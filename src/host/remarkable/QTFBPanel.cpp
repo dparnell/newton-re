@@ -117,13 +117,17 @@ public:
 	virtual void		Origin(long* left, long* top) { *left = fLeft; *top = fTop; }
 	virtual void		Update(long left, long top, long right, long bottom, RemarkableRefresh how);
 	virtual bool		Poll(RemarkableEvent* event, long timeoutMs);
+	virtual bool		HasPenInk(void) { return true; }		// (AppLoad's ufast)
+	virtual bool		HasDirectPen(void) { return true; }		// (its points mapped by the ones AppLoad gives: PenFit.h)
 	virtual void		SetPenInk(bool pen) { fPenInk = pen; }
 	virtual bool		PenInk(void) { return fPenInk; }
+	virtual void		SetDirectPen(bool direct);
+	virtual bool		DirectPen(void) { return fPenFd >= 0; }
 
 private:
 	bool				Connect(void);
 	void				Send(const QTFBClientMessage& message);
-	void				OpenPenDevice(void);
+	void				OpenPenDevice(bool asked = false);
 	bool				ReadPen(RemarkableEvent* event);
 
 	int					fSocket;
@@ -193,26 +197,18 @@ QTFBPanel::Connect(void)
 	checking on a device: docs/host-remarkable.md.)
 ------------------------------------------------------------------------------*/
 
-bool
-QTFBPanel::NativeSize(long* width, long* height)
+void
+RemarkablePanelSize(long* width, long* height)
 {
-	if (getenv("QTFB_KEY") == nil && getenv("NEWTON_QTFB_SOCKET") == nil)
-		return false;						// not started by AppLoad (nor by its stand-in)
-	if (!Connect())
-		return false;
 	*width = 1620;
 	*height = 2160;
-	fPanelWidth = 1620;
-	fGlassWidth = 1620;
-	fGlassHeight = 2160;
-	fPanelHeight = 2160;
 	const char* panel = getenv("NEWTON_RM_PANEL");
 	long w, h;
 	if (panel != nil && sscanf(panel, "%ldx%ld", &w, &h) == 2 && w > 0 && h > 0)
 	{
-		*width = fPanelWidth = fGlassWidth = w;
-		*height = fPanelHeight = fGlassHeight = h;
-		return true;
+		*width = w;
+		*height = h;
+		return;
 	}
 	FILE* f = fopen("/proc/device-tree/model", "r");
 	if (f != nil)
@@ -222,16 +218,23 @@ QTFBPanel::NativeSize(long* width, long* height)
 		model[n] = 0;
 		fclose(f);
 		if (strstr(model, "Chiappa") != nil || strstr(model, "Move") != nil)
-		{
-			*width = fPanelWidth = fGlassWidth = 954;
-			*height = fPanelHeight = fGlassHeight = 1696;
-		}
+			{ *width = 954; *height = 1696; }
 		else if (strstr(model, "reMarkable 2") != nil)
-		{
-			*width = fPanelWidth = fGlassWidth = 1404;
-			*height = fPanelHeight = fGlassHeight = 1872;
-		}
+			{ *width = 1404; *height = 1872; }
 	}
+}
+
+
+bool
+QTFBPanel::NativeSize(long* width, long* height)
+{
+	if (getenv("QTFB_KEY") == nil && getenv("NEWTON_QTFB_SOCKET") == nil)
+		return false;						// not started by AppLoad (nor by its stand-in)
+	if (!Connect())
+		return false;
+	RemarkablePanelSize(width, height);
+	fPanelWidth = fGlassWidth = *width;
+	fPanelHeight = fGlassHeight = *height;
 	return true;
 }
 
@@ -484,11 +487,13 @@ QTFBPanel::Poll(RemarkableEvent* event, long timeoutMs)
 	point is sent at each SYN_REPORT.
 ------------------------------------------------------------------------------*/
 
+// (asked: the Host preferences panel's "Read the Marker directly";
+// otherwise only with NEWTON_RM_PEN=evdev)
 void
-QTFBPanel::OpenPenDevice(void)
+QTFBPanel::OpenPenDevice(bool asked)
 {
 	const char* how = getenv("NEWTON_RM_PEN");
-	if (how == nil || strcmp(how, "evdev") != 0)
+	if (!asked && (how == nil || strcmp(how, "evdev") != 0))
 		return;							// (AppLoad's qtfb hands on the Marker: its events are the default)
 	for (int i = 0; i < 16 && fPenFd < 0; i++)
 	{
@@ -578,6 +583,27 @@ QTFBPanel::ReadPen(RemarkableEvent* event)
 		}
 	}
 	return false;
+}
+
+
+// The Marker read directly, or not, from now on (the window's thread).  A
+// stroke under way is ended where it is; the map learnt is kept, since the
+// geometry has not changed.
+void
+QTFBPanel::SetDirectPen(bool direct)
+{
+	if (direct == (fPenFd >= 0))
+		return;
+	if (direct)
+		OpenPenDevice(true);
+	else
+	{
+		close(fPenFd);
+		fPenFd = -1;
+		fPenWasDown = fPenTouch = fPenMoved = false;
+	}
+	fStroke = kNoStroke;
+	fprintf(stderr, "[host] qtfb: the Marker %s\n", fPenFd >= 0 ? "read directly" : "through AppLoad");
 }
 
 

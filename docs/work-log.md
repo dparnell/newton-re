@@ -9,6 +9,21 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-03: the Host panel - pickers, docking, the Marker, the screen size
+
+The owner found the pen waveform's ghosting noticeable and asked for the
+ink waveform to be chosen on the Host page, with the other settings: the
+page now has pickers (`protoLabelPicker`) - Ink: Fast, Pen, Gray; Screen
+(next start): 1x-4x, kept in `<store>.host`, the pen's calibration reset to
+the factory one when the size changes (`gNewtHostBeforeCalibration`) -
+and checkboxes for docking over the network (the serial chip's listener
+closed and opened in place, `HostSerialChipSetListening`) and reading the
+Marker directly (the qtfb panel opening and closing the device).  At the
+owner's asking, only what applies is listed: a panel says what it can do
+(`HasPenInk`, `HasDirectPen`), and a headless newton has no panel settings.
+Checked on the tablet with `tools/remarkable/hostsettings-device.ns`; the
+"Newton (pen mode)" app is gone, the picker does its job.
+
 ## 2026-10-03: the Host preferences panel
 
 At the owner's request, a page in the Newton's own Prefs for the host's

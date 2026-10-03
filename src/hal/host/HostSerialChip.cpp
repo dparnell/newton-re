@@ -82,6 +82,7 @@ public:
 
 	// the host's side
 	NewtonErr			Listen(unsigned short port);
+	void				CloseWire(void);		// the connection and the listener closed (HostSerialChipSetListening)
 	Boolean				Due(Int64* when);
 	void				Poll(void);
 	void				Pace(void);
@@ -138,11 +139,25 @@ THostSerialChip::New()
 void
 THostSerialChip::Delete()
 {
+	CloseWire();
+}
+
+
+// The desktop's connection and the listener closed, and what was on its way
+// either way dropped: the cable pulled out (the tool sees the carrier go)
+void
+THostSerialChip::CloseWire(void)
+{
 	if (fClient >= 0)
+	{
 		HostSocketClose(fClient);
+		fStatusChanged = true;
+	}
 	if (fListener >= 0)
 		HostSocketClose(fListener);
 	fClient = fListener = -1;
+	fRxHead = fRxCount = fRxReady = 0;
+	fTxCount = 0;
 }
 
 
@@ -488,4 +503,27 @@ unsigned short
 HostSerialChipPort(void)
 {
 	return gHostSerialChip != nil ? gHostSerialChip->fPort : 0;
+}
+
+
+NewtonErr
+HostSerialChipSetListening(Boolean on, unsigned short port)
+{
+	if (gHostSerialChip == nil)
+		return on ? HostSerialChipInstall(port) : noErr;
+	if (!on)
+	{
+		gHostSerialChip->CloseWire();
+		return noErr;
+	}
+	if (gHostSerialChip->fListener >= 0)
+		return noErr;
+	return gHostSerialChip->Listen(gHostSerialChip->fPort != 0 ? gHostSerialChip->fPort : port);
+}
+
+
+Boolean
+HostSerialChipListening(void)
+{
+	return gHostSerialChip != nil && gHostSerialChip->fListener >= 0;
 }

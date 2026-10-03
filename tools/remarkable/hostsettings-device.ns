@@ -1,0 +1,40 @@
+// On a reMarkable (docs/host-settings.md, "Tests"): the Host preferences
+// page's Ink picker set to Pen on a scratch store - Setup walked through at
+// 320 x 480, Prefs opened, Host tapped, the picker tapped and Pen picked;
+// prints "hd: waveform 1, picker shows Pen (quickest; ghosts)" and
+// "hd: done", and snapshots hd-panel.pgm and hd-popup.pgm.  Run beside
+// src/host/demo/{common,walkhelpers,apphelpers}.ns; the commands are in
+// docs/host-settings.md.
+
+HostInclude("common.ns");
+HostInclude("walkhelpers.ns");
+HostInclude("apphelpers.ns");
+hdWave := func() begin local w := nil; foreach i in HostSettingsList() do if i.setting = 'waveform then w := i.value; w; end;
+hdIcon := func() if GetRoot().extrasDrawer.viewCObject then
+	call findView with (GetRoot().extrasDrawer, func(v) v.target and v.target.fentry and v.target.fentry.app = 'preferenceRoll);
+hdPanel := func() call findView with (GetRoot(), func(v) v.overview and IsString(v.overview) and StrEqual(v.overview, "Host") and v.viewCObject and Length(v:ChildViewFrames()) > 2);
+Print("hd: settings " & NumberStr(Length(HostSettingsList())) & ", waveform " & NumberStr(call hdWave with ()));
+call walkSetup with ([4, 31, 1, 17], func() begin
+	call tapAt with (20, GetRoot():GlobalBox().bottom - 20);
+	call waitFor with ("hd: prefs icon", func() call hdIcon with (), func() begin
+		call tapCentre with (call hdIcon with ());
+		call waitFor with ("hd: prefs", func() GetRoot().preferenceRoll.viewCObject, func() begin
+			call tapPrefsItem with ("Host");
+			call waitFor with ("hd: panel", func() call hdPanel with (), func() begin
+				ScreenSnapshot("hd-panel.pgm");
+				local picker := call findView with (call hdPanel with (), func(v) v.setting = 'waveform and v.viewCObject);
+				Print("hd: picker shows " & picker.entryLine.text);
+				call tapCentre with (picker);
+				call waitFor with ("hd: popup", func() call pickerUp with (), func() begin
+					ScreenSnapshot("hd-popup.pgm");
+					call pickItem with ("Pen");
+					call waitFor with ("hd: pen chosen", func() call hdWave with () = 1, func() begin
+						Print("hd: waveform " & NumberStr(call hdWave with ()) & ", picker shows " & picker.entryLine.text);
+						Print("hd: done");
+						HostQuit();
+					end, 20);
+				end, 20);
+			end, 30);
+		end, 30);
+	end, 30);
+end);

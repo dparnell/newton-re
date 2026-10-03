@@ -65,11 +65,20 @@ public:
 	virtual bool			Poll(RemarkableEvent* event, long timeoutMs) = 0;
 	// the ink sent in the pen's own waveform (qtfb's ufast) rather than the
 	// fast one, from the next update on; a panel without one ignores it
+	// what the panel can do of the Host panel's settings (a panel that
+	// cannot has them left off the page)
+	virtual bool			HasPenInk(void) { return false; }
+	virtual bool			HasDirectPen(void) { return false; }
 	virtual void			SetPenInk(bool pen) { (void) pen; }
 	virtual bool			PenInk(void) { return false; }
+	// the Marker read from its own input device (true) or taken as the
+	// panel's own events give it; called on the window's thread
+	virtual void			SetDirectPen(bool direct) { (void) direct; }
+	virtual bool			DirectPen(void) { return false; }
 };
 
 RemarkablePanel*	NewQTFBPanel(void);
+void				RemarkablePanelSize(long* width, long* height);	// the panel's size, portrait (NEWTON_RM_PANEL, else the device tree's model)
 RemarkablePanel*	NewRMKitPanel(void);		// nil when newton was built without rmkit
 
 #endif	/* __REMARKABLE_PANEL_H */

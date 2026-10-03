@@ -231,6 +231,11 @@ extern const char*	gNewtBootTestScript;
 // script - the program's own globals (host/HostPackages.h); nil for none
 void	AllocateEarlyStuff(void);								// ROM 0x0030d19c AllocateEarlyStuff__Fv - the locale's sorting table made the default
 extern void	(*gNewtHostPreMain)(void);
+// host: what MainConstructor runs just before the tablet's calibration is
+// read back from the System soup (the Host panel's screen size: a
+// calibration kept at another display size reset to the factory one,
+// host/HostSettings.h); nil for nothing
+extern void	(*gNewtHostBeforeCalibration)(void);
 void	NewtUserMain(void);									// ROM 0x0030bba8 UserMain__Fv - the 'main' task: a TNewtWorld made and run (installed as the loader's gHostUserMain by NewtInstallUserMain)
 void	NewtInstallUserMain(void);							// host: the loader's 'main' task runs NewtUserMain
 

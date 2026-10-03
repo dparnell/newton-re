@@ -46,4 +46,14 @@
 NewtonErr	HostSerialChipInstall(unsigned short port);
 unsigned short	HostSerialChipPort(void);
 
+// The port opened or closed while the OS runs (the Host preferences panel's
+// docking over the network): closed, a desktop connected is cut off - as a
+// cable pulled out (the tool sees the carrier go) - and nobody can connect;
+// opened, it listens on the port it had (or the one given, if it never
+// had one: the chip is made and registered then).  Called with the baton
+// held, as the chip's interrupt source is, so the two never meet.
+// ==> noErr, or why not.
+NewtonErr	HostSerialChipSetListening(Boolean on, unsigned short port);
+Boolean		HostSerialChipListening(void);
+
 #endif

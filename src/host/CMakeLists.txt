@@ -919,7 +919,7 @@ set_tests_properties(host.NewtonHostSettings.set PROPERTIES TIMEOUT 300
                      FAIL_REGULAR_EXPRESSION "waited in vain|fell over|!!! Exception")
 set_tests_properties(host.NewtonHostSettings.kept PROPERTIES TIMEOUT 300
                      FIXTURES_REQUIRED hostsettingsset
-                     PASS_REGULAR_EXPRESSION "at boot beaming over the network on, kept on.*turned off, kept off.*hostsettings: done"
+                     PASS_REGULAR_EXPRESSION "at boot beaming over the network on, kept on.*turned off, kept off.*docking on.*docking turned off.*docking turned on.*hostsettings: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain|fell over|!!! Exception")
 
 # the sums that turn the display onto the reMarkable's panel image

@@ -79,10 +79,15 @@ static std::atomic<int>		gSnapshotsAsked(0);	// SIGUSR2: the display written out
 
 // the settings the Host preferences panel changes while newton runs
 // (HostWindowSetOption): a finger as the pen (NEWTON_RM_TOUCH=off at
-// start: not), the ink in the pen's waveform (NEWTON_RM_INK_MODE=ufast),
-// and a flashing redraw of everything asked for
+// start: not), the ink's waveform, the Marker read directly, and a
+// flashing redraw of everything asked for
 static std::atomic<bool>	gTouchIsPen(getenv("NEWTON_RM_TOUCH") == nil || strcmp(getenv("NEWTON_RM_TOUCH"), "off") != 0);
-static std::atomic<int>		gPenInkAsked(-1);		// -1 nothing asked, else 0/1 for the window's thread to give the panel
+// the ink's waveform: 0 fast (the default), 1 the pen's (qtfb ufast: quicker,
+// more ghosting), 2 gray (the UI waveform for everything: slowest, cleanest);
+// -1 until the window has started (NEWTON_RM_WAVEFORM, NEWTON_RM_INK_MODE)
+static std::atomic<int>		gWaveform(-1);
+static std::atomic<int>		gDirectPenAsked(-1);	// -1 nothing asked, else 0/1 for the window's thread to give the panel
+static long					gStartScale = 0;		// the scale asked for at start (the Host panel's Screen size, kept beside the store): the display the panel's size over it
 static std::atomic<bool>	gClearAsked(false);
 
 
@@ -435,12 +440,17 @@ WindowThread(void)
 	// in gray once the pen has rested (NEWTON_RM_SETTLE ms).  A flashing
 	// full refresh only every NEWTON_RM_FULL screens' worth of change (0, the
 	// default: never - AppLoad's five-finger tap does one by hand).
+	// (the Host preferences panel's "Ink waveform" changes it while newton
+	// runs: gWaveform - fast, pen or gray; switch stays an environment
+	// setting)
 	const char* waveform = getenv("NEWTON_RM_WAVEFORM");
 	enum { kWaveFast, kWaveUI, kWaveSwitch } policy = kWaveFast;
 	if (waveform != nil && strcmp(waveform, "ui") == 0)
 		policy = kWaveUI;
 	else if (waveform != nil && strcmp(waveform, "switch") == 0)
 		policy = kWaveSwitch;
+	int waveformShown = policy == kWaveUI ? 2 : gPanel->PenInk() ? 1 : 0;
+	gWaveform.store(waveformShown);
 	const long settleMs = EnvLong("NEWTON_RM_SETTLE", 600);
 	const long fullScreens = EnvLong("NEWTON_RM_FULL", 0);
 	// the pen overlay (NEWTON_RM_PEN_OVERLAY, on by default): the pen's
@@ -529,9 +539,18 @@ WindowThread(void)
 		}
 		const unsigned char* pixels = gPixels;
 		long l, t, r, b;
-		int penInk = gPenInkAsked.exchange(-1);
-		if (penInk >= 0)
-			gPanel->SetPenInk(penInk != 0);
+		int wave = gWaveform.load();
+		if (wave != waveformShown)
+		{
+			// the ink's waveform chosen on the Host panel
+			waveformShown = wave;
+			policy = wave == 2 ? kWaveUI : kWaveFast;
+			gPanel->SetPenInk(wave == 1);
+			fprintf(stderr, "[host] reMarkable: the ink in the %s waveform\n", wave == 2 ? "gray" : wave == 1 ? "pen" : "fast");
+		}
+		int direct = gDirectPenAsked.exchange(-1);
+		if (direct >= 0)
+			gPanel->SetDirectPen(direct != 0);
 		if (gClearAsked.exchange(false))
 		{
 			send(0, 0, imageWidth, imageHeight, kRefreshContent);		// (the ghosts cleared, as AppLoad's five-finger tap does)
@@ -865,6 +884,15 @@ HostWindowStart(long width, long height, const unsigned char* pixels, const char
 void
 HostWindowPreferredDisplay(long* width, long* height)
 {
+	if (gStartScale >= 1 && gStartScale <= 4)
+	{
+		// the Host panel's Screen size: the panel over the scale, portrait,
+		// whatever --display said
+		long panelWidth, panelHeight;
+		RemarkablePanelSize(&panelWidth, &panelHeight);
+		*width = (panelWidth / gStartScale) & ~1L;
+		*height = (panelHeight / gStartScale) & ~1L;
+	}
 	const char* how = getenv("NEWTON_RM_ORIENTATION");
 	if (how != nil && strcmp(how, "appload") == 0)
 		return;
@@ -887,16 +915,32 @@ HostWindowPreferredDisplay(long* width, long* height)
 bool
 HostWindowOption(const char* name, long* value)
 {
+	// (the panel's size is the device's, known before the window opens -
+	// the Host settings read the screen size kept for this start then)
+	long panelWidth, panelHeight;
+	RemarkablePanelSize(&panelWidth, &panelHeight);
+	if (strcmp(name, "panelWidth") == 0)
+		{ *value = panelWidth; return true; }
+	if (strcmp(name, "panelHeight") == 0)
+		{ *value = panelHeight; return true; }
+	// the rest only with a panel open (headless: none of them applies), and
+	// only what that panel can do
+	if (gPanel == nil)
+		return false;
 	if (strcmp(name, "touch") == 0)
 		{ *value = gTouchIsPen.load() ? 1 : 0; return true; }
-	if (strcmp(name, "penInk") == 0)
+	if (strcmp(name, "waveform") == 0 && gPanel->HasPenInk())
+		{ *value = gWaveform.load() < 0 ? 0 : gWaveform.load(); return true; }
+	if (strcmp(name, "directPen") == 0 && gPanel->HasDirectPen())
 	{
-		int asked = gPenInkAsked.load();
-		*value = asked >= 0 ? asked : (gPanel != nil && gPanel->PenInk() ? 1 : 0);
+		int asked = gDirectPenAsked.load();
+		*value = asked >= 0 ? asked : (gPanel != nil && gPanel->DirectPen() ? 1 : 0);
 		return true;
 	}
 	if (strcmp(name, "clearGhosts") == 0)
 		{ *value = 0; return true; }
+	if (strcmp(name, "scale") == 0)
+		{ *value = gScale; return true; }
 	return false;
 }
 
@@ -906,10 +950,14 @@ HostWindowSetOption(const char* name, long value)
 {
 	if (strcmp(name, "touch") == 0)
 		gTouchIsPen.store(value != 0);
-	else if (strcmp(name, "penInk") == 0)
-		gPenInkAsked.store(value != 0 ? 1 : 0);
+	else if (strcmp(name, "waveform") == 0)
+		{ if (value < 0 || value > 2) return false; gWaveform.store((int) value); }
+	else if (strcmp(name, "directPen") == 0)
+		gDirectPenAsked.store(value != 0 ? 1 : 0);
 	else if (strcmp(name, "clearGhosts") == 0)
 		{ if (value != 0) gClearAsked.store(true); }
+	else if (strcmp(name, "startScale") == 0)
+		gStartScale = value;					// (before the window starts: HostWindowPreferredDisplay)
 	else
 		return false;
 	return true;

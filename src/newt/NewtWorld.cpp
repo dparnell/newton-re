@@ -76,6 +76,7 @@ TTime			gLastIOEvent;				// ROM 0x0c100d0c gLastIOEvent
 TTime			gLastPenupTime;				// ROM 0x0c100d14 gLastPenupTime
 Boolean			gGoingToSleep = false;		// ROM 0x0c105520 gGoingToSleep
 void			(*gNewtHostBoot)(void) = nil;
+void			(*gNewtHostBeforeCalibration)(void) = nil;
 const char*		gNewtBootTestScript = nil;
 void			(*gNewtHostPreMain)(void) = nil;
 static const Int64	kZero = { 0, 0 };
@@ -336,7 +337,11 @@ TNewtWorld::MainConstructor()
 	// the tablet's calibration read back, unless the setup assistant is
 	// still to ask for it
 	if (!EQRef(GetPreference(RSSYMblessedapp), RSSYMsetup))
+	{
+		if (gNewtHostBeforeCalibration != nil)
+			gNewtHostBeforeCalibration();
 		LoadInkerCalibration();
+	}
 	AllocateEarlyStuff();
 	StartDrawing(nil, nil);
 	return noErr;

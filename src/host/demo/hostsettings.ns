@@ -68,6 +68,19 @@ hsKeptRun := func() begin
 	GetGlobalVar('|HostSettings:host|):Change('lanBeam, nil);
 	call waitFor with ("hostsettings: beaming off", func() not call hsBeaming with () and call hsKept with () = 'off, func() begin
 		Print("hostsettings: turned off, kept " & SPrintObject(call hsKept with ()));
+		// docking over the network: the serial port's listener closed and
+		// opened again while the machine runs
+		local docking := func() begin
+			local on := nil;
+			foreach item in HostSettingsList() do
+				if item.setting = 'docking then on := if item.value then 'on else 'off;
+			on;
+		end;
+		Print("hostsettings: docking " & SPrintObject(call docking with ()));
+		GetGlobalVar('|HostSettings:host|):Change('docking, nil);
+		Print("hostsettings: docking turned " & SPrintObject(call docking with ()));
+		GetGlobalVar('|HostSettings:host|):Change('docking, true);
+		Print("hostsettings: docking turned " & SPrintObject(call docking with ()));
 		Print("hostsettings: done");
 		HostQuit();
 	end, 30);

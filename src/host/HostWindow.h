@@ -37,10 +37,15 @@ void	HostWindowStop(void);								// the window closed and its thread joined
 void	HostWindowPreferredDisplay(long* width, long* height);
 // The window's own settings, changed while it runs (the Host preferences
 // panel, host/HostSettings.h).  A window has the ones it can do:
-//   "penInk"       the e-ink panel's pen waveform for ink (reMarkable: qtfb's
-//                  ufast) rather than the fast one - 1 or 0
+//   "waveform"     the e-ink's waveform for ink (reMarkable): 0 fast, 1 the
+//                  pen's (qtfb ufast: quicker, ghosts), 2 gray (slowest, clean)
+//   "directPen"    the Marker read from its own device (reMarkable) - 1 or 0
 //   "touch"        a finger is the pen (reMarkable) - 1 or 0
 //   "clearGhosts"  set to 1: the whole panel redrawn once, flashing (reMarkable)
+//   "scale", "panelWidth", "panelHeight"  (to read) the display's scale on
+//                  the panel and the panel's size (reMarkable)
+//   "startScale"   (to set, before the window starts) the display made the
+//                  panel's size over it by HostWindowPreferredDisplay
 // HostWindowOption ==> whether the window has that setting, and its value;
 // HostWindowSetOption ==> whether it took it (from any thread)
 bool	HostWindowOption(const char* name, long* value);

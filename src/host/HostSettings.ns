@@ -26,18 +26,24 @@
 		local prefs := GetAppPrefs(kAppSymbol, nil);
 		if prefs and prefs.settings then
 			foreach item in HostSettingsList() do
-				if item.kind = 'check and HasSlot(prefs.settings, item.setting) then
+				if item.kind <> 'button and not item.nextStart and HasSlot(prefs.settings, item.setting) then
 					HostSetSetting(item.setting, prefs.settings.(item.setting));
 	end,
 
-	// one setting changed: given to the host, and kept
+	// one setting changed: given to the host, and kept (a choice as the
+	// index of the one chosen; one for the next start the host keeps itself)
 	Change: func(setting, value)
 	begin
 		local taken := HostSetSetting(setting, value);
-		local prefs := GetAppPrefs(kAppSymbol, {settings: {}});
-		if not prefs.settings then prefs.settings := {};
-		prefs.settings.(setting) := if value then true else nil;
-		EntryChange(prefs);
+		local nextStart := nil;
+		foreach item in HostSettingsList() do
+			if item.setting = setting and item.nextStart then nextStart := true;
+		if not nextStart then begin
+			local prefs := GetAppPrefs(kAppSymbol, {settings: {}});
+			if not prefs.settings then prefs.settings := {};
+			prefs.settings.(setting) := if IsInteger(value) then value else if value then true else nil;
+			EntryChange(prefs);
+		end;
 		taken;
 	end,
 
@@ -62,7 +68,8 @@
 	end,
 
 	// The preferences panel: a line of text, then a checkbox for each
-	// setting that is on or off and a button for each that is done once -
+	// setting that is on or off, a picker for each that is one of several
+	// (protoLabelPicker: "Ink  Fast"), and a button for each done once -
 	// made by Start, since the roll lays out and builds the panel from its
 	// template (a viewSetupFormScript's stepChildren come too late)
 	panel: {
@@ -82,7 +89,24 @@
 			 viewJustify: 48, text: "The machine newton runs on:"}];
 		local top := 42;
 		foreach item in HostSettingsList() do begin
-			if item.kind = 'check then
+			if item.kind = 'choice then
+				AddArraySlot(children,
+					{_proto: @190,												// protoLabelPicker
+					 viewBounds: {left: 10, top: top, right: -10, bottom: top + 16},
+					 viewJustify: 48,
+					 text: item.label,
+					 labelCommands: item.choices,
+					 setting: item.setting,
+					 // (the choice the host has now, each time the panel opens)
+					 TextSetup: func() begin
+						local shown := labelCommands[0];
+						foreach i in HostSettingsList() do
+							if i.setting = setting and IsInteger(i.value) and i.value >= 0
+								and i.value < Length(labelCommands) then shown := labelCommands[i.value];
+						shown;
+					 end,
+					 LabelActionScript: func(index) GetGlobalVar('|HostSettings:host|):Change(setting, index)})
+			else if item.kind = 'check then
 				AddArraySlot(children,
 					{_proto: @164,												// protoCheckbox
 					 viewBounds: {left: 10, top: top, right: -10, bottom: top + 18},

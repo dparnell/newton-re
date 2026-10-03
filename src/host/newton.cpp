@@ -299,6 +299,7 @@ NewtonBoot(void)
 		// and off: the LAN medium newton was given, or "lan", and back to
 		// the --ir-peer or nobody)
 		HostSettingsSetBeamPeers(gIRLanAsked ? gIRPeer : nil, gIRLanAsked ? nil : gIRPeer);
+		HostSettingsSetSerialPort(gSerialPort);
 		if (err == noErr)
 			err = HostIRChipInstall(gIRPeer);
 		if (err == noErr)
@@ -1056,8 +1057,13 @@ main(int argc, char** argv)
 #endif
 	HostUseRealClock(true);
 	HostRestartReceive();		// (a restarted newton: the reboot reason, the window's place)
+	HostSettingsSetFile(storeFile);			// (the Host panel's settings for the next start: the screen size)
 	if (gWindowed)
+	{
+		HostSettingsReadStartup();
 		HostWindowPreferredDisplay(&width, &height);
+		HostSettingsNoteDisplay(width, height);
+	}
 	HostConfigureNewtWorld(romImage, heapSize, width, height, depth);
 	gNewtBootTestScript = script;
 	gScriptPath = script;
