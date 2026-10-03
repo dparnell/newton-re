@@ -45,7 +45,16 @@ the way are all in `docs/work-log.md`.
 
 ## In progress
 
-Nothing at present.
+- **Optimisation, drawing first** (branch `perf/drawing`, 2026-10-03, the
+  owner's choice now that the system works): the blitter, `DrawLine` and
+  the native lookup done (`docs/work-log.md`; `docs/qd/README.md`,
+  "Drawing speed").  Measure with `demo/redrawbench.ns` (whole-screen
+  redraws) and `demo/drawbench.ns` on a RelWithDebInfo build, profile with
+  `tools/host/profile.py`.  What a redraw spends now is mostly the view
+  system and the interpreter; the blitter is 12% of it (43% before), the
+  display's gray conversion 6%.  Open: `host.NewtonAlignPen.restart`
+  fails on main too in a RelWithDebInfo build; `host.NewtonATASupport.pull`
+  failed once under `ctest -j 6` (56 s where it takes 2) and passes alone.
 
 ### Left of the 64-bit NewtonScript flavour (merged 2026-10-02)
 

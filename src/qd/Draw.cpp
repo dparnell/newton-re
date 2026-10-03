@@ -4,7 +4,7 @@
 	Contains:	Drawing rectangles and regions, and the blitter.
 
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
-	The blitter is written a row at a time (BlitPixelsFast), with the
+	The blitter is written a byte at a time (BlitPixelsFast), with the
 	pixel-at-a-time version it replaced kept as the oracle (BlitPixelsSlow,
 	NEWTON_QD_SLOW; qd/tests/test_Blitter.cpp compares them); the ROM's
 	transfer semantics - the source inverted for the notSrc/notPat modes,
@@ -147,7 +147,8 @@ SetRowPixel(unsigned char* row, long bit, long depth, long value)
 }
 
 
-// the widest pattern whose row is worked out once a row
+// the widest pattern whose row is made once a row (a wider one is read a
+// pixel at a time)
 enum { kPatternValuesMax = 64 };
 // a pattern row packed at the destination's depth repeats every so many
 // bytes (at most kPatternValuesMax * 8 bits); it is laid out at least
@@ -165,6 +166,46 @@ GreatestCommonDivisor(long a, long b)
 		b = t;
 	}
 	return a;
+}
+
+
+// a bit offset's byte, rounded down (the offset may be negative)
+static inline long
+FloorDiv8(long bit)
+{
+	return bit >= 0 ? bit >> 3 : -((7 - bit) >> 3);
+}
+
+
+// For each byte of a row of gray pixels (2, 4 or 8 bits) the bits of its
+// non-white pixels: the gray "or" replaces just those (Transfer).
+struct NonWhiteTables
+{
+	unsigned char	byDepth[3][256];		// depths 2, 4 and 8
+
+	NonWhiteTables()
+	{
+		for (long d = 0; d < 3; d++)
+		{
+			long pixelDepth = 2 << d;
+			long pixelMask = (1 << pixelDepth) - 1;
+			for (long b = 0; b < 256; b++)
+			{
+				long m = 0;
+				for (long shift = 0; shift < 8; shift += pixelDepth)
+					if ((b >> shift) & pixelMask)
+						m |= pixelMask << shift;
+				byDepth[d][b] = (unsigned char) m;
+			}
+		}
+	}
+};
+
+static const unsigned char*
+NonWhiteTable(long depth)
+{
+	static const NonWhiteTables tables;
+	return tables.byDepth[depth == 2 ? 0 : depth == 4 ? 1 : 2];
 }
 
 
@@ -218,37 +259,142 @@ CombinePackedRow(unsigned char* drow, long b0, long b1, unsigned char leftMask, 
 }
 
 
-// The masks' scan rows ANDed into one byte a pixel for the width from x
-// (the masks at their own depth, as BlitPixelsSlow tests them); ==>
-// whether every pixel is visible.
-static Boolean
-VisibleRow(RgnState** masks, long maskCount, long x, long width, unsigned char* visible)
+// count bytes of a row combined with the source's bytes under op (0 copy,
+// 1 or, 2 xor, 3 bic; the gray "or" through nonWhite, nil for the bitwise
+// one), each byte under its mask: the first leftMask, the last rightMask,
+// and every byte vis's (nil: all visible).
+static void
+CombineRow(unsigned char* d, const unsigned char* s, const unsigned char* vis, long count, unsigned char leftMask, unsigned char rightMask, long op, const unsigned char* nonWhite)
 {
-	memset(visible, 1, width);
-	for (long m = 0; m < maskCount; m++)
+	if (vis == nil && count > 2)
 	{
-		const ULong32* scan = masks[m]->fScan;
-		long mdepth = masks[m]->fDepth;
-		long bit = (x - masks[m]->fOrigin) * mdepth;
-		for (long i = 0; i < width; i++, bit += mdepth)
-			if (!(scan[bit >> 5] & (0x80000000u >> (bit & 31))))
-				visible[i] = 0;
+		// the whole bytes between the ends, unmasked
+		CombineRow(d, s, nil, 1, leftMask, 0xff, op, nonWhite);
+		long n = count - 2;
+		unsigned char* dm = d + 1;
+		const unsigned char* sm = s + 1;
+		switch (op)
+		{
+		case 0:
+			memcpy(dm, sm, n);
+			break;
+		case 1:
+			if (nonWhite == nil)
+				for (long j = 0; j < n; j++)
+					dm[j] |= sm[j];
+			else
+				for (long j = 0; j < n; j++)
+				{
+					unsigned char m = nonWhite[sm[j]];
+					dm[j] = (unsigned char) ((dm[j] & ~m) | sm[j]);
+				}
+			break;
+		case 2:
+			for (long j = 0; j < n; j++)
+				dm[j] ^= sm[j];
+			break;
+		default:
+			for (long j = 0; j < n; j++)
+				dm[j] &= ~sm[j];
+			break;
+		}
+		CombineRow(d + count - 1, s + count - 1, nil, 1, 0xff, rightMask, op, nonWhite);
+		return;
 	}
-	for (long i = 0; i < width; i++)
-		if (!visible[i])
-			return false;
-	return true;
+	for (long j = 0; j < count; j++)
+	{
+		unsigned char m = 0xff;
+		if (j == 0)
+			m &= leftMask;
+		if (j == count - 1)
+			m &= rightMask;
+		if (vis != nil)
+			m &= vis[j];
+		unsigned char value;
+		switch (op)
+		{
+		case 0:		value = s[j]; break;
+		case 1:		if (nonWhite != nil)
+					{
+						m &= nonWhite[s[j]];
+						value = s[j];
+					}
+					else
+						value = d[j] | s[j];
+					break;
+		case 2:		value = d[j] ^ s[j]; break;
+		default:	value = d[j] & ~s[j]; break;
+		}
+		d[j] = (unsigned char) ((d[j] & ~m) | (value & m));
+	}
 }
 
 
-// Host: BlitPixelsSlow's pixels, a row at a time.  The maps' bits, depths
-// and origins, the pattern and its alignment are looked up once rather
-// than for every pixel; a row's source values are read along the row with
-// the bit offset stepped; the masks are ANDed into one visibility row; and
-// the common cases are written a byte at a time: a copy between maps of one
-// depth whose pixels line up in their bytes moves each visible run's bytes,
-// and a copy row every pixel of which is visible is packed.  Everything
-// else is written pixel by pixel through the same Transfer.
+// Eight bits of a mask's scan row from a bit offset (perhaps negative):
+// 0 outside the words it was made in.
+static inline unsigned char
+ScanByte(const RgnState* state, long bit)
+{
+	long word = bit >= 0 ? bit >> 5 : -((31 - bit) >> 5);
+	long offset = bit - word * 32;
+	ULong32 hi = (word >= 0 && word <= state->fScanWords) ? state->fScan[word] : 0;
+	ULong32 bits = hi << offset;
+	if (offset != 0)
+		bits |= (word + 1 >= 0 && word + 1 <= state->fScanWords) ? state->fScan[word + 1] >> (32 - offset) : 0;
+	return (unsigned char) (bits >> 24);
+}
+
+
+// The masks' scan rows ANDed for count bytes of a destination row from
+// byte b0: each byte the bits of its visible pixels.  A mask at the
+// destination's depth (the usual: masks are at the port's) is read a byte
+// at a time from its words - a pixel's bits are all set or all clear in it;
+// another is tested a pixel at a time, as BlitPixelsSlow tests it, for the
+// pixels from left to right.
+static void
+MaskRow(RgnState** masks, long maskCount, const PixelMap* dst, long depth, long b0, long count, long left, long right, unsigned char* out)
+{
+	memset(out, 0xff, count);
+	for (long m = 0; m < maskCount; m++)
+	{
+		const RgnState* state = masks[m];
+		if (state->fDepth == depth)
+		{
+			// (pixel x lies at bit (x - bounds.left) * depth of the row and at
+			// (x - origin) * depth of the scan)
+			long bit = b0 * 8 + (dst->bounds.left - state->fOrigin) * depth;
+			for (long j = 0; j < count; j++, bit += 8)
+				out[j] &= ScanByte(state, bit);
+		}
+		else
+		{
+			long mdepth = state->fDepth;
+			long pixelMask = (1 << depth) - 1;
+			for (long x = left; x < right; x++)
+			{
+				long sbit = (x - state->fOrigin) * mdepth;
+				if (!(state->fScan[sbit >> 5] & (0x80000000u >> (sbit & 31))))
+				{
+					long dbit = (x - dst->bounds.left) * depth - b0 * 8;
+					out[dbit >> 3] &= (unsigned char) ~(pixelMask << (8 - depth - (dbit & 7)));
+				}
+			}
+		}
+	}
+}
+
+
+// Host: BlitPixelsSlow's pixels, a byte at a time.  Each row is three rows
+// of bytes laid over the destination's: the source's pixels packed at the
+// destination's depth and bit phase (a pattern's row made once and
+// repeated; a source of the same depth shifted into place a byte at a time,
+// or read where it is when it already lines up; another depth converted a
+// pixel at a time), the masks' bits for the visible pixels (read from the
+// regions' scan words), and the ends' bits; the operation is then done a
+// byte at a time - copy, xor, bic and the one-bit "or" are bitwise, and the
+// gray "or" replaces the non-white pixels a table gives for each byte.
+// The row buffer (width longs, made by the caller before the masks' states
+// pointed into the regions' blocks) holds the source's and the masks' bytes.
 // DEVIATION (performance): the ROM's own BB* routines are word-at-a-time
 // assembly; this reproduces BlitPixelsSlow's output bit for bit
 // (qd/tests/test_Blitter.cpp).
@@ -272,21 +418,42 @@ BlitPixelsFast(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* ds
 	long yEnd = upward ? clipped->top - 1 : clipped->bottom;
 	long yStep = upward ? -1 : 1;
 
+	// the destination row's bytes the pixels lie in, and the ends' bits
 	unsigned char* dstBits = (unsigned char*) GetPixelMapBits(dst);
 	long dstRowBytes = dst->rowBytes;
 	long dstBit0 = (clipped->left - dst->bounds.left) * depth;
+	long b0 = dstBit0 >> 3;
+	long endBit = dstBit0 + width * depth;
+	long b1 = (endBit - 1) >> 3;
+	long count = b1 - b0 + 1;
+	unsigned char leftMask = (unsigned char) (0xff >> (dstBit0 & 7));
+	unsigned char rightMask = (endBit & 7) ? (unsigned char) (0xff << (8 - (endBit & 7))) : 0xff;
+	const unsigned char* nonWhite = (op == 1 && depth > 1) ? NonWhiteTable(depth) : nil;
+	// (count <= width: a pixel never straddles a byte)
+	unsigned char* sourceBytes = (unsigned char*) row;
+	unsigned char* maskBytes = sourceBytes + count;
+
 	const unsigned char* srcBits = nil;
-	long srcRowBytes = 0;
-	long srcBit0 = 0;
+	long srcRowBytes = 0, srcBit0 = 0, srcStart = 0, srcFirst = 0, srcLast = 0;
+	Boolean direct = false;
 	if (!usePattern)
 	{
 		srcBits = (const unsigned char*) GetPixelMapBits(src);
 		srcRowBytes = src->rowBytes;
 		srcBit0 = (clipped->left + dh - src->bounds.left) * srcDepth;
+		// (the source's bit under the destination byte b0's first bit, and
+		// the source bytes the pixels lie in)
+		srcStart = srcBit0 - (dstBit0 & 7);
+		srcFirst = FloorDiv8(srcBit0);
+		srcLast = FloorDiv8(srcBit0 + width * srcDepth - 1);
+		// a source of the same depth already in line is read where it is -
+		// except within one row of one map, which is read whole first
+		direct = srcDepth == depth && !invert && srcBit0 >= 0 && (srcStart & 7) == 0 && !(sameBits && dv == 0);
 	}
 	const PixelMap* pm = usePattern ? *pattern : nil;
 	const unsigned char* patBits = nil;
 	long patWidth = 0, patHeight = 0, patDepth = 0, patRowBytes = 0;
+	long period = 0, phaseBytes = 0, phaseX = 0;
 	Point align = { 0, 0 };
 	if (usePattern)
 	{
@@ -296,131 +463,61 @@ BlitPixelsFast(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* ds
 		patDepth = PixelMapDepth(pm);
 		patRowBytes = pm->rowBytes;
 		align = GetCurrentPort()->patAlign;
-	}
-	// A copy between maps of one depth whose pixels lie at the same place
-	// in their bytes moves the bytes of each visible run (the ends pixel by
-	// pixel), without the row buffer - except within one row of one map,
-	// where the row must be read whole before it is written.
-	Boolean alignedCopy = !usePattern && srcDepth == depth && op == 0 && !invert && srcBit0 >= 0
-					   && (srcBit0 & 7) == (dstBit0 & 7) && !(sameBits && dv == 0);
-	// one byte per pixel of the row: whether the masks let it through
-	unsigned char visibleRow[1024];
-	unsigned char* visible = (width <= (long) sizeof(visibleRow)) ? visibleRow : (unsigned char*) QDNewTempPtr(width);
-	if (visible == nil)
-		return;
-
-	for (; y != yEnd; y += yStep)
-	{
-		if (alignedCopy)
+		if (patWidth <= kPatternValuesMax)
 		{
-			const unsigned char* srow = srcBits + (y + dv - src->bounds.top) * srcRowBytes;
-			unsigned char* drow = dstBits + (y - dst->bounds.top) * dstRowBytes;
-			if (maskCount > 0)
-			{
-				for (long m = 0; m < maskCount; m++)
-					SeekRgn(masks[m], y);
-				VisibleRow(masks, maskCount, clipped->left, width, visible);
-			}
-			long i = 0;
-			while (i < width)
-			{
-				// the next run of visible pixels
-				if (maskCount > 0)
-				{
-					while (i < width && !visible[i])
-						i++;
-					if (i == width)
-						break;
-				}
-				long end = i;
-				if (maskCount > 0)
-					while (end < width && visible[end])
-						end++;
-				else
-					end = width;
-				long dbit = dstBit0 + i * depth;
-				long sbit = srcBit0 + i * depth;
-				long k = i;
-				for (; k < end && (dbit & 7) != 0; k++, dbit += depth, sbit += depth)
-					SetRowPixel(drow, dbit, depth, RowPixel(srow, sbit, depth));
-				long bytes = ((end - k) * depth) >> 3;
-				if (bytes > 0)
-				{
-					memmove(drow + (dbit >> 3), srow + (sbit >> 3), bytes);
-					k += (bytes << 3) / depth;
-					dbit += bytes << 3;
-					sbit += bytes << 3;
-				}
-				for (; k < end; k++, dbit += depth, sbit += depth)
-					SetRowPixel(drow, dbit, depth, RowPixel(srow, sbit, depth));
-				i = end;
-			}
-			continue;
-		}
-
-		// the masks, ANDed
-		Boolean allVisible = true;
-		if (maskCount > 0)
-		{
-			for (long m = 0; m < maskCount; m++)
-				SeekRgn(masks[m], y);
-			allVisible = VisibleRow(masks, maskCount, clipped->left, width, visible);
-		}
-
-		// A pattern row every pixel of which is visible under a bitwise
-		// operation: the row's bytes made once, packed at the destination's
-		// depth from the byte the first pixel is in, and repeated along it.
-		if (usePattern && allVisible && depth <= 8 && patWidth <= kPatternValuesMax && (op != 1 || depth == 1))
-		{
-			const unsigned char* prow = patBits + ((((y + align.v) % patHeight) + patHeight) % patHeight) * patRowBytes;
-			long values[kPatternValuesMax];
-			for (long k = 0; k < patWidth; k++)
-			{
-				long value = RowPixel(prow, k * patDepth, patDepth);
-				if (patDepth != depth)
-					value = value ? maxValue : 0;
-				values[k] = invert ? value ^ maxValue : value;
-			}
-			long b0 = dstBit0 >> 3;
-			long endBit = dstBit0 + width * depth;
-			long b1 = (endBit - 1) >> 3;
-			long period = (patWidth * depth) / GreatestCommonDivisor(patWidth * depth, 8);
-			long phaseBytes = period;
+			period = (patWidth * depth) / GreatestCommonDivisor(patWidth * depth, 8);
+			phaseBytes = period;
 			while (phaseBytes < kPatternPhaseMin)
 				phaseBytes += period;
-			if (phaseBytes > b1 - b0 + 1)
-				phaseBytes = b1 - b0 + 1;
-			unsigned char phase[kPatternPhaseMax];
+			if (phaseBytes > count)
+				phaseBytes = count;
 			// (the pattern's column for the first pixel of byte b0)
-			long firstPixel = (b0 << 3) / depth;
-			long px = (((dst->bounds.left + firstPixel + align.h) % patWidth) + patWidth) % patWidth;
-			long perByte = 8 / depth;
-			for (long j = 0; j < phaseBytes; j++)
-			{
-				unsigned long b = 0;
-				for (long k = 0; k < perByte; k++)
-				{
-					b = (b << depth) | (unsigned long) values[px];
-					if (++px == patWidth)
-						px = 0;
-				}
-				phase[j] = (unsigned char) b;
-			}
-			unsigned char leftMask = (unsigned char) (0xff >> (dstBit0 & 7));
-			unsigned char rightMask = (endBit & 7) ? (unsigned char) (0xff << (8 - (endBit & 7))) : 0xff;
-			unsigned char* drow = dstBits + (y - dst->bounds.top) * dstRowBytes;
-			CombinePackedRow(drow, b0, b1, leftMask, rightMask, phase, phaseBytes, op);
-			continue;
+			phaseX = (((dst->bounds.left + (b0 * 8) / depth + align.h) % patWidth) + patWidth) % patWidth;
 		}
+	}
 
-		// the source row (read in full first: it may overlap the destination row)
+	Boolean maskKnown = false, maskAll = true, maskNone = false;
+	for (; y != yEnd; y += yStep)
+	{
+		// the masks, ANDed: none when every pixel is visible
+		// (made again only when a mask has changed: a region's rows are
+		// mostly the same as the row above)
+		if (maskCount > 0)
+		{
+			Boolean changed = !maskKnown;
+			for (long m = 0; m < maskCount; m++)
+				if (SeekRgn(masks[m], y))
+					changed = true;
+			if (changed)
+			{
+				MaskRow(masks, maskCount, dst, depth, b0, count, clipped->left, clipped->right, maskBytes);
+				maskAll = true;
+				maskNone = true;
+				for (long j = 0; j < count; j++)
+				{
+					unsigned char edges = (unsigned char) ((j == 0 ? leftMask : 0xff) & (j == count - 1 ? rightMask : 0xff));
+					unsigned char shown = maskBytes[j] & edges;
+					if (shown != edges)
+						maskAll = false;
+					if (shown != 0)
+						maskNone = false;
+				}
+				maskKnown = true;
+			}
+			if (maskNone)
+				continue;
+		}
+		const unsigned char* vis = (maskCount > 0 && !maskAll) ? maskBytes : nil;
+		unsigned char* drow = dstBits + (y - dst->bounds.top) * dstRowBytes;
+
+		// the source's bytes
+		const unsigned char* s = sourceBytes;
 		if (usePattern)
 		{
 			const unsigned char* prow = patBits + ((((y + align.v) % patHeight) + patHeight) % patHeight) * patRowBytes;
-			long px = (((clipped->left + align.h) % patWidth) + patWidth) % patWidth;
 			if (patWidth <= kPatternValuesMax)
 			{
-				// (the pattern's row worked out once, then repeated)
+				// the pattern's row made once, packed from byte b0, and repeated
 				long values[kPatternValuesMax];
 				for (long k = 0; k < patWidth; k++)
 				{
@@ -429,80 +526,88 @@ BlitPixelsFast(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* ds
 						value = value ? maxValue : 0;
 					values[k] = invert ? value ^ maxValue : value;
 				}
-				for (long i = 0; i < width; i++)
+				// (one period a pixel at a time, then doubled)
+				unsigned char phase[kPatternPhaseMax];
+				long px = phaseX;
+				long perByte = 8 / depth;
+				long made = (period < phaseBytes) ? period : phaseBytes;
+				for (long j = 0; j < made; j++)
 				{
-					row[i] = values[px];
-					if (++px == patWidth)
-						px = 0;
+					unsigned long b = 0;
+					for (long k = 0; k < perByte; k++)
+					{
+						b = (b << depth) | (unsigned long) values[px];
+						if (++px == patWidth)
+							px = 0;
+					}
+					phase[j] = (unsigned char) b;
 				}
+				for (; made < phaseBytes; made += made)
+					memcpy(phase + made, phase, (phaseBytes - made < made) ? phaseBytes - made : made);
+				if (vis == nil && nonWhite == nil)
+				{
+					CombinePackedRow(drow, b0, b1, leftMask, rightMask, phase, phaseBytes, op);
+					continue;
+				}
+				for (long j = 0; j < count; j += phaseBytes)
+					memcpy(sourceBytes + j, phase, (count - j < phaseBytes) ? count - j : phaseBytes);
 			}
 			else
-				for (long i = 0; i < width; i++)
+			{
+				// a wide pattern a pixel at a time
+				memset(sourceBytes, 0, count);
+				long px = (((clipped->left + align.h) % patWidth) + patWidth) % patWidth;
+				long bit = dstBit0 & 7;
+				for (long i = 0; i < width; i++, bit += depth)
 				{
 					long value = RowPixel(prow, px * patDepth, patDepth);
 					if (patDepth != depth)
 						value = value ? maxValue : 0;
-					row[i] = invert ? value ^ maxValue : value;
+					SetRowPixel(sourceBytes, bit, depth, invert ? value ^ maxValue : value);
 					if (++px == patWidth)
 						px = 0;
 				}
+			}
 		}
 		else
 		{
 			const unsigned char* srow = srcBits + (y + dv - src->bounds.top) * srcRowBytes;
-			long bit = srcBit0;
-			if (srcDepth == depth)
+			if (direct)
+				s = srow + (srcStart >> 3);
+			else if (srcDepth == depth)
 			{
-				for (long i = 0; i < width; i++, bit += srcDepth)
+				// shifted into line a byte at a time (only the bytes the
+				// pixels lie in are read)
+				long k = FloorDiv8(srcStart);
+				long shift = srcStart - k * 8;
+				for (long j = 0; j < count; j++, k++)
 				{
-					long value = RowPixel(srow, bit, srcDepth);
-					row[i] = invert ? value ^ maxValue : value;
+					unsigned long first = (k >= srcFirst && k <= srcLast) ? srow[k] : 0;
+					unsigned long b = first;
+					if (shift != 0)
+					{
+						unsigned long next = (k + 1 >= srcFirst && k + 1 <= srcLast) ? srow[k + 1] : 0;
+						b = (first << shift) | (next >> (8 - shift));
+					}
+					sourceBytes[j] = (unsigned char) (invert ? ~b : b);
 				}
 			}
 			else
 			{
-				for (long i = 0; i < width; i++, bit += srcDepth)
+				// another depth a pixel at a time
+				memset(sourceBytes, 0, count);
+				long sbit = srcBit0;
+				long bit = dstBit0 & 7;
+				for (long i = 0; i < width; i++, sbit += srcDepth, bit += depth)
 				{
-					long value = ConvertDepth(RowPixel(srow, bit, srcDepth), srcDepth, depth);
-					row[i] = invert ? value ^ maxValue : value;
+					long value = ConvertDepth(RowPixel(srow, sbit, srcDepth), srcDepth, depth);
+					SetRowPixel(sourceBytes, bit, depth, invert ? value ^ maxValue : value);
 				}
 			}
 		}
 
-		// the destination row
-		unsigned char* drow = dstBits + (y - dst->bounds.top) * dstRowBytes;
-		long bit = dstBit0;
-		if (op == 0 && allVisible && depth < 8)
-		{
-			// copy, every pixel: whole bytes packed, the partial ones at the ends merged
-			long perByte = 8 / depth;
-			long i = 0;
-			for (; i < width && (bit & 7) != 0; i++, bit += depth)
-				SetRowPixel(drow, bit, depth, row[i]);
-			for (; i + perByte <= width; i += perByte, bit += 8)
-			{
-				unsigned long b = 0;
-				for (long k = 0; k < perByte; k++)
-					b = (b << depth) | (row[i + k] & maxValue);
-				drow[bit >> 3] = (unsigned char) b;
-			}
-			for (; i < width; i++, bit += depth)
-				SetRowPixel(drow, bit, depth, row[i]);
-		}
-		else if (op == 0 && allVisible)
-		{
-			for (long i = 0; i < width; i++, bit += depth)
-				SetRowPixel(drow, bit, depth, row[i]);
-		}
-		else
-		{
-			for (long i = 0; i < width; i++, bit += depth)
-				if (allVisible || visible[i])
-					SetRowPixel(drow, bit, depth, Transfer(op, RowPixel(drow, bit, depth), row[i], maxValue));
-		}
+		CombineRow(drow + b0, s, vis, count, leftMask, rightMask, op, nonWhite);
 	}
-	if (visible != visibleRow)
-		QDDisposeTempPtr(visible);
 }
 
 
@@ -541,6 +646,13 @@ BlitPixels(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRec
 }
 
 
+// the widest row the blitter's buffer is made for on the stack: a wider one
+// comes from the heap (DEVIATION, performance: the buffer is the host's -
+// the ROM's word-at-a-time blitter needs none - and a heap block for every
+// blit, some thousands a screen, was a good part of the time a redraw took)
+enum { kStackRowLongs = 1024 };
+
+
 // ROM 0x002ac9c8 BitBlt__FP8PixelMapT1P4RectT3lPP8PixelMap
 // The transfer without region clipping: dstRect is drawn as it is (the
 // caller has clipped it) from the corresponding pixels of srcRect.
@@ -550,9 +662,11 @@ BitBlt(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, l
 	long width = dstRect->right - dstRect->left;
 	if (width <= 0)
 		return;
-	long* row = (long*) QDNewTempPtr(width * sizeof(long));
+	long rowSpace[kStackRowLongs];
+	long* row = (width <= kStackRowLongs) ? rowSpace : (long*) QDNewTempPtr(width * sizeof(long));
 	BlitPixels(src, dst, srcRect, dstRect, dstRect, mode, pattern, nil, 0, row);
-	QDDisposeTempPtr(row);
+	if (row != rowSpace)
+		QDDisposeTempPtr(row);
 }
 
 
@@ -604,7 +718,8 @@ RgnBlt(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, l
 	long count = 0;
 	// every buffer first: the states point into the regions' blocks, which
 	// an allocation may move (the heap compacts handles)
-	long* row = (long*) QDNewTempPtr((clipped.right - clipped.left) * sizeof(long));
+	long rowSpace[kStackRowLongs];
+	long* row = (clipped.right - clipped.left <= kStackRowLongs) ? rowSpace : (long*) QDNewTempPtr((clipped.right - clipped.left) * sizeof(long));
 	for (long i = 0; i < 3; i++)
 		if (which & (2 << i))
 			scans[i] = (char*) QDNewTempPtr(words * sizeof(ULong32));
@@ -619,7 +734,8 @@ RgnBlt(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, l
 	for (long i = 0; i < 3; i++)
 		if (scans[i] != nil)
 			QDDisposeTempPtr(scans[i]);
-	QDDisposeTempPtr(row);
+	if (row != rowSpace)
+		QDDisposeTempPtr(row);
 	QDStopDrawing(dst, &clipped);
 }
 

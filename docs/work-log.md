@@ -9,6 +9,31 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-03: drawing speed, round two (branch perf/drawing)
+
+Measured first with a new benchmark of nothing but whole-screen redraws
+(`demo/redrawbench.ns`) and `profile.py`: the blitter was 43% of a
+redraw, and counting its calls by kind showed some 4,300 blits a redraw,
+half of them `DrawLine` stamping a one-pixel pen through `RgnBlt` at every
+pixel, and 88% of the pixels a few large pattern fills done a pixel at a
+time.  `DrawLine` now draws a run along a row (column) as one rectangle
+(the same pixels for every mode but xor with a pen bigger than a pixel,
+which still stamps); `BlitPixelsFast` works a byte at a time - the
+source packed at the destination's phase, the masks read from the scan
+words and kept while `SeekRgn` says they are unchanged, the gray "or"
+through a table of each byte's non-white pixels; the row buffer is on the
+stack; and natives are found by hash rather than searched.  2000
+redraws: Notepad 1219 -> ~240 ms, Extras 1344 -> ~395, Dates 1891 ->
+~330 (`docs/qd/README.md`, "Drawing speed").  `qd.Blitter` now draws
+straight lines, a pattern wider than 64 pixels, and `RgnBlt` between
+depths with the port at a third, which the old fast path's paths had
+never been checked by: an error planted in each of eleven paths shows in
+20 to 233 of 240 scenes.  The blitter was 43% of a redraw's profile and
+is 12%.  Full ctest on RelWithDebInfo: 414 of 416; found on the way,
+neither from this work: `host.NewtonAlignPen.restart` fails on main's own
+sources in a RelWithDebInfo build, and `host.NewtonATASupport.pull`
+failed once under `-j 6` load (passes alone).
+
 ## 2026-10-03: release builds on GitHub; rmkit dropped
 
 `.github/workflows/release.yml` builds Windows (zig), Linux x86-64 (clang)

@@ -385,6 +385,8 @@ the store, soup, cursor and entry prototype frames (`storePrototype`'s
 that symbol in either table and `CallCFuncPtr`
 resolves a funcPtr below `kROMCodeLimit` (0x02000000) through the
 bindings - an unbound one throws `kNSErrNativeNotReconstructed` (-48899).
+The bindings are found through a hash table on the funcPtr (host; they
+were searched one by one, which was 4% of a screen redraw's time).
 A funcPtr above the limit is a host function pointer (`MakeCFunction`).
 `InitInterpreter` (which `InitObjects` calls, as in the ROM) binds the
 reconstructed built-ins first (`RegisterBuiltinNatives`: arithmetic,

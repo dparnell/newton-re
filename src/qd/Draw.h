@@ -23,7 +23,7 @@
 
 	The ROM's blitter (RgnBlt 0x00343228, BitBlt 0x002ac9c8 and the BB*
 	routines) works a word at a time in the map's depth; the host works a
-	row at a time with the same results (DEVIATION, for speed: the code,
+	byte at a time with the same results (DEVIATION, for speed: the code,
 	not the pixels - SetQDSlowBlitter below).  Lines, ovals and the rest
 	are Shapes.h and Polygons.h, pictures PicPlay.h, text Text.h,
 	StretchBits Stretch.cpp.  A blit onto the screen is bracketed by

@@ -4,14 +4,20 @@
 // same pixels bit for bit.  Scenes of random drawing, made from a seed, are
 // drawn twice over the same starting pixels, once each way, and every byte
 // of the maps compared: rectangles, regions, ovals, round rectangles,
-// arcs, polygons and lines in every verb and all sixteen pen modes, with
-// the standard patterns and one of our own, pens of several sizes, the
-// pattern alignment moved; CopyBits in the eight source modes between maps
-// of depths 1, 2, 4 and 8 (a gray source onto a one-bit map, and back),
-// with and without a mask region, and within one map in both directions
-// (the scroll's overlap); ScrollRect; all clipped by a complex clip region
+// arcs, polygons and lines (straight across and down among them: DrawLine
+// draws a run as one rectangle, except under the slow blitter) in every
+// verb and all sixteen pen modes, with the standard patterns, one of our
+// own and one wider than the blitter makes a row of at once, pens of
+// several sizes, the pattern alignment moved; CopyBits in the eight source
+// modes between maps of depths 1, 2, 4 and 8 (a gray source onto a one-bit
+// map, and back), with and without a mask region, and within one map in
+// both directions (the scroll's overlap); RgnBlt itself between maps of
+// different depths with the port's bits of a third (its masks at a depth
+// not the destination's); ScrollRect; all clipped by a complex clip region
 // and a visible region, the port's origin moved so that the maps' edges
-// fall anywhere in a byte.  Runs over a standalone kernel heap.
+// fall anywhere in a byte.  Every path of BlitPixelsFast is reached: an
+// error planted in any one of them shows in tens of scenes or more.  Runs
+// over a standalone kernel heap.
 #include "Draw.h"
 #include "Shapes.h"
 #include "Polygons.h"
@@ -80,12 +86,34 @@ RandomInside(Rect* r, const Rect* in)
 }
 
 static PatternHandle gOwnPattern;
+static PatternHandle gWidePattern;
 
 static PatternHandle
 RandomPattern()
 {
-	long k = Rnd(6);
-	return k == 5 ? gOwnPattern : GetStdPattern(k);
+	long k = Rnd(7);
+	return k == 6 ? gWidePattern : k == 5 ? gOwnPattern : GetStdPattern(k);
+}
+
+// A pattern wider than the blitter makes a row of at once (72 x 5, two
+// bits a pixel, its rows not a power of two)
+static PatternHandle
+MakeWidePattern(void)
+{
+	const long width = 72, height = 5, depth = 2, rowBytes = width * depth / 8;
+	PatternHandle pattern = (PatternHandle) NewHandle(kPatternPixelsOffset + rowBytes * height);
+	PixelMap* pm = *pattern;
+	pm->baseAddr = (Ptr) (intptr_t) kPatternPixelsOffset;
+	pm->rowBytes = rowBytes;
+	SetRect(&pm->bounds, 0, 0, width, height);
+	pm->pixMapFlags = kPixMapOffset | depth;
+	pm->deviceRes.v = kDefaultDPI;
+	pm->deviceRes.h = kDefaultDPI;
+	pm->grayTable = nil;
+	unsigned char* bits = (unsigned char*) pm + kPatternPixelsOffset;
+	for (long i = 0; i < rowBytes * height; i++)
+		bits[i] = (unsigned char) (i * 37 + (i >> 3) * 11);
+	return pattern;
 }
 
 // A region of a few rectangles, unioned, with a hole
@@ -167,7 +195,7 @@ DrawScene(unsigned long seed, Map* dst, Map* sources, long sourceCount)
 		port.patAlign.v = (short) Rnd(16);
 		Rect r;
 		RandomRect(&r, &bounds);
-		long what = Rnd(15);
+		long what = Rnd(16);
 		if (getenv("TRACE_BLITTER"))
 			fprintf(stderr, "step %ld: %ld\n", s, what);
 		// (TEST_BLITTER_ONLY=n: only that kind of step drawn - finding which one misbehaves)
@@ -260,6 +288,24 @@ DrawScene(unsigned long seed, Map* dst, Map* sources, long sourceCount)
 				RandomInside(&sr, &from->pm.bounds);
 				RandomRect(&dr, &bounds);
 				CopyBits(&from->pm, &dst->pm, &sr, &dr, Rnd(8), nil);
+			}
+			break;
+		case 15:
+			{
+				// RgnBlt itself from a map of any depth, in any of the sixteen
+				// modes, the port's bits a map of any depth meanwhile - the
+				// regions' masks come at the port's depth, not the destination's
+				Map* from = &sources[Rnd(sourceCount)];
+				Map* portMap = &sources[Rnd(sourceCount)];
+				Rect sr, dr;
+				RandomInside(&sr, &from->pm.bounds);
+				dr = sr;
+				OffsetRect(&dr, bounds.left - from->pm.bounds.left + Rnd(21) - 10, bounds.top - from->pm.bounds.top + Rnd(21) - 10);
+				RgnHandle clip = RandomRegion(&bounds);
+				SetPortBits(&portMap->pm);
+				RgnBlt(&from->pm, &dst->pm, &sr, &dr, Rnd(16), port.fgPat, port.visRgn, port.clipRgn, clip);
+				SetPortBits(&dst->pm);
+				DisposeRgn(clip);
 			}
 			break;
 		default:
@@ -374,6 +420,7 @@ main(int argc, char** argv)
 	InitHostStandaloneHeap();
 	InitGraf();
 	gOwnPattern = MakeSimplePattern(0x81, 0x42, 0x24, 0x18, 0x18, 0x24, 0x42, 0x81);
+	gWidePattern = MakeWidePattern();
 	TestScenes(argc > 1 ? atol(argv[1]) : 60);
 	if (failures == 0)
 		printf("test_Blitter: all passed\n");

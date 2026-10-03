@@ -1,0 +1,43 @@
+// A drawing benchmark with nothing but drawing in it: after the Setup walk
+// (common.ns) the whole screen is redrawn (GetRoot():Dirty() and
+// RefreshViews()) `rbRounds` (2000) times over each of three screens - the
+// Notepad, the Extras drawer over it, and Dates - and the processor time
+// of the newt task's own thread (HostThreadCPUTime, milliseconds) printed
+// for each.  drawbench.ns times what a user does (opening and closing
+// applications, which the animations' pacing dominates); this one keeps
+// the processor busy drawing, so that tools/host/profile.py <pid>, run
+// meanwhile (with rbRounds raised), samples little else.  Where the time
+// went, and what came of it: docs/qd/README.md, "Drawing speed".
+//
+//   build/rel/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --erase --store tmp/redrawbench.store --headless 600 --script src/host/demo/redrawbench.ns
+//
+// (The Setup walk taps the 320x480 screen's places, so other sizes stop
+// at Setup.)  NEWTON_QD_SLOW=1 draws through the pixel-at-a-time blitter.
+
+HostInclude("common.ns");
+
+rbName := [2, 0, 45, 34, 14, 37];
+rbRounds := 2000;
+
+rbRun := func(label, before, after, andThen) begin
+	call before with ();
+	RefreshViews();
+	local startTask := HostThreadCPUTime();
+	local start := Ticks();
+	for r := 1 to rbRounds do begin GetRoot():Dirty(); RefreshViews(); end;
+	local task := HostThreadCPUTime() - startTask;
+	Print("redrawbench: " & label & " " & NumberStr(task) & " ms of the task's for " & NumberStr(rbRounds) & ", " & NumberStr(Ticks() - start) & " ticks");
+	call after with ();
+	RefreshViews();
+	AddDelayedCall(andThen, nil, 500);
+end;
+
+call walkSetup with (rbName, func() AddDelayedCall(func()
+	call rbRun with ('notepad, func() nil, func() nil, func()
+	call rbRun with ('extras, func() GetRoot().extrasDrawer:Open(), func() GetRoot().extrasDrawer:Close(), func()
+	call rbRun with ('dates, func() GetRoot().calendar:Open(), func() GetRoot().calendar:Close(), func()
+	begin
+		Print("redrawbench: done");
+		HostQuit();
+	end))), nil, 2000));

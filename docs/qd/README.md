@@ -230,24 +230,48 @@ The profile at the start: `RgnBlt` 77% inclusive, and `GetPixel`,
 blitter was fast, the host display driver's `Blit` (every animation frame
 reaches the display) came next.
 
-- **The blitter's fast path, `BlitPixelsFast`:**
-  - The maps' bits, depths and origins, and the pattern and its
-    alignment, are looked up once a call, not once a pixel.
-  - A pattern's row is worked out once a row.
-  - The masks are ANDed into one visibility row (`VisibleRow`).
-  - A copy between maps of one depth whose pixels line up in their bytes
-    moves each visible run's bytes. This is not done within one row of
-    one map, which must be read whole before it is written.
-  - A copy row every pixel of which is visible is packed a byte at a time.
-  - Everything else goes pixel by pixel through the same `Transfer`.
+- **The blitter's fast path, `BlitPixelsFast`** (a byte at a time since
+  2026-10-03; a row at a time before). Each row is three rows of bytes laid
+  over the destination's:
+  - the source, packed at the destination's depth and bit phase: a
+    pattern's row made once a row (one period pixel by pixel, then
+    doubled) and repeated; a source of the same depth shifted into place a
+    byte at a time, or read where it is when it already lines up (not
+    within one row of one map, which is read whole first); another depth
+    converted pixel by pixel;
+  - the masks' bits for the visible pixels, read a byte at a time from the
+    regions' scan words (a mask at another depth than the destination's
+    pixel by pixel), made again only when `SeekRgn` says a mask changed,
+    and dropped when every pixel shows; a row none of which shows is
+    skipped;
+  - the ends' bits.
+  The operation is then done a byte at a time: copy, xor, bic and the
+  one-bit "or" are bitwise; the gray "or" (a non-white source pixel
+  replaces the destination's) takes each byte's non-white pixels from a
+  table. A fully visible pattern row under a bitwise mode is written
+  straight from the pattern's bytes (`CombinePackedRow`).
+- **The row buffer** (`BitBlt`, `RgnBlt`) is on the stack up to 1024
+  pixels wide; it came from the heap for every blit, some thousands a
+  redraw. It is the host's: the ROM's word-at-a-time blitter needs none.
+- **`DrawLine`** stamped the pen through `RgnBlt` at every pixel (the
+  Notepad's ruled lines were about 4,200 `RgnBlt`s a redraw). A run along
+  a row (a column, for a steep line) is now drawn as the one rectangle it
+  covers - the same pixels wherever drawing a pixel twice is drawing it
+  once, which is every mode but xor, and xor with a one-pixel pen, whose
+  stamps never overlap. Xor with a bigger pen, and the slow blitter, stamp
+  each pen. The ROM's own `DrawLine` draws a row at a time.
 - **The oracle:** the old blitter is kept as `BlitPixelsSlow`
   (`NEWTON_QD_SLOW=1`, or `SetQDSlowBlitter`). `qd/tests/test_Blitter.cpp`
   (ctest `qd.Blitter`) draws 240 random scenes both ways and compares
-  every byte. The scenes cover every verb and all sixteen pen modes,
-  patterns and alignments, pens of several sizes, and `CopyBits` at depths
-  1/2/4/8 with masks, overlapping and stretched. They also cover
+  every byte (`test_Blitter N` draws N a depth). The scenes cover every
+  verb and all sixteen pen modes, patterns (one wider than 64 pixels) and
+  alignments, pens of several sizes, lines straight and slanting,
+  `CopyBits` at depths 1/2/4/8 with masks, overlapping and stretched, and
+  `RgnBlt` itself between depths with the port at a third. They also cover
   `ScrollRect`, complex clip and visible regions, and maps at odd origins.
-  A one-pixel error planted in the fast path shows up in 65 of the scenes.
+  An error planted in any one path of the fast blitter (eleven tried: the
+  masks either way, each kind of source, each operation's run, the mask
+  kept too long) shows in 20 to 233 of the 240 scenes.
   A copy's source must lie within its map: QuickDraw reads the source
   rectangle unclipped, so outside it reads whatever memory is there.
 - **The display:** `THostScreenDriver::Blit` turns a byte of pixels into
@@ -273,6 +297,35 @@ interactive use.
 A full-screen Notepad redraw took 18.9 ms of processor and now takes
 about 6 ms. What remains of the wall time is mostly the animations'
 pacing, which is the ROM's.
+
+**The second round (2026-10-03).** `src/host/demo/redrawbench.ns`
+redraws the whole screen 2000 times over the Notepad, the Extras drawer
+and Dates, so that a profile of it is nothing but drawing. On the
+optimised build at 320 x 480 the blitter was 43% of a redraw's time, and
+counting its calls by kind showed why: about 4,300 blits a redraw, half
+of them `DrawLine`'s one-pixel stamps (the Notepad's ruled lines), and 88%
+of the pixels a few large pattern fills worked a pixel at a time. In
+order, each step's effect (the newt task's processor time for 2000
+redraws, ms):
+
+| | Notepad | Extras | Dates |
+|---|---|---|---|
+| before | 1219 | 1344 | 1891 |
+| pattern rows packed once and repeated | ~900 | ~950 | ~1450 |
+| `DrawLine` a rectangle a run | 375 | 562 | 469 |
+| the blitter a byte at a time, the row buffer on the stack | ~335 | ~515 | ~470 |
+| a pattern's period doubled, the masks kept while unchanged | ~275 | 485 | ~375 |
+| natives found by hash (`frames/NativeFunctions.cpp`) | ~240 | ~395 | ~330 |
+
+A whole-screen redraw of the Notepad is now about 0.12 ms of processor.
+The blitter's cycles per pixel by kind (timed with a cycle counter around
+each call, Notepad): a pattern fill 0.76 after the first step, 0.35 at
+the end; the gray "or" of text onto the screen 11.3 to 2.2; a pattern
+fill a region clips 9.9 to 6.9 (these average 400 pixels, so a call's
+setup is most of it). The blitter, 43% of a redraw's samples at the start,
+is 12% at the end, the display's conversion to grays
+(`THostScreenDriver::Blit`) 6%; the rest is the view system and the
+interpreter.
 
 ### StretchBits (`src/qd/Stretch.cpp`)
 
