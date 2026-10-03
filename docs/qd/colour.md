@@ -119,3 +119,16 @@ needs nothing more.  ctest `host.NewtonColour` draws a 32-bit bitmap (red
 and blue halves, `MakeBitmap(w, h, {depth: 32})` filled by `StuffByte`), a
 16-bit one (green) and a four-bit `'colordata` bitmap whose table makes
 its pixels magenta.
+
+### Period software in colour: NetHopper
+
+NetHopper 3.2 (1997, `fixtures/packages/apps/NetHopper3.2`) uses `PackRGB`
+and colour tables: its GIF decoder (native ARM code, run by `src/armcpu`)
+makes each picture a `'colordata` bitmap carrying the GIF's own colour
+table, which a MessagePad draws in grays.  On the colour screen the same
+bitmap is drawn in colour, untouched: ctest `host.NewtonNetHopperColour`
+browses `www/nethopper-colour.html`, whose picture `www/colour.gif` is four
+bands (red, green, blue, yellow) in a black frame
+(`tools/imaging/gifwrite.py colour.gif`), and finds each band's colour on
+the screen.  Newt's Cape, its helpers and NetHopper's JPEG viewer use
+`PackRGB` and colour tables too (`grep -a` of the packages); not yet tried.

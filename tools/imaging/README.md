@@ -8,7 +8,8 @@ printer's pages (PNG, `print/host/HostPrinter.h`).  Python 3.9+.
 | Tool | Purpose |
 |---|---|
 | `png.py` | The PNG reader and writer the others share (`write_gray(path, w, h, rows, depth)`, `read_gray`). `test_png.py` checks it. |
-| `pgm2png.py` | A PGM or PBM made a PNG so it can be looked at anywhere: `python tools/imaging/pgm2png.py shot.pgm [shot.png]`. |
+| `pgm2png.py` | A PGM, PBM or PPM (the colour screen's snapshots, `docs/qd/colour.md`) made a PNG so it can be looked at anywhere: `python tools/imaging/pgm2png.py shot.pgm [shot.png]`. |
+| `gifwrite.py` | A GIF (GIF87a) written in pure Python - `write_gif(path, w, h, palette, pixels)`, the plainest LZW (literals and clear codes); as a program it writes the colour test picture (four bands in a black frame) that `src/host/demo/www/colour.gif` is: `python tools/imaging/gifwrite.py colour.gif`. |
 | `pagecheck.py` | Checks the host printer's pages: how many, their size, that none is blank, that given rectangles are inked, how many lines of text (`--lines`). Used by ctests `host.NewtonHostPrinter` and `host.NewtonPrintLong`. |
 | `pgmdiff.py` | Compares two directories of screen snapshots pixel by pixel. |
 

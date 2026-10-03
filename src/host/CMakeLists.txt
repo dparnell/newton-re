@@ -1862,6 +1862,21 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/rex/inetenbl.pkg)
         set_tests_properties(host.NewtonNetHopper PROPERTIES TIMEOUT 300
                              PASS_REGULAR_EXPRESSION "nethopper: the help page drawn: ok.*nethopper: the URL typed: ok.*nethopper: loaded Host Test Page.*nethopper: the page's heading drawn: ok.*nethopper: the image decoded and drawn: ok.*nethopper: done, 0 failed"
                              FAIL_REGULAR_EXPRESSION "waited in vain|is not answered|stopped \\(|FAILED")
+        # the same on the colour screen (--colour, docs/qd/colour.md) with a
+        # colour GIF (www/colour.gif): NetHopper's decoder keeps the GIF's
+        # colour table, and the image's four colours are checked on the screen
+        add_test(NAME host.NewtonNetHopperColour
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/httpserve.py
+                         --dir ${CMAKE_CURRENT_SOURCE_DIR}/demo/www --port 0 --
+                         $<TARGET_FILE:newton> --colour --display 320x480 --erase
+                         --store ${CMAKE_CURRENT_BINARY_DIR}/nethopper-colour.store --headless 240
+                         --package ${NETHOPPER_DIR}/nethopper.pkg
+                         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/nethopper.ns
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+        set_tests_properties(host.NewtonNetHopperColour PROPERTIES TIMEOUT 300
+                             ENVIRONMENT "NETHOPPER_COLOUR=1"
+                             PASS_REGULAR_EXPRESSION "nethopper: loaded Host Colour Page.*the image's red in colour: ok.*the image's green in colour: ok.*the image's blue in colour: ok.*the image's yellow in colour: ok.*nethopper: done, 0 failed"
+                             FAIL_REGULAR_EXPRESSION "waited in vain|is not answered|stopped \\(|FAILED")
         # the NetHopper Scheduler used for what it is for (apps-netsched.ns):
         # a URL added in its URL Selector, Load Now, the page fetched into
         # NetHopper's cache

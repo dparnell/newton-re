@@ -20,9 +20,20 @@
 // bar, made with PIL: Image.new('P', (64, 32)), palette white/black,
 // rectangle [0,0,63,31] outlined and [8,8,55,23] filled, saved
 // non-interlaced.)
+//
+// With NETHOPPER_COLOUR=1 in the environment (ctest host.NewtonNetHopperColour,
+// newton --colour: docs/qd/colour.md) the page is nethopper-colour.html,
+// whose picture is www/colour.gif - four bands, red, green, blue, yellow,
+// in a black frame (tools/imaging/gifwrite.py colour.gif) - and the image
+// is checked for each of the four colours on the screen (ScreenColour):
+// NetHopper's GIF decoder makes a 'colordata bitmap with the GIF's colour
+// table, which the colour screen draws in colour.  The snapshot is then
+// nethopper-colour.ppm as well.
 
 // (the port tools/host/httpserve.py serves on, a free one it picked)
-kNetHopperURL := "http://127.0.0.1:" & HostGetEnv("NEWTON_HTTP_PORT") & "/nethopper.html";
+nhColourAsked := HostGetEnv("NETHOPPER_COLOUR");
+nhColour := nhColourAsked and StrEqual(nhColourAsked, "1");
+kNetHopperURL := "http://127.0.0.1:" & HostGetEnv("NEWTON_HTTP_PORT") & (if nhColour then "/nethopper-colour.html" else "/nethopper.html");
 
 nhFailures := 0;
 nhCheck := func(what, ok, detail) begin
@@ -115,6 +126,17 @@ nhImage := func() begin
 			ScreenSnapshot("nethopper-3.pgm");
 			local b := v:GlobalBox();
 			local x := (b.left + b.right) div 2, y := (b.top + b.bottom) div 2;
+			if nhColour then begin
+				// each band's colour somewhere in the image
+				ScreenSnapshot("nethopper-colour.ppm");
+				foreach band in [{name: "red", rgb: 0xFF0000}, {name: "green", rgb: 0x00FF00}, {name: "blue", rgb: 0x0000FF}, {name: "yellow", rgb: 0xFFFF00}] do begin
+					local seen := nil;
+					for h := b.left to b.right - 1 do
+						if ScreenColour(h, y) = band.rgb then seen := true;
+					call nhCheck with ("the image's " & band.name & " in colour", seen, "not along row " & y & " of " & SPrintObject(b));
+				end;
+				return call nhDone with ();
+			end;
 			// the bar in the middle black, the gap between it and the frame white
 			call nhCheck with ("the image decoded and drawn",
 				v.icon.colordata and ScreenPixel(x, y) < 128 and ScreenPixel(b.left + 5, y) >= 128,
@@ -151,7 +173,7 @@ nhBrowse := func() begin
 				frame = 2 * width and stripes > width and stripes < 4 * width,
 				"frame " & frame & ", stripes " & stripes & " of " & 6 * width);
 			call nhTapView with ((call nhConnectSlip with ())._defaultButton);		// Connect
-			call waitFor with ("nethopper: the page", func() StrEqual(call nhTitle with (), "Host Test Page"),
+			call waitFor with ("nethopper: the page", func() StrEqual(call nhTitle with (), if nhColour then "Host Colour Page" else "Host Test Page"),
 				func() AddDelayedCall(func() begin
 					ScreenSnapshot("nethopper-2.pgm");
 					Print("nethopper: loaded " & call nhTitle with ());
