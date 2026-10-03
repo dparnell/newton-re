@@ -45,26 +45,28 @@ the way are all in `docs/work-log.md`.
 
 ## In progress
 
-- **Optimisation, drawing first** (branch `perf/drawing`, 2026-10-03, the
-  owner's choice now that the system works): the blitter, `DrawLine` and
-  the native lookup done (`docs/work-log.md`; `docs/qd/README.md`,
-  "Drawing speed").  Measure with `demo/redrawbench.ns` (whole-screen
-  redraws; raise `rbRounds` to 10000 for steady numbers - Windows counts
-  thread time in 15.6 ms steps) and `demo/drawbench.ns` on a
-  RelWithDebInfo build, profile with `tools/host/profile.py --walk`.  Then
-  the view system and the interpreter: the FindOffset cache, the symbol
-  compare and DrawArc's regions (Notepad 122 -> 100 us a redraw).  What is
-  left is a third pixels and the rest a few percent each (the list of what
-  was looked at and left is in `docs/qd/README.md`).  On the reMarkable
-  (`docs/host-remarkable.md`, "Drawing speed on the tablet"): a Notepad
-  redraw at 810x1080 33 ms -> 4.8 ms; the branch build is in AppLoad's
-  Newton app for the owner to try.  The window now sends only the
-  rectangles that changed (`ChangedRects.h`; the trace's `changes in ...`
-  line says how much it saves in use).  Next there: `PaintRect`'s pixel
-  loop at the scale and the display driver's gray conversion (18% of a
-  redraw on the A53).  Open: `host.NewtonAlignPen.restart`
-  fails on main too in a RelWithDebInfo build; `host.NewtonATASupport.pull`
-  failed once under `ctest -j 6` (56 s where it takes 2) and passes alone.
+Nothing at present.
+
+### Left of the drawing performance work (merged 2026-10-03)
+
+Branch `perf/drawing` (`docs/work-log.md`, 2026-10-03; the numbers in
+`docs/qd/README.md`, "Drawing speed", and `docs/host-remarkable.md`,
+"Drawing speed on the tablet" and "Only what changed"): the blitter a byte
+at a time, `DrawLine` a rectangle a run, natives found by hash, the
+FindOffset cache, DrawArc's regions, and on the reMarkable only the
+changed rectangles sent.  A Notepad redraw at 810x1080 on the tablet 33 ms
+-> 4.8 ms; 42% less area to the panel in the owner's use.  Measure with
+`demo/redrawbench.ns` (raise `rbRounds` to 10000 for steady numbers on
+Windows) and profile with `tools/host/profile.py --walk`, or on the tablet
+with `tools/remarkable/rmsample.c` (`tools/remarkable/README.md`).  Left:
+- the pen's latency on the tablet: about 50 ms a stroke, the
+  reconstructed inker's own pace, not the drawing;
+- the window's `PaintRect` (a pixel at a time at the scale) and the
+  display driver's gray conversion (18% of a redraw on the A53);
+- `host.NewtonAlignPen.restart` fails in a RelWithDebInfo build (on main
+  before the merge too); `host.NewtonATASupport.pull` and
+  `armcpu.NewtHack` are intermittent (timing; NewtHack taps a random game
+  map at fixed times).
 
 ### Left of the 64-bit NewtonScript flavour (merged 2026-10-02)
 
