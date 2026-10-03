@@ -15,6 +15,19 @@ own symbol table (whichfunction.py's ElfSymbols), demangled with c++filt.
 
 Used through stacksample.py and profile.py, which call stacksample_main
 and profile_main here when they are run on Linux; the options are theirs.
+
+A sample file made elsewhere - on a reMarkable, which has no Python, by
+tools/remarkable/rmsample.c sending the signal - is named here offline:
+
+    python3 tools/host/linuxsample.py --samples FILE --exe ELF [--save JSON]
+                                      [--top N] [--callees NAME]... [--callers NAME]...
+
+ELF is the executable that made it, with its symbols (a RelWithDebInfo
+build: a Release one for the tablet is stripped); each line becomes a
+stack of names, innermost first, printed as profile.py --walk prints them
+(tools/host/stackreport.py) and kept with --save for profile.py --load.
+Lines of other executables' samples cannot be told apart - start from an
+empty file.  (Run where c++filt is, WSL say, for demangled names.)
 Standard library only (ctypes for tgkill).
 """
 
@@ -29,8 +42,8 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import whichfunction as wf			# noqa: E402
 
-SYS_tgkill = {"x86_64": 234, "aarch64": 131}.get(os.uname().machine, 234)
-_libc = ctypes.CDLL(None, use_errno=True)
+SYS_tgkill = {"x86_64": 234, "aarch64": 131}.get(os.uname().machine, 234) if hasattr(os, "uname") else 234
+_libc = ctypes.CDLL(None, use_errno=True) if hasattr(os, "uname") else None
 
 
 def sample_file(pid):
@@ -143,7 +156,76 @@ def stacksample_main(argv):
     return 0
 
 
+def stacks_from_file(path, exe):
+    """The samples of a newton sample file as stacks of names, innermost
+    first (the interrupted function, then its callers; the handler's own
+    frames, before libc's signal trampoline, dropped)."""
+    symbols = wf.ElfSymbols(exe)
+    names = {}
+
+    def name(offset):
+        if offset is None:
+            return None
+        hit = symbols.lookup(offset)
+        if hit is None:
+            return None
+        if hit[0] not in names:
+            names[hit[0]] = hit[2]
+        return names[hit[0]]
+
+    raw = []
+    with open(path) as f:
+        for line in f:
+            words = line.split()
+            if len(words) < 2:
+                continue
+            value = [None if w == "-" else int(w, 16) for w in words[1:]]
+            pc, stack = value[0], value[1:]
+            if None in stack:
+                stack = stack[stack.index(None) + 1:]
+            # (after the trampoline the unwinder starts again from the
+            # interrupted instruction itself; the rest are return addresses,
+            # looked up a byte back - in the call, not what follows it)
+            if stack and stack[0] == pc:
+                stack = stack[1:]
+            frames = [n for n in (name(o) for o in [pc] + [None if o is None else o - 1 for o in stack]) if n is not None]
+            if frames:
+                raw.append(frames)
+    plain = sorted(names.values())
+    demangled = dict(zip(plain, wf.demangle(plain))) if plain else {}
+    return [[demangled.get(f, f) for f in frames] for frames in raw]
+
+
+def offline_main(argv):
+    import json
+    import stackreport
+    ap = argparse.ArgumentParser(description="a newton sample file named offline (tools/host/linuxsample.py)")
+    ap.add_argument("--samples", default=None, help="the sample file")
+    ap.add_argument("--exe", default=None, help="the executable that made it, with symbols")
+    ap.add_argument("--load", default=None, help="stacks saved before (JSON)")
+    ap.add_argument("--save", default=None, help="keep the stacks as JSON (profile.py --load)")
+    ap.add_argument("--top", type=int, default=30)
+    ap.add_argument("--callees", action="append", default=[])
+    ap.add_argument("--callers", action="append", default=[])
+    a = ap.parse_args(argv[1:])
+    if a.load:
+        with open(a.load) as f:
+            stacks = json.load(f)
+    else:
+        if not (a.samples and a.exe):
+            ap.error("--samples FILE --exe ELF (or --load JSON)")
+        stacks = stacks_from_file(a.samples, a.exe)
+    if a.save:
+        with open(a.save, "w") as f:
+            json.dump(stacks, f)
+    print(f"{len(stacks)} samples")
+    stackreport.report_stacks(stacks, a.top, a.callees, a.callers)
+    return 0
+
+
 def profile_main(argv):
+    if "--samples" in argv or "--load" in argv:
+        return offline_main(argv)
     ap = argparse.ArgumentParser(description="profile.py on Linux (tools/host/linuxsample.py)")
     ap.add_argument("pid", type=int)
     ap.add_argument("--seconds", type=float, default=10)
@@ -204,3 +286,7 @@ def profile_main(argv):
     for f, n in incl.most_common(a.top):
         print(f"  {100.0 * n / samples:5.1f}%  {name(f)}")
     return 0
+
+
+if __name__ == "__main__":
+    sys.exit(offline_main(sys.argv))

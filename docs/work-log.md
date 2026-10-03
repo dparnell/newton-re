@@ -9,6 +9,21 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-03: the drawing work on the reMarkable (branch perf/drawing)
+
+Main's and the branch's Release cross builds run headless on the Paper
+Pro: at the app's 810x1080 a Notepad redraw 33.3 ms -> 4.8 ms, Dates
+54.8 -> 6.0; at 320x480 6.8 -> 1.9; opening and closing applications
+(drawbench) 14% less wall time; the ROM's scripts 3.6 s -> 1.4 s
+(`docs/host-remarkable.md`, "Drawing speed on the tablet").  Profiling
+there: `tools/remarkable/rmsample.c` (built by `build_probe.py`) sends
+newton's own sample signal to its running threads, and
+`tools/host/linuxsample.py --samples FILE --exe ELF` names the file
+offline (`tools/host/stackreport.py`, now shared with `profile.py`); the
+tablet's profile has the desktop's shape (the A53 about 20x slower at
+everything).  The branch build is in AppLoad's Newton app; "Newton
+(before)" and "rmprobe" removed at the owner's asking.
+
 ## 2026-10-03: the view system and the interpreter (branch perf/drawing)
 
 `tools/host/profile.py --walk` takes exact stacks (dbghelp's StackWalk64

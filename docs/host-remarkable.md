@@ -648,6 +648,43 @@ before it passed eighths on.
 To remove everything: `rm -r /home/root/xovi/exthome/appload/{newton,newton-rmkit,rmprobe-app}
 /home/root/newton /home/root/newton-data /home/root/rmprobe-qtfb.log`.
 
+## Drawing speed on the tablet (2026-10-03)
+
+The drawing work of branch `perf/drawing` (`docs/qd/README.md`, "Drawing
+speed") measured on the Paper Pro: two Release cross builds, main's
+(2de328ef, from a worktree) and the branch's, run headless over SSH from
+`/home/root/newton-perf` (no display touched; `--objects` with the same
+object file).  Processor time of the newt task:
+
+| | main | branch |
+|---|---|---|
+| `redrawbench.ns`, 320x480, a Notepad redraw | 6.8 ms | 1.9 ms |
+| the same, Extras / Dates | 7.4 / 9.8 ms | 2.9 / 2.5 ms |
+| **810x1080 (the app's size), a Notepad redraw** | **33.3 ms** | **4.8 ms** |
+| the same, Extras / Dates | 33.6 / 54.8 ms | 6.0 / 6.0 ms |
+| `drawbench.ns`, wall time (opening and closing applications) | 1925 ticks | 1654 ticks |
+| `scriptbench.ns`, the ROM's scripts / in all | 3.6 / 18.1 s | 1.4 / 12.4 s |
+
+The 810x1080 runs used a copy of the app's own store (already set up at
+that size, so no Setup walk: `redrawbench.ns`'s loop after waiting for
+the Notepad).  A redraw on main took two to three of the panel's 33 ms
+frames; on the branch it fits in a sixth of one.  The profile of a redraw
+on the tablet (`tools/remarkable/README.md`, "Profiling on the tablet")
+has the desktop's shape: the Cortex-A53 is about twenty times slower at
+everything, the display driver's conversion to grays a larger share
+(18% against 11%).  Not measured: the window thread's own work (the
+changed rectangle found by comparing the whole display, then painted at
+the scale a pixel at a time, `PaintRect`) - it runs on a core of its own
+and adds to the latency of what reaches the glass, not to the Newton's
+time.
+
+The branch's Release build was put in AppLoad's Newton app (the binary
+alone; the one it replaced kept as
+`/home/root/newton-perf/newton-installed-backup`).  The "Newton (before)"
+and "rmprobe" apps were removed from AppLoad at the owner's asking
+(`build_probe.py` remakes rmprobe; `newton-data/newton-before`, the old
+app's store, is left).
+
 ## Risks
 
 - **Live ink latency.**  xochitl's own ink is drawn by its compositor with

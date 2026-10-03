@@ -369,7 +369,7 @@ clock ticks).
 interpreter"): run `src/host/demo/redrawbench.ns` with `rbRounds` raised
 so that it outlasts the profile, then
 
-    python tools/host/profile.py <pid> --walk --seconds 90 --interval 1         --save tmp/walk.json --callees "TView::Draw" --callers FindOffset1
+    python tools/host/profile.py <pid> --walk --seconds 90 --interval 1 --save tmp/walk.json --callees "TView::Draw" --callers FindOffset1
 
 ## httpserve.py - a web server for a host Newton to browse
 

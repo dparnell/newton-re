@@ -6,7 +6,9 @@ aarch64 Linux, against the same glibc floor as newton's cross build
     python tools/remarkable/build_probe.py [-o tmp/rmpp-app] [--glibc 2.31]
 
 writes OUT/rmprobe and OUT/rmprobe-app/ (an AppLoad application that runs
-`rmprobe --qtfb 30` and leaves its output in /home/root/rmprobe-qtfb.log).
+`rmprobe --qtfb 30` and leaves its output in /home/root/rmprobe-qtfb.log),
+and OUT/rmsample (tools/remarkable/rmsample.c: the sampling profiler's
+trigger, tools/remarkable/README.md "Profiling on the tablet").
 The steps to run it on the tablet are docs/host-remarkable.md's
 "On the device".
 """
@@ -52,6 +54,11 @@ def main():
                os.path.join(HERE, "rmprobe.c"), "-o", exe, "-lrt"]
     print(" ".join(command))
     subprocess.check_call(command)
+    sampler = os.path.join(args.out, "rmsample")
+    command = [args.zig, "cc", "-target", "aarch64-linux-gnu." + args.glibc, "-O2", "-Wall",
+               os.path.join(HERE, "rmsample.c"), "-o", sampler]
+    print(" ".join(command))
+    subprocess.check_call(command)
     app = os.path.join(args.out, "rmprobe-app")
     os.makedirs(app, exist_ok=True)
     shutil.copy(exe, os.path.join(app, "rmprobe"))
@@ -62,7 +69,7 @@ def main():
         json.dump({"name": "rmprobe", "application": "run.sh", "qtfb": True, "disablesWindowedMode": True}, f, indent=2)
         f.write("\n")
     icon(os.path.join(app, "icon.png"), ["X  X", " XX ", " XX ", "X  X"])
-    print("built %s and %s/" % (exe, app))
+    print("built %s, %s and %s/" % (exe, sampler, app))
 
 
 if __name__ == "__main__":

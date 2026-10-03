@@ -58,6 +58,7 @@ if __name__ == "__main__" and sys.platform.startswith("linux"):
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import stacksample as ss			# noqa: E402
 import whichfunction as wf			# noqa: E402
+import stackreport					# noqa: E402
 
 TH32CS_SNAPTHREAD = 4
 
@@ -337,59 +338,8 @@ def walk_main(a):
 
 
 def report_stacks(stacks, a):
-	"""The self and inclusive tables, and --callees/--callers, from stacks
-	(each a list of names, innermost first)."""
-	n = len(stacks)
-	if n == 0:
-		print("no samples")
-		return
-	selfs = collections.Counter(s[0] for s in stacks)
-	incl = collections.Counter()
-	for s in stacks:
-		for f in set(s):
-			incl[f] += 1
-	print("\nself:")
-	for f, k in selfs.most_common(a.top):
-		print(f"  {100.0 * k / n:5.1f}%  {f}")
-	print("\ninclusive:")
-	for f, k in incl.most_common(a.top):
-		print(f"  {100.0 * k / n:5.1f}%  {f}")
-
-	def resolve(part):
-		matches = [f for f, _ in incl.most_common() if part in f]
-		return matches[0] if matches else None
-
-	for part in a.callees:
-		f = resolve(part)
-		if f is None:
-			print(f"\nno function matches {part!r}")
-			continue
-		inside = collections.Counter()
-		total = 0
-		for s in stacks:
-			if f not in s:
-				continue
-			total += 1
-			# (every appearance - a function may recur - each callee once a sample)
-			inside.update({"(self)" if i == 0 else s[i - 1] for i, g in enumerate(s) if g == f})
-		print(f"\ncallees of {f} ({100.0 * total / n:.1f}% of the samples):")
-		for g, k in inside.most_common(a.top):
-			print(f"  {100.0 * k / n:5.1f}%  {g}")
-	for part in a.callers:
-		f = resolve(part)
-		if f is None:
-			print(f"\nno function matches {part!r}")
-			continue
-		outside = collections.Counter()
-		total = 0
-		for s in stacks:
-			if f not in s:
-				continue
-			total += 1
-			outside.update({"(the thread's start)" if i == len(s) - 1 else s[i + 1] for i, g in enumerate(s) if g == f})
-		print(f"\ncallers of {f} ({100.0 * total / n:.1f}% of the samples):")
-		for g, k in outside.most_common(a.top):
-			print(f"  {100.0 * k / n:5.1f}%  {g}")
+	"""The views (tools/host/stackreport.py) of stacks, by the options."""
+	stackreport.report_stacks(stacks, a.top, a.callees, a.callers)
 
 
 if __name__ == "__main__":
