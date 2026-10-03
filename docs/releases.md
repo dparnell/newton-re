@@ -61,6 +61,7 @@ The workflow's steps were run before it was first pushed:
   debug information otherwise and `zig objcopy --strip-all` is
   unimplemented.
 
-What only GitHub can show: the runners' own tool versions (cmake 3.25 or
-later is needed; `pip install ninja` on Windows), `mlugg/setup-zig` finding
-zig 0.16.0, and the release job's permissions.
+The first run on GitHub (2026-10-03, run 37099590128, commit 911b4ac0)
+passed: windows 3 minutes, linux 1, remarkable 2, their archives 8.5, 9.3
+and 5.1 MB; the release job skipped, as it does without a tag.  Still to
+be seen: the release job itself, at the first tag.
