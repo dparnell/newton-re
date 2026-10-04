@@ -45,11 +45,16 @@ the way are all in `docs/work-log.md`.
 
 ## In progress
 
-- **Colour** (branch `colour`, 2026-10-03/04, the owner's overnight
-  question): the ROM's colour API drawn in colour on an eight-bit palette
-  screen (`docs/qd/colour.md`; `--colour` or the Host panel).  Left: see
-  that doc's "Open" - Newt's Cape's JPEG converter at eight bits, the
-  windows and the tablet's colour panel seen with eyes.
+Nothing at present.
+
+### Left of colour (merged 2026-10-04, behind `--colour`)
+
+The ROM's colour API drawn in colour on an eight-bit palette screen
+(`docs/qd/colour.md`): off unless newton is started with `--colour`; the
+Host panel then offers "Colour screen (next start)".  Left (that doc's
+"Open"): the windows and the reMarkable's colour panel not yet seen in
+colour; Newt's Cape's JPEG converter makes no eight-bit pictures (Gestalt's
+screenDepth); four-bit offscreen maps from colour tables.
 
 ### Left of the drawing performance work (merged 2026-10-03)
 
