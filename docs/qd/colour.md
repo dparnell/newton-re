@@ -69,6 +69,13 @@ those gaps, so `--display WxHx8` draws everything.
   operations commute with repeating a nibble, so it is exact).
 - `DrTextChunk`'s direct drawing and `MakeGrayText` at eight bits.
 - The three gray pattern makers at eight bits (a byte a pixel).
+- The busy box (`BusyBox.cpp`): the ROM's busy pictures are one, two and
+  four bits, and at another depth the box keeps its map's own bits - which
+  the inker's `TBusyBox` leaves nil, so on an eight-bit screen the display
+  read through nil and newton fell over whenever something slow (deleting
+  a note) put the box up (found by the owner, 2026-10-04).  At eight bits
+  the four-bit picture widened; and the host's display driver draws nothing
+  for a map with no bits (`test_Screen`).
 
 With them a whole screen at eight bits (the Notepad with the Extras
 drawer open) is the four-bit screen pixel for pixel, the clock aside.

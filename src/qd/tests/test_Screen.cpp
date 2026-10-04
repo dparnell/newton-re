@@ -85,6 +85,51 @@ TestBlitAgainstReference(void)
 }
 
 
+// The busy box on an eight-bit screen (the host's eight-bit and colour
+// screens, docs/qd/colour.md): its map made as the inker's TBusyBox makes
+// it - the screen's depth, no bits of its own - shown without the display
+// reading through nil (the ROM has busy pictures of one, two and four bits
+// only), and what shows is the four-bit picture widened; and a map with no
+// bits at all blitted shows nothing.
+extern const unsigned char	blast4bits[512];		// BusyBoxBits.cpp
+
+static void
+TestBusyBoxEightBits(void)
+{
+	THostScreenDriver* display = new THostScreenDriver;
+	display->New();
+	display->Configure(64, 48, 8, 100);
+	InitScreen(display);
+	long depth = 0;
+	GetGrafInfo(kGrafInfoDepth, &depth);
+	EXPECT(depth == 8);
+	PixelMap box;
+	box.baseAddr = nil;
+	box.rowBytes = (short) (depth << 2);
+	SetRect(&box.bounds, 0, 0, 32, 32);
+	box.pixMapFlags = (ULong) depth + kPixMapPtr;
+	box.deviceRes.v = box.deviceRes.h = kDefaultDPI;
+	box.grayTable = nil;
+	QDShowBusyBox(&box);
+	long left = (64 - 32) >> 1, wrong = 0;
+	for (long y = 0; y < 32; y++)
+		for (long x = 0; x < 32; x++)
+		{
+			long nibble = (blast4bits[y * 16 + x / 2] >> ((x & 1) ? 0 : 4)) & 15;
+			if (display->Gray(left + x, y) != nibble * 17)
+				wrong++;
+		}
+	EXPECT(wrong == 0);
+	QDHideBusyBox(&box);
+	EXPECT(display->Gray(left + 16, 16) == 0);
+	PixelMap none = box;
+	none.baseAddr = nil;
+	Rect r = { 0, 0, 8, 8 };
+	display->Blit(&none, &r, &r, srcCopy);			// (nothing, and no fault)
+	printf("test_Screen: the busy box at eight bits: %ld pixels wrong\n", wrong);
+}
+
+
 int
 main(int argc, char** argv)
 {
@@ -174,6 +219,7 @@ main(int argc, char** argv)
 	SetOrientation(1);
 	EXPECT(screen->bounds.right == 64 && screen->bounds.bottom == 48 && screenWidth == 64 && screenHeight == 48);
 	TestBlitAgainstReference();
+	TestBusyBoxEightBits();
 	if (failures == 0)
 		printf("test_Screen: all passed\n");
 	else

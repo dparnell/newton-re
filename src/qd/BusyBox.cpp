@@ -21,6 +21,30 @@ extern const unsigned char	blast2bits[256];
 extern const unsigned char	blastbits[128];
 
 
+// (host) The busy picture at eight bits: the ROM has none - its pictures
+// are one, two and four bits, and on another depth the box's map keeps its
+// own bits, which the inker's TBusyBox leaves nil, so on the host's
+// eight-bit screen the display read through nil.  DEVIATION (an extension
+// for eight-bit and colour screens, docs/qd/colour.md): the four-bit
+// picture widened as StretchBits widens grays (v * 17), made once.
+static const unsigned char*
+Blast8Bits(void)
+{
+	static unsigned char bits[32 * 32];
+	static bool made = false;
+	if (!made)
+	{
+		for (long i = 0; i < 512; i++)
+		{
+			bits[2 * i] = (unsigned char) ((blast4bits[i] >> 4) * 17);
+			bits[2 * i + 1] = (unsigned char) ((blast4bits[i] & 15) * 17);
+		}
+		made = true;
+	}
+	return bits;
+}
+
+
 // ROM 0x00047ad4 QDHideBusyBox__FP8PixelMap
 // The screen's bits blitted back over where the box was.
 void
@@ -34,8 +58,8 @@ QDHideBusyBox(PixelMap* box)
 
 // ROM 0x00047b10 QDShowBusyBox__FP8PixelMap
 // The box placed at the top of the screen, in the middle, its bits the
-// busy picture of the map's depth (a depth with none keeps the map's own),
-// and blitted onto the display.
+// busy picture of the map's depth (a depth with none keeps the map's own;
+// host: eight bits has one too), and blitted onto the display.
 void
 QDShowBusyBox(PixelMap* box)
 {
@@ -47,6 +71,7 @@ QDShowBusyBox(PixelMap* box)
 	case 1:	box->baseAddr = (Ptr) blastbits;	break;
 	case 2:	box->baseAddr = (Ptr) blast2bits;	break;
 	case 4:	box->baseAddr = (Ptr) blast4bits;	break;
+	case 8:	box->baseAddr = (Ptr) Blast8Bits();	break;		// (host: above)
 	}
 	BlockLCDActivity(true);
 	BlitToScreens(box, &box->bounds, &box->bounds, srcCopy);

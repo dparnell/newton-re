@@ -233,6 +233,8 @@ THostScreenDriver::Blit(PixelMap* map, Rect* src, Rect* dst, long mode)
 		bits = (const unsigned char*) *(Handle) map->baseAddr;
 	else
 		bits = (const unsigned char*) map + (intptr_t) map->baseAddr;
+	if (bits == nil)
+		return;						// (a map with no bits - the busy box's at a depth it has no picture for - shows nothing)
 	for (long y = src->top; y < src->bottom; y++)
 	{
 		long dy = dst->top + (y - src->top);
