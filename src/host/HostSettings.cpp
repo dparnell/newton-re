@@ -207,12 +207,15 @@ FHostSettingsList(RefArg /*rcvr*/)
 		Choices(item, choices, 4);
 		AddArraySlot(list, item);
 	}
-	if (gStartupFile[0] != 0)
+	long colourChosen = StartupValue("colourScreen");
+	if (gStartupFile[0] != 0 && (ColourScreen() || colourChosen >= 0))
 	{
 		// the colour screen (qd/Colour.h): eight bits whose values a
-		// palette's - the depth is fixed when the screen is made
-		long chosen = StartupValue("colourScreen");
-		AddArraySlot(list, RefVar(Item("colourScreen", "Colour screen (next start)", kCheck, chosen >= 0 ? chosen : ColourScreen(), true)));
+		// palette's - the depth is fixed when the screen is made.  Behind
+		// --colour: offered only once colour has been asked for (--colour,
+		// or this setting already kept), so that it can be turned off again
+		// here - nothing among the usual packages draws in colour
+		AddArraySlot(list, RefVar(Item("colourScreen", "Colour screen (next start)", kCheck, colourChosen >= 0 ? colourChosen : ColourScreen(), true)));
 	}
 	if (HostWindowOption("clearGhosts", &value))
 		AddArraySlot(list, RefVar(Item("clearGhosts", "Clear ghosts", kButton, 0)));

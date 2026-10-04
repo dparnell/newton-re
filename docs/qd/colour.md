@@ -135,12 +135,16 @@ the screen.  Newt's Cape, its helpers and NetHopper's JPEG viewer use
 
 ### Asking for it
 
-`newton --colour`, or the Host panel's **Colour screen (next start)**
-(`docs/host-settings.md`; kept in `<store>.host` as `colourScreen=1`,
-read before the screen is made - the depth cannot change while newton
-runs).  ctests `host.NewtonColourPref.set` and `.kept`
-(`src/host/demo/colour-pref.ns`): the setting turned on through
-`HostSetSetting`, and the next start without `--colour` drawing red as red.
+Off unless asked for: `newton --colour`.  Once colour has been asked for,
+the Host panel offers **Colour screen (next start)** (`docs/host-settings.md`;
+kept in `<store>.host` as `colourScreen=1`, read before the screen is made -
+the depth cannot change while newton runs), so a tablet started once with
+`--colour` keeps it, and it can be turned off there; a host that never
+asked does not see it - nothing among the usual packages draws in colour.
+ctests `host.NewtonColourPref.hidden`, `.set` and `.kept`
+(`src/host/demo/colour-pref.ns`): not offered on a fresh store without
+`--colour`; offered and turned on with it; the next start without
+`--colour` drawing red as red, then turned off.
 
 ## Open
 
