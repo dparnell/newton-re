@@ -15,9 +15,11 @@
 #include "Stroke.h"
 #include "Angles.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 
 static int failures = 0;
 #define EXPECT(cond) do { if (!(cond)) { failures++; fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
@@ -94,6 +96,38 @@ TestACaret()
 	// the angle is half way between the two arms measured out from the
 	// point, which is the way the caret opens: to the right
 	corners->Dispose();
+}
+
+
+// A caret's long arm split to the short one's length (TestCarets, ROM BUG
+// (fixed)): the ROM gives Interpolate the arms' ratio for a distance, so
+// the new corner lands a third of a pixel from the point; the fix puts it
+// the first arm's length along the second.
+static void
+TestTheSplitArm()
+{
+	static const long arms[] = { 0, 20, 0, 0, 60, 0 };
+	UnitInterpretation interp;
+	for (int fixed = 0; fixed < 2; fixed++)
+	{
+		SetRomBugFixed(fixed != 0);
+		TDArray* corners = Corners(arms, 3);
+		InitInterpretation(&interp, 0, 0);
+		TestCarets(corners, &interp);
+		EXPECT(corners->fCount == 4);
+		FPoint split;
+		memcpy(&split, corners->GetEntry(2), sizeof(FPoint));
+		FPoint end;
+		memcpy(&end, corners->GetEntry(3), sizeof(FPoint));
+		EXPECT(end.x == (60 << 16) && end.y == 0);
+		EXPECT(split.y == 0);
+		if (fixed)
+			EXPECT(split.x > (19 << 16) && split.x < (21 << 16));
+		else
+			EXPECT(split.x > 0 && split.x < (1 << 16));
+		corners->Dispose();
+	}
+	SetRomBugFixed(true);
 }
 
 
@@ -245,6 +279,7 @@ main()
 	InitHostStandaloneHeap();
 	TestALine();
 	TestACaret();
+	TestTheSplitArm();
 	TestAScrub();
 	TestCollapse();
 	TestTurns();

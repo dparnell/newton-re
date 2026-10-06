@@ -12,9 +12,12 @@
 #include "Segment.h"
 #include "FixedMath.h"
 #include "memory/host/KernelHeap.h"
+#include "NewtonMemory.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 
 static Fixed	F(long n)		{ return (Fixed) (int) ((unsigned int) n << 16); }
 
@@ -193,6 +196,36 @@ main()
 		StrokeDestroy(tail);
 		StrokeDestroy(over);
 		StrokeDestroy(line);
+	}
+
+	// ---- a run narrowed to its longest least-crossed stretch ----
+	{
+		// crossings at each point: stretches of nought at 1-2, 4 and
+		// 6-8.  The ROM does not close the one at 4, which loses to 1-2,
+		// so it runs on into 6-8 and the run becomes 4-8 (ROM BUG); the
+		// fix closes it and the run is the longest stretch, 6-8.
+		static short values[10] = { 2, 0, 0, 2, 0, 2, 0, 0, 0, 2 };
+		XProjection proj;
+		memset(&proj, 0, sizeof(proj));
+		proj.fPointValue = values;
+		for (int fixed = 0; fixed < 2; fixed++)
+		{
+			SetRomBugFixed(fixed != 0);
+			List* runs = ListCreate();
+			StrokeRun* r = (StrokeRun*) NewPtr(sizeof(StrokeRun));
+			r->fFirst = 0;
+			r->fLast = 9;
+			ListAppendEntry(runs, r);
+			CheckXProjection(runs, runs->fFirst, nil, &proj);
+			EXPECT(runs->fCount == 1);
+			if (fixed)
+				EXPECT(r->fFirst == 6 && r->fLast == 8);
+			else
+				EXPECT(r->fFirst == 4 && r->fLast == 8);
+			ListDestroy(runs, nil);
+			DisposPtr((Ptr) r);
+		}
+		SetRomBugFixed(true);
 	}
 
 	// ---- the good runs of a stroke ----

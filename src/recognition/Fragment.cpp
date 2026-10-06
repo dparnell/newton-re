@@ -14,6 +14,7 @@
 #include "FixedMath.h"
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -503,11 +504,12 @@ CheckXProjection(List* runs, ListEntry* cursor, const FPoint* /*points*/,
 
 	// The longest stretch holding the lowest count.
 	//
-	// ROM BUG: a stretch that turns out to be no longer than the best
-	// so far is not closed - the count simply carries on over the
+	// ROM BUG (fixed): a stretch that turns out to be no longer than the
+	// best so far is not closed - the count simply carries on over the
 	// values that are not the lowest and into the next stretch, so two
 	// short stretches with a gap between them can be taken for one
 	// long one.  Only a stretch that *beats* the best ends the count.
+	// The fix closes every stretch at its end, the best or not.
 	//
 	// (The ROM also answers a run of two registers it never set when
 	// `first` is past `last`, which cannot happen: a run always has
@@ -538,6 +540,8 @@ CheckXProjection(List* runs, ListEntry* cursor, const FPoint* /*points*/,
 			best = howMany;
 			inRun = false;
 		}
+		else if (RomBugFixed())
+			inRun = false;
 	}
 	if (inRun && best < howMany)
 	{

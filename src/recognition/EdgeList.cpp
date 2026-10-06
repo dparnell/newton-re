@@ -17,6 +17,7 @@
 #include "Angles.h"
 #include "FixedMathExtra.h"
 #include "Recognizer.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -360,15 +361,16 @@ TestCarets(TDArray* corners, UnitInterpretation* interp)
 	{
 		if (count == 4)
 			return false;
-		// ROM bug: Interpolate's third argument is a distance along the
-		// line, and what it is given here is the ratio of the two arms -
-		// at most a half, where the distance wanted is the length of the
-		// first arm.  The new corner therefore lands all but on top of
-		// p1 rather than a first arm's length along the second, and the
-		// four-corner tests below see a first arm and a stub.  Ported as
-		// the ROM has it.
+		// ROM BUG (fixed): Interpolate's third argument is a distance
+		// along the line, and what it is given here is the ratio of the
+		// two arms - at most a half, where the distance wanted is the
+		// length of the first arm.  The new corner therefore lands all but
+		// on top of p1 rather than a first arm's length along the second,
+		// and the four-corner tests below see a first arm and a stub.  The
+		// fix gives it the first arm's length, so the second arm is split
+		// into one as long as the first and the rest.
 		FPoint split;
-		Interpolate(&p1, &p2, FixedDivide(first, second), &split);
+		Interpolate(&p1, &p2, RomBugFixed() ? first : FixedDivide(first, second), &split);
 		corners->Add();
 		memcpy(corners->GetEntry(2), &split, sizeof(FPoint));
 		memcpy(corners->GetEntry(3), &p2, sizeof(FPoint));
