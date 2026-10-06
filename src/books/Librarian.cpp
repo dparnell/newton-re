@@ -23,6 +23,7 @@
 #include "RSSymbols.h"
 #include "Unicode.h"
 #include "NewtonExceptions.h"
+#include "host/RomBugs.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -203,8 +204,9 @@ TLibrarian::PageSize(RefArg reader)
 
 // ROM 0x0010909c CurrentPage__10TLibrarianFRC6RefVar
 // The page the reader's book is at (its library entry's curPage).
-// ROM BUG: a page beyond the book's end sets the entry back to page 1, but
-// the page beyond the end is still what is answered.
+// ROM BUG (fixed): a page beyond the book's end sets the entry back to
+// page 1, but the page beyond the end is still what is answered.  The fix
+// answers page 1, the page the entry now says.
 long
 TLibrarian::CurrentPage(RefArg reader)
 {
@@ -218,6 +220,8 @@ TLibrarian::CurrentPage(RefArg reader)
 		SetFrameSlot(entry, RSSYMprevpage, RefVar(MAKEINT(0)));
 		SetFrameSlot(entry, RSSYMcurpage, RefVar(MAKEINT(1)));
 		EntryChange(entry);
+		if (RomBugFixed())
+			page = 1;
 	}
 	return page;
 }
@@ -286,9 +290,12 @@ TLibrarian::BookAvailable(RefArg partFrame, RefArg packageId)
 // Extras drawer: the ROM's help book through SetupROMHelpBook, any other
 // by an AddIcon of a protoExtrasFormEntry-like frame (a book on a card
 // store has its icon from the extras soup already).
-// ROM BUG: with no source (FBookAvailable), the source is read from
-// address 0 - the reset vector, a branch whose first two bytes are 0xea
-// and 0x00 - and the book is given an icon by AddIcon.
+// ROM BUG (fixed): with no source (FBookAvailable), the source is read
+// from address 0 - the reset vector, a branch whose first two bytes are
+// 0xea and 0x00 - and the book is given an icon by AddIcon.  The fix
+// reads no source: a book with none is taken as a SourceType of noughts,
+// which also gives it its icon by AddIcon (what the script's
+// BookAvailable evidently wants), without the read of address 0.
 Ref
 TLibrarian::BookAvailable(RefArg partFrame, RefArg packageId, SourceType* source)
 {
@@ -361,7 +368,8 @@ TLibrarian::BookAvailable(RefArg partFrame, RefArg packageId, SourceType* source
 	}
 	SetFrameSlot(library, isbnSym, partFrame);
 
-	const SourceType* type = source != nil ? source : &kAddressZero;
+	static const SourceType kNoSource = { 0, 0, 0, 0 };
+	const SourceType* type = source != nil ? source : (RomBugFixed() ? &kNoSource : &kAddressZero);
 	if (source == nil
 	||  (source->deviceKind == kStoreDevice && (source->format & kRemovableMask) != 0)
 	||  ((source->format & kFormatMask) != 0 && source->deviceKind == 0))
@@ -429,8 +437,10 @@ TLibrarian::BookAvailable(RefArg partFrame, RefArg packageId, SourceType* source
 // the extras soup looks after), Copperfield dropped from vars.findApps with
 // the last book, and the reader told to let go of the oldest book it has
 // cached.  ==> -10008 when the book has no Library entry (a help book).
-// ROM BUG: the count is decremented for every book with an entry, whether
-// or not it was one BookAvailable counted.
+// ROM BUG (fixed): the count is decremented for every book with an entry,
+// whether or not it was one BookAvailable counted.  The fix decrements it
+// only for a book that was in the library and not a help book (the books
+// BookAvailable counts), and never below nought.
 long
 TLibrarian::BookRemoved(RefArg bookFrame)
 {
@@ -460,6 +470,8 @@ TLibrarian::BookRemoved(RefArg bookFrame)
 	}
 	RefVar sym(StrRefToSymbol(isbn));
 	RefVar library(*fLibrary);
+	RefVar inLibrary(GetFrameSlotRef(library, sym));
+	Boolean counted = NOTNIL(inLibrary) && ISNIL(GetFrameSlotRef(inLibrary, RSSYMhelp)) && fBookCount > 0;
 	RemoveSlot(library, sym);
 	SetFrameSlot(entry, RSSYMbookpresent, RefVar(MAKEINT(0)));
 	SetFrameSlot(entry, RSSYMpackageid, RefVar());
@@ -481,7 +493,7 @@ TLibrarian::BookRemoved(RefArg bookFrame)
 		SetArraySlotRef(list, 0, icon);
 		DoMessage(extras, RSSYMdropicon, list);
 	}
-	if (--fBookCount == 0)
+	if (RomBugFixed() ? (counted && --fBookCount == 0) : --fBookCount == 0)
 	{
 		list = GetFrameSlotRef(RefVar(gVarFrame), RSSYMfindapps);
 		ArrayRemove(list, RSSYMcopperfield);
@@ -696,8 +708,9 @@ CurrentBook(RefArg rcvr)
 // reader:CurrentKiosk() - the nearest page before the current one whose
 // template's flags have bit 0 set (a kiosk: a page the book goes back to),
 // as {page, name: its first block's item's name}; nil at page 1.
-// ROM BUG: at page 0 (a book not opened yet) the search starts below 1 and
-// stops at once, and the page that is not there is asked for its blocks.
+// ROM BUG (fixed): at page 0 (a book not opened yet) the search starts
+// below 1 and stops at once, and the page that is not there is asked for
+// its blocks.  The fix answers nil there, as at page 1.
 Ref
 CurrentKiosk(RefArg rcvr)
 {
@@ -720,7 +733,7 @@ CurrentKiosk(RefArg rcvr)
 		else
 			flags = 0;
 	} while ((flags & 1) == 0);
-	if (index != 0)
+	if (RomBugFixed() ? index > 0 : index != 0)
 	{
 		RefVar kiosk(AllocateFrame());
 		SetFrameSlot(kiosk, RSSYMpage, RefVar(MAKEINT(index)));

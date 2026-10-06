@@ -31,6 +31,7 @@
 #include "Interpreter.h"
 #include "RSSymbols.h"
 #include "NewtonExceptions.h"
+#include "host/RomBugs.h"
 
 extern const ExceptionName exPipeException;
 
@@ -90,7 +91,8 @@ TBookPartHandler::InstallBook(RefArg partFrame, const PartId& partId, SourceType
 // alone).  ==> -10401 when the part could not be had or is not a book,
 // -10402 when a book of its ISBN is in already, a frames exception's
 // error.
-// ROM BUG: an error out of Copy is reported as -10401, not as itself.
+// ROM BUG (fixed): an error out of Copy is reported as -10401, not as
+// itself.  The fix reports Copy's own error.
 NewtonErr
 TBookPartHandler::Install(const PartId& partId, SourceType sourceType, PartInfo* partInfo)
 {
@@ -104,7 +106,10 @@ TBookPartHandler::Install(const PartId& partId, SourceType sourceType, PartInfo*
 		if ((sourceType.format & kFormatMask) == 0)
 		{
 			Ref ref = NILREF;
-			err = Copy(&ref) != noErr ? kError_Book_Not_Installed : noErr;
+			if (RomBugFixed())
+				err = Copy(&ref);
+			else
+				err = Copy(&ref) != noErr ? kError_Book_Not_Installed : noErr;
 			partFrame = ref;
 		}
 		else

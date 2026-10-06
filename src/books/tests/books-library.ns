@@ -81,6 +81,50 @@ AddDelayedCall(func() begin
     call check with ("AddInkMarks", Length(reader:InkMarks(2)) = 1 and reader:InkMarks(2)[0] = 'ink);
     reader:AddInkMarks(2, []);
     call check with ("AddInkMarks with none takes them out", Length(reader:InkMarks(nil)) = 0);
+    // the ROM's bugs (books/Search.cpp, Librarian.cpp), fixed unless
+    // NEWTON_ROM_BUGS=1 (the books.Library.romBugs variant)
+    local romBugs := HostGetEnv("NEWTON_ROM_BUGS");
+    local fixed := not (romBugs and StrLen(romBugs) > 0 and not StrEqual(romBugs, "0"));
+    // a broken partial match: "to the" in "to to the" (the second "to" not
+    // tried as a new start by the ROM)
+    local savedContents := mine.book.contents;
+    mine.book.contents := [{data: "Go to to the shop.", name: "four"}];
+    mine.book.hints := [0];
+    results := [];
+    root.copperfield:CuFind("to the", 'me, results, nil, status, [{isbn: "TEST-0001"}]);
+    if fixed then
+      call check with ("fixed: \"to the\" found after \"to\"", Length(results) = 1 and Length(results[0].items) = 1 and results[0].items[0].found.char = 6)
+    else
+      call check with ("ROM: \"to the\" not found after \"to\"", Length(results) = 0);
+    // a book with no hints: searched only when fixed
+    mine.book.contents := [{data: "A cat.", name: "five"}];
+    mine.book.hints := nil;
+    results := [];
+    root.copperfield:CuFind("cat", 'me, results, nil, status, [{isbn: "TEST-0001"}]);
+    call check with ("a book with no hints", Length(results) = (if fixed then 1 else 0));
+    mine.book.contents := savedContents;
+    mine.book.hints := [0, 0, 0];
+    // FindPageByValue's first only: the first page alone when fixed
+    mine.book.rendering[0].pages := [{blocks: []}, {blocks: [{item: mine.book.contents[2]}]}, {blocks: [{item: mine.book.contents[2]}]}];
+    pages := reader:FindPageByValue('name, "three", true);
+    call check with ("FindPageByValue first only", if fixed then Length(pages) = 1 and pages[0] = 2 else Length(pages) = 2);
+    // a page beyond the end: the entry set back to 1, and 1 answered when fixed
+    entry := root.copperfield:GetLibraryEntry("TEST-0001");
+    entry.curPage := 10;
+    local beyond := reader:CurrentPage();
+    call check with ("CurrentPage beyond the end", beyond = (if fixed then 1 else 10) and entry.curPage = 1);
+    // CurrentKiosk at page 0: nil when fixed (the ROM asks page 0 for its blocks)
+    if fixed then
+      begin
+        entry.curPage := 0;
+        call check with ("CurrentKiosk at page 0", reader:CurrentKiosk() = nil);
+      end;
+    call check with ("BookRemoved answers 0", BookRemoved(removeFrame) = 0);
+    // removed twice: the ROM counts the book out again, so the next book in
+    // does not make Copperfield a Find application
+    call check with ("BookRemoved again answers 0", BookRemoved(removeFrame) = 0);
+    removeFrame := BookAvailable(mine, 7);
+    call check with ("the count after a second BookRemoved", (LSearch(vars.findApps, 'copperfield, 0, '|=|, nil) <> nil) = fixed);
     call check with ("BookRemoved answers 0", BookRemoved(removeFrame) = 0);
     call check with ("the book is out of the library", library.|TEST-0001| = nil);
     entry := root.copperfield:GetLibraryEntry("TEST-0001");
