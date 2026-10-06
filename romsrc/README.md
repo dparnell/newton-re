@@ -56,9 +56,11 @@ python tools/newton-rom/analysis/romsrc.py build romsrc --relayout -o build/obje
 - It lays the objects out as `layout.tsv` says and writes the object file
   the host loads.
 - The tree is no longer the ROM byte for byte: the Newton Internet
-  Enabler has been added to its extension (below). Everything else is:
-  `--original` leaves the additions out, and `--original --check
-  build/MP2x00US` compares the rest with the ROM, which needs the
+  Enabler has been added to its extension (below), and it may be changed
+  further to enhance the system. The git tag `romsrc-rom` keeps the last
+  tree that is the ROM's but for the additions: `--git-ref romsrc-rom`
+  builds that tree out of git, `--original` leaves the additions out, and
+  `--check build/MP2x00US` compares the rest with the ROM, which needs the
   extracted ROM (`build/<rom>`, `tools/newton-rom/pipeline.py`).
 
 ## Editing it
@@ -116,7 +118,7 @@ then not registered).
 
 | Test | What it checks |
 |---|---|
-| `host.ROMSourceCommitted` | The committed tree, less what was added to it on purpose (`--original`: the Newton Internet Enabler), still builds byte for byte the ROM's - so an unintended change to the rest is still caught. |
+| `host.ROMSourceCommitted` | The tree as the git tag `romsrc-rom` has it - the last tree that is the ROM's - less what was added to it on purpose (`--original`: the Newton Internet Enabler), still builds byte for byte the ROM's with today's builder (`romsrc.py build romsrc --git-ref romsrc-rom --original --check build/MP2x00US`). The working tree is not checked, so it can be changed to enhance the system; the test is registered only when the tag is in the clone (`git fetch --tags`). |
 | `host.ROMSourceRoundTrip` | The extractor itself: a fresh extraction into the build directory, built back byte for byte. It does not touch this tree. |
 | `host.NewtonNoROM`, `host.NewtonNoROMSameScreen` | The OS booted from this tree's object file, and its screen against the ROM image boot's (the Setup assistant's Welcome, which the built-in NIE does not change). |
 | `host.NewtonNIEBuiltIn`, `host.NewtonNIEOverBuiltIn` | The Newton Internet Enabler built in: its packages active on no store, Internet Setup in Extras, the link grabbed and a name looked up; and the fixtures' copies installed over it (kept on the store, not activated). The NIE's other tests (`host.NewtonInet`, `...InetSetup`, `...InetHostSetup`, `...InetFSM`, `...NetHopper`) use the built-in one too. |

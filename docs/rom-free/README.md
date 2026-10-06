@@ -345,7 +345,11 @@ from it.
   byte for byte the ROM's. Since the first intentional edit (below: the
   Newton Internet Enabler built into the extension) it builds the tree
   less what was added (`romsrc.py build --original`), so it still
-  catches an unintended change to the rest.
+  catches an unintended change to the rest.  Since 2026-10-06 it builds
+  the tree as the git tag `romsrc-rom` has it (`romsrc.py build
+  --git-ref romsrc-rom`), not the working tree, so `romsrc/` can be
+  changed to enhance the system while the builder is still checked
+  against the ROM; it is not registered without the tag.
 - `.gitattributes` keeps its resources binary and its `.ns`/`.tsv` LF on
   every system.
 - It is 7696 files, 20 MB on disk.

@@ -2073,16 +2073,36 @@ if(Python3_FOUND AND EXISTS ${NEWTON_ROM_BUILD_DIR}/symbols.json)
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.ROMSourceRoundTrip PROPERTIES TIMEOUT 300)
 
-    # whether the committed tree (romsrc/), less what was added to it on
-    # purpose (--original: the Newton Internet Enabler in its extension,
-    # romsrc/README.md), still builds byte for byte the ROM's - so an
-    # unintended change to the rest is still caught
-    add_test(NAME host.ROMSourceCommitted
-             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
-                     build ${CMAKE_SOURCE_DIR}/../romsrc --original --check ${NEWTON_ROM_BUILD_DIR}
-                     --newtonscript $<TARGET_FILE:newtonscript>
-             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
-    set_tests_properties(host.ROMSourceCommitted PROPERTIES TIMEOUT 300 PASS_REGULAR_EXPRESSION "identical to the ROM's")
+    # whether the tree tagged NEWTON_ROMSRC_ROM_TAG (romsrc/ as it was when
+    # it last built the ROM), less what was added to it on purpose
+    # (--original: the Newton Internet Enabler in its extension,
+    # romsrc/README.md), still builds byte for byte the ROM's with today's
+    # builder - so the builder and the extraction stay right while the
+    # working tree's romsrc/ is free to be changed to enhance the system.
+    # The tree comes out of git (romsrc.py build --git-ref), so the test is
+    # registered only when the tag is there (git fetch --tags).
+    set(NEWTON_ROMSRC_ROM_TAG "romsrc-rom" CACHE STRING "the git tag of the romsrc/ tree that builds the ROM byte for byte")
+    find_package(Git QUIET)
+    set(romsrc_rom_tag_found FALSE)
+    if(GIT_FOUND)
+        execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse -q --verify "refs/tags/${NEWTON_ROMSRC_ROM_TAG}"
+                        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/.. RESULT_VARIABLE romsrc_rom_tag_result
+                        OUTPUT_QUIET ERROR_QUIET)
+        if(romsrc_rom_tag_result EQUAL 0)
+            set(romsrc_rom_tag_found TRUE)
+        endif()
+    endif()
+    if(romsrc_rom_tag_found)
+        add_test(NAME host.ROMSourceCommitted
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
+                         build ${CMAKE_SOURCE_DIR}/../romsrc --git-ref ${NEWTON_ROMSRC_ROM_TAG}
+                         --original --check ${NEWTON_ROM_BUILD_DIR}
+                         --newtonscript $<TARGET_FILE:newtonscript>
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+        set_tests_properties(host.ROMSourceCommitted PROPERTIES TIMEOUT 300 PASS_REGULAR_EXPRESSION "identical to the ROM's")
+    else()
+        message(STATUS "no git tag ${NEWTON_ROMSRC_ROM_TAG}: host.ROMSourceCommitted is not registered (git fetch --tags)")
+    endif()
 
     # the OS booted from the committed tree draws exactly what the boot on the
     # ROM image draws (the Setup assistant's Welcome, out of the ROM extension

@@ -11,6 +11,8 @@ nothing.
 
     python romsrc.py extract build/MP2x00US -o build/MP2x00US/romsrc
     python romsrc.py build build/MP2x00US/romsrc -o build/MP2x00US/objects.bin --check build/MP2x00US
+    python romsrc.py build romsrc --git-ref romsrc-rom --original --check build/MP2x00US --newtonscript <exe>
+                     # the tree as the tag romsrc-rom has it (host.ROMSourceCommitted)
 
 The output (-o) is what the host loads in place of a ROM image
 (`newton --objects`, frames/ROMImport.h's ImportBuiltObjects): the header
@@ -2230,6 +2232,9 @@ def main(argv=None):
 				   help="lay the objects out afresh at the sizes they now have (what an edit needs), not at the layout's addresses")
 	b.add_argument("--original", action="store_true",
 				   help="leave out what was added to the ROM extension (rex.tsv's `-` pieces), to compare the rest with the ROM")
+	b.add_argument("--git-ref", metavar="REF",
+				   help="build the tree as it was at that git commit or tag (git archive into a temporary directory), "
+						"not as it is in the working tree - the ctest host.ROMSourceCommitted builds the tag romsrc-rom")
 	t = sub.add_parser("edit-test", help="copy a tree, lengthen one string, build it laid out afresh")
 	t.add_argument("source")
 	t.add_argument("-o", "--output", required=True, help="where the edited copy goes (emptied first)")
@@ -2335,7 +2340,35 @@ def main(argv=None):
 		print("%d definitions (%d taken from compiled functions) and %d maps written to %s"
 			  % (n, e.same_count, m, a.output))
 		return 0
-	builder = Builder(a.source, a.newtonscript, a.relayout, original=a.original)
+	if a.git_ref:
+		import tempfile
+		with tempfile.TemporaryDirectory(prefix="romsrc-") as scratch:
+			tree = tree_at_ref(a.source, a.git_ref, scratch)
+			print("the tree at %s" % a.git_ref)
+			return build_command(a, tree)
+	return build_command(a, a.source)
+
+
+def tree_at_ref(source, ref, scratch):
+	"""The tree `source` (a directory in a git working tree) as it was at
+	the commit or tag `ref`, written under `scratch` by git archive.
+	==> its path there."""
+	import tarfile
+	source = os.path.abspath(source)
+	top = subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=source, check=True,
+						 capture_output=True, text=True).stdout.strip()
+	rel = os.path.relpath(source, top).replace(os.sep, "/")
+	archive = os.path.join(scratch, "tree.tar")
+	with open(archive, "wb") as f:
+		subprocess.run(["git", "archive", "--format=tar", ref, rel], cwd=top, check=True, stdout=f)
+	with tarfile.open(archive) as t:
+		t.extractall(scratch)
+	os.remove(archive)
+	return os.path.join(scratch, rel)
+
+
+def build_command(a, source):
+	builder = Builder(source, a.newtonscript, a.relayout, original=a.original)
 	base, area = builder.build()
 	if a.output:
 		with open(a.output, "wb") as f:
