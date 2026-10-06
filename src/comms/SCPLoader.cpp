@@ -251,9 +251,9 @@ TSCPLoader::SCPLoad(ULong waitPeriod, ULong filter, ULong hwLocation)
 // The framed serial service on the port at 9600 bps, 8N1, a 0x400-byte
 // receive buffer, hardware flow control in, the transmitter off until the
 // first send; opened, with a framed pipe of 0x100 bytes each way over it
-// (its timeout half a second) and the message buffer as big.  ROM BUG
-// (fixed): the message buffer is allocated afresh for every load and the
-// last one never freed.  The fix frees the last one first.
+// (its timeout half a second) and the message buffer as big.
+// ROM BUG (fixed): the message buffer is allocated afresh for every load
+// and the last one never freed.  The fix frees the last one first.
 NewtonErr
 TSCPLoader::SCPInit(ULong hwLocation)
 {

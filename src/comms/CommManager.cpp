@@ -857,10 +857,10 @@ TCMWorld::SCPCheck(ULong reason)
 // Start the docking loader ('scpl, comms/SCPLoader.h) and ask it,
 // asynchronously, to load what a connected device wants; its answer comes
 // back to AECompletionProc, which answers the token's request with it.
-// One load at a time: kCMErr_SCPLoadBusy while one is in flight.  ROM BUG
-// (fixed): a request that fails after the message is made leaves it in
-// fSCPMessage, so every later load answers busy.  The fix deletes the
-// message when it was not sent, so the next load can be asked.
+// One load at a time: kCMErr_SCPLoadBusy while one is in flight.
+// ROM BUG (fixed): a request that fails after the message is made leaves
+// it in fSCPMessage, so every later load answers busy.  The fix deletes
+// the message when it was not sent, so the next load can be asked.
 // DEVIATION: the loader is started through the hook comms_dock sets
 // (gStartSCPLoader, SCPLoader.h's RegisterSCPLoader); with none, the
 // answer is kCMErr_SCPLoadBusy, as while a load is in flight.
