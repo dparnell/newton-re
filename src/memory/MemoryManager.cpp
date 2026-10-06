@@ -28,6 +28,7 @@
 #include "NewtonExceptions.h"
 #include "NewtMemory.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 
 extern "C" void ClearMemory(void* p, ULong size);
 
@@ -1215,7 +1216,16 @@ NextHeapBlock(Heap opaque_heap, long seed, void* fromBlock, void** pFoundBlock, 
 	SkiaBlock* from = SkiaBlock::Of(fromBlock != nil ? fromBlock : (void*) heap);
 	SkiaBlock* b = from->Following();
 	if ((char*) b >= heap->fEnd)
-		b = (SkiaBlock*) fromBlock;			// (sic: past the sentinel the ROM reads the caller's data as a header)
+	{
+		// ROM BUG (fixed): past the sentinel the ROM reads the caller's data
+		// as a header.  The fix answers fromBlock's own header - the
+		// sentinel again, kMM_HeapEndBlock - which is what a walk that
+		// overran was evidently meant to see.
+		if (RomBugFixed())
+			b = from;
+		else
+			b = (SkiaBlock*) fromBlock;
+	}
 	int type;
 	void** handle = nil;
 	char tag = 0;

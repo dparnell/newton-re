@@ -17,6 +17,7 @@
 #include "os600/TaskGlobals.h"
 #include "VirtualMemory.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -863,10 +864,29 @@ ShrinkSkiaHeapLeaving(SkiaHeap* heap, Size amountLeftFree)
 			if (newEnd < end)
 			{
 				Size newTailSize = (newEnd - (char*) tail) - kBlockHeaderSize;
+				SkiaBlock* prevFree = tail->fPrev;		// (before the sentinel lands on it)
 				BlockMove(end - kBlockHeaderSize, newEnd - kBlockHeaderSize, kBlockHeaderSize);
-				if (newTailSize == 0)
+				if (newTailSize == 0 && RomBugFixed())
 				{
-					heap->fFreeHead = nil;			// (sic: the ROM assumes it was the only free block)
+					// ROM BUG (fixed): the ROM assumes the tail was the only
+					// free block and empties the list.  The fix unlinks the
+					// tail alone (its fPrev read before the sentinel was
+					// moved over it), moves the rover off it and tells the
+					// sentinel no free block precedes it.  (Unreachable as
+					// far as can be seen: newTailSize is at least
+					// amountLeftFree, which is at least a header.)
+					if (prevFree == nil)
+						heap->fFreeHead = nil;
+					else
+						prevFree->fNext = nil;
+					heap->fFreeTail = prevFree;
+					if (heap->fRover == tail)
+						heap->fRover = heap->fFreeHead;
+					((SkiaBlock*) (newEnd - kBlockHeaderSize))->fFlags &= ~kBlockFlag_PrevIsFree;
+				}
+				else if (newTailSize == 0)
+				{
+					heap->fFreeHead = nil;			// (the ROM's: see the fix above)
 					heap->fFreeTail = nil;
 				}
 				else

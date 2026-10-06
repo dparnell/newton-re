@@ -303,6 +303,10 @@ static void TestGrowthAndWalk()
 	while ((type = NextHeapBlock(heap, seed, block, &block, nil, nil, nil, nil, nil)) != kMM_HeapEndBlock && n < 16)
 		types[n++] = type;
 	EXPECT(n == 2 && types[0] == kMM_HeapPtrBlock && types[1] == kMM_HeapFreeBlock);
+	// ROM bug fixed: asked for the block after the end, the sentinel again
+	// (the ROM reads the sentinel's "data" as a header)
+	void* after = nil;
+	EXPECT(NextHeapBlock(heap, seed, block, &after, nil, nil, nil, nil, nil) == kMM_HeapEndBlock && after == block);
 	Size total;
 	ULong count;
 	CountHeapBlocks(&total, &count, heap, kMM_HeapPtrBlock, 0, 0);
