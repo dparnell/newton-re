@@ -12,6 +12,7 @@
 #include "NewtonMemory.h"
 #include "FixedMath.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -100,14 +101,16 @@ TXTabsArray::SearchTab(int position, long* index) const
 
 
 // ROM 0x00230174 InsertTab__11TXTabsArrayF5TXTab
-// BUG (the ROM's): it does not look at what SearchTab answered, so a
+// ROM BUG (fixed): it does not look at what SearchTab answered, so a
 // tab put in twice at the same position gives two entries there rather
-// than replacing the one already in it.  Kept as it is.
+// than replacing the one already in it.  The fix replaces it.
 NewtonErr
 TXTabsArray::InsertTab(TXTab tab)
 {
 	long index;
-	SearchTab((int) tab.fPosition, &index);
+	Boolean there = SearchTab((int) tab.fPosition, &index);
+	if (RomBugFixed() && there)
+		return Replace(index, 1, &tab, 1);
 	if (Insert(&tab, 1, index) == nil)
 		return kError_No_Memory;
 	return noErr;
@@ -140,10 +143,11 @@ TXTabsArray::WidthToTab(long width) const
 	TXTab beyond;
 	beyond.fPosition = (w / gTXDefaultTabVal + 1) * gTXDefaultTabVal;
 	beyond.fKind = kTXTabLeft;
-	// BUG (the ROM's): it never sets the fill character here, and the
+	// ROM BUG (fixed): it never sets the fill character here, and the
 	// six bytes it copies out take in whatever the stack held.  Nothing
 	// looks at a left tab's fill character, so it has never shown; we
-	// clear it, having no stack rubbish to hand on.
+	// clear it, having no stack rubbish to hand on - which is also the
+	// fix, a default tab having no fill, so both ways it is nought.
 	beyond.fFillChar = 0;
 	return beyond;
 }

@@ -7,6 +7,7 @@
 #include "TXObjectRange.h"
 #include "OSErrors.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -326,6 +327,18 @@ TestRegisteredObjects()
 		EXPECT(TestStyle::sLive == 2);
 	}
 	// the pool gives its objects back when it goes
+	EXPECT(TestStyle::sLive == 0);
+
+	// a full pool (six): the ROM writes a seventh past its end (the ROM
+	// bug); fixed, the seventh is refused and given back
+	SetRomBugFixed(true);
+	{
+		TXRegisteredObjects pool;
+		for (long i = 0; i < kTXRegisteredObjectsMax + 1; i++)
+			pool.Add(new TestStyle(i));
+		EXPECT(pool.GetCount() == kTXRegisteredObjectsMax);
+		EXPECT(TestStyle::sLive == kTXRegisteredObjectsMax);
+	}
 	EXPECT(TestStyle::sLive == 0);
 }
 

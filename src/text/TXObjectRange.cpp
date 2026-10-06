@@ -9,6 +9,7 @@
 
 #include "TXObjectRange.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 
 
 #pragma mark -
@@ -612,13 +613,20 @@ TXRegisteredObjects::~TXRegisteredObjects()
 
 
 // ROM 0x00235a84 Add__19TXRegisteredObjectsFP12TXAttrObject
-// BUG (the ROM's): nothing looks at whether there is room.  There are
+// ROM BUG (fixed): nothing looks at whether there is room.  There are
 // six slots and the ROM registers five things in them, so the seventh
 // would write over the object that follows; it never happens because
-// the list is a fixed one built at start-up.
+// the list is a fixed one built at start-up.  The fix refuses an object
+// when the pool is full, and - the pool owning what it is given - frees
+// it, as it would have done when the pool went.
 void
 TXRegisteredObjects::Add(TXAttrObject* object)
 {
+	if (RomBugFixed() && fCount >= kTXRegisteredObjectsMax)
+	{
+		object->Free();
+		return;
+	}
 	fObjects[fCount++] = object;
 }
 

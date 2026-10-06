@@ -68,7 +68,7 @@ struct TXFrameEditInfo
 };
 
 // The frames an edit touched.  The ROM's is 0x40 bytes - room for two
-// frames, and CatchFrame does not look.  ROM BUG: TXDisplay::BeginEdit
+// frames, and CatchFrame does not look.  ROM BUG (fixed): TXDisplay::BeginEdit
 // catches every frame in the view, so a paginated view showing three
 // pages or more writes the third frame's entry over fFirst, fLast (made
 // nought) and fNext, and the fourth and later ones on into the eight
@@ -77,9 +77,15 @@ struct TXFrameEditInfo
 // not redrawn as they should be after an edit.  The host keeps the three
 // together as the ROM does (TXFrameFormatter.cpp), so that it goes wrong
 // in the same way - up to the eighth frame, which is the end of
-// gTXParagCtrlChars.
+// gTXParagCtrlChars.  The fix (RomBugFixed()) keeps the entries past the
+// second in an array of the host's own beside the object (Entry), so
+// every frame is caught and found and nothing next to it is written over.
 struct TXFramesEditInfo
 {
+	// (the fix) the entry `i`: fInfos for the first two, then the host's
+	// own array; nil past its end
+	TXFrameEditInfo* Entry(long i);
+
 	TXFrameEditInfo* CatchFrame(long frame);						// ROM 0x002399b0 CatchFrame__16TXFramesEditInfoFl - ==> its entry
 	// The entry of `frame`, into `*info`; ==> whether it has none of the
 	// flags in `mask`.

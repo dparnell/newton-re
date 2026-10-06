@@ -33,6 +33,7 @@
 #include "OSErrors.h"
 #include "FixedMath.h"
 #include "TXRulerRange.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -670,9 +671,10 @@ TXRulerTabsBar::CheckUpdate(const TXRuler* ruler)
 
 // ROM 0x00244b4c PointToBitMapIndex__14TXRulerTabsBarCF5PointP5TXTab
 // The margin markers first, then the tabs from the last.
-// ROM BUG: a tab that was only near leaves in `*tab` the nearest tab seen
+// ROM BUG (fixed): a tab that was only near leaves in `*tab` the nearest tab seen
 // - or, when no tab was near at all, whatever was on the stack; the host
-// clears it.
+// clears it.  The fix is that: `*tab` is the tab found, or nought - also
+// when the ruler has no tabs at all, where the ROM does not write it.
 int
 TXRulerTabsBar::PointToBitMapIndex(Point pt, TXTab* tab) const
 {
@@ -715,6 +717,8 @@ TXRulerTabsBar::PointToBitMapIndex(Point pt, TXTab* tab) const
 		}
 		*tab = nearestTab;
 	}
+	else if (RomBugFixed())
+		memset(tab, 0, sizeof(*tab));
 	return found;
 }
 

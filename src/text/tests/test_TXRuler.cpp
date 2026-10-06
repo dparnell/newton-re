@@ -11,6 +11,7 @@
 #include "OSErrors.h"
 #include "FixedMath.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -77,11 +78,20 @@ TestTabs()
 	tab.Set(120, kTXTabLeft, 0);		other.InsertTab(tab);
 	EXPECT(other.GetCount() == 3 && !tabs.IsEqual(&other));		// the kind differs
 
-	// BUG (the ROM's): the same position twice gives two entries
+	// fixed: the same position twice replaces the tab that was there
+	SetRomBugFixed(true);
+	tab.Set(50, kTXTabRight, 0);
+	EXPECT(other.InsertTab(tab) == noErr);
+	EXPECT(other.GetCount() == 3 && other.GetIndTab(0).fPosition == 50
+		&& other.GetIndTab(0).fKind == kTXTabRight && other.GetIndTab(1).fPosition == 120);
+
+	// the ROM's bug (NEWTON_ROM_BUGS=1): the same position twice gives two entries
+	SetRomBugFixed(false);
 	tab.Set(50, kTXTabLeft, 0);
 	EXPECT(other.InsertTab(tab) == noErr);
 	EXPECT(other.GetCount() == 4 && other.GetIndTab(0).fPosition == 50
 		&& other.GetIndTab(1).fPosition == 50);
+	SetRomBugFixed(true);
 }
 
 

@@ -16,6 +16,7 @@
 #include "TXUtilities.h"
 #include "FixedMath.h"
 #include "Ports.h"
+#include "host/RomBugs.h"
 
 
 // ROM 0x0023cba8 __ct__6TXLineFP12TXStyledTextP12TXRulerRange
@@ -286,10 +287,12 @@ TXLine::CalcFullJustifPortions(const UniChar* text, long* portions, long* count)
 // tab in proportion to their portions.  A line of more than a hundred
 // pieces is left as it is.
 //
-// ROM BUG, kept: the shares are handed to the pieces from the end
+// ROM BUG (fixed): the shares are handed to the pieces from the end
 // backwards, one per *text* piece counted, but the portions include a
 // nought for each line end among them - so a line end before the last
-// text piece shifts every share after it one piece along.
+// text piece shifts every share after it one piece along.  The fix walks
+// the pieces as CalcFullJustifPortions did, each text piece taking its own
+// portion's share.
 void
 TXLine::DefineRunsExtraWidths(const UniChar* text, Fixed extra)
 {
@@ -306,7 +309,18 @@ TXLine::DefineRunsExtraWidths(const UniChar* text, Fixed extra)
 	long portions[100];
 	long count;
 	Fixed total = CalcFullJustifPortions(text, portions, &count);
-	if (total != 0)
+	if (total != 0 && RomBugFixed())
+	{
+		TXLineRunInfo* info = GetRunInfo(fLast);
+		long given = 0;
+		for (long i = 0; given < count && i <= fLast; i++, info--)
+			if (info->fKind == 0)
+			{
+				info->fExtra = FixedMultiply(FixedDivide(portions[i], total), extra);
+				given++;
+			}
+	}
+	else if (total != 0)
 	{
 		TXLineRunInfo* info = GetRunInfo(fLast);
 		for (long i = 0; i < count; i++, info--)

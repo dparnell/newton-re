@@ -7,6 +7,7 @@
 #include "TXFrames.h"
 #include "Rects.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -144,6 +145,33 @@ TestMonoFrame()
 	EXPECT(gFramesEditInfo.GetEditInfoPtr(0, &found, 1));
 	formatter->EndEdit();
 	EXPECT(gFramesEditInfo.fCount == 0);
+
+	// four frames caught (a view showing four pages): the ROM's object has
+	// room for two and the rest overwrite it and what follows it (the ROM
+	// bug); fixed, every one is kept, found and flagged, and the paragraph
+	// control characters after it are left alone
+	{
+		SetRomBugFixed(true);
+		unsigned char ctrl[sizeof(gTXParagCtrlChars)];
+		memcpy(ctrl, &gTXParagCtrlChars, sizeof(ctrl));
+		formatter->BeginEdit();
+		for (long f = 0; f < 4; f++)
+			EXPECT(formatter->CatchFrame(f) != nil);
+		EXPECT(gFramesEditInfo.fCount == 4 && gFramesEditInfo.fFirst == 0 && gFramesEditInfo.fLast == 3);
+		gFramesEditInfo.SetEditFlag(4, 2, 0x7fffffff);
+		for (long f = 0; f < 4; f++)
+		{
+			TXFrameEditInfo* e;
+			EXPECT(gFramesEditInfo.GetEditInfoPtr(f, &e, 0) && e != nil && e->fFrame == f);
+			EXPECT(e != nil && (e->fFlags == 4) == (f >= 2));
+		}
+		long seen = 0;
+		for (TXFrameEditInfo* e = formatter->GetNextFrameEditInfo(); e != nil; e = formatter->GetNextFrameEditInfo())
+			EXPECT(e->fFrame == seen++);
+		EXPECT(seen == 4);
+		formatter->EndEdit();
+		EXPECT(memcmp(ctrl, &gTXParagCtrlChars, sizeof(ctrl)) == 0);
+	}
 
 	// one frame, 0x7fff tall
 	EXPECT(formatter->GetFrameHeight(0) == 0x7fff);

@@ -25,6 +25,7 @@
 #include "NewtonExceptions.h"
 #include "RootView.h"
 #include "Fonts.h"
+#include "host/RomBugs.h"
 
 #include <new>
 
@@ -534,9 +535,9 @@ FTXClear(RefArg rcvr)
 // ROM 0x0024acf4 FTXChangeRangeRuns
 // ChangeRangeRuns(range, style, toggle, undoable); a packed font spec is
 // opened out into a frame first.
-// ROM BUG: GetFontFamilyNum already answers an integer Ref, and it is
+// ROM BUG (fixed): GetFontFamilyNum already answers an integer Ref, and it is
 // shifted again, so the family of a packed spec comes out four times its
-// number.
+// number.  The fix puts the Ref in as it is.
 Ref
 FTXChangeRangeRuns(RefArg rcvr, RefArg range, RefArg style, RefArg toggle, RefArg undoable)
 {
@@ -550,7 +551,10 @@ FTXChangeRangeRuns(RefArg rcvr, RefArg range, RefArg style, RefArg toggle, RefAr
 		RefVar spec(Clone(RefVar(Rcanonicalfontspec)));
 		SetFrameSlot(spec, RSSYMsize, RefVar(MAKEINT(GetFontSize(style))));
 		SetFrameSlot(spec, RSSYMface, RefVar(MAKEINT(GetFontFace(style))));
-		SetFrameSlot(spec, RSSYMfamily, RefVar((Ref) (GetFontFamilyNum(style) << 2)));
+		if (RomBugFixed())
+			SetFrameSlot(spec, RSSYMfamily, RefVar(GetFontFamilyNum(style)));
+		else
+			SetFrameSlot(spec, RSSYMfamily, RefVar((Ref) (GetFontFamilyNum(style) << 2)));
 		view->ChangeRangeRuns(r, spec, NOTNIL(toggle), NOTNIL(undoable));
 	}
 	else

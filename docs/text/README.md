@@ -564,9 +564,10 @@ justification decides the rest:
   the text pieces after the last tab in proportion to what each says it
   can take - except on a paragraph's last line (one ending in a line
   break, or at the end of the text), which is laid out left.  A ruler
-  value of 0x10 stretches the last line too.  ROM BUG kept: the shares
+  value of 0x10 stretches the last line too.  ROM BUG: the shares
   are handed out from the line's end backwards one per text piece, but
-  the list of portions holds a nought for each line end among them too.
+  the list of portions holds a nought for each line end among them too
+  (fixed by default; `NEWTON_ROM_BUGS=1` for the ROM's behaviour).
 
 `DefineRunWidths` measures the pieces: text by its run, a line end as
 nothing, and a tab by the ruler's `GetTabWidth` - a left tab's width at
@@ -668,7 +669,9 @@ The host keeps the three globals together in the ROM's order
 (`TXFrameFormatter.cpp`), so it goes wrong in the same way - a demo page
 four in view showed a page with a line missing and one half-drawn after a
 page break was put in.  With pages of a realistic size a view shows two at
-most.
+most.  Fixed by default: the entries past the second are kept in an array
+of the host's own, so every frame is found and nothing after the note is
+written over (`NEWTON_ROM_BUGS=1` for the ROM's behaviour).
 
 ## The formatter (`text/TXFormatter.h`)
 
@@ -894,7 +897,9 @@ with it).  The dragging is one loop that xor-draws the icons after the
 pen, keeping each within its bounds and snapping one from the icons bar
 into the ruler or back.  The pictures are the ROM's `rulerPicts`.
 
-The 39 methods are `TXViewNatives.cpp`.  Two ROM bugs kept:
+The 39 methods are `TXViewNatives.cpp`.  Two ROM bugs, now fixed by
+default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour, as with the others
+below):
 `GetCountPages` answers the view's own address when there are no pages,
 and a packed font spec given to `ChangeRangeRuns` (the method) comes out
 with its family four times its number, while the same spec in command

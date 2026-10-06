@@ -58,6 +58,7 @@
 #include "NewtonExceptions.h"
 #include "NSErrors.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 
 #include <new>
 #include <string.h>
@@ -340,13 +341,18 @@ TXView::GetTotalWidth(void)
 
 
 // ROM 0x0024d358 GetCountPages__6TXViewFv
-// ROM BUG: with no pages the function answers whatever r0 held - the
-// view's own address - which the caller turns into an integer.
+// ROM BUG (fixed): with no pages the function answers whatever r0 held - the
+// view's own address - which the caller turns into an integer.  The fix
+// answers 0: a view that is not paginated has no pages to count (the most
+// conservative answer - nothing the ROM's callers do is told of a page
+// that is not there).
 long
 TXView::GetCountPages(void)
 {
 	if (fTXFlags & kTXViewPaginated)
 		return ((TXPageFrames*) fText->fDisplay->fFrames)->GetCountPages();
+	if (RomBugFixed())
+		return 0;
 	return (long) (intptr_t) this;
 }
 
@@ -578,12 +584,21 @@ TXView::RealDoCommand(RefArg cmd)
 				spec = MAKEINT(CommandParameter(cmd));
 			if (ISINT(spec))
 			{
-				// ROM BUG: the size and the face go into the frame as the
+				// ROM BUG (fixed): the size and the face go into the frame as the
 				// bare numbers GetFontSize and GetFontFace answer, not as
-				// integer Refs (the family, a Ref already, is right)
+				// integer Refs (the family, a Ref already, is right).  The
+				// fix makes them integer Refs.
 				style = Clone(RefVar(Rcanonicalfontspec));
-				SetFrameSlot(style, RSSYMsize, RefVar((Ref) GetFontSize(spec)));
-				SetFrameSlot(style, RSSYMface, RefVar((Ref) GetFontFace(spec)));
+				if (RomBugFixed())
+				{
+					SetFrameSlot(style, RSSYMsize, RefVar(MAKEINT(GetFontSize(spec))));
+					SetFrameSlot(style, RSSYMface, RefVar(MAKEINT(GetFontFace(spec))));
+				}
+				else
+				{
+					SetFrameSlot(style, RSSYMsize, RefVar((Ref) GetFontSize(spec)));
+					SetFrameSlot(style, RSSYMface, RefVar((Ref) GetFontFace(spec)));
+				}
 				SetFrameSlot(style, RSSYMfamily, RefVar(GetFontFamilyNum(spec)));
 			}
 			else
@@ -701,7 +716,8 @@ ClickLoop(unsigned char inLoop, void* scroll, void* view)
 
 // ROM 0x0024ba60 RulerClick__6TXViewFP9TXNewtPen
 // A click on the ruler: its change made a paragraph command.
-// ROM BUG: the attribute list is lost when the click changed nothing.
+// ROM BUG (fixed): the attribute list is lost when the click changed nothing.
+// The fix deletes it.
 Boolean
 TXView::RulerClick(TXNewtPen* pen)
 {
@@ -720,6 +736,8 @@ TXView::RulerClick(TXNewtPen* pen)
 			fText->fHilite->GetHiliteRange(&selection);
 			NewAttrCommand(kTXRulersCommand, selection, values, how);
 		}
+		else if (RomBugFixed())
+			delete values;
 		return true;
 	}
 	return false;
@@ -1224,10 +1242,12 @@ TXView::CheckReplaceData(RefArg data, long length)
 // ROM 0x00247ac0 ReplaceAll__6TXViewFPUslRC6RefVar
 // Every occurrence from `start` on replaced by the frame, the lines
 // formatted once at the end.  ==> how many.
-// ROM BUG: when the last search finds nothing the length handed to
+// ROM BUG (fixed): when the last search finds nothing the length handed to
 // Format is -1 less the first match's offset rather than "to the end";
 // and the error the loop may stop on is never thrown (the variable it
-// would be kept in is never set).
+// would be kept in is never set).  The fix formats from the first match to
+// the end of the text, and keeps the error and throws it (exRootException,
+// as the ROM's code at 0x00247c40 would) once the edit is finished.
 long
 TXView::ReplaceAll(UniChar* find, long start, RefArg data)
 {
@@ -1246,13 +1266,19 @@ TXView::ReplaceAll(UniChar* find, long start, RefArg data)
 	TXNewtContainer container(data);
 	TXReplaceParams params(&container, kTXImportAll);
 	long at;
+	NewtonErr err = noErr;			// (the fix) the error the loop stopped on
 	while ((at = FindString(find, start)) >= 0)
 	{
 		if (first < 0)
 			first = at;
 		count++;
-		if (fText->ReplaceRange(at, at + length, &params) != noErr)
+		NewtonErr replaced = fText->ReplaceRange(at, at + length, &params);
+		if (replaced != noErr)
+		{
+			if (RomBugFixed())
+				err = replaced;
 			break;
+		}
 		if (step < 0)
 		{
 			TXOffsetRange selection;
@@ -1265,10 +1291,15 @@ TXView::ReplaceAll(UniChar* find, long start, RefArg data)
 	display->EnableDrawing();
 	if (count != 0)
 	{
-		fText->Format(false, first, at - first);
+		if (RomBugFixed() && at < 0)
+			fText->Format(false, first, fText->fChars->Count() - first);
+		else
+			fText->Format(false, first, at - first);
 		Edited(true, true, true);
 		UpdateRuler(true);
 		fTXFlags |= kTXViewModified;
+		if (err != noErr)
+			Throw(exRootException, (void*) (long) err, nil);
 	}
 	return count;
 }
@@ -2193,12 +2224,14 @@ FailGetTXView(RefArg context)
 // Read from the assembly.  A 'text item for [start, start+length): the
 // selection's box, its top and bottom cut to the lines the run begins and
 // ends on, and when both are one line its sides too, relative to the view.
-// ROM BUG: when the run starts with a line feed the top is first worked
+// ROM BUG (fixed): when the run starts with a line feed the top is first worked
 // out from the next line (its point less the line's height) and then
 // overwritten with that next line's point, so the working out is lost;
-// and the item count is never added to.
+// and the item count is never added to.  The fix keeps the top worked out
+// (what was evidently meant - it is computed for nothing otherwise) and
+// counts the item (GetDragInfo's callers do not look at the count).
 void
-TXView::AddTextDragItem(TDragInfo* info, long start, long length, int* /*count*/)
+TXView::AddTextDragItem(TDragInfo* info, long start, long length, int* count)
 {
 	RefVar ref;
 	TXFormatter* formatter = fText->fFormatter;
@@ -2208,7 +2241,8 @@ TXView::AddTextDragItem(TDragInfo* info, long start, long length, int* /*count*/
 	Point first;
 	TXOffsetPos at;
 	at.fAtStart = false;
-	if (length > 0 && formatter->IsLineFeed(start))
+	Boolean fromLineFeed = length > 0 && formatter->IsLineFeed(start);
+	if (fromLineFeed)
 	{
 		at.fOffset = start + 1;
 		first = CharToPoint(at, &height);
@@ -2232,7 +2266,8 @@ TXView::AddTextDragItem(TDragInfo* info, long start, long length, int* /*count*/
 		at.fOffset = end;
 		last = CharToPoint(at, &height);
 	}
-	bounds.top = first.v;
+	if (!(RomBugFixed() && fromLineFeed))
+		bounds.top = first.v;
 	bounds.bottom = last.v + height;
 	if (first.v == last.v)
 	{
@@ -2245,6 +2280,8 @@ TXView::AddTextDragItem(TDragInfo* info, long start, long length, int* /*count*/
 	SetArraySlot(ref, 1, RefVar(MAKEINT(length)));
 	SetArraySlot(ref, 2, RefVar(ToObject(bounds)));
 	info->AddDragItem(RSSYMtext, ref, RefVar(NILREF));
+	if (RomBugFixed() && count != nil)
+		(*count)++;
 }
 
 
@@ -2252,12 +2289,14 @@ TXView::AddTextDragItem(TDragInfo* info, long start, long length, int* /*count*/
 // Read from the assembly.  The selection as drag items: each stretch of
 // text between pictures one 'text item, each picture a 'shape/'picture
 // item labelled with the ROM's drawingName.  ==> how many pictures.
-// ROM BUG: the two CharToPoint calls for a picture share their height
+// ROM BUG (fixed): the two CharToPoint calls for a picture share their height
 // slot with the first point, so the item's rectangle is made of the
 // second height and a stale stack word: its top is the height's top half
 // (nought), its left the height, its right the picture's right end and its
 // bottom the height's top half plus that stale word.  DEVIATION: the host
-// takes the stale word as nought.
+// takes the stale word as nought.  The fix makes the rectangle of the two
+// points, as AddTextDragItem does for text: the start's top left to the
+// end's right and the bottom of its line.
 long
 TXView::GetDragInfo(TDragInfo* info)
 {
@@ -2297,14 +2336,24 @@ TXView::GetDragInfo(TDragInfo* info)
 			TXOffsetPos at;
 			at.fAtStart = false;
 			at.fOffset = runStart;
-			(void) CharToPoint(at, &height);
+			Point firstPt = CharToPoint(at, &height);
 			at.fOffset = runEnd;
 			Point last = CharToPoint(at, &height);
 			Rect bounds;
-			bounds.top = (short) (height >> 16);
-			bounds.left = (short) height;
-			bounds.bottom = (short) ((height >> 16) + 0);
-			bounds.right = last.h;
+			if (RomBugFixed())
+			{
+				bounds.top = firstPt.v;
+				bounds.left = firstPt.h;
+				bounds.bottom = (short) (last.v + height);
+				bounds.right = last.h;
+			}
+			else
+			{
+				bounds.top = (short) (height >> 16);
+				bounds.left = (short) height;
+				bounds.bottom = (short) ((height >> 16) + 0);
+				bounds.right = last.h;
+			}
 			OffsetRect(&bounds, -viewBounds.left, -viewBounds.top);
 			ref = MakeArray(3);
 			SetArraySlot(ref, 0, RefVar(MAKEINT(runStart)));
@@ -2805,8 +2854,9 @@ TXView::GetIntersectedLines(const Rect& r, long* first, long* last)
 // Read from the assembly.  Of lines first to last, the one the rectangle
 // covers most of; the rectangle comes back with that line's top and
 // bottom, `*coverage` with how much (-1: none looked at).
-// ROM BUG: with no lines to look at, the answer is whatever the register
-// held; the host answers -1.
+// ROM BUG (fixed): with no lines to look at, the answer is whatever the
+// register held; the host answers -1, which is also the fix (no line, as
+// GetBestCoveredLine's other form answers when nothing is intersected).
 long
 TXView::GetBestCoveredLine(Rect* r, long first, long last, long* coverage)
 {

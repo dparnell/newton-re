@@ -11,12 +11,14 @@
 #include "TXStream.h"
 #include "ByteOrder.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 
 
 // The ROM's globals from 0x0c104d98: gFramesEditInfo, eight bytes no
 // symbol names, and gTXParagCtrlChars at 0x0c104de0.  An edit that
 // catches more than two frames writes on from the first into the others
-// (TXFramesEditInfo, ROM BUG), so the host keeps them in the same order.
+// (TXFramesEditInfo, ROM BUG (fixed): with the fix nothing is written past
+// it), so the host keeps them in the same order.
 struct TXFramesEditGlobals
 {
 	TXFramesEditInfo	fFramesEditInfo;	// +0x00
@@ -30,10 +32,51 @@ TXFramesEditInfo&	gFramesEditInfo = gTXFramesEditGlobals.fFramesEditInfo;
 TXParagCtrlChars&	gTXParagCtrlChars = gTXFramesEditGlobals.fParagCtrlChars;
 
 
+// (the fix of the ROM's bug, TXFrameFormatter.h) the entries past the
+// second, kept apart; a frame past these is not caught (its entry is a
+// scratch one), which is as the ROM would have it, harmlessly
+enum { kTXFramesEditOverflow = 254 };
+static TXFrameEditInfo	gTXFramesEditOverflow[kTXFramesEditOverflow];
+
+TXFrameEditInfo*
+TXFramesEditInfo::Entry(long i)
+{
+	if (i < 2)
+		return &fInfos[i];
+	if (i - 2 < kTXFramesEditOverflow)
+		return &gTXFramesEditOverflow[i - 2];
+	return nil;
+}
+
+
 // ROM 0x002399b0 CatchFrame__16TXFramesEditInfoFl
 TXFrameEditInfo*
 TXFramesEditInfo::CatchFrame(long frame)
 {
+	if (RomBugFixed())
+	{
+		static TXFrameEditInfo scratch;
+		TXFrameEditInfo* info = Entry(fCount);
+		if (info == nil)
+			info = &scratch;
+		else
+		{
+			if (fCount == 0)
+				fFirst = frame;
+			if (fCount == 0 || frame > fLast)
+				fLast = frame;
+			if (frame < fFirst)
+				fFirst = frame;
+			fCount++;
+		}
+		info->fFrame = frame;
+		info->fHeightChange = 0;
+		info->fFlags = 0;
+		info->fField08 = 0;
+		info->fField10 = 0;
+		info->fField14 = 0;
+		return info;
+	}
 	long n = fCount;
 	if (n == 0)
 		fFirst = frame;
@@ -55,6 +98,20 @@ Boolean
 TXFramesEditInfo::GetEditInfoPtr(long frame, TXFrameEditInfo** info, int mask) const
 {
 	*info = nil;
+	if (RomBugFixed())
+	{
+		if (fCount != 0 && fFirst <= frame && frame <= fLast)
+			for (long i = 0; i < fCount; i++)
+			{
+				TXFrameEditInfo* p = ((TXFramesEditInfo*) this)->Entry(i);
+				if (p->fFrame == frame)
+				{
+					*info = p;
+					return (p->fFlags & mask) == 0;
+				}
+			}
+		return false;
+	}
 	if (fCount != 0 && fFirst <= frame && frame <= fLast)
 	{
 		for (const TXFrameEditInfo* p = fInfos; p < fInfos + fCount; p++)
@@ -78,6 +135,8 @@ TXFramesEditInfo::GetNext(void)
 	if (n != fCount)
 	{
 		fNext = n + 1;
+		if (RomBugFixed())
+			return Entry(n);
 		return &fInfos[n];
 	}
 	fNext = 0;
@@ -101,6 +160,16 @@ TXFramesEditInfo::SetEditFlag(int flag, long frame, long count)
 	}
 	if (count < 0x7fffffff)
 		count = frame + count;
+	if (RomBugFixed())
+	{
+		for (long i = 0; i < n; i++)
+		{
+			TXFrameEditInfo* p = Entry(i);
+			if (frame <= p->fFrame && p->fFrame < count)
+				p->fFlags |= flag;
+		}
+		return;
+	}
 	for (TXFrameEditInfo* p = fInfos; p < fInfos + n; p++)
 		if (frame <= p->fFrame && p->fFrame < count)
 			p->fFlags |= flag;
