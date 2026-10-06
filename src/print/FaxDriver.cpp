@@ -16,6 +16,7 @@
 #include "utility/PseudoSyncState.h"
 #include "utility/Unicode.h"
 #include "UserTasks.h"
+#include "host/RomBugs.h"
 #include <string.h>
 #include <stdint.h>
 
@@ -215,16 +216,29 @@ TFaxDriver::Open()
 
 // ROM 0x0020f4e8 GetPageInfo__10TFaxDriverFP10PrPageInfo
 // The page as the session agreed it: 200 dots an inch across, and 200 or
-// 100 down, letter or A4 as the paper is.  ROM BUG: asked before the
-// session's open has come back it waits for it by spinning on the flag,
-// which nothing can set while this task spins - it never returns.
-// (TDotPrinter only asks after Open, which has waited properly.)
+// 100 down, letter or A4 as the paper is.  ROM BUG (fixed): asked before
+// the session's open has come back it waits for it by spinning on the
+// flag, which nothing can set while this task spins - it never returns.
+// (TDotPrinter only asks after Open, which has waited properly.)  The fix
+// waits as Open does - in PrReleaseControl, with fWaiting set so a cancel
+// can let it go - and gives up waiting once the job is cancelled (the
+// page then the standard one, as for a resolution it does not know).
 void
 TFaxDriver::GetPageInfo(PrPageInfo* info)
 {
 	Boolean a4 = EQ(fConnect->fPaperSize, RSSYMa4);
-	while (!fData->fSessionOpen)
-		;
+	if (RomBugFixed())
+	{
+		while (!fData->fSessionOpen && fError != kPR_ERR_UserCancel)
+		{
+			fData->fWaiting = true;
+			PrReleaseControl(kUntilRegained, fPrinter);
+			fData->fWaiting = false;
+		}
+	}
+	else
+		while (!fData->fSessionOpen)
+			;
 	const unsigned int* page;
 	if (fData->fVRes == 0xc4)
 		page = a4 ? kFaxFineA4 : kFaxFineLetter;

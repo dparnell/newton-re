@@ -43,6 +43,7 @@
 #include "NewtonMemory.h"
 #include "FixedMath.h"
 #include "toolbox/ByteOrder.h"
+#include "host/RomBugs.h"
 #include <string.h>
 #include <stdint.h>
 
@@ -208,11 +209,13 @@ UpdateScalePat(TDotPrinter* printer, PatternHandle pattern)
 		UChar shifted[8];
 		if (align.h != 0)
 		{
-			// ROM BUG: each row is turned left by the alignment with the
-			// bits that fall off the left put back shifted right by 7 - h
-			// rather than 8 - h, so one bit is doubled and one lost
+			// ROM BUG (fixed): each row is turned left by the alignment
+			// with the bits that fall off the left put back shifted right
+			// by 7 - h rather than 8 - h, so one bit is doubled and one
+			// lost.  The fix shifts them by 8 - h: the row rotated.
+			int back = RomBugFixed() ? 8 - align.h : 7 - align.h;
 			for (int i = 7; i >= 0; i--)
-				shifted[i] = (UChar) ((patBits[i] << align.h) | (patBits[i] >> (7 - align.h)));
+				shifted[i] = (UChar) ((patBits[i] << align.h) | (patBits[i] >> back));
 			patBits = shifted;
 		}
 		long height = printer->fBandRect.bottom - printer->fBandRect.top;
@@ -427,12 +430,15 @@ ConvertPattern(uint32_t* src, UChar* dst, long depth)
 
 // ROM 0x001c85dc TransferShape__FP11TDotPrinter
 // The mask's shape put into the band in the scaled pattern, in the pen's
-// mode.  ROM BUG: the four "not" modes' loops never move on in the mask,
-// so everything they draw is masked by the band's first 32 dots.
+// mode.  ROM BUG (fixed): the four "not" modes' loops never move on in the
+// mask, so everything they draw is masked by the band's first 32 dots.
+// (notCopy's does, as ported: it is notOr's, notXor's and notBic's that
+// stand still.)  The fix moves them on in the mask as the others do.
 static void
 TransferShape(TDotPrinter* printer)
 {
 	long n = printer->fBandSize >> 2;
+	long maskStep = RomBugFixed() ? 1 : 0;
 	const uint32_t* mask = (const uint32_t*) printer->fMask.baseAddr;
 	const uint32_t* pat = (const uint32_t*) printer->fPattern.baseAddr;
 	uint32_t* dst = (uint32_t*) printer->fPhantom.port.portBits.baseAddr;
@@ -465,15 +471,15 @@ TransferShape(TDotPrinter* printer)
 		}
 		break;
 	case 5:		// notOr
-		for ( ; n > 0; n--, dst++)
+		for ( ; n > 0; n--, dst++, mask += maskStep)
 			*dst = (~*pat++ & *mask) | *dst;
 		break;
 	case 6:		// notXor
-		for ( ; n > 0; n--, dst++)
+		for ( ; n > 0; n--, dst++, mask += maskStep)
 			*dst = (*mask & ~*pat++) ^ *dst;
 		break;
 	case 7:		// notBic
-		for ( ; n > 0; n--, dst++)
+		for ( ; n > 0; n--, dst++, mask += maskStep)
 			*dst = ~(~*pat++ & *mask) & *dst;
 		break;
 	}

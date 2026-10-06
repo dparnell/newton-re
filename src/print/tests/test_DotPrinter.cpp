@@ -23,6 +23,7 @@
 #include "Boot.h"
 #include "UserBoot.h"
 #include "host/TaskRuntime.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -128,6 +129,54 @@ DrawPage()
 }
 
 
+// ROM BUG (fixed): TryAllocBands failing on a buffer after the first left
+// the ones before it, freed, in the array; fixed, they are cleared
+// the largest block NewPtr can give now (the heap may grow to give it)
+static Size
+LargestPtr(void)
+{
+	Size low = 0, high = 0x40000000;
+	while (high - low > 16)
+	{
+		Size mid = low + (high - low) / 2;
+		Ptr p = NewPtr(mid);
+		if (p != nil)
+		{
+			DisposPtr(p);
+			low = mid;
+		}
+		else
+			high = mid;
+	}
+	return low;
+}
+
+static void
+TestTryAllocBands(TDotPrinter* printer)
+{
+	char* bands[4];
+	// one block as big as the largest can be had, a second cannot
+	Size size = LargestPtr();
+	Ptr held = NewPtr(size);
+	Size second = LargestPtr();
+	DisposPtr(held);
+	EXPECT(second < size);
+	SetRomBugFixed(false);
+	bands[0] = bands[1] = (char*) 1;
+	EXPECT(!printer->TryAllocBands(bands, 2, size));
+	EXPECT(bands[0] != nil && bands[1] == nil);		// bands[0] freed but left
+	SetRomBugFixed(true);
+	bands[0] = bands[1] = (char*) 1;
+	EXPECT(!printer->TryAllocBands(bands, 2, size));
+	EXPECT(bands[0] == nil && bands[1] == nil);
+	// and a request that can be met still is
+	EXPECT(printer->TryAllocBands(bands, 2, 256));
+	EXPECT(bands[0] != nil && bands[1] != nil);
+	DisposPtr(bands[0]);
+	DisposPtr(bands[1]);
+}
+
+
 static void
 PrintScenario(void)
 {
@@ -188,6 +237,8 @@ PrintScenario(void)
 	printf("test_DotPrinter: the gray is %ld of %ld dots\n", gray, 160L * 140);
 	EXPECT(gray > 160 * 140 * 4 / 10 && gray < 160 * 140 * 6 / 10);
 	EXPECT(Pixel(20, 440) == Pixel(21, 440) && Pixel(20, 440) == Pixel(20, 441));
+
+	TestTryAllocBands((TDotPrinter*) printer);
 
 	printer->Delete();
 	HostStopTasks();

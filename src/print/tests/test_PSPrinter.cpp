@@ -5,7 +5,7 @@
 // patterned fill, and a line of text in the system font.  The document is
 // then read: the DSC structure and the header, each shape as the
 // bottlenecks write it, the text shown in Helvetica's Mac-encoded copy, and
-// the trailer's page count.  Also FixedToString (and its ROM quirk with a
+// the trailer's page count.  Also FixedToString (and its ROM bug with a
 // negative number), and TPSPAPDriver's status reading, which is not
 // AppleTalk's.
 //
@@ -33,6 +33,7 @@
 #include "Boot.h"
 #include "UserBoot.h"
 #include "host/TaskRuntime.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -136,9 +137,82 @@ TestFixedToString(TPSPrinter* printer)
 	EXPECT(strcmp(printer->FixedToString(ToFixed(12), buffer), "12") == 0);
 	EXPECT(strcmp(printer->FixedToString(0x18000, buffer), "1.50") == 0);
 	EXPECT(strcmp(printer->FixedToString(0x14ccd, buffer), "1.30") == 0);
-	// ROM quirk: the answer is past the sign; the buffer has it
+	// ROM BUG (fixed): the answer is past the sign; the buffer has it
+	SetRomBugFixed(false);
 	char* answer = printer->FixedToString(-0x18000, buffer);
 	EXPECT(strcmp(answer, "1.50") == 0 && strcmp(buffer, "-1.50") == 0);
+	SetRomBugFixed(true);
+	answer = printer->FixedToString(-0x18000, buffer);
+	EXPECT(answer == buffer && strcmp(answer, "-1.50") == 0);
+}
+
+
+// ROM BUG (fixed): the two- and four-bit patterns' darkness counted the
+// row's first pixel over and over
+static void
+TestCountBitsInPattern(TPSPrinter* printer)
+{
+	UChar bits2[16], bits4[32];
+	for (int row = 0; row < 8; row++)
+	{
+		bits2[2 * row] = 0x6C;		// 1 2 3 0 2 1 0 3: 12 a row
+		bits2[2 * row + 1] = 0x93;
+		bits4[4 * row] = 0x81;		// 8 1 2 3 15 14 13 12: 68 a row
+		bits4[4 * row + 1] = 0x23;
+		bits4[4 * row + 2] = 0xFE;
+		bits4[4 * row + 3] = 0xDC;
+	}
+	PixelMap pm;
+	memset(&pm, 0, sizeof(pm));
+	PixelMap* pattern = &pm;
+	pm.baseAddr = (Ptr) bits2;
+	pm.pixMapFlags = kPixMapPtr | 2;
+	SetRomBugFixed(false);
+	EXPECT(printer->CountBitsInPattern(&pattern) == 22);
+	SetRomBugFixed(true);
+	EXPECT(printer->CountBitsInPattern(&pattern) == 32);		// 96 of 192
+	pm.baseAddr = (Ptr) bits4;
+	pm.pixMapFlags = kPixMapPtr | 4;
+	SetRomBugFixed(false);
+	EXPECT(printer->CountBitsInPattern(&pattern) == 35);
+	SetRomBugFixed(true);
+	EXPECT(printer->CountBitsInPattern(&pattern) == 37);		// 544 of 960
+}
+
+
+// ROM BUGS (fixed): a justified text cut into strings took the space's
+// extra down again for each, and showed the character at the cut twice
+static void
+TestFlushBuffer(TPSPrinter* printer, Boolean fixed)
+{
+	UniChar text[250];
+	for (int i = 0; i < 250; i++)
+		text[i] = 'x';
+	size_t from = gDocSize;
+	long start = 0;
+	StyleRecord style;
+	SetRomBugFixed(fixed);
+	printer->FlushBuffer((char*) text, start, 250, sizeof(UniChar), &style, ToFixed(1), ToFixed(3));
+	SetRomBugFixed(true);
+	EXPECT(start == 250);
+	const char* sent = gDoc + from;
+	long xs = 0;
+	for (const char* p = sent; *p != 0; p++)
+		xs += (*p == 'x');
+	const char* first = strstr(sent, "2 0 32 1 0 (");
+	EXPECT(first == sent);
+	const char* second = first != nil ? strstr(first + 12, " 0 32 1 0 (") : nil;
+	EXPECT(second != nil);
+	if (fixed)
+	{
+		EXPECT(xs == 250);
+		EXPECT(second != nil && second[-1] == '2');
+	}
+	else
+	{
+		EXPECT(xs == 251);
+		EXPECT(second != nil && second[-1] == '1');
+	}
 }
 
 
@@ -205,6 +279,7 @@ PrintScenario(void)
 	{
 		EXPECT(printer->Constructor((char*) "TTestPSDriver") == noErr);
 		TestFixedToString((TPSPrinter*) printer);
+		TestCountBitsInPattern((TPSPrinter*) printer);
 		TestStatusStrings();
 		RefVar connect(AllocateFrame());
 		SetFrameSlot(connect, RSSYMtitle, MakeString("A test"));
@@ -224,6 +299,11 @@ PrintScenario(void)
 				passes++;
 			} while (printer->RepeatPage() && passes < 10);
 			EXPECT(passes == 1);
+			if (page == 2)
+			{
+				TestFlushBuffer((TPSPrinter*) printer, false);
+				TestFlushBuffer((TPSPrinter*) printer, true);
+			}
 			EXPECT(printer->ClosePage() == noErr);
 		}
 		EXPECT(printer->Close() == noErr);

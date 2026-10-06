@@ -59,6 +59,7 @@
 #include "utility/Unicode.h"
 #include "ink/Ink.h"
 #include "ink/InkFont.h"
+#include "host/RomBugs.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -144,12 +145,14 @@ TPSPrinter::TearDownPSBottlenecks(GrafPort* port)
 // ROM 0x001568c0 FixedToString__10TPSPrinterFlPc
 // A Fixed as PostScript: a whole number as it is, anything else rounded
 // to two decimals (the fraction worked out a bit at a time in nine digits).
-// ROM BUG, kept: the answer is the text after the minus sign, so a
+// ROM BUG (fixed): the answer is the text after the minus sign, so a
 // negative number printed through the answer prints positive; the callers
-// that print the buffer itself print it with its sign.
+// that print the buffer itself print it with its sign.  The fix answers
+// the buffer, sign and all.
 char*
 TPSPrinter::FixedToString(Fixed value, char* string)
 {
+	char* start = string;
 	uint32_t v = (uint32_t) value;
 	if ((int32_t) v < 0)
 	{
@@ -173,6 +176,8 @@ TPSPrinter::FixedToString(Fixed value, char* string)
 		sprintf(digits, "%9.9lu", (unsigned long) fraction);
 		sprintf(string, "%d.%.2s", (int) ((int32_t) v >> 16), digits);
 	}
+	if (RomBugFixed())
+		return start;
 	return string;
 }
 
@@ -267,9 +272,10 @@ TPSPrinter::DoSetGray(UChar gray)
 // How dark a pattern is, 0 .. 64: the black pixels of its eight rows (the
 // first eight bytes of a one-bit pattern), or of a two- or four-bit one
 // its pixels' values added up and scaled.
-// ROM BUG, kept: the two- and four-bit counts shift both the row and the
+// ROM BUG (fixed): the two- and four-bit counts shift both the row and the
 // mask, so each step adds the row's first pixel again - as many times as
-// the row has steps left - and the others are never counted.
+// the row has steps left - and the others are never counted.  The fix
+// moves only the mask along the row, so each pixel is counted once.
 long
 TPSPrinter::CountBitsInPattern(PatternHandle pattern)
 {
@@ -296,6 +302,12 @@ TPSPrinter::CountBitsInPattern(PatternHandle pattern)
 				bits += 2;
 				uint32_t mask = 0xc000;
 				uint32_t shift = 14;
+				if (RomBugFixed())
+				{
+					for (; mask != 0; mask >>= 2, shift -= 2)
+						count += (long) ((half & mask) >> shift);
+					continue;
+				}
 				while (half != 0)
 				{
 					count += (long) ((half & mask) >> shift);
@@ -316,6 +328,12 @@ TPSPrinter::CountBitsInPattern(PatternHandle pattern)
 				bits += 4;
 				uint32_t mask = 0xf0000000;
 				uint32_t shift = 28;
+				if (RomBugFixed())
+				{
+					for (; mask != 0; mask >>= 4, shift -= 4)
+						count += (long) ((word & mask) >> shift);
+					continue;
+				}
 				while (word != 0)
 				{
 					count += (long) ((word & mask) >> shift);
@@ -526,7 +544,7 @@ TPSPrinter::Draw1QDLine(const FPoint& fromPt, Point pen, const FPoint& toPt)
 // A rectangle's path, inset by half the pen.  ROM QUIRK, kept: the second
 // and third corners print two of their numbers from FixedToString's
 // buffers rather than its answers, so those keep a minus sign the others
-// lose.
+// lose (the same, once FixedToString's bug is fixed).
 void
 TPSPrinter::SendRectangle(Rect* r, Point pen)
 {
@@ -971,9 +989,11 @@ TPSPrinter::DoSelectFont(Boolean macEncoding)
 // at a time as a PostScript string, (, ) and \ escaped, by "show" - or by
 // "awidthshow" when the text is justified, each character given
 // charExtra and each space spaceExtra.  start is moved to end.
-// ROM BUGS, kept: the space's extra is taken down by charExtra again for
+// ROM BUGS (fixed): the space's extra is taken down by charExtra again for
 // every string after the first; and a string cut at 245 bytes ends after a
-// character that the next string starts with again.
+// character that the next string starts with again.  The fix takes the
+// space's extra down once, and moves start past the character the cut
+// string ends with.
 void
 TPSPrinter::FlushBuffer(char* chars, long& start, long end, long charSize, StyleRecord* /*style*/, Fixed charExtra, Fixed spaceExtra)
 {
@@ -981,12 +1001,16 @@ TPSPrinter::FlushBuffer(char* chars, long& start, long end, long charSize, Style
 	const long kMaxBytes = kMaxChars - 2;
 	if (start == end)
 		return;
+	Boolean fixed = RomBugFixed();
+	if (fixed)
+		spaceExtra -= charExtra;
 	do
 	{
 		if (charExtra != 0 || spaceExtra != 0)
 		{
 			char ax[16], cx[16];
-			spaceExtra -= charExtra;
+			if (!fixed)
+				spaceExtra -= charExtra;
 			char* axs = FixedToString(charExtra, ax);
 			char* cxs = FixedToString(spaceExtra, cx);
 			sprintf(fBuffer, "%s 0 32 %s 0 ", cxs, axs);
@@ -1012,7 +1036,7 @@ TPSPrinter::FlushBuffer(char* chars, long& start, long end, long charSize, Style
 				fBuffer[n++] = '\\';
 			fBuffer[n++] = (char) c;
 			if (kMaxBytes <= n)
-				count = i;
+				count = fixed ? i + 1 : i;
 		}
 		fBuffer[n] = 0;
 		strcat(fBuffer, (charExtra != 0 || spaceExtra != 0) ? ") awidthshow\r" : ") show\r");
@@ -1434,10 +1458,12 @@ PrStdRgn(GrafVerb /*verb*/, RgnHandle /*rgn*/)
 // starts part way into one, and a deeper map's pixels through its gray
 // table.  A fax's bitmap (204 dots an inch) moves the transport's
 // progress on.
-// ROM BUGS, kept: the source rectangle's top is not looked at (the rows
+// ROM BUGS (fixed): the source rectangle's top is not looked at (the rows
 // sent start at the map's first); a map deeper than 8 bits sends nothing,
 // leaves the gsave unmatched and keeps its realigning buffer; and the
-// realigning buffer is never given back at all.
+// realigning buffer is never given back at all.  The fix starts at the
+// source rectangle's top row, matches the gsave and gives the realigning
+// buffer back on the way out of either.
 // DEVIATION: a pixel map with no gray table - the ROM looks its pixels up
 // in whatever lies at address 0 - is sent as it is.
 void
@@ -1476,6 +1502,9 @@ PrStdBits(PixelMap* src, Rect* srcRect, Rect* dstRect, long mode, RgnHandle mask
 		shift = 1;
 	long offset = srcRect->left - src->bounds.left;
 	UChar* start = (UChar*) GetPixelMapBits(src) + (offset >> shift);
+	Boolean fixed = RomBugFixed();
+	if (fixed)
+		start += (srcRect->top - src->bounds.top) * src->rowBytes;
 	long leftShift = 0, rightShift = 0;
 	if (depth < 8)
 	{
@@ -1522,6 +1551,12 @@ PrStdBits(PixelMap* src, Rect* srcRect, Rect* dstRect, long mode, RgnHandle mask
 		if (printer->fLevel == 1 || (src->pixMapFlags & 0x4000000) != 0 || (src->pixMapFlags & 0x2000000) != 0)
 		{
 			DisposPtr((Ptr) hex);
+			if (fixed)
+			{
+				printer->SendPSText((char*) "grestore\r", false);
+				if (aligned != nil)
+					DisposPtr((Ptr) aligned);
+			}
 			return;
 		}
 		// (a deeper map's own image is NOT YET in the ROM either: the
@@ -1601,14 +1636,16 @@ PrStdBits(PixelMap* src, Rect* srcRect, Rect* dstRect, long mode, RgnHandle mask
 	printer->SendPSText((char*) "\rgrestore\r", false);
 	if (hex != nil)
 		DisposPtr((Ptr) hex);
+	if (fixed && aligned != nil)
+		DisposPtr((Ptr) aligned);
 }
 
 
 // ROM 0x00159290 PrStdCurve__FUcP5curve
 // A curve, its line width half the pen's height and width added.
-// ROM BUG, kept: the width is set without the current one being saved
+// ROM BUG (fixed): the width is set without the current one being saved
 // first (PrStdPaths says "CLW %s SLW"), so the closing SLW finds nothing
-// on the PostScript stack.
+// on the PostScript stack.  The fix saves it first, as PrStdPaths does.
 void
 PrStdCurve(GrafVerb verb, curve* c)
 {
@@ -1627,7 +1664,7 @@ PrStdCurve(GrafVerb verb, curve* c)
 	printer->SetGrayLevel(verb, port);
 	char number[16];
 	Fixed width = FixedDivide((Fixed) ((uint32_t) (uint16_t) (port->pnSize.h + port->pnSize.v) << 16), 0x20000);
-	sprintf(printer->fBuffer, "%s SLW ", printer->FixedToString(width, number));
+	sprintf(printer->fBuffer, RomBugFixed() ? "CLW %s SLW " : "%s SLW ", printer->FixedToString(width, number));
 	printer->SendPSText(printer->fBuffer, false);
 	printer->SendPSText((char*) "newpath\r", false);
 	if (verb == 0)

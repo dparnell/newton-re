@@ -28,6 +28,7 @@
 #include "Frames.h"
 #include "NewtonMemory.h"
 #include "FixedMath.h"
+#include "host/RomBugs.h"
 #include <string.h>
 #include <stdint.h>
 
@@ -172,10 +173,11 @@ TDotPrinter::CalcMinBounds(const PixelMap* band, long /*size*/, Rect* bounds)
 
 
 // ROM 0x0020d36c TryAllocBands__11TDotPrinterFPPclT2
-// The buffers a band needs, all of one size, or none.  ROM BUG: when one
-// after the first cannot be had the ones before it are given back but
-// left in the array - so a failure anywhere but the first leaves bands[0]
-// pointing at a freed block, which Open and OpenPage take for success.
+// The buffers a band needs, all of one size, or none.  ROM BUG (fixed):
+// when one after the first cannot be had the ones before it are given back
+// but left in the array - so a failure anywhere but the first leaves
+// bands[0] pointing at a freed block, which Open and OpenPage take for
+// success.  The fix clears each pointer as its block is given back.
 Boolean
 TDotPrinter::TryAllocBands(char** bands, long count, long size)
 {
@@ -185,7 +187,11 @@ TDotPrinter::TryAllocBands(char** bands, long count, long size)
 		if (bands[i] == nil)
 		{
 			while (--i >= 0)
+			{
 				DisposPtr(bands[i]);
+				if (RomBugFixed())
+					bands[i] = nil;
+			}
 			return false;
 		}
 	}
@@ -267,9 +273,11 @@ TDotPrinter::Open(RefArg connectInfo)
 	long count = fPrefs.asyncBanding ? 2 : 1;
 	fBandCount = count;
 	long rowBytes = BandRowBytes(GetScalerInfo()->toRect.right);
-	// ROM BUG: the buffers' pointers are not cleared first, so a driver
-	// whose minimum band is above its optimum leaves Open looking at stack
-	// rubbish here (DEVIATION: noughts on the host)
+	// ROM BUG (fixed): the buffers' pointers are not cleared first, so a
+	// driver whose minimum band is above its optimum leaves Open looking at
+	// stack rubbish here (DEVIATION: noughts on the host).  The fix is those
+	// noughts - the failure the test below means - in either mode, since the
+	// host cannot reproduce the rubbish.
 	char* buffers[4] = { nil, nil, nil, nil };
 	long height = fPrefs.optimumBand;
 	long size = 0;

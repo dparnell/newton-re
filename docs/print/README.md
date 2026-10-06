@@ -54,20 +54,22 @@ The layout offsets below are the ROM's.
 - **PixelMap offsets.** A PixelMap's `rowBytes` is padded to a word, so its bounds start at +8.
 - **SetPort.** The ROM's `SetPort` answers the port it replaced, and `OpenPage`/`RepeatPage` use that value. The host's `SetPort` is void, so they read `GetCurrentPort()` first.
 
-## ROM bugs kept
+## ROM bugs and quirks kept
 
-- `TransferShape`'s notOr, notXor and notBic loops never advance the mask pointer. Everything they draw is masked by the band's first 32 dots.
-- `UpdateScalePat` turns a pattern row left by the alignment *h*, but puts the bits that fall off back shifted right by 7-h rather than 8-h. One bit is doubled and one is lost.
+The bugs below are ported as the ROM has them and, since 2026-10-06, fixed by default beside the ROM's code (`NEWTON_ROM_BUGS=1` brings back the ROM's behaviour, `docs/rom-bugs.md`); the quirks are kept as they are.
+
+- `TransferShape`'s notOr, notXor and notBic loops never advance the mask pointer. Everything they draw is masked by the band's first 32 dots. Fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour).
+- `UpdateScalePat` turns a pattern row left by the alignment *h*, but puts the bits that fall off back shifted right by 7-h rather than 8-h. One bit is doubled and one is lost. Fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour).
 - `ScaleStdRRect` scales the corners' oval as a Point with the width in `v`. On a fax, whose two resolutions differ (204 x 98 or 196), the corners come out scaled crosswise.
 - `WhiteOrBlackPat` does not look at the pattern's last byte.
 - `ConvertPattern` converts in place and reads each word again after writing the byte before it. The first pixels of a word are read from bits already converted.
-- `TryAllocBands` gives back the buffers it had when a later one fails, but leaves them in the array. `bands[0]` then dangles, and `Open`/`OpenPage` take it for success.
+- `TryAllocBands` gives back the buffers it had when a later one fails, but leaves them in the array. `bands[0]` then dangles, and `Open`/`OpenPage` take it for success. Fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour).
 
 ## Deviations
 
 - `QDProcs` are allocated by `sizeof`; the host's procs are pointers.
 - `PrReleaseControl` clears the printer's pointer to its waiting state after the wait. The ROM leaves it pointing at a dead stack object; on the device, a later `PrRegainControl` sends to a port that no longer exists, which does no harm there.
-- `Open`'s buffer array starts zeroed. The ROM reads stack rubbish there when a driver's minimum band is above its optimum.
+- `Open`'s buffer array starts zeroed. The ROM reads stack rubbish there when a driver's minimum band is above its optimum (the noughts are also the fix).
 
 ## A host pitfall
 
@@ -156,6 +158,8 @@ Seen on the way, not yet looked into: a card added with `cardfile:AddCard` shows
 Test: ctest `print.PSPrinter` prints two pages through a test driver that keeps the document, and checks the header, the prolog, each shape as the bottlenecks write it, the text in Helvetica, and the trailer; also `FixedToString` and the status strings.
 
 ### PostScript ROM bugs kept
+
+All but `Draw1Path`'s (a quirk) are fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour). The fax driver's `GetPageInfo`, which spins for ever when asked before the session has opened, now waits for it as `Open` does.
 
 - `FixedToString` answers the text after the minus sign, so a negative number printed through its answer prints positive. Where a caller prints the buffer itself (`SendRectangle`'s second and third corners, `Draw1QDLine`'s slanted lines, `EmitText`'s shifts) the sign is kept.
 - `Draw1Path` fills a patterned contour with `PatternFIll`, misspelt: the PostScript stops on an undefined name. It also moves a line's end by a quarter of the pen when filling as well as framing, and moves a curve's end only after drawing it.
