@@ -24,6 +24,7 @@
 #include "ROMConstants.h"
 #include "Unicode.h"
 #include "AirusIterator.h"	// GetWordCompletions
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -311,15 +312,18 @@ ReplaceLocalDictionary(RefArg localeBundle, RefArg frame)
 // words: the list of dictionaries is the ROM's either way, and the locale
 // bundle replaces the data behind the ones it has its own words for.
 //
-// BUG (kept): the list is not checked.  `TRecognitionManager::Init`
+// ROM BUG (fixed): the list is not checked.  `TRecognitionManager::Init`
 // builds it only above level 1, but calls `InitRecognizers` - and so
 // `ReadDomainOptions` and this - at every level, so a machine started at
 // level 1 throws here on a `vars.dictionaries` that was never made.  The
-// MP2x00 always starts at level 2, so nobody ever saw it.
+// MP2x00 always starts at level 2, so nobody ever saw it.  The fix
+// reads nothing when there is no list.
 void
 ReadDictPrefs(void)
 {
 	RefVar list(Dictionaries());
+	if (RomBugFixed() && !IsArray(list))
+		return;					// no dictionaries made: nothing to read
 	RefVar intl(IntlResources());
 	RefVar bundle(GetProtoVariable(intl, RSSYMcurrentlocalebundle, nil));
 	long count = Length(list);

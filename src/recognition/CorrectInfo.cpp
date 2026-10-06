@@ -24,6 +24,7 @@
 #include "NativeFunctions.h"
 #include "Interpreter.h"	// DoBlock
 #include "Rects.h"
+#include "host/RomBugs.h"
 
 
 /*------------------------------------------------------------------------------
@@ -1574,21 +1575,41 @@ FAddUnitInfo(RefArg rcvr, RefArg view, RefArg start, RefArg stop, RefArg unit)
 // the word info at the offset of one of its views moved to the other one at
 // the new offset, the word's length kept.
 //
-// ROM BUG: both offsets reach FindWordInfo and SetOffsetInfo as the Refs
-// they are, not the integers in them - four times the offset - so the word
-// is looked for (and put) at four times where it was asked for, and only
-// an offset of nought works.
+// ROM BUG (fixed): both offsets reach FindWordInfo and SetOffsetInfo as
+// the Refs they are, not the integers in them - four times the offset - so
+// the word is looked for (and put) at four times where it was asked for,
+// and only an offset of nought works.  (The word's length, the difference
+// of its start and stop slots, is likewise taken between Refs.)  The fix
+// takes the integers.
 //
-// ROM BUG: the native table gives it three arguments, so the new offset -
-// the function's fifth parameter, read from the stack - is never passed:
-// the ROM takes whatever the interpreter left on its stack there.
-// DEVIATION: the host cannot know what that was, and takes nil.
+// ROM BUG (fixed): the native table gives it three arguments, so the new
+// offset - the function's fifth parameter, read from the stack - is never
+// passed: the ROM takes whatever the interpreter left on its stack there.
+// DEVIATION: the host cannot know what that was, and takes nil.  The fix
+// cannot make a fourth argument arrive (the global function's count is
+// the ROM's), so it puts the word at the same offset it was found at in
+// the other view - the one offset the call does carry.
 static Ref
 FMoveCorrectionInfo(RefArg rcvr, RefArg fromName, RefArg offset, RefArg toName)
 {
 	RefVar newOffset(NILREF);
 	TView* from = FailGetView(rcvr, fromName);
 	TView* to = FailGetView(rcvr, toName);
+	if (RomBugFixed())
+	{
+		if (from != nil && to != nil)
+		{
+			RefVar info(FindWordInfo(from, RINT(offset)));
+			if (NOTNIL(info))
+			{
+				long start = RINT(RefVar(GetFrameSlotRef(info, RSSYMstart)));
+				long stop = RINT(RefVar(GetFrameSlotRef(info, RSSYMstop)));
+				long at = RINT(offset);
+				SetOffsetInfo(info, to, at, at + stop - start, 0);
+			}
+		}
+		return NILREF;
+	}
 	if (from != nil && to != nil)
 	{
 		RefVar info(FindWordInfo(from, (long) (Ref) offset));

@@ -32,6 +32,7 @@
 #include "ROMConstants.h"
 #include "RSSymbols.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 
@@ -278,7 +279,9 @@ main()
 
 
 	// ---- FromObject: a field's base line and grid frames ----
-	// (ROM BUG kept: the heights and the spacings keep only their low byte)
+	// (ROM BUG, NEWTON_ROM_BUGS=1: the heights and the spacings keep only
+	// their low byte)
+	SetRomBugFixed(false);
 	{
 		RefVar base(AllocateFrame());
 		SetFrameSlot(base, RSSYMbase, RefVar(MAKEINT(300)));
@@ -302,6 +305,28 @@ main()
 		EXPECT(boxes.boxLeft[0] == 0x01 && boxes.boxLeft[1] == 0x05);
 		EXPECT(boxes.xSpace[0] == 0 && boxes.xSpace[1] == 0x18);
 		EXPECT(boxes.boxTop[1] == 10 && boxes.ySpace[1] == 32 && boxes.boxRight[1] == 0 && boxes.boxBottom[1] == 0);
+	}
+	SetRomBugFixed(true);
+	// fixed, they keep their whole half-word
+	{
+		RefVar base(AllocateFrame());
+		SetFrameSlot(base, RSSYMsmallheight, RefVar(MAKEINT(20)));
+		SetFrameSlot(base, RSSYMbigheight, RefVar(MAKEINT(0x123)));
+		SetFrameSlot(base, RSSYMdescent, RefVar(MAKEINT(0x104)));
+		WordBaseInfo info;
+		memset(&info, 0xaa, sizeof(info));
+		FromObject(base, &info);
+		EXPECT(info.smallHeight[0] == 0 && info.smallHeight[1] == 20);
+		EXPECT(info.bigHeight[0] == 0x01 && info.bigHeight[1] == 0x23);
+		EXPECT(info.descent[0] == 0x01 && info.descent[1] == 0x04);
+		RefVar grid(AllocateFrame());
+		SetFrameSlot(grid, RSSYMxspace, RefVar(MAKEINT(0x118)));
+		SetFrameSlot(grid, RSSYMyspace, RefVar(MAKEINT(0x220)));
+		RecGridInfo boxes;
+		memset(&boxes, 0xaa, sizeof(boxes));
+		FromObject(grid, &boxes);
+		EXPECT(boxes.xSpace[0] == 0x01 && boxes.xSpace[1] == 0x18);
+		EXPECT(boxes.ySpace[0] == 0x02 && boxes.ySpace[1] == 0x20);
 	}
 
 	printf("test_RecConfig: %s\n", failures == 0 ? "ok" : "FAILED");

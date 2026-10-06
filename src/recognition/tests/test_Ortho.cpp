@@ -12,6 +12,7 @@
 #include "XrDomains.h"
 #include "ByteOrder.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -202,6 +203,15 @@ TestDatabase(void)
 	static const UByte kDigits[] = { '1', '2', 0 };
 	ClearAlist(list);
 	EXPECT(SearchInDataBase(list, o, db, kDigits) == 0);
+	// ... and Occam on that empty list: the ROM reads the first answer the
+	// search left behind as though it were one (the o, at nought), so a
+	// new o is not kept; fixed, an empty list keeps it
+	list->e[0].sym = 'o';
+	list->e[0].dist = 0;
+	SetRomBugFixed(false);
+	EXPECT(Occam('o', list) == 0);
+	SetRomBugFixed(true);
+	EXPECT(Occam('o', list) == 1);
 	DestroyAlist(list);
 
 	// training: the same o again is not kept; the same shape as a c is

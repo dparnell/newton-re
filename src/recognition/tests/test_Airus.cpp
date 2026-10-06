@@ -6,6 +6,7 @@
 #include "Airus.h"
 #include "AirusIterator.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -236,8 +237,70 @@ TestAL16Lexicon(void)
 	// wrong way round, so it stops at the *first* child and hands that
 	// character back as though it were the only one.  The eight-bit
 	// walker, given the same shape, answers "no single character".
+	SetRomBugFixed(false);
 	EXPECT(LookUpAL16(&block, "a") == kAirusPrefix);
 	EXPECT(block.fSymbol == (ULong) 't');		// (and 'n' was just as possible)
+	SetRomBugFixed(true);
+
+	// with the fix it answers as the eight-bit walker does
+	EXPECT(LookUpAL16(&block, "a") == kAirusPrefix);
+	EXPECT(block.fSymbol == 0xffffffff);
+}
+
+
+// what AE8_NextSet9 hands its callback
+static ULong	gNextSetAttributes[8];
+static long		gNextSetCount;
+
+static void
+CollectNextSet(void* /*context*/, ULong /*character*/, ULong /*node*/, ULong attribute)
+{
+	if (gNextSetCount < 8)
+		gNextSetAttributes[gNextSetCount] = attribute;
+	gNextSetCount++;
+}
+
+
+// A dictionary whose words carry three- and four-byte attributes: the
+// ROM's ChangeAttribute writes no three-byte one, and AE8_NextSet9 hands
+// a multi-byte one over byte-reversed - both fixed by default.
+static void
+TestWideAttributes(void)
+{
+	for (long fixed = 0; fixed <= 1; fixed++)
+	{
+		SetRomBugFixed(fixed != 0);
+		Handle three = NewDictionary(kAirusKindEnumRAM | kAirusLockedBit, 3);
+		UByte word[16];
+		strcpy((char*) word, "ab");
+		AddWord(three, 0, word, 0x010203);
+		EXPECT(airusResult == 0);
+		ChangeAttribute(three, word, 0x040506);
+		EXPECT(airusResult == 0);					// it says it worked either way
+		AirusAParmBlock* d = (AirusAParmBlock*) *three;
+		CheckDictPtrs(d);
+		EXPECT(Lookup(d, "ab") == kAirusLeaf);
+		// (AddWord passes on no three-byte attribute either, so the word
+		// went in with nought)
+		EXPECT(d->fAttribute == (fixed ? (ULong) 0x040506 : (ULong) 0));
+		DisposDictionary(&three);
+
+		Handle four = NewDictionary(kAirusKindEnumRAM | kAirusLockedBit, 4);
+		strcpy((char*) word, "x");
+		AddWord(four, 0, word, 0x01020304);
+		EXPECT(airusResult == 0);
+		d = (AirusAParmBlock*) *four;
+		CheckDictPtrs(d);
+		gNextSetCount = 0;
+		d->fNode = 0;
+		d->fWalkContext = nil;
+		d->fWalkProc = CollectNextSet;
+		AE8_NextSet9(d);
+		EXPECT(d->fResult == 0 && gNextSetCount == 1);
+		EXPECT(gNextSetAttributes[0] == (fixed ? (ULong) 0x01020304 : (ULong) 0x04030201));
+		DisposDictionary(&four);
+	}
+	SetRomBugFixed(true);
 }
 
 
@@ -278,6 +341,7 @@ main()
 
 	TestALLexicon();
 	TestAL16Lexicon();
+	TestWideAttributes();
 
 	// an empty dictionary of the kind the machine writes into
 	// (the type InitDictionaries asks for: the walkers the machine writes
@@ -534,8 +598,8 @@ main()
 		EXPECT(Lookup(d, "a") == kAirusPrefixWithAttr && d->fAttribute == 11);
 
 		// an empty word is refused, and one that was never there is
-		// reported as gone (the ROM bug written down in
-		// AEnum_DeleteWord)
+		// reported as not there - but a path that is not a word the ROM
+		// reports as gone (the ROM bug written down in AEnum_DeleteWord)
 		word[0] = 0;
 		DeleteWord(words, word);
 		EXPECT(airusResult == kAirusEmptyWord);
@@ -543,8 +607,12 @@ main()
 		DeleteWord(words, word);
 		EXPECT(airusResult == kAirusAlreadyThere);	// ... "not there"
 		strcpy((char*) word, "an");					// a path that is not a word
+		SetRomBugFixed(false);
 		DeleteWord(words, word);
 		EXPECT(airusResult == 0);					// ... and the bug says it went
+		SetRomBugFixed(true);
+		DeleteWord(words, word);
+		EXPECT(airusResult == kAirusAlreadyThere);	// ... fixed: "not there"
 
 		// ---- what may come next, and walking the whole thing ----
 		// The dictionary now holds "a", "and", "ant", "at" (and "an" is

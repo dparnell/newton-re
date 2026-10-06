@@ -11,6 +11,7 @@
 #include "Unicode.h"
 #include "NewtonMemory.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -103,6 +104,8 @@ TestPacking(void)
 	EXPECT(list->ScanTo(1) == packed + 6);
 	EXPECT(list->ScanTo(2) == packed + 11);
 	EXPECT(list->ScanTo(3) == nil);			// one past the end is safe
+	SetRomBugFixed(true);
+	EXPECT(list->ScanTo(5) == nil);			// ... and, fixed, any further
 
 	// the words come out as handles of their own
 	Handle word = list->Word(1);
@@ -130,9 +133,17 @@ TestPacking(void)
 	EXPECT(list->Find(&wanted) == 2);
 	wanted = U("goodbye");
 	EXPECT(list->Find(&wanted) == -1);
-	// (BUG, kept: a word is compared only as far as the reading goes,
+	// (ROM BUG: a word is compared only as far as the reading goes,
 	//  so a longer one finds the reading it starts with)
+	SetRomBugFixed(false);
 	wanted = U("hellos");
+	EXPECT(list->Find(&wanted) == 0);
+	SetRomBugFixed(true);
+	// fixed, it must end where the reading does
+	EXPECT(list->Find(&wanted) == -1);
+	wanted = U("hel");
+	EXPECT(list->Find(&wanted) == -1);
+	wanted = U("hello");
 	EXPECT(list->Find(&wanted) == 0);
 
 	delete list;
@@ -213,9 +224,10 @@ TestTryString(void)
 	EXPECT(TryStringLength() == 1 && InTryString('a') != 0);
 	AddTryString('b');
 	EXPECT(TryStringLength() == 2 && InTryString('b') != 0);
-	// (BUG, kept: the index wraps after the write rather than before,
+	// (ROM BUG: the index wraps after the write rather than before,
 	//  so the third character lands on the terminator and stays there
 	//  for ever - the ring is of two but the string is three long)
+	SetRomBugFixed(false);
 	AddTryString('c');
 	EXPECT(TryStringLength() == 3);
 	EXPECT(gTryString[0] == 'a' && gTryString[1] == 'b' && gTryString[2] == 'c');
@@ -228,6 +240,19 @@ TestTryString(void)
 	AddTryString('e');
 	EXPECT(TryStringLength() == 1 && gTryString[0] == 'e');
 	EXPECT(InTryString('c') == 0);
+	SetRomBugFixed(true);
+
+	// fixed, it is a ring of two: the third replaces the first
+	ClearTryString();
+	AddTryString('a');
+	AddTryString('b');
+	AddTryString('c');
+	EXPECT(TryStringLength() == 2 && gTryString[0] == 'c' && gTryString[1] == 'b');
+	AddTryString('d');
+	EXPECT(TryStringLength() == 2 && gTryString[0] == 'c' && gTryString[1] == 'd');
+	AddTryString('e');
+	EXPECT(TryStringLength() == 2 && gTryString[0] == 'e' && gTryString[1] == 'd');
+	ClearTryString();
 }
 
 

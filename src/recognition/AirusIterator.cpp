@@ -11,6 +11,7 @@
 #include "SortTables.h"		// CompareTextNoCase
 #include "Unicode.h"		// U_CONST_CHAR
 #include "NewtonMemory.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -126,13 +127,29 @@ TAirusIterator::RefreshState(TAirusPosition* position)
 // One character put into the state's set, in sort order, with which
 // position it came from.
 //
-// BUG (the ROM's): the index it walks with is kept in a byte, so a
+// ROM BUG (fixed): the index it walks with is kept in a byte, so a
 // state with more than 255 next-characters wraps round to the front.
 // A dictionary of eight-bit characters cannot have more than 255, so it
-// never happens.
+// never happens.  The fix walks with a full-width index and drops a
+// character there is no room for (the set holds kAirusMaxNextChars).
 void
 TAirusIterator::InsertNewNextChar(UByte c, int which)
 {
+	if (RomBugFixed())
+	{
+		if (fStates->fCharCount >= kAirusMaxNextChars)
+			return;
+		long n = 0;
+		while (fStates->fCharCount > n && SortOrder(c, fStates->fChars[n][0]) > 0)
+			n++;
+		UByte* at = fStates->fChars[n];
+		if (fStates->fCharCount > n)
+			BlockMove(at, at + 4, (fStates->fCharCount - n) * 4);
+		at[0] = c;
+		at[1] = (UByte) which;
+		fStates->fCharCount++;
+		return;
+	}
 	UByte i = 0;
 	while (fStates->fCharCount > i && SortOrder(c, fStates->fChars[i][0]) > 0)
 		i = (UByte) (i + 1);
@@ -515,13 +532,15 @@ TAirusIterator::TAirusIterator(Handle dictionary)
 
 
 // ROM 0x0002e2a8 __ct__14TAirusIteratorFRC14TAirusIterator
-// BUG (the ROM's), kept: this copies the words and the dictionary and
+// ROM BUG (fixed): this copies the words and the dictionary and
 // then copies the state stack - but it links each copy to the *source*
 // state rather than to the copy before it, so the original's chain ends
 // up spliced onto the copies; and it never sets the new iterator's own
 // `fStates` at all, so the copy has no stack.  Nothing ever notices,
 // because the only caller (`FAirusIteratorClone`) throws the copy away
-// without destroying it - see AirusIterator.cpp's note there.
+// without destroying it - see Words.cpp's note there.  The fix links
+// each copy to the one before it and makes the first the copy's stack,
+// so the copy is a cursor of its own standing where the original does.
 TAirusIterator::TAirusIterator(const TAirusIterator& other)
 {
 	fDictionary = other.fDictionary;
@@ -532,6 +551,23 @@ TAirusIterator::TAirusIterator(const TAirusIterator& other)
 
 	charState* previous = nil;
 	charState* source = other.fStates;
+	if (RomBugFixed())
+	{
+		fStates = nil;
+		while (source != nil)
+		{
+			charState* copy = new charState;
+			BlockMove(source, copy, sizeof(charState));
+			copy->fNext = nil;
+			if (previous != nil)
+				previous->fNext = copy;
+			else
+				fStates = copy;
+			previous = copy;
+			source = source->fNext;
+		}
+		return;
+	}
 	while (source != nil)
 	{
 		charState* copy = new charState;

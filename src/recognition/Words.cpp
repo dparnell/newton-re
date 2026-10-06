@@ -38,6 +38,7 @@
 #include "FixedMath.h"
 #include "Rects.h"			// SetPt
 #include "WordEngines.h"	// HostWordEngineDomainInUse
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -403,16 +404,27 @@ FAirusIteratorMake(RefArg rcvr)
 // ROM 0x0008f680 FAirusIteratorClone
 // PrivateClone() on a cursor frame.
 //
-// BUG (the ROM's), kept: it makes a copy of the iterator and then never
+// ROM BUG (fixed): it makes a copy of the iterator and then never
 // uses it - the new frame's `cursor` slot is set from the *original's*
 // slot, so the two frames share one iterator and the copy is leaked -
 // and it adds the original rather than the copy to the dictionary's
 // `cursors` array.  (Which is also why the copy constructor's own
 // muddle, which would leave the copy with no state stack, never shows.)
+// The fix gives the new frame the copied iterator (whose constructor is
+// fixed too) and adds the new frame to `cursors`, so the clone is a
+// cursor of its own and disposing of one leaves the other working.
 Ref
 FAirusIteratorClone(RefArg rcvr)
 {
 	RefVar copy(Clone(rcvr));
+	if (RomBugFixed())
+	{
+		TAirusIterator* iterator = new TAirusIterator(*GetScriptCursorRef(rcvr));
+		SetFrameSlot(copy, RSSYMcursor, RefVar(AddressToRef(iterator)));
+		RefVar cursors(GetFrameSlotRef(RefVar(GetFrameSlotRef(rcvr, RSSYMdict)), RSSYMcursors));
+		AddArraySlot(cursors, copy);
+		return copy;
+	}
 	new TAirusIterator(*GetScriptCursorRef(rcvr));
 	SetFrameSlot(copy, RSSYMcursor, RefVar(GetFrameSlotRef(rcvr, RSSYMcursor)));
 	RefVar cursors(GetFrameSlotRef(RefVar(GetFrameSlotRef(rcvr, RSSYMdict)), RSSYMcursors));

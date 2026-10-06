@@ -25,6 +25,7 @@
 #include "NewtonExceptions.h"
 #include "InkGroups.h"		// WRecEndInkStrokeGroup
 #include "WordEngines.h"	// NewHostWordEngine
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -461,21 +462,26 @@ TWRecDomain::ConfigureArea(RefArg config, ULong info)
 // hands it over before classifying a unit written in a different area
 // from the last one.
 //
-// (BUG, kept: the override does not call the base, so `fParameters` is
-//  never written down - the controller therefore hands the block over
+// (ROM BUG (fixed): the override does not call the base, so `fParameters`
+//  is never written down - the controller therefore hands the block over
 //  again before every unit rather than only when it changes.  And the
 //  answer is the wrong way round: "the parameters changed" is what it
 //  says when the engine has just run out of memory, and "unchanged"
-//  every other time.)
+//  every other time.  The fix calls the base first, which writes the
+//  block down and says whether it changed, and answers that; running out
+//  of memory is still signalled to the controller as before.)
 Boolean
 TWRecDomain::SetParameters(Handle params)
 {
+	Boolean changed = RomBugFixed() ? TDomain::SetParameters(params) : false;
 	Boolean failed = false;
 	WREC_TRY
 		fRecognizer->AreaInfoSetParameters(params);
 	WREC_CATCH
 		failed = true;
 	WREC_END;
+	if (RomBugFixed())
+		return changed;
 	return failed;
 }
 

@@ -31,6 +31,7 @@
 #include "Boot.h"
 #include "UserBoot.h"
 #include "host/TaskRuntime.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -473,14 +474,28 @@ TestAreaInfo(TWRecDomain* domain, TController* controller)
 	EXPECT(gCalls.fAreaConfigure == configured + 1);
 	EXPECT(gLastAreaInfo == info);
 
-	// handed over as the parameters in force
+	// handed over as the parameters in force (the ROM's answer, which is
+	// the wrong way round, and the block never written down)
+	SetRomBugFixed(false);
+	Handle before = domain->fParameters;
 	long set = gCalls.fAreaSetParams;
 	EXPECT(!domain->SetParameters(info));		// (0 means "unchanged")
 	EXPECT(gCalls.fAreaSetParams == set + 1);
+	EXPECT(domain->fParameters == before);
 	// ... and an engine that throws answers the other way round
 	gEngineThrows = true;
 	EXPECT(domain->SetParameters(info));
 	gEngineThrows = false;
+	SetRomBugFixed(true);
+	// fixed: the block is written down, and the answer is whether it changed
+	domain->InvalParameters();
+	EXPECT(domain->SetParameters(info));
+	EXPECT(domain->fParameters == info && gCalls.fAreaSetParams == set + 3);
+	EXPECT(!domain->SetParameters(info));
+	gEngineThrows = true;
+	EXPECT(!domain->SetParameters(info));		// (still unchanged)
+	gEngineThrows = false;
+	domain->fParameters = before;
 
 	// whatever the engine hangs off the block let go before the block is
 	long freed = gCalls.fAreaFree;

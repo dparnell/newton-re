@@ -10,6 +10,7 @@
 #include "NativeFunctions.h"
 #include "Frames.h"
 #include "objects.h"
+#include "host/RomBugs.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -157,10 +158,10 @@ TWordList::Count(void)
 // The n-th word within the packed handle; nil when the text ran out
 // first.
 //
-// (BUG, kept: the nil is only noticed on the way round the loop, so an
-//  index more than one past the last word carries on reading from it.
-//  Every caller asks for an index below the count, so it does not
-//  happen in practice.)
+// (ROM BUG (fixed): the nil is only noticed on the way round the loop, so
+//  an index more than one past the last word carries on reading from it.
+//  Every caller asks for an index below the count, so it does not happen
+//  in practice.  The fix answers nil as soon as the text runs out.)
 UniChar*
 TWordList::ScanTo(long index)
 {
@@ -173,6 +174,8 @@ TWordList::ScanTo(long index)
 		UniChar c;
 		while ((c = *at) != 0 && c != kWordSeparator)
 			at++;
+		if (c == 0 && RomBugFixed())
+			return nil;
 		if (c == 0)
 			at = nil;
 		else
@@ -187,13 +190,15 @@ TWordList::ScanTo(long index)
 // The n-th word copied out into a handle of its own.  The list is
 // scanned twice because making the handle may move it.
 //
-// (BUG, kept: the new handle is not checked, so with no memory the copy
-//  writes through nil.)
+// (ROM BUG (fixed): the new handle is not checked, so with no memory the
+//  copy writes through nil.  The fix answers nil then.)
 Handle
 TWordList::Word(long index)
 {
 	long length = Wstrlen(ScanTo(index));
 	Handle word = NewHandle((length + 1) * (long) sizeof(UniChar));
+	if (word == nil && RomBugFixed())
+		return nil;
 	SetHandleName(word, kWordCopyHandleName);
 	Wstrcpy((UniChar*) *word, ScanTo(index));
 	return word;
@@ -261,10 +266,12 @@ TWordList::InsertLast(UniChar** word, long score, long label)
 // ROM 0x0022f1cc Find__9TWordListFPPUs
 // Which reading this is, -1 for none of them.
 //
-// (BUG, kept: a reading is compared only as far as it goes, so a word
-//  longer than the one in the list matches it - "01" finds the reading
-//  "0".  The callers all look for single characters, where it only
-//  matters for an empty reading, which cannot be inserted.)
+// (ROM BUG (fixed): a reading is compared only as far as it goes, so a
+//  word longer than the one in the list matches it - "01" finds the
+//  reading "0".  The callers all look for single characters, where it only
+//  matters for an empty reading, which cannot be inserted.  The fix also
+//  asks that the word ends where the reading does, and stops reading the
+//  word at its end.)
 long
 TWordList::Find(UniChar** word)
 {
@@ -282,9 +289,10 @@ TWordList::Find(UniChar** word)
 			at++;
 			if (c != *wanted)
 				same = false;
-			wanted++;
+			if (!RomBugFixed() || *wanted != 0)
+				wanted++;
 		}
-		if (same)
+		if (same && (!RomBugFixed() || *wanted == 0))
 			return index;
 		if (*at == kWordSeparator)
 		{
@@ -388,13 +396,14 @@ InTryString(UniChar c)
 // twice says the writer has settled on it, not that they are
 // alternating between two.
 //
-// (BUG, kept: this means to be a ring of two, and the index does cycle
-//  0, 1, 0, 1 - but the wrap happens *after* the write, so the third
+// (ROM BUG (fixed): this means to be a ring of two, and the index does
+//  cycle 0, 1, 0, 1 - but the wrap happens *after* the write, so the third
 //  character lands on the terminator and the string becomes three long.
 //  The third character then stays there for ever, because nothing
 //  writes position 2 again.  Nothing notices: the only thing ever asked
 //  of the string is its first character and whether a character is in
-//  it.)
+//  it.  The fix wraps the index before the write, so the string stays a
+//  ring of two.)
 void
 AddTryString(UniChar c)
 {
@@ -402,6 +411,8 @@ AddTryString(UniChar c)
 		ClearTryString();
 	long length = Ustrlen(gTryString);
 	long index = gTryIndex;
+	if (RomBugFixed() && index >= 2)
+		index = 0;
 	gTryIndex = index + 1;
 	if (length >= 2)
 	{

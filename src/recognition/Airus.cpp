@@ -15,6 +15,7 @@
 
 #include "Airus.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -999,10 +1000,11 @@ FindDeletionPoint(const UniChar* word, ULong* previous, ULong* node, long* after
 // everything under it - and afterwards it says what happened: 0 it
 // went, 1 it was not there, 2 the Handle could not be resized.
 //
-// (BUG, kept: a word whose last node carries no attribute - a path that
-//  is not a word - returns without setting fResult, which DeleteWord had
-//  already set to 0, so deleting a word that is not there is reported as
-//  success.)
+// (ROM BUG (fixed): a word whose last node carries no attribute - a path
+//  that is not a word - returns without setting fResult, which DeleteWord
+//  had already set to 0, so deleting a word that is not there is reported
+//  as success.  The fix answers 1, not there, as the other two ways of
+//  not finding the word do.)
 long
 AEnum_DeleteWord(AirusAParmBlock* parms)
 {
@@ -1036,7 +1038,11 @@ AEnum_DeleteWord(AirusAParmBlock* parms)
 	{
 		UByte flags = (UByte) AE_Parms->fData[at + charSize];
 		if ((flags & kAirusHasAttribute) == 0)
+		{
+			if (RomBugFixed())
+				AE_Parms->fResult = 1;	// not there
 			return AE_Parms->fResult;	// not a word: nothing to take out
+		}
 		if ((flags & kAirusNoChildren) != 0)
 			removing = true;
 		else
@@ -1420,12 +1426,15 @@ AEnum_ChangeAttribute(AirusAParmBlock* parms)
 		{
 			long offset = SkipNode(node);
 			ULong attribute = AE_Parms->fAttribute;
-			// BUG (the ROM's): it writes the bytes out by hand for the
+			// ROM BUG (fixed): it writes the bytes out by hand for the
 			// sizes 1, 2 and 4 and has no arm for 3, so a dictionary
 			// with a three-byte attribute is left as it was - and the
 			// call still says it worked.  (PutDictBytes, which every
-			// other writer goes through, handles all four.)
-			if (AE_Parms->fAttributeSize == 1)
+			// other writer goes through, handles all four.)  The fix
+			// writes it with PutDictBytes.
+			if (RomBugFixed())
+				PutDictBytes(offset, AE_Parms->fAttributeSize, attribute);
+			else if (AE_Parms->fAttributeSize == 1)
 				AE_Parms->fData[offset] = (char) attribute;
 			else if (AE_Parms->fAttributeSize == 2)
 			{
@@ -1533,11 +1542,12 @@ DeleteWord(Handle dictionary, UByte* word)
 // order they lie - which is sorted, so the characters come out sorted.
 // A node of 0 means the root, and the row walked is the top one.
 //
-// (BUG, kept: the attribute handed to the callback is assembled from its
-//  bytes low one first, where `PutAttr` writes it and `GetAttr` reads it
-//  high one first.  A one-byte attribute - which is what every dictionary
-//  the machine writes has - is the same either way, so nobody ever saw
-//  it; a two- or four-byte one comes out of here byte-reversed.)
+// (ROM BUG (fixed): the attribute handed to the callback is assembled from
+//  its bytes low one first, where `PutAttr` writes it and `GetAttr` reads
+//  it high one first.  A one-byte attribute - which is what every
+//  dictionary the machine writes has - is the same either way, so nobody
+//  ever saw it; a two- or four-byte one comes out of here byte-reversed.
+//  The fix assembles it high byte first, as GetAttr does.)
 //
 // The ROM writes the loop out twice, once for a dictionary whose words
 // carry no attribute at all and once for the rest; the two differ only in
@@ -1577,8 +1587,16 @@ AE8_NextSet9(AirusAParmBlock* parms)
 				&& (flags & kAirusHasAttribute) != 0 && attributeSize > 0)
 			{
 				const UByte* bytes = (const UByte*) AE_Parms->fData + SkipNode(at);
-				for (long i = 0; i < attributeSize; i++)
-					attribute |= (ULong) bytes[i] << (i * 8);
+				if (RomBugFixed())
+				{
+					for (long i = 0; i < attributeSize; i++)
+						attribute = (attribute << 8) | bytes[i];
+				}
+				else
+				{
+					for (long i = 0; i < attributeSize; i++)
+						attribute |= (ULong) bytes[i] << (i * 8);
+				}
 			}
 			AE_Parms->fWalkProc(context, (ULong) (UByte) AE_Parms->fData[at],
 								(ULong) at | ((ULong) ((flags >> 4) & 3) << 30), attribute);
@@ -2800,14 +2818,15 @@ AL16_GetAttribute2(long node)
 // The sixteen-bit walk.  It is `AL_Verify` again with two-byte
 // characters, and with one difference that is not deliberate.
 //
-// ROM BUG, kept: the tail - the loop that works out the single character
+// ROM BUG (fixed): the tail - the loop that works out the single character
 // a word can only go on with - tests the "last sibling" flag the wrong
 // way round.  Where the eight-bit walker stops at the last sibling and
 // hands the character back, this one stops at every sibling *but* the
 // last, and on the last one steps past the end of the list and carries
 // on reading whatever lies there.  It leaves the loop only when those
 // bytes happen to disagree, and the character it hands back is the one
-// before the end rather than the one after it.
+// before the end rather than the one after it.  The fix tests the flag
+// the right way round, as AL_Verify does.
 void
 AL16_Verify(AirusAParmBlock* parms)
 {
@@ -2905,7 +2924,7 @@ AL16_Verify(AirusAParmBlock* parms)
 		only = c;
 		UByte flags = data[child + 2];
 		// (the inverted test - see above)
-		if ((flags & 4) == 0)
+		if (RomBugFixed() ? (flags & 4) != 0 : (flags & 4) == 0)
 		{
 			AE_Parms->fSymbol = only;
 			break;

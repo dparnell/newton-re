@@ -13,6 +13,7 @@
 #include "ShapeDomain.h"		// TGeneralShapeUnit, GetAvgLength, gCurveFlag
 #include "WordUnit.h"		// TStdWordUnit
 #include "Unicode.h"			// Ustrlen
+#include "host/RomBugs.h"
 #include <string.h>
 
 #include <stdio.h>
@@ -956,18 +957,19 @@ TArbiter::DoArbitration(void)
 					if (!unit->TestFlags(kClaimedUnit) && UnitInClass(unit->fType, kClickUnit))
 						fController->MarkUnits(unit, kClaimedUnit | kInvalidUnit);
 				}
-				// ROM bug: the gather is walked and each entry's flags
-				// are tested, but the unit that is marked is the one in
-				// hand rather than the entry's own - the register holding
-				// it is never reloaded inside the loop.  Kept as it is:
-				// marking the same unit twice does no harm, and the
-				// entries that should have been marked are left for the
-				// round after.
+				// ROM BUG (fixed): the gather is walked and each entry's
+				// flags are tested, but the unit that is marked is the one
+				// in hand rather than the entry's own - the register
+				// holding it is never reloaded inside the loop.  Marking
+				// the same unit twice does no harm, and the entries that
+				// should have been marked are left for the round after.
+				// The fix marks each unclaimed entry's own unit.
 				BestMatch* left = (BestMatch*) Gathered()->GetIterator(&winIter);
 				for (ULong g = 0; g < (ULong) winIter.fCount; g++, left = (BestMatch*) winIter.GetNext())
 				{
 					if (!left->fUnit->TestFlags(kClaimedUnit))
-						fController->MarkUnits(unit, kClaimedUnit | kInvalidUnit);
+						fController->MarkUnits(RomBugFixed() ? left->fUnit : unit,
+											   kClaimedUnit | kInvalidUnit);
 				}
 			}
 			Gathered()->CutToIndex(0);
