@@ -7,6 +7,7 @@
 #include "FixedMath.h"
 #include "NewtErrors.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <math.h>
@@ -147,6 +148,7 @@ main()
 		EXPECT(v.fDistance == 0);
 		EXPECT(v.fIndexA == 10 && v.fIndexB == 0);	// the end of one, the start of the other
 		EXPECT(!SegmentCrossed(&v));				// they meet, they do not cross
+		EXPECT(!SegmentNonTailLinked(&v));			// end to end: tail-linked
 
 		// two strokes that never come near each other
 		RosStroke* far1 = Line(F(0), F(0), F(0), F(20), 11);
@@ -197,7 +199,11 @@ main()
 		// what the long stroke's margin would call an end.
 		EXPECT(!SegmentCrossed(&d));		// A's point is too near its end
 		// ... and this is the bug: it should be true
+		SetRomBugFixed(false);
 		EXPECT(!SegmentNonTailLinked(&d));
+		// ... as with the fix it is
+		SetRomBugFixed(true);
+		EXPECT(SegmentNonTailLinked(&d));
 		StrokeDestroy(longOne);
 		StrokeDestroy(shortOne);
 	}
@@ -528,9 +534,10 @@ main()
 		EXPECT(gSegOnlyThreshold == MaxSegOnlyThreshold);
 		EXPECT(gSegLogWordSpacing > 0);
 
-		// ROM BUG, kept: the constant above the middle setting is
+		// ROM BUG (fixed): the constant above the middle setting is
 		// 0x170000 where 0x17000 was surely meant, so the top half of
 		// the slider runs away from the bottom half.  The whole curve:
+		SetRomBugFixed(false);
 		static const Fixed kCurve[9] = {
 			0x000051eb, 0x00007d70, 0x0000a8f5, 0x0000d47a, 0x00010000,
 			0x0006c000, 0x000c8000, 0x00124000, 0x00180000
@@ -546,6 +553,18 @@ main()
 		EXPECT(kCurve[3] < kCurve[4] && kCurve[4] < kCurve[5]);
 		// and the loosest asks for twenty-four times normal
 		EXPECT(kCurve[8] == F(24));
+		// The fix: the top half goes on as the bottom half goes, 1.00,
+		// 1.36, 1.72, 2.08 and 2.44
+		SetRomBugFixed(true);
+		static const Fixed kFixedCurve[9] = {
+			0x000051eb, 0x00007d70, 0x0000a8f5, 0x0000d47a, 0x00010000,
+			0x00015c00, 0x0001b800, 0x00021400, 0x00027000
+		};
+		for (long n = 1; n <= 9; n++)
+		{
+			SegmentSetWordSpacing(n);
+			EXPECT(gSegWordSpacing == kFixedCurve[n - 1]);
+		}
 
 		// the log really is the log, rounded toward zero as the ROM's
 		// FIX instruction rounds it
