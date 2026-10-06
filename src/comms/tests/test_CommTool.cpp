@@ -11,7 +11,8 @@
 //
 // Also: a connect to a port nobody listens on fails; the tool refuses a get
 // before it is connected (kCommErrNotConnected); an option it does not
-// know is marked not processed.
+// know is marked not processed.  And the base tool's default for 'sid
+// (the ROM gave a passive claim's, a bug fixed by default).
 
 #include "CommTools.h"
 #include "CommManagerInterface.h"
@@ -25,6 +26,7 @@
 #include "Boot.h"
 #include "UserBoot.h"
 #include "host/TaskRuntime.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -36,6 +38,28 @@
 static int failures = 0;
 static bool sScenarioDone = false;		// the scenario ran to its end
 #define EXPECT(cond) do { if (!(cond)) { failures++; printf("FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
+
+// the tool's option processing, called directly
+class TTestTCPTool : public THostTCPTool
+{
+public:
+	TTestTCPTool() : THostTCPTool('tcp ') { }
+	using TCommTool::ProcessOptionStart;
+};
+
+static void
+TestDefaults(void)
+{
+	SetRomBugFixed(true);
+	TTestTCPTool* tool = new TTestTCPTool;
+	TCMOServiceIdentifier sid;
+	sid.fServiceId = 0x12345678;
+	sid.fPortId = 7;
+	EXPECT(tool->ProcessOptionStart(&sid, kCMOServiceIdentifier, opGetDefault) == opSuccess);
+	EXPECT(sid.fServiceId == 0 && sid.fPortId == 0 && sid.Label() == kCMOServiceIdentifier);
+	delete tool;
+}
+
 
 static void
 Scenario(void)
@@ -201,6 +225,7 @@ Scenario(void)
 	sServerStop = true;
 	server.join();
 	HostSocketClose(sServerListener);
+	TestDefaults();
 	sScenarioDone = true;
 	HostStopTasks();
 }

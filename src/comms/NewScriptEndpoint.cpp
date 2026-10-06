@@ -465,7 +465,7 @@ TNewScriptEndpointClient::DoBind(RefArg options, RefArg callback)
 	if (RomBugFixed())
 	{
 		// OPTIONS_REQUEST, with the array an asynchronous bind leaves kept
-		// for BindComplete (the ROM bug described there)
+		// for BindComplete (ROM bug: see BindComplete)
 		TOptionArray* array = nil;
 		ULong timeout = 0;
 		Boolean sync = GetParms(callback, &timeout);

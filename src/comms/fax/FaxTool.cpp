@@ -935,8 +935,8 @@ TFaxTool::KillModemRequest(ULong refCon, CommToolRequestType requestType, ULong 
 
 
 // ROM 0x000bcd28 TimeOutKillComplete__8TFaxToolFv
-// A response that never came, killed: the command sent again.  ROM BUG
-// (fixed): the modem request's flag is cleared in fFaxFlags rather than
+// A response that never came, killed: the command sent again.
+// ROM BUG (fixed): the modem request's flag is cleared in fFaxFlags rather than
 // fToolState, where PostModemCommand set it - the kill's own answer having
 // cleared nothing, fToolState keeps kFaxToolStateModemRequest until the
 // next request's answer clears it.  The fix clears it in fToolState.

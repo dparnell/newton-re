@@ -399,15 +399,21 @@ TAsyncServiceMessage::Match(TUMsgToken* token)
 // ROM 0x00070a1c OpenCommTool__FUlP12TOptionArrayP10TCMService
 // Send the open request asynchronously on the service's behalf (its reply
 // reaches the comm manager, which calls the service's DoneStarting); the
-// answer is kCall_In_Progress (1) once it has gone.  (The ROM leaks the
-// request and the reply when the second allocation fails; so does this.)
+// answer is kCall_In_Progress (1) once it has gone.
+// ROM BUG (fixed): the ROM leaks the request (and the reply) when the
+// second (or third) allocation fails.  The fix frees them.
 NewtonErr
 OpenCommTool(TObjectId portId, TOptionArray* options, TCMService* service)
 {
 	NewtonErr err = kError_No_Memory;
 	TCommToolOpenRequest* request = new TCommToolOpenRequest;
-	TCommToolOpenReply* reply;
-	if (request != nil && (reply = new TCommToolOpenReply) != nil)
+	TCommToolOpenReply* reply = nil;
+	if (RomBugFixed() && request != nil && (reply = new TCommToolOpenReply) == nil)
+	{
+		delete request;
+		return err;
+	}
+	if (request != nil && (RomBugFixed() || (reply = new TCommToolOpenReply) != nil))
 	{
 		request->fOptions = options;
 		request->fOptionCount = options->GetArrayCount();
@@ -424,8 +430,14 @@ OpenCommTool(TObjectId portId, TOptionArray* options, TCMService* service)
 			if (err == noErr)
 				err = 1;
 		}
+		else if (RomBugFixed())
+		{
+			delete reply;
+			delete request;
+		}
 	}
 	return err;
+
 }
 
 
