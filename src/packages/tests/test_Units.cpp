@@ -26,6 +26,7 @@
 #include "RSSymbols.h"
 #include "ByteOrder.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -413,6 +414,7 @@ TestCommPartHandler(void)
 	PartId partId = { 1, 0 };
 
 	// installed: the configurations registered, then the part as an 'auto part
+	SetRomBugFixed(false);
 	EXPECT(handler.InstallFrame(frame, partId, source, &info) == noErr);
 	EXPECT(gRegistered == 1 && gRegisteredLength == 2 && gInstalled == 1);
 	// removed: the configurations looked for in the remove object, which has
@@ -425,6 +427,89 @@ TestCommPartHandler(void)
 	SetFrameSlot(saved, RSSYMconfigurations, configurations);
 	EXPECT(handler.RemoveFrame(saved, partId, 'comm') == noErr);
 	EXPECT(gUnregistered == 1 && gRemoved == 2);
+	SetRomBugFixed(true);
+
+	// the fix: the configurations are the part frame's, so they are unregistered
+	handler.Prime();
+	EXPECT(handler.InstallFrame(frame, partId, source, &info) == noErr);
+	EXPECT(gRegistered == 2 && gInstalled == 2);
+	saved = handler.SavedObject();
+	EXPECT(ISNIL(GetFrameSlotRef(saved, RSSYMconfigurations)) && GetFrameSlotRef(saved, RSSYMpartframe) == (Ref) frame);
+	EXPECT(handler.RemoveFrame(saved, partId, 'comm') == noErr);
+	EXPECT(gUnregistered == 2 && gRemoved == 3);
+
+	// GetBackupInfo: the ROM leaves the caller's flag; the fix says no backup
+	TFormPartHandler& form = *new TFormPartHandler;		// (never destroyed, as above)
+	Boolean needsBackup = true;
+	SetRomBugFixed(false);
+	form.GetBackupInfo(partId, 'form', nil, &info, 0, &needsBackup);
+	EXPECT(needsBackup == true);
+	SetRomBugFixed(true);
+	form.GetBackupInfo(partId, 'form', nil, &info, 0, &needsBackup);
+	EXPECT(needsBackup == false);
+}
+
+
+// InstallImportTable for a part already installed: the ROM leaves the
+// second item's pending imports pointing at the item it frees; the fix
+// forgets them (only the first installation's pending import is left).
+// A nil import item no longer throws in RegisterPendingImport.
+static void
+TestImportTwice(void)
+{
+	const ULong32 kImporterBase = 0x05000000;
+	PartBytes importerBytes = ImporterPart(kImporterBase, 0);
+	EXPECT(gMPPendingImports == nil);
+	TImportedObjectArea* importer = Install(importerBytes, kImporterBase);
+	EXPECT(gMPPendingImports != nil && gMPPendingImports->fNext == nil);
+	MPPendingImport* first = gMPPendingImports;
+	RefVar frame(FramePartToplevelFrame(importer->fArea));
+	RefVar imports(GetFrameSlotRef(frame, RSSYM_importtable));
+	Boolean threw = false;
+	newton_try
+	{
+		InstallImportTable((ULong) importer, imports, importer->fArea, importer->fAreaEnd - importer->fArea);
+	}
+	newton_catch_all
+	{
+		threw = true;
+	}
+	end_try;
+	EXPECT(threw);
+	EXPECT(gMPPendingImports == first && first->fNext == nil);
+	Remove(importer);
+	EXPECT(gMPPendingImports == nil);
+	RemoveFramesPart(importer);
+
+	// RegisterPendingImport with no item: the ROM throws, the fix does not
+	threw = false;
+	newton_try
+	{
+		RegisterPendingImport((MPImportItem*) nil, 0, "nobody", 1, 0);
+	}
+	newton_catch_all
+	{
+		threw = true;
+	}
+	end_try;
+	EXPECT(!threw && gMPPendingImports != nil && strcmp(gMPPendingImports->fName, "nobody") == 0);
+	MPPendingImport* doomed = gMPPendingImports;
+	gMPPendingImports = doomed->fNext;
+	delete doomed;
+	SetRomBugFixed(false);
+	threw = false;
+	newton_try
+	{
+		RegisterPendingImport((MPImportItem*) nil, 0, "nobody", 1, 0);
+	}
+	newton_catch_all
+	{
+		threw = true;
+	}
+	end_try;
+	SetRomBugFixed(true);
+	EXPECT(threw);
+	// (the ROM's pending object is left unlinked: leaked, as on the MessagePad)
 }
 
 
@@ -446,6 +531,7 @@ main()
 	TestResolve();
 	TestUnits();
 	TestCommPartHandler();
+	TestImportTwice();
 	if (failures == 0)
 		printf("test_Units: all passed\n");
 	return failures != 0;

@@ -308,6 +308,8 @@ new pending import, for a failed allocation; `InstallImportTable` throws
 out-of-memory for a part already on the import list; neither
 `RemoveExportTables` nor `RemoveImportTable` frees its item (only the
 list entry goes); a part whose `InstallFrame` fails keeps its exports.
+All four are fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's
+behaviour, `docs/rom-bugs.md`).
 
 DEVIATION (the host has no ROM domain, `Units.h`): the part the tables
 name is the part's imported host area's first object; its import refs
@@ -351,7 +353,8 @@ MainConstructor` 0x0030d20c): `'form`, `'book`, `'dict`, `'auto`, `'comm`.
   `RemoveFrame` looks for `configurations` in the *remove object* - a
   `canonicalFramePartSavedObject`, `{partFrame, packageStyle,
   removeCookie}` - so `UnRegCommConfigArray` is never called.
-  `test_Units` checks both.
+  `test_Units` checks both, and the fixes (the default; the configurations
+  are the remove object's `partFrame`'s, the `'auto` answer is answered).
 
 Neither kind of part is in this ROM's extension.
 
@@ -384,7 +387,9 @@ is refused) is never closed - its `'pipe'` world waits, the name stays
 registered, and the pipe stays in the handler until the next streamed
 load; a ring buffer that cannot be made answers noErr; a source that fails
 in the middle of a seek-to-EOF sends the loop round once more with a
-negative count.  NOT YET: an endpoint as the source (`TEndpointPipe`).
+negative count.  The first two are fixed by default (`NEWTON_ROM_BUGS=1`
+for the ROM's behaviour); the third is a ROM QUIRK, kept.  NOT YET: an
+endpoint as the source (`TEndpointPipe`).
 
 `test_PackageManager`'s `TestStreamed` streams ScreenBuffer (its protocol
 part's code read through the manager's own pipe), a package of one NSOF
@@ -572,7 +577,13 @@ Tested by `test_LargeObjects` (both companders, a stream cut short) and
 
 See the Status section at the top.
 
-## ROM bugs kept
+## ROM bugs
+
+Those marked in the code as ROM BUGs are fixed by default
+(`docs/rom-bugs.md`; `NEWTON_ROM_BUGS=1` for the ROM's behaviour) - all
+of the list below but the backup walk's date test, `CPackagePipe::Init`'s
+relocation header, the archival pipe's
+(ROM QUIRKs, kept) and `FillChunkArrayCompressed` (the stores').
 
 - `TPkPartInstallEvent`'s constructor copies a part's info for as long
   as `infoSize` says, into 64 bytes.

@@ -21,6 +21,7 @@
 #include "Random.h"
 #include "ByteOrder.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 #include "PartPipe.h"
 #include "RingBuffer.h"
 #include "ROMImport.h"		// ROMAddressOf: a part in the ROM extension
@@ -98,9 +99,10 @@ TRegistryInfo::TRegistryInfo(ULong type, ULong portId)
 // empty list of parts.  ==> kError_No_Memory when any of the three could
 // not be made (they are all let go again), kError_Bad_Package when copying
 // the strings threw.
-// ROM BUG: on either failure the name and the copyright are let go but
-// fName and fCopyright still point at them; the caller throws the block
-// away, so nothing reads them.
+// ROM BUG (fixed): on either failure the name and the copyright are let
+// go but fName and fCopyright still point at them; the caller throws the
+// block away, so nothing reads them.  The fix: fName, fCopyright and
+// fParts are nil once let go.
 NewtonErr
 TPackageBlock::Init(ULong packageId, ULong version, ULong size, SourceType source, ULong flags,
 					const UniChar* name, const UniChar* copyright, ULong numParts, ULong modifyDate)
@@ -144,6 +146,12 @@ TPackageBlock::Init(ULong packageId, ULong version, ULong size, SourceType sourc
 		delete fParts;
 	delete[] fName;
 	delete[] fCopyright;
+	if (RomBugFixed())
+	{
+		fParts = nil;
+		fName = nil;
+		fCopyright = nil;
+	}
 	return err;
 }
 
@@ -179,9 +187,10 @@ TPackageManager::GetSizeOf()
 // In the new task: the app world's own construction, the two heaps the
 // handler moves between, the event handler (for 'newt/'pckm events) and
 // gPackageSemaphore.
-// ROM BUG: the app world's MainConstructor answer is not looked at, and
-// neither is the semaphore's Init's: a manager that could not get its
-// port starts all the same.
+// ROM BUG (fixed): the app world's MainConstructor answer is not looked
+// at, and neither is the semaphore's Init's: a manager that could not get
+// its port starts all the same.  The fix answers the first error of the
+// three (the app world's, the handler's Init's, the semaphore's Init's).
 // DEVIATION: the ROM finds the 'prot' domain's heap, zaps it and destroys
 // it, and takes the persistent heap from the 'kstk' entry of the memory
 // object database; the host has one heap (and no such entries), which
@@ -192,17 +201,23 @@ TPackageManager::MainConstructor()
 	fDefaultHeap = nil;
 	fUnused7C = 0;
 	fPersistentHeap = nil;
-	TAppWorld::MainConstructor();
+	long worldErr = TAppWorld::MainConstructor();
+	if (RomBugFixed() && worldErr != noErr)
+		return worldErr;
 	fDefaultHeap = GetHeap();
 	fPersistentHeap = GetHeap();
 	fHandler = new TPackageEventHandler;
 	if (fHandler == nil)
 		return MemError();
-	fHandler->Init(kPackageEventId, kNewtEventClass);
+	NewtonErr err = fHandler->Init(kPackageEventId, kNewtEventClass);
+	if (RomBugFixed() && err != noErr)
+		return err;
 	gPackageSemaphore = new TULockingSemaphore;
 	if (gPackageSemaphore == nil)
 		return MemError();
-	gPackageSemaphore->Init();
+	err = gPackageSemaphore->Init();
+	if (RomBugFixed() && err != noErr)
+		return err;
 	return noErr;
 }
 
@@ -570,10 +585,12 @@ done:
 // A streamed source is read through a CPartPipe over a shadow of the
 // sender's ring buffer (PartPipe.h), which is kept (fPipe, fBuffer) until
 // LoadNextPart has read the last part and closes it.
-// ROM BUG kept: when the stream's directory cannot be read the pipe is not
-// closed - the sender's 'pipe' world is left waiting, and the pipe and its
-// buffer stay in fPipe/fBuffer until the next streamed load takes their
-// places.
+// ROM BUG (fixed): when the stream's directory cannot be read the pipe is
+// not closed - the sender's 'pipe' world is left waiting, and the pipe and
+// its buffer stay in fPipe/fBuffer until the next streamed load takes
+// their places.  The fix: a package refused before its parts (directory
+// unreadable, already installed, not valid) has its iterator deleted and
+// its pipe closed, as LoadNextPart does once a package is done.
 void
 TPackageEventHandler::BeginLoadPackage(TPkBeginLoadEvent* event)
 {
@@ -678,6 +695,19 @@ parts:
 	if (result == noErr)
 		while (LoadNextPart(&result, &event->fForDispatchOnly, &event->fPatchInstalled))
 			;
+	else if (RomBugFixed())
+	{
+		if (fIter != nil)
+			delete fIter;
+		fIter = nil;
+		if (fPipe != nil)
+		{
+			fPipe->Close();
+			delete fPipe;
+			fPipe = nil;
+			fBuffer = nil;
+		}
+	}
 	if (result == noErr && fValidator == nil && format == 1 && startsVPD == 0x565044)
 		InitValidatePackageDriver();
 	event->fEventError = result;
@@ -721,8 +751,10 @@ TPackageEventHandler::LoadNextPart(long* result, UChar* forDispatchOnly, UChar* 
 				fPipe->SetStreamSize(partSize);
 			if (info.kind == kFrames && info.infoSize != 0 && !info.compressed && IsMemory(fPackage->fSourceType))
 			{
-				// ROM BUG: the info is copied to a buffer on the stack for as
-				// long as it is; the host stops at the buffer's end
+				// ROM BUG (fixed): the info is copied to a buffer on the stack
+				// for as long as it is; the host stops at the buffer's end.
+				// The fix is that same stop - the copy bounded by the
+				// buffer - so the two machines agree here.
 				char name[kMaxInfoSize + 1];
 				ULong length = info.infoSize < kMaxInfoSize ? info.infoSize : kMaxInfoSize;
 				BlockMove(info.info, name, length);
@@ -1031,9 +1063,10 @@ TPackageEventHandler::Unregister(TPkUnregisterEvent* event)
 // ROM 0x0015faf4 SafeToDeactivatePackage__20TPackageEventHandlerFP19TPkSafeToDeactivate
 // A 'pksc event: whether the package can go - true unless one of its
 // protocol parts' implementations still has instances.
-// ROM BUG: a part's kind is checked but not whether it has a class info,
-// so a protocol part the manager registered none for asks the registry
-// about nil.
+// ROM BUG (fixed): a part's kind is checked but not whether it has a
+// class info, so a protocol part the manager registered none for asks the
+// registry about nil.  The fix passes over a protocol part with no class
+// info (it has no instances to count).
 void
 TPackageEventHandler::SafeToDeactivatePackage(TPkSafeToDeactivate* event)
 {
@@ -1047,7 +1080,7 @@ TPackageEventHandler::SafeToDeactivatePackage(TPkSafeToDeactivate* event)
 		for (ArrayIndex i = iter.FirstIndex(); iter.More(); i = iter.NextIndex())
 		{
 			TInstalledPart* part = (TInstalledPart*) block->fParts->ElementPtrAt(i);
-			if (part->fKind == kProtocol)
+			if (part->fKind == kProtocol && (part->fClassInfo != 0 || !RomBugFixed()))
 			{
 				long instances = gProtocolRegistry->GetInstanceCount((TClassInfo*) part->fClassInfo);
 				event->fSafe = instances == 0;

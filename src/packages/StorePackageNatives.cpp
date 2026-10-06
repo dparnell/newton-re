@@ -53,10 +53,12 @@
 #include "BufferSegment.h"
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 #include "ByteOrder.h"
 #include "SoundChannel.h"		// StopFrameSound
 
 #include <string.h>
+#include <new>
 
 extern const ExceptionName exPipeException;
 
@@ -179,9 +181,10 @@ WrapPackage(ULong id, TStore* store)
 // The package in the pipe stored on the store, wrapped, and handed to
 // RegisterNewPackage(pkgRef, store, activate) - the store nil meaning the
 // default store.  ==> RegisterNewPackage's answer.
-// ROM BUG kept: only RegisterNewPackage is given the default store; the
+// ROM BUG (fixed): only RegisterNewPackage is given the default store; the
 // package itself is stored through the store argument's own `store` slot,
-// which nil does not have.  The parameters' callback function is called
+// which nil does not have.  The fix stores it on the default store too.
+// The parameters' callback function is called
 // every callbackFreq bytes as the package is read (TLOCallback, told by
 // TPackageIterator::Store).
 Ref
@@ -199,7 +202,7 @@ AllocatePackage(CPipe* pipe, RefArg storeObject, RefArg callback, ULong callback
 	RefVar store(storeObject);
 	if (ISNIL(store))
 		store = NSCallGlobalFn(RSSYMgetdefaultstore);
-	TStore* theStore = StoreOf(storeObject);
+	TStore* theStore = StoreOf(RomBugFixed() ? (RefArg) store : storeObject);
 	GC();
 	ULong id = 0;
 	NewtonErr err = StorePackage(pipe, theStore, &progress, &id);
@@ -329,6 +332,26 @@ StoreSegmentedPackageRestore(RefArg rcvr, RefArg soup, RefArg keys)
 }
 
 
+// host: a CStdioPipe reading the file, its memory freed again when its
+// constructor throws (the fix of the bug in FSuckPackageOffDeskTop)
+static CPipe*
+NewStdioPipe(const char* path)
+{
+	void* memory = operator new(sizeof(CStdioPipe));
+	CPipe* volatile pipe = nil;
+	newton_try
+	{
+		pipe = new (memory) CStdioPipe(path, "r");
+	}
+	cleanup
+	{
+		operator delete(memory);
+	}
+	end_try;
+	return pipe;
+}
+
+
 // ROM 0x001fb8b0 FSuckPackageOffDeskTop
 // SuckPackageOffDeskTop(name, store, parameters): a package read through
 // the C library's stdio - on the MessagePad a file on the desktop, over
@@ -336,10 +359,12 @@ StoreSegmentedPackageRestore(RefArg rcvr, RefArg soup, RefArg keys)
 // ("dev:StdGetFile") - and kept on the store as SuckPackageFromBinary
 // does.  ==> the pkgRef; a pipe or frames exception's data, or -10400 for
 // any other, as an integer instead.
-// ROM BUGS kept: a pipe whose file will not open is left allocated (its
+// ROM BUG (fixed): a pipe whose file will not open is left allocated (its
 // constructor throws after the allocation); the name is converted into a
 // 256-byte buffer with no limit (DEVIATION: the host stops at 255
-// characters rather than running over its stack).
+// characters rather than running over its stack).  The fix frees the
+// pipe's memory when its constructor throws; the name's limit is the
+// host's 255 characters, both ways.
 // (CStdioPipe - utility/StdioPipe.h - is the host's C library on the
 // host's own files.)
 static Ref
@@ -350,7 +375,19 @@ FSuckPackageOffDeskTop(RefArg /*rcvr*/, RefArg name, RefArg storeObject, RefArg 
 	volatile long error = 0;
 	newton_try
 	{
-		if (ISNIL(name))
+		if (RomBugFixed())
+		{
+			char path[256];
+			if (ISNIL(name))
+				strcpy(path, "dev:StdGetFile");
+			else
+			{
+				ConvertFromUnicode(GetCString(name), path, kMacRomanEncoding, 255);
+				path[255] = 0;
+			}
+			pipe = NewStdioPipe(path);
+		}
+		else if (ISNIL(name))
 			pipe = new CStdioPipe("dev:StdGetFile", "r");
 		else
 		{

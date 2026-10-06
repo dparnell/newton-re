@@ -11,6 +11,7 @@
 #include "RingBuffer.h"
 #include "AEvents.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 #include "NewtonExceptions.h"
 #include "UserTasks.h"			// GetGlobals
 
@@ -426,10 +427,16 @@ TPipeApp::MainConstructor()
 			fHandler->Init(kPackageEventId, kNewtEventClass);
 	}
 	// the endpoint taken into this world; its error, or nought, the answer
-	// ROM BUG kept: an endpoint's answer replaces the world's own error, so
-	// a world that failed to start is answered noErr when the endpoint came in
+	// ROM BUG (fixed): an endpoint's answer replaces the world's own error,
+	// so a world that failed to start is answered noErr when the endpoint
+	// came in.  The fix keeps the world's error, the endpoint's answered
+	// only when there was none.
 	if (fIsEndpoint)
-		err = CallEndpointPipeHook(gEndpointPipeHooks.fAddToAppWorld, fInfo.fPipe);
+	{
+		long endpointErr = CallEndpointPipeHook(gEndpointPipeHooks.fAddToAppWorld, fInfo.fPipe);
+		if (!RomBugFixed() || err == noErr)
+			err = endpointErr;
+	}
 	return err;
 }
 

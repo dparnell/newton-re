@@ -138,7 +138,14 @@ the start of a word), each place found an entry whose title is the words
 round it between ellipses (`ExtractWords`).  A book's `bookSearchScript` and
 `mungeContentScript`, and a form's `formSearchScript`, take part.
 
-### ROM bugs kept
+### ROM bugs, fixed by default
+
+Each of these is now fixed by default (`docs/rom-bugs.md`;
+`NEWTON_ROM_BUGS=1` for the ROM's behaviour), but for `PrepBookX`, which
+is no bug; `books.Library` checks the fixes and `books.Library.romBugs`
+the ROM's behaviour.  `Find`'s answer is left as it was either way: its
+callers only ask whether it is nil, which the last entry made answers
+rightly.
 
 - `BookAvailable` with no source (the NewtonScript `BookAvailable`) reads
   the source from address 0: the reset vector's first two bytes, 0xea and

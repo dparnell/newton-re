@@ -26,6 +26,7 @@
 #include "RSSymbols.h"
 #include "Unicode.h"
 #include "NewtonExceptions.h"
+#include "host/RomBugs.h"
 #include "NewtonMemory.h"
 
 extern const ExceptionName exOutOfMemory;
@@ -219,12 +220,15 @@ TOutline::TopicInit(long index, Topic* topic)
 // under it when this one is deeper; a topic at the top level shown, any
 // other hidden, with the nearest shallower topic before it as its parent;
 // closed.
-// ROM BUG: a first topic deeper than level 1 marks the word before the
-// array (the heap block's header) as having topics under it.  The host
-// leaves it alone.
-// ROM BUG: a topic below the top level with no shallower topic before it
-// keeps whatever parent the Topic it came in held - stack rubbish on the
-// MessagePad (TopicInit does not set it); nought on the host.
+// ROM BUG (fixed): a first topic deeper than level 1 marks the word before
+// the array (the heap block's header) as having topics under it.  The host
+// leaves it alone, which is also the fix, so the two machines agree here.
+// ROM BUG (fixed): a topic below the top level with no shallower topic
+// before it keeps whatever parent the Topic it came in held - stack
+// rubbish on the MessagePad (TopicInit does not set it); nought on the
+// host.  The fix takes such a topic, having no parent to be opened from,
+// as one at the top level: shown, with no parent (-1) - so RevealTopic
+// and AutoCollapse stop at it rather than at a stranger.
 void
 TOutline::AddTopic(long index, Topic* topic)
 {
@@ -242,12 +246,19 @@ TOutline::AddTopic(long index, Topic* topic)
 	else
 	{
 		t->fFlags = flags & ~kTopicVisible;
+		Boolean parented = false;
 		for (long i = index; i >= 0; i--)
 			if (TopicLevel(fTopics[i].fFlags) < TopicLevel(flags))
 			{
 				t->fParent = (short) i;
+				parented = true;
 				break;
 			}
+		if (!parented && RomBugFixed())
+		{
+			t->fFlags = flags | kTopicVisible;
+			t->fParent = -1;
+		}
 	}
 	t->fFlags &= ~kTopicExpanded;
 }
@@ -558,13 +569,14 @@ TOutline::DrawTopicRefs(long index, Rect& bounds)
 // topics under it), leading blanks skipped, cut to the line's width with
 // an ellipsis; the topic the book is at marked by a bar two pixels wide
 // down the line's left edge.
-// ROM BUG: the topic is looked at when its index is the count, one past
-// the last (no caller asks for it).
+// ROM BUG (fixed): the topic is looked at when its index is the count, one
+// past the last (no caller asks for it).  The fix draws only topics there
+// are.
 void
 TOutline::DrawTopic(long index, Rect& bounds)
 {
 	StyleRecord style;
-	if (index <= fCount)
+	if (RomBugFixed() ? index < fCount : index <= fCount)
 	{
 		UniChar text[64];
 		long length;
@@ -640,8 +652,12 @@ TOutline::RealDraw(Rect& area)
 // The shown topic whose line a point (on the screen) is in, or above:
 // the first whose bottom is below it; a left-hand half only when the point
 // is left of the middle.  ==> -1 above the list, or below it.
-// ROM BUG: the middle is half the view's right edge on the screen, while
-// the point has been made relative to the view's left.
+// ROM BUG (fixed): the middle is half the view's right edge on the screen,
+// while the point has been made relative to the view's left.  The fix
+// takes the middle of the topic's line relative to the view's left as the
+// point is: its indent and half the width beyond it (what the ROM's
+// ((right - indent) + indent) >> 1, an indent added and taken away again,
+// evidently meant).
 long
 TOutline::FindTopic(Point pt)
 {
@@ -659,7 +675,12 @@ TOutline::FindTopic(Point pt)
 			if (TopicKind(flags) != 1)
 				return i;
 			short indent = (short) (TopicLevel(flags) * 12 - 12);
-			if (pt.h <= (((bounds.right - indent) + indent) >> 1))
+			if (RomBugFixed())
+			{
+				if (pt.h <= indent + (((bounds.right - bounds.left) - indent) >> 1))
+					return i;
+			}
+			else if (pt.h <= (((bounds.right - indent) + indent) >> 1))
 				return i;
 		}
 	}
@@ -772,8 +793,9 @@ TOutline::RealDoCommand(RefArg cmd)
 // ROM 0x0014d880 ScrollToSelection__8TOutlineFv
 // The list scrolled, when the topic tapped is out of sight, to put it in
 // the middle.
-// ROM BUG: scrolled down, the position is not kept from going below
-// nought, as it is scrolled up.
+// ROM BUG (fixed): scrolled down, the position is not kept from going
+// below nought, as it is scrolled up.  The fix keeps it from going below
+// nought both ways.
 void
 TOutline::ScrollToSelection(void)
 {
@@ -792,6 +814,8 @@ TOutline::ScrollToSelection(void)
 		if (top < fScroll + (short) (fLineHeight * rows))
 			return;
 		scroll = top - fLineHeight * (ViewableTopics() / 2);
+		if (RomBugFixed() && scroll < 0)
+			scroll = 0;
 	}
 	fScroll = (short) scroll;
 }
@@ -1019,11 +1043,13 @@ THelpOutline::ClassID(void) const
 
 
 // ROM 0x0014e2fc DerivedFrom__12THelpOutlineCFl
-// ROM BUG: a help outline does not say it derives from TOutline (it asks
-// TView).
+// ROM BUG (fixed): a help outline does not say it derives from TOutline
+// (it asks TView).  The fix asks TOutline.
 Boolean
 THelpOutline::DerivedFrom(long id) const
 {
+	if (RomBugFixed())
+		return id == clHelpOutlineView || TOutline::DerivedFrom(id);
 	return id == clHelpOutlineView || TView::DerivedFrom(id);
 }
 

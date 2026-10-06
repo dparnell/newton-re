@@ -24,6 +24,7 @@
 #include "RSSymbols.h"
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -214,6 +215,23 @@ GiveBackPart(TImportedObjectArea* area, Boolean lookedAt)
 }
 
 
+// A part that would not install, its units taken back first (the fix of
+// the bug in Install below): what it exports and what it imports
+// forgotten, as Remove forgets them, before its area goes.
+static void
+GiveBackPartAndUnits(TImportedObjectArea* area, Boolean lookedAt)
+{
+	if (RomBugFixed())
+	{
+		void* source = area->fArea;
+		RemoveExportTables(source);
+		RemoveImportTable(source);
+		UnregisterUnitArea(area);
+	}
+	GiveBackPart(area, lookedAt);
+}
+
+
 // ROM 0x000d118c Install__17TFramePartHandlerFRC6PartId10SourceTypeP8PartInfo
 // The part's top-level frame found and handed to InstallFrame, with a
 // remove object made for it; kError_Bad_Package when there is no frame.
@@ -222,9 +240,13 @@ GiveBackPart(TImportedObjectArea* area, Boolean lookedAt)
 // part outside the ROM (at an address above 0x037fffff) has its
 // _ImportTable installed and its package's pages flushed, so that its
 // import refs are resolved (Units.h).
-// ROM BUG: when InstallFrame fails the units the part exports are not
-// taken back, and the export list keeps pointing into a part that is
-// about to go.
+// ROM BUG (fixed): when InstallFrame fails the units the part exports are
+// not taken back, and the export list keeps pointing into a part that is
+// about to go.  The fix: a part given back after its units were recorded
+// (InstallFrame failing, no remove object, a frame that is no frame) has
+// its export and import tables removed first, as Remove removes them; its
+// importers wait for the units again (no dead imports are reported, the
+// part never having been installed).
 // DEVIATION: the part the unit tables name is its imported area's first
 // object, and its package that area (Units.h).
 // A streamed source's part is one flattened object, read by Copy (Expand).
@@ -289,20 +311,20 @@ TFramePartHandler::Install(const PartId& partId, SourceType sourceType, PartInfo
 	if (ISNIL(frame) || !IsFrame(frame))
 	{
 		if (area != nil)
-			GiveBackPart(area, lookedAt);
+			GiveBackPartAndUnits(area, lookedAt);
 		return kError_Bad_Package;
 	}
 	if (err != noErr)
 	{
 		if (area != nil)
-			GiveBackPart(area, lookedAt);
+			GiveBackPartAndUnits(area, lookedAt);
 		return err;
 	}
 	fRemoveObject = new FramePartRemoveObject;
 	if (fRemoveObject == nil)
 	{
 		if (area != nil)
-			GiveBackPart(area, lookedAt);
+			GiveBackPartAndUnits(area, lookedAt);
 		return MemError();
 	}
 	fRemoveObject->fObject = new RefStruct(NILREF);
@@ -317,7 +339,7 @@ TFramePartHandler::Install(const PartId& partId, SourceType sourceType, PartInfo
 		delete fRemoveObject;
 		fRemoveObject = nil;
 		if (area != nil)
-			GiveBackPart(area, lookedAt);
+			GiveBackPartAndUnits(area, lookedAt);
 	}
 	return err;
 }
@@ -513,12 +535,16 @@ TFormPartHandler::RemoveFrame(RefArg removeObject, const PartId& partId, PartTyp
 
 
 // ROM 0x000cbd18 GetBackupInfo__16TFormPartHandlerFRC6PartIdUllP8PartInfoT2PUc
-// ROM BUG: says nothing about whether the part needs a backup - the
-// caller's flag is left as it was.
+// ROM BUG (fixed): says nothing about whether the part needs a backup -
+// the caller's flag is left as it was.  The fix: no backup needed, as
+// TPartHandler's own GetBackupInfo answers (and as Backup, which does
+// nothing, implies).
 NewtonErr
 TFormPartHandler::GetBackupInfo(const PartId& /*partId*/, PartType /*partType*/, RemoveObjPtr /*removePtr*/, PartInfo* /*partInfo*/,
-								ULong /*lastBackupDate*/, Boolean* /*needsBackup*/)
+								ULong /*lastBackupDate*/, Boolean* needsBackup)
 {
+	if (RomBugFixed())
+		*needsBackup = false;
 	return noErr;
 }
 
@@ -557,8 +583,11 @@ TAutoScriptPartHandler::RemoveFrame(RefArg removeObject, const PartId& partId, P
 // The part's `configurations`, if it has some, registered with the global
 // RegCommConfigArray (an evt.ex.fr becomes the answer), then the part
 // installed as an 'auto part is.
-// ROM BUG: what the 'auto part's installation answers is thrown away -
-// only the configurations' error (none, usually) is answered.
+// ROM BUG (fixed): what the 'auto part's installation answers is thrown
+// away - only the configurations' error (none, usually) is answered.  The
+// fix: the configurations' error if there was one, else the 'auto part's;
+// configurations registered for a part that then would not install are
+// unregistered again.
 NewtonErr
 TCommPartHandler::InstallFrame(RefArg frame, const PartId& partId, SourceType sourceType, PartInfo* partInfo)
 {
@@ -579,6 +608,24 @@ TCommPartHandler::InstallFrame(RefArg frame, const PartId& partId, SourceType so
 		}
 		end_try;
 	}
+	if (RomBugFixed())
+	{
+		NewtonErr autoErr = TAutoScriptPartHandler::InstallFrame(frame, partId, sourceType, partInfo);
+		if (autoErr != noErr && err == noErr && NOTNIL(configurations))
+		{
+			RefVar args(MakeArray(1));
+			SetArraySlotRef(args, 0, configurations);
+			newton_try
+			{
+				RefVar fn(GetFrameSlotRef(RefVar(gFunctionFrame), RSSYMunregcommconfigarray));
+				DoBlock(fn, args);
+			}
+			newton_catch(exFrames)
+			{ }
+			end_try;
+		}
+		return err != noErr ? err : autoErr;
+	}
 	TAutoScriptPartHandler::InstallFrame(frame, partId, sourceType, partInfo);
 	return err;
 }
@@ -587,15 +634,26 @@ TCommPartHandler::InstallFrame(RefArg frame, const PartId& partId, SourceType so
 // ROM 0x0013a760 RemoveFrame__16TCommPartHandlerFRC6RefVarRC6PartIdUl
 // The configurations unregistered (the global UnRegCommConfigArray), then
 // the part removed as an 'auto part is.
-// ROM BUG: the configurations are looked for in the remove object - a
-// canonicalFramePartSavedObject, {partFrame, packageStyle, removeCookie} -
-// rather than in the part's frame, so they are never unregistered.  And
-// as in InstallFrame, the 'auto part's answer is thrown away.
+// ROM BUG (fixed): the configurations are looked for in the remove object
+// - a canonicalFramePartSavedObject, {partFrame, packageStyle,
+// removeCookie} - rather than in the part's frame, so they are never
+// unregistered.  And as in InstallFrame, the 'auto part's answer is thrown
+// away.  The fix: the configurations are those of the remove object's
+// partFrame, and the 'auto part's error is answered when unregistering
+// had none.
 NewtonErr
 TCommPartHandler::RemoveFrame(RefArg removeObject, const PartId& partId, PartType partType)
 {
 	NewtonErr err = noErr;
-	RefVar configurations(GetFrameSlotRef(removeObject, RSSYMconfigurations));
+	RefVar configurations;
+	if (RomBugFixed())
+	{
+		RefVar partFrame(GetFrameSlotRef(removeObject, RSSYMpartframe));
+		if (NOTNIL(partFrame))
+			configurations = GetFrameSlotRef(partFrame, RSSYMconfigurations);
+	}
+	else
+		configurations = GetFrameSlotRef(removeObject, RSSYMconfigurations);
 	if (NOTNIL(configurations))
 	{
 		RefVar args(MakeArray(1));
@@ -610,6 +668,11 @@ TCommPartHandler::RemoveFrame(RefArg removeObject, const PartId& partId, PartTyp
 			err = FramesException(CurrentException());
 		}
 		end_try;
+	}
+	if (RomBugFixed())
+	{
+		NewtonErr autoErr = TAutoScriptPartHandler::RemoveFrame(removeObject, partId, partType);
+		return err != noErr ? err : autoErr;
 	}
 	TAutoScriptPartHandler::RemoveFrame(removeObject, partId, partType);
 	return err;

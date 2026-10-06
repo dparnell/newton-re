@@ -30,6 +30,7 @@
 #include "RSSymbols.h"
 #include "Unicode.h"
 #include "NewtonExceptions.h"
+#include "host/RomBugs.h"
 #include "NewtonMemory.h"
 
 extern const unsigned char	FiveBitASCII_Adobe[256];		// BookTables.cpp (generated)
@@ -83,11 +84,36 @@ TLibrarian::CheckHints(const UShort* codes, const char* hints, long count)
 // The word (upper case, length characters) looked for in text from *pos
 // to end, cases folded (a to z only), where a word starts.  ==> whether it
 // was found: *found its start and *pos past it; else *pos the end.
-// ROM BUG: a character that breaks a partial match is not tried as the
-// start of a new one, so "aab" does not contain "ab".
+// ROM BUG (fixed): a character that breaks a partial match is not tried as
+// the start of a new one, so "aab" does not contain "ab".  The fix tries
+// the word at every position in turn (a match that does not start a word
+// passed over, as before).
 Boolean
 TLibrarian::TextSearch(const UniChar* word, long length, const UniChar* text, long* pos, long end, long* found)
 {
+	if (RomBugFixed())
+	{
+		for (long start = *pos; start + length <= end; start++)
+		{
+			long k = 0;
+			for ( ; k < length; k++)
+			{
+				ULong c = text[start + k];
+				if (c > 0x60 && c < 0x7b)
+					c -= 0x20;
+				if (word[k] != (UniChar) c)
+					break;
+			}
+			if (k == length && (start == 0 || !IsAlphaNumeric(text[start - 1])))
+			{
+				*found = start;
+				*pos = start + length;
+				return true;
+			}
+		}
+		*pos = end;
+		return false;
+	}
 	long matched = 0;
 	long i = *pos;
 	for ( ; ; )
@@ -216,11 +242,17 @@ AddFound(RefArg items, RefArg title, RefArg owner, RefArg isbn, RefArg found)
 // {title, items, appSymbol: 'copperfield} entry of the results, its title
 // the words round it between ellipses.  ==> the last book's entry, nil
 // when nothing was found in any.
-// ROM BUG: the book's scripts, once one book has them, are kept for the
-// books after it that have none.
-// ROM BUG: a book with no hints is not searched at all.
-// ROM BUG: the entry answered is the last one made, which the next book
-// found nothing in does not clear.
+// ROM BUG (fixed): the book's scripts, once one book has them, are kept
+// for the books after it that have none.  The fix forgets them at each
+// book.
+// ROM BUG (fixed): a book with no hints is not searched at all.  The fix
+// searches every content item of such a book, as one whose hints do not
+// rule the word out.
+// ROM BUG (fixed): the entry answered is the last one made, which the
+// next book found nothing in does not clear.  The fix is no change: the
+// callers (Copperfield's find and FindTargeted) only ask whether the
+// answer is nil, to learn whether anything was found in any book - which
+// the last entry made answers rightly, and the last book's own would not.
 Ref
 TLibrarian::Find(UniChar* word, RefArg owner, RefArg results, RefArg arg4, RefArg status, RefArg books)
 {
@@ -268,6 +300,11 @@ TLibrarian::Find(UniChar* word, RefArg owner, RefArg results, RefArg arg4, RefAr
 		sym = StrRefToSymbol(isbn);
 		book = GetFrameSlotRef(*fLibrary, sym);
 		book = GetFrameSlotRef(book, RSSYMbook);
+		if (RomBugFixed())
+		{
+			searchScript = NILREF;
+			mungeScript = NILREF;
+		}
 		if (FrameHasSlot(book, RSSYMscripts))
 		{
 			RefVar scripts(GetFrameSlotRef(book, RSSYMscripts));
@@ -291,13 +328,20 @@ TLibrarian::Find(UniChar* word, RefArg owner, RefArg results, RefArg arg4, RefAr
 		DoMessage(status, RSSYMsetstatus, args);
 		items = MakeArray(0);
 		hints = GetFrameSlotRef(book, RSSYMhints);
+		Boolean noHints = false;
 		if (ISNIL(hints))
-			continue;
-		long hintCount = Length(hints);
+		{
+			if (!RomBugFixed())
+				continue;
+			noHints = true;
+		}
 		contents = GetFrameSlotRef(book, RSSYMcontents);
+		if (noHints && ISNIL(contents))
+			continue;
+		long hintCount = noHints ? Length(contents) : Length(hints);
 		for (long i = 0; i < hintCount; i++)
 		{
-			hint = GetArraySlotRef(hints, i);
+			hint = noHints ? RefVar(TRUEREF) : RefVar(GetArraySlotRef(hints, i));
 			if (ISNIL(hint))
 				continue;
 			if (EQRef(ClassOf(hint), RSSYMdata))
@@ -456,8 +500,9 @@ TLibrarian::FindContentBySlot(RefArg reader, RefArg slot, RefArg bookArg)
 // rendering of the same number) with a block whose item's slot holds the
 // value (or whose slots hold the values), a page once for each such block;
 // items whose layout has bit 11 or 14 set are passed over.
-// ROM BUG: book true (first only) stops at the first block found on each
-// page, not at the first page.
+// ROM BUG (fixed): book true (first only) stops at the first block found
+// on each page, not at the first page.  The fix answers the first page
+// alone.
 Ref
 TLibrarian::FindPageByValue(RefArg reader, RefArg slot, RefArg value, RefArg bookArg)
 {
@@ -512,7 +557,11 @@ TLibrarian::FindPageByValue(RefArg reader, RefArg slot, RefArg value, RefArg boo
 				continue;
 			AddArraySlot(found, RefVar(MAKEINT(p + 1)));
 			if (firstOnly)
+			{
+				if (RomBugFixed())
+					return found;
 				break;
+			}
 		}
 	}
 	return found;

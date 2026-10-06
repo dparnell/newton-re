@@ -16,6 +16,7 @@
 #include "RSSymbols.h"
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 
 
 // ROM 0x0c1053fc gFontPartHandler
@@ -43,7 +44,9 @@ InitFontLoader(void)
 // the array of [fonts frame, symbol] pairs the part added.
 // ==> kError_No_Memory (and the part rejected) when the memory runs out
 // half way - the families already added stay, and no remove object is
-// set, so nothing takes them out again (ROM BUG, kept).
+// set, so nothing takes them out again (ROM BUG (fixed): the fix takes
+// the families added so far out again, as RemoveFrame would, before the
+// error is answered).
 NewtonErr
 TFontPart::InstallFrame(RefArg frame, const PartId& partId, SourceType sourceType, PartInfo* partInfo)
 {
@@ -92,7 +95,21 @@ TFontPart::InstallFrame(RefArg frame, const PartId& partId, SourceType sourceTyp
 			end_try;
 		}
 		if (err != noErr)
+		{
+			if (RomBugFixed())
+			{
+				RefVar pair;
+				for (ArrayIndex i = 0, count = Length(added); i < count; i++)
+				{
+					pair = GetArraySlotRef(added, i);
+					list = GetArraySlotRef(pair, 0);
+					there = GetArraySlotRef(pair, 1);
+					RemoveSlot(list, there);
+				}
+				FlushFontCache();
+			}
 			return err;
+		}
 	}
 	SetFrameRemoveObject(added);
 	return noErr;
