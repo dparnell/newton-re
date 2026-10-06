@@ -1128,6 +1128,16 @@ TestShapes()
 	EXPECT(NOTNIL(Eval("FindShape(MakeLine(0, 0, 50, 50), 26, 24, nil)")) && ISNIL(Eval("FindShape(MakeLine(0, 0, 50, 50), 40, 10, nil)")));
 	EXPECT(NOTNIL(Eval("FindShape(MakeOval(0, 0, 40, 40), 20, 1, nil)")) && ISNIL(Eval("FindShape(MakeOval(0, 0, 40, 40), 20, 20, nil)")));
 	EXPECT(NOTNIL(Eval("FindShape(MakePolygon([0, 0, 40, 0, 20, 30]), 20, 1, nil)")) && ISNIL(Eval("FindShape(MakePolygon([0, 0, 40, 0, 20, 30]), 20, 12, nil)")));
+	// the ROM's bugs in DoFindShape (NEWTON_ROM_BUGS=1): a filled oval is
+	// found anywhere in its box, and a shape up to four times further away
+	// than the one found replaces it; fixed, neither
+	SetRomBugFixed(false);
+	EXPECT(NOTNIL(Eval("FindShape(MakeOval(10, 10, 60, 60), 12, 12, {fillPattern: 5})")));
+	EXPECT(RINT(Eval("FindShape([MakeLine(0, 0, 100, 0), MakeLine(0, 4, 100, 4)], 50, 1, nil).path[0]")) == 1);
+	SetRomBugFixed(true);
+	EXPECT(ISNIL(Eval("FindShape(MakeOval(10, 10, 60, 60), 12, 12, {fillPattern: 5})")));
+	EXPECT(NOTNIL(Eval("FindShape(MakeOval(10, 10, 60, 60), 35, 35, {fillPattern: 5})")));
+	EXPECT(RINT(Eval("FindShape([MakeLine(0, 0, 100, 0), MakeLine(0, 4, 100, 4)], 50, 1, nil).path[0]")) == 0);
 	// GetShapeInfo: the bounds, a line's ends, a text's string, a wedge's quarter
 	EXPECT(RINT(Eval("GetShapeInfo(MakeRect(10, 10, 30, 20)).bounds.right")) == 30);
 	EXPECT(RINT(Eval("GetShapeInfo(MakeLine(1, 2, 3, 4)).start.x")) == 1 && RINT(Eval("GetShapeInfo(MakeLine(1, 2, 3, 4)).stop.y")) == 4);

@@ -27,6 +27,7 @@
 #include "NewtWorld.h"
 #include "REPTranslators.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -118,9 +119,21 @@ TestFormatVertical()
 	// stacked from the top with no gaps: 5-15, 15-45; the bottom answered
 	long bottom = RINT(RefVar(Eval("ctxStack:fv({left: 0, top: 5, right: 50, bottom: 105}, nil)")));
 	EXPECT(bottom == 45);
-	// spread: the gap is the height (100) less the children's total over
-	// ChildrenHeight's count, which is one more than there are (40 / 3 =
-	// 13) - the ROM's arithmetic - so 92-102, then 189-219
+	// spread, fixed: the height (100) less the children's total (40) over
+	// ChildrenHeight's count, which is one more than there are: 20 - so
+	// 25-35, then 55-85, and the bottom answered a gap further on
+	SetRomBugFixed(true);
+	bottom = RINT(RefVar(Eval("ctxStack:fv({left: 0, top: 5, right: 50, bottom: 105}, true)")));
+	EXPECT(bottom == 105);
+	{
+		TView* stack = GetView(RefVar(Eval("ctxStack")));
+		TView* first = stack != nil ? (TView*) stack->fChildren->At(0) : nil;
+		EXPECT(first != nil && first->viewBounds.top == 25 && first->viewBounds.bottom == 35);
+	}
+	// spread, the ROM's bug (NEWTON_ROM_BUGS=1): the gap is the height
+	// less the children's total over the count (40 / 3 = 13) - so
+	// 92-102, then 189-219
+	SetRomBugFixed(false);
 	bottom = RINT(RefVar(Eval("ctxStack:fv({left: 0, top: 5, right: 50, bottom: 105}, true)")));
 	if (bottom != 306) fprintf(stderr, "  spread bottom %ld\n", bottom);
 	EXPECT(bottom == 306);
@@ -132,6 +145,7 @@ TestFormatVertical()
 		if (!(first->viewBounds.top == 92)) fprintf(stderr, "  first child %d-%d\n", first->viewBounds.top, first->viewBounds.bottom);
 		EXPECT(first->viewBounds.top == 92 && first->viewBounds.bottom == 102);
 	}
+	SetRomBugFixed(true);
 	// not a rectangle: thrown (FromObject refuses a non-frame first)
 	EXPECT(ISNIL(RefVar(Eval("try ctxStack:fv(3, nil) onexception |evt.ex| do nil"))));
 	Eval("ctxStack:Close()");
@@ -152,10 +166,26 @@ TestGrayShrink()
 	Eval("ctxShrink:GrayShrink(box, {transform: [{}, {left: 0, top: 0, right: 8, bottom: 4}]})");
 	EXPECT(Pixel(20, 10) == 1 && Pixel(23, 10) == 1 && Pixel(20, 13) == 1 && Pixel(21, 11) == 0 && Pixel(24, 10) == 0);
 	// no transform: the view's bounds, offset by the view's top-left once
-	// more (the ROM's doing) - (40, 20)-(80, 40), five times the size
+	// more (the ROM's bug, NEWTON_ROM_BUGS=1) - (40, 20)-(80, 40), five
+	// times the size
+	SetRomBugFixed(false);
 	memset(gBits, 0, sizeof(gBits));
 	Eval("ctxShrink:GrayShrink(box, {})");
 	EXPECT(Pixel(40, 20) == 1 && Pixel(59, 24) == 1 && Pixel(45, 25) == 0 && Pixel(20, 10) == 0 && Pixel(60, 20) == 0);
+	// and a grayLevels that is not an array puts the preference back as nil
+	Eval("userConfiguration.grayLevels := [0, 1]");
+	Eval("ctxShrink:GrayShrink(box, {grayLevels: 3})");
+	EXPECT(ISNIL(RefVar(Eval("userConfiguration.grayLevels"))));
+	SetRomBugFixed(true);
+	// fixed: the view's own bounds, (20, 10)-(60, 30), five times the size
+	memset(gBits, 0, sizeof(gBits));
+	Eval("ctxShrink:GrayShrink(box, {})");
+	EXPECT(Pixel(20, 10) == 1 && Pixel(39, 14) == 1 && Pixel(25, 15) == 0 && Pixel(40, 20) == 0);
+	// and the preference is left alone
+	Eval("userConfiguration.grayLevels := [0, 1]");
+	Eval("ctxShrink:GrayShrink(box, {grayLevels: 3})");
+	EXPECT(NOTNIL(RefVar(Eval("userConfiguration.grayLevels"))));
+	Eval("userConfiguration.grayLevels := nil");
 	// an integer where the transform's first rectangle goes is refused
 	EXPECT(ISNIL(RefVar(Eval("try ctxShrink:GrayShrink(box, {transform: [1, 2]}) onexception |evt.ex.graf| do nil"))));
 	Eval("ctxShrink:Close()");

@@ -36,6 +36,7 @@
 #include "Shapes.h"
 #include "Transform.h"
 #include "ByteOrder.h"
+#include "host/RomBugs.h"
 
 
 // ROM 0x000e15b8 PointInShape__FRC6RefVarRC6TPointP10TStyleSave
@@ -112,14 +113,16 @@ OutlineDistance(const Point& pt, const Point& mid, long width, long height, long
 // point there finds the shape whatever its outline says, being where a
 // selected shape's resize handles are - and nil otherwise.
 //
-// ROM BUG: the distance a new find is compared with is the path's first
+// ROM BUG (fixed): the distance a new find is compared with is the path's first
 // slot as it stands - the Ref, four times the distance it holds - so a
 // shape up to four times further away than the one found so far replaces
-// it (and with nothing found yet the limit is 0x200, the Ref of 128).
+// it (and with nothing found yet the limit is 0x200, the Ref of 128).  The
+// fix compares with the distance the slot holds (128 with nothing found).
 //
-// ROM BUG: a filled oval or wedge asks PointInShape and then takes the
+// ROM BUG (fixed): a filled oval or wedge asks PointInShape and then takes the
 // shape as found whatever it answers, so any point inside its box (grown
-// by the tolerance) finds it.
+// by the tolerance) finds it.  The fix takes the answer, as a filled
+// polygon's is taken.
 Boolean
 DoFindShape(RefArg shape, const Point& pt, RefVar& path, TStyleSave* style)
 {
@@ -214,15 +217,23 @@ DoFindShape(RefArg shape, const Point& pt, RefVar& path, TStyleSave* style)
 					break;
 				}
 			}
-			// (ROM: the fake handle is not given back - a leak kept)
+			// (ROM BUG (fixed): the fake handle is not given back - a leak.
+			//  The fix gives it back.)
+			if (RomBugFixed())
+				DisposHandle(fake);
 		}
 	}
 	else if (EQRef(cls, RSSYMoval))
 	{
 		if (fill)
 		{
-			PointInShape(shape, pt, style);			// (its answer ignored: see above)
-			found = 0;
+			if (RomBugFixed())
+				found = PointInShape(shape, pt, style) ? 0 : -1;
+			else
+			{
+				PointInShape(shape, pt, style);			// (its answer ignored: see above)
+				found = 0;
+			}
 		}
 		else
 		{
@@ -246,8 +257,13 @@ DoFindShape(RefArg shape, const Point& pt, RefVar& path, TStyleSave* style)
 		{
 			if (fill)
 			{
-				PointInShape(shape, pt, style);		// (its answer ignored: see above)
-				found = 0;
+				if (RomBugFixed())
+					found = PointInShape(shape, pt, style) ? 0 : -1;
+				else
+				{
+					PointInShape(shape, pt, style);		// (its answer ignored: see above)
+					found = 0;
+				}
 			}
 			else
 			{
@@ -314,8 +330,10 @@ DoFindShape(RefArg shape, const Point& pt, RefVar& path, TStyleSave* style)
 			if (found >= 0)
 				break;
 		}
-		// ROM BUG: the expanded strokes are never given back (no
-		// DisposeTStrokes) - a leak kept
+		// ROM BUG (fixed): the expanded strokes are never given back (no
+		// DisposeTStrokes) - a leak.  The fix gives them back.
+		if (RomBugFixed())
+			DisposeTStrokes(strokes);
 	}
 	else if (EQRef(cls, RSSYMbitmap) || EQRef(cls, RSSYMtext) || EQRef(cls, RSSYMpicture))
 	{
@@ -353,7 +371,13 @@ DoFindShape(RefArg shape, const Point& pt, RefVar& path, TStyleSave* style)
 	Ref nearest = 0x200;
 	if (Length(path) != 0)
 		nearest = GetArraySlotRef(path, 0);
-	if (found > (long) nearest)						// (the Ref, not its value: see above)
+	if (RomBugFixed())
+	{
+		long limit = ISINT(nearest) ? RVALUE(nearest) : 128;
+		if (found > limit)
+			return false;
+	}
+	else if (found > (long) nearest)						// (the Ref, not its value: see above)
 		return false;
 	path = AllocateArray(RSSYMpathexpr, 0);
 	AddArraySlot(path, RefVar(MAKEINT(found)));

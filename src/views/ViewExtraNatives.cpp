@@ -34,6 +34,7 @@
 #include "RichString.h"
 #include "Interpreter.h"	// DoMessage
 #include <string.h>
+#include "host/RomBugs.h"
 
 
 // ROM 0x001ea130 FDV
@@ -111,9 +112,10 @@ FConnectPassthruKeyboard(RefArg /*rcvr*/, RefArg connected)
 // apart by the rect's height less the children's total height divided by
 // ChildrenHeight's count (which is one more than the children).
 //
-// ROM BUG kept: an even spread would be the height less the children's
+// ROM BUG (fixed): an even spread would be the height less the children's
 // total, over their number; the ROM divides the total by the count and
-// takes that from the height, so the gap is nearly the whole rect.
+// takes that from the height, so the gap is nearly the whole rect.  The
+// fix spreads them evenly: the height less the total, over the count.
 static Ref
 FormatVertical(RefArg rcvr, RefArg bounds, RefArg spread)
 {
@@ -129,7 +131,8 @@ FormatVertical(RefArg rcvr, RefArg bounds, RefArg spread)
 		if (count == 0)
 			spacing = 0;
 		else
-			spacing = (short) (rect.bottom - rect.top) - total / count;
+			spacing = RomBugFixed() ? ((short) (rect.bottom - rect.top) - total) / count
+									: (short) (rect.bottom - rect.top) - total / count;
 	}
 	return MAKEINT(view->SetChildrenVertical(spacing + rect.top, spacing));
 }
@@ -143,11 +146,13 @@ FormatVertical(RefArg rcvr, RefArg bounds, RefArg spread)
 // shrinking turns pixels into grays through them).  A one-bit bitmap is
 // flagged 0x1000000 first.
 //
-// ROM BUGS kept: the destination is offset by the view's top-left even
+// ROM BUGS (fixed): the destination is offset by the view's top-left even
 // when it is the view's bounds, which are already global, so with no
 // transform the bitmap lands the view's own offset down and to the right;
 // and the preference is put back whenever the style has a grayLevels at
 // all, so a grayLevels that is not an array sets the preference to nil.
+// The fix offsets only a transform's rectangle, and puts the preference
+// back only when it was changed.
 static Ref
 FGrayShrink(RefArg rcvr, RefArg bitmap, RefArg style)
 {
@@ -165,7 +170,8 @@ FGrayShrink(RefArg rcvr, RefArg bitmap, RefArg style)
 		if (!FromObject(to, rect))
 			Throw((ExceptionName) "evt.ex.graf", (void*) -8810, nil);
 	}
-	OffsetRect(&rect, view->viewBounds.left, view->viewBounds.top);
+	if (!RomBugFixed() || NOTNIL(transform))
+		OffsetRect(&rect, view->viewBounds.left, view->viewBounds.top);
 	TPixelObj pixels;
 	newton_try
 	{
@@ -185,7 +191,7 @@ FGrayShrink(RefArg rcvr, RefArg bitmap, RefArg style)
 		StartDrawing(nil, nil);
 		CopyBits(map, &port->portBits, &map->bounds, &rect, 0, nil);
 		StopDrawing(nil, &rect);
-		if (NOTNIL(levels))
+		if (RomBugFixed() ? IsArray(levels) : NOTNIL(levels))
 			SetPreference(RSSYMgraylevels, saved);
 	}
 	cleanup

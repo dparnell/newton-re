@@ -1260,9 +1260,10 @@ forgotten (`RemoveExcessWhiteSpace`).  An area never written into stays
 until the paragraph goes.  So the writer opens a gap with a caret, writes
 a word into it, and the gap closes up round the word.
 
-ROM bug kept: a deletion that swallows the whole of an area leaves its
+ROM bug: a deletion that swallows the whole of an area leaves its
 length negative, and the check meant to empty it compares the length
-unsigned, so never fires.  The idler's wait for the pen needs it to have
+unsigned, so never fires (fixed by default - the area is left empty;
+`NEWTON_ROM_BUGS=1` for the ROM's behaviour).  The idler's wait for the pen needs it to have
 come up *after* it went down, which a test stroke fed all in one tick
 never does - `src/host/demo/caretspace.ns` writes its last word paced
 (`PacePen`) and lets the inker feed it (ctest `host.NewtonCaretSpace`:
@@ -1786,9 +1787,10 @@ ended, or to where a stroke of another shape nearby crosses (the
 recognition context's units, the stroke's unit made a 'GSHP' for the
 asking; `MiniSolver` solves the two lines), and merged with the old
 selection (`AddInterval`, `ExtractHiliteFromIntervals`: one interval,
-or two meeting round a closed shape's join).  ROM bug kept:
+or two meeting round a closed shape's join).  ROM bug:
 `AddInterval` merges an interval that spans several of the others with
-the first of them only.
+the first of them only (now fixed by default, `NEWTON_ROM_BUGS=1` for the
+ROM's behaviour).
 
 Deleting a partial selection (`RemovePoints`) makes what follows it a
 shape of its own (an open verb, an oval's piece an arc) through
@@ -1799,8 +1801,9 @@ stays, cut back to end at the cut by the undoable points command 0x44
 'points, the verb then param3 - 1; its undo puts the old points back,
 moved by as much as the view's bounds moved).  `ValidatePoly` makes a
 verb agree with its points (15 none, 3 one, 8 two, 9 four closing,
-closed verbs that do not close the open one; ROM bug kept: the check of
-the points' box against the bounds it is given sets nothing).
+closed verbs that do not close the open one; ROM bug: the check of
+the points' box against the bounds it is given sets nothing - fixed by
+default, `NEWTON_ROM_BUGS=1` for the ROM's behaviour).
 `OuterBounds` grows the view by the pen at the bottom right - a level
 line's box has no height - and by four all round while it is selected.
 `src/host/demo/traced.ns` (ctest `host.NewtonTraced`) traces part of a
@@ -2517,7 +2520,8 @@ four corners (0 top left, clockwise) finds the shape whatever its outline
 says - that is where a selected shape's handles are.  A find nearer than
 the one held starts the path again as [distance, corner] and every list
 level adds its index on the way out; `FFindShape` turns it round into
-{vertex, path} (path true for a single shape).  Two ROM bugs are kept: the
+{vertex, path} (path true for a single shape).  Two ROM bugs, now fixed by
+default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour): the
 comparison with the find already held is against its Ref, four times the
 distance, and a filled oval or wedge asks `PointInShape` and then takes the
 shape whatever it answered.
@@ -2695,8 +2699,9 @@ moves the end of the meeting - the screen below it saved
 screen put back under it as it comes up, never shorter than twelve
 pixels - and the meeting's `SetMeetingBounds(new, old)` is told the
 result; a scrub over the bar deletes the meeting (an `aeRemoveData` to
-the page, with a poof); `aeScaleData` is the drag's undo.  ROM BUG,
-kept: the polygon the press inverts is never killed.
+the page, with a poof); `aeScaleData` is the drag's undo.  ROM BUG: the
+polygon the press inverts is never killed (fixed by default,
+`NEWTON_ROM_BUGS=1` for the ROM's leak).
 
 Getting the day view to draw a meeting turned up two host bugs outside
 the views.  A pattern made from rows (`MakeSimplePattern`, and so every
@@ -2739,13 +2744,15 @@ nsfunctions.py --binary-classes` saying which classes there are).
 - **GrayShrink** 0x0003ec94: a bitmap shrunk into the view's bounds or the
   second rectangle of the style's `transform`, with the style's
   `grayLevels` in the user's preferences while the bits are copied.  ROM
-  bugs kept: the destination is offset by the view's top-left even when it
+  bugs: the destination is offset by the view's top-left even when it
   is the (already global) bounds, and a `grayLevels` that is not an array
-  sets the preference to nil on the way out.
+  sets the preference to nil on the way out - both fixed by default
+  (`NEWTON_ROM_BUGS=1` for the ROM's behaviour).
 - **FormatVertical** 0x001f0aa4 (a global taking its view from self): the
-  children stacked from a rectangle's top, spaced (ROM bug kept) by the
+  children stacked from a rectangle's top, spaced (ROM bug) by the
   height less the children's total over `ChildrenHeight`'s count, which is
-  one more than there are.
+  one more than there are; fixed by default to (height less total) over the
+  count, an even spread (`NEWTON_ROM_BUGS=1` for the ROM's).
 - **ComputeParagraphHeight** 0x001ecfd0: a paragraph frame's text fitted
   to a width (`TextBounds`), never under 50 - its box built on the stack
   as `{top, 0, top, width}` through an unaligned load (read from the
@@ -2808,7 +2815,9 @@ nsfunctions.py --binary-classes` saying which classes there are).
   the text; with 'all the fonts, and the ink words' print scale, are
   worked out after the styles slot was set and never reach the piece;
   the room left is reset to a whole page after every piece;
-  `SplitStyles` gives a part inside one run the wrong length; and the
+  `SplitStyles` gives a part inside one run the wrong length (these four,
+  and the dropped character, are fixed by default; `NEWTON_ROM_BUGS=1` for
+  the ROM's behaviour); and the
   gutter test compares the text's length, unsigned, with nought, so an
   empty text counts as text.  The lasso moves a group but not its
   children (the ROM's `TView::Constructor` as much as the host's), so a

@@ -28,6 +28,7 @@
 #include "OSErrors.h"
 #include "RSSymbols.h"
 #include "ROMConstants.h"
+#include "host/RomBugs.h"
 
 
 // ROM 0x001cbda4 TRectToSliderPoly__FR5TRect
@@ -219,8 +220,9 @@ TSliderView::DrawHilitedData(void)
 // page's coordinates - unless the meeting has no start date.  Lifted
 // without moving, the bar is put back.  ==> 1 (0: not on the bar).
 //
-// ROM BUG, kept: the bar's polygon is never killed - every press on a
-// meeting's bar leaks one.
+// ROM BUG (fixed): the bar's polygon is never killed - every press on a
+// meeting's bar leaks one.  The fix kills it once the press is over,
+// thrown out of or not.
 long
 TSliderView::HandleClick(RefArg cmd)
 {
@@ -329,9 +331,13 @@ TSliderView::HandleClick(RefArg cmd)
 	newton_catch_all
 	{
 		SetClip(savedClip);
+		if (RomBugFixed())
+			KillPoly(poly);
 		rethrow;
 	}
 	end_try;
 	SetClip(savedClip);
+	if (RomBugFixed())
+		KillPoly(poly);
 	return 1;
 }

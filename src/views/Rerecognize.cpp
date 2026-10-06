@@ -39,6 +39,7 @@
 #include "NewtonExceptions.h"
 #include "RSSymbols.h"
 #include "ROMConstants.h"
+#include "host/RomBugs.h"
 
 StrokeCentral*	gBulkStrokes = nil;					// ROM 0x0c1008a4 gBulkStrokes
 static Boolean	gCheckmarkUp = false;				// (the ROM's byte at 0x0c101730) which of the two arrows DrawCheckmark shows next
@@ -425,15 +426,18 @@ RecognizeInkWord(RefArg ink)
 // runs before it named - or the font given, or the user's font - and the
 // runs merged where they now agree.  A frame with no ink words comes back
 // as it was; one with any comes back as a new canonicalTextAndStyles.
-// ROM BUG (latent): the text's characters are read through a pointer
+// ROM BUG (fixed) (latent): the text's characters are read through a pointer
 // taken before the ink words are read, which allocates - a collection
-// that moved the string would leave it pointing at the old place.
+// that moved the string would leave it pointing at the old place.  The fix
+// holds the text and takes the pointers (its, and the reading's) afresh
+// after anything that allocates.
 Ref
 RecognizeTextInStyles(RefArg textAndStyles, RefArg fontSpec)
 {
 	RefVar result(textAndStyles);
 	RefVar text(GetFrameSlotRef(textAndStyles, RSSYMtext));
 	UniChar* chars = GetCString(text);
+	RefVar original(text);			// (the fix) the text, held while `text` is reused
 	RefVar font(fontSpec);
 	if (ISNIL(fontSpec))
 		font = GetPreference(RSSYMuserfont);
@@ -458,6 +462,8 @@ RecognizeTextInStyles(RefArg textAndStyles, RefArg fontSpec)
 				if (made)
 				{
 					SetLength(newText, (textOut + length + 1) * (long) sizeof(UniChar));
+					if (RomBugFixed())
+						chars = GetCString(original);
 					Ustrncpy(GetCString(newText) + textOut, chars + textIn, length);
 				}
 				textOut += length;
@@ -485,11 +491,15 @@ RecognizeTextInStyles(RefArg textAndStyles, RefArg fontSpec)
 				{
 					made = true;
 					newText = AllocateBinary(RSSYMstring, size);
+					if (RomBugFixed())
+						chars = GetCString(original);
 					Ustrncpy(GetCString(newText), chars, textIn);
 					newStyles = Clone(styles);
 				}
 				if (wordLength > 0)
 				{
+					if (RomBugFixed())
+						word = GetCString(text);
 					Ustrncpy(GetCString(newText) + textOut, word, wordLength);
 					textOut = newLength;
 				}
