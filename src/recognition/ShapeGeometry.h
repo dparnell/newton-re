@@ -94,7 +94,7 @@ struct EqSystem
 {
 	long		fN;				// +0x00  how many variables there are
 	long		fCount;			// +0x04  how many equations there are
-	Equation	fEqs[42];		// +0x08  ROM BUG: 41 fit, but NewCoeffs makes a 42nd (see there)
+	Equation	fEqs[42];		// +0x08  41 fit in the ROM's layout, but NewCoeffs makes a 42nd (see the ROM bug there, fixed; the host keeps room for the 42nd)
 };
 
 // A quadratic form over [1, x1 .. xn] as an upper triangle: row i is a

@@ -28,6 +28,7 @@
 
 #include "ShapeGeometry.h"
 #include "FixedMath.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 
@@ -386,11 +387,16 @@ TTrend::Merge(long index, Cluster* a, Cluster* b)
 		spreadB = stretchedB + ShiftLeft(b->fMin - merged.fMean, 16);
 	merged.fVar = (long) (int32_t) ((uint32_t) nA * (uint32_t) spreadA + (uint32_t) nB * (uint32_t) spreadB) / n;
 	merged.fCount = n;
-	// ROM BUG: the merged cluster's value (+0x18) is never set, so it is
-	// whatever Merge's stack held there, and AddToTrend answers that for a
-	// value that joins it.  DEVIATION: that cannot be known on the host,
-	// which takes the merged mean.
-	merged.fValue = merged.fMean;
+	// ROM BUG (fixed): the merged cluster's value (+0x18) is never set, so
+	// it is whatever Merge's stack held there, and AddToTrend answers that
+	// for a value that joins it.  DEVIATION: that cannot be known on the
+	// host, which takes the merged mean.  The fix sets it to the merged
+	// mean as well - what a value joining the merged cluster snaps to,
+	// rather than either cluster's old value.
+	if (RomBugFixed())
+		merged.fValue = merged.fMean;
+	else
+		merged.fValue = merged.fMean;		// DEVIATION: the host's stand-in for the ROM's stack
 	DeleteEntries(index, 2);
 	if (InsertEntry(index, (char*) &merged) == (ULong) -1)
 		return true;
