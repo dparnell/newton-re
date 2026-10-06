@@ -20,6 +20,7 @@
 #include "Locale.h"
 #include "FixedMath.h"
 #include "FixedMathExtra.h"	// WrapAdd/WrapSub: the ARM's wrapping add and subtract
+#include "host/RomBugs.h"
 #include <string.h>
 
 // the pen tip and inking defaults the strokes are made with
@@ -190,7 +191,7 @@ UnfixRect(const FRect* src, Rect* dst)
 // The dst rect narrowed (or shortened) about its centre to the src
 // rect's proportions, so that a mapping between them keeps shapes.
 //
-// BUG (the ROM's): a stroke that is perfectly flat blows the dst rect up
+// ROM BUG (fixed): a stroke that is perfectly flat blows the dst rect up
 // to about sixteen thousand pixels each way.  `UpdateBBox` makes a box a
 // single Fixed unit - 1/65536 of a pixel - past its points, so a stroke
 // drawn along one exact y has a height of 1 and `srcRatio` divides that
@@ -201,7 +202,9 @@ UnfixRect(const FRect* src, Rect* dst)
 // which on the machine wraps and puts the ink somewhere meaningless.
 // The reconstruction does the same (MapPoint below wraps as the ARM
 // does), because a Newton with a flat stroke in a word large enough to
-// need scaling really does make nonsense of it.
+// need scaling really does make nonsense of it.  The fix takes a flat
+// stroke (a ratio of nought) the first way, narrowing the height, so the
+// width is kept and nothing is divided by nought.
 void
 GetMapper(const FRect* src, const FRect* dst)
 {
@@ -210,7 +213,7 @@ GetMapper(const FRect* src, const FRect* dst)
 	Fixed dstHeight = WrapSub(d->bottom, d->top);
 	Fixed dstWidth = WrapSub(d->right, d->left);
 	Fixed dstRatio = FixedDivide(dstHeight, dstWidth);
-	if (srcRatio < dstRatio)
+	if (srcRatio < dstRatio || (RomBugFixed() && srcRatio == 0))
 	{
 		Fixed height = FixedMultiply(dstWidth, srcRatio);
 		Fixed inset = WrapSub(dstHeight, height) >> 1;
