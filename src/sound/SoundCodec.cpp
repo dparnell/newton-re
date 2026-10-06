@@ -15,6 +15,7 @@
 #include "NewtonExceptions.h"
 #include "SoundDriver.h"
 #include "SoundServer.h"
+#include "host/RomBugs.h"
 
 // (declared in os600/kernel/KernelGlobals.h)
 extern ULong	gMainCPUType;		// ROM 0x0c1008dc gMainCPUType
@@ -241,9 +242,9 @@ TMuLawCodec::BlockConvertMuLawToLin16(void* dst, void* src, long count)
 
 
 // ROM 0x00123014 BlockConvertLin16ToMuLaw__11TMuLawCodecFPvPCvl
-// The same exponent search as SampleConvertLin16ToMuLaw, bug included: the
-// loudest samples leave no bit in the low eight and the search runs off the
-// end (see SampleConvert.cpp).
+// The same exponent search as SampleConvertLin16ToMuLaw.  ROM BUG (fixed),
+// as there: the loudest samples leave no bit in the low eight and the search
+// runs off the end (see SampleConvert.cpp); RomBugFixed() clips them.
 void
 TMuLawCodec::BlockConvertLin16ToMuLaw(void* dst, const void* src, long count)
 {
@@ -258,6 +259,8 @@ TMuLawCodec::BlockConvertLin16ToMuLaw(void* dst, const void* src, long count)
 			value = -value;
 			sign = 0x80;
 		}
+		if (RomBugFixed() && value > 0x1fff - kMuLawBias)
+			value = 0x1fff - kMuLawBias;
 		long biased = value + kMuLawBias;
 		int exponent = 7;
 		while (exponent >= 0 && (((biased >> 5) & (1L << exponent)) == 0))

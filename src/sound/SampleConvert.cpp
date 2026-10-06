@@ -13,6 +13,7 @@
 #include "SampleWords.h"
 #include "SampleConvert.h"
 #include "Ports.h"					// QuickDraw's Random, which the decoder dithers with
+#include "host/RomBugs.h"
 
 
 /*------------------------------------------------------------------------------
@@ -90,12 +91,13 @@ BlockConvertStd8ToLin16(void* dst, long* dstCount, void* src, long* srcCount)
 // mantissa (G.711's is 132, on a 13-bit magnitude; the ROM's is 33, on the
 // 14-bit magnitude a 16-bit sample gives when shifted down by two).
 enum { kMuLawBias = 0x21 };
+enum { kMuLawMaxMagnitude = 0x1fff - kMuLawBias };	// the fix's clip: biased, the top of exponent 7
 
 
 // The coding of one sample.  The exponent is the position of the highest bit
 // set in the biased magnitude shifted down by five, searched from 7 down.
 //
-// BUG (the ROM's): the magnitude is never clamped to what eight exponents can
+// ROM BUG (fixed): the magnitude is never clamped to what eight exponents can
 // hold - G.711's implementations clip at the top of the last segment - so the
 // loudest samples overflow the search two different ways.  From 32636 to
 // 32763 (and -32760 to -32633) the shifted magnitude is 0x100, no bit in 0..7
@@ -106,8 +108,9 @@ enum { kMuLawBias = 0x21 };
 // positive sample decodes as a loud negative one.  Louder still (32764 and
 // above, -32761 and below) the search finds bit 0, the mantissa keeps only
 // its bottom four bits, which are zero, and the sample codes as silence.
-// Ported as the ROM does it, with the ARM shift written out, rather than
-// corrected.
+// Ported as the ROM does it, with the ARM shift written out; the fix
+// (RomBugFixed(), host/RomBugs.h) clips the magnitude at the top of the last
+// segment as G.711 does, so the loudest samples take the loudest code.
 static UByte
 MuLawFromLin16(short sample)
 {
@@ -118,6 +121,8 @@ MuLawFromLin16(short sample)
 		value = -value;
 		sign = 0x80;
 	}
+	if (RomBugFixed() && value > kMuLawMaxMagnitude)
+		value = kMuLawMaxMagnitude;
 	long biased = value + kMuLawBias;
 	int exponent = 7;
 	while (exponent >= 0 && (((biased >> 5) & (1L << exponent)) == 0))

@@ -2450,6 +2450,11 @@ if(Python3_FOUND)
     add_test(NAME tools.IncludeCase
              COMMAND ${Python3_EXECUTABLE} tools/host/includecase.py src
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    # every file that marks a ROM bug fixed asks the switch for it
+    # (tools/newton-rom/analysis/rombugs.py, docs/rom-bugs.md)
+    add_test(NAME tools.RomBugs
+             COMMAND ${Python3_EXECUTABLE} tools/newton-rom/analysis/rombugs.py src --check
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 endif()
 
 # a fresh store has every soup the ROM's first boot makes, and mounting it

@@ -28,6 +28,7 @@
 #include "SampleOrder.h"
 #include "SampleConvert.h"
 #include "Ports.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -182,9 +183,13 @@ TestBlockConversion()
 //  * louder still - 32764..32767 and -32768..-32761 - the search wraps round
 //    to exponent 0 and the mantissa keeps only its bottom four bits, which
 //    are zero, so the codes are 0xFF and 0x7F: silence.
+//
+// The fix (host/RomBugs.h, the default) clips them, as G.711 does; this is
+// the ROM's behaviour, NEWTON_ROM_BUGS=1.
 static void
 TestTheLoudSampleBugs()
 {
+	SetRomBugFixed(false);
 	EXPECT(Encode(32635) == 0x80);				// just below: the loudest code
 	for (long sample = 32636; sample <= 32763; sample++)
 		EXPECT(Encode((short) sample) == 0x0F);
@@ -201,6 +206,20 @@ TestTheLoudSampleBugs()
 	// negative samples it really stands for
 	EXPECT(Encode(-16764) == 0x0F);
 	EXPECT((Decode(0x0F) >> 2) == -4191);
+	SetRomBugFixed(true);
+}
+
+
+// With the fix every sample louder than the loudest code's takes that code.
+static void
+TestTheLoudSampleFix()
+{
+	SetRomBugFixed(true);
+	for (long sample = 32635; sample <= 32767; sample++)
+		EXPECT(Encode((short) sample) == 0x80);
+	for (long sample = -32768; sample <= -32632; sample++)
+		EXPECT(Encode((short) sample) == 0x00);
+	EXPECT(Encode(-16764) == 0x0F);				// what 0x0F really stands for
 }
 
 
@@ -296,6 +315,7 @@ main()
 	TestRampRoundTrip();
 	TestBlockConversion();
 	TestTheLoudSampleBugs();
+	TestTheLoudSampleFix();
 	if (failures == 0)
 		printf("test_SampleConvert: all passed\n");
 	else
