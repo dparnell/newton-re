@@ -13,6 +13,7 @@
 #include "XrDomains.h"
 #include "ParaGraph.h"
 #include "CursiveReader.h"
+#include "host/RomBugs.h"
 #include <string.h>
 
 static inline long	Index(GCWordDescrType* words, GCWordDescrType* word)	{ return word - words; }
@@ -360,12 +361,19 @@ GCWordDescWriteGroupResults(GCWordDescrType* words, UByte first, UByte last, UBy
 		return -4;
 	made->fFirst = first;
 	made->fLast = last;
-	// ROM BUG: the extra strokes are copied while the index is less than
-	// the stroke number, rather than while the stroke number is not
-	// nought - which is the same unless a stroke numbered no more than
-	// its place in the list comes first
-	for (long i = 0; i < (long) extra[i] && i < 8; i++)
-		made->fExtra[i] = extra[i];
+	// ROM BUG (fixed): the extra strokes are copied while the index is
+	// less than the stroke number, rather than while the stroke number is
+	// not nought - which is the same unless a stroke numbered no more than
+	// its place in the list comes first.  The fix copies while the stroke
+	// number is not nought.
+	if (RomBugFixed())
+	{
+		for (long i = 0; i < 8 && extra[i] != 0; i++)
+			made->fExtra[i] = extra[i];
+	}
+	else
+		for (long i = 0; i < (long) extra[i] && i < 8; i++)
+			made->fExtra[i] = extra[i];
 	if (info != nil)
 		made->fInfo = *info;
 	GCWordDescrType* dashed = GCGetWordDescWithFlags(words, 0x80, 0);
@@ -861,6 +869,33 @@ GCWDGetTrace(PS_point_type* trace, GCWordDescrType* word, UByte* strokes, PS_poi
 		{
 			long k = (short) (dash + 1);
 			Boolean removed = false;
+			if (RomBugFixed())
+			{
+				// (the fix for the ROM bug below: each entry after the
+				//  dash's moved down with its number lowered, and the
+				//  place it left cleared)
+				long shift = 0;
+				for (long i = 0; i < 8; i++)
+				{
+					UByte s = word->fInfo.fStrokes[i];
+					if (s == 0)
+						break;
+					UByte sure = word->fInfo.fSure[i];
+					if (s == k || shift != 0)
+					{
+						word->fInfo.fStrokes[i] = 0;
+						word->fInfo.fSure[i] = 0;
+					}
+					if (s == k)
+					{
+						shift++;
+						continue;
+					}
+					word->fInfo.fStrokes[i - shift] = (UByte) ((long) s > k ? s - 1 : s);
+					word->fInfo.fSure[i - shift] = sure;
+				}
+			}
+			else
 			for (long i = 0; i < 8; i++)
 			{
 				UByte s = word->fInfo.fStrokes[i];
@@ -874,10 +909,12 @@ GCWDGetTrace(PS_point_type* trace, GCWordDescrType* word, UByte* strokes, PS_poi
 				}
 				else
 				{
-					// ROM BUG: an entry is moved down one, but it is the
-					// one left behind whose number is lowered, so the
-					// moved copy keeps its old number and the list keeps
-					// a stale last entry
+					// ROM BUG (fixed): an entry is moved down one, but it
+					// is the one left behind whose number is lowered, so
+					// the moved copy keeps its old number and the list
+					// keeps a stale last entry.  The fix (above) lowers
+					// the moved copy's number and clears the place it
+					// left.
 					if (removed)
 					{
 						word->fInfo.fStrokes[i - 1] = s;
@@ -908,9 +945,10 @@ GCWDRemoveStrokesFromList(GCWordDescrType* word, UByte* strokes)
 		return -1;
 	for (ULong s = word->fFirst; (long) s <= (long) word->fLast; s++)
 		strokes[s >> 3] &= (UByte) ~(1 << (7 - (s & 7)));
-	// ROM BUG: as in GCWordDescWriteGroupResults, the extra strokes are
-	// walked while the index is less than the stroke number
-	for (long i = 0; i < 8 && i < (long) word->fExtra[i]; i++)
+	// ROM BUG (fixed): as in GCWordDescWriteGroupResults, the extra
+	// strokes are walked while the index is less than the stroke number.
+	// The fix walks them while the stroke number is not nought.
+	for (long i = 0; i < 8 && (RomBugFixed() ? word->fExtra[i] != 0 : i < (long) word->fExtra[i]); i++)
 	{
 		UByte s = word->fExtra[i];
 		strokes[s >> 3] &= (UByte) ~(1 << (7 - (s & 7)));

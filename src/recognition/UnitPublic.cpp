@@ -27,6 +27,7 @@
 #include "Frames.h"
 #include "RSSymbols.h"
 #include "NewtonMemory.h"
+#include "host/RomBugs.h"
 
 
 // ROM 0x0022ced0 __ct__11TUnitPublicFP5TUnitUl
@@ -478,11 +479,14 @@ TUnitPublic::MakeWordList(Boolean raw, Boolean tryString)
 						list->InsertLast((UniChar**) variant, score, label);
 						added++;
 					}
-					// (BUG, kept: the unlock is inside this arm, so a
-					//  word with no variant stays locked for ever)
+					// (ROM BUG (fixed): the unlock is inside this arm, so
+					//  a word with no variant stays locked for ever.  The
+					//  fix unlocks it in the other arm too.)
 					HUnlock(word);
 					DisposHandle(variant);
 				}
+				else if (RomBugFixed())
+					HUnlock(word);
 			}
 			if (list->Find((UniChar**) word) < 0)
 			{

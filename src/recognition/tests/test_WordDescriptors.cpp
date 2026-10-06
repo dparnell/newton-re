@@ -17,6 +17,7 @@
 #include "Areas.h"				// WordBaseInfo, RecGridInfo
 #include "WordRecognizer.h"		// GetWordGeom, GetGridGeom
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -166,6 +167,18 @@ TestContains(void)
 	EXPECT(GCWDRemoveStrokesFromList(&word, strokes) == 0);
 	EXPECT(strokes[0] == 0xf1);			// 4, 5 and 6 gone (bit 7 is stroke 0)
 	EXPECT(strokes[1] == 0xaf);			// 9 and 11 (the extras are walked while each is more than its place in the list, which these are)
+
+	// an extra stroke numbered no more than its place: the ROM stops at it
+	word.fExtra[1] = 1;
+	for (long fixed = 0; fixed <= 1; fixed++)
+	{
+		SetRomBugFixed(fixed != 0);
+		memset(strokes, 0xff, sizeof(strokes));
+		EXPECT(GCWDRemoveStrokesFromList(&word, strokes) == 0);
+		EXPECT(strokes[0] == (fixed ? 0xb1 : 0xf1));	// stroke 1 only when fixed
+		EXPECT(strokes[1] == 0xbf);						// 9
+	}
+	SetRomBugFixed(true);
 }
 
 
@@ -209,6 +222,22 @@ TestWriteGroupResults(void)
 	EXPECT(GCGetWordDescWithFlags(words, 0x80, 0) == nil);
 	HWRMemoryUnlockHandle(h);
 	HWRMemoryFreeHandle(h);
+
+	// a new word whose second extra stroke is numbered no more than its
+	// place in the list: the ROM copies only the first
+	for (long fixed = 0; fixed <= 1; fixed++)
+	{
+		SetRomBugFixed(fixed != 0);
+		words = NewBlock(&h);
+		UByte extra[9] = { 9, 1, 0 };
+		EXPECT(GCWordDescWriteGroupResults(words, 4, 6, extra, 10, 20, 80, 100, 0, 2, &info) == 0);
+		w = GCGetFirstWordDescriptor(words);
+		EXPECT(w != nil && w->fExtra[0] == 9);
+		EXPECT(w->fExtra[1] == (fixed ? 1 : 0));
+		HWRMemoryUnlockHandle(h);
+		HWRMemoryFreeHandle(h);
+	}
+	SetRomBugFixed(true);
 }
 
 
@@ -253,6 +282,33 @@ TestTraces(void)
 	EXPECT(gTrace[3].y == -1);						// the word's end, then straight on to the next line
 	EXPECT(gTrace[4].x == 40 + 200 && gTrace[4].y == 320 - 240);
 	EXPECT(gTrace[6].y == -1);
+
+	// the same three as one word joined after the dash (the second
+	// stroke): the stroke numbers of its info past the dash are lowered
+	// by one.  The ROM lowers the entry left behind rather than the one
+	// moved down, and leaves a stale last entry.
+	for (long fixed = 0; fixed <= 1; fixed++)
+	{
+		SetRomBugFixed(fixed != 0);
+		TraceStart();
+		PenTo(10, 10); PenTo(20, 10);					StrokeEnd();
+		PenTo(30, 10); PenTo(34, 10);					StrokeEnd();
+		PenTo(5, 40);  PenTo(15, 40);					StrokeEnd();
+		memset(&word, 0, sizeof(word));
+		word.fFirst = 0; word.fLast = 2; word.fMerged = 2;
+		word.fJoinX = 200; word.fJoinY = -240;
+		word.fInfo.fStrokes[0] = 1; word.fInfo.fStrokes[1] = 2; word.fInfo.fStrokes[2] = 3;
+		word.fInfo.fSure[0] = 5; word.fInfo.fSure[1] = 6; word.fInfo.fSure[2] = 7;
+		EXPECT(GCWDGetTrace(gTrace, &word, strokes, &wordTrace, &n, &copied) == 0);
+		if (fixed)
+			EXPECT(word.fInfo.fStrokes[0] == 1 && word.fInfo.fStrokes[1] == 2 && word.fInfo.fStrokes[2] == 0
+				   && word.fInfo.fSure[1] == 7 && word.fInfo.fSure[2] == 0);
+		else
+			EXPECT(word.fInfo.fStrokes[0] == 1 && word.fInfo.fStrokes[1] == 3 && word.fInfo.fStrokes[2] == 2);
+		if (copied != 0 && wordTrace != gTrace)
+			HWRMemoryFree((Ptr) wordTrace);
+	}
+	SetRomBugFixed(true);
 	gSmooth = true;
 }
 
