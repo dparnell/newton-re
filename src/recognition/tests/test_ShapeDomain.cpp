@@ -71,7 +71,7 @@ SetScreenDistances(void)
 
 // A stroke of points spaced about 2 pixels apart along a polyline.
 static TStroke*
-PolylineStroke(const long* corners, long count)
+PolylineStroke(const long* corners, long count, bool slowAtCorners = true)
 {
 	TStroke* stroke = TStroke::Make(0);
 	TabPt pt;
@@ -84,6 +84,22 @@ PolylineStroke(const long* corners, long count)
 		long dx = x1 - x0, dy = y1 - y0;
 		long len = (dx < 0 ? -dx : dx) > (dy < 0 ? -dy : dy) ? (dx < 0 ? -dx : dx) : (dy < 0 ? -dy : dy);
 		long steps = len / 2;
+		// the pen slows into a corner, as a hand does: samples a quarter
+		// of a pixel apart along the way in, which RSmallDists notes as a
+		// run of small steps (with its ROM bug fixed, FindCubic1 reads a
+		// join the pen did not slow at as smooth)
+		if (c > 0 && slowAtCorners)
+		{
+			long pdx = x0 - corners[2 * c - 2], pdy = y0 - corners[2 * c - 1];
+			long plen = (pdx < 0 ? -pdx : pdx) > (pdy < 0 ? -pdy : pdy) ? (pdx < 0 ? -pdx : pdx) : (pdy < 0 ? -pdy : pdy);
+			if (plen > 0)
+				for (long k = 4; k > 0; k--)
+				{
+					pt.x = F(x0) - (Fixed) (((long long) F(pdx) * k) / (plen * 4));
+					pt.y = F(y0) - (Fixed) (((long long) F(pdy) * k) / (plen * 4));
+					stroke->AddPoint(&pt);
+				}
+		}
 		for (long k = 0; k < steps; k++)
 		{
 			pt.x = F(x0) + (Fixed) (((long long) F(dx) * k) / steps);
@@ -103,10 +119,10 @@ PolylineStroke(const long* corners, long count)
 
 // A shape unit of one stroke through the corners, fitted.
 static TGeneralShapeUnit*
-Fitted(TDomain* domain, const long* corners, long count, long* type, ULong* score)
+Fitted(TDomain* domain, const long* corners, long count, long* type, ULong* score, bool slowAtCorners = true)
 {
 	TGeneralShapeUnit* unit = TGeneralShapeUnit::Make(domain, 3, nil);
-	TStrokeUnit* stroke = TStrokeUnit::Make(domain, 2, PolylineStroke(corners, count), nil);
+	TStrokeUnit* stroke = TStrokeUnit::Make(domain, 2, PolylineStroke(corners, count, slowAtCorners), nil);
 	unit->AddSub(stroke);
 	unit->fGroupInfo->fOrder[0] = 0;
 	FindKeyPoints(unit, type, score);
@@ -183,7 +199,7 @@ TestKeyPoints(TDomain* domain)
 		arc[2 * k + 1] = 200 - (60 * sn[k]) / 100;
 	}
 	type = kShapeGrouping;
-	unit = Fitted(domain, arc, 13, &type, &score);
+	unit = Fitted(domain, arc, 13, &type, &score, false);	// (a smooth curve: the pen does not slow)
 	printf("  arc: type %ld score %lu\n", type, (unsigned long) score);
 	DumpShape(unit);
 	shape = unit->GetGeneralShape();
@@ -686,6 +702,56 @@ TestShapeBugs(void)
 				EXPECT(flags[1] == 0 && segs[1].fT0.x == 0x1234);
 			else
 				EXPECT(segs[1].fT0.x != 0x1234);
+		}
+	}
+	// RSmallDists: points evenly spaced at an average step the engine
+	// trusts; the ROM marks the runs untrustworthy (-2) whatever the
+	// average, the fix only when the average says so
+	{
+		FPoint pts[12];
+		Fixed step = (gPixMinAvgLenForSmallDists + gPixMaxAvgLenForSmallDists) / 2;
+		for (long i = 0; i < 12; i++)
+		{
+			pts[i].x = step * i;
+			pts[i].y = 0;
+		}
+		for (int fixed = 0; fixed < 2; fixed++)
+		{
+			SetRomBugFixed(fixed != 0);
+			Run runs[30];
+			memset(runs, 0, sizeof(runs));
+			RSmallDists(pts, 11, runs);
+			EXPECT((runs[0].fStart == -2) == (fixed == 0));
+		}
+	}
+
+	// TVSplSpl: a smooth join turning back on the curve's start (more than
+	// 110 degrees) ends the curve at its side's half-way point; the ROM
+	// gives the end tangent that point, the fix the direction to it
+	{
+		FPoint pts[9];
+		for (long k = 0; k < 9; k++)
+		{
+			pts[k].x = F(100 - 10 * k);
+			pts[k].y = 0;
+		}
+		FPoint keys[3] = { pts[0], pts[4], pts[8] };
+		char kinds[3] = { 2, 2, 2 };
+		uint32_t breaks[3] = { 0, 4, 8 };
+		for (int fixed = 0; fixed < 2; fixed++)
+		{
+			SetRomBugFixed(fixed != 0);
+			SplineSeg segs[2];
+			memset(segs, 0, sizeof(segs));
+			segs[0].fP0 = pts[0];
+			segs[0].fT0.x = F(1);			// the curve starts off to the right
+			char flags[3] = { 0, 0, 0 };
+			TVSplSpl(1, pts, keys, kinds, breaks, segs, flags, 0);
+			EXPECT(segs[0].fP1.x == F(80) && segs[0].fP1.y == 0);
+			if (fixed)
+				EXPECT(segs[0].fT1.x == F(-20) && segs[0].fT1.y == 0);
+			else
+				EXPECT(segs[0].fT1.x == F(80) && segs[0].fT1.y == 0);
 		}
 	}
 	SetRomBugFixed(true);
