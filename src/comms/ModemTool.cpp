@@ -23,6 +23,7 @@
 #include "AEvents.h"
 #include "SystemEvents.h"
 #include "VirtualMemory.h"
+#include "host/RomBugs.h"
 
 #include <new>
 #include <stdio.h>
@@ -139,11 +140,13 @@ NewtonErr
 TClassOneModem::TaskConstructor()
 {
 	TULockStack lockStack;
-	// BUG: the strings for EC only, EC falling back and cellular point at
-	// this empty string on the stack while SetModemProfile copies them into
-	// the profile (after which they point into the profile) - which is
-	// why later comparisons of fCellularStr with a string on the stack never
-	// hold (C1IdGetIdCmdResponse, C1IdACLSetProfile).
+	// ROM BUG (fixed): the strings for EC only, EC falling back and
+	// cellular point at this empty string on the stack while
+	// SetModemProfile copies them into the profile (after which they point
+	// into the profile) - which is why later comparisons of fCellularStr
+	// with a string on the stack never hold (C1IdGetIdCmdResponse,
+	// C1IdACLSetProfile).  The fix is there: whether the string is empty is
+	// asked of its characters, not its address.
 	UChar empty[1];
 	empty[0] = 0;
 	NewtonErr err = LockStack(&lockStack, 0x800);
@@ -1122,10 +1125,12 @@ TClassOneModem::ProcessOptionStart(TOption* theOption, ULong label, ULong opcode
 		return opFailure;
 
 	case 'answ':
-		// BUG: the answer is the command number (kModemCmdTAPIOffHook) that
-		// should have been given to ProcessTAPICommand, as a status
+		// ROM BUG (fixed): the answer is the command number
+		// (kModemCmdTAPIOffHook) that should have been given to
+		// ProcessTAPICommand, as a status.  The fix gives it to
+		// ProcessTAPICommand, as 'disc does kModemCmdTAPIOnHook.
 		if (set)
-			return kModemCmdTAPIOffHook;
+			return RomBugFixed() ? ProcessTAPICommand(kModemCmdTAPIOffHook) : kModemCmdTAPIOffHook;
 		return opFailure;
 
 	case kCMOListenTimer:
@@ -1298,10 +1303,13 @@ TClassOneModem::ProcessOptionStart(TOption* theOption, ULong label, ULong opcode
 		}
 		else if (getDefault)
 		{
-			// BUG: the default is made on the stack with no room for its
-			// strings, so the six bytes of them copied are whatever lies
-			// past it
+			// ROM BUG (fixed): the default is made on the stack with no
+			// room for its strings, so the six bytes of them copied are
+			// whatever lies past it.  (The host gives them the room.)  The
+			// fix clears them: six empty strings.
 			UByte space[ModemProfileSize(6)];
+			if (RomBugFixed())
+				memset(space, 0, sizeof(space));
 			TCMOModemProfile* profile = new (space) TCMOModemProfile(6);
 			theOption->CopyDataFrom(profile);
 		}
@@ -1343,9 +1351,19 @@ TClassOneModem::ProcessOptionStart(TOption* theOption, ULong label, ULong opcode
 		}
 		else if (getDefault)
 		{
-			// BUG: the default given is a connect type's, not a TAPI service's
+			// ROM BUG (fixed): the default given is a connect type's, not a
+			// TAPI service's.  The fix gives a TAPI service's.
+			if (RomBugFixed())
+			{
+				TCMOTAPIService service;
+				theOption->CopyDataFrom(&service);
+			}
+			else
+			{
 			TCMOModemConnectType connectType;
 			theOption->CopyDataFrom(&connectType);
+			}
+
 		}
 		else
 			theOption->CopyDataFrom(&fTAPIService);

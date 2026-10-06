@@ -14,6 +14,7 @@
 #include "ModemTool.h"
 #include "CommErrors.h"
 #include "NewtErrors.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,16 +38,17 @@ reverse(UChar* s)
 
 
 // ROM 0x0005ed4c UiToA__FUlPUc
-// BUG: each digit is taken from the low byte of what is left (n & 0xff,
-// then % 10), so a number above 255 comes out wrong - 300 as "304".  The
-// modem's S-registers and silences rarely need more.
+// ROM BUG (fixed): each digit is taken from the low byte of what is left
+// (n & 0xff, then % 10), so a number above 255 comes out wrong - 300 as
+// "304".  The modem's S-registers and silences rarely need more.  The fix
+// takes each digit from the whole number.
 void
 UiToA(ULong n, UChar* s)
 {
 	ULong i = 0;
 	do
 	{
-		s[i++] = ((n & 0xff) % 10) + '0';
+		s[i++] = (RomBugFixed() ? (n % 10) : ((n & 0xff) % 10)) + '0';
 		n /= 10;
 	} while (n > 0);
 	s[i] = 0;
@@ -349,8 +351,14 @@ TClassOneModem::PrepareCommand(ULong command)
 		case 0x5a:	withByte = cmdC20FPP; break;
 		case 0x5b:	withByte = cmdC20FBO; break;
 		case 0x5c:
-			// BUG: the "+FEA=" built here is thrown away - the case runs on
-			// into the next, whose "+FCR=" replaces it
+			// ROM BUG (fixed): the "+FEA=" built here is thrown away - the
+			// case runs on into the next, whose "+FCR=" replaces it.  The
+			// fix sends the "+FEA=".
+			if (RomBugFixed())
+			{
+				withByte = cmdC20FEA;
+				break;
+			}
 			BuildCommand((const UChar*) cmdC20FEA, bytes, 1, nil, 0, nil, 0);
 			withByte = cmdC20FCR;
 			break;
@@ -503,8 +511,11 @@ TClassOneModem::GetCommandResultComplete(NewtonErr result)
 			fResultBuffer[fResultLength++] = c;
 		if (lineDone)
 		{
-			// BUG: a line of 0x100 characters has its terminator written
-			// past the buffer (into fModemIdStrings)
+			// ROM BUG (fixed): a line of 0x100 characters has its
+			// terminator written past the buffer (into fModemIdStrings).
+			// The fix writes it over the last character instead.
+			if (RomBugFixed() && fResultLength >= sizeof(fResultBuffer))
+				fResultLength = sizeof(fResultBuffer) - 1;
 			fResultBuffer[fResultLength] = 0;
 			ParseModemRsp(fResultBuffer);
 			if (fReply.fResultCode == kModemResultConnect)
@@ -696,9 +707,10 @@ TClassOneModem::ParseModemRsp(UChar* response)
 // ROM 0x0005cd1c C2ParsePhoneNum__14TClassOneModemFPUcT1
 // A Class 2 answer's quoted number: what follows the first quote, spaces
 // first skipped, up to the closing quote, trailing spaces trimmed - 21
-// characters at most.  BUG: the count is a halfword the skipped spaces use
-// up too, and running out while skipping takes it past nought to 0xffff, so
-// a number after 21 spaces is copied without a limit.
+// characters at most.  ROM BUG (fixed): the count is a halfword the
+// skipped spaces use up too, and running out while skipping takes it past
+// nought to 0xffff, so a number after 21 spaces is copied without a limit.
+// The fix skips the spaces without counting them.
 void
 TClassOneModem::C2ParsePhoneNum(UChar* number, UChar* response)
 {
@@ -707,7 +719,24 @@ TClassOneModem::C2ParsePhoneNum(UChar* number, UChar* response)
 		response++;
 	if (*response == '"')
 		response++;
+	if (RomBugFixed())
+	{
+		while (*response == ' ')
+			response++;
+		UShort count = 21;
+		while (*response != 0 && *response != '"' && --count != 0)
+			*number++ = *response++;
+		*number = 0;
+		number--;
+		while (number >= start && *number == ' ')
+		{
+			*number = 0;
+			number--;
+		}
+		return;
+	}
 	UShort n = 21;
+
 	for ( ; ; response++)
 	{
 		if (*response == 0)
