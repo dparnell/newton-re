@@ -12,6 +12,7 @@
 #include "CursiveReader.h"
 #include "XrDomains.h"
 
+#include "host/RomBugs.h"
 #include <string.h>
 
 static inline short	RCSigned(rc_type* rc, ULong offset)	{ return (short) RCGetH(rc, offset); }
@@ -307,10 +308,11 @@ fill_RW_aliases(rec_w_type* readings, RWG_type* rwg)
 					readings[r].fVariants[k] = e->var;
 					readings[r].fX30[k] = e->xrLen;
 					readings[r].fWord[k] = e->sym;
-					// ROM BUG, kept: a letter read in another letter's case
-					// clears the reading's first span rather than its own
+					// ROM BUG (fixed): a letter read in another letter's
+					// case clears the reading's first span rather than its
+					// own.  The fix clears its own.
 					if (ToLower(readings[r].fWord[k]) != ToLower(e->realSym))
-						readings[r].fX30[0] = 0;
+						readings[r].fX30[RomBugFixed() ? k : 0] = 0;
 					if (readings[r].fWord[k] != e->realSym)
 						readings[r].fVariants[k] |= 0x80;
 					k++;

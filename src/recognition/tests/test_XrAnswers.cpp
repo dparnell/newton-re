@@ -8,6 +8,7 @@
 #include "XrDomains.h"
 #include "Chunk.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -282,18 +283,32 @@ TestGraphOfAlternatives(void)
 
 	// a letter read in another case has its variant's top bit set; one
 	// read as another letter clears the reading's first variant and span
-	// (ROM BUG: not its own)
+	// (ROM BUG (fixed): not its own; the fix clears its own)
 	RWS_type sym[2] = { Sym('A', 1, 50), Sym('x', 1, 50) };
 	sym[0].realSym = 'a';
 	sym[0].var = 3;
 	sym[1].realSym = 'y';
-	memset(readings, 0, sizeof(readings));
-	readings[0].fVariants[0] = 9;
-	readings[0].fVariants[1] = 9;
-	FillRecWordsElement(readings, sym, 0, 1, 0);
-	EXPECT(readings[0].fWord[1] == 'A' && readings[0].fVariants[1] == 0x83);
-	FillRecWordsElement(readings, sym, 0, 2, 1);
-	EXPECT(readings[0].fWord[2] == 'x' && readings[0].fVariants[0] == 0 && readings[0].fVariants[2] == 0);
+	for (int fixed = 0; fixed < 2; fixed++)
+	{
+		SetRomBugFixed(fixed != 0);
+		memset(readings, 0, sizeof(readings));
+		readings[0].fVariants[0] = 9;
+		readings[0].fVariants[1] = 9;
+		readings[0].fVariants[2] = 9;
+		readings[0].fX30[0] = 4;
+		readings[0].fX30[2] = 4;
+		FillRecWordsElement(readings, sym, 0, 1, 0);
+		EXPECT(readings[0].fWord[1] == 'A' && readings[0].fVariants[1] == 0x83);
+		FillRecWordsElement(readings, sym, 0, 2, 1);
+		EXPECT(readings[0].fWord[2] == 'x');
+		if (fixed)
+			EXPECT(readings[0].fVariants[0] == 9 && readings[0].fX30[0] == 4
+				&& readings[0].fVariants[2] == 0 && readings[0].fX30[2] == 0);
+		else
+			EXPECT(readings[0].fVariants[0] == 0 && readings[0].fX30[0] == 0
+				&& readings[0].fVariants[2] == 9 && readings[0].fX30[2] == 4);
+	}
+	SetRomBugFixed(true);
 }
 
 

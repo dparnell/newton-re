@@ -18,6 +18,7 @@
 #include "NewtonMemory.h"
 #include "FixedMath.h"
 #include "ByteOrder.h"
+#include "host/RomBugs.h"
 #include <string.h>
 
 extern const unsigned char	lpunct_charset[8];
@@ -1066,9 +1067,13 @@ TXrWordDomain::InitializeParamStruct(XRWORDPARAM* param)
 	case 2:	RCSetH(&rc, 0x04, 4); break;
 	case 3:
 		RCSetH(&rc, 0x04, 4);
-		// ROM BUG: the block's own field is set, not the defaults' - and
-		// the defaults are copied over the block below, so this is lost.
-		RCSetH(param, 0x90, 0x0800);
+		// ROM BUG (fixed): the block's own field is set, not the defaults'
+		// - and the defaults are copied over the block below, so this is
+		// lost.  The fix sets the defaults' field, so the block gets it.
+		if (RomBugFixed())
+			RCSetH(&rc, 0x90, 0x0800);
+		else
+			RCSetH(param, 0x90, 0x0800);
 		break;
 	case 4:	RCSetH(&rc, 0x04, 1); break;
 	default: RCSetH(&rc, 0x04, 2); break;
