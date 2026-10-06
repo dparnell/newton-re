@@ -15,6 +15,10 @@
 #include "RSSymbols.h"
 #include "NewtonExceptions.h"
 #include "Commands.h"		// aeWord
+#include "UnitPublic.h"
+#include "WordUnit.h"
+#include "Keyboard.h"		// GetPostingView, PostKeyString
+#include "Unicode.h"
 
 #include <string.h>
 
@@ -51,6 +55,60 @@ NewHostWordEngine(const char* implementation)
 }
 
 
+Boolean gHostUnitTyped = false;
+
+
+// The word recogniser over a host engine.  It is TWRecRecognizer but for
+// what becomes of a unit whose reading is typing (kHostTypedLabel - the
+// unistroke engine's characters): the reading goes to the caret as keys,
+// as the keyboard sends them (PostKeyString), so that a character appears
+// as soon as it is written, a space is a space and backspace and return
+// do what those keys do; and nothing is sent to the view under the
+// writing.  With no caret to type at, a character is put down as a word
+// is - which makes the paragraph the next ones are typed into - and a
+// space, backspace or return does nothing.
+class THostWRecRecognizer : public TWRecRecognizer
+{
+public:
+	virtual ULong		HandleUnit(TUnitPublic* unit);
+};
+
+
+ULong
+THostWRecRecognizer::HandleUnit(TUnitPublic* pub)
+{
+	TStdWordUnit* unit = (TStdWordUnit*) pub->fUnit;
+	if (!pub->IsTap() && unit->InterpretationCount() > 0
+	 && (ULong) unit->GetLabel(0) == kHostTypedLabel
+	 && UnitConfidence(pub) != kWRecInk)
+	{
+		Handle h = unit->GetString(0);
+		UniChar ch = (h != nil && *h != nil) ? *(UniChar*) *h : 0;
+		TView* view = GetPostingView(false);
+		if (view != nil)
+		{
+			if (ch != 0)
+			{
+				UniChar text[2];
+				text[0] = ch;
+				text[1] = 0;
+				PostKeyString(view, RefVar(MakeString(text)));
+			}
+			gHostUnitTyped = true;
+			return 0;
+		}
+		// nowhere to type a space, backspace, return or shift: the stroke
+		// is used up all the same
+		if (ch == 0 || ch == ' ' || ch == 0x08 || ch == 0x0D)
+		{
+			gHostUnitTyped = true;
+			return 0;
+		}
+	}
+	return WordRecognizerHandleUnit(this, pub);
+}
+
+
 // Each one as InstallWRecRecognizer installs Rosetta's: the word command,
 // the "reads writing" flag, an arbitration time of one tick, the word
 // services possible and none of them offered, and asleep.
@@ -68,7 +126,7 @@ InstallHostWordEngines(TRecognitionManager* manager)
 													  engine->fImplementation, engine->fDomainName);
 		if (domain == nil)
 			continue;
-		TWRecRecognizer* recognizer = new TWRecRecognizer;
+		TWRecRecognizer* recognizer = new THostWRecRecognizer;
 		recognizer->Init(domain, domain->fType, aeWord, kRecognizerIsWriting, 1);
 		recognizer->InitServices(kWRecServices, 0);
 		manager->fRecognizers->AddRecognizer(recognizer);

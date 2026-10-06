@@ -1129,12 +1129,19 @@ set_tests_properties(host.NewtonDrag PROPERTIES TIMEOUT 180
 # "ton" and "to" written with the pen and read by Rosetta, the second at the first's caret (demo/write.ns)
 # the host's handwriting engines chosen in the Handwriting Recognition slip
 # (recognition/WordEngines.h, host/HostWordEngines.ns): the unistroke
-# engine's button, chosen and put in use, its word left as ink, and
-# Rosetta put back by "Printing"
+# engine's button, chosen and put in use, printed writing typed as its
+# strokes rather than read, and Rosetta put back by "Printing"
 add_test(NAME host.NewtonWordEngines COMMAND newton --display 320x480 --headless 200
          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/engines.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonWordEngines PROPERTIES TIMEOUT 300
-                     PASS_REGULAR_EXPRESSION "UNIS in use: ok.*is ink: ok.*read by Rosetta: ok.*engines: done, 0 failed")
+                     PASS_REGULAR_EXPRESSION "UNIS in use: ok.*strokes are typed: ok.*read by Rosetta: ok.*engines: done, 0 failed")
+# the unistroke engine (recognition/UnistrokeRecognizer.h): Graffiti's
+# strokes, drawn by hand on the Notepad, typed at the caret a character at
+# a time - caps shift, letters, a space, a backspace - "Hello world"
+add_test(NAME host.NewtonUnistroke COMMAND newton --display 320x480 --headless 200
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/unistroke.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonUnistroke PROPERTIES TIMEOUT 300
+                     PASS_REGULAR_EXPRESSION "reads .Hello world.: ok.*unistroke: done, 0 failed")
 add_test(NAME host.NewtonWrite COMMAND newton --display 320x480 --headless 90
          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/write.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonWrite PROPERTIES TIMEOUT 180

@@ -1,0 +1,109 @@
+// The unistroke engine (recognition/UnistrokeRecognizer.h, Unistroke.h):
+// Graffiti's alphabet written on the Notepad, a character a stroke, each
+// typed at the caret as it is read (ctest host.NewtonUnistroke).
+//
+//   build/host/host/newton --display 320x480 --headless 200 --script src/host/demo/unistroke.ns
+//
+// After the Setup walk the engine is chosen as the Handwriting
+// Recognition slip chooses it (userConfiguration.hostWordEngine, then
+// ReadCursiveOptions).  The strokes are drawn by hand here - corners and
+// curves a person might draw, not the engine's own templates - all in
+// the same place, one on top of the other, as on a Palm.
+//
+// The caps shift (a stroke up) and "h" are typed at the page's caret,
+// which makes the paragraph; then "ello", a space (a line drawn left to
+// right), "worlx", a backspace (the same line drawn right to left) and
+// "d" are typed after it: the page reads "Hello world".
+//
+// Prints "unistroke: <step>: ok" or "FAILED", and "unistroke: done, N failed".
+
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
+HostInclude("penhelpers.ns");		// penStroke, penPath, penOval, penFindPara
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+usFailures := 0;
+
+usCheck := func(what, ok)
+  begin
+    if not ok then usFailures := usFailures + 1;
+    Print("unistroke: " & what & (if ok then ": ok" else ": FAILED"));
+  end;
+
+// every paragraph's text, ink words as "<ink>"
+usParas := func(v, into)
+  begin
+    if BAnd(v.viewClass, 0xFFFF) = 81 and IsString(v.text) then begin
+      local t := "";
+      for i := 0 to StrLen(v.text) - 1 do
+        t := t & (if Ord(v.text[i]) = 0xF701 then "<ink>" else v.text[i]);
+      AddArraySlot(into, t);
+    end;
+    foreach child in v:ChildViewFrames() do call usParas with (child, into);
+    into;
+  end;
+
+usText := func() begin
+  local all := "";
+  foreach t in call usParas with (GetRoot(), []) do all := all & "[" & t & "]";
+  all;
+end;
+
+usFinish := func()
+  begin
+    Print("unistroke: the page has " & call usText with ());
+    Print("unistroke: done, " & NumberStr(usFailures) & " failed");
+    HostQuit();
+  end;
+
+// Each character as a hand draws it, in a 30-pixel cell at x, y (the
+// top left).  A letter is its Graffiti stroke.
+usX := 140;
+usY := 150;
+usStrokes := {
+  shift: func(x, y) [x + 15, y + 30, x + 15, y + 22, x + 16, y + 14, x + 15, y + 6, x + 15, y],
+  space: func(x, y) [x, y + 15, x + 8, y + 15, x + 16, y + 16, x + 24, y + 15, x + 32, y + 15],
+  backspace: func(x, y) [x + 32, y + 15, x + 24, y + 15, x + 16, y + 16, x + 8, y + 15, x, y + 15],
+  h: func(x, y) call penPath with ([x, y, x, y + 30, x, y + 18, x + 4, y + 12, x + 11, y + 10,
+                                    x + 18, y + 13, x + 21, y + 19, x + 21, y + 30]),
+  e: func(x, y) call penPath with ([x + 20, y + 3, x + 11, y, x + 3, y + 5, x + 4, y + 11, x + 12, y + 14,
+                                    x + 3, y + 18, x + 2, y + 25, x + 10, y + 30, x + 21, y + 27]),
+  l: func(x, y) call penPath with ([x + 2, y, x + 1, y + 30, x + 20, y + 30]),
+  o: func(x, y) call penOval with (x + 12, y + 15, 12, 15),
+  w: func(x, y) call penPath with ([x, y, x + 6, y + 30, x + 13, y + 11, x + 19, y + 30, x + 26, y]),
+  r: func(x, y) call penPath with ([x, y + 30, x, y, x + 12, y + 1, x + 18, y + 7, x + 13, y + 14,
+                                    x + 1, y + 15, x + 21, y + 30]),
+  x: func(x, y) call penPath with ([x, y, x + 24, y + 30]),
+  d: func(x, y) call penPath with ([x, y, x, y + 30, x, y, x + 12, y + 2, x + 21, y + 10, x + 22, y + 20,
+                                    x + 13, y + 28, x, y + 30]),
+};
+
+usWrite := func(name) begin
+  call penStroke with (call usStrokes.(name) with (usX, usY));
+  IdleStrokes();
+end;
+
+usUseEngine := func() begin
+  userConfiguration.hostWordEngine := 8;
+  userConfiguration.letterSetSelection := 2;
+  ReadCursiveOptions();
+end;
+
+call walkSetup with (name, func() begin
+  call usUseEngine with ();
+  call usCheck with ("the unistroke engine is in use", StrEqual(userConfiguration.currentWordRecognizer, "UNIS"));
+
+  // the first character, typed at the page, makes the paragraph
+  call usWrite with ('shift);
+  call usWrite with ('h);
+  call waitFor with ("unistroke: H", func() call penFindPara with (GetRoot(), "H"), func() begin
+    call usCheck with ("\"H\" put down", call penFindPara with (GetRoot(), "H") <> nil);
+    // ... and the rest typed after it
+    foreach c in ['e, 'l, 'l, 'o, 'space, 'w, 'o, 'r, 'l, 'x, 'backspace, 'd] do
+      call usWrite with (c);
+    call waitFor with ("unistroke: Hello world", func() call penFindPara with (GetRoot(), "Hello world"), func() begin
+      local p := call penFindPara with (GetRoot(), "Hello world");
+      call usCheck with ("the page reads \"Hello world\"", p and StrEqual(p.text, "Hello world"));
+      call usFinish with ();
+    end, 30);
+  end, 30);
+end);

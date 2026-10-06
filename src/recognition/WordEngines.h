@@ -60,6 +60,17 @@ class TWRecognizer;
 // letter sets are 0..4; 5..7 are left alone)
 const long	kFirstHostWordEngine = 8;
 
+// Set by a host engine's recogniser that has typed the unit it was asked
+// to handle (posted its reading at the caret) instead of answering a
+// command: HandleUnitList then counts the unit as handled and claims its
+// strokes, which an unanswered command would leave to become ink.
+extern Boolean	gHostUnitTyped;
+
+// The label an engine puts on a reading that is typing rather than a
+// word: the recogniser posts it at the caret as keys (PostKeyString),
+// as the keyboard does, instead of sending the view the word.
+const ULong	kHostTypedLabel = 'TYPE';
+
 struct SWordEngine
 {
 	ULong			fType;				// its unit type, the recogniser's id ('UNIS')

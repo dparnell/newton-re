@@ -1,6 +1,6 @@
 # More word recognisers, chosen from the Handwriting slip
 
-Status: branch `hwr-engines`; the framework is built, the engines do not read yet.
+Status: branch `hwr-engines`; the framework and the unistroke engine are built.
 
 The owner wants handwriting engines beside the ROM's two (Rosetta for
 printing, ParaGraph for cursive), chosen from the Newton's own
@@ -95,19 +95,70 @@ changes ROM behaviour is a `DEVIATION`.
    the built-in panels by name (`GetPrefs`), so the panel keeps its place.
    Editing the slip in `romsrc` instead would have broken the
    byte-for-byte check of the tree (`host.ROMSourceCommitted`).
-5. **The unistroke engine is a stand-in so far**
-   (`recognition/UnistrokeRecognizer.h`, 'UNIS', button 8): it groups
-   strokes into words as the ROM's engines do and answers ink for every
-   word.  ctest `host.NewtonWordEngines` (`src/host/demo/engines.ns`):
-   the button is in the slip, choosing it puts 'UNIS' in use with the
-   letter set left at 2, a word written stays ink, and "Printing" puts
-   Rosetta back and the next word is read.
+5. ctest `host.NewtonWordEngines` (`src/host/demo/engines.ns`): the
+   button is in the slip, choosing it puts 'UNIS' in use with the letter
+   set left at 2, printed writing is typed as Graffiti strokes rather
+   than read, and "Printing" puts Rosetta back and the next word is read.
+
+## The unistroke engine
+
+`recognition/UnistrokeRecognizer.h` ('UNIS', button 8) is Palm's
+Graffiti (the original, "Graffiti 1"), because so many people already
+know it: one stroke, one character, typed at the caret the moment it
+is written.
+
+- **The classifier** (`recognition/Unistroke.h`) compares a stroke with
+  a template per character - a path in a unit square, drawn as the
+  Graffiti card draws it - after resampling both to 40 evenly spaced
+  points and scaling them into the square: stretched to fill it for a
+  figure (so a tall O and a wide one are both O), the same both ways
+  for a straight stroke (I, X, the space, backspace, return and shift),
+  so that its direction is kept.  Direction is part of the shape: the
+  space is a line drawn left to right, backspace the same line drawn
+  right to left.  The reference card,
+  `docs/recognition/unistroke-card.svg`, is drawn from the templates by
+  `test_Unistroke --card <file>`.  ctest `recognition.Unistroke`: every
+  character drawn as its template, then stretched, sheared, turned and
+  wobbled (2916 drawings, 98.2% read right; b/d, a stretched X, L/4 are
+  the confusions), the commands never mistaken for each other.
+- **One stroke is one unit**: `Group` makes a unit of the stroke and
+  closes it at once, so it is arbitrated and read without waiting for
+  the pen to rest.  Its readings are labelled as typing
+  (`kHostTypedLabel`), and the host engines' recogniser
+  (`THostWRecRecognizer`, `WordEngines.cpp`) posts the first at the
+  caret as the keyboard posts keys (`PostKeyString` to the key view):
+  letters and digits, space, backspace and return all do what those
+  keys do.  It then sets `gHostUnitTyped`, and `HandleUnitList` counts
+  the unit as handled and claims its strokes (DEVIATION) - a unit whose
+  recogniser answers no command is otherwise left to the arbiter, which
+  turns its strokes into ink (that is how the first try typed every
+  character *and* left an ink word beside it).  On a fresh Notepad the
+  page itself is the key view, and the first character typed at it makes
+  the paragraph the rest are typed into.
+- **Caps**: a stroke up is the caps shift (the next letter a capital),
+  twice is caps lock, a third time unlocks.
+- **Digits**: Graffiti read 0/O, 1/I and 5/S by where they were written
+  (its letter and number areas).  A field whose input mask takes numbers
+  but no letters reads them as digits; any other as letters, the digit
+  being the second reading.  The other digits have shapes of their own
+  and are read anywhere.
+- A stroke read worse than `kUnistrokeGoodScore` is left as ink; a dot is
+  a tap, and the Newton takes it as a click before any recogniser sees
+  it.
+- `NEWTON_TRACE_UNISTROKE=1` prints each stroke's readings and scores.
+- ctest `host.NewtonUnistroke` (`src/host/demo/unistroke.ns`): strokes
+  drawn by hand (not the templates), one on top of the other as on a
+  Palm - caps shift, "hello", a space, "worlx", a backspace, "d" - and
+  the page reads "Hello world".
+
+NOT YET: punctuation (Graffiti's punctuation shift is a tap), the symbol
+and extended shifts, accented letters.
 
 ## Order of work
 
 1. ~~The framework.~~
-2. The unistroke engine's reading (alphabet, digits, punctuation shift;
-   one stroke per character).
+2. ~~The unistroke engine's reading~~ - letters, digits, space,
+   backspace, return, caps; punctuation next.
 3. The neural engine: choose a model (licence first), the ONNX Runtime
    dependency per host (vendored or fetched by a documented script), the
    stroke-to-tensor encoding, CTC decoding against the area's

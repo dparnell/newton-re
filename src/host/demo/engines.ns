@@ -7,10 +7,11 @@
 // After the Setup walk: HostWordEngines() lists the unistroke engine
 // (button 8); Extras, Prefs, "Handwriting Recognition" shows its button
 // under "Printing" and "Cursive", and tapping it puts the 'UNIS'
-// recogniser in use with the letter set left at printing.  The engine
-// reads nothing yet, so "ton" written on the Notepad stays ink.  Then
+// recogniser in use with the letter set left at printing.  "ton" written
+// on the Notepad as Rosetta reads it is then typed as Graffiti strokes,
+// not read as the word.  Then
 // "Printing" tapped puts Rosetta back, and "to" written further down is
-// read as text (remote writing puts it after the ink word: "<ink> to").
+// read as text (remote writing puts it on the line already there).
 //
 // Prints "engines: <step>: ok" or "FAILED", and "engines: done, N failed".
 
@@ -112,13 +113,15 @@ call walkSetup with (name, func() begin
       call enCheck with ("the choice is kept", userConfiguration.hostWordEngine = 8);
       call enCheck with ("Rosetta is not in use", not WRecIsBeingUsed());
 
-      // the engine reads nothing yet: the word stays ink
+      // printed writing is not what this engine reads: "ton" written as
+      // Rosetta reads it is typed as Graffiti strokes instead (the t's
+      // stem an I, its bar a space, ...), never as the word
       local base := 200;
       call penWriteWord with ("ton", 60, base);
       IdleStrokes();
-      call waitFor with ("engines: ton as ink", func() call penFindPara with (GetRoot(), nil), func() begin
-        call enCheck with ("\"ton\" is ink", call penFindPara with (GetRoot(), nil) <> nil);
-        call enCheck with ("... and not read", call penFindPara with (GetRoot(), "ton") = nil);
+      call waitFor with ("engines: ton typed", func() call penFindPara with (GetRoot(), ""), func() begin
+        call enCheck with ("the strokes are typed", call penFindPara with (GetRoot(), "") <> nil);
+        call enCheck with ("... and not read as \"ton\"", call penFindPara with (GetRoot(), "ton") = nil);
 
         // back to the letter set's recogniser
         call enOpenSlip with (func() begin
@@ -126,7 +129,7 @@ call walkSetup with (name, func() begin
             call enCheck with ("the choice is gone", not HasSlot(userConfiguration, 'hostWordEngine));
             call penWriteWord with ("to", 60, base + 60);
             IdleStrokes();
-            // (remote writing puts it after the ink word, on the same line)
+            // (remote writing puts it on the line already there)
             call waitFor with ("engines: to read", func() call enReadTo with (), func() begin
               call enCheck with ("\"to\" is read by Rosetta", call enReadTo with ());
               call enFinish with ();

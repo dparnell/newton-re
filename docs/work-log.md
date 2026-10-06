@@ -9,6 +9,26 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-06: the unistroke engine reads Graffiti (branch hwr-engines)
+
+The owner wanted the unistroke engine as close to Palm's Graffiti as
+possible, since many people already know it.  recognition/Unistroke.h
+compares a stroke with a template per character, drawn as the Graffiti
+card draws it (40 resampled points; figures stretched to the square,
+straight strokes kept at their aspect so their direction counts); the
+engine makes each stroke a unit of its own, closed at once, and the host
+engines' recogniser types its reading at the caret with PostKeyString,
+so space, backspace and return are keys.  The first try typed every
+character and also left an ink word beside it: a recogniser that answers
+no command leaves its unit's strokes to the arbiter, which inks them -
+HandleUnitList now claims a unit a host engine has typed
+(gHostUnitTyped).  Digits that share a shape with a letter (0/O, 1/I,
+5/S) are read by the field's input mask, Graffiti's number area having
+no Newton equivalent.  Punctuation is NOT YET: its shift is a tap, which
+never reaches a recogniser.  ctests recognition.Unistroke,
+host.NewtonUnistroke ("Hello world" written stroke by stroke); the
+reference card docs/recognition/unistroke-card.svg.
+
 ## 2026-10-06: more word recognisers, chosen from the Handwriting slip (branch hwr-engines)
 
 The owner wants handwriting engines beside Rosetta and ParaGraph -

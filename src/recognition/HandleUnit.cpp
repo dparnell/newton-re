@@ -9,6 +9,7 @@
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
+#include "WordEngines.h"	// gHostUnitTyped
 #include "Recognizer.h"
 #include "Controller.h"
 #include "UnitPublic.h"
@@ -150,7 +151,14 @@ HandleUnitList(TArray* units)
 		{
 			if (command != 0)
 			{
+				gHostUnitTyped = false;
 				posted = recognizer->HandleUnit(&pub);
+				// DEVIATION (host): a host engine's recogniser that typed the
+				// unit at the caret itself (WordEngines.h) posts no command;
+				// the unit is handled all the same, and its strokes claimed
+				// rather than left to become ink
+				if (posted == 0 && gHostUnitTyped)
+					result = 1;
 				if (posted != 0)
 				{
 					newton_try
