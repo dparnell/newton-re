@@ -30,6 +30,7 @@
 #include "NewtonTime.h"
 #include "NewtErrors.h"
 #include "UserTasks.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -119,10 +120,13 @@ NTKInit(void)
 	// (the ROM registers them first)
 	gProtocolRegistry->Register(PNullInTranslator::ClassInfo(), 0);
 	gProtocolRegistry->Register(PNullOutTranslator::ClassInfo(), 0);
-	// ROM BUG: PStdioInTranslator is registered twice and
-	// PStdioOutTranslator never
+	// ROM BUG (fixed): PStdioInTranslator is registered twice and
+	// PStdioOutTranslator never.  The fix registers each once.
 	gProtocolRegistry->Register(PStdioInTranslator::ClassInfo(), 0);
-	gProtocolRegistry->Register(PStdioInTranslator::ClassInfo(), 0);
+	if (RomBugFixed())
+		gProtocolRegistry->Register(PStdioOutTranslator::ClassInfo(), 0);
+	else
+		gProtocolRegistry->Register(PStdioInTranslator::ClassInfo(), 0);
 	gProtocolRegistry->Register(PSerialInTranslator::ClassInfo(), 0);
 	gProtocolRegistry->Register(PSerialOutTranslator::ClassInfo(), 0);
 	gProtocolRegistry->Register(PNTKInTranslator::ClassInfo(), 0);
@@ -168,13 +172,26 @@ TNTKNub::~TNTKNub()
 		TKillEvent kill;
 		fTaskPort.Send(&kill, sizeof(kill));
 		fTaskPort.CopyObject(0);
+		if (RomBugFixed())
+		{
+			// the task waited for (five seconds at most): its name goes
+			// when its loop has ended
+			for (int i = 0; i < 250; i++)
+			{
+				TUPort port;
+				if (GetOSPortFromName('ntk ', &port) != noErr)
+					break;
+				Sleep(20 * kMilliseconds);
+			}
+		}
 	}
 	if (fInTranslator != nil)
 		fInTranslator->Delete();
 	if (fOutTranslator != nil)
 		fOutTranslator->Delete();
-	// ROM BUG: the task may still have events in hand that write to these
-	// (it is only told to finish, not waited for)
+	// ROM BUG (fixed): the task may still have events in hand that write to
+	// these (it is only told to finish, not waited for).  The fix waits,
+	// above, until the task's name has gone (it unregisters as it ends).
 	if (fInBuffer != nil)
 		delete fInBuffer;
 	if (fOutBuffer != nil)
@@ -426,7 +443,7 @@ TNTKNub::HandleCodeBlock(ULong length)
 NewtonErr
 TNTKNub::DeletePackage(ULong length)
 {
-	// ROM BUG: the name's block is never freed
+	// ROM BUG (fixed): the name's block is never freed.  The fix frees it.
 	UniChar* name = (UniChar*) NewPtr(length);
 	fNTKIn->ReadData(name, length);
 	// the name's UniChars are big-endian on the connection
@@ -447,6 +464,8 @@ TNTKNub::DeletePackage(ULong length)
 		iter.NextPackage();
 	}
 	iter.Done();
+	if (RomBugFixed())
+		DisposPtr((Ptr) name);
 	return noErr;
 }
 
@@ -811,10 +830,11 @@ CreateNub(RefArg connection, RefArg address, RefArg inTranslator, RefArg outTran
 
 	if ((Ref) inTranslator != NILREF && (Ref) outTranslator != NILREF)
 	{
-		// ROM BUG: 0x3f (the names' room) is passed as the encoding and
-		// 0x7fffffff as the room, so the conversion reads past the
+		// ROM BUG (fixed): 0x3f (the names' room) is passed as the encoding
+		// and 0x7fffffff as the room, so the conversion reads past the
 		// encodings' table.  DEVIATION: the host converts as Mac Roman
-		// into the 63 characters there are room for.
+		// into the 63 characters there are room for - which is the fix, on
+		// both paths (the ROM's read past the table cannot be reproduced).
 		ConvertFromUnicode(GetCString(inTranslator), inName, kMacRomanEncoding, sizeof(inName) - 1);
 		ConvertFromUnicode(GetCString(outTranslator), outName, kMacRomanEncoding, sizeof(outName) - 1);
 		inTranslatorName = inName;
@@ -935,6 +955,7 @@ Ref
 FNTKDownload(RefArg rcvr, RefArg connection, RefArg address, RefArg inTranslator, RefArg outTranslator)
 {
 	NewtonErr err;
+	Boolean already = (gNTKNub != nil);
 	if (gNTKNub != nil)
 		err = -1;
 	else
@@ -944,12 +965,16 @@ FNTKDownload(RefArg rcvr, RefArg connection, RefArg address, RefArg inTranslator
 			err = gNTKNub->DownloadPackage();
 	}
 	Sleep(100 * kMilliseconds);
-	// ROM BUG: a listener's nub is deleted too when there already was one
-	// (it is not stopped first)
+	// ROM BUG (fixed): a listener's nub is deleted too when there already
+	// was one (it is not stopped first).  The fix leaves a nub it did not
+	// make alone.
+	if (RomBugFixed() && already)
+		return MAKEINT(err);
 	if (gNTKNub != nil)
 		delete gNTKNub;
 	gNTKNub = nil;
 	return MAKEINT(err);
+
 }
 
 

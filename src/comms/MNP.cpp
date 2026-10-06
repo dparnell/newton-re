@@ -13,6 +13,7 @@
 #include "NewtErrors.h"
 #include "CommToolOptions.h"
 #include "OptionArray.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -314,14 +315,19 @@ TMNP::DoCompressFile()
 // ROM 0x0011ab4c OpenAlloc__4TMNPFv
 // The CCB made: the compressors allowed, the receive frame's list, the
 // three buffers, the idle and listen times.
-// ROM BUG (kept): a CCB that cannot be allocated answers noErr.
+// ROM BUG (fixed): a CCB that cannot be allocated answers noErr.  The fix
+// answers kError_No_Memory.
 NewtonErr
 TMNP::OpenAlloc()
 {
 	NewtonErr err = noErr;
 	fCCB = new TMNP_CCB;
 	if (fCCB == nil)
+	{
+		if (RomBugFixed())
+			err = kError_No_Memory;
 		goto failed;
+	}
 	if ((err = fCCB->Init()) != noErr)
 		goto failed;
 	fCCB->fCompressionAllowed = fCompressionOpt.fCompressionType;
@@ -592,8 +598,8 @@ TMNP::SetRetransTimer()
 // 0xc5 the speed.  An originator (answering an LR we sent) must know
 // every parameter; the compression settled, and the connect info filled
 // in.  ==> true if the link can go ahead.
-// ROM BUG (kept): in the speed parameter, a sub-parameter other than 1 is
-// counted but its bytes are not read past.
+// ROM BUG (fixed): in the speed parameter, a sub-parameter other than 1 is
+// counted but its bytes are not read past.  The fix skips its bytes.
 Boolean
 TMNP::ParamNegotiation(Boolean acceptor)
 {
@@ -756,6 +762,8 @@ TMNP::ParamNegotiation(Boolean acceptor)
 						if (!acceptor)
 							fDataRate = ChangeSpeed(rate);
 					}
+					else if (RomBugFixed())
+						list.Seek(subLength, kSeekFromHere);
 					i += subLength;
 				}
 				i += 2;
@@ -1389,8 +1397,8 @@ TMNP::KillGetComplete(NewtonErr result)
 // ROM 0x0011afc4 ProcessOptionStart__4TMNPFP7TOptionUlT2
 // The MNP options, the idle and listen timers; 'sbav answers what has been
 // received; a discard is refused; anything else the framed tool's.
-// ROM BUG (kept): a current 'mdct is read out of the CCB without looking
-// whether there is one.
+// ROM BUG (fixed): a current 'mdct is read out of the CCB without looking
+// whether there is one.  The fix fails it without one, as 'mnps does.
 ULong
 TMNP::ProcessOptionStart(TOption* opt, ULong label, ULong opcode)
 {
@@ -1509,9 +1517,12 @@ TMNP::ProcessOptionStart(TOption* opt, ULong label, ULong opcode)
 			opt->CopyDataFrom(&def);
 			return noErr;
 		}
+		if (RomBugFixed() && fCCB == nil)
+			return opFailure;
 		{
 			TCMOMNPDebugConnect* d = (TCMOMNPDebugConnect*) opt;
 			d->fMaxCredit = fCCB->fWindow;
+
 			d->fClass4 = fCCB->fClass4;
 			d->fMaxDataSize = fCCB->fMaxDataSize;
 			d->fStreamModeMax = (fCCB->fOptFlags & 4) != 0;

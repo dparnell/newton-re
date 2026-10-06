@@ -19,6 +19,7 @@
 #include "NewtonMemory.h"
 #include "NewtonTime.h"
 #include "NewtErrors.h"
+#include "host/RomBugs.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -383,9 +384,15 @@ PNTKOutTranslator::FlushText(void)
 		return;
 	NewtonErr err = gNTKNub->SendTextHeader(length);
 	if (err != noErr)
-		// ROM BUG: NTKShutdown deletes the nub and with it this translator
-		// and its buffer, which are then written to all the same
+	{
+		// ROM BUG (fixed): NTKShutdown deletes the nub and with it this
+		// translator and its buffer, which are then written to all the
+		// same.  The fix returns at once, touching nothing of this.
 		NTKShutdown(err);
+		if (RomBugFixed())
+			return;
+	}
+
 	fBuffer->PutnCompletely((const UByte*) fText, length, fPause, fTimeout);
 	fTextPtr = fText;
 	fTextLeft = fTextSize;

@@ -192,7 +192,11 @@ public:
 	PFrameSource*		fDataIn;			// +0xc8  PScriptDataIn
 	PFrameSink*			fFlattenOut;		// +0xcc  PFlattenPtr
 	PFrameSource*		fUnflattenIn;		// +0xd0  PUnFlattenPtr
+	// host (DEVIATION): an asynchronous bind's options, for BindComplete
+	// to read back (the fix of the ROM bug described there)
+	TOptionArray*		fBindOptions;
 };
+
 
 Boolean		IsRaw(RefArg obj);
 Boolean		IsRawOrString(RefArg obj);
