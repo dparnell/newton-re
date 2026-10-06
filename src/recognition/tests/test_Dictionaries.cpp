@@ -35,6 +35,7 @@
 #include "REPTranslators.h"
 #include "OSErrors.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -684,12 +685,33 @@ main()
 			EXPECT(NOTNIL(RefVar(FAirusIteratorThisWord(cursor, entry))));
 			EXPECT(WordIs(GetFrameSlotRef(entry, RSSYMword), "badger"));
 
-			// the clone shares the original's cursor, which is the ROM's
-			// own muddle rather than ours
+			// in the ROM the clone shares the original's cursor, which is
+			// the ROM's own muddle rather than ours
+			SetRomBugFixed(false);
 			RefVar copy(FAirusIteratorClone(cursor));
 			EXPECT(IsFrame(copy));
 			EXPECT(EQRef(GetFrameSlotRef(copy, RSSYMcursor),
 						 GetFrameSlotRef(cursor, RSSYMcursor)));
+			SetRomBugFixed(true);
+
+			// fixed, the clone has a cursor of its own, standing on the
+			// same word, that lives on when the original is disposed of
+			{
+				RefVar own(FAirusIteratorClone(cursor));
+				EXPECT(IsFrame(own));
+				EXPECT(!EQRef(GetFrameSlotRef(own, RSSYMcursor),
+							  GetFrameSlotRef(cursor, RSSYMcursor)));
+				RefVar ownEntry(AllocateFrame());
+				EXPECT(NOTNIL(RefVar(FAirusIteratorThisWord(own, ownEntry))));
+				EXPECT(WordIs(GetFrameSlotRef(ownEntry, RSSYMword), "badger"));
+				EXPECT(NOTNIL(RefVar(FAirusIteratorPreviousWord(own))));
+				EXPECT(NOTNIL(RefVar(FAirusIteratorThisWord(own, ownEntry))));
+				EXPECT(WordIs(GetFrameSlotRef(ownEntry, RSSYMword), "badge"));
+				// the original did not move
+				EXPECT(NOTNIL(RefVar(FAirusIteratorThisWord(cursor, entry))));
+				EXPECT(WordIs(GetFrameSlotRef(entry, RSSYMword), "badger"));
+				EXPECT(ISNIL(RefVar(FAirusIteratorDispose(own))));
+			}
 
 			EXPECT(ISNIL(RefVar(FAirusIteratorDispose(cursor))));
 			EXPECT(ISNIL(RefVar(GetFrameSlotRef(cursor, RSSYMcursor))));

@@ -18,6 +18,7 @@
 #include "OSErrors.h"
 #include "NewtonExceptions.h"
 #include "FixedMath.h"
+#include "host/RomBugs.h"
 
 // a big-endian halfword kept whole, and one of which the ROM keeps only
 // the low byte
@@ -826,13 +827,21 @@ ToObject(RecGridInfo* info)
 // ROM 0x00035830 FromObject__FRC6RefVarP12WordBaseInfo
 // An rcBaseInfo frame's base, smallHeight, bigHeight and descent (nought
 // for a slot it has not got).
-// ROM BUG, kept: the three heights keep only their low byte - each is
+// ROM BUG (fixed): the three heights keep only their low byte - each is
 // masked with 0xff before its high byte is taken - so a height of 256 or
-// more comes out as that less a multiple of 256.
+// more comes out as that less a multiple of 256.  The fix stores the
+// whole half-word, as the base's is.
 void
 FromObject(RefArg frame, WordBaseInfo* info)
 {
 	SetBEHalf(info->base, GetNonNilInt(frame, RefVar(RSSYMbase)));
+	if (RomBugFixed())
+	{
+		SetBEHalf(info->smallHeight, GetNonNilInt(frame, RefVar(RSSYMsmallheight)));
+		SetBEHalf(info->bigHeight, GetNonNilInt(frame, RefVar(RSSYMbigheight)));
+		SetBEHalf(info->descent, GetNonNilInt(frame, RefVar(RSSYMdescent)));
+		return;
+	}
 	SetBEHalfLowByte(info->smallHeight, GetNonNilInt(frame, RefVar(RSSYMsmallheight)));
 	SetBEHalfLowByte(info->bigHeight, GetNonNilInt(frame, RefVar(RSSYMbigheight)));
 	SetBEHalfLowByte(info->descent, GetNonNilInt(frame, RefVar(RSSYMdescent)));
@@ -842,15 +851,21 @@ FromObject(RefArg frame, WordBaseInfo* info)
 // ROM 0x0003598c FromObject__FRC6RefVarP11RecGridInfo
 // An rcGridInfo frame's boxLeft, boxRight, xSpace, boxTop, boxBottom and
 // ySpace (nought for a slot it has not got).
-// ROM BUG, kept: the two spacings keep only their low byte, as the heights
-// above do.
+// ROM BUG (fixed): the two spacings keep only their low byte, as the
+// heights above do.  The fix stores the whole half-word, as the boxes' are.
 void
 FromObject(RefArg frame, RecGridInfo* info)
 {
 	SetBEHalf(info->boxLeft, GetNonNilInt(frame, RefVar(RSSYMboxleft)));
 	SetBEHalf(info->boxRight, GetNonNilInt(frame, RefVar(RSSYMboxright)));
-	SetBEHalfLowByte(info->xSpace, GetNonNilInt(frame, RefVar(RSSYMxspace)));
+	if (RomBugFixed())
+		SetBEHalf(info->xSpace, GetNonNilInt(frame, RefVar(RSSYMxspace)));
+	else
+		SetBEHalfLowByte(info->xSpace, GetNonNilInt(frame, RefVar(RSSYMxspace)));
 	SetBEHalf(info->boxTop, GetNonNilInt(frame, RefVar(RSSYMboxtop)));
 	SetBEHalf(info->boxBottom, GetNonNilInt(frame, RefVar(RSSYMboxbottom)));
-	SetBEHalfLowByte(info->ySpace, GetNonNilInt(frame, RefVar(RSSYMyspace)));
+	if (RomBugFixed())
+		SetBEHalf(info->ySpace, GetNonNilInt(frame, RefVar(RSSYMyspace)));
+	else
+		SetBEHalfLowByte(info->ySpace, GetNonNilInt(frame, RefVar(RSSYMyspace)));
 }
