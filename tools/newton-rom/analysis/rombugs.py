@@ -29,7 +29,7 @@ import sys
 # a comment that introduces a bug of the ROM's
 BUG = re.compile(r"\bROM\s+BUGS?\b|\bBUG\s+\(the ROM's\)|\bbug kept\b|\bBUG,\s+kept\b|\bBUG\s+\(kept\)|\bleak kept\b|\(sic:", re.I)
 # a mention that points at another one rather than introducing a bug
-BACKREF = re.compile(r"ROM\s+bugs?\s*(:\s*see\b|above\b|below\b)|\(the ROM bug|see the ROM bug|kept and described at", re.I)
+BACKREF = re.compile(r"ROM\s+bugs?\s*(:\s*see\b|above\b|below\b)|\(the ROM bug|see the ROM bug|kept and described at|ROM\s+bugs?\s+fixed\b", re.I)
 FIXED = re.compile(r"\(fixed\)", re.I)
 SKIP_DIRS = {"tests", "thirdparty", "ddk", "demo"}
 EXTS = (".cpp", ".h", ".c")
