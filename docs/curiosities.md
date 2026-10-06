@@ -737,7 +737,8 @@ lands on the terminator instead of overwriting the first, the string
 quietly becomes three long, and that third character stays there for
 ever - no later write ever reaches position 2 again. Nothing notices,
 because the only questions ever asked of the string are what its first
-character is and whether a given character is in it somewhere.
+character is and whether a given character is in it somewhere. Now fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour):
+the index wraps before the write, so the string stays a ring of two.
 
 ---
 
@@ -823,7 +824,8 @@ disagree.
 Nothing crashes, because a ROM dictionary is followed by more ROM. The
 feature simply gives the wrong answer in the sixteen-bit lexicons and
 the right one in the eight-bit lexicons, which is a difficult thing to
-notice when the two are reached through the same call.
+notice when the two are reached through the same call. Now fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour):
+the test is the eight-bit walker's.
 
 *`src/recognition/Airus.cpp`; `test_Airus.cpp` pins both behaviours.*
 
@@ -912,7 +914,8 @@ dictionary the machine writes into — the user dictionary, the expansion
 dictionary, the auto-add dictionary — is made with
 `NewDictionary(kind, 1)`: one byte of attribute, where the two orders
 agree. The multi-byte case exists in the format and in both readers, and
-nothing in the ROM ever takes it.
+nothing in the ROM ever takes it. Now fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour):
+the attribute is assembled high byte first, as `GetAttr` reads it.
 
 *`src/recognition/Airus.cpp`; `test_Airus.cpp` walks a one-byte
 dictionary, where the bug is invisible, exactly as the ROM does.*
@@ -1206,7 +1209,9 @@ the original would be walking a chain of half-copies.
 
 Because `PrivateClone` throws the copy away without ever destroying it
 or reading from it, none of that ever happens. Two bugs, and the first
-one hides the second.
+one hides the second. Now fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour):
+the copy constructor links each copy to the one before it and sets the
+copy's stack, and `PrivateClone` hands back the copy and registers it.
 
 *`src/recognition/AirusIterator.cpp` and `src/recognition/Words.cpp`;
 `test_Dictionaries` pins the shared cursor.*

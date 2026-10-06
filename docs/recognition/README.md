@@ -635,12 +635,14 @@ time, date, phone and number ones - which `InitDictionaries` opens into
 `gTimeLexDictionary` and its three neighbours for the lexical analysis
 to use.
 
-BUG (kept): `ReadDictPrefs` does not check that there is a list.
+ROM BUG (fixed): `ReadDictPrefs` does not check that there is a list.
 `TRecognitionManager::Init` builds one only above level 1 but calls
 `InitRecognizers` - and so `ReadDomainOptions`, and so this - at every
 level, so a machine started at level 1 throws on a `vars.dictionaries`
 that was never made.  The MP2x00 always starts at level 2, so nobody
-ever saw it; the tests that do start at level 1 put an empty list there.
+ever saw it; the tests that do start at level 1 put an empty list there
+(which `ExpandWord` still wants).  Now fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour): with no list
+it reads nothing.
 
 ## What the machine keeps (`recognition/Learning.h`)
 
@@ -688,10 +690,11 @@ the user dictionary encoded, which is what the recogniser reads against.
 Every twentieth word the `autoAdd` view is told, which is what puts up
 the slip offering to show the writer what has been learnt.
 
-BUG (kept): the answer is set to true before the second add is checked,
-so a word whose user-dictionary entry failed - and which is therefore
-taken straight out of the auto-add dictionary again - is still reported
-as added.
+ROM BUG (fixed): the answer is set to true before the second add is
+checked, so a word whose user-dictionary entry failed - and which is
+therefore taken straight out of the auto-add dictionary again - is still
+reported as added.  Now fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour): the answer is
+whether the second add worked.
 
 `RemoveAutoAdd` 0x001ab0f8 takes it back out of both, which is what
 happens when the entry the word was learnt from goes; both go through
@@ -784,11 +787,11 @@ with no sibling is left alone: what went was under it, not after it),
 and the Handle is given a growth unit back whenever the data has shrunk
 enough to spare one.
 
-BUG (kept): a word whose last node carries no attribute - a path that is
+ROM BUG (fixed): a word whose last node carries no attribute - a path that is
 not a word - returns without setting the block's result, which
 `DeleteWord` had just set to 0, so deleting a word that was never there
 is reported as success.  Deleting a word that begins nothing at all is
-reported properly, as "not there".
+reported properly, as "not there".  Now fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour): a path that is not a word is "not there" too.
 
 `test_Airus` builds a six-word dictionary, takes the words out one at a
 time in the three shapes above and puts one back, checking after each
@@ -804,12 +807,12 @@ callback `AEnum_NextSet` uses (`AE8_NextSetCB` 0x0002af38) simply
 writes the characters out into the block's word buffer.  They come out
 sorted, because the row is.
 
-BUG (kept): `AE8_NextSet9` assembles the attribute it hands the callback
+ROM BUG (fixed): `AE8_NextSet9` assembles the attribute it hands the callback
 from its bytes low one first, where `PutAttr` writes it and `GetAttr`
 reads it high one first.  A one-byte attribute - which is what every
 dictionary the machine writes has - is the same either way, so nobody
 ever saw it; a two- or four-byte one comes out of that call
-byte-reversed.
+byte-reversed.  Now fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour).
 
 Walking a whole dictionary is the two questions in a recursion.
 `WalkDictionary` 0x0002e0f0 sets up a `DictWalkBlock` - the dictionary,
@@ -1146,7 +1149,7 @@ One ROM bug is kept: the last loop of `DoArbitration` walks the gather and
 tests each entry's flags, but marks the unit in hand rather than the
 entry's own - the register holding it is never reloaded.  Marking the same
 unit twice does no harm, and the entries that should have been marked are
-left for the round after.
+left for the round after.  Now fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour): each entry's own unit is marked.
 
 ## What happens when the pen goes down
 
@@ -2045,7 +2048,7 @@ drives that from above, along with the area's three dictionary chains
 call the base, so `fParameters` is never written down and the controller
 hands the block over before every unit rather than only when it changes;
 and its answer is the wrong way round, saying "the parameters changed"
-exactly when the engine has just run out of memory.
+exactly when the engine has just run out of memory.  Now fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour): it calls the base and answers whether the block changed.
 
 NOT YET: `EndInkStrokeGroup` (the CIC library's
 `WRecEndInkStrokeGroup`).
@@ -2250,7 +2253,8 @@ on in a new unit with the segmenter's state.
 ROM bugs kept: the extra strokes of a word are copied (and taken off the
 list) while their *index* is less than the stroke number rather than
 while the stroke is not nought; the dash's removal from a joined word's
-info moves an entry down but renumbers the one left behind; when no
+info moves an entry down but renumbers the one left behind (both now fixed
+by default, `NEWTON_ROM_BUGS=1` for the ROM's behaviour); when no
 stroke reaches right of nought `GCMergeLinesAndRemoveDash` answers the
 caller's r8.  `NEWTON_TRACE_CURSIVE=1` prints each word the reader is
 given and the answer; `src/host/demo/cursive.ns` makes the letter set
@@ -3487,7 +3491,8 @@ until something is found, then again within the square root of the best
 distance, gathered per letter into an answer list), and *Occam* decides
 whether it is worth keeping - it is added when the nearest letter is
 another one, or this one only just nearer than the next.  ROM bug kept:
-`Occam` reads the first entry of an answer list that may be empty.
+`Occam` reads the first entry of an answer list that may be empty
+(now fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour): an empty list's sample is kept).
 DEVIATION: the ROM's `SDiv` by nought answers whatever the divide
 routine leaves; the host answers nought.  The learn array's +0x14 is a
 cached pointer to its parts, which a host pointer does not fit in; the
@@ -3518,7 +3523,7 @@ boxRight, xSpace, boxTop, boxBottom, ySpace) its grid (`GetGridGeom`:
 the first box's corner and the step to the next, 16.16), which is what
 boxed grouping reads.  ROM bug kept: `FromObject` masks the heights and
 the spacings with 0xff before taking their high byte, so each keeps only
-its low byte.  The domain's selectors are 0x2000b/0x2000d to ask the
+its low byte (now fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour)).  The domain's selectors are 0x2000b/0x2000d to ask the
 geometry and grid and 0x2000c/0x2000e to set them (the host had the pairs
 the wrong way round until ConfigFromFrame used them - the ROM's memcpy
 takes the destination first).
