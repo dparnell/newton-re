@@ -30,6 +30,7 @@
 #include "Ports.h"		// ToFixed, RoundFixed
 #include "memory/host/KernelHeap.h"
 
+#include "host/RomBugs.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -1967,9 +1968,9 @@ TestInkFont()
 // with the words' bytes carried in the picture (0x81a2 styles with the
 // family 0x800000, 0x81a4 the words) and played back to the same pixels.
 // A single run whose font is an ink word is recorded the same way, but -
-// a ROM bug kept - playing it back never puts the word back into the one
-// style, so nothing is drawn (the ROM draws with whatever lies at the
-// integer 0x800000).
+// a ROM bug, fixed by default - playing it back never puts the word back
+// into the one style, so nothing is drawn (the ROM draws with whatever lies
+// at the integer 0x800000); with the fix it is drawn as the several are.
 static void
 TestInkWordPicture()
 {
@@ -2038,7 +2039,8 @@ TestInkWordPicture()
 	EXPECT(memcmp(direct, gDrawBits, sizeof(gDrawBits)) == 0);
 	KillPicture(picture);
 
-	// one run alone: recorded, and played back as nothing
+	// one run alone: recorded, and (the ROM bug) played back as nothing
+	SetRomBugFixed(false);
 	memset(gDrawBits, 0, sizeof(gDrawBits));
 	StyleRecord* one[1] = { &first };
 	picture = OpenPicture(&gDrawMap.bounds, false);
@@ -2047,9 +2049,23 @@ TestInkWordPicture()
 	DrawPicture(picture, &frame, false);
 	EXPECT(DrawnPixels() == 0);
 	KillPicture(picture);
+	SetRomBugFixed(true);
 	memset(gDrawBits, 0, sizeof(gDrawBits));
 	DrawTextOnce(chars, 1, one, nil, where, nil, nil);
 	EXPECT(DrawnPixels() > 10);
+	unsigned char single[sizeof(gDrawBits)];
+	memcpy(single, gDrawBits, sizeof(gDrawBits));
+
+	// the fix: one run alone is played back to the same pixels, and twice
+	// running (the second text in the same style) as well
+	memset(gDrawBits, 0, sizeof(gDrawBits));
+	picture = OpenPicture(&gDrawMap.bounds, false);
+	DrawTextOnce(chars, 1, one, nil, where, nil, nil);
+	DrawTextOnce(chars, 1, one, nil, where, nil, nil);
+	ClosePicture();
+	DrawPicture(picture, &frame, false);
+	EXPECT(memcmp(single, gDrawBits, sizeof(gDrawBits)) == 0);
+	KillPicture(picture);
 	ClosePort(&gDrawPort);
 }
 

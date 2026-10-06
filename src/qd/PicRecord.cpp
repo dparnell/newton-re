@@ -22,6 +22,7 @@
 #include "Unicode.h"
 #include "NewtonExceptions.h"
 #include "objects.h"
+#include "host/RomBugs.h"
 #include <string.h>
 
 // the text options a picture begins with (QDTables.cpp, generated: its
@@ -103,7 +104,10 @@ OpenPicture(Rect* frame, Boolean macPicture)
 	Handle picture = NewHandle(ps->fAllocated);
 	if (picture == nil)
 	{
-		// ROM BUG, kept: the PicSave's clip region is not given back
+		// ROM BUG (fixed): the PicSave's clip region is not given back.
+		// The fix gives it back with the PicSave.
+		if (RomBugFixed())
+			DisposeRgn(ps->fClip);
 		DisposHandle(save);
 		DisposeStyleRecord(&style);
 		return nil;
@@ -401,13 +405,35 @@ PutPicVerb(GrafVerb verb)
 	case erase:
 		if (!EqualPat(port->bgPat, CurrentPicSave(port)->fBkPat))
 		{
-			// ROM BUG, kept: BkPat's opcode is written and then PutPicPat
+			// ROM BUG (fixed): BkPat's opcode is written and then PutPicPat
 			// writes an opcode of its own (PnPat, 0x09, or FillPixPat) in
 			// front of the pattern, so a player reads the background
 			// pattern out of that opcode and six bytes of the pattern and
-			// is out of step from there on
-			PutPicOpcode(0x02);
-			PutPicPat(port->bgPat);
+			// is out of step from there on.  The fix writes the pattern as
+			// PutPicPat does but under the background's opcodes, BkPat
+			// (0x02) or BkPixPat (0x12).
+			if (RomBugFixed())
+			{
+				PatternHandle pattern = port->bgPat;
+				long depth = (*pattern)->pixMapFlags & 0xff;
+				HLock((Handle) pattern);
+				if (depth == 1 || ((depth == 2 || depth == 4) && BlackOrWhitePat(pattern) != 0))
+				{
+					PutPicOpcode(0x02);
+					PutPicData((const char*) GetPixelMapBits(*pattern), 8);
+				}
+				else if (depth == 2 || depth == 4)
+				{
+					PutPicOpcode(0x12);
+					PutPixPat(*pattern);
+				}
+				HUnlock((Handle) pattern);
+			}
+			else
+			{
+				PutPicOpcode(0x02);
+				PutPicPat(port->bgPat);
+			}
 			DisposePattern(CurrentPicSave(port)->fBkPat);
 			CurrentPicSave(port)->fBkPat = CopyPattern(port->bgPat);
 		}
@@ -832,7 +858,7 @@ RunsTotal(const TextObject* obj)
 // the text: its length, location, flags (0x80 several styles, 0x40
 // options, 0x20 a 0x81a4 follows) and the UniChars.
 //
-// ROM BUGS, kept:
+// ROM BUG (fixed):
 //  - 0x81a0 does not remember the options it wrote, so the same options
 //    are written again every time.
 //  - LongText's count is a byte, but every character is written: a text of
@@ -842,6 +868,11 @@ RunsTotal(const TextObject* obj)
 //    length's worth, the last two whatever the buffer held (host: nought);
 //    playing it back, 0x81a4 fills in only the several-style records, so
 //    the one style's family stays the integer 0x800000.
+// The fixes: 0x81a0's options are remembered in the PicSave; LongText
+// carries at most the 255 characters its count can say; and the one
+// style's integer family is written as the several styles' are, its
+// length halfword and then its bytes (ParsePicCodes' 0x81a4 fills it in,
+// for that text only - so the PicSave does not remember such a family).
 // DEVIATIONS: the Mac characters are converted for the text's length into
 // a buffer as long, where the ROM converts to the first nought character
 // into 236 bytes on its stack; the options' last word is never called as
@@ -883,6 +914,8 @@ DoPutText(TextObjectRef text, Fixed hScale, Fixed vScale)
 		PutPicWord((short) ((ULong32) (obj->fLocation.y + 0x8000) >> 16));
 		PutPicWord((short) ((ULong32) (obj->fLocation.x + 0x8000) >> 16));
 		long count = RunsTotal(obj);
+		if (RomBugFixed() && count > 0xff)
+			count = 0xff;
 		PutPicByte(count);
 		char* chars = (char*) QDNewTempPtr(count + 1);
 		if (chars == nil)
@@ -937,6 +970,15 @@ DoPutText(TextObjectRef text, Fixed hScale, Fixed vScale)
 			// ignores (it clears the word); a host function's address is
 			// nothing to put in a picture, so nought goes in
 			PutPicLong(0);
+			if (RomBugFixed())
+			{
+				had->fJustification = options->fJustification;
+				had->fAlignment = options->fAlignment;
+				had->fWidth = options->fWidth;
+				had->fReserved = options->fReserved;
+				had->fTransferMode = options->fTransferMode;
+				had->fFittedWidth = options->fFittedWidth;
+			}
 		}
 		withOptions = 1;
 	}
@@ -971,11 +1013,18 @@ DoPutText(TextObjectRef text, Fixed hScale, Fixed vScale)
 			else
 			{
 				const char* data;
+				bool whole = false;
 				if (ISINT(family))
 				{
 					const UniChar* block = (const UniChar*) RefToAddress(family);
 					inlineSize = (short) *block;
 					data = (const char*) (block + 1);
+					if (RomBugFixed())
+					{
+						// the length halfword and all the bytes after it
+						inlineSize += 2;
+						whole = true;
+					}
 				}
 				else
 				{
@@ -987,7 +1036,7 @@ DoPutText(TextObjectRef text, Fixed hScale, Fixed vScale)
 					Throw(exOutOfMemory, nil, nil);
 				memset(inlineData, 0, inlineSize);
 				char* p = inlineData;
-				if (IsInkWord(family))
+				if (IsInkWord(family) || whole)
 				{
 					PutBigEndianHalf(p, (unsigned short) (inlineSize - 2));
 					p += 2;
@@ -995,6 +1044,10 @@ DoPutText(TextObjectRef text, Fixed hScale, Fixed vScale)
 				BlockMove(data, p, inlineSize - 2);
 				PutPicLong(0x800000);
 				inlineCount = 1;
+				// (the fix: a player has the family only for this text, so
+				// the next text in it is not taken for the same style)
+				if (RomBugFixed())
+					ps->fTextStyle.fFontFamily->ref = NILREF;
 			}
 			PutPicStyleWords(style);
 		}
