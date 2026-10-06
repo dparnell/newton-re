@@ -18,6 +18,7 @@
 #include "ParaGraph.h"
 #include "WordSegment.h"
 #include "ByteOrder.h"
+#include "host/RomBugs.h"
 #include <string.h>
 
 extern const int	_2C16[8];
@@ -324,13 +325,17 @@ DestroyAlist(ALIST* list)
 // nearest letter found is another one; when it is this one, yes only if
 // it is not already within 8 (it alone found) or not nearer than half
 // the distance of the next letter.
-// ROM BUG kept: an empty list is not looked for - its first answer, never
-// written, is compared as though it were one (CreateAlist's memory is not
-// cleared, so it is whatever the block last held: often the last list's
-// best answer, the same size of block being had again).
+// ROM BUG (fixed): an empty list is not looked for - its first answer,
+// never written, is compared as though it were one (CreateAlist's memory
+// is not cleared, so it is whatever the block last held: often the last
+// list's best answer, the same size of block being had again).  The fix
+// answers yes for an empty list: nothing near was found, which is the
+// case the first test means ("the nearest is another letter").
 long
 Occam(UShort sym, ALIST* list)
 {
+	if (RomBugFixed() && list->count == 0)
+		return 1;
 	if (list->e[0].sym != sym)
 		return 1;
 	if (list->count < 2)

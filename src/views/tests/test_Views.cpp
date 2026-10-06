@@ -6251,14 +6251,26 @@ TestCorrectInfo()
 	EXPECT(EQRef(RefVar(FindWordInfo(list, p, 5)), info));
 	EXPECT(EQRef(RefVar(FindWordInfo(p, 5)), info));	// the machine's own list
 	EXPECT(ISNIL(RefVar(FindWordInfo(p, 0))));
-	// MoveCorrectionInfo(from, offset, to): the offset goes to FindWordInfo
-	// as its Ref, four times over (a ROM bug kept), so offset 1 finds the
-	// word at 4; the new offset is never passed (the native table's count
-	// is one short) and the host's stand-in, nil, puts it at the Ref of nil
+	// MoveCorrectionInfo(from, offset, to): in the ROM the offset goes to
+	// FindWordInfo as its Ref, four times over (a ROM bug), so offset 1
+	// finds the word at 4; the new offset is never passed (the native
+	// table's count is one short) and the host's stand-in, nil, puts it at
+	// the Ref of nil
+	SetRomBugFixed(false);
 	Eval("ctxCI.moveIt := func() MoveCorrectionInfo(ctxCI, 1, ctxCI)");
 	Eval("ctxCI:moveIt()");
 	EXPECT(RINT(RefVar(GetFrameSlotRef(info, RSSYMstart))) == NILREF);
 	EXPECT(RINT(RefVar(GetFrameSlotRef(info, RSSYMstop))) == NILREF + MAKEINT(3));
+	SetOffsetInfo(info, p, 4, 7, kWordInfoKnown);
+	SetRomBugFixed(true);
+	// fixed, the offset is the integer, and the word is put at it, its
+	// length kept: offset 1 finds nothing, 5 finds the word at 4..7
+	Eval("ctxCI:moveIt()");
+	EXPECT(RINT(RefVar(GetFrameSlotRef(info, RSSYMstart))) == 4);
+	Eval("ctxCI.moveIt := func() MoveCorrectionInfo(ctxCI, 5, ctxCI)");
+	Eval("ctxCI:moveIt()");
+	EXPECT(RINT(RefVar(GetFrameSlotRef(info, RSSYMstart))) == 5);
+	EXPECT(RINT(RefVar(GetFrameSlotRef(info, RSSYMstop))) == 8);
 	SetOffsetInfo(info, p, 4, 7, kWordInfoKnown);
 
 	// a reading that is not a single word is not kept: the corrector has

@@ -14,6 +14,7 @@
 #include "Random.h"
 #include "Unicode.h"
 #include "NativeFunctions.h"
+#include "host/RomBugs.h"
 #include <string.h>
 
 // ROM 0x0c106528 letterPairs - how often each pair of letters has been
@@ -103,9 +104,11 @@ GetCharWeight(char c, ULong /*position*/, Boolean capitalsAllowed)
 // One of the characters at random, in proportion to their weights.  ==>
 // its index; nought when nothing has any weight.
 //
-// ROM BUG, kept: the draw is 1 .. the total and a character is taken
+// ROM BUG (fixed): the draw is 1 .. the total and a character is taken
 // while the draw is *below* the running total, so a draw of the total
 // itself takes none of them and answers the index of the terminator.
+// The fix takes a character while the draw is at most the running total,
+// so every draw lands on one, each in proportion to its weight.
 ULong
 ChooseWeightedChar(char* chars, ULong position, Boolean capitalsAllowed)
 {
@@ -121,7 +124,7 @@ ChooseWeightedChar(char* chars, ULong position, Boolean capitalsAllowed)
 	for ( ; i < n; i++)
 	{
 		running += GetCharWeight(chars[i], position, capitalsAllowed);
-		if (draw < running)
+		if (RomBugFixed() ? draw <= running : draw < running)
 			return i;
 	}
 	return i;

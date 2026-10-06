@@ -16,6 +16,7 @@
 #include "Interpreter.h"	// NSSend
 #include "Locale.h"		// GetPreference
 #include "RootView.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -99,10 +100,12 @@ CollectPunctSymbols(UniChar* word, UniChar** leading, UniChar** trailing)
 // plain apostrophe and the curly right single one - and only an "s"
 // after it.
 //
-// (BUG, kept: `leading` is set to nil and never written.  The function
-//  is shaped like `CollectPunctSymbols`, which answers both ends, but
-//  there is nothing a contraction can leave at the front, and the ROM
-//  kept the parameter rather than the code.)
+// (ROM BUG (fixed): `leading` is set to nil and never written.  The
+//  function is shaped like `CollectPunctSymbols`, which answers both ends,
+//  but there is nothing a contraction can leave at the front, and the ROM
+//  kept the parameter rather than the code.  Nothing is fixed by code:
+//  nil is the right answer for a front a contraction never has, and every
+//  caller takes it as "nothing there", so the fixed machine is the ROM's.)
 void
 CollectContractions(UniChar* word, UniChar** leading, UniChar** trailing)
 {
@@ -331,10 +334,11 @@ DeleteWordWithCount(long id, UByte* word)
 // `autoAdd` view is told, which is what puts up the slip offering to
 // show the writer what has been learnt.
 //
-// (BUG, kept: the answer is set to true before the second add is
+// (ROM BUG (fixed): the answer is set to true before the second add is
 //  checked, so a word whose user-dictionary entry failed - and which is
 //  therefore taken out of the auto-add dictionary again - is still
-//  reported as added.)
+//  reported as added.  The fix answers true only when the second add
+//  worked, the same test that decides whether the first is undone.)
 Boolean
 AddAutoAdd(UniChar* word)
 {
@@ -374,7 +378,10 @@ AddAutoAdd(UniChar* word)
 			// and then there is nobody to tell.
 			if (count % 20 == 0 && gRootView != nil)
 				NSSend(RefVar(gRootView->GetVar(RSSYMautoadd)), RSSYMaddnotification);
-			added = true;
+			if (RomBugFixed())
+				added = airusResult == 0;
+			else
+				added = true;
 			DisposePtr((Ptr) copy);
 			if (airusResult == 0)
 				undo = false;

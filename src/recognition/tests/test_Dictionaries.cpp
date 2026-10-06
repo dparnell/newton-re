@@ -25,6 +25,7 @@
 #include "Locale.h"
 #include "Learning.h"
 #include "RandomWords.h"
+#include "Random.h"
 #include "View.h"
 #include "RootView.h"
 #include "Ports.h"
@@ -168,10 +169,32 @@ LookUp(const char* word, ULong* attribute)
 }
 
 
+// ChooseWeightedChar's draw: one character of weight two (not a letter)
+// is drawn 1 or 2.  The ROM takes it only for a draw below the running
+// total, so a draw of 2 answers the terminator's index; fixed, every draw
+// takes it.
+static void
+TestChooseWeightedChar(void)
+{
+	char one[] = "1";
+	NewtonSrand(12345);					// (the generator stuck at nought otherwise)
+	long terminators = 0;
+	SetRomBugFixed(false);
+	for (long i = 0; i < 200; i++)
+		if (ChooseWeightedChar(one, 0, false) == 1)
+			terminators++;
+	EXPECT(terminators > 0);
+	SetRomBugFixed(true);
+	for (long i = 0; i < 200; i++)
+		EXPECT(ChooseWeightedChar(one, 0, false) == 0);
+}
+
+
 int
 main()
 {
 	InitHostStandaloneHeap();
+	TestChooseWeightedChar();
 	if (ImportROMObjectsFromFile(NEWTON_OBJECTS) != noErr)
 	{
 		printf("test_Dictionaries: cannot import %s\n", NEWTON_OBJECTS);
@@ -180,6 +203,11 @@ main()
 	gObjectHeapSize = 0x200000;
 	InitObjects();
 	SetFrameSlot(RefVar(gVarFrame), RSSYMvars, RefVar(gVarFrame));
+
+	// with no list of dictionaries made (a machine started at level 1),
+	// the fixed ReadDictPrefs reads nothing rather than throwing
+	EXPECT(ISNIL(RefVar(Dictionaries())));
+	ReadDictPrefs();
 
 	memcpy(gWordsBytes, kWordsAL, sizeof(kWordsAL));
 	memcpy(gNamesBytes, kNamesAL, sizeof(kNamesAL));
