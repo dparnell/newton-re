@@ -21,6 +21,7 @@
 #include "ByteOrder.h"
 #include "ROMConstants.h"
 #include "LargeBinaries.h"		// FLBAllocCompressed, FGetBinaryStore...
+#include "host/RomBugs.h"
 #include <string.h>
 
 // the graphics exception (evt.ex.graf) for a picture that is not a bitmap
@@ -107,8 +108,9 @@ TPixelObj::FramBitMapToPixMap(const FramBitmap& bits, PixelMap* map)
 // colour table's entries (eight bytes each: a value and red, green, blue
 // halfwords) made grays (RGBtoGray at the entry's depth).
 //
-// ROM BUG, kept: the table is allocated afresh on every call, a table
-// already made left behind.
+// ROM BUG (fixed): the table is allocated afresh on every call, a table
+// already made left behind.  The fix gives a table already made back
+// first (and takes it out of the mask's map, should that have it).
 Ref
 TPixelObj::GetFramBitmap(void)
 {
@@ -163,6 +165,16 @@ TPixelObj::GetFramBitmap(void)
 		LockRef(colorTable);
 		long entries = Length(colorTable) / 8;
 		ULong size = (ULong) 1 << (fDepth & 0xff);
+		if (RomBugFixed() && fGrayTable != nil)
+		{
+			if (fMaskMap.grayTable == (UChar*) fGrayTable)
+			{
+				fMaskMap.grayTable = nil;
+				fMaskMap.pixMapFlags &= ~kPixMapGrayTable;
+			}
+			DisposPtr(fGrayTable);
+			fGrayTable = nil;
+		}
 		fGrayTable = NewPtr(size);
 		if (fGrayTable != nil)
 		{

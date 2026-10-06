@@ -55,6 +55,7 @@
 #include "Locale.h"		// GetPreference
 #include "RSSymbols.h"
 #include "Colour.h"
+#include "host/RomBugs.h"
 #include <string.h>
 
 extern const unsigned char	kDepthPixelsPerWordShift[33];	// QDTables.cpp
@@ -2620,13 +2621,42 @@ MSeekMask(long y, long which, ULong32* mask, long words, RgnState* first, RgnSta
 // A further row of 32-bit pixels folded into four-bit grays two to a
 // byte: the darker kept (ORed in).
 //
-// ROM BUGS, kept: the source is not shifted to the first row's boundary;
+// ROM BUG (fixed): the source is not shifted to the first row's boundary;
 // the colours go to RGBtoGray as eight-bit values where it wants sixteen,
 // so every pixel comes out nearly white; and a darker gray is ORed into
-// the nibble rather than put in place of it.
+// the nibble rather than put in place of it.  The fix starts at the word
+// before *param_2, where the first row started (a 32-bit pixel is a whole
+// word, so the shift is always nought: the other combiners' "previous
+// word"), widens the colours as ConvertDirect32to4 does, and puts a darker
+// gray in place.
+static inline void
+DarkerInPlace(UByte* dst, UByte gray, Boolean high)
+{
+	if (high)
+	{
+		if ((UByte) (*dst >> 4) < gray)
+			*dst = (UByte) ((*dst & 0x0f) | (gray << 4));
+	}
+	else if ((UByte) (*dst & 0x0f) < gray)
+		*dst = (UByte) ((*dst & 0xf0) | gray);
+}
+
 static void
 CombineDirect32to4(char* param_1, ULong32** param_2, Long32 param_3, ULong32 /*param_4*/, ULong32 /*param_5*/, UChar* /*param_6*/)
 {
+	if (RomBugFixed())
+	{
+		const UByte* src = (const UByte*) (*param_2 - 1);
+		UByte* dst = (UByte*) param_1;
+		for (; 1 < param_3; param_3 -= 2, src += 8, dst++)
+		{
+			DarkerInPlace(dst, (UByte) RGBtoGray((ULong32) src[1] << 8, (ULong32) src[2] << 8, (ULong32) src[3] << 8, 8, 4), true);
+			DarkerInPlace(dst, (UByte) RGBtoGray((ULong32) src[5] << 8, (ULong32) src[6] << 8, (ULong32) src[7] << 8, 8, 4), false);
+		}
+		if (param_3 != 0)
+			DarkerInPlace(dst, (UByte) RGBtoGray((ULong32) src[1] << 8, (ULong32) src[2] << 8, (ULong32) src[3] << 8, 8, 4), true);
+		return;
+	}
 	const UByte* src = (const UByte*) *param_2;
 	UByte* dst = (UByte*) param_1;
 	for (; 1 < param_3; param_3 -= 2)
@@ -2652,11 +2682,26 @@ CombineDirect32to4(char* param_1, ULong32** param_2, Long32 param_3, ULong32 /*p
 // The same for a row stored a component plane at a time (the planes
 // param_3 bytes apart).
 //
-// ROM BUGS, kept: as CombineDirect32to4 (no shift; ORed in), and the
-// second pixel of each byte is compared with the *high* nibble.
+// ROM BUG (fixed): as CombineDirect32to4 (no shift; ORed in), and the
+// second pixel of each byte is compared with the *high* nibble.  The fix
+// as CombineDirect32to4's, each pixel compared with its own nibble, and
+// the planes taken as far apart as ConvertDirectComp32to4 took the first
+// row's (param_3 + 1 bytes), so that the rows line up.
 static void
 CombineDirectComp32to4(char* param_1, ULong32** param_2, Long32 param_3, ULong32 /*param_4*/, ULong32 /*param_5*/, UChar* /*param_6*/)
 {
+	if (RomBugFixed())
+	{
+		const UByte* src = (const UByte*) (*param_2 - 1);
+		UByte* dst = (UByte*) param_1;
+		Long32 plane = param_3 + 1;
+		for (Long32 n = param_3 >> 1; n > 0; n--, src += 2, dst++)
+		{
+			DarkerInPlace(dst, (UByte) RGBtoGray((ULong32) src[0] << 8, (ULong32) src[plane] << 8, (ULong32) src[plane * 2] << 8, 8, 4), true);
+			DarkerInPlace(dst, (UByte) RGBtoGray((ULong32) src[1] << 8, (ULong32) src[1 + plane] << 8, (ULong32) src[1 + plane * 2] << 8, 8, 4), false);
+		}
+		return;
+	}
 	const UByte* src = (const UByte*) *param_2;
 	UByte* dst = (UByte*) param_1;
 	for (Long32 n = param_3 >> 1; n > 0; n--)
@@ -2676,11 +2721,24 @@ CombineDirectComp32to4(char* param_1, ULong32** param_2, Long32 param_3, ULong32
 // ROM 0x000751e0 CombineDirectNoPad32to4__FPcPPUllUlT4PUc
 // The same for 24-bit pixels with no pad byte.
 //
-// ROM BUGS, kept: as CombineDirect32to4 (no shift, eight-bit colours,
-// ORed in).
+// ROM BUG (fixed): as CombineDirect32to4 (no shift, eight-bit colours,
+// ORed in).  The fix as CombineDirect32to4's.
 static void
 CombineDirectNoPad32to4(char* param_1, ULong32** param_2, Long32 param_3, ULong32 /*param_4*/, ULong32 /*param_5*/, UChar* /*param_6*/)
 {
+	if (RomBugFixed())
+	{
+		const UByte* src = (const UByte*) (*param_2 - 1);
+		UByte* dst = (UByte*) param_1;
+		for (; 1 < param_3; param_3 -= 2, src += 6, dst++)
+		{
+			DarkerInPlace(dst, (UByte) RGBtoGray((ULong32) src[0] << 8, (ULong32) src[1] << 8, (ULong32) src[2] << 8, 8, 4), true);
+			DarkerInPlace(dst, (UByte) RGBtoGray((ULong32) src[3] << 8, (ULong32) src[4] << 8, (ULong32) src[5] << 8, 8, 4), false);
+		}
+		if (param_3 != 0)
+			DarkerInPlace(dst, (UByte) RGBtoGray((ULong32) src[0] << 8, (ULong32) src[1] << 8, (ULong32) src[2] << 8, 8, 4), true);
+		return;
+	}
 	const UByte* src = (const UByte*) *param_2;
 	UByte* dst = (UByte*) param_1;
 	for (; 1 < param_3; param_3 -= 2)
@@ -2931,6 +2989,15 @@ SetupColourConversion(long depth, PixelMap* src)
 }
 
 
+// (host) the fix of SetupStretchRatio's ROM bug for two bits into four at
+// the same width: Stretch2to4 stepping a whole source pixel each time
+static void
+Unscaled2to4(ULong32* src, ULong32* dst, ULong32* end, Long32 /*ratio*/)
+{
+	Stretch2to4(src, dst, end, 0x10000);
+}
+
+
 // (host) the colour screen's fold of several source rows into one: the
 // first kept ("the darker" means nothing among colours)
 static void
@@ -2965,13 +3032,26 @@ SetupStretchRatio(Point dstSize, Point srcSize, long* ratio, long srcDepth, long
 	case 104:	choice = (Choice) { Unscaled1to4, Stretch1to4, Shrink1to4 }; break;
 	case 201:	choice = (Choice) { Unscaled2to1, Stretch2to1, Shrink2to1 }; break;
 	case 202:	choice = (Choice) { Unscaled, Stretch2to2, Shrink2to2 }; break;
-	case 204:	choice = (Choice) { Unscaled1to2, Stretch2to4, Shrink2to4 }; break;	// ROM BUG, kept: two bits unscaled into four take the one-to-two routine
+	case 204:	// ROM BUG (fixed): two bits unscaled into four take the one-to-two
+				// routine, which makes a gray v of aabb where the stretch makes
+				// v * 5 (aabb vs abab: 1 comes out 3, 2 comes out 12).  The fix
+				// takes Stretch2to4 a source pixel per pixel (Unscaled2to4).
+		if (RomBugFixed())
+			choice = (Choice) { Unscaled2to4, Stretch2to4, Shrink2to4 };
+		else
+			choice = (Choice) { Unscaled1to2, Stretch2to4, Shrink2to4 };
+		break;
 	case 401:	choice = (Choice) { Unscaled4to1, Stretch4to1, Shrink4to1 }; break;
 	case 402:	choice = (Choice) { Unscaled4to2, Stretch4to2, Shrink4to2 }; break;
 	case 404:	choice = (Choice) { Unscaled, Stretch4to4, Shrink4to4 }; break;
 	// (host: eight-bit destinations - above)
 	case 108:	choice = (Choice) { WidenFrom4<Unscaled1to4>, WidenFrom4<Stretch1to4>, WidenFrom4<Shrink1to4> }; break;
-	case 208:	choice = (Choice) { WidenFrom4<Unscaled1to2>, WidenFrom4<Stretch2to4>, WidenFrom4<Shrink2to4> }; break;
+	case 208:	// (the four-bit one's, widened - the ROM bug at 204 and its fix with it)
+		if (RomBugFixed())
+			choice = (Choice) { WidenFrom4<Unscaled2to4>, WidenFrom4<Stretch2to4>, WidenFrom4<Shrink2to4> };
+		else
+			choice = (Choice) { WidenFrom4<Unscaled1to2>, WidenFrom4<Stretch2to4>, WidenFrom4<Shrink2to4> };
+		break;
 	case 408:	choice = (Choice) { WidenFrom4<Unscaled>, WidenFrom4<Stretch4to4>, WidenFrom4<Shrink4to4> }; break;
 	case 808:	choice = (Choice) { Unscaled8to8, Stretch8to8, Shrink8to8 }; break;
 	default:	return (RowStretcher) NotDrawn;
@@ -3541,8 +3621,11 @@ StretchBits(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRe
 		TPixelMapAntialias* shrink = (TPixelMapAntialias*) NewByName("TPixelMapAntialias", "TGrayShrink");
 		if (shrink != nil)
 		{
-			// (ROM BUG: the instance is never given back)
+			// (ROM BUG (fixed): the instance is never given back.  The fix
+			// gives it back, its Delete and FreeInstance, as GlueDelete does)
 			shrink->GrayShrink(src, dst, (Rect*) srcRect, (Rect*) dstRect, clip1, clip2, mask);
+			if (RomBugFixed())
+				shrink->GlueDelete();
 			return;
 		}
 	}
