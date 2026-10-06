@@ -22,6 +22,7 @@
 #include "FixedMath.h"
 #include "OSErrors.h"
 #include "ByteOrder.h"
+#include "host/RomBugs.h"
 #include "views/Application.h"
 #include "stores/LargeObjects.h"
 #include <string.h>
@@ -323,15 +324,17 @@ TTile::RotateTilesR(PixelMap* from, PixelMap* to)
 // ROM 0x00254bac RotateTilesL__5TTileFP8PixelMapT1
 // A quarter turn to the left: as RotateTilesR the other way round - the
 // page's top band to the new bitmap's left-hand tiles, its left-hand tile
-// to the bottom band, each tile filled from its last row upwards.  ROM
-// BUG: the rows past the last whole band are turned as RotateTilesR turns
+// to the bottom band, each tile filled from its last row upwards.
+// ROM BUG (fixed): the rows past the last whole band are turned as RotateTilesR turns
 // them - downwards from the last row of their tile, the bits the other way
 // up, though a blank byte column moves back up - so they come out wrong,
 // and are written past the end of their tile: for the page's left-hand
 // tile, which lands in the new bitmap's last band, up to 512 bytes past
 // the end of the new bitmap.  (A fax page's last 58 rows are usually
 // white, and white rows write nothing; when they are not, turning the
-// page left overwrites whatever follows the new bitmap.)
+// page left overwrites whatever follows the new bitmap.)  The fix turns
+// them as the whole bands are turned - upwards, the group's top row the
+// byte's top bit - and so within their tiles.
 void
 TTile::RotateTilesL(PixelMap* from, PixelMap* to)
 {
@@ -388,7 +391,8 @@ TTile::RotateTilesL(PixelMap* from, PixelMap* to)
 		TileBuffer(rows);
 		UChar* column = place + 0x3f8;
 		long groups = leftover >> 3;
-		// DEVIATION: the bytes the BUG above writes past the end of the new
+		bool fixed = RomBugFixed();
+		// DEVIATION: the bytes the bug above writes past the end of the new
 		// bitmap are dropped.  On the device they landed in whatever block
 		// followed it; on the host that is heap corruption (or, for a large
 		// binary, past the host block the object is mapped into).  Nothing
@@ -411,6 +415,21 @@ TTile::RotateTilesL(PixelMap* from, PixelMap* to)
 					if (any == 0)
 					{
 						out -= 0x40;
+						continue;
+					}
+					if (fixed)
+					{
+						for (int b = 8; b != 0; b--)
+						{
+							UChar v = 0;
+							for (int k = 0; k < 8; k++)
+							{
+								v = (UChar) ((v << 1) | (row[k] >> 7));
+								row[k] = (UChar) (row[k] << 1);
+							}
+							*out = v;
+							out -= 8;
+						}
 						continue;
 					}
 					for (int b = 8; b != 0; b--)

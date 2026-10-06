@@ -34,6 +34,7 @@
 #include "Paths.h"
 #include "PixelConvert.h"
 #include "Frames.h"
+#include "host/RomBugs.h"
 #include <new>
 #include <string.h>
 
@@ -409,16 +410,21 @@ ConvertPixPat(PixelMap* pm)
 // header and converted to the screen's kind (ConvertPixPat).  ==> the
 // pattern, nil for anything else.
 //
-// ROM BUGS, kept: a row that is not a multiple of four bytes is laid out
+// ROM BUG (fixed): a row that is not a multiple of four bytes is laid out
 // two bytes further on than the pattern's row bytes say, so such a pattern
 // (one or two bits deep, eight pixels wide) is read skewed; the pattern's
 // gray table is left pointing at the table given back here; and when the
 // rows cannot be read the exception goes on up without the unpacking
-// buffer or the pattern given back.  (Host: the pixels follow the host's
-// PixelMap, kPatternPixelsOffset - DEVIATION.)
+// buffer or the pattern given back.  The fix lays the rows out at the
+// pattern's row bytes (a pattern's rows are not padded - InitGrayPattern),
+// clears the gray table once it is given back (ConvertPixPat has used it),
+// and gives the buffer and the pattern back before the exception goes on.
+// (Host: the pixels follow the host's PixelMap, kPatternPixelsOffset -
+// DEVIATION.)
 PatternHandle
 GetPicPixPat(long type)
 {
+	bool fixed = RomBugFixed();
 	if (type == 2)
 	{
 		long depth = GetCurrentPort()->portBits.pixMapFlags & 0xff;
@@ -432,7 +438,7 @@ GetPicPixPat(long type)
 	}
 	if (type != 1)
 		return nil;
-	char* temp = nil;
+	char* volatile temp = nil;
 	long noPad = 0;
 	long byComponent = 0;
 	UChar* grayTable = nil;
@@ -483,6 +489,8 @@ GetPicPixPat(long type)
 		}
 	}
 	long pad = (rowBytes & 3) != 0 ? 2 : 0;
+	if (fixed)
+		pad = 0;
 	long rows = (short) GetBigEndianHalf(header + 0xa) - (short) GetBigEndianHalf(header + 6);
 	long stride = rowBytes + pad;
 	long size = rows * stride;
@@ -550,13 +558,23 @@ GetPicPixPat(long type)
 	{
 		if (grayTable != nil)
 			QDDisposeTempPtr(grayTable);
+		if (fixed)
+		{
+			if (temp != nil)
+				QDDisposeTempPtr(temp);
+			DisposHandle((Handle) pattern);
+		}
 	}
 	end_try;
 	HUnlock((Handle) pattern);
 	if (temp != nil)
 		QDDisposeTempPtr(temp);
 	if (grayTable != nil)
+	{
 		QDDisposeTempPtr(grayTable);
+		if (fixed)
+			(*pattern)->grayTable = nil;
+	}
 	return pattern;
 }
 
@@ -577,7 +595,7 @@ GetPicPixPat(long type)
 long
 GetPicBits(long opcode, PicPlay* play, const OpcodeProc* procs)
 {
-	char* temp = nil;
+	char* volatile temp = nil;
 	long pixelSize = 1;
 	long unpacked = 0;
 	RgnHandle mask = nil;
@@ -795,8 +813,10 @@ rows:
 		threw = true;
 	}
 	end_try;
-	// ROM BUG, kept: after an exception the row buffer is not given back
-	if (!threw && temp != nil)
+	// ROM BUG (fixed): after an exception the row buffer is not given back.
+	// The fix gives it back either way (temp is volatile so that its value
+	// survives the longjmp).
+	if ((RomBugFixed() || !threw) && temp != nil)
 		QDDisposeTempPtr(temp);
 	QDDisposeTempPtr(bits);
 	if (hasGray)
@@ -939,11 +959,12 @@ DrawPicText(PicPlay* play)
 // one style, the block it was handed), the text, and 0x81a2's styles and
 // runs.
 //
-// ROM BUG, not kept: with several styles the ROM gives back each integer
+// ROM BUG (fixed): with several styles the ROM gives back each integer
 // family's block - the first is the start of 0x81a4's block, the others
 // inside it, which the ROM hands to QDDisposeTempPtr as if each were a
-// block of its own; the host gives the block back once (DEVIATION: a
-// pointer inside a block would damage the host's heap).
+// block of its own.  The host gives the block back once whichever way
+// RomBugFixed() is set (DEVIATION: a pointer inside a block would damage
+// the host's heap) - which is the fix.
 void
 TextCleanup(PicPlay* play, char* families)
 {
@@ -994,14 +1015,16 @@ TextCleanup(PicPlay* play, char* families)
 // 0x8088-0x808c): the curve read unless it is "the same" as the last, then
 // a copy of it mapped onto the destination and handed to CallCurve.
 //
-// ROM BUGS, kept: the copy is mapped twice, so a picture drawn at another
+// ROM BUG (fixed): the copy is mapped twice, so a picture drawn at another
 // size has its curves scaled twice over; and the procs are never asked -
 // the curve is drawn even while the picture is being made into shapes.
 // And StdCurve records a curve the same as the last as 0x0c88 + the verb,
 // which this reads as a reserved opcode of 0x18 bytes: a curve drawn twice
-// running leaves a picture that cannot be read past it.
+// running leaves a picture that cannot be read past it.  The fix maps the
+// copy once, hands the opcode to the proc instead of drawing when there is
+// one, and ParsePicCodes plays 0x0c88-0x0c8c as the same curve again.
 static long
-PlayCurve(PicPlay* play, GrafVerb verb, Boolean same)
+PlayCurve(PicPlay* play, GrafVerb verb, Boolean same, long opcode, OpcodeProc proc)
 {
 	if (!same)
 	{
@@ -1011,6 +1034,14 @@ PlayCurve(PicPlay* play, GrafVerb verb, Boolean same)
 	}
 	curve c = play->fCurve;
 	MapCurve(&c, &play->fFromRect, &play->fToRect);
+	if (RomBugFixed())
+	{
+		if (proc != nil)
+			proc(opcode, play, GetCurrentPort());
+		else
+			CallCurve(verb, &c);
+		return 1;
+	}
 	MapCurve(&c, &play->fFromRect, &play->fToRect);
 	CallCurve(verb, &c);
 	return 1;
@@ -1442,11 +1473,13 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 	if (opcode < 0x8000)
 	{
 		if (opcode >= 0xc80 && opcode - 0xc80 <= 4)
-			return PlayCurve(play, verb, same);
+			return PlayCurve(play, verb, same, opcode, proc);
+		if (RomBugFixed() && opcode >= 0xc88 && opcode - 0xc88 <= 4)
+			return PlayCurve(play, verb, same, opcode, proc);	// (the ROM bug: see PlayCurve)
 		return GetPicResvOpcode((opcode >> 8) << 1, false);
 	}
 	if (opcode - 0x8000 >= 0x88 && opcode - 0x8000 <= 0x8c)
-		return PlayCurve(play, verb, same);
+		return PlayCurve(play, verb, same, opcode, proc);
 	if (opcode - 0x8100 >= 0x90 && opcode - 0x8100 <= 0x94)
 	{
 		// the Newton's paths: the handle's size and bytes, mapped and drawn
@@ -1565,9 +1598,12 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 			TextCleanup(play, nil);
 			return 1;
 		}
-		// ROM BUG, kept: with the procs nothing is given back (TextCleanup
-		// is only on the drawing side)
+		// ROM BUG (fixed): with the procs nothing is given back (TextCleanup
+		// is only on the drawing side), here or at 0x81a4.  The fix gives it
+		// back once the proc has had it (XtndPicCodes copies the text).
 		proc((long) opcode, play, port);
+		if (RomBugFixed())
+			TextCleanup(play, nil);
 		return 1;
 	}
 	case 0x81a4:									// the families the styles name
@@ -1586,27 +1622,52 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 		// always points at (the host's halfword in its own order, as a rich
 		// string writes it)
 		char* p = families;
-		StyleRecord* style = play->fXStyleRecs;
-		for (long i = play->fStyleCount; i > 0; i--, style++)
+		Boolean oneFilled = false;
+		if (RomBugFixed() && (play->fTextFlags & 0x80) == 0)
 		{
-			if (ISINT((Ref) style->fFontFamily))
+			// (the ROM bug: see DoPutText - fixed, with one style its family,
+			// 0x81a1's integer 0x800000, is given the block too - until the
+			// block is given back, when it is the integer again)
+			StyleRecord* one = &play->fXStyle;
+			if (ISINT((Ref) one->fFontFamily))
 			{
-				style->fFontFamily = AddressToRef(p);
+				one->fFontFamily = AddressToRef(p);
 				long length = GetPicWord();
 				*(UniChar*) p = (UniChar) length;
 				GetPicData(p + 2, length);
-				p += 2 + length;
-				if (((uintptr_t) p & 3) != 0)
-					p += 4 - ((uintptr_t) p & 3);
+				oneFilled = true;
+			}
+		}
+		else
+		{
+			StyleRecord* style = play->fXStyleRecs;
+			for (long i = play->fStyleCount; i > 0; i--, style++)
+			{
+				if (ISINT((Ref) style->fFontFamily))
+				{
+					style->fFontFamily = AddressToRef(p);
+					long length = GetPicWord();
+					*(UniChar*) p = (UniChar) length;
+					GetPicData(p + 2, length);
+					p += 2 + length;
+					if (((uintptr_t) p & 3) != 0)
+						p += 4 - ((uintptr_t) p & 3);
+				}
 			}
 		}
 		if (proc == nil)
 		{
 			DrawPicText(play);
 			TextCleanup(play, families);
-			return 1;
 		}
-		proc((long) opcode, play, port);
+		else
+		{
+			proc((long) opcode, play, port);
+			if (RomBugFixed())
+				TextCleanup(play, families);			// (the ROM bug: see 0x81a3)
+		}
+		if (oneFilled)
+			play->fXStyle.fFontFamily = (Ref) (0x800000 << 2);
 		return 1;
 	}
 	default:

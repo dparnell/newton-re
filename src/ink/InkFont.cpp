@@ -19,6 +19,7 @@
 #include "Paths.h"			// FramePaths
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -335,10 +336,15 @@ InkGetGlyph(long ch, long glyph, FontEngineInfo* info)
 
 	long rowBytes = (long) (((ULong) info->fGlyphWidth + 0x1f) & ~0x1fUL) >> 3;
 	long length = rowBytes * info->fGlyphHeight;
-	// ROM BUG, kept: a block already here is dropped rather than given
+	// ROM BUG (fixed): a block already here is dropped rather than given
 	// back, so asking an open ink font for its glyph twice loses the
 	// first one.  Nothing does: a run of an ink word is one character
-	// long, and the font is closed after it.
+	// long, and the font is closed after it.  The fix gives it back first.
+	if (RomBugFixed() && info->fInkGlyphBits != nil)
+	{
+		QDDisposeTempPtr(info->fInkGlyphBits);
+		info->fInkGlyphBits = nil;
+	}
 	info->fInkGlyphBits = QDNewTempPtr(length);
 	if (info->fInkGlyphBits == nil)
 		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);

@@ -38,6 +38,7 @@
 #include "Unicode.h"
 #include "CICCodec.h"		// ConvertData
 #include "ParaGraph.h"		// HWRMemoryFree
+#include "host/RomBugs.h"
 
 
 /*------------------------------------------------------------------------------
@@ -561,7 +562,9 @@ FNumInkWordsInRange(RefArg /*rcvr*/, RefArg string, RefArg start, RefArg count)
 // packed again, which writes them anew.  nil when it is not ink, or the
 // converter fails.
 //
-// ROM BUG: the copy the converter is handed is never given back.
+// ROM BUG (fixed): the copy the converter is handed is never given back.
+// The fix gives it back once the converted data is in the result (or the
+// conversion has failed).
 Ref
 InkConvert(RefArg ink, RefArg cls)
 {
@@ -612,6 +615,11 @@ InkConvert(RefArg ink, RefArg cls)
 		BlockMove(data, BinaryData(result), size);
 		if (data != copy)
 			HWRMemoryFree((Ptr) data);
+		if (RomBugFixed())
+		{
+			DisposPtr(copy);
+			copy = nil;
+		}
 		if (kind == 2)
 		{
 			TStroke** strokes = InkExpand(result, 0, 0, 0);
@@ -624,6 +632,8 @@ InkConvert(RefArg ink, RefArg cls)
 			DisposeTStrokes(strokes);
 		}
 	}
+	if (RomBugFixed() && copy != nil)
+		DisposPtr(copy);
 	return result;
 }
 

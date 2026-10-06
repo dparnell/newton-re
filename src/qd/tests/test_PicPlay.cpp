@@ -31,6 +31,7 @@
 #include "Curves.h"
 #include "Paths.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -669,7 +670,7 @@ PaintPixPat(PictureWriter& w)
 
 // Pixel patterns of type 1: a direct 32-bit one made four-bit grays, an
 // indexed 8-bit one through its colour table (the first pixel of each pair
-// taking its gray's low four bits: a ROM bug), and a four-bit pattern
+// taking its gray's low four bits: a ROM bug, fixed by default), and a four-bit pattern
 // recorded and played back.
 static void
 TestPixPat()
@@ -723,9 +724,16 @@ TestPixPat()
 			for (long x = 0; x < 8; x++)
 				w.Byte(1);
 		}
+		PictureWriter again = w;
+		SetRomBugFixed(false);
 		PaintPixPat(w);
 		ULong gray = RGBtoGray(0x5000, 0x5000, 0x5000, 8, 8);
 		EXPECT((ULong) GetPixel(&g4Map, 0, 2) == (gray & 0xf));	// the low four bits
+		EXPECT((ULong) GetPixel(&g4Map, 1, 2) == (gray >> 4));
+		SetRomBugFixed(true);
+		// the fix: both pixels take the high four
+		PaintPixPat(again);
+		EXPECT((ULong) GetPixel(&g4Map, 0, 2) == (gray >> 4));
 		EXPECT((ULong) GetPixel(&g4Map, 1, 2) == (gray >> 4));
 	}
 

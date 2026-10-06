@@ -19,6 +19,7 @@
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
 #include "DynamicArray.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -234,8 +235,9 @@ TQDScaler::ReplaceClip(RgnHandle base, RgnHandle clip, long level)
 // ROM 0x001962b0 SetupScalingPen__9TQDScalerFUc
 // The pen size saved and, to frame, scaled (never below a pixel).
 //
-// ROM BUG, kept: the height is the pen's *width* times the vertical scale,
-// so a pen taller or shorter than it is wide comes out square.
+// ROM BUG (fixed): the height is the pen's *width* times the vertical scale,
+// so a pen taller or shorter than it is wide comes out square.  The fix
+// scales the pen's height.
 void
 TQDScaler::SetupScalingPen(GrafVerb verb)
 {
@@ -247,7 +249,8 @@ TQDScaler::SetupScalingPen(GrafVerb verb)
 	if (h < 1)
 		h = 1;
 	fPort->pnSize.h = h;
-	short v = (short) RoundFixed((Fixed) ((ULong32) width * (ULong32) fTransform.fScaleV));
+	long height = RomBugFixed() ? fPnSize.v : width;
+	short v = (short) RoundFixed((Fixed) ((ULong32) height * (ULong32) fTransform.fScaleV));
 	if (v < 1)
 		v = 1;
 	fPort->pnSize.v = v;

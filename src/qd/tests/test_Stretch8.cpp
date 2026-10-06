@@ -11,7 +11,9 @@
 // every pixel drawn is one of the source's.  Runs over a standalone kernel
 // heap.
 #include "Draw.h"
+#include "Ports.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -213,6 +215,65 @@ TestEightToEight(long scenes)
 }
 
 
+// (one source drawn unscaled or shrunk onto a fresh four-bit map)
+static void
+DrawOnto4(Map* src, Map* d4, long dw, long dh)
+{
+	MakeMap(d4, dw, dh, 4, 0, 0);
+	Rect sr = src->pm.bounds, dr;
+	SetRect(&dr, 0, 0, dw, dh);
+	RgnHandle wide = NewRgn();
+	SetRectRgn(wide, -32767, -32767, 32767, 32767);
+	GrafPort port;
+	OpenPort(&port);
+	SetPortBits(&d4->pm);
+	StretchBits(&src->pm, &d4->pm, &sr, &dr, srcCopy, wide, wide, wide);
+	ClosePort(&port);
+	SetPort(&gGrafPort);
+	DisposeRgn(wide);
+}
+
+
+// The ROM's bugs in StretchBits' row routines, and their fixes: two bits
+// into four at the same width took the one-to-two routine (a gray 1 came
+// out 3, not 5); and a further row of 32-bit pixels was folded in a pixel
+// off, its colours taken as eight bits where RGBtoGray wants sixteen, and
+// ORed into the nibble.
+static void
+TestRomBugFixes()
+{
+	Map src, d4;
+	MakeMap(&src, 8, 1, 2, 0, 0);
+	src.bits[0] = src.bits[1] = 0x55;				// every pixel 1
+	SetRomBugFixed(false);
+	DrawOnto4(&src, &d4, 8, 1);
+	EXPECT(Pixel(&d4, 0, 0, 4) == 3 && Pixel(&d4, 7, 0, 4) == 3);
+	free(d4.bits);
+	SetRomBugFixed(true);
+	DrawOnto4(&src, &d4, 8, 1);
+	EXPECT(Pixel(&d4, 0, 0, 4) == 5 && Pixel(&d4, 7, 0, 4) == 5);
+	free(d4.bits);
+	free(src.bits);
+
+	// two rows of 32-bit pixels shrunk into one: the first all white, the
+	// second black only at its first pixel - the darker kept, in place
+	MakeMap(&src, 4, 2, 32, 0, 0);
+	memset(src.bits, 0xff, 16);
+	for (long i = 0; i < 4; i++)
+		src.bits[i * 4] = 0;						// the pad bytes
+	memset(src.bits + 16, 0xff, 16);
+	memset(src.bits + 16, 0, 4);					// (0, 0) black
+	for (long i = 1; i < 4; i++)
+		src.bits[16 + i * 4] = 0;
+	DrawOnto4(&src, &d4, 4, 1);
+	EXPECT((ULong) Pixel(&d4, 0, 0, 4) == RGBtoGray(0, 0, 0, 8, 4));
+	EXPECT((ULong) Pixel(&d4, 1, 0, 4) == RGBtoGray(0xff00, 0xff00, 0xff00, 8, 4));
+	EXPECT((ULong) Pixel(&d4, 2, 0, 4) == RGBtoGray(0xff00, 0xff00, 0xff00, 8, 4));
+	free(d4.bits);
+	free(src.bits);
+}
+
+
 int
 main(int argc, char** argv)
 {
@@ -220,6 +281,7 @@ main(int argc, char** argv)
 	InitGraf();
 	TestWidened(argc > 1 ? atol(argv[1]) : 600);
 	TestEightToEight(200);
+	TestRomBugFixes();
 	if (failures == 0)
 		printf("test_Stretch8: all passed\n");
 	else

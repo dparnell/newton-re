@@ -16,6 +16,7 @@
 #include "FixedMath.h"
 #include "NewtonMemory.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 
 
 // (host) The halfword of a rectangle's corner in the top of a word, as the
@@ -152,13 +153,16 @@ MapPaths(pathsHandle p, const Rect* src, const Rect* dst)
 
 
 // ROM 0x00327ed0 GetPathsBounds__FPP5pathsP4Rect
-// The box of every point, rounded to pixels.  ROM QUIRK, kept: the maximum
-// starts at -0x7fa6 (as GetCurveBounds' does).
+// The box of every point, rounded to pixels.  ROM BUG (fixed): the maximum
+// starts at -0x7fa6 (as GetCurveBounds' does), so paths wholly left of or
+// above -0x7fa6 get a box inside out.  The fix starts it at -0x8000.
 void
 GetPathsBounds(pathsHandle p, Rect* bounds)
 {
 	long left = 0x7fff, top = 0x7fff;
 	long right = 0x5a - 0x8000, bottom = 0x5a - 0x8000;
+	if (RomBugFixed())
+		right = bottom = -0x8000;
 	path* contour = (*p)->contour;
 	for (long n = (*p)->contours; n != 0; n--)
 	{

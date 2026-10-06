@@ -10,6 +10,7 @@
 #include "Draw.h"
 #include "FixedMath.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -490,7 +491,7 @@ TestTransforms()
 
 // Drawing under a transform that scales: the shapes' coordinates mapped
 // (a point rounded to the nearest pixel), the pen of a frame scaled - its
-// height from its *width*, a ROM bug - and a clip set in the drawing's own
+// height from its *width*, a ROM bug fixed by default - and a clip set in the drawing's own
 // coordinates mapped too, and cut by the clip the port had.
 static void
 TestScaling()
@@ -538,8 +539,9 @@ TestScaling()
 		"........................\n"
 		"........................\n", "a frame scaled"));
 
-	// the pen's width scaled makes the height too: a pen 1 wide and 3 high
-	// frames with a height of a pixel (1 x 0.5 rounds to 1)
+	// (the ROM bug) the pen's width scaled makes the height too: a pen 1
+	// wide and 3 high frames with a height of a pixel (1 x 0.5 rounds to 1)
+	SetRomBugFixed(false);
 	Clear();
 	PenSize(1, 3);
 	TQDScaler::StartScaling(stretch);
@@ -548,6 +550,17 @@ TestScaling()
 	TQDScaler::StopScaling();
 	PenNormal();
 	EXPECT(GetPixel(&gMap, 10, 4) != 0 && GetPixel(&gMap, 10, 5) == 0);
+	SetRomBugFixed(true);
+	// the fix: the height is its own, 3 x 0.5 rounding to 2 (the 1.5 of a
+	// half - the ROM's would have left row 5 white)
+	Clear();
+	PenSize(1, 3);
+	TQDScaler::StartScaling(stretch);
+	FrameRect(&r);
+	TQDScaler::StopScaling();
+	PenNormal();
+	// (the frame 4 rows high: the top and bottom edges two rows each fill it)
+	EXPECT(GetPixel(&gMap, 10, 4) != 0 && GetPixel(&gMap, 10, 5) != 0 && GetPixel(&gMap, 10, 6) != 0 && GetPixel(&gMap, 10, 8) == 0);
 
 	// a clip set under the transform, in its coordinates: mapped
 	Clear();

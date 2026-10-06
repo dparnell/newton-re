@@ -42,6 +42,7 @@
 #include "NewtonMemory.h"
 #include "OSErrors.h"
 #include "ByteOrder.h"
+#include "host/RomBugs.h"
 #include <string.h>
 
 extern const unsigned char	bitFlip[256];		// the bits of each byte reversed
@@ -148,8 +149,9 @@ RotBitmap180(RefArg bitmap, RefArg options)
 // ROM 0x0003fbf8 FlipBitmapH__FRC6RefVar
 // Flipped left to right: each row's bytes swapped end for end with their
 // bits reversed - first moved right by the row's padding (through a row
-// of their own) so that the picture lands at the left.  ROM BUG: that row
-// is not given back.
+// of their own) so that the picture lands at the left.  ROM BUG (fixed):
+// that row is not given back (but for an exception).  The fix gives it
+// back when the flip is done.
 Ref
 FlipBitmapH(RefArg bitmap)
 {
@@ -201,6 +203,8 @@ FlipBitmapH(RefArg bitmap)
 		obj.~TPixelObj();
 	}
 	end_try;
+	if (RomBugFixed() && temp != nil)
+		DisposPtr((Ptr) temp);
 	return bitmap;
 }
 

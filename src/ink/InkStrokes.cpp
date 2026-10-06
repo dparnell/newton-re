@@ -40,6 +40,7 @@
 #include "OSErrors.h"
 #include "FixedMath.h"
 #include "Paths.h"			// DisposePaths
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -803,9 +804,11 @@ InkPixel(long value, Fixed scale, Fixed offset, Fixed tabScale)
 // The points the decoder hands out drawn: each brought to a pixel of the
 // port and kept back (a repeat of the last one is not kept again), the
 // pen moved to the first of a stroke, and the ones kept drawn twenty at a
-// time and at the end of each stroke (DrawBufferedPoints).  (BUG, kept:
-// kInkEnd gives the buffer back without drawing what is still in it; the
-// decoder ends every stroke with kInkEndStroke first, which draws them.)
+// time and at the end of each stroke (DrawBufferedPoints).
+// (ROM BUG (fixed): kInkEnd gives the buffer back without drawing what is
+// still in it; the decoder ends every stroke with kInkEndStroke first,
+// which draws them.  The fix draws them at kInkEnd too - nothing, after a
+// kInkEndStroke.)
 // Host: the buffer is the caller's, beside the drawing block, where the
 // ROM allocates it at kInkBegin (HWRMemoryAlloc, answering 0 when it
 // cannot) and frees it at kInkEnd.
@@ -868,6 +871,8 @@ PGCDrawPointProc(short what, const InkPoint* pt, void* refCon)
 		buffer->fStarting = 1;
 		if (buffer->fDone)
 			return 1;
+		if (RomBugFixed())
+			DrawBufferedPoints(buffer);
 		buffer->fDone = 1;
 		state->fBuffer = nil;
 		return 1;

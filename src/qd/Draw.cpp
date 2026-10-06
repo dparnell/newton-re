@@ -24,6 +24,8 @@ extern const unsigned char	kDepthPixelsPerWordMask[33];
 #include "Screen.h"
 #include "FixedMath.h"
 #include "OSErrors.h"
+#include "NewtonExceptions.h"
+#include "host/RomBugs.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -759,9 +761,12 @@ RgnBlt(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, l
 // table, the two rectangles, the mode, the mask, then the rows as they
 // are or packed, a count byte in front of each.
 //
-// ROM BUG, kept: a packed row's count is always one byte, where Apple's
+// ROM BUG (fixed): a packed row's count is always one byte, where Apple's
 // format (and GetPicBits) has a word from 251 row bytes up - a row that
-// packs to more than 255 bytes is recorded with its count cut short.
+// packs to more than 255 bytes is recorded with its count cut short (and
+// overruns the 256-byte buffer it is packed into).  The fix writes a word
+// count from 251 row bytes up, packing into a buffer big enough for the
+// worst case, so GetPicBits reads back what was recorded.
 void
 StdBits(PixelMap* src, Rect* srcRect, Rect* dstRect, long mode, RgnHandle mask)
 {
@@ -837,6 +842,24 @@ StdBits(PixelMap* src, Rect* srcRect, Rect* dstRect, long mode, RgnHandle mask)
 					PutPicData(bits, rowBytes & 0xff);
 					bits += srcRowBytes;
 				}
+			}
+			else if (RomBugFixed() && rowBytes > 0xfa)
+			{
+				// PackBits' worst case: a count byte for every 128 bytes
+				char* packed = (char*) QDNewTempPtr(rowBytes + (rowBytes >> 7) + 2);
+				if (packed == nil)
+					Throw(exOutOfMemory, (void*) (long) kError_No_Memory, nil);
+				for ( ; rows > 0; rows--)
+				{
+					char* from = (char*) bits;
+					char* to = packed;
+					PackBits(&from, &to, rowBytes);
+					long count = to - packed;
+					PutPicWord(count);
+					PutPicData(packed, count);
+					bits += srcRowBytes;
+				}
+				QDDisposeTempPtr(packed);
 			}
 			else
 			{

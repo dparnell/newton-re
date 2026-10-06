@@ -26,6 +26,8 @@
 #include "Locale.h"
 #include "OSErrors.h"
 #include "NewtonExceptions.h"
+#include "NewtonMemory.h"
+#include "host/RomBugs.h"
 #include <limits.h>
 #include <string.h>
 
@@ -498,12 +500,15 @@ BreakStep(const unsigned char* table, long state, long cls, Boolean* marked)
 // may end - a word that ends at or before the offset starts the scan again
 // from its end, one that ends beyond it is the answer.
 //
-// ROM BUGS, kept: the backward scan answers a mark it never made (whatever
+// ROM BUG (fixed): the backward scan answers a mark it never made (whatever
 // the register held) when its machine stops before marking anything, and
 // the forward scan that runs off the end answers an end it never marked
 // (host: the start of the text, for both - DEVIATION, a register's garbage
-// cannot be reproduced).  DEVIATION: with no table (a host without the
-// locale's) the word runs between spaces and carriage returns.
+// cannot be reproduced).  The fix, what the scans evidently mean: a word
+// whose start was never marked begins at the character looked at, and one
+// whose end was never marked runs to the end of the text.  DEVIATION: with
+// no table (a host without the locale's) the word runs between spaces and
+// carriage returns.
 void
 FindWordBreaks(const UniChar* text, ULong length, ULong offset, Boolean forward, RefArg breakTable, ULong* wordStart, ULong* wordEnd)
 {
@@ -535,6 +540,7 @@ FindWordBreaks(const UniChar* text, ULong length, ULong offset, Boolean forward,
 	}
 	if (!forward)
 		offset--;
+	bool fixed = RomBugFixed();
 	const UniChar* textEnd = text + length;
 	const UniChar* wordBegin = text;			// (r5: host, the start - see above)
 	const UniChar* wordStop = text;				// (r10)
@@ -557,6 +563,8 @@ FindWordBreaks(const UniChar* text, ULong length, ULong offset, Boolean forward,
 	{
 		long state = 2;
 		const UniChar* p = at;
+		if (fixed)
+			wordBegin = at;
 		for (; p > text; p--)
 		{
 			state = BreakStep(backTable, state, BreakClass(p, classTable), &marked);
@@ -570,6 +578,7 @@ FindWordBreaks(const UniChar* text, ULong length, ULong offset, Boolean forward,
 	}
 	const UniChar* p = wordBegin;
 	long state = 2;
+	Boolean everMarked = false;
 	if (wordBegin <= textEnd)
 	{
 		do
@@ -584,7 +593,10 @@ FindWordBreaks(const UniChar* text, ULong length, ULong offset, Boolean forward,
 				cls = 0;
 			state = BreakStep(forwardTable, state, cls, &marked);
 			if (marked)
+			{
 				mark = here;
+				everMarked = true;
+			}
 			if (state == 0)
 			{
 				if (mark > at)
@@ -598,7 +610,7 @@ FindWordBreaks(const UniChar* text, ULong length, ULong offset, Boolean forward,
 			}
 			else if (p > textEnd)
 			{
-				wordStop = mark;
+				wordStop = (fixed && !everMarked) ? textEnd : mark;
 				break;
 			}
 		} while (p <= textEnd);
@@ -939,16 +951,20 @@ FStrWidth(RefArg rcvr, RefArg str)
 // it does, as long as at least one is left after the point; nil when that
 // is not enough.
 //
-// ROM BUG, kept: the index the cut must stay beyond is held in the register
+// ROM BUG (fixed): the index the cut must stay beyond is held in the register
 // the fontSpec argument came in, and is only set when the text has a
 // decimal point; text with none compares its length against the argument's
 // address, which is larger than any length, so it answers nil - a whole
 // number too wide is never shortened (LONG_MAX stands for the address).
+// The fix sets it for text with no point too, to the text's length (there
+// are no digits after a point to cut) - which answers nil just the same,
+// as the description above says it should, without leaning on an address.
 //
-// ROM BUG, kept: the cut is made in the caller's own string - a terminator
+// ROM BUG (fixed): the cut is made in the caller's own string - a terminator
 // written into its characters where the text ends - and the answer is a
 // new string made of what is left, so the string passed in is shortened
-// too (its length is unchanged; its text ends early).
+// too (its length is unchanged; its text ends early).  The fix makes the
+// answer from a copy, leaving the caller's string as it was.
 Ref
 FMeasuredNumberStr(RefArg /*rcvr*/, RefArg number, RefArg width, RefArg fontSpec)
 {
@@ -964,6 +980,8 @@ FMeasuredNumberStr(RefArg /*rcvr*/, RefArg number, RefArg width, RefArg fontSpec
 	{
 		result = NILREF;
 		long keep = LONG_MAX;					// (the ROM's: the fontSpec argument's address)
+		if (RomBugFixed())
+			keep = length;
 		for (long i = 0; i < length; i++)
 		{
 			if (text[i] == decimalPoint)
@@ -974,7 +992,17 @@ FMeasuredNumberStr(RefArg /*rcvr*/, RefArg number, RefArg width, RefArg fontSpec
 		}
 		while (--length != 0 && MeasureOnce(text, length, &style) >= maxWidth)
 			;
-		if (length > keep)
+		if (length > keep && RomBugFixed())
+		{
+			UniChar* cut = (UniChar*) NewPtr((length + 1) * sizeof(UniChar));
+			if (cut == nil)
+				OutOfMemory();
+			memmove(cut, text, length * sizeof(UniChar));
+			cut[length] = 0;
+			result = MakeString(cut);
+			DisposPtr((Ptr) cut);
+		}
+		else if (length > keep)
 		{
 			text[length] = 0;
 			result = MakeString(text);

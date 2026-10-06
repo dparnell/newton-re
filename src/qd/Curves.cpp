@@ -13,6 +13,7 @@
 #include "Rects.h"
 #include "Regions.h"
 #include "FixedMath.h"
+#include "host/RomBugs.h"
 
 
 // ROM 0x002d221c SetCurve__FP5curve6FPointN22
@@ -168,19 +169,35 @@ MapCurve(curve* c, const Rect* src, const Rect* dst)
 // ROM 0x002d211c GetCurveBounds__FP5curveP4Rect
 // The box of the three points, rounded to pixels.
 //
-// ROM BUGS, kept: the maximum starts at -0x7fa6 rather than -0x8000, and a
+// ROM BUG (fixed): the maximum starts at -0x7fa6 rather than -0x8000, and a
 // point that lowers the minimum is not looked at for the maximum - so the
-// first point never counts towards the right and bottom edges.
+// first point never counts towards the right and bottom edges.  The fix
+// starts the maximum at -0x8000 and looks at every point for both.
 void
 GetCurveBounds(const curve* c, Rect* bounds)
 {
+	bool fixed = RomBugFixed();
 	long left = 0x7fff, top = 0x7fff;
 	long right = 0x5a - 0x8000, bottom = 0x5a - 0x8000;
+	if (fixed)
+		right = bottom = -0x8000;
 	const FPoint* p = &c->first;
 	for (long i = 3; i > 0; i--, p++)
 	{
 		long h = (short) RoundFixed(p->x);
 		long v = (short) RoundFixed(p->y);
+		if (fixed)
+		{
+			if (h < left)
+				left = h;
+			if (h > right)
+				right = h;
+			if (v < top)
+				top = v;
+			if (v > bottom)
+				bottom = v;
+			continue;
+		}
 		if (h < left)
 			left = h;
 		else if (h > right)

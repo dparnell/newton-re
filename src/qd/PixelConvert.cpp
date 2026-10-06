@@ -8,6 +8,7 @@
 
 #include "PixelConvert.h"
 #include "Colour.h"
+#include "host/RomBugs.h"
 
 
 // (host) A byte of the row as the ARM reads it: unsigned.
@@ -141,16 +142,21 @@ ConvertIndex8(char* row, const UChar* table, long count)
 // Eight-bit indices through the table (eight-bit grays), two made a byte
 // of four-bit ones.
 //
-// ROM BUG, kept: the first pixel of each pair takes its gray's *low* four
-// bits (shifted up) where the second takes the high four.
+// ROM BUG (fixed): the first pixel of each pair takes its gray's *low* four
+// bits (shifted up) where the second takes the high four.  The fix takes
+// the high four of both.
 void
 ConvertIndex8to4(char* row, const UChar* table, long count)
 {
+	bool fixed = RomBugFixed();
 	UChar* dst = (UChar*) row;
 	const char* src = row;
 	for (long n = count >> 1; n >= 1; n--)
 	{
-		*dst = (UChar) (table[(UChar) src[0]] << 4);
+		if (fixed)
+			*dst = (UChar) (table[(UChar) src[0]] & 0xf0);
+		else
+			*dst = (UChar) (table[(UChar) src[0]] << 4);
 		*dst = (UChar) (*dst | (table[(UChar) src[1]] >> 4));
 		src += 2;
 		dst++;
