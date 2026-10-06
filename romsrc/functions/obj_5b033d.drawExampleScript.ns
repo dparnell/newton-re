@@ -14,6 +14,28 @@ func() begin
 	local l5;
 	local l6;
 	local l7;
+	// (an addition: while one of the host's handwriting engines is chosen,
+	//  its own example - recognition/WordEngines.h: words of letters, each a
+	//  stroke drawn with a dot where the pen goes down - in place of the
+	//  letter set's)
+	local engine := nil;
+	if IsInteger(userConfiguration.hostWordEngine) and GlobalFnExists('HostWordEngines) then
+		foreach e in HostWordEngines() do
+			if e.value = userConfiguration.hostWordEngine and e.example then engine := e;
+	if engine then begin
+		foreach word in engine.example do begin
+			foreach letter in word do begin
+				local pts := Clone(letter.points);
+				for i := 0 to Length(pts) - 2 by 2 do pts[i] := pts[i] + l1;
+				self:DrawShape(MakePolygon(pts), {penSize: 2, penPattern: 5, fillPattern: 0, transferMode: 1});
+				self:DrawShape(MakeOval(pts[0] - 2, pts[1] - 2, pts[0] + 3, pts[1] + 3),
+							   {penPattern: 5, fillPattern: 5, transferMode: 1});
+				l1 := ((l1 + letter.width) + l4)
+			end;
+			l1 := ((l1 - l4) + l5)
+		end;
+		return nil;
+	end;
 	(foreach l8 in (l7 := wordBits[l6]) do begin
 			(foreach l10 in l8 do begin
 					local l12;

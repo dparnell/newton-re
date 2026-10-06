@@ -9,6 +9,27 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-06: the engines in Setup, with an example drawn (branch hwr-engines)
+
+The owner asked for the unistroke engine on the Setup assistant's
+handwriting page, with an image like printing's and cursive's.  Setup's
+"Describe your Handwriting" page is the same letter-set box as the Prefs
+slip (ROM magic pointer 506), and its image is the example word under the
+buttons, "one two 123" as per-letter bitmaps (`wordBits`).  Now that the
+working tree's romsrc/ may change, the box does it itself: the cluster
+adds a button per engine, the box grows a row each, and the example draws
+the chosen engine's own - for the unistroke engine "one two 123" in
+Graffiti strokes, drawn from the classifier's templates, a dot where each
+starts.  The runtime patch only grows the Prefs form (or, on --rom, does
+everything as before).  On the way: romsrc.py made new maps with flags 0,
+so the edited cluster - a frame with a _proto - inherited nothing and
+Setup stuck on the page with kViewErrNoViewClass; a map with _proto now
+gets kMapProto (4).  The runtime patch's test for the romsrc box used
+HasSlot on a frame that only protos to it and put the button in twice;
+the demo now checks the button is there once.  host.ROMSourceOriginal
+(the fidelity walk's original tree) builds the tag too, like
+host.ROMSourceCommitted.
+
 ## 2026-10-06: the unistroke engine reads Graffiti (branch hwr-engines)
 
 The owner wanted the unistroke engine as close to Palm's Graffiti as

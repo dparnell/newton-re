@@ -12,6 +12,9 @@
 // not read as the word.  Then
 // "Printing" tapped puts Rosetta back, and "to" written further down is
 // read as text (remote writing puts it on the line already there).
+// Last, Setup's handwriting page is opened again: it has the engine's
+// button too (booted from romsrc/; the ROM image's page has only its
+// own two), and tapping it puts the engine in use.
 //
 // Prints "engines: <step>: ok" or "FAILED", and "engines: done, N failed".
 
@@ -52,6 +55,34 @@ enReadTo := func()
     found;
   end;
 
+// Setup's handwriting page (the Setup assistant opened again, its page
+// "handwriting") has the engine's button too - booted from romsrc/ the
+// letter-set box adds it itself - and choosing it there chooses the
+// engine; then the run ends.
+enSetupPage := func()
+  begin
+    GetRoot().setup:Open();
+    call waitFor with ("engines: Setup again", func() GetRoot().setup.viewCObject, func() begin
+      local s := GetRoot().setup;
+      local at := nil;
+      foreach i, p in s.fPages do
+        if p.debug and StrEqual(p.debug, "handwriting") then at := i;
+      if not at then begin
+        call enCheck with ("Setup has its handwriting page", nil);
+        return call enFinish with ();
+      end;
+      s:ShowPage(at);
+      call waitFor with ("engines: Setup's handwriting page", func() call enButton with (8), func() begin
+        call enCheck with ("Setup's handwriting page has the engine's button", call enButton with (8) <> nil);
+        call tapCentre with (call enButton with (8));
+        call waitFor with ("engines: chosen in Setup", func() StrEqual(call enCurrent with (), "UNIS"), func() begin
+          call enCheck with ("... and choosing it there puts UNIS in use", StrEqual(call enCurrent with (), "UNIS"));
+          call enFinish with ();
+        end, 30);
+      end, 30);
+    end, 30);
+  end;
+
 enFinish := func()
   begin
     foreach t in call enParas with (GetRoot(), []) do Print("engines: the page has \"" & t & "\"");
@@ -65,7 +96,7 @@ enPrefsIcon := func() if GetRoot().extrasDrawer.viewCObject then
   call findView with (GetRoot().extrasDrawer, func(v) v.target and v.target.fentry
     and v.target.fentry.app = 'preferenceRoll);
 
-enCluster := func() call findView with (GetRoot(), func(v) v.engineValues and v.viewCObject);
+enCluster := func() call findView with (GetRoot(), func(v) v.preallocatedContext = 'LetterSetCluster and v.viewCObject);
 
 enButton := func(value) begin
   local cluster := call enCluster with ();
@@ -108,6 +139,9 @@ call walkSetup with (name, func() begin
         and StrPos(v.text, "Unistroke", 0) = 0));
     call enCheck with ("... under Printing and Cursive",
       call enButton with (2) and call enButton with (0));
+    local count := 0;
+    foreach v in cluster:ChildViewFrames() do if v.buttonValue = 8 then count := count + 1;
+    call enCheck with ("... once", count = 1);
     call enChoose with (8, "UNIS", func() begin
       call enCheck with ("the letter set stays printing", userConfiguration.letterSetSelection = 2);
       call enCheck with ("the choice is kept", userConfiguration.hostWordEngine = 8);
@@ -132,7 +166,7 @@ call walkSetup with (name, func() begin
             // (remote writing puts it on the line already there)
             call waitFor with ("engines: to read", func() call enReadTo with (), func() begin
               call enCheck with ("\"to\" is read by Rosetta", call enReadTo with ());
-              call enFinish with ();
+              call enSetupPage with ();
             end, 30);
           end);
         end);

@@ -30,8 +30,8 @@
 //  'NNET', button 9, when it exists.)
 static const SWordEngine kWordEngines[] =
 {
-	{ kUnistrokeType, kFirstHostWordEngine, "TUnistrokeRecognizer", "Unistroke (one letter per stroke)",
-	  "Unistroke Word-rec", false, RegisterUnistrokeRecognizer },
+	{ kUnistrokeType, kFirstHostWordEngine, "TUnistrokeRecognizer", "Unistroke (single strokes)",
+	  "Unistroke Word-rec", false, RegisterUnistrokeRecognizer, UnistrokeExample },
 };
 static const long kWordEngineCount = sizeof(kWordEngines) / sizeof(kWordEngines[0]);
 
@@ -234,6 +234,8 @@ FHostWordEngines(RefArg /*rcvr*/)
 		SetFrameSlot(item, RefVar(Intern((char*) "text")), RefVar(MakeString(engine->fTitle)));
 		SetFrameSlot(item, RefVar(Intern((char*) "value")), RefVar(MAKEINT(engine->fChoice)));
 		SetFrameSlot(item, RefVar(Intern((char*) "type")), RefVar(MakeString(type)));
+		if (engine->fExample != nil)
+			SetFrameSlot(item, RefVar(Intern((char*) "example")), RefVar(engine->fExample()));
 		AddArraySlot(list, item);
 	}
 	return list;

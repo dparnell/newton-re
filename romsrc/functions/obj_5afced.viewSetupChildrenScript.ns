@@ -1,0 +1,15 @@
+@@ new
+func() begin
+	// (an addition: a button for each of the host's handwriting engines,
+	//  recognition/WordEngines.h, under "Printing" and "Cursive" - each
+	//  made from the "Cursive" button, the one drawn under another)
+	local engines := if GlobalFnExists('HostWordEngines) then HostWordEngines() else [];
+	if Length(engines) > 0 then begin
+		local below := viewChildren[1];
+		local buttons := Clone(viewChildren);
+		foreach e in engines do
+			AddArraySlot(buttons, {_proto: below, text: e.text, buttonValue: e.value});
+		self.viewChildren := buttons;
+	end;
+end
+@@end

@@ -1,0 +1,12 @@
+@@ new
+func() begin
+	// (an addition: a row taller for each of the host's handwriting
+	//  engines, recognition/WordEngines.h, whose buttons the cluster adds)
+	if GlobalFnExists('HostWordEngines) then begin
+		local n := Length(HostWordEngines());
+		if n > 0 then
+			self.viewBounds := {left: viewBounds.left, top: viewBounds.top, right: viewBounds.right,
+								bottom: viewBounds.bottom + hostEngineRow * n};
+	end;
+end
+@@end

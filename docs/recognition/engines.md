@@ -82,7 +82,44 @@ changes ROM behaviour is a `DEVIATION`.
    keys the area's block by the recogniser's own type, not 'WREC'.  Each
    is marked DEVIATION.  Left as they are: `WRecIsBeingUsed()` (true only
    for Rosetta) and auto-add (only for Rosetta, `AddAutoAdd`).
-4. **The slip is patched at boot, not in `romsrc`.**
+4. **The letter-set box knows the engines (in `romsrc/`), and the
+   Prefs form is grown at boot.**  The box (`obj_646c8d`, ROM magic
+   pointer 506) is the label, the letter-set cluster and the example
+   word under it, and the Setup assistant's "Describe your Handwriting"
+   page and the Handwriting Recognition slip both show it.  Since the
+   working tree's `romsrc/` may be changed (the byte-for-byte check
+   builds the tag `romsrc-rom`), the box does the work itself:
+   - the cluster (`obj_5afced`) adds a radio button per engine from
+     `HostWordEngines()` (`viewSetupChildrenScript`, new) and grows a row
+     for each; `viewSetupFormScript` shows a chosen engine as its button;
+     `ClusterChanged` keeps an engine's number in `hostWordEngine` and the
+     letter set at 2, or forgets the engine for the ROM's two;
+   - the box grows a row per engine (`viewSetupFormScript`, new, and the
+     slot `hostEngineRow`, 13 - also the mark that the box knows the
+     engines); Setup's page gives the box a fixed 125 pixels, room for
+     three more rows, and its own `viewSetupFormScript` shadows the box's;
+   - the example (`obj_5b033d.drawExampleScript`) draws the chosen
+     engine's own example - `HostWordEngines()`'s `example`, words of
+     letters, each a stroke with a dot where the pen goes down - in place
+     of the letter set's bitmaps (`wordBits`).  The unistroke engine's is
+     "one two 123", the words the ROM draws in printing and cursive, each
+     character drawn from the classifier's own template
+     (`UnistrokeExample`), so it is always what the engine reads.
+
+   The Prefs roll lays its panels out by the height the template gives,
+   so `host/HostWordEngines.ns` still registers a copy of the form a row
+   taller per engine (with "Use defaults" forgetting the engine).  Booted
+   from the ROM image (`--rom`) the box is the ROM's: the runtime patch
+   then puts the buttons into a copy of it as well (no example is drawn
+   for an engine there, and Setup's page has no buttons).
+
+   (This edit found a builder bug: a new map made for an edited frame had
+   flags 0, so a frame with a `_proto` slot inherited nothing through it
+   and its view could not be built - `kViewErrNoViewClass`, Setup stuck on
+   the page.  A map's class is its flags, 4 being kMapProto; `romsrc.py`
+   now sets it for a map with `_proto` among its tags.)
+
+   Before `romsrc/` could be changed, the slip was patched at boot only:
    `host/HostWordEngines.ns` (embedded in newton, run by
    `HostInstallWordEngines` after the Host panel) registers a copy of the
    `HWRecPreferencesForm` with `RegPrefs` - the form, its letter-set box
@@ -96,9 +133,11 @@ changes ROM behaviour is a `DEVIATION`.
    Editing the slip in `romsrc` instead would have broken the
    byte-for-byte check of the tree (`host.ROMSourceCommitted`).
 5. ctest `host.NewtonWordEngines` (`src/host/demo/engines.ns`): the
-   button is in the slip, choosing it puts 'UNIS' in use with the letter
-   set left at 2, printed writing is typed as Graffiti strokes rather
-   than read, and "Printing" puts Rosetta back and the next word is read.
+   button is in the slip (once), choosing it puts 'UNIS' in use with the
+   letter set left at 2, printed writing is typed as Graffiti strokes
+   rather than read, "Printing" puts Rosetta back and the next word is
+   read, and Setup's handwriting page has the button too, which puts the
+   engine in use.
 
 ## The unistroke engine
 

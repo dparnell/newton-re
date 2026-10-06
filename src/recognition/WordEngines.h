@@ -80,6 +80,8 @@ struct SWordEngine
 	const char*		fDomainName;		// its domain's name (what the debugger shows)
 	Boolean			fLineAtATime;		// whether it reads a line at a time, as ParaGraph's does
 	void			(*fRegister)(void);	// registers the implementation; nil for none
+	Ref				(*fExample)(void);	// the example the slip draws for it (HostWordEngines()'s
+										// `example`: words, each letters {points, width}); nil for none
 };
 
 // The engines this host was built with: their implementations put in
@@ -108,8 +110,13 @@ TDomain*			HostWordEngineDomainInUse(void);
 // under kHostWordEngineInterface.  nil when there is none.
 TWRecognizer*		NewHostWordEngine(const char* implementation);
 
-// HostWordEngines(): the installed engines, each {text, value, type},
-// in the order of their buttons.
+// HostWordEngines(): the installed engines, each {text, value, type,
+// example}, in the order of their buttons.  The example is what the
+// letter-set box under the buttons draws while the engine is chosen, as
+// it draws a word in printing or cursive for those (`wordBits`): an
+// array of words, each an array of letters, each {points: [x0, y0, x1,
+// y1, ...] (a stroke, in a cell 24 pixels high whose base line is at 23),
+// width}.
 Ref		FHostWordEngines(RefArg rcvr);
 
 // the user configuration's slot holding the choice

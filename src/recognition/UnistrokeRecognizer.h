@@ -42,4 +42,9 @@ const ULong kUnistrokeType = 'UNIS';
 // when there is no protocol registry.
 void	RegisterUnistrokeRecognizer(void);
 
+// The example the letter-set box draws for the engine (WordEngines.h):
+// "one two 123", each character its Graffiti stroke as the classifier's
+// template has it - the same words the ROM draws in printing and cursive.
+Ref		UnistrokeExample(void);
+
 #endif	/* __UNISTROKERECOGNIZER_H */

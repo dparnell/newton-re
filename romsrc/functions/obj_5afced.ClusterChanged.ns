@@ -5,7 +5,17 @@ func() begin
 			self:SetClusterValue(2);
 			self:SysBeep()
 		end;
-	userConfiguration.letterSetSelection := clusterValue;
+	// (an addition: one of the host's handwriting engines chosen - its
+	//  number kept in hostWordEngine, the letter set left at printing,
+	//  which ParaGraph's code needs to be one of its own; any other button
+	//  is the ROM's letter set, and the engine is forgotten)
+	if clusterValue >= 8 then begin
+			userConfiguration.hostWordEngine := clusterValue;
+			userConfiguration.letterSetSelection := 2
+		end else begin
+			RemoveSlot(userConfiguration, 'hostWordEngine);
+			userConfiguration.letterSetSelection := clusterValue
+		end;
 	wordExample:Dirty();
 	ReadCursiveOptions()
 end

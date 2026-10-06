@@ -1901,7 +1901,10 @@ class Builder:
 			if name is None:
 				made += 1
 				name = "romsrc_map_%d" % made
-				m = Obj("map", Imm(0), items=[Imm(2)] + [Sym(t) for t in v.tags])
+				# (a map's class is its flags: 4, kMapProto, says the frame has
+				# a _proto slot, without which nothing is inherited through it)
+				flags = (4 << 2) if "_proto" in tags else 0		# (as an integer ref)
+				m = Obj("map", Imm(flags), items=[Imm(2)] + [Sym(t) for t in v.tags])
 				m.path = name
 				self.defs[name] = m
 				self.by_path[name.lower()] = m

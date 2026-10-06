@@ -7,10 +7,15 @@
 // The slip's letter-set cluster has two buttons, "Printing (separate
 // letters)" (2) and "Cursive (connected letters)" (0); under them goes a
 // button for each engine HostWordEngines() says this host has, its value
-// the engine's number (8 and up).  The ROM's own form is not touched: a
-// copy is registered in its place (RegPrefs), each level of it a frame
-// whose _proto is the ROM's - the form, the letter-set box in it, and the
-// cluster - so a newton booted from the ROM image gets the buttons too.
+// the engine's number (8 and up).  Booted from romsrc/ (the default) the
+// letter-set box does that itself, in the slip and in Setup's handwriting
+// page alike, and draws the engine's example; all that is left here is
+// the form, a row taller for each engine, since the Prefs roll lays its
+// panels out by the heights their templates give.  Booted from the ROM
+// image (--rom) the box is the ROM's, and the buttons are put in here: a
+// copy of the form is registered in its place (RegPrefs), each level of
+// it a frame whose _proto is the ROM's - the form, the letter-set box in
+// it, and the cluster.
 // The Prefs roll lists the built-in panels by name, so the copy keeps
 // the Handwriting Recognition panel's place.
 //
@@ -40,6 +45,33 @@
 			b;
 		end;
 
+		local steps := Clone(form.stepChildren);
+		local newForm := {
+			_proto: form,
+			height: form.height + extra,
+			viewBounds: call grown with (form.viewBounds),
+			stepChildren: steps,
+			// "Use defaults" is the letter set's recogniser as well
+			UseDefault: func()
+			begin
+				RemoveSlot(userConfiguration, 'hostWordEngine);
+				inherited:UseDefault();
+			end,
+		};
+
+		// Booted from romsrc/, the letter-set box knows the engines itself
+		// (its hostEngineRow; the cluster's buttons, the box's height and
+		// the example drawn for an engine are its own - romsrc/functions/
+		// obj_5afced.*, obj_646c8d.*, obj_5b033d.drawExampleScript), and
+		// Setup's handwriting page has them too: only the form is grown.
+		if box.hostEngineRow then begin
+			RegPrefs('HWRecPreferencesForm, newForm);
+			return true;
+		end;
+
+		// Booted from the ROM image, the box is the ROM's: the buttons are
+		// put in here, in a copy of it (no example is drawn for an engine,
+		// and Setup's page has no buttons)
 		local buttons := Clone(cluster.viewChildren);
 		foreach e in engines do
 			AddArraySlot(buttons, {_proto: below, text: e.text, buttonValue: e.value});
@@ -82,20 +114,7 @@
 		if IsArray(box.allocateContext) then
 			newBox.allocateContext := call swapped with (box.allocateContext, cluster, newCluster);
 
-		local steps := Clone(form.stepChildren);
 		steps[0] := newBox;
-		local newForm := {
-			_proto: form,
-			height: form.height + extra,
-			viewBounds: call grown with (form.viewBounds),
-			stepChildren: steps,
-			// "Use defaults" is the letter set's recogniser as well
-			UseDefault: func()
-			begin
-				RemoveSlot(userConfiguration, 'hostWordEngine);
-				inherited:UseDefault();
-			end,
-		};
 		if IsArray(form.stepallocatecontext) then
 			newForm.stepallocatecontext := call swapped with (form.stepallocatecontext, box, newBox);
 		RegPrefs('HWRecPreferencesForm, newForm);

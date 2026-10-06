@@ -287,6 +287,46 @@ void	TUnistrokeRecognizer::Sleep(void)						{ fShift = 0; }
 void	TUnistrokeRecognizer::WakeUp(void)					{ }
 
 
+Ref
+UnistrokeExample(void)
+{
+	static const char* const kWords[] = { "one", "two", "123" };
+	const double kWidth = 12, kHeight = 19, kTop = 3;
+	RefVar words(MakeArray(0));
+	for (unsigned w = 0; w < sizeof(kWords) / sizeof(kWords[0]); w++)
+	{
+		RefVar letters(MakeArray(0));
+		for (const char* p = kWords[w]; *p != 0; p++)
+		{
+			Boolean digit = *p >= '0' && *p <= '9';
+			double xy[2 * 40];
+			long n = UnistrokeTemplatePath((UniChar) *p, digit, 1.0, xy, 40);
+			if (n == 0)
+				continue;
+			double left = xy[0], right = xy[0];
+			for (long i = 1; i < n; i++)
+			{
+				if (xy[2 * i] < left) left = xy[2 * i];
+				if (xy[2 * i] > right) right = xy[2 * i];
+			}
+			RefVar points(MakeArray(2 * n));
+			for (long i = 0; i < n; i++)
+			{
+				SetArraySlot(points, 2 * i, MAKEINT((long) ((xy[2 * i] - left) * kWidth + 0.5)));
+				SetArraySlot(points, 2 * i + 1, MAKEINT((long) (kTop + xy[2 * i + 1] * kHeight + 0.5)));
+			}
+			long width = (long) ((right - left) * kWidth + 0.5);
+			RefVar letter(AllocateFrame());
+			SetFrameSlot(letter, RefVar(Intern((char*) "points")), points);
+			SetFrameSlot(letter, RefVar(Intern((char*) "width")), RefVar(MAKEINT(width < 2 ? 2 : width)));
+			AddArraySlot(letters, letter);
+		}
+		AddArraySlot(words, letters);
+	}
+	return words;
+}
+
+
 void
 RegisterUnistrokeRecognizer(void)
 {

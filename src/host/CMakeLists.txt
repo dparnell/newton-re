@@ -1134,7 +1134,7 @@ set_tests_properties(host.NewtonDrag PROPERTIES TIMEOUT 180
 add_test(NAME host.NewtonWordEngines COMMAND newton --display 320x480 --headless 200
          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/engines.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonWordEngines PROPERTIES TIMEOUT 300
-                     PASS_REGULAR_EXPRESSION "UNIS in use: ok.*strokes are typed: ok.*read by Rosetta: ok.*engines: done, 0 failed")
+                     PASS_REGULAR_EXPRESSION "UNIS in use: ok.*strokes are typed: ok.*read by Rosetta: ok.*Setup.s handwriting page has the engine.s button: ok.*engines: done, 0 failed")
 # the unistroke engine (recognition/UnistrokeRecognizer.h): Graffiti's
 # strokes, drawn by hand on the Notepad, typed at the caret a character at
 # a time - caps shift, letters, a space, a backspace - "Hello world"
@@ -2124,24 +2124,30 @@ if(Python3_FOUND AND EXISTS ${NEWTON_ROM_BUILD_DIR}/symbols.json)
                          ENVIRONMENT "NEWTON_ROM=${CMAKE_BINARY_DIR}/no-rom-image")
     # beyond the Setup screen: a walk through the built-in applications,
     # pickers and Prefs panels snapshotted at each step on the ROM image, on
-    # the committed tree built --original (must be the same at every step)
-    # and on the default object file (may differ only where the NIE's
-    # packages add something, each listed with its reason) -
+    # the tree tagged NEWTON_ROMSRC_ROM_TAG built --original (must be the same
+    # at every step) and on the default object file (may differ only where
+    # an addition - the NIE's packages, the host's handwriting engines -
+    # adds something, each listed with its reason) -
     # tools/host/fidelity.py, src/host/demo/fidelity.ns
-    add_test(NAME host.ROMSourceOriginal
-             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
-                     build ${CMAKE_SOURCE_DIR}/../romsrc --original -o ${CMAKE_BINARY_DIR}/romsrc-original.bin
-                     --newtonscript $<TARGET_FILE:newtonscript>
-             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
-    set_tests_properties(host.ROMSourceOriginal PROPERTIES TIMEOUT 300 FIXTURES_SETUP romsrc_original
-                         PASS_REGULAR_EXPRESSION "built [0-9]+ objects")
-    add_test(NAME host.NewtonROMFreeFidelity
-             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/fidelity.py $<TARGET_FILE:newton>
-                     --rom ${NEWTON_ROM_BIN} --original ${CMAKE_BINARY_DIR}/romsrc-original.bin
-                     --default ${CMAKE_BINARY_DIR}/romsrc-objects.bin --out ${CMAKE_BINARY_DIR}/fidelity
-             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
-    set_tests_properties(host.NewtonROMFreeFidelity PROPERTIES TIMEOUT 900 FIXTURES_REQUIRED romsrc_original
-                         PASS_REGULAR_EXPRESSION "every difference accounted for")
+    if(romsrc_rom_tag_found)
+        # (the tree as the tag NEWTON_ROMSRC_ROM_TAG has it, as host.ROMSourceCommitted
+        # builds it: the working tree's romsrc/ is free to be changed)
+        add_test(NAME host.ROMSourceOriginal
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
+                         build ${CMAKE_SOURCE_DIR}/../romsrc --git-ref ${NEWTON_ROMSRC_ROM_TAG}
+                         --original -o ${CMAKE_BINARY_DIR}/romsrc-original.bin
+                         --newtonscript $<TARGET_FILE:newtonscript>
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+        set_tests_properties(host.ROMSourceOriginal PROPERTIES TIMEOUT 300 FIXTURES_SETUP romsrc_original
+                             PASS_REGULAR_EXPRESSION "built [0-9]+ objects")
+        add_test(NAME host.NewtonROMFreeFidelity
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/fidelity.py $<TARGET_FILE:newton>
+                         --rom ${NEWTON_ROM_BIN} --original ${CMAKE_BINARY_DIR}/romsrc-original.bin
+                         --default ${CMAKE_BINARY_DIR}/romsrc-objects.bin --out ${CMAKE_BINARY_DIR}/fidelity
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+        set_tests_properties(host.NewtonROMFreeFidelity PROPERTIES TIMEOUT 900 FIXTURES_REQUIRED romsrc_original
+                             PASS_REGULAR_EXPRESSION "every difference accounted for")
+    endif()
     add_test(NAME host.NewtonEditedSameScreen
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/samescreen.py
                      --newton $<TARGET_FILE:newton> --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/newton.ns

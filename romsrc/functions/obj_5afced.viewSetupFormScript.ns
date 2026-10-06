@@ -1,5 +1,20 @@
 @@ 0x5afbf9
 func() begin
+	// (an addition: the host's handwriting engines, recognition/WordEngines.h
+	//  - one chosen shows as its button, and the cluster is a row taller for
+	//  each; the ROM's letter set as before otherwise)
+	local engines := if GlobalFnExists('HostWordEngines) then HostWordEngines() else [];
+	if Length(engines) > 0 then begin
+		local below := viewChildren[1];
+		local row := below.viewBounds.bottom - below.viewBounds.top;
+		self.viewBounds := {left: viewBounds.left, top: viewBounds.top, right: viewBounds.right,
+							bottom: viewBounds.bottom + row * Length(engines)};
+	end;
+	local chosen := userConfiguration.hostWordEngine;
+	if IsInteger(chosen) then
+		foreach e in engines do
+			if e.value = chosen then
+				return clusterValue := chosen;
 	(if (((ClassOf((clusterValue := userConfiguration.letterSetSelection)) <> 'int) or (clusterValue < 0)) or (clusterValue > 4)) then begin
 			clusterValue := 2;
 			self:ClusterChanged()
