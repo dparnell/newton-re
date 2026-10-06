@@ -31,6 +31,7 @@
 #include "Unicode.h"
 #include "Frames.h"
 #include "NewtonMemory.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 #include <stdint.h>
@@ -389,15 +390,19 @@ Marshal1(RefArg value, RefArg type, void** buf, void** strBuf, void** regBuf, UL
 			case kMarshalChar:
 				if (ISCHAR((Ref) v))
 				{
-					// ROM BUG: what is stuffed is the address of the
+					// ROM BUG (fixed): what is stuffed is the address of the
 					// converted bytes, not the bytes (StuffScalar is handed
 					// the stack pointer); the host stuffs its buffer's
-					// address likewise
+					// address likewise.  The fix stuffs the converted
+					// character: its byte, or its two bytes big-endian.
 					UniChar c[2] = { (UniChar) RCHAR(v), 0 };
-					char bytes[4];
+					char bytes[4] = { 0, 0, 0, 0 };
 					long k = ConvertUnicodeChar(c, bytes, encoding);
 					ULong n = inRegisters ? 4 : (k == 1 ? 1 : 2);
-					StuffScalar((ULong) (uintptr_t) bytes, target, targetSize, n);
+					if (RomBugFixed())
+						StuffScalar(k == 1 ? (ULong) (UByte) bytes[0] : ((ULong) (UByte) bytes[0] << 8) | (UByte) bytes[1], target, targetSize, n);
+					else
+						StuffScalar((ULong) (uintptr_t) bytes, target, targetSize, n);
 					break;
 				}
 				// not a character: a byte

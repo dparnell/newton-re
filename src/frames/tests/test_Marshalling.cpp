@@ -15,6 +15,7 @@
 #include "ROMConstants.h"
 #include "RSSymbols.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -161,6 +162,25 @@ main()
 		RefVar a(GetArraySlotRef(back, 0));
 		EXPECT(IsArray(a) && Length(a) == 4 && RINT(GetArraySlotRef(a, 0)) == 127 && RINT(GetArraySlotRef(a, 3)) == 1);
 		EXPECT(RINT(GetArraySlotRef(back, 1)) == 0x1234);
+	}
+
+	// a character marshalled out: the ROM stuffs the address of its
+	// converted bytes (a ROM bug); fixed, the byte itself
+	{
+		static const char* const kTypes[] = { "struct", "char", "byte" };
+		RefVar type(Template(kTypes, 3));
+		RefVar args(MakeArray(2));
+		SetArraySlot(args, 0, MAKECHAR('A'));
+		SetArraySlot(args, 1, MAKEINT(0x42));
+		unsigned char block[8];
+		memset(block, 0xee, sizeof(block));
+		EXPECT(MarshalArguments(args, type, block, sizeof(block), kMacRomanEncoding) == noErr);
+		EXPECT(block[0] == 'A' && block[1] == 0x42);
+		SetRomBugFixed(false);
+		memset(block, 0xee, sizeof(block));
+		EXPECT(MarshalArguments(args, type, block, sizeof(block), kMacRomanEncoding) == noErr);
+		EXPECT(block[1] == 0x42);		// (block[0]: the low byte of a stack address)
+		SetRomBugFixed(true);
 	}
 
 	// device-order words and an array of characters read as a string

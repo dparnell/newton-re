@@ -19,6 +19,9 @@
 #include "HostOrder.h"
 #include "NSErrors.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
+
+ULong	StringRightTrim(RefArg str);		// frames/StringNatives.cpp
 
 #include <stdio.h>
 #include <string.h>
@@ -412,6 +415,14 @@ TestStringFunctions()
 	EXPECT_INT("Length(SplitString(\"\"))", 1);
 	EXPECT_NIL("SplitString(\"\")[0]");
 	EXPECT_NIL("SplitString(\"   \")[0]");
+	// StringRightTrim: the ROM's trims nothing (a ROM bug); fixed, the
+	// index just past the last character that is not a space
+	EXPECT(StringRightTrim(RefVar(MakeString("ab  "))) == 2);
+	EXPECT(StringRightTrim(RefVar(MakeString("   "))) == 0);
+	EXPECT(StringRightTrim(RefVar(MakeString("ab"))) == 2);
+	SetRomBugFixed(false);
+	EXPECT(StringRightTrim(RefVar(MakeString("ab  "))) == 4);
+	SetRomBugFixed(true);
 	// StringFilter: the six modes, over the characters in the set
 	EXPECT_STRING("StringFilter(\"a1b2c3\", \"0123456789\", 'passAll)", "123");
 	EXPECT_STRING("StringFilter(\"a1b2c3\", \"0123456789\", 'rejectAll)", "abc");
@@ -428,6 +439,9 @@ TestStringFunctions()
 	EXPECT_STRING("SubstituteChars(\"abcd\", \"abc\", \"xyz\")", "xyzd");
 	EXPECT_STRING("SubstituteChars(\"abcd\", \"abc\", \"z\")", "zzzd");
 	EXPECT_STRING("SubstituteChars(\"hello\", \"xyz\", \"abc\")", "hello");
+	// an empty replacement: the ROM reads past its end (a ROM bug); fixed,
+	// it is never read past its terminator, which is what goes in
+	EXPECT_TRUE("local s := SubstituteChars(\"ab\", \"xyb\", \"\"); s[0] = $a and Length(s) = 6");
 	// nothing substituted: the very string that went in comes back
 	EXPECT_TRUE("local s := \"hello\"; SubstituteChars(s, \"xyz\", \"abc\") = s");
 	// something substituted: a clone, the original left as it was
