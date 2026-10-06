@@ -35,6 +35,7 @@
 #include "ConfigServer.h"
 #include "AppWorld.h"
 #include "toolbox/ByteOrder.h"
+#include "host/RomBugs.h"
 
 #include <new>
 #include <string.h>
@@ -191,9 +192,10 @@ TScriptEndpointClient::~TScriptEndpointClient()
 		fEndpoint->Delete();
 	if (fInput != nil)
 		CIFree(fInput);
-	// ROM BUG: the frame is tested against 0 rather than nil, so a client
-	// whose frame is nil would throw here
-	if ((Ref) fEndpointRef != 0)
+	// ROM BUG (fixed): the frame is tested against 0 rather than nil, so a
+	// client whose frame is nil would throw here.  The fix tests it against
+	// nil.
+	if (RomBugFixed() ? NOTNIL(fEndpointRef) : (Ref) fEndpointRef != 0)
 		SetFrameSlot(fEndpointRef, RSSYMciprivate, RefVar(NILREF));
 }
 
@@ -750,8 +752,24 @@ TScriptEndpointClient::ConvertToModemDialingOption(RefArg option)
 		RefVar data(GetFrameSlotRef(option, RSSYMdata));
 		if (NOTNIL(data))
 		{
-			// ROM BUG: the five switches are given the low byte of the
-			// Ref, not 0 or 1 - true is 0x1a and nil 2, both of them true
+			// ROM BUG (fixed): the five switches are given the low byte of
+			// the Ref, not 0 or 1 - true is 0x1a and nil 2, both of them
+			// true.  The fix gives them 1 for anything but nil, 0 for nil.
+			if (RomBugFixed())
+			{
+				if (FrameHasSlot(data, RSSYMspeakeron))
+					dialing->fSpeakerOn = NOTNIL(GetFrameSlotRef(data, RSSYMspeakeron)) ? 1 : 0;
+				if (FrameHasSlot(data, RSSYMdetectdialtone))
+					dialing->fDetectDialTone = NOTNIL(GetFrameSlotRef(data, RSSYMdetectdialtone)) ? 1 : 0;
+				if (FrameHasSlot(data, RSSYMdetectbusy))
+					dialing->fDetectBusy = NOTNIL(GetFrameSlotRef(data, RSSYMdetectbusy)) ? 1 : 0;
+				if (FrameHasSlot(data, RSSYMdtmftonedialing))
+					dialing->fDTMFToneDialing = NOTNIL(GetFrameSlotRef(data, RSSYMdtmftonedialing)) ? 1 : 0;
+				if (FrameHasSlot(data, RSSYMmanualdial))
+					dialing->fManualDial = NOTNIL(GetFrameSlotRef(data, RSSYMmanualdial)) ? 1 : 0;
+			}
+			else
+			{
 			if (FrameHasSlot(data, RSSYMspeakeron))
 				dialing->fSpeakerOn = (UByte) (Ref) GetFrameSlotRef(data, RSSYMspeakeron);
 			if (FrameHasSlot(data, RSSYMdetectdialtone))
@@ -762,6 +780,7 @@ TScriptEndpointClient::ConvertToModemDialingOption(RefArg option)
 				dialing->fDTMFToneDialing = (UByte) (Ref) GetFrameSlotRef(data, RSSYMdtmftonedialing);
 			if (FrameHasSlot(data, RSSYMmanualdial))
 				dialing->fManualDial = (UByte) (Ref) GetFrameSlotRef(data, RSSYMmanualdial);
+			}
 			value = GetFrameSlotRef(data, RSSYMspeakervolume);
 			if (ISINT(value))
 				dialing->fSpeakerVolume = RINT(value);
@@ -895,12 +914,23 @@ TScriptEndpointClient::ConvertToOption(RefArg option)
 	}
 	else if (IsRawBinary(data))
 	{
-		// ROM BUG: the bytes are copied from the option frame, not from
-		// its data.  (The host copies no more than the frame's own bytes.)
+		// ROM BUG (fixed): the bytes are copied from the option frame, not
+		// from its data.  (The host copies no more than the frame's own
+		// bytes.)  The fix copies the data's bytes.
+		if (RomBugFixed())
+		{
+			LockRef(data);
+			long dataSize = Length(data);
+			BlockMove(BinaryData(data), bytes, length < dataSize ? length : dataSize);
+			UnlockRef(data);
+		}
+		else
+		{
 		LockRef(option);
 		long frameSize = Length(option) * sizeof(Ref);
 		BlockMove(BinaryData(option), bytes, length < frameSize ? length : frameSize);
 		UnlockRef(option);
+		}
 	}
 	return OptionFromDeviceData(result);
 }
@@ -1954,9 +1984,10 @@ CIStartCCL(RefArg rcvr)
 	{
 		gCCLState = &state;
 		state.Block(0);
-		// ROM BUG: set again rather than cleared, so the global is left
-		// pointing at a state that is about to go
-		gCCLState = &state;
+		// ROM BUG (fixed): set again rather than cleared, so the global is
+		// left pointing at a state that is about to go.  The fix clears it
+		// (and stopCCL then does nothing with none waiting).
+		gCCLState = RomBugFixed() ? nil : &state;
 	}
 	return NILREF;
 }
@@ -1966,6 +1997,8 @@ CIStartCCL(RefArg rcvr)
 Ref
 CIStopCCL(RefArg rcvr)
 {
+	if (RomBugFixed() && gCCLState == nil)
+		return NILREF;
 	gCCLState->Unblock();
 	return NILREF;
 }
@@ -2007,8 +2040,8 @@ CIJustUnBind(RefArg rcvr)
 
 
 // ROM 0x0006b104 CIJustListen
-// ROM BUG: the options go to Listen as its address, which a serial
-// endpoint refuses.
+// ROM BUG (fixed): the options go to Listen as its address, which a serial
+// endpoint refuses.  The fix passes them as its options.
 Ref
 CIJustListen(RefArg rcvr, RefArg options)
 {
@@ -2026,7 +2059,11 @@ CIJustListen(RefArg rcvr, RefArg options)
 			||  (err = client->ConvertToOptionArray(options, array)) != noErr)
 				goto done;
 		}
-		err = client->fEndpoint->Listen(array, nil, nil, nil, 0);
+		if (RomBugFixed())
+			err = client->fEndpoint->Listen(nil, array, nil, nil, 0);
+		else
+			err = client->fEndpoint->Listen(array, nil, nil, nil, 0);
+
 	}
 done:
 	if (array != nil)

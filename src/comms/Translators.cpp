@@ -25,6 +25,7 @@
 #include "BinaryBytes.h"
 #include "RefPipe.h"
 #include "EndpointPipe.h"
+#include "host/RomBugs.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -150,7 +151,7 @@ PScriptDataOut::Translate(void* context, PipeCallBack* callback)
 
 	Ptr block = nil;
 	Handle blockHandle = nil;
-	long* lengths = nil;
+	long* volatile lengths = nil;		// (volatile: read after a throw)
 	ULong count = 0;
 	long total = 0;
 	newton_try
@@ -219,7 +220,13 @@ PScriptDataOut::Translate(void* context, PipeCallBack* callback)
 			DisposHandle(blockHandle);
 		else if (block != nil)
 			DisposPtr(block);
-		// (the ROM leaks the lengths array here)
+		// ROM BUG (fixed): the ROM leaks the lengths array here.  The fix
+		// frees it.
+		if (RomBugFixed() && lengths != nil)
+		{
+			free(lengths);
+			lengths = nil;
+		}
 		rethrow;
 	}
 	end_try;
@@ -376,13 +383,24 @@ PScriptDataIn::ParseInput(FormType form, long encoding, long length, UByte* data
 		{
 		case kFormChar:
 			{
-				// ROM BUG: length characters are converted into a four-byte
-				// stack word, which is overrun by more than one (and its
-				// terminator); the host gives them the room
+				// ROM BUG (fixed): length characters are converted into a
+				// four-byte stack word, which is overrun by more than one
+				// (and its terminator); the host gives them the room.  The
+				// fix converts the one character the answer takes.
+				if (RomBugFixed())
+				{
+					UniChar c[2] = { 0, 0 };
+					ConvertToUnicode(data, c, encoding, length > 0 ? 1 : 0);
+					result = MAKECHAR(c[0]);
+				}
+				else
+				{
 				UniChar* c = (UniChar*) calloc(length + 2, sizeof(UniChar));
 				ConvertToUnicode(data, c, encoding, length);
 				result = MAKECHAR(c[0]);
 				free(c);
+				}
+
 			}
 			break;
 

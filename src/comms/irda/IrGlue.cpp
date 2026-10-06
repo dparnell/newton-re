@@ -16,6 +16,7 @@
 #include "BufferSegment.h"
 #include "CommErrors.h"
 #include "utility/Random.h"
+#include "host/RomBugs.h"
 
 
 // ROM 0x000ef538 __ct__7TIrGlueFv
@@ -327,8 +328,11 @@ TIrGlue::LSAPLookupStart(ULong devAddr, UByte* className, UByte* attrName)
 		event->fConnectData = nil;
 		event->fDevAddr = devAddr;
 		fNameClient->EnqueueEvent(event);
-		// ROM BUG: should the server fail below, the event just queued for
-		// the client is released as well, while the client still has it
+		// ROM BUG (fixed): should the server fail below, the event just
+		// queued for the client is released as well, while the client still
+		// has it.  The fix leaves it to the client, which has it now.
+		if (RomBugFixed())
+			event = nil;
 		fNameServer = new TIASServer;
 		if (fNameServer == nil)
 			err = -7000;
@@ -844,15 +848,17 @@ TIrGlue::InitPutRequests(CBuffer* buffer, ULong offset, ULong size)
 		TIrEvent* event = GrabEventBlock(kIrPutDataRequest, 0x1c);
 		if (event == nil)
 		{
-			// ROM BUG: the blocks are released from requests[fPutsPending]
-			// down to requests[1] - one past the last and never the first -
-			// so a stale stack word goes into the free list and a block is
-			// lost
+			// ROM BUG (fixed): the blocks are released from
+			// requests[fPutsPending] down to requests[1] - one past the last
+			// and never the first - so a stale stack word goes into the free
+			// list and a block is lost.  The fix releases requests[0] up to
+			// the last.
 			while (fPutsPending > 0)
 			{
-				UByte i = fPutsPending--;
+				UByte i = RomBugFixed() ? --fPutsPending : fPutsPending--;
 				ReleaseEventBlock(requests[i]);
 			}
+
 			return -7000;
 		}
 		event->fOffset = offset;

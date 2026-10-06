@@ -57,6 +57,7 @@
 
 #include "MNP.h"
 #include "NewtErrors.h"
+#include "host/RomBugs.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -522,9 +523,10 @@ BTDecode(TCompressVars* v, ULong byte)
 	ULong prev = 0;									// r10
 	ULong last = 0;									// sp+8: the string a new node hangs off
 	Boolean dontAdd = false;						// sp+0x18
-	// ROM BUG: when the last string overflowed the stack or there was
-	// none, the ROM tests "found" (sp+0x1c) without having set it - a stack
-	// slot left from earlier; the host takes it as not found
+	// ROM BUG (fixed): when the last string overflowed the stack or there
+	// was none, the ROM tests "found" (sp+0x1c) without having set it - a
+	// stack slot left from earlier; the host takes it as not found, which
+	// is also the fix, on both paths (there is no string it could extend)
 	Boolean found = false;							// sp+0x1c
 	Boolean overflowed = false;						// sp+0x14
 
@@ -552,10 +554,14 @@ BTDecode(TCompressVars* v, ULong byte)
 			else if (byte == 2)
 			{
 				// RESET
-				// ROM BUG: the decoder's string and next node are put back
-				// from before the reset on the way out
+				// ROM BUG (fixed): the decoder's string and next node are
+				// put back from before the reset on the way out.  The fix
+				// leaves them as the reset made them.
 				BTInitDe(v);
+				if (RomBugFixed())
+					return result;
 				goto done;
+
 			}
 			else
 			{
