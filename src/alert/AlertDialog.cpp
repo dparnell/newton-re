@@ -20,6 +20,7 @@
 #include "ROMConstants.h"
 #include "RSSymbols.h"
 #include "ObjectHeap.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -245,10 +246,13 @@ DrawDChar(long v, long h, UByte* bits)
 	}
 	else if (depth == 2)
 	{
-		// ROM BUG: each expanded halfword's bytes land one to a halfword -
-		// the ROM ORs a byte into the low half of what an unaligned load
-		// finds there - so the glyph is drawn at half its width, in every
-		// other byte
+		// ROM BUG (fixed): each expanded halfword's bytes land one to a
+		// halfword - the ROM ORs a byte into the low half of what an
+		// unaligned load finds there - so the glyph is drawn at half its
+		// width, in every other byte.  The fix ORs the halfword's two bytes
+		// and the bits shifted out of it into three bytes running, as the
+		// one- and four-bit cases do.
+		Boolean fixed = RomBugFixed();
 		ULong s = (h & 3) * 2;
 		UByte* row = (UByte*) ScreenBase() + rowBytes * v + (h >> 2);
 		for (int r = 0; r < 16; r++, row += rowBytes)
@@ -259,6 +263,16 @@ DrawDChar(long v, long h, UByte* bits)
 				long t = (short) gTwoBitTable[*bits++];
 				long hi = (short) (t >> s);
 				long lo = (short) ArmLSL((ULong) t, 16 - s);
+				if (fixed)
+				{
+					ULong pixels = (ULong) (unsigned short) gTwoBitTable[bits[-1]];
+					ULong shifted = (pixels << 8) >> s;		// 24 bits: the halfword and what falls out of it
+					p[0] |= (UByte) (shifted >> 16);
+					p[1] |= (UByte) (shifted >> 8);
+					p[2] |= (UByte) shifted;
+					p += 2;
+					continue;
+				}
 				ULong v1 = ((hi >> 8) & 0xFF) | (LoadWordARM(p) >> 16);
 				p[1] = (UByte) v1;
 				p[0] = (UByte) (v1 >> 8);
@@ -467,13 +481,17 @@ TAlertItem::DrawText(UChar centred)
 			used += glyph.GetAlertGlyphWidth(s[n]);
 			n++;
 		}
-		// ROM BUG: when the text fits, every character is drawn (the
-		// count is the string's length), not the ones measured
+		// ROM BUG (fixed): when the text fits, every character is drawn
+		// (the count is the string's length), not the ones measured - which
+		// differ when the measured ones fill the width exactly.  The fix
+		// draws the ones measured.
 		if (width < used)
 		{
 			remaining = n - 1;
 			used -= glyph.GetAlertGlyphWidth(s[remaining]);
 		}
+		else if (RomBugFixed())
+			remaining = n;
 		long h = h0 + (long) ((width - used) >> 1);
 		for (ULong i = 0; i < remaining; i++)
 		{
@@ -842,9 +860,10 @@ UChar
 TAlertGlyph::GetAlertGlyphWidth(long ch)
 {
 	ULong glyph = (ULong) fMap(ch, fCmap);
-	// ROM BUG: && where || was meant - a glyph outside the strike is never
-	// the missing glyph
-	if (glyph < fFirstGlyph && fLastGlyph < glyph)
+	// ROM BUG (fixed): && where || was meant - a glyph outside the strike
+	// is never the missing glyph.  The fix makes it the missing glyph, with
+	// ||.
+	if (RomBugFixed() ? (glyph < fFirstGlyph || fLastGlyph < glyph) : (glyph < fFirstGlyph && fLastGlyph < glyph))
 		glyph = 0;
 	const char* entry = fIndexArray;
 	while (Get16(entry + 2) < glyph)
