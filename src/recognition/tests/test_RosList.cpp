@@ -4,6 +4,7 @@
 
 #include "RosList.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 
@@ -55,8 +56,13 @@ main()
 		EXPECT(ListDestroy(list, nil) == false);
 		// (`ListAppendEntry` answers true whatever happens - it does
 		//  not look at what `ListAddEntry` said - so it is the
-		//  complaint on the standard error that shows the check fired)
+		//  complaint on the standard error that shows the check fired:
+		//  ROM BUG (fixed), the fix answers false)
+		SetRomBugFixed(false);
 		EXPECT(ListAppendEntry(list, V(0)));
+		SetRomBugFixed(true);
+		EXPECT(ListAppendEntry(list, V(0)) == false);
+		EXPECT(ListAppendEntry(nil, V(0)) == false);
 		EXPECT(ListRemoveEntry(list, &list->fFirst) == nil);
 		// a nil list likewise
 		EXPECT(ListDestroy(nil, nil) == false);

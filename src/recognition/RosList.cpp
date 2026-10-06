@@ -12,6 +12,7 @@
 #include "RosStrokes.h"			// RosAllocate
 #include "NewtonMemory.h"
 
+#include "host/RomBugs.h"
 #include <stdio.h>
 
 
@@ -185,12 +186,18 @@ ListAddEntry(List* list, ListEntry** cursor, void* value)
 
 // ROM 0x00112fa4 ListAppendEntry
 // ... at the end, which is the same thing with the cursor on the last
-// entry.  (ROM BUG: it answers true whatever `ListAddEntry` said, so a
-// caller cannot tell that the list was nil or had been given back -
-// only the complaint on the standard error shows it.)
+// entry.  (ROM BUG (fixed): it answers true whatever `ListAddEntry` said,
+// so a caller cannot tell that the list was nil or had been given back -
+// only the complaint on the standard error shows it.  The fix answers what
+// `ListAddEntry` said, and does not read a nil list's last entry.)
 Boolean
 ListAppendEntry(List* list, void* value)
 {
+	if (RomBugFixed())
+	{
+		ListEntry* cursor = list != nil ? list->fLast : nil;
+		return ListAddEntry(list, &cursor, value);
+	}
 	ListEntry* cursor = list->fLast;
 	ListAddEntry(list, &cursor, value);
 	return true;

@@ -17,6 +17,7 @@
 #include "Segment.h"
 #include "WordRecog.h"
 
+#include "host/RomBugs.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -245,12 +246,12 @@ BiGrammarAddSlice(BiGrammar* grammar, ULong dictionary, const char* name, short 
 // transition between them.  Two passes, because a transition may point
 // at a kind that has not been copied yet.
 //
-// **A ROM bug, kept.**  The first pass copies the shorts at +0x08,
+// **ROM BUG (fixed).**  The first pass copies the shorts at +0x08,
 // +0x0a and +0x0c but *not* the one at +0x0e, and `BiGSliceNew` does
 // not clear it either - so a cloned slice's `fField0e` is whatever was
 // in the heap.  It is nought in all 46 of the ROM's own slices, so
-// nothing has ever depended on it; the reconstruction leaves it
-// uncopied as the ROM does rather than tidying it.
+// nothing has ever depended on it; the faithful reconstruction leaves it
+// uncopied as the ROM does.  The fix copies it with the others.
 BiGrammar*
 BiGrammarClone(const BiGrammar* src)
 {
@@ -273,7 +274,9 @@ BiGrammarClone(const BiGrammar* src)
 			to->fScore = from->fScore;
 			to->fField0a = from->fField0a;
 			to->fCharCost = from->fCharCost;
-			// (+0x0e is not copied - see above)
+			// (+0x0e is not copied - see above - but for the fix)
+			if (RomBugFixed())
+				to->fField0e = from->fField0e;
 			to->fField10 = from->fField10;
 			to->fCapExtraUpper = from->fCapExtraUpper;
 			to->fCapExtraLower = from->fCapExtraLower;
@@ -350,7 +353,7 @@ static Fixed	gArSigNegArg = 0;
 // z-scores - the log-likelihood ratio of two Gaussians - and gets back
 // the probability that the first of them is the right one.
 //
-// ROM BUG, twice over.  The step between one entry and the next is
+// ROM BUG (fixed), twice over.  The step between one entry and the next is
 // 0x800 of the argument, so the fraction within a step is `x & 0x7ff`
 // scaled to 16.16; the ROM takes `x & 0xff` and hands *that* to
 // `FixedMultiply` as though it were already a fraction of one, which
@@ -361,6 +364,10 @@ static Fixed	gArSigNegArg = 0;
 // previous call's fraction as well), so even that much depends on what
 // was asked last.  Ported as it stands; nothing downstream notices,
 // because half a thousandth either way does not move a word break.
+// The fix interpolates as meant: this call's index, and the fraction
+// `x & 0x7ff` made a 16.16 fraction of the step (shifted up five); the
+// negative side is one less the positive (0x10000, not 0xffff, so the
+// two halves add up to one).
 Fixed
 ArSigmoid(Fixed x)
 {
@@ -372,6 +379,15 @@ ArSigmoid(Fixed x)
 		return 0;
 	if (x > kArSigLimit)
 		return 0x00010000;
+	if (RomBugFixed())
+	{
+		Fixed magnitude = x < 0 ? -x : x;
+		gArSigNegArg = -x;
+		gArSigIndex = magnitude >> 11;
+		Fixed between = FixedMultiply((magnitude & 0x7ff) << 5, ArSigSlopeLu[gArSigIndex]);
+		Fixed value = ArSigLu[gArSigIndex] + between;
+		return x < 0 ? 0x00010000 - value : value;
+	}
 	if (x < 0)
 	{
 		Fixed between = FixedMultiply(gArSigNegArg & 0xff, ArSigSlopeLu[gArSigIndex]);
