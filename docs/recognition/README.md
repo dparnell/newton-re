@@ -1221,7 +1221,8 @@ the length of the other it splits the longer one so that the two match,
 and passes `Interpolate` the *ratio* of the two lengths where
 `Interpolate` wants a distance along the line.  The new corner therefore
 lands all but on top of the joint instead of an arm's length down the
-second arm.
+second arm.  It is fixed by default now (the first arm's length is
+passed); `NEWTON_ROM_BUGS=1` brings the ROM's behaviour back.
 
 A scrub now reaches the text.  The command goes to the view the stroke
 was written in, which on a page is the `TEditView`, not the paragraph:
@@ -1958,6 +1959,11 @@ ROM bugs kept (each commented where it is):
 * `RSmallDists` always marks its runs untrustworthy, and `TVSplSpl` sets
   an end tangent to a point.
 
+`NewCoeffs`' 42nd equation, `TTrend::Merge`'s value (the merged mean),
+`GlobalTrends`' turned square, `RLineOut2`'s path limit that overflows
+for a long chord and `TVStrTail`'s read past the last corner are fixed by
+default now (`NEWTON_ROM_BUGS=1` for the ROM's behaviour).
+
 ## The word domain (`recognition/WRecDomain.h`)
 
 `TWRecDomain` ('WREC') is the domain a handwriting engine is driven
@@ -2312,7 +2318,8 @@ thirty of the base-line finder's pieces.  ROM bugs kept:
 array when it is full (onto the index that follows it in the block);
 `GetGroupNumber` answers its own argument's address for a point in no
 stroke; `spec_neibour_extr`/`neibour_susp_extr` read an unset register
-for a kind other than 1 or 3.  `test_LowLevel` checks the roots against
+for a kind other than 1 or 3 (all four fixed by default now;
+`NEWTON_ROM_BUGS=1` for the ROM's behaviour).  `test_LowLevel` checks the roots against
 the true roots, the strokes of a hand-made trace, the filters on a line,
 a zigzag's extrema, and the pieces one by one.  `low_level` itself is not
 yet called: `GCTryToRecognize` still answers -8 until the whole layer is
@@ -2368,7 +2375,8 @@ decompiler lost the conditions of nearly every one of these functions.
 ROM behaviour kept: `extract_all_extr`'s walk back does not skip the
 extrema it did not copy, so a stroke with one writes its shift one EXTR
 too early; `numbers_in_text`'s test of the stroke before a figure measures
-the figure itself, so it never passes; `FindCrossPoint` rounds a negative
+the figure itself, so it never passes (these two are fixed by default
+now, `NEWTON_ROM_BUGS=1` for the ROM's behaviour); `FindCrossPoint` rounds a negative
 step the wrong way ((5, 5) comes out (5, 6)); `curve_com_or_brkt`,
 `all_susp_extr`, `glitch_to_inside` and `bord_correction` leave values
 unset for kinds other than 1 and 3, which they are never given.
@@ -2851,7 +2859,8 @@ was meant).  A reading of one word needs none of that: the block just
 says one word.  When the letters cannot be traced the block is dropped
 and the low level's letter ends (xr attrib 4) cleared - and the stretches
 are not freed when a stroke turns out to belong to an earlier word, a
-ROM leak kept.
+ROM leak kept.  Both are fixed by default now (`NEWTON_ROM_BUGS=1` for
+the ROM's behaviour).
 
 **What the learning is given** (`GCFillLearningHandle`, 0x000d6ad4, over
 `LHAddEntry`, 0x001059b4): training data is a block of entries - a count,
@@ -2981,14 +2990,17 @@ digits whose tops or bottoms wander is charged by how much
 does).
 
 ROM bugs kept: `GetXrCorr` adds three whole bytes of the prototype as
-well as their nibbles; `ReturnZeroIfDoubleSkip` gives the xr the next
-type up for a moment and asks whether the two differ - they always do,
-so it always fails; `CalculateCurvature`'s "middles" are half each xr's
-length rather than points within it; `CalculatePow` multiplies for a
+well as their nibbles; `CalculateCurvature`'s "middles" are half each
+xr's length rather than points within it (these two are fixed by default
+now, `NEWTON_ROM_BUGS=1` for the ROM's behaviour); `CalculatePow` multiplies for a
 negative power too; `CalculateFunction`'s arguments a function does not
 take are whatever the registers held (the host passes nought); an xr
 field of a letter that is neither the rule's neighbour nor missing reads
-the last one found.
+the last one found.  (`ReturnZeroIfDoubleSkip`, once listed here as
+always failing because it gives the xr the next type up for a moment and
+asks whether the two differ, does not: the xr it is given is one of the
+xrs the letter's elements index, so at its own element the bumped type
+is on both sides and they compare equal - the bump is an identity test.)
 
 NOT YET, deliberately: `CheckDiacriticsDirections` (0x0007c9a0, 684
 bytes, over `AnalyseDiacriticsDirection` 0x0007c130 - 2160 bytes -,
@@ -3071,7 +3083,9 @@ letter's score lowered by a hundred (what a number would read as) and
 from the graph with the digits' and `+ = %`'s lowered (a word's) - and
 `MergeTwoRecWordsSets` merges them best first, no word twice.  ROM bug
 kept: a letter the reader read as a *different* letter clears the
-reading's first variant and span, not its own (`test_XrAnswers`).
+reading's first variant and span, not its own (`test_XrAnswers`).  Fixed
+by default now, with the word graph's like case (`NEWTON_ROM_BUGS=1` for
+the ROM's behaviour).
 
 ### Learning (`TWordRecognizer::DoLearning`, `XRWDoLearning`)
 
@@ -3103,7 +3117,8 @@ approximation (`GetLineApprox`), cuts it into chunks (`ChunkConstruct`)
 and reads the digits (`Digits` over four searchers); when it found a
 number, `ChunkModifyRC` narrows the configuration to digits for the xr
 reader and `ChunkRestoreRC` puts it back after (ROM bug kept: rc +0x92,
-which the numbers-alone way sets, is not put back).  Done: the context
+which the numbers-alone way sets, is not put back; fixed by default now,
+`NEWTON_ROM_BUGS=1` for the ROM's behaviour).  Done: the context
 and the configuration (`ChunkAllocCtx`, `ChunkCleanUp`, `IsChunkNumbers`,
 `ChunkModifyRC`/`ChunkRestoreRC`, `ChunkWriteParamCtx`, called where
 `GCTryToRecognize` calls them) and the first of its geometry -
@@ -3158,7 +3173,8 @@ follows them through):
   searchers add what they find.  ROM bugs kept: `LO_Add` with no object
   free answers -1 having switched the class worked in, and
   `LO_GetRealChunkInd`'s count inside a group starts too high, so it
-  answers the object's last chunk.
+  answers the object's last chunk.  Both are fixed by default now
+  (`NEWTON_ROM_BUGS=1` for the ROM's behaviour).
 
 `Digits` (0x0029c94c) is the searchers' driver: the writing's line
 (`DefHeightsForNumber`), the chunks put in the list as their classes, the
@@ -3178,7 +3194,9 @@ extra how it was found.  Done so far (`ChunkDigits.cpp`,
   fields `fZoneStart`/`fZoneEnd`, +0x44/+0x50: the ROM stores a byte there
   in the middle of what looked like a word).  ROM bug kept: the test that
   would join two overlapping boxes is `HWRAbs(0) * 3 > height` - the
-  argument a register set to nought - so none ever is.
+  argument a register set to nought - so none ever is.  (Fixed by
+  default now: the boxes' overlap is measured; `NEWTON_ROM_BUGS=1` for
+  the ROM's behaviour.)
 - **The circles** (`GetCircles`): a chunk going down (an arc) and the next
   coming back up, the taller between two thirds and four thirds of the
   line, turning more than eleven steps (sixteen when its ends are apart),
@@ -3200,7 +3218,8 @@ extra how it was found.  Done so far (`ChunkDigits.cpp`,
   `x_in_line`, `x_in_curve`, `cross_with_line`.
 - **Second looks**: `ThreeToFive` (a 3 whose writing turns back sharply at
   its left - a 5 whose bar was not lifted - becomes 1305; ROM bug kept: the
-  two turns it finds are not forgotten between digits), `RecognizeZCCW` (a
+  two turns it finds are not forgotten between digits - fixed by default
+  now), `RecognizeZCCW` (a
   curve down that turns the other way then an arc up: a 2 becomes a 6, an
   8 whose closing line misses its start a 0), with `CheckQIntersec`/`XY`;
   `Check_4` (the "4"s of value 0x605 taken out when too tall or sharing
@@ -3268,7 +3287,8 @@ extra how it was found.  Done so far (`ChunkDigits.cpp`,
   chunk's own address, not the array's; DEVIATION: past the array's end
   the host takes it as not a line), a direction from (x, x), a circle's
   tail compared with half its width, a curve's height measured from node
-  `fKind`.  DEVIATION: two tests read the chunk two after without asking
+  `fKind` (all four fixed by default now, `NEWTON_ROM_BUGS=1` for the
+  ROM's behaviour).  DEVIATION: two tests read the chunk two after without asking
   whether there is one, and the ROM reads a nil pointer's fields from low
   memory; the host reads them as nought (`kNoChunk`).
 - **`SearchNumber`** (`ChunkNumber.cpp`, 0x002a28d0-0x002a3ef8 and five
@@ -3286,7 +3306,8 @@ extra how it was found.  Done so far (`ChunkDigits.cpp`,
   by any step in its bottoms or heights; a single digit is never a
   number.  ROM quirks kept: a character wider than two and a half times
   its height is marked 0x65 and at once remarked 2 (wider than twice), so
-  width alone never rules a number out; the walk that skips deleted
+  width alone never rules a number out (fixed by default now:
+  `NEWTON_ROM_BUGS=1` for the ROM's behaviour); the walk that skips deleted
   objects answers a deleted one at a list's end; with no other stroke to
   look at, the sign check answers the caller's register (the last real
   chunk) and "takes out" the digits of the stroke numbered by the
@@ -3296,7 +3317,8 @@ extra how it was found.  Done so far (`ChunkDigits.cpp`,
   the stroke before it for a **pound sign** (value 1570): the stroke
   falling steeply, turning left at a foot that lies below the crest of a
   wavy base, the bar across its middle, up from its foot.  ROM bug kept: a
-  direction past the last is brought round by 23, not 24.
+  direction past the last is brought round by 23, not 24 (fixed by
+  default now, `NEWTON_ROM_BUGS=1` for the ROM's behaviour).
 
 `test_Chunk` draws the digits with a synthetic pen: a 5 with a separate
 bar and a 5 in one stroke and a $ are found by `SearchDigit_L` (the 2, 3,
@@ -3792,7 +3814,9 @@ and they are what `WordRecogDetermineMaxHeight`, `ComputeCapHeight` and
 The four between-letter distributions never actually move: the routine
 that updates them works the second moment out from a mean it does not
 change (see `docs/curiosities.md`, "Nine Gaussians are what the Newton
-knows about your handwriting"). That is reproduced here, bug and all.
+knows about your handwriting"). That is reproduced here, bug and all,
+and fixed by default (the mean nudged as the within-letter ones are;
+`NEWTON_ROM_BUGS=1` for the ROM's behaviour).
 
 `fSavedRun` is the copy to go back to.
 `WordRecogInvalRun` puts the run back as it was, `WordRecogSaveRun`
@@ -4269,6 +4293,8 @@ carries on over the values that are not the lowest and into the next
 stretch, so two short stretches with a gap between them can be taken
 for one long one.  And `ListAppendEntry` answers true whatever
 `ListAddEntry` said, so a caller cannot tell that the list was nil.
+Both are fixed by default now (`NEWTON_ROM_BUGS=1` for the ROM's
+behaviour).
 
 `test_Fragment` writes three `u`s without lifting the pen and gets back
 four pieces: the cut lands on the rising right-hand side of each one,
@@ -4356,7 +4382,9 @@ forty-one-point stroke touching the eighth point of a twenty-point one
 is joined, and plainly not end to end - but three tenths of 41 is 12,
 so the long stroke's margin swallows B's point at 8 and the answer
 comes back "no". Ported as it stands, with the failing case in
-`test_Segment`.
+`test_Segment`.  The fix - the default now, `NEWTON_ROM_BUGS=1` for the
+ROM's - asks the question as written out, each stroke with its own
+margin.
 
 #### The first pass: one stroke against its neighbours
 
@@ -4521,7 +4549,8 @@ so the tightest setting still weighs a gap at about a third. Above it,
 the ROM computes `1 + 23 x (n-5)/4`, and that 23 is almost certainly an
 extra zero: the constant in the instruction is `0x170000` where the
 shape of the rest of the routine wants `0x17000`, one and seven
-sixteenths. The curve it actually produces is
+sixteenths (the extra zero is taken out by default now;
+`NEWTON_ROM_BUGS=1` for the ROM's curve). The curve it actually produces is
 
 | setting | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
 |---|---|---|---|---|---|---|---|---|---|
@@ -4640,7 +4669,9 @@ nominal term out and then leaves it out of the sum, dividing by four
 rather than five, so those four estimates are pooled with no prior at
 all.  And two of the four questions go on to turn the same ratio into a
 score and a probability, write the score into the global `xpsvx` and
-drop the rest on the floor.
+drop the rest on the floor.  The first is fixed by default now: all
+eight are pooled with the nominal term (`NEWTON_ROM_BUGS=1` for the ROM's
+behaviour).
 
 `test_Segment` gives the layer a hand that leaves two pixels between
 the letters of a word and fourteen between words, and checks that the
@@ -4792,6 +4823,7 @@ takes the cell path and looks in table 127, which is almost never made.
 Nothing in the engine ever adds a reference to nothing - the first
 character of a reading has no tail to hold on to - so it has never
 mattered, and `test_WordTails` notes where the engine sidesteps it.
+Fixed by default now (`NEWTON_ROM_BUGS=1` for the ROM's behaviour).
 
 ### What the classifier does not know (`CharModifyProbs`)
 
@@ -5256,6 +5288,8 @@ and one when the box was full, but it ends in a tail call to
 `SLDestroy` and so gives back whatever *that* answers instead. The
 flag does reach `SLDestroy`, which is what makes a refused list take
 its strokes down with it; it is only the caller who never learns.
+(Fixed by default now: the flag is answered; `NEWTON_ROM_BUGS=1` for
+the ROM's behaviour.)
 `CharBoxIntialize` has a smaller one: it asks both questions about the
 box (`ValidFixedRect`, `EmptyFixedRect`) and throws the answer away -
 a statement with no effect, all that is left of what was presumably an

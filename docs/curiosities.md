@@ -1330,7 +1330,8 @@ never changes, so it writes back the number that was already there.
 The four within-letter ones move; their four counterparts are frozen at
 the trained values for ever. The shape of the code says what was meant:
 it is the other half of the learning routine with the two lines that
-update the mean left out.
+update the mean left out.  The reconstruction now puts the mean's update
+back by default (`NEWTON_ROM_BUGS=1` for the frozen distributions).
 
 *`src/recognition/WordRecog.cpp`, `WordRecogAddStroke2`;
 `docs/recognition/README.md` has the layers.*
@@ -1635,7 +1636,8 @@ taken once, here, in double precision, because the layers above *add*
 it to a score - and the log of that range runs from -1.14 to +3.18. So
 the top half of the slider is compressed rather than broken. But it
 does not do what the bottom half does, and the asymmetry is an
-accident rather than a decision.
+accident rather than a decision.  The reconstruction now takes the extra
+zero out by default (`NEWTON_ROM_BUGS=1` for the ROM's slider).
 
 (This is also the only floating point in the entire 200 KB engine.)
 
