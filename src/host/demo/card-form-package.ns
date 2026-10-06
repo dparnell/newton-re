@@ -1,0 +1,64 @@
+// An application ('form part) a card carries in its attribute memory, as
+// card-package.ns carries an 'auto part.  The ROM's InstallFormPart writes
+// the card's socket into the new application's base view - reading
+// deviceNumber as a variable, which there is none of, where the install
+// info's slot was meant (ROM BUG, docs/curiosities.md "No application
+// installs off a card's own package").  Fixed (the default), the
+// application installs, its base view's cardSocket the socket (0); with
+// NEWTON_ROM_BUGS=1 the part throws -48807 (undefined variable), as on a
+// MessagePad, and the user is told "An error occurred activating the
+// package" (ctests host.NewtonCardFormPackage and ...romBugs).
+//
+//   python tools/cards/streamedpkg.py tmp/cardform.pkg --name "Card Form" --text "Card Form" --kind form
+//   python tools/cards/linearcard.py make tmp/cardform.card --size 2 \
+//       --cis "01 03 52 06 ff 1e 06 02 11 01 01 03 01 18 02 89 a2 ff" \
+//       --attr-package tmp/cardform.pkg --package-name "Card Form"
+//   CARD_FORM_CARD=tmp/cardform.card build/host/host/newton --headless 120 \
+//       --script src/host/demo/card-form-package.ns
+//
+// The card is flash beside its package, so the ROM's card handler asks to
+// erase and format it as for any new card; the script answers Erase.
+
+HostInclude("common.ns");			// waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView, wtCheck, the steps
+HostInclude("apphelpers.ns");		// tapCentre
+
+wtName := "card-form-package";
+cfpCardFile := HostGetEnv("CARD_FORM_CARD");
+cfpApp := '|CardHello:Test|;
+cfpLastErase := 0;
+cfpAnswerErase := func() begin
+	if Ticks() - cfpLastErase > 60 then begin
+		local button := call findView with (GetRoot(), func(v) IsString(v.text) and StrEqual(v.text, "Erase") and v.viewCObject);
+		if button then begin
+			call tapCentre with (button);
+			cfpLastErase := Ticks();
+		end;
+	end;
+end;
+
+wtSteps := [
+	// the card put in once the machine is set up; the application's base
+	// view is made (both ways) before its socket is written
+	func(done) begin
+		HostInsertCard(0, cfpCardFile);
+		call waitFor with ("card-form-package: the application's base view", func() begin
+				call cfpAnswerErase with ();
+				GetRoot().(cfpApp) and Length(GetStores()) > 1
+			end, func() begin
+				local base := GetRoot().(cfpApp);
+				local socket := if base then base.cardSocket;
+				Print("card-form-package: RomBugFixed " & (if RomBugFixed() then "true" else "nil") & ", cardSocket " & socket);
+				if RomBugFixed() then
+					call wtCheck with ("the application installed off the card, its socket 0", socket = 0, "(" & socket & ")")
+				else
+					call wtCheck with ("the ROM's InstallFormPart threw before the socket", socket = nil, "(" & socket & ")");
+				call done with ();
+			end, 60);
+	end,
+	func(done) begin
+		Print("card-form-package: done, " & wtFailures & " failed");
+		HostQuit();
+	end];
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], wtNext);		// "Daniel"

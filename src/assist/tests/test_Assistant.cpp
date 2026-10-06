@@ -16,6 +16,7 @@
 #include "REPTranslators.h"
 #include "Unicode.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -194,9 +195,10 @@ TestStrings()
 	RefVar clean(MakeString("call John"));
 	EXPECT(TrimBlanksAndPunct(RefVar(NIL()), clean) == (Ref) clean);
 	EXPECT(ISNIL(RefVar(TrimBlanksAndPunct(RefVar(NIL()), RefVar(MakeString(" ... "))))));
-	// BUG (the ROM's): the guillemets it means to trim are given as Mac
+	// ROM BUG (fixed): the guillemets it means to trim are given as Mac
 	// Roman 0xc7/0xc8, which are Ç and È in the Unicode the string is by
 	// then - so those are trimmed and « » are not
+	SetRomBugFixed(false);
 	{
 		UniChar guillemets[4];
 		guillemets[0] = 0x00ab;
@@ -211,6 +213,15 @@ TestStrings()
 		accented[2] = 0x00c8;
 		accented[3] = 0;
 		EXPECT(Is(RefVar(TrimBlanksAndPunct(RefVar(NIL()), RefVar(MakeString(accented)))), "x"));
+	}
+	SetRomBugFixed(true);
+	// fixed: « » trimmed, Ç and È kept
+	{
+		UniChar guillemets[4] = { 0x00ab, 'x', 0x00bb, 0 };
+		EXPECT(Is(RefVar(TrimBlanksAndPunct(RefVar(NIL()), RefVar(MakeString(guillemets)))), "x"));
+		UniChar accented[4] = { 0x00c7, 'x', 0x00c8, 0 };
+		RefVar kept(MakeString(accented));
+		EXPECT(TrimBlanksAndPunct(RefVar(NIL()), kept) == (Ref) kept);
 	}
 
 	// lowercased in place

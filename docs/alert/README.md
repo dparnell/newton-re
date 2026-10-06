@@ -88,13 +88,17 @@ alert gone and the entry still readable.
   is the one nearest nought: the smallest.
 - `GetAlertGlyphWidth` checks a glyph against the strike's range with `&&`
   where `||` was meant, so a glyph outside it is never replaced by the
-  missing glyph.
+  missing glyph. ROM bug, fixed by default (`NEWTON_ROM_BUGS=1` for the
+  ROM's behaviour).
 - At depth 2, `DrawDChar` ORs each byte of a glyph into the low half of a
   halfword it reads with an unaligned load: the glyph is drawn at half its
   width, a byte in every other byte (the MessagePad's screen is four bits
-  deep, so it is never seen).
+  deep, so it is never seen; `--display 320x480x2` shows it). ROM bug,
+  fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour).
 - A centred text item (a button's label) that fits is drawn whole - the
-  count used is the string's length, not the characters measured.
+  count used is the string's length, not the characters measured (they
+  differ when those fill the width exactly). ROM bug, fixed by default
+  (`NEWTON_ROM_BUGS=1` for the ROM's behaviour).
 - A line that is neither horizontal nor vertical is drawn vertical, at its
   leftmost column.
 - An alert taken off the manager's list is not freed.

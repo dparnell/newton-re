@@ -17,6 +17,7 @@
 #include "NewtCardEvents.h"
 #include "CardHandler.h"
 #include "CardPCMCIA.h"
+#include "host/RomBugs.h"
 
 
 // The version the frame says it is (the ROM's literal, 0x00080800 as a Ref).
@@ -119,9 +120,20 @@ FGetCardInfo(RefArg /*rcvr*/)
 					}
 				}
 				cisNumber++;
-				// ROM BUG: both the count and the next CIS are asked of the
-				// CIS just done rather than of the card, so a card with more
-				// than two function CISs has the third asked of the second
+				// ROM BUG (fixed): both the count and the next CIS are asked
+				// of the CIS just done rather than of the card, so a card
+				// with more than two function CISs has the third asked of
+				// the second.  The fix asks the card (and stops at a CIS
+				// the card does not have).
+				if (RomBugFixed())
+				{
+					if (card->GetNumOfCISs() <= cisNumber)
+						break;
+					cis = card->GetCardCIS(cisNumber);
+					if (cis == nil)
+						break;
+					continue;
+				}
 				if (cis->GetNumOfCISs() <= cisNumber)
 					break;
 				if (cisNumber != 0)

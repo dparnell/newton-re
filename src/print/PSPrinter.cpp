@@ -35,6 +35,7 @@
 #include "ROMConstants.h"
 #include "NewtonMemory.h"
 #include "utility/Unicode.h"
+#include "host/RomBugs.h"
 #include <string.h>
 #include <stdio.h>
 #include <new>
@@ -91,7 +92,9 @@ TPSPrinter::Constructor(char* driverName)
 
 // ROM 0x0021bb10 Delete__10TPSPrinterFv
 // The connection record and the driver given back.  (fFont's handle is
-// not: ROM BUG, kept - each job leaves one RefHandle behind.)
+// not: ROM BUG (fixed) - each job leaves one RefHandle behind.  The fix
+// gives it back too: the instance's memory goes without its destructor
+// being run, so fFont's is run here.)
 void
 TPSPrinter::Delete()
 {
@@ -103,6 +106,8 @@ TPSPrinter::Delete()
 		fDriver->Delete();
 	}
 	gSCPDevicePackageBusy = false;
+	if (RomBugFixed())
+		fFont.~RefStruct();
 }
 
 
@@ -459,8 +464,9 @@ TPSPrinter::SendPSText(char* text, Boolean eoj)
 
 // ROM 0x0021b89c SendPSBinary__10TPSPrinterFPcUl
 // Bytes sent, as SendPSText sends a text.  (After a problem the rest is
-// sent from where it stopped, but the size is not made smaller: ROM BUG,
-// kept - the bytes after the end go too.)
+// sent from where it stopped, but the size is not made smaller:
+// ROM BUG (fixed) - the bytes after the end go too.  The fix takes what
+// was sent off the size.)
 void
 TPSPrinter::SendPSBinary(char* data, ULong size)
 {
@@ -475,6 +481,8 @@ TPSPrinter::SendPSBinary(char* data, ULong size)
 		if (HandleError(err) != kPrProblemFixed)
 			break;
 		data += sent;
+		if (RomBugFixed())
+			size = (sent < size) ? size - sent : 0;
 	}
 }
 

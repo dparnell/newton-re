@@ -43,8 +43,9 @@ which the U.S. ROM cannot install off a card: its InstallFormPart (ROM
 0x5579c1) writes the card socket into the new view with `find-var
 'deviceNumber` - a free variable - where `a1.deviceNumber` was meant, so
 every 'form part from a card throws -48807 (undefined variable) and the
-user is told "An error occurred activating the package" (a ROM bug, kept;
-docs/curiosities.md).
+user is told "An error occurred activating the package" (a ROM bug,
+docs/curiosities.md - fixed by default in romsrc/'s InstallFormPart,
+NEWTON_ROM_BUGS=1 for the ROM's behaviour; demo/card-form-package.ns).
 
 Usage:
     python tools/cards/streamedpkg.py OUT.pkg --name NAME --text TEXT [--kind auto|form] [--app SYMBOL]

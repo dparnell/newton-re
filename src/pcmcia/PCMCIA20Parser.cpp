@@ -13,6 +13,7 @@
 #include "NewtonExceptions.h"
 #include "NewtonMemory.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 #include <stdint.h>
@@ -371,8 +372,9 @@ TPCMCIA20Parser::DeviceParser(UChar* tuple, UChar forAttrMemory, UChar otherCond
 
 // ROM 0x0004d124 CisTpl_Device_GEO__15TPCMCIA20ParserFPUc
 // Each common device's geometry, six bytes a device.
-// ROM BUG kept: the device is not checked - a CISTPL_DEVICE_GEO naming more
-// devices than the CISTPL_DEVICE did writes through a nil one.
+// ROM BUG (fixed): the device is not checked - a CISTPL_DEVICE_GEO naming
+// more devices than the CISTPL_DEVICE did writes through a nil one.  The
+// fix passes over the geometry of a device the card does not have.
 UChar*
 TPCMCIA20Parser::CisTpl_Device_GEO(UChar* tuple)
 {
@@ -382,6 +384,13 @@ TPCMCIA20Parser::CisTpl_Device_GEO(UChar* tuple)
 	for ( ; count != 0; count--)
 	{
 		TCardDevice* device = fCard->GetCardDevice(deviceNumber);
+		if (device == nil && RomBugFixed())
+		{
+			for (int i = 0; i < 6; i++)
+				IncrAddr(tuple, 1);
+			deviceNumber++;
+			continue;
+		}
 		device->fBusSize = *IncrAddr(tuple, 1);
 		device->fEraseBlockSize = *IncrAddr(tuple, 1);
 		device->fReadBlockSize = *IncrAddr(tuple, 1);
@@ -675,8 +684,9 @@ GetBytes(TPCMCIA20Parser* parser, UChar*& p, Long size)
 // - starting from the default entry unless it is one itself, when it
 // becomes the default.  The functions the entries belong to are given the
 // range of entries seen for them.
-// ROM BUG kept: an entry may name up to sixteen I/O ranges where the
-// configuration keeps eight, so the ninth on write over what follows.
+// ROM BUG (fixed): an entry may name up to sixteen I/O ranges where the
+// configuration keeps eight, so the ninth on write over what follows.  The
+// fix reads them all but keeps (and counts) only the first eight.
 UChar*
 TPCMCIA20Parser::CisTpl_CE(UChar* tuple)
 {
@@ -781,6 +791,9 @@ TPCMCIA20Parser::CisTpl_CE(UChar* tuple)
 			if (fIOFunctions < count)
 				fIOFunctions = (UChar) count;
 			config->fNumOfIOSpace = (UChar) count;
+			Boolean fixed = RomBugFixed();
+			if (fixed && count > kNumIOBlocks)
+				config->fNumOfIOSpace = kNumIOBlocks;
 			Long lengthSize = GetBits(ranges, 7, 2);
 			Long addressSize = GetBits(ranges, 5, 2);
 			if (lengthSize == 3)
@@ -791,6 +804,8 @@ TPCMCIA20Parser::CisTpl_CE(UChar* tuple)
 			{
 				uint32_t address = GetBytes(this, tuple, addressSize);
 				uint32_t length = GetBytes(this, tuple, lengthSize);
+				if (fixed && i >= kNumIOBlocks)
+					continue;
 				config->fIoAddresses[i] = address;
 				config->fIoLengths[i] = length + 1;
 			}

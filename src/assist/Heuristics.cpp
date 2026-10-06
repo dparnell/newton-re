@@ -20,6 +20,7 @@
 #include "NativeFunctions.h"
 #include "Unicode.h"
 #include "RSSymbols.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -135,9 +136,13 @@ InitDSHeuristics(RefArg /*rcvr*/, RefArg /*arg*/)
 	gWhoObj = GetFrameSlotRef(kAssistantFrame, RSSYMwho_obj);
 	AddGCRoot(gWhoObj);
 	gWhatObj = GetFrameSlotRef(kAssistantFrame, RSSYMwhat_obj);
-	// ROM BUG, kept: gWhoObj is made a root a second time and gWhatObj
-	// never is (harmless: the class lives in the ROM, which never moves)
-	AddGCRoot(gWhoObj);
+	// ROM BUG (fixed): gWhoObj is made a root a second time and gWhatObj
+	// never is (harmless: the class lives in the ROM, which never moves).
+	// The fix makes gWhatObj the root.
+	if (RomBugFixed())
+		AddGCRoot(gWhatObj);
+	else
+		AddGCRoot(gWhoObj);
 	gWhenObj = GetFrameSlotRef(kAssistantFrame, RSSYMwhen_obj);
 	AddGCRoot(gWhenObj);
 	gWhereObj = GetFrameSlotRef(kAssistantFrame, RSSYMwhere_obj);
@@ -701,8 +706,12 @@ DSTagString(RefArg /*rcvr*/, RefArg entries, RefArg str, RefArg info)
 					AddEntry(RefVar(), RSSYMgroup, RefVar(MAKEINT(0)), alias, info);
 					UniqueAppendItem(RefVar(), matched, RSSYMperson);
 				}
-				// ROM BUG, kept: a group falls through into the title's
-				// case, so a group that matches is recorded as a title too
+				// ROM BUG (fixed): a group falls through into the title's
+				// case, so a group that matches is recorded as a title too.
+				// The fix stops at the group, with the break the other
+				// cases have.
+				if (RomBugFixed())
+					break;
 			case 5:
 				parts = SplitString(RefVar(), value);
 				if (NOTNIL(DSPartialStrMatch(RefVar(), words, parts)))

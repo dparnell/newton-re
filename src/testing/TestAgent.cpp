@@ -18,6 +18,7 @@
 #include "RSSymbols.h"
 #include "Interpreter.h"
 #include "PackageManager.h"
+#include "host/RomBugs.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
@@ -195,9 +196,11 @@ TTestReporter::TestReportError(char* message, char* where, long error)
 
 
 // ROM 0x0022b640 TestReportErrorValues__13TTestReporterFPcT1lT3
-// ROM bug kept: with no `where` the format asks for two strings and is
+// ROM BUG (fixed): with no `where` the format asks for two strings and is
 // given one, so the values line is whatever the next argument word held
-// - here, as there, it is simply left out.
+// - here, as there, it is simply left out.  The fix gives it the values
+// (cut to the line's 256 bytes, which a 200-character message and the
+// values would overrun).
 void
 TTestReporter::TestReportErrorValues(char* message, char* where, long got, long expected)
 {
@@ -207,7 +210,9 @@ TTestReporter::TestReportErrorValues(char* message, char* where, long got, long 
 		message[200] = 0;
 	fErrors++;
 	sprintf(values, "               got: %d (0x%x), expect %d (0x%x)", (int) got, (unsigned) got, (int) expected, (unsigned) expected);
-	if (where == nil)
+	if (where == nil && RomBugFixed())
+		snprintf(line, sizeof(line), "Test Case ERR: \t%s\r%s\r", message, values);
+	else if (where == nil)
 		sprintf(line, "Test Case ERR: \t%s\r%s\r", message, "");
 	else
 		sprintf(line, "Test Case ERR: %s\t%s\r%s\r", where, message, values);
@@ -507,10 +512,11 @@ TTestAgent::MainConstructor()
 
 
 // ROM 0x0022a930 MainDestructor__10TTestAgentFv
-// ROM bug kept: the queue is freed but gTestAgentMessageQueue still
+// ROM BUG (fixed): the queue is freed but gTestAgentMessageQueue still
 // points at it, so a TestMGetReportMsg after the agent has gone reads
 // freed memory.  (The host clears it, which the ROM does not: DEVIATION,
-// a stale pointer cannot be reproduced safely.)
+// a stale pointer cannot be reproduced safely.)  The clearing is also the
+// fix, in either mode.
 void
 TTestAgent::MainDestructor()
 {
@@ -637,13 +643,17 @@ TTestAgent::DoDropConnection(void)
 
 
 // ROM 0x002286e4 AgentReportDirect__10TTestAgentFUlPc
-// ROM bug kept: the format asks for the text and is given none, so the
-// line carries whatever the argument word held - here, nothing.
+// ROM BUG (fixed): the format asks for the text and is given none, so the
+// line carries whatever the argument word held - here, nothing.  The fix
+// gives it the text (cut to the line).
 void
 TTestAgent::AgentReportDirect(ULong kind, char* text)
 {
 	char line[256];
-	sprintf(line, "TestAgent ERR\t%s\r", "");
+	if (RomBugFixed())
+		snprintf(line, sizeof(line), "TestAgent ERR\t%s\r", text != nil ? text : "");
+	else
+		sprintf(line, "TestAgent ERR\t%s\r", "");
 	fMessages->EnqueueMessage(kind, nil, line);
 }
 
@@ -885,9 +895,10 @@ TTestAgent::AEHandlerProc(TUMsgToken* token, ULong* size, TTestAgentEvent* event
 		else
 		{
 			// asked of the test manager in the newt world, and its answer
-			// passed back as this RPC's.  ROM bug kept: the request is
+			// passed back as this RPC's.  ROM BUG (fixed): the request is
 			// then queued as well, with a kind nothing set (whatever the
-			// stack held; nought here).
+			// stack held; nought here).  The fix does not queue it: it has
+			// been answered, and has no kind to be queued as.
 			TNewtTestScriptEvent ask;
 			ask.fAEventClass = kNewtEventClass;
 			ask.fAEventID = kTestScriptEventId;
@@ -899,6 +910,8 @@ TTestAgent::AEHandlerProc(TUMsgToken* token, ULong* size, TTestAgentEvent* event
 			fNewtPort.SendRPC(&replySize, &ask, sizeof(ask), &reply, sizeof(reply));
 			fDataFileToken.ReplyRPC(&reply, sizeof(reply));
 			fReplyPending = false;
+			if (RomBugFixed())
+				break;
 		}
 		goto queue;
 

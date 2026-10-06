@@ -62,7 +62,11 @@ python tools/newton-rom/analysis/romsrc.py build romsrc --relayout -o build/obje
   `obj_5afced`, the box `obj_646c8d`, the example `obj_5b033d`), the help
   book has two topics on writing with them (`rex/help_book`: the
   `unistrokeHelp*` items and their two pages; the pictures made by
-  `test_Unistroke --pict`), and it may be changed further to enhance the
+  `test_Unistroke --pict`), `InstallFormPart` writes a card's socket from
+  the install info rather than a variable that does not exist - a ROM
+  bug fixed behind `RomBugFixed()`, the host's switch
+  (`docs/rom-bugs.md`; `NEWTON_ROM_BUGS=1` runs the ROM's code) - and it
+  may be changed further to enhance the
   system. The git tag `romsrc-rom` keeps the last
   tree that is the ROM's but for the additions: `--git-ref romsrc-rom`
   builds that tree out of git, `--original` leaves the additions out, and

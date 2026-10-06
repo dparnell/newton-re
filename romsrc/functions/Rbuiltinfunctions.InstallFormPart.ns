@@ -13,8 +13,17 @@ func(a1) begin
 				end;
 			l5 := BuildContext(l1.theForm);
 			l2.(l3) := l5;
+			// ROM BUG (fixed): the card's socket is read as the variable
+			//  deviceNumber, which there is none of, where a1.deviceNumber
+			//  was meant - so every 'form part on a card threw -48807 and
+			//  the user was told "An error occurred activating the
+			//  package".  The fix reads the install info's slot; with
+			//  NEWTON_ROM_BUGS=1 (RomBugFixed() nil) the ROM's code runs.
 			if (a1.deviceKind = 1) then begin
-					l5.cardSocket := deviceNumber
+					if RomBugFixed() then
+						l5.cardSocket := a1.deviceNumber
+					else
+						l5.cardSocket := deviceNumber
 				end;
 			l4.InstallScript := nil;
 			l4

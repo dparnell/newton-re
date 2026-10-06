@@ -74,6 +74,9 @@ ROM bugs kept: `TestReportErrorValues` and `AgentReportDirect` pass their
 formats too few arguments; the agent frees its message queue without
 clearing `gTestAgentMessageQueue` (the host clears it: DEVIATION); a data
 file asked of the test manager is also queued with a kind nothing set.
+All are fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour):
+the formats are given their text and values, and the answered request is
+not queued; the cleared pointer is the fix in either mode.
 DEVIATION: the natives that report through `gTestReporterForNewt` or look
 in `gtspsPartHandler` without asking whether the agent runs answer nil on
 the host rather than read low memory; a `TTestAgentEvent`'s text block is
@@ -191,7 +194,8 @@ the ROM does).
 
 ROM bug kept: `PlayAStroke` moves a stroke by adding the offset to its
 first `count` words - its samples in format 1, but in format 2 the wrong
-places in the TabPts.
+places in the TabPts. Fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's
+behaviour): a format 2 stroke's TabPts are moved.
 
 ### The tablet's natives
 

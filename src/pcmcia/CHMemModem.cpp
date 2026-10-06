@@ -17,6 +17,7 @@
 #include "NewtonExceptions.h"
 #include "UserTasks.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -289,14 +290,17 @@ TCHMemModem::WriteTuple(UChar* to, const UChar* tuple, ULong size, UChar inAttrM
 // the end.
 // DEVIATION: the ROM writes the size code into its sCISRamDevice table
 // itself (a global it recomputes each time); a copy is written here.
-// ROM BUG kept: a card with a bad CIS and no devices at all is not checked
-// for (device 0 is nil).
+// ROM BUG (fixed): a card with a bad CIS and no devices at all is not
+// checked for (device 0 is nil).  The fix leaves such a card alone, as one
+// that is not SRAM.
 NewtonErr
 TCHMemModem::FormatCIS(TCardSocket* socket, TCardPCMCIA* card)
 {
 	NewtonErr err = noErr;
 	TCardDevice* device = card->GetCardDevice(0);
 	if (card->fBadCIS == 0)
+		return noErr;
+	if (device == nil && RomBugFixed())
 		return noErr;
 	if (device->fDeviceType != 6)
 		return noErr;

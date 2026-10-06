@@ -16,6 +16,7 @@
 #include "Atomic.h"
 #include "OSErrors.h"
 #include "UserGlobals.h"
+#include "host/RomBugs.h"
 
 
 /* -------------------------------------------------------------------------------
@@ -446,9 +447,10 @@ TCardProcessor::DoCommand(TUMsgToken* /*token*/, ULong* /*size*/, TCardMessage* 
 {
 	long result = noErr;
 	ULong socketNumber = message->fSocket;
-	// ROM BUG: > where >= was meant, so a message for the socket one past
-	// the last goes through, with a socket and a state of nil
-	if (socketNumber > gNumberOfHWSockets)
+	// ROM BUG (fixed): > where >= was meant, so a message for the socket
+	// one past the last goes through, with a socket and a state of nil.
+	// The fix turns it away with >=.
+	if (RomBugFixed() ? socketNumber >= gNumberOfHWSockets : socketNumber > gNumberOfHWSockets)
 		return kError_Bad_Parameters;
 	TCardSocket* socket = gCardSockets[socketNumber];
 	TCardSocketState* state = gSocketStates[socketNumber];
@@ -514,9 +516,12 @@ TCardProcessor::DoCommand(TUMsgToken* /*token*/, ULong* /*size*/, TCardMessage* 
 			{ }
 			end_try;
 		}
-		// ROM BUG: the error answered is ReleaseBlockedTask's - the fault
-		// monitor's id, which the server tells the application as an error
+		// ROM BUG (fixed): the error answered is ReleaseBlockedTask's -
+		// the fault monitor's id, which the server tells the application
+		// as an error.  The fix still lets the task go but answers noErr.
 		result = TCardDomains::ReleaseBlockedTask();
+		if (RomBugFixed())
+			result = noErr;
 		VccOff(socketNumber);
 		break;
 
