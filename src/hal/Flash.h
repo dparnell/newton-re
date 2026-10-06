@@ -36,9 +36,9 @@ enum
 };
 
 // What the bank control register answers a lane set it cannot make a bus
-// of.  ROM BUG: 0x293b, a positive number - kError_Flash_Erase_Failed
-// (-10555) without its sign - so a caller testing for an error (< 0) takes
-// it for success.
+// of in the ROM (the ROM bug fixed in host/Flash.cpp): 0x293b, a positive
+// number - kError_Flash_Erase_Failed (-10555) without its sign - so a caller
+// testing for an error (< 0) takes it for success.
 enum
 {
 	kError_Flash_Bad_Lanes	= 0x293b

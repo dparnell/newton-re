@@ -18,6 +18,7 @@
 #include "Reboot.h"
 #include "hal/MMU.h"
 #include "hal/System.h"
+#include "host/RomBugs.h"
 
 #include <new>
 
@@ -681,12 +682,17 @@ TNewInternalFlash::GatherBlockMappingInfo(ULong& erasedRegion, ULong& erasingReg
 // itself up), 3 (both), 4 (a stray) and 11 (a region part-way through, the
 // spare erased and a logical region with nowhere to be); anything else
 // needs formatting.
-// ROM BUG: 11 is what an interruption between the first two writes of
-// Erase leaves - the region giving itself up marked, the spare not yet
+// ROM BUG (fixed): 11 is what an interruption between the first two writes
+// of Erase leaves - the region giving itself up marked, the spare not yet
 // taken, so the logical region is held by neither.  The marked region is
 // erased and made the spare, but the logical region is left without a
 // place and the old spare stays erased too; the start after that finds two
-// erased regions, and the flash is wiped.
+// erased regions, and the flash is wiped.  The fix finishes the Erase that
+// was interrupted: the erased spare is given the logical region (Erase's
+// second write) and put in the map before the marked region is erased and
+// made the spare - so an interruption of the recovery itself leaves 2, which
+// the next start finishes.  (Only when the marked region's header names the
+// logical region nothing holds, as it must after Erase's first write.)
 // (The ROM keeps the table as a twelve-character string on its stack,
 // "011110000001", indexed by the combination; 12-15 index past it into
 // the next local, a region number whose high byte is nought, so they are
@@ -723,6 +729,24 @@ TNewInternalFlash::SetupVirtualMappings(void)
 	static const char kAcceptable[16] = { '0','1','1','1','1','0','0','0', '0','0','0','1', 0,0,0,0 };
 	if (kAcceptable[combination] != '1')
 		return kSError_NeedsFormat;
+	if (RomBugFixed() && combination == 11)
+	{
+		// the interrupted Erase finished: the spare takes the logical region
+		UChar header[4];
+		err = ReadPhysical(erasingRegion * fEraseRegionSize, 4, (char*) header);
+		if (err != noErr)
+			return err;
+		if ((((ULong) header[0] << 8) | header[1]) == unmappedRegion)
+		{
+			header[2] = 0;
+			header[3] = 0xFF;
+			err = WritePhysical(erasedRegion * fEraseRegionSize, 4, (char*) header);
+			if (err != noErr)
+				return err;
+			SetMapEntry(map, unmappedRegion, erasedRegion);
+			erasedRegion = kNoRegion;
+		}
+	}
 	if (erasedRegion != kNoRegion)
 		fSpareRegion = erasedRegion;
 	if (erasingRegion == kNoRegion)
@@ -1093,8 +1117,9 @@ TNewInternalFlash::Copy(ULong from, ULong to, ULong size)
 // ROM 0x0013c3ac IsVirgin__17TNewInternalFlashFUlT1
 // Whether the logical bytes are all erased - a region's header, which is
 // the flash's own, not counting.
-// ROM BUG: a piece that starts a region and is shorter than its header
-// asks about a length that has wrapped round.
+// ROM BUG (fixed): a piece that starts a region and is shorter than its
+// header asks about a length that has wrapped round.  The fix asks about
+// none of it: the header's bytes do not count.
 Boolean
 TNewInternalFlash::IsVirgin(ULong address, ULong size)
 {
@@ -1117,7 +1142,10 @@ TNewInternalFlash::IsVirgin(ULong address, ULong size)
 		if (offset == 0)
 		{
 			offset = 4;
-			length = piece - 4;
+			if (RomBugFixed() && piece < 4)
+				length = 0;
+			else
+				length = piece - 4;
 		}
 		if (!range->IsVirgin(physicalAddress + offset, length))
 			return false;

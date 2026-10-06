@@ -11,6 +11,7 @@
 #include "FlashStore.h"
 #include "NewtonMemory.h"
 #include "NewtonDebug.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -256,11 +257,16 @@ SFlashStoreLookupCacheEntry::Matches(PSSId id, int state)
 
 
 // The set an id's entries go in.
-// ROM BUG: the set is the hash masked with ~fWays where ~(fWays - 1) was
-// meant, so only bit 3 is cleared and the eight-entry sets overlap.
+// ROM BUG (fixed): the set is the hash masked with ~fWays where
+// ~(fWays - 1) was meant, so only bit 3 is cleared and the eight-entry sets
+// overlap.  The fix masks with ~(fWays - 1): sets of eight on a boundary of
+// eight.  (The cache is in RAM and every lookup asks the same CacheSet, so
+// either is consistent.)
 static inline SFlashStoreLookupCacheEntry*
 CacheSet(TFlashStoreLookupCache* cache, PSSId id)
 {
+	if (RomBugFixed())
+		return cache->fEntries + (HashPSSID(id) & (cache->fSize - 1) & ~(cache->fWays - 1));
 	return cache->fEntries + (HashPSSID(id) & (cache->fSize - 1) & ~cache->fWays);
 }
 
@@ -668,8 +674,9 @@ TObjRef::Clone(int state, TObjRef& clone, UChar separate)
 
 // ROM 0x001487a0 CopyTo__7TObjRefFR7TObjRefUlT2
 // Part of this object's data into another's.
-// ROM BUG: on a memory-mapped store the write's result, and on a TFlash
-// the copy's, are dropped: the answer is always noErr.
+// ROM BUG (fixed): on a memory-mapped store the write's result, and on a
+// TFlash the copy's, are dropped: the answer is always noErr.  The fix
+// answers them (so Clone makes a copy that failed again).
 NewtonErr
 TObjRef::CopyTo(TObjRef& to, ULong offset, ULong size)
 {
@@ -678,7 +685,14 @@ TObjRef::CopyTo(TObjRef& to, ULong offset, ULong size)
 	NewtonErr err = noErr;
 	if (fStore->fStoreDriver == nil)
 	{
-		if (!fStore->fUsesTFlash)
+		if (RomBugFixed())
+		{
+			if (!fStore->fUsesTFlash)
+				err = fStore->BasicWrite(dst, fStore->fBase + src, size);
+			else
+				err = fStore->fFlash->Copy(src, dst, size);
+		}
+		else if (!fStore->fUsesTFlash)
 			fStore->BasicWrite(dst, fStore->fBase + src, size);
 		else
 			fStore->fFlash->Copy(src, dst, size);

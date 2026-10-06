@@ -1338,7 +1338,10 @@ answers "no" without `DoneReadingArray`; `TNewInternalFlash::IsVirgin`
 wraps a length shorter than a region's header; `CheckEraseCompletion`
 always says "not complete" on an instance with no lock; and an Erase
 interrupted between its first two writes is recovered into a state the
-next start wipes (`test_Flash` shows it; `docs/curiosities.md`).
+next start wipes (`test_Flash` shows it; `docs/curiosities.md`).  All but
+the `CheckEraseCompletion` quirk are now fixed by default (the error signed,
+`DoneReadingArray` called, the short piece not asked about, the interrupted
+Erase finished); `NEWTON_ROM_BUGS=1` gives the ROM's behaviour.
 
 ## The flash store
 

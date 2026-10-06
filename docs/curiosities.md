@@ -2275,7 +2275,10 @@ makes it the spare - but leaves the old spare erased as well, and the
 logical region with nowhere to live. Nothing is lost yet. At the *next*
 start the headers show two erased regions, which is not one of the five,
 and the whole flash is wiped (`Clobber`) and the store told to format.
-`test_Flash` walks through it. Ported as it is.
+`test_Flash` walks through it. Ported as it is - and, since the ROM bugs
+were fixed (`docs/rom-bugs.md`), finished properly by default: the erased
+spare is given the logical region before the marked region is erased
+(`NEWTON_ROM_BUGS=1` for the ROM's recovery).
 
 ---
 

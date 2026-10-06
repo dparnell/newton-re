@@ -20,6 +20,7 @@
 #include "UserBoot.h"
 #include "OSErrors.h"
 #include "host/TaskRuntime.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -142,6 +143,7 @@ TestFreshFlash(void)
 	EXPECT(memcmp(&file[kRegion + 2 * kRegion + 0x101], text, sizeof(text)) == 0);
 	EXPECT(!flash->IsVirgin(address, sizeof(text)));
 	EXPECT(flash->IsVirgin(3 * kRegion, 64));
+	EXPECT(flash->IsVirgin(3 * kRegion, 2));		// ROM bug fixed: shorter than the header (the ROM's length wraps)
 
 	// flash only clears bits: writing over what is there ANDs
 	char ones[4] = { (char) 0xF0, (char) 0xF0, (char) 0xF0, (char) 0xF0 };
@@ -197,7 +199,8 @@ TestReopen(void)
 
 	// a region left half-way through an erase (its header marked, the
 	// spare not yet taken) is erased again at the next start and becomes
-	// the spare
+	// the spare (the ROM's recovery: NEWTON_ROM_BUGS=1)
+	SetRomBugFixed(false);
 	FileBytes file = ReadFile();
 	HostFlashClose();
 	file[kRegion + 3 * kRegion + 3] = 0x0F;			// region 3: {0, 3, 0, 0x0F}
@@ -225,6 +228,31 @@ TestReopen(void)
 	EXPECT(HeaderAt(file, 2) == ((2 << 16) | 0x00FF));
 	EXPECT(HeaderAt(file, 3) == ((3 << 16) | 0x00FF));
 	EXPECT(HeaderAt(file, kRegions - 1) == 0xFFFFFFFF);
+	flash->Delete();
+	HostFlashClose();
+	SetRomBugFixed(true);
+
+	// fixed: the interrupted Erase is finished - the spare (now the last
+	// region) takes logical region 3, region 3 is erased and is the spare,
+	// and the start after that finds a consistent flash
+	f = fopen(kFlashFile, "r+b");
+	fseek(f, (long) (kRegion + 3 * kRegion + 3), SEEK_SET);
+	fputc(0x0F, f);						// region 3: {0, 3, 0, 0x0F}
+	fclose(f);
+	EXPECT(HostFlashOpen(kFlashFile) == noErr);
+	flash = MakeFlash(&err);
+	EXPECT(err == noErr);
+	EXPECT(flash->fSpareRegion == 3);
+	file = ReadFile();
+	EXPECT(HeaderAt(file, kRegions - 1) == ((3 << 16) | 0x00FF));
+	EXPECT(HeaderAt(file, 3) == 0xFFFFFFFF);
+	flash->Delete();
+	HostFlashClose();
+	EXPECT(HostFlashOpen(kFlashFile) == noErr);
+	flash = MakeFlash(&err);
+	EXPECT(err == noErr);
+	EXPECT(flash->fSpareRegion == 3);
+	EXPECT(flash->IsVirgin(3 * kRegion, 64));
 	flash->Delete();
 	HostFlashClose();
 
