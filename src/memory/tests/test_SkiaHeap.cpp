@@ -9,6 +9,7 @@
 #include "SkiaHeap.h"
 #include "memory/host/KernelHeap.h"
 #include "Boot.h"
+#include "host/RomBugs.h"
 #include "KernelGlobals.h"
 #include "os600/TaskGlobals.h"
 #include "NewtonMemory.h"
@@ -306,6 +307,7 @@ static void TestGrowthAndWalk()
 	// ROM bug fixed: asked for the block after the end, the sentinel again
 	// (the ROM reads the sentinel's "data" as a header)
 	void* after = nil;
+	SetRomBugFixed(true);
 	EXPECT(NextHeapBlock(heap, seed, block, &after, nil, nil, nil, nil, nil) == kMM_HeapEndBlock && after == block);
 	Size total;
 	ULong count;

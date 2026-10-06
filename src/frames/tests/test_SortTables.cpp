@@ -74,6 +74,7 @@ main()
 		gSortTables.fDefaultTable = nil;
 		gSortTables.fDefaultId = 0;
 		// the size of no table: nought (the ROM reads through nil)
+		SetRomBugFixed(true);
 		long noSize = -1;
 		EXPECT(gSortTables.GetSortTable(0, &noSize) == nil && noSize == 0);
 		// characters with no Mac Roman form compare whole (the ROM: on

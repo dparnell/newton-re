@@ -172,6 +172,7 @@ main()
 		RefVar args(MakeArray(2));
 		SetArraySlot(args, 0, MAKECHAR('A'));
 		SetArraySlot(args, 1, MAKEINT(0x42));
+		SetRomBugFixed(true);
 		unsigned char block[8];
 		memset(block, 0xee, sizeof(block));
 		EXPECT(MarshalArguments(args, type, block, sizeof(block), kMacRomanEncoding) == noErr);

@@ -417,6 +417,7 @@ TestStringFunctions()
 	EXPECT_NIL("SplitString(\"   \")[0]");
 	// StringRightTrim: the ROM's trims nothing (a ROM bug); fixed, the
 	// index just past the last character that is not a space
+	SetRomBugFixed(true);
 	EXPECT(StringRightTrim(RefVar(MakeString("ab  "))) == 2);
 	EXPECT(StringRightTrim(RefVar(MakeString("   "))) == 0);
 	EXPECT(StringRightTrim(RefVar(MakeString("ab"))) == 2);
@@ -441,6 +442,7 @@ TestStringFunctions()
 	EXPECT_STRING("SubstituteChars(\"hello\", \"xyz\", \"abc\")", "hello");
 	// an empty replacement: the ROM reads past its end (a ROM bug); fixed,
 	// it is never read past its terminator, which is what goes in
+	SetRomBugFixed(true);
 	EXPECT_TRUE("local s := SubstituteChars(\"ab\", \"xyb\", \"\"); s[0] = $a and Length(s) = 6");
 	// nothing substituted: the very string that went in comes back
 	EXPECT_TRUE("local s := \"hello\"; SubstituteChars(s, \"xyz\", \"abc\") = s");

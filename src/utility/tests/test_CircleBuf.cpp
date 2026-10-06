@@ -122,6 +122,7 @@ TestBufferLists()
 static void
 TestGetBytes()
 {
+	SetRomBugFixed(true);
 	TCircleBuf a, b;
 	EXPECT(a.Allocate(8) == noErr && b.Allocate(4) == noErr);	// b: 7 usable
 	ULong count = 5;

@@ -143,6 +143,7 @@ TestFreshFlash(void)
 	EXPECT(memcmp(&file[kRegion + 2 * kRegion + 0x101], text, sizeof(text)) == 0);
 	EXPECT(!flash->IsVirgin(address, sizeof(text)));
 	EXPECT(flash->IsVirgin(3 * kRegion, 64));
+	SetRomBugFixed(true);
 	EXPECT(flash->IsVirgin(3 * kRegion, 2));		// ROM bug fixed: shorter than the header (the ROM's length wraps)
 
 	// flash only clears bits: writing over what is there ANDs

@@ -12,6 +12,7 @@
 #include "SortedList.h"
 #include "NArray.h"
 #include "UCErrors.h"
+#include "host/RomBugs.h"
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -267,6 +268,7 @@ static void TestNArray()
 
 	// ROM bug fixed: the sizes asked for are checked (the ROM checks the
 	// members, which the constructor made 4 and 4)
+	SetRomBugFixed(true);
 	NArray bad;
 	EXPECT(bad.Init(0, 4, 1, true) == eRangeCheck && bad.Init(sizeof(long), -1, 1, true) == eRangeCheck);
 

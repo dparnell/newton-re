@@ -275,6 +275,7 @@ TestSelector(void)
 	memset(&info, 0, sizeof(info));
 	info.fFree = FreeProcForTest;
 	info.fSelector = (CodeProcPtr) SelectorForTest;
+	SetRomBugFixed(true);
 	EXPECT(info.Selector() == (CodeProcPtr) SelectorForTest);
 	SetRomBugFixed(false);
 	EXPECT(info.Selector() == (CodeProcPtr) FreeProcForTest);
