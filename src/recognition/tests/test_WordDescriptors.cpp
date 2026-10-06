@@ -17,6 +17,7 @@
 #include "Areas.h"				// WordBaseInfo, RecGridInfo
 #include "WordRecognizer.h"		// GetWordGeom, GetGridGeom
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -445,12 +446,20 @@ TestChunkContext(void)
 	ChunkRestoreRC(chunk, &rc);
 	EXPECT(RCGetH(&rc, 0x00) == 0x1111 && RCGetH(&rc, 0x02) == 0x2222 && RCGetH(&rc, 0x08) == 0x00ff
 		&& RCGetH(&rc, 0x0a) == 0x4444 && RCGetH(&rc, 0x90) == 0x5555);
-	// numbers alone: +0x90 0x62 and +0x92 one - which is not put back (ROM bug)
+	// numbers alone: +0x90 0x62 and +0x92 one - which the ROM does not put
+	// back (ROM BUG, fixed: the fix puts it back)
 	((ChunkCtx*) chunk)->fNumbersOnly = 1;
+	SetRomBugFixed(false);
 	ChunkModifyRC(chunk, &rc);
 	EXPECT(RCGetH(&rc, 0x90) == 0x62 && RCGetH(&rc, 0x92) == 1 && RCGetH(&rc, 0x08) == 0x00ff);
 	ChunkRestoreRC(chunk, &rc);
 	EXPECT(RCGetH(&rc, 0x90) == 0x5555 && RCGetH(&rc, 0x92) == 1);
+	SetRomBugFixed(true);
+	RCSetH(&rc, 0x92, 0x6666);
+	ChunkModifyRC(chunk, &rc);
+	EXPECT(RCGetH(&rc, 0x90) == 0x62 && RCGetH(&rc, 0x92) == 1);
+	ChunkRestoreRC(chunk, &rc);
+	EXPECT(RCGetH(&rc, 0x90) == 0x5555 && RCGetH(&rc, 0x92) == 0x6666);
 	rec_w_type readings[1];
 	EXPECT(ChunkWriteParamCtx(chunk, &rc, nil, readings) == &((ChunkCtx*) chunk)->fReadings);
 	EXPECT(ChunkWriteParamCtx(nil, &rc, nil, readings) == nil);

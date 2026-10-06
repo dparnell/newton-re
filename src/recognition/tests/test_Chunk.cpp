@@ -9,6 +9,7 @@
 #include "CursiveReader.h"	// xrdata_type
 #include "LowLevel.h"		// xrd_el_type
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -256,6 +257,41 @@ TestApprox(void)
 	LO_*: the list of low objects
 --------------------------------------------------------------------*/
 
+// LO_Add with no object free, and LO_GetRealChunkInd in a group: the
+// ROM's bugs (ROM BUG (fixed) in ChunkLowObj.cpp) and their fixes.
+static void
+TestLowObjectBugs(tag_wapx_type* nodes, tag_CHUNK* chunks)
+{
+	for (int fixed = 0; fixed < 2; fixed++)
+	{
+		SetRomBugFixed(fixed != 0);
+		void* lo = LO_Create();
+		LO_Clear(lo);
+		LOBlock* block = (LOBlock*) lo;
+		// a group: an object over both chunks, then one over the second
+		EXPECT(LO_Add(lo, nodes, 300, 0, 4, 11, 22) == 0);
+		EXPECT(LO_Add(lo, nodes, 300, 3, 4, 12, 23) == 1);
+		tag_LOWOBJ* first = &block->fObjects[0];
+		first->fGroupCount = 1;
+		first->fNext = 1;
+		EXPECT(LO_HowManyChunks(lo, first) == 3);
+		// the first chunk of the group: the ROM answers the first
+		// object's last
+		EXPECT(LO_GetRealChunkInd(lo, chunks, nodes, first, 1) == (fixed ? 7 : 8));
+		EXPECT(LO_GetRealChunkInd(lo, chunks, nodes, first, 3) == 8);
+
+		// no object free: the ROM leaves the new class the one worked in
+		EXPECT(LO_SetWorkClass(lo, 300) == 1);
+		int32_t wasFree = block->fFree;
+		block->fFree = 0;
+		EXPECT(LO_Add(lo, nodes, 1900, 3, 4, 13, 24) == -1);
+		EXPECT(LO_GetWorkClassID(lo) == (ULong) (fixed ? 300 : 1900));
+		block->fFree = wasFree;
+		LO_Destroy(lo);
+	}
+	SetRomBugFixed(true);
+}
+
 static void
 TestLowObjects(void)
 {
@@ -312,6 +348,7 @@ TestLowObjects(void)
 	EXPECT(LO_PickDirectInd(lo, 1, &obj) == 1 && obj->fFrom == 1);
 	EXPECT(LO_PickDirectInd(lo, 3, &obj) == 0 && obj == nil);
 	EXPECT(LO_Destroy(lo) == 1);
+	TestLowObjectBugs(nodes, chunks);
 }
 
 

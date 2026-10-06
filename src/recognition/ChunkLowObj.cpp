@@ -11,6 +11,7 @@
 
 #include "Chunk.h"
 #include "ParaGraph.h"		// HWRMemoryAlloc, HWRMemoryFree, HWRAbs
+#include "host/RomBugs.h"
 #include <string.h>
 
 
@@ -157,8 +158,9 @@ LO_SetWorkClass(void* list, ULong classID)
 // (fGroup not nought) it is numbered in the group.  The class worked in
 // is left as it was.  ==> the object's index; -1 with 300 objects, no
 // room or an id that is not a class.
-// ROM BUG: with no object free it answers -1 having made the new class
-// the one worked in, the one that was being worked in lost.
+// ROM BUG (fixed): with no object free it answers -1 having made the new
+// class the one worked in, the one that was being worked in lost.  The fix
+// puts the class that was being worked in back before answering.
 long
 LO_Add(void* list, tag_wapx_type* nodes, ULong classID, long from, long to, ULong value, long extra)
 {
@@ -176,7 +178,14 @@ LO_Add(void* list, tag_wapx_type* nodes, ULong classID, long from, long to, ULon
 		lo->fClass = (int32_t) classID;
 	}
 	if (lo->fFree == 0)
+	{
+		if (RomBugFixed() && classID != oldClass)
+		{
+			lo->fClass = (int32_t) oldClass;
+			lo->fWork = oldWork;
+		}
 		return -1;
+	}
 	lo->fFree--;
 	long at = lo->fFreeHead;
 	tag_LOWOBJ* obj = &lo->fObjects[at];
@@ -362,9 +371,10 @@ LO_HowManyChunks(void* list, tag_LOWOBJ* obj)
 // ROM 0x0029bc74 LO_GetRealChunkInd__FPvP9tag_CHUNKP13tag_wapx_typeP10tag_LOWOBJi
 // The real index (tag_CHUNK fRealIndex) of the n-th chunk (from one) an
 // object and its group run through.  ==> -1 for n past them.
-// ROM BUG: in a group the count through the object that holds the n-th
-// chunk starts from the chunks before it and that object's own, so it
-// never meets n and the object's last chunk is answered.
+// ROM BUG (fixed): in a group the count through the object that holds the
+// n-th chunk starts from the chunks before it and that object's own, so it
+// never meets n and the object's last chunk is answered.  The fix starts
+// it from the chunks before that object alone.
 // DEVIATION: when the chunk found is none (-1) or nought - the object's
 // nodes name no chunk - the ROM reads a word from before the chunk
 // array; the host answers -1.
@@ -397,6 +407,8 @@ LO_GetRealChunkInd(void* list, tag_CHUNK* chunks, tag_wapx_type* nodes, tag_LOWO
 			if (k > group)
 				return -1;
 		}
+		if (RomBugFixed())
+			counted -= obj->fChunks;
 	}
 	long last = -1;
 	for (long k = obj->fFrom; k <= obj->fTo; k++)

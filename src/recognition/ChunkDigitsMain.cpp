@@ -21,6 +21,7 @@
 
 #include "Chunk.h"
 #include "ParaGraph.h"		// HWRAbs, HWRMemoryAlloc, HWRMemoryFree
+#include "host/RomBugs.h"
 #include <string.h>
 
 
@@ -442,9 +443,11 @@ UsualDigitsOnly(tag_CHUNK_STAFF* staff)
 // "(" digits ")": at most five objects, all digits or brackets, one "("
 // first and one ")" last, three or more in all, the strokes no more than
 // four beyond the digits', and the brackets together a half to a fifth of
-// the width.  ROM BUG: it counts the brackets from the entry after the one
-// it has just filled, which is whatever the stack held there - DEVIATION:
-// the host's entries start at nought, so the counts stay nought.
+// the width.  ROM BUG (fixed): it counts the brackets from the entry after
+// the one it has just filled, which is whatever the stack held there -
+// DEVIATION: the host's entries start at nought, so the counts stay
+// nought.  The fix counts them from the entry just filled, so a second
+// "(" or ")" rules the writing out as the test after the loop means to.
 static long
 InBrackets(tag_CHUNK_STAFF* staff)
 {
@@ -490,9 +493,10 @@ InBrackets(tag_CHUNK_STAFF* staff)
 			ok = 0;
 			break;
 		}
-		if (entries[count].fChar == '(')
+		UByte counted = RomBugFixed() ? entries[count - 1].fChar : entries[count].fChar;
+		if (counted == '(')
 			opens++;
-		else if (entries[count].fChar == ')')
+		else if (counted == ')')
 			closes++;
 		long n = LO_HowManyChunks(lo, obj);
 		if (n == 0)

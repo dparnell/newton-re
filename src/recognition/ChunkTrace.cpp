@@ -14,6 +14,7 @@
 #include "Chunk.h"
 #include "ParaGraph.h"		// HWRMemoryAlloc, HWRMemoryFree, HWRAbs
 #include "LowLevel.h"		// HWRLAbs
+#include "host/RomBugs.h"
 #include <string.h>
 
 
@@ -315,11 +316,13 @@ const long	kApxMaxNodes	= 200;			// the whole polyline (the block holds one more
 // directions and the points.
 // ROM QUIRK: the scan checking the marked points are in order finds
 // where they are not, and nothing uses what it found.
-// ROM BUG: a split in front of a segment's first node, when it is not
-// the segment's first split, clears the second node's fFirst rather than
-// the new first node's (left as the memset had it).  And at fifty nodes a
-// split in front of the first node has already moved the nodes along
-// when it finds there is no room, leaving the first node twice.
+// ROM BUG (fixed): a split in front of a segment's first node, when it is
+// not the segment's first split, clears the second node's fFirst rather
+// than the new first node's (left as the memset had it).  And at fifty
+// nodes a split in front of the first node has already moved the nodes
+// along when it finds there is no room, leaving the first node twice.
+// The fix clears the new first node's fFirst, and looks for room before
+// moving anything (with none the split is not made, as the ROM means).
 long
 GetLineApprox(tag_WORD_TRACE* trace, long count, long tolerance, tag_wapx_type** result)
 {
@@ -441,7 +444,9 @@ GetLineApprox(tag_WORD_TRACE* trace, long count, long tolerance, tag_wapx_type**
 				{
 					// split at the furthest point
 					long j;
-					for (j = nSplit - 1; j >= 0; j--)
+					// (the fix: no room, no split - nothing moved)
+					long top = RomBugFixed() && nSplit == kApxMaxSplit ? -1 : nSplit - 1;
+					for (j = top; j >= 0; j--)
 					{
 						if (split[j].fIndex <= far)
 						{
@@ -477,6 +482,8 @@ GetLineApprox(tag_WORD_TRACE* trace, long count, long tolerance, tag_wapx_type**
 									first = false;
 									split[0].fFirst = 1;
 								}
+								else if (RomBugFixed())
+									split[0].fFirst = 0;
 								else
 									split[1].fFirst = 0;
 							}

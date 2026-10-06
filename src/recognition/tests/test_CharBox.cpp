@@ -10,6 +10,7 @@
 #include "FixedMath.h"
 #include "NewtErrors.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -100,8 +101,19 @@ main()
 
 		// six is all it will take, and the strokes of a refused list go
 		// back rather than being kept
-		for (long i = 0; i < 8; i++)
-			CharBoxAddStroke(cb, down);
+		for (long i = 0; i < 3; i++)
+			EXPECT(CharBoxAddStroke(cb, down) == 0);
+		EXPECT(cb->fStrokeCount == 5);
+		// the ROM answers nought even when the box is full (ROM BUG)...
+		SetRomBugFixed(false);
+		EXPECT(CharBoxAddStroke(cb, down) == 0);
+		EXPECT(cb->fStrokeCount == 6);
+		EXPECT(CharBoxAddStroke(cb, down) == 0);
+		EXPECT(cb->fStrokeCount == 6);
+		// ...the fix answers one for a refused stroke
+		SetRomBugFixed(true);
+		for (long i = 0; i < 3; i++)
+			EXPECT(CharBoxAddStroke(cb, down) == 1);
 		EXPECT(cb->fStrokeCount == 6);
 
 		StrokeDestroy(down);

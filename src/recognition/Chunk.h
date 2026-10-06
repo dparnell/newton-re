@@ -47,7 +47,7 @@ struct ChunkCtx
 	long			fAlternative;	// +24  a second reading was made (the sort: letters read as digits, or an 8 that may be an '&')
 	long			fAmpersand;		// +28  an 8 read that may be an '&' (the staff's +0x58)
 	long			fListItem;		// +2c  the number is a list's "1)" (the sort; ChunkCorrectByLexDB then leaves it)
-	UShort			fSaved[5];		// +30  rc +0x02, +0x08, +0x0a, +0x00, +0x90 as they were
+	UShort			fSaved[6];		// +30  rc +0x02, +0x08, +0x0a, +0x00, +0x90 as they were; [5] (+3a, padding in the ROM): +0x92, with the ROM bug fixed (ChunkRestoreRC)
 	rc_type*		fRC;			// +3c
 	xrdata_type*	fXr;			// +40
 	rec_w_type*		fReadings;		// +44

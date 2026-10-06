@@ -16,6 +16,7 @@
 
 #include "Chunk.h"
 #include "ParaGraph.h"		// HWRAbs
+#include "host/RomBugs.h"
 #include <limits.h>
 
 
@@ -521,16 +522,32 @@ GatherNumberStats(tag_CHUNK_STAFF* staff, NumberStats* st)
 				maxHeight = h;
 			if (h < minHeight)
 				minHeight = h;
-			// ROM BUG: a character wider than two and a half times its
-			// height is ruled out, and at once marked 2 by the next test
-			// (wider than twice), which overwrites it - so width alone
-			// never rules a number out
-			if (w - h * 2 > h / 2)
-				st->fShape = kNotANumber;
-			if (w > h * 2)
-				st->fShape = 2;
-			else if (st->fShape == 0 && w * 2 - h * 3 > w / 8)
-				st->fShape = 1;
+			// ROM BUG (fixed): a character wider than two and a half
+			// times its height is ruled out, and at once marked 2 by the
+			// next test (wider than twice), which overwrites it - so width
+			// alone never rules a number out.  The fix lets the ruling-out
+			// stand, against this character's next test and a later
+			// character's.
+			if (RomBugFixed())
+			{
+				if (st->fShape == kNotANumber)
+					;
+				else if (w - h * 2 > h / 2)
+					st->fShape = kNotANumber;
+				else if (w > h * 2)
+					st->fShape = 2;
+				else if (st->fShape == 0 && w * 2 - h * 3 > w / 8)
+					st->fShape = 1;
+			}
+			else
+			{
+				if (w - h * 2 > h / 2)
+					st->fShape = kNotANumber;
+				if (w > h * 2)
+					st->fShape = 2;
+				else if (st->fShape == 0 && w * 2 - h * 3 > w / 8)
+					st->fShape = 1;
+			}
 			sumHeight += h;
 			heights++;
 		} while (LO_PickNext(lo, &obj));

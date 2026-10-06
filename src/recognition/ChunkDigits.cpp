@@ -20,6 +20,7 @@
 
 #include "Chunk.h"
 #include "ParaGraph.h"		// HWRMemoryAlloc, HWRMemoryFree, HWRAbs
+#include "host/RomBugs.h"
 #include <string.h>
 
 
@@ -244,10 +245,16 @@ RemoveBox(tag_BOX* boxes, long at, long count)
 
 // ROM 0x00285554 (unnamed) - a box that overlaps the one before it across
 // the line meant to be joined to it.  ==> how many boxes there are now.
-// ROM BUG: the test that the two are close enough is HWRAbs(0) * 3 >
-// the earlier box's height - the argument is a register the code set to
-// nought and never loaded (the disassembly: `mov r0,r9` with r9 = 0) -
+// ROM BUG (fixed): the test that the two are close enough is HWRAbs(0) *
+// 3 > the earlier box's height - the argument is a register the code set
+// to nought and never loaded (the disassembly: `mov r0,r9` with r9 = 0) -
 // and a height is never below nought, so no two boxes are ever joined.
+// The fix measures what the test before it looks at, how far the second
+// box reaches back over the first (the first's right less the second's
+// left), and joins the two when that is more than a third of the first's
+// height.  What the lost argument was cannot be read from the code; the
+// overlap is the one quantity the function has to hand that the comment's
+// "overlaps ... meant to be joined" describes.
 static long
 JoinOverlappingBoxes(tag_BOX* boxes, long count)
 {
@@ -258,7 +265,12 @@ JoinOverlappingBoxes(tag_BOX* boxes, long count)
 		int32_t height = a->bottom - a->top;
 		if (b->left > a->right)
 			continue;
-		if (!(HWRAbs(0) * 3 > height))
+		if (RomBugFixed())
+		{
+			if (!(HWRAbs(a->right - b->left) * 3 > height))
+				continue;
+		}
+		else if (!(HWRAbs(0) * 3 > height))
 			continue;
 		if (a->left > b->left)
 			a->left = b->left;
@@ -748,10 +760,10 @@ CheckQIntersec(tag_wapx_type* n, long a, long b, long c, long d)
 // back at its right and then at its left again, the left turn sharp (more
 // than four steps) and the right one hardly a turn at all, or one of two
 // steps whose line back points at the start, and the left turn left of
-// the start - a 5 whose bar was not lifted - becomes 1305.  ROM BUG: the
-// two turns found are not forgotten between one digit and the next, so a
-// 3 that has neither is judged by the last one's.  ==> 0 with no digits,
-// else 1.
+// the start - a 5 whose bar was not lifted - becomes 1305.  ROM BUG
+// (fixed): the two turns found are not forgotten between one digit and the
+// next, so a 3 that has neither is judged by the last one's.  The fix
+// forgets them at each 3.  ==> 0 with no digits, else 1.
 long
 ThreeToFive(void* lo, tag_CHUNK* chunks, tag_wapx_type* n, int32_t* real, tag_LOWOBJ** objs, long count)
 {
@@ -765,6 +777,8 @@ ThreeToFive(void* lo, tag_CHUNK* chunks, tag_wapx_type* n, int32_t* real, tag_LO
 			continue;
 		if ((uint32_t) (obj->fValue - 1300) % 100 != 3)
 			continue;
+		if (RomBugFixed())
+			right = left = -1;
 		long m = LO_HowManyChunks(lo, obj);
 		long a0 = chunks[real[LO_GetRealChunkInd(lo, chunks, n, obj, 1)]].fFrom;
 		long last = chunks[real[LO_GetRealChunkInd(lo, chunks, n, obj, m)]].fTo - 1;

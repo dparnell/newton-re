@@ -12,6 +12,7 @@
 #include "Chunk.h"
 #include "ParaGraph.h"		// HWRMemoryAlloc, HWRMemoryFree, GetVariantState
 #include "WordSegment.h"	// PS_point_type
+#include "host/RomBugs.h"
 #include <string.h>
 
 extern const int	kChunkSin[4];		// ChunkTables.cpp (generated): sin 0, 15, 30, 45 degrees x 10000
@@ -91,6 +92,8 @@ ChunkModifyRC(void* ctx, rc_type* rc)
 	c->fSaved[1] = RCGetH(rc, 0x08);
 	c->fSaved[2] = RCGetH(rc, 0x0a);
 	c->fSaved[3] = RCGetH(rc, 0x00);
+	if (RomBugFixed())
+		c->fSaved[5] = RCGetH(rc, 0x92);	// (the fix: see ChunkRestoreRC)
 	RCSetH(rc, 0x02, 0x3f);
 	if (c->fNumbersOnly != 0)
 	{
@@ -106,7 +109,9 @@ ChunkModifyRC(void* ctx, rc_type* rc)
 
 // ROM 0x002a654c ChunkRestoreRC__FPvP7rc_type
 // The configuration put back as ChunkModifyRC found it.
-// ROM BUG: +0x92, which the numbers-alone way sets to one, is not put back.
+// ROM BUG (fixed): +0x92, which the numbers-alone way sets to one, is not
+// put back.  The fix keeps it with the others (in the halfword the ROM's
+// layout leaves as padding after the five) and puts it back too.
 void
 ChunkRestoreRC(void* ctx, rc_type* rc)
 {
@@ -118,6 +123,8 @@ ChunkRestoreRC(void* ctx, rc_type* rc)
 	RCSetH(rc, 0x08, c->fSaved[1]);
 	RCSetH(rc, 0x0a, c->fSaved[2]);
 	RCSetH(rc, 0x00, c->fSaved[3]);
+	if (RomBugFixed())
+		RCSetH(rc, 0x92, c->fSaved[5]);
 	c->fModified = 0;
 }
 

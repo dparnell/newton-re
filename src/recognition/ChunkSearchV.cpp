@@ -22,6 +22,7 @@
 
 #include "Chunk.h"
 #include "ParaGraph.h"		// HWRAbs, HWRMemoryAlloc, HWRMemoryFree
+#include "host/RomBugs.h"
 
 
 // What each of V's tests is given about the chunk it is looking at: the
@@ -180,11 +181,13 @@ DgtFromDnHorseshoe(tagLocalStuff* ls, void* lo, tag_wapx_type* n, tag_CHUNK* chu
 				long d3 = GetDirection(cur->fX1, cur->fY1, n[cur->fTo - 1].x, n[cur->fTo - 1].y);
 				if (ang + 1 >= GetAngleBetweenTwoDir(next->fDir, (ULong) d3))
 				{
-					// ROM BUG: the direction to the leg's end is taken from
-					// (fX1, fX1) - the curve's end's x twice, its y never
+					// ROM BUG (fixed): the direction to the leg's end is
+					// taken from (fX1, fX1) - the curve's end's x twice, its
+					// y never.  The fix takes it from (fX1, fY1).
 					if (cur != nil && next2 != nil && (next2->fBottom - cur->fBottom) * 3 < next2->fBottom - cur->fTop)
 					{
-						if ((ULong) GetDirection(cur->fX1, cur->fX1, next2->fX1, next2->fY1) > 14)
+						long fromY = RomBugFixed() ? cur->fY1 : cur->fX1;
+						if ((ULong) GetDirection(cur->fX1, fromY, next2->fX1, next2->fY1) > 14)
 							return -1;
 					}
 					// a 5: a bar written as a stroke of its own beside the top
@@ -192,16 +195,19 @@ DgtFromDnHorseshoe(tagLocalStuff* ls, void* lo, tag_wapx_type* n, tag_CHUNK* chu
 					if (s < strokeCount && strokes[s].fFirstChunk == strokes[s].fLastChunk)
 					{
 						long first = strokes[s].fFirstChunk;
-						// ROM BUG: the bar's subclass, start and end are read
-						// from the chunk `first` places after this one, not from
-						// chunk `first` itself (the index is added to the
-						// chunk's own address rather than the array's); only
-						// its box and size are read from the bar.  DEVIATION:
-						// the host takes a chunk past the array's end as not a
-						// line, where the ROM reads beyond it.
+						// ROM BUG (fixed): the bar's subclass, start and end
+						// are read from the chunk `first` places after this
+						// one, not from chunk `first` itself (the index is
+						// added to the chunk's own address rather than the
+						// array's); only its box and size are read from the
+						// bar.  DEVIATION: the host takes a chunk past the
+						// array's end as not a line, where the ROM reads
+						// beyond it.  The fix reads them all from the bar.
 						tag_CHUNK* bar = &chunks[first];
 						long wrong = (cur - chunks) + first;
 						tag_CHUNK* w = wrong < kMaxChunks ? &chunks[wrong] : nil;
+						if (RomBugFixed())
+							w = bar;
 						if (w != nil && Is(w, 301)
 						 && bar->fX0 < bar->fX1 && bar->fHeight * 3 < bar->fWidth * 2
 						 && HWRAbs(start->y - w->fY0) < bar->fHeight
@@ -468,9 +474,11 @@ DgtFromCircle(tagLocalStuff* ls, void* lo, tag_LOWOBJ* obj, tag_wapx_type* n, ta
 	if (nextIdx != -1)
 	{
 		tag_CHUNK* t = &chunks[nextIdx];
-		// ROM BUG: the tail's left is compared with half the circle's
-		// width, not with the circle's middle
-		if (t->fKind == 2 && t->fLeft > (obj->fRight - obj->fLeft) / 2)
+		// ROM BUG (fixed): the tail's left is compared with half the
+		// circle's width, not with the circle's middle.  The fix compares
+		// it with the middle.
+		long middle = RomBugFixed() ? (obj->fRight + obj->fLeft) / 2 : (obj->fRight - obj->fLeft) / 2;
+		if (t->fKind == 2 && t->fLeft > middle)
 		{
 			if (objBottom - objHeight / 3 < t->fBottom)
 				return -1;
@@ -1321,10 +1329,12 @@ DgtFromDnCurve(tagLocalStuff* ls, void* lo, tag_wapx_type* n, tag_CHUNK* chunks,
 				seven = true;
 			else if (blast->fKind == 1)
 			{
-				// ROM BUG: the curve's height is measured from node fKind
-				// (+0x08) rather than from its first node (+0x00)
+				// ROM BUG (fixed): the curve's height is measured from
+				// node fKind (+0x08) rather than from its first node
+				// (+0x00).  The fix measures it from fFrom.
 				long t = HWRAbs(dxl) * 3 / 2;
-				if (t < HWRAbs(n[c->fKind].y - n[c->fTo].y))
+				long top = RomBugFixed() ? c->fFrom : c->fKind;
+				if (t < HWRAbs(n[top].y - n[c->fTo].y))
 					seven = true;
 			}
 			if (seven)

@@ -17,6 +17,7 @@
 #include "FixedMath.h"
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
+#include "host/RomBugs.h"
 
 #include <stdlib.h>
 
@@ -126,13 +127,14 @@ CharBoxIntialize(CharBox** out, long field00, const FRect* box,
 // and that may make more than one stroke out of it, which is why the
 // count is checked against the whole list.
 //
-// **A ROM bug, kept:** the answer is meant to be nought when the stroke
+// **ROM BUG (fixed):** the answer is meant to be nought when the stroke
 // was taken and one when the box was full, but the function ends in a
 // tail call to `SLDestroy` and so gives back *whatever that answers*
 // instead.  The flag does reach `SLDestroy`, which is what makes it
 // destroy the strokes of a list that was refused; it is only the caller
 // who never learns.  `SLDestroy` answers nothing in particular, so this
-// answers nought however it went.
+// answers nought however it went.  The fix answers the flag: one when
+// the box was full, nought when the stroke was taken.
 long
 CharBoxAddStroke(CharBox* self, RosStroke* stroke)
 {
@@ -159,6 +161,8 @@ CharBoxAddStroke(CharBox* self, RosStroke* stroke)
 	// the list goes, and its strokes with it only when the box would
 	// not have them - otherwise they belong to the box now
 	SLDestroy(list, refused);
+	if (RomBugFixed())
+		return refused;
 	// (and this is where the ROM's answer comes from)
 	return 0;
 }
