@@ -125,8 +125,8 @@ TFlashRange::StartOfBlockFlashAddress(ULong flashAddress) const
 // ROM 0x000c2928 StartReadingArray__11TFlashRangeFv
 // The chips put back into reading their contents, and the bus made the
 // range's width.  A lane set the register has no setting for answers the
-// register's error (see kError_Flash_Bad_Lanes: a positive number in the
-// ROM, (the ROM bug fixed in hal/host/Flash.cpp)).
+// register's error (see kError_Flash_Bad_Lanes: a positive number in
+// the ROM: see (the ROM bug fixed in) hal/host/Flash.cpp).
 NewtonErr
 TFlashRange::StartReadingArray(void)
 {
