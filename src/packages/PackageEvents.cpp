@@ -9,6 +9,7 @@
 #include "PackageEvents.h"
 #include "NewtonMemory.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -52,11 +53,13 @@ TPkBeginLoadEvent::TPkBeginLoadEvent(SourceType type, const PartSource& source, 
 	fSource.stream.bufferId = source.stream.bufferId;
 	fSource.stream.messagePortId = source.stream.messagePortId;
 	fFlag = flag;
-	// ROM BUG: the two answer flags are left as they were, and only a load
-	// that got as far as its parts sets them; a refused package's answer
-	// carries whatever the sender's stack held (InstallPackage then says
-	// "dispatched only" and answers id 0 at random).  The host's start
-	// false, as the stack most often held.
+	// ROM BUG (fixed): the two answer flags are left as they were, and only
+	// a load that got as far as its parts sets them; a refused package's
+	// answer carries whatever the sender's stack held (InstallPackage then
+	// says "dispatched only" and answers id 0 at random).  The host's start
+	// false, as the stack most often held.  The fix is the same false - a
+	// refused package was neither dispatched only nor the patch - so the
+	// two machines agree here.
 	fPatchInstalled = false;
 	fForDispatchOnly = false;
 }
@@ -114,12 +117,14 @@ TPkBackupEvent::TPkBackupEvent(Long index, ULong lastBackupDate, Boolean flag, c
 // ROM 0x0015c464 __ct__19TPkPartInstallEventFRC6PartIdRC16ExtendedPartInfo10SourceTypeRC10PartSource
 // The part's info bytes and its compressor's name are copied into the
 // event, since the pointers to them mean nothing in the task that gets it.
-// ROM BUG: the info is copied for as long as infoSize says, with no check
-// against the 64 bytes the event has for it; a longer info runs on into
-// the compressor's name (which a compressed part then writes over) and
-// past the end of the event.  DEVIATION: the host keeps the first part of
-// that - the run into the compressor's name - and stops at the end of the
-// two, where the ROM goes on over whatever follows the event.
+// ROM BUG (fixed): the info is copied for as long as infoSize says, with
+// no check against the 64 bytes the event has for it; a longer info runs
+// on into the compressor's name (which a compressed part then writes
+// over) and past the end of the event.  DEVIATION: the host keeps the
+// first part of that - the run into the compressor's name - and stops at
+// the end of the two, where the ROM goes on over whatever follows the
+// event.  The fix: no more than the 64 bytes are copied, and the event's
+// infoSize says how many were, so the handler reads only the info.
 TPkPartInstallEvent::TPkPartInstallEvent(const PartId& partId, const ExtendedPartInfo& info, SourceType type, const PartSource& source)
 {
 	fEventCode = kPkPartInstallEvent;
@@ -130,7 +135,13 @@ TPkPartInstallEvent::TPkPartInstallEvent(const PartId& partId, const ExtendedPar
 	fSource.stream.bufferId = source.stream.bufferId;
 	fSource.stream.messagePortId = source.stream.messagePortId;
 	ULong size = fPartInfo.infoSize;
-	if (size > sizeof(fInfo) + sizeof(fCompressor))
+	if (RomBugFixed())
+	{
+		if (size > sizeof(fInfo))
+			size = sizeof(fInfo);
+		fPartInfo.infoSize = size;
+	}
+	else if (size > sizeof(fInfo) + sizeof(fCompressor))
 		size = sizeof(fInfo) + sizeof(fCompressor);
 	if (size != 0)
 		memmove(fInfo, info.info, size);

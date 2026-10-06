@@ -9,6 +9,7 @@
 
 #include "PackageIterator.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 #include "NewtonExceptions.h"
 #include "NewtonMemory.h"
 #include "Unicode.h"
@@ -339,6 +340,8 @@ ReadFromPipe(CPipe* pipe, void* data, long count)
 		long size = count;
 		Boolean eof;
 		pipe->ReadChunk(data, size, eof);
+		if (RomBugFixed() && size < count)
+			err = kError_Bad_Package;	// (the fix of the ROM BUG in ComputeSizeOfEntriesAndData)
 	}
 	newton_catch(exPipeException)
 	{
@@ -433,11 +436,13 @@ TPackageIterator::ComputeSizeOfEntriesAndData(ULong& entriesSize, ULong& dataSiz
 {
 	if (!fFromPipe)
 		return TPrivatePackageIterator::ComputeSizeOfEntriesAndData(entriesSize, dataSize);
-	// ROM BUG kept: a pipe that runs dry is not noticed - ReadChunk answers
-	// eof rather than throwing, and nothing here (nor in Init's header read)
-	// looks at it - so what was not read stays as malloc left it, and
-	// VerifyPackage judges that: a short package is refused or accepted by
-	// whatever the heap held (on the machine as on the host)
+	// ROM BUG (fixed): a pipe that runs dry is not noticed - ReadChunk
+	// answers eof rather than throwing, and nothing here (nor in Init's
+	// header read) looks at it - so what was not read stays as malloc left
+	// it, and VerifyPackage judges that: a short package is refused or
+	// accepted by whatever the heap held (on the machine as on the host).
+	// The fix: ReadFromPipe answers kError_Bad_Package when the pipe gives
+	// fewer bytes than were asked for.
 	fParts = (PartEntry*) malloc(entriesSize);
 	if (fParts == nil)
 		return kError_No_Memory;

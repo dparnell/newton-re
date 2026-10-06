@@ -11,6 +11,7 @@
 #include "NewtonExceptions.h"
 #include "UCErrors.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -109,9 +110,11 @@ CPackagePipe::WritePosition(void) const
 // What is left of the directory's copy first, then the pipe.  Throws
 // evt.ex.pipe with kError_Bad_Parameters when more is wanted than the copy
 // has and there is no pipe.
-// ROM BUG: count comes back as what the pipe gave, not counting the bytes
-// that came from the copy - a read served wholly from the copy says it
-// read nothing.
+// ROM BUG (fixed): count comes back as what the pipe gave, not counting
+// the bytes that came from the copy - a read served wholly from the copy
+// says it read nothing.  The fix: count is the bytes from the copy and
+// the pipe together (and a read served wholly from the copy is not at the
+// end of the pipe, so eof is false).
 void
 CPackagePipe::ReadChunk(void* data, long& count, Boolean& eof)
 {
@@ -127,10 +130,19 @@ CPackagePipe::ReadChunk(void* data, long& count, Boolean& eof)
 		count -= n;
 	}
 	if (count == 0)
+	{
+		if (RomBugFixed())
+		{
+			count = n;
+			eof = false;
+		}
 		return;
+	}
 	if (fPipe == nil)
 		Throw(exPipeException, (void*) kError_Bad_Parameters, nil);
 	fPipe->ReadChunk(data, count, eof);
+	if (RomBugFixed())
+		count += n;
 }
 
 

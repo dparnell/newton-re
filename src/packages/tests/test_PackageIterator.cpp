@@ -9,7 +9,9 @@
 // signatures from there.
 
 #include "PackageIterator.h"
+#include "PackagePipe.h"
 #include "../../utility/tests/TestPipe.h"
+#include "host/RomBugs.h"
 #include "OSErrors.h"
 #include "memory/host/KernelHeap.h"
 
@@ -173,8 +175,9 @@ TestPipe()
 	EXPECT(pipe.ReadPosition() == 176);								// the directory has been consumed; the parts follow
 	// a directory that fails verification (a processor the machine does
 	// not have) is refused and disposed.  (A pipe that runs dry in the
-	// directory is not a test case: the ROM does not notice, and verifies
-	// whatever the heap held - see ComputeSizeOfEntriesAndData.)
+	// directory is not a test case of the ROM's: it does not notice, and
+	// verifies whatever the heap held - see ComputeSizeOfEntriesAndData.
+	// The fix refuses it: below.)
 	UByte bad[176];
 	memcpy(bad, gPackages[7], sizeof(bad));
 	bad[14] = (bad[14] & 0x0f) | 0x20;				// the flags word (+12) under kPackageProcessorMask: processor 0x2000
@@ -183,6 +186,48 @@ TestPipe()
 	badPipe.Rewind();
 	TPackageIterator badIt(&badPipe);
 	EXPECT(badIt.Init() == kError_Bad_Package && badIt.fDirectory == nil);
+
+	// the fix: a pipe that runs dry in the directory is a bad package
+	SetRomBugFixed(true);
+	CTestPipe dryPipe(150);
+	dryPipe.WriteChunk(gPackages[7], 150, false);
+	dryPipe.Rewind();
+	TPackageIterator dryIt(&dryPipe);
+	EXPECT(dryIt.Init() == kError_Bad_Package);
+}
+
+
+// CPackagePipe::ReadChunk: the ROM's count leaves out what came from the
+// directory's copy (none at all for a read served wholly from it); the
+// fix counts it
+static void
+TestPackagePipe()
+{
+	if (gNumPackages < 10)
+		return;
+	PackageDirectory* dir = (PackageDirectory*) gPackages[7];
+	UByte buffer[200];
+	for (int fixed = 0; fixed < 2; fixed++)
+	{
+		SetRomBugFixed(fixed != 0);
+		CTestPipe pipe(dir->Size());
+		pipe.WriteChunk(gPackages[7], dir->Size(), false);
+		pipe.Rewind();
+		CPackagePipe packagePipe;
+		packagePipe.Init(&pipe);
+		long count = 100;
+		Boolean eof = true;
+		packagePipe.ReadChunk(buffer, count, eof);
+		EXPECT(count == (fixed ? 100 : 0));
+		EXPECT(memcmp(buffer, gPackages[7], 100) == 0);
+		if (fixed)
+			EXPECT(!eof);
+		count = 126;						// the copy's last 76 and 50 from the pipe
+		packagePipe.ReadChunk(buffer, count, eof);
+		EXPECT(count == (fixed ? 126 : 50));
+		EXPECT(memcmp(buffer, gPackages[7] + 100, 126) == 0);
+	}
+	SetRomBugFixed(true);
 }
 
 
@@ -198,6 +243,7 @@ main()
 	FindPackages();
 	TestMemory();
 	TestPipe();
+	TestPackagePipe();
 	if (failures == 0)
 		printf("test_PackageIterator: all passed\n");
 	return failures != 0;

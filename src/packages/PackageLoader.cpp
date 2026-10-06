@@ -17,6 +17,7 @@
 #include "UserPorts.h"
 #include "Reboot.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 
 
 /*------------------------------------------------------------------------------
@@ -101,10 +102,10 @@ TPackageLoader::Reset(void)
 // 'pipe' world fills (PackageLoader.h).  gPackageSemaphore is taken here and
 // let go in Done, whatever happens between.  ==> the manager's answer, or
 // the first error on the way.
-// ROM BUG kept: a ring buffer that cannot be made answers noErr - and no
-// package is loaded.
-// ROM BUG kept: the handler is initialised without looking whether it could
-// be made.
+// ROM BUG (fixed): a ring buffer that cannot be made answers noErr - and
+// no package is loaded.  The fix answers kError_No_Memory.
+// ROM BUG (fixed): the handler is initialised without looking whether it
+// could be made.  The fix answers kError_No_Memory when it could not.
 NewtonErr
 TPackageLoader::Load(void)
 {
@@ -115,6 +116,8 @@ TPackageLoader::Load(void)
 	fForDispatchOnly = false;
 	fPatchInstalled = false;
 	fHandler = new TPackageLoaderEventHandler;
+	if (RomBugFixed() && fHandler == nil)
+		return kError_No_Memory;
 	NewtonErr err = fHandler->Init(kPackageEventId, kNewtEventClass);
 	if (err != noErr)
 		return err;
@@ -124,7 +127,7 @@ TPackageLoader::Load(void)
 	{
 		fBuffer = new CRingBuffer;
 		if (fBuffer == nil)
-			return noErr;
+			return RomBugFixed() ? kError_No_Memory : noErr;
 		err = fBuffer->Init(0x100);
 		if (err != noErr)
 			return err;

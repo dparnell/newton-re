@@ -57,6 +57,9 @@
 #include "host/TaskRuntime.h"
 #include "../../utility/tests/TestPipe.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
+
+#include <new>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -942,9 +945,43 @@ public:
 };
 
 
+// TPkPartInstallEvent: an info longer than the event's 64 bytes runs on
+// into the compressor's name in the ROM; the fix copies the 64 and says so
+static void
+TestPartInstallEventInfo(void)
+{
+	char info[100];
+	for (int i = 0; i < 100; i++)
+		info[i] = (char) ('A' + i % 26);
+	ExtendedPartInfo partInfo;
+	memset(&partInfo, 0, sizeof(partInfo));
+	partInfo.info = info;
+	partInfo.infoSize = 100;
+	PartId partId = { 1, 0 };
+	SourceType type = { kFixedMemory, kNoDevice, 0, 0 };
+	PartSource source;
+	memset(&source, 0, sizeof(source));
+	alignas(16) static unsigned char storage[sizeof(TPkPartInstallEvent)];
+	for (int fixed = 0; fixed < 2; fixed++)
+	{
+		SetRomBugFixed(fixed != 0);
+		memset(storage, 0, sizeof(storage));
+		TPkPartInstallEvent* event = new (storage) TPkPartInstallEvent(partId, partInfo, type, source);
+		EXPECT(memcmp(event->fInfo, info, kMaxInfoSize) == 0);
+		if (fixed)
+			EXPECT(event->fPartInfo.infoSize == kMaxInfoSize && event->fCompressor[0] == 0);
+		else
+			EXPECT(event->fPartInfo.infoSize == 100 && event->fCompressor[0] == info[kMaxInfoSize]);
+		event->~TPkPartInstallEvent();
+	}
+	SetRomBugFixed(true);
+}
+
+
 static void
 Scenario(void)
 {
+	TestPartInstallEventInfo();
 	TestEvents();
 	TestListEntries();
 	TTestWorld world;
