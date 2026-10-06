@@ -760,10 +760,10 @@ CheckQIntersec(tag_wapx_type* n, long a, long b, long c, long d)
 // back at its right and then at its left again, the left turn sharp (more
 // than four steps) and the right one hardly a turn at all, or one of two
 // steps whose line back points at the start, and the left turn left of
-// the start - a 5 whose bar was not lifted - becomes 1305.  ROM BUG
-// (fixed): the two turns found are not forgotten between one digit and the
-// next, so a 3 that has neither is judged by the last one's.  The fix
-// forgets them at each 3.  ==> 0 with no digits, else 1.
+// the start - a 5 whose bar was not lifted - becomes 1305.
+// ROM BUG (fixed): the two turns found are not forgotten between one digit
+// and the next, so a 3 that has neither is judged by the last one's.  The
+// fix forgets them at each 3.  ==> 0 with no digits, else 1.
 long
 ThreeToFive(void* lo, tag_CHUNK* chunks, tag_wapx_type* n, int32_t* real, tag_LOWOBJ** objs, long count)
 {
