@@ -18,6 +18,7 @@
 #include "NativeFunctions.h"
 #include "NewtonMemory.h"
 #include "RSSymbols.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -401,9 +402,16 @@ MatchString(Handle dictionary, char* phrase, RefArg info)
 			RefVar exceptions(GetFrameSlotRef(info, RSSYMexception));
 			Ref seen = GetArraySlotRef(exceptions, RINT(dateIndex));
 			if (ISNIL(seen))
-				// ROM BUG, kept: the slot written is the one numbered by
-				// the nil it found (2), not the word's own
-				SetArraySlotRef(exceptions, (ArrayIndex) seen, MAKEINT(0));
+			{
+				// ROM BUG (fixed): the slot written is the one numbered by
+				// the nil it found (2), not the word's own - so the word is
+				// never marked seen, and slot 2's word is.  The fix marks
+				// the word's own slot.
+				if (RomBugFixed())
+					SetArraySlotRef(exceptions, RINT(dateIndex), MAKEINT(0));
+				else
+					SetArraySlotRef(exceptions, (ArrayIndex) seen, MAKEINT(0));
+			}
 			else
 				dateIndex = NILREF;
 		}

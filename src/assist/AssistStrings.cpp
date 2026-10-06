@@ -14,6 +14,7 @@
 #include "Interpreter.h"
 #include "NewtonMemory.h"
 #include "RSSymbols.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 #include <ctype.h>
@@ -383,18 +384,25 @@ CleanString(RefArg /*rcvr*/, RefArg str)
 // ROM 0x000845c0 TrimBlanksAndPunct__FRC6RefVarT1 +0x1c
 // White space, or one of the marks a sentence may be wrapped in.
 //
-// BUG (the ROM's): the last two are 0xc7 and 0xc8, which are the *Mac
+// ROM BUG (fixed): the last two are 0xc7 and 0xc8, which are the *Mac
 // Roman* codes for the guillemets « and ».  The string is Unicode by the
 // time it gets here, so what is actually matched is Ç and È; the
-// guillemets themselves (0x00ab, 0x00bb) go untrimmed.  Kept as it is.
+// guillemets themselves (0x00ab, 0x00bb) go untrimmed.  The fix matches
+// the guillemets' Unicode codes instead.
 static Boolean
 IsBlankOrPunct(UniChar c)
 {
+	UniChar open = 0xc7, close = 0xc8;
+	if (RomBugFixed())
+	{
+		open = 0xab;
+		close = 0xbb;
+	}
 	return c == 0x0d || c == 0x0a || c == 0x09 || c == ' '
 		|| c == '!' || c == '"' || c == '\'' || c == '(' || c == ')'
 		|| c == ',' || c == '-' || c == '.' || c == ':' || c == ';' || c == '?'
 		|| c == 0x2018 || c == 0x2019 || c == 0x201c || c == 0x201d
-		|| c == 0xc7 || c == 0xc8;
+		|| c == open || c == close;
 }
 
 

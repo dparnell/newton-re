@@ -181,7 +181,9 @@ space, and it stops there every time: it trims nothing. And
 `TrimBlanksAndPunct`'s list of marks ends with 0xc7 and 0xc8, which are
 the *Mac Roman* codes for « and » — the string is Unicode by then, so
 what is actually trimmed is Ç and È, and the guillemets are left on.
-Both are kept.
+Both are ported as the ROM has them; the guillemets are fixed by default
+(`NEWTON_ROM_BUGS=1` for the ROM's behaviour; `StringRightTrim` is
+`frames/`'s).
 
 ## The lexicon (`assist/Lexicon.h`)
 
@@ -204,8 +206,8 @@ run-time meanings joined to the ROM's), each meaning copied with the run
 as its `value` (`TagPhraseFrame`); else the locale's lexical dictionaries
 - a date, a time, a phone number or a number, each a copy of the
 Assistant's `lexical` frame with that class as its `isa`, in an array of
-class `lex`; else the Names file (`DSResolveString`). One ROM bug here is
-kept: a date word ("may", "june") seen for the first time is marked in
+class `lex`; else the Names file (`DSResolveString`). One ROM bug here,
+fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour): a date word ("may", "june") seen for the first time is marked in
 the parse's `exception` array by writing slot 2 - the value of the nil it
 found there - rather than the word's own slot.
 
@@ -232,8 +234,8 @@ for a run of more than four words or with a one-letter word), and
 names of the people a card lists, the company, a custom field, the group,
 the title - for one that contains every word of the run
 (`DSPartialStrMatch`, case aside). Each hit is recorded in the parse
-(`AddEntry`, through the card's alias) under what it matched. ROM bug
-kept: a matching group falls through into the title's case, so it is
+(`AddEntry`, through the card's alias) under what it matched. ROM bug,
+fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour): a matching group falls through into the title's case, so it is
 recorded as a title too.
 
 The task scripts' helpers are here as well: `GuessAddressee` (the person
@@ -242,8 +244,8 @@ a letter's opening line is to - "Dear Mr Smith," looks up "Smith"),
 meeting's subject from its meal or scheduling word), the phone-number
 conversions over `vars.PhoneTypes.phoneText`, and the four histories -
 who, what, when and where, three each, newest first (`RecordHistory`).
-ROM bug kept: `InitDSHeuristics` makes `gWhoObj` a GC root twice and
-`gWhatObj` never.
+ROM bug, fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour):
+`InitDSHeuristics` makes `gWhoObj` a GC root twice and `gWhatObj` never.
 
 ## The parse (`assist/ParseUtter.h`)
 
