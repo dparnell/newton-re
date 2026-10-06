@@ -19,6 +19,7 @@
 #include "NewtonMemory.h"
 #include "NewtonTime.h"
 #include "ByteOrder.h"
+#include "host/RomBugs.h"
 #include <string.h>
 
 long					gJournallingState = 0;			// ROM 0x0c100fb8 gJournallingState
@@ -117,9 +118,10 @@ JournalReplayHandler::InitStroke(ULong dx, ULong dy)
 // the host's order here) or borrowed (made in memory), every sample moved
 // by (dx, dy) pixels, its timing set up.  ==> 0, -1 while one is playing.
 //
-// ROM BUG, kept: the offset is added to the stroke's first fCount words,
+// ROM BUG (fixed): the offset is added to the stroke's first fCount words,
 // which are its samples only in format 1; a format 2 stroke has its TabPts
-// moved in the wrong places.
+// moved in the wrong places.  The fix moves a format 2 stroke's TabPts, x
+// and y by so many pixels (16.16).
 long
 JournalReplayHandler::PlayAStroke(JournalStroke* stroke, ULong dx, ULong dy, Boolean borrow)
 {
@@ -158,7 +160,14 @@ JournalReplayHandler::PlayAStroke(JournalStroke* stroke, ULong dx, ULong dy, Boo
 	else
 		fStroke = stroke;
 	ULong count = fStroke->fCount;
-	if (dx != 0 || dy != 0)
+	if ((dx != 0 || dy != 0) && fFormat == 2 && RomBugFixed())
+		for (ULong i = 0; i < count; i++)
+		{
+			TabPt* pt = (TabPt*) ((UByte*) fStroke + 0x10 + i * 12);
+			pt->x = (Fixed) ((ULong32) pt->x + ((ULong32) dx << 16));
+			pt->y = (Fixed) ((ULong32) pt->y + ((ULong32) dy << 16));
+		}
+	else if (dx != 0 || dy != 0)
 		for (ULong i = 0; i < count; i++)
 			fStroke->fSamples[i] = (ULong32) (fStroke->fSamples[i] + dx * 0x200000 + dy * 0x80);
 	InitStroke(dx, dy);
