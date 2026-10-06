@@ -13,6 +13,7 @@
 #include "UserSharedMem.h"
 #include "CommAddresses.h"
 #include "CommOptions.h"
+#include "host/RomBugs.h"
 
 
 // ---------------------------------------------------------------------------
@@ -292,7 +293,11 @@ TOptionIterator::Init(TOptionArray* itsOptionArray, ArrayIndex itsLowBound, Arra
 	fLowBound = itsLowBound;
 	fCurrentIndex = fLowBound;
 	// the block's first option whatever the low bound (as Reset)
-	fCurrentOption = (fCurrentIndex >= 0) ? (TOption*) fOptionArray->fArrayBlock : nil;
+	// - ROM bug: see Reset, where it is fixed (here and in InitBounds too)
+	if (RomBugFixed())
+		fCurrentOption = (fCurrentIndex >= 0) ? fOptionArray->OptionAt(fCurrentIndex) : nil;
+	else
+		fCurrentOption = (fCurrentIndex >= 0) ? (TOption*) fOptionArray->fArrayBlock : nil;
 }
 
 
@@ -304,7 +309,10 @@ TOptionIterator::InitBounds(ArrayIndex itsLowBound, ArrayIndex itsHighBound)
 	fHighBound = itsHighBound;
 	fLowBound = itsLowBound;
 	fCurrentIndex = fLowBound;
-	fCurrentOption = (fCurrentIndex >= 0) ? (TOption*) fOptionArray->fArrayBlock : nil;
+	if (RomBugFixed())
+		fCurrentOption = (fCurrentIndex >= 0) ? fOptionArray->OptionAt(fCurrentIndex) : nil;
+	else
+		fCurrentOption = (fCurrentIndex >= 0) ? (TOption*) fOptionArray->fArrayBlock : nil;
 }
 
 
@@ -330,14 +338,18 @@ TOptionIterator::More()
 
 
 // ROM 0x0014ad0c Reset__15TOptionIteratorFv
-// Back to the low bound.  The option there is the first of the block
-// whatever the low bound is - the ROM does not walk to it (a bug when the
-// low bound is above nought; kept).
+// Back to the low bound.  ROM BUG (fixed): the option there is the first
+// of the block whatever the low bound is - the ROM does not walk to it (a
+// bug when the low bound is above nought; Init and InitBounds likewise).
+// The fix walks to the low bound's option.
 void
 TOptionIterator::Reset()
 {
 	fCurrentIndex = fLowBound;
-	fCurrentOption = (fCurrentIndex >= 0) ? (TOption*) fOptionArray->fArrayBlock : nil;
+	if (RomBugFixed())
+		fCurrentOption = (fCurrentIndex >= 0) ? fOptionArray->OptionAt(fCurrentIndex) : nil;
+	else
+		fCurrentOption = (fCurrentIndex >= 0) ? (TOption*) fOptionArray->fArrayBlock : nil;
 }
 
 
@@ -568,8 +580,9 @@ TOptionArray::Init(TSubArrayOption* array)
 	Size count = array->Length() - (sizeof(TSubArrayOption) - sizeof(TOption));
 	fArrayBlock = NewPtr(count);
 	if (fArrayBlock == nil)
-		// ROM BUG: the ROM answers r7 here, which nothing set - whatever
-		// its caller had in it.  The host answers the memory error.
+		// ROM BUG (fixed): the ROM answers r7 here, which nothing set -
+		// whatever its caller had in it.  The host answers the memory
+		// error, which is the fix, on both paths.
 		return MemError();
 	BlockMove(array + 1, fArrayBlock, count);
 	return noErr;
@@ -593,9 +606,10 @@ TOptionArray::Reset()
 // ROM 0x0014b268 CopyOptionAt__12TOptionArrayFlP7TOption
 // Copy the option at index into `copy`, whose length says how much room it
 // has: opNotFound if there is no such option, opTruncated if it has more
-// data than the room.  ROM BUG: when it is truncated the header is copied
-// too, so `copy`'s length becomes the source's although only the room's
-// worth of data came with it; kept.
+// data than the room.  ROM BUG (fixed): when it is truncated the header is
+// copied too, so `copy`'s length becomes the source's although only the
+// room's worth of data came with it.  The fix gives the copy the room's
+// length.
 NewtonErr
 TOptionArray::CopyOptionAt(ArrayIndex index, TOption* copy)
 {
@@ -607,10 +621,15 @@ TOptionArray::CopyOptionAt(ArrayIndex index, TOption* copy)
 		result = opTruncated;
 	else if (source->fLength < copy->fLength)
 		copy->fLength = source->fLength;
+	ULong room = copy->fLength;
 	BlockMove(source, copy, copy->fLength + sizeof(TOption));
-	// ROM BUG: on success the ROM answers r5, which it never set (its
-	// caller's r5); the host answers noErr.
+	if (RomBugFixed())
+		copy->fLength = room;
+	// ROM BUG (fixed): on success the ROM answers r5, which it never set
+	// (its caller's r5); the host answers noErr, which is the fix, on both
+	// paths.
 	return result;
+
 }
 
 
