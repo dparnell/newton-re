@@ -6,6 +6,7 @@
 #include "CircleBuf.h"
 #include "BufferList.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -129,10 +130,32 @@ TestGetBytes()
 	EXPECT(b.BufferCount() == 5 && a.BufferCount() == 0);
 	count = 5;
 	a.CopyIn((UByte*) "67890", &count, false, 0);
-	// full: the last byte written is the free one, and the rest of a is
-	// dropped (the ROM's)
+	// full: the last byte written is the free one, and (fixed) the rest of a
+	// stays in a, from that byte on
+	EXPECT(b.GetBytes(&a) == kCircleBufFull);
+	EXPECT(b.BufferCount() == 7 && a.BufferCount() == 3);
+	UByte rest[4];
+	count = 3;
+	a.CopyOut(rest, &count, nil);
+	EXPECT(count == 0 && memcmp(rest, "890", 3) == 0);		// (count: what was not copied)
+}
+
+
+// the ROM's GetBytes drops what did not fit (a ROM bug)
+static void
+TestGetBytesRomBug()
+{
+	SetRomBugFixed(false);
+	TCircleBuf a, b;
+	EXPECT(a.Allocate(8) == noErr && b.Allocate(4) == noErr);
+	ULong count = 5;
+	a.CopyIn((UByte*) "12345", &count, false, 0);
+	EXPECT(b.GetBytes(&a) == kCircleBufEmpty);
+	count = 5;
+	a.CopyIn((UByte*) "67890", &count, false, 0);
 	EXPECT(b.GetBytes(&a) == kCircleBufFull);
 	EXPECT(b.BufferCount() == 7 && a.BufferCount() == 0);
+	SetRomBugFixed(true);
 }
 
 
@@ -144,6 +167,7 @@ main()
 	TestMarkers();
 	TestBufferLists();
 	TestGetBytes();
+	TestGetBytesRomBug();
 	printf("test_CircleBuf: %s\n", failures == 0 ? "all passed" : "FAILED");
 	return failures != 0;
 }

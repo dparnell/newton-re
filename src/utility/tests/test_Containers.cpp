@@ -265,6 +265,11 @@ static void TestNArray()
 	EXPECT(a.SetCount(1) == noErr && a.fPhysicalCount == 4);	// a whole chunk went
 	EXPECT(a.SetCount(0) == noErr && a.fArray == nil && a.fPhysicalCount == 0);
 
+	// ROM bug fixed: the sizes asked for are checked (the ROM checks the
+	// members, which the constructor made 4 and 4)
+	NArray bad;
+	EXPECT(bad.Init(0, 4, 1, true) == eRangeCheck && bad.Init(sizeof(long), -1, 1, true) == eRangeCheck);
+
 	NArray keep;
 	EXPECT(keep.Init(sizeof(long), 4, 8, false) == noErr && keep.fPhysicalCount == 8);
 	EXPECT(keep.InsertElements(0, 6, v) == noErr && keep.SetCount(1) == noErr && keep.fPhysicalCount == 8);	// no shrinking

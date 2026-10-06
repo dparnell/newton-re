@@ -368,10 +368,11 @@ CRingBuffer::CopyIn(CPipe* pipe, long& count)
 	{
 		UByte* p1; long n1; UByte* p2; long n2;
 		ComputePutVectors(p1, n1, p2, n2);
-		// BUG (the ROM's): eof is a stack local the ROM never initialises, so
+		// ROM BUG (fixed): eof is a stack local the ROM never initialises, so
 		// when the first run is empty the test below reads whatever was on the
 		// stack.  An indeterminate value cannot be reproduced on the host, so
-		// the reconstruction starts it false - the case the ROM meant.
+		// the reconstruction starts it false - the case the ROM meant, and
+		// the fix, so both paths are one (no RomBugFixed() test).
 		Boolean eof = false;
 		if (p2 != nil && n2 > 0)
 		{

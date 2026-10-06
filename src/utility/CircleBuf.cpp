@@ -9,6 +9,7 @@
 #include "CircleBuf.h"
 #include "BufferList.h"
 #include "NewtonMemory.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -528,6 +529,7 @@ TCircleBuf::GetBytes(TCircleBuf* source)
 	ULong end = fEnd;
 	ULong at;
 	ULong result;
+	ULong lastFrom = from;		// (the fix: where the last byte written came from)
 	for (;;)
 	{
 		at = end;
@@ -537,6 +539,7 @@ TCircleBuf::GetBytes(TCircleBuf* source)
 			break;
 		}
 		buffer[at] = fromBuffer[from];
+		lastFrom = from;
 		from++;
 		if (from == fromSize)
 			from = 0;
@@ -550,10 +553,15 @@ TCircleBuf::GetBytes(TCircleBuf* source)
 		}
 	}
 	// (full, the last byte written is the one kept free and does not
-	// count.)  ROM BUG (kept): source's start is set to its end whether or
-	// not it all came - what did not fit is dropped.
+	// count.)  ROM BUG (fixed): source's start is set to its end whether or
+	// not it all came - what did not fit is dropped.  The fix leaves in
+	// source what did not come: from the byte written into the free place
+	// on, when full.
 	fEnd = at;
-	source->fStart = fromEnd;
+	if (RomBugFixed())
+		source->fStart = result == kCircleBufFull ? lastFrom : from;
+	else
+		source->fStart = fromEnd;
 	return result;
 }
 
