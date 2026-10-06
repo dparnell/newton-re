@@ -4,11 +4,13 @@
 // height rounded up to 64); a right turn puts the page's row y at column
 // 1151 - y, a left turn at column y.  ROM QUIRKS pinned: of the 58 rows
 // past the last whole band only whole groups of eight are turned (rows
-// 1144 and 1145 are lost), and the left turn's leftover rows go wrong - so
-// the left turn is checked with those rows white.  A left turn of a page
-// whose last rows are black is where the ROM writes past the end of the
-// new bitmap; the host drops those bytes (DEVIATION in Tile.cpp), so the
-// bytes after it are checked untouched and the whole bands still right.
+// 1144 and 1145 are lost), and (a ROM bug, fixed by default) the left
+// turn's leftover rows go wrong - so the ROM's left turn is checked with
+// those rows white, the fixed one with them as they are.  A left turn of a
+// page whose last rows are black is where the ROM writes past the end of
+// the new bitmap; the host drops those bytes (DEVIATION in Tile.cpp), so
+// the bytes after it are checked untouched and the whole bands still
+// right (and with the fix the leftover rows too).
 // Runs over a standalone heap and object heap without ROM objects.
 #include "Tile.h"
 #include "Pictures.h"
@@ -17,6 +19,7 @@
 #include "ObjectHeap.h"
 #include "NewtonMemory.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -98,7 +101,7 @@ Turn(Boolean right, long whiteFrom)
 
 
 static void
-TurnLeftOverrun()
+TurnLeftOverrun(long blackColumns)
 {
 	const long kGuard = 1024;
 	UChar* page = (UChar*) NewPtr(kRowBytes * kHeight);
@@ -120,7 +123,7 @@ TurnLeftOverrun()
 	EXPECT(touched == 0);
 	long wrong = 0;
 	for (long row = 0; row < kWidth; row++)
-		for (long col = 0; col < 1088; col++)
+		for (long col = 0; col < blackColumns; col++)
 			if (Pixel(turned, kTurnedRowBytes, row, col) != 1)
 				wrong++;
 	EXPECT(wrong == 0);
@@ -138,9 +141,14 @@ main()
 	gObjectHeapSize = 0x100000;
 	InitObjects();
 
+	SetRomBugFixed(false);
 	Turn(true, kHeight);
 	Turn(false, 1088);
-	TurnLeftOverrun();
+	TurnLeftOverrun(1088);
+	SetRomBugFixed(true);
+	Turn(true, kHeight);
+	Turn(false, kHeight);					// the fix: the leftover rows turned left right
+	TurnLeftOverrun(1144);
 
 	printf("test_Tile: %s\n", failures == 0 ? "ok" : "FAILED");
 	return failures == 0 ? 0 : 1;

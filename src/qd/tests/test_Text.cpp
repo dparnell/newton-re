@@ -17,10 +17,11 @@
 #include "NativeFunctions.h"
 #include "Unicode.h"
 #include "RichString.h"
+#include "Locale.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
-#include "host/RomBugs.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -363,6 +364,38 @@ TestWordBreaks()
 }
 
 
+Ref		FMeasuredNumberStr(RefArg rcvr, RefArg number, RefArg width, RefArg fontSpec);	// (qd/Text.cpp)
+
+
+// MeasuredNumberStr: the digits after the point cut off to fit.  The ROM
+// cuts the caller's own string as well (a ROM bug, fixed by default); a
+// whole number too wide answers nil either way.
+static void
+TestMeasuredNumber()
+{
+	if (gLocaleCache == nil)
+	{
+		gLocaleCache = new LocaleCache;
+		gLocaleCache->fDecimalPoint = Eval("\".\"");
+	}
+	RefVar font(MAKEINT(PackFont(kEspy, 12, 0)));
+	UniChar pi[8];
+	ConvertToUnicode("3.14", pi, kMacRomanEncoding, 7);
+	RefVar width(MAKEINT(MeasureOnceFont(pi, 4, font) + 1));
+	for (int fixed = 0; fixed < 2; fixed++)
+	{
+		SetRomBugFixed(fixed != 0);
+		RefVar number(Eval("\"3.14159\""));
+		RefVar cut(FMeasuredNumberStr(RefVar(NILREF), number, width, font));
+		EXPECT(IsString(cut) && Ustrlen(GetCString(cut)) == 4);
+		EXPECT(Ustrlen(GetCString(number)) == (fixed ? 7u : 4u));
+		RefVar whole(Eval("\"314159\""));
+		EXPECT(ISNIL(FMeasuredNumberStr(RefVar(NILREF), whole, RefVar(MAKEINT(10)), font)));
+	}
+	SetRomBugFixed(true);
+}
+
+
 static void
 TestNatives()
 {
@@ -583,6 +616,7 @@ main()
 		TestItalic();
 		TestWordBreaks();
 		TestNatives();
+		TestMeasuredNumber();
 		TestLayout();
 		TestStyleTable();
 	}
