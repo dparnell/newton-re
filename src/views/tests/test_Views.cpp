@@ -83,6 +83,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "host/RomBugs.h"
 
 static int failures = 0;
 #define EXPECT(cond) do { if (!(cond)) { failures++; fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
@@ -3091,7 +3092,43 @@ TestCaretGesture()
 		delete (InsertRun*) p->fInsertRunList->At(0);
 		p->fInsertRunList->RemoveElementsAt(0, 1);
 		p->fInsertAreasChanged = false;
+
+		// a deletion that swallows the whole of an area: the ROM leaves
+		// its length "negative" (the unsigned check never empties it);
+		// fixed, the area is left empty
+		for (int fixed = 0; fixed < 2; fixed++)
+		{
+			SetRomBugFixed(fixed != 0);
+			CList* areas = CList::Make();
+			SaveInsertArea(areas, 5, 2);
+			p->AdjustInsertAreasAfterDeletion(areas, 3, 6);
+			InsertRun* swallowed = (InsertRun*) areas->At(0);
+			EXPECT(swallowed->fStart == 3);
+			EXPECT(fixed ? swallowed->fLength == 0 : swallowed->fLength > 0x7fffffff);
+			delete swallowed;
+			areas->RemoveElementsAt(0, 1);
+			delete areas;
+		}
+		SetRomBugFixed(true);
+		p->fInsertAreasChanged = false;
 	}
+
+	// a caret with neither a width worth a space nor a height worth a
+	// line: the ROM inserts its unfilled buffer (the host's is empty);
+	// fixed, nothing is inserted at all.  Either way the text is as it was
+	for (int fixed = 0; fixed < 2; fixed++)
+	{
+		SetRomBugFixed(fixed != 0);
+		Rect at1;
+		p->OffsetToBounds(1, &at1);
+		Point on;
+		on.h = at1.left;
+		on.v = (short) (at1.top + 2);
+		long had = p->TextLength();
+		EXPECT(p->InsertHorizontalSpace(on, 0, 0, false) == 1);
+		EXPECT(p->TextLength() == had);
+	}
+	SetRomBugFixed(true);
 
 	// the white space a block of insert area comes down to (FindPreviousWhiteSpaceBlock)
 	{
@@ -5824,6 +5861,33 @@ TestWordIntoParagraph()
 	EXPECT(TestWordInfoFlags(registered, kWordInfoKnown));
 	RemoveCorrectionInfo(para);
 
+	// with remote writing on and the caret on the page just under the
+	// paragraph, a word written far below goes onto the end of the
+	// paragraph's text.  The ROM answers the word's text pointer as the
+	// view (the ROM bug in HandleWord); fixed, the paragraph it went into
+	Eval("userConfiguration.remoteWriting := true");
+	for (int fixed = 0; fixed < 2; fixed++)
+	{
+		SetRomBugFixed(fixed != 0);
+		Point under;
+		under.h = (short) 15;
+		under.v = (short) (para->viewBounds.bottom + 2);
+		editor->PositionCaret(under, false);
+		Rect caretRect;
+		SetRect(&caretRect, 15, para->viewBounds.bottom + 2, 17, para->viewBounds.bottom + 14);
+		editor->SetCaretRectGlobal(caretRect);
+		EXPECT(gRootView->fCaretView == (TView*) editor);
+		long before = para->TextLength();
+		offset = -1;
+		into = editor->HandleWord(text, 3, far, room, &pub, info, &offset);
+		EXPECT(para->TextLength() > before);
+		EXPECT(into == (fixed ? (TView*) para : (TView*) text));
+	}
+	SetRomBugFixed(true);
+	Eval("userConfiguration.remoteWriting := nil");
+	gRootView->SetKeyView(nil, 0, 0, false);
+	RemoveCorrectionInfo(para);
+
 	unit->Dispose();
 	domain->Dispose();
 	gLastAddedWordView = nil;
@@ -5893,6 +5957,39 @@ TestInkWordAtPageCaret()
 }
 
 
+// A polygon whose points' box is not its bounds (ValidatePoly): the ROM
+// never sets the flag that says so (the ROM bug), so a closed curve keeps
+// its verb; fixed, it becomes the plain closed polygon.  Bounds that
+// match leave it alone either way.
+static void
+TestValidatePolyBounds()
+{
+	static const short xy[6][2] = { {0, 0}, {10, 0}, {10, 10}, {5, 12}, {0, 10}, {0, 0} };
+	for (int fixed = 0; fixed < 2; fixed++)
+	{
+		SetRomBugFixed(fixed != 0);
+		for (int matching = 0; matching < 2; matching++)
+		{
+			RefVar poly(AllocateBinary(RSSYMpolygonshape, 4 + 6 * sizeof(Point)));
+			PolygonShape* shape = (PolygonShape*) BinaryData(poly);
+			shape->fVerb = 6;
+			shape->fCount = 6;
+			for (int i = 0; i < 6; i++)
+			{
+				shape->fPoints[i].h = xy[i][0];
+				shape->fPoints[i].v = xy[i][1];
+			}
+			Rect bounds;
+			SetRect(&bounds, 0, 0, matching ? 10 : 50, matching ? 12 : 50);
+			ValidatePoly(poly, bounds);
+			shape = (PolygonShape*) BinaryData(poly);
+			EXPECT(shape->fVerb == ((fixed && !matching) ? 4 : 6));
+		}
+	}
+	SetRomBugFixed(true);
+}
+
+
 // Remote writing turned off while the corrector is up.  A word that
 // arrives while the corrector's slip is on screen has to go where it was
 // written, not to whatever caret the slip happens to hold.
@@ -5920,14 +6017,27 @@ TestRemoteForCorrector()
 	RestoreRemoteForCorrector(state);
 	EXPECT(NOTNIL(Eval("userConfiguration.remoteWriting")));
 
-	// the ROM's bug, kept: with the corrector up and remote writing
-	// already off, nothing was taken away - but the restore tests for
-	// either bit rather than both, so it switches remote writing ON
+	// the ROM's bug (NEWTON_ROM_BUGS=1): with the corrector up and remote
+	// writing already off, nothing was taken away - but the restore tests
+	// for either bit rather than both, so it switches remote writing ON
+	SetRomBugFixed(false);
 	Eval("userConfiguration.remoteWriting := nil");
 	state = SetRemoteForCorrector();
 	EXPECT(state == 1);
 	EXPECT(ISNIL(Eval("userConfiguration.remoteWriting")));
 	RestoreRemoteForCorrector(state);
+	EXPECT(NOTNIL(Eval("userConfiguration.remoteWriting")));
+	SetRomBugFixed(true);
+
+	// fixed: nothing was taken away, so nothing is put back
+	Eval("userConfiguration.remoteWriting := nil");
+	state = SetRemoteForCorrector();
+	EXPECT(state == 1);
+	RestoreRemoteForCorrector(state);
+	EXPECT(ISNIL(Eval("userConfiguration.remoteWriting")));
+	// nor with the corrector down and remote writing on (state 2)
+	Eval("userConfiguration.remoteWriting := true");
+	RestoreRemoteForCorrector(2);
 	EXPECT(NOTNIL(Eval("userConfiguration.remoteWriting")));
 
 	Eval("userConfiguration.remoteWriting := nil");
@@ -7957,6 +8067,7 @@ main()
 		TestWordIntoParagraph();
 		TestInkWordAtPageCaret();
 		TestRemoteForCorrector();
+		TestValidatePolyBounds();
 		TestRichStringIntoParagraph();
 		TestCorrectInfo();
 		TestCorrectInfoEditing();

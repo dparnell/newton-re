@@ -29,6 +29,7 @@
 #include "Locale.h"			// GetPreference
 #include "Rects.h"
 #include "Unicode.h"		// Ustrlen
+#include "host/RomBugs.h"
 #include <string.h>
 
 
@@ -118,10 +119,11 @@ MungeInkScale(RefArg styles, RefArg scale)
 // front, and the array cut after the run `end` falls in, which is
 // shortened to finish there.
 //
-// ROM BUG kept: a part that starts and ends inside one run gets that run
+// ROM BUG (fixed): a part that starts and ends inside one run gets that run
 // shortened twice over the same variable - first to what is left after
 // `start`, then overwritten with `end` less the run's *start* - so the
-// run comes out `start` less the run's start longer than the text.
+// run comes out `start` less the run's start longer than the text.  The
+// fix measures the last run from `start` when the part starts inside it.
 static Ref
 SplitStyles(RefArg styles, long start, long end)
 {
@@ -153,7 +155,8 @@ SplitStyles(RefArg styles, long start, long end)
 			}
 			if (end <= runEnd)
 			{
-				SetArraySlot(result, slot, RefVar(MAKEINT(end - pos)));
+				long from = (RomBugFixed() && pos < start) ? start : pos;
+				SetArraySlot(result, slot, RefVar(MAKEINT(end - from)));
 				slot += 2;
 				SetLength(result, slot);
 				break;
@@ -197,14 +200,30 @@ TextPart(const UniChar* chars, long length)
 // returns is not there, so a piece is always the rest of the text (less a
 // final return).
 //
-// ROM BUGS kept: the styles given to a piece are those split for the
+// ROM BUGS (fixed): the styles given to a piece are those split for the
 // whole of the rest of the text, not cut again where the page cuts it;
 // the fonts of a 'all format and the ink words' print scale are worked
 // out after the styles slot was set, so neither reaches the piece; `*y`
 // is set to the whole page height after every piece, so a paragraph that
 // fits where it started is charged as if it had started a page; and a
 // cut that leaves one character only drops it, the walk finding the end
-// of the text before looking at it.
+// of the text before looking at it.  The fix (RomBugFixed()) sets the
+// styles once all three munges are done, splits them again where the page
+// cuts the piece, starts the next page's room only when a piece was cut,
+// and starts the walk after a cut at the cut itself.
+static Ref
+PieceStyles(RefArg styles, RefArg format, RefArg reflowFont, RefArg inkScale)
+{
+	RefVar result(styles);
+	if (EQ(RefVar(GetFrameSlot(format, RSSYMunistyle)), RSSYMfont))
+		result = MungeStyles(result, reflowFont);
+	if (NOTNIL(result) && EQ(RefVar(GetFrameSlot(format, RSSYMunistyle)), RSSYMall))
+		result = MungeAllStyles(result, reflowFont);
+	if (NOTNIL(result))
+		result = MungeInkScale(result, inkScale);
+	return result;
+}
+
 static void
 ReflowText(RefArg para, RefArg format, RefArg pages, long width, long* y, long pageHeight)
 {
@@ -265,7 +284,13 @@ ReflowText(RefArg para, RefArg format, RefArg pages, long width, long* y, long p
 							font = SetFontSize(font, GetFontSize(reflowFont));
 						SetFrameSlot(part, RSSYMviewfont, font);
 					}
-					if (NOTNIL(styles))
+					if (NOTNIL(styles) && RomBugFixed())
+					{
+						styles = PieceStyles(styles, format, reflowFont, inkScale);
+						if (NOTNIL(styles))
+							SetFrameSlot(part, RSSYMstyles, styles);
+					}
+					else if (NOTNIL(styles))
 					{
 						if (EQ(RefVar(GetFrameSlot(format, RSSYMunistyle)), RSSYMfont))
 							styles = MungeStyles(styles, reflowFont);
@@ -297,13 +322,24 @@ ReflowText(RefArg para, RefArg format, RefArg pages, long width, long* y, long p
 					view->BoundsOfLastLine(&last);
 					lastBottom = last.bottom;
 					view->RemoveView();
+					Boolean cut = false;		// (the fix) the piece was cut where the page ran out
 					if (visible > 0)
 					{
+						cut = visible < n;
 						p = src + visible;
 						n = visible;
 						if (n > 1 && p[-1] == kCR)
 							n--;
 						SetFrameSlot(part, RSSYMtext, RefVar(TextPart(src, n)));
+						RefVar paraStyles(GetProtoVariable(para, RSSYMstyles, nil));
+						if (RomBugFixed() && NOTNIL(paraStyles))
+						{
+							long offset = (long) (src - base);
+							styles = PieceStyles(RefVar(SplitStyles(paraStyles, offset, offset + n)),
+												 format, reflowFont, inkScale);
+							if (NOTNIL(styles))
+								SetFrameSlot(part, RSSYMstyles, styles);
+						}
 					}
 					group = Clone(RefVar(parts > 0 || Length(pages) == 0 ? Rcanonicalfirstgroup : Rcanonicalgroup));
 					parts++;
@@ -311,7 +347,13 @@ ReflowText(RefArg para, RefArg format, RefArg pages, long width, long* y, long p
 					SetArraySlot(children, 0, part);
 					SetFrameSlot(group, RSSYMviewchildren, children);
 					AddArraySlot(pages, group);
-					*y = pageHeight;
+					if (!RomBugFixed() || cut)
+						*y = pageHeight;
+					if (RomBugFixed() && cut)
+					{
+						src = p;
+						continue;			// (the walk goes on from the cut itself)
+					}
 				}
 				src = p;
 			}

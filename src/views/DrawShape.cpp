@@ -31,6 +31,7 @@
 #include "Locale.h"
 #include "NativeFunctions.h"
 #include "NewtonExceptions.h"
+#include "host/RomBugs.h"
 #include <string.h>
 
 static const char kGrafException[] = "evt.ex.graf";
@@ -1820,8 +1821,9 @@ FIsPrimShape(RefArg /*rcvr*/, RefArg shape)
 // way is drawn into through DrawShapeScaled, at its resolution; otherwise
 // the scaler is forced on around the drawing.
 //
-// ROM BUG, kept: a throw out of the plain drawing leaves the scaler
-// forced (the ROM puts it back only after a drawing that returns).
+// ROM BUG (fixed): a throw out of the plain drawing leaves the scaler
+// forced (the ROM puts it back only after a drawing that returns).  The
+// fix puts the scaling back in the handler too, as it was before.
 Ref
 FDrawIntoBitmap(RefArg /*rcvr*/, RefArg shape, RefArg styles, RefArg bitmap)
 {
@@ -1842,13 +1844,16 @@ FDrawIntoBitmap(RefArg /*rcvr*/, RefArg shape, RefArg styles, RefArg bitmap)
 	Point origin;
 	origin.h = 0;
 	origin.v = 0;
+	volatile long wasForced = -1;		// (the fix) the scaling to put back on a throw, -1 for none
 	newton_try
 	{
 		Point res = pm->deviceRes;
 		if (res.v == 0 || res.h == 0 || (res.v == 72 && res.h == 72))
 		{
 			long forced = TQDScaler::ForceScaling(1);
+			wasForced = forced;
 			DrawShape(shape, styles, origin);
+			wasForced = -1;
 			TQDScaler::ForceScaling(forced);
 		}
 		else
@@ -1856,6 +1861,8 @@ FDrawIntoBitmap(RefArg /*rcvr*/, RefArg shape, RefArg styles, RefArg bitmap)
 	}
 	newton_catch_all
 	{
+		if (RomBugFixed() && wasForced != -1)
+			TQDScaler::ForceScaling(wasForced);
 		SetPort(saved);
 		ClosePort(&port);
 		UnlockRef(data);

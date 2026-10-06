@@ -62,6 +62,7 @@
 #include "Polygons.h"
 #include "ShapeDomain.h"
 #include "Stroke.h"
+#include "host/RomBugs.h"
 
 
 // what a gathering rectangle starts as, and how the callers know nothing
@@ -582,14 +583,17 @@ TEditView::ChildBoundsChanged(TView* child, Rect& bounds)
 // ROM 0x000a5e4c SetValue__9TEditViewFRC6RefVarT1
 // The page's text flags are its own as an input view; anything else is
 // set as any view's is.
-// ROM BUG, kept: 'textFlags is never written to the context - the flags
+// ROM BUG (fixed): 'textFlags is never written to the context - the flags
 // are worked out again from the slot as it was, so setting it changes
-// nothing.
+// nothing.  The fix writes the slot first, so the flags are worked out
+// from the new value.
 void
 TEditView::SetValue(RefArg slot, RefArg value)
 {
 	if (EQRef(slot, RSSYMtextflags))
 	{
+		if (RomBugFixed())
+			SetContextSlot(slot, value);
 		fTextFlags = (long) GetInputViewTextFlags((ULong) TextFlags(), fFlags);
 		return;
 	}
@@ -2581,17 +2585,17 @@ SetRemoteForCorrector(void)
 // ROM 0x001774e0 RestoreRemoteForCorrector__Fl
 // Remote writing put back after the corrector has had its turn.
 //
-// ROM BUG, kept: the test is "either bit", not "both bits".  The
+// ROM BUG (fixed): the test is "either bit", not "both bits".  The
 // preference is only ever taken away when the corrector was up *and*
 // remote writing was on, so only that case should put it back - but a
 // session where the corrector was up with remote writing off ends with
 // remote writing switched on, and it stays on.  Writing a word anywhere
 // on a page with the corrector up is enough to change a preference the
-// writer never touched.
+// writer never touched.  The fix puts it back only when both bits are set.
 void
 RestoreRemoteForCorrector(ULong state)
 {
-	if ((state & 3) != 0)
+	if (RomBugFixed() ? (state & 3) == 3 : (state & 3) != 0)
 		SetPreference(RSSYMremotewriting, RefVar(TRUEREF));
 }
 
@@ -2634,7 +2638,7 @@ TimeStampTextChange(TView* view)
 // itself, or into a new paragraph.
 //
 // ==> the view the word ended up in - on the two caret paths, the
-// caller's own leftover (the ROM bug below).
+// caller's own leftover (the ROM bug below; fixed, the view at the caret).
 TView*
 TEditView::HandleWord(UniChar* text, ULong length, Rect& box, Rect& room,
 					  TUnitPublic* unit, RefArg info, long* outOffset)
@@ -2686,7 +2690,7 @@ TEditView::HandleWord(UniChar* text, ULong length, Rect& box, Rect& room,
 							|| (key->fParent != nil && key->fParent->fParent == this))
 						&& key->Hilited() && !CorrectorUp();
 
-	// ROM bug: the best child is kept in r8, which is set only when a
+	// ROM BUG (fixed): the best child is kept in r8, which is set only when a
 	// child answers better than the one before - never cleared first.
 	// Two paths below put the word in without choosing a child (at the
 	// caret, and at the end of the text under the caret), so the view
@@ -2697,8 +2701,10 @@ TEditView::HandleWord(UniChar* text, ULong length, Rect& box, Rect& room,
 	// tests for nil: the word counts as taken, and the recogniser claims
 	// its strokes.  Kept by starting from the text pointer; answering nil
 	// instead makes the command's result 0, and the arbiter then turns
-	// the strokes of the word just inserted into ink as well.
-	TView* best = (TView*) text;
+	// the strokes of the word just inserted into ink as well.  The fix
+	// starts from nil and answers, on those two paths, the paragraph the
+	// word went into - the caret's, or the text under the caret.
+	TView* best = RomBugFixed() ? nil : (TView*) text;
 	long bestScore = 0;
 	if (!emptyBox)
 	{
@@ -2745,6 +2751,8 @@ TEditView::HandleWord(UniChar* text, ULong length, Rect& box, Rect& room,
 					SetFrameSlot(spec, RSSYMinsertitems, wordInfo);
 					SetFrameSlot(spec, RSSYMaddspace, RefVar(addSpace ? TRUEREF : NILREF));
 					InsertItemsAtCaret(spec);
+					if (RomBugFixed())
+						best = key;
 				}
 				else
 				{
@@ -2778,6 +2786,8 @@ TEditView::HandleWord(UniChar* text, ULong length, Rect& box, Rect& room,
 						long end = (long) ((ULong) (Length(textRef) - sizeof(UniChar)) / sizeof(UniChar));
 						RefVar noFont;
 						DoInsertItems(under, items, false, true, end, 0, true, noFont);
+						if (RomBugFixed())
+							best = under;
 					}
 					else if (bestScore != 0)
 						((TDataView*) best)->HandleWord(text, length, box, pt,

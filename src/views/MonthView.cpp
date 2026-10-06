@@ -29,6 +29,7 @@
 #include "Pictures.h"
 #include "MeetingView.h"
 #include "Meetings.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -460,10 +461,11 @@ IsOverviewMeeting(RefArg meeting)
 // top, nine pixels down.  The bars start 9 pixels down in a small box and
 // 16 in a big one.
 //
-// When asking for the month throws, each day is asked for its own.  ROM
-// bug kept: that path draws every meeting of the day with the start and
-// end of the *month's* first meeting - which it never found, the asking
-// having failed - so the bars all fall past the bottom of the box.
+// When asking for the month throws, each day is asked for its own.
+// ROM BUG (fixed): that path draws every meeting of the day with the start
+// and end of the *month's* first meeting - which it never found, the asking
+// having failed - so the bars all fall past the bottom of the box.  The
+// fix draws each of the day's meetings with its own start and end.
 void
 TMonthView::DrawMonthOverView(void)
 {
@@ -553,7 +555,16 @@ TMonthView::DrawMonthOverView(void)
 			{
 				item = GetArraySlotRef(dayMeetings, i);
 				if (IsOverviewMeeting(item))
-					DrawMeetingOverviewLine(nextStart, nextEnd, dayStart, margin, box);		// (ROM bug: see above)
+				{
+					if (RomBugFixed())
+					{
+						long start = RINT(GetMeetingSlot(item, RSSYMmtgstartdate));
+						long end = RINT(GetMeetingSlot(item, RSSYMmtgduration)) + start;
+						DrawMeetingOverviewLine(start, end, dayStart, margin, box);
+					}
+					else
+						DrawMeetingOverviewLine(nextStart, nextEnd, dayStart, margin, box);		// (ROM bug: see above)
+				}
 			}
 			notes = GetAllMeetings(notesSoup, repeatNotesSoup, dayStart, dayEnd, false);
 			noteCount = ISNIL(notes) ? 0 : Length(notes);

@@ -41,6 +41,7 @@
 #include "RSSymbols.h"
 #include "Hilites.h"
 #include "NewtonMemory.h"
+#include "host/RomBugs.h"
 #include <string.h>
 
 extern const int	kHiliteTracedCurve[17];		// PolygonViewTables.cpp: sqrt(1 - (i/16)^2), 16.16
@@ -498,10 +499,12 @@ IntervalIndex(long position, long* ends, long count)
 // ROM 0x0018ebb8 AddInterval__FlT1PlT3
 // An interval added to the (at most five) kept in order: one that falls
 // wholly between two is put in there, one that overlaps is merged.
-// ROM bug kept: an interval that runs over more than one of the others
+// ROM BUG (fixed): an interval that runs over more than one of the others
 // is only merged with the first of them - the length of the stretch to
 // close up comes out negative (the first index less the last) and nothing
-// is moved - so the ones it covers stay as they were.
+// is moved - so the ones it covers stay as they were.  The fix closes up
+// the ends between the merged interval's start and its end, so the ones it
+// covers go.
 static void
 AddInterval(long from, long to, long* ends, long* count)
 {
@@ -537,6 +540,16 @@ AddInterval(long from, long to, long* ends, long* count)
 	{
 		last--;
 		ends[last] = to;
+	}
+	if (RomBugFixed())
+	{
+		long gone = last - (first + 1);	// the ends inside the merged interval
+		if (gone > 0)
+		{
+			memmove(ends + first + 1, ends + last, (n - last) * sizeof(long));
+			*count = *count - gone / 2;
+		}
+		return;
 	}
 	long move = (first + 1) - last;
 	if (move <= 0)

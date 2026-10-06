@@ -34,6 +34,7 @@
 #include "OSErrors.h"
 #include "Locale.h"		// GetPreference
 #include "NewtonExceptions.h"
+#include "host/RomBugs.h"
 #include <stdint.h>
 
 TTransform	gEditViewTransform;
@@ -1188,11 +1189,13 @@ CommandPoints(RefArg cmd)
 
 
 // ROM 0x0018b2c8 ValidatePoly__F7DataPtrRC5TRect
-// ROM bug kept (to no effect): the points' box, moved to the rectangle's
+// ROM BUG (fixed) (to no effect): the points' box, moved to the rectangle's
 // place, is compared with the rectangle and EmptyRect asked of it when
 // they differ, but the flag that was meant to say so is never set - so a
 // closed verb of any number of points besides 0, 3, 8, 9 and 10-12 is
-// never turned into the plain polygon.
+// never turned into the plain polygon.  (The ROM's `moveq r7, #0` at
+// 0x0018b390 stores false where true was meant.)  The fix sets the flag
+// when the boxes differ and the rectangle is not empty.
 void
 ValidatePoly(RefArg points, const Rect& bounds)
 {
@@ -1213,7 +1216,12 @@ ValidatePoly(RefArg points, const Rect& bounds)
 	shape->CalcBounds(&box);
 	OffsetRect(&box, bounds.left, bounds.top);
 	if (!EqualRect(&bounds, &box))
-		(void) EmptyRect(&bounds);				// (the answer goes nowhere)
+	{
+		if (RomBugFixed())
+			badBounds = !EmptyRect(&bounds);
+		else
+			(void) EmptyRect(&bounds);				// (the answer goes nowhere)
+	}
 	long count = shape->fCount;
 	Boolean closes = *(ULong32*) &shape->fPoints[0] == *(ULong32*) &shape->fPoints[count - 1];
 	Boolean fix;

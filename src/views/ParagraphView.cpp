@@ -59,6 +59,7 @@
 #include "NewtonExceptions.h"
 #include "Interpreter.h"
 #include "NewtonMemory.h"
+#include "host/RomBugs.h"
 #include <string.h>
 
 
@@ -2956,11 +2957,13 @@ TParagraphView::FindLineForWord(const Rect& box, long flags)
 // leaves an insert area behind (SaveInsertArea), so whatever of it the
 // writer does not write into is taken out again later.
 //
-// ROM bug kept: with neither a width worth a space nor a height worth a
+// ROM BUG (fixed): with neither a width worth a space nor a height worth a
 // line the ROM inserts the buffer it never filled in, which is whatever
 // was on the stack.  DEVIATION: the host cannot reproduce which bytes
 // those are, and putting arbitrary text into somebody's note is worse
-// than useless, so the buffer starts empty and nothing goes in.
+// than useless, so the buffer starts empty and nothing goes in.  The fix
+// does not insert at all when there is nothing to put in (no empty
+// string handed to DoInsertItems).
 // ROM QUIRK: a space with no width (a style the text object measures as
 // nothing) would be a division by zero; the host takes it as no spaces.
 long
@@ -3024,7 +3027,8 @@ TParagraphView::InsertHorizontalSpace(Point& point, long width, long height, Boo
 		chars[count] = 0;
 	}
 
-	if (breaks != 0 || !CheckAndDoSplitInk(pt, offset))
+	if ((breaks != 0 || !CheckAndDoSplitInk(pt, offset))
+		&& !(RomBugFixed() && count == 0))
 	{
 		RefVar items(MakeString(chars));
 		DoInsertItems(this, items, false, true, offset, 0, !typed, RefVar(NILREF));
@@ -4310,11 +4314,14 @@ TParagraphView::HandleWord(const UniChar* text, ULong length, const Rect& box,
 				wordBox.right = (short) (wordBox.left + width);
 				wordBox.top = endBox.top;
 				wordBox.bottom = endBox.bottom;
-				// (ROM bug: the new middle is *added* to the point's h
+				// (ROM BUG (fixed): the new middle is *added* to the point's h
 				//  rather than replacing it.  It is harmless - nothing
 				//  reads this point's h again, only its v, which
-				//  AdjacentBoxes compares - so it is kept.)
-				wordPt.h = (short) (wordBox.left + (width >> 1) + wordPt.h);
+				//  AdjacentBoxes compares.  The fix replaces it.)
+				if (RomBugFixed())
+					wordPt.h = (short) (wordBox.left + (width >> 1));
+				else
+					wordPt.h = (short) (wordBox.left + (width >> 1) + wordPt.h);
 				wordPt.v = wordBox.bottom;
 			}
 		}
@@ -6309,8 +6316,13 @@ TParagraphView::WordCommand(RefArg cmd)
 			AddWordInfo(this, 0, length, unit);
 			CommandSetResult(cmd, 1);
 			RestoreRemoteForCorrector(remote);
-			// ROM BUG: the word's handle is neither unlocked nor disposed
-			// of on this path
+			// ROM BUG (fixed): the word's handle is neither unlocked nor
+			// disposed of on this path.  The fix gives it back.
+			if (RomBugFixed())
+			{
+				HUnlock(word);
+				DisposHandle(word);
+			}
 			return true;
 		}
 		RefVar hilite(FirstHilite());
@@ -6322,7 +6334,13 @@ TParagraphView::WordCommand(RefArg cmd)
 			{
 				CommandSetResult(cmd, 1);
 				RestoreRemoteForCorrector(remote);
-				// ROM BUG: the word's handle is kept here too
+				// ROM BUG (fixed): the word's handle is kept here too.  The
+				// fix gives it back.
+				if (RomBugFixed())
+				{
+					HUnlock(word);
+					DisposHandle(word);
+				}
 				return true;
 			}
 		}

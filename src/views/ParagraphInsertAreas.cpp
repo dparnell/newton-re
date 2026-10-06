@@ -24,6 +24,7 @@
 #include "OSErrors.h"
 #include "NewtonTime.h"
 #include "Rects.h"
+#include "host/RomBugs.h"
 
 static const UniChar kSpaceChar = 0x20;
 static const UniChar kReturnChar = 0x0d;
@@ -169,9 +170,10 @@ StartInsertAreaIdler(TParagraphView* view, Boolean changed)
 // after them moves back, one they reach into shrinks (and counts as
 // written into).
 //
-// ROM BUG: a deletion that swallows the whole of an area leaves its
+// ROM BUG (fixed): a deletion that swallows the whole of an area leaves its
 // length negative, and the check meant to empty it compares the length
-// as unsigned, so it never does; the area stays with a huge length.
+// as unsigned, so it never does; the area stays with a huge length.  The
+// fix makes the check signed, so a swallowed area is left empty.
 void
 TParagraphView::AdjustInsertAreasAfterDeletion(CList* list, ULong offset, ULong length)
 {
@@ -194,6 +196,8 @@ TParagraphView::AdjustInsertAreasAfterDeletion(CList* list, ULong offset, ULong 
 				run->fChanged = true;
 				changed = true;
 				// (if (run->fLength < 0) - unsigned, never)
+				if (RomBugFixed() && offset + length - start > runLength)
+					run->fLength = 0;
 			}
 		}
 		else if (offset < end)

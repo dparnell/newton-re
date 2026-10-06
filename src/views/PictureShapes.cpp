@@ -47,6 +47,7 @@
 #include "NewtonMemory.h"
 #include "ByteOrder.h"
 #include "Unicode.h"
+#include "host/RomBugs.h"
 #include <string.h>
 
 static void	FlushAnyInk(PicPlay* play, GrafPort* port);
@@ -236,7 +237,13 @@ StylesEqual(RefArg a, RefArg b)
 		Boolean same = EqualRgn(aRgn, bRgn);
 		UnlockRef(bData);
 		UnlockRef(aData);
-		// (ROM BUG, kept: the two fake handles are never given back)
+		// (ROM BUG (fixed): the two fake handles are never given back.
+		//  The fix disposes of them once compared.)
+		if (RomBugFixed())
+		{
+			DisposHandle((Handle) aRgn);
+			DisposHandle((Handle) bRgn);
+		}
 		if (!same)
 		{
 			equal = false;
