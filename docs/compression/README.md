@@ -105,7 +105,9 @@ given to `Init` instead of nil.
 
 Quirks kept: `TArithmeticCompressor::Delete` frees nothing (the tables are
 `Cleanup`'s); the decompressor's `Delete` frees the tables whenever the
-model is adaptive, whoever owns them. Two `DEVIATION`s zero flags the ROM
+model is adaptive, whoever owns them. (Both are now fixed by default -
+each `Delete` frees the tables it owns, as `Cleanup` does;
+`NEWTON_ROM_BUGS=1` for the ROM's behaviour.) Two `DEVIATION`s zero flags the ROM
 leaves uninitialised in a fresh instance (`fOwnsTables`; the Unicode
 decompressor's `fRunCount`/`fSourceDone`).
 

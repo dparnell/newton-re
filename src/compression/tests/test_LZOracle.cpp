@@ -14,6 +14,10 @@
 //     decoder reads codewords until the input runs out and the bits that
 //     pad the last byte can make one more.
 //
+// Both are fixed by default now (docs/rom-bugs.md); the comparison with the
+// ROM runs with the ROM's bugs back (SetRomBugFixed(false)), and then the
+// fixed decoder is held to the data itself at every size.
+//
 // Neither is reachable through the only thing that uses the coder: the
 // store compander hands it fixed 0x400-byte blocks
 // (stores/StoreCompander.h), where the last block is full and the padding
@@ -37,6 +41,7 @@
 #include "NewtonMemory.h"
 #include "OSErrors.h"
 #include "host/TaskRuntime.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -383,6 +388,36 @@ CheckSize(TCompressor* compressor, TDecompressor* decompressor, ULong size, Bool
 }
 
 
+// The fixed decoder, on the host alone: ==> how many sizes give back
+// exactly their data.  None may come back longer than a short copy (three
+// bytes) the padding's zero bits also spell - the part of the fault the
+// format cannot tell apart - and what comes back must be the data as far
+// as it goes.  (Some sizes come back short, on the ROM as here: the coded
+// loop's `taken == fRemaining` tail stops a last block early.)
+static long
+CheckFixedRoundTrips(TCompressor* compressor, TDecompressor* decompressor, ULong from, ULong to)
+{
+	long exact = 0;
+	for (ULong size = from; size <= to; size++)
+	{
+		ULong compressed = 0, restored = 0;
+		memset(gHostCompressed, 0, sizeof(gHostCompressed));
+		memset(gHostRestored, 0xee, sizeof(gHostRestored));
+		compressor->Compress(&compressed, gHostCompressed, sizeof(gHostCompressed), gData, size);
+		decompressor->Decompress(&restored, gHostRestored, sizeof(gHostRestored), gHostCompressed, compressed);
+		ULong common = restored < size ? restored : size;
+		if (restored > size + 3 || memcmp(gHostRestored, gData, common) != 0)
+		{
+			printf("FAIL: fixed, %lu bytes came back as %lu\n", (unsigned long) size, (unsigned long) restored);
+			failures++;
+		}
+		else if (restored == size)
+			exact++;
+	}
+	return exact;
+}
+
+
 static void
 LZOracleScenario(void)
 {
@@ -397,6 +432,7 @@ LZOracleScenario(void)
 	}
 	EXPECT(compressor->Init(nil) == noErr && decompressor->Init(nil) == noErr);
 
+	SetRomBugFixed(false);			// the ROM's decoder, bugs and all, against the ROM
 	Fill(gData, sizeof(gData), 42);
 
 	// Every size the round-trip test uses, the boundaries around a block
@@ -454,6 +490,14 @@ LZOracleScenario(void)
 		CheckSize(compressor, decompressor, size, &exact);
 		EXPECT(exact == (size < 1021 || size >= 1024));	// the ROM's own answer
 	}
+
+	// fixed: the right length back at every size, coded or stored
+	SetRomBugFixed(true);
+	EXPECT(CheckFixedRoundTrips(compressor, decompressor, 1018, 1028) == 11);	// the stored path: all exact
+	Fill(gData, sizeof(gData), 42);
+	long fixedExact = CheckFixedRoundTrips(compressor, decompressor, 0, 0x900);
+	printf("test_LZOracle: fixed, %ld of the 2305 sizes round-trip exactly (the ROM: %ld)\n", fixedExact, exactCount);
+	EXPECT(fixedExact > exactCount);
 
 	HostStopTasks();
 }

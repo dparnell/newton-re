@@ -227,7 +227,14 @@ compressed bytes, and the same restored bytes *and length* - at every size
 from 0 to 0x900 and around the stored path's boundary.  All 2305 sizes
 agree, the 76 that do not round-trip exactly included.  Changing the
 reconstruction to "fix" the stored-block length makes the oracle fail at
-1021-1023, which is what it is for.
+1021-1023, which is what it is for - so the oracle runs with the ROM's
+bugs back (`SetRomBugFixed(false)`): both are now fixed by default
+(`docs/rom-bugs.md`).  Fixed, the stored path gives the length back, and
+the coded path drops a codeword that needs bits past the block's data;
+2282 of the 2305 sizes round-trip exactly (the ROM: 2229).  What is left
+is a short copy whose few bits lie wholly in the padding - the format
+keeps no length, so those zero bits are a copy the coder could have
+written - and a few last blocks that come back short, on the ROM too.
 
 Neither fault is reachable through the only thing that uses the coder: the
 store compander hands it fixed 0x400-byte blocks

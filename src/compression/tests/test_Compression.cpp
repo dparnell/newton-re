@@ -17,6 +17,7 @@
 #include "OSErrors.h"
 #include "NewtErrors.h"
 #include "host/TaskRuntime.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -530,7 +531,19 @@ TestArithmetic()
 	d->Init(nil);											// own tables again: Delete frees only those
 	d->Delete();
 	c->Delete();
-	m->Cleanup();											// (a compressor's Delete leaves its tables)
+	// ROM bug fixed: a decompressor lent an adaptive model leaves it alone
+	// when it goes (the ROM frees it under the lender, so not asked then)
+	if (RomBugFixed())
+	{
+		TArithmeticDecompressor* lent = (TArithmeticDecompressor*) TCallbackDecompressor::New("TArithmeticDecompressor");
+		ArithmeticModel adaptive = { m->fCumFreq, m->fCharToIndex, m->fIndexToChar, m->fFreq, true };
+		lent->fReadProc = ReadSource;
+		lent->fRefCon = &source;
+		EXPECT(lent->Init(&adaptive) == noErr && lent->fAdaptive && !lent->fOwnsTables);
+		lent->Delete();
+		EXPECT(GetPtrSize((Ptr) m->fCumFreq) >= 4 * sizeof(long));		// still m's
+	}
+	m->Cleanup();											// (the ROM's compressor Delete leaves its tables)
 	m->Delete();
 	DisposPtr((Ptr) gathered.fData);
 }
