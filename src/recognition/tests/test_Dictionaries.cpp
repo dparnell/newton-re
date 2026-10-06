@@ -206,6 +206,7 @@ main()
 
 	// with no list of dictionaries made (a machine started at level 1),
 	// the fixed ReadDictPrefs reads nothing rather than throwing
+	SetRomBugFixed(true);
 	EXPECT(ISNIL(RefVar(Dictionaries())));
 	ReadDictPrefs();
 
