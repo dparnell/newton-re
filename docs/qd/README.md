@@ -375,13 +375,17 @@ screen's kind (`SetupConversion` 0x002ae540: an indexed row through its
 gray table, 16- and 32-bit direct colour - padded, unpadded, by
 component - made four-bit grays, `PixelConvert.h`); the rest are folded
 into it (`SetupCombine`: OR for one bit, the darker gray kept for
-indexed rows, the direct `CombineDirect*to4` with the ROM's bugs kept -
+indexed rows, the direct `CombineDirect*to4` with the ROM's bugs -
 eight-bit colours handed to `RGBtoGray`, the gray ORed in, the
-by-component one comparing the wrong nibble); the row is taken across to
+by-component one comparing the wrong nibble, the row folded a pixel off;
+all now fixed by default, `NEWTON_ROM_BUGS=1` for the ROM's behaviour);
+the row is taken across to
 the destination's width and depth (`SetupStretchRatio`: 33
 `Unscaled`/`Stretch`/`Shrink` routines by source and destination depth,
 the ratio the smaller width over the larger, a running fraction from half
-of it; a ROM bug kept: two bits to four unscaled uses `Unscaled1to2`);
+of it; a ROM bug, now fixed by default - `NEWTON_ROM_BUGS=1` for the
+ROM's behaviour: two bits to four unscaled uses `Unscaled1to2`, the fix
+`Stretch2to4` a pixel at a time);
 and it is written into each destination row it covers through the mode
 (`BlitModeCopy`/`Or`/`Xor`/`Bic` and the two- and four-bit `Or`s) under
 the masks of the two clip regions and the mask region (`MSeekMask`
@@ -597,8 +601,9 @@ run as one block at the strike's own size:
   each way, would touch it (a descender breaks the line);
 - outline and shadow (`fStyleAdjust[5]` 1 and 2): the slab smeared right
   and down by one more pixel than that into a block four rows taller, and
-  the original, a pixel right and a row down, XORed out of it (a ROM bug
-  kept: the first word is never ORed down);
+  the original, a pixel right and a row down, XORed out of it (a ROM bug:
+  the first word is never ORed down - now fixed by default,
+  `NEWTON_ROM_BUGS=1` for the ROM's behaviour);
 - text whose style has a pattern that is not black (a font spec's
   `color`, `GetPattern` - registered by the views, which sit above
   QuickDraw here): `MakeGrayText` 0x0035dcd0 knocks a checkerboard out of
@@ -612,9 +617,11 @@ A strike at its own size in srcOr with none of the faces, on a port whose
 regions are rectangles, skips the slab and ORs the glyphs straight into
 the port's bits (one, two or four bits; a deeper port gets nothing - the
 ROM has no loop for it).  A slab over 8000 bytes is drawn as two halves of
-the run, recursively (a ROM bug kept: a single character too big is
+the run, recursively (a ROM bug: a single character too big is
 not drawn at all and the pen is left where it was; and the port's
-foreground pattern is left as the style's).  An object flagged 0x10000
+foreground pattern is left as the style's - now fixed by default, the
+character drawn in a slab of its size and the pattern put back;
+`NEWTON_ROM_BUGS=1` for the ROM's behaviour).  An object flagged 0x10000
 with options is squeezed into their width - a pixel off each advance but
 the first's in turn, the clip box widened by a sixteenth for the drawing.
 
@@ -769,7 +776,10 @@ nothing is given back; with several carried families the ROM gives back
 each one's block though all but the first are inside the first
 (DEVIATION: the host gives the block back once); a single style's
 carried family is never filled in, so the text is drawn with the
-integer 0x800000 as its font (the host draws nothing).
+integer 0x800000 as its font (the host draws nothing).  These are now
+fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's behaviour): the
+procs' text is given back, and a single style's carried family is
+recorded whole and filled in for its text.
 
 Curves (0x0c80-0x0c84, and 0x8088-0x808c "the same curve") are read into
 PicPlay +8, mapped onto the destination *twice* (`MapCurve`: a picture
@@ -780,7 +790,9 @@ procs, so they are drawn even while a picture is being made into shapes.
 ROM bug kept: `StdCurve` records the curve the picture already has as
 0x0c88 + the verb, which playback reads as a reserved opcode of 0x18
 bytes, so a curve drawn twice running leaves a picture that cannot be
-read past it.
+read past it.  All three are now fixed by default (`NEWTON_ROM_BUGS=1`
+for the ROM's behaviour): the curve mapped once, handed to the procs
+when there are some, and 0x0c88-0x0c8c played as the same curve again.
 
 A pixel pattern of type 1 (in 0x12-0x14) is a pixel map of its own:
 `GetPicPixPat` 0x00333dc0 reads its header, a colour table for an
@@ -799,7 +811,9 @@ bytes is laid out two bytes further on than the pattern's row bytes say,
 so a one- or two-bit pixel pattern comes out skewed; and a four-bit
 pattern recorded (`PutPixPat`: a gray ramp, white first, for its colour
 table) comes back through `RGBtoGray` a shade out for some grays (3
-comes back 2).
+comes back 2).  The first two are now fixed by default
+(`NEWTON_ROM_BUGS=1` for the ROM's behaviour): both pixels take the high
+four bits, and the rows are laid out at the pattern's row bytes.
 
 A picture drawn under a scaling transform goes through the scaler like
 any other drawing (`Transform.h`; `src/host/demo/scaledmap.ns`).
@@ -829,7 +843,9 @@ or `StdPutPic` 0x00334e88, which grows the picture 0x100 bytes at a
 time and on failure cuts it to an empty picture (size 0xffff).  Bitmaps
 are recorded as the ROM's `StdBits` does (packed with `PackBits`
 0x002aeed0 when the row is 8 bytes or more - with a one-byte row count,
-a ROM bug kept).  `ClosePicture` 0x00331c94 writes the end and trims the
+a ROM bug, now fixed by default: a word count from 251 row bytes up, as
+playback reads; `NEWTON_ROM_BUGS=1` for the ROM's behaviour).
+`ClosePicture` 0x00331c94 writes the end and trims the
 handle.
 
 Text is recorded by `DoPutText` 0x0035a680, from `StdText`: a picture
@@ -839,6 +855,10 @@ a Newton picture gets TxRatio when the scales changed, TxMode when only
 the options' transfer mode did or else 0x81a0 (never remembered, so
 written again every time - ROM bug kept), 0x81a1 when the one style is
 not the one the picture has, or 0x81a2 for runs, then 0x81a3 and 0x81a4.
+Both bugs are now fixed by default (`NEWTON_ROM_BUGS=1` for the ROM's
+behaviour): LongText carries at most 255 characters and 0x81a0 is
+remembered; and an erase's background pattern goes under BkPat/BkPixPat
+alone, where the ROM writes BkPat's opcode in front of `PutPicPat`'s own.
 DEVIATIONS: a style's font pattern Ref and pattern pointer go into the
 picture as their low 32 bits and are not read back; the options' last
 word, which the ROM calls as a text getter when set, is ignored.
@@ -950,7 +970,9 @@ line back to its start, a region (`DrawCurve`), if its bounds meet the
 clip and visible regions.  `GetCurveBounds` 0x002d211c starts its
 maximum at -0x7fa6 and never looks at a point for the maximum when it
 lowered the minimum, so the first point never counts for the right and
-bottom (ROM bug kept); `MapCurve`, `OffsetCurve`, `ScaleCurve`,
+bottom (a ROM bug, now fixed by default - as is `GetPathsBounds`'
+-0x7fa6 - with `NEWTON_ROM_BUGS=1` for the ROM's behaviour); `MapCurve`,
+`OffsetCurve`, `ScaleCurve`,
 `SetCurve`, `EqualCurve`.
 
 Paths are TrueType outlines: a handle of contours, each its point count,
@@ -1164,8 +1186,9 @@ region, curve or paths (`MapPoly`, `MapRgn`, `MapCurve`, `MapPaths`), a
 bitmap's destination and mask, text's location and its options' width,
 with text drawn at the scales times the transform's (a sixteenth less
 with feature 1) - and hand it to the proc the port had.  For a frame the
-pen is scaled too (`SetupScalingPen`, never below a pixel).  ROM BUG,
-kept: the pen's height is its *width* times the vertical scale.  The
+pen is scaled too (`SetupScalingPen`, never below a pixel).  ROM BUG:
+the pen's height is its *width* times the vertical scale (now fixed by
+default, the height scaled; `NEWTON_ROM_BUGS=1` for the ROM's).  The
 port's clip region is set by the drawing in its own coordinates, so
 `SetupScalingRegions` maps it whenever it has changed and cuts it by the
 clip the port had outside the scaling (kept aside the first time it

@@ -213,10 +213,13 @@ way about.  `WriteNewStroke` (0x00282d84) writes a stroke's kind and
 where it starts, and settles the run's format on the first stroke;
 `WriteShortStroke` (0x00283240) writes the points as they were drawn.
 
-One ROM bug is kept and commented: a first stroke of the newer format
+One ROM bug is commented: a first stroke of the newer format
 that starts exactly where the pen is - both steps nought - sets the
 width of the coordinates to eight but never sets the byte that says so,
-and writes whatever was in the register.
+and writes whatever was in the register.  The host writes the byte that
+agrees with the width, which is also the fix (`docs/rom-bugs.md`; the
+encoder's and the ink code's other bugs are fixed by default too,
+`NEWTON_ROM_BUGS=1` for the ROM's behaviour).
 
 The rest of it is the fitting.  `EncoderRun` (0x002804f8) tells the
 source to begin and then pulls points; a stroke of one point is a dot
