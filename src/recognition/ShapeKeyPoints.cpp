@@ -387,10 +387,11 @@ RLineOut2(FPoint* pts, char* marks, uint32_t* breaks, long depth, ULong first, U
 // gSmpMinSmallDistRun long - noted, ended by a -1 pair.  ==> the whole
 // length of the stroke, which is left in gGSInkLength.
 //
-// BUG (kept): the average step is worked out so that a stroke whose points
-// are unevenly spaced has its runs thrown away (a -2 at the start of the
-// first), and then the -2 is written whatever it came to, so FindCubic1
-// never sees a run of small steps.
+// ROM BUG (fixed): the average step is worked out so that a stroke whose
+// points are unevenly spaced has its runs thrown away (a -2 at the start of
+// the first), and then the -2 is written whatever it came to, so FindCubic1
+// never sees a run of small steps.  The fix writes it only when the
+// average says so.
 long
 RSmallDists(FPoint* pts, ULong last, Run* runs)
 {
@@ -431,7 +432,8 @@ RSmallDists(FPoint* pts, ULong last, Run* runs)
 	long average = (long) ((ULong) total / last);
 	if (gPixMaxAvgLenForSmallDists < average || average < gPixMinAvgLenForSmallDists)
 		runs[0].fStart = -2;
-	runs[0].fStart = -2;
+	if (!RomBugFixed())
+		runs[0].fStart = -2;
 	return total;
 }
 
@@ -810,11 +812,19 @@ TVSplSpl(ULong i, FPoint* pts, FPoint* keys, char* kinds, uint32_t* breaks,
 	segs[i].fT0 = segs[i - 1].fT1;
 	if (turn > 0x6e0000)
 	{
-		// BUG (kept): the curve is ended at the stroke's half-way point,
-		// and its end *tangent* is given that point too - a position
-		// where a direction was meant.
+		// ROM BUG (fixed): the curve is ended at the stroke's half-way
+		// point, and its end *tangent* is given that point too - a
+		// position where a direction was meant.  The fix gives it the
+		// direction to that point from the curve's start, as the comment
+		// above the function describes.
 		segs[i - 1].fP1 = *half;
-		segs[i - 1].fT1 = *half;
+		if (RomBugFixed())
+		{
+			segs[i - 1].fT1.x = half->x - segs[i - 1].fP0.x;
+			segs[i - 1].fT1.y = half->y - segs[i - 1].fP0.y;
+		}
+		else
+			segs[i - 1].fT1 = *half;
 	}
 	flags[i] = 1;
 }

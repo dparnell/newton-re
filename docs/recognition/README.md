@@ -1964,8 +1964,13 @@ ROM bugs kept (each commented where it is):
 
 `NewCoeffs`' 42nd equation, `TTrend::Merge`'s value (the merged mean),
 `GlobalTrends`' turned square, `RLineOut2`'s path limit that overflows
-for a long chord and `TVStrTail`'s read past the last corner are fixed by
-default now (`NEWTON_ROM_BUGS=1` for the ROM's behaviour).
+for a long chord, `TVStrTail`'s read past the last corner, `RSmallDists`'
+untrusted runs and `TVSplSpl`'s point-for-a-tangent are fixed by default
+now (`NEWTON_ROM_BUGS=1` for the ROM's behaviour).  With `RSmallDists`
+fixed, the runs of small steps count: a join the pen slowed into is a
+kink, and one it did not slow at is smooth (the ROM had `CheckSmooth`
+decide every join), so `test_ShapeDomain`'s synthetic strokes slow into
+their corners as a hand does.
 
 ## The word domain (`recognition/WRecDomain.h`)
 

@@ -17,7 +17,8 @@
 //   penDrag(x0, y0, x1, y1)    pressed and dragged, a sample a tick
 //                              (PacePen), so a view tracking it sees it down
 //   penPath(corners)           a stroke's points through the corners, a
-//                              point every few pixels, a little wobble
+//                              point every few pixels, a little wobble,
+//                              the pen pausing at each corner
 //   penRound(cx, cy, r)        a circle's points from the right anticlockwise
 //   penFindPolys(v, into)      the shapes (polygon views, class 82) under v
 //                              that are not ink, added to into
@@ -148,6 +149,15 @@ penPath := func(corners)
         local x0 := corners[c], y0 := corners[c + 1];
         local x1 := corners[c + 2], y1 := corners[c + 3];
         local steps := Max(Abs(x1 - x0), Abs(y1 - y0)) div 4;
+        // the pen pauses at a corner, as a hand slows into one: the shape
+        // recogniser takes a join the pen did not slow at for a smooth one
+        // (RSmallDists, with its ROM bug fixed)
+        if c > 0 then
+          for k := 1 to 4 do
+            begin
+              AddArraySlot(pts, x0);
+              AddArraySlot(pts, y0);
+            end;
         for k := 0 to steps - 1 do
           begin
             AddArraySlot(pts, x0 + ((x1 - x0) * k) div steps + wobble[w mod 6]);

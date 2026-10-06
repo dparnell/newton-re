@@ -45,12 +45,17 @@ trLine := func() begin
 	line;
 end;
 
-// A straight stroke through the corners, a point every four pixels.
+// A straight stroke through the corners, a point every four pixels, the
+// pen pausing at each corner as a hand slows into one (the shape
+// recogniser takes a join the pen did not slow at for a smooth one -
+// RSmallDists, with its ROM bug fixed).
 trPath := func(corners) begin
 	local pts := [];
 	for c := 0 to Length(corners) - 4 by 2 do begin
 		local x0 := corners[c], y0 := corners[c + 1], x1 := corners[c + 2], y1 := corners[c + 3];
 		local steps := Max(Abs(x1 - x0), Abs(y1 - y0)) div 4;
+		if c > 0 then
+			for k := 1 to 4 do begin AddArraySlot(pts, x0); AddArraySlot(pts, y0); end;
 		for k := 0 to steps - 1 do begin
 			AddArraySlot(pts, x0 + ((x1 - x0) * k) div steps);
 			AddArraySlot(pts, y0 + ((y1 - y0) * k) div steps);
