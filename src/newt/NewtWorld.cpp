@@ -65,6 +65,7 @@
 #include "OSErrors.h"
 #include "Screen.h"
 #include "NTK.h"
+#include "host/RomBugs.h"
 #include <string.h>
 
 NewtGlobals*	gNewtGlobals = nil;			// ROM 0x0c1054b0 gNewtGlobals
@@ -357,6 +358,18 @@ TNewtWorld::TheMain()
 }
 
 
+// Host: RomBugFixed() - true when the ROM's known bugs are fixed (the
+// default; NEWTON_ROM_BUGS=1 for the ROM's behaviour, host/RomBugs.h), so
+// that a fix to the ROM's own NewtonScript in romsrc/ can ask
+// `if RomBugFixed() then <fixed> else <the ROM's code>`.  Booted from the
+// ROM image the ROM's functions are used, unchanged, and never ask.
+static Ref
+FRomBugFixed(RefArg /*rcvr*/)
+{
+	return RomBugFixed() ? TRUEREF : NILREF;
+}
+
+
 // ROM 0x0030cd28 PreMain__10TNewtWorldFv
 // The boot's second half, before the loop: the strokes blocked, the wakeup
 // time noted, the ROM's frames packages loaded, the extras soup marked
@@ -374,6 +387,9 @@ long
 TNewtWorld::PreMain()
 {
 	long err = 0;
+	// host: RomBugFixed(), for the fixes of the ROM's own NewtonScript bugs
+	// in romsrc/ (docs/rom-bugs.md)
+	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "RomBugFixed")), RefVar(MakeCFunction((void*) FRomBugFixed, 0, nil)));
 	gStrokeWorld.BlockStrokes();
 	gLastWakeupTime = GetGlobalTime();
 	LoadHighROMFramesPackages();

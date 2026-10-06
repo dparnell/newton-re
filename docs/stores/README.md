@@ -1018,9 +1018,13 @@ card coming out removes them (`state->fPackages`).
   for streaming - an ordinary package, its frames part in object layout,
   fails with -48006 (not NSOF version 2), on a MessagePad as here.
 
-A 'form part from a card never installs: the ROM's `InstallFormPart`
+A 'form part from a card never installs on the ROM: its `InstallFormPart`
 reads `deviceNumber` as a variable (`docs/curiosities.md`, "No application
-installs off a card's own package"); an 'auto part does.
+installs off a card's own package"); an 'auto part does. Booted from
+`romsrc/` the bug is fixed by default (`RomBugFixed()`; `NEWTON_ROM_BUGS=1`
+for the ROM's behaviour) and the application installs, its base view's
+`cardSocket` the socket (ctest `host.NewtonCardFormPackage`,
+`src/host/demo/card-form-package.ns`).
 `tools/cards/streamedpkg.py` makes a streamed package (an 'auto part by
 default, whose InstallScript and removeScript set the globals
 `cardPackageInstalled` and `cardPackageRemoved`), and `linearcard.py make

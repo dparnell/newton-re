@@ -1452,8 +1452,40 @@ if(Python3_FOUND)
                  COMMAND newton --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/card-package.ns
                  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
         set_tests_properties(host.NewtonCardPackage PROPERTIES TIMEOUT 180 FIXTURES_REQUIRED host_card_package
-                             ENVIRONMENT "CARD_PACKAGE_CARD=${CMAKE_CURRENT_BINARY_DIR}/cardpackage.card"
+                             ENVIRONMENT "CARD_PACKAGE_CARD=${CMAKE_CURRENT_BINARY_DIR}/cardpackage.card;NEWTON_ROM_BUGS=0"
                              PASS_REGULAR_EXPRESSION "its InstallScript ran: ok.*its removeScript ran: ok.*the package gone with the card: ok.*loaded again with the card back: ok.*card-package: done, 0 failed"
+                             FAIL_REGULAR_EXPRESSION "waited in vain|FAILED")
+        # an application ('form part) off a card (demo/card-form-package.ns):
+        # installed, its base view's cardSocket the socket - the ROM's
+        # InstallFormPart reads deviceNumber as a variable, fixed by default
+        # in romsrc/ (RomBugFixed()); .romBugs, with NEWTON_ROM_BUGS=1, the
+        # ROM's code, which throws -48807 before the socket is written
+        add_test(NAME host.NewtonCardFormPackage.pkg
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/cards/streamedpkg.py
+                         ${CMAKE_CURRENT_BINARY_DIR}/cardform.pkg --name "Card Form" --text "Card Form" --kind form)
+        set_tests_properties(host.NewtonCardFormPackage.pkg PROPERTIES FIXTURES_SETUP host_card_form_pkg)
+        add_test(NAME host.NewtonCardFormPackage.make
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/cards/linearcard.py make
+                         ${CMAKE_CURRENT_BINARY_DIR}/cardform.card --size 2
+                         --cis "01 03 52 06 ff 1e 06 02 11 01 01 03 01 18 02 89 a2 ff"
+                         --attr-package ${CMAKE_CURRENT_BINARY_DIR}/cardform.pkg --package-name "Card Form")
+        set_tests_properties(host.NewtonCardFormPackage.make PROPERTIES FIXTURES_REQUIRED host_card_form_pkg
+                             FIXTURES_SETUP host_card_form)
+        add_test(NAME host.NewtonCardFormPackage
+                 COMMAND newton --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/card-form-package.ns
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+        set_tests_properties(host.NewtonCardFormPackage PROPERTIES TIMEOUT 180 FIXTURES_REQUIRED host_card_form
+                             RESOURCE_LOCK host_card_form_card
+                             ENVIRONMENT "CARD_FORM_CARD=${CMAKE_CURRENT_BINARY_DIR}/cardform.card;NEWTON_ROM_BUGS=0"
+                             PASS_REGULAR_EXPRESSION "RomBugFixed true, cardSocket 0.*the application installed off the card, its socket 0: ok.*card-form-package: done, 0 failed"
+                             FAIL_REGULAR_EXPRESSION "waited in vain|FAILED")
+        add_test(NAME host.NewtonCardFormPackage.romBugs
+                 COMMAND newton --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/card-form-package.ns
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+        set_tests_properties(host.NewtonCardFormPackage.romBugs PROPERTIES TIMEOUT 180 FIXTURES_REQUIRED host_card_form
+                             RESOURCE_LOCK host_card_form_card
+                             ENVIRONMENT "CARD_FORM_CARD=${CMAKE_CURRENT_BINARY_DIR}/cardform.card;NEWTON_ROM_BUGS=1"
+                             PASS_REGULAR_EXPRESSION "RomBugFixed nil, cardSocket .*the ROM.s InstallFormPart threw before the socket: ok.*card-form-package: done, 0 failed"
                              FAIL_REGULAR_EXPRESSION "waited in vain|FAILED")
     endif()
     # an ATA card taken on as far as the ROM goes (demo/ata-card.ns): its

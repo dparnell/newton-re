@@ -58,3 +58,14 @@ python tools/newton-rom/analysis/rombugs.py --markdown docs/rom-bugs-list.md
 ```
 
 `docs/rom-bugs-list.md` is its generated list.
+
+## The ROM's own NewtonScript
+
+A bug in the ROM's NewtonScript (`romsrc/functions/`) is fixed the same
+way: the host gives NewtonScript a global function, `RomBugFixed()`
+(registered by `TNewtWorld::PreMain`, `src/newt/NewtWorld.cpp`), true
+unless `NEWTON_ROM_BUGS=1`, and the fix reads
+`if RomBugFixed() then <fixed> else <the ROM's code>`. Booted from the
+ROM image (`--rom`), the ROM's own functions run, unchanged. The first is
+`InstallFormPart`'s socket (`docs/curiosities.md`, "No application
+installs off a card's own package").

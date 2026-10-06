@@ -2350,9 +2350,12 @@ InstallFormPart`, offset 180), and there is no such variable. So every
 'form part on a card throws -48807 (undefined variable), `InstallPart`'s
 handler catches it, and the user is told "An error occurred activating the
 package ... It may not work with this system". Only 'auto parts and the
-other part kinds come off a card whole. The reconstruction keeps the bug
-(`romsrc/` is the ROM's own code); `tools/cards/streamedpkg.py --kind form`
-makes a card package that shows it. `docs/stores/README.md`, "Card
+other part kinds come off a card whole. The reconstruction ports the bug
+and fixes it by default: `romsrc/`'s `InstallFormPart` asks the host's
+`RomBugFixed()` and reads `a1.deviceNumber` (`NEWTON_ROM_BUGS=1` for the
+ROM's behaviour; booted with `--rom` the ROM's own function runs, bug and
+all); `tools/cards/streamedpkg.py --kind form` makes a card package that
+shows it (ctests `host.NewtonCardFormPackage` and `...romBugs`). `docs/stores/README.md`, "Card
 packages".
 
 ## An o written alone is a zero until it is written over a word
