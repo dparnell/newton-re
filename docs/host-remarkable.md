@@ -645,6 +645,15 @@ through the same pen path over a copy of the tablet's store, and
 `NEWTON_PENREPLAY_WHOLE=1` cuts the points to whole pixels as the window did
 before it passed eighths on.
 
+**Deployed 2026-10-06**: `main` with the handwriting engines (unistroke in the
+Handwriting Recognition slip, Setup and Help), cross-built afresh in
+`tmp/build-rmpp-main` from this checkout (`tmp/build-rmpp` is configured against
+an older worktree, `tmp/wt-rmpp`, and builds that source) and packaged with
+`package.py`; only `newton` and `romsrc-objects.bin` changed.  The app as it
+was is kept in `/home/root/newton-data/appload-newton-before-20261006` - copy it
+back over `/home/root/xovi/exthome/appload/newton` to undo.  The tablet has no
+`timeout`; a headless check there is `./newton ... --headless S --script F`.
+
 To remove everything: `rm -r /home/root/xovi/exthome/appload/{newton,newton-rmkit,rmprobe-app}
 /home/root/newton /home/root/newton-data /home/root/rmprobe-qtfb.log`.
 
