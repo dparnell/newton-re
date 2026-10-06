@@ -32,6 +32,7 @@
 #include "NewtonMemory.h"
 #include "ByteOrder.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 #include <stdint.h>
 #include <string.h>
 
@@ -252,12 +253,17 @@ TPixelMapCompander::Write(ULong offset, char* buffer, long count, ULong objectBa
 		if (fHeader == nil)
 			return kError_No_Memory;
 		PutBigEndianWord(fHeader, kPixelMapHeaderSize);
-		// ROM BUG: FillChunkArray (an object filled from a pipe as it is
-		// made) passes nought as the object's base, so the ROM copies its
-		// "PixelMap" from address 0 - the vectors page.  DEVIATION: the host
-		// cannot read what is there; it copies noughts, so the row length
-		// is nought and such a page goes unfiltered.
-		if (objectBase == 0)
+		// ROM BUG (fixed): FillChunkArray (an object filled from a pipe as
+		// it is made) passes nought as the object's base, so the ROM copies
+		// its "PixelMap" from address 0 - the vectors page.  DEVIATION: the
+		// host cannot read what is there; it copies noughts, so the row
+		// length is nought and such a page goes unfiltered.  The fix takes
+		// the PixelMap from the bytes being written when they are the
+		// object's first (FillChunkArray writes in order, so its first
+		// write is), and the noughts only when they are not.
+		if (objectBase == 0 && RomBugFixed() && offset == 0 && count >= (long) kNewtonPixelMapSize)
+			memmove(fHeader + 4, buffer, kNewtonPixelMapSize);
+		else if (objectBase == 0)
 			memset(fHeader + 4, 0, kNewtonPixelMapSize);
 		else
 			memmove(fHeader + 4, (const void*) objectBase, kNewtonPixelMapSize);	// (the 'pixels binary's own header, big-endian - qd/Pictures.h)

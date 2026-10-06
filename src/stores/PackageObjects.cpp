@@ -100,9 +100,11 @@ RemoveIndexTable(TStore* store, PSSId indexId)
 // index table (and its pages), the name, the parameters and the root.
 // ==> the first error; kError_Bad_Package for a root of another kind.
 //
-// ROM BUG kept: when there is no index table, the name's deletion answers
-// into a register that was never set, which is what comes back when the
-// name's own deletion went through (the host's 0).
+// ROM BUG (fixed): when there is no index table, the name's deletion
+// answers into a register that was never set, which is what comes back
+// when the name's own deletion went through (the host's 0).  The host's 0
+// is also the fix - the first error, or noErr - so both paths are one (no
+// RomBugFixed() test: there is no ROM behaviour the host could reproduce).
 NewtonErr
 DeallocatePackage(TStore* store, PSSId rootId)
 {

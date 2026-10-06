@@ -19,6 +19,7 @@
 #include "HostOrder.h"
 #include "LargeBinaries.h"
 #include "LargeObjects.h"
+#include "host/RomBugs.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -362,8 +363,9 @@ TObjectWriter::Scan(void)
 			// its parameters' size and a nought; the name and the
 			// parameters; then the large object itself (LOWrite)
 			//
-			// ROM BUG kept: the name's and parameters' blocks are given back
-			// only when something throws
+			// ROM BUG (fixed): the name's and parameters' blocks are given
+			// back only when something throws.  The fix gives them back
+			// when the large binary has been written, too.
 			LBData* lb = LargeBinaryData(fObject);
 			TStoreWrapper* wrapper = lb->GetStore();
 			TStore* store = wrapper->fStore;
@@ -413,6 +415,11 @@ TObjectWriter::Scan(void)
 				rethrow;
 			}
 			end_try;
+			if (RomBugFixed())
+			{
+				free(name);
+				free(parameters);
+			}
 			return;
 		}
 		// any other indirect binary cannot be streamed
@@ -743,8 +750,9 @@ TObjectReader::ReadSmallRect(void)
 // (kNSErrNoStoreForLargeBinary without a store), mapped and wrapped - an
 // ephemeral until an entry takes it.
 //
-// ROM BUG kept: the name's and parameters' blocks are given back only
-// when something throws.  (A stream written compressed is made again by
+// ROM BUG (fixed): the name's and parameters' blocks are given back only
+// when something throws.  The fix gives them back once the large object
+// has been made, too.  (A stream written compressed is made again by
 // CreateLargeObject's fromCompressed branch, LODefCreateFromComp.)
 Ref
 TObjectReader::ReadLargeBinary(void)
@@ -791,6 +799,11 @@ TObjectReader::ReadLargeBinary(void)
 		rethrow;
 	}
 	end_try;
+	if (RomBugFixed())
+	{
+		free(name);
+		free(parameters);
+	}
 	if (err != noErr)
 		Throw(exFrames, (void*) (Long) err, nil);
 	ULong address;

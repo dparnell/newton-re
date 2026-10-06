@@ -23,6 +23,7 @@
 #include "OSErrors.h"
 extern const ExceptionName exPipeException;	// (LargeObjects.cpp's)
 #include "host/TaskRuntime.h"
+#include "host/RomBugs.h"
 #include "../../utility/tests/TestPipe.h"
 
 #include <stdio.h>
@@ -349,15 +350,24 @@ PixelMapScenario()
 	long lastSize = -1;
 	EXPECT(store->GetObjectSize(GetBigEndianWord(word), &lastSize) == noErr && lastSize == 0);
 
-	// filled from a pipe: nought for the object's base, so no row length
-	// and no filter - but the bytes come back
-	CTestPipe pipe(kPixSize);
-	pipe.WriteChunk(image, kPixSize, false);
-	pipe.Rewind();
-	ULong piped = 0;
-	EXPECT(LODefaultCreate(&piped, store, &pipe, kPixSize, false, (char*) "TPixelMapCompander", nil, 0, nil) == noErr);
-	EXPECT(MapLargeObject(&address, store, piped, true) == noErr && memcmp((void*) address, image, kPixSize) == 0);
-	EXPECT(UnmapLargeObject(address) == noErr);
+	// filled from a pipe: nought for the object's base, so (ROM bug) no
+	// row length and no filter - but the bytes come back; fixed, the
+	// PixelMap is taken from the first bytes written
+	for (int fixed = 0; fixed < 2; fixed++)
+	{
+		SetRomBugFixed(fixed != 0);
+		CTestPipe pipe(kPixSize);
+		pipe.WriteChunk(image, kPixSize, false);
+		pipe.Rewind();
+		ULong piped = 0;
+		EXPECT(LODefaultCreate(&piped, store, &pipe, kPixSize, false, (char*) "TPixelMapCompander", nil, 0, nil) == noErr);
+		EXPECT(MapLargeObject(&address, store, piped, true) == noErr && memcmp((void*) address, image, kPixSize) == 0);
+		EXPECT(UnmapLargeObject(address) == noErr);
+		EXPECT(store->Read(piped, 0, (char*) root, kLargeObjectRootSize) == noErr);
+		EXPECT(store->Read(GetBigEndianWord(root + kLORootCompanderParams), 0, (char*) header, 0x2c) == noErr);
+		EXPECT(GetBigEndianHalf(header + 8) == (fixed ? kRowBytes : 0));
+	}
+	SetRomBugFixed(true);
 
 	free(image);
 	store->Delete();

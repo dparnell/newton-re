@@ -147,6 +147,10 @@ TestLargeBinaries(void)
 	EXPECT(LargeBinaryData(vbo)->fEntry != NILREF && LargeBinaryData(vbo)->IsSameEntry(entry));
 	EXPECT(EQRef(FindLargeBinaryInCache(wrapper, id), vbo));
 	EXPECT(RINT(Eval("GetVBOStoredSize(theVBO)")) > 0);
+	// ROM bug fixed: anything that is not a large binary is asked about first
+	EXPECT(RINT(Eval("GetVBOStoredSize(\"not a VBO\")")) == 0);
+	EXPECT(RINT(Eval("GetVBOStoredSize(5)")) == 0);
+	EXPECT(Eval("VBOUndoChanges(\"not a VBO\")") == NILREF);
 	SetGlobal("theEntry", entry);
 	// EntrySize counts what the VBO takes up on the store; EntrySizeWithoutVBOs does not
 	EXPECT(RINT(Eval("EntrySize(theEntry)")) == RINT(Eval("EntrySizeWithoutVBOs(theEntry)")) + RINT(Eval("GetVBOStoredSize(theVBO)")));
