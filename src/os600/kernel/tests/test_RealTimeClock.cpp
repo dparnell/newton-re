@@ -10,6 +10,7 @@
 #include "hal/host/Host.h"
 #include "CompMath.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 
 #include <stdint.h>
 
@@ -122,11 +123,24 @@ main()
 	// name up afterwards finds whichever slot is free instead.  The Newton
 	// gets away with it because the newt world's alarm
 	// (TNewtWorld::MainConstructor) is the only name ever asked for.
+	// (NEWTON_ROM_BUGS=1: a ROM bug, now fixed by default)
+	SetRomBugFixed(false);
 	ULong handed = 99;
 	EXPECT(TRealTimeClock::NewName(&handed) == noErr && handed == 0);
 	EXPECT(TRealTimeClock::FindSlot(handed) == 0);
 	EXPECT(TRealTimeClock::CheckIn('next') == noErr && TRealTimeClock::FindSlot('next') == 0);
 	EXPECT(TRealTimeClock::FindSlot(handed) == 1);
+	TRealTimeClock::CheckOut('next');
+	SetRomBugFixed(true);
+
+	// fixed: 0 is never handed out, so a name keeps its slot
+	TRealTimeClock::fNextName = 0;
+	ULong fixedName = 0;
+	EXPECT(TRealTimeClock::NewName(&fixedName) == noErr && fixedName == 1);
+	long fixedSlot = TRealTimeClock::FindSlot(fixedName);
+	EXPECT(fixedSlot >= 0);
+	EXPECT(TRealTimeClock::CheckIn('more') == noErr && TRealTimeClock::FindSlot('more') != fixedSlot);
+	EXPECT(TRealTimeClock::FindSlot(fixedName) == fixedSlot);
 
 	if (failures == 0)
 		printf("test_RealTimeClock: all passed\n");

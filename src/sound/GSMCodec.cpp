@@ -9,6 +9,7 @@
 
 #include "SoundCodec.h"
 #include "GSM.h"
+#include "host/RomBugs.h"
 
 #include <stdlib.h>
 
@@ -49,11 +50,14 @@ TGSMCodec::Delete()
 
 
 // ROM 0x000d8824 Init__9TGSMCodecFP10CodecBlock
-// A coder made (and tagged whether it could be).  ROM BUG kept: a second
-// Init makes another and loses the first.
+// A coder made (and tagged whether it could be).  ROM BUG (fixed): a second
+// Init makes another and loses the first.  The fix frees the first, as
+// Delete would.
 NewtonErr
 TGSMCodec::Init(CodecBlock* /*block*/)
 {
+	if (RomBugFixed() && fStateTag == 'aloc' && fState != nil)
+		free(fState);
 	fState = gsm_create();
 	fStateTag = (fState == nil) ? 'dead' : 'aloc';
 	return noErr;

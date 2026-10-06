@@ -15,6 +15,7 @@
 #include "hal/Atomic.h"
 #include "UserTasks.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 #include "FrameSoundChannel.h"		// ConvertCodecBlock
 #include <stdlib.h>
 #include <stddef.h>
@@ -48,13 +49,26 @@ TSoundChannel::TSoundChannel(ULong id)
 // ROM 0x001e3764 __dt__13TSoundChannelFv
 // Every node still scheduled answered as closed, the spare nodes freed.
 //
-// ROM BUG kept: the loop goes on to a node's fNext after FreeNode has
+// ROM BUG (fixed): the loop goes on to a node's fNext after FreeNode has
 // put the node on the spare list, whose link it overwrote - so it walks
 // into the spare list instead.  (FreeNode keeps one spare and deletes the
 // rest; with one node left it walks on to the spares, which the next loop
-// deletes.)
+// deletes.)  The fix reads each node's fNext before FreeNode, so every
+// scheduled node is answered and the walk never reads a deleted node.
 TSoundChannel::~TSoundChannel()
 {
+	if (RomBugFixed())
+	{
+		ChannelNode* node = fNodes;
+		while (node != nil)
+		{
+			ChannelNode* next = node->fNext;
+			CleanupNode(node);
+			FreeNode(node, kSndErrNoChannel, 1);
+			node = next;
+		}
+	}
+	else
 	for (ChannelNode* node = fNodes; node != nil; node = node->fNext)
 	{
 		CleanupNode(node);
@@ -1245,7 +1259,7 @@ TCodecChannel::InitNode(ChannelNode* node)
 		codecState->fBufferCount = 0;
 		codecState->fIndex = 0;
 		codecState->fDone = false;
-		// ROM BUG, kept: fError and fState are not set here (the ROM's
+		// ROM BUG (fixed): fError and fState are not set here (the ROM's
 		// operator new(0x48) leaves them as the heap had them).  A
 		// compressor's state is the channel's one, and the node being
 		// recorded when Stop comes is let go by WaitForNextBuffer as its
@@ -1253,7 +1267,14 @@ TCodecChannel::InitNode(ChannelNode* node)
 		// which is what sets them - so the recording's node is answered
 		// with whatever error word the heap held (seen on the host as
 		// 19333588).  The Sound Recorder's RecordCompletion then takes an
-		// error other than 0 or -30011 as its engine error 2.
+		// error other than 0 or -30011 as its engine error 2.  The fix
+		// starts them as a node that ran to its end is answered (FreeNode's
+		// noErr and state 0), so such a recording ends without an error.
+		if (RomBugFixed())
+		{
+			codecState->fError = noErr;
+			codecState->fState = 0;
+		}
 	}
 	if ((fFlags & kSndChannelInput) != 0 || (fFlags & kSndChannelCompressor) != 0)
 	{
@@ -2498,10 +2519,13 @@ TSoundServer::SetInputVolume(long gain)
 
 
 // ROM 0x001e9674 SetInputDevice__12TSoundServerFUll
-// ROM BUG kept: the channel is not looked for before it is written to.
+// ROM BUG (fixed): the channel is not looked for before it is written to.
+// The fix answers kSndErrNoChannel for a channel there is not.
 long
 TSoundServer::SetInputDevice(ULong id, long device)
 {
+	if (RomBugFixed() && FindChannel(id) == nil)
+		return kSndErrNoChannel;
 	FindChannel(id)->fDevice = device;
 	return noErr;
 }

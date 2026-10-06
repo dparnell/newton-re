@@ -37,6 +37,7 @@
 #include "OSErrors.h"
 #include "NewtonMemory.h"
 #include "UserPersistent.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -358,7 +359,12 @@ TNameServer::RegisterName(ULong thing, ULong spec)
 	if (fLists[Hash(fName)].Lookup(fName, fType, &oldThing, &oldSpec, nil))
 		return kError_Already_Registered;
 	if (!fLists[Hash(fName)].Add(fName, fType, thing, spec))
-		return kError_Already_Registered;		// (sic: the ROM answers this for "no memory" too)
+	{
+		// ROM BUG (fixed): the ROM answers kError_Already_Registered for
+		// "no memory" too (Add fails only when its entry cannot be made).
+		// The fix answers kError_No_Memory.
+		return RomBugFixed() ? kError_No_Memory : kError_Already_Registered;
+	}
 	fName = nil;
 	fType = nil;
 	return noErr;

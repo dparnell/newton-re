@@ -145,6 +145,9 @@ TestCodec(void)
 	block.fSampleRate = 8000 << 16;
 	EXPECT(codec.Init(&block) == noErr);
 	EXPECT(codec.fStateTag == 'aloc');
+	// a second Init: the ROM loses the first coder (a ROM bug); fixed, it
+	// is freed and a fresh one made
+	EXPECT(codec.Init(&block) == noErr && codec.fStateTag == 'aloc' && codec.fState != nil);
 	EXPECT(codec.Reset(&block) == noErr);
 
 	// coding: a frame and a half of samples makes one frame

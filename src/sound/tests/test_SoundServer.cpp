@@ -23,6 +23,7 @@
 #include "UserBoot.h"
 #include "UserPorts.h"
 #include "host/TaskRuntime.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -150,6 +151,9 @@ SoundScenario(void)
 
 	EXPECT(Immediate(port, channel, kSndClose, 0, &reply) == noErr);
 	EXPECT(Immediate(port, channel, kSndClose, 0, &reply) == kSndErrNoChannel);
+	// fixed: a channel there is not is looked for (the ROM writes through nil)
+	if (RomBugFixed())
+		EXPECT(Immediate(port, channel, kSndSetInputDevice, 1, &reply) == kSndErrNoChannel);
 
 	printf(failures ? "FAILED (%d)\n" : "OK\n", failures);
 	HostStopTasks();
