@@ -9,6 +9,20 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-06: the unistroke engine in the built-in help
+
+Two topics in the help book under Write and Draw: "Write with unistrokes"
+(turning it on, a stroke a letter from the dot, the letters' picture) and
+"Write numbers and commands" (the digits and the four command strokes,
+and what they do).  The book is laid out in advance, a page per topic,
+and its reader does not scroll ("This application does not support
+scrolling" on the down arrow), so what was planned as one topic over two
+pages became two topics.  The pictures are PICTs of a 1-bit bitmap like
+the help's own, drawn from the classifier's templates by test_Unistroke
+--pict with a 5x7 font for the labels; the first try's last row of
+letters sat under the Topics button and the commands' five-letter labels
+ran together, so the cells are 28 pixels and the labels three letters.
+
 ## 2026-10-06: the engines in Setup, with an example drawn (branch hwr-engines)
 
 The owner asked for the unistroke engine on the Setup assistant's

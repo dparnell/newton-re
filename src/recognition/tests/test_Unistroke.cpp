@@ -246,11 +246,219 @@ WriteCard(const char* path)
 }
 
 
+/*------------------------------------------------------------------------------
+	T h e   h e l p   b o o k ' s   p i c t u r e s
+------------------------------------------------------------------------------*/
+
+// The alphabet as the built-in help shows it (romsrc/rex/help_book: "Write
+// with unistrokes"): `test_Unistroke --pict letters|others <file.pict>`
+// writes a QuickDraw picture - the 512-byte header a PICT file has, then a
+// version 2 picture of one 1-bit bitmap (PackBitsRect), as the help's own
+// pictures are - of the letters, or of the digits and the four strokes
+// that are not characters.  Each cell is a label in a 5x7 font and the
+// stroke from the classifier's template, 2 pixels wide, with a dot where
+// the pen goes down.
+
+// a 5x7 font: the labels' characters, seven rows of five
+struct Glyph { char ch; const char* rows[7]; };
+static const Glyph kFont[] =
+{
+	{ 'A', { " ### ", "#   #", "#   #", "#####", "#   #", "#   #", "#   #" } },
+	{ 'B', { "#### ", "#   #", "#   #", "#### ", "#   #", "#   #", "#### " } },
+	{ 'C', { " ### ", "#   #", "#    ", "#    ", "#    ", "#   #", " ### " } },
+	{ 'D', { "#### ", "#   #", "#   #", "#   #", "#   #", "#   #", "#### " } },
+	{ 'E', { "#####", "#    ", "#    ", "#### ", "#    ", "#    ", "#####" } },
+	{ 'F', { "#####", "#    ", "#    ", "#### ", "#    ", "#    ", "#    " } },
+	{ 'G', { " ### ", "#   #", "#    ", "# ###", "#   #", "#   #", " ####" } },
+	{ 'H', { "#   #", "#   #", "#   #", "#####", "#   #", "#   #", "#   #" } },
+	{ 'I', { " ### ", "  #  ", "  #  ", "  #  ", "  #  ", "  #  ", " ### " } },
+	{ 'J', { "  ###", "   # ", "   # ", "   # ", "   # ", "#  # ", " ##  " } },
+	{ 'K', { "#   #", "#  # ", "# #  ", "##   ", "# #  ", "#  # ", "#   #" } },
+	{ 'L', { "#    ", "#    ", "#    ", "#    ", "#    ", "#    ", "#####" } },
+	{ 'M', { "#   #", "## ##", "# # #", "# # #", "#   #", "#   #", "#   #" } },
+	{ 'N', { "#   #", "#   #", "##  #", "# # #", "#  ##", "#   #", "#   #" } },
+	{ 'O', { " ### ", "#   #", "#   #", "#   #", "#   #", "#   #", " ### " } },
+	{ 'P', { "#### ", "#   #", "#   #", "#### ", "#    ", "#    ", "#    " } },
+	{ 'Q', { " ### ", "#   #", "#   #", "#   #", "# # #", "#  # ", " ## #" } },
+	{ 'R', { "#### ", "#   #", "#   #", "#### ", "# #  ", "#  # ", "#   #" } },
+	{ 'S', { " ####", "#    ", "#    ", " ### ", "    #", "    #", "#### " } },
+	{ 'T', { "#####", "  #  ", "  #  ", "  #  ", "  #  ", "  #  ", "  #  " } },
+	{ 'U', { "#   #", "#   #", "#   #", "#   #", "#   #", "#   #", " ### " } },
+	{ 'V', { "#   #", "#   #", "#   #", "#   #", "#   #", " # # ", "  #  " } },
+	{ 'W', { "#   #", "#   #", "#   #", "# # #", "# # #", "# # #", " # # " } },
+	{ 'X', { "#   #", "#   #", " # # ", "  #  ", " # # ", "#   #", "#   #" } },
+	{ 'Y', { "#   #", "#   #", " # # ", "  #  ", "  #  ", "  #  ", "  #  " } },
+	{ 'Z', { "#####", "    #", "   # ", "  #  ", " #   ", "#    ", "#####" } },
+	{ '0', { " ### ", "#   #", "#  ##", "# # #", "##  #", "#   #", " ### " } },
+	{ '1', { "  #  ", " ##  ", "  #  ", "  #  ", "  #  ", "  #  ", " ### " } },
+	{ '2', { " ### ", "#   #", "    #", "   # ", "  #  ", " #   ", "#####" } },
+	{ '3', { "#####", "   # ", "  #  ", "   # ", "    #", "#   #", " ### " } },
+	{ '4', { "   # ", "  ## ", " # # ", "#  # ", "#####", "   # ", "   # " } },
+	{ '5', { "#####", "#    ", "#### ", "    #", "    #", "#   #", " ### " } },
+	{ '6', { "  ## ", " #   ", "#    ", "#### ", "#   #", "#   #", " ### " } },
+	{ '7', { "#####", "    #", "   # ", "  #  ", " #   ", " #   ", " #   " } },
+	{ '8', { " ### ", "#   #", "#   #", " ### ", "#   #", "#   #", " ### " } },
+	{ '9', { " ### ", "#   #", "#   #", " ####", "    #", "   # ", " ##  " } },
+};
+
+struct Bitmap
+{
+	int				fWidth, fHeight, fRowBytes;
+	unsigned char	fBits[26 * 200];
+
+	void	Clear(int w, int h)	{ fWidth = w; fHeight = h; fRowBytes = ((w + 15) / 16) * 2; memset(fBits, 0, sizeof(fBits)); }
+	void	Set(int x, int y)
+	{
+		if (x >= 0 && y >= 0 && x < fWidth && y < fHeight)
+			fBits[y * fRowBytes + x / 8] |= (unsigned char) (0x80 >> (x % 8));
+	}
+	void	Text(int x, int y, const char* text)
+	{
+		for (; *text; text++, x += 6)
+			for (const Glyph& g : kFont)
+				if (g.ch == *text)
+					for (int r = 0; r < 7; r++)
+						for (int c = 0; c < 5; c++)
+							if (g.rows[r][c] == '#')
+								Set(x + c, y + r);
+	}
+	// a 2-pixel pen along the points, and a dot where they start
+	void	Stroke(int x, int y, const double* xy, long count)
+	{
+		for (long i = 1; i < count; i++)
+		{
+			double x0 = xy[2 * i - 2], y0 = xy[2 * i - 1], x1 = xy[2 * i], y1 = xy[2 * i + 1];
+			double len = sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
+			int steps = (int) (len * 4) + 1;
+			for (int k = 0; k <= steps; k++)
+			{
+				int px = x + (int) floor(x0 + (x1 - x0) * k / steps + 0.5);
+				int py = y + (int) floor(y0 + (y1 - y0) * k / steps + 0.5);
+				Set(px, py); Set(px + 1, py); Set(px, py + 1); Set(px + 1, py + 1);
+			}
+		}
+		int dx = x + (int) floor(xy[0] + 0.5), dy = y + (int) floor(xy[1] + 0.5);
+		for (int j = -2; j <= 3; j++)
+			for (int i = -2; i <= 3; i++)
+				if (!((i == -2 || i == 3) && (j == -2 || j == 3)))
+					Set(dx + i, dy + j);
+	}
+};
+
+static void
+PutWord(FILE* f, int w)
+{
+	fputc((w >> 8) & 0xff, f);
+	fputc(w & 0xff, f);
+}
+
+static void
+PutRect(FILE* f, int top, int left, int bottom, int right)
+{
+	PutWord(f, top); PutWord(f, left); PutWord(f, bottom); PutWord(f, right);
+}
+
+static int
+WritePict(const char* which, const char* path)
+{
+	struct Entry { UniChar ch; bool digit; const char* label; };
+	Entry entries[40];
+	int n = 0;
+	char labels[40][2];
+	if (strcmp(which, "letters") == 0)
+		for (const char* p = kLetters; *p; p++, n++)
+		{
+			labels[n][0] = (char) (*p - 'a' + 'A');
+			labels[n][1] = 0;
+			entries[n] = { (UniChar) *p, false, labels[n] };
+		}
+	else if (strcmp(which, "others") == 0)
+	{
+		for (const char* p = kDigits; *p; p++, n++)
+		{
+			labels[n][0] = *p;
+			labels[n][1] = 0;
+			entries[n] = { (UniChar) *p, true, labels[n] };
+		}
+		entries[n++] = { kUnistrokeSpace, false, "SPC" };
+		entries[n++] = { kUnistrokeBackspace, false, "DEL" };
+		entries[n++] = { kUnistrokeReturn, false, "RET" };
+		entries[n++] = { kUnistrokeShift, false, "CAP" };
+	}
+	else
+		return 1;
+	const int columns = 7, cellW = 29, cellH = 28;
+	int rows = (n + columns - 1) / columns;
+	static Bitmap bm;
+	bm.Clear(columns * cellW, rows * cellH);
+	for (int i = 0; i < n; i++)
+	{
+		int x = (i % columns) * cellW, y = (i / columns) * cellH;
+		// (the label at the top left, the stroke below and to the right of
+		//  it, so that a dot at the stroke's top left does not touch it)
+		bm.Text(x + 1, y + 1, entries[i].label);
+		double xy[2 * 40];
+		long count = UnistrokeTemplatePath(entries[i].ch, entries[i].digit, 16, xy, 40);
+		bm.Stroke(x + 9, y + 9, xy, count);
+	}
+
+	FILE* f = fopen(path, "wb");
+	if (f == nullptr)
+		return 1;
+	for (int i = 0; i < 512; i++)
+		fputc(0, f);
+	long sizeAt = ftell(f);
+	PutWord(f, 0);										// picSize, filled in below
+	PutRect(f, 0, 0, bm.fHeight, bm.fWidth);			// picFrame
+	PutWord(f, 0x0011); PutWord(f, 0x02ff);				// version 2
+	PutWord(f, 0x0c00);									// header: version -1, the frame as Fixed
+	PutWord(f, 0xffff); PutWord(f, 0xffff);
+	PutWord(f, 0); PutWord(f, 0); PutWord(f, 0); PutWord(f, 0);
+	PutWord(f, bm.fWidth); PutWord(f, 0); PutWord(f, bm.fHeight); PutWord(f, 0);
+	PutWord(f, 0); PutWord(f, 0);
+	PutWord(f, 0x001e);									// DefHilite
+	PutWord(f, 0x0001); PutWord(f, 10);					// ClipRgn: the frame
+	PutRect(f, 0, 0, bm.fHeight, bm.fWidth);
+	PutWord(f, 0x0098);									// PackBitsRect
+	PutWord(f, bm.fRowBytes);
+	PutRect(f, 0, 0, bm.fHeight, bm.fWidth);			// bounds
+	PutRect(f, 0, 0, bm.fHeight, bm.fWidth);			// srcRect
+	PutRect(f, 0, 0, bm.fHeight, bm.fWidth);			// dstRect
+	PutWord(f, 0);										// srcCopy
+	long data = 0;
+	for (int y = 0; y < bm.fHeight; y++)
+	{
+		// each row as literal runs of at most 128 bytes, its length a byte
+		int length = 0;
+		for (int at = 0; at < bm.fRowBytes; at += 128)
+			length += 1 + (bm.fRowBytes - at < 128 ? bm.fRowBytes - at : 128);
+		fputc(length, f);
+		for (int at = 0; at < bm.fRowBytes; at += 128)
+		{
+			int run = bm.fRowBytes - at < 128 ? bm.fRowBytes - at : 128;
+			fputc(run - 1, f);
+			fwrite(&bm.fBits[y * bm.fRowBytes + at], 1, run, f);
+		}
+		data += 1 + length;
+	}
+	if (data & 1)
+		fputc(0, f);									// (opcodes are word-aligned)
+	PutWord(f, 0x00ff);									// OpEndPic
+	long end = ftell(f);
+	fseek(f, sizeAt, SEEK_SET);
+	PutWord(f, (int) ((end - sizeAt) & 0xffff));
+	fclose(f);
+	return 0;
+}
+
+
 int
 main(int argc, char** argv)
 {
 	if (argc == 3 && strcmp(argv[1], "--card") == 0)
 		return WriteCard(argv[2]);
+	if (argc == 4 && strcmp(argv[1], "--pict") == 0)
+		return WritePict(argv[2], argv[3]);
 	TestClean();
 	TestDistorted();
 	TestDirections();

@@ -59,8 +59,11 @@ python tools/newton-rom/analysis/romsrc.py build romsrc --relayout -o build/obje
   Enabler has been added to its extension (below), the letter-set box of
   the Handwriting Recognition slip and Setup's handwriting page offers the
   host's handwriting engines (`docs/recognition/engines.md`: the cluster
-  `obj_5afced`, the box `obj_646c8d`, the example `obj_5b033d`), and it may
-  be changed further to enhance the system. The git tag `romsrc-rom` keeps the last
+  `obj_5afced`, the box `obj_646c8d`, the example `obj_5b033d`), the help
+  book has two topics on writing with them (`rex/help_book`: the
+  `unistrokeHelp*` items and their two pages; the pictures made by
+  `test_Unistroke --pict`), and it may be changed further to enhance the
+  system. The git tag `romsrc-rom` keeps the last
   tree that is the ROM's but for the additions: `--git-ref romsrc-rom`
   builds that tree out of git, `--original` leaves the additions out, and
   `--check build/MP2x00US` compares the rest with the ROM, which needs the

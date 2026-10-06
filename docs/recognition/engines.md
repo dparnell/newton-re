@@ -193,6 +193,28 @@ is written.
 NOT YET: punctuation (Graffiti's punctuation shift is a tap), the symbol
 and extended shifts, accented letters.
 
+### In the built-in help
+
+The help book (`romsrc/rex/help_book`, the "How do I..." slip the i
+button's Help opens) has two topics under Write and Draw, after "Write to
+get the best recognition": **Write with unistrokes** (how to turn it on,
+one stroke per letter starting at the dot, and a picture of the letters)
+and **Write numbers and commands** (a picture of the digits and the
+space, delete, return and caps strokes, and what each does).  The book
+is laid out in advance - its `rendering` is a list of pages, each a list
+of blocks with bounds on a 206 x 214 page - and its reader shows one page
+per topic and does not scroll, so each topic is one page: a heading
+(`layout: 32`, 14 pixels), text in the book's own fonts, a picture.  The
+bottom fifteen pixels or so are under the Topics and close buttons.
+
+The pictures (`resources/picture/unistroke-letters.pict`,
+`unistroke-others.pict`) are made from the classifier's own templates by
+`test_Unistroke --pict letters|others <file>`: a PICT file's 512-byte
+header, then a version 2 picture of one 1-bit bitmap (PackBitsRect), as
+the help's own pictures are; each cell a label in a 5x7 font and the
+stroke with a dot where it starts.  Regenerate them when a template
+changes.
+
 ## Order of work
 
 1. ~~The framework.~~
