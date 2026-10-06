@@ -20,6 +20,7 @@
 #include "LowLevel.h"
 #include "ParaGraph.h"
 #include "XrDomains.h"
+#include "host/RomBugs.h"
 
 
 // ROM 0x001bd73c sort_extr__FP4EXTRi
@@ -263,11 +264,13 @@ ret_to_line(EXTR* extr, long n, long i, long j)
 void
 spec_neibour_extr(EXTR* extr, long n, UByte kind, long dir)
 {
-	long tag = 0;			// ROM BUG: a register never set for a kind other than 1 or 3 (it is only ever given those)
+	long tag = 0;			// ROM BUG (fixed): a register never set for a kind other than 1 or 3 (it is only ever given those); the fix does nothing for another kind
 	if (kind == 3)
 		tag = 0x65;
 	else if (kind == 1)
 		tag = 0x66;
+	else if (RomBugFixed())
+		return;
 	for (long i = 1; i < n; i++)
 	{
 		if (extr[i].susp == tag && extr[i - 1].susp == 0x67)
@@ -718,11 +721,13 @@ smooth_u_bord(EXTR* extr, long n, low_type* low, long w, short* line, short* bas
 long
 neibour_susp_extr(EXTR* extr, long n, UByte kind, short* base, long lim)
 {
-	long tag = 0;			// ROM BUG: unset for a kind other than 1 or 3 (never given one)
+	long tag = 0;			// ROM BUG (fixed): unset for a kind other than 1 or 3 (never given one); the fix leaves the extrema alone for another kind and answers 0
 	if (kind == 3)
 		tag = 0x65;
 	else if (kind == 1)
 		tag = 0x66;
+	else if (RomBugFixed())
+		return 0;
 	long plain = 0;
 	long sum = 0;
 	long avg = 0;

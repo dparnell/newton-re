@@ -25,6 +25,7 @@
 #include "LowLevel.h"
 #include "ParaGraph.h"
 #include "XrDomains.h"
+#include "host/RomBugs.h"
 
 
 static inline long
@@ -587,11 +588,22 @@ numbers_in_text(low_type* low, short* upper, short* lower)
 								hgt = box.bottom - b2.top;
 							}
 						}
-						// ROM BUG: meant to be the stroke before, this is the
-						// figure's own last extremum and its own start, so the
-						// box it measures is the figure's own and neither test
-						// below can pass
+						// ROM BUG (fixed): meant to be the stroke before, this
+						// is the figure's own last extremum and its own start,
+						// so the box it measures is the figure's own and
+						// neither test below can pass.  The fix takes the
+						// element before the figure's start (0x10), the end
+						// (0x20) of the stroke before, when there is one.
 						SPEC_TYPE* pv = elem->prev;
+						if (RomBugFixed())
+						{
+							SPEC_TYPE* fs = elem;
+							while (fs != nil && fs->mark != 0x10)
+								fs = fs->prev;
+							pv = fs != nil ? fs->prev : nil;
+							if (pv != nil && pv->mark != 0x20)
+								pv = nil;
+						}
 						if (pv != nil)
 						{
 							long pe = pv->iEnd;

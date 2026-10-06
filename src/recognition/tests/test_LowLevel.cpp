@@ -13,6 +13,7 @@
 #include "ParaGraph.h"
 #include "CursiveReader.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -102,9 +103,43 @@ TestStrokes(void)
 	EXPECT(GetGroupNumber(low, 9) == 1);
 	EXPECT(GetGroupNumber(low, 6) == -2);
 
+	// a point in no stroke (the first cut short to end at 3): the ROM
+	// answers the low_type's address, the fix -1 (ROM BUG (fixed))
+	low->fGroups[0].iEnd = 3;
+	SetRomBugFixed(false);
+	EXPECT(GetGroupNumber(low, 4) == (long) (ULong) low);
+	SetRomBugFixed(true);
+	EXPECT(GetGroupNumber(low, 4) == -1);
+	low->fGroups[0].iEnd = 5;
+
+	// room for one stroke of two: refused, and the ROM writes the second
+	// stroke's start one past the groups it has (ROM BUG (fixed))
+	short maxGroups = low->fMaxGroups;
+	low->fMaxGroups = 1;
+	low->fGroups[1].iBeg = 99;
+	SetRomBugFixed(false);
+	EXPECT(InitGroupsBorder(low, 0) == 1);
+	EXPECT(low->fGroups[1].iBeg == 7);
+	low->fGroups[1].iBeg = 99;
+	SetRomBugFixed(true);
+	EXPECT(InitGroupsBorder(low, 0) == 1);
+	EXPECT(low->fGroups[1].iBeg == 99);
+	low->fMaxGroups = maxGroups;
+
 	// a trace that does not end with a pen-up is refused
 	low->fY[low->fII - 1] = 7;
 	EXPECT(InitGroupsBorder(low, 0) == 1);
+
+	// a kind of extremum other than 1 or 3: the ROM works with a tag it
+	// never set (nought); the fix leaves the extrema alone (ROM BUG (fixed))
+	EXTR extr[2];
+	memset(extr, 0, sizeof(extr));
+	extr[1].susp = 0x67;
+	spec_neibour_extr(extr, 2, 2, 0);
+	EXPECT(extr[0].susp == 0 && extr[1].susp == 0x67);
+	short base[4] = { 0, 0, 0, 0 };
+	EXPECT(neibour_susp_extr(extr, 2, 2, base, 0) == 0);
+	EXPECT(extr[0].susp == 0 && extr[1].susp == 0x67);
 }
 
 

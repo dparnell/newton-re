@@ -26,6 +26,7 @@
 #include "LowLevel.h"
 #include "ParaGraph.h"
 #include "XrDomains.h"
+#include "host/RomBugs.h"
 #include <string.h>
 
 
@@ -1816,11 +1817,16 @@ LowStFiltr(low_type* low, short* heights, SPEC_TYPE* bar, PS_point_type* /*p*/, 
 	{
 		flags = 2;
 		long k = SpcElemFirstOccArr(low, &flags, &g, 1);
-		// ROM BUG: no top found reads the element two before the list's
-		// start; the host cannot, and takes it as the case above does
-		// (DEVIATION)
+		// ROM BUG (fixed): no top found reads the element two before the
+		// list's start; the host cannot, and takes it as the case above
+		// does (DEVIATION).  The fix is the same answer: no top is taken
+		// as no bottom is above, which is what the code means.
 		if (k == -2)
-			return 1;
+		{
+			if (RomBugFixed())
+				return 1;
+			return 1;		// DEVIATION: the host's stand-in for the ROM's read
+		}
 		start = specl[k].ipoint0;
 	}
 	else if (y[iEnd] > v)

@@ -11,6 +11,7 @@
 #include "XrDomains.h"
 #include "ParaGraph.h"
 #include "CursiveReader.h"
+#include "host/RomBugs.h"
 #include <string.h>
 
 
@@ -478,10 +479,12 @@ InitGroupsBorder(low_type* low, short withBoxes)
 			if (y[i] == -1)
 			{
 				groups[k - 1].iEnd = i - 1;
-				// ROM BUG: the next stroke's start is written before the room
-				// is checked, so with every group used it lands one past the
-				// array - on the index that follows it in the block
-				groups[k].iBeg = i + 1;
+				// ROM BUG (fixed): the next stroke's start is written before
+				// the room is checked, so with every group used it lands one
+				// past the array - on the index that follows it in the block.
+				// The fix writes it only when there is a group for it.
+				if (!RomBugFixed() || k < maxGroups)
+					groups[k].iBeg = i + 1;
 				if (withBoxes == 1)
 					GetTraceBox(x, y, groups[k - 1].iBeg, groups[k - 1].iEnd, &groups[k - 1].box);
 				if (maxGroups <= k)
@@ -523,11 +526,11 @@ GetGroupNumber(low_type* low, long i)
 	POINTS_GROUP* groups = low->fGroups;
 	long n = low->fLenGroups;
 	long k = 0;
-	// ROM BUG: when no stroke holds the point the answer is left as the
-	// low_type's own address (the register it was passed in), which the
+	// ROM BUG (fixed): when no stroke holds the point the answer is left as
+	// the low_type's own address (the register it was passed in), which the
 	// callers never see because every point that is not a pen-up is in a
-	// stroke
-	long found = (long) (ULong) low;
+	// stroke.  The fix answers -1, no group, there (-2 stays the pen-up's).
+	long found = RomBugFixed() ? -1 : (long) (ULong) low;
 	for ( ; k < n; k++)
 	{
 		if (groups[k].iBeg <= i && i <= groups[k].iEnd)
