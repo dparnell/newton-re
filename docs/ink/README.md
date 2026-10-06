@@ -357,7 +357,10 @@ and `GetMapper` do their arithmetic through `ULong`
 (`toolbox/FixedMathExtra.h`'s `WrapAdd`/`WrapSub`), and the doublings in
 the encoder's `Repar` wrap with them.  What comes out is a stroke whose
 points are scattered, which the CIC encoder then refuses - so the word
-is lost, and the unit handler reports `evt.ex.outofmem`.
+is lost, and the unit handler reports `evt.ex.outofmem`.  This is fixed
+by default now: `GetMapper` takes a flat stroke the first way, narrowing
+the height and keeping the width (`NEWTON_ROM_BUGS=1` for the ROM's
+behaviour).
 
 It takes a stroke that is flat to the last eighth of a pixel over its
 whole length, in a word tall or wide enough to be scaled down (sixty

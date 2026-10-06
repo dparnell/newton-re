@@ -29,6 +29,7 @@
 #include "FixedMath.h"
 #include "Ports.h"		// ToFixed, RoundFixed
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -1439,7 +1440,7 @@ TestStrokesToInk()
 	EXPECT(box.bottom - box.top >= 14 && box.bottom - box.top <= 17);	// half of thirty-odd
 	wide->IDispose();
 
-	// BUG (the ROM's): a perfectly flat stroke in a word that has to be
+	// ROM BUG (fixed in GetMapper): a perfectly flat stroke in a word that has to be
 	// scaled has its box blown up to about sixteen thousand pixels each
 	// way, and its points are mapped into that - which is nonsense.
 	//
@@ -1454,7 +1455,10 @@ TestStrokesToInk()
 	// The reconstruction keeps it: a Newton really does make nonsense of
 	// such a word.  It is easy to hit on a host because the mouse gives
 	// exactly equal y values, where a tablet's samples always jitter.
+	// With the fix (the default) the flat stroke keeps a sane width.
+	for (int fixed = 0; fixed < 2; fixed++)
 	{
+		SetRomBugFixed(fixed != 0);
 		TStroke* word[3];
 		word[0] = MakeLine(10, 20, 40, 120, 20);	// tall enough to need scaling
 		word[1] = MakeLine(50, 100, 160, 100, 20);	// ... and perfectly flat
@@ -1465,10 +1469,14 @@ TestStrokesToInk()
 		EXPECT(word[1]->fBBox.bottom - word[1]->fBBox.top == 2);	// two Fixed units high, 1/32768 of a pixel
 		ScaleStrokesForInkWord(word, &box);
 		ULong blownUp = (ULong) word[1]->fBBox.right - (ULong) word[1]->fBBox.left;
-		EXPECT(blownUp > 0x7f000000);				// about 2^31: sixteen thousand pixels
+		if (fixed)
+			EXPECT(blownUp > 0 && blownUp < (ULong) (240 << 16));	// no wider than the word
+		else
+			EXPECT(blownUp > 0x7f000000);				// about 2^31: sixteen thousand pixels
 		word[0]->IDispose();
 		word[1]->IDispose();
 	}
+	SetRomBugFixed(true);
 }
 
 
