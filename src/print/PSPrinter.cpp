@@ -464,9 +464,9 @@ TPSPrinter::SendPSText(char* text, Boolean eoj)
 
 // ROM 0x0021b89c SendPSBinary__10TPSPrinterFPcUl
 // Bytes sent, as SendPSText sends a text.  (After a problem the rest is
-// sent from where it stopped, but the size is not made smaller: ROM BUG
-// (fixed) - the bytes after the end go too.  The fix takes what was sent
-// off the size.)
+// sent from where it stopped, but the size is not made smaller:
+// ROM BUG (fixed) - the bytes after the end go too.  The fix takes what
+// was sent off the size.)
 void
 TPSPrinter::SendPSBinary(char* data, ULong size)
 {
