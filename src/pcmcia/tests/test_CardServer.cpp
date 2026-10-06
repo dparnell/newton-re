@@ -22,6 +22,7 @@
 #include "UserPorts.h"
 #include "SystemEvents.h"
 #include "host/TaskRuntime.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -148,6 +149,20 @@ CardServerScenario(void)
 
 	HostCardRemove(0);
 	EXPECT(Expect(app, kCardServerCardRemoved, &news));
+
+	// ROM BUGS (fixed): the processor took a message for the socket one
+	// past the last (> for >=), and answered a resume with the fault
+	// monitor's id.  (The ROM's code would index past the sockets here, so
+	// only the fix is run.)
+	{
+		SetRomBugFixed(true);
+		TCardProcessor processor;
+		TCardMessage message;
+		message.MessageStuff(kCardProcessorBattery, gNumberOfHWSockets, 0);
+		EXPECT(processor.DoCommand(nil, nil, &message, 0) == kError_Bad_Parameters);
+		message.MessageStuff(kCardProcessorResume, 0, 0);
+		EXPECT(processor.DoCommand(nil, nil, &message, 0) == noErr);
+	}
 	remove(kCardFile);
 	printf(failures ? "FAILED (%d)\n" : "OK\n", failures);
 	HostStopTasks();

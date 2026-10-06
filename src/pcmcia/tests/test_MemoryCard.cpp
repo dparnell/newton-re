@@ -20,6 +20,7 @@
 #include "Boot.h"
 #include "UserBoot.h"
 #include "host/TaskRuntime.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -124,6 +125,16 @@ MemoryCardScenario(void)
 	EXPECT(store->GetStoreSizes(&total, &used) == noErr && total > 0x300000);
 	EXPECT(!CardVccIsOn(0) || CardVccCount(0) == 0);	// counted off again (the countdown may keep it on)
 	store->Delete();
+
+	// ROM BUG (fixed): FormatCIS on a card with a bad CIS and no device
+	// read through device 0, nil; fixed, the card is left alone
+	{
+		TCardPCMCIA bare;
+		bare.fBadCIS = 1;
+		SetRomBugFixed(true);
+		EXPECT(bare.GetCardDevice(0) == nil);
+		EXPECT(handler->FormatCIS(socket, &bare) == noErr);
+	}
 	handler->Delete();
 
 	// out, and in again

@@ -28,6 +28,7 @@
 #include "NewtonMemory.h"
 #include "OSErrors.h"
 #include "NewtErrors.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -56,8 +57,12 @@ SetString(char*& desStr, const char* srcStr)
 // ROM 0x0004ee54 SetStringsBlock__FRPcPCcCUl
 // A copy of a block of C strings ending in 0xFF (VERS_1's), no more than
 // maxSize bytes of it, always ending "\0\xFF".
-// ROM BUG kept: a block that runs past maxSize comes out as maxSize + 3
-// bytes, the copy reading past the end of the source by as much.
+// ROM BUG (fixed): a block that runs past maxSize comes out as maxSize + 3
+// bytes, the copy reading past the end of the source by as much.  The fix
+// cuts the block at maxSize (two bytes at least, for the ending) and
+// copies no more of the source than there is - up to its 0xFF, which also
+// keeps a block that fits from reading the byte after it; what a block
+// that fits comes out as is the ROM's.
 char*
 SetStringsBlock(char*& desBlock, const char* srcBlock, const ULong maxSize)
 {
@@ -75,8 +80,24 @@ SetStringsBlock(char*& desBlock, const char* srcBlock, const ULong maxSize)
 				byteCount = through + 1;
 			s += length + 1;
 		} while (byteCount < maxSize && *s != (char) 0xFF);
+		ULong copied = byteCount;
+		if (RomBugFixed())
+		{
+			if (byteCount > maxSize)
+				byteCount = maxSize;
+			if (byteCount < 2)
+				byteCount = 2;
+			ULong source = 0;		// the source's bytes, its 0xFF included
+			while (source < maxSize && srcBlock[source] != (char) 0xFF)
+				source++;
+			if (source < maxSize)
+				source++;
+			copied = byteCount < source ? byteCount : source;
+		}
 		desBlock = new char[byteCount];
-		BlockMove(srcBlock, desBlock, byteCount);
+		BlockMove(srcBlock, desBlock, copied);
+		if (copied < byteCount)
+			memset(desBlock + copied, 0, byteCount - copied);
 		desBlock[byteCount - 1] = (char) 0xFF;
 		desBlock[byteCount - 2] = 0;
 	}

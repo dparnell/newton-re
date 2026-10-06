@@ -16,6 +16,7 @@
 #include "Boot.h"
 #include "UserBoot.h"
 #include "host/TaskRuntime.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -236,6 +237,78 @@ TestRichCIS(TCardSocket* socket)
 }
 
 
+// ROM BUGS (fixed): a DEVICE_GEO naming more devices than the DEVICE has
+// wrote through a nil one, and an entry's I/O ranges past the eighth over
+// what follows them; fixed, the extra geometry is passed over and only
+// eight ranges kept.  (The ROM's code would write through nil here, so
+// only the fix is run.)
+static void
+TestCISBugs(TCardSocket* socket)
+{
+	Bytes cis;
+	Tuple(cis, 0x01, { 0x53, 0x0E, 0xFF });							// DEVICE: one, flash, 4 MB
+	Tuple(cis, 0x1E, { 0x02, 0x11, 0x01, 0x01, 0x01, 0x01,			// DEVICE_GEO: two
+					   0x04, 0x22, 0x02, 0x02, 0x02, 0x02 });
+	Tuple(cis, 0x1A, { 0x01, 0x03, 0x00, 0x02, 0x03 });				// CONFIG
+	cis.push_back(0x1B);											// CFTABLE_ENTRY 0x21, default
+	cis.push_back(35);
+	cis.push_back(0xE1);
+	cis.push_back(0x01);											//   interface: I/O
+	cis.push_back(0x08);											//   I/O only
+	cis.push_back(0xE0);											//   8/16 bit, ranges
+	cis.push_back(0x69);											//   ten, 2-byte addresses, 1-byte lengths
+	for (int i = 0; i < 10; i++)
+	{
+		cis.push_back((unsigned char) (i * 0x10));
+		cis.push_back(0x03);
+		cis.push_back((unsigned char) i);
+	}
+	cis.push_back(0xFF);											// END
+	WriteCard(Bytes(16, 0xFF), cis);
+	EXPECT(HostCardInsert(0, kCardFile) == noErr);
+	TCardPCMCIA card;
+	TPCMCIA20Parser parser;
+	SetRomBugFixed(true);
+	parser.ParsePCCardCIS(&card, socket);
+	EXPECT(card.fNumOfDevice == 1);
+	TCardDevice* device = card.GetCardDevice(0);
+	if (device != nil)
+		EXPECT(device->fBusSize == 2 && device->fEraseBlockSize == 0x11);
+	TCardConfiguration* config = card.GetCardConfiguration(0);
+	EXPECT(config != nil);
+	if (config != nil)
+	{
+		EXPECT(config->fNumOfIOSpace == kNumIOBlocks);
+		EXPECT(config->fIoAddresses[7] == 0x370 && config->fIoLengths[7] == 8);
+		EXPECT(config->fIoAddresses[0] == 0x300 && config->fIoLengths[0] == 1);
+	}
+	HostCardRemove(0);
+}
+
+
+// ROM BUG (fixed): SetStringsBlock's block cut at maxSize came out longer
+// than maxSize, read from past the source's end
+static void
+TestSetStringsBlock(void)
+{
+	static const char kLong[] = "abcdefgh\0\xFF\0\0\0\0";
+	static const char kShort[] = "abc\0def\0\xFF\0\0\0";
+	char* block = nil;
+	SetRomBugFixed(false);
+	SetStringsBlock(block, kLong, 5);
+	EXPECT(block != nil && block[4] == 'e' && block[5] == 0 && (UChar) block[6] == 0xFF);
+	SetStringsBlock(block, kShort, 64);
+	EXPECT(block != nil && block[7] == 0 && block[8] == 0 && (UChar) block[9] == 0xFF);
+	SetRomBugFixed(true);
+	SetStringsBlock(block, kLong, 5);
+	EXPECT(block != nil && memcmp(block, "abc\0\xFF", 5) == 0);
+	// one that fits comes out as the ROM's
+	SetStringsBlock(block, kShort, 64);
+	EXPECT(block != nil && memcmp(block, "abc\0def\0\0\xFF", 10) == 0);
+	delete[] block;
+}
+
+
 static void
 CISScenario(void)
 {
@@ -243,6 +316,8 @@ CISScenario(void)
 	EXPECT(socket.Init() == noErr);
 	TestBlankCard(&socket);
 	TestRichCIS(&socket);
+	TestCISBugs(&socket);
+	TestSetStringsBlock();
 	remove(kCardFile);
 	HostStopTasks();
 }
