@@ -216,7 +216,7 @@ GiveBackPart(TImportedObjectArea* area, Boolean lookedAt)
 
 
 // A part that would not install, its units taken back first (the fix of
-// the ROM BUG in Install below): what it exports and what it imports
+// the bug in Install below): what it exports and what it imports
 // forgotten, as Remove forgets them, before its area goes.
 static void
 GiveBackPartAndUnits(TImportedObjectArea* area, Boolean lookedAt)

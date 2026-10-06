@@ -18,6 +18,7 @@
 #include "NewtonTime.h"			// RealClock
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 #include "Unicode.h"			// Ustrcmp
 #include "UserTasks.h"			// Reboot
 #include "Frames.h"
@@ -119,13 +120,15 @@ TCRelocationGenerator::Init(RelocationHeader* header, RelocationEntry* entries)
 // The size of the C relocation data in front of a page: 0 with no
 // relocation at all, the block header alone when no entry is the page's,
 // else the header and the page's offsets padded to four.
-// ROM BUG kept: the walk's end test compares the entry pointer plus the
+// ROM BUG (fixed): the walk's end test compares the entry pointer plus the
 // entries' size with the entry pointer itself, so it never ends the walk:
 // the entries are walked until one is for this page or a later one, or
 // has no offsets - past the last entry, into whatever follows it.
 // DEVIATION: the host stops at the end of the entries (what lies beyond
 // them on the MessagePad - heap rubbish for a package read from a pipe -
-// cannot be reproduced), answering as for a page with no entry.
+// cannot be reproduced), answering as for a page with no entry.  That
+// stop is also the fix - the end test the code meant - so the two
+// machines agree here.
 long
 TCRelocationGenerator::GetRelocDataSizeForBlock(ULong block)
 {
@@ -660,10 +663,11 @@ TPackageIterator::Store(TStore* store, PSSId indexId, TCallbackCompressor* compr
 // directory's data, the relocation chunk, then every part - read from the
 // pipe, or copied from memory - frames parts being walked for the page
 // headers.
-// ROM BUG kept: from memory, every 1K piece of a part is copied from the
-// part's start (the source is never advanced), so a part longer than 1K
-// is stored as its first 1K over and over.  (A package reaches the store
-// through a pipe, which is read properly.)
+// ROM BUG (fixed): from memory, every 1K piece of a part is copied from
+// the part's start (the source is never advanced), so a part longer than
+// 1K is stored as its first 1K over and over.  (A package reaches the
+// store through a pipe, which is read properly.)  The fix copies each
+// piece from where the last one ended.
 // Read from a pipe, the progress callback is told each time its frequency
 // of bytes has been read: the package's size and name, how many parts, the
 // part being read, and how much of the package has come in (counted from
@@ -723,7 +727,10 @@ TPackageIterator::Store(TStore* store, PSSId indexId, TCallbackCompressor* compr
 				{
 					newton_try
 					{
-						memmove(buffer, (void*) info.data, n);
+						if (RomBugFixed())
+							memmove(buffer, (char*) info.data + (info.size - left), n);
+						else
+							memmove(buffer, (void*) info.data, n);
 					}
 					newton_catch_all
 					{
@@ -1401,7 +1408,8 @@ BackupPackagePages(CPipe* pipe, TStore* store, PSSId id, long packageSize, char*
 // The package written to the pipe as it was installed: mapped (if it is
 // not already) to learn its size, then every page read through its own
 // decompressor at base 0 and written out, the last one cut to the size.
-// ROM BUG kept: a package mapped here is never unmapped.
+// ROM BUG (fixed): a package mapped here is never unmapped.  The fix
+// unmaps it once its size is known (one already mapped is left so).
 // NOT YET RECONSTRUCTED: the progress callback.
 NewtonErr
 BackupPackage(CPipe* pipe, TStore* store, PSSId id, TLOCallback* /*callback*/)
@@ -1412,12 +1420,15 @@ BackupPackage(CPipe* pipe, TStore* store, PSSId id, TLOCallback* /*callback*/)
 	if (err == noErr)
 	{
 		ULong address;
-		if (StoreToVAddr(&address, store, id) == noErr || (err = MapLargeObject(&address, store, id, false)) == noErr)
+		Boolean mappedHere = false;
+		if (StoreToVAddr(&address, store, id) == noErr || ((err = MapLargeObject(&address, store, id, false)) == noErr && (mappedHere = true)))
 		{
 			TPackageIterator iter((void*) address);
 			if ((err = iter.Init()) == noErr)
 				packageSize = (long) iter.PackageSize();
 		}
+		if (mappedHere && RomBugFixed())
+			UnmapLargeObject(address);
 		if (err == noErr)
 			err = BackupPackagePages(pipe, store, id, packageSize, page);
 	}
@@ -1467,9 +1478,11 @@ BackupPackage(CPipe* pipe, ULong packageId)
 // is read back by the simple decompressors and stored with no compressor.
 // The patch package is not stored at all: read into a binary and loaded,
 // the store aborted, ==> 1.  On failure the objects made are aborted.
-// ROM BUG kept: the patch package's relocation chunk, which the iterator
-// has already read out of the pipe, is not copied into the binary, and
-// the rest is read as if it began at the directory's end.
+// ROM BUG (fixed): the patch package's relocation chunk, which the
+// iterator has already read out of the pipe, is not copied into the
+// binary, and the rest is read as if it began at the directory's end.
+// The fix copies the chunk (its header and entries) after the directory
+// and reads the rest in after it.
 NewtonErr
 AllocatePackage(CPipe* pipe, TStore* store, PSSId rootId, char* decompressor, void* parameters, long parametersSize,
 				TCallbackCompressor* compressor, TLOCallback* callback)
@@ -1491,6 +1504,14 @@ AllocatePackage(CPipe* pipe, TStore* store, PSSId rootId, char* decompressor, vo
 				memmove(buffer + numParts * 0x20 + kPackageDirectorySize, iter.fDirectoryData,
 						iter.DirectorySize() - (numParts * 0x20 + kPackageDirectorySize));
 				ULong directorySize = iter.DirectorySize();
+				if (RomBugFixed() && iter.fRelocationInfo != nil)
+				{
+					ULong relocationSize = iter.fRelocationInfo->RelocationSize();
+					memmove(buffer + directorySize, iter.fRelocationInfo, kRelocationHeaderSize);
+					if (iter.fRelocationData != nil)
+						memmove(buffer + directorySize + kRelocationHeaderSize, iter.fRelocationData, relocationSize - kRelocationHeaderSize);
+					directorySize += relocationSize;
+				}
 				volatile NewtonErr readErr = noErr;
 				newton_try
 				{
@@ -1568,9 +1589,11 @@ AllocatePackage(CPipe* pipe, TStore* store, PSSId rootId, char* decompressor, vo
 // The package stored with the store locked, installed from there, and
 // committed (a package only dispatched is taken back off the store at
 // once); a patch that went in restarts the machine.
-// ROM BUGS kept: the store is left locked when the package will not
+// ROM BUG (fixed): the store is left locked when the package will not
 // install, and when it was the patch package; a failure to commit takes
 // the package back off the store but still answers noErr (the unlock's).
+// The fix unlocks the store on every way out, and answers the commit's
+// error when there was one.
 NewtonErr
 NewPackage(CPipe* pipe, TStore* store, PSSId rootId, ULong* packageId, char* decompressor, void* parameters, long parametersSize,
 		   TCallbackCompressor* compressor)
@@ -1582,16 +1605,22 @@ NewPackage(CPipe* pipe, TStore* store, PSSId rootId, ULong* packageId, char* dec
 	if (err == 1)
 	{
 		*packageId = 0;
+		if (RomBugFixed())
+			store->UnlockStore();
 		return noErr;
 	}
 	if (err != noErr)
 	{
 		store->Abort();
+		if (RomBugFixed())
+			store->UnlockStore();
 		return err;
 	}
 	if ((err = PackageAvailable(store, rootId, packageId, &forDispatchOnly, &patchInstalled)) != noErr)
 	{
 		DeallocatePackage(store, rootId);
+		if (RomBugFixed())
+			store->UnlockStore();
 		return err;
 	}
 	if (forDispatchOnly)
@@ -1607,7 +1636,14 @@ NewPackage(CPipe* pipe, TStore* store, PSSId rootId, ULong* packageId, char* dec
 		else
 			DeallocatePackage(store, rootId);
 	}
-	err = store->UnlockStore();
+	if (RomBugFixed())
+	{
+		NewtonErr unlockErr = store->UnlockStore();
+		if (err == noErr)
+			err = unlockErr;
+	}
+	else
+		err = store->UnlockStore();
 	if (patchInstalled)
 		Reboot(-10077, 0, false);
 	return err;

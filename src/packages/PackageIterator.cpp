@@ -341,7 +341,7 @@ ReadFromPipe(CPipe* pipe, void* data, long count)
 		Boolean eof;
 		pipe->ReadChunk(data, size, eof);
 		if (RomBugFixed() && size < count)
-			err = kError_Bad_Package;	// (the fix of the ROM BUG in ComputeSizeOfEntriesAndData)
+			err = kError_Bad_Package;	// (the fix of the bug in ComputeSizeOfEntriesAndData)
 	}
 	newton_catch(exPipeException)
 	{

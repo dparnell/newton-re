@@ -225,7 +225,7 @@ RemovePendingImports(void* source)
 
 
 // host: the pending imports of one import item forgotten (the fix of the
-// ROM BUG in InstallImportTable below; RemovePendingImports goes by part,
+// bug in InstallImportTable below; RemovePendingImports goes by part,
 // which would take an earlier installation's too).
 static void
 RemovePendingImportsOf(MPImportItem* import)
