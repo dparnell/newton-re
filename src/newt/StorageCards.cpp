@@ -79,10 +79,11 @@ TNewtCardEventHandler::HandleCardEvent(TCardMessage* message)
 				delete (TCardAsyncMsg*) message;
 			}
 			end_unwind;
-			// ROM BUG: the ROM answers the message it has just deleted
-			// (ReplyServer writes into the freed block); an answer to a
-			// completion goes nowhere, so the host leaves the freed block
-			// alone (DEVIATION)
+			// ROM BUG (fixed): the ROM answers the message it has just
+			// deleted (ReplyServer writes into the freed block); an answer
+			// to a completion goes nowhere, so the host leaves the freed
+			// block alone (DEVIATION) - which is also the fix, so both
+			// paths are one (no RomBugFixed() test)
 			ExitHandler(&_info);
 			return 2;
 		}
