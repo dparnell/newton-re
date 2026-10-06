@@ -25,6 +25,7 @@
 #include "Unicode.h"
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
+#include "host/RomBugs.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -93,13 +94,19 @@ CFInstantiate(RefArg rcvr)
 			ConvertFromUnicode(GetCString(name), collectionName, 1, length + 1);
 		RefVar elements(GetVariable(rcvr, RSSYMtraceelements, nil, 0));
 		ArrayIndex count = Length(elements);
-		// ROM BUG: only the elements with a trace string are entered, but
-		// the collector is given the whole count, and CFDispose frees
-		// every entry's string.  DEVIATION: the host's table is cleared,
-		// so an entry not filled in has none (the ROM's is heap rubbish).
+		// ROM BUG (fixed): only the elements with a trace string are
+		// entered, but the collector is given the whole count, and CFDispose
+		// frees every entry's string.  DEVIATION: the host's table is
+		// cleared, so an entry not filled in has none (the ROM's is heap
+		// rubbish).  The fix gives the collector, and the table, the count
+		// of entries filled in.
 		TraceTable* table = (TraceTable*) calloc(1, sizeof(long) + count * sizeof(EventTraceCauseDesc));
-		// ROM BUG: the count is written before the table is checked
-		table->fCount = count;
+		// ROM BUG (fixed): the count is written before the table is
+		// checked.  The fix writes it only into a table there is.
+		if (!RomBugFixed())
+			table->fCount = count;
+		else if (table != nil)
+			table->fCount = count;
 		long entry = 0;
 		if (table != nil)
 		{
@@ -120,6 +127,8 @@ CFInstantiate(RefArg rcvr)
 					}
 				}
 			}
+			if (RomBugFixed())
+				table->fCount = entry;
 		}
 		TEventCollector* collector;
 		if (collectionName == nil || table == nil
@@ -131,7 +140,7 @@ CFInstantiate(RefArg rcvr)
 		else
 		{
 			collector->Init(4, (char*) "\t%bd %bx", collectionName, 0x80, 0);
-			collector->AddDescriptions(table->fEntries, count);
+			collector->AddDescriptions(table->fEntries, RomBugFixed() ? (ArrayIndex) entry : count);
 			SetFrameSlot(rcvr, RSSYMprivateeventcollector, RefVar(AddressToRef(collector)));
 			SetFrameSlot(rcvr, RSSYMprivatetraceevents, RefVar(AddressToRef(table)));
 			err = noErr;
@@ -172,8 +181,10 @@ CFRecord(RefArg rcvr, RefArg cause, RefArg data)
 		}
 		else if (NOTNIL(data))
 			byte = 0xff;
-		// ROM BUG: a frame with no collector is recorded through nil (a
-		// data abort on the MessagePad).  DEVIATION: the host does nothing.
+		// ROM BUG (fixed): a frame with no collector is recorded through nil
+		// (a data abort on the MessagePad).  DEVIATION: the host does
+		// nothing, which is also the fix, on both paths.
+
 		if (collector != nil)
 			collector->Add((unsigned long) ((RINT(cause) << 24) + (byte << 16)));
 	}

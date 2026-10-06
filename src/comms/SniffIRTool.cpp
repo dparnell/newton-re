@@ -13,6 +13,7 @@
 #include "NewtonTime.h"
 #include "UserPorts.h"
 #include "NameServer.h"
+#include "host/RomBugs.h"
 
 // how long after a failed start, or after telling the newt world, the
 // sniffer tries again
@@ -178,11 +179,12 @@ TSniffIRTool::AddCurrentOptions(TOptionArray* options)
 
 
 // ROM 0x001e32f8 ProcessOptionStart__12TSniffIRToolFP7TOptionUlT2
-// 'irsn: whether to sniff.  ROM BUG kept: every opcode copies the tool's own
-// option *into* the one given (CopyDataFrom the wrong way round), so a set
-// changes nothing - it only clears the option's status and starts or stops
-// the sniffing by the setting the tool already had; the default answers a
-// fresh option's.  Anything else is the serial tool's.
+// 'irsn: whether to sniff.  ROM BUG (fixed): every opcode copies the
+// tool's own option *into* the one given (CopyDataFrom the wrong way
+// round), so a set changes nothing - it only clears the option's status
+// and starts or stops the sniffing by the setting the tool already had;
+// the default answers a fresh option's.  The fix has a set copy the given
+// option into the tool's.  Anything else is the serial tool's.
 ULong
 TSniffIRTool::ProcessOptionStart(TOption* theOption, ULong label, ULong opcode)
 {
@@ -190,7 +192,11 @@ TSniffIRTool::ProcessOptionStart(TOption* theOption, ULong label, ULong opcode)
 		return TAsyncSerTool::ProcessOptionStart(theOption, label, opcode);
 	if (opcode == opSetNegotiate || opcode == opSetRequired)
 	{
-		theOption->CopyDataFrom(&fSniff);
+		if (RomBugFixed())
+			fSniff.CopyDataFrom(theOption);
+		else
+			theOption->CopyDataFrom(&fSniff);
+
 		theOption->SetOpCodeResult(0);
 		NextState(fSniff.sniffEnable ? kSniffMayStart : kSniffStop);
 	}

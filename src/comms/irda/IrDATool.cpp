@@ -366,7 +366,11 @@ TIrDATool::UpdateOptionsAfterConnectOrListen(void)
 ------------------------------------------------------------------------------*/
 
 // ROM 0x000eeb4c StartOutput__9TIrDAToolFP11CBufferList
+// With the chip off the put is completed before fPutBuffer is stored, so
+// DoPutComplete asks a nil buffer its position (ROM bug: see
+// TAsyncSerTool::DoPutComplete, where it is fixed).
 void
+
 TIrDATool::StartOutput(CBufferList* clientBuffer)
 {
 	if (!fChipOn)

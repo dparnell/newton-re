@@ -1,6 +1,7 @@
 // The modem tool's commands and answers (comms/ModemTool.h), without a
-// modem: the AT commands PrepareCommand builds (and the ROM's bugs in them
-// - the +FEA= thrown away, UiToA's digits of the low byte), a long number
+// modem: the AT commands PrepareCommand builds (and the ROM's bugs in them,
+// pinned with SetRomBugFixed(false), and their fixes - the +FEA= thrown
+// away, UiToA's digits of the low byte), a long number
 // dialed in pieces, the dialing preferences' string, and the modem's
 // answers parsed (CONNECT and its speed, a Class 2 number and page status,
 // a line the table does not have).  The dialing out and answering
@@ -13,6 +14,7 @@
 #include "Boot.h"
 #include "UserBoot.h"
 #include "host/TaskRuntime.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -125,10 +127,19 @@ Scenario(void)
 
 	// UiToA's bug: each digit taken from the low byte
 	UChar digits[8];
+	SetRomBugFixed(false);
 	UiToA(40, digits);
 	EXPECT(strcmp((char*) digits, "40") == 0);
 	UiToA(300, digits);
 	EXPECT(strcmp((char*) digits, "304") == 0);
+	SetRomBugFixed(true);
+	// fixed: the whole number's digits
+	UiToA(40, digits);
+	EXPECT(strcmp((char*) digits, "40") == 0);
+	UiToA(300, digits);
+	EXPECT(strcmp((char*) digits, "300") == 0);
+	UiToA(65535, digits);
+	EXPECT(strcmp((char*) digits, "65535") == 0);
 
 	// Class 1
 	modem->fControl.fPacket.fModulation = 0x40;
@@ -146,7 +157,11 @@ Scenario(void)
 	memcpy(modem->fControl.fBytes, "10230000", 8);
 	EXPECT(strcmp(modem->Command(0x27), "AT+FDCC=1,0,2,3,0,0,0,0\r") == 0);
 	EXPECT(strcmp(modem->Command(0x21), "AT+FBOR=1\r") == 0);
+	SetRomBugFixed(false);
 	EXPECT(strcmp(modem->Command(0x5c), "AT+FCR=1\r") == 0);
+	SetRomBugFixed(true);
+	// fixed: the +FEA= sent
+	EXPECT(strcmp(modem->Command(0x5c), "AT+FEA=1\r") == 0);
 	strcpy((char*) modem->fControl.fBytes, "408 555 1212");
 	EXPECT(strcmp(modem->Command(0x32), "AT+FLID=\"408 555 1212\"\r") == 0);
 	NewtonErr err;
@@ -203,7 +218,13 @@ Scenario(void)
 	modem->ParseModemRsp((UChar*) "+FCSI: \"  408 555 1212  \"");
 	EXPECT(modem->fReply.fResultCode == 0x15);
 	EXPECT(strcmp((char*) modem->fReply.fText, "408 555 1212") == 0);
+	// fixed: spaces before the number do not count against its 20
+	// characters (the ROM's count wrapped past nought after 21 of them)
+	modem->ParseModemRsp((UChar*) "+FCSI: \"                       123456789012345678901234567890\"");
+	EXPECT(modem->fReply.fResultCode == 0x15);
+	EXPECT(strcmp((char*) modem->fReply.fText, "12345678901234567890") == 0);
 	modem->ParseModemRsp((UChar*) "+FDIS: 1,5,2,2,0,0,0,5");
+
 	EXPECT(modem->fReply.fResultCode == 0x17);
 	EXPECT(memcmp(modem->fReply.fDIS.fParms, "15220005", 8) == 0);
 	modem->ParseModemRsp((UChar*) "+FDIS: 1,5,2");

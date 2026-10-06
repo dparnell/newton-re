@@ -5,9 +5,10 @@
 // bytes as the fax tool does - fed into the ring a piece at a time, the
 // first end of line skipped, then a line at a time - and compares every
 // scan line with the PBM's.  (The page has fill ahead of its first end of
-// line, as a fax machine sends it: the decoder steps over the ring's first
-// byte - T4FaxLine.cpp's GetNextBit - so an end of line right at the start
-// would lose the first line.)
+// line, as a fax machine sends it: the ROM's decoder steps over the ring's
+// first byte - T4FaxLine.cpp's GetNextBit, a bug fixed by default and
+// tested both ways below - so an end of line right at the start would
+// lose the first line.)
 //
 // With a third path, the page is coded the other way too - each scan line
 // through the fax tool's EncodeT4, and RTC after the last - and written
@@ -21,6 +22,7 @@
 #include "Boot.h"
 #include "UserBoot.h"
 #include "host/TaskRuntime.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -133,6 +135,25 @@ Scenario(void)
 	int bytes;
 	EXPECT(decoder.DecodeLine(line, stride, bytes, 1) == false);
 
+	// the ring's first byte after a Reset: stepped over by the ROM (pinned
+	// with SetRomBugFixed(false)), read by the fix
+	{
+		UChar firstBytes[] = { 0xab, 0x01 };
+		SetRomBugFixed(false);
+		decoder.Reset();
+		p = firstBytes;
+		n = 2;
+		decoder.AppendTo(&p, &n, &appended);
+		EXPECT(decoder.GetBits(8) == 0x80);		// 0x01, least significant bit first
+		SetRomBugFixed(true);
+		decoder.Reset();
+		p = firstBytes;
+		n = 2;
+		decoder.AppendTo(&p, &n, &appended);
+		EXPECT(decoder.GetBits(8) == 0xd5);		// 0xab, least significant bit first
+		EXPECT(decoder.GetBits(8) == 0x80);
+	}
+
 	// the fill dropped: the third nought byte in a row and after
 	decoder.Reset();
 	UChar fill[] = { 1, 0, 0, 0, 0, 2 };
@@ -170,6 +191,10 @@ Scenario(void)
 		EXPECT(EncodeT4(pbm.data() + offset, stride, out, 4, width, 0, 0) == -1);
 		// and one too short padded out to the minimum
 		EXPECT(EncodeT4(pbm.data() + offset, stride, out, sizeof(out), width, 0, 100) >= 100);
+		// the fix: a minimum the buffer has no room for refuses the line
+		// (the ROM wrote its noughts past the end)
+		EXPECT(EncodeT4(pbm.data() + offset, stride, out, 120, width, 0, 500) == -1);
+
 		printf("test_T4FaxLine: %d lines coded, %ld bytes, the longest %d\n", height, (long) coded.size(), longest);
 	}
 

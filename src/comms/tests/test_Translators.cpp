@@ -16,6 +16,7 @@
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -136,6 +137,16 @@ TestScriptData(void)
 	RefVar c(In(in, p, 1, kFormChar, RefVar(), &err));
 	EXPECT(err == noErr && ISCHAR(c) && RCHAR(c) == 'Z');
 	DisposPtr(p);
+	// a character read from several bytes: the first, both ways (the ROM
+	// converted them all into a four-byte word - a bug, fixed by converting
+	// only the one the answer takes)
+	static const UByte kChars[6] = { 'Q', 'r', 's', 't', 'u', 'v' };
+	SetRomBugFixed(false);
+	RefVar c6(In(in, (Ptr) kChars, 6, kFormChar, RefVar(), &err));
+	EXPECT(err == noErr && ISCHAR(c6) && RCHAR(c6) == 'Q');
+	SetRomBugFixed(true);
+	c6 = In(in, (Ptr) kChars, 6, kFormChar, RefVar(), &err);
+	EXPECT(err == noErr && ISCHAR(c6) && RCHAR(c6) == 'Q');
 	p = Out(out, RefVar(Eval("[1, 2, 255]")), kFormBytes, 0, &err);
 	EXPECT(err == noErr && p != nil && GetPtrSize(p) == 3 && (UByte) p[2] == 255);
 	RefVar bytes(In(in, p, 3, kFormBytes, RefVar(), &err));

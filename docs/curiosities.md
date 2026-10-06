@@ -28,7 +28,10 @@ again, and a backup always runs to the end.
 short makes it announce a new base ('base'), but the base is never kept.
 The following ids are still sent less nought, so every later id above
 0x7fff makes another 'base'. Both bugs are ported as they are
-(`comms/Docker.cpp`).
+(`comms/Docker.cpp`), and both are now fixed by default: a desktop can
+cancel a backup, and the base is kept (`NEWTON_ROM_BUGS=1` for the ROM's
+behaviour).
+
 
 ---
 

@@ -2,10 +2,11 @@
 // array, iterators walking it and following the inserts and removals made
 // under them, a sub-array option and the array copied back out of it, and
 // an array handed to a shared-memory object and copied back (for which the
-// test runs as the kernel services task of a booted OS).  The ROM's quirks
-// are pinned: an iterator's Reset lands on the first option of the block
-// whatever its low bound, and a truncating CopyOptionAt leaves the source's
-// length in the copy.
+// test runs as the kernel services task of a booted OS).  The ROM's bugs
+// are pinned (SetRomBugFixed(false)) and their fixes tested: an iterator's
+// Init and Reset land on the first option of the block whatever its low
+// bound (fixed: the low bound's option), and a truncating CopyOptionAt
+// leaves the source's length in the copy (fixed: the room's).
 
 #include "Options.h"
 #include "UserSharedMem.h"
@@ -13,6 +14,7 @@
 #include "Boot.h"
 #include "UserBoot.h"
 #include "host/TaskRuntime.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -100,8 +102,9 @@ TestArray()
 
 	// an iterator follows the inserts and removals under it
 	TOptionIterator second(&array, 1, 2);
-	// ROM quirk: Init goes to the low bound's index but the block's first option
-	EXPECT(second.CurrentIndex() == 1 && ValueOf(second.CurrentOption()) == 1);
+	// ROM bug: Init goes to the low bound's index but the block's first
+	// option; fixed, the low bound's option
+	EXPECT(second.CurrentIndex() == 1 && ValueOf(second.CurrentOption()) == (RomBugFixed() ? 2 : 1));
 	EXPECT(array.RemoveOptionAt(0) == noErr);
 	EXPECT(array.GetArrayCount() == 3 && ValueOf(array.OptionAt(0)) == 2);
 	EXPECT(second.CurrentIndex() == 0 && ValueOf(second.CurrentOption()) == 2);
@@ -111,9 +114,10 @@ TestArray()
 	EXPECT(second.NextOption() != nil && ValueOf(second.CurrentOption()) == 3);
 	EXPECT(second.NextOption() == nil && !second.More());	// its high bound moved up with it
 
-	// ROM quirk: Reset goes to the low bound's index but the block's first option
+	// ROM bug: Reset goes to the low bound's index but the block's first
+	// option; fixed, the low bound's option
 	second.Reset();
-	EXPECT(second.CurrentIndex() == 1 && ValueOf(second.CurrentOption()) == 0);
+	EXPECT(second.CurrentIndex() == 1 && ValueOf(second.CurrentOption()) == (RomBugFixed() ? 2 : 0));
 
 	// CopyOptionAt
 	TWordOption copy('copy', 0);
@@ -121,7 +125,8 @@ TestArray()
 	EXPECT(array.CopyOptionAt(1, &copy) == noErr && copy.fValue == 2);
 	TOption small;
 	EXPECT(array.CopyOptionAt(1, &small) == (NewtonErr) opTruncated);
-	EXPECT(small.Label() == 'two ' && small.Length() == sizeof(ULong));	// the source's length (ROM bug kept)
+	// the source's length (the ROM's bug); fixed, the room's
+	EXPECT(small.Label() == 'two ' && small.Length() == (RomBugFixed() ? 0 : sizeof(ULong)));
 
 	// a sub-array, and an array made from it
 	TOptionArray sub;
@@ -190,6 +195,9 @@ static void
 OptionsScenario(void)
 {
 	TestOption();
+	SetRomBugFixed(false);
+	TestArray();
+	SetRomBugFixed(true);
 	TestArray();
 	TestArrayGoesFirst();
 	TestShared();

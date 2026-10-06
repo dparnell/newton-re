@@ -11,6 +11,7 @@
 #include "CommErrors.h"
 #include "NewtonTime.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -91,6 +92,18 @@ TestDscInfo(void)
 	TIrDscInfo theirs;
 	EXPECT(theirs.ExtractDevInfoFromBuffer(&segment) == noErr);
 	EXPECT(theirs.fHints == 2 && theirs.fCharSet == 0 && strcmp(theirs.fNickname, "Newton") == 0);
+
+	// a nickname of 24 characters: the ROM copied them all into its 22
+	// bytes (a bug, fixed by default): the first 21 are kept
+	UByte longInfo[] = { 2, 0, 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
+						 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x' };
+	CBufferSegment longSegment;
+	EXPECT(longSegment.Init(longInfo, sizeof(longInfo)) == noErr);
+	SetRomBugFixed(true);
+	TIrDscInfo* other = new TIrDscInfo;
+	EXPECT(other->ExtractDevInfoFromBuffer(&longSegment) == noErr);
+	EXPECT(strcmp(other->fNickname, "abcdefghijklmnopqrstu") == 0);
+	delete other;
 }
 
 

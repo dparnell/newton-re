@@ -21,6 +21,7 @@
 #include "NewtonMemory.h"
 #include "NewtonTime.h"
 #include "stores/LargeObjects.h"
+#include "host/RomBugs.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -221,7 +222,9 @@ RegisterFaxService(void)
 // ROM 0x000b962c __ct__8TFaxToolFUl
 TFaxTool::TFaxTool(ULong serviceId)
 	: TCommTool(serviceId)
-{ }
+{
+	fDCSValid = false;		// (host: not the ROM's)
+}
 
 
 // ROM 0x000bb2dc __dt__8TFaxToolFv
@@ -932,15 +935,18 @@ TFaxTool::KillModemRequest(ULong refCon, CommToolRequestType requestType, ULong 
 
 
 // ROM 0x000bcd28 TimeOutKillComplete__8TFaxToolFv
-// A response that never came, killed: the command sent again.  BUG: the
-// modem request's flag is cleared in fFaxFlags rather than fToolState,
-// where PostModemCommand set it - the kill's own answer having cleared
-// nothing, fToolState keeps kFaxToolStateModemRequest until the next
-// request's answer clears it.
+// A response that never came, killed: the command sent again.
+// ROM BUG (fixed): the modem request's flag is cleared in fFaxFlags rather than
+// fToolState, where PostModemCommand set it - the kill's own answer having
+// cleared nothing, fToolState keeps kFaxToolStateModemRequest until the
+// next request's answer clears it.  The fix clears it in fToolState.
 void
 TFaxTool::TimeOutKillComplete()
 {
-	fFaxFlags &= ~kFaxFlagCarrierKillOwed;
+	if (RomBugFixed())
+		fToolState &= ~kFaxToolStateModemRequest;
+	else
+		fFaxFlags &= ~kFaxFlagCarrierKillOwed;
 	RetransCommand(10);
 }
 
@@ -1129,8 +1135,9 @@ TFaxTool::TerminateComplete()
 // ROM 0x000b78dc GetIdentification__8TFaxToolFPCUcCPUcUl
 // A CSI/TSI FIF (20 characters, the last first) as a C string, the spaces
 // it was padded with dropped; nothing unless the FIF is 20 characters (22
-// with an FCS).  BUG: an FIF of spaces alone has the scan run on before
-// its start, into whatever precedes it.
+// with an FCS).  ROM BUG (fixed): an FIF of spaces alone has the scan run
+// on before its start, into whatever precedes it.  The fix stops at its
+// start.
 void
 TFaxTool::GetIdentification(const UChar* from, UChar* to, ULong length)
 {
@@ -1140,8 +1147,12 @@ TFaxTool::GetIdentification(const UChar* from, UChar* to, ULong length)
 		return;
 	}
 	long i = 19;
-	while (from[i] == ' ')
-		i--;
+	if (RomBugFixed())
+		while (i >= 0 && from[i] == ' ')
+			i--;
+	else
+		while (from[i] == ' ')
+			i--;
 	long j = 0;
 	for ( ; i >= 0; i--)
 		to[j++] = from[i];
@@ -1778,9 +1789,19 @@ TFaxTool::ProcessOptionStart(TOption* theOption, ULong label, ULong opcode)
 		}
 		else
 		{
-			// BUG: the default read is a start page's, not an end message's
+			// ROM BUG (fixed): the default read is a start page's, not an
+			// end message's.  The fix gives an end message's.
+			if (RomBugFixed())
+			{
+				TCMOFaxEndMessage defaults;
+				theOption->CopyDataFrom(&defaults);
+			}
+			else
+			{
 			TCMOFaxStartPage defaults;
 			theOption->CopyDataFrom(&defaults);
+			}
+
 		}
 		break;
 

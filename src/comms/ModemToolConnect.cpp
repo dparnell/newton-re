@@ -15,6 +15,7 @@
 #include "CommErrors.h"
 #include "NewtErrors.h"
 #include "CommToolOptions.h"
+#include "host/RomBugs.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -427,10 +428,11 @@ TClassOneModem::C1IdGetIdCmdResponse()
 		if ((err = SetModemProfile()) != noErr)
 			goto failed;
 		fProfile->fECTypes = 7;
-		// BUG: SetModemProfile has pointed fCellularStr into the new profile,
-		// so it is never the empty string on the stack: cellular is always
-		// said to be supported
-		fProfile->fCellularSupported = (fCellularStr != empty);
+		// ROM BUG (fixed): SetModemProfile has pointed fCellularStr into
+		// the new profile, so it is never the empty string on the stack:
+		// cellular is always said to be supported.  The fix asks whether
+		// the string is empty.
+		fProfile->fCellularSupported = RomBugFixed() ? (fCellularStr != nil && fCellularStr[0] != 0) : (fCellularStr != empty);
 		fProfile->fMNP10 = true;
 		fProfile->fPassThrough = false;
 		fProfile->fCommandTimeout = 500;
@@ -495,10 +497,11 @@ TClassOneModem::C1IdACLGetMNP10CmdResponse()
 
 
 // ROM 0x00062368 C1IdACLSetV32bis__14TClassOneModemFv
-// "ATF10" taken: S37 asked.  BUG: a refusal was meant to go on with the
-// profile regardless, but the result code is compared with an error
-// number (kModemErrCommandFailure), which it never is, so any refusal
-// ends the identification with kModemErrNotSupported.
+// "ATF10" taken: S37 asked.  ROM BUG (fixed): a refusal was meant to go on
+// with the profile regardless, but the result code is compared with an
+// error number (kModemErrCommandFailure), which it never is, so any
+// refusal ends the identification with kModemErrNotSupported.  The fix
+// compares it with ERROR's result code (kModemResultError).
 void
 TClassOneModem::C1IdACLSetV32bis()
 {
@@ -512,7 +515,7 @@ TClassOneModem::C1IdACLSetV32bis()
 			if ((err = BeginModemCommand(kModemCmdReadSRegister)) == noErr)
 				return;
 		}
-		else if ((NewtonErr) fReply.fResultCode == kModemErrCommandFailure)
+		else if (RomBugFixed() ? (fReply.fResultCode == kModemResultError) : ((NewtonErr) fReply.fResultCode == kModemErrCommandFailure))
 		{
 			fProfile->fECTypes = 0x2e;
 			C1IdACLSetProfile();
@@ -601,9 +604,10 @@ TClassOneModem::C1IdACLSetProfile()
 	NewtonErr err = SetModemProfile();
 	if (err == noErr)
 	{
-		// BUG: as in C1IdGetIdCmdResponse, fCellularStr now points into the
-		// profile: cellular is always said to be supported
-		fProfile->fCellularSupported = (fCellularStr != empty);
+		// ROM BUG (fixed): as in C1IdGetIdCmdResponse, fCellularStr now
+		// points into the profile: cellular is always said to be supported.
+		// The fix asks whether the string is empty.
+		fProfile->fCellularSupported = RomBugFixed() ? (fCellularStr != nil && fCellularStr[0] != 0) : (fCellularStr != empty);
 		fProfile->fMNP10 = true;
 		fProfile->fPassThrough = false;
 		fProfile->fECTypes = ecTypes;
@@ -746,13 +750,17 @@ TClassOneModem::EnterConnectedState()
 
 
 // ROM 0x000600a8 ListenStart__14TClassOneModemFv
-// BUG: not bound, the listen is completed as a connect.
+// ROM BUG (fixed): not bound, the listen is completed as a connect.  The
+// fix completes it as a listen.
 void
 TClassOneModem::ListenStart()
 {
 	if (!(fToolState & kToolStateBound))
 	{
-		ConnectComplete(kCommErrNotBound);
+		if (RomBugFixed())
+			ListenComplete(kCommErrNotBound);
+		else
+			ConnectComplete(kCommErrNotBound);
 		return;
 	}
 	SetInputSendForIntDelay(11058);
@@ -831,8 +839,9 @@ TClassOneModem::ConnectModemContinue(NewtonErr result)
 // ROM 0x00060230 C1CnctCheckCountryConfig__14TClassOneModemFv
 // The port at the modem's speed (a direct connection's, if that is what
 // is wanted), the dialing options put in; in Japan the 224 needs its
-// secondary defaults.  BUG: that command failing ends it as an
-// identification (C1IdModemComplete), not a connect.
+// secondary defaults.  ROM BUG (fixed): that command failing ends it as an
+// identification (C1IdModemComplete), not a connect.  The fix completes
+// the connect with the error, as the other steps do.
 void
 TClassOneModem::C1CnctCheckCountryConfig()
 {
@@ -845,7 +854,12 @@ TClassOneModem::C1CnctCheckCountryConfig()
 	{
 		NewtonErr err = BeginModemCommand(kModemCmdSecondaryDefaults);
 		if (err != noErr)
-			C1IdModemComplete(err);
+		{
+			if (RomBugFixed())
+				ConnectComplete(err);
+			else
+				C1IdModemComplete(err);
+		}
 	}
 	else
 		C1CnctBegin();
@@ -1460,9 +1474,10 @@ TClassOneModem::HangUpModemComplete()
 ------------------------------------------------------------------------------*/
 
 // ROM 0x000614c4 ProcessTAPICommand__14TClassOneModemFUl
-// BUG: the speaker is set, then a second sound option made here (whose
-// constructor turns the sound on) is given to the chip as well, so the
-// speaker ends on whatever was asked.
+// ROM BUG (fixed): the speaker is set, then a second sound option made
+// here (whose constructor turns the sound on) is given to the chip as
+// well, so the speaker ends on whatever was asked.  The fix leaves the
+// speaker as it was set.
 ULong
 TClassOneModem::ProcessTAPICommand(ULong command)
 {
@@ -1477,7 +1492,9 @@ TClassOneModem::ProcessTAPICommand(ULong command)
 			SetSpeakerVolume(1);
 		else
 			SetSpeakerVolume(0);
-		fChip->ProcessOption(&sound);
+		if (!RomBugFixed())
+			fChip->ProcessOption(&sound);
+
 	}
 	if (BeginModemCommand(command) != noErr)
 		return opFailure;

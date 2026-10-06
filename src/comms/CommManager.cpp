@@ -20,6 +20,7 @@
 #include "OSErrors.h"
 #include "SharedTypes.h"
 #include "UserSharedMem.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -398,15 +399,21 @@ TAsyncServiceMessage::Match(TUMsgToken* token)
 // ROM 0x00070a1c OpenCommTool__FUlP12TOptionArrayP10TCMService
 // Send the open request asynchronously on the service's behalf (its reply
 // reaches the comm manager, which calls the service's DoneStarting); the
-// answer is kCall_In_Progress (1) once it has gone.  (The ROM leaks the
-// request and the reply when the second allocation fails; so does this.)
+// answer is kCall_In_Progress (1) once it has gone.
+// ROM BUG (fixed): the ROM leaks the request (and the reply) when the
+// second (or third) allocation fails.  The fix frees them.
 NewtonErr
 OpenCommTool(TObjectId portId, TOptionArray* options, TCMService* service)
 {
 	NewtonErr err = kError_No_Memory;
 	TCommToolOpenRequest* request = new TCommToolOpenRequest;
-	TCommToolOpenReply* reply;
-	if (request != nil && (reply = new TCommToolOpenReply) != nil)
+	TCommToolOpenReply* reply = nil;
+	if (RomBugFixed() && request != nil && (reply = new TCommToolOpenReply) == nil)
+	{
+		delete request;
+		return err;
+	}
+	if (request != nil && (RomBugFixed() || (reply = new TCommToolOpenReply) != nil))
 	{
 		request->fOptions = options;
 		request->fOptionCount = options->GetArrayCount();
@@ -423,8 +430,14 @@ OpenCommTool(TObjectId portId, TOptionArray* options, TCMService* service)
 			if (err == noErr)
 				err = 1;
 		}
+		else if (RomBugFixed())
+		{
+			delete reply;
+			delete request;
+		}
 	}
 	return err;
+
 }
 
 
@@ -856,9 +869,10 @@ TCMWorld::SCPCheck(ULong reason)
 // Start the docking loader ('scpl, comms/SCPLoader.h) and ask it,
 // asynchronously, to load what a connected device wants; its answer comes
 // back to AECompletionProc, which answers the token's request with it.
-// One load at a time: kCMErr_SCPLoadBusy while one is in flight.  ROM BUG:
-// a request that fails after the message is made leaves it in fSCPMessage,
-// so every later load answers busy.
+// One load at a time: kCMErr_SCPLoadBusy while one is in flight.
+// ROM BUG (fixed): a request that fails after the message is made leaves
+// it in fSCPMessage, so every later load answers busy.  The fix deletes
+// the message when it was not sent, so the next load can be asked.
 // DEVIATION: the loader is started through the hook comms_dock sets
 // (gStartSCPLoader, SCPLoader.h's RegisterSCPLoader); with none, the
 // answer is kCMErr_SCPLoadBusy, as while a load is in flight.
@@ -889,6 +903,11 @@ TCMWorld::SCPLoad(ULong waitPeriod, ULong tries, ULong filter, TUMsgToken* token
 				fSCPMessage->fRequest.fFilter = filter;
 				fSCPMessage->fRequest.fReason = reason;
 				err = fSCPMessage->SendRPC(&loaderPort);
+			}
+			if (RomBugFixed() && err != noErr && fSCPMessage != nil)
+			{
+				delete fSCPMessage;
+				fSCPMessage = nil;
 			}
 		}
 	}
@@ -978,9 +997,12 @@ TCMWorld::MatchPendingStartInfo(TCMService* service)
 
 
 // ROM 0x0006c8c0 SetDevice__8TCMWorldFP16TConnectedDevice
-// The device, stamped with the time now.  ROM BUG: the time is written into
-// a TTime made *over* the device's own connect time - so it is the time the
-// device was recorded, whatever it said.
+// The device, stamped with the time now.  ROM QUIRK: the time is written
+// into a TTime made *over* the device's own connect time - so it is the
+// time the device was recorded, whatever it said.  (Not a bug: the DDK's
+// CommManagerInterface.h says the caller need not set fLastConnectTime,
+// "call sets it".)
+
 void
 TCMWorld::SetDevice(TConnectedDevice* device)
 {

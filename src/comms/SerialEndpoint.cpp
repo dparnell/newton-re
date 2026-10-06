@@ -15,6 +15,7 @@
 #include "NewtErrors.h"
 #include "OSErrors.h"
 #include "CommErrors.h"
+#include "host/RomBugs.h"
 
 // an address given to Listen, Accept or Connect: not supported (-36001)
 #define kEndpointErrNoAddresses		(-36001)
@@ -1123,9 +1124,10 @@ TSerialEndpoint::nSnd(UByte* buf, Size* count, ULong flags, TTimeout timeOut, Bo
 
 
 // ROM 0x001db794 nSnd__15TSerialEndpointFP14CBufferSegmentUlT2UcP12TOptionArray
-// ROM BUG: the PB's fAsync is not set here, so an asynchronous send of a
-// segment tells the client only if the PB last served an asynchronous call;
-// kept.
+// ROM BUG (fixed): the PB's fAsync is not set here, so an asynchronous
+// send of a segment tells the client only if the PB last served an
+// asynchronous call (eWorldSnd likewise).  The fix sets it, as nSnd of a
+// buffer does.
 NewtonErr
 TSerialEndpoint::nSnd(CBufferSegment* buf, ULong flags, TTimeout timeOut, Boolean sync, TOptionArray* opt)
 {
@@ -1144,6 +1146,8 @@ TSerialEndpoint::nSnd(CBufferSegment* buf, ULong flags, TTimeout timeOut, Boolea
 	pb->fEvent.fBuffer = nil;
 	pb->fEvent.fData = buf;
 	pb->fEvent.fOptions = opt;
+	if (RomBugFixed())
+		pb->fAsync = !sync;
 	Size count = buf->GetSize();
 	if ((err = pb->fList->InsertLast(buf)) == noErr)
 		err = SendBytes(pb, &count, flags, timeOut, sync, opt);
@@ -1468,6 +1472,7 @@ TSerialEndpoint::RecvBytes(TCommToolGetPB* pb, Size* count, Size thresh, ULong* 
 // ROM 0x001dd25c eWorldSnd__15TSerialEndpointFP14CBufferSegmentUlT2UcP12TOptionArray
 // nSnd of a segment through eWorldSendBytes.  (The ROM does not test for an
 // empty segment's early return the way nSnd does: an empty one is sent.)
+// The PB's fAsync is not set (ROM bug: see nSnd, where it is fixed, here too).
 NewtonErr
 TSerialEndpoint::eWorldSnd(CBufferSegment* buf, ULong flags, TTimeout timeOut, Boolean sync, TOptionArray* opt)
 {
@@ -1486,6 +1491,8 @@ TSerialEndpoint::eWorldSnd(CBufferSegment* buf, ULong flags, TTimeout timeOut, B
 	pb->fEvent.fBuffer = nil;
 	pb->fEvent.fData = buf;
 	pb->fEvent.fOptions = opt;
+	if (RomBugFixed())
+		pb->fAsync = !sync;
 	Size count = buf->GetSize();
 	if ((err = pb->fList->InsertLast(buf)) == noErr)
 		err = eWorldSendBytes(pb, &count, flags, timeOut, sync, opt);

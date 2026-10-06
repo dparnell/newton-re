@@ -25,6 +25,7 @@
 #include "NewtErrors.h"
 #include "OSErrors.h"
 #include "OptionArray.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -572,15 +573,16 @@ TFaxTool::C2RecvFDR_Rsp(ULong& state)
 
 
 // ROM 0x000b3abc C2AbortSession__8TFaxToolFRUll
-// +FK (the session aborted) and the tool with it.  BUG: error is not used -
-// the tool always aborts with kModemErrNoResponse.
+// +FK (the session aborted) and the tool with it.  ROM BUG (fixed): error
+// is not used - the tool always aborts with kModemErrNoResponse.  The fix
+// aborts with the error.
 void
 TFaxTool::C2AbortSession(ULong& state, NewtonErr error)
 {
 	fModemRequest.fTimeout = 10000;
 	if (PostModemCommand(0x12b) == noErr)
 		state = 0x1f;
-	StartAbort(kModemErrNoResponse);
+	StartAbort(RomBugFixed() ? error : kModemErrNoResponse);
 }
 
 
@@ -647,8 +649,9 @@ TFaxTool::C2ConfigModem(UChar* done)
 // ROM 0x000b3d0c C2DisFromCapabilities__8TFaxToolFR13FaxClass2FDIST1
 // Our +FDIS parameters from our capabilities: resolution, the fastest rate
 // both we and the modem have, width, length, no 2-D, no ECM, no binary
-// file transfer, and the scan time.  BUG: the last rate test (V.27 ter at
-// 2400) answers '0' either way.
+// file transfer, and the scan time.  ROM QUIRK: the last rate test (V.27
+// ter at 2400) answers '0' either way.  (Not a bug: with no rate in common
+// there is nothing else +FDIS could say, and 2400 is every fax's.)
 NewtonErr
 TFaxTool::C2DisFromCapabilities(FaxClass2FDIS& dis, FaxClass2FDIS& modem)
 {
@@ -929,7 +932,8 @@ done:
 
 // ROM 0x000b4154 C2ParseDISResponse__8TFaxToolFPUcR13FaxClass2FDIS
 // +FDIS=? answered: the first seven parameters, each as its set of bits.
-// BUG: the eighth (the scan time) is never parsed.
+// ROM BUG (fixed): the eighth (the scan time) is never parsed.  The fix
+// parses it when it is there (nought when not).
 NewtonErr
 TFaxTool::C2ParseDISResponse(UChar* response, FaxClass2FDIS& dis)
 {
@@ -946,6 +950,16 @@ TFaxTool::C2ParseDISResponse(UChar* response, FaxClass2FDIS& dis)
 	dis.fParms[6] = 0;
 	if (C2ParseParameter(&response, &value, false) == noErr)
 		dis.fParms[6] = (UChar) value;
+	if (RomBugFixed())
+	{
+		dis.fParms[7] = 0;
+		if (*response != 0)
+		{
+			response++;
+			if (C2ParseParameter(&response, &value, false) == noErr)
+				dis.fParms[7] = (UChar) value;
+		}
+	}
 	return noErr;
 }
 
@@ -1470,14 +1484,16 @@ TFaxTool::C20RecvFDR_Rsp(ULong& state)
 
 
 // ROM 0x000b299c C20AbortSession__8TFaxToolFRUll
-// +FKS and the tool aborted.  BUG: error is not used, as in C2AbortSession.
+// +FKS and the tool aborted.  ROM BUG (fixed): error is not used, as in
+// C2AbortSession.  The fix aborts with the error.
 void
 TFaxTool::C20AbortSession(ULong& state, NewtonErr error)
 {
 	fModemRequest.fTimeout = 10000;
 	if (PostModemCommand(0x13e) == noErr)
 		state = 0x51;
-	StartAbort(kModemErrNoResponse);
+	StartAbort(RomBugFixed() ? error : kModemErrNoResponse);
+
 }
 
 

@@ -23,6 +23,7 @@
 #include "SCPEvents.h"
 #include "OSErrors.h"
 #include "NewtonTime.h"
+#include "host/RomBugs.h"
 
 extern TClassInfoRegistry*	gProtocolRegistry;
 
@@ -250,9 +251,9 @@ TSCPLoader::SCPLoad(ULong waitPeriod, ULong filter, ULong hwLocation)
 // The framed serial service on the port at 9600 bps, 8N1, a 0x400-byte
 // receive buffer, hardware flow control in, the transmitter off until the
 // first send; opened, with a framed pipe of 0x100 bytes each way over it
-// (its timeout half a second) and the message buffer as big.  ROM BUG:
-// the message buffer is allocated afresh for every load and the last one
-// never freed.
+// (its timeout half a second) and the message buffer as big.
+// ROM BUG (fixed): the message buffer is allocated afresh for every load
+// and the last one never freed.  The fix frees the last one first.
 NewtonErr
 TSCPLoader::SCPInit(ULong hwLocation)
 {
@@ -288,9 +289,15 @@ TSCPLoader::SCPInit(ULong hwLocation)
 						&&  (err = CMGetEndpoint(&options, &fEndpoint, false)) == noErr)
 						{
 							fPipe = new TEndpointPipe;
+							if (RomBugFixed() && fMessage.fBuffer != nil)
+							{
+								DisposPtr((Ptr) fMessage.fBuffer);
+								fMessage.fBuffer = nil;
+							}
 							if (fPipe == nil)
 								err = kError_No_Memory;
 							else if ((err = fMessage.Init(fPipe, 0x100)) == noErr)
+
 							{
 								fPipe->Init(fEndpoint, 0x100, 0x100, 500 * kMilliseconds, true, nil);	// 0x1c1f38
 								err = fEndpoint->EasyOpen(0);

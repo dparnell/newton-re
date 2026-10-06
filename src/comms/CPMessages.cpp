@@ -14,6 +14,7 @@
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
 #include "ByteOrder.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -214,15 +215,77 @@ TCPReadMessage::ReceiveMessage()
 // ROM 0x00049834 ReadTuple__14TCPReadMessageFP8TCPTupleUc
 // The next tuple read into the buffer - its header copied out, and its
 // data after it unless only the header is wanted.  ==> an 'abrt' tuple's
-// error, or a pipe exception's.  ROM BUG: the data is read in whatever its
-// length, with nothing to say the buffer (0x100 bytes, SCPInit) holds it;
-// and an 'abrt' read header only answers whatever the buffer held after it.
+// error, or a pipe exception's.  ROM BUG (fixed): the data is read in
+// whatever its length, with nothing to say the buffer (0x100 bytes,
+// SCPInit) holds it; and an 'abrt' read header only answers whatever the
+// buffer held after it.  The fix reads no more than the buffer's room - a
+// header that does not fit is not read, data that does not fit is read and
+// dropped (to keep the pipe in step), and either answers kError_No_Memory -
+// and reads an 'abrt' header's error word from the pipe.
 NewtonErr
 TCPReadMessage::ReadTuple(TCPTuple* tuple, Boolean headerOnly)
 {
 	NewtonErr result = noErr;
+	if (RomBugFixed())
+	{
+		newton_try
+		{
+			UByte* at = fNext;
+			ULong room = (fBuffer != nil) ? (ULong) GetPtrSize((Ptr) fBuffer) - (ULong) (fNext - fBuffer) : 0;
+			if (room < 8)
+				result = kError_No_Memory;
+			else
+			{
+				ReadChunk(fNext, 8);
+				tuple->fTag = (ULong32) CPTupleWord(fNext, 0);
+				tuple->fLength = (ULong32) CPTupleWord(fNext, 4);
+				fNext += 8;
+				room -= 8;
+				if (!headerOnly && tuple->fLength != 0)
+				{
+					if (tuple->fLength <= room)
+					{
+						ReadChunk(fNext, tuple->fLength);
+						fNext += tuple->fLength;
+					}
+					else
+					{
+						// read into the room left, again and again, and dropped
+						UByte scratch[4];
+						for (ULong left = tuple->fLength; left != 0; )
+						{
+							UByte* into = (room != 0) ? fNext : scratch;
+							ULong most = (room != 0) ? room : (ULong) sizeof(scratch);
+							ULong count = (left < most) ? left : most;
+							ReadChunk(into, count);
+							left -= count;
+						}
+						result = kError_No_Memory;
+					}
+				}
+				if (result == noErr && tuple->fTag == kCPAbortTag && tuple->fLength >= 4)
+				{
+					if (!headerOnly)
+						result = (NewtonErr) (Long32) CPTupleWord(at, 8);
+					else
+					{
+						UByte error[4];
+						ReadChunk(error, 4);
+						result = (NewtonErr) (Long32) CPTupleWord(error, 0);
+					}
+				}
+			}
+		}
+		newton_catch(exPipeException)
+		{
+			result = (NewtonErr) (Long) CurrentException()->data;
+		}
+		end_try;
+		return result;
+	}
 	newton_try
 	{
+
 		UByte* at = fNext;
 		ReadChunk(fNext, 8);
 		tuple->fTag = (ULong32) CPTupleWord(fNext, 0);

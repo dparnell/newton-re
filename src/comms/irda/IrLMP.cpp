@@ -14,6 +14,7 @@
 #include "BufferSegment.h"
 #include "CommErrors.h"
 #include "NewtonTime.h"
+#include "host/RomBugs.h"
 
 // an LM control frame's opcodes
 #define kLMConnect			0x01
@@ -231,11 +232,15 @@ TIrLMP::HandleResolveAddressStateEvent(ULong event)
 		}
 		else
 		{
-			// ROM BUG: the block goes back to the link as a discover reply
-			// (not a request, as for the first conflict), which the link
-			// ignores: with more than one conflict the discovery never ends
+			// ROM BUG (fixed): the block goes back to the link as a discover
+			// reply (not a request, as for the first conflict), which the
+			// link ignores: with more than one conflict the discovery never
+			// ends.  The fix makes it a request again.
+			if (RomBugFixed())
+				current->fEvent = kIrDiscoverRequest;
 			current->fDevAddr = fConflicts[--fNumConflicts];
 			fLAP->EnqueueEvent(current);
+
 		}
 	}
 	else if (event == kIrDisconnectRequest)

@@ -10,6 +10,7 @@
 #include "IrDscInfo.h"
 #include "BufferSegment.h"
 #include "CommErrors.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -96,9 +97,14 @@ TIrDscInfo::ExtractDevInfoFromBuffer(CBufferSegment* buffer)
 	}
 	if (i < count)
 		fCharSet = info[i++];
-	// ROM BUG: up to 26 bytes are read, so a nickname longer than 21
-	// characters runs past fNickname's 22 (into what follows the object)
-	memcpy(fNickname, info + i, count - i);
-	fNickname[count - i] = 0;
+	// ROM BUG (fixed): up to 26 bytes are read, so a nickname longer than
+	// 21 characters runs past fNickname's 22 (into what follows the
+	// object).  The fix keeps the first 21 characters.
+	ULong length = count - i;
+	if (RomBugFixed() && length > sizeof(fNickname) - 1)
+		length = sizeof(fNickname) - 1;
+	memcpy(fNickname, info + i, length);
+	fNickname[length] = 0;
+
 	return noErr;
 }

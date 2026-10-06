@@ -15,6 +15,7 @@
 #include "OptionArray.h"
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
+#include "host/RomBugs.h"
 #include "stores/LargeObjects.h"
 
 #include <string.h>
@@ -222,6 +223,7 @@ TFaxTool::StartPhaseB()
 {
 	fPhase = kFaxPhaseB;
 	fFaxFlags &= ~(kFaxFlagPostMessage | kFaxFlagNSF | kFaxFlagDCSReceived | kFaxFlagDISReceived);
+	fDCSValid = false;		// (host: the last DCS's validity - ROM bug: see PhaseBProcessCommand)
 	fPostMessage = 0;
 	if (fFaxFlags & kFaxFlagCaller)
 	{
@@ -552,10 +554,11 @@ TFaxTool::GetCommandComplete(NewtonErr result)
 
 // ROM 0x000b5884 PhaseBProcessCommand__8TFaxToolFv
 // The called machine's command: TSI and DCS (the training check follows),
-// or DIS/DTC, which have it send its own again.  BUG: whether the DCS was
-// valid is a register only a DCS in this frame sets - a final frame that
-// is not a DCS after one that was reads what the register held (false
-// here).
+// or DIS/DTC, which have it send its own again.  ROM BUG (fixed): whether
+// the DCS was valid is a register only a DCS in this frame sets - a final
+// frame that is not a DCS after one that was reads what the register held
+// (false here).  The fix keeps the last DCS's validity (fDCSValid) from
+// frame to frame.
 void
 TFaxTool::PhaseBProcessCommand()
 {
@@ -581,7 +584,8 @@ TFaxTool::PhaseBProcessCommand()
 			fFaxFlags |= kFaxFlagDCSReceived;
 			TT30Capabilities dcs;
 			CopyFIF(dcs, fFrameList, fFrame + 3);
-			if (!(valid = ValidateDCS(dcs)))
+			fDCSValid = valid = ValidateDCS(dcs);
+			if (!valid)
 			{
 				duration = 0x9c4;
 				fPhaseBStep = 2;
@@ -608,6 +612,8 @@ TFaxTool::PhaseBProcessCommand()
 
 	if (fFrame[1] == 0x13)
 	{
+		if (RomBugFixed())
+			valid = fDCSValid;
 		if ((fFaxFlags & kFaxFlagDCSReceived) && valid)
 			fPhaseBStep = 6;
 		if (fPhaseBStep == 2)
@@ -752,8 +758,9 @@ TFaxTool::PhaseBProcessDTCResponse()
 
 // ROM 0x000b5ea0 PhaseBProcessDISResponse__8TFaxToolFv
 // The called machine's DIS answered: TSI and DCS (the training check
-// follows), FTT, CRP, DCN - or, by a caller, its own DIS.  BUG: as
-// PhaseBProcessCommand, the DCS's validity is a register only a DCS sets.
+// follows), FTT, CRP, DCN - or, by a caller, its own DIS.  ROM BUG (fixed):
+// as PhaseBProcessCommand, the DCS's validity is a register only a DCS
+// sets.  The fix, likewise, keeps it in fDCSValid.
 void
 TFaxTool::PhaseBProcessDISResponse()
 {
@@ -818,7 +825,8 @@ TFaxTool::PhaseBProcessDISResponse()
 			fFaxFlags |= kFaxFlagDCSReceived;
 			TT30Capabilities dcs;
 			CopyFIF(dcs, fFrameList, fFrame + 3);
-			if (!(valid = ValidateDCS(dcs)))
+			fDCSValid = valid = ValidateDCS(dcs);
+			if (!valid)
 			{
 				duration = 0x9c4;
 				fPhaseBStep = 2;
@@ -845,7 +853,10 @@ TFaxTool::PhaseBProcessDISResponse()
 	if (fFrame[1] == 0x13)
 	{
 		KillTimer();
+		if (RomBugFixed())
+			valid = fDCSValid;
 		if ((fFaxFlags & kFaxFlagDCSReceived) && valid && !(fFaxFlags & kFaxFlagTransmitter))
+
 			fPhaseBStep = 6;
 		switch (fPhaseBStep)
 		{

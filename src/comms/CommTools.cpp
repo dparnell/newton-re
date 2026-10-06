@@ -20,6 +20,7 @@
 #include "CommErrors.h"
 #include "SharedTypes.h"
 #include "UserSharedMem.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 
@@ -976,13 +977,14 @@ TCommTool::GetNextTermProc(ULong terminationPhase, ULong& terminationFlag, Termi
 
 // ROM 0x0006f29c GetCommEvent__9TCommToolFv
 // A get-event request: an event that could not be posted when it happened
-// is posted now.  ROM BUG: it looks for kCommErrNoEventPending (-16016)
-// where PostCommEvent answers kCommErrNoRequestPending (-16015), so a
-// disconnect with no get-event request waiting is never posted; kept.
+// is posted now.  ROM BUG (fixed): it looks for kCommErrNoEventPending
+// (-16016) where PostCommEvent answers kCommErrNoRequestPending (-16015),
+// so a disconnect with no get-event request waiting is never posted.  The
+// fix looks for kCommErrNoRequestPending.
 void
 TCommTool::GetCommEvent()
 {
-	if (fEventReply.fResult != kCommErrNoEventPending)
+	if (fEventReply.fResult != (RomBugFixed() ? kCommErrNoRequestPending : kCommErrNoEventPending))
 		return;
 	PostCommEvent(fEventReply, noErr);
 	fEventReply.fResult = kCommErrNoEventPending;
@@ -1640,10 +1642,11 @@ TCommTool::CloseComplete(NewtonErr result)
 
 // ROM 0x0006f5c4 ImportConnectPB__9TCommToolFP23TCommToolConnectRequest
 // The connect request's data, an outside one read through a new
-// CShadowBufferSegment.  ROM BUG: it checks the *old* fConnectParms.udata
-// rather than the segment it just made, so an outside connect with data
-// fails with kError_No_Memory (leaking the segment) unless the previous
-// connect left its data behind; kept.
+// CShadowBufferSegment.  ROM BUG (fixed): it checks the *old*
+// fConnectParms.udata rather than the segment it just made, so an outside
+// connect with data fails with kError_No_Memory (leaking the segment)
+// unless the previous connect left its data behind.  The fix checks the
+// new segment, and frees it when it cannot be initialised.
 NewtonErr
 TCommTool::ImportConnectPB(TCommToolConnectRequest* request)
 {
@@ -1657,6 +1660,17 @@ TCommTool::ImportConnectPB(TCommToolConnectRequest* request)
 	if (request->fData == nil)
 		return noErr;
 	CShadowBufferSegment* segment = new CShadowBufferSegment;
+	if (RomBugFixed())
+	{
+		if (segment == nil)
+			return kError_No_Memory;
+		NewtonErr err = segment->Init((TObjectId) (ULong) request->fData, 0, -1);
+		if (err == noErr)
+			fConnectParms.udata = segment;
+		else
+			delete segment;
+		return err;
+	}
 	if (fConnectParms.udata == nil)
 		return kError_No_Memory;
 	NewtonErr err = segment->Init((TObjectId) (ULong) request->fData, 0, -1);
@@ -2016,7 +2030,7 @@ TCommTool::Unbind()
 	if ((fToolState & (kToolStateConnecting | kToolStateConnected)) == 0 && (fToolState & kToolStateBound))
 		UnbindStart();
 	else
-		UnbindComplete(noErr);		// ROM BUG: r1 is not set, so the result is whatever the state test left in it; the host passes noErr
+		UnbindComplete(noErr);		// ROM BUG (fixed): r1 is not set, so the result is whatever the state test left in it; the host passes noErr, which is also the fix (an unbind with nothing bound has nothing to fail), so both paths are one
 }
 
 
@@ -2077,8 +2091,10 @@ TCommTool::OptionMgmt(TCommToolOptionMgmtRequest* request)
 		else
 			err = kCommErrBadCommand;
 	}
-	// ROM BUG: the reply is sent with r4's size - the request pointer, as it
-	// happens, not the reply's; the host sends the reply's.
+	// ROM BUG (fixed): the reply is sent with r4's size - the request
+	// pointer, as it happens, not the reply's; the host sends the reply's,
+	// which is the fix, on both paths (the pointer's value cannot be
+	// reproduced).
 	CompleteRequest(kCommToolControlChannel, err);
 }
 
@@ -2161,9 +2177,11 @@ complete:
 // forwarding's cue); the rest go to the channel's Process...OptionStart,
 // whose answer is the option's result - or kCall_In_Progress (1), when the
 // subclass calls Process...OptionComplete later.
-// ROM BUG: when the 'ctso for another tool is the last option the request
-// is never completed; kept.  (The result carries over from one option to
-// the next when a channel has no ...OptionStart, which never happens.)
+// ROM BUG (fixed): when the 'ctso for another tool is the last option the
+// request is never completed.  The fix completes it as when options follow
+// (marked not processed, for the forwarding).  (The result carries over
+// from one option to the next when a channel has no ...OptionStart, which
+// never happens.)
 void
 TCommTool::ProcessOptionsContinue(TCommToolOptionInfo* info)
 {
@@ -2189,7 +2207,7 @@ TCommTool::ProcessOptionsContinue(TCommToolOptionInfo* info)
 				option->SetProcessed();
 				continue;
 			}
-			if (!info->fOptionsIterator->More())
+			if (!RomBugFixed() && !info->fOptionsIterator->More())
 				return;
 			info->fOptionsState |= kOptionsNotProcessed;
 			ProcessOptionsComplete(noErr, info);
@@ -2420,10 +2438,18 @@ TCommTool::ProcessOptionStart(TOption* theOption, ULong label, ULong opcode)
 			option->fPortId = fToolPort.fId;
 			return opSuccess;
 		}
-		// ROM BUG: the default for 'sid is a passive claim's
+		// ROM BUG (fixed): the default for 'sid is a passive claim's.  The
+		// fix gives a service identifier's own default.
+		if (RomBugFixed())
+		{
+			TCMOServiceIdentifier defaults;
+			theOption->CopyDataFrom(&defaults);
+			return opSuccess;
+		}
 		TCMOPassiveClaim defaults;
 		theOption->CopyDataFrom(&defaults);
 		return opSuccess;
+
 	}
 	if (label == 'tinf')
 	{

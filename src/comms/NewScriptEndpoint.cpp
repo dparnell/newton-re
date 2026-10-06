@@ -28,6 +28,7 @@
 #include "Notebook.h"
 #include "ConfigServer.h"
 #include "toolbox/ByteOrder.h"
+#include "host/RomBugs.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -186,6 +187,7 @@ TNewScriptEndpointClient::TNewScriptEndpointClient()
 	fAborts = MakeArray(0);
 	fOptionsOut = nil;
 	fOptionsIn = nil;
+	fBindOptions = nil;
 	fDataOut = nil;
 	fDataIn = nil;
 	fFlattenOut = nil;
@@ -215,9 +217,19 @@ TNewScriptEndpointClient::~TNewScriptEndpointClient()
 		fEndpoint->Delete();
 	if (fInputBuffer != nil)
 		DisposPtr((Ptr) fInputBuffer);
-	// (the ROM tests the Ref against nought, not nil: an endpoint frame
-	// that was nil would have its slot set, and throw)
-	if ((Ref) fEndpointRef != 0)
+	// ROM BUG (fixed): the ROM tests the Ref against nought, not nil: an
+	// endpoint frame that was nil would have its slot set, and throw.  The
+	// fix tests it against nil (and frees an asynchronous bind's options
+	// never read back).
+	if (RomBugFixed())
+	{
+		if (NOTNIL(fEndpointRef))
+			SetFrameSlot(fEndpointRef, RSSYMciprivate, RefVar());
+		if (fBindOptions != nil)
+			delete fBindOptions;
+		fBindOptions = nil;
+	}
+	else if ((Ref) fEndpointRef != 0)
 		SetFrameSlot(fEndpointRef, RSSYMciprivate, RefVar());
 	if (fOptionsOut != nil)
 		fOptionsOut->Delete();
@@ -450,6 +462,37 @@ TNewScriptEndpointClient::DoState(void)
 NewtonErr
 TNewScriptEndpointClient::DoBind(RefArg options, RefArg callback)
 {
+	if (RomBugFixed())
+	{
+		// OPTIONS_REQUEST, with the array an asynchronous bind leaves kept
+		// for BindComplete (ROM bug: see BindComplete)
+		TOptionArray* array = nil;
+		ULong timeout = 0;
+		Boolean sync = GetParms(callback, &timeout);
+		NewtonErr err = noErr;
+		if (ISNIL(options) || (err = PrepOptions(options, &array)) == noErr)
+		{
+			if (!sync)
+				QueueOptions(options, callback);
+			err = fEndpoint->nBind(array, timeout, sync);
+			if (err == noErr && sync && NOTNIL(options))
+				err = ConvertFromOptionArray(options, array);
+		}
+		if (array != nil)
+		{
+			if (err == noErr && !sync)
+			{
+				if (fBindOptions != nil)
+					delete fBindOptions;
+				fBindOptions = array;
+				return err;
+			}
+			delete array;
+		}
+		if (err != noErr && !sync)
+			UnwindOptions();
+		return err;
+	}
 	OPTIONS_REQUEST(fEndpoint->nBind(array, timeout, sync))
 }
 
@@ -665,13 +708,21 @@ TNewScriptEndpointClient::OptMgmtComplete(TEndpointEvent* event)
 
 
 // ROM 0x001346b8 BindComplete__24TNewScriptEndpointClientFP14TEndpointEvent
-// ROM BUG: the options are read out of the event's first word as for an
-// option request, but a bind's event has its queue length there (which
-// TSerialEndpoint::nBind leaves nought), so an asynchronous bind's options
-// are never read back and their array is never deleted.
+// ROM BUG (fixed): the options are read out of the event's first word as
+// for an option request, but a bind's event has its queue length there
+// (which TSerialEndpoint::nBind leaves nought), so an asynchronous bind's
+// options are never read back and their array is never deleted.  The fix
+// keeps the array DoBind made (fBindOptions) and reads them back from it.
 void
 TNewScriptEndpointClient::BindComplete(TEndpointEvent* event)
 {
+	if (RomBugFixed())
+	{
+		TOptionArray* array = fBindOptions;
+		fBindOptions = nil;
+		OptionCommandComplete(event->fError, fRequests, array);
+		return;
+	}
 	OptionCommandComplete(event->fError, fRequests, ((TOptMgmtCompleteEvent*) event)->fOptions);
 }
 
@@ -1650,9 +1701,12 @@ TNewScriptEndpointClient::RcvComplete(TEndpointEvent* event)
 NewtonErr
 TNewScriptEndpointClient::RawRcvComplete(TRcvCompleteEvent* event)
 {
-	// ROM BUG: the condition is 'useEOP only when fUseEOP is set and the
-	// packet is complete; otherwise a register left from the caller is
-	// compared, which on the device is never 2 - so 'byteCount
+	// ROM BUG (fixed): the condition is 'useEOP only when fUseEOP is set
+	// and the packet is complete; otherwise a register left from the caller
+	// is compared, which on the device is never 2 - so 'byteCount.  The
+	// host answers that on both paths, which is also the fix: 'useEOP for
+	// a packet that ended, 'byteCount for anything else.
+
 	Boolean eop = fUseEOP && (event->fFlags & 1) == 0;
 	RefVar inputScript(GetVariable(fInputSpec, RSSYMinputscript, nil, 0));
 	if (NOTNIL(inputScript))
