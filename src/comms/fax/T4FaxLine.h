@@ -68,7 +68,12 @@ public:
 	int					fOutBitsFree;			// +0x28  of fOutByte
 	UByte				fOutByte;				// +0x2c
 	UChar*				fOutEnd;				// +0x30
+	// host (DEVIATION): nothing read since Reset, so fReadPtr is the first
+	// byte to read, not the last read (ROM bug: see GetNextBit, where it
+	// is fixed)
+	Boolean				fNothingRead;
 };
+
 
 // The coder of a page being sent: a scan line (most significant bit first,
 // a black pixel a 1) as MH, preceded by an end of line and followed by

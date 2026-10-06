@@ -11,6 +11,7 @@
 #include "T4FaxLine.h"
 #include "NewtonExceptions.h"
 #include "CommErrors.h"
+#include "host/RomBugs.h"
 
 // ROM 0x003712f0 exFaxBufOverrunException
 // (the ring running dry - named as evt.ex itself, so catching it catches
@@ -30,6 +31,7 @@ TT4FaxLine::TT4FaxLine()
 	fOutBitsFree = 0;
 	fBitsLeft = 0;
 	fBufSize = 0;
+	fNothingRead = false;		// (host)
 }
 
 
@@ -57,6 +59,7 @@ TT4FaxLine::Reset()
 	fReadPtr = fBufStart;
 	fBitsLeft = 0;
 	fWrapped = false;
+	fNothingRead = RomBugFixed();		// (host: GetNextBit's fix)
 }
 
 
@@ -116,13 +119,22 @@ TT4FaxLine::GetLength()
 
 // ROM 0x00204940 GetNextBit__10TT4FaxLineFv
 // The next bit, least significant first.  fReadPtr is the byte last read,
-// so the next is the one after it.  BUG: after Reset nothing has been read,
-// yet the first byte is stepped over all the same - the ring's first byte
-// is never decoded.  The ring empty throws exFaxBufOverrunException with
-// kFaxToolErrT4DecodeUnderflow.
+// so the next is the one after it.  ROM BUG (fixed): after Reset nothing
+// has been read, yet the first byte is stepped over all the same - the
+// ring's first byte is never decoded.  The fix reads the first byte where
+// it is (fNothingRead, set by Reset).  The ring empty throws
+// exFaxBufOverrunException with kFaxToolErrT4DecodeUnderflow.
 int
 TT4FaxLine::GetNextBit()
 {
+	if (fBitsLeft == 0 && fNothingRead)
+	{
+		if (fReadPtr == fWritePtr && fWrapped == 0)
+			Throw(exFaxBufOverrunException, (void*) (long) kFaxToolErrT4DecodeUnderflow, nil);
+		fNothingRead = false;
+		fCurByte = *fReadPtr;
+		fBitsLeft = 8;
+	}
 	if (fBitsLeft == 0)
 	{
 		UChar* write = fWritePtr;
@@ -395,8 +407,9 @@ outputRun(UChar*& out, UChar* end, int run, UChar color, ULong& bits, int& count
 
 // ROM 0x00204f60 EncodeT4__FPUciT1N42
 // The line's runs, the leftOffset white pixels before them and the white
-// that fills it out to width.  BUG: the noughts that make it minBytes are
-// written with no check against the end of the buffer.
+// that fills it out to width.  ROM BUG (fixed): the noughts that make it
+// minBytes are written with no check against the end of the buffer.  The
+// fix refuses the line (-1) when they do not fit, as one too long is.
 int
 EncodeT4(UChar* line, int lineBytes, UChar* out, int outSize, int width, int leftOffset, int minBytes)
 {
@@ -446,6 +459,9 @@ EncodeT4(UChar* line, int lineBytes, UChar* out, int outSize, int width, int lef
 	int fill = minBytes - (int) (out - start - 2);
 	if (fill <= 0)
 		fill = 1;
+	if (RomBugFixed() && fill > end - out)
+		return -1;
+
 	do
 		*out++ = 0;
 	while (--fill > 0);

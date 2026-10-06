@@ -524,6 +524,9 @@ protected:
 	ULong				fField85C;				// +0x85c
 	UChar				fLocalId[0x18];			// +0x860  ('flid', 20 characters and a nought at +0x874)
 	TCMOFramingParms	fFraming;				// +0x878
+	// host (DEVIATION): whether the last DCS was valid, kept from frame to
+	// frame (ROM bug: see PhaseBProcessCommand, where it is fixed)
+	Boolean				fDCSValid;
 };
 
 
