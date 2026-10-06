@@ -5,6 +5,7 @@
 // keeping a string.
 #include "WordTails.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -233,6 +234,15 @@ main()
 		EXPECT(wordTailFrees == kWordTailNone);
 		// twice is no trouble
 		WordTailDeallocateGlobals();
+	}
+
+	// a reference added to nothing (ROM BUG (fixed): the ROM looks for the
+	// empty tail's cell in table 127, here not made at all) is no-op
+	{
+		SetRomBugFixed(true);
+		WordTailAddRef(kWordTailNone);
+		WordTailDeleteRef(kWordTailNone);
+		EXPECT(wordTails == nil);
 	}
 
 	if (failures == 0)

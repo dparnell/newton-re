@@ -29,6 +29,7 @@
 #include "InkGroups.h"			// GetTraceFromStrokes
 #include "StrokeQueue.h"		// gTabScale
 #include "FixedMath.h"
+#include "host/RomBugs.h"
 #include <string.h>
 
 // ROM 0x0c104d40 gUSE_GROUP_AND_CLASSIFY
@@ -461,11 +462,12 @@ LearningDataPtr(void)
 
 
 // ROM 0x00167e40 SizeOfLearningData__Fv
-// ROM BUG: when there is no database the domain answers nought, and
-// AdjustParaSize takes the handle word off that - a size just short of
+// ROM BUG (fixed): when there is no database the domain answers nought,
+// and AdjustParaSize takes the handle word off that - a size just short of
 // four gigabytes (on the host, of the address space), which
 // FGetLearningData then tries to allocate.  Only a writer who turned big
-// learning on has a database, and only then is this asked.
+// learning on has a database, and only then is this asked.  The fix
+// answers nought for no database.
 ULong
 SizeOfLearningData(void)
 {
@@ -475,6 +477,8 @@ SizeOfLearningData(void)
 	ULong size;
 	domain->DomainParameter(0x20039, (ULong) &size, (ULong) info);
 	LIEndWeights(info);
+	if (RomBugFixed() && size == 0)
+		return 0;
 	return AdjustParaSize(size);
 }
 

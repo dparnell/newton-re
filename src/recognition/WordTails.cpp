@@ -11,6 +11,7 @@
 #include "RosStrokes.h"			// kRosettaMemoryTag
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
+#include "host/RomBugs.h"
 
 extern const ExceptionName exRosetta;	// ROM 0x003774f8 exRosetta
 
@@ -122,14 +123,16 @@ WordTailBlockAllocate(void)
 // One more holder.  A count of 0xff means the cell is not counted at
 // all and is never given back.
 //
-// **A ROM bug, kept.**  `WordTailDeleteRef` begins by answering
+// **ROM BUG (fixed).**  `WordTailDeleteRef` begins by answering
 // straight away for `kWordTailNone`; this does not, so the empty tail
 // takes the cell path and looks in table 127, which is almost never
 // made.  Nothing in the engine adds a reference to nothing, so it has
-// never mattered.
+// never mattered.  The fix answers straight away for it too.
 void
 WordTailAddRef(WordTailRef ref)
 {
+	if (RomBugFixed() && ref == kWordTailNone)
+		return;
 	if (ref == kWordTailNone || ref < kWordTailListBase)
 	{
 		WordTailCell* cell = WordTailAt(ref);
