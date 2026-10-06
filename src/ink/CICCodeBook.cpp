@@ -82,10 +82,13 @@ long	HWRFileClose(void* /*file*/)										{ return 0; }
 // nothing (HWRFileOpen answers nought), so that path only ever prints
 // "Cannot load the code book !!!" and gives up.
 //
-// ROM bug kept: the entry's handle is set from a register the "already
+// ROM BUG (fixed): the entry's handle is set from a register the "already
 // there" path never loaded, so a book that came from a global gets
 // whatever was lying in it.  Nothing ever frees through that handle -
-// UnlockBook only counts down - so it does no harm.
+// UnlockBook only counts down - so it does no harm.  The host cannot have
+// the register's garbage and gives such a book no handle (nil) whichever
+// way RomBugFixed() is set - which is the fix: a book it did not allocate
+// has no handle of its own.
 void*
 LockBook(const char* name, BookEntry* entry)
 {

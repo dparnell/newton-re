@@ -1625,7 +1625,7 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 		Boolean oneFilled = false;
 		if (RomBugFixed() && (play->fTextFlags & 0x80) == 0)
 		{
-			// (the fix of DoPutText's ROM bug: with one style its family,
+			// (the ROM bug: see DoPutText - fixed, with one style its family,
 			// 0x81a1's integer 0x800000, is given the block too - until the
 			// block is given back, when it is the integer again)
 			StyleRecord* one = &play->fXStyle;

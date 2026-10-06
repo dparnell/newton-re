@@ -2989,7 +2989,7 @@ SetupColourConversion(long depth, PixelMap* src)
 }
 
 
-// (host) the fix of SetupStretchRatio's ROM bug for two bits into four at
+// (host) SetupStretchRatio's fix (the ROM bug: see case 204) for two bits into four at
 // the same width: Stretch2to4 stepping a whole source pixel each time
 static void
 Unscaled2to4(ULong32* src, ULong32* dst, ULong32* end, Long32 /*ratio*/)
@@ -3046,7 +3046,7 @@ SetupStretchRatio(Point dstSize, Point srcSize, long* ratio, long srcDepth, long
 	case 404:	choice = (Choice) { Unscaled, Stretch4to4, Shrink4to4 }; break;
 	// (host: eight-bit destinations - above)
 	case 108:	choice = (Choice) { WidenFrom4<Unscaled1to4>, WidenFrom4<Stretch1to4>, WidenFrom4<Shrink1to4> }; break;
-	case 208:	// (the four-bit one's, widened - the ROM bug at 204 and its fix with it)
+	case 208:	// (the four-bit one's, widened - see the ROM bug at 204, and its fix with it)
 		if (RomBugFixed())
 			choice = (Choice) { WidenFrom4<Unscaled2to4>, WidenFrom4<Stretch2to4>, WidenFrom4<Shrink2to4> };
 		else

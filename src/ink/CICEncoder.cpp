@@ -7,6 +7,7 @@
 
 #include "CICCodec.h"
 #include "ByteOrder.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -450,15 +451,17 @@ TryQuantVariant(const long* coef, const long* trial, long best, long* outError)
 // ways of nudging the three by one either way are tried, and whichever
 // comes nearest the fitted segment is kept.
 //
-// ROM bug kept: which of the twenty-seven was best is only written down
+// ROM BUG (fixed): which of the twenty-seven was best is only written down
 // when one of them is better than the best so far, and the best so far
 // starts at a number large enough that the first try all but always
 // takes it - all but.  DEVIATION: the host starts the three at the first
 // try's own offsets, where the ROM would use whatever was in the
-// registers.
+// registers.  The fix starts them at nought - when no try is near enough,
+// the three roundings stand as they were.
 void
 SegVectQuant(CICEncoder* encoder, short* rounded, ULong which)
 {
+	long start = RomBugFixed() ? 0 : -1;
 	long step = encoder->fStepA;
 	long limitB = encoder->fLimitB;
 	long limitA = encoder->fLimitA;
@@ -469,9 +472,9 @@ SegVectQuant(CICEncoder* encoder, short* rounded, ULong which)
 	trial[2] = limitA * rounded[2] - limitA;
 	trial[3] = limitB * rounded[3] - limitB;
 	long best = 0x40000000;
-	long bestEnd = -1;
-	long bestFirst = -1;
-	long bestSecond = -1;
+	long bestEnd = start;
+	long bestFirst = start;
+	long bestSecond = start;
 	for (long end = -1; end < 2; end++)
 	{
 		for (long first = -1; first < 2; first++)
@@ -812,12 +815,13 @@ EcdrSelectCodeBook(CICEncoder* encoder)
 // again, because nine bits will not reach: a short stroke starting at
 // (511, 511) followed by a 7 is the marker the reader knows that by.
 //
-// ROM bug kept: a first stroke of the newer format that starts exactly
+// ROM BUG (fixed): a first stroke of the newer format that starts exactly
 // where the pen is - both steps nought - sets the width to eight but
 // never sets the byte that says so, and writes whatever was in the
 // register.  DEVIATION: the host cannot reproduce which value that is,
 // so it writes the one the next case would have used, which is the one
-// that agrees with the width.
+// that agrees with the width - whichever way RomBugFixed() is set, since
+// that is also the fix.
 Boolean
 WriteNewStroke(CICEncoder* encoder, short kind)
 {

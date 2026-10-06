@@ -1340,6 +1340,21 @@ TestStrokeRoundTrip()
 		// an ink word stays one, its measurements worked out again
 		RefVar wordAgain(InkConvert(ink, RSSYMinkword));
 		EXPECT(NOTNIL(wordAgain) && IsInkWord(wordAgain));
+
+		// the copy the converter is handed: kept by the ROM (a leak), given
+		// back with the fix - the heap's free space as it was
+		SetRomBugFixed(false);
+		Size before = TotalFreeInHeap();
+		{
+			RefVar leaked(InkConvert(ink, RSSYMink));
+		}
+		EXPECT(TotalFreeInHeap() < before);
+		SetRomBugFixed(true);
+		before = TotalFreeInHeap();
+		{
+			RefVar kept(InkConvert(ink, RSSYMink));
+		}
+		EXPECT(TotalFreeInHeap() == before);
 	}
 
 	// the ink put down somewhere else moves with it
