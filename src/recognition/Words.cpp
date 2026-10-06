@@ -37,6 +37,7 @@
 #include "ParaGraph.h"		// HWRMemoryFree
 #include "FixedMath.h"
 #include "Rects.h"			// SetPt
+#include "WordEngines.h"	// HostWordEngineDomainInUse
 
 #include <string.h>
 
@@ -822,11 +823,18 @@ WRecFindBaseline(TStroke** strokes, Point* out)
 // ROM 0x00144470 (unnamed) - WRecDomainInUse
 // The 'WREC' recogniser's domain while that recogniser is the one reading
 // (gWordID), nil otherwise - Rosetta's, when the letter set is printed.
+//
+// DEVIATION (host): or the domain of the host's own engine in use
+// (WordEngines.h), which is a word domain of the same kind and is asked
+// the same questions.
 static TDomain*
 WRecDomainInUse(void)
 {
 	if (gRecognition.fRecognizers == nil)		// DEVIATION: a host test with no recognition system
 		return nil;
+	TDomain* hostEngine = HostWordEngineDomainInUse();
+	if (hostEngine != nil)
+		return hostEngine;
 	TRecognizer* recognizer = gRecognition.fRecognizers->FindRecognizer('WREC');
 	if (recognizer != nil && gWordID == 'WREC')
 		return recognizer->Domain();

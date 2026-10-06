@@ -159,6 +159,11 @@ class TWRecDomain : public TDomain
 public:
 	static TDomain*		Make(TController* controller);			// ROM 0x0026d84c Make__11TWRecDomainSFP11TController
 	void				IWRecDomain(TController* controller);	// ROM 0x0026d91c IWRecDomain__11TWRecDomainFP11TController
+	// DEVIATION (host): the same over one of the host's own engines
+	// (WordEngines.h), with its own unit type and found under its own
+	// interface name, so that it sits beside the ROM's 'WREC' one.
+	static TDomain*		MakeHostEngine(TController* controller, ULong type, const char* implementation, const char* name);
+	void				IHostEngineDomain(TController* controller, ULong type, const char* implementation, const char* name);
 
 	virtual void		Dispose(void);							// ROM 0x0026df2c Dispose__11TWRecDomainFv (+0x00)
 	virtual void		Classify(TUnit* unit);					// ROM 0x0026e0a8 Classify__11TWRecDomainFP5TUnit (+0x10)

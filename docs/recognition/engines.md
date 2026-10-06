@@ -1,6 +1,6 @@
 # More word recognisers, chosen from the Handwriting slip
 
-Status: design, branch `hwr-engines`.  Nothing here is built yet.
+Status: branch `hwr-engines`; the framework is built, the engines do not read yet.
 
 The owner wants handwriting engines beside the ROM's two (Rosetta for
 printing, ParaGraph for cursive), chosen from the Newton's own
@@ -51,50 +51,67 @@ changes ROM behaviour is a `DEVIATION`.
   `drawExampleScript` (`obj_5b033d`) draws `wordBits[letterSetSelection]`,
   so a new value needs an entry there (or a guard).
 
-## Design
+## What is built (the framework)
 
-1. **One recogniser per engine.**  Each engine is a `TWRecognizer`
-   implementation with its own `TWRecDomain`/`TWRecRecognizer` and its
-   own four-character unit type ('UNIS', 'NNET'), installed **asleep**
-   beside the ROM's two, as `InstallWRecRecognizer` installs Rosetta.
-   Because `TWRecDomain` finds its engine by protocol name, each engine
-   registers under a name of its own and the domain is told which to
-   make (a host-side constructor argument - DEVIATION).
-2. **A host-side engine table** (`recognition/WordEngines.h`): id,
-   unit type, the slip's button text, the letter-set value it answers to,
-   and whether it is available on this host (the neural engine is not
-   offered when ONNX Runtime or its model is missing).
-3. **Letter-set values from 8 up are engines.**  8 = Unistroke, 9 =
-   Neural, leaving 5..7 clear of anything Apple might have meant.
-   `ReadCursiveOptions` gains a third call beside `SetUpRosetta` and
-   `SetUpParaGraph` - `SetUpHostEngine(letterSet)` - and those two return
-   for values >= 8 (DEVIATION).  Engines read a word at a time
-   (`lineAtATime` nil) unless the table says otherwise.
-4. **The slip** (`romsrc`, so only when booting from the reconstructed
-   data - `--rom` shows the ROM's own two buttons):
-   - the cluster gets one button per available engine, added at view
-     setup from the engine table (a native, e.g. `HostWordEngines()`),
-     so an engine the host lacks is never shown;
-   - `viewSetupFormScript` accepts the engines' values as well as 0..4;
-   - `wordBits` gets an example drawing per engine, or
-     `drawExampleScript` falls back to printing's;
-   - the `<> 2` letter-weight scripts are guarded to ParaGraph's values
-     (0, 1, 3, 4), so choosing an engine does not save ParaGraph's
-     weights.
-5. **A demo and a ctest per engine**, like `write.ns`: pick the engine
-   through the slip's value, write, check the text that comes back.
+1. **One recogniser per engine.**  `recognition/WordEngines.h` holds the
+   table of the host's engines: unit type, button value, implementation
+   name, button text, whether it reads a line at a time.
+   `RegisterHostWordEngines` (beside `RegisterRosettaWRec` in both boots)
+   registers their implementations under the interface name
+   `THostWordEngine` - not `TWRecognizer`, because the ROM's 'WREC' domain
+   asks the registry for *any* TWRecognizer and another implementation
+   would be as likely an answer as Rosetta.  `InstallHostWordEngines`
+   (after `InstallWRecRecognizer`, in `InitRecognizers`) makes each a
+   `TWRecDomain` of its own type (`TWRecDomain::MakeHostEngine`) and a
+   `TWRecRecognizer` over it, installed asleep as Rosetta's is.
+2. **The choice is its own slot.**  `userConfiguration.hostWordEngine` is
+   the engine's button value (8 and up); no slot means the ROM's choice.
+   The letter set stays one of the ROM's: ParaGraph's code reads it
+   asleep or not and refuses anything above 4 (`AllocLearnInfo` fails,
+   and with it `TXrWordDomain::InitializeParamStruct`), so choosing an
+   engine sets the letter set to printing, 2 - which is also how the
+   slip then draws its example word and spacing.
+   `ReadCursiveOptions` calls `SetUpHostEngine` after the ROM's two set-up
+   functions: an installed engine chosen is put in use in their place
+   (`SetWordRecognizer`), with `currentWordRecognizer` and `lineAtATime`
+   set as the ROM's set-up functions set them.
+3. **The places that knew only the ROM's recognisers**:
+   `TDomain::VUnitInClass` counts the engines' types as words;
+   `WRecDomainInUse` (Words.cpp, behind `WRecVerifyWordSymbols`) answers
+   the engine's domain when one is in use; `TWRecRecognizer::ConfigureArea`
+   keys the area's block by the recogniser's own type, not 'WREC'.  Each
+   is marked DEVIATION.  Left as they are: `WRecIsBeingUsed()` (true only
+   for Rosetta) and auto-add (only for Rosetta, `AddAutoAdd`).
+4. **The slip is patched at boot, not in `romsrc`.**
+   `host/HostWordEngines.ns` (embedded in newton, run by
+   `HostInstallWordEngines` after the Host panel) registers a copy of the
+   `HWRecPreferencesForm` with `RegPrefs` - the form, its letter-set box
+   and the cluster each a frame whose `_proto` is the ROM's, grown by a
+   row per engine, with a radio button per engine from
+   `HostWordEngines()` under "Printing" and "Cursive".  The cluster's
+   `viewSetupFormScript`/`ClusterChanged` and the form's `UseDefault`
+   handle the engines' values and hand the rest to the ROM's.  It works
+   the same booted from the ROM image (`--rom`).  The Prefs roll lists
+   the built-in panels by name (`GetPrefs`), so the panel keeps its place.
+   Editing the slip in `romsrc` instead would have broken the
+   byte-for-byte check of the tree (`host.ROMSourceCommitted`).
+5. **The unistroke engine is a stand-in so far**
+   (`recognition/UnistrokeRecognizer.h`, 'UNIS', button 8): it groups
+   strokes into words as the ROM's engines do and answers ink for every
+   word.  ctest `host.NewtonWordEngines` (`src/host/demo/engines.ns`):
+   the button is in the slip, choosing it puts 'UNIS' in use with the
+   letter set left at 2, a word written stays ink, and "Printing" puts
+   Rosetta back and the next word is read.
 
 ## Order of work
 
-1. The framework: engine table, `SetUpHostEngine`, a second recogniser
-   installed from the ink-only engine, the slip's buttons; demo shows the
-   switch and that writing becomes ink.
-2. The unistroke engine (alphabet, digits, punctuation shift; one stroke
-   per character - the domain's grouping makes a run of strokes a word).
+1. ~~The framework.~~
+2. The unistroke engine's reading (alphabet, digits, punctuation shift;
+   one stroke per character).
 3. The neural engine: choose a model (licence first), the ONNX Runtime
    dependency per host (vendored or fetched by a documented script), the
    stroke-to-tensor encoding, CTC decoding against the area's
-   dictionaries.
+   dictionaries.  It goes into `kWordEngines` as 'NNET', button 9.
 
 ## Open questions
 

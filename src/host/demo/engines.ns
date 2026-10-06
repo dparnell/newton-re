@@ -1,0 +1,139 @@
+// The host's own handwriting engines, chosen in the Newton's Handwriting
+// Recognition slip (recognition/WordEngines.h, host/HostWordEngines.ns,
+// docs/recognition/engines.md): ctest host.NewtonWordEngines.
+//
+//   build/host/host/newton --display 320x480 --headless 200 --script src/host/demo/engines.ns
+//
+// After the Setup walk: HostWordEngines() lists the unistroke engine
+// (button 8); Extras, Prefs, "Handwriting Recognition" shows its button
+// under "Printing" and "Cursive", and tapping it puts the 'UNIS'
+// recogniser in use with the letter set left at printing.  The engine
+// reads nothing yet, so "ton" written on the Notepad stays ink.  Then
+// "Printing" tapped puts Rosetta back, and "to" written further down is
+// read as text (remote writing puts it after the ink word: "<ink> to").
+//
+// Prints "engines: <step>: ok" or "FAILED", and "engines: done, N failed".
+
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView
+HostInclude("apphelpers.ns");		// tapCentre, tapPrefsItem
+HostInclude("penhelpers.ns");		// penWriteWord, penFindPara
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+enFailures := 0;
+
+enCheck := func(what, ok)
+  begin
+    if not ok then enFailures := enFailures + 1;
+    Print("engines: " & what & (if ok then ": ok" else ": FAILED"));
+  end;
+
+// every paragraph's text, ink words as "<ink>"
+enParas := func(v, into)
+  begin
+    if BAnd(v.viewClass, 0xFFFF) = 81 and IsString(v.text) then begin
+      local t := "";
+      for i := 0 to StrLen(v.text) - 1 do
+        t := t & (if Ord(v.text[i]) = 0xF701 then "<ink>" else v.text[i]);
+      AddArraySlot(into, t);
+    end;
+    foreach child in v:ChildViewFrames() do call enParas with (child, into);
+    into;
+  end;
+
+// a paragraph ending in the word "to", read as text
+enReadTo := func()
+  begin
+    local found := nil;
+    foreach t in call enParas with (GetRoot(), []) do
+      if StrLen(t) >= 2 and StrEqual(SubStr(t, StrLen(t) - 2, 2), "to")
+         and (StrLen(t) = 2 or t[StrLen(t) - 3] = $ ) then found := true;
+    found;
+  end;
+
+enFinish := func()
+  begin
+    foreach t in call enParas with (GetRoot(), []) do Print("engines: the page has \"" & t & "\"");
+    Print("engines: done, " & NumberStr(enFailures) & " failed");
+    HostQuit();
+  end;
+
+enCurrent := func() userConfiguration.currentWordRecognizer;
+
+enPrefsIcon := func() if GetRoot().extrasDrawer.viewCObject then
+  call findView with (GetRoot().extrasDrawer, func(v) v.target and v.target.fentry
+    and v.target.fentry.app = 'preferenceRoll);
+
+enCluster := func() call findView with (GetRoot(), func(v) v.engineValues and v.viewCObject);
+
+enButton := func(value) begin
+  local cluster := call enCluster with ();
+  if cluster then call findView with (cluster, func(v) v.buttonValue = value and v.viewCObject);
+end;
+
+// the slip opened from Extras, Prefs; then done()
+enOpenSlip := func(done) begin
+  call tapAt with (20, 460);				// Extras
+  call waitFor with ("engines: the Prefs icon", func() call enPrefsIcon with (), func() begin
+    call tapCentre with (call enPrefsIcon with ());
+    call waitFor with ("engines: Prefs", func() GetRoot().preferenceRoll.viewCObject, func() begin
+      call enCheck with ("Prefs lists Handwriting Recognition", call tapPrefsItem with ("Handwriting Recognition"));
+      call waitFor with ("engines: the slip", func() call enButton with (8), done, 30);
+    end, 30);
+  end, 30);
+end;
+
+enChoose := func(value, recogniser, done) begin
+  call tapCentre with (call enButton with (value));
+  call waitFor with ("engines: " & recogniser & " in use",
+    func() StrEqual(call enCurrent with (), recogniser), func() begin
+      call enCheck with (recogniser & " in use", StrEqual(call enCurrent with (), recogniser));
+      GetRoot().preferenceRoll:Close();
+      call waitFor with ("engines: Prefs closed", func() not GetRoot().preferenceRoll.viewCObject, done, 30);
+    end, 30);
+end;
+
+call walkSetup with (name, func() begin
+  local engines := HostWordEngines();
+  local unis := nil;
+  foreach e in engines do if e.value = 8 and StrEqual(e.type, "UNIS") then unis := e;
+  call enCheck with ("the unistroke engine is listed", unis <> nil);
+  call enCheck with ("Rosetta reads at first", StrEqual(call enCurrent with (), "WREC"));
+
+  call enOpenSlip with (func() begin
+    local cluster := call enCluster with ();
+    call enCheck with ("the slip has the engine's button",
+      cluster and call findView with (cluster, func(v) v.buttonValue = 8 and IsString(v.text)
+        and StrPos(v.text, "Unistroke", 0) = 0));
+    call enCheck with ("... under Printing and Cursive",
+      call enButton with (2) and call enButton with (0));
+    call enChoose with (8, "UNIS", func() begin
+      call enCheck with ("the letter set stays printing", userConfiguration.letterSetSelection = 2);
+      call enCheck with ("the choice is kept", userConfiguration.hostWordEngine = 8);
+      call enCheck with ("Rosetta is not in use", not WRecIsBeingUsed());
+
+      // the engine reads nothing yet: the word stays ink
+      local base := 200;
+      call penWriteWord with ("ton", 60, base);
+      IdleStrokes();
+      call waitFor with ("engines: ton as ink", func() call penFindPara with (GetRoot(), nil), func() begin
+        call enCheck with ("\"ton\" is ink", call penFindPara with (GetRoot(), nil) <> nil);
+        call enCheck with ("... and not read", call penFindPara with (GetRoot(), "ton") = nil);
+
+        // back to the letter set's recogniser
+        call enOpenSlip with (func() begin
+          call enChoose with (2, "WREC", func() begin
+            call enCheck with ("the choice is gone", not HasSlot(userConfiguration, 'hostWordEngine));
+            call penWriteWord with ("to", 60, base + 60);
+            IdleStrokes();
+            // (remote writing puts it after the ink word, on the same line)
+            call waitFor with ("engines: to read", func() call enReadTo with (), func() begin
+              call enCheck with ("\"to\" is read by Rosetta", call enReadTo with ());
+              call enFinish with ();
+            end, 30);
+          end);
+        end);
+      end, 30);
+    end);
+  end);
+end);

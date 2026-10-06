@@ -40,6 +40,7 @@
 #include "EdgeList.h"
 #include "ShapeDomain.h"		// SetContextUnitRoutine
 #include "WordRecognizer.h"	// InstallWordRecognizer
+#include "WordEngines.h"		// InstallHostWordEngines, SetUpHostEngine
 #include "WordRecog.h"		// FragmentLigatures
 #include "NewtonGestalt.h"
 #include "ROMConstants.h"
@@ -613,19 +614,23 @@ TWRecRecognizer::HandleUnit(TUnitPublic* unit)
 // told its parameters are complete.
 //
 // An area this domain is not running over has nothing to set up.
+//
+// (The ROM names 'WREC' for the area's block, there being one of these
+// recognisers; the host's engines are more of them, so the block is the
+// recogniser's own type - the same thing for the ROM's.)
 long
 TWRecRecognizer::ConfigureArea(TRecArea* area, RefArg config)
 {
 	if (!DomainOn(area, ID()))
 		return 0;
 	TWRecDomain* domain = (TWRecDomain*) Domain();
-	Handle info = area->GetInfoFor(kWRecDomainType, true);
+	Handle info = area->GetInfoFor(ID(), true);
 	domain->ConfigureArea(config, (ULong) info);
 	TDictChain* chains[kAreaDictChains];
 	BuildChains(chains, config);
 	for (long i = 0; i < kAreaDictChains; i++)
 		area->fDictionaries[i] = chains[i];
-	area->ParamsAllSet(kWRecDomainType);
+	area->ParamsAllSet(ID());
 	return 0;
 }
 
@@ -788,12 +793,17 @@ GetDefaultedPreference(RefArg slot, long deflt)
 //
 // The letter set says which of the two word recognisers is in use
 // (SetUpRosetta, SetUpParaGraph).
+//
+// DEVIATION (host): then the writer's choice of one of the host's own
+// engines, if there is one, is put in use in their place (SetUpHostEngine,
+// WordEngines.h); the letter set stays the ROM's.
 Ref
 FReadCursiveOptions(RefArg /*rcvr*/)
 {
 	gLetterSetSelection = GetDefaultedPreference(RSSYMlettersetselection, 2);
 	SetUpRosetta(gLetterSetSelection);
 	SetUpParaGraph(gLetterSetSelection);
+	SetUpHostEngine();
 
 	gRecognitionTimeout = (ULong) GetDefaultedPreference(RSSYMtimeoutcursiveoption, 0x28);
 	if (gRecognitionTimeout < 0xf)
@@ -985,6 +995,9 @@ TRecognitionManager::InitRecognizers(void)
 		InstallShapeRecognizer(this);
 		InstallWordRecognizer(this);
 		InstallWRecRecognizer(this);
+		// DEVIATION (host): the host's own engines beside them, asleep
+		// (WordEngines.h)
+		InstallHostWordEngines(this);
 	}
 	// the writer's recognition preferences put into force
 	ReadDomainOptions();

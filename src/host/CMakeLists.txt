@@ -155,8 +155,18 @@ add_custom_command(
             -P ${CMAKE_SOURCE_DIR}/cmake/EmbedText.cmake
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/HostSettings.ns ${CMAKE_SOURCE_DIR}/cmake/EmbedText.cmake
     VERBATIM)
+# host/HostWordEngines.ns, the host's engines in the Handwriting Recognition
+# slip (recognition/WordEngines.h), compiled in the same way
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/HostWordEnginesSource.cpp
+    COMMAND ${CMAKE_COMMAND} -DINPUT=${CMAKE_CURRENT_SOURCE_DIR}/HostWordEngines.ns
+            -DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/HostWordEnginesSource.cpp -DNAME=gHostWordEnginesSource
+            -P ${CMAKE_SOURCE_DIR}/cmake/EmbedText.cmake
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/HostWordEngines.ns ${CMAKE_SOURCE_DIR}/cmake/EmbedText.cmake
+    VERBATIM)
 add_executable(newton newton.cpp HostRestart.cpp HostKeyboard.cpp HostPackages.cpp HostOrientation.cpp HostSettings.cpp
-               ${CMAKE_CURRENT_BINARY_DIR}/HostSettingsSource.cpp HostHeapCheck.cpp)
+               ${CMAKE_CURRENT_BINARY_DIR}/HostSettingsSource.cpp HostWordEngines.cpp
+               ${CMAKE_CURRENT_BINARY_DIR}/HostWordEnginesSource.cpp HostHeapCheck.cpp)
 target_link_libraries(newton PRIVATE newt host_views host_window hal_host_sound hal_timers hal_host_serial)
 target_compile_definitions(newton PRIVATE "NEWTON_DEFAULT_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 install(TARGETS newton DESTINATION bin)
@@ -1117,6 +1127,14 @@ set_tests_properties(host.NewtonDrag PROPERTIES TIMEOUT 180
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 
 # "ton" and "to" written with the pen and read by Rosetta, the second at the first's caret (demo/write.ns)
+# the host's handwriting engines chosen in the Handwriting Recognition slip
+# (recognition/WordEngines.h, host/HostWordEngines.ns): the unistroke
+# engine's button, chosen and put in use, its word left as ink, and
+# Rosetta put back by "Printing"
+add_test(NAME host.NewtonWordEngines COMMAND newton --display 320x480 --headless 200
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/engines.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonWordEngines PROPERTIES TIMEOUT 300
+                     PASS_REGULAR_EXPRESSION "UNIS in use: ok.*is ink: ok.*read by Rosetta: ok.*engines: done, 0 failed")
 add_test(NAME host.NewtonWrite COMMAND newton --display 320x480 --headless 90
          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/write.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonWrite PROPERTIES TIMEOUT 180

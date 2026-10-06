@@ -9,6 +9,27 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-06: more word recognisers, chosen from the Handwriting slip (branch hwr-engines)
+
+The owner wants handwriting engines beside Rosetta and ParaGraph -
+first a Graffiti-style unistroke reader and a neural one over ONNX
+Runtime - chosen from the Newton's own Handwriting Recognition slip.  The
+framework is in (docs/recognition/engines.md): a table of host engines
+(recognition/WordEngines.h), each a TWRecognizer registered under its own
+interface name (THostWordEngine, so the ROM's "any TWRecognizer" still
+finds Rosetta) and driven by a TWRecDomain of its own type, installed
+asleep beside the ROM's; the choice is userConfiguration.hostWordEngine,
+put in force by ReadCursiveOptions after the letter set's recogniser, and
+the letter set itself stays the ROM's - a value above 4 would reach
+ParaGraph's AllocLearnInfo, which fails for it, sleeping or not.  The
+slip is patched at boot (host/HostWordEngines.ns registers a copy of the
+form whose levels proto to the ROM's, a radio button per engine), so it
+works booted from the ROM image as well and romsrc stays the ROM's.
+'UNIS' groups strokes and answers ink until its reading is written.
+ctest host.NewtonWordEngines.  On the way: remote writing puts a word
+after an ink word on the same line, so the demo's "to" came back as
+"<ink> to".
+
 ## 2026-10-03/04: colour (branch colour)
 
 The owner had heard that the Newton OS had some colour support.  It has an

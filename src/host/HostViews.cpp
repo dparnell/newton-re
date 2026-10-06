@@ -28,6 +28,7 @@
 #include "Recognizer.h"
 #include "InkRecognizer.h"
 #include "RosRecognizer.h"
+#include "WordEngines.h"
 #include "StrokeCentral.h"
 #include "UnitPublic.h"
 #include "CardInfo.h"
@@ -388,6 +389,7 @@ HostStartViews(long width, long height, long depth)
 	// the ROM's own handwriting engine, as the Notebook's toolbox
 	// registers it (recognition/RosRecognizer.h)
 	RegisterRosettaWRec();
+	RegisterHostWordEngines();	// (and the host's own engines: recognition/WordEngines.h)
 	gRecognition.Init(2);		// (which puts the letter set's word recogniser in use: ReadCursiveOptions)
 	gStrokeWorld.Init();
 	HostTabletInit();

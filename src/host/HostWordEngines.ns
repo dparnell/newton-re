@@ -1,0 +1,104 @@
+// The host's handwriting engines in the Handwriting Recognition slip
+// (recognition/WordEngines.h, docs/recognition/engines.md).  This file is
+// compiled into newton (HostWordEnginesSource.cpp, made by
+// src/cmake/EmbedText.cmake) and evaluated at boot by
+// HostInstallWordEngines, after the Host panel.
+//
+// The slip's letter-set cluster has two buttons, "Printing (separate
+// letters)" (2) and "Cursive (connected letters)" (0); under them goes a
+// button for each engine HostWordEngines() says this host has, its value
+// the engine's number (8 and up).  The ROM's own form is not touched: a
+// copy is registered in its place (RegPrefs), each level of it a frame
+// whose _proto is the ROM's - the form, the letter-set box in it, and the
+// cluster - so a newton booted from the ROM image gets the buttons too.
+// The Prefs roll lists the built-in panels by name, so the copy keeps
+// the Handwriting Recognition panel's place.
+//
+// The choice is userConfiguration.hostWordEngine, which ReadCursiveOptions
+// puts into force (SetUpHostEngine).  The letter set itself stays one of
+// the ROM's - choosing an engine sets it to printing, 2, which is also
+// what the example word under the buttons is then drawn as.
+
+{
+	Start: func()
+	begin
+		local engines := HostWordEngines();
+		if Length(engines) = 0 then return nil;
+		local values := [];
+		foreach e in engines do AddArraySlot(values, e.value);
+
+		local form := PrefsRegistry.HWRecPreferencesForm;
+		local box := form.stepChildren[0];				// the letter set: its label, the cluster, the example
+		local cluster := box.viewChildren[1];
+		local below := cluster.viewChildren[1];			// "Cursive", the button under another
+		local row := below.viewBounds.bottom - below.viewBounds.top;
+		local extra := row * Length(engines);
+		local grown := func(r) {left: r.left, top: r.top, right: r.right, bottom: r.bottom + extra};
+		local swapped := func(a, old, new) begin
+			local b := Clone(a);
+			foreach i, x in b do if x = old then b[i] := new;
+			b;
+		end;
+
+		local buttons := Clone(cluster.viewChildren);
+		foreach e in engines do
+			AddArraySlot(buttons, {_proto: below, text: e.text, buttonValue: e.value});
+
+		local newCluster := {
+			_proto: cluster,
+			viewBounds: call grown with (cluster.viewBounds),
+			viewChildren: buttons,
+			engineValues: values,
+			// an engine chosen shows as its button; otherwise the ROM's
+			viewSetupFormScript: func()
+			begin
+				local chosen := userConfiguration.hostWordEngine;
+				if IsInteger(chosen) and SetContains(engineValues, chosen) then
+					clusterValue := chosen
+				else
+					inherited:viewSetupFormScript();
+			end,
+			ClusterChanged: func()
+			begin
+				if IsInteger(clusterValue) and SetContains(engineValues, clusterValue) then begin
+					userConfiguration.hostWordEngine := clusterValue;
+					userConfiguration.letterSetSelection := 2;
+					wordExample:Dirty();
+					ReadCursiveOptions();
+				end else begin
+					RemoveSlot(userConfiguration, 'hostWordEngine);
+					inherited:ClusterChanged();
+				end;
+			end,
+		};
+
+		local children := Clone(box.viewChildren);
+		children[1] := newCluster;
+		local newBox := {
+			_proto: box,
+			viewBounds: call grown with (box.viewBounds),
+			viewChildren: children,
+		};
+		if IsArray(box.allocateContext) then
+			newBox.allocateContext := call swapped with (box.allocateContext, cluster, newCluster);
+
+		local steps := Clone(form.stepChildren);
+		steps[0] := newBox;
+		local newForm := {
+			_proto: form,
+			height: form.height + extra,
+			viewBounds: call grown with (form.viewBounds),
+			stepChildren: steps,
+			// "Use defaults" is the letter set's recogniser as well
+			UseDefault: func()
+			begin
+				RemoveSlot(userConfiguration, 'hostWordEngine);
+				inherited:UseDefault();
+			end,
+		};
+		if IsArray(form.stepallocatecontext) then
+			newForm.stepallocatecontext := call swapped with (form.stepallocatecontext, box, newBox);
+		RegPrefs('HWRecPreferencesForm, newForm);
+		true;
+	end,
+}

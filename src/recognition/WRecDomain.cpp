@@ -24,6 +24,7 @@
 #include "Stroke.h"
 #include "NewtonExceptions.h"
 #include "InkGroups.h"		// WRecEndInkStrokeGroup
+#include "WordEngines.h"	// NewHostWordEngine
 
 #include <string.h>
 
@@ -303,6 +304,50 @@ TWRecDomain::IWRecDomain(TController* controller)
 	fDelay = 0x78;
 	fController = controller;
 	// (the ROM writes RegisterDomain out here rather than calling it)
+	controller->RegisterDomain(this);
+}
+
+
+// DEVIATION (host): Make and IWRecDomain over one of the host's engines
+// (WordEngines.h) - the domain's type is the engine's own, and the
+// engine is asked for by name under the host engines' interface, so the
+// ROM's 'WREC' domain and its "any TWRecognizer" are left as they are.
+TDomain*
+TWRecDomain::MakeHostEngine(TController* controller, ULong type, const char* implementation, const char* name)
+{
+	TWRecDomain* domain = new TWRecDomain;
+	if (domain == nil)
+		return nil;
+	newton_try
+	{
+		domain->IHostEngineDomain(controller, type, implementation, name);
+	}
+	newton_catch_all
+	{
+		if (domain->fRecognizer != nil)
+			domain->fRecognizer->Delete();
+		domain->Dispose();
+		domain = nil;
+	}
+	end_try;
+	return domain;
+}
+
+
+void
+TWRecDomain::IHostEngineDomain(TController* controller, ULong type, const char* implementation, const char* name)
+{
+	IDomain(controller, type, (char*) name);
+	fRecognizer = nil;
+	fRecognizer = NewHostWordEngine(implementation);
+	if (fRecognizer == nil)
+		Throw(exAbort, nil, nil);
+	fRecognizer->fDomain = this;
+	fRecognizer->Initialize();
+	SetFlags(0x80000000);
+	AddPieceType(kStrokeUnitType);
+	fDelay = 0x78;
+	fController = controller;
 	controller->RegisterDomain(this);
 }
 

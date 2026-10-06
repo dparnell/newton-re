@@ -10,6 +10,7 @@
 #include "Areas.h"
 #include "Controller.h"
 #include "Stroke.h"
+#include "WordEngines.h"	// IsHostWordEngineType
 
 TDomain*	gRootDomain = nil;			// ROM 0x0c101884 gRootDomain
 
@@ -56,11 +57,14 @@ TDomain::IDomain(TController* controller, ULong type, char* name)
 // ROM 0x0020cfc4 VUnitInClass__7TDomainSFUlT1
 // Whether a unit type belongs to a class of types: the word class ('WORD')
 // takes in the three word recognisers' types.
+//
+// DEVIATION (host): and the host's own engines' (WordEngines.h), whose
+// units are words as much as Rosetta's are.
 ULong
 TDomain::VUnitInClass(ULong type, ULong classType)
 {
 	if (classType == kWordUnit)
-		return type == 'WRXR' || type == 'JANK' || type == 'WREC';
+		return type == 'WRXR' || type == 'JANK' || type == 'WREC' || IsHostWordEngineType(type);
 	return 0;
 }
 

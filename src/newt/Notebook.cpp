@@ -20,6 +20,7 @@
 #include "Recognizer.h"
 #include "InkRecognizer.h"
 #include "RosRecognizer.h"
+#include "WordEngines.h"
 #include "StrokeCentral.h"
 #include "Ports.h"
 #include "Regions.h"
@@ -208,6 +209,9 @@ TNotebook::InitToolbox(void)
 	// ink.  (The letter set chooses between it and the cursive
 	// recogniser, ParaGraph's: ReadCursiveOptions, under gRecognition.Init.)
 	RegisterRosettaWRec();
+	// ... and the host's own engines beside it, which the Handwriting
+	// Recognition slip offers (recognition/WordEngines.h)
+	RegisterHostWordEngines();
 	gRecognition.Init(2);		// (which puts the letter set's word recogniser in use: ReadCursiveOptions)
 	RunInitScripts();
 	InitDarkStar(RefVar(), RefVar());

@@ -22,6 +22,8 @@ add_library(recognition STATIC
     WordInfo.cpp
     CorrectInfo.cpp
     InkRecognizer.cpp
+    WordEngines.cpp
+    UnistrokeRecognizer.cpp
     WRecDomain.cpp
     Unit.cpp
     UnitPublic.cpp
