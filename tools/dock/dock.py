@@ -267,12 +267,22 @@ class DockSession:
         self.write_command(b"test", b"echo")
         echoed = self.expect(b"test")
         ok = ok and echoed == b"echo"
-        # (the ROM writes the 'rtst' header twice: a stray one first)
+        # (the ROM writes the 'rtst' header twice: a stray one first - a
+        # ROM bug the reconstruction fixes unless NEWTON_ROM_BUGS=1, so the
+        # stray header is taken when it is there: a header followed by
+        # "newt" rather than a length)
         self.write_command(b"rtst", nsof.encode({Symbol("x"): 1}))
-        stray = self._read(12)
+        head = self._read(12)
+        while len(self.buffer) < 4:
+            self.buffer += self.link.receive()
+        stray = None
+        if bytes(self.buffer[:4]) == b"newt":
+            stray = head
+        else:
+            self.buffer[0:0] = head
         back = nsof.decode(self.expect(b"rtst"))
         print("dock.py: 'test' echoed %r; 'rtst' echoed %r after a stray %r" % (echoed, back, stray))
-        ok = ok and stray == b"newtdockrtst" and back == {Symbol("x"): 1}
+        ok = ok and stray in (None, b"newtdockrtst") and back == {Symbol("x"): 1}
         self.write_command(b"ginh")
         data = self.expect(b"dinh")
         count = struct.unpack(">I", data[:4])[0]

@@ -42,6 +42,7 @@
 #include "toolbox/ByteOrder.h"
 #include "Unicode.h"
 #include "BinaryBytes.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -219,14 +220,26 @@ TDockerDynArray::Add(ULong value)
 	}
 	if (fCount >= fAllocated)
 	{
-		// ROM BUG: the room is counted before the handle has grown, so
-		// when SetHandleSize fails the next Add believes there is room and
-		// writes past the end of the handle
-		fAllocated += 30;
-		SetHandleSize(fWords, fAllocated * sizeof(ULong));
-		err = MemError();
-		if (err != noErr)
-			return err;
+		// ROM BUG (fixed): the room is counted before the handle has grown,
+		// so when SetHandleSize fails the next Add believes there is room
+		// and writes past the end of the handle.  The fix counts the room
+		// only once the handle has grown.
+		if (RomBugFixed())
+		{
+			SetHandleSize(fWords, (fAllocated + 30) * sizeof(ULong));
+			err = MemError();
+			if (err != noErr)
+				return err;
+			fAllocated += 30;
+		}
+		else
+		{
+			fAllocated += 30;
+			SetHandleSize(fWords, fAllocated * sizeof(ULong));
+			err = MemError();
+			if (err != noErr)
+				return err;
+		}
 	}
 	((ULong*) *fWords)[fCount] = value;
 	fCount++;
@@ -1452,11 +1465,16 @@ TDocker::WritePassword(RefArg password)
 		UnlockRef(password);
 	}
 	else
-		// ROM BUG: neither a string nor a key: the desktop is told the
-		// password is wrong, and then sent the challenge encrypted under
-		// whatever key the docker had anyway (and the ROM unlocks nothing
-		// it locked, which is harmless)
+	{
+		// ROM BUG (fixed): neither a string nor a key: the desktop is told
+		// the password is wrong, and then sent the challenge encrypted
+		// under whatever key the docker had anyway (and the ROM unlocks
+		// nothing it locked, which is harmless).  The fix stops after
+		// telling it.
 		WriteResult(kDockErrNotConnected);
+		if (RomBugFixed())
+			return;
+	}
 	DESWord block[2] = { fDesktopChallenge[0], fDesktopChallenge[1] };
 	DESEncodeNonce(fKey, block);
 	WriteDockerHeader(kDPassword, false);
@@ -1853,10 +1871,11 @@ TDocker::ReadCurrentSoup(void)
 			info = GetFrameSlot(info, RSSYMownerapp);
 			if (NOTNIL(info) && EQRef(info, RSSYMsystemscratch))
 			{
-				// ROM BUG: the soup is forgotten by storing 0 - the integer
-				// nought's Ref - rather than nil, so it is not forgotten:
-				// SetupSoup below asks it its name, which throws
-				fCurrentSoup = (Ref) 0;
+				// ROM BUG (fixed): the soup is forgotten by storing 0 - the
+				// integer nought's Ref - rather than nil, so it is not
+				// forgotten: SetupSoup below asks it its name, which
+				// throws.  The fix stores nil.
+				fCurrentSoup = RomBugFixed() ? NILREF : (Ref) 0;
 				WriteResult(kDockErrNoCurrentSoup);
 			}
 		}
@@ -2845,9 +2864,15 @@ TDocker::WriteSoupIDs(void)
 					if (fChangedIDs == nil)
 						OutOfMemory();
 				}
-				if (fChangedIDs->Add(EntryUniqueID(entry)) != noErr)
-					// ROM BUG: the id is added a second time to find the
-					// error to throw
+				// ROM BUG (fixed): the id is added a second time to find
+				// the error to throw.  The fix throws the first Add's.
+				if (RomBugFixed())
+				{
+					NewtonErr addErr = fChangedIDs->Add(EntryUniqueID(entry));
+					if (addErr != noErr)
+						Throw(exLongErrorException, (void*) (intptr_t) addErr, nil);
+				}
+				else if (fChangedIDs->Add(EntryUniqueID(entry)) != noErr)
 					Throw(exLongErrorException, (void*) (intptr_t) fChangedIDs->Add(EntryUniqueID(entry)), nil);
 			}
 		}
@@ -3010,15 +3035,16 @@ TDocker::GetBackupCursor(void)
 // During a long send: what the desktop sent read - 'opca' cancels it
 // (acknowledged, and kDockErrDisconnected thrown), anything else is thrown
 // away.
-// ROM BUG: it means to look at most every 90 ticks, but returns when 90
-// ticks HAVE passed since the last look - and the last look is only
-// recorded when it looks - so after the machine's first second and a half
-// it never looks at all, and a desktop cannot cancel a backup.
+// ROM BUG (fixed): it means to look at most every 90 ticks, but returns
+// when 90 ticks HAVE passed since the last look - and the last look is
+// only recorded when it looks - so after the machine's first second and a
+// half it never looks at all, and a desktop cannot cancel a backup.  The
+// fix returns while fewer than 90 ticks have passed.
 void
 TDocker::CheckCancel(ULong* lastLook)
 {
 	ULong now = Ticks();
-	if (*lastLook + 90 <= now)
+	if (RomBugFixed() ? (now - *lastLook < 90) : (*lastLook + 90 <= now))
 		return;
 	*lastLook = now;
 	if (BytesAvailable(true) == 0)
@@ -3123,9 +3149,11 @@ TDocker::ClearSoupDirty(void)
 // the others sent as runs ('bids': a first id, then for a run of the ids
 // after it their count negated, the next id, ..., and 0x8000 to end;
 // 'base' first when an id does not fit in a short); then 'bsdn'.
-// ROM BUG: the base 'base' announces is never kept - the ids after it are
-// still written less nought - so an id above 0x7fff is sent as its low
-// sixteen bits, and every later id makes another 'base'.
+// ROM BUG (fixed): the base 'base' announces is never kept - the ids after
+// it are still written less nought - so an id above 0x7fff is sent as its
+// low sixteen bits, and every later id makes another 'base'.  The fix
+// keeps the base, and announces one too before a run that starts out of
+// a short's reach of it.
 void
 TDocker::BackupSoup(void)
 {
@@ -3141,7 +3169,7 @@ TDocker::BackupSoup(void)
 			short count = 0;
 			Boolean inSequence = false;
 			ULong previous = 0;
-			const ULong base = 0;
+			ULong base = 0;
 			ULong id = 0;
 			for (RefVar entry(CursorEntry(cursor)); NOTNIL(entry); entry = CursorNext(cursor))
 			{
@@ -3161,10 +3189,18 @@ TDocker::BackupSoup(void)
 							FinishSequence(&count, (short) -0x8000);
 							WriteDockerHeader('base', false);
 							*fPipe << (unsigned long) id;
+							if (RomBugFixed())
+								base = id;
 							start = true;
 						}
 						else
 							FinishSequence(&count, (short) (id - base));
+					}
+					else if (RomBugFixed() && id - base > 0x7fff)
+					{
+						WriteDockerHeader('base', false);
+						*fPipe << (unsigned long) id;
+						base = id;
 					}
 					if (start)
 					{
@@ -3242,8 +3278,15 @@ TDocker::GetPackageInfo(void)
 				SetFrameSlot(frame, RSSYMiscopyprotected, RefVar(MAKEINT(iter.IsCopyProtected())));
 				SetFrameSlot(frame, RSSYMlength, RefVar(MAKEINT(Ustrlen(iter.PackageName()) * 2 + 2)));
 				UChar safe = false;
-				if (SafeToDeactivatePackage(iter.PackageId(), &safe) != noErr)
-					// ROM BUG: asked a second time for the error to throw
+				// ROM BUG (fixed): asked a second time for the error to
+				// throw.  The fix throws the first answer.
+				if (RomBugFixed())
+				{
+					NewtonErr safeErr = SafeToDeactivatePackage(iter.PackageId(), &safe);
+					if (safeErr != noErr)
+						Throw(exLongErrorException, (void*) (intptr_t) safeErr, nil);
+				}
+				else if (SafeToDeactivatePackage(iter.PackageId(), &safe) != noErr)
 					Throw(exLongErrorException, (void*) (intptr_t) SafeToDeactivatePackage(iter.PackageId(), &safe), nil);
 				SetFrameSlot(frame, RSSYMsafetoremove, RefVar(safe ? TRUEREF : NILREF));
 				AddArraySlot(info, frame);
@@ -3367,9 +3410,10 @@ TDocker::TestMessage(void)
 
 // ROM 0x0009c0c0 TestRefMessage__7TDockerFv
 // 'rtst': the object sent back (no data: an empty 'rtst').
-// ROM BUG: the header is written twice - once here, without its length,
-// and again by WriteRef - so what the desktop gets is a stray 12-byte
-// header in front of the answer.
+// ROM BUG (fixed): the header is written twice - once here, without its
+// length, and again by WriteRef - so what the desktop gets is a stray
+// 12-byte header in front of the answer.  The fix leaves the header to
+// WriteRef.
 void
 TDocker::TestRefMessage(void)
 {
@@ -3379,7 +3423,8 @@ TDocker::TestRefMessage(void)
 		return;
 	}
 	RefVar obj(ReadRef(RefVar(NILREF)));
-	WriteDockerHeader('rtst', false);
+	if (!RomBugFixed())
+		WriteDockerHeader('rtst', false);
 	WriteRef('rtst', obj);
 }
 
@@ -3896,8 +3941,9 @@ TDocker::DoKeyboardPassthrough(void)
 // (PostKeyString), until the desktop says it has finished ('opdn') or
 // cancels ('opca').  The Connection application's idle (IdleConnection)
 // runs as often as it asks meanwhile.
-// ROM BUG: the time of the last idle is never moved on, so once its
-// interval has passed the idle runs after every command.
+// ROM BUG (fixed): the time of the last idle is never moved on, so once
+// its interval has passed the idle runs after every command.  The fix
+// notes the time of each idle.
 void
 TDocker::KeyboardProcessCommand(void)
 {
@@ -3957,6 +4003,8 @@ TDocker::KeyboardProcessCommand(void)
 				fInConnectionApp = true;
 				interval = RINT(NSSend(fConnection, RefVar(RSSYMidleconnection), RefVar(NILREF))) / 1000;
 				fInConnectionApp = false;
+				if (RomBugFixed())
+					lastIdle = now;
 			}
 		}
 	}
@@ -4559,14 +4607,16 @@ FConnWriteCommand(RefArg rcvr, RefArg command, RefArg data, RefArg withData)
 // ROM 0x00096bb8 FConnWriteCommandHeader
 // WriteCommandHeader(command, length): meant to write a header for
 // WriteBytes to follow.
-// ROM BUG: the "no data" flag it passes is the integer nought, which is not
-// nil, so the command goes out with a long of nought as its data and the
-// length is ignored - and WriteBytes then finds nothing owed.
+// ROM BUG (fixed): the "no data" flag it passes is the integer nought,
+// which is not nil, so the command goes out with a long of nought as its
+// data and the length is ignored - and WriteBytes then finds nothing owed.
+// The fix passes nil, so the header goes out with the length.
 Ref
 FConnWriteCommandHeader(RefArg rcvr, RefArg command, RefArg length)
 {
 	ULong commandWord;
-	ConnWriteCommand(rcvr, command, RefVar(MAKEINT(0)), length, RefVar(MAKEINT(0)), &commandWord);
+	ConnWriteCommand(rcvr, command, RefVar(MAKEINT(0)), length, RefVar(RomBugFixed() ? NILREF : MAKEINT(0)), &commandWord);
+
 	SetFrameSlot(rcvr, RSSYMlastcommunicationwithdesktop, RefVar(FTimeInSeconds(RefVar(NILREF))));
 	return NILREF;
 }

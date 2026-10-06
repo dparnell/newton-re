@@ -25,6 +25,7 @@
 #include "CommAddresses.h"
 #include "ModemOptions.h"
 #include "Unicode.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -254,8 +255,10 @@ TEzEndpointPipe::GetMNPSerialEndpoint()
 // ROM 0x000b0764 GetMNPModemEndpoint__15TEzEndpointPipeFv
 // The modem service with MNP, through the modem navigator when it is in
 // use, dialling the name - the phone number, UniChars - with the default
-// idle timer.  ROM BUG: the number is converted into 256 bytes with no
-// limit, and whether its option went in is not asked.
+// idle timer.  ROM BUG (fixed): the number is converted into 256 bytes
+// with no limit, and whether its option went in is not asked.  The fix
+// converts no more than 255 characters (and the terminator), and fails
+// when the option does not go in.
 void
 TEzEndpointPipe::GetMNPModemEndpoint()
 {
@@ -271,14 +274,18 @@ TEzEndpointPipe::GetMNPModemEndpoint()
 		{
 			char number[256];
 			HLock((Handle) fName);
-			ConvertFromUnicode((const UniChar*) *fName, number, kMacRomanEncoding, 0x7FFFFFFF);
+			ConvertFromUnicode((const UniChar*) *fName, number, kMacRomanEncoding, RomBugFixed() ? (long) sizeof(number) - 1 : 0x7FFFFFFF);
 			HUnlock((Handle) fName);
 			ULong numberLen = strlen(number);
 			TCMAPhoneNumber phone(numberLen);
-			options.InsertVarOptionAt(options.GetArrayCount(), &phone, number, numberLen);
+			if (RomBugFixed())
+				fError = options.InsertVarOptionAt(options.GetArrayCount(), &phone, number, numberLen);
+			else
+				options.InsertVarOptionAt(options.GetArrayCount(), &phone, number, numberLen);
 			TCMOIdleTimer idle;
-			if ((fError = options.InsertOptionAt(options.GetArrayCount(), &idle)) == noErr)
+			if (fError == noErr && (fError = options.InsertOptionAt(options.GetArrayCount(), &idle)) == noErr)
 				fError = fEndpoint->EasyConnect(0, &options, fEzTimeout);
+
 		}
 	}
 	if (fError != noErr)
