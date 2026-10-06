@@ -15,6 +15,7 @@
 #include "NewtErrors.h"
 #include "CommErrors.h"
 #include "CompMath.h"
+#include "host/RomBugs.h"
 
 
 // ROM 0x0003913c __ct__13TAsyncSerToolFUl
@@ -542,10 +543,11 @@ TAsyncSerTool::ProcessOptionStart(TOption* opt, ULong label, ULong opcode)
 // starts the input DMA (the tool must see each byte to find them), and
 // hardware flow control turned on reads CTS or, turned off, lets the
 // output go.
-// ROM BUG (kept): the modem interrupts are configured before the new
+// ROM BUG (fixed): the modem interrupts are configured before the new
 // hardware flow control setting is recorded, so turning it on does not
 // enable CTS's interrupt (nor turning it off disable it) until they are
-// configured again.
+// configured again.  The fix records the setting first, then configures
+// them.
 NewtonErr
 TAsyncSerTool::SetOutputFlowControl(TCMOOutputFlowControlParms* opt)
 {
@@ -576,8 +578,16 @@ TAsyncSerTool::SetOutputFlowControl(TCMOOutputFlowControlParms* opt)
 	Boolean hard = opt->useHardFlowControl;
 	if (hard == fOutFlow.useHardFlowControl)
 		return noErr;
-	ConfigureModemInterrupts();
-	fOutFlow.useHardFlowControl = hard;
+	if (RomBugFixed())
+	{
+		fOutFlow.useHardFlowControl = hard;
+		ConfigureModemInterrupts();
+	}
+	else
+	{
+		ConfigureModemInterrupts();
+		fOutFlow.useHardFlowControl = hard;
+	}
 	if (hard)
 		fOutFlow.hardFlowBlocked = !HSKiOn();
 	else
@@ -624,15 +634,20 @@ TAsyncSerTool::SetInputFlowControl(TCMOInputFlowControlParms* opt)
 
 
 // ROM 0x00039f14 SetEventEnables__13TAsyncSerToolFP22TCMOSerialEventEnables
-// ROM BUG (kept): the events wanted replace fIntMask's event bits by
+// ROM BUG (fixed): the events wanted replace fIntMask's event bits by
 // masking the old value with the event mask rather than its complement, so
 // the output-done and input-ready bits are cleared too - a put or get in
 // hand when 'sevt is set is no longer told when its data has gone or come.
+// The fix keeps the bits outside the event mask.
+
 void
 TAsyncSerTool::SetEventEnables(TCMOSerialEventEnables* opt)
 {
 	fEventEnables.CopyDataFrom(opt);
-	fIntMask = (fIntMask & kSerIntEventMask) | (fEventEnables.serEventEnables & kSerIntEventMask);
+	if (RomBugFixed())
+		fIntMask = (fIntMask & ~kSerIntEventMask) | (fEventEnables.serEventEnables & kSerIntEventMask);
+	else
+		fIntMask = (fIntMask & kSerIntEventMask) | (fEventEnables.serEventEnables & kSerIntEventMask);
 	if (!fChipOn)
 		return;
 	ConfigureModemInterrupts();
@@ -737,14 +752,24 @@ TAsyncSerTool::FillOutputBuffer()
 
 
 // ROM 0x00039428 DoPutComplete__13TAsyncSerToolFl
+// ROM BUG (fixed): the put's buffer is asked its position whether or not
+// there is one - and TIrDATool::StartOutput and TSharpIRTool::StartOutput
+// complete a put refused with the chip off before they have stored its
+// buffer, so fPutBuffer is nil (or a finished put's) and the MessagePad
+// calls through whatever the field holds; the host crashed.  The fix
+// answers no bytes sent when there is no buffer.
 void
 TAsyncSerTool::DoPutComplete(NewtonErr result)
 {
 	fIntMask &= ~kSerIntOutputDone;
 	if (fConfigureForOutput)
 		fChip->ConfigureForOutput(false);
-	PutComplete(result, fPutBuffer->Position());
+	if (RomBugFixed())
+		PutComplete(result, fPutBuffer != nil ? fPutBuffer->Position() : 0);
+	else
+		PutComplete(result, fPutBuffer->Position());
 }
+
 
 
 // ROM 0x00039484 KillPut__13TAsyncSerToolFv
