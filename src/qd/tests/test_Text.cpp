@@ -20,6 +20,7 @@
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
+#include "host/RomBugs.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -516,13 +517,22 @@ TestStyleTable()
 	EXPECT(wide[0x19] == kStyleTable[0x19]);
 	EXPECT(wide[0x18] == kStyleTable[0x18] * 2);
 
-	// (BUG, kept: the one negative entry is read unsigned, so scaling it
+	// (ROM BUG: the one negative entry is read unsigned, so scaling it
 	//  gives 255 times the scale rather than minus the scale.  It is
 	//  0xff at 0x13 - what an italic adds to the width, which is
-	//  nothing - and halved it becomes 127 rather than staying -1.)
+	//  nothing - and halved it becomes 128 rather than staying -1.)
 	EXPECT(kStyleTable[0x13] == 0xff);
+	SetRomBugFixed(false);
 	const unsigned char* half = UpdateStyleTable(ToFixed(1) / 2, ToFixed(1) / 2);
 	EXPECT(half[0x13] == 0x80);
+	SetRomBugFixed(true);
+	// the fix reads it signed: minus one and a half is minus two, and
+	// halved it stays minus one
+	const unsigned char* more = UpdateStyleTable(ToFixed(3) / 2, ToFixed(3) / 2);
+	EXPECT(more[0x13] == 0xfe);
+	EXPECT(more[3] == (unsigned char) ((kStyleTable[3] * 3 + 1) / 2));
+	half = UpdateStyleTable(ToFixed(1) / 2, ToFixed(1) / 2);
+	EXPECT(half[0x13] == 0xff);
 }
 
 

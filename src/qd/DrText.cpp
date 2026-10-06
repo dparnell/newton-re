@@ -44,6 +44,7 @@
 #include "FixedMath.h"
 #include "ByteOrder.h"
 #include "Frames.h"
+#include "host/RomBugs.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -227,19 +228,24 @@ MakeGrayText(PixelMap* slab, GrafPort* port)
 // A run of characters in one style drawn at the pen, the pen moved on by
 // the run's advance (at the font engine's scale).  The header says how.
 //
-// ROM BUGS, kept: a chunk too big for a slab is drawn as two halves, and a
+// ROM BUG (fixed): a chunk too big for a slab is drawn as two halves, and a
 // single character too big is not drawn at all (the pen is left where it
 // was, so what follows overlaps it); on the way to either the port's
 // foreground pattern is left as the style's pattern (the recursion saves
 // the pattern it set as the one to put back), as it is when the slab
 // cannot be had; and a glyph that starts at or past the right of the
 // port's rectangle ends the direct drawing of the run, even though a
-// glyph after it (a negative advance) might come back into it.
+// glyph after it (a negative advance) might come back into it.  The fix
+// draws a single character in a slab as big as it needs (the pen moved on
+// past it when even that cannot be had), puts the foreground pattern back
+// before every early return, and passes over a glyph past the right
+// rather than stopping.
 static void
 DrTextChunk(DrTextInfo* dti, long count, const UniChar* chars, const Fixed* advances)
 {
 	if (count < 1)
 		return;
+	bool fixed = RomBugFixed();
 	GrafPort* port = dti->fPort;
 	Fixed sum = 0;
 	for (long i = 0; i < count; i++)
@@ -318,7 +324,7 @@ DrTextChunk(DrTextInfo* dti, long count, const UniChar* chars, const Fixed* adva
 		if (trimmed < 0)
 		{
 			CloseFont(&info);
-			return;
+			return;							// (not gray: no pattern to put back)
 		}
 		if (trimmed == 0)
 		{
@@ -355,10 +361,12 @@ DrTextChunk(DrTextInfo* dti, long count, const UniChar* chars, const Fixed* adva
 		long need = total * 4;
 		if (adjust[5] != 0)
 			need += rowWords * 0x10;
-		if (need + 0x80 > 8000)
+		if (need + 0x80 > 8000 && !(fixed && count == 1))
 		{
 			CloseFont(&info);
 			dti->fX -= sum;
+			if (fixed && gray)
+				SetFgPattern(savedPattern);
 			long half = count >> 1;
 			if (half != 0)
 			{
@@ -373,6 +381,8 @@ DrTextChunk(DrTextInfo* dti, long count, const UniChar* chars, const Fixed* adva
 		{
 			// (host: the font closed, where the ROM leaves it open)
 			CloseFont(&info);
+			if (fixed && gray)
+				SetFgPattern(savedPattern);
 			return;
 		}
 		memset(block, 0, size);
@@ -404,7 +414,11 @@ DrTextChunk(DrTextInfo* dti, long count, const UniChar* chars, const Fixed* adva
 			else if (clipRight < gxEnd)
 			{
 				if (clipRight <= gx)
+				{
+					if (fixed)
+						continue;
 					break;
+				}
 				gxEnd = clipRight;
 			}
 		}
@@ -586,8 +600,9 @@ DrTextChunk(DrTextInfo* dti, long count, const UniChar* chars, const Fixed* adva
 					carry = v << 31;
 				}
 			} while (--times >= 0);
-			// ROM BUG, kept: the slab's first word is never ORed down into
-			// the row below it (the loop stops a word short of the start)
+			// ROM BUG (fixed): the slab's first word is never ORed down into
+			// the row below it (the loop stops a word short of the start).
+			// The fix runs the loop down to the first word.
 			times = adjust[5] & 3;
 			do
 			{
@@ -600,7 +615,7 @@ DrTextChunk(DrTextInfo* dti, long count, const UniChar* chars, const Fixed* adva
 					SW(to, LW(from) | LW(to));
 					to -= 4;
 					from = next;
-				} while (base < next);
+				} while (base < next || (fixed && base == next));
 			} while (--times >= 0);
 			ULong32 carry = 0;
 			UByte* to = base + rowBytes;
@@ -622,17 +637,20 @@ DrTextChunk(DrTextInfo* dti, long count, const UniChar* chars, const Fixed* adva
 			StretchBits(&slab, &portBits, &srcRect, &toRect, dti->fMode, port->visRgn, port->clipRgn, &widePtr);
 			if (gray)
 			{
-				// ROM BUGS: the slab's bits are given back whatever
+				// ROM BUG (fixed): the slab's bits are given back whatever
 				// MakeGrayText did - on a one-bit port that is the middle
 				// of the block given back next (host: given back only when
-				// it is a block of its own) - and the first slab is not
-				// given back at all, a leak kept
+				// it is a block of its own, either way) - and the first
+				// slab is not given back at all, a leak.  The fix gives the
+				// first slab back too.
 				Ptr grayBits = GetPixelMapBits(&slab);
 				if (grayBits != (Ptr) base)
 					QDDisposeTempPtr(grayBits);
 				QDDisposeTempPtr(outlined);
 				CloseFont(&info);
 				SetFgPattern(savedPattern);
+				if (fixed)
+					QDDisposeTempPtr(block);
 			}
 			else
 			{
@@ -649,9 +667,11 @@ DrTextChunk(DrTextInfo* dti, long count, const UniChar* chars, const Fixed* adva
 	if (gray)
 	{
 		SetFgPattern(savedPattern);
-		// ROM BUG: on a port deeper than four bits MakeGrayText made no
-		// block of its own, and the ROM gives back the middle of the slab
-		// (host: only a block of its own is given back)
+		// ROM BUG (fixed): on a port deeper than four bits MakeGrayText made
+		// no block of its own, and the ROM gives back the middle of the slab.
+		// The host gives back only a block of its own whichever way
+		// RomBugFixed() is set (DEVIATION: the ROM's would damage the host's
+		// heap) - which is the fix.
 		if ((port->portBits.pixMapFlags & 0xff) > 1 && GetPixelMapBits(&slab) != (Ptr) bits)
 			QDDisposeTempPtr(GetPixelMapBits(&slab));
 	}

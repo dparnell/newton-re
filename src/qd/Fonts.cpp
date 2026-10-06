@@ -18,6 +18,7 @@
 #include "Unicode.h"
 #include "RichString.h"		// IsInkWord
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 #include <string.h>
 
 const unsigned char kStyleTable[0x1c] = {
@@ -621,13 +622,17 @@ SFNTCloseFont(FontEngineInfo* info)
 // and the two that are neither (the outline's spread) by the mean of
 // the two.
 //
-// (BUG, kept: the bytes are read unsigned, so the one entry that is a
-//  negative adjustment - 0xff, minus one - comes out of the scaling as
+// (ROM BUG (fixed): the bytes are read unsigned, so the one entry that is
+//  a negative adjustment - 0xff, minus one - comes out of the scaling as
 //  255 times the scale rather than minus the scale.  It only matters
-//  for a font that is being scaled at all.)
+//  for a font that is being scaled at all.  The fix reads them signed,
+//  a negative one scaled as minus its size scaled.)
 //
 // The scaled table is the one the entry of the font last opened keeps
 // (gGlobalFontArrayIndex), made again only when the scales change.
+static const unsigned char kAcrossFixed[] = { 3, 4, 12, 13, 18, 19, 21, 22 };	// (the fix's copies of
+static const unsigned char kDownFixed[] = { 23, 25 };							//  the tables below)
+static const unsigned char kMeanFixed[] = { 15, 16, 24 };
 const unsigned char*
 UpdateStyleTable(Fixed xScale, Fixed yScale)
 {
@@ -641,6 +646,23 @@ UpdateStyleTable(Fixed xScale, Fixed yScale)
 
 	Fixed mean = (xScale + yScale) >> 1;
 	memcpy(sScaled, kStyleTable, sizeof(kStyleTable));
+	if (RomBugFixed())
+	{
+		static const unsigned char* const kWhich[3] = { kAcrossFixed, kDownFixed, kMeanFixed };
+		static const ULong kCount[3] = { sizeof(kAcrossFixed), sizeof(kDownFixed), sizeof(kMeanFixed) };
+		const Fixed scales[3] = { xScale, yScale, mean };
+		for (int s = 0; s < 3; s++)
+			for (ULong i = 0; i < kCount[s]; i++)
+			{
+				unsigned char* b = &sScaled[kWhich[s][i]];
+				long v = (signed char) *b;
+				ULong magnitude = (((ULong) scales[s] * (ULong) (v < 0 ? -v : v)) + 0x8000) >> 16;
+				*b = (unsigned char) (v < 0 ? -(long) magnitude : (long) magnitude);
+			}
+		entry->fTableXScale = xScale;
+		entry->fTableYScale = yScale;
+		return sScaled;
+	}
 	// which byte goes by which scale
 	static const unsigned char kAcross[] = { 3, 4, 12, 13, 18, 19, 21, 22 };
 	static const unsigned char kDown[] = { 23, 25 };
@@ -1275,7 +1297,7 @@ PackedFontFamilyFrame(long font)
 // makes a font of one glyph out of it.  The size and face are the
 // word's own.
 //
-// ROM BUG, kept: a spec that is none of those - a nil `styles` slot, for
+// ROM BUG (fixed): a spec that is none of those - a nil `styles` slot, for
 // one, which is what TParagraphView::GetInterLineSpacing hands over for a
 // paragraph that has no style runs - leaves the size and the face as the
 // caller left them, and every caller builds its StyleRecord on the stack.
@@ -1283,7 +1305,10 @@ PackedFontFamilyFrame(long font)
 // nil), but the size is whatever was underneath, and the font engine then
 // scales a strike to it.  Nothing crashes on the machine, because the ARM
 // is content to shift and multiply nonsense; on the host the arithmetic is
-// written so that it wraps in the same way rather than trapping.
+// written so that it wraps in the same way rather than trapping.  The fix
+// gives such a spec the size and face of the user's font, whose family it
+// gets (the default the nil spec stands for); twelve-point plain when the
+// user's font says none.
 void
 CreateTextStyleRecord(RefArg fontSpec, StyleRecord* style)
 {
@@ -1322,6 +1347,28 @@ CreateTextStyleRecord(RefArg fontSpec, StyleRecord* style)
 		{
 			style->fPattern = pattern;
 			style->fFontPattern = AddressToRef(pattern);
+		}
+	}
+	else if (RomBugFixed())
+	{
+		// (the fix: the size and face of the user's font, as the family
+		// below is; twelve-point plain when it has none to give)
+		RefVar userFont(GetFrameSlotRef(RefVar(GetFrameSlotRef(RefVar(gVarFrame), RSSYMuserconfiguration)), RSSYMuserfont));
+		style->fFontSize = ToFixed(12);
+		style->fFontFace = 0;
+		if (ISINT((Ref) userFont))
+		{
+			style->fFontSize = ToFixed(PackedFontSize(RINT(userFont)));
+			style->fFontFace = PackedFontFace(RINT(userFont));
+		}
+		else if (IsFrame(userFont))
+		{
+			Ref size = GetFrameSlotRef(userFont, RSSYMsize);
+			Ref face = GetFrameSlotRef(userFont, RSSYMface);
+			if (ISINT(size))
+				style->fFontSize = ToFixed(RINT(size));
+			if (ISINT(face))
+				style->fFontFace = RINT(face);
 		}
 	}
 	if ((Ref) style->fFontFamily == NILREF)
