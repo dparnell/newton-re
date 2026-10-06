@@ -15,6 +15,7 @@
 #include "NewtonMemory.h"
 #include "OSErrors.h"
 #include "host/TaskRuntime.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -262,8 +263,28 @@ RegistryScenario()
 }
 
 
+static void FreeProcForTest(void*) { }
+static void SelectorForTest(void) { }
+
+// TClassInfo::Selector: the ROM answers the free proc (a ROM bug); fixed,
+// the selector
+static void
+TestSelector(void)
+{
+	TClassInfo info;
+	memset(&info, 0, sizeof(info));
+	info.fFree = FreeProcForTest;
+	info.fSelector = (CodeProcPtr) SelectorForTest;
+	EXPECT(info.Selector() == (CodeProcPtr) SelectorForTest);
+	SetRomBugFixed(false);
+	EXPECT(info.Selector() == (CodeProcPtr) FreeProcForTest);
+	SetRomBugFixed(true);
+}
+
+
 int main()
 {
+	TestSelector();
 	gHostKernelServicesTask = RegistryScenario;
 	OsBoot();
 	if (failures == 0)
