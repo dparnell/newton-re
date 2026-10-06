@@ -9,6 +9,52 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-06: the ROM's known bugs fixed, switchable (branch fix-rom-bugs)
+
+The owner asked for every known ROM bug to be fixed, harmless and
+debug-only ones included, with the ROM's behaviour still there to compare
+against.  Each fix sits beside the faithful port behind `RomBugFixed()`
+(`src/host/RomBugs.h`): fixed by default, `NEWTON_ROM_BUGS=1` for the
+ROM's behaviour; NewtonScript in `romsrc/` asks the same switch through a
+global `RomBugFixed()` (`docs/rom-bugs.md`).  `analysis/rombugs.py` lists
+the sites (`docs/rom-bugs-list.md`), ctest `tools.RomBugs` checks every
+file that marks one fixed asks the switch.
+
+366 sites, 365 fixed: one is kept on purpose - DES's parity bits ORed into
+the key (`utility/DES.cpp`), because a store's password is kept as those
+bytes and a corrected key would not open a store a real Newton protected.
+Some sites turned out not to be bugs and were relabelled ROM QUIRK
+(CommManager's SetDevice stamping the connect time, the DDK says it should;
+Class 2 fax's '0' when no rate is common) or had a wrong comment
+(XrPostCalc's ReturnZeroIfDoubleSkip compares equal at its own entry).
+In a few dozen places the host had already substituted what the code
+meant for the ROM's garbage (an unwritten register, a read past a block);
+those are marked fixed with both paths one.  The LZ coder's last block
+can only be partly fixed: the format stores no length, so a copy spelled
+by the padding's zero bits cannot be told from a real one (2282 of 2305
+sizes round-trip exactly, against the ROM's 2229).
+
+Changes a user would see with the fixes: a desktop can cancel a backup;
+an interrupted flash erase is finished at start-up instead of wiping the
+store; a 'form part on a card installs; the mu-law coder clips loud
+samples; ink-word pictures play back; 32-bit colour shrinks to readable
+gray; the alert's 2-bit text is legible; IrDA discovery ends; a failed
+SCP load no longer leaves every later one busy; PostScript keeps a
+negative number's sign; book search finds "ab" in "aab"; StringRightTrim
+trims.  The shape recogniser now uses its small-step runs (RSmallDists),
+so a corner counts as sharp only where the pen slowed down: test strokes
+drawn at an even spacing were given a hand's slow-down at corners
+(test_ShapeDomain, penhelpers.ns, traced.ns), and a shape drawn with a
+mouse at constant speed may now come out rounded.  The dock session's
+stray 'rtst' header is gone (tools/dock/dock.py takes either;
+host.NewtonDockSession.romBugs keeps the ROM's).
+
+Done by seven agents, each in its own worktree on a group of areas, merged
+one by one.  Tests that pinned a bug now pin it under
+`SetRomBugFixed(false)` with a test of the fix beside it; host demos that
+differ have `.romBugs` variants.  ROM QUIRK comments (about 220) are not
+bugs and are left as they are.
+
 ## 2026-10-06: the unistroke engine in the built-in help
 
 Two topics in the help book under Write and Draw: "Write with unistrokes"
