@@ -761,7 +761,8 @@ is an empty object.  The domain manager passes the object's base as a
 page's last argument, which is where the PixelMap is read from; ROM BUG:
 `FillChunkArray` (an object filled from a pipe) passes nought, so the ROM
 reads its "PixelMap" from the vectors page (DEVIATION: the host copies
-noughts - no row length, no filter).  ROM quirks kept: `Write` filters
+noughts - no row length, no filter).  Now fixed by default: the PixelMap is
+taken from the first bytes written (`NEWTON_ROM_BUGS=1` for the noughts).  ROM quirks kept: `Write` filters
 the caller's page in place (the host's domain manager writes each page
 from a copy, DEVIATION, since it keeps the whole object mapped where the
 ROM writes a page out as it lets it go); a 1-bit map's copy has its
@@ -799,7 +800,8 @@ object is taken to be dirty, so a flush or commit writes it all back
 its store objects to the store's transaction; an abort throws the changes
 away and unmaps it, as the ROM's ends the session.
 
-ROM bugs kept: `InitializeChunkArray`'s clean-up after a failure aborts
+ROM bugs (now fixed by default; `NEWTON_ROM_BUGS=1` for the ROM's
+behaviour): `InitializeChunkArray`'s clean-up after a failure aborts
 the same wrong entry each time; `LOWrite` leaks the compander's
 name when the compander is unknown.  Found on
 the way: the companders read a root's chunk-table id and the table's block
@@ -856,11 +858,12 @@ does (the ROM's `TFlashStore` answers `"LOBJ; rom ; sram; flsh"`).
 `InitLargeObjects` (the ROM's, from `InitExternal`) is called from
 `InitQueries` on the host (DEVIATION: layering).
 
-ROM bugs kept: `GetVBOStoredSize` never checks it was given a large
+ROM bugs (now fixed by default; `NEWTON_ROM_BUGS=1` for the ROM's
+behaviour): `GetVBOStoredSize` never checks it was given a large
 binary, nor does `VBOUndoChanges` (`FLBRollback`) - there the host answers
 nil for anything else rather than read past an ordinary binary
-(DEVIATION); NSOF's reader leaks the compander name and parameters it
-read.  A consumer's ROM bug worth
+(DEVIATION, and the fix); NSOF's reader leaks the compander name and
+parameters it read.  A consumer's ROM bug worth
 knowing: `SizeOfLearningData` answers the handle word less than nought
 when there is no big-learning database, so `GetLearningData` then asks
 for a VBO of nearly the whole address space - only ever asked with one.
@@ -1342,7 +1345,10 @@ answers "no" without `DoneReadingArray`; `TNewInternalFlash::IsVirgin`
 wraps a length shorter than a region's header; `CheckEraseCompletion`
 always says "not complete" on an instance with no lock; and an Erase
 interrupted between its first two writes is recovered into a state the
-next start wipes (`test_Flash` shows it; `docs/curiosities.md`).
+next start wipes (`test_Flash` shows it; `docs/curiosities.md`).  All but
+the `CheckEraseCompletion` quirk are now fixed by default (the error signed,
+`DoneReadingArray` called, the short piece not asked about, the interrupted
+Erase finished); `NEWTON_ROM_BUGS=1` gives the ROM's behaviour.
 
 ## The flash store
 

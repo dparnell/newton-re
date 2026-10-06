@@ -17,6 +17,7 @@
 #include "DelayTimer.h"
 #include "hal/MMU.h"
 #include "hal/System.h"
+#include "host/RomBugs.h"
 
 #include <new>
 
@@ -124,7 +125,8 @@ TFlashRange::StartOfBlockFlashAddress(ULong flashAddress) const
 // ROM 0x000c2928 StartReadingArray__11TFlashRangeFv
 // The chips put back into reading their contents, and the bus made the
 // range's width.  A lane set the register has no setting for answers the
-// register's error (see kError_Flash_Bad_Lanes: a positive number).
+// register's error (see kError_Flash_Bad_Lanes: a positive number in
+// the ROM: see (the ROM bug fixed in) hal/host/Flash.cpp).
 NewtonErr
 TFlashRange::StartReadingArray(void)
 {
@@ -185,9 +187,10 @@ TFlashRange::Write(ULong flashAddress, ULong size, char* buffer)
 // ROM 0x000c2a14 IsVirgin__11TFlashRangeFUlT1
 // Whether every byte is 0xFF: single bytes up to a word boundary, then
 // words, then the bytes left.
-// ROM BUG: the answer "no" comes back without DoneReadingArray, so the bus
-// is left at the range's width (harmless on a 32-bit range, whose width it
-// is anyway) and the driver is not told the read is over.
+// ROM BUG (fixed): the answer "no" comes back without DoneReadingArray, so
+// the bus is left at the range's width (harmless on a 32-bit range, whose
+// width it is anyway) and the driver is not told the read is over.  The
+// fix calls DoneReadingArray before answering "no" as well.
 Boolean
 TFlashRange::IsVirgin(ULong flashAddress, ULong size)
 {
@@ -196,7 +199,11 @@ TFlashRange::IsVirgin(ULong flashAddress, ULong size)
 	while (((uintptr_t) p & 3) != 0 && size != 0)
 	{
 		if (*p != 0xFF)
+		{
+			if (RomBugFixed())
+				DoneReadingArray();
 			return false;
+		}
 		p++;
 		size--;
 	}
@@ -205,13 +212,21 @@ TFlashRange::IsVirgin(ULong flashAddress, ULong size)
 	for ( ; words != 0; words -= 4)
 	{
 		if (p[0] != 0xFF || p[1] != 0xFF || p[2] != 0xFF || p[3] != 0xFF)
+		{
+			if (RomBugFixed())
+				DoneReadingArray();
 			return false;
+		}
 		p += 4;
 	}
 	for ( ; bytes != 0; bytes--)
 	{
 		if (*p != 0xFF)
+		{
+			if (RomBugFixed())
+				DoneReadingArray();
 			return false;
+		}
 		p++;
 	}
 	DoneReadingArray();

@@ -26,6 +26,7 @@
 #include "OSErrors.h"
 #include "NewtonExceptions.h"
 #include "DynamicArray.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -779,14 +780,18 @@ FGetBinaryCompanderData(RefArg /*rcvr*/, RefArg obj)
 // GetVBOStoredSize(obj): how much room it takes on the store, which is
 // not the same as its size in memory because it is compressed there.
 //
-// BUG (the ROM's): this one does not ask whether the object is a large
+// ROM BUG (fixed): this one does not ask whether the object is a large
 // binary at all.  It hands the binary's data pointer to
 // StorageSizeOfLargeObject as a mapped address - right for a large binary,
 // whose data pointer is exactly that - and for an ordinary binary no
-// large object is mapped there, so the answer is 0.
+// large object is mapped there, so the answer is 0.  The fix asks first,
+// and answers 0 (what an ordinary binary got anyway) for anything that is
+// not a large binary, without taking a pointer out of it.
 static Ref
 FGetBinaryStoredSize(RefArg /*rcvr*/, RefArg obj)
 {
+	if (RomBugFixed() && !IsLargeBinary(obj))
+		return MAKEINT(0);
 	return MAKEINT(StorageSizeOfLargeObject((ULong) BinaryData(obj)));
 }
 
@@ -812,10 +817,11 @@ FLBClearCache(RefArg /*rcvr*/, RefArg obj)
 // VBOUndoChanges(obj): the changes made since it was paged in thrown
 // away, and every Ref into it declawed.
 //
-// BUG (the ROM's): like GetVBOStoredSize this does not check that the
+// ROM BUG (fixed): like GetVBOStoredSize this does not check that the
 // object is a large binary first - it reads the LBData out of any object
 // it is given.  DEVIATION: on the host that would read past an ordinary
-// binary's bytes, so anything that is not a large binary answers nil.
+// binary's bytes, so anything that is not a large binary answers nil -
+// which is also the fix, so both settings of NEWTON_ROM_BUGS do it.
 static Ref
 FLBRollback(RefArg /*rcvr*/, RefArg obj)
 {

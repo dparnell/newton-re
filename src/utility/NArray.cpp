@@ -11,6 +11,7 @@
 #include "NArray.h"
 #include "NewtonMemory.h"
 #include "UCErrors.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -106,7 +107,11 @@ NArray::~NArray()
 NewtonErr
 NArray::Init(long elementSize, long chunkSize, long physicalCount, Boolean shrink)
 {
-	if (fElementSize <= 0 || fChunkSize <= 0 || physicalCount <= 0)		// (sic: the members, not the arguments)
+	// ROM BUG (fixed): the members are checked, not the arguments (the
+	// constructor's 4 and 4, so any sizes pass).  The fix checks the
+	// arguments.
+	if (RomBugFixed() ? (elementSize <= 0 || chunkSize <= 0 || physicalCount <= 0)
+					  : (fElementSize <= 0 || fChunkSize <= 0 || physicalCount <= 0))
 		return eRangeCheck;
 	fElementSize = elementSize;
 	fChunkSize = chunkSize;

@@ -16,6 +16,7 @@
 #include "UserBoot.h"
 #include "OSErrors.h"
 #include "host/TaskRuntime.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -243,6 +244,38 @@ TestMuxStore(PSSId* kept)
 }
 
 
+// The lookup cache's sets: the ROM masks the hash with ~fWays (ROM bug),
+// so a set can start anywhere bit 3 is clear and the sets overlap; fixed,
+// a set starts on a boundary of eight.
+static void
+TestLookupCache(void)
+{
+	Boolean misaligned = false;
+	for (int fixed = 0; fixed < 2; fixed++)
+	{
+		SetRomBugFixed(fixed != 0);
+		for (PSSId id = 1; id < 64; id++)
+		{
+			TFlashStoreLookupCache cache;
+			EXPECT(cache.Init(64) == noErr);
+			cache.Add(id, 0x100 + id, kFlashObjCommitted);
+			EXPECT(cache.Lookup(id, kFlashObjCommitted) == 0x100 + id);
+			for (ULong i = 0; i < cache.fSize; i++)
+				if (cache.fEntries[i].fId == id)
+				{
+					if (fixed)
+						EXPECT((i & 7) == 0);		// the first way of an aligned set
+					else if ((i & 7) != 0)
+						misaligned = true;
+				}
+			cache.Destroy();
+		}
+	}
+	EXPECT(misaligned);			// the ROM's sets do overlap
+	SetRomBugFixed(true);
+}
+
+
 static void
 FlashStoreScenario(void)
 {
@@ -250,6 +283,7 @@ FlashStoreScenario(void)
 	TFlashStore::ClassInfo()->Register();
 	TMuxStore::ClassInfo()->Register();
 	TMuxStoreMonitor::ClassInfo()->Register();
+	TestLookupCache();
 	remove(kFlashFile);
 	EXPECT(HostFlashOpen(kFlashFile) == noErr);
 	HostClearSections();

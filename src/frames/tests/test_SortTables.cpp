@@ -15,6 +15,7 @@
 #include "ROMConstants.h"
 #include "SortTables.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -65,6 +66,28 @@ main()
 	}
 	gObjectHeapSize = 0x80000;
 	InitObjects();
+
+	// ---- ROM bugs fixed, with no default table --------------------------
+	{
+		const TSortingTable* defaultTable = gSortTables.fDefaultTable;
+		long fDefaultId = gSortTables.fDefaultId;
+		gSortTables.fDefaultTable = nil;
+		gSortTables.fDefaultId = 0;
+		// the size of no table: nought (the ROM reads through nil)
+		SetRomBugFixed(true);
+		long noSize = -1;
+		EXPECT(gSortTables.GetSortTable(0, &noSize) == nil && noSize == 0);
+		// characters with no Mac Roman form compare whole (the ROM: on
+		// their low bytes, so U+0100 and U+0200 are equal)
+		UniChar u100[2] = { 0x0100, 0 }, u200[2] = { 0x0200, 0 };
+		EXPECT(Collate(u100, u200, kDefaultSortTable, false) < 0);
+		EXPECT(Collate(U("apple"), U("APPLE"), kDefaultSortTable, false) == 0);
+		SetRomBugFixed(false);
+		EXPECT(Collate(u100, u200, kDefaultSortTable, false) == 0);
+		SetRomBugFixed(true);
+		gSortTables.fDefaultTable = defaultTable;
+		gSortTables.fDefaultId = fDefaultId;
+	}
 
 	// ---- the ROM's table registered by InitUnicode ---------------------
 	EXPECT(Length(RefVar(Rsorttables)) == 2);

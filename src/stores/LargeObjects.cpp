@@ -30,6 +30,7 @@
 #include "Interpreter.h"		// DoBlock
 #include "ROMConstants.h"		// Rcanonicalpackagecallbackinfo
 #include "RSSymbols.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -90,17 +91,20 @@ PackageAllocationOk(TStore* store, PSSId rootId)
 // ROM 0x001017a8 InitializeChunkArray__FP6TStorePUlUl
 // The chunk array: an empty block object (in a separate transaction) for
 // every 0x400 bytes of the size, their ids written into a new object.
-// ROM BUG kept: when a block object cannot be made, the ones already made
-// are to be given back, but every pass of the loop aborts the same entry -
-// the first one that was *not* made (whatever the array held there) - and
-// the loop stops at its first error, so nothing made is given back; nor is
-// the chunk array object itself.
+// ROM BUG (fixed): when a block object cannot be made, the ones already
+// made are to be given back, but every pass of the loop aborts the same
+// entry - the first one that was *not* made (whatever the array held
+// there) - and the loop stops at its first error, so nothing made is given
+// back; nor is the chunk array object itself.  The fix aborts each block
+// that was made, in turn; the chunk array is the caller's to give back
+// (*chunkArrayId is set as soon as it is made, and LODefCreate and
+// LODefCreateFromComp abort it on any error).
 NewtonErr
 InitializeChunkArray(TStore* store, ULong* chunkArrayId, ULong size)
 {
 	ULong count = (size + 0x3ff) >> 10;
 	long bytes = count << 2;
-	// DEVIATION: a word to spare, which the ROM BUG's abort reads when every
+	// DEVIATION: a word to spare, which the faulty abort above reads when every
 	// block was made and the write failed (the ROM reads past its array);
 	// cleared, where the ROM's operator new leaves the heap's bytes
 	UByte* ids = (UByte*) calloc(bytes + 4, 1);
@@ -122,9 +126,17 @@ InitializeChunkArray(TStore* store, ULong* chunkArrayId, ULong size)
 	}
 	if (err != noErr)
 	{
-		for (long i = 0; i < (long) made; i++)
-			if (store->SeparatelyAbort(GetBigEndianWord(ids + made * 4)) != noErr)
-				break;
+		if (RomBugFixed())
+		{
+			for (long i = 0; i < (long) made; i++)
+				store->SeparatelyAbort(GetBigEndianWord(ids + i * 4));
+		}
+		else
+		{
+			for (long i = 0; i < (long) made; i++)
+				if (store->SeparatelyAbort(GetBigEndianWord(ids + made * 4)) != noErr)
+					break;
+		}
 	}
 	free(ids);
 	return err;
@@ -275,9 +287,13 @@ LODefaultCreate(ULong* id, TStore* store, CPipe* pipe, long size, UChar readOnly
 // The callback is told the bytes read so far (counting the stream's two
 // leading words) every so many bytes.  On a failure every block object is
 // given back.
-// ROM BUGS kept: a block's length is never checked against the 0x520-byte
-// buffer it is read into; the callback's part count is left unset
-// (DEVIATION: the host's is nought, where the ROM's is stack rubbish).
+// ROM BUGS (fixed): a block's length is never checked against the
+// 0x520-byte buffer it is read into; the callback's part count is left
+// unset (DEVIATION: the host's is nought, where the ROM's is stack
+// rubbish).  The fix refuses a length the buffer cannot hold
+// (kError_Bad_Object: the stream is not one a backup wrote) before reading
+// it; the part count's nought is what the fix would set as well (the
+// stream is one part).
 NewtonErr
 FillChunkArrayCompressed(TStore* store, ULong chunkArrayId, CPipe* pipe, long streamSize, TLOCallback* callback)
 {
@@ -309,8 +325,13 @@ FillChunkArrayCompressed(TStore* store, ULong chunkArrayId, CPipe* pipe, long st
 				// says eof when its source runs dry (a memory pipe), the
 				// length is read out of whatever `word` held
 				length = (long) GetBigEndianWord(word);
-				n = length;
-				pipe->ReadChunk(block, n, eof);
+				if (RomBugFixed() && (ULong) length > 0x520)
+					readErr = kError_Bad_Object;
+				else
+				{
+					n = length;
+					pipe->ReadChunk(block, n, eof);
+				}
 			}
 			newton_catch(exPipeException)
 			{
@@ -482,10 +503,10 @@ TLrgObjStore::Delete()
 // ROM 0x0010389c GetLOAllocator__FP6TStoreUlPP12TLrgObjStore
 // The large-object store that claims the object's compander by name, made
 // and initialised (one that fails to initialise is given back, though
-// *allocator is left pointing at it - ROM BUG kept: the callers only look
-// at it when the answer is noErr); nil when the compander is a plain
-// TStoreCompander.  ROM BUG kept: when neither knows the name, the name's
-// block is not given back.
+// *allocator is left pointing at it - ROM BUG (fixed): the callers only
+// look at it when the answer is noErr; the fix leaves it nil); nil when
+// the compander is a plain TStoreCompander.  ROM BUG (fixed): when neither
+// knows the name, the name's block is not given back; the fix frees it.
 NewtonErr
 GetLOAllocator(TStore* store, PSSId id, TLrgObjStore** allocator)
 {
@@ -498,13 +519,21 @@ GetLOAllocator(TStore* store, PSSId id, TLrgObjStore** allocator)
 	if (*allocator == nil)
 	{
 		if (ClassInfoByName("TStoreCompander", name) == nil)
+		{
+			if (RomBugFixed())
+				free(name);
 			return kError_Bad_Parameters;
+		}
 		free(name);
 		return noErr;
 	}
 	err = (*allocator)->Init();
 	if (err != noErr)
+	{
 		(*allocator)->Delete();
+		if (RomBugFixed())
+			*allocator = nil;
+	}
 	free(name);
 	return err;
 }
@@ -980,8 +1009,8 @@ LOCompanderParameters(TStore* store, PSSId id, void* parameters)
 // How many bytes LOWrite would write (compressed: as the blocks lie on the
 // store) - the object's own store's answer when it has one.
 //
-// ROM BUG kept: a compander that is not registered answers an error with
-// the name's block not given back.
+// ROM BUG (fixed): a compander that is not registered answers an error with
+// the name's block not given back.  The fix frees it.
 long
 LOSizeOfStream(TStore* store, PSSId id, UChar compressed)
 {
@@ -994,7 +1023,11 @@ LOSizeOfStream(TStore* store, PSSId id, UChar compressed)
 		if (allocator == nil)
 		{
 			if (ClassInfoByName("TStoreCompander", name) == nil)
+			{
+				if (RomBugFixed())
+					free(name);
 				return kError_Bad_Parameters;
+			}
 			free(name);
 			return LODefaultStreamSize(store, id, compressed);
 		}
@@ -1011,8 +1044,8 @@ LOSizeOfStream(TStore* store, PSSId id, UChar compressed)
 
 // ROM 0x00102e44 LOWrite__FP5CPipeP6TStoreUlUcP11TLOCallback
 // The large object written to pipe (compressed: its blocks as they lie) -
-// by its own store when it has one.  ROM BUG kept: as LOSizeOfStream, an
-// unregistered compander leaves the name's block behind.
+// by its own store when it has one.  ROM BUG (fixed): as LOSizeOfStream, an
+// unregistered compander leaves the name's block behind; the fix frees it.
 NewtonErr
 LOWrite(CPipe* pipe, TStore* store, PSSId id, UChar compressed, TLOCallback* callback)
 {
@@ -1024,7 +1057,11 @@ LOWrite(CPipe* pipe, TStore* store, PSSId id, UChar compressed, TLOCallback* cal
 		if (allocator == nil)
 		{
 			if (ClassInfoByName("TStoreCompander", name) == nil)
+			{
+				if (RomBugFixed())
+					free(name);
 				return kError_Bad_Parameters;
+			}
 			free(name);
 			return LODefaultBackup(pipe, store, id, compressed, callback);
 		}

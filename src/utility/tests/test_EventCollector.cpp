@@ -5,13 +5,15 @@
 // gEventTraceBufArray and its removal, longs recorded after the time's
 // word (low bit set) and the ring wrapping at the limit, a one-byte
 // collector's byte in the time's word, an entry of several bytes,
-// AddDescriptions (five at most; answering false, the ROM's bug), and
+// AddDescriptions (five at most; answering false, the ROM's bug, or fixed,
+// whether they were added), and
 // CollectionControl(0) stopping collection.
 
 #include "EventCollector.h"
 #include "Boot.h"
 #include "UserBoot.h"
 #include "host/TaskRuntime.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -59,8 +61,12 @@ Scenario(void)
 
 	// descriptions: five, and false every time
 	EventTraceCauseDesc descs[2] = { { 0, (char*) "start" }, { 1, (char*) "byte" } };
-	for (int i = 0; i < 6; i++)
+	SetRomBugFixed(false);
+	for (int i = 0; i < 3; i++)
 		EXPECT(longs->AddDescriptions(descs, 2) == false);
+	SetRomBugFixed(true);
+	for (int i = 3; i < 6; i++)
+		EXPECT(longs->AddDescriptions(descs, 2) == (i < 5));		// the sixth does not fit
 	EXPECT(longs->fData.fActualDescCount == 5 && longs->fData.fDescInfo[4].desc == descs);
 
 	// stopped: nothing more is recorded

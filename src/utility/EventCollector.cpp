@@ -11,6 +11,7 @@
 #include "hal/Atomic.h"
 #include "hal/Timer.h"
 #include "VirtualMemory.h"
+#include "host/RomBugs.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -204,7 +205,8 @@ THistoryCollector::Init(size_t entrySizeInBytes, char* printableFormat, char* co
 
 
 // ROM 0x002dc638 AddDescriptions__17THistoryCollectorFP19EventTraceCauseDesci
-// ROM BUG: answers false even when the descriptions were added.
+// ROM BUG (fixed): answers false even when the descriptions were added.
+// The fix answers whether they were (false only when the table is full).
 Boolean
 THistoryCollector::AddDescriptions(EventTraceCauseDesc* list, int count)
 {
@@ -213,6 +215,8 @@ THistoryCollector::AddDescriptions(EventTraceCauseDesc* list, int count)
 		fData.fDescInfo[fData.fActualDescCount].desc = list;
 		fData.fDescInfo[fData.fActualDescCount].descCount = count;
 		fData.fActualDescCount++;
+		if (RomBugFixed())
+			return true;
 	}
 	return false;
 }

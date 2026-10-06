@@ -525,7 +525,9 @@ word, starts one past the terminating nul, so its first step lands on the
 nul - which is not a space - and it stops there every time.  It therefore
 always answers the string's length and trims nothing, a ROM bug its only
 caller does not notice, because trailing spaces are separators to it
-anyway.  `StringLeftTrim` 0x0008421c does work, stopping at the nul so
+anyway.  (Now fixed by default - it answers the index just past the last
+character that is not a space; `NEWTON_ROM_BUGS=1` for the ROM's.)
+`StringLeftTrim` 0x0008421c does work, stopping at the nul so
 that an all-blank string does not run off the end.
 
 `ArrayNatives.cpp` has `TGeneralizedTestFnVar`, the comparison object
@@ -688,7 +690,9 @@ with no `sortId` compares - `OldCompareText` 0x00255bf8 answers instead:
 character by character, each taken to Mac Roman and folded through
 `charClass` and `upperNoMarkList` unless the compare is exact, and the
 folded characters compared *as bytes* - so two characters with no Mac
-Roman form compare on their low bytes alone.  `CompareStringNoCase`
+Roman form compare on their low bytes alone (a ROM bug, now fixed by
+default: those compare whole; `NEWTON_ROM_BUGS=1` for the ROM's bytes).
+`CompareStringNoCase`
 0x00255750 and `CompareTextNoCase` 0x002557a4 are the wrappers over the
 default table.
 

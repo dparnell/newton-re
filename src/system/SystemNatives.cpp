@@ -32,6 +32,7 @@
 #include "UserTasks.h"
 #include "ClassInfoRegistry.h"
 #include "Locale.h"
+#include "host/RomBugs.h"
 
 
 // ROM 0x0020171c FGetSerialNumber
@@ -166,9 +167,13 @@ ExtendedGestalt(RefArg args)
 // the largest yet, so that Gestalt's first guess at a buffer for it is big
 // enough.
 //
-// ROM BUG, kept: the block MarshalArguments allocates is never freed - the
-// gestalt server copies it, and the ROM leaves its own copy behind on
-// every call.
+// ROM BUG (fixed): the block MarshalArguments allocates is never freed.
+// (Not that the gestalt server copies it - TUGestalt registers the block's
+// address with the name server, and Gestalt reads it from there, so a
+// block that was registered is in use and must stay.)  What is lost is the
+// block of a call the server refused; the fix frees that one.  (The block
+// a ReplaceGestalt takes the place of is not freed either way: it may not
+// be one this made.)
 static Ref
 UpdateGestalt(RefArg selector, RefArg args, RefArg types, RefArg encoding, Boolean replace)
 {
@@ -190,6 +195,8 @@ UpdateGestalt(RefArg selector, RefArg args, RefArg types, RefArg encoding, Boole
 					err = gestalt.RegisterGestalt((GestaltSelector) RINT(selector), block, size);
 				else
 					err = gestalt.ReplaceGestalt((GestaltSelector) RINT(selector), block, size);
+				if (err != noErr && RomBugFixed())
+					free(block);
 				if (err == noErr && !IsScriptGestalt((ULong) RINT(selector)) && gScriptGestaltCount < kScriptGestaltsMax)
 					gScriptGestalts[gScriptGestaltCount++] = (ULong) RINT(selector);		// (host: its byte order, above)
 			}

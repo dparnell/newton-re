@@ -14,6 +14,7 @@
 #include "hal/RealTimeClock.h"
 #include "OSErrors.h"
 #include "UserPorts.h"
+#include "host/RomBugs.h"
 
 
 RealTimeAlarm	TRealTimeClock::fTable[kRealTimeAlarmCount];
@@ -144,9 +145,10 @@ TRealTimeClock::CheckOut(ULong name)
 //
 // The counter starts at 0, and 0 is also what a free slot's name is, so
 // the first name handed out is checked into a slot that still reads as
-// free and the next CheckIn takes that slot away from it.  The bug never
-// shows on the Newton because TNewtWorld::MainConstructor's alarm is the
-// only name anything ever asks for.
+// free and the next CheckIn takes that slot away from it.  ROM BUG (fixed):
+// it never shows on the Newton because TNewtWorld::MainConstructor's alarm
+// is the only name anything ever asks for.  The fix never hands out 0: the
+// counter steps over it (at the start, and should it ever wrap).
 long
 TRealTimeClock::NewName(ULong* name)
 {
@@ -154,6 +156,11 @@ TRealTimeClock::NewName(ULong* name)
 		;
 	*name = fNextName;
 	fNextName = fNextName + 1;
+	if (RomBugFixed() && *name == 0)
+	{
+		*name = fNextName;
+		fNextName = fNextName + 1;
+	}
 	long err = CheckIn(*name);
 	if (err != noErr)
 		*name = 0;

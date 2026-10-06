@@ -12,6 +12,7 @@
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 
@@ -199,9 +200,14 @@ TArithmeticCompressor::New()
 
 // ROM 0x000370fc Delete__21TArithmeticCompressorFv
 // (nothing: the tables are Cleanup's, which no one calls at the end - the ROM)
+// ROM BUG (fixed): so a compressor that made its own tables (an adaptive
+// Init) leaks them.  The fix cleans up: the tables it owns, and only those.
 void
 TArithmeticCompressor::Delete()
-{ }
+{
+	if (RomBugFixed())
+		Cleanup();
+}
 
 
 // ROM 0x000378c0 Cleanup__21TArithmeticCompressorFv
@@ -489,10 +495,18 @@ TArithmeticDecompressor::New()
 
 
 // ROM 0x00036f4c Delete__23TArithmeticDecompressorFv
-// (sic: the tables go if the model is adaptive, whoever owns them)
+// ROM BUG (fixed): the tables go if the model is adaptive, whoever owns
+// them - an adaptive model lent by the caller is freed under it, and
+// tables of its own a decompressor was given back to a fixed model are
+// not freed.  The fix frees the tables it owns, as Cleanup does.
 void
 TArithmeticDecompressor::Delete()
 {
+	if (RomBugFixed())
+	{
+		Cleanup();
+		return;
+	}
 	if (!fAdaptive)
 		return;
 	DisposPtr((Ptr) fCumFreq);

@@ -13,6 +13,7 @@
 #include "ByteOrder.h"
 #include "NewtonMemory.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 #include "NativeFunctions.h"
 #include "objects.h"
 
@@ -253,17 +254,23 @@ TSortTables::GetTableEntry(long id) const
 
 
 // ROM 0x00258414 GetSortTable__11TSortTablesCFlPl
-// The table with this id, and how big it is.  BUG (the ROM's): when the id
+// The table with this id, and how big it is.  ROM BUG (fixed): when the id
 // is the default one and there is no default table - which is how the
 // system starts - a caller that wants the size reads through a nil table.
-// Everything in the ROM asks with no size, so it never happens there.
+// Everything in the ROM asks with no size, so it never happens there.  The
+// fix answers a size of nought for no table.
 const TSortingTable*
 TSortTables::GetSortTable(long id, long* size) const
 {
 	if (fDefaultId == id)
 	{
 		if (size != nil)
-			*size = fDefaultTable->CalcSize();
+		{
+			if (fDefaultTable == nil && RomBugFixed())
+				*size = 0;
+			else
+				*size = fDefaultTable->CalcSize();
+		}
 		return fDefaultTable;
 	}
 	SortTableEntry* entry = GetTableEntry(id);
@@ -355,10 +362,11 @@ TSortTables::SetDefaultTableId(long id)
 // upper case without diacriticals through the Mac Roman character class
 // tables unless an exact compare was asked for.
 //
-// BUG (the ROM's): the folded characters are compared as bytes, so two
+// ROM BUG (fixed): the folded characters are compared as bytes, so two
 // characters that have no Mac Roman form (both fold to 0x1a and are left
 // as themselves) compare on their low bytes alone - U+0100 and U+0200
-// come out equal.
+// come out equal.  The fix keeps a folded character to its byte (the
+// folding's sum wraps as a byte) but compares one left as itself whole.
 int
 OldCompareText(const UniChar* a, long aLength, const UniChar* b, long bLength,
 			   Boolean exact, CompareInkProcPtr compareInk, void* refCon)
@@ -392,7 +400,16 @@ OldCompareText(const UniChar* a, long aLength, const UniChar* b, long bLength,
 					fa = (ULong) (ma + (unsigned char) gUpperNoMarkList[gCharClass[ma]]);
 				if (mb != 0x1a)
 					fb = (ULong) (mb + (unsigned char) gUpperNoMarkList[gCharClass[mb]]);
-				result = (int) (fa & 0xff) - (int) (fb & 0xff);
+				if (RomBugFixed())
+				{
+					if (ma != 0x1a)
+						fa &= 0xff;
+					if (mb != 0x1a)
+						fb &= 0xff;
+					result = (int) fa - (int) fb;
+				}
+				else
+					result = (int) (fa & 0xff) - (int) (fb & 0xff);
 			}
 			else
 				// DEVIATION: the ROM reads the class tables through nil

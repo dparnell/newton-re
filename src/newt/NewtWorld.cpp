@@ -249,8 +249,8 @@ TNewtWorld::MainConstructor()
 		return kError_No_Memory;
 	if ((err = fMessage->Init()) != noErr)
 		return err;
-	TURealTimeAlarm::NewName(&NewtAlarmName);	// (0, and the slot it takes still reads as free:
-												// see TRealTimeClock::NewName)
+	TURealTimeAlarm::NewName(&NewtAlarmName);	// (the ROM's 0, whose slot still reads as free:
+												// see TRealTimeClock::NewName; fixed, 1)
 	RegisterAlarmNatives();
 	RegisterPowerNatives();
 	RegisterBusyBoxNatives();		// (host/HostNatives.h's RegisterAllNatives is below this library)

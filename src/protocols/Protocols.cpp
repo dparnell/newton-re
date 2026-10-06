@@ -19,6 +19,7 @@
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -277,11 +278,13 @@ TClassInfo::Destroy(TProtocol* instance) const
 
 
 // ROM 0x0005c710 Selector__10TClassInfoCFv
-// (sic: the ROM answers the address of the free branch, +0x20, not the
-// selector branch at +0x34)
+// ROM BUG (fixed): the ROM answers the address of the free branch, +0x20,
+// not the selector branch at +0x34.  The fix answers the selector.
 CodeProcPtr
 TClassInfo::Selector() const
 {
+	if (RomBugFixed())
+		return fSelector;
 	return (CodeProcPtr) fFree;
 }
 

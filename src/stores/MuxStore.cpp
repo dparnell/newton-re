@@ -10,6 +10,7 @@
 #include "UserSemaphore.h"
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 
 
 /*------------------------------------------------------------------------------
@@ -271,7 +272,18 @@ TMuxStore::New(void)
 	fMonitor = nil;
 	fLock = new TULockingSemaphore;
 	if (fLock != nil && fLock->Init() != noErr && fLock != nil)
-		fLock->~TULockingSemaphore();		// (sic: destroyed but not freed, and left in fLock)
+	{
+		// ROM BUG (fixed): destroyed but not freed, and left in fLock.  The
+		// fix frees it and forgets it (as Delete does), so the store has no
+		// lock either way but the block is not lost.
+		if (RomBugFixed())
+		{
+			delete fLock;
+			fLock = nil;
+		}
+		else
+			fLock->~TULockingSemaphore();
+	}
 	return this;
 }
 

@@ -272,7 +272,12 @@ DESCharToKey(const UniChar* password, DESWord* key)
 		// ROM BUG: the corrected bytes are ORed into the encrypted block
 		// rather than replacing it, so a byte whose low bit was cleared to
 		// make its parity odd keeps it set, and its parity even (harmless:
-		// DES ignores the parity bits)
+		// DES ignores the parity bits).  Kept even with the ROM's bugs fixed
+		// (docs/rom-bugs.md): the key is a persistent format - a store's
+		// password is kept as these eight bytes and compared with them
+		// byte for byte (CheckStorePassword, whose master key 0x39 byte has
+		// the bug's even parity) - so a corrected key would not open a
+		// store a Newton protected
 		block[0] |= (DESWord) bytes[0] << 24 | (DESWord) bytes[1] << 16 | (DESWord) bytes[2] << 8 | bytes[3];
 		block[1] |= (DESWord) bytes[4] << 24 | (DESWord) bytes[5] << 16 | (DESWord) bytes[6] << 8 | bytes[7];
 		current[0] = block[0];

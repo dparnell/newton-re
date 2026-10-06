@@ -26,6 +26,7 @@
 #include "NSErrors.h"
 #include "NewtonExceptions.h"
 #include "NewtonMemory.h"
+#include "host/RomBugs.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -1151,11 +1152,12 @@ FParamStr(RefArg /*rcvr*/, RefArg templateStr, RefArg params)
 // stands for an ink word rather than being a character of its own.
 //
 // `newChars` is walked in step with `oldChars` and starts again from its
-// beginning when it is the shorter of the two.  ROM BUG: the wrap looks at
-// the character after the one it just used, so with an empty `newChars`
-// the first look is already one past the end of the string; the ROM reads
-// it too, and the reconstruction reads the same word rather than guarding
-// a case the ROM does not.
+// beginning when it is the shorter of the two.  ROM BUG (fixed): the wrap
+// looks at the character after the one it just used, so with an empty
+// `newChars` the first look is already one past the end of the string; the
+// ROM reads it too, and the reconstruction reads the same word rather than
+// guarding a case the ROM does not.  The fix never looks past an empty
+// `newChars`'s terminator (k stays at nought, as the wrap would leave it).
 static Ref
 FSubstituteChars(RefArg /*rcvr*/, RefArg str, RefArg oldChars, RefArg newChars)
 {
@@ -1184,6 +1186,8 @@ FSubstituteChars(RefArg /*rcvr*/, RefArg str, RefArg oldChars, RefArg newChars)
 				result.MungeRange(i, 1, &replacement, k, 1);
 				break;
 			}
+			if (RomBugFixed() && to[0] == 0)
+				continue;			// k stays 0
 			k++;
 			if (to[k] == 0)
 				k = 0;
@@ -1364,14 +1368,25 @@ StringLeftTrim(RefArg str)
 // Meant to be the index just past the last character that is not a space
 // - but it starts one past the terminating nul, so its first step lands
 // on the nul, which is not a space, and it stops there every time.  It
-// therefore always answers the string's length and trims nothing: a ROM
-// bug, kept.  SplitString, its only caller, does not notice, because the
-// trailing spaces it hands back are separators there anyway.
+// therefore always answers the string's length and trims nothing.
+// ROM BUG (fixed).  SplitString, its only caller, does not notice, as the
+// trailing spaces it hands back are separators there anyway.  The fix
+// starts at the nul and steps back over the spaces before it, answering
+// the index just past the last character that is not one (nought for a
+// string of nothing but spaces).
 ULong
 StringRightTrim(RefArg str)
 {
 	ULong i = (ULong) Length(str) / sizeof(UniChar);
 	const UniChar* text = (const UniChar*) BinaryData(str);
+	if (RomBugFixed())
+	{
+		if (i != 0)
+			i--;			// the nul
+		while (i > 0 && text[i - 1] == ' ')
+			i--;
+		return i;
+	}
 	do
 		i--;
 	while (text[i] == ' ');

@@ -21,3 +21,9 @@ add_executable(test_HostCard test_HostCard.cpp)
 target_link_libraries(test_HostCard PRIVATE hal_host_card os600_kernel os600_user)
 add_test(NAME hal.HostCard COMMAND test_HostCard)
 set_tests_properties(hal.HostCard PROPERTIES TIMEOUT 60)
+
+# the bank control register: its lane settings, and its error for a lane set
+# it has none for (a ROM bug fixed: the error's sign)
+add_executable(test_BankControl test_BankControl.cpp)
+target_link_libraries(test_BankControl PRIVATE hal_host)
+add_test(NAME hal.BankControl COMMAND test_BankControl)

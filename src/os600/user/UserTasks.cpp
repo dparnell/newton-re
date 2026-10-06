@@ -176,8 +176,8 @@ TUTaskWorld::StartTask(Boolean wantResultFromChild, Boolean wantOwnerShip, TTime
 // wants a result, construct, answer, run, destruct, and unmake the copy in
 // place.  (Every failure - the start Receive, the constructor, the reply -
 // still destructs, as the ROM does; for a TForkWorld fork that frees the
-// family's mutex, a ROM bug kept and described at
-// TForkWorld::TaskDestructor.)
+// family's mutex (the ROM bug fixed and described at
+// TForkWorld::TaskDestructor).)
 void
 TUTaskWorld::TaskEntry(ULong /*size*/, TObjectId taskId)
 {

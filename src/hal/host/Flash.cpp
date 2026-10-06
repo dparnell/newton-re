@@ -10,6 +10,8 @@
 
 #include "hal/Flash.h"
 #include "NewtErrors.h"
+#include "OSErrors.h"
+#include "host/RomBugs.h"
 
 ULong	gHostBankControlRegister = 0;		// the register at 0x0F241000
 ULong	gHostInternalVppCount = 0;			// the ROM's gInternalVppCount
@@ -31,6 +33,11 @@ TBankControlRegister::GetBankControlRegister(void)
 // Bits 8-10 of the register: 0 a 32-bit bus, 2 and 3 the high and low
 // halves, 4 and 5 the top byte and the second byte.  The two bytes of the
 // low half have no setting of their own.
+//
+// ROM BUG (fixed): a lane set with no setting answers 0x293b
+// (kError_Flash_Bad_Lanes), kError_Flash_Erase_Failed without its sign, so
+// a caller testing for an error (< 0) takes it for success.  The fix
+// answers the signed error, kError_Flash_Erase_Failed.
 NewtonErr
 TBankControlRegister::ConfigureFlashBankDataSize(eMemoryLane lanes)
 {
@@ -45,6 +52,8 @@ TBankControlRegister::ConfigureFlashBankDataSize(eMemoryLane lanes)
 		value = 0x400;
 	else if (lanes == kHighHalfLanes)
 		value = 0x200;
+	else if (RomBugFixed())
+		return kError_Flash_Erase_Failed;
 	else
 		return kError_Flash_Bad_Lanes;
 	SetBankControlRegister(value, 0x700);

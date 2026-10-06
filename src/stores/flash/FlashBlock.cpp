@@ -12,6 +12,7 @@
 #include "FlashStore.h"
 #include "LargeObjects.h"
 #include "ByteOrder.h"
+#include "host/RomBugs.h"
 
 #include <string.h>
 
@@ -585,8 +586,10 @@ TFlashBlock::CompactInto(ULong physOffset)
 // Every live object but the directories copied into the other block (made
 // the block's own for the moment, so that the copies' offsets translate
 // there), then the migrated-object entries of the root directory.
-// ROM BUG: only the last object's copy is checked for an error, and the
-// copies' AddObject is not checked at all.
+// ROM BUG (fixed): only the last object's copy is checked for an error,
+// and the copies' AddObject is not checked at all.  The fix stops at the
+// first AddObject or copy that fails (before copying into an object that
+// was not made) and answers its error.
 NewtonErr
 TFlashBlock::CompactInto(TFlashBlock* into)
 {
@@ -606,13 +609,20 @@ TFlashBlock::CompactInto(TFlashBlock* into)
 		{
 			fStore->ExchangeBlock(fLogicalOffset, into);
 			Boolean xip = (fromStore->fZapWord & 1) == ((from.fWord1 & 0xFF) >> 7);
-			into->AddObject(from.Id(), from.State(), from.Size(), to, from.SeparateBits() == 2, xip);
+			NewtonErr addErr = into->AddObject(from.Id(), from.State(), from.Size(), to, from.SeparateBits() == 2, xip);
 			ULong toAt = fStore->Translate(to.fOffset);
 			fStore->ExchangeBlock(fLogicalOffset, this);
+			if (RomBugFixed() && addErr != noErr)
+			{
+				err = addErr;
+				break;
+			}
 			if ((fromStore->fZapWord & 1) == ((from.fWord1 & 0xFF) >> 7))
 				XIPObjectHasMoved(fStore, from.Id());
 			ULong size = from.Size();
 			err = fStore->BasicCopy(fStore->Translate(from.fOffset) + 8, toAt + 8, size);
+			if (RomBugFixed() && err != noErr)
+				break;
 		}
 	}
 	if (err == noErr)

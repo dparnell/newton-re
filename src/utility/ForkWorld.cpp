@@ -17,6 +17,7 @@
 #include "AppWorld.h"
 #include "NewtonMemory.h"
 #include "OSErrors.h"
+#include "host/RomBugs.h"
 
 
 // ROM 0x000cb188 __ct__10TForkWorldFv
@@ -93,7 +94,7 @@ TForkWorld::TaskConstructor()
 
 
 // ROM 0x000cb618 TaskDestructor__10TForkWorldFv
-// ROM BUG kept: whether this is a fork is decided by fRunsMain, not fIsMain.
+// ROM BUG (fixed): whether this is a fork is decided by fRunsMain, not fIsMain.
 // ForkInit (0x000cb2e4) clears only fIsMain, so a fork keeps the fRunsMain
 // its constructor gave it (true) until it forks in its turn.  A fork whose
 // start fails - TUTaskWorld::TaskEntry calls TaskDestructor when the start
@@ -103,12 +104,16 @@ TForkWorld::TaskConstructor()
 // mutex, shared by the whole family and still in use.  It also takes one off
 // fWorlds, which TaskConstructor never added for it.  A fork that ran and
 // ended normally has forked (Fork clears fRunsMain), so only the failure
-// paths are affected.
+// paths are affected.  The fix destroys a fork that never ran (fRunning is
+// set only by TaskMain) as a fork, leaving the family's mutex alone; a fork
+// that did run has taken the main code over, and ends as the ROM has it.
+// (The fWorlds count is left as the ROM keeps it: which failure it was -
+// before TaskConstructor added one or after - cannot be told here.)
 void
 TForkWorld::TaskDestructor()
 {
 	fMutex->fWorlds--;
-	if (!fRunsMain)
+	if (!fRunsMain || (RomBugFixed() && !fIsMain && !fRunning))
 	{
 		ForkDestructor();
 		return;

@@ -181,11 +181,12 @@ DecimalStrToDouble(char* digits)
 	if (digits != nil)
 	{
 		long i = (long) strlen(digits) - 1;
-		// ROM BUG: the zeros are dropped with no check for the start of the
-		// string, so one of nothing but zeros (or an empty one) is read
-		// backwards out of the buffer until a byte that is not '0' - which
-		// the host cannot reproduce; it stops at the start instead
-		// (DEVIATION).
+		// ROM BUG (fixed): the zeros are dropped with no check for the start
+		// of the string, so one of nothing but zeros (or an empty one) is
+		// read backwards out of the buffer until a byte that is not '0' -
+		// which the host cannot reproduce; it stops at the start instead
+		// (DEVIATION).  Stopping there is also the fix (a fraction of
+		// nought), so both paths are one (no RomBugFixed() test).
 		while (i >= 0 && digits[i] == '0')
 			i--;
 		for ( ; i >= 0; i--)

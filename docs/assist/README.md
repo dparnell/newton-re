@@ -181,9 +181,9 @@ space, and it stops there every time: it trims nothing. And
 `TrimBlanksAndPunct`'s list of marks ends with 0xc7 and 0xc8, which are
 the *Mac Roman* codes for « and » — the string is Unicode by then, so
 what is actually trimmed is Ç and È, and the guillemets are left on.
-Both are ported as the ROM has them; the guillemets are fixed by default
-(`NEWTON_ROM_BUGS=1` for the ROM's behaviour; `StringRightTrim` is
-`frames/`'s).
+Both are ported as the ROM has them, and both are now fixed by default:
+the guillemets are matched as Unicode, and `StringRightTrim` (`frames/`'s)
+trims the trailing spaces (`NEWTON_ROM_BUGS=1` for the ROM's behaviour).
 
 ## The lexicon (`assist/Lexicon.h`)
 
