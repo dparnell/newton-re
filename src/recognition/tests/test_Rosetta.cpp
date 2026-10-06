@@ -15,6 +15,7 @@
 #include "BPNet.h"
 #include "NewtErrors.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -50,7 +51,9 @@ main()
 		EXPECT(ArSigmoid(F(1)) == ArSigLu[32]);
 		EXPECT(ArSigLu[32] == 47910);
 		// the negative side is the same curve upside down, out of
-		// 0xffff rather than one - so the two do not quite add up
+		// 0xffff rather than one - so the two do not quite add up (ROM
+		// BUG, fixed: see below)
+		SetRomBugFixed(false);
 		EXPECT(ArSigmoid(-F(1)) == 0x0000ffff - ArSigLu[32]);
 		EXPECT(ArSigmoid(F(1)) + ArSigmoid(-F(1)) == 0x0000ffff);
 		// and outside the table it is nought and one
@@ -70,6 +73,34 @@ main()
 		EXPECT(high - low <= 2);
 		EXPECT(ArSigmoid(0x00000800) - low == ArSigSlopeLu[0]);
 		EXPECT(ArSigSlopeLu[0] == ArSigLu[1] - ArSigLu[0]);
+
+		// The fix: this call's index and the fraction of a step
+		// interpolated, and the negative side out of one.
+		SetRomBugFixed(true);
+		EXPECT(ArSigmoid(0) == 0x8000);
+		EXPECT(ArSigmoid(F(1)) == ArSigLu[32]);
+		EXPECT(ArSigmoid(F(1)) + ArSigmoid(-F(1)) == 0x00010000);
+		Fixed half = ArSigmoid(0x00000400) - ArSigLu[0];		// half way to the next entry
+		EXPECT(half >= ArSigSlopeLu[0] / 2 && half <= ArSigSlopeLu[0] / 2 + 1);
+		Fixed nearly = ArSigmoid(0x000007ff);
+		EXPECT(nearly > ArSigLu[1] - 2 && nearly <= ArSigLu[1]);
+		EXPECT(ArSigmoid(-0x00000400) == 0x00010000 - ArSigmoid(0x00000400));
+		EXPECT(ArSigmoid(F(12)) == 0x00010000 && ArSigmoid(-F(12)) == 0);
+		EXPECT(ArSigmoid(kArSigLimit) >= ArSigLu[354]);
+	}
+
+	// ---- a grammar cloned: +0x0e copied with the fix (ROM BUG (fixed)) ----
+	{
+		BiGrammar* g = BiGrammarCreate("Test", 2);
+		BiGSlice* s = BiGrammarAddSlice(g, 15, "Slice", 0);
+		s->fField0e = 0x1234;
+		s->fCharCost = 7;
+		SetRomBugFixed(true);
+		BiGrammar* copy = BiGrammarClone(g);
+		EXPECT(copy->fCount == 1);
+		EXPECT(copy->fSlices[0]->fCharCost == 7 && copy->fSlices[0]->fField0e == 0x1234);
+		BiGrammarDestroy(copy);
+		BiGrammarDestroy(g);
 	}
 
 	// ---- the grammar the ROM brings ----

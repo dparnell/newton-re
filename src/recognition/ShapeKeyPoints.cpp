@@ -41,6 +41,7 @@
 #include "FixedMath.h"
 #include "NewtonMemory.h"
 
+#include "host/RomBugs.h"
 #include <string.h>
 
 
@@ -313,11 +314,14 @@ RLineOut2(FPoint* pts, char* marks, uint32_t* breaks, long depth, ULong first, U
 			FPoint a = pts[first];
 			FPoint b = pts[last];
 			long chord = CheapDistPoint(&a, &b);
-			// ROM BUG: chord is 16.16, so chord * 138 overflows a 32-bit
-			// word once the chord passes about 237 pixels (a tall shape's
-			// diagonal, on a 320x480 screen) and the limit wraps to rubbish,
-			// often negative.  The ARM wraps silently; so does this.
-			long pathLimit = (long) (int32_t) ((uint32_t) chord * 138u) / 100;
+			// ROM BUG (fixed): chord is 16.16, so chord * 138 overflows a
+			// 32-bit word once the chord passes about 237 pixels (a tall
+			// shape's diagonal, on a 320x480 screen) and the limit wraps to
+			// rubbish, often negative.  The ARM wraps silently; so does
+			// this.  The fix works the product out in 64 bits.
+			long pathLimit = RomBugFixed()
+				? (long) ((int64_t) chord * 138 / 100)
+				: (long) (int32_t) ((uint32_t) chord * 138u) / 100;
 			long tolerance = chord / 9;
 			if (tolerance < gPixMinRLineOutTolerance)
 				tolerance = gPixMinRLineOutTolerance;
@@ -586,7 +590,7 @@ TVStrTail(ULong i, FPoint* pts, FPoint* keys, char* kinds, uint32_t* breaks,
 	else
 	{
 		ULong at = breaks[i];
-		// ROM BUG, kept: at the stroke's last corner (FindCubic1 calls this
+		// ROM BUG (fixed): at the stroke's last corner (FindCubic1 calls this
 		// for i = n - 1 after a straight last segment) breaks[i + 1] is past
 		// the corners - the 0xffffffff FindKeyPoints fills the table with -
 		// so the "middle" is some 2^31 points on.  On the ARM the address
@@ -595,7 +599,18 @@ TVStrTail(ULong i, FPoint* pts, FPoint* keys, char* kinds, uint32_t* breaks,
 		// before the start; a 64-bit host would read 16 GB away and fall
 		// over (a long rising line on the reMarkable did, in the shape
 		// recogniser).  The index is wrapped as the ARM's address is
-		// (DEVIATION in form only: the same point is read).
+		// (DEVIATION in form only: the same point is read).  The fix: at
+		// the last corner (no corner after it, the fill in breaks[i + 1])
+		// there is no segment after to start, so the segment before ends
+		// along its chord, as at a straight corner, and the join is no
+		// kink (as FindCubic1 marks the last corner).
+		if (RomBugFixed() && breaks[i + 1] == 0xffffffff)
+		{
+			segs[i - 1].fT1.y = dy;
+			segs[i - 1].fT1.x = dx;
+			flags[i] = 0;
+			return;
+		}
 		ULong32 mid32 = (ULong32) at + (((ULong32) breaks[i + 1] - (ULong32) at) >> 1);
 		long mid = (long) (mid32 & 0x1fffffff);
 		Fixed sx = pts[mid].x - pts[at].x;

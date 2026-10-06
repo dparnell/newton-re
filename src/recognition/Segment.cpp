@@ -15,6 +15,7 @@
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
 
+#include "host/RomBugs.h"
 #include <math.h>
 
 
@@ -65,7 +66,7 @@ Fixed	MaxSegOnlyThreshold = 45875;
 // the layers above want is to *add* it to a score.  This is the only
 // floating point in the whole engine.
 //
-// **A ROM bug, kept.**  Above five the factor is
+// **ROM BUG (fixed).**  Above five the factor is
 // `1 + 1.4375 x (n-5)`, but the constant in the ROM is `0x170000` -
 // twenty-three - where the pattern of the rest of the routine wants
 // `0x17000`, one and seven sixteenths.  The curve it actually
@@ -80,7 +81,8 @@ Fixed	MaxSegOnlyThreshold = 45875;
 // 1.72, 2.08, 2.44 and join the lower half smoothly.  The logarithm
 // keeps it from being catastrophic - the score term only runs from
 // -1.14 to 3.18 - but the top half of the writer's spacing slider does
-// not do what the bottom half does.  Ported as it stands.
+// not do what the bottom half does.  Ported as it stands; the fix takes
+// the zero out (0x17000), so the top half runs 1.00 to 2.44.
 void
 SegmentSetWordSpacing(long spacing)
 {
@@ -106,7 +108,7 @@ SegmentSetWordSpacing(long spacing)
 		// above: twenty-three, where 0x17000 was surely meant.
 		long over = (long) (int) ((unsigned int) (spacing - 5) << 16);
 		long biased = (over < 0) ? over + 3 : over;
-		gSegWordSpacing = FixedMultiply(biased >> 2, 0x170000) + 0x00010000;
+		gSegWordSpacing = FixedMultiply(biased >> 2, RomBugFixed() ? 0x17000 : 0x170000) + 0x00010000;
 		gSegOnlyThreshold = MidSegOnlyThreshold
 					+ FixedMultiply(biased >> 2, MaxSegOnlyThreshold - MidSegOnlyThreshold);
 	}
@@ -558,7 +560,7 @@ SegmentCrossed(const SegmentDistance* d)
 // says a piece of writing is joined up rather than made of separate
 // marks.
 //
-// **A ROM bug, kept.**  Written out, "not tail-linked" is
+// **ROM BUG (fixed).**  Written out, "not tail-linked" is
 //
 //     (idxB in the middle of B) or (idxA in the middle of A)
 //
@@ -568,7 +570,8 @@ SegmentCrossed(const SegmentDistance* d)
 // `idxB >= marginB`.  The effect is that two strokes which really do
 // meet end to end are sometimes called non-tail-linked - most often
 // when one stroke is much longer than the other, since that is when
-// the two margins differ most.  Ported as it stands.
+// the two margins differ most.  Ported as it stands; the fix asks the
+// question as written out above, with each stroke's own margin.
 Boolean
 SegmentNonTailLinked(const SegmentDistance* d)
 {
@@ -586,6 +589,9 @@ SegmentNonTailLinked(const SegmentDistance* d)
 	long endB = (short) (countB - marginB);
 	long endA = (short) (countA - marginA);
 
+	if (RomBugFixed())
+		return (d->fIndexB >= marginB && d->fIndexB <= endB)
+			|| (d->fIndexA >= marginA && d->fIndexA <= endA);
 	if (!(d->fIndexB <= endB || d->fIndexA >= marginA))
 		return false;
 	//                        vvvvvvv  the bug: marginB is meant
@@ -1839,11 +1845,12 @@ SegmentWordXGap(const SegWordInk* ink, const SegWordRef* ref, Fixed /*startSize*
 			crossSigma[k] = FixedMultiply(sigma[other],
 						FixedDivide(kSegGapNominal[i][1], kSegGapNominal[other][1]));
 		}
-		// ROM BUG: the stroke-size half works the nominal term out
-		// and then leaves it out of the sum, dividing by four rather
+		// ROM BUG (fixed): the stroke-size half works the nominal term
+		// out and then leaves it out of the sum, dividing by four rather
 		// than five - so those four estimates are pooled with no prior
-		// at all.  The two multiplications are made and dropped.
-		Boolean useNominal = (i < 4);
+		// at all.  The two multiplications are made and dropped.  The fix
+		// pools all eight with the nominal term, as the first half is.
+		Boolean useNominal = RomBugFixed() || (i < 4);
 		Fixed share = useNominal ? 0x00003333 : 0x00004000;
 		pooledMean[i] = SegGapPool(mean[i], kSegGapNominal[i][0], sizeFactor,
 						partnerMean, crossMean[0], crossMean[1], share, useNominal);

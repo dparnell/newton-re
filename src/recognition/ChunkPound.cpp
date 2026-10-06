@@ -13,6 +13,7 @@
 */
 
 #include "Chunk.h"
+#include "host/RomBugs.h"
 
 
 // ROM 0x002a40a0 (unnamed) - whether the stroke before the bar obj (whose
@@ -79,10 +80,10 @@ PoundBody(tag_CHUNK_STAFF* staff, tag_LOWOBJ* obj, long first, long* start)
 		long dir = find_direct_backward(n, from, 0, 0, h / 8);
 		if (turn > 0 && direct_suits(dir, 0x14, 7))
 			dir += turn;
-		// ROM BUG: a direction past the last (23) is brought round by 23,
-		// not by the 24 steps a turn has
+		// ROM BUG (fixed): a direction past the last (23) is brought round
+		// by 23, not by the 24 steps a turn has.  The fix takes 24 off.
 		if (dir > 0x17)
-			dir -= 0x17;
+			dir -= RomBugFixed() ? 0x18 : 0x17;
 		if (!direct_suits(dir, 1, 9))
 			return 0;
 	}

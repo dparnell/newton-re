@@ -27,6 +27,7 @@
 
 #include "Chunk.h"
 #include "ParaGraph.h"		// HWRAbs
+#include "host/RomBugs.h"
 
 
 // SearchDigit_S's own copy of the writing's line (on its stack): the
@@ -293,14 +294,30 @@ S_ArcsPass(tag_CHUNK_STAFF* staff, long /*unused*/)
 }
 
 
+// How far apart two chunks' tops are, as S_SpanLeft and S_SpanRight ask:
+// the ROM's nought (see S_SpanLeft), or with the ROM bug fixed the
+// distance.
+static long
+S_TopsApart(const tag_CHUNK* c, const tag_CHUNK* n)
+{
+	if (RomBugFixed())
+		return HWRAbs(c->fTop - n->fTop);
+	return HWRAbs(0);
+}
+
+
 // ROM 0x00292ae8 (unnamed) - whether real chunk ri and the one after it
 // span enough: the width across them at least twice how far the stroke
 // reaches out either side of them (from the chunk before the first's
 // right, or its start, to the chunk after the second's left, or its end).
 // When both run from their tops, apart by more than three quarters of
-// that width, the ends are looked at too - ROM BUG: it asks whether
-// HWRAbs(0) is less than a quarter of the chunk's height, where some
-// distance was meant, so only a chunk under four high skips the look.
+// that width, the ends are looked at too - ROM BUG (fixed): it asks
+// whether HWRAbs(0) is less than a quarter of the chunk's height, where
+// some distance was meant, so only a chunk under four high skips the
+// look.  The nought is a constant in the code (`mov r0,#0`), what a
+// difference of a field with itself folds to; the fix takes it to be the
+// two chunks' tops (both run from them) and asks that they be level
+// within a quarter of the chunk's height (S_TopsApart).
 static long
 S_SpanLeft(tag_CHUNK_STAFF* staff, long ri)
 {
@@ -318,7 +335,7 @@ S_SpanLeft(tag_CHUNK_STAFF* staff, long ri)
 		before = chunks[c->fPrev].fRight;
 	if (c->fTopNode == c->fFrom && n->fTo == n->fTopNode
 		&& c->fX0 - n->fX1 > width * 3 / 4
-		&& HWRAbs(0) < c->fHeight / 4)
+		&& S_TopsApart(c, n) < c->fHeight / 4)
 	{
 		tag_wapx_type* s = &nodes[c->fFrom];
 		long startDrop = s[1].y - s[0].y;
@@ -336,7 +353,8 @@ S_SpanLeft(tag_CHUNK_STAFF* staff, long ri)
 
 // ROM 0x00292c60 (unnamed) - S_SpanLeft the other way round: the pair
 // turning the other way, the first no more than twice the second's height.
-// ROM BUG: the same HWRAbs(0) as S_SpanLeft's.  ROM QUIRK: its last test
+// ROM BUG (fixed): the same HWRAbs(0) as S_SpanLeft's, and the same fix.
+// ROM QUIRK: its last test
 // is against the node before the first chunk's end, where S_SpanLeft's is
 // against the end itself.
 static long
@@ -358,7 +376,7 @@ S_SpanRight(tag_CHUNK_STAFF* staff, long ri)
 		after = chunks[n->fNext].fRight;
 	if (c->fFrom == c->fTopNode && n->fTo == n->fTopNode
 		&& n->fX1 - c->fX0 > width * 3 / 4
-		&& HWRAbs(0) < c->fHeight / 4)
+		&& S_TopsApart(c, n) < c->fHeight / 4)
 	{
 		tag_wapx_type* s = &nodes[c->fFrom];
 		long startDrop = s[1].y - s[0].y;
@@ -1717,9 +1735,10 @@ S_PerChunk(tag_CHUNK_STAFF* staff, long i, SLine* line)
 // ROM 0x00295bc4 (unnamed) - whether the stroke from real chunk ri is an
 // "@": three to six chunks ending in two arcs 402 (the last going down
 // round the outside), as wide as it is tall, its start and top near the
-// box of the chunks inside.  ROM BUG: with three chunks it asks for the
-// first's kind to be 701, a subclass, which no kind is - so a three-chunk
-// "@" is never read.
+// box of the chunks inside.  ROM BUG (fixed): with three chunks it asks
+// for the first's kind to be 701, a subclass, which no kind is - so a
+// three-chunk "@" is never read.  The fix asks it of the first's subclass
+// (f78), where 701 is one.
 static long
 S_At(tag_CHUNK_STAFF* staff, long ri)
 {
@@ -1741,7 +1760,7 @@ S_At(tag_CHUNK_STAFF* staff, long ri)
 		return 0;
 	if (n > 5 && c->fKind != 1)
 		return 0;
-	if (n == 3 && c->fKind != 701)
+	if (n == 3 && (RomBugFixed() ? c->f78 : c->fKind) != 701)
 		return 0;
 	tag_CHUNK* e = &chunks[last];
 	if (e->f78 != 402 || e[-1].f78 != 402)
@@ -2409,9 +2428,15 @@ S_FiveBody(tag_wapx_type* nodes, tag_CHUNK* chunks, tag_STK* a, tag_STK* b)
 	if (count < 3)
 		return 0;
 	tag_CHUNK* c2 = &chunks[ci + 2];
-	// ROM BUG: the stroke's height less the bowl's foot less the top's top,
-	// where the height less the distance between them was meant
-	if (h - c2->fBottom - c->fTop > h / 8)
+	// ROM BUG (fixed): the stroke's height less the bowl's foot less the
+	// top's top, where the height less the distance between them was
+	// meant.  The fix takes the distance, c2's bottom less c's top.
+	if (RomBugFixed())
+	{
+		if (h - (c2->fBottom - c->fTop) > h / 8)
+			return 0;
+	}
+	else if (h - c2->fBottom - c->fTop > h / 8)
 		return 0;
 	if (c2->f78 != 401)
 		return 0;

@@ -5,6 +5,7 @@
 #include "Stroke.h"
 #include "Rects.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -107,6 +108,22 @@ main()
 	EXPECT(big->fDecimation == 4 && big->Count() < 800);
 	big->Dispose();
 	stroke->Dispose();
+
+	// GetMapper over a perfectly flat stroke (ROM BUG (fixed)): the ROM
+	// divides by its ratio of nought and blows the rect up; the fix keeps
+	// it as it was
+	{
+		FRect flat = { 0, 0, 100 << 16, 1 };			// left, top, right, bottom
+		FRect to = { 0, 0, 200 << 16, 1 };
+		SetRomBugFixed(false);
+		GetMapper(&flat, &to);
+		EXPECT(to.left > (1 << 28) || to.left < -(1 << 28));
+		to = flat;
+		to.right = 200 << 16;
+		SetRomBugFixed(true);
+		GetMapper(&flat, &to);
+		EXPECT(to.left == 0 && to.right == (200 << 16) && to.top == 0 && to.bottom == 1);
+	}
 	if (failures == 0)
 		printf("test_Stroke: all passed\n");
 	else

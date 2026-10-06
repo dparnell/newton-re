@@ -26,6 +26,7 @@
 #include "LowLevel.h"
 #include "Chunk.h"			// ChunkCtx, tagNumBox: a number's words
 
+#include "host/RomBugs.h"
 #include <string.h>
 
 static inline short	RCSigned(rc_type* rc, ULong offset)	{ return (short) RCGetH(rc, offset); }
@@ -135,8 +136,9 @@ static inline long		NextAlternative(const RWS_type* rws, long e)	{ return e + (I
 // different letter (another case is the same letter), when the variant and
 // span are left out; a symbol read in another case has its variant's top
 // bit set.
-// ROM BUG: a letter read as a different one clears the variant and span of
-// the reading's *first* letter (+0x18, +0x30), not of the letter at pos.
+// ROM BUG (fixed): a letter read as a different one clears the variant and
+// span of the reading's *first* letter (+0x18, +0x30), not of the letter at
+// pos.  The fix clears the letter at pos.
 void
 FillRecWordsElement(rec_w_type* readings, RWS_type* rws, short reading, short pos, short e)
 {
@@ -144,8 +146,9 @@ FillRecWordsElement(rec_w_type* readings, RWS_type* rws, short reading, short po
 	rw->fWord[pos] = rws[e].sym;
 	if (ToLower(rws[e].sym) != ToLower(rws[e].realSym))
 	{
-		rw->fVariants[0] = 0;
-		rw->fX30[0] = 0;
+		short at = RomBugFixed() ? pos : 0;
+		rw->fVariants[at] = 0;
+		rw->fX30[at] = 0;
 		return;
 	}
 	rw->fVariants[pos] = rws[e].var;
@@ -877,11 +880,12 @@ FillSplitInfoFromRWG(xrdata_type* xr, RWG_type* rwg, UByte* split)
 				long last = x + s->xrLen - 1;
 				while (x <= last && (e[x].attrib & 4) == 0)
 					x++;
-				// ROM BUG, kept: what follows the symbol is asked for by its
-				// sym (the symbol's first byte) where its type (+2) was
+				// ROM BUG (fixed): what follows the symbol is asked for by
+				// its sym (the symbol's first byte) where its type (+2) was
 				// meant, so "not at the end of the answer" is nearly always
-				// true
-				if (x == last && rws[i + 1].sym != 3 && rws[i + 1].sym != 4)
+				// true.  The fix asks its type.
+				UByte follows = RomBugFixed() ? rws[i + 1].type : rws[i + 1].sym;
+				if (x == last && follows != 3 && follows != 4)
 				{
 					long bit = i - start;
 					split[answer * 3 + bit / 8] |= (UByte) (1 << (bit % 8));
@@ -984,7 +988,14 @@ FillRecwordSplitInfo(xrdata_type* xr, rc_type* rc, RWG_type* rwg, rec_w_type* re
 						long until = part + letters.count[l];
 						for (long p = part; p < until; p++)
 							if (AddStrokesOfSymbol(XrGetH(letters.parts[p].beg), XrGetH(letters.parts[p].end), claimed, w - 1, rc, split) == 0)
-								goto failed;		// ROM BUG, kept: the stretches (letters.parts) are not freed
+							{
+								// ROM BUG (fixed): the stretches
+								// (letters.parts) are not freed.  The fix
+								// frees them before giving up.
+								if (RomBugFixed() && letters.parts != nil)
+									HWRMemoryFree((Ptr) letters.parts);
+								goto failed;
+							}
 						part += letters.count[l];
 						xrs += readings[0].fX30[l];
 					}

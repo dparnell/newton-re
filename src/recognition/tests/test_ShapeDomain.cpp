@@ -14,6 +14,7 @@
 #include "FixedMath.h"
 #include "RecObject.h"
 #include "NewtonMemory.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -611,6 +612,86 @@ TestEquations(TDomain* domain)
 }
 
 
+// The ROM's bugs in the shape recogniser's geometry, fixed (ROM BUG
+// (fixed) in ShapeEquations.cpp and ShapeKeyPoints.cpp).
+static void
+TestShapeBugs(void)
+{
+	// NewCoeffs: the ROM makes a 42nd equation where 41 fit
+	{
+		EqSystem system;
+		system.fN = 4;
+		system.fCount = 41;
+		SetRomBugFixed(false);
+		Handle h = NewCoeffs(&system);
+		EXPECT(h != nil && system.fCount == 42);
+		if (h != nil)
+			DisposeHandle(h);
+		system.fCount = 41;
+		SetRomBugFixed(true);
+		EXPECT(NewCoeffs(&system) == nil && system.fCount == 41);
+	}
+
+	// RLineOut2: a straight run 300 pixels long, its middle a pixel off.
+	// The ROM's limit on the path (chord * 1.38) wraps negative, so it is
+	// split; with the product in 64 bits it is one run, both ends marked 2.
+	{
+		FPoint pts[3];
+		pts[0].x = 0;		pts[0].y = 0;
+		pts[1].x = F(150);	pts[1].y = F(1);
+		pts[2].x = F(300);	pts[2].y = 0;
+		for (int fixed = 0; fixed < 2; fixed++)
+		{
+			SetRomBugFixed(fixed != 0);
+			char marks[3] = { 0, 0, 0 };
+			uint32_t breaks[30];
+			for (long i = 0; i < 30; i++)
+				breaks[i] = 0xffffffff;
+			breaks[0] = 0;
+			breaks[1] = 2;
+			RLineOut2(pts, marks, breaks, 0, 0, 2);
+			if (fixed)
+				EXPECT(marks[0] == 2 && marks[1] == 0 && marks[2] == 2 && breaks[1] == 2);
+			else
+				EXPECT(marks[0] == 1 && marks[1] == 1 && marks[2] == 1 && breaks[1] == 1);
+		}
+	}
+
+	// TVStrTail at the stroke's last corner: the ROM reads a point some
+	// 2^31 on (wrapped) and starts a segment after the last; the fix ends
+	// the last segment along its chord and starts nothing.
+	{
+		FPoint pts[11];
+		for (long i = 0; i < 11; i++)
+		{
+			pts[i].x = F(i * 10);
+			pts[i].y = F(i);
+		}
+		FPoint keys[3];
+		keys[0] = pts[0];
+		keys[1] = pts[10];
+		keys[2] = pts[10];
+		char kinds[3] = { 2, 2, 2 };
+		uint32_t breaks[3] = { 0, 10, 0xffffffff };
+		for (int fixed = 0; fixed < 2; fixed++)
+		{
+			SetRomBugFixed(fixed != 0);
+			SplineSeg segs[2];
+			memset(segs, 0, sizeof(segs));
+			segs[1].fT0.x = 0x1234;
+			char flags[3] = { 9, 9, 9 };
+			TVStrTail(1, pts, keys, kinds, breaks, segs, flags, 0);
+			EXPECT(segs[0].fT1.x == F(100) && segs[0].fT1.y == F(10));
+			if (fixed)
+				EXPECT(flags[1] == 0 && segs[1].fT0.x == 0x1234);
+			else
+				EXPECT(segs[1].fT0.x != 0x1234);
+		}
+	}
+	SetRomBugFixed(true);
+}
+
+
 int
 main()
 {
@@ -630,6 +711,7 @@ main()
 	TestSolver();
 	TestTrend();
 	TestEquations(domain);
+	TestShapeBugs();
 	if (failures != 0)
 	{
 		fprintf(stderr, "test_ShapeDomain: %d failures\n", failures);

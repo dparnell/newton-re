@@ -50,6 +50,7 @@
 #include "FixedMath.h"
 #include "Angles.h"
 
+#include "host/RomBugs.h"
 #include <string.h>
 
 
@@ -95,13 +96,14 @@ AccessPoint(long index, TDArray* shape, GeneralPt* pt)
 
 // ROM 0x00225330 NewCoeffs__FP8EqSystem
 // A new equation of 37 nought coefficients ('cof0'); nil if there are 42
-// already or no memory.  ROM BUG: the count allowed is one more than the
-// 41 the system has room for.  Its fN is left for FindEquations to set.
+// already or no memory.  ROM BUG (fixed): the count allowed is one more
+// than the 41 the system has room for.  The fix stops at 41.  Its fN is
+// left for FindEquations to set.
 Handle
 NewCoeffs(EqSystem* system)
 {
 	long count = system->fCount;
-	if (count > 0x29)
+	if (count > (RomBugFixed() ? 0x28 : 0x29))
 		return nil;
 	Handle h = MakeHandle(0x94);
 	NameHandle(h, 'cof0');

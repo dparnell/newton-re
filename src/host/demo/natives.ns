@@ -36,7 +36,8 @@ Print(["too narrow", MeasuredNumberStr("31.4159", 5, kFont)]);
 
 // the writing a stroke bundle holds drawn into a box: as large as fits,
 // kept within twice its size (and the box grown, not shrunk, when the
-// writing is too wide for it - a ROM bug kept)
+// writing is too wide for it - a ROM bug, fixed by default; the limit to
+// twice the writing's size makes the narrow box come out the same either way)
 kBundle := {bounds: {left: 0, top: 0, right: 20, bottom: 10}, strokes: []};
 Print(["original", DrawOriginal(kBundle, {left: 0, top: 0, right: 100, bottom: 50})]);
 Print(["original narrow", DrawOriginal(kBundle, {left: 0, top: 0, right: 50, bottom: 100})]);

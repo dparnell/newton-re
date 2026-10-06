@@ -18,6 +18,7 @@
 
 #include "Chunk.h"
 #include "ParaGraph.h"		// HWRAbs
+#include "host/RomBugs.h"
 #include <string.h>
 
 
@@ -570,13 +571,17 @@ SmallRing(tag_CHUNK_STAFF* staff, long s, long h)
 	tag_CHUNK* after = nil;
 	if (pieces > 3)
 		return 0;
-	// ROM BUG: the chunk before the arcs is meant to be the first one, but
-	// it is taken after the index has moved on - it is the first arc, so
-	// its tests always pass and the ends are the arc's own
+	// ROM BUG (fixed): the chunk before the arcs is meant to be the first
+	// one, but it is taken after the index has moved on - it is the first
+	// arc, so its tests always pass and the ends are the arc's own.  The
+	// fix takes it before moving on.
 	if (chunks[first].fKind != 2)
 	{
+		if (RomBugFixed())
+			before = &chunks[first];
 		first++;
-		before = &chunks[first];
+		if (!RomBugFixed())
+			before = &chunks[first];
 	}
 	if (pieces < 2 && before != nil)
 		return 0;

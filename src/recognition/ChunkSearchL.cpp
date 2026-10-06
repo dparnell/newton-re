@@ -19,6 +19,7 @@
 
 #include "Chunk.h"
 #include "ParaGraph.h"		// HWRAbs
+#include "host/RomBugs.h"
 #include <string.h>
 
 
@@ -717,9 +718,11 @@ StrokeIsUpright(tag_CHUNK_STAFF* staff, long k, int32_t* chunk)
 // then right, in a stroke of one to three chunks near the start or end of
 // the writing) with one or two uprights through it (StrokeIsUpright,
 // crossing it or lying across its middle), all the strokes between
-// accounted for.  ROM BUG: the test of the chunk after it asks whether a
-// comparison's answer (0 or 1) is more than an eighth of the height,
-// where the one before compares a width - so it never refuses anything.
+// accounted for.  ROM BUG (fixed): the test of the chunk after it asks
+// whether a comparison's answer (0 or 1) is more than an eighth of the
+// height, where the one before compares a width - so it never refuses
+// anything.  The fix makes it the test the chunk before has, of the
+// chunk's width and a half against the S's height.
 // ==> 1, *from and *to the whole $'s nodes.
 static long
 SearchDollar(tag_CHUNK_STAFF* staff, long idx, int32_t* from, int32_t* to)
@@ -758,9 +761,17 @@ SearchDollar(tag_CHUNK_STAFF* staff, long idx, int32_t* from, int32_t* to)
 			return 0;
 		if (c->fHeight < (nx->fHeight * 3) / 2)
 			return 0;
-		long wider = c->fHeight < (nx->fWidth * 3) / 2 ? 1 : 0;
-		if (wider > c->fHeight / 8)
-			return 0;
+		if (RomBugFixed())
+		{
+			if ((nx->fWidth * 3) / 2 - c->fHeight > c->fHeight / 8)
+				return 0;
+		}
+		else
+		{
+			long wider = c->fHeight < (nx->fWidth * 3) / 2 ? 1 : 0;
+			if (wider > c->fHeight / 8)
+				return 0;
+		}
 	}
 	brack_type* br = &brackets[c->fFirstBracket];
 	int32_t d = c->fBottom - n[br->fTo].y;

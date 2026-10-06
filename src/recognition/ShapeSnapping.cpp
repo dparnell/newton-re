@@ -29,6 +29,7 @@
 #include "StrokeQueue.h"
 #include "FixedMath.h"
 #include "Angles.h"
+#include "host/RomBugs.h"
 
 
 static inline long
@@ -76,10 +77,15 @@ GlobalTrends(TGeneralShapeUnit* unit, long* snapped)
 			long otherType = other->GetLabel(0);
 			if (otherType == kShapeSquare)
 			{
-				// ROM BUG: a turned square is skipped without moving on, so
-				// the rest of the list is that same square, skipped again
+				// ROM BUG (fixed): a turned square is skipped without moving
+				// on, so the rest of the list is that same square, skipped
+				// again.  The fix moves on to the next unit first.
 				if (other->GetAngle(0) != 0)
+				{
+					if (RomBugFixed())
+						entry = (TGeneralShapeUnit**) iter.GetNext();
 					continue;
+				}
 			}
 			else if (otherType != kShapeCircle)
 			{

@@ -19,6 +19,7 @@
 #include "ParaGraph.h"
 #include "WordSegment.h"
 #include "toolbox/ByteOrder.h"
+#include "host/RomBugs.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1077,9 +1078,9 @@ TooManyStrongElems(RWG_PPD_type* ppd, xrdata_type* xr, short* syms)
 // (the letter table's 0x4c-byte elements, each a nibble per xr type,
 // height, shift, orientation and link).  -1 for no such element, nought
 // when the type or the height is not allowed at all.
-// ROM BUG: the shift's, the orientation's and the link's bytes are added
-// whole as well as their nibbles, so the answer is inflated by whatever
-// the neighbouring nibble holds.
+// ROM BUG (fixed): the shift's, the orientation's and the link's bytes are
+// added whole as well as their nibbles, so the answer is inflated by
+// whatever the neighbouring nibble holds.  The fix adds the nibbles alone.
 long
 GetXrCorr(xrd_el_type* xr, UByte sym, long var, long idx, DTIHeader* dti)
 {
@@ -1116,12 +1117,13 @@ GetXrCorr(xrd_el_type* xr, UByte sym, long var, long idx, DTIHeader* dti)
 	if (h == 0)
 		return 0;
 	long sum = v + h;
+	long whole = RomBugFixed() ? 0 : 1;		// (the ROM bug above: the byte as well)
 	UByte b = el[0x2c + (xr->shift >> 1)];
-	sum += NIBBLE(b, xr->shift) + b;
+	sum += NIBBLE(b, xr->shift) + whole * b;
 	b = el[0x3c + (xr->orient >> 1)];
-	sum += NIBBLE(b, xr->orient) + b;
+	sum += NIBBLE(b, xr->orient) + whole * b;
 	b = el[0x34 + (xr->link >> 1)];
-	sum += NIBBLE(b, xr->link) + b;
+	sum += NIBBLE(b, xr->link) + whole * b;
 	#undef NIBBLE
 	return sum;
 }
@@ -1196,8 +1198,8 @@ SignedRootOfBend(long bend)
 // ROM 0x00338e10 CalculateCurvature__FlN21PiP13PS_point_typesPsT7P8ppd_typeUiP11xrdata_type
 // How much the trace bends between two xrs: from the first's end to the
 // second's start, or when they overlap from the middle of one to the
-// other's.  ROM BUG: the "middles" are half of each xr's length, not
-// points within it.
+// other's.  ROM BUG (fixed): the "middles" are half of each xr's length,
+// not points within it.  The fix takes the points half way along each.
 static intptr_t
 CalculateCurvature(intptr_t a, intptr_t b, intptr_t, int* err, POST_PARAMS* pp)
 {
@@ -1205,8 +1207,16 @@ CalculateCurvature(intptr_t a, intptr_t b, intptr_t, int* err, POST_PARAMS* pp)
 	long j = XrBeg(XrEl(b));
 	if (j <= i)
 	{
-		i = (i - XrBeg(XrEl(a))) / 2;
-		j = (XrEnd(XrEl(b)) - j) / 2;
+		if (RomBugFixed())
+		{
+			i = (i + XrBeg(XrEl(a))) / 2;
+			j = (XrEnd(XrEl(b)) + j) / 2;
+		}
+		else
+		{
+			i = (i - XrBeg(XrEl(a))) / 2;
+			j = (XrEnd(XrEl(b)) - j) / 2;
+		}
 		if (j <= i)
 		{
 			*err = 0x13;
@@ -2079,10 +2089,16 @@ CalculateBDShapeTip(intptr_t a, intptr_t b, intptr_t, int*, POST_PARAMS* pp)
 // ROM 0x0033bb6c ReturnZeroIfDoubleSkip__FlN21PiP13PS_point_typesPsT7P8ppd_typeUiP11xrdata_type
 // Whether the letter's prototype element that read an xr of this one's
 // type skipped it (0) or read it with a correlation (1).
-// ROM BUG: the element is looked for by giving the xr the next type up
-// for a moment and asking PostCompareXrs whether the two differ, which
-// they then always do, so nothing is found and the function always fails
-// with 0x1b.
+// The element is looked for by giving the xr the next type up for a
+// moment and asking PostCompareXrs whether the two differ.  (This was
+// once described here as the ROM's mistake - "they then always differ" -
+// but the xr is itself one of the xrs the elements index (the
+// interpreter pushes xrBase + found, and base is the same array), so at
+// the element that is this very xr the bumped type is on both sides and
+// they compare equal: the bump is how the code tells this xr from
+// another of the same type.  An xr the letter's own elements do not
+// index - one pushed from the letter before or after - is not found, and
+// the function fails with 0x1b.  Nothing to fix.)
 static intptr_t
 ReturnZeroIfDoubleSkip(intptr_t a, intptr_t, intptr_t, int* err, POST_PARAMS* pp)
 {

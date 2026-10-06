@@ -19,6 +19,7 @@
 #include "NewtonExceptions.h"
 #include "FixedMath.h"
 
+#include "host/RomBugs.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -340,6 +341,8 @@ WordRecogClear(WordRecog* wr, Boolean invalRun)
 		WordRecogInvalRun(wr);
 
 	wr->fField60 = wr->fRun[0];
+	if (RomBugFixed())
+		wr->fField68 = wr->fRun[18];	// (the ROM bug in WordRecogIsStrokeTooWide)
 	wr->fWordBreak = 0;
 
 	RosStroke* pending = wr->fPendingStroke;
@@ -637,12 +640,14 @@ WordRecogStrokeType(WordRecog* wr, const RosStroke* stroke)
 Boolean
 WordRecogIsStrokeTooWide(WordRecog* wr, RosStroke* stroke, Fixed multiple)
 {
-	// ROM BUG: fField68 is never set before its running mean first reads
-	// it (+0x68 is written only in WordRecogAddStroke2), so it starts as
-	// whatever the heap held and can be large enough for this and the mean
-	// to overflow; the ARM wraps, so the sums are worked in 32-bit
+	// ROM BUG (fixed): fField68 is never set before its running mean first
+	// reads it (+0x68 is written only in WordRecogAddStroke2), so it starts
+	// as whatever the heap held and can be large enough for this and the
+	// mean to overflow; the ARM wraps, so the sums are worked in 32-bit
 	// unsigned arithmetic here (the host traps a signed overflow) and the
-	// shift is the ARM's arithmetic one
+	// shift is the ARM's arithmetic one.  The fix starts it, with the rest
+	// of a run's measures in WordRecogClear, at the small height the run
+	// holds (fRun[18]), the measure it is set against here.
 	Fixed measured = (Fixed) (int32_t) ((uint32_t) wr->fField68 * 3u + (uint32_t) WordRecogDetermineMaxHeight(wr)) >> 2;
 	Fixed scale = (wr->fRun[18] < measured)
 				? FixedDivide(measured, wr->fRun[18])
@@ -804,20 +809,25 @@ LearnRunPair(Fixed* pair, Fixed value, Fixed nominal, Fixed deviation, Fixed low
 
 // ... and the same again with the mean left alone.
 //
-// ROM BUG: this works the second moment out from a mean it does not
-// change, so after the first stroke it writes back the number that was
-// already there.  The first time it does have an effect - it replaces
+// ROM BUG (fixed): this works the second moment out from a mean it does
+// not change, so after the first stroke it writes back the number that
+// was already there.  The first time it does have an effect - it replaces
 // ParaGraph's trained second moment with what the code's own rounding
 // makes of the same formula - but nothing is learnt.  The four
 // distributions it is used on (the between-letter ones) therefore
 // never move at all, while their four within-letter counterparts do.
 // The shape of the call says what was meant: it is the other half of
-// `LearnRunPair` with the first two lines dropped.
+// `LearnRunPair` with the first two lines dropped.  The fix puts the
+// first line back - the mean nudged an eighth of the way towards the
+// value, inside the gate the ROM already has (half to twice the mean),
+// which stands in for LearnRunPair's limits.
 static void
 RelearnRunSpread(Fixed* pair, Fixed value, Fixed nominal, Fixed deviation)
 {
 	if (FixedDivide(pair[0], 0x00020000) < value && value < FixedMultiply(pair[0], 0x00020000))
 	{
+		if (RomBugFixed())
+			pair[0] = FixedMultiply(0x0000e000, pair[0]) + FixedMultiply(0x00002000, value);
 		Fixed deviate = FixedMultiply(deviation, FixedDivide(pair[0], nominal));
 		pair[1] = FixedMultiply(pair[0], pair[0]) + FixedMultiply(deviate, deviate);
 	}
@@ -889,11 +899,17 @@ WordRecogAddStroke2(WordRecog* wr, RosStroke* stroke, Fixed advance, Fixed /*fie
 				XYFixedScaleFixedRect(&wr->fBaseline,
 					FixedDivide((Fixed) (int) ((unsigned int) wr->fResX << 16), 0x00480000),
 					FixedDivide((Fixed) (int) ((unsigned int) wr->fResY << 16), 0x00480000));
+			else if (RomBugFixed())
+			{
+				// (the fix: each axis by its own scale, when either is not one)
+				if (wr->fField2c != 0x00010000 || wr->fField30 != 0x00010000)
+					XYFixedScaleFixedRect(&wr->fBaseline, wr->fField2c, wr->fField30);
+			}
 			else if (wr->fField2c != 0x00010000)
-				// ROM BUG: it asks whether the horizontal scale is one
-				// and then scales *both* axes by the vertical one.
+				// ROM BUG (fixed): it asks whether the horizontal scale is
+				// one and then scales *both* axes by the vertical one.
 				// `fField2c` is never read anywhere else, so nothing
-				// notices.
+				// notices.  The fix scales x by fField2c and y by fField30.
 				XYFixedScaleFixedRect(&wr->fBaseline, wr->fField30, wr->fField30);
 
 			/*----------------------------------------------------------
@@ -987,8 +1003,9 @@ WordRecogAddStroke2(WordRecog* wr, RosStroke* stroke, Fixed advance, Fixed /*fie
 			// ... and of the height, over the strokes tall enough to be
 			// worth counting
 			if (FixedMultiply(0x00004000, wr->fRun[18]) < height)
-				// (ROM BUG: fField68 starts as heap rubbish - WordRecogIsStrokeTooWide;
-				//  the product wraps as the ARM's does)
+				// (fField68 starts as heap rubbish in the ROM - see the ROM
+				//  bug in WordRecogIsStrokeTooWide; the product wraps as the
+				//  ARM's does)
 				wr->fField68 = (Fixed) ((int32_t) ((uint32_t) wr->fField68 * (uint32_t) (seen - 1) + (uint32_t) height) / (int32_t) seen);
 
 			// and the first of the nine: how big a stroke is.  Anything
@@ -1329,13 +1346,13 @@ WRSegMean(Fixed base, long i, Fixed value, long w)
 // far from the running middle is left out of the middle altogether,
 // which is how a dot or a crossing is kept from moving it.
 //
-// ROM BUG: the reference's top and bottom are not gathered at all.
-// Each stroke sets them afresh, as the smaller of its own top and the
-// *leftmost x so far* and the greater of its own bottom and the
+// ROM BUG (fixed): the reference's top and bottom are not gathered at
+// all.  Each stroke sets them afresh, as the smaller of its own top and
+// the *leftmost x so far* and the greater of its own bottom and the
 // *rightmost x so far* - an x compared with a y, both being pixels on
 // the one tablet - so what reaches `SegmentWordXGap` is the last
 // stroke's, bent by where the word begins and ends.  Ported as it
-// stands.
+// stands; the fix gathers them, the smallest top and the greatest bottom.
 Boolean
 WRSegWordXGap(RosStroke* stroke, const SegWordInk* ink, WordRecog* wr, Fixed* strength)
 {
@@ -1371,8 +1388,16 @@ WRSegWordXGap(RosStroke* stroke, const SegWordInk* ink, WordRecog* wr, Fixed* st
 			left = b->left;
 		if (right < b->right)
 			right = b->right;
-		top = (left < b->top) ? left : b->top;
-		bottom = (right < b->bottom) ? b->bottom : right;
+		if (RomBugFixed())
+		{
+			top = (top < b->top) ? top : b->top;
+			bottom = (bottom < b->bottom) ? b->bottom : bottom;
+		}
+		else
+		{
+			top = (left < b->top) ? left : b->top;
+			bottom = (right < b->bottom) ? b->bottom : right;
+		}
 		if (rightmostX < centre.x)
 			rightmostX = centre.x;
 

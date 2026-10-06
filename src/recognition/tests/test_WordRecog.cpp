@@ -9,6 +9,7 @@
 #include "ROMDictionaryData.h"
 #include "FixedMath.h"
 #include "memory/host/KernelHeap.h"
+#include "host/RomBugs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -430,7 +431,11 @@ main()
 	}
 
 	// ---- the gap between letters is measured but never learnt ----
+	// (ROM BUG (fixed): the fix learns it, the mean nudged an eighth of
+	//  the way towards the gap)
+	for (int fixed = 0; fixed < 2; fixed++)
 	{
+		SetRomBugFixed(fixed != 0);
 		WordRecogReset(wr);
 		wr->fField68 = 0;
 		FPoint p[2];
@@ -445,7 +450,11 @@ main()
 		// band round the trained mean of 23.1, so the ROM does its
 		// work - and writes the mean straight back unchanged
 		WordRecogAddStroke2(wr, second, F(45), 0, 0, 0, F(1));
-		EXPECT(wr->fRun[4] == betweenMean);
+		if (fixed)
+			EXPECT(wr->fRun[4] == FixedMultiply(0x0000e000, betweenMean)
+								+ FixedMultiply(0x00002000, F(25)));
+		else
+			EXPECT(wr->fRun[4] == betweenMean);
 		// the second moment is what it always was, to the code's own
 		// rounding
 		Fixed deviate = FixedMultiply(0x000a7851, FixedDivide(wr->fRun[4], 0x00171999));
@@ -453,6 +462,15 @@ main()
 							+ FixedMultiply(deviate, deviate));
 
 		WordRecogClearStrokes(wr);
+	}
+	SetRomBugFixed(true);
+
+	// ---- fField68 starts as the run's small height (ROM BUG (fixed): the
+	//      ROM leaves it as the heap had it) ----
+	{
+		wr->fField68 = 0x7fff0000;
+		WordRecogReset(wr);
+		EXPECT(wr->fField68 == wr->fRun[18]);
 	}
 
 	// ---- and there is room for a hundred and fifty strokes ----

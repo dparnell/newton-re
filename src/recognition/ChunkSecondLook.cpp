@@ -24,6 +24,7 @@
 
 #include "Chunk.h"
 #include "ParaGraph.h"		// HWRMemoryAlloc, HWRMemoryFree, HWRAbs
+#include "host/RomBugs.h"
 #include <string.h>
 
 
@@ -1017,10 +1018,11 @@ DropDisallowedVariants(void* lo, tag_CHUNK* chunks, tag_wapx_type* nodes, int32_
 // the writing is in closing the two ends; a gap of no width strictly
 // inside it) - then the digits, with their values and fExtra, and the
 // gaps, value 0xffff, put in the list as class 1900 in order.
-// ROM BUG: nothing limits the gaps kept to the 33 words the ROM has for
-// them; past that they run into the sorted digits (the two arrays are one
-// block here as on the stack) and, past both, into the counts - DEVIATION:
-// the host stops at the end of the block.
+// ROM BUG (fixed): nothing limits the gaps kept to the 33 words the ROM
+// has for them; past that they run into the sorted digits (the two arrays
+// are one block here as on the stack) and, past both, into the counts -
+// DEVIATION: the host stops at the end of the block.  The fix keeps the
+// first 33 gaps and leaves the rest out, the digits untouched.
 // ==> how many objects went in (0 with no digits).
 long
 DigitsSecondLooks(void* lo, tag_CHUNK* chunks, int32_t* real, tag_STK* strokes, long strokeCount, tag_wapx_type* nodes, const UByte* allowed, tag_BOX box)
@@ -1101,9 +1103,17 @@ DigitsSecondLooks(void* lo, tag_CHUNK* chunks, int32_t* real, tag_STK* strokes, 
 			int32_t overlap = hi - low;
 			if ((w == 0 && l > lo1 && l < hi1) || (w > 0 && overlap * 100 / w > 60))
 			{
-				if (gaps < kBlock)		// DEVIATION: see above
-					kept[gaps] = obj;
-				gaps++;
+				if (RomBugFixed())
+				{
+					if (gaps < 33)
+						kept[gaps++] = obj;
+				}
+				else
+				{
+					if (gaps < kBlock)		// DEVIATION: see above
+						kept[gaps] = obj;
+					gaps++;
+				}
 				obj->fValue = (int32_t) at;
 				break;
 			}

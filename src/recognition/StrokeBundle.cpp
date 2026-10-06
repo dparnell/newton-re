@@ -29,6 +29,7 @@
 #include "Polygons.h"
 #include "View.h"		// FailGetView
 #include "Ports.h"		// the pen
+#include "host/RomBugs.h"
 
 
 // (a box that holds nothing yet: the recogniser's mark is a top of
@@ -727,11 +728,12 @@ FStrokesAfterUnit(RefArg /*rcvr*/, RefArg unit, RefArg /*ignored*/)
 // worked out; when that is too wide the box's width is kept and the height
 // made to suit.
 //
-// ROM BUG, kept: that height is the box's height times the too-wide width
-// divided by the box's - the ratio upside down - so it comes out taller
-// than the box instead of shorter, and the box grows rather than shrinks
-// in that direction (then limited to twice the writing's height, as the
-// width is to twice its width).
+// ROM BUG (fixed): that height is the box's height times the too-wide
+// width divided by the box's - the ratio upside down - so it comes out
+// taller than the box instead of shorter, and the box grows rather than
+// shrinks in that direction (then limited to twice the writing's height,
+// as the width is to twice its width).  The fix turns the ratio the right
+// way up, the box's height times its width over the too-wide width.
 static Ref
 FDrawOriginal(RefArg /*rcvr*/, RefArg bundle, RefArg itemBounds)
 {
@@ -755,7 +757,10 @@ FDrawOriginal(RefArg /*rcvr*/, RefArg bundle, RefArg itemBounds)
 	long drawHeight = height;
 	if (drawWidth > width)
 	{
-		drawHeight = (drawWidth * height) / width;		// (the ROM bug above: upside down)
+		if (RomBugFixed())
+			drawHeight = (height * width) / drawWidth;
+		else
+			drawHeight = (drawWidth * height) / width;		// (the ROM bug above: upside down)
 		drawWidth = width;
 	}
 	if (drawWidth > strokeWidth * 2)

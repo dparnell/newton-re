@@ -21,6 +21,7 @@
 #include "LowLevel.h"
 #include "ParaGraph.h"
 #include "XrDomains.h"
+#include "host/RomBugs.h"
 
 
 static inline long
@@ -98,10 +99,13 @@ extract_all_extr(low_type* low, UByte kind, EXTR* extr, long* all, long* count, 
 			long m = n;
 			for (SPEC_TYPE* back = elem->prev; back->mark != 0x10; back = back->prev)
 			{
-				// ROM BUG: this walk back does not skip the extrema coded
-				// 0x6f that the copying above left out, so a stroke with
-				// one writes its shift into the EXTR before the stroke's
-				// own (or before the array, for the first stroke's).
+				// ROM BUG (fixed): this walk back does not skip the extrema
+				// coded 0x6f that the copying above left out, so a stroke
+				// with one writes its shift into the EXTR before the
+				// stroke's own (or before the array, for the first
+				// stroke's).  The fix skips them, as the copying does.
+				if (RomBugFixed() && back->code == 0x6f)
+					continue;
 				if (back->mark == kind && (back->attr == 1 || back->attr == 5 || back->code == 0x6e))
 				{
 					m--;
