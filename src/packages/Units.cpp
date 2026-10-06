@@ -25,6 +25,7 @@
 #include "OSErrors.h"
 #include "LargeObjects.h"
 #include "LargeBinaries.h"
+#include "host/RomBugs.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -153,14 +154,15 @@ RExPendingImport::Match(void* /*source*/)
 // ROM 0x000cf934 RegisterPendingImport__FP12MPImportItemlPcN22
 // A package's import slot waiting for its unit, put at the front of the
 // pending imports.
-// ROM BUG: the test for the allocation's failing tests the import item
-// instead of the new object - a nil item throws out-of-memory, and a
-// failed allocation is written through.
+// ROM BUG (fixed): the test for the allocation's failing tests the import
+// item instead of the new object - a nil item throws out-of-memory, and a
+// failed allocation is written through.  The fix: the new object is
+// tested.
 void
 RegisterPendingImport(MPImportItem* item, long index, const char* name, long major, long minor)
 {
 	PkgPendingImport* pending = new PkgPendingImport;
-	if (item == nil)
+	if (RomBugFixed() ? pending == nil : item == nil)
 		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
 	pending->fKind = 0;
 	pending->fName = name;
@@ -174,12 +176,14 @@ RegisterPendingImport(MPImportItem* item, long index, const char* name, long maj
 
 
 // ROM 0x000cf9c8 RegisterPendingImport__FP9RExImportPlPclT4
-// A ROM extension's import waiting for its unit.  ROM BUG as above.
+// A ROM extension's import waiting for its unit.  ROM BUG (fixed) as
+// above: the record is tested rather than the new object, and the fix
+// tests the new object.
 void
 RegisterPendingImport(const void* rexImport, Ref* table, const char* name, long major, long minor)
 {
 	RExPendingImport* pending = new RExPendingImport;
-	if (rexImport == nil)
+	if (RomBugFixed() ? pending == nil : rexImport == nil)
 		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
 	pending->fKind = 1;
 	pending->fName = name;
@@ -202,6 +206,35 @@ RemovePendingImports(void* source)
 	while (pending != nil)
 	{
 		if (pending->Match(source))
+		{
+			MPPendingImport* doomed = pending;
+			pending = pending->fNext;
+			delete doomed;
+			if (previous == nil)
+				gMPPendingImports = pending;
+			else
+				previous->fNext = pending;
+		}
+		else
+		{
+			previous = pending;
+			pending = pending->fNext;
+		}
+	}
+}
+
+
+// host: the pending imports of one import item forgotten (the fix of the
+// ROM BUG in InstallImportTable below; RemovePendingImports goes by part,
+// which would take an earlier installation's too).
+static void
+RemovePendingImportsOf(MPImportItem* import)
+{
+	MPPendingImport* previous = nil;
+	MPPendingImport* pending = gMPPendingImports;
+	while (pending != nil)
+	{
+		if (pending->fKind == 0 && pending->fImport == import)
 		{
 			MPPendingImport* doomed = pending;
 			pending = pending->fNext;
@@ -369,7 +402,9 @@ InstallExportTables(RefArg exportTable, void* source)
 // refs through it are no longer resolved), the importers that are still
 // there reported.  ==> an array of canonicalDeadImport frames, {name,
 // major, minor, client: the importing part's frame}.
-// ROM BUG: the export item itself is never freed, only taken off the list.
+// ROM BUG (fixed): the export item itself is never freed, only taken off
+// the list.  The fix: it is freed once it is off the list (nothing points
+// at it by then - every import slot that did is pending again).
 Ref
 RemoveExportTables(void* source)
 {
@@ -419,6 +454,8 @@ RemoveExportTables(void* source)
 		}
 		FreeExportTable(item);
 		gMPExportList->RemoveElementsAt(iter.CurrentIndex(), 1);
+		if (RomBugFixed())
+			free(item);
 	}
 	return deadImports;
 }
@@ -433,10 +470,13 @@ RemoveExportTables(void* source)
 // of the same name (ignoring case) and major version with the highest
 // minor version at least the one asked for, or made a pending import
 // when there is none.
-// ROM BUG: the item is put on the import list with InsertUnique, and a
-// part already there (which can only be this part installed twice) throws
-// out-of-memory; the pending imports registered meanwhile are left
-// pointing at the item the handler frees.
+// ROM BUG (fixed): the item is put on the import list with InsertUnique,
+// and a part already there (which can only be this part installed twice)
+// throws out-of-memory; the pending imports registered meanwhile are left
+// pointing at the item the handler frees.  The fix: whatever throws, what
+// the item did is undone before it is freed - its pending imports
+// forgotten and each export it took one client the fewer (its table copy
+// freed at none); the part installed twice is still refused.
 void
 InstallImportTable(ULong package, RefArg importTable, void* source, long size)
 {
@@ -451,6 +491,11 @@ InstallImportTable(ULong package, RefArg importTable, void* source, long size)
 	import->fEnd = (char*) source + size;
 	import->fImportTable = importTable;
 	import->fCount = count;
+	if (RomBugFixed())
+	{
+		for (long slot = 0; slot < count; slot++)
+			import->fExports[slot] = nil;
+	}
 	newton_try
 	{
 		RefVar wanted;
@@ -491,6 +536,16 @@ InstallImportTable(ULong package, RefArg importTable, void* source, long size)
 	}
 	cleanup
 	{
+		if (RomBugFixed())
+		{
+			RemovePendingImportsOf(import);
+			for (long slot = 0; slot < count; slot++)
+			{
+				MPExportItem* item = import->fExports[slot];
+				if (item != nil && --item->fClients == 0)
+					FreeExportTable(item);
+			}
+		}
 		free(import);
 	}
 	end_try;
@@ -500,7 +555,9 @@ InstallImportTable(ULong package, RefArg importTable, void* source, long size)
 // ROM 0x000d0588 RemoveImportTable__FPv
 // What the part imports forgotten: its pending imports, and each export
 // it used one client the fewer (its copy of the table freed at none).
-// ROM BUG: the import item is taken off the list but never freed.
+// ROM BUG (fixed): the import item is taken off the list but never freed.
+// The fix: it is freed once it is off the list (its pending imports went
+// first).
 void
 RemoveImportTable(void* source)
 {
@@ -523,6 +580,8 @@ RemoveImportTable(void* source)
 			}
 		}
 		gMPImportList->RemoveElementsAt(index, 1);
+		if (RomBugFixed())
+			free(import);
 	}
 }
 
