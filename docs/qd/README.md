@@ -473,7 +473,8 @@ only widths (`hmtx`, for the printer).  espy's plain data has strikes at
 picker offers), and there is a bold data.  Every table of the 13 fonts,
 field by field and with what the ROM reads of it, is
 [fonts-sfnt.md](fonts-sfnt.md); the ROM source tree keeps them as BDF
-strikes and text tables (`tools/fonts/`).
+strikes and text tables (`tools/fonts/`).  What drawing in the host's own fonts
+would take is [host-fonts.md](host-fonts.md) (an investigation).
 
 A `StyleRecord` (0x20 bytes: the family, the size in 16.16, the face,
 a pattern) comes from a font spec (`CreateTextStyleRecord` 0x0025f980):
