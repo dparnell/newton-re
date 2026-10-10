@@ -9,7 +9,7 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
-## 2026-10-10: the host's own fonts (branch host-fonts)
+## 2026-10-10: the host's own fonts (branch host-fonts, merged)
 
 The owner asked what it would take for the Newton to use the host
 system's fonts; the investigation found the font engine already has the

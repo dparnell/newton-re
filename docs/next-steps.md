@@ -45,7 +45,9 @@ the way are all in `docs/work-log.md`.
 
 ## In progress
 
-### Host fonts (branch `host-fonts`, 2026-10-10)
+Nothing at present.
+
+### Left of host fonts (merged 2026-10-10, off unless asked for)
 
 The host's own fonts offered beside the ROM's, drawn by the host's
 rasteriser (`docs/qd/host-fonts.md`): off unless asked for (the Host
