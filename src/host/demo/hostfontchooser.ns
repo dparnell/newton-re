@@ -1,0 +1,95 @@
+// The Host preferences panel's font chooser (HostSettings.ns's
+// OpenFontChooser; docs/qd/host-fonts.md) used with the pen: with no
+// family chosen and the host's fonts off, the chooser is opened, its first
+// and third rows ticked and Done tapped - the host's fonts are then on,
+// exactly those two families in the font menus, and the choice kept in the
+// Host panel's entry; opened again, it shows the two ticked, and Usual
+// goes back to the host's usual families.  ctest host.NewtonHostFontChooser
+// (Windows):
+//
+//   build/host/host/newton --display 320x480 --erase --store tmp/hostfontchooser.store --headless 240 \
+//       --script src/host/demo/hostfontchooser.ns
+
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView, the steps
+HostInclude("apphelpers.ns");		// tapButtonText
+
+wtName := "hostfontchooser";
+chooserSettings := GetGlobalVar('|HostSettings:host|);
+
+chooserSlip := func() call findView with (GetRoot(), func(v) v.fontChooser);
+chooserList := func() call findView with (GetRoot(), func(v) v.fontList);
+// a row of the list tapped (the rows the list shows from its top)
+chooserTapRow := func(k) begin
+	local list := call chooserList with ();
+	local b := list:GlobalBox();
+	call tapAt with (b.left + 20, b.top + k * list.lineHeight + list.lineHeight div 2);
+end;
+chooserOpen := func(done) begin
+	chooserSettings:OpenFontChooser(nil);
+	call waitFor with ("hostfontchooser: the chooser open", func() call chooserList with (), done, 10);
+end;
+chooserSymbols := func() foreach s in HostFontsAdded() collect SPrintObject(s);
+
+wtSteps := [
+	// nothing chosen, the host's fonts off
+	func(done) begin
+		chooserSettings:ChooseFonts([]);
+		HostSetSetting('hostFonts, nil);
+		call wtCheck with ("no host fonts to start with", Length(HostFontsAdded()) = 0, "(" & SPrintObject(HostFontsAdded()) & ")");
+		call done with ();
+	end,
+	chooserOpen,
+	func(done) begin
+		local list := call chooserList with ();
+		call wtCheck with ("the chooser lists the host's families", Length(list.listItems) = Length(HostFontFamilies()) and Length(list.listItems) > 2,
+			"(" & Length(list.listItems) & " listed)");
+		call wtCheck with ("none ticked", Length(list.selectedItems) = 0, "(" & SPrintObject(list.selectedItems) & ")");
+		call chooserTapRow with (0);
+		call settleStep with (done);
+	end,
+	func(done) begin
+		call chooserTapRow with (2);
+		call settleStep with (done);
+	end,
+	call shotStep with ("hostfontchooser"),
+	func(done) begin
+		local list := call chooserList with ();
+		call wtCheck with ("rows 0 and 2 ticked", Length(list.selectedItems) = 2 and SetContains(list.selectedItems, 0) and SetContains(list.selectedItems, 2),
+			"(" & SPrintObject(list.selectedItems) & ")");
+		call tapButtonText with (call chooserSlip with (), "Done");
+		call waitFor with ("hostfontchooser: the chooser closed", func() not call chooserSlip with (), done, 10);
+	end,
+	func(done) begin
+		local names := HostFontFamilies();
+		local added := call chooserSymbols with ();
+		call wtCheck with ("the host's fonts turned on, with the two families", Length(added) = 2
+			and StrEqual(added[0], names[0] & ".host") and StrEqual(added[1], names[2] & ".host"), "(" & SPrintObject(added) & ")");
+		local prefs := GetAppPrefs('|HostSettings:host|, nil);
+		call wtCheck with ("the choice kept", prefs and IsArray(prefs.fontFamilies) and Length(prefs.fontFamilies) = 2
+			and StrEqual(prefs.fontFamilies[0], names[0]), "(" & SPrintObject(prefs and prefs.fontFamilies) & ")");
+		call wtCheck with ("the setting kept on", prefs and prefs.settings and prefs.settings.hostFonts, "(" & SPrintObject(prefs and prefs.settings) & ")");
+		call done with ();
+	end,
+	chooserOpen,
+	func(done) begin
+		local list := call chooserList with ();
+		call wtCheck with ("opened again, the two ticked", Length(list.selectedItems) = 2 and SetContains(list.selectedItems, 0) and SetContains(list.selectedItems, 2),
+			"(" & SPrintObject(list.selectedItems) & ")");
+		call tapButtonText with (call chooserSlip with (), "Usual");
+		call waitFor with ("hostfontchooser: the chooser closed", func() not call chooserSlip with (), done, 10);
+	end,
+	func(done) begin
+		local usual := HostFontsChosen();
+		local added := HostFontsAdded();
+		call wtCheck with ("Usual: the host's usual families", Length(added) > 2 and Length(added) <= Length(usual), "(" & SPrintObject(added) & ")");
+		local prefs := GetAppPrefs('|HostSettings:host|, nil);
+		call wtCheck with ("Usual: no choice kept", prefs and not HasSlot(prefs, 'fontFamilies), "(" & SPrintObject(prefs) & ")");
+		call done with ();
+	end,
+	func(done) begin
+		Print("hostfontchooser: done, " & wtFailures & " failed");
+		HostQuit();
+	end];
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], wtNext);			// "Daniel"

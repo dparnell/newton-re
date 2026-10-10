@@ -16,6 +16,12 @@
 // Printers panel keeps its printers (print/host/HostPrinters.ns); only a
 // setting changed here is kept, so one never touched stays as newton was
 // started (--ir-lan, NEWTON_RM_*).
+//
+// A host that draws fonts (qd/HostFonts.h) has "More fonts from the host"
+// and "Choose fonts...", which opens a list of every family the host has
+// to tick those the font menus offer; the families chosen are kept in the
+// same entry (its fontFamilies slot, an array of names - none kept: the
+// host's usual ones), and given to the host first at boot.
 
 {
 	kAppSymbol: '|HostSettings:host|,
@@ -24,6 +30,9 @@
 	Restore: func()
 	begin
 		local prefs := GetAppPrefs(kAppSymbol, nil);
+		// (the families chosen before the setting that adds them)
+		if prefs and HasSlot(prefs, 'fontFamilies) and IsArray(prefs.fontFamilies) then
+			HostSetFontFamilies(prefs.fontFamilies);
 		if prefs and prefs.settings then
 			foreach item in HostSettingsList() do
 				if item.kind <> 'button and not item.nextStart and HasSlot(prefs.settings, item.setting) then
@@ -129,13 +138,118 @@
 					 viewBounds: {left: 10, top: top, right: 130, bottom: top + 16},
 					 text: item.label,
 					 setting: item.setting,
-					 buttonClickScript: func() HostSetSetting(setting, true)});
+					 action: item.action,
+					 // (a button the panel does itself names its method)
+					 buttonClickScript: func()
+						if action then Perform(GetGlobalVar('|HostSettings:host|), action, [:Parent()])
+						else HostSetSetting(setting, true)});
 			top := top + 22;
 		end;
 		panel.stepChildren := children;
 		panel.height := top + 8;
 		panel.viewBounds := {left: 0, top: 0, right: 0, bottom: panel.height};
 	end,
+
+	// The font chooser: every family the host has in a list, those the
+	// font menus offer ticked (the ROM's protoTextList with several
+	// selections), Done keeping what is ticked - and turning the host's
+	// fonts on, if they are off, when anything is - Usual going back to
+	// the host's usual families.
+	OpenFontChooser: func(panelView)
+	begin
+		local names := HostFontFamilies();
+		if not names or Length(names) = 0 then return;
+		local chosen := HostFontsChosen();
+		local ticked := [];
+		foreach i, name in names do
+			foreach c in chosen do
+				if StrEqual(c, name) and not SetContains(ticked, i) then AddArraySlot(ticked, i);
+		local app := GetAppParams();
+		local width := Min(app.appAreaWidth - 20, 300);
+		local height := Min(app.appAreaHeight - 20, 420);
+		local slip := BuildContext({_proto: fontChooser, familyNames: names, ticked: ticked, panelView: panelView,
+			viewBounds: RelBounds((app.appAreaWidth - width) div 2, (app.appAreaHeight - height) div 2, width, height),
+			listBottom: height - 34});
+		slip:Open();
+		slip;
+	end,
+
+	// the families chosen (nil: the host's usual ones) given to the host
+	// and kept
+	ChooseFonts: func(names)
+	begin
+		HostSetFontFamilies(names);
+		local prefs := GetAppPrefs(kAppSymbol, {settings: {}});
+		if names then prefs.fontFamilies := names else RemoveSlot(prefs, 'fontFamilies);
+		EntryChange(prefs);
+	end,
+
+	fontChooser: {
+		_proto: @179,
+		viewFlags: 580,
+		viewBounds: {left: 0, top: 0, right: 300, bottom: 420},
+		fontChooser: true,
+		familyNames: [],
+		ticked: [],
+		panelView: nil,
+		listBottom: 386,
+		stepChildren: [
+			{_proto: @218, viewBounds: {left: 10, top: 6, right: -10, bottom: 22}, viewJustify: 48,
+			 viewFont: {family: 'espy, face: 1, size: 10},
+			 text: "Fonts from the host"},
+			{_proto: @218, viewBounds: {left: 10, top: 22, right: -10, bottom: 38}, viewJustify: 48,
+			 text: "Tick those the font menus offer:"},
+			{_proto: @228, viewBounds: {left: 10, top: 42, right: -10, bottom: 380}, viewJustify: 48,
+			 useMultipleSelections: true, useScrollers: true, fontList: true,
+			 listItems: [], selectedItems: nil,
+			 viewSetupFormScript: func() begin
+				listItems := familyNames;
+				selectedItems := Clone(ticked);
+				viewBounds := {left: 10, top: 42, right: -10, bottom: listBottom};
+				inherited:?viewSetupFormScript();
+			 end,
+			 // (the list measured and its rows made once it has its box: the
+			 //  ROM's protoTextList leaves SetupList to its user)
+			 viewSetupDoneScript: func() begin
+				inherited:?viewSetupDoneScript();
+				:SetupList();
+				:RedoChildren();
+			 end},
+			{_proto: @226, viewBounds: {left: -204, top: -26, right: -144, bottom: -10}, viewJustify: 8388774,
+			 text: "Usual", buttonClickScript: func() :Parent():Finish('usual)},
+			{_proto: @226, viewBounds: {left: -136, top: -26, right: -76, bottom: -10}, viewJustify: 8388774,
+			 text: "Cancel", buttonClickScript: func() :Parent():Finish(nil)},
+			{_proto: @226, viewBounds: {left: -68, top: -26, right: -8, bottom: -10}, viewJustify: 8388774,
+			 text: "Done", buttonClickScript: func() :Parent():Finish('done)}
+		],
+		// the families ticked, in the list's order
+		PickedNames: func()
+		begin
+			local list := nil;
+			foreach c in :ChildViewFrames() do
+				if c.fontList then list := c;
+			local picked := if list and list.selectedItems then Clone(list.selectedItems) else [];
+			Sort(picked, '|<|, nil);
+			foreach i in picked collect familyNames[i];
+		end,
+		Finish: func(how)
+		begin
+			local settings := GetGlobalVar('|HostSettings:host|);
+			if how = 'usual then
+				settings:ChooseFonts(nil)
+			else if how = 'done then begin
+				local names := :PickedNames();
+				settings:ChooseFonts(names);
+				if Length(names) > 0 and Length(HostFontsAdded()) = 0 then begin
+					settings:Change('hostFonts, true);
+					if panelView then
+						foreach c in panelView:ChildViewFrames() do
+							if c.setting = 'hostFonts then SetValue(c, 'viewValue, true);
+				end;
+			end;
+			:Close();
+		end,
+	},
 
 	Start: func()
 	begin

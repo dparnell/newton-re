@@ -220,7 +220,13 @@ FHostSettingsList(RefArg /*rcvr*/)
 		AddArraySlot(list, RefVar(Item("colourScreen", "Colour screen (next start)", kCheck, colourChosen >= 0 ? colourChosen : ColourScreen(), true)));
 	}
 	if (HostFontsAvailable())
+	{
 		AddArraySlot(list, RefVar(Item("hostFonts", "More fonts from the host", kCheck, HostFontFamiliesAdded())));
+		// (a button done in NewtonScript: HostSettings.ns's OpenFontChooser)
+		RefVar chooser(Item("hostFontChooser", "Choose fonts...", kButton, 0));
+		SetFrameSlot(chooser, RefVar(Intern((char*) "action")), RefVar(Intern((char*) "OpenFontChooser")));
+		AddArraySlot(list, chooser);
+	}
 	if (HostWindowOption("clearGhosts", &value))
 		AddArraySlot(list, RefVar(Item("clearGhosts", "Clear ghosts", kButton, 0)));
 	return list;

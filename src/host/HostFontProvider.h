@@ -4,9 +4,11 @@
 	Contains:	The host's fonts given to the Newton: the font provider
 				(qd/HostFonts.h) made of the platform's rasteriser
 				(host/HostFontRaster.h) and registered at boot, with the
-				NewtonScript natives.  Host fonts are added to vars.fonts
-				only when asked for - the Host preferences panel's "More
-				fonts from the host", or NEWTON_HOST_FONTS:
+				NewtonScript natives (HostFontsChosen and
+				HostSetFontFamilies: the families the Host panel's "Choose
+				fonts..." list has ticked).  Host fonts are added to
+				vars.fonts only when asked for - the Host preferences
+				panel's "More fonts from the host", or NEWTON_HOST_FONTS:
 
 					unset or 0	none (unless the panel's setting is kept on)
 					1			the host's usual families (HostFontRasterDefaults)

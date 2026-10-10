@@ -31,6 +31,14 @@ glyphs) and its provider (`host/HostFontProvider.cpp`); the Host panel's
 (a made-up provider of boxes: every host) and `host.NewtonHostFonts`
 (Windows: four families picked in the Styles slip).  `docs/qd/host-fonts.md`.
 
+Then the Host panel's "Choose fonts...": every family the host has in the
+ROM's protoTextList with several selections, those ticked put into the
+font menus at once and kept in the panel's entry (`fontFamilies`), Usual
+going back to the host's ten.  The list stays empty unless its user calls
+`SetupList` once the view has its box - the ROM leaves that to whoever
+uses the proto (the Network Printers panel does it in its refresh).
+ctest `host.NewtonHostFontChooser` does it with the pen.
+
 ## 2026-10-06: the ROM's known bugs fixed, switchable (branch fix-rom-bugs)
 
 The owner asked for every known ROM bug to be fixed, harmless and

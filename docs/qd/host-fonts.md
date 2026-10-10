@@ -19,17 +19,26 @@ eventually, and nothing here may stand in its way (below).
 ## Using it
 
 - **The Host preferences panel**: "More fonts from the host" (shown only
-  on a host that draws fonts) adds the host's usual families to the font
-  menus, and takes them out again. The setting is kept with the other
-  Host settings.
+  on a host that draws fonts) adds the families chosen - the host's usual
+  ones until others are - to the font menus, and takes them out again.
+  **"Choose fonts..."** opens a list of every family the host has (the
+  ROM's protoTextList with several selections, scrolling): tick those the
+  menus should offer and tap Done - the menus change at once, and the
+  host's fonts are turned on if they were off and something is ticked;
+  Usual goes back to the host's usual families. Both the setting and the
+  families chosen are kept in the Host panel's entry in the System soup
+  (`fontFamilies`, an array of names), the families given to the host
+  first at boot.
 - **`NEWTON_HOST_FONTS`** at start: `1` the host's usual families, `*`
   every family it has (several hundred on Windows - a long picker), or a
   comma-separated list of family names (`Georgia,Consolas`); `0` or unset,
   none (unless the panel's setting is kept on). A list given here is also
   what the panel's setting adds.
-- From NewtonScript: `HostFontFamilies()` (every family the host has, nil
-  when it draws none), `HostFontsAdded()` (the symbols of those in
-  `vars.fonts`), `HostSetSetting('hostFonts, true)`.
+- From NewtonScript: `HostFontFamilies()` (every family the host has that
+  a family symbol can name, nil when it draws none), `HostFontsAdded()`
+  (the symbols of those in `vars.fonts`), `HostFontsChosen()` (the names
+  the setting adds), `HostSetFontFamilies(names)` (nil: the usual ones),
+  `HostSetSetting('hostFonts, true)`.
 
 A host family is named in a font spec by its symbol, the family name and
 `.host`: `{family: '|Georgia.host|, size: 12, face: 0}`. A note written in
@@ -39,7 +48,9 @@ in the user's font, as any spec naming an unknown family is
 
 The demo `src/host/demo/hostfonts.ns` (ctest `host.NewtonHostFonts`,
 Windows) turns host fonts on, picks four families in the Styles slip and
-checks the note is set and drawn in each.
+checks the note is set and drawn in each; `hostfontchooser.ns` (ctest
+`host.NewtonHostFontChooser`) ticks two families in the chooser with the
+pen, taps Done and checks the menus and what is kept, then Usual.
 
 ## How it works
 
@@ -159,9 +170,9 @@ Not built, but the design keeps the door open:
   offered (it was not the aim, and fixed-height views would clip).
 - **Family names** a symbol cannot carry (beyond printable ASCII, or with
   `|`) are not offered; nor are more than 63 characters of a name kept.
-- **Choosing families**: the panel adds the host's usual ten, or the
-  `NEWTON_HOST_FONTS` list; a chooser on the Host panel for the rest is
-  still to do (a picker of hundreds of families does not fit the screen).
+- **The chooser** lists names only (not each in its own face), and a name
+  longer than the list is wide runs under its scroll arrows, as in any
+  protoTextList.
 - **Line spacing**: a host face's ascent and descent are the host's
   (Windows' `tmAscent` covers accents), so lines in a host font are
   somewhat taller than in the ROM's fonts at the same size.

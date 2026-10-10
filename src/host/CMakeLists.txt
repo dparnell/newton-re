@@ -1759,6 +1759,15 @@ if(WIN32)
     set_tests_properties(host.NewtonHostFonts PROPERTIES TIMEOUT 340
                          PASS_REGULAR_EXPRESSION "hostfonts: done, 0 failed"
                          FAIL_REGULAR_EXPRESSION "FAILED|waited in vain|is not answered|stopped \\(|fell over")
+    # the Host panel's font chooser used with the pen: two families ticked,
+    # Done, then Usual (demo/hostfontchooser.ns)
+    add_test(NAME host.NewtonHostFontChooser
+             COMMAND newton --display 320x480 --erase --store ${CMAKE_CURRENT_BINARY_DIR}/hostfontchooser.store --headless 280
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/hostfontchooser.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonHostFontChooser PROPERTIES TIMEOUT 340
+                         PASS_REGULAR_EXPRESSION "hostfontchooser: done, 0 failed"
+                         FAIL_REGULAR_EXPRESSION "FAILED|waited in vain|is not answered|stopped \\(|fell over")
 endif()
 
 # a large binary (VBO) made on the booted machine's internal store

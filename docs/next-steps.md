@@ -51,8 +51,8 @@ The host's own fonts offered beside the ROM's, drawn by the host's
 rasteriser (`docs/qd/host-fonts.md`): off unless asked for (the Host
 panel's "More fonts from the host", `NEWTON_HOST_FONTS`).  Done: the
 engine (`qd/HostFontEngine.cpp`, ctest `qd.HostFonts`) and the Windows
-provider over GDI (ctest `host.NewtonHostFonts`).  Left: a chooser for the
-families on the Host panel; Linux (fontconfig + FreeType) and reMarkable
+provider over GDI (ctest `host.NewtonHostFonts`), the Host panel's font
+chooser (ctest `host.NewtonHostFontChooser`).  Left: Linux (fontconfig + FreeType) and reMarkable
 (FreeType) providers; printing tried; anti-aliased text, later, by the
 owner's wish - the design leaves room for it (that doc says how).
 

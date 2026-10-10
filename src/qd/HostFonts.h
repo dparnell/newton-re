@@ -102,7 +102,7 @@ Boolean		IsHostFontFamily(RefArg family);
 long		HostOpenFont(PixelMap* pm, StyleRecord* style, RefArg family, Fixed xScale, Fixed yScale, FontEngineInfo* info);
 
 // vars.fonts: the host's families added by name (UTF-8, comma-separated;
-// "*" every family the host has; nil or "" the provider's defaults), and
+// "*" every family the host has; "" none; nil the provider's defaults), and
 // taken out again.  ==> how many were added.
 long		AddHostFontFamilies(const char* names);
 void		RemoveHostFontFamilies(void);
@@ -113,8 +113,8 @@ Boolean		HostFontFamiliesAdded(void);
 Ref			MakeHostFontFamily(const UniChar* name);
 
 // NewtonScript: HostFontFamilies() - the names of the host's families
-// (nil when the host draws none); HostFontsAdded() - the symbols of
-// those in vars.fonts.
+// a family symbol can name (nil when the host draws none);
+// HostFontsAdded() - the symbols of those in vars.fonts.
 void		RegisterHostFontNatives(void);
 
 // Every open face given back (host fonts turned off, a test's provider

@@ -682,7 +682,7 @@ AddHostFontFamilies(const char* names)
 			if (gHostFontProvider->GetFamilyName(i, name, kFamilyNameSize) && AddFamily(fonts, name))
 				added++;
 	}
-	else if (names != nil && names[0] != 0)
+	else if (names != nil)
 	{
 		for (const char* s = names; *s != 0; )
 		{
@@ -741,7 +741,8 @@ HostFontFamiliesAdded(void)
 	N e w t o n S c r i p t
 ------------------------------------------------------------------------------*/
 
-// HostFontFamilies(): the names of the host's families, nil when it draws none
+// HostFontFamilies(): the names of the host's families (those a family
+// symbol can name), nil when it draws none
 static Ref
 FHostFontFamilies(RefArg /*rcvr*/)
 {
@@ -751,7 +752,7 @@ FHostFontFamilies(RefArg /*rcvr*/)
 	RefVar list(MakeArray(0));
 	UniChar name[kFamilyNameSize];
 	for (long i = 0; i < count; i++)
-		if (gHostFontProvider->GetFamilyName(i, name, kFamilyNameSize))
+		if (gHostFontProvider->GetFamilyName(i, name, kFamilyNameSize) && NOTNIL(FamilySymbol(name)))
 			AddArraySlot(list, RefVar(MakeString(name)));
 	return list;
 }
