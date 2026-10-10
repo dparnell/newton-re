@@ -66,3 +66,11 @@ add_executable(test_Tile test_Tile.cpp)
 target_link_libraries(test_Tile PRIVATE qd views)
 add_test(NAME qd.Tile COMMAND test_Tile)
 set_tests_properties(qd.Tile PROPERTIES TIMEOUT 60 PASS_REGULAR_EXPRESSION "test_Tile: ok")
+
+# fonts the host draws (qd/HostFonts.h), through a made-up provider whose
+# glyphs are boxes - the engine on every host, whatever fonts it has
+add_executable(test_HostFonts test_HostFonts.cpp)
+target_link_libraries(test_HostFonts PRIVATE qd)
+target_compile_definitions(test_HostFonts PRIVATE "NEWTON_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
+add_test(NAME qd.HostFonts COMMAND test_HostFonts)
+set_tests_properties(qd.HostFonts PROPERTIES TIMEOUT 120)

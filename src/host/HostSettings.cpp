@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "HostSettings.h"
+#include "HostFontProvider.h"
+#include "HostFonts.h"
 #include "HostWindow.h"
 #include "hal/host/HostIRChip.h"
 #include "hal/host/HostSerialChip.h"
@@ -217,6 +219,8 @@ FHostSettingsList(RefArg /*rcvr*/)
 		// here - nothing among the usual packages draws in colour
 		AddArraySlot(list, RefVar(Item("colourScreen", "Colour screen (next start)", kCheck, colourChosen >= 0 ? colourChosen : ColourScreen(), true)));
 	}
+	if (HostFontsAvailable())
+		AddArraySlot(list, RefVar(Item("hostFonts", "More fonts from the host", kCheck, HostFontFamiliesAdded())));
 	if (HostWindowOption("clearGhosts", &value))
 		AddArraySlot(list, RefVar(Item("clearGhosts", "Clear ghosts", kButton, 0)));
 	return list;
@@ -268,6 +272,25 @@ FHostSetSetting(RefArg /*rcvr*/, RefArg setting, RefArg value)
 		bool taken = SetStartupValue("colourScreen", on ? 1 : 0);
 		fprintf(stderr, "[host] the colour screen %s when newton next starts%s\n", on ? "on" : "off", taken ? "" : " - not kept");
 		return MAKEBOOLEAN(taken);
+	}
+	if (strcmp(name, "hostFonts") == 0)
+	{
+		// the host's families in vars.fonts, so that every font menu offers
+		// them (qd/HostFonts.h) - or taken out again, text in them then
+		// drawn in the user's font
+		if (!HostFontsAvailable())
+			return NILREF;
+		if (on && !HostFontFamiliesAdded())
+		{
+			long added = AddHostFontFamilies(HostFontsChosen());
+			fprintf(stderr, "[host] %ld of the host's font families added\n", added);
+		}
+		else if (!on && HostFontFamiliesAdded())
+		{
+			RemoveHostFontFamilies();
+			fprintf(stderr, "[host] the host's font families taken out\n");
+		}
+		return TRUEREF;
 	}
 	if (strcmp(name, "directPen") == 0 || strcmp(name, "touch") == 0 || strcmp(name, "clearGhosts") == 0)
 	{

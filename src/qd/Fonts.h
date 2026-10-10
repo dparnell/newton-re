@@ -136,6 +136,7 @@ struct FontEngineInfo
 	long			fWidthsAdjust;		// +0xb8
 	Fixed			fWidthsScale;		// +0xbc
 	RefStruct*		fFontData;			// +0xc0  the 'sfnt' object, locked while open
+	void*			fHostFace;			// host: the host font engine's face (qd/HostFonts.h; DEVIATION, not in the ROM's 0xc4 bytes)
 };
 
 // ROM 0x00377324: the style table the synthesised faces are made with,

@@ -1,0 +1,113 @@
+// The host's own fonts (qd/HostFonts.h, docs/qd/host-fonts.md) used as
+// their user would: turned on as the Host preferences panel's "More fonts
+// from the host" does, each of the host's usual families is offered in
+// the Styles slip's Font picker beside the ROM's, and picking one sets the
+// text selected in a note in it - drawn by the host's rasteriser (GDI on
+// Windows).  Made from apps-fonts.ns, the font packages' demo.  ctest
+// host.NewtonHostFonts (Windows):
+//
+//   build/host/host/newton --display 320x480 --erase --store tmp/hostfonts.store --headless 240 //       --script src/host/demo/hostfonts.ns
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView, the steps
+HostInclude("apphelpers.ns");		// openFromExtras, typeText, tapButtonText
+
+wtName := "hostfonts";
+fontText := "Hello fonts";
+fontWidths := [];
+
+fontPara := func() call findView with (GetRoot().paperroll, func(v) IsString(v.text) and StrPos(v.text, fontText, 0));
+// the family the paragraph's first style run is in
+fontFamily := func() begin
+	local p := call fontPara with ();
+	local run := if p and p.styles then p.styles[1] else if p then p.viewFont;
+	if IsFrame(run) then run.family else run;
+end;
+// how wide the text is drawn: the black pixels' extent on its line
+fontInk := func() begin
+	local p := call fontPara with ();
+	local b := p:GlobalBox();
+	local left := nil, right := nil;
+	for x := b.left to b.right - 1 do
+		for y := b.top to b.bottom - 1 do
+			if ScreenPixel(x, y) < 128 then begin
+				if not left then left := x;
+				right := x;
+			end;
+	if left then right - left else 0;
+end;
+// a picker's item tapped: its row (a picker draws its items itself)
+fontPick := func(label) begin
+	local picker := call findView with (GetRoot(), func(v) v.pickItems);
+	local k := nil;
+	if picker then foreach i, item in picker.pickItems do
+		if not k and (IsString(item) and StrEqual(item, label) or IsFrame(item) and IsString(item.item) and StrEqual(item.item, label)) then k := i;
+	if k then begin
+		local b := picker:GlobalBox();
+		local n := Length(picker.pickItems);
+		call tapAt with ((b.left + b.right) div 2, b.top + ((b.bottom - b.top) * (2 * k + 1)) div (2 * n));
+	end;
+	k
+end;
+fontItems := func() begin
+	local picker := call findView with (GetRoot(), func(v) v.pickItems);
+	if picker then foreach item in picker.pickItems collect if IsFrame(item) then item.item else item;
+end;
+fontChoose := func(name) func(done) begin
+	call tapButtonText with (GetRoot().stylePalette, "Font");
+	call waitFor with ("fonts: the Font picker", func() call findView with (GetRoot(), func(v) v.pickItems), func() begin
+		local offered := call fontPick with (name);
+		call wtCheck with ("the Font picker offers " & name, offered, "(it offers " & SPrintObject(call fontItems with ()) & ")");
+		call waitFor with ("fonts: " & name & " set", func() not call findView with (GetRoot(), func(v) v.pickItems), func() AddDelayedCall(func() begin
+			local family := call fontFamily with ();
+			local width := call fontInk with ();
+			Print("fonts: " & name & ": the family is " & SPrintObject(family) & ", the text " & width & " pixels wide");
+			call wtCheck with ("the note set in " & name, family and StrPos(Downcase(SPrintObject(family)), Downcase(Clone(Substr(name, 0, 4))), 0),
+				"(its family is " & SPrintObject(family) & ")");
+			call wtCheck with ("the note drawn in " & name & " (" & width & " wide)", width > 0 and not LSearch(fontWidths, width, 0, '|=|, nil), "(as wide as another font's)");
+			AddArraySlot(fontWidths, width);
+			call done with ();
+		end, nil, 1000), 10);
+	end, 10);
+end;
+
+wtSteps := [
+	// (the caret the page already has after Setup is on this line too, at
+	// the left edge, so the tap is waited for by the caret's own left:
+	// the page puts the caret off a tap after the double-tap interval)
+	func(done) begin
+		call tapAt with (60, 70);
+		call waitFor with ("fonts: the caret on the note", func() begin
+			local c := GetCaretBox();
+			c and c.left >= 50 and c.left <= 70 and c.top <= 82 and c.bottom >= 58
+		end, done, 10);
+	end,
+	func(done) begin
+		call typeText with (fontText);
+		call waitFor with ("fonts: the note written", func() call fontPara with (), done, 10);
+	end,
+	settleStep,
+	func(done) begin
+		AddArraySlot(fontWidths, call fontInk with ());
+		// command-A: all of the note selected
+		KeyEvent(55, true); call typeKey with (0); KeyEvent(55, nil);
+		call done with ();
+	end,
+	settleStep,
+	func(done) call openFromExtras with ("Styles", 'stylePalette, done),
+	call fontChoose with ("Georgia"),
+	call fontChoose with ("Courier New"),
+	call fontChoose with ("Comic Sans MS"),
+	call fontChoose with ("Verdana"),
+	call shotStep with ("hostfonts"),
+	func(done) begin
+		Print("hostfonts: done, " & wtFailures & " failed");
+		HostQuit();
+	end];
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], func()			// "Daniel"
+	begin
+		// the Host panel's setting turned on
+		HostSetSetting('hostFonts, true);
+		call waitFor with ("fonts: the host's fonts offered", func() Length(HostFontsAdded()) > 0, wtNext, 10);
+	end);

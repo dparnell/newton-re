@@ -131,7 +131,9 @@ else()
         message(STATUS "no ALSA: newton runs silent (install the ALSA development headers for sound)")
     endif()
 endif()
-add_library(host_window STATIC ${host_window_source} ${host_audio_source} HostPenReplay.cpp)
+# the host's fonts (HostFontRaster.h): GDI on Windows, none elsewhere yet
+# (win32/HostFontRaster.cpp's #else)
+add_library(host_window STATIC ${host_window_source} ${host_audio_source} HostPenReplay.cpp win32/HostFontRaster.cpp)
 target_include_directories(host_window PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 if(NEWTON_HOST_WINDOW STREQUAL "remarkable")
     target_link_libraries(host_window PUBLIC rt pthread dl)
@@ -164,7 +166,7 @@ add_custom_command(
             -P ${CMAKE_SOURCE_DIR}/cmake/EmbedText.cmake
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/HostWordEngines.ns ${CMAKE_SOURCE_DIR}/cmake/EmbedText.cmake
     VERBATIM)
-add_executable(newton newton.cpp HostRestart.cpp HostKeyboard.cpp HostPackages.cpp HostOrientation.cpp HostSettings.cpp
+add_executable(newton newton.cpp HostRestart.cpp HostKeyboard.cpp HostPackages.cpp HostOrientation.cpp HostSettings.cpp HostFontProvider.cpp
                ${CMAKE_CURRENT_BINARY_DIR}/HostSettingsSource.cpp HostWordEngines.cpp
                ${CMAKE_CURRENT_BINARY_DIR}/HostWordEnginesSource.cpp HostHeapCheck.cpp)
 target_link_libraries(newton PRIVATE newt host_views host_window hal_host_sound hal_timers hal_host_serial)
@@ -1743,6 +1745,20 @@ if(EXISTS ${THIRDPARTY_DIR}/apps/RPNcalc/rpncalc.pkg)
                     apps/NewtCard/NewtCard/Stacks/ADDRESS.PKG apps/NewtCard/NewtCard/Stacks/RECIPE.PKG)
 else()
     message(STATUS "fixtures/packages not there: host.NewtonThirdPartyPackages is not run")
+endif()
+
+# the host's own fonts (qd/HostFonts.h): turned on as the Host panel's
+# "More fonts from the host" does, four of the host's usual families picked
+# in the Styles slip and a note set and drawn in each (demo/hostfonts.ns;
+# Windows, whose GDI draws them - elsewhere the host draws no fonts yet)
+if(WIN32)
+    add_test(NAME host.NewtonHostFonts
+             COMMAND newton --display 320x480 --erase --store ${CMAKE_CURRENT_BINARY_DIR}/hostfonts.store --headless 280
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/hostfonts.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonHostFonts PROPERTIES TIMEOUT 340
+                         PASS_REGULAR_EXPRESSION "hostfonts: done, 0 failed"
+                         FAIL_REGULAR_EXPRESSION "FAILED|waited in vain|is not answered|stopped \\(|fell over")
 endif()
 
 # a large binary (VBO) made on the booted machine's internal store

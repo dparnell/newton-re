@@ -18,6 +18,7 @@ add_library(qd STATIC
     Shapes.cpp
     Polygons.cpp
     Fonts.cpp
+    HostFontEngine.cpp
     Text.cpp
     DrText.cpp
     Pictures.cpp

@@ -10,6 +10,7 @@
 */
 
 #include "Fonts.h"
+#include "HostFonts.h"
 #include "FixedMath.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
@@ -926,6 +927,19 @@ OpenFont(PixelMap* pm, StyleRecord* style, Fixed xScale, Fixed yScale, FontEngin
 		//  one of their own, its data handle constructed with it)
 		memset(info, 0, sizeof(FontEngineInfo));
 		info->fFontData = new RefStruct;
+		// DEVIATION: a family the host draws (qd/HostFonts.h) goes to the
+		// host's engine, outside the cache; the system font when the host
+		// cannot open it (not on this host, or host fonts gone)
+		if (IsHostFontFamily(family))
+		{
+			long hosted = HostOpenFont(pm, style, family, xScale, yScale, info);
+			if (hosted != kNoFont)
+				return hosted;
+			delete info->fFontData;
+			info->fFontData = nil;
+			family = NILREF;
+			continue;
+		}
 		long i;
 		for (i = 0; i < 4; i++)
 		{

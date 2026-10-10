@@ -141,6 +141,7 @@
 #include "HostPackages.h"
 #include "HostOrientation.h"
 #include "HostSettings.h"
+#include "HostFontProvider.h"
 #include "HostWordEngines.h"
 #include "HostTablet.h"
 #include "HostCard.h"
@@ -565,6 +566,7 @@ NewtonPreMain(void)
 	HostLinkStart();
 	HostInstallPrinter();
 	HostInstallPowerGlobals();			// (power/host/HostPowerSwitch.h: HostPowerSwitch(), HostWakeAfter(ms), ...)
+	HostInstallFonts();					// (the host's fonts, offered when asked for: before the Host panel, which may turn them on)
 	HostInstallSettings();				// (the Host preferences panel, after Network Printers: the Prefs list's last)
 	HostInstallWordEngines();			// (the host's handwriting engines in the Handwriting Recognition slip)
 	// the boot sound (TNotebook::InitToolbox), which may still be playing,

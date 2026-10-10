@@ -9,6 +9,28 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-10: the host's own fonts (branch host-fonts)
+
+The owner asked what it would take for the Newton to use the host
+system's fonts; the investigation found the font engine already has the
+seam (`OpenFont` hands ink words to a second engine before its cache) and
+the ROM's font menus list whatever is in `vars.fonts`.  The owner chose a
+host-provided rendering engine, optional, for giving users more fonts,
+with anti-aliasing left for later but not to be designed out.
+
+Built: `qd/HostFonts.h` (the provider interface; glyphs carry their depth,
+one bit or eight bits of coverage), `qd/HostFontEngine.cpp` (the engine
+`OpenFont` calls for a family frame with a `hostFont` slot - the face
+nearest the one wanted, the rest synthesised; opened at the exact size;
+glyphs cut to the slab's bounds, since `DrTextChunk` trusts the font for
+columns; missing characters from the system font; a face and glyph
+cache), the families put into `vars.fonts` as `|Name.host|`; the Windows
+rasteriser over GDI (`host/win32/HostFontRaster.cpp`, hinted one-bit
+glyphs) and its provider (`host/HostFontProvider.cpp`); the Host panel's
+"More fonts from the host" and `NEWTON_HOST_FONTS`.  ctests `qd.HostFonts`
+(a made-up provider of boxes: every host) and `host.NewtonHostFonts`
+(Windows: four families picked in the Styles slip).  `docs/qd/host-fonts.md`.
+
 ## 2026-10-06: the ROM's known bugs fixed, switchable (branch fix-rom-bugs)
 
 The owner asked for every known ROM bug to be fixed, harmless and

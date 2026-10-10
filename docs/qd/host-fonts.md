@@ -1,20 +1,49 @@
-# Host fonts: what it would take
+# Host fonts
 
-*An investigation (2026-10-10, branch `host-fonts`), not yet a design that
-has been agreed. Nothing here is built.*
+The reconstructed Newton can draw text in the fonts the host system has
+- Georgia, Verdana, Segoe UI, Consolas and the rest on Windows - beside the
+ROM's own five bitmap faces. They are offered in every Styles slip and
+font picker the ROM has, as if a font package had been installed, and are
+drawn by the host's own rasteriser at the exact size asked for.
 
-The question: what would the reconstructed Newton need in order to draw
-text in the fonts the host system provides (Windows' Segoe UI or Georgia,
-a Linux machine's DejaVu, whatever is on the reMarkable) as well as in the
-ROM's five bitmap faces?
+**It is a DEVIATION** (the ROM has the 'sfnt' engine and the ink engine
+and nothing else) and **it is off until asked for**, so that nothing drawn
+differs from the ROM's unless the user wants it to - the screen-comparison
+ctests stay pixel-exact.
 
-The short answer: **the font engine already has the seam, and the ROM's
-font menus already list whatever is in `vars.fonts`.** What is missing is a
-rasteriser on the host and a few hundred lines to join it to the engine.
-The open questions are which rasteriser, and how far host fonts should go
-(more choices in the Styles menu, or the system's own look replaced).
+The owner's decisions (2026-10-10): the host provides the rendering
+engine; host fonts are optional; the aim is to give users more fonts (not
+to change how the system's own text looks); anti-aliased text is wanted
+eventually, and nothing here may stand in its way (below).
 
-## How text reaches the screen today
+## Using it
+
+- **The Host preferences panel**: "More fonts from the host" (shown only
+  on a host that draws fonts) adds the host's usual families to the font
+  menus, and takes them out again. The setting is kept with the other
+  Host settings.
+- **`NEWTON_HOST_FONTS`** at start: `1` the host's usual families, `*`
+  every family it has (several hundred on Windows - a long picker), or a
+  comma-separated list of family names (`Georgia,Consolas`); `0` or unset,
+  none (unless the panel's setting is kept on). A list given here is also
+  what the panel's setting adds.
+- From NewtonScript: `HostFontFamilies()` (every family the host has, nil
+  when it draws none), `HostFontsAdded()` (the symbols of those in
+  `vars.fonts`), `HostSetSetting('hostFonts, true)`.
+
+A host family is named in a font spec by its symbol, the family name and
+`.host`: `{family: '|Georgia.host|, size: 12, face: 0}`. A note written in
+one and opened where the host lacks it (or with host fonts off) is drawn
+in the user's font, as any spec naming an unknown family is
+(`CreateTextStyleRecord`).
+
+The demo `src/host/demo/hostfonts.ns` (ctest `host.NewtonHostFonts`,
+Windows) turns host fonts on, picks four families in the Styles slip and
+checks the note is set and drawn in each.
+
+## How it works
+
+### Where it joins the ROM's font engine
 
 Established by reading the reconstruction; each point cites where.
 
@@ -22,186 +51,128 @@ Established by reading the reconstruction; each point cites where.
    `src/qd/Fonts.cpp`, ROM 0x002618b8). A packed integer indexes the
    ROM's four-family list (`Rromfontlist`, ten bits); anything else is a
    frame `{family: 'sym, size, face}` whose family symbol is looked up in
-   `vars.fonts`. A family with no number - a package's font, say - is
-   always a frame. **An unknown family symbol falls back to the user's
-   font, then the system font**, so a note written in a host font that a
-   later machine lacks still opens and draws, in espy.
-2. **`OpenFont` fills a `FontEngineInfo`** (ROM 0x002e229c,
-   `Fonts.cpp` `OpenFont`). Before the open-font cache it already hands a
-   style that is not a font family at all - an ink word - to another
-   engine through a registered hook (`gInkOpenFont`, `ink/InkFont.cpp`,
-   marked DEVIATION). Everything else goes through the four-entry cache to
-   `SFNTOpenFont`; a family that cannot be opened is retried as the system
-   font.
-3. **The `FontEngineInfo` is already an engine interface**: line metrics
-   (`fAscent`, `fDescent`, `fLeading`, `fWidMax`, `fMaxBeforeBL`, ...), a
-   scale from the strike to the size wanted, and five procedures - `fMap`
-   (character to glyph), `fGetGlyphInfo` (the advance, 16.16),
-   `fGetGlyph` (height, width, bearings and a pointer to byte-aligned
-   one-bit rows), `fReopen`, `fClose`. QuickDraw's text code never looks
-   at the sfnt itself; it calls these.
-4. **Measuring** (`Text.cpp`, `MeasureTextOnce`) calls `fGetGlyphInfo`
-   for each character; **drawing** (`DrText.cpp`, `DrTextChunk`) calls
-   `fGetGlyph` for each and ORs the glyph's **one-bit** rows into a
-   one-bit slab, works the synthesised faces (bold smear, italic shear,
-   underline, outline/shadow, gray) on the slab, and `StretchBits` it
-   onto the port (scaled when the strike is not the size wanted). A slab
-   over 8000 bytes is split.
-5. **The font menus are NewtonScript and enumerate `vars.fonts`**:
-   `GetAllFontFamilies` (ROM 0x4165f5) answers every family whose
-   `usable` slot is absent or true, `GetFontNameItems` names them by their
-   `name` slot, and `MakeFontMenu` offers the family's `userSizes`. The
-   `'font` part handler (`packages/FontPartHandler.cpp`) is how a package
-   adds a family there today.
-6. **What does not go through the engine**: the alert manager reads the
-   system font's sfnt itself (`alert/AlertDialog.cpp`,
-   `TAlertGlyph::InitGlyph`), and a PostScript printer's port swaps a
-   family for its `vars.psFonts` counterpart by `psName` inside `OpenFont`.
+   `vars.fonts`. A family with no number - a package's font, a host font -
+   is always a frame.
+2. **`OpenFont` fills a `FontEngineInfo`** (ROM 0x002e229c). Before the
+   open-font cache it hands a style that is not a font family at all - an
+   ink word - to the ink engine through a hook (`gInkOpenFont`). **A family
+   frame with a `hostFont` slot now goes to `HostOpenFont`
+   (`src/qd/HostFontEngine.cpp`) in the same place**, outside the
+   four-entry cache; when the host cannot open it the system font is used.
+3. **The `FontEngineInfo` is the engine interface**: line metrics, a scale
+   from what was opened to the size wanted, and the procedures `fMap`,
+   `fGetGlyphInfo` (the advance, 16.16), `fGetGlyph` (height, width,
+   bearings, one-bit rows), `fReopen`, `fClose`. QuickDraw's text code
+   (`Text.cpp`'s measuring, `DrText.cpp`'s `DrTextChunk`) calls only these.
+   The host engine fills it as `SFNTOpenFont` does. One field is added at
+   the end, `fHostFace` (host only, not in the ROM's 0xc4 bytes).
+4. **The font menus are NewtonScript and list `vars.fonts`**:
+   `GetAllFontFamilies` (ROM 0x4165f5) answers every family whose `usable`
+   slot is absent or true, `GetFontNameItems` names them by `name`,
+   `MakeFontMenu` offers the family's `userSizes`. So adding a family frame
+   to `vars.fonts` - which is what the `'font` part handler does for a
+   package - is all the menus need.
 
-So a host font needs to be (a) a family frame in `vars.fonts`, for the
-menus and for specs to name it, and (b) something `OpenFont` can turn into
-a `FontEngineInfo`. There are two ways to do (b).
+### The host engine (`src/qd/HostFontEngine.cpp`)
 
-## Two ways in
+- **The face**: the one the host has nearest the face wanted, in
+  `ChooseStrike`'s order (bold italic, italic, bold, plain); the bold and
+  italic the host's face does not have are synthesised on the slab, as for
+  the ROM's fonts. A provider must never fake a face itself.
+- **The size**: opened at the style's size times the scale, so text is
+  never a strike stretched (`fScaling` 0); with unequal scales it is
+  opened at the size and `StretchBits` scales it (2). Superscript and
+  subscript as `SFNTOpenFont`: four fifths of the size, the baseline moved
+  by three eighths of the ascent.
+- **The slab's bounds**: `DrTextChunk` makes its one-bit slab from
+  `fMaxBeforeBL`/`fMinAfterBL` (rows) and `fMinOriginSB`/`fMinAdvanceSB`
+  (columns), and clips rows but **trusts the font for columns** - a glyph
+  wider than they say would be written outside the slab. The engine takes
+  them from the face's bounding box (no more than twice the size), allows
+  a quarter of the size past a glyph's advance, and **cuts every glyph to
+  them** before QuickDraw sees it.
+- **Characters the face lacks** - Apple's private-use characters (the
+  menus' check mark 0xFC0B, the Apple 0xF7FF, ...) above all - are taken
+  from the system font's strike at the same size, opened through
+  `SFNTOpenFont` with an info and cache copy of the engine's own.
+- **Caches**: eight open faces (one being drawn is never evicted; a ninth
+  needed at once is made outside the cache and given back on close), each
+  with 256 glyphs by the character's low byte.
 
-### A. Make Newton fonts out of host fonts (no engine change)
+### The provider (`src/qd/HostFonts.h`)
 
-Rasterise a host font at a chosen set of sizes into one-bit strikes and
-pack them into the Newton's own `bloc`/`bdat` sfnt - the format the ROM's
-fonts are in, which `tools/fonts/newtonsfnt.py` already packs from BDF
-byte for byte (`docs/qd/fonts-sfnt.md`). The result is an ordinary family
-frame, drawn by the reconstructed engine exactly as it draws espy.
+A host that can draw its system's fonts registers a `THostFontProvider`:
+its families, the faces each has (plain, bold, italic, bold italic), a
+face opened at a size in pixels per em, a face's metrics (ascent, descent,
+leading, widest advance, how far any glyph reaches above, below and left),
+and a character's glyph. The engine is tested with a made-up provider
+whose glyphs are boxes (`src/qd/tests/test_HostFonts.cpp`, ctest
+`qd.HostFonts`), so it is tested on every host.
 
-- **Offline**, as a tool: host font → BDF strikes → sfnt → a package with
-  a `'font` part, installed with `--package`. Works on `--rom` and could
-  even go to a real MessagePad. Needs a rasteriser in Python (Pillow's
-  `ImageFont` renders one-bit with `fontmode = "1"`; or `freetype-py`)
-  and a package *writer*, which the repo does not have yet (it only reads
-  packages).
-- **At boot**, in the host: the same strikes made in memory and the family
-  frames put into `vars.fonts`. Needs the host rasteriser (below) but
-  still no engine change.
+On the host side the platform's rasteriser sits behind a plain interface
+with no Newton types (`src/host/HostFontRaster.h`; the platform's headers
+and the DDK's do not mix), and `src/host/HostFontProvider.cpp` makes the
+provider of it, registers it at boot and reads `NEWTON_HOST_FONTS`.
 
-Limits: only the sizes made have strikes - any other size is the nearest
-strike scaled by `StretchBits`, which looks as crude as the ROM's own
-scaled text; the glyph repertoire is fixed when the strikes are made
-(the cmap can cover far more than Mac Roman - glyph ids are 16-bit and
-index format 3 takes any range); each strike is memory (a few KB to a few
-tens of KB a size at Newton sizes).
+| Host | Rasteriser | State |
+|---|---|---|
+| Windows | GDI (`host/win32/HostFontRaster.cpp`): the TrueType/OpenType families `EnumFontFamiliesExW` lists (not raster fonts, not the `@` vertical ones), each family's real styles by weight and slant; `CreateFontW` at the em size with `NONANTIALIASED_QUALITY`; `GetGlyphOutlineW(GGO_BITMAP)` - hinted, one bit - by glyph index; `GetGlyphIndicesW` marks a missing character | done |
+| Linux/X11 | fontconfig for the families, FreeType (`FT_LOAD_TARGET_MONO`) for the glyphs - the system's libraries, as X11 and ALSA are | not yet |
+| reMarkable | FreeType over the tablet's `/usr/share/fonts` (no X11, no Qt to borrow) | not yet |
+| macOS | Core Text | not yet (the port has not reached macOS) |
 
-### B. A host font engine behind `FontEngineInfo` (recommended for the host)
+A host with no rasteriser (`HostFontRaster.cpp`'s `#else`) offers no host
+fonts and the Host panel shows no setting.
 
-A second engine beside `SFNTOpenFont`, chosen in `OpenFont` the way the
-ink engine is: a family frame carrying a `hostFont` slot (the host's name
-for the face) goes to a registered `gHostOpenFont` instead of the cache
-and `SFNTOpenFont`. It fills the info with the host face's line metrics
-at the exact size wanted (`fScaling` 0: no scaling, ever), and its
-`fMap`/`fGetGlyphInfo`/`fGetGlyph` answer from the host rasteriser,
-keeping the last glyph's bits alive until the next call as the sfnt
-engine's pointer into `bdat` is.
+## Anti-aliased text, later
 
-- Every size is drawn at its own size, hinted, not a strike stretched.
-- On a printer's port the face is opened at the printer's resolution, so
-  a raster printer (`print/`, the dot-printer and PCL/IPP drivers) gets
-  real 300-dpi text rather than a screen strike scaled up. (The
-  PostScript substitution by `psName` stays as it is; a host family can
-  carry a `psName` too.)
-- The synthesised faces keep working unchanged, since they are worked on
-  the slab; a host family that has real bold/italic faces opens those and
-  takes the bits off the face to synthesise, as `ChooseStrike` does.
-- It is a DEVIATION (no such engine in the ROM), behind an explicit seam,
-  as the ink engine and `TInkCodec`/`TWRecognizer` are.
+Not built, but the design keeps the door open:
 
-Option A's offline tool and option B are not exclusive: A is the way to
-give a *real* Newton or a `--rom` boot a host face; B is the way to make
-the host's text look right.
+- A provider's glyphs carry their **depth**: 1 (a bit a pixel) or 8 (a
+  byte of coverage a pixel, 0 to 255), and the engine asks for the depth
+  it wants. GDI already answers both (`GGO_GRAY8_BITMAP`'s 65 levels made
+  0-255). The engine asks for one bit today, and makes an eight-bit
+  glyph one bit (coverage of half or more) if that is all a provider has.
+- What anti-aliasing would still need is all on QuickDraw's side:
+  `DrTextChunk` composes glyphs into a **one-bit slab** and works the
+  synthesised faces (bold's smear, italic's shear, outline/shadow,
+  `MakeGrayText`'s masking) on it before `StretchBits` puts it on the
+  port. Gray glyphs would need a deeper slab (eight bits of coverage),
+  those faces done on it, and a blend of the pen's pattern through the
+  coverage onto the port's 1/2/4/8-bit pixels - most likely as a separate
+  path taken only for a host face, with a glyph depth in the
+  `FontEngineInfo` saying which. The ROM's fonts would keep their one-bit
+  path untouched.
+- Anti-aliased text would be a Host setting of its own, off by default,
+  like the fonts themselves.
 
-## What B needs, piece by piece
+## Limits and open points
 
-1. **The seam in QuickDraw** (`qd/Fonts.h`, `Fonts.cpp`): a
-   `FontHostOpenProc gHostOpenFont`, called from `OpenFont` for a family
-   with a `hostFont` slot (before the cache, as for ink, so the four-entry
-   cache's offset-keeping `SFNTReopenFont`/`SFNTCloseFont` never sees a
-   host font). Falls through to the system font when it answers
-   `kNoFont`. A host test with a fake engine (boxes for glyphs) proves
-   measuring, drawing, the synthesised faces and the fallback.
-2. **A host font interface** (`hal/host/HostFonts.h`, say): list the
-   host's families and faces; open a face at a pixel size (x and y);
-   answer line metrics (ascent, descent, leading, widest, max above and
-   below the baseline); for a Unicode character, whether the face has it,
-   its advance in 16.16, and its one-bit bitmap with bearings. A small
-   per-face glyph cache (the engine is asked for the same glyphs on every
-   redraw).
-3. **The Newton's own characters**: Newton text is Unicode, so mapping is
-   natural, but the ROM uses Apple's private-use characters (0xF714-6,
-   0xF7FF, 0xFC00-0xFC0F - the menus' check mark `ﰋ` among them) that
-   no host font has. The host engine should take a glyph the face lacks
-   from the system font's strike (the bitmap and bearings are all
-   `DrTextChunk` needs; the bitmap is placed by bearing y against
-   `fMaxBeforeBL`, so a taller fallback glyph must not stand above it).
-4. **Families in `vars.fonts`**: at boot, from the Host preferences page
-   (as the owner wants host options: `docs/codebase-map.md`, Host panel),
-   each chosen host face added as `{name, screenSym, hostFont, userSizes,
-   usable: true}` - it then appears in every Styles slip and font picker
-   with no ROM script changed. A family symbol must be stable across
-   machines (made from the host name) so that saved specs find it again.
-5. **Optionally, the system font itself**: a Host option to draw `'espy`
-   (or Simple/Fancy) with a host face. This is the change people will
-   *see* most, and the risky one: ROM views are laid out for espy's
-   metrics (`GetStyleFontInfo` gives espy 12 as ascent 12, descent 4,
-   widest 15), so a face with taller ascenders clips in fixed-height
-   fields and wraps differently in narrow ones. It should map size for
-   size by matching the cap height or x-height, not the em, and be off by
-   default.
-6. **Tests and determinism**: host fonts must be off by default, or every
-   screen-comparison ctest (`host.NewtonNoROMSameScreen`, the
-   walkthroughs) depends on what is installed. The seam is tested with
-   the fake engine on every host; a real-rasteriser test runs only where
-   its font is found (Windows always has Arial/Segoe UI; on Linux
-   DejaVu if present) and checks properties (glyphs non-empty, advances
-   monotonic in size), not pixels.
+- **Pictures**: a picture recorded with text in a host font names it by
+  `macFontID` 0 (`PicRecord.cpp`), so it plays back in the system font.
+- **Printing**: a host family has no `psName`, so on a PostScript printer
+  it is not swapped for a printer font; it has not been tried on any
+  printer yet. On a raster printer's port it is opened at the printer's
+  resolution, which should give real 300-dpi text - untested.
+- **The system font is not replaced**: the ROM's views are laid out for
+  espy's metrics; drawing the system's own text in a host face is not
+  offered (it was not the aim, and fixed-height views would clip).
+- **Family names** a symbol cannot carry (beyond printable ASCII, or with
+  `|`) are not offered; nor are more than 63 characters of a name kept.
+- **Choosing families**: the panel adds the host's usual ten, or the
+  `NEWTON_HOST_FONTS` list; a chooser on the Host panel for the rest is
+  still to do (a picker of hundreds of families does not fit the screen).
+- **Line spacing**: a host face's ascent and descent are the host's
+  (Windows' `tmAscent` covers accents), so lines in a host font are
+  somewhat taller than in the ROM's fonts at the same size.
 
-### Which rasteriser
+## Background: the other way considered
 
-| | Windows | Linux/X11 | reMarkable | macOS | One-bit, hinted | New dependency |
-|---|---|---|---|---|---|---|
-| **FreeType** (`FT_LOAD_TARGET_MONO`) | yes | yes | yes | yes | yes - mono hinting is what it is for | yes (FreeType licence, BSD-style with credit), built from vendored source by the zig toolchain |
-| **Native**: GDI `GetGlyphOutlineW(GGO_BITMAP)` / CoreText | yes (gdi32 already linked) | no good native API (core X fonts are legacy; Xft *is* FreeType) | no (no X11, no Qt to borrow) | yes | yes on Windows | none |
-| **stb_truetype** | yes | yes | yes | yes | **no hinting** - poor at 9-14 px in one bit; fine at printer resolution | one public-domain header |
-
-The repo has no third-party library today (the zig toolchain builds
-everything from source), so this is the main decision. FreeType is the
-only choice that covers the reMarkable, which is a stated goal; GDI alone
-would be the quickest proof on the owner's Windows machine. Font
-*discovery* is per-host whatever the rasteriser: the Windows fonts folder
-and registry (or `EnumFontFamiliesEx`), fontconfig or `/usr/share/fonts`
-on Linux, `/usr/share/fonts` on the reMarkable, CoreText on macOS.
-
-### Later: gray (anti-aliased) text
-
-Every rasteriser can give 8-bit coverage, and the screen has 16 grays,
-but `DrTextChunk`'s slab is one bit and so is everything worked on it
-(bold's smear, outline, `MakeGrayText`'s masking, `StretchBits` from a
-one-bit source). Anti-aliased host text would need a deeper slab and a
-blend into the port - a larger departure from the ROM's drawing, for a
-second stage if one-bit host text proves too jagged.
-
-## Suggested order
-
-1. The seam with a fake engine and its test.
-2. A first backend (GDI on Windows, or FreeType straight away) behind
-   `HostFonts.h`, one face registered by an environment variable, and a
-   demo (`src/host/demo/`) that sets a paragraph in it.
-3. Missing glyphs from the system font.
-4. The Host page's list of host faces into `vars.fonts`.
-5. Printing at device resolution.
-6. Optional: the system-font substitution; the offline font-package tool
-   (option A); gray text.
-
-## Questions for the owner
-
-- What is the aim: more typefaces to choose in the Styles menu, the
-  system's own text in a host face, better printed text - or all three?
-- Is a vendored FreeType acceptable as the project's first third-party
-  library (needed for the reMarkable), or should Windows go native first?
-- One-bit text only, in keeping with the ROM, or is gray text wanted?
+Before the decision, the investigation also looked at making Newton fonts
+out of host fonts: rasterising a host font at a few sizes into the ROM's
+own `bloc`/`bdat` sfnt (`tools/fonts/newtonsfnt.py` packs that form from
+BDF) and installing it as a font package. It needs no engine change and
+would work on `--rom` and a real MessagePad, but only at the sizes made
+(others stretched as crudely as the ROM's), and the repo has no package
+writer yet. It remains a possible tool for taking a host face to a real
+Newton; for the host itself the engine above is better.
