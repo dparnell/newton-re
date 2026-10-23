@@ -16,7 +16,9 @@
 				(gHostResetHook) and newton starts itself again as a new
 				process with the same arguments, waiting for it and
 				answering its exit status - so a console or a test sees
-				the whole run.  The new process is the machine booted
+				the whole run.  (macOS's Cocoa window replaces the process
+				instead: it is an application, and a second process would
+				be a second one.)  The new process is the machine booted
 				again: its stores are the same files; what lived across the
 				reboot in RAM is handed over in the environment
 				(NEWTON_REBOOT_REASON, NEWTON_REBOOT_COUNT, and the
@@ -238,6 +240,18 @@ HostRestartIfReset(int argc, char** argv, bool scriptQuit)
 		program[length] = 0;
 	else
 		strncpy(program, argv[0], sizeof(program) - 1);
+#endif
+#ifdef __APPLE__
+	// an application of macOS's (the Cocoa window, HostWindowOwnsProcess)
+	// is the process: a second beside it would be a second application, with
+	// a Dock icon of its own and the first left windowless behind it.  The
+	// process is replaced instead - the same process, so a console or a
+	// test still sees the whole run and its status
+	if (HostWindowOwnsProcess())
+	{
+		execv(program, args);
+		fprintf(stderr, "[host] the restart could not replace the process; starting a new one\n");
+	}
 #endif
 	pid_t child = fork();
 	if (child == 0)

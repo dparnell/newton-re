@@ -252,4 +252,10 @@ OsBoot()
 	gKernelScheduler->Add(userTask);
 	ExitAtomic();
 	SleepTask();
+	// (host: the run has ended and OsBoot returns, which the MessagePad's
+	// never does.  The boot task lets go of the boot environment first: both
+	// are this frame's, and ~TTask would otherwise read the environment
+	// after it was destroyed - AddressSanitizer saw it - or, the environment
+	// kept alive, delete it as its last user, a stack object freed)
+	bootTask.fEnvironment = nil;
 }

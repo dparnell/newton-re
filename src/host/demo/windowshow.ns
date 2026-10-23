@@ -1,0 +1,23 @@
+// What the window shows (macOS: ctests host.NewtonWindowShows and
+// .compare): the Setup assistant's Welcome page let settle, the screen
+// written as the OS has it (ScreenSnapshot, build/windowshow-os.pgm), and
+// newton ended half a second later - by when the window has refreshed -
+// so that NEWTON_WINDOW_SNAPSHOT writes what the window last showed
+// (host/cocoa/HostWindow.mm: the CGImage its layer was given, drawn back
+// through a gray context) into build/windowshow-window.pgm.  The two are
+// the same bytes when the window's colour space shows the display's grays
+// as they are.
+HostInclude("common.ns");
+
+wsSetupOpen := func() GetRoot().setup and GetRoot().setup.viewCObject;
+
+call waitFor with ("windowshow: the Setup assistant", wsSetupOpen, func() begin
+	AddDelayedCall(func() begin
+		ScreenSnapshot("build/windowshow-os.pgm");
+		Print("windowshow: the screen written");
+		AddDelayedCall(func() begin
+			Print("windowshow: done");
+			HostQuit();
+		end, [], 500);
+	end, [], 2000);
+end, 60);

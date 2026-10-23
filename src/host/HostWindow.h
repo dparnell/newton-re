@@ -67,5 +67,17 @@ void	HostWindowPostPen(long x, long y, int what);
 // window opening where the old one was): ==> false when there is none
 bool	HostWindowPosition(long* x, long* y);
 void	HostWindowSetPosition(long x, long y);
+// The machine run - the OS booted, and what newton does once it has ended
+// (==> the exit status) - on the thread the host's window needs it on.
+// Windows' and X11's windows run on a thread of their own, so there it is
+// simply called; macOS's AppKit must have the process's main thread, so
+// host/cocoa/HostWindow.mm runs the machine on a thread of its own and the
+// main thread runs the application until the machine has ended.  Not
+// windowed (--headless), it is simply called everywhere.
+int		HostWindowRunMachine(int (*machine)(void), bool windowed);
+// Whether the window is an application of the host's that owns the process
+// (macOS's: a restart then replaces the process rather than starting a
+// second one beside it - host/HostRestart.cpp)
+bool	HostWindowOwnsProcess(void);
 
 #endif	/* __HOSTWINDOW_H */

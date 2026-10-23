@@ -1,9 +1,12 @@
 /*
 	File:		user/host/GenericSWIStub.cpp
 
-	Contains:	GenericSWI, the variadic stub (UserGlobals.h declares it as
-				`long GenericSWI(...)`, which C++ cannot pick arguments from, so
-				this definition names the selector and lives in its own file).
+	Contains:	GenericSWI, the variadic stub (the DDK's UserGlobals.h declares
+				it as `long GenericSWI(...)`, which C++ cannot pick arguments
+				from, so this definition names the selector and lives in its own
+				file; src/ddk's copy names it too, because on Apple's arm64 a
+				variadic argument is passed on the stack where a named one is
+				in a register - sync_ddk_headers.py).
 				SWI 5: the selector and up to four arguments, one kernel routine.
 
 	ROM:		GenericSWI 0x003a4af4 (assembly)

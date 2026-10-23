@@ -48,7 +48,12 @@ else()
     # finds the build machine's own - an x86-64 OpenSSL for the reMarkable's
     # aarch64 newton on a Linux runner - and fails; without one it has no
     # ipps, as on a cross build from Windows)
-    if(NOT CMAKE_CROSSCOMPILING OR OPENSSL_ROOT_DIR)
+    # (likewise a macOS build of more than one architecture - a fat binary,
+    # docs/host-macos.md - unless OPENSSL_ROOT_DIR names a universal
+    # OpenSSL: Homebrew's has the build machine's architecture alone, and
+    # the link of the other slice fails)
+    list(LENGTH CMAKE_OSX_ARCHITECTURES osx_architectures)
+    if((NOT CMAKE_CROSSCOMPILING AND osx_architectures LESS 2) OR OPENSSL_ROOT_DIR)
         find_package(OpenSSL)
     endif()
     if(OpenSSL_FOUND)

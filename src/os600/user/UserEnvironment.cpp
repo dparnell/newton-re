@@ -29,7 +29,11 @@ TUEnvironment::Init(void* heap)
 long
 TUEnvironment::Add(TObjectId domainId, Boolean isManager, Boolean isStack, Boolean isHeap)
 {
-	return GenericSWI(kGeneric_AddDomainToEnvironment, fId, domainId, (isManager ? 4 : 0) | (isStack ? 2 : 0) | (isHeap ? 1 : 0));
+	// (a ULong, not the int the expression is: GenericSWI's stub reads each
+	// argument as a ULong, which for an int is undefined - on Apple's arm64
+	// an int's variadic slot may have anything in its upper half,
+	// docs/host-macos.md)
+	return GenericSWI(kGeneric_AddDomainToEnvironment, fId, domainId, (ULong) ((isManager ? 4 : 0) | (isStack ? 2 : 0) | (isHeap ? 1 : 0)));
 }
 
 

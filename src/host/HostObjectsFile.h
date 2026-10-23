@@ -16,7 +16,8 @@
 // The object file to boot from, in this order: NEWTON_OBJECTS in the
 // environment (used as it is, whether or not there is a file there); the
 // file romsrc-objects.bin beside the running program, or in the directory
-// above it (an installed newton, and the build directory's host/newton);
+// above it (an installed newton, and the build directory's host/newton),
+// or on macOS in ../Resources (Newton.app's Contents/Resources);
 // the path the build compiled in (compiledIn).  nil when none of the
 // candidates is a file - the caller then says how to build one
 // (HostObjectsFileMissing) and stops.

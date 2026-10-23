@@ -29,7 +29,9 @@ build\host\host\newton --store my.store
 
 On Linux use the system compiler instead
 (`cmake -G Ninja -S src -B build/host -DCMAKE_CXX_COMPILER=clang++`; `newton`
-wants the X11 and ALSA development headers).  The build makes
+wants the X11 and ALSA development headers).  On macOS the system clang needs
+nothing more (`cmake -G Ninja -S src -B build/host`), and the build makes
+`build/host/host/Newton.app` beside `newton`.  The build makes
 `build/host/romsrc-objects.bin` from `romsrc/` with Python and the
 reconstruction's own NewtonScript compiler; no ROM image is read.
 
@@ -69,10 +71,10 @@ build without the ROM image simply skips the few that compare against it).
 | 32-bit x86 Linux | built and tested under WSL by `tools/host/wsl32.sh`; the proof that the tree is correct at 32 bits | [docs/host-lp64.md](docs/host-lp64.md) |
 | reMarkable Paper Pro | runs from AppLoad on the tablet's e-paper, written on with the Marker | [docs/host-remarkable.md](docs/host-remarkable.md) |
 | LilyGO T-Deck Pro | **boots and runs on the board** (ESP32-S3, e-paper, touch, keyboard) - below | [docs/host-tdeck-pro.md](docs/host-tdeck-pro.md) |
-| macOS | planned: the POSIX seams are in the source, the window and sound are not written | [docs/host-macos.md](docs/host-macos.md) |
+| macOS (Apple silicon, Intel) | `Newton.app`: the system clang, an AppKit window, audio queues; one binary for both with `-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"`, signed ad hoc; every ctest passes but the two flaky on every host | [docs/host-macos.md](docs/host-macos.md) |
 
-Pushing to `main` builds and smoke-tests the Windows, Linux and reMarkable
-builds on GitHub's runners, and a `v*` tag publishes them as a release
+Pushing to `main` builds and smoke-tests the Windows, Linux, reMarkable and
+macOS builds on GitHub's runners, and a `v*` tag publishes them as a release
 ([docs/releases.md](docs/releases.md)).
 
 ### The reMarkable Paper Pro

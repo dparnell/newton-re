@@ -38,9 +38,13 @@ the way are all in `docs/work-log.md`.
   `host.NewtonWindowDrop`), `whichfunction.py` reads ELF, and
   `stacksample.py`/`profile.py` work there by newton sampling itself
   (`tools/host/linuxsample.py`); ALSA builds and plays through WSLg's
-  PulseAudio (`docs/host-lp64.md`).  macOS
-  has no window or sound implementation yet (it would run headless):
-  the plan is `docs/host-macos.md`, its POSIX seams already in the source.
+  PulseAudio (`docs/host-lp64.md`).
+- **macOS** runs newton as Newton.app - the Cocoa window, audio queues,
+  IOKit's battery, a fat binary if asked for, signed ad hoc
+  (`docs/host-macos.md`, 2026-10-17).  Open there: ipps:// without
+  OpenSSL (Apple's TLS), the `dns_sd.h` printer browse, ending a deleted
+  task's thread, Core Text for the host's fonts, Mach-O in
+  `whichfunction.py`.
 - **The reMarkable Paper Pro** runs newton from AppLoad at 2x
   (`docs/host-remarkable.md`).  Open there: ink latency (the
   reconstructed inker's ~50 ms cadence; a video from the owner for the

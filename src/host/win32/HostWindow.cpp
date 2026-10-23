@@ -369,3 +369,19 @@ HostWindowSetOption(const char* name, long value)
 	(void) value;
 	return false;
 }
+
+
+// the window runs on a thread of its own: the machine is simply run
+int
+HostWindowRunMachine(int (*machine)(void), bool windowed)
+{
+	(void) windowed;
+	return machine();
+}
+
+
+bool
+HostWindowOwnsProcess(void)
+{
+	return false;
+}

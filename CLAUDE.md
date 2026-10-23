@@ -86,7 +86,7 @@ cmake -G Ninja -S src -B build/host -DCMAKE_TOOLCHAIN_FILE=$PWD/src/cmake/zig-to
 - `cmake --build build/host --target newton64` builds the 64-bit flavour in `build/host/ns64` (`-DNEWTON_BUILD_NS64=ON` every time).
 - A CMake `PASS_REGULAR_EXPRESSION` must not contain `;` (CMake splits it into alternatives).
 - The 32-bit (ILP32) x86 build is built and tested under WSL by `tools/host/wsl32.sh` (zig into `tmp/`; `docs/host-lp64.md` "The 32-bit build under WSL").
-- Other hosts: the reMarkable Paper Pro (`docs/host-remarkable.md`), macOS planned (`docs/host-macos.md`), the LilyGO T-Deck Pro investigated (`docs/host-tdeck-pro.md`: 32-bit builds `src/cmake/zig-x86-linux.cmake`/`zig-arm-linux.cmake`; every function must be four-byte aligned - `-falign-functions=4`).
+- Other hosts: the reMarkable Paper Pro (`docs/host-remarkable.md`), macOS (`docs/host-macos.md`: the system clang, the Cocoa window and `build/host/host/Newton.app`; a fat binary with `-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"`; Apple's arm64 passes every variadic argument on the stack, so a declaration and its definition must agree on what is named), the LilyGO T-Deck Pro investigated (`docs/host-tdeck-pro.md`: 32-bit builds `src/cmake/zig-x86-linux.cmake`/`zig-arm-linux.cmake`; every function must be four-byte aligned - `-falign-functions=4`).
 
 ### Running it
 

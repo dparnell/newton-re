@@ -191,6 +191,7 @@ TaskThreadEntry(void* arg)
 {
 	TaskThread* t = (TaskThread*) arg;
 	gMyThread = *t;
+	gMyThread.fThread = pthread_self();		// (not t's: StartTaskThread)
 	delete t;
 	Trampoline(gMyThread.fTask, gMyThread.fContext);
 	return nullptr;
@@ -230,7 +231,14 @@ StartTaskThread(TTask* task, HostTaskContext* ctx)
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 	pthread_attr_setstack(&attr, stack, gTaskStackSize);
-	if (pthread_create(&t->fThread, &attr, TaskThreadEntry, t) != 0)
+	// (the new thread's id into a variable of our own, not into t: the
+	// thread may run - and delete t - before pthread_create returns, and
+	// macOS's stores the id after making the thread, so it wrote into a
+	// freed block; the allocator caught it at the next new TaskThread, under
+	// load - docs/host-macos.md; Linux never showed it.  The thread takes
+	// its own id, pthread_self.)
+	pthread_t thread;
+	if (pthread_create(&thread, &attr, TaskThreadEntry, t) != 0)
 	{
 		fprintf(stderr, "[host] a task's thread could not be made\n");
 		abort();

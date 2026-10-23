@@ -196,6 +196,18 @@ PATCHES = {
         ("\t#define QD_SupportUnicode\n",
          "\t#define QD_SupportUnicode\n\n\t#define QD_Gray\t\t\t/* the MP2100 ROM's PixelMap has the grayTable (sync_ddk_headers.py) */\n"),
     ],
+    # UserGlobals.h: GenericSWI is declared with no named parameter, as the
+    # ARM's C took it (the selector in r0 either way); the host's stub
+    # (os600/user/host/GenericSWIStub.cpp) names the selector to read the rest
+    # with va_arg.  Where variadic arguments travel as named ones do (x86-64,
+    # Linux's arm64) the two agree by accident; on Apple's arm64 every
+    # variadic argument is on the stack, so a caller of `GenericSWI(...)` left
+    # the stub reading a garbage selector from x0 and the boot fell over
+    # (docs/host-macos.md).  The declaration names it too.
+    "UserGlobals.h": [
+        ('extern "C" long GenericSWI(...);',
+         'extern "C" long GenericSWI(ULong selector, ...);\t/* the selector named, as the host\'s stub has it (sync_ddk_headers.py) */'),
+    ],
     "UserPorts.h": [
         ("\t\tfriend void SleepTill(TTime* futureTimeToSend);",
          "\t\tfriend void SleepTill(TTime* futureTimeToSend);\n\t\tfriend void Sleep(TTimeout timeout);\n\t\tfriend class TUTaskWorld;"),

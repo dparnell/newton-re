@@ -1,160 +1,252 @@
-# A macOS host: the plan
+# The macOS host
 
-The owner wants the user-mode side of the OS to run on other host operating
-systems (`docs/host-lp64.md` is Linux).  macOS is the one left; it cannot be
-built or run on the development machine, so this page is the plan for it,
-written so that the port is *new files behind seams that already exist*
-plus a handful of `#elif defined(__APPLE__)` lines - and those lines have
-been put in already (2026-10-02), so a first macOS configure should build
-and run headless and silent with nothing more than the system compiler.
-Nothing here has been compiled on a Mac: the first job on one is to find
-out what this page got wrong.
+newton runs on macOS as **Newton.app**: AppKit's window, AudioToolbox's
+sound, IOKit's battery, a fat binary (arm64 and x86_64) if asked for,
+signed ad hoc.  First built on a Mac on 2026-10-17 (an Apple-silicon
+MacBook, macOS 26, Xcode's clang); before that this page was a plan written
+on Windows, and what it got wrong is under "What the first build found".
 
-## What carries over unchanged
-
-Everything below the host seams is portable C++17 and has been run on two
-hosts with different `long`s (Windows LLP64, Linux LP64); macOS is LP64
-like Linux, so `docs/host-lp64.md`'s whole list already applies to it
+macOS is LP64 like Linux, so `docs/host-lp64.md`'s whole list applies
 (`Long32`/`ULong32`, `Fixed` pinned to 32 bits, `sizeof` for ROM byte
-counts).  The kernel's host runtime (`os600/kernel/host/TaskRuntime.cpp`:
-one `std::thread` per task, a baton on `std::mutex`/`std::condition_variable`),
-the timers (`std::chrono`), the sockets (`hal/host/HostSockets.cpp`, BSD
-sockets - the POSIX branch), the files, the restart (`host/HostRestart.cpp`:
-fork/execv), the object file, the stores and everything above them need
+counts).  The kernel's host runtime (`std::thread` per task, the baton),
+the timers, the sockets (the POSIX branch, `SIGPIPE` ignored - macOS has no
+`MSG_NOSIGNAL`), the files, the object file and everything above them needed
 nothing.
 
-The POSIX code that was Linux-only, and what it now does on macOS:
+## Building
 
-| Where | Linux | macOS (already in the source) |
-|---|---|---|
-| `hal/host/System.cpp` `GetStackBounds` | `pthread_getattr_np` | `pthread_get_stackaddr_np`/`pthread_get_stacksize_np` (the top and the size) |
-| `host/HostCStack.h` (a crash's, a traced throw's, the heap check's C stack) | glibc `backtrace`, `dladdr` | the same calls - macOS has `<execinfo.h>` and `dladdr` |
-| `host/newton.cpp` the crash handler's faulting instruction | `uc_mcontext.gregs[REG_RIP]` / `.pc` | `uc_mcontext->__ss.__rip` / `__ss.__pc` |
-| `host/newton.cpp` the self-sampler (`SIGRTMIN+3`, `gettid`) | built | left out: macOS has no real-time signals (see "The crash tools") |
-| `host/HostRestart.cpp` the program's own path | `/proc/self/exe` | `_NSGetExecutablePath` |
-| `host/HostObjectsFile.cpp` the program's directory | `/proc/self/exe` | `_NSGetExecutablePath` (was already there) |
-| `hal/host/HostSockets.cpp` a send to a reset connection | `MSG_NOSIGNAL`, `SIGPIPE` ignored | `SIGPIPE` ignored (macOS has no `MSG_NOSIGNAL`) |
-| `power/host/HostBattery.cpp` the host's battery | `/sys/class/power_supply` | IOKit's power sources (`IOPSCopyPowerSourcesInfo`: the internal battery's capacity, state, charging, voltage, current); `power/CMakeLists.txt` links IOKit and CoreFoundation |
-| `print/host/dnssd/HostDNSSD.cpp` printers on the network | `avahi-browse` | nothing found (the `#else` branch) until a `dns_sd.h` browse is written |
-| `print/host/tls/HostTLS.cpp` ipps:// | OpenSSL | OpenSSL if CMake finds one (Homebrew's), else no ipps |
-| `src/host/CMakeLists.txt` the window and the sound | X11, ALSA | neither found: no window (headless) and silent - the `win32` files' `#else` branches |
-
-(The `SIGPIPE` row was a latent Linux bug too: a send to a connection the
-other end had reset would have ended newton with `SIGPIPE`.)
-
-## The build
-
-The system compiler, as on Linux:
-
-    cmake -G Ninja -S src -B build/host -DCMAKE_CXX_COMPILER=clang++
+    cmake -G Ninja -S src -B build/host -DCMAKE_BUILD_TYPE=RelWithDebInfo
     cmake --build build/host && ctest --test-dir build/host
 
-- Apple's `ld64` (and the newer `ld-prime`) resolves the mutually dependent
-  static libraries without `--start-group`; `src/CMakeLists.txt` only adds
-  the group for GNU ld (`CMAKE_CXX_COMPILER_LINKER_ID`), so nothing to do -
-  but check that CMake reports `AppleClang`'s linker as not GNU.
-- The case-insensitive APFS default is the Windows situation again:
-  `src/intl/Locale.h` shadows `<locale.h>`, so the rule "no `<map>`,
-  `<string>` or `<vector>` in Newton libraries" applies, and
-  `tools.IncludeCase` keeps the includes right for Linux.
-- `char` is signed on Apple's arm64 (as on x86-64), so the reconstruction's
-  assumptions hold there; a Linux arm64 build would be the first with an
-  unsigned `char` (`-fsigned-char` is the escape hatch if anything shows).
-- Threads: a secondary thread's default stack is 512 KB on macOS, but the
-  task threads are made by `TaskRuntime.cpp`'s `StartTaskThread` with a
-  stack of their own, 8 MB on every POSIX host, so that does not apply.
-  What does: a deleted task's thread cannot end where it stands
-  (`EndThisThread`: Linux uses the raw exit system call, which on macOS
-  would end the process), so on macOS it stays parked with its stack - the
-  one or two threads a minute the Linux and Windows hosts no longer keep.
-  The macOS answer is `__bsdthread_terminate` or a `pthread_exit` made
-  safe by first switching to a small stack of its own; worth doing once
-  there is a Mac to test it on.
-- The Python tools are the standard library only and run as they are; the
-  ROM tooling's Ghidra step is the user's own Ghidra.
+The system's clang (Xcode or the Command Line Tools), Homebrew's CMake and
+Ninja, Python 3 for the object file.  `build/host/host/` then has `newton`
+(the program, as on every host) and `Newton.app` (the same program in a
+bundle).
 
-## New files: the window, the sound, the network printers
+A **fat binary** is a build of both architectures:
 
-Each is one implementation of an interface that already has two:
+    cmake -G Ninja -S src -B build/fat -DCMAKE_BUILD_TYPE=RelWithDebInfo "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64"
+    cmake --build build/fat
 
-- **`host/cocoa/HostWindow.mm`** (Objective-C++, linked with `-framework
-  Cocoa`) answering `host/HostWindow.h`: `HostWindowStart` (an `NSWindow`
-  with an `NSView` subclass whose `drawRect:` scales the display's grays
-  into a `CGImage` thirty times a second), `HostWindowStop`,
-  `HostWindowPostPen`, `HostWindowPosition`/`HostWindowSetPosition` (the
-  restart's), and the shims it calls back - `HostWindowPenDown/Move/Up`
-  from `mouseDown:`/`mouseDragged:`/`mouseUp:`, `HostWindowKey` with the
-  Windows virtual key code from `keyDown:`/`keyUp:` (a `kVK_*` table, as
-  the X11 file has a keysym table), `HostWindowClosed` from
-  `windowWillClose:`, and `HostWindowFileDropped` from the view's
-  `NSDraggingDestination` (`performDragOperation:`, the file URLs off the
-  pasteboard) - the drop the X11 window does by XDND.  The one real
-  difference: AppKit wants the **main thread**, where the other two run
-  their window on a thread of their own.  So on macOS newton's `main` has to
-  run `OsBoot` on a second thread and give the main thread to
-  `[NSApp run]` - a `HostWindowRunMain(void (*boot)(void))` in
-  `HostWindow.h` that the other two implement as a plain call, and
-  `newton.cpp` calling it instead of `OsBoot()` directly.  That is the only
-  change outside the new file.  (Until then, XQuartz's X11 works with the
-  X11 file as it is: CMake finds X11 and builds it.)
-- **`host/coreaudio/HostAudio.cpp`** answering `host/HostAudio.h`: an
-  `AudioQueue` (AudioToolbox) for the loudspeaker - 16-bit mono at the rate
-  asked, `HostAudioPlay` copying into queue buffers, a few buffers ahead
-  as waveOut and ALSA are fed - and an input `AudioQueue` for
-  `HostMicrophone*` (which needs the microphone permission: an
-  `NSMicrophoneUsageDescription` in an `Info.plist` once newton is a
-  bundle; from a terminal, the terminal's permission).
-- **`print/host/dnssd/HostDNSSD.cpp`'s macOS branch**: `DNSServiceBrowse`
-  and `DNSServiceResolve` from `<dns_sd.h>` (in libSystem; the same API the
-  Windows branch's `DnsServiceBrowse` imitates) for `_ipp._tcp`, filling the
-  same list the other two branches fill.
-- **ipps:// without OpenSSL** (optional): a `HOST_TLS_SECURETRANSPORT` or
-  Network.framework branch of `HostTLS.cpp` over the same memory-buffer
-  interface (`HostTLSPutReceived`/`HostTLSTakeToSend`) - Secure Transport
-  is deprecated but does exactly that; with Homebrew's OpenSSL found, the
-  existing branch already works.
-- `src/host/CMakeLists.txt`: `elseif(APPLE)` choosing the two new files
-  and linking `-framework Cocoa -framework AudioToolbox -framework
-  CoreAudio`, as the Windows branch links `user32 gdi32 shell32 winmm`.
+- the whole tree builds for both; the object file (`romsrc.py` running the
+  fat `newtonscript`, natively) is the same bytes either way;
+- `print/CMakeLists.txt` looks for no OpenSSL in a build of more than one
+  architecture (Homebrew's is the machine's own architecture only, and the
+  other slice's link fails), so a fat newton has no `ipps://` printing
+  unless `OPENSSL_ROOT_DIR` names a universal OpenSSL - see "Left to do";
+- `newton64` (`NEWTON_BUILD_NS64`) is given the same architectures and
+  oldest system;
+- ctest `host.NewtonRosetta` boots the Intel half under Rosetta
+  (`arch -x86_64`); the rest of the suite runs the native half.  Both
+  halves were seen to draw the same screen byte for byte.
+
+`CMAKE_OSX_DEPLOYMENT_TARGET` defaults to 11.0 (`src/CMakeLists.txt`), the
+first macOS on Apple silicon.  Apple's linker's "ignoring duplicate
+libraries" warning (CMake names the mutually dependent libraries more than
+once) is turned off; `ld64` resolves archives as lld does, so there is no
+`--start-group` either.
+
+## Newton.app
+
+`src/host/CMakeLists.txt` (target `newton_app`, built with everything)
+makes `build/host/host/Newton.app`:
+
+| | |
+|---|---|
+| `Contents/MacOS/newton` | the `newton` program, unchanged |
+| `Contents/Info.plist` | `src/host/cocoa/Info.plist.in`: identifier `com.matthiasm.newton-re` (`NEWTON_APP_IDENTIFIER`), version `NEWTON_APP_VERSION`, the microphone's reason, `.nspkg` documents |
+| `Contents/Resources/romsrc-objects.bin` | the object file it boots: `HostObjectsFile.cpp` looks in `../Resources` on macOS |
+| `Contents/Resources/Newton.icns` | `tools/host/macicon.py`: the ROM's `smallLogoBitmap` (the lightbulb) on a tile the 2x00 screen's green |
+
+and signs it ad hoc (`codesign --force --sign -`), which is all an
+Apple-silicon Mac asks of a program built on it.  ctests `host.NewtonApp`
+(the bundle's program boots its own object file) and `host.NewtonAppSigned`
+(`codesign --verify --strict`).  It is not notarised and has no hardened
+runtime: copied to another Mac it has to be let through Gatekeeper by hand
+(right-click > Open).
+
+**Opened in the Finder** (`HostAppDefaults.h` - only the bundle's program,
+only when launchd started it) it has a home of its own, named by its
+identifier rather than "Newton", which NewtPlay's internal store already
+uses:
+
+- `~/Library/Application Support/com.matthiasm.newton-re/` - its working
+  directory and `Internal.store`, the internal store (unless `--store` is
+  given: `open -a Newton --args --display 640x480 ...` adds arguments);
+- `~/Library/Logs/com.matthiasm.newton-re/newton.log` - its stdout and
+  stderr, appended to.
+
+Run from a shell (`Newton.app/Contents/MacOS/newton ...`) it is plain
+newton.
+
+**Packages** install by dropping them on the window, by File > Install
+Package... (Cmd-O), and by opening a `.nspkg` in the Finder.  A `.pkg` is
+macOS Installer's whatever an application declares, so the app opens
+`.nspkg` files only.  The `.nspkg` type is newton-framework's
+(`org.newton-framework.newton-package`, which NewtPlay exports): Newton.app
+imports it under that identifier rather than declaring another, which left
+a `.nspkg` NewtPlay's type and Newton.app's document type unmatched.  Which
+of the two opens a `.nspkg` on a double-click is macOS's choice (Get Info >
+Open with > Change All); `open -a Newton x.nspkg` always works.  A package
+opened as the application starts waits in the queue until the Newton is
+up.
+
+**Restart** (the machine's Reboot): the Cocoa window replaces the process
+(`execv`) instead of starting a second one beside it, which would be a
+second application with its own Dock icon (`HostRestart.cpp`,
+`HostWindowOwnsProcess`).
+
+## The window: host/cocoa/HostWindow.mm
+
+AppKit must have the process's main thread, where the Windows and X11
+windows run on a thread of their own.  `newton.cpp`'s `main` therefore hands
+the machine - `OsBoot` and everything after it - to
+`HostWindowRunMachine(RunMachine, windowed)` (`HostWindow.h`): the other
+windows simply call it; the Cocoa one starts a thread for it (with the main
+thread's stack size: the boot context becomes the idle task, and
+`GetStackBounds` reads that thread's stack) and runs `[NSApp run]` on the
+main thread until the machine has ended.  `HostWindowStart`/`Stop`, which the
+machine calls, have the main thread open and close the window
+(`dispatch_sync`).  The main thread calls `HostWindowThreadStarted` first,
+so it is an alien thread to the kernel: the pen, the keys and the drops are
+plain memory writes, as the other windows' threads' are.
+
+- **The display**: each thirtieth of a second, if the display's bytes (or
+  the palette) changed, they are copied and made a `CGImage` in an indexed
+  colour space (the grays, 0 white, or `HostWindowSetPalette`'s colours) and
+  given to the view's layer, which scales it nearest-neighbour - sharp on a
+  Retina screen.  The window can be resized, its shape kept.
+- **The pen**: the mouse, in eighths of a display pixel
+  (`HostWindowPenDownFine`); a click into an inactive window is a tap.
+- **The keys**: a Mac key code *is* the ADB code the Newton keyboard sends,
+  so the table is `HostKeyboard.cpp`'s the other way round (by position);
+  Command and Control are the Newton's Command, Caps Lock a press and a
+  release each time it locks or unlocks, F11 the backlight, F12 the power
+  switch, repeats dropped (the Newton repeats its own).  Cmd-Q, Cmd-W,
+  Cmd-H, Cmd-M and Cmd-O are the menus'.
+- **Quit, closing the window, logging out**: the run is ended as on the
+  other hosts (`HostWindowClosed`); Quit waits (`NSTerminateLater`) until the
+  machine has ended.
+- `NEWTON_WINDOW_SNAPSHOT=<file>` writes, as the window closes, the image
+  the window last showed, drawn back through a gray context as a PGM.
+  ctests `host.NewtonWindowShows` and `.compare`
+  (`src/host/demo/windowshow.ns`): it is byte for byte the OS's own
+  `ScreenSnapshot`.  `host.NewtonWindowPen` drives the pen through the window.
+
+X11 through XQuartz is still there: `-DNEWTON_HOST_WINDOW=x11` builds the
+X11 window and ALSA's place is taken by no sound.
+
+## Sound: host/coreaudio/HostAudio.cpp
+
+The loudspeaker is an output audio queue, 16-bit mono at the Newton's 21600
+Hz (the queue converts), refilled on its own thread from a ring a fifth of a
+second long; `HostAudioPlay` never waits (what does not fit is dropped, as
+ALSA's full buffer drops it) and what the queue finds missing is silence.
+
+The microphone is an input queue filling a ring that `HostMicrophoneRecord`
+takes from.  It is started by the first record, not by
+`HostMicrophoneOpen`: macOS asks the user for the microphone the first time
+a program listens, and newton opens the microphone at every start - the
+question should come when the Newton records.  (`Info.plist` has the reason
+macOS shows; run from Terminal, Terminal's permission is asked for.)
+
+## The battery: power/host/iokit/HostBatteryIOKit.cpp
+
+IOKit's power sources (the first internal battery present).  A file - and a
+library, `power_host_iokit` - of its own, compiled without the Newton
+include paths: CoreFoundation brings `MacTypes.h`, whose `Point`, `Rect`,
+`Byte`, `Debugger` and `DebugStr` are the DDK's names too.  (The page's plan
+had put it in `HostBattery.cpp`, which then did not compile.)
+
+## What the first build found
+
+1. **`GenericSWI` on Apple's arm64.**  The DDK declares
+   `extern "C" long GenericSWI(...)`; the host's stub
+   (`os600/user/host/GenericSWIStub.cpp`) is `GenericSWI(ULong selector,
+   ...)`.  Where variadic arguments travel as named ones do (x86-64,
+   Windows, Linux's arm64) the two agreed by accident; Apple's arm64 ABI
+   passes *every* variadic argument on the stack, so the stub read its
+   selector from `x0`, which held nothing, every memory-object request
+   failed quietly and the boot fell over in `TTask::Init` on a nil
+   environment.  `sync_ddk_headers.py` now names the selector in the
+   declaration.  `CodeProcPtr` (`protocols/Protocols.h`,
+   `void* (*)(int selector, ...)`) is the same shape; nothing on the host
+   calls through one with arguments yet - a host hunk implementing it must
+   be variadic too.
+2. **The battery's IOKit headers** (above).
+3. **A use-after-free in `armcpu`** (`PackageNativeCPU.cpp`): an ARM throw
+   out to the host was named by the native world's own buffer, which
+   `RunPackageNativeOnCPU`'s cleanup deletes on the way out - then the
+   catcher read the name.  Linux's and Windows' allocators left the freed
+   bytes alone; macOS's writes into a freed block, and
+   `armcpu.PackageNativeCPU`'s exception arrived named "ck_s_$" and was
+   unhandled.  Exception names thrown to the host are now kept for the
+   process.
+4. **`int`s read as `ULong` from a variadic** - undefined, and on Apple's
+   arm64 an `int`'s eight-byte stack slot may have anything in its upper
+   half: `UserEnvironment.cpp` passed GenericSWI an `int` of flags (cast
+   now), and `TUSemaphoreOpList::Init` read its `MAKESEMLISTITEM` ints as
+   `ULong`s (it reads 32-bit words now; a garbage upper half would have made
+   `OpSemaphore` skip the op).  The compiler happened to store those
+   constants as whole words, so neither was seen to go wrong.
+5. **AddressSanitizer** (a build with `-fsanitize=address`, the boot,
+   the window, the pen) found two more host bugs: `TCardServer::
+   MainConstructor` called `LockPtr` on a socket the host's `operator new`
+   made, which reads a heap block's header from before a block that has
+   none (the ROM's `operator new` is the pointer heap's; DEVIATION, left
+   out - host memory is never paged out); and `OsBoot`'s boot task was
+   destroyed after its environment at the end of a run (the boot task now
+   lets go of it before `OsBoot` returns - declaring the two the other way
+   round instead had `~TTask` delete the stack environment as its last
+   user).  Both now run clean under ASan.
+6. **`pthread_create` on macOS stores the new thread's id after the thread
+   has started.**  `TaskRuntime.cpp`'s `StartTaskThread` handed it
+   `&t->fThread`, where `t` is the `TaskThread` the new thread copies and
+   deletes: when the new thread ran first, `pthread_create` then wrote into
+   a freed block, and macOS 26's allocator stopped newton at the next
+   `new TaskThread` - "BUG IN CLIENT OF LIBMALLOC: memory corruption of
+   free block" (`~/Library/Logs/DiagnosticReports/newton-*.ips`).  It
+   showed only under load - one run in tens alone, several per suite at
+   `ctest -j8` - and AddressSanitizer did not see it.  A twelve-way test
+   of `pthread_create` alone had the child run first, and the id written
+   after it, in about 2.5% of creations.  The id now goes into a variable
+   of `StartTaskThread`'s own and the thread takes its own
+   (`pthread_self`).  Linux never showed it.
+7. `ld` warns of duplicate libraries (off), `sprintf` is deprecated (93
+   warnings, left), Homebrew's libX11 would have been found (the Cocoa
+   window is now the default).
+
+The suite, headless and windowed, passes on arm64 but for
+`host.NewtonAlignPen.restart`, which fails in a RelWithDebInfo build on
+every host (`docs/next-steps.md`).
 
 ## The crash tools
 
-- **A crash** prints the faulting instruction and the C stack as image
-  offsets already (the rows above).  `tools/host/whichfunction.py` reads
-  PE and ELF; macOS needs **Mach-O**: the symbol table is `LC_SYMTAB`
-  (`nlist_64` entries, names in the string table, a function's end the next
-  symbol's start), the offset relative to the `__TEXT` segment's vmaddr
-  (the crash line's base is `dladdr`'s `dli_fbase`, the Mach header) - or
-  simply `atos -o build/host/host/newton -l 0x100000000 <address>` /
-  `nm -n` + `c++filt`, which every Mac has.
-- **stacksample.py / profile.py**: macOS has its own sampler, `sample <pid>
-  <seconds>` (a call tree of every thread, symbolised), and `spindump`;
-  both need no setup for a process of one's own.  The Linux route (the
-  process samples itself on a signal) does not carry over: macOS has no
-  real-time signals and no way to send a signal to one thread from outside.
-  So on macOS the two tools should run `sample` and summarise its output
-  (the busiest thread's stacks; self and inclusive counts), a
-  `tools/host/macsample.py` beside `linuxsample.py`.
-- **gdb** is lldb there (`lldb -p <pid>` needs no ptrace dance for one's
-  own process, given the developer tools).
+- A crash prints the faulting instruction and the C stack as image offsets
+  (`uc_mcontext->__ss.__pc`/`__rip`).  `tools/host/whichfunction.py` reads
+  PE and ELF, not Mach-O; on a Mac `atos` does it:
+  `atos -o build/host/host/newton -l 0x100000000 0x100000000+<offset>...`.
+- `lldb` works on one's own processes with the developer tools; `sample
+  <pid> <seconds>` is macOS's sampler (the Linux self-sampler, a real-time
+  signal, does not exist here).
 
-## Tests
+## Left to do
 
-Nothing in the suite is Windows- or Linux-specific except where it says so:
-`host.NewtonWindowDrop` is X11's (it builds only with X11) and skips with no
-display; the tests that need ALSA or waveOut do not exist - the suite runs
-the null sound backend.  A macOS window drop test would want an
-`NSDraggingSource` program, as `xdnddrop` is X11's; until then the Cocoa
-drop is tested by hand.  The suite should pass headless on a Mac as it is.
-
-## Order of work, when there is a Mac
-
-1. Configure and build with the system clang; run the suite headless (no
-   window, no sound).  Fix what the compiler finds - this page's guesses.
-2. The task threads' stack size, if the suite finds it short.
-3. `host/cocoa/HostWindow.mm` and `HostWindowRunMain`.
-4. `host/coreaudio/HostAudio.cpp`.
-5. The `dns_sd.h` browse; Mach-O in whichfunction.py and a `sample`
-   wrapper for stacksample/profile.
-6. A `docs/host-macos.md` rewritten from plan to record, as
-   `docs/host-lp64.md` is for Linux.
+- **ipps:// in a fat build**: a TLS branch of `print/host/tls/HostTLS.cpp`
+  over Apple's own TLS (Network.framework, or Secure Transport over the
+  existing memory-buffer interface) instead of OpenSSL - which would also
+  free the arm64 build of Homebrew's OpenSSL dylibs, a path that exists
+  only on a Mac with Homebrew.
+- **Network printers**: `print/host/dnssd/HostDNSSD.cpp`'s macOS branch
+  (`DNSServiceBrowse`/`DNSServiceResolve` from `<dns_sd.h>`), today the
+  `#else` that finds none.
+- **A deleted task's thread** is parked with its stack rather than ended
+  (`TaskRuntime.cpp`'s `EndThisThread`: Linux's raw exit would end the whole
+  process here).
+- **The host's fonts** (`HostFontRaster.h`): GDI on Windows, none here;
+  Core Text would do it.
+- **Mach-O in `whichfunction.py`**, and a `macsample.py` beside
+  `linuxsample.py` running `sample` for `stacksample.py`/`profile.py`.
+- **Distribution**: a Developer ID, the hardened runtime (with the
+  `com.apple.security.device.audio-input` entitlement) and notarisation -
+  not wanted for now; ad-hoc signing is.

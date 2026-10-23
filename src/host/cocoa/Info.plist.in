@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Newton.app's Info.plist (src/host/CMakeLists.txt configures it; docs/host-macos.md) -->
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleExecutable</key>
+	<string>newton</string>
+	<key>CFBundleIdentifier</key>
+	<string>@NEWTON_APP_IDENTIFIER@</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Newton</string>
+	<key>CFBundleDisplayName</key>
+	<string>Newton</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>@NEWTON_APP_VERSION@</string>
+	<key>CFBundleVersion</key>
+	<string>@NEWTON_APP_VERSION@</string>
+	<key>CFBundleIconFile</key>
+	<string>Newton</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>@CMAKE_OSX_DEPLOYMENT_TARGET@</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.utilities</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSSupportsAutomaticGraphicsSwitching</key>
+	<true/>
+	<key>NSHumanReadableCopyright</key>
+	<string>A reconstruction of Apple's Newton OS 2.1 (MessagePad 2x00)</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>The Newton records sound through the Mac's microphone when one of its applications records.</string>
+
+	<!-- Newton packages: .nspkg (a .pkg is macOS's Installer's, whatever an
+	     application declares; a .pkg still installs by drag and drop or
+	     File > Install Package).  The type is newton-framework's (NewtPlay
+	     exports org.newton-framework.newton-package for .nspkg): it is
+	     imported under that identifier rather than declared again under
+	     another, which would leave a .nspkg one type or the other depending
+	     on which application macOS saw first -->
+	<key>UTImportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>org.newton-framework.newton-package</string>
+			<key>UTTypeDescription</key>
+			<string>Newton package</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>nspkg</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Newton package</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>CFBundleTypeIconFile</key>
+			<string>Newton</string>
+			<key>LSHandlerRank</key>
+			<string>Default</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>org.newton-framework.newton-package</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

@@ -368,7 +368,13 @@ TCardServer::MainConstructor()
 		if ((err = socket->MakeSocketInaccessible(socket->SocketBaseAddr(), 0xC000000)) != noErr)
 			return err;
 		AddCardHandler(socketNumber, TCHMemModem::ClassInfo());
-		LockPtr((Ptr) socket);
+		// DEVIATION: the ROM locks the socket's block in (LockPtr: the ROM's
+		// operator new is the pointer heap's, so the socket is a heap block
+		// whose pages the stack manager could page out).  The host's
+		// operator new is the C++ runtime's - LockPtr would read a heap
+		// block's header from before a block that has none (AddressSanitizer:
+		// a heap-buffer-overflow) - and host memory is never paged out.
+		// LockPtr((Ptr) socket);
 		socket->RegisterSocketInterrupt(kSocketCardDetectedInt, CardIntProc, this);
 		socket->RegisterSocketInterrupt(kSocketCardLockInt, CardIntProc, this);
 		gNumberOfHWSockets = socketNumber + 1;

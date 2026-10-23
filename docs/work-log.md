@@ -9,6 +9,55 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-17: macOS - Newton.app, a fat binary
+
+The first build on a Mac (Apple silicon, macOS 26, Xcode's clang); the
+owner asked for newton as a fat-binary application bundle, signed ad hoc,
+identifier `com.matthiasm.newton-re`, opening `.nspkg` packages.  The
+record is `docs/host-macos.md`.
+
+- Two things kept it from building or booting: IOKit's `MacTypes.h`
+  against the DDK's types in `HostBattery.cpp` (now
+  `power/host/iokit/HostBatteryIOKit.cpp`, a library without the Newton
+  include paths), and **`GenericSWI`**: declared `(...)` in the DDK,
+  defined `(ULong selector, ...)` - Apple's arm64 passes every variadic
+  argument on the stack, so the stub read its selector from an empty
+  register and the boot fell over in `TTask::Init`.  The declaration names
+  the selector now (`sync_ddk_headers.py`).  An `int` handed to a variadic
+  that reads `ULong` is the same hazard: `UserEnvironment.cpp`'s
+  AddDomainToEnvironment flags are cast, `TUSemaphoreOpList::Init` reads
+  32-bit words.
+- Host bugs that only macOS's allocator and AddressSanitizer showed: an
+  `armcpu` exception named by a buffer in the native world that the
+  cleanup had deleted (`LastingExceptionName`; `armcpu.PackageNativeCPU`
+  failed on macOS); `TCardServer::MainConstructor`'s `LockPtr` on a socket
+  made by the host's `operator new`, reading a heap header before a block
+  that has none (DEVIATION, left out); `OsBoot`'s boot task outliving its
+  environment on the stack at the end of a run; and **`StartTaskThread`
+  handing `pthread_create` a field of the `TaskThread` the new thread
+  deletes** - macOS stores the id after the thread has started, so under
+  load (`ctest -j8`) it wrote into a freed block and the allocator stopped
+  newton at the next `new TaskThread`.
+- `host/cocoa/HostWindow.mm`: AppKit on the main thread, the machine on a
+  thread of its own (`HostWindowRunMachine` in `HostWindow.h`, a plain call
+  on the other hosts); the display an indexed-colour `CGImage` scaled
+  nearest-neighbour, the pen in eighths of a pixel, Mac key codes being
+  ADB codes, drops, Install Package, Quit.  `NEWTON_WINDOW_SNAPSHOT` and
+  ctests `host.NewtonWindowShows(.compare)`: the window shows the OS's
+  screen byte for byte.
+- `host/coreaudio/HostAudio.cpp`: audio queues; the microphone started by
+  the first record, so macOS asks for it when the Newton records.
+- `Newton.app` (target `newton_app`): the program, `Info.plist`, the
+  object file in `Resources` (looked for there), an icon from the ROM's
+  `smallLogoBitmap` (`tools/host/macicon.py`), `codesign -s -`;
+  `HostAppDefaults.h` gives it a directory and a log in the user's Library
+  when the Finder opens it; a restart replaces the process.  `.nspkg` is
+  newton-framework's type (NewtPlay exports it), imported rather than
+  declared again.  ctests `host.NewtonApp`, `host.NewtonAppSigned`.
+- A fat build (`-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"`) builds as it
+  is but for OpenSSL (Homebrew's is one architecture: not looked for);
+  `host.NewtonRosetta` boots the Intel half.
+
 ## 2026-10-16: The T-Deck Pro's quick sheet and lock screen
 
 The owner asked for lilyphone1's way of locking the screen on the T-Deck:

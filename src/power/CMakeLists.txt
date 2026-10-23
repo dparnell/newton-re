@@ -14,9 +14,14 @@ add_library(power STATIC
 )
 target_link_libraries(power PUBLIC newton_config protocols utility os600_user qd recognition stores frames hal_host)
 target_include_directories(power PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-# (macOS's battery is IOKit's power sources)
+# (macOS's battery is IOKit's power sources, in a library of its own built
+# without the Newton include paths: IOKit's MacTypes.h and the DDK's
+# NewtonTypes.h name the same types - host/iokit/HostBatteryIOKit.cpp)
 if(APPLE)
-    target_link_libraries(power PRIVATE "-framework IOKit" "-framework CoreFoundation")
+    add_library(power_host_iokit STATIC host/iokit/HostBatteryIOKit.cpp)
+    target_include_directories(power_host_iokit PRIVATE ${CMAKE_SOURCE_DIR})
+    target_link_libraries(power_host_iokit PUBLIC "-framework IOKit" "-framework CoreFoundation")
+    target_link_libraries(power PRIVATE power_host_iokit)
 endif()
 
 add_subdirectory(tests)

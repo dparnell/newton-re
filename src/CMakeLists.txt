@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
+# macOS: the oldest system the programs run on - 11, the first on Apple
+# silicon (docs/host-macos.md; set before project(), which reads it)
+set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "the oldest macOS the programs run on")
 project(NewtonOS CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -229,6 +232,16 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
             endforeach()
         endforeach()
     endif()
+endif()
+# macOS's window is AppKit's, in Objective-C++ (host/cocoa/HostWindow.mm)
+if(APPLE)
+    enable_language(OBJCXX)
+endif()
+# Apple's linker warns at every program that a library is named twice on its
+# line - which CMake's dependency closure does for the mutually dependent
+# libraries above, and which is harmless with a linker that rescans
+if(APPLE)
+    add_link_options(LINKER:-no_warn_duplicate_libraries)
 endif()
 
 enable_testing()

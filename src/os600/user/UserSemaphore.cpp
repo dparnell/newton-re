@@ -36,7 +36,13 @@ TUSemaphoreOpList	TURdWrSemaphore::freleaseRdOP;
 ------------------------------------------------------------------------------- */
 
 // ROM 0x0025a1c8 Init__17TUSemaphoreOpListFUle
-// The ops (MAKESEMLISTITEM words) follow the count as varargs.
+// The ops (MAKESEMLISTITEM words) follow the count as varargs.  They are
+// read as the 32-bit words they are: a MAKESEMLISTITEM is an int, and an
+// int read as a ULong is undefined - on Apple's arm64, where each variadic
+// argument has an eight-byte stack slot, its upper half is whatever the
+// caller stored there, and OpSemaphore (item >> 16) would then name a
+// semaphore past the group's and the op be skipped (docs/host-macos.md).
+// (A ULong argument holding a 32-bit word reads the same: its low half.)
 long
 TUSemaphoreOpList::Init(ULong numInList, ...)
 {
@@ -49,7 +55,7 @@ TUSemaphoreOpList::Init(ULong numInList, ...)
 	va_list args;
 	va_start(args, numInList);
 	for (ULong i = 0; i < numInList; i++)
-		msg->fSemList.fOps[i] = va_arg(args, ULong);
+		msg->fSemList.fOps[i] = (ULong) va_arg(args, unsigned int);
 	va_end(args);
 	msg->fSemList.fCount = numInList;
 	long err = MakeObject(kObjectSemList, msg, msgSize);

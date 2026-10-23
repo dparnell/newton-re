@@ -621,3 +621,22 @@ on its undefined-behaviour checks in a build without a type, so a
 `memcpy` from nil and the like stop the program with the C stack - which
 found two of the bugs below.  What it found is in `docs/host-lp64.md`,
 "The 32-bit build under WSL".
+
+## macicon.py - Newton.app's icon
+
+macOS's Newton.app (`docs/host-macos.md`) has an icon made from the ROM's
+own art: `smallLogoBitmap`, the Newton lightbulb
+(`romsrc/resources/bits/3d594d.png`, 44 x 45, one bit), drawn on a rounded
+tile the colour of the MessagePad 2x00's screen.
+
+    python tools/host/macicon.py build/host/host/Newton.icns [--bitmap file.png] [--iconset dir] [--no-icns]
+
+**Inputs:** a grey or palette PNG (`--bitmap`; the default is the logo).
+
+**Outputs:** the iconset - `icon_16x16.png` to `icon_512x512@2x.png`, RGBA,
+the bitmap scaled by a whole number of pixels where the size allows (sharp)
+and averaged down where it is smaller - in `--iconset` (default: the output
+with `.iconset`), and the `.icns` made from it by Apple's `iconutil`
+(macOS only; `--no-icns` stops at the iconset).  Standard library only.
+The build runs it for `Newton.app` (`src/host/CMakeLists.txt`); about eight
+seconds.

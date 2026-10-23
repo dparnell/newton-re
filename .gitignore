@@ -4,3 +4,4 @@ __pycache__/
 tmp/
 .claude/settings.local.json
 .AppleDouble/
+.vscode/settings.json

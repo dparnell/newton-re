@@ -85,6 +85,13 @@ HostDefaultObjectsFile(const char* argv0, const char* compiledIn)
 		snprintf(path, sizeof(path), "%s../%s", dir, kObjectsFileName);
 		if (IsFile(path))
 			return path;
+#if defined(__APPLE__)
+		// (an application bundle's: the program in Contents/MacOS, its
+		// files in Contents/Resources - host/cocoa/macapp.cmake)
+		snprintf(path, sizeof(path), "%s../Resources/%s", dir, kObjectsFileName);
+		if (IsFile(path))
+			return path;
+#endif
 	}
 	if (compiledIn != NULL && IsFile(compiledIn))
 		return compiledIn;

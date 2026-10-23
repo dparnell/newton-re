@@ -6,11 +6,14 @@
 #   remarkable   the reMarkable Paper Pro: aarch64 Linux cross-built with zig
 #                (src/cmake/zig-aarch64-linux.cmake), packaged as an AppLoad
 #                application (tools/remarkable/package.py)
+#   macos        Newton.app, one binary for arm64 and x86_64, the system clang,
+#                signed ad hoc (docs/host-macos.md)
 #
 # Each archive holds newton, newtonscript and romsrc-objects.bin - the object
 # file built from the committed romsrc/ tree, which newton boots from and
-# finds beside itself - and a README.  No ROM image is needed to build or run.
-# macOS is planned (docs/host-macos.md) and not built yet.
+# finds beside itself - and a README (macOS's: Newton.app, which has its own
+# copy inside, newtonscript and the object file).  No ROM image is needed to
+# build or run.
 
 name: release
 
@@ -101,9 +104,32 @@ jobs:
           name: newton-remarkable-aarch64
           path: dist/newton-remarkable-aarch64.tar.gz
 
+  macos:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ninja
+        run: brew install ninja
+      # one binary for both architectures; OpenSSL is not looked for in a
+      # build of two (Homebrew's is one), so there is no ipps:// printing
+      - name: Configure
+        run: >
+          cmake -G Ninja -S src -B build -DCMAKE_BUILD_TYPE=Release
+          "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64"
+      - name: Build
+        run: cmake --build build --target newton newtonscript romsrc newton_app
+      - name: Smoke test
+        run: tools/ci/smoke.sh build/host
+      - name: Package
+        run: tools/ci/package-macos.sh build newton-macos-universal
+      - uses: actions/upload-artifact@v4
+        with:
+          name: newton-macos-universal
+          path: dist/newton-macos-universal.zip
+
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [windows, linux, remarkable]
+    needs: [windows, linux, remarkable, macos]
     runs-on: ubuntu-latest
     permissions:
       contents: write

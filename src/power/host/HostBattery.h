@@ -66,4 +66,12 @@ void	HostBatteryPin(const HostBatteryReading* reading, bool present = true);
 // present, and whether any Mains or USB supply is online
 bool	HostBatteryReadSysfs(const char* root, HostBatteryReading* reading);
 
+#if defined(__APPLE__)
+// macOS's IOKit power sources: the first internal battery that is present
+// (power/host/iokit/HostBatteryIOKit.cpp - a file of its own, built without
+// the Newton include paths: IOKit's MacTypes.h has a Point, a Rect, a Byte
+// and a Debugger of its own, which the DDK's collide with)
+bool	HostBatteryReadIOKit(HostBatteryReading* reading);
+#endif
+
 #endif	/* __HOSTBATTERY_H */

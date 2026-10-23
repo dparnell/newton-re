@@ -36,7 +36,7 @@
 	build makes from the committed ROM source tree (<build>/romsrc-objects.bin,
 	romsrc/README.md; docs/rom-free/README.md), with no ROM image anywhere.
 	It is looked for in NEWTON_OBJECTS, beside the program, in the directory
-	above it and at the build's own path (host/HostObjectsFile.h); when there
+	above it (in a macOS application, Contents/Resources) and at the build's own path (host/HostObjectsFile.h); when there
 	is none newton says how to build it and stops - it does not go looking
 	for a ROM image.  --objects names another object file (an edited tree's).
 	--rom boots the original ROM image instead (build/MP2x00US/rom.bin, or
@@ -230,6 +230,7 @@
 #include "print/host/HostPrinter.h"
 #include "print/host/HostIPP.h"
 #include "power/host/HostPowerSwitch.h"
+#include "HostAppDefaults.h"
 #include "HostObjectsFile.h"
 #include "HostRestart.h"
 #include "HostCStack.h"
@@ -1045,12 +1046,66 @@ HostCrashedFilter(HostExceptionPointers* info)
 #endif
 
 
+// The machine: the OS booted and run until it ends, then the sound closed,
+// what was played reported and - if the machine reset itself - newton
+// started again (==> the exit status).  main runs it through
+// HostWindowRunMachine, on the thread the host's window leaves it.
+static int		gArgc = 0;
+static char**	gArgv = nil;
+static Boolean	gLoud = false;			// the loudspeaker is open
+static Boolean	gHearing = false;		// and the microphone
+
+static int
+RunMachine(void)
+{
+	OsBoot();
+	HostStopEchoServer();
+	HostWindowStop();
+	if (gHearing)
+		HostMicrophoneClose();
+	if (gLoud)
+		HostAudioClose();
+	long played = 0;
+	const short* samples = HostSoundCaptured(&played);
+	if (HostSoundSetAsideCount() > 0)
+		fprintf(stderr, "[host] sound: the boot sound, %ld samples, not counted\n", HostSoundSetAsideCount());
+	if (HostSoundPlayedCount() > 0)
+		fprintf(stderr, "[host] sound: %ld samples played\n", HostSoundPlayedCount());
+	if (played > 0 && gToneFrequency > 0)
+	{
+		// how much of what was played is the test tone (Goertzel over the
+		// whole of it, against all the energy there)
+		double w = 2 * 3.14159265358979 * gToneFrequency / kHostSoundRate, c = 2 * cos(w);
+		double s1 = 0, s2 = 0, energy = 0;
+		for (long i = 0; i < played; i++)
+		{
+			double s0 = samples[i] + c * s1 - s2;
+			s2 = s1;
+			s1 = s0;
+			energy += (double) samples[i] * samples[i];
+		}
+		double power = (s1 * s1 + s2 * s2 - c * s1 * s2) * 2 / played;
+		fprintf(stderr, "[host] sound: the %ld Hz test tone makes up %.0f%% of what was played\n",
+				gToneFrequency, energy > 0 ? 100 * power / energy : 0.0);
+	}
+	// the machine reset itself (Reboot, Restart): booted again
+	// (host/HostRestart.h; DEVIATION, a new process for the jump to the
+	// reset vector)
+	int restarted = HostRestartIfReset(gArgc, gArgv, gScriptQuit.load());
+	if (restarted >= 0)
+		return restarted;
+	return 0;
+}
+
+
 int
 main(int argc, char** argv)
 {
 #if NEWTON_NS64
 	fprintf(stderr, "[host] newton64: the 64-bit NewtonScript flavour - 62-bit integers, 32-bit formats (docs/frames/64bit.md)\n");
 #endif
+	// (Newton.app opened in the Finder: a home of its own, HostAppDefaults.h)
+	argv = HostAppDefaults(&argc, argv);
 #ifdef _WIN32
 	SetUnhandledExceptionFilter(HostCrashedFilter);
 #endif
@@ -1338,13 +1393,13 @@ main(int argc, char** argv)
 	// and the microphone (the same file's waveIn), when there is one
 	static const HostSoundBackend kLoudspeaker = { HostAudioPlay, nil };
 	static const HostSoundBackend kLoudspeakerAndMicrophone = { HostAudioPlay, HostMicrophoneRecord };
-	Boolean loud = gWindowed && HostAudioOpen(kHostSoundRate);
-	Boolean hearing = loud && HostMicrophoneOpen(kHostSoundRate);
-	HostInstallSoundDriver(hearing ? &kLoudspeakerAndMicrophone : loud ? &kLoudspeaker : nil);
+	gLoud = gWindowed && HostAudioOpen(kHostSoundRate);
+	gHearing = gLoud && HostMicrophoneOpen(kHostSoundRate);
+	HostInstallSoundDriver(gHearing ? &kLoudspeakerAndMicrophone : gLoud ? &kLoudspeaker : nil);
 	// headless, the null microphone can hear a test tone: a minute of it
 	static short* tone = nil;
 	const long kToneSamples = 60 * kHostSoundRate;
-	if (!hearing && gToneFrequency > 0)
+	if (!gHearing && gToneFrequency > 0)
 	{
 		tone = (short*) malloc(kToneSamples * sizeof(short));
 		if (tone != nil)
@@ -1354,41 +1409,9 @@ main(int argc, char** argv)
 			HostSoundSetSource(tone, kToneSamples);
 		}
 	}
-	OsBoot();
-	HostStopEchoServer();
-	HostWindowStop();
-	if (hearing)
-		HostMicrophoneClose();
-	if (loud)
-		HostAudioClose();
-	long played = 0;
-	const short* samples = HostSoundCaptured(&played);
-	if (HostSoundSetAsideCount() > 0)
-		fprintf(stderr, "[host] sound: the boot sound, %ld samples, not counted\n", HostSoundSetAsideCount());
-	if (HostSoundPlayedCount() > 0)
-		fprintf(stderr, "[host] sound: %ld samples played\n", HostSoundPlayedCount());
-	if (played > 0 && gToneFrequency > 0)
-	{
-		// how much of what was played is the test tone (Goertzel over the
-		// whole of it, against all the energy there)
-		double w = 2 * 3.14159265358979 * gToneFrequency / kHostSoundRate, c = 2 * cos(w);
-		double s1 = 0, s2 = 0, energy = 0;
-		for (long i = 0; i < played; i++)
-		{
-			double s0 = samples[i] + c * s1 - s2;
-			s2 = s1;
-			s1 = s0;
-			energy += (double) samples[i] * samples[i];
-		}
-		double power = (s1 * s1 + s2 * s2 - c * s1 * s2) * 2 / played;
-		fprintf(stderr, "[host] sound: the %ld Hz test tone makes up %.0f%% of what was played\n",
-				gToneFrequency, energy > 0 ? 100 * power / energy : 0.0);
-	}
-	// the machine reset itself (Reboot, Restart): booted again
-	// (host/HostRestart.h; DEVIATION, a new process for the jump to the
-	// reset vector)
-	int restarted = HostRestartIfReset(argc, argv, gScriptQuit.load());
-	if (restarted >= 0)
-		return restarted;
-	return 0;
+	// the machine run where the host's window wants it: on macOS a thread
+	// of its own, the main thread being AppKit's (HostWindow.h)
+	gArgc = argc;
+	gArgv = argv;
+	return HostWindowRunMachine(RunMachine, gWindowed);
 }

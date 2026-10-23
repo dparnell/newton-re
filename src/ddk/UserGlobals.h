@@ -43,7 +43,7 @@ extern TObjectId		gCurrentMonitorId;	// monitor that a task is in if any
 extern void*			gCurrentGlobals;	// pointer to per task globals
 
 extern "C" ULong GetPortSWI(ULong what);
-extern "C" long GenericSWI(...);
+extern "C" long GenericSWI(ULong selector, ...);	/* the selector named, as the host's stub has it (sync_ddk_headers.py) */
 extern "C" long GenericWithReturnSWI(ULong p1, ULong p2, ULong p3, ULong p4, ULong* rp1, ULong* rp2, ULong* rp3);
 extern "C" long SemaphoreOpGlue(ULong ObjectId, ULong OpListId, ULong flags);
 extern "C" long PortSendSWI(ULong ObjectId, ULong msgId, ULong replyId, ULong msgType, ULong flags);

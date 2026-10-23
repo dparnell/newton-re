@@ -1390,22 +1390,44 @@ TNativeWorld::DeliverHost(TARMCPU& cpu, Exception* e)
 }
 
 
+// An exception's name kept where it outlives the world: a name thrown out
+// to the host is read by whatever catches it - after RunPackageNativeOnCPU's
+// cleanup has deleted the world on the way.  (It was the world's own
+// fThrownName, read after the delete: harmless where the freed block kept
+// its bytes, but macOS's allocator writes into a freed block, and
+// armcpu.PackageNativeCPU's ARM throw arrived named "ck_s_$".)  The names
+// are few - a native's exceptions - so each is kept once; a full table
+// reuses its oldest, which no exception still in flight can be using.
+static const char*
+LastingExceptionName(const char* name)
+{
+	static char sNames[64][64];
+	static int sCount = 0, sNext = 0;
+	for (int i = 0; i < sCount; i++)
+		if (strcmp(sNames[i], name) == 0)
+			return sNames[i];
+	int slot = sCount < 64 ? sCount++ : sNext++ % 64;
+	strncpy(sNames[slot], name, sizeof(sNames[slot]) - 1);
+	sNames[slot][sizeof(sNames[slot]) - 1] = 0;
+	return sNames[slot];
+}
+
+
 // The other way: an exception the ARM code throws (or passes on) that no
 // handler of its takes goes on out to the host, its data translated back.
 void
 TNativeWorld::ThrowToHost(const char* name, uint32_t data)
 {
-	strncpy(fThrownName, name, sizeof(fThrownName) - 1);
-	fThrownName[sizeof(fThrownName) - 1] = 0;
-	if (Subexception((ExceptionName) fThrownName, (ExceptionName) "type.ref") && data != 0)
-		ThrowRefException((ExceptionName) fThrownName, RefVar(ArgRef(data)));
-	if (Subexception((ExceptionName) fThrownName, exMsgException) && data != 0)
+	ExceptionName thrown = (ExceptionName) LastingExceptionName(name);
+	if (Subexception(thrown, (ExceptionName) "type.ref") && data != 0)
+		ThrowRefException(thrown, RefVar(ArgRef(data)));
+	if (Subexception(thrown, exMsgException) && data != 0)
 	{
 		static char message[256];
 		ReadCString(data, message, sizeof(message));
-		Throw((ExceptionName) fThrownName, message, nil);
+		Throw(thrown, message, nil);
 	}
-	Throw((ExceptionName) fThrownName, (void*) (intptr_t) (int32_t) data, nil);
+	Throw(thrown, (void*) (intptr_t) (int32_t) data, nil);
 }
 
 

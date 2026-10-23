@@ -115,19 +115,26 @@ set_tests_properties(host.NewtonScriptTrace PROPERTIES TIMEOUT 60
 # One window and one sound implementation per host, chosen here:
 #   Windows   win32/HostWindow.cpp (the message loop), win32/HostAudio.cpp (waveOut/waveIn)
 #   Linux/BSD x11/HostWindow.cpp (X11, and Wayland through XWayland), alsa/HostAudio.cpp
+#   macOS     cocoa/HostWindow.mm (AppKit, on the main thread: HostWindowRunMachine),
+#             coreaudio/HostAudio.cpp (audio queues) - or X11 through XQuartz
+#             with -DNEWTON_HOST_WINDOW=x11 (docs/host-macos.md)
 # Where there is neither, the win32 files' own #else answers the calls and
 # says there is no window and no device, so the world runs headless - which
-# is what a host the port has not reached yet gets (macOS today).
+# is what a host the port has not reached yet gets.
 #   reMarkable remarkable/HostWindow.cpp (the e-ink panel through AppLoad's
 #             qtfb), no sound - -DNEWTON_HOST_WINDOW=remarkable
 #             (docs/host-remarkable.md)
-set(NEWTON_HOST_WINDOW "auto" CACHE STRING "the host window: auto (the platform's), remarkable (a reMarkable tablet's panel)")
+set(NEWTON_HOST_WINDOW "auto" CACHE STRING "the host window: auto (the platform's), remarkable (a reMarkable tablet's panel), x11 (X11 on macOS, through XQuartz)")
 if(NEWTON_HOST_WINDOW STREQUAL "remarkable")
     set(host_window_source remarkable/HostWindow.cpp remarkable/QTFBPanel.cpp remarkable/Folio.cpp)
     set(host_audio_source win32/HostAudio.cpp)         # its #else: no device (the tablets have no loudspeaker)
 elseif(WIN32)
     set(host_window_source win32/HostWindow.cpp)
     set(host_audio_source win32/HostAudio.cpp)
+elseif(APPLE AND NOT NEWTON_HOST_WINDOW STREQUAL "x11")
+    set(host_window_source cocoa/HostWindow.mm)
+    set(host_audio_source coreaudio/HostAudio.cpp)
+    set_source_files_properties(cocoa/HostWindow.mm PROPERTIES COMPILE_OPTIONS -fobjc-arc)
 else()
     find_package(X11)
     find_path(ALSA_INCLUDE_DIR alsa/asoundlib.h)
@@ -153,6 +160,9 @@ if(NEWTON_HOST_WINDOW STREQUAL "remarkable")
     target_link_libraries(host_window PUBLIC rt pthread dl)
 elseif(WIN32)
     target_link_libraries(host_window PUBLIC user32 gdi32 shell32 winmm)
+elseif(APPLE AND NOT NEWTON_HOST_WINDOW STREQUAL "x11")
+    target_link_libraries(host_window PUBLIC "-framework Cocoa" "-framework QuartzCore" "-framework Carbon"
+                          "-framework AudioToolbox" "-framework CoreAudio")
 else()
     if(X11_FOUND)
         target_include_directories(host_window PRIVATE ${X11_INCLUDE_DIR})
@@ -201,10 +211,72 @@ add_executable(newton newton.cpp HostRestart.cpp HostKeyboard.cpp HostPackages.c
                ${CMAKE_CURRENT_BINARY_DIR}/HostSettingsSource.cpp HostDeveloper.cpp
                ${CMAKE_CURRENT_BINARY_DIR}/HostDeveloperSource.cpp HostWordEngines.cpp
                ${CMAKE_CURRENT_BINARY_DIR}/HostWordEnginesSource.cpp HostHeapCheck.cpp
-               HostQuickSheet.cpp ${CMAKE_CURRENT_BINARY_DIR}/HostQuickSheetSource.cpp)
+               HostQuickSheet.cpp ${CMAKE_CURRENT_BINARY_DIR}/HostQuickSheetSource.cpp HostAppDefaults.cpp)
 target_link_libraries(newton PRIVATE newt host_views host_window hal_host_sound hal_timers hal_host_serial)
 target_compile_definitions(newton PRIVATE "NEWTON_DEFAULT_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 install(TARGETS newton DESTINATION bin)
+
+# Newton.app (macOS, the Cocoa window): the newton above - the same program,
+# so the ctests and a shell run it as they always did - put in an application
+# bundle with what it needs beside it, and signed ad hoc (docs/host-macos.md):
+#   Contents/MacOS/newton                 the program
+#   Contents/Info.plist                   cocoa/Info.plist.in: the identifier,
+#                                         the .nspkg document type, the microphone's reason
+#   Contents/Resources/romsrc-objects.bin the object file it boots (HostObjectsFile.h)
+#   Contents/Resources/Newton.icns        tools/host/macicon.py: the ROM's smallLogoBitmap
+# Opened in the Finder it keeps its store and its log in the user's Library
+# (HostAppDefaults.h).  A fat binary is a build with
+# -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64".
+set(NEWTON_APP_IDENTIFIER "com.matthiasm.newton-re" CACHE STRING "Newton.app's bundle identifier (and its directories' name: HostAppDefaults.h)")
+target_compile_definitions(newton PRIVATE "NEWTON_APP_IDENTIFIER=\"${NEWTON_APP_IDENTIFIER}\"")
+if(APPLE AND NOT NEWTON_HOST_WINDOW STREQUAL "x11" AND Python3_FOUND)
+    set(NEWTON_APP_VERSION "0.1" CACHE STRING "Newton.app's version")
+    set(app ${CMAKE_CURRENT_BINARY_DIR}/Newton.app)
+    configure_file(cocoa/Info.plist.in ${CMAKE_CURRENT_BINARY_DIR}/Info.plist @ONLY)
+    set(app_bitmap ${CMAKE_SOURCE_DIR}/../romsrc/resources/bits/3d594d.png)
+    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Newton.icns
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/macicon.py
+                     ${CMAKE_CURRENT_BINARY_DIR}/Newton.icns --bitmap ${app_bitmap}
+             DEPENDS ${CMAKE_SOURCE_DIR}/../tools/host/macicon.py ${app_bitmap}
+             COMMENT "Making Newton.app's icon"
+             VERBATIM)
+    set(app_objects_copy "")
+    set(app_objects_depends "")
+    if(TARGET romsrc)
+        set(app_objects_copy COMMAND ${CMAKE_COMMAND} -E copy ${NEWTON_OBJECTS_FILE} ${app}/Contents/Resources/romsrc-objects.bin)
+        set(app_objects_depends ${NEWTON_OBJECTS_FILE})
+    endif()
+    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Newton.app.stamp
+             COMMAND ${CMAKE_COMMAND} -E make_directory ${app}/Contents/MacOS ${app}/Contents/Resources
+             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:newton> ${app}/Contents/MacOS/newton
+             COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/Info.plist ${app}/Contents/Info.plist
+             COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/Newton.icns ${app}/Contents/Resources/Newton.icns
+             ${app_objects_copy}
+             COMMAND codesign --force --sign - --timestamp=none ${app}
+             COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_BINARY_DIR}/Newton.app.stamp
+             DEPENDS newton ${CMAKE_CURRENT_BINARY_DIR}/Info.plist ${CMAKE_CURRENT_BINARY_DIR}/Newton.icns ${app_objects_depends}
+             COMMENT "Making ${app}"
+             VERBATIM)
+    add_custom_target(newton_app ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Newton.app.stamp)
+    if(TARGET romsrc)
+        add_dependencies(newton_app romsrc)
+    endif()
+    # the bundle's program boots its own object file (Contents/Resources)
+    # and runs as newton does; the signature holds
+    add_test(NAME host.NewtonApp
+             COMMAND ${app}/Contents/MacOS/newton --headless 5 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/newton.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonApp PROPERTIES TIMEOUT 60 PASS_REGULAR_EXPRESSION "newton: the world is up")
+    add_test(NAME host.NewtonAppSigned COMMAND codesign --verify --strict ${app})
+endif()
+# a fat binary's Intel half, booted under Rosetta on an Apple-silicon Mac
+# (the suite runs the native half)
+if(APPLE AND "x86_64" IN_LIST CMAKE_OSX_ARCHITECTURES AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "arm64")
+    add_test(NAME host.NewtonRosetta
+             COMMAND arch -x86_64 $<TARGET_FILE:newton> --headless 5 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/newton.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonRosetta PROPERTIES TIMEOUT 90 PASS_REGULAR_EXPRESSION "newton: the world is up")
+endif()
 
 # newton64 and newtonscript64: the same programs in the 64-bit NewtonScript
 # flavour (docs/frames/64bit.md).  NEWTON_NS64 changes every library, so they
@@ -235,12 +307,20 @@ if(NOT NEWTON_NS64)
     if(DEFINED NEWTON_WRAPV)
         list(APPEND ns64_args -DNEWTON_WRAPV=${NEWTON_WRAPV})
     endif()
+    # (macOS: the same architectures - a list, passed with | between them -
+    # and the same oldest system)
+    if(APPLE)
+        string(REPLACE ";" "|" ns64_architectures "${CMAKE_OSX_ARCHITECTURES}")
+        list(APPEND ns64_args -DCMAKE_OSX_ARCHITECTURES=${ns64_architectures}
+                              -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET})
+    endif()
     set(ns64_dir ${CMAKE_BINARY_DIR}/ns64)
     set(exe ${CMAKE_EXECUTABLE_SUFFIX})
     ExternalProject_Add(ns64_build
         SOURCE_DIR ${CMAKE_SOURCE_DIR}
         BINARY_DIR ${ns64_dir}
         CMAKE_GENERATOR ${CMAKE_GENERATOR}
+        LIST_SEPARATOR |
         CMAKE_ARGS ${ns64_args}
         BUILD_COMMAND ${CMAKE_COMMAND} --build ${ns64_dir} --target newton newtonscript
         INSTALL_COMMAND ${CMAKE_COMMAND} -E copy ${ns64_dir}/host/newton${exe} ${CMAKE_CURRENT_BINARY_DIR}/newton64${exe}
@@ -778,6 +858,23 @@ if(X11_FOUND AND NOT WIN32)
     set_tests_properties(host.NewtonWindowDrop PROPERTIES TIMEOUT 200 SKIP_RETURN_CODE 77
                          PASS_REGULAR_EXPRESSION "xdnddrop: dropped .*monaco.pkg.*accepted.*windowdrop: done"
                          FAIL_REGULAR_EXPRESSION "FAILED|waited in vain|xdnddrop: no ")
+endif()
+
+# what macOS's window shows (host/cocoa/HostWindow.mm): the screen as the OS
+# has it and as the window last showed it (NEWTON_WINDOW_SNAPSHOT), the same
+# bytes (demo/windowshow.ns)
+if(APPLE AND NOT NEWTON_HOST_WINDOW STREQUAL "x11")
+    add_test(NAME host.NewtonWindowShows
+             COMMAND newton --display 320x480 --limit 90 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/windowshow.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonWindowShows PROPERTIES TIMEOUT 120 FIXTURES_SETUP host_windowshow
+                         ENVIRONMENT "NEWTON_WINDOW_SNAPSHOT=${CMAKE_SOURCE_DIR}/../build/windowshow-window.pgm"
+                         PASS_REGULAR_EXPRESSION "window snapshot written.*windowshow: done|windowshow: done.*window snapshot written"
+                         FAIL_REGULAR_EXPRESSION "FAILED|waited in vain|no window")
+    add_test(NAME host.NewtonWindowShows.compare
+             COMMAND ${CMAKE_COMMAND} -E compare_files build/windowshow-os.pgm build/windowshow-window.pgm
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonWindowShows.compare PROPERTIES FIXTURES_REQUIRED host_windowshow DEPENDS host.NewtonWindowShows)
 endif()
 
 # the inker's live ink and busy box (recognition/Inker.h, LiveInker.h;

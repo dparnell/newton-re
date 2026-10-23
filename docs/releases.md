@@ -11,10 +11,8 @@ a GitHub release with `tools/ci/release-notes.md` above GitHub's own notes.
 | `windows` | windows-latest | zig 0.16 (`src/cmake/zig-toolchain.cmake`), Release | `newton-windows-x86_64.zip` |
 | `linux` | ubuntu-22.04 | clang, X11, ALSA, OpenSSL from apt, Release | `newton-linux-x86_64.tar.gz` (glibc 2.35 on) |
 | `remarkable` | ubuntu-22.04 | a native `newtonscript` built first (a cross build cannot run its own to compile `romsrc/`), then zig's aarch64 cross build (`src/cmake/zig-aarch64-linux.cmake`, `-DNEWTON_HOST_WINDOW=remarkable`, `-DNEWTON_HOST_NEWTONSCRIPT`) | `newton-remarkable-aarch64.tar.gz`: the AppLoad application `package.py` makes |
-| `release` | ubuntu-latest | on a tag only: the three archives attached to a release (`softprops/action-gh-release`) | - |
-
-macOS is not built: its window and sound are not written yet
-(`docs/host-macos.md`).
+| `macos` | macos-15 | the system clang, Ninja from Homebrew, Release, `-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"` (no OpenSSL in a two-architecture build: no ipps://), the `newton_app` target (`docs/host-macos.md`) | `newton-macos-universal.zip`: `Newton.app` (signed ad hoc), `newtonscript`, `romsrc-objects.bin` |
+| `release` | ubuntu-latest | on a tag only: the four archives attached to a release (`softprops/action-gh-release`) | - |
 
 No ROM image is needed: the build compiles the committed `romsrc/` tree into
 `romsrc-objects.bin`, which newton boots from and finds beside itself
@@ -32,6 +30,7 @@ checked, by hand:
 |---|---|---|
 | `smoke.sh` | `newtonscript` runs a line; `newton` boots headless from the object file to the Setup assistant and quits (`smoke.ns`) | `tools/ci/smoke.sh <build>/host` |
 | `package.sh` | the build installed into `dist/<name>/` with `README.txt`, then `dist/<name>.zip` or `.tar.gz` (Python's `zipfile`/`tarfile`, so the same on every runner) | `tools/ci/package.sh <build> <name> zip\|tar` |
+| `package-macos.sh` | `Newton.app` copied with `ditto` (its signature kept), `newtonscript`, `romsrc-objects.bin` and `README-macos.txt` into `dist/<name>/`; the signature verified and the architectures listed; then `dist/<name>.zip` by `ditto -c -k`, which keeps the bundle as it is | `tools/ci/package-macos.sh <build> <name>` |
 | `package-remarkable.sh` | `tools/remarkable/package.py`'s AppLoad application in `dist/<name>/newton`, `newton` and `run.sh` made executable, with `README-remarkable.txt`; then `dist/<name>.tar.gz` (a tar keeps the executable bits that a copy from Windows loses) | `tools/ci/package-remarkable.sh <build> <name>` |
 
 ## Checked by hand (2026-10-03)
@@ -60,6 +59,12 @@ The workflow's steps were run before it was first pushed:
   `zig-aarch64-linux.cmake`): 7.3 MB against 38 MB, since zig keeps the
   debug information otherwise and `zig objcopy --strip-all` is
   unimplemented.
+
+- **macOS** (2026-10-18, on an Apple-silicon Mac, macOS 26): the job's
+  steps - a fresh Release configure of both architectures, the build,
+  `smoke.sh` (booted to Setup), `package-macos.sh` (19.7 MB); the zip
+  unpacked elsewhere, the bundle's signature verified, and the bundle's
+  `newton` and `newtonscript` run from another directory.
 
 The first run on GitHub (2026-10-03, run 37099590128, commit 911b4ac0)
 passed: windows 3 minutes, linux 1, remarkable 2, their archives 8.5, 9.3
