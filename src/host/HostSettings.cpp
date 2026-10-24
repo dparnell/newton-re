@@ -540,9 +540,10 @@ ResetCalibration(void)
 void
 HostSettingsNoteDisplay(long width, long height)
 {
-	long panel;
-	if (!HostWindowOption("panelWidth", &panel))
-		return;							// (a window with no screen size to choose: nothing kept, nothing reset)
+	// (on every host, windowed or not: the host's panel reads more raw
+	//  steps a pixel on a smaller screen, HostTabletDriver.cpp, so a store
+	//  calibrated at one size put every tap wrong at another - it was done
+	//  only on the reMarkable, whose screen size is chosen in the panel)
 	long longer = width > height ? width : height;
 	long was = StartupValue("displaySide");
 	if (was > 0 && was != longer)

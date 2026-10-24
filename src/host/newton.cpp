@@ -1360,8 +1360,8 @@ main(int argc, char** argv)
 	{
 		HostSettingsReadStartup();
 		HostWindowPreferredDisplay(&width, &height);
-		HostSettingsNoteDisplay(width, height);
 	}
+	HostSettingsNoteDisplay(width, height);
 	if (HostSettingsColourAtStart())
 		SetColourScreen(true);					// (the Host panel's "Colour screen (next start)", kept beside the store)
 	if (ColourScreen())

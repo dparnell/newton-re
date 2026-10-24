@@ -1149,6 +1149,15 @@ set_tests_properties(host.NewtonBigScreen PROPERTIES TIMEOUT 300
                      PASS_REGULAR_EXPRESSION "bigscreen: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
 
+# a tap on a scroll arrow scrolls once (demo/scrollarrow.ns): the Time Zones
+# city picker's down arrow moves its list a page, not to the last city - the
+# arrow's click loop repeats until the pen comes up, paced on the host
+add_test(NAME host.NewtonScrollArrow COMMAND newton --headless 120
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/scrollarrow.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonScrollArrow PROPERTIES TIMEOUT 200
+                     PASS_REGULAR_EXPRESSION "scrollarrow: done"
+                     FAIL_REGULAR_EXPRESSION "waited in vain")
+
 # the screen following the device (host/HostOrientation.h, demo/rotation.ns):
 # the rotation the reMarkable's window passes on - asked here with
 # HostDeviceRotation - turns the Newton's screen, the root view laid out the

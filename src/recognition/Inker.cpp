@@ -646,7 +646,7 @@ TInker::GetRawPoint(ULong* x, ULong* y, short h, short v, ULong limit)
 	Boolean penUp = true;
 	TUMsgToken token;
 	ULong waited = 0;
-	RefVar stylus(h < 50 ? Rstylusdownbitmap : Rstylusupbitmap);
+	RefVar stylus(h >= 50 ? Rstylusdownbitmap : Rstylusupbitmap);	// (cmp h,#50; ldrge down; ldrlt up - it was the other way round)
 	Rect stylusBounds;
 	FromObject(RefVar(GetFrameSlot(stylus, RSSYMbounds)), stylusBounds);
 	long dh, dv;

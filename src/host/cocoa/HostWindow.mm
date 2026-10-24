@@ -59,6 +59,7 @@ void	HostWindowKey(long virtualKey, int down);
 void	HostWindowClosed(void);
 void	HostWindowThreadStarted(void);
 void	HostWindowFileDropped(const char* path);		// host/HostPackages.cpp: a package to install
+void	HostWindowDisplayShape(long* width, long* height, long* orientation);	// host/HostOrientation.h
 }
 
 static std::atomic<long>	gPositionX(LONG_MIN), gPositionY(LONG_MIN);	// where it is (or is to open): the frame's top left, from the top of the main screen
@@ -102,7 +103,7 @@ HostWindowSetPalette(const unsigned char* rgb)
 	that map the other way round - by position (the Newton applies its own
 	keyboard layout to the codes, as it does to a Newton keyboard's) - plus
 	the keys it has no code for that the other windows hand over: the
-	keypad's digits and Enter, the right-hand modifiers, Control (the
+	keypad's Enter, the right-hand modifiers, Control (the
 	Newton's Command, as a PC's Ctrl is), and F11 and F12 (the backlight
 	and the power switch).
 ------------------------------------------------------------------------------*/
@@ -121,16 +122,34 @@ VirtualKeyForKeyCode(unsigned short code)
 	case kVK_ANSI_S: return 'S';	case kVK_ANSI_T: return 'T';	case kVK_ANSI_U: return 'U';
 	case kVK_ANSI_V: return 'V';	case kVK_ANSI_W: return 'W';	case kVK_ANSI_X: return 'X';
 	case kVK_ANSI_Y: return 'Y';	case kVK_ANSI_Z: return 'Z';
-	case kVK_ANSI_0: case kVK_ANSI_Keypad0:	return '0';
-	case kVK_ANSI_1: case kVK_ANSI_Keypad1:	return '1';
-	case kVK_ANSI_2: case kVK_ANSI_Keypad2:	return '2';
-	case kVK_ANSI_3: case kVK_ANSI_Keypad3:	return '3';
-	case kVK_ANSI_4: case kVK_ANSI_Keypad4:	return '4';
-	case kVK_ANSI_5: case kVK_ANSI_Keypad5:	return '5';
-	case kVK_ANSI_6: case kVK_ANSI_Keypad6:	return '6';
-	case kVK_ANSI_7: case kVK_ANSI_Keypad7:	return '7';
-	case kVK_ANSI_8: case kVK_ANSI_Keypad8:	return '8';
-	case kVK_ANSI_9: case kVK_ANSI_Keypad9:	return '9';
+	case kVK_ANSI_0:				return '0';
+	case kVK_ANSI_1:				return '1';
+	case kVK_ANSI_2:				return '2';
+	case kVK_ANSI_3:				return '3';
+	case kVK_ANSI_4:				return '4';
+	case kVK_ANSI_5:				return '5';
+	case kVK_ANSI_6:				return '6';
+	case kVK_ANSI_7:				return '7';
+	case kVK_ANSI_8:				return '8';
+	case kVK_ANSI_9:				return '9';
+	// the keypad as the PC keyboard's (VK_NUMPAD0..): the ADB keypad's codes
+	case kVK_ANSI_Keypad0:			return 0x60;
+	case kVK_ANSI_Keypad1:			return 0x61;
+	case kVK_ANSI_Keypad2:			return 0x62;
+	case kVK_ANSI_Keypad3:			return 0x63;
+	case kVK_ANSI_Keypad4:			return 0x64;
+	case kVK_ANSI_Keypad5:			return 0x65;
+	case kVK_ANSI_Keypad6:			return 0x66;
+	case kVK_ANSI_Keypad7:			return 0x67;
+	case kVK_ANSI_Keypad8:			return 0x68;
+	case kVK_ANSI_Keypad9:			return 0x69;
+	case kVK_ANSI_KeypadMultiply:	return 0x6a;
+	case kVK_ANSI_KeypadPlus:		return 0x6b;
+	case kVK_ANSI_KeypadMinus:		return 0x6d;
+	case kVK_ANSI_KeypadDecimal:	return 0x6e;
+	case kVK_ANSI_KeypadDivide:		return 0x6f;
+	case kVK_ANSI_KeypadClear:		return 0x0c;
+	case kVK_ANSI_KeypadEquals:		return 0x92;
 	case kVK_Return: case kVK_ANSI_KeypadEnter:	return 0x0d;
 	case kVK_Tab:					return 0x09;
 	case kVK_Space:					return 0x20;
@@ -244,6 +263,24 @@ FlagForModifierKey(unsigned short code)
 	const unsigned char* pixels = gPixels;
 	if (pixels == nullptr)
 		return;
+	// the display turned (SetScreenOrientation: its width and height
+	// swapped in the same buffer): the window turns with it, so the rows
+	// are read at the new width and the pen reads in the screen's own
+	// orientation, as the host's tablet driver takes it
+	long width, height, orientation;
+	HostWindowDisplayShape(&width, &height, &orientation);
+	if (width > 0 && height > 0 && (width != gWidth || height != gHeight) && width * height == gWidth * gHeight)
+	{
+		gWidth = width;
+		gHeight = height;
+		fShownVersion = -1;							// (shown afresh)
+		NSWindow* window = self.window;
+		NSSize was = self.bounds.size;
+		window.contentMinSize = NSMakeSize(gWidth / 2, gHeight / 2);
+		window.contentAspectRatio = NSMakeSize(gWidth, gHeight);
+		[window setContentSize:NSMakeSize(was.height, was.width)];
+		fprintf(stderr, "[host] the window turned with the display: %ld x %ld\n", gWidth, gHeight);
+	}
 	size_t size = (size_t) (gWidth * gHeight);
 	int version = gPaletteVersion.load();
 	if (version == fShownVersion && memcmp(fShown, pixels, size) == 0)

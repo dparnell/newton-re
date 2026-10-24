@@ -1133,12 +1133,22 @@ four orientations shaped as the ROM's are, the bar as thick.  The ROM's
 screen driver keeps its panel portrait (`hal/host/HostScreen.cpp`'s
 `Configure`) and a window asked for wider than it is tall starts in
 landscape - which `TNotebook::InitToolbox` keeps over the ROM's default
-preference of portrait (DEVIATION; the window turns with the screen
-afterwards, as before).  The pen follows: the host's panel reads twelve
+preference of portrait (DEVIATION).  The window turns with the screen
+afterwards: each desktop window (X11, Windows, macOS) and the reMarkable's
+read the display's shape (`HostWindowDisplayShape`) as they refresh and
+take the turned size, so the rows are read at the new width and the pen
+reads in the screen's own orientation (before, the desktop windows kept
+their first size, and a turned screen came out sheared, its calibration
+targets never met).  The pen follows: the host's panel reads twelve
 bits, as the MP2x00's ADC does, so a display over 511 pixels is read four
 to the pixel (two over 1023), the factory calibration following
 (`hal/host/HostTabletDriver.cpp`'s `RawPerPixel`) - a store calibrated at
-one size is therefore out at another, and Prefs' Align Pen puts it right.
+one size is therefore out at another.  The host keeps the display's longer
+side in `<store>.host` and, when it has changed, puts the driver's factory
+calibration back into the store before the ROM reads it
+(`host/HostSettings.cpp`'s `HostSettingsNoteDisplay`, on every host;
+it was done only on the reMarkable), and Prefs' Align Pen puts any
+remaining skew right.
 
 At 1024 x 768 (ctest `host.NewtonBigScreen`, `src/host/demo/bigscreen.ns`)
 the splash, the Setup assistant, the Notepad, Dates, the Extras drawer

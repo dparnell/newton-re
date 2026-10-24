@@ -27,6 +27,7 @@ void	HostWindowKey(long virtualKey, int down);
 void	HostWindowClosed(void);
 void	HostWindowThreadStarted(void);
 void	HostWindowFileDropped(const char* path);	// host/HostPackages.cpp: a package to install
+void	HostWindowDisplayShape(long* width, long* height, long* orientation);	// host/HostOrientation.h
 }
 
 #define nil 0
@@ -111,8 +112,25 @@ WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		Paint(hwnd);
 		return 0;
 	case WM_TIMER:
+	{
+		// the display turned (SetScreenOrientation: its width and height
+		// swapped in the same buffer): the window turns with it, so the
+		// rows are read at the new width and the pen reads in the screen's
+		// own orientation, as the host's tablet driver takes it
+		long width, height, orientation;
+		HostWindowDisplayShape(&width, &height, &orientation);
+		if (width > 0 && height > 0 && (width != gWidth || height != gHeight) && width * height == gWidth * gHeight)
+		{
+			gWidth = width;
+			gHeight = height;
+			RECT r = { 0, 0, (LONG) (gWidth * gScale), (LONG) (gHeight * gScale) };
+			AdjustWindowRect(&r, (DWORD) GetWindowLongA(hwnd, GWL_STYLE), FALSE);
+			SetWindowPos(hwnd, nil, 0, 0, r.right - r.left, r.bottom - r.top, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+			fprintf(stderr, "[host] the window turned with the display: %ld x %ld\n", gWidth, gHeight);
+		}
 		InvalidateRect(hwnd, nil, FALSE);
 		return 0;
+	}
 	case WM_ERASEBKGND:
 		return 1;
 	case WM_DROPFILES:

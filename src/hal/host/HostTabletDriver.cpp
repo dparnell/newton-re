@@ -27,7 +27,10 @@
 				so a display wider or taller than 511 pixels is read four to
 				the pixel (two above 1023, one above 2047), the factory scale
 				following (RawPerPixel) - which is also why a store
-				calibrated at one display size is out at another.  A test can put the panel askew (HostTabletSetSkew, or
+				calibrated at one display size is out at another, and why
+				the host puts the factory calibration back into a store
+				opened at a new size (host/HostSettings.cpp's
+				HostSettingsNoteDisplay).  A test can put the panel askew (HostTabletSetSkew, or
 				NEWTON_TABLET_SKEW="dx,dy,sx,sy": the raw reading is that of
 				the point x*sx+dx, y*sy+dy) to show Align Pen correcting it.
 				The panel turns with the window, so it always reads in the

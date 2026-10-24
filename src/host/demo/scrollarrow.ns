@@ -1,0 +1,46 @@
+// A tap on a list's scroll arrow scrolls it once (ctest host.NewtonScrollArrow).
+// The Time Zones city picker: a tap on its down arrow moves the list a page
+// on, not to its last city - the arrow's click loop repeats until the pen
+// comes up, which on the host took a few hundred steps in a tap until the
+// repeat was paced (romsrc/functions/obj_6479ad.viewClickScript.ns).
+HostInclude("common.ns");
+scrollArrowName := func(v) begin local e := v.cursor:Entry(); if e then e.name else nil end;
+scrollArrowWalk := func(v, depth) begin
+	local found := nil;
+	if depth > 0 then
+	foreach child in v:ChildViewFrames() do begin
+		if not found then begin
+			if HasSlot(child, 'cityList) and child.cityList and child.cityList.viewCObject then found := child
+			else found := call scrollArrowWalk with (child, depth - 1);
+		end;
+	end;
+	found
+end;
+scrollArrowPicker := func() call scrollArrowWalk with (GetRoot(), 4);
+scrollArrowCount := 0;
+call walkSetup with ([2, 0, 45, 34, 14, 37], func() begin
+	GetRoot().worldClock:Open();
+	call waitFor with ("worldClock", func() GetRoot().worldClock.viewCObject, func() begin
+		GetRoot().worldClock:SelectHomeCity();
+		call waitFor with ("picker", func() call scrollArrowPicker with (), func() begin
+			local p := call scrollArrowPicker with ();
+			local cl := p.cityList;
+			cl.viewScrollDownScript := func() begin scrollArrowCount := scrollArrowCount + 1; inherited:viewScrollDownScript() end;
+			local start := call scrollArrowName with (cl);
+			local arrow := p.upDown:ChildViewFrames()[1];
+			local b := arrow:GlobalBox();
+			HostPenTap((b.left + b.right) div 2, (b.top + b.bottom) div 2);
+			call waitFor with ("tap", func() HostPenReplayDone(), func() begin
+				AddDeferredCall(func() begin
+					local now := call scrollArrowName with (cl);
+					Print({start: start, afterTap: now, scrolls: scrollArrowCount});
+					if scrollArrowCount = 1 and now <> start and now <> "Worcester" then
+						Print("scrollarrow: done")
+					else
+						Print("scrollarrow: a tap scrolled " & scrollArrowCount & " times");
+					HostQuit();
+				end, []);
+			end, 10);
+		end, 20);
+	end, 20);
+end);

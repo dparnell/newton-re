@@ -371,6 +371,31 @@ Scenario(void)
 	}
 	EXPECT(gSndPort != 0);
 
+	// the volume at its loudest, 0 dB: the host's driver applies the output
+	// volume to the samples (hal/host/HostSoundDriver.cpp), and the samples
+	// below are compared as they were made; then a tone at volume 1
+	// (-18 dB) comes out at an eighth of the amplitude
+	EXPECT(Send(newtPort, "begin SetVolume(1); 1 end") == 1);
+	HostSoundClearCapture();
+	EXPECT(Send(newtPort, kLoudDTMFSource) == 1);
+	WaitForSilence();
+	long quietCount;
+	const short* quietPlayed = HostSoundCaptured(&quietCount);
+	long quietPeak = 0;
+	for (long i = 0; i < quietCount; i++)
+		quietPeak = labs(quietPlayed[i]) > quietPeak ? labs(quietPlayed[i]) : quietPeak;
+	EXPECT(Send(newtPort, "begin SetVolume(4); 1 end") == 1);
+	HostSoundClearCapture();
+	EXPECT(Send(newtPort, kLoudDTMFSource) == 1);
+	WaitForSilence();
+	long loudCount;
+	const short* loudPlayed = HostSoundCaptured(&loudCount);
+	long loudPeak = 0;
+	for (long i = 0; i < loudCount; i++)
+		loudPeak = labs(loudPlayed[i]) > loudPeak ? labs(loudPlayed[i]) : loudPeak;
+	printf("volume: a tone's peak %ld at volume 1, %ld at volume 4\n", quietPeak, loudPeak);
+	EXPECT(loudPeak > 1000 && quietPeak * 8 > loudPeak - 64 && quietPeak * 8 < loudPeak + 64);
+
 	// PlaySoundSync(click)
 	HostSoundClearCapture();
 	EXPECT(Send(newtPort, nil) == 1);

@@ -97,7 +97,13 @@ HostKeyCodeForVirtualKey(long vk)
 		{ 0x25, 123 }, { 0x27, 124 }, { 0x28, 125 }, { 0x26, 126 },
 		{ 0x2e, 117 }, { 0x24, 115 }, { 0x23, 119 }, { 0x21, 116 }, { 0x22, 121 },
 		// the punctuation (the US layout's VK_OEM_* keys)
-		{ 0xbd, 27 }, { 0xbb, 24 }, { 0xdb, 33 }, { 0xdd, 30 }, { 0xdc, 42 }, { 0xba, 41 }, { 0xde, 39 }, { 0xc0, 50 }
+		{ 0xbd, 27 }, { 0xbb, 24 }, { 0xdb, 33 }, { 0xdd, 30 }, { 0xdc, 42 }, { 0xba, 41 }, { 0xde, 39 }, { 0xc0, 50 },
+		// the keypad (VK_NUMPAD0..9, VK_MULTIPLY, VK_ADD, VK_SUBTRACT,
+		// VK_DECIMAL, VK_DIVIDE, VK_CLEAR, VK_OEM_NEC_EQUAL): the ADB
+		// keypad's codes, which the ROM's key maps give their characters
+		{ 0x60, 82 }, { 0x61, 83 }, { 0x62, 84 }, { 0x63, 85 }, { 0x64, 86 },
+		{ 0x65, 87 }, { 0x66, 88 }, { 0x67, 89 }, { 0x68, 91 }, { 0x69, 92 },
+		{ 0x6a, 67 }, { 0x6b, 69 }, { 0x6d, 78 }, { 0x6e, 65 }, { 0x6f, 75 }, { 0x0c, 71 }, { 0x92, 81 }
 	};
 	for (unsigned i = 0; i < sizeof(kMap) / sizeof(kMap[0]); i++)
 		if (kMap[i].vk == vk)
@@ -117,6 +123,15 @@ HostKeyboardSendKeys(TUPort* newtPort)
 	{
 		HostKey key = gHostKeys[gHostKeyHead.load()];
 		gHostKeyHead.store((gHostKeyHead.load() + 1) % kHostKeyQueueSize);
+		// the keyboard connected before its first key, as a Newton
+		// keyboard's driver says so when it is plugged in: connecting clears
+		// the hard key map (TRootView::RealDoCommand), so a Shift held as
+		// the first key was forgotten and the first letter came out small
+		if (!gKeyboardConnected)
+		{
+			KeyboardEvent connect(aeKeyboardConnected, 1);
+			newtPort->SendRPC(&replySize, &connect, sizeof(connect), &reply, sizeof(reply));
+		}
 		KeyboardEvent event(key.down ? aeKeyDown : aeKeyUp, key.code);
 		newtPort->SendRPC(&replySize, &event, sizeof(event), &reply, sizeof(reply));
 	}
@@ -144,8 +159,8 @@ HostKeyboardToolTask(void)
 			Sleep(20 * kMilliseconds);
 		// (no 'connected' event up front: the machine is a bare MessagePad
 		//  until a key is pressed, and the first key connects the keyboard
-		//  as the ROM's DoKeyEvent does - so a fresh note has no caret
-		//  waiting for typing, and writing goes where it is written)
+		//  just before it is sent - so a fresh note has no caret waiting
+		//  for typing, and writing goes where it is written)
 		while (!HostTimeIsUp())
 		{
 			HostKeyboardSendKeys(&newtPort);

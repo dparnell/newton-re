@@ -9,6 +9,60 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-25: a user's report from Linux (keys, Setup, Time Zones, volume, rotation, calibration)
+
+A user of the 0.1-0.3 releases on Debian (X11, an Orbit trackball, Mac
+and PC keyboards) reported nine oddities.  What each turned out to be:
+
+- **Keys missing on X11** (`` ` - = [ ] ; ' \ ``): the X11 window mapped
+  only letters, digits and `, . /` to virtual keys
+  (`host/x11/HostWindow.cpp`'s `VirtualKeyForKeySym`); the rest of the US
+  layout's VK_OEM keys, F11/F12 (backlight, power) are mapped now.
+- **The keypad gave only Enter**: no host mapped VK_NUMPAD0.. or the
+  operators.  The ROM's key maps have the ADB keypad's codes (65-92: the
+  US `kchr` gives `0-9 . * + - / =`), so `HostKeyCodeForVirtualKey` sends
+  those, and the X11 window reads a keypad key's digit while Num Lock is
+  on (its navigation key otherwise); the Mac window's keypad goes the same
+  way instead of as the top row's digits.
+- **Setup's first letter small** whatever Shift said: the first key
+  connects the keyboard, and connecting clears the hard key map
+  (`TRootView::RealDoCommand`, as the ROM's does), so the Shift held as
+  that first key was forgotten.  The host's keyboard tool now says the
+  keyboard is connected just before its first key, as a Newton keyboard's
+  driver does when it is plugged in (`host/HostKeyboard.cpp`).
+- **Time Zones' scroll arrows ran to the end of the list**: the arrow
+  proto's click loop (`romsrc/functions/obj_6479ad.viewClickScript.ns`,
+  ROM 0x440bc9) scrolls until the pen comes up with no pacing of its own;
+  the SA-110's slowness made a tap one step, the host did ~400 in a tap.
+  Paced (DEVIATION: a first step, a third of a second, then a step a
+  tenth); ctest `host.NewtonScrollArrow` (`demo/scrollarrow.ns`).
+- **The volume slider changed nothing**: `PMainSoundDriver::OutputVolume`
+  kept the decibels and nothing applied them (the ROM's Cirrus driver sets
+  the codec's attenuation).  The host's driver scales the samples it hands
+  the backend (DEVIATION, `hal/host/HostSoundDriver.cpp`);
+  `sound.PlaySound` checks volume 1 comes out at an eighth.  The desktop's
+  volume keys stay the desktop's: the Newton's volume is its own.
+- **Rotation sheared the screen and looped Align Pen**: no desktop window
+  followed the display's turn (only the reMarkable's did), so a 480-wide
+  screen was read 320 a row and the calibration targets were never met.
+  The X11, Windows and macOS windows read `HostWindowDisplayShape` as they
+  refresh and take the turned size.  The calibration screen once after a
+  turn is the ROM's own (`VerifyCalibration`).
+- **A store needed per screen size**: the reset of a store's calibration
+  when the display's longer side changes (`HostSettingsNoteDisplay`) ran
+  only on the reMarkable; it runs on every host now, windowed or not.  The
+  user's data was never out of reach - only the pen was scaled wrong.
+- **A tap needs holding longer**: not found in the host.  The pen is
+  sampled at the ROM's 80 a second; the ROM's calibration wants 20 steady
+  readings (~250 ms) per target on the MP2100 too, and a quick tap's
+  caret is placed only after the double-tap interval (~0.5 s,
+  `ParagraphView.cpp`).  One host suspect, unconfirmed: the X11 window
+  converted and sent every frame before reading its events, so on a slow
+  server a click's press and release could be read together; it now
+  redraws only when the display has changed (or on Expose).
+- In passing: `TInker::GetRawPoint` drew the stylus-up picture where the
+  ROM draws stylus-down and the other way round (ROM 0x217c2c).
+
 ## 2026-10-17: macOS - Newton.app, a fat binary
 
 The first build on a Mac (Apple silicon, macOS 26, Xcode's clang); the

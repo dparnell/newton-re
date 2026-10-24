@@ -11,6 +11,7 @@
 #include "SampleWords.h"
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 PROTOCOL_IMPL_SOURCE_MACRO(PMainSoundDriver)
 PROTOCOL_CLASSINFO(PMainSoundDriver, "PSoundDriver", "SoundOutput\0\0SoundInput\0\0", 0, 0, nil)
@@ -397,8 +398,24 @@ PMainSoundDriver::StartPlaying(void)
 	}
 	if (fPlay != nil)
 	{
+		// DEVIATION: the output volume (the server's 16.16 decibels, the
+		// loudest channel's) as a gain on the samples handed over - the
+		// ROM's PCirrusSoundDriver::SetVolume (0x0005a414) sets the codec's
+		// attenuation instead, and the host's backends have none of their
+		// own; it was kept and never applied, so the volume slider changed
+		// nothing.  Silence is 0x80000000; 0 dB and above, and the codec's
+		// "never set"/"fixed" values (0x7fffffff, 0x7ffffffe), are full.
+		long decibels = (Long32) fVolume;
+		long gain = 32768;
+		if (decibels == (Long32) 0x80000000)
+			gain = 0;
+		else if (decibels < 0)
+			gain = (long) (pow(10.0, (decibels / 65536.0) / 20.0) * 32768.0 + 0.5);
 		for (long i = 0; i < samples; i++)
-			fPlay[i] = GetSampleAt((const void*) fBuffer[which], i);
+		{
+			long sample = GetSampleAt((const void*) fBuffer[which], i);
+			fPlay[i] = (short) (sample * gain / 32768);
+		}
 		gHostSoundBackend->play(fPlay, samples);
 	}
 	GetClock(&fEnd);

@@ -25,6 +25,16 @@ func(a1) begin
 			self:AdjustArrows();
 			l1 := self:GetArrow(arrowDirection);
 			extras.count := (extras.count + 1);
+			// DEVIATION: the repeat paced - a first step, then after a
+			//  third of a second one every tenth while the pen stays down.
+			//  The ROM's loop has no pacing of its own: each step (the
+			//  list's abstracts set up again from the soup, redrawn) took
+			//  the SA-110 long enough that a tap scrolled once; the host
+			//  does a step in half a millisecond, so one tap ran through
+			//  the whole list (Time Zones' cities went to the last).
+			local pace := if extras.count = 1 then 20 else 6;
+			local started := Ticks();
+			while not StrokeDone(a1) and (Ticks() - started) < pace do Sleep(1);
 			(if StrokeDone(a1) then break)
 		end);
 	scrollView:?viewScrollDoneScript();

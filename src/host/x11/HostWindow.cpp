@@ -50,6 +50,7 @@ void	HostWindowKey(long virtualKey, int down);
 void	HostWindowClosed(void);
 void	HostWindowThreadStarted(void);
 void	HostWindowFileDropped(const char* path);	// host/HostPackages.cpp: a package to install
+void	HostWindowDisplayShape(long* width, long* height, long* orientation);	// host/HostOrientation.h
 }
 
 #define nil 0
@@ -84,7 +85,10 @@ static std::atomic<bool>	gFailed(false);
 	A key of a PC keyboard as its Windows virtual key code, which is what
 	host/HostKeyboard.cpp's HostKeyCodeForVirtualKey names the Newton's (ADB)
 	key codes by.  The window on either host hands over the same code, so
-	there is one map from a key to the Newton's and not two.
+	there is one map from a key to the Newton's and not two.  The keypad's
+	digits and operators are the keypad's own codes (VK_NUMPAD0.., which
+	the Newton's key map gives their characters), its other keys with
+	Num Lock off the navigation keys they say.
 ------------------------------------------------------------------------------*/
 
 static long
@@ -97,7 +101,7 @@ VirtualKeyForKeySym(KeySym sym)
 	if (sym >= XK_0 && sym <= XK_9)
 		return '0' + (sym - XK_0);
 	if (sym >= XK_KP_0 && sym <= XK_KP_9)
-		return '0' + (sym - XK_KP_0);
+		return 0x60 + (sym - XK_KP_0);			// VK_NUMPAD0..
 	switch (sym)
 	{
 	case XK_Return: case XK_KP_Enter:	return 0x0d;
@@ -119,11 +123,64 @@ VirtualKeyForKeySym(KeySym sym)
 	case XK_End: case XK_KP_End:		return 0x23;
 	case XK_Prior: case XK_KP_Prior:	return 0x21;		// page up
 	case XK_Next: case XK_KP_Next:		return 0x22;		// page down
+	case XK_F11:						return 0x7a;		// the backlight button
+	case XK_F12:						return 0x7b;		// the power switch
+	// the punctuation (the US layout's VK_OEM_* keys)
 	case XK_comma:						return 0xbc;
 	case XK_period:						return 0xbe;
 	case XK_slash:						return 0xbf;
+	case XK_minus:						return 0xbd;
+	case XK_equal:						return 0xbb;
+	case XK_bracketleft:				return 0xdb;
+	case XK_bracketright:				return 0xdd;
+	case XK_backslash:					return 0xdc;
+	case XK_semicolon:					return 0xba;
+	case XK_apostrophe:					return 0xde;
+	case XK_grave:						return 0xc0;
+	// the keypad's operators
+	case XK_KP_Multiply:				return 0x6a;
+	case XK_KP_Add:						return 0x6b;
+	case XK_KP_Subtract:				return 0x6d;
+	case XK_KP_Decimal:					return 0x6e;
+	case XK_KP_Divide:					return 0x6f;
+	case XK_KP_Equal:					return 0x92;		// (VK_OEM_NEC_EQUAL)
 	}
 	return -1;
+}
+
+
+// The key's virtual key: its unshifted keysym (the key by its place, the
+// Newton applies its own layout), but a keypad key's second keysym (its
+// digit) while Num Lock is on
+static long
+VirtualKeyForKeyEvent(XKeyEvent* event, unsigned numLockMask)
+{
+	KeySym sym = XLookupKeysym(event, 0);
+	if (IsKeypadKey(sym) && (event->state & numLockMask) != 0)
+	{
+		KeySym locked = XLookupKeysym(event, 1);
+		if (IsKeypadKey(locked))
+			sym = locked;
+	}
+	return VirtualKeyForKeySym(sym);
+}
+
+
+// the modifier bit Num Lock is (0 if it is none)
+static unsigned
+NumLockMask(Display* display)
+{
+	unsigned mask = 0;
+	KeyCode numLock = XKeysymToKeycode(display, XK_Num_Lock);
+	XModifierKeymap* map = XGetModifierMapping(display);
+	if (map != nil && numLock != 0)
+		for (int i = 0; i < 8; i++)
+			for (int j = 0; j < map->max_keypermod; j++)
+				if (map->modifiermap[i * map->max_keypermod + j] == numLock)
+					mask = 1u << i;
+	if (map != nil)
+		XFreeModifiermap(map);
+	return mask;
 }
 
 
@@ -417,8 +474,16 @@ WindowThread(void)
 		fprintf(stderr, "[host] window asked to open at %ld,%ld\n", startX, startY);	// (a restarted newton's; the window manager has the last word)
 	gStarted.store(true);
 
-	char down[256];				// which keycodes are held, so a repeat is not sent again
-	memset(down, 0, sizeof(down));
+	long down[256];				// the virtual key each held keycode went down as (-1: not held),
+	for (int i = 0; i < 256; i++)	// so a repeat is not sent again and the release is the same key
+		down[i] = -1;			// whatever Num Lock has done since
+	unsigned numLockMask = NumLockMask(display);
+	// the display's bytes as last shown: the frame is converted and sent
+	// only when they (or the colours, or the window) have changed, so the
+	// events are not kept waiting behind a frame nothing has changed in -
+	// a click's press and release read together were a tap held no time
+	unsigned char* shown = (unsigned char*) calloc((size_t) (gWidth * gHeight), 1);
+	bool redraw = true;
 	int fd = ConnectionNumber(display);
 	bool closed = false;
 	while (!gStopping.load() && !closed)
@@ -428,10 +493,51 @@ WindowThread(void)
 		{
 			rampVersion = gPaletteVersion.load();
 			ramp.Build(visual->red_mask, visual->green_mask, visual->blue_mask);
+			redraw = true;
+		}
+		// the display turned (SetScreenOrientation: its width and height
+		// swapped in the same buffer): the window turns with it, so the
+		// rows are read at the new width and the pen reads in the screen's
+		// own orientation, as the host's tablet driver takes it
+		long shapeWidth, shapeHeight, orientation;
+		HostWindowDisplayShape(&shapeWidth, &shapeHeight, &orientation);
+		if (shapeWidth > 0 && shapeHeight > 0 && (shapeWidth != gWidth || shapeHeight != gHeight)
+		 && shapeWidth * shapeHeight == gWidth * gHeight)
+		{
+			gWidth = shapeWidth;
+			gHeight = shapeHeight;
+			scaledWidth = gWidth * gScale;
+			scaledHeight = gHeight * gScale;
+			XImage* turned = XCreateImage(display, visual, (unsigned) depth, ZPixmap, 0, nil,
+										  (unsigned) scaledWidth, (unsigned) scaledHeight, 32, 0);
+			if (turned != nil)
+			{
+				turned->data = (char*) calloc((size_t) (scaledWidth * scaledHeight), (size_t) bytesPerPixel);
+				turned->byte_order = image->byte_order;
+				XDestroyImage(image);		// (its data with it)
+				image = turned;
+			}
+			XSizeHints* turnHints = XAllocSizeHints();
+			if (turnHints != nil)
+			{
+				turnHints->flags = PMinSize | PMaxSize;
+				turnHints->min_width = turnHints->max_width = (int) scaledWidth;
+				turnHints->min_height = turnHints->max_height = (int) scaledHeight;
+				XSetWMNormalHints(display, window, turnHints);
+				XFree(turnHints);
+			}
+			XResizeWindow(display, window, (unsigned) scaledWidth, (unsigned) scaledHeight);
+			redraw = true;
+			fprintf(stderr, "[host] the window turned with the display: %ld x %ld\n", gWidth, gHeight);
 		}
 		const unsigned char* pixels = gPixels;
-		if (pixels != nil)
+		size_t size = (size_t) (gWidth * gHeight);
+		if (pixels != nil && image->width == scaledWidth && shown != nil
+		 && (redraw || memcmp(shown, pixels, size) != 0))
 		{
+			redraw = false;
+			memcpy(shown, pixels, size);
+			pixels = shown;
 			for (long y = 0; y < gHeight; y++)
 			{
 				const unsigned char* row = pixels + y * gWidth;
@@ -497,24 +603,30 @@ WindowThread(void)
 			case KeyPress:
 			{
 				unsigned code = event.xkey.keycode & 0xff;
-				if (down[code] == 0)			// not a repeat
+				if (down[code] < 0)				// not a repeat
 				{
-					down[code] = 1;
-					long vk = VirtualKeyForKeySym(XLookupKeysym(&event.xkey, 0));
+					long vk = VirtualKeyForKeyEvent(&event.xkey, numLockMask);
 					if (vk >= 0)
+					{
+						down[code] = vk;
 						HostWindowKey(vk, 1);
+					}
 				}
 				break;
 			}
 			case KeyRelease:
 			{
 				unsigned code = event.xkey.keycode & 0xff;
-				down[code] = 0;
-				long vk = VirtualKeyForKeySym(XLookupKeysym(&event.xkey, 0));
+				long vk = down[code];
+				down[code] = -1;
 				if (vk >= 0)
 					HostWindowKey(vk, 0);
 				break;
 			}
+			case MappingNotify:
+				XRefreshKeyboardMapping(&event.xmapping);
+				numLockMask = NumLockMask(display);
+				break;
 			case ClientMessage:
 				if (event.xclient.message_type == protocols && (Atom) event.xclient.data.l[0] == deleteWindow)
 					closed = true;
@@ -524,6 +636,10 @@ WindowThread(void)
 			case SelectionNotify:
 				if (event.xselection.selection == xdnd.fSelection)
 					XdndSelectionArrived(display, window, xdnd, event.xselection);
+				break;
+			case Expose:
+				if (event.xexpose.count == 0)
+					redraw = true;
 				break;
 			case DestroyNotify:
 				closed = true;
@@ -545,6 +661,7 @@ WindowThread(void)
 	free(image->data);
 	image->data = nil;
 	XDestroyImage(image);
+	free(shown);
 	XCloseDisplay(display);
 	if (closed && !gStopping.load())
 		HostWindowClosed();
