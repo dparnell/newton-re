@@ -33,5 +33,7 @@ void	HostAndroidPaused(bool paused);
 // the display report (Diag.cpp, an APK made with build_apk.py --diag): drawn on the window, shown for 100 s
 void	HostAndroidDiagnose(JavaVM* vm, ANativeWindow* window);
 void	HostAndroidSetDiag(bool on);
+// the Viwoods writing overlay while the pen is down (an APK made with build_apk.py --overlay)
+void	HostAndroidSetOverlay(bool on);
 
 #endif	/* __HOSTANDROID_H */

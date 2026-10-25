@@ -172,6 +172,11 @@ android_main(android_app* app)
 		AAsset_close(flag);
 		HostAndroidSetDiag(true);
 	}
+	if (AAsset* flag = AAssetManager_open(app->activity->assetManager, "overlay.flag", AASSET_MODE_BUFFER))
+	{
+		AAsset_close(flag);
+		HostAndroidSetOverlay(true);
+	}
 	std::string dir = app->activity->internalDataPath;
 	mkdir(dir.c_str(), 0700);
 	chdir(dir.c_str());

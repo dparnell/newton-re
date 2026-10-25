@@ -55,6 +55,7 @@ def main():
     ap.add_argument("--sdk", default=os.environ.get("ANDROID_HOME") or os.path.expanduser("~/Library/Android/sdk"))
     ap.add_argument("--ndk", default=os.environ.get("ANDROID_NDK_HOME") or "/opt/homebrew/share/android-ndk")
     ap.add_argument("--diag", action="store_true", help="a diagnostic APK: shows a report of the display's device nodes for 100 s at start")
+    ap.add_argument("--overlay", action="store_true", help="the Viwoods writing overlay while the pen is down (experimental)")
     ap.add_argument("--target-sdk", help="targetSdkVersion in place of the manifest's (30: the fast ink wants it)")
     ap.add_argument("--keystore", default=os.path.expanduser("~/.android/debug.keystore"))
     args = ap.parse_args()
@@ -91,6 +92,8 @@ def main():
                 dst.writestr(item, src.read(item.filename))
             dst.write(stripped, "lib/%s/libnewton.so" % ABI)
             dst.write(args.objects, "assets/romsrc-objects.bin")
+            if args.overlay:
+                dst.writestr("assets/overlay.flag", "overlay")
             if args.diag:
                 dst.writestr("assets/diag.flag", "diag")
         aligned = os.path.join(work, "aligned.apk")

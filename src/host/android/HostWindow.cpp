@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <android/native_window.h>
+#include <android/bitmap.h>
 #include <android/input.h>
 #include <android/log.h>
 #include <jni.h>
@@ -478,6 +479,154 @@ InkMode(int mode)
 }
 
 
+/*------------------------------------------------------------------------------
+	The writing overlay of the same API (the --overlay APK): while the pen is
+	down the display's dark pixels that changed go into a transparent Bitmap that
+	the system shows over the screen at once (renderWriting); the window is
+	redrawn when the pen has been up a moment.  (A first try that put the whole
+	picture into the Bitmap ghosted badly.)
+------------------------------------------------------------------------------*/
+
+static std::atomic<bool>	gOverlayWanted(false);
+void HostAndroidSetOverlay(bool on) { gOverlayWanted.store(on); }
+
+static jobject		gOvBitmap = nullptr;
+static jobject		gOvSetBitmap = nullptr, gOvStart = nullptr, gOvEnd = nullptr, gOvRender = nullptr;
+static bool			gOverlayOn = false;
+static jclass		gRectClass = nullptr;
+static jmethodID	gRectInit = nullptr;
+
+static void
+OverlayOpen(ANativeWindow* window)
+{
+	static bool tried = false;
+	if (tried || !gOverlayWanted.load() || !gInkOn)
+		return;
+	tried = true;
+	JavaThread t;
+	JNIEnv* env = t.env;
+	if (env == nullptr)
+		return;
+	jclass classClass = env->FindClass("java/lang/Class");
+	jclass enote = env->GetObjectClass(gEnote);
+	jclass bitmapClass = env->FindClass("android/graphics/Bitmap");
+	jclass configClass = env->FindClass("android/graphics/Bitmap$Config");
+	jobject config = env->GetStaticObjectField(configClass, env->GetStaticFieldID(configClass, "ARGB_8888", "Landroid/graphics/Bitmap$Config;"));
+	jobject bitmap = env->CallStaticObjectMethod(bitmapClass,
+		env->GetStaticMethodID(bitmapClass, "createBitmap", "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;"),
+		(jint) ANativeWindow_getWidth(window), (jint) ANativeWindow_getHeight(window), config);
+	if (env->ExceptionCheck() || bitmap == nullptr)
+	{
+		env->ExceptionClear();
+		return;
+	}
+	jclass integer = env->FindClass("java/lang/Integer"), boolean = env->FindClass("java/lang/Boolean");
+	jobject intType = env->GetStaticObjectField(integer, env->GetStaticFieldID(integer, "TYPE", "Ljava/lang/Class;"));
+	jobject boolType = env->GetStaticObjectField(boolean, env->GetStaticFieldID(boolean, "TYPE", "Ljava/lang/Class;"));
+	jclass rect = env->FindClass("android/graphics/Rect");
+	jobjectArray noTypes = env->NewObjectArray(0, classClass, nullptr);
+	jobjectArray bitmapTypes = env->NewObjectArray(4, classClass, nullptr);
+	env->SetObjectArrayElement(bitmapTypes, 0, bitmapClass);
+	for (int i = 1; i < 4; i++)
+		env->SetObjectArrayElement(bitmapTypes, i, intType);
+	jobjectArray rectType = env->NewObjectArray(1, classClass, rect);
+	jobjectArray boolTypes = env->NewObjectArray(1, classClass, nullptr);
+	env->SetObjectArrayElement(boolTypes, 0, boolType);
+	jobjectArray intTypes = env->NewObjectArray(1, classClass, nullptr);
+	env->SetObjectArrayElement(intTypes, 0, intType);
+	jobject setBitmap = FindMethod(env, enote, "setWritingJavaBitmap", bitmapTypes);
+	jobject start = FindMethod(env, enote, "onWritingStart", noTypes);
+	jobject end = FindMethod(env, enote, "onWritingEnd", noTypes);
+	jobject render = FindMethod(env, enote, "renderWriting", rectType);
+	jobject enable = FindMethod(env, enote, "setWritingEnabled", boolTypes);
+	jobject delay = FindMethod(env, enote, "setRenderWritingDelayCount", intTypes);
+	if (!setBitmap || !start || !end || !render || !enable)
+	{
+		LOG("overlay: a method is missing");
+		return;
+	}
+	jclass object = env->FindClass("java/lang/Object");
+	if (delay != nullptr)
+	{
+		jobject zero = env->CallStaticObjectMethod(integer, env->GetStaticMethodID(integer, "valueOf", "(I)Ljava/lang/Integer;"), (jint) 0);
+		Invoke(env, delay, gEnote, env->NewObjectArray(1, object, zero));
+	}
+	jobject yes = env->CallStaticObjectMethod(boolean, env->GetStaticMethodID(boolean, "valueOf", "(Z)Ljava/lang/Boolean;"), (jboolean) JNI_TRUE);
+	Invoke(env, enable, gEnote, env->NewObjectArray(1, object, yes));
+	gOvBitmap = env->NewGlobalRef(bitmap);
+	gOvSetBitmap = env->NewGlobalRef(setBitmap);
+	gOvStart = env->NewGlobalRef(start);
+	gOvEnd = env->NewGlobalRef(end);
+	gOvRender = env->NewGlobalRef(render);
+	gRectClass = (jclass) env->NewGlobalRef(rect);
+	gRectInit = env->GetMethodID(gRectClass, "<init>", "(IIII)V");
+	gOverlayOn = true;
+	LOG("fast ink: overlay on");
+}
+
+static void
+OverlayStart(void)
+{
+	JavaThread t;
+	JNIEnv* env = t.env;
+	if (env == nullptr)
+		return;
+	jclass integer = env->FindClass("java/lang/Integer");
+	jmethodID valueOf = env->GetStaticMethodID(integer, "valueOf", "(I)Ljava/lang/Integer;");
+	jobjectArray args = env->NewObjectArray(4, env->FindClass("java/lang/Object"), nullptr);
+	env->SetObjectArrayElement(args, 0, gOvBitmap);
+	for (int i = 1; i < 4; i++)
+		env->SetObjectArrayElement(args, i, env->CallStaticObjectMethod(integer, valueOf, (jint) 0));
+	Invoke(env, gOvSetBitmap, gEnote, args);
+	Invoke(env, gOvStart, gEnote, env->NewObjectArray(0, env->FindClass("java/lang/Object"), nullptr));
+}
+
+static void
+OverlayEnd(void)
+{
+	JavaThread t;
+	if (t.env != nullptr)
+		Invoke(t.env, gOvEnd, gEnote, t.env->NewObjectArray(0, t.env->FindClass("java/lang/Object"), nullptr));
+}
+
+// a rectangle of the display: its dark pixels into the Bitmap (the rest transparent), then shown
+static void
+OverlayPut(ANativeWindow* window, long x0, long y0, long x1, long y1)
+{
+	JavaThread t;
+	JNIEnv* env = t.env;
+	if (env == nullptr)
+		return;
+	AndroidBitmapInfo info;
+	void* bits = nullptr;
+	if (AndroidBitmap_getInfo(env, gOvBitmap, &info) != 0 || AndroidBitmap_lockPixels(env, gOvBitmap, &bits) != 0)
+		return;
+	long width = ANativeWindow_getWidth(window), height = ANativeWindow_getHeight(window);
+	long scale = gScaleNow.load(), ox = gOriginX.load(), oy = gOriginY.load(), pad = 2;
+	long left = ox + x0 * scale - pad, top = oy + y0 * scale - pad;
+	long right = ox + (x1 + 1) * scale + pad, bottom = oy + (y1 + 1) * scale + pad;
+	if (left < 0) left = 0;
+	if (top < 0) top = 0;
+	if (right > width) right = width;
+	if (bottom > height) bottom = height;
+	if ((long) info.width == width && (long) info.height == height)
+	{
+		uint32_t* base = (uint32_t*) bits;
+		long stride = info.stride / 4;
+		PaintRows(base, stride, width, height, scale, ox, oy, left, top, right, bottom);
+		for (long y = top; y < bottom; y++)
+			for (long x = left; x < right; x++)
+			{
+				uint32_t& p = base[y * stride + x];
+				p = (p & 0xff) < 128 ? 0xff000000u : 0u;
+			}
+	}
+	AndroidBitmap_unlockPixels(env, gOvBitmap);
+	jobject rect = env->NewObject(gRectClass, gRectInit, (jint) left, (jint) top, (jint) right, (jint) bottom);
+	Invoke(env, gOvRender, gEnote, env->NewObjectArray(1, env->FindClass("java/lang/Object"), rect));
+}
+
+
 static void
 RenderThread(void)
 {
@@ -486,7 +635,8 @@ RenderThread(void)
 	int windowVersion = -1, paletteVersion = -1;
 	bool direct = false;
 	DisplayDamage pending;
-	bool penWas = false, ghosts = false;
+	bool penWas = false, ghosts = false, inkStroke = false;
+	DisplayDamage held;
 	auto penUpAt = std::chrono::steady_clock::now();
 	BuildRamp();
 	while (!gStopping.load())
@@ -552,6 +702,33 @@ RenderThread(void)
 			Draw(gWindow, true, 0, 0, 0, 0);
 			InkMode(kInkReading);
 		}
+		if (!full && !direct && gOverlayOn && (penNow || inkStroke))
+		{
+			// the overlay shows the pen's changes at once; the window is caught up afterwards
+			if (penNow && !inkStroke)
+			{
+				OverlayStart();
+				inkStroke = true;
+			}
+			if (x1 >= 0)
+			{
+				OverlayPut(gWindow, x0, y0, x1, y1);
+				held.add(x0, y0, x1, y1);
+			}
+			if (!penNow)
+			{
+				OverlayEnd();
+				inkStroke = false;
+			}
+			continue;
+		}
+		if (held.any && !penNow && (x1 >= 0 || std::chrono::steady_clock::now() - penUpAt > std::chrono::milliseconds(500)))
+		{
+			if (x1 >= 0)
+				held.add(x0, y0, x1, y1);
+			x0 = held.x0, y0 = held.y0, x1 = held.x1, y1 = held.y1;
+			held.any = false;
+		}
 		if (!full && direct && (x1 >= 0 || pending.any))
 		{
 			// (the damage kept from a busy panel, and now's)
@@ -567,7 +744,10 @@ RenderThread(void)
 			{
 				direct = DirectUsable(gWindow);
 				if (!direct)
+				{
 					InkOpen();
+					OverlayOpen(gWindow);
+				}
 			}
 		}
 	}
