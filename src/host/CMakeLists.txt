@@ -1200,6 +1200,16 @@ add_test(NAME host.NewtonLockScreen COMMAND newton --display 320x480 --headless 
 set_tests_properties(host.NewtonLockScreen PROPERTIES TIMEOUT 300
                      PASS_REGULAR_EXPRESSION "the chosen one opened ok.*the rest unlocked ok.*left alone, it locked itself ok.*lockscreen: done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "waited in vain|fell over|!!! Exception|FAILED")
+# the Host preferences pages fit a small screen (HostSettings.ns,
+# demo/hostpages.ns): every page opens at 240x320 as Prefs opens it, and a
+# page with more rows than fit is split, each part opening - the ROM's
+# OpenPrefsTo cannot open a panel taller than the application area
+add_test(NAME host.NewtonHostPages COMMAND newton --display 240x320 --headless 120 --erase --gps fixed:-37.81,144.96
+         --store ${CMAKE_CURRENT_BINARY_DIR}/hostpages.store
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/hostpages.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonHostPages PROPERTIES TIMEOUT 200
+                     PASS_REGULAR_EXPRESSION "the Host page .* opens ok.*the Pretend 2 page opens ok.*hostpages: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "waited in vain|fell over|!!! Exception|FAILED")
 # the Host preferences panel (HostSettings.h, demo/hostsettings.ns): .set
 # turns beaming over the network on from Prefs with no restart and keeps it,
 # .kept boots the same store with it on and turns it off.  (Docking on a

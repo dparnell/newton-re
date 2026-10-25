@@ -9,6 +9,24 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-25: the Host page opened on the T-Deck Pro again (a Screen page)
+
+The owner's report: on the T-Deck the Prefs Host page did not work.  A tap
+on it printed "exception in a unit handler: evt.ex (-8505)" and nothing
+opened: -8505 is `kViewErrNoViewBounds`.  The ROM's Prefs open every panel
+through `OpenPrefsTo` in a slip whose template has `viewBounds: nil` (set
+on the context afterwards); the floater's base proto (@132) removes
+`viewBounds` at setup when the slip's box is off the application area, so
+the template's nil is all that is left.  The T-Deck's page, with the
+e-paper settings, was 292 pixels on a 320-pixel screen already (broken
+before Auto-lock), 314 with it.  Reproduced on the desktop at 240x320 by
+padding the page.  Fixed on our side (`HostSettings.ns`): the screen's
+settings on a **Screen** page of their own and any page too tall for the
+application area either way up split in two - the T-Deck's pages are now
+182 pixels each, checked on the board (Host with Auto-lock's picker,
+Screen with the panel's clean-ups).  Ctest `host.NewtonHostPages`;
+`docs/host-settings.md`, "Two pages".
+
 ## 2026-10-25: the lock screen on every host - auto-lock and notifications
 
 The owner's ask: an optional time-based auto-lock, and a section of the

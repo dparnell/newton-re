@@ -154,12 +154,13 @@ What the T-Deck Pro has that a desktop newton does not:
   digits and punctuation; **Alt** held gives Esc (Q), End (E), Up (U),
   Page Up (P), Home (A) and Down (D), and with any other key is the
   Newton's Command key (Alt-C copy, Alt-V paste ...).
-* **Prefs, Host page** (Extras → Prefs → Host) has the board's settings:
-  the 4G module and the GPS switched on or off (kept across restarts),
-  the e-paper panel's refreshes - *A new page drawn in full*, *Clean up*
-  after so many quick updates, *... and when still*, *... once* so much
-  has changed, *Small changes cleaned up* - and **Clear ghosts**, one full
-  redraw of the panel ([docs/host-settings.md](docs/host-settings.md)).
+* **Prefs, Host and Screen pages** (Extras → Prefs → Host, Screen) have
+  the board's settings: on Host the 4G module and the GPS switched on or
+  off (kept across restarts) and Auto-lock; on Screen the e-paper panel's
+  refreshes - *A new page drawn in full*, *Clean up* after so many quick
+  updates, *... and when still*, *... once* so much has changed, *Small
+  changes cleaned up* - and **Clear ghosts**, one full redraw of the panel
+  ([docs/host-settings.md](docs/host-settings.md)).
   The LoRa radio's power, its settings and MeshCore's regional presets
   are the Mesh application's own Prefs (its "i" button).
 * **Messages** and **Mesh** appear in Extras only on hardware that has

@@ -289,9 +289,11 @@ switch and report, `src/host/HostDeveloper.ns`, ctest
 `host.NewtonDeveloperPanel` - is `docs/host-settings.md`'s "The Developer
 panel"; developer tools go there.)
 
-`docs/host-settings.md`: Prefs' **Host** page (`src/host/HostSettings.ns`,
-`HostSettings.cpp`) - the host's settings switched while newton runs and
-kept in the System soup: beaming over the network (`HostIRChipSetPeer`), and
+`docs/host-settings.md`: Prefs' **Host** and **Screen** pages
+(`src/host/HostSettings.ns`, `HostSettings.cpp`; the screen's settings on
+Screen, a page too tall for the application area split - the ROM's Prefs
+cannot open a taller one, ctest `host.NewtonHostPages`) - the host's
+settings switched while newton runs and kept in the System soup: beaming over the network (`HostIRChipSetPeer`), and
 the reMarkable's pen waveform, touch and ghost clearing
 (`HostWindowSetOption`).  A new setting is answered in `HostSettingsList` /
 `HostSetSetting` and the page lists it.  Demos tap a Prefs row by name with

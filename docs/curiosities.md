@@ -2601,3 +2601,18 @@ for an equality test, not for a sorted list's binary search; and no
 vtable in the ROM points at it, so no such comparer was ever made.
 (`docs/views/README.md`, "What nothing calls"; `docs/codebase-map.md`,
 "Build, portability and the ROM-study tools".)
+
+## A Prefs panel that is too tall is never opened
+
+The Preferences roll opens every panel through `OpenPrefsTo` (romsrc
+`functions/Rbuiltinfunctions.OpenPrefsTo.ns`): it builds a slip from a
+template (@809, a protoFloatNGo) whose `viewBounds` is `nil`, sets the
+bounds on the new context, and opens it.  The floater's base proto (@132)
+has a `viewSetupFormScript` that keeps a dragged floater on the screen:
+if its box lies outside the application area it *removes* `viewBounds`
+from the context, expecting the proto's default to take over.  Here the
+template's `nil` is what is left, and the view constructor throws -8505
+(`kViewErrNoViewBounds`) - the panel simply does not open.  On a
+MessagePad's 320x480 screen no ROM panel comes close; the host's Host
+page did, on the T-Deck Pro's 320-pixel-high screen, and was split so
+that it never meets it (`docs/host-settings.md`, "Two pages").

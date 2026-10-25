@@ -11,6 +11,25 @@ On a desktop newton the page is a line, "The machine newton runs on:", and
 one checkbox, "Beam over the network"; a reMarkable adds its panel's
 settings.
 
+**Two pages** (2026-10-25): the screen's settings - an e-paper panel's
+refreshes (`bigChange`, `cleanCount`, `cleanAfter`, `cleanArea`,
+`localClean`, Clear ghosts), the reMarkable's `waveform`, `directPen`,
+`touch` and `screenScale`, and `colourScreen` - are on a page of their own,
+**Screen**, the rest on **Host** (`HostSettings.ns`'s `kScreenSettings`);
+a page with no settings is not registered (a desktop newton has no Screen
+page unless it is offered the colour screen).  And a page with more rows
+than fit the application area either way up (`(shorter side - 50) div
+22`) is split, "Host 2" ... after it.  The ROM's Prefs cannot open a panel
+taller than the application area: the roll opens every panel through
+`OpenPrefsTo`, whose slip (@809) is a protoFloatNGo with `viewBounds: nil`
+set afterwards; the floater's base (@132) takes `viewBounds` out at setup
+when its box is off the application area, which leaves the template's nil
+and the view is never made (-8505, `kViewErrNoViewBounds`: "exception in a
+unit handler" and nothing on the screen).  The T-Deck Pro's one page had
+grown to 292 pixels with its e-paper settings and 314 with Auto-lock, on a
+screen of 320: it did not open.  Ctest `host.NewtonHostPages` opens every
+page at 240x320 and a page split from twenty pretend rows.
+
 ## What it offers
 
 Only what applies to the machine newton is running on: the page lists what
