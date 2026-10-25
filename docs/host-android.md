@@ -1,8 +1,8 @@
 # An Android host (the Viwoods AiPaper Mini)
 
-Status (2026-10-25): **builds, signs and packs; never run on a device.**  The
-first Android build was made on a Mac with no tablet connected, so everything
-below the line "Not yet verified" is the design, not a result.
+Status (2026-10-25): **runs on the Viwoods AiPaper Mini and the Supernote Manta**
+(the owner's report: fast on both, the Manta a little faster).  Not yet done:
+keyboard, sound, pressure and the eraser, palm rejection ("Not yet verified").
 
 The target is the Viwoods AiPaper Mini: an 8.2" black-and-white e-ink tablet,
 1920x1440, Android 13, an octa-core 2 GHz SoC, 4 GB, an EMR stylus (specs from
@@ -61,6 +61,15 @@ code), the Android SDK's build-tools and a JDK:
   `classes.dex` made it block the install).  The window is drawn as usual; the
   panel's picture mode is FAST (4) while the pen is down, GL16 (3) to read, and
   one GC (17) full refresh 1.2 s after the pen rests, to clear the ghosts.
+  `initWriting()` also switches on the system's own instant pen stroke
+  (jdkruzr/ViwoodsAppDev documents it); it is set to a pen of narrow width
+  (`setAutoDrawToolType(2)`, `setAutoDrawPenWidthRange(2,5)`, a guess in the
+  API's units; `NEWTON_PEN_WIDTH=min,max`) so that it matches the Newton's ink -
+  with its default thick stroke writing felt slow.  The app cannot reach the
+  panel driver itself (a MediaTek board; /dev is closed to apps - `build_apk.py
+  --diag` makes an APK that shows what an app can open).  Tried and dropped: the
+  writing overlay Bitmap (`renderWriting`) - slow, ghosts; a Java class
+  (`classes.dex`) - Play Protect blocks the install.
   Confirmed by the owner: much faster (as a dex build).  The writing overlay
   of the same API (a Bitmap drawn into and `renderWriting`) was tried first:
   unusable, bad ghosting.  `NEWTON_FAST_INK=0` turns it off.
