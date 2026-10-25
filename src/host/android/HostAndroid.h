@@ -30,4 +30,8 @@ void	HostAndroidSetActivity(JavaVM* vm, JNIEnv* env, jobject activity);
 // the activity went to the background (true) or came back
 void	HostAndroidPaused(bool paused);
 
+// the display report (Diag.cpp, an APK made with build_apk.py --diag): drawn on the window, shown for 100 s
+void	HostAndroidDiagnose(JavaVM* vm, ANativeWindow* window);
+void	HostAndroidSetDiag(bool on);
+
 #endif	/* __HOSTANDROID_H */

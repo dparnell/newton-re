@@ -166,6 +166,12 @@ android_main(android_app* app)
 			HostAndroidSetActivity(app->activity->vm, env, app->activity->clazz);
 	}
 
+	// an APK made with --diag shows the display report first
+	if (AAsset* flag = AAssetManager_open(app->activity->assetManager, "diag.flag", AASSET_MODE_BUFFER))
+	{
+		AAsset_close(flag);
+		HostAndroidSetDiag(true);
+	}
 	std::string dir = app->activity->internalDataPath;
 	mkdir(dir.c_str(), 0700);
 	chdir(dir.c_str());

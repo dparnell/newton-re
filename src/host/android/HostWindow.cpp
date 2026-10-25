@@ -332,6 +332,9 @@ SendDirect(const DisplayDamage& d)
 	pen has been up a while.
 ------------------------------------------------------------------------------*/
 
+static std::atomic<bool>	gDiag(false);
+void HostAndroidSetDiag(bool on) { gDiag.store(on); }
+
 static JavaVM*		gVM = nullptr;
 static jobject		gActivityRef = nullptr;
 static jobject		gEnote = nullptr;			// the ENoteSetting
@@ -595,6 +598,12 @@ HostWindowStart(long width, long height, const unsigned char* pixels, const char
 				break;
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	}
+	if (gDiag.load() && gVM != nullptr)
+	{
+		std::lock_guard<std::mutex> lock(gWindowLock);
+		if (gWindow != nullptr)
+			HostAndroidDiagnose(gVM, gWindow);
 	}
 	gThread = new std::thread(RenderThread);
 	LOG("window up: display %ldx%ld", width, height);

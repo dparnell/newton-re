@@ -129,7 +129,7 @@ if(NEWTON_HOST_WINDOW STREQUAL "remarkable")
     set(host_window_source remarkable/HostWindow.cpp remarkable/QTFBPanel.cpp remarkable/Folio.cpp)
     set(host_audio_source win32/HostAudio.cpp)         # its #else: no device (the tablets have no loudspeaker)
 elseif(ANDROID)
-    set(host_window_source android/HostWindow.cpp android/EinkDirect.cpp)     # the activity's window and stylus: docs/host-android.md
+    set(host_window_source android/HostWindow.cpp android/EinkDirect.cpp android/Diag.cpp)     # the activity's window and stylus: docs/host-android.md
     set(host_audio_source win32/HostAudio.cpp)         # its #else: no device yet
 elseif(WIN32)
     set(host_window_source win32/HostWindow.cpp)
@@ -162,7 +162,7 @@ target_include_directories(host_window PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 if(NEWTON_HOST_WINDOW STREQUAL "remarkable")
     target_link_libraries(host_window PUBLIC rt pthread dl)
 elseif(ANDROID)
-    target_link_libraries(host_window PUBLIC android log)
+    target_link_libraries(host_window PUBLIC android log jnigraphics)
 elseif(WIN32)
     target_link_libraries(host_window PUBLIC user32 gdi32 shell32 winmm)
 elseif(APPLE AND NOT NEWTON_HOST_WINDOW STREQUAL "x11")
