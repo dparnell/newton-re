@@ -35,6 +35,7 @@
 #include <android/log.h>
 
 #include "HostAndroid.h"
+#include "EinkDirect.h"
 
 // the pen and the keyboard: C-linkage shims over hal/host/HostTablet.h
 // and host/HostKeyboard.h (HostKeyboard.cpp), the Newton headers kept out
@@ -196,14 +197,14 @@ BuildRamp(void)
 }
 
 
-// the display drawn into the window, nearest-neighbour, whole pixels
+// the display drawn into the window, nearest-neighbour, whole pixels.  Only
+// the part that changed is drawn (dx0..dx1, dy0..dy1 in display pixels; all
+// of it when full): the full 1920x1440 picture took longer than the pen moves,
+// and an e-ink panel refreshes just what the window says it touched.
 static void
-Draw(ANativeWindow* window)
+Draw(ANativeWindow* window, bool full, long dx0, long dy0, long dx1, long dy1)
 {
-	ANativeWindow_Buffer buffer;
-	if (ANativeWindow_lock(window, &buffer, nullptr) != 0)
-		return;
-	long width = buffer.width, height = buffer.height;
+	long width = ANativeWindow_getWidth(window), height = ANativeWindow_getHeight(window);
 	long scale = width / gWidth < height / gHeight ? width / gWidth : height / gHeight;
 	if (scale < 1)
 		scale = 1;
@@ -216,19 +217,100 @@ Draw(ANativeWindow* window)
 	gOriginX.store(originX);
 	gOriginY.store(originY);
 
+	ARect dirty;
+	if (full)
+		dirty = { 0, 0, (int32_t) width, (int32_t) height };
+	else
+		dirty = { (int32_t) (originX + dx0 * scale), (int32_t) (originY + dy0 * scale),
+					 (int32_t) (originX + (dx1 + 1) * scale), (int32_t) (originY + (dy1 + 1) * scale) };
+	ANativeWindow_Buffer buffer;
+	if (ANativeWindow_lock(window, &buffer, &dirty) != 0)
+		return;
 	uint32_t* bits = (uint32_t*) buffer.bits;
 	long stride = buffer.stride;
-	for (long y = 0; y < height; y++)
-		for (long x = 0; x < width; x++)
-			bits[y * stride + x] = 0xffffffffu;
-	for (long y = 0; y < shownH; y++)
+	long left = dirty.left < 0 ? 0 : dirty.left, right = dirty.right > width ? width : dirty.right;
+	long top = dirty.top < 0 ? 0 : dirty.top, bottom = dirty.bottom > height ? height : dirty.bottom;
+	for (long y = top; y < bottom; y++)
 	{
-		const unsigned char* row = gPixels + (y / scale) * gWidth;
-		uint32_t* out = bits + (originY + y) * stride + originX;
-		for (long x = 0; x < shownW; x++)
-			out[x] = gRamp[row[x / scale]];
+		uint32_t* out = bits + y * stride;
+		long dy = y - originY;
+		if (dy < 0 || dy >= shownH)
+		{
+			for (long x = left; x < right; x++)
+				out[x] = 0xffffffffu;
+			continue;
+		}
+		// (a row is made once and copied to the other rows of the same display row)
+		if (dy % scale != 0 && y > top && (y - 1 - originY) / scale == dy / scale)
+		{
+			memcpy(out + left, out - stride + left, (size_t) (right - left) * sizeof(uint32_t));
+			continue;
+		}
+		const unsigned char* row = gPixels + (dy / scale) * gWidth;
+		for (long x = left; x < right; x++)
+		{
+			long dx = x - originX;
+			out[x] = (dx < 0 || dx >= shownW) ? 0xffffffffu : gRamp[row[dx / scale]];
+		}
 	}
 	ANativeWindow_unlockAndPost(window);
+}
+
+
+// Where the panel has a driver of its own (the Supernote Manta's /dev/ebc,
+// EinkDirect.h), what changed goes there at once: through the window it waits
+// for Android's compositor and the panel's refresh policy, which is the lag.
+// The first picture, and any change of window, still go through the window.
+struct DisplayDamage
+{
+	bool	any = false;
+	long	x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+	void	add(long ax0, long ay0, long ax1, long ay1)
+	{
+		if (!any)
+			x0 = ax0, y0 = ay0, x1 = ax1, y1 = ay1, any = true;
+		else
+		{
+			if (ax0 < x0) x0 = ax0;
+			if (ay0 < y0) y0 = ay0;
+			if (ax1 > x1) x1 = ax1;
+			if (ay1 > y1) y1 = ay1;
+		}
+	}
+};
+
+static unsigned char
+PanelGray(int x, int y, void*)
+{
+	long scale = gScaleNow.load();
+	long dx = (x - gOriginX.load()) / scale, dy = (y - gOriginY.load()) / scale;
+	if (x < gOriginX.load() || y < gOriginY.load() || dx >= gWidth || dy >= gHeight)
+		return 255;
+	return (unsigned char) ((gRamp[gPixels[dy * gWidth + dx]] >> 8) & 0xff);
+}
+
+static bool
+DirectUsable(ANativeWindow* window)
+{
+	static bool tried = false, opened = false;
+	if (!tried)
+	{
+		tried = true;
+		const char* off = getenv("NEWTON_EINK_DIRECT");
+		opened = (off == nullptr || off[0] != '0') && EinkDirectOpen();
+	}
+	return opened && ANativeWindow_getWidth(window) == EinkDirectWidth() && ANativeWindow_getHeight(window) == EinkDirectHeight();
+}
+
+// ==> 0 sent, otherwise kept: busy
+static int
+SendDirect(const DisplayDamage& d)
+{
+	long scale = gScaleNow.load();
+	int left = (int) (gOriginX.load() + d.x0 * scale), top = (int) (gOriginY.load() + d.y0 * scale);
+	int right = (int) (gOriginX.load() + (d.x1 + 1) * scale), bottom = (int) (gOriginY.load() + (d.y1 + 1) * scale);
+	int result = EinkDirectPresent(left, top, right, bottom, PanelGray, nullptr);
+	return result < 0 ? 0 : result;			// (a failure drops the damage: the window will show it at the next full draw)
 }
 
 
@@ -238,37 +320,68 @@ RenderThread(void)
 	std::vector<unsigned char> shadow((size_t) (gWidth * gHeight), 0);
 	bool haveShadow = false;
 	int windowVersion = -1, paletteVersion = -1;
+	bool direct = false;
+	DisplayDamage pending;
 	BuildRamp();
 	while (!gStopping.load())
 	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(33));
+		// (short, so that ink shows soon after the pen: the picture is only looked at, not redrawn)
+		std::this_thread::sleep_for(std::chrono::milliseconds(8));
 		std::lock_guard<std::mutex> lock(gWindowLock);
 		if (gWindow == nullptr)
 		{
 			windowVersion = -1;
 			continue;
 		}
-		bool redraw = false;
+		bool full = false;
 		if (windowVersion != gWindowVersion.load())
 		{
 			windowVersion = gWindowVersion.load();
 			ANativeWindow_setBuffersGeometry(gWindow, 0, 0, 1 /* WINDOW_FORMAT_RGBA_8888 */);
-			redraw = true;
+			full = true;
 		}
 		if (paletteVersion != gPaletteVersion.load())
 		{
 			paletteVersion = gPaletteVersion.load();
 			BuildRamp();
-			redraw = true;
+			full = true;
 		}
-		if (!haveShadow || memcmp(shadow.data(), gPixels, shadow.size()) != 0)
+		// what changed: the rows and columns the pixels differ in
+		long x0 = gWidth, x1 = -1, y0 = gHeight, y1 = -1;
+		for (long y = 0; y < gHeight; y++)
 		{
-			memcpy(shadow.data(), gPixels, shadow.size());
-			haveShadow = true;
-			redraw = true;
+			const unsigned char* now = gPixels + y * gWidth;
+			unsigned char* was = shadow.data() + y * gWidth;
+			if (memcmp(was, now, (size_t) gWidth) == 0)
+				continue;
+			long first = 0, last = gWidth - 1;
+			while (was[first] == now[first]) first++;
+			while (was[last] == now[last]) last--;
+			if (first < x0) x0 = first;
+			if (last > x1) x1 = last;
+			if (y < y0) y0 = y;
+			y1 = y;
+			memcpy(was, now, (size_t) gWidth);
 		}
-		if (redraw)
-			Draw(gWindow);
+		if (!haveShadow)
+		{
+			haveShadow = true;
+			full = true;
+		}
+		if (!full && direct && (x1 >= 0 || pending.any))
+		{
+			// (the damage kept from a busy panel, and now's)
+			if (x1 >= 0)
+				pending.add(x0, y0, x1, y1);
+			if (SendDirect(pending) == 0)
+				pending.any = false;
+		}
+		else if (full || x1 >= 0)
+		{
+			Draw(gWindow, full, x0, y0, x1, y1);
+			if (full)
+				direct = DirectUsable(gWindow);
+		}
 	}
 }
 
