@@ -200,7 +200,7 @@ TaskThreadEntry(void* arg)
 static void
 ReapEndedThreads(void)
 {
-#ifdef __linux__
+#if defined(__linux__) && !defined(__ANDROID__)		// (bionic has no pthread_tryjoin_np: as on macOS, ended threads are not reaped)
 	std::lock_guard<std::mutex> lock(gGraveyardLock);
 	for (size_t i = 0; i < gGraveyard.size(); )
 	{
