@@ -159,7 +159,12 @@ android_main(android_app* app)
 	app->onAppCmd = OnCommand;
 	app->onInputEvent = OnInput;
 	StartLogPipe();
-	HostAndroidSetActivity(app->activity->vm, app->activity->env, app->activity->clazz);
+	{
+		// (activity->env is the UI thread's: this thread gets its own)
+		JNIEnv* env = nullptr;
+		if (app->activity->vm->AttachCurrentThread(&env, nullptr) == JNI_OK)
+			HostAndroidSetActivity(app->activity->vm, env, app->activity->clazz);
+	}
 
 	std::string dir = app->activity->internalDataPath;
 	mkdir(dir.c_str(), 0700);

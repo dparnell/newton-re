@@ -55,6 +55,7 @@ def main():
     ap.add_argument("--out", default="build/android/newton.apk")
     ap.add_argument("--sdk", default=os.environ.get("ANDROID_HOME") or os.path.expanduser("~/Library/Android/sdk"))
     ap.add_argument("--ndk", default=os.environ.get("ANDROID_NDK_HOME") or "/opt/homebrew/share/android-ndk")
+    ap.add_argument("--target-sdk", help="targetSdkVersion in place of the manifest's (30: the fast ink wants it)")
     ap.add_argument("--keystore", default=os.path.expanduser("~/.android/debug.keystore"))
     args = ap.parse_args()
 
@@ -75,8 +76,13 @@ def main():
         stripped = os.path.join(work, "libnewton.so")
         run(strip[0], "--strip-unneeded", "-o", stripped, args.lib)
         base = os.path.join(work, "base.apk")
-        run(os.path.join(tools, "aapt2"), "link", "--manifest", os.path.join(HERE, "AndroidManifest.xml"),
-            "-I", jar, "-o", base)
+        manifest = os.path.join(HERE, "AndroidManifest.xml")
+        if args.target_sdk:
+            text = open(manifest).read().replace('android:targetSdkVersion="30"', 'android:targetSdkVersion="%s"' % args.target_sdk)
+            text = text.replace('<activity\n', '<activity\n            android:exported="true"\n')
+            manifest = os.path.join(work, "AndroidManifest.xml")
+            open(manifest, "w").write(text)
+        run(os.path.join(tools, "aapt2"), "link", "--manifest", manifest, "-I", jar, "-o", base)
         classes = os.path.join(work, "classes")
         os.makedirs(classes)
         sources = glob.glob(os.path.join(HERE, "java", "**", "*.java"), recursive=True)
