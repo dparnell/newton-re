@@ -2,7 +2,7 @@
 
 Status (2026-10-25): **runs on the Viwoods AiPaper Mini and the Supernote Manta**
 (the owner's report: fast on both, the Manta a little faster).  Not yet done:
-keyboard, sound, pressure and the eraser, palm rejection ("Not yet verified").
+keyboard, sound, pressure and the eraser ("Not yet verified").
 
 The target is the Viwoods AiPaper Mini: an 8.2" black-and-white e-ink tablet,
 1920x1440, Android 13, an octa-core 2 GHz SoC, 4 GB, an EMR stylus (specs from
@@ -73,6 +73,15 @@ code), the Android SDK's build-tools and a JDK:
   Confirmed by the owner: much faster (as a dex build).  The writing overlay
   of the same API (a Bitmap drawn into and `renderWriting`) was tried first:
   unusable, bad ghosting.  `NEWTON_FAST_INK=0` turns it off.
+
+## Palm rejection
+
+`HostAndroidInput` (HostWindow.cpp): a stylus is the pen; a finger is too unless
+a stylus is touching or hovering, or was within 0.7 s (the resting hand), or the
+touch is a palm (contact wider than 220 px, about 19 mm, or a second pointer);
+a rejected touch stays rejected until lifted, and a finger writing when the
+stylus comes is lifted from the page.  Checked by the owner on both tablets
+("seems to be OK"); the size limit is a guess.
 
 ## Not yet verified / left to do
 

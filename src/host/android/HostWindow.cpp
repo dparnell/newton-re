@@ -130,6 +130,24 @@ PenAt(float x, float y, long* x8, long* y8)
 }
 
 
+// Palm rejection.  A stylus is the pen; a finger is too, unless a stylus is near
+// (in range, or just gone: the hand that holds it rests on the screen) or the touch is
+// a palm (a large contact, or a second finger).  A finger that was writing when the
+// stylus came is lifted from the page, as it would be by a real pen.
+static std::atomic<long long>	gStylusSeen(0);			// when a stylus last reported (ns, the event clock)
+static bool						gFingerBlocked = false;	// the finger's touch, once rejected, stays so until it is lifted
+static int						gPenTool = 0;			// who is writing: 0 nobody, 1 stylus, 2 finger
+static const long long			kStylusQuiet = 700000000LL;
+static const float				kPalmSize = 220.0f;		// a touch wider than this (pixels, about 19 mm on these tablets) is a palm, not a finger
+
+static void
+PenLift(void)
+{
+	if (gPenDown.exchange(false))
+		HostWindowPenUp();
+	gPenTool = 0;
+}
+
 // ==> whether the event was taken
 int
 HostAndroidInput(AInputEvent* event)
@@ -137,20 +155,51 @@ HostAndroidInput(AInputEvent* event)
 	if (AInputEvent_getType(event) != AINPUT_EVENT_TYPE_MOTION || gPixels == nullptr)
 		return 0;
 	int32_t action = AMotionEvent_getAction(event) & AMOTION_EVENT_ACTION_MASK;
-	if (AMotionEvent_getToolType(event, 0) == AMOTION_EVENT_TOOL_TYPE_ERASER)
+	int32_t tool = AMotionEvent_getToolType(event, 0);
+	long long now = AMotionEvent_getEventTime(event);
+	if (tool == AMOTION_EVENT_TOOL_TYPE_ERASER)
+	{
+		gStylusSeen.store(now);
 		return 1;				// (the pen's eraser end is not a pen yet)
+	}
+	bool stylus = tool == AMOTION_EVENT_TOOL_TYPE_STYLUS;
+	if (stylus)
+	{
+		gStylusSeen.store(now);
+		if (gPenTool == 2)
+			PenLift();			// (a finger was writing: the stylus has come)
+	}
+	else
+	{
+		bool stylusNear = now - gStylusSeen.load() < kStylusQuiet || gPenTool == 1;
+		bool palm = AMotionEvent_getTouchMajor(event, 0) > kPalmSize || AMotionEvent_getPointerCount(event) > 1
+					|| action == AMOTION_EVENT_ACTION_POINTER_DOWN;
+		if (action == AMOTION_EVENT_ACTION_DOWN)
+			gFingerBlocked = stylusNear || palm;
+		else if (stylusNear || palm)
+			gFingerBlocked = true;
+		if (gFingerBlocked)
+		{
+			if (gPenTool == 2)
+				PenLift();
+			if (action == AMOTION_EVENT_ACTION_UP || action == AMOTION_EVENT_ACTION_CANCEL)
+				gFingerBlocked = false;
+			return 1;
+		}
+	}
 	long x8, y8;
 	switch (action)
 	{
 	case AMOTION_EVENT_ACTION_DOWN:
 		PenAt(AMotionEvent_getX(event, 0), AMotionEvent_getY(event, 0), &x8, &y8);
+		gPenTool = stylus ? 1 : 2;
 		gPenDown.store(true);
 		HostWindowPenDownFine(x8, y8);
 		return 1;
 	case AMOTION_EVENT_ACTION_MOVE:
 		if (!gPenDown.load())
 			return 1;
-		// (what the stylus did between two events first, so that a quick stroke keeps its shape)
+		// (what the pen did between two events first, so that a quick stroke keeps its shape)
 		for (size_t i = 0, n = AMotionEvent_getHistorySize(event); i < n; i++)
 		{
 			PenAt(AMotionEvent_getHistoricalX(event, 0, i), AMotionEvent_getHistoricalY(event, 0, i), &x8, &y8);
@@ -161,11 +210,10 @@ HostAndroidInput(AInputEvent* event)
 		return 1;
 	case AMOTION_EVENT_ACTION_UP:
 	case AMOTION_EVENT_ACTION_CANCEL:
-		if (gPenDown.exchange(false))
-			HostWindowPenUp();
+		PenLift();
 		return 1;
 	}
-	return 1;					// (a hover, a second finger: nothing the pen does)
+	return 1;					// (a hover: the stylus is near, noted above)
 }
 
 
