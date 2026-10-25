@@ -642,7 +642,7 @@ RenderThread(void)
 	while (!gStopping.load())
 	{
 		// (short, so that ink shows soon after the pen: the picture is only looked at, not redrawn)
-		std::this_thread::sleep_for(std::chrono::milliseconds(8));
+		std::this_thread::sleep_for(std::chrono::milliseconds(4));
 		std::lock_guard<std::mutex> lock(gWindowLock);
 		if (gWindow == nullptr)
 		{
