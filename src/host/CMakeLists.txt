@@ -852,7 +852,7 @@ if(X11_FOUND AND NOT WIN32)
     target_link_libraries(xdnddrop PRIVATE ${X11_LIBRARIES})
     add_test(NAME host.NewtonWindowDrop
              COMMAND xdnddrop ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monaco.pkg --
-                     $<TARGET_FILE:newton> --display 320x480 --limit 120
+                     $<TARGET_FILE:newton> --display 320x480 --store none --limit 120
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/windowdrop.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonWindowDrop PROPERTIES TIMEOUT 200 SKIP_RETURN_CODE 77
@@ -865,7 +865,7 @@ endif()
 # bytes (demo/windowshow.ns)
 if(APPLE AND NOT NEWTON_HOST_WINDOW STREQUAL "x11")
     add_test(NAME host.NewtonWindowShows
-             COMMAND newton --display 320x480 --limit 90 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/windowshow.ns
+             COMMAND newton --display 320x480 --store none --limit 90 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/windowshow.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonWindowShows PROPERTIES TIMEOUT 120 FIXTURES_SETUP host_windowshow
                          ENVIRONMENT "NEWTON_WINDOW_SNAPSHOT=${CMAKE_SOURCE_DIR}/../build/windowshow-window.pgm"

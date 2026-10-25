@@ -13,11 +13,14 @@ Run it:
 
   newton                          a MessagePad's 320 x 480 screen
   newton --display 480x640        another size
-  newton --store newton.store     keep what you do in a file between runs
+  newton --store newton.store     keep the machine in another file
+  newton --store none             keep nothing between runs
   newton --package app.pkg        install a Newton package (or drop one on the window)
 
-The first start walks you through the Setup assistant, as a new MessagePad
-does.  The Host page in the Newton's Preferences (Extras, Prefs, Host) has
+What you do on the Newton is kept between runs in your own directory:
+%LOCALAPPDATA%\Newton\Internal.store on Windows, ~/.local/newton/Internal.store
+on Linux and macOS (newton --erase starts it again).  The first start walks
+you through the Setup assistant, as a new MessagePad does.  The Host page in the Newton's Preferences (Extras, Prefs, Host) has
 the settings of this computer that can change while it runs, such as
 beaming to another newton on the network.
 

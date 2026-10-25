@@ -19,7 +19,7 @@ click "Open Anyway" beside its name; or, in Terminal:
   xattr -dr com.apple.quarantine Newton.app
 
 Newton.app keeps the internal store - everything you do on the Newton - in
-~/Library/Application Support/com.matthiasm.newton-re/Internal.store, and
+~/.local/newton/Internal.store (as newton run from a shell does), and
 its log in ~/Library/Logs/com.matthiasm.newton-re/newton.log.  The first
 start walks you through the Setup assistant, as a new MessagePad does.
 

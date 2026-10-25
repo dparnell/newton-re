@@ -9,6 +9,23 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-25: the internal store in the user's own directory by default
+
+`newton` run in a window with no `--store` kept the machine in memory
+only, so everything done on it was lost at the end of the run.  It now
+keeps it in the user's own directory (`host/HostAppDefaults.h`'s
+`HostDefaultStoreFile`, the directory made when it is not there):
+`%LOCALAPPDATA%\Newton\Internal.store` on Windows
+(`C:\Users\<user>\AppData\Local\Newton`), `~/.local/newton/Internal.store`
+on Linux and macOS, with the Host page's settings and the mesh node's
+files beside it as beside any store.  A `--headless` run - the ctests, the
+scripts - still keeps it in memory, so that no test touches the user's
+machine; `--store none` does the same for a windowed run (given to the two
+windowed ctests that had no store, `host.NewtonWindowDrop` and
+`host.NewtonWindowShows`).  Newton.app no longer adds its own
+`--store` in Application Support: it finds the same `~/.local/newton`
+store a shell's newton does (`docs/host-macos.md`).
+
 ## 2026-10-25: a user's report from Linux (keys, Setup, Time Zones, volume, rotation, calibration)
 
 A user of the 0.1-0.3 releases on Debian (X11, an Orbit trackball, Mac

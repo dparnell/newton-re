@@ -71,10 +71,16 @@ identifier rather than "Newton", which NewtPlay's internal store already
 uses:
 
 - `~/Library/Application Support/com.matthiasm.newton-re/` - its working
-  directory and `Internal.store`, the internal store (unless `--store` is
-  given: `open -a Newton --args --display 640x480 ...` adds arguments);
+  directory;
 - `~/Library/Logs/com.matthiasm.newton-re/newton.log` - its stdout and
   stderr, appended to.
+
+Its internal store is newton's own default for a windowed run,
+`~/.local/newton/Internal.store` - the same machine newton run from a
+shell finds (`--store` names another; `open -a Newton --args ...` adds
+arguments).  An `Internal.store` an earlier Newton.app left in
+Application Support is not moved: copy it, and the files beside it named
+`Internal.store.*`, into `~/.local/newton/` to keep that machine.
 
 Run from a shell (`Newton.app/Contents/MacOS/newton ...`) it is plain
 newton.

@@ -14,7 +14,7 @@
 				is up, as the ROM's boot runs its bootTestScript.
 
 	newton [--rom image | --objects file] [--heap bytes] [--display WxH[xdepth]] [--colour] [--scale n]
-	       [--script file.ns] [--headless seconds] [--store file] [--erase]
+	       [--script file.ns] [--headless seconds] [--store file|none] [--erase]
 	       [--flash-size mb] [--flat-flash] [--kernel-heap mb] [--task-stack kb]
 	       [--bake-objects image [--bake-base address]]
 	       [--package file.pkg]... [--card file] [--microphone-tone hz] [--tcp-echo port]
@@ -74,7 +74,11 @@
 	default, the most the ROM's code takes unchanged - or 128;
 	docs/stores/README.md, "Bigger flash"), and --flat-flash makes it a
 	flat file of that many bytes instead (4 MB unless --flash-size says
-	otherwise; at 4 or 8 MB, Einstein's own).
+	otherwise; at 4 or 8 MB, Einstein's own).  Without --store a windowed
+	run keeps it in the user's own directory (host/HostAppDefaults.h's
+	HostDefaultStoreFile: %LOCALAPPDATA%\Newton\Internal.store on Windows,
+	~/.local/newton/Internal.store on Linux and macOS) and a headless one
+	keeps it in memory; --store none keeps a windowed one's in memory too.
 
 	--kernel-heap (megabytes; 32 unless given) and --task-stack (kilobytes,
 	each task thread's stack; 8 MB unless given, Unix hosts only - Windows
@@ -335,7 +339,7 @@ Usage(void)
 {
 	fprintf(stderr, "usage: newton [--objects file | --rom image] [--heap bytes] [--display WxH[xdepth]] [--colour] [--scale n]\n"
 					"              [--script file.ns] [--headless seconds] [--limit seconds] [--window-pen]\n"
-					"              [--store file] [--erase]\n"
+					"              [--store file|none] [--erase]\n"
 					"              [--flash-size mb] [--flat-flash] [--kernel-heap mb] [--task-stack kb]\n"
 					"              [--bake-objects image [--bake-base address]]\n"
 					"              [--package file.pkg]... [--card file] [--microphone-tone hz] [--tcp-echo port]\n"
@@ -1136,6 +1140,7 @@ main(int argc, char** argv)
 	// the Setup assistant (holding the power switch down through a reset
 	// asks whether to erase the internal store, and this is that)
 	const char* storeFile = nil;
+	Boolean storeGiven = false;
 	Boolean erase = false;
 	// what a store file that is not there yet is made as (HostSetNewFlash):
 	// 0 is the default - 64 MB for a sparse image, the most the ROM's flash
@@ -1249,7 +1254,12 @@ main(int argc, char** argv)
 		else if (strcmp(argv[i], "--window-pen") == 0)
 			gHostTabletTapHook = WindowPenTap;
 		else if (strcmp(argv[i], "--store") == 0 && i + 1 < argc)
+		{
 			storeFile = argv[++i];
+			storeGiven = true;
+			if (strcmp(storeFile, "none") == 0)
+				storeFile = nil;
+		}
 		else if (strcmp(argv[i], "--erase") == 0)
 			erase = true;
 		else if (strcmp(argv[i], "--flash-size") == 0 && i + 1 < argc)
@@ -1327,6 +1337,15 @@ main(int argc, char** argv)
 	{
 		HostObjectsFileMismatch("newton", romImage, NEWTON_DEFAULT_OBJECTS);
 		return 1;
+	}
+	// a windowed run with no --store keeps the machine in the user's own
+	// directory (HostDefaultStoreFile); a headless one - a test, a script -
+	// keeps it in memory, as --store none does, so as not to touch it
+	if (!storeGiven && gWindowed)
+	{
+		storeFile = HostDefaultStoreFile();
+		if (storeFile != nil)
+			fprintf(stderr, "[host] the internal store is %s (--store names another, --store none keeps it in memory)\n", storeFile);
 	}
 	if (erase && storeFile != nil && remove(storeFile) == 0)
 		fprintf(stderr, "[host] %s erased; the machine starts new\n", storeFile);
