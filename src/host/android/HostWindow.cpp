@@ -33,7 +33,6 @@
 #include <android/native_window.h>
 #include <android/input.h>
 #include <android/log.h>
-#include <android/bitmap.h>
 #include <jni.h>
 
 #include "HostAndroid.h"
@@ -327,18 +326,17 @@ SendDirect(const DisplayDamage& d)
 
 
 /*------------------------------------------------------------------------------
-	The Viwoods AiPaper Mini's fast ink (tools/android/java/.../FastInk.java,
-	docs/host-android.md): while the pen is down the display's changes go to
-	the system's writing overlay, in a Bitmap, not through the window, whose
-	refresh is slow; the window gets them when the pen has been up a moment.
+	The Viwoods AiPaper Mini's refresh modes (tools/android/java/.../FastInk.java,
+	docs/host-android.md): the window is drawn as always; the panel is told to
+	refresh it FAST while the pen is down, and to clear the ghosts once the
+	pen has been up a while.
 ------------------------------------------------------------------------------*/
 
 static JavaVM*		gVM = nullptr;
 static jclass		gInkClass = nullptr;
-static jmethodID	gInkInit = nullptr, gInkBitmap = nullptr, gInkBegin = nullptr, gInkRender = nullptr, gInkEnd = nullptr,
-					gInkPause = nullptr, gInkResume = nullptr;
+static jmethodID	gInkInit = nullptr, gInkMode = nullptr;
 static jobject		gActivityRef = nullptr;
-static std::atomic<bool>	gInkOn(false);
+static bool			gInkOn = false;
 
 // on the activity's own thread (android_main): finds the class in the application's loader
 void
@@ -353,18 +351,12 @@ HostAndroidSetActivity(JavaVM* vm, JNIEnv* env, jobject activity)
 	jclass ink = (jclass) env->CallObjectMethod(loader, env->GetMethodID(loaderClass, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;"), name);
 	if (env->ExceptionCheck() || ink == nullptr)
 	{
-		env->ExceptionClear();
-		LOG("fast ink: no FastInk class");
+		env->ExceptionClear();		// (an APK without --fast-ink)
 		return;
 	}
 	gInkClass = (jclass) env->NewGlobalRef(ink);
 	gInkInit = env->GetStaticMethodID(gInkClass, "init", "(Landroid/app/Activity;)Z");
-	gInkBitmap = env->GetStaticMethodID(gInkClass, "bitmap", "(II)Landroid/graphics/Bitmap;");
-	gInkBegin = env->GetStaticMethodID(gInkClass, "begin", "()V");
-	gInkRender = env->GetStaticMethodID(gInkClass, "render", "(IIII)V");
-	gInkEnd = env->GetStaticMethodID(gInkClass, "end", "()V");
-	gInkPause = env->GetStaticMethodID(gInkClass, "pause", "()V");
-	gInkResume = env->GetStaticMethodID(gInkClass, "resume", "()V");
+	gInkMode = env->GetStaticMethodID(gInkClass, "mode", "(I)V");
 	if (env->ExceptionCheck())
 	{
 		env->ExceptionClear();
@@ -384,110 +376,43 @@ struct JavaThread			// the current thread in the VM, for as long as this lives
 	~JavaThread() { if (attached) gVM->DetachCurrentThread(); }
 };
 
-// the activity left the foreground or came back: the writing queue is the system's, not ours, meanwhile
 void
 HostAndroidPaused(bool paused)
 {
-	if (gInkClass == nullptr || !gInkOn.load())
-		return;
-	JavaThread t;
-	if (t.env == nullptr)
-		return;
-	t.env->CallStaticVoidMethod(gInkClass, paused ? gInkPause : gInkResume);
-	t.env->ExceptionClear();
+	(void) paused;				// (the modes are the panel's, not a queue we hold)
 }
 
-class FastInkStroke
-{
-public:
-	bool	Ready(void) { return gInkOn.load(); }
-	// render thread only
-	void	Open(ANativeWindow* window);
-	void	Begin(void);
-	void	Put(ANativeWindow* window, long x0, long y0, long x1, long y1);
-	void	End(void);
-private:
-	bool		fTried = false;
-	jobject		fBitmap = nullptr;
-};
+enum { kInkFast = 4, kInkReading = 3, kInkClear = 17 };
 
-void
-FastInkStroke::Open(ANativeWindow* window)
+static void
+InkOpen(void)
 {
-	if (fTried || gInkClass == nullptr)
+	static bool tried = false;
+	if (tried || gInkClass == nullptr)
 		return;
-	fTried = true;
+	tried = true;
 	const char* off = getenv("NEWTON_FAST_INK");
 	if (off != nullptr && off[0] == '0')
 		return;
 	JavaThread t;
 	if (t.env == nullptr)
 		return;
-	bool ok = t.env->CallStaticBooleanMethod(gInkClass, gInkInit, gActivityRef);
+	gInkOn = t.env->CallStaticBooleanMethod(gInkClass, gInkInit, gActivityRef);
 	t.env->ExceptionClear();
-	if (!ok)
-		return;
-	jobject bitmap = t.env->CallStaticObjectMethod(gInkClass, gInkBitmap, (jint) ANativeWindow_getWidth(window), (jint) ANativeWindow_getHeight(window));
-	t.env->ExceptionClear();
-	if (bitmap == nullptr)
-		return;
-	fBitmap = t.env->NewGlobalRef(bitmap);
-	gInkOn.store(true);
-	LOG("fast ink: on");
+	LOG("fast ink: %s", gInkOn ? "on" : "no ENoteSetting");
 }
 
-void
-FastInkStroke::Begin(void)
+static void
+InkMode(int mode)
 {
+	if (!gInkOn)
+		return;
 	JavaThread t;
 	if (t.env != nullptr)
 	{
-		t.env->CallStaticVoidMethod(gInkClass, gInkBegin);
+		t.env->CallStaticVoidMethod(gInkClass, gInkMode, (jint) mode);
 		t.env->ExceptionClear();
 	}
-}
-
-void
-FastInkStroke::End(void)
-{
-	JavaThread t;
-	if (t.env != nullptr)
-	{
-		t.env->CallStaticVoidMethod(gInkClass, gInkEnd);
-		t.env->ExceptionClear();
-	}
-}
-
-// the display's rectangle drawn into the overlay's bitmap and sent
-void
-FastInkStroke::Put(ANativeWindow* window, long x0, long y0, long x1, long y1)
-{
-	JavaThread t;
-	if (t.env == nullptr || fBitmap == nullptr)
-		return;
-	AndroidBitmapInfo info;
-	void* bits = nullptr;
-	if (AndroidBitmap_getInfo(t.env, fBitmap, &info) != 0 || AndroidBitmap_lockPixels(t.env, fBitmap, &bits) != 0)
-		return;
-	long width = ANativeWindow_getWidth(window), height = ANativeWindow_getHeight(window);
-	if ((long) info.width == width && (long) info.height == height)
-	{
-		long scale = gScaleNow.load(), ox = gOriginX.load(), oy = gOriginY.load();
-		// (a little around, as the strokes' ends are round)
-		long pad = 2;
-		long left = ox + x0 * scale - pad, top = oy + y0 * scale - pad;
-		long right = ox + (x1 + 1) * scale + pad, bottom = oy + (y1 + 1) * scale + pad;
-		if (left < 0) left = 0;
-		if (top < 0) top = 0;
-		if (right > width) right = width;
-		if (bottom > height) bottom = height;
-		PaintRows((uint32_t*) bits, info.stride / 4, width, height, scale, ox, oy, left, top, right, bottom);
-		AndroidBitmap_unlockPixels(t.env, fBitmap);
-		t.env->CallStaticVoidMethod(gInkClass, gInkRender, (jint) left, (jint) top, (jint) right, (jint) bottom);
-		t.env->ExceptionClear();
-		return;
-	}
-	AndroidBitmap_unlockPixels(t.env, fBitmap);
 }
 
 
@@ -499,9 +424,7 @@ RenderThread(void)
 	int windowVersion = -1, paletteVersion = -1;
 	bool direct = false;
 	DisplayDamage pending;
-	FastInkStroke ink;
-	bool inkStroke = false;
-	DisplayDamage held;
+	bool penWas = false, ghosts = false;
 	auto penUpAt = std::chrono::steady_clock::now();
 	BuildRamp();
 	while (!gStopping.load())
@@ -549,27 +472,23 @@ RenderThread(void)
 			haveShadow = true;
 			full = true;
 		}
+		// the panel's refresh: fast while the pen writes, a clearing refresh when it has rested
 		bool penNow = gPenDown.load();
-		if (!full && !direct && ink.Ready() && (penNow || inkStroke))
+		if (penNow != penWas)
 		{
-			// the fast ink: the pen's changes into the overlay, the window's picture caught up after
-			if (penNow && !inkStroke)
-			{
-				ink.Begin();
-				inkStroke = true;
-			}
-			if (x1 >= 0)
-			{
-				ink.Put(gWindow, x0, y0, x1, y1);
-				held.add(x0, y0, x1, y1);
-			}
-			if (!penNow)
-			{
-				ink.End();
-				inkStroke = false;
+			penWas = penNow;
+			InkMode(penNow ? kInkFast : kInkReading);
+			if (penNow)
+				ghosts = true;
+			else
 				penUpAt = std::chrono::steady_clock::now();
-			}
-			continue;
+		}
+		if (ghosts && !penNow && std::chrono::steady_clock::now() - penUpAt > std::chrono::milliseconds(1200))
+		{
+			ghosts = false;
+			InkMode(kInkClear);
+			Draw(gWindow, true, 0, 0, 0, 0);
+			InkMode(kInkReading);
 		}
 		if (!full && direct && (x1 >= 0 || pending.any))
 		{
@@ -579,24 +498,14 @@ RenderThread(void)
 			if (SendDirect(pending) == 0)
 				pending.any = false;
 		}
-		else if (full || x1 >= 0 || held.any)
+		else if (full || x1 >= 0)
 		{
-			// (the pen has been up a while, or something else changed: the window shows the stroke too)
-			if (!full && x1 < 0 && std::chrono::steady_clock::now() - penUpAt < std::chrono::milliseconds(600))
-				continue;
-			if (held.any)
-			{
-				if (x1 >= 0)
-					held.add(x0, y0, x1, y1);
-				x0 = held.x0, y0 = held.y0, x1 = held.x1, y1 = held.y1;
-				held.any = false;
-			}
 			Draw(gWindow, full, x0, y0, x1, y1);
 			if (full)
 			{
 				direct = DirectUsable(gWindow);
 				if (!direct)
-					ink.Open(gWindow);
+					InkOpen();
 			}
 		}
 	}
