@@ -128,6 +128,9 @@ set(NEWTON_HOST_WINDOW "auto" CACHE STRING "the host window: auto (the platform'
 if(NEWTON_HOST_WINDOW STREQUAL "remarkable")
     set(host_window_source remarkable/HostWindow.cpp remarkable/QTFBPanel.cpp remarkable/Folio.cpp)
     set(host_audio_source win32/HostAudio.cpp)         # its #else: no device (the tablets have no loudspeaker)
+elseif(ANDROID)
+    set(host_window_source android/HostWindow.cpp android/EinkDirect.cpp android/Diag.cpp)     # the activity's window and stylus: docs/host-android.md
+    set(host_audio_source win32/HostAudio.cpp)         # its #else: no device yet
 elseif(WIN32)
     set(host_window_source win32/HostWindow.cpp)
     set(host_audio_source win32/HostAudio.cpp)
@@ -158,6 +161,8 @@ add_library(host_window STATIC ${host_window_source} ${host_audio_source} HostPe
 target_include_directories(host_window PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 if(NEWTON_HOST_WINDOW STREQUAL "remarkable")
     target_link_libraries(host_window PUBLIC rt pthread dl)
+elseif(ANDROID)
+    target_link_libraries(host_window PUBLIC android log jnigraphics)
 elseif(WIN32)
     target_link_libraries(host_window PUBLIC user32 gdi32 shell32 winmm)
 elseif(APPLE AND NOT NEWTON_HOST_WINDOW STREQUAL "x11")
@@ -216,6 +221,29 @@ add_executable(newton newton.cpp HostRestart.cpp HostKeyboard.cpp HostPackages.c
 target_link_libraries(newton PRIVATE newt host_views host_window hal_host_sound hal_timers hal_host_serial)
 target_compile_definitions(newton PRIVATE "NEWTON_DEFAULT_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 install(TARGETS newton DESTINATION bin)
+
+# newton as an Android application (docs/host-android.md): the same program
+# as a NativeActivity's library, libnewton.so - android/AndroidMain.cpp runs
+# its main on a thread of its own - packed into an APK by tools/android/build_apk.py
+if(ANDROID)
+    enable_language(C)                  # (the activity glue is C)
+    set(native_app_glue ${ANDROID_NDK}/sources/android/native_app_glue)
+    # (the entry point in a library of its own: with the Newton include paths its <string> reaches
+    # intl/Locale.h, which shadows <locale.h> on a case-insensitive file system)
+    add_library(newton_android_main STATIC android/AndroidMain.cpp ${native_app_glue}/android_native_app_glue.c)
+    target_include_directories(newton_android_main PRIVATE ${native_app_glue} ${CMAKE_CURRENT_SOURCE_DIR}/android)
+    target_link_libraries(newton_android_main PUBLIC android log)
+    add_library(newton_android SHARED
+                newton.cpp HostRestart.cpp HostKeyboard.cpp HostPackages.cpp HostOrientation.cpp HostSettings.cpp HostFontProvider.cpp
+                ${CMAKE_CURRENT_BINARY_DIR}/HostSettingsSource.cpp HostDeveloper.cpp
+                ${CMAKE_CURRENT_BINARY_DIR}/HostDeveloperSource.cpp HostWordEngines.cpp
+                ${CMAKE_CURRENT_BINARY_DIR}/HostWordEnginesSource.cpp HostHeapCheck.cpp
+                HostQuickSheet.cpp ${CMAKE_CURRENT_BINARY_DIR}/HostQuickSheetSource.cpp HostAppDefaults.cpp)
+    set_target_properties(newton_android PROPERTIES OUTPUT_NAME newton)
+    target_link_libraries(newton_android PRIVATE newton_android_main newt host_views host_window hal_host_sound hal_timers hal_host_serial)
+    target_link_options(newton_android PRIVATE -u ANativeActivity_onCreate)
+    target_compile_definitions(newton_android PRIVATE "NEWTON_DEFAULT_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
+endif()
 
 # Newton.app (macOS, the Cocoa window): the newton above - the same program,
 # so the ctests and a shell run it as they always did - put in an application

@@ -9,6 +9,16 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-25: an Android host (the Viwoods AiPaper Mini)
+
+`newton` builds for Android (arm64, NDK r27+, `src/cmake/android-ndk.cmake`)
+as `libnewton.so`, a NativeActivity's library: `host/android/` holds the
+entry point (`AndroidMain.cpp`) and the host window (`HostWindow.cpp`, an
+`ANativeWindow` drawn only when the display changed, the stylus or a finger
+as the pen), and `tools/android/build_apk.py` packs the APK with the SDK's own
+tools.  bionic has no `pthread_tryjoin_np` (`TaskRuntime.cpp`).  It builds
+and signs; it has not been run on a device (docs/host-android.md).
+
 ## 2026-10-25: the lock screen on every host - auto-lock and notifications
 
 The owner's ask: an optional time-based auto-lock, and a section of the
