@@ -132,6 +132,12 @@ OnCommand(android_app* app, int32_t command)
 	case APP_CMD_TERM_WINDOW:
 		HostAndroidSetWindow(nullptr);
 		break;
+	case APP_CMD_PAUSE:
+		HostAndroidPaused(true);
+		break;
+	case APP_CMD_RESUME:
+		HostAndroidPaused(false);
+		break;
 	case APP_CMD_DESTROY:
 		HostAndroidDestroyed();
 		break;
@@ -153,6 +159,7 @@ android_main(android_app* app)
 	app->onAppCmd = OnCommand;
 	app->onInputEvent = OnInput;
 	StartLogPipe();
+	HostAndroidSetActivity(app->activity->vm, app->activity->env, app->activity->clazz);
 
 	std::string dir = app->activity->internalDataPath;
 	mkdir(dir.c_str(), 0700);

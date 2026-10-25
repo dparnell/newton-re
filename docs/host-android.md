@@ -49,6 +49,19 @@ code), the Android SDK's build-tools and a JDK:
   stylus, a finger or a mouse is the pen, in eighths of a display pixel, with
   the stroke's history between events; the eraser end is ignored.
 
+## Fast ink
+
+- **Supernote Manta**: `host/android/EinkDirect.cpp` sends changed regions
+  straight to the e-ink driver `/dev/ebc` (the interface of MPdairy's
+  fasteink library); only when the driver reports the Manta's exact layout.
+  Confirmed by the owner: writing is fast.  `NEWTON_EINK_DIRECT=0` turns it off.
+- **Viwoods AiPaper Mini**: `tools/android/java/.../FastInk.java` calls the
+  hidden `android.os.enote.ENoteSetting` by reflection; while the pen is down
+  the render thread draws the display's changes into the overlay's Bitmap
+  (picture mode FAST), and the window catches up 600 ms after the pen lifts
+  (GL16).  Paused with the activity.  `NEWTON_FAST_INK=0` turns it off.  Not
+  yet verified on the device.
+
 ## Not yet verified / left to do
 
 - Running on the tablet at all.  The tablet's adbd refuses `shell`, `push`,

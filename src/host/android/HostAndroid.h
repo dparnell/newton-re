@@ -12,6 +12,7 @@
 
 struct ANativeWindow;
 struct AInputEvent;
+#include <jni.h>
 
 // android_main has run: the process is the activity's, so there can be a window
 void	HostAndroidSetActive(bool active);
@@ -23,5 +24,10 @@ void	HostAndroidSetWindow(ANativeWindow* window);
 int		HostAndroidInput(AInputEvent* event);
 // the activity is being destroyed: the run ends
 void	HostAndroidDestroyed(void);
+
+// the activity's Java side (the Viwoods fast ink): its VM and the activity, from android_main's thread
+void	HostAndroidSetActivity(JavaVM* vm, JNIEnv* env, jobject activity);
+// the activity went to the background (true) or came back
+void	HostAndroidPaused(bool paused);
 
 #endif	/* __HOSTANDROID_H */

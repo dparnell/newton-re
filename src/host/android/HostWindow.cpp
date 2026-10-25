@@ -33,6 +33,8 @@
 #include <android/native_window.h>
 #include <android/input.h>
 #include <android/log.h>
+#include <android/bitmap.h>
+#include <jni.h>
 
 #include "HostAndroid.h"
 #include "EinkDirect.h"
@@ -197,39 +199,17 @@ BuildRamp(void)
 }
 
 
-// the display drawn into the window, nearest-neighbour, whole pixels.  Only
-// the part that changed is drawn (dx0..dx1, dy0..dy1 in display pixels; all
-// of it when full): the full 1920x1440 picture took longer than the pen moves,
-// and an e-ink panel refreshes just what the window says it touched.
+// the rows [top,bottom) x [left,right) of a width x height picture of the display (RGBA)
 static void
-Draw(ANativeWindow* window, bool full, long dx0, long dy0, long dx1, long dy1)
+PaintRows(uint32_t* bits, long stride, long width, long height, long scale, long originX, long originY,
+			long left, long top, long right, long bottom)
 {
-	long width = ANativeWindow_getWidth(window), height = ANativeWindow_getHeight(window);
-	long scale = width / gWidth < height / gHeight ? width / gWidth : height / gHeight;
-	if (scale < 1)
-		scale = 1;
 	long shownW = gWidth * scale < width ? gWidth * scale : width;
 	long shownH = gHeight * scale < height ? gHeight * scale : height;
-	long originX = (width - gWidth * scale) / 2, originY = (height - gHeight * scale) / 2;
-	if (originX < 0) originX = 0;
-	if (originY < 0) originY = 0;
-	gScaleNow.store(scale);
-	gOriginX.store(originX);
-	gOriginY.store(originY);
-
-	ARect dirty;
-	if (full)
-		dirty = { 0, 0, (int32_t) width, (int32_t) height };
-	else
-		dirty = { (int32_t) (originX + dx0 * scale), (int32_t) (originY + dy0 * scale),
-					 (int32_t) (originX + (dx1 + 1) * scale), (int32_t) (originY + (dy1 + 1) * scale) };
-	ANativeWindow_Buffer buffer;
-	if (ANativeWindow_lock(window, &buffer, &dirty) != 0)
-		return;
-	uint32_t* bits = (uint32_t*) buffer.bits;
-	long stride = buffer.stride;
-	long left = dirty.left < 0 ? 0 : dirty.left, right = dirty.right > width ? width : dirty.right;
-	long top = dirty.top < 0 ? 0 : dirty.top, bottom = dirty.bottom > height ? height : dirty.bottom;
+	if (left < 0) left = 0;
+	if (right > width) right = width;
+	if (top < 0) top = 0;
+	if (bottom > height) bottom = height;
 	for (long y = top; y < bottom; y++)
 	{
 		uint32_t* out = bits + y * stride;
@@ -253,6 +233,38 @@ Draw(ANativeWindow* window, bool full, long dx0, long dy0, long dx1, long dy1)
 			out[x] = (dx < 0 || dx >= shownW) ? 0xffffffffu : gRamp[row[dx / scale]];
 		}
 	}
+}
+
+
+// the display drawn into the window, nearest-neighbour, whole pixels.  Only
+// the part that changed is drawn (dx0..dx1, dy0..dy1 in display pixels; all
+// of it when full): the full 1920x1440 picture took longer than the pen moves,
+// and an e-ink panel refreshes just what the window says it touched.
+static void
+Draw(ANativeWindow* window, bool full, long dx0, long dy0, long dx1, long dy1)
+{
+	long width = ANativeWindow_getWidth(window), height = ANativeWindow_getHeight(window);
+	long scale = width / gWidth < height / gHeight ? width / gWidth : height / gHeight;
+	if (scale < 1)
+		scale = 1;
+	long originX = (width - gWidth * scale) / 2, originY = (height - gHeight * scale) / 2;
+	if (originX < 0) originX = 0;
+	if (originY < 0) originY = 0;
+	gScaleNow.store(scale);
+	gOriginX.store(originX);
+	gOriginY.store(originY);
+
+	ARect dirty;
+	if (full)
+		dirty = { 0, 0, (int32_t) width, (int32_t) height };
+	else
+		dirty = { (int32_t) (originX + dx0 * scale), (int32_t) (originY + dy0 * scale),
+					 (int32_t) (originX + (dx1 + 1) * scale), (int32_t) (originY + (dy1 + 1) * scale) };
+	ANativeWindow_Buffer buffer;
+	if (ANativeWindow_lock(window, &buffer, &dirty) != 0)
+		return;
+	PaintRows((uint32_t*) buffer.bits, buffer.stride, width, height, scale, originX, originY,
+				dirty.left, dirty.top, dirty.right, dirty.bottom);
 	ANativeWindow_unlockAndPost(window);
 }
 
@@ -314,6 +326,171 @@ SendDirect(const DisplayDamage& d)
 }
 
 
+/*------------------------------------------------------------------------------
+	The Viwoods AiPaper Mini's fast ink (tools/android/java/.../FastInk.java,
+	docs/host-android.md): while the pen is down the display's changes go to
+	the system's writing overlay, in a Bitmap, not through the window, whose
+	refresh is slow; the window gets them when the pen has been up a moment.
+------------------------------------------------------------------------------*/
+
+static JavaVM*		gVM = nullptr;
+static jclass		gInkClass = nullptr;
+static jmethodID	gInkInit = nullptr, gInkBitmap = nullptr, gInkBegin = nullptr, gInkRender = nullptr, gInkEnd = nullptr,
+					gInkPause = nullptr, gInkResume = nullptr;
+static jobject		gActivityRef = nullptr;
+static std::atomic<bool>	gInkOn(false);
+
+// on the activity's own thread (android_main): finds the class in the application's loader
+void
+HostAndroidSetActivity(JavaVM* vm, JNIEnv* env, jobject activity)
+{
+	gVM = vm;
+	gActivityRef = env->NewGlobalRef(activity);
+	jclass activityClass = env->GetObjectClass(activity);
+	jobject loader = env->CallObjectMethod(activity, env->GetMethodID(activityClass, "getClassLoader", "()Ljava/lang/ClassLoader;"));
+	jclass loaderClass = env->GetObjectClass(loader);
+	jstring name = env->NewStringUTF("com.matthiasm.newtonre.FastInk");
+	jclass ink = (jclass) env->CallObjectMethod(loader, env->GetMethodID(loaderClass, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;"), name);
+	if (env->ExceptionCheck() || ink == nullptr)
+	{
+		env->ExceptionClear();
+		LOG("fast ink: no FastInk class");
+		return;
+	}
+	gInkClass = (jclass) env->NewGlobalRef(ink);
+	gInkInit = env->GetStaticMethodID(gInkClass, "init", "(Landroid/app/Activity;)Z");
+	gInkBitmap = env->GetStaticMethodID(gInkClass, "bitmap", "(II)Landroid/graphics/Bitmap;");
+	gInkBegin = env->GetStaticMethodID(gInkClass, "begin", "()V");
+	gInkRender = env->GetStaticMethodID(gInkClass, "render", "(IIII)V");
+	gInkEnd = env->GetStaticMethodID(gInkClass, "end", "()V");
+	gInkPause = env->GetStaticMethodID(gInkClass, "pause", "()V");
+	gInkResume = env->GetStaticMethodID(gInkClass, "resume", "()V");
+	if (env->ExceptionCheck())
+	{
+		env->ExceptionClear();
+		gInkClass = nullptr;
+	}
+}
+
+struct JavaThread			// the current thread in the VM, for as long as this lives
+{
+	JNIEnv*		env = nullptr;
+	bool		attached = false;
+	JavaThread()
+	{
+		if (gVM != nullptr && gVM->GetEnv((void**) &env, JNI_VERSION_1_6) != JNI_OK)
+			attached = gVM->AttachCurrentThread(&env, nullptr) == JNI_OK;
+	}
+	~JavaThread() { if (attached) gVM->DetachCurrentThread(); }
+};
+
+// the activity left the foreground or came back: the writing queue is the system's, not ours, meanwhile
+void
+HostAndroidPaused(bool paused)
+{
+	if (gInkClass == nullptr || !gInkOn.load())
+		return;
+	JavaThread t;
+	if (t.env == nullptr)
+		return;
+	t.env->CallStaticVoidMethod(gInkClass, paused ? gInkPause : gInkResume);
+	t.env->ExceptionClear();
+}
+
+class FastInkStroke
+{
+public:
+	bool	Ready(void) { return gInkOn.load(); }
+	// render thread only
+	void	Open(ANativeWindow* window);
+	void	Begin(void);
+	void	Put(ANativeWindow* window, long x0, long y0, long x1, long y1);
+	void	End(void);
+private:
+	bool		fTried = false;
+	jobject		fBitmap = nullptr;
+};
+
+void
+FastInkStroke::Open(ANativeWindow* window)
+{
+	if (fTried || gInkClass == nullptr)
+		return;
+	fTried = true;
+	const char* off = getenv("NEWTON_FAST_INK");
+	if (off != nullptr && off[0] == '0')
+		return;
+	JavaThread t;
+	if (t.env == nullptr)
+		return;
+	bool ok = t.env->CallStaticBooleanMethod(gInkClass, gInkInit, gActivityRef);
+	t.env->ExceptionClear();
+	if (!ok)
+		return;
+	jobject bitmap = t.env->CallStaticObjectMethod(gInkClass, gInkBitmap, (jint) ANativeWindow_getWidth(window), (jint) ANativeWindow_getHeight(window));
+	t.env->ExceptionClear();
+	if (bitmap == nullptr)
+		return;
+	fBitmap = t.env->NewGlobalRef(bitmap);
+	gInkOn.store(true);
+	LOG("fast ink: on");
+}
+
+void
+FastInkStroke::Begin(void)
+{
+	JavaThread t;
+	if (t.env != nullptr)
+	{
+		t.env->CallStaticVoidMethod(gInkClass, gInkBegin);
+		t.env->ExceptionClear();
+	}
+}
+
+void
+FastInkStroke::End(void)
+{
+	JavaThread t;
+	if (t.env != nullptr)
+	{
+		t.env->CallStaticVoidMethod(gInkClass, gInkEnd);
+		t.env->ExceptionClear();
+	}
+}
+
+// the display's rectangle drawn into the overlay's bitmap and sent
+void
+FastInkStroke::Put(ANativeWindow* window, long x0, long y0, long x1, long y1)
+{
+	JavaThread t;
+	if (t.env == nullptr || fBitmap == nullptr)
+		return;
+	AndroidBitmapInfo info;
+	void* bits = nullptr;
+	if (AndroidBitmap_getInfo(t.env, fBitmap, &info) != 0 || AndroidBitmap_lockPixels(t.env, fBitmap, &bits) != 0)
+		return;
+	long width = ANativeWindow_getWidth(window), height = ANativeWindow_getHeight(window);
+	if ((long) info.width == width && (long) info.height == height)
+	{
+		long scale = gScaleNow.load(), ox = gOriginX.load(), oy = gOriginY.load();
+		// (a little around, as the strokes' ends are round)
+		long pad = 2;
+		long left = ox + x0 * scale - pad, top = oy + y0 * scale - pad;
+		long right = ox + (x1 + 1) * scale + pad, bottom = oy + (y1 + 1) * scale + pad;
+		if (left < 0) left = 0;
+		if (top < 0) top = 0;
+		if (right > width) right = width;
+		if (bottom > height) bottom = height;
+		PaintRows((uint32_t*) bits, info.stride / 4, width, height, scale, ox, oy, left, top, right, bottom);
+		AndroidBitmap_unlockPixels(t.env, fBitmap);
+		t.env->CallStaticVoidMethod(gInkClass, gInkRender, (jint) left, (jint) top, (jint) right, (jint) bottom);
+		t.env->ExceptionClear();
+		return;
+	}
+	AndroidBitmap_unlockPixels(t.env, fBitmap);
+}
+
+
 static void
 RenderThread(void)
 {
@@ -322,6 +499,10 @@ RenderThread(void)
 	int windowVersion = -1, paletteVersion = -1;
 	bool direct = false;
 	DisplayDamage pending;
+	FastInkStroke ink;
+	bool inkStroke = false;
+	DisplayDamage held;
+	auto penUpAt = std::chrono::steady_clock::now();
 	BuildRamp();
 	while (!gStopping.load())
 	{
@@ -368,6 +549,28 @@ RenderThread(void)
 			haveShadow = true;
 			full = true;
 		}
+		bool penNow = gPenDown.load();
+		if (!full && !direct && ink.Ready() && (penNow || inkStroke))
+		{
+			// the fast ink: the pen's changes into the overlay, the window's picture caught up after
+			if (penNow && !inkStroke)
+			{
+				ink.Begin();
+				inkStroke = true;
+			}
+			if (x1 >= 0)
+			{
+				ink.Put(gWindow, x0, y0, x1, y1);
+				held.add(x0, y0, x1, y1);
+			}
+			if (!penNow)
+			{
+				ink.End();
+				inkStroke = false;
+				penUpAt = std::chrono::steady_clock::now();
+			}
+			continue;
+		}
 		if (!full && direct && (x1 >= 0 || pending.any))
 		{
 			// (the damage kept from a busy panel, and now's)
@@ -376,11 +579,25 @@ RenderThread(void)
 			if (SendDirect(pending) == 0)
 				pending.any = false;
 		}
-		else if (full || x1 >= 0)
+		else if (full || x1 >= 0 || held.any)
 		{
+			// (the pen has been up a while, or something else changed: the window shows the stroke too)
+			if (!full && x1 < 0 && std::chrono::steady_clock::now() - penUpAt < std::chrono::milliseconds(600))
+				continue;
+			if (held.any)
+			{
+				if (x1 >= 0)
+					held.add(x0, y0, x1, y1);
+				x0 = held.x0, y0 = held.y0, x1 = held.x1, y1 = held.y1;
+				held.any = false;
+			}
 			Draw(gWindow, full, x0, y0, x1, y1);
 			if (full)
+			{
 				direct = DirectUsable(gWindow);
+				if (!direct)
+					ink.Open(gWindow);
+			}
 		}
 	}
 }

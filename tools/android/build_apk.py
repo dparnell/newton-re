@@ -3,8 +3,10 @@
 
 Purpose: the Android build's libnewton.so (cmake target newton_android) and the
 object file the Newton boots from (target romsrc) into one signed APK, by the
-Android SDK's own command line tools - no Gradle, no Java sources: the
-application is a NativeActivity (tools/android/AndroidManifest.xml).
+Android SDK's own command line tools - no Gradle: the application is a
+NativeActivity (tools/android/AndroidManifest.xml) plus one small Java class,
+tools/android/java/.../FastInk.java (the Viwoods fast ink), compiled by javac
+and turned into classes.dex by the SDK's d8.
 
 Inputs:  --lib <libnewton.so>          build/android/host/libnewton.so
          --objects <romsrc-objects.bin> build/android/romsrc-objects.bin
@@ -15,7 +17,7 @@ Inputs:  --lib <libnewton.so>          build/android/host/libnewton.so
 Output:  the signed, aligned APK; `adb install -r <file.apk>` puts it on a tablet and
          `adb logcat -s newton` shows what the machine prints.
 Needs:   the SDK's build-tools (aapt2, zipalign, apksigner) and platforms/android-28 or later, a JDK
-         (keytool, java).
+         (javac, keytool, java).
 
     python3 tools/android/build_apk.py --lib build/android/host/libnewton.so \
         --objects build/android/romsrc-objects.bin
@@ -75,10 +77,17 @@ def main():
         base = os.path.join(work, "base.apk")
         run(os.path.join(tools, "aapt2"), "link", "--manifest", os.path.join(HERE, "AndroidManifest.xml"),
             "-I", jar, "-o", base)
+        classes = os.path.join(work, "classes")
+        os.makedirs(classes)
+        sources = glob.glob(os.path.join(HERE, "java", "**", "*.java"), recursive=True)
+        run("javac", "--release", "8", "-Xlint:-options", "-cp", jar, "-d", classes, *sources)
+        class_files = glob.glob(os.path.join(classes, "**", "*.class"), recursive=True)
+        run(os.path.join(tools, "d8"), "--lib", jar, "--output", work, *class_files)
         unaligned = os.path.join(work, "unaligned.apk")
         with zipfile.ZipFile(base) as src, zipfile.ZipFile(unaligned, "w", zipfile.ZIP_DEFLATED) as dst:
             for item in src.infolist():
                 dst.writestr(item, src.read(item.filename))
+            dst.write(os.path.join(work, "classes.dex"), "classes.dex")
             dst.write(stripped, "lib/%s/libnewton.so" % ABI)
             dst.write(args.objects, "assets/romsrc-objects.bin")
         aligned = os.path.join(work, "aligned.apk")
