@@ -65,7 +65,7 @@ code), the Android SDK's build-tools and a JDK:
   (jdkruzr/ViwoodsAppDev documents it); it is set to a pen of narrow width
   (`setAutoDrawToolType(2)`, `setAutoDrawPenWidthRange(2,5)`, a guess in the
   API's units; `NEWTON_PEN_WIDTH=min,max`) so that it matches the Newton's ink -
-  with its default thick stroke writing felt slow.  (Not yet tested on the device: the owner's "almost as fast as the Manta" was the 4 ms look-interval build without it.)  The app cannot reach the
+  with its default thick stroke writing felt slow.  (Tested by the owner: "a bit better" than the 4 ms look-interval build without it.)  The app cannot reach the
   panel driver itself (a MediaTek board; /dev is closed to apps - `build_apk.py
   --diag` makes an APK that shows what an app can open).  Tried and dropped: the
   writing overlay Bitmap (`renderWriting`) - slow, ghosts; a Java class
