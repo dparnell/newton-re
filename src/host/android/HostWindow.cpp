@@ -333,35 +333,17 @@ SendDirect(const DisplayDamage& d)
 ------------------------------------------------------------------------------*/
 
 static JavaVM*		gVM = nullptr;
-static jclass		gInkClass = nullptr;
-static jmethodID	gInkInit = nullptr, gInkMode = nullptr;
 static jobject		gActivityRef = nullptr;
+static jobject		gEnote = nullptr;			// the ENoteSetting
+static jobject		gSetMode = nullptr;			// its setPictureMode(int), a java.lang.reflect.Method
 static bool			gInkOn = false;
 
-// on the activity's own thread (android_main): finds the class in the application's loader
+// on the activity's own thread (android_main)
 void
 HostAndroidSetActivity(JavaVM* vm, JNIEnv* env, jobject activity)
 {
 	gVM = vm;
 	gActivityRef = env->NewGlobalRef(activity);
-	jclass activityClass = env->GetObjectClass(activity);
-	jobject loader = env->CallObjectMethod(activity, env->GetMethodID(activityClass, "getClassLoader", "()Ljava/lang/ClassLoader;"));
-	jclass loaderClass = env->GetObjectClass(loader);
-	jstring name = env->NewStringUTF("com.matthiasm.newtonre.FastInk");
-	jclass ink = (jclass) env->CallObjectMethod(loader, env->GetMethodID(loaderClass, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;"), name);
-	if (env->ExceptionCheck() || ink == nullptr)
-	{
-		env->ExceptionClear();		// (an APK without --fast-ink)
-		return;
-	}
-	gInkClass = (jclass) env->NewGlobalRef(ink);
-	gInkInit = env->GetStaticMethodID(gInkClass, "init", "(Landroid/app/Activity;)Z");
-	gInkMode = env->GetStaticMethodID(gInkClass, "mode", "(I)V");
-	if (env->ExceptionCheck())
-	{
-		env->ExceptionClear();
-		gInkClass = nullptr;
-	}
 }
 
 struct JavaThread			// the current thread in the VM, for as long as this lives
@@ -384,22 +366,97 @@ HostAndroidPaused(bool paused)
 
 enum { kInkFast = 4, kInkReading = 3, kInkClear = 17 };
 
+// cls.getMethod(name, types) ==> a java.lang.reflect.Method or nil.  The vendor's API is called
+// as java reflection does (the types of its arguments are all that is known of it), but from
+// here: an APK with Java code of its own makes Play Protect warn, one with only a library does not
+static jobject
+FindMethod(JNIEnv* env, jclass cls, const char* name, jobjectArray types)
+{
+	jmethodID getMethod = env->GetMethodID(env->FindClass("java/lang/Class"), "getMethod", "(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;");
+	jstring jname = env->NewStringUTF(name);
+	jobject method = env->CallObjectMethod(cls, getMethod, jname, types);
+	if (env->ExceptionCheck())
+	{
+		env->ExceptionClear();
+		return nullptr;
+	}
+	return method;
+}
+
+static jobject
+Invoke(JNIEnv* env, jobject method, jobject target, jobjectArray args)
+{
+	jmethodID invoke = env->GetMethodID(env->FindClass("java/lang/reflect/Method"), "invoke", "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;");
+	jobject result = env->CallObjectMethod(method, invoke, target, args);
+	if (env->ExceptionCheck())
+	{
+		env->ExceptionClear();
+		return nullptr;
+	}
+	return result;
+}
+
 static void
 InkOpen(void)
 {
 	static bool tried = false;
-	if (tried || gInkClass == nullptr)
+	if (tried || gVM == nullptr)
 		return;
 	tried = true;
 	const char* off = getenv("NEWTON_FAST_INK");
 	if (off != nullptr && off[0] == '0')
 		return;
 	JavaThread t;
-	if (t.env == nullptr)
+	JNIEnv* env = t.env;
+	if (env == nullptr)
 		return;
-	gInkOn = t.env->CallStaticBooleanMethod(gInkClass, gInkInit, gActivityRef);
-	t.env->ExceptionClear();
-	LOG("fast ink: %s", gInkOn ? "on" : "no ENoteSetting");
+	jclass classClass = env->FindClass("java/lang/Class");
+	jclass enote = env->FindClass("android/os/enote/ENoteSetting");
+	if (env->ExceptionCheck() || enote == nullptr)
+	{
+		// (a native thread sees the system's classes only: the activity's loader may see more)
+		env->ExceptionClear();
+		jclass activityClass = env->GetObjectClass(gActivityRef);
+		jobject loader = env->CallObjectMethod(gActivityRef, env->GetMethodID(activityClass, "getClassLoader", "()Ljava/lang/ClassLoader;"));
+		jclass loaderClass = env->GetObjectClass(loader);
+		enote = (jclass) env->CallObjectMethod(loader, env->GetMethodID(loaderClass, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;"),
+												env->NewStringUTF("android.os.enote.ENoteSetting"));
+		if (env->ExceptionCheck() || enote == nullptr)
+		{
+			env->ExceptionClear();
+			return;				// (not the Viwoods)
+		}
+	}
+	jobjectArray none = env->NewObjectArray(0, env->FindClass("java/lang/Object"), nullptr);
+	jobjectArray noTypes = env->NewObjectArray(0, classClass, nullptr);
+	jobject getInstance = FindMethod(env, enote, "getInstance", noTypes);
+	jobject instance = getInstance ? Invoke(env, getInstance, nullptr, none) : nullptr;
+	if (instance == nullptr)
+		return;
+	gEnote = env->NewGlobalRef(instance);
+
+	// setApplicationContext(Context)
+	jclass activityClass = env->GetObjectClass(gActivityRef);
+	jobject context = env->CallObjectMethod(gActivityRef, env->GetMethodID(activityClass, "getApplicationContext", "()Landroid/content/Context;"));
+	jobjectArray contextType = env->NewObjectArray(1, classClass, env->FindClass("android/content/Context"));
+	jobject setContext = FindMethod(env, enote, "setApplicationContext", contextType);
+	if (setContext == nullptr)
+		return;
+	jobjectArray contextArg = env->NewObjectArray(1, env->FindClass("java/lang/Object"), context);
+	Invoke(env, setContext, gEnote, contextArg);
+	// initWriting(), then the mode setter
+	jobject init = FindMethod(env, enote, "initWriting", noTypes);
+	if (init != nullptr)
+		Invoke(env, init, gEnote, none);
+	jclass integer = env->FindClass("java/lang/Integer");
+	jobject intClass = env->GetStaticObjectField(integer, env->GetStaticFieldID(integer, "TYPE", "Ljava/lang/Class;"));
+	jobjectArray intType = env->NewObjectArray(1, classClass, (jobject) intClass);
+	jobject setMode = FindMethod(env, enote, "setPictureMode", intType);
+	if (setMode == nullptr)
+		return;
+	gSetMode = env->NewGlobalRef(setMode);
+	gInkOn = true;
+	LOG("fast ink: on");
 }
 
 static void
@@ -408,11 +465,13 @@ InkMode(int mode)
 	if (!gInkOn)
 		return;
 	JavaThread t;
-	if (t.env != nullptr)
-	{
-		t.env->CallStaticVoidMethod(gInkClass, gInkMode, (jint) mode);
-		t.env->ExceptionClear();
-	}
+	JNIEnv* env = t.env;
+	if (env == nullptr)
+		return;
+	jclass integer = env->FindClass("java/lang/Integer");
+	jobject value = env->CallStaticObjectMethod(integer, env->GetStaticMethodID(integer, "valueOf", "(I)Ljava/lang/Integer;"), (jint) mode);
+	jobjectArray args = env->NewObjectArray(1, env->FindClass("java/lang/Object"), value);
+	Invoke(env, gSetMode, gEnote, args);
 }
 
 

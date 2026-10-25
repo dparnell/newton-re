@@ -55,14 +55,15 @@ code), the Android SDK's build-tools and a JDK:
   straight to the e-ink driver `/dev/ebc` (the interface of MPdairy's
   fasteink library); only when the driver reports the Manta's exact layout.
   Confirmed by the owner: writing is fast.  `NEWTON_EINK_DIRECT=0` turns it off.
-- **Viwoods AiPaper Mini**: `tools/android/java/.../FastInk.java` calls the
-  hidden `android.os.enote.ENoteSetting` by reflection; while the pen is down
-  the render thread draws the display's changes into the overlay's Bitmap
-  (picture mode FAST), and the window catches up 600 ms after the pen lifts
-  (GL16).  **Tried on the device (2026-10-25): unusable, bad ghosting, worse
-  than the plain window path.**  So the default APK leaves it out; it is
-  built only by `build_apk.py --fast-ink` (needs `hasCode`, and Play Protect
-  blocks the dex until "install anyway").
+- **Viwoods AiPaper Mini**: the hidden `android.os.enote.ENoteSetting` is
+  called through java reflection *from native code* (`HostWindow.cpp`,
+  InkOpen/InkMode), so the APK has no Java and Play Protect does not warn (a
+  `classes.dex` made it block the install).  The window is drawn as usual; the
+  panel's picture mode is FAST (4) while the pen is down, GL16 (3) to read, and
+  one GC (17) full refresh 1.2 s after the pen rests, to clear the ghosts.
+  Confirmed by the owner: much faster (as a dex build).  The writing overlay
+  of the same API (a Bitmap drawn into and `renderWriting`) was tried first:
+  unusable, bad ghosting.  `NEWTON_FAST_INK=0` turns it off.
 
 ## Not yet verified / left to do
 

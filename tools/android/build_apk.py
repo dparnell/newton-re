@@ -4,9 +4,8 @@
 Purpose: the Android build's libnewton.so (cmake target newton_android) and the
 object file the Newton boots from (target romsrc) into one signed APK, by the
 Android SDK's own command line tools - no Gradle: the application is a
-NativeActivity (tools/android/AndroidManifest.xml); with --fast-ink also one
-small Java class, tools/android/java/.../FastInk.java (the Viwoods fast ink),
-compiled by javac and turned into classes.dex by the SDK's d8.
+NativeActivity (tools/android/AndroidManifest.xml).  No Java code on purpose:
+an APK with a classes.dex made Play Protect warn on the Viwoods AiPaper Mini.
 
 Inputs:  --lib <libnewton.so>          build/android/host/libnewton.so
          --objects <romsrc-objects.bin> build/android/romsrc-objects.bin
@@ -17,7 +16,7 @@ Inputs:  --lib <libnewton.so>          build/android/host/libnewton.so
 Output:  the signed, aligned APK; `adb install -r <file.apk>` puts it on a tablet and
          `adb logcat -s newton` shows what the machine prints.
 Needs:   the SDK's build-tools (aapt2, zipalign, apksigner) and platforms/android-28 or later, a JDK
-         (javac, keytool, java).
+         (keytool, java).
 
     python3 tools/android/build_apk.py --lib build/android/host/libnewton.so \
         --objects build/android/romsrc-objects.bin
@@ -55,8 +54,6 @@ def main():
     ap.add_argument("--out", default="build/android/newton.apk")
     ap.add_argument("--sdk", default=os.environ.get("ANDROID_HOME") or os.path.expanduser("~/Library/Android/sdk"))
     ap.add_argument("--ndk", default=os.environ.get("ANDROID_NDK_HOME") or "/opt/homebrew/share/android-ndk")
-    ap.add_argument("--fast-ink", action="store_true",
-                    help="include the Viwoods fast-ink class (FastInk.java; experimental, ghosts badly on the AiPaper Mini)")
     ap.add_argument("--target-sdk", help="targetSdkVersion in place of the manifest's (30: the fast ink wants it)")
     ap.add_argument("--keystore", default=os.path.expanduser("~/.android/debug.keystore"))
     args = ap.parse_args()
@@ -79,29 +76,18 @@ def main():
         run(strip[0], "--strip-unneeded", "-o", stripped, args.lib)
         base = os.path.join(work, "base.apk")
         manifest = os.path.join(HERE, "AndroidManifest.xml")
-        if args.target_sdk or args.fast_ink:
+        if args.target_sdk:
             text = open(manifest).read()
-            if args.fast_ink:
-                text = text.replace('android:hasCode="false"', 'android:hasCode="true"')
             text = text.replace('android:targetSdkVersion="30"', 'android:targetSdkVersion="%s"' % (args.target_sdk or 30))
             if args.target_sdk:
                 text = text.replace('<activity\n', '<activity\n            android:exported="true"\n')
             manifest = os.path.join(work, "AndroidManifest.xml")
             open(manifest, "w").write(text)
         run(os.path.join(tools, "aapt2"), "link", "--manifest", manifest, "-I", jar, "-o", base)
-        if args.fast_ink:
-            classes = os.path.join(work, "classes")
-            os.makedirs(classes)
-            sources = glob.glob(os.path.join(HERE, "java", "**", "*.java"), recursive=True)
-            run("javac", "--release", "8", "-Xlint:-options", "-cp", jar, "-d", classes, *sources)
-            class_files = glob.glob(os.path.join(classes, "**", "*.class"), recursive=True)
-            run(os.path.join(tools, "d8"), "--lib", jar, "--output", work, *class_files)
         unaligned = os.path.join(work, "unaligned.apk")
         with zipfile.ZipFile(base) as src, zipfile.ZipFile(unaligned, "w", zipfile.ZIP_DEFLATED) as dst:
             for item in src.infolist():
                 dst.writestr(item, src.read(item.filename))
-            if args.fast_ink:
-                dst.write(os.path.join(work, "classes.dex"), "classes.dex")
             dst.write(stripped, "lib/%s/libnewton.so" % ABI)
             dst.write(args.objects, "assets/romsrc-objects.bin")
         aligned = os.path.join(work, "aligned.apk")
