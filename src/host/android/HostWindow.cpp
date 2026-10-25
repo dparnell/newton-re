@@ -454,6 +454,28 @@ InkOpen(void)
 		Invoke(env, init, gEnote, none);
 	jclass integer = env->FindClass("java/lang/Integer");
 	jobject intClass = env->GetStaticObjectField(integer, env->GetStaticFieldID(integer, "TYPE", "Ljava/lang/Class;"));
+	// the system's own pen stroke (shown while the pen is down): a pen, as thin as the Newton's ink,
+	// so that the real ink replaces it without a jump.  The widths are in the API's own units (a guess).
+	{
+		jclass object = env->FindClass("java/lang/Object");
+		jmethodID valueOf = env->GetStaticMethodID(integer, "valueOf", "(I)Ljava/lang/Integer;");
+		const char* widthText = getenv("NEWTON_PEN_WIDTH");
+		int widthMin = 2, widthMax = 5;
+		if (widthText != nullptr)
+			sscanf(widthText, "%d,%d", &widthMin, &widthMax);
+		for (int pass = 0; pass < 2; pass++)
+		{
+			jobjectArray types = env->NewObjectArray(pass == 0 ? 1 : 2, classClass, (jobject) intClass);
+			jobject method = FindMethod(env, enote, pass == 0 ? "setAutoDrawToolType" : "setAutoDrawPenWidthRange", types);
+			if (method == nullptr)
+				continue;
+			jobjectArray args = env->NewObjectArray(pass == 0 ? 1 : 2, object, nullptr);
+			env->SetObjectArrayElement(args, 0, env->CallStaticObjectMethod(integer, valueOf, (jint) (pass == 0 ? 2 : widthMin)));
+			if (pass == 1)
+				env->SetObjectArrayElement(args, 1, env->CallStaticObjectMethod(integer, valueOf, (jint) widthMax));
+			Invoke(env, method, gEnote, args);
+		}
+	}
 	jobjectArray intType = env->NewObjectArray(1, classClass, (jobject) intClass);
 	jobject setMode = FindMethod(env, enote, "setPictureMode", intType);
 	if (setMode == nullptr)
