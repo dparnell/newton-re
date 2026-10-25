@@ -867,7 +867,8 @@
 			name: item.smsName, text: text, time: if item.timestamp then item.timestamp else Time(),
 			dir: 'incoming, state: 'unread};
 		local base := GetRoot().(appSymbol);
-		if base and base.viewCObject and base.currentThread and StrEqual(base.currentThread, entry.thread) then
+		local locked := :ScreenLocked();
+		if base and base.viewCObject and base.currentThread and StrEqual(base.currentThread, entry.thread) and not locked then
 			entry.state := 'read;
 		:Soup():AddToDefaultStoreXmit(entry, nil);
 		if base and base.viewCObject then begin
@@ -875,8 +876,9 @@
 			base:Redraw();
 		end;
 		// (the user told: an alert, or - Messages open - the list or the
-		// conversation shows it, and a beep says so)
-		if base and base.viewCObject then
+		// conversation shows it, and a beep says so; the screen locked, the
+		// lock screen tells it)
+		if base and base.viewCObject and not locked then
 			PlaySound(@102)
 		else
 			:Tell(entry);
@@ -894,6 +896,7 @@
 	alertSlip: nil,
 	alertCount: 0,
 	alertThread: nil,						// (the conversation they all came from, or nil)
+	alertTitle: nil, alertBody: nil,		// (what it says)
 
 	Tell: func(entry)
 	begin
@@ -905,18 +908,28 @@
 		local body := if alertCount = 1 then entry.text else "The latest, from " & from & ": " & entry.text;
 		if StrLen(body) > 140 then
 			body := SubStr(body, 0, 139) & "…\u";
+		alertTitle := title;
+		alertBody := body;
+		// (the screen locked: on the lock screen instead)
+		if not (:ScreenLocked() and :NotifyLocked()) then
+			:ShowAlert();
+		PlaySound(@102);
+	end,
+
+	// the slip opened with what the alert says (or the one open changed)
+	ShowAlert: func()
+	begin
 		if alertSlip and alertSlip.viewCObject then
-			alertSlip:Show(title, body)
+			alertSlip:Show(alertTitle, alertBody)
 		else begin
 			// (protoFloatNGo centres itself across the screen: its left is an
 			// offset from there)
 			local box := GetRoot():LocalBox();
 			local width := Min(box.right - box.left - 16, 260);
-			alertSlip := BuildContext({_proto: alertTemplate, title: title, body: body,
+			alertSlip := BuildContext({_proto: alertTemplate, title: alertTitle, body: alertBody,
 				viewBounds: RelBounds(0, box.top + 24, width, 104)});
 			alertSlip:Open();
 		end;
-		PlaySound(@102);
 	end,
 
 	// the slip gone (closed, or the application opened): the count begun again
@@ -925,6 +938,9 @@
 		alertSlip := nil;
 		alertCount := 0;
 		alertThread := nil;
+		alertTitle := alertBody := nil;
+		if GetGlobalFn('ScreenLockWithdraw) then
+			call GetGlobalFn('ScreenLockWithdraw) with (appSymbol, 'unread);
 	end,
 
 	CloseAlert: func()
@@ -947,6 +963,45 @@
 			base:OpenThread(thread)
 		else
 			base:ShowList();
+	end,
+
+	/*----------------------------------------------------------------------
+		The lock screen (host/HostQuickSheet.h, docs/host-lock-screen.md):
+		while the screen is locked, what the alert would say is left on
+		the lock screen instead - one notification, kept up to date as
+		the slip is (its key 'unread) - and the message is not taken as
+		read, even with its conversation open behind the lock screen.  At
+		the unlock the notification gives it back: tapped on the lock
+		screen (Opened), Messages opens at the conversation as the slip's
+		Show does; otherwise (Unlocked) the slip comes up with it - or,
+		Messages open already, the open conversation takes in what came.
+	----------------------------------------------------------------------*/
+
+	ScreenLocked: func()
+		GetGlobalFn('ScreenLockIsLocked) and call GetGlobalFn('ScreenLockIsLocked) with (),
+
+	// what the alert says, on the lock screen (==> whether it is there)
+	NotifyLocked: func()
+		GetGlobalFn('ScreenLockNotify) and call GetGlobalFn('ScreenLockNotify) with (appSymbol,
+			{key: 'unread, title: alertTitle, text: alertBody,
+			 Opened: func() GetGlobalVar('|HostMessages:host|):ShowAlerted(),
+			 Unlocked: func() GetGlobalVar('|HostMessages:host|):LockLifted()}),
+
+	// the lock screen gone, its notification not tapped
+	LockLifted: func()
+	begin
+		local base := GetRoot().(appSymbol);
+		if base and base.viewCObject then begin
+			local thread := alertThread;
+			:CloseAlert();
+			if thread and base.currentThread and StrEqual(base.currentThread, thread) then
+				base:OpenThread(thread)
+			else begin
+				base:Reload();
+				base:Redraw();
+			end;
+		end else if alertCount > 0 then
+			:ShowAlert();
 	end,
 
 	alertTemplate: {

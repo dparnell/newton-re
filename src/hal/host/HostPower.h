@@ -24,6 +24,14 @@
 				straight back with nothing to report (as the host always
 				did before it slept).  Everything here may be called from
 				any thread: the window's calls are plain memory writes.
+
+				The user's activity: every pen sample and key the host's
+				window (or a script) gives the machine is counted
+				(HostNoteUserActivity, from the tablet's and the keyboard's
+				entry points), so that something can tell how long the user
+				has left it alone - the lock screen's auto-lock
+				(host/HostQuickSheet.h) watches the count change.
+				DEVIATION (host addition): a MessagePad has no such count.
 */
 
 #ifndef __HAL_HOST_POWER_H
@@ -43,5 +51,7 @@ Boolean	HostPowerAsleep(void);					// in PlatformPowerOffSystem now
 ULong	HostPowerSleeps(void);					// how many times the machine has gone to sleep
 void	HostPowerWindowOpened(void);			// a window is up: the pen and the keys can wake it
 void	HostPowerWakeAfter(ULong milliseconds);	// a test's wake: the next sleep ends with the switch after so long asleep
+void	HostNoteUserActivity(void);				// a pen sample or a key from the user (any thread)
+ULong	HostUserActivity(void);					// how many there have been (it only grows, and wraps)
 
 #endif	/* __HAL_HOST_POWER_H */

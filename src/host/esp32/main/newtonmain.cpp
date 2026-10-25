@@ -302,9 +302,9 @@ DevicePreMain(void)
 	HostCellProviderStart();			// (the 4G module, for the Phone transport: comms/host/HostCellProvider.h)
 	HostMeshAppStart();					// (the LoRa radio's mesh node, for the Mesh application: comms/host/HostMeshApp.h)
 	HostInstallIPPPrinters();			// (print/host/HostIPP.h: the network's IPP printers, in the Print slip and the Network Printers panel; no PNG host printer on the board)
-	HostInstallSettings();				// (the Host preferences panel: the panel's quick updates and clean-ups)
 	HostQuickSheetSetLockHook(HostDeviceSetLocked);
-	HostInstallQuickSheet();			// (host/HostQuickSheet.h: the sheet pulled down from the top edge - tdeck_input.cpp - and the lock screen)
+	HostInstallQuickSheet();			// (host/HostQuickSheet.h: the sheet pulled down from the top edge - tdeck_input.cpp - and the lock screen; before the Host panel, which lists its auto-lock)
+	HostInstallSettings();				// (the Host preferences panel: the panel's quick updates and clean-ups)
 	HostInstallDeveloper();				// (the Developer preferences panel: the profile to the console)
 }
 

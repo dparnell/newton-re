@@ -33,6 +33,7 @@ static std::atomic<bool>	gHostQuit(false);
 void
 HostKeyboardPush(long keyCode, Boolean down)
 {
+	HostNoteUserActivity();
 	long tail = gHostKeyTail.load();
 	long next = (tail + 1) % kHostKeyQueueSize;
 	if (next == gHostKeyHead.load())

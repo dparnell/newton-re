@@ -13,20 +13,184 @@
 // while it is open, it closes; so does its close box.
 //
 // The lock screen: a floating view over the whole screen - the time, the
-// date, and a slider whose knob is dragged from its left end to its right to
-// unlock.  A press that does not start on the knob does nothing, and a knob
-// let go short of the end goes back, so a tap anywhere (a pocket) cannot
-// unlock it.  The time is redrawn when the minute changes.  The host is told
-// (HostScreenLocked) so that it can leave the keyboard out meanwhile.
+// date, the notifications applications have left on it, and a slider whose
+// knob is dragged from its left end to its right to unlock.  A press that
+// does not start on the knob does nothing, and a knob let go short of the
+// end goes back, so a tap anywhere (a pocket) cannot unlock it.  The time is
+// redrawn when the minute changes.  The host is told (HostScreenLocked) so
+// that it can leave the keyboard out meanwhile.
+//
+// The notifications (the interface any application uses: the global
+// functions ScreenLockIsLocked, ScreenLockNow, ScreenLockNotify,
+// ScreenLockWithdraw, ScreenLockNotifications, RegScreenLockChange and
+// UnRegScreenLockChange that Start defines - docs/host-lock-screen.md): an
+// application whose news the user would otherwise see in a slip of its own
+// leaves a notification on the lock screen instead while it is locked, one
+// for each of its keys - the same key again replaces it, which a count of
+// unread messages wants.  They are listed newest first between the date and
+// the slider, as many as fit, "and N more" below them.  One tapped is
+// chosen (its frame thick, "Unlock to open"); a tap on it again leaves it.
+// At the unlock they are all taken off and given back to the applications:
+// the one chosen its Opened method, the rest their Unlocked - an
+// application shows then what it would have shown had the screen not been
+// locked.  Nothing is kept while the screen is not locked (Notify ==> nil:
+// the application shows its own slip).
+//
+// The auto-lock: once the user has left the pen and the keys alone for the
+// Host panel's "Auto-lock" (HostAutoLockSeconds; 0 never), the screen locks
+// itself.  Watch looks at the count of the user's pen samples and keys
+// (HostUserActivity) every few seconds - every 30 while the auto-lock is
+// off; a change of the setting starts it again at once, HostSetAutoLock
+// sending Rewatch - and the idle time is counted again from any change of
+// it, from a change of the setting, and from the unlock.
 
 {
 	kFont: 10240,							// the system font, 10 point
 	kBold: 1058816,							// ... bold (face 1: 1 << 20)
 	kBig: 1067008,							// ... 18 point, bold
+	kSmall: 9216,							// ... 9 point
 	kRowHeight: 22,
+	kMostNotes: 20,							// (notifications kept: the oldest dropped past it)
 
 	sheetView: nil,
 	lockView: nil,
+	notes: [],								// the notifications, newest first: {appSymbol, key, note, time, chosen}
+	watchers: nil,							// RegScreenLockChange's: {callbackID: fn}
+	autoLocked: nil,						// (the lock screen up by the auto-lock)
+
+	// the auto-lock's watch: the activity seen last, when (Ticks), the
+	// setting then
+	lastActivity: nil,
+	lastActive: 0,
+	lastSeconds: 0,
+	watchGen: 0,							// (a watch begun before the last Rewatch stops)
+
+	Start: func()
+	begin
+		notes := [];
+		watchers := {};
+		// the interface, as global functions (the ROM's own LockScreen and
+		// ReleaseScreenLock are something else: QuickDraw's)
+		DefGlobalFn('ScreenLockIsLocked, func() GetGlobalVar('|QuickSheet:host|):IsLocked());
+		DefGlobalFn('ScreenLockNow, func() GetGlobalVar('|QuickSheet:host|):Lock() and true);
+		DefGlobalFn('ScreenLockNotify, func(appSymbol, note) GetGlobalVar('|QuickSheet:host|):Notify(appSymbol, note));
+		DefGlobalFn('ScreenLockWithdraw, func(appSymbol, key) GetGlobalVar('|QuickSheet:host|):Withdraw(appSymbol, key));
+		DefGlobalFn('ScreenLockNotifications, func() GetGlobalVar('|QuickSheet:host|):Notifications());
+		DefGlobalFn('RegScreenLockChange, func(callbackID, fn) GetGlobalVar('|QuickSheet:host|):RegChange(callbackID, fn));
+		DefGlobalFn('UnRegScreenLockChange, func(callbackID) GetGlobalVar('|QuickSheet:host|):UnRegChange(callbackID));
+		:Watch(watchGen);
+	end,
+
+	// the auto-lock set anew (HostSetAutoLock): watched from now
+	Rewatch: func()
+	begin
+		watchGen := watchGen + 1;
+		:Watch(watchGen);
+	end,
+
+	IsLocked: func() if lockView then true,
+
+	// two keys the same: strings by their characters, anything else by =
+	SameKey: func(a, b) if IsString(a) and IsString(b) then StrEqual(a, b) else a = b,
+
+	// a notification left on the lock screen (or the one with the same
+	// application and key replaced, newest again) ==> true; nil when the
+	// screen is not locked, or the notification will not do
+	Notify: func(appSymbol, note)
+	begin
+		if not lockView or not IsSymbol(appSymbol) or not IsFrame(note) then return nil;
+		local key := note.key;
+		local chosen := nil;
+		local kept := [];
+		foreach r in notes do
+			if r.appSymbol = appSymbol and :SameKey(r.key, key) then chosen := r.chosen
+			else AddArraySlot(kept, r);
+		local record := {appSymbol: appSymbol, key: key, note: note,
+			time: if IsInteger(note.time) then note.time else Time(), chosen: chosen};
+		notes := [record];
+		foreach r in kept do
+			if Length(notes) < kMostNotes then AddArraySlot(notes, r);
+		:NotesChanged();
+		true;
+	end,
+
+	// an application's notification taken off (key nil: all of the
+	// application's) ==> how many were
+	Withdraw: func(appSymbol, key)
+	begin
+		local kept := [];
+		local taken := 0;
+		foreach r in notes do
+			if r.appSymbol = appSymbol and (key = nil or :SameKey(r.key, key)) then taken := taken + 1
+			else AddArraySlot(kept, r);
+		notes := kept;
+		if taken > 0 then :NotesChanged();
+		taken;
+	end,
+
+	// the notifications on the lock screen, newest first: {appSymbol, key,
+	// title, text, time, chosen}
+	Notifications: func()
+		foreach r in notes collect {appSymbol: r.appSymbol, key: r.key, title: r.note.title, text: r.note.text,
+			time: r.time, chosen: r.chosen},
+
+	RegChange: func(callbackID, fn)
+	begin
+		if not watchers then watchers := {};
+		watchers.(callbackID) := fn;
+		true;
+	end,
+
+	UnRegChange: func(callbackID)
+	begin
+		if watchers and HasSlot(watchers, callbackID) then RemoveSlot(watchers, callbackID);
+		true;
+	end,
+
+	// those registered told (each on its own: one that throws does not stop
+	// the rest)
+	TellWatchers: func(locked)
+	begin
+		if not watchers then return;
+		foreach id, fn in watchers do
+			try
+				call fn with (locked)
+			onexception |evt.ex| do
+				Print("[lock] " & SPrintObject(id) & " threw when told the screen " & (if locked then "locked" else "unlocked"));
+	end,
+
+	NotesChanged: func()
+	begin
+		if lockView then
+			foreach c in lockView:ChildViewFrames() do
+				if c.lockRole = 'notes then c:Dirty();
+	end,
+
+	// the auto-lock's watch (again in a few seconds)
+	Watch: func(gen)
+	begin
+		if gen <> watchGen then return;
+		local seconds := 0;
+		try
+			begin
+				seconds := HostAutoLockSeconds();
+				local activity := HostUserActivity();
+				local now := Ticks();
+				if activity <> lastActivity or seconds <> lastSeconds or lockView or now < lastActive then begin
+					lastActivity := activity;
+					lastSeconds := seconds;
+					lastActive := now;
+				end else if seconds > 0 and now - lastActive >= seconds * 60 then begin
+					:Lock();
+					autoLocked := true;
+					lastActive := now;
+				end;
+			end
+		onexception |evt.ex| do
+			Print("[lock] the auto-lock's watch threw");
+		AddDelayedCall(func(gen) GetGlobalVar('|QuickSheet:host|):Watch(gen), [gen],
+			if seconds <= 0 then 30000 else Max(1000, Min(5000, seconds * 250)));
+	end,
 
 	Pulled: func()
 	begin
@@ -136,6 +300,8 @@
 		local width := root.right - root.left;
 		local height := root.bottom - root.top;
 		local sliderTop := height - 70;
+		local clockTop := height div 6;
+		notes := [];
 		lockView := BuildContext({
 			viewClass: 74,
 			viewFlags: 580,
@@ -144,10 +310,11 @@
 			viewFont: kFont,
 			lockScreen: true,
 			stepChildren: [
-				{_proto: @218, viewBounds: {left: 0, top: height div 4, right: width, bottom: height div 4 + 26},
+				{_proto: @218, viewBounds: {left: 0, top: clockTop, right: width, bottom: clockTop + 26},
 				 viewJustify: 2, viewFont: kBig, text: "", lockRole: 'time},
-				{_proto: @218, viewBounds: {left: 0, top: height div 4 + 30, right: width, bottom: height div 4 + 46},
+				{_proto: @218, viewBounds: {left: 0, top: clockTop + 30, right: width, bottom: clockTop + 46},
 				 viewJustify: 2, viewFont: kFont, text: "", lockRole: 'date},
+				{_proto: notesList, viewBounds: {left: 12, top: clockTop + 56, right: width - 12, bottom: sliderTop - 10}},
 				{_proto: slider, viewBounds: {left: 16, top: sliderTop, right: width - 16, bottom: sliderTop + 36}}],
 			viewSetupDoneScript: func() begin
 				:ShowTime();
@@ -170,16 +337,178 @@
 			end,
 			viewQuitScript: func() GetGlobalVar('|QuickSheet:host|).lockView := nil});
 		lockView:Open();
+		autoLocked := nil;
 		HostScreenLocked(true);
+		:TellWatchers(true);
 		lockView;
 	end,
 
+	// the lock screen gone; its notifications given back to their
+	// applications - those left Unlocked, then the one chosen Opened (last,
+	// so that what it opens is on top)
 	Unlock: func()
 	begin
 		if lockView then lockView:Close();
 		lockView := nil;
+		autoLocked := nil;
+		lastActive := Ticks();
 		HostScreenLocked(nil);
+		local given := notes;
+		notes := [];
+		local opened := nil;
+		foreach r in given do
+			if r.chosen then opened := r
+			else
+				try
+					r.note:?Unlocked()
+				onexception |evt.ex| do
+					Print("[lock] " & SPrintObject(r.appSymbol) & "'s notification threw at the unlock");
+		if opened then
+			try
+				opened.note:?Opened()
+			onexception |evt.ex| do
+				Print("[lock] " & SPrintObject(opened.appSymbol) & "'s notification threw when opened");
+		:TellWatchers(nil);
 	end,
+
+	// a notification's words fitted to a width: the text wrapped at its
+	// spaces (a word too long for a line broken), at most so many lines, the
+	// last cut short with "..." when there is more
+	Split: func(text, separator)
+	begin
+		local parts := [];
+		local start := 0;
+		local n := StrLen(text);
+		for i := 0 to n - 1 do
+			if text[i] = separator then begin
+				AddArraySlot(parts, SubStr(text, start, i - start));
+				start := i + 1;
+			end;
+		AddArraySlot(parts, SubStr(text, start, n - start));
+		parts;
+	end,
+
+	Fit: func(text, width, font)
+	begin
+		if StrFontWidth(text, font) <= width then return text;
+		local n := StrLen(text);
+		while n > 0 and StrFontWidth(SubStr(text, 0, n) & "...", font) > width do n := n - 1;
+		SubStr(text, 0, n) & "...";
+	end,
+
+	WrapText: func(text, width, font, most)
+	begin
+		local lines := [];
+		foreach paragraph in :Split(text, $\n) do begin
+			local line := "";
+			foreach word in :Split(paragraph, $ ) do begin
+				local tryLine := if StrLen(line) = 0 then word else line & " " & word;
+				if StrFontWidth(tryLine, font) <= width then
+					line := tryLine
+				else begin
+					if StrLen(line) > 0 then AddArraySlot(lines, line);
+					line := word;
+					while StrFontWidth(line, font) > width and StrLen(line) > 1 do begin
+						local n := StrLen(line) - 1;
+						while n > 1 and StrFontWidth(SubStr(line, 0, n), font) > width do n := n - 1;
+						AddArraySlot(lines, SubStr(line, 0, n));
+						line := SubStr(line, n, StrLen(line) - n);
+					end;
+				end;
+			end;
+			AddArraySlot(lines, line);
+		end;
+		if Length(lines) > most then begin
+			local cut := [];
+			for i := 0 to most - 1 do AddArraySlot(cut, lines[i]);
+			cut[most - 1] := :Fit(cut[most - 1] & " " & lines[most], width, font);
+			if not EndsWith(cut[most - 1], "...") then cut[most - 1] := :Fit(cut[most - 1] & "...", width, font);
+			lines := cut;
+		end;
+		lines;
+	end,
+
+	// when a notification came: the time today, the date before
+	WhenText: func(time)
+		if time div 1440 = Time() div 1440 then TimeStr(time, @66.shortTimeStrSpec) else ShortDate(time),
+
+	// The notifications' list: drawn by itself, each a frame with its title
+	// in bold and its time at the right, its text below in at most two
+	// lines; as many as fit, newest first, "and N more" below them.  A tap
+	// on one chooses it (or leaves it, chosen already).
+	notesList: {
+		viewClass: 74,
+		viewFlags: 513,														// vVisible, vClickable
+		viewFormat: 0,
+		lockRole: 'notes,
+		kPad: 5,
+		kGap: 6,
+		kTextLines: 2,
+		rows: nil,															// (as drawn: {top, bottom, record})
+		viewDrawScript: func()
+		begin
+			local sheet := GetGlobalVar('|QuickSheet:host|);
+			local b := :LocalBox();
+			local w := b.right - b.left;
+			local h := b.bottom - b.top;
+			local titleH := FontHeight(sheet.kBold);
+			local lineH := FontHeight(sheet.kFont);
+			local moreH := lineH + 2;
+			rows := [];
+			local y := 0;
+			local shown := 0;
+			foreach i, r in sheet.notes do begin
+				local title := if IsString(r.note.title) then r.note.title else "";
+				local text := if IsString(r.note.text) then r.note.text else "";
+				local when := if r.chosen then "Unlock to open" else sheet:WhenText(r.time);
+				local whenW := StrFontWidth(when, sheet.kSmall);
+				local lines := if StrLen(text) > 0 then sheet:WrapText(text, w - 2 * kPad, sheet.kFont, kTextLines) else [];
+				local rowH := kPad + titleH + 2 + lineH * Length(lines) + kPad;
+				local room := if i = Length(sheet.notes) - 1 then h else h - moreH;
+				if y + rowH > room then break;
+				:DrawShape(MakeRoundRect(0, y, w, y + rowH, 6),
+					{penSize: if r.chosen then 3 else 1, penPattern: 5, fillPattern: 1});
+				:DrawShape(MakeText(sheet:Fit(title, w - 3 * kPad - whenW, sheet.kBold), kPad, y + kPad, w - 2 * kPad - whenW, y + kPad + titleH),
+					{font: sheet.kBold});
+				:DrawShape(MakeText(when, w - kPad - whenW - 2, y + kPad + 1, w - kPad, y + kPad + titleH),
+					{font: sheet.kSmall, justification: 'right});
+				local ly := y + kPad + titleH + 2;
+				foreach line in lines do begin
+					:DrawShape(MakeText(line, kPad, ly, w - kPad, ly + lineH), {font: sheet.kFont});
+					ly := ly + lineH;
+				end;
+				AddArraySlot(rows, {top: y, bottom: y + rowH, record: r});
+				y := y + rowH + kGap;
+				shown := shown + 1;
+			end;
+			local more := Length(sheet.notes) - shown;
+			if more > 0 then
+				:DrawShape(MakeText("and " & NumberStr(more) & " more", 0, y, w, y + lineH),
+					{font: sheet.kFont, justification: 'center});
+		end,
+		viewClickScript: func(unit)
+		begin
+			InkOff(unit);
+			:Tapped(GetPoint(1, unit) - (:GlobalBox()).top);				// (firstY)
+			true;
+		end,
+		// a tap at y (in the list): the notification there chosen, or left
+		// (==> the notification, or nil: none there)
+		Tapped: func(y)
+		begin
+			local sheet := GetGlobalVar('|QuickSheet:host|);
+			if not rows then return nil;
+			local hit := nil;
+			foreach row in rows do
+				if y >= row.top and y < row.bottom then hit := row.record;
+			if not hit then return nil;
+			local choose := not hit.chosen;
+			foreach r in sheet.notes do r.chosen := nil;
+			hit.chosen := choose;
+			:Dirty();
+			hit;
+		end,
+	},
 
 	// The slider: a frame with the knob in it at knobX (0 at the left end),
 	// "slide to unlock" in what is left of it.  A press on the knob drags it

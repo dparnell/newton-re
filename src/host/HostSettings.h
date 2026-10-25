@@ -27,6 +27,10 @@
 				               when the size changes)
 				  clearGhosts  a flashing redraw of the panel (reMarkable; a
 				               button, not kept)
+				  autoLock     the lock screen shown once the user has left
+				               the pen and the keys alone so long: never, or
+				               after 1, 2, 5, 10 or 30 minutes (host/
+				               HostQuickSheet.h; on every host that has it)
 				the reMarkable's only where the window has them
 				(host/HostWindow.h's HostWindowOption).  The NewtonScript
 				side sees HostSettingsList() - [{setting, label, kind,

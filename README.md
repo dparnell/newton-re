@@ -143,10 +143,13 @@ What the T-Deck Pro has that a desktop newton does not:
   for the 4G module, the GPS and the LoRa radio (only those the board
   has); pulled again, it closes.  A tap at the very top still reaches the
   Newton - only a pull 40 px down is the sheet's.
-* **The lock screen** covers everything with the time, the date and a
-  slider: drag its knob from the left end all the way to the right to
-  unlock (a tap, or a knob let go short of the end, does nothing).  While
-  locked the keyboard is ignored and its light is off.
+* **The lock screen** covers everything with the time, the date, the
+  notifications applications have left on it and a slider: drag its knob
+  from the left end all the way to the right to unlock (a tap, or a knob
+  let go short of the end, does nothing).  While locked the keyboard is
+  ignored and its light is off.  It is on every host, and locks by itself
+  after the time chosen in Prefs, Host, **Auto-lock**
+  ([docs/host-lock-screen.md](docs/host-lock-screen.md)).
 * **The keyboard**: Shift is the Newton's Shift; **Sym** held gives the
   digits and punctuation; **Alt** held gives Esc (Q), End (E), Up (U),
   Page Up (P), Home (A) and Down (D), and with any other key is the
@@ -161,7 +164,9 @@ What the T-Deck Pro has that a desktop newton does not:
   are the Mesh application's own Prefs (its "i" button).
 * **Messages** and **Mesh** appear in Extras only on hardware that has
   the modem and the radio; a message arriving while its application is
-  closed puts up a slip with **Show** to open the conversation.
+  closed puts up a slip with **Show** to open the conversation - with the
+  screen locked, a notification on the lock screen instead (tap it, then
+  unlock, to open the conversation).
 * **The serial console** (the board's USB port, any serial terminal) is a NewtonScript
   prompt once the OS is up, plus the board's own commands: `!shot` (what
   the panel shows, for `tools/tdeck/panelshot.py`), `!tap x y`,
@@ -169,9 +174,11 @@ What the T-Deck Pro has that a desktop newton does not:
   `DevicePanelSet(name, value)` for the panel's finer settings
   ([src/host/esp32/README.md](src/host/esp32/README.md)).
 
-On a desktop the quick sheet and the lock screen can be tried with
-`newton --quick-sheet`, opened from a script with
-`GetGlobalVar('|QuickSheet:host|):Pulled()` (`src/host/demo/quicksheet.ns`).
+On a desktop the lock screen and its auto-lock are always there (Prefs,
+Host, Auto-lock; `ScreenLockNow()` from a script), and the quick sheet can
+be opened from a script with `GetGlobalVar('|QuickSheet:host|):Pulled()`
+(`src/host/demo/quicksheet.ns`).  Any application can leave a
+notification on the lock screen: [docs/host-lock-screen.md](docs/host-lock-screen.md).
 
 The board found bugs of the reconstruction that x86 had hidden (a glue
 function dropping its result, a one-byte overrun, an unwinder that cannot
