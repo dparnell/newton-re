@@ -10,7 +10,7 @@
     <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="30" />
     <application
         android:label="Newton"
-        android:hasCode="true"
+        android:hasCode="false"
         android:allowBackup="false">
         <activity
             android:name="android.app.NativeActivity"

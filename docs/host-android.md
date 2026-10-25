@@ -59,8 +59,10 @@ code), the Android SDK's build-tools and a JDK:
   hidden `android.os.enote.ENoteSetting` by reflection; while the pen is down
   the render thread draws the display's changes into the overlay's Bitmap
   (picture mode FAST), and the window catches up 600 ms after the pen lifts
-  (GL16).  Paused with the activity.  `NEWTON_FAST_INK=0` turns it off.  Not
-  yet verified on the device.
+  (GL16).  **Tried on the device (2026-10-25): unusable, bad ghosting, worse
+  than the plain window path.**  So the default APK leaves it out; it is
+  built only by `build_apk.py --fast-ink` (needs `hasCode`, and Play Protect
+  blocks the dex until "install anyway").
 
 ## Not yet verified / left to do
 
