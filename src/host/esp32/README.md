@@ -236,8 +236,10 @@ checkbox each for the 4G module, the GPS and the LoRa radio (only those
 the board can switch) - and **Lock screen** covers the whole screen with
 the time, the date and a slider whose knob is dragged from its left end
 to the right to unlock.  The NewtonScript is host/HostQuickSheet.ns
-(host/HostQuickSheet.h; on a desktop only behind `newton --quick-sheet`,
-for its ctest `host.NewtonQuickSheet`).
+(host/HostQuickSheet.h; installed on every host since 2026-10-25, ctest
+`host.NewtonQuickSheet`).  Since then the lock screen also holds the
+notifications applications leave on it while it is locked, and locks by
+itself after the Host page's **Auto-lock** (docs/host-lock-screen.md).
 
 - **The pull** (tdeck_input.cpp): a finger landing within 14 px of the top
   is held back from the Newton until it shows what it is - 40 px down is

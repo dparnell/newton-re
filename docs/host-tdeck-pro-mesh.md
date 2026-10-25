@@ -143,6 +143,11 @@ forgets them); the board's in NVS, namespace `mesh`.
   latest; **Show** opens the application at the conversation (or its list,
   when they came from more than one); closing the slip, or opening the
   application, begins the count again;
+- **the screen locked** (2026-10-25), what the slip would say is a
+  notification on the lock screen instead, whether Mesh is open or not; at
+  the unlock it opens Mesh at the conversation if it was tapped there,
+  otherwise brings the slip up (or, Mesh open, marks the open
+  conversation's messages read) - `docs/host-lock-screen.md`;
 - a message that cannot be filed is told on the console and the poll goes
   on (a throw out of `Poll` used to end the polling until a restart).
 

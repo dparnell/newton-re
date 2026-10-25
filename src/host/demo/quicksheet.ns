@@ -1,5 +1,5 @@
 // The quick sheet and the lock screen (host/HostQuickSheet.h,
-// HostQuickSheet.ns), the T-Deck Pro's, installed here by --quick-sheet:
+// HostQuickSheet.ns), the T-Deck Pro's, installed on every host:
 // ctest host.NewtonQuickSheet.
 //
 // Setup walked through, then the sheet pulled down (as the board does when
@@ -11,7 +11,7 @@
 // knob dragged to the end unlocks it.  Pictures of the sheet and the lock
 // screen: tmp/quicksheet-sheet.pgm, tmp/quicksheet-lock.pgm.
 //
-//   build/host/host/newton --display 320x480 --headless 200 --quick-sheet \
+//   build/host/host/newton --display 320x480 --headless 200 \
 //       --store build/qs.store --erase --script src/host/demo/quicksheet.ns
 
 HostInclude("common.ns");			// tapAt, waitFor, walkSetup

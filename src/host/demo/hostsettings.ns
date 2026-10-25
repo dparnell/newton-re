@@ -8,7 +8,8 @@
 // .kept: newton started again on that store, still without --ir-lan, beams
 // over the network from the boot (the panel's Start gave the setting back),
 // and turning it off through the panel's Change takes it off the LAN and
-// keeps that.
+// keeps that.  The lock screen's Auto-lock likewise: chosen in .set, back
+// at boot in .kept.
 //
 //   build/host/host/newton --display 320x480 --serial-port 0 --headless 200 --store build/hs.store \
 //       --script src/host/demo/hostsettings.ns
@@ -54,6 +55,14 @@ hsSet := func() begin
 				call tapCentre with (box);
 				call waitFor with ("hostsettings: beaming on", func() call hsBeaming with () and call hsKept with () = 'on, func() begin
 					Print("hostsettings: beaming over the network on, kept " & SPrintObject(call hsKept with ()));
+					// the lock screen's auto-lock, chosen and kept (the .kept
+					// run finds it at boot)
+					GetGlobalVar('|HostSettings:host|):Change('autoLock, 3);
+					local chosen := nil;
+					foreach item in HostSettingsList() do
+						if item.setting = 'autoLock then chosen := item.choices[item.value];
+					Print("hostsettings: auto-lock " & chosen & ", kept "
+						  & SPrintObject(GetAppPrefs('|HostSettings:host|, nil).settings.autoLock));
 					Print("hostsettings: done");
 					HostQuit();
 				end, 30);
@@ -65,6 +74,8 @@ end;
 hsKeptRun := func() begin
 	Print("hostsettings: at boot beaming over the network " & (if call hsBeaming with () then "on" else "off")
 		  & ", kept " & SPrintObject(call hsKept with ()));
+	Print("hostsettings: at boot auto-lock after " & NumberStr(HostAutoLockSeconds()) & " seconds");
+	GetGlobalVar('|HostSettings:host|):Change('autoLock, 0);
 	GetGlobalVar('|HostSettings:host|):Change('lanBeam, nil);
 	call waitFor with ("hostsettings: beaming off", func() not call hsBeaming with () and call hsKept with () = 'off, func() begin
 		Print("hostsettings: turned off, kept " & SPrintObject(call hsKept with ()));

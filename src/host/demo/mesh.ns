@@ -20,8 +20,10 @@
 // 144.96: newton --gps) - Send Location in Ada's conversation, her echo of
 // it back, Location in adverts putting the position in the node's adverts
 // and taking it out again; the alert while Mesh is closed - two messages,
-// one slip saying two are unread, Show opening Ada's conversation; each
-// screen snapshotted
+// one slip saying two are unread, Show opening Ada's conversation;
+// messages while the screen is locked left on the lock screen (read at
+// the unlock in the open conversation, opened at it when chosen there,
+// the slip at the unlock otherwise); each screen snapshotted
 // (mesh-<width>x<height>-<n>.pgm).  The ctests host.NewtonMesh.<size>:
 //
 //   python tools/mesh/meshrun.py \
@@ -455,6 +457,52 @@ meSteps := [
 		call meCheck with ("Show: Mesh open at Ada's conversation, the slip gone", meApp.viewCObject and meApp.mode = 'thread
 			and StrEqual(meApp.currentThread, meAda.key) and not mesh.alertSlip and mesh.alertCount = 0,
 			"the mode is " & meApp.mode);
+		call next with ();
+	end,
+	// the screen locked (host/HostQuickSheet.h): what came left on the lock
+	// screen, not in a slip; Mesh open at the conversation behind it
+	// does not take it as read until the unlock
+	func(next) begin
+		local app := GetGlobalVar('|HostMesh:host|);
+		local sheet := GetGlobalVar('|QuickSheet:host|);
+		ScreenLockNow();
+		app:Received({key: meAda.key, name: "Ada", channel: nil, text: "While locked"});
+		local notes := ScreenLockNotifications();
+		call meCheck with ("locked: no slip, a notification on the lock screen", not app.alertSlip and Length(notes) = 1
+			and notes[0].appSymbol = app.appSymbol and StrPos(notes[0].title, "Ada", 0),
+			Length(notes) & " notifications, the slip " & (if app.alertSlip then "up" else "not up"));
+		app:Received({key: meAda.key, name: "Ada", channel: nil, text: "Still locked"});
+		notes := ScreenLockNotifications();
+		call meCheck with ("the same notification, two unread", Length(notes) = 1 and StrPos(notes[0].title, "2 unread", 0)
+			and StrPos(notes[0].text, "Still locked", 0), if Length(notes) = 1 then notes[0].title else Length(notes) & " of them");
+		local unread := 0;
+		foreach e in meApp:ThreadMessages(meAda.key) do if e.state = 'unread then unread := unread + 1;
+		call meCheck with ("unread with its conversation open behind the lock", unread = 2, unread & " unread");
+		sheet:Unlock();
+		unread := 0;
+		foreach e in meApp:ThreadMessages(meAda.key) do if e.state = 'unread then unread := unread + 1;
+		call meCheck with ("unlocked: read in the open conversation, no slip", unread = 0 and not app.alertSlip
+			and app.alertCount = 0 and Length(ScreenLockNotifications()) = 0, unread & " unread");
+		// closed: the notification tapped (chosen) opens it at the conversation
+		meApp:Close();
+		ScreenLockNow();
+		app:Received({key: meAda.key, name: "Ada", channel: nil, text: "While locked"});
+		sheet.notes[0].chosen := true;
+		sheet:Unlock();
+		call meCheck with ("chosen on the lock screen: Mesh opened at the conversation", meApp.viewCObject
+			and meApp.mode = 'thread and StrEqual(meApp.currentThread, meAda.key) and not app.alertSlip,
+			"the mode is " & meApp.mode);
+		// closed, not chosen: the slip at the unlock
+		meApp:Close();
+		ScreenLockNow();
+		app:Received({key: meAda.key, name: "Ada", channel: nil, text: "While locked"});
+		call meCheck with ("closed and locked: no slip yet", not app.alertSlip, "the slip is up");
+		sheet:Unlock();
+		local slip := app.alertSlip;
+		call meCheck with ("unlocked: the slip with what came", slip and slip.viewCObject
+			and StrPos(slip.titleView.text, "Ada", 0) and StrPos(slip.bodyView.text, "While locked", 0),
+			"it is " & (if slip and slip.viewCObject then slip.titleView.text else "not up"));
+		app:ShowAlerted();
 		call next with ();
 	end,
 	func(next) begin

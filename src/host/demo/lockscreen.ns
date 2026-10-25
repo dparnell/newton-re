@@ -1,0 +1,206 @@
+// The lock screen's notifications and the auto-lock (host/HostQuickSheet.h,
+// docs/host-lock-screen.md): ctest host.NewtonLockScreen.
+//
+// Setup walked through, then, as an application would: nothing is left on
+// the lock screen while it is not locked; locked (ScreenLockNow), those
+// registered with RegScreenLockChange are told; two notifications left on
+// it, newest first, the first replaced by its key, one withdrawn and left
+// again; one with a long text and enough more that the last are "and N
+// more"; one tapped on the lock screen is chosen ("Unlock to open"), tapped
+// again it is left, tapped once more chosen.  At the unlock the chosen one
+// is Opened and the rest Unlocked, the list empties and the registered are
+// told.  Then the auto-lock: the Host panel's "Auto-lock" setting, and the
+// machine left alone for the seconds set (HostSetAutoLock - the panel's
+// choices are minutes) locks itself, while taps every second keep it
+// unlocked.  Pictures of the lock screen with its notifications:
+// tmp/lockscreen-notes.pgm, and with one chosen tmp/lockscreen-chosen.pgm.
+//
+//   build/host/host/newton --display 320x480 --headless 200 --erase \
+//       --store build/ls.store --script src/host/demo/lockscreen.ns
+
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView
+
+lsFailures := 0;
+lsApp := '|LockScreenDemo:host|;
+lsOpened := [];
+lsUnlocked := [];
+lsChanges := [];
+
+lsCheck := func(what, ok, why) begin
+	if ok then
+		Print("lockscreen: " & what & " ok")
+	else begin
+		Print("lockscreen: " & what & " FAILED - " & why);
+		lsFailures := lsFailures + 1;
+	end;
+end;
+
+lsSheet := func() GetGlobalVar('|QuickSheet:host|);
+lsView := func(role) call findView with (call lsSheet with ().lockView, func(v) v.lockRole = role and v.viewCObject);
+
+// a notification as an application leaves one: told how it ended
+lsNote := func(key, title, text)
+	{key: key, title: title, text: text,
+	 Opened: func() AddArraySlot(lsOpened, key),
+	 Unlocked: func() AddArraySlot(lsUnlocked, key)};
+
+lsTitles := func() foreach n in ScreenLockNotifications() collect n.title;
+
+lsDrag := func(x0, x1, y) begin
+	PenDown(x0, y);
+	for x := x0 to x1 by 8 do PenMove(x, y);
+	PenMove(x1, y);
+	PenUp();
+	IdleStrokes();
+end;
+
+// a notification's row on the lock screen tapped (its index as drawn)
+lsTapRow := func(index) begin
+	local list := call lsView with ('notes);
+	local box := list:GlobalBox();
+	local row := list.rows[index];
+	call tapAt with ((box.left + box.right) div 2, box.top + (row.top + row.bottom) div 2);
+end;
+
+lsSteps := [
+	// the interface there, and nothing kept while the screen is not locked
+	func(next) begin
+		call lsCheck with ("the interface defined", GetGlobalFn('ScreenLockIsLocked) and GetGlobalFn('ScreenLockNotify)
+			and GetGlobalFn('ScreenLockWithdraw) and GetGlobalFn('ScreenLockNotifications) and GetGlobalFn('ScreenLockNow)
+			and GetGlobalFn('RegScreenLockChange) and GetGlobalFn('UnRegScreenLockChange), "a function is missing");
+		call lsCheck with ("not locked", not ScreenLockIsLocked(), "it is");
+		call lsCheck with ("a notification not taken while unlocked",
+			not ScreenLockNotify(lsApp, call lsNote with ('first, "First", "Not shown")) and Length(ScreenLockNotifications()) = 0,
+			Length(ScreenLockNotifications()) & " there");
+		RegScreenLockChange(lsApp, func(locked) AddArraySlot(lsChanges, if locked then 'locked else 'unlocked));
+		ScreenLockNow();
+		call waitFor with ("lockscreen: the lock screen", func() call lsView with ('notes), next, 20);
+	end,
+	func(next) begin
+		call lsCheck with ("locked, the registered told", ScreenLockIsLocked() and Length(lsChanges) = 1 and lsChanges[0] = 'locked,
+			"told " & Length(lsChanges));
+		call lsCheck with ("left on the lock screen", ScreenLockNotify(lsApp, call lsNote with ('first, "First", "The first one")),
+			"refused");
+		ScreenLockNotify(lsApp, call lsNote with ('second, "Second", "The second one"));
+		local titles := call lsTitles with ();
+		call lsCheck with ("two, newest first", Length(titles) = 2 and StrEqual(titles[0], "Second") and StrEqual(titles[1], "First"),
+			"they are " & SPrintObject(titles));
+		ScreenLockNotify(lsApp, call lsNote with ('first, "First again", "Replaced"));
+		titles := call lsTitles with ();
+		call lsCheck with ("the same key replaced, newest again", Length(titles) = 2 and StrEqual(titles[0], "First again")
+			and StrEqual(titles[1], "Second") and StrEqual(ScreenLockNotifications()[0].text, "Replaced"),
+			"they are " & SPrintObject(titles));
+		call lsCheck with ("one withdrawn", ScreenLockWithdraw(lsApp, 'second) = 1 and Length(ScreenLockNotifications()) = 1,
+			Length(ScreenLockNotifications()) & " there");
+		ScreenLockNotify(lsApp, call lsNote with ('second, "Second", "Back again"));
+		// another application's, with a long text, and enough more that the
+		// last do not fit
+		for i := 1 to 6 do
+			ScreenLockNotify('|OtherDemo:host|, {key: i, title: "Number " & NumberStr(i), text: "Item " & NumberStr(i)});
+		ScreenLockNotify('|OtherDemo:host|, {key: 'long, title: "A long one with a title that goes on and on",
+			text: "This text is long enough that it has to be wrapped onto more than the two lines a notification is given on the lock screen, so it is cut short."});
+		call lsCheck with ("another application's withdrawn by key", ScreenLockWithdraw('|OtherDemo:host|, 6) = 1,
+			"not withdrawn");
+		RefreshViews();
+		local list := call lsView with ('notes);
+		call lsCheck with ("as many as fit drawn, the rest more", list.rows and Length(list.rows) >= 2
+			and Length(list.rows) < Length(ScreenLockNotifications()),
+			(if list.rows then Length(list.rows) else 0) & " drawn of " & Length(ScreenLockNotifications()));
+		ScreenSnapshot("tmp/lockscreen-notes.pgm");
+		// the others taken off, so that this one's own fit
+		ScreenLockWithdraw('|OtherDemo:host|, nil);
+		RefreshViews();
+		call lsCheck with ("all of an application's withdrawn", Length(ScreenLockNotifications()) = 2 and Length(list.rows) = 2,
+			Length(ScreenLockNotifications()) & " there");
+		call next with ();
+	end,
+	// one tapped: chosen; again: left; once more: chosen
+	func(next) begin
+		call lsTapRow with (1);						// "First again"
+		call waitFor with ("lockscreen: the tap", func() ScreenLockNotifications()[1].chosen, func() begin
+			call lsCheck with ("a tap chooses it", ScreenLockNotifications()[1].chosen and not ScreenLockNotifications()[0].chosen,
+				"not chosen");
+			RefreshViews();
+			call lsTapRow with (1);
+			call waitFor with ("lockscreen: the second tap", func() not ScreenLockNotifications()[1].chosen, func() begin
+				call lsCheck with ("tapped again, left", not ScreenLockNotifications()[1].chosen, "still chosen");
+				RefreshViews();
+				call lsTapRow with (1);
+				call waitFor with ("lockscreen: the third tap", func() ScreenLockNotifications()[1].chosen, func() begin
+					RefreshViews();
+					ScreenSnapshot("tmp/lockscreen-chosen.pgm");
+					call next with ();
+				end, 10);
+			end, 10);
+		end, 10);
+	end,
+	// the unlock: the chosen Opened, the other Unlocked
+	func(next) begin
+		RefreshViews();
+		local box := call lsView with ('slider):GlobalBox();
+		local y := (box.top + box.bottom) div 2;
+		call lsDrag with (box.left + 24, box.right + 10, y);
+		call waitFor with ("lockscreen: unlocked", func() not ScreenLockIsLocked(), func() begin
+			call lsCheck with ("the chosen one opened", Length(lsOpened) = 1 and lsOpened[0] = 'first,
+				"opened " & SPrintObject(lsOpened));
+			call lsCheck with ("the rest unlocked", Length(lsUnlocked) = 1 and lsUnlocked[0] = 'second,
+				"unlocked " & SPrintObject(lsUnlocked));
+			call lsCheck with ("the lock screen emptied", Length(ScreenLockNotifications()) = 0,
+				Length(ScreenLockNotifications()) & " left");
+			call lsCheck with ("the registered told of the unlock", Length(lsChanges) = 2 and lsChanges[1] = 'unlocked,
+				"told " & SPrintObject(lsChanges));
+			UnRegScreenLockChange(lsApp);
+			call next with ();
+		end, 20);
+	end,
+	// the auto-lock: the Host panel's setting
+	func(next) begin
+		local item := nil;
+		foreach s in HostSettingsList() do
+			if s.setting = 'autoLock then item := s;
+		call lsCheck with ("the Host panel's Auto-lock, Never", item and item.kind = 'choice and item.value = 0
+			and StrEqual(item.choices[item.value], "Never"), "it is " & SPrintObject(item));
+		HostSetSetting('autoLock, 3);
+		call lsCheck with ("After 5 minutes set", HostAutoLockSeconds() = 300, "it is " & HostAutoLockSeconds());
+		HostSetSetting('autoLock, 0);
+		call lsCheck with ("and Never again", HostAutoLockSeconds() = 0, "it is " & HostAutoLockSeconds());
+		// taps every second for five seconds keep a 3-second auto-lock off
+		local activity := HostUserActivity();
+		HostSetAutoLock(3);
+		local taps := 0;
+		local tap;
+		tap := func() begin
+			call tapAt with (160, 300);
+			taps := taps + 1;
+			if taps < 6 then
+				AddDelayedCall(tap, nil, 1000)
+			else begin
+				call lsCheck with ("the pen counted", HostUserActivity() <> activity, "the count did not change");
+				call lsCheck with ("taps every second keep it unlocked", not ScreenLockIsLocked(), "it locked");
+				local start := Ticks();
+				call waitFor with ("lockscreen: the auto-lock", func() ScreenLockIsLocked(), func() begin
+					call lsCheck with ("left alone, it locked itself", ScreenLockIsLocked() and call lsSheet with ().autoLocked,
+						"not locked");
+					call lsCheck with ("after about three seconds", Ticks() - start >= 60, (Ticks() - start) & " ticks");
+					HostSetAutoLock(0);
+					call lsSheet with ():Unlock();
+					call next with ();
+				end, 20);
+			end;
+		end;
+		call tap with ();
+	end,
+	func(next) begin
+		Print("lockscreen: done, " & lsFailures & " failed");
+		HostQuit();
+	end];
+
+lsStep := 0;
+lsNext := func() begin
+	local step := lsSteps[lsStep];
+	lsStep := lsStep + 1;
+	call step with (lsNext);
+end;
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], func() call lsNext with ());	// ("Daniel" in ADB key codes)

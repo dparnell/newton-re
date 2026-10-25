@@ -12,6 +12,7 @@
 #include "HostFontProvider.h"
 #include "HostFonts.h"
 #include "HostWindow.h"
+#include "HostQuickSheet.h"
 #include "hal/host/HostIRChip.h"
 #include "hal/host/HostCellular.h"
 #include "hal/host/HostSerialChip.h"
@@ -200,6 +201,15 @@ ChoiceIndex(const long* values, int count, long value)
 }
 
 
+// the lock screen's auto-lock (host/HostQuickSheet.h): the screen locked
+// after the user has left the pen and the keys alone so long (seconds; 0
+// never) - the choice shown is the nearest to what is set (a test sets
+// seconds of its own, HostSetAutoLock)
+const int		kAutoLockChoices = 6;
+static const long			kAutoLockSeconds[kAutoLockChoices] = { 0, 60, 120, 300, 600, 1800 };
+static const char* const	kAutoLockNames[kAutoLockChoices] = { "Never", "After 1 minute", "After 2 minutes", "After 5 minutes", "After 10 minutes", "After 30 minutes" };
+
+
 // the GPS receiver (hal/host/HostGPS.h): the port it is plugged into - none,
 // serial port 2 ('mdem', a port of its own) or the external one - and its
 // kind; and whether the panel has chosen yet (if not, newton plugs it in
@@ -258,6 +268,12 @@ FHostSettingsList(RefArg /*rcvr*/)
 		AddArraySlot(list, RefVar(Item("cellPower", "The 4G module on", kCheck, HostCellularPowered())));
 	// (the LoRa mesh node's settings - its radio's power and preset, its
 	// name - are the Mesh application's Prefs: comms/host/HostMesh.ns)
+	if (HostQuickSheetInstalled())
+	{
+		RefVar item(Item("autoLock", "Auto-lock", kChoice, ChoiceIndex(kAutoLockSeconds, kAutoLockChoices, HostQuickSheetAutoLock())));
+		Choices(item, kAutoLockNames, kAutoLockChoices);
+		AddArraySlot(list, item);
+	}
 	if (HostWindowOption("waveform", &value))
 	{
 		RefVar item(Item("waveform", "Ink", kChoice, value));
@@ -400,6 +416,14 @@ FHostSetSetting(RefArg /*rcvr*/, RefArg setting, RefArg value)
 		bool taken = HostCellularSetPower(on);
 		fprintf(stderr, "[host] the 4G module %s%s\n", on ? "on" : "off", taken ? "" : " - it could not be switched");
 		return MAKEBOOLEAN(taken);
+	}
+	if (strcmp(name, "autoLock") == 0)
+	{
+		if (!HostQuickSheetInstalled() || !ISINT(value) || RINT(value) < 0 || RINT(value) >= kAutoLockChoices)
+			return NILREF;
+		HostQuickSheetSetAutoLock(kAutoLockSeconds[RINT(value)]);
+		fprintf(stderr, "[host] auto-lock: %s\n", kAutoLockNames[RINT(value)]);
+		return TRUEREF;
 	}
 	if (strcmp(name, "waveform") == 0)
 		return MAKEBOOLEAN(ISINT(value) && HostWindowSetOption("waveform", RINT(value)));

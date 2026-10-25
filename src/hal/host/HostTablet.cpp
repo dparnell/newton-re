@@ -18,6 +18,7 @@
 #include "KernelGlobals.h"
 #include "hal/Timer.h"
 #include "Host.h"			// HostAdvanceClock
+#include "HostPower.h"		// HostNoteUserActivity
 #include "NewtonTime.h"
 #include <atomic>
 
@@ -127,6 +128,7 @@ HostTabletNow(void)
 void
 HostTabletPenDown(long x, long y, ULong time)
 {
+	HostNoteUserActivity();
 	if (time == 0)
 		time = HostTabletNow();
 	InsertTabletSample(kTabletPenDown, time);
@@ -137,6 +139,7 @@ HostTabletPenDown(long x, long y, ULong time)
 void
 HostTabletPenMove(long x, long y, ULong pressure)
 {
+	HostNoteUserActivity();
 	InsertTabletSample(HostTabletSample(x, y, pressure), 0);
 }
 
@@ -198,6 +201,7 @@ HostTabletSetPaced(Boolean paced)
 void
 HostTabletQueuePenDown(long x, long y, ULong time)
 {
+	HostNoteUserActivity();
 	if (FeedDirectly())
 	{
 		HostTabletPenDown(x, y, time);
@@ -211,6 +215,7 @@ HostTabletQueuePenDown(long x, long y, ULong time)
 void
 HostTabletQueuePenMove(long x, long y, ULong pressure)
 {
+	HostNoteUserActivity();
 	if (FeedDirectly())
 	{
 		HostTabletPenMove(x, y, pressure);

@@ -307,7 +307,12 @@ host gives it**.
   as Mesh's: `Notify` piled an alert on an alert): the first text's sender
   and words, then "N unread" and the latest; **Show** opens the
   conversation (or the list, from more than one); closing the slip or
-  opening Messages begins the count again.  The transport no longer keeps texts in the
+  opening Messages begins the count again.  **While the screen is
+  locked** (2026-10-25) what the slip would say is a notification on the
+  lock screen instead, open or not; at the unlock it opens Messages at the
+  conversation if it was tapped there, otherwise brings the slip up (or,
+  Messages open, marks the open conversation's texts read) -
+  `docs/host-lock-screen.md`.  The transport no longer keeps texts in the
   In Box (`dontAutoPutAway` cleared on a store that saved `'never`).
 - **Sent**: `Send` straight to the transport, the item hidden from the Out
   Box with a completion script (`ItemCompletionScript`): the message

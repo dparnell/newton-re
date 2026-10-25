@@ -38,6 +38,7 @@
 */
 
 #include "HostTablet.h"
+#include "HostPower.h"		// HostNoteUserActivity
 #include "TabletBuffer.h"
 #include "TabletDriver.h"
 #include "Inker.h"
@@ -468,6 +469,7 @@ HostTabletRawPenMove(long x, long y)
 void
 HostTabletRawPenDownFine(long x8, long y8)
 {
+	HostNoteUserActivity();
 	gRawX.store(x8);
 	gRawY.store(y8);
 	gRawDown.store(true);
@@ -478,6 +480,7 @@ HostTabletRawPenDownFine(long x8, long y8)
 void
 HostTabletRawPenMoveFine(long x8, long y8)
 {
+	HostNoteUserActivity();
 	gRawX.store(x8);
 	gRawY.store(y8);
 }
@@ -495,6 +498,7 @@ HostTabletRawPenUp(void)
 static void
 StartTap(long x, long y, ULong milliseconds, ULong reads)
 {
+	HostNoteUserActivity();
 	gTapX = x;
 	gTapY = y;
 	gTapMilliseconds = milliseconds;

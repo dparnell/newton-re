@@ -4,7 +4,10 @@
 // conversation's Reply line, the message 'sent; a new message to a Names
 // card; the Reply line growing with a long message, Send doing nothing
 // with only spaces; a message tapped and deleted, then the whole
-// conversation once confirmed; each screen snapshotted
+// conversation once confirmed; the alert slip while it is closed; texts
+// while the screen is locked left on the lock screen (read at the unlock
+// in the open conversation, opened at it when chosen there, the slip at
+// the unlock otherwise); each screen snapshotted
 // (messages-<width>x<height>-<n>.pgm), so a
 // run at each display size shows the layout made for it.  The module is
 // tools/modem/fakecell.py on --cell-port (ctests host.NewtonMessages.*):
@@ -238,6 +241,58 @@ msSteps := [
 		call msCheck with ("Show: Messages open at Bob's conversation, the slip gone", msApp.viewCObject and msApp.mode = 'thread
 			and StrEqual(msApp.currentThread, messages:ThreadKey("0400111222")) and not messages.alertSlip and messages.alertCount = 0,
 			"the mode is " & msApp.mode);
+		// (Ada's conversation open, for the locked screen's)
+		messages:Received({smsNumber: "0400333444", smsName: "Ada", smsText: "Hello"});
+		msApp:OpenThread(messages:ThreadKey("0400333444"));
+		call next with ();
+	end,
+	// the screen locked (host/HostQuickSheet.h): what came left on the lock
+	// screen, not in a slip; Messages open at the conversation behind it
+	// does not take it as read until the unlock
+	func(next) begin
+		local app := GetGlobalVar('|HostMessages:host|);
+		local sheet := GetGlobalVar('|QuickSheet:host|);
+		ScreenLockNow();
+		app:Received({smsNumber: "0400333444", smsName: "Ada", smsText: "While locked"});
+		local notes := ScreenLockNotifications();
+		call msCheck with ("locked: no slip, a notification on the lock screen", not app.alertSlip and Length(notes) = 1
+			and notes[0].appSymbol = app.appSymbol and StrPos(notes[0].title, "Ada", 0),
+			Length(notes) & " notifications, the slip " & (if app.alertSlip then "up" else "not up"));
+		app:Received({smsNumber: "0400333444", smsName: "Ada", smsText: "Still locked"});
+		notes := ScreenLockNotifications();
+		call msCheck with ("the same notification, two unread", Length(notes) = 1 and StrPos(notes[0].title, "2 unread", 0)
+			and StrPos(notes[0].text, "Still locked", 0), if Length(notes) = 1 then notes[0].title else Length(notes) & " of them");
+		local unread := 0;
+		foreach e in msApp:ThreadMessages(app:ThreadKey("0400333444")) do if e.state = 'unread then unread := unread + 1;
+		call msCheck with ("unread with its conversation open behind the lock", unread = 2, unread & " unread");
+		sheet:Unlock();
+		unread := 0;
+		foreach e in msApp:ThreadMessages(app:ThreadKey("0400333444")) do if e.state = 'unread then unread := unread + 1;
+		call msCheck with ("unlocked: read in the open conversation, no slip", unread = 0 and not app.alertSlip
+			and app.alertCount = 0 and Length(ScreenLockNotifications()) = 0, unread & " unread");
+		// closed: the notification tapped (chosen) opens it at the conversation
+		msApp:Close();
+		ScreenLockNow();
+		app:Received({smsNumber: "0400333444", smsName: "Ada", smsText: "While locked"});
+		sheet.notes[0].chosen := true;
+		sheet:Unlock();
+		call msCheck with ("chosen on the lock screen: Messages opened at the conversation", msApp.viewCObject
+			and msApp.mode = 'thread and StrEqual(msApp.currentThread, app:ThreadKey("0400333444")) and not app.alertSlip,
+			"the mode is " & msApp.mode);
+		// closed, not chosen: the slip at the unlock
+		msApp:Close();
+		ScreenLockNow();
+		app:Received({smsNumber: "0400333444", smsName: "Ada", smsText: "While locked"});
+		call msCheck with ("closed and locked: no slip yet", not app.alertSlip, "the slip is up");
+		sheet:Unlock();
+		local slip := app.alertSlip;
+		call msCheck with ("unlocked: the slip with what came", slip and slip.viewCObject
+			and StrPos(slip.titleView.text, "Ada", 0) and StrPos(slip.bodyView.text, "While locked", 0),
+			"it is " & (if slip and slip.viewCObject then slip.titleView.text else "not up"));
+		app:ShowAlerted();
+		call next with ();
+	end,
+	func(next) begin
 		Print("messages: done, " & msFailures & " failed");
 		HostQuit();
 	end];

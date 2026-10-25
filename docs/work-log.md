@@ -19,6 +19,29 @@ as the pen), and `tools/android/build_apk.py` packs the APK with the SDK's own
 tools.  bionic has no `pthread_tryjoin_np` (`TaskRuntime.cpp`).  It builds
 and signs; it has not been run on a device (docs/host-android.md).
 
+## 2026-10-25: the lock screen on every host - auto-lock and notifications
+
+The owner's ask: an optional time-based auto-lock, and a section of the
+lock screen where applications can leave notifications while it is
+locked, as an interface any application can use, with Messages and Mesh
+using it.  The T-Deck Pro's lock screen (`host/HostQuickSheet.ns`) is now
+installed on every host (`--quick-sheet` is still taken and does nothing),
+before the Host page, which gains **Auto-lock** (Never, or 1, 2, 5, 10 or
+30 minutes; kept like its other settings).  The host counts the user's pen
+samples and keys (`HostNoteUserActivity`, `hal/host/HostPower.h`, called
+from the tablet's and the keyboard's entry points) and the lock screen
+watches the count.  The interface is a set of global functions -
+`ScreenLockIsLocked`, `ScreenLockNow`, `ScreenLockNotify`,
+`ScreenLockWithdraw`, `ScreenLockNotifications`, `RegScreenLockChange`,
+`UnRegScreenLockChange` (not `LockScreen...`: the ROM's `LockScreen` is
+QuickDraw's) - and a notification is a frame with a key (the same key
+replaces it), a title, a text and `Opened`/`Unlocked` methods sent at the
+unlock (tapped on the lock screen, or not).  Messages and Mesh leave their
+alert there while the screen is locked and do not mark what came read
+until the unlock.  `docs/host-lock-screen.md`; ctest
+`host.NewtonLockScreen`, locked steps in `host.NewtonMessages.*`/
+`host.NewtonMesh.*`, the setting kept in `host.NewtonHostSettings.*`.
+
 ## 2026-10-25: the internal store in the user's own directory by default
 
 `newton` run in a window with no `--store` kept the machine in memory

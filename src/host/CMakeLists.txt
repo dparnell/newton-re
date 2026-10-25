@@ -204,7 +204,8 @@ add_custom_command(
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/HostWordEngines.ns ${CMAKE_SOURCE_DIR}/cmake/EmbedText.cmake
     VERBATIM)
 # host/HostQuickSheet.ns, the quick sheet and the lock screen (the T-Deck
-# Pro's; here behind --quick-sheet), compiled in the same way
+# Pro's, and the lock screen's notifications and auto-lock on every host),
+# compiled in the same way
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/HostQuickSheetSource.cpp
     COMMAND ${CMAKE_COMMAND} -DINPUT=${CMAKE_CURRENT_SOURCE_DIR}/HostQuickSheet.ns
@@ -1206,15 +1207,27 @@ set_tests_properties(host.NewtonDeveloperPanel PROPERTIES TIMEOUT 300
                      PASS_REGULAR_EXPRESSION "has Developer, has no AppleTalk.*profiling on.*the profile written to .*developer.store.nsprofile.txt.*profiling off.*developer: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain|fell over|!!! Exception")
 # the T-Deck Pro's quick sheet and lock screen (HostQuickSheet.h,
-# demo/quicksheet.ns, behind --quick-sheet): pulled open and closed, the
+# demo/quicksheet.ns; installed on every host): pulled open and closed, the
 # screen locked from it, a tap at the slider's end and a short drag leaving
 # it locked, a drag to the end unlocking it
-add_test(NAME host.NewtonQuickSheet COMMAND newton --display 320x480 --headless 200 --erase --quick-sheet
+add_test(NAME host.NewtonQuickSheet COMMAND newton --display 320x480 --headless 200 --erase
          --store ${CMAKE_CURRENT_BINARY_DIR}/quicksheet.store
          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/quicksheet.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonQuickSheet PROPERTIES TIMEOUT 300
                      PASS_REGULAR_EXPRESSION "the sheet open, Lock screen.*pulled again, closed.*the close box closes it.*locked, the sheet closed.*pulled while locked, the sheet closed.*a tap at the slider's end leaves it locked.*half way and let go leaves it locked, the knob at 0.*dragged to the end, unlocked.*quicksheet: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain|fell over|!!! Exception|not installed")
+# the lock screen's notifications and the auto-lock (HostQuickSheet.h,
+# demo/lockscreen.ns, docs/host-lock-screen.md): the ScreenLock functions -
+# nothing kept unlocked, notifications left, replaced by key, withdrawn, more
+# than fit, one chosen by a tap, Opened and Unlocked at the unlock, the
+# registered told - and the Host panel's Auto-lock, the screen locking
+# itself once left alone and not while tapped
+add_test(NAME host.NewtonLockScreen COMMAND newton --display 320x480 --headless 200 --erase
+         --store ${CMAKE_CURRENT_BINARY_DIR}/lockscreen.store
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/lockscreen.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonLockScreen PROPERTIES TIMEOUT 300
+                     PASS_REGULAR_EXPRESSION "the chosen one opened ok.*the rest unlocked ok.*left alone, it locked itself ok.*lockscreen: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "waited in vain|fell over|!!! Exception|FAILED")
 # the Host preferences panel (HostSettings.h, demo/hostsettings.ns): .set
 # turns beaming over the network on from Prefs with no restart and keeps it,
 # .kept boots the same store with it on and turns it off.  (Docking on a
@@ -1230,11 +1243,11 @@ foreach(run set kept)
 endforeach()
 set_tests_properties(host.NewtonHostSettings.set PROPERTIES TIMEOUT 300
                      FIXTURES_REQUIRED hostsettingsclean FIXTURES_SETUP hostsettingsset
-                     PASS_REGULAR_EXPRESSION "beaming over the network off.*the panel shows Beam over the network.*beaming over the network on, kept on.*hostsettings: done"
+                     PASS_REGULAR_EXPRESSION "beaming over the network off.*the panel shows Beam over the network.*beaming over the network on, kept on.*auto-lock After 5 minutes, kept 3.*hostsettings: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain|fell over|!!! Exception")
 set_tests_properties(host.NewtonHostSettings.kept PROPERTIES TIMEOUT 300
                      FIXTURES_REQUIRED hostsettingsset
-                     PASS_REGULAR_EXPRESSION "at boot beaming over the network on, kept on.*turned off, kept off.*docking on.*docking turned off.*docking turned on.*hostsettings: done"
+                     PASS_REGULAR_EXPRESSION "at boot beaming over the network on, kept on.*at boot auto-lock after 300 seconds.*turned off, kept off.*docking on.*docking turned off.*docking turned on.*hostsettings: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain|fell over|!!! Exception")
 
 # the sums that turn the display onto the reMarkable's panel image
