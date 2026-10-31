@@ -683,3 +683,9 @@ vfInset	<<16
 vfShadow	<<18
 vfRound	<<24
 tsSize	<<10
+# slips (mailSlip, backupSlip): kNotifyAlert/kNotifyQAlert the Newton Programmer's Reference 2.0 names (Notify), values as the ROM's BHNotify treats them (3 beeps, 4 does not); kGestalt_SystemInfo src/ddk/NewtonGestalt.h and the Reference; opGetCurrent src/ddk/OptionArray.h and the Reference; vjOneLineOnly src/views/TextView.h
+kNotifyAlert	0x3
+kNotifyQAlert	0x4
+kGestalt_SystemInfo	0x1000003
+opGetCurrent	0x400
+vjOneLineOnly	0x800000
