@@ -1,3 +1,8 @@
-// newtroLabelNumInputLine, and what only it reaches
+// newtroLabelNumInputLine: newtLabelNumInputLine read-only (the NPR's
+// newtROLabelNumInputLine): a label and a number that cannot be edited.
+//
+// This file holds newtroLabelNumInputLine and what only it reaches.
 
+// flavor: the NewtApp filter that makes and reads the text (newtFilter)
+// access 'readOnly: the value is shown and cannot be edited, and the label offers no picker
 newtroLabelNumInputLine := {_proto: @newtProtoLine, flavor: @newtNumberFilter, access: 'readOnly};

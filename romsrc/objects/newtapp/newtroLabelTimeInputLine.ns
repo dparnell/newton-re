@@ -1,3 +1,8 @@
-// newtroLabelTimeInputLine, and what only it reaches
+// newtroLabelTimeInputLine: newtLabelTimeInputLine read-only (the NPR's
+// newtROLabelTimeInputLine): a label and a time that cannot be edited.
+//
+// This file holds newtroLabelTimeInputLine and what only it reaches.
 
+// flavor: the NewtApp filter that makes and reads the text (newtFilter)
+// access 'readOnly: the value is shown and cannot be edited, and the label offers no picker
 newtroLabelTimeInputLine := {_proto: @newtProtoLine, flavor: @newtTimeFilter, access: 'readOnly};

@@ -1,3 +1,7 @@
-// newtLabelPhoneInputLine, and what only it reaches
+// newtLabelPhoneInputLine: the NewtApp labelled input line for a phone number
+// (NPR 2.0), recognising phone numbers.
+//
+// This file holds newtLabelPhoneInputLine and what only it reaches.
 
+// flavor: the NewtApp filter that makes and reads the text (newtFilter)
 newtLabelPhoneInputLine := {_proto: @newtProtoLine, flavor: @newtPhoneFilter};

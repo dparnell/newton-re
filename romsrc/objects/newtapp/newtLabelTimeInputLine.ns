@@ -1,3 +1,7 @@
-// newtLabelTimeInputLine, and what only it reaches
+// newtLabelTimeInputLine: the NewtApp labelled input line for a time (NPR 2.0): the
+// time is written, or chosen with the time popup the label offers.
+//
+// This file holds newtLabelTimeInputLine and what only it reaches.
 
+// flavor: the NewtApp filter that makes and reads the text (newtFilter)
 newtLabelTimeInputLine := {_proto: @newtProtoLine, flavor: @newtTimeFilter};

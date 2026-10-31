@@ -1,3 +1,9 @@
-// newtnrLabelDateInputLine, and what only it reaches
+// newtnrLabelDateInputLine: a date input line whose date can only be picked (the NPR's
+// newtNRLabelDateInputLine, "no recognition"): writing is not recognised, and any
+// attempt to edit it opens the date popup.
+//
+// This file holds newtnrLabelDateInputLine and what only it reaches.
 
+// flavor: the NewtApp filter that makes and reads the text (newtFilter)
+// access 'pickOnly: the value can only be set with the filter's picker, not written
 newtnrLabelDateInputLine := {_proto: @newtProtoLine, flavor: @newtDateFilter, access: 'pickOnly};
