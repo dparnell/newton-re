@@ -125,7 +125,6 @@ titleBar := {
 	viewFlags: vVisible,
 	viewFormat: nil,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 12},
-	// oneLineOnly (8388608) + vjParentFullH + vjCenterV + vjCenterH
 	viewJustify: vjCenterH + vjCenterV + vjParentFullH + oneLineOnly,
 	// CarefullIncrementMonth(date, months): the date months later, moved
 	// first to the 1st of the month shown if it is not in it; a yearless
@@ -193,8 +192,6 @@ titleBar := {
 // the month and year between the arrows; tapping it pops up a list of months
 monthYearLabel := {
 	viewClass: clParagraphView,
-	// oneLineOnly (8388608) + vjParentFullV + vjParentFullH + vjCenterV +
-	// vjCenterH
 	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjParentFullV + oneLineOnly,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
 	viewFlags: vVisible + vReadOnly + vClickable,

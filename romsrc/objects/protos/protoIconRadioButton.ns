@@ -57,8 +57,7 @@ protoIconRadioButton := {
 			{
 				viewClass: clTextView,
 				viewFlags: vVisible + vReadOnly,
-				// oneLineOnly (8388608)
-				viewJustify: 8388608,
+				viewJustify: oneLineOnly,
 				// shows labelText
 				viewSetupFormScript: func() begin
 					(self.text := labelText)

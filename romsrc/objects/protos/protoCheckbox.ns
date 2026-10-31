@@ -7,9 +7,7 @@ protoCheckbox := {
 		{
 			viewClass: clTextView,
 			viewFlags: vVisible + vReadOnly,
-			// oneLineOnly (8388608, the Programmer's Guide's value) +
-			// vjParentFullH + vjParentFullV + vjCenterV
-			viewJustify: 8388852,
+			viewJustify: vjCenterV + vjParentFullH + vjParentFullV + oneLineOnly,
 			// 16 pixels in from the left, past the box
 			viewBounds: {left: 16, top: 0, right: 0, bottom: 0}
 		}

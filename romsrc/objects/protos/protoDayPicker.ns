@@ -73,9 +73,8 @@ protoDayPicker := {
 	viewChildren: [viewChildren:
 		{
 			_proto: protoDayPickerProto,
-			// oneLineOnly (8388608) + vjCenterV + vjCenterH: the first button
-			// is not placed after a sibling
-			viewJustify: 8388614,
+			// the first button is not placed after a sibling
+			viewJustify: vjCenterH + vjCenterV + oneLineOnly,
 			dayNum: 0,
 			viewBounds: {left: 2, top: 2, right: 15, bottom: 15},
 			dayOfWeek: kSunday,
@@ -94,8 +93,7 @@ protoDayPicker := {
 // one day button: a small round-cornered text button
 protoDayPickerProto := {
 	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2) + vfRound(4),
-	// oneLineOnly (8388608) + vjSiblingRightH + vjCenterV + vjCenterH
-	viewJustify: 8389638,
+	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + oneLineOnly,
 	viewBounds: {left: 2, top: 2, right: 15, bottom: 15},
 	hilite: nil,
 	// at setup: asks the picker for its day and label

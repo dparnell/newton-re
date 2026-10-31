@@ -9,7 +9,7 @@ protoTextButton := {
 	viewTransferMode: modeOr,
 	viewFont: @fontSystem9Bold,
 	// 8388614 = vjCenterH + vjCenterV + oneLineOnly (0x800000, the NPG's value)
-	viewJustify: 8388614,
+	viewJustify: vjCenterH + vjCenterV + oneLineOnly,
 	styles: nil,
 	tabs: nil,
 	// the button's label

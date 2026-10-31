@@ -6700,9 +6700,8 @@ meetingTitle_2 := {
 		if (if IsSoupEntry(repeatTemplate) then EntryStore(repeatTemplate):IsReadOnly()) then begin
 				self.viewFlags := BOr(viewFlags, vWriteProtected)
 			end;
-		// clears 0x800000 (8388608), oneLineOnly in the NPG's text limits, so the
-		// title may wrap
-		(entryLine.viewJustify := BAnd(entryLine.viewJustify, bnot(8388608)))
+		// clears oneLineOnly, so the title may wrap
+		(entryLine.viewJustify := BAnd(entryLine.viewJustify, bnot(oneLineOnly)))
 	end,
 	// The title was edited.
 	textChanged: func() begin

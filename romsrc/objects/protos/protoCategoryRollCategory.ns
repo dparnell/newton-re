@@ -11,9 +11,7 @@ protoCategoryRollCategory := {
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 14},
 	viewFormat: 0,
 	viewFlags: vVisible + vClickable,
-	// oneLineOnly (8388608) + vjSiblingBottomV + vjParentClip +
-	// vjParentFullH + vjCenterV
-	viewJustify: 8396852,
+	viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV + oneLineOnly,
 	height: 14,
 	title: nil,
 	count: 0,

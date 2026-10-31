@@ -5,8 +5,7 @@
 
 protoFindItem := {
 	_proto: @protoRollItem,
-	// oneLineOnly (8388608) + vjSiblingBottomV + vjParentFullH + vjCenterV
-	viewJustify: 8396852,
+	viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV + oneLineOnly,
 	// CloseFindAll(): closes the list of found items
 	CloseFindAll: func() begin
 		findOverview:Close()
@@ -21,8 +20,7 @@ protoFindItem := {
 	viewChildren: [|Array|:
 		{
 			_proto: @protoStaticText,
-			// oneLineOnly (8388608) + vjParentFullH
-			viewJustify: 8388656,
+			viewJustify: vjParentFullH + oneLineOnly,
 			viewFont: @fontSystem9,
 			viewBounds: {left: 15, top: 0, right: 0, bottom: 15},
 			// viewSetupFormScript: shows the item's title

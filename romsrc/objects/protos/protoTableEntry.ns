@@ -8,7 +8,7 @@ protoTableEntry := {
 	viewFormat: 0,
 	viewTransferMode: modeOr,
 	// 8388612 = vjLeftH + vjCenterV + oneLineOnly (0x800000, the NPG's value)
-	viewJustify: 8388612,
+	viewJustify: vjCenterV + oneLineOnly,
 	// the cell's value (protoTableDef's tabValueSlot)
 	text: nil,
 	viewBounds: nil,

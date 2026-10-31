@@ -20,8 +20,7 @@ protoBookmark := {
 			viewFormat: 0,
 			viewTransferMode: modeOr,
 			viewBounds: {left: 0, top: -11, right: 0, bottom: 0},
-			// oneLineOnly (8388608) + vjParentBottomV + vjParentFullH + vjCenterH
-			viewJustify: 8388786
+			viewJustify: vjCenterH + vjParentFullH + vjParentBottomV + oneLineOnly
 		}
 	],
 	debug: 362739

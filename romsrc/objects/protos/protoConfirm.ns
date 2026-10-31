@@ -15,8 +15,7 @@ protoConfirm := {
 	// an ordinary button
 	buttonTemplate: {
 		_proto: @protoTextButton,
-		// oneLineOnly (8388608) + vjSiblingLeftH + vjParentFullV +
-		// vjParentRightH + vjCenterV + vjCenterH: right to left from the edge
+		// right to left from the edge
 		viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentFullV + vjSiblingLeftH + oneLineOnly,
 		// at setup: as wide as its text needs, 7 pixels left of its sibling
 		viewSetupFormScript: func() begin

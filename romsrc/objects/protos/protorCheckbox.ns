@@ -21,7 +21,7 @@ protorCheckbox := {
 			viewFlags: vVisible + vReadOnly,
 			// 8388852 = vjCenterV + vjParentFullH + vjParentFullV +
 			// oneLineOnly (0x800000, the NPG's value)
-			viewJustify: 8388852,
+			viewJustify: vjCenterV + vjParentFullH + vjParentFullV + oneLineOnly,
 			viewBounds: {left: 0, top: 0, right: 0, bottom: 0}
 		}
 	]

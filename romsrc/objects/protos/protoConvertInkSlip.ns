@@ -107,8 +107,7 @@ infoText := {
 // the entry line below the explanation
 entryLine_3 := {
 	viewBounds: {left: 10, top: 5, right: -10, bottom: 30},
-	// oneLineOnly (8388608) + vjSiblingBottomV + vjParentClip + vjParentFullH
-	viewJustify: 8396848,
+	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 	viewFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed,
 	preallocatedContext: 'entryLine,
 	_proto: @protoInputLine

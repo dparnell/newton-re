@@ -7,8 +7,8 @@ protoStaticText := {
 	viewBounds: nil,
 	viewFlags: vVisible + vReadOnly,
 	viewFormat: 0,
-	// 8388608 = 0x800000, the NPG's oneLineOnly (one line of text, no wrapping)
-	viewJustify: 8388608,
+	// one line of text, no wrapping
+	viewJustify: oneLineOnly,
 	viewFont: @fontSystem9Bold,
 	viewTransferMode: modeOr,
 	styles: nil,

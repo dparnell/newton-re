@@ -10,7 +10,7 @@ protoStatusButton := {
 	viewBounds: {left: -55, top: -18, right: -25, bottom: -5},
 	// 8388774 = vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV +
 	// oneLineOnly (0x800000, the NPG's value)
-	viewJustify: 8388774,
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV + oneLineOnly,
 	viewFlags: vVisible + vReadOnly + vClickable,
 	// the bounds it has when the ShiftItem view is visible
 	constViewBounds: {left: -55, top: -18, right: -25, bottom: -5},
