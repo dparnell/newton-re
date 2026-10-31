@@ -1,4 +1,7 @@
-// export116, and what only it reaches
+// The Net Present Value panel (@8308): periods, interest rate per period,
+// present value, future value and payment - any four give the fifth - straight
+// through the solvers (@8304).  The periods line has an "x12" button, the
+// interest rate a "/12" one.
 
 export116 := {
 	viewBounds: {left: 0, top: 0, right: 224, bottom: 225},
@@ -18,6 +21,7 @@ export116 := {
 	],
 	changeInProgress: nil,
 	solvedFor: nil,
+	// The panel's lines, in the order the solvers' list has them.
 	viewSetupDoneScript: func() begin
 		AddArraySlot((FSViews := [Array: ]), Periods);
 		AddArraySlot(FSViews, InterestRate);
@@ -50,8 +54,10 @@ export116 := {
 
 netPresentValue := "Net Present Value";
 
+// Periods (line 0).
 export116Item := {
 	calcLineLabel: "Periods",
+	// The periods for the other four values; an alert when there are none.
 	ComputeValue: func(list) begin
 		local solveForPeriod;
 		if (((solveForPeriod := self:SolveForPeriod(list[1], list[2], list[3], list[4])) = nil) or (solveForPeriod < 0)) then begin
@@ -61,6 +67,7 @@ export116Item := {
 		return solveForPeriod
 	end,
 	lineNumber: 0,
+	// Puts the caret at the end of the line's field.
 	viewSetupDoneScript: func() begin
 		inherited:?viewSetupDoneScript();
 		SetKeyView(self.CalcLine.value.value, 9999)
@@ -69,8 +76,10 @@ export116Item := {
 	preAllocatedContext: 'Periods
 };
 
+// Interest rate per period, % (line 1).
 export116Item_2 := {
 	calcLineLabel: interestRate,
+	// The rate for the other four values; an alert when out of range.
 	ComputeValue: func(list) begin
 		local solveForInterestRate;
 		if ((solveForInterestRate := self:SolveForInterestRate(list[0], list[2], list[3], list[4])) = nil) then begin
@@ -83,8 +92,10 @@ export116Item_2 := {
 	preAllocatedContext: 'InterestRate
 };
 
+// Present value (line 2).
 export116Item_3 := {
 	calcLineLabel: "Present Value",
+	// The present value for the other four values.
 	ComputeValue: func(list) begin
 		local solveForPresentValue;
 		if ((solveForPresentValue := self:SolveForPresentValue(list[0], list[1], list[3], list[4])) = nil) then begin
@@ -97,8 +108,10 @@ export116Item_3 := {
 	preAllocatedContext: 'PresentValue
 };
 
+// Future value (line 3).
 export116Item_4 := {
 	calcLineLabel: "Future Value",
+	// The future value for the other four values.
 	ComputeValue: func(list) begin
 		local solveForFutureValue;
 		if ((solveForFutureValue := self:SolveForFutureValue(list[0], list[1], list[2], list[4])) = nil) then begin
@@ -111,8 +124,10 @@ export116Item_4 := {
 	preAllocatedContext: 'FutureValue
 };
 
+// Payment (line 4).
 export116Item_5 := {
 	calcLineLabel: "Payment",
+	// The payment for the other four values.
 	ComputeValue: func(list) begin
 		local solveForPayment;
 		if ((solveForPayment := self:SolveForPayment(list[0], list[1], list[2], list[3])) = nil) then begin

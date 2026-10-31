@@ -270,7 +270,7 @@ pageOf := {
 	viewBounds: {left: 0, top: 0, right: 74, bottom: 17},
 	viewJustify: vjCenterH + vjCenterV + vjParentCenterV + oneLineOnly,
 	// Called by imageContainer:Update with the current page number (the argument
-	// is the page, though named scalingInfo); its first piece, ﰁ, is the popup diamond.
+	// is the page, though named scalingInfo); its first piece, U+FC01, is the popup diamond.
 	Update: func(scalingInfo) begin
 		SetValue(self, 'text, ParamStr("^0 ^1 of ^2", [Array: "\uFC01\u", scalingInfo, Length(target.pages)]))
 	end,
@@ -303,7 +303,7 @@ pageOf := {
 			end;
 		self:hilite(nil)
 	end,
-	// Shows the popup with the current page checked (ﰋ, the check mark) and
+	// Shows the popup with the current page checked (U+FC0B, the check mark) and
 	// the last item's text matching whether the page view is open.
 	buttonClickScript: func() begin
 		local currentPage;

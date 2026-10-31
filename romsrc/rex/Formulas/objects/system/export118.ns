@@ -1,4 +1,5 @@
-// export118, and what only it reaches
+// The Date Calculator panel (@8310): a start date, a number of days and an end
+// date - any two give the third.  Dates are minutes since 1904 (1440 to a day).
 
 export118 := {
 	stepChildren: [stepChildren:
@@ -14,6 +15,7 @@ export118 := {
 		export118Item_3
 	],
 	viewBounds: {left: 0, top: 0, right: 224, bottom: 158},
+	// The panel's lines, in the order the solver's list has them.
 	viewSetupDoneScript: func() begin
 		AddArraySlot((FSViews := [Array: ]), StartDateField);
 		AddArraySlot(FSViews, NumberOfDaysField);
@@ -22,6 +24,8 @@ export118 := {
 	end,
 	formulaSymbol: 'DateCalculator,
 	overview: dateCalculator,
+	// True for a date the panel will not show: before 1904 or after the last
+	// minute of 2099 (103088159 minutes since 1904).
 	DateOutOfRange: func(a1) begin
 		return ((a1 < 0) or (a1 > 103088159))
 	end,
@@ -41,8 +45,10 @@ export118 := {
 
 dateCalculator := "Date Calculator";
 
+// The start date (line 0).
 export118Item := {
 	calcLineLabel: "ﰁStart Date",
+	// The start: the end date less the days; an alert when out of range.
 	ComputeValue: func(list) begin
 		local l1, listItem, listItem2;
 		l1 := nil;
@@ -59,8 +65,10 @@ export118Item := {
 	preAllocatedContext: 'StartDateField
 };
 
+// The number of days (line 1), whole numbers.
 export118Item_2 := {
 	calcLineLabel: "# of Days",
+	// The days from the start date to the end date.
 	ComputeValue: func(list) begin
 		local listItem, l2, listItem2;
 		listItem := list[0];
@@ -70,6 +78,7 @@ export118Item_2 := {
 	integerField: true,
 	indent: 93,
 	lineNumber: 1,
+	// Puts the caret at the end of the line's field.
 	viewSetupDoneScript: func() begin
 		inherited:?viewSetupDoneScript();
 		SetKeyView(self.value.value, 9999)
@@ -78,8 +87,10 @@ export118Item_2 := {
 	preAllocatedContext: 'NumberOfDaysField
 };
 
+// The end date (line 2).
 export118Item_3 := {
 	calcLineLabel: "ﰁEnd Date",
+	// The end: the start date plus the days; an alert when out of range.
 	ComputeValue: func(list) begin
 		local listItem, listItem2, l3;
 		listItem := list[0];

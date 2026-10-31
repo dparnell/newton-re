@@ -1,4 +1,6 @@
-// export104, and what only it reaches
+// A formula line (@8296): a label (calcLineLabel) beside a number field
+// (@8295).  The panels make their lines of it, setting lineNumber, the label,
+// integerField and decimalPlaces.
 
 export104 := {
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 36},
@@ -6,18 +8,22 @@ export104 := {
 	viewFormat: vfPen(1),
 	stepChildren: [stepChildren: export104Item, export104Item_2],
 	viewJustify: vjParentFullH + vjSiblingBottomV,
+	// Shows the line's label.
 	viewSetupFormScript: func() begin
 		SetValue(label, 'text, calcLineLabel)
 	end,
 	integerField: nil,
 	indent: 115,
+	// A tap on the label: nothing by default (a panel's line may override it).
 	CalcLineLabelClickScript: func(unit) begin
 		return true
 	end,
 	changeInProgress: nil,
+	// The line's value (its number field's).
 	GetNumericValue: func() begin
 		return value:GetNumericValue()
 	end,
+	// Sets the line's value.
 	SetNumericValue: func(a1) begin
 		value:SetNumericValue(a1)
 	end,
@@ -29,6 +35,7 @@ export104 := {
 	value: nil
 };
 
+// The line's label; a tap on it is sent on as CalcLineLabelClickScript.
 export104Item := {
 	text: staticText,
 	viewBounds: {left: 5, top: 15, right: 110, bottom: 28},
