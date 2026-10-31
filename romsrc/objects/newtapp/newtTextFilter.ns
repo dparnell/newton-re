@@ -1,12 +1,23 @@
-// newtTextFilter, and what only it reaches
+// newtTextFilter: the NewtApp filter for plain text (NPR 2.0 Table 3-1), the base of
+// nearly every other filter.  Text goes into the slot as written; as the user writes,
+// the line looks the words up in the application's own soup (dataSoup) and offers
+// the entries holding them in the label popup; picking one moves to that entry.
+//
+// This file holds newtTextFilter and what only it reaches.
 
 newtTextFilter := {
 	_proto: @newtFilter,
-	recFlags: 14849,
+	// recFlags: the view flags newtProtoLine gives its entry line (entryLine.viewFlags) when it can be written:
+	// what the recognisers may make of the writing in it
+	recFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed,
+	// the entry line's textFlags
 	recTextFlags: 8,
 	recConfig: @rcInkorText,
+	// called by the line when it clones the filter: a field that recognises words (text,
+	// names, addresses or custom dictionaries) also recognises single letters when the
+	// user's "letters in fields" option is on
 	InitFilter: func() begin
-		(if (if (BAnd(recFlags, 23072768) <> 0) then GetUserConfig('lettersInFieldsOption)) then (recFlags := BOr(recFlags, 16384)))
+		(if (if (BAnd(recFlags, vCharsAllowed + vAddressField + vNameField + vCustomDictionaries) <> 0) then GetUserConfig('lettersInFieldsOption)) then (recFlags := BOr(recFlags, vLettersAllowed)))
 	end,
 	PathToText: func() begin
 		Clone(target.(path))
@@ -14,22 +25,29 @@ newtTextFilter := {
 	TextToPath: func(a1) begin
 		Clone(a1)
 	end,
+	// the text written, made into the words to look for
 	PreQuery: func(a1) begin
 		SplitString(a1)
 	end,
+	// the entries of the application's soup that hold those words
 	PathQuery: func(a1) begin
 		dataSoup:Query({type: 'words, words: a1})
 	end,
+	// an entry whose own slot at path holds the words is offered by that slot's text
 	QueryItem: func(entry, preQuery) begin
 		(if (if entry.(path) then FindStringInFrame(entry.(path), preQuery, nil)) then {item: entry.(path), id: MakeEntryAlias(entry)})
 	end,
+	// picking one goes to that entry (the application's cursor) and shows it
 	ResolveItem: func(a1) begin
 		dataCursor:Goto(ResolveEntryAlias(a1.id));
 		self:DoRetarget()
 	end,
+	// copy the same slot from the other entry
 	EntryToPath: func(resolveEntryAlias) begin
 		(target.(path) := resolveEntryAlias.(path))
 	end,
+	// the value a picker (see picker in newtFilter) gave back: store it, show it and
+	// unhilite the line (baseLine is the input line)
 	pickActionScript: func(index) begin
 		if target then begin
 				target.(path) := index;
@@ -37,6 +55,7 @@ newtTextFilter := {
 			end;
 		baseLine:hilite(nil)
 	end,
+	// the picker was closed without a choice
 	pickCancelledScript: func() begin
 		baseLine:hilite(nil)
 	end

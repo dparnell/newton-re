@@ -683,3 +683,9 @@ vfInset	<<16
 vfShadow	<<18
 vfRound	<<24
 tsSize	<<10
+# newtapp (the small files): viewJustify's oneLineOnly (NPR 2.0 "Text limits", the value as src/views/TextView.h's vjOneLineOnly and TTextView::RealDraw test it); view effects fxUp, fxPopDownEffect (NPR 2.0 "viewEffect" table); dictionary ids kUserDictionary, kNumbersOnlyDictionary (NPR 2.0 Tables 8-4, 8-5)
+oneLineOnly	0x800000
+fxUp	0x20800
+fxPopDownEffect	0x60000
+kUserDictionary	0x1f
+kNumbersOnlyDictionary	0x75
