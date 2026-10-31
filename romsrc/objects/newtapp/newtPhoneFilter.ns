@@ -1,10 +1,19 @@
-// newtPhoneFilter, and what only it reaches
+// newtPhoneFilter: the NewtApp filter for a phone number (NPR 2.0 Table 3-1).  Taking
+// a number from another entry (EntryToPath, for jamFromEntry) offers all that entry's
+// phone numbers in the label popup, each with its type, the one of the filter's kind
+// chosen and checked; the country of the chosen number is kept in country.
+//
+// This file holds newtPhoneFilter and what only it reaches.
 
 newtPhoneFilter := {
 	_proto: @newtTextFilter,
-	recFlags: 264705,
+	// recFlags: the entry line's view flags (newtTextFilter)
+	recFlags: vVisible + vClickable + vGesturesAllowed + vPhoneField,
+	// the class of phone number wanted (a subclass of phone, as 'homePhone); nil for any
 	kind: nil,
+	// the country of the number last taken from an entry or picked
 	country: nil,
+	// take the phone number from another (Names) entry; the others go in the popup
 	EntryToPath: func(resolveEntryAlias) begin
 		target.(path) := nil;
 		country := nil;
@@ -17,6 +26,7 @@ newtPhoneFilter := {
 						local cls, frame2;
 						if StrFilled(value) then begin
 								cls := ClassOf(value);
+								// "number (type)", the type's name from PhoneTypes; $\uFC0B is the check mark
 								frame2 := {item: ParamStr("^0 ^?1(^1)||", [Array: MakeDisplayPhone(value), PhoneTypes.phoneText.(cls)]), value: value, country: resolveEntryAlias.country};
 								if IsSubclass(cls, kind) then begin
 										key2 := key;
@@ -33,11 +43,13 @@ newtPhoneFilter := {
 						country := resolveEntryAlias.country
 					end
 			end;
+		// a single number needs no popup
 		if (if list then (Length(list) = 1)) then begin
 				list := nil
 			end;
 		self:SetLabelCommands(list)
 	end,
+	// a number picked from the popup brings its country; nil: the line puts its text in
 	ChooseItem: func(index) begin
 		country := labelCommands[index].country;
 		nil

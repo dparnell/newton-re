@@ -1,10 +1,18 @@
-// newtSmartPhoneFilter, and what only it reaches
+// newtSmartPhoneFilter: a newtPhoneFilter that looks phone numbers up in the Names
+// soup (the flavor of newtSmartPhoneView): as the user writes, the cards with a phone
+// number holding the words are offered as "number (type)", and choosing one fills
+// the entry from that card.  Not in the NPR.
+//
+// This file holds newtSmartPhoneFilter and what only it reaches.
 
 newtSmartPhoneFilter := {
 	_proto: @newtPhoneFilter,
+	// the Names entries (the cardfile union soup) holding the words written
 	PathQuery: func(a1) begin
 		Query(GetUnionSoup(@cardfileSoupName), {type: 'words, words: a1})
 	end,
+	// a card one of whose phones holds the words (FindStringInFrame gives the path to it;
+	// [1] its index in phones), offered as that number and its type
 	QueryItem: func(entry, preQuery) begin
 		local stringInFrame, phone;
 		(if entry.phones then (if (stringInFrame := FindStringInFrame(entry.phones, preQuery, true)) then begin
@@ -12,6 +20,8 @@ newtSmartPhoneFilter := {
 					{item: ParamStr("^0 ^?1(^1)||", [Array: MakeDisplayPhone(phone), PhoneTypes.phoneText.(ClassOf(phone))]), id: MakeEntryAlias(entry)}
 				end))
 	end,
+	// the user picked one of them: take what this field wants from that Names entry
+	// (targetView is the entry view, whose jamFromEntry passes it to every slot view)
 	ResolveItem: func(a1) begin
 		targetView:jamFromEntry(ResolveEntryAlias(a1.id))
 	end

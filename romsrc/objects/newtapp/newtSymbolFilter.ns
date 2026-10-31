@@ -1,12 +1,22 @@
-// newtSymbolFilter, and what only it reaches
+// newtSymbolFilter: a NewtApp filter for a slot that holds a symbol.  Without a
+// textFrame the symbol is shown as its own text and what is written is interned;
+// with one, textFrame maps each symbol to its text (or to a frame whose textFramePath
+// slot is the text), and text written is looked up there.  Not in the NPR.
+//
+// This file holds newtSymbolFilter and what only it reaches.
 
 newtSymbolFilter := {
 	_proto: @newtTextFilter,
+	// {symbol: text (or a frame), ...}; nil: the symbols' own names
 	textFrame: nil,
+	// the slot of textFrame's frames that holds the text; nil when they are the text
 	textFramePath: nil,
+	// the symbol's text from textFrame, or its name (a string in the slot as it is)
 	PathToText: func() begin
 		(if IsString(target.(path)) then Clone(target.(path)) else (if textFrame then (if textFramePath then textFrame.(target.(path)).(textFramePath) else textFrame.(target.(path))) else Stringer([Array: target.(path)])))
 	end,
+	// the symbol whose text is a1 (nil when textFrame has none); ink and empty text are
+	// stored as they are
 	TextToPath: func(a1) begin
 		(if ((not StrFilled(a1)) or IsRichString(a1)) then a1 else (if textFrame then (foreach key, value in textFrame do begin
 						if StrEqual((if textFramePath then value.(textFramePath) else value), a1) then begin

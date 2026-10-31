@@ -1,4 +1,8 @@
-// newtFloatingBar, and what only it reaches
+// newtFloatingBar: a NewtApp button bar that floats at the bottom of a view
+// (NPR 2.0), as in Notes' outline view: the buttons of menuButtons centred on a
+// rounded bar.
+//
+// This file holds newtFloatingBar and what only it reaches.
 
 newtFloatingBar := {
 	viewClass: clView,
@@ -12,9 +16,12 @@ newtFloatingBar := {
 	height: 13,
 	left: 0,
 	right: 0,
+	// the rounded bar behind the buttons
 	viewDrawScript: func() begin
 		self:DrawShape(MakeRoundRect(left, 6, right, 10, 4), '{fillPattern: 5, penPattern: 0})
 	end,
+	// the children: the buttons side by side, 7 pixels apart, the row centred in the
+	// parent (left, right: the bar's ends)
 	viewSetupChildrenScript: func() begin
 		viewChildren := nil;
 		(if menuButtons then begin
@@ -37,7 +44,7 @@ newtFloatingBar := {
 				(foreach key, value in menuButtons do begin
 						local box;
 						copyItem := copy[key];
-						viewChildren[key] := (if (key > 0) then {_proto: value, viewBounds: RelBounds(7, 0, copyItem, height), viewJustify: 8406022} else {_proto: value, viewBounds: RelBounds((left + 7), 4, copyItem, height), viewJustify: 8388614})
+						viewChildren[key] := (if (key > 0) then {_proto: value, viewBounds: RelBounds(7, 0, copyItem, height), viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingTopV + oneLineOnly} else {_proto: value, viewBounds: RelBounds((left + 7), 4, copyItem, height), viewJustify: vjCenterH + vjCenterV + oneLineOnly})
 					end)
 			end)
 	end

@@ -1,21 +1,35 @@
-// newtSmartCompanyFilter, and what only it reaches
+// newtSmartCompanyFilter: a NewtApp filter for a company name from the Names soup:
+// as the user writes, the Names cards whose company holds the words are offered as
+// "company (address)", and choosing one fills the entry from that card.  Not in the NPR.
+//
+// This file holds newtSmartCompanyFilter and what only it reaches.
 
 newtSmartCompanyFilter := {
 	_proto: @newtTextFilter,
-	recFlags: 29395457,
-	dictionaries: [|Array|: 42, 31, 0],
+	// recFlags: the entry line's view flags (newtTextFilter)
+	recFlags: vVisible + vClickable + vGesturesAllowed + vPunctuationAllowed + vNameField + vCapsRequired + vCustomDictionaries,
+	// dictionary ids (42 and 0 system dictionaries, 31 the user's words); InitFilter adds
+	// the locale's company dictionaries
+	dictionaries: [|Array|: 42, kUserDictionary, 0],
+	// the Names entries (the cardfile union soup) holding the words written
 	PathQuery: func(a1) begin
 		Query(GetUnionSoup(@cardfileSoupName), {type: 'words, words: a1})
 	end,
+	// a card whose company holds the words, offered as "company (address)"
 	QueryItem: func(entry, preQuery) begin
 		(if (if entry.company then FindStringInFrame(entry.company, preQuery, nil)) then {item: Stringer([Array: entry.company, " ", $(, entry.address, $)]), id: MakeEntryAlias(entry)})
 	end,
+	// the user picked one of them: take what this field wants from that Names entry
+	// (targetView is the entry view, whose jamFromEntry passes it to every slot view)
 	ResolveItem: func(a1) begin
 		targetView:jamFromEntry(ResolveEntryAlias(a1.id))
 	end,
+	// the field's part of a Names entry: its company
 	EntryToPath: func(resolveEntryAlias) begin
 		(target.(path) := resolveEntryAlias.company)
 	end,
+	// when the line clones the filter: its own copy of the dictionaries with the locale's
+	// recogCompanyDictionaries appended
 	InitFilter: func() begin
 		ArrayMunger((dictionaries := Clone(dictionaries)), Length(dictionaries), 0, GetLocale().recogCompanyDictionaries, 0, nil);
 		inherited:?InitFilter()

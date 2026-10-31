@@ -1,4 +1,8 @@
-// newtShowMenu, and what only it reaches
+// newtShowMenu: a Show button that lists the NewtApp application's layouts
+// (allLayouts, but the overview) by name, checking the current one, and shows the
+// one chosen.
+//
+// This file holds newtShowMenu and what only it reaches.
 
 newtShowMenu := {
 	_proto: @protoPopupButton,
@@ -6,10 +10,13 @@ newtShowMenu := {
 	viewJustify: vjSiblingRightH + vjSiblingTopV,
 	text: show_2,
 	keyButton: '_showKeyButton,
+	// register as one of the application's key buttons: newtAppBase.(keyButton) is this view
+	// (the buttons the keyboard's and other commands can find)
 	viewSetupDoneScript: func() begin
 		inherited:?viewSetupDoneScript();
 		(if keyButton then (newtAppBase.(keyButton) := self))
 	end,
+	// build the picker from the layouts, then open it
 	buttonClickScript: func() begin
 		popup := [Array: ];
 		(foreach key, value in allLayouts do begin
@@ -24,15 +31,18 @@ newtShowMenu := {
 			end);
 		inherited:buttonClickScript()
 	end,
+	// show the layout chosen
 	pickActionScript: func(index) begin
 		inherited:pickActionScript(index);
 		newtAppBase:ShowLayout(popup[index].slot);
 		(popup := nil)
 	end,
+	// no choice: forget the items
 	pickCancelledScript: func() begin
 		inherited:pickCancelledScript();
 		(popup := nil)
 	end,
+	// no longer a key button
 	viewQuitScript: func() begin
 		if keyButton then begin
 				RemoveSlot(newtAppBase, keyButton)

@@ -1,3 +1,7 @@
-// newtLabelSimpleDateInputLine, and what only it reaches
+// newtLabelSimpleDateInputLine: the NewtApp labelled input line for a date that may
+// have no year, such as a birthday (7/24 or July 24 as well as 7/24/88) (NPR 2.0).
+//
+// This file holds newtLabelSimpleDateInputLine and what only it reaches.
 
+// flavor: the NewtApp filter that makes and reads the text (newtFilter)
 newtLabelSimpleDateInputLine := {_proto: @newtProtoLine, flavor: @newtSimpleDateFilter};

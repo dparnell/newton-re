@@ -1,19 +1,27 @@
-// newtDateNTimeFilter, and what only it reaches
+// newtDateNTimeFilter: the NewtApp filter for a date and a time together (NPR 2.0
+// Table 3-1), shown as the date (LongDateStr with longFormat, else ShortDateStr) and the
+// time (TimeStr with format); its picker is the date-and-time popup.
+//
+// This file holds newtDateNTimeFilter and what only it reaches.
 
 newtDateNTimeFilter := {
 	_proto: @newtTextFilter,
-	recFlags: 1575425,
-	increment: 15,
-	longFormat: 180969,
+	// recFlags: the entry line's view flags (newtTextFilter)
+	recFlags: vVisible + vClickable + vGesturesAllowed + vDateField + vTimeField,
+	increment: 15, // the popup's time step, in minutes
+	longFormat: 180969, // yearMonthDayStrSpec's value (@datetimeStrSpecs)
 	shortFormat: nil,
-	format: 170636,
+	format: 170636, // shortTimeStrSpec's value (@datetimeStrSpecs)
+	// the date and the time, or a string in the slot as it is
 	PathToText: func() begin
 		(if IsString(target.(path)) then Clone(target.(path)) else Stringer([Array: (if longFormat then LongDateStr(target.(path), longFormat) else ShortDateStr(target.(path), shortFormat)), " ", TimeStr(target.(path), format)]))
 	end,
+	// the date and time written, in minutes (nil when not a date)
 	TextToPath: func(a1) begin
 		local stringToDate2;
 		(if ((not StrFilled(a1)) or IsRichString(a1)) then a1 else (if (stringToDate2 := StringToDate(a1)) then stringToDate2))
 	end,
+	// the date-and-time popup at the slot's value, stepping by increment minutes
 	picker: func() begin
 		@dateNTimePopup:New(target.(path), increment, self:GlobalLabelBounds(), self)
 	end

@@ -1,14 +1,25 @@
-// newtDateFilter, and what only it reaches
+// newtDateFilter: the NewtApp filter for a date (NPR 2.0 Table 3-1).  The slot holds the
+// date in minutes (as Time() gives it); the line shows it with LongDateStr (or
+// ShortDateStr when longFormat is nil) and its picker is the date popup.  A date the
+// user writes keeps the time of day the slot held; one that is not a valid date is
+// erased, with an alert, when the line closes.
+//
+// This file holds newtDateFilter and what only it reaches.
 
 newtDateFilter := {
 	_proto: @newtTextFilter,
-	recFlags: 526849,
+	// recFlags: the entry line's view flags (newtTextFilter)
+	recFlags: vVisible + vClickable + vGesturesAllowed + vDateField,
+	// whether the last text written was a valid date (TextToPath; QuitFilter)
 	validDate: true,
-	longFormat: 180969,
+	longFormat: 180969, // yearMonthDayStrSpec's value (@datetimeStrSpecs), the NPR's default
 	shortFormat: nil,
+	// a string in the slot is shown as it is
 	PathToText: func() begin
 		(if IsString(target.(path)) then Clone(target.(path)) else (if longFormat then LongDateStr(target.(path), longFormat) else ShortDateStr(target.(path), shortFormat)))
 	end,
+	// the date written, in minutes at midnight plus the time of day the slot held
+	// (1440 minutes in a day); ink and empty text are stored as they are
 	TextToPath: func(a1) begin
 		local l1, stringToDate2;
 		(if ((not StrFilled(a1)) or IsRichString(a1)) then a1 else begin
@@ -17,15 +28,19 @@ newtDateFilter := {
 				(if (stringToDate2 := StringToDate(a1)) then (if (if l1 then IsImmediate(l1)) then ((stringToDate2 - (stringToDate2 mod 1440)) + (l1 mod 1440)) else (stringToDate2 - (stringToDate2 mod 1440))))
 			end)
 	end,
+	// called when the line closes: an invalid date is erased, and the user told so
 	QuitFilter: func() begin
 		(if (if (not validDate) then target.(path)) then begin
 				target.(path) := nil;
+				// 3: the notification level (an alert)
 				GetRoot():Notify(3, "Date Entry", "The date you entered is invalid and has been erased.")
 			end)
 	end,
+	// the date popup, starting at the slot's date if it holds one
 	picker: func() begin
 		@datePopup:New((if (if target.(path) then (not IsRichString(target.(path)))) then [Array: target.(path)]), self:GlobalLabelBounds(), self)
 	end,
+	// the date popup gives back an array of dates: store the first
 	pickActionScript: func(index) begin
 		if target then begin
 				target.(path) := index[0];

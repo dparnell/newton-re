@@ -1,12 +1,18 @@
-// newtNewStationeryButton, and what only it reaches
+// newtNewStationeryButton: the NewtApp New button (NPR 2.0): lists the dataDefs
+// of the application (those whose superSymbol is its own) and adds a new entry of
+// the one chosen.
+//
+// This file holds newtNewStationeryButton and what only it reaches.
 
 newtNewStationeryButton := {
 	form: 'dataDef,
 	keyButton: '_newKeyButton,
 	text: new_3,
+	// add an entry made from the dataDef chosen
 	statScript: func(statArrayItem) begin
 		self:AddEntryFromStationery(statArrayItem.symbol)
 	end,
+	// the dataDefs of this application
 	SetUpStatArray: func() begin
 		GetDefs(form, [Array: superSymbol], nil)
 	end,

@@ -1,3 +1,8 @@
-// newtroLabelDateInputLine, and what only it reaches
+// newtroLabelDateInputLine: newtLabelDateInputLine read-only (the NPR's
+// newtROLabelDateInputLine): a label and a date that cannot be edited.
+//
+// This file holds newtroLabelDateInputLine and what only it reaches.
 
+// flavor: the NewtApp filter that makes and reads the text (newtFilter)
+// access 'readOnly: the value is shown and cannot be edited, and the label offers no picker
 newtroLabelDateInputLine := {_proto: @newtProtoLine, flavor: @newtDateFilter, access: 'readOnly};

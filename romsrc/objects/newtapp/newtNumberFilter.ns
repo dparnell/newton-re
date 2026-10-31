@@ -1,3 +1,6 @@
-// newtNumberFilter, and what only it reaches
+// newtNumberFilter: the NewtApp filter for any number, integer or real (NPR 2.0 Table
+// 3-1): newtIntegerFilter without the rounding.
+//
+// This file holds newtNumberFilter and what only it reaches.
 
 newtNumberFilter := {_proto: @newtIntegerFilter, integerOnly: nil};
