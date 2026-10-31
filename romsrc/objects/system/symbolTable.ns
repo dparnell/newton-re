@@ -1,4 +1,11 @@
 // symbolTable, and what only it reaches
+//
+// The ROM's symbol table (kROMSymbolTable, 32768 slots): every symbol the
+// ROM's objects use, interned once so that two ROM symbols compare by
+// identity.  It is open-addressed by the symbol's hash (the high bits pick
+// the first slot, the probe steps by an odd stride; frames/Symbols.cpp
+// FindSymbol): nil is an empty slot, an integer (0) a deleted one.  Intern
+// looks here before the RAM table.  Pure data, in the order the hash put it.
 
 symbolTable := [|Array|:
 	0,

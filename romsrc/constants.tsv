@@ -800,3 +800,7 @@ kDockStateSync	2
 kDockStateRestore	3
 kDockStateLoadPackage	4
 kDockStateKeyboard	9
+# romsrc/objects/system h-z: NPG Table 3-1 (oneLineOnly), the NPR (Notify levels, Keyboard Modifier Keys), headers NewtErrors.h/NewtMemory.h
+vjOneLineOnly	0x800000
+kNoMemory	-7000
+memFullErr	-108

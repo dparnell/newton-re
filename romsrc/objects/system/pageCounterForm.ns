@@ -1,4 +1,6 @@
-// pageCounterForm, and what only it reaches
+// pageCounterForm (@355): the print form protoPrintFormat's CountPages builds,
+// opens and closes to count the pages a print format makes: it steps through the pages
+// without drawing them and leaves the count in fields.pageCount.
 
 pageCounterForm := {
 	_proto: @protoPrintForm,
@@ -6,6 +8,8 @@ pageCounterForm := {
 	fields: nil,
 	printView: nil,
 	_counterForm: true,
+	// viewSetupDoneScript: asks printNextPageScript for page after page until it
+	// answers nil; the number of pages goes to fields.pageCount.
 	viewSetupDoneScript: func() begin
 		local l1;
 		l1 := 1;

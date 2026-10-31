@@ -1,7 +1,12 @@
-// mailEditor, and what only it reaches
+// mailEditor (@120): the full-screen editor the mail routing slip opens to
+// write a letter's text (path 'text) or, as a smaller box, its subject
+// (path 'title): editMessage and editSubject (mailSlip) set message (the
+// item), path, updateScript (called with the new text when it changed) and
+// appName, then Open it. A root child (preallocatedContext 'mailEditor).
 
 mailEditor := {
 	path: nil,
+	// the slots the preallocated context starts with
 	_cacheContext: {
 		_parent: nil,
 		_proto: nil,
@@ -28,6 +33,7 @@ mailEditor := {
 	_proto: @protoFloatNGo,
 	mailTitle: nil,
 	fullBounds: {left: 18, top: 18, right: -18, bottom: -18},
+	// the scroll arrows go to the message holder
 	viewScrollDownScript: func() begin
 		messageHolder:viewScrollDownScript()
 	end,
@@ -35,12 +41,15 @@ mailEditor := {
 	messageField: nil,
 	viewJustify: vjParentFullH + vjParentFullV,
 	updateScript: nil,
+	// (as viewScrollDownScript)
 	viewScrollUpScript: func() begin
 		messageHolder:viewScrollUpScript()
 	end,
 	appName: uCardPositionAlertButton,
 	stepallocatecontext: [|Array|: 'mailTitle, mailTitle, 'messageHolder, messageHolder, 'messageField, messageField],
 	declareSelf: 'base,
+	// viewSetupFormScript: the subject gets the small box, centred; the text
+	// the whole screen less a margin.
 	viewSetupFormScript: func() begin
 		(if (path = 'title) then begin
 				viewJustify := vjParentFullH + vjParentCenterV;
@@ -50,9 +59,10 @@ mailEditor := {
 				(viewBounds := fullBounds)
 			end)
 	end,
-	viewEffect: 133120,
+	viewEffect: 133120, // 0x20800: the open/close animation's effect flags
 	stepChildren: [stepChildren: mailTitle, messageHolder],
 	debug: 40020,
+	// viewSetupChildrenScript: titles the subject editor "Letter Subject"
 	viewSetupChildrenScript: func() begin
 		(if (path = 'title) then (mailTitle.title := "Letter Subject"))
 	end
@@ -60,6 +70,7 @@ mailEditor := {
 
 mailTitle := {title: letterText, preallocatedContext: 'mailTitle, _proto: @protoTitle};
 
+// messageHolder: the scrolling frame round the edit view.
 messageHolder := {
 	viewClass: clView,
 	viewBounds: {left: 2, top: 14, right: -2, bottom: -14},
@@ -67,13 +78,17 @@ messageHolder := {
 	viewFlags: vVisible + vClipping + vStrokesAllowed,
 	viewOriginY: nil,
 	scrollDy: 100,
+	// viewScrollUpScript: up by the field's scroll step, not past the top
 	viewScrollUpScript: func() begin
 		local least;
 		(if ((least := min(messageField.scrollDy, viewOriginY)) > 0) then self:SetOrigin(0, (viewOriginY - least)))
 	end,
+	// viewScrollDownScript: grows the field to hold its children (and 50
+	// pixels more), then scrolls down a step if there is more below.
 	viewScrollDownScript: func() begin
 		least := 99999;
 		most := 0;
+		// (the decompiler's placement of the function's locals)
 		local least2;
 		local l2;
 		local least;
@@ -86,6 +101,7 @@ messageHolder := {
 		SetValue(messageField, 'viewBounds, SetBounds(2, 0, -2, max(l2, self:LocalBox().bottom)));
 		(if ((least2 := min((l2 - (viewOriginY + self:LocalBox().bottom)), messageField.scrollDy)) > 0) then self:SetOrigin(0, (viewOriginY + least2)))
 	end,
+	// viewSetupFormScript: the field starts as tall as the holder
 	viewSetupFormScript: func() begin
 		viewOriginY := 0;
 		messageField.viewBounds := Clone(messageField.viewBounds);
@@ -96,6 +112,8 @@ messageHolder := {
 	viewChildren: [viewChildren: messageField]
 };
 
+// messageField: the edit view holding the letter's text or subject (path
+// of message) as one paragraph, in the handwriting font.
 messageField := {
 	viewClass: clEditView,
 	viewBounds: {left: 2, top: 0, right: -2, bottom: 0},
@@ -106,10 +124,14 @@ messageField := {
 	viewFont: tsHWFont + tsSize(18),
 	changed: nil,
 	scrollDy: 150,
+	// viewSetupFormScript: the scroll step a whole number of lines; letters
+	// allowed if the user's "letters in fields" option is on.
 	viewSetupFormScript: func() begin
 		scrollDy := ((150 div viewLineSpacing) * viewLineSpacing);
-		(if GetUserConfig('lettersInFieldsOption) then (viewFlags := BOr(viewFlags, 16384)))
+		(if GetUserConfig('lettersInFieldsOption) then (viewFlags := BOr(viewFlags, vLettersAllowed)))
 	end,
+	// editAddWordScript(view, ...): a written word added; it takes the field's
+	// font, and the letter is marked edited (changed for either path).
 	editAddWordScript: func(a1, a2) begin
 		a1.viewFont := viewFont;
 		if (path = 'text) then begin
@@ -118,6 +140,9 @@ messageField := {
 		changed := true;
 		a1
 	end,
+	// viewSetupChildrenScript: the text ("" if none) with trailing newlines
+	// cut, in one paragraph; rich text (with ink) is put in afterwards by
+	// Recognize.
 	viewSetupChildrenScript: func() begin
 		local text;
 		viewOriginY := 0;
@@ -128,6 +153,8 @@ messageField := {
 		message.(path) := text;
 		(self.viewChildren := [Array: {_proto: @protoParagraph, viewBounds: SetBounds(0, 0, 636, (displayParams.appAreaHeight - 34)), viewStationery: 'para, text: (if IsRichString(text) then "" else text), viewFont: viewFont, viewLineSpacing: viewLineSpacing}])
 	end,
+	// GetTheText: the field's text (its paragraphs', notesText) less
+	// trailing newlines
 	GetTheText: func() begin
 		local childViewFrames, notesText2;
 		if (not (childViewFrames := self:?ChildViewFrames())) then begin
@@ -137,6 +164,8 @@ messageField := {
 		(while (if (StrLen(notesText2) > 0) then (notesText2[(StrLen(notesText2) - 1)] = $\n)) do (notesText2 := Substr(notesText2, 0, (StrLen(notesText2) - 1))));
 		notesText2
 	end,
+	// viewQuitScript: stores the edited text back in the message, saves the
+	// entry if it changed and calls updateScript with the new text.
 	viewQuitScript: func() begin
 		local theText;
 		theText := self:GetTheText();
@@ -151,20 +180,26 @@ messageField := {
 			end;
 		(message := nil)
 	end,
+	// viewSetupDoneScript: Recognize once the view is up
 	viewSetupDoneScript: func() begin
 		inherited:?viewSetupDoneScript();
 		AddDeferredSend(self, 'Recognize, nil)
 	end,
+	// Recognize: puts rich text (ink words) in the paragraph, and a second
+	// later makes it the key view with the caret at the end.
 	Recognize: func() begin
 		if IsRichString(message.(path)) then begin
 				SetValue(viewChildren[0], 'text, message.(path))
 			end;
 		AddProcrastinatedCall('_SetKeyView, functions.SetKeyView, [Array: self.viewChildren[0], 99999], 1000)
 	end,
+	// viewChangedScript(slot, view): runs in the paragraph (inherited). The
+	// text marks the letter changed; a subject over 61 characters is refused
+	// with an alert (the text is not cut).
 	viewChangedScript: func(slot, view) begin
 		(if (slot = 'text) then begin
 				changed := true;
-				(if (path = 'text) then (message.edited := true) else (if (StrLen(self:Parent():GetTheText()) > 61) then self:Notify(3, appName, ParamStr("The Subject is limited to ^0 characters.", [Array: 61]))))
+				(if (path = 'text) then (message.edited := true) else (if (StrLen(self:Parent():GetTheText()) > 61) then self:Notify(kNotifyAlert, appName, ParamStr("The Subject is limited to ^0 characters.", [Array: 61]))))
 			end)
 	end,
 	debug: 149728,

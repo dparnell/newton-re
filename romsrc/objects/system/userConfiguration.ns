@@ -1,8 +1,15 @@
 // userConfiguration, and what only it reaches
+//
+// The default user configuration (magic pointer 285): the slots
+// GetUserConfig and SetUserConfig read and write - the owner's name,
+// address and phone numbers (empty strings until Setup fills them in), the
+// location and dialing settings, mail, fax and printer choices, sounds and
+// volumes, handwriting recognition options, folders, and the long-distance
+// carriers' access numbers.
 
 userConfiguration := {
 	callingCard: nil,
-	_ScrollingPopupSleepTime: 25,
+	_ScrollingPopupSleepTime: 25, // read by protoPicker as its scrollingSleepTime
 	dialingPrefix: uCardPositionAlertButton,
 	inkWordScaling: 75,
 	AlarmAnnoyOn: nil,
@@ -11,7 +18,7 @@ userConfiguration := {
 	doubleTime: 30,
 	mailFont: tsFancy + tsSize(12),
 	phoneFormat: x,
-	AlarmAnnoyReps: 3,
+	AlarmAnnoyReps: 3, // how many more times an alarm sounds, AlarmAnnoyPause apart
 	paperSize: uSLetter,
 	commonCountries: [|Array|:
 		'Australia,
@@ -31,12 +38,12 @@ userConfiguration := {
 	],
 	currentwordrecognizer: xRWR,
 	backOff: 30,
-	AlarmAnnoyPause: 60,
+	AlarmAnnoyPause: 60, // in ticks (60 a second): the pause between those sounds
 	AutoDockOn: true,
 	lastRollover: 0,
 	cellularConnection: nil,
 	alarmVolumeDb: alarmVolumeDb,
-	AlarmAnnoyDelays: [|Array|: 30, 30, 60, 90, 150, 240, 390, 630],
+	AlarmAnnoyDelays: [|Array|: 30, 30, 60, 90, 150, 240, 390, 630], // seconds until the alarm notice nags again, the first, second, ... time
 	bigLearningEnabled: nil,
 	userPenSize: 2,
 	manualDialing: nil,
@@ -55,7 +62,7 @@ userConfiguration := {
 	recordingQuality: nil,
 	mailNetwork: nil,
 	mailStripHeaders: true,
-	SleepTime: 300,
+	SleepTime: 300, // seconds of idle before the Newton sleeps (5 minutes)
 	modemSoundVolume: 2,
 	zapAutoRoute: nil,
 	alarmVolume: 2,
@@ -67,11 +74,12 @@ userConfiguration := {
 	ExtraAlwaysClose: true,
 	currentPersona: nil,
 	mailPassword: nil,
+	// a paper size is {top, left, bottom, right, title, id}, in points
 	paperSizes: [|Array|: uSLetter, {top: 0, left: 0, bottom: 773, right: 529, title: "A4 Letter", id: 'a4}],
 	powerSleep: nil,
 	systemName: nil,
 	userFont: tsHWFont + tsSize(18),
-	currentZone: currentZone,
+	currentZone: currentZone, // the AppleTalk zone, "*" (the local one)
 	leftHanded: nil,
 	commaDelay: 2,
 	beepSound: 'simpleBeep,
@@ -84,9 +92,11 @@ userConfiguration := {
 	location: {
 		name: sanFrancisco,
 		place: sanFrancisco,
+		// latitude and longitude in units of 360/2^29 degrees: 37.8 N, and 237.6
+		// east (122.4 W)
 		latitude: 56371445,
 		longitude: 354334801,
-		gmt: -28800,
+		gmt: -28800, // seconds from GMT (8 hours west)
 		country: 'USA,
 		areacode: 415,
 		region: "CA",
@@ -130,7 +140,7 @@ userConfiguration := {
 	letterSetSelection: 2,
 	learningEnabledOption: nil,
 	timeoutCursiveOption: 40,
-	daylightsavings: 3600,
+	daylightsavings: 3600, // seconds added in summer time (an hour)
 	AlarmVolumeEqualsSystem: nil,
 	blessedapp: 'setup,
 	doShapeRecognition: nil,
@@ -162,6 +172,8 @@ userConfiguration := {
 	currentcoverpage: 'standard,
 	ExtraPackageFreezing: nil,
 	actionSoundEffects: true,
+	// per carrier, per country, the number dialled to reach it (w waits for a
+	// dial tone); USA800 is its toll-free number in the USA
 	accessNumbers: {
 		|at&t|: {
 			USA: 10288,
@@ -328,7 +340,7 @@ userConfiguration := {
 	locale: uS
 };
 
-x := "^?0^0 ||^1^?2x^2||";
+x := "^?0^0 ||^1^?2x^2||"; // the default phoneFormat, a ParamStr-style template
 
 llap := "llap";
 
@@ -338,4 +350,4 @@ xRWR := "XRWR";
 
 storage := "Storage";
 
-alarmVolumeDb := real('|Real|, -6.0206);
+alarmVolumeDb := real('|Real|, -6.0206); // decibels; 20*log10(1/2), half the full amplitude

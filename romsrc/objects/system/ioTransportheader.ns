@@ -1,4 +1,7 @@
-// ioTransportheader, and what only it reaches
+// ioTransportheader (@818): the header at the top of an In/Out Box item: the
+// transport's icon (a button opening the transport's info slip,
+// transportInfoForm) and the title the transport draws for the item
+// (GetTitleInfoShape).
 
 ioTransportheader := {
 	viewClass: clView,
@@ -10,6 +13,7 @@ ioTransportheader := {
 	infoSlip: nil,
 	routeSlip: nil,
 	debug: "TransportTitle",
+	// viewQuitScript: closes the info slip and routing slip if open.
 	viewQuitScript: func() begin
 		if (infoSlip <> nil) then begin
 				infoSlip:Close();
@@ -20,6 +24,8 @@ ioTransportheader := {
 				(routeSlip := nil)
 			end)
 	end,
+	// InfoChanged(changed): called by the info slip when it closes; if the
+	// item was changed, saves it and redraws the title.
 	InfoChanged: func(changed) begin
 		if changed then begin
 				layout:FlushData();
@@ -33,10 +39,12 @@ ioTransportheader := {
 			viewBounds: {left: 0, top: 0, right: 32, bottom: 20},
 			viewFormat: 0,
 			icon: nil,
+			// the icon button: the transport's icon
 			viewSetupFormScript: func() begin
 				icon := transport.icon;
 				(_titleKeyButton := self)
 			end,
+			// toggles the transport's info slip; a transport without one says so
 			buttonClickScript: func() begin
 				(if infoSlip then begin
 						infoSlip:Close();
@@ -44,8 +52,9 @@ ioTransportheader := {
 					end else (if (if transport then transport.transportInfoForm) then begin
 							layout:FlushData();
 							(infoSlip := transport.transportInfoForm:New(target, transport, self:GlobalBox(), self))
-						end else self:Notify(3, "InOut Box", "No Information Available")))
+						end else self:Notify(kNotifyAlert, "InOut Box", "No Information Available")))
 			end,
+			// forgets the _titleKeyButton
 			viewQuitScript: func() begin
 				(_titleKeyButton := nil)
 			end,
@@ -58,6 +67,8 @@ ioTransportheader := {
 	allocateContext: [|Array|: 'title, title_3]
 };
 
+// title_3: the header's title view, drawing the shape the item's transport
+// makes for it (GetTitleInfoShape) in the view's box.
 title_3 := {
 	viewClass: clView,
 	viewBounds: {left: 37, top: 0, right: 0, bottom: 0},
@@ -65,12 +76,15 @@ title_3 := {
 	viewFont: tsSystem + tsSize(10) + tsBold,
 	viewFlags: vVisible + vClipping,
 	bits: nil,
+	// viewSetupFormScript / viewUpdateFormScript: (re)make the title shape
 	viewSetupFormScript: func() begin
 		(if target then (bits := transport:GetTitleInfoShape(target, self:LocalBox())))
 	end,
+	// (viewUpdateFormScript: sent by InfoChanged after the item changed)
 	viewUpdateFormScript: func() begin
 		(if target then SetValue(self, 'bits, transport:GetTitleInfoShape(target, self:LocalBox())))
 	end,
+	// viewDrawScript: draws the title shape
 	viewDrawScript: func() begin
 		(if bits then self:DrawShape(bits, '{transferMode: 0, penPattern: 0, fillPattern: 1}))
 	end,

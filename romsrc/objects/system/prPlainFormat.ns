@@ -1,4 +1,6 @@
-// prPlainFormat, and what only it reaches
+// prPlainFormat (@869): the "Plain" print format - an item's data reflowed
+// into page-sized pieces (ReFlow) and printed page after page, with wider
+// margins on the first page when there is no cover page.
 
 prPlainFormat := {
 	viewJustify: vjParentFullH + vjParentFullV + vjReflow,
@@ -8,6 +10,8 @@ prPlainFormat := {
 	data: nil,
 	kids: nil,
 	reflowStart: 0,
+	// viewSetupFormScript: the page's bounds (a smaller top margin when a cover
+	// page is printed) and the data to print, from the first piece on.
 	viewSetupFormScript: func() begin
 		inherited:viewSetupFormScript();
 		if fields.coverPage then begin
@@ -18,6 +22,8 @@ prPlainFormat := {
 		self.data := target.data;
 		(self.reflowStart := 0)
 	end,
+	// viewSetupChildrenScript: reflows the data into kids once, then shows the
+	// kids from reflowStart on.
 	viewSetupChildrenScript: func() begin
 		if (if (not kids) then data) then begin
 				kids := ReFlow(data, '{reflowFont: tsFancy + tsSize(12), unistyle: nil, graphicsGutter: 16, textGutter: -16, viewLineSpacing: 28}, fields.targetBox, self:LocalBox())
@@ -27,6 +33,8 @@ prPlainFormat := {
 			end;
 		inherited:?viewSetupChildrenScript()
 	end,
+	// printNextPageScript: moves reflowStart past the pieces on this page and
+	// lays out the next page if any are left; nil when it was the last.
 	printNextPageScript: func() begin
 		if self.stepChildren then begin
 				reflowStart := (reflowStart + Length(self.stepChildren))

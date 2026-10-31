@@ -1,3 +1,4 @@
-// kCardAlertBounds, and what only it reaches
+// kCardAlertBounds: the bounds of the PC card alert box drawn by the alert
+// manager (TCardAlertDialog, src/pcmcia/CardAlerts.cpp), read by the native.
 
 kCardAlertBounds := {left: 0, top: 0, right: 192, bottom: 80};

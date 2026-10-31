@@ -1,4 +1,7 @@
-// meeting, and what only it reaches
+// meeting (@125): the view of one meeting in the Calendar's day view - a
+// slider bar on the left and the meeting's text (textView), placed by the
+// meeting's time and length; realData is the meeting entry (or an instance of
+// a repeating meeting) it shows, and its text is saved back as it is edited.
 
 meeting := {
 	debug: 78425,
@@ -7,6 +10,9 @@ meeting := {
 	target: nil,
 	targetView: nil,
 	declareSelf: 'meetingview,
+	// viewSetupFormScript: the meeting's bounds (from the day view's layout, or
+	// laid out now); an old (version 1.x) meeting is converted to 2.0 and saved -
+	// or, on a read-only store, only placed by its start time and duration.
 	viewSetupFormScript: func() begin
 		local kidBound, pos, realData2, l4;
 		if (viewBounds = nil) then begin
@@ -23,6 +29,7 @@ meeting := {
 		if (realData2.version <> 2) then begin
 				if EntryStore(realData2):IsReadOnly() then begin
 						if realData.viewBounds then begin
+								// the start time's minutes into its day (1440 minutes in a day)
 								l4 := (realData.mtgStartDate mod 1440);
 								self.viewBounds := {left: viewBounds.left, top: TimeToPosition(dayView, l4), right: viewBounds.right, bottom: TimeToPosition(dayView, (l4 + self:GetMeetingSlot(realData, 'mtgDuration)))}
 							end
@@ -38,6 +45,8 @@ meeting := {
 		targetView := self;
 		inherited:viewSetupFormScript()
 	end,
+	// viewFindTargetScript(dragTypes): a dragged meeting is dropped on the day
+	// view, anything else on this view.
 	viewFindTargetScript: func(a1) begin
 		(foreach item in a1 do begin
 				if SetContains(item.types, 'meeting) then begin
@@ -46,9 +55,17 @@ meeting := {
 			end);
 		self
 	end,
+	// viewDropScript: accepts nothing.
 	viewDropScript: func(dragInfo, dropPt, a3) begin
 		nil
 	end,
+	// SetMeetingBounds(newBounds, oldBounds): the meeting moved or resized to
+	// newBounds in the day view - its start time and duration from the new top
+	// and bottom (30 minutes when the bottom is not below the top, a duration of
+	// whole half hours kept so, and not past midnight), custom bounds kept when
+	// the left edge is at least 30, and the change saved to the repeating
+	// meeting's template, its exception or the meeting itself; undoable (the
+	// undo is the same call with the bounds swapped).
 	SetMeetingBounds: func(a1, a2) begin
 		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12, l13, l14, l15;
 		l1 := self.realData.mtgStartDate;
@@ -60,6 +77,7 @@ meeting := {
 		if (if (((l5 := self:GetMeetingSlot(self.realData, 'mtgDuration)) mod 30) = 0) then (((l4 - l3) mod 30) = 15)) then begin
 				l4 := (l4 + 15)
 			end;
+		// not past midnight
 		l4 := min(1440, l4);
 		if (if (if (not self:GetMeetingSlot(self.realData, 'viewBounds)) then ((l1 mod 1440) = l3)) then (l5 <> (l4 - l3))) then begin
 				l6 := nil
@@ -125,6 +143,7 @@ meeting := {
 			viewBounds: {left: 0, top: 0, right: 12, bottom: 0},
 			viewJustify: vjParentFullV,
 			viewFormat: 0,
+			// viewRawInkScript: swallows ink written on the bar
 			viewRawInkScript: func(a1) begin
 				true
 			end
@@ -147,8 +166,11 @@ meeting := {
 	}
 };
 
+// the meeting's text, right of the slider bar
 textViewViewBounds := {left: 38, top: 0, right: 0, bottom: 0};
 
+// the meeting's text, editable in place; an edit is saved after half a
+// second idle (or when the view closes)
 textView := {
 	debug: 78400,
 	viewClass: clParagraphView,
@@ -160,11 +182,15 @@ textView := {
 	textFlags: 24,
 	text: nil,
 	unsavedContext: nil,
+	// viewSetupFormScript: the meeting's text, in the day view's font and line
+	// spacing.
 	viewSetupFormScript: func() begin
 		text := self:GetMeetingText(realData);
 		self.viewFont := dayView.viewFont;
 		(self.viewLineSpacing := dayView.viewLineSpacing)
 	end,
+	// updateAndSave(editView): saves the edited text (with its styles, as a rich
+	// string) in the meeting, or in its repeating meeting's template.
 	updateAndSave: func(unsavedContext) begin
 		local richString, repeatTemplate, soup;
 		richString := MakeRichString(unsavedContext.text, unsavedContext.styles);
@@ -172,12 +198,14 @@ textView := {
 		(if (repeatTemplate := realData.repeatTemplate) then self:CarefulChange((soup := EntrySoup(repeatTemplate)), repeatTemplate, true) else self:CarefulChange(EntrySoup(realData), realData, true))
 	end,
 	iAmKey: nil,
+	// viewChangedScript(slot, view): a text change is saved after 500 ms idle.
 	viewChangedScript: func(slot, view) begin
 		(if (slot = 'text) then begin
 				self.unsavedContext := view;
 				self:SetupIdle(500)
 			end)
 	end,
+	// viewIdleScript: saves an edit not yet saved; nil stops the idler.
 	viewIdleScript: func() begin
 		if unsavedContext then begin
 				self:updateAndSave(unsavedContext);
@@ -185,6 +213,7 @@ textView := {
 			end;
 		nil
 	end,
+	// viewQuitScript: saves an edit not yet saved.
 	viewQuitScript: func() begin
 		(if unsavedContext then self:viewIdleScript())
 	end,

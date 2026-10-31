@@ -1,4 +1,9 @@
 // varsmapstarter, and what only it reaches
+//
+// The starter map of the globals frame: InitScriptGlobals
+// (src/frames/ScriptBoot.cpp) clones it and copies in whatever globals
+// exist, so that the system's globals sit in a map laid out in advance
+// for the ROM's scripts. The values are set during boot.
 
 varsmapstarter := {
 	OldPowerOffHandlers: nil,

@@ -1,4 +1,8 @@
-// handwritingStyleImages, and what only it reaches
+// handwritingStyleImages (@673): the bitmaps of handwritten sample words the
+// handwriting-style preferences draw (the wordExample view's wordBits, and
+// paragraphData's hwImages) to show how the recogniser will split letters and
+// words at the chosen spacing. Nested arrays of {bits, bounds} images: each
+// inner array is one sample's pieces, drawn side by side.
 
 handwritingStyleImages := [|Array|:
 	[|Array|:

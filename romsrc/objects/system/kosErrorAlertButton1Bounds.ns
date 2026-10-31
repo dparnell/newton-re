@@ -1,3 +1,4 @@
-// kosErrorAlertButton1Bounds, and what only it reaches
+// kosErrorAlertButton1Bounds: the second button of a two-button OS error
+// alert, at the left (TErasePersistentDataAlert, src/alert/AlertDialog.cpp).
 
 kosErrorAlertButton1Bounds := {left: 10, top: 55, right: 60, bottom: 70};

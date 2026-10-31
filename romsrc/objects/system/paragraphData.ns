@@ -1,4 +1,6 @@
-// paragraphData, and what only it reaches
+// paragraphData (@684): the tables of the Paragraph handwriting recogniser in
+// one frame - its DTE and PPD tables and trigrams, letter images, the handwriting style
+// images and the two compression codebooks.
 
 paragraphData := {
 	DTEHeader: DTEHeader,

@@ -1,4 +1,7 @@
-// plainSoupPersistent, and what only it reaches
+// plainSoupPersistent: the template of a soup's persistent frame - the store
+// object the store's name index maps a soup's name to; StoreCreateSoup clones it
+// with class 'DiskSoup and fills the rest (docs/stores/README.md,
+// src/stores/Soups.cpp).
 
 plainSoupPersistent := {
 	class: 'DiskSoup,

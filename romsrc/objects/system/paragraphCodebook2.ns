@@ -1,3 +1,5 @@
-// paragraphCodebook2, and what only it reaches
+// paragraphCodebook2 (@145): the second compression codebook of the Paragraph
+// handwriting data (paragraphData.codebook2) - a 'Comp table loaded from
+// resources/.
 
 paragraphCodebook2 := texttable('Comp, "resources/Comp/63dedd.txt");

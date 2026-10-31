@@ -1,4 +1,7 @@
-// pagePreviewForm, and what only it reaches
+// pagePreviewForm (@141): the floating print preview slip - the page drawn
+// small in a remote view (previewRemoteView), a Cancel button and a Next button
+// that steps through the pages; a print format's preview button builds it with
+// the item as its fields.
 
 pagePreviewForm := {
 	viewBounds: {left: 8, top: 8, right: -8, bottom: -8},
@@ -14,10 +17,13 @@ pagePreviewForm := {
 	ReOrientToScreen: @defRotateFunc
 };
 
+// the Next button: the slip's default button
 _defaultButton_12 := {
 	viewBounds: {left: -39, top: -18, right: -8, bottom: -5},
-	viewJustify: 8390790,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + vjOneLineOnly,
 	text: next,
+	// buttonClickScript: shows the next page (the print form's printNextPageScript)
+	// or, after the last one, closes the slip.
 	buttonClickScript: func() begin
 		local l1;
 		l1 := true;

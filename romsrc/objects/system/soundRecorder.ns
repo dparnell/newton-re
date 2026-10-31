@@ -1,9 +1,21 @@
 // soundRecorder, and what only it reaches
+//
+// The sound recorder slip: the floating window with Rec, Stop and Play
+// buttons, a progress slider and a status line, that records a voice memo
+// or plays one back. Other code opens it with OpenRecord(callback) or
+// OpenPlay(sounds). The work is done by RecordEngine, an instance of
+// recorderchassIs (a recorderEngine, romsrc/objects/recognition/), whose
+// state is a bit: 1 idle, 2 recording, 4 playing, 8 playback paused,
+// 16 recording paused, 32 stopping; it calls the buttons' and the status
+// line's SetState(old, new, hasSounds) as the state changes.
 
 soundRecorder := {
+	// Called once the slip is set up: makes the record engine, unless
+	// OpenRecord or OpenPlay has made it already (openCalled).
 	viewSetupDoneScript: func() begin
 		(if (not openCalled) then (RecordEngine := @recorderchassIs:New({_parent: self})) else (self.openCalled := nil))
 	end,
+	// Called as the slip closes: tells the record engine it is done.
 	viewQuitScript: func() begin
 		(if RecordEngine then RecordEngine:Done())
 	end,
@@ -18,6 +30,10 @@ soundRecorder := {
 	],
 	viewFlags: vApplication + vFloating + vClickable,
 	openCalled: nil,
+	// While recording (state 2) or playing (4), every 200 ms: frees the
+	// virtual binary cache of the second-to-last sound frame (presumably as
+	// the last is still being written), so that a long recording does not
+	// fill memory.
 	FlushVBO: func() begin
 		local l1, fSoundArrayItem;
 		(if RecordEngine:TestState(6) then begin
@@ -42,6 +58,10 @@ soundRecorder := {
 		'statusText,
 		statusText
 	],
+	// Opens the slip to record. a1 is the callback the engine calls with the
+	// recorded sounds; the engine starts in the record direction if a
+	// recording source is set in the user configuration, else in the play
+	// direction.
 	OpenRecord: func(a1) begin
 		local l1;
 		if RecordEngine then begin
@@ -54,6 +74,8 @@ soundRecorder := {
 	end,
 	_proto: @protoFloater,
 	recordButton: nil,
+	// Called every second while recording or playing: moves the progress
+	// slider to the current time.
 	UpdateSlider: func() begin
 		self:EventPause(true);
 		(if RecordEngine:TestState(6) then (if SoundProgressSlider then begin
@@ -63,6 +85,7 @@ soundRecorder := {
 	end,
 	viewJustify: vjParentCenterH + vjParentCenterV,
 	stopButton: nil,
+	// Opens the slip to play back a1, an array of sound frames.
 	OpenPlay: func(a1) begin
 		if RecordEngine then begin
 				RecordEngine:Done()
@@ -75,7 +98,7 @@ soundRecorder := {
 		nil
 	end,
 	playButton: nil,
-	viewEffect: 165920,
+	viewEffect: 165920, // the slip's opening/closing animation (fx flags; no names in constants.tsv)
 	debug: 330856,
 	notifyTitle: soundRecorder_2,
 	RecordEngine: nil,
@@ -96,6 +119,7 @@ rec := "Rec";
 
 play := "Play";
 
+// The Rec button, which becomes Pause while recording.
 recordButton := {
 	_proto: protoRecorderButton,
 	viewJustify: vjCenterV,
@@ -103,6 +127,8 @@ recordButton := {
 	icon: recordButtonIcon,
 	text: rec,
 	preallocatedContext: 'recordButton,
+	// The button's icon: the record icon if a recording source is set,
+	// otherwise a greyed one.
 	GetIcon: compile(
 		constants: {
 			kBinaryFromHex: func(hex, cls) begin
@@ -120,10 +146,15 @@ recordButton := {
 		func() begin
 			(if (GetUserConfig('inputDevice) <> nil) then kLiteral_423bb9 else kLiteral_423c61)
 		end),
+	// Called as the button is set up: chooses its icon.
 	viewSetupFormScript: func() begin
 		icon := self:GetIcon();
 		inherited:?viewSetupFormScript()
 	end,
+	// Rec/Pause pressed: with no recording source, offers to open the
+	// Recording preferences; otherwise records (from idle or a paused
+	// recording) or pauses a recording, or in any other state plays the
+	// alarmWakeup sound (@262) as a refusal.
 	buttonClickScript: compile(
 		constants: {
 			kFunction_426ded: func(a1) begin
@@ -136,21 +167,24 @@ recordButton := {
 					AsyncConfirm("To record, you must pick a recording source from the \u201C\uRecording\u201D\u preference.  Would you like to open the \u201C\uRecording\u201D\u preference now?", 'yesNoDefaultYes, kFunction_426ded);
 					return nil
 				end;
+			// from idle: through state 64 and back to 1, so that the engine calls
+			// the SetState methods afresh (presumably to bring them up to date)
 			if RecordEngine:TestState(1) then begin
 					RecordEngine:SetState(64);
 					RecordEngine:SetState(1)
 				end;
 			if (not RecordEngine:TestState(16)) then begin
+					// TestStore: 0 room to record, 1 the store too full, 3 a locked card
 					if ((testStore := RecordEngine:TestStore()) = 3) then begin
-							self:Notify(3, notifyTitle, "Sorry, you must unlock the card before recording.");
+							self:Notify(kNotifyAlert, notifyTitle, "Sorry, you must unlock the card before recording.");
 							return nil
 						end;
 					if (testStore = 1) then begin
-							self:Notify(3, notifyTitle, "Sorry, there is not enough memory available for a new recording. The internal memory or storage card is almost full.");
+							self:Notify(kNotifyAlert, notifyTitle, "Sorry, there is not enough memory available for a new recording. The internal memory or storage card is almost full.");
 							return nil
 						end
 				end;
-			(if RecordEngine:TestState(17) then RecordEngine:record() else (if RecordEngine:TestState(2) then RecordEngine:pause() else playsound(@262)))
+			(if RecordEngine:TestState(17) then RecordEngine:record() else (if RecordEngine:TestState(2) then RecordEngine:pause() else playsound(@262))) // 17: idle or recording paused
 		end),
 	SetState: compile(
 		constants: {
@@ -165,6 +199,10 @@ recordButton := {
 			end,
 			kLiteral_423e59: {bits: call kBinaryFromHex with ("000000000004003500350084004c009f7fffffc0ffffffe0c0000060c0000060c0000060c0000060c071c060c071c060c071c060c071c060c071c060c071c060c071c060c071c060c071c060c071c060c071c060c0000060c0000060c0000060c0000060ffffffe07fffffc0", 'bits), bounds: '{left: 0, top: 0, right: 27, bottom: 23}}
 		},
+		// Called by the engine when its state changes from fSoundState to
+		// fSoundState2: while recording (2) the button shows the pause icon and
+		// "Pause", otherwise the record icon and "Rec"; when a recording stops
+		// (32) with an error, says why (fEngineError 1: no room left).
 		func(fSoundState, fSoundState2, hasSoundFrames) begin
 			if (fSoundState2 = 2) then begin
 					if (recButIcon.icon <> kLiteral_423e59) then begin
@@ -177,7 +215,7 @@ recordButton := {
 							SetValue(recButText, 'text, "Rec")
 						end
 				end;
-			(if (fSoundState2 = 32) then (if (RecordEngine.fEngineError <> 0) then (if (RecordEngine.fEngineError = 1) then self:Notify(3, notifyTitle, "Sorry, the recording was stopped because the internal memory or storage card is almost full.") else self:Notify(3, notifyTitle, "Sorry, the recording was stopped due to an internal error."))))
+			(if (fSoundState2 = 32) then (if (RecordEngine.fEngineError <> 0) then (if (RecordEngine.fEngineError = 1) then self:Notify(kNotifyAlert, notifyTitle, "Sorry, the recording was stopped because the internal memory or storage card is almost full.") else self:Notify(kNotifyAlert, notifyTitle, "Sorry, the recording was stopped due to an internal error."))))
 		end)
 };
 
@@ -189,6 +227,7 @@ stopButton := {
 	},
 	text: stop,
 	preallocatedContext: 'stopButton,
+	// Stop pressed: stops recording or playing.
 	buttonClickScript: func() begin
 		RecordEngine:stop()
 	end
@@ -199,6 +238,9 @@ playButton := {
 	icon: playButtonIcon,
 	text: play,
 	preallocatedContext: 'playButton,
+	// Play/Pause pressed: plays (from idle or paused playback, 9), pauses
+	// playing (4), stops a recording and plays it from the start (2), or
+	// beeps.
 	buttonClickScript: func() begin
 		(if RecordEngine:TestState(9) then RecordEngine:play() else (if RecordEngine:TestState(4) then RecordEngine:pause() else (if RecordEngine:TestState(2) then begin
 						RecordEngine:stop();
@@ -220,6 +262,8 @@ playButton := {
 			kLiteral_423e59: {bits: call kBinaryFromHex with ("000000000004003500350084004c009f7fffffc0ffffffe0c0000060c0000060c0000060c0000060c071c060c071c060c071c060c071c060c071c060c071c060c071c060c071c060c071c060c071c060c071c060c0000060c0000060c0000060c0000060ffffffe07fffffc0", 'bits), bounds: '{left: 0, top: 0, right: 27, bottom: 23}},
 			kLiteral_423d09: {bits: call kBinaryFromHex with ("0000000000040035003500a9004c00c47fffffc0ffffffe0c0000060c0000060c0000060c0180060c01c0060c01e0060c01f0060c01f8060c01fc060c01fc060c01fc060c01f8060c01f0060c01e0060c01c0060c0180060c0000060c0000060c0000060ffffffe07fffffc0", 'bits), bounds: '{left: 0, top: 0, right: 27, bottom: 23}}
 		},
+		// Called by the engine on a state change: shows the pause icon and
+		// "Pause" while playing (4), otherwise the play icon and "Play".
 		func(fSoundState, fSoundState2, hasSoundFrames) begin
 			(if (fSoundState2 = 4) then (if (recButIcon.icon <> kLiteral_423e59) then begin
 						SetValue(recButIcon, 'icon, kLiteral_423e59);
@@ -232,14 +276,18 @@ playButton := {
 };
 
 statusText := {
-	viewJustify: 8388740,
+	viewJustify: vjCenterV + vjParentBottomV + vjOneLineOnly,
 	viewBounds: {top: -13, left: 7, right: 200, bottom: 0},
 	text: readyToRecord,
 	preallocatedContext: 'statusText,
+	// Called as the status line is set up: what it says depends on whether
+	// a recording source is set.
 	viewSetupFormScript: func() begin
 		text := (if (GetUserConfig('inputDevice) <> nil) then "Ready to record." else "No recording source set.");
 		inherited:?viewSetupFormScript()
 	end,
+	// Called by the engine on a state change: says what the recorder is
+	// doing or can do now (idle: ready to play and/or record).
 	SetState: func(fSoundState, fSoundState2, hasSoundFrames) begin
 		local text;
 		text := nil;

@@ -1,4 +1,6 @@
-// phonePad, and what only it reaches
+// phonePad (@676): the telephone keypad slip children - the touch-tone digits,
+// a column of phone keys beside them and a row of tab, space and arrow keys -
+// used by the convert-ink and validate slips for phone fields.
 
 phonePad := {
 	viewClass: clView,
@@ -18,6 +20,10 @@ phonePad := {
 			keyResultsAreKeycodes: nil,
 			keyDefinitions: [|Array|:
 				[|Array|:
+					// a row: [rowHeight, rowMaxKeyHeight, then legend, result and descriptor
+					// per key]; descriptor 288360456 is 0x11300808, keyAutoHilite + keyFramed * 2
+					// + keyRoundingUnit * 3 + keyHUnit + keyVUnit; 288364552 the same three units
+					// wide (keyHUnit * 3)
 					8,
 					8,
 					@kbdTabBitmap,

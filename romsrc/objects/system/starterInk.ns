@@ -1,3 +1,7 @@
 // starterInk, and what only it reaches
+//
+// The starter form of an ink object as the views make one (cloned by the
+// native shape code, src/views/DrawShape.cpp): its ink and its bounds,
+// filled in by the caller.
 
 starterInk := {ink: nil, viewBounds: nil};

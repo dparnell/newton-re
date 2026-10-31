@@ -1,4 +1,6 @@
-// ioIoboxSoup, and what only it reaches
+// ioIoboxSoup (@824): the In/Out Box's soup definition - its indexes, the
+// query its cursor uses and the methods (shared with other soup definitions)
+// that make and file its entries.
 
 ioIoboxSoup := {
 	soupIndices: @ioIndices,

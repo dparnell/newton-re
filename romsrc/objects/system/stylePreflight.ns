@@ -1,3 +1,8 @@
 // stylePreflight, and what only it reaches
+//
+// The template ReflowPreflight (src/views/Reflow.cpp) deep-clones and
+// fills: the different font families, sizes, faces and styles a page's
+// views use, each an array, so that the paper roll's print layout can see
+// whether a page is all in one family.
 
 stylePreflight := {family: [|Array|: ], size: [|Array|: ], face: [|Array|: ], styles: [|Array|: ]};

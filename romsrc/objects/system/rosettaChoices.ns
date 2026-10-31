@@ -1,4 +1,6 @@
-// rosettaChoices, and what only it reaches
+// rosettaChoices: the items of the cursive (Rosetta) recogniser's choice of what
+// to recognise - words or numbers - each with the recognizer option symbol it
+// stands for (recognizerUserChoices).
 
 rosettaChoices := [|Array|:
 	{item: words, symbol: 'wordsCursiveOption},

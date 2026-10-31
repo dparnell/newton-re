@@ -1,4 +1,6 @@
-// newYorkFont, and what only it reaches
+// newYorkFont (@131): the Fancy screen font family (New York; family number
+// 1, tsFancy): its sfnt data, sizes offered to the user and the PostScript font
+// printed for it (Times Roman).
 
 newYorkFont := {
 	name: "Fancy",
@@ -6,6 +8,7 @@ newYorkFont := {
 	macFontID: 2,
 	screenSym: 'newYorkFont,
 	psName: 'timesroman,
+	// 16.16 fixed point: about 1.15
 	psScale: 75366,
 	badFontMap: 1,
 	plainData: sfnt('sfnt, "resources/sfnt/3e9319"),

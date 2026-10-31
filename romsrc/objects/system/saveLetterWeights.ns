@@ -1,10 +1,15 @@
-// saveLetterWeights, and what only it reaches
+// saveLetterWeights (@252): saves the handwriting recogniser's letter weights
+// (and, with big learning on, its learning data) to the system soup.
 
+// saveLetterWeights(): called as the global function of the same name; nothing
+// is saved when the letter set selection is 2.
 saveLetterWeights := func() begin
 	local letterWeights;
 	(if (userConfiguration.letterSetSelection <> 2) then begin
 			SaveDataToEntry((letterWeights := GetLetterWeights()), "LetterWeights2.0");
 			(if userConfiguration.bigLearningEnabled then begin
+					// the learning data is fetched only when there are letter weights;
+					// otherwise nil is saved as "LearningData2.0"
 					if letterWeights then begin
 							letterWeights := GetLearningData()
 						end;

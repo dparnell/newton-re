@@ -1,5 +1,10 @@
-// loadGlobals, and what only it reaches
+// loadGlobals (@118): makes the userConfiguration global at boot - the
+// internal store's system-soup entry tagged "userConfiguration" (protoed to
+// @userConfiguration's defaults), or a new one added to that soup - then
+// applies its LCD contrast and sound volume to the hardware.
 
+// Called with no arguments at boot (bootInitNsGlobals, the backup slip after a
+// restore); creates the system soup if the store has none. Returns nil.
 loadGlobals := func() begin
 	local store, soup, entry;
 	store := GetStores()[0];
@@ -8,6 +13,7 @@ loadGlobals := func() begin
 		end;
 	if (not entry) then begin
 			DefGlobalVar('userConfiguration, {_proto: @userConfiguration, tag: "userConfiguration", lcdContrast: GetLCDContrast()});
+			// a new configuration: the sort order is the default's
 			SetSortID(GetUserConfig('sortID))
 		end else begin
 			entry._proto := @userConfiguration;

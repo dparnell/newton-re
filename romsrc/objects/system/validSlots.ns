@@ -1,10 +1,20 @@
 // validSlots, and what only it reaches
+//
+// The fields ValidateConfigGuts can ask the user for (magic pointer 308),
+// by the frame they are in: 'location (the current worksite: place, area
+// code, country, closest city, mail access number and network, ...) and
+// 'owner (the owner card: e-mail account and password). For each field:
+// inputProto, the view that edits it in the validation slip
+// (protoValidateSlip); theText, its label; type, what kind of value it is;
+// and optionally getPath (where in the target frame the value is, making
+// room for it if need be) and HasData (whether the frame has the value).
 
 validSlots := {
 	location: {
 		place: {
 			inputProto: {
 				_proto: @newtLabelInputLine,
+				// Called as the line closes: the place's name is also the frame's sorton.
 				viewQuitScript: func() begin
 					target.sorton := target.(path);
 					self:StartFlush()
@@ -20,12 +30,17 @@ validSlots := {
 				viewBounds: {left: 0, top: 4, right: 0, bottom: 20},
 				viewJustify: vjParentFullH + vjSiblingBottomV,
 				text: country,
+				// Called before the picker opens: pops up the country list (locationPopup)
+				// to the left of the line, starting at the current country.
 				pickerSetup: func() begin
 					local box;
 					(box := self:GlobalBox()).right := ((box.left + indent) - 2);
 					@locationPopup:New({default: GetCountryEntry(GetUserConfig('currentCountry))[0], spots: @countrySoupName, result: 'symbol}, box, self);
 					nil
 				end,
+				// A country picked (index is its symbol): the user configuration's location
+				// keeps the symbol in country; another worksite keeps the symbol in
+				// countrySymbol and the country's name in country.
 				pickActionScript: func(index) begin
 					local name;
 					name := GetCountryEntry(index)[0].name;
@@ -48,10 +63,14 @@ validSlots := {
 				viewBounds: {left: 0, top: 4, right: 0, bottom: 20},
 				viewJustify: vjParentFullH + vjSiblingBottomV,
 				viewLineSpacing: 14,
+				// Called as the picker is set up: it picks from the city soup.
 				viewSetupFormScript: func() begin
 					params := {spots: @citySoupName, result: nil};
 					inherited:?viewSetupFormScript()
 				end,
+				// A city picked (index is the city's entry): remembers the city (name,
+				// longitude, latitude) and fills in the country, area code and country
+				// name from it where they are not set.
 				pickActionScript: func(index) begin
 					target.cityAlias := [Array: index.name, index.longitude, index.latitude];
 					if (not target.countrySymbol) then begin
@@ -67,6 +86,8 @@ validSlots := {
 					inherited:pickActionScript(index.name)
 				end
 			},
+			// Whether a closest city with its country, area code and country name is
+			// set.
 			HasData: func(key) begin
 				(if (if (if key.cityAlias then key.countrySymbol) then key.areacode) then StrFilled(key.country))
 			end,
@@ -80,10 +101,14 @@ validSlots := {
 				viewFormat: 0,
 				viewBounds: {left: 0, top: 0, right: 0, bottom: 50},
 				viewJustify: vjParentFullH + vjSiblingBottomV,
+				// Called by the mail network chooser when its value changes (a1 the slot
+				// changed, id the network): fills in the access number that network has in
+				// the closest city (the card file's bcEmailNetwork).
 				DataChangeNotify: func(a1, id) begin
 					local cityFromAlias, bcEmailNetwork;
 					(if (a1 = 'mailNetwork) then (if (if (cityFromAlias := GetCityFromAlias(target.cityAlias)) then (bcEmailNetwork := GetRoot().cardfile:bcEmailNetwork(cityFromAlias, id))) then mailPhone:UpdateText(ConvertIntToPhone(bcEmailNetwork[0].mailPhone))))
 				end,
+				// Called as the view closes: a network with no access number is cleared.
 				viewQuitScript: func() begin
 					(if (not target.(mailPhone.path)) then begin
 							target.(mailNetwork.path) := nil;
@@ -95,12 +120,15 @@ validSlots := {
 				allocateContext: [|Array|: 'mailPhone, mailPhone, 'mailNetwork, mailNetwork],
 				mailNetwork: nil
 			},
+			// The path of the mail access number and network: the first element of
+			// mailAccess, made if the frame has none.
 			getPath: func(a1, a2) begin
 				if ((not a1.mailAccess) or (Length(a1.mailAccess) < 1)) then begin
 						a1.mailAccess := [Array: {}]
 					end;
 				'[pathExpr: mailAccess, 0]
 			end,
+			// Whether the first mail access entry has a network and a number.
 			HasData: func(key) begin
 				local convertIntToPhone2;
 				convertIntToPhone2 := ConvertIntToPhone(key.mailAccess[0].mailPhone);
@@ -118,9 +146,12 @@ validSlots := {
 				_proto: @newtPopupEdit,
 				viewBounds: {left: 0, top: 0, right: 0, bottom: 32},
 				viewLineSpacing: 25,
+				// recognition flags for the line (as the newtPopupEdit proto reads them)
 				newRecFlags: 64001,
 				newRecTextFlags: 10,
 				emailclass: nil,
+				// Called as the line is set up: the class an e-mail address is given is the
+				// first of the context's address symbols.
 				viewSetupFormScript: func() begin
 					local value;
 					if (Length((value := GetVariable(context, 'addressSymbols))) > 0) then begin
@@ -128,6 +159,7 @@ validSlots := {
 						end;
 					inherited:viewSetupFormScript()
 				end,
+				// Called as the line closes: the address entered is given that class.
 				viewQuitScript: func() begin
 					inherited:?viewQuitScript();
 					(if (if emailclass then target.(path)) then begin
@@ -137,7 +169,12 @@ validSlots := {
 				end
 			},
 			theText: "E-Mail Acct",
+			// Where the owner's e-mail address is (a1 the owner card's frame, a2 the
+			// context): its email slot if that holds an address of the context's
+			// class; else an emailAddrs entry holding one; else the email slot if it
+			// is empty, an emailAddrs entry with no address, or a new entry at the end.
 			getPath: func(a1, a2) begin
+				// value2 (a local, declared below) is the context's address symbols
 				value2 := GetVariable(a2, 'addressSymbols);
 				(if (if (if a1.email then (Length(value2) > 0)) then IsInstance(a1.email, value2[0])) then return 'email else begin
 						local list;
@@ -162,6 +199,8 @@ validSlots := {
 		emailPassword: {
 			inputProto: @newtLabelInputLine,
 			theText: "E-Mail Password",
+			// As above, for the password of that address; nil if there is no entry
+			// for it.
 			getPath: func(a1, a2) begin
 				value2 := GetVariable(a2, 'addressSymbols);
 				(if (if (if a1.email then (Length(value2) > 0)) then IsInstance(a1.email, value2[0])) then return 'emailPassword else begin
@@ -184,6 +223,7 @@ validSlots := {
 	}
 };
 
+// The mail access number line of the mailPhone field's view.
 mailPhone := {
 	label: "E-Mail Access #",
 	path: [pathExpr: 'mailAccess, 0, 'mailPhone],
@@ -191,7 +231,9 @@ mailPhone := {
 	_proto: @newtLabelPhoneInputLine
 };
 
+// The mail network chooser of the mailPhone field's view.
 mailNetwork := {
+	// The networks to choose from: the context's network symbols.
 	GetSymArray: func() begin
 		GetVariable(context, 'networkSymbols)
 	end,

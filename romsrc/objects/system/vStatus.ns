@@ -1,3 +1,7 @@
 // vStatus, and what only it reaches
+//
+// The simplest layout of protoStatusTemplate's status slips: a line of
+// status text and the default (Stop/Cancel) button. A transport's
+// SetStatusDialog names it ('vStatus); height is the slip's in pixels.
 
 vStatus := {height: 56, name: 'vStatus, kids: [|Array|: @protoStatusText, @protoDefaultStatusButton]};

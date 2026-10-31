@@ -1,4 +1,6 @@
-// notePaper, and what only it reaches
+// notePaper (@133): the Notes application's default stationery - the view
+// definition of a plain note (an editable newtEditView whose children
+// are in target.data), also the paper roll's (stdForms).
 
 notePaper := {
 	viewFont: tsHWFont + tsSize(18),
@@ -11,6 +13,8 @@ notePaper := {
 	name: note,
 	protection: 'private,
 	path: 'data,
+	// MinimalBounds(target): the smallest box holding all of the note's
+	// children (the union of their viewBounds); nil for an empty note.
 	MinimalBounds: func(target) begin
 		if target.data then begin
 				local unionRect2;
@@ -20,8 +24,10 @@ notePaper := {
 			end;
 		unionRect2
 	end,
+	// viewSetupDoneScript: with a keyboard connected, puts the caret at the top
+	// of an empty, writable note.
 	viewSetupDoneScript: func() begin
-		if (if (if KeyboardConnected() then (BAnd(self.viewFlags, 130) = 0)) then (if target then (not target.data))) then begin
+		if (if (if KeyboardConnected() then (BAnd(self.viewFlags, vReadOnly + vWriteProtected) = 0)) then (if target then (not target.data))) then begin
 				self:PositionCaret(10, (viewOriginY + viewLineSpacing), nil)
 			end;
 		inherited:?viewSetupDoneScript()

@@ -1,3 +1,6 @@
 // starterPolygon, and what only it reaches
+//
+// The starter form of a polygon (a drawn shape) as the views make one: the
+// 'poly stationery with its points and bounds filled in by the caller.
 
 starterPolygon := {viewStationery: 'poly, viewBounds: nil, points: nil};

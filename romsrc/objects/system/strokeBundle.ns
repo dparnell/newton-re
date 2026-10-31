@@ -1,3 +1,7 @@
 // strokeBundle, and what only it reaches
+//
+// The prototype of a stroke bundle - the frame of class 'strokeBundle
+// that holds raw ink strokes and their bounds (GetStrokeBundle and the
+// recognition natives clone it: src/recognition/StrokeBundle.cpp).
 
 strokeBundle := {class: 'strokeBundle, bounds: nil, strokes: nil};

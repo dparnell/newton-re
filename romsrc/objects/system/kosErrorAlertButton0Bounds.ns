@@ -1,3 +1,4 @@
-// kosErrorAlertButton0Bounds, and what only it reaches
+// kosErrorAlertButton0Bounds: the OS error alert's first button, at the
+// right (src/alert/AlertDialog.cpp).
 
 kosErrorAlertButton0Bounds := {left: 132, top: 55, right: 182, bottom: 70};

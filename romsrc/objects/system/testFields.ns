@@ -1,4 +1,10 @@
 // testFields, and what only it reaches
+//
+// The recognition configurations of the handwriting test harness: the
+// replay machinery's control strings select one by index, and AddTestConfig
+// (src/recognition/ReplayMetrics.cpp) sets userConfiguration.testConfig to
+// it. Each entry is a field's input mask and the dictionaries it uses
+// (dictionary ids); not used in normal operation.
 
 testFields := [|Array|:
 	{inputmask: 25200640, dictionaries: [|Array|: 45]},

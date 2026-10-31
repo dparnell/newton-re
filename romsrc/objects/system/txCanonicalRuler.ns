@@ -1,3 +1,7 @@
 // txCanonicalRuler, and what only it reaches
+//
+// The template of a ruler (paragraph format) as the text view (clTXView)
+// hands one to scripts: justification, indent, margins, line spacing and
+// tabs (src/text/TXRuler.cpp clones it).
 
 txCanonicalRuler := {justification: nil, indent: nil, leftMargin: nil, rightMargin: nil, lineSpacing: nil, tabs: nil};

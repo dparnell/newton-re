@@ -1,4 +1,7 @@
-// messageNotification, and what only it reaches
+// messageNotification (@127): the item proto of a notification in the
+// notification roll (notification, @135) - an overview line, the time stamp and
+// the message; BHNotify protos a notice on it (snoozeNotification for a
+// snoozable alarm).
 
 messageNotification := {
 	viewFormat: 0,

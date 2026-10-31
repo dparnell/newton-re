@@ -1,4 +1,8 @@
-// plainSoupPrototype, and what only it reaches
+// plainSoupPrototype: the prototype of a soup frame on a store - its methods
+// (_parent; most are natives) and the slots StoreGetSoup fills when it clones
+// it over a soup's persistent frame (docs/stores/README.md, src/stores/Soups.cpp).
+// The ...Xmit methods do the operation and then, given an application symbol,
+// announce the change with XmitSoupChange.
 
 plainSoupPrototype := {
 	_parent: {
@@ -7,6 +11,8 @@ plainSoupPrototype := {
 		GetSize: {class: #132, funcPtr: 6895010, numArgs: 0},
 		collect: {class: #132, funcPtr: 6895020, numArgs: 1},
 		RemoveAllEntries: {class: #132, funcPtr: 6893983, numArgs: 0},
+		// RemoveAllEntriesXmit(appSymbol): RemoveAllEntries, announced as 'whatThe
+		// (unspecified changes).
 		RemoveAllEntriesXmit: func(a1) begin
 			local removeAllEntries;
 			removeAllEntries := self:RemoveAllEntries();
@@ -16,6 +22,8 @@ plainSoupPrototype := {
 			removeAllEntries
 		end,
 		CopyEntries: {class: #132, funcPtr: 6914065, numArgs: 1},
+		// CopyEntriesXmit(toSoup, appSymbol): CopyEntries, announced for the soup
+		// copied to.
 		CopyEntriesXmit: func(a1, a2) begin
 			local entries;
 			entries := self:CopyEntries(a1);
@@ -25,6 +33,7 @@ plainSoupPrototype := {
 			entries
 		end,
 		Add: {class: #132, funcPtr: 6914063, numArgs: 1},
+		// AddXmit(entry, appSymbol): Add, announced as 'entryAdded.
 		AddXmit: func(a1, appSymbol) begin
 			local add;
 			add := self:Add(a1);
@@ -35,6 +44,8 @@ plainSoupPrototype := {
 		end,
 		HasTags: {class: #132, funcPtr: 6898195, numArgs: 0},
 		RemoveFromStore: {class: #132, funcPtr: 6895008, numArgs: 0},
+		// RemoveFromStoreXmit(appSymbol): RemoveFromStore, announced as 'soupDeleted
+		// with the store it was on.
 		RemoveFromStoreXmit: func(a1) begin
 			local store, removeFromStore;
 			store := self:GetStore();
@@ -46,6 +57,7 @@ plainSoupPrototype := {
 		end,
 		SetInfo: {class: #132, funcPtr: 6893978, numArgs: 2},
 		GetNextUID: {class: #132, funcPtr: 6914070, numArgs: 0},
+		// SetInfoXmit(slot, value, appSymbol): SetInfo, announced as 'soupInfoChanged.
 		SetInfoXmit: func(a1, a2, a3) begin
 			local setInfo;
 			setInfo := self:SetInfo(a1, a2);
@@ -57,6 +69,7 @@ plainSoupPrototype := {
 		SetSignature: {class: #132, funcPtr: 6914076, numArgs: 1},
 		IndexSizes: {class: #132, funcPtr: 6914073, numArgs: 0},
 		SetAllInfo: {class: #132, funcPtr: 6914074, numArgs: 1},
+		// SetAllInfoXmit(info, appSymbol): SetAllInfo, announced as 'soupInfoChanged.
 		SetAllInfoXmit: func(a1, a2) begin
 			local setAllInfo;
 			setAllInfo := self:SetAllInfo(a1);
@@ -67,6 +80,7 @@ plainSoupPrototype := {
 		end,
 		SetFlags: {class: #132, funcPtr: 6893980, numArgs: 1},
 		AddFlushed: {class: #132, funcPtr: 861062, numArgs: 1},
+		// AddFlushedXmit(entry, appSymbol): AddFlushed, announced as 'entryAdded.
 		AddFlushedXmit: func(a1, a2) begin
 			local addFlushed;
 			addFlushed := self:AddFlushed(a1);
@@ -87,6 +101,8 @@ plainSoupPrototype := {
 		MakeKey: {class: #132, funcPtr: 6895027, numArgs: 2},
 		AddWithUniqueID: {class: #132, funcPtr: 6914064, numArgs: 1},
 		GetIndexes: {class: #132, funcPtr: 6914069, numArgs: 0},
+		// AddWithUniqueIDXmit(entry, appSymbol): AddWithUniqueID, announced as
+		// 'entryAdded.
 		AddWithUniqueIDXmit: func(a1, a2) begin
 			local addWithUniqueID;
 			addWithUniqueID := self:AddWithUniqueID(a1);
@@ -108,6 +124,8 @@ plainSoupPrototype := {
 		Query: {class: #132, funcPtr: 6895019, numArgs: 1},
 		GetAllInfo: {class: #132, funcPtr: 6914068, numArgs: 0},
 		NaughtyFlush: {class: #132, funcPtr: 6914067, numArgs: 0},
+		// flush(): discontinued in 2.0 - complains (BadWickedNaughtyNoot) and calls
+		// the native NaughtyFlush.
 		flush: func() begin
 			BadWickedNaughtyNoot(Stringer([Array: "soup:Flush(\"", self:GetName(), "\")"]), 'discontinued);
 			self:NaughtyFlush()
@@ -115,6 +133,8 @@ plainSoupPrototype := {
 	},
 	_proto: nil,
 	class: 'PlainSoup,
+	// filled in by StoreGetSoup: the store wrapper, the soup's persistent store
+	// object, its name, entry and cursor caches and its index objects
 	tStore: nil,
 	storeObj: nil,
 	theName: nil,

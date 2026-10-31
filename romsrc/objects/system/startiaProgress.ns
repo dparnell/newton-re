@@ -1,4 +1,8 @@
 // startiaProgress, and what only it reaches
+//
+// Opens the Intelligent Assistant's "Interpreting" progress slip (a
+// vBarber status slip with the Assistant's icon and no close box) and does
+// the work under it; tickleiaProgress keeps it turning.
 
 startiaProgress := compile(
 	constants: {
@@ -16,6 +20,8 @@ startiaProgress := compile(
 		kLiteral_52b64d: {class: kNativeFuncClass, funcPtr: 7018690, numArgs: 1}
 	},
 	func() begin
+		// DoProgress opens the slip and calls the work function (a native, one
+		// argument: the slip's context view), answering what that returns.
 		local vBarber;
 		return (vBarber := DoProgress('vBarber, {statusText: "Interpreting", barber: true, icon: kLiteral_52b639, closeBox: nil}, kLiteral_52b64d))
 	end);

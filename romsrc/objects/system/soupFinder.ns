@@ -1,19 +1,31 @@
 // soupFinder, and what only it reaches
+//
+// ROM_SoupFinder (magic pointer 237): the proto of a Find result over one
+// soup. An application's Find method makes one with a cursor of the found
+// entries (in `cursor`) and its application in `owner`; the Find overview
+// lists the items it makes and shows one through the owner's ShowFoundItem.
+// See the Newton Programmer's Guide, "Find" (Table 16-1).
 
 soupFinder := {
-	cacheCount: nil,
-	currentItem: 0,
-	masterFinder: nil,
+	cacheCount: nil, // the number of entries found, once counted
+	currentItem: 0, // the index of the item shown, in the found entries
+	masterFinder: nil, // the finder the found items name as theirs, when not this one
 	selected: nil,
+	// The number of entries found, counted once and then remembered.
 	count: func() begin
 		(if self.cacheCount then cacheCount else (self.cacheCount := cursor:CountEntries()))
 	end,
+	// Resets the cursor to the first found entry and answers it (only the
+	// cursor's current entry if it is reset already).
 	Reset: func() begin
 		(if self.isReset then cursor:entry() else begin
 				self.isReset := true;
 				cursor:Reset()
 			end)
 	end,
+	// Answers 0 if no entries were found, 1 for one, and 2 (or the whole count,
+	// once known) for more - counting no further than two, and putting the
+	// cursor back where it was.
 	ZeroOneOrMore: func() begin
 		local entry, reset, l3;
 		(if self.cacheCount then cacheCount else begin
@@ -39,12 +51,16 @@ soupFinder := {
 				(self.zeroOneOrMoreResult := l3)
 			end)
 	end,
+	// Returns the finder to its first state: forgets the counts, makes item 0
+	// the current one and resets the cursor.
 	ReSync: func() begin
 		cacheCount := nil;
 		currentItem := 0;
 		self:Reset();
 		(zeroOneOrMoreResult := nil)
 	end,
+	// Has the owner application show entry a1, opening it if need be. a1 nil or
+	// 'deleted (the entry is gone) starts again from the first entry.
 	ShowEntry: func(a1) begin
 		if ((a1 = 'deleted) or (a1 = nil)) then begin
 				currentItem := 0;
@@ -56,6 +72,9 @@ soupFinder := {
 				cursor:Goto(a1);
 				self.isReset := nil
 			end;
+		// an owner with an OpenTo method is asked to show the entry; otherwise it
+		// is opened (given the entry first by viewPreOpenScript) and sent
+		// ShowFoundItem
 		(if (a1 <> nil) then (if owner.OpenTo then owner:OpenTo(a1, self) else begin
 					if (owner.viewCObject = nil) then begin
 							owner:?viewPreOpenScript(a1);
@@ -64,11 +83,15 @@ soupFinder := {
 					(if owner.viewCObject then owner:ShowFoundItem(a1, self))
 				end))
 	end,
+	// Shows the found item a1 (a frame MakeFoundItem made), finding its entry
+	// again by its unique id in its soup.
 	ShowFoundItem: func(a1) begin
 		local cursor;
 		currentItem := a1.itemIndex;
 		self:ShowEntry((cursor := Query(a1.soup, {type: 'index, indexPath: '_uniqueID, beginKey: a1.entryID})):entry())
 	end,
+	// Shows an item by ordinal: 'first, 'prev, 'next or an index, kept within
+	// the found entries, by moving the cursor.
 	ShowOrdinalItem: func(a1) begin
 		local currentItem2;
 		(if (a1 = 'first) then begin
@@ -90,15 +113,23 @@ soupFinder := {
 				self:ShowEntry(cursor:move((currentItem - currentItem2)))
 			end)
 	end,
+	// Makes the Find overview's item (a protoFindItem) for entry a1: the entry
+	// by unique id, soup and store signature, and as its title the excerpt the
+	// owner's FindSoupExcerpt makes.
 	MakeFoundItem: func(a1, owner) begin
 		local soupExcerpt;
 		if owner then begin
+				// looks like a ROM bug, or slack: an excerpt longer than 50 characters is
+				// cut to 80, so excerpts of 51 to 80 characters are kept whole
 				if (StrLen((soupExcerpt := owner:FindSoupExcerpt(a1, self))) > 50) then begin
 						soupExcerpt := Substr(soupExcerpt, 0, 80)
 					end
 			end;
 		{_proto: @protoFindItem, finder: (if self.masterFinder then masterFinder else self), realFinder: self, entryID: EntryUniqueID(a1), soup: EntrySoup(a1), storeID: EntryStore(a1):GetSignature(), selected: nil, itemIndex: nil, title: soupExcerpt}
 	end,
+	// Adds to array a1 up to a3 found items starting at item a2, marking those
+	// selected, and answers how many it added. The cursor is put back where it
+	// was (an error while walking ends the walk).
 	AddFoundItems: func(a1, a2, a3) begin
 		local entry, reset, l3, foundItem;
 		reset := (entry := cursor:entry());
@@ -131,6 +162,7 @@ soupFinder := {
 			end;
 		l3
 	end,
+	// the methods shared with the other finder protos (ROM_CompatibleFinder)
 	SelectItem: SelectItem_2,
 	isSelected: isSelected_2,
 	ForEachSelected: ForEachSelected_2,

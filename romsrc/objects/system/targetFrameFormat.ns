@@ -1,3 +1,7 @@
 // targetFrameFormat, and what only it reaches
+//
+// The routing format that sends the target frame itself: a
+// protoRoutingFormat with nothing else. protoPrintFormat and prFrameFormat
+// are built on it, and eWorld mail names it as an item's currentFormat.
 
 targetFrameFormat := {symbol: 'targetFrameFormat, _proto: @protoRoutingFormat};

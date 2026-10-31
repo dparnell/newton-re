@@ -1,4 +1,8 @@
 // vStatusTitle, and what only it reaches
+//
+// A layout of protoStatusTemplate's status slips: status text with a title
+// line (e.g. the number dialled, the message being sent) and the default
+// button. Mail, the call transport and the eWorld endpoint use it.
 
 vStatusTitle := {
 	height: 85,

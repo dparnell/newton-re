@@ -1,3 +1,6 @@
 // txClipboardPrototype, and what only it reaches
+//
+// The template of the data a text view puts on the clipboard for a
+// selection: its text, styles and rulers, and the clipping's bounds.
 
 txClipboardPrototype := {text: nil, styles: nil, rulers: nil, viewBounds: nil};

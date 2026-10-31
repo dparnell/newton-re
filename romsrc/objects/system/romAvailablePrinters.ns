@@ -1,4 +1,8 @@
-// romAvailablePrinters, and what only it reaches
+// romAvailablePrinters (@245): the printers the ROM knows (the global
+// AvailablePrinters): for each, its name, the C++ printer driver and imaging
+// class that print to it (src/print/), how it is reached ('serialSym or, for
+// a LaserWriter, 'networkSym by its NBP type) and its printable page bounds
+// and origin for US letter and A4 paper, in points.
 
 romAvailablePrinters := [|Array|:
 	styleWriterIII,
@@ -47,6 +51,7 @@ romAvailablePrinters := [|Array|:
 		driverName: thpPCL,
 		imagingName: tDotPrinter,
 		type: 'serialSym,
+		// prModel: which model the PCL driver drives
 		prModel: 0,
 		printerPageBounds: {eightByEleven: {bottom: 756, right: 576}, a4: {bottom: 797, right: 559}},
 		printableOrigin: {top: 14, left: 18}

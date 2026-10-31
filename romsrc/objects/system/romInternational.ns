@@ -1,10 +1,21 @@
-// romInternational, and what only it reaches
+// romInternational (@246): the ROM's international settings - the locale
+// bundles it knows (USA, Canada, Canada French, UK, Australia, Sweden; NPG
+// chapter 20, "Localizing Newton Applications"), the current and system
+// locale (USA), and the keyboard layouts (US, British, Swedish). Locale
+// bundles are protos of each other: every other locale protos on the USA
+// bundle (misleadingly named canadaFrenchProtoProto by the renaming), Canada
+// French on Canada; a bundle gives its number, time and date formats, the
+// recogniser's dictionary ids for its names, places and formats
+// (recog...Dictionary), its lexical dictionaries and input filters, labels
+// for address fields and its paper size.
 
 romInternational := {
 	scripts: [|Array|: 'Roman],
+	// indices into scripts
 	systemScript: 0,
 	currentScript: 0,
 	locales: [|Array|: canadaFrenchProtoProto, canadaFrenchProto, canadaFrench, UK, Australia_2, Sweden_2],
+	// the locale bundles by locale symbol
 	localeTable: {
 		USA: canadaFrenchProtoProto,
 		Canada: canadaFrenchProto,
@@ -15,6 +26,7 @@ romInternational := {
 	},
 	systemLocaleBundle: canadaFrenchProtoProto,
 	currentlocalebundle: canadaFrenchProtoProto,
+	// the keyboard layouts offered: their titles and key code mappings ('kchr)
 	keyboards: [|Array|:
 		Keyboard,
 		{title: "British", mapping: hexfile('kchr, "resources/kchr/3c7ca1.txt")},
@@ -23,12 +35,14 @@ romInternational := {
 	Keyboard: Keyboard
 };
 
+// the US and Swedish key code mappings
 keycodeMapping := hexfile('kchr, "resources/kchr/3c7705.txt");
 
 keycodeMapping_2 := hexfile('kchr, "resources/kchr/3c823d.txt");
 
 dateDictionary := lexicon('AirusA, "resources/AirusA/4a1d1d.lex");
 
+// the USA number format: 1,234.56, -1, $ before the amount
 numberformatProto := {
 	versionNumber: 1,
 	decimalpoint: decimalpoint,
@@ -43,6 +57,7 @@ numberformatProto := {
 
 pm_2 := " pm";
 
+// the USA time format: 12-hour, " am"/" pm"
 timeformatProto := {
 	versionNumber: 1,
 	timeSepStr1: timeSepStr1,
@@ -58,6 +73,8 @@ timeformatProto := {
 	noonForm: 1
 };
 
+// the USA short date format: shortDateOrder packs the order of the date's
+// elements, shortDateDelim the separators before, between and after them
 shortDateFormatProto := {
 	versionNumber: 1,
 	shortDateOrder: 182891,
@@ -80,6 +97,8 @@ t := "T";
 
 may := "May";
 
+// the USA long date format: the names of the days and months, the order of
+// the elements (longDateOrder, packed) and the separators between them
 longDateFormatProto := {
 	versionNumber: 1,
 	longDofWeek: [|Array|: "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
@@ -116,6 +135,8 @@ miles := "miles";
 
 state := "State";
 
+// the USA locale bundle (localeTable.USA, the system locale): the proto of
+// all the others
 canadaFrenchProtoProto := {
 	recogAddressDictionary: 89,
 	wordsDictionary: nil,
@@ -176,6 +197,7 @@ canadaFrenchProtoProto := {
 	versionNumber: 1,
 	commonDialingPrefixes: [|Array|: none_2, "9,", "8,", "1,", "0,", "*70, (No Call Waiting)"],
 	recogCitiesDictionary: 90,
+	// the dictionary lists below hold dictionary ids; 31 is kUserDictionary
 	recogCityDictionaries: [|Array|: 24, 31],
 	shortDateFormat: shortDateFormatProto,
 	wordBreakTable: texttable('Intl, "resources/Intl/4a3fbd.txt"),
@@ -246,12 +268,15 @@ canadaFrenchProtoProto := {
 	recogStateDictionaries: [|Array|: 26],
 	numberDictionary: lexicon('AirusA, "resources/AirusA/4a2c55.lex"),
 	keyboardLayout: 'USA,
+	// dictionaries the cursive (Rosetta) recogniser ignores, going by the name
 	rosIgnoreDicts: [|Array|: 31, 33, 40, 0, 6, 3, 32, 16, 15, 21, 18, 2, 104],
 	recogPropersDictionary: 81,
+	// 0 Sunday, 1 Monday
 	firstDayOfWeek: 0,
 	cityLabel: city
 };
 
+// the short date format of the UK and Australia (another element order)
 shortDateFormat := {_proto: shortDateFormatProto, shortDateOrder: 183017};
 
 aM_2 := " AM";
@@ -262,6 +287,8 @@ kilometers := "kilometers";
 
 postalCode := "Postal Code";
 
+// the Canada locale bundle (localeTable.Canada): kilometres, provinces and
+// its own dictionaries
 canadaFrenchProto := {
 	recogAddressDictionary: 57,
 	postalCodeLabel: postalCode,
@@ -307,6 +334,8 @@ canadaFrenchProto := {
 
 province := "Province";
 
+// the Canada (French) locale bundle: on Canada's, with French number, time
+// (24-hour) and date formats
 canadaFrench := {
 	_proto: canadaFrenchProto,
 	title: "Canada (French)",
@@ -363,6 +392,7 @@ cityCode := "City Code";
 
 postCode := "Post Code";
 
+// the United Kingdom locale bundle
 UK := {
 	recogAddressDictionary: 73,
 	postalCodeLabel: postCode,
@@ -406,6 +436,7 @@ UK := {
 
 summerTime := "Summer Time";
 
+// the Australia locale bundle
 Australia_2 := {
 	recogAddressDictionary: 41,
 	postalCodeLabel: postCode,
@@ -456,6 +487,7 @@ Australia_2 := {
 
 km := "km";
 
+// the Sweden locale bundle: Swedish, the ISO keyboard, week numbers, A4
 Sweden_2 := {
 	_proto: canadaFrenchProtoProto,
 	title: sweden,
@@ -465,6 +497,7 @@ Sweden_2 := {
 	recogNumbersOnlyDictionary: 121,
 	recogMoneyOnlyDictionary: 120,
 	enabledlanguage: 'Swedish,
+	// the id of the collation (sort) table to use
 	sortID: 7,
 	firstDayOfWeek: 1,
 	useWeekNumber: true,
@@ -478,6 +511,7 @@ Sweden_2 := {
 	defaultPaperSize: 'a4
 };
 
+// the US keyboard (romInternational.Keyboard and the first of keyboards)
 Keyboard := {title: uS, mapping: keycodeMapping};
 
 longDateFormatProtoItem := ", ";

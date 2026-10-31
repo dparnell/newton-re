@@ -1,4 +1,7 @@
-// marshalTypes, and what only it reaches
+// marshalTypes: maps the type symbols of a marshalling template (the
+// descriptions NewtonScript uses to read and write C structures, e.g. for
+// endpoint options) to the marshalling type codes
+// (src/frames/Marshalling.h).
 
 marshalTypes := {
 	long: 1,
@@ -6,7 +9,9 @@ marshalTypes := {
 	short: 3,
 	byte: 4,
 	boolean: 5,
+	// a long whose low two bits are not part of it
 	highint: 6,
+	// answered as eight hexadecimal characters
 	hexlong: 7,
 	splitlong: 8,
 	splitbytelong: 9,
@@ -16,6 +21,7 @@ marshalTypes := {
 	char: 13,
 	cstring: 14,
 	unicodechar: 15,
+	// the two string encodings share the scalar codes
 	unicode: 0,
 	asciiencoding: 2,
 	|binary|: 17,
