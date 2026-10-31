@@ -1,4 +1,11 @@
-// part, and what only it reaches
+// part: Internet Setup, the NIE's NewtApp application (|InternetSetup:NIE|) for the link
+// setups the Inet Manager connects with ("Internet Setups" soup: one entry per setup, its
+// class the physical layer, e.g. |Modem:NIE|). theForm is the application: the overview,
+// the All Info layout (each setup shown through its data def's view defs and info frames),
+// the edit slip (a walk-through for a new setup, or one item at a time), New Setup's
+// method chooser, About, conversion of an older NIE's setups, help manual. The part also
+// exports the All Info viewer (IOAllInfo) for other apps. The changes made by this project
+// are under DEVIATION (rex/inetstup/README.md). The file holds the part and what only it reaches.
 
 part := array(nil, {
 	_ExportTable: [|Array|:
@@ -6,12 +13,15 @@ part := array(nil, {
 			name: '|InternetSetup:NIE|,
 			major: 1,
 			minor: 0,
+			// the exported All Info viewer (a viewer view def other applications can use)
 			objects: [|Array|:
 				{
 					name: allInfo,
 					protection: 'public,
 					symbol: 'IOAllInfo,
 					type: 'viewer,
+					// viewSetupFormScript: the layouts to show for the setup's class (once per class); outside
+					// Internet Setup it is only visible.
 					viewSetupFormScript: func() begin
 						local l1, l2;
 						(if (if target then target.class) then begin
@@ -30,6 +40,7 @@ part := array(nil, {
 					showBullet: true,
 					showMultipleData: true,
 					viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+					// viewClickScript: taps do nothing here.
 					viewClickScript: func(unit) begin
 						true
 					end,
@@ -40,6 +51,8 @@ part := array(nil, {
 	],
 	labels: '_Setup,
 	_taglist: [|Array|: '_icon, '_Setup],
+	// doNotInstall(): refuses to install over an older Internet Setup package that is still
+	// installed (it must be removed first).
 	doNotInstall: func() begin
 		if (if LFetch(GetPackages(), "InternetSetup", 0, '|str=|, 'title) then GetRoot().|InternetSetup:Newton|) then begin
 				GetRoot():Notify(3, "Internet Setup", "Please remove the Internet Setup package before installing a new version.");
@@ -90,9 +103,13 @@ part := array(nil, {
 		bounds: unhilitedBounds,
 		mask: bitmap('bits, "resources/bits/10032cd.png", "000000000004000000000000001e001e", 1)
 	},
+	// theForm: the application's base view (a newtApplication)
 	theForm: {
 		allViewDefs: {},
 		superSymbol: 'INET,
+		// GetNewPath(target, layout): the path in the setup where a new item of that layout goes -
+		// the item's own path, or the next free element of its array (one added, empty, if none
+		// is free); fills a frame item with its info frame's frameData. nil when nothing can be added.
 		GetNewPath: func(target, slot) begin
 			local dataPaths, checkPrefixItem2, infoFrame, l4, count, l6, checkPrefixItem;
 			l4 := 0;
@@ -152,8 +169,12 @@ part := array(nil, {
 			checkPrefixItem
 		end,
 		previousLayout: 'overview,
+		// API_AddEntry(setup, store): InetAddNewLinkEntry's implementation - adds a setup to the
+		// soup (on store, else the internal store or the default one, as the app prefs say);
+		// returns its linkID.
 		API_AddEntry: compile(
 			constants: {
+				// makes a new Internet Setups entry from a setup frame (a template or an old-format setup): its class from the physical layer (the old symbols 'serial, 'Modem, 'MacIP, 'ethernet mapped to the NIE's services, '|Modem:NIE| by default), the frame's slots copied in, a setup older than version 2 converted by its data def.
 				kFunction_1003dc5: func(a1) begin
 					l1 := '{serial: |Serial:NIE|, Modem: |Modem:NIE|, MacIP: |LocalTalk:NIE|, ethernet: |Ethernet:NIE|};
 					copy := Clone(GetRoot().|InternetSetup:NIE|.allSoups.INETSetupSoup);
@@ -202,6 +223,7 @@ part := array(nil, {
 				soup:AddToStoreXmit(l1, store, nil);
 				l1.linkID
 			end),
+		// viewQuitScript: back to the overview next time; removes the link templates it registered.
 		viewQuitScript: func() begin
 			(if _coolToStart then begin
 					if (currentLayout <> 'overview) then begin
@@ -216,6 +238,7 @@ part := array(nil, {
 				end)
 		end,
 		appAll: "All Setups",
+		// GetViewsToDisplay(setup): the layouts its data def shows, plus its other editor view defs.
 		GetViewsToDisplay: func(a1) begin
 			if (dataDefs := GetDataDefs(a1.class)) then begin
 					copy := Clone(dataDefs.viewsToDisplay);
@@ -230,6 +253,8 @@ part := array(nil, {
 				end;
 			copy
 		end,
+		// GetInfoFrame(layout, class): the info frame of a layout - the view def's own, else the
+		// application's layoutDataMap's.
 		GetInfoFrame: func(layout, class2) begin
 			local infoFrame, l2;
 			if ((not (l2 := GetViewDefs(class2).(layout))) or (not (infoFrame := l2.infoFrame))) then begin
@@ -237,6 +262,7 @@ part := array(nil, {
 				end;
 			infoFrame
 		end,
+		// the help book (NIE 2.0)
 		helpManual: {
 			version: 2,
 			isbn: "NIE2.0",
@@ -690,6 +716,8 @@ part := array(nil, {
 		},
 		HandHoldStart: nil,
 		viewFlags: vApplication + vClickable,
+		// HasPathData(target, paths, stringData): whether the setup has data at any of the paths
+		// (a non-empty string, when stringData or the value is a string).
 		HasPathData: func(target, dataPaths, stringData) begin
 			if IsArray(dataPaths) then begin
 					(foreach item in dataPaths do begin
@@ -710,6 +738,8 @@ part := array(nil, {
 		end,
 		doCardRouting: 'onlyCardRouting,
 		viewBounds: {left: 0, top: -312, right: 238, bottom: -8},
+		// MakeDataPaths(prefix, checkPaths, stringData): the paths an item's data is at - the
+		// prefix with each of checkPaths appended (or the prefix alone).
 		MakeDataPaths: func(checkPrefixItem, checkPaths, stringData) begin
 			local item;
 			local list;
@@ -738,14 +768,17 @@ part := array(nil, {
 				soupQuery: {type: 'index, IndexPath: 'setupName},
 				soupDescr: "The Internet Setup soup.",
 				defaultDataType: 'INET,
+				// CreateBlankEntry(): a new setup (version 2, tag 'INET) with a unique link id.
 				CreateBlankEntry: func() begin
 					(newEntry := {version: 2, tags: Clone('INET)}).linkID := (if functions.InetStartUp then InetStartUp():MGetLinkUniqueID() else Random(0, 10000));
 					newEntry
 				end,
+				// DuplicateEntry(entry, store): a copy with a new link id and a "Copy" name.
 				DuplicateEntry: compile(
 					constants: {
 						kLiteral_100ea69: "Copy",
 						kLiteral_1004161: "Internet Setups",
+						// a name for the copy: "<name> Copy", or "<name> Copy n" (n up to 99) for the first name not in use.
 						kFunction_100e96d: func(a1) begin
 							text := Stringer([Array: a1.setupName, " ", kLiteral_100ea69]);
 							if (not (cursor := Query(GetUnionSoupAlways(kLiteral_1004161), {IndexPath: 'setupName, beginKey: text, endKey: text})):entry()) then begin
@@ -770,14 +803,17 @@ part := array(nil, {
 					end)
 			}
 		},
+		// viewOverviewScript: no overview when the overview is already showing and empty.
 		viewOverviewScript: func() begin
 			(if (if (currentLayout = 'overview) then (layout.dataCursor:CountEntries() = 0)) then return nil else inherited:?viewOverviewScript())
 		end,
+		// the edit slip (a floater): one layout of a setup, or the walk-through of a new one
 		editSlip: {
 			noOverview: "This window does not support Overview.",
 			deleteButton: nil,
 			closeBox: nil,
 			verfyFunc: nil,
+			// viewQuitScript: the deleted item becomes undoable; the help topic is forgotten.
 			viewQuitScript: func() begin
 				newtAppBase.viewHelpTopic := nil;
 				if _deletedData then begin
@@ -793,6 +829,7 @@ part := array(nil, {
 			ReorientToScreen: @defRotateFunc,
 			goBackBtn: nil,
 			viewBounds: {left: 0, top: -320, right: 320, bottom: 0},
+			// MakeDataPaths(...): the application's.
 			MakeDataPaths: func(checkPrefixItem, checkPaths, stringData) begin
 				newtAppBase:MakeDataPaths(checkPrefixItem, checkPaths, stringData)
 			end,
@@ -826,8 +863,10 @@ part := array(nil, {
 				'editNewtLayout,
 				editFields
 			],
+			// viewSetupFormScript: the slip's bounds.
 			viewSetupFormScript: compile(
 				constants: {
+					// the edit slip's bounds in the walk-through layout: the app area up to 320x320, less 16 wide and 8 from the bottom.
 					kFunction_100f7a1: func() begin
 						local params, l2, l3;
 						l2 := (if ((params := GetAppParams()).appAreaWidth > 320) then 320 else params.appAreaWidth);
@@ -843,6 +882,8 @@ part := array(nil, {
 					inherited:?viewSetupFormScript()
 				end),
 			ContinueBtn: nil,
+			// CloseAction(): after a walk-through, warns when information is missing (the data def's
+			// ConfirmWalkThru) and lets the user go back; else validates the setup and closes the slip.
 			CloseAction: func() begin
 				local dataDefs, okCancelDefaultCancel, confirmWalkThru;
 				dataDefs := GetDataDefs(target.class);
@@ -866,6 +907,7 @@ part := array(nil, {
 			retargetChain: nil
 		},
 		appSymbol: '|InternetSetup:NIE|,
+		// HandleRedoDelete([slot, value]): deletes the item again (redo); undoable.
 		HandleRedoDelete: func(a1) begin
 			RemoveSlot(self.target, a1[0]);
 			targetView:?StartFlush();
@@ -874,8 +916,10 @@ part := array(nil, {
 		end,
 		viewJustify: vjParentCenterH + vjParentBottomV,
 		title: internetSetup,
+		// ChooseNewEntry(): opens the New Setup slip, which asks for the connection method.
 		ChooseNewEntry: compile(
 			constants: {
+				// kBinaryFromHex(hex, class): a binary of that class made from a string of hex digits (this project's helper for binaries in compiled constants).
 				kBinaryFromHex: func(hex, cls) begin
 					local b := MakeBinary(StrLen(hex) div 2, cls);
 					for i := 0 to Length(b) - 1 do begin
@@ -885,10 +929,12 @@ part := array(nil, {
 					end;
 					b
 				end,
+				// the "Connect using" picker's viewSetupFormScript: its choices.
 				kFunction_1011921: func() begin
 					labelCommands := self:BuildLabelCommands();
 					inherited:?viewSetupFormScript()
 				end,
+				// textSetup(): starts at the modem (and its help text).
 				kFunction_101198d: func() begin
 					local item;
 					(if labelCommands then begin
@@ -898,6 +944,7 @@ part := array(nil, {
 							return labelCommands[item].item
 						end else "")
 				end,
+				// labelActionScript(index): the connection method chosen; its help text shown.
 				kFunction_1011a11: func(a1) begin
 					inherited:labelActionScript(a1);
 					(if labelCommands then begin
@@ -905,22 +952,27 @@ part := array(nil, {
 							self:AdjustHelpText(labelCommands[a1].help)
 						end)
 				end,
+				// Popit(...): pops up only when there are methods.
 				kFunction_1011a7d: func(a1) begin
 					(if labelCommands then inherited:?Popit(a1) else self:hilite(nil))
 				end,
+				// the close box: forgets the help topic and closes.
 				kFunction_1011c05: func() begin
 					appBase.viewHelpTopic := nil;
 					inherited:?buttonClickScript()
 				end,
+				// the Continue button: starts a new setup of the chosen method (walk-through) and closes, or asks for a method.
 				kFunction_1011ca5: func() begin
 					(if newDef then begin
 							appBase:?BeginNewEntry(newDef, nil);
 							base:Close()
 						end else GetRoot():Notify(3, "Internet Setup", "Please select a connection method from the connect using popup menu."))
 				end,
+				// viewSetupFormScript: is the default button.
 				kFunction_1011dd5: func() begin
 					(_defaultButton := self)
 				end,
+				// the help button: closes the help book if it is open, else opens the NIE's help manual (at the topic in view).
 				kFunction_100faad: func() begin
 					local tinyTim, viewHelpTopic, l3;
 					(if (if (tinyTim := GetRoot().TinyTim) then tinyTim.viewCObject) then tinyTim:Close() else begin
@@ -930,6 +982,7 @@ part := array(nil, {
 							(if newtAppBase.helpManual then (if viewHelpTopic then tinyTim:OpenManualTo(newtAppBase.helpManual, viewHelpTopic) else tinyTim:OpenManual(newtAppBase.helpManual)) else (if viewHelpTopic then tinyTim:OpenHelpTo(viewHelpTopic) else tinyTim:Open()))
 						end)
 				end,
+				// BuildLabelCommands(): the 'INET data defs whose dependencies are loaded, by name, with icon and help text.
 				kFunction_1011e39: func() begin
 					defs := GetDefs('dataDef, [Array: 'INET], nil);
 					list := [Array: ];
@@ -944,6 +997,7 @@ part := array(nil, {
 						end;
 					list
 				end,
+				// FindItem(symbol): the index of the method with that symbol (0 if none).
 				kFunction_1011fc5: func(a1) begin
 					(foreach key, value in labelCommands do begin
 							if (value.symbol = a1) then begin
@@ -952,34 +1006,43 @@ part := array(nil, {
 						end);
 					return 0
 				end,
+				// AdjustHelpText(text): shows the method's help text.
 				kFunction_1012031: func(a1) begin
 					SetValue(help, 'text, a1)
 				end,
+				// viewSetupDoneScript: takes the keyboard focus.
 				kFunction_101207d: func() begin
 					SetKeyView(self, 0)
 				end,
+				// the edit slip's bounds in the walk-through layout: the app area up to 320x320, less 16 wide and 8 from the bottom.
 				kFunction_100f7a1: func() begin
 					local params, l2, l3;
 					l2 := (if ((params := GetAppParams()).appAreaWidth > 320) then 320 else params.appAreaWidth);
 					l3 := (if (params.appAreaHeight > 320) then 320 else params.appAreaHeight);
 					SetBounds(0, (-(l3 - 8)), (l2 - 16), -8)
 				end,
+				// the slip's viewSetupFormScript: its bounds, help topic and app.
 				kFunction_10120c1: func() begin
 					self.viewBounds := call (kFunction_100f7a1) with ();
 					appBase.viewHelpTopic := helpTopic;
 					self.newtAppBase := appBase;
 					inherited:?viewSetupFormScript()
 				end,
+				// viewQuitScript: nothing more than the proto's.
 				kFunction_1012125: func() begin
 					inherited:?viewQuitScript()
 				end,
+				// the New Internet Setup slip: "Connect using" picker, its help text, Continue
 				kLiteral_1011549: {viewBounds: '{left: 0, top: -328, right: 320, bottom: -8}, stepChildren: [stepChildren: '{title: "New Internet Setup", _proto: @protoTitle}, '{text: "Select a connection method for this new Internet setup.", viewBounds: {left: 5, top: 10, right: -5, bottom: 46}, viewFont: {family: espy, face: 1, size: 10}, viewJustify: vjParentFullH + vjSiblingBottomV, _proto: @protoStaticText}, {text: "Connect using", viewBounds: '{left: 5, top: 5, right: -5, bottom: 21}, viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly, viewSetupFormScript: kFunction_1011921, textSetup: kFunction_101198d, labelActionScript: kFunction_1011a11, Popit: kFunction_1011a7d, _proto: @protoLabelPicker, preAllocatedContext: 'picker}, '{text: "", viewBounds: {left: 5, top: 10, right: -5, bottom: 74}, viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV, viewFont: @fontSystem10, viewFlags: vVisible, viewFormat: vfFrameBlack + vfPen(1) + vfInset(3), _proto: @protoStaticText, preAllocatedContext: help}, '{text: "Tap ? if you need help.", viewBounds: {left: 5, top: 20, right: -5, bottom: 36}, viewFont: {family: espy, face: 1, size: 10}, viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV + oneLineOnly, _proto: @protoStaticText}, {buttonClickScript: kFunction_1011c05, _proto: @protoCancelButton}, {buttonClickScript: kFunction_1011ca5, text: "Continue", viewBounds: '{left: -59, top: 0, right: -7, bottom: 0}, viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV + oneLineOnly, viewSetupFormScript: kFunction_1011dd5, _proto: @protoTextButton, preAllocatedContext: '_defaultButton}, {_proto: {viewFlags: vVisible + vReadOnly + vClickable, viewJustify: vjCenterH + vjCenterV + vjParentBottomV, viewBounds: '{left: 5, top: -18, right: 18, bottom: -5}, buttonClickScript: kFunction_100faad, icon: {bounds: '{left: 0, top: 0, right: 11, bottom: 11}, bits: call kBinaryFromHex with ("000000000004000000000000000b000b000000001f0000003f8000003180000003800000070000000e0000000e000000000000000e0000000e000000", 'bits), colorData: {cbits: call kBinaryFromHex with ("000000000004000000000000000b000b000000001f0000003f8000003180000003800000070000000e0000000e000000000000000e0000000e000000", 'bits), bitDepth: 1}}, _proto: @protoPictureButton}}], viewJustify: vjParentCenterH + vjParentBottomV, appBase: nil, newDef: nil, BuildLabelCommands: kFunction_1011e39, FindItem: kFunction_1011fc5, AdjustHelpText: kFunction_1012031, declareSelf: 'base, viewSetupDoneScript: kFunction_101207d, viewSetupFormScript: kFunction_10120c1, helpTopic: "determine", viewQuitScript: kFunction_1012125, _proto: @protoFloater, picker: nil, stepAllocateContext: [Array: 'picker, {text: "Connect using", viewBounds: '{left: 5, top: 5, right: -5, bottom: 21}, viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly, viewSetupFormScript: kFunction_1011921, textSetup: kFunction_101198d, labelActionScript: kFunction_1011a11, Popit: kFunction_1011a7d, _proto: @protoLabelPicker, preAllocatedContext: 'picker}, 'help, '{text: "", viewBounds: {left: 5, top: 10, right: -5, bottom: 74}, viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV, viewFont: @fontSystem10, viewFlags: vVisible, viewFormat: vfFrameBlack + vfPen(1) + vfInset(3), _proto: @protoStaticText, preAllocatedContext: help}, '_defaultButton, {buttonClickScript: kFunction_1011ca5, text: "Continue", viewBounds: '{left: -59, top: 0, right: -7, bottom: 0}, viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV + oneLineOnly, viewSetupFormScript: kFunction_1011dd5, _proto: @protoTextButton, preAllocatedContext: '_defaultButton}], help: nil, _defaultButton: nil}
 			},
+			// ChooseNewEntry's body: opens the slip.
 			func() begin
 				local context;
 				(context := BuildContext(kLiteral_1011549)).appBase := newtAppBase;
 				newtAppBase:RememberedOpen(context)
 			end),
+		// Find(what, results, ...): the system Find - setups whose text matches; a match only in the
+		// password is not a match.
 		Find: func(what, a2, a3, a4) begin
 			local frame2, soup, cursor;
 			soup := GetUnionSoupAlways("Internet Setups");
@@ -1000,6 +1063,7 @@ part := array(nil, {
 				end)
 		end,
 		allDataDefs: {},
+		// AppEmpty(): the text shown when there are no setups.
 		AppEmpty: func() begin
 			local box;
 			box := self:LocalBox();
@@ -1007,11 +1071,14 @@ part := array(nil, {
 			box.left := (box.left + 10);
 			box.right := (box.right - 10);
 			box.top := ((box.bottom - box.top) div 3);
-			(appEmptyStr := [Array: '{font: tsSystem + tsSize(10) + tsBold, justification: left}, MakeTextLines(ParamStr("No current ^0 exists. To create a new ^0, tap New and in the pop-up list, tap a choice\u2014\uGeneric Setup, SecurID, UNIX, or an Internet Service Provider (ISP).", [Array: title]), box, fontHeight(1058816), 1058816)])
+			(appEmptyStr := [Array: '{font: tsSystem + tsSize(10) + tsBold, justification: left}, MakeTextLines(ParamStr("No current ^0 exists. To create a new ^0, tap New and in the pop-up list, tap a choice\u2014\uGeneric Setup, SecurID, UNIX, or an Internet Service Provider (ISP).", [Array: title]), box, fontHeight(tsSystem + tsSize(10) + tsBold), tsSystem + tsSize(10) + tsBold)])
 		end,
 		stepAllocateContext: [|Array|: 'statusBar, partItem_5],
+		// BeginNewEntry(method, template): a new setup - from a link template (LinkTemplateRegistry)
+		// or blank of that method - opened in the walk-through.
 		BeginNewEntry: compile(
 			constants: {
+				// makes a new Internet Setups entry from a setup frame (a template or an old-format setup): its class from the physical layer (the old symbols 'serial, 'Modem, 'MacIP, 'ethernet mapped to the NIE's services, '|Modem:NIE| by default), the frame's slots copied in, a setup older than version 2 converted by its data def.
 				kFunction_1003dc5: func(a1) begin
 					l1 := '{serial: |Serial:NIE|, Modem: |Modem:NIE|, MacIP: |LocalTalk:NIE|, ethernet: |Ethernet:NIE|};
 					copy := Clone(GetRoot().|InternetSetup:NIE|.allSoups.INETSetupSoup);
@@ -1063,8 +1130,11 @@ part := array(nil, {
 				target := addEntryFromStationery;
 				self:ShowEditSlip('walkThru, nil, oldTarget, true, nil)
 			end),
+		// viewSetupFormScript: starts only when OkToStart; offers to convert old setups, fits the
+		// screen, registers the built-in link templates (generic SecurID, ...); else closes.
 		viewSetupFormScript: compile(
 			constants: {
+				// kBinaryFromHex(hex, class): a binary of that class made from a string of hex digits (this project's helper for binaries in compiled constants).
 				kBinaryFromHex: func(hex, cls) begin
 					local b := MakeBinary(StrLen(hex) div 2, cls);
 					for i := 0 to Length(b) - 1 do begin
@@ -1074,6 +1144,7 @@ part := array(nil, {
 					end;
 					b
 				end,
+				// makes a new Internet Setups entry from a setup frame (a template or an old-format setup): its class from the physical layer (the old symbols 'serial, 'Modem, 'MacIP, 'ethernet mapped to the NIE's services, '|Modem:NIE| by default), the frame's slots copied in, a setup older than version 2 converted by its data def.
 				kFunction_1003dc5: func(a1) begin
 					l1 := '{serial: |Serial:NIE|, Modem: |Modem:NIE|, MacIP: |LocalTalk:NIE|, ethernet: |Ethernet:NIE|};
 					copy := Clone(GetRoot().|InternetSetup:NIE|.allSoups.INETSetupSoup);
@@ -1106,7 +1177,9 @@ part := array(nil, {
 						end;
 					adoptEntry
 				end,
+				// an icon (the conversion progress slip's)
 				kLiteral_101485d: {bits: call kBinaryFromHex with ("000000000004000000000000001e001e000000000000000000000000000300000003c0000001f000000ffc00007ffe0001fffe0003fffc400781f0000c03c00008030000100000201000002000030040000f00c0003e078008ffff0001fffe0001fff80000ffc000003e0000000f0000000300000000000000000000000000000000000000000000", 'bits), bounds: '{left: 0, top: 0, right: 30, bottom: 30}},
+				// converts the setups of an older NIE (the "LinkSetups" soup) to "Internet Setups" if the user agrees, with a progress slip (Stop cancels); a setup on a locked card is copied to the internal store and the user told. Returns whether it converted.
 				kFunction_1013fad: func(caller) begin
 					local oldSoupQuery;
 					local yesNoDefaultYes, fn;
@@ -1170,6 +1243,7 @@ part := array(nil, {
 							return true
 						end else return nil)
 				end,
+				// the edit slip's bounds in the walk-through layout: the app area up to 320x320, less 16 wide and 8 from the bottom.
 				kFunction_100f7a1: func() begin
 					local params, l2, l3;
 					l2 := (if ((params := GetAppParams()).appAreaWidth > 320) then 320 else params.appAreaWidth);
@@ -1198,6 +1272,7 @@ part := array(nil, {
 			end),
 		updated: nil,
 		statusBar: nil,
+		// ShowLayout(layout): switches to a layout (nil: the previous one).
 		ShowLayout: func(a1) begin
 			if (not a1) then begin
 					a1 := previousLayout
@@ -1208,6 +1283,7 @@ part := array(nil, {
 			currentLayout := a1;
 			self:RedoChildren()
 		end,
+		// viewEffect 133120 (0x20800): the application's open/close effect
 		viewEffect: 133120,
 		allLayouts: {
 			default: {
@@ -1216,6 +1292,7 @@ part := array(nil, {
 				allInfoHeight: 0,
 				childBottom: 0,
 				childToScroll: nil,
+				// ViewScroll2DScript(direction, info): scrolls the All Info view by 16 pixels a step.
 				ViewScroll2DScript: func(arrowDirection, a2) begin
 					local viewOriginY, l2, most;
 					viewOriginY := childToScroll.viewOriginY;
@@ -1239,6 +1316,7 @@ part := array(nil, {
 					masterSoupSlot: 'INETSetupSoup,
 					forceNewEntry: nil,
 					viewJustify: vjParentFullH + vjParentFullV,
+					// Retarget(redo): shows the cursor's entry (the next or previous when it was deleted).
 					Retarget: func(a1) begin
 						local entry;
 						if (((entry := dataCursor:entry()) = 'deleted) or (not entry)) then begin
@@ -1261,14 +1339,17 @@ part := array(nil, {
 							end;
 						SetKeyView(self, 0)
 					end,
+					// viewScrollDownScript: the next setup, with the flip effect.
 					viewScrollDownScript: func() begin
 						ClearUndoStacks();
 						entryView:Effect(77725696, true, @flip, 'Scroller, [Array: 1])
 					end,
+					// viewScrollUpScript: the previous setup, with the flip effect.
 					viewScrollUpScript: func() begin
 						ClearUndoStacks();
 						entryView:Effect(77725696, nil, @flip, 'Scroller, [Array: -1])
 					end,
+					// viewSetupFormScript: shows the current setup.
 					viewSetupFormScript: func() begin
 						inherited:?viewSetupFormScript();
 						self:Retarget(nil)
@@ -1293,6 +1374,8 @@ part := array(nil, {
 			}
 		},
 		stepChildren: [stepChildren: {title: internetSetup, _proto: @protoTitle}, partItem_5],
+		// PutAwayScript(item): a beamed setup - an old Internet Setup's ('|InternetSetup:Newton|) is
+		// converted to this one's classes first; it gets a new link id.
 		PutAwayScript: func(a1) begin
 			local l1, dataDefs, l3;
 			if (a1.appSymbol = '|InternetSetup:Newton|) then begin
@@ -1312,6 +1395,8 @@ part := array(nil, {
 				end;
 			l3
 		end,
+		// OkToStart(): Internet Setup runs only when the NIE is installed and at least one 'INET
+		// data def (a link module) is loaded; else an alert.
 		OkToStart: compile(
 			constants: {
 				kLiteral_1002399: "Internet Setup",
@@ -1339,6 +1424,7 @@ part := array(nil, {
 					end;
 				l1
 			end),
+		// the About slip: the version, the NIE's version and its installed components
 		aboutView: {
 			viewBounds: {left: 0, top: 0, right: 200, bottom: 225},
 			viewJustify: vjParentCenterH + vjParentCenterV,
@@ -1363,6 +1449,7 @@ part := array(nil, {
 					viewBounds: {left: 8, top: 10, right: -8, bottom: 22},
 					viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 					viewFont: {family: 'espy, face: 1, size: 10},
+					// viewSetupFormScript: the Inet Manager service's name.
 					viewSetupFormScript: func() begin
 						if inetMgr then begin
 								text := inetMgr.name
@@ -1376,6 +1463,7 @@ part := array(nil, {
 					viewBounds: {left: 8, top: 2, right: -8, bottom: 14},
 					viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 					viewFont: {family: 'espy, face: 0, size: 10},
+					// viewSetupFormScript: the NIE's version, or "Is not installed." when it is missing.
 					viewSetupFormScript: func() begin
 						if inetMgr then begin
 								if inetMgr.versionStr then begin
@@ -1399,10 +1487,12 @@ part := array(nil, {
 					text: "Static Text",
 					viewBounds: {left: 8, top: 2, right: -8, bottom: 50},
 					viewJustify: vjParentFullH + vjSiblingBottomV,
+					// viewSetupFormScript: the list of components.
 					viewSetupFormScript: func() begin
 						text := self:BuildComponentList();
 						inherited:?viewSetupFormScript()
 					end,
+					// BuildComponentList(): the names of the registered physical and logical services.
 					BuildComponentList: func() begin
 						local theList;
 						theList := "";
@@ -1429,6 +1519,7 @@ part := array(nil, {
 				{
 					text: aboutViewText,
 					viewBounds: {left: 8, top: -22, right: -8, bottom: -10},
+					// viewSetupFormScript: the number of setups and the storage they use.
 					viewSetupFormScript: func() begin
 						most := 0;
 						l2 := 0;
@@ -1452,6 +1543,7 @@ part := array(nil, {
 				}
 			],
 			theApp: nil,
+			// viewSetupFormScript: the application's soups and the Inet Manager service.
 			viewSetupFormScript: func() begin
 				if (not theSoups) then begin
 						theSoups := (foreach item in theApp.allSoups collect item.theSoup)
@@ -1465,6 +1557,8 @@ part := array(nil, {
 			inetMgr: nil,
 			_proto: @protoFloatNGo
 		},
+		// ShowEditSlip(layout, path, saveEntry, adding, newCard): opens the edit slip on the current
+		// setup (closing one already open).
 		ShowEditSlip: func(layout, path, a3, a4, a5) begin
 			local context;
 			(if target then begin
@@ -1486,6 +1580,7 @@ part := array(nil, {
 					(newtAppBase.editSlipLayout := context)
 				end)
 		end,
+		// viewSetupChildrenScript: the current layout's children, when it could start.
 		viewSetupChildrenScript: func() begin
 			(if _coolToStart then begin
 					if (not allLayouts.(currentLayout)) then begin
@@ -1496,19 +1591,25 @@ part := array(nil, {
 		end,
 		viewHelpTopic: nil,
 		editSlipLayout: nil,
+		// HandleUndoDelete([slot, value]): puts a deleted item back (undo); redoable.
 		HandleUndoDelete: func(a1) begin
 			self.target.(a1[0]) := a1[1];
 			targetView:?StartFlush();
 			self:AddUndoAction('HandleRedoDelete, [Array: a1]);
 			self:RedoChildren()
 		end,
+		// HandleNewButtonAction(item): the New button's choice - the method chooser, or a new
+		// setup from the chosen template.
 		HandleNewButtonAction: func(statArrayItem) begin
 			local l1;
 			(if (statArrayItem.dataDef = 'newEntry) then self:ChooseNewEntry() else self:BeginNewEntry((if (l1 := '{serial: |Serial:NIE|, Modem: |Modem:NIE|, MacIP: |LocalTalk:NIE|, ethernet: |Ethernet:NIE|}.(statArrayItem.dataDef)) then l1 else statArrayItem.dataDef), statArrayItem.symbol))
 		end
 	},
+	// devInstallScript(partFrame): makes the root's |InternetSetup:Newton| (an older Internet
+	// Setup's name) pass beamed setups on; installs the NewtApp.
 	devInstallScript: compile(
 		constants: {
+			// PutAwayScript(item): passes a beamed setup to Internet Setup's PutAwayScript.
 			kFunction_1016e7d: func(a1) begin
 				GetRoot().|InternetSetup:NIE|:?PutAwayScript(a1)
 			end
@@ -1521,6 +1622,7 @@ part := array(nil, {
 			theForm := partFrame.theForm;
 			(partFrame.removeFrame := theForm:NewtInstallScript(theForm))
 		end),
+	// removeScript(partFrame): undoes devInstallScript.
 	removeScript: func(partFrame) begin
 		local removeFrame;
 		if GetRoot().|InternetSetup:Newton| then begin
@@ -1528,6 +1630,7 @@ part := array(nil, {
 			end;
 		call removeFrame.NewtRemoveScript with ((removeFrame := partFrame.removeFrame))
 	end,
+	// installScript(partFrame): runs devInstallScript and removes it (needed only once).
 	installScript: func(partFrame) begin
 		partFrame:?devInstallScript(partFrame);
 		if HasSlot(partFrame, 'devInstallScript) then begin
@@ -1539,7 +1642,11 @@ part := array(nil, {
 
 allInfo := "All Info";
 
+// the All Info viewer: draws a setup's items as shapes, each tappable to edit it
 objectsProto := {
+	// AddAllInfoItem(paths, prefix, shapes, hits, infoFrame, layout, top, bounds, bold, style):
+	// adds one item's text (title and value, made by its shapeFunc or formatFunc) to the shapes
+	// and its hit area to hits; reduces the font when it does not fit (reduceFont). Returns the new top.
 	AddAllInfoItem: func(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) begin
 		local v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v14_yyyyyyyyyyyyyyyyyyyyyyyyyyyxxxxxxxxxxxxxxxxx, v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyy, v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy, v20_wwwwwwwwwwvvvvvv, v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v22_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyy, v23_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww, v26_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyy, v27_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v29_xwwwwwwwwwwwwwwww;
 		v26_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyy := a7;
@@ -1645,12 +1752,14 @@ objectsProto := {
 	viewFormat: vfPen(1),
 	reduceFont: nil,
 	boldTitle: nil,
+	// viewDrawScript: draws the shapes.
 	viewDrawScript: func() begin
 		(if shapeArray then self:DrawShape(shapeArray, {font: viewFont, justification: viewJustSym}))
 	end,
 	showBullet: nil,
 	hitArray: nil,
 	viewFlags: vVisible + vClickable + vGesturesAllowed,
+	// GetBottom(): the bottom of the last item.
 	GetBottom: func() begin
 		local count;
 		(if ((count := Length(hitArray)) > 0) then hitArray[(count - 1)].vOffset else 0)
@@ -1658,6 +1767,7 @@ objectsProto := {
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
 	viewOriginY: 0,
 	viewJustify: vjParentFullH + vjParentFullV,
+	// SetOrigin(x, y): scrolls the shapes to that origin.
 	SetOrigin: func(viewOriginX2, a2) begin
 		OffsetShape(shapeArray, (viewOriginX - viewOriginX2), (viewOriginY - a2));
 		viewOriginX := viewOriginX2;
@@ -1666,6 +1776,7 @@ objectsProto := {
 	end,
 	layouts: nil,
 	shapeArray: nil,
+	// GetMaxTextWidth(): the widest text line.
 	GetMaxTextWidth: func() begin
 		most := 0;
 		viewFont2 := viewFont;
@@ -1685,6 +1796,8 @@ objectsProto := {
 			end);
 		most
 	end,
+	// viewClickScript(unit): a tap on an item hilites it and opens its edit slip (the setup
+	// name: the walk-through), unless its info frame's actionFunc handles the tap.
 	viewClickScript: func(unit) begin
 		l2 := (Length(hitArray) - 1);
 		InkOff(unit);
@@ -1728,6 +1841,8 @@ objectsProto := {
 	showMultipleData: nil,
 	viewFont: tsFancy + tsSize(12),
 	viewOriginX: 0,
+	// viewSetupChildrenScript: builds the shapes and hit areas of every layout's items for the
+	// setup, justified as viewJustify's horizontal bits (BAnd 3: left, right, center, full) say.
 	viewSetupChildrenScript: func() begin
 		l12 := BAnd(viewJustify, 3);
 		l13 := true;
@@ -1793,6 +1908,7 @@ objectsProto := {
 				end))
 	end,
 	CanScroll: nil,
+	// Hiliter(shape): inverts the shape (transferMode 2, XOR).
 	Hiliter: func(hiliteShape) begin
 		self:DrawShape(hiliteShape, {transferMode: 2, penPattern: 0, fillPattern: 5})
 	end,
@@ -1815,6 +1931,7 @@ aboutViewText := "";
 
 internetSetups := "Internet Setups";
 
+// the help book's items follow (headings, text blocks, layouts)
 start := {data: "Get Started\u000d", layout: 2080, name: "start"};
 
 listItem := {data: "Determine how to connect", viewFont: viewFont, layout: 32, name: determine};
@@ -2191,14 +2308,17 @@ blocksBounds_3 := [|Array|: 0, 0, 206, 28];
 
 blocksBounds_4 := [|Array|: 0, 28, 206, 214];
 
+// the edit slip's title: the setup's name and the layout's (and "Page n of m" in the walk-through)
 partItem := {
 	_proto: {
 		title: aboutViewText,
 		viewBounds: {left: 0, top: 0, right: 0, bottom: 15},
+		// Retarget(): redraws.
 		Retarget: func() begin
 			(if self.viewCObject then self:SyncView())
 		end,
 		viewFlags: vVisible + vReadOnly + vClipping,
+		// viewSetupFormScript: the title text and the setup's icon.
 		viewSetupFormScript: func() begin
 			local stringExtract, l2, l3;
 			stringExtract := GetDataDefs(target.class):StringExtract(target, 1);
@@ -2225,6 +2345,7 @@ partItem := {
 };
 
 partItem_2 := {
+	// buttonClickScript: the close box - CloseAction.
 	buttonClickScript: func() begin
 		base:CloseAction()
 	end,
@@ -2233,6 +2354,7 @@ partItem_2 := {
 };
 
 done := {
+	// buttonClickScript: Done - CloseAction.
 	buttonClickScript: func() begin
 		self:hilite(nil);
 		base:CloseAction()
@@ -2245,8 +2367,11 @@ done := {
 };
 
 partItem_3 := {
+	// buttonClickScript: Continue - the next walk-through page, unless its verifyFunc returns
+	// a complaint (shown in an alert).
 	buttonClickScript: compile(
 		constants: {
+			// the edit slip's bounds in the walk-through layout: the app area up to 320x320, less 16 wide and 8 from the bottom.
 			kFunction_100f7a1: func() begin
 				local params, l2, l3;
 				l2 := (if ((params := GetAppParams()).appAreaWidth > 320) then 320 else params.appAreaWidth);
@@ -2265,6 +2390,7 @@ partItem_3 := {
 					if (selectedLayout = 'walkThru) then begin
 							base.viewBounds := call (kFunction_100f7a1) with ()
 						end else begin
+							// looks like a bug: -304 where the edit slip's own original bounds have a width of 304
 							base.viewBounds := SetBounds(0, (-(GetAppParams().appAreaHeight - 8)), -304, -8)
 						end;
 					base:SyncView();
@@ -2281,6 +2407,7 @@ partItem_3 := {
 continue := "Continue";
 
 goBack := {
+	// buttonClickScript: Go Back - the previous walk-through page.
 	buttonClickScript: func() begin
 		newtAppBase.WhichPage := (newtAppBase.WhichPage - 1);
 		self:hilite(nil);
@@ -2301,6 +2428,8 @@ partItem_4Proto := {
 	viewFlags: vVisible + vReadOnly + vClickable,
 	viewJustify: vjCenterH + vjCenterV + vjParentBottomV,
 	viewBounds: {left: 5, top: -18, right: 18, bottom: -5},
+	// buttonClickScript: the help button - closes the help book if open, else opens the
+	// NIE's help manual (at the topic in view).
 	buttonClickScript: func() begin
 		local tinyTim, viewHelpTopic, l3;
 		(if (if (tinyTim := GetRoot().TinyTim) then tinyTim.viewCObject) then tinyTim:Close() else begin
@@ -2333,6 +2462,7 @@ blahBlahBlah := {
 	viewBounds: {left: 10, top: -64, right: -10, bottom: -32},
 	viewFormat: vfFrameBlack + vfPen(1) + vfInset(3),
 	viewJustify: vjParentFullH + vjParentBottomV,
+	// viewSetupFormScript: the page's help text, above the keyboard when that is shown.
 	viewSetupFormScript: func() begin
 		inherited:?viewSetupFormScript();
 		self.text := self:parent():ChildViewFrames()[0].helpText;
@@ -2344,6 +2474,7 @@ blahBlahBlah := {
 };
 
 delete_2 := {
+	// buttonClickScript: Delete - removes the item from the setup (undoable) and closes.
 	buttonClickScript: func() begin
 		_deletedData := [Array: deleteSlot, target.(deleteSlot)];
 		RemoveSlot(target, deleteSlot);
@@ -2357,6 +2488,7 @@ delete_2 := {
 	preAllocatedContext: 'deleteButton
 };
 
+// the edit slip's layout: a newtLayout with the item's or the walk-through page's view
 editFields := {
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
 	masterSoupSlot: 'INETSetupSoup,
@@ -2377,6 +2509,8 @@ editFields := {
 					extraChildrenHeight: 28,
 					keypadFont: tsSystem + tsSize(10) + tsBold,
 					viewDef: 'default,
+					// viewSetupFormScript: the view def to show - the layout's, or in the walk-through the
+					// data def's page (WhichPage), with that page's verifyFunc.
 					viewSetupFormScript: func() begin
 						local dataDefs;
 						if (if (if selectedLayout then target) then GetViewDefs(target.class).(selectedLayout)) then begin
@@ -2396,8 +2530,12 @@ editFields := {
 								(base.verifyFunc := dataDefs.newEntryViews[newtAppBase.WhichPage].verifyFunc)
 							end)
 					end,
+					// viewSetupDoneScript: fits the slip to its contents and the screen - the keyboard
+					// replaced by a keyboard button when it does not fit, help text and Delete added when the
+					// page has them - and puts the caret in the first field and picks the default button.
 					viewSetupDoneScript: compile(
 						constants: {
+							// the edit slip's bounds in the walk-through layout: the app area up to 320x320, less 16 wide and 8 from the bottom.
 							kFunction_100f7a1: func() begin
 								local params, l2, l3;
 								l2 := (if ((params := GetAppParams()).appAreaWidth > 320) then 320 else params.appAreaWidth);
@@ -2460,6 +2598,9 @@ editFields := {
 							base:dirty();
 							inherited:?viewSetupDoneScript()
 						end),
+					// viewSetupChildrenScript: the buttons for the walk-through page (no Go Back on the first,
+					// Done instead of Continue on the last) and the keyboard the page asks for (phone pad,
+					// numeric keys, letters, or none with a keyboard attached).
 					viewSetupChildrenScript: func() begin
 						local viewChildrenItem, viewBounds, dataDefs, count, keyboardConnected2;
 						viewChildrenItem := viewChildren[0];
@@ -2518,6 +2659,8 @@ editFields := {
 					stepAllocateContext: [|Array|: 'AlphaKeys, editFieldsItem]
 				}
 			],
+			// hasData(key, value): the first key under value that has data (a non-empty string, or any
+			// value except in kDatalessSlots), or nil.
 			hasData: func(key2, a2) begin
 				strFilled2 := nil;
 				if (IsFrame(a2) or IsArray(a2)) then begin
@@ -2542,13 +2685,17 @@ editFields := {
 					end;
 				strFilled2
 			end,
+			// viewSetupFormScript: remembers the setup as it was (for undo).
 			viewSetupFormScript: func() begin
 				self.startTarget := TotalClone(target);
 				inherited:?viewSetupFormScript()
 			end,
+			// viewQuitScript: the work is done after closing.
 			viewQuitScript: func() begin
 				'postQuit
 			end,
+			// ViewPostQuitScript: saves; a new setup left empty is deleted, else the change is
+			// undoable (UndoNewCard or UndoAddData) and the overview shows it.
 			ViewPostQuitScript: func() begin
 				local l1, l2, l3, target2;
 				self:EndFlush();
@@ -2578,6 +2725,7 @@ editFields := {
 	preAllocatedContext: 'editNewtLayout
 };
 
+// the edit slip's keyboard (DEVIATION: as wide as the slip less 21, rex/inetstup/README.md)
 editFieldsItem := {
 	viewBounds: {left: 10, top: -135, right: -11, bottom: -24},
 	viewJustify: vjParentFullH + vjParentBottomV,
@@ -2586,22 +2734,30 @@ editFieldsItem := {
 	preAllocatedContext: 'AlphaKeys
 };
 
+// the status bar: Info, New (the link templates) and, outside the overview, Add; routing
+// and filing on the right
 partItem_5 := {
 	menuLeftButtons: [|Array|:
 		{
 			_proto: @newtInfoButton,
+			// DoInfoAbout(): About - or, for a setup named "WDSC", a hidden credits slip with
+			// tumbling card-slot icons.
 			DoInfoAbout: compile(
 				constants: {
+					// viewDrawScript: draws a card-slot icon.
 					kFunction_1012a75: func() begin
 						self:DrawMovingIcon(RelBounds(0, 0, 36, 36))
 					end,
+					// viewSetupDoneScript: redraws every 500 ms.
 					kFunction_1012ae1: func() begin
 						self:SetupIdle(500)
 					end,
+					// viewIdleScript: redraws (a new random icon) every 500 ms.
 					kFunction_1012b41: func() begin
 						self:dirty();
 						500
 					end,
+					// viewIdleScript: the next credit line every 10 seconds.
 					kFunction_1012ccd: func() begin
 						if (index = (Length(credits) - 1)) then begin
 								index := 0
@@ -2611,20 +2767,25 @@ partItem_5 := {
 						SetValue(self, 'text, credits[index]);
 						10000
 					end,
+					// viewSetupDoneScript: starts the 10-second idle.
 					kFunction_1012d39: func() begin
 						self:SetupIdle(10000)
 					end,
+					// viewSetupFormScript: starts at the first credit.
 					kFunction_1012d81: func() begin
 						index := 0;
 						SetValue(self, 'text, credits[index])
 					end,
+					// viewSetupFormScript: starts at the first credit.
 					kFunction_1012e4d: func() begin
 						index := 0;
 						SetValue(self, 'text, credits[index])
 					end,
+					// viewSetupDoneScript: starts the 2.5-second idle.
 					kFunction_1013285: func() begin
 						self:SetupIdle(2500)
 					end,
+					// viewIdleScript: the next credit line every 2.5 seconds.
 					kFunction_10132c9: func() begin
 						if (index = (Length(credits) - 1)) then begin
 								index := 0
@@ -2634,6 +2795,7 @@ partItem_5 := {
 						SetValue(self, 'text, credits[index]);
 						2500
 					end,
+					// DrawMovingIcon(bounds): a random card-slot icon in a random one of four orientations.
 					kFunction_1013331: func(a1) begin
 						DrawXBitmap(a1, CardSlotIcons[Random(0, (Length(CardSlotIcons) - 1))], Random(0, 3), 0)
 					end,
@@ -2650,10 +2812,13 @@ partItem_5 := {
 				end)
 		},
 		{
+			// StatScript(item): the New button's choice.
 			StatScript: func(statArrayItem) begin
 				newtAppBase:?HandleNewButtonAction(statArrayItem);
 				nil
 			end,
+			// BuildPopUp(): the New button's popup - "Generic Setup", then the generic templates and
+			// the others from LinkTemplateRegistry, by name.
 			BuildPopUp: func() begin
 				popup := [Array: ];
 				statArray := [Array: ];
@@ -2686,8 +2851,11 @@ partItem_5 := {
 		}
 	],
 	menuRightButtons: [|Array|: @newtRoutingButton, @newtFilingButton],
+	// viewSetupChildrenScript: the buttons for the layout - Check All in a non-empty overview,
+	// Add on an entry.
 	viewSetupChildrenScript: compile(
 		constants: {
+			// the Add button's buttonClickScript: a popup of the editor layouts that can be added to the setup (its data def's viewsToDisplay, then the other editors).
 			kFunction_1013921: func() begin
 				popup := [Array: ];
 				(if target then begin
@@ -2719,6 +2887,7 @@ partItem_5 := {
 						inherited:buttonClickScript()
 					end else self:hilite(nil))
 			end,
+			// AddLayout(popup, viewDefs, layout): adds the layout to the popup when the setup has room for it (no data in it yet, or an array to add to), unless HideIfTrue hides it.
 			kFunction_1013a71: func(a1, a2, a3) begin
 				local infoFrame, dataPaths, hasPathData, l4, l5;
 				if (if (infoFrame := self:GetInfoFrame(a3, target.class)) then ((not infoFrame.checkPrefix[1]) or (not IsArray(infoFrame.checkPrefix[1])))) then begin
@@ -2758,6 +2927,7 @@ partItem_5 := {
 						AddArraySlot(a1, {item: l5, slot: a3})
 					end)
 			end,
+			// pickActionScript(index): opens the edit slip on a new path for the layout chosen.
 			kFunction_1013c35: func(a1) begin
 				local slot, newPath;
 				slot := popup[a1].slot;
@@ -2765,16 +2935,20 @@ partItem_5 := {
 				newtAppBase:ShowEditSlip(slot, newPath, nil, true, nil);
 				inherited:?pickActionScript(a1)
 			end,
+			// viewQuitScript: forgets itself in the app.
 			kFunction_1013ca5: func() begin
 				RemoveSlot(newtAppBase, keyButton);
 				inherited:?viewQuitScript()
 			end,
+			// viewSetupDoneScript: remembers itself in the app.
 			kFunction_1013cf5: func() begin
 				inherited:?viewSetupDoneScript();
 				(newtAppBase.(keyButton) := self)
 			end,
+			// the Add button (a popup of the layouts that can be added)
 			kLiteral_101386d: {buttonClickScript: kFunction_1013921, text: "  Add", AddLayout: kFunction_1013a71, pickActionScript: kFunction_1013c35, popup: nil, viewQuitScript: kFunction_1013ca5, viewSetupDoneScript: kFunction_1013cf5, keyButton: '_addKeyButton, viewBounds: nil, viewFlags: vVisible + vReadOnly + vClickable, _proto: @protoPopupButton}
 		},
+		// the status bar's viewSetupChildrenScript itself
 		func() begin
 			local menuLeftButtons2, menuRightButtons2, l3;
 			(if _coolToStart then begin
@@ -2801,12 +2975,15 @@ partItem_5 := {
 
 partItem_6 := {_proto: @protoUpDownScroller, preAllocatedContext: 'scrollArrows};
 
+// the All Info entry view: the viewer of the current setup, scrolled by the arrows
 partItem_7 := {
 	viewJustify: vjParentFullH + vjParentFullV,
 	viewBounds: {left: 0, top: 0, right: -20, bottom: 0},
 	viewFlags: vVisible + vClipping,
+	// viewSetupChildrenScript: an All Info viewer for a setup in the default layout.
 	viewSetupChildrenScript: compile(
 		constants: {
+			// kBinaryFromHex(hex, class): a binary of that class made from a string of hex digits (this project's helper for binaries in compiled constants).
 			kBinaryFromHex: func(hex, cls) begin
 				local b := MakeBinary(StrLen(hex) div 2, cls);
 				for i := 0 to Length(b) - 1 do begin
@@ -2816,6 +2993,7 @@ partItem_7 := {
 				end;
 				b
 			end,
+			// the All Info viewer's viewSetupFormScript: works out (once per class) which layouts the setup shows; outside Internet Setup it is visible only.
 			kFunction_1014d91: func() begin
 				local l1, l2;
 				(if (if target then target.class) then begin
@@ -2828,6 +3006,7 @@ partItem_7 := {
 						(if (GetVariable(self, 'newtAppBase) <> GetRoot().|InternetSetup:NIE|) then (self.viewFlags := vVisible))
 					end)
 			end,
+			// AddAllInfoItem(paths, prefix, shapes, hits, infoFrame, layout, top, bounds, bold, style): adds one item's text (title and value, made by its shapeFunc or formatFunc) to the shapes and its hit area to hits; reduces the font when it does not fit (reduceFont). Returns the new top.
 			kFunction_1000e19: func(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) begin
 				local v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v14_yyyyyyyyyyyyyyyyyyyyyyyyyyyxxxxxxxxxxxxxxxxx, v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyy, v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy, v20_wwwwwwwwwwvvvvvv, v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v22_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyy, v23_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww, v26_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyy, v27_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v29_xwwwwwwwwwwwwwwww;
 				v26_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyy := a7;
@@ -2924,19 +3103,23 @@ partItem_7 := {
 					end;
 				a7
 			end,
+			// viewDrawScript: draws the shapes.
 			kFunction_10017a5: func() begin
 				(if shapeArray then self:DrawShape(shapeArray, {font: viewFont, justification: viewJustSym}))
 			end,
+			// GetBottom(): the bottom of the last item.
 			kFunction_1001821: func() begin
 				local count;
 				(if ((count := Length(hitArray)) > 0) then hitArray[(count - 1)].vOffset else 0)
 			end,
+			// SetOrigin(x, y): scrolls the shapes to that origin.
 			kFunction_1001899: func(a1, a2) begin
 				OffsetShape(shapeArray, (viewOriginX - a1), (viewOriginY - a2));
 				viewOriginX := a1;
 				viewOriginY := a2;
 				self:dirty()
 			end,
+			// GetMaxTextWidth(): the widest text line.
 			kFunction_1001911: func() begin
 				most := 0;
 				viewFont2 := viewFont;
@@ -2956,6 +3139,7 @@ partItem_7 := {
 					end);
 				most
 			end,
+			// viewClickScript(unit): a tap on an item hilites it and opens its edit slip (the setup name: the walk-through), unless its info frame's actionFunc handles the tap.
 			kFunction_1001a25: func(a1) begin
 				l2 := (Length(hitArray) - 1);
 				InkOff(a1);
@@ -2995,6 +3179,7 @@ partItem_7 := {
 					end);
 				nil
 			end,
+			// viewSetupChildrenScript: builds the shapes and hit areas of every layout's items for the setup, justified as viewJustify's horizontal bits (BAnd 3) say.
 			kFunction_1001d6d: func() begin
 				l12 := BAnd(viewJustify, 3);
 				l13 := true;
@@ -3059,17 +3244,21 @@ partItem_7 := {
 								end
 						end))
 			end,
+			// Hiliter(shape): inverts the shape (transferMode 2, XOR).
 			kFunction_100214d: func(a1) begin
 				self:DrawShape(a1, {transferMode: 2, penPattern: 0, fillPattern: 5})
 			end,
+			// the All Info viewer view def (as the exported one)
 			kLiteral_1014cfd: {name: "All Info", protection: 'public, symbol: 'allinfo, type: 'viewer, viewSetupFormScript: kFunction_1014d91, boldTitle: true, CanScroll: true, layouts: nil, showBullet: true, showMultipleData: true, viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, _proto: {AddAllInfoItem: kFunction_1000e19, viewJustSym: nil, tapIcon: {bounds: '{left: 0, top: 0, right: 14, bottom: 3}, bits: call kBinaryFromHex with ("0000000000040000000000000003000e038000000380000003800000", 'bits), colorData: {cbits: call kBinaryFromHex with ("0000000000040000000000000003000e038000000380000003800000", 'bits), bitDepth: 1}}, viewFormat: vfPen(1), reduceFont: nil, boldTitle: nil, viewDrawScript: kFunction_10017a5, showBullet: nil, hitArray: nil, viewFlags: vVisible + vClickable + vGesturesAllowed, GetBottom: kFunction_1001821, viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewOriginY: 0, viewJustify: vjParentFullH + vjParentFullV, SetOrigin: kFunction_1001899, layouts: nil, shapeArray: nil, GetMaxTextWidth: kFunction_1001911, viewClickScript: kFunction_1001a25, origin: nil, showMultipleData: nil, viewFont: tsFancy + tsSize(12), viewOriginX: 0, viewSetupChildrenScript: kFunction_1001d6d, CanScroll: nil, Hiliter: kFunction_100214d, viewClass: clView}}
 		},
+		// the entry view's viewSetupChildrenScript itself
 		func() begin
 			if (if (if target then IsSoupEntry(target)) then (currentLayout = 'default)) then begin
 					self.stepChildren := [Array: kLiteral_1014cfd]
 				end;
 			inherited:?viewSetupChildrenScript()
 		end),
+	// viewSetupDoneScript: shows the scroll arrows when the setup's items are taller than the view.
 	viewSetupDoneScript: func() begin
 		local l1, childViewFrames;
 		inherited:?viewSetupDoneScript();
@@ -3093,12 +3282,15 @@ partItem_7 := {
 	preAllocatedContext: 'entryView
 };
 
+// the overview layout
 layout := {
 	viewBounds: {left: 0, top: 20, right: 0, bottom: -25},
 	masterSoupSlot: 'INETSetupSoup,
 	dataCursor: nil,
 	name: "Layout",
 	forceNewEntry: nil,
+	// Abstract(entry, bounds): an overview line - the setup's icon and name (and its store's
+	// name when there are several stores).
 	Abstract: func(a1, a2) begin
 		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12, l13, l14, l15;
 		l5 := "";
@@ -3115,19 +3307,21 @@ layout := {
 					end else begin
 						l4 := l2
 					end;
-				l10 := StrFontWidth(l4, 1058816);
+				l10 := StrFontWidth(l4, tsSystem + tsSize(10) + tsBold);
 				l11 := [Array: OffsetShape(MakeShape(l1.overviewIcon), a2.left, (l8 + 2)), MakeText(StrTruncate(l4, l12), l6, l8, l7, (a2.top + 11)), '{font: tsSystem + tsSize(9), justification: left}, MakeText(l5, l6, l8, l7, (a2.top + 25))];
 				if (l13 > 1) then begin
 						l15 := Clone((l14 := EntryStore(a1)):GetName());
 						AddArraySlot(l11, '{font: tsSystem + tsSize(9), justification: right});
-						AddArraySlot(l11, MakeText(StyledStrTruncate(l15, ((a2.right - 2) - (l10 + l6)), 9216), (l10 + l6), a2.top, (a2.right - 2), (a2.top + 11)))
+						AddArraySlot(l11, MakeText(StyledStrTruncate(l15, ((a2.right - 2) - (l10 + l6)), tsSystem + tsSize(9)), (l10 + l6), a2.top, (a2.right - 2), (a2.top + 11)))
 					end;
 				l11
 			end else inherited:Abstract(a1, a2))
 	end,
+	// GetTargetInfo(...): the hilited setup, when there is one.
 	GetTargetInfo: func(a1) begin
 		(if self.hilitItem then {target: hilitItem, targetView: self} else inherited:GetTargetInfo(a1))
 	end,
+	// Retarget(...): back to the first setup, the list rebuilt.
 	Retarget: func(a1) begin
 		a1 := true;
 		dataCursor:Reset();

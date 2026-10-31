@@ -25,8 +25,9 @@ part := array(nil, {
 				end, [Array: ])
 			end,
 			kLiteral_1010fed: {viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewFlags: vVisible, viewFormat: 0, viewSetupDoneScript: kFunction_101115d, viewClass: clView},
-			// ROM functions (magic pointers 8192 and 8193) that register and unregister a card
-			// handler for a CIS product name (here as a "Lantern" card)
+			// @8192 and @8193: the imported unit |NameServerInterface:NSG|'s first two functions
+			// (native, 4 and 3 arguments) - here called with a card's CIS product name and
+			// "Lantern", to register and unregister it
 			kROM_8192: @8192,
 			kLiteral_1011391: "Lantern",
 			// RegisterDevice(sym, device): enters a device (a frame with DeviceClass, DeviceType,

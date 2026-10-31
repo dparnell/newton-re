@@ -1,4 +1,5 @@
-// frame, and what only it reaches
+// frame: the Modem module's Configuration picker (a picker proto of |SetupProtos:NIE|,
+// @8200) on the setup's configuration slot. The file holds it and what only it reaches.
 
 frame := {text: configuration, labelText: configuration, path: 'configuration, _proto: @8200};
 

@@ -1,3 +1,6 @@
+// Newton Devices's part1: the frame maps - the slot names of its frames, shared by frames with the same
+// slots (map(flags, supermap, slots...); romsrc/README.md)
+
 map_1000b0d := map(0, nil, '_ExportTable, 'installScript, 'devInstallScript, 'devRemoveScript);
 map_1000bf5 := map(2, nil, 'name, 'major, 'minor, 'objects);
 map_1000cd1 := map(2, nil, 'class, 'code, 'numArgs, 'offset);

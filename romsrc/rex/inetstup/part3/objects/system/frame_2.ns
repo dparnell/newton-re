@@ -1,10 +1,14 @@
-// frame_2, and what only it reaches
+// frame_2: the LocalTalk module's Zone picker - the AppleTalk zone of the MacIP gateway:
+// the zones known from the printer, the current zone and the worksites, or another one
+// through the network chooser ("*" is the current zone). The file holds it and what only it reaches.
 
 frame_2 := {
 	text: zone,
 	viewBounds: {left: 3, top: 10, right: -3, bottom: 36},
 	alwaysCallPickActionScript: true,
 	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
+	// MakePopup(): the zones - the setup's, the current printer's, the current zone, the
+	// worksites' networks and printers - and "Other AppleTalk Zone".
 	MakePopup: func() begin
 		if StrFilled(target.(path)) then begin
 				BInsert(labelCommands, self:ConvertToDefaultText(target.(path)), '|str<|, nil, true)
@@ -29,19 +33,23 @@ frame_2 := {
 		ArrayInsert(labelCommands, 'pickSeparator, count);
 		ArrayInsert(labelCommands, "Other AppleTalk Zone", (count + 1))
 	end,
+	// viewSetupFormScript: the choices.
 	viewSetupFormScript: func() begin
 		labelCommands := [Array: ];
 		self:MakePopup();
 		inherited:?viewSetupFormScript()
 	end,
+	// labelActionScript(index): the last item opens the chooser; a zone is stored ("*" for the current one).
 	labelActionScript: func(index) begin
 		(if (index = (Length(labelCommands) - 1)) then self:DoChooser() else begin
 				target.(path) := Clone(self:ConvertDefaultToStar(labelCommands[index]));
 				newtAppbase.targetView:?StartFlush()
 			end)
 	end,
+	// textSetup(): the stored zone's item.
 	textSetup: compile(
 		constants: {
+			// "*" shown as "<Current AppleTalk Zone>"
 			kFunction_102108d: func(a1) begin
 				(if StrEqual(a1, "*") then "<Current AppleTalk Zone>" else a1)
 			end
@@ -49,13 +57,16 @@ frame_2 := {
 		func() begin
 			labelCommands[FindStringInArray(labelCommands, call (kFunction_102108d) with (target.(path)))]
 		end),
+	// DoChooser(): opens the network chooser to pick a MacIP gateway (=:IPGATEWAY@) in a zone.
 	DoChooser: func() begin
 		self:updateText(self:ConvertToDefaultText(target.(path)));
 		chooserIsOpen := true;
 		GetRoot().NetChooser:OpenNetChooser((if HaveZones() then target.(path) else "*"), "=:IPGATEWAY@", nil, self, "Use IP Gateway", "MacIP Gateway", "Gateway")
 	end,
+	// NetworkChooserDone(selection, zone): the chooser's zone stored in the setup.
 	NetworkChooserDone: compile(
 		constants: {
+			// "*" shown as "<Current AppleTalk Zone>"
 			kFunction_102108d: func(a1) begin
 				(if StrEqual(a1, "*") then "<Current AppleTalk Zone>" else a1)
 			end
@@ -69,6 +80,7 @@ frame_2 := {
 			newtAppbase.targetView:?StartFlush()
 		end),
 	ConvertToDefaultText: ConvertToDefaultText,
+	// ConvertDefaultToStar(text): "<Current AppleTalk Zone>" back to "*".
 	ConvertDefaultToStar: func(labelCommand) begin
 		(if StrEqual(labelCommand, "<Current AppleTalk Zone>") then "*" else labelCommand)
 	end,
@@ -76,6 +88,7 @@ frame_2 := {
 	_proto: @protoLabelPicker
 };
 
+// ConvertToDefaultText(zone): "*" shown as "<Current AppleTalk Zone>".
 ConvertToDefaultText := func(a1) begin
 	(if StrEqual(a1, "*") then "<Current AppleTalk Zone>" else a1)
 end;

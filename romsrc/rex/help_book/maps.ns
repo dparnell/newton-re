@@ -1,3 +1,6 @@
+// the help book: the frame maps - the slot names of its frames, shared by frames with the same
+// slots (map(flags, supermap, slots...); romsrc/README.md)
+
 map_774099 := map(0, nil, 'book, 'help);
 map_774119 := map(2, nil, 'version, 'isbn, 'title, 'author, 'publicationDate, 'help, 'contents, 'styles, 'browsers, 'templates, 'rendering);
 map_7745d1 := map(2, nil, 'data, 'layout, 'name);

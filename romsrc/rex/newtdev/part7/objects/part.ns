@@ -157,8 +157,9 @@ part := array(nil, {
 				pref := self;
 				inherited:?viewSetupFormScript()
 			end,
-			// ROM functions (magic pointers 8193 and 8192) that select AppleTalk's link: over
-			// LocalTalk, or over the named Ethernet card (args "ATalk", "enet", card, nil)
+			// @8192 and @8193: the imported unit |NameServerInterface:NSG|'s first two functions
+			// (native, 4 and 3 arguments) - here they point AppleTalk ("ATalk", "enet") at an
+			// Ethernet card, or at none (LocalTalk)
 			kROM_8193: @8193,
 			kLiteral_100e2b9: "ATalk",
 			kLiteral_100e2d1: "enet",
