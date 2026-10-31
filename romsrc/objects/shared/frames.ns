@@ -1,5 +1,16 @@
 // objects several roots reach, none alone (naturalize.py)
+//
+// The frames of the ROM that are shared: each is reached from more than one
+// of the tree's roots (the protos, applications, slips and system objects of
+// the other files), so it belongs to none of them and is kept here instead.
+// They are a mixed lot - bitmaps and their bounds, view templates that
+// several protos use as a child or a _proto (entry and label lines, the
+// digits of the latitude and time pickers, the AppleTalk chooser's pieces,
+// the backup slips' lists, the folder tab's filing popup), the Notes and Call
+// Log stationery, the Assistant's action frames and the Recognition
+// preferences' handwriting style - with a comment on each saying what it is.
 
+// the checkbox bitmaps, checked and not (with the shared mask CheckOnMask)
 CheckOn := {
 	mask: CheckOnMask,
 	bits: bitmap('bits, "resources/bits/3c8a6d.png", "00000000000400340034001300410020", 1),
@@ -12,6 +23,8 @@ CheckOff := {
 	bounds: {left: 0, top: 0, right: 13, bottom: 13}
 };
 
+// the bounds of the punctuation pickers' bitmaps (the caret's popup and the
+// corrector's leading, middle and trailing punctuation)
 caretpunctBitmapBounds := {left: 0, top: 0, right: 43, bottom: 163};
 
 leadingpunctBitmapBounds := {left: 0, top: 0, right: 63, bottom: 25};
@@ -20,22 +33,29 @@ midpunctBitmapBounds := {left: 0, top: 0, right: 43, bottom: 47};
 
 trailingpunctBitmapBounds := {left: 0, top: 0, right: 63, bottom: 69};
 
+// the entry line of the label input lines (protoLabelInputLine and the
+// like): one line of handwriting-font text on gray lines
 entryLine := {
 	_proto: @protoInputLine,
-	viewJustify: 8388800,
+	viewJustify: vjParentFullV + vjOneLineOnly,
 	viewFont: tsHWFont + tsSize(12),
 	viewFormat: vfLinesGray,
+	// its text changed: the parent's textChanged sent
 	viewChangedScript: func(slot, view) begin
 		(if (slot = 'text) then self:textChanged())
 	end,
 	preallocatedContext: 'entryLine
 };
 
+// the label of the label input lines: static text that, when the line has
+// labelCommands, pops them up when tapped (unless labelClick took the tap)
 labelLine := {
 	_proto: @protoStaticText,
 	viewFlags: vVisible + vReadOnly + vClickable,
 	viewFormat: vfRound(3),
-	viewJustify: 8388608,
+	viewJustify: vjOneLineOnly,
+	// a tap: labelClick's first; else, with label commands, the popup after
+	// the pen is tracked (true: the tap taken)
 	viewClickScript: func(unit) begin
 		(if (if (not self:labelClick(unit)) then labelCommands) then begin
 				if self:TrackHilite(unit) then begin
@@ -47,6 +67,9 @@ labelLine := {
 	preallocatedContext: 'labelLine
 };
 
+// the sound recorder's progress gauge: while recording it fills a step a
+// second, round again every 60 seconds; while playing it fills in
+// proportion to the sound's length (playTime, in seconds)
 SoundProgressSlider := {
 	viewJustify: vjSiblingBottomV,
 	viewBounds: {left: 7, top: 3, right: 127, bottom: 14},
@@ -54,27 +77,36 @@ SoundProgressSlider := {
 	minValue: 0,
 	maxValue: 60,
 	viewValue: 0,
+	// TimeInSeconds() when the recording or playing (re)started, less what
+	// had elapsed before a pause
 	startSeconds: nil,
 	playTime: nil,
+	// the seconds elapsed when paused (0 while running)
 	elapsedTime: 0,
+	// the clock started
 	viewSetupFormScript: func() begin
 		(startSeconds := TimeInSeconds())
 	end,
+	// back to the start, recording
 	ResetSlider: func() begin
 		elapsedTime := 0;
 		self:SetRecordStart()
 	end,
+	// the gauge full (the sound ended)
 	SlideToRight: func() begin
 		self:SetAndUpdate(maxValue)
 	end,
+	// recording (again, after a pause): no length to measure against
 	SetRecordStart: func() begin
 		playTime := nil;
 		startSeconds := (TimeInSeconds() - elapsedTime);
 		self:SetCurrentTime()
 	end,
+	// paused: the time so far kept
 	PauseSlider: func() begin
 		(elapsedTime := (TimeInSeconds() - startSeconds))
 	end,
+	// playing (again) a sound of playingTime seconds (at least 1)
 	SetPlayStart: func(playingTime) begin
 		if ((playTime := playingTime) < 1) then begin
 				playTime := 1
@@ -82,15 +114,20 @@ SoundProgressSlider := {
 		startSeconds := (TimeInSeconds() - elapsedTime);
 		self:SetCurrentTime()
 	end,
+	// the gauge set for the time now: l1 seconds elapsed, over the range l2 -
+	// a share of the sound when playing, else the seconds round the range
 	SetCurrentTime: func() begin
 		local l1, l2, l3;
 		l1 := (TimeInSeconds() - startSeconds);
 		l2 := (maxValue - minValue);
 		self:SetAndUpdate((l3 := (if playTime then ceiling(((l1 * l2) / playTime)) else (l1 mod l2))))
 	end,
+	// the seconds recorded or played so far
 	getElapsedTime: func() begin
 		(if (elapsedTime > 0) then elapsedTime else (TimeInSeconds() - startSeconds))
 	end,
+	// the gauge set to the value (the argument named maxValue) and drawn at
+	// once; elapsedTime cleared, as the gauge is running
 	SetAndUpdate: func(maxValue) begin
 		viewValue := maxValue;
 		self:Dirty();
@@ -101,8 +138,11 @@ SoundProgressSlider := {
 	_proto: @protoGauge
 };
 
+// the status bar's time glance (tapping the clock): the date and time, and
+// a battery gauge to the right of the word "Battery"
 timeField := {
 	_proto: @protoGlance,
+	// the text, and the glance as wide as it plus room for the gauge
 	viewSetupFormScript: func() begin
 		self.text := ParamStr(" ^0        Battery", [Array: DateNTime(Time())]);
 		(self.viewBounds := RelBounds(25, 2, (StrFontWidth(self.text, viewFont) + 50), 13))
@@ -112,6 +152,7 @@ timeField := {
 			_proto: @protoGauge,
 			viewBounds: {left: -45, top: 1, right: -4, bottom: -1},
 			viewJustify: vjParentRightH + vjParentFullV,
+			// the main battery's (0) level
 			viewSetupFormScript: func() begin
 				(self.viewValue := BatteryLevel(0))
 			end
@@ -120,34 +161,47 @@ timeField := {
 	preallocatedContext: 'timeField
 };
 
+// protoDragger's default bounds (also the filing slip's)
 protoDraggerViewBounds := {left: 10, top: 10, right: 200, bottom: 100};
 
+// protoApp's title bar
 protoAppItem := {_proto: @protoTitle};
 
+// the digits of the latitude, longitude and time-delta pickers
+// (protoDigit flaps; the value is in minutes, signed): this one shows the
+// hemisphere (the compass letters: index 0 for a value >= 0, 1 below), and
+// tapping it negates the value
 protoLatitudePickerItem := {
 	viewBounds: {left: -23, top: 0, right: 0, bottom: 28},
 	icon: @digitflaploWord,
 	totalFrames: 2,
+	// any tap flips the sign: the value moved by -2 times itself
 	Advance: func(a1) begin
 		inherited:Advance((-2 * value))
 	end,
 	increment: 0,
+	// the flap to show: 0 for a value >= 0, else 1
 	GetIndex: func(value) begin
 		(if (value >= 0) then 0 else 1)
 	end,
+	// the flaps are the compass letters
 	viewSetupFormScript: func() begin
 		(digits := compass)
 	end,
 	_proto: @protoDigit
 };
 
+// the minutes' units digit; this and the digits after it count away from
+// zero, so a step of a1 is taken the other way for a negative value
 protoLatitudePickerItem_2 := {
 	viewBounds: {left: -29, top: 0, right: -6, bottom: 28},
 	icon: @digitflaploWord,
+	// a step taken away from zero
 	Advance: func(a1) begin
 		inherited:Advance((if (value < 0) then (-a1) else a1))
 	end,
 	increment: 1,
+	// the minutes' units
 	GetIndex: func(value) begin
 		(abs(value) mod 10)
 	end,
@@ -155,13 +209,16 @@ protoLatitudePickerItem_2 := {
 	_proto: @protoDigit
 };
 
+// the minutes' tens digit (0-5)
 minutes10 := {
 	viewBounds: {left: -22, top: 0, right: 0, bottom: 28},
 	icon: @digitflap,
+	// a step taken away from zero
 	Advance: func(a1) begin
 		inherited:Advance((if (value < 0) then (-a1) else a1))
 	end,
 	increment: 10,
+	// the minutes' tens
 	GetIndex: func(value) begin
 		((abs(value) mod 60) div 10)
 	end,
@@ -170,13 +227,16 @@ minutes10 := {
 	_proto: @protoDigit
 };
 
+// the hours' (or degrees') units digit: a step is 60 minutes
 hours1 := {
 	viewBounds: {left: -29, top: 0, right: -6, bottom: 28},
 	icon: @digitflaploWord,
+	// a step taken away from zero
 	Advance: func(a1) begin
 		inherited:Advance((if (value < 0) then (-a1) else a1))
 	end,
 	increment: 60,
+	// the hours' units
 	GetIndex: func(value) begin
 		((abs(value) div 60) mod 10)
 	end,
@@ -185,13 +245,16 @@ hours1 := {
 	_proto: @protoDigit
 };
 
+// the hours' (or degrees') tens digit: a step is 600 minutes
 hours10 := {
 	viewBounds: {left: -22, top: 0, right: 0, bottom: 28},
 	icon: @digitflap,
+	// a step taken away from zero
 	Advance: func(a1) begin
 		inherited:Advance((if (value < 0) then (-a1) else a1))
 	end,
 	increment: 600,
+	// the hours' tens
 	GetIndex: func(value) begin
 		((abs(value) div 600) mod 10)
 	end,
@@ -199,9 +262,11 @@ hours10 := {
 	_proto: @protoDigit
 };
 
+// a gauge the width of its parent, 9 high (the battery gauges' and others')
 gauge := {
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 9},
 	viewJustify: vjParentFullH,
+	// (empty: in place of the proto's)
 	viewSetupFormScript: func() begin
 		nil
 	end,
@@ -209,12 +274,16 @@ gauge := {
 	_proto: @protoGauge
 };
 
+// protoPicker's up and down arrows (hidden until the list is too long)
 scrollers := {
 	viewJustify: vjParentRightH + vjParentCenterV + vjParentClip,
 	viewFlags: vReadOnly,
 	ScrollRect: nil,
 	DataRect: nil,
 	ViewRect: nil,
+	// an arrow held: the picker scrolled a line while there is more that
+	// way, pausing so that a line takes at least scrollingSleepTime ticks;
+	// then the arrows updated
 	viewScroll2DScript: func(arrowDirection, a2) begin
 		local parent, ticks2;
 		parent := self:Parent();
@@ -232,14 +301,19 @@ scrollers := {
 	_proto: @protoUpDownScroller
 };
 
+// the notification slips' heading (message and snooze notifications): the
+// overview diamond and its text; a tap shows when the notice came
+// (timeStampField)
 snoozeNotificationItem := {
 	viewFlags: vVisible + vReadOnly + vClickable,
-	viewJustify: 8388656,
+	viewJustify: vjParentFullH + vjOneLineOnly,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 14},
 	viewFont: @fontSystem10Bold,
+	// $\uFC05: a character of the system font's private range (the diamond)
 	viewSetupFormScript: func() begin
 		(self.text := Stringer([Array: $\uFC05, overview]))
 	end,
+	// a tap: the time stamp glance opened
 	viewClickScript: func(unit) begin
 		timeStampField:Open();
 		true
@@ -247,8 +321,10 @@ snoozeNotificationItem := {
 	_proto: @protoStaticText
 };
 
+// a glance with the notice's date and time (its timestamp)
 timeStampField := {
 	viewJustify: vjCenterV,
+	// the date and time, the glance as wide as its text
 	viewSetupFormScript: func() begin
 		self.text := Stringer([Array: $ , DateNTime(timestamp)]);
 		(self.viewBounds := RelBounds(15, 0, StrFontWidth(text, viewFont), 12))
@@ -257,8 +333,10 @@ timeStampField := {
 	_proto: @protoGlance
 };
 
+// the notice's text (nfText), below the heading
 snoozeNotificationItem_2 := {
 	viewJustify: vjParentFullH + vjParentFullV,
+	// the notice's text, below the 14-pixel heading
 	viewSetupFormScript: func() begin
 		self.text := nfText;
 		(self.viewBounds := SetBounds(0, 14, 0, 0))
@@ -266,6 +344,10 @@ snoozeNotificationItem_2 := {
 	_proto: @protoStaticText
 };
 
+// the AppleTalk chooser's base (the zone and network choosers, zoneChooser
+// and netChooser): a floater that opens AppleTalk, looks names up with NBP
+// in its table (theTable_2Proto), and closes AppleTalk again when it closes
+// or the Newton powers off
 zoneChooserProto := {
 	_proto: @protoFloater,
 	viewFlags: vApplication + vFloating + vClickable,
@@ -274,14 +356,20 @@ zoneChooserProto := {
 	selectedZoneIndex: nil,
 	appleTalkOpen: nil,
 	chooserNBPTable: nil,
+	// true from setup until the chooser starts closing
 	formOpen: nil,
+	// the power-off handler: powering off is allowed, and closes the chooser
 	PowerOffScript: func(a1) begin
 		(if (a1 = 'okToPowerOff) then true else (if (a1 = 'PowerOff) then self:CloseAndNotify(nil)))
 	end,
+	// open, and told of powering off
 	viewSetupFormScript: func() begin
 		formOpen := true;
 		AddPowerOffHandler(self)
 	end,
+	// after the chooser is up: AppleTalk opened (unless it already is); on
+	// failure the chooser closes with an alert saying why.  Returns whether
+	// AppleTalk is open
 	deferredSetupScript: func() begin
 		local openAppleTalk2, text;
 		openAppleTalk2 := 0;
@@ -290,6 +378,8 @@ zoneChooserProto := {
 						openAppleTalk2 := OpenAppleTalk()
 					end;
 				if (openAppleTalk2 <> 0) then begin
+						// -12014: an AppleTalk error (ERRBASE_APPLETALK - 14) that
+						// means it is already in use, by the text it gets
 						if (openAppleTalk2 = -12014) then begin
 								text := "The chooser can not be opened because AppleTalk is already in use."
 							end else begin
@@ -302,6 +392,7 @@ zoneChooserProto := {
 			end;
 		return (if formOpen then appleTalkOpen)
 	end,
+	// the handler removed and what the chooser was given let go
 	viewQuitScript: func() begin
 		RemovePowerOffHandler(self);
 		notifyOnClose := nil;
@@ -313,10 +404,14 @@ zoneChooserProto := {
 		lookForText := nil;
 		(nbpLookupName := nil)
 	end,
+	// the table's cell at selectedIndex (an index among the visible cells)
+	// shown selected, when there is one
 	selectCellInTable: func() begin
 		local childViewFrames;
 		(if (selectedIndex <> nil) then (if (if ((childViewFrames := theTable:ChildViewFrames()) <> nil) then (selectedIndex < Length(childViewFrames))) then theTable:selectThisCell(childViewFrames[selectedIndex])))
 	end,
+	// the chooser closed: the NBP lookup stopped, AppleTalk closed, and text
+	// (when not nil) shown in an alert
 	CloseAndNotify: func(text) begin
 		formOpen := nil;
 		if chooserNBPTable then begin
@@ -327,13 +422,16 @@ zoneChooserProto := {
 				appleTalkOpen := nil
 			end;
 		if (text <> nil) then begin
-				self:Notify(3, "Chooser", text)
+				self:Notify(kNotifyAlert, "Chooser", text)
 			end;
 		base:Close()
 	end,
+	// an error number: the chooser closed with it in the alert
 	showError: func(a1) begin
 		self:CloseAndNotify(ParamStr("The chooser found a problem...(^0).", [Array: NumberStr(a1)]))
 	end,
+	// the chooser left open too long: kept on external power, else closed to
+	// save the battery (returns whether to go on)
 	timesUpScript: func() begin
 		(if (BatteryStatus(0).acPower = 'yes) then return true else begin
 				self:CloseAndNotify("The chooser has been closed to conserve battery power.");
@@ -342,11 +440,13 @@ zoneChooserProto := {
 	end
 };
 
+// the chooser's "Looking for <lookForText>..." while no names have come
 startupMsg_2Proto := {
 	_proto: @protoStaticText,
-	viewJustify: 8393222,
+	viewJustify: vjCenterH + vjCenterV + vjSiblingCenterH + vjSiblingCenterV + vjOneLineOnly,
 	viewBounds: {left: 0, top: 0, right: 115, bottom: 13},
 	text: uCardPositionAlertButton,
+	// the text, and the view as wide as it, when the chooser has lookForText
 	viewSetupFormScript: func() begin
 		local strFontWidth2;
 		(if (lookForText exists) then begin
@@ -357,9 +457,12 @@ startupMsg_2Proto := {
 	end
 };
 
+// the chooser's heading, "Select a <headerText>", as wide as its text
 zoneChooserProto_2 := {
 	_proto: @protoStaticText,
 	text: uCardPositionAlertButton,
+	// the text, and the view as wide as it (a pixel taller), when the
+	// chooser has headerText
 	viewSetupFormScript: func() begin
 		local strFontWidth2, viewBounds;
 		(if (headerText exists) then begin
@@ -371,6 +474,11 @@ zoneChooserProto_2 := {
 	end
 };
 
+// the chooser's table of the names NBP found (seven lines showing): it
+// starts a lookup of nbpLookupName in the current zone ("*" for this one),
+// polls for names on an idle that slows down as it goes (200 ms, then 1 s
+// after 4 checks, 3 s after 20), and shows them sorted, the previous choice
+// selected
 theTable_2Proto := {
 	_proto: @protoTable,
 	viewJustify: vjParentBottomV,
@@ -379,6 +487,8 @@ theTable_2Proto := {
 	def: @protoTableDef,
 	entryProto: {
 		_proto: @protoTableEntry,
+		// a name tapped: the chooser's time-out started again (300000) and the
+		// line remembered
 		viewClickScript: func(unit) begin
 			timeoutCounter := 300000;
 			inherited:viewClickScript(unit);
@@ -389,6 +499,7 @@ theTable_2Proto := {
 	currentChecks: 0,
 	nbpCookie: nil,
 	idleFrequency: 200,
+	// the idle period for a stage (0, 1, 2), in milliseconds
 	getIdleFrequency: func(a1) begin
 		if (a1 = 0) then begin
 				idleFrequency := 200
@@ -401,6 +512,9 @@ theTable_2Proto := {
 			end;
 		return idleFrequency
 	end,
+	// the names found so far put in the table, sorted; the scroller shown
+	// when there are more than seven; the current selection scrolled into
+	// view and selected
 	CopyNBPNamesToTable: func() begin
 		local l1, stringInArray;
 		def.tabValues := NBPGetNames(nbpCookie);
@@ -431,6 +545,9 @@ theTable_2Proto := {
 		theTable:RedoChildren();
 		self:selectCellInTable()
 	end,
+	// a poll: when more names have come, the "Looking for" message hidden
+	// and the table refilled; returns the next idle period (0: stop, when
+	// the chooser is closing)
 	viewIdleScript: func() begin
 		local nBPGetCount2, getIdleFrequency;
 		getIdleFrequency := 0;
@@ -459,6 +576,9 @@ theTable_2Proto := {
 			end;
 		return getIdleFrequency
 	end,
+	// the chooser told of its table; a private copy of the table definition
+	// (170 wide, less any indent); the table seven lines high; the starting
+	// selection's name
 	viewSetupFormScript: func() begin
 		currentNames := 0;
 		currentChecks := 0;
@@ -472,6 +592,11 @@ theTable_2Proto := {
 		self.viewBounds.bottom := (viewBounds.top + (((7 * FontHeight(viewFont)) - 7) + 1));
 		(if (startSelection <> nil) then (currentSelection := GetNames(startSelection)))
 	end,
+	// a lookup started (the table emptied): NBPStart on "<name><zone>"; the
+	// error l2 is -12310 when one is already running and -12000
+	// (ERRBASE_APPLETALK, as a generic AppleTalk error) when NBPStart gave no
+	// cookie; on an error the chooser closes, else polling starts.  Returns
+	// the error (0: none)
 	startScript: func() begin
 		local text, l2;
 		def.tabValues := nil;
@@ -506,6 +631,8 @@ theTable_2Proto := {
 			end;
 		return l2
 	end,
+	// the lookup stopped (and polling); returns NBPStop's error, closing the
+	// chooser on one
 	stopScript: func() begin
 		local nBPStop2;
 		nBPStop2 := 0;
@@ -519,6 +646,7 @@ theTable_2Proto := {
 			end;
 		return nBPStop2
 	end,
+	// scrolling counts as use: the time-out started again
 	viewScroll2DScript: func(arrowDirection, a2) begin
 		timeoutCounter := 300000;
 		inherited:viewScroll2DScript(arrowDirection, a2);
@@ -526,42 +654,61 @@ theTable_2Proto := {
 	end
 };
 
+// the chooser table's scroll arrows (seven lines a page)
 nbpScroller_2Proto := {
 	_proto: @protoUpDownScroller,
 	viewJustify: vjParentBottomV,
 	viewBounds: {left: 185, top: -108, right: 203, bottom: -75},
 	ViewRect: {left: 0, top: 0, right: 0, bottom: 7},
+	// the arrows scroll the chooser's table
 	viewSetupDoneScript: func() begin
 		scrollView := theTable;
 		inherited:?viewSetupDoneScript()
 	end
 };
 
+// the folder tab's text (protoShowBar, protoNewShowBar, the NewtApp
+// folder tab): the folder (and store) being shown, as a tab with rounded
+// ends; tapping it pops up the application's folders - Unfiled, each
+// folder, All - and, with more than one store, the stores and All Stores,
+// the current ones checked, and picking one changes the filter
 showBarText := {
 	_proto: {
 		_proto: @protoTextButton,
 		viewFormat: vfFillWhite,
 		viewBounds: nil,
-		viewJustify: 8388626,
+		viewJustify: vjCenterH + vjParentCenterH + vjOneLineOnly,
 		viewFont: tsSystem + tsSize(10) + tsBold,
 		text: nil,
 		width: nil,
 		folderList: nil,
 		unfiled: "Unfiled ^0",
+		// the tab's text (RedoText)
 		viewSetupFormScript: func() begin
 			self:RedoText()
 		end,
+		// the tab's two ends
 		viewDrawScript: func() begin
 			self:CopyBits(leftBits, 0, 0, nil);
 			self:CopyBits(rightBits, (width - rightBits.bounds.right), 0, nil)
 		end,
+		// the hilite: the tab's shape (both ends and the rectangle between)
+		// inverted
 		viewHiliteScript: func(on) begin
 			local box, right;
 			box := self:LocalBox();
 			right := leftHiliteBits.bounds.right;
-			self:DrawShape([Array: OffsetShape(MakeShape(leftHiliteBits), box.left, 1), MakeRect((box.left + right), 0, (box.right - right), box.bottom), OffsetShape(MakeShape(rightHiliteBits), (box.right - right), 1)], '{transferMode: 2, penPattern: 0, fillPattern: 5});
+			self:DrawShape([Array: OffsetShape(MakeShape(leftHiliteBits), box.left, 1), MakeRect((box.left + right), 0, (box.right - right), box.bottom), OffsetShape(MakeShape(rightHiliteBits), (box.right - right), 1)], '{transferMode: modeXor, penPattern: vfNone, fillPattern: vfBlack});
 			true
 		end,
+		// the popup built from the filing target's view: l2 the target view,
+		// l3 its labelsFilter (the folder shown: nil Unfiled, '_all All), l6
+		// the items - Unfiled ("Unfiled <things>" unless the app names it),
+		// a separator, the folders, a separator, All - and, with more than
+		// one store and a storesFilter slot, a solid separator, the stores
+		// (l11 the one shown, nil for all), a separator and All Stores.
+		// $ﰋ is the check mark.  (The locals declared after their first
+		// use are as the decompiler wrote them.)
 		buttonClickScript: func() begin
 			l3 := GetVariable((l2 := (l1 := self:GetTargetInfo('Filing)).targetView), 'labelsFilter);
 			l4 := GetVariable(l2, 'localFoldersOnly);
@@ -612,9 +759,13 @@ showBarText := {
 				end;
 			DoPopup(l6, 0, 2, self)
 		end,
+		// the popup, once the pen is tracked
 		viewClickScript: func(unit) begin
 			(if self:TrackHilite(unit) then self:buttonClickScript())
 		end,
+		// the target view's filter slot a2 ('labelsFilter or 'storesFilter)
+		// set to the new value, undoably; the view told by NewFilingFilter
+		// (with the slot) when it has one, else FilterChanged
 		SetNewFilter: func(targetView, a2, folderListItem) begin
 			AddUndoAction('SetNewFilter, [Array: targetView, a2, GetVariable(targetView, a2)]);
 			SetVariable(targetView, a2, folderListItem);
@@ -622,6 +773,9 @@ showBarText := {
 			self:SyncView();
 			(if (targetView:NewFilingFilter exists) then targetView:NewFilingFilter(a2) else targetView:?FilterChanged())
 		end,
+		// the item picked, by its index in the popup's layout: 0 Unfiled, l4
+		// (2) to l5 the folders, l5 + 2 All, l6 to l7 the stores, l7 + 2 All
+		// Stores (the separators between); a changed folder or store set
 		pickActionScript: func(index) begin
 			local filing, l2, stores, l4, l5, l6, l7, value, value2, folderListItem, value22;
 			l2 := (filing := self:GetTargetInfo('Filing)).targetView;
@@ -658,6 +812,7 @@ showBarText := {
 				end;
 			self:pickCancelledScript()
 		end,
+		// the folder list let go and the tab unhilited
 		pickCancelledScript: func() begin
 			folderList := nil;
 			self:hilite(nil)
@@ -666,6 +821,7 @@ showBarText := {
 	preallocatedContext: 'showBarText
 };
 
+// the "Information" heading of the backup slips
 information := {
 	viewJustify: vjParentFullH,
 	viewBounds: {left: 7, top: 5, right: -7, bottom: 18},
@@ -674,6 +830,9 @@ information := {
 	_proto: @protoStaticText
 };
 
+// the backup and restore slips' list of applications (prefsSlipProto's):
+// several may be checked; prefsCache.(prefsSlot) is 'all or 'Partial and
+// prefsCache.(prefsArray) the checked ones
 scrollList := {
 	viewFlags: vVisible + vClipping + vClickable,
 	viewFormat: vfFrameBlack + vfPen(2),
@@ -681,7 +840,9 @@ scrollList := {
 	viewBounds: {left: 18, top: 5, right: -18, bottom: 67},
 	useMultipleSelections: true,
 	useScrollers: true,
+	// true while every line is checked
 	checkAll: nil,
+	// a line tapped: no longer 'all; checkAll follows
 	HiliteLine: func(temp) begin
 		if (prefsCache.(prefsSlot) = 'all) then begin
 				prefsCache.(prefsSlot) := 'Partial
@@ -689,6 +850,7 @@ scrollList := {
 		inherited:HiliteLine(temp);
 		(if (Length(selectedItems) = Length(ListItems)) then (checkAll := true) else (checkAll := nil))
 	end,
+	// the checked applications saved in the preferences entry
 	viewQuitScript: func() begin
 		if (prefsCache.(prefsSlot) = 'Partial) then begin
 				self:stashItems(soupNameList)
@@ -696,6 +858,10 @@ scrollList := {
 		EntryChangeXmit(prefsCache, 'backup)
 	end,
 	stashItems: stashItems,
+	// the "other" item (class 'otherFrame) split into one item per soup it
+	// holds, each inserted in name order; then the lines and which are
+	// checked (prefsSlipProto's figureAllItems).  (The locals declared after
+	// their first use are as the decompiler wrote them.)
 	viewSetupFormScript: func() begin
 		inherited:?viewSetupFormScript();
 		if (soupNameList2 := soupNameList) then begin
@@ -721,10 +887,13 @@ scrollList := {
 	_proto: @protoTextList
 };
 
+// the "All" button under the applications' list: checks them all or, when
+// all are checked, none
 prefsSlipProtoItem := {
 	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingBottomV,
 	viewBounds: {left: 0, top: 7, right: 36, bottom: 20},
 	text: all,
+	// the choice saved in the preferences entry and the list redrawn
 	buttonClickScript: func() begin
 		local scrollList2;
 		if (not (scrollList2 := scrollList).checkAll) then begin
@@ -741,10 +910,15 @@ prefsSlipProtoItem := {
 	_proto: @protoTextButton
 };
 
+// the touch-tone keypad (touchtonePad): a protoKeypad whose keys play their
+// DTMF tones - with a tab and two arrow keys on the bottom row
 touchtonePadProto := {
 	keySound: nil,
 	typewriter: @typewriter,
 	newt_feature: true,
+	// a key pressed: for 0-9, * (10) and # (11) its tone from dialTones, at
+	// volume 4, when the sound is on and the locale does not say the device
+	// has no speaker; any other key, or no tone allowed, the typewriter click
 	keyPressScript: func(char2) begin
 		local oRD2;
 		if (char2 = $*) then begin
@@ -771,6 +945,10 @@ touchtonePadProto := {
 	end,
 	viewBounds: {left: 0, top: 0, right: 129, bottom: 121},
 	keyResultsAreKeycodes: nil,
+	// the rows of keys (the Newton Programmer's Guide's "key definitions
+	// array"): each row its height and its tallest key's, in key units, then
+	// a legend, a result and a key descriptor (packed key flags) for each key
+	// - the last row tab, space, left and right arrow
 	keyDefinitions: [|Array|:
 		touchtonePadProtoItem,
 		touchtonePadProtoItem_2,
@@ -798,10 +976,14 @@ touchtonePadProto := {
 	_proto: @protoKeypad
 };
 
+// a query spec: by the timestamp index (NewtApp's soups, the Notes overview)
 soupQuery := {type: 'index, indexPath: 'timestamp};
 
+// the bounds of NewtApp's entry page and roll headers
 newtEntryPageHeaderViewBounds := {left: 0, top: 0, right: 0, bottom: 15};
 
+// the right-hand buttons of a status bar: the action (routing) button and,
+// below, the filing button, each placed to the left of the one before it
 menuRightButtonsDefProto := {
 	viewBounds: {left: -24, top: 0, right: -7, bottom: 13},
 	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingTopV,
@@ -815,40 +997,52 @@ menuRightButtonsDefProto_2 := {
 	_proto: @newtFilingButton
 };
 
+// the padlock shown on an entry on a locked store
 lockedIcon := {
 	bits: bitmap('bits, "resources/bits/4b7dc5.png", "0000000000040022002200300030003b", 1),
 	bounds: {left: 0, top: 0, right: 11, bottom: 14}
 };
 
+// the print and fax slips' Preview button, on the bottom row below the
+// envelope: the item laid out by its format and shown in pagePreviewForm
 _previewButtonProto := {
 	text: preview,
 	viewBounds: {left: 11, top: 0, right: 59, bottom: 13},
-	viewJustify: 8388614,
+	viewJustify: vjCenterH + vjCenterV + vjOneLineOnly,
+	// 21 pixels above the bottom of the area below the envelope
 	viewSetupFormScript: func() begin
 		(viewBounds := DeepClone(viewBounds)).top := (((envelopeHeight + bottomIndent) - 19) - 2);
 		(viewBounds.bottom := (viewBounds.top + 13))
 	end,
+	// fields: the routing slip's: the transport sets up the format (a
+	// non-nil answer means it has none - an alert), the format gets its
+	// last chance to set up, and the page preview opens on the fields
 	preview: func(fields) begin
 		local l1, context;
-		(if (transport:SetupFormat(fields) <> nil) then self:Notify(3, "Print", "The print format for this item is missing") else begin
+		(if (transport:SetupFormat(fields) <> nil) then self:Notify(kNotifyAlert, "Print", "The print format for this item is missing") else begin
 				GetCurrentFormat(fields):LastChanceToSetup(fields);
 				(context := BuildContext(@pagePreviewForm)).fields := fields;
 				context:Open()
 			end)
 	end,
+	// the preview of the routing slip's fields
 	buttonClickScript: func() begin
 		self:preview(fields)
 	end,
 	_proto: @protoTextButton
 };
 
+// a 95 x 25 bitmap (the Extras drawer's)
 fineprintIcon := {
 	bits: bitmap('bits, "resources/bits/4cc2d9.png", "00000000000c00c800c8005c00e100bb", 1),
 	bounds: {left: 0, top: 0, right: 95, bottom: 25}
 };
 
+// the To Do icon (the remind slip's title, the Calendar's To Do List)
 smallIcon_3 := {bits: todoBits, bounds: {left: 0, top: 0, right: 14, bottom: 11}};
 
+// the Notes' "Note" stationery: the data definition (newtStationery) of a
+// plain note in the Notes application (superSymbol 'notes)
 paperroll := {
 	_proto: @newtStationery,
 	symbol: 'paperroll,
@@ -858,11 +1052,14 @@ paperroll := {
 	icon: @paperLinedBitmap,
 	version: 1,
 	metadata: nil,
+	// a new note: a copy of protoNote stamped with the time now
 	MakeNewEntry: func() begin
 		local copy;
 		(copy := Clone(@protoNote)).timestamp := Time();
 		copy
 	end,
+	// the note as a line of text (for overviews and Find): its title, if any,
+	// then its first 50 characters, or "-empty-"
 	StringExtract: func(entry, nLines) begin
 		local text;
 		if StrEqual((text := (if (if entry.data then (Length(entry.data) > 0)) then ExtractData(entry.data, "...", 50) else "-empty-")), "") then begin
@@ -870,16 +1067,20 @@ paperroll := {
 			end;
 		(if entry.title then Stringer([Array: entry.title, " ", text]) else text)
 	end,
+	// the note as text (for routing): its paragraphs' text
 	TextScript: func(entry, target) begin
 		notesText(target.data)
 	end
 };
 
+// a note's editor view definition 'viewonly (on notePaper, public)
 viewonly := {
 	_proto: @notePaper,
 	type: 'editor,
 	symbol: 'viewonly,
 	protection: 'public,
+	// widened, when the content (MinimalBounds) reaches past the parent's
+	// right edge, by as much as it does
 	viewSetupFormScript: func() begin
 		local minimalBounds, box, l3;
 		if (minimalBounds := self:MinimalBounds(target)) then begin
@@ -892,6 +1093,9 @@ viewonly := {
 	end
 };
 
+// the editing area of the letter's and memo's auxiliary slips
+// (addresseeSlip, toSubjectSlip): a newtFalseEntryView over the routing
+// slip's fields
 addresseeSlipProto := {
 	viewJustify: vjParentFullH + vjParentFullV,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: -16},
@@ -899,22 +1103,30 @@ addresseeSlipProto := {
 	_proto: @newtFalseEntryView
 };
 
+// a routing format that sends the item as a frame (targetFrameFormat)
 prFrameFormat := {title: default_3, symbol: 'prFrameFormat, _proto: @targetFrameFormat};
 
+// protoPensizeMenu's button (the styles palette's): pops up pop - items
+// each with a value in the slot named by slot - the current one (setup())
+// checked; picking one sets base.(slot) and tells fontChanged
 protoPensizeMenuProto := {
 	viewJustify: vjCenterH + vjCenterV + vjParentCenterV + vjSiblingRightH,
 	viewBounds: nil,
 	text: nil,
 	pop: nil,
 	slot: nil,
+	// an item picked: its value set in base, and fontChanged told
 	pickActionScript: func(index) begin
 		base.(slot) := popup[index].(slot);
 		self:fontChanged(true);
 		inherited:pickActionScript(index)
 	end,
+	// refused, with an alert, when the key view's styles are fixed
+	// (vFixedTextStyle or vFixedInkTextStyle in its textFlags).  (The locals
+	// declared after their first use are as the decompiler wrote them.)
 	buttonClickScript: func() begin
-		if (if (if (keyView := GetKeyView()) then keyView.textFlags) then (BAnd(keyView.textFlags, 24) <> 0)) then begin
-				self:Notify(3, "Styles", "The style cannot be changed here.");
+		if (if (if (keyView := GetKeyView()) then keyView.textFlags) then (BAnd(keyView.textFlags, vFixedTextStyle + vFixedInkTextStyle) <> 0)) then begin
+				self:Notify(kNotifyAlert, "Styles", "The style cannot be changed here.");
 				self:hilite(nil);
 				return nil
 			end;
@@ -935,6 +1147,9 @@ protoPensizeMenuProto := {
 	_proto: @protoPopupButton
 };
 
+// the Call Log's stationery (newtStationery of 'callapp): a phone message -
+// who called, the number, when, how the call ended and notes; its entries
+// are made by the call transport (|PhoneHome:Newton|)
 calllog := {
 	_proto: @newtStationery,
 	symbol: 'calllog,
@@ -945,22 +1160,30 @@ calllog := {
 	version: 1,
 	metadata: nil,
 	taskSlip: '|PhoneHome:Newton|,
+	// a new entry: the transport's new item, marked as made in the Call Log
 	MakeNewEntry: func() begin
 		local l1;
 		(l1 := GetRoot().(taskSlip):NewItem(nil)).fromCallApp := true;
 		l1
 	end,
+	// the entry as text: one line - its title, or the name and how the call
+	// ended (else the number and date) - or, for more lines, all of these;
+	// l2 is hangupreason's text
 	StringExtract: func(entry, nLines) begin
 		local shortDate2, l2;
 		shortDate2 := ShortDate(entry.timestamp);
 		l2 := (if entry.hangupreason then '{lineBusy: "Line Busy", noAnswer: "No Answer", leftMessage: "Left Message", followup: "Followup Needed", completed: "Call Completed"}.(entry.hangupreason));
 		(if (nLines = 1) then (if StrFilled(entry.title) then entry.title else Stringer([Array: entry.name, " ", (if l2 then l2 else Stringer([Array: entry.phoneNumber, " ", shortDate2]))])) else Stringer([Array: entry.title, " ", entry.name, " ", entry.phoneNumber, " ", l2, " ", shortDate2]))
 	end,
+	// the entry as text (for routing): a "Phone Message: ..." line and its notes
 	TextScript: func(entry, target) begin
 		Stringer([Array: ParamStr("Phone Message: ^0 ^1 on ^2", [Array: target.name, target.phoneNumber, DateNTime(target.timestamp)]), "\n\n", notesText(target.notes)])
 	end
 };
 
+// the phone message's "Name" line: a smart name line on the Names file's
+// phone numbers; the caller picked is kept as toRef, and forgotten when the
+// name no longer matches it
 default_2Proto := {
 	viewBounds: {left: 5, top: 0, right: -5, bottom: 36},
 	viewJustify: vjParentFullH,
@@ -970,21 +1193,25 @@ default_2Proto := {
 	path: 'name,
 	memory: 'caller,
 	flavor: {
+		// the name's text; a |string.noData| placeholder replaced by ""
 		PathToText: func() begin
 			(if IsInstance(target.(path), '|string.noData|) then begin
 					target.(path) := "";
 					""
 				end else Clone(target.(path)))
 		end,
+		// the People popup on the Names file's phone numbers
 		picker: func() begin
 			@protoPeoplePopup:New('|nameRef.phone|, nil, self, nil)
 		end,
+		// a name picked kept as the caller (toRef)
 		pickActionScript: func(index) begin
 			target.toRef := index;
 			inherited:pickActionScript(index)
 		end,
 		_proto: @newtSmartNameFilter
 	},
+	// toRef dropped when its name is no longer the one in the line
 	viewIdleScript: func() begin
 		local toRefItem, get;
 		if (if target.toRef then (Length(target.toRef) > 0)) then begin
@@ -997,6 +1224,9 @@ default_2Proto := {
 	_proto: @newtSmartNameView
 };
 
+// the phone message's "Phone" line: the number; its label pops up the
+// caller's card's numbers, the one in toRef (or else the first work phone)
+// checked
 default_2Proto_2 := {
 	viewBounds: {left: 5, top: 0, right: -5, bottom: 36},
 	viewLineSpacing: 28,
@@ -1006,6 +1236,10 @@ default_2Proto_2 := {
 	path: 'phoneNumber,
 	kind: 'workPhone,
 	flavor: {
+		// a card picked: the label's items made from its numbers ("number
+		// (type)"), the one to use checked and put in the line with its type
+		// and country; no popup when the card has only one.  (The locals
+		// declared after their first use are as the decompiler wrote them.)
 		EntryToPath: func(resolveEntryAlias) begin
 			target.(path) := nil;
 			country := nil;
@@ -1051,6 +1285,9 @@ default_2Proto_2 := {
 		end,
 		_proto: @newtPhoneFilter
 	},
+	// a label item picked: a name reference resolved (it has an id); the
+	// last item opens the picker; else the number put in the line, checked,
+	// and its class (the phone type, else 'phone) set on the line's value
 	pickActionScript: func(index) begin
 		local labelCommand;
 		if HasPath(labelCommands[index], 'id) then begin
@@ -1084,6 +1321,8 @@ default_2Proto_2 := {
 	_proto: @newtAreacodePhoneLine
 };
 
+// the phone message's "When" line: the call's date and time, picked only
+// (longFormat 80466: a packed date format spec)
 when := {
 	flavor: {_proto: @newtDateNTimeFilter, increment: 1, longFormat: 80466},
 	access: 'pickOnly,
@@ -1094,6 +1333,7 @@ when := {
 	viewJustify: vjParentFullH + vjSiblingBottomV,
 	label: "When",
 	path: 'callDate,
+	// a card jammed in: made the caller (toRef) when there is none yet
 	jamFromEntry: func(resolveEntryAlias) begin
 		if (not target.toRef) then begin
 				target.toRef := [Array: ]
@@ -1103,6 +1343,7 @@ when := {
 	_proto: @newtLabelInputLine
 };
 
+// the phone message's notes: an edit view below the lines
 notesfieldProto := {
 	viewBounds: {left: 5, top: 110, right: -5, bottom: 0},
 	viewJustify: vjParentFullH + vjParentFullV,
@@ -1111,6 +1352,8 @@ notesfieldProto := {
 	_proto: @newtEditView
 };
 
+// the base of the phone message's view definitions: the editor 'default
+// (default_2) and the viewer 'viewonly (viewonly_2)
 default := {
 	viewClass: clView,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
@@ -1122,6 +1365,7 @@ default := {
 	symbol: 'default,
 	name: phoneMessage,
 	viewDefHeight: 140,
+	// the union of the notes' bounds (nil with no notes)
 	MinimalBounds: func(target) begin
 		if target.notes then begin
 				local unionRect2;
@@ -1133,14 +1377,18 @@ default := {
 	end
 };
 
+// the editor's notes (the viewer has its own, notesfield_2)
 notesfield := {_proto: notesfieldProto, preallocatedContext: 'notesfield};
 
+// the phone message's editor (private): name, phone, when and notes, the
+// caret into the name
 default_2 := {
 	_proto: default,
 	protection: 'private,
 	viewChildren: [viewChildren:
 		{
 			_proto: default_2Proto,
+			// the caret into the name line
 			viewSetupDoneScript: func() begin
 				SetKeyView(entryLine, 9999);
 				inherited:?viewSetupDoneScript()
@@ -1156,12 +1404,15 @@ default_2 := {
 
 notesfield_2 := {_proto: notesfieldProto, preallocatedContext: 'notesfield};
 
+// the phone message's viewer (public, read-only lines), widened like the
+// note's viewonly
 viewonly_2 := {
 	_proto: default,
 	type: 'viewer,
 	symbol: 'viewonly,
 	protection: 'public,
 	rollScrolling: true,
+	// widened as the note's viewonly is
 	viewSetupFormScript: func() begin
 		local minimalBounds, box, l3;
 		if (minimalBounds := self:MinimalBounds(target)) then begin
@@ -1182,6 +1433,8 @@ viewonly_2 := {
 	allocateContext: [|Array|: 'notesfield, notesfield_2]
 };
 
+// the phone message's print format (protoLetterFormat): its lines as the
+// page's header, the notes as the body
 cLogFormat := {
 	version: 1,
 	symbol: 'cLogFormat,
@@ -1196,28 +1449,38 @@ cLogFormat := {
 		{_proto: when, access: 'readOnly}
 	],
 	headerHeight: 110,
+	// the message as text: name, number, then the notes
 	TextScript: func(entry, target) begin
 		Stringer([Array: target.name, " ", target.phoneNumber, $\n, target.notes])
 	end,
 	_proto: @protoLetterFormat
 };
 
+// (a second frame format, the same as prFrameFormat)
 prFrameFormat_2 := {title: default_3, symbol: 'prFrameFormat, _proto: @targetFrameFormat};
 
+// a meeting's view (clMeetingView; system/cribNote.ns and meeting.ns use
+// it): its meeting-type icon drawn at the top left, past the slider; a tap
+// on the icon opens the meeting's slip
 cribNoteProto := {
 	viewClass: clMeetingView,
 	viewFlags: vVisible,
 	recConfig: @rcInkorText,
 	iconShape: nil,
 	SliderWidth: 12,
+	// the icon offset 13 right and 1 down
 	transformStyle: {transform: [|Array|: 13, 1]},
+	// the icon of the meeting's type
 	viewSetupFormScript: func() begin
 		local meetingTypeInfo;
 		(iconShape := (meetingTypeInfo := GetMeetingTypeInfo(realData)).shape)
 	end,
+	// the icon, offset by transformStyle
 	viewDrawScript: func() begin
 		(if iconShape then self:DrawShape(iconShape, transformStyle))
 	end,
+	// a tap within the icon (16 pixels from the top, past the slider):
+	// the meeting chosen and its slip opened; true says the tap was taken
 	viewClickScript: func(unit) begin
 		local pt, pt2, box, l4;
 		pt := GetPoint(0, unit);
@@ -1232,18 +1495,26 @@ cribNoteProto := {
 	end
 };
 
+// protoContentArea's base (the book reader's content area, protoPrintPage
+// too): most of its methods are native functions - the frames of class
+// #132 whose funcPtr is a ROM routine and numArgs its argument count - and
+// its scripts do nothing but answer true
 protoContentAreaProto := {
 	CurrentKiosk: {class: #132, funcPtr: 6962673, numArgs: 0},
+	// (answers true)
 	bookShowScript: func() begin
 		true
 	end,
+	// (answers true)
 	pageTurnToScript: func() begin
 		true
 	end,
 	BookData: BookData,
+	// (answers true)
 	BookOKClose: func() begin
 		true
 	end,
+	// (answers true)
 	viewDrawScript: func() begin
 		true
 	end,
@@ -1254,6 +1525,7 @@ protoContentAreaProto := {
 	viewFlags: vVisible,
 	CountPages: {class: #132, funcPtr: 6961630, numArgs: 0},
 	WhereIsBook: {class: #132, funcPtr: 6985922, numArgs: 1},
+	// (answers true)
 	pageTurnAwayScript: func() begin
 		true
 	end,
@@ -1264,35 +1536,46 @@ protoContentAreaProto := {
 	CurrentBook: {class: #132, funcPtr: 6962672, numArgs: 0},
 	debug: 2909404,
 	AuthorData: {class: #132, funcPtr: 6957397, numArgs: 0},
+	// (answers true)
 	bookHideScript: func() begin
 		true
 	end,
 	FindContentByValue: {class: #132, funcPtr: 6966902, numArgs: 3}
 };
 
+// the book reader's "Turn to page" line (Copperfield): a number written is
+// the page to go to (NumberEntered); anything else beeps and is cleared
+// 1.8 seconds later
 turnToPage := {
 	viewBounds: {left: 0, top: 0, right: 138, bottom: 50},
 	viewJustify: 0,
-	entryFlags: 10753,
-	entryTextFlags: 2,
+	entryFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed,
+	entryTextFlags: vNoSpaces,
 	viewLineSpacing: 38,
 	label: "Turn to page",
 	text: nil,
+	// the entry line's text centred; the BAnd with bnot(0) keeps every bit,
+	// so it clears nothing before vjCenterH is added
 	viewSetupChildrenScript: func() begin
 		inherited:viewSetupChildrenScript();
-		(entryLine.viewJustify := BOr(BAnd(entryLine.viewJustify, bnot(0)), 2))
+		(entryLine.viewJustify := BOr(BAnd(entryLine.viewJustify, bnot(0)), vjCenterH))
 	end,
+	// (after BadText's wait) the line cleared; 0 stops the idling
 	viewIdleScript: func() begin
 		SetValue(entryLine, 'text, "");
 		return 0
 	end,
+	// the caret into the line
 	viewSetupDoneScript: func() begin
 		SetKeyView(entryLine, 999)
 	end,
+	// a bad page: a beep, and the line cleared after 1800 ms
 	BadText: func() begin
 		self:SysBeep();
 		self:SetupIdle(1800)
 	end,
+	// a page number from 1 to maxValue passed to NumberEntered (the
+	// fraction dropped)
 	textChanged: func() begin
 		local floor2, number;
 		(if (not StrEqual(text, "")) then begin
@@ -1307,6 +1590,9 @@ turnToPage := {
 	_proto: @protoLabelInputLine
 };
 
+// the Assistant's action words (assistFrames.ns, action_list.ns): each task's
+// primary act, an "action" (isa) with the words that call for it in its
+// Lexicon - find, fax, print, about, remember, mail, schedule, call
 finding_taskPrimary_actIsa := {value: "action"};
 
 finding_taskPrimary_act := {
@@ -1338,11 +1624,19 @@ remembering_taskPrimary_act := {
 
 mailing_taskPrimary_act := {isa: finding_taskPrimary_actIsa, Lexicon: [|Array|: [|Array|: mail, "send", "email", mail]]};
 
+// the scheduling task's act ("schedule"); its removeIt slot has the
+// scheduling task's SetTitle take the word out of the meeting's title
 birthdayIsaIsa := {isa: finding_taskPrimary_actIsa, removeIt: nil, Lexicon: [|Array|: [|Array|: "schedule"]]};
 
 calling_taskPrimary_act := {isa: finding_taskPrimary_actIsa, Lexicon: [|Array|: [|Array|: "call", "phone", "ring", "dial"]]};
 
+// the Extras drawer's entry for a package's icon (proto1_2Exformentry): the
+// icon's soup entry (fentry) and what the drawer asks of it - its name,
+// store, size, whether it may be filed, moved, sent, deleted or used as the
+// backdrop, and what a tap does (activate the package if need be, then open
+// the application)
 proto1_2ExformentryProto := {
+	// the template of a new icon entry
 	iconEntry: {
 		class: 'FormEntry,
 		text: uCardPositionAlertButton,
@@ -1353,40 +1647,57 @@ proto1_2ExformentryProto := {
 		packageName: nil,
 		app: nil
 	},
+	// a new icon entry: a copy of the template
 	New: func() begin
 		Clone(iconEntry)
 	end,
+	// the icon's text, in curly quotes
 	name: func() begin
 		ParamStr("\u201C\u^0\u201D\u", [Array: fentry.text])
 	end,
+	// the name of the store it is on, "" for none
 	where: func() begin
 		local store;
 		(if (store := self:store()) then store:GetName() else "")
 	end,
+	// the package's size in K (1024 bytes, rounded down)
 	size: func() begin
 		Stringer([Array: (EntrySize(self:LookupSoupPackage()) div 1024), "K"])
 	end,
+	// the package's copy protection
 	copyprotected: func() begin
 		GetPkgRefInfo(self:LookupSoupPackage().pkgRef).copyprotection
 	end,
+	// the store of the icon's entry (nil if it is not a soup entry)
 	store: func() begin
 		(if IsSoupEntry(fentry) then EntryStore(fentry))
 	end,
+	// the package's entry on that store, by the icon's packageName
 	LookupSoupPackage: func() begin
 		local store, packageName;
 		store := self:store();
 		packageName := fentry.packageName;
 		(if (if store then packageName) then GetPackageEntry(packageName, store))
 	end,
+	// 'noSoupPackage, 'alreadyActive, 'justActivated - or nil when the
+	// package would not activate
 	LookupSoupPackageAndActivate: func() begin
 		local soupPackage;
 		(if (not (soupPackage := self:LookupSoupPackage())) then 'noSoupPackage else (if SetContains(ActivePackageList, soupPackage.pkgRef) then 'alreadyActive else (if SafeActivatePackage(soupPackage.pkgRef, soupPackage.packageName, EntryStore(soupPackage)) then 'justActivated)))
 	end,
+	// (its comment is above its function, below)
 	Preflight: compile(
 		constants: {
 			kLiteral_536a15: "locked",
 			kLiteral_536afd: "copy protected"
 		},
+		// may the action a1 be done to the icon (kids: all the icons it is
+		// done to)?  'OK, or a string saying why not: the backdrop takes one
+		// icon, of an application that allows it (no noBackdrop), that can
+		// rotate (ReOrientToScreen) when the screen is under 320 high, and on
+		// the internal store; filing, deleting and
+		// freezing need an unlocked store; moving and sending an unprotected
+		// package
 		func(a1, kids) begin
 			local l1;
 			(if (a1 = 'Backdrop) then (if (Length(kids) = 1) then begin
@@ -1399,17 +1710,26 @@ proto1_2ExformentryProto := {
 						(if (EntryStore(fentry) = GetStores()[0]) then 'OK else "not stored internally")
 					end) else (if (((a1 = 'Filing) or (a1 = 'delete)) or (a1 = 'freeze)) then (if (not EntryStore(fentry):IsReadOnly()) then 'OK else kLiteral_536a15) else (if (a1 = 'move) then (if self:copyprotected() then kLiteral_536afd else (if EntryStore(fentry):IsReadOnly() then kLiteral_536a15 else 'OK)) else (if (a1 = 'send) then (if self:copyprotected() then kLiteral_536afd else 'OK) else 'OK))))
 		end),
+	// the package removed
 	delete: func() begin
 		local soupPackage;
 		(if (soupPackage := self:LookupSoupPackage()) then SafeRemovePackageQT(soupPackage))
 	end,
+	// the package moved to the store given (the argument named maxLines)
 	move: func(maxLines) begin
 		SafeMovePackageQT(self:LookupSoupPackage(), maxLines)
 	end,
 	file: file_2,
+	// a tap: the package found and activated, then the entry's own
+	// TapAction; when that answers non-nil, the result is whether the drawer
+	// closes (closeControl 'alwaysClose, or the user's ExtraAlwaysClose),
+	// else (no TapAction, or nil) the application is opened (_Open)
 	TapAction: func() begin
 		(if self:LookupSoupPackageAndActivate() then (if fentry:?TapAction() then (if fentry.closeControl then (fentry.closeControl = 'alwaysClose) else GetUserConfig('ExtraAlwaysClose)) else self:_Open(GetRoot().(fentry.app))))
 	end,
+	// the application (the argument, named copperfield after one caller)
+	// toggled open; when it was not showing and the drawer is to close, the
+	// toggle waits until after the tap.  Returns whether the drawer closes
 	_Open: func(copperfield) begin
 		local l1;
 		(if copperfield then begin
@@ -1423,6 +1743,9 @@ proto1_2ExformentryProto := {
 	end
 };
 
+// the bounds of the Extras drawer's built-in icons (extrasRomIcons): the
+// globe, calculator, palette, online, card, notes, alarm, prefs, owner,
+// names, dates, extras, undo, find and assist bitmaps, in that order
 unhilitedBounds_14 := {left: 0, top: 0, right: 32, bottom: 25};
 
 unhilitedBounds_15 := {left: 0, top: 0, right: 22, bottom: 27};
@@ -1453,11 +1776,14 @@ unhilitedBounds_27 := {left: 0, top: 0, right: 23, bottom: 25};
 
 unhilitedBounds_28 := {left: 0, top: 0, right: 25, bottom: 27};
 
+// the button bar's Overview and scroll arrows (protoExtrasControlButton):
+// each posts its event to the front-most view, as the silk-screen buttons do
 ovButton := {
 	iconPro: @overviewBitmap,
 	viewBounds: {left: -11, top: 0, right: 6, bottom: 16},
+	// Overview
 	buttonClickScript: func() begin
-		PostCommand('viewfrontmost, 51)
+		PostCommand('viewfrontmost, aeOverview)
 	end,
 	debug: 574352,
 	_proto: @protoExtrasControlButton
@@ -1466,8 +1792,9 @@ ovButton := {
 upButton := {
 	iconPro: @upArrowBitmap,
 	viewBounds: {left: 9, top: -10, right: 27, bottom: 7},
+	// scrolls up, again while held
 	buttonPressedScript: func() begin
-		PostCommand('viewfrontmost, 45);
+		PostCommand('viewfrontmost, aeScrollUp);
 		RefreshViews()
 	end,
 	debug: 714576,
@@ -1477,14 +1804,17 @@ upButton := {
 downButton := {
 	iconPro: @downArrowBitmap,
 	viewBounds: {left: 9, top: 11, right: 27, bottom: 28},
+	// scrolls down, again while held
 	buttonPressedScript: func() begin
-		PostCommand('viewfrontmost, 46);
+		PostCommand('viewfrontmost, aeScrollDown);
 		RefreshViews()
 	end,
 	debug: 2862800,
 	_proto: @protoExtrasControlButton
 };
 
+// the StyleWriter (I and II) entry of the ROM's printers: a serial dot
+// printer, with its page sizes and printable origin in pixels (72 dpi)
 styleWriterIII := {
 	name: "StyleWriter (I & II)",
 	driverName: tSWGroupDriver,
@@ -1494,17 +1824,24 @@ styleWriterIII := {
 	printableOrigin: {top: 14, left: 18}
 };
 
+// the Recognition preferences' handwriting style: this heading, the letter
+// set (LetterSetCluster) and an example of the spacing chosen (wordExample)
 label := {
-	viewJustify: 8396800,
+	viewJustify: vjSiblingBottomV + vjOneLineOnly,
 	viewBounds: {left: 14, top: 0, right: 224, bottom: 13},
 	text: "My handwriting style is",
 	preallocatedContext: 'label,
 	_proto: @protoStaticText
 };
 
+// the letter set: Printing (2) or Cursive (0), the user's letterSetSelection
+// (a value outside 0-4 made printing); plus the host's handwriting engines
+// (the host's additions, marked below)
 LetterSetCluster := {
 	viewBounds: {left: 30, top: 2, right: 0, bottom: 28},
 	viewJustify: vjParentFullH + vjSiblingBottomV,
+	// the choice from the user configuration (a host engine's when one is
+	// chosen); an unknown letter set made printing
 	viewSetupFormScript: func() begin
 		// (an addition: the host's handwriting engines, recognition/WordEngines.h
 		//  - one chosen shows as its button, and the cluster is a row taller for
@@ -1526,6 +1863,7 @@ LetterSetCluster := {
 				self:ClusterChanged()
 			end)
 	end,
+	// (the host's addition only)
 	viewSetupChildrenScript: func() begin
 		// (an addition: a button for each of the host's handwriting engines,
 		//  recognition/WordEngines.h, under "Printing" and "Cursive" - each
@@ -1539,6 +1877,9 @@ LetterSetCluster := {
 			self.viewChildren := buttons;
 		end;
 	end,
+	// a choice made: kept in the user configuration (none chosen: back to
+	// printing, with a beep), the example redrawn, and the recogniser's
+	// cursive options read again
 	ClusterChanged: func() begin
 		if (clusterValue = nil) then begin
 				clusterValue := 2;
@@ -1583,23 +1924,34 @@ LetterSetCluster := {
 	_proto: @protoRadioCluster
 };
 
+// an example of handwriting in the chosen letter set, its letters and words
+// spaced as the user's letterSpaceCursiveOption (0-9) says, on a gray line
 wordExample := {
 	viewClass: clView,
 	viewFlags: vVisible,
 	viewJustify: vjParentCenterH + vjSiblingBottomV,
 	viewBounds: {left: 0, top: 2, right: 210, bottom: 37},
+	// the gaps, in pixels, between letters and between words for each
+	// spacing option, cursive and printed; charSpace and wordSpace the set
+	// in use
 	cursiveCharSpace: [|Array|: 9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
 	cursiveWordSpace: [|Array|: 27, 24, 21, 18, 15, 12, 9, 6, 3, 0],
 	printedCharSpace: [|Array|: 7, 7, 6, 6, 5, 4, 3, 2, 1, 0],
 	printedWordSpace: [|Array|: 20, 18, 16, 14, 12, 11, 10, 9, 8, 7],
 	charSpace: [|Array|: 9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
 	wordSpace: [|Array|: 27, 24, 21, 18, 15, 12, 9, 6, 3, 0],
+	// the example's words for each letter set: arrays of letter bitmaps
 	wordBits: @handwritingStyleImages,
+	// where the base line is drawn
 	textHeight: 23,
-	lineStyle: {penPattern: 3, fillPattern: 0, transferMode: 1},
+	// the base line: a gray pen (3), no fill, or-ed
+	lineStyle: {penPattern: 3, fillPattern: vfNone, transferMode: modeOr},
+	// the example drawn
 	viewDrawScript: func() begin
 		self:drawExampleScript()
 	end,
+	// the spacing tables for the letter set: printed for printing (2),
+	// cursive otherwise
 	SelectSpacingOption: func() begin
 		local letterSetSelection;
 		(if ((letterSetSelection := userConfiguration.letterSetSelection) = 2) then begin
@@ -1610,6 +1962,8 @@ wordExample := {
 				(wordSpace := cursiveWordSpace)
 			end)
 	end,
+	// the base line, then each word's letters drawn left to right, l4
+	// pixels between letters and l5 between words (l1 the pen's x)
 	drawExampleScript: func() begin
 		l1 := 0;
 		l2 := 0;
@@ -1652,7 +2006,7 @@ wordExample := {
 						local l12;
 						l12 := ShapeBounds((l3 := MakeShape(l10))).right;
 						OffsetShape(l3, l1, l2);
-						self:DrawShape(l3, '{transferMode: 1});
+						self:DrawShape(l3, '{transferMode: modeOr});
 						l1 := ((l1 + l12) + l4)
 					end);
 				l1 := ((l1 - l4) + l5)

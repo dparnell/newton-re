@@ -1,14 +1,25 @@
-// faxSlip, and what only it reaches
+// faxSlip, and what only it reaches: the fax transport's routing slip
+// (|faxsend:newton|'s routingSlip), a protoFullRouteSlip whose envelope holds
+// the recipient (a name with a fax number from the Names file, or a number
+// dialled by hand), the number that will be dialled, a cover page picker,
+// fine resolution, notes for the cover page, Call Options (protoCallassistButton)
+// and Preview.  Before sending or previewing it makes sure the owner's location
+// (area code and country) is configured.
 
 faxSlip := {
+	// Command-I: as if Preview were tapped
 	_previewKeyScript: func(a1) begin
 		PressButton(_previewButton)
 	end,
 	callPhoneLine: nil,
+	// ValidateConfig's callback once the location is known (a1 true): refuses a
+	// fax with no recipient unless it is dialled by hand, else fills in the
+	// sender's information and sends, now or later (noworlater, from
+	// PrepareToSend)
 	DoTheSend: func(a1) begin
 		(if a1 then begin
 				if (if (not callPhoneLine.selected) then (not fields.manualDialing)) then begin
-						self:Notify(3, "Fax", "You have not chosen a recipient! Please fill in the 'Name' field and try again.");
+						self:Notify(kNotifyAlert, "Fax", "You have not chosen a recipient! Please fill in the 'Name' field and try again.");
 						return nil
 					end;
 				self:CommitFaxInfo();
@@ -18,6 +29,9 @@ faxSlip := {
 	willDial: nil,
 	validateDialog: nil,
 	_previewButton: nil,
+	// after the Call Options slip: a number the user changed there for the
+	// recipient is kept as the recipient's asIsPhone (dialled as it is), then
+	// the slip retargeted
 	UpdatePhone: func() begin
 		local routingInfoItem;
 		if (if (if callOptionsSlip.viewCObject then fields.toRef) then (Length(fields.toRef) > 0)) then begin
@@ -27,20 +41,28 @@ faxSlip := {
 			end;
 		self:Retarget()
 	end,
+	// the sender (owner card) changed
 	OwnerInfoChanged: func() begin
 		self:Retarget()
 	end,
 	_proto: @protoFullRouteSlip,
+	// the recipient as picked made the fields' toRef; the preview's address
+	// and the number to dial follow it
 	Retarget: func() begin
 		fields.toRef := callPhoneLine.selected;
 		self:SetPreviewInfo();
 		willDial:SetWillDial()
 	end,
 	appSymbol: '|faxsend:newton|,
+	// sent by protoFullRouteSlip when the user sends (noworlater: now or
+	// later): the owner's area code and country checked first - asking for
+	// them if they are missing - and DoTheSend called with the outcome
 	PrepareToSend: func(noworlater2) begin
 		noworlater := noworlater2;
 		self:ValidateConfig('location, nil, '[Array: areacode, country], "Your configuration is incomplete. Please identify your faxing location:", 'validateDialog, 'DoTheSend)
 	end,
+	// the sender's details put in the fields: the item's title from the fax
+	// transport, the owner card, and the owner's fax number to show
 	CommitFaxInfo: func() begin
 		fields.fromTitle := GetRoot().(appSymbol):GetItemTitle(fields);
 		fields.fromRef := userConfiguration.currentPersona;
@@ -61,6 +83,8 @@ faxSlip := {
 		faxAssist
 	],
 	noworlater: nil,
+	// the transport given the recipient's routing information (name, fax
+	// number) for the cover page and preview; nil when there is no recipient
 	SetPreviewInfo: func() begin
 		local routingInfoItem;
 		routingInfoItem := nil;
@@ -69,22 +93,29 @@ faxSlip := {
 			end;
 		transport:SetupAddressInfo(fields, routingInfoItem)
 	end,
+	// the recipients made fax name references (ToRefCheck) before the slip is
+	// set up
 	viewSetupFormScript: func() begin
 		self:ToRefCheck('|nameRef.fax|);
 		inherited:viewSetupFormScript();
 		self:SetPreviewInfo()
 	end,
 	_keyCommands: [|Array|:
-		{char: $i, modifiers: 33554432, keyMessage: '_previewKeyScript, name: preview, category: viewing}
+		{char: $i, modifiers: kCommandModifier, keyMessage: '_previewKeyScript, name: preview, category: viewing}
 	],
 	stepChildren: [stepChildren:
 		callPhoneLine,
 		willDial,
+		// "Cover Page": None, or one of the cover pages registered in
+		// CoverPageRegistry (their key kept in fields.coverPage and as the
+		// user's currentcoverpage); Notes shows only for one that has notes
 		{
 			_proto: {
 				text: "Cover Page",
 				labelCommands: nil,
 				labelCommandsId: nil,
+				// the picker's items: "None", a separator, then each registered
+				// cover page's name, with its key at the same index in labelCommandsId
 				viewSetupFormScript: func() begin
 					labelCommands := [Array: "None", 'pickseparator];
 					labelCommandsId := [Array: nil, nil];
@@ -94,9 +125,12 @@ faxSlip := {
 						end);
 					inherited:?viewSetupFormScript()
 				end,
+				// the label: the chosen cover page's name, or "None"
 				TextSetup: func() begin
 					(if fields.coverPage then return CoverPageRegistry.(fields.coverPage).name else return labelCommands[0])
 				end,
+				// a cover page picked: kept in the fields and as the user's default,
+				// and Notes shown only for one with notes
 				LabelActionScript: func(index) begin
 					fields.coverPage := labelCommandsId[index];
 					userConfiguration.currentcoverpage := labelCommandsId[index];
@@ -106,20 +140,25 @@ faxSlip := {
 				_proto: @protoLabelPicker
 			},
 			viewBounds: {left: 10, top: 0, right: 180, bottom: 13},
+			// placed 60 pixels above the bottom of the area below the envelope
 			viewSetupFormScript: func() begin
 				(viewBounds := DeepClone(viewBounds)).top := (((envelopeHeight + bottomIndent) - 58) - 2);
 				viewBounds.bottom := (viewBounds.top + 13);
 				inherited:viewSetupFormScript()
 			end
 		},
+		// "Fine resolution": fields.faxResolution 'fine or 'normal, kept as the
+		// user's faxResolution setting
 		{
 			viewBounds: {left: 10, top: 5, right: 90, bottom: 17},
 			viewJustify: vjSiblingLeftH + vjSiblingBottomV,
 			text: "Fine resolution",
 			buttonValue: true,
+			// checked for fine
 			viewSetupFormScript: func() begin
 				(viewValue := (fields.faxResolution = 'fine))
 			end,
+			// kept in the fields and as the user's default
 			valueChanged: func() begin
 				fields.faxResolution := (if viewValue then 'fine else 'normal);
 				SetUserConfig('faxResolution, fields.faxResolution)
@@ -135,19 +174,25 @@ faxSlip := {
 	notes: nil,
 	faxAssist: nil,
 	manualDial: nil,
+	// the room below the envelope for the controls above
 	bottomIndent: 68
 };
 
+// "Name": the recipient, picked from the Names file's fax numbers
+// (protoAddressPicker on |nameRef.fax|)
 callPhoneLine := {
 	text: name,
 	selected: nil,
 	alternatives: nil,
 	class: '|nameRef.fax|,
+	// the picker starts at the fields' recipients and their alternatives
 	viewSetupFormScript: func() begin
 		selected := fields.toRef;
 		alternatives := fields.alternatives;
 		inherited:?viewSetupFormScript()
 	end,
+	// a new pick: the Call Options slip closed, and any number typed there for
+	// the recipients (asIsPhone) forgotten
 	buttonClickScript: func() begin
 		if optionsUp then begin
 				callOptionsSlip:Close()
@@ -158,6 +203,7 @@ callPhoneLine := {
 			end);
 		inherited:buttonClickScript()
 	end,
+	// a recipient picked: the slip retargeted
 	pickActionScript: func(index) begin
 		inherited:?pickActionScript(index);
 		self:Retarget()
@@ -166,17 +212,23 @@ callPhoneLine := {
 	_proto: @protoAddressPicker
 };
 
+// the number that will be dialled, as tappable text (a tap opens Call Options,
+// like faxAssist); a recipient's number written in ink is first converted to
+// text, the user asked to check it (ConvertInkText)
 willDial := {
 	text: uCardPositionAlertButton,
 	asIs: nil,
+	// the open ink conversion slip, if any
 	InkConvert: nil,
 	viewBounds: {left: 10, top: 5, right: -10, bottom: 18},
-	viewJustify: 8396850,
+	viewJustify: vjCenterH + vjParentFullH + vjSiblingBottomV + vjOneLineOnly,
 	viewFont: tsSimple + tsSize(9),
 	viewFlags: vVisible + vClickable,
+	// as the Call Options button
 	buttonClickScript: func() begin
 		faxAssist:buttonClickScript()
 	end,
+	// a tap tracked with the hilite; released on the text, a button click
 	viewClickScript: func(unit) begin
 		if self:TrackHilite(unit) then begin
 				self:buttonClickScript();
@@ -184,23 +236,33 @@ willDial := {
 			end;
 		true
 	end,
+	// the hilite: a black round rectangle inverted (xor) around the centred
+	// text, 2 pixels wider on each side; on is ignored, as xor undoes itself
 	viewHiliteScript: func(on) begin
 		local box, l2;
-		self:DrawShape(MakeRoundRect((l2 := ((((box := self:LocalBox()).right - StrFontWidth(text, viewFont)) div 2) - 2)), 0, (box.right - l2), box.bottom, 8), '{transferMode: 2, penPattern: 0, fillPattern: 5});
+		self:DrawShape(MakeRoundRect((l2 := ((((box := self:LocalBox()).right - StrFontWidth(text, viewFont)) div 2) - 2)), 0, (box.right - l2), box.bottom, 8), '{transferMode: modeXor, penPattern: vfNone, fillPattern: vfBlack});
 		true
 	end,
+	// the number shown
 	viewSetupDoneScript: func() begin
 		(text := self:GetPhoneText())
 	end,
+	// an ink conversion still open is closed with the slip
 	viewQuitScript: func() begin
 		if InkConvert then begin
 				InkConvert:Close()
 			end;
 		(InkConvert := nil)
 	end,
+	// the number shown again (after a new recipient or a conversion)
 	SetWillDial: func() begin
 		SetValue(self, 'text, self:GetPhoneText())
 	end,
+	// the text to show: "" when dialling by hand or with no recipient; else the
+	// first recipient's number, followed by an ellipsis when there are more.
+	// A number still in ink (a rich string) starts its conversion after this
+	// script (ConvertStart) and stops the loop.  (The locals declared after
+	// their first use are as the decompiler wrote them.)
 	GetPhoneText: func() begin
 		local theInfo;
 		text := "";
@@ -229,9 +291,15 @@ willDial := {
 			end;
 		text
 	end,
+	// theInfo: a routing info item whose rawNumber is ink: the root's
+	// ConvertInkText recognises it as a phone number (the phone keyboard,
+	// recognition flags vPhoneField) in a slip asking the user to verify it;
+	// ConvertComplete gets the result
 	ConvertStart: func(theInfo) begin
-		self:ConvertInkText(theInfo.rawNumber, 'phone, 262144, ParamStr("Phone for ^0 ", [Array: theInfo.name]), ParamStr("Please verify that ^0 is converted correctly\u2026\u", [Array: theInfo.rawNumber]), 'InkConvert, 'ConvertComplete, theInfo)
+		self:ConvertInkText(theInfo.rawNumber, 'phone, vPhoneField, ParamStr("Phone for ^0 ", [Array: theInfo.name]), ParamStr("Please verify that ^0 is converted correctly\u2026\u", [Array: theInfo.rawNumber]), 'InkConvert, 'ConvertComplete, theInfo)
 	end,
+	// (ok, the text, theInfo): when converted, the text stored as the card's
+	// phone (a3.entry.phone) and the number shown again
 	ConvertComplete: func(a1, a2, a3) begin
 		InkConvert := nil;
 		(if (if a1 then a2) then begin
@@ -244,14 +312,18 @@ willDial := {
 	_proto: @protoStaticText
 };
 
+// "Manually connect": fields.manualDialing - the user dials (or the call is
+// set up by hand) and the fax needs no recipient's number
 manualDial := {
 	viewBounds: {left: -104, top: 0, right: -10, bottom: 0},
 	viewJustify: vjParentRightH + vjSiblingFullV,
 	text: "Manually connect",
 	buttonValue: true,
+	// checked from the fields
 	viewSetupFormScript: func() begin
 		(viewValue := fields.manualDialing)
 	end,
+	// kept in the fields, and the slip retargeted
 	valueChanged: func() begin
 		fields.manualDialing := viewValue;
 		self:Retarget()
@@ -260,11 +332,16 @@ manualDial := {
 	_proto: @protoCheckbox
 };
 
+// "Preview": like the print slip's, but the location is checked first, as
+// for sending
 _previewButton_2 := {
 	_proto: _previewButtonProto,
+	// the location checked first (ValidateConfig), then DoThePreview
 	buttonClickScript: func() begin
 		self:ValidateConfig('location, nil, '[Array: areacode, country], "Your configuration is not complete. Please identify your faxing location:", 'validateDialog, 'DoThePreview)
 	end,
+	// ValidateConfig's callback: the sender's details filled in, then the
+	// preview (_previewButtonProto's buttonClickScript)
 	DoThePreview: func(a1) begin
 		(if a1 then begin
 				self:CommitFaxInfo();
@@ -274,13 +351,17 @@ _previewButton_2 := {
 	preallocatedContext: '_previewButton
 };
 
+// "Notes" (the button's text is the notes soup's name): the cover page's notes,
+// in notesSlip; shown only when the chosen cover page has notes
 notes := {
-	viewJustify: 8406022,
+	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingTopV + vjOneLineOnly,
 	viewBounds: {left: 7, top: 0, right: 43, bottom: 13},
 	text: @paperrollSoupName,
+	// hidden unless the chosen cover page has notes
 	viewSetupDoneScript: func() begin
 		(if (not (if fields.coverPage then CoverPageRegistry.(fields.coverPage).hasNotes)) then self:Hide())
 	end,
+	// the notes slip opened or closed on the fields
 	buttonClickScript: func() begin
 		notesSlip.fields := fields;
 		notesSlip:Toggle();
@@ -290,13 +371,19 @@ notes := {
 	_proto: @protoTextButton
 };
 
+// the Call Options button (protoCallassistButton): its slip shows the number
+// to dial for the first recipient (raw number and country) and lets the
+// user change how it is dialled
 faxAssist := {
 	viewBounds: {left: 109, top: 0, right: 160, bottom: 13},
-	viewJustify: 8388614,
+	viewJustify: vjCenterH + vjCenterV + vjOneLineOnly,
+	// on the bottom row, 21 pixels above the bottom of the area below the envelope
 	viewSetupFormScript: func() begin
 		(viewBounds := DeepClone(viewBounds)).top := (((envelopeHeight + bottomIndent) - 19) - 2);
 		(viewBounds.bottom := (viewBounds.top + 13))
 	end,
+	// the Call Options slip given the recipient's number (none without one),
+	// then opened; optionsUp says it is open
 	buttonClickScript: func() begin
 		local routingInfoItem;
 		if (if fields.toRef then (Length(fields.toRef) > 0)) then begin

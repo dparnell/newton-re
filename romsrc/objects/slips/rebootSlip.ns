@@ -1,13 +1,20 @@
-// rebootSlip, and what only it reaches
+// rebootSlip (magic pointer 573), and what only it reaches: a floater with a
+// title, a message and a single Restart button, which restarts the Newton
+// (ReBoot).  The Backup slip opens it after a restore, with "Your Newton
+// device needs to be restarted to use the restored information."; it has no
+// close box, so restarting is the only way on.
 
 rebootSlip := {
 	viewFlags: vApplication + vFloating + vClickable,
 	viewBounds: {left: 0, top: 40, right: 210, bottom: 150},
 	declareSelf: 'base,
 	_nextKeyView: 'none,
+	// (0x8400: text flags with no documented names; views/BuildView.cpp's
+	// 'viewFrontKey lookup takes a view with 0x8000 as the key view itself)
 	textFlags: 33792,
 	title: nil,
 	message: nil,
+	// rebootSlip:New(title, message): the slip built, opened, and given the keys
 	New: func(a1, a2) begin
 		local context;
 		(context := BuildContext(self)).title := a1;
@@ -17,10 +24,12 @@ rebootSlip := {
 	end,
 	ReOrientToScreen: @defRotateFunc,
 	viewChildren: [viewChildren:
+		// the title and the message, from New's arguments
 		{
 			viewJustify: vjCenterH + vjCenterV + vjParentCenterH,
 			viewBounds: {left: 0, top: 5, right: 100, bottom: 18},
 			viewFont: @fontSystem10Bold,
+			// the title
 			viewSetupFormScript: func() begin
 				(self.text := title)
 			end,
@@ -30,6 +39,7 @@ rebootSlip := {
 			viewJustify: vjParentCenterH + vjSiblingBottomV,
 			viewBounds: {left: 0, top: 10, right: 195, bottom: 60},
 			viewFont: @fontSystem10Bold,
+			// the message
 			viewSetupFormScript: func() begin
 				(self.text := message)
 			end,
@@ -42,13 +52,16 @@ rebootSlip := {
 	_proto: @protoFloater
 };
 
+// "Restart", the default button: restarts the Newton
 _defaultButton_7 := {
 	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV,
 	viewBounds: {left: -52, top: -18, right: -5, bottom: -5},
 	text: restart,
+	// the Newton restarted
 	buttonClickScript: func() begin
 		ReBoot()
 	end,
+	// as wide as its (localised) text needs, 5 pixels in from the bottom right
 	viewSetupFormScript: func() begin
 		(self.viewBounds := SetBounds((-5 - StdButtonWidth(text)), -18, -5, -5))
 	end,
