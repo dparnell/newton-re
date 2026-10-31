@@ -126,6 +126,8 @@ everything here: the comments change nothing that is built).
 - After any of it the tree must still build the same object file:
   `romsrc.py build romsrc --relayout -o tmp/check.bin --newtonscript <exe>`
   and compare it with `build/host/romsrc-objects.bin` built before.
+- `tools/newton-rom/analysis/romsrc_comments.py` lists the functions with
+  no comment above them.
 
 ## Building it
 

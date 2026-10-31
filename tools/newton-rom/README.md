@@ -92,6 +92,9 @@ tools/newton-rom/
                           slot, an error code - constants.tsv with the headers' error codes) and arguments and
                           locals named (a script's signature, a local's first value, an argument after its calls);
                           python tools/newton-rom/analysis/naturalcode.py <tree> [--stats]; the build unchanged
+    romsrc_comments.py    the functions in such a tree with no // comment above them (romsrc/README.md
+                          "Comments and constants"): python tools/newton-rom/analysis/romsrc_comments.py
+                          [tree] [--top N] [--list]; an upper bound (a group comment is not seen)
     packages.py           the packages built into the ROM extension: --parts, --extract DIR (.pkg files;
                           --relocatable, --rename OLD=NEW for loadable copies), --doc docs/packages/rex-packages.md
     pkgdisasm.py          the ARM code of a package's protocol parts (capstone): --list, --part N [--start --end],

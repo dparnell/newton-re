@@ -2633,3 +2633,33 @@ reads the array.  We met them putting back the capitals of the R-constants'
 lower-case names ourselves (`tools/newton-rom/analysis/naturalize.py`'s
 `Speller`), which took the ROM's own spelling of a name wherever it had
 one - until `protoAddressPicker` came out as `ProToadDressPicker`.
+
+## Plan 9 from Groom Lake
+
+The World Clock's city info picks the city nearest where you tap
+(romsrc `objects/apps/worldClock.ns`), and one place on the map is
+special: a city at latitude 55526371 and longitude 364152580 calls the
+global function `InitiatePlan9()` before it is set as the location.
+World Clock keeps degrees in units of 360/2^29, longitude eastwards from
+nought, so that is 37.2333 N, 115.8167 W - Groom Lake, Area 51.  What
+Plan 9 (from Outer Space, presumably) does is mundane: it puts the
+Dates application's built-in meeting types (`|MeetingTypesROM-51|`, the
+51 again) back as the prototype of its meeting-type registry
+(`objects/system/builtinFunctions.ns`).  Found while commenting
+romsrc/ (2026-10-31).
+
+## A backup made on Black Tuesday
+
+When the Backup slip restores from a backup whose info has lost its
+date, it warns "Restore at your own risk!" and fills the date in as
+13584276 (romsrc `objects/slips/backupSlip.ns`).  Newton dates are
+minutes since 1904: that is 29 October 1929, 12:36 - Black Tuesday,
+the day of the Wall Street crash.
+
+## d_invertrect, in ROT13
+
+The root view has a method `q_vairegerpg` (romsrc
+`objects/system/viewRoot.ns`) that reports itself through
+`BadWickedNaughtyNoot` as undocumented and then calls `InvertRect`.  Its
+name is `d_invertrect` in ROT13: a private alias for InvertRect left in
+the ROM, with its name hidden in plain sight.
