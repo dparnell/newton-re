@@ -1,4 +1,10 @@
 // canonicalSocketInfo, and what only it reaches
+//
+// One PC Card socket with a card in it, in GetCardInfo's socketInfos
+// (src/pcmcia/CardInfo.cpp): the socket's number and what the card's CIS
+// says - manufacturer and product names and ids, its functions
+// (canonicalCisCardFunctionInfo), device types - and the card's types and
+// hardware locations.
 
 canonicalSocketInfo := {
 	socketNumber: 0,

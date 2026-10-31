@@ -1,4 +1,9 @@
 // canonicalFramePartInstallInfo, and what only it reaches
+//
+// What InstallPart is told of a frame part being installed
+// (src/packages/FramePartHandler.cpp): the part's type and frame, its
+// package's id, name, type and style, the part's index and size, and the
+// store's kind and number.
 
 canonicalFramePartInstallInfo := {
 	partType: nil,

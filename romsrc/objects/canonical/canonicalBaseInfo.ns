@@ -1,3 +1,7 @@
 // canonicalBaseInfo, and what only it reaches
+//
+// The frame a word's baseline measurements are answered in (the recogniser's
+// WordBaseInfo made an object, src/recognition/Areas.cpp): its base line,
+// the heights of small and capital letters, and the descent.
 
 canonicalBaseInfo := {base: nil, smallHeight: nil, bigHeight: nil, descent: nil};

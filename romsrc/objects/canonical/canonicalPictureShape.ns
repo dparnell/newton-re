@@ -1,3 +1,6 @@
 // canonicalPictureShape, and what only it reaches
+//
+// The 'picture shape a recorded picture is (src/views/DrawShape.cpp): its
+// bounds and the picture data.
 
 canonicalPictureShape := {class: 'picture, bounds: nil, data: nil};

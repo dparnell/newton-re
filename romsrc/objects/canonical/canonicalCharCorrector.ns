@@ -1,4 +1,14 @@
 // canonicalCharCorrector, and what only it reaches
+//
+// The correction picker (@canonicalCharCorrector, the root's preallocated
+// 'correct view): the floating keyboard-like slip that opens on a word that
+// is double-tapped.  It shows the word letter by letter (cText) or as ink
+// (cInk, with a recognize button), the recogniser's alternatives
+// (alternates), a format picker for fields with templates (templatePicker),
+// arrows to move to the previous and next word, and a keyboard button.
+// refCon says which word it corrects: {form: the view, wordOffset,
+// wordLength}.  Its pieces - saveBounds, templatePicker, alternates, cText,
+// cInk, recognizeButton - follow it.
 
 canonicalCharCorrector := {
 	refCon: nil,
@@ -371,8 +381,8 @@ canonicalCharCorrector := {
 	end,
 	viewClickScript: func(unit) begin
 		local pt, pt2, box;
-		pt := GetPoint(0, unit);
-		pt2 := GetPoint(1, unit);
+		pt := GetPoint(firstX, unit);
+		pt2 := GetPoint(firstY, unit);
 		box := self:GlobalBox();
 		(if (if (if ((pt2 - box.top) < 6) then (abs((pt - ((box.left + box.right) >> 1))) < 7)) then inherited:viewClickScript(unit)) then begin
 				cText:viewSetupDoneScript();
@@ -498,8 +508,8 @@ alternates := {
 				strWidth3 := strWidth3
 			end;
 		(loop begin
-				pt := GetPoint(4, unit);
-				pt2 := GetPoint(5, unit);
+				pt := GetPoint(finalX, unit);
+				pt2 := GetPoint(finalY, unit);
 				(box := self:GlobalBox()).left := (box.left + strWidth3);
 				local strWidth2;
 				local strWidth3;

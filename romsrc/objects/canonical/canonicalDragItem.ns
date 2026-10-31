@@ -1,3 +1,6 @@
 // canonicalDragItem, and what only it reaches
+//
+// One item of a drag (src/views/DragDrop.cpp): the drag reference, its
+// label, the data types it can be dropped as, and the view it came from.
 
 canonicalDragItem := {dragRef: nil, label: nil, types: nil, view: nil};

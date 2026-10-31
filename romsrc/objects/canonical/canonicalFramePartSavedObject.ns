@@ -1,3 +1,7 @@
 // canonicalFramePartSavedObject, and what only it reaches
+//
+// What a form or auto part's install keeps for its removal
+// (src/packages/FramePartHandler.cpp): the part frame, the package's style
+// and the cookie InstallPart answered.
 
 canonicalFramePartSavedObject := {partFrame: nil, packageStyle: nil, removeCookie: nil};

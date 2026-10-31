@@ -1,3 +1,6 @@
 // canonicalShapeDragData, and what only it reaches
+//
+// The data of a shape dragged out of a text view (src/text/TXView.cpp,
+// GetDropData): the shape and its bounds.
 
 canonicalShapeDragData := {shape: nil, viewBounds: nil};

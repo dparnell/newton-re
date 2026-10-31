@@ -1,4 +1,9 @@
 // canonicalCompass, and what only it reaches
+//
+// The four-way scroll arrow at the bottom left of a book page's scrolling
+// block (src/books/Pages.cpp gives it as the _proto of the block's compass):
+// a tap in one of its quarters moves the scrolled view (canonicalScrollee)
+// scrollDelta pixels that way, as long as the pen is held.
 
 canonicalCompass := {
 	viewClass: clPictureView,
@@ -20,15 +25,15 @@ canonicalCompass := {
 		InkOff(unit);
 		playsound(@click);
 		box := self:GlobalBox();
-		l1 := (GetPoint(0, unit) - box.left);
-		l2 := (GetPoint(1, unit) - box.top);
+		l1 := (GetPoint(firstX, unit) - box.left);
+		l2 := (GetPoint(firstY, unit) - box.top);
 		self:TrackCompass(box, l1, l2);
 		(loop begin
 				if StrokeDone(unit) then begin
 						break
 					end;
-				l1 := (GetPoint(4, unit) - box.left);
-				l2 := (GetPoint(5, unit) - box.top);
+				l1 := (GetPoint(finalX, unit) - box.left);
+				l2 := (GetPoint(finalY, unit) - box.top);
 				self:TrackCompass(box, l1, l2)
 			end);
 		true

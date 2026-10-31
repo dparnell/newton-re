@@ -1,4 +1,8 @@
 // canonicalBatteryStatus, and what only it reaches
+//
+// The frame BatteryStatus(battery) answers (src/system/SystemNatives.cpp):
+// the battery's kind, voltage, capacity and low/dead flags, the AC adapter,
+// the charging state, and the temperatures.
 
 canonicalBatteryStatus := {
 	batteryType: nil,

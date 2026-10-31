@@ -1,3 +1,6 @@
 // canonicalTextShape, and what only it reaches
+//
+// The 'text shape MakeText and MakeTextBox clone (src/views/DrawShape.cpp):
+// its bounds and the string.
 
 canonicalTextShape := {class: 'text, bounds: nil, data: nil};

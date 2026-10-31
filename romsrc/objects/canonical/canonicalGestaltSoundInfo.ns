@@ -1,4 +1,8 @@
 // canonicalGestaltSoundInfo, and what only it reaches
+//
+// Gestalt's frame for the sound hardware: sampling rate (the real 0.0
+// here), sample size, compression, channels, and whether there
+// is sound input and output.
 
 canonicalGestaltSoundInfo := {
 	samplingRate: stack,

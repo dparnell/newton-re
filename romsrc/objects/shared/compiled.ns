@@ -1,4 +1,12 @@
 // objects several roots reach, none alone (naturalize.py)
+//
+// Pieces of compiled functions that functions in more than one root hold
+// in common, each given as same("path") - the object the named function
+// holds at that path, made when that function is compiled (romsrc/README.md).
+// NAME_code is a function's bytecode (its `instructions` string), which a
+// function elsewhere with exactly the same code also uses; NAME_literalN is
+// entry N of its literals array (a string, symbol, frame or array another
+// function's literals hold too).  Each follows the function its path names.
 
 // what the functions above hold and share with other objects (same(): romsrc/README.md)
 

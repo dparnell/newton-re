@@ -1,4 +1,8 @@
 // canonicalScrollee, and what only it reaches
+//
+// The scrolled view of a book page's picture block that is larger than the
+// block (src/books/Pages.cpp, MakeBlockView): a picture view, the picture
+// as its icon, which the block's compass moves by changing its origin.
 
 canonicalScrollee := {
 	viewClass: clPictureView,

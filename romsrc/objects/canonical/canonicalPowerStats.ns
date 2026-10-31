@@ -1,3 +1,7 @@
 // canonicalPowerStats, and what only it reaches
+//
+// The frame GetPowerStats() answers (src/system/SystemNatives.cpp): the
+// time of the last cold boot and how long the processor has been off and
+// the screen, serial port and sound on.
 
 canonicalPowerStats := {timeatcoldboot: nil, processorofftime: nil, screenontime: nil, serialontime: nil, soundontime: nil};

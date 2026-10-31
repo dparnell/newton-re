@@ -1,4 +1,8 @@
 // canonicalScroller, and what only it reaches
+//
+// The view of a book page's picture block whose picture is larger than the
+// block (src/books/Pages.cpp, MakeBlockView): it clips the scrolled picture
+// (canonicalScrollee) and holds the compass that scrolls it.
 
 canonicalScroller := {
 	viewClass: clView,

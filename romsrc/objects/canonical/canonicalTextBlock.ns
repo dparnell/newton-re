@@ -1,4 +1,9 @@
 // canonicalTextBlock, and what only it reaches
+//
+// The view of a block of text on a book page (src/books/Pages.cpp,
+// MakeBlockView): a read-only protoStaticText with tab stops every 18
+// pixels; a tap on it sends buttonClickScript, which does nothing unless
+// the block's item gives one.
 
 canonicalTextBlock := {
 	viewFlags: vVisible + vReadOnly + vClickable + vGesturesAllowed,
