@@ -22,11 +22,11 @@ newtStationeryPopupButton := {
 		inherited:?viewSetupDoneScript();
 		(if keyButton then (newtAppBase.(keyButton) := self))
 	end,
-	pickActionScript: func(a1) begin
-		local l1;
-		l1 := statArray[a1];
-		inherited:pickActionScript(a1);
-		self:statScript(l1);
+	pickActionScript: func(index) begin
+		local statArrayItem;
+		statArrayItem := statArray[index];
+		inherited:pickActionScript(index);
+		self:statScript(statArrayItem);
 		popup := nil;
 		(statArray := nil)
 	end,
@@ -39,7 +39,7 @@ newtStationeryPopupButton := {
 		self:BuildPopup();
 		(if (if shortCircuit then (Length(popup) = 1)) then self:pickActionScript(0) else inherited:buttonClickScript())
 	end,
-	statScript: func(a1) begin
+	statScript: func(statArrayItem) begin
 		nil
 	end,
 	SetUpStatArray: func() begin
@@ -53,12 +53,12 @@ newtStationeryPopupButton := {
 			end;
 		l1 := nil;
 		local l1;
-		(foreach l2 in statArray do begin
+		(foreach item in statArray do begin
 				local l4, l5;
-				l4 := (if l2.name then l2.name else l2.title);
-				l5 := (if l2.icon then begin
+				l4 := (if item.name then item.name else item.title);
+				l5 := (if item.icon then begin
 						l1 := true;
-						{item: l4, icon: l2.icon}
+						{item: l4, icon: item.icon}
 					end else {item: l4});
 				AddArraySlot(popup, l5)
 			end);

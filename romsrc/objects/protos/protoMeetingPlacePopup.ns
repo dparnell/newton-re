@@ -14,13 +14,13 @@ protoMeetingPlacePopup := {
 		BuildContext({_proto: self})
 	end,
 	New: func(a1, a2, a3, a4) begin
-		local l1;
-		(l1 := self:Init()).dataClass := a1;
-		l1.context := a3;
-		l1.selected := a2;
-		l1.options := a4;
-		l1:Open();
-		l1
+		local init;
+		(init := self:Init()).dataClass := a1;
+		init.context := a3;
+		init.selected := a2;
+		init.options := a4;
+		init:Open();
+		init
 	end,
 	stepChildren: [stepChildren: placeList],
 	placeList: nil,
@@ -32,8 +32,8 @@ placeList := {
 	_proto: @protoMeetingPlacePicker,
 	viewSetupFormScript: func() begin
 		if options then begin
-				(foreach l1, l2 in options do begin
-						self.(l1) := l2
+				(foreach key, value in options do begin
+						self.(key) := value
 					end)
 			end;
 		inherited:?viewSetupFormScript()

@@ -4,8 +4,8 @@ aboutNewton := compile(
 	constants: {
 		kFunction_637e69: func(a1) begin
 			(if (a1 = 1) then true else (if ((a1 mod 2) = 0) then (a1 = 2) else begin
-						(for l1 := 3 to floor(sqrt(a1)) by 2 do begin
-								if ((a1 mod l1) = 0) then begin
+						(for i := 3 to floor(sqrt(a1)) by 2 do begin
+								if ((a1 mod i) = 0) then begin
 										return nil
 									end
 							end);

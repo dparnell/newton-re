@@ -22,17 +22,17 @@ notes_2 := {
 			l3 := 0;
 			l4 := 0;
 			if (GetVariable(self, 'newtAppBase) <> GetRoot().cardfile) then begin
-					self.viewFlags := 513;
+					self.viewFlags := vVisible + vClickable;
 					self.viewClickScript := kFunction_72faa1
 				end;
 			inherited:?viewSetupFormScript()
 		end),
 	viewSetupDoneScript: func() begin
-		local l1;
+		local least;
 		if scrollToBottom then begin
-				if ((l1 := min((initialDataRect.bottom - 30), (scrollerView.scrollRect.bottom - (scrollerView.viewRect.bottom - scrollerView.viewRect.top)))) > 0) then begin
-						self:SetOrigin(viewOriginX, l1);
-						scrollerView.yPos := l1
+				if ((least := min((initialDataRect.bottom - 30), (scrollerView.scrollRect.bottom - (scrollerView.viewRect.bottom - scrollerView.viewRect.top)))) > 0) then begin
+						self:SetOrigin(viewOriginX, least);
+						scrollerView.yPos := least
 					end
 			end;
 		scrollerView:AdjustArrows();

@@ -29,7 +29,7 @@ export145 := {
 			convertFrame.viewBounds.bottom := newHeight;
 			convertFrame.viewBounds.left := 0;
 			oldTask.height := newHeight;
-			oldTask.data := [Array: {viewStationery: 'para, viewBounds: convertFrame.viewBounds, text: convertFrame.text, viewFont: 12290}];
+			oldTask.data := [Array: {viewStationery: 'para, viewBounds: convertFrame.viewBounds, text: convertFrame.text, viewFont: tsSimple + tsSize(12)}];
 			oldTask
 		end),
 	ConvertOldEntry: compile(

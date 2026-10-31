@@ -6,7 +6,7 @@ export6 := {
 		values: {statusText: "Exchanging cards", barber: true, closeBox: nil},
 		appSymbol: 'cardfile
 	},
-	CancelRequest: func(a1) begin
+	CancelRequest: func(symbol2) begin
 		beamer:Cancel();
 		base:Close();
 		(GetRoot().cardfile.barber := nil)

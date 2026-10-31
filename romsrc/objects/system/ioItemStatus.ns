@@ -14,8 +14,8 @@ ioItemStatus := {
 			(_sendKeyButton := self)
 		end,
 		buttonClickScript: func() begin
-			local l1;
-			(if (fields.state = 'pending) then OpenRoutingSlip(fields, nil) else (if (l1 := GetItemTransport(fields)) then self:DoRequest(l1, 'SendRequest, 'user, fields)))
+			local itemTransport;
+			(if (fields.state = 'pending) then OpenRoutingSlip(fields, nil) else (if (itemTransport := GetItemTransport(fields)) then self:DoRequest(itemTransport, 'SendRequest, 'user, fields)))
 		end,
 		viewQuitScript: func() begin
 			(_sendKeyButton := nil)
@@ -30,9 +30,9 @@ ioItemStatus := {
 				viewSetupFormScript: func() begin
 					popup := [Array: ];
 					if (if layout then layout.viewDefFrame) then begin
-							(foreach l1, l2 in layout.viewDefFrame do begin
-									if (if ((l2.type = 'viewer) or (l2.type = 'editor)) then ((l2.protection = nil) or (l2.protection = 'public))) then begin
-											self:AddToPopup(l1, l2)
+							(foreach key, value in layout.viewDefFrame do begin
+									if (if ((value.type = 'viewer) or (value.type = 'editor)) then ((value.protection = nil) or (value.protection = 'public))) then begin
+											self:AddToPopup(key, value)
 										end
 								end)
 						end;
@@ -44,30 +44,30 @@ ioItemStatus := {
 					inherited:?viewSetupFormScript();
 					(_showKeyButton := self)
 				end,
-				pickActionScript: func(a1) begin
-					inherited:pickActionScript(a1);
-					currentViewSymbol := popup[a1].symbol;
-					(foreach l1 in popup do begin
-							if (l1.symbol = currentViewSymbol) then begin
-									l1.mark := $\uFC0B
+				pickActionScript: func(index) begin
+					inherited:pickActionScript(index);
+					currentViewSymbol := popup[index].symbol;
+					(foreach item in popup do begin
+							if (item.symbol = currentViewSymbol) then begin
+									item.mark := $\uFC0B
 								end else begin
-									if l1.mark then begin
-											RemoveSlot(l1, 'mark)
+									if item.mark then begin
+											RemoveSlot(item, 'mark)
 										end
 								end
 						end);
 					(if (ioEntryView exists) then begin
-							ioEntryView:SetViewDef(popup[a1].symbol);
+							ioEntryView:SetViewDef(popup[index].symbol);
 							(if itemStatus.viewCObject then itemStatus:RedoChildren())
 						end)
 				end,
-				AddToPopup: func(a1, a2) begin
-					local l1;
-					l1 := {item: (if a2.title then a2.title else a2.name), symbol: a1};
-					if (a1 = currentViewSymbol) then begin
-							l1.mark := $\uFC0B
+				AddToPopup: func(key, value) begin
+					local frame2;
+					frame2 := {item: (if value.title then value.title else value.name), symbol: key};
+					if (key = currentViewSymbol) then begin
+							frame2.mark := $\uFC0B
 						end;
-					AddArraySlot(popup, l1)
+					AddArraySlot(popup, frame2)
 				end,
 				popup: nil,
 				viewQuitScript: func() begin
@@ -94,23 +94,23 @@ ioItemStatus := {
 		{_proto: @ioTransportButton}
 	],
 	viewSetupChildrenScript: func() begin
-		local l1, l2;
+		local iOEditFlags, entry;
 		self.menuLeftButtons := menuLeftButtonsDef;
 		self.menuRightButtons := Clone(menuRightButtonsDef);
 		if (currentSoupSymbol = 'outbox) then begin
 				if (if layout.entryViewDefs then (layout.entryViewDefs[0].type = 'editor)) then begin
 						menuLeftButtons := Clone(menuLeftButtons);
-						if (((l1 := layout.entryViewDefs[0].IOEditFlags) = nil) or (BAnd(l1, 2) <> 0)) then begin
+						if (((iOEditFlags := layout.entryViewDefs[0].IOEditFlags) = nil) or (BAnd(iOEditFlags, 2) <> 0)) then begin
 								ArrayInsert(menuLeftButtons, {_proto: @protoSmallKeyboardButton}, 0)
 							end;
-						if ((l1 = nil) or (BAnd(l1, 1) <> 0)) then begin
+						if ((iOEditFlags = nil) or (BAnd(iOEditFlags, 1) <> 0)) then begin
 								ArrayInsert(menuLeftButtons, {_proto: @recToggle}, 0);
 								if layout.entryViewDefs[0]._recogPopup then begin
 										menuLeftButtons[0] := {_proto: @recToggle, _recogPopup: layout.entryViewDefs[0]._recogPopup}
 									end
 							end
 					end;
-				if (if (l2 := layout.dataCursor:entry()) then ((l2.state = 'ready) or (l2.state = 'pending))) then begin
+				if (if (entry := layout.dataCursor:entry()) then ((entry.state = 'ready) or (entry.state = 'pending))) then begin
 						AddArraySlot(menuRightButtons, simpleSendButton)
 					end
 			end;

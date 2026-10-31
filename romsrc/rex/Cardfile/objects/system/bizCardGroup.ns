@@ -19,9 +19,9 @@ bizCardGroup := {
 			viewJustify: vjParentFullH,
 			layouts: {group: [|Array|: 'default]},
 			viewFont: tsFancy + tsSize(18),
-			AddAllInfoItem: func(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) begin
+			AddAllInfoItem: func(a1, checkPrefixItem, shapeArray, hitArray, a5, a6, a7, a8, a9, frame2) begin
 				a8.left := (a8.left + 30);
-				inherited:?AddAllInfoItem(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
+				inherited:?AddAllInfoItem(a1, checkPrefixItem, shapeArray, hitArray, a5, a6, a7, a8, a9, frame2)
 			end,
 			reduceFont: true,
 			_proto: @8242
@@ -39,11 +39,11 @@ bizCardGroup := {
 			layouts: {group: [|Array|: 'group]},
 			viewFont: tsFancy + tsSize(10),
 			viewSetupChildrenScript: func() begin
-				local l1, l2, l3;
+				local shapeBounds2, copy, l3;
 				inherited:viewSetupChildrenScript();
-				l1 := ShapeBounds(shapeArray);
-				(l2 := Clone(viewBounds)).bottom := ((l2.top + l1.bottom) - l1.top);
-				SetValue(self, 'viewBounds, l2)
+				shapeBounds2 := ShapeBounds(shapeArray);
+				(copy := Clone(viewBounds)).bottom := ((copy.top + shapeBounds2.bottom) - shapeBounds2.top);
+				SetValue(self, 'viewBounds, copy)
 			end,
 			_proto: @8242
 		}

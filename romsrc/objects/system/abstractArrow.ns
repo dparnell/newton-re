@@ -15,17 +15,17 @@ abstractArrow := {
 		l1 := (if hilite then (StateMap.hilite + arrowIndex) else (scrollerState[arrowIndex] + arrowIndex));
 		DrawXBitmap(self:LocalBox(), Arrows, l1, 0)
 	end,
-	EndOfTheLine: func(a1) begin
-		(if (if ScrollRect then ViewRect) then (if ((((if (a1 = 'up) then (yPos <= ScrollRect.top)) or (if (a1 = 'down) then (yPos >= (ScrollRect.bottom - (ViewRect.bottom - ViewRect.top))))) or (if (a1 = 'left) then (xPos <= ScrollRect.left))) or (if (a1 = 'right) then (xPos >= (ScrollRect.right - (ViewRect.right - ViewRect.left))))) then begin
+	EndOfTheLine: func(arrowDirection) begin
+		(if (if ScrollRect then ViewRect) then (if ((((if (arrowDirection = 'up) then (yPos <= ScrollRect.top)) or (if (arrowDirection = 'down) then (yPos >= (ScrollRect.bottom - (ViewRect.bottom - ViewRect.top))))) or (if (arrowDirection = 'left) then (xPos <= ScrollRect.left))) or (if (arrowDirection = 'right) then (xPos >= (ScrollRect.right - (ViewRect.right - ViewRect.left))))) then begin
 					self:PlayStopSound();
 					Sleep(10);
 					true
 				end))
 	end,
-	viewClickScript: func(a1) begin
-		local l1;
-		InkOff(a1);
-		l1 := self:GetArrow(arrowDirection);
+	viewClickScript: func(unit) begin
+		local arrow;
+		InkOff(unit);
+		arrow := self:GetArrow(arrowDirection);
 		hilite := true;
 		self:DoDrawing('viewDrawScript, [Array: ]);
 		if self:EndOfTheLine(arrowDirection) then begin
@@ -34,7 +34,7 @@ abstractArrow := {
 				return true
 			end;
 		clicker();
-		(extras := Clone(baseFrame)).unit := a1;
+		(extras := Clone(baseFrame)).unit := unit;
 		if ((Ticks() - lastTap) < 60) then begin
 				extras.tap := 'double
 			end;
@@ -46,7 +46,7 @@ abstractArrow := {
 				self:SetupExtras(arrowDirection, extras);
 				scrollView:?viewScroll2DScript(arrowDirection, extras);
 				self:AdjustArrows();
-				l1 := self:GetArrow(arrowDirection);
+				arrow := self:GetArrow(arrowDirection);
 				extras.count := (extras.count + 1);
 				// DEVIATION: the repeat paced - a first step, then after a
 				//  third of a second one every tenth while the pen stays down.
@@ -57,8 +57,8 @@ abstractArrow := {
 				//  the whole list (Time Zones' cities went to the last).
 				local pace := if extras.count = 1 then 20 else 6;
 				local started := Ticks();
-				while not StrokeDone(a1) and (Ticks() - started) < pace do Sleep(1);
-				(if StrokeDone(a1) then break)
+				while not StrokeDone(unit) and (Ticks() - started) < pace do Sleep(1);
+				(if StrokeDone(unit) then break)
 			end);
 		scrollView:?viewScrollDoneScript();
 		hilite := nil;

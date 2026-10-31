@@ -85,16 +85,16 @@ recorderEngine := {
 	end,
 	SetRecordingQuality: func() begin
 		fSoundFrameSlots := Clone(fQualitySettings.defaults);
-		if (not (l1 := fRecordQuality)) then begin
-				l1 := GetUserConfig('recordingQuality)
+		if (not (fRecordQuality2 := fRecordQuality)) then begin
+				fRecordQuality2 := GetUserConfig('recordingQuality)
 			end;
-		if (not l1) then begin
-				l1 := (if (Gestalt(16777219).cputype = 'strongarm) then 'GSM8K16Codec else 'IMA8K16Codec)
+		if (not fRecordQuality2) then begin
+				fRecordQuality2 := (if (Gestalt(16777219).cputype = 'strongarm) then 'GSM8K16Codec else 'IMA8K16Codec)
 			end;
-		local l1;
+		local fRecordQuality2;
 		local l2;
-		(if (l2 := fQualitySettings.(l1)) then (foreach l3, l4 in l2 do begin
-					fSoundFrameSlots.(l3) := l4
+		(if (l2 := fQualitySettings.(fRecordQuality2)) then (foreach key, value in l2 do begin
+					fSoundFrameSlots.(key) := value
 				end))
 	end,
 	DoRecord: func() begin
@@ -133,14 +133,14 @@ recorderEngine := {
 		l1
 	end,
 	TestStore: func() begin
-		local l1, l2, l3;
-		if (if (l1 := self:GetStore()) then l1:IsReadOnly()) then begin
+		local store, l2, l3;
+		if (if (store := self:GetStore()) then store:IsReadOnly()) then begin
 				return 3
 			end;
-		l2 := (l1:TotalSize() - l1:UsedSize());
+		l2 := (store:TotalSize() - store:UsedSize());
 		(if ((l3 := (fSoundChannel.inputBlockSize * 2.5)) < l2) then 0 else 1)
 	end,
-	RecordCompletion: func(a1, a2) begin
+	RecordCompletion: func(sounds, a2) begin
 		if (if (a2 <> 0) then (a2 <> -30011)) then begin
 				fEngineError := 2;
 				return nil
@@ -176,13 +176,13 @@ recorderEngine := {
 				if (not IsArray(fSoundArray)) then begin
 						fSoundArray := [Array: fSoundArray]
 					end;
-				fSoundArray := (foreach l1 in fSoundArray collect begin
-					l5 := Clone(@protoSoundFrame);
-					local l5;
-					(foreach l6, l7 in l1 do begin
-							l5.(l6) := l7
+				fSoundArray := (foreach item in fSoundArray collect begin
+					copy := Clone(@protoSoundFrame);
+					local copy;
+					(foreach key, value in item do begin
+							copy.(key) := value
 						end);
-					l5
+					copy
 				end);
 				fSoundChannel := {_proto: @protoSoundChannel, direction: 'play}
 			end;
@@ -213,15 +213,15 @@ recorderEngine := {
 								fSoundChannel.inputGain := fInputGain;
 								fSoundChannel:Open();
 								engine := self;
-								l2 := func(a1, a2) begin
+								fn := func(a1, a2) begin
 									engine:PlayCompletion(a1, a2)
 								end;
 								local l1;
-								local l2;
-								(foreach l3 in fSoundArray do begin
-										local l5, l6;
-										l5 := (if (if HasPath(l3, 'volume) then l3.volume) then l3.volume else GetUserConfig('soundVolumeDb));
-										fSoundChannel:schedule((l6 := {_proto: l3, callback: l2, volume: l5}))
+								local fn;
+								(foreach item in fSoundArray do begin
+										local l5, frame2;
+										l5 := (if (if HasPath(item, 'volume) then item.volume) then item.volume else GetUserConfig('soundVolumeDb));
+										fSoundChannel:schedule((frame2 := {_proto: item, callback: fn, volume: l5}))
 									end);
 								fSoundChannel:start(true)
 							end;
@@ -237,56 +237,56 @@ recorderEngine := {
 	end,
 	stop: func() begin
 		local engine;
-		local l1, l2, l3, l4, l5, l6, l7, l8;
+		local stop, testState, testState2, sound, index, floor2, fn, l8;
 		if (not self:TestState(1)) then begin
-				l2 := self:TestState(18);
-				l3 := self:TestState(24);
+				testState := self:TestState(18);
+				testState2 := self:TestState(24);
 				self:SetState(32);
-				l1 := fSoundChannel:stop();
-				if l3 then begin
-						l1 := fPauseResult
+				stop := fSoundChannel:stop();
+				if testState2 then begin
+						stop := fPauseResult
 					end;
-				if (if l2 then l1) then begin
-						l4 := l1.sound;
-						l5 := l1.index;
+				if (if testState then stop) then begin
+						sound := stop.sound;
+						index := stop.index;
 						if (if fTrimAmount then (fTrimAmount > 0)) then begin
-								l6 := floor((fTrimAmount * fSoundFrameSlots.samplingRate));
-								if ((l5 := (l5 - l6)) < 0) then begin
-										l5 := 0
+								floor2 := floor((fTrimAmount * fSoundFrameSlots.samplingRate));
+								if ((index := (index - floor2)) < 0) then begin
+										index := 0
 									end
 							end;
 						if (fSetLengthInProgress = 'doItNow) then begin
-								l4:SetRecordingLengthNow(l5);
+								sound:SetRecordingLengthNow(index);
 								fSetLengthInProgress := nil
 							end else begin
 								fSetLengthInProgress := true;
 								engine := self;
-								l7 := func() begin
+								fn := func() begin
 									engine:SetLengthDone()
 								end;
-								l4:SetRecordingLength(l5, l7)
+								sound:SetRecordingLength(index, fn)
 							end;
 						l8 := (Length(fSoundArray) - 1);
-						(while (if (l8 > 0) then (fSoundArray[l8] <> l4)) do begin
+						(while (if (l8 > 0) then (fSoundArray[l8] <> sound)) do begin
 								RemoveSlot(fSoundArray, l8);
 								(l8 := (l8 - 1))
 							end)
 					end;
 				self:SetState(1)
 			end;
-		return l1
+		return stop
 	end,
 	GetPlayingTime: func() begin
 		l1 := 0;
 		local l1;
-		(foreach l2 in fSoundArray do begin
-				l1 := (l1 + l2:GetPlayingTime())
+		(foreach item in fSoundArray do begin
+				l1 := (l1 + item:GetPlayingTime())
 			end);
 		return l1
 	end,
 	HasSoundFrames: func() begin
-		(if (if fSoundArray then (Length(fSoundArray) > 0)) then (not (foreach l1 in fSoundArray do begin
-					if (l1:GetSampleCount() = 0) then begin
+		(if (if fSoundArray then (Length(fSoundArray) > 0)) then (not (foreach item in fSoundArray do begin
+					if (item:GetSampleCount() = 0) then begin
 							break true
 						end
 				end)))
@@ -310,36 +310,36 @@ recorderEngine := {
 		local engine;
 		try begin
 				engine := self;
-				l1 := func(a1, a2) begin
+				fn := func(a1, a2) begin
 					engine:RecordCompletion(a1, a2)
 				end;
 				fSoundChannel.recordingStore := self:GetStore();
-				l2 := fSoundChannel:newInputBlock(l1);
-				local l1;
-				local l2;
-				(foreach l3, l4 in fSoundFrameSlots do begin
-						l2.(l3) := l4
+				newInputBlock := fSoundChannel:newInputBlock(fn);
+				local fn;
+				local newInputBlock;
+				(foreach key, value in fSoundFrameSlots do begin
+						newInputBlock.(key) := value
 					end);
-				AddArraySlot(fSoundArray, l2);
-				fSoundChannel:schedule(l2)
+				AddArraySlot(fSoundArray, newInputBlock);
+				fSoundChannel:schedule(newInputBlock)
 			end onexception |evt.ex| do begin
-				l2 := nil
+				newInputBlock := nil
 			end;
-		l2
+		newInputBlock
 	end,
 	play: func() begin
 		(if (if fSetLengthInProgress then (fSetLengthInProgress <> 'doItNow)) then (fSetLengthInProgress := 'play) else self:DoPlay())
 	end,
 	New: func(a1) begin
-		l1 := Clone(self);
+		copy := Clone(self);
 		if a1 then begin
-				local l1;
-				(foreach l2, l3 in a1 do begin
-						l1.(l2) := l3
+				local copy;
+				(foreach key, value in a1 do begin
+						copy.(key) := value
 					end)
 			end;
-		l1:Init();
-		return l1
+		copy:Init();
+		return copy
 	end,
 	SetLengthDone: func() begin
 		if (fSetLengthInProgress = 'play) then begin
@@ -359,8 +359,8 @@ recorderEngine := {
 		fSoundChannel := nil;
 		fPauseResult := nil;
 		if fCallBack then begin
-				(foreach l1 in fSoundArray do begin
-						l1.callback := nil
+				(foreach item in fSoundArray do begin
+						item.callback := nil
 					end);
 				call fCallBack with (fSoundArray)
 			end;
@@ -374,8 +374,8 @@ recorderEngine := {
 	GetStore: func() begin
 		(if fStore then fStore else GetDefaultStore())
 	end,
-	SetState: func(a1) begin
-		(fSoundState := a1)
+	SetState: func(fSoundState2) begin
+		(fSoundState := fSoundState2)
 	end
 };
 

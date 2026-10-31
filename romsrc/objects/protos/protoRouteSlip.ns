@@ -4,8 +4,8 @@ protoRouteSlip := {
 	indentSound: @flip,
 	closeGadgetForm: {
 		viewSetupFormScript: func() begin
-			local l1;
-			(l1 := self:Parent()).base := l1;
+			local parent;
+			(parent := self:Parent()).base := parent;
 			(printDepth := 0)
 		end,
 		_proto: @protoCancelButton
@@ -41,35 +41,35 @@ protoRouteSlip := {
 			kROM_732: @routeMailBitmap,
 			kROM_725: @stampFrameBitmap
 		},
-		func(a1, a2) begin
-			local l1, l2, l3, l4, l5;
-			l1 := ((a1 - bottomIndent) div 2);
-			viewBounds := SetBounds(0, l1, envelopeWidth, ((envelopeHeight + l1) + a1));
-			viewJustify := 80;
-			l2 := SetBounds(0, 0, envelopeWidth, (envelopeHeight + a1));
-			if (not (l3 := transport.icon)) then begin
-					l3 := kROM_732
+		func(bottomIndent2, a2) begin
+			local l1, bounds, icon, bounds2, l5;
+			l1 := ((bottomIndent2 - bottomIndent) div 2);
+			viewBounds := SetBounds(0, l1, envelopeWidth, ((envelopeHeight + l1) + bottomIndent2));
+			viewJustify := vjParentCenterH + vjParentCenterV;
+			bounds := SetBounds(0, 0, envelopeWidth, (envelopeHeight + bottomIndent2));
+			if (not (icon := transport.icon)) then begin
+					icon := kROM_732
 				end;
-			l4 := l3.bounds;
-			l5 := ((l2.right - 31) - 10);
-			pix := [Array: '{penPattern: "\u8205\u\u0A14\u\u2850\u\uA041\u", pensize: 8}, MakeRect(0, 0, l2.right, (l2.bottom - a1)), OffsetShape(MakeShape(kROM_725), l5, 10), OffsetShape(MakeShape(l3), (l5 + ((31 - l4.right) div 2)), (10 + ((27 - l4.bottom) div 2))), '{penPattern: 5, fillPattern: 0, pensize: 2}, MakeRect(0, 0, l2.right, (l2.bottom - a1)), MakeRect(4, ((l2.bottom - a1) - 2), (l2.right - 4), l2.bottom), '{penPattern: 3, pensize: 4, transferMode: 1}, MakeLine(2, (l2.bottom - a1), ((l2.right - 4) - 2), (l2.bottom - a1))];
+			bounds2 := icon.bounds;
+			l5 := ((bounds.right - 31) - 10);
+			pix := [Array: '{penPattern: "\u8205\u\u0A14\u\u2850\u\uA041\u", pensize: 8}, MakeRect(0, 0, bounds.right, (bounds.bottom - bottomIndent2)), OffsetShape(MakeShape(kROM_725), l5, 10), OffsetShape(MakeShape(icon), (l5 + ((31 - bounds2.right) div 2)), (10 + ((27 - bounds2.bottom) div 2))), '{penPattern: 5, fillPattern: 0, pensize: 2}, MakeRect(0, 0, bounds.right, (bounds.bottom - bottomIndent2)), MakeRect(4, ((bounds.bottom - bottomIndent2) - 2), (bounds.right - 4), bounds.bottom), '{penPattern: 3, pensize: 4, transferMode: 1}, MakeLine(2, (bounds.bottom - bottomIndent2), ((bounds.right - 4) - 2), (bounds.bottom - bottomIndent2))];
 			(if a2 then ArrayInsert(pix, OffsetShape(MakeShape(@postMark), (l5 - 55), 10), 0))
 		end),
 	firstTime: true,
 	_nextKeyView: nil,
 	optionsUp: nil,
 	ToRefCheck: func(a1) begin
-		local l1, l2, l3, l4;
+		local dataDefs, list, count, l4;
 		(if (if (if (if HasPath(fields, 'alternatives) then (not fields.toRef)) then IsArray(fields.alternatives)) then (Length(fields.alternatives) > 0)) then begin
-				l1 := GetDataDefs(a1);
-				fields.toRef := Array(1, l1:MakeNameRef(fields.alternatives[0], a1));
-				l2 := nil;
-				if ((l3 := Length(fields.alternatives)) > 1) then begin
-						l2 := Array((l3 - 1), nil);
+				dataDefs := GetDataDefs(a1);
+				fields.toRef := Array(1, dataDefs:MakeNameRef(fields.alternatives[0], a1));
+				list := nil;
+				if ((count := Length(fields.alternatives)) > 1) then begin
+						list := Array((count - 1), nil);
 						l4 := 0;
-						(repeat l2[l4] := l1:MakeNameRef(fields.alternatives[(l4 + 1)], a1) until ((l4 := (l4 + 1)) = (l3 - 1)))
+						(repeat list[l4] := dataDefs:MakeNameRef(fields.alternatives[(l4 + 1)], a1) until ((l4 := (l4 + 1)) = (count - 1)))
 					end;
-				(fields.alternatives := l2)
+				(fields.alternatives := list)
 			end)
 	end,
 	SetFieldDefaults: func() begin
@@ -123,45 +123,45 @@ protoRouteSlip := {
 	debug: 722074,
 	Editing: nil,
 	auxSetup: func() begin
-		local l1, l2;
-		(if fields then (if (if (l1 := activeFormat) then l1.auxForm) then begin
-					if IsSymbol(l1.auxForm) then begin
-							if (not (l2 := GetRoot().(l1.auxForm)).closeGadget) then begin
-									if l2.stepChildren then begin
-											l2.stepChildren := Clone(l2.stepChildren)
+		local activeFormat2, context;
+		(if fields then (if (if (activeFormat2 := activeFormat) then activeFormat2.auxForm) then begin
+					if IsSymbol(activeFormat2.auxForm) then begin
+							if (not (context := GetRoot().(activeFormat2.auxForm)).closeGadget) then begin
+									if context.stepChildren then begin
+											context.stepChildren := Clone(context.stepChildren)
 										end else begin
-											l2.stepChildren := [Array: ]
+											context.stepChildren := [Array: ]
 										end;
-									AddArraySlot(l2.stepChildren, closeGadgetForm);
-									l2.closeGadget := true
+									AddArraySlot(context.stepChildren, closeGadgetForm);
+									context.closeGadget := true
 								end
 						end else begin
-							l2 := BuildContext(Clone(l1.auxForm))
+							context := BuildContext(Clone(activeFormat2.auxForm))
 						end;
-					l2.fields := fields;
-					l2.target := target;
-					l2:Open();
-					(auxUp := l2)
+					context.fields := fields;
+					context.target := target;
+					context:Open();
+					(auxUp := context)
 				end))
 	end,
 	AnimateIndent: func() begin
-		local l1;
+		local box;
 		self:SetupBounds(bottomIndent, nil);
 		self:SyncView();
-		(l1 := self:LocalBox()).top := (l1.bottom - bottomIndent);
-		self:RevealEffect((l1.bottom - l1.top), l1, indentSound, nil, nil)
+		(box := self:LocalBox()).top := (box.bottom - bottomIndent);
+		self:RevealEffect((box.bottom - box.top), box, indentSound, nil, nil)
 	end,
 	pix: nil,
 	bottomIndent: 29,
 	AnimateSend: func() begin
-		local l1, l2;
-		l1 := self:GlobalBox();
-		(l2 := self:LocalBox()).top := (l2.bottom - bottomIndent);
+		local box, box2;
+		box := self:GlobalBox();
+		(box2 := self:LocalBox()).top := (box2.bottom - bottomIndent);
 		self:SetupBounds(0, true);
 		self:SyncView();
-		self:RevealEffect((l2.top - l2.bottom), l2, indentSound, nil, nil);
+		self:RevealEffect((box2.top - box2.bottom), box2, indentSound, nil, nil);
 		playsound(cancelSound);
-		GetRoot():DirtyBox(l1);
+		GetRoot():DirtyBox(box);
 		(base.hideSound := @poof)
 	end
 };

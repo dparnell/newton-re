@@ -16,13 +16,13 @@ analogClock := {
 	minutes: 0,
 	lastSeed: 0,
 	calcTime: func() begin
-		local l1;
-		hours := ((minutes := ((l1 := TimeInSeconds()) div 60)) div 60);
+		local timeInSeconds2;
+		hours := ((minutes := ((timeInSeconds2 := TimeInSeconds()) div 60)) div 60);
 		if ((minutes := ((minutes mod 60) div 5)) > 6) then begin
 				hours := (hours + 1)
 			end;
 		hours := (hours mod 12);
-		((300 - (l1 mod 300)) * 1000)
+		((300 - (timeInSeconds2 mod 300)) * 1000)
 	end,
 	viewSetupFormScript: func() begin
 		self:SetupIdle(self:calcTime())
@@ -35,18 +35,18 @@ analogClock := {
 		DrawXBitmap(handsBounds, smallClocks, hours, 0);
 		DrawXBitmap(handsBounds, smallClocks, (12 + minutes), 1)
 	end,
-	viewClickScript: func(a1) begin
-		InkOff(a1);
+	viewClickScript: func(unit) begin
+		InkOff(unit);
 		self:hilite(true);
 		timeField:Toggle();
 		self:hilite(nil);
 		true
 	end,
 	viewIdleScript: func() begin
-		local l1;
-		l1 := self:calcTime();
+		local calcTime;
+		calcTime := self:calcTime();
 		self:Dirty();
-		l1
+		calcTime
 	end,
 	debug: 72801
 };

@@ -6,13 +6,13 @@ newtSmartAddressFilter := {
 	PathQuery: func(a1) begin
 		Query(GetUnionSoup(@cardfileSoupName), {type: 'words, words: a1})
 	end,
-	QueryItem: func(a1, a2) begin
-		(if (if a1.address then FindStringInFrame(a1.address, a2, nil)) then {item: a1.address, id: MakeEntryAlias(a1)})
+	QueryItem: func(entry, preQuery) begin
+		(if (if entry.address then FindStringInFrame(entry.address, preQuery, nil)) then {item: entry.address, id: MakeEntryAlias(entry)})
 	end,
 	ResolveItem: func(a1) begin
 		targetView:jamFromEntry(ResolveEntryAlias(a1.id))
 	end,
-	EntryToPath: func(a1) begin
-		(target.(path) := a1.address)
+	EntryToPath: func(resolveEntryAlias) begin
+		(target.(path) := resolveEntryAlias.address)
 	end
 };

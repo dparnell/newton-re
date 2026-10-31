@@ -1,19 +1,19 @@
 // protoEworldEndpoint, and what only it reaches
 
 protoEworldEndpoint := {
-	HandleError: func(a1) begin
-		local l1;
-		lastError := a1;
-		(if (a1 <> -16005) then begin
-				if (a1 = -1) then begin
-						a1 := lastErrMsg
+	HandleError: func(error) begin
+		local translateError;
+		lastError := error;
+		(if (error <> -16005) then begin
+				if (error = -1) then begin
+						error := lastErrMsg
 					end;
-				(if IsInteger(a1) then begin
-						if (l1 := self:TranslateError(a1)) then begin
-								self:Notify(3, serviceName, l1)
+				(if IsInteger(error) then begin
+						if (translateError := self:TranslateError(error)) then begin
+								self:Notify(3, serviceName, translateError)
 							end;
 						self:ConnectionAbort()
-					end else GetRoot():Notify(3, serviceName, a1))
+					end else GetRoot():Notify(3, serviceName, error))
 			end)
 	end,
 	Tokenta: func(a1, a2, a3) begin
@@ -25,66 +25,66 @@ protoEworldEndpoint := {
 		self:ConnectionAbort()
 	end,
 	GetOptions: func() begin
-		local l1;
-		l1 := MakeModemOption();
-		[Array: {label: "p3  ", type: 'service, opCode: 512}, {label: "mods", type: 'service, opCode: 512}, {label: "mecp", type: 'option, opCode: 512, data: {arglist: [Array: 1], typelist: [Array: 10, 1]}}, {label: "mnpa", type: 'option, opCode: 512, data: {arglist: [Array: 0], typelist: [Array: 10, 1]}}, {label: "mnpc", type: 'option, opCode: 512, data: {arglist: [Array: 1], typelist: [Array: 10, 1]}}, l1, {label: "p3no", type: 'option, opCode: 512, data: {arglist: [Array: 1, 0, 0, 0], typelist: [Array: 10, 4, 4, 4, 4]}}]
+		local modemOption;
+		modemOption := MakeModemOption();
+		[Array: {label: "p3  ", type: 'service, opCode: 512}, {label: "mods", type: 'service, opCode: 512}, {label: "mecp", type: 'option, opCode: 512, data: {arglist: [Array: 1], typelist: [Array: 10, 1]}}, {label: "mnpa", type: 'option, opCode: 512, data: {arglist: [Array: 0], typelist: [Array: 10, 1]}}, {label: "mnpc", type: 'option, opCode: 512, data: {arglist: [Array: 1], typelist: [Array: 10, 1]}}, modemOption, {label: "p3no", type: 'option, opCode: 512, data: {arglist: [Array: 1, 0, 0, 0], typelist: [Array: 10, 4, 4, 4, 4]}}]
 	end,
 	filetoframe: {class: #132, funcPtr: 7012339, numArgs: 2},
 	frametofile: {class: #132, funcPtr: 7012340, numArgs: 1},
-	Mail_Read: func(a1, a2) begin
+	Mail_Read: func(id, transport) begin
 		if (not self:StartTransaction(120)) then begin
 				return nil
 			end;
 		eworld.cancelling := nil;
-		eworld.statusView := a2;
+		eworld.statusView := transport;
 		self:output("m6", nil, true);
-		self:output(a1, nil, true);
+		self:output(id, nil, true);
 		self:send(true);
 		eworld.mail_state := 'Read;
-		(eworld.lastMailID := a1)
+		(eworld.lastMailID := id)
 	end,
 	Mail_DownloadDone: func(a1) begin
-		local l1, l2;
+		local filetoframe, text;
 		if a1.data then begin
 				if ((if a1.type then StrEqual(a1.type, "pkg ")) or EndsWith(a1.filename, ".pkg")) then begin
 						mailmessage.package := a1.data
 					end;
 				if (if a1.type then StrEqual(a1.type, "newt")) then begin
-						if (not (l1 := self:filetoframe(a1.data, a1.filesize))) then begin
-								l2 := "Not enough free space in the default soup to unpack the enclosure.";
+						if (not (filetoframe := self:filetoframe(a1.data, a1.filesize))) then begin
+								text := "Not enough free space in the default soup to unpack the enclosure.";
 								GetRoot():Notify(3, serviceName, msg.text);
 								return nil
 							end;
-						if (not l1.text) then begin
-								l1.text := mailmessage.text
+						if (not filetoframe.text) then begin
+								filetoframe.text := mailmessage.text
 							end;
-						l1.toRef := mailmessage.toRef;
+						filetoframe.toRef := mailmessage.toRef;
 						if mailmessage.fromName then begin
-								l1.fromName := mailmessage.fromName
+								filetoframe.fromName := mailmessage.fromName
 							end;
-						l1.fromRef := mailmessage.fromRef;
-						l1.subject := mailmessage.subject;
-						l1.id := mailmessage.id;
-						l1.dateStr := mailmessage.dateStr;
-						l1.cc := mailmessage.cc;
-						l1.bcc := mailmessage.bcc;
-						l1.account := mailmessage.account;
-						mailmessage := l1
+						filetoframe.fromRef := mailmessage.fromRef;
+						filetoframe.subject := mailmessage.subject;
+						filetoframe.id := mailmessage.id;
+						filetoframe.dateStr := mailmessage.dateStr;
+						filetoframe.cc := mailmessage.cc;
+						filetoframe.bcc := mailmessage.bcc;
+						filetoframe.account := mailmessage.account;
+						mailmessage := filetoframe
 					end
 			end;
 		self:?Mail_DownloadDoneScript(mailmessage);
 		(mailmessage := nil)
 	end,
 	Tokentf: func(a1, a2, a3) begin
-		local l1;
+		local string2;
 		if (self:getdata(a2, (a3 - 1), 1, 'integer) = 144) then begin
-				l1 := self:getdata(a2, a3, 2, 'string)
+				string2 := self:getdata(a2, a3, 2, 'string)
 			end;
 		(if a1.file_in then begin
-				a1.file_in.reply := l1;
+				a1.file_in.reply := string2;
 				self:output("xG", nil, nil)
 			end else (if a1.file_out then begin
-					a1.file_out.reply := l1;
+					a1.file_out.reply := string2;
 					self:File_UploadStart(a1.file_out);
 					(a1.file_out := nil)
 				end))
@@ -124,10 +124,10 @@ protoEworldEndpoint := {
 	output: {class: #132, funcPtr: 7012345, numArgs: 3},
 	uploadingfile: nil,
 	send: {class: #132, funcPtr: 7012347, numArgs: 1},
-	PrefsSet: func(a1, a2, a3, a4, a5, a6) begin
+	PrefsSet: func(text, text2, a3, a4, a5, a6) begin
 		local l1;
 		l1 := true;
-		if ((((not a1) or (StrLen(a1) < 1)) or (not a2)) or (StrLen(a2) < 1)) then begin
+		if ((((not text) or (StrLen(text) < 1)) or (not text2)) or (StrLen(text2) < 1)) then begin
 				self:Notify(3, serviceName, msgOwner);
 				l1 := nil
 			end;
@@ -144,70 +144,70 @@ protoEworldEndpoint := {
 		self:LoginDone()
 	end,
 	HandleThrow: func() begin
-		local l1, l2, l3, l4;
-		l1 := 0;
-		if HasSlot((l2 := CurrentException()), 'message) then begin
-				l1 := -1;
-				self.lastErrMsg := l2.message
+		local error, ex, l3, l4;
+		error := 0;
+		if HasSlot((ex := CurrentException()), 'message) then begin
+				error := -1;
+				self.lastErrMsg := ex.message
 			end else begin
-				if HasSlot(l2, 'error) then begin
-						l1 := l2.error
+				if HasSlot(ex, 'error) then begin
+						error := ex.error
 					end else begin
-						if HasSlot(l2.data, 'errorCode) then begin
-								l1 := l2.data.errorCode
+						if HasSlot(ex.data, 'errorCode) then begin
+								error := ex.data.errorCode
 							end else begin
 								GetRoot():Notify(3, serviceName, "Unexpected error")
 							end
 					end
 			end;
-		if (l3 := (not self:ignoreError(l1))) then begin
+		if (l3 := (not self:ignoreError(error))) then begin
 				if (l4 := (if (connectState = 'Login) then GetVariable(self, 'currentItem) else (if (if request then (self:ItemRequest exists)) then self:ItemRequest(request)))) then begin
-						self:ItemCompleted(l4, l4.state, l1)
+						self:ItemCompleted(l4, l4.state, error)
 					end else begin
-						self:HandleError(l1)
+						self:HandleError(error)
 					end
 			end;
 		l3
 	end,
-	File_DownloadDone: func(a1) begin
+	File_DownloadDone: func(file_in) begin
 		self:EndTransaction();
-		ClearVBOCache(a1.data);
-		(if a1.doneScript then Perform(self, a1.doneScript, [Array: a1]))
+		ClearVBOCache(file_in.data);
+		(if file_in.doneScript then Perform(self, file_in.doneScript, [Array: file_in]))
 	end,
 	Mail_SendMessage: func() begin
-		local l1, l2, l3, l4;
-		(if (l1 := eworld.mail_out) then begin
+		local mail_out, text, labels, emailPassword;
+		(if (mail_out := eworld.mail_out) then begin
 				self:StartStream("m5");
-				if l1.attachment then begin
-						if (not l1.IsPackage) then begin
-								l2 := l1.text;
-								l3 := l1.labels;
-								if (l4 := l1.fromRef.emailPassword) then begin
-										l1.fromRef.emailPassword := nil
+				if mail_out.attachment then begin
+						if (not mail_out.IsPackage) then begin
+								text := mail_out.text;
+								labels := mail_out.labels;
+								if (emailPassword := mail_out.fromRef.emailPassword) then begin
+										mail_out.fromRef.emailPassword := nil
 									end;
 								if (not userConfiguration.mailSendText) then begin
-										l1.text := nil
+										mail_out.text := nil
 									end;
-								if l1.labels then begin
-										l1.labels := nil
+								if mail_out.labels then begin
+										mail_out.labels := nil
 									end;
 								try begin
-										eworld.file_out := self:frametofile(l1)
+										eworld.file_out := self:frametofile(mail_out)
 									end onexception |evt.ex| do begin
 										self:HandleThrow()
 									end;
 								eworld.file_out.filename := "newton";
 								eworld.file_out.type := "newt";
 								eworld.file_out.creator := "DOCK";
-								l1.text := l2;
-								if l4 then begin
-										l1.fromRef.emailPassword := l4
+								mail_out.text := text;
+								if emailPassword then begin
+										mail_out.fromRef.emailPassword := emailPassword
 									end;
-								if l3 then begin
-										l1.labels := l3
+								if labels then begin
+										mail_out.labels := labels
 									end
 							end else begin
-								eworld.file_out := l1.body
+								eworld.file_out := mail_out.body
 							end;
 						self:atom(17, 7, nil, nil);
 						self:atom(17, 20, 1, nil);
@@ -216,13 +216,13 @@ protoEworldEndpoint := {
 						self:atom(17, 22, eworld.file_out.filesize, nil);
 						self:atom(17, 8, nil, nil)
 					end;
-				if l1.receipt then begin
+				if mail_out.receipt then begin
 						self:atom(17, 26, 1, nil)
 					end;
-				if ((not l1.text) or (StrLen(l1.text) = 0)) then begin
+				if ((not mail_out.text) or (StrLen(mail_out.text) = 0)) then begin
 						self:atom(17, 11, " ", 'encoded)
 					end else begin
-						self:atom(17, 11, l1.text, 'encoded)
+						self:atom(17, 11, mail_out.text, 'encoded)
 					end;
 				self:atom(17, 2, nil, nil);
 				self:SendStream()
@@ -230,16 +230,16 @@ protoEworldEndpoint := {
 	end,
 	stopCCL: {class: #132, funcPtr: 6959508, numArgs: 0},
 	getmacheader: {class: #132, funcPtr: 7012342, numArgs: 2},
-	LoginToHost: func(a1, a2, a3, a4, a5, a6) begin
-		local l1;
+	LoginToHost: func(a1, a2, text, text2, a5, a6) begin
+		local list;
 		connected := nil;
 		connectState := nil;
-		if (not a3) then begin
-				a3 := userConfiguration.mailAccount
+		if (not text) then begin
+				text := userConfiguration.mailAccount
 			end;
-		eworld.account := a3;
-		if (not a4) then begin
-				a4 := userConfiguration.mailPassword
+		eworld.account := text;
+		if (not text2) then begin
+				text2 := userConfiguration.mailPassword
 			end;
 		if (not a6) then begin
 				if (if (a6 := userConfiguration.mailPhoneFull) then IsInteger(a6)) then begin
@@ -254,7 +254,7 @@ protoEworldEndpoint := {
 				self:GetNetwork(a1);
 				a5 := mailnavigator
 			end;
-		if (not self:PrefsSet(a3, a4, a6, a5, a2, a1)) then begin
+		if (not self:PrefsSet(text, text2, a6, a5, a2, a1)) then begin
 				return nil
 			end;
 		if (transport exists) then begin
@@ -267,7 +267,7 @@ protoEworldEndpoint := {
 				self:HandleThrow();
 				return nil
 			end;
-		l1 := [Array: {type: 'address, label: "rout", opCode: 512, data: {arglist: [Array: 3, StrLen(a6), a6], typelist: [Array: 10, 1, 2, [Array: 11, 13, 0]]}}];
+		list := [Array: {type: 'address, label: "rout", opCode: 512, data: {arglist: [Array: 3, StrLen(a6), a6], typelist: [Array: 10, 1, 2, [Array: 11, 13, 0]]}}];
 		if (not (transport exists)) then begin
 				self:?loginStatus(1)
 			end;
@@ -277,7 +277,7 @@ protoEworldEndpoint := {
 				if (transport exists) then begin
 						transport:?SetStatusDialog('dialing, 'vStatusTitle, {titleText: a6})
 					end;
-				self:Connect(l1, nil);
+				self:Connect(list, nil);
 				connectState := 'Connect;
 				connected := true
 			end onexception |evt.ex| do begin
@@ -296,7 +296,7 @@ protoEworldEndpoint := {
 		navigator._parent := nil;
 		if err then begin
 				transport:?CloseStatusDialog(nil);
-				if (err = -16005) then begin
+				if (err = kCommErrRequestCanceled) then begin
 						self:ConnectionAbort()
 					end else begin
 						self:HandleError(err)
@@ -305,20 +305,20 @@ protoEworldEndpoint := {
 			end;
 		eworld.navigator := nil;
 		if (transport exists) then begin
-				transport:?SetStatusDialog('Login, 'vStatusTitle, {titleText: a3})
+				transport:?SetStatusDialog('Login, 'vStatusTitle, {titleText: text})
 			end else begin
 				self:?loginStatus(3)
 			end;
-		self:Login(a3, a4);
+		self:Login(text, text2);
 		return true
 	end,
-	StartStream: func(a1) begin
+	StartStream: func(text) begin
 		if (eworld.streamid = nil) then begin
 				eworld.streamid := 1
 			end else begin
 				eworld.streamid := (eworld.streamid + 1)
 			end;
-		self:BufferStart(a1, eworld.streamid)
+		self:BufferStart(text, eworld.streamid)
 	end,
 	connected: nil,
 	TransactionAbort: func() begin
@@ -382,15 +382,15 @@ protoEworldEndpoint := {
 	defaultAtom00: {class: #132, funcPtr: 7012349, numArgs: 5},
 	GetEWError: {class: #132, funcPtr: 7052533, numArgs: 0},
 	msgWorksite: "You need to set your worksite E-Mail information before you can connect to America Online.",
-	Mail_Download: func(a1, a2) begin
-		self.mailmessage := a1;
+	Mail_Download: func(message, transport) begin
+		self.mailmessage := message;
 		if (not self:StartTransaction(120)) then begin
 				return nil
 			end;
-		eworld.file_in := {id: a1.id, filetype: a1.filetype, filesize: a1.filesize, filename: a1.filename, statusView: a2, doneScript: 'Mail_DownloadDone};
+		eworld.file_in := {id: message.id, filetype: message.filetype, filesize: message.filesize, filename: message.filename, statusView: transport, doneScript: 'Mail_DownloadDone};
 		self:StartStream("eD");
 		self:atom(1, 7, 0, nil);
-		self:atom(3, 1, a1.id, nil);
+		self:atom(3, 1, message.id, nil);
 		self:SendStream()
 	end,
 	Mail_ListRead: func() begin
@@ -400,10 +400,10 @@ protoEworldEndpoint := {
 		self:output("m9", nil, nil);
 		(eworld.mail_state := 'list)
 	end,
-	atom09: func(a1, a2, a3, a4, a5) begin
-		local l1;
+	atom09: func(a1, lastStream, a3, a4, a5) begin
+		local count;
 		a1.lastAtom := 'atom09;
-		a1.lastStream := a2;
+		a1.lastStream := lastStream;
 		if a1.outofmem then begin
 				if (a3 = 4) then begin
 						self:EndTransaction();
@@ -431,9 +431,9 @@ protoEworldEndpoint := {
 						StuffLong(a1.listentry, 8, 0)
 					end;
 				if (if (a3 = 6) then a1.listentry) then begin
-						l1 := Length(a1.list.items);
+						count := Length(a1.list.items);
 						try begin
-								BinaryMunger(a1.list.items, l1, 0, a1.listentry, 0, Length(a1.listentry))
+								BinaryMunger(a1.list.items, count, 0, a1.listentry, 0, Length(a1.listentry))
 							end onexception |evt.ex.fr.store| do begin
 								a1.outofmem := true;
 								a1.list.items := nil;
@@ -443,7 +443,7 @@ protoEworldEndpoint := {
 							end;
 						self:?ListItem(a1.listentry);
 						a1.listentry := nil;
-						if (l1 > a1.list.nextClear) then begin
+						if (count > a1.list.nextClear) then begin
 								a1.list.nextClear := (a1.list.nextClear + 10240);
 								ClearVBOCache(a1.list.items)
 							end
@@ -466,29 +466,29 @@ protoEworldEndpoint := {
 			end)
 	end,
 	Mail_SendHeader: func() begin
-		(if (l1 := eworld.mail_out) then begin
+		(if (mail_out := eworld.mail_out) then begin
 				self:StartStream("m4");
 				self:atom(17, 0, nil, nil);
-				if (if l1.toRef then (Length(l1.toRef) > 0)) then begin
+				if (if mail_out.toRef then (Length(mail_out.toRef) > 0)) then begin
 						self:atom(17, 19, 0, nil);
-						local l1;
-						(foreach l2, l3 in l1.toRef do begin
-								self:Mail_SendAddress(l3)
+						local mail_out;
+						(foreach key, value in mail_out.toRef do begin
+								self:Mail_SendAddress(value)
 							end)
 					end;
-				if (if l1.cc then (Length(l1.cc) > 0)) then begin
+				if (if mail_out.cc then (Length(mail_out.cc) > 0)) then begin
 						self:atom(17, 19, 1, nil);
-						(foreach l2, l3 in l1.cc do begin
-								self:Mail_SendAddress(l3)
+						(foreach key, value in mail_out.cc do begin
+								self:Mail_SendAddress(value)
 							end)
 					end;
-				if (if l1.bcc then (Length(l1.bcc) > 0)) then begin
+				if (if mail_out.bcc then (Length(mail_out.bcc) > 0)) then begin
 						self:atom(17, 19, 2, nil);
-						(foreach l2, l3 in l1.bcc do begin
-								self:Mail_SendAddress(l3)
+						(foreach key, value in mail_out.bcc do begin
+								self:Mail_SendAddress(value)
 							end)
 					end;
-				self:atom(17, 10, l1.title, nil);
+				self:atom(17, 10, mail_out.title, nil);
 				self:atom(17, 1, nil, nil);
 				self:SendStream()
 			end)
@@ -505,15 +505,15 @@ protoEworldEndpoint := {
 	end,
 	serviceName: americaOnline,
 	connectState: nil,
-	AddTextToVBO: func(a1, a2, a3) begin
+	AddTextToVBO: func(a1, mail_in, text) begin
 		try begin
-				BinaryMunger(a2.text, (Length(a2.text) - 2), 0, a3, 0, (Length(a3) - 2))
+				BinaryMunger(mail_in.text, (Length(mail_in.text) - 2), 0, text, 0, (Length(text) - 2))
 			end onexception |evt.ex.fr.store| do begin
 				if a1 then begin
 						a1.cancelling := true
 					end;
-				a2.text := "Not enough free space in the default soup to save the message.";
-				GetRoot():Notify(3, serviceName, a2.text);
+				mail_in.text := "Not enough free space in the default soup to save the message.";
+				GetRoot():Notify(3, serviceName, mail_in.text);
 				return nil
 			end;
 		return true
@@ -558,10 +558,10 @@ protoEworldEndpoint := {
 		end, [Array: ])
 	end,
 	fileSizeMultiplier: 1,
-	File_UploadStart: func(a1) begin
+	File_UploadStart: func(file_out) begin
 		(try begin
-				self:uploadfile(a1.data, a1.filesize, a1.statusView, a1.type, a1.creator);
-				(if (if a1.reply then (not self:GetEWError())) then self:output(a1.reply, nil, nil))
+				self:uploadfile(file_out.data, file_out.filesize, file_out.statusView, file_out.type, file_out.creator);
+				(if (if file_out.reply then (not self:GetEWError())) then self:output(file_out.reply, nil, nil))
 			end onexception |evt.ex| do begin
 				nil
 			end)
@@ -572,48 +572,48 @@ protoEworldEndpoint := {
 		self:?LoginDoneScript()
 	end,
 	getdata: {class: #132, funcPtr: 7012341, numArgs: 4},
-	Mail_Send: func(a1) begin
+	Mail_Send: func(msg) begin
 		if (not self:StartTransaction(120)) then begin
 				return nil
 			end;
-		eworld.mail_out := a1;
+		eworld.mail_out := msg;
 		self:Mail_SendHeader();
 		(eworld.mail_state := 'send)
 	end,
 	FIle_DownloadPart: func(a1, a2, a3) begin
-		local l1, l2, l3, l4, l5;
-		if ((l1 := a1.file_in).filesize = 0) then begin
+		local file_in, length, getmacheader, defaultOwnerStore, l5;
+		if ((file_in := a1.file_in).filesize = 0) then begin
 				return nil
 			end;
-		(if l1.data then begin
-				if l1.statusView then begin
-						l1.statusView:filetransferstatus(l1.offset, l1.filesize)
+		(if file_in.data then begin
+				if file_in.statusView then begin
+						file_in.statusView:filetransferstatus(file_in.offset, file_in.filesize)
 					end;
-				l1.offset := self:decodepacket(l1.data, l1.offset, a2, 2, a3, (l1.filesize - l1.offset));
-				(if (l1.offset > l1.nextClear) then begin
-						l1.nextClear := (l1.nextClear + 10240);
-						ClearVBOCache(l1.data)
+				file_in.offset := self:decodepacket(file_in.data, file_in.offset, a2, 2, a3, (file_in.filesize - file_in.offset));
+				(if (file_in.offset > file_in.nextClear) then begin
+						file_in.nextClear := (file_in.nextClear + 10240);
+						ClearVBOCache(file_in.data)
 					end)
 			end else begin
-				l2 := 0;
-				if (l1.filetype = 247) then begin
-						l3 := self:getmacheader(a2, a3);
-						l1.type := l3.type;
-						l2 := l3.length
+				length := 0;
+				if (file_in.filetype = 247) then begin
+						getmacheader := self:getmacheader(a2, a3);
+						file_in.type := getmacheader.type;
+						length := getmacheader.length
 					end;
-				l5 := (((l4 := self:GetDefaultOwnerStore()):TotalSize() - l4:UsedSize()) - 10240);
-				(if (if (((if l1.type then StrEqual(l1.type, "newt")) or (if l1.type then StrEqual(l1.type, "pkg "))) or EndsWith(l1.filename, ".pkg")) then (l5 > (fileSizeMultiplier * l1.filesize))) then begin
-						l1.data := l4:NewVBO(EnsureInternal('package), l1.filesize);
-						l1.offset := self:decodepacket(l1.data, 0, a2, (2 + l2), (a3 - l2), l1.filesize);
-						(l1.nextClear := 10240)
+				l5 := (((defaultOwnerStore := self:GetDefaultOwnerStore()):TotalSize() - defaultOwnerStore:UsedSize()) - 10240);
+				(if (if (((if file_in.type then StrEqual(file_in.type, "newt")) or (if file_in.type then StrEqual(file_in.type, "pkg "))) or EndsWith(file_in.filename, ".pkg")) then (l5 > (fileSizeMultiplier * file_in.filesize))) then begin
+						file_in.data := defaultOwnerStore:NewVBO(EnsureInternal('package), file_in.filesize);
+						file_in.offset := self:decodepacket(file_in.data, 0, a2, (2 + length), (a3 - length), file_in.filesize);
+						(file_in.nextClear := 10240)
 					end else begin
-						if (l5 <= (fileSizeMultiplier * l1.filesize)) then begin
-								GetRoot():Notify(3, serviceName, ParamStr("Not enough free space in the default soup to save the enclosure. Need ^0K bytes of additional space", [Array: ((((fileSizeMultiplier * l1.filesize) - l5) + 1023) div 1024)]))
+						if (l5 <= (fileSizeMultiplier * file_in.filesize)) then begin
+								GetRoot():Notify(3, serviceName, ParamStr("Not enough free space in the default soup to save the enclosure. Need ^0K bytes of additional space", [Array: ((((fileSizeMultiplier * file_in.filesize) - l5) + 1023) div 1024)]))
 							end else begin
-								GetRoot():Notify(3, serviceName, ParamStr("Ignoring the enclosed file named \u201C\u^0\u201D\u because it is not a file format known to the Newton", [Array: l1.filename]))
+								GetRoot():Notify(3, serviceName, ParamStr("Ignoring the enclosed file named \u201C\u^0\u201D\u because it is not a file format known to the Newton", [Array: file_in.filename]))
 							end;
-						l1.data := nil;
-						l1.filesize := 0;
+						file_in.data := nil;
+						file_in.filesize := 0;
 						self:output("xA", nil, true);
 						self:output(255, 'byte, nil)
 					end)
@@ -621,37 +621,37 @@ protoEworldEndpoint := {
 	end,
 	startCCL: {class: #132, funcPtr: 6959506, numArgs: 0},
 	SetEWError: {class: #132, funcPtr: 7052532, numArgs: 1},
-	atom17: func(a1, a2, a3, a4, a5) begin
-		local l1, l2, l3, l4, l5, l6;
+	atom17: func(a1, lastStream, a3, a4, a5) begin
+		local mail_in, string3, text, string2, l5, l6;
 		if a1.cancelling then begin
 				return nil
 			end;
-		l1 := a1.mail_in;
-		l3 := "";
+		mail_in := a1.mail_in;
+		text := "";
 		eworld.lastAtom := 'atom17;
-		eworld.lastStream := a2;
+		eworld.lastStream := lastStream;
 		if (a3 = 0) then begin
-				if l1 then begin
-						l1.depth := (l1.depth + 1);
-						self:AddTextToVBO(a1, l1, "\n")
+				if mail_in then begin
+						mail_in.depth := (mail_in.depth + 1);
+						self:AddTextToVBO(a1, mail_in, "\n")
 					end else begin
 						a1.mail_in := {depth: 0, currentFormat: 'targetFrameFormat, toRef: [Array: ], cc: [Array: ], bcc: [Array: ], text: self:GetDefaultOwnerStore():NewVBO('string, 2), nextClear: 10240}
 					end
 			end;
 		if (a3 = 25) then begin
-				l1.type := self:getdata(a5, 0, a4, 'integer)
+				mail_in.type := self:getdata(a5, 0, a4, 'integer)
 			end;
 		if (a3 = 20) then begin
-				l1.data := self:getdata(a5, 0, a4, 'integer);
-				if (l1.data = 1) then begin
-						l1.hasfile := true
+				mail_in.data := self:getdata(a5, 0, a4, 'integer);
+				if (mail_in.data = 1) then begin
+						mail_in.hasfile := true
 					end
 			end;
 		if (a3 = 22) then begin
-				l1.filesize := self:getdata(a5, 0, a4, 'integer)
+				mail_in.filesize := self:getdata(a5, 0, a4, 'integer)
 			end;
 		if (a3 = 23) then begin
-				l1.filetype := self:getdata(a5, 0, a4, 'integer)
+				mail_in.filetype := self:getdata(a5, 0, a4, 'integer)
 			end;
 		if (a3 = 3) then begin
 				self:Mail_SendMessage()
@@ -667,122 +667,122 @@ protoEworldEndpoint := {
 						self:EndTransaction();
 						return self:?ListDone(nil)
 					end;
-				l4 := self:getdata(a5, 1, (a4 - 1), 'string);
+				string2 := self:getdata(a5, 1, (a4 - 1), 'string);
 				if (a1.mail_state = 'Read) then begin
-						if l1 then begin
-								l1.progress := l4
+						if mail_in then begin
+								mail_in.progress := string2
 							end else begin
-								self:Notify(3, serviceName, l4)
+								self:Notify(3, serviceName, string2)
 							end;
 						a1.statusView := nil;
-						return self:Mail_MessageDone(l1)
+						return self:Mail_MessageDone(mail_in)
 					end;
 				if (a1.mail_state = 'send) then begin
 						self:EndTransaction();
-						return self:?Mail_SendDone(l4)
+						return self:?Mail_SendDone(string2)
 					end;
-				self:Notify(3, serviceName, l4)
+				self:Notify(3, serviceName, string2)
 			end;
 		if (a3 = 14) then begin
-				if (l1.depth = 0) then begin
-						l1.id := self:getdata(a5, 0, a4, 'integer)
+				if (mail_in.depth = 0) then begin
+						mail_in.id := self:getdata(a5, 0, a4, 'integer)
 					end
 			end;
 		if (a3 = 17) then begin
-				l2 := self:getdata(a5, 0, a4, 'string);
-				if (l1.depth = 0) then begin
-						l1.dateStr := l2
+				string3 := self:getdata(a5, 0, a4, 'string);
+				if (mail_in.depth = 0) then begin
+						mail_in.dateStr := string3
 					end else begin
-						self:AddTextToVBO(a1, l1, Stringer([Array: "\nDate:\t", l2]))
+						self:AddTextToVBO(a1, mail_in, Stringer([Array: "\nDate:\t", string3]))
 					end
 			end;
 		if (a3 = 15) then begin
-				l2 := self:getdata(a5, 0, a4, 'string);
-				if (l1.depth = 0) then begin
-						l1.fromRef := self:MakeMailNameRef(l2)
+				string3 := self:getdata(a5, 0, a4, 'string);
+				if (mail_in.depth = 0) then begin
+						mail_in.fromRef := self:MakeMailNameRef(string3)
 					end else begin
-						self:AddTextToVBO(a1, l1, Stringer([Array: "\nFrom:\t", l2]))
+						self:AddTextToVBO(a1, mail_in, Stringer([Array: "\nFrom:\t", string3]))
 					end
 			end;
 		if (a3 = 10) then begin
-				l2 := self:getdata(a5, 0, a4, 'string);
-				if (l1.depth = 0) then begin
-						l1.title := l2
+				string3 := self:getdata(a5, 0, a4, 'string);
+				if (mail_in.depth = 0) then begin
+						mail_in.title := string3
 					end else begin
-						self:AddTextToVBO(a1, l1, Stringer([Array: "\nSubject:\t", l2]))
+						self:AddTextToVBO(a1, mail_in, Stringer([Array: "\nSubject:\t", string3]))
 					end
 			end;
 		if (a3 = 21) then begin
-				l1.filename := self:getdata(a5, 0, a4, 'string)
+				mail_in.filename := self:getdata(a5, 0, a4, 'string)
 			end;
 		if (a3 = 9) then begin
-				l2 := self:getdata(a5, 0, a4, 'string);
-				if (l1.depth = 0) then begin
+				string3 := self:getdata(a5, 0, a4, 'string);
+				if (mail_in.depth = 0) then begin
 						l5 := 'toRef;
-						if (l1.addrType = 1) then begin
+						if (mail_in.addrType = 1) then begin
 								l5 := 'cc
 							end else begin
-								if (l1.addrType = 2) then begin
+								if (mail_in.addrType = 2) then begin
 										l5 := 'bcc
 									end
 							end;
-						AddArraySlot(l1.(l5), self:MakeMailNameRef(l2))
+						AddArraySlot(mail_in.(l5), self:MakeMailNameRef(string3))
 					end else begin
-						self:AddTextToVBO(a1, l1, Stringer([Array: "\nTo:\t", l2]))
+						self:AddTextToVBO(a1, mail_in, Stringer([Array: "\nTo:\t", string3]))
 					end
 			end;
 		if (a3 = 19) then begin
-				l1.addrType := self:getdata(a5, 0, a4, 'integer)
+				mail_in.addrType := self:getdata(a5, 0, a4, 'integer)
 			end;
 		if (a3 = 11) then begin
-				if (if (l1.depth > 0) then (Length(l1.text) > 2)) then begin
-						if (not self:AddTextToVBO(a1, l1, "\n\n")) then begin
+				if (if (mail_in.depth > 0) then (Length(mail_in.text) > 2)) then begin
+						if (not self:AddTextToVBO(a1, mail_in, "\n\n")) then begin
 								return nil
 							end
 					end;
 				l6 := 0;
 				(while (a4 > 0) do begin
-						if (not self:AddTextToVBO(a1, l1, self:getdata(a5, l6, (if (a4 > 512) then 512 else a4), 'encoded))) then begin
+						if (not self:AddTextToVBO(a1, mail_in, self:getdata(a5, l6, (if (a4 > 512) then 512 else a4), 'encoded))) then begin
 								return nil
 							end;
 						a4 := (a4 - 512);
 						(l6 := (l6 + 512))
 					end);
-				if (l1.nextClear < Length(l1.text)) then begin
-						l1.nextClear := (l1.nextClear + 10240);
-						ClearVBOCache(l1.text)
+				if (mail_in.nextClear < Length(mail_in.text)) then begin
+						mail_in.nextClear := (mail_in.nextClear + 10240);
+						ClearVBOCache(mail_in.text)
 					end
 			end;
 		(if (a3 = 2) then begin
-				l1.depth := (l1.depth - 1);
-				(if (l1.depth >= 0) then self:AddTextToVBO(a1, l1, "\n\n") else (if (not a1.retry) then begin
+				mail_in.depth := (mail_in.depth - 1);
+				(if (mail_in.depth >= 0) then self:AddTextToVBO(a1, mail_in, "\n\n") else (if (not a1.retry) then begin
 							a1.statusView := nil;
-							self:Mail_MessageDone(l1);
+							self:Mail_MessageDone(mail_in);
 							(a1.mail_in := nil)
 						end))
 			end)
 	end,
-	Mail_MessageDone: func(a1) begin
-		local l1, l2;
+	Mail_MessageDone: func(mail_in) begin
+		local pos, text;
 		self:EndTransaction();
-		if a1 then begin
-				if (if userConfiguration.mailStripHeaders then StrPos(a1.fromRef.email, "@", 0)) then begin
-						if (l1 := StrPos(a1.text, "----------------------- Headers --", 0)) then begin
-								l1 := (l1 * 2);
-								BinaryMunger(a1.text, l1, ((Length(a1.text) - l1) - 2), nil, 0, nil)
+		if mail_in then begin
+				if (if userConfiguration.mailStripHeaders then StrPos(mail_in.fromRef.email, "@", 0)) then begin
+						if (pos := StrPos(mail_in.text, "----------------------- Headers --", 0)) then begin
+								pos := (pos * 2);
+								BinaryMunger(mail_in.text, pos, ((Length(mail_in.text) - pos) - 2), nil, 0, nil)
 							end
 					end;
-				if (Length(a1.text) = 2) then begin
-						l2 := "Text of message missing, message was probably too large";
-						self:AddTextToVBO(nil, a1, l2)
+				if (Length(mail_in.text) = 2) then begin
+						text := "Text of message missing, message was probably too large";
+						self:AddTextToVBO(nil, mail_in, text)
 					end;
-				a1.account := curAccount;
-				ClearVBOCache(a1.text);
-				if a1.fromName then begin
-						a1.fromRef.name := Clone(a1.fromName)
+				mail_in.account := curAccount;
+				ClearVBOCache(mail_in.text);
+				if mail_in.fromName then begin
+						mail_in.fromRef.name := Clone(mail_in.fromName)
 					end
 			end;
-		self:?Mail_Message(a1)
+		self:?Mail_Message(mail_in)
 	end,
 	EndTransaction: func() begin
 		self.activeTransaction := nil;
@@ -790,30 +790,30 @@ protoEworldEndpoint := {
 		(self.transactiontimeout := nil)
 	end,
 	simulatedHost: nil,
-	MakeMailNameRef: func(a1) begin
-		local l1, l2, l3, l4, l5, l6;
-		l1 := GetUnionSoup(@cardfileSoupName);
-		l2 := l1:Query({type: 'words, words: [Array: a1]});
-		l3 := GetDataDefs('|nameRef.email|);
-		l4 := SetClass(a1, (if StrPos(a1, "@", 0) then '|string.email.internet| else '|string.email.aol|));
-		l5 := l2:entry();
-		(while (if l5 then (not (StrEqual(l5.email, a1) or (if l5.emailAddrs then (FindStringInFrame(l5.emailAddrs, [Array: a1], 'first) <> nil))))) do (l5 := l2:Next()));
-		(if l5 then begin
-				(l6 := l3:MakeNameRef(l5, '|nameRef.email|)).email := l4;
-				l6
-			end else l3:MakeNameRef({name: {last: a1}, email: l4}, '|nameRef.email|))
+	MakeMailNameRef: func(string2) begin
+		local soup, cursor, dataDefs, setClass2, entry, nameRef;
+		soup := GetUnionSoup(@cardfileSoupName);
+		cursor := soup:Query({type: 'words, words: [Array: string2]});
+		dataDefs := GetDataDefs('|nameRef.email|);
+		setClass2 := SetClass(string2, (if StrPos(string2, "@", 0) then '|string.email.internet| else '|string.email.aol|));
+		entry := cursor:entry();
+		(while (if entry then (not (StrEqual(entry.email, string2) or (if entry.emailAddrs then (FindStringInFrame(entry.emailAddrs, [Array: string2], 'first) <> nil))))) do (entry := cursor:Next()));
+		(if entry then begin
+				(nameRef := dataDefs:MakeNameRef(entry, '|nameRef.email|)).email := setClass2;
+				nameRef
+			end else dataDefs:MakeNameRef({name: {last: string2}, email: setClass2}, '|nameRef.email|))
 	end,
 	GetNetwork: func(a1) begin
-		local l1;
-		if (not (l1 := self.transport)) then begin
-				l1 := GetRoot().mailSlip
+		local transport;
+		if (not (transport := self.transport)) then begin
+				transport := GetRoot().mailSlip
 			end;
 		(if userConfiguration.mailNetwork then begin
-				GetGlobals().mailnavigator := FindMailNetwork(l1.mailNetworks, userConfiguration.mailNetwork);
+				GetGlobals().mailnavigator := FindMailNetwork(transport.mailNetworks, userConfiguration.mailNetwork);
 				(if (not GetGlobals().mailnavigator) then self:Notify(3, serviceName, "The mail network selected for your current worksite is not valid."))
 			end else (GetGlobals().mailnavigator := nil))
 	end,
-	Atom00: func(a1, a2, a3, a4, a5) begin
+	Atom00: func(a1, lastStream, a3, a4, a5) begin
 		if (if (if (a3 = 1) then (not a1.connected)) then (a1.connectState <> 'Connect)) then begin
 				self:EndTransaction();
 				self:LoginDone()
@@ -823,34 +823,34 @@ protoEworldEndpoint := {
 			end;
 		a1.lastAtom := nil;
 		a1.lastStream := nil;
-		self:defaultAtom00(a1, a2, a3, a4, a5)
+		self:defaultAtom00(a1, lastStream, a3, a4, a5)
 	end,
 	lastAtom: nil,
-	ignoreError: func(a1) begin
-		((((a1 = nil) or (a1 = 0)) or (a1 = -16005)) or (a1 = 1))
+	ignoreError: func(error) begin
+		((((error = nil) or (error = 0)) or (error = -16005)) or (error = 1))
 	end,
 	Mail_MarkRead: func(a1) begin
 		self:StartStream("ey");
 		self:atom(3, 1, a1.id, nil);
 		self:SendStream()
 	end,
-	Mail_SendAddress: func(a1) begin
-		local l1;
-		(if IsString((l1 := self:normalizeAddress(a1))) then self:atom(17, 9, l1, nil) else (foreach l2 in l1 do begin
-					self:Mail_SendAddress(l2)
+	Mail_SendAddress: func(value) begin
+		local normalizeAddress;
+		(if IsString((normalizeAddress := self:normalizeAddress(value))) then self:atom(17, 9, normalizeAddress, nil) else (foreach item in normalizeAddress do begin
+					self:Mail_SendAddress(item)
 				end))
 	end,
 	Tokentd: func(a1, a2, a3) begin
-		local l1, l2;
-		l1 := self:getdata(a2, 2, 2, 'string);
-		l2 := Array(19, 0);
+		local string2, list;
+		string2 := self:getdata(a2, 2, 2, 'string);
+		list := Array(19, 0);
 		a3 := a1.file_out.filesize;
-		l2[3] := (a3 div 65536);
-		a3 := (a3 - l2[3]);
-		l2[2] := (a3 div 256);
-		l2[1] := (a3 - l2[2]);
-		self:output(l1, nil, true);
-		self:output(l2, nil, true);
+		list[3] := (a3 div 65536);
+		a3 := (a3 - list[3]);
+		list[2] := (a3 div 256);
+		list[1] := (a3 - list[2]);
+		self:output(string2, nil, true);
+		self:output(list, nil, true);
 		self:output(a1.file_out.filename, nil, true);
 		self:send(true)
 	end,
@@ -897,27 +897,27 @@ protoEworldEndpoint := {
 			end)
 	end,
 	uploadfile: {class: #132, funcPtr: 7012350, numArgs: 5},
-	Login: func(a1, a2) begin
-		self.curAccount := a1;
+	Login: func(text, text2) begin
+		self.curAccount := text;
 		self:output("Dd", nil, true);
 		self:output([Array: 0, 21, 0, 1, 0, 1, 10, 4, 0, 0, 0, 1, 1, 11, 4, 0, 0, 0, 1, 3, 1], nil, true);
-		self:output(StrLen(a1), 'byte, true);
-		self:output(a1, nil, true);
+		self:output(StrLen(text), 'byte, true);
+		self:output(text, nil, true);
 		self:output([Array: 1, 29, 0, 1, 29, 0, 1, 10, 4, 0, 0, 0, 2, 3, 1], nil, true);
-		self:output(StrLen(a2), 'byte, true);
-		self:output(a2, nil, true);
+		self:output(StrLen(text2), 'byte, true);
+		self:output(text2, nil, true);
 		self:output([Array: 1, 29, 0, 0, 2, 0], nil, nil)
 	end,
 	protoEWorldReg: {
 		_proto: @protoEworldEndpoint,
 		Busy: nil,
 		Register: func(a1, a2) begin
-			local l1;
+			local loginToHost;
 			Busy := true;
-			l1 := self:LoginToHost(nil, nil, "New User  ", "5555555555", a1, a2);
+			loginToHost := self:LoginToHost(nil, nil, "New User  ", "5555555555", a1, a2);
 			transport:?SetStatus('idle, nil);
 			transport:?CloseStatusDialog(nil);
-			l1
+			loginToHost
 		end,
 		SendInfo: func() begin
 			Busy := true;
@@ -978,15 +978,15 @@ protoEworldEndpoint := {
 					self:SendInfo()
 				end)
 		end,
-		Atom00: func(a1, a2, a3, a4, a5) begin
-			local l1, l2;
+		Atom00: func(a1, lastStream, a3, a4, a5) begin
+			local integer2, string2;
 			(if (a3 = 14) then begin
 					if (a1.pending = 2) then begin
 							Busy := nil;
-							l1 := self:getdata(a5, 0, 1, 'integer);
-							l2 := self:getdata(a5, 1, (a4 - 1), 'string);
+							integer2 := self:getdata(a5, 0, 1, 'integer);
+							string2 := self:getdata(a5, 1, (a4 - 1), 'string);
 							self:EndTransaction();
-							self:RegError(l1, l2);
+							self:RegError(integer2, string2);
 							transport:?SetStatus('idle, nil);
 							transport:?CloseStatusDialog(nil)
 						end;
@@ -998,7 +998,7 @@ protoEworldEndpoint := {
 							transport:?SetStatus('idle, nil);
 							transport:?CloseStatusDialog(nil)
 						end)
-				end else inherited:Atom00(a1, a2, a3, a4, a5))
+				end else inherited:Atom00(a1, lastStream, a3, a4, a5))
 		end
 	},
 	_proto: @protoBasicEndpoint

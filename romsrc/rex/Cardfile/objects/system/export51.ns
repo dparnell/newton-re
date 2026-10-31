@@ -2,10 +2,10 @@
 
 export51 := {
 	viewSetupChildrenScript: func() begin
-		local l1;
+		local copy;
 		inherited:viewSetupChildrenScript();
-		(l1 := Clone(viewBounds)).right := ((indent + l1.left) + self:GetMaxTextWidth());
-		SetValue(self, 'viewBounds, l1)
+		(copy := Clone(viewBounds)).right := ((indent + copy.left) + self:GetMaxTextWidth());
+		SetValue(self, 'viewBounds, copy)
 	end,
 	viewFormat: vfFillWhite + vfPen(1),
 	indent: 0,

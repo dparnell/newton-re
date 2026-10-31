@@ -8,8 +8,8 @@ email := {
 	infoFrame: {
 		checkPrefix: [|Array|: true, [pathExpr: 'emailAddrs]],
 		checkPaths: [|Array|: 'email, 'emailPassword],
-		formatFunc: func(a1) begin
-			(if StrFilled(a1[0]) then ParamStr("^?0^0: ||^1", [Array: GetGlobals().EmailSystems.emailText.(ClassOf(a1[0])), a1[0]]) else "")
+		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+			(if StrFilled(v20_wwwwwwwwwwvvvvvv[0]) then ParamStr("^?0^0: ||^1", [Array: GetGlobals().EmailSystems.emailText.(ClassOf(v20_wwwwwwwwwwvvvvvv[0])), v20_wwwwwwwwwwvvvvvv[0]]) else "")
 		end
 	},
 	protection: 'private,
@@ -66,10 +66,10 @@ emailItem := {
 setEMailPassword := {
 	viewBounds: {left: 0, top: 2, right: 107, bottom: 14},
 	buttonClickScript: func() begin
-		local l1;
-		(l1 := BuildContext(setpasswordslip)).target := target;
-		l1.path := path;
-		appBase:RememberedOpen(l1)
+		local context;
+		(context := BuildContext(setpasswordslip)).target := target;
+		context.path := path;
+		appBase:RememberedOpen(context)
 	end,
 	text: "Set E-Mail Password",
 	viewJustify: 8396822,

@@ -18,11 +18,11 @@ cardAlertTemplate := {
 		inherited:?viewQuitScript()
 	end,
 	viewIdleScript: func() begin
-		local l1, l2;
+		local l1, cardSlotStores;
 		l1 := inherited:?viewIdleScript();
 		if cardMessage.keepSlotPowered then begin
-				if (l2 := GetCardSlotStores(CardSlot)) then begin
-						l2[0]:IsReadOnly()
+				if (cardSlotStores := GetCardSlotStores(CardSlot)) then begin
+						cardSlotStores[0]:IsReadOnly()
 					end;
 				if (not l1) then begin
 						l1 := 5000
@@ -30,17 +30,17 @@ cardAlertTemplate := {
 			end;
 		l1
 	end,
-	BuildCardAlertFromCardMessage: func(a1, a2, a3) begin
-		local l1;
+	BuildCardAlertFromCardMessage: func(a1, cardSlot, name) begin
+		local context;
 		if IsFunction(a1.message) then begin
-				a1 := {_proto: a1, message: a1:message(a3)}
+				a1 := {_proto: a1, message: a1:message(name)}
 			end;
-		(l1 := BuildContext(self)).CardSlot := a2;
-		l1.cardMessage := a1;
-		l1
+		(context := BuildContext(self)).CardSlot := cardSlot;
+		context.cardMessage := a1;
+		context
 	end,
-	BuildCardAlert: func(a1, a2, a3) begin
-		self:BuildCardAlertFromCardMessage(cardMessageList.(a1), a2, a3)
+	BuildCardAlert: func(a1, cardSlot, name) begin
+		self:BuildCardAlertFromCardMessage(cardMessageList.(a1), cardSlot, name)
 	end,
 	cardMessageList: {
 		SRAMCardReplaceBattery: {
@@ -49,8 +49,8 @@ cardAlertTemplate := {
 			keepSlotPowered: true
 		},
 		LockedDefaultStore: {
-			message: func(a1) begin
-				ParamStr("Card \u201C\u^0\u201D\u is locked. New information cannot be saved on it. Remove the card, unlock it, then reinsert the card.", [Array: a1])
+			message: func(name) begin
+				ParamStr("Card \u201C\u^0\u201D\u is locked. New information cannot be saved on it. Remove the card, unlock it, then reinsert the card.", [Array: name])
 			end,
 			buttonList: buttonList_3
 		},
@@ -63,15 +63,15 @@ cardAlertTemplate := {
 			buttonList: buttonList
 		},
 		MiscCardError: {
-			message: func(a1) begin
-				ParamStr("There is a problem with this card. (^0)", [Array: GetRoot():TranslateError(a1)])
+			message: func(name) begin
+				ParamStr("There is a problem with this card. (^0)", [Array: GetRoot():TranslateError(name)])
 			end,
 			buttonList: buttonList_3
 		},
 		CommCardInserted: {message: "A communications card has been inserted.", buttonList: buttonList_3},
 		|ConvertIncompatibleSoups?|: {
-			message: func(a1) begin
-				ParamStr("Card \u201C\u^0\u201D\u is formatted for a different language. Do you want to update it?", [Array: a1])
+			message: func(name) begin
+				ParamStr("Card \u201C\u^0\u201D\u is formatted for a different language. Do you want to update it?", [Array: name])
 			end,
 			buttonList: [|Array|: {value: true, text: update}, cardAlertTemplateItem]
 		},
@@ -88,14 +88,14 @@ cardAlertTemplate := {
 			buttonList: buttonList_3
 		},
 		|MakeDefaultStore?|: {
-			message: func(a1) begin
-				ParamStr("Save new information and packages on card \u201C\u^0\u201D\u?", [Array: a1])
+			message: func(name) begin
+				ParamStr("Save new information and packages on card \u201C\u^0\u201D\u?", [Array: name])
 			end,
 			buttonList: [|Array|: {value: true, text: uErasePersistentDataButton1Str}, cardAlertTemplateItem_2]
 		},
 		incompatibleSoups: {
-			message: func(a1) begin
-				ParamStr("Card \u201C\u^0\u201D\u is locked and formatted for a different language. To update it remove the card, unlock it, then reinsert the card.", [Array: a1])
+			message: func(name) begin
+				ParamStr("Card \u201C\u^0\u201D\u is locked and formatted for a different language. To update it remove the card, unlock it, then reinsert the card.", [Array: name])
 			end,
 			buttonList: buttonList_3
 		},
@@ -105,8 +105,8 @@ cardAlertTemplate := {
 		},
 		UnrecognizedCardInserted: {message: "An unrecognized type of card has been inserted.", buttonList: buttonList_3},
 		|FormatAfterMountError?|: {
-			message: func(a1) begin
-				ParamStr("This card cannot be read due to an error (^0). To use this card you must first erase it.", [Array: GetRoot():TranslateError(a1)])
+			message: func(name) begin
+				ParamStr("This card cannot be read due to an error (^0). To use this card you must first erase it.", [Array: GetRoot():TranslateError(name)])
 			end,
 			buttonList: buttonList_2
 		},
@@ -125,8 +125,8 @@ cardAlertTemplate := {
 			buttonList: buttonList_3
 		},
 		|ActivatePackages?|: {
-			message: func(a1) begin
-				ParamStr("Activate packages on card \u201C\u^0\u201D\u?", [Array: a1])
+			message: func(name) begin
+				ParamStr("Activate packages on card \u201C\u^0\u201D\u?", [Array: name])
 			end,
 			buttonList: [|Array|: {value: true, text: activate}, cardAlertTemplateItem_2]
 		},
@@ -137,8 +137,8 @@ cardAlertTemplate := {
 		},
 		ProtectedStore: {message: "This card is protected. You will not be able to read it.", buttonList: buttonList_3},
 		SmileAfterMountError: {
-			message: func(a1) begin
-				ParamStr("This card cannot be read. (^0) To erase the card remove it, unlock it, then reinsert the card with \u201C\uPrefs\u201D\u open.", [Array: GetRoot():TranslateError(a1)])
+			message: func(name) begin
+				ParamStr("This card cannot be read. (^0) To erase the card remove it, unlock it, then reinsert the card with \u201C\uPrefs\u201D\u open.", [Array: GetRoot():TranslateError(name)])
 			end,
 			buttonList: buttonList_3
 		},

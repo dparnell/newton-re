@@ -7,20 +7,20 @@ protoEmporiumPopup := {
 	viewJustify: vjCenterV,
 	viewSetupFormScript: viewSetupFormScript,
 	SetupText: func() begin
-		local l1, l2;
-		(if (l1 := GetUserConfig('currentEmporium)) then begin
-				l2 := ResolveEntryAlias(l1);
-				Stringer([Array: $\uFC01, l2.place])
+		local currentEmporium, resolveEntryAlias2;
+		(if (currentEmporium := GetUserConfig('currentEmporium)) then begin
+				resolveEntryAlias2 := ResolveEntryAlias(currentEmporium);
+				Stringer([Array: $\uFC01, resolveEntryAlias2.place])
 			end else Stringer([Array: $\uFC01, GetUserConfig('location).name]))
 	end,
 	JamIt: JamIt,
 	viewDrawScript: viewDrawScript_2,
 	buttonClickScript: func() begin
-		(if (l2 := GetUserConfig('emporia)) then begin
-				local l1;
-				local l2;
+		(if (emporia := GetUserConfig('emporia)) then begin
+				local place2;
+				local emporia;
 				local l3;
-				l3 := (foreach l4 in l2 collect {item: (if (l1 := ResolveEntryAlias(l4).place) then l1 else "(unnamed location)"), value: l4});
+				l3 := (foreach item in emporia collect {item: (if (place2 := ResolveEntryAlias(item).place) then place2 else "(unnamed location)"), value: item});
 				if (Length(l3) = 0) then begin
 						AddArraySlot(place, {item: GetUserConfig('location).name, value: nil})
 					end;
@@ -31,11 +31,11 @@ protoEmporiumPopup := {
 				inherited:buttonClickScript()
 			end else self:hilite(nil))
 	end,
-	pickActionScript: func(a1) begin
-		if (a1 = (Length(popup) - 1)) then begin
+	pickActionScript: func(index) begin
+		if (index = (Length(popup) - 1)) then begin
 				self:PickOther()
 			end else begin
-				SetUserConfig('currentEmporium, popup[a1].value);
+				SetUserConfig('currentEmporium, popup[index].value);
 				UseCurrentEmporium()
 			end;
 		self:hilite(nil)

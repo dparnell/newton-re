@@ -6,16 +6,16 @@ canonicalTextBlock := {
 	viewJustify: 0,
 	textFlags: 256,
 	tabs: [|Array|: 18, 36, 54, 72, 90, 108, 126, 144, 162, 180, 198, 216, 234],
-	viewClickScript: func(a1) begin
+	viewClickScript: func(unit) begin
 		nil
 	end,
-	viewgesturescript: func(a1, a2) begin
-		local l1;
-		l1 := nil;
-		if (a2 = 49) then begin
-				l1 := self:?buttonClickScript()
+	viewgesturescript: func(unit, gesture) begin
+		local buttonClickScript;
+		buttonClickScript := nil;
+		if (gesture = 49) then begin
+				buttonClickScript := self:?buttonClickScript()
 			end;
-		l1
+		buttonClickScript
 	end,
 	buttonClickScript: func() begin
 		nil

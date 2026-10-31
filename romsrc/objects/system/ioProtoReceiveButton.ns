@@ -20,36 +20,36 @@ ioProtoReceiveButton := {
 	end,
 	buttonClickScript: func() begin
 		items := [Array: ];
-		(foreach l1 in transports do begin
+		(foreach item in transports do begin
 				local l3;
-				if (if (if (l3 := GetRoot().(l1)) then l3.(checkSlot)) then (l3.owner = appSymbol)) then begin
+				if (if (if (l3 := GetRoot().(item)) then l3.(checkSlot)) then (l3.owner = appSymbol)) then begin
 						AddArraySlot(items, {item: l3.title, icon: l3.icon, indent: 28, transport: l3})
 					end
 			end);
 		(connectPopup := GetView(DoPopup(items, (width + 2), 0, self)))
 	end,
-	pickActionScript: func(a1) begin
-		local l1, l2, l3;
-		l1 := items[a1].transport;
+	pickActionScript: func(index) begin
+		local transport, routing, labelsFilter2;
+		transport := items[index].transport;
 		items := nil;
-		if ((l2 := self:GetTargetInfo('Routing)).target = nil) then begin
+		if ((routing := self:GetTargetInfo('Routing)).target = nil) then begin
 				if (self.checkSlot = 'ReceiveRequest) then begin
 						if labelsFilter then begin
-								l3 := labelsFilter;
+								labelsFilter2 := labelsFilter;
 								labelsFilter := nil;
 								self:FilterChanged();
 								if filterBar then begin
-										filterBar:UpdateFilter(l3, nil)
+										filterBar:UpdateFilter(labelsFilter2, nil)
 									end
 							end;
-						self:TransportCall(l1, 'ReceiveRequest, [Array: {cause: 'user}])
+						self:TransportCall(transport, 'ReceiveRequest, [Array: {cause: 'user}])
 					end else begin
-						self:StartSend(l1, 'user, nil, nil)
+						self:StartSend(transport, 'user, nil, nil)
 					end
 			end else begin
-				self:ScriptRequest(l1, self.checkSlot, l2.target)
+				self:ScriptRequest(transport, self.checkSlot, routing.target)
 			end;
-		inherited:pickActionScript(a1)
+		inherited:pickActionScript(index)
 	end,
 	viewQuitScript: func() begin
 		(_sendKeyButton := nil)

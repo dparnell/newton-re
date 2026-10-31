@@ -33,12 +33,12 @@ globalHeapvarwannabes := {
 							viewFlags: vVisible,
 							icon: fineprintIcon,
 							viewSetupFormScript: func() begin
-								local l1, l2, l3;
-								l3 := ((l2 := Clone((l1 := icon.bounds))).right div 4);
-								l2.right := (l2.right - l3);
-								l2.left := (l2.left + l3);
-								l2.bottom := (l2.bottom div 2);
-								ScaleShape((icon := MakeShape(icon)), l1, l2)
+								local bounds, copy, l3;
+								l3 := ((copy := Clone((bounds := icon.bounds))).right div 4);
+								copy.right := (copy.right - l3);
+								copy.left := (copy.left + l3);
+								copy.bottom := (copy.bottom div 2);
+								ScaleShape((icon := MakeShape(icon)), bounds, copy)
 							end
 						},
 						{
@@ -62,24 +62,24 @@ globalHeapvarwannabes := {
 							_proto: formProto,
 							viewBounds: {left: 130, top: 220, right: 470, bottom: 300},
 							viewSetupFormScript: func() begin
-								local l1, l2;
+								local currentPersona, faxPhone;
 								self.text := Stringer([Array: fromFrame.name, $\n, fromFrame.company, $\n]);
-								if IsEntryAlias((l1 := GetUserConfig('currentPersona))) then begin
-										l1 := ResolveEntryAlias(l1)
+								if IsEntryAlias((currentPersona := GetUserConfig('currentPersona))) then begin
+										currentPersona := ResolveEntryAlias(currentPersona)
 									end;
-								if (not l1) then begin
+								if (not currentPersona) then begin
 										return nil
 									end;
-								if (if (l2 := GetRoot().cardfile:bcPhoneNumber(l1, 'faxPhone)) then StrFilled(l2[0])) then begin
-										self.text := Stringer([Array: self.text, MakeDisplayPhone(l2[0]), " fax\n"]);
-										if (if (l2 := GetRoot().cardfile:bcPhoneNumber(l1, 'workPhone)) then StrFilled(l2[0])) then begin
-												self.text := Stringer([Array: self.text, MakeDisplayPhone(l2[0]), " voice"])
+								if (if (faxPhone := GetRoot().cardfile:bcPhoneNumber(currentPersona, 'faxPhone)) then StrFilled(faxPhone[0])) then begin
+										self.text := Stringer([Array: self.text, MakeDisplayPhone(faxPhone[0]), " fax\n"]);
+										if (if (faxPhone := GetRoot().cardfile:bcPhoneNumber(currentPersona, 'workPhone)) then StrFilled(faxPhone[0])) then begin
+												self.text := Stringer([Array: self.text, MakeDisplayPhone(faxPhone[0]), " voice"])
 											end;
 										return nil
 									end;
-								(if (if (l2 := GetRoot().cardfile:bcPhoneNumber(l1, 'homefaxPhone)) then StrFilled(l2[0])) then begin
-										self.text := Stringer([Array: self.text, MakeDisplayPhone(l2[0]), " fax\n"]);
-										(if (if (l2 := GetRoot().cardfile:bcPhoneNumber(l1, 'homePhone)) then StrFilled(l2[0])) then (self.text := Stringer([Array: self.text, MakeDisplayPhone(l2[0]), " voice"])))
+								(if (if (faxPhone := GetRoot().cardfile:bcPhoneNumber(currentPersona, 'homefaxPhone)) then StrFilled(faxPhone[0])) then begin
+										self.text := Stringer([Array: self.text, MakeDisplayPhone(faxPhone[0]), " fax\n"]);
+										(if (if (faxPhone := GetRoot().cardfile:bcPhoneNumber(currentPersona, 'homePhone)) then StrFilled(faxPhone[0])) then (self.text := Stringer([Array: self.text, MakeDisplayPhone(faxPhone[0]), " voice"])))
 									end)
 							end
 						},
@@ -161,24 +161,24 @@ globalHeapvarwannabes := {
 				superSymbol: 'notes,
 				version: 1,
 				height: 70,
-				StringExtract: func(a1, a2) begin
-					local l1, l2, l3;
-					l1 := (if StrEqual((l1 := a1.|SoundPaper:NSG|.soundData.description), "00:00") then "No recording" else Stringer([Array: "Playing time:", " ", l1]));
-					if a1.data then begin
-							l2 := ExtractData(a1.data, "...", 50)
+				StringExtract: func(entry, nLines) begin
+					local l1, extractData2, text;
+					l1 := (if StrEqual((l1 := entry.|SoundPaper:NSG|.soundData.description), "00:00") then "No recording" else Stringer([Array: "Playing time:", " ", l1]));
+					if entry.data then begin
+							extractData2 := ExtractData(entry.data, "...", 50)
 						end;
-					if a1.title then begin
-							l3 := Stringer([Array: a1.title, " -- "])
+					if entry.title then begin
+							text := Stringer([Array: entry.title, " -- "])
 						end;
-					(l3 := (if l2 then Stringer([Array: l3, l2]) else Stringer([Array: l3, l1])))
+					(text := (if extractData2 then Stringer([Array: text, extractData2]) else Stringer([Array: text, l1])))
 				end,
-				TextScript: func(a1, a2) begin
-					notesText(a2.data)
+				TextScript: func(entry, target) begin
+					notesText(target.data)
 				end,
 				FillNewEntry: func(a1) begin
-					local l1;
-					l1 := {soundData: {sounds: nil, description: "00:00"}};
-					a1.|SoundPaper:NSG| := l1;
+					local frame2;
+					frame2 := {soundData: {sounds: nil, description: "00:00"}};
+					a1.|SoundPaper:NSG| := frame2;
 					a1.class := '|SoundPaper:NSG|;
 					a1.viewStationery := 'paperroll;
 					a1.height := self.height;
@@ -203,8 +203,8 @@ globalHeapvarwannabes := {
 					type: 'index,
 					indexPath: 'sorton,
 					validTest: func(a1) begin
-						local l1;
-						((((IsSubclass((l1 := ClassOf(a1)), 'person) or IsSubclass(l1, 'company)) or IsSubclass(l1, 'owner)) or (if IsSubclass(l1, 'group) then IsInstance(a1.members, '|nameRef.fax|))) or (l1 = 'frame))
+						local cls;
+						((((IsSubclass((cls := ClassOf(a1)), 'person) or IsSubclass(cls, 'company)) or IsSubclass(cls, 'owner)) or (if IsSubclass(cls, 'group) then IsInstance(a1.members, '|nameRef.fax|))) or (cls = 'frame))
 					end
 				}
 			},
@@ -223,26 +223,26 @@ globalHeapvarwannabes := {
 					type: 'index,
 					indexPath: 'sorton,
 					validTest: func(a1) begin
-						local l1;
-						((((IsSubclass((l1 := ClassOf(a1)), 'person) or IsSubclass(l1, 'company)) or IsSubclass(l1, 'owner)) or (if IsSubclass(l1, 'group) then IsInstance(a1.members, '|nameRef.email|))) or (l1 = 'frame))
+						local cls;
+						((((IsSubclass((cls := ClassOf(a1)), 'person) or IsSubclass(cls, 'company)) or IsSubclass(cls, 'owner)) or (if IsSubclass(cls, 'group) then IsInstance(a1.members, '|nameRef.email|))) or (cls = 'frame))
 					end
 				},
-				MakeNameRef: func(a1, a2) begin
-					local l1, l2, l3, l4;
-					l1 := inherited:MakeNameRef(a1, a2);
-					l2 := EntryFromObj(a1);
-					l1.email := (if IsInstance(l2, 'group) then l2.members else (if (if IsFrame(a1) then a1.email) then a1.email else (if l2 then (if (if (l3 := GetRoot().cardfile:bcEMailAddress(l2, preferredRouting)) then (Length(l3) > 0)) then begin
-										SortByClass(l3, preferredRouting, 'email);
-										(if IsFrame((l4 := l3[0])) then l4.email else l4)
+				MakeNameRef: func(frame2, cls) begin
+					local l1, entryFromObj2, bcEMailAddress, bcEMailAddres;
+					l1 := inherited:MakeNameRef(frame2, cls);
+					entryFromObj2 := EntryFromObj(frame2);
+					l1.email := (if IsInstance(entryFromObj2, 'group) then entryFromObj2.members else (if (if IsFrame(frame2) then frame2.email) then frame2.email else (if entryFromObj2 then (if (if (bcEMailAddress := GetRoot().cardfile:bcEMailAddress(entryFromObj2, preferredRouting)) then (Length(bcEMailAddress) > 0)) then begin
+										SortByClass(bcEMailAddress, preferredRouting, 'email);
+										(if IsFrame((bcEMailAddres := bcEMailAddress[0])) then bcEMailAddres.email else bcEMailAddres)
 									end))));
 					l1
 				end,
 				GetSuffix: func(a1) begin
-					local l1, l2;
-					if (l1 := self:Get(a1, 'email, nil)) then begin
-							l2 := ClassOf(l1);
-							if StrFilled((l2 := EmailSystems.emailText.(l2))) then begin
-									return ParamStr("(^0)", [Array: l2])
+					local email, cls;
+					if (email := self:Get(a1, 'email, nil)) then begin
+							cls := ClassOf(email);
+							if StrFilled((cls := EmailSystems.emailText.(cls))) then begin
+									return ParamStr("(^0)", [Array: cls])
 								end
 						end;
 					return nil
@@ -252,28 +252,28 @@ globalHeapvarwannabes := {
 						kLiteral_450465: SetClass(Clone("--"), '|string.noData|)
 					},
 					func(a1, a2, a3) begin
-						local l1, l2;
-						l1 := inherited:Get(a1, a2, a3);
+						local email, entryFromObj2;
+						email := inherited:Get(a1, a2, a3);
 						if (a2 = 'email) then begin
 								if (if (not (ObjEntryClass(a1) = 'group)) then a1.email) then begin
-										l1 := a1.email
+										email := a1.email
 									end;
-								if ((not l1) or IsInstance(l1, '|string.noData|)) then begin
-										l1 := (if (if (l1 := (if (l2 := EntryFromObj(a1)) then GetRoot().cardfile:bcEMailAddress(l2, preferredRouting))) then (Length(l1) > 0)) then begin
-												SortByClass(l1, preferredRouting, 'email);
-												l1[0].email
+								if ((not email) or IsInstance(email, '|string.noData|)) then begin
+										email := (if (if (email := (if (entryFromObj2 := EntryFromObj(a1)) then GetRoot().cardfile:bcEMailAddress(entryFromObj2, preferredRouting))) then (Length(email) > 0)) then begin
+												SortByClass(email, preferredRouting, 'email);
+												email[0].email
 											end else (if (a3 = 'text) then kLiteral_450465))
 									end
 							end;
-						l1
+						email
 					end),
-				GetItemRoutingFrame: func(a1) begin
-					{name: self:Get(a1, 'name, 'text), email: self:Get(a1, 'email, nil)}
+				GetItemRoutingFrame: func(item) begin
+					{name: self:Get(item, 'name, 'text), email: self:Get(item, 'email, nil)}
 				end,
-				DefaultOpenEditor: func(a1, a2, a3) begin
-					local l1, l2;
-					if (if (l2 := self:Get((l1 := a1.nameRef), primaryPath, 'text)) then (not IsInstance(l2, '|string.noData|))) then begin
-							editTitle := ParamStr("New E-Mail address for ^0", [Array: l2])
+				DefaultOpenEditor: func(a1, trackScrollingItem, a3) begin
+					local nameRef, text;
+					if (if (text := self:Get((nameRef := a1.nameRef), primaryPath, 'text)) then (not IsInstance(text, '|string.noData|))) then begin
+							editTitle := ParamStr("New E-Mail address for ^0", [Array: text])
 						end else begin
 							if (a1.fieldPath = 'name) then begin
 									editTitle := "Add Name"
@@ -285,52 +285,52 @@ globalHeapvarwannabes := {
 										end
 								end
 						end;
-					inherited:DefaultOpenEditor(a1, a2, a3)
+					inherited:DefaultOpenEditor(a1, trackScrollingItem, a3)
 				end,
-				MakePopup: func(a1, a2) begin
-					if (a2 <> 'email) then begin
+				MakePopup: func(a1, fieldPath) begin
+					if (fieldPath <> 'email) then begin
 							return nil
 						end;
-					if (if (l3 := GetRoot().cardfile:bcEMailAddress(EntryFromObj(a1), preferredRouting)) then ((l2 := Length(l3)) > 0)) then begin
-							SortByClass(l3, preferredRouting, 'email);
-							l1 := Array((l2 + 2), nil);
-							local l1;
-							local l2;
-							local l3;
-							(for l4 := 0 to (l2 - 1) do begin
-									local l7, l8;
-									l7 := l3[l4].email;
-									l8 := ParamStr("^0 (^1)", [Array: l7, EmailSystems.emailText.(ClassOf(l7))]);
-									l1[l4] := {value: l7, item: l8, pickable: true}
+					if (if (bcEMailAddress := GetRoot().cardfile:bcEMailAddress(EntryFromObj(a1), preferredRouting)) then ((count := Length(bcEMailAddress)) > 0)) then begin
+							SortByClass(bcEMailAddress, preferredRouting, 'email);
+							list := Array((count + 2), nil);
+							local list;
+							local count;
+							local bcEMailAddress;
+							(for i := 0 to (count - 1) do begin
+									local email, text;
+									email := bcEMailAddress[i].email;
+									text := ParamStr("^0 (^1)", [Array: email, EmailSystems.emailText.(ClassOf(email))]);
+									list[i] := {value: email, item: text, pickable: true}
 								end);
-							l1[l2] := 'pickseparator;
-							l1[(l2 + 1)] := {item: "New Address", value: 'OpenEditor, pickable: true}
+							list[count] := 'pickseparator;
+							list[(count + 1)] := {item: "New Address", value: 'OpenEditor, pickable: true}
 						end;
-					l1
+					list
 				end,
-				ModifyEntry: func(a1, a2) begin
-					(if (l1 := EntryFromObj(a1)) then begin
-							local l1;
-							(foreach l2 in a2 do begin
-									if (l2 = 'email) then begin
-											GetRoot().cardfile:AddCardData(l1, 'email, {email: a1.email})
+				ModifyEntry: func(nameRef, equivalent) begin
+					(if (entryFromObj2 := EntryFromObj(nameRef)) then begin
+							local entryFromObj2;
+							(foreach item in equivalent do begin
+									if (item = 'email) then begin
+											GetRoot().cardfile:AddCardData(entryFromObj2, 'email, {email: nameRef.email})
 										end else begin
-											self:ModifyEntryPath(a1, l1, l2)
+											self:ModifyEntryPath(nameRef, entryFromObj2, item)
 										end
 								end);
-							EntryChangeXmit(l1, 'entryChanged)
+							EntryChangeXmit(entryFromObj2, 'entryChanged)
 						end)
 				end,
-				NewEntry: func(a1, a2) begin
-					local l1, l2, l3;
-					l1 := GetRoot().cardfile;
-					l2 := a1.email;
+				NewEntry: func(a1, _context) begin
+					local cardfile, email, addcard;
+					cardfile := GetRoot().cardfile;
+					email := a1.email;
 					RemoveSlot(a1, 'email);
-					l1:AddCardData((l3 := l1:addcard((l3 := self:PrepareToAdd(a1)).class, l3)), 'email, {email: l2});
-					EntryChangeXmit(l3, 'entryAdded);
-					self:FixupPostAdd(a1, l3);
-					a1.email := l2;
-					l3
+					cardfile:AddCardData((addcard := cardfile:addcard((addcard := self:PrepareToAdd(a1)).class, addcard)), 'email, {email: email});
+					EntryChangeXmit(addcard, 'entryAdded);
+					self:FixupPostAdd(a1, addcard);
+					a1.email := email;
+					addcard
 				end
 			},
 			|nameRef.meetingPlace|: {
@@ -346,8 +346,8 @@ globalHeapvarwannabes := {
 					type: 'index,
 					indexPath: 'sorton,
 					validTest: func(a1) begin
-						local l1;
-						(if ((IsSubclass((l1 := ClassOf(a1)), 'company) or IsSubclass(l1, 'worksite)) or (if IsFrame(a1) then IsInstance(a1.sorton, 'company))) then (not IsSubclass(l1, 'group)))
+						local cls;
+						(if ((IsSubclass((cls := ClassOf(a1)), 'company) or IsSubclass(cls, 'worksite)) or (if IsFrame(a1) then IsInstance(a1.sorton, 'company))) then (not IsSubclass(cls, 'group)))
 					end
 				}
 			},
@@ -360,8 +360,8 @@ globalHeapvarwannabes := {
 				MakeNewEntry: func() begin
 					""
 				end,
-				StringExtract: func(a1, a2) begin
-					Substr(a1, 0, 30)
+				StringExtract: func(entry, nLines) begin
+					Substr(entry, 0, 30)
 				end,
 				_proto: @newtStationery
 			},
@@ -376,11 +376,11 @@ globalHeapvarwannabes := {
 				MakeNewEntry: func() begin
 					GetRoot().iobox:GetDefaultItem()
 				end,
-				SetupForm: func(a1, a2) begin
+				SetupForm: func(entry, a2) begin
 					nil
 				end,
-				StringExtract: func(a1, a2) begin
-					(if a1.title then a1.title else (if a1.appSymbol then Stringer([Array: "Item from:", " ", a1.appSymbol])))
+				StringExtract: func(entry, nLines) begin
+					(if entry.title then entry.title else (if entry.appSymbol then Stringer([Array: "Item from:", " ", entry.appSymbol])))
 				end,
 				_proto: @newtStationery
 			},
@@ -394,14 +394,14 @@ globalHeapvarwannabes := {
 				icon: nil,
 				version: 1,
 				metadata: nil,
-				SetupForm: func(a1, a2) begin
+				SetupForm: func(entry, a2) begin
 					nil
 				end,
-				StringExtract: func(a1, a2) begin
-					(if a1.title then a1.title else (if a1.text then (if (StrLen(a1.text) > 50) then Substr(a1.text, 0, 50) else a1.text) else "Untitled Mail"))
+				StringExtract: func(entry, nLines) begin
+					(if entry.title then entry.title else (if entry.text then (if (StrLen(entry.text) > 50) then Substr(entry.text, 0, 50) else entry.text) else "Untitled Mail"))
 				end,
-				TextScript: func(a1, a2) begin
-					(if a2.text then a2.text else (if IsFrame(a2.body) then a2.body.text else ""))
+				TextScript: func(entry, target) begin
+					(if target.text then target.text else (if IsFrame(target.body) then target.body.text else ""))
 				end
 			},
 			smartMail: smartMail
@@ -599,10 +599,10 @@ globalHeapvarwannabes := {
 					bounds: {left: 0, top: 0, right: 13, bottom: 12}
 				},
 				DoNotDisplay: func() begin
-					local l1, l2;
-					l1 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1]);
-					l2 := Gestalt('[Array: 33554444, [Array: struct, boolean], 1]);
-					(not ((if l1 then l1[0]) or (if l2 then l2[0])))
+					local gestalt2, gestalt3;
+					gestalt2 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1]);
+					gestalt3 := Gestalt('[Array: 33554444, [Array: struct, boolean], 1]);
+					(not ((if gestalt2 then gestalt2[0]) or (if gestalt3 then gestalt3[0])))
 				end,
 				stepChildren: [stepChildren:
 					inputSourcePicker,
@@ -620,12 +620,12 @@ globalHeapvarwannabes := {
 						_sound: nil,
 						maxValue: 255,
 						viewSetupFormScript: func() begin
-							local l1;
+							local inputGain;
 							inherited:?viewSetupFormScript();
-							if (not (l1 := GetUserConfig('inputGain))) then begin
-									l1 := 128
+							if (not (inputGain := GetUserConfig('inputGain))) then begin
+									inputGain := 128
 								end;
-							(if (viewValue <> l1) then SetValue(self, 'viewValue, l1))
+							(if (viewValue <> inputGain) then SetValue(self, 'viewValue, inputGain))
 						end,
 						trackSlider: func() begin
 							SetUserConfig('inputGain, viewValue)
@@ -916,8 +916,8 @@ globalHeapvarwannabes := {
 				end,
 				UseDefault: func() begin
 					self:CloseOpenPanel();
-					(foreach l1 in '[Array: letterSetSelection, lineAtATime, letterSpaceCursiveOption, speedCursiveOption, timeoutCursiveOption, wordsCursiveOption, lettersCursiveOption, lettersInFieldsOption, numbersCursiveOption, punctuationcursiveoption, remoteWriting, inkWordScaling, doAutoAdd, learningEnabledOption] do begin
-							RemoveSlot(userConfiguration, l1)
+					(foreach item in '[Array: letterSetSelection, lineAtATime, letterSpaceCursiveOption, speedCursiveOption, timeoutCursiveOption, wordsCursiveOption, lettersCursiveOption, lettersInFieldsOption, numbersCursiveOption, punctuationcursiveoption, remoteWriting, inkWordScaling, doAutoAdd, learningEnabledOption] do begin
+							RemoveSlot(userConfiguration, item)
 						end);
 					ReadCursiveOptions();
 					SetRemoteWriting(GetRemoteWriting());
@@ -969,13 +969,13 @@ globalHeapvarwannabes := {
 						useList: nil,
 						buttonClickScript: func() begin
 							local l1;
-							popup := (foreach l2 in (l1 := (useList := (if StrEqual("WREC", userConfiguration.currentwordrecognizer) then rosForms else paraForms))) collect l2.overview);
+							popup := (foreach item in (l1 := (useList := (if StrEqual("WREC", userConfiguration.currentwordrecognizer) then rosForms else paraForms))) collect item.overview);
 							AddArraySlot(popup, 'pickseparator);
 							AddArraySlot(popup, "Use default settings");
 							inherited:buttonClickScript()
 						end,
-						pickActionScript: func(a1) begin
-							if (a1 = (Length(popup) - 1)) then begin
+						pickActionScript: func(index) begin
+							if (index = (Length(popup) - 1)) then begin
 									self:UseDefault();
 									panel:RedoChildren();
 									if openPanel then begin
@@ -983,9 +983,9 @@ globalHeapvarwannabes := {
 										end
 								end else begin
 									self:CloseOpenPanel();
-									openPanel := OpenPrefsTo(useList[a1])
+									openPanel := OpenPrefsTo(useList[index])
 								end;
-							inherited:pickActionScript(a1)
+							inherited:pickActionScript(index)
 						end,
 						_proto: @protoPopupButton
 					},
@@ -1083,8 +1083,8 @@ globalHeapvarwannabes := {
 					bounds: {left: 0, top: 0, right: 8, bottom: 10}
 				},
 				viewSetupChildrenScript: func() begin
-					local l1;
-					(if (not (if (l1 := Gestalt('[Array: 33554439, [Array: struct, boolean], 1])) then l1[0])) then (backOff.viewFlags := 0))
+					local gestalt2;
+					(if (not (if (gestalt2 := Gestalt('[Array: 33554439, [Array: struct, boolean], 1])) then gestalt2[0])) then (backOff.viewFlags := 0))
 				end,
 				stepChildren: [stepChildren:
 					{
@@ -1138,7 +1138,7 @@ globalHeapvarwannabes := {
 						configPath: [pathExpr: 'userConfiguration, 'locale],
 						viewSetupFormScript: func() begin
 							self.items := international.locales;
-							self.labelCommands := (foreach l1 in international.locales collect l1.title);
+							self.labelCommands := (foreach item in international.locales collect item.title);
 							inherited:viewSetupFormScript()
 						end,
 						UndoAction: nil,
@@ -1148,37 +1148,37 @@ globalHeapvarwannabes := {
 							userConfiguration.letterSetSelection := a2;
 							(UndoAction := nil)
 						end,
-						LabelActionScript: func(a1) begin
+						LabelActionScript: func(index) begin
 							local newSortID, currentSortID;
 							AddUndoAction('setLabelScript2, [Array: vars.(configPath), userConfiguration.letterSetSelection]);
-							vars.(configPath) := items[a1].title;
-							(if ((l1 := SetLocale(items[a1].title)) <> nil) then begin
+							vars.(configPath) := items[index].title;
+							(if ((setLocale2 := SetLocale(items[index].title)) <> nil) then begin
 									ReadCursiveOptions();
 									localeChanged := true;
-									if (l2 := GetLocale().defaultPaperSize) then begin
-											local l1;
-											local l2;
-											(foreach l3, l4 in userConfiguration.paperSizes do begin
-													local l6;
-													if (if (l4.id = l2) then (userConfiguration.paperSize <> l4)) then begin
-															userConfiguration.paperSize := l4;
-															paper:pickActionScript(l3)
+									if (defaultPaperSize := GetLocale().defaultPaperSize) then begin
+											local setLocale2;
+											local defaultPaperSize;
+											(foreach key, value in userConfiguration.paperSizes do begin
+													local text;
+													if (if (value.id = defaultPaperSize) then (userConfiguration.paperSize <> value)) then begin
+															userConfiguration.paperSize := value;
+															paper:pickActionScript(key)
 														end
 												end)
 										end;
-									newSortID := l1.sortID;
+									newSortID := setLocale2.sortID;
 									currentSortID := GetSortID(nil);
-									(if (newSortID <> currentSortID) then (if ModalConfirm((l6 := ParamStr("The selected locale \u201C\u^0\u201D\u uses a different sorting order; you may choose to use it to rearrange your data.  The conversion process may take a few minutes.  Would you like to switch to this sorting order?", [Array: l1.title])), 'yesNo) then begin
+									(if (newSortID <> currentSortID) then (if ModalConfirm((text := ParamStr("The selected locale \u201C\u^0\u201D\u uses a different sorting order; you may choose to use it to rearrange your data.  The conversion process may take a few minutes.  Would you like to switch to this sorting order?", [Array: setLocale2.title])), 'yesNo) then begin
 												SetSortID(newSortID);
 												SetUserConfig('sortID, newSortID);
 												DoProgress('vBarber, {primary: nil, statusText: "Changing Sorting Order", barber: true, closeBox: nil}, func(a1) begin
-													local l1;
-													local l2;
-													(foreach l3 in (l2 := GetStores()) do begin
-															if (not l3:IsReadOnly()) then begin
-																	(foreach l5 in (l1 := l3:GetSoupNames()) do begin
-																			a1:SetStatus('vBarber, {titleText: ParamStr("Building indexes in ^0\u2026\u", [Array: l5]), barber: true});
-																			self:RebuildIndexes(l3:GetSoup(l5), currentSortID, newSortID, a1)
+													local soupNames;
+													local stores;
+													(foreach item in (stores := GetStores()) do begin
+															if (not item:IsReadOnly()) then begin
+																	(foreach item2 in (soupNames := item:GetSoupNames()) do begin
+																			a1:SetStatus('vBarber, {titleText: ParamStr("Building indexes in ^0\u2026\u", [Array: item2]), barber: true});
+																			self:RebuildIndexes(item:GetSoup(item2), currentSortID, newSortID, a1)
 																		end)
 																end else nil
 														end)
@@ -1188,17 +1188,17 @@ globalHeapvarwannabes := {
 											end))
 								end)
 						end,
-						RebuildIndexes: func(soup, a2, a3, busybox) begin
+						RebuildIndexes: func(soup, currentSortID, newSortID, busybox) begin
 							local newIndexSpec, indexSpec;
 							(foreach indexSpec in (indexes := soup:GetIndexes()) do begin
-									local l2;
-									if (if (a3 <> indexSpec.sortID) then (indexSpec.type = 'string)) then begin
+									local store;
+									if (if (newSortID <> indexSpec.sortID) then (indexSpec.type = 'string)) then begin
 											newIndexSpec := Clone(indexSpec);
-											if (not a3) then begin
+											if (not newSortID) then begin
 													RemoveSlot(newIndexSpec, 'sortID)
 												end;
-											l2 := soup:GetStore();
-											l2:AtomicAction(func() begin
+											store := soup:GetStore();
+											store:AtomicAction(func() begin
 												soup:RemoveIndex(indexSpec.path);
 												busybox:SetStatus('vBarber, {barber: true});
 												soup:AddIndex(newIndexSpec)
@@ -1215,13 +1215,13 @@ globalHeapvarwannabes := {
 						configPath: [pathExpr: 'userConfiguration, 'Keyboard],
 						viewSetupFormScript: func() begin
 							self.items := international.keyboards;
-							self.labelCommands := (foreach l1 in international.keyboards collect l1.title);
+							self.labelCommands := (foreach item in international.keyboards collect item.title);
 							inherited:viewSetupFormScript()
 						end,
-						LabelActionScript: func(a1) begin
+						LabelActionScript: func(index) begin
 							AddUndoAction('setLabelScript, [Array: vars.(configPath)]);
-							vars.(configPath) := items[a1].title;
-							(international.Keyboard := items[a1])
+							vars.(configPath) := items[index].title;
+							(international.Keyboard := items[index])
 						end,
 						debug: 20235,
 						_proto: @protoPreferencesPopup
@@ -1346,12 +1346,12 @@ globalHeapvarwannabes := {
 						popup: nil,
 						removeModemIndex: nil,
 						viewSetupFormScript: func() begin
-							local l1;
-							(if (Length((l1 := GetAllSoupBasedModemSetUpNames())) > 0) then (popup := l1) else (self.viewFlags := 0))
+							local allSoupBasedModemSetUpNames;
+							(if (Length((allSoupBasedModemSetUpNames := GetAllSoupBasedModemSetUpNames())) > 0) then (popup := allSoupBasedModemSetUpNames) else (self.viewFlags := 0))
 						end,
-						pickActionScript: func(a1) begin
-							inherited:pickActionScript(a1);
-							removeModemIndex := a1;
+						pickActionScript: func(index) begin
+							inherited:pickActionScript(index);
+							removeModemIndex := index;
 							self:Confirm("Modem", ParamStr("Are you sure you want to remove the ^0 Modem Setup?", [Array: popup[removeModemIndex]]), self, 'confirmScript)
 						end,
 						confirmScript: compile(
@@ -1359,9 +1359,9 @@ globalHeapvarwannabes := {
 								kLiteral_3c5f05: "28.8 and faster"
 							},
 							func(a1) begin
-								local l1;
+								local currentModem;
 								(if a1 then begin
-										if (if (l1 := GetUserConfig('currentModem)) then StrEqual(popup[removeModemIndex], l1)) then begin
+										if (if (currentModem := GetUserConfig('currentModem)) then StrEqual(popup[removeModemIndex], currentModem)) then begin
 												SetUserConfig('currentModem, kLiteral_3c5f05);
 												modemPicker:UpdateText(kLiteral_3c5f05)
 											end;
@@ -1384,8 +1384,8 @@ globalHeapvarwannabes := {
 				overview: alarm_2,
 				icon: @alarmIconTinyBitmap,
 				viewSetupFormScript: func() begin
-					local l1;
-					(if (if (l1 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1])) then l1[2]) then (useSystemVolume.viewFlags := 0))
+					local gestalt2;
+					(if (if (gestalt2 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1])) then gestalt2[2]) then (useSystemVolume.viewFlags := 0))
 				end,
 				stepChildren: [stepChildren:
 					alarmSoundPicker,
@@ -1499,15 +1499,15 @@ globalHeapvarwannabes := {
 					viewDefHeight: 50,
 					protection: 'private,
 					version: 1,
-					MinimalBounds: func(a1) begin
-						l1 := {left: 0, top: 0, right: 0, bottom: 0};
-						if a1.data then begin
-								local l1;
-								(foreach l2 in a1.data do begin
-										l1 := UnionRect(l1, l2.viewBounds)
+					MinimalBounds: func(target) begin
+						frame2 := {left: 0, top: 0, right: 0, bottom: 0};
+						if target.data then begin
+								local frame2;
+								(foreach item in target.data do begin
+										frame2 := UnionRect(frame2, item.viewBounds)
 									end)
 							end;
-						l1
+						frame2
 					end,
 					debug: "soundDefaultViewDef",
 					viewChildren: [viewChildren:
@@ -1521,23 +1521,23 @@ globalHeapvarwannabes := {
 								HasSounds: func() begin
 									return (if (if sounds then IsArray(sounds)) then (Length(sounds) > 0))
 								end,
-								GetTimeString: func(a1) begin
-									local l1, l2, l3, l4;
-									l1 := floor((a1 + 0.5));
-									l2 := floor((a1 / 60));
-									l1 := (l1 mod 60);
-									l3 := Stringer([Array: (if (l2 < 10) then "0"), l2]);
-									l4 := Stringer([Array: (if (l1 < 10) then "0"), l1]);
-									return Stringer([Array: (if (l2 < 10) then "0"), l2, ":", (if (l1 < 10) then "0"), l1])
+								GetTimeString: func(elapsedTime) begin
+									local floor2, floor3, text, text2;
+									floor2 := floor((elapsedTime + 0.5));
+									floor3 := floor((elapsedTime / 60));
+									floor2 := (floor2 mod 60);
+									text := Stringer([Array: (if (floor3 < 10) then "0"), floor3]);
+									text2 := Stringer([Array: (if (floor2 < 10) then "0"), floor2]);
+									return Stringer([Array: (if (floor3 < 10) then "0"), floor3, ":", (if (floor2 < 10) then "0"), floor2])
 								end,
-								RecordCompletion: func(a1) begin
-									self.sounds := a1;
+								RecordCompletion: func(sounds) begin
+									self.sounds := sounds;
 									if self:HasSounds() then begin
 											l1 := 0;
-											if a1 then begin
+											if sounds then begin
 													local l1;
-													(foreach l2 in a1 do begin
-															l1 := (l1 + l2:GetPlayingTime())
+													(foreach item in sounds do begin
+															l1 := (l1 + item:GetPlayingTime())
 														end)
 												end;
 											target.|SoundPaper:NSG|.soundData.description := self:GetTimeString(l1);
@@ -1545,7 +1545,7 @@ globalHeapvarwannabes := {
 										end else begin
 											RemoveSlot(soundDescription, 'text)
 										end;
-									SetValue(self, 'sounds, a1);
+									SetValue(self, 'sounds, sounds);
 									RefreshViews()
 								end,
 								path: nil,
@@ -1559,8 +1559,8 @@ globalHeapvarwannabes := {
 									inherited:?viewQuitScript()
 								end,
 								viewSetupDoneScript: func() begin
-									local l1;
-									l1 := self:TargetData();
+									local targetData;
+									targetData := self:TargetData();
 									self:Retarget()
 								end,
 								TargetData: func() begin
@@ -1568,28 +1568,28 @@ globalHeapvarwannabes := {
 								end,
 								Retarget: func() begin
 									inRetarget := true;
-									if (l2 := (l1 := self:TargetData()).sounds) then begin
-											local l1;
+									if (l2 := (targetData := self:TargetData()).sounds) then begin
+											local targetData;
 											local l2;
-											(foreach l3 in l2 do begin
-													if (not HasPath(l3, '_proto)) then begin
-															l3._proto := @protoSoundFrame
+											(foreach item in l2 do begin
+													if (not HasPath(item, '_proto)) then begin
+															item._proto := @protoSoundFrame
 														end
 												end)
 										end;
 									SetValue(self, 'sounds, l2);
 									SetValue(recorder, 'sounds, l2);
-									SetValue(soundDescription, 'text, l1.description);
+									SetValue(soundDescription, 'text, targetData.description);
 									(inRetarget := nil)
 								end,
-								jamFromEntry: func(a1) begin
+								jamFromEntry: func(resolveEntryAlias) begin
 									(if jamSlot then begin
 											target.(path) := nil;
-											(if a1 then (target.(path) := a1.(jamSlot)))
+											(if resolveEntryAlias then (target.(path) := resolveEntryAlias.(jamSlot)))
 										end)
 								end,
-								viewChangedScript: func(a1, a2) begin
-									(if (if (not inRetarget) then (a1 = 'sounds)) then begin
+								viewChangedScript: func(slot, view) begin
+									(if (if (not inRetarget) then (slot = 'sounds)) then begin
 											target.(path) := {description: soundDescription.text, sounds: self.sounds};
 											self:StartFlush()
 										end)
@@ -1658,8 +1658,8 @@ globalHeapvarwannabes := {
 					viewSetupFormScript: func() begin
 						(viewLineSpacing := FontHeight((viewFont := GetUserConfig('mailFont))))
 					end,
-					viewChangedScript: func(a1, a2) begin
-						(if (a1 = 'text) then (fields.edited := true))
+					viewChangedScript: func(slot, view) begin
+						(if (slot = 'text) then (fields.edited := true))
 					end,
 					debug: 757625
 				},
@@ -1674,10 +1674,10 @@ globalHeapvarwannabes := {
 						nil
 					end,
 					viewSetupFormScript: func() begin
-						local l1;
+						local mailFont;
 						inherited:viewSetupFormScript();
-						l1 := GetUserConfig('mailFont);
-						self.data := [Array: {_proto: @protoParagraph, viewBounds: SetBounds(0, 0, 636, 100), viewStationery: 'para, text: target, viewFont: l1}];
+						mailFont := GetUserConfig('mailFont);
+						self.data := [Array: {_proto: @protoParagraph, viewBounds: SetBounds(0, 0, 636, 100), viewStationery: 'para, text: target, viewFont: mailFont}];
 						(self.reflowStart := 0)
 					end,
 					printNextPageScript: func() begin
@@ -1694,10 +1694,10 @@ globalHeapvarwannabes := {
 								(self.viewBounds := self:Parent():LocalBox())
 							end,
 							viewSetupChildrenScript: func() begin
-								local l1;
+								local mailFont;
 								if (if (not kids) then data) then begin
-										l1 := GetUserConfig('mailFont);
-										kids := ReFlow(data, {reflowFont: l1, unistyle: nil, graphicsGutter: 8, textGutter: -8, viewLineSpacing: FontHeight(l1)}, fields.targetBox, self:LocalBox())
+										mailFont := GetUserConfig('mailFont);
+										kids := ReFlow(data, {reflowFont: mailFont, unistyle: nil, graphicsGutter: 8, textGutter: -8, viewLineSpacing: FontHeight(mailFont)}, fields.targetBox, self:LocalBox())
 									end;
 								(if kids then (self.stepChildren := ArrayMunger([Array: ], 0, 0, kids, reflowStart, nil)))
 							end,
@@ -1787,9 +1787,9 @@ globalHeapvarwannabes := {
 						tabValues: nil,
 						tabDown: 1,
 						tabSetup: func(a1, a2, a3) begin
-							local l1;
-							l1 := self:Parent():LocalBox();
-							(a1.viewBounds.bottom := (l1.bottom - 15))
+							local box;
+							box := self:Parent():LocalBox();
+							(a1.viewBounds.bottom := (box.bottom - 15))
 						end,
 						viewSetupFormScript: func() begin
 							inherited:viewSetupFormScript();
@@ -1939,30 +1939,30 @@ globalHeapvarwannabes := {
 							]
 						},
 						viewSetupChildrenScript: func() begin
-							l1 := self:LocalBox();
+							box := self:LocalBox();
 							tabAcross := numDays;
-							tabWidths := ((viewWidth := l1.right) div tabAcross);
+							tabWidths := ((viewWidth := box.right) div tabAcross);
 							tabValues := selectedDates;
 							self.stepChildren := self:LayoutTable(self, 0, 0);
-							l2 := tabValues[0];
+							tabValue := tabValues[0];
 							l3 := (tabValues[(numDays - 1)] + 1440);
-							l4 := GetAllMeetings(MeetingSoup, RepeatSoup, l2, l3);
+							allMeetings := GetAllMeetings(MeetingSoup, RepeatSoup, tabValue, l3);
 							l5 := 0;
 							l6 := 0;
 							self.SubKids := Array(numDays, nil);
-							local l1;
-							local l2;
+							local box;
+							local tabValue;
 							local l3;
-							local l4;
+							local allMeetings;
 							local l5;
 							local l6;
-							local l7;
+							local mtgStartDate;
 							local l8;
-							(if l4 then (for l9 := 0 to (numDays - 1) do begin
-										l8 := (tabValues[l9] + 1440);
-										if ((l7 := BSearchRight(l4, l8, '|<|, 'mtgStartDate)) >= l5) then begin
-												SubKids[l9] := ArrayMunger([Array: ], 0, nil, l4, l5, ((l7 - l5) + 1));
-												l5 := (l7 + 1)
+							(if allMeetings then (for i := 0 to (numDays - 1) do begin
+										l8 := (tabValues[i] + 1440);
+										if ((mtgStartDate := BSearchRight(allMeetings, l8, '|<|, 'mtgStartDate)) >= l5) then begin
+												SubKids[i] := ArrayMunger([Array: ], 0, nil, allMeetings, l5, ((mtgStartDate - l5) + 1));
+												l5 := (mtgStartDate + 1)
 											end
 									end))
 						end,
@@ -1977,11 +1977,11 @@ globalHeapvarwannabes := {
 								DateSpecLong: 41705,
 								DateSpecShort: 745,
 								viewSetupFormScript: func() begin
-									local l1, l2, l3;
-									l1 := Length(selectedDates);
-									l2 := selectedDates[0];
-									l3 := selectedDates[(l1 - 1)];
-									(if (l1 > 1) then (self.text := ParamStr("^0 ^1 ^2", [Array: LongDateStr(l2, DateSpecShort), "-", LongDateStr(l3, DateSpecShort)])) else (self.text := LongDateStr(l2, DateSpecLong)))
+									local count, selectedDate, selectedDate2;
+									count := Length(selectedDates);
+									selectedDate := selectedDates[0];
+									selectedDate2 := selectedDates[(count - 1)];
+									(if (count > 1) then (self.text := ParamStr("^0 ^1 ^2", [Array: LongDateStr(selectedDate, DateSpecShort), "-", LongDateStr(selectedDate2, DateSpecShort)])) else (self.text := LongDateStr(selectedDate, DateSpecLong)))
 								end
 							},
 							{
@@ -1997,11 +1997,11 @@ globalHeapvarwannabes := {
 					},
 					margins: {left: 50, top: 50, right: 50, bottom: 10},
 					TextScript: 'oneDayText,
-					SetupItem: func(a1, a2) begin
-						inherited:SetupItem(a1, a2);
-						(a1.title := title)
+					SetupItem: func(fields, frame2) begin
+						inherited:SetupItem(fields, frame2);
+						(fields.title := title)
 					end,
-					CountPages: func(a1, a2) begin
+					CountPages: func(fields, target) begin
 						1
 					end,
 					_proto: @coverPageFormat
@@ -2022,16 +2022,16 @@ globalHeapvarwannabes := {
 									self:CarefulCreate(oldShapes, l1)
 								end;
 							local l1;
-							(if (if selectedDates then (Length(selectedDates) > 0)) then (foreach l2 in selectedDates do begin
-										local l4;
+							(if (if selectedDates then (Length(selectedDates) > 0)) then (foreach item in selectedDates do begin
+										local toDo;
 										if (not Header) then begin
 												Header := true;
-												self:CarefulCreate(self:GetDateHeader(l2, yOffset, pageWidth), l2)
+												self:CarefulCreate(self:GetDateHeader(item, yOffset, pageWidth), item)
 											end;
 										if (not todos) then begin
 												todos := true;
-												if (l4 := GetRoot().calendar:GetToDo()) then begin
-														self:CarefulCreate(l4:GetToDoShapes(l2, yOffset, pageWidth, bodyFont), l2)
+												if (toDo := GetRoot().calendar:GetToDo()) then begin
+														self:CarefulCreate(toDo:GetToDoShapes(item, yOffset, pageWidth, bodyFont), item)
 													end
 											end;
 										Header := nil;
@@ -2041,9 +2041,9 @@ globalHeapvarwannabes := {
 						end
 					},
 					margins: {left: 50, top: 50, right: 50, bottom: 10},
-					SetupItem: func(a1, a2) begin
-						inherited:SetupItem(a1, a2);
-						(a1.title := title)
+					SetupItem: func(fields, frame2) begin
+						inherited:SetupItem(fields, frame2);
+						(fields.title := title)
 					end,
 					_proto: @coverPageFormat
 				},
@@ -2055,9 +2055,9 @@ globalHeapvarwannabes := {
 					symbol: 'AgendaListPrintFormat,
 					mainFormat: mainFormatProto,
 					margins: {left: 50, top: 50, right: 50, bottom: 10},
-					SetupItem: func(a1, a2) begin
-						inherited:SetupItem(a1, a2);
-						(a1.title := title)
+					SetupItem: func(fields, frame2) begin
+						inherited:SetupItem(fields, frame2);
+						(fields.title := title)
 					end,
 					_proto: @coverPageFormat
 				},
@@ -2070,9 +2070,9 @@ globalHeapvarwannabes := {
 					mainFormat: {_proto: mainFormatProto, numDays: 7},
 					margins: {left: 50, top: 50, right: 50, bottom: 10},
 					TextScript: 'weekText,
-					SetupItem: func(a1, a2) begin
-						inherited:SetupItem(a1, a2);
-						(a1.title := title)
+					SetupItem: func(fields, frame2) begin
+						inherited:SetupItem(fields, frame2);
+						(fields.title := title)
 					end,
 					_proto: @coverPageFormat
 				}
@@ -2103,9 +2103,9 @@ globalHeapvarwannabes := {
 							(repeatingInstance := Clone(protoInstanceOfRepeatingMeeting))
 						end,
 						viewSetupDoneScript: func() begin
-							local l1;
-							pageHeight := (((l1 := self:LocalBox()).bottom - 12) - 4);
-							pageWidth := l1.right;
+							local box;
+							pageHeight := (((box := self:LocalBox()).bottom - 12) - 4);
+							pageWidth := box.right;
 							self:CreateShapes()
 						end,
 						viewQuitScript: func() begin
@@ -2123,55 +2123,55 @@ globalHeapvarwannabes := {
 						end,
 						CreateShapes: func() begin
 							drawShapes := [Array: ];
-							l4 := nil;
+							instanceTime2 := nil;
 							l5 := 0;
-							l6 := GetRoot().calendar:GetToDo();
-							local l1;
-							local l2;
-							local l3;
-							local l4;
+							toDo := GetRoot().calendar:GetToDo();
+							local exception;
+							local singleEventShape;
+							local dateHeader;
+							local instanceTime2;
 							local l5;
-							local l6;
-							(for l7 := cursorIndex to (cursorLength - 1) do begin
-									local l10, l11, l12, l13, l14;
-									if (l10 := cursor[l7]).entryAlias then begin
-											if (l11 := ResolveEntryAlias(l10.entryAlias)) then begin
-													if l11.repeatType then begin
-															if (not (l1 := self:FindException(l10.instanceTime, l11))) then begin
-																	(l1 := repeatingInstance).viewStationery := l11.viewStationery;
-																	l1.mtgStartDate := l10.instanceTime;
-																	l1.repeatTemplate := l11
+							local toDo;
+							(for i := cursorIndex to (cursorLength - 1) do begin
+									local cursorItem, resolveEntryAlias2, taskShapes, l13, instanceTime;
+									if (cursorItem := cursor[i]).entryAlias then begin
+											if (resolveEntryAlias2 := ResolveEntryAlias(cursorItem.entryAlias)) then begin
+													if resolveEntryAlias2.repeatType then begin
+															if (not (exception := self:FindException(cursorItem.instanceTime, resolveEntryAlias2))) then begin
+																	(exception := repeatingInstance).viewStationery := resolveEntryAlias2.viewStationery;
+																	exception.mtgStartDate := cursorItem.instanceTime;
+																	exception.repeatTemplate := resolveEntryAlias2
 																end
 														end else begin
-															l1 := l11
+															exception := resolveEntryAlias2
 														end;
-													if (l1.viewStationery = 'cribNote) then begin
-															l2 := self:GetSingleEventShape(l1, l5, pageWidth)
+													if (exception.viewStationery = 'cribNote) then begin
+															singleEventShape := self:GetSingleEventShape(exception, l5, pageWidth)
 														end else begin
-															l2 := self:GetSingleMeetingShape(l1, l5, pageWidth)
+															singleEventShape := self:GetSingleMeetingShape(exception, l5, pageWidth)
 														end
 												end
 										end else begin
-											l2 := (l12 := l6:GetTaskShapes(nil, l10.topic, l5, pageWidth, bodyFont)).shapes
+											singleEventShape := (taskShapes := toDo:GetTaskShapes(nil, cursorItem.topic, l5, pageWidth, bodyFont)).shapes
 										end;
-									l13 := (ShapeBounds(l2).bottom + 2);
-									l14 := ((l14 := l10.instanceTime) - (l14 mod 1440));
-									if (l4 <> l14) then begin
-											l3 := self:GetDateHeader((l4 := l14), l5, pageWidth);
-											OffsetShape(l2, 0, headerHt);
+									l13 := (ShapeBounds(singleEventShape).bottom + 2);
+									instanceTime := ((instanceTime := cursorItem.instanceTime) - (instanceTime mod 1440));
+									if (instanceTime2 <> instanceTime) then begin
+											dateHeader := self:GetDateHeader((instanceTime2 := instanceTime), l5, pageWidth);
+											OffsetShape(singleEventShape, 0, headerHt);
 											l5 := (l13 + headerHt)
 										end else begin
-											l3 := nil;
+											dateHeader := nil;
 											l5 := l13
 										end;
 									if (l13 <= pageHeight) then begin
-											if l3 then begin
-													ArrayInsert(drawShapes, l3, 0)
+											if dateHeader then begin
+													ArrayInsert(drawShapes, dateHeader, 0)
 												end;
-											ArrayInsert(drawShapes, l2, 0);
+											ArrayInsert(drawShapes, singleEventShape, 0);
 											indexFirstShapeThatDidntFit := nil
 										end else begin
-											indexFirstShapeThatDidntFit := l7;
+											indexFirstShapeThatDidntFit := i;
 											break
 										end
 								end)
@@ -2180,9 +2180,9 @@ globalHeapvarwannabes := {
 					},
 					margins: {left: 50, top: 50, right: 50, bottom: 10},
 					usesCursors: true,
-					SetupItem: func(a1, a2) begin
-						inherited:SetupItem(a1, a2);
-						(a1.title := title)
+					SetupItem: func(fields, frame2) begin
+						inherited:SetupItem(fields, frame2);
+						(fields.title := title)
 					end,
 					_proto: @coverPageFormat
 				},
@@ -2233,10 +2233,10 @@ globalHeapvarwannabes := {
 					viewLineSpacing: 14,
 					viewFont: tsSimple + tsSize(10),
 					viewSetupChildrenScript: func() begin
-						local l1, l2;
+						local mailFont, l2;
 						(if fields then begin
-								l1 := TextBounds(fields.text, {font: GetUserConfig('mailFont)}, SetBounds(0, 0, 636, 0));
-								fields.height := l1.bottom;
+								mailFont := TextBounds(fields.text, {font: GetUserConfig('mailFont)}, SetBounds(0, 0, 636, 0));
+								fields.height := mailFont.bottom;
 								if ((l2 := (if fields.package then GetPkgRefInfo(fields.package))) = nil) then begin
 										l2 := (if (if target then target.package) then GetPkgRefInfo(target.package))
 									end;
@@ -2246,7 +2246,7 @@ globalHeapvarwannabes := {
 								if l2 then begin
 										filename := l2.title
 									end;
-								(self.viewChildren := [Array: {viewBounds: l1, _proto: @protoParagraph, viewStationery: 'para, text: (if (l2 = nil) then "No package information available." else ParamStr("Package information:\n\nName: ^0\nSize: ^1 bytes\n^2", [Array: filename, l2.size, l2.copyright])), viewFont: GetUserConfig('mailFont)}])
+								(self.viewChildren := [Array: {viewBounds: mailFont, _proto: @protoParagraph, viewStationery: 'para, text: (if (l2 = nil) then "No package information available." else ParamStr("Package information:\n\nName: ^0\nSize: ^1 bytes\n^2", [Array: filename, l2.size, l2.copyright])), viewFont: GetUserConfig('mailFont)}])
 							end else (self.viewChildren := [Array: ]))
 					end,
 					viewSetupFormScript: func() begin
@@ -2260,36 +2260,36 @@ globalHeapvarwannabes := {
 					sizeLimit: 0,
 					showMessage: nil,
 					dataTypes: [|Array|: 'frame],
-					SetupItem: func(a1, a2) begin
+					SetupItem: func(fields, frame2) begin
 						local l1;
-						if (a2.target = nil) then begin
+						if (frame2.target = nil) then begin
 								return nil
 							end;
-						if (l1 := (if a2.target.package then GetPkgRefInfo(a2.target.package))) then begin
-								a1.title := l1.title
+						if (l1 := (if frame2.target.package then GetPkgRefInfo(frame2.target.package))) then begin
+								fields.title := l1.title
 							end;
-						inherited:SetupItem(a1, a2)
+						inherited:SetupItem(fields, frame2)
 					end,
-					TargetSize: func(a1) begin
+					TargetSize: func(frame2) begin
 						local l1;
-						(if (l1 := (if a1.target.package then GetPkgRefInfo(a1.target.package))) then l1.size)
+						(if (l1 := (if frame2.target.package then GetPkgRefInfo(frame2.target.package))) then l1.size)
 					end,
-					MakeBodyAlias: func(a1) begin
-						local l1, l2, l3;
-						if ((a1.target = nil) or (a1.target.package = nil)) then begin
+					MakeBodyAlias: func(frame2) begin
+						local pkgRefInfo, packageEntry, entryAlias;
+						if ((frame2.target = nil) or (frame2.target.package = nil)) then begin
 								return nil
 							end;
-						l2 := GetPackageEntry((l1 := GetPkgRefInfo(a1.target.package)).title, l1.store);
-						if l1 then begin
-								if (l3 := MakeEntryAlias(l2)) then begin
-										return {class: 'packageFrame, _ioAlias: l3}
+						packageEntry := GetPackageEntry((pkgRefInfo := GetPkgRefInfo(frame2.target.package)).title, pkgRefInfo.store);
+						if pkgRefInfo then begin
+								if (entryAlias := MakeEntryAlias(packageEntry)) then begin
+										return {class: 'packageFrame, _ioAlias: entryAlias}
 									end
 							end;
 						nil
 					end,
-					ResolveBody: func(a1) begin
+					ResolveBody: func(fields) begin
 						local l1;
-						(if (if (l1 := inherited:ResolveBody(a1)) then l1.pkgRef) then {class: 'packageFrame, package: l1.pkgRef} else return l1)
+						(if (if (l1 := inherited:ResolveBody(fields)) then l1.pkgRef) then {class: 'packageFrame, package: l1.pkgRef} else return l1)
 					end,
 					_proto: @targetFrameFormat
 				}
@@ -2328,24 +2328,24 @@ globalHeapvarwannabes := {
 						a1
 					end,
 					viewSetupChildrenScript: func() begin
-						local l1, l2;
+						local fields2, mailFont;
 						(if fields then begin
-								l1 := fields;
+								fields2 := fields;
 								if (if (if (not fields.text) then fields.body) then fields.body.text) then begin
-										l1 := fields.body;
+										fields2 := fields.body;
 										inBody := true
 									end;
-								l2 := TextBounds(l1.text, {font: GetUserConfig('mailFont)}, SetBounds(0, 0, 636, 0));
-								l1.height := l2.bottom;
-								(self.viewChildren := [Array: {viewBounds: l2, _proto: @protoParagraph, viewStationery: 'para, text: l1.text, viewFont: GetUserConfig('mailFont)}])
+								mailFont := TextBounds(fields2.text, {font: GetUserConfig('mailFont)}, SetBounds(0, 0, 636, 0));
+								fields2.height := mailFont.bottom;
+								(self.viewChildren := [Array: {viewBounds: mailFont, _proto: @protoParagraph, viewStationery: 'para, text: fields2.text, viewFont: GetUserConfig('mailFont)}])
 							end else (self.viewChildren := [Array: ]))
 					end,
 					viewQuitScript: func() begin
-						local l1, l2;
+						local l1, notesText2;
 						(if (not (((l1 := (if inBody then fields.body else fields)).state = 'Read) or (l1.state = 'Received))) then begin
-								l2 := notesText(self:ChildViewFrames());
-								if (if (not (l1.text = l2)) then (((not l1.text) or (not l2)) or (StrExactCompare(l1.text, l2) <> 0))) then begin
-										l1.text := l2;
+								notesText2 := notesText(self:ChildViewFrames());
+								if (if (not (l1.text = notesText2)) then (((not l1.text) or (not notesText2)) or (StrExactCompare(l1.text, notesText2) <> 0))) then begin
+										l1.text := notesText2;
 										l1.edited := true
 									end;
 								(if (if (if l1.edited then IsSoupEntry(fields)) then FrameDirty(fields)) then self:itemchanged(fields, nil))
@@ -2356,10 +2356,10 @@ globalHeapvarwannabes := {
 						height := self:Parent():LocalBox().bottom;
 						((viewBounds := Clone(viewBounds)).bottom := ((height div viewLineSpacing) * viewLineSpacing))
 					end,
-					viewChangedScript: func(a1, a2) begin
+					viewChangedScript: func(slot, view) begin
 						local l1;
 						l1 := (if inBody then fields.body else fields);
-						(if (a1 = 'text) then (l1.edited := true))
+						(if (slot = 'text) then (l1.edited := true))
 					end,
 					debug: "MailViewDef"
 				},
@@ -2381,16 +2381,16 @@ globalHeapvarwannabes := {
 							nil
 						end,
 						viewSetupFormScript: func() begin
-							local l1, l2, l3, l4, l5, l6, l7, l8;
+							local mailFont2, mailFont, l3, l4, box, l6, textHeader, l8;
 							inherited:viewSetupFormScript();
-							l2 := FontHeight((l1 := SetFontSize((l1 := GetUserConfig('mailFont)), 10)));
+							mailFont := FontHeight((mailFont2 := SetFontSize((mailFont2 := GetUserConfig('mailFont)), 10)));
 							l3 := 4;
-							l5 := self:GlobalBox();
-							viewBounds := SetBounds(max((60 - l5.left), 0), max((60 - l5.top), 0), (viewBounds.right - 30), (viewBounds.bottom - 30));
-							l6 := ((l5.right - l5.left) - 6);
-							l7 := GetRoot().mailSlip:TextHeader(target);
-							l8 := ((l3 := (((4 + Length(target.toRef)) + Length(target.cc)) + Length(target.bcc))) * l2);
-							self.data := [Array: {_proto: @protoParagraph, viewBounds: SetBounds(0, 0, (l6 - 4), l8), viewStationery: 'para, text: l7, viewFont: l1}, {_proto: @protoParagraph, viewBounds: RelBounds(0, (l8 + l2), (l6 - 4), l2), viewStationery: 'para, text: target.text, viewFont: l1}];
+							box := self:GlobalBox();
+							viewBounds := SetBounds(max((60 - box.left), 0), max((60 - box.top), 0), (viewBounds.right - 30), (viewBounds.bottom - 30));
+							l6 := ((box.right - box.left) - 6);
+							textHeader := GetRoot().mailSlip:TextHeader(target);
+							l8 := ((l3 := (((4 + Length(target.toRef)) + Length(target.cc)) + Length(target.bcc))) * mailFont);
+							self.data := [Array: {_proto: @protoParagraph, viewBounds: SetBounds(0, 0, (l6 - 4), l8), viewStationery: 'para, text: textHeader, viewFont: mailFont2}, {_proto: @protoParagraph, viewBounds: RelBounds(0, (l8 + mailFont), (l6 - 4), mailFont), viewStationery: 'para, text: target.text, viewFont: mailFont2}];
 							(self.reflowStart := 0)
 						end,
 						printNextPageScript: func() begin
@@ -2407,12 +2407,12 @@ globalHeapvarwannabes := {
 									(self.viewBounds := self:Parent():LocalBox())
 								end,
 								viewSetupChildrenScript: func() begin
-									local l1, l2;
+									local mailFont, insetRect2;
 									if (if (not kids) then data) then begin
-											l1 := SetFontSize((l1 := GetUserConfig('mailFont)), 10);
-											(l2 := InsetRect(fields.printerPageBounds, 60, 0)).top := (l2.top + 60);
-											l2.bottom := (l2.bottom - 60);
-											kids := ReFlow(data, {reflowFont: l1, unistyle: nil, graphicsGutter: 8, textGutter: -8, viewLineSpacing: FontHeight(l1), pageBounds: l2}, fields.targetBox, self:LocalBox())
+											mailFont := SetFontSize((mailFont := GetUserConfig('mailFont)), 10);
+											(insetRect2 := InsetRect(fields.printerPageBounds, 60, 0)).top := (insetRect2.top + 60);
+											insetRect2.bottom := (insetRect2.bottom - 60);
+											kids := ReFlow(data, {reflowFont: mailFont, unistyle: nil, graphicsGutter: 8, textGutter: -8, viewLineSpacing: FontHeight(mailFont), pageBounds: insetRect2}, fields.targetBox, self:LocalBox())
 										end;
 									(if kids then (self.stepChildren := ArrayMunger([Array: ], 0, 0, kids, reflowStart, nil)))
 								end,
@@ -2423,8 +2423,8 @@ globalHeapvarwannabes := {
 						],
 						_proto: @protoPrintFormat
 					},
-					TextScript: func(a1, a2) begin
-						a2.text
+					TextScript: func(entry, target) begin
+						target.text
 					end,
 					_proto: @coverPageFormat
 				}
@@ -2440,10 +2440,10 @@ globalHeapvarwannabes := {
 					viewJustify: vjParentFullH + vjParentFullV,
 					viewFlags: vVisible + vClipping,
 					dataDef: smartMail,
-					doOption: func(a1) begin
+					doOption: func(option) begin
 						local l1;
-						l1 := GetRoot().(a1.app);
-						call l1.(a1.path) with (fields, target.arg)
+						l1 := GetRoot().(option.app);
+						call l1.(option.path) with (fields, target.arg)
 					end,
 					viewSetupFormScript: func() begin
 						local l1;
@@ -2464,8 +2464,8 @@ globalHeapvarwannabes := {
 							viewJustify: vjParentFullH,
 							viewSetupChildrenScript: func() begin
 								self.viewChildren := [Array: ];
-								(if (if (if fields then target) then target.options) then (foreach l1 in target.options do begin
-											AddArraySlot(viewChildren, {_proto: @protoTextButton, viewFont: @fontSystem9Bold, viewJustify: 8389638, viewBounds: RelBounds(6, 6, StdButtonWidth(l1.label), 13), text: l1.label, option: l1, buttonClickScript: func() begin
+								(if (if (if fields then target) then target.options) then (foreach item in target.options do begin
+											AddArraySlot(viewChildren, {_proto: @protoTextButton, viewFont: @fontSystem9Bold, viewJustify: 8389638, viewBounds: RelBounds(6, 6, StdButtonWidth(item.label), 13), text: item.label, option: item, buttonClickScript: func() begin
 												self:doOption(option)
 											end})
 										end))
@@ -2488,12 +2488,12 @@ globalHeapvarwannabes := {
 								(if fields then (self.viewChildren := [Array: {viewBounds: SetBounds(0, 0, 636, 100), _proto: @protoParagraph, viewStationery: 'para, text: fields.text, viewFont: GetUserConfig('mailFont)}]) else (self.viewChildren := [Array: ]))
 							end,
 							viewQuitScript: func() begin
-								local l1;
+								local notesText2;
 								(if (not ((fields.state = 'Read) or (fields.state = 'Received))) then begin
-										l1 := notesText(self:ChildViewFrames());
-										if (if (not (fields.text = l1)) then (((not fields.text) or (not l1)) or (StrExactCompare(fields.text, l1) <> 0))) then begin
+										notesText2 := notesText(self:ChildViewFrames());
+										if (if (not (fields.text = notesText2)) then (((not fields.text) or (not notesText2)) or (StrExactCompare(fields.text, notesText2) <> 0))) then begin
 												fields.edited := true;
-												fields.text := l1
+												fields.text := notesText2
 											end;
 										(if (if (if fields.edited then IsSoupEntry(fields)) then FrameDirty(fields)) then self:itemchanged(fields, nil))
 									end)
@@ -2501,8 +2501,8 @@ globalHeapvarwannabes := {
 							viewSetupFormScript: func() begin
 								(viewLineSpacing := FontHeight((viewFont := GetUserConfig('mailFont))))
 							end,
-							viewChangedScript: func(a1, a2) begin
-								(if (a1 = 'text) then (fields.edited := true))
+							viewChangedScript: func(slot, view) begin
+								(if (slot = 'text) then (fields.edited := true))
 							end,
 							debug: 4711
 						}
@@ -2562,30 +2562,30 @@ globalHeapvarwannabes := {
 			locale: compile(
 				constants: {
 					kFunction_4a64f5: func() begin
-						(if (l1 := GetUserConfig('timeformat)) then begin
-								l1 := Clone(l1);
-								l2 := GetLocale().timeformat;
-								local l1;
-								local l2;
-								(foreach l3, l4 in l1 do begin
-										if (l2.(l3) = l4) then begin
-												RemoveSlot(l1, l3)
+						(if (timeformat := GetUserConfig('timeformat)) then begin
+								timeformat := Clone(timeformat);
+								timeformat2 := GetLocale().timeformat;
+								local timeformat;
+								local timeformat2;
+								(foreach key, value in timeformat do begin
+										if (timeformat2.(key) = value) then begin
+												RemoveSlot(timeformat, key)
 											end
 									end);
-								(if (Length(l1) > 0) then begin
+								(if (Length(timeformat) > 0) then begin
 										if IsReadOnly(international.currentlocalebundle) then begin
 												international.currentlocalebundle := {_proto: international.currentlocalebundle}
 											end;
 										if IsReadOnly(international.currentlocalebundle.timeformat) then begin
 												international.currentlocalebundle.timeformat := {_proto: international.currentlocalebundle.timeformat}
 											end;
-										l2 := GetLocale().timeformat;
-										(foreach l3, l4 in l1 do begin
-												local l6;
-												l2.(EnsureInternal(l3)) := EnsureInternal(l4)
+										timeformat2 := GetLocale().timeformat;
+										(foreach key, value in timeformat do begin
+												local root;
+												timeformat2.(EnsureInternal(key)) := EnsureInternal(value)
 											end);
 										vars.setTimeSeed := Random(0, 10000000);
-										(if (l6 := GetRoot()) then l6:Dirty())
+										(if (root := GetRoot()) then root:Dirty())
 									end)
 							end)
 					end,
@@ -2638,40 +2638,40 @@ recording := "Recording";
 recorder := {
 	viewBounds: {left: 0, top: 7, right: 191, bottom: 30},
 	viewSetupFormScript: func() begin
-		(self.statusText := {_parent: self, SetState: func(a1, a2, a3) begin
-			local l1, l2;
-			if (a2 = 64) then begin
+		(self.statusText := {_parent: self, SetState: func(fSoundState, fSoundState2, hasSoundFrames) begin
+			local text, parent;
+			if (fSoundState2 = 64) then begin
 					RecordEngine.fStore := EntryStore(target)
 				end else begin
-					if (a1 = 64) then begin
-							l1 := nil
+					if (fSoundState = 64) then begin
+							text := nil
 						end else begin
-							if ((a2 = 1) or (a2 = 32)) then begin
+							if ((fSoundState2 = 1) or (fSoundState2 = 32)) then begin
 									if (GetUserConfig('inputDevice) <> nil) then begin
-											if a3 then begin
-													l1 := "Ready to play or record."
+											if hasSoundFrames then begin
+													text := "Ready to play or record."
 												end else begin
-													l1 := "Ready to record."
+													text := "Ready to record."
 												end
 										end else begin
-											if a3 then begin
-													l1 := "Ready to play."
+											if hasSoundFrames then begin
+													text := "Ready to play."
 												end else begin
-													l1 := "No recording source set."
+													text := "No recording source set."
 												end
 										end
 								end else begin
-									if (a2 = 4) then begin
-											l1 := "Playing..."
+									if (fSoundState2 = 4) then begin
+											text := "Playing..."
 										end else begin
-											if (a2 = 2) then begin
-													l1 := "Recording..."
+											if (fSoundState2 = 2) then begin
+													text := "Recording..."
 												end else begin
-													if (a2 = 8) then begin
-															l1 := "Paused..."
+													if (fSoundState2 = 8) then begin
+															text := "Paused..."
 														end else begin
-															if (a2 = 16) then begin
-																	l1 := "Paused..."
+															if (fSoundState2 = 16) then begin
+																	text := "Paused..."
 																end
 														end
 												end
@@ -2679,21 +2679,21 @@ recorder := {
 								end
 						end
 				end;
-			if l1 then begin
-					SetValue(recorderStatus, 'text, l1)
+			if text then begin
+					SetValue(recorderStatus, 'text, text)
 				end;
-			(if (if (a1 = 32) then (a2 = 1)) then begin
-					l2 := recorder:Parent();
-					l2:RecordCompletion(recorder:GetSounds())
+			(if (if (fSoundState = 32) then (fSoundState2 = 1)) then begin
+					parent := recorder:Parent();
+					parent:RecordCompletion(recorder:GetSounds())
 				end)
 		end})
 	end,
-	viewChangedScript: func(a1, a2) begin
-		local l1;
-		(if (a1 = 'elapsedTime) then begin
-				l1 := self:GetTimeString(self.elapsedTime);
-				SetValue(soundDescription, 'text, l1)
-			end else (if (a1 = 'sounds) then inherited:?viewChangedScript(a1, a2)))
+	viewChangedScript: func(slot, view) begin
+		local timeString;
+		(if (slot = 'elapsedTime) then begin
+				timeString := self:GetTimeString(self.elapsedTime);
+				SetValue(soundDescription, 'text, timeString)
+			end else (if (slot = 'sounds) then inherited:?viewChangedScript(slot, view)))
 	end,
 	debug: "soundRecorder",
 	preallocatedContext: 'recorder,
@@ -2727,8 +2727,8 @@ inputSourcePicker := {
 	text: recordingSource,
 	labelCommands: nil,
 	viewSetupFormScript: func() begin
-		local l1, l2;
-		l2 := (if (l1 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1])) then l1[6] else 0);
+		local gestalt2, l2;
+		l2 := (if (gestalt2 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1])) then gestalt2[6] else 0);
 		AddArraySlot((labelCommands := [Array: ]), {item: "None", value: nil});
 		if (BAnd(l2, 4) <> 0) then begin
 				AddArraySlot(labelCommands, {item: "Microphone", value: 4})
@@ -2739,25 +2739,25 @@ inputSourcePicker := {
 		inherited:?viewSetupFormScript()
 	end,
 	TextSetup: func() begin
-		l1 := GetUserConfig('inputDevice);
-		local l1;
-		local l2;
-		l2 := (foreach l3 in labelCommands do begin
-				if (l3.value = l1) then begin
-						break l3
+		inputDevice := GetUserConfig('inputDevice);
+		local inputDevice;
+		local labelCommand;
+		labelCommand := (foreach item in labelCommands do begin
+				if (item.value = inputDevice) then begin
+						break item
 					end
 			end);
-		if (not l2) then begin
-				l2 := labelCommands[0];
-				SetUserConfig('inputDevice, l2.value)
+		if (not labelCommand) then begin
+				labelCommand := labelCommands[0];
+				SetUserConfig('inputDevice, labelCommand.value)
 			end;
-		return l2.item
+		return labelCommand.item
 	end,
-	LabelActionScript: func(a1) begin
-		local l1;
-		l1 := labelCommands[a1].value;
-		SetUserConfig('inputDevice, l1);
-		(if (l1 = 16) then self:Notify(3, "Recording source", "If you don't have an external microphone connected, you should change this setting back to \u201C\uNone\u201D\u or \u201C\uMicrophone\u201D\u."))
+	LabelActionScript: func(index) begin
+		local value;
+		value := labelCommands[index].value;
+		SetUserConfig('inputDevice, value);
+		(if (value = 16) then self:Notify(3, "Recording source", "If you don't have an external microphone connected, you should change this setting back to \u201C\uNone\u201D\u or \u201C\uMicrophone\u201D\u."))
 	end,
 	preallocatedContext: 'inputSourcePicker,
 	_proto: @protoLabelPicker
@@ -2777,24 +2777,24 @@ qualityPicker := {
 		inherited:?viewSetupFormScript()
 	end,
 	TextSetup: func() begin
-		if (not (l1 := GetUserConfig('recordingQuality))) then begin
-				l1 := (if (Gestalt(16777219).cputype = 'strongarm) then 'GSM8K16Codec else 'IMA8K16Codec)
+		if (not (recordingQuality := GetUserConfig('recordingQuality))) then begin
+				recordingQuality := (if (Gestalt(16777219).cputype = 'strongarm) then 'GSM8K16Codec else 'IMA8K16Codec)
 			end;
-		local l1;
-		local l2;
-		l2 := (foreach l3 in labelCommands do begin
-				if (l3.symbol = l1) then begin
-						break l3
+		local recordingQuality;
+		local labelCommand;
+		labelCommand := (foreach item in labelCommands do begin
+				if (item.symbol = recordingQuality) then begin
+						break item
 					end
 			end);
-		if (not l2) then begin
-				l2 := labelCommands[0];
-				SetUserConfig('recordingQuality, l2.symbol)
+		if (not labelCommand) then begin
+				labelCommand := labelCommands[0];
+				SetUserConfig('recordingQuality, labelCommand.symbol)
 			end;
-		return l2.item
+		return labelCommand.item
 	end,
-	LabelActionScript: func(a1) begin
-		SetUserConfig('recordingQuality, labelCommands[a1].symbol)
+	LabelActionScript: func(index) begin
+		SetUserConfig('recordingQuality, labelCommands[index].symbol)
 	end,
 	preallocatedContext: 'qualityPicker,
 	_proto: @protoLabelPicker
@@ -2823,36 +2823,36 @@ phones := {
 		type: 'index,
 		indexPath: 'sorton,
 		validTest: func(a1) begin
-			local l1;
-			(((IsSubclass((l1 := ClassOf(a1)), 'person) or IsSubclass(l1, 'company)) or IsSubclass(l1, 'owner)) or (l1 = 'frame))
+			local cls;
+			(((IsSubclass((cls := ClassOf(a1)), 'person) or IsSubclass(cls, 'company)) or IsSubclass(cls, 'owner)) or (cls = 'frame))
 		end
 	},
-	MakeNameRef: func(a1, a2) begin
-		local l1, l2, l3, l4;
-		l1 := inherited:MakeNameRef(a1, a2);
-		l2 := EntryFromObj(a1);
-		l1.phone := (if IsInstance(l2, 'group) then l2.members else (if (if IsFrame(a1) then a1.phone) then a1.phone else (if l2 then (if (if (l3 := GetRoot().cardfile:bcPhoneNumber(l2, preferredRouting)) then (Length(l3) > 0)) then begin
-							SortByClass(l3, preferredRouting, nil);
-							l3[0]
+	MakeNameRef: func(frame2, cls) begin
+		local l1, entryFromObj2, bcPhoneNumber, country;
+		l1 := inherited:MakeNameRef(frame2, cls);
+		entryFromObj2 := EntryFromObj(frame2);
+		l1.phone := (if IsInstance(entryFromObj2, 'group) then entryFromObj2.members else (if (if IsFrame(frame2) then frame2.phone) then frame2.phone else (if entryFromObj2 then (if (if (bcPhoneNumber := GetRoot().cardfile:bcPhoneNumber(entryFromObj2, preferredRouting)) then (Length(bcPhoneNumber) > 0)) then begin
+							SortByClass(bcPhoneNumber, preferredRouting, nil);
+							bcPhoneNumber[0]
 						end))));
-		if (if l2 then l2.country) then begin
-				l4 := l2.country
+		if (if entryFromObj2 then entryFromObj2.country) then begin
+				country := entryFromObj2.country
 			end else begin
-				l4 := (if IsFrame(a1) then a1.country)
+				country := (if IsFrame(frame2) then frame2.country)
 			end;
-		l1.country := l4;
+		l1.country := country;
 		l1
 	end,
 	GetSuffix: func(a1) begin
-		local l1, l2;
-		if (l1 := self:Get(a1, 'phone, nil)) then begin
-				if IsSubclass((l2 := ClassOf(l1)), '|string.pager|) then begin
-						l2 := PagerTypes.pagerText.(l2)
+		local phone, cls;
+		if (phone := self:Get(a1, 'phone, nil)) then begin
+				if IsSubclass((cls := ClassOf(phone)), '|string.pager|) then begin
+						cls := PagerTypes.pagerText.(cls)
 					end else begin
-						l2 := PhoneTypes.phoneText.(l2)
+						cls := PhoneTypes.phoneText.(cls)
 					end;
-				if StrFilled(l2) then begin
-						return ParamStr("(^0)", [Array: l2])
+				if StrFilled(cls) then begin
+						return ParamStr("(^0)", [Array: cls])
 					end
 			end;
 		return nil
@@ -2862,11 +2862,11 @@ phones := {
 			kLiteral_450465: SetClass(Clone("--"), '|string.noData|)
 		},
 		func(a1, a2, a3) begin
-			local l1, l2;
+			local l1, entryFromObj2;
 			l1 := inherited:Get(a1, a2, a3);
 			(if (a2 = 'phone) then begin
 					if ((not l1) or IsInstance(l1, '|string.noData|)) then begin
-							l1 := (if (if (l1 := (if (l2 := EntryFromObj(a1)) then GetRoot().cardfile:bcPhoneNumber(l2, preferredRouting))) then (Length(l1) > 0)) then begin
+							l1 := (if (if (l1 := (if (entryFromObj2 := EntryFromObj(a1)) then GetRoot().cardfile:bcPhoneNumber(entryFromObj2, preferredRouting))) then (Length(l1) > 0)) then begin
 									SortByClass(l1, preferredRouting, nil);
 									l1[0]
 								end else (if (a3 = 'text) then kLiteral_450465))
@@ -2874,96 +2874,96 @@ phones := {
 					(if (if (if (a3 = 'text) then l1) then (not IsInstance(l1, '|string.noData|))) then MakeDisplayPhone(l1) else l1)
 				end else l1)
 		end),
-	GetItemRoutingFrame: func(a1) begin
-		local l1;
-		if ((not (l1 := self:Get(a1, 'phone, nil))) or IsInstance(l1, '|string.noData|)) then begin
-				l1 := ""
+	GetItemRoutingFrame: func(item) begin
+		local phone;
+		if ((not (phone := self:Get(item, 'phone, nil))) or IsInstance(phone, '|string.noData|)) then begin
+				phone := ""
 			end;
-		{entry: a1, name: self:Get(a1, primaryPath, 'text), country: a1.country, rawNumber: l1, displayNumber: MakeDisplayPhone(l1), phoneNumber: (if a1.asIsPhone then a1.asIsPhone else GetRoot():MungePhone(l1, a1.country))}
+		{entry: item, name: self:Get(item, primaryPath, 'text), country: item.country, rawNumber: phone, displayNumber: MakeDisplayPhone(phone), phoneNumber: (if item.asIsPhone then item.asIsPhone else GetRoot():MungePhone(phone, item.country))}
 	end,
-	ModifyEntry: func(a1, a2) begin
-		(if (l1 := EntryFromObj(a1)) then begin
-				local l1;
-				(foreach l2 in a2 do begin
-						if (l2 = 'phone) then begin
-								GetRoot().cardfile:AddCardData(l1, 'phone, a1.phone)
+	ModifyEntry: func(nameRef, equivalent) begin
+		(if (entryFromObj2 := EntryFromObj(nameRef)) then begin
+				local entryFromObj2;
+				(foreach item in equivalent do begin
+						if (item = 'phone) then begin
+								GetRoot().cardfile:AddCardData(entryFromObj2, 'phone, nameRef.phone)
 							end else begin
-								self:ModifyEntryPath(a1, l1, l2)
+								self:ModifyEntryPath(nameRef, entryFromObj2, item)
 							end
 					end);
-				EntryChangeXmit(l1, 'entryChanged)
+				EntryChangeXmit(entryFromObj2, 'entryChanged)
 			end)
 	end,
-	NewEntry: func(a1, a2) begin
-		local l1, l2, l3;
-		l1 := GetRoot().cardfile;
-		l2 := a1.phone;
+	NewEntry: func(a1, _context) begin
+		local cardfile, phone, addcard;
+		cardfile := GetRoot().cardfile;
+		phone := a1.phone;
 		RemoveSlot(a1, 'phone);
-		l1:AddCardData((l3 := l1:addcard((l3 := self:PrepareToAdd(a1)).class, l3)), 'phone, l2);
-		EntryChangeXmit(l3, 'entryAdded);
-		self:FixupPostAdd(a1, l3);
-		a1.phone := l2;
-		l3
+		cardfile:AddCardData((addcard := cardfile:addcard((addcard := self:PrepareToAdd(a1)).class, addcard)), 'phone, phone);
+		EntryChangeXmit(addcard, 'entryAdded);
+		self:FixupPostAdd(a1, addcard);
+		a1.phone := phone;
+		addcard
 	end,
-	DefaultOpenEditor: func(a1, a2, a3) begin
-		local l1, l2, l3;
+	DefaultOpenEditor: func(a1, trackScrollingItem, a3) begin
+		local nameRef, text, validityCheck2;
 		editTitle := defaultEditTitle;
 		if (not (a1.fieldPath = 'New)) then begin
-				if (not IsInstance((l2 := self:Get((l1 := a1.nameRef), primaryPath, 'text)), '|string.noData|)) then begin
-						editTitle := ParamStr("New phone for ^0", [Array: l2])
+				if (not IsInstance((text := self:Get((nameRef := a1.nameRef), primaryPath, 'text)), '|string.noData|)) then begin
+						editTitle := ParamStr("New phone for ^0", [Array: text])
 					end else begin
-						if (Length((l3 := ValidityCheck(a1.nameRef, validationFrame, '[Array: phone], nil, nil))) < 1) then begin
+						if (Length((validityCheck2 := ValidityCheck(a1.nameRef, validationFrame, '[Array: phone], nil, nil))) < 1) then begin
 								editTitle := "Add Name"
 							end else begin
 								editTitle := "Add Phone"
 							end
 					end
 			end;
-		inherited:DefaultOpenEditor(a1, a2, a3)
+		inherited:DefaultOpenEditor(a1, trackScrollingItem, a3)
 	end,
-	MakePopup: func(a1, a2) begin
-		if (a2 <> 'phone) then begin
+	MakePopup: func(a1, fieldPath) begin
+		if (fieldPath <> 'phone) then begin
 				return nil
 			end;
-		l2 := EntryFromObj(a1);
-		l3 := preferredRouting;
-		l4 := GetRoot().cardfile;
+		entryFromObj2 := EntryFromObj(a1);
+		preferredRouting2 := preferredRouting;
+		cardfile := GetRoot().cardfile;
 		if (if a1 then IsString(a1.phone)) then begin
-				l5 := a1.phone
+				phone := a1.phone
 			end;
-		if l2 then begin
-				l6 := l4:bcPhoneNumber(l2, l3)
+		if entryFromObj2 then begin
+				bcPhoneNumber := cardfile:bcPhoneNumber(entryFromObj2, preferredRouting2)
 			end;
-		if l5 then begin
-				if (if l6 then (not LSearch(l6, l5, 0, '|str=|, nil))) then begin
-						AddArraySlot(l6, l5)
+		if phone then begin
+				if (if bcPhoneNumber then (not LSearch(bcPhoneNumber, phone, 0, '|str=|, nil))) then begin
+						AddArraySlot(bcPhoneNumber, phone)
 					end else begin
-						if (not l6) then begin
-								l6 := [Array: l5]
+						if (not bcPhoneNumber) then begin
+								bcPhoneNumber := [Array: phone]
 							end
 					end
 			end;
-		if (if l6 then ((l1 := Length(l6)) > 0)) then begin
-				SortByClass(l6, l3, nil);
-				l7 := Array((l1 + 2), nil);
-				local l1;
-				local l2;
-				local l3;
-				local l4;
-				local l5;
-				local l6;
-				local l7;
-				(for l8 := 0 to (l1 - 1) do begin
-						local l11, l12, l13;
-						l11 := l6[l8];
-						l12 := PhoneTypes.phoneLabels.(ClassOf(l11));
-						l13 := ParamStr("^0 ^1", [Array: MakeDisplayPhone(l11), l12]);
-						l7[l8] := {value: l11, item: l13, pickable: true}
+		if (if bcPhoneNumber then ((count := Length(bcPhoneNumber)) > 0)) then begin
+				SortByClass(bcPhoneNumber, preferredRouting2, nil);
+				list := Array((count + 2), nil);
+				local count;
+				local entryFromObj2;
+				local preferredRouting2;
+				local cardfile;
+				local phone;
+				local bcPhoneNumber;
+				local list;
+				(for i := 0 to (count - 1) do begin
+						local bcPhoneNumberItem, l12, text;
+						bcPhoneNumberItem := bcPhoneNumber[i];
+						l12 := PhoneTypes.phoneLabels.(ClassOf(bcPhoneNumberItem));
+						text := ParamStr("^0 ^1", [Array: MakeDisplayPhone(bcPhoneNumberItem), l12]);
+						list[i] := {value: bcPhoneNumberItem, item: text, pickable: true}
 					end);
-				l7[l1] := 'pickseparator;
-				l7[(l1 + 1)] := {item: "New Phone", value: 'OpenEditor, pickable: true}
+				list[count] := 'pickseparator;
+				list[(count + 1)] := {item: "New Phone", value: 'OpenEditor, pickable: true}
 			end;
-		l7
+		list
 	end
 };
 
@@ -2975,21 +2975,21 @@ sprint := {
 	title: sprintNet,
 	id: 'sprint,
 	GetAccessNumbers: func(a1, a2) begin
-		l1 := [Array: ];
+		list := [Array: ];
 		if (if a1 then IsEntryAlias(a1.cityAlias)) then begin
 				a2 := ResolveEntryAlias(a1.cityAlias)
 			end;
 		if (if (if a2 then a2.mailAccess) then IsArray(a2.mailAccess)) then begin
-				local l1;
-				(foreach l2 in a2.mailAccess do begin
-						local l4;
-						if (l2.mailNetwork = id) then begin
-								(l4 := TotalClone(l2)).mailPhone := ConvertIntToPhone(l4.mailPhone);
-								AddArraySlot(l1, l4)
+				local list;
+				(foreach item in a2.mailAccess do begin
+						local copy;
+						if (item.mailNetwork = id) then begin
+								(copy := TotalClone(item)).mailPhone := ConvertIntToPhone(copy.mailPhone);
+								AddArraySlot(list, copy)
 							end
 					end)
 			end;
-		(if (Length(l1) > 0) then return l1 else return nil)
+		(if (Length(list) > 0) then return list else return nil)
 	end
 };
 
@@ -3019,11 +3019,11 @@ meeting_2 := {
 		symbol: 'default,
 		name: date_2,
 		viewSetupChildrenScript: func() begin
-			local l1, l2, l3;
-			l1 := GetRoot().calendar:GetTextOfRoutedMeeting(target);
-			l2 := self:LocalBox();
-			l3 := TextBounds(l1, {font: 12291}, SetBounds(0, 0, (l2.right - 4), 0));
-			(self.viewChildren := [Array: {viewBounds: l3, viewStationery: 'para, text: l1, viewFont: 12291, recConfig: @rcInkorText}])
+			local textOfRoutedMeeting, box, textBounds2;
+			textOfRoutedMeeting := GetRoot().calendar:GetTextOfRoutedMeeting(target);
+			box := self:LocalBox();
+			textBounds2 := TextBounds(textOfRoutedMeeting, {font: tsHWFont + tsSize(12)}, SetBounds(0, 0, (box.right - 4), 0));
+			(self.viewChildren := [Array: {viewBounds: textBounds2, viewStationery: 'para, text: textOfRoutedMeeting, viewFont: tsHWFont + tsSize(12), recConfig: @rcInkorText}])
 		end
 	},
 	singleFrameDef: {
@@ -3085,13 +3085,13 @@ meeting_2 := {
 							end
 					end))
 		end,
-		TextScript: func(a1, a2) begin
-			GetRoot().calendar:GetTextOfRoutedMeeting(a1.body)
+		TextScript: func(entry, target) begin
+			GetRoot().calendar:GetTextOfRoutedMeeting(entry.body)
 		end,
 		PrepareForRouting: func(a1) begin
 			if a1.mtgInvitees then begin
-					(foreach l1 in a1.mtgInvitees do begin
-							l1._alias := nil
+					(foreach item in a1.mtgInvitees do begin
+							item._alias := nil
 						end)
 				end;
 			(if a1.mtgLocation then (a1.mtgLocation._alias := nil))
@@ -3119,8 +3119,8 @@ meeting_2 := {
 				self.DataRect := SetBounds(0, 0, 0, 0);
 				self.currentY := 0;
 				self.pageNumber := 1;
-				(if (if NotesData then (Length(NotesData) > 0)) then (foreach l1 in NotesData do begin
-							DataRect := UnionRect(DataRect, l1.viewBounds)
+				(if (if NotesData then (Length(NotesData) > 0)) then (foreach item in NotesData do begin
+							DataRect := UnionRect(DataRect, item.viewBounds)
 						end))
 			end,
 			printNextPageScript: func() begin
@@ -3163,8 +3163,8 @@ meeting_2 := {
 					height: 50,
 					labelText: "Who",
 					GetContent: func() begin
-						local l1;
-						(if (l1 := self:GetMeetingSlot(meeting, 'mtgInvitees)) then self:GetNamesOfInvitees(l1, nil))
+						local mtgInvitees;
+						(if (mtgInvitees := self:GetMeetingSlot(meeting, 'mtgInvitees)) then self:GetNamesOfInvitees(mtgInvitees, nil))
 					end
 				},
 				{
@@ -3172,8 +3172,8 @@ meeting_2 := {
 					height: 25,
 					labelText: where_2,
 					GetContent: func() begin
-						local l1;
-						(if (l1 := self:GetMeetingSlot(meeting, 'mtgLocation)) then self:getNameOfLocation(l1))
+						local mtgLocation;
+						(if (mtgLocation := self:GetMeetingSlot(meeting, 'mtgLocation)) then self:getNameOfLocation(mtgLocation))
 					end
 				},
 				notes_3,
@@ -3185,15 +3185,15 @@ meeting_2 := {
 		},
 		version: 1,
 		symbol: 'singlePrintDef,
-		SetupSlip: func(a1, a2) begin
-			local l1;
-			a2.title := Clone(GetRoot().calendar:GetMeetingText(a1.target));
-			a2.body := a1.target;
-			(if (l1 := a2.body.repeatTemplate) then begin
-					(l1 := DeepClone(l1)).NotesData := GetRoot().calendar:GetNotesData(a2.body)[1];
-					RemoveSlot(l1, 'InstanceNotesData);
-					a2.body := Clone(a2.body);
-					(a2.body.repeatTemplate := l1)
+		SetupSlip: func(a1, fields) begin
+			local repeatTemplate;
+			fields.title := Clone(GetRoot().calendar:GetMeetingText(a1.target));
+			fields.body := a1.target;
+			(if (repeatTemplate := fields.body.repeatTemplate) then begin
+					(repeatTemplate := DeepClone(repeatTemplate)).NotesData := GetRoot().calendar:GetNotesData(fields.body)[1];
+					RemoveSlot(repeatTemplate, 'InstanceNotesData);
+					fields.body := Clone(fields.body);
+					(fields.body.repeatTemplate := repeatTemplate)
 				end)
 		end,
 		_proto: @coverPageFormat
@@ -3218,25 +3218,25 @@ mainFormatProtoProto := {
 	TimeSpec: 170636,
 	headerHt: nil,
 	MeetingSoup: nil,
-	GetSingleEventShape: func(a1, a2, a3) begin
-		local l1, l2, l3, l4, l5, l6, l7;
-		l1 := [Array: ];
-		l2 := OffsetShape(MakeShape(GetMeetingIcon(a1)), 20, (a2 + 1));
-		ArrayInsert(l1, l2, 0);
-		l3 := (a2 + LineHt);
-		if (if (l4 := self:GetMeetingText(a1)) then (StrLen(l4) > 0)) then begin
-				l5 := Clone(l4);
+	GetSingleEventShape: func(a1, yOffset, pageWidth) begin
+		local list, offsetShape2, l3, meetingText, copy, l6, notesDataItem;
+		list := [Array: ];
+		offsetShape2 := OffsetShape(MakeShape(GetMeetingIcon(a1)), 20, (yOffset + 1));
+		ArrayInsert(list, offsetShape2, 0);
+		l3 := (yOffset + LineHt);
+		if (if (meetingText := self:GetMeetingText(a1)) then (StrLen(meetingText) > 0)) then begin
+				copy := Clone(meetingText);
 				l6 := 98;
-				StyledStrTruncate(l5, l6, bodyFont);
-				ArrayInsert(l1, MakeText(l5, 42, l3, a3, (l3 + 1)), 0)
+				StyledStrTruncate(copy, l6, bodyFont);
+				ArrayInsert(list, MakeText(copy, 42, l3, pageWidth, (l3 + 1)), 0)
 			end;
-		if (if (l7 := self:GetNotesData(a1)[1]) then (Length(l7) > 0)) then begin
-				a2 := (a2 + LineHt);
-				l5 := ExtractData(l7, " ", 100);
-				StyledStrTruncate((l5 := ParamStr("\u2022\u ^0", [Array: l5])), (a3 - 145), bodyFont);
-				ArrayInsert(l1, MakeText(l5, 145, a2, a3, (a2 + 1)), 0)
+		if (if (notesDataItem := self:GetNotesData(a1)[1]) then (Length(notesDataItem) > 0)) then begin
+				yOffset := (yOffset + LineHt);
+				copy := ExtractData(notesDataItem, " ", 100);
+				StyledStrTruncate((copy := ParamStr("\u2022\u ^0", [Array: copy])), (pageWidth - 145), bodyFont);
+				ArrayInsert(list, MakeText(copy, 145, yOffset, pageWidth, (yOffset + 1)), 0)
 			end;
-		l1
+		list
 	end,
 	FindException: FindException,
 	meetingTypeRegistry: nil,
@@ -3254,38 +3254,38 @@ mainFormatProtoProto := {
 	getNameOfLocation: getNameOfLocation,
 	RepeatSoup: nil,
 	selectedDates: nil,
-	GetSingleMeetingShape: func(a1, a2, a3) begin
-		local l1, l2, l3, l4, l5, l6, l7, l8;
-		l1 := [Array: ];
-		if ((ClassOf(a1) = 'meeting) or a1.mtgText) then begin
-				l2 := OffsetShape(MakeShape(GetMeetingIcon(a1)), 20, (a2 + 1));
-				ArrayInsert(l1, l2, 0);
+	GetSingleMeetingShape: func(exception, a2, pageWidth) begin
+		local list, offsetShape2, l3, text, meetingText, notesDataItem, mtgLocation, mtgInvitees;
+		list := [Array: ];
+		if ((ClassOf(exception) = 'meeting) or exception.mtgText) then begin
+				offsetShape2 := OffsetShape(MakeShape(GetMeetingIcon(exception)), 20, (a2 + 1));
+				ArrayInsert(list, offsetShape2, 0);
 				a2 := (a2 + LineHt);
-				l3 := (a1.mtgStartDate + self:GetMeetingSlot(a1, 'mtgDuration));
-				l4 := Stringer([Array: TimeStr(a1.mtgStartDate, TimeSpec), " ", $-, " ", TimeStr(l3, TimeSpec)]);
-				ArrayInsert(l1, MakeText(l4, 42, a2, 145, (a2 + 1)), 0);
-				if (if (l5 := self:GetMeetingText(a1)) then (StrLen(l5) > 0)) then begin
-						StyledStrTruncate((l5 := Clone(l5)), (a3 - 145), bodyFont);
-						ArrayInsert(l1, MakeText(l5, 145, a2, a3, (a2 + 1)), 0)
+				l3 := (exception.mtgStartDate + self:GetMeetingSlot(exception, 'mtgDuration));
+				text := Stringer([Array: TimeStr(exception.mtgStartDate, TimeSpec), " ", $-, " ", TimeStr(l3, TimeSpec)]);
+				ArrayInsert(list, MakeText(text, 42, a2, 145, (a2 + 1)), 0);
+				if (if (meetingText := self:GetMeetingText(exception)) then (StrLen(meetingText) > 0)) then begin
+						StyledStrTruncate((meetingText := Clone(meetingText)), (pageWidth - 145), bodyFont);
+						ArrayInsert(list, MakeText(meetingText, 145, a2, pageWidth, (a2 + 1)), 0)
 					end;
-				if (if (l6 := self:GetNotesData(a1)[1]) then (Length(l6) > 0)) then begin
+				if (if (notesDataItem := self:GetNotesData(exception)[1]) then (Length(notesDataItem) > 0)) then begin
 						a2 := (a2 + LineHt);
-						l4 := ExtractData(l6, " ", 100);
-						StyledStrTruncate((l4 := ParamStr("\u2022\u ^0", [Array: l4])), (a3 - 145), bodyFont);
-						ArrayInsert(l1, MakeText(l4, 145, a2, a3, (a2 + 1)), 0)
+						text := ExtractData(notesDataItem, " ", 100);
+						StyledStrTruncate((text := ParamStr("\u2022\u ^0", [Array: text])), (pageWidth - 145), bodyFont);
+						ArrayInsert(list, MakeText(text, 145, a2, pageWidth, (a2 + 1)), 0)
 					end;
-				if (l7 := self:GetMeetingSlot(a1, 'mtgLocation)) then begin
+				if (mtgLocation := self:GetMeetingSlot(exception, 'mtgLocation)) then begin
 						a2 := (a2 + LineHt);
-						StyledStrTruncate((l4 := ParamStr("@ ^0", [Array: self:getNameOfLocation(l7)])), (a3 - 145), bodyFont);
-						ArrayInsert(l1, MakeText(l4, 145, a2, a3, (a2 + 1)), 0)
+						StyledStrTruncate((text := ParamStr("@ ^0", [Array: self:getNameOfLocation(mtgLocation)])), (pageWidth - 145), bodyFont);
+						ArrayInsert(list, MakeText(text, 145, a2, pageWidth, (a2 + 1)), 0)
 					end;
-				if (l8 := self:GetMeetingSlot(a1, 'mtgInvitees)) then begin
+				if (mtgInvitees := self:GetMeetingSlot(exception, 'mtgInvitees)) then begin
 						a2 := (a2 + LineHt);
-						StyledStrTruncate((l4 := ParamStr("with ^0", [Array: self:GetNamesOfInvitees(l8, nil)])), (a3 - 145), bodyFont);
-						ArrayInsert(l1, MakeText(l4, 145, a2, a3, (a2 + 1)), 0)
+						StyledStrTruncate((text := ParamStr("with ^0", [Array: self:GetNamesOfInvitees(mtgInvitees, nil)])), (pageWidth - 145), bodyFont);
+						ArrayInsert(list, MakeText(text, 145, a2, pageWidth, (a2 + 1)), 0)
 					end
 			end;
-		l1
+		list
 	end,
 	GetNotesData: GetNotesData,
 	viewSetupFormScript: func() begin
@@ -3296,32 +3296,32 @@ mainFormatProtoProto := {
 		self.RepeatNotes := GetUnionSoup(@repeatNotesName);
 		printForm := self;
 		meetingTypeRegistry := calendar.meetingTypeRegistry;
-		l1 := target.startDate;
+		startDate := target.startDate;
 		if (numDays > 1) then begin
-				l2 := Date(l1).dayOfWeek;
-				if (not (l3 := GetUserConfig('firstDayOfWeek))) then begin
-						l3 := GetLocale().firstDayOfWeek
+				dayOfWeek := Date(startDate).dayOfWeek;
+				if (not (firstDayOfWeek := GetUserConfig('firstDayOfWeek))) then begin
+						firstDayOfWeek := GetLocale().firstDayOfWeek
 					end;
-				if (not l3) then begin
-						l3 := 0
+				if (not firstDayOfWeek) then begin
+						firstDayOfWeek := 0
 					end;
-				l4 := (((l2 + 7) - l3) mod 7);
-				l1 := (l1 - (l4 * 1440))
+				l4 := (((dayOfWeek + 7) - firstDayOfWeek) mod 7);
+				startDate := (startDate - (l4 * 1440))
 			end;
-		l5 := Array(numDays, nil);
-		local l1;
-		local l2;
-		local l3;
+		list := Array(numDays, nil);
+		local startDate;
+		local dayOfWeek;
+		local firstDayOfWeek;
 		local l4;
-		local l5;
-		(for l6 := 0 to (numDays - 1) do begin
-				local l9, l10, l11, l12;
-				l5[l6] := (l1 + (l6 * 1440))
+		local list;
+		(for i := 0 to (numDays - 1) do begin
+				local l9, selectedDate, l11, allMeetings;
+				list[i] := (startDate + (i * 1440))
 			end);
-		l9 := (Length((selectedDates := l5)) - 1);
-		l10 := selectedDates[0];
+		l9 := (Length((selectedDates := list)) - 1);
+		selectedDate := selectedDates[0];
 		l11 := (selectedDates[l9] + 1440);
-		if (l12 := GetAllMeetings(notes, RepeatNotes, l10, l11)) then begin
+		if (allMeetings := GetAllMeetings(notes, RepeatNotes, selectedDate, l11)) then begin
 				ShowCribNotes := true
 			end;
 		LineHt := (GetFontSize(bodyFont) + 2);
@@ -3329,15 +3329,15 @@ mainFormatProtoProto := {
 	end,
 	numDays: 1,
 	bodyFont: tsSimple + tsSize(9),
-	GetDateHeader: func(a1, a2, a3) begin
-		local l1, l2;
-		ArrayInsert((l1 := [Array: ]), MakeLine(0, a2, a3, a2), 0);
-		ArrayInsert(l1, '{penPattern: 3, pensize: 1}, 0);
-		a2 := (a2 + HeaderTextHt);
-		l2 := LongDateStr(a1, 0);
-		ArrayInsert(l1, MakeText(l2, 0, (a2 - 2), a3, (a2 + 1)), 0);
-		ArrayInsert(l1, headerStyle, 0);
-		l1
+	GetDateHeader: func(item, yOffset, pageWidth) begin
+		local list, longDateStr2;
+		ArrayInsert((list := [Array: ]), MakeLine(0, yOffset, pageWidth, yOffset), 0);
+		ArrayInsert(list, '{penPattern: 3, pensize: 1}, 0);
+		yOffset := (yOffset + HeaderTextHt);
+		longDateStr2 := LongDateStr(item, 0);
+		ArrayInsert(list, MakeText(longDateStr2, 0, (yOffset - 2), pageWidth, (yOffset + 1)), 0);
+		ArrayInsert(list, headerStyle, 0);
+		list
 	end,
 	debug: -329551966,
 	notes: nil,
@@ -3375,9 +3375,9 @@ mainFormatProto := {
 				end))
 	end,
 	viewSetupDoneScript: func() begin
-		local l1;
-		pageHeight := (((l1 := self:LocalBox()).bottom - 12) - 4);
-		pageWidth := l1.right;
+		local box;
+		pageHeight := (((box := self:LocalBox()).bottom - 12) - 4);
+		pageWidth := box.right;
 		self:setupNextPage()
 	end,
 	printNextPageScript: func() begin
@@ -3387,14 +3387,14 @@ mainFormatProto := {
 			end;
 		drawShapes
 	end,
-	GetEventShapes: func(a1, a2, a3) begin
-		(if (l1 := GetAllMeetings(notes, RepeatNotes, a1, (a1 + 1440))) then begin
-				local l1;
+	GetEventShapes: func(item2, yOffset, pageWidth) begin
+		(if (allMeetings := GetAllMeetings(notes, RepeatNotes, item2, (item2 + 1440))) then begin
+				local allMeetings;
 				local l2;
-				l2 := (foreach l3 in l1 collect begin
-					local l7;
-					a2 := (ShapeBounds((l7 := self:GetSingleEventShape(l3, a2, a3))).bottom + 2);
-					l7
+				l2 := (foreach item in allMeetings collect begin
+					local singleEventShape;
+					yOffset := (ShapeBounds((singleEventShape := self:GetSingleEventShape(item, yOffset, pageWidth))).bottom + 2);
+					singleEventShape
 				end);
 				ArrayInsert(l2, bodyStyle, 0)
 			end)
@@ -3423,30 +3423,30 @@ mainFormatProto := {
 				ArrayInsert(l9, bodyStyle, 0)
 			end)
 	end,
-	CarefulCreate: func(a1, a2) begin
-		(if a1 then (if ((l1 := ShapeBounds(a1).bottom) < pageHeight) then begin
+	CarefulCreate: func(a1, item) begin
+		(if a1 then (if ((bottom := ShapeBounds(a1).bottom) < pageHeight) then begin
 					oldShapes := nil;
 					ArrayMunger(drawShapes, Length(drawShapes), nil, a1, 0, nil);
-					(yOffset := l1)
+					(yOffset := bottom)
 				end else begin
-					local l1;
-					local l2;
-					(foreach l3, l4 in a1 do begin
-							local l6, l7;
-							l2 := l3;
-							if (if (not (l6 := (if IsFrame(l4) then l4.font))) then (ShapeBounds(l4).bottom > pageHeight)) then begin
+					local bottom;
+					local key2;
+					(foreach key, value in a1 do begin
+							local l6, pos;
+							key2 := key;
+							if (if (not (l6 := (if IsFrame(value) then value.font))) then (ShapeBounds(value).bottom > pageHeight)) then begin
 									break
 								end
 						end);
 					oldShapes := [Array: ];
-					ArrayMunger(drawShapes, Length(drawShapes), nil, a1, 0, l2);
-					ArrayMunger(oldShapes, 0, nil, a1, l2, nil);
+					ArrayMunger(drawShapes, Length(drawShapes), nil, a1, 0, key2);
+					ArrayMunger(oldShapes, 0, nil, a1, key2, nil);
 					OffsetShape(oldShapes, 0, (-ShapeBounds(oldShapes).top));
-					if (if (ShapeBounds(oldShapes).bottom < pageHeight) then a2) then begin
-							l7 := ArrayPos(selectedDates, a2, 0, nil);
-							ArrayRemoveCount(selectedDates, 0, l7)
+					if (if (ShapeBounds(oldShapes).bottom < pageHeight) then item) then begin
+							pos := ArrayPos(selectedDates, item, 0, nil);
+							ArrayRemoveCount(selectedDates, 0, pos)
 						end;
-					Throw('|evt.ex.nextpage|, a2)
+					Throw('|evt.ex.nextpage|, item)
 				end))
 	end,
 	CreateShapes: func() begin
@@ -3457,28 +3457,28 @@ mainFormatProto := {
 				self:CarefulCreate(oldShapes, l1)
 			end;
 		local l1;
-		(if (if selectedDates then (Length(selectedDates) > 0)) then (foreach l2 in selectedDates do begin
-					local l4;
+		(if (if selectedDates then (Length(selectedDates) > 0)) then (foreach item in selectedDates do begin
+					local toDo;
 					if (not Header) then begin
 							Header := true;
-							self:CarefulCreate(self:GetDateHeader(l2, yOffset, pageWidth), l2);
+							self:CarefulCreate(self:GetDateHeader(item, yOffset, pageWidth), item);
 							yOffset := (yOffset + 2)
 						end;
 					if (not events) then begin
 							events := true;
 							yOffset := (yOffset + 2);
-							self:CarefulCreate(self:GetEventShapes(l2, yOffset, pageWidth), l2)
+							self:CarefulCreate(self:GetEventShapes(item, yOffset, pageWidth), item)
 						end;
 					if (not meetings) then begin
 							meetings := true;
 							yOffset := (yOffset + 2);
-							self:CarefulCreate(self:GetMeetingShapes(l2, yOffset, pageWidth), l2)
+							self:CarefulCreate(self:GetMeetingShapes(item, yOffset, pageWidth), item)
 						end;
 					if (not todos) then begin
 							todos := true;
 							yOffset := (yOffset + 2);
-							if (l4 := GetRoot().calendar:GetToDo()) then begin
-									self:CarefulCreate(l4:GetToDoShapes(l2, yOffset, pageWidth, bodyFont), l2)
+							if (toDo := GetRoot().calendar:GetToDo()) then begin
+									self:CarefulCreate(toDo:GetToDoShapes(item, yOffset, pageWidth, bodyFont), item)
 								end
 						end;
 					Header := nil;
@@ -3573,25 +3573,25 @@ mainFormat := {
 		inherited:viewSetupFormScript();
 		printForm := self;
 		self.isbn := fields.body.isbn;
-		if (l1 := copperfield:WhereIsBook(isbn)) then begin
-				self.bookRef := l1.bookSoup.Book
+		if (whereIsBook := copperfield:WhereIsBook(isbn)) then begin
+				self.bookRef := whereIsBook.bookSoup.Book
 			end;
 		if (bookRef = nil) then begin
 				self:Notify(3, "Book", "Book not available.")
 			end;
 		self.curRendering := fields.body.curRendering;
-		l2 := bookRef.rendering[curRendering].PageSize;
-		self.cuPageSize := {width: l2.right, height: l2.bottom};
+		pageSize := bookRef.rendering[curRendering].PageSize;
+		self.cuPageSize := {width: pageSize.right, height: pageSize.bottom};
 		if (bookRef.version = 1) then begin
 				self.cuPageSize.height := 318
 			end;
-		if (l3 := bookRef.scripts) then begin
-				local l1;
-				local l2;
-				local l3;
-				(for l4 := 0 to (Length(l3) - 1) by 2 do begin
-						if ((bookRef.version > 1) or (not hasVariable(self, l3[l4]))) then begin
-								self.(l3[l4]) := l3[(l4 + 1)]
+		if (scripts := bookRef.scripts) then begin
+				local whereIsBook;
+				local pageSize;
+				local scripts;
+				(for i := 0 to (Length(scripts) - 1) by 2 do begin
+						if ((bookRef.version > 1) or (not hasVariable(self, scripts[i]))) then begin
+								self.(scripts[i]) := scripts[(i + 1)]
 							end
 					end)
 			end;
@@ -3605,31 +3605,31 @@ mainFormat := {
 			end)
 	end,
 	viewSetupChildrenScript: func() begin
-		local l1, l2, l3, l4, l5, l6;
-		l1 := self:LocalBox();
-		l2 := [Array: ];
+		local box, list, l3, l4, bounds, frame2;
+		box := self:LocalBox();
+		list := [Array: ];
 		l3 := 8;
 		l4 := 8;
-		AddArraySlot(l2, {_proto: @canonicalTitle, viewFont: 10241, viewBounds: RelBounds(l4, l3, 200, 16), viewJustify: 0, text: fields.body.title});
-		AddArraySlot(l2, {_proto: @canonicalTitle, viewFont: 10241, viewBounds: RelBounds(-208, l3, 200, 16), viewJustify: 33, text: bookRef.author});
+		AddArraySlot(list, {_proto: @canonicalTitle, viewFont: tsFancy + tsSize(10), viewBounds: RelBounds(l4, l3, 200, 16), viewJustify: 0, text: fields.body.title});
+		AddArraySlot(list, {_proto: @canonicalTitle, viewFont: tsFancy + tsSize(10), viewBounds: RelBounds(-208, l3, 200, 16), viewJustify: vjRightH + vjParentRightH, text: bookRef.author});
 		l3 := (l3 + 18);
 		(loop begin
-				l5 := SetBounds(l4, l3, (l4 + cuPageSize.width), (l3 + cuPageSize.height));
-				l6 := {_proto: @protoPrintPage, viewBounds: l5, bookRef: bookRef, pageNum: bookPage, printData: fields.body.printData};
+				bounds := SetBounds(l4, l3, (l4 + cuPageSize.width), (l3 + cuPageSize.height));
+				frame2 := {_proto: @protoPrintPage, viewBounds: bounds, bookRef: bookRef, pageNum: bookPage, printData: fields.body.printData};
 				if showMarks then begin
-						l6.showMarks := true
+						frame2.showMarks := true
 					end;
-				AddArraySlot(l2, l6);
-				if (((l4 := (l5.right + 8)) + cuPageSize.width) > l1.right) then begin
-						l3 := ((l5.bottom + 8) + 12);
+				AddArraySlot(list, frame2);
+				if (((l4 := (bounds.right + 8)) + cuPageSize.width) > box.right) then begin
+						l3 := ((bounds.bottom + 8) + 12);
 						l4 := 8
 					end;
 				if ((bookPage := (bookPage + 1)) > printTo) then begin
 						break
 					end;
-				(if ((l3 + cuPageSize.height) > l1.bottom) then break)
+				(if ((l3 + cuPageSize.height) > box.bottom) then break)
 			end);
-		(self.viewChildren := l2)
+		(self.viewChildren := list)
 	end,
 	printNextPageScript: func() begin
 		(if (bookPage <= printTo) then begin
@@ -3666,8 +3666,8 @@ auxForm := {
 				fields.body.fromPage := 1;
 				(self.text := "1")
 			end,
-			NumberEntered: func(a1) begin
-				(fields.body.fromPage := a1)
+			NumberEntered: func(floor) begin
+				(fields.body.fromPage := floor)
 			end
 		},
 		{
@@ -3680,8 +3680,8 @@ auxForm := {
 				self.text := NumberStr(fields.body.nPages);
 				(fields.toPage := fields.body.nPages)
 			end,
-			NumberEntered: func(a1) begin
-				(fields.body.toPage := a1)
+			NumberEntered: func(floor) begin
+				(fields.body.toPage := floor)
 			end
 		}
 	],
@@ -3689,53 +3689,53 @@ auxForm := {
 };
 
 modemNavigator := {
-	NavigateHelper: func(a1, a2) begin
+	NavigateHelper: func(a1, currentModemSetup) begin
 		modemEndpoint := {_proto: @protoBasicEndpoint, _parent: self};
-		l1 := nil;
+		result := nil;
 		try begin
 				modemEndpoint:instantiateFromTEndpoint(modemEndpoint, nil, a1);
-				l2 := [Array: self:MakeModemPrefs(a2.modemprefs), self:MakeModemProfile(a2.ModemProfile)];
-				if a2.FaxProfile then begin
-						AddArraySlot(l2, self:MakeFaxCapabilities(a2.FaxProfile))
+				list := [Array: self:MakeModemPrefs(currentModemSetup.modemprefs), self:MakeModemProfile(currentModemSetup.ModemProfile)];
+				if currentModemSetup.FaxProfile then begin
+						AddArraySlot(list, self:MakeFaxCapabilities(currentModemSetup.FaxProfile))
 					end;
-				local l1;
-				local l2;
-				local l3;
-				(foreach l4 in (l3 := modemEndpoint:option(l2, nil)) do begin
-						local l6;
-						if l4.result then begin
-								l1 := l4.result;
+				local result;
+				local list;
+				local option;
+				(foreach item in (option := modemEndpoint:option(list, nil)) do begin
+						local ex;
+						if item.result then begin
+								result := item.result;
 								break
 							end
 					end);
 				modemEndpoint:disposeLeavingTEndpoint()
 			end onexception |evt.ex| do begin
-				if HasSlot((l6 := CurrentException()), 'error) then begin
-						l1 := l6.error
+				if HasSlot((ex := CurrentException()), 'error) then begin
+						result := ex.error
 					end else begin
-						if HasSlot(l6.data, 'errorCode) then begin
-								l1 := l6.data.errorCode
+						if HasSlot(ex.data, 'errorCode) then begin
+								result := ex.data.errorCode
 							end else begin
-								l1 := -1
+								result := -1
 							end
 					end;
 				if modemEndpoint then begin
 						modemEndpoint:disposeLeavingTEndpoint()
 					end
 			end;
-		l1
+		result
 	end,
 	faxNavigate: compile(
 		constants: {
 			kROM_216: @newtonModemName
 		},
 		func(a1) begin
-			local l1, l2;
-			(if (not StrEqual((l1 := GetCurrentModemSetup()).modemName, kROM_216)) then begin
-					if (if (not (l2 := self:NavigateHelper(a1, l1))) then l1.FaxConnectSetupScript) then begin
-							l2 := l1:FaxConnectSetupScript(a1)
+			local currentModemSetup, navigateHelper;
+			(if (not StrEqual((currentModemSetup := GetCurrentModemSetup()).modemName, kROM_216)) then begin
+					if (if (not (navigateHelper := self:NavigateHelper(a1, currentModemSetup))) then currentModemSetup.FaxConnectSetupScript) then begin
+							navigateHelper := currentModemSetup:FaxConnectSetupScript(a1)
 						end;
-					l2
+					navigateHelper
 				end)
 		end),
 	voiceNavigate: compile(
@@ -3743,12 +3743,12 @@ modemNavigator := {
 			kROM_216: @newtonModemName
 		},
 		func(a1) begin
-			local l1, l2;
-			(if (not StrEqual((l1 := GetCurrentModemSetup()).modemName, kROM_216)) then begin
-					if (if (not (l2 := self:NavigateHelper(a1, l1))) then l1.VoiceConnectSetupScript) then begin
-							l2 := l1:VoiceConnectSetupScript(a1)
+			local currentModemSetup, navigateHelper;
+			(if (not StrEqual((currentModemSetup := GetCurrentModemSetup()).modemName, kROM_216)) then begin
+					if (if (not (navigateHelper := self:NavigateHelper(a1, currentModemSetup))) then currentModemSetup.VoiceConnectSetupScript) then begin
+							navigateHelper := currentModemSetup:VoiceConnectSetupScript(a1)
 						end;
-					l2
+					navigateHelper
 				end)
 		end),
 	modemNavigate: compile(
@@ -3756,12 +3756,12 @@ modemNavigator := {
 			kROM_216: @newtonModemName
 		},
 		func(a1) begin
-			local l1, l2;
-			(if (not StrEqual((l1 := GetCurrentModemSetup()).modemName, kROM_216)) then begin
-					if (if (not (l2 := self:NavigateHelper(a1, l1))) then l1.DataConnectSetupScript) then begin
-							l2 := l1:DataConnectSetupScript(a1)
+			local currentModemSetup, navigateHelper;
+			(if (not StrEqual((currentModemSetup := GetCurrentModemSetup()).modemName, kROM_216)) then begin
+					if (if (not (navigateHelper := self:NavigateHelper(a1, currentModemSetup))) then currentModemSetup.DataConnectSetupScript) then begin
+							navigateHelper := currentModemSetup:DataConnectSetupScript(a1)
 						end;
-					l2
+					navigateHelper
 				end)
 		end),
 	MakeModemProfile: func(a1) begin
@@ -3805,13 +3805,13 @@ modemNavigator := {
 			end);
 		{label: "mpro", type: 'option, form: 'bytes, opCode: 256, data: l12}
 	end,
-	MakeModemPrefs: func(a1) begin
-		local l1;
-		l1 := [Array: 0, (if a1.idModem then 1 else 0), 0, (if a1.useHardwareCD then 1 else 0), 0, (if a1.useConfigString then 1 else 0), (if a1.useDialOptions then 1 else 0), (if a1.hangUpAtDisconnect then 1 else 0), 0, 0, 0, 0, 0, 0, 75, 0, 0, 0, 0, 3, 0, 0, 0, 15, (if (if HasPath(a1, 'RemoveDialStrWhitespace) then (not a1.RemoveDialStrWhitespace)) then 0 else 1)];
-		{label: "mpre", type: 'option, form: 'bytes, opCode: 256, data: l1}
+	MakeModemPrefs: func(modemprefs) begin
+		local list;
+		list := [Array: 0, (if modemprefs.idModem then 1 else 0), 0, (if modemprefs.useHardwareCD then 1 else 0), 0, (if modemprefs.useConfigString then 1 else 0), (if modemprefs.useDialOptions then 1 else 0), (if modemprefs.hangUpAtDisconnect then 1 else 0), 0, 0, 0, 0, 0, 0, 75, 0, 0, 0, 0, 3, 0, 0, 0, 15, (if (if HasPath(modemprefs, 'RemoveDialStrWhitespace) then (not modemprefs.RemoveDialStrWhitespace)) then 0 else 1)];
+		{label: "mpre", type: 'option, form: 'bytes, opCode: 256, data: list}
 	end,
-	MakeFaxCapabilities: func(a1) begin
-		{label: "mfax", type: 'option, form: 'template, opCode: 512, data: {arglist: [Array: nil, 0, (if a1.serviceClass then a1.serviceClass else 15), (if a1.transmitDataMod then a1.transmitDataMod else 8190), (if a1.transmitHDLCDataMod then a1.transmitHDLCDataMod else 1), (if a1.receiveDataMod then a1.receiveDataMod else 8190), (if a1.receiveHDLCDataMod then a1.receiveHDLCDataMod else 1)], typelist: [Array: 'struct, 'uLong, 'uLong, 'uLong, 'uLong, 'uLong, 'uLong, 'uLong]}}
+	MakeFaxCapabilities: func(faxProfile) begin
+		{label: "mfax", type: 'option, form: 'template, opCode: 512, data: {arglist: [Array: nil, 0, (if faxProfile.serviceClass then faxProfile.serviceClass else 15), (if faxProfile.transmitDataMod then faxProfile.transmitDataMod else 8190), (if faxProfile.transmitHDLCDataMod then faxProfile.transmitHDLCDataMod else 1), (if faxProfile.receiveDataMod then faxProfile.receiveDataMod else 8190), (if faxProfile.receiveHDLCDataMod then faxProfile.receiveHDLCDataMod else 1)], typelist: [Array: 'struct, 'uLong, 'uLong, 'uLong, 'uLong, 'uLong, 'uLong, 'uLong]}}
 	end
 };
 
@@ -3828,13 +3828,13 @@ smartMail := {
 	MakeNewEntry: func() begin
 		{class: 'smartMail, options: [Array: ], arg: nil}
 	end,
-	SetupForm: func(a1, a2) begin
+	SetupForm: func(entry, a2) begin
 		nil
 	end,
-	StringExtract: func(a1, a2) begin
+	StringExtract: func(entry, nLines) begin
 		local l1;
-		l1 := (if (if a1.text then (StrLen(a1.text) > 0)) then StrTruncate(Clone(a1.text), 50) else "-empty-");
-		(if a1.title then Stringer([Array: a1.title, " ", l1]) else l1)
+		l1 := (if (if entry.text then (StrLen(entry.text) > 0)) then StrTruncate(Clone(entry.text), 50) else "-empty-");
+		(if entry.title then Stringer([Array: entry.title, " ", l1]) else l1)
 	end,
 	_proto: @newtStationery
 };
@@ -3859,11 +3859,11 @@ letterShapes_2 := {
 	viewDrawScript: func() begin
 		DrawLetterScript()
 	end,
-	viewClickScript: func(a1) begin
-		local l1;
+	viewClickScript: func(unit) begin
+		local clickLetterScript2;
 		clicker();
-		(if (l1 := ClickLetterScript(a1)) then begin
-				displayOrigin := l1;
+		(if (clickLetterScript2 := ClickLetterScript(unit)) then begin
+				displayOrigin := clickLetterScript2;
 				hiliteIndex := GetHiliteIndex();
 				letterShapeLabel:UpdateText();
 				enableCluster:getNewSetting()
@@ -3944,9 +3944,9 @@ enableCluster := {
 
 A2Z_2Proto := {
 	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjSiblingBottomV,
-	IndexClickScript: func(a1) begin
+	IndexClickScript: func(curIndex) begin
 		GetVariable(self, other):unhilite();
-		displayOrigin := (origin := letters[a1]);
+		displayOrigin := (origin := letters[curIndex]);
 		SetHiliteIndex((hiliteIndex := 0));
 		letterShapeLabel:UpdateText();
 		enableCluster:getNewSetting();
@@ -3954,9 +3954,9 @@ A2Z_2Proto := {
 	end,
 	OriginIndex: func() begin
 		if (if letters then origin) then begin
-				(for l1 := 0 to (StrLen(letters) - 1) do begin
-						if (letters[l1] = origin) then begin
-								return l1
+				(for i := 0 to (StrLen(letters) - 1) do begin
+						if (letters[i] = origin) then begin
+								return i
 							end
 					end)
 			end;
@@ -4041,8 +4041,8 @@ globalHeapvarwannabesItem := {
 	declareSelf: 'recogPrefs,
 	icon: globalHeapvarwannabesItemIcon,
 	viewSetupFormScript: func() begin
-		local l1;
-		(if (if (l1 := Gestalt('[Array: 33554443, [Array: struct, boolean], 1])) then l1[0]) then (remoteWriting.viewFlags := 0))
+		local gestalt2;
+		(if (if (gestalt2 := Gestalt('[Array: 33554443, [Array: struct, boolean], 1])) then gestalt2[0]) then (remoteWriting.viewFlags := 0))
 	end,
 	stepChildren: [stepChildren:
 		{
@@ -4056,24 +4056,24 @@ globalHeapvarwannabesItem := {
 				{item: "50% Scaling", value: 50}
 			],
 			TextSetup: func() begin
-				if (not (l1 := currentItem)) then begin
-						l1 := 1;
-						l2 := userConfiguration.inkWordScaling;
-						local l1;
-						local l2;
-						(for l3 := 0 to (Length(labelCommands) - 1) do begin
-								if (labelCommands[l3].value = l2) then begin
-										break (l1 := l3)
+				if (not (currentItem2 := currentItem)) then begin
+						currentItem2 := 1;
+						inkWordScaling := userConfiguration.inkWordScaling;
+						local currentItem2;
+						local inkWordScaling;
+						(for i := 0 to (Length(labelCommands) - 1) do begin
+								if (labelCommands[i].value = inkWordScaling) then begin
+										break (currentItem2 := i)
 									end
 							end)
 					end;
-				currentItem := l1;
-				labelCommands[l1].item
+				currentItem := currentItem2;
+				labelCommands[currentItem2].item
 			end,
-			LabelActionScript: func(a1) begin
+			LabelActionScript: func(index) begin
 				AddUndoAction('pickActionScript, [Array: currentItem]);
-				userConfiguration.inkWordScaling := labelCommands[a1].value;
-				(currentItem := a1)
+				userConfiguration.inkWordScaling := labelCommands[index].value;
+				(currentItem := index)
 			end,
 			_proto: @protoLabelPicker
 		},
@@ -4201,8 +4201,8 @@ outputSourcePicker := {
 	text: "Play using",
 	labelCommands: nil,
 	viewSetupFormScript: func() begin
-		local l1, l2;
-		l2 := (if (l1 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1])) then l1[6] else 0);
+		local gestalt2, l2;
+		l2 := (if (gestalt2 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1])) then gestalt2[6] else 0);
 		labelCommands := [Array: ];
 		if (BAnd(l2, 1) <> 0) then begin
 				AddArraySlot(labelCommands, {item: "Internal Speaker", value: 1})
@@ -4216,26 +4216,26 @@ outputSourcePicker := {
 		inherited:?viewSetupFormScript()
 	end,
 	TextSetup: func() begin
-		if (not (l1 := GetUserConfig('outputDevice))) then begin
-				l1 := 0
+		if (not (outputDevice := GetUserConfig('outputDevice))) then begin
+				outputDevice := 0
 			end;
-		l1 := BAnd(l1, 9);
-		local l1;
-		local l2;
-		l2 := (foreach l3 in labelCommands do begin
-				if (l3.value = l1) then begin
-						break l3
+		outputDevice := BAnd(outputDevice, 9);
+		local outputDevice;
+		local labelCommand;
+		labelCommand := (foreach item in labelCommands do begin
+				if (item.value = outputDevice) then begin
+						break item
 					end
 			end);
-		if (not l2) then begin
-				l2 := labelCommands[0];
-				SetUserConfig('outputDevice, l2.value)
+		if (not labelCommand) then begin
+				labelCommand := labelCommands[0];
+				SetUserConfig('outputDevice, labelCommand.value)
 			end;
-		return l2.item
+		return labelCommand.item
 	end,
-	LabelActionScript: func(a1) begin
+	LabelActionScript: func(index) begin
 		local value;
-		value := labelCommands[a1].value;
+		value := labelCommands[index].value;
 		AddDeferredCall(func() begin
 			SetOutputDevice(value);
 			PlaySoundSync(GetRegisteredSound(GetUserConfig('beepSound)));
@@ -4258,8 +4258,8 @@ soundPicker := {
 	TextSetup: func() begin
 		GetRegisteredSound(GetUserConfig('beepSound)).userName
 	end,
-	LabelActionScript: func(a1) begin
-		SetUserConfig('beepSound, labelCommands[a1].soundSymbol);
+	LabelActionScript: func(index) begin
+		SetUserConfig('beepSound, labelCommands[index].soundSymbol);
 		self:SysBeep()
 	end,
 	debug: 2651810,
@@ -4293,7 +4293,7 @@ paper := {
 	configPath: [pathExpr: 'userConfiguration, 'paperSize],
 	viewSetupFormScript: func() begin
 		self.items := GetUserConfig('paperSizes);
-		self.labelCommands := (foreach l1 in items collect l1.title);
+		self.labelCommands := (foreach item in items collect item.title);
 		inherited:viewSetupFormScript()
 	end,
 	debug: 21933,
@@ -4327,8 +4327,8 @@ modemPicker := {
 	TextSetup: func() begin
 		GetUserConfig('currentModem)
 	end,
-	LabelActionScript: func(a1) begin
-		SetUserConfig('currentModem, labelCommands[a1])
+	LabelActionScript: func(index) begin
+		SetUserConfig('currentModem, labelCommands[index])
 	end,
 	viewSetupFormScript: func() begin
 		labelCommands := GetModemPopUpList();
@@ -4353,9 +4353,9 @@ alarmSoundPicker := {
 	TextSetup: func() begin
 		GetRegisteredSound(GetUserConfig('alarmSound)).userName
 	end,
-	LabelActionScript: func(a1) begin
-		SetUserConfig('alarmSound, labelCommands[a1].soundSymbol);
-		PlaySoundIrregardlessAtVolume(GetRegisteredSound(labelCommands[a1].soundSymbol), GetAlarmVolume())
+	LabelActionScript: func(index) begin
+		SetUserConfig('alarmSound, labelCommands[index].soundSymbol);
+		PlaySoundIrregardlessAtVolume(GetRegisteredSound(labelCommands[index].soundSymbol), GetAlarmVolume())
 	end,
 	debug: 72709794,
 	preallocatedContext: 'alarmSoundPicker,
@@ -4439,9 +4439,9 @@ setPINButton := {
 	end,
 	buttonClickScript: func() begin
 		AddDeferredCall(func() begin
-			local l1;
-			(if (l1 := ModalChangePIN(GetUserConfig('passwordkey))) then begin
-					SetUserConfig('passwordkey, l1);
+			local passwordkey;
+			(if (passwordkey := ModalChangePIN(GetUserConfig('passwordkey))) then begin
+					SetUserConfig('passwordkey, passwordkey);
 					if (not GetUserConfig('usepassword)) then begin
 							SetUserConfig('usepassword, true);
 							SetUserConfig('passwordFrequency, 0)
@@ -4480,18 +4480,18 @@ PINFreqPicker := {
 	viewFlags: vVisible + vReadOnly + vClickable,
 	labelCommands: [|Array|: "Every Power On", "Once an Hour", "Once a Day", never],
 	TextSetup: func() begin
-		local l1;
-		l1 := GetUserConfig('passwordFrequency);
-		(if ((not GetUserConfig('usepassword)) or (if GetUserConfig('usepassword) then (not l1))) then labelCommands[3] else (if (l1 = 0) then labelCommands[0] else (if (l1 = 60) then labelCommands[1] else (if (l1 = 1440) then labelCommands[2]))))
+		local passwordFrequency;
+		passwordFrequency := GetUserConfig('passwordFrequency);
+		(if ((not GetUserConfig('usepassword)) or (if GetUserConfig('usepassword) then (not passwordFrequency))) then labelCommands[3] else (if (passwordFrequency = 0) then labelCommands[0] else (if (passwordFrequency = 60) then labelCommands[1] else (if (passwordFrequency = 1440) then labelCommands[2]))))
 	end,
-	LabelActionScript: func(a1) begin
-		(if (a1 = 3) then SetUserConfig('usepassword, nil) else begin
+	LabelActionScript: func(index) begin
+		(if (index = 3) then SetUserConfig('usepassword, nil) else begin
 				SetUserConfig('usepassword, true);
-				SetUserConfig('passwordFrequency, ([Array: 0, 60, 1440, nil])[a1])
+				SetUserConfig('passwordFrequency, ([Array: 0, 60, 1440, nil])[index])
 			end)
 	end,
-	viewClickScript: func(a1) begin
-		if (not self:TrackHilite(a1)) then begin
+	viewClickScript: func(unit) begin
+		if (not self:TrackHilite(unit)) then begin
 				return nil
 			end;
 		if GetUserConfig('passwordkey) then begin

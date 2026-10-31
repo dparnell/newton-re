@@ -15,20 +15,20 @@ export4 := {
 	allinfoHeight: 0,
 	childBottom: 0,
 	childToScroll: nil,
-	ViewScroll2DScript: func(a1, a2) begin
-		local l1, l2, l3;
-		l1 := childToScroll.viewOriginY;
+	ViewScroll2DScript: func(arrowDirection, a2) begin
+		local viewOriginY, l2, most;
+		viewOriginY := childToScroll.viewOriginY;
 		l2 := (max(a2.count, 1) * 16);
-		if (if (a1 = 'up) then (l1 > 0)) then begin
-				l3 := max(0, (l1 - l2))
+		if (if (arrowDirection = 'up) then (viewOriginY > 0)) then begin
+				most := max(0, (viewOriginY - l2))
 			end else begin
-				if ((l1 + allinfoHeight) < childBottom) then begin
-						l3 := min((childBottom - allinfoHeight), (l1 + l2))
+				if ((viewOriginY + allinfoHeight) < childBottom) then begin
+						most := min((childBottom - allinfoHeight), (viewOriginY + l2))
 					end
 			end;
-		(if l3 then begin
-				childToScroll:SetOrigin(0, l3);
-				scrollArrows.yPos := l3;
+		(if most then begin
+				childToScroll:SetOrigin(0, most);
+				scrollArrows.yPos := most;
 				scrollArrows:AdjustArrows();
 				RefreshViews()
 			end)
@@ -56,9 +56,9 @@ export4Item_2 := {viewClass: clView, _proto: @protoUpDownScroller, preAllocatedC
 export4Item_3 := {
 	viewBounds: {top: 20, left: 0, right: -20, bottom: 0},
 	viewSetupChildrenScript: func() begin
-		local l1;
-		if (if (if (if target then IsSoupEntry(target)) then (l1 := GetViewDefs(target.class))) then l1.allinfo) then begin
-				self.stepChildren := [Array: l1.allinfo]
+		local viewDefs;
+		if (if (if (if target then IsSoupEntry(target)) then (viewDefs := GetViewDefs(target.class))) then viewDefs.allinfo) then begin
+				self.stepChildren := [Array: viewDefs.allinfo]
 			end;
 		inherited:?viewSetupChildrenScript()
 	end,
@@ -74,10 +74,10 @@ export4Item_3 := {
 	end,
 	viewFlags: vVisible + vClipping,
 	viewSetupDoneScript: func() begin
-		local l1, l2;
+		local l1, childViewFrames;
 		inherited:?viewSetupDoneScript();
-		if (if (l2 := self:ChildViewFrames()) then (Length(l2) > 0)) then begin
-				allinfoHeight := ((l1 := (childToScroll := l2[0]):GlobalBox()).bottom - l1.top);
+		if (if (childViewFrames := self:ChildViewFrames()) then (Length(childViewFrames) > 0)) then begin
+				allinfoHeight := ((l1 := (childToScroll := childViewFrames[0]):GlobalBox()).bottom - l1.top);
 				childBottom := childToScroll:GetBottom()
 			end;
 		(if (childBottom <= allinfoHeight) then (if scrollArrows.viewCObject then scrollArrows:Hide()) else begin

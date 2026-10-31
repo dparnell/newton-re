@@ -43,11 +43,11 @@ dateCalculator := "Date Calculator";
 
 export118Item := {
 	calcLineLabel: "ﰁStart Date",
-	ComputeValue: func(a1) begin
-		local l1, l2, l3;
+	ComputeValue: func(list) begin
+		local l1, listItem, listItem2;
 		l1 := nil;
-		l2 := a1[1];
-		if self:DateOutOfRange((l1 := ((l3 := a1[2]) - (l2 * 1440)))) then begin
+		listItem := list[1];
+		if self:DateOutOfRange((l1 := ((listItem2 := list[2]) - (listItem * 1440)))) then begin
 				l1 := nil;
 				self:Notify(3, "Date Calculator", "The calculated date is out of range.")
 			end;
@@ -61,11 +61,11 @@ export118Item := {
 
 export118Item_2 := {
 	calcLineLabel: "# of Days",
-	ComputeValue: func(a1) begin
-		local l1, l2, l3;
-		l1 := a1[0];
+	ComputeValue: func(list) begin
+		local listItem, l2, listItem2;
+		listItem := list[0];
 		l2 := nil;
-		return (((l3 := a1[2]) - l1) div 1440)
+		return (((listItem2 := list[2]) - listItem) div 1440)
 	end,
 	integerField: true,
 	indent: 93,
@@ -80,11 +80,11 @@ export118Item_2 := {
 
 export118Item_3 := {
 	calcLineLabel: "ﰁEnd Date",
-	ComputeValue: func(a1) begin
-		local l1, l2, l3;
-		l1 := a1[0];
-		l2 := a1[1];
-		if self:DateOutOfRange((l3 := (l1 + (l2 * 1440)))) then begin
+	ComputeValue: func(list) begin
+		local listItem, listItem2, l3;
+		listItem := list[0];
+		listItem2 := list[1];
+		if self:DateOutOfRange((l3 := (listItem + (listItem2 * 1440)))) then begin
 				l3 := nil;
 				self:Notify(3, "Date Calculator", "The calculated date is out of range.")
 			end;

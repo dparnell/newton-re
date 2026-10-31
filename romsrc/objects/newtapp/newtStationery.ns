@@ -12,16 +12,16 @@ newtStationery := {
 	MakeNewEntry: func() begin
 		{}
 	end,
-	MinimalBounds: func(a1) begin
+	MinimalBounds: func(target) begin
 		nil
 	end,
-	SetupForm: func(a1, a2) begin
+	SetupForm: func(entry, a2) begin
 		nil
 	end,
-	StringExtract: func(a1, a2) begin
+	StringExtract: func(entry, nLines) begin
 		""
 	end,
-	TextScript: func(a1, a2) begin
+	TextScript: func(entry, target) begin
 		""
 	end
 };

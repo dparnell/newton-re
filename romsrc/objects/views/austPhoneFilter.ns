@@ -3,22 +3,22 @@
 austPhoneFilter := {
 	item: "austPhoneFilter",
 	templateArray: [|Array|: @auststdPhoneFilter, @usDefaultPhoneFilter],
-	Init: func(a1) begin
+	Init: func(currentWord) begin
 		self:SetTemplate(@auststdPhoneFilter)
 	end,
-	switch: func(a1, a2) begin
-		self:SetTemplate(templateArray[a1])
+	switch: func(index, wordForDisplay) begin
+		self:SetTemplate(templateArray[index])
 	end,
-	SetupString: func(a1) begin
-		(if HasPath(curTemplate, 'SetupString) then curTemplate:SetupString(self, a1) else a1)
+	SetupString: func(currentWord) begin
+		(if HasPath(curTemplate, 'SetupString) then curTemplate:SetupString(self, currentWord) else currentWord)
 	end,
-	CleanupString: func(a1) begin
-		(if HasPath(curTemplate, 'CleanupString) then curTemplate:CleanupString(a1) else a1)
+	CleanupString: func(currentWord) begin
+		(if HasPath(curTemplate, 'CleanupString) then curTemplate:CleanupString(currentWord) else currentWord)
 	end,
-	SetTemplate: func(a1) begin
-		self.format := a1.format;
-		self.string := a1.string;
-		self.filters := a1.filters;
-		(self.curTemplate := a1)
+	SetTemplate: func(templateArrayItem) begin
+		self.format := templateArrayItem.format;
+		self.string := templateArrayItem.string;
+		self.filters := templateArrayItem.filters;
+		(self.curTemplate := templateArrayItem)
 	end
 };

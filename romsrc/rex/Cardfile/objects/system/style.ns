@@ -60,13 +60,13 @@ style := {
 	end,
 	selectedCard: nil,
 	viewSetupDoneScript: func() begin
-		l3 := Length((l1 := self:ChildViewFrames()));
-		local l1;
-		local l2;
-		local l3;
-		(for l2 := 0 to (l3 - 1) do begin
-				if (l1[l2].viewFormat <> 0) then begin
-						break (selectedCard := l1[l2])
+		count := Length((childViewFrames := self:ChildViewFrames()));
+		local childViewFrames;
+		local i;
+		local count;
+		(for i := 0 to (count - 1) do begin
+				if (childViewFrames[i].viewFormat <> 0) then begin
+						break (selectedCard := childViewFrames[i])
 					end
 			end)
 	end,
@@ -74,28 +74,28 @@ style := {
 		checkPrefix: [|Array|: true, nil],
 		checkPaths: [|Array|: 'cardType],
 		showEmptyData: true,
-		shapeFunc: func(a1, a2, a3, a4) begin
-			if (not (l2 := a1[0])) then begin
-					l2 := 0
+		shapeFunc: func(v20_wwwwwwwwwwvvvvvv, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, a3, a4) begin
+			if (not (v20_wwwwwwwwwwvvvvvvItem := v20_wwwwwwwwwwvvvvvv[0])) then begin
+					v20_wwwwwwwwwwvvvvvvItem := 0
 				end;
-			local l1;
-			local l2;
-			local l3;
-			local l4;
-			local l5;
-			(foreach l6 in GetViewDefs('person) do begin
-					if (if (l6.type = 'bizcard) then (l6.bizCardNum = l2)) then begin
-							break (l1 := l6.bizCardIcon)
+			local bizCardIcon;
+			local v20_wwwwwwwwwwvvvvvvItem;
+			local text;
+			local strFontWidth2;
+			local fontAscent2;
+			(foreach item in GetViewDefs('person) do begin
+					if (if (item.type = 'bizcard) then (item.bizCardNum = v20_wwwwwwwwwwvvvvvvItem)) then begin
+							break (bizCardIcon := item.bizCardIcon)
 						end
 				end);
-			(if l1 then begin
-					l4 := StrFontWidth((l3 := "Card Style: "), a4.font);
-					l5 := FontAscent(a4.font);
-					{shape: [Array: MakeText(l3, a2.left, a2.top, a2.right, (a2.top + l5)), OffsetShape(MakeShape(l1), (a2.left + l4), (a2.top + 3))]}
+			(if bizCardIcon then begin
+					strFontWidth2 := StrFontWidth((text := "Card Style: "), a4.font);
+					fontAscent2 := FontAscent(a4.font);
+					{shape: [Array: MakeText(text, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.left, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.right, (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top + fontAscent2)), OffsetShape(MakeShape(bizCardIcon), (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.left + strFontWidth2), (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top + 3))]}
 				end)
 		end,
-		formatFunc: func(a1) begin
-			ParamStr("Card Style: ^0", [Array: (a1[0] + 1)])
+		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+			ParamStr("Card Style: ^0", [Array: (v20_wwwwwwwwwwvvvvvv[0] + 1)])
 		end
 	},
 	protection: 'private,

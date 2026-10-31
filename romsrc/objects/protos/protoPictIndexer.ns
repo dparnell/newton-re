@@ -20,8 +20,8 @@ protoPictIndexer := {
 			end;
 		(if (startLeft < 0) then (startLeft := 0))
 	end,
-	hiliter: func(a1) begin
-		(if (if viewCObject then (a1 >= 0)) then (if _vertical then self:InvertRect(0, (startLeft + ((a1 * iconBBox.bottom) div numIndices)), viewBBox.right, (startLeft + (((a1 + 1) * iconBBox.bottom) div numIndices))) else self:InvertRect((startLeft + ((a1 * iconBBox.right) div numIndices)), 0, (startLeft + (((a1 + 1) * iconBBox.right) div numIndices)), viewBBox.bottom)))
+	hiliter: func(hiliteShape) begin
+		(if (if viewCObject then (hiliteShape >= 0)) then (if _vertical then self:InvertRect(0, (startLeft + ((hiliteShape * iconBBox.bottom) div numIndices)), viewBBox.right, (startLeft + (((hiliteShape + 1) * iconBBox.bottom) div numIndices))) else self:InvertRect((startLeft + ((hiliteShape * iconBBox.right) div numIndices)), 0, (startLeft + (((hiliteShape + 1) * iconBBox.right) div numIndices)), viewBBox.bottom)))
 	end,
 	unhilite: func() begin
 		(if (curIndex >= 0) then begin
@@ -32,13 +32,13 @@ protoPictIndexer := {
 	viewDrawScript: func() begin
 		self:hiliter(curIndex)
 	end,
-	viewClickScript: func(a1) begin
-		if self:DoDrawing('trackPictHilite, [Array: a1]) then begin
+	viewClickScript: func(unit) begin
+		if self:DoDrawing('trackPictHilite, [Array: unit]) then begin
 				self:IndexClickScript(curIndex)
 			end;
 		true
 	end,
-	IndexClickScript: func(a1) begin
+	IndexClickScript: func(curIndex) begin
 		nil
 	end,
 	SetHilite: func(a1) begin
@@ -48,14 +48,14 @@ protoPictIndexer := {
 			end)
 	end,
 	trackPictHilite: func(a1) begin
-		local l1, l2;
+		local box, l2;
 		InkOff(a1);
-		l1 := self:GlobalBox();
+		box := self:GlobalBox();
 		(loop begin
 				if _vertical then begin
-						l2 := ((((GetPoint(5, a1) - startLeft) - l1.top) * numIndices) div iconBBox.bottom)
+						l2 := ((((GetPoint(5, a1) - startLeft) - box.top) * numIndices) div iconBBox.bottom)
 					end else begin
-						l2 := ((((GetPoint(4, a1) - startLeft) - l1.left) * numIndices) div iconBBox.right)
+						l2 := ((((GetPoint(4, a1) - startLeft) - box.left) * numIndices) div iconBBox.right)
 					end;
 				if (l2 >= numIndices) then begin
 						l2 := -1

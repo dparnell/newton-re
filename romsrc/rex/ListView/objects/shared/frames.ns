@@ -41,10 +41,10 @@ export145Proto := {
 					end onexception |evt.ex.fr.store| do begin
 						error := CurrentException().error;
 						where := EntryStore(Entry):GetName();
-						if (error = -10605) then begin
+						if (error = kSError_WriteProtected) then begin
 								msg := "To Do changes could not be saved (\u201C\u^0\u201D\u is write-protected)"
 							end else begin
-								if (error = -10617) then begin
+								if (error = kSError_StoreFull) then begin
 										msg := "To Do changes could not be saved (\u201C\u^0\u201D\u is full)"
 									end
 							end;
@@ -806,10 +806,10 @@ export145Proto := {
 										end onexception |evt.ex.fr.store| do begin
 											error := CurrentException().error;
 											where := EntryStore(Entry):GetName();
-											if (error = -10605) then begin
+											if (error = kSError_WriteProtected) then begin
 													msg := "To Do changes could not be saved (\u201C\u^0\u201D\u is write-protected)"
 												end else begin
-													if (error = -10617) then begin
+													if (error = kSError_StoreFull) then begin
 															msg := "To Do changes could not be saved (\u201C\u^0\u201D\u is full)"
 														end
 												end;
@@ -1489,10 +1489,10 @@ export145Proto := {
 				end onexception |evt.ex.fr.store| do begin
 					error := CurrentException().error;
 					where := aDestStore:GetName();
-					if (error = -10605) then begin
+					if (error = kSError_WriteProtected) then begin
 							msg := "To Do changes could not be saved (\u201C\u^0\u201D\u is write-protected)"
 						end else begin
-							if (error = -10617) then begin
+							if (error = kSError_StoreFull) then begin
 									msg := "To Do changes could not be saved (\u201C\u^0\u201D\u is full)"
 								end
 						end;

@@ -7,12 +7,12 @@ newtCountrySymbolFilter := {
 		@locationPopup:New({default: GetCountryEntry(GetUserConfig('currentCountry))[0], spots: @countrySoupName, result: 'symbol}, self:GlobalLabelBounds(), self)
 	end,
 	PathToText: func() begin
-		local l1;
-		(l1 := GetCountryEntry(target.(path)))[0].name
+		local countryEntry;
+		(countryEntry := GetCountryEntry(target.(path)))[0].name
 	end,
 	TextToPath: func(a1) begin
-		local l1;
-		(if (not StrFilled(a1)) then a1 else (l1 := GetCountryEntry(a1))[0].symbol)
+		local countryEntry;
+		(if (not StrFilled(a1)) then a1 else (countryEntry := GetCountryEntry(a1))[0].symbol)
 	end
 };
 

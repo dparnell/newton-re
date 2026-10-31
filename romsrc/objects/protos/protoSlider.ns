@@ -11,8 +11,8 @@ protoSlider := {
 	ChangedSlider: func() begin
 		(vars.(valuePath) := viewValue)
 	end,
-	viewChangedScript: func(a1, a2) begin
-		(if (a1 = 'viewValue) then self:trackSlider())
+	viewChangedScript: func(slot, view) begin
+		(if (slot = 'viewValue) then self:trackSlider())
 	end,
 	viewFinalChangeScript: func(a1, a2) begin
 		(if (a2 <> a1) then begin

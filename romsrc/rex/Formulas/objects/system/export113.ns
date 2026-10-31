@@ -8,7 +8,7 @@ export113 := {
 	viewSetupFormScript: func() begin
 		(self.text := Stringer([Array: "\u2022\u", " ", text]))
 	end,
-	viewClickScript: func(a1) begin
+	viewClickScript: func(unit) begin
 		self:LaunchFormula();
 		return true
 	end,

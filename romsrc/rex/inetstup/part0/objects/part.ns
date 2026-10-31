@@ -21,7 +21,7 @@ part := array(nil, {
 								if (not layouts.(target.class)) then begin
 										layouts.(target.class) := call GetRoot().|InternetSetup:NIE|.GetViewsToDisplay with (target)
 									end;
-								(if (GetVariable(self, 'newtAppBase) <> GetRoot().|InternetSetup:NIE|) then (self.viewFlags := 1))
+								(if (GetVariable(self, 'newtAppBase) <> GetRoot().|InternetSetup:NIE|) then (self.viewFlags := vVisible))
 							end)
 					end,
 					boldTitle: true,
@@ -30,7 +30,7 @@ part := array(nil, {
 					showBullet: true,
 					showMultipleData: true,
 					viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
-					viewClickScript: func(a1) begin
+					viewClickScript: func(unit) begin
 						true
 					end,
 					_proto: objectsProto
@@ -93,71 +93,71 @@ part := array(nil, {
 	theForm: {
 		allViewDefs: {},
 		superSymbol: 'INET,
-		GetNewPath: func(a1, a2) begin
-			local l1, l2, l3, l4, l5, l6, l7;
+		GetNewPath: func(target, slot) begin
+			local dataPaths, checkPrefixItem2, infoFrame, l4, count, l6, checkPrefixItem;
 			l4 := 0;
 			l6 := nil;
-			if (l3 := self:GetInfoFrame(a2, a1.class)) then begin
-					if (if (l1 := self:MakeDataPaths(l3.checkPrefix[0], l3.checkPaths, l3.stringData)) then (not self:HasPathData(a1, l1, l3.stringData))) then begin
-							if l3.frameData then begin
-									if HasSlot(l3, 'FillFrameData) then begin
-											a1.(l3.checkPrefix[1]) := l3:?FillFrameData(l3.frameData)
+			if (infoFrame := self:GetInfoFrame(slot, target.class)) then begin
+					if (if (dataPaths := self:MakeDataPaths(infoFrame.checkPrefix[0], infoFrame.checkPaths, infoFrame.stringData)) then (not self:HasPathData(target, dataPaths, infoFrame.stringData))) then begin
+							if infoFrame.frameData then begin
+									if HasSlot(infoFrame, 'FillFrameData) then begin
+											target.(infoFrame.checkPrefix[1]) := infoFrame:?FillFrameData(infoFrame.frameData)
 										end else begin
-											a1.(l3.checkPrefix[1]) := DeepClone(l3.frameData)
+											target.(infoFrame.checkPrefix[1]) := DeepClone(infoFrame.frameData)
 										end;
 									targetView:?StartFlush()
 								end;
-							l7 := l3.checkPrefix[0]
+							checkPrefixItem := infoFrame.checkPrefix[0]
 						end else begin
-							if (l2 := l3.checkPrefix[1]) then begin
+							if (checkPrefixItem2 := infoFrame.checkPrefix[1]) then begin
 									l4 := 0;
-									if (not a1.(l2)) then begin
-											a1.(l2) := [Array: ]
+									if (not target.(checkPrefixItem2)) then begin
+											target.(checkPrefixItem2) := [Array: ]
 										end;
-									l5 := Length(a1.(l2));
-									(while (l4 < l5) do begin
-											AddArraySlot((newPath := Clone(l3.checkPrefix[1])), l4);
-											if (if (l1 := self:MakeDataPaths(newPath, l3.checkPaths, l3.stringData)) then (not self:HasPathData(a1, l1, l3.stringData))) then begin
+									count := Length(target.(checkPrefixItem2));
+									(while (l4 < count) do begin
+											AddArraySlot((newPath := Clone(infoFrame.checkPrefix[1])), l4);
+											if (if (dataPaths := self:MakeDataPaths(newPath, infoFrame.checkPaths, infoFrame.stringData)) then (not self:HasPathData(target, dataPaths, infoFrame.stringData))) then begin
 													break (l6 := true)
 												end;
 											(l4 := (l4 + 1))
 										end);
 									if (not l6) then begin
-											if l3.stringData then begin
-													AddArraySlot(a1.(l3.checkPrefix[1]), "")
+											if infoFrame.stringData then begin
+													AddArraySlot(target.(infoFrame.checkPrefix[1]), "")
 												end else begin
-													if l3.arrayData then begin
-															AddArraySlot(a1.(l3.checkPrefix[1]), DeepClone(l3.arrayData))
+													if infoFrame.arrayData then begin
+															AddArraySlot(target.(infoFrame.checkPrefix[1]), DeepClone(infoFrame.arrayData))
 														end else begin
-															if l3.frameData then begin
-																	if HasSlot(l3, 'FillFrameData) then begin
-																			a1.(l3.checkPrefix[1]) := l3:?FillFrameData(l3.frameData)
+															if infoFrame.frameData then begin
+																	if HasSlot(infoFrame, 'FillFrameData) then begin
+																			target.(infoFrame.checkPrefix[1]) := infoFrame:?FillFrameData(infoFrame.frameData)
 																		end else begin
-																			a1.(l3.checkPrefix[1]) := DeepClone(l3.frameData)
+																			target.(infoFrame.checkPrefix[1]) := DeepClone(infoFrame.frameData)
 																		end
 																end else begin
-																	AddArraySlot(a1.(l3.checkPrefix[1]), {})
+																	AddArraySlot(target.(infoFrame.checkPrefix[1]), {})
 																end
 														end
 												end
 										end;
-									if IsArray((l7 := Clone(l3.checkPrefix[1]))) then begin
-											AddArraySlot(l7, l4)
+									if IsArray((checkPrefixItem := Clone(infoFrame.checkPrefix[1]))) then begin
+											AddArraySlot(checkPrefixItem, l4)
 										end
 								end else begin
-									l7 := nil
+									checkPrefixItem := nil
 								end
 						end
 				end;
-			l7
+			checkPrefixItem
 		end,
 		previousLayout: 'overview,
 		API_AddEntry: compile(
 			constants: {
 				kFunction_1003dc5: func(a1) begin
 					l1 := '{serial: |Serial:NIE|, Modem: |Modem:NIE|, MacIP: |LocalTalk:NIE|, ethernet: |Ethernet:NIE|};
-					l2 := Clone(GetRoot().|InternetSetup:NIE|.allSoups.INETSetupSoup);
-					l2:MakeSoup('|InternetSetup:NIE|);
+					copy := Clone(GetRoot().|InternetSetup:NIE|.allSoups.INETSetupSoup);
+					copy:MakeSoup('|InternetSetup:NIE|);
 					if a1 then begin
 							if a1.physicalLayer then begin
 									l3 := (if l1.(a1.physicalLayer) then l1.(a1.physicalLayer) else a1.physicalLayer)
@@ -167,39 +167,39 @@ part := array(nil, {
 						end else begin
 							l3 := '|Modem:NIE|
 						end;
-					l4 := l2:AdoptEntry(nil, l3);
+					adoptEntry := copy:AdoptEntry(nil, l3);
 					if a1 then begin
 							local l1;
-							local l2;
+							local copy;
 							local l3;
-							local l4;
-							(foreach l5, l6 deeply in a1 do begin
-									local l8;
-									if (if (l5 <> 'class) then (l5 <> 'physicalLayer)) then begin
-											l4.(l5) := DeepClone(l6)
+							local adoptEntry;
+							(foreach key, value deeply in a1 do begin
+									local dataDefs;
+									if (if (key <> 'class) then (key <> 'physicalLayer)) then begin
+											adoptEntry.(key) := DeepClone(value)
 										end
 								end);
 							if ((not a1.version) or (a1.version < 2)) then begin
-									l8 := GetDataDefs(l3);
-									l4 := l8:?DataConversion(l4)
+									dataDefs := GetDataDefs(l3);
+									adoptEntry := dataDefs:?DataConversion(adoptEntry)
 								end
 						end;
-					l4
+					adoptEntry
 				end
 			},
-			func(a1, a2) begin
-				local l1, l2, l3;
+			func(a1, store) begin
+				local l1, internalStore, soup;
 				l1 := call (kFunction_1003dc5) with (a1);
-				l2 := self:GetAppPreferences().internalStore;
-				if (not a2) then begin
-						if l2 then begin
-								a2 := GetStores()[0]
+				internalStore := self:GetAppPreferences().internalStore;
+				if (not store) then begin
+						if internalStore then begin
+								store := GetStores()[0]
 							end else begin
-								a2 := GetDefaultStore()
+								store := GetDefaultStore()
 							end
 					end;
-				l3 := GetUnionSoupAlways("Internet Setups");
-				l3:AddToStoreXmit(l1, a2, nil);
+				soup := GetUnionSoupAlways("Internet Setups");
+				soup:AddToStoreXmit(l1, store, nil);
 				l1.linkID
 			end),
 		viewQuitScript: func() begin
@@ -209,33 +209,33 @@ part := array(nil, {
 						end;
 					updated := nil;
 					HandHoldStart := nil;
-					(foreach l1, l2 in '{GenericSecurID: {generic: true, setupName: "SecurID\u00AE\u", class: |Modem:NIE|, version: 2, linkLayer: |PPP:NIE|, physicalLayer: |Modem:NIE|, loginScript: {interpreterSymbol: |Script Manager:NIE|, timeout: 60, instructions: [Array: {type: sendCR}, {type: waitFor, data: "ogin"}, {type: userName}, {type: sendCR}, {type: waitFor, data: "word"}, {type: password}, {type: sendCR}, {type: waitFor, data: "CODE"}, {type: sendPrompt, data: "Please enter your pin number"}, {type: sendCR}, {type: waitFor, data: "ccepted"}]}}, GenericUNIX: {generic: true, setupName: "UNIX\u00AE\u", class: |Modem:NIE|, version: 2, linkLayer: |PPP:NIE|, physicalLayer: |Modem:NIE|, loginScript: {interpreterSymbol: |Script Manager:NIE|, timeout: 60, instructions: [Array: {type: sendCR}, {type: waitFor, data: "ogin"}, {type: userName}, {type: sendCR}, {type: waitFor, data: "word"}, {type: password}, {type: sendCR}, {type: waitFor, data: "."}]}}} do begin
-							RemoveSlot(LinkTemplateRegistry, l1)
+					(foreach key, value in '{GenericSecurID: {generic: true, setupName: "SecurID\u00AE\u", class: |Modem:NIE|, version: 2, linkLayer: |PPP:NIE|, physicalLayer: |Modem:NIE|, loginScript: {interpreterSymbol: |Script Manager:NIE|, timeout: 60, instructions: [Array: {type: sendCR}, {type: waitFor, data: "ogin"}, {type: userName}, {type: sendCR}, {type: waitFor, data: "word"}, {type: password}, {type: sendCR}, {type: waitFor, data: "CODE"}, {type: sendPrompt, data: "Please enter your pin number"}, {type: sendCR}, {type: waitFor, data: "ccepted"}]}}, GenericUNIX: {generic: true, setupName: "UNIX\u00AE\u", class: |Modem:NIE|, version: 2, linkLayer: |PPP:NIE|, physicalLayer: |Modem:NIE|, loginScript: {interpreterSymbol: |Script Manager:NIE|, timeout: 60, instructions: [Array: {type: sendCR}, {type: waitFor, data: "ogin"}, {type: userName}, {type: sendCR}, {type: waitFor, data: "word"}, {type: password}, {type: sendCR}, {type: waitFor, data: "."}]}}} do begin
+							RemoveSlot(LinkTemplateRegistry, key)
 						end);
 					inherited:?viewQuitScript()
 				end)
 		end,
 		appAll: "All Setups",
 		GetViewsToDisplay: func(a1) begin
-			if (l3 := GetDataDefs(a1.class)) then begin
-					l2 := Clone(l3.viewsToDisplay);
-					local l1;
-					local l2;
-					local l3;
-					(foreach l4, l5 in (l1 := GetViewDefs(a1.class)) do begin
-							if (if (l5.type = 'editor) then (l4 <> 'default)) then begin
-									SetAdd(l2, l4, true)
+			if (dataDefs := GetDataDefs(a1.class)) then begin
+					copy := Clone(dataDefs.viewsToDisplay);
+					local viewDefs;
+					local copy;
+					local dataDefs;
+					(foreach key, value in (viewDefs := GetViewDefs(a1.class)) do begin
+							if (if (value.type = 'editor) then (key <> 'default)) then begin
+									SetAdd(copy, key, true)
 								end
 						end)
 				end;
-			l2
+			copy
 		end,
-		GetInfoFrame: func(a1, a2) begin
-			local l1, l2;
-			if ((not (l2 := GetViewDefs(a2).(a1))) or (not (l1 := l2.infoFrame))) then begin
-					l1 := GetRoot().|InternetSetup:NIE|.layoutDataMap.(a1)
+		GetInfoFrame: func(layout, class2) begin
+			local infoFrame, l2;
+			if ((not (l2 := GetViewDefs(class2).(layout))) or (not (infoFrame := l2.infoFrame))) then begin
+					infoFrame := GetRoot().|InternetSetup:NIE|.layoutDataMap.(layout)
 				end;
-			l1
+			infoFrame
 		end,
 		helpManual: {
 			version: 2,
@@ -690,19 +690,19 @@ part := array(nil, {
 		},
 		HandHoldStart: nil,
 		viewFlags: vApplication + vClickable,
-		HasPathData: func(a1, a2, a3) begin
-			if IsArray(a2) then begin
-					(foreach l1 in a2 do begin
-							if a1.(l1) then begin
-									if (a3 or IsInstance(a1.(l1), 'string)) then begin
-											return StrFilled(a1.(l1))
+		HasPathData: func(target, dataPaths, stringData) begin
+			if IsArray(dataPaths) then begin
+					(foreach item in dataPaths do begin
+							if target.(item) then begin
+									if (stringData or IsInstance(target.(item), 'string)) then begin
+											return StrFilled(target.(item))
 										end else begin
 											return true
 										end
 								end
 						end)
 				end else begin
-					if a1.(a2) then begin
+					if target.(dataPaths) then begin
 							return true
 						end
 				end;
@@ -710,15 +710,15 @@ part := array(nil, {
 		end,
 		doCardRouting: 'onlyCardRouting,
 		viewBounds: {left: 0, top: -312, right: 238, bottom: -8},
-		MakeDataPaths: func(a1, a2, a3) begin
-			local l1;
-			local l2;
-			(if (not a1) then nil else (if (if IsArray(a2) then (Length(a2) < 1)) then (if a3 then (l2 := [Array: Clone(a1)]) else a1) else (if (a1 = true) then (if IsArray(a2) then (foreach l1 in a2 collect [pathExpr: l1]) else a1) else (foreach l1 in a2 collect begin
-							l2 := Clone(a1);
-							if l1 then begin
-									AddArraySlot(l2, l1)
+		MakeDataPaths: func(checkPrefixItem, checkPaths, stringData) begin
+			local item;
+			local list;
+			(if (not checkPrefixItem) then nil else (if (if IsArray(checkPaths) then (Length(checkPaths) < 1)) then (if stringData then (list := [Array: Clone(checkPrefixItem)]) else checkPrefixItem) else (if (checkPrefixItem = true) then (if IsArray(checkPaths) then (foreach item in checkPaths collect [pathExpr: item]) else checkPrefixItem) else (foreach item in checkPaths collect begin
+							list := Clone(checkPrefixItem);
+							if item then begin
+									AddArraySlot(list, item)
 								end;
-							l2
+							list
 						end))))
 		end,
 		appObject: [|Array|: "Setup", "Setups"],
@@ -747,26 +747,26 @@ part := array(nil, {
 						kLiteral_100ea69: "Copy",
 						kLiteral_1004161: "Internet Setups",
 						kFunction_100e96d: func(a1) begin
-							l1 := Stringer([Array: a1.setupName, " ", kLiteral_100ea69]);
-							if (not (l2 := Query(GetUnionSoupAlways(kLiteral_1004161), {IndexPath: 'setupName, beginKey: l1, endKey: l1})):entry()) then begin
-									return Clone(l1)
+							text := Stringer([Array: a1.setupName, " ", kLiteral_100ea69]);
+							if (not (cursor := Query(GetUnionSoupAlways(kLiteral_1004161), {IndexPath: 'setupName, beginKey: text, endKey: text})):entry()) then begin
+									return Clone(text)
 								end else begin
-									local l1;
-									local l2;
-									(for l3 := 1 to 99 do begin
-											l1 := Stringer([Array: a1.setupName, " ", kLiteral_100ea69, " ", NumberStr(l3)]);
-											if (not (l2 := Query(GetUnionSoupAlways(kLiteral_1004161), {IndexPath: 'setupName, beginKey: l1, endKey: l1})):entry()) then begin
-													return Clone(l1)
+									local text;
+									local cursor;
+									(for i := 1 to 99 do begin
+											text := Stringer([Array: a1.setupName, " ", kLiteral_100ea69, " ", NumberStr(i)]);
+											if (not (cursor := Query(GetUnionSoupAlways(kLiteral_1004161), {IndexPath: 'setupName, beginKey: text, endKey: text})):entry()) then begin
+													return Clone(text)
 												end
 										end)
 								end;
 							a1.setupName
 						end
 					},
-					func(a1, a2) begin
+					func(a1, store) begin
 						(a1 := Clone(a1)).linkID := (if functions.InetStartUp then InetStartUp():MGetLinkUniqueID() else Random(0, 10000));
 						a1.setupName := call (kFunction_100e96d) with (a1);
-						inherited:?DuplicateEntry(a1, a2)
+						inherited:?DuplicateEntry(a1, store)
 					end)
 			}
 		},
@@ -793,8 +793,8 @@ part := array(nil, {
 			ReorientToScreen: @defRotateFunc,
 			goBackBtn: nil,
 			viewBounds: {left: 0, top: -320, right: 320, bottom: 0},
-			MakeDataPaths: func(a1, a2, a3) begin
-				newtAppBase:MakeDataPaths(a1, a2, a3)
+			MakeDataPaths: func(checkPrefixItem, checkPaths, stringData) begin
+				newtAppBase:MakeDataPaths(checkPrefixItem, checkPaths, stringData)
 			end,
 			_proto: @protoFloater,
 			info: nil,
@@ -829,9 +829,9 @@ part := array(nil, {
 			viewSetupFormScript: compile(
 				constants: {
 					kFunction_100f7a1: func() begin
-						local l1, l2, l3;
-						l2 := (if ((l1 := GetAppParams()).appAreaWidth > 320) then 320 else l1.appAreaWidth);
-						l3 := (if (l1.appAreaHeight > 320) then 320 else l1.appAreaHeight);
+						local params, l2, l3;
+						l2 := (if ((params := GetAppParams()).appAreaWidth > 320) then 320 else params.appAreaWidth);
+						l3 := (if (params.appAreaHeight > 320) then 320 else params.appAreaHeight);
 						SetBounds(0, (-(l3 - 8)), (l2 - 16), -8)
 					end
 				},
@@ -844,16 +844,16 @@ part := array(nil, {
 				end),
 			ContinueBtn: nil,
 			CloseAction: func() begin
-				local l1, l2, l3;
-				l1 := GetDataDefs(target.class);
-				l2 := true;
+				local dataDefs, okCancelDefaultCancel, confirmWalkThru;
+				dataDefs := GetDataDefs(target.class);
+				okCancelDefaultCancel := true;
 				if (selectedLayout = 'walkThru) then begin
-						if (if (l3 := l1:?ConfirmWalkThru(target)) then StrFilled(l3)) then begin
-								l2 := ModalConfirm(ParamStr("This setup is missing information in the ^0 field(s) and may not function properly. Are you sure you want to close?", [Array: l3]), 'okCancelDefaultCancel)
+						if (if (confirmWalkThru := dataDefs:?ConfirmWalkThru(target)) then StrFilled(confirmWalkThru)) then begin
+								okCancelDefaultCancel := ModalConfirm(ParamStr("This setup is missing information in the ^0 field(s) and may not function properly. Are you sure you want to close?", [Array: confirmWalkThru]), 'okCancelDefaultCancel)
 							end
 					end;
-				(if l2 then begin
-						target := l1:?ValidateTarget(target);
+				(if okCancelDefaultCancel then begin
+						target := dataDefs:?ValidateTarget(target);
 						if (appBase.editSlipLayout = base) then begin
 								appBase.editSlipLayout := nil
 							end;
@@ -890,12 +890,12 @@ part := array(nil, {
 					inherited:?viewSetupFormScript()
 				end,
 				kFunction_101198d: func() begin
-					local l1;
+					local item;
 					(if labelCommands then begin
-							l1 := self:FindItem('|Modem:NIE|);
-							newDef := labelCommands[l1].symbol;
-							self:AdjustHelpText(labelCommands[l1].help);
-							return labelCommands[l1].item
+							item := self:FindItem('|Modem:NIE|);
+							newDef := labelCommands[item].symbol;
+							self:AdjustHelpText(labelCommands[item].help);
+							return labelCommands[item].item
 						end else "")
 				end,
 				kFunction_1011a11: func(a1) begin
@@ -922,32 +922,32 @@ part := array(nil, {
 					(_defaultButton := self)
 				end,
 				kFunction_100faad: func() begin
-					local l1, l2, l3;
-					(if (if (l1 := GetRoot().TinyTim) then l1.viewCObject) then l1:Close() else begin
+					local tinyTim, viewHelpTopic, l3;
+					(if (if (tinyTim := GetRoot().TinyTim) then tinyTim.viewCObject) then tinyTim:Close() else begin
 							if newtAppBase.viewHelpTopic then begin
-									l2 := newtAppBase.viewHelpTopic
+									viewHelpTopic := newtAppBase.viewHelpTopic
 								end;
-							(if newtAppBase.helpManual then (if l2 then l1:OpenManualTo(newtAppBase.helpManual, l2) else l1:OpenManual(newtAppBase.helpManual)) else (if l2 then l1:OpenHelpTo(l2) else l1:Open()))
+							(if newtAppBase.helpManual then (if viewHelpTopic then tinyTim:OpenManualTo(newtAppBase.helpManual, viewHelpTopic) else tinyTim:OpenManual(newtAppBase.helpManual)) else (if viewHelpTopic then tinyTim:OpenHelpTo(viewHelpTopic) else tinyTim:Open()))
 						end)
 				end,
 				kFunction_1011e39: func() begin
-					l1 := GetDefs('dataDef, [Array: 'INET], nil);
-					l2 := [Array: ];
-					if (Length(l1) > 0) then begin
-							local l1;
-							local l2;
-							(foreach l3 in l1 do begin
-									if l3:?DependenciesLoaded() then begin
-											BInsert(l2, {item: l3.name, icon: l3.icon, symbol: l3.symbol, help: (if l3.helpText then l3.helpText else "")}, '|str<|, '[pathExpr: item], nil)
+					defs := GetDefs('dataDef, [Array: 'INET], nil);
+					list := [Array: ];
+					if (Length(defs) > 0) then begin
+							local defs;
+							local list;
+							(foreach item2 in defs do begin
+									if item2:?DependenciesLoaded() then begin
+											BInsert(list, {item: item2.name, icon: item2.icon, symbol: item2.symbol, help: (if item2.helpText then item2.helpText else "")}, '|str<|, '[pathExpr: item], nil)
 										end
 								end)
 						end;
-					l2
+					list
 				end,
 				kFunction_1011fc5: func(a1) begin
-					(foreach l1, l2 in labelCommands do begin
-							if (l2.symbol = a1) then begin
-									return l1
+					(foreach key, value in labelCommands do begin
+							if (value.symbol = a1) then begin
+									return key
 								end
 						end);
 					return 0
@@ -959,9 +959,9 @@ part := array(nil, {
 					SetKeyView(self, 0)
 				end,
 				kFunction_100f7a1: func() begin
-					local l1, l2, l3;
-					l2 := (if ((l1 := GetAppParams()).appAreaWidth > 320) then 320 else l1.appAreaWidth);
-					l3 := (if (l1.appAreaHeight > 320) then 320 else l1.appAreaHeight);
+					local params, l2, l3;
+					l2 := (if ((params := GetAppParams()).appAreaWidth > 320) then 320 else params.appAreaWidth);
+					l3 := (if (params.appAreaHeight > 320) then 320 else params.appAreaHeight);
 					SetBounds(0, (-(l3 - 8)), (l2 - 16), -8)
 				end,
 				kFunction_10120c1: func() begin
@@ -973,49 +973,49 @@ part := array(nil, {
 				kFunction_1012125: func() begin
 					inherited:?viewQuitScript()
 				end,
-				kLiteral_1011549: {viewBounds: '{left: 0, top: -328, right: 320, bottom: -8}, stepChildren: [stepChildren: '{title: "New Internet Setup", _proto: @protoTitle}, '{text: "Select a connection method for this new Internet setup.", viewBounds: {left: 5, top: 10, right: -5, bottom: 46}, viewFont: {family: espy, face: 1, size: 10}, viewJustify: 8240, _proto: @protoStaticText}, {text: "Connect using", viewBounds: '{left: 5, top: 5, right: -5, bottom: 21}, viewJustify: 8396848, viewSetupFormScript: kFunction_1011921, textSetup: kFunction_101198d, labelActionScript: kFunction_1011a11, Popit: kFunction_1011a7d, _proto: @protoLabelPicker, preAllocatedContext: 'picker}, '{text: "", viewBounds: {left: 5, top: 10, right: -5, bottom: 74}, viewJustify: 8368, viewFont: @fontSystem10, viewFlags: 1, viewFormat: 196944, _proto: @protoStaticText, preAllocatedContext: help}, '{text: "Tap ? if you need help.", viewBounds: {left: 5, top: 20, right: -5, bottom: 36}, viewFont: {family: espy, face: 1, size: 10}, viewJustify: 8396976, _proto: @protoStaticText}, {buttonClickScript: kFunction_1011c05, _proto: @protoCancelButton}, {buttonClickScript: kFunction_1011ca5, text: "Continue", viewBounds: '{left: -59, top: 0, right: -7, bottom: 0}, viewJustify: 8402950, viewSetupFormScript: kFunction_1011dd5, _proto: @protoTextButton, preAllocatedContext: '_defaultButton}, {_proto: {viewFlags: 515, viewJustify: 134, viewBounds: '{left: 5, top: -18, right: 18, bottom: -5}, buttonClickScript: kFunction_100faad, icon: {bounds: '{left: 0, top: 0, right: 11, bottom: 11}, bits: call kBinaryFromHex with ("000000000004000000000000000b000b000000001f0000003f8000003180000003800000070000000e0000000e000000000000000e0000000e000000", 'bits), colorData: {cbits: call kBinaryFromHex with ("000000000004000000000000000b000b000000001f0000003f8000003180000003800000070000000e0000000e000000000000000e0000000e000000", 'bits), bitDepth: 1}}, _proto: @protoPictureButton}}], viewJustify: 144, appBase: nil, newDef: nil, BuildLabelCommands: kFunction_1011e39, FindItem: kFunction_1011fc5, AdjustHelpText: kFunction_1012031, declareSelf: 'base, viewSetupDoneScript: kFunction_101207d, viewSetupFormScript: kFunction_10120c1, helpTopic: "determine", viewQuitScript: kFunction_1012125, _proto: @protoFloater, picker: nil, stepAllocateContext: [Array: 'picker, {text: "Connect using", viewBounds: '{left: 5, top: 5, right: -5, bottom: 21}, viewJustify: 8396848, viewSetupFormScript: kFunction_1011921, textSetup: kFunction_101198d, labelActionScript: kFunction_1011a11, Popit: kFunction_1011a7d, _proto: @protoLabelPicker, preAllocatedContext: 'picker}, 'help, '{text: "", viewBounds: {left: 5, top: 10, right: -5, bottom: 74}, viewJustify: 8368, viewFont: @fontSystem10, viewFlags: 1, viewFormat: 196944, _proto: @protoStaticText, preAllocatedContext: help}, '_defaultButton, {buttonClickScript: kFunction_1011ca5, text: "Continue", viewBounds: '{left: -59, top: 0, right: -7, bottom: 0}, viewJustify: 8402950, viewSetupFormScript: kFunction_1011dd5, _proto: @protoTextButton, preAllocatedContext: '_defaultButton}], help: nil, _defaultButton: nil}
+				kLiteral_1011549: {viewBounds: '{left: 0, top: -328, right: 320, bottom: -8}, stepChildren: [stepChildren: '{title: "New Internet Setup", _proto: @protoTitle}, '{text: "Select a connection method for this new Internet setup.", viewBounds: {left: 5, top: 10, right: -5, bottom: 46}, viewFont: {family: espy, face: 1, size: 10}, viewJustify: vjParentFullH + vjSiblingBottomV, _proto: @protoStaticText}, {text: "Connect using", viewBounds: '{left: 5, top: 5, right: -5, bottom: 21}, viewJustify: 8396848, viewSetupFormScript: kFunction_1011921, textSetup: kFunction_101198d, labelActionScript: kFunction_1011a11, Popit: kFunction_1011a7d, _proto: @protoLabelPicker, preAllocatedContext: 'picker}, '{text: "", viewBounds: {left: 5, top: 10, right: -5, bottom: 74}, viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV, viewFont: @fontSystem10, viewFlags: vVisible, viewFormat: vfFrameBlack + vfPen(1) + vfInset(3), _proto: @protoStaticText, preAllocatedContext: help}, '{text: "Tap ? if you need help.", viewBounds: {left: 5, top: 20, right: -5, bottom: 36}, viewFont: {family: espy, face: 1, size: 10}, viewJustify: 8396976, _proto: @protoStaticText}, {buttonClickScript: kFunction_1011c05, _proto: @protoCancelButton}, {buttonClickScript: kFunction_1011ca5, text: "Continue", viewBounds: '{left: -59, top: 0, right: -7, bottom: 0}, viewJustify: 8402950, viewSetupFormScript: kFunction_1011dd5, _proto: @protoTextButton, preAllocatedContext: '_defaultButton}, {_proto: {viewFlags: vVisible + vReadOnly + vClickable, viewJustify: vjCenterH + vjCenterV + vjParentBottomV, viewBounds: '{left: 5, top: -18, right: 18, bottom: -5}, buttonClickScript: kFunction_100faad, icon: {bounds: '{left: 0, top: 0, right: 11, bottom: 11}, bits: call kBinaryFromHex with ("000000000004000000000000000b000b000000001f0000003f8000003180000003800000070000000e0000000e000000000000000e0000000e000000", 'bits), colorData: {cbits: call kBinaryFromHex with ("000000000004000000000000000b000b000000001f0000003f8000003180000003800000070000000e0000000e000000000000000e0000000e000000", 'bits), bitDepth: 1}}, _proto: @protoPictureButton}}], viewJustify: vjParentCenterH + vjParentBottomV, appBase: nil, newDef: nil, BuildLabelCommands: kFunction_1011e39, FindItem: kFunction_1011fc5, AdjustHelpText: kFunction_1012031, declareSelf: 'base, viewSetupDoneScript: kFunction_101207d, viewSetupFormScript: kFunction_10120c1, helpTopic: "determine", viewQuitScript: kFunction_1012125, _proto: @protoFloater, picker: nil, stepAllocateContext: [Array: 'picker, {text: "Connect using", viewBounds: '{left: 5, top: 5, right: -5, bottom: 21}, viewJustify: 8396848, viewSetupFormScript: kFunction_1011921, textSetup: kFunction_101198d, labelActionScript: kFunction_1011a11, Popit: kFunction_1011a7d, _proto: @protoLabelPicker, preAllocatedContext: 'picker}, 'help, '{text: "", viewBounds: {left: 5, top: 10, right: -5, bottom: 74}, viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV, viewFont: @fontSystem10, viewFlags: vVisible, viewFormat: vfFrameBlack + vfPen(1) + vfInset(3), _proto: @protoStaticText, preAllocatedContext: help}, '_defaultButton, {buttonClickScript: kFunction_1011ca5, text: "Continue", viewBounds: '{left: -59, top: 0, right: -7, bottom: 0}, viewJustify: 8402950, viewSetupFormScript: kFunction_1011dd5, _proto: @protoTextButton, preAllocatedContext: '_defaultButton}], help: nil, _defaultButton: nil}
 			},
 			func() begin
-				local l1;
-				(l1 := BuildContext(kLiteral_1011549)).appBase := newtAppBase;
-				newtAppBase:RememberedOpen(l1)
+				local context;
+				(context := BuildContext(kLiteral_1011549)).appBase := newtAppBase;
+				newtAppBase:RememberedOpen(context)
 			end),
 		Find: func(what, a2, a3, a4) begin
-			local l1, l2, l3;
-			l2 := GetUnionSoupAlways("Internet Setups");
-			(if (l3 := l2:Query({text: what, validTest: func(a1) begin
-				local l1;
-				if (l1 := FindStringInFrame(a1, [Array: what], true)) then begin
-						if (not SetContains(l1, 'password)) then begin
+			local frame2, soup, cursor;
+			soup := GetUnionSoupAlways("Internet Setups");
+			(if (cursor := soup:Query({text: what, validTest: func(a1) begin
+				local stringInFrame;
+				if (stringInFrame := FindStringInFrame(a1, [Array: what], true)) then begin
+						if (not SetContains(stringInFrame, 'password)) then begin
 								return true
 							end;
-						if (if SetContains(l1, 'password) then (Length(l1) > 3)) then begin
+						if (if SetContains(stringInFrame, 'password) then (Length(stringInFrame) > 3)) then begin
 								return true
 							end
 					end;
 				nil
 			end})):entry() then begin
-					l1 := {_proto: @soupFinder, owner: self, findtype: 'text, findWords: [Array: what], cursor: l3};
-					AddArraySlot(a2, l1)
+					frame2 := {_proto: @soupFinder, owner: self, findtype: 'text, findWords: [Array: what], cursor: cursor};
+					AddArraySlot(a2, frame2)
 				end)
 		end,
 		allDataDefs: {},
 		AppEmpty: func() begin
-			local l1;
-			l1 := self:LocalBox();
+			local box;
+			box := self:LocalBox();
 			HandHoldStart := true;
-			l1.left := (l1.left + 10);
-			l1.right := (l1.right - 10);
-			l1.top := ((l1.bottom - l1.top) div 3);
-			(appEmptyStr := [Array: '{font: 1058816, justification: left}, MakeTextLines(ParamStr("No current ^0 exists. To create a new ^0, tap New and in the pop-up list, tap a choice\u2014\uGeneric Setup, SecurID, UNIX, or an Internet Service Provider (ISP).", [Array: title]), l1, fontHeight(1058816), 1058816)])
+			box.left := (box.left + 10);
+			box.right := (box.right - 10);
+			box.top := ((box.bottom - box.top) div 3);
+			(appEmptyStr := [Array: '{font: tsSystem + tsSize(10) + tsBold, justification: left}, MakeTextLines(ParamStr("No current ^0 exists. To create a new ^0, tap New and in the pop-up list, tap a choice\u2014\uGeneric Setup, SecurID, UNIX, or an Internet Service Provider (ISP).", [Array: title]), box, fontHeight(1058816), 1058816)])
 		end,
 		stepAllocateContext: [|Array|: 'statusBar, partItem_5],
 		BeginNewEntry: compile(
 			constants: {
 				kFunction_1003dc5: func(a1) begin
 					l1 := '{serial: |Serial:NIE|, Modem: |Modem:NIE|, MacIP: |LocalTalk:NIE|, ethernet: |Ethernet:NIE|};
-					l2 := Clone(GetRoot().|InternetSetup:NIE|.allSoups.INETSetupSoup);
-					l2:MakeSoup('|InternetSetup:NIE|);
+					copy := Clone(GetRoot().|InternetSetup:NIE|.allSoups.INETSetupSoup);
+					copy:MakeSoup('|InternetSetup:NIE|);
 					if a1 then begin
 							if a1.physicalLayer then begin
 									l3 := (if l1.(a1.physicalLayer) then l1.(a1.physicalLayer) else a1.physicalLayer)
@@ -1025,42 +1025,42 @@ part := array(nil, {
 						end else begin
 							l3 := '|Modem:NIE|
 						end;
-					l4 := l2:AdoptEntry(nil, l3);
+					adoptEntry := copy:AdoptEntry(nil, l3);
 					if a1 then begin
 							local l1;
-							local l2;
+							local copy;
 							local l3;
-							local l4;
-							(foreach l5, l6 deeply in a1 do begin
-									local l8;
-									if (if (l5 <> 'class) then (l5 <> 'physicalLayer)) then begin
-											l4.(l5) := DeepClone(l6)
+							local adoptEntry;
+							(foreach key, value deeply in a1 do begin
+									local dataDefs;
+									if (if (key <> 'class) then (key <> 'physicalLayer)) then begin
+											adoptEntry.(key) := DeepClone(value)
 										end
 								end);
 							if ((not a1.version) or (a1.version < 2)) then begin
-									l8 := GetDataDefs(l3);
-									l4 := l8:?DataConversion(l4)
+									dataDefs := GetDataDefs(l3);
+									adoptEntry := dataDefs:?DataConversion(adoptEntry)
 								end
 						end;
-					l4
+					adoptEntry
 				end
 			},
-			func(a1, a2) begin
-				local l1, l2, l3, l4;
-				if a2 then begin
-						l1 := call (kFunction_1003dc5) with ((l2 := LinkTemplateRegistry.(a2)));
-						if (l3 := self:GetAppPreferences().internalStore) then begin
-								l4 := GetStores()[0]
+			func(newDef, symbol2) begin
+				local addEntryFromStationery, l2, internalStore, store;
+				if symbol2 then begin
+						addEntryFromStationery := call (kFunction_1003dc5) with ((l2 := LinkTemplateRegistry.(symbol2)));
+						if (internalStore := self:GetAppPreferences().internalStore) then begin
+								store := GetStores()[0]
 							end else begin
-								l4 := GetDefaultStore()
+								store := GetDefaultStore()
 							end;
-						self:AddEntryDirect(l1, l4)
+						self:AddEntryDirect(addEntryFromStationery, store)
 					end else begin
-						l1 := self:AddEntryFromStationery(a1)
+						addEntryFromStationery := self:AddEntryFromStationery(newDef)
 					end;
 				oldTarget := target;
 				WhichPage := 0;
-				target := l1;
+				target := addEntryFromStationery;
 				self:ShowEditSlip('walkThru, nil, oldTarget, true, nil)
 			end),
 		viewSetupFormScript: compile(
@@ -1076,8 +1076,8 @@ part := array(nil, {
 				end,
 				kFunction_1003dc5: func(a1) begin
 					l1 := '{serial: |Serial:NIE|, Modem: |Modem:NIE|, MacIP: |LocalTalk:NIE|, ethernet: |Ethernet:NIE|};
-					l2 := Clone(GetRoot().|InternetSetup:NIE|.allSoups.INETSetupSoup);
-					l2:MakeSoup('|InternetSetup:NIE|);
+					copy := Clone(GetRoot().|InternetSetup:NIE|.allSoups.INETSetupSoup);
+					copy:MakeSoup('|InternetSetup:NIE|);
 					if a1 then begin
 							if a1.physicalLayer then begin
 									l3 := (if l1.(a1.physicalLayer) then l1.(a1.physicalLayer) else a1.physicalLayer)
@@ -1087,76 +1087,76 @@ part := array(nil, {
 						end else begin
 							l3 := '|Modem:NIE|
 						end;
-					l4 := l2:AdoptEntry(nil, l3);
+					adoptEntry := copy:AdoptEntry(nil, l3);
 					if a1 then begin
 							local l1;
-							local l2;
+							local copy;
 							local l3;
-							local l4;
-							(foreach l5, l6 deeply in a1 do begin
-									local l8;
-									if (if (l5 <> 'class) then (l5 <> 'physicalLayer)) then begin
-											l4.(l5) := DeepClone(l6)
+							local adoptEntry;
+							(foreach key, value deeply in a1 do begin
+									local dataDefs;
+									if (if (key <> 'class) then (key <> 'physicalLayer)) then begin
+											adoptEntry.(key) := DeepClone(value)
 										end
 								end);
 							if ((not a1.version) or (a1.version < 2)) then begin
-									l8 := GetDataDefs(l3);
-									l4 := l8:?DataConversion(l4)
+									dataDefs := GetDataDefs(l3);
+									adoptEntry := dataDefs:?DataConversion(adoptEntry)
 								end
 						end;
-					l4
+					adoptEntry
 				end,
 				kLiteral_101485d: {bits: call kBinaryFromHex with ("000000000004000000000000001e001e000000000000000000000000000300000003c0000001f000000ffc00007ffe0001fffe0003fffc400781f0000c03c00008030000100000201000002000030040000f00c0003e078008ffff0001fffe0001fff80000ffc000003e0000000f0000000300000000000000000000000000000000000000000000", 'bits), bounds: '{left: 0, top: 0, right: 30, bottom: 30}},
 				kFunction_1013fad: func(caller) begin
 					local oldSoupQuery;
-					local l1, l2;
+					local yesNoDefaultYes, fn;
 					if ((oldSoupQuery := Query(GetUnionSoupAlways("LinkSetups"), '{})):CountEntries() > 0) then begin
-							l1 := ModalConfirm("You have Internet Setup information for an older version of the Newton Internet Enabler. Do you want to update these now?", 'yesNoDefaultYes)
+							yesNoDefaultYes := ModalConfirm("You have Internet Setup information for an older version of the Newton Internet Enabler. Do you want to update these now?", 'yesNoDefaultYes)
 						end else begin
 							return nil
 						end;
-					l2 := func(a1) begin
+					fn := func(a1) begin
 						a1.CancelRequest := func(a1) begin
 							(self.cancelled := a1)
 						end;
 						caller.allSoups.INETSetupSoup:MakeSoup('|InternetSetup:NIE|);
-						l1 := GetUnionSoupAlways("Internet Setups");
-						if (l2 := oldSoupQuery:entry()) then begin
+						soup2 := GetUnionSoupAlways("Internet Setups");
+						if (entry := oldSoupQuery:entry()) then begin
 								l5 := 0
 							end;
-						l7 := oldSoupQuery:CountEntries();
-						(while l2 do begin
+						countEntries := oldSoupQuery:CountEntries();
+						(while entry do begin
 								l5 := (l5 + 1);
-								if (if (l8 := (l3 := EntryStore(l2)):IsReadOnly()) then (not l9)) then begin
+								if (if (l8 := (store := EntryStore(entry)):IsReadOnly()) then (not l9)) then begin
 										l9 := l8
 									end;
-								a1:SetStatus('vGauge, {titleText: Stringer([Array: "Converting:\n", l2.setupName]), gauge: rinttol(((l5 / l7) * 100))});
+								a1:SetStatus('vGauge, {titleText: Stringer([Array: "Converting:\n", entry.setupName]), gauge: rinttol(((l5 / countEntries) * 100))});
 								if a1.cancelled then begin
 										break
 									end;
-								l6 := call (kFunction_1003dc5) with (l2);
+								l6 := call (kFunction_1003dc5) with (entry);
 								if l8 then begin
 										caller.allSoups.INETSetupSoup:AddEntry(l6, GetStores()[0])
 									end else begin
-										caller.allSoups.INETSetupSoup:AddEntry(l6, l3)
+										caller.allSoups.INETSetupSoup:AddEntry(l6, store)
 									end;
 								if (not l8) then begin
 										EntryRemoveFromSoupXmit(oldSoupQuery:entry(), '|InternetSetup:NIE|)
 									end;
-								(l2 := oldSoupQuery:Next())
+								(entry := oldSoupQuery:Next())
 							end);
-						local l1;
-						local l2;
-						local l3;
+						local soup2;
+						local entry;
+						local store;
 						local l4;
 						local l5;
 						local l6;
-						local l7;
+						local countEntries;
 						local l8;
 						local l9;
-						(foreach l10 in GetStores() do begin
-								if (not l10:IsReadOnly()) then begin
-										if (Soup := l10:GetSoup("LinkSetups")) then begin
+						(foreach item in GetStores() do begin
+								if (not item:IsReadOnly()) then begin
+										if (Soup := item:GetSoup("LinkSetups")) then begin
 												if (Soup:Query(nil):CountEntries() = 0) then begin
 														Soup:RemoveFromStoreXmit(nil)
 													end
@@ -1165,15 +1165,15 @@ part := array(nil, {
 							end);
 						(if l9 then GetRoot():Notify(3, "Internet Setup", "There are old setups on a locked card. These setups were converted and are now stored in the internal memory. Please unlock the card and delete the old setup information."))
 					end;
-					(if l1 then begin
-							DoProgress('vGauge, {gauge: 0, statusText: "Internet Setup", titleText: "Preparing to convert data...", closeBox: nil, icon: kLiteral_101485d}, l2);
+					(if yesNoDefaultYes then begin
+							DoProgress('vGauge, {gauge: 0, statusText: "Internet Setup", titleText: "Preparing to convert data...", closeBox: nil, icon: kLiteral_101485d}, fn);
 							return true
 						end else return nil)
 				end,
 				kFunction_100f7a1: func() begin
-					local l1, l2, l3;
-					l2 := (if ((l1 := GetAppParams()).appAreaWidth > 320) then 320 else l1.appAreaWidth);
-					l3 := (if (l1.appAreaHeight > 320) then 320 else l1.appAreaHeight);
+					local params, l2, l3;
+					l2 := (if ((params := GetAppParams()).appAreaWidth > 320) then 320 else params.appAreaWidth);
+					l3 := (if (params.appAreaHeight > 320) then 320 else params.appAreaHeight);
 					SetBounds(0, (-(l3 - 8)), (l2 - 16), -8)
 				end,
 				kLiteral_1004281: '{GenericSecurID: {generic: true, setupName: "SecurID\u00AE\u", class: |Modem:NIE|, version: 2, linkLayer: |PPP:NIE|, physicalLayer: |Modem:NIE|, loginScript: {interpreterSymbol: |Script Manager:NIE|, timeout: 60, instructions: [Array: {type: sendCR}, {type: waitFor, data: "ogin"}, {type: userName}, {type: sendCR}, {type: waitFor, data: "word"}, {type: password}, {type: sendCR}, {type: waitFor, data: "CODE"}, {type: sendPrompt, data: "Please enter your pin number"}, {type: sendCR}, {type: waitFor, data: "ccepted"}]}}, GenericUNIX: {generic: true, setupName: "UNIX\u00AE\u", class: |Modem:NIE|, version: 2, linkLayer: |PPP:NIE|, physicalLayer: |Modem:NIE|, loginScript: {interpreterSymbol: |Script Manager:NIE|, timeout: 60, instructions: [Array: {type: sendCR}, {type: waitFor, data: "ogin"}, {type: userName}, {type: sendCR}, {type: waitFor, data: "word"}, {type: password}, {type: sendCR}, {type: waitFor, data: "."}]}}}
@@ -1186,8 +1186,8 @@ part := array(nil, {
 						if (not GetGlobals().LinkTemplateRegistry) then begin
 								GetGlobals().(EnsureInternal('LinkTemplateRegistry)) := Clone(kLiteral_1004281)
 							end else begin
-								(foreach l1, l2 in kLiteral_1004281 do begin
-										LinkTemplateRegistry.(EnsureInternal(l1)) := l2
+								(foreach key, value in kLiteral_1004281 do begin
+										LinkTemplateRegistry.(EnsureInternal(key)) := value
 									end)
 							end;
 						(if (currentLayout = previousLayout) then (if (previousLayout = 'overview) then (previousLayout := 'default)))
@@ -1216,20 +1216,20 @@ part := array(nil, {
 				allInfoHeight: 0,
 				childBottom: 0,
 				childToScroll: nil,
-				ViewScroll2DScript: func(a1, a2) begin
-					local l1, l2, l3;
-					l1 := childToScroll.viewOriginY;
+				ViewScroll2DScript: func(arrowDirection, a2) begin
+					local viewOriginY, l2, most;
+					viewOriginY := childToScroll.viewOriginY;
 					l2 := (max(a2.count, 1) * 16);
-					if (if (a1 = 'up) then (l1 > 0)) then begin
-							l3 := max(0, (l1 - l2))
+					if (if (arrowDirection = 'up) then (viewOriginY > 0)) then begin
+							most := max(0, (viewOriginY - l2))
 						end else begin
-							if ((l1 + allInfoHeight) < childBottom) then begin
-									l3 := min((childBottom - allInfoHeight), (l1 + l2))
+							if ((viewOriginY + allInfoHeight) < childBottom) then begin
+									most := min((childBottom - allInfoHeight), (viewOriginY + l2))
 								end
 						end;
-					(if l3 then begin
-							childToScroll:SetOrigin(0, l3);
-							scrollArrows.yPos := l3;
+					(if most then begin
+							childToScroll:SetOrigin(0, most);
+							scrollArrows.yPos := most;
 							scrollArrows:AdjustArrows();
 							RefreshViews()
 						end)
@@ -1240,14 +1240,14 @@ part := array(nil, {
 					forceNewEntry: nil,
 					viewJustify: vjParentFullH + vjParentFullV,
 					Retarget: func(a1) begin
-						local l1;
-						if (((l1 := dataCursor:entry()) = 'deleted) or (not l1)) then begin
-								if (not (l1 := dataCursor:Next())) then begin
-										l1 := dataCursor:Prev()
+						local entry;
+						if (((entry := dataCursor:entry()) = 'deleted) or (not entry)) then begin
+								if (not (entry := dataCursor:Next())) then begin
+										entry := dataCursor:Prev()
 									end;
-								if (not l1) then begin
+								if (not entry) then begin
 										self:SetupCursor();
-										l1 := dataCursor:entry()
+										entry := dataCursor:entry()
 									end
 							end;
 						target := dataCursor:entry();
@@ -1294,15 +1294,15 @@ part := array(nil, {
 		},
 		stepChildren: [stepChildren: {title: internetSetup, _proto: @protoTitle}, partItem_5],
 		PutAwayScript: func(a1) begin
-			local l1, l2, l3;
+			local l1, dataDefs, l3;
 			if (a1.appSymbol = '|InternetSetup:Newton|) then begin
 					if (not a1.body.physicalLayer) then begin
 							a1.body.physicalLayer := 'Modem
 						end;
 					a1.body.physicalLayer := '{serial: |Serial:NIE|, Modem: |Modem:NIE|, MacIP: |LocalTalk:NIE|, ethernet: |Ethernet:NIE|}.(a1.body.physicalLayer);
 					a1.body.class := a1.body.physicalLayer;
-					if (if (l2 := GetDataDefs(a1.body.physicalLayer)) then ((not HasSlot(a1.body, 'version)) or (a1.body.version < 2))) then begin
-							a1.body := l2:?DataConversion(a1.body)
+					if (if (dataDefs := GetDataDefs(a1.body.physicalLayer)) then ((not HasSlot(a1.body, 'version)) or (a1.body.version < 2))) then begin
+							a1.body := dataDefs:?DataConversion(a1.body)
 						end;
 					l1 := true
 				end;
@@ -1323,11 +1323,11 @@ part := array(nil, {
 						GetRoot():Notify(3, kLiteral_1002399, "You cannot use Internet Setup because the Newton Internet Enabler package is not installed.");
 						return nil
 					end;
-				if (Length((l2 := GetDefs('dataDef, [Array: 'INET], nil))) > 0) then begin
+				if (Length((defs := GetDefs('dataDef, [Array: 'INET], nil))) > 0) then begin
 						local l1;
-						local l2;
-						(foreach l3 in l2 do begin
-								if l3:?DependenciesLoaded() then begin
+						local defs;
+						(foreach item in defs do begin
+								if item:?DependenciesLoaded() then begin
 										return true
 									end
 							end);
@@ -1430,19 +1430,19 @@ part := array(nil, {
 					text: aboutViewText,
 					viewBounds: {left: 8, top: -22, right: -8, bottom: -10},
 					viewSetupFormScript: func() begin
-						l1 := 0;
+						most := 0;
 						l2 := 0;
-						local l1;
+						local most;
 						local l2;
-						(foreach l3 in theSoups do begin
-								local l5;
-								l5 := l3:Query(nil);
-								l2 := (l2 + l5:CountEntries());
-								l1 := (l1 + l3:GetSize())
+						(foreach item in theSoups do begin
+								local cursor;
+								cursor := item:Query(nil);
+								l2 := (l2 + cursor:CountEntries());
+								most := (most + item:GetSize())
 							end);
-						if (l1 > 0) then begin
-								l1 := max((l1 div 1024), 1);
-								text := Stringer([Array: text, (if (l2 = 0) then ParamStr("\n^0K storage used", [Array: l1]) else (if (l2 = 1) then ParamStr("\n^0K storage used for 1 ^1", [Array: l1, theApp.appObject[0]]) else ParamStr("\n^0K storage used for ^1 ^2", [Array: l1, l2, theApp.appObject[1]])))])
+						if (most > 0) then begin
+								most := max((most div 1024), 1);
+								text := Stringer([Array: text, (if (l2 = 0) then ParamStr("\n^0K storage used", [Array: most]) else (if (l2 = 1) then ParamStr("\n^0K storage used for 1 ^1", [Array: most, theApp.appObject[0]]) else ParamStr("\n^0K storage used for ^1 ^2", [Array: most, l2, theApp.appObject[1]])))])
 							end;
 						inherited:?viewSetupFormScript()
 					end,
@@ -1454,7 +1454,7 @@ part := array(nil, {
 			theApp: nil,
 			viewSetupFormScript: func() begin
 				if (not theSoups) then begin
-						theSoups := (foreach l1 in theApp.allSoups collect l1.theSoup)
+						theSoups := (foreach item in theApp.allSoups collect item.theSoup)
 					end;
 				if functions.InetGetService then begin
 						inetMgr := InetGetService('|Inet Manager:NIE|)
@@ -1465,25 +1465,25 @@ part := array(nil, {
 			inetMgr: nil,
 			_proto: @protoFloatNGo
 		},
-		ShowEditSlip: func(a1, a2, a3, a4, a5) begin
-			local l1;
+		ShowEditSlip: func(layout, path, a3, a4, a5) begin
+			local context;
 			(if target then begin
 					if (if editSlipLayout then editSlipLayout.viewCObject) then begin
 							editSlipLayout.closeBox:buttonClickScript()
 						end;
-					(l1 := BuildContext(editSlip)).appBase := (l1.newtAppBase := newtAppBase);
-					l1.title := title;
-					l1.appSymbol := appSymbol;
-					l1.allSoups := allSoups;
-					l1.saveEntry := a3;
-					l1.target := target;
-					l1.targetView := self:GetTargetView();
-					l1.addingData := a4;
-					l1.makingNewCard := a5;
-					l1.selectedLayout := a1;
-					l1.selectedPath := a2;
-					newtAppBase:RememberedOpen(l1);
-					(newtAppBase.editSlipLayout := l1)
+					(context := BuildContext(editSlip)).appBase := (context.newtAppBase := newtAppBase);
+					context.title := title;
+					context.appSymbol := appSymbol;
+					context.allSoups := allSoups;
+					context.saveEntry := a3;
+					context.target := target;
+					context.targetView := self:GetTargetView();
+					context.addingData := a4;
+					context.makingNewCard := a5;
+					context.selectedLayout := layout;
+					context.selectedPath := path;
+					newtAppBase:RememberedOpen(context);
+					(newtAppBase.editSlipLayout := context)
 				end)
 		end,
 		viewSetupChildrenScript: func() begin
@@ -1502,9 +1502,9 @@ part := array(nil, {
 			self:AddUndoAction('HandleRedoDelete, [Array: a1]);
 			self:RedoChildren()
 		end,
-		HandleNewButtonAction: func(a1) begin
+		HandleNewButtonAction: func(statArrayItem) begin
 			local l1;
-			(if (a1.dataDef = 'newEntry) then self:ChooseNewEntry() else self:BeginNewEntry((if (l1 := '{serial: |Serial:NIE|, Modem: |Modem:NIE|, MacIP: |LocalTalk:NIE|, ethernet: |Ethernet:NIE|}.(a1.dataDef)) then l1 else a1.dataDef), a1.symbol))
+			(if (statArrayItem.dataDef = 'newEntry) then self:ChooseNewEntry() else self:BeginNewEntry((if (l1 := '{serial: |Serial:NIE|, Modem: |Modem:NIE|, MacIP: |LocalTalk:NIE|, ethernet: |Ethernet:NIE|}.(statArrayItem.dataDef)) then l1 else statArrayItem.dataDef), statArrayItem.symbol))
 		end
 	},
 	devInstallScript: compile(
@@ -1513,27 +1513,27 @@ part := array(nil, {
 				GetRoot().|InternetSetup:NIE|:?PutAwayScript(a1)
 			end
 		},
-		func(a1) begin
-			local l1;
+		func(partFrame) begin
+			local theForm;
 			if (not GetRoot().|InternetSetup:Newton|) then begin
 					GetRoot().(EnsureInternal('|InternetSetup:Newton|)) := {PutAwayScript: kFunction_1016e7d}
 				end;
-			l1 := a1.theForm;
-			(a1.removeFrame := l1:NewtInstallScript(l1))
+			theForm := partFrame.theForm;
+			(partFrame.removeFrame := theForm:NewtInstallScript(theForm))
 		end),
-	removeScript: func(a1) begin
-		local l1;
+	removeScript: func(partFrame) begin
+		local removeFrame;
 		if GetRoot().|InternetSetup:Newton| then begin
 				RemoveSlot(GetRoot(), '|InternetSetup:Newton|)
 			end;
-		call l1.NewtRemoveScript with ((l1 := a1.removeFrame))
+		call removeFrame.NewtRemoveScript with ((removeFrame := partFrame.removeFrame))
 	end,
-	installScript: func(a1) begin
-		a1:?devInstallScript(a1);
-		if HasSlot(a1, 'devInstallScript) then begin
-				RemoveSlot(a1, 'devInstallScript)
+	installScript: func(partFrame) begin
+		partFrame:?devInstallScript(partFrame);
+		if HasSlot(partFrame, 'devInstallScript) then begin
+				RemoveSlot(partFrame, 'devInstallScript)
 			end;
-		(a1.installScript := nil)
+		(partFrame.installScript := nil)
 	end
 });
 
@@ -1603,7 +1603,7 @@ objectsProto := {
 					end;
 				(if (if (if (if reduceFont then (not v29_xwwwwwwwwwwwwwwww)) then v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww) then (Length(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww) > 1)) then begin
 						v29_xwwwwwwwwwwwwwwww := true;
-						a10.font := 1060865;
+						a10.font := tsFancy + tsSize(12) + tsBold;
 						v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := fontHeight(a10.font);
 						v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.bottom := ((a7 + a8.bottom) - a8.top);
 						(v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top := (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.bottom - v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy))
@@ -1652,75 +1652,75 @@ objectsProto := {
 	hitArray: nil,
 	viewFlags: vVisible + vClickable + vGesturesAllowed,
 	GetBottom: func() begin
-		local l1;
-		(if ((l1 := Length(hitArray)) > 0) then hitArray[(l1 - 1)].vOffset else 0)
+		local count;
+		(if ((count := Length(hitArray)) > 0) then hitArray[(count - 1)].vOffset else 0)
 	end,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
 	viewOriginY: 0,
 	viewJustify: vjParentFullH + vjParentFullV,
-	SetOrigin: func(a1, a2) begin
-		OffsetShape(shapeArray, (viewOriginX - a1), (viewOriginY - a2));
-		viewOriginX := a1;
+	SetOrigin: func(viewOriginX2, a2) begin
+		OffsetShape(shapeArray, (viewOriginX - viewOriginX2), (viewOriginY - a2));
+		viewOriginX := viewOriginX2;
 		viewOriginY := a2;
 		self:dirty()
 	end,
 	layouts: nil,
 	shapeArray: nil,
 	GetMaxTextWidth: func() begin
-		l2 := 0;
-		l3 := viewFont;
-		local l1;
-		local l2;
-		local l3;
-		(foreach l1 in shapeArray do begin
-				if (ClassOf(l1) = 'text) then begin
-						l2 := max(l2, StrFontWidth(GetShapeInfo(l1).text, l3))
+		most := 0;
+		viewFont2 := viewFont;
+		local item;
+		local most;
+		local viewFont2;
+		(foreach item in shapeArray do begin
+				if (ClassOf(item) = 'text) then begin
+						most := max(most, StrFontWidth(GetShapeInfo(item).text, viewFont2))
 					end else begin
-						if (ClassOf(l1) = 'frame) then begin
-								if l1.font then begin
-										l3 := l1.font
+						if (ClassOf(item) = 'frame) then begin
+								if item.font then begin
+										viewFont2 := item.font
 									end
 							end
 					end
 			end);
-		l2
+		most
 	end,
-	viewClickScript: func(a1) begin
+	viewClickScript: func(unit) begin
 		l2 := (Length(hitArray) - 1);
-		InkOff(a1);
-		l3 := ((GetPoint(5, a1) + viewOriginY) - origin);
-		l4 := (GetPoint(4, a1) - self:GlobalBox().left);
-		l5 := 0;
-		local l1;
+		InkOff(unit);
+		l3 := ((GetPoint(5, unit) + viewOriginY) - origin);
+		l4 := (GetPoint(4, unit) - self:GlobalBox().left);
+		vOffset := 0;
+		local i;
 		local l2;
 		local l3;
 		local l4;
-		local l5;
-		local l6;
-		local l7;
-		local l8;
-		(for l1 := 0 to l2 do begin
-				if (l3 <= hitArray[l1].vOffset) then begin
+		local vOffset;
+		local layout;
+		local box;
+		local infoFrame;
+		(for i := 0 to l2 do begin
+				if (l3 <= hitArray[i].vOffset) then begin
 						PlaySound(@click);
-						l6 := hitArray[l1].layout;
-						(l7 := self:LocalBox()).top := (if (l1 = 0) then 0 else (hitArray[(l1 - 1)].vOffset - viewOriginY));
-						l7.bottom := (hitArray[l1].vOffset - viewOriginY);
-						if (l8 := newtAppBase:GetInfoFrame(l6, target.class)).actionFunc then begin
-								if l8:actionFunc(l4, (l3 - l5), self, l7, target, hitArray[l1].path, hitArray[l1].misc) then begin
+						layout := hitArray[i].layout;
+						(box := self:LocalBox()).top := (if (i = 0) then 0 else (hitArray[(i - 1)].vOffset - viewOriginY));
+						box.bottom := (hitArray[i].vOffset - viewOriginY);
+						if (infoFrame := newtAppBase:GetInfoFrame(layout, target.class)).actionFunc then begin
+								if infoFrame:actionFunc(l4, (l3 - vOffset), self, box, target, hitArray[i].path, hitArray[i].misc) then begin
 										return true
 									end
 							end;
-						self:DoDrawing('Hiliter, [Array: MakeShape(l7)]);
-						if (l6 = 'setupName) then begin
+						self:DoDrawing('Hiliter, [Array: MakeShape(box)]);
+						if (layout = 'setupName) then begin
 								WhichPage := 0;
 								newtAppBase:ShowEditSlip('walkThru, nil, nil, nil, nil)
 							end else begin
-								newtAppBase:ShowEditSlip(l6, hitArray[l1].path, nil, nil, nil)
+								newtAppBase:ShowEditSlip(layout, hitArray[i].path, nil, nil, nil)
 							end;
 						self:dirty();
 						return true
 					end;
-				l5 := hitArray[l1].vOffset
+				vOffset := hitArray[i].vOffset
 			end);
 		nil
 	end,
@@ -1793,8 +1793,8 @@ objectsProto := {
 				end))
 	end,
 	CanScroll: nil,
-	Hiliter: func(a1) begin
-		self:DrawShape(a1, {transferMode: 2, penPattern: 0, fillPattern: 5})
+	Hiliter: func(hiliteShape) begin
+		self:DrawShape(hiliteShape, {transferMode: 2, penPattern: 0, fillPattern: 5})
 	end,
 	viewClass: clView
 };
@@ -2200,20 +2200,20 @@ partItem := {
 		end,
 		viewFlags: vVisible + vReadOnly + vClipping,
 		viewSetupFormScript: func() begin
-			local l1, l2, l3;
-			l1 := GetDataDefs(target.class):StringExtract(target, 1);
+			local stringExtract, l2, l3;
+			stringExtract := GetDataDefs(target.class):StringExtract(target, 1);
 			if (if GetVariable(self, 'selectedLayout) then (selectedLayout <> 'default)) then begin
 					if (l3 := GetViewDefs(target.class).(selectedLayout)) then begin
 							l2 := (if l3.nameByClass then l3.nameByClass.(target.class) else l3.name)
 						end
 				end;
 			if (base.selectedLayout = 'walkThru) then begin
-					self.title := ParamStr("^0 ^1  Page ^2 of ^3", [Array: l1, l2, NumberStr((newtAppBase.WhichPage + 1)), NumberStr(Length(GetDataDefs(base.target.class).newEntryViews))])
+					self.title := ParamStr("^0 ^1  Page ^2 of ^3", [Array: stringExtract, l2, NumberStr((newtAppBase.WhichPage + 1)), NumberStr(Length(GetDataDefs(base.target.class).newEntryViews))])
 				end else begin
 					if l2 then begin
-							self.title := ParamStr("^0 ^1", [Array: l1, l2])
+							self.title := ParamStr("^0 ^1", [Array: stringExtract, l2])
 						end else begin
-							self.title := ParamStr("^0", [Array: l1])
+							self.title := ParamStr("^0", [Array: stringExtract])
 						end
 				end;
 			self.titleIcon := GetDataDefs(target.class).overviewIcon;
@@ -2248,19 +2248,19 @@ partItem_3 := {
 	buttonClickScript: compile(
 		constants: {
 			kFunction_100f7a1: func() begin
-				local l1, l2, l3;
-				l2 := (if ((l1 := GetAppParams()).appAreaWidth > 320) then 320 else l1.appAreaWidth);
-				l3 := (if (l1.appAreaHeight > 320) then 320 else l1.appAreaHeight);
+				local params, l2, l3;
+				l2 := (if ((params := GetAppParams()).appAreaWidth > 320) then 320 else params.appAreaWidth);
+				l3 := (if (params.appAreaHeight > 320) then 320 else params.appAreaHeight);
 				SetBounds(0, (-(l3 - 8)), (l2 - 16), -8)
 			end
 		},
 		func() begin
-			local l1;
+			local verifyFunc2;
 			self:hilite(nil);
 			if verifyFunc then begin
-					l1 := base:verifyFunc()
+					verifyFunc2 := base:verifyFunc()
 				end;
-			(if (if l1 then StrFilled(l1)) then GetRoot():Notify(3, "Internet Setup", l1) else begin
+			(if (if verifyFunc2 then StrFilled(verifyFunc2)) then GetRoot():Notify(3, "Internet Setup", verifyFunc2) else begin
 					newtAppBase.WhichPage := (newtAppBase.WhichPage + 1);
 					if (selectedLayout = 'walkThru) then begin
 							base.viewBounds := call (kFunction_100f7a1) with ()
@@ -2302,12 +2302,12 @@ partItem_4Proto := {
 	viewJustify: vjCenterH + vjCenterV + vjParentBottomV,
 	viewBounds: {left: 5, top: -18, right: 18, bottom: -5},
 	buttonClickScript: func() begin
-		local l1, l2, l3;
-		(if (if (l1 := GetRoot().TinyTim) then l1.viewCObject) then l1:Close() else begin
+		local tinyTim, viewHelpTopic, l3;
+		(if (if (tinyTim := GetRoot().TinyTim) then tinyTim.viewCObject) then tinyTim:Close() else begin
 				if newtAppBase.viewHelpTopic then begin
-						l2 := newtAppBase.viewHelpTopic
+						viewHelpTopic := newtAppBase.viewHelpTopic
 					end;
-				(if newtAppBase.helpManual then (if l2 then l1:OpenManualTo(newtAppBase.helpManual, l2) else l1:OpenManual(newtAppBase.helpManual)) else (if l2 then l1:OpenHelpTo(l2) else l1:Open()))
+				(if newtAppBase.helpManual then (if viewHelpTopic then tinyTim:OpenManualTo(newtAppBase.helpManual, viewHelpTopic) else tinyTim:OpenManual(newtAppBase.helpManual)) else (if viewHelpTopic then tinyTim:OpenHelpTo(viewHelpTopic) else tinyTim:Open()))
 			end)
 	end,
 	icon: {
@@ -2378,7 +2378,7 @@ editFields := {
 					keypadFont: tsSystem + tsSize(10) + tsBold,
 					viewDef: 'default,
 					viewSetupFormScript: func() begin
-						local l1;
+						local dataDefs;
 						if (if (if selectedLayout then target) then GetViewDefs(target.class).(selectedLayout)) then begin
 								self.viewDef := selectedLayout
 							end else begin
@@ -2389,33 +2389,33 @@ editFields := {
 							end;
 						inherited:?viewSetupFormScript();
 						(if (selectedLayout = 'walkThru) then begin
-								l1 := GetDataDefs(target.class);
-								l1:?SetupViews(target);
+								dataDefs := GetDataDefs(target.class);
+								dataDefs:?SetupViews(target);
 								header:Retarget();
-								viewChildren := [Array: l1.newEntryViews[newtAppBase.WhichPage]];
-								(base.verifyFunc := l1.newEntryViews[newtAppBase.WhichPage].verifyFunc)
+								viewChildren := [Array: dataDefs.newEntryViews[newtAppBase.WhichPage]];
+								(base.verifyFunc := dataDefs.newEntryViews[newtAppBase.WhichPage].verifyFunc)
 							end)
 					end,
 					viewSetupDoneScript: compile(
 						constants: {
 							kFunction_100f7a1: func() begin
-								local l1, l2, l3;
-								l2 := (if ((l1 := GetAppParams()).appAreaWidth > 320) then 320 else l1.appAreaWidth);
-								l3 := (if (l1.appAreaHeight > 320) then 320 else l1.appAreaHeight);
+								local params, l2, l3;
+								l2 := (if ((params := GetAppParams()).appAreaWidth > 320) then 320 else params.appAreaWidth);
+								l3 := (if (params.appAreaHeight > 320) then 320 else params.appAreaHeight);
 								SetBounds(0, (-(l3 - 8)), (l2 - 16), -8)
 							end
 						},
 						func() begin
-							local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
-							l9 := (if (if ((l8 := GetAppParams()).appAreaHeight > 320) then (selectedLayout = 'walkThru)) then 320 else l8.appAreaHeight);
-							l10 := self:LocalBox();
-							l11 := base:GlobalBox();
-							l1 := Length((l2 := self:ChildViewFrames()[0]:ChildViewFrames()));
-							l3 := Clone(base.viewBounds);
-							l4 := ((l2[(l1 - 1)]:GlobalBox().bottom - l11.top) + extraChildrenHeight);
+							local count, childViewFrames, copy, l4, nextKeyView2, l6, childViewFrame, params, l9, box, box2;
+							l9 := (if (if ((params := GetAppParams()).appAreaHeight > 320) then (selectedLayout = 'walkThru)) then 320 else params.appAreaHeight);
+							box := self:LocalBox();
+							box2 := base:GlobalBox();
+							count := Length((childViewFrames := self:ChildViewFrames()[0]:ChildViewFrames()));
+							copy := Clone(base.viewBounds);
+							l4 := ((childViewFrames[(count - 1)]:GlobalBox().bottom - box2.top) + extraChildrenHeight);
 							if (if (if (not viewChildren[0].noKeyboard) then ((l4 + 5) > l9)) then (not KeyboardConnected())) then begin
-									l7 := self:ChildViewFrames()[1];
-									RemoveStepView(self, l7);
+									childViewFrame := self:ChildViewFrames()[1];
+									RemoveStepView(self, childViewFrame);
 									l4 := ((l4 - extraChildrenHeight) + 18);
 									AddStepView(self, keyButton)
 								end;
@@ -2435,15 +2435,15 @@ editFields := {
 								end else begin
 									deleteSlot := nil
 								end;
-							l3.top := (-(l4 + 14));
+							copy.top := (-(l4 + 14));
 							if (selectedLayout = 'walkThru) then begin
 									base.viewBounds := call (kFunction_100f7a1) with ()
 								end else begin
-									SetValue(base, 'viewBounds, l3)
+									SetValue(base, 'viewBounds, copy)
 								end;
 							if (viewDef <> 'editNotes) then begin
-									if (l5 := NextKeyView(l2[0], 0, 0)) then begin
-											SetCaretInfo(l5, SetClass({offset: 0, length: 999}, 'paraCaret))
+									if (nextKeyView2 := NextKeyView(childViewFrames[0], 0, 0)) then begin
+											SetCaretInfo(nextKeyView2, SetClass({offset: 0, length: 999}, 'paraCaret))
 										end else begin
 											SetKeyView(base, nil)
 										end
@@ -2461,27 +2461,27 @@ editFields := {
 							inherited:?viewSetupDoneScript()
 						end),
 					viewSetupChildrenScript: func() begin
-						local l1, l2, l3, l4, l5;
-						l1 := viewChildren[0];
+						local viewChildrenItem, viewBounds, dataDefs, count, keyboardConnected2;
+						viewChildrenItem := viewChildren[0];
 						stepChildren := Clone(stepChildren);
 						if (selectedLayout = 'walkThru) then begin
-								if IsReadOnly((l3 := GetDataDefs(target.class)).newEntryViews) then begin
-										l3.newEntryViews := Clone(l3.newEntryViews)
+								if IsReadOnly((dataDefs := GetDataDefs(target.class)).newEntryViews) then begin
+										dataDefs.newEntryViews := Clone(dataDefs.newEntryViews)
 									end;
 								if (target.configuration = 'manual) then begin
-										l3.newEntryViews := l3._proto.newEntryViews
+										dataDefs.newEntryViews := dataDefs._proto.newEntryViews
 									end else begin
-										if (if l3.AlternateNewViews then (Length(l3.AlternateNewViews) > 0)) then begin
-												l3.newEntryViews := l3.AlternateNewViews
+										if (if dataDefs.AlternateNewViews then (Length(dataDefs.AlternateNewViews) > 0)) then begin
+												dataDefs.newEntryViews := dataDefs.AlternateNewViews
 											end else begin
-												l3.newEntryViews := l3._proto.newEntryViews
+												dataDefs.newEntryViews := dataDefs._proto.newEntryViews
 											end
 									end;
-								l4 := Length(l3.newEntryViews);
+								count := Length(dataDefs.newEntryViews);
 								if (newtAppBase.WhichPage = 0) then begin
 										ArrayMunger(stepChildren, 4, 1, nil, 0, nil)
 									end;
-								if (newtAppBase.WhichPage = (l4 - 1)) then begin
+								if (newtAppBase.WhichPage = (count - 1)) then begin
 										ArrayMunger(stepChildren, 3, 1, nil, 0, nil);
 										ArrayMunger(stepChildren, 1, 1, nil, 0, nil)
 									end else begin
@@ -2490,21 +2490,21 @@ editFields := {
 							end else begin
 								ArrayMunger(stepChildren, 2, 3, nil, 0, nil)
 							end;
-						l5 := KeyboardConnected();
-						if (if l1.usePhoneKeys then (not l5)) then begin
-								stepChildren[0] := {_proto: @phonePad, viewJustify: 144, viewBounds: SetBounds(0, (-126 - extraChildrenHeight), 124, (-extraChildrenHeight))}
+						keyboardConnected2 := KeyboardConnected();
+						if (if viewChildrenItem.usePhoneKeys then (not keyboardConnected2)) then begin
+								stepChildren[0] := {_proto: @phonePad, viewJustify: vjParentCenterH + vjParentBottomV, viewBounds: SetBounds(0, (-126 - extraChildrenHeight), 124, (-extraChildrenHeight))}
 							end else begin
-								if (if l1.useNumericKeys then (not l5)) then begin
-										stepChildren[0] := {_proto: @numericKeys, viewJustify: 144, viewBounds: SetBounds(0, (-101 - extraChildrenHeight), 105, (-extraChildrenHeight)), viewFont: keypadFont}
+								if (if viewChildrenItem.useNumericKeys then (not keyboardConnected2)) then begin
+										stepChildren[0] := {_proto: @numericKeys, viewJustify: vjParentCenterH + vjParentBottomV, viewBounds: SetBounds(0, (-101 - extraChildrenHeight), 105, (-extraChildrenHeight)), viewFont: keypadFont}
 									end else begin
-										if (l1.noKeyboard or l5) then begin
+										if (viewChildrenItem.noKeyboard or keyboardConnected2) then begin
 												ArrayMunger(stepChildren, 0, 1, nil, 0, nil)
 											end else nil
 									end
 							end;
-						if (not l1.noKeyboard) then begin
-								l2 := stepChildren[0].viewBounds;
-								extraChildrenHeight := ((extraChildrenHeight + l2.bottom) - l2.top)
+						if (not viewChildrenItem.noKeyboard) then begin
+								viewBounds := stepChildren[0].viewBounds;
+								extraChildrenHeight := ((extraChildrenHeight + viewBounds.bottom) - viewBounds.top)
 							end;
 						inherited:?viewSetupChildrenScript()
 					end,
@@ -2518,29 +2518,29 @@ editFields := {
 					stepAllocateContext: [|Array|: 'AlphaKeys, editFieldsItem]
 				}
 			],
-			hasData: func(a1, a2) begin
-				l3 := nil;
+			hasData: func(key2, a2) begin
+				strFilled2 := nil;
 				if (IsFrame(a2) or IsArray(a2)) then begin
-						local l1;
-						local l2;
-						local l3;
-						(foreach l1, l2 in a2 do begin
-								if self:hasData(l1, l2) then begin
-										break (l3 := l1)
+						local key;
+						local value;
+						local strFilled2;
+						(foreach key, value in a2 do begin
+								if self:hasData(key, value) then begin
+										break (strFilled2 := key)
 									end
 							end)
 					end else begin
-						if ((not IsInstance(a1, 'symbol)) or (not appBase.kDatalessSlots.(a1))) then begin
+						if ((not IsInstance(key2, 'symbol)) or (not appBase.kDatalessSlots.(key2))) then begin
 								if IsInstance(a2, 'string) then begin
-										l3 := StrFilled(a2)
+										strFilled2 := StrFilled(a2)
 									end else begin
 										if a2 then begin
-												l3 := a1
+												strFilled2 := key2
 											end
 									end
 							end
 					end;
-				l3
+				strFilled2
 			end,
 			viewSetupFormScript: func() begin
 				self.startTarget := TotalClone(target);
@@ -2550,17 +2550,17 @@ editFields := {
 				'postQuit
 			end,
 			ViewPostQuitScript: func() begin
-				local l1, l2, l3, l4;
+				local l1, l2, l3, target2;
 				self:EndFlush();
 				if (not EntryValid(target)) then begin
 						return nil
 					end;
 				(if (not self:hasData(nil, target)) then begin
-						l4 := target;
+						target2 := target;
 						if saveEntry then begin
 								appBase.layout.dataCursor:Goto(saveEntry)
 							end;
-						appBase.layout:KillEntry(l4)
+						appBase.layout:KillEntry(target2)
 					end else begin
 						if makingNewCard then begin
 								appBase:AddUndoAction('UndoNewCard, [Array: target, saveEntry])
@@ -2637,7 +2637,7 @@ partItem_5 := {
 					kFunction_1013331: func(a1) begin
 						DrawXBitmap(a1, CardSlotIcons[Random(0, (Length(CardSlotIcons) - 1))], Random(0, 3), 0)
 					end,
-					kLiteral_1012939: {viewBounds: '{left: 0, top: 50, right: 200, bottom: 220}, stepChildren: [stepChildren: '{_proto: @protoCancelButton}, {viewBounds: '{left: 5, top: 6, right: 41, bottom: 42}, viewFlags: 1, viewFormat: 0, viewDrawScript: kFunction_1012a75, viewSetupDoneScript: kFunction_1012ae1, viewIdleScript: kFunction_1012b41, viewClass: 74}, {viewJustify: 8401144, viewFont: '{family: tsHWFont, face: 0, size: 12}, viewBounds: '{left: 41, top: 0, right: -5, bottom: 0}, credits: '[Array: "The NIE 2.0 Team", "We do support cards!"], index: nil, viewIdleScript: kFunction_1012ccd, viewSetupDoneScript: kFunction_1012d39, viewSetupFormScript: kFunction_1012d81, _proto: @protoStaticText}, {viewBounds: '{left: 15, top: 10, right: 195, bottom: 106}, viewJustify: 8192, viewSetupFormScript: kFunction_1012e4d, credits: '[Array: "The Engineering Team:\n\t\nRob Sirota, Jim Schram, Tim Wiegman, Avi Weiss, Jason Rukman, Lieh-Wuu Wang, Charles Leu, Dan Chernikoff, Guy McIlroy", "Support:\n\t\nBruce Thompson, Ryan Robertson, Bob Ebert, Greg Christie, Joe Hayashi, Art Cabral, David Fedor, Eric Welch, and all of Partner Engineering", "SQA: \n\t\nYun Shia Lauw, Jeff Brickman, Ping Li, Larry Bolton, Alex Hamdy, Sylvia Cruz-Loebach, Ping Zhou, Flash Sheridan", "Documentation:\n\t\nGary Hillerson, Laura Elliott, Gerry Kane"], index: nil, viewSetupDoneScript: kFunction_1013285, viewIdleScript: kFunction_10132c9, _proto: @protoStaticText}], declareSelf: 'base, DrawMovingIcon: kFunction_1013331, _proto: @protoFloater}
+					kLiteral_1012939: {viewBounds: '{left: 0, top: 50, right: 200, bottom: 220}, stepChildren: [stepChildren: '{_proto: @protoCancelButton}, {viewBounds: '{left: 5, top: 6, right: 41, bottom: 42}, viewFlags: vVisible, viewFormat: 0, viewDrawScript: kFunction_1012a75, viewSetupDoneScript: kFunction_1012ae1, viewIdleScript: kFunction_1012b41, viewClass: clView}, {viewJustify: 8401144, viewFont: '{family: tsHWFont, face: 0, size: 12}, viewBounds: '{left: 41, top: 0, right: -5, bottom: 0}, credits: '[Array: "The NIE 2.0 Team", "We do support cards!"], index: nil, viewIdleScript: kFunction_1012ccd, viewSetupDoneScript: kFunction_1012d39, viewSetupFormScript: kFunction_1012d81, _proto: @protoStaticText}, {viewBounds: '{left: 15, top: 10, right: 195, bottom: 106}, viewJustify: vjSiblingBottomV, viewSetupFormScript: kFunction_1012e4d, credits: '[Array: "The Engineering Team:\n\t\nRob Sirota, Jim Schram, Tim Wiegman, Avi Weiss, Jason Rukman, Lieh-Wuu Wang, Charles Leu, Dan Chernikoff, Guy McIlroy", "Support:\n\t\nBruce Thompson, Ryan Robertson, Bob Ebert, Greg Christie, Joe Hayashi, Art Cabral, David Fedor, Eric Welch, and all of Partner Engineering", "SQA: \n\t\nYun Shia Lauw, Jeff Brickman, Ping Li, Larry Bolton, Alex Hamdy, Sylvia Cruz-Loebach, Ping Zhou, Flash Sheridan", "Documentation:\n\t\nGary Hillerson, Laura Elliott, Gerry Kane"], index: nil, viewSetupDoneScript: kFunction_1013285, viewIdleScript: kFunction_10132c9, _proto: @protoStaticText}], declareSelf: 'base, DrawMovingIcon: kFunction_1013331, _proto: @protoFloater}
 				},
 				func() begin
 					(if (if newtAppBase.target then StrEqual(newtAppBase.target.setupName, "WDSC")) then (if (if boutView then boutView.viewCObject) then begin
@@ -2650,31 +2650,31 @@ partItem_5 := {
 				end)
 		},
 		{
-			StatScript: func(a1) begin
-				newtAppBase:?HandleNewButtonAction(a1);
+			StatScript: func(statArrayItem) begin
+				newtAppBase:?HandleNewButtonAction(statArrayItem);
 				nil
 			end,
 			BuildPopUp: func() begin
 				popup := [Array: ];
 				statArray := [Array: ];
-				l1 := [Array: ];
-				l2 := [Array: ];
+				list := [Array: ];
+				list2 := [Array: ];
 				if HasSlot(GetGlobals(), 'LinkTemplateRegistry) then begin
-						local l1;
-						local l2;
-						(foreach l3, l4 in LinkTemplateRegistry do begin
-								if ((if HasSlot(l4, 'generic) then l4.generic) or BeginsWith(l4.setupName, "Generic")) then begin
-										BInsert(l2, {item: l4.setupName, symbol: l3, dataDef: (if HasSlot(l4, 'physicalLayer) then l4.physicalLayer else '|Modem:NIE|)}, '|str<|, '[pathExpr: item], nil)
+						local list;
+						local list2;
+						(foreach key, value in LinkTemplateRegistry do begin
+								if ((if HasSlot(value, 'generic) then value.generic) or BeginsWith(value.setupName, "Generic")) then begin
+										BInsert(list2, {item: value.setupName, symbol: key, dataDef: (if HasSlot(value, 'physicalLayer) then value.physicalLayer else '|Modem:NIE|)}, '|str<|, '[pathExpr: item], nil)
 									end else begin
-										BInsert(l1, {item: l4.setupName, symbol: l3, dataDef: (if HasSlot(l4, 'physicalLayer) then l4.physicalLayer else '|Modem:NIE|)}, '|str<|, '[pathExpr: item], nil)
+										BInsert(list, {item: value.setupName, symbol: key, dataDef: (if HasSlot(value, 'physicalLayer) then value.physicalLayer else '|Modem:NIE|)}, '|str<|, '[pathExpr: item], nil)
 									end
 							end);
-						if (Length(l1) > 0) then begin
-								ArrayMunger(popup, 0, 0, l1, 0, nil);
+						if (Length(list) > 0) then begin
+								ArrayMunger(popup, 0, 0, list, 0, nil);
 								ArrayInsert(popup, 'pickSeparator, 0)
 							end;
-						if (Length(l2) > 0) then begin
-								ArrayMunger(popup, 0, 0, l2, 0, nil);
+						if (Length(list2) > 0) then begin
+								ArrayMunger(popup, 0, 0, list2, 0, nil);
 								ArrayInsert(popup, 'pickSeparator, 0)
 							end
 					end;
@@ -2720,31 +2720,31 @@ partItem_5 := {
 					end else self:hilite(nil))
 			end,
 			kFunction_1013a71: func(a1, a2, a3) begin
-				local l1, l2, l3, l4, l5;
-				if (if (l1 := self:GetInfoFrame(a3, target.class)) then ((not l1.checkPrefix[1]) or (not IsArray(l1.checkPrefix[1])))) then begin
-						if (l2 := self:MakeDataPaths(l1.checkPrefix[0], l1.checkPaths, l1.stringData)) then begin
-								if l1.showEmptyData then begin
-										l3 := true
+				local infoFrame, dataPaths, hasPathData, l4, l5;
+				if (if (infoFrame := self:GetInfoFrame(a3, target.class)) then ((not infoFrame.checkPrefix[1]) or (not IsArray(infoFrame.checkPrefix[1])))) then begin
+						if (dataPaths := self:MakeDataPaths(infoFrame.checkPrefix[0], infoFrame.checkPaths, infoFrame.stringData)) then begin
+								if infoFrame.showEmptyData then begin
+										hasPathData := true
 									end else begin
-										if l1.HasDataFunc then begin
-												l3 := call l1.HasDataFunc with (target, l2)
+										if infoFrame.HasDataFunc then begin
+												hasPathData := call infoFrame.HasDataFunc with (target, dataPaths)
 											end else begin
-												l3 := self:HasPathData(target, l2, l1.stringData)
+												hasPathData := self:HasPathData(target, dataPaths, infoFrame.stringData)
 											end
 									end;
-								if l1.HideIfTrue then begin
-										if (target.(l1.HideIfTrue[0]) = l1.HideIfTrue[1]) then begin
+								if infoFrame.HideIfTrue then begin
+										if (target.(infoFrame.HideIfTrue[0]) = infoFrame.HideIfTrue[1]) then begin
 												l4 := nil
 											end
 									end else begin
-										if (not l3) then begin
+										if (not hasPathData) then begin
 												l4 := true
 											end
 									end
 							end
 					end else begin
-						if l1.HideIfTrue then begin
-								if (target.(l1.HideIfTrue[0]) = l1.HideIfTrue[1]) then begin
+						if infoFrame.HideIfTrue then begin
+								if (target.(infoFrame.HideIfTrue[0]) = infoFrame.HideIfTrue[1]) then begin
 										l4 := nil
 									end else begin
 										l4 := true
@@ -2759,10 +2759,10 @@ partItem_5 := {
 					end)
 			end,
 			kFunction_1013c35: func(a1) begin
-				local l1, l2;
-				l1 := popup[a1].slot;
-				l2 := self:GetNewPath(target, l1);
-				newtAppBase:ShowEditSlip(l1, l2, nil, true, nil);
+				local slot, newPath;
+				slot := popup[a1].slot;
+				newPath := self:GetNewPath(target, slot);
+				newtAppBase:ShowEditSlip(slot, newPath, nil, true, nil);
 				inherited:?pickActionScript(a1)
 			end,
 			kFunction_1013ca5: func() begin
@@ -2773,13 +2773,13 @@ partItem_5 := {
 				inherited:?viewSetupDoneScript();
 				(newtAppBase.(keyButton) := self)
 			end,
-			kLiteral_101386d: {buttonClickScript: kFunction_1013921, text: "  Add", AddLayout: kFunction_1013a71, pickActionScript: kFunction_1013c35, popup: nil, viewQuitScript: kFunction_1013ca5, viewSetupDoneScript: kFunction_1013cf5, keyButton: '_addKeyButton, viewBounds: nil, viewFlags: 515, _proto: @protoPopupButton}
+			kLiteral_101386d: {buttonClickScript: kFunction_1013921, text: "  Add", AddLayout: kFunction_1013a71, pickActionScript: kFunction_1013c35, popup: nil, viewQuitScript: kFunction_1013ca5, viewSetupDoneScript: kFunction_1013cf5, keyButton: '_addKeyButton, viewBounds: nil, viewFlags: vVisible + vReadOnly + vClickable, _proto: @protoPopupButton}
 		},
 		func() begin
-			local l1, l2, l3;
+			local menuLeftButtons2, menuRightButtons2, l3;
 			(if _coolToStart then begin
-					l1 := menuLeftButtons;
-					l2 := menuRightButtons;
+					menuLeftButtons2 := menuLeftButtons;
+					menuRightButtons2 := menuRightButtons;
 					if (currentLayout = 'overview) then begin
 							menuRightButtons := Clone(menuRightButtons);
 							if (layout.dataCursor:CountEntries() > 0) then begin
@@ -2791,8 +2791,8 @@ partItem_5 := {
 							AddArraySlot((menuLeftButtons := Clone(menuLeftButtons)), {_proto: kLiteral_101386d})
 						end;
 					inherited:viewSetupChildrenScript();
-					menuLeftButtons := l1;
-					(menuRightButtons := l2)
+					menuLeftButtons := menuLeftButtons2;
+					(menuRightButtons := menuRightButtons2)
 				end)
 		end),
 	_proto: @newtStatusBar,
@@ -2825,7 +2825,7 @@ partItem_7 := {
 						if (not layouts.(target.class)) then begin
 								layouts.(target.class) := call GetRoot().|InternetSetup:NIE|.GetViewsToDisplay with (target)
 							end;
-						(if (GetVariable(self, 'newtAppBase) <> GetRoot().|InternetSetup:NIE|) then (self.viewFlags := 1))
+						(if (GetVariable(self, 'newtAppBase) <> GetRoot().|InternetSetup:NIE|) then (self.viewFlags := vVisible))
 					end)
 			end,
 			kFunction_1000e19: func(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) begin
@@ -2891,7 +2891,7 @@ partItem_7 := {
 							end;
 						(if (if (if (if reduceFont then (not v29_xwwwwwwwwwwwwwwww)) then v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww) then (Length(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww) > 1)) then begin
 								v29_xwwwwwwwwwwwwwwww := true;
-								a10.font := 1060865;
+								a10.font := tsFancy + tsSize(12) + tsBold;
 								v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := fontHeight(a10.font);
 								v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.bottom := ((a7 + a8.bottom) - a8.top);
 								(v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top := (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.bottom - v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy))
@@ -2928,8 +2928,8 @@ partItem_7 := {
 				(if shapeArray then self:DrawShape(shapeArray, {font: viewFont, justification: viewJustSym}))
 			end,
 			kFunction_1001821: func() begin
-				local l1;
-				(if ((l1 := Length(hitArray)) > 0) then hitArray[(l1 - 1)].vOffset else 0)
+				local count;
+				(if ((count := Length(hitArray)) > 0) then hitArray[(count - 1)].vOffset else 0)
 			end,
 			kFunction_1001899: func(a1, a2) begin
 				OffsetShape(shapeArray, (viewOriginX - a1), (viewOriginY - a2));
@@ -2938,60 +2938,60 @@ partItem_7 := {
 				self:dirty()
 			end,
 			kFunction_1001911: func() begin
-				l2 := 0;
-				l3 := viewFont;
-				local l1;
-				local l2;
-				local l3;
-				(foreach l1 in shapeArray do begin
-						if (ClassOf(l1) = 'text) then begin
-								l2 := max(l2, StrFontWidth(GetShapeInfo(l1).text, l3))
+				most := 0;
+				viewFont2 := viewFont;
+				local item;
+				local most;
+				local viewFont2;
+				(foreach item in shapeArray do begin
+						if (ClassOf(item) = 'text) then begin
+								most := max(most, StrFontWidth(GetShapeInfo(item).text, viewFont2))
 							end else begin
-								if (ClassOf(l1) = 'frame) then begin
-										if l1.font then begin
-												l3 := l1.font
+								if (ClassOf(item) = 'frame) then begin
+										if item.font then begin
+												viewFont2 := item.font
 											end
 									end
 							end
 					end);
-				l2
+				most
 			end,
 			kFunction_1001a25: func(a1) begin
 				l2 := (Length(hitArray) - 1);
 				InkOff(a1);
 				l3 := ((GetPoint(5, a1) + viewOriginY) - origin);
 				l4 := (GetPoint(4, a1) - self:GlobalBox().left);
-				l5 := 0;
-				local l1;
+				vOffset := 0;
+				local i;
 				local l2;
 				local l3;
 				local l4;
-				local l5;
-				local l6;
-				local l7;
-				local l8;
-				(for l1 := 0 to l2 do begin
-						if (l3 <= hitArray[l1].vOffset) then begin
+				local vOffset;
+				local layout;
+				local box;
+				local infoFrame;
+				(for i := 0 to l2 do begin
+						if (l3 <= hitArray[i].vOffset) then begin
 								PlaySound(@click);
-								l6 := hitArray[l1].layout;
-								(l7 := self:LocalBox()).top := (if (l1 = 0) then 0 else (hitArray[(l1 - 1)].vOffset - viewOriginY));
-								l7.bottom := (hitArray[l1].vOffset - viewOriginY);
-								if (l8 := newtAppBase:GetInfoFrame(l6, target.class)).actionFunc then begin
-										if l8:actionFunc(l4, (l3 - l5), self, l7, target, hitArray[l1].path, hitArray[l1].misc) then begin
+								layout := hitArray[i].layout;
+								(box := self:LocalBox()).top := (if (i = 0) then 0 else (hitArray[(i - 1)].vOffset - viewOriginY));
+								box.bottom := (hitArray[i].vOffset - viewOriginY);
+								if (infoFrame := newtAppBase:GetInfoFrame(layout, target.class)).actionFunc then begin
+										if infoFrame:actionFunc(l4, (l3 - vOffset), self, box, target, hitArray[i].path, hitArray[i].misc) then begin
 												return true
 											end
 									end;
-								self:DoDrawing('Hiliter, [Array: MakeShape(l7)]);
-								if (l6 = 'setupName) then begin
+								self:DoDrawing('Hiliter, [Array: MakeShape(box)]);
+								if (layout = 'setupName) then begin
 										WhichPage := 0;
 										newtAppBase:ShowEditSlip('walkThru, nil, nil, nil, nil)
 									end else begin
-										newtAppBase:ShowEditSlip(l6, hitArray[l1].path, nil, nil, nil)
+										newtAppBase:ShowEditSlip(layout, hitArray[i].path, nil, nil, nil)
 									end;
 								self:dirty();
 								return true
 							end;
-						l5 := hitArray[l1].vOffset
+						vOffset := hitArray[i].vOffset
 					end);
 				nil
 			end,
@@ -3062,7 +3062,7 @@ partItem_7 := {
 			kFunction_100214d: func(a1) begin
 				self:DrawShape(a1, {transferMode: 2, penPattern: 0, fillPattern: 5})
 			end,
-			kLiteral_1014cfd: {name: "All Info", protection: 'public, symbol: 'allinfo, type: 'viewer, viewSetupFormScript: kFunction_1014d91, boldTitle: true, CanScroll: true, layouts: nil, showBullet: true, showMultipleData: true, viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, _proto: {AddAllInfoItem: kFunction_1000e19, viewJustSym: nil, tapIcon: {bounds: '{left: 0, top: 0, right: 14, bottom: 3}, bits: call kBinaryFromHex with ("0000000000040000000000000003000e038000000380000003800000", 'bits), colorData: {cbits: call kBinaryFromHex with ("0000000000040000000000000003000e038000000380000003800000", 'bits), bitDepth: 1}}, viewFormat: 256, reduceFont: nil, boldTitle: nil, viewDrawScript: kFunction_10017a5, showBullet: nil, hitArray: nil, viewFlags: 2561, GetBottom: kFunction_1001821, viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewOriginY: 0, viewJustify: 240, SetOrigin: kFunction_1001899, layouts: nil, shapeArray: nil, GetMaxTextWidth: kFunction_1001911, viewClickScript: kFunction_1001a25, origin: nil, showMultipleData: nil, viewFont: 12289, viewOriginX: 0, viewSetupChildrenScript: kFunction_1001d6d, CanScroll: nil, Hiliter: kFunction_100214d, viewClass: 74}}
+			kLiteral_1014cfd: {name: "All Info", protection: 'public, symbol: 'allinfo, type: 'viewer, viewSetupFormScript: kFunction_1014d91, boldTitle: true, CanScroll: true, layouts: nil, showBullet: true, showMultipleData: true, viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, _proto: {AddAllInfoItem: kFunction_1000e19, viewJustSym: nil, tapIcon: {bounds: '{left: 0, top: 0, right: 14, bottom: 3}, bits: call kBinaryFromHex with ("0000000000040000000000000003000e038000000380000003800000", 'bits), colorData: {cbits: call kBinaryFromHex with ("0000000000040000000000000003000e038000000380000003800000", 'bits), bitDepth: 1}}, viewFormat: vfPen(1), reduceFont: nil, boldTitle: nil, viewDrawScript: kFunction_10017a5, showBullet: nil, hitArray: nil, viewFlags: vVisible + vClickable + vGesturesAllowed, GetBottom: kFunction_1001821, viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewOriginY: 0, viewJustify: vjParentFullH + vjParentFullV, SetOrigin: kFunction_1001899, layouts: nil, shapeArray: nil, GetMaxTextWidth: kFunction_1001911, viewClickScript: kFunction_1001a25, origin: nil, showMultipleData: nil, viewFont: tsFancy + tsSize(12), viewOriginX: 0, viewSetupChildrenScript: kFunction_1001d6d, CanScroll: nil, Hiliter: kFunction_100214d, viewClass: clView}}
 		},
 		func() begin
 			if (if (if target then IsSoupEntry(target)) then (currentLayout = 'default)) then begin
@@ -3071,10 +3071,10 @@ partItem_7 := {
 			inherited:?viewSetupChildrenScript()
 		end),
 	viewSetupDoneScript: func() begin
-		local l1, l2;
+		local l1, childViewFrames;
 		inherited:?viewSetupDoneScript();
-		if (if (l2 := self:ChildViewFrames()) then (Length(l2) > 0)) then begin
-				allInfoHeight := ((l1 := (childToScroll := l2[0]):GlobalBox()).bottom - l1.top);
+		if (if (childViewFrames := self:ChildViewFrames()) then (Length(childViewFrames) > 0)) then begin
+				allInfoHeight := ((l1 := (childToScroll := childViewFrames[0]):GlobalBox()).bottom - l1.top);
 				childBottom := childToScroll:GetBottom()
 			end;
 		(if (childBottom <= allInfoHeight) then (if scrollArrows.viewCObject then scrollArrows:Hide()) else begin
@@ -3116,10 +3116,10 @@ layout := {
 						l4 := l2
 					end;
 				l10 := StrFontWidth(l4, 1058816);
-				l11 := [Array: OffsetShape(MakeShape(l1.overviewIcon), a2.left, (l8 + 2)), MakeText(StrTruncate(l4, l12), l6, l8, l7, (a2.top + 11)), '{font: 9216, justification: left}, MakeText(l5, l6, l8, l7, (a2.top + 25))];
+				l11 := [Array: OffsetShape(MakeShape(l1.overviewIcon), a2.left, (l8 + 2)), MakeText(StrTruncate(l4, l12), l6, l8, l7, (a2.top + 11)), '{font: tsSystem + tsSize(9), justification: left}, MakeText(l5, l6, l8, l7, (a2.top + 25))];
 				if (l13 > 1) then begin
 						l15 := Clone((l14 := EntryStore(a1)):GetName());
-						AddArraySlot(l11, '{font: 9216, justification: right});
+						AddArraySlot(l11, '{font: tsSystem + tsSize(9), justification: right});
 						AddArraySlot(l11, MakeText(StyledStrTruncate(l15, ((a2.right - 2) - (l10 + l6)), 9216), (l10 + l6), a2.top, (a2.right - 2), (a2.top + 11)))
 					end;
 				l11

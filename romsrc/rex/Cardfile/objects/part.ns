@@ -7,37 +7,37 @@ part := array(nil, {
 				GetRoot().cardfile:NewtSoupChangedNotify(a1, a2, a3, a4)
 			end
 		},
-		func(a1) begin
+		func(partFrame) begin
 			local namesSoup;
-			local l1, l2, l3, l4;
-			l1 := a1.partData.theForm;
-			(l4 := {}).(EnsureInternal('theStuff)) := l1:NewtInstallScript(l1);
-			l4.(EnsureInternal('appSymbol)) := l1.appSymbol;
-			l2 := BuildContext(l1);
-			OverrideBuiltinApp('cardfile, l2);
-			namesSoup := l1.allSoups.names;
-			l4.(EnsureInternal('soupName)) := namesSoup.soupName;
+			local theForm, context, copy, frame2;
+			theForm := partFrame.partData.theForm;
+			(frame2 := {}).(EnsureInternal('theStuff)) := theForm:NewtInstallScript(theForm);
+			frame2.(EnsureInternal('appSymbol)) := theForm.appSymbol;
+			context := BuildContext(theForm);
+			OverrideBuiltinApp('cardfile, context);
+			namesSoup := theForm.allSoups.names;
+			frame2.(EnsureInternal('soupName)) := namesSoup.soupName;
 			if (not GetStores()[0]:HasSoup(namesSoup.soupName)) then begin
-					l3 := Clone(namesSoup);
-					l3:MakeSoup(l1.appSymbol);
-					l3:AddWalletEntries()
+					copy := Clone(namesSoup);
+					copy:MakeSoup(theForm.appSymbol);
+					copy:AddWalletEntries()
 				end;
-			RegSoupChange(namesSoup.soupName, l1.appSymbol, kFunction_720809);
-			RegSoupRestore(l1.appSymbol, func(a1) begin
-				local l1, l2;
+			RegSoupChange(namesSoup.soupName, theForm.appSymbol, kFunction_720809);
+			RegSoupRestore(theForm.appSymbol, func(a1) begin
+				local cardfile, l2;
 				(if BFetch(a1, namesSoup.soupName, '|str<|, nil) then begin
-						if (l2 := (l1 := GetRoot().cardfile).allSoups.names).theSoup then begin
+						if (l2 := (cardfile := GetRoot().cardfile).allSoups.names).theSoup then begin
 								l2.theSoup := nil
 							end;
-						l1:CheckAllBdays()
+						cardfile:CheckAllBdays()
 					end)
 			end);
-			l4
+			frame2
 		end),
-	removeScript: func(a1) begin
-		UnRegSoupChange(a1.soupName, a1.appSymbol);
-		UnRegUnionSoup(a1.soupName, a1.appSymbol);
-		call a1.theStuff.NewtRemoveScript with (a1.theStuff);
+	removeScript: func(partFrame) begin
+		UnRegSoupChange(partFrame.soupName, partFrame.appSymbol);
+		UnRegUnionSoup(partFrame.soupName, partFrame.appSymbol);
+		call partFrame.theStuff.NewtRemoveScript with (partFrame.theStuff);
 		nil
 	end,
 	partData: {theForm: @8192},

@@ -12,10 +12,10 @@ export79 := {
 		export79Item
 	],
 	viewSetupFormScript: func() begin
-		local l1;
+		local autodock;
 		self.protoContext := GetRoot().Connection;
 		protoContext:AddOpenWindow(self);
-		(if (if (l1 := protoContext:ConnectionPrefsRead('autodock)) then (not GetGlobals().ConnectionLikesWorksites)) then begin
+		(if (if (autodock := protoContext:ConnectionPrefsRead('autodock)) then (not GetGlobals().ConnectionLikesWorksites)) then begin
 				self.viewBounds := SetBounds(0, 50, 220, 270);
 				(connectValues.viewFlags := BOr(connectValues.viewFlags, 1))
 			end else begin
@@ -162,13 +162,13 @@ export79Item := {
 	viewQuitScript: func() begin
 		GetRoot().Connection:ConnectionPrefsWrite('autoDockAddr, prefsFrame)
 	end,
-	ConnectionPrefsRead: func(a1) begin
-		(if (a1 = nil) then prefsFrame else prefsFrame.(a1))
+	ConnectionPrefsRead: func(currentChoiceUserconfigTag) begin
+		(if (currentChoiceUserconfigTag = nil) then prefsFrame else prefsFrame.(currentChoiceUserconfigTag))
 	end,
-	ConnectionPrefsWrite: func(a1, a2) begin
-		(prefsFrame.(a1) := a2)
+	ConnectionPrefsWrite: func(currentChoiceUserconfigTag, a2) begin
+		(prefsFrame.(currentChoiceUserconfigTag) := a2)
 	end,
-	SetConnectionType: func(a1, a2, a3) begin
+	SetConnectionType: func(currentlyShowing, currentChoice, connectionOptions) begin
 		nil
 	end,
 	HideIfVisible: func() begin

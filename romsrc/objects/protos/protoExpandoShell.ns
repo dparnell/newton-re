@@ -30,10 +30,10 @@ protoExpandoShell := {
 	end,
 	keys: nil,
 	viewBounds: nil,
-	viewKeyDownScript: func(a1, a2) begin
+	viewKeyDownScript: func(char2, flags) begin
 		local l1;
-		if (a1 = $\t) then begin
-				if (BAnd(a2, 67108864) <> 0) then begin
+		if (char2 = $\t) then begin
+				if (BAnd(flags, 67108864) <> 0) then begin
 						if ((l1 := (split - 1)) < 0) then begin
 								l1 := (numLines - 1)
 							end
@@ -69,9 +69,9 @@ protoExpandoShell := {
 		expando:ExpandLine(a1);
 		expando:RedoChildren()
 	end,
-	viewClickScript: func(a1) begin
+	viewClickScript: func(unit) begin
 		local l1, l2;
-		(if ((l1 := ((l2 := (GetPoint(1, a1) - expando:GlobalBox().top)) div lineHeight)) >= split) then begin
+		(if ((l1 := ((l2 := (GetPoint(1, unit) - expando:GlobalBox().top)) div lineHeight)) >= split) then begin
 				l1 := ((l2 := (l2 - insertHeight)) div lineHeight);
 				(if (if (l2 >= 0) then (l1 >= split)) then begin
 						self:ExpandLine((l1 + 1));
@@ -84,22 +84,22 @@ protoExpandoShell := {
 				true
 			end)
 	end,
-	ExpandLine: func(a1) begin
-		(if (not writeProtected) then (if (a1 < numLines) then begin
+	ExpandLine: func(firstLine) begin
+		(if (not writeProtected) then (if (firstLine < numLines) then begin
 					if insert then begin
 							self:CloseEdit(insert)
 						end;
-					split := a1;
+					split := firstLine;
 					if keys then begin
 							keys:Close();
 							keys := nil
 						end;
 					self.insertHeight := (editHeight + 6);
-					(self.insert := {_proto: lines[split], viewBounds: RelBounds(0, (3 + (a1 * lineHeight)), editWidth, editHeight), indent: indent, viewLineSpacing: viewLineSpacing})
+					(self.insert := {_proto: lines[split], viewBounds: RelBounds(0, (3 + (firstLine * lineHeight)), editWidth, editHeight), indent: indent, viewLineSpacing: viewLineSpacing})
 				end))
 	end,
 	viewClass: clView,
-	CloseEdit: func(a1) begin
+	CloseEdit: func(insert) begin
 		nil
 	end,
 	insert: nil,

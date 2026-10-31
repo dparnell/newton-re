@@ -9,39 +9,39 @@ pager := {
 		_proto: infoFrameProto,
 		checkPrefix: [|Array|: nil, [pathExpr: 'pagers]],
 		checkPaths: [|Array|: 'pagerNum, 'pagerPin],
-		formatFunc: func(a1) begin
-			local l1, l2, l3, l4;
-			l4 := ClassOf((l2 := a1[0]));
-			if StrFilled(a1[1]) then begin
-					if StrFilled(l2) then begin
-							l1 := ParsePhone(l2)
+		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+			local parsePhone2, displayPhone, l3, cls;
+			cls := ClassOf((displayPhone := v20_wwwwwwwwwwvvvvvv[0]));
+			if StrFilled(v20_wwwwwwwwwwvvvvvv[1]) then begin
+					if StrFilled(displayPhone) then begin
+							parsePhone2 := ParsePhone(displayPhone)
 						end else begin
-							l1 := {}
+							parsePhone2 := {}
 						end;
-					l1.extension := ParamStr("^?0^0^?1 ^1|||^?1^1|", [Array: l1.extension, a1[1]]);
-					l2 := l1
+					parsePhone2.extension := ParamStr("^?0^0^?1 ^1|||^?1^1|", [Array: parsePhone2.extension, v20_wwwwwwwwwwvvvvvv[1]]);
+					displayPhone := parsePhone2
 				end;
-			l2 := MakeDisplayPhone(l2);
-			(l2 := ParamStr("^0 ^1", [Array: l2, GetGlobals().pagerTypes.pagerText.(l4)]))
+			displayPhone := MakeDisplayPhone(displayPhone);
+			(displayPhone := ParamStr("^0 ^1", [Array: displayPhone, GetGlobals().pagerTypes.pagerText.(cls)]))
 		end,
-		shapeFunc: func(a1, a2, a3, a4) begin
-			local l1;
-			inherited:shapeFunc([Array: (l1 := self:formatFunc(a1))], a2, a3, a4)
+		shapeFunc: func(v20_wwwwwwwwwwvvvvvv, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, a3, a4) begin
+			local formatFunc;
+			inherited:shapeFunc([Array: (formatFunc := self:formatFunc(v20_wwwwwwwwwwvvvvvv))], v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, a3, a4)
 		end,
-		actionFunc: func(a1, a2, a3, a4, a5, a6, a7) begin
-			local l1, l2, l3;
-			l2 := a5.(a6).pagerNum;
-			if StrFilled((l3 := a5.(a6).pagerPin)) then begin
-					if StrFilled(l2) then begin
-							l1 := ParsePhone(l2)
+		actionFunc: func(a1, a2, a3, box, target, path, misc) begin
+			local parsePhone2, phone, l3;
+			phone := target.(path).pagerNum;
+			if StrFilled((l3 := target.(path).pagerPin)) then begin
+					if StrFilled(phone) then begin
+							parsePhone2 := ParsePhone(phone)
 						end else begin
-							l1 := {}
+							parsePhone2 := {}
 						end;
-					l1.extension := ParamStr("^?0^0^?1 ^1|||^?1^1|", [Array: l1.extension, l3]);
-					l2 := MakePhone(l1)
+					parsePhone2.extension := ParamStr("^?0^0^?1 ^1|||^?1^1|", [Array: parsePhone2.extension, l3]);
+					phone := MakePhone(parsePhone2)
 				end;
-			a7.phoneNum := l2;
-			inherited:actionFunc(a1, a2, a3, a4, a5, a6, a7)
+			misc.phoneNum := phone;
+			inherited:actionFunc(a1, a2, a3, box, target, path, misc)
 		end
 	},
 	usePhoneKeys: true,

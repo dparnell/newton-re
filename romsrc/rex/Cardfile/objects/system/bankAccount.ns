@@ -9,8 +9,8 @@ bankAccount := {
 		_proto: infoFrameProto_2,
 		checkPrefix: [|Array|: nil, [pathExpr: 'owner, 'bankAccounts]],
 		checkPaths: [|Array|: 'bankContactNum, 'bankAcctNum, 'bankName],
-		formatFunc: func(a1) begin
-			ParamStr("^?0Bank: ^0\n||^?1Bank Acct: ^1||", [Array: a1[2], a1[1]])
+		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+			ParamStr("^?0Bank: ^0\n||^?1Bank Acct: ^1||", [Array: v20_wwwwwwwwwwvvvvvv[2], v20_wwwwwwwwwwvvvvvv[1]])
 		end
 	},
 	protection: 'private,

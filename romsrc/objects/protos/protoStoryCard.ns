@@ -6,7 +6,7 @@ protoStoryCard := {
 	viewJustify: 0,
 	viewEffect: 236577,
 	declareSelf: 'base,
-	viewClickScript: func(a1) begin
+	viewClickScript: func(unit) begin
 		nil
 	end,
 	viewShowScript: func() begin

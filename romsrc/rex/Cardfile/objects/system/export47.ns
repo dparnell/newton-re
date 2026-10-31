@@ -20,7 +20,7 @@ export47 := {
 		AddDeferredCall(functions.SetKeyView, [Array: self.entryLine, 99999]);
 		(if (if target then target.(path)) then target.(path).label else "")
 	end,
-	Setup1: func(a1) begin
+	Setup1: func(target) begin
 		label
 	end,
 	Setup2: func(a1) begin

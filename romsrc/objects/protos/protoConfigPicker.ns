@@ -8,9 +8,9 @@ protoConfigPicker := {
 	configService: mods,
 	configType: defHWLoc,
 	viewSetupFormScript: func() begin
-		l1 := GetUserConfig('screenOrientation);
-		local l1;
-		labelCommands := (foreach l2 in items collect (if l2.title then (if IsArray(l2.title) then l2.title[l1] else l2.title) else 'pickseparator));
+		screenOrientation := GetUserConfig('screenOrientation);
+		local screenOrientation;
+		labelCommands := (foreach item in items collect (if item.title then (if IsArray(item.title) then item.title[screenOrientation] else item.title) else 'pickseparator));
 		inherited:?viewSetupFormScript()
 	end,
 	ensureServerSetup: func() begin
@@ -20,18 +20,18 @@ protoConfigPicker := {
 			end)
 	end,
 	viewQuitScript: func() begin
-		l1 := GetUserConfig(configSlot);
+		userConfig := GetUserConfig(configSlot);
 		self:ensureServerSetup();
-		server:setdefaultConfig(l1);
+		server:setdefaultConfig(userConfig);
 		if server then begin
 				server:Dispose();
 				server := nil
 			end;
-		local l1;
-		(foreach l2, l3 deeply in CommConfigChangeRegistry do begin
-				if (l3 = CommConfigChangeRegistry.(l2)) then begin
+		local userConfig;
+		(foreach key, value deeply in CommConfigChangeRegistry do begin
+				if (value = CommConfigChangeRegistry.(key)) then begin
 						try begin
-								call l3 with (configService, l1)
+								call value with (configService, userConfig)
 							end onexception |evt.ex| do begin end
 					end
 			end)
@@ -42,21 +42,21 @@ protoConfigPicker := {
 				labelCommands[self:LabelIndex(server:getdefaultConfig())]
 			end else labelCommands[self:LabelIndex(GetUserConfig(configSlot))])
 	end,
-	LabelActionScript: func(a1) begin
+	LabelActionScript: func(index) begin
 		AddUndoAction('setLabelScript, [Array: GetUserConfig(configSlot)]);
-		SetUserConfig(configSlot, items[a1].id);
-		self:?PickItem(items[a1].id)
+		SetUserConfig(configSlot, items[index].id);
+		self:?PickItem(items[index].id)
 	end,
 	LabelIndex: func(a1) begin
-		l1 := 0;
-		local l1;
-		(for l2 := 0 to (Length(items) - 1) do begin
-				if (if (if a1 then items[l2].id) then StrEqual(a1, items[l2].id)) then begin
-						l1 := l2;
+		i2 := 0;
+		local i2;
+		(for i := 0 to (Length(items) - 1) do begin
+				if (if (if a1 then items[i].id) then StrEqual(a1, items[i].id)) then begin
+						i2 := i;
 						break
 					end
 			end);
-		l1
+		i2
 	end,
 	setLabelScript: func(a1) begin
 		self:LabelActionScript(self:LabelIndex(a1))

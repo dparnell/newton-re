@@ -5,60 +5,60 @@ protoMultiCursor := {
 	finalCurse: 0,
 	metaCursor: nil,
 	comparator: func(a1, a2, a3) begin
-		local l1;
-		(if (a3 = '|=|) then IsSameEntry(a1, a2) else ((if ((l1 := StrCompare(a1.sorton, a2.sorton)) < 0) then (a3 = '|<|)) or (if (l1 > 0) then (a3 = '|>|))))
+		local strCompare2;
+		(if (a3 = '|=|) then IsSameEntry(a1, a2) else ((if ((strCompare2 := StrCompare(a1.sorton, a2.sorton)) < 0) then (a3 = '|<|)) or (if (strCompare2 > 0) then (a3 = '|>|))))
 	end,
 	New: func(a1, a2) begin
-		l1 := {_proto: self, curses: [Array: ]};
+		frame2 := {_proto: self, curses: [Array: ]};
 		if a2 then begin
-				l1.comparator := a2
+				frame2.comparator := a2
 			end;
 		if a1 then begin
-				local l1;
-				(foreach l2 in a1 do begin
-						l1:addCursor(l2, nil)
+				local frame2;
+				(foreach item in a1 do begin
+						frame2:addCursor(item, nil)
 					end)
 			end;
-		l1:Reset();
-		l1
+		frame2:Reset();
+		frame2
 	end,
-	addCursor: func(a1, a2) begin
-		local l1;
-		l1 := {cursor: a1, id: (if a2 then a2 else finalCurse), state: 'passed};
-		ArrayInsert(curses, l1, finalCurse);
+	addCursor: func(item, a2) begin
+		local frame2;
+		frame2 := {cursor: item, id: (if a2 then a2 else finalCurse), state: 'passed};
+		ArrayInsert(curses, frame2, finalCurse);
 		(finalCurse := (finalCurse + 1))
 	end,
-	ReplaceCursor: func(a1, a2) begin
-		(for l1 := 0 to (finalCurse - 1) do begin
-				if (curses[l1].id = a1) then begin
-						curses[l1].cursor := a2;
+	ReplaceCursor: func(a1, soupCursor) begin
+		(for i := 0 to (finalCurse - 1) do begin
+				if (curses[i].id = a1) then begin
+						curses[i].cursor := soupCursor;
 						return true
 					end
 			end);
 		nil
 	end,
 	mover: func(a1) begin
-		local l1;
-		(for l2 := 0 to (Length(curses) - 1) do begin
-				local l5, l6, l7;
-				l5 := curses[l2];
-				l6 := '{passed: {prev: prev, Next: entry}, resident: {prev: prev, Next: Next}, prior: {prev: entry, Next: Next}}.(l5.state).(a1);
-				l7 := Perform(l5.cursor, l6, [Array: ]);
-				(while (l7 = 'deleted) do (l7 := Perform(l5.cursor, l6, [Array: ])));
+		local perform22;
+		(for i := 0 to (Length(curses) - 1) do begin
+				local curse, l6, perform2;
+				curse := curses[i];
+				l6 := '{passed: {prev: prev, Next: entry}, resident: {prev: prev, Next: Next}, prior: {prev: entry, Next: Next}}.(curse.state).(a1);
+				perform2 := Perform(curse.cursor, l6, [Array: ]);
+				(while (perform2 = 'deleted) do (perform2 := Perform(curse.cursor, l6, [Array: ])));
 				if (l6 = a1) then begin
-						l5.state := '{Next: passed, prev: prior}.(a1)
+						curse.state := '{Next: passed, prev: prior}.(a1)
 					end;
-				if l7 then begin
-						if ((not l1) or call comparator with (l1, l7, '{Next: |>|, prev: |<|}.(a1))) then begin
-								metaCursor := l5;
-								l1 := l7
+				if perform2 then begin
+						if ((not perform22) or call comparator with (perform22, perform2, '{Next: |>|, prev: |<|}.(a1))) then begin
+								metaCursor := curse;
+								perform22 := perform2
 							end
 					end
 			end);
 		if metaCursor then begin
 				metaCursor.state := 'resident
 			end;
-		l1
+		perform22
 	end,
 	Next: func() begin
 		self:mover('Next)
@@ -70,83 +70,83 @@ protoMultiCursor := {
 		metaCursor.cursor:entry()
 	end,
 	Reset: func() begin
-		(foreach l1 in curses do begin
-				l1.cursor:Reset();
-				l1.state := 'passed
+		(foreach item in curses do begin
+				item.cursor:Reset();
+				item.state := 'passed
 			end);
 		self:Next()
 	end,
 	ResetToEnd: func() begin
-		(foreach l1 in curses do begin
-				l1.cursor:ResetToEnd();
-				l1.state := 'prior
+		(foreach item in curses do begin
+				item.cursor:ResetToEnd();
+				item.state := 'prior
 			end);
 		self:prev()
 	end,
 	Goto: func(a1) begin
-		local l1;
-		(foreach l2 in curses do begin
-				local l4;
-				l4 := l2.cursor:Goto(a1);
-				l2.state := 'passed;
-				if l4 then begin
-						if ((not l1) or call comparator with (l1, l4, '|>|)) then begin
-								metaCursor := l2;
-								l1 := l4
+		local goto2;
+		(foreach item in curses do begin
+				local goto;
+				goto := item.cursor:Goto(a1);
+				item.state := 'passed;
+				if goto then begin
+						if ((not goto2) or call comparator with (goto2, goto, '|>|)) then begin
+								metaCursor := item;
+								goto2 := goto
 							end
 					end
 			end);
 		if metaCursor then begin
 				metaCursor.state := 'resident
 			end;
-		l1
+		goto2
 	end,
 	GotoKey: func(a1) begin
-		local l1;
-		(foreach l2 in curses do begin
-				local l4;
-				l4 := l2.cursor:GotoKey(a1);
-				(while (l4 = 'deleted) do (l4 := l2.cursor:Next()));
-				l2.state := 'passed;
-				if l4 then begin
-						if ((not l1) or call comparator with (l1, l4, '|>|)) then begin
-								metaCursor := l2;
-								l1 := l4
+		local gotoKey2;
+		(foreach item in curses do begin
+				local gotoKey;
+				gotoKey := item.cursor:GotoKey(a1);
+				(while (gotoKey = 'deleted) do (gotoKey := item.cursor:Next()));
+				item.state := 'passed;
+				if gotoKey then begin
+						if ((not gotoKey2) or call comparator with (gotoKey2, gotoKey, '|>|)) then begin
+								metaCursor := item;
+								gotoKey2 := gotoKey
 							end
 					end
 			end);
 		if metaCursor then begin
 				metaCursor.state := 'resident
 			end;
-		l1
+		gotoKey2
 	end,
 	clone: func() begin
-		(l1 := Clone(self)).metaCursor := Clone(metaCursor);
-		l1.curses := Clone(l1.curses);
-		local l1;
-		(for l2 := 0 to (finalCurse - 1) do begin
-				l1.curses[l2] := Clone(curses[l2]);
-				l1.curses[l2].cursor := l1.curses[l2].cursor:clone()
+		(copy := Clone(self)).metaCursor := Clone(metaCursor);
+		copy.curses := Clone(copy.curses);
+		local copy;
+		(for i := 0 to (finalCurse - 1) do begin
+				copy.curses[i] := Clone(curses[i]);
+				copy.curses[i].cursor := copy.curses[i].cursor:clone()
 			end);
-		l1
+		copy
 	end,
 	CountEntries: func() begin
 		l1 := 0;
 		local l1;
-		(for l2 := 0 to (finalCurse - 1) do begin
-				l1 := (l1 + curses[l2].cursor:CountEntries())
+		(for i := 0 to (finalCurse - 1) do begin
+				l1 := (l1 + curses[i].cursor:CountEntries())
 			end);
 		l1
 	end,
-	move: func(a1) begin
-		if (a1 > 0) then begin
-				(while (a1 > 0) do begin
-						a1 := (a1 - 1);
+	move: func(maxLines) begin
+		if (maxLines > 0) then begin
+				(while (maxLines > 0) do begin
+						maxLines := (maxLines - 1);
 						self:Next()
 					end)
 			end else begin
-				(while (a1 < 0) do begin
-						a1 := (a1 + 1);
+				(while (maxLines < 0) do begin
+						maxLines := (maxLines + 1);
 						self:prev()
 					end)
 			end;

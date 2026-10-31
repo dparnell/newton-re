@@ -48,7 +48,7 @@ export158Item := {
 	TextLength: func() begin
 		(if self.text then StrLen(self.text) else 0)
 	end,
-	viewChangedScript: func(a1, a2) begin
+	viewChangedScript: func(slot, view) begin
 		self:?textChanged()
 	end,
 	viewFont: tsFancy + tsSize(12),

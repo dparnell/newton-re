@@ -1,45 +1,45 @@
 // systemConversionFrame, and what only it reaches
 
 systemConversionFrame := {
-	CopyValue: func(a1, a2, a3) begin
+	CopyValue: func(userConfiguration, body, a3) begin
 		if (ClassOf(a3) <> 'Array) then begin
 				a3 := [Array: a3]
 			end;
-		(foreach l1 in a3 do begin
-				if HasSlot(a2, l1) then begin
-						a1.(l1) := a2.(l1)
+		(foreach item in a3 do begin
+				if HasSlot(body, item) then begin
+						userConfiguration.(item) := body.(item)
 					end
 			end)
 	end,
-	Convert: func(a1, a2, a3, a4) begin
-		local l1, l2, l3;
-		(if StrEqual((l1 := a1.tag), "UserConfiguration") then begin
-				self:CopyValue(userConfiguration, a1, '[Array: mailAccount, mailPassword, mailPhone]);
-				self:CopyValue(userConfiguration, a1, '[Array: locale, Keyboard, paperSize]);
-				self:CopyValue(userConfiguration, a1, '[Array: location, name, address, cityZip, company, country, countrySlot, phone, faxPhone, currentCountry, currentAreaCode, dialingPrefix, homePhone, currentPrinter, mailNetwork, callingCard, longDistanceAccess]);
-				if a1.SleepTime then begin
-						if (not (l2 := LFetch([Array: 60, 300, 600, 1800], a1.SleepTime, 0, '|=|, nil))) then begin
-								l2 := 300
+	Convert: func(body, a2, a3, a4) begin
+		local tag, lFetch2, beepSound;
+		(if StrEqual((tag := body.tag), "UserConfiguration") then begin
+				self:CopyValue(userConfiguration, body, '[Array: mailAccount, mailPassword, mailPhone]);
+				self:CopyValue(userConfiguration, body, '[Array: locale, Keyboard, paperSize]);
+				self:CopyValue(userConfiguration, body, '[Array: location, name, address, cityZip, company, country, countrySlot, phone, faxPhone, currentCountry, currentAreaCode, dialingPrefix, homePhone, currentPrinter, mailNetwork, callingCard, longDistanceAccess]);
+				if body.SleepTime then begin
+						if (not (lFetch2 := LFetch([Array: 60, 300, 600, 1800], body.SleepTime, 0, '|=|, nil))) then begin
+								lFetch2 := 300
 							end;
-						userConfiguration.SleepTime := l2
+						userConfiguration.SleepTime := lFetch2
 					end else begin
 						userConfiguration.SleepTime := 300
 					end;
-				self:CopyValue(userConfiguration, a1, '[Array: actionSoundEffects, alarmSoundEffects, penSoundEffects]);
-				if (l3 := a1.beepSound) then begin
-						l3 := LFetch('[Array: simpleBeep, wakeupBeep, funBeep, plinkBeep], a1.beepSound, 0, '|=|, nil)
+				self:CopyValue(userConfiguration, body, '[Array: actionSoundEffects, alarmSoundEffects, penSoundEffects]);
+				if (beepSound := body.beepSound) then begin
+						beepSound := LFetch('[Array: simpleBeep, wakeupBeep, funBeep, plinkBeep], body.beepSound, 0, '|=|, nil)
 					end;
-				if (not l3) then begin
-						l3 := 'simpleBeep
+				if (not beepSound) then begin
+						beepSound := 'simpleBeep
 					end;
-				userConfiguration.beepSound := l3;
-				self:CopyValue(userConfiguration, a1, '[Array: zapAutoReceive]);
-				self:CopyValue(userConfiguration, a1, '[Array: dialing, modemSoundVolume, blinddialing, currentDialSpeaker]);
-				if a1.userFolders then begin
-						|Restore1.XFolders|(a1.userFolders)
+				userConfiguration.beepSound := beepSound;
+				self:CopyValue(userConfiguration, body, '[Array: zapAutoReceive]);
+				self:CopyValue(userConfiguration, body, '[Array: dialing, modemSoundVolume, blinddialing, currentDialSpeaker]);
+				if body.userFolders then begin
+						|Restore1.XFolders|(body.userFolders)
 					end;
 				EntryChange(userConfiguration);
 				return nil
-			end else (if StrEqual(l1, "UserDictionary") then a1 else (if StrEqual(l1, "Modems") then a1 else (if StrPos(l1, ":", 0) then a1))))
+			end else (if StrEqual(tag, "UserDictionary") then body else (if StrEqual(tag, "Modems") then body else (if StrPos(tag, ":", 0) then body))))
 	end
 };

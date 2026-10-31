@@ -10,54 +10,54 @@ protoFinderWindow := {
 	declareSelf: 'iconSpace,
 	skipStarter: [|Array|: backupInfo, @metaSoupName, library, extrasSoupName, @systemSoupName, systemAlarmSoup],
 	viewChildren: nil,
-	HandleNavKey: func(a1, a2, a3) begin
-		local l1, l2, l3, l4;
-		(if (if (a1 <> $\00) then (not IsCommandKeystroke(a1, a2))) then (if (l1 := BFetch(NavKeys, a1, '|chr<|, 'char)) then begin
-					l3 := Length((l2 := self:GetSelectedIconsAndIndexes(a3)).icons);
-					l4 := (if (if (BAnd(a2, 67108864) <> 0) then l1.shiftCommand) then l1.shiftCommand else l1.command);
-					if (l3 = 1) then begin
-							Perform(self, l4, [Array: l2, a3])
+	HandleNavKey: func(char3, flags, childIconViews) begin
+		local char2, selectedIconsAndIndexes, count, l4;
+		(if (if (char3 <> $\00) then (not IsCommandKeystroke(char3, flags))) then (if (char2 := BFetch(NavKeys, char3, '|chr<|, 'char)) then begin
+					count := Length((selectedIconsAndIndexes := self:GetSelectedIconsAndIndexes(childIconViews)).icons);
+					l4 := (if (if (BAnd(flags, 67108864) <> 0) then char2.shiftCommand) then char2.shiftCommand else char2.command);
+					if (count = 1) then begin
+							Perform(self, l4, [Array: selectedIconsAndIndexes, childIconViews])
 						end else begin
-							if (l3 > 1) then begin
-									if (not l1.noMultiSelect) then begin
-											Perform(self, l4, [Array: l2, a3])
+							if (count > 1) then begin
+									if (not char2.noMultiSelect) then begin
+											Perform(self, l4, [Array: selectedIconsAndIndexes, childIconViews])
 										end else begin
-											if (l1.noMultiSelect = 'first) then begin
-													self:ChangeSelection(l2.icons[0], l2.icons)
+											if (char2.noMultiSelect = 'first) then begin
+													self:ChangeSelection(selectedIconsAndIndexes.icons[0], selectedIconsAndIndexes.icons)
 												end else begin
-													if (l1.noMultiSelect = 'last) then begin
-															self:ChangeSelection(l2.icons[(l3 - 1)], l2.icons)
+													if (char2.noMultiSelect = 'last) then begin
+															self:ChangeSelection(selectedIconsAndIndexes.icons[(count - 1)], selectedIconsAndIndexes.icons)
 														end
 												end
 										end
 								end else begin
-									if l1.NoSelection then begin
-											Perform(self, l4, [Array: l2, a3])
+									if char2.NoSelection then begin
+											Perform(self, l4, [Array: selectedIconsAndIndexes, childIconViews])
 										end
 								end
 						end;
 					true
 				end))
 	end,
-	viewgesturescript: func(a1, a2) begin
-		(if (a2 = 47) then begin
-				self:HiliteViewChildren(a1);
+	viewgesturescript: func(unit, gesture) begin
+		(if (gesture = 47) then begin
+				self:HiliteViewChildren(unit);
 				self:LockScreen(true);
-				(foreach l1 in self:GetChildIconViews() do begin
-						local l3;
-						if (if l1.target then l1.hilites) then begin
-								RemoveSlot(l1, 'hilites);
-								if ((not (l3 := l1.target.fentry.sequence)) or (l3 >= 0)) then begin
+				(foreach item in self:GetChildIconViews() do begin
+						local sequence;
+						if (if item.target then item.hilites) then begin
+								RemoveSlot(item, 'hilites);
+								if ((not (sequence := item.target.fentry.sequence)) or (sequence >= 0)) then begin
 										if overUp then begin
-												l1:Checkit(true)
+												item:Checkit(true)
 											end else begin
-												l1:hilite(true)
+												item:hilite(true)
 											end
 									end
 							end
 					end);
 				self:LockScreen(nil)
-			end else (if (a2 = 49) then self:SelectNone()))
+			end else (if (gesture = 49) then self:SelectNone()))
 	end,
 	viewGetDropDataScript: func(a1, a2) begin
 		{fromFinder: iconSpace, dragRef: a2}
@@ -78,50 +78,50 @@ protoFinderWindow := {
 	end,
 	ChangeTagListAndLabels: ChangeTagListAndLabels,
 	NavKeyDown: func(a1, a2) begin
-		local l1, l2, l3, l4, l5;
+		local l1, indexe, l3, l4, l5;
 		(if (Length(a1.icons) > 0) then begin
 				l1 := (self:LocalBox().right div hSpacing);
-				(if ((l3 := ((l2 := a1.indexes[0]) + l1)) > (Length(a2) - 1)) then begin
+				(if ((l3 := ((indexe := a1.indexes[0]) + l1)) > (Length(a2) - 1)) then begin
 						l4 := (if overUp then topIndexText else topIndexIcon);
 						base:viewScrollDownScript();
 						l5 := (if overUp then topIndexText else topIndexIcon);
 						a2 := self:GetChildIconViews();
-						(if (l5 <> l4) then self:ChangeSelection(a2[min((l2 mod l1), (Length(a2) - 1))], nil) else self:ChangeSelection(a2[l2], nil))
+						(if (l5 <> l4) then self:ChangeSelection(a2[min((indexe mod l1), (Length(a2) - 1))], nil) else self:ChangeSelection(a2[indexe], nil))
 					end else self:ChangeSelection(a2[l3], a1.icons))
 			end else self:ChangeSelection(a2[0], nil))
 	end,
-	viewKeyDownScript: func(a1, a2) begin
-		local l1, l2;
-		if (Length((l1 := self:GetChildIconViews())) > 0) then begin
-				l2 := (self:HandleNavKey(a1, a2, l1) or self:HandleTypeSelect(a1, a2, l1))
+	viewKeyDownScript: func(char2, flags) begin
+		local childIconViews, l2;
+		if (Length((childIconViews := self:GetChildIconViews())) > 0) then begin
+				l2 := (self:HandleNavKey(char2, flags, childIconViews) or self:HandleTypeSelect(char2, flags, childIconViews))
 			end;
 		if (not l2) then begin
-				l2 := inherited:?viewKeyDownScript(a1, a2)
+				l2 := inherited:?viewKeyDownScript(char2, flags)
 			end;
 		l2
 	end,
 	NavKeyDelete: func(a1, a2) begin
 		(if self:SetupFakeTarget() then self:DeleteActionScript(nil, self))
 	end,
-	HandleTypeSelect: func(a1, a2, a3) begin
-		(if (l1 := self:NewTypeSelectKey(a1, a2)) then begin
-				local l1;
-				(foreach l2 in a3 do begin
-						local l4, l5, l6;
-						if (l4 := l2.shape) then begin
+	HandleTypeSelect: func(char2, flags, childIconViews) begin
+		(if (typeSelectKey := self:NewTypeSelectKey(char2, flags)) then begin
+				local typeSelectKey;
+				(foreach item in childIconViews do begin
+						local shape, data, fentry;
+						if (shape := item.shape) then begin
 								if overUp then begin
-										l5 := l4[1].data
+										data := shape[1].data
 									end else begin
-										l5 := l4[(Length(l4) - 1)][0].data
+										data := shape[(Length(shape) - 1)][0].data
 									end
 							end else begin
-								l5 := (l6 := l2.target.fentry).text;
-								if IsSoupEntry(l6) then begin
-										EntryUndoChanges(l6)
+								data := (fentry := item.target.fentry).text;
+								if IsSoupEntry(fentry) then begin
+										EntryUndoChanges(fentry)
 									end
 							end;
-						if BeginsWith(l5, l1) then begin
-								self:ChangeSelection(l2, a3);
+						if BeginsWith(data, typeSelectKey) then begin
+								self:ChangeSelection(item, childIconViews);
 								break
 							end
 					end);
@@ -132,13 +132,13 @@ protoFinderWindow := {
 		nil
 	end,
 	NavKeyUp: func(a1, a2) begin
-		local l1, l2, l3, l4, l5, l6;
+		local l1, indexe, l3, l4, count, most;
 		(if (Length(a1.icons) > 0) then begin
 				l1 := (self:LocalBox().right div hSpacing);
-				(if ((l3 := ((l2 := a1.indexes[0]) - l1)) < 0) then (if ((l4 := (if overUp then topIndexText else topIndexIcon)) <> 0) then begin
+				(if ((l3 := ((indexe := a1.indexes[0]) - l1)) < 0) then (if ((l4 := (if overUp then topIndexText else topIndexIcon)) <> 0) then begin
 							base:viewScrollUpScript();
-							l6 := max(((l5 := Length((a2 := self:GetChildIconViews()))) - l1), 0);
-							self:ChangeSelection(a2[min((l6 + (l2 mod l1)), (l5 - 1))], nil)
+							most := max(((count := Length((a2 := self:GetChildIconViews()))) - l1), 0);
+							self:ChangeSelection(a2[min((most + (indexe mod l1)), (count - 1))], nil)
 						end) else self:ChangeSelection(a2[l3], a1.icons))
 			end else self:ChangeSelection(a2[(Length(a2) - 1)], nil))
 	end,
@@ -252,18 +252,18 @@ protoFinderWindow := {
 					XmitSoupChange(kLiteral_5a74d1, 'ExtrasDrawer, 'whatThe, nil)
 				end)
 		end),
-	GetSelectedIconsAndIndexes: func(a1) begin
-		l1 := [Array: ];
-		l2 := [Array: ];
-		local l1;
-		local l2;
-		(foreach l3, l4 in a1 do begin
-				if (BAnd(GetViewFlags(l4), 33554432) <> 0) then begin
-						AddArraySlot(l1, l4);
-						AddArraySlot(l2, l3)
+	GetSelectedIconsAndIndexes: func(childIconViews) begin
+		list := [Array: ];
+		list2 := [Array: ];
+		local list;
+		local list2;
+		(foreach key, value in childIconViews do begin
+				if (BAnd(GetViewFlags(value), 33554432) <> 0) then begin
+						AddArraySlot(list, value);
+						AddArraySlot(list2, key)
 					end
 			end);
-		{icons: l1, indexes: l2}
+		{icons: list, indexes: list2}
 	end,
 	NavKeyRight: func(a1, a2) begin
 		local l1, l2, l3;
@@ -277,12 +277,12 @@ protoFinderWindow := {
 	end,
 	SelectNone: func() begin
 		self:LockScreen(true);
-		(foreach l1 in self:GetChildIconViews() do begin
-				if (BAnd(GetViewFlags(l1), 33554432) <> 0) then begin
+		(foreach item in self:GetChildIconViews() do begin
+				if (BAnd(GetViewFlags(item), 33554432) <> 0) then begin
 						if overUp then begin
-								l1:Checkit(nil)
+								item:Checkit(nil)
 							end else begin
-								l1:hilite(nil)
+								item:hilite(nil)
 							end
 					end
 			end);
@@ -348,14 +348,14 @@ protoFinderWindow := {
 		self:LockScreen(nil)
 	end,
 	GetSelectedIcons: func() begin
-		l1 := [Array: ];
-		local l1;
-		(foreach l2 in self:GetChildIconViews() do begin
-				if (BAnd(GetViewFlags(l2), 33554432) <> 0) then begin
-						AddArraySlot(l1, l2)
+		list := [Array: ];
+		local list;
+		(foreach item in self:GetChildIconViews() do begin
+				if (BAnd(GetViewFlags(item), 33554432) <> 0) then begin
+						AddArraySlot(list, item)
 					end
 			end);
-		l1
+		list
 	end,
 	viewDropApproveScript: func(a1) begin
 		return a1

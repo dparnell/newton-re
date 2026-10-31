@@ -5,12 +5,12 @@ canonicalScroller := {
 	viewFlags: vVisible + vClipping + vClickable,
 	declareSelf: 'base,
 	ShowScroller: func() begin
-		local l1;
-		(l1 := self:ChildViewFrames())[1]:Show()
+		local childViewFrames;
+		(childViewFrames := self:ChildViewFrames())[1]:Show()
 	end,
 	HideScroller: func() begin
-		local l1;
-		(l1 := self:ChildViewFrames())[1]:Hide()
+		local childViewFrames;
+		(childViewFrames := self:ChildViewFrames())[1]:Hide()
 	end,
 	scrolledView: nil,
 	Scroller: nil,

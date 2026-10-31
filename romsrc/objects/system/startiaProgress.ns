@@ -16,6 +16,6 @@ startiaProgress := compile(
 		kLiteral_52b64d: {class: kNativeFuncClass, funcPtr: 7018690, numArgs: 1}
 	},
 	func() begin
-		local l1;
-		return (l1 := DoProgress('vBarber, {statusText: "Interpreting", barber: true, icon: kLiteral_52b639, closeBox: nil}, kLiteral_52b64d))
+		local vBarber;
+		return (vBarber := DoProgress('vBarber, {statusText: "Interpreting", barber: true, icon: kLiteral_52b639, closeBox: nil}, kLiteral_52b64d))
 	end);

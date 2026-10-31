@@ -15,43 +15,43 @@ protoDictionary := {
 	cursors: nil,
 	type: {class: #132, funcPtr: 6994395, numArgs: 0},
 	LookupEncodedWord: func(a1) begin
-		local l1, l2;
-		if (((l1 := self:LookupWord(a1, nil)) = -6) or (l1 = 1)) then begin
-				self:EncodeRecognitionWordDiacritsOK((l2 := Clone(a1)));
-				if (StrLen(l2) > 0) then begin
+		local word, copy;
+		if (((word := self:LookupWord(a1, nil)) = -6) or (word = 1)) then begin
+				self:EncodeRecognitionWordDiacritsOK((copy := Clone(a1)));
+				if (StrLen(copy) > 0) then begin
 						if (StrExactCompare(Upcase(Clone(a1)), a1) = 0) then begin
-								if (((l1 := self:LookupWord(Capitalize(Downcase(Clone(l2))), nil)) = -6) or (l1 = 1)) then begin
-										l1 := self:LookupWord(Downcase(Clone(l2)), nil)
+								if (((word := self:LookupWord(Capitalize(Downcase(Clone(copy))), nil)) = -6) or (word = 1)) then begin
+										word := self:LookupWord(Downcase(Clone(copy)), nil)
 									end
 							end else begin
 								if (StrExactCompare(Capitalize(Downcase(Clone(a1))), a1) = 0) then begin
-										l1 := self:LookupWord(Downcase(Clone(l2)), nil)
+										word := self:LookupWord(Downcase(Clone(copy)), nil)
 									end
 							end
 					end
 			end;
-		return l1
+		return word
 	end,
 	result: {class: #132, funcPtr: 6995431, numArgs: 0},
 	GetName: func() begin
 		name
 	end,
-	DeleteWord: func(a1) begin
-		local l1;
-		if ((l1 := self:PrivateDeleteWord(a1)) = 0) then begin
+	DeleteWord: func(copy) begin
+		local privateDeleteWord;
+		if ((privateDeleteWord := self:PrivateDeleteWord(copy)) = 0) then begin
 				if HasPath(self, 'count) then begin
 						if ((count := (count - 1)) < 0) then begin
 								count := self:Walk("", nil)
 							end
 					end
 			end;
-		return l1
+		return privateDeleteWord
 	end,
-	MakeCursor: func(a1, a2, a3) begin
-		local l1;
-		l1 := self:AllocateCursor();
-		l1:Initialize(a1, a2, a3);
-		return l1
+	MakeCursor: func(currentSoupSymbol, spec, loc) begin
+		local allocateCursor;
+		allocateCursor := self:AllocateCursor();
+		allocateCursor:Initialize(currentSoupSymbol, spec, loc);
+		return allocateCursor
 	end,
 	Add: func(a1) begin
 		self:AddWord(a1.word, a1.attribute)
@@ -59,15 +59,15 @@ protoDictionary := {
 	LookupWord: {class: #132, funcPtr: 6995428, numArgs: 2},
 	PrivateDeleteWord: {class: #132, funcPtr: 6994394, numArgs: 1},
 	Walk: {class: #132, funcPtr: 6995433, numArgs: 2},
-	AddEncodedWord: func(a1, a2) begin
-		local l1, l2, l3;
-		l1 := Clone(a1);
-		l2 := -13;
-		l3 := self:EncodeRecognitionWord(l1);
-		if (StrLen(l1) > 0) then begin
-				l2 := self:AddOneEncodedWord(l1, l3, a2)
+	AddEncodedWord: func(copy2, a2) begin
+		local copy, addOneEncodedWord, encodeRecognitionWord;
+		copy := Clone(copy2);
+		addOneEncodedWord := -13;
+		encodeRecognitionWord := self:EncodeRecognitionWord(copy);
+		if (StrLen(copy) > 0) then begin
+				addOneEncodedWord := self:AddOneEncodedWord(copy, encodeRecognitionWord, a2)
 			end;
-		return l2
+		return addOneEncodedWord
 	end,
 	AttributeSize: {class: #132, funcPtr: 6994391, numArgs: 0},
 	DeletePrefix: {class: #132, funcPtr: 6994393, numArgs: 1},
@@ -76,28 +76,28 @@ protoDictionary := {
 	end,
 	ChangeAttribute: {class: #132, funcPtr: 6994392, numArgs: 2},
 	AllocateCursor: {class: #132, funcPtr: 6994399, numArgs: 0},
-	AddWord: func(a1, a2) begin
-		local l1, l2, l3;
+	AddWord: func(word, a2) begin
+		local limit, count, privateAddWord;
 		if HasPath(self, 'limit) then begin
-				l1 := self.limit
+				limit := self.limit
 			end;
 		if HasPath(self, 'count) then begin
-				l2 := self.count
+				count := self.count
 			end;
-		if (if (if l1 then l2) then (l2 >= l1)) then begin
+		if (if (if limit then count) then (count >= limit)) then begin
 				if (if cursors then (Length(cursors) > 0)) then begin
 						GetRoot():Notify(3, "Word List", "The word was not added because the word list is getting too full.  Please remove some words and try again.")
 					end;
 				return -15
 			end;
 		if BAnd(a2, 192) then begin
-				self:DecodeRecognitionWord((a1 := Clone(a1)), a2);
+				self:DecodeRecognitionWord((word := Clone(word)), a2);
 				a2 := BAnd(a2, -193)
 			end;
-		if (if ((l3 := self:PrivateAddWord(a1, a2)) = 0) then l2) then begin
-				self.count := (l2 + 1)
+		if (if ((privateAddWord := self:PrivateAddWord(word, a2)) = 0) then count) then begin
+				self.count := (count + 1)
 			end;
-		return l3
+		return privateAddWord
 	end,
 	EntryRemoveable: func() begin
 		self:IsReadOnly()
@@ -114,18 +114,18 @@ protoDictionary := {
 	protoQuery: @protoDictionaryCursor,
 	PrivateAddWord: {class: #132, funcPtr: 6994390, numArgs: 2},
 	Dispose: {class: #132, funcPtr: 6994396, numArgs: 0},
-	DecodeRecognitionWord: func(a1, a2) begin
-		if (BAnd(a2, 128) <> 0) then begin
-				Capitalize(a1)
+	DecodeRecognitionWord: func(copy, attribute) begin
+		if (BAnd(attribute, 128) <> 0) then begin
+				Capitalize(copy)
 			end;
-		if (BAnd(a2, 64) <> 0) then begin
-				Upcase(a1)
+		if (BAnd(attribute, 64) <> 0) then begin
+				Upcase(copy)
 			end;
-		return a1
+		return copy
 	end,
 	PrivateNew: {class: #132, funcPtr: 6995429, numArgs: 2},
-	EncodeRecognitionWordDiacritsOK: func(a1) begin
-		return StripRecognitionWordDiacritsOK(a1)
+	EncodeRecognitionWordDiacritsOK: func(copy) begin
+		return StripRecognitionWordDiacritsOK(copy)
 	end,
 	EntryStore: func(a1) begin
 		nil
@@ -134,22 +134,22 @@ protoDictionary := {
 		self:Add(a1)
 	end,
 	Register: {class: #132, funcPtr: 6995430, numArgs: 0},
-	EncodeRecognitionWord: func(a1) begin
-		return StripRecognitionWord(a1)
+	EncodeRecognitionWord: func(copy) begin
+		return StripRecognitionWord(copy)
 	end,
 	RemoveIndex: AddIndex,
 	Query: func(a1) begin
 		self:MakeCursor(a1.prefix, a1.pin, a1.loc)
 	end,
-	DeleteEncodedWord: func(a1) begin
-		local l1, l2, l3;
-		l1 := Clone(a1);
-		l2 := -6;
-		l3 := self:EncodeRecognitionWordDiacritsOK(l1);
-		if (StrLen(l1) > 0) then begin
-				l2 := self:DeleteWord(l1)
+	DeleteEncodedWord: func(word) begin
+		local copy, deleteWord, encodeRecognitionWordDiacritsOK;
+		copy := Clone(word);
+		deleteWord := -6;
+		encodeRecognitionWordDiacritsOK := self:EncodeRecognitionWordDiacritsOK(copy);
+		if (StrLen(copy) > 0) then begin
+				deleteWord := self:DeleteWord(copy)
 			end;
-		return l2
+		return deleteWord
 	end,
 	IsRegistered: func() begin
 		(if (if (dictID exists) then dictID) then true)
@@ -160,29 +160,29 @@ protoDictionary := {
 	EntryReadOnly: func(a1) begin
 		true
 	end,
-	AddOneEncodedWord: func(a1, a2, a3) begin
-		local l1, l2, l3, l4;
-		l1 := -13;
-		l2 := {};
-		if (((l3 := self:LookupWord(a1, l2)) = 2) or (l3 = 3)) then begin
-				l1 := l3;
-				if (if a3 then (l2.attribute <> a2)) then begin
-						l4 := BAnd(l2.attribute, -193);
-						self:ChangeAttribute(a1, l4);
-						l1 := 0
+	AddOneEncodedWord: func(copy, encodeRecognitionWord, a3) begin
+		local addWord, frame2, word, bAnd2;
+		addWord := -13;
+		frame2 := {};
+		if (((word := self:LookupWord(copy, frame2)) = 2) or (word = 3)) then begin
+				addWord := word;
+				if (if a3 then (frame2.attribute <> encodeRecognitionWord)) then begin
+						bAnd2 := BAnd(frame2.attribute, -193);
+						self:ChangeAttribute(copy, bAnd2);
+						addWord := 0
 					end
 			end else begin
-				l1 := self:AddWord(a1, a2)
+				addWord := self:AddWord(copy, encodeRecognitionWord)
 			end;
-		return l1
+		return addWord
 	end,
-	Initialize: func(a1, a2) begin
-		local l1;
-		if (not SetContains('[Array: 0, 1, 2, 4], a2)) then begin
-				Throw('|evt.ex.msg.dict|, Stringer([Array: "bad attrSize:", " ", a2]))
+	Initialize: func(a1, singleSelect) begin
+		local privateNew;
+		if (not SetContains('[Array: 0, 1, 2, 4], singleSelect)) then begin
+				Throw('|evt.ex.msg.dict|, Stringer([Array: "bad attrSize:", " ", singleSelect]))
 			end;
-		if ((l1 := self:PrivateNew(a1, a2)) < 0) then begin
-				Throw('|evt.ex.msg.dict|, SPrintObject(l1))
+		if ((privateNew := self:PrivateNew(a1, singleSelect)) < 0) then begin
+				Throw('|evt.ex.msg.dict|, SPrintObject(privateNew))
 			end;
 		return nil
 	end

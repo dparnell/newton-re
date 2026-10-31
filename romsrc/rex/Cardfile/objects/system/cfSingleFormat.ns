@@ -10,9 +10,9 @@ cfSingleFormat := {
 		self.stepChildren := [Array: GetRoot().cardfile:GetBCLayout(target).layout];
 		inherited:viewSetupChildrenScript()
 	end,
-	SetupItem: func(a1, a2) begin
-		a1.title := nil;
-		inherited:SetupItem(a1, a2)
+	SetupItem: func(fields, frame2) begin
+		fields.title := nil;
+		inherited:SetupItem(fields, frame2)
 	end,
 	_proto: @protoPrintFormat
 };

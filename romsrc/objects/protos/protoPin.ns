@@ -14,9 +14,9 @@ protoPin := {
 	numKeys: 0,
 	tempPassword: nil,
 	viewSetupFormScript: func() begin
-		local l1;
-		if (l1 := GetRoot().correct).viewCObject then begin
-				l1:Close()
+		local correct;
+		if (correct := GetRoot().correct).viewCObject then begin
+				correct:Close()
 			end;
 		if (not passwordkey) then begin
 				passwordkey := GetUserConfig('passwordkey)
@@ -35,7 +35,7 @@ protoPin := {
 		(numKeys := 0)
 	end,
 	ChangeState: func(a1) begin
-		local l1;
+		local prompt2;
 		if (not state) then begin
 				state := a1
 			end;
@@ -46,28 +46,28 @@ protoPin := {
 		self:ResetDisplay();
 		if (state = 'getpassword) then begin
 				if prompt then begin
-						l1 := prompt
+						prompt2 := prompt
 					end else begin
-						l1 := "Enter PIN"
+						prompt2 := "Enter PIN"
 					end
 			end else begin
 				if (state = 'SetPassword) then begin
-						l1 := "Enter new PIN"
+						prompt2 := "Enter new PIN"
 					end else begin
 						if (state = 'changePassword) then begin
-								l1 := "Enter old PIN"
+								prompt2 := "Enter old PIN"
 							end else begin
 								if (state = 'verifyPassword) then begin
-										l1 := "Confirm new PIN"
+										prompt2 := "Confirm new PIN"
 									end else begin
 										if (if (state = 'InActive) then promptLine) then begin
-												l1 := ""
+												prompt2 := ""
 											end
 									end
 							end
 					end
 			end;
-		SetValue(promptLine, 'text, l1)
+		SetValue(promptLine, 'text, prompt2)
 	end,
 	CheckPassword: func() begin
 		(if BinEqual(DESCreatePasswordKey(pin), passwordkey) then return true else return nil)
@@ -77,7 +77,7 @@ protoPin := {
 			kLiteral_5b554d: "Security"
 		},
 		func() begin
-			local l1;
+			local dESCreatePasswordKey2;
 			(if (state = 'getpassword) then (if self:CheckPassword() then self:passwordPasses() else begin
 						self:Notify(3, kLiteral_5b554d, "An incorrect PIN has been entered. Please try again.");
 						self:ResetDisplay()
@@ -87,7 +87,7 @@ protoPin := {
 						end) else (if (state = 'SetPassword) then begin
 							tempPassword := DESCreatePasswordKey(pin);
 							self:ChangeState('verifyPassword)
-						end else (if (state = 'verifyPassword) then (if BinEqual((l1 := DESCreatePasswordKey(pin)), tempPassword) then self:passwordChanged(l1) else begin
+						end else (if (state = 'verifyPassword) then (if BinEqual((dESCreatePasswordKey2 := DESCreatePasswordKey(pin)), tempPassword) then self:passwordChanged(dESCreatePasswordKey2) else begin
 									self:Notify(3, kLiteral_5b554d, "New PIN's do not match. Please try again.");
 									self:ChangeState('SetPassword)
 								end)))))
@@ -125,14 +125,14 @@ PINDisplay := {
 	viewQuitScript: func() begin
 		ShowCaret()
 	end,
-	viewKeyDownScript: func(a1, a2) begin
-		if (if (a1 >= $0) then (a1 <= $9)) then begin
-				PINKeyPad:keyPressScript(a1)
+	viewKeyDownScript: func(char2, flags) begin
+		if (if (char2 >= $0) then (char2 <= $9)) then begin
+				PINKeyPad:keyPressScript(char2)
 			end;
-		if ((a1 = $\n) or (a1 = $\03)) then begin
+		if ((char2 = $\n) or (char2 = $\03)) then begin
 				PINKeyPad:keyPressScript($E)
 			end;
-		if (a1 = $\08) then begin
+		if (char2 = $\08) then begin
 				PINKeyPad:keyPressScript($<)
 			end;
 		true
@@ -150,19 +150,19 @@ PINKeyPad := {
 	],
 	viewBounds: {left: 5, top: 40, right: -5, bottom: 0},
 	viewJustify: vjParentFullH + vjParentFullV,
-	keyPressScript: func(a1) begin
+	keyPressScript: func(char2) begin
 		playsound(@click);
-		if ((if (a1 = $<) then (numKeys = 0)) or (state = 'InActive)) then begin
+		if ((if (char2 = $<) then (numKeys = 0)) or (state = 'InActive)) then begin
 				return nil
 			end;
-		(if (if (a1 = $<) then (numKeys > 0)) then begin
+		(if (if (char2 = $<) then (numKeys > 0)) then begin
 				numKeys := (numKeys - 1);
 				if PINDisplay then begin
 						SetValue(PINDisplay, 'text, Substr(PINDisplay.text, 0, numKeys))
 					end;
 				(pin := Substr(pin, 0, numKeys))
-			end else (if (if (a1 = $E) then (numKeys > 0)) then self:Parent():FinishedPIN() else (if (if (a1 <> $E) then (a1 <> $<)) then begin
-						pin := Stringer([Array: pin, a1]);
+			end else (if (if (char2 = $E) then (numKeys > 0)) then self:Parent():FinishedPIN() else (if (if (char2 <> $E) then (char2 <> $<)) then begin
+						pin := Stringer([Array: pin, char2]);
 						numKeys := (numKeys + 1);
 						(if PINDisplay then SetValue(PINDisplay, 'text, Stringer([Array: PINDisplay.text, $\u2022])))
 					end)))

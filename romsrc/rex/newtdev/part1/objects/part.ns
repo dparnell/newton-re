@@ -13,16 +13,16 @@ part := array(nil, {
 			]
 		}
 	],
-	installScript: func(a1) begin
-		local l1;
-		l1 := EnsureInternal({removeScript: a1.devRemoveScript});
-		a1:devInstallScript(a1, l1);
-		l1
+	installScript: func(partFrame) begin
+		local ensureInternal2;
+		ensureInternal2 := EnsureInternal({removeScript: partFrame.devRemoveScript});
+		partFrame:devInstallScript(partFrame, ensureInternal2);
+		ensureInternal2
 	end,
-	devInstallScript: func(a1, a2) begin
+	devInstallScript: func(partFrame, removeFrame) begin
 		nil
 	end,
-	devRemoveScript: func(a1) begin
+	devRemoveScript: func(partFrame) begin
 		nil
 	end
 });

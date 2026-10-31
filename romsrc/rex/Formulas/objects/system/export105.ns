@@ -24,10 +24,10 @@ export105 := {
 	end,
 	viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV,
 	Div12: func() begin
-		local l1;
-		(if ((l1 := self:GetNumericValue()) <> nil) then begin
-				AddUndoAction('UndoDiv12, [Array: l1]);
-				self:SetNumericValue((l1 / 12));
+		local numericValue;
+		(if ((numericValue := self:GetNumericValue()) <> nil) then begin
+				AddUndoAction('UndoDiv12, [Array: numericValue]);
+				self:SetNumericValue((numericValue / 12));
 				self:SolveFormula(lineNumber)
 			end)
 	end,

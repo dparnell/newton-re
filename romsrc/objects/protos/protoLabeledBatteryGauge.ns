@@ -16,12 +16,12 @@ batteryLabelForm := {
 	viewFlags: vVisible + vClickable,
 	lastClick: 0,
 	text: battery,
-	viewClickScript: func(a1) begin
-		local l1;
-		if (if (((l1 := Ticks()) - lastClick) < 30) then HasSlot(GetRoot(), 'batteryInfo)) then begin
+	viewClickScript: func(unit) begin
+		local ticks2;
+		if (if (((ticks2 := Ticks()) - lastClick) < 30) then HasSlot(GetRoot(), 'batteryInfo)) then begin
 				GetRoot().batteryInfo:Open()
 			end else begin
-				lastClick := l1
+				lastClick := ticks2
 			end;
 		true
 	end,

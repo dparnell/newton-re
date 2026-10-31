@@ -31,8 +31,8 @@ list := {
 	_proto: @protoPeoplePicker,
 	viewSetupFormScript: func() begin
 		if options then begin
-				(foreach l1, l2 in options do begin
-						self.(l1) := l2
+				(foreach key, value in options do begin
+						self.(key) := value
 					end)
 			end;
 		inherited:?viewSetupFormScript()

@@ -5,8 +5,8 @@ newtEntryShowStationeryButton := {
 	SetUpStatArray: func() begin
 		(if targetDataDef then GetDefs(form, [Array: targetDataDef.symbol], types) else [Array: ])
 	end,
-	statScript: func(a1) begin
-		targetView.viewDef := a1.symbol;
+	statScript: func(statArrayItem) begin
+		targetView.viewDef := statArrayItem.symbol;
 		targetView:RedoChildren()
 	end,
 	BuildPopup: func() begin
@@ -17,14 +17,14 @@ newtEntryShowStationeryButton := {
 			end;
 		l1 := nil;
 		local l1;
-		(foreach l2 in statArray do begin
+		(foreach item in statArray do begin
 				local l4, l5;
-				l4 := (if l2.name then l2.name else l2.title);
-				l5 := (if l2.icon then begin
+				l4 := (if item.name then item.name else item.title);
+				l5 := (if item.icon then begin
 						l1 := true;
-						{item: l4, icon: l2.icon}
+						{item: l4, icon: item.icon}
 					end else {item: l4});
-				if (if targetView then (l2.symbol = targetView.viewDef)) then begin
+				if (if targetView then (item.symbol = targetView.viewDef)) then begin
 						l5.mark := $\uFC0B
 					end;
 				AddArraySlot(popup, l5)

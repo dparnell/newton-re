@@ -4,13 +4,13 @@ protoMultiLinePicker := {
 	info: nil,
 	infoSymbol: nil,
 	doTheShuffle: func() begin
-		local l1, l2, l3;
+		local l1, transport, l3;
 		l1 := nil;
 		if (if (not info) then infoSymbol) then begin
 				info := base.(infoSymbol)
 			end;
 		if info then begin
-				if HasPath((l2 := self:GetTransport()), info.testMethod) then begin
+				if HasPath((transport := self:GetTransport()), info.testMethod) then begin
 						l1 := true
 					end
 			end;
@@ -41,13 +41,13 @@ protoMultiLinePicker := {
 	GetIndex: func() begin
 		0
 	end,
-	Popit: func(a1) begin
-		local l1, l2, l3;
-		l1 := Clone(labelCommands);
-		l2 := self:GetIndex();
-		l1[l2] := {item: l1[l2], mark: $\uFC0B};
+	Popit: func(x) begin
+		local copy, index, l3;
+		copy := Clone(labelCommands);
+		index := self:GetIndex();
+		copy[index] := {item: copy[index], mark: $\uFC0B};
 		l3 := (if HasPath(self, 'viewLineSpacing) then ((viewLineSpacing - FontAscent(viewFont)) - 2) else -2);
-		DoPopup(l1, a1, l3, self);
+		DoPopup(copy, x, l3, self);
 		true
 	end,
 	_proto: @protoLabelPicker

@@ -9,16 +9,16 @@ personal := {
 	infoFrame: {
 		checkPrefix: [|Array|: true, nil],
 		checkPaths: [|Array|: 'bday, 'anniversary],
-		formatFunc: func(a1) begin
-			local l1;
-			l1 := "";
-			if a1[0] then begin
-					l1 := Stringer([Array: l1, " ", ParamStr("Bday: ^0", [Array: (if (if IsInstance(a1[0], 'string) then IsRichString(a1[0])) then a1[0] else ShortDateStr(a1[0], 0))])])
+		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+			local text;
+			text := "";
+			if v20_wwwwwwwwwwvvvvvv[0] then begin
+					text := Stringer([Array: text, " ", ParamStr("Bday: ^0", [Array: (if (if IsInstance(v20_wwwwwwwwwwvvvvvv[0], 'string) then IsRichString(v20_wwwwwwwwwwvvvvvv[0])) then v20_wwwwwwwwwwvvvvvv[0] else ShortDateStr(v20_wwwwwwwwwwvvvvvv[0], 0))])])
 				end;
-			if a1[1] then begin
-					l1 := Stringer([Array: l1, " ", "\n", " ", ParamStr("Anniv.: ^0", [Array: (if (if IsInstance(a1[1], 'string) then IsRichString(a1[1])) then a1[1] else ShortDateStr(a1[1], 0))])])
+			if v20_wwwwwwwwwwvvvvvv[1] then begin
+					text := Stringer([Array: text, " ", "\n", " ", ParamStr("Anniv.: ^0", [Array: (if (if IsInstance(v20_wwwwwwwwwwvvvvvv[1], 'string) then IsRichString(v20_wwwwwwwwwwvvvvvv[1])) then v20_wwwwwwwwwwvvvvvv[1] else ShortDateStr(v20_wwwwwwwwwwvvvvvv[1], 0))])])
 				end;
-			l1
+			text
 		end
 	},
 	protection: 'private,

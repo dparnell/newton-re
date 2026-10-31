@@ -28,8 +28,8 @@ title := {
 	viewFlags: vVisible + vReadOnly + vClickable,
 	viewFormat: 0,
 	viewTransferMode: 3,
-	viewClickScript: func(a1) begin
-		if (if titleClickScript then self:TrackHilite(a1)) then begin
+	viewClickScript: func(unit) begin
+		if (if titleClickScript then self:TrackHilite(unit)) then begin
 				self:titleClickScript();
 				self:hilite(nil)
 			end;

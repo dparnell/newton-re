@@ -17,12 +17,12 @@ snoozeNotification := {
 				RemoveSlot(base, '_defaultButton)
 			end,
 			buttonClickScript: func() begin
-				popup := (foreach l1 in snoozeARoos collect (if (l1 = 60) then "1 hour" else (if (l1 = 1440) then "1 day" else (if (l1 < 60) then ParamStr("^0 minutes", [Array: l1]) else (if (l1 < 1440) then ParamStr("^0 hours", ([Array: l1] div 60)) else ParamStr("^0 days", ([Array: l1] div 1440)))))));
+				popup := (foreach item in snoozeARoos collect (if (item = 60) then "1 hour" else (if (item = 1440) then "1 day" else (if (item < 60) then ParamStr("^0 minutes", [Array: item]) else (if (item < 1440) then ParamStr("^0 hours", ([Array: item] div 60)) else ParamStr("^0 days", ([Array: item] div 1440)))))));
 				inherited:buttonClickScript()
 			end,
-			pickActionScript: func(a1) begin
-				notification:YouSnoozeYouLose(snoozeARoos[a1]);
-				inherited:?pickActionScript(a1)
+			pickActionScript: func(index) begin
+				notification:YouSnoozeYouLose(snoozeARoos[index]);
+				inherited:?pickActionScript(index)
 			end,
 			_proto: @protoPopupButton
 		}

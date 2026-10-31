@@ -25,21 +25,21 @@ protoDatepicker := {
 		(monthYearLabel.text := self:JamIt())
 	end,
 	JamIt: func() begin
-		local l1, l2, l3, l4;
-		l1 := Date(selectedDates[0]);
-		if ((l2 := Length(selectedDates)) > 1) then begin
-				if (if ((endDate := Date(selectedDates[(l2 - 1)])).month <> l1.month) then monthView.month) then begin
-						l1.month := monthView.month;
-						l1.year := monthView.year;
-						l1.Date := 1
+		local date2, count, monthSpec2, totalMinutes2;
+		date2 := Date(selectedDates[0]);
+		if ((count := Length(selectedDates)) > 1) then begin
+				if (if ((endDate := Date(selectedDates[(count - 1)])).month <> date2.month) then monthView.month) then begin
+						date2.month := monthView.month;
+						date2.year := monthView.year;
+						date2.Date := 1
 					end
 			end;
-		if (l1.year = 2920) then begin
-				l3 := monthSpec
+		if (date2.year = 2920) then begin
+				monthSpec2 := monthSpec
 			end else begin
-				l3 := monthYearSpec
+				monthSpec2 := monthYearSpec
 			end;
-		LongDateStr((l4 := TotalMinutes(l1)), l3)
+		LongDateStr((totalMinutes2 := TotalMinutes(date2)), monthSpec2)
 	end,
 	monthChangedScript: func() begin
 		self:Dirty();
@@ -68,9 +68,9 @@ titleBarProto := {
 	viewFormat: vfFillWhite,
 	lastPressTime: nil,
 	icon: nil,
-	viewClickScript: func(a1) begin
+	viewClickScript: func(unit) begin
 		lastPressTime := 0;
-		inherited:viewClickScript(a1)
+		inherited:viewClickScript(unit)
 	end,
 	ReadyToFire: func() begin
 		if (not lastPressTime) then begin
@@ -100,30 +100,30 @@ titleBar := {
 	viewFormat: nil,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 12},
 	viewJustify: 8388662,
-	CarefullIncrementMonth: func(a1, a2) begin
-		local l1;
-		if (((l1 := Date(a1)).month <> monthView.month) or (l1.year <> monthView.year)) then begin
-				l1.month := monthView.month;
-				l1.year := monthView.year;
-				l1.Date := 1
+	CarefullIncrementMonth: func(selectedDate, inc) begin
+		local date2;
+		if (((date2 := Date(selectedDate)).month <> monthView.month) or (date2.year <> monthView.year)) then begin
+				date2.month := monthView.month;
+				date2.year := monthView.year;
+				date2.Date := 1
 			end;
-		if (if (l1.year = 2920) then ((l1.month + a2) > 12)) then begin
-				a2 := (a2 - 12)
+		if (if (date2.year = 2920) then ((date2.month + inc) > 12)) then begin
+				inc := (inc - 12)
 			end;
-		if (if (l1.year = 2920) then ((l1.month + a2) < 1)) then begin
-				a2 := (a2 + 12)
+		if (if (date2.year = 2920) then ((date2.month + inc) < 1)) then begin
+				inc := (inc + 12)
 			end;
-		IncrementMonth(TotalMinutes(l1), a2)
+		IncrementMonth(TotalMinutes(date2), inc)
 	end,
 	viewSetupFormScript: func() begin
-		local l1;
+		local viewFont2;
 		self.viewBounds := Clone(self.viewBounds);
 		(if titleHeight then (self.viewBounds.bottom := titleHeight) else begin
-				l1 := viewFont;
+				viewFont2 := viewFont;
 				if (titleFont exists) then begin
-						l1 := titleFont
+						viewFont2 := titleFont
 					end;
-				(self.viewBounds.bottom := max(FontHeight(l1), 12))
+				(self.viewBounds.bottom := max(FontHeight(viewFont2), 12))
 			end)
 	end,
 	debug: 2574,
@@ -175,11 +175,11 @@ monthYearLabel := {
 		(viewBounds := Clone(viewBounds)).left := 12;
 		(viewBounds.right := -12)
 	end,
-	viewHiliteScript: func(a1) begin
-		local l1, l2, l3, l4;
-		l2 := (l1 := self:LocalBox()).bottom;
+	viewHiliteScript: func(on) begin
+		local box, l2, l3, l4;
+		l2 := (box := self:LocalBox()).bottom;
 		l3 := (StrFontWidth(text, viewFont) + 4);
-		self:DrawShape(MakeRoundRect((l4 := ((l1.right - l3) div 2)), 0, (l4 + l3), l2, 8), '{transferMode: 2, penPattern: 0, fillPattern: 5});
+		self:DrawShape(MakeRoundRect((l4 := ((box.right - l3) div 2)), 0, (l4 + l3), l2, 8), '{transferMode: 2, penPattern: 0, fillPattern: 5});
 		true
 	end,
 	viewClickScript: compile(
@@ -188,30 +188,30 @@ monthYearLabel := {
 				(if (((a1 = 0) or (a1 = 1)) or (a3 = 0)) then LongDateStr(a2, 12) else "")
 			end
 		},
-		func(a1) begin
-			local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+		func(unit) begin
+			local date2, month, list, l4, l5, l6, l7, totalMinutes2, month2, text;
 			self:hilite(true);
 			clicker();
-			(l1 := Date(selectedDates[0])).month := monthView.month;
-			l1.year := monthView.year;
-			l1.Date := 1;
-			l2 := l1.month;
-			l3 := Array(15, nil);
-			l4 := (if (selectedDates[0] <= 129600) then l2 else 3);
-			l5 := (l2 - l4);
+			(date2 := Date(selectedDates[0])).month := monthView.month;
+			date2.year := monthView.year;
+			date2.Date := 1;
+			month := date2.month;
+			list := Array(15, nil);
+			l4 := (if (selectedDates[0] <= 129600) then month else 3);
+			l5 := (month - l4);
 			l6 := 0;
 			l7 := 0;
 			(while (l7 < 12) do begin
-					l1.month := l5;
-					l9 := Date((l8 := TotalMinutes(l1))).month;
-					l10 := ParamStr("^0^?1 ^1||", [Array: LongDateStr(l8, monthSpec), (if (l1.year <> 2920) then call (kFunction_443495) with (l9, l8, l7))]);
-					if (if (l9 = 1) then (l6 > 0)) then begin
-							l3[l6] := 'pickseparator;
+					date2.month := l5;
+					month2 := Date((totalMinutes2 := TotalMinutes(date2))).month;
+					text := ParamStr("^0^?1 ^1||", [Array: LongDateStr(totalMinutes2, monthSpec), (if (date2.year <> 2920) then call (kFunction_443495) with (month2, totalMinutes2, l7))]);
+					if (if (month2 = 1) then (l6 > 0)) then begin
+							list[l6] := 'pickseparator;
 							l6 := (l6 + 1)
 						end;
-					l3[l6] := {item: l10, inc: (l5 - l2)};
-					if (l5 = l2) then begin
-							l3[l6].mark := $\uFC0B
+					list[l6] := {item: text, inc: (l5 - month)};
+					if (l5 = month) then begin
+							list[l6].mark := $\uFC0B
 						end;
 					l5 := (l5 + 1);
 					l6 := (l6 + 1);
@@ -220,22 +220,22 @@ monthYearLabel := {
 			if noTodayShow then begin
 					l6 := (l6 - 1)
 				end else begin
-					l3[l6] := 'pickseparator;
+					list[l6] := 'pickseparator;
 					l6 := (l6 + 1);
-					l3[l6] := "Today";
+					list[l6] := "Today";
 					todayItem := l6
 				end;
-			SetLength(l3, (l6 + 1));
-			DoPopup((popup := l3), 4, 0, self);
+			SetLength(list, (l6 + 1));
+			DoPopup((popup := list), 4, 0, self);
 			return true
 		end),
-	pickActionScript: func(a1) begin
-		local l1, l2, l3;
-		if (a1 = todayItem) then begin
-				selectedDates := [Array: ((l3 := Time()) - (l3 mod 1440))]
+	pickActionScript: func(index) begin
+		local l1, l2, now;
+		if (index = todayItem) then begin
+				selectedDates := [Array: ((now := Time()) - (now mod 1440))]
 			end else begin
 				self:?MonthPicked();
-				selectedDates := [Array: self:CarefullIncrementMonth(selectedDates[0], popup[a1].inc)]
+				selectedDates := [Array: self:CarefullIncrementMonth(selectedDates[0], popup[index].inc)]
 			end;
 		pickerBase:Dirty();
 		self:hilite(nil);

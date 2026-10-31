@@ -3,53 +3,53 @@
 newtOverLayout := {
 	ForEachSelected: ForEachSelected,
 	GetTargetInfo: func(a1) begin
-		l4 := {target: nil, targetView: self};
+		frame2 := {target: nil, targetView: self};
 		if (a1 = 'Filing) then begin
-				l4.targetView := targetApp
+				frame2.targetView := targetApp
 			end;
 		if (if selected then (Length(selected) > 0)) then begin
 				if (Length(selected) = 1) then begin
-						l4.target := ResolveEntryAlias(selected[0])
+						frame2.target := ResolveEntryAlias(selected[0])
 					end else begin
-						if (l5 = nil) then begin
-								l5 := GetVariable(self, 'overviewTargetClass)
+						if (value = nil) then begin
+								value := GetVariable(self, 'overviewTargetClass)
 							end;
-						if (l5 = nil) then begin
-								l5 := 'newtOverview
+						if (value = nil) then begin
+								value := 'newtOverview
 							end;
-						l4.target := CreateTargetCursor(l5, selected);
+						frame2.target := CreateTargetCursor(value, selected);
 						if (a1 = 'Filing) then begin
-								l4.target.labels := '__XXTempLabel
+								frame2.target.labels := '__XXTempLabel
 							end
 					end;
-				local l1;
-				local l2;
-				local l3;
-				local l4;
-				local l5;
-				(foreach l6 in selected do begin
-						if (if IsSoupEntry((l1 := ResolveEntryAlias(l6))) then (l2 := EntryStore(l1))) then begin
-								if (not l3) then begin
-										l3 := l2
+				local resolveEntryAlias2;
+				local store;
+				local store2;
+				local frame2;
+				local value;
+				(foreach item in selected do begin
+						if (if IsSoupEntry((resolveEntryAlias2 := ResolveEntryAlias(item))) then (store := EntryStore(resolveEntryAlias2))) then begin
+								if (not store2) then begin
+										store2 := store
 									end else begin
-										if (l2 <> l3) then begin
-												break (l3 := nil)
+										if (store <> store2) then begin
+												break (store2 := nil)
 											end
 									end
 							end
 					end);
-				l4.targetStore := l3
+				frame2.targetStore := store2
 			end;
-		l4
+		frame2
 	end,
 	ChooseCurrItem: func(a1) begin
 		clicker();
 		newtAppBase:ShowLayout(nil)
 	end,
-	NewEntry: func(a1, a2, a3) begin
-		masterSoup:AddEntry(a1, a3);
+	NewEntry: func(a1, _context, store) begin
+		masterSoup:AddEntry(a1, store);
 		AddUndoSend(layout, 'KillEntry, [Array: a1]);
-		(if a2 then begin
+		(if _context then begin
 				dataCursor:Goto(a1);
 				hiliteEntry := nil;
 				currentLayout := previousLayout;
@@ -85,7 +85,7 @@ newtOverLayout := {
 		layout:DoRetarget()
 	end,
 	viewDrawScript: func() begin
-		local l1, l2;
+		local box, hiliteShape;
 		(if (if (not forceNewEntry) then (not dataCursor:entry())) then self:DrawShape(self:AppEmpty(), '{}) else begin
 				if (not viewStyle) then begin
 						viewStyle := {font: viewFont}
@@ -97,8 +97,8 @@ newtOverLayout := {
 						self:DrawShape(MakeRect((selectIndent - dividerLine), 0, selectIndent, (maxLines * lineHeight)), '{penPattern: 0, fillPattern: 3})
 					end;
 				(if hilitedIndex then begin
-						(l1 := self:LocalBox()).bottom := lineHeight;
-						self:hiliter((l2 := self:GetHiliteShape(19, l1)), hilitedIndex, 'off)
+						(box := self:LocalBox()).bottom := lineHeight;
+						self:hiliter((hiliteShape := self:GetHiliteShape(19, box)), hilitedIndex, 'off)
 					end)
 			end)
 	end,
@@ -111,39 +111,39 @@ newtOverLayout := {
 	CheckOn: CheckOn,
 	Abstract: compile(
 		constants: {
-			kLiteral_49cdf1: '{font: 9216, justification: right}
+			kLiteral_49cdf1: '{font: tsSystem + tsSize(9), justification: right}
 		},
-		func(a1, a2) begin
-			local l1, l2, l3, l4, l5, l6, l7, l8, l9;
-			if (a1 = hiliteEntry) then begin
+		func(items2Item, copy) begin
+			local l1, entryDataDef, icon, l4, stringExtract, l6, l7, list, store;
+			if (items2Item = hiliteEntry) then begin
 					hilitedIndex := hiliteCount
 				end;
 			hiliteCount := (hiliteCount + 1);
-			l1 := (if (labelsFilter = '_all) then a1.labels);
-			(if (l2 := GetEntryDataDef(a1)) then begin
-					l3 := l2.icon;
-					l4 := ((a2.left + 16) + 2);
-					l5 := l2:StringExtract(a1, 2);
-					l6 := (a2.right - l4);
+			l1 := (if (labelsFilter = '_all) then items2Item.labels);
+			(if (entryDataDef := GetEntryDataDef(items2Item)) then begin
+					icon := entryDataDef.icon;
+					l4 := ((copy.left + 16) + 2);
+					stringExtract := entryDataDef:StringExtract(items2Item, 2);
+					l6 := (copy.right - l4);
 					if l1 then begin
-							if (l7 := userConfiguration.userFolders.(a1.labels)) then begin
+							if (l7 := userConfiguration.userFolders.(items2Item.labels)) then begin
 									l6 := (l6 - StrFontWidth(l7, 9216))
 								end
 						end;
-					l8 := [Array: OffsetShape(MakeShape(l3), a2.left, (a2.top + 2)), MakeText(StrTruncate(l5, l6), l4, a2.top, a2.right, (a2.top + 11))];
+					list := [Array: OffsetShape(MakeShape(icon), copy.left, (copy.top + 2)), MakeText(StrTruncate(stringExtract, l6), l4, copy.top, copy.right, (copy.top + 11))];
 					if l1 then begin
 							if l7 then begin
-									AddArraySlot(l8, kLiteral_49cdf1);
-									AddArraySlot(l8, MakeText(l7, l4, a2.top, (a2.right - 2), (a2.top + 11)))
+									AddArraySlot(list, kLiteral_49cdf1);
+									AddArraySlot(list, MakeText(l7, l4, copy.top, (copy.right - 2), (copy.top + 11)))
 								end
 						end;
 					if (if showStoreName then (Length(GetStores()) > 1)) then begin
-							l9 := EntryStore(a1);
-							AddArraySlot(l8, kLiteral_49cdf1);
-							AddArraySlot(l8, MakeText(l9:GetName(), l4, a2.top, (a2.right - 2), (a2.top + 25)))
+							store := EntryStore(items2Item);
+							AddArraySlot(list, kLiteral_49cdf1);
+							AddArraySlot(list, MakeText(store:GetName(), l4, copy.top, (copy.right - 2), (copy.top + 25)))
 						end;
-					l8
-				end else (if (not (l8 := self:?OverviewAbstract(a1, a2))) then [Array: OffsetShape(MakeShape(@infoBitmap), a2.left, (a2.top + 2))] else l8))
+					list
+				end else (if (not (list := self:?OverviewAbstract(items2Item, copy))) then [Array: OffsetShape(MakeShape(@infoBitmap), copy.left, (copy.top + 2))] else list))
 		end),
 	showStoreName: nil,
 	maxLines: 0,
@@ -151,18 +151,18 @@ newtOverLayout := {
 	cursor: nil,
 	FilterChanged: func() begin
 		inherited:FilterChanged();
-		l1 := [Array: ];
-		l2 := dataCursor:clone();
+		list := [Array: ];
+		copy := dataCursor:clone();
 		if selected then begin
-				local l1;
-				local l2;
-				(foreach l3 in selected do begin
-						local l5;
-						if (if (l5 := ResolveEntryAlias(l3)) then l2:Goto(l5)) then begin
-								AddArraySlot(l1, l3)
+				local list;
+				local copy;
+				(foreach item in selected do begin
+						local resolveEntryAlias2;
+						if (if (resolveEntryAlias2 := ResolveEntryAlias(item)) then copy:Goto(resolveEntryAlias2)) then begin
+								AddArraySlot(list, item)
 							end
 					end);
-				selected := l1
+				selected := list
 			end;
 		(hilitedIndex := nil)
 	end,
@@ -221,26 +221,26 @@ newtOverLayout := {
 	centerTarget: nil,
 	hiliteEntry: nil,
 	viewSetupFormScript: func() begin
-		local l1;
+		local entry;
 		inherited:viewSetupFormScript();
-		if (l1 := dataCursor:entry()) then begin
-				hiliteEntry := l1
+		if (entry := dataCursor:entry()) then begin
+				hiliteEntry := entry
 			end;
 		dontStartWithFolder := true;
 		SetKeyView(self, 0)
 	end,
 	GetHiliteShape: GetHiliteShape,
 	downOneItem: func(a1) begin
-		local l1, l2;
+		local copy, next;
 		clicker();
 		if (if hiliteEntry then IsSoupEntry(hiliteEntry)) then begin
-				l1 := cursor:clone();
-				l1:Goto(hiliteEntry);
-				if (l2 := l1:Next()) then begin
-						hiliteEntry := l2;
+				copy := cursor:clone();
+				copy:Goto(hiliteEntry);
+				if (next := copy:Next()) then begin
+						hiliteEntry := next;
 						if ((not hilitedIndex) or (hilitedIndex >= (maxLines - 1))) then begin
 								hilitedIndex := 0;
-								cursor:Goto(l2);
+								cursor:Goto(next);
 								self:RedoChildren()
 							end else begin
 								hilitedIndex := (hilitedIndex + 1);
@@ -254,8 +254,8 @@ newtOverLayout := {
 		selected := nil;
 		inherited:?FilingChangedX()
 	end,
-	HitItem: func(a1, a2, a3) begin
-		(if (a2 < selectIndent) then begin
+	HitItem: func(a1, trackScrollingItem, trackScrollingItem2) begin
+		(if (trackScrollingItem < selectIndent) then begin
 				self:SelectItem(a1);
 				checkAllPrimed := nil;
 				hilitedIndex := nil;
@@ -268,47 +268,47 @@ newtOverLayout := {
 			end)
 	end,
 	viewClickScript: viewClickScript_3,
-	FileThis: func(a1, a2, a3, a4, a5) begin
-		if a4 then begin
-				if (not (l3 := a5:GetSoup((l2 := allSoups.(mastersoupSlot).soupName)))) then begin
-						l3 := CreateUSoupMember(l2, a5)
+	FileThis: func(target, labelsChanged, a3, storeChanged, a5) begin
+		if storeChanged then begin
+				if (not (soup := a5:GetSoup((l2 := allSoups.(mastersoupSlot).soupName)))) then begin
+						soup := CreateUSoupMember(l2, a5)
 					end
 			end;
-		local l1;
+		local resolveEntryAlias2;
 		local l2;
-		local l3;
-		(foreach l4, l5 in selected do begin
+		local soup;
+		(foreach key, value in selected do begin
 				local l7;
-				if (l1 := ResolveEntryAlias(l5)) then begin
+				if (resolveEntryAlias2 := ResolveEntryAlias(value)) then begin
 						l7 := nil;
-						if a2 then begin
+						if labelsChanged then begin
 								if (not a3) then begin
-										if l1.labels then begin
-												RemoveSlot(l1, 'labels);
+										if resolveEntryAlias2.labels then begin
+												RemoveSlot(resolveEntryAlias2, 'labels);
 												l7 := true
 											end
 									end else begin
-										if (a3 <> l1.labels) then begin
-												l1.labels := a3;
+										if (a3 <> resolveEntryAlias2.labels) then begin
+												resolveEntryAlias2.labels := a3;
 												l7 := true
 											end
 									end
 							end;
-						if (if a4 then (EntryStore(l1) <> a5)) then begin
+						if (if storeChanged then (EntryStore(resolveEntryAlias2) <> a5)) then begin
 								self:SetActionDescription(-8101);
-								if EntryStore(l1):IsReadOnly() then begin
-										EntryCopy(l1, l3)
+								if EntryStore(resolveEntryAlias2):IsReadOnly() then begin
+										EntryCopy(resolveEntryAlias2, soup)
 									end else begin
-										EntryMove(l1, l3)
+										EntryMove(resolveEntryAlias2, soup)
 									end
 							end else begin
 								if l7 then begin
-										EntryChange(l1)
+										EntryChange(resolveEntryAlias2)
 									end
 							end
 					end
 			end);
-		(if (a4 or l7) then XmitSoupChange(masterSoup.soupName, appSymbol, 'whatThe, nil))
+		(if (storeChanged or l7) then XmitSoupChange(masterSoup.soupName, appSymbol, 'whatThe, nil))
 	end,
 	_keyCommands: [|Array|:
 		{
@@ -336,16 +336,16 @@ newtOverLayout := {
 		self
 	end,
 	upOneItem: func(a1) begin
-		local l1, l2;
+		local copy, prev;
 		clicker();
 		if (if hiliteEntry then IsSoupEntry(hiliteEntry)) then begin
-				l1 := cursor:clone();
-				l1:Goto(hiliteEntry);
-				if (l2 := l1:prev()) then begin
-						hiliteEntry := l2;
+				copy := cursor:clone();
+				copy:Goto(hiliteEntry);
+				if (prev := copy:prev()) then begin
+						hiliteEntry := prev;
 						if ((not hilitedIndex) or (hilitedIndex <= 0)) then begin
 								hilitedIndex := 0;
-								cursor:Goto(l2);
+								cursor:Goto(prev);
 								self:RedoChildren()
 							end else begin
 								hilitedIndex := (hilitedIndex - 1);
@@ -356,22 +356,22 @@ newtOverLayout := {
 		RefreshViews()
 	end,
 	viewSetupChildrenScript: func() begin
-		local l1;
-		l1 := dataCursor;
+		local dataCursor2;
+		dataCursor2 := dataCursor;
 		hiliteCount := 0;
 		hilitedIndex := nil;
 		if (not cursor) then begin
 				hilitedIndex := nil;
-				hiliteEntry := l1:entry();
+				hiliteEntry := dataCursor2:entry();
 				if centerTarget then begin
-						if (not l1:move((-((maxLines := (self:LocalBox().bottom div lineHeight)) div 2)))) then begin
-								l1:Next()
+						if (not dataCursor2:move((-((maxLines := (self:LocalBox().bottom div lineHeight)) div 2)))) then begin
+								dataCursor2:Next()
 							end
 					end
 			end;
 		inherited:viewSetupChildrenScript();
-		self:SetupAbstracts(l1:clone());
-		(self.cursor := l1)
+		self:SetupAbstracts(dataCursor2:clone());
+		(self.cursor := dataCursor2)
 	end,
 	hiliter: hiliter,
 	isSelected: isSelected,

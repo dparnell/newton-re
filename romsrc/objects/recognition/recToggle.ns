@@ -18,26 +18,26 @@ recToggle := {
 		'recToggleSettings
 	],
 	BuildInputMask: func() begin
-		local l1, l2;
-		l1 := 0;
-		if ((l2 := self:GetSettings()).doTextRecognition or l2.doInkWordRecognition) then begin
-				if l2.wordsCursiveOption then begin
-						l1 := BOr(l1, 4096)
+		local bOr2, settings;
+		bOr2 := 0;
+		if ((settings := self:GetSettings()).doTextRecognition or settings.doInkWordRecognition) then begin
+				if settings.wordsCursiveOption then begin
+						bOr2 := BOr(bOr2, 4096)
 					end;
-				if l2.lettersCursiveOption then begin
-						l1 := BOr(l1, 24576)
+				if settings.lettersCursiveOption then begin
+						bOr2 := BOr(bOr2, 24576)
 					end;
-				if l2.numbersCursiveOption then begin
-						l1 := BOr(l1, 1843200)
+				if settings.numbersCursiveOption then begin
+						bOr2 := BOr(bOr2, 1843200)
 					end;
-				if (if (l1 <> 0) then l2.punctuationcursiveoption) then begin
-						l1 := BOr(l1, 32768)
+				if (if (bOr2 <> 0) then settings.punctuationcursiveoption) then begin
+						bOr2 := BOr(bOr2, 32768)
 					end
 			end;
-		if l2.doShapeRecognition then begin
-				l1 := BOr(l1, 65536)
+		if settings.doShapeRecognition then begin
+				bOr2 := BOr(bOr2, 65536)
 			end;
-		return l1
+		return bOr2
 	end,
 	InitRecogSettings: func() begin
 		if (not (_recogSettings exists)) then begin
@@ -54,22 +54,22 @@ recToggle := {
 			end;
 		(self._cachedSettings := self:ExpandSettingsFrame(_recogSettings))
 	end,
-	SetItem: func(a1) begin
-		(if self:ValidItem(a1) then (_cachedSettings.curItem := a1))
+	SetItem: func(symbol2) begin
+		(if self:ValidItem(symbol2) then (_cachedSettings.curItem := symbol2))
 	end,
 	ClearSettings: func() begin
-		l1 := self:GetRecognizers();
-		l2 := self:GetSettings();
-		local l1;
-		local l2;
-		(foreach l3, l4 in l1 do begin
-				l2.(l4.symbol) := nil;
-				if l4.all then begin
-						(foreach l6 in l4.all do begin
-								l2.(l6) := nil
+		recognizers := self:GetRecognizers();
+		settings := self:GetSettings();
+		local recognizers;
+		local settings;
+		(foreach key, value in recognizers do begin
+				settings.(value.symbol) := nil;
+				if value.all then begin
+						(foreach item in value.all do begin
+								settings.(item) := nil
 							end)
 					end else begin
-						l2.(l4.targetSymbol) := nil
+						settings.(value.targetSymbol) := nil
 					end
 			end)
 	end,
@@ -78,100 +78,100 @@ recToggle := {
 	end,
 	viewDrawScript: nil,
 	RecognizerUsed: func(a1) begin
-		(foreach l1 in popup do begin
-				if (l1 <> 'pickseparator) then begin
-						if (if (if HasPath(l1, 'commands) then (l1.commands.(a1) exists)) then l1.commands.(a1).recState) then begin
+		(foreach item in popup do begin
+				if (item <> 'pickseparator) then begin
+						if (if (if HasPath(item, 'commands) then (item.commands.(a1) exists)) then item.commands.(a1).recState) then begin
 								return true
 							end
 					end
 			end);
 		return nil
 	end,
-	GetDefaultSettings: func(a1) begin
-		l1 := self:GetDefaults(a1);
-		if (l2 := self:GetSettings()) then begin
-				if (l3 := self:GetRecognizers().(a1)) then begin
+	GetDefaultSettings: func(key) begin
+		defaults := self:GetDefaults(key);
+		if (settings := self:GetSettings()) then begin
+				if (l3 := self:GetRecognizers().(key)) then begin
 						if l3.all then begin
-								local l1;
-								local l2;
+								local defaults;
+								local settings;
 								local l3;
-								(foreach l4 in l3.all do begin
-										l2.(l4) := (if SetContains(l1, l4) then true)
+								(foreach item in l3.all do begin
+										settings.(item) := (if SetContains(defaults, item) then true)
 									end)
 							end else begin
-								l2.(l3.targetSymbol) := l1
+								settings.(l3.targetSymbol) := defaults
 							end
 					end
 			end;
-		return l2
+		return settings
 	end,
-	GetDefaults: func(a1) begin
+	GetDefaults: func(key) begin
 		local l1;
-		(if (l1 := self:GetRecognizers().(a1)) then l1.default)
+		(if (l1 := self:GetRecognizers().(key)) then l1.default)
 	end,
 	buttonClickScript: func() begin
 		inherited:buttonClickScript()
 	end,
 	ParseCommands: func(a1) begin
-		l1 := self:GetRecognizers();
-		l2 := self:GetSettings();
-		local l1;
-		local l2;
-		(foreach l3, l4 in a1.commands do begin
-				local l6, l7;
-				if (l6 := l1.(l3)) then begin
-						l2.(l6.symbol) := l4.recState;
-						if ((l7 := l4.recSettings) = 'default) then begin
-								self:GetDefaultSettings(l3)
+		recognizers := self:GetRecognizers();
+		settings := self:GetSettings();
+		local recognizers;
+		local settings;
+		(foreach key, value in a1.commands do begin
+				local l6, recSettings;
+				if (l6 := recognizers.(key)) then begin
+						settings.(l6.symbol) := value.recState;
+						if ((recSettings := value.recSettings) = 'default) then begin
+								self:GetDefaultSettings(key)
 							end else begin
-								l2.(l7) := true
+								settings.(recSettings) := true
 							end
 					end
 			end)
 	end,
 	CompactSettingsFrame: func(a1) begin
-		local l1, l2;
-		l1 := self:itemIndex(a1.curItem);
-		if (l2 := a1.settings).doTextRecognition then begin
-				l1 := BOr(l1, 32)
+		local itemIndex, settings;
+		itemIndex := self:itemIndex(a1.curItem);
+		if (settings := a1.settings).doTextRecognition then begin
+				itemIndex := BOr(itemIndex, 32)
 			end;
-		if l2.doShapeRecognition then begin
-				l1 := BOr(l1, 128)
+		if settings.doShapeRecognition then begin
+				itemIndex := BOr(itemIndex, 128)
 			end;
-		if l2.doInkWordRecognition then begin
-				l1 := BOr(l1, 64)
+		if settings.doInkWordRecognition then begin
+				itemIndex := BOr(itemIndex, 64)
 			end;
-		if l2.wordsCursiveOption then begin
-				l1 := BOr(l1, 256)
+		if settings.wordsCursiveOption then begin
+				itemIndex := BOr(itemIndex, 256)
 			end;
-		if l2.numbersCursiveOption then begin
-				l1 := BOr(l1, 512)
+		if settings.numbersCursiveOption then begin
+				itemIndex := BOr(itemIndex, 512)
 			end;
-		return l1
+		return itemIndex
 	end,
 	GetRecognizers: func() begin
 		GetRoot()._recognizerUserChoices.recognizers
 	end,
-	ExpandSettingsFrame: func(a1) begin
-		local l1;
-		(l1 := Clone('{settings: nil, curItem: nil})).curItem := _recogPopup[BAnd(a1, 31)];
-		l1.settings := ExpandSettings(a1);
-		return l1
+	ExpandSettingsFrame: func(_recogSettings) begin
+		local copy;
+		(copy := Clone('{settings: nil, curItem: nil})).curItem := _recogPopup[BAnd(_recogSettings, 31)];
+		copy.settings := ExpandSettings(_recogSettings);
+		return copy
 	end,
 	SetupPopup: func() begin
 		popup := Clone(_recogPopup);
-		l1 := self:GetUserChoices();
-		local l1;
-		(foreach l2, l3 in popup do begin
-				if (l3 <> 'pickseparator) then begin
-						popup[l2] := l1.(l3)
+		userChoices := self:GetUserChoices();
+		local userChoices;
+		(foreach key, value in popup do begin
+				if (value <> 'pickseparator) then begin
+						popup[key] := userChoices.(value)
 					end
 			end)
 	end,
 	JamIt: func(a1) begin
-		(foreach l1, l2 in popup do begin
-				if (if (ClassOf(l2) = 'frame) then (l2.symbol = a1)) then begin
-						self:PickItem(l2);
+		(foreach key, value in popup do begin
+				if (if (ClassOf(value) = 'frame) then (value.symbol = a1)) then begin
+						self:PickItem(value);
 						self:UpdateTogglers();
 						break
 					end
@@ -189,18 +189,18 @@ recToggle := {
 		RecSettingsChanged()
 	end,
 	itemIndex: func(a1) begin
-		local l1;
-		if (not (l1 := self:ValidItem(a1))) then begin
-				l1 := 0
+		local validItem;
+		if (not (validItem := self:ValidItem(a1))) then begin
+				validItem := 0
 			end;
-		return l1
+		return validItem
 	end,
-	ValidItem: func(a1) begin
-		(if (a1 <> 'pickseparator) then SetContains(_recogPopup, a1))
+	ValidItem: func(defaultItem) begin
+		(if (defaultItem <> 'pickseparator) then SetContains(_recogPopup, defaultItem))
 	end,
 	GetItem: func() begin
-		local l1;
-		(if (l1 := SetContains(_recogPopup, _cachedSettings.curItem)) then popup[l1])
+		local setContains2;
+		(if (setContains2 := SetContains(_recogPopup, _cachedSettings.curItem)) then popup[setContains2])
 	end,
 	GetSettings: func() begin
 		_cachedSettings.settings
@@ -228,33 +228,33 @@ recToggle := {
 	GetUserChoices: func() begin
 		GetRoot()._recognizerUserChoices
 	end,
-	pickActionScript: func(a1) begin
-		local l1;
+	pickActionScript: func(index) begin
+		local popupItem;
 		_cachedSettings := self:ExpandSettingsFrame(_recogSettings);
-		if IsFrame((l1 := popup[a1])) then begin
-				if (l1.symbol = 'recToggleSettings) then begin
+		if IsFrame((popupItem := popup[index])) then begin
+				if (popupItem.symbol = 'recToggleSettings) then begin
 						OpenPrefsTo(PrefsRegistry.HWRecPreferencesForm)
 					end else begin
-						self:PickItem(l1);
+						self:PickItem(popupItem);
 						self:UpdateTogglers()
 					end;
-				inherited:pickActionScript(a1)
+				inherited:pickActionScript(index)
 			end;
 		(_cachedSettings := nil)
 	end,
 	UpdateTogglers: func() begin
-		(foreach l1 in recTogglers do begin
-				l1:SetRecognizers()
+		(foreach item in recTogglers do begin
+				item:SetRecognizers()
 			end)
 	end,
 	SetRecognizers: func() begin
-		local l1, l2;
-		if (not (l1 := _cachedSettings)) then begin
+		local _cachedSettings2, item;
+		if (not (_cachedSettings2 := _cachedSettings)) then begin
 				self._cachedSettings := self:ExpandSettingsFrame(_recogSettings)
 			end;
-		if (l2 := self:GetItem()) then begin
-				SetValue(self, 'icon, l2.icon)
+		if (item := self:GetItem()) then begin
+				SetValue(self, 'icon, item.icon)
 			end;
-		(_cachedSettings := l1)
+		(_cachedSettings := _cachedSettings2)
 	end
 };

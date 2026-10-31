@@ -22,8 +22,8 @@ viewClickScript_2 := func(a1) begin
 end;
 
 _DoDefaultButton := func(a1) begin
-	local l1;
-	(if (l1 := GetVariable(a1, '_defaultButton)) then PressButton(l1))
+	local value;
+	(if (value := GetVariable(a1, '_defaultButton)) then PressButton(value))
 end;
 
 viewKeyDownScript := func(a1, a2) begin
@@ -34,16 +34,16 @@ viewKeyDownScript := func(a1, a2) begin
 end;
 
 New := func(a1, a2, a3, a4) begin
-	local l1, l2;
+	local init, l2;
 	if (not a1) then begin
 			a1 := Time()
 		end;
-	l1 := self:Init();
+	init := self:Init();
 	l2 := ((if (not a1) then Time() else a1) + (a2 div 2));
-	l1.Time := (l2 - (l2 mod a2));
-	l1.increment := a2;
-	l1.context := a4;
-	l1:popup(a3)
+	init.Time := (l2 - (l2 mod a2));
+	init.increment := a2;
+	init.context := a4;
+	init:popup(a3)
 end;
 
 CheckState := func(a1) begin
@@ -51,41 +51,41 @@ CheckState := func(a1) begin
 end;
 
 GetTheRightShape := func(a1, a2) begin
-	local l1, l2;
-	(l1 := Clone(a2)).left := (l1.left + 18);
+	local copy, checkState;
+	(copy := Clone(a2)).left := (copy.left + 18);
 	if nothingCheckable then begin
 			return self:Abstract(a1, a2)
 		end;
-	(if ((l2 := self:CheckState(a1)) = 'NotCheckable) then return self:Abstract(a1, l1) else (if l2 then return [Array: OffsetShape(MakeShape(CheckOn), ((l1.left - 18) + checkBoxHorzOffset), (l1.top + checkBoxVertOffset)), self:Abstract(a1, l1)] else return [Array: OffsetShape(MakeShape(CheckOff), ((l1.left - 18) + checkBoxHorzOffset), (l1.top + checkBoxVertOffset)), self:Abstract(a1, l1)]))
+	(if ((checkState := self:CheckState(a1)) = 'NotCheckable) then return self:Abstract(a1, copy) else (if checkState then return [Array: OffsetShape(MakeShape(CheckOn), ((copy.left - 18) + checkBoxHorzOffset), (copy.top + checkBoxVertOffset)), self:Abstract(a1, copy)] else return [Array: OffsetShape(MakeShape(CheckOff), ((copy.left - 18) + checkBoxHorzOffset), (copy.top + checkBoxVertOffset)), self:Abstract(a1, copy)]))
 end;
 
 SetupAbstracts := func(a1) begin
-	l1 := self:LocalBox();
-	self.maxLines := (l1.bottom div lineHeight);
-	l1.bottom := lineHeight;
+	box := self:LocalBox();
+	self.maxLines := (box.bottom div lineHeight);
+	box.bottom := lineHeight;
 	if (not checkBoxVertOffset) then begin
 			checkBoxVertOffset := (if (not lineHeight) then max(((lineHeight div 2) - 6), 0) else 2)
 		end;
 	self.pieces := Array(maxLines, nil);
 	if checkScrollability then begin
 			canScrollUp := (if (canScrollUp := a1:prev()) then (canScrollUp <> 'deleted));
-			l3 := a1:Next()
+			next := a1:Next()
 		end else begin
-			l3 := a1:entry()
+			next := a1:entry()
 		end;
-	local l1;
+	local box;
 	local l2;
-	local l3;
+	local next;
 	local l4;
-	l4 := (for l5 := 0 to (maxLines - 1) do begin
-			if (not l3) then begin
-					break l5
+	l4 := (for i := 0 to (maxLines - 1) do begin
+			if (not next) then begin
+					break i
 				end;
-			if (l3 <> 'deleted) then begin
-					pieces[l5] := self:GetTheRightShape(l3, l1);
-					l1.bottom := ((l1.top := l1.bottom) + lineHeight)
+			if (next <> 'deleted) then begin
+					pieces[i] := self:GetTheRightShape(next, box);
+					box.bottom := ((box.top := box.bottom) + lineHeight)
 				end;
-			l3 := a1:Next()
+			next := a1:Next()
 		end);
 	if checkScrollability then begin
 			canScrollDown := (if (canScrollDown := a1:entry()) then (canScrollDown <> 'deleted))
@@ -109,33 +109,33 @@ viewScrollDownScript := func() begin
 end;
 
 GetIndexEntry := func(a1) begin
-	local l1;
+	local copy;
 	(if cursor then begin
-			l1 := cursor:clone();
-			l1:move(a1);
-			l1:entry()
+			copy := cursor:clone();
+			copy:move(a1);
+			copy:entry()
 		end)
 end;
 
 hiliter := func(a1, a2, a3) begin
-	local l1, l2, l3;
-	(if a2 then (if ((l1 := ShapeBounds(a1)).left < selectIndent) then begin
-				if (not (l2 := self:GetIndexEntry((a2 + scrollOrigin)))) then begin
+	local shapeBounds2, indexEntry, checkState;
+	(if a2 then (if ((shapeBounds2 := ShapeBounds(a1)).left < selectIndent) then begin
+				if (not (indexEntry := self:GetIndexEntry((a2 + scrollOrigin)))) then begin
 						return nil
 					end;
-				(if ((l3 := self:CheckState(l2)) <> 'NotCheckable) then begin
+				(if ((checkState := self:CheckState(indexEntry)) <> 'NotCheckable) then begin
 						if (a3 = 'on) then begin
-								l3 := (not l3)
+								checkState := (not checkState)
 							end;
-						self:DrawShape(OffsetShape((shapes := (if l3 then MakeShape(CheckOn) else MakeShape(CheckOff))), (l1.left + checkBoxHorzOffset), ((l1.top + checkBoxVertOffset) + (a2 * lineHeight))), {transferMode: 0, penPattern: 0, fillPattern: 1})
+						self:DrawShape(OffsetShape((shapes := (if checkState then MakeShape(CheckOn) else MakeShape(CheckOff))), (shapeBounds2.left + checkBoxHorzOffset), ((shapeBounds2.top + checkBoxVertOffset) + (a2 * lineHeight))), {transferMode: 0, penPattern: 0, fillPattern: 1})
 					end)
 			end else self:DrawShape(a1, {transform: [Array: 0, (a2 * lineHeight)]})))
 end;
 
 viewClickScript_3 := func(a1) begin
-	local l1;
-	if (l1 := self:DoDrawing('trackOverview, [Array: a1])) then begin
-			SendWithStrokesOff(self, 'HitItem, [Array: l1[0], l1[1], l1[2]])
+	local trackOverview;
+	if (trackOverview := self:DoDrawing('trackOverview, [Array: a1])) then begin
+			SendWithStrokesOff(self, 'HitItem, [Array: trackOverview[0], trackOverview[1], trackOverview[2]])
 		end;
 	true
 end;
@@ -145,21 +145,21 @@ trackOverview := compile(
 		kLiteral_3c5eed: '{transferMode: 2, penPattern: 0, fillPattern: 5}
 	},
 	func(a1) begin
-		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+		local box, l2, box2, pt, l5, l6, shapeBounds2, l8, l9, l10;
 		InkOff(a1);
 		playsound(@click);
 		BusyBoxControl(2);
-		l1 := self:GlobalBox();
-		if ((l2 := ((GetPoint(5, a1) - l1.top) div lineHeight)) >= numLines) then begin
+		box := self:GlobalBox();
+		if ((l2 := ((GetPoint(5, a1) - box.top) div lineHeight)) >= numLines) then begin
 				return nil
 			end;
-		(l3 := self:LocalBox()).bottom := lineHeight;
-		l5 := ((l4 := GetPoint(4, a1)) - l1.left);
-		(l7 := ShapeBounds((l6 := (if (if items then items[l2].category) then [Array: kLiteral_3c5eed, MakeShape(Clone(l3))] else self:GetHiliteShape(l5, l3))))).left := (l7.left + l1.left);
-		l7.right := (l7.right + l1.left);
+		(box2 := self:LocalBox()).bottom := lineHeight;
+		l5 := ((pt := GetPoint(4, a1)) - box.left);
+		(shapeBounds2 := ShapeBounds((l6 := (if (if items then items[l2].category) then [Array: kLiteral_3c5eed, MakeShape(Clone(box2))] else self:GetHiliteShape(l5, box2))))).left := (shapeBounds2.left + box.left);
+		shapeBounds2.right := (shapeBounds2.right + box.left);
 		(loop begin
-				l4 := GetPoint(4, a1);
-				l2 := ((l8 := (GetPoint(5, a1) - l1.top)) div lineHeight);
+				pt := GetPoint(4, a1);
+				l2 := ((l8 := (GetPoint(5, a1) - box.top)) div lineHeight);
 				if (l8 < 0) then begin
 						self:hiliter(l6, hilitedIndex, 'off);
 						hilitedIndex := (l2 := nil);
@@ -173,12 +173,12 @@ trackOverview := compile(
 									end;
 								l2 := nil
 							end else begin
-								if ((l4 < l7.left) or (l4 > l7.right)) then begin
-										if (if (l4 > l1.left) then (l4 < l1.right)) then begin
+								if ((pt < shapeBounds2.left) or (pt > shapeBounds2.right)) then begin
+										if (if (pt > box.left) then (pt < box.right)) then begin
 												self:hiliter(l6, hilitedIndex, 'off);
-												l5 := (l4 - l1.left);
-												(l7 := ShapeBounds((l6 := (if (if items then items[l2].category) then [Array: kLiteral_3c5eed, MakeShape(Clone(l3))] else self:GetHiliteShape(l5, l3))))).left := (l7.left + l1.left);
-												l7.right := (l7.right + l1.left);
+												l5 := (pt - box.left);
+												(shapeBounds2 := ShapeBounds((l6 := (if (if items then items[l2].category) then [Array: kLiteral_3c5eed, MakeShape(Clone(box2))] else self:GetHiliteShape(l5, box2))))).left := (shapeBounds2.left + box.left);
+												shapeBounds2.right := (shapeBounds2.right + box.left);
 												self:hiliter(l6, (hilitedIndex := l2), 'on)
 											end else begin
 												l2 := nil
@@ -189,9 +189,9 @@ trackOverview := compile(
 				if (l2 <> hilitedIndex) then begin
 						self:hiliter(l6, hilitedIndex, 'off);
 						if l2 then begin
-								l5 := (l4 - l1.left);
-								(l7 := ShapeBounds((l6 := (if (if items then items[l2].category) then [Array: kLiteral_3c5eed, MakeShape(Clone(l3))] else self:GetHiliteShape(l5, l3))))).left := (l7.left + l1.left);
-								l7.right := (l7.right + l1.left);
+								l5 := (pt - box.left);
+								(shapeBounds2 := ShapeBounds((l6 := (if (if items then items[l2].category) then [Array: kLiteral_3c5eed, MakeShape(Clone(box2))] else self:GetHiliteShape(l5, box2))))).left := (shapeBounds2.left + box.left);
+								shapeBounds2.right := (shapeBounds2.right + box.left);
 								self:hiliter(l6, (hilitedIndex := l2), 'on)
 							end;
 						hilitedIndex := l2
@@ -199,9 +199,9 @@ trackOverview := compile(
 				(if StrokeDone(a1) then break)
 			end);
 		(if l2 then begin
-				l9 := ((GetPoint(5, a1) - l1.top) mod lineHeight);
+				l9 := ((GetPoint(5, a1) - box.top) mod lineHeight);
 				l10 := (self:GlobalBox().left - self:LocalBox().left);
-				if (l4 < (selectIndent + l10)) then begin
+				if (pt < (selectIndent + l10)) then begin
 						hilitedIndex := nil
 					end;
 				if (autoDeselect or (l5 < selectIndent)) then begin
@@ -213,13 +213,13 @@ trackOverview := compile(
 	end);
 
 GetHiliteShape := func(a1, a2) begin
-	local l1;
+	local copy;
 	if (a1 > selectIndent) then begin
-			(l1 := Clone(a2)).left := selectIndent
+			(copy := Clone(a2)).left := selectIndent
 		end else begin
-			(l1 := Clone(a2)).right := (selectIndent - 1)
+			(copy := Clone(a2)).right := (selectIndent - 1)
 		end;
-	[Array: '{transferMode: 2, penPattern: 0, fillPattern: 5}, MakeShape(l1)]
+	[Array: '{transferMode: 2, penPattern: 0, fillPattern: 5}, MakeShape(copy)]
 end;
 
 SelectItem := compile(
@@ -229,19 +229,19 @@ SelectItem := compile(
 		end
 	},
 	func(a1) begin
-		local l1, l2, l3, l4;
-		l2 := MakeEntryAlias((l1 := cursor:clone():move(a1)));
+		local move, entryAlias, pos, box;
+		entryAlias := MakeEntryAlias((move := cursor:clone():move(a1)));
 		if selected then begin
-				if (l3 := LSearch(selected, l2, 0, kFunction_43b471, nil)) then begin
-						RemoveSlot(selected, l3)
+				if (pos := LSearch(selected, entryAlias, 0, kFunction_43b471, nil)) then begin
+						RemoveSlot(selected, pos)
 					end else begin
-						AddArraySlot(selected, l2)
+						AddArraySlot(selected, entryAlias)
 					end
 			end else begin
-				selected := [Array: l2]
+				selected := [Array: entryAlias]
 			end;
-		(l4 := self:LocalBox()).bottom := ((l4.top := (a1 * lineHeight)) + lineHeight);
-		pieces[a1] := self:GetTheRightShape(l1, l4);
+		(box := self:LocalBox()).bottom := ((box.top := (a1 * lineHeight)) + lineHeight);
+		pieces[a1] := self:GetTheRightShape(move, box);
 		self:Dirty()
 	end);
 
@@ -256,16 +256,16 @@ isSelected := compile(
 	end);
 
 Scroller := func(a1) begin
-	l1 := cursor:entry();
+	entry := cursor:entry();
 	if (not cursor:move(a1)) then begin
 			l2 := (if (a1 < 0) then -1 else 1);
 			if hilitedIndex then begin
-					cursor:Goto(l1);
-					local l1;
+					cursor:Goto(entry);
+					local entry;
 					local l2;
-					(for l3 := 0 to a1 by l2 do begin
+					(for i := 0 to a1 by l2 do begin
 							if (not cursor:move(l2)) then begin
-									break (a1 := l3)
+									break (a1 := i)
 								end
 						end)
 				end;
@@ -284,10 +284,10 @@ Scroller := func(a1) begin
 end;
 
 ForEachSelected := func(a1) begin
-	(if selected then (foreach l1 in selected do begin
-				local l3;
-				if (l3 := ResolveEntryAlias(l1)) then begin
-						call a1 with (l3)
+	(if selected then (foreach item in selected do begin
+				local resolveEntryAlias2;
+				if (resolveEntryAlias2 := ResolveEntryAlias(item)) then begin
+						call a1 with (resolveEntryAlias2)
 					end
 			end))
 end;
@@ -304,9 +304,9 @@ buttonClickScript := func() begin
 end;
 
 buttonClickScript_2 := func() begin
-	local l1;
-	l1 := self:GetTargetInfo('Filing);
-	filingSlip:OpenForUser(self, l1, GetVariable(l1.targetView, 'doCardRouting), GetVariable(l1.targetView, 'dontStartWithFolder))
+	local filing;
+	filing := self:GetTargetInfo('Filing);
+	filingSlip:OpenForUser(self, filing, GetVariable(filing.targetView, 'doCardRouting), GetVariable(filing.targetView, 'dontStartWithFolder))
 end;
 
 TimeString := func() begin
@@ -318,21 +318,21 @@ buttonClickScript_3 := func() begin
 end;
 
 TimeBox := func(a1) begin
-	local l1, l2;
-	l1 := viewBounds;
-	l2 := StrFontWidth(a1, viewFont);
-	(if ((l1.right - l1.left) <> l2) then begin
-			(l1 := Clone(l1)).right := (l1.left + l2);
-			l1
+	local viewBounds2, strFontWidth2;
+	viewBounds2 := viewBounds;
+	strFontWidth2 := StrFontWidth(a1, viewFont);
+	(if ((viewBounds2.right - viewBounds2.left) <> strFontWidth2) then begin
+			(viewBounds2 := Clone(viewBounds2)).right := (viewBounds2.left + strFontWidth2);
+			viewBounds2
 		end)
 end;
 
 viewIdleScript := func() begin
-	local l1, l2;
-	if (l2 := title:TimeBox((l1 := self:TimeString()))) then begin
-			SetValue(title, 'viewBounds, l2)
+	local timeString, timeBox;
+	if (timeBox := title:TimeBox((timeString := self:TimeString()))) then begin
+			SetValue(title, 'viewBounds, timeBox)
 		end;
-	SetValue(title, 'text, l1);
+	SetValue(title, 'text, timeString);
 	30000
 end;
 
@@ -378,26 +378,26 @@ viewDrawScript_2 := func() begin
 end;
 
 stashItems := func(a1) begin
-	l2 := Length((l3 := selectedItems));
-	prefsCache.(prefsArray) := Array(l2, nil);
-	local l1;
-	local l2;
-	local l3;
-	(for l1 := 0 to (l2 - 1) do begin
-			prefsCache.(prefsArray)[l1] := a1[l3[l1]]
+	count := Length((selectedItems2 := selectedItems));
+	prefsCache.(prefsArray) := Array(count, nil);
+	local i;
+	local count;
+	local selectedItems2;
+	(for i := 0 to (count - 1) do begin
+			prefsCache.(prefsArray)[i] := a1[selectedItems2[i]]
 		end)
 end;
 
 Jogged := func() begin
 	nextEntry := 0;
-	(foreach l1 in layout:ChildViewFrames() do begin
-			l1:SyncView()
+	(foreach item in layout:ChildViewFrames() do begin
+			item:SyncView()
 		end)
 end;
 
 GetActiveViewX := func() begin
-	local l1;
-	(if (if (l1 := self:ChildViewFrames()) then (Length(l1) > 0)) then l1[0].targetView)
+	local childViewFrames;
+	(if (if (childViewFrames := self:ChildViewFrames()) then (Length(childViewFrames) > 0)) then childViewFrames[0].targetView)
 end;
 
 CreateBlankEntry := func() begin
@@ -409,48 +409,48 @@ FillNewSoup := func() begin
 end;
 
 AddTagSlot := func(a1, a2, a3) begin
-	local l1;
-	l1 := a1.tagspec;
+	local tagspec;
+	tagspec := a1.tagspec;
 	if a3 then begin
-			if (not l1) then begin
-					l1 := {}
+			if (not tagspec) then begin
+					tagspec := {}
 				end;
-			if l1.(a2) then begin
-					if (ClassOf(l1.(a2)) = 'symbol) then begin
-							l1.(a2) := [Array: l1.(a2)]
+			if tagspec.(a2) then begin
+					if (ClassOf(tagspec.(a2)) = 'symbol) then begin
+							tagspec.(a2) := [Array: tagspec.(a2)]
 						end;
-					SetAdd(l1.(a2), a3, true)
+					SetAdd(tagspec.(a2), a3, true)
 				end else begin
-					l1.(a2) := [Array: a3]
+					tagspec.(a2) := [Array: a3]
 				end;
-			a1.tagspec := l1
+			a1.tagspec := tagspec
 		end;
-	return l1
+	return tagspec
 end;
 
 FolderTag := func(a1) begin
-	local l1;
-	l1 := nil;
+	local soupFilter2;
+	soupFilter2 := nil;
 	if (soupFilter = nil) then begin
-			l1 := '_unfiled
+			soupFilter2 := '_unfiled
 		end else begin
 			if (soupFilter <> '_all) then begin
-					l1 := soupFilter
+					soupFilter2 := soupFilter
 				end
 		end;
-	self:AddTagSlot(a1, 'all, l1)
+	self:AddTagSlot(a1, 'all, soupFilter2)
 end;
 
 SetupCursor := func() begin
-	local l1, l2, l3;
-	l1 := {none: GetRoot().iobox.hideFilter};
-	(l2 := Clone(soupQuery)).tagspec := l1;
-	self:FolderTag(l2);
+	local frame2, copy, l3;
+	frame2 := {none: GetRoot().iobox.hideFilter};
+	(copy := Clone(soupQuery)).tagspec := frame2;
+	self:FolderTag(copy);
 	l3 := (if (if storesFilter then storesFilter:IsValid()) then theSoup:GetMember(storesFilter) else begin
 			storesFilter := nil;
 			theSoup
 		end);
-	(theCursor := l3:Query(l2))
+	(theCursor := l3:Query(copy))
 end;
 
 AddEntry := func(a1, a2) begin
@@ -467,30 +467,30 @@ GetTitle := func() begin
 end;
 
 viewDrawScript_3 := func() begin
-	local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+	local icon, text, l3, strFontWidth2, box, l6, title, l8, l9;
 	if (if (not pieces) then target) then begin
 			headerText := appObject[0];
 			if targetDataDef then begin
-					if (l1 := targetDataDef.icon) then begin
-							headerIcon := l1
+					if (icon := targetDataDef.icon) then begin
+							headerIcon := icon
 						end;
 					headerText := targetDataDef.description
 				end;
-			l2 := "";
+			text := "";
 			if (if (labelsFilter = '_all) then target.labels) then begin
 					if (l3 := userConfiguration.userFolders.(target.labels)) then begin
-							l2 := StrTruncate(Clone(l3), 100)
+							text := StrTruncate(Clone(l3), 100)
 						end
 				end;
-			l4 := StrFontWidth(l2, viewFont);
-			l6 := (((l5 := layout:LocalBox()).right - l4) - 4);
+			strFontWidth2 := StrFontWidth(text, viewFont);
+			l6 := (((box := layout:LocalBox()).right - strFontWidth2) - 4);
 			if hasFiling then begin
 					l6 := (l6 - 35)
 				end;
-			l7 := self:GetTitle();
+			title := self:GetTitle();
 			l8 := (headerIcon.bounds.right + 4);
-			l9 := (StrFontWidth((l7 := StrTruncate(l7, ((l6 - 2) - l8))), viewFont) + 2);
-			pieces := [Array: OffsetShape(MakeShape(headerIcon), 1, ((15 - (headerIcon.bounds.bottom - headerIcon.bounds.top)) div 2)), '{fillPattern: 5}, MakeRect(((l8 + l9) + 2), 6, l6, 9), {transferMode: 0, font: viewFont}, MakeText(l7, l8, 2, (l8 + l9), 11), MakeText(l2, (l6 + 2), 2, ((l6 + l4) + 4), 11)]
+			l9 := (StrFontWidth((title := StrTruncate(title, ((l6 - 2) - l8))), viewFont) + 2);
+			pieces := [Array: OffsetShape(MakeShape(headerIcon), 1, ((15 - (headerIcon.bounds.bottom - headerIcon.bounds.top)) div 2)), '{fillPattern: 5}, MakeRect(((l8 + l9) + 2), 6, l6, 9), {transferMode: 0, font: viewFont}, MakeText(title, l8, 2, (l8 + l9), 11), MakeText(text, (l6 + 2), 2, ((l6 + strFontWidth2) + 4), 11)]
 		end;
 	(if pieces then self:DrawShape(pieces, nil))
 end;
@@ -606,26 +606,26 @@ viewClickScript_4 := compile(
 	end);
 
 checkCaret := func() begin
-	local l1, l2, l3;
+	local box, caretInfo, caretRelativeToVisibleRect;
 	if OtherViewInUse(nil) then begin
 			AddProcrastinatedSend('checkCaret, targetView, 'checkCaret, nil, 500);
 			return nil
 		end;
 	(loop begin
-			if ((((not (l2 := GetCaretInfo())) or (not l2.view)) or (not l2.view.viewCObject)) or (BAnd(l2.view.viewClass, 65535) <> 81)) then begin
+			if ((((not (caretInfo := GetCaretInfo())) or (not caretInfo.view)) or (not caretInfo.view.viewCObject)) or (BAnd(caretInfo.view.viewClass, 65535) <> 81)) then begin
 					break
 				end;
 			if (not ViewContainsCaretView(self)) then begin
 					break
 				end;
-			if (not l1) then begin
-					(l1 := layout:GlobalBox()).top := (l1.top + 8);
-					l1.bottom := (l1.bottom - viewLineSpacing)
+			if (not box) then begin
+					(box := layout:GlobalBox()).top := (box.top + 8);
+					box.bottom := (box.bottom - viewLineSpacing)
 				end;
-			if ((not (l3 := l2.view:CaretRelativeToVisibleRect(l1))) or (l3 = 'inbox)) then begin
+			if ((not (caretRelativeToVisibleRect := caretInfo.view:CaretRelativeToVisibleRect(box))) or (caretRelativeToVisibleRect = 'inbox)) then begin
 					break
 				end;
-			(if (l3 = 'top) then layout:PixelScrollBy(0, ((l1.top - l1.bottom) + viewLineSpacing)) else (if (l3 = 'bottom) then layout:PixelScrollBy(0, ((l1.bottom - l1.top) - viewLineSpacing)) else break))
+			(if (caretRelativeToVisibleRect = 'top) then layout:PixelScrollBy(0, ((box.top - box.bottom) + viewLineSpacing)) else (if (caretRelativeToVisibleRect = 'bottom) then layout:PixelScrollBy(0, ((box.bottom - box.top) - viewLineSpacing)) else break))
 		end)
 end;
 
@@ -706,8 +706,8 @@ ConvertAnnotatedMeetingsAfterStopDate := compile(
 		end
 	},
 	func(a1, a2) begin
-		local l1, l2;
-		(if (l1 := a1.InstanceNotesData) then (if (l2 := ArrayPos(l1, a2, 0, kFunction_4f3d01)) then self:ConvertAnnotatedMeetingsToExceptions(a1, l2, (Length(l1) - 1))))
+		local instanceNotesData, pos;
+		(if (instanceNotesData := a1.InstanceNotesData) then (if (pos := ArrayPos(instanceNotesData, a2, 0, kFunction_4f3d01)) then self:ConvertAnnotatedMeetingsToExceptions(a1, pos, (Length(instanceNotesData) - 1))))
 	end);
 
 ConvertAnnotatedMeetingsBeforeStartDate := compile(
@@ -717,64 +717,64 @@ ConvertAnnotatedMeetingsBeforeStartDate := compile(
 		end
 	},
 	func(a1, a2) begin
-		local l1, l2;
-		(if (l1 := a1.InstanceNotesData) then begin
-				if (l2 := ArrayPos(l1, a2, 0, kFunction_4f3dd1)) then begin
-						l2 := (l2 - 1)
+		local instanceNotesData, pos;
+		(if (instanceNotesData := a1.InstanceNotesData) then begin
+				if (pos := ArrayPos(instanceNotesData, a2, 0, kFunction_4f3dd1)) then begin
+						pos := (pos - 1)
 					end else begin
-						l2 := (Length(l1) - 1)
+						pos := (Length(instanceNotesData) - 1)
 					end;
-				(if (l2 >= 0) then self:ConvertAnnotatedMeetingsToExceptions(a1, 0, l2))
+				(if (pos >= 0) then self:ConvertAnnotatedMeetingsToExceptions(a1, 0, pos))
 			end)
 	end);
 
 ConvertAnnotatedMeetingsToExceptions := func(a1, a2, a3) begin
-	l1 := a1.InstanceNotesData;
-	l2 := a1.mtgDuration;
-	local l1;
-	local l2;
-	(for l3 := a2 to a3 do begin
-			local l6, l7, l8;
-			l7 := (l6 := l1[l3])[0];
-			l8 := l6[1];
+	instanceNotesData := a1.InstanceNotesData;
+	mtgDuration := a1.mtgDuration;
+	local instanceNotesData;
+	local mtgDuration;
+	(for i := a2 to a3 do begin
+			local instanceNotesDataItem, l7, instanceNotesDataItemItem;
+			l7 := (instanceNotesDataItem := instanceNotesData[i])[0];
+			instanceNotesDataItemItem := instanceNotesDataItem[1];
 			if (not self:FindException(l7, a1)) then begin
-					self:MakeNewExceptionFrame(a1, l7, l7, l2)
+					self:MakeNewExceptionFrame(a1, l7, l7, mtgDuration)
 				end
 		end);
 	self:CarefulChange(EntrySoup(a1), a1, true)
 end;
 
 GetNotesData := func(a1) begin
-	local l1, l2, l3, l4, l5, l6;
-	(if ((l1 := a1.repeatTemplate) <> nil) then (if (l1.version = nil) then [Array: 'NotesData, l1.NotesData] else begin
-				if IsSoupEntry(l1) then begin
-						l2 := EntrySoup(l1):GetName();
-						if (if l1.NotesData then (if (not EntryStore(l1):IsReadOnly()) then (StrEqual(l2, @repeatMeetingName) or StrEqual(l2, @repeatNotesName)))) then begin
-								self:StoreLocalNotes(l1, a1.mtgStartDate, l1.NotesData, nil);
-								l1.NotesData := nil;
-								EntryChangeXmit(l1, 'calendar)
+	local repeatTemplate, name, instanceNotesData, found, l3ItemItem, resolveEntryAlias2;
+	(if ((repeatTemplate := a1.repeatTemplate) <> nil) then (if (repeatTemplate.version = nil) then [Array: 'NotesData, repeatTemplate.NotesData] else begin
+				if IsSoupEntry(repeatTemplate) then begin
+						name := EntrySoup(repeatTemplate):GetName();
+						if (if repeatTemplate.NotesData then (if (not EntryStore(repeatTemplate):IsReadOnly()) then (StrEqual(name, @repeatMeetingName) or StrEqual(name, @repeatNotesName)))) then begin
+								self:StoreLocalNotes(repeatTemplate, a1.mtgStartDate, repeatTemplate.NotesData, nil);
+								repeatTemplate.NotesData := nil;
+								EntryChangeXmit(repeatTemplate, 'calendar)
 							end
 					end;
-				(if HasSlot(l1, 'InstanceNotesData) then begin
-						l3 := l1.InstanceNotesData;
-						l4 := nil;
-						if l3 then begin
-								l4 := BFind(l3, a1.mtgStartDate, '|<|, 0)
+				(if HasSlot(repeatTemplate, 'InstanceNotesData) then begin
+						instanceNotesData := repeatTemplate.InstanceNotesData;
+						found := nil;
+						if instanceNotesData then begin
+								found := BFind(instanceNotesData, a1.mtgStartDate, '|<|, 0)
 							end;
-						(if l4 then (if (l5 := l3[l4][1]) then (if IsEntryAlias(l5) then (if (l6 := ResolveEntryAlias(l5)) then [Array: 'InstanceNotesData, l6.notes] else [Array: 'InstanceNotesData, nil]) else [Array: 'InstanceNotesData, l5]) else [Array: 'InstanceNotesData, nil]) else [Array: 'InstanceNotesData, nil])
-					end else [Array: 'NotesData, l1.NotesData])
+						(if found then (if (l3ItemItem := instanceNotesData[found][1]) then (if IsEntryAlias(l3ItemItem) then (if (resolveEntryAlias2 := ResolveEntryAlias(l3ItemItem)) then [Array: 'InstanceNotesData, resolveEntryAlias2.notes] else [Array: 'InstanceNotesData, nil]) else [Array: 'InstanceNotesData, l3ItemItem]) else [Array: 'InstanceNotesData, nil]) else [Array: 'InstanceNotesData, nil])
+					end else [Array: 'NotesData, repeatTemplate.NotesData])
 			end) else [Array: 'NotesData, a1.NotesData])
 end;
 
 FindException := func(a1, a2) begin
-	local l1, l2;
-	l1 := nil;
+	local lFetch2Item, lFetch2;
+	lFetch2Item := nil;
 	if a2.exceptions then begin
-			if (l2 := LFetch(a2.exceptions, a1, 0, '|=|, '[pathExpr: 1, mtgStartDate])) then begin
-					(l1 := l2[1]).repeatTemplate := a2
+			if (lFetch2 := LFetch(a2.exceptions, a1, 0, '|=|, '[pathExpr: 1, mtgStartDate])) then begin
+					(lFetch2Item := lFetch2[1]).repeatTemplate := a2
 				end
 		end;
-	l1
+	lFetch2Item
 end;
 
 GetMeetingSlot := func(a1, a2) begin
@@ -796,34 +796,34 @@ GetNameOfPerson := func(a1) begin
 end;
 
 GetNamesOfInvitees := func(a1, a2) begin
-	l1 := SmartStart(20);
-	l2 := 0;
+	smartStart2 := SmartStart(20);
+	smartConcat2 := 0;
 	if (if (a1 <> nil) then (Length(a1) > 0)) then begin
-			local l1;
-			local l2;
-			(foreach l3 in a1 do begin
-					local l5;
-					l5 := self:GetNameOfPerson(l3);
-					if (if a2 then (l2 > 50)) then begin
+			local smartStart2;
+			local smartConcat2;
+			(foreach item in a1 do begin
+					local nameOfPerson;
+					nameOfPerson := self:GetNameOfPerson(item);
+					if (if a2 then (smartConcat2 > 50)) then begin
 							break
 						end else begin
-							if (StrLen(l5) > 0) then begin
-									if (l2 > 0) then begin
-											l2 := SmartConcat(l1, l2, ", ")
+							if (StrLen(nameOfPerson) > 0) then begin
+									if (smartConcat2 > 0) then begin
+											smartConcat2 := SmartConcat(smartStart2, smartConcat2, ", ")
 										end;
-									l2 := SmartConcat(l1, l2, l5)
+									smartConcat2 := SmartConcat(smartStart2, smartConcat2, nameOfPerson)
 								end
 						end
 				end);
 			if a2 then begin
-					l1 := StyledStrTruncate(l1, a2, 10243);
-					l2 := nil
+					smartStart2 := StyledStrTruncate(smartStart2, a2, 10243);
+					smartConcat2 := nil
 				end
 		end;
-	if l2 then begin
-			SmartStop(l1, l2)
+	if smartConcat2 then begin
+			SmartStop(smartStart2, smartConcat2)
 		end;
-	l1
+	smartStart2
 end;
 
 getNameOfLocation := func(a1) begin
@@ -885,9 +885,9 @@ SelectItem_2 := compile(
 		end
 	},
 	func(a1) begin
-		local l1, l2;
-		l1 := {_uniqueID: a1.entryID, _storeID: a1.storeID};
-		(if selected then (if (l2 := ArrayPos(selected, l1, 0, kFunction_55f3f1)) then RemoveSlot(selected, l2) else AddArraySlot(selected, l1)) else (selected := [Array: l1]))
+		local frame2, pos;
+		frame2 := {_uniqueID: a1.entryID, _storeID: a1.storeID};
+		(if selected then (if (pos := ArrayPos(selected, frame2, 0, kFunction_55f3f1)) then RemoveSlot(selected, pos) else AddArraySlot(selected, frame2)) else (selected := [Array: frame2]))
 	end);
 
 isSelected_2 := compile(
@@ -902,19 +902,19 @@ isSelected_2 := compile(
 
 ForEachSelected_2 := func(a1) begin
 	(if selected then begin
-			l1 := Query(cursor:soup(), '{type: index});
-			local l1;
-			(foreach l2 in selected do begin
-					local l4;
-					l4 := l1:GotoKey(l2._uniqueID);
+			cursor2 := Query(cursor:soup(), '{type: index});
+			local cursor2;
+			(foreach item in selected do begin
+					local gotoKey;
+					gotoKey := cursor2:GotoKey(item._uniqueID);
 					(loop begin
-							if (l4._uniqueID <> l2._uniqueID) then begin
-									break (l4 := nil)
+							if (gotoKey._uniqueID <> item._uniqueID) then begin
+									break (gotoKey := nil)
 								end;
-							(if (EntryStore(l4):GetSignature() <> l2._storeID) then (l4 := l1:Next()) else break)
+							(if (EntryStore(gotoKey):GetSignature() <> item._storeID) then (gotoKey := cursor2:Next()) else break)
 						end);
-					if l4 then begin
-							call a1 with (l4)
+					if gotoKey then begin
+							call a1 with (gotoKey)
 						end else nil
 				end)
 		end)
@@ -970,10 +970,10 @@ end;
 
 MoveTo := func(toStore) begin
 	local toSoup;
-	local l1;
+	local name;
 	(if (if selected then toStore:IsReadOnly()) then GetRoot():Notify(3, "Find", "Can not file items to a write-protected store.") else (if selected then begin
-				l1 := cursor:soup():GetName();
-				toSoup := GetUnionSoupAlways(l1):GetMember(toStore);
+				name := cursor:soup():GetName();
+				toSoup := GetUnionSoupAlways(name):GetMember(toStore);
 				if (Length(selected) = 1) then begin
 						self:ForEachSelected(func(a1) begin
 							(if (EntryStore(a1) <> toStore) then EntryMoveXmit(a1, toSoup, 'find))
@@ -1016,93 +1016,93 @@ delete_5 := func() begin
 end;
 
 GetTarget := func() begin
-	l1 := [Array: ];
+	list := [Array: ];
 	if selected then begin
-			l2 := Query(cursor:soup(), '{type: index});
-			local l1;
-			local l2;
-			(foreach l3 in selected do begin
-					local l5, l6;
-					l5 := l2:GotoKey(l3._uniqueID);
+			cursor2 := Query(cursor:soup(), '{type: index});
+			local list;
+			local cursor2;
+			(foreach item in selected do begin
+					local gotoKey, value;
+					gotoKey := cursor2:GotoKey(item._uniqueID);
 					(loop begin
-							if (l5._uniqueID <> l3._uniqueID) then begin
-									break (l5 := nil)
+							if (gotoKey._uniqueID <> item._uniqueID) then begin
+									break (gotoKey := nil)
 								end;
-							(if (EntryStore(l5):GetSignature() <> l3._storeID) then (l5 := l2:Next()) else break)
+							(if (EntryStore(gotoKey):GetSignature() <> item._storeID) then (gotoKey := cursor2:Next()) else break)
 						end);
-					if l5 then begin
-							AddArraySlot(l1, MakeEntryAlias(l5))
+					if gotoKey then begin
+							AddArraySlot(list, MakeEntryAlias(gotoKey))
 						end
 				end)
 		end;
-	if (Length(l1) = 0) then begin
+	if (Length(list) = 0) then begin
 			return nil
 		end;
-	if (Length(l1) = 1) then begin
-			return ResolveEntryAlias(l1[0])
+	if (Length(list) = 1) then begin
+			return ResolveEntryAlias(list[0])
 		end;
 	if owner then begin
-			l6 := GetVariable(owner, 'overviewTargetClass)
+			value := GetVariable(owner, 'overviewTargetClass)
 		end;
-	if (l6 = nil) then begin
-			l6 := 'newtOverview
+	if (value = nil) then begin
+			value := 'newtOverview
 		end;
-	CreateTargetCursor(l6, l1)
+	CreateTargetCursor(value, list)
 end;
 
 viewSetupDoneScript := func() begin
-	l1 := self:LocalBox();
-	local l1;
-	local l2;
-	(foreach l3 in self:ChildViewFrames() do begin
-			if (l3._proto = prefPanelProto) then begin
-					l2 := l3:LocalBox()
+	box := self:LocalBox();
+	local box;
+	local box2;
+	(foreach item in self:ChildViewFrames() do begin
+			if (item._proto = prefPanelProto) then begin
+					box2 := item:LocalBox()
 				end
 		end);
-	(if (if l2 then (l1.bottom < l2.bottom)) then SetValue(self, 'viewBounds, RelBounds(0, 0, l1.right, l2.bottom)))
+	(if (if box2 then (box.bottom < box2.bottom)) then SetValue(self, 'viewBounds, RelBounds(0, 0, box.right, box2.bottom)))
 end;
 
 AddTagsXmit := func(a1, a2) begin
-	local l1;
-	l1 := self:AddTags(a1);
+	local addTags;
+	addTags := self:AddTags(a1);
 	if a2 then begin
 			XmitSoupChange(self:GetName(), a2, 'soupTagsChanged, self)
 		end;
-	l1
+	addTags
 end;
 
 AddIndexXmit := func(a1, a2) begin
-	local l1;
-	l1 := self:AddIndex(a1);
+	local addIndex;
+	addIndex := self:AddIndex(a1);
 	if a2 then begin
 			XmitSoupChange(self:GetName(), a2, 'soupIndexAdded, {soup: self, indexPath: a1.path})
 		end;
-	l1
+	addIndex
 end;
 
 ModifyTagXmit := func(a1, a2, a3) begin
-	local l1;
-	l1 := self:ModifyTag(a1, a2);
+	local modifyTag;
+	modifyTag := self:ModifyTag(a1, a2);
 	if a3 then begin
 			XmitSoupChange(self:GetName(), a3, 'soupTagsChanged, self)
 		end;
-	l1
+	modifyTag
 end;
 
 RemoveTagsXmit := func(a1, a2) begin
-	local l1;
-	l1 := self:RemoveTags(a1);
+	local removeTags;
+	removeTags := self:RemoveTags(a1);
 	if a2 then begin
 			XmitSoupChange(self:GetName(), a2, 'soupTagsChanged, self)
 		end;
-	l1
+	removeTags
 end;
 
 RemoveIndexXmit := func(a1, a2) begin
-	local l1;
-	l1 := self:RemoveIndex(a1);
+	local removeIndex;
+	removeIndex := self:RemoveIndex(a1);
 	if a2 then begin
 			XmitSoupChange(self:GetName(), a2, 'soupIndexRemoved, {soup: self, indexPath: a1})
 		end;
-	l1
+	removeIndex
 end;

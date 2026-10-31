@@ -8,11 +8,11 @@ company_2 := {
 	infoFrame: {
 		checkPrefix: [|Array|: true, [pathExpr: 'companies]],
 		checkPaths: [|Array|: 'company, 'title],
-		formatFunc: func(a1) begin
-			local l1, l2;
-			l1 := StrFilled(a1[0]);
-			l2 := StrFilled(a1[1]);
-			(if (if l1 then l2) then ParamStr("^1, ^0", a1) else (if l1 then a1[0] else (if l2 then a1[1] else "")))
+		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+			local strFilled2, strFilled3;
+			strFilled2 := StrFilled(v20_wwwwwwwwwwvvvvvv[0]);
+			strFilled3 := StrFilled(v20_wwwwwwwwwwvvvvvv[1]);
+			(if (if strFilled2 then strFilled3) then ParamStr("^1, ^0", v20_wwwwwwwwwwvvvvvv) else (if strFilled2 then v20_wwwwwwwwwwvvvvvv[0] else (if strFilled3 then v20_wwwwwwwwwwvvvvvv[1] else "")))
 		end
 	},
 	protection: 'private,
@@ -71,8 +71,8 @@ company_2Item := {
 	newDictionaries: nil,
 	newRecFlags: 29403649,
 	viewSetupFormScript: func() begin
-		local l1;
-		newDictionaries := (l1 := GetLocale()).recogCompanyDictionaries;
+		local locale;
+		newDictionaries := (locale := GetLocale()).recogCompanyDictionaries;
 		if (selectedPath <> true) then begin
 				RemoveSlot(self, 'viewChangedScript)
 			end;

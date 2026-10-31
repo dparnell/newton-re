@@ -4,16 +4,16 @@ loadCalibration := compile(
 	constants: {
 		kLiteral_491521: "Calibration",
 		kFunction_5acb89: func() begin
-			local l1, l2, l3;
-			l2 := GetStores()[0];
-			if l2:HasSoup(@systemSoupName) then begin
-					l3 := l2:GetSoup(@systemSoupName);
-					if (if (l1 := l3:Query({type: 'index, indexPath: 'tag, beginKey: kLiteral_491521, endKey: kLiteral_491521}):entry()) then IsTabletCalibrationNeeded()) then begin
-							l1.rotated := Array(4, nil);
-							EntryChange(l1)
+			local entry, store, soup;
+			store := GetStores()[0];
+			if store:HasSoup(@systemSoupName) then begin
+					soup := store:GetSoup(@systemSoupName);
+					if (if (entry := soup:Query({type: 'index, indexPath: 'tag, beginKey: kLiteral_491521, endKey: kLiteral_491521}):entry()) then IsTabletCalibrationNeeded()) then begin
+							entry.rotated := Array(4, nil);
+							EntryChange(entry)
 						end
 				end;
-			l1
+			entry
 		end
 	},
 	func() begin

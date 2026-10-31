@@ -9,13 +9,13 @@ creditCard := {
 		_proto: infoFrameProto_2,
 		checkPrefix: [|Array|: nil, [pathExpr: 'owner, 'creditCards]],
 		checkPaths: [|Array|: 'creditCardContactNum, 'creditCardName, 'creditCardNum, 'creditCardExpDate],
-		formatFunc: func(a1) begin
-			local l1;
-			TrimString((l1 := ParamStr("^?0Card Name: ^0\n||^?1Card #: ^1||", [Array: a1[1], a1[2]])));
-			if a1[3] then begin
-					l1 := Stringer([Array: l1, ParamStr("\nExp. Date: ^0", [Array: (if (if IsInstance(a1[3], 'string) then IsRichString(a1[3])) then a1[3] else ShortDateStr(a1[3], 0))])])
+		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+			local text;
+			TrimString((text := ParamStr("^?0Card Name: ^0\n||^?1Card #: ^1||", [Array: v20_wwwwwwwwwwvvvvvv[1], v20_wwwwwwwwwwvvvvvv[2]])));
+			if v20_wwwwwwwwwwvvvvvv[3] then begin
+					text := Stringer([Array: text, ParamStr("\nExp. Date: ^0", [Array: (if (if IsInstance(v20_wwwwwwwwwwvvvvvv[3], 'string) then IsRichString(v20_wwwwwwwwwwvvvvvv[3])) then v20_wwwwwwwwwwvvvvvv[3] else ShortDateStr(v20_wwwwwwwwwwvvvvvv[3], 0))])])
 				end;
-			l1
+			text
 		end
 	},
 	protection: 'private,
@@ -58,13 +58,13 @@ creditCardItem := {
 	GetTextArray: func() begin
 		GetGlobals().creditCardTypes.creditCardText
 	end,
-	pickActionScript: func(a1) begin
-		local l1, l2;
-		inherited:pickActionScript(a1);
-		self:UpdateText(Clone(labelCommands[a1].item));
+	pickActionScript: func(index) begin
+		local l1, parsePhone2;
+		inherited:pickActionScript(index);
+		self:UpdateText(Clone(labelCommands[index].item));
 		(if (l1 := GetGlobals().creditCardTypes.creditCardPhoneNums.(currPhoneType)) then begin
-				creditCardContactNum:UpdateAreaCode((l2 := ParsePhone(l1)).areacode);
-				creditCardContactNum:UpdatePhone(l2.phone)
+				creditCardContactNum:UpdateAreaCode((parsePhone2 := ParsePhone(l1)).areacode);
+				creditCardContactNum:UpdatePhone(parsePhone2.phone)
 			end)
 	end,
 	newRecFlags: 8428033,
@@ -81,10 +81,10 @@ expDate := {
 	flavor: {
 		_proto: @newtDateFilter,
 		TextToPath: func(a1) begin
-			local l1, l2;
-			if (if (if (if (l2 := StringToDateFrame(a1)) then (not l2.day)) then l2.month) then l2.year) then begin
-					l2.day := 1;
-					l1 := inherited:TextToPath(ShortDateStr(TotalMinutes(l2), 0))
+			local l1, stringToDateFrame2;
+			if (if (if (if (stringToDateFrame2 := StringToDateFrame(a1)) then (not stringToDateFrame2.day)) then stringToDateFrame2.month) then stringToDateFrame2.year) then begin
+					stringToDateFrame2.day := 1;
+					l1 := inherited:TextToPath(ShortDateStr(TotalMinutes(stringToDateFrame2), 0))
 				end else begin
 					l1 := inherited:TextToPath(a1)
 				end;

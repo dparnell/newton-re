@@ -65,38 +65,38 @@ export77 := {
 					end))
 		end),
 	DeferredConnect: func() begin
-		local l1, l2, l3, l4, l5, l6, l7, l8;
-		l1 := 0;
+		local error, state, l3, l4, desktopApps, text, desktopApp, frame2;
+		error := 0;
 		try begin
 				endpoint:connect(connectOptions, password)
 			end onexception |evt.ex| do begin
-				l1 := CurrentException().error
+				error := CurrentException().error
 			end;
-		if (l1 = 0) then begin
+		if (error = 0) then begin
 				try begin
-						l3 := (l2 := endpoint:GetState()).State
+						l3 := (state := endpoint:GetState()).State
 					end onexception |evt.ex| do begin
 						l3 := 1
 					end;
 				l4 := true;
-				if (if (if (l5 := l2.desktopApps) then IsArray(l5)) then (Length(l5) > 0)) then begin
-						l7 := l5[0];
-						if ((Length(l5) > 1) or (if (l7.id <> 1) then (l7.id <> 2))) then begin
-								l6 := "You can\u2019\ut connect to \u201C\u^0\u201D\u.";
+				if (if (if (desktopApps := state.desktopApps) then IsArray(desktopApps)) then (Length(desktopApps) > 0)) then begin
+						desktopApp := desktopApps[0];
+						if ((Length(desktopApps) > 1) or (if (desktopApp.id <> 1) then (desktopApp.id <> 2))) then begin
+								text := "You can\u2019\ut connect to \u201C\u^0\u201D\u.";
 								l4 := nil
 							end else begin
-								if (l7.version > 1) then begin
-										l6 := "You can\u2019\ut connect to that version of \u201C\u^0\u201D\u.";
+								if (desktopApp.version > 1) then begin
+										text := "You can\u2019\ut connect to that version of \u201C\u^0\u201D\u.";
 										l4 := nil
 									end else begin
-										if (if autodock then (not (l7.doesAuto or (l7.id = 1)))) then begin
-												l6 := "This version of \u201C\u^0\u201D\u doesn't support AutoDocking.";
+										if (if autodock then (not (desktopApp.doesAuto or (desktopApp.id = 1)))) then begin
+												text := "This version of \u201C\u^0\u201D\u doesn't support AutoDocking.";
 												l4 := nil
 											end
 									end
 							end;
 						if (not l4) then begin
-								self:Notify(3, "Dock", ParamStr(l6, [Array: l7.name]));
+								self:Notify(3, "Dock", ParamStr(text, [Array: desktopApp.name]));
 								endpoint:ConnectionDone(0)
 							end
 					end;
@@ -105,7 +105,7 @@ export77 := {
 								if (not autodock) then begin
 										protoContext:OpenWhichConnection(endpoint)
 									end else begin
-										if (if l7 then (l7.id = 1)) then begin
+										if (if desktopApp then (desktopApp.id = 1)) then begin
 												protoContext:StartAutoBackup(endpoint)
 											end else begin
 												endpoint:WriteCommand("auto", nil, nil);
@@ -125,14 +125,14 @@ export77 := {
 							end
 					end
 			end else begin
-				if (l1 = -28023) then begin
-						l8 := {memory: nil, |guest?|: nil, |name?|: nil, title: nil, buttonTitle: "Cancel", Keyboard: true, |password?|: {guest: nil, users: 'hidden}};
-						ConnOpenUserPsswdSlip(endpoint, protoContext.RetryPasswordScript, l8)
+				if (error = -28023) then begin
+						frame2 := {memory: nil, |guest?|: nil, |name?|: nil, title: nil, buttonTitle: "Cancel", Keyboard: true, |password?|: {guest: nil, users: 'hidden}};
+						ConnOpenUserPsswdSlip(endpoint, protoContext.RetryPasswordScript, frame2)
 					end else begin
 						if (not autodock) then begin
 								protoContext:ReopenOnError()
 							end;
-						endpoint:ConnectionDone(l1)
+						endpoint:ConnectionDone(error)
 					end
 			end;
 		(if inited then self:Close())
@@ -147,13 +147,13 @@ export77 := {
 		AddDeferredSend(self, 'DeferredConnected, nil)
 	end,
 	viewIdleScript: func() begin
-		local l1, l2, l3, l4;
+		local state, l2, same2, nameSet2;
 		if stopping then begin
 				return 0
 			end;
 		(if endpoint.connected then begin
 				try begin
-						l2 := (l1 := endpoint:GetState()).State
+						l2 := (state := endpoint:GetState()).State
 					end onexception |evt.ex| do begin end;
 				if (l2 = 2) then begin
 						if (not restoreRoot) then begin
@@ -162,18 +162,18 @@ export77 := {
 									end onexception |evt.ex| do begin end;
 								restoreRoot := true
 							end;
-						if l1.Soup then begin
-								newText := ParamStr("Backing up ^0", [Array: protoContext:SoupNameToAppName(l1.Soup:GetName())])
+						if state.Soup then begin
+								newText := ParamStr("Backing up ^0", [Array: protoContext:SoupNameToAppName(state.Soup:GetName())])
 							end else begin
 								newText := "Backing up information..."
 							end;
-						l3 := StrEqual(newText, currentStatusSetup.values.titleText)
+						same2 := StrEqual(newText, currentStatusSetup.values.titleText)
 					end else begin
 						if (l2 = 4) then begin
 								if (endpoint.percentDone < currentStatusSetup.values.gauge) then begin
 										nameSet := nil
 									end;
-								l4 := nameSet;
+								nameSet2 := nameSet;
 								currentStatusSetup.values.gauge := endpoint.percentDone;
 								if (if (not nameSet) then endpoint.packageName) then begin
 										nameSet := true;
@@ -181,8 +181,8 @@ export77 := {
 									end else begin
 										newText := "Installing package..."
 									end;
-								if (if (l4 or StrEqual(newText, currentStatusSetup.values.titleText)) then (currentStatusSetup.name = 'vGauge)) then begin
-										l3 := true
+								if (if (nameSet2 or StrEqual(newText, currentStatusSetup.values.titleText)) then (currentStatusSetup.name = 'vGauge)) then begin
+										same2 := true
 									end else begin
 										currentStatusSetup.name := 'vGauge
 									end
@@ -195,16 +195,16 @@ export77 := {
 												restoreRoot := true
 											end;
 										restoring := true;
-										if l1.Soup then begin
-												newText := ParamStr("Restoring ^0", [Array: protoContext:SoupNameToAppName(l1.Soup:GetName())])
+										if state.Soup then begin
+												newText := ParamStr("Restoring ^0", [Array: protoContext:SoupNameToAppName(state.Soup:GetName())])
 											end else begin
 												newText := "Restoring information..."
 											end;
 										if StrEqual(newText, currentStatusSetup.values.titleText) then begin
-												l3 := true
+												same2 := true
 											end
 									end else begin
-										l3 := true;
+										same2 := true;
 										if (l2 = 5) then begin
 												newText := "Testing communications..."
 											end else begin
@@ -213,7 +213,7 @@ export77 := {
 									end
 							end
 					end;
-				if l3 then begin
+				if same2 then begin
 						self:updateIndicator(currentStatusSetup)
 					end else begin
 						currentStatusSetup.values.titleText := newText;
@@ -233,18 +233,18 @@ export77 := {
 		appSymbol: 'Connection
 	},
 	syncOptions: nil,
-	CancelRequest: func(a1) begin
+	CancelRequest: func(symbol2) begin
 		local StopIt;
 		(if (not stopping) then begin
 				stopping := true;
 				currentStatusSetup.values.titleText := "Stopping...";
 				self:viewSet(currentStatusSetup);
 				(if restoring then AddDelayedCall((StopIt := func(a1) begin
-						local l1;
+						local state;
 						try begin
-								l1 := endpoint:GetState()
+								state := endpoint:GetState()
 							end onexception |evt.ex| do begin end;
-						(if ((((a1 > 10) or (not l1)) or (not l1.Soup)) or (not StrEqual(l1.Soup:GetName(), "System"))) then protoContext:StopOperation(endpoint) else AddDelayedCall(StopIt, [Array: (a1 + 1)], 1000))
+						(if ((((a1 > 10) or (not state)) or (not state.Soup)) or (not StrEqual(state.Soup:GetName(), "System"))) then protoContext:StopOperation(endpoint) else AddDelayedCall(StopIt, [Array: (a1 + 1)], 1000))
 					end), [Array: 0], 1000) else protoContext:StopOperation(endpoint))
 			end)
 	end,
@@ -269,9 +269,9 @@ export77 := {
 					end;
 				try begin
 						endpoint:InstallAnyProtocolExtension("stxt", func(a1) begin
-							local l1;
-							l1 := a1:ReadCommandData();
-							currentStatusSetup.values.titleText := l1;
+							local commandData;
+							commandData := a1:ReadCommandData();
+							currentStatusSetup.values.titleText := commandData;
 							self:viewSet(currentStatusSetup);
 							endpoint:WriteCommand("dres", 0, true)
 						end)
@@ -281,37 +281,37 @@ export77 := {
 		inherited:?viewSetupFormScript()
 	end,
 	DeferredConnected: func() begin
-		local l1, l2, l3, l4, l5;
-		l1 := 0;
-		l2 := true;
-		if (l3 := stopping) then begin
-				l2 := nil;
+		local error, connection, stopping2, inited, syncChanges;
+		error := 0;
+		connection := true;
+		if (stopping2 := stopping) then begin
+				connection := nil;
 				protoContext:SendCancelToDesktop(endpoint)
 			end else begin
 				try begin
-						l2 := endpoint:DoConnection(nil, syncOptions)
+						connection := endpoint:DoConnection(nil, syncOptions)
 					end onexception |evt.ex| do begin
-						l1 := CurrentException().error
+						error := CurrentException().error
 					end
 			end;
-		l4 := self.inited;
+		inited := self.inited;
 		protoContext:InvalidateApplicationList();
-		if (if (if l4 then (not l3)) then (currentStatusSetup.name = 'vGauge)) then begin
+		if (if (if inited then (not stopping2)) then (currentStatusSetup.name = 'vGauge)) then begin
 				currentStatusSetup.values.gauge := 100;
 				self:updateIndicator(currentStatusSetup)
 			end;
-		l5 := true;
+		syncChanges := true;
 		if restoring then begin
 				try begin
-						l5 := endpoint:GetSyncChanges()
+						syncChanges := endpoint:GetSyncChanges()
 					end onexception |evt.ex| do begin end
 			end;
-		(if (if (if (if (not l3) then restoring) then (l1 <> -28014)) then l5) then self:FinishRestore(endpoint, l1, l5) else begin
+		(if (if (if (if (not stopping2) then restoring) then (error <> -28014)) then syncChanges) then self:FinishRestore(endpoint, error, syncChanges) else begin
 				if protoContext.keyPassthroughOn then begin
 						protoContext:ToggleKeyboardPassthrough(true)
 					end;
-				if (l2 or (l1 <> 0)) then begin
-						protoContext:HandleException(l1, endpoint)
+				if (connection or (error <> 0)) then begin
+						protoContext:HandleException(error, endpoint)
 					end else begin
 						if (not autodock) then begin
 								AddDeferredSend(protoContext, 'OpenWhichConnection, [Array: endpoint])
@@ -319,9 +319,9 @@ export77 := {
 								protoContext:DoAutoDockFinish()
 							end
 					end;
-				(if l4 then begin
+				(if inited then begin
 						self:Close();
-						(if (if restoreRoot then (((not restoring) or (l1 = -28014)) or (not l5))) then protoContext:ReopenBlessed())
+						(if (if restoreRoot then (((not restoring) or (error = -28014)) or (not syncChanges))) then protoContext:ReopenBlessed())
 					end)
 			end)
 	end,
@@ -329,20 +329,20 @@ export77 := {
 	nameSet: nil,
 	restoreRoot: nil,
 	autodock: nil,
-	OpenForSync: func(a1, a2, a3, a4) begin
-		local l1;
-		(l1 := BuildContext(self)).password := a1;
-		l1.connectOptions := a2;
-		l1.endpoint := a3;
-		l1.autodock := a4;
-		l1:FilterDialog()
+	OpenForSync: func(password, connectOptions, theEndpoint, a4) begin
+		local context;
+		(context := BuildContext(self)).password := password;
+		context.connectOptions := connectOptions;
+		context.endpoint := theEndpoint;
+		context.autodock := a4;
+		context:FilterDialog()
 	end,
-	OpenOnEndpoint: func(a1, a2, a3) begin
-		local l1;
-		(l1 := BuildContext(self)).syncOptions := a1;
-		l1.endpoint := a2;
-		l1.autodock := a3;
-		l1:FilterDialog()
+	OpenOnEndpoint: func(syncOptions, endpoint, a3) begin
+		local context;
+		(context := BuildContext(self)).syncOptions := syncOptions;
+		context.endpoint := endpoint;
+		context.autodock := a3;
+		context:FilterDialog()
 	end,
 	_proto: @protoStatusTemplate
 };

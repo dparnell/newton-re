@@ -14,8 +14,8 @@ drawpokerTemplate := {
 			kROM_828: @protoDeckOfCards
 		},
 		func() begin
-			(foreach l1, l2 in cardHolder:ChildViewFrames() do begin
-					l2.cardIndex := l1
+			(foreach key, value in cardHolder:ChildViewFrames() do begin
+					value.cardIndex := key
 				end);
 			deck := kROM_828:New();
 			self:Deal()
@@ -32,13 +32,13 @@ drawpokerTemplate := {
 	end,
 	Draw: func() begin
 		gameState := 'over;
-		(foreach l1, l2 in cardHolder:ChildViewFrames() do begin
-				if (BAnd(GetViewFlags(l2), 33554432) <> 0) then begin
-						hand[l1] := nil
+		(foreach key, value in cardHolder:ChildViewFrames() do begin
+				if (BAnd(GetViewFlags(value), 33554432) <> 0) then begin
+						hand[key] := nil
 					end
 			end);
-		l4 := deck:Eval5((hand := deck:Draw(hand)));
-		if ((money := (money + deck.DrawPayOffs.(l4))) < bet) then begin
+		eval5 := deck:Eval5((hand := deck:Draw(hand)));
+		if ((money := (money + deck.DrawPayOffs.(eval5))) < bet) then begin
 				GetRoot():Notify(3, "Draw Poker", "Your line of credit has been terminated.");
 				AddDeferredSend(base, 'Close, nil)
 			end else begin
@@ -47,13 +47,13 @@ drawpokerTemplate := {
 						AddDeferredSend(base, 'Close, nil)
 					end
 			end;
-		SetValue(handValue, 'text, SymbolName(l4));
+		SetValue(handValue, 'text, SymbolName(eval5));
 		SetValue(dButton, 'text, "Deal");
 		SetValue(bankroll, 'text, Stringer([Array: $$, money]));
-		(foreach l1, l2 in cardHolder:ChildViewFrames() do begin
-				local l4;
-				if (BAnd(GetViewFlags(l2), 33554432) <> 0) then begin
-						l2:hilite(nil)
+		(foreach key, value in cardHolder:ChildViewFrames() do begin
+				local eval5;
+				if (BAnd(GetViewFlags(value), 33554432) <> 0) then begin
+						value:hilite(nil)
 					end
 			end);
 		cardHolder:Dirty()
@@ -73,10 +73,10 @@ cardHolderItem := {
 	GetCard: func() begin
 		hand[cardIndex]
 	end,
-	viewClickScript: func(a1) begin
+	viewClickScript: func(unit) begin
 		local l1;
 		l1 := (BAnd(GetViewFlags(self), 33554432) <> 0);
-		(if (if (gameState = 'dealt) then self:TrackHilite(a1)) then begin
+		(if (if (gameState = 'dealt) then self:TrackHilite(unit)) then begin
 				self:hilite((not l1));
 				self:Dirty();
 				true

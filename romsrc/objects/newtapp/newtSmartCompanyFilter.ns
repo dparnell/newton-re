@@ -7,14 +7,14 @@ newtSmartCompanyFilter := {
 	PathQuery: func(a1) begin
 		Query(GetUnionSoup(@cardfileSoupName), {type: 'words, words: a1})
 	end,
-	QueryItem: func(a1, a2) begin
-		(if (if a1.company then FindStringInFrame(a1.company, a2, nil)) then {item: Stringer([Array: a1.company, " ", $(, a1.address, $)]), id: MakeEntryAlias(a1)})
+	QueryItem: func(entry, preQuery) begin
+		(if (if entry.company then FindStringInFrame(entry.company, preQuery, nil)) then {item: Stringer([Array: entry.company, " ", $(, entry.address, $)]), id: MakeEntryAlias(entry)})
 	end,
 	ResolveItem: func(a1) begin
 		targetView:jamFromEntry(ResolveEntryAlias(a1.id))
 	end,
-	EntryToPath: func(a1) begin
-		(target.(path) := a1.company)
+	EntryToPath: func(resolveEntryAlias) begin
+		(target.(path) := resolveEntryAlias.company)
 	end,
 	InitFilter: func() begin
 		ArrayMunger((dictionaries := Clone(dictionaries)), Length(dictionaries), 0, GetLocale().recogCompanyDictionaries, 0, nil);

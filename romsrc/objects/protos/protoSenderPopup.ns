@@ -13,40 +13,40 @@ protoSenderPopup := {
 		SetAdd(senderList, self, true)
 	end,
 	viewQuitScript: viewQuitScript,
-	viewHiliteScript: func(a1) begin
-		local l1;
-		l1 := self:LocalBox();
-		self:DrawShape(MakeRoundRect(0, 0, l1.right, l1.bottom, 8), '{transferMode: 2, penPattern: 0, fillPattern: 5});
+	viewHiliteScript: func(on) begin
+		local box;
+		box := self:LocalBox();
+		self:DrawShape(MakeRoundRect(0, 0, box.right, box.bottom, 8), '{transferMode: 2, penPattern: 0, fillPattern: 5});
 		true
 	end,
 	SetupText: func() begin
-		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+		local l1, strTruncate2, strFontWidth2, l4, fromRef, resolveEntryAlias2, currentEmporium, location, box, l10;
 		l1 := (self:Parent():LocalBox().right div 2);
-		l3 := 0;
+		strFontWidth2 := 0;
 		l4 := 0;
 		if (if (if self:Parent() then self:Parent().fields) then IsEntryAlias(self:Parent().fields.fromRef)) then begin
-				l5 := self:Parent().fields.fromRef
+				fromRef := self:Parent().fields.fromRef
 			end else begin
-				l5 := GetUserConfig('currentPersona)
+				fromRef := GetUserConfig('currentPersona)
 			end;
-		if l5 then begin
-				l6 := ResolveEntryAlias(l5);
-				l3 := StrFontWidth((l2 := StrTruncate(Stringer([Array: $\uFC02, self:PrimaryName(l6)]), l1)), viewFont);
+		if fromRef then begin
+				resolveEntryAlias2 := ResolveEntryAlias(fromRef);
+				strFontWidth2 := StrFontWidth((strTruncate2 := StrTruncate(Stringer([Array: $\uFC02, self:PrimaryName(resolveEntryAlias2)]), l1)), viewFont);
 				l4 := (l4 + 1)
 			end;
-		l7 := GetUserConfig('currentEmporium);
-		l8 := StrTruncate((l8 := Stringer([Array: $\uFC02, (if l7 then ResolveEntryAlias(l7).place else GetUserConfig('location).name)])), l1);
-		l2 := Stringer([Array: (if l2 then Stringer([Array: l2, $\n])), l8]);
-		l3 := max(l3, StrFontWidth(l8, viewFont));
+		currentEmporium := GetUserConfig('currentEmporium);
+		location := StrTruncate((location := Stringer([Array: $\uFC02, (if currentEmporium then ResolveEntryAlias(currentEmporium).place else GetUserConfig('location).name)])), l1);
+		strTruncate2 := Stringer([Array: (if strTruncate2 then Stringer([Array: strTruncate2, $\n])), location]);
+		strFontWidth2 := max(strFontWidth2, StrFontWidth(location, viewFont));
 		l4 := (l4 + 1);
-		l9 := self:GlobalBox();
-		if (l3 <> (l9.right - l9.left)) then begin
-				(l10 := (viewBounds := Clone(viewBounds))).right := (l10.left + l3)
+		box := self:GlobalBox();
+		if (strFontWidth2 <> (box.right - box.left)) then begin
+				(l10 := (viewBounds := Clone(viewBounds))).right := (l10.left + strFontWidth2)
 			end;
-		if ((l4 := (l4 * FontHeight(viewFont))) <> (l9.bottom - l9.top)) then begin
+		if ((l4 := (l4 * FontHeight(viewFont))) <> (box.bottom - box.top)) then begin
 				(l10 := (viewBounds := Clone(viewBounds))).bottom := (l10.top + l4)
 			end;
-		l2
+		strTruncate2
 	end,
 	viewDrawScript: func() begin
 		self:DrawShape(MakeText("\uFC01\u", 0, 0, 16, ((self:LocalBox().bottom div 2) + 4)), {font: viewFont})
@@ -56,59 +56,59 @@ protoSenderPopup := {
 			kLiteral_3c5f65: "Other City"
 		},
 		func() begin
-			if (if (l4 := GetUserConfig('personae)) then (Length(l4) > 1)) then begin
+			if (if (personae := GetUserConfig('personae)) then (Length(personae) > 1)) then begin
 					local l1;
-					local l2;
-					local l3;
-					local l4;
-					l1 := (foreach l5 in l4 collect self:PrimaryName(ResolveEntryAlias(l5)))
+					local list;
+					local pickseparator;
+					local personae;
+					l1 := (foreach item in personae collect self:PrimaryName(ResolveEntryAlias(item)))
 				end;
-			if (l9 := GetUserConfig('emporia)) then begin
-					l2 := [Array: ];
-					(foreach l5 in l9 do begin
-							local l9, l10;
-							if StrFilled((l10 := ResolveEntryAlias(l5)).place) then begin
-									AddArraySlot(l2, {item: l10.place, value: l5})
+			if (emporia := GetUserConfig('emporia)) then begin
+					list := [Array: ];
+					(foreach item in emporia do begin
+							local emporia, resolveEntryAlias2;
+							if StrFilled((resolveEntryAlias2 := ResolveEntryAlias(item)).place) then begin
+									AddArraySlot(list, {item: resolveEntryAlias2.place, value: item})
 								end
 						end);
-					if (Length(l2) = 0) then begin
-							AddArraySlot(l2, {item: GetUserConfig('location).name, value: nil})
+					if (Length(list) = 0) then begin
+							AddArraySlot(list, {item: GetUserConfig('location).name, value: nil})
 						end;
-					Sort(l2, '|str<|, 'item);
+					Sort(list, '|str<|, 'item);
 					if (not GetVariable(self, 'hideOtherCity)) then begin
-							if (Length(l2) > 0) then begin
-									AddArraySlot(l2, 'pickseparator)
+							if (Length(list) > 0) then begin
+									AddArraySlot(list, 'pickseparator)
 								end;
-							AddArraySlot(l2, kLiteral_3c5f65)
+							AddArraySlot(list, kLiteral_3c5f65)
 						end
 				end else begin
 					if (not GetVariable(self, 'hideOtherCity)) then begin
-							l2 := [Array: kLiteral_3c5f65]
+							list := [Array: kLiteral_3c5f65]
 						end
 				end;
 			if l1 then begin
-					l3 := ArrayMunger(ArrayInsert(l2, 'pickseparator, 0), 0, 0, l1, 0, nil)
+					pickseparator := ArrayMunger(ArrayInsert(list, 'pickseparator, 0), 0, 0, l1, 0, nil)
 				end else begin
-					l3 := l2
+					pickseparator := list
 				end;
-			(if l3 then begin
-					popup := l3;
+			(if pickseparator then begin
+					popup := pickseparator;
 					inherited:buttonClickScript()
 				end else self:hilite(nil))
 		end),
 	PickOther: PickOther,
 	|map|: {pickActionScript: pickActionScript},
-	pickActionScript: func(a1) begin
-		local l1, l2, l3, l4;
-		l2 := (if (if (l1 := GetUserConfig('personae)) then (Length(l1) > 1)) then Length(l1) else -1);
+	pickActionScript: func(index) begin
+		local personae, l2, l3, value;
+		l2 := (if (if (personae := GetUserConfig('personae)) then (Length(personae) > 1)) then Length(personae) else -1);
 		l3 := (Length(popup) - (if (not GetVariable(self, 'hideOtherCity)) then 1 else 0));
-		if (a1 < l2) then begin
-				SetUserConfig('currentPersona, l1[a1]);
+		if (index < l2) then begin
+				SetUserConfig('currentPersona, personae[index]);
 				UseCurrentPersona()
 			end else begin
-				if (a1 < l3) then begin
-						if (l4 := popup[a1].value) then begin
-								SetUserConfig('currentEmporium, l4);
+				if (index < l3) then begin
+						if (value := popup[index].value) then begin
+								SetUserConfig('currentEmporium, value);
 								UseCurrentEmporium()
 							end
 					end else begin

@@ -28,10 +28,10 @@ default := {
 			flavor: flavor,
 			labelCommands: nil,
 			viewSetupFormScript: func() begin
-				local l1;
-				newDictionaries := (l1 := GetLocale()).recogHonorificDictionaries;
-				labelCommands := l1.commonHonorifics;
-				label := l1.honorificLabel;
+				local locale;
+				newDictionaries := (locale := GetLocale()).recogHonorificDictionaries;
+				labelCommands := locale.commonHonorifics;
+				label := locale.honorificLabel;
 				inherited:?viewSetupFormScript()
 			end,
 			newDictionaries: nil,
@@ -50,22 +50,22 @@ default := {
 				inherited:?viewSetupFormScript()
 			end,
 			viewQuitScript: func() begin
-				l1 := target.phones;
-				l2 := 0;
+				phones := target.phones;
+				i2 := 0;
 				inherited:?viewQuitScript();
-				l3 := Length(l1);
-				local l1;
-				local l2;
-				local l3;
-				(for l4 := 0 to (l3 - 1) do begin
-						if (not StrFilled(l1[l4])) then begin
-								l1[l4] := nil
+				count := Length(phones);
+				local phones;
+				local i2;
+				local count;
+				(for i := 0 to (count - 1) do begin
+						if (not StrFilled(phones[i])) then begin
+								phones[i] := nil
 							end else begin
-								l2 := l4
+								i2 := i
 							end
 					end);
-				if ((l2 + 1) < l3) then begin
-						SetLength(l1, (l2 + 1))
+				if ((i2 + 1) < count) then begin
+						SetLength(phones, (i2 + 1))
 					end;
 				self:StartFlush()
 			end,
@@ -81,8 +81,8 @@ default := {
 	infoFrame: {
 		checkPrefix: [|Array|: [pathExpr: 'name], nil],
 		checkPaths: [|Array|: 'honorific, 'first, 'last, 'title],
-		formatFunc: func(a1) begin
-			ParamStr("^?0^0 ||^?1^1 ||^?2^2||", a1)
+		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+			ParamStr("^?0^0 ||^?1^1 ||^?2^2||", v20_wwwwwwwwwwvvvvvv)
 		end
 	},
 	protection: 'private,
@@ -92,15 +92,15 @@ default := {
 		targetView:StartFlush()
 	end,
 	viewQuitScript: func() begin
-		local l1, l2, l3, l4;
-		(if (if self.extension.viewCObject then (l2 := target.phones[0])) then begin
-				l4 := ClassOf(l2);
-				l1 := ParsePhone(l2).areacode;
-				l2 := ParsePhone(l2).phone;
-				l3 := TrimString(extension.entryLine:GetRichString());
-				savePhoneNum := MakePhone({areacode: l1, phone: l2, extension: l3});
-				if (if l4 then StrFilled(savePhoneNum)) then begin
-						SetClass(savePhoneNum, l4)
+		local areacode, phone, text, cls;
+		(if (if self.extension.viewCObject then (phone := target.phones[0])) then begin
+				cls := ClassOf(phone);
+				areacode := ParsePhone(phone).areacode;
+				phone := ParsePhone(phone).phone;
+				text := TrimString(extension.entryLine:GetRichString());
+				savePhoneNum := MakePhone({areacode: areacode, phone: phone, extension: text});
+				if (if cls then StrFilled(savePhoneNum)) then begin
+						SetClass(savePhoneNum, cls)
 					end else begin
 						savePhoneNum := nil
 					end;

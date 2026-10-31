@@ -7,16 +7,16 @@ accessNumbers := {
 	infoFrame: {
 		checkPrefix: [|Array|: nil, [pathExpr: 'mailAccess]],
 		checkPaths: [|Array|: 'mailPhone, 'baud, 'mailNetwork],
-		formatFunc: func(a1) begin
-			local l1, l2;
-			if (ClassOf((l2 := a1[1])) = 'int) then begin
-					l2 := NumberStr(l2)
+		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+			local text2, text;
+			if (ClassOf((text := v20_wwwwwwwwwwvvvvvv[1])) = 'int) then begin
+					text := NumberStr(text)
 				end;
-			l1 := ParamStr("^?0Access Number: ^0||^?1 [^1]||", [Array: a1[0], l2]);
-			if (if a1[2] then GlobalVarExists('DialinNetworkRegistry)) then begin
-					l1 := Stringer([Array: l1, ParamStr("\n Network: ^0", [Array: DialinNetworkRegistry.(a1[2]).title])])
+			text2 := ParamStr("^?0Access Number: ^0||^?1 [^1]||", [Array: v20_wwwwwwwwwwvvvvvv[0], text]);
+			if (if v20_wwwwwwwwwwvvvvvv[2] then GlobalVarExists('DialinNetworkRegistry)) then begin
+					text2 := Stringer([Array: text2, ParamStr("\n Network: ^0", [Array: DialinNetworkRegistry.(v20_wwwwwwwwwwvvvvvv[2]).title])])
 				end;
-			l1
+			text2
 		end
 	},
 	usePhoneKeys: true,
@@ -75,22 +75,22 @@ network := {
 	labelCommands: nil,
 	text: "Network",
 	viewBounds: {left: 0, top: 15, right: 0, bottom: 37},
-	labelActionScript: func(a1) begin
-		local l1;
-		l1 := allNetworks[a1].id;
-		target.(path) := l1;
+	labelActionScript: func(index) begin
+		local id;
+		id := allNetworks[index].id;
+		target.(path) := id;
 		self:StartFlush();
-		self:UpdateNetwork(l1)
+		self:UpdateNetwork(id)
 	end,
 	textSetup: func() begin
-		l1 := (if labelCommands then labelCommands[0] else "");
-		local l1;
-		(foreach l2 in allNetworks do begin
-				if (l2.id = target.(path)) then begin
-						break (l1 := l2.title)
+		title := (if labelCommands then labelCommands[0] else "");
+		local title;
+		(foreach item in allNetworks do begin
+				if (item.id = target.(path)) then begin
+						break (title := item.title)
 					end
 			end);
-		l1
+		title
 	end,
 	viewSetupFormScript: func() begin
 		labelCommands := [Array: ];
@@ -116,10 +116,10 @@ accessNumbersItem := {
 	end,
 	addPath: 'mailPhone,
 	path: nil,
-	pickActionScript: func(a1) begin
-		inherited:pickActionScript(a1);
+	pickActionScript: func(index) begin
+		inherited:pickActionScript(index);
 		(if (if baudArray then (Length(baudArray) > 0)) then begin
-				target.(baudChooser.path) := baudArray[a1];
+				target.(baudChooser.path) := baudArray[index];
 				self:StartFlush();
 				baudChooser:Retarget()
 			end)
@@ -139,28 +139,28 @@ baudRate := {
 	labelCommands: nil,
 	text: "Baud Rate",
 	viewBounds: {left: 0, top: 6, right: 0, bottom: 28},
-	labelActionScript: func(a1) begin
-		target.(path) := labelCommands[a1].baudRate;
+	labelActionScript: func(index) begin
+		target.(path) := labelCommands[index].baudRate;
 		self:StartFlush()
 	end,
 	textSetup: func() begin
-		l1 := (if labelCommands then labelCommands[0].item else "");
-		local l1;
-		(foreach l2 in labelCommands do begin
-				if (l2.baudRate = target.(path)) then begin
-						break (l1 := l2.item)
+		item2 := (if labelCommands then labelCommands[0].item else "");
+		local item2;
+		(foreach item in labelCommands do begin
+				if (item.baudRate = target.(path)) then begin
+						break (item2 := item.item)
 					end
 			end);
 		if (if (not target.(path)) then labelCommands) then begin
 				target.(path) := labelCommands[0].baudRate
 			end;
-		l1
+		item2
 	end,
 	viewJustify: 8396848,
 	viewSetupFormScript: func() begin
 		labelCommands := [Array: ];
-		(for l1 := 0 to (Length(BaudTypes.baudRates) - 1) do begin
-				AddArraySlot(labelCommands, {item: BaudTypes.baudText[l1], baudRate: BaudTypes.baudRates[l1]})
+		(for i := 0 to (Length(BaudTypes.baudRates) - 1) do begin
+				AddArraySlot(labelCommands, {item: BaudTypes.baudText[i], baudRate: BaudTypes.baudRates[i]})
 			end);
 		inherited:?viewSetupFormScript()
 	end,

@@ -29,10 +29,10 @@ newtAreacodePhoneLine := {
 	suppressAreaCode: nil,
 	viewChildren: [viewChildren: areacode_3, phone_2],
 	currPhoneNum: nil,
-	UpdateAreaCode: func(a1) begin
+	UpdateAreaCode: func(areacode2) begin
 		(if areacode then begin
 				areacode.changed := true;
-				(if areacode.viewCObject then SetValue(areacode, 'text, a1) else (currAreaCode := a1))
+				(if areacode.viewCObject then SetValue(areacode, 'text, areacode2) else (currAreaCode := areacode2))
 			end)
 	end,
 	UpdatePhone: func(a1) begin
@@ -43,16 +43,16 @@ newtAreacodePhoneLine := {
 	end,
 	shapes: nil,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
-	viewChangedScript: func(a1, a2) begin
-		local l1, l2, l3;
-		inherited:viewChangedScript(a1, a2);
+	viewChangedScript: func(slot, view) begin
+		local l1, l2, phone;
+		inherited:viewChangedScript(slot, view);
 		l2 := (if (if (not StrFilled((l1 := (if currPhoneNum then TrimString(currPhoneNum))))) then (not areacode.changed)) then nil else (if currAreaCode then TrimString(currAreaCode)));
 		if (StrFilled(l1) or StrFilled(l2)) then begin
-				l3 := MakePhone({areacode: l2, phone: l1})
+				phone := MakePhone({areacode: l2, phone: l1})
 			end else begin
-				l3 := nil
+				phone := nil
 			end;
-		target.(path) := filter:TextToPath(l3);
+		target.(path) := filter:TextToPath(phone);
 		if (if currPhoneType then target.(path)) then begin
 				SetClass(target.(path), currPhoneType)
 			end;
@@ -66,38 +66,38 @@ newtAreacodePhoneLine := {
 	end,
 	areacode: nil,
 	UpdateText: func(a1) begin
-		local l1;
+		local parsePhone2;
 		if (not a1) then begin
 				a1 := ""
 			end;
 		self:AddUndoAction('UpdateText, [Array: MakePhone({phone: Clone(phone:GetRichString()), areacode: Clone(areacode:GetRichString())})]);
 		(if IsInteger(a1) then self:UpdatePhone(SPrintObject(a1)) else begin
-				self:UpdatePhone((l1 := ParsePhone(a1)).phone);
-				self:UpdateAreaCode(l1.areacode)
+				self:UpdatePhone((parsePhone2 := ParsePhone(a1)).phone);
+				self:UpdateAreaCode(parsePhone2.areacode)
 			end)
 	end,
 	phone: nil,
 	viewSetupFormScript: func() begin
-		local l1, l2;
+		local parsePhone2, pathToText;
 		inherited:viewSetupFormScript();
 		if self.viewLineSpacing then begin
 				areacode.viewLineSpacing := self.viewLineSpacing;
 				phone.viewLineSpacing := self.viewLineSpacing
 			end;
-		if StrFilled((l2 := filter:PathToText())) then begin
-				currAreaCode := (l1 := ParsePhone(l2)).areacode;
-				currPhoneNum := l1.phone
+		if StrFilled((pathToText := filter:PathToText())) then begin
+				currAreaCode := (parsePhone2 := ParsePhone(pathToText)).areacode;
+				currPhoneNum := parsePhone2.phone
 			end;
 		parenWidth := (StrFontWidth("(", viewFont) + 2);
 		(if suppressAreaCode then (currAreaCode := nil))
 	end,
-	pickActionScript: func(a1) begin
-		local l1;
-		l1 := filter:PathToText();
-		(if (currPhoneType := labelCommands[a1].class) then begin
-				self:SetLabelText(labelCommands[a1].item);
+	pickActionScript: func(index) begin
+		local pathToText;
+		pathToText := filter:PathToText();
+		(if (currPhoneType := labelCommands[index].class) then begin
+				self:SetLabelText(labelCommands[index].item);
 				self:hilite(nil);
-				target.(path) := filter:TextToPath(l1);
+				target.(path) := filter:TextToPath(pathToText);
 				if (if currPhoneType then target.(path)) then begin
 						SetClass(target.(path), currPhoneType)
 					end;
@@ -105,29 +105,29 @@ newtAreacodePhoneLine := {
 				shapes := nil;
 				self:RedoChildren();
 				SetKeyView(phone, 0)
-			end else inherited:pickActionScript(a1))
+			end else inherited:pickActionScript(index))
 	end,
 	currAreaCode: nil,
 	areaCodeWidth: 50,
 	currPhoneType: nil,
 	SetupCommands: func() begin
 		(if label then inherited:SetupCommands() else begin
-				l1 := self:GetSymArray();
-				l2 := self:GetTextArray();
-				l3 := filter:PathToText();
-				local l1;
-				local l2;
-				local l3;
-				local l4;
-				labelCommands := (foreach l5 in l1 collect {item: l2.(l5), class: l5});
+				symArray := self:GetSymArray();
+				textArray := self:GetTextArray();
+				pathToText := filter:PathToText();
+				local symArray;
+				local textArray;
+				local pathToText;
+				local cls;
+				labelCommands := (foreach item in symArray collect {item: textArray.(item), class: item});
 				if (not currPhoneType) then begin
-						if (if (if l3 then (l4 := ClassOf(l3))) then l2.(l4)) then begin
-								currPhoneType := l4
+						if (if (if pathToText then (cls := ClassOf(pathToText))) then textArray.(cls)) then begin
+								currPhoneType := cls
 							end else begin
-								currPhoneType := l1[0]
+								currPhoneType := symArray[0]
 							end
 					end;
-				(label := l2.(currPhoneType))
+				(label := textArray.(currPhoneType))
 			end)
 	end
 };
@@ -148,10 +148,10 @@ areacode_3 := {
 		self._keyboard := GetRoot().phoneKeyboard;
 		inherited:?viewSetupFormScript()
 	end,
-	viewChangedScript: func(a1, a2) begin
+	viewChangedScript: func(slot, view) begin
 		currAreaCode := self:GetRichString();
 		changed := true;
-		baseLine:viewChangedScript(a1, a2)
+		baseLine:viewChangedScript(slot, view)
 	end,
 	preallocatedContext: 'areacode,
 	_proto: @protoRichInputLine
@@ -170,10 +170,10 @@ phone_2 := {
 		text := currPhoneNum;
 		inherited:?viewSetupFormScript()
 	end,
-	viewChangedScript: func(a1, a2) begin
+	viewChangedScript: func(slot, view) begin
 		currPhoneNum := self:GetRichString();
 		changed := true;
-		baseLine:viewChangedScript(a1, a2)
+		baseLine:viewChangedScript(slot, view)
 	end,
 	preallocatedContext: 'phone,
 	_proto: @protoRichInputLine

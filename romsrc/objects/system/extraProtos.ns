@@ -5,7 +5,7 @@ extraProtos := {
 	|1.XBookEntry|: {
 		_proto: proto1_2Exformentry,
 		iconEntry: {class: '|1.XBookEntry|, text: uCardPositionAlertButton, icon: 0, packageId: nil, isbn: nil},
-		Preflight: func(a1, a2) begin
+		Preflight: func(a1, kids) begin
 			"locked"
 		end,
 		New: func() begin
@@ -85,11 +85,11 @@ extraProtos := {
 			packageId: nil,
 			type: nil
 		},
-		Preflight: func(a1, a2) begin
+		Preflight: func(a1, kids) begin
 			(if (a1 = 'Filing) then 'OK else "built-in")
 		end,
-		file: func(a1) begin
-			fentry.labels := a1;
+		file: func(labels) begin
+			fentry.labels := labels;
 			true
 		end,
 		TapAction: TapAction_4
@@ -109,7 +109,7 @@ extraProtos := {
 			constants: {
 				kLiteral_536a15: "locked"
 			},
-			func(a1, a2) begin
+			func(a1, kids) begin
 				(if ((a1 = 'Filing) or (a1 = 'delete)) then (if (not EntryStore(fentry):IsReadOnly()) then 'OK else kLiteral_536a15) else (if (a1 = 'move) then (if self:copyprotected() then "copy protected" else (if EntryStore(fentry):IsReadOnly() then kLiteral_536a15 else 'OK)) else (if (a1 = 'route) then 'OK else (if (a1 = 'freeze) then "already frozen" else "frozen"))))
 			end),
 		TapAction: func() begin
@@ -165,7 +165,7 @@ extraProtos := {
 			packageName: nil,
 			TapAction: nil
 		},
-		Preflight: func(a1, a2) begin
+		Preflight: func(a1, kids) begin
 			(if (((a1 = 'Filing) or (a1 = 'move)) or (a1 = 'delete)) then (if (not EntryStore(fentry):IsReadOnly()) then 'OK else "locked") else (if (a1 = 'route) then 'OK else (if (if self:LookupSoupPackage() then (a1 = 'freeze)) then 'OK else "the wrong kind")))
 		end,
 		size: func() begin
@@ -174,14 +174,14 @@ extraProtos := {
 		delete: func() begin
 			(if self:LookupSoupPackage() then inherited:delete() else EntryRemoveFromSoup(fentry))
 		end,
-		move: func(a1) begin
-			local l1, l2;
-			(if self:LookupSoupPackage() then inherited:move(a1) else begin
-					l2 := a1:GetSoup((l1 := EntrySoup(fentry):GetName()));
+		move: func(maxLines) begin
+			local name, soup;
+			(if self:LookupSoupPackage() then inherited:move(maxLines) else begin
+					soup := maxLines:GetSoup((name := EntrySoup(fentry):GetName()));
 					if EntryStore(fentry):IsReadOnly() then begin
-							EntryCopyXmit(fentry, l2, '_newt)
+							EntryCopyXmit(fentry, soup, '_newt)
 						end else begin
-							EntryMoveXmit(fentry, l2, '_newt)
+							EntryMoveXmit(fentry, soup, '_newt)
 						end;
 					true
 				end)
@@ -199,7 +199,7 @@ extraProtos := {
 			_tagList: [|Array|: '_icon, '_noBackup],
 			TapAction: nil
 		},
-		Preflight: func(a1, a2) begin
+		Preflight: func(a1, kids) begin
 			(if ((a1 = 'Filing) or (a1 = 'route)) then 'OK else (if ((a1 = 'delete) or (a1 = 'move)) then "built-in" else "the wrong kind"))
 		end,
 		file: file_2,
@@ -237,9 +237,9 @@ ROMHelpBookEntryProto := {
 		GetStores()[0]
 	end,
 	move: move,
-	Preflight: func(a1, a2) begin
+	Preflight: func(a1, kids) begin
 		local l1;
-		(if ((a1 = 'Filing) or (a1 = 'route)) then 'OK else (if (if (a1 = 'Backdrop) then (Length(a2) = 1)) then begin
+		(if ((a1 = 'Filing) or (a1 = 'route)) then 'OK else (if (if (a1 = 'Backdrop) then (Length(kids) = 1)) then begin
 					if (l1 := GetRoot().(fentry.app)).noBackdrop then begin
 							return "the wrong kind"
 						end;
@@ -249,16 +249,16 @@ ROMHelpBookEntryProto := {
 					'OK
 				end else "built-in"))
 	end,
-	file: func(a1) begin
+	file: func(labels) begin
 		if IsReadOnly(fentry._tagList) then begin
 				fentry._tagList := Clone(fentry._tagList)
 			end;
 		if fentry.labels then begin
 				SetRemove(fentry._tagList, fentry.labels)
 			end;
-		if a1 then begin
-				SetAdd(fentry._tagList, a1, true);
-				fentry.labels := a1
+		if labels then begin
+				SetAdd(fentry._tagList, labels, true);
+				fentry.labels := labels
 			end else begin
 				fentry.labels := nil
 			end;
@@ -292,8 +292,8 @@ AutoEntryProto := {
 	},
 	Preflight: Preflight,
 	TapAction: func() begin
-		local l1;
-		(if (l1 := self:LookupSoupPackageAndActivate()) then (if fentry.TapAction then fentry:TapAction() else (if (l1 <> 'justActivated) then begin
+		local soupPackageAndActivate;
+		(if (soupPackageAndActivate := self:LookupSoupPackageAndActivate()) then (if fentry.TapAction then fentry:TapAction() else (if (soupPackageAndActivate <> 'justActivated) then begin
 						GetRoot():Notify(3, "Packages", "Tapping this does nothing.");
 						nil
 					end)))
@@ -318,17 +318,17 @@ TapAction := func() begin
 end;
 
 where := func() begin
-	local l1;
-	local l2;
-	(foreach l3 in (l1 := GetValidStores()) do begin
-			(foreach l5 in fentry.soupNames do begin
-					if l3:HasSoup(l5) then begin
-							l2 := Stringer([Array: (if l2 then Stringer([Array: l2, $,])), " ", l3:GetName()]);
+	local validStores;
+	local text;
+	(foreach item in (validStores := GetValidStores()) do begin
+			(foreach item2 in fentry.soupNames do begin
+					if item:HasSoup(item2) then begin
+							text := Stringer([Array: (if text then Stringer([Array: text, $,])), " ", item:GetName()]);
 							break
 						end
 				end)
 		end);
-	(if (not l2) then "" else l2)
+	(if (not text) then "" else text)
 end;
 
 Preflight_2 := func(a1, a2) begin
@@ -336,21 +336,21 @@ Preflight_2 := func(a1, a2) begin
 end;
 
 delete_4 := func() begin
-	local l1;
+	local storesFilter;
 	local l2;
-	(foreach l3 in (l2 := (if (l1 := GetRoot().ExtrasDrawer.storesFilter) then [Array: l1] else GetStores())) do begin
-			if (not l3:IsReadOnly()) then begin
-					if (not (l5 := (if fentry.ownerApp then GetRoot().(fentry.ownerApp)))) then begin
-							l5 := GetRoot().ExtrasDrawer
+	(foreach item in (l2 := (if (storesFilter := GetRoot().ExtrasDrawer.storesFilter) then [Array: storesFilter] else GetStores())) do begin
+			if (not item:IsReadOnly()) then begin
+					if (not (extrasDrawer := (if fentry.ownerApp then GetRoot().(fentry.ownerApp)))) then begin
+							extrasDrawer := GetRoot().ExtrasDrawer
 						end;
-					local l5;
-					(foreach l6 in fentry.soupNames do begin
-							local l8;
-							if (l8 := l3:GetSoup(l6)) then begin
+					local extrasDrawer;
+					(foreach item2 in fentry.soupNames do begin
+							local soup;
+							if (soup := item:GetSoup(item2)) then begin
 									try begin
-											l8:RemoveFromStoreXmit(l5.appSymbol)
+											soup:RemoveFromStoreXmit(extrasDrawer.appSymbol)
 										end onexception |evt.ex| do begin
-											self:Notify(3, "Packages", ParamStr("Unable to delete the data from ^0", [Array: l3:GetName()]))
+											self:Notify(3, "Packages", ParamStr("Unable to delete the data from ^0", [Array: item:GetName()]))
 										end
 								end
 						end)
@@ -359,36 +359,36 @@ delete_4 := func() begin
 end;
 
 TapAction_2 := func() begin
-	local l1;
-	(if (l1 := GetRoot().soupervisor) then begin
-			l1:OpenTo(fentry);
+	local soupervisor;
+	(if (soupervisor := GetRoot().soupervisor) then begin
+			soupervisor:OpenTo(fentry);
 			(if fentry.closeControl then (fentry.closeControl = 'alwaysClose) else GetUserConfig('ExtraAlwaysClose))
 		end)
 end;
 
 TapAction_3 := func() begin
-	local l1, l2;
+	local copperfield, l2;
 	(if self:LookupSoupPackageAndActivate() then begin
-			if (l2 := (l1 := GetRoot().copperfield):CurrentBook()) then begin
+			if (l2 := (copperfield := GetRoot().copperfield):CurrentBook()) then begin
 					if (not StrEqual(l2.isbn, fentry.isbn)) then begin
-							l1:Close();
-							l1:viewPreOpenScript(fentry.isbn)
+							copperfield:Close();
+							copperfield:viewPreOpenScript(fentry.isbn)
 						end
 				end else begin
-					l1:PrepBook(fentry.isbn)
+					copperfield:PrepBook(fentry.isbn)
 				end;
-			self:_Open(l1)
+			self:_Open(copperfield)
 		end)
 end;
 
 TapAction_4 := func() begin
-	local l1;
+	local tinyTim;
 	(if self:LookupSoupPackageAndActivate() then begin
-			if (if (l1 := GetRoot().TinyTim).viewCObject then StrEqual(l1.isbn, fentry.isbn)) then begin
-					l1:Close();
+			if (if (tinyTim := GetRoot().TinyTim).viewCObject then StrEqual(tinyTim.isbn, fentry.isbn)) then begin
+					tinyTim:Close();
 					return nil
 				end;
-			AddDeferredSend(l1, 'OpenHelpBook, [Array: fentry.isbn]);
+			AddDeferredSend(tinyTim, 'OpenHelpBook, [Array: fentry.isbn]);
 			(if fentry.closeControl then (fentry.closeControl = 'alwaysClose) else GetUserConfig('ExtraAlwaysClose))
 		end)
 end;

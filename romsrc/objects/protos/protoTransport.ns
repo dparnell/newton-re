@@ -1,161 +1,161 @@
 // protoTransport, and what only it reaches
 
 protoTransport := {
-	IsInItem: func(a1) begin
-		return (((a1.state = 'Received) or (a1.state = 'Read)) or (a1.state = 'InLog))
+	IsInItem: func(target) begin
+		return (((target.state = 'Received) or (target.state = 'Read)) or (target.state = 'InLog))
 	end,
 	PowerOffCheck: func(a1) begin
 		(if (a1 = 'idle) then nil else ModalConfirm(ParamStr("Are you sure you want to turn off the power while ^0 is active?", [Array: title]), 'okCancelDefaultCancel))
 	end,
-	HandleError: func(a1) begin
-		local l1;
-		lastError := a1;
-		(if (l1 := self:TranslateError(a1)) then self:Notify(3, title, l1))
+	HandleError: func(error) begin
+		local translateError;
+		lastError := error;
+		(if (translateError := self:TranslateError(error)) then self:Notify(3, title, translateError))
 	end,
-	ItemRequest: func(a1) begin
-		local l1, l2, l3, l4;
-		l1 := nil;
+	ItemRequest: func(request) begin
+		local item, l2, requestQueueItem, currentFormat;
+		item := nil;
 		(loop begin
 				l2 := nil;
-				if a1.item then begin
-						l1 := a1.item;
-						a1.item := nil
+				if request.item then begin
+						item := request.item;
+						request.item := nil
 					end else begin
-						if a1.cursor then begin
-								if (l1 := a1.cursor:entry()) then begin
-										a1.cursor:Next()
+						if request.cursor then begin
+								if (item := request.cursor:entry()) then begin
+										request.cursor:Next()
 									end
 							end
 					end;
-				if (if (if (not l1) then a1.requestQueue) then (Length(a1.requestQueue) > 0)) then begin
-						l3 := a1.requestQueue[0];
-						a1.cause := l3.cause;
-						if (if ((l1 := l3.item) = nil) then l3.cursor) then begin
-								a1.cursor := l3.cursor;
-								if (l1 := a1.cursor:entry()) then begin
-										a1.cursor:Next()
+				if (if (if (not item) then request.requestQueue) then (Length(request.requestQueue) > 0)) then begin
+						requestQueueItem := request.requestQueue[0];
+						request.cause := requestQueueItem.cause;
+						if (if ((item := requestQueueItem.item) = nil) then requestQueueItem.cursor) then begin
+								request.cursor := requestQueueItem.cursor;
+								if (item := request.cursor:entry()) then begin
+										request.cursor:Next()
 									end
 							end;
-						SetRemove(a1.requestQueue, l3);
-						l2 := (Length(a1.requestQueue) > 0)
+						SetRemove(request.requestQueue, requestQueueItem);
+						l2 := (Length(request.requestQueue) > 0)
 					end;
-				if (if (if l1 then IsFrame(l1)) then l1.currentFormat) then begin
+				if (if (if item then IsFrame(item)) then item.currentFormat) then begin
 						l2 := true;
-						if (if (l4 := GetCurrentFormat(l1)) then l4.ResolveItem) then begin
-								l1 := l4:ResolveItem(l1)
+						if (if (currentFormat := GetCurrentFormat(item)) then currentFormat.ResolveItem) then begin
+								item := currentFormat:ResolveItem(item)
 							end else begin
-								if (if l1.needsResolve then l1.body) then begin
+								if (if item.needsResolve then item.body) then begin
 										self:Notify(3, "Routing", "This item cannot be sent because the proper format cannot be found. Please make sure both the format and the original application are installed before sending.");
-										l1 := nil
+										item := nil
 									end
 							end
 					end;
-				if IsFrame(l1) then begin
+				if IsFrame(item) then begin
 						break
 					end else begin
-						if l1 then begin
+						if item then begin
 								l2 := true
 							end
 					end;
 				(if (not l2) then break)
 			end);
-		currentItem := l1;
-		l1
+		currentItem := item;
+		item
 	end,
 	errorIcon: {
 		mask: bitmap('mask, "resources/mask/47f9c1.png", "0000000000040086008602110092021e", 1),
 		bits: bitmap('bits, "resources/bits/47fa0d.png", "0000000000040086008602110092021e", 1),
 		bounds: {left: 0, top: 0, right: 13, bottom: 12}
 	},
-	itemchanged: func(a1) begin
-		GetRoot().(owner):itemchanged(a1, true)
+	itemchanged: func(fields) begin
+		GetRoot().(owner):itemchanged(fields, true)
 	end,
 	deleteItem: func(a1) begin
 		(if a1 then GetRoot().(owner):?ItemCompleted(a1, nil))
 	end,
-	GetItemInfo: func(a1, a2, a3) begin
-		local l1, l2, l3, l4;
-		l2 := self:GetItemTime(a1);
-		a2 := (a2 - StrFontWidth(Stringer([Array: " ", l2]), a3));
-		if self:IsInItem(a1) then begin
-				l1 := self:?GetFromText(a1)
+	GetItemInfo: func(target, a2, a3) begin
+		local fromText, itemTime, dataDefs, l4;
+		itemTime := self:GetItemTime(target);
+		a2 := (a2 - StrFontWidth(Stringer([Array: " ", itemTime]), a3));
+		if self:IsInItem(target) then begin
+				fromText := self:?GetFromText(target)
 			end else begin
-				l1 := self:?GetToText(a1)
+				fromText := self:?GetToText(target)
 			end;
-		if l1 then begin
-				l1 := StyledStrTruncate(Clone(l1), a2, a3)
+		if fromText then begin
+				fromText := StyledStrTruncate(Clone(fromText), a2, a3)
 			end else begin
-				if (l3 := GetDataDefs(addressingClass)) then begin
-						l1 := l3:GetRoutingTitle((l4 := (if self:IsInItem(a1) then a1.fromRef else a1.toRef)), a2, a3)
+				if (dataDefs := GetDataDefs(addressingClass)) then begin
+						fromText := dataDefs:GetRoutingTitle((l4 := (if self:IsInItem(target) then target.fromRef else target.toRef)), a2, a3)
 					end
 			end;
-		if (not l1) then begin
-				l1 := (if self:IsInItem(a1) then a1.fromName else a1.name)
+		if (not fromText) then begin
+				fromText := (if self:IsInItem(target) then target.fromName else target.name)
 			end;
-		if (not l1) then begin
-				l1 := "Unaddressed"
+		if (not fromText) then begin
+				fromText := "Unaddressed"
 			end;
-		(if StrFilled(l1) then Stringer([Array: l1, " ", l2]) else l2)
+		(if StrFilled(fromText) then Stringer([Array: fromText, " ", itemTime]) else itemTime)
 	end,
 	statusDialog: nil,
 	owner: 'iobox,
 	status: 'idle,
 	GetConfig: func(a1) begin
-		local l1;
-		if ((l1 := GetUserConfig(appSymbol)) = nil) then begin
-				l1 := SetUserConfig(appSymbol, EnsureInternal(Clone(defaultConfiguration)));
+		local userConfig;
+		if ((userConfig := GetUserConfig(appSymbol)) = nil) then begin
+				userConfig := SetUserConfig(appSymbol, EnsureInternal(Clone(defaultConfiguration)));
 				FlushUserConfig()
 			end;
-		l1.(a1)
+		userConfig.(a1)
 	end,
 	ItemCount: func(a1) begin
-		local l1;
-		l1 := 0;
+		local count;
+		count := 0;
 		if a1.item then begin
-				l1 := 1
+				count := 1
 			end else begin
 				if a1.cursor then begin
 						if IsArray(a1.cursor) then begin
-								l1 := Length(a1.cursor)
+								count := Length(a1.cursor)
 							end else begin
-								l1 := a1.cursor:CountEntries()
+								count := a1.cursor:CountEntries()
 							end
 					end
 			end;
-		return l1
+		return count
 	end,
-	UpdateStatusSlots: func(a1, a2, a3) begin
+	UpdateStatusSlots: func(status2, a2, frame4) begin
 		if (status = nil) then begin
 				status := 'idle
 			end;
-		if (a1 = nil) then begin
-				a1 := status
+		if (status2 = nil) then begin
+				status2 := status
 			end;
-		if (if (status = 'idle) then (a1 <> 'idle)) then begin
+		if (if (status = 'idle) then (status2 <> 'idle)) then begin
 				userClosedStatus := nil;
 				self:BeginIO()
 			end else begin
-				if (if (status <> 'idle) then (a1 = 'idle)) then begin
+				if (if (status <> 'idle) then (status2 = 'idle)) then begin
 						self:EndIO();
 						userClosedStatus := nil
 					end
 			end;
-		status := EnsureInternal(a1);
-		if (a3 <> nil) then begin
-				if IsFrame(a3) then begin
-						l1 := a3
+		status := EnsureInternal(status2);
+		if (frame4 <> nil) then begin
+				if IsFrame(frame4) then begin
+						frame2 := frame4
 					end else begin
-						if IsString(a3) then begin
-								l1 := {statusText: a3}
+						if IsString(frame4) then begin
+								frame2 := {statusText: frame4}
 							end else begin
-								l1 := {}
+								frame2 := {}
 							end
 					end
 			end else begin
-				l1 := {}
+				frame2 := {}
 			end;
-		if (not HasSlot(l1, 'statusText)) then begin
-				l1.statusText := self:GetStatusString()
+		if (not HasSlot(frame2, 'statusText)) then begin
+				frame2.statusText := self:GetStatusString()
 			end;
 		if (a2 = nil) then begin
 				if ((statusSetup = nil) or (statusSetup.name = nil)) then begin
@@ -164,78 +164,78 @@ protoTransport := {
 						a2 := statusSetup.name
 					end
 			end;
-		l2 := {name: a2, appSymbol: appSymbol, values: l1};
+		frame3 := {name: a2, appSymbol: appSymbol, values: frame2};
 		if (statusSetup = nil) then begin
-				statusSetup := l2
+				statusSetup := frame3
 			end else begin
 				if (statusSetup.name <> a2) then begin
-						statusSetup.values := l1;
+						statusSetup.values := frame2;
 						statusSetup.name := a2
 					end else begin
-						if l1 then begin
-								local l1;
-								local l2;
-								(foreach l3, l4 in l1 do begin
-										statusSetup.values.(l3) := l4
+						if frame2 then begin
+								local frame2;
+								local frame3;
+								(foreach key, value in frame2 do begin
+										statusSetup.values.(key) := value
 									end)
 							end
 					end
 			end;
-		return l2
+		return frame3
 	end,
 	dialogStatusMsgs: @defaultStatusMsgs,
-	QueueRequest: func(a1, a2) begin
-		if IsSymbol(a1) then begin
-				a2.function := a1;
-				a1 := GetRoot().(appSymbol)
+	QueueRequest: func(request, request2) begin
+		if IsSymbol(request) then begin
+				request2.function := request;
+				request := GetRoot().(appSymbol)
 			end;
-		if a1 then begin
-				if a1.requestQueue then begin
-						AddArraySlot(a1.requestQueue, a2)
+		if request then begin
+				if request.requestQueue then begin
+						AddArraySlot(request.requestQueue, request2)
 					end else begin
-						a1.requestQueue := [Array: a2]
+						request.requestQueue := [Array: request2]
 					end
 			end;
-		a2
+		request2
 	end,
 	requestQueue: nil,
 	actionTitle: send,
 	HandleThrow: func() begin
-		local l1, l2, l3;
-		l1 := CurrentException();
-		l2 := 0;
-		if HasSlot(l1, 'error) then begin
-				l2 := l1.error
+		local ex, error, l3;
+		ex := CurrentException();
+		error := 0;
+		if HasSlot(ex, 'error) then begin
+				error := ex.error
 			end else begin
-				if HasSlot(l1.data, 'errorCode) then begin
-						l2 := l1.data.errorCode
+				if HasSlot(ex.data, 'errorCode) then begin
+						error := ex.data.errorCode
 					end else begin
-						l2 := -1
+						error := -1
 					end
 			end;
-		if (l3 := (not self:ignoreError(l2))) then begin
+		if (l3 := (not self:ignoreError(error))) then begin
 				if self.currentItem then begin
-						self:ItemCompleted(currentItem, nil, l2)
+						self:ItemCompleted(currentItem, nil, error)
 					end else begin
-						self:HandleError(l2)
+						self:HandleError(error)
 					end
 			end;
 		l3
 	end,
 	NewFromItem: func(a1) begin
-		l1 := self:NewItem(nil);
-		local l1;
-		(foreach l2, l3 in a1 do begin
-				if (not SetContains(fromItemSlotsToPunt, l2)) then begin
-						l1.(l2) := l3
+		item := self:NewItem(nil);
+		local item;
+		(foreach key, value in a1 do begin
+				if (not SetContains(fromItemSlotsToPunt, key)) then begin
+						item.(key) := value
 					end;
-				l1.labels := nil
+				item.labels := nil
 			end);
 		if a1.destAppSymbol then begin
-				l1.fromAppSymbol := a1.appSymbol;
-				l1.appSymbol := a1.destAppSymbol
+				item.fromAppSymbol := a1.appSymbol;
+				item.appSymbol := a1.destAppSymbol
 			end;
-		l1
+		item
 	end,
 	viewFlags: 0,
 	CloseStatusDialog: func(a1) begin
@@ -250,31 +250,31 @@ protoTransport := {
 		(userClosedStatus := a1)
 	end,
 	GetItemTitle: func(a1) begin
-		local l1, l2, l3, l4, l5;
-		l1 := "Untitled";
+		local text, l2, targetFromEntry, dataDefs, stringExtract;
+		text := "Untitled";
 		if a1 then begin
-				l1 := nil;
+				text := nil;
 				if IsString(a1.title) then begin
-						l1 := a1.title
+						text := a1.title
 					end else begin
-						if (l4 := GetDataDefs(DataClassOf((l3 := GetTargetFromEntry(a1))))) then begin
-								if (l5 := l4:?StringExtract(l3, 1)) then begin
-										l1 := l5
+						if (dataDefs := GetDataDefs(DataClassOf((targetFromEntry := GetTargetFromEntry(a1))))) then begin
+								if (stringExtract := dataDefs:?StringExtract(targetFromEntry, 1)) then begin
+										text := stringExtract
 									end
 							end;
-						if (if (if (not l1) then IsFrame(l3)) then StrFilled(l3.title)) then begin
-								l1 := Clone(l3.title)
+						if (if (if (not text) then IsFrame(targetFromEntry)) then StrFilled(targetFromEntry.title)) then begin
+								text := Clone(targetFromEntry.title)
 							end
 					end;
-				if (l1 = nil) then begin
+				if (text = nil) then begin
 						if TargetIsCursor(a1.body) then begin
-								l1 := "Selected Items"
+								text := "Selected Items"
 							end else begin
-								l1 := ParamStr("Untitled ^0", [Array: self:GetItemType(a1)])
+								text := ParamStr("Untitled ^0", [Array: self:GetItemType(a1)])
 							end
 					end
 			end;
-		l1
+		text
 	end,
 	CancelStatusNotify: func() begin
 		(if activeNotify then begin
@@ -290,8 +290,8 @@ protoTransport := {
 		return self:GetConfig('noworlater)
 	end,
 	currentItem: nil,
-	IsLogItem: func(a1) begin
-		return ((a1.state = 'InLog) or (a1.state = 'OutLog))
+	IsLogItem: func(fields) begin
+		return ((fields.state = 'InLog) or (fields.state = 'OutLog))
 	end,
 	statusTemplate: @protoStatusTemplate,
 	GetDefaultOwnerStore: func() begin
@@ -299,12 +299,12 @@ protoTransport := {
 		(if (l1 := GetRoot().(owner):GetDefaultAppStore()):IsReadOnly() then GetStores()[0] else l1)
 	end,
 	userClosedStatus: nil,
-	GetFolderName: func(a1) begin
-		local l1;
-		if ((l1 := self:GetConfig((if self:IsInItem(a1) then 'inboxFiling else 'outboxFiling))) = 'same) then begin
-				l1 := a1.labels
+	GetFolderName: func(target) begin
+		local config;
+		if ((config := self:GetConfig((if self:IsInItem(target) then 'inboxFiling else 'outboxFiling))) = 'same) then begin
+				config := target.labels
 			end;
-		return l1
+		return config
 	end,
 	StatusNotify: compile(
 		constants: {
@@ -315,44 +315,44 @@ protoTransport := {
 		func() begin
 			(if (activeNotify = nil) then (activeNotify := GetRoot().notifyIcon:AddAction(title, kFunction_47f521, [Array: appSymbol])))
 		end),
-	GetTitleInfoShape: func(a1, a2) begin
-		local l1, l2, l3, l4, l5;
-		l1 := ((a2.right - a2.left) - 10);
-		l2 := self:GetItemTitle(a1);
-		l3 := self:GetItemInfo(a1, l1, 9216);
-		l5 := StrFontWidth((l4 := self:GetItemStateString(a1)), 1058816);
-		l2 := StyledStrTruncate(Clone(l2), (l1 - (l5 + 10)), 1058816);
-		(shapes := [Array: {font: 1058816}, MakeText(l2, a2.left, a2.top, (a2.right - l5), (a2.top + 11)), MakeText(l4, (a2.right - l5), a2.top, a2.right, (a2.top + 11)), {font: 9216}, MakeText(l3, (a2.left + 10), a2.top, a2.right, (a2.bottom - 4))])
+	GetTitleInfoShape: func(target, box) begin
+		local l1, itemTitle, itemInfo, itemStateString, strFontWidth2;
+		l1 := ((box.right - box.left) - 10);
+		itemTitle := self:GetItemTitle(target);
+		itemInfo := self:GetItemInfo(target, l1, 9216);
+		strFontWidth2 := StrFontWidth((itemStateString := self:GetItemStateString(target)), 1058816);
+		itemTitle := StyledStrTruncate(Clone(itemTitle), (l1 - (strFontWidth2 + 10)), 1058816);
+		(shapes := [Array: {font: tsSystem + tsSize(10) + tsBold}, MakeText(itemTitle, box.left, box.top, (box.right - strFontWidth2), (box.top + 11)), MakeText(itemStateString, (box.right - strFontWidth2), box.top, box.right, (box.top + 11)), {font: tsSystem + tsSize(9)}, MakeText(itemInfo, (box.left + 10), box.top, box.right, (box.bottom - 4))])
 	end,
-	TranslateError: func(a1) begin
-		local l1;
-		l1 := nil;
-		if (not self:?ignoreError(a1)) then begin
-				if (l1 = nil) then begin
-						l1 := TableLookup(@errorTable, a1)
+	TranslateError: func(error) begin
+		local tableLookup2;
+		tableLookup2 := nil;
+		if (not self:?ignoreError(error)) then begin
+				if (tableLookup2 = nil) then begin
+						tableLookup2 := TableLookup(@errorTable, error)
 					end;
-				if (l1 = nil) then begin
-						l1 := ParamStr("Error ^0 encountered", [Array: NumberStr(a1)])
+				if (tableLookup2 = nil) then begin
+						tableLookup2 := ParamStr("Error ^0 encountered", [Array: NumberStr(error)])
 					end
 			end;
-		l1
+		tableLookup2
 	end,
 	addressingClass: '|nameRef.email|,
-	ItemSubmit: func(a1) begin
-		GetRoot().(owner):submit(a1)
+	ItemSubmit: func(fields) begin
+		GetRoot().(owner):submit(fields)
 	end,
-	InstallScript: func(a1) begin
+	InstallScript: func(partFrame) begin
 		nil
 	end,
 	category: nil,
 	appSymbol: nil,
 	SetConfig: func(a1, a2) begin
-		local l1;
-		if ((l1 := GetUserConfig(appSymbol)) = nil) then begin
-				l1 := EnsureInternal(Clone(defaultConfiguration))
+		local userConfig;
+		if ((userConfig := GetUserConfig(appSymbol)) = nil) then begin
+				userConfig := EnsureInternal(Clone(defaultConfiguration))
 			end;
-		l1.(EnsureInternal(a1)) := EnsureInternal(a2);
-		SetUserConfig(appSymbol, l1)
+		userConfig.(EnsureInternal(a1)) := EnsureInternal(a2);
+		SetUserConfig(appSymbol, userConfig)
 	end,
 	icon: @routeTransport,
 	title: transport,
@@ -381,7 +381,7 @@ protoTransport := {
 		GetRoot().(owner):?ActivateTransport(self);
 		nil
 	end,
-	CancelRequest: func(a1) begin
+	CancelRequest: func(symbol2) begin
 		self:SetStatus('Canceling, nil);
 		nil
 	end,
@@ -398,11 +398,11 @@ protoTransport := {
 		GetRoot().(owner):ioDeleteScript(a1.target, a1.targetView)
 	end,
 	GetStatusString: func() begin
-		local l1;
-		if ((l1 := dialogStatusMsgs.(status)) = nil) then begin
-				l1 := ""
+		local text;
+		if ((text := dialogStatusMsgs.(status)) = nil) then begin
+				text := ""
 			end;
-		l1
+		text
 	end,
 	defaultConfiguration: @defaultConfiguration,
 	DeleteRemoteItems: func() begin
@@ -414,28 +414,28 @@ protoTransport := {
 	MissingTarget: func(a1) begin
 		self:Notify(3, title, "Nothing to Send")
 	end,
-	GetItemType: func(a1) begin
-		local l1, l2;
-		l1 := "item";
-		if (if a1 then a1.appSymbol) then begin
-				if (if (l2 := GetRoot().(a1.appSymbol)) then (l2:appObject exists)) then begin
-						l1 := GetVariable(l2, 'appObject)[0]
+	GetItemType: func(copy) begin
+		local text, l2;
+		text := "item";
+		if (if copy then copy.appSymbol) then begin
+				if (if (l2 := GetRoot().(copy.appSymbol)) then (l2:appObject exists)) then begin
+						text := GetVariable(l2, 'appObject)[0]
 					end
 			end;
-		l1
+		text
 	end,
 	modalStatus: nil,
 	CheckOutBoxSilently: func() begin
 		GetRoot().(owner):StartSend(self, 'silent, nil, nil)
 	end,
-	ItemCompleted: func(a1, a2, a3) begin
-		local l1, l2;
+	ItemCompleted: func(a1, state, error) begin
+		local l1, itemCompletionScript;
 		(if a1 then begin
-				if a2 then begin
-						a1.state := a2
+				if state then begin
+						a1.state := state
 					end;
-				if a3 then begin
-						a1.error := a3
+				if error then begin
+						a1.error := error
 					end;
 				currentItem := nil;
 				l1 := 'save;
@@ -446,11 +446,11 @@ protoTransport := {
 				if a1.completionscript then begin
 						if (if a1.appSymbol then (app := GetRoot().(a1.appSymbol))) then begin
 								try begin
-										l2 := app:?ItemCompletionScript(a1)
+										itemCompletionScript := app:?ItemCompletionScript(a1)
 									end onexception |evt.ex| do begin
 										self:Notify(3, title, "Error in completionScript")
 									end;
-								if l2 then begin
+								if itemCompletionScript then begin
 										l1 := nil
 									end
 							end else begin
@@ -480,22 +480,22 @@ protoTransport := {
 			end)
 	end,
 	activeNotify: nil,
-	GetItemStateString: func(a1) begin
-		local l1, l2;
-		if (not self:ignoreError(a1.error)) then begin
+	GetItemStateString: func(target) begin
+		local text, state;
+		if (not self:ignoreError(target.error)) then begin
 				return itemStateMsgs.error
 			end;
-		l2 := a1.state;
-		if a1.Remote then begin
-				l2 := 'Remote
+		state := target.state;
+		if target.Remote then begin
+				state := 'Remote
 			end;
-		if l2 then begin
-				l1 := itemStateMsgs.(l2)
+		if state then begin
+				text := itemStateMsgs.(state)
 			end;
-		if (l1 = nil) then begin
-				l1 := ""
+		if (text = nil) then begin
+				text := ""
 			end;
-		l1
+		text
 	end,
 	fromItemSlotsToPunt: [|Array|:
 		'category,
@@ -509,32 +509,32 @@ protoTransport := {
 	manualStatus: nil,
 	itemLabel: 'transport,
 	EndIO: func() begin
-		local l1;
+		local requestQueueItem;
 		GetRoot().(owner):?DeactivateTransport(self);
 		self:CancelStatusNotify();
 		UnRegPowerOn(appSymbol);
 		UnRegPowerOff(appSymbol);
 		(if (if requestQueue then (Length(requestQueue) > 0)) then begin
-				l1 := requestQueue[0];
-				SetRemove(requestQueue, l1);
-				AddDeferredSend(self, l1.function, [Array: l1])
+				requestQueueItem := requestQueue[0];
+				SetRemove(requestQueue, requestQueueItem);
+				AddDeferredSend(self, requestQueueItem.function, [Array: requestQueueItem])
 			end)
 	end,
 	viewClass: 64,
 	RefreshOwner: func() begin
 		GetRoot().(owner):?Refresh()
 	end,
-	UpdateStatusDialog: func(a1) begin
+	UpdateStatusDialog: func(updateStatusSlots) begin
 		lastError := nil;
 		if (if statusDialog then statusDialog.viewCObject) then begin
-				statusDialog:viewSet(a1)
+				statusDialog:viewSet(updateStatusSlots)
 			end else begin
 				if (statusDialog = nil) then begin
 						if (not HasSlot(GetRoot(), 'stepChildren)) then begin
 								GetRoot().stepChildren := Clone(GetRoot().stepChildren)
 							end;
 						statusDialog := BuildContext(statusTemplate);
-						statusDialog:viewSet(a1);
+						statusDialog:viewSet(updateStatusSlots);
 						if modalStatus then begin
 								statusDialog:FilterDialog()
 							end else begin
@@ -544,68 +544,68 @@ protoTransport := {
 			end;
 		self:CancelStatusNotify()
 	end,
-	ignoreError: func(a1) begin
-		(((((((a1 = nil) or (a1 = 0)) or (a1 = -16005)) or (a1 = -16013)) or (a1 = -10039)) or (a1 = -38002)) or (a1 = -44004))
+	ignoreError: func(error) begin
+		(((((((error = nil) or (error = 0)) or (error = -16005)) or (error = -16013)) or (error = -10039)) or (error = -38002)) or (error = -44004))
 	end,
 	lastError: nil,
 	debug: 723740,
-	MakeLogEntry: func(a1, a2) begin
-		a1.title := self:GetItemTitle(a2);
-		(if HasSlot(a2, 'sentTimeStamp) then (a1.sentTimeStamp := a2.sentTimeStamp))
+	MakeLogEntry: func(next, next2) begin
+		next.title := self:GetItemTitle(next2);
+		(if HasSlot(next2, 'sentTimeStamp) then (next.sentTimeStamp := next2.sentTimeStamp))
 	end,
-	NewItem: func(a1) begin
+	NewItem: func(viewfrontmostapp) begin
 		local l1;
 		(l1 := GetRoot().(owner):GetDefaultItem()).category := GetVariable(self, 'appSymbol);
-		if a1 then begin
-				l1.appSymbol := GetVariable(a1, 'appSymbol)
+		if viewfrontmostapp then begin
+				l1.appSymbol := GetVariable(viewfrontmostapp, 'appSymbol)
 			end;
 		l1
 	end,
 	transportInfoForm: @protoTransportheader,
 	preferencesForm: @protoTransportPrefs,
 	GetNameText: func(a1, a2, a3) begin
-		local l1;
-		(if (l1 := GetDataDefs(addressingClass)) then (text := l1:GetRoutingTitle(a1, a2, a3)))
+		local dataDefs;
+		(if (dataDefs := GetDataDefs(addressingClass)) then (text := dataDefs:GetRoutingTitle(a1, a2, a3)))
 	end,
 	statusSetup: nil,
-	normalizeAddress: func(a1) begin
-		local l1, l2, l3;
-		if (not IsString((l1 := GetDataDefs('|nameRef.email|):Get(a1, 'email, nil)))) then begin
-				return l1
+	normalizeAddress: func(value) begin
+		local email, cls, l3;
+		if (not IsString((email := GetDataDefs('|nameRef.email|):Get(value, 'email, nil)))) then begin
+				return email
 			end;
-		l2 := ClassOf(l1);
-		if (if IsArray(addressSymbols) then LSearch(addressSymbols, l2, 0, '|=|, nil)) then begin
-				return l1
+		cls := ClassOf(email);
+		if (if IsArray(addressSymbols) then LSearch(addressSymbols, cls, 0, '|=|, nil)) then begin
+				return email
 			end;
-		if (not (l3 := (if IsFrame(translate) then translate.(l2)))) then begin
-				l3 := EmailSystems.emailInternet.(l2)
+		if (not (l3 := (if IsFrame(translate) then translate.(cls)))) then begin
+				l3 := EmailSystems.emailInternet.(cls)
 			end;
 		if l3 then begin
 				if IsFunction(l3) then begin
-						l1 := call l3 with (l1)
+						email := call l3 with (email)
 					end else begin
-						if (not StrPos(l1, l3, 0)) then begin
-								l1 := Stringer([Array: l1, l3])
+						if (not StrPos(email, l3, 0)) then begin
+								email := Stringer([Array: email, l3])
 							end
 					end
 			end;
-		l1
+		email
 	end,
-	GetItemTime: func(a1) begin
-		Stringer([Array: ShortDate(a1.timestamp), " ", HourMinute(a1.timestamp)])
+	GetItemTime: func(target) begin
+		Stringer([Array: ShortDate(target.timestamp), " ", HourMinute(target.timestamp)])
 	end,
 	translate: nil,
-	SetStatusDialog: func(a1, a2, a3) begin
-		local l1, l2, l3, l4;
-		l1 := self:UpdateStatusSlots(a1, a2, a3);
+	SetStatusDialog: func(status2, a2, frame2) begin
+		local updateStatusSlots, l2, l3, l4;
+		updateStatusSlots := self:UpdateStatusSlots(status2, a2, frame2);
 		l2 := (if statusDialog then statusDialog.viewCObject);
 		l3 := (if self:GetConfig('autoStatus) then (not manualStatus));
 		l4 := (status = 'idle);
-		(if (if (if (if l3 then (not l2)) then (not l4)) then (not userClosedStatus)) then self:UpdateStatusDialog(l1) else (if (if (if (not manualStatus) then l2) then l4) then self:CloseStatusDialog(nil) else (if (l2 or (if manualStatus then (not userClosedStatus))) then self:UpdateStatusDialog(l1))))
+		(if (if (if (if l3 then (not l2)) then (not l4)) then (not userClosedStatus)) then self:UpdateStatusDialog(updateStatusSlots) else (if (if (if (not manualStatus) then l2) then l4) then self:CloseStatusDialog(nil) else (if (l2 or (if manualStatus then (not userClosedStatus))) then self:UpdateStatusDialog(updateStatusSlots))))
 	end,
 	routingSlip: @protoFullRouteSlip,
-	SetStatus: func(a1, a2) begin
-		self:SetStatusDialog(a1, nil, a2)
+	SetStatus: func(text, frame2) begin
+		self:SetStatusDialog(text, nil, frame2)
 	end,
 	UpdateItem: func(a1) begin
 		GetRoot().(owner):itemchanged(a1, true)

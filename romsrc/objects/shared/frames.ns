@@ -25,8 +25,8 @@ entryLine := {
 	viewJustify: 8388800,
 	viewFont: tsHWFont + tsSize(12),
 	viewFormat: vfLinesGray,
-	viewChangedScript: func(a1, a2) begin
-		(if (a1 = 'text) then self:textChanged())
+	viewChangedScript: func(slot, view) begin
+		(if (slot = 'text) then self:textChanged())
 	end,
 	preallocatedContext: 'entryLine
 };
@@ -36,9 +36,9 @@ labelLine := {
 	viewFlags: vVisible + vReadOnly + vClickable,
 	viewFormat: vfRound(3),
 	viewJustify: 8388608,
-	viewClickScript: func(a1) begin
-		(if (if (not self:labelClick(a1)) then labelCommands) then begin
-				if self:TrackHilite(a1) then begin
+	viewClickScript: func(unit) begin
+		(if (if (not self:labelClick(unit)) then labelCommands) then begin
+				if self:TrackHilite(unit) then begin
 						self:Popit()
 					end;
 				true
@@ -75,8 +75,8 @@ SoundProgressSlider := {
 	PauseSlider: func() begin
 		(elapsedTime := (TimeInSeconds() - startSeconds))
 	end,
-	SetPlayStart: func(a1) begin
-		if ((playTime := a1) < 1) then begin
+	SetPlayStart: func(playingTime) begin
+		if ((playTime := playingTime) < 1) then begin
 				playTime := 1
 			end;
 		startSeconds := (TimeInSeconds() - elapsedTime);
@@ -91,8 +91,8 @@ SoundProgressSlider := {
 	getElapsedTime: func() begin
 		(if (elapsedTime > 0) then elapsedTime else (TimeInSeconds() - startSeconds))
 	end,
-	SetAndUpdate: func(a1) begin
-		viewValue := a1;
+	SetAndUpdate: func(maxValue) begin
+		viewValue := maxValue;
 		self:Dirty();
 		RefreshViews();
 		(elapsedTime := 0)
@@ -132,8 +132,8 @@ protoLatitudePickerItem := {
 		inherited:Advance((-2 * value))
 	end,
 	increment: 0,
-	GetIndex: func(a1) begin
-		(if (a1 >= 0) then 0 else 1)
+	GetIndex: func(value) begin
+		(if (value >= 0) then 0 else 1)
 	end,
 	viewSetupFormScript: func() begin
 		(digits := compass)
@@ -148,8 +148,8 @@ protoLatitudePickerItem_2 := {
 		inherited:Advance((if (value < 0) then (-a1) else a1))
 	end,
 	increment: 1,
-	GetIndex: func(a1) begin
-		(abs(a1) mod 10)
+	GetIndex: func(value) begin
+		(abs(value) mod 10)
 	end,
 	nextDigit: 'minutes10,
 	_proto: @protoDigit
@@ -162,8 +162,8 @@ minutes10 := {
 		inherited:Advance((if (value < 0) then (-a1) else a1))
 	end,
 	increment: 10,
-	GetIndex: func(a1) begin
-		((abs(a1) mod 60) div 10)
+	GetIndex: func(value) begin
+		((abs(value) mod 60) div 10)
 	end,
 	nextDigit: 'hours1,
 	preallocatedContext: 'minutes10,
@@ -177,8 +177,8 @@ hours1 := {
 		inherited:Advance((if (value < 0) then (-a1) else a1))
 	end,
 	increment: 60,
-	GetIndex: func(a1) begin
-		((abs(a1) div 60) mod 10)
+	GetIndex: func(value) begin
+		((abs(value) div 60) mod 10)
 	end,
 	nextDigit: 'hours10,
 	preallocatedContext: 'hours1,
@@ -192,8 +192,8 @@ hours10 := {
 		inherited:Advance((if (value < 0) then (-a1) else a1))
 	end,
 	increment: 600,
-	GetIndex: func(a1) begin
-		((abs(a1) div 600) mod 10)
+	GetIndex: func(value) begin
+		((abs(value) div 600) mod 10)
 	end,
 	preallocatedContext: 'hours10,
 	_proto: @protoDigit
@@ -215,18 +215,18 @@ scrollers := {
 	ScrollRect: nil,
 	DataRect: nil,
 	ViewRect: nil,
-	viewScroll2DScript: func(a1, a2) begin
-		local l1, l2;
-		l1 := self:Parent();
-		if (self:GetArrow(a1) = 'more) then begin
-				l2 := Ticks();
-				l1:Scroll(a1);
+	viewScroll2DScript: func(arrowDirection, a2) begin
+		local parent, ticks2;
+		parent := self:Parent();
+		if (self:GetArrow(arrowDirection) = 'more) then begin
+				ticks2 := Ticks();
+				parent:Scroll(arrowDirection);
 				RefreshViews();
-				if ((l2 := (Ticks() - l2)) < scrollingSleepTime) then begin
-						Sleep((scrollingSleepTime - l2))
+				if ((ticks2 := (Ticks() - ticks2)) < scrollingSleepTime) then begin
+						Sleep((scrollingSleepTime - ticks2))
 					end
 			end;
-		l1:SetScrollers()
+		parent:SetScrollers()
 	end,
 	preallocatedContext: 'scrollers,
 	_proto: @protoUpDownScroller
@@ -240,7 +240,7 @@ snoozeNotificationItem := {
 	viewSetupFormScript: func() begin
 		(self.text := Stringer([Array: $\uFC05, overview]))
 	end,
-	viewClickScript: func(a1) begin
+	viewClickScript: func(unit) begin
 		timeStampField:Open();
 		true
 	end,
@@ -283,19 +283,19 @@ zoneChooserProto := {
 		AddPowerOffHandler(self)
 	end,
 	deferredSetupScript: func() begin
-		local l1, l2;
-		l1 := 0;
+		local openAppleTalk2, text;
+		openAppleTalk2 := 0;
 		if formOpen then begin
 				if (not appleTalkOpen) then begin
-						l1 := OpenAppleTalk()
+						openAppleTalk2 := OpenAppleTalk()
 					end;
-				if (l1 <> 0) then begin
-						if (l1 = -12014) then begin
-								l2 := "The chooser can not be opened because AppleTalk is already in use."
+				if (openAppleTalk2 <> 0) then begin
+						if (openAppleTalk2 = -12014) then begin
+								text := "The chooser can not be opened because AppleTalk is already in use."
 							end else begin
-								l2 := ParamStr("There is a problem opening the chooser. (^0)", [Array: self:TranslateError(l1)])
+								text := ParamStr("There is a problem opening the chooser. (^0)", [Array: self:TranslateError(openAppleTalk2)])
 							end;
-						self:CloseAndNotify(l2)
+						self:CloseAndNotify(text)
 					end else begin
 						appleTalkOpen := true
 					end
@@ -314,10 +314,10 @@ zoneChooserProto := {
 		(nbpLookupName := nil)
 	end,
 	selectCellInTable: func() begin
-		local l1;
-		(if (selectedIndex <> nil) then (if (if ((l1 := theTable:ChildViewFrames()) <> nil) then (selectedIndex < Length(l1))) then theTable:selectThisCell(l1[selectedIndex])))
+		local childViewFrames;
+		(if (selectedIndex <> nil) then (if (if ((childViewFrames := theTable:ChildViewFrames()) <> nil) then (selectedIndex < Length(childViewFrames))) then theTable:selectThisCell(childViewFrames[selectedIndex])))
 	end,
-	CloseAndNotify: func(a1) begin
+	CloseAndNotify: func(text) begin
 		formOpen := nil;
 		if chooserNBPTable then begin
 				chooserNBPTable:stopScript()
@@ -326,8 +326,8 @@ zoneChooserProto := {
 				CloseAppleTalk();
 				appleTalkOpen := nil
 			end;
-		if (a1 <> nil) then begin
-				self:Notify(3, "Chooser", a1)
+		if (text <> nil) then begin
+				self:Notify(3, "Chooser", text)
 			end;
 		base:Close()
 	end,
@@ -348,11 +348,11 @@ startupMsg_2Proto := {
 	viewBounds: {left: 0, top: 0, right: 115, bottom: 13},
 	text: uCardPositionAlertButton,
 	viewSetupFormScript: func() begin
-		local l1;
+		local strFontWidth2;
 		(if (lookForText exists) then begin
 				self.text := ParamStr("Looking for ^0...", [Array: lookForText]);
-				l1 := StrFontWidth(self.text, viewFont);
-				(self.viewBounds := RelBounds(0, 0, l1, 13))
+				strFontWidth2 := StrFontWidth(self.text, viewFont);
+				(self.viewBounds := RelBounds(0, 0, strFontWidth2, 13))
 			end)
 	end
 };
@@ -361,12 +361,12 @@ zoneChooserProto_2 := {
 	_proto: @protoStaticText,
 	text: uCardPositionAlertButton,
 	viewSetupFormScript: func() begin
-		local l1, l2;
+		local strFontWidth2, viewBounds;
 		(if (headerText exists) then begin
 				text := ParamStr("Select a ^0", [Array: headerText]);
-				l2 := self.viewBounds;
-				l1 := StrFontWidth(self.text, viewFont);
-				(self.viewBounds := RelBounds(l2.left, l2.top, l1, ((l2.bottom - l2.top) + 1)))
+				viewBounds := self.viewBounds;
+				strFontWidth2 := StrFontWidth(self.text, viewFont);
+				(self.viewBounds := RelBounds(viewBounds.left, viewBounds.top, strFontWidth2, ((viewBounds.bottom - viewBounds.top) + 1)))
 			end)
 	end
 };
@@ -379,9 +379,9 @@ theTable_2Proto := {
 	def: @protoTableDef,
 	entryProto: {
 		_proto: @protoTableEntry,
-		viewClickScript: func(a1) begin
+		viewClickScript: func(unit) begin
 			timeoutCounter := 300000;
-			inherited:viewClickScript(a1);
+			inherited:viewClickScript(unit);
 			(selectedIndex := (self.vIndex - vOrg))
 		end
 	},
@@ -402,7 +402,7 @@ theTable_2Proto := {
 		return idleFrequency
 	end,
 	CopyNBPNamesToTable: func() begin
-		local l1, l2;
+		local l1, stringInArray;
 		def.tabValues := NBPGetNames(nbpCookie);
 		Sort(def.tabValues, '|str<|, nil);
 		def.tabDown := (if (def.tabValues <> nil) then Length(def.tabValues) else 0);
@@ -413,13 +413,13 @@ theTable_2Proto := {
 				nbpScroller:Hide()
 			end;
 		if (currentSelection <> nil) then begin
-				if ((l2 := FindStringInArray(def.tabValues, currentSelection)) <> nil) then begin
-						if (l2 >= visibleItems) then begin
-								vOrg := min(l2, (def.tabDown - visibleItems))
+				if ((stringInArray := FindStringInArray(def.tabValues, currentSelection)) <> nil) then begin
+						if (stringInArray >= visibleItems) then begin
+								vOrg := min(stringInArray, (def.tabDown - visibleItems))
 							end else begin
 								vOrg := 0
 							end;
-						selectedIndex := (l2 - vOrg);
+						selectedIndex := (stringInArray - vOrg);
 						nbpScroller.yPos := vOrg;
 						l1 := true
 					end
@@ -432,32 +432,32 @@ theTable_2Proto := {
 		self:selectCellInTable()
 	end,
 	viewIdleScript: func() begin
-		local l1, l2;
-		l2 := 0;
-		l1 := 0;
+		local nBPGetCount2, getIdleFrequency;
+		getIdleFrequency := 0;
+		nBPGetCount2 := 0;
 		if formOpen then begin
 				currentChecks := (currentChecks + 1);
 				if nbpCookie then begin
-						l1 := NBPGetCount(nbpCookie)
+						nBPGetCount2 := NBPGetCount(nbpCookie)
 					end;
-				if (l1 > currentNames) then begin
+				if (nBPGetCount2 > currentNames) then begin
 						if Visible(startupMsg) then begin
 								startupMsg:Hide()
 							end;
-						currentNames := l1;
+						currentNames := nBPGetCount2;
 						self:CopyNBPNamesToTable()
 					end;
 				if (currentChecks > 20) then begin
-						l2 := self:getIdleFrequency(2)
+						getIdleFrequency := self:getIdleFrequency(2)
 					end else begin
 						if (currentChecks > 4) then begin
-								l2 := self:getIdleFrequency(1)
+								getIdleFrequency := self:getIdleFrequency(1)
 							end else begin
-								l2 := self:getIdleFrequency(0)
+								getIdleFrequency := self:getIdleFrequency(0)
 							end
 					end
 			end;
-		return l2
+		return getIdleFrequency
 	end,
 	viewSetupFormScript: func() begin
 		currentNames := 0;
@@ -473,7 +473,7 @@ theTable_2Proto := {
 		(if (startSelection <> nil) then (currentSelection := GetNames(startSelection)))
 	end,
 	startScript: func() begin
-		local l1, l2;
+		local text, l2;
 		def.tabValues := nil;
 		selectedIndex := nil;
 		selectedCells := [Array: ];
@@ -481,13 +481,13 @@ theTable_2Proto := {
 		nbpScroller.yPos := 0;
 		nbpScroller:AdjustArrows();
 		if (currentZone = nil) then begin
-				l1 := "*"
+				text := "*"
 			end else begin
-				l1 := currentZone
+				text := currentZone
 			end;
 		l2 := 0;
 		if (not nbpCookie) then begin
-				nbpCookie := NBPStart(Stringer([Array: nbpLookupName, l1]))
+				nbpCookie := NBPStart(Stringer([Array: nbpLookupName, text]))
 			end else begin
 				l2 := -12310
 			end;
@@ -507,21 +507,21 @@ theTable_2Proto := {
 		return l2
 	end,
 	stopScript: func() begin
-		local l1;
-		l1 := 0;
+		local nBPStop2;
+		nBPStop2 := 0;
 		if nbpCookie then begin
 				theTable:SetupIdle(0);
-				l1 := NBPStop(nbpCookie);
+				nBPStop2 := NBPStop(nbpCookie);
 				nbpCookie := nil
 			end;
-		if (l1 <> 0) then begin
-				self:showError(l1)
+		if (nBPStop2 <> 0) then begin
+				self:showError(nBPStop2)
 			end;
-		return l1
+		return nBPStop2
 	end,
-	viewScroll2DScript: func(a1, a2) begin
+	viewScroll2DScript: func(arrowDirection, a2) begin
 		timeoutCounter := 300000;
-		inherited:viewScroll2DScript(a1, a2);
+		inherited:viewScroll2DScript(arrowDirection, a2);
 		RefreshViews()
 	end
 };
@@ -555,11 +555,11 @@ showBarText := {
 			self:CopyBits(leftBits, 0, 0, nil);
 			self:CopyBits(rightBits, (width - rightBits.bounds.right), 0, nil)
 		end,
-		viewHiliteScript: func(a1) begin
-			local l1, l2;
-			l1 := self:LocalBox();
-			l2 := leftHiliteBits.bounds.right;
-			self:DrawShape([Array: OffsetShape(MakeShape(leftHiliteBits), l1.left, 1), MakeRect((l1.left + l2), 0, (l1.right - l2), l1.bottom), OffsetShape(MakeShape(rightHiliteBits), (l1.right - l2), 1)], '{transferMode: 2, penPattern: 0, fillPattern: 5});
+		viewHiliteScript: func(on) begin
+			local box, right;
+			box := self:LocalBox();
+			right := leftHiliteBits.bounds.right;
+			self:DrawShape([Array: OffsetShape(MakeShape(leftHiliteBits), box.left, 1), MakeRect((box.left + right), 0, (box.right - right), box.bottom), OffsetShape(MakeShape(rightHiliteBits), (box.right - right), 1)], '{transferMode: 2, penPattern: 0, fillPattern: 5});
 			true
 		end,
 		buttonClickScript: func() begin
@@ -612,49 +612,49 @@ showBarText := {
 				end;
 			DoPopup(l6, 0, 2, self)
 		end,
-		viewClickScript: func(a1) begin
-			(if self:TrackHilite(a1) then self:buttonClickScript())
+		viewClickScript: func(unit) begin
+			(if self:TrackHilite(unit) then self:buttonClickScript())
 		end,
-		SetNewFilter: func(a1, a2, a3) begin
-			AddUndoAction('SetNewFilter, [Array: a1, a2, GetVariable(a1, a2)]);
-			SetVariable(a1, a2, a3);
+		SetNewFilter: func(targetView, a2, folderListItem) begin
+			AddUndoAction('SetNewFilter, [Array: targetView, a2, GetVariable(targetView, a2)]);
+			SetVariable(targetView, a2, folderListItem);
 			self:hilite(nil);
 			self:SyncView();
-			(if (a1:NewFilingFilter exists) then a1:NewFilingFilter(a2) else a1:?FilterChanged())
+			(if (targetView:NewFilingFilter exists) then targetView:NewFilingFilter(a2) else targetView:?FilterChanged())
 		end,
-		pickActionScript: func(a1) begin
-			local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
-			l2 := (l1 := self:GetTargetInfo('Filing)).targetView;
-			l3 := GetStores();
-			l7 := (((l6 := ((l5 := (((l4 := 2) + Length(folderList)) - 1)) + 4)) + Length(l3)) - 1);
-			l8 := GetVariable(l2, 'labelsFilter);
-			l9 := GetVariable(l2, 'storesFilter);
-			l10 := l8;
-			l11 := l9;
-			if (a1 = 0) then begin
-					l10 := nil
+		pickActionScript: func(index) begin
+			local filing, l2, stores, l4, l5, l6, l7, value, value2, folderListItem, value22;
+			l2 := (filing := self:GetTargetInfo('Filing)).targetView;
+			stores := GetStores();
+			l7 := (((l6 := ((l5 := (((l4 := 2) + Length(folderList)) - 1)) + 4)) + Length(stores)) - 1);
+			value := GetVariable(l2, 'labelsFilter);
+			value2 := GetVariable(l2, 'storesFilter);
+			folderListItem := value;
+			value22 := value2;
+			if (index = 0) then begin
+					folderListItem := nil
 				end else begin
-					if (a1 <= l5) then begin
-							l10 := folderList[(a1 - l4)]
+					if (index <= l5) then begin
+							folderListItem := folderList[(index - l4)]
 						end else begin
-							if (a1 = (l5 + 2)) then begin
-									l10 := '_all
+							if (index = (l5 + 2)) then begin
+									folderListItem := '_all
 								end else begin
-									if (a1 <= l7) then begin
-											l11 := l3[(a1 - l6)]
+									if (index <= l7) then begin
+											value22 := stores[(index - l6)]
 										end else begin
-											if (a1 = (l7 + 2)) then begin
-													l11 := nil
+											if (index = (l7 + 2)) then begin
+													value22 := nil
 												end
 										end
 								end
 						end
 				end;
-			if (l10 <> l8) then begin
-					self:SetNewFilter(l2, 'labelsFilter, l10)
+			if (folderListItem <> value) then begin
+					self:SetNewFilter(l2, 'labelsFilter, folderListItem)
 				end;
-			if (l11 <> l9) then begin
-					self:SetNewFilter(l2, 'storesFilter, l11)
+			if (value22 <> value2) then begin
+					self:SetNewFilter(l2, 'storesFilter, value22)
 				end;
 			self:pickCancelledScript()
 		end,
@@ -682,11 +682,11 @@ scrollList := {
 	useMultipleSelections: true,
 	useScrollers: true,
 	checkAll: nil,
-	HiliteLine: func(a1) begin
+	HiliteLine: func(temp) begin
 		if (prefsCache.(prefsSlot) = 'all) then begin
 				prefsCache.(prefsSlot) := 'Partial
 			end;
-		inherited:HiliteLine(a1);
+		inherited:HiliteLine(temp);
 		(if (Length(selectedItems) = Length(ListItems)) then (checkAll := true) else (checkAll := nil))
 	end,
 	viewQuitScript: func() begin
@@ -698,17 +698,17 @@ scrollList := {
 	stashItems: stashItems,
 	viewSetupFormScript: func() begin
 		inherited:?viewSetupFormScript();
-		if (l1 := soupNameList) then begin
-				l3 := LSearch(l1, 'otherFrame, 0, '|=|, 'class)
+		if (soupNameList2 := soupNameList) then begin
+				pos := LSearch(soupNameList2, 'otherFrame, 0, '|=|, 'class)
 			end;
-		if l3 then begin
-				l2 := l1[l3];
-				RemoveSlot(l1, l3);
-				local l1;
-				local l2;
-				local l3;
-				(foreach l4 in l2.soups do begin
-						BInsert(l1, {name: l4, soups: [Array: l4]}, '|str<|, '[pathExpr: name], nil)
+		if pos then begin
+				soupNameList2Item := soupNameList2[pos];
+				RemoveSlot(soupNameList2, pos);
+				local soupNameList2;
+				local soupNameList2Item;
+				local pos;
+				(foreach item in soupNameList2Item.soups do begin
+						BInsert(soupNameList2, {name: item, soups: [Array: item]}, '|str<|, '[pathExpr: name], nil)
 					end)
 			end;
 		self.ListItems := [Array: ];
@@ -726,17 +726,17 @@ prefsSlipProtoItem := {
 	viewBounds: {left: 0, top: 7, right: 36, bottom: 20},
 	text: all,
 	buttonClickScript: func() begin
-		local l1;
-		if (not (l1 := scrollList).checkAll) then begin
+		local scrollList2;
+		if (not (scrollList2 := scrollList).checkAll) then begin
 				prefsCache.(prefsSlot) := 'all
 			end else begin
 				prefsCache.(prefsSlot) := 'Partial;
 				prefsCache.(prefsArray) := [Array: ]
 			end;
-		l1.checkAll := (not l1.checkAll);
+		scrollList2.checkAll := (not scrollList2.checkAll);
 		EntryChangeXmit(prefsCache, 'backup);
-		l1:figureAllItems(l1.ListItems, l1.selectedItems);
-		l1:RedoChildren()
+		scrollList2:figureAllItems(scrollList2.ListItems, scrollList2.selectedItems);
+		scrollList2:RedoChildren()
 	end,
 	_proto: @protoTextButton
 };
@@ -745,24 +745,24 @@ touchtonePadProto := {
 	keySound: nil,
 	typewriter: @typewriter,
 	newt_feature: true,
-	keyPressScript: func(a1) begin
-		local l1;
-		if (a1 = $*) then begin
-				l1 := 10
+	keyPressScript: func(char2) begin
+		local oRD2;
+		if (char2 = $*) then begin
+				oRD2 := 10
 			end else begin
-				if (a1 = $#) then begin
-						l1 := 11
+				if (char2 = $#) then begin
+						oRD2 := 11
 					end else begin
-						if (if ((l1 := ORD(a1)) >= 48) then (l1 <= 57)) then begin
-								l1 := (l1 - 48)
+						if (if ((oRD2 := ORD(char2)) >= 48) then (oRD2 <= 57)) then begin
+								oRD2 := (oRD2 - 48)
 							end else begin
-								l1 := nil
+								oRD2 := nil
 							end
 					end
 			end;
-		if (if l1 then (not GetLocale().speakerless)) then begin
+		if (if oRD2 then (not GetLocale().speakerless)) then begin
 				if (GetVolume() > 0) then begin
-						PlaySoundAtVolume(@dialTones[l1], 4)
+						PlaySoundAtVolume(@dialTones[oRD2], 4)
 					end
 			end else begin
 				playsound(typewriter)
@@ -828,12 +828,12 @@ _previewButtonProto := {
 		(viewBounds := DeepClone(viewBounds)).top := (((envelopeHeight + bottomIndent) - 19) - 2);
 		(viewBounds.bottom := (viewBounds.top + 13))
 	end,
-	preview: func(a1) begin
-		local l1, l2;
-		(if (transport:SetupFormat(a1) <> nil) then self:Notify(3, "Print", "The print format for this item is missing") else begin
-				GetCurrentFormat(a1):LastChanceToSetup(a1);
-				(l2 := BuildContext(@pagePreviewForm)).fields := a1;
-				l2:Open()
+	preview: func(fields) begin
+		local l1, context;
+		(if (transport:SetupFormat(fields) <> nil) then self:Notify(3, "Print", "The print format for this item is missing") else begin
+				GetCurrentFormat(fields):LastChanceToSetup(fields);
+				(context := BuildContext(@pagePreviewForm)).fields := fields;
+				context:Open()
 			end)
 	end,
 	buttonClickScript: func() begin
@@ -859,19 +859,19 @@ paperroll := {
 	version: 1,
 	metadata: nil,
 	MakeNewEntry: func() begin
-		local l1;
-		(l1 := Clone(@protoNote)).timestamp := Time();
-		l1
+		local copy;
+		(copy := Clone(@protoNote)).timestamp := Time();
+		copy
 	end,
-	StringExtract: func(a1, a2) begin
-		local l1;
-		if StrEqual((l1 := (if (if a1.data then (Length(a1.data) > 0)) then ExtractData(a1.data, "...", 50) else "-empty-")), "") then begin
-				l1 := "-empty-"
+	StringExtract: func(entry, nLines) begin
+		local text;
+		if StrEqual((text := (if (if entry.data then (Length(entry.data) > 0)) then ExtractData(entry.data, "...", 50) else "-empty-")), "") then begin
+				text := "-empty-"
 			end;
-		(if a1.title then Stringer([Array: a1.title, " ", l1]) else l1)
+		(if entry.title then Stringer([Array: entry.title, " ", text]) else text)
 	end,
-	TextScript: func(a1, a2) begin
-		notesText(a2.data)
+	TextScript: func(entry, target) begin
+		notesText(target.data)
 	end
 };
 
@@ -881,10 +881,10 @@ viewonly := {
 	symbol: 'viewonly,
 	protection: 'public,
 	viewSetupFormScript: func() begin
-		local l1, l2, l3;
-		if (l1 := self:MinimalBounds(target)) then begin
-				l2 := self:Parent():LocalBox();
-				if ((l3 := (l1.right - l2.right)) > 0) then begin
+		local minimalBounds, box, l3;
+		if (minimalBounds := self:MinimalBounds(target)) then begin
+				box := self:Parent():LocalBox();
+				if ((l3 := (minimalBounds.right - box.right)) > 0) then begin
 						viewBounds := SetBounds(0, 0, l3, 0)
 					end
 			end;
@@ -907,25 +907,25 @@ protoPensizeMenuProto := {
 	text: nil,
 	pop: nil,
 	slot: nil,
-	pickActionScript: func(a1) begin
-		base.(slot) := popup[a1].(slot);
+	pickActionScript: func(index) begin
+		base.(slot) := popup[index].(slot);
 		self:fontChanged(true);
-		inherited:pickActionScript(a1)
+		inherited:pickActionScript(index)
 	end,
 	buttonClickScript: func() begin
-		if (if (if (l1 := GetKeyView()) then l1.textFlags) then (BAnd(l1.textFlags, 24) <> 0)) then begin
+		if (if (if (keyView := GetKeyView()) then keyView.textFlags) then (BAnd(keyView.textFlags, 24) <> 0)) then begin
 				self:Notify(3, "Styles", "The style cannot be changed here.");
 				self:hilite(nil);
 				return nil
 			end;
 		popup := Clone(pop);
-		if (l2 := self:setup()) then begin
-				local l1;
-				local l2;
-				(foreach l3, l4 in popup do begin
-						if (l4.(slot) = l2) then begin
-								popup[l3] := Clone(l4);
-								popup[l3].mark := $\uFC0B;
+		if (setup := self:setup()) then begin
+				local keyView;
+				local setup;
+				(foreach key, value in popup do begin
+						if (value.(slot) = setup) then begin
+								popup[key] := Clone(value);
+								popup[key].mark := $\uFC0B;
 								break
 							end
 					end)
@@ -950,14 +950,14 @@ calllog := {
 		(l1 := GetRoot().(taskSlip):NewItem(nil)).fromCallApp := true;
 		l1
 	end,
-	StringExtract: func(a1, a2) begin
-		local l1, l2;
-		l1 := ShortDate(a1.timestamp);
-		l2 := (if a1.hangupreason then '{lineBusy: "Line Busy", noAnswer: "No Answer", leftMessage: "Left Message", followup: "Followup Needed", completed: "Call Completed"}.(a1.hangupreason));
-		(if (a2 = 1) then (if StrFilled(a1.title) then a1.title else Stringer([Array: a1.name, " ", (if l2 then l2 else Stringer([Array: a1.phoneNumber, " ", l1]))])) else Stringer([Array: a1.title, " ", a1.name, " ", a1.phoneNumber, " ", l2, " ", l1]))
+	StringExtract: func(entry, nLines) begin
+		local shortDate2, l2;
+		shortDate2 := ShortDate(entry.timestamp);
+		l2 := (if entry.hangupreason then '{lineBusy: "Line Busy", noAnswer: "No Answer", leftMessage: "Left Message", followup: "Followup Needed", completed: "Call Completed"}.(entry.hangupreason));
+		(if (nLines = 1) then (if StrFilled(entry.title) then entry.title else Stringer([Array: entry.name, " ", (if l2 then l2 else Stringer([Array: entry.phoneNumber, " ", shortDate2]))])) else Stringer([Array: entry.title, " ", entry.name, " ", entry.phoneNumber, " ", l2, " ", shortDate2]))
 	end,
-	TextScript: func(a1, a2) begin
-		Stringer([Array: ParamStr("Phone Message: ^0 ^1 on ^2", [Array: a2.name, a2.phoneNumber, DateNTime(a2.timestamp)]), "\n\n", notesText(a2.notes)])
+	TextScript: func(entry, target) begin
+		Stringer([Array: ParamStr("Phone Message: ^0 ^1 on ^2", [Array: target.name, target.phoneNumber, DateNTime(target.timestamp)]), "\n\n", notesText(target.notes)])
 	end
 };
 
@@ -979,16 +979,16 @@ default_2Proto := {
 		picker: func() begin
 			@protoPeoplePopup:New('|nameRef.phone|, nil, self, nil)
 		end,
-		pickActionScript: func(a1) begin
-			target.toRef := a1;
-			inherited:pickActionScript(a1)
+		pickActionScript: func(index) begin
+			target.toRef := index;
+			inherited:pickActionScript(index)
 		end,
 		_proto: @newtSmartNameFilter
 	},
 	viewIdleScript: func() begin
-		local l1, l2;
+		local toRefItem, get;
 		if (if target.toRef then (Length(target.toRef) > 0)) then begin
-				if ((not (l2 := GetDataDefs('|nameRef.phone|):Get((l1 := target.toRef[0]), 'name, 'text))) or (not (if StrFilled(target.name) then StrEqual(l2, target.name)))) then begin
+				if ((not (get := GetDataDefs('|nameRef.phone|):Get((toRefItem := target.toRef[0]), 'name, 'text))) or (not (if StrFilled(target.name) then StrEqual(get, target.name)))) then begin
 						target.toRef := nil
 					end
 			end;
@@ -1006,75 +1006,75 @@ default_2Proto_2 := {
 	path: 'phoneNumber,
 	kind: 'workPhone,
 	flavor: {
-		EntryToPath: func(a1) begin
+		EntryToPath: func(resolveEntryAlias) begin
 			target.(path) := nil;
 			country := nil;
-			l1 := nil;
-			if (if a1 then a1.phones) then begin
-					l2 := 0;
+			list := nil;
+			if (if resolveEntryAlias then resolveEntryAlias.phones) then begin
+					key2 := 0;
 					l3 := (if (if target.toRef then (Length(target.toRef) > 0)) then target.toRef[0]);
-					local l1;
-					local l2;
+					local list;
+					local key2;
 					local l3;
-					(foreach l4, l5 in a1.phones do begin
-							local l7, l8;
-							if StrFilled(l5) then begin
-									l7 := ClassOf(l5);
-									l8 := {item: ParamStr("^0 ^?1(^1)||", [Array: MakeDisplayPhone(l5), PhoneTypes.phoneText.(l7)]), value: l5, class: l7, country: a1.country};
+					(foreach key, value in resolveEntryAlias.phones do begin
+							local cls, frame2;
+							if StrFilled(value) then begin
+									cls := ClassOf(value);
+									frame2 := {item: ParamStr("^0 ^?1(^1)||", [Array: MakeDisplayPhone(value), PhoneTypes.phoneText.(cls)]), value: value, class: cls, country: resolveEntryAlias.country};
 									if (if l3 then l3.phone) then begin
-											if StrEqual(l3.phone, l5) then begin
-													baseLine.lastPicked := (l2 := l4);
-													l8.mark := $\uFC0B
+											if StrEqual(l3.phone, value) then begin
+													baseLine.lastPicked := (key2 := key);
+													frame2.mark := $\uFC0B
 												end
 										end else begin
-											if (l7 = kind) then begin
-													baseLine.lastPicked := (l2 := l4);
-													l8.mark := $\uFC0B
+											if (cls = kind) then begin
+													baseLine.lastPicked := (key2 := key);
+													frame2.mark := $\uFC0B
 												end
 										end;
-									if (not l1) then begin
-											l1 := [Array: ]
+									if (not list) then begin
+											list := [Array: ]
 										end;
-									AddArraySlot(l1, l8)
+									AddArraySlot(list, frame2)
 								end
 						end);
-					if (Length(a1.phones) > l2) then begin
-							target.(path) := a1.phones[l2];
-							currPhoneType := ClassOf(a1.phones[l2]);
-							country := a1.country
+					if (Length(resolveEntryAlias.phones) > key2) then begin
+							target.(path) := resolveEntryAlias.phones[key2];
+							currPhoneType := ClassOf(resolveEntryAlias.phones[key2]);
+							country := resolveEntryAlias.country
 						end
 				end;
-			if (if l1 then (Length(l1) = 1)) then begin
-					l1 := nil
+			if (if list then (Length(list) = 1)) then begin
+					list := nil
 				end;
-			self:SetLabelCommands(l1)
+			self:SetLabelCommands(list)
 		end,
 		_proto: @newtPhoneFilter
 	},
-	pickActionScript: func(a1) begin
-		local l1;
-		if HasPath(labelCommands[a1], 'id) then begin
-				filter:ResolveItem(labelCommands[a1]);
+	pickActionScript: func(index) begin
+		local labelCommand;
+		if HasPath(labelCommands[index], 'id) then begin
+				filter:ResolveItem(labelCommands[index]);
 				self:hilite(nil)
 			end else begin
-				if (if filter.picker then (a1 = (Length(labelCommands) - 1))) then begin
+				if (if filter.picker then (index = (Length(labelCommands) - 1))) then begin
 						filter:picker()
 					end else begin
-						if (not filter:?ChooseItem(a1)) then begin
+						if (not filter:?ChooseItem(index)) then begin
 								if lastPicked then begin
 										labelCommands[lastPicked].mark := nil
 									end;
-								if IsFrame((l1 := labelCommands[a1])) then begin
-										l1.mark := $\uFC0B;
-										l1 := (if l1.value then l1.value else l1.item)
+								if IsFrame((labelCommand := labelCommands[index])) then begin
+										labelCommand.mark := $\uFC0B;
+										labelCommand := (if labelCommand.value then labelCommand.value else labelCommand.item)
 									end;
-								lastPicked := a1;
-								self:UpdateText(Clone(l1));
+								lastPicked := index;
+								self:UpdateText(Clone(labelCommand));
 								self:hilite(nil)
 							end
 					end
 			end;
-		(if (currPhoneType := labelCommands[a1].class) then begin
+		(if (currPhoneType := labelCommands[index].class) then begin
 				if target.(path) then begin
 						SetClass(target.(path), currPhoneType)
 					end;
@@ -1094,11 +1094,11 @@ when := {
 	viewJustify: vjParentFullH + vjSiblingBottomV,
 	label: "When",
 	path: 'callDate,
-	jamFromEntry: func(a1) begin
+	jamFromEntry: func(resolveEntryAlias) begin
 		if (not target.toRef) then begin
 				target.toRef := [Array: ]
 			end;
-		(if (Length(target.toRef) < 1) then AddArraySlot(target.toRef, GetDataDefs('|nameRef.phone|):MakeNameRef(a1, '|nameRef.phone|)))
+		(if (Length(target.toRef) < 1) then AddArraySlot(target.toRef, GetDataDefs('|nameRef.phone|):MakeNameRef(resolveEntryAlias, '|nameRef.phone|)))
 	end,
 	_proto: @newtLabelInputLine
 };
@@ -1122,14 +1122,14 @@ default := {
 	symbol: 'default,
 	name: phoneMessage,
 	viewDefHeight: 140,
-	MinimalBounds: func(a1) begin
-		if a1.notes then begin
-				local l1;
-				(foreach l2 in a1.notes do begin
-						l1 := UnionRect(l1, l2.viewBounds)
+	MinimalBounds: func(target) begin
+		if target.notes then begin
+				local unionRect2;
+				(foreach item in target.notes do begin
+						unionRect2 := UnionRect(unionRect2, item.viewBounds)
 					end)
 			end;
-		l1
+		unionRect2
 	end
 };
 
@@ -1163,10 +1163,10 @@ viewonly_2 := {
 	protection: 'public,
 	rollScrolling: true,
 	viewSetupFormScript: func() begin
-		local l1, l2, l3;
-		if (l1 := self:MinimalBounds(target)) then begin
-				l2 := self:Parent():LocalBox();
-				if ((l3 := (l1.right - l2.right)) > 0) then begin
+		local minimalBounds, box, l3;
+		if (minimalBounds := self:MinimalBounds(target)) then begin
+				box := self:Parent():LocalBox();
+				if ((l3 := (minimalBounds.right - box.right)) > 0) then begin
 						viewBounds := SetBounds(0, 0, l3, 0)
 					end
 			end;
@@ -1196,8 +1196,8 @@ cLogFormat := {
 		{_proto: when, access: 'readOnly}
 	],
 	headerHeight: 110,
-	TextScript: func(a1, a2) begin
-		Stringer([Array: a2.name, " ", a2.phoneNumber, $\n, a2.notes])
+	TextScript: func(entry, target) begin
+		Stringer([Array: target.name, " ", target.phoneNumber, $\n, target.notes])
 	end,
 	_proto: @protoLetterFormat
 };
@@ -1212,18 +1212,18 @@ cribNoteProto := {
 	SliderWidth: 12,
 	transformStyle: {transform: [|Array|: 13, 1]},
 	viewSetupFormScript: func() begin
-		local l1;
-		(iconShape := (l1 := GetMeetingTypeInfo(realData)).shape)
+		local meetingTypeInfo;
+		(iconShape := (meetingTypeInfo := GetMeetingTypeInfo(realData)).shape)
 	end,
 	viewDrawScript: func() begin
 		(if iconShape then self:DrawShape(iconShape, transformStyle))
 	end,
-	viewClickScript: func(a1) begin
-		local l1, l2, l3, l4;
-		l1 := GetPoint(0, a1);
-		l2 := GetPoint(1, a1);
-		l4 := ((l3 := self:GlobalBox()).left + SliderWidth);
-		(if (if (if (if (l1 >= l4) then (l1 <= (l4 + ShapeBounds(iconShape).right))) then (l2 >= l3.top)) then (l2 <= (l3.top + 16))) then begin
+	viewClickScript: func(unit) begin
+		local pt, pt2, box, l4;
+		pt := GetPoint(0, unit);
+		pt2 := GetPoint(1, unit);
+		l4 := ((box := self:GlobalBox()).left + SliderWidth);
+		(if (if (if (if (pt >= l4) then (pt <= (l4 + ShapeBounds(iconShape).right))) then (pt2 >= box.top)) then (pt2 <= (box.top + 16))) then begin
 				calendar.selectedMeeting := realData;
 				isNewMeeting := nil;
 				self:OpenMeetingSlip(selectedMeeting, nil, nil);
@@ -1294,13 +1294,13 @@ turnToPage := {
 		self:SetupIdle(1800)
 	end,
 	textChanged: func() begin
-		local l1, l2;
+		local floor2, number;
 		(if (not StrEqual(text, "")) then begin
-				l1 := 0;
-				if (l2 := StringToNumber(text)) then begin
-						l1 := floor(l2)
+				floor2 := 0;
+				if (number := StringToNumber(text)) then begin
+						floor2 := floor(number)
 					end;
-				(if (if (l1 > 0) then (l1 <= maxValue)) then self:NumberEntered(l1) else self:Parent():BadText())
+				(if (if (floor2 > 0) then (floor2 <= maxValue)) then self:NumberEntered(floor2) else self:Parent():BadText())
 			end)
 	end,
 	debug: 6040,
@@ -1360,8 +1360,8 @@ proto1_2ExformentryProto := {
 		ParamStr("\u201C\u^0\u201D\u", [Array: fentry.text])
 	end,
 	where: func() begin
-		local l1;
-		(if (l1 := self:store()) then l1:GetName() else "")
+		local store;
+		(if (store := self:store()) then store:GetName() else "")
 	end,
 	size: func() begin
 		Stringer([Array: (EntrySize(self:LookupSoupPackage()) div 1024), "K"])
@@ -1373,23 +1373,23 @@ proto1_2ExformentryProto := {
 		(if IsSoupEntry(fentry) then EntryStore(fentry))
 	end,
 	LookupSoupPackage: func() begin
-		local l1, l2;
-		l1 := self:store();
-		l2 := fentry.packageName;
-		(if (if l1 then l2) then GetPackageEntry(l2, l1))
+		local store, packageName;
+		store := self:store();
+		packageName := fentry.packageName;
+		(if (if store then packageName) then GetPackageEntry(packageName, store))
 	end,
 	LookupSoupPackageAndActivate: func() begin
-		local l1;
-		(if (not (l1 := self:LookupSoupPackage())) then 'noSoupPackage else (if SetContains(ActivePackageList, l1.pkgRef) then 'alreadyActive else (if SafeActivatePackage(l1.pkgRef, l1.packageName, EntryStore(l1)) then 'justActivated)))
+		local soupPackage;
+		(if (not (soupPackage := self:LookupSoupPackage())) then 'noSoupPackage else (if SetContains(ActivePackageList, soupPackage.pkgRef) then 'alreadyActive else (if SafeActivatePackage(soupPackage.pkgRef, soupPackage.packageName, EntryStore(soupPackage)) then 'justActivated)))
 	end,
 	Preflight: compile(
 		constants: {
 			kLiteral_536a15: "locked",
 			kLiteral_536afd: "copy protected"
 		},
-		func(a1, a2) begin
+		func(a1, kids) begin
 			local l1;
-			(if (a1 = 'Backdrop) then (if (Length(a2) = 1) then begin
+			(if (a1 = 'Backdrop) then (if (Length(kids) = 1) then begin
 						if (l1 := GetRoot().(fentry.app)).noBackdrop then begin
 								return "the wrong kind"
 							end;
@@ -1400,23 +1400,23 @@ proto1_2ExformentryProto := {
 					end) else (if (((a1 = 'Filing) or (a1 = 'delete)) or (a1 = 'freeze)) then (if (not EntryStore(fentry):IsReadOnly()) then 'OK else kLiteral_536a15) else (if (a1 = 'move) then (if self:copyprotected() then kLiteral_536afd else (if EntryStore(fentry):IsReadOnly() then kLiteral_536a15 else 'OK)) else (if (a1 = 'send) then (if self:copyprotected() then kLiteral_536afd else 'OK) else 'OK))))
 		end),
 	delete: func() begin
-		local l1;
-		(if (l1 := self:LookupSoupPackage()) then SafeRemovePackageQT(l1))
+		local soupPackage;
+		(if (soupPackage := self:LookupSoupPackage()) then SafeRemovePackageQT(soupPackage))
 	end,
-	move: func(a1) begin
-		SafeMovePackageQT(self:LookupSoupPackage(), a1)
+	move: func(maxLines) begin
+		SafeMovePackageQT(self:LookupSoupPackage(), maxLines)
 	end,
 	file: file_2,
 	TapAction: func() begin
 		(if self:LookupSoupPackageAndActivate() then (if fentry:?TapAction() then (if fentry.closeControl then (fentry.closeControl = 'alwaysClose) else GetUserConfig('ExtraAlwaysClose)) else self:_Open(GetRoot().(fentry.app))))
 	end,
-	_Open: func(a1) begin
+	_Open: func(copperfield) begin
 		local l1;
-		(if a1 then begin
-				if (l1 := (if (not (if a1.viewCObject then Visible(a1))) then (if fentry.closeControl then (fentry.closeControl = 'alwaysClose) else GetUserConfig('ExtraAlwaysClose)))) then begin
-						AddDeferredSend(a1, 'ButtonToggle, nil)
+		(if copperfield then begin
+				if (l1 := (if (not (if copperfield.viewCObject then Visible(copperfield))) then (if fentry.closeControl then (fentry.closeControl = 'alwaysClose) else GetUserConfig('ExtraAlwaysClose)))) then begin
+						AddDeferredSend(copperfield, 'ButtonToggle, nil)
 					end else begin
-						a1:ButtonToggle()
+						copperfield:ButtonToggle()
 					end;
 				l1
 			end)
@@ -1601,8 +1601,8 @@ wordExample := {
 		self:drawExampleScript()
 	end,
 	SelectSpacingOption: func() begin
-		local l1;
-		(if ((l1 := userConfiguration.letterSetSelection) = 2) then begin
+		local letterSetSelection;
+		(if ((letterSetSelection := userConfiguration.letterSetSelection) = 2) then begin
 				charSpace := printedCharSpace;
 				(wordSpace := printedWordSpace)
 			end else begin

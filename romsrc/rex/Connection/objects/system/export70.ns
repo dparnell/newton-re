@@ -1,61 +1,61 @@
 // export70, and what only it reaches
 
 export70 := {
-	GetDriveFromName: func(a1) begin
-		if (if a1 then (Length(a1) > 0)) then begin
-				if ((l2 := (StrLen(a1) - 1)) > 1) then begin
-						local l1;
-						local l2;
-						(for l3 := 1 to l2 do begin
-								if ((a1[l3] = $:) or (a1[l3] = $ )) then begin
-										l2 := l3;
+	GetDriveFromName: func(name) begin
+		if (if name then (Length(name) > 0)) then begin
+				if ((i2 := (StrLen(name) - 1)) > 1) then begin
+						local text;
+						local i2;
+						(for i := 1 to i2 do begin
+								if ((name[i] = $:) or (name[i] = $ )) then begin
+										i2 := i;
 										break
 									end
 							end)
 					end;
-				l1 := Stringer([Array: Substr(a1, 0, l2), ":"])
+				text := Stringer([Array: Substr(name, 0, i2), ":"])
 			end;
-		if (not l1) then begin
-				l1 := ""
+		if (not text) then begin
+				text := ""
 			end;
-		return l1
+		return text
 	end,
 	getinfoButton: nil,
-	RebuildFileList: func(a1, a2) begin
-		self:GetNewFileFolderLists(a1, a2);
+	RebuildFileList: func(a1, callReadCommand) begin
+		self:GetNewFileFolderLists(a1, callReadCommand);
 		fileNameList:UpdateFileList(true);
 		folderList:UpdateFolderList(true);
 		directory:UpdateDirectoryText()
 	end,
-	GetNewFileFolderLists: func(a1, a2) begin
+	GetNewFileFolderLists: func(a1, callReadCommand) begin
 		currentFolders := [Array: ];
 		currentFiles := [Array: ];
 		(if (not aborting) then begin
-				if (not a2) then begin
+				if (not callReadCommand) then begin
 						if a1 then begin
 								if (a1 = 'drive) then begin
-										l1 := self:GetDriveFromName(currentPath[0].name);
-										l2 := "sdrv"
+										driveFromName := self:GetDriveFromName(currentPath[0].name);
+										text := "sdrv"
 									end else begin
-										(l3 := DeepClone((l1 := Clone(currentPath))[0])).name := self:GetDriveFromName(l3.name);
-										l1[0] := l3;
-										l2 := "spth"
+										(copy := DeepClone((driveFromName := Clone(currentPath))[0])).name := self:GetDriveFromName(copy.name);
+										driveFromName[0] := copy;
+										text := "spth"
 									end
 							end;
 						checkCommandsInIdle := nil;
-						a2 := protoContext:GetNewFiles(endpoint, l1, l2, func(a1) begin
+						callReadCommand := protoContext:GetNewFiles(endpoint, driveFromName, text, func(a1) begin
 							(if (a1 <> nil) then (currentPath := a1))
 						end);
 						checkCommandsInIdle := true
 					end;
-				local l1;
-				local l2;
-				local l3;
-				(if (not a2) then (if (not setupDone) then self:StopOpen(-16005)) else (foreach l4 in a2 do begin
-							if (l4.type = 2) then begin
-									AddArraySlot(currentFolders, l4)
+				local driveFromName;
+				local text;
+				local copy;
+				(if (not callReadCommand) then (if (not setupDone) then self:StopOpen(-16005)) else (foreach item in callReadCommand do begin
+							if (item.type = 2) then begin
+									AddArraySlot(currentFolders, item)
 								end else begin
-									AddArraySlot(currentFiles, l4)
+									AddArraySlot(currentFiles, item)
 								end
 						end))
 			end)
@@ -86,27 +86,27 @@ export70 := {
 		protoContext:RemoveOpenWindow(self);
 		(if (not aborting) then (if (not closing) then endpoint:ConnectionDone(0)))
 	end,
-	SetFontForEntryLine: func(a1) begin
-		local l1, l2;
-		l1 := a1.viewBounds;
-		if (StrFontWidth(a1.text, 10241) > (l1.right - l1.left)) then begin
+	SetFontForEntryLine: func(entryLine) begin
+		local viewBounds, l2;
+		viewBounds := entryLine.viewBounds;
+		if (StrFontWidth(entryLine.text, 10241) > (viewBounds.right - viewBounds.left)) then begin
 				l2 := 9217
 			end else begin
 				l2 := 10241
 			end;
-		(if (l2 <> a1.viewFont) then SetValue(a1, 'viewFont, l2))
+		(if (l2 <> entryLine.viewFont) then SetValue(entryLine, 'viewFont, l2))
 	end,
 	viewFlags: vApplication + vFloating + vClickable,
 	viewIdleScript: func() begin
-		local l1;
-		if (if ((l1 := endpoint:IdleConnection(checkCommandsInIdle)) = 0) then (not endpoint.closingDown)) then begin
+		local idleConnection;
+		if (if ((idleConnection := endpoint:IdleConnection(checkCommandsInIdle)) = 0) then (not endpoint.closingDown)) then begin
 				closing := true;
 				protoContext:FileBrowserClose(endpoint);
 				if (callWhenDone exists) then begin
 						call callWhenDone with (endpoint, true, nil, nil, nil)
 					end
 			end;
-		return l1
+		return idleConnection
 	end,
 	directory: nil,
 	currentDevices: nil,
@@ -128,18 +128,18 @@ export70 := {
 		bounds: {left: 0, top: 0, right: 18, bottom: 12}
 	},
 	aborting: nil,
-	VerifyAlias: func(a1) begin
-		local l1, l2;
+	VerifyAlias: func(currentFile) begin
+		local l1, frame2;
 		l1 := true;
-		if a1.alias then begin
+		if currentFile.alias then begin
 				try begin
-						if HasPath(a1, 'whichVol) then begin
-								l2 := {name: a1.name, whichVol: a1.whichVol}
+						if HasPath(currentFile, 'whichVol) then begin
+								frame2 := {name: currentFile.name, whichVol: currentFile.whichVol}
 							end else begin
-								l2 := a1.name
+								frame2 := currentFile.name
 							end;
 						checkCommandsInIdle := nil;
-						endpoint:WriteCommand("rali", l2, true);
+						endpoint:WriteCommand("rali", frame2, true);
 						l1 := (protoContext:CallReadCommand(endpoint, "alir").data = 1);
 						checkCommandsInIdle := true
 					end onexception |evt.ex| do begin
@@ -151,11 +151,11 @@ export70 := {
 			end;
 		return l1
 	end,
-	StopOpen: func(a1) begin
-		if (not a1) then begin
-				a1 := -1
+	StopOpen: func(error) begin
+		if (not error) then begin
+				error := -1
 			end;
-		aborting := a1;
+		aborting := error;
 		endpoint:StopIdle(self)
 	end,
 	checks: nil,
@@ -177,7 +177,7 @@ export70 := {
 	closing: nil,
 	folderList: nil,
 	viewSetupFormScript: func() begin
-		local l1;
+		local callReadCommand;
 		self.setupDone := nil;
 		self.closing := nil;
 		self.protoContext := GetRoot().Connection;
@@ -192,14 +192,14 @@ export70 := {
 		currentFilters := [Array: ];
 		try begin
 				endpoint:WriteCommand("gdev", nil, nil);
-				currentDevices := (l1 := protoContext:CallReadCommand(endpoint, "devs")).data;
+				currentDevices := (callReadCommand := protoContext:CallReadCommand(endpoint, "devs")).data;
 				endpoint:WriteCommand("gflt", nil, nil);
-				currentFilters := (l1 := protoContext:CallReadCommand(endpoint, "filt")).data;
+				currentFilters := (callReadCommand := protoContext:CallReadCommand(endpoint, "filt")).data;
 				endpoint:WriteCommand("dpth", nil, nil);
-				if (not IsArray((l1 := protoContext:CallReadCommand(endpoint, "path")).data)) then begin
-						Throw('|evt.ex.error|, -28012)
+				if (not IsArray((callReadCommand := protoContext:CallReadCommand(endpoint, "path")).data)) then begin
+						Throw('|evt.ex.error|, kDockErrDesktopError)
 					end;
-				currentPath := l1.data
+				currentPath := callReadCommand.data
 			end onexception |evt.ex| do begin
 				self:StopOpen(CurrentException().error)
 			end;
@@ -238,7 +238,7 @@ export70 := {
 			text: "Drives:",
 			viewSetupFormScript: func() begin
 				if currentDevices then begin
-						self.labelCommands := (foreach l1 in currentDevices collect l1.name)
+						self.labelCommands := (foreach item in currentDevices collect item.name)
 					end else begin
 						self.labelCommands := '[Array: ]
 					end;
@@ -247,37 +247,37 @@ export70 := {
 			textSetup: func() begin
 				if (Length(labelCommands) > 0) then begin
 						if (if currentPath then (Length(currentPath) > 0)) then begin
-								l2 := self:GetDriveFromName(currentPath[0].name);
-								local l1;
-								local l2;
-								(for l3 := 0 to (Length(labelCommands) - 1) do begin
-										local l6;
-										l6 := self:GetDriveFromName(labelCommands[l3]);
-										if StrEqual(l2, l6) then begin
-												l1 := labelCommands[l3];
+								driveFromName := self:GetDriveFromName(currentPath[0].name);
+								local labelCommand;
+								local driveFromName;
+								(for i := 0 to (Length(labelCommands) - 1) do begin
+										local driveFromName2;
+										driveFromName2 := self:GetDriveFromName(labelCommands[i]);
+										if StrEqual(driveFromName, driveFromName2) then begin
+												labelCommand := labelCommands[i];
 												break
 											end
 									end)
 							end;
-						if (not l1) then begin
-								l1 := labelCommands[0]
+						if (not labelCommand) then begin
+								labelCommand := labelCommands[0]
 							end
 					end;
-				(if l1 then return l1 else return "")
+				(if labelCommand then return labelCommand else return "")
 			end,
-			labelActionScript: func(a1) begin
-				currentPath := [Array: currentDevices[a1]];
+			labelActionScript: func(index) begin
+				currentPath := [Array: currentDevices[index]];
 				self:RebuildFileList('drive, nil)
 			end,
 			textChanged: func() begin
 				self:SetFontForEntryLine(entryLine)
 			end,
 			viewSetupChildrenScript: func() begin
-				local l1;
+				local viewBounds;
 				inherited:?viewSetupChildrenScript();
-				entryLine.viewFont := 10241;
-				l1 := entryLine.viewBounds;
-				(if (StrFontWidth(entryLine.text, entryLine.viewFont) > (l1.right - l1.left)) then (entryLine.viewFont := 9217))
+				entryLine.viewFont := tsFancy + tsSize(10);
+				viewBounds := entryLine.viewBounds;
+				(if (StrFontWidth(entryLine.text, entryLine.viewFont) > (viewBounds.right - viewBounds.left)) then (entryLine.viewFont := tsFancy + tsSize(9)))
 			end,
 			_proto: @protoLabelPicker
 		},
@@ -296,37 +296,37 @@ export70 := {
 			textSetup: func() begin
 				if (Length(labelCommands) > 0) then begin
 						if (if currentPath then (Length(currentPath) > 0)) then begin
-								l2 := self:GetDriveFromName(currentPath[0].name);
-								local l1;
-								local l2;
-								(for l3 := 0 to (Length(labelCommands) - 1) do begin
-										local l6;
-										l6 := self:GetDriveFromName(labelCommands[l3]);
-										if StrEqual(l2, l6) then begin
-												l1 := labelCommands[l3];
+								driveFromName := self:GetDriveFromName(currentPath[0].name);
+								local labelCommand;
+								local driveFromName;
+								(for i := 0 to (Length(labelCommands) - 1) do begin
+										local driveFromName2;
+										driveFromName2 := self:GetDriveFromName(labelCommands[i]);
+										if StrEqual(driveFromName, driveFromName2) then begin
+												labelCommand := labelCommands[i];
 												break
 											end
 									end)
 							end;
-						if (not l1) then begin
-								l1 := labelCommands[0]
+						if (not labelCommand) then begin
+								labelCommand := labelCommands[0]
 							end
 					end;
-				(if l1 then return l1 else return "")
+				(if labelCommand then return labelCommand else return "")
 			end,
-			labelActionScript: func(a1) begin
-				local l1, l2;
+			labelActionScript: func(index) begin
+				local callReadCommand, error;
 				(try begin
 						checkCommandsInIdle := nil;
-						endpoint:WriteCommand("sflt", a1, true);
-						if (l1 := protoContext:CallReadCommand(endpoint, "file")) then begin
-								l1 := l1.data
+						endpoint:WriteCommand("sflt", index, true);
+						if (callReadCommand := protoContext:CallReadCommand(endpoint, "file")) then begin
+								callReadCommand := callReadCommand.data
 							end;
-						self:RebuildFileList(nil, l1);
+						self:RebuildFileList(nil, callReadCommand);
 						(checkCommandsInIdle := true)
 					end onexception |evt.ex| do begin
-						l2 := CurrentException().error;
-						AddDeferredSend(GetRoot().Connection, 'HandleException, [Array: l2, endpoint])
+						error := CurrentException().error;
+						AddDeferredSend(GetRoot().Connection, 'HandleException, [Array: error, endpoint])
 					end)
 			end,
 			viewJustify: 8396800,
@@ -334,11 +334,11 @@ export70 := {
 				self:SetFontForEntryLine(entryLine)
 			end,
 			viewSetupChildrenScript: func() begin
-				local l1;
+				local viewBounds;
 				inherited:?viewSetupChildrenScript();
-				entryLine.viewFont := 10241;
-				l1 := entryLine.viewBounds;
-				(if (StrFontWidth(entryLine.text, entryLine.viewFont) > (l1.right - l1.left)) then (entryLine.viewFont := 9217))
+				entryLine.viewFont := tsFancy + tsSize(10);
+				viewBounds := entryLine.viewBounds;
+				(if (StrFontWidth(entryLine.text, entryLine.viewFont) > (viewBounds.right - viewBounds.left)) then (entryLine.viewFont := tsFancy + tsSize(9)))
 			end,
 			_proto: @protoLabelPicker
 		},
@@ -378,7 +378,7 @@ export70Item := {
 		protoContext:ShowIfNotVisible(getinfoButton)
 	end,
 	UpdateFileList: func(a1) begin
-		self.listItems := (foreach l1 in currentFiles collect l1.name);
+		self.listItems := (foreach item in currentFiles collect item.name);
 		self:SetupList();
 		self:SetOrigin(0, 0);
 		selection := nil;
@@ -401,16 +401,16 @@ export70Item_2 := {
 	end,
 	viewFont: @fontSystem10,
 	buttonClickScript: func(a1) begin
-		local l1;
+		local frame2;
 		if (a1 < Length(currentPath)) then begin
 				SetLength(currentPath, (a1 + 1))
 			end else begin
 				a1 := (a1 - Length(currentPath));
-				l1 := {name: Clone(currentFolders[a1].name), type: currentFolders[a1].type};
+				frame2 := {name: Clone(currentFolders[a1].name), type: currentFolders[a1].type};
 				if HasPath(currentFolders[a1], 'whichVol) then begin
-						l1.whichVol := currentFolders[a1].whichVol
+						frame2.whichVol := currentFolders[a1].whichVol
 					end;
-				AddArraySlot(currentPath, l1)
+				AddArraySlot(currentPath, frame2)
 			end;
 		selection := nil;
 		currentIndex := nil;
@@ -470,20 +470,20 @@ export70Item_3 := {
 	end,
 	UpdateDirectoryText: func() begin
 		if (if currentPath then (Length(currentPath) > 0)) then begin
-				l1 := self:GetDriveFromName(currentPath[0].name);
-				if ((l2 := Length(currentPath)) = 0) then begin
-						l1 := Stringer([Array: l1, "\\"])
+				driveFromName := self:GetDriveFromName(currentPath[0].name);
+				if ((count := Length(currentPath)) = 0) then begin
+						driveFromName := Stringer([Array: driveFromName, "\\"])
 					end else begin
-						local l1;
-						local l2;
-						(for l3 := 1 to (l2 - 1) do begin
-								l1 := Stringer([Array: l1, "\\", currentPath[l3].name])
+						local driveFromName;
+						local count;
+						(for i := 1 to (count - 1) do begin
+								driveFromName := Stringer([Array: driveFromName, "\\", currentPath[i].name])
 							end)
 					end
 			end else begin
-				l1 := ""
+				driveFromName := ""
 			end;
-		SetValue(self, 'text, l1)
+		SetValue(self, 'text, driveFromName)
 	end,
 	_proto: @protoStaticText,
 	preAllocatedContext: 'directory
@@ -492,8 +492,8 @@ export70Item_3 := {
 export70Item_4 := {
 	text: nil,
 	buttonClickScript: func() begin
-		local l1;
-		(if (currentSelection <> nil) then (if self:VerifyAlias((l1 := currentFiles[currentIndex])) then begin
+		local currentFile;
+		(if (currentSelection <> nil) then (if self:VerifyAlias((currentFile := currentFiles[currentIndex])) then begin
 					closing := true;
 					protoContext:FileBrowserClose(endpoint);
 					(if (callWhenDone exists) then call callWhenDone with (endpoint, nil, whichFiles, currentSelection, currentPath))
@@ -516,8 +516,8 @@ export70Item_4 := {
 export70Item_5 := {
 	text: fileInfo,
 	buttonClickScript: func() begin
-		local l1;
-		(if (currentSelection <> nil) then (if self:VerifyAlias((l1 := currentFiles[currentIndex])) then begin
+		local currentFile;
+		(if (currentSelection <> nil) then (if self:VerifyAlias((currentFile := currentFiles[currentIndex])) then begin
 					checkCommandsInIdle := nil;
 					protoContext:OpenGetInfoDialog(endpoint, currentSelection, currentSelection, currentPath);
 					AddDeferredCall(func() begin

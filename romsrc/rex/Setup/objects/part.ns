@@ -71,11 +71,11 @@ part := array(nil, {
 	},
 	theForm: @8339,
 	autoClose: 'noAutoclose,
-	installScript: func(a1) begin
-		a1:?devInstallScript(a1);
-		if HasSlot(a1, 'devInstallScript) then begin
-				RemoveSlot(a1, 'devInstallScript)
+	installScript: func(partFrame) begin
+		partFrame:?devInstallScript(partFrame);
+		if HasSlot(partFrame, 'devInstallScript) then begin
+				RemoveSlot(partFrame, 'devInstallScript)
 			end;
-		(a1.installScript := nil)
+		(partFrame.installScript := nil)
 	end
 });

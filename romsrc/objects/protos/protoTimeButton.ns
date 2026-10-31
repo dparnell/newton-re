@@ -7,9 +7,9 @@ protoTimeButton := {
 	TimeString: TimeString,
 	TimeBox: TimeBox,
 	viewSetupFormScript: func() begin
-		local l1;
-		if (l1 := self:TimeBox((text := self:TimeString()))) then begin
-				viewBounds := l1
+		local timeBox;
+		if (timeBox := self:TimeBox((text := self:TimeString()))) then begin
+				viewBounds := timeBox
 			end;
 		self:SetupIdle(30000)
 	end,

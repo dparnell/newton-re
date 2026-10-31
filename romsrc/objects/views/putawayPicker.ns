@@ -49,30 +49,30 @@ putawayPicker := {
 				popup := Array((l1 := (if theApps then Length(theApps) else 0)), nil);
 				if theApps then begin
 						local l1;
-						(foreach l2, l3 in theApps do begin
-								local l5;
-								popup[l2] := (if IsFrame(l3) then l3.appName else GetAppName(l3))
+						(foreach key, value in theApps do begin
+								local fontHeight2;
+								popup[key] := (if IsFrame(value) then value.appName else GetAppName(value))
 							end)
 					end;
 				if (showit := (l1 > 1)) then begin
 						text := Stringer([Array: $\uFC01, text])
 					end;
-				l5 := FontHeight(viewFont);
-				viewBounds := RelBounds(viewBounds.left, viewBounds.top, viewBounds.right, l5);
+				fontHeight2 := FontHeight(viewFont);
+				viewBounds := RelBounds(viewBounds.left, viewBounds.top, viewBounds.right, fontHeight2);
 				inherited:?viewSetupFormScript()
 			end,
-			PadText: func(a1) begin
-				a1
+			PadText: func(text) begin
+				text
 			end,
 			viewDrawScript: func() begin
 				nil
 			end,
-			viewClickScript: func(a1) begin
-				(if showit then inherited:viewClickScript(a1))
+			viewClickScript: func(unit) begin
+				(if showit then inherited:viewClickScript(unit))
 			end,
-			pickActionScript: func(a1) begin
-				theAppToRun := theApps[a1];
-				inherited:pickActionScript(a1)
+			pickActionScript: func(index) begin
+				theAppToRun := theApps[index];
+				inherited:pickActionScript(index)
 			end,
 			_proto: @protoPopInPlace
 		},
@@ -101,8 +101,8 @@ _defaultButton_11 := {
 	viewJustify: 8407046,
 	text: putAway,
 	buttonClickScript: func() begin
-		local l1;
-		l1 := GetRoot().iobox:DoPutAway((if IsFrame(theAppToRun) then theAppToRun.appSymbol else theAppToRun), theItem, targetView);
+		local putAway;
+		putAway := GetRoot().iobox:DoPutAway((if IsFrame(theAppToRun) then theAppToRun.appSymbol else theAppToRun), theItem, targetView);
 		AddDeferredSend(GetRoot().iobox.pap, 'Close, nil)
 	end,
 	preallocatedContext: '_defaultButton,

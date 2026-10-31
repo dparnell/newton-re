@@ -21,14 +21,14 @@ export85 := {
 			text: connect,
 			buttonClickScript: func() begin
 				local myCallback;
-				local l1;
+				local phone;
 				AddDeferredAction(func() begin
 					base:Close()
 				end, nil);
 				(if (prefsFrame.type = 'modem) then begin
-						l1 := modemStuff:GetPhone();
-						if (if (if IsFrame(options) then l1) then (StrLen(l1) > 0)) then begin
-								(options := DeepClone(options)).phonenumber := l1;
+						phone := modemStuff:GetPhone();
+						if (if (if IsFrame(options) then phone) then (StrLen(phone) > 0)) then begin
+								(options := DeepClone(options)).phonenumber := phone;
 								options := {connectOptions: options, password: password}
 							end else begin
 								options := nil
@@ -60,13 +60,13 @@ export85 := {
 	prefsFrame: nil,
 	callback: nil,
 	password: nil,
-	OpenOn: func(a1, a2, a3, a4) begin
-		local l1;
-		(l1 := BuildContext(self)).options := a1;
-		l1.prefsFrame := a2;
-		l1.password := a3;
-		l1.callback := a4;
-		l1:Open()
+	OpenOn: func(options, a2, a3, callback) begin
+		local context;
+		(context := BuildContext(self)).options := options;
+		context.prefsFrame := a2;
+		context.password := a3;
+		context.callback := callback;
+		context:Open()
 	end,
 	viewSetupFormScript: func() begin
 		if options.button then begin
@@ -110,10 +110,10 @@ export85Item := {
 	end,
 	phonenumber: nil,
 	GetPhone: func() begin
-		local l1, l2;
+		local connection, worksite;
 		(if phonenumber then phonenumber else begin
-				l1 := GetRoot().Connection;
-				(if (if (l2 := l1:GetWorksite(prefsFrame.phoneCurrentChoice)) then l2.connectionPhone) then self:MungePhone(MakePhone({areacode: l2.areacode, phone: l2.connectionPhone}), l1:WorksiteToCountry(l2)) else "")
+				connection := GetRoot().Connection;
+				(if (if (worksite := connection:GetWorksite(prefsFrame.phoneCurrentChoice)) then worksite.connectionPhone) then self:MungePhone(MakePhone({areacode: worksite.areacode, phone: worksite.connectionPhone}), connection:WorksiteToCountry(worksite)) else "")
 			end)
 	end,
 	viewClass: clView,
@@ -136,14 +136,14 @@ export85ItemItem := {
 
 export85Item_2 := {
 	buttonClickScript: func() begin
-		local l1, l2;
-		l1 := GetRoot().Connection;
-		if (if (l2 := l1:GetWorksite(prefsFrame.phoneCurrentChoice)) then l2.connectionPhone) then begin
-				callOptionsSlip.inNumber := MakePhone({areacode: l2.areacode, phone: l2.connectionPhone})
+		local connection, worksite;
+		connection := GetRoot().Connection;
+		if (if (worksite := connection:GetWorksite(prefsFrame.phoneCurrentChoice)) then worksite.connectionPhone) then begin
+				callOptionsSlip.inNumber := MakePhone({areacode: worksite.areacode, phone: worksite.connectionPhone})
 			end else begin
 				callOptionsSlip.inNumber := ""
 			end;
-		callOptionsSlip.inCountry := l1:WorksiteToCountry(l2);
+		callOptionsSlip.inCountry := connection:WorksiteToCountry(worksite);
 		callOptionsSlip.invoker := self;
 		callOptionsSlip:Toggle()
 	end,
@@ -162,11 +162,11 @@ export85Item_3 := {
 	viewBounds: {left: -133, top: -18, right: -79, bottom: -5},
 	viewJustify: 8388774,
 	viewSetupFormScript: func() begin
-		local l1;
+		local copy;
 		(if options.button then begin
 				self.text := options.button.buttonTitle;
-				(l1 := Clone(viewBounds)).left := ((viewBounds.right - StrWidth(text)) - 7);
-				(self.viewBounds := l1)
+				(copy := Clone(viewBounds)).left := ((viewBounds.right - StrWidth(text)) - 7);
+				(self.viewBounds := copy)
 			end)
 	end,
 	_proto: @protoTextButton,

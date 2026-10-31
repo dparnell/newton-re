@@ -9,35 +9,35 @@ protoDeckOfCards := {
 			{_proto: kROM_828, deck: nil, top: nil}
 		end),
 	Shuffle: func() begin
-		l1 := Array(52, nil);
-		local l1;
-		(for l2 := 0 to 51 do begin
-				l1[l2] := l2
+		list := Array(52, nil);
+		local list;
+		(for i := 0 to 51 do begin
+				list[i] := i
 			end);
-		(for l5 := 1 to 6 do begin
-				(for l2 := 0 to 25 do begin
-						local l8, l9;
+		(for j := 1 to 6 do begin
+				(for i := 0 to 25 do begin
+						local n, listItem;
 						if (Random(0, 10000) < 5000) then begin
-								l8 := Random(0, 51);
-								l9 := l1[l2];
-								l1[l2] := l1[l8];
-								l1[l8] := l9
+								n := Random(0, 51);
+								listItem := list[i];
+								list[i] := list[n];
+								list[n] := listItem
 							end
 					end)
 			end);
-		self.deck := l1;
+		self.deck := list;
 		(self.top := 52)
 	end,
 	Deal: func(a1) begin
 		ArrayMunger([Array: ], 0, nil, deck, (top := (top - a1)), a1)
 	end,
-	Draw: func(a1) begin
-		(foreach l1, l2 in a1 do begin
-				if (not l2) then begin
-						a1[l1] := deck[(top := (top - 1))]
+	Draw: func(hand) begin
+		(foreach key, value in hand do begin
+				if (not value) then begin
+						hand[key] := deck[(top := (top - 1))]
 					end
 			end);
-		a1
+		hand
 	end,
 	Eval5: func(a1) begin
 		Sort((a1 := Clone(a1)), '|<|, nil);

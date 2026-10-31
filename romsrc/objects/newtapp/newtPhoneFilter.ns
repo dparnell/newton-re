@@ -5,41 +5,41 @@ newtPhoneFilter := {
 	recFlags: 264705,
 	kind: nil,
 	country: nil,
-	EntryToPath: func(a1) begin
+	EntryToPath: func(resolveEntryAlias) begin
 		target.(path) := nil;
 		country := nil;
-		l1 := nil;
-		if (if a1 then a1.phones) then begin
-				l2 := 0;
-				local l1;
-				local l2;
-				(foreach l3, l4 in a1.phones do begin
-						local l6, l7;
-						if StrFilled(l4) then begin
-								l6 := ClassOf(l4);
-								l7 := {item: ParamStr("^0 ^?1(^1)||", [Array: MakeDisplayPhone(l4), PhoneTypes.phoneText.(l6)]), value: l4, country: a1.country};
-								if IsSubclass(l6, kind) then begin
-										l2 := l3;
-										l7.mark := $\uFC0B
+		list := nil;
+		if (if resolveEntryAlias then resolveEntryAlias.phones) then begin
+				key2 := 0;
+				local list;
+				local key2;
+				(foreach key, value in resolveEntryAlias.phones do begin
+						local cls, frame2;
+						if StrFilled(value) then begin
+								cls := ClassOf(value);
+								frame2 := {item: ParamStr("^0 ^?1(^1)||", [Array: MakeDisplayPhone(value), PhoneTypes.phoneText.(cls)]), value: value, country: resolveEntryAlias.country};
+								if IsSubclass(cls, kind) then begin
+										key2 := key;
+										frame2.mark := $\uFC0B
 									end;
-								if (not l1) then begin
-										l1 := [Array: ]
+								if (not list) then begin
+										list := [Array: ]
 									end;
-								AddArraySlot(l1, l7)
+								AddArraySlot(list, frame2)
 							end
 					end);
-				if (Length(a1.phones) > l2) then begin
-						target.(path) := a1.phones[l2];
-						country := a1.country
+				if (Length(resolveEntryAlias.phones) > key2) then begin
+						target.(path) := resolveEntryAlias.phones[key2];
+						country := resolveEntryAlias.country
 					end
 			end;
-		if (if l1 then (Length(l1) = 1)) then begin
-				l1 := nil
+		if (if list then (Length(list) = 1)) then begin
+				list := nil
 			end;
-		self:SetLabelCommands(l1)
+		self:SetLabelCommands(list)
 	end,
-	ChooseItem: func(a1) begin
-		country := labelCommands[a1].country;
+	ChooseItem: func(index) begin
+		country := labelCommands[index].country;
 		nil
 	end
 };

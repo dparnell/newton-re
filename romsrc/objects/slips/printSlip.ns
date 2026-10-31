@@ -5,12 +5,12 @@ printSlip := {
 	bottomIndent: 29,
 	appSymbol: '|print:newton|,
 	OwnerInfoChanged: func() begin
-		local l1;
-		l1 := userConfiguration;
-		fields.fromTitle := l1.currentFaxTitle;
+		local userConfiguration2;
+		userConfiguration2 := userConfiguration;
+		fields.fromTitle := userConfiguration2.currentFaxTitle;
 		printChoose:SyncView();
 		printChoose:RedoChildren();
-		(fields.fromRef := l1.currentPersona)
+		(fields.fromRef := userConfiguration2.currentPersona)
 	end,
 	debug: 23370,
 	stepChildren: [stepChildren: printChoose, _previewButton],

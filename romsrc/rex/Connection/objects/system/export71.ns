@@ -66,14 +66,14 @@ export71 := {
 		{_proto: @protoCancelButton}
 	],
 	viewSetupFormScript: func() begin
-		local l1;
+		local callReadCommand;
 		self.protoContext := GetRoot().Connection;
 		protoContext:AddOpenWindow(self);
 		(try begin
-				if (not IsFrame((l1 := protoContext:CallReadCommand(endpoint, "finf")).data)) then begin
-						Throw('|evt.ex.error|, -28012)
+				if (not IsFrame((callReadCommand := protoContext:CallReadCommand(endpoint, "finf")).data)) then begin
+						Throw('|evt.ex.error|, kDockErrDesktopError)
 					end;
-				(fileInfo := l1.data)
+				(fileInfo := callReadCommand.data)
 			end onexception |evt.ex| do begin
 				protoContext:HandleErrorDuringStartup(endpoint, self, CurrentException().error);
 				(fileInfo := {})
@@ -101,10 +101,10 @@ export71Item := {
 	viewSetupFormScript: func() begin
 		newIcon := MakeBitmap(32, 32, nil);
 		if (if fileInfo.icon then (Length(fileInfo.icon) = 128)) then begin
-				l1 := GetBitmapInfo(newIcon);
-				local l1;
-				(for l2 := 0 to 63 do begin
-						StuffWord(l1.bits, ((l2 * 2) + l1.scanOffset), ExtractWord(fileInfo.icon, (l2 * 2)))
+				bitmapInfo := GetBitmapInfo(newIcon);
+				local bitmapInfo;
+				(for i := 0 to 63 do begin
+						StuffWord(bitmapInfo.bits, ((i * 2) + bitmapInfo.scanOffset), ExtractWord(fileInfo.icon, (i * 2)))
 					end)
 			end;
 		(self.icon := newIcon)

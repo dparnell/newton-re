@@ -9,54 +9,54 @@ dayView := {
 			end)
 	end,
 	ReArrangeMeetings: func() begin
-		if ((l2 := Length((l1 := self:ChildViewFrames()))) = 0) then begin
+		if ((count := Length((childViewFrames := self:ChildViewFrames()))) = 0) then begin
 				return nil
 			end;
-		l3 := Array(l2, nil);
-		local l1;
-		local l2;
-		local l3;
-		(for l4 := 0 to (l2 - 1) do begin
-				l3[l4] := l1[l4].realData
+		list := Array(count, nil);
+		local childViewFrames;
+		local count;
+		local list;
+		(for i := 0 to (count - 1) do begin
+				list[i] := childViewFrames[i].realData
 			end);
-		InsertionSort(l3, '|<|, 'mtgStartDate);
-		InsertionSort(l1, '|<|, 'realData.mtgStartDate);
-		kidBounds := Array(l2, nil);
-		self:LayoutMeetings(l3, kidBounds, 0, (l2 - 1), tabWidths);
-		(for l4 := 0 to (l2 - 1) do begin
-				local l7;
-				if (l7 := kidBounds[l4]) then begin
-						SetValue(l1[l4], 'viewBounds, l7)
+		InsertionSort(list, '|<|, 'mtgStartDate);
+		InsertionSort(childViewFrames, '|<|, 'realData.mtgStartDate);
+		kidBounds := Array(count, nil);
+		self:LayoutMeetings(list, kidBounds, 0, (count - 1), tabWidths);
+		(for i := 0 to (count - 1) do begin
+				local kidBound;
+				if (kidBound := kidBounds[i]) then begin
+						SetValue(childViewFrames[i], 'viewBounds, kidBound)
 					end
 			end);
 		dayView:Dirty()
 	end,
 	editAddWordScript: func(a1, a2) begin
-		local l1, l2, l3, l4, l5, l6, l7;
-		l1 := a1;
-		l2 := a2;
+		local meeting, viewBounds, positionToTime2, positionToTime3, frame2, most, richString;
+		meeting := a1;
+		viewBounds := a2;
 		if (if GetRemoteWriting() then (GetKeyView() = dayView)) then begin
-				l2 := a1.viewBounds
+				viewBounds := a1.viewBounds
 			end;
-		l3 := PositionToTime(dayView, l2.top);
-		l4 := PositionToTime(dayView, l2.bottom);
-		if ((l3 mod 30) = 15) then begin
-				l3 := (l3 + 15)
+		positionToTime2 := PositionToTime(dayView, viewBounds.top);
+		positionToTime3 := PositionToTime(dayView, viewBounds.bottom);
+		if ((positionToTime2 mod 30) = 15) then begin
+				positionToTime2 := (positionToTime2 + 15)
 			end;
-		l3 := max(startTime, l3);
-		if ((l4 - l3) < 60) then begin
-				l4 := (l3 + 60)
+		positionToTime2 := max(startTime, positionToTime2);
+		if ((positionToTime3 - positionToTime2) < 60) then begin
+				positionToTime3 := (positionToTime2 + 60)
 			end;
-		if (l4 > 1440) then begin
-				l4 := 1440
+		if (positionToTime3 > 1440) then begin
+				positionToTime3 := 1440
 			end;
-		l5 := nil;
-		if (l2.left >= 60) then begin
-				l5 := {left: (l6 := max(0, min((DayTable.tabWidths - 100), l2.left))), top: TimeToPosition(dayView, l3), right: DayTable.tabWidths, bottom: TimeToPosition(dayView, l4)}
+		frame2 := nil;
+		if (viewBounds.left >= 60) then begin
+				frame2 := {left: (most := max(0, min((DayTable.tabWidths - 100), viewBounds.left))), top: TimeToPosition(dayView, positionToTime2), right: DayTable.tabWidths, bottom: TimeToPosition(dayView, positionToTime3)}
 			end;
-		l7 := MakeRichString(a1.text, a1.styles);
-		(l1 := self:MakeNewMeetingFrame('meeting, l7, (displaydate + l3), (l4 - l3))).viewBounds := l5;
-		l1
+		richString := MakeRichString(a1.text, a1.styles);
+		(meeting := self:MakeNewMeetingFrame('meeting, richString, (displaydate + positionToTime2), (positionToTime3 - positionToTime2))).viewBounds := frame2;
+		meeting
 	end,
 	viewgesturescript: func(a1, a2) begin
 		local v5_xxxxxxxxxxxxxxxxxwwwww, v6_zzzzzzyyyyyyyyyyyyyyyyyyyyyy, v7_qppppp, v8_xxxxwwwwwwww, v9_zzzzzyy, v10_yyyyyyyyyyyyx, v11_rrrrrrrqq, v12_wwwwwwwwwwwwwvv, v13_zyyyyyyyyyyyyyyyyyyyy, v14_vvvvvuuuuuuuuuuuu, v15_xxxxxxxxxxxxxxxxwwwwwww, v18_ji, v19_yyyyyyyyyyyyyyyyyyyyyyyxxx, v20_lllk, v21_wwwwwwwwww, v22_zzzzzzzzzzzzzyyy, v23_uuuuuuuuuttt, v24_xxxxxxxxxxxxxxxxxx, v25_zzzzzzzyyyyyy, v26_wwwwwwwwwwwvvvvvvvvv;
@@ -133,73 +133,73 @@ dayView := {
 		return '[Array: meeting, text]
 	end,
 	viewFlags: vVisible + vClipping + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed + vPunctuationAllowed,
-	AnyOverlap: func(a1) begin
-		if ((l1 := (if a1 then (Length(a1) - 1) else 0)) <= 0) then begin
+	AnyOverlap: func(pos) begin
+		if ((l1 := (if pos then (Length(pos) - 1) else 0)) <= 0) then begin
 				return nil
 			end;
 		l2 := nil;
 		l3 := 0;
-		l4 := GetMeetingSlot;
+		getMeetingSlot2 := GetMeetingSlot;
 		local l1;
 		local l2;
 		local l3;
-		local l4;
-		(foreach l5 in a1 do begin
-				if LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], l5.viewStationery, 0, '|=|, nil) then begin
-						if (l5.mtgStartDate < l3) then begin
+		local getMeetingSlot2;
+		(foreach item in pos do begin
+				if LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], item.viewStationery, 0, '|=|, nil) then begin
+						if (item.mtgStartDate < l3) then begin
 								break (l2 := true)
 							end else begin
-								l3 := (l5.mtgStartDate + call l4 with (l5, 'mtgDuration))
+								l3 := (item.mtgStartDate + call getMeetingSlot2 with (item, 'mtgDuration))
 							end
 					end
 			end);
 		l2
 	end,
 	viewBounds: nil,
-	viewChangedScript: func(a1, a2) begin
-		local l1;
-		(if (if (if (if (l1 := a2.realData) then (ClassOf(l1) <> 'meeting)) then IsSoupEntry(l1)) then (not EntryStore(l1):IsReadOnly())) then self:CarefulChange(MeetingSoup, l1, true))
+	viewChangedScript: func(slot, view) begin
+		local realData;
+		(if (if (if (if (realData := view.realData) then (ClassOf(realData) <> 'meeting)) then IsSoupEntry(realData)) then (not EntryStore(realData):IsReadOnly())) then self:CarefulChange(MeetingSoup, realData, true))
 	end,
 	recConfig: @rcInkorText,
-	viewDropScript: func(a1, a2, a3) begin
-		local l1, l2;
-		l2 := PositionToTime(dayView, a2.viewBounds.top);
-		if (a1 = 'text) then begin
-				(l1 := self:ConvertParagraphToMeeting(a2, 'meeting, (displaydate + l2))).mtgDuration := 60;
-				l1.viewBounds.bottom := TimeToPosition(dayView, (l2 + 60))
+	viewDropScript: func(dragInfo, dropPt, a3) begin
+		local meeting, positionToTime2;
+		positionToTime2 := PositionToTime(dayView, dropPt.viewBounds.top);
+		if (dragInfo = 'text) then begin
+				(meeting := self:ConvertParagraphToMeeting(dropPt, 'meeting, (displaydate + positionToTime2))).mtgDuration := 60;
+				meeting.viewBounds.bottom := TimeToPosition(dayView, (positionToTime2 + 60))
 			end else begin
-				if (l1 := a2).repeatTemplate then begin
-						l1 := self:FixupDroppedRepeatingMeeting(l1, 'dayView)
+				if (meeting := dropPt).repeatTemplate then begin
+						meeting := self:FixupDroppedRepeatingMeeting(meeting, 'dayView)
 					end
 			end;
-		self:AddMeetingToDate(l1, (displaydate + l2), true);
+		self:AddMeetingToDate(meeting, (displaydate + positionToTime2), true);
 		true
 	end,
 	viewDropChildScript: func(a1) begin
 		self:RemoveMeetingFromDate(a1, displaydate, nil);
 		true
 	end,
-	MeetingBounds: func(a1, a2, a3) begin
-		local l1, l2, l3;
+	MeetingBounds: func(a1, a2, v15_zzzzzzzzzzzzzzzzzzzzyyyyyyy) begin
+		local l1, timeToPosition2, mtgDuration;
 		(if a1.viewBounds then LayoutMeeting(a1, viewHeight, tabWidths, nil) else begin
 				l1 := (a1.mtgStartDate mod 1440);
-				l2 := TimeToPosition(dayView, l1);
-				l3 := TimeToPosition(dayView, (l1 + self:GetMeetingSlot(a1, 'mtgDuration)));
-				SetBounds(a2, l2, a3, l3)
+				timeToPosition2 := TimeToPosition(dayView, l1);
+				mtgDuration := TimeToPosition(dayView, (l1 + self:GetMeetingSlot(a1, 'mtgDuration)));
+				SetBounds(a2, timeToPosition2, v15_zzzzzzzzzzzzzzzzzzzzyyyyyyy, mtgDuration)
 			end)
 	end,
-	DistributeBounds: func(a1, a2, a3, a4, a5) begin
-		(if ((l1 := ((a4 - a3) + 1)) > 0) then begin
-				l3 := (a5 div l1);
+	DistributeBounds: func(v21_yyyyyxxxxxxxxxxxxxx, a2, v8_wwwwwwvvvvvvvvvvvvv, v26_uuttt, v15_zzzzzzzzzzzzzzzzzzzzyyyyyyy) begin
+		(if ((l1 := ((v26_uuttt - v8_wwwwwwvvvvvvvvvvvvv) + 1)) > 0) then begin
+				l3 := (v15_zzzzzzzzzzzzzzzzzzzzyyyyyyy div l1);
 				l4 := 0;
 				local l1;
-				local l2;
+				local i;
 				local l3;
 				local l4;
-				(for l2 := a3 to a4 do begin
-						local l7, l8;
-						l8 := (l7 := a1[l2]).index;
-						a2[l8] := self:MeetingBounds(l7.kid, l4, (l4 + l3));
+				(for i := v8_wwwwwwvvvvvvvvvvvvv to v26_uuttt do begin
+						local v21_yyyyyxxxxxxxxxxxxxxItem, l8;
+						l8 := (v21_yyyyyxxxxxxxxxxxxxxItem := v21_yyyyyxxxxxxxxxxxxxx[i]).index;
+						a2[l8] := self:MeetingBounds(v21_yyyyyxxxxxxxxxxxxxxItem.kid, l4, (l4 + l3));
 						l4 := (l4 + l3)
 					end)
 			end)
@@ -258,15 +258,15 @@ dayView := {
 		end),
 	declareSelf: 'dayView,
 	viewDropMoveScript: func(a1, a2, a3, a4) begin
-		local l1, l2, l3, l4, l5, l6, l7;
+		local l1, l2, l3, viewBounds, offsetRect2, l6, mtgStartDate;
 		if ((((l2 := (l1 := (if a1.realData then a1.realData else a1)).viewStationery) = 'meeting) or (l2 = 'RepeatingMeeting)) or (l2 = 'exceptionMeeting)) then begin
-				a1:SetMeetingBounds((l5 := OffsetRect((l4 := a1.viewBounds), a2.x, a2.y)), l4);
+				a1:SetMeetingBounds((offsetRect2 := OffsetRect((viewBounds := a1.viewBounds), a2.x, a2.y)), viewBounds);
 				l3 := true
 			end else begin
 				if l1.mtgStartDate then begin
 						l6 := (a1.viewBounds.top + a2.y);
-						l7 := (((l7 := ((l7 := ((l7 := l1.mtgStartDate) - (l7 mod 1440))) + ((l6 * 1440) div 768))) + 8) - ((l7 + 8) mod 15));
-						l1.mtgStartDate := l7;
+						mtgStartDate := (((mtgStartDate := ((mtgStartDate := ((mtgStartDate := l1.mtgStartDate) - (mtgStartDate mod 1440))) + ((l6 * 1440) div 768))) + 8) - ((mtgStartDate + 8) mod 15));
+						l1.mtgStartDate := mtgStartDate;
 						l3 := nil
 					end else begin
 						l3 := nil
@@ -332,12 +332,12 @@ dayView := {
 			end);
 		(if (if (a4 >= 0) then (not a2[a4])) then (a2[a4] := self:MeetingBounds(v17_zzzzzzzzzzzzzzzy, 0, v15_zzzzzzzzzzzzzzzzzzzzyyyyyyy)))
 	end,
-	viewAddChildScript: func(a1) begin
-		self:AddMeetingToDate(a1, a1.mtgStartDate, nil)
+	viewAddChildScript: func(aNewOne) begin
+		self:AddMeetingToDate(aNewOne, aNewOne.mtgStartDate, nil)
 	end,
-	viewClickScript: func(a1) begin
-		(foreach l1 in self:ChildViewFrames() do begin
-				if (if (l1.viewClass = 95) then l1:HandleUnit(11, a1)) then begin
+	viewClickScript: func(unit) begin
+		(foreach item in self:ChildViewFrames() do begin
+				if (if (item.viewClass = 95) then item:HandleUnit(11, unit)) then begin
 						break true
 					end
 			end)
@@ -346,44 +346,44 @@ dayView := {
 	debug: 4121,
 	viewFont: tsHWFont + tsSize(12),
 	viewSetupChildrenScript: func() begin
-		if (l1 := LSearch(selectedDates, displaydate, 0, '|=|, nil)) then begin
-				l1 := SubKids[l1]
+		if (pos := LSearch(selectedDates, displaydate, 0, '|=|, nil)) then begin
+				pos := SubKids[pos]
 			end;
-		(if l1 then begin
-				local l1;
+		(if pos then begin
+				local pos;
 				local l2;
-				(foreach l3 in l1 do begin
-						local l5, l6, l7;
-						if (if l3.viewBounds then (not LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], l3.viewStationery, 0, '|=|, nil))) then begin
-								if (l5 := EntryStore(l3):IsReadOnly()) then begin
-										l3.viewFlags := 129
+				(foreach item in pos do begin
+						local isReadOnly, frame2, count;
+						if (if item.viewBounds then (not LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], item.viewStationery, 0, '|=|, nil))) then begin
+								if (isReadOnly := EntryStore(item):IsReadOnly()) then begin
+										item.viewFlags := vVisible + vWriteProtected
 									end;
-								if (l3._DatesVersion <> 2) then begin
-										if l5 then begin
-												self:Convert10BoundsTo20((l6 := {viewStationery: l3.viewStationery, mtgStartDate: l3.mtgStartDate, viewBounds: l3.viewBounds}));
-												l3._DatesVersion := 2
+								if (item._DatesVersion <> 2) then begin
+										if isReadOnly then begin
+												self:Convert10BoundsTo20((frame2 := {viewStationery: item.viewStationery, mtgStartDate: item.mtgStartDate, viewBounds: item.viewBounds}));
+												item._DatesVersion := 2
 											end else begin
-												self:Convert10to20(l3, nil);
-												EntryChangeXmit(l3, 'calendar)
+												self:Convert10to20(item, nil);
+												EntryChangeXmit(item, 'calendar)
 											end;
 										l2 := true
 									end else begin
-										if FrameDirty(l3) then begin
+										if FrameDirty(item) then begin
 												l2 := true
 											end
 									end
 							end
 					end);
 				if l2 then begin
-						InsertionSort(l1, '|<|, 'mtgStartDate)
+						InsertionSort(pos, '|<|, 'mtgStartDate)
 					end;
 				kidBounds := nil;
-				l7 := Length(l1);
-				if self:AnyOverlap(l1) then begin
-						kidBounds := Array(l7, nil);
-						self:LayoutMeetings(l1, kidBounds, 0, (l7 - 1), tabWidths)
+				count := Length(pos);
+				if self:AnyOverlap(pos) then begin
+						kidBounds := Array(count, nil);
+						self:LayoutMeetings(pos, kidBounds, 0, (count - 1), tabWidths)
 					end;
-				(self.viewChildren := l1)
+				(self.viewChildren := pos)
 			end)
 	end
 };

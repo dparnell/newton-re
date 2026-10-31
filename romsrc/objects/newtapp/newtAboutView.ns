@@ -9,7 +9,7 @@ newtAboutView := {
 	creditHeight: 0,
 	viewSetupFormScript: func() begin
 		if (not theSoups) then begin
-				theSoups := (foreach l1 in theApp.allSoups collect l1.theSoup)
+				theSoups := (foreach item in theApp.allSoups collect item.theSoup)
 			end;
 		if theApp.aboutInfo.credits then begin
 				self:SetupIdle(8000)
@@ -17,14 +17,14 @@ newtAboutView := {
 		SetKeyView(self, 0)
 	end,
 	New: func(a1, a2, a3) begin
-		local l1;
-		(l1 := BuildContext(@newtAboutView)).theApp := a1;
-		l1.theSoups := a2;
+		local context;
+		(context := BuildContext(@newtAboutView)).theApp := a1;
+		context.theSoups := a2;
 		if a3 then begin
-				l1.viewBounds := a3
+				context.viewBounds := a3
 			end;
-		l1:Open();
-		l1
+		context:Open();
+		context
 	end,
 	viewIdleScript: func() begin
 		basic:Close();
@@ -64,24 +64,24 @@ basic := {
 	viewFont: tsSimple + tsSize(12),
 	viewLineSpacing: 12,
 	viewSetupFormScript: func() begin
-		l1 := theApp.aboutInfo;
-		l2 := l1:?extraInfo(theApp);
-		l3 := 0;
+		aboutInfo := theApp.aboutInfo;
+		extraInfo := aboutInfo:?extraInfo(theApp);
+		most := 0;
 		l4 := 0;
-		local l1;
-		local l2;
-		local l3;
+		local aboutInfo;
+		local extraInfo;
+		local most;
 		local l4;
-		(foreach l5 in theSoups do begin
-				local l7;
-				l7 := l5:Query(nil);
-				l4 := (l4 + l7:CountEntries());
-				l3 := (l3 + l5:GetSize())
+		(foreach item in theSoups do begin
+				local cursor;
+				cursor := item:Query(nil);
+				l4 := (l4 + cursor:CountEntries());
+				most := (most + item:GetSize())
 			end);
-		text := ParamStr("^?0^0\n\n||^?1^1\n||^?2^2\n||^?3^3\n||^?4^4\n||^?5^5\n||", [Array: l1.tagline, l1.version, l1.Date, l1.copyright, l1.trademarks, l2]);
-		(if (l3 > 0) then begin
-				l3 := max((l3 div 1024), 1);
-				(text := Stringer([Array: text, (if (l4 = 0) then ParamStr("\n^0K storage used", [Array: l3]) else (if (l4 = 1) then ParamStr("\n^0K storage used for 1 ^1", [Array: l3, theApp.appObject[0]]) else ParamStr("\n^0K storage used for ^1 ^2", [Array: l3, l4, theApp.appObject[1]])))]))
+		text := ParamStr("^?0^0\n\n||^?1^1\n||^?2^2\n||^?3^3\n||^?4^4\n||^?5^5\n||", [Array: aboutInfo.tagline, aboutInfo.version, aboutInfo.Date, aboutInfo.copyright, aboutInfo.trademarks, extraInfo]);
+		(if (most > 0) then begin
+				most := max((most div 1024), 1);
+				(text := Stringer([Array: text, (if (l4 = 0) then ParamStr("\n^0K storage used", [Array: most]) else (if (l4 = 1) then ParamStr("\n^0K storage used for 1 ^1", [Array: most, theApp.appObject[0]]) else ParamStr("\n^0K storage used for ^1 ^2", [Array: most, l4, theApp.appObject[1]])))]))
 			end)
 	end,
 	preallocatedContext: 'basic,
@@ -102,8 +102,8 @@ credits := {
 		self:CopyBits(creditPict, 0, (-viewOriginY), 0)
 	end,
 	viewIdleScript: func() begin
-		local l1, l2, l3;
-		l2 := ((l1 := self:LocalBox()).bottom - l1.top);
+		local box, l2, l3;
+		l2 := ((box := self:LocalBox()).bottom - box.top);
 		if ((l3 := (viewOriginY + l2)) > creditHeight) then begin
 				l3 := 0
 			end;
@@ -114,23 +114,23 @@ credits := {
 	viewSetupDoneScript: func() begin
 		if (not creditPict) then begin
 				l1 := 0;
-				l2 := self:LocalBox().right;
+				right := self:LocalBox().right;
 				local l1;
-				local l2;
+				local right;
 				local l3;
-				l3 := (foreach l4 in theApp.aboutInfo.credits collect begin
-					local l8;
-					(if (l4[0] = $%) then begin
-							l8 := [Array: '{font: 12291}, MakeText(Substr(l4, 1, nil), 0, l1, l2, (l1 + 24))];
+				l3 := (foreach item in theApp.aboutInfo.credits collect begin
+					local list;
+					(if (item[0] = $%) then begin
+							list := [Array: '{font: tsHWFont + tsSize(12)}, MakeText(Substr(item, 1, nil), 0, l1, right, (l1 + 24))];
 							l1 := (l1 + 30);
-							l8
+							list
 						end else begin
-							l8 := MakeText(l4, 15, l1, l2, (l1 + 12));
+							list := MakeText(item, 15, l1, right, (l1 + 12));
 							l1 := (l1 + 14);
-							l8
+							list
 						end)
 				end);
-				creditPict := MakePict(l3, '{font: 10243});
+				creditPict := MakePict(l3, '{font: tsHWFont + tsSize(10)});
 				creditHeight := l1
 			end;
 		self:SetupIdle(5000)

@@ -16,10 +16,10 @@ protoStatusButton := {
 		(if (CancelRequest exists) then base:CancelRequest('userCancel) else GetRoot().(appSymbol):CancelRequest('userCancel))
 	end,
 	viewSetupFormScript: func() begin
-		local l1, l2, l3, l4, l5, l6;
-		l2 := (l1 := self:path()).(name);
+		local path, l2, l3, l4, shiftItem, copy;
+		l2 := (path := self:path()).(name);
 		visibleAction := nil;
-		if (if (not HasSlot(l1, name)) then (BAnd(self.viewFlags, 1) = 1)) then begin
+		if (if (not HasSlot(path, name)) then (BAnd(self.viewFlags, 1) = 1)) then begin
 				l3 := 'shiftOnly
 			end else begin
 				if (if (ClassOf(l2) = 'frame) then l2.text) then begin
@@ -44,10 +44,10 @@ protoStatusButton := {
 					end;
 				visibleAction := 'makeVisible
 			end;
-		(if ((l3 = 'create) or (l3 = 'shiftOnly)) then (if (l5 := self:shiftItem()) then (if ((l5.visibleAction = 'makeVisible) or (if (not l5.visibleAction) then (BAnd(l5.viewFlags, 1) = 1))) then (self.viewBounds := DeepClone(self.constViewBounds)) else begin
-						(l6 := DeepClone(self.constViewBounds)).right := l5.viewBounds.right;
-						l6.left := (self.constViewBounds.left - (self.constViewBounds.right - l5.viewBounds.right));
-						(self.viewBounds := l6)
+		(if ((l3 = 'create) or (l3 = 'shiftOnly)) then (if (shiftItem := self:shiftItem()) then (if ((shiftItem.visibleAction = 'makeVisible) or (if (not shiftItem.visibleAction) then (BAnd(shiftItem.viewFlags, 1) = 1))) then (self.viewBounds := DeepClone(self.constViewBounds)) else begin
+						(copy := DeepClone(self.constViewBounds)).right := shiftItem.viewBounds.right;
+						copy.left := (self.constViewBounds.left - (self.constViewBounds.right - shiftItem.viewBounds.right));
+						(self.viewBounds := copy)
 					end)) else (visibleAction := 'makeInvisible))
 	end,
 	viewSetupDoneScript: func() begin

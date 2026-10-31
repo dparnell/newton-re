@@ -1,40 +1,40 @@
 // export112, and what only it reaches
 
 export112 := {
-	SolveForPayment: func(a1, a2, a3, a4) begin
+	SolveForPayment: func(listItem, listItem2, listItem3, listItem4) begin
 		local l1, l2;
 		l1 := nil;
-		l2 := (a2 / 100);
-		if (not IsFinite((l1 := ((-(a3 + (a4 * compound(l2, (-a1))))) / annuity(l2, a1))))) then begin
+		l2 := (listItem2 / 100);
+		if (not IsFinite((l1 := ((-(listItem3 + (listItem4 * compound(l2, (-listItem))))) / annuity(l2, listItem))))) then begin
 				l1 := nil
 			end;
 		return l1
 	end,
-	SolveForPeriod: func(a1, a2, a3, a4) begin
+	SolveForPeriod: func(listItem, listItem2, listItem3, listItem4) begin
 		local l1, l2;
 		l1 := nil;
-		l2 := (a1 / 100);
-		if (not IsFinite((l1 := ((-log(((a4 + (l2 * a2)) / (a4 - (l2 * a3))))) / log1p(l2))))) then begin
+		l2 := (listItem / 100);
+		if (not IsFinite((l1 := ((-log(((listItem4 + (l2 * listItem2)) / (listItem4 - (l2 * listItem3))))) / log1p(l2))))) then begin
 				l1 := nil
 			end;
 		return l1
 	end,
-	SolveForInterestRate: func(a1, a2, a3, a4) begin
+	SolveForInterestRate: func(listItem, listItem2, listItem3, listItem4) begin
 		l1 := nil;
-		if (not ((((if (if (a2 >= 0.0) then (a3 >= 0.0)) then (a4 >= 0.0)) or (if (if (a2 <= 0.0) then (a3 <= 0.0)) then (a4 <= 0.0))) or (if (a2 = 0.0) then (a3 = 0.0))) or (a1 < 0))) then begin
-				l2 := 0;
+		if (not ((((if (if (listItem2 >= 0.0) then (listItem3 >= 0.0)) then (listItem4 >= 0.0)) or (if (if (listItem2 <= 0.0) then (listItem3 <= 0.0)) then (listItem4 <= 0.0))) or (if (listItem2 = 0.0) then (listItem3 = 0.0))) or (listItem < 0))) then begin
+				i := 0;
 				l3 := 0.001;
 				l4 := 0.01;
-				l6 := ((a2 + (a4 * annuity(l3, a1))) + (a3 / compound(l3, a1)));
-				l7 := ((a2 + (a4 * annuity(l4, a1))) + (a3 / compound(l4, a1)));
+				l6 := ((listItem2 + (listItem4 * annuity(l3, listItem))) + (listItem3 / compound(l3, listItem)));
+				l7 := ((listItem2 + (listItem4 * annuity(l4, listItem))) + (listItem3 / compound(l4, listItem)));
 				local l1;
-				local l2;
+				local i;
 				local l3;
 				local l4;
 				local l5;
 				local l6;
 				local l7;
-				(for l2 := 1 to 50 do begin
+				(for i := 1 to 50 do begin
 						if (abs(((l3 - l4) / l4)) < 1.0e-07) then begin
 								l1 := (l4 * 100);
 								break
@@ -45,25 +45,25 @@ export112 := {
 						l3 := l4;
 						l6 := l7;
 						l4 := l5;
-						l7 := ((a2 + (a4 * annuity(l4, a1))) + (a3 / compound(l4, a1)))
+						l7 := ((listItem2 + (listItem4 * annuity(l4, listItem))) + (listItem3 / compound(l4, listItem)))
 					end)
 			end;
 		return l1
 	end,
-	SolveForPresentValue: func(a1, a2, a3, a4) begin
+	SolveForPresentValue: func(listItem, listItem2, listItem3, listItem4) begin
 		local l1, l2;
 		l1 := nil;
-		l2 := (a2 / 100);
-		if (not IsFinite((l1 := (((-a4) * annuity(l2, a1)) - (a3 * compound(l2, (-a1))))))) then begin
+		l2 := (listItem2 / 100);
+		if (not IsFinite((l1 := (((-listItem4) * annuity(l2, listItem)) - (listItem3 * compound(l2, (-listItem))))))) then begin
 				l1 := nil
 			end;
 		return l1
 	end,
-	SolveForFutureValue: func(a1, a2, a3, a4) begin
+	SolveForFutureValue: func(listItem, listItem2, listItem3, listItem4) begin
 		local l1, l2;
 		l1 := nil;
-		l2 := (a2 / 100);
-		if (not IsFinite((l1 := ((((-a4) * annuity(l2, a1)) - a3) * compound(l2, a1))))) then begin
+		l2 := (listItem2 / 100);
+		if (not IsFinite((l1 := ((((-listItem4) * annuity(l2, listItem)) - listItem3) * compound(l2, listItem))))) then begin
 				l1 := nil
 			end;
 		return l1

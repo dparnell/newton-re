@@ -5,12 +5,12 @@ newtShowStationeryButton := {
 	keyButton: '_showKeyButton,
 	text: show_2,
 	types: [|Array|: 'viewer, 'editor],
-	statScript: func(a1) begin
+	statScript: func(statArrayItem) begin
 		if (newtAppBase.currentLayout = 'overview) then begin
 				newtAppBase:ShowLayout(nil)
 			end;
-		preferredViewDef := a1.symbol;
-		layout.viewDef := a1.symbol;
+		preferredViewDef := statArrayItem.symbol;
+		layout.viewDef := statArrayItem.symbol;
 		layout:Retarget(true)
 	end,
 	BuildPopup: func() begin
@@ -21,14 +21,14 @@ newtShowStationeryButton := {
 			end;
 		l1 := nil;
 		local l1;
-		(foreach l2 in statArray do begin
+		(foreach item in statArray do begin
 				local l4, l5;
-				l4 := (if l2.name then l2.name else l2.title);
-				l5 := (if l2.icon then begin
+				l4 := (if item.name then item.name else item.title);
+				l5 := (if item.icon then begin
 						l1 := true;
-						{item: l4, icon: l2.icon}
+						{item: l4, icon: item.icon}
 					end else {item: l4});
-				if (l2.symbol = layout.viewDef) then begin
+				if (item.symbol = layout.viewDef) then begin
 						l5.mark := $\uFC0B
 					end;
 				AddArraySlot(popup, l5)

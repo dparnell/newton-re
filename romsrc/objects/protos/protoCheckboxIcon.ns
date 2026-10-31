@@ -16,8 +16,8 @@ protoCheckboxIcon := {
 	viewSetupDoneScript: func() begin
 		self:UpdateBitmap()
 	end,
-	viewClickScript: func(a1) begin
-		if self:TrackHilite(a1) then begin
+	viewClickScript: func(unit) begin
+		if self:TrackHilite(unit) then begin
 				self:toggleCheck();
 				self:hilite(nil)
 			end;
@@ -41,9 +41,9 @@ protoCheckboxIcon := {
 			end;
 		base:Dirty()
 	end,
-	SetCheck: func(a1) begin
-		(if (viewValue <> a1) then begin
-				viewValue := (if a1 then buttonValue);
+	SetCheck: func(value) begin
+		(if (viewValue <> value) then begin
+				viewValue := (if value then buttonValue);
 				self:valueChanged();
 				self:UpdateBitmap()
 			end)
@@ -51,8 +51,8 @@ protoCheckboxIcon := {
 	valueChanged: func() begin
 		nil
 	end,
-	viewChangedScript: func(a1, a2) begin
-		(if (a1 = 'viewValue) then self:valueChanged())
+	viewChangedScript: func(slot, view) begin
+		(if (slot = 'viewValue) then self:valueChanged())
 	end,
 	debug: 5800980
 };

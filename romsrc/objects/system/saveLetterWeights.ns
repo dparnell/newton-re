@@ -1,14 +1,14 @@
 // saveLetterWeights, and what only it reaches
 
 saveLetterWeights := func() begin
-	local l1;
+	local letterWeights;
 	(if (userConfiguration.letterSetSelection <> 2) then begin
-			SaveDataToEntry((l1 := GetLetterWeights()), "LetterWeights2.0");
+			SaveDataToEntry((letterWeights := GetLetterWeights()), "LetterWeights2.0");
 			(if userConfiguration.bigLearningEnabled then begin
-					if l1 then begin
-							l1 := GetLearningData()
+					if letterWeights then begin
+							letterWeights := GetLearningData()
 						end;
-					SaveDataToEntry(l1, "LearningData2.0")
+					SaveDataToEntry(letterWeights, "LearningData2.0")
 				end)
 		end)
 end;

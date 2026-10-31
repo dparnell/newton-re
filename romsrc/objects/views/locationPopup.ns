@@ -9,19 +9,19 @@ locationPopup := {
 	result: nil,
 	returnSlot: nil,
 	New: func(a1, a2, a3) begin
-		local l1;
-		(l1 := self:Init()).context := a3;
+		local init;
+		(init := self:Init()).context := a3;
 		if a1.spots then begin
-				l1.spots := a1.spots
+				init.spots := a1.spots
 			end;
-		l1.initialSpot := a1.default;
-		l1.returnSlot := a1.result;
+		init.initialSpot := a1.default;
+		init.returnSlot := a1.result;
 		if HasPath(a1, 'nameBased) then begin
-				l1.countryAndName := (not nameBased)
+				init.countryAndName := (not nameBased)
 			end else begin
-				l1.countryAndName := (l1.spots = @citySoupName)
+				init.countryAndName := (init.spots = @citySoupName)
 			end;
-		l1:popup(a2)
+		init:popup(a2)
 	end,
 	Affirmative: func() begin
 		(if result then context:?pickActionScript((if returnSlot then result.(returnSlot) else result)) else context:?pickCancelledScript())

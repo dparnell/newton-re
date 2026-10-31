@@ -9,47 +9,47 @@ newTrollLayout := {
 	viewOriginY: 0,
 	overlapscrollamount: nil,
 	viewSetupChildrenScript: func() begin
-		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
+		local list, box, l3, copy, l5, entry2, entry, l8, height, entryDataDef, entryDataView;
 		inherited:viewSetupChildrenScript();
 		self.viewChildren := nil;
-		l1 := [Array: ];
-		l2 := self:LocalBox();
+		list := [Array: ];
+		box := self:LocalBox();
 		overlapscrollamount := (4 * viewLineSpacing);
 		l3 := (-viewOriginY);
-		l4 := dataCursor:clone();
+		copy := dataCursor:clone();
 		l5 := 0;
-		l6 := nil;
-		l7 := l4:entry();
+		entry2 := nil;
+		entry := copy:entry();
 		entries := Array(10, nil);
 		entryViewDefs := Array(10, nil);
 		l8 := 10;
 		lastItem := nil;
 		lastHeight := self:LocalBox().bottom;
-		l9 := 0;
+		height := 0;
 		(loop begin
-				if (not l7) then begin
-						lastItem := l6;
+				if (not entry) then begin
+						lastItem := entry2;
 						break
 					end;
-				if (l10 := GetEntryDataDef(l7)) then begin
-						l11 := GetEntryDataView(l7, viewDef)
+				if (entryDataDef := GetEntryDataDef(entry)) then begin
+						entryDataView := GetEntryDataView(entry, viewDef)
 					end;
-				if (l3 > l2.bottom) then begin
+				if (l3 > box.bottom) then begin
 						break
 					end else begin
-						lastHeight := (lastHeight - l9);
-						l9 := l7.height;
-						l3 := (l3 + l9);
+						lastHeight := (lastHeight - height);
+						height := entry.height;
+						l3 := (l3 + height);
 						if (l5 >= l8) then begin
 								SetLength(entries, (l8 := (l8 + 10)));
 								SetLength(entryViewDefs, l8)
 							end;
-						entries[l5] := l7;
-						entryViewDefs[l5] := l11;
+						entries[l5] := entry;
+						entryViewDefs[l5] := entryDataView;
 						l5 := (l5 + 1)
 					end;
-				l6 := l7;
-				(l7 := l4:Next())
+				entry2 := entry;
+				(entry := copy:Next())
 			end);
 		self.viewChildren := Array(l5, protoChild);
 		SetLength(entries, l5);
@@ -57,16 +57,16 @@ newTrollLayout := {
 		layout:Retarget(nil)
 	end,
 	PixelScrollBy: func(a1, a2) begin
-		local l1, l2;
+		local box, l2;
 		duringScroll := 'item;
 		try begin
 				self:DropHilites();
 				RefreshViews();
-				l2 := (l1 := self:LocalBox()).bottom;
-				l1.bottom := (l1.bottom - 20);
-				self:RevealEffect((-a2), l1, @flip, 'PixelScroller, [Array: a1, a2]);
-				(l1 := self:GlobalBox()).top := (l1.bottom - 20);
-				self:DirtyBox(l1)
+				l2 := (box := self:LocalBox()).bottom;
+				box.bottom := (box.bottom - 20);
+				self:RevealEffect((-a2), box, @flip, 'PixelScroller, [Array: a1, a2]);
+				(box := self:GlobalBox()).top := (box.bottom - 20);
+				self:DirtyBox(box)
 			end onexception |evt.ex| do begin
 				duringScroll := nil;
 				Rethrow()
@@ -203,27 +203,27 @@ newTrollLayout := {
 				end))
 	end,
 	viewScrollUpScript: func() begin
-		local l1, l2, l3, l4, l5, l6;
-		l2 := ((l1 := self:LocalBox()).bottom - (if viewLineSpacing then (4 * viewLineSpacing) else 24));
-		l3 := Length(entries);
+		local box, l2, count, viewOriginY2, prev, l6;
+		l2 := ((box := self:LocalBox()).bottom - (if viewLineSpacing then (4 * viewLineSpacing) else 24));
+		count := Length(entries);
 		if (viewOriginY <> 0) then begin
-				if (viewOriginY >= l1.bottom) then begin
-						l4 := (if ((viewOriginY mod l2) = 0) then l2 else (viewOriginY mod l2))
+				if (viewOriginY >= box.bottom) then begin
+						viewOriginY2 := (if ((viewOriginY mod l2) = 0) then l2 else (viewOriginY mod l2))
 					end else begin
-						l4 := viewOriginY
+						viewOriginY2 := viewOriginY
 					end
 			end else begin
-				if (not (l5 := dataCursor:clone():prev())) then begin
+				if (not (prev := dataCursor:clone():prev())) then begin
 						return nil
 					end;
-				l4 := (if (l5.height > l1.bottom) then (if ((l6 := (l5.height mod l2)) < (l1.bottom - l2)) then (l6 + l2) else l6) else l5.height)
+				viewOriginY2 := (if (prev.height > box.bottom) then (if ((l6 := (prev.height mod l2)) < (box.bottom - l2)) then (l6 + l2) else l6) else prev.height)
 			end;
-		self:PixelScrollBy(0, (-l4))
+		self:PixelScrollBy(0, (-viewOriginY2))
 	end,
 	viewScrollDownScript: func() begin
-		local l1, l2, l3, l4;
-		l2 := ((l1 := self:LocalBox()).bottom - (if viewLineSpacing then (4 * viewLineSpacing) else 24));
-		l4 := (if ((l3 := Length(entries)) > 1) then (entries[0].height - viewOriginY) else l2);
+		local box, l2, count, l4;
+		l2 := ((box := self:LocalBox()).bottom - (if viewLineSpacing then (4 * viewLineSpacing) else 24));
+		l4 := (if ((count := Length(entries)) > 1) then (entries[0].height - viewOriginY) else l2);
 		self:PixelScrollBy(0, l4)
 	end,
 	Jogged: Jogged,

@@ -3,15 +3,15 @@
 newtNumView := {
 	_proto: @newtroNumView,
 	viewFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed,
-	viewChangedScript: func(a1, a2) begin
-		local l1;
-		(if (if (not GetVariable(a2, 'hack)) then (a1 = 'text)) then begin
-				if (not (l1 := StringToNumber(a2.(a1)))) then begin
-						if (not (l1 := StringToNumber(StringFilter(a2.(a1), "0123456789.,-", 'passAll)))) then begin
-								l1 := 0
+	viewChangedScript: func(slot, view) begin
+		local number;
+		(if (if (not GetVariable(view, 'hack)) then (slot = 'text)) then begin
+				if (not (number := StringToNumber(view.(slot)))) then begin
+						if (not (number := StringToNumber(StringFilter(view.(slot), "0123456789.,-", 'passAll)))) then begin
+								number := 0
 							end
 					end;
-				GetVariable(a2, 'target).(path) := (if integerOnly then floor((l1 + 0.5)) else l1);
+				GetVariable(view, 'target).(path) := (if integerOnly then floor((number + 0.5)) else number);
 				self:StartFlush()
 			end)
 	end

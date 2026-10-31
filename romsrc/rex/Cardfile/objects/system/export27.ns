@@ -7,19 +7,19 @@ export27 := {
 	viewBounds: {top: 7, left: 7, right: -7, bottom: -7},
 	noScroll: "This window does not support scrolling.",
 	noOverview: "This window does not support Overview.",
-	pickActionScript: func(a1) begin
-		target.sorton := SPrintObject(a1);
+	pickActionScript: func(index) begin
+		target.sorton := SPrintObject(index);
 		EntryChange(target);
 		AddDeferredSend(closeBox, 'buttonClickScript, '[Array: ])
 	end,
-	MakeDataPaths: func(a1, a2, a3) begin
-		newtAppBase:MakeDataPaths(a1, a2, a3)
+	MakeDataPaths: func(checkPrefixItem, checkPaths, stringData) begin
+		newtAppBase:MakeDataPaths(checkPrefixItem, checkPaths, stringData)
 	end,
 	GetCustomInfo: func() begin
 		newtAppBase:GetCustomInfo()
 	end,
-	SetCustomInfo: func(a1) begin
-		newtAppBase:SetCustomInfo(a1)
+	SetCustomInfo: func(target) begin
+		newtAppBase:SetCustomInfo(target)
 	end,
 	EditCustomLabels: func() begin
 		newtAppBase:EditCustomLabels()
@@ -59,26 +59,26 @@ editFields := {
 					stepChildren: [stepChildren: editFieldsItem, {_proto: @8212}, doneBtn],
 					declareSelf: 'editView,
 					viewSetupChildrenScript: func() begin
-						local l1, l2;
-						l1 := viewChildren[0];
+						local viewChildrenItem, viewBounds;
+						viewChildrenItem := viewChildren[0];
 						stepChildren := Clone(stepChildren);
-						if l1.nukeRecToggle then begin
+						if viewChildrenItem.nukeRecToggle then begin
 								ArrayMunger(stepChildren, 1, 1, nil, 0, nil)
 							end;
-						if l1.usePhoneKeys then begin
-								stepChildren[0] := {_proto: @phonePad, viewJustify: 144, viewBounds: SetBounds(0, (-126 - extraChildrenHeight), 124, (-extraChildrenHeight))}
+						if viewChildrenItem.usePhoneKeys then begin
+								stepChildren[0] := {_proto: @phonePad, viewJustify: vjParentCenterH + vjParentBottomV, viewBounds: SetBounds(0, (-126 - extraChildrenHeight), 124, (-extraChildrenHeight))}
 							end else begin
-								if l1.useNumericKeys then begin
-										stepChildren[0] := {_proto: @numericKeys, viewJustify: 144, viewBounds: SetBounds(0, (-101 - extraChildrenHeight), 105, (-extraChildrenHeight)), viewFont: keypadFont}
+								if viewChildrenItem.useNumericKeys then begin
+										stepChildren[0] := {_proto: @numericKeys, viewJustify: vjParentCenterH + vjParentBottomV, viewBounds: SetBounds(0, (-101 - extraChildrenHeight), 105, (-extraChildrenHeight)), viewFont: keypadFont}
 									end else begin
-										if l1.noKeyboard then begin
+										if viewChildrenItem.noKeyboard then begin
 												ArrayMunger(stepChildren, 0, 1, nil, 0, nil)
 											end else nil
 									end
 							end;
-						if (not l1.noKeyboard) then begin
-								l2 := stepChildren[0].viewBounds;
-								extraChildrenHeight := ((extraChildrenHeight + l2.bottom) - l2.top)
+						if (not viewChildrenItem.noKeyboard) then begin
+								viewBounds := stepChildren[0].viewBounds;
+								extraChildrenHeight := ((extraChildrenHeight + viewBounds.bottom) - viewBounds.top)
 							end;
 						inherited:?viewSetupChildrenScript()
 					end,
@@ -91,22 +91,22 @@ editFields := {
 						inherited:?viewSetupFormScript()
 					end,
 					viewSetupDoneScript: func() begin
-						local l1, l2, l3, l4, l5, l6, l7, l8, l9;
-						l8 := GetAppParams().appAreaHeight;
-						l9 := self:LocalBox();
-						l1 := Length((l2 := self:ChildViewFrames()[0]:ChildViewFrames()));
-						l3 := Clone(base.viewBounds);
-						l4 := (l2[(l1 - 1)]:GlobalBox().bottom + extraChildrenHeight);
-						if (if (not viewChildren[0].noKeyboard) then (l4 > l8)) then begin
-								l7 := self:ChildViewFrames()[1];
-								RemoveStepView(self, l7);
+						local count, childViewFrames, copy, l4, nextKeyView2, l6, childViewFrame, appAreaHeight, box;
+						appAreaHeight := GetAppParams().appAreaHeight;
+						box := self:LocalBox();
+						count := Length((childViewFrames := self:ChildViewFrames()[0]:ChildViewFrames()));
+						copy := Clone(base.viewBounds);
+						l4 := (childViewFrames[(count - 1)]:GlobalBox().bottom + extraChildrenHeight);
+						if (if (not viewChildren[0].noKeyboard) then (l4 > appAreaHeight)) then begin
+								childViewFrame := self:ChildViewFrames()[1];
+								RemoveStepView(self, childViewFrame);
 								l4 := ((l4 - extraChildrenHeight) + 18)
 							end;
-						l3.top := max(7, ((l8 - l4) - 3));
-						SetValue(base, 'viewBounds, l3);
+						copy.top := max(7, ((appAreaHeight - l4) - 3));
+						SetValue(base, 'viewBounds, copy);
 						if (viewDef <> 'editNotes) then begin
-								if (l5 := NextKeyView(l2[0], 0, 0)) then begin
-										SetKeyView(l5, 999)
+								if (nextKeyView2 := NextKeyView(childViewFrames[0], 0, 0)) then begin
+										SetKeyView(nextKeyView2, 999)
 									end
 							end;
 						inherited:?viewSetupDoneScript()
@@ -131,43 +131,43 @@ editFields := {
 			declareSelf: 'editEntryView,
 			viewJustify: vjParentFullH + vjParentFullV,
 			viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
-			HasData: func(a1, a2) begin
-				l3 := nil;
+			HasData: func(key2, a2) begin
+				strFilled2 := nil;
 				if (IsFrame(a2) or IsArray(a2)) then begin
-						local l1;
-						local l2;
-						local l3;
-						(foreach l1, l2 in a2 do begin
-								if self:HasData(l1, l2) then begin
-										break (l3 := l1)
+						local key;
+						local value;
+						local strFilled2;
+						(foreach key, value in a2 do begin
+								if self:HasData(key, value) then begin
+										break (strFilled2 := key)
 									end
 							end)
 					end else begin
-						if ((not IsInstance(a1, 'symbol)) or (not appBase.kDatalessSlots.(a1))) then begin
+						if ((not IsInstance(key2, 'symbol)) or (not appBase.kDatalessSlots.(key2))) then begin
 								if IsInstance(a2, 'string) then begin
-										l3 := StrFilled(a2)
+										strFilled2 := StrFilled(a2)
 									end else begin
 										if a2 then begin
-												l3 := a1
+												strFilled2 := key2
 											end
 									end
 							end
 					end;
-				l3
+				strFilled2
 			end,
 			inkDialog: nil,
 			viewPostQuitScript: func() begin
-				local l1, l2, l3, l4;
+				local l1, l2, l3, target2;
 				self:EndFlush();
 				if (not EntryValid(target)) then begin
 						return nil
 					end;
 				if (not self:HasData(nil, target)) then begin
-						l4 := target;
+						target2 := target;
 						if saveEntry then begin
 								appBase.layout.dataCursor:Goto(saveEntry)
 							end;
-						appBase.layout:KillEntry(l4)
+						appBase.layout:KillEntry(target2)
 					end else begin
 						if (target.class = 'owner) then begin
 								UseCurrentPersona()

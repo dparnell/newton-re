@@ -5,18 +5,18 @@ protoConvertInkSlip := {
 	viewJustify: vjParentCenterH + vjParentCenterV,
 	extraHeight: 20,
 	viewSetupChildrenScript: func() begin
-		local l1, l2, l3, l4;
+		local l1, strFontWidth2, l3, l4;
 		l3 := 'symbol;
 		infoText.text := userText;
 		headerText.title := userTitle;
-		l2 := StrFontWidth(headerText.title, headerText.viewFont);
-		headerText.viewBounds := SetBounds(0, 5, l2, 15);
+		strFontWidth2 := StrFontWidth(headerText.title, headerText.viewFont);
+		headerText.viewBounds := SetBounds(0, 5, strFontWidth2, 15);
 		if (kbdType = 'alpha) then begin
-				l4 := '{_proto: @alphaKeys, viewBounds: {left: 1, top: -101, right: 226, bottom: -20}, viewJustify: 144}
+				l4 := '{_proto: @alphaKeys, viewBounds: {left: 1, top: -101, right: 226, bottom: -20}, viewJustify: vjParentCenterH + vjParentBottomV}
 			end else begin
 				if (kbdType = 'phone) then begin
-						l4 := '{_proto: @phonePad, viewBounds: {left: 0, top: -146, right: 124, bottom: -20}, viewJustify: 144};
-						entryLine.viewFlags := 264705
+						l4 := '{_proto: @phonePad, viewBounds: {left: 0, top: -146, right: 124, bottom: -20}, viewJustify: vjParentCenterH + vjParentBottomV};
+						entryLine.viewFlags := vVisible + vClickable + vGesturesAllowed + vPhoneField
 					end
 			end;
 		if recFlags then begin
@@ -29,12 +29,12 @@ protoConvertInkSlip := {
 		inherited:?viewSetupChildrenScript()
 	end,
 	viewSetupDoneScript: func() begin
-		local l1, l2, l3, l4;
-		l2 := self:ChildViewFrames();
-		l1 := Clone(self.viewBounds);
-		l4 := (Length(l2) - (if kbdType then 2 else 1));
-		l1.bottom := ((l2[l4]:GlobalBox().bottom - self:GlobalBox().top) + extraHeight);
-		SetValue(self, 'viewBounds, l1);
+		local copy, childViewFrames, l3, l4;
+		childViewFrames := self:ChildViewFrames();
+		copy := Clone(self.viewBounds);
+		l4 := (Length(childViewFrames) - (if kbdType then 2 else 1));
+		copy.bottom := ((childViewFrames[l4]:GlobalBox().bottom - self:GlobalBox().top) + extraHeight);
+		SetValue(self, 'viewBounds, copy);
 		inherited:?viewSetupDoneScript();
 		SetKeyView(entryLine, 0)
 	end,
@@ -45,14 +45,14 @@ protoConvertInkSlip := {
 	viewChildren: [viewChildren:
 		{
 			buttonClickScript: func() begin
-				local l1;
-				l1 := Clone(entryLine:GetRichString());
+				local copy;
+				copy := Clone(entryLine:GetRichString());
 				if phoneCvt then begin
-						StrReplace(l1, "(", "(", 1);
-						StrReplace(l1, ")", ")", 1)
+						StrReplace(copy, "(", "(", 1);
+						StrReplace(copy, ")", ")", 1)
 					end;
 				if compMsg then begin
-						Perform(compView, compMsg, [Array: (not IsRichString(l1)), l1, userData])
+						Perform(compView, compMsg, [Array: (not IsRichString(copy)), copy, userData])
 					end;
 				base:Close()
 			end,

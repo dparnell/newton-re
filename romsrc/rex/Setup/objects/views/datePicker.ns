@@ -37,8 +37,8 @@ datePicker := {
 	titleTExt: "Set Today’s Date\u000d\u000d",
 	description: "To set the year, tap the upper half of a number to increase it and the bottom half to decrease it.",
 	TearDown: func() begin
-		local l1;
-		(if dateValue then SetTime((l1 := (((l1 := dateValue) - (l1 mod 1440)) + (Time() mod 1440)))))
+		local dateValue2;
+		(if dateValue then SetTime((dateValue2 := (((dateValue2 := dateValue) - (dateValue2 mod 1440)) + (Time() mod 1440)))))
 	end,
 	fullDateSpec: 45833,
 	viewSetupFormScript: func() begin

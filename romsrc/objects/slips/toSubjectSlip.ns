@@ -25,7 +25,7 @@ toSubjectSlip := {
 					newRecFlags: 1636865,
 					label: "Subject",
 					indent: 55,
-					jamFromEntry: func(a1) begin
+					jamFromEntry: func(resolveEntryAlias) begin
 						nil
 					end,
 					path: 'title,

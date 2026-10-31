@@ -26,8 +26,8 @@ signature := {
 			local l1;
 			(if (l1 := a1.(a2[0])) then (Length(l1) > 0))
 		end,
-		formatFunc: func(a1) begin
-			(if (if a1[0] then (Length(a1[0]) > 0)) then "[signature]" else "")
+		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+			(if (if v20_wwwwwwwwwwvvvvvv[0] then (Length(v20_wwwwwwwwwwvvvvvv[0]) > 0)) then "[signature]" else "")
 		end
 	},
 	protection: 'private,

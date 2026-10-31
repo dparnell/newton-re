@@ -6,26 +6,26 @@ protoPopInPlace := {
 	text: currentZone,
 	popup: nil,
 	buttonClickScript: func() begin
-		l1 := StringFilter(text, " ", 'rejectBeginning);
+		rejectBeginning := StringFilter(text, " ", 'rejectBeginning);
 		l2 := 0;
-		local l1;
+		local rejectBeginning;
 		local l2;
-		(foreach l3, l4 in popup do begin
+		(foreach key, value in popup do begin
 				local l6;
-				if (ClassOf(l4) <> 'symbol) then begin
-						if StrEqual((l6 := (if IsFrame(l4) then l4.item else l4)), l1) then begin
+				if (ClassOf(value) <> 'symbol) then begin
+						if StrEqual((l6 := (if IsFrame(value) then value.item else value)), rejectBeginning) then begin
 								if IsReadOnly(popup) then begin
 										popup := Clone(popup)
 									end;
-								if IsFrame(l4) then begin
-										(popup[l3] := Clone(l4)).mark := $\uFC0B
+								if IsFrame(value) then begin
+										(popup[key] := Clone(value)).mark := $\uFC0B
 									end else begin
-										popup[l3] := {item: l4, mark: $\uFC0B}
+										popup[key] := {item: value, mark: $\uFC0B}
 									end;
-								l2 := ((-l3) * FontHeight(viewFont))
+								l2 := ((-key) * FontHeight(viewFont))
 							end else begin
-								if (if IsFrame(l4) then (not IsReadOnly(l4))) then begin
-										RemoveSlot(l4, 'mark)
+								if (if IsFrame(value) then (not IsReadOnly(value))) then begin
+										RemoveSlot(value, 'mark)
 									end
 							end
 					end
@@ -37,14 +37,14 @@ protoPopInPlace := {
 		self:SetBounds()
 	end,
 	SetBounds: func() begin
-		local l1, l2, l3;
-		l2 := ((l1 := self:GlobalBox()).right - l1.left);
+		local box, l2, l3;
+		l2 := ((box := self:GlobalBox()).right - box.left);
 		((l3 := (viewBounds := Clone(viewBounds))).right := (l3.left + StdButtonWidth(text)))
 	end,
-	pickActionScript: func(a1) begin
-		local l1, l2;
-		inherited:pickActionScript(a1);
-		self:SetText((l2 := (if IsFrame((l1 := popup[a1])) then l1.item else l1)));
+	pickActionScript: func(index) begin
+		local popupItem, l2;
+		inherited:pickActionScript(index);
+		self:SetText((l2 := (if IsFrame((popupItem := popup[index])) then popupItem.item else popupItem)));
 		self:SyncView()
 	end,
 	_proto: @protoPopupButton

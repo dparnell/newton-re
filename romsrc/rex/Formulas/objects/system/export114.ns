@@ -2,27 +2,27 @@
 
 export114 := {
 	GetConversionFactor: func() begin
-		local l1;
+		local lengthTable2;
 		if (curMeasurement = 0) then begin
-				l1 := lengthTable
+				lengthTable2 := lengthTable
 			end else begin
 				if (curMeasurement = 1) then begin
-						l1 := areaTable
+						lengthTable2 := areaTable
 					end else begin
 						if (curMeasurement = 2) then begin
-								l1 := weightTable
+								lengthTable2 := weightTable
 							end else begin
 								if (curMeasurement = 3) then begin
-										l1 := USLiquidTable
+										lengthTable2 := USLiquidTable
 									end else begin
 										if (curMeasurement = 4) then begin
-												l1 := BritishLiquidTable
+												lengthTable2 := BritishLiquidTable
 											end
 									end
 							end
 					end
 			end;
-		return l1[Metric:GetPickerItemNumber()][US:GetPickerItemNumber()]
+		return lengthTable2[Metric:GetPickerItemNumber()][US:GetPickerItemNumber()]
 	end,
 	viewSetupDoneScript: func() begin
 		AddArraySlot((FSViews := [Array: ]), US);
@@ -65,10 +65,10 @@ export114 := {
 		]
 	],
 	viewQuitScript: func() begin
-		local l1;
-		(l1 := self:GetFormulaValues()).(formulaSymbol).measurement := curMeasurement;
-		l1.(formulaSymbol).USItem := US:GetPickerItemNumber();
-		l1.(formulaSymbol).MetricItem := Metric:GetPickerItemNumber();
+		local formulaValues;
+		(formulaValues := self:GetFormulaValues()).(formulaSymbol).measurement := curMeasurement;
+		formulaValues.(formulaSymbol).USItem := US:GetPickerItemNumber();
+		formulaValues.(formulaSymbol).MetricItem := Metric:GetPickerItemNumber();
 		inherited:?viewQuitScript()
 	end,
 	MetricDefaults: [|Array|: 1, 2, 1, 1, 1, 0],
@@ -136,21 +136,21 @@ export114 := {
 	stepAllocateContext: [|Array|: 'category, measurement, 'US, export114Item, 'Metric, export114Item_2],
 	solvedFor: nil,
 	viewSetupFormScript: func() begin
-		local l1;
-		if ((l1 := self:GetFormulaValues()).(formulaSymbol).measurement = nil) then begin
+		local formulaValues;
+		if ((formulaValues := self:GetFormulaValues()).(formulaSymbol).measurement = nil) then begin
 				curMeasurement := 0
 			end else begin
-				curMeasurement := l1.(formulaSymbol).measurement
+				curMeasurement := formulaValues.(formulaSymbol).measurement
 			end;
-		if (l1.(formulaSymbol).USItem = nil) then begin
+		if (formulaValues.(formulaSymbol).USItem = nil) then begin
 				SetValue(US, 'defaultItem, USDefaults[curMeasurement])
 			end else begin
-				SetValue(US, 'defaultItem, l1.(formulaSymbol).USItem)
+				SetValue(US, 'defaultItem, formulaValues.(formulaSymbol).USItem)
 			end;
-		if (l1.(formulaSymbol).MetricItem = nil) then begin
+		if (formulaValues.(formulaSymbol).MetricItem = nil) then begin
 				SetValue(Metric, 'defaultItem, MetricDefaults[curMeasurement])
 			end else begin
-				SetValue(Metric, 'defaultItem, l1.(formulaSymbol).MetricItem)
+				SetValue(Metric, 'defaultItem, formulaValues.(formulaSymbol).MetricItem)
 			end;
 		inherited:?viewSetupFormScript()
 	end,
@@ -199,14 +199,14 @@ measurement := {
 	text: "Measurement",
 	indent: 110,
 	viewFont: @fontSystem10Bold,
-	labelActionScript: func(a1) begin
-		curMeasurement := a1;
+	labelActionScript: func(index) begin
+		curMeasurement := index;
 		self:ClearAllFields();
-		SetValue(US, 'labelItems, USLabels[a1]);
-		SetValue(US, 'defaultItem, USDefaults[a1]);
+		SetValue(US, 'labelItems, USLabels[index]);
+		SetValue(US, 'defaultItem, USDefaults[index]);
 		US:ResetPicker();
-		SetValue(Metric, 'labelItems, MetricLabels[a1]);
-		SetValue(Metric, 'defaultItem, MetricDefaults[a1]);
+		SetValue(Metric, 'labelItems, MetricLabels[index]);
+		SetValue(Metric, 'defaultItem, MetricDefaults[index]);
 		Metric:ResetPicker();
 		self:InitFieldBasedOnMeasurement()
 	end,
@@ -218,8 +218,8 @@ measurement := {
 };
 
 export114Item := {
-	ComputeValue: func(a1) begin
-		(if (curMeasurement = 5) then return ((a1[1] * 1.8) + 32) else return (a1[1] / self:GetConversionFactor()))
+	ComputeValue: func(list) begin
+		(if (curMeasurement = 5) then return ((list[1] * 1.8) + 32) else return (list[1] / self:GetConversionFactor()))
 	end,
 	labelItems: nil,
 	viewSetupFormScript: func() begin
@@ -236,8 +236,8 @@ export114Item := {
 };
 
 export114Item_2 := {
-	ComputeValue: func(a1) begin
-		(if (curMeasurement = 5) then return ((a1[0] - 32) / 1.8) else return (a1[0] * self:GetConversionFactor()))
+	ComputeValue: func(list) begin
+		(if (curMeasurement = 5) then return ((list[0] - 32) / 1.8) else return (list[0] * self:GetConversionFactor()))
 	end,
 	labelItems: nil,
 	viewSetupFormScript: func() begin

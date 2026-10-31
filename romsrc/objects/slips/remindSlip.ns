@@ -18,8 +18,8 @@ remindSlip := {
 		inherited:?viewSetupFormScript()
 	end,
 	viewSetupDoneScript: func() begin
-		local l1;
-		SetKeyView((l1 := meetingTitle.entryLine), 9999)
+		local entryLine;
+		SetKeyView((entryLine := meetingTitle.entryLine), 9999)
 	end,
 	viewQuitScript: func() begin
 		(if (not rotationInProgress) then begin
@@ -51,12 +51,12 @@ remindSlip := {
 			viewSetupFormScript: func() begin
 				(Date := totMin)
 			end,
-			pickActionScript: func(a1) begin
-				local l1;
-				l1 := a1[0];
+			pickActionScript: func(index) begin
+				local indexItem;
+				indexItem := index[0];
 				dirtyFlag := true;
-				totMin := (l1 - (l1 mod 1440));
-				inherited:pickActionScript(a1)
+				totMin := (indexItem - (indexItem mod 1440));
+				inherited:pickActionScript(index)
 			end,
 			_proto: @protoDateTextPicker
 		},
@@ -76,8 +76,8 @@ remindSlip := {
 			iconSetup: func() begin
 				labelCommands[3].icon
 			end,
-			LabelActionScript: func(a1) begin
-				(priority := a1)
+			LabelActionScript: func(index) begin
+				(priority := index)
 			end,
 			TextSetup: func() begin
 				return labelCommands[3].item
@@ -109,15 +109,15 @@ _defaultButton_15 := {
 	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingCenterV,
 	text: do_2,
 	buttonClickScript: func() begin
-		local l1, l2;
-		l1 := GetRoot().calendar;
+		local calendar, toDo;
+		calendar := GetRoot().calendar;
 		ClearUndoStacks();
 		if (not whoIsUp('calendar)) then begin
-				l1:Open()
+				calendar:Open()
 			end;
-		l2 := l1:GetToDo();
-		l2:CreateToDoItemAll(totMin, title, nil, nil, priority, nil);
-		l1:ShowToDoList(totMin);
+		toDo := calendar:GetToDo();
+		toDo:CreateToDoItemAll(totMin, title, nil, nil, priority, nil);
+		calendar:ShowToDoList(totMin);
 		remindSlip:Close()
 	end,
 	preallocatedContext: '_defaultButton,

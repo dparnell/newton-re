@@ -11,8 +11,8 @@ protoPensizeMenu := {
 		{icon: @mediumpentip, item: popItem, value: 3},
 		{icon: @largepentip, item: popItem_3, value: 4}
 	],
-	pickActionScript: func(a1) begin
-		self:PenSizeChanged(popup[a1].value);
+	pickActionScript: func(index) begin
+		self:PenSizeChanged(popup[index].value);
 		self:hilite(nil)
 	end,
 	setup: func() begin

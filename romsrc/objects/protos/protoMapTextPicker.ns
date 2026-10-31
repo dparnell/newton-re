@@ -5,16 +5,16 @@ protoMapTextPicker := {
 	label: uCardPositionAlertButton,
 	place: nil,
 	params: {spots: @countrySoupName, result: 'name},
-	Popit: func(a1) begin
-		local l1;
-		(l1 := self:GlobalBox()).right := (l1.left + a1);
-		@locationPopup:New(params, l1, self)
+	Popit: func(x) begin
+		local box;
+		(box := self:GlobalBox()).right := (box.left + x);
+		@locationPopup:New(params, box, self)
 	end,
 	TextSetup: func() begin
 		(if place then place else "")
 	end,
-	pickActionScript: func(a1) begin
-		place := a1;
+	pickActionScript: func(index) begin
+		place := index;
 		inherited:pickActionScript(nil)
 	end,
 	_proto: @protoTextPicker

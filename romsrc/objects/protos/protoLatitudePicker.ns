@@ -4,12 +4,12 @@ protoLatitudePicker := {
 	maxValue: 5400,
 	minValue: -5400,
 	compass: @northSouthBitmap,
-	ConvertToWC: func(a1) begin
-		local l1;
-		if ((l1 := a1) < 0) then begin
-				l1 := (21600 + l1)
+	ConvertToWC: func(value) begin
+		local value2;
+		if ((value2 := value) < 0) then begin
+				value2 := (21600 + value2)
 			end;
-		(24855 * l1)
+		(24855 * value2)
 	end,
 	ConvertFromWC: func(a1) begin
 		local l1;

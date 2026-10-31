@@ -9,8 +9,8 @@ protoRoutingSlip := {
 	actionList: nil,
 	targetInfo: nil,
 	alwaysCallPickActionScript: true,
-	viewClickScript: func(a1) begin
-		if self:TrackHilite(a1) then begin
+	viewClickScript: func(unit) begin
+		if self:TrackHilite(unit) then begin
 				self:buttonClickScript()
 			end;
 		true
@@ -87,27 +87,27 @@ protoRoutingSlip := {
 			end;
 		(if (popupForm := DoPopup(l8, nil, nil, self)) then OpenedEntryForm(popupForm, nil) else self:hilite(nil))
 	end,
-	pickActionScript: func(a1) begin
-		local l1, l2, l3;
+	pickActionScript: func(index) begin
+		local routeScript, appSymbol, item;
 		if popupForm then begin
 				ClosedEntryForm(popupForm)
 			end;
 		try begin
-				if HasPath(actionList[a1], 'routeScript) then begin
-						if (ClassOf((l1 := actionList[a1].routeScript)) = 'symbol) then begin
-								if (l2 := actionList[a1].appSymbol) then begin
-										l2 := GetRoot().(l2)
+				if HasPath(actionList[index], 'routeScript) then begin
+						if (ClassOf((routeScript := actionList[index].routeScript)) = 'symbol) then begin
+								if (appSymbol := actionList[index].appSymbol) then begin
+										appSymbol := GetRoot().(appSymbol)
 									end;
-								if (l2 = nil) then begin
-										l2 := self
+								if (appSymbol = nil) then begin
+										appSymbol := self
 									end;
-								Perform(l2, l1, [Array: targetInfo.target, targetInfo.targetView])
+								Perform(appSymbol, routeScript, [Array: targetInfo.target, targetInfo.targetView])
 							end else begin
-								call l1 with (targetInfo.target, targetInfo.targetView)
+								call routeScript with (targetInfo.target, targetInfo.targetView)
 							end
 					end else begin
-						if (OpenRoutingSlip((l3 := actionList[a1]:NewItem(self)), targetInfo) = nil) then begin
-								GetItemTransport(l3):?MissingTarget(nil)
+						if (OpenRoutingSlip((item := actionList[index]:NewItem(self)), targetInfo) = nil) then begin
+								GetItemTransport(item):?MissingTarget(nil)
 							end
 					end
 			end onexception |evt.ex| do begin
@@ -124,46 +124,46 @@ protoRoutingSlip := {
 		(if popupForm then ClosedEntryForm(popupForm))
 	end,
 	GetActionTransports: func(a1) begin
-		local l1;
-		if ((l1 := GetAppFormats(GetVariable(self, 'appSymbol))) = nil) then begin
-				l1 := GetRouteFormats(a1.target)
+		local appSymbol;
+		if ((appSymbol := GetAppFormats(GetVariable(self, 'appSymbol))) = nil) then begin
+				appSymbol := GetRouteFormats(a1.target)
 			end;
-		return GetFormatTransports(l1, a1.target)
+		return GetFormatTransports(appSymbol, a1.target)
 	end,
-	GetActionScripts: func(a1) begin
-		l1 := [Array: ];
-		if ((l1 := Clone(self:GetRouteScripts(a1))) = nil) then begin
-				l1 := [Array: ]
+	GetActionScripts: func(targetInfo) begin
+		list := [Array: ];
+		if ((list := Clone(self:GetRouteScripts(targetInfo))) = nil) then begin
+				list := [Array: ]
 			end;
-		if (l2 := GetVariable(self, 'currentViewDef)) then begin
-				if (l3 := GetVariable(l2, 'routeScripts)) then begin
-						ArrayMunger(l1, Length(l1), 0, l3, 0, nil)
+		if (value := GetVariable(self, 'currentViewDef)) then begin
+				if (value2 := GetVariable(value, 'routeScripts)) then begin
+						ArrayMunger(list, Length(list), 0, value2, 0, nil)
 					end
 			end;
-		if (Length(l1) = 0) then begin
-				if (if (l4 := GetVariable(self, 'appSymbol)) then Routing.(l4)) then begin
-						local l1;
-						local l2;
-						local l3;
-						local l4;
-						(foreach l5 in Routing.(l4) do begin
-								if (if l5 then l5.routeScript) then begin
-										(l5 := Clone(l5)).appSymbol := l4;
-										if (if (l5.title <> nil) then (l5.icon = nil)) then begin
-												if StrEqual(l5.title, "Delete") then begin
-														l5.icon := @routetrashBitmap
+		if (Length(list) = 0) then begin
+				if (if (value3 := GetVariable(self, 'appSymbol)) then Routing.(value3)) then begin
+						local list;
+						local value;
+						local value2;
+						local value3;
+						(foreach item in Routing.(value3) do begin
+								if (if item then item.routeScript) then begin
+										(item := Clone(item)).appSymbol := value3;
+										if (if (item.title <> nil) then (item.icon = nil)) then begin
+												if StrEqual(item.title, "Delete") then begin
+														item.icon := @routetrashBitmap
 													end else begin
-														if StrEqual(l5.title, "Duplicate") then begin
-																l5.icon := @routeDuplicateIcon
+														if StrEqual(item.title, "Duplicate") then begin
+																item.icon := @routeDuplicateIcon
 															end
 													end
 											end;
-										AddArraySlot(l1, l5)
+										AddArraySlot(list, item)
 									end
 							end)
 					end
 			end;
-		return l1
+		return list
 	end,
 	debug: 2888314
 };

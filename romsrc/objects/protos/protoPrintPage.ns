@@ -7,12 +7,12 @@ protoPrintPage := {
 	viewFormat: vfFrameGray + vfPen(1) + vfInset(3),
 	viewLineSpacing: 0,
 	viewSetupDoneScript: func() begin
-		local l1, l2;
+		local printMarks2, l2;
 		contentArea := self;
 		CuPage := self;
 		self:TurnToPage(pageNum);
-		(if showMarks then (if (l2 := (if (l1 := fields.body.printMarks) then LSearch(l1, pageNum, 0, '|=|, nil))) then begin
-					printMarks.viewChildren := l1[(l2 + 1)];
+		(if showMarks then (if (l2 := (if (printMarks2 := fields.body.printMarks) then LSearch(printMarks2, pageNum, 0, '|=|, nil))) then begin
+					printMarks.viewChildren := printMarks2[(l2 + 1)];
 					printMarks:Open()
 				end))
 	end,

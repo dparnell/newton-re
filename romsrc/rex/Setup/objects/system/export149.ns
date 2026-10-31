@@ -192,8 +192,8 @@ tour := {
 	viewSetupDoneScript: func() begin
 		l1 := nil;
 		local l1;
-		(foreach l2 in GetPackages() do begin
-				if StrEqual(l2.title, "NewtonTour:Newton") then begin
+		(foreach item in GetPackages() do begin
+				if StrEqual(item.title, "NewtonTour:Newton") then begin
 						l1 := true
 					end
 			end);

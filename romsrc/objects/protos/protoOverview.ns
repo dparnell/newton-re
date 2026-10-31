@@ -6,7 +6,7 @@ protoOverview := {
 	CheckOn: CheckOn,
 	viewBounds: nil,
 	maxLines: 0,
-	Scroller: func(a1) begin
+	Scroller: func(maxLines) begin
 		nil
 	end,
 	lineHeight: 32,
@@ -31,7 +31,7 @@ protoOverview := {
 	viewScrollUpScript: viewScrollUpScript,
 	viewScrollDownScript: viewScrollDownScript,
 	viewDrawScript: func() begin
-		local l1, l2;
+		local box, hiliteShape;
 		if (not viewStyle) then begin
 				viewStyle := {font: viewFont}
 			end;
@@ -42,16 +42,16 @@ protoOverview := {
 				self:DrawShape(MakeRect((selectIndent - dividerLine), 0, selectIndent, (maxLines * lineHeight)), '{penPattern: 0, fillPattern: 3})
 			end;
 		(if hilitedIndex then begin
-				(l1 := self:LocalBox()).bottom := lineHeight;
-				self:hiliter((l2 := self:GetHiliteShape(19, l1)), hilitedIndex, 'off)
+				(box := self:LocalBox()).bottom := lineHeight;
+				self:hiliter((hiliteShape := self:GetHiliteShape(19, box)), hilitedIndex, 'off)
 			end)
 	end,
 	GetIndexEntry: GetIndexEntry,
 	hiliter: hiliter,
 	viewClickScript: viewClickScript_3,
 	trackOverview: trackOverview,
-	HitItem: func(a1, a2, a3) begin
-		(if (if (a2 < selectIndent) then (not (if items then items[a1].category))) then begin
+	HitItem: func(a1, trackScrollingItem, trackScrollingItem2) begin
+		(if (if (trackScrollingItem < selectIndent) then (not (if items then items[a1].category))) then begin
 				self:SelectItem(a1);
 				true
 			end)

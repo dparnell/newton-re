@@ -53,130 +53,130 @@ protoCorrector := {
 			end;
 		(self.pickItems := v15_vvvvvvvvvuuuuuuuuuu)
 	end,
-	pickActionScript: func(a1) begin
-		local l1, l2, l3, l4, l5, l6;
+	pickActionScript: func(index) begin
+		local l1, correct, l3, refCon2, pickItem, words;
 		l1 := nil;
-		l2 := GetRoot().correct;
+		correct := GetRoot().correct;
 		l3 := nil;
-		l4 := refCon;
-		if IsFrame(a1) then begin
-				if (a1.x = 0) then begin
-						if l4.form.text then begin
-								l4.form:SetHilite(l4.wordOffset, (l4.wordOffset + l4.wordLength), true)
+		refCon2 := refCon;
+		if IsFrame(index) then begin
+				if (index.x = 0) then begin
+						if refCon2.form.text then begin
+								refCon2.form:SetHilite(refCon2.wordOffset, (refCon2.wordOffset + refCon2.wordLength), true)
 							end;
-						OpenKeypadFor(l4.form)
+						OpenKeypadFor(refCon2.form)
 					end else begin
-						if (not l4.form:?ViewCorrectorScript(l4)) then begin
-								l2.refCon := l4;
-								l6 := wordInfo:GetWords();
-								l2.pickItems := (if (Length(l6) > 0) then l6);
-								l2.wordInfo := wordInfo;
-								if l2.viewCObject then begin
-										l2.cText:SetupAll(Clone(pickItems[0]), 'external, nil, nil)
+						if (not refCon2.form:?ViewCorrectorScript(refCon2)) then begin
+								correct.refCon := refCon2;
+								words := wordInfo:GetWords();
+								correct.pickItems := (if (Length(words) > 0) then words);
+								correct.wordInfo := wordInfo;
+								if correct.viewCObject then begin
+										correct.cText:SetupAll(Clone(pickItems[0]), 'external, nil, nil)
 									end;
-								l2:Open()
+								correct:Open()
 							end
 					end;
 				l1 := true
 			end else begin
-				if (ClassOf((l5 := pickItems[a1])) = 'string) then begin
-						UnmapAmbiguousCharacters(l5)
+				if (ClassOf((pickItem := pickItems[index])) = 'string) then begin
+						UnmapAmbiguousCharacters(pickItem)
 					end
 			end;
-		(if (if IsFrame(l5) then l5.context) then l5.context:?CorrectorActionScript(l5) else (if (not l1) then begin
+		(if (if IsFrame(pickItem) then pickItem.context) then pickItem.context:?CorrectorActionScript(pickItem) else (if (not l1) then begin
 					self:LockScreen(true);
-					if (ClassOf(l5) = 'string) then begin
-							self:ReplaceWord(a1, true)
+					if (ClassOf(pickItem) = 'string) then begin
+							self:ReplaceWord(index, true)
 						end;
-					if IsFrame(l5) then begin
-							if (l5 = @tryLettersBitmap) then begin
+					if IsFrame(pickItem) then begin
+							if (pickItem = @tryLettersBitmap) then begin
 									self:LockScreen(nil);
 									self:HandleTryLetters();
 									self:LockScreen(true)
 								end else begin
-									self:CorrectInk(l5)
+									self:CorrectInk(pickItem)
 								end
 						end;
-					if l2.viewCObject then begin
-							l4.form:SetHilite(l4.wordOffset, (l4.wordOffset + l4.wordLength), true)
+					if correct.viewCObject then begin
+							refCon2.form:SetHilite(refCon2.wordOffset, (refCon2.wordOffset + refCon2.wordLength), true)
 						end;
 					self:LockScreen(nil)
 				end))
 	end,
 	FindNewGuess: func(a1) begin
-		l1 := wordInfo:GetWords();
-		l3 := (Length((l2 := a1:GetWords())) - 1);
-		local l1;
-		local l2;
+		words := wordInfo:GetWords();
+		l3 := (Length((words2 := a1:GetWords())) - 1);
+		local words;
+		local words2;
 		local l3;
-		(for l4 := 0 to l3 do begin
-				if (not FindStringInArray(l1, l2[l4])) then begin
-						break self:MoveToFirst(a1, l4)
+		(for i := 0 to l3 do begin
+				if (not FindStringInArray(words, words2[i])) then begin
+						break self:MoveToFirst(a1, i)
 					end
 			end)
 	end,
 	HandleTryLetters: func() begin
-		local l1, l2, l3, l4, l5, l6;
-		l1 := Clone(self.bounds);
-		l4 := ((l3 := Clone((l2 := GetRoot().busyDialog).viewBounds)).bottom - l3.top);
-		l3.top := ((l1.top + 4) - l4);
-		if (l3.top < 32) then begin
-				l3.top := (l1.bottom - 4)
+		local copy, busyDialog, copy2, l4, recognize2, infoItem;
+		copy := Clone(self.bounds);
+		l4 := ((copy2 := Clone((busyDialog := GetRoot().busyDialog).viewBounds)).bottom - copy2.top);
+		copy2.top := ((copy.top + 4) - l4);
+		if (copy2.top < 32) then begin
+				copy2.top := (copy.bottom - 4)
 			end;
-		l3.bottom := (l3.top + l4);
-		l2:Open();
-		l5 := Recognize([Array: wordInfo.strokes], @rcTryLettersConfig, nil);
-		l2:Close();
-		if (Length(l5.info) = 1) then begin
-				self:FindNewGuess((l6 := l5.info[0]));
-				self.wordInfo := l6;
-				l6 := self:ReplaceWord(0, nil)
+		copy2.bottom := (copy2.top + l4);
+		busyDialog:Open();
+		recognize2 := Recognize([Array: wordInfo.strokes], @rcTryLettersConfig, nil);
+		busyDialog:Close();
+		if (Length(recognize2.info) = 1) then begin
+				self:FindNewGuess((infoItem := recognize2.info[0]));
+				self.wordInfo := infoItem;
+				infoItem := self:ReplaceWord(0, nil)
 			end else nil;
-		if l6 then begin
-				l6:ClearFlags(2)
+		if infoItem then begin
+				infoItem:ClearFlags(2)
 			end;
-		l6
+		infoItem
 	end,
-	MoveToFirst: func(a1, a2) begin
-		local l1, l2;
-		(if (a2 > 0) then begin
-				l2 := (l1 := a1.words)[a2];
-				ArrayRemoveCount(l1, a2, 1);
-				ArrayInsert(l1, l2, 0)
+	MoveToFirst: func(copy, i) begin
+		local words, l2;
+		(if (i > 0) then begin
+				l2 := (words := copy.words)[i];
+				ArrayRemoveCount(words, i, 1);
+				ArrayInsert(words, l2, 0)
 			end)
 	end,
-	ReplaceWord: func(a1, a2) begin
-		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
-		l1 := correctInfo;
-		l2 := refCon;
-		(l3 := self.wordInfo):AutoRemove();
+	ReplaceWord: func(index, a2) begin
+		local correctInfo2, refCon2, wordInfo, copy, form, wordOffset, wordLength, correct, l9, styleAtOffset, frame2;
+		correctInfo2 := correctInfo;
+		refCon2 := refCon;
+		(wordInfo := self.wordInfo):AutoRemove();
 		if a2 then begin
-				l3:Learn(a1)
+				wordInfo:Learn(index)
 			end;
-		l4 := DeepClone(l3);
-		if (a1 > 0) then begin
-				self:MoveToFirst(l4, a1)
+		copy := DeepClone(wordInfo);
+		if (index > 0) then begin
+				self:MoveToFirst(copy, index)
 			end;
-		l5 := l2.form;
-		l6 := l2.wordOffset;
-		l7 := l2.wordLength;
-		if (l8 := GetRoot().correct).viewCObject then begin
+		form := refCon2.form;
+		wordOffset := refCon2.wordOffset;
+		wordLength := refCon2.wordLength;
+		if (correct := GetRoot().correct).viewCObject then begin
 				l9 := true;
-				l8:SetCaret(l2.wordOffset)
+				correct:SetCaret(refCon2.wordOffset)
 			end;
-		l10 := l5:GetStyleAtOffset(l6);
-		l5:HandleInsertItems((l11 := {insertItems: l4, insertOffset: l6, replaceChars: l7, defaultFontSpec: l10, addspace: nil, moveCaret: l9}));
+		styleAtOffset := form:GetStyleAtOffset(wordOffset);
+		form:HandleInsertItems((frame2 := {insertItems: copy, insertOffset: wordOffset, replaceChars: wordLength, defaultFontSpec: styleAtOffset, addspace: nil, moveCaret: l9}));
 		if l9 then begin
-				l2.wordOffset := l8.refCon.wordOffset;
-				l2.wordLength := l8.refCon.wordLength
+				refCon2.wordOffset := correct.refCon.wordOffset;
+				refCon2.wordLength := correct.refCon.wordLength
 			end;
-		return l4
+		return copy
 	end,
-	CorrectInk: func(a1) begin
-		local l1, l2;
-		(if ViewAllowsInkWords((l1 := refCon).form) then begin
-				l1.form:HandleInsertItems((l2 := {insertItems: StrokeBundleToInkWord(a1.strokelist), insertOffset: l1.wordOffset, replaceChars: l1.wordLength, addspace: nil, moveCaret: nil}));
-				(l1.wordLength := 1)
+	CorrectInk: func(pickItem) begin
+		local refCon2, frame2;
+		(if ViewAllowsInkWords((refCon2 := refCon).form) then begin
+				refCon2.form:HandleInsertItems((frame2 := {insertItems: StrokeBundleToInkWord(pickItem.strokelist), insertOffset: refCon2.wordOffset, replaceChars: refCon2.wordLength, addspace: nil, moveCaret: nil}));
+				(refCon2.wordLength := 1)
 			end)
 	end,
 	debug: 726132,

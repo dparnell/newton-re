@@ -20,9 +20,9 @@ cardfile := {
 				_proto: @targetFrameFormat,
 				symbol: 'cardfileOverFrameFormat,
 				title: "Selected Names",
-				SetupItem: func(a1, a2) begin
-					a1.title := title;
-					inherited:SetupItem(a1, a2)
+				SetupItem: func(fields, frame2) begin
+					fields.title := title;
+					inherited:SetupItem(fields, frame2)
 				end
 			}
 		},
@@ -142,34 +142,34 @@ cardfile := {
 			cardfileRouteFormat: cardfileRouteFormat
 		}
 	},
-	GetBCLayout: func(a1) begin
-		l3 := nil;
-		if a1.class then begin
-				l4 := a1.class
+	GetBCLayout: func(target) begin
+		key2 := nil;
+		if target.class then begin
+				class2 := target.class
 			end else begin
-				l4 := 'person
+				class2 := 'person
 			end;
-		if (l6 := GetViewDefs(l4)) then begin
-				local l1;
-				local l2;
-				local l3;
-				local l4;
-				local l5;
-				local l6;
-				(foreach l1, l2 in GetViewDefs(l4) do begin
-						if (if (not l3) then (l2.type = 'bizcard)) then begin
-								l3 := l1
+		if (viewDefs := GetViewDefs(class2)) then begin
+				local key;
+				local value;
+				local key2;
+				local class2;
+				local noBizCard;
+				local viewDefs;
+				(foreach key, value in GetViewDefs(class2) do begin
+						if (if (not key2) then (value.type = 'bizcard)) then begin
+								key2 := key
 							end;
-						if (if (l2.type = 'bizcard) then (l2.bizCardNum = a1.cardType)) then begin
-								l3 := l1;
+						if (if (value.type = 'bizcard) then (value.bizCardNum = target.cardType)) then begin
+								key2 := key;
 								break
 							end
 					end)
 			end;
-		(if (not l3) then begin
-				(l5 := GetDataView(l4, 'noBizCard)).type := 'bizcard;
-				{slot: 'noBizCard, layout: l5}
-			end else {slot: l3, layout: l6.(l3)})
+		(if (not key2) then begin
+				(noBizCard := GetDataView(class2, 'noBizCard)).type := 'bizcard;
+				{slot: 'noBizCard, layout: noBizCard}
+			end else {slot: key2, layout: viewDefs.(key2)})
 	end,
 	superSymbol: 'names,
 	viewSetupDoneScript: func() begin
@@ -281,56 +281,56 @@ cardfile := {
 			end;
 		l1
 	end,
-	bcEmailNetwork: func(a1, a2) begin
-		l1 := [Array: ];
-		if (not IsArray(a2)) then begin
-				a2 := [Array: a2]
+	bcEmailNetwork: func(currentEmporium, id) begin
+		list := [Array: ];
+		if (not IsArray(id)) then begin
+				id := [Array: id]
 			end;
-		if a1.mailAccess then begin
-				local l1;
-				(foreach l2 in a1.mailAccess do begin
-						if SetContains(a2, l2.mailNetwork) then begin
-								AddArraySlot(l1, Clone(l2))
+		if currentEmporium.mailAccess then begin
+				local list;
+				(foreach item in currentEmporium.mailAccess do begin
+						if SetContains(id, item.mailNetwork) then begin
+								AddArraySlot(list, Clone(item))
 							end
 					end)
 			end;
-		(if (Length(l1) > 0) then l1)
+		(if (Length(list) > 0) then list)
 	end,
-	GetNewPath: func(a1, a2) begin
-		local l1, l2, l3, l4, l5, l6, l7;
+	GetNewPath: func(target, slot) begin
+		local dataPaths, checkPrefixItem2, infoFrame, l4, count, l6, checkPrefixItem;
 		l4 := 0;
 		l6 := nil;
-		if (l3 := self:GetInfoFrame(a2, a1.class)) then begin
-				if (if (l1 := self:MakeDataPaths(l3.checkPrefix[0], l3.checkPaths, l3.stringData)) then (not self:HasPathData(a1, l1, l3.stringData))) then begin
-						l7 := l3.checkPrefix[0]
+		if (infoFrame := self:GetInfoFrame(slot, target.class)) then begin
+				if (if (dataPaths := self:MakeDataPaths(infoFrame.checkPrefix[0], infoFrame.checkPaths, infoFrame.stringData)) then (not self:HasPathData(target, dataPaths, infoFrame.stringData))) then begin
+						checkPrefixItem := infoFrame.checkPrefix[0]
 					end else begin
-						if (l2 := l3.checkPrefix[1]) then begin
+						if (checkPrefixItem2 := infoFrame.checkPrefix[1]) then begin
 								l4 := 0;
-								if (not a1.(l2)) then begin
-										a1.(l2) := [Array: ]
+								if (not target.(checkPrefixItem2)) then begin
+										target.(checkPrefixItem2) := [Array: ]
 									end;
-								l5 := Length(a1.(l2));
-								(while (l4 < l5) do begin
-										AddArraySlot((newPath := Clone(l3.checkPrefix[1])), l4);
-										if (if (l1 := self:MakeDataPaths(newPath, l3.checkPaths, l3.stringData)) then (not self:HasPathData(a1, l1, l3.stringData))) then begin
+								count := Length(target.(checkPrefixItem2));
+								(while (l4 < count) do begin
+										AddArraySlot((newPath := Clone(infoFrame.checkPrefix[1])), l4);
+										if (if (dataPaths := self:MakeDataPaths(newPath, infoFrame.checkPaths, infoFrame.stringData)) then (not self:HasPathData(target, dataPaths, infoFrame.stringData))) then begin
 												break (l6 := true)
 											end;
 										(l4 := (l4 + 1))
 									end);
 								if (not l6) then begin
-										if l3.stringData then begin
-												AddArraySlot(a1.(l3.checkPrefix[1]), "")
+										if infoFrame.stringData then begin
+												AddArraySlot(target.(infoFrame.checkPrefix[1]), "")
 											end else begin
-												AddArraySlot(a1.(l3.checkPrefix[1]), {})
+												AddArraySlot(target.(infoFrame.checkPrefix[1]), {})
 											end
 									end;
-								AddArraySlot((l7 := Clone(l3.checkPrefix[1])), l4)
+								AddArraySlot((checkPrefixItem := Clone(infoFrame.checkPrefix[1])), l4)
 							end else begin
-								l7 := nil
+								checkPrefixItem := nil
 							end
 					end
 			end;
-		l7
+		checkPrefixItem
 	end,
 	DoOwnerOpen: func() begin
 		superSymbol := 'ownerNames;
@@ -339,51 +339,51 @@ cardfile := {
 		self:Open()
 	end,
 	kViewsToDisplay: func(a1) begin
-		if (l3 := GetDataDefs(a1.class)) then begin
-				l2 := Clone(l3.viewsToDisplay);
-				local l1;
-				local l2;
-				local l3;
-				(foreach l4, l5 in (l1 := GetViewDefs(a1.class)) do begin
-						if (if (l5.type = 'editor) then (l4 <> 'default)) then begin
-								SetAdd(l2, l4, true)
+		if (dataDefs := GetDataDefs(a1.class)) then begin
+				copy := Clone(dataDefs.viewsToDisplay);
+				local viewDefs;
+				local copy;
+				local dataDefs;
+				(foreach key, value in (viewDefs := GetViewDefs(a1.class)) do begin
+						if (if (value.type = 'editor) then (key <> 'default)) then begin
+								SetAdd(copy, key, true)
 							end
 					end)
 			end;
-		l2
+		copy
 	end,
 	UndoAddData: func(a1, a2) begin
-		local l1;
-		l1 := EntryStore(a1);
+		local store;
+		store := EntryStore(a1);
 		layout:KillEntry(a1);
-		layout:newEntry(a2, true, l1);
+		layout:newEntry(a2, true, store);
 		true
 	end,
 	EditCustomLabels: func() begin
-		local l1;
-		(l1 := BuildContext(customEditor)).appBase := (l1.newtAppBase := newtAppBase);
-		l1.customInfo := self:GetCustomInfo();
-		newtAppBase:RememberedOpen(l1)
+		local context;
+		(context := BuildContext(customEditor)).appBase := (context.newtAppBase := newtAppBase);
+		context.customInfo := self:GetCustomInfo();
+		newtAppBase:RememberedOpen(context)
 	end,
 	syncing: nil,
 	kTextDumper: func(a1, a2, a3, a4) begin
-		if (l1 := GetRoot().cardfile:MakeDataPaths(a3, a2.checkPaths, a2.stringData)) then begin
-				local l1;
-				local l2;
+		if (dataPaths := GetRoot().cardfile:MakeDataPaths(a3, a2.checkPaths, a2.stringData)) then begin
+				local dataPaths;
+				local formatFunc;
 				local l3;
-				l3 := (foreach l4 in l1 collect a1.(l4));
+				l3 := (foreach item in dataPaths collect a1.(item));
 				if a2.formatFunc then begin
-						l2 := a2:formatFunc(l3)
+						formatFunc := a2:formatFunc(l3)
 					end else begin
-						l2 := ParamStr(a2.format, l3)
+						formatFunc := ParamStr(a2.format, l3)
 					end;
-				TrimString(l2)
+				TrimString(formatFunc)
 			end;
-		if (if l2 then StrFilled(l2)) then begin
+		if (if formatFunc then StrFilled(formatFunc)) then begin
 				if a4 then begin
-						a4 := Stringer([Array: a4, "\n", l2])
+						a4 := Stringer([Array: a4, "\n", formatFunc])
 					end else begin
-						a4 := l2
+						a4 := formatFunc
 					end
 			end;
 		a4
@@ -395,20 +395,20 @@ cardfile := {
 				if (newBdays = true) then begin
 						newCursor := self:GetBdayCursor();
 						DoProgress('vBarber, progressData, func(a1) begin
-							local l1;
-							l1 := newCursor:entry();
-							(while l1 do begin
-									self:AddBdayToCalendar(l1, 'bday, 'bdayEvent, "Bday: ^0");
-									l1 := newCursor:Next();
+							local entry;
+							entry := newCursor:entry();
+							(while entry do begin
+									self:AddBdayToCalendar(entry, 'bday, 'bdayEvent, "Bday: ^0");
+									entry := newCursor:Next();
 									a1:UpdateIndicator(progressData)
 								end)
 						end)
 					end else begin
-						local l1;
+						local resolveEntryAlias2;
 						local l2;
-						(foreach l3 in newBdays do begin
-								if (l1 := ResolveEntryAlias(l3.entry)) then begin
-										self:AddBdayToCalendar(l1, 'bday, 'bdayEvent, "Bday: ^0")
+						(foreach item in newBdays do begin
+								if (resolveEntryAlias2 := ResolveEntryAlias(item.entry)) then begin
+										self:AddBdayToCalendar(resolveEntryAlias2, 'bday, 'bdayEvent, "Bday: ^0")
 									end
 							end)
 					end
@@ -428,16 +428,16 @@ cardfile := {
 		constants: {
 			kROM_8192: @8192
 		},
-		func(a1) begin
-			(foreach l1 in '[Array: viewSetupFormScript, viewSetupChildrenScript, viewSetupDoneScript, viewQuitScript, viewShowScript, viewHideScript] do begin
-					RemoveSlot(self, l1)
+		func(childViewFrame) begin
+			(foreach item in '[Array: viewSetupFormScript, viewSetupChildrenScript, viewSetupDoneScript, viewQuitScript, viewShowScript, viewHideScript] do begin
+					RemoveSlot(self, item)
 				end);
 			self._proto := kROM_8192;
 			(if self.viewCObject then (if (self.superSymbol = 'ownerNames) then begin
 						AddDeferredSend(self, 'Close, '[Array: ]);
 						AddDeferredSend(self, 'Open, '[Array: ]);
 						true
-					end else (if (a1.appBase = self) then begin
+					end else (if (childViewFrame.appBase = self) then begin
 							self:Toggle();
 							true
 						end else begin
@@ -445,10 +445,10 @@ cardfile := {
 							nil
 						end)))
 		end),
-	RemoveBdayFromCalendar: func(a1) begin
-		local l1, l2, l3;
-		l1 := GetRoot().calendar;
-		(if (l3 := l1:FindAppointment((l2 := ParamStr("Bday: ^0", [Array: GetRoot():PrimaryName(a1)])), nil, nil, '[Array: RepeatingMeeting, RepeatingEvent], 1)) then l1:DeleteRepeatingEntry(l2, l3[0].mtgStartDate, true))
+	RemoveBdayFromCalendar: func(target) begin
+		local calendar, text, appointment;
+		calendar := GetRoot().calendar;
+		(if (appointment := calendar:FindAppointment((text := ParamStr("Bday: ^0", [Array: GetRoot():PrimaryName(target)])), nil, nil, '[Array: RepeatingMeeting, RepeatingEvent], 1)) then calendar:DeleteRepeatingEntry(text, appointment[0].mtgStartDate, true))
 	end,
 	viewQuitScript: func() begin
 		local l1;
@@ -461,27 +461,27 @@ cardfile := {
 	appAll: "All Names",
 	CustomMetaData: {
 		GetExtensionFrame: func() begin
-			(if (l1 := GetRoot().cardfile:GetCustomInfo()) then begin
-					l2 := {};
-					l3 := [Array: ];
-					local l1;
-					local l2;
-					local l3;
-					(foreach l4, l5 in l1 do begin
-							l2.(l4) := Clone(l5);
-							l2.(l4).path := l4;
-							AddArraySlot(l3, l4)
+			(if (customInfo := GetRoot().cardfile:GetCustomInfo()) then begin
+					frame2 := {};
+					list := [Array: ];
+					local customInfo;
+					local frame2;
+					local list;
+					(foreach key, value in customInfo do begin
+							frame2.(key) := Clone(value);
+							frame2.(key).path := key;
+							AddArraySlot(list, key)
 						end);
-					{FieldDefinitionsFrame: l2, ImportExportArray: l3, FunctionsFrame: {ValidateCustom: CustomValidation}, ValidateEntry: [Array: 'ValidateCustom]}
+					{FieldDefinitionsFrame: frame2, ImportExportArray: list, FunctionsFrame: {ValidateCustom: CustomValidation}, ValidateEntry: [Array: 'ValidateCustom]}
 				end)
 		end,
 		CustomValidation: func(a1) begin
 			local l1;
 			local l2;
-			(foreach l3, l4 in (l2 := '[Array: custom1, custom2, custom3, custom4, custom5, custom6, custom7, custom8, custom9, custom10]) do begin
-					if (l1 := a1.(l4)) then begin
+			(foreach key, value in (l2 := '[Array: custom1, custom2, custom3, custom4, custom5, custom6, custom7, custom8, custom9, custom10]) do begin
+					if (l1 := a1.(value)) then begin
 							if (not IsInstance(l1, 'string)) then begin
-									RemoveSlot(a1, l3)
+									RemoveSlot(a1, key)
 								end;
 							SetClass(l1, '|string.custom|)
 						end
@@ -489,25 +489,25 @@ cardfile := {
 		end
 	},
 	hideSound: @drawerClose,
-	GetInfoFrame: func(a1, a2) begin
-		local l1, l2;
-		if ((not (l2 := GetViewDefs(a2).(a1))) or (not (l1 := l2.infoFrame))) then begin
-				l1 := GetRoot().cardfile.layoutDataMap.(a1)
+	GetInfoFrame: func(layout, class2) begin
+		local infoFrame, l2;
+		if ((not (l2 := GetViewDefs(class2).(layout))) or (not (infoFrame := l2.infoFrame))) then begin
+				infoFrame := GetRoot().cardfile.layoutDataMap.(layout)
 			end;
-		l1
+		infoFrame
 	end,
 	kGenericTextFunc: func(a1) begin
-		local l1;
-		local l2;
+		local infoFrame;
+		local copy;
 		local l3;
 		local l4;
-		(foreach l5 in call GetRoot().cardfile.kViewsToDisplay with (a1) do begin
-				l1 := GetRoot().cardfile:GetInfoFrame(l5, a1.class);
-				l3 := call GetRoot().cardfile.kTextDumper with (a1, l1, l1.checkPrefix[0], l3);
-				if (if l1.checkPrefix[1] then (l4 := a1.(l1.checkPrefix[1]))) then begin
-						(for l7 := 0 to Length(l4) do begin
-								AddArraySlot((l2 := Clone(l1.checkPrefix[1])), l7);
-								l3 := call GetRoot().cardfile.kTextDumper with (a1, l1, l2, l3)
+		(foreach item in call GetRoot().cardfile.kViewsToDisplay with (a1) do begin
+				infoFrame := GetRoot().cardfile:GetInfoFrame(item, a1.class);
+				l3 := call GetRoot().cardfile.kTextDumper with (a1, infoFrame, infoFrame.checkPrefix[0], l3);
+				if (if infoFrame.checkPrefix[1] then (l4 := a1.(infoFrame.checkPrefix[1]))) then begin
+						(for i := 0 to Length(l4) do begin
+								AddArraySlot((copy := Clone(infoFrame.checkPrefix[1])), i);
+								l3 := call GetRoot().cardfile.kTextDumper with (a1, infoFrame, copy, l3)
 							end)
 					end
 			end);
@@ -530,58 +530,58 @@ cardfile := {
 		(if (ClassOf(a1.sorton) = 'name) then (a1.class := 'person) else (a1.class := 'company))
 	end,
 	closingEditSlip: nil,
-	AddBdayToCalendar: func(a1, a2, a3, a4) begin
-		local l1, l2;
-		l2 := ParamStr(a4, [Array: GetRoot():PrimaryName(a1)]);
-		if a1.(a3) then begin
+	AddBdayToCalendar: func(a1, path, eventPath, text2) begin
+		local yearly, text;
+		text := ParamStr(text2, [Array: GetRoot():PrimaryName(a1)]);
+		if a1.(eventPath) then begin
 				self:RemoveBdayFromCalendar(a1);
-				a1.(a3) := nil;
+				a1.(eventPath) := nil;
 				EntryChange(a1)
 			end;
-		(if (if (if a1.(a2) then (not IsInstance(a1.(a2), 'string))) then (not StrEqual("Untitled Person", l2))) then (if (l1 := GetRoot().calendar:AddEvent(l2, a1.(a2), 'yearly, nil)) then begin
-					l1.mtgIconType := 'annualEvent;
-					EntryChangeXmit(l1, 'cardfile);
-					a1.(a3) := MakeEntryAlias(l1);
+		(if (if (if a1.(path) then (not IsInstance(a1.(path), 'string))) then (not StrEqual("Untitled Person", text))) then (if (yearly := GetRoot().calendar:AddEvent(text, a1.(path), 'yearly, nil)) then begin
+					yearly.mtgIconType := 'annualEvent;
+					EntryChangeXmit(yearly, 'cardfile);
+					a1.(eventPath) := MakeEntryAlias(yearly);
 					EntryChange(a1)
 				end))
 	end,
-	bcPhoneNumber: func(a1, a2) begin
-		if (not IsArray(a2)) then begin
-				a2 := [Array: a2]
+	bcPhoneNumber: func(currentPersona, preferredRouting) begin
+		if (not IsArray(preferredRouting)) then begin
+				preferredRouting := [Array: preferredRouting]
 			end;
-		l6 := SetContains(a2, 'phone);
-		l7 := SetContains(a2, '|string.phone|);
-		if ((if l6 then (not l7)) or (if l7 then (not l6))) then begin
-				if IsReadOnly(a2) then begin
-						a2 := Clone(a2)
+		phone := SetContains(preferredRouting, 'phone);
+		setContains2 := SetContains(preferredRouting, '|string.phone|);
+		if ((if phone then (not setContains2)) or (if setContains2 then (not phone))) then begin
+				if IsReadOnly(preferredRouting) then begin
+						preferredRouting := Clone(preferredRouting)
 					end;
-				AddArraySlot(a2, (if l6 then '|string.phone| else 'phone))
+				AddArraySlot(preferredRouting, (if phone then '|string.phone| else 'phone))
 			end;
-		l1 := self:bcHelper(a1, a2, '[Array: phones], nil);
-		if (l2 := self:bcHelper(a1, a2, '[Array: pagers], '[Array: pagerNum, pagerPin])) then begin
-				if (not l1) then begin
-						l1 := [Array: ]
+		bcHelper := self:bcHelper(currentPersona, preferredRouting, '[Array: phones], nil);
+		if (bcHelper2 := self:bcHelper(currentPersona, preferredRouting, '[Array: pagers], '[Array: pagerNum, pagerPin])) then begin
+				if (not bcHelper) then begin
+						bcHelper := [Array: ]
 					end;
-				local l1;
-				local l2;
-				local l3;
-				local l4;
-				local l5;
-				local l6;
-				local l7;
-				(for l8 := 0 to (Length(l2) - 1) do begin
-						(l5 := ParsePhone((l4 := l2[l8].pagerNum))).extension := ParamStr("^?0^0^?1 ^1|||^?1^1|", [Array: l5.extension, l2[l8].pagerPin]);
-						SetClass((l3 := MakePhone(l5)), ClassOf(l4));
-						AddArraySlot(l1, l3)
+				local bcHelper;
+				local bcHelper2;
+				local phone2;
+				local pagerNum2;
+				local parsePhone2;
+				local phone;
+				local setContains2;
+				(for i := 0 to (Length(bcHelper2) - 1) do begin
+						(parsePhone2 := ParsePhone((pagerNum2 := bcHelper2[i].pagerNum))).extension := ParamStr("^?0^0^?1 ^1|||^?1^1|", [Array: parsePhone2.extension, bcHelper2[i].pagerPin]);
+						SetClass((phone2 := MakePhone(parsePhone2)), ClassOf(pagerNum2));
+						AddArraySlot(bcHelper, phone2)
 					end)
 			end;
-		l1
+		bcHelper
 	end,
 	SaveAppState: func() begin
-		local l1;
+		local appPreferences;
 		(if (superSymbol = 'names) then begin
-				(l1 := self:GetAppPreferences()).newBdays := newBdays;
-				EntryChange(l1);
+				(appPreferences := self:GetAppPreferences()).newBdays := newBdays;
+				EntryChange(appPreferences);
 				(if self.viewCObject then inherited:SaveAppState())
 			end)
 	end,
@@ -589,15 +589,15 @@ cardfile := {
 		constants: {
 			kLiteral_736fd5: '{name: {first: first}, sorton: sorton, company: company, postal_code: postal_code, cardType: class}
 		},
-		func(a1, a2) begin
-			(kLiteral_736fd5.(a1) = kLiteral_736fd5.(a2))
+		func(a1, sortBy) begin
+			(kLiteral_736fd5.(a1) = kLiteral_736fd5.(sortBy))
 		end),
 	showSound: @drawerOpen,
-	HasPathData: func(a1, a2, a3) begin
-		(foreach l1 in a2 do begin
-				if a1.(l1) then begin
-						if (a3 or IsInstance(a1.(l1), 'string)) then begin
-								return StrFilled(a1.(l1))
+	HasPathData: func(target, dataPaths, stringData) begin
+		(foreach item in dataPaths do begin
+				if target.(item) then begin
+						if (stringData or IsInstance(target.(item), 'string)) then begin
+								return StrFilled(target.(item))
 							end else begin
 								return true
 							end
@@ -605,35 +605,35 @@ cardfile := {
 			end);
 		nil
 	end,
-	SetIAClass: func(a1) begin
-		if (if a1.sorton then IsReadOnly(a1.sorton)) then begin
-				a1.sorton := Clone(a1.sorton)
+	SetIAClass: func(target) begin
+		if (if target.sorton then IsReadOnly(target.sorton)) then begin
+				target.sorton := Clone(target.sorton)
 			end;
-		(if ((a1.class = 'person) or (a1.class = 'owner)) then begin
-				if a1.name then begin
-						if IsReadOnly(a1.name) then begin
-								a1.name := Clone(a1.name)
+		(if ((target.class = 'person) or (target.class = 'owner)) then begin
+				if target.name then begin
+						if IsReadOnly(target.name) then begin
+								target.name := Clone(target.name)
 							end;
-						SetClass(a1.name, 'person)
+						SetClass(target.name, 'person)
 					end;
-				(if a1.sorton then SetClass(a1.sorton, 'name))
-			end else (if a1.sorton then SetClass(a1.sorton, 'company)))
+				(if target.sorton then SetClass(target.sorton, 'name))
+			end else (if target.sorton then SetClass(target.sorton, 'company)))
 	end,
 	_notesRecogSettings: nil,
-	SortByChange: func(a1) begin
-		local l1, l2, l3, l4, l5, l6;
-		l4 := (l3 := allSoups.names).theSoup;
-		l6 := (l5 := self:GetAppPreferences()).sortBy;
-		if (a1 <> 'sorton) then begin
-				if (a1 = 'class) then begin
+	SortByChange: func(clusterValue) begin
+		local l1, l2, names, l4, appPreferences, l6;
+		l4 := (names := allSoups.names).theSoup;
+		l6 := (appPreferences := self:GetAppPreferences()).sortBy;
+		if (clusterValue <> 'sorton) then begin
+				if (clusterValue = 'class) then begin
 						l1 := 'symbol
 					end else begin
 						l1 := 'string
 					end;
 				try begin
-						l4:AddIndex({structure: 'multiSlot, path: [Array: a1, 'sorton], type: [Array: l1, 'string]})
+						l4:AddIndex({structure: 'multiSlot, path: [Array: clusterValue, 'sorton], type: [Array: l1, 'string]})
 					end onexception |evt.ex.fr.store| do begin
-						if (CurrentException().error = -10605) then begin
+						if (CurrentException().error = kSError_WriteProtected) then begin
 								self:Notify(3, title, "You cannot change the sort order on a locked card.  Please unlock the card, reinsert it, and try again.")
 							end else begin
 								self:Notify(3, title, ParamStr("The sort order was not changed because an error occurred. \n(^0)", [Array: self:TranslateError(CurrentException().error)]))
@@ -643,20 +643,20 @@ cardfile := {
 			end;
 		if (l6 <> 'sorton) then begin
 				try begin
-						l3.theSoup:RemoveIndex([Array: l6, 'sorton])
+						names.theSoup:RemoveIndex([Array: l6, 'sorton])
 					end onexception |evt.ex| do begin end
 			end;
-		l5.sortBy := a1;
-		EntryChange(l5);
-		if IsReadOnly(l3.soupQuery) then begin
-				l3.soupQuery := Clone(l3.soupQuery)
+		appPreferences.sortBy := clusterValue;
+		EntryChange(appPreferences);
+		if IsReadOnly(names.soupQuery) then begin
+				names.soupQuery := Clone(names.soupQuery)
 			end;
-		if (a1 = 'sorton) then begin
-				l3.soupQuery.IndexPath := 'sorton
+		if (clusterValue = 'sorton) then begin
+				names.soupQuery.IndexPath := 'sorton
 			end else begin
-				l3.soupQuery.IndexPath := [Array: a1, 'sorton]
+				names.soupQuery.IndexPath := [Array: clusterValue, 'sorton]
 			end;
-		l3:SetupCursor();
+		names:SetupCursor();
 		layout:SetupCursor();
 		layout:Retarget(true)
 	end,
@@ -667,17 +667,17 @@ cardfile := {
 		(if l1 then self:OpenAsOwner(true) else self:Open())
 	end,
 	SafeRemoveLayout: func(a1) begin
-		local l1;
+		local appPreferences;
 		if (if self.viewCObject then (currentLayout = a1)) then begin
 				self:ShowLayout('default)
 			end;
-		if ((l1 := self:GetAppPreferences()).currentLayout = a1) then begin
-				l1.currentLayout := 'default
+		if ((appPreferences := self:GetAppPreferences()).currentLayout = a1) then begin
+				appPreferences.currentLayout := 'default
 			end;
-		if (l1.previousLayout = a1) then begin
-				l1.previousLayout := 'default
+		if (appPreferences.previousLayout = a1) then begin
+				appPreferences.previousLayout := 'default
 			end;
-		EntryChange(l1);
+		EntryChange(appPreferences);
 		(if allLayouts.(a1) then begin
 				if IsReadOnly(allLayouts) then begin
 						allLayouts := Clone(allLayouts)
@@ -825,61 +825,61 @@ cardfile := {
 		end
 	},
 	viewBounds: {top: -223, left: 0, right: 238, bottom: -8},
-	MakeDataPaths: func(a1, a2, a3) begin
-		local l1;
-		local l2;
-		(if (not a1) then nil else (if (Length(a2) < 1) then (if a3 then (l2 := [Array: Clone(a1)])) else (if (a1 = true) then (foreach l1 in a2 collect [pathExpr: l1]) else (foreach l1 in a2 collect begin
-						l2 := Clone(a1);
-						if l1 then begin
-								AddArraySlot(l2, l1)
+	MakeDataPaths: func(checkPrefixItem, checkPaths, stringData) begin
+		local item;
+		local list;
+		(if (not checkPrefixItem) then nil else (if (Length(checkPaths) < 1) then (if stringData then (list := [Array: Clone(checkPrefixItem)])) else (if (checkPrefixItem = true) then (foreach item in checkPaths collect [pathExpr: item]) else (foreach item in checkPaths collect begin
+						list := Clone(checkPrefixItem);
+						if item then begin
+								AddArraySlot(list, item)
 							end;
-						l2
+						list
 					end))))
 	end,
 	DateFind: nil,
 	appObject: [|Array|: "Name", names],
 	_proto: @newtApplication,
-	GetDefaultFormat: func(a1, a2) begin
+	GetDefaultFormat: func(category, target) begin
 		local l1;
-		if (not (l1 := (if (if self.lastFormats then self.lastFormats.(a1)) then self.lastFormats.(a1)))) then begin
+		if (not (l1 := (if (if self.lastFormats then self.lastFormats.(category)) then self.lastFormats.(category)))) then begin
 				l1 := 'cfSingleFormat
 			end;
 		l1
 	end,
 	SetCardfileStuff: func(a1, a2) begin
-		local l1, l2;
-		l1 := a1.class;
+		local class2, text;
+		class2 := a1.class;
 		if (not a1.cardType) then begin
-				if (if (l1 <> 'group) then (l1 <> 'worksite)) then begin
+				if (if (class2 <> 'group) then (class2 <> 'worksite)) then begin
 						a1.cardType := allSoups.names.defaultCardType
 					end else begin
 						a1.cardType := 1
 					end
 			end;
 		a1.version := 2;
-		if ((l1 = 'person) or (l1 = 'owner)) then begin
+		if ((class2 = 'person) or (class2 = 'owner)) then begin
 				if StrFilled(a1.name.last) then begin
-						l2 := ParamStr("^0 ^1", [Array: a1.name.last, a1.name.first])
+						text := ParamStr("^0 ^1", [Array: a1.name.last, a1.name.first])
 					end else begin
 						if a1.name.first then begin
-								l2 := a1.name.first
+								text := a1.name.first
 							end
 					end
 			end else begin
-				if (if (l1 = 'company) then a1.company) then begin
-						l2 := a1.company
+				if (if (class2 = 'company) then a1.company) then begin
+						text := a1.company
 					end else begin
-						if (if (l1 = 'worksite) then a1.place) then begin
-								l2 := a1.place
+						if (if (class2 = 'worksite) then a1.place) then begin
+								text := a1.place
 							end else begin
-								if (if (l1 = 'group) then a1.group) then begin
-										l2 := a1.group
+								if (if (class2 = 'group) then a1.group) then begin
+										text := a1.group
 									end
 							end
 					end
 			end;
-		if (if StrFilled(l2) then (not IsRichString(l2))) then begin
-				a1.sorton := l2
+		if (if StrFilled(text) then (not IsRichString(text))) then begin
+				a1.sorton := text
 			end;
 		if (not StrFilled(a1.sorton)) then begin
 				a1.sorton := " "
@@ -897,28 +897,28 @@ cardfile := {
 		(if a2 then EntryChange(a1))
 	end,
 	GetCustomInfo: func() begin
-		local l1;
-		(if (l1 := GetStores()[0]:GetSoup(allSoups.names.soupName)) then l1:GetInfo('customFields))
+		local soup;
+		(if (soup := GetStores()[0]:GetSoup(allSoups.names.soupName)) then soup:GetInfo('customFields))
 	end,
 	_recogSettings: nil,
 	labelsFilter: nil,
-	bcStreetAddress: func(a1, a2) begin
-		self:bcHelper(a1, a2, '[Array: addresses], '[Array: address, address2, city, region, postal_code, country])
+	bcStreetAddress: func(resolveEntryAlias, a2) begin
+		self:bcHelper(resolveEntryAlias, a2, '[Array: addresses], '[Array: address, address2, city, region, postal_code, country])
 	end,
 	GetAppState: func() begin
-		local l1;
+		local appPreferences;
 		if (superSymbol = 'names) then begin
-				l1 := inherited:GetAppState()
+				appPreferences := inherited:GetAppState()
 			end else begin
-				l1 := self:GetAppPreferences()
+				appPreferences := self:GetAppPreferences()
 			end;
-		newBdays := l1.newBdays;
-		l1
+		newBdays := appPreferences.newBdays;
+		appPreferences
 	end,
-	AddEntryDirect: func(a1, a2) begin
-		local l1;
-		l1 := layout.masterSoup;
-		l1:AddEntry(a1, a2);
+	AddEntryDirect: func(a1, store) begin
+		local masterSoup;
+		masterSoup := layout.masterSoup;
+		masterSoup:AddEntry(a1, store);
 		layout.dataCursor:Goto(a1);
 		layout:Retarget(nil);
 		(newtAppBase.target := a1)
@@ -953,29 +953,29 @@ cardfile := {
 			end;
 		true
 	end,
-	AddAuxButton: func(a1) begin
+	AddAuxButton: func(frame2) begin
 		statusBar:?RedoChildren()
 	end,
 	ShowFoundItem: func(a1, a2) begin
-		local l1, l2, l3;
+		local currentLayout2, text, l3;
 		if (if a2 then a2.findWords) then begin
-				if FindStringInFrame([Array: (l2 := Stringer([Array: GetRoot():PrimaryName(a1), " ", GetRoot():secondaryName(a1)]))], a2.findWords, nil) then begin
+				if FindStringInFrame([Array: (text := Stringer([Array: GetRoot():PrimaryName(a1), " ", GetRoot():secondaryName(a1)]))], a2.findWords, nil) then begin
 						if (currentLayout = 'allinfo) then begin
-								l1 := 'allinfo
+								currentLayout2 := 'allinfo
 							end else begin
-								l1 := 'default
+								currentLayout2 := 'default
 							end
 					end else begin
 						if FindStringInFrame([Array: a1.notes], a2.findWords, nil) then begin
-								l1 := currentLayout;
+								currentLayout2 := currentLayout;
 								l3 := true
 							end else begin
-								l1 := 'allinfo
+								currentLayout2 := 'allinfo
 							end
 					end
 			end;
-		if (if l1 then (l1 <> currentLayout)) then begin
-				self:ShowLayout(l1)
+		if (if currentLayout2 then (currentLayout2 <> currentLayout)) then begin
+				self:ShowLayout(currentLayout2)
 			end;
 		if (if (if (not l3) then editSlipLayout) then editSlipLayout.viewCObject) then begin
 				self:RememberedClose(editSlipLayout);
@@ -995,7 +995,7 @@ cardfile := {
 			CreateBlankEntry: func() begin
 				{class: 'person, version: 2, sorton: ""}
 			end,
-			DoneWithSoup: func(a1) begin
+			DoneWithSoup: func(appSymbol) begin
 				nil
 			end,
 			SetupCursor: compile(
@@ -1005,60 +1005,60 @@ cardfile := {
 					end
 				},
 				func() begin
-					local l1;
+					local copy;
 					(if (GetRoot().cardfile.superSymbol = 'ownerNames) then begin
 							theSoup := GetStores()[0]:GetSoup(soupName);
 							(theCursor := theSoup:Query(soupQuery))
 						end else begin
 							if theSoup:HasTags() then begin
 									if (not soupFilter) then begin
-											(l1 := Clone(soupQuery)).tagSpec := '{equal: [Array: ]}
+											(copy := Clone(soupQuery)).tagSpec := '{equal: [Array: ]}
 										end
 								end else begin
 									if (soupFilter = '_all) then begin
-											RemoveSlot((l1 := Clone(soupQuery)), 'tagSpec);
-											l1.validTest := kFunction_73924d
+											RemoveSlot((copy := Clone(soupQuery)), 'tagSpec);
+											copy.validTest := kFunction_73924d
 										end
 								end;
-							(if l1 then (theCursor := theSoup:Query(l1)) else inherited:SetupCursor())
+							(if copy then (theCursor := theSoup:Query(copy)) else inherited:SetupCursor())
 						end)
 				end),
-			AddEntry: func(a1, a2) begin
-				local l1, l2;
-				if (((l2 := a1.class) = 'owner) or (l2 = 'worksite)) then begin
-						a1.labels := '_ownerNames
+			AddEntry: func(adoptEntry, store) begin
+				local cardfile, class2;
+				if (((class2 := adoptEntry.class) = 'owner) or (class2 = 'worksite)) then begin
+						adoptEntry.labels := '_ownerNames
 					end;
 				if (ClassOf(theSoup) = 'PlainSoup) then begin
-						l1 := theSoup:AddXmit(a1, 'cardfile)
+						cardfile := theSoup:AddXmit(adoptEntry, 'cardfile)
 					end else begin
-						l1 := inherited:AddEntry(a1, a2);
-						XmitSoupChange(soupName, 'cardfile, 'entryAdded, a1)
+						cardfile := inherited:AddEntry(adoptEntry, store);
+						XmitSoupChange(soupName, 'cardfile, 'entryAdded, adoptEntry)
 					end;
-				if (l2 = 'owner) then begin
-						AddPersona(a1)
+				if (class2 = 'owner) then begin
+						AddPersona(adoptEntry)
 					end else begin
-						if (l2 = 'worksite) then begin
-								AddEmporium(a1)
+						if (class2 = 'worksite) then begin
+								AddEmporium(adoptEntry)
 							end
 					end;
-				l1
+				cardfile
 			end,
-			DuplicateEntry: func(a1, a2) begin
+			DuplicateEntry: func(a1, store) begin
 				if a1.bdayEvent then begin
 						(a1 := Clone(a1)).bdayEvent := nil
 					end;
-				inherited:DuplicateEntry(a1, a2)
+				inherited:DuplicateEntry(a1, store)
 			end,
-			DeleteEntry: func(a1) begin
+			DeleteEntry: func(next) begin
 				local l1, l2;
-				EntryRemoveFromSoupXmit(a1, 'cardfile);
-				if a1.bdayEvent then begin
-						GetRoot().cardfile:RemoveBdayFromCalendar(a1)
+				EntryRemoveFromSoupXmit(next, 'cardfile);
+				if next.bdayEvent then begin
+						GetRoot().cardfile:RemoveBdayFromCalendar(next)
 					end;
-				if (a1.class = 'owner) then begin
+				if (next.class = 'owner) then begin
 						SyncPersonae()
 					end;
-				(if (a1.class = 'worksite) then SyncEmporia())
+				(if (next.class = 'worksite) then SyncEmporia())
 			end,
 			AddWalletEntries: compile(
 				constants: {
@@ -1074,45 +1074,45 @@ cardfile := {
 					kLiteral_7395c9: [Array: {address2: nil, addresses: '[Array: ], pagers: '[Array: ], address: "217 Crocker Lane", class: 'person, postal_code: "44704", cardType: 0, anniversary: nil, region: "OH", companyReading: nil, section: nil, city: "Hillsdale", email: nil, bdayEvent: nil, title: nil, country: nil, name: '{class: person, first: "Royce", last: "Walthrop", nameReading: ""}, company: nil, emailAddrs: '[Array: ], companies: '[Array: ], sorton: call kBinaryFromHex with ("00570061006c007400680072006f007000200052006f0079006300650000", 'name), notes: nil, anniversaryEvent: nil, names: '[Array: ], phones: [Array: call kBinaryFromHex with ("00280034003100390029003500350035002d00330035003400330000", 'homePhone)], version: 2, bday: nil, emailPassword: nil}, {address2: "37415 Park Place", addresses: '[Array: ], address: "The Crossroads", class: 'company, postal_code: "94804", cardType: 3, region: "CA", companyReading: "", section: nil, city: "Brisbane", email: nil, title: nil, country: nil, name: '{honorific: nil, first: "", last: nil, title: nil}, company: call kBinaryFromHex with ("0043006f006e0067006c006f006d00650072006100740065006400200043007200650064006900740000", 'company), emailAddrs: '[Array: ], sorton: call kBinaryFromHex with ("0043006f006e0067006c006f006d00650072006100740065006400200043007200650064006900740000", 'company), notes: nil, names: '[Array: ], phones: [Array: call kBinaryFromHex with ("00280038003000300029003500350035002d00310030003000300000", 'workPhone), call kBinaryFromHex with ("00280034003100350029003500350035002d00380031003200330000", 'faxPhone)], version: 2}, {address2: nil, addresses: '[Array: ], address: "241 Cappuccino Court", class: 'company, postal_code: "02168", cardType: 2, region: "MA", companyReading: nil, section: nil, city: "Newton", email: nil, title: nil, country: nil, name: '{honorific: nil, first: "", last: nil, title: nil}, company: call kBinaryFromHex with ("004e006500770074006f006e002000430061006600650000", 'company), emailAddrs: '[Array: ], sorton: call kBinaryFromHex with ("004e006500770074006f006e002000430061006600650000", 'company), notes: nil, names: '[Array: ], phones: [Array: call kBinaryFromHex with ("00280036003100370029003500350035002d00310030003000300000", 'phone), call kBinaryFromHex with ("00280036003100370029003500350035002d00380031003200330000", 'faxPhone)], version: 2}, {address2: nil, addresses: '[Array: ], pagers: '[Array: ], address: "51 Partlow Pond Road", class: 'person, postal_code: "13639", cardType: 1, anniversary: nil, region: "New York", companyReading: nil, section: nil, city: "Fine", email: nil, bdayEvent: nil, title: nil, country: nil, name: '{class: person, first: "Bob", last: "Anderson", nameReading: ""}, company: nil, emailAddrs: '[Array: ], companies: '[Array: ], sorton: call kBinaryFromHex with ("0041006e0064006500720073006f006e00200042006f00620000", 'name), notes: nil, anniversaryEvent: nil, names: '[Array: ], phones: [Array: call kBinaryFromHex with ("00280033003100350029003500350035002d00340034003700360000", 'homePhone)], version: 2, bday: nil, emailPassword: nil}, {address2: nil, addresses: '[Array: ], address: "100 Main St.", class: 'company, postal_code: "02165", cardType: 1, region: "MA", companyReading: "", section: nil, city: "Newton", email: nil, title: nil, country: nil, name: '{honorific: nil, first: "", last: nil, title: nil}, company: call kBinaryFromHex with ("0041006c00690063006500270073002000520065007300740061007500720061006e00740000", 'company), emailAddrs: '[Array: ], sorton: call kBinaryFromHex with ("0041006c00690063006500270073002000520065007300740061007500720061006e00740000", 'company), notes: nil, names: '[Array: ], phones: [Array: call kBinaryFromHex with ("00280036003100370029003500350035002d00320030003200300000", 'phone)], version: 2}]
 				},
 				func() begin
-					(foreach l1 in kLiteral_7395c9 do begin
-							theSoup:AddToDefaultStore(DeepClone(l1))
+					(foreach item in kLiteral_7395c9 do begin
+							theSoup:AddToDefaultStore(DeepClone(item))
 						end)
 				end)
 		}
 	},
 	AddCard: func(a1, a2) begin
-		local l1, l2, l3;
-		if (not GetStores()[0]:HasSoup((l1 := allSoups.names).soupName)) then begin
-				l2 := Clone(l1);
-				l2:MakeSoup(appSymbol)
+		local names, copy, adoptEntryFromStationery;
+		if (not GetStores()[0]:HasSoup((names := allSoups.names).soupName)) then begin
+				copy := Clone(names);
+				copy:MakeSoup(appSymbol)
 			end;
-		l3 := self:AdoptEntryFromStationery(a2, a1, nil);
-		AddProcrastinatedCall('cardfileAddCard, functions.XmitSoupChange, [Array: l1.soupName, 'cardfileAddCard, 'entryAdded, l3], 0);
-		l3
+		adoptEntryFromStationery := self:AdoptEntryFromStationery(a2, a1, nil);
+		AddProcrastinatedCall('cardfileAddCard, functions.XmitSoupChange, [Array: names.soupName, 'cardfileAddCard, 'entryAdded, adoptEntryFromStationery], 0);
+		adoptEntryFromStationery
 	end,
 	editSlip: @8219,
 	kGetAppSize: func(a1, a2) begin
-		local l1, l2, l3, l4;
+		local l1, least, bounds, viewFormat;
 		if ((screenSize := GetAppParams()).appAreaWidth <= 240) then begin
 				l1 := 0
 			end else begin
 				l1 := 8
 			end;
 		if ((a1.superSymbol = 'ownerNames) or (a2 = 'default)) then begin
-				l2 := (if (a1.superSymbol = 'ownerNames) then 202 else 220)
+				least := (if (a1.superSymbol = 'ownerNames) then 202 else 220)
 			end else begin
-				l2 := (screenSize.appAreaHeight - (l1 * 2));
+				least := (screenSize.appAreaHeight - (l1 * 2));
 				if (l1 > 0) then begin
-						l2 := min(((220 - l1) * 2), l2)
+						least := min(((220 - l1) * 2), least)
 					end
 			end;
-		l3 := SetBounds(0, ((-l2) - l1), 240, (-l1));
+		bounds := SetBounds(0, ((-least) - l1), 240, (-l1));
 		if (l1 = 0) then begin
-				l4 := 0
+				viewFormat := 0
 			end else begin
-				l4 := GetRoot().cardfile._proto.viewFormat
+				viewFormat := GetRoot().cardfile._proto.viewFormat
 			end;
-		{bounds: l3, justify: 144, viewFormat: l4, draggerBorder: l1}
+		{bounds: bounds, justify: 144, viewFormat: viewFormat, draggerBorder: l1}
 	end,
 	appSymbol: 'cardfile,
 	viewJustify: vjParentCenterH + vjParentBottomV,
@@ -1129,32 +1129,32 @@ cardfile := {
 	],
 	kDoCallSlip: func(a1, a2, a3) begin
 		a1:dirty();
-		(if ((not (l3 := GetRoot().cardfile.callSlip)) or (not l3.viewCObject)) then begin
+		(if ((not (callSlip := GetRoot().cardfile.callSlip)) or (not callSlip.viewCObject)) then begin
 				l1 := GetRoot().|phonehome:newton|:NewItem(a1);
-				l2 := GetDataDefs('|nameRef.phone|):MakeNameRef(a2, '|nameRef.phone|);
+				nameRef := GetDataDefs('|nameRef.phone|):MakeNameRef(a2, '|nameRef.phone|);
 				if a3 then begin
-						l2.phone := a3
+						nameRef.phone := a3
 					end else begin
 						l5 := true
 					end;
-				l1.toRef := [Array: l2];
-				if (l4 := GetRoot().cardfile:bcPhoneNumber(a2, '[Array: string])) then begin
+				l1.toRef := [Array: nameRef];
+				if (bcPhoneNumber := GetRoot().cardfile:bcPhoneNumber(a2, '[Array: string])) then begin
 						l1.alternatives := [Array: ];
 						local l1;
-						local l2;
-						local l3;
-						local l4;
+						local nameRef;
+						local callSlip;
+						local bcPhoneNumber;
 						local l5;
-						(foreach l6 in l4 do begin
-								local l8;
-								if l6 then begin
+						(foreach item in bcPhoneNumber do begin
+								local copy;
+								if item then begin
 										if l5 then begin
-												l2.phone := (a3 := l6);
+												nameRef.phone := (a3 := item);
 												l5 := nil
 											end else begin
-												if (not StrEqual(l6, a3)) then begin
-														(l8 := Clone(l2)).suffix := (l8.phone := l6);
-														AddArraySlot(l1.alternatives, l8)
+												if (not StrEqual(item, a3)) then begin
+														(copy := Clone(nameRef)).suffix := (copy.phone := item);
+														AddArraySlot(l1.alternatives, copy)
 													end
 											end
 									end
@@ -1201,30 +1201,30 @@ cardfile := {
 				'editNotes
 			],
 			MakeNewEntry: func() begin
-				local l1;
-				return (l1 := TotalClone('{address2: nil, addresses: [Array: ], pagers: [Array: ], address: nil, class: person, postal_code: nil, cardType: nil, anniversary: nil, region: nil, companyReading: nil, section: nil, city: nil, email: nil, bdayEvent: nil, title: nil, country: nil, name: {honorific: nil, first: "", last: nil, title: nil}, company: nil, emailAddrs: [Array: ], companies: [Array: ], sorton: "Untitled Person", notes: nil, anniversaryEvent: nil, names: [Array: ], phones: [Array: ], version: 2, bday: nil, emailPassword: nil}))
+				local copy;
+				return (copy := TotalClone('{address2: nil, addresses: [Array: ], pagers: [Array: ], address: nil, class: person, postal_code: nil, cardType: nil, anniversary: nil, region: nil, companyReading: nil, section: nil, city: nil, email: nil, bdayEvent: nil, title: nil, country: nil, name: {honorific: nil, first: "", last: nil, title: nil}, company: nil, emailAddrs: [Array: ], companies: [Array: ], sorton: "Untitled Person", notes: nil, anniversaryEvent: nil, names: [Array: ], phones: [Array: ], version: 2, bday: nil, emailPassword: nil}))
 			end,
 			textScript: textScript,
-			StringExtract: func(a1, a2) begin
-				l1 := "";
-				if (not StrFilled((l4 := ParamStr("^?0^?1^0, ^1|^0||^1|", [Array: a1.name.last, a1.name.first])))) then begin
-						l4 := "Untitled Person"
+			StringExtract: func(entry, nLines) begin
+				text := "";
+				if (not StrFilled((text2 := ParamStr("^?0^?1^0, ^1|^0||^1|", [Array: entry.name.last, entry.name.first])))) then begin
+						text2 := "Untitled Person"
 					end;
-				if (a2 > 1) then begin
-						if (if (l3 := a1.phones) then ((l2 := Length(l3)) > 0)) then begin
-								local l1;
-								local l2;
-								local l3;
-								local l4;
-								(for l5 := 0 to (l2 - 1) do begin
-										if StrFilled(l3[l5]) then begin
-												break (l1 := Stringer([Array: " ", MakeDisplayPhone(l3[l5])]))
+				if (nLines > 1) then begin
+						if (if (phones := entry.phones) then ((count := Length(phones)) > 0)) then begin
+								local text;
+								local count;
+								local phones;
+								local text2;
+								(for i := 0 to (count - 1) do begin
+										if StrFilled(phones[i]) then begin
+												break (text := Stringer([Array: " ", MakeDisplayPhone(phones[i])]))
 											end
 									end)
 							end;
-						l4 := Stringer([Array: l4, "\n", l1])
+						text2 := Stringer([Array: text2, "\n", text])
 					end;
-				l4
+				text2
 			end
 		},
 		owner: {
@@ -1257,12 +1257,12 @@ cardfile := {
 				'editNotes
 			],
 			MakeNewEntry: func() begin
-				local l1;
-				(l1 := TotalClone('{address2: nil, addresses: [Array: ], pagers: [Array: ], address: nil, class: person, postal_code: nil, cardType: nil, anniversary: nil, region: nil, companyReading: nil, section: nil, city: nil, email: nil, bdayEvent: nil, title: nil, country: nil, name: {honorific: nil, first: "", last: nil, title: nil}, company: nil, emailAddrs: [Array: ], companies: [Array: ], sorton: "Untitled Person", notes: nil, anniversaryEvent: nil, names: [Array: ], phones: [Array: ], version: 2, bday: nil, emailPassword: nil})).owner := {};
-				l1.class := 'owner;
-				l1.sorton := "Untitled Owner";
-				l1.labels := '_ownerNames;
-				return l1
+				local copy;
+				(copy := TotalClone('{address2: nil, addresses: [Array: ], pagers: [Array: ], address: nil, class: person, postal_code: nil, cardType: nil, anniversary: nil, region: nil, companyReading: nil, section: nil, city: nil, email: nil, bdayEvent: nil, title: nil, country: nil, name: {honorific: nil, first: "", last: nil, title: nil}, company: nil, emailAddrs: [Array: ], companies: [Array: ], sorton: "Untitled Person", notes: nil, anniversaryEvent: nil, names: [Array: ], phones: [Array: ], version: 2, bday: nil, emailPassword: nil})).owner := {};
+				copy.class := 'owner;
+				copy.sorton := "Untitled Owner";
+				copy.labels := '_ownerNames;
+				return copy
 			end,
 			textScript: compile(
 				constants: {
@@ -1270,20 +1270,20 @@ cardfile := {
 						call GetRoot().cardfile.kGenericTextFunc with (a2)
 					end
 				},
-				func(a1, a2) begin
-					local l1;
-					RemoveSlot((l1 := Clone(a2)), 'owner);
-					call (kFunction_73d459) with (a1, l1)
+				func(entry, target) begin
+					local copy;
+					RemoveSlot((copy := Clone(target)), 'owner);
+					call (kFunction_73d459) with (entry, copy)
 				end),
-			StringExtract: func(a1, a2) begin
-				local l1;
-				if (not StrFilled((l1 := ParamStr("^?0^?1^0, ^1|^0||^1|", [Array: a1.name.last, a1.name.first])))) then begin
-						l1 := "Untitled Owner"
+			StringExtract: func(entry, nLines) begin
+				local text;
+				if (not StrFilled((text := ParamStr("^?0^?1^0, ^1|^0||^1|", [Array: entry.name.last, entry.name.first])))) then begin
+						text := "Untitled Owner"
 					end;
-				if (a2 > 1) then begin
-						l1 := Stringer([Array: l1, "\n ", "Owner"])
+				if (nLines > 1) then begin
+						text := Stringer([Array: text, "\n ", "Owner"])
 					end;
-				l1
+				text
 			end
 		},
 		worksite: {
@@ -1302,20 +1302,20 @@ cardfile := {
 			},
 			viewsToDisplay: [|Array|: 'default, 'worksite, 'Connection, 'accessNumbers, 'custom, 'editNotes],
 			MakeNewEntry: func() begin
-				local l1;
-				(l1 := TotalClone('{version: 2, class: worksite, cardType: nil, place: nil, dialingPrefix: nil, areacode: nil, cityAlias: nil, country: nil, countrySymbol: nil, printer: nil, mailAccess: nil, connectionPhone: nil, connectionNetwork: nil, notes: nil, sorton: "Untitled Worksite"})).labels := '_ownerNames;
-				return l1
+				local copy;
+				(copy := TotalClone('{version: 2, class: worksite, cardType: nil, place: nil, dialingPrefix: nil, areacode: nil, cityAlias: nil, country: nil, countrySymbol: nil, printer: nil, mailAccess: nil, connectionPhone: nil, connectionNetwork: nil, notes: nil, sorton: "Untitled Worksite"})).labels := '_ownerNames;
+				return copy
 			end,
 			textScript: textScript,
-			StringExtract: func(a1, a2) begin
-				local l1;
-				if (not StrFilled((l1 := a1.place))) then begin
-						l1 := "Untitled Worksite"
+			StringExtract: func(entry, nLines) begin
+				local place;
+				if (not StrFilled((place := entry.place))) then begin
+						place := "Untitled Worksite"
 					end;
-				if (a2 > 1) then begin
-						l1 := Stringer([Array: l1, "\n ", "Worksite"])
+				if (nLines > 1) then begin
+						place := Stringer([Array: place, "\n ", "Worksite"])
 					end;
-				l1
+				place
 			end
 		},
 		company: {
@@ -1334,30 +1334,30 @@ cardfile := {
 			},
 			viewsToDisplay: [|Array|: 'default, 'name, 'address, 'phone, 'email, 'custom, 'style, 'editNotes],
 			MakeNewEntry: func() begin
-				local l1;
-				return (l1 := TotalClone('{address2: nil, addresses: [Array: ], address: nil, class: company, postal_code: nil, cardType: nil, region: nil, companyReading: nil, section: nil, city: nil, email: nil, title: nil, country: nil, name: {honorific: nil, first: "", last: nil, title: nil}, company: nil, emailAddrs: [Array: ], sorton: "Untitled Company", notes: nil, names: [Array: ], phones: [Array: ], version: 2}))
+				local copy;
+				return (copy := TotalClone('{address2: nil, addresses: [Array: ], address: nil, class: company, postal_code: nil, cardType: nil, region: nil, companyReading: nil, section: nil, city: nil, email: nil, title: nil, country: nil, name: {honorific: nil, first: "", last: nil, title: nil}, company: nil, emailAddrs: [Array: ], sorton: "Untitled Company", notes: nil, names: [Array: ], phones: [Array: ], version: 2}))
 			end,
 			textScript: textScript,
-			StringExtract: func(a1, a2) begin
-				l1 := "";
-				if (not StrFilled((l4 := a1.company))) then begin
-						l4 := "Untitled Company"
+			StringExtract: func(entry, nLines) begin
+				text := "";
+				if (not StrFilled((company := entry.company))) then begin
+						company := "Untitled Company"
 					end;
-				if (a2 > 1) then begin
-						if (if (l3 := a1.phones) then ((l2 := Length(l3)) > 0)) then begin
-								local l1;
-								local l2;
-								local l3;
-								local l4;
-								(for l5 := 0 to (l2 - 1) do begin
-										if StrFilled(l3[l5]) then begin
-												break (l1 := Stringer([Array: " ", MakeDisplayPhone(l3[l5])]))
+				if (nLines > 1) then begin
+						if (if (phones := entry.phones) then ((count := Length(phones)) > 0)) then begin
+								local text;
+								local count;
+								local phones;
+								local company;
+								(for i := 0 to (count - 1) do begin
+										if StrFilled(phones[i]) then begin
+												break (text := Stringer([Array: " ", MakeDisplayPhone(phones[i])]))
 											end
 									end)
 							end;
-						l4 := Stringer([Array: l4, "\n", l1])
+						company := Stringer([Array: company, "\n", text])
 					end;
-				l4
+				company
 			end
 		},
 		group: {
@@ -1373,16 +1373,16 @@ cardfile := {
 			},
 			viewsToDisplay: [|Array|: 'default, 'groupHeader, 'group, 'custom, 'editNotes],
 			MakeNewEntry: func() begin
-				local l1;
-				return (l1 := TotalClone('{version: 2, class: group, cardType: nil, group: nil, notes: nil, members: [Array: ], groupInfo: {}, name: {honorific: nil, first: "", last: nil, title: nil}, company: nil, postal_code: nil, sorton: "Untitled Group"}))
+				local copy;
+				return (copy := TotalClone('{version: 2, class: group, cardType: nil, group: nil, notes: nil, members: [Array: ], groupInfo: {}, name: {honorific: nil, first: "", last: nil, title: nil}, company: nil, postal_code: nil, sorton: "Untitled Group"}))
 			end,
 			textScript: textScript,
-			StringExtract: func(a1, a2) begin
-				local l1;
-				if (not StrFilled((l1 := a1.group))) then begin
-						l1 := "Untitled Group"
+			StringExtract: func(entry, nLines) begin
+				local group;
+				if (not StrFilled((group := entry.group))) then begin
+						group := "Untitled Group"
 					end;
-				l1
+				group
 			end
 		}
 	},
@@ -1396,27 +1396,27 @@ cardfile := {
 		self.lastFormats := nil;
 		(self.stepChildren := nil)
 	end,
-	AddLayout: func(a1) begin
+	AddLayout: func(popup) begin
 		if IsReadOnly(allLayouts) then begin
 				allLayouts := Clone(allLayouts)
 			end;
-		(allLayouts.(EnsureInternal(a1.symbol)) := a1)
+		(allLayouts.(EnsureInternal(popup.symbol)) := popup)
 	end,
 	AppEmpty: compile(
 		constants: {
-			kLiteral_73e3bd: '{font: 1058816, justification: center}
+			kLiteral_73e3bd: '{font: tsSystem + tsSize(10) + tsBold, justification: center}
 		},
 		func() begin
-			local l1, l2;
-			l1 := self:LocalBox();
-			if ((not appEmptyStr) or (if (l2 := ShapeBounds(appEmptyStr)) then (l1.right <> l2.right))) then begin
-					l1.top := 20;
-					l1.bottom := 100;
+			local box, shapeBounds2;
+			box := self:LocalBox();
+			if ((not appEmptyStr) or (if (shapeBounds2 := ShapeBounds(appEmptyStr)) then (box.right <> shapeBounds2.right))) then begin
+					box.top := 20;
+					box.bottom := 100;
 					if (superSymbol = 'ownerNames) then begin
-							appEmptyStr := [Array: kLiteral_73e3bd, MakeTextLines("There are no Owners or Worksites.\n Go through Setup in Extras, or \ntap the New button.", l1, fontHeight(1058816), 1058816)]
+							appEmptyStr := [Array: kLiteral_73e3bd, MakeTextLines("There are no Owners or Worksites.\n Go through Setup in Extras, or \ntap the New button.", box, fontHeight(1058816), 1058816)]
 						end else begin
-							l1.top := 40;
-							appEmptyStr := [Array: kLiteral_73e3bd, MakeTextLines("There are no Names in this folder.", l1, fontHeight(1058816), 1058816)]
+							box.top := 40;
+							appEmptyStr := [Array: kLiteral_73e3bd, MakeTextLines("There are no Names in this folder.", box, fontHeight(1058816), 1058816)]
 						end
 				end;
 			appEmptyStr
@@ -1427,7 +1427,7 @@ cardfile := {
 			kLiteral_722c79: "Names"
 		},
 		func(a1) begin
-			local l1, l2, l3, l4, l5;
+			local l1, l2, cardfile, l4, passwordKey;
 			if self.viewCObject then begin
 					l4 := (self.superSymbol = 'ownerNames);
 					if (if (self = GetRoot().(UserConfiguration.blessedApp)) then (not l4)) then begin
@@ -1441,14 +1441,14 @@ cardfile := {
 						end
 				end;
 			if a1 then begin
-					(l3 := GetRoot().cardfile).previousLayout := 'default;
-					l3.currentLayout := 'overview
+					(cardfile := GetRoot().cardfile).previousLayout := 'default;
+					cardfile.currentLayout := 'overview
 				end;
-			(if (if self:GetAppPreferences().usePassword then (l5 := GetUserConfig('passwordKey))) then (if ModalCheckPIN("Enter PIN", l5) then self:DoOwnerOpen() else GetRoot():Notify(3, kLiteral_722c79, "The PIN you entered is incorrect.  Owner Info cannot be opened.")) else self:DoOwnerOpen())
+			(if (if self:GetAppPreferences().usePassword then (passwordKey := GetUserConfig('passwordKey))) then (if ModalCheckPIN("Enter PIN", passwordKey) then self:DoOwnerOpen() else GetRoot():Notify(3, kLiteral_722c79, "The PIN you entered is incorrect.  Owner Info cannot be opened.")) else self:DoOwnerOpen())
 		end),
 	CheckAllBdays: func() begin
-		local l1;
-		(if (l1 := self:GetBdayCursor()):entry() then begin
+		local bdayCursor;
+		(if (bdayCursor := self:GetBdayCursor()):entry() then begin
 				newBdays := true;
 				prefsCache := nil;
 				self:SaveAppState()
@@ -1467,8 +1467,8 @@ cardfile := {
 						end;
 					appEmptyStr := nil;
 					if (not HasSlot(self, 'routeScripts)) then begin
-							ArrayMunger((l2 := Clone(extraRouteScripts)), Length(l2), 0, routeScripts, 0, nil);
-							routeScripts := l2
+							ArrayMunger((copy := Clone(extraRouteScripts)), Length(copy), 0, routeScripts, 0, nil);
+							routeScripts := copy
 						end;
 					if IsReadOnly(allSoups) then begin
 							(allSoups := Clone(allSoups)).names := Clone(allSoups.names)
@@ -1482,31 +1482,31 @@ cardfile := {
 								(theCursor := theSoup:Query(soupQuery))
 							end
 						end else begin
-							if ((l6 := (l7 := self:GetAppPreferences()).sortBy) = 'sorton) then begin
+							if ((l6 := (appPreferences := self:GetAppPreferences()).sortBy) = 'sorton) then begin
 									allSoups.names.soupQuery := kLiteral_738f8d
 								end else begin
 									local l1;
-									local l2;
+									local copy;
 									local l3;
 									local l4;
 									local l5;
 									local l6;
-									local l7;
-									local l8;
+									local appPreferences;
+									local soup;
 									local l9;
-									(foreach l10 in (l9 := (l8 := GetUnionSoupAlways(allSoups.names.soupName)):GetSoupList()) do begin
-											if (not self:CheckSortBy(l10, l6)) then begin
+									(foreach item in (l9 := (soup := GetUnionSoupAlways(allSoups.names.soupName)):GetSoupList()) do begin
+											if (not self:CheckSortBy(item, l6)) then begin
 													self:Notify(3, title, "Your sorting prefs have been reset to the default sort order.");
 													try begin
-															l8:RemoveIndex([Array: l6, 'sorton])
+															soup:RemoveIndex([Array: l6, 'sorton])
 														end onexception |evt.ex| do begin end;
 													allSoups.names.soupQuery := kLiteral_738f8d;
-													l7.sortBy := 'sorton;
-													EntryChange(l7);
+													appPreferences.sortBy := 'sorton;
+													EntryChange(appPreferences);
 													break
 												end
 										end);
-									if (l7.sortBy <> 'sorton) then begin
+									if (appPreferences.sortBy <> 'sorton) then begin
 											allSoups.names.soupQuery := Clone(kLiteral_738f8d);
 											allSoups.names.soupQuery.IndexPath := [Array: l6, 'sorton]
 										end
@@ -1527,46 +1527,46 @@ cardfile := {
 	end,
 	statusBar: nil,
 	customEditor: @8218,
-	AddCardData: func(a1, a2, a3) begin
-		if (l1 := self:GetInfoFrame(a2, a1.class)) then begin
-				if l1.stringData then begin
-						if IsInstance(a3, 'string) then begin
-								l2 := a3
+	AddCardData: func(entryFromObj, a2, frame3) begin
+		if (infoFrame := self:GetInfoFrame(a2, entryFromObj.class)) then begin
+				if infoFrame.stringData then begin
+						if IsInstance(frame3, 'string) then begin
+								frame2 := frame3
 							end
 					end else begin
-						l2 := {};
-						local l1;
-						local l2;
-						local l3;
-						(foreach l4 in l1.checkPaths do begin
-								if a3.(l4) then begin
-										l2.(l4) := a3.(l4)
+						frame2 := {};
+						local infoFrame;
+						local frame2;
+						local newPath;
+						(foreach item in infoFrame.checkPaths do begin
+								if frame3.(item) then begin
+										frame2.(item) := frame3.(item)
 									end
 							end);
-						if (Length(l2) = 0) then begin
-								l2 := nil
+						if (Length(frame2) = 0) then begin
+								frame2 := nil
 							end
 					end;
-				if l2 then begin
-						if (l3 := self:GetNewPath(a1, a2)) then begin
-								if (l3 = true) then begin
-										(foreach l4, l6 in l2 do begin
-												a1.(l4) := l6
+				if frame2 then begin
+						if (newPath := self:GetNewPath(entryFromObj, a2)) then begin
+								if (newPath = true) then begin
+										(foreach item, value in frame2 do begin
+												entryFromObj.(item) := value
 											end)
 									end else begin
-										a1.(l3) := l2
+										entryFromObj.(newPath) := frame2
 									end;
-								self:SetCardfileStuff(a1, true)
+								self:SetCardfileStuff(entryFromObj, true)
 							end
 					end
 			end;
-		l2
+		frame2
 	end,
 	_addKeyScript: _addKeyScript,
 	NewtSoupChangedNotify: func(a1, a2, a3, a4) begin
-		local l1;
-		if (if ((l1 := self:GetAppPreferences().sortBy) <> 'sorton) then (a3 = 'soupEnters)) then begin
-				if (not self:CheckSortBy(a4, l1)) then begin
+		local sortBy;
+		if (if ((sortBy := self:GetAppPreferences().sortBy) <> 'sorton) then (a3 = 'soupEnters)) then begin
+				if (not self:CheckSortBy(a4, sortBy)) then begin
 						self:Notify(3, title, "Your sorting prefs have been reset to the default sort order.");
 						self:SortByChange('sorton)
 					end
@@ -1601,8 +1601,8 @@ cardfile := {
 		statusBar:?RedoChildren()
 	end,
 	ShowLayout: func(a1) begin
-		local l1, l2, l3, l4, l5;
-		l1 := currentLayout;
+		local currentLayout2, box, l3, l4, l5;
+		currentLayout2 := currentLayout;
 		if (not a1) then begin
 				a1 := previousLayout
 			end;
@@ -1610,59 +1610,59 @@ cardfile := {
 				previousLayout := a1
 			end;
 		currentLayout := a1;
-		l2 := self:LocalBox();
+		box := self:LocalBox();
 		l5 := (l4 := call kGetAppSize with (self, a1)).draggerBorder;
 		if (superSymbol = 'ownerNames) then begin
-				l3 := (((l2.bottom - l2.top) - 202) - l5)
+				l3 := (((box.bottom - box.top) - 202) - l5)
 			end else begin
 				if (a1 = 'default) then begin
-						l3 := (((l2.bottom - l2.top) - 220) - l5)
+						l3 := (((box.bottom - box.top) - 220) - l5)
 					end else begin
-						l3 := (((l2.bottom - l2.top) + l4.bounds.top) + l5)
+						l3 := (((box.bottom - box.top) + l4.bounds.top) + l5)
 					end
 			end;
 		(if (l3 <> 0) then self:SlideEffect(l3, (-l3), @flip, 'Resize, [Array: l4.justify, l4.bounds, l4.viewFormat]) else self:RedoChildren())
 	end,
 	viewEffect: 133120,
-	FileThis: func(a1, a2, a3, a4, a5) begin
+	FileThis: func(target, labelsChanged, a3, storeChanged, a5) begin
 		if (if (self:GetAppPreferences().sortBy <> 'sorton) then (not a5:GetSoup(@cardfileSoupName))) then begin
 				self:Notify(3, title, "Your sorting prefs have been reset to the default sort order.");
 				self:SortByChange('sorton)
 			end;
-		inherited:FileThis(a1, a2, a3, a4, a5)
+		inherited:FileThis(target, labelsChanged, a3, storeChanged, a5)
 	end,
-	CheckSortBy: func(a1, a2) begin
+	CheckSortBy: func(item2, sortBy) begin
 		local l1;
-		local l2;
-		(foreach l3 in (l2 := a1:GetIndexes()) do begin
-				if (l3.structure = 'multiSlot) then begin
-						if self:SortPathMatches(l3.path[0], a2) then begin
+		local indexes;
+		(foreach item in (indexes := item2:GetIndexes()) do begin
+				if (item.structure = 'multiSlot) then begin
+						if self:SortPathMatches(item.path[0], sortBy) then begin
 								break (l1 := true)
 							end
 					end
 			end);
 		l1
 	end,
-	FindSoupExcerpt: func(a1, a2) begin
-		if (not a1.class) then begin
-				call GetRoot().cardfile.kUpdateClass with (a1)
+	FindSoupExcerpt: func(currentItem, repeatTemplate) begin
+		if (not currentItem.class) then begin
+				call GetRoot().cardfile.kUpdateClass with (currentItem)
 			end;
-		GetDataDefs(a1.class):StringExtract(a1, 1)
+		GetDataDefs(currentItem.class):StringExtract(currentItem, 1)
 	end,
 	allLayouts: {default: @8210, overview: @8227, allinfo: @8196},
-	bcEmailAddress: func(a1, a2) begin
-		self:bcHelper(a1, a2, '[Array: emailAddrs], '[Array: email, emailPassword])
+	bcEmailAddress: func(entryFromObj, preferredRouting) begin
+		self:bcHelper(entryFromObj, preferredRouting, '[Array: emailAddrs], '[Array: email, emailPassword])
 	end,
-	SetCustomInfo: func(a1) begin
-		local l1;
-		(if (l1 := GetStores()[0]:GetSoup(allSoups.names.soupName)) then begin
-				l1:SetInfo('customFields, a1);
+	SetCustomInfo: func(target) begin
+		local soup;
+		(if (soup := GetStores()[0]:GetSoup(allSoups.names.soupName)) then begin
+				soup:SetInfo('customFields, target);
 				UnregMetaDataExtension('cardfile, 'cardfile);
 				RegMetaDataExtension('cardfile, 'cardfile, 'cardfile.CustomMetaData)
 			end)
 	end,
-	RestoreFolderPosition: func(a1, a2, a3) begin
-		(if (superSymbol <> 'ownerNames) then inherited:RestoreFolderPosition(a1, a2, a3))
+	RestoreFolderPosition: func(key, value, labelsFilter) begin
+		(if (superSymbol <> 'ownerNames) then inherited:RestoreFolderPosition(key, value, labelsFilter))
 	end,
 	stepChildren: nil,
 	GetBdayCursor: compile(
@@ -1672,23 +1672,23 @@ cardfile := {
 			end
 		},
 		func() begin
-			local l1, l2, l3;
-			if (not (l1 := allSoups.names.theSoup)) then begin
-					l1 := Clone(allSoups.names);
-					l1:MakeSoup(appSymbol);
-					l1 := l1.theSoup
+			local theSoup, copy, cursor;
+			if (not (theSoup := allSoups.names.theSoup)) then begin
+					theSoup := Clone(allSoups.names);
+					theSoup:MakeSoup(appSymbol);
+					theSoup := theSoup.theSoup
 				end;
-			l2 := Clone('{type: index, IndexPath: sorton, tagSpec: {none: _ownerNames}});
-			if (not l1:HasTags()) then begin
-					RemoveSlot(l2, 'tagSpec)
+			copy := Clone('{type: index, IndexPath: sorton, tagSpec: {none: _ownerNames}});
+			if (not theSoup:HasTags()) then begin
+					RemoveSlot(copy, 'tagSpec)
 				end;
-			l2.validTest := kFunction_741eb5;
-			(l3 := l1:Query(l2))
+			copy.validTest := kFunction_741eb5;
+			(cursor := theSoup:Query(copy))
 		end),
 	OpenTo: func(a1, a2) begin
-		local l1;
-		if (l1 := GetDataDefs(a1.class)) then begin
-				newSuperSym := l1.superSymbol
+		local dataDefs;
+		if (dataDefs := GetDataDefs(a1.class)) then begin
+				newSuperSym := dataDefs.superSymbol
 			end else begin
 				newSuperSym := 'names
 			end;
@@ -1707,38 +1707,38 @@ cardfile := {
 		(if self.viewCObject then self:ShowFoundItem(a1, a2))
 	end,
 	PutAwayScript: func(a1) begin
-		local l1;
-		if ((not (l1 := a1.body).class) or (not l1.version)) then begin
-				a1.body := self.conversion:Convert(l1, 'oneO, 'twoO, nil)
+		local body;
+		if ((not (body := a1.body).class) or (not body.version)) then begin
+				a1.body := self.conversion:Convert(body, 'oneO, 'twoO, nil)
 			end;
-		(if (l1 := inherited:PutAwayScript(a1)) then XmitSoupChange(@cardfileSoupName, '_routing, 'entryAdded, l1))
+		(if (body := inherited:PutAwayScript(a1)) then XmitSoupChange(@cardfileSoupName, '_routing, 'entryAdded, body))
 	end,
-	GetCity: func(a1) begin
-		if IsEntryAlias((l2 := a1.cityAlias)) then begin
-				l1 := ResolveEntryAlias(l2);
+	GetCity: func(target2) begin
+		if IsEntryAlias((cityAlias := target2.cityAlias)) then begin
+				resolveEntryAlias2 := ResolveEntryAlias(cityAlias);
 				if (if EntryValid(target) then (not EntryStore(target):IsReadOnly())) then begin
-						a1.cityAlias := [Array: l1.name, l1.longitude, l1.latitude];
-						EntryChange(a1)
+						target2.cityAlias := [Array: resolveEntryAlias2.name, resolveEntryAlias2.longitude, resolveEntryAlias2.latitude];
+						EntryChange(target2)
 					end
 			end else begin
-				if IsArray(l2) then begin
-						if ((l4 := Length((l3 := GetCityEntry(l2[0])))) > 1) then begin
-								local l1;
-								local l2;
-								local l3;
-								local l4;
-								(foreach l5 in l3 do begin
-										if (if (l5.longitude = l2[1]) then (l5.latitude = l2[2])) then begin
-												break (l1 := l5)
+				if IsArray(cityAlias) then begin
+						if ((count := Length((cityEntry := GetCityEntry(cityAlias[0])))) > 1) then begin
+								local resolveEntryAlias2;
+								local cityAlias;
+								local cityEntry;
+								local count;
+								(foreach item in cityEntry do begin
+										if (if (item.longitude = cityAlias[1]) then (item.latitude = cityAlias[2])) then begin
+												break (resolveEntryAlias2 := item)
 											end
 									end)
 							end;
-						if (if (not l1) then (l4 > 0)) then begin
-								l1 := l3[0]
+						if (if (not resolveEntryAlias2) then (count > 0)) then begin
+								resolveEntryAlias2 := cityEntry[0]
 							end
 					end
 			end;
-		l1
+		resolveEntryAlias2
 	end,
 	forceNewEntry: nil,
 	GetDefaultState: func() begin
@@ -1751,60 +1751,60 @@ cardfile := {
 		groupHeader: {
 			checkPrefix: [|Array|: true, nil],
 			checkPaths: [|Array|: 'members],
-			formatFunc: func(a1) begin
-				local l1;
-				(l1 := ParamStr("^?0^0, ||# members: ^1", [Array: GetDataDefs(ClassOf(a1[0])).name, Length(a1[0])]))
+			formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+				local text;
+				(text := ParamStr("^?0^0, ||# members: ^1", [Array: GetDataDefs(ClassOf(v20_wwwwwwwwwwvvvvvv[0])).name, Length(v20_wwwwwwwwwwvvvvvv[0])]))
 			end
 		},
 		group: {
 			checkPrefix: [|Array|: true, nil],
 			checkPaths: [|Array|: 'members],
-			shapeFunc: func(a1, a2, a3, a4) begin
-				l2 := [Array: ];
-				l4 := FontAscent(a4.font);
-				l5 := fontHeight(a4.font);
-				l6 := a2.left;
-				l7 := a2.right;
-				l3 := GetDataDefs(ClassOf(a1[0]));
-				local l1;
-				local l2;
-				local l3;
-				local l4;
-				local l5;
-				local l6;
-				local l7;
-				(foreach l8 in a1[0] do begin
-						entry := ResolveEntryAlias(l8._alias);
-						l1 := Stringer([Array: "\n+", l3:Get(l8, 'name, 'text)]);
-						a2.bottom := (a2.top + l4);
-						AddArraySlot(l2, MakeText(l1, l6, a2.top, l7, a2.bottom));
-						a2.top := (a2.top + l5)
+			shapeFunc: func(v20_wwwwwwwwwwvvvvvv, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, a3, a4) begin
+				list := [Array: ];
+				fontAscent2 := FontAscent(a4.font);
+				fontHeight2 := fontHeight(a4.font);
+				left := v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.left;
+				right := v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.right;
+				dataDefs := GetDataDefs(ClassOf(v20_wwwwwwwwwwvvvvvv[0]));
+				local text;
+				local list;
+				local dataDefs;
+				local fontAscent2;
+				local fontHeight2;
+				local left;
+				local right;
+				(foreach item in v20_wwwwwwwwwwvvvvvv[0] do begin
+						entry := ResolveEntryAlias(item._alias);
+						text := Stringer([Array: "\n+", dataDefs:Get(item, 'name, 'text)]);
+						v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.bottom := (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top + fontAscent2);
+						AddArraySlot(list, MakeText(text, left, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top, right, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.bottom));
+						v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top := (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top + fontHeight2)
 					end);
-				{shape: l2}
+				{shape: list}
 			end,
-			formatFunc: func(a1) begin
-				l3 := GetDataDefs(ClassOf(a1[0]));
-				l1 := "";
-				local l1;
-				local l2;
-				local l3;
-				(foreach l4 in a1[0] do begin
-						l2 := ResolveEntryAlias(l4._alias);
-						l1 := Stringer([Array: l1, "\n+", l3:Get(l4, 'name, 'text)])
+			formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+				dataDefs := GetDataDefs(ClassOf(v20_wwwwwwwwwwvvvvvv[0]));
+				text := "";
+				local text;
+				local resolveEntryAlias2;
+				local dataDefs;
+				(foreach item in v20_wwwwwwwwwwvvvvvv[0] do begin
+						resolveEntryAlias2 := ResolveEntryAlias(item._alias);
+						text := Stringer([Array: text, "\n+", dataDefs:Get(item, 'name, 'text)])
 					end);
-				l1
+				text
 			end,
-			actionFunc: func(a1, a2, a3, a4, a5, a6, a7) begin
-				local l1, l2, l3, l4;
-				l3 := fontHeight(a3.viewFont);
-				l1 := (a2 div l3);
-				l4 := ResolveEntryAlias(a5.members[l1]._alias);
-				a4.top := (a4.top + (l1 * l3));
-				a4.bottom := (a4.top + l3);
-				a3:DoDrawing('Hiliter, [Array: MakeShape(a4)]);
+			actionFunc: func(a1, a2, a3, box, target, path, misc) begin
+				local l1, l2, fontHeight2, resolveEntryAlias2;
+				fontHeight2 := fontHeight(a3.viewFont);
+				l1 := (a2 div fontHeight2);
+				resolveEntryAlias2 := ResolveEntryAlias(target.members[l1]._alias);
+				box.top := (box.top + (l1 * fontHeight2));
+				box.bottom := (box.top + fontHeight2);
+				a3:DoDrawing('Hiliter, [Array: MakeShape(box)]);
 				a3:dirty();
-				if l4 then begin
-						GetRoot().cardfile:OpenTo(l4, nil)
+				if resolveEntryAlias2 then begin
+						GetRoot().cardfile:OpenTo(resolveEntryAlias2, nil)
 					end else begin
 						a3:Notify(3, GetVariable(a3, 'title), "The group member cannot be found.")
 					end;
@@ -1815,58 +1815,58 @@ cardfile := {
 			checkPrefix: [|Array|: true, nil],
 			checkPaths: [|Array|: 'dialingPrefix, 'areacode, 'cityAlias, 'country, 'printer],
 			showEmptyData: true,
-			formatFunc: func(a1) begin
-				local l1, l2, l3, l4, l5, l6, l7;
-				l2 := (if (if a1[0] then StrFilled(a1[0])) then a1[0] else "None");
-				if a1[2] then begin
-						if IsEntryAlias(a1[2]) then begin
-								if (l4 := ResolveEntryAlias(a1[2])) then begin
-										l3 := l4.name
+			formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+				local text, l2, name, resolveEntryAlias2, countryEntry, v20_wwwwwwwwwwvvvvvvItem, text2;
+				l2 := (if (if v20_wwwwwwwwwwvvvvvv[0] then StrFilled(v20_wwwwwwwwwwvvvvvv[0])) then v20_wwwwwwwwwwvvvvvv[0] else "None");
+				if v20_wwwwwwwwwwvvvvvv[2] then begin
+						if IsEntryAlias(v20_wwwwwwwwwwvvvvvv[2]) then begin
+								if (resolveEntryAlias2 := ResolveEntryAlias(v20_wwwwwwwwwwvvvvvv[2])) then begin
+										name := resolveEntryAlias2.name
 									end
 							end else begin
-								l3 := a1[2][0]
+								name := v20_wwwwwwwwwwvvvvvv[2][0]
 							end
 					end;
-				l1 := ParamStr("^?0Dialing Prefix: ^0\n||^?1Area Code: ^1\n||^?2City: ^2\n||", [Array: l2, a1[1], l3]);
-				if (if (if a1[3] then (l5 := GetCountryEntry(a1[3]))) then (Length(l5) > 0)) then begin
-						l1 := Stringer([Array: l1, ParamStr("Country: ^0\n", [Array: l5[0].name])])
+				text := ParamStr("^?0Dialing Prefix: ^0\n||^?1Area Code: ^1\n||^?2City: ^2\n||", [Array: l2, v20_wwwwwwwwwwvvvvvv[1], name]);
+				if (if (if v20_wwwwwwwwwwvvvvvv[3] then (countryEntry := GetCountryEntry(v20_wwwwwwwwwwvvvvvv[3]))) then (Length(countryEntry) > 0)) then begin
+						text := Stringer([Array: text, ParamStr("Country: ^0\n", [Array: countryEntry[0].name])])
 					end;
-				l7 := "No Printer";
-				if (l6 := a1[4]) then begin
-						if (if (if l6.printerName then l6.name) then (not StrEqual(l6.printerName, l6.name))) then begin
-								l7 := ParamStr("^0 (^1)", [Array: GetNames(l6.printerName), l6.name])
+				text2 := "No Printer";
+				if (v20_wwwwwwwwwwvvvvvvItem := v20_wwwwwwwwwwvvvvvv[4]) then begin
+						if (if (if v20_wwwwwwwwwwvvvvvvItem.printerName then v20_wwwwwwwwwwvvvvvvItem.name) then (not StrEqual(v20_wwwwwwwwwwvvvvvvItem.printerName, v20_wwwwwwwwwwvvvvvvItem.name))) then begin
+								text2 := ParamStr("^0 (^1)", [Array: GetNames(v20_wwwwwwwwwwvvvvvvItem.printerName), v20_wwwwwwwwwwvvvvvvItem.name])
 							end else begin
-								if l6.name then begin
-										l7 := l6.name
+								if v20_wwwwwwwwwwvvvvvvItem.name then begin
+										text2 := v20_wwwwwwwwwwvvvvvvItem.name
 									end
 							end
 					end;
-				TrimString((l1 := Stringer([Array: l1, l7])));
-				l1
+				TrimString((text := Stringer([Array: text, text2])));
+				text
 			end
 		}
 	},
 	newBdays: nil,
-	ShowEditSlip: func(a1, a2, a3, a4, a5) begin
-		local l1;
+	ShowEditSlip: func(layout, path, a3, a4, a5) begin
+		local context;
 		(if target then begin
 				if (if editSlipLayout then editSlipLayout.viewCObject) then begin
 						editSlipLayout.closeBox:buttonClickScript()
 					end;
-				(l1 := BuildContext(editSlip)).appBase := (l1.newtAppBase := newtAppBase);
-				l1.title := title;
-				l1.appSymbol := appSymbol;
-				l1.allSoups := allSoups;
-				l1.saveEntry := a3;
-				l1.target := target;
-				l1.targetView := self:GetTargetView();
-				l1.addingData := a4;
-				l1.makingNewCard := a5;
-				l1.selectedLayout := a1;
-				l1.selectedPath := a2;
-				l1._recogSettings := _recogSettings;
-				newtAppBase:RememberedOpen(l1);
-				(newtAppBase.editSlipLayout := l1)
+				(context := BuildContext(editSlip)).appBase := (context.newtAppBase := newtAppBase);
+				context.title := title;
+				context.appSymbol := appSymbol;
+				context.allSoups := allSoups;
+				context.saveEntry := a3;
+				context.target := target;
+				context.targetView := self:GetTargetView();
+				context.addingData := a4;
+				context.makingNewCard := a5;
+				context.selectedLayout := layout;
+				context.selectedPath := path;
+				context._recogSettings := _recogSettings;
+				newtAppBase:RememberedOpen(context);
+				(newtAppBase.editSlipLayout := context)
 			end)
 	end,
 	viewSetupChildrenScript: compile(
@@ -1880,19 +1880,19 @@ cardfile := {
 				inherited:?viewQuitScript()
 			end,
 			kFunction_742e0d: func() begin
-				local l1, l2, l3;
-				(if (l2 := self:GetTargetInfo(nil)).target then begin
-						if ((l3 := l2.target.class) = 'worksite) then begin
-								l1 := "Worksite"
+				local text, targetInfo, class2;
+				(if (targetInfo := self:GetTargetInfo(nil)).target then begin
+						if ((class2 := targetInfo.target.class) = 'worksite) then begin
+								text := "Worksite"
 							end else begin
-								if (l3 = 'owner) then begin
-										l1 := "Owner"
+								if (class2 = 'owner) then begin
+										text := "Owner"
 									end
 							end;
-						(if l1 then SetValue(self, 'text, Stringer([Array: l1, " "])))
+						(if text then SetValue(self, 'text, Stringer([Array: text, " "])))
 					end)
 			end,
-			kLiteral_742cd5: {_proto: @protoStaticText, viewBounds: '{left: -54, top: 5, right: -3, bottom: 21}, viewJustify: 8388645, viewFont: 1058816, viewFormat: 5, viewTransferMode: 3, viewSetupDoneScript: kFunction_742d55, viewQuitScript: kFunction_742db9, RetargetNotify: kFunction_742e0d}
+			kLiteral_742cd5: {_proto: @protoStaticText, viewBounds: '{left: -54, top: 5, right: -3, bottom: 21}, viewJustify: 8388645, viewFont: tsSystem + tsSize(10) + tsBold, viewFormat: vfFillBlack, viewTransferMode: 3, viewSetupDoneScript: kFunction_742d55, viewQuitScript: kFunction_742db9, RetargetNotify: kFunction_742e0d}
 		},
 		func() begin
 			stepChildren := theChildren;
@@ -1900,97 +1900,97 @@ cardfile := {
 					if IsReadOnly(stepChildren) then begin
 							stepChildren := Clone(stepChildren)
 						end;
-					ArrayMunger(stepChildren, 0, 1, [Array: '{_proto: @protoStaticText, text: " Owner Info", viewBounds: {left: 0, top: 5, right: 0, bottom: 21}, viewJustify: 8388660, viewFont: @fontSystem10Bold, viewFormat: 5, viewTransferMode: 3}, kLiteral_742cd5], 0, nil)
+					ArrayMunger(stepChildren, 0, 1, [Array: '{_proto: @protoStaticText, text: " Owner Info", viewBounds: {left: 0, top: 5, right: 0, bottom: 21}, viewJustify: 8388660, viewFont: @fontSystem10Bold, viewFormat: vfFillBlack, viewTransferMode: 3}, kLiteral_742cd5], 0, nil)
 				end;
 			if (not allLayouts.(currentLayout)) then begin
 					currentLayout := (previousLayout := 'default)
 				end;
 			inherited:viewSetupChildrenScript()
 		end),
-	ReplaceInkData: func(a1, a2, a3, a4, a5) begin
-		(if (l1 := self:GetInfoFrame(a2, a1.class)) then begin
+	ReplaceInkData: func(resolveEntryAlias, a2, a3, a4, a5) begin
+		(if (infoFrame := self:GetInfoFrame(a2, resolveEntryAlias.class)) then begin
 				if a4 then begin
-						l2 := [Array: a4]
+						list := [Array: a4]
 					end else begin
-						l2 := '[Array: ]
+						list := '[Array: ]
 					end;
-				if (dataPaths := GetRoot().cardfile:MakeDataPaths(l1.checkPrefix[0], l2, l1.stringData)) then begin
-						if (StrCompare(a1.(dataPaths[0]), a3) = 0) then begin
-								l4 := dataPaths[0]
+				if (dataPaths := GetRoot().cardfile:MakeDataPaths(infoFrame.checkPrefix[0], list, infoFrame.stringData)) then begin
+						if (StrCompare(resolveEntryAlias.(dataPaths[0]), a3) = 0) then begin
+								dataPath := dataPaths[0]
 							end
 					end;
-				if (if (if (not l4) then (multiPath := l1.checkPrefix[1])) then (multiArray := a1.(multiPath))) then begin
-						local l1;
-						local l2;
-						local l3;
-						local l4;
-						(for l5 := 0 to (Length(multiArray) - 1) do begin
-								AddArraySlot((l3 := Clone(l1.checkPrefix[1])), l5);
-								if (dataPaths := GetRoot().cardfile:MakeDataPaths(l3, l2, l1.stringData)) then begin
-										if (StrCompare(a1.(dataPaths[0]), a3) = 0) then begin
-												break (l4 := dataPaths[0])
+				if (if (if (not dataPath) then (multiPath := infoFrame.checkPrefix[1])) then (multiArray := resolveEntryAlias.(multiPath))) then begin
+						local infoFrame;
+						local list;
+						local copy;
+						local dataPath;
+						(for i := 0 to (Length(multiArray) - 1) do begin
+								AddArraySlot((copy := Clone(infoFrame.checkPrefix[1])), i);
+								if (dataPaths := GetRoot().cardfile:MakeDataPaths(copy, list, infoFrame.stringData)) then begin
+										if (StrCompare(resolveEntryAlias.(dataPaths[0]), a3) = 0) then begin
+												break (dataPath := dataPaths[0])
 											end
 									end
 							end)
 					end;
-				(if l4 then begin
-						a1.(l4) := a5;
-						EntryChange(a1);
+				(if dataPath then begin
+						resolveEntryAlias.(dataPath) := a5;
+						EntryChange(resolveEntryAlias);
 						a5
 					end)
 			end)
 	end,
 	viewHelpTopic: "names",
 	editSlipLayout: nil,
-	AdoptEntryFromStationery: func(a1, a2, a3) begin
-		local l1, l2, l3, l4, l5, l6;
-		l1 := nil;
-		l5 := (l4 := GetRoot().cardfile:GetAppPreferences()).sortBy;
-		if (not a2) then begin
-				if a1.class then begin
-						a2 := a1.class
+	AdoptEntryFromStationery: func(adoptEntry2, symbol2, a3) begin
+		local adoptEntry, copy, l3, appPreferences, l5, viewCObject;
+		adoptEntry := nil;
+		l5 := (appPreferences := GetRoot().cardfile:GetAppPreferences()).sortBy;
+		if (not symbol2) then begin
+				if adoptEntry2.class then begin
+						symbol2 := adoptEntry2.class
 					end else begin
-						a2 := allSoups.names.defaultDataType
+						symbol2 := allSoups.names.defaultDataType
 					end
 			end;
-		if a1 then begin
-				a1.class := a2
+		if adoptEntry2 then begin
+				adoptEntry2.class := symbol2
 			end;
-		useInternal := ((a2 = 'owner) or (a2 = 'worksite));
+		useInternal := ((symbol2 = 'owner) or (symbol2 = 'worksite));
 		if GetRoot().cardfile.viewCObject then begin
-				l1 := inherited:AdoptEntryFromStationery(a1, a2, nil)
+				adoptEntry := inherited:AdoptEntryFromStationery(adoptEntry2, symbol2, nil)
 			end else begin
-				if GetDataDefs(a2) then begin
-						l1 := allSoups.names:AdoptEntry(a1, a2);
-						l2 := Clone(allSoups.names);
-						l2:MakeSoup(appSymbol);
-						l2:AddEntry(l1, (if (useInternal or l4.internalStore) then GetStores()[0] else GetDefaultStore()))
+				if GetDataDefs(symbol2) then begin
+						adoptEntry := allSoups.names:AdoptEntry(adoptEntry2, symbol2);
+						copy := Clone(allSoups.names);
+						copy:MakeSoup(appSymbol);
+						copy:AddEntry(adoptEntry, (if (useInternal or appPreferences.internalStore) then GetStores()[0] else GetDefaultStore()))
 					end else begin
 						Throw('|evt.ex.fr.intrp|, "Unknown datadef")
 					end
 			end;
-		if l1 then begin
-				GetRoot().cardfile:SetCardfileStuff(l1, nil);
-				if (not l1.(l5)) then begin
-						l1.(l5) := "";
-						l6 := GetRoot().cardfile.viewCObject
+		if adoptEntry then begin
+				GetRoot().cardfile:SetCardfileStuff(adoptEntry, nil);
+				if (not adoptEntry.(l5)) then begin
+						adoptEntry.(l5) := "";
+						viewCObject := GetRoot().cardfile.viewCObject
 					end;
-				EntryChange(l1);
-				if l6 then begin
-						layout.dataCursor:Goto(l1)
+				EntryChange(adoptEntry);
+				if viewCObject then begin
+						layout.dataCursor:Goto(adoptEntry)
 					end
 			end;
-		l1
+		adoptEntry
 	end,
 	UndoCustomChange: func(a1) begin
 		self:SetCustomInfo(a1)
 	end,
 	cardExchangeScript: func(a1, a2) begin
-		local l1, l2;
+		local context, l2;
 		(if (l2 := (if UserConfiguration.currentPersona then ResolveEntryAlias(UserConfiguration.currentPersona))) then begin
-				(l1 := BuildContext(cardExchangeLayout)).theEntry := l2;
-				l1.appBase := (l1.newtAppBase := newtAppBase);
-				newtAppBase:RememberedOpen(l1)
+				(context := BuildContext(cardExchangeLayout)).theEntry := l2;
+				context.appBase := (context.newtAppBase := newtAppBase);
+				newtAppBase:RememberedOpen(context)
 			end else self:Notify(3, title, "There is no current owner card to send."))
 	end
 };
@@ -2004,8 +2004,8 @@ cfCardsFormat := {
 	title: cards,
 	symbol: 'cfCardsFormat,
 	usesCursors: true,
-	AddPrintChild: func(a1, a2, a3, a4) begin
-		AddArraySlot(stepChildren, {_proto: a1, target: a2, viewBounds: RelBounds(a3, a4, 225, 160), viewJustify: 0});
+	AddPrintChild: func(layout, target, a3, a4) begin
+		AddArraySlot(stepChildren, {_proto: layout, target: target, viewBounds: RelBounds(a3, a4, 225, 160), viewJustify: 0});
 		{bottom: 160, right: 225}
 	end,
 	protection: 'private,
@@ -2017,21 +2017,21 @@ cards := "Cards";
 cardfileRouteFormat := {
 	_proto: @targetFrameFormat,
 	symbol: 'cardfileRouteFormat,
-	SetupSlip: func(a1, a2) begin
-		a2.body := DeepClone(a1.target);
-		RemoveSlot(a2.body, 'bdayEvent);
-		RemoveSlot(a2.body, 'anniversaryEvent);
+	SetupSlip: func(a1, fields) begin
+		fields.body := DeepClone(a1.target);
+		RemoveSlot(fields.body, 'bdayEvent);
+		RemoveSlot(fields.body, 'anniversaryEvent);
 		if (not GetRoot().cardfile:GetAppPreferences().beamNotes) then begin
-				RemoveSlot(a2.body, 'notes)
+				RemoveSlot(fields.body, 'notes)
 			end;
 		(if (a1.target.class = 'owner) then begin
-				RemoveSlot(a2.body, 'owner);
-				a2.body.labels := nil;
-				a2.body.class := 'person;
-				RemoveSlot(a2.body, 'emailPassword);
-				(if a2.body.emailAddrs then (foreach l1 in a2.body.emailAddrs do begin
-							if l1.emailPassword then begin
-									RemoveSlot(l1, 'emailPassword)
+				RemoveSlot(fields.body, 'owner);
+				fields.body.labels := nil;
+				fields.body.class := 'person;
+				RemoveSlot(fields.body, 'emailPassword);
+				(if fields.body.emailAddrs then (foreach item in fields.body.emailAddrs do begin
+							if item.emailPassword then begin
+									RemoveSlot(item, 'emailPassword)
 								end
 						end))
 			end)
@@ -2050,10 +2050,10 @@ cardfileItem := {
 	menuLeftButtons: [|Array|:
 		{DoInfoAbout: nil, _proto: @newtInfoButton},
 		{
-			pickActionScript: func(a1) begin
-				local l1;
-				l1 := target;
-				(if inherited:pickActionScript(a1) then newtAppBase:ShowEditSlip('default, nil, l1, true, true))
+			pickActionScript: func(index) begin
+				local target2;
+				target2 := target;
+				(if inherited:pickActionScript(index) then newtAppBase:ShowEditSlip('default, nil, target2, true, true))
 			end,
 			debug: "New btn",
 			sorter: nil,
@@ -2110,31 +2110,31 @@ cardfileItem := {
 					end else self:hilite(nil))
 			end,
 			popup: nil,
-			pickActionScript: func(a1) begin
-				local l1, l2;
-				if (popup[a1].slot = customEditor) then begin
+			pickActionScript: func(index) begin
+				local slot, custom;
+				if (popup[index].slot = customEditor) then begin
 						self:EditCustomLabels()
 					end else begin
-						if ((l1 := popup[a1].slot) = 'custom) then begin
-								l2 := popup[a1].custom
+						if ((slot := popup[index].slot) = 'custom) then begin
+								custom := popup[index].custom
 							end else begin
-								l2 := self:GetNewPath(target, l1)
+								custom := self:GetNewPath(target, slot)
 							end;
-						newtAppBase:ShowEditSlip(l1, l2, nil, true, nil)
+						newtAppBase:ShowEditSlip(slot, custom, nil, true, nil)
 					end;
-				inherited:?pickActionScript(a1)
+				inherited:?pickActionScript(index)
 			end,
 			text: "  Add",
-			AddLayout: func(a1, a2, a3) begin
-				local l1, l2, l3, l4, l5;
-				if (if (l1 := self:GetInfoFrame(a3, target.class)) then (not l1.checkPrefix[1])) then begin
-						if (l2 := self:MakeDataPaths(l1.checkPrefix[0], l1.checkPaths, l1.stringData)) then begin
-								if l1.hasDataFunc then begin
-										l3 := call l1.hasDataFunc with (target, l2)
+			AddLayout: func(popup, a2, a3) begin
+				local infoFrame, dataPaths, hasPathData, l4, l5;
+				if (if (infoFrame := self:GetInfoFrame(a3, target.class)) then (not infoFrame.checkPrefix[1])) then begin
+						if (dataPaths := self:MakeDataPaths(infoFrame.checkPrefix[0], infoFrame.checkPaths, infoFrame.stringData)) then begin
+								if infoFrame.hasDataFunc then begin
+										hasPathData := call infoFrame.hasDataFunc with (target, dataPaths)
 									end else begin
-										l3 := self:HasPathData(target, l2, l1.stringData)
+										hasPathData := self:HasPathData(target, dataPaths, infoFrame.stringData)
 									end;
-								if (not l3) then begin
+								if (not hasPathData) then begin
 										l4 := true
 									end
 							end
@@ -2143,7 +2143,7 @@ cardfileItem := {
 					end;
 				(if l4 then begin
 						l5 := (if a2.(a3).nameByClass then a2.(a3).nameByClass.(target.class) else a2.(a3).name);
-						AddArraySlot(a1, {item: l5, slot: a3})
+						AddArraySlot(popup, {item: l5, slot: a3})
 					end)
 			end,
 			viewSetupDoneScript: func() begin
@@ -2174,38 +2174,38 @@ cardfileItem := {
 			end
 		},
 		func() begin
-			l2 := menuLeftButtons;
-			l1 := menuRightButtons;
+			menuLeftButtons2 := menuLeftButtons;
+			menuRightButtons2 := menuRightButtons;
 			if (currentLayout = 'overview) then begin
-					l3 := ArrayPos((menuLeftButtons := Clone(menuLeftButtons)), nil, 0, kFunction_73d01d);
-					ArrayRemoveCount(menuLeftButtons, l3, 1);
-					l6 := ArrayPos(menuLeftButtons, nil, 0, kFunction_73d061);
-					ArrayRemoveCount(menuLeftButtons, l6, 1);
+					pos := ArrayPos((menuLeftButtons := Clone(menuLeftButtons)), nil, 0, kFunction_73d01d);
+					ArrayRemoveCount(menuLeftButtons, pos, 1);
+					pos2 := ArrayPos(menuLeftButtons, nil, 0, kFunction_73d061);
+					ArrayRemoveCount(menuLeftButtons, pos2, 1);
 					AddArraySlot((menuRightButtons := Clone(menuRightButtons)), {_proto: @newtCheckAllButton})
 				end;
-			if (Length((l7 := GetAuxButtons(appSymbol))) > 0) then begin
+			if (Length((auxButtons := GetAuxButtons(appSymbol))) > 0) then begin
 					if IsReadOnly(menuLeftButtons) then begin
 							menuLeftButtons := Clone(menuLeftButtons)
 						end;
-					local l1;
-					local l2;
-					local l3;
-					local l4;
+					local menuRightButtons2;
+					local menuLeftButtons2;
+					local pos;
+					local pos3;
 					local l5;
-					local l6;
-					local l7;
+					local pos2;
+					local auxButtons;
 					local l8;
-					l8 := (foreach l9 deeply in l7 collect l9.butt);
+					l8 := (foreach item deeply in auxButtons collect item.butt);
 					ArrayMunger(menuLeftButtons, Length(menuLeftButtons), nil, l8, 0, nil)
 				end;
 			if (superSymbol = 'ownerNames) then begin
-					if (l4 := ArrayPos((menuRightButtons := Clone(menuRightButtons)), nil, 0, kFunction_73d0dd)) then begin
-							ArrayRemoveCount(menuRightButtons, l4, 1)
+					if (pos3 := ArrayPos((menuRightButtons := Clone(menuRightButtons)), nil, 0, kFunction_73d0dd)) then begin
+							ArrayRemoveCount(menuRightButtons, pos3, 1)
 						end
 				end;
 			inherited:viewSetupChildrenScript();
-			menuLeftButtons := l2;
-			(menuRightButtons := l1)
+			menuLeftButtons := menuLeftButtons2;
+			(menuRightButtons := menuRightButtons2)
 		end),
 	_proto: @newtStatusBar,
 	preAllocatedContext: 'statusBar

@@ -4,8 +4,8 @@ newtInfoBox := {
 	GetTitle: func() begin
 		(if HasPath(target, 'title) then target.title else MakeRichString(Stringer([Array: LongDateStr(target.timestamp, @datetimeStrSpecs.abbrDayOfWeekStrSpec), " ", ShortDateStr(target.timestamp, @datetimeStrSpecs.numericMDStrSpec)]), nil))
 	end,
-	addTextLine: func(a1, a2) begin
-		MakeText(a1, 42, (49 + (a2 * lineHeight)), self:LocalBox().right, ((49 + (a2 * lineHeight)) + 10))
+	addTextLine: func(text, currentOffset) begin
+		MakeText(text, 42, (49 + (currentOffset * lineHeight)), self:LocalBox().right, ((49 + (currentOffset * lineHeight)) + 10))
 	end,
 	theApp: nil,
 	viewQuitScript: func() begin
@@ -17,7 +17,7 @@ newtInfoBox := {
 		if (not pix) then begin
 				pix := self:buildPix()
 			end;
-		self:DrawShape(pix, '{font: 1058816})
+		self:DrawShape(pix, '{font: tsSystem + tsSize(10) + tsBold})
 	end,
 	target: nil,
 	viewChildren: [viewChildren: _defaultButton_10],
@@ -25,8 +25,8 @@ newtInfoBox := {
 	ReOrientToScreen: @defRotateFunc,
 	allocateContext: [|Array|: '_defaultButton, _defaultButton_10],
 	buildPix: func() begin
-		local l1;
-		l1 := self:LocalBox();
+		local box;
+		box := self:LocalBox();
 		(pix := [Array: self:addIcon(icon, 0), self:addIconLine(description, 0), self:addTextLine(ParamStr("Date: ^2 ^0 ^1", [Array: LongDateStr(target.timestamp, @datetimeStrSpecs.abbrDayOfWeekStrSpec), ShortDateStr(target.timestamp, @datetimeStrSpecs.numericDateStrSpec), HourMinute(target.timestamp)]), 1), self:addTextLine(ParamStr("Size: ^0 bytes", [Array: EntrySize(target)]), 2), self:addTextLine(ParamStr("Where: ^0", [Array: EntryStore(target):GetName()]), 3)])
 	end,
 	_proto: @protoFloater,
@@ -36,35 +36,35 @@ newtInfoBox := {
 	height: 116,
 	icon: nil,
 	New: func(a1, a2, a3, a4, a5) begin
-		local l1, l2;
-		(l1 := BuildContext(self)).target := a1;
-		l1.icon := a2;
-		l1.description := a3;
-		l1.context := a5;
-		l1.viewBounds := l1:CalcBounds(a4);
+		local context, value;
+		(context := BuildContext(self)).target := a1;
+		context.icon := a2;
+		context.description := a3;
+		context.context := a5;
+		context.viewBounds := context:CalcBounds(a4);
 		if (if a5 then (a5:appSymbol exists)) then begin
-				l2 := GetVariable(a5, 'appSymbol);
-				l1.theApp := l2;
-				l1._recogSettings := GetRoot().(l2)._recogSettings;
-				GetRoot().(l2).newtInfoBoxSlip := l1
+				value := GetVariable(a5, 'appSymbol);
+				context.theApp := value;
+				context._recogSettings := GetRoot().(value)._recogSettings;
+				GetRoot().(value).newtInfoBoxSlip := context
 			end;
-		l1:Open();
-		l1
+		context:Open();
+		context
 	end,
-	CalcBounds: func(a1) begin
-		local l1, l2, l3;
-		if ((l3 := ((l2 := ((l1 := max((l1 := (a1.bottom + 9)), 9)) + height)) - ((displayParams.appAreaTop + displayParams.appAreaHeight) - 9))) > 0) then begin
-				l1 := (l1 - l3);
+	CalcBounds: func(bbox) begin
+		local most, l2, l3;
+		if ((l3 := ((l2 := ((most := max((most := (bbox.bottom + 9)), 9)) + height)) - ((displayParams.appAreaTop + displayParams.appAreaHeight) - 9))) > 0) then begin
+				most := (most - l3);
 				l2 := (l2 - l3)
 			end;
-		return SetBounds(9, l1, -9, l2)
+		return SetBounds(9, most, -9, l2)
 	end,
 	description: nil,
-	addIconLine: func(a1, a2) begin
-		MakeText(a1, (46 + icon.bounds.right), (49 + (a2 * lineHeight)), self:LocalBox().right, ((49 + (a2 * lineHeight)) + 10))
+	addIconLine: func(description, a2) begin
+		MakeText(description, (46 + icon.bounds.right), (49 + (a2 * lineHeight)), self:LocalBox().right, ((49 + (a2 * lineHeight)) + 10))
 	end,
-	addIcon: func(a1, a2) begin
-		OffsetShape(MakeShape(a1), 42, (47 + (a2 * lineHeight)))
+	addIcon: func(icon, a2) begin
+		OffsetShape(MakeShape(icon), 42, (47 + (a2 * lineHeight)))
 	end,
 	viewEffect: 393216,
 	changed: nil,

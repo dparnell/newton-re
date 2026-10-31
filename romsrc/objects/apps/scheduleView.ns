@@ -16,12 +16,12 @@ scheduleView := {
 	HourFont: tsSystem + tsSize(9) + tsBold,
 	dayStrSpec: 2793,
 	ScrollTo: func(a1) begin
-		local l1, l2, l3;
-		(if (a1.viewStationery <> 'cribNote) then (if (if ((l2 := ((l1 := (a1.mtgStartDate mod 1440)) - startTime)) >= 0) then (l2 < (ViewDuration - 30))) then nil else begin
-					l1 := ((l1 div 60) * 60);
-					l1 := max(0, (l1 - 120));
+		local most, l2, l3;
+		(if (a1.viewStationery <> 'cribNote) then (if (if ((l2 := ((most := (a1.mtgStartDate mod 1440)) - startTime)) >= 0) then (l2 < (ViewDuration - 30))) then nil else begin
+					most := ((most div 60) * 60);
+					most := max(0, (most - 120));
 					l3 := ((ViewDuration div 60) * 60);
-					stopTime := ((startTime := min(l1, (1440 - l3))) + ViewDuration);
+					stopTime := ((startTime := min(most, (1440 - l3))) + ViewDuration);
 					DayTable:calculateScrollRects();
 					upDownScroller:AdjustArrows();
 					DayTable:SetOrigin(0, ((startTime div 30) * 16));
@@ -29,11 +29,11 @@ scheduleView := {
 					DayTable:Dirty()
 				end))
 	end,
-	viewScrollUpScript: func(a1) begin
-		DayTable:viewScrollUpScript(a1)
+	viewScrollUpScript: func(amount) begin
+		DayTable:viewScrollUpScript(amount)
 	end,
-	viewScrollDownScript: func(a1) begin
-		DayTable:viewScrollDownScript(a1)
+	viewScrollDownScript: func(amount) begin
+		DayTable:viewScrollDownScript(amount)
 	end,
 	calculateScrollRects: func() begin
 		DayTable:calculateScrollRects()
@@ -53,10 +53,10 @@ DayTable := {
 		DayTable:DrawShape(MakeRect(0, lineHeight, 15, (2 * lineHeight)), whitePat)
 	end,
 	viewSetupDoneScript: func() begin
-		local l1;
+		local childViewFrame;
 		(if (if (not Visible(MeetingNotes)) then (not Visible(ToDoSlip))) then begin
-				l1 := self:ChildViewFrames()[0];
-				l1:PositionCaret(10, (viewOriginY + l1.viewLineSpacing), nil)
+				childViewFrame := self:ChildViewFrames()[0];
+				childViewFrame:PositionCaret(10, (viewOriginY + childViewFrame.viewLineSpacing), nil)
 			end)
 	end,
 	viewFormat: 0,
@@ -115,22 +115,22 @@ DayTable := {
 	tabWidths: nil,
 	indentX: 15,
 	viewOriginY: 0,
-	viewScrollDownScript: func(a1) begin
+	viewScrollDownScript: func(amount) begin
 		local l1;
 		(if (stopTime < 1440) then begin
-				DayTable:SlideEffect((-(l1 := ((2 * lineHeight) * a1))), 0, nil, 'doscrollscript, [Array: l1, a1]);
+				DayTable:SlideEffect((-(l1 := ((2 * lineHeight) * amount))), 0, nil, 'doscrollscript, [Array: l1, amount]);
 				self:Dirty()
 			end)
 	end,
 	viewJustify: vjParentFullH + vjParentFullV,
 	tabAcross: nil,
 	tabValues: nil,
-	viewScrollUpScript: func(a1) begin
+	viewScrollUpScript: func(amount) begin
 		local l1;
 		(if (startTime > 0) then begin
-				l1 := ((2 * lineHeight) * a1);
+				l1 := ((2 * lineHeight) * amount);
 				self:DoDrawing('zapAMPM, nil);
-				DayTable:SlideEffect((-l1), 0, nil, 'doscrollscript, [Array: l1, a1]);
+				DayTable:SlideEffect((-l1), 0, nil, 'doscrollscript, [Array: l1, amount]);
 				self:Dirty()
 			end)
 	end,
@@ -156,7 +156,7 @@ DayTable := {
 	debug: 8221,
 	viewSetupChildrenScript: func() begin
 		(if ((numDays := Length(selectedDates)) <= 7) then begin
-				viewWidth := ((l1 := self:GlobalBox()).right - l1.left);
+				viewWidth := ((box := self:GlobalBox()).right - box.left);
 				tabAcross := numDays;
 				tabWidths := ((viewWidth - 15) div tabAcross);
 				tabValues := selectedDates;
@@ -166,23 +166,23 @@ DayTable := {
 						l2 := true
 					end;
 				if l2 then begin
-						local l1;
+						local box;
 						local l2;
-						(for l3 := 0 to (numDays - 1) do begin
-								SubKids[l3] := GetAllMeetings(MeetingSoup, RepeatSoup, tabValues[l3], nil)
+						(for i := 0 to (numDays - 1) do begin
+								SubKids[i] := GetAllMeetings(MeetingSoup, RepeatSoup, tabValues[i], nil)
 							end)
 					end else begin
-						l6 := tabValues[0];
+						tabValue := tabValues[0];
 						l7 := (tabValues[(numDays - 1)] + 1440);
-						if (l8 := GetAllMeetings(MeetingSoup, RepeatSoup, l6, l7)) then begin
+						if (allMeetings := GetAllMeetings(MeetingSoup, RepeatSoup, tabValue, l7)) then begin
 								l9 := 0;
 								l10 := 0;
-								(for l3 := 0 to (numDays - 1) do begin
-										local l6, l7, l8, l9, l10, l11, l12;
-										l12 := ((tabValues[l3] + 1440) - 1);
-										if ((l11 := BSearchRight(l8, l12, '|<|, 'mtgStartDate)) >= l9) then begin
-												SubKids[l3] := ArrayMunger([Array: ], 0, nil, l8, l9, ((l11 - l9) + 1));
-												l9 := (l11 + 1)
+								(for i := 0 to (numDays - 1) do begin
+										local tabValue, l7, allMeetings, l9, l10, mtgStartDate, l12;
+										l12 := ((tabValues[i] + 1440) - 1);
+										if ((mtgStartDate := BSearchRight(allMeetings, l12, '|<|, 'mtgStartDate)) >= l9) then begin
+												SubKids[i] := ArrayMunger([Array: ], 0, nil, allMeetings, l9, ((mtgStartDate - l9) + 1));
+												l9 := (mtgStartDate + 1)
 											end
 									end)
 							end
@@ -203,15 +203,15 @@ HeaderLabels := {
 	viewDrawScript: func() begin
 		DrawDateLabels(self:GlobalBox(), selectedDates)
 	end,
-	viewgesturescript: func(a1, a2) begin
-		local l1, l2, l3, l4, l5, l6;
-		(if (a2 = 49) then (if ((l1 := Length(selectedDates)) > 1) then begin
-					l2 := self:GlobalBox();
-					l3 := (GetPoint(0, a1) - l2.left);
-					l4 := ((l2.right - l2.left) div l1);
-					l5 := (l3 div l4);
-					self:DrawShape(MakeRect((l6 := ((l5 := min(l1, l5)) * l4)), 0, (l6 + l4), (l2.bottom - l2.top)), '{fillPattern: 5, transferMode: 2});
-					selectedDates := [Array: selectedDates[l5]];
+	viewgesturescript: func(unit, gesture) begin
+		local count, box, l3, l4, least, l6;
+		(if (gesture = 49) then (if ((count := Length(selectedDates)) > 1) then begin
+					box := self:GlobalBox();
+					l3 := (GetPoint(0, unit) - box.left);
+					l4 := ((box.right - box.left) div count);
+					least := (l3 div l4);
+					self:DrawShape(MakeRect((l6 := ((least := min(count, least)) * l4)), 0, (l6 + l4), (box.bottom - box.top)), '{fillPattern: 5, transferMode: 2});
+					selectedDates := [Array: selectedDates[least]];
 					calendar:redisplayScript()
 				end))
 	end,

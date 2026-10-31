@@ -58,13 +58,13 @@ export66 := {
 		}
 	],
 	viewSetupFormScript: func() begin
-		local l1;
+		local copy;
 		self.protoContext := GetRoot().Connection;
 		protoContext:AddOpenWindow(self);
 		if ((not restoreOptions.packages) or (Length(restoreOptions.packages) = 0)) then begin
-				(l1 := Clone(self.viewBounds)).top := (l1.top + 40);
-				l1.bottom := (l1.bottom - 60);
-				viewBounds := l1
+				(copy := Clone(self.viewBounds)).top := (copy.top + 40);
+				copy.bottom := (copy.bottom - 60);
+				viewBounds := copy
 			end;
 		endpoint:StartIdle(self, 2000)
 	end,
@@ -81,20 +81,20 @@ export66 := {
 		a1:SetupList()
 	end,
 	SelectAll: func(a1) begin
-		l2 := Array((l1 := Length(a1.listItems)), nil);
-		local l1;
-		local l2;
-		(for l3 := 0 to (l1 - 1) do begin
-				l2[l3] := l3
+		list := Array((count := Length(a1.listItems)), nil);
+		local count;
+		local list;
+		(for i := 0 to (count - 1) do begin
+				list[i] := i
 			end);
-		(a1.selectedItems := l2)
+		(a1.selectedItems := list)
 	end,
 	CollectOptions: func(a1) begin
 		local l1;
-		l1 := (foreach l2 in appsList.selectedItems collect appsList.listItems[l2]);
-		l6 := (if packageList.selectedItems then (foreach l2 in packageList.selectedItems collect begin
+		l1 := (foreach item in appsList.selectedItems collect appsList.listItems[item]);
+		l6 := (if packageList.selectedItems then (foreach item in packageList.selectedItems collect begin
 				local l6;
-				packageList.listItems[l2]
+				packageList.listItems[item]
 			end) else '[Array: ]);
 		a1.applications := l1;
 		a1.packages := l6;
@@ -105,36 +105,36 @@ export66 := {
 			kROM_8269: @8269
 		},
 		func() begin
-			local l1, l2, l3, l4;
+			local frame2, l2, error, l4;
 			if endpoint.closingDown then begin
 					return nil
 				end;
-			self:CollectOptions((l1 := {}));
+			self:CollectOptions((frame2 := {}));
 			l2 := nil;
 			if (if IsArray(storePicker.labelCommands) then (Length(storePicker.labelCommands) > 0)) then begin
-					l1.storeToUse := storePicker.labelCommands[storePicker.indexValue].store
+					frame2.storeToUse := storePicker.labelCommands[storePicker.indexValue].store
 				end;
-			(if (if (Length(l1.applications) = 0) then (Length(l1.packages) = 0)) then begin
+			(if (if (Length(frame2.applications) = 0) then (Length(frame2.packages) = 0)) then begin
 					AddDeferredSend(self, 'Notify, [Array: 5, "Dock", "You didn\u2019\ut select anything to restore."]);
 					(restoring := nil)
 				end else begin
-					l3 := 0;
+					error := 0;
 					if l2 then begin
 							l4 := 0;
 							try begin
 									endpoint:WriteCommand("rall", l4, true)
 								end onexception |evt.ex| do begin
-									endpoint:ConnectionDone((l3 := CurrentException().error))
+									endpoint:ConnectionDone((error := CurrentException().error))
 								end
 						end else begin
 							try begin
-									endpoint:WriteCommand("ropt", l1, true)
+									endpoint:WriteCommand("ropt", frame2, true)
 								end onexception |evt.ex| do begin
-									endpoint:ConnectionDone((l3 := CurrentException().error))
+									endpoint:ConnectionDone((error := CurrentException().error))
 								end
 						end;
 					base:Close();
-					(if (l3 = 0) then kROM_8269:OpenOnEndpoint(nil, endpoint, nil))
+					(if (error = 0) then kROM_8269:OpenOnEndpoint(nil, endpoint, nil))
 				end)
 		end),
 	viewIdleScript: func() begin
@@ -209,8 +209,8 @@ export66Item_3 := {
 	selectedItems: nil,
 	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2),
 	SetupViewflags: func() begin
-		local l1;
-		(if ((not (l1 := restoreOptions.packages)) or (Length(l1) = 0)) then (self.viewFlags := (viewFlags - 1)))
+		local packages;
+		(if ((not (packages := restoreOptions.packages)) or (Length(packages) = 0)) then (self.viewFlags := (viewFlags - 1)))
 	end,
 	_proto: @protoTextList,
 	preAllocatedContext: 'packageList
@@ -244,50 +244,50 @@ export66Item_5 := {
 	SetupViewflags: func() begin
 		(if (if (not (restoreOptions.storeType = 0)) then ((not restoreOptions.stores) or (Length(GetStores()) = 1))) then (self.viewFlags := BAnd(viewFlags, -2)))
 	end,
-	FindCandidateStore: func(a1) begin
-		l1 := a1.name;
-		l2 := a1.signature;
-		l3 := [Array: ];
-		local l1;
-		local l2;
-		local l3;
-		(foreach l4 in popup do begin
-				if (l4.store:GetSignature() = l2) then begin
-						break (l3 := [Array: l4.store])
+	FindCandidateStore: func(store) begin
+		name := store.name;
+		signature := store.signature;
+		list := [Array: ];
+		local name;
+		local signature;
+		local list;
+		(foreach item in popup do begin
+				if (item.store:GetSignature() = signature) then begin
+						break (list := [Array: item.store])
 					end else begin
-						if StrEqual(l4.store:GetName(), l1) then begin
-								SetAdd(l3, l4.store, true)
+						if StrEqual(item.store:GetName(), name) then begin
+								SetAdd(list, item.store, true)
 							end
 					end
 			end);
-		if (Length(l3) = 0) then begin
+		if (Length(list) = 0) then begin
 				selectedStore := popup[0].store
 			end else begin
-				selectedStore := l3[0]
+				selectedStore := list[0]
 			end;
 		(restoreOptions.stores := [Array: {name: selectedStore:GetName(), signature: selectedStore:GetSignature()}])
 	end,
 	viewSetupFormScript: func() begin
-		l2 := (l1 := GetStores())[0];
+		l2 := (stores := GetStores())[0];
 		(if (restoreOptions.storeType = 0) then begin
 				self.popup := [Array: {item: l2:GetName(), store: l2, mark: $\uFC0B}];
 				(selectedStore := l2)
 			end else begin
 				self.popup := [Array: ];
-				local l1;
+				local stores;
 				local l2;
-				(for l3 := 1 to (Length(l1) - 1) do begin
-						local l6, l7, l8;
-						if (not (l6 := l1[l3]):IsReadOnly()) then begin
-								l7 := l6:GetName()
+				(for i := 1 to (Length(stores) - 1) do begin
+						local store2, name, store;
+						if (not (store2 := stores[i]):IsReadOnly()) then begin
+								name := store2:GetName()
 							end;
-						if (not StrFilled(l7)) then begin
-								l7 := l6:GetKind()
+						if (not StrFilled(name)) then begin
+								name := store2:GetKind()
 							end;
-						AddArraySlot(popup, {item: l7, store: l6})
+						AddArraySlot(popup, {item: name, store: store2})
 					end);
 				self:FindCandidateStore(restoreOptions.stores[0]);
-				((l8 := LFetch(popup, selectedStore, 0, '|=|, 'store)).mark := $\uFC0B)
+				((store := LFetch(popup, selectedStore, 0, '|=|, 'store)).mark := $\uFC0B)
 			end)
 	end,
 	popup: nil,
@@ -306,19 +306,19 @@ restoreTo := {
 	viewSetupFormScript: func() begin
 		(self.viewBounds := SetBounds(0, 0, StdButtonWidth(text), 0))
 	end,
-	pickActionScript: func(a1) begin
-		local l1;
-		RemoveSlot((l1 := LFetch(popup, selectedStore, 0, '|=|, 'store)), 'mark);
-		selectedStore := popup[a1].store;
+	pickActionScript: func(index) begin
+		local store;
+		RemoveSlot((store := LFetch(popup, selectedStore, 0, '|=|, 'store)), 'mark);
+		selectedStore := popup[index].store;
 		restoreOptions.stores := [Array: {name: selectedStore:GetName(), signature: selectedStore:GetSignature()}];
-		popup[a1].mark := $\uFC0B;
-		SetValue(storeName, 'text, popup[a1].item);
+		popup[index].mark := $\uFC0B;
+		SetValue(storeName, 'text, popup[index].item);
 		self:hilite(nil)
 	end,
 	viewFormat: vfFillWhite + vfRound(4),
 	viewFlags: vVisible + vReadOnly + vClickable,
-	viewClickScript: func(a1) begin
-		if self:TrackHilite(a1) then begin
+	viewClickScript: func(unit) begin
+		if self:TrackHilite(unit) then begin
 				self:PopupMenu(popup, {bounds: self:LocalBox()})
 			end else begin
 				self:hilite(nil)

@@ -20,14 +20,14 @@ export76 := {
 		{_proto: @protoCancelButton}
 	],
 	viewIdleScript: func() begin
-		local l1;
-		if (if ((l1 := endpoint:IdleConnection(true)) = 0) then (not endpoint.closingDown)) then begin
+		local idleConnection;
+		if (if ((idleConnection := endpoint:IdleConnection(true)) = 0) then (not endpoint.closingDown)) then begin
 				protoContext:ImportFileClose(endpoint);
 				if callWhenDone then begin
 						call callWhenDone with ()
 					end
 			end;
-		return l1
+		return idleConnection
 	end,
 	viewSetupFormScript: func() begin
 		self.protoContext := GetRoot().Connection;

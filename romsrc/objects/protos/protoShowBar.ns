@@ -14,28 +14,28 @@ protoShowBar := {
 	viewQuitScript: func() begin
 		UnRegFolderChanged(folderChangeSym)
 	end,
-	UpdateFilter: func(a1, a2) begin
-		local l1;
-		(if (GetVariable((l1 := self:GetTargetInfo('Filing)).targetView, 'labelsFilter) <> a1) then showBarText:SyncView())
+	UpdateFilter: func(labelsFilter, labelsFilter2) begin
+		local filing;
+		(if (GetVariable((filing := self:GetTargetInfo('Filing)).targetView, 'labelsFilter) <> labelsFilter) then showBarText:SyncView())
 	end,
 	viewDrawScript: func() begin
-		local l1;
-		l1 := self:LocalBox();
-		self:DrawShape(MakeRect(0, 0, l1.right, (l1.bottom - 6)), '{fillPattern: 5})
+		local box;
+		box := self:LocalBox();
+		self:DrawShape(MakeRect(0, 0, box.right, (box.bottom - 6)), '{fillPattern: 5})
 	end,
 	RedoText: func() begin
-		local l1, l2, l3;
-		if (not (l3 := GetVariable((l2 := (l1 := self:GetTargetInfo('Filing)).targetView), 'labelsFilter))) then begin
+		local filing, l2, value;
+		if (not (value := GetVariable((l2 := (filing := self:GetTargetInfo('Filing)).targetView), 'labelsFilter))) then begin
 				if (l2:AppObjectUnfiled exists) then begin
 						text := Stringer([Array: $\uFC01, GetVariable(l2, 'AppObjectUnfiled)])
 					end else begin
 						text := Stringer([Array: $\uFC01, ParamStr(unfiled, [Array: GetVariable(l2, 'appObject)[1]])])
 					end
 			end else begin
-				if (l3 = '_all) then begin
+				if (value = '_all) then begin
 						text := Stringer([Array: $\uFC01, GetVariable(l2, 'AppAll)])
 					end else begin
-						text := Stringer([Array: $\uFC01, GetFolderStr(l3)])
+						text := Stringer([Array: $\uFC01, GetFolderStr(value)])
 					end
 			end;
 		showBarText.text := StrTruncate(text, 137);

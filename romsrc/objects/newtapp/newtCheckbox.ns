@@ -17,9 +17,9 @@ newtCheckbox := {
 		(if target then (target.(path) := (if viewValue then assert else negate)))
 	end,
 	viewDrawScript: func() begin
-		local l1;
-		(l1 := self:LocalBox()).left := 16;
-		TextBox(text, {font: viewFont, justification: 'left}, l1)
+		local box;
+		(box := self:LocalBox()).left := 16;
+		TextBox(text, {font: viewFont, justification: 'left}, box)
 	end,
 	TextScript: func() begin
 		(if viewValue then "true" else "false")

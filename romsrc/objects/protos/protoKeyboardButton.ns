@@ -15,41 +15,41 @@ protoKeyboardButton := {
 						defaultKeyboard := root.currentKeyboard.preallocatedContext
 					end
 			end;
-		l1 := GetVariable(self, defaultKeyboard).userName;
-		local l1;
+		userName := GetVariable(self, defaultKeyboard).userName;
+		local userName;
 		local l2;
-		l2 := (foreach l3 in _popupKeyboards collect begin
-			local l7;
-			GetVariable(self, l3).userName
+		l2 := (foreach item in _popupKeyboards collect begin
+			local value;
+			GetVariable(self, item).userName
 		end);
-		if (defaultPos := ArrayPos(l2, l1, 0, nil)) then begin
-				l2[defaultPos] := {item: l1, mark: $\uFC0B, pickable: true}
+		if (defaultPos := ArrayPos(l2, userName, 0, nil)) then begin
+				l2[defaultPos] := {item: userName, mark: $\uFC0B, pickable: true}
 			end;
-		(if root.currentKeyboard then self:PopupMenu(l2, nil) else (if (l7 := GetVariable(self, defaultKeyboard)) then l7:Open()))
+		(if root.currentKeyboard then self:PopupMenu(l2, nil) else (if (value := GetVariable(self, defaultKeyboard)) then value:Open()))
 	end,
-	pickActionScript: func(a1) begin
-		local l1, l2, l3;
-		l1 := _popupKeyboards[a1];
-		(if (l2 := GetVariable(self, l1)).viewCObject then l2:MoveBehind(nil) else begin
-				if (l3 := GetVariable(self, defaultKeyboard)) then begin
-						l3:Close()
+	pickActionScript: func(index) begin
+		local _popupKeyboard, value, value2;
+		_popupKeyboard := _popupKeyboards[index];
+		(if (value := GetVariable(self, _popupKeyboard)).viewCObject then value:MoveBehind(nil) else begin
+				if (value2 := GetVariable(self, defaultKeyboard)) then begin
+						value2:Close()
 					end;
-				defaultKeyboard := l1;
-				l2:Open()
+				defaultKeyboard := _popupKeyboard;
+				value:Open()
 			end)
 	end,
 	SetDefaultKeyboard: func(a1) begin
 		(if ArrayPos(_popupKeyboards, a1, 0, nil) then (defaultKeyboard := a1))
 	end,
 	SetKeyboardList: func(a1, a2) begin
-		local l1;
-		l1 := Clone(GetVariable(self, '_popupKeyboards));
+		local copy;
+		copy := Clone(GetVariable(self, '_popupKeyboards));
 		if (if (ClassOf(a2) = 'symbol) then (a2 = 'noGlobalKeyboards)) then begin
-				l1 := SetUnion([Array: ], a1, true)
+				copy := SetUnion([Array: ], a1, true)
 			end else begin
-				l1 := SetUnion((l1 := SetDifference(l1, a2)), a1, true)
+				copy := SetUnion((copy := SetDifference(copy, a2)), a1, true)
 			end;
-		(self._popupKeyboards := l1)
+		(self._popupKeyboards := copy)
 	end,
 	GetKeyboardList: func() begin
 		_popupKeyboards

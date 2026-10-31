@@ -15,15 +15,15 @@ protoThumbnailFloater := {
 	Update: func() begin
 		actualThumbnail:Update()
 	end,
-	RelocateGreyBox: func(a1) begin
-		actualThumbnail:RelocateGreyBox(a1)
+	RelocateGreyBox: func(scalingInfo) begin
+		actualThumbnail:RelocateGreyBox(scalingInfo)
 	end,
-	ToggleThumbnail: func(a1) begin
+	ToggleThumbnail: func(andStashThumbnail) begin
 		local l1;
 		if HasSlot(self, 'image) then begin
 				l1 := true
 			end;
-		self.image := a1;
+		self.image := andStashThumbnail;
 		if (not image) then begin
 				self:Close()
 			end else begin
@@ -31,16 +31,16 @@ protoThumbnailFloater := {
 			end;
 		(if l1 then RemoveSlot(self, 'image))
 	end,
-	OpenThumbnail: func(a1) begin
+	OpenThumbnail: func(andStashThumbnail) begin
 		local l1;
 		if Visible(self) then begin
-				self:setup(a1);
+				self:setup(andStashThumbnail);
 				return nil
 			end;
 		if HasSlot(self, 'image) then begin
 				l1 := true
 			end;
-		self.image := a1;
+		self.image := andStashThumbnail;
 		self:Open();
 		(if l1 then RemoveSlot(self, 'image))
 	end,

@@ -3,7 +3,7 @@
 newtProtoLine := {
 	entryFont: tsHWFont + tsSize(12),
 	viewSetupFormScript: func() begin
-		local l1;
+		local box;
 		inherited:viewSetupFormScript();
 		if HasPath(self, 'viewLineSpacing) then begin
 				entryLine.viewLineSpacing := self.viewLineSpacing
@@ -18,8 +18,8 @@ newtProtoLine := {
 		if (BAnd(entryLine.viewFlags, 2) <> 0) then begin
 				entryLine.viewFormat := 0
 			end;
-		l1 := self:LocalBox();
-		entryLine.viewBounds := SetBounds(indent, 0, l1.right, 0);
+		box := self:LocalBox();
+		entryLine.viewBounds := SetBounds(indent, 0, box.right, 0);
 		(entryLine.text := (if (if (if target then path) then target.(path)) then filter:PathToText() else ""))
 	end,
 	Retarget: func() begin
@@ -32,10 +32,10 @@ newtProtoLine := {
 		entryLine:viewChangedScript('text, entryLine)
 	end,
 	viewQuitScript: func() begin
-		local l1;
-		l1 := entryLine:GetRichString();
+		local richString;
+		richString := entryLine:GetRichString();
 		inherited:viewQuitScript();
-		(if ((not lastPicked) or (not StrEqual(lastPicked, l1))) then AddMemoryItem(memory, l1))
+		(if ((not lastPicked) or (not StrEqual(lastPicked, richString))) then AddMemoryItem(memory, richString))
 	end,
 	viewChildren: [viewChildren: entryLine_5],
 	entryLine: nil,
@@ -50,8 +50,8 @@ entryLine_5 := {
 	viewFlags: vVisible + vReadOnly,
 	viewLineSpacing: 25,
 	preallocatedContext: 'entryLine,
-	viewChangedScript: func(a1, a2) begin
-		(if (a1 = 'text) then baseLine:viewChangedScript(a1, a2))
+	viewChangedScript: func(slot, view) begin
+		(if (slot = 'text) then baseLine:viewChangedScript(slot, view))
 	end,
 	_proto: @protoInputLine
 };

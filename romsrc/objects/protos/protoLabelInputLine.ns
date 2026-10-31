@@ -2,7 +2,7 @@
 
 protoLabelInputLine := {
 	entryFlags: 14849,
-	LabelActionScript: func(a1) begin
+	LabelActionScript: func(index) begin
 		nil
 	end,
 	indent: nil,
@@ -21,13 +21,13 @@ protoLabelInputLine := {
 	memory: nil,
 	viewBounds: nil,
 	oldLabelCommands: nil,
-	SetLabelCommands: func(a1) begin
-		local l1;
-		if (if (l1 := GetMemoryItems(memory)) then (not a1)) then begin
-				a1 := l1
+	SetLabelCommands: func(sort) begin
+		local memoryItems;
+		if (if (memoryItems := GetMemoryItems(memory)) then (not sort)) then begin
+				sort := memoryItems
 			end;
-		(if (a1 <> oldLabelCommands) then begin
-				labelCommands := a1;
+		(if (sort <> oldLabelCommands) then begin
+				labelCommands := sort;
 				self:SetLabelText(label);
 				labelLine:Dirty();
 				(oldLabelCommands := labelCommands)
@@ -52,36 +52,36 @@ protoLabelInputLine := {
 	end,
 	alwaysCallPickActionScript: nil,
 	Popit: func() begin
-		local l1, l2;
+		local labelCommands2, l2;
 		(if labelCommands then begin
-				l1 := labelCommands;
+				labelCommands2 := labelCommands;
 				if curLabelCommand then begin
-						if IsFrame((l2 := (l1 := Clone(l1))[curLabelCommand])) then begin
-								(l2 := (l1[curLabelCommand] := Clone(l2))).mark := $\uFC0B
+						if IsFrame((l2 := (labelCommands2 := Clone(labelCommands2))[curLabelCommand])) then begin
+								(l2 := (labelCommands2[curLabelCommand] := Clone(l2))).mark := $\uFC0B
 							end else begin
-								l1[curLabelCommand] := {item: l2, mark: $\uFC0B}
+								labelCommands2[curLabelCommand] := {item: l2, mark: $\uFC0B}
 							end
 					end;
 				labelLine.alwaysCallPickActionScript := alwaysCallPickActionScript;
-				labelLine:PopupMenu(l1, {indent: indent});
+				labelLine:PopupMenu(labelCommands2, {indent: indent});
 				entryLine:Dirty()
 			end)
 	end,
 	labelFont: @fontSystem9Bold,
-	labelClick: func(a1) begin
+	labelClick: func(unit) begin
 		nil
 	end,
-	pickActionScript: func(a1) begin
-		local l1;
-		if (not self:LabelActionScript(a1)) then begin
-				if IsFrame((l1 := labelCommands[a1])) then begin
-						if (if (not l1.item) then l1.keyMessage) then begin
-								l1 := MatchKeyMessage(self, l1.keyMessage).name
+	pickActionScript: func(index) begin
+		local labelCommand;
+		if (not self:LabelActionScript(index)) then begin
+				if IsFrame((labelCommand := labelCommands[index])) then begin
+						if (if (not labelCommand.item) then labelCommand.keyMessage) then begin
+								labelCommand := MatchKeyMessage(self, labelCommand.keyMessage).name
 							end else begin
-								l1 := l1.item
+								labelCommand := labelCommand.item
 							end
 					end;
-				self:UpdateText(Clone(l1))
+				self:UpdateText(Clone(labelCommand))
 			end;
 		self:hilite(nil)
 	end,
@@ -90,13 +90,13 @@ protoLabelInputLine := {
 	debug: 23283101,
 	entryTextFlags: 8,
 	viewSetupChildrenScript: func() begin
-		local l1, l2;
-		if (l1 := GetMemoryItems(memory)) then begin
+		local memoryItems, box;
+		if (memoryItems := GetMemoryItems(memory)) then begin
 				if (not labelCommands) then begin
-						labelCommands := l1
+						labelCommands := memoryItems
 					end else begin
 						AddArraySlot((labelCommands := Clone(labelCommands)), 'pickseparator);
-						AddArraySlot(labelCommands, l1[0])
+						AddArraySlot(labelCommands, memoryItems[0])
 					end
 			end;
 		self:SetLabelText(label);
@@ -112,10 +112,10 @@ protoLabelInputLine := {
 		if HasPath(self, 'entryFont) then begin
 				entryLine.viewFont := self.entryFont
 			end;
-		l2 := self:LocalBox();
+		box := self:LocalBox();
 		labelLine.viewBounds := RelBounds(0, (entryLine.viewLineSpacing - height), indent, height);
 		entryLine.viewFlags := self.entryFlags;
-		entryLine.viewBounds := SetBounds(indent, 0, l2.right, 0);
+		entryLine.viewBounds := SetBounds(indent, 0, box.right, 0);
 		entryLine.textFlags := self.entryTextFlags;
 		(entryLine.text := self:TextSetup())
 	end,

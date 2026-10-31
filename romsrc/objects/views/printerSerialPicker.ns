@@ -68,9 +68,9 @@ serialPrinterList := {
 	viewSetupFormScript: func() begin
 		AddPowerOffHandler(self);
 		ListItems := [Array: ];
-		(foreach l1 in AvailablePrinters do begin
-				if (l1.type = 'serialSym) then begin
-						AddArraySlot(ListItems, l1.name)
+		(foreach item in AvailablePrinters do begin
+				if (item.type = 'serialSym) then begin
+						AddArraySlot(ListItems, item.name)
 					end
 			end);
 		self:SetupList();

@@ -12,8 +12,8 @@ protoFullRouteSlip := {
 			end;
 		inherited:viewSetupFormScript()
 	end,
-	PrepareToSend: func(a1) begin
-		self:ContinueSend(a1)
+	PrepareToSend: func(noworlater) begin
+		self:ContinueSend(noworlater)
 	end,
 	ContinueSend: func(when) begin
 		(if (when = 'readdress) then begin
@@ -79,16 +79,16 @@ formatPicker := {
 			end;
 		inherited:viewSetupFormScript()
 	end,
-	LabelActionScript: func(a1) begin
-		lastCmd := a1;
-		if self:?FormatChanged(formats[a1]) then begin
+	LabelActionScript: func(index) begin
+		lastCmd := index;
+		if self:?FormatChanged(formats[index]) then begin
 				return nil
 			end;
 		if auxUp then begin
 				auxUp:Close()
 			end;
 		auxUp := nil;
-		inherited:LabelActionScript(a1)
+		inherited:LabelActionScript(index)
 	end,
 	revertCommand: func() begin
 		self:UpdateText(labelCommands[lastCmd])
@@ -105,11 +105,11 @@ _closeBox := {
 		(viewBounds.bottom := (viewBounds.top + 13))
 	end,
 	buttonClickScript: func() begin
-		local l1;
+		local error;
 		(try begin
 				self:SlipClosed()
 			end onexception |evt.ex| do begin
-				if ((l1 := CurrentException().error) = -10605) then begin
+				if ((error := CurrentException().error) = -10605) then begin
 						inherited:?buttonClickScript()
 					end;
 				Rethrow()
@@ -120,8 +120,8 @@ _closeBox := {
 };
 
 sendButton := {
-	PrepareForSubmission: func(a1) begin
-		self:PrepareToSend(a1)
+	PrepareForSubmission: func(when) begin
+		self:PrepareToSend(when)
 	end,
 	preallocatedContext: 'sendButton,
 	_proto: @protoSendButton

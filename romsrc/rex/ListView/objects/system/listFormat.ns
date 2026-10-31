@@ -62,13 +62,13 @@ listFormat := {
 		options: "names",
 		func() begin
 			if (if (symbol = 'listMemoFormat) then (reflowStart = 0)) then begin
-					stepChildren := [Array: {_proto: @banner, viewBounds: RelBounds(0, 0, 200, 30), viewJustify: 16, text: "\u2022\uMemo\u2022\u"}, {viewClass: 98, viewBounds: SetBounds(20, 40, -20, 80), viewFlags: 3, viewFormat: 0, viewJustify: 48, viewFont: 12289, viewSetupFormScript: func() begin
+					stepChildren := [Array: {_proto: @banner, viewBounds: RelBounds(0, 0, 200, 30), viewJustify: vjParentCenterH, text: "\u2022\uMemo\u2022\u"}, {viewClass: clTextView, viewBounds: SetBounds(20, 40, -20, 80), viewFlags: vVisible + vReadOnly, viewFormat: 0, viewJustify: vjParentFullH, viewFont: tsFancy + tsSize(12), viewSetupFormScript: func() begin
 						self.text := "";
 						if StrFilled(fields.toName) then begin
 								self.text := Stringer([Array: self.text, "To:", " ", fields.toName, $\n])
 							end;
 						(if StrFilled(fields.title) then (self.text := Stringer([Array: self.text, "Subject:", " ", SubStr(fields.title, 0, 32)])))
-					end}, {viewClass: 98, viewBounds: SetBounds(20, 40, -20, 80), viewFlags: 3, viewFormat: 0, viewJustify: 49, viewFont: 12289, viewSetupFormScript: func() begin
+					end}, {viewClass: clTextView, viewBounds: SetBounds(20, 40, -20, 80), viewFlags: vVisible + vReadOnly, viewFormat: 0, viewJustify: vjRightH + vjParentFullH, viewFont: tsFancy + tsSize(12), viewSetupFormScript: func() begin
 						self.text := "";
 						if StrFilled(fields.fromName) then begin
 								self.text := Stringer([Array: "From:", " ", fields.fromName, $\n])

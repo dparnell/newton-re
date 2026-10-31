@@ -4,9 +4,9 @@ export165 := {
 	viewFlags: vClickable,
 	viewFormat: nil,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
-	viewClickScript: func(a1) begin
+	viewClickScript: func(unit) begin
 		PlaySound(@click);
-		(while (not StrokeDone(a1)) do nil);
+		(while (not StrokeDone(unit)) do nil);
 		self:LeaveWelcomeScreen();
 		true
 	end,

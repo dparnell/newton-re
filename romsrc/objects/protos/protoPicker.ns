@@ -15,16 +15,16 @@ protoPicker := {
 	Scroll: {class: #132, funcPtr: 7050430, numArgs: 1},
 	pickItemsMarkable: nil,
 	viewFlags: vReadOnly + vFloating + vClickable,
-	viewKeyDownScript: func(a1, a2) begin
-		PickViewKeyDown(a1, a2)
+	viewKeyDownScript: func(char2, flags) begin
+		PickViewKeyDown(char2, flags)
 	end,
 	pickMarkWidth: 10,
 	textFlags: 1024,
 	topItem: 0,
 	GetItemMark: func(a1) begin
-		local l1, l2;
+		local l1, mark;
 		l1 := nil;
-		l2 := nil;
+		mark := nil;
 		if (ClassOf(self.pickItems[a1]) = 'frame) then begin
 				if HasSlot(self.pickItems[a1], 'item) then begin
 						l1 := true
@@ -32,30 +32,30 @@ protoPicker := {
 			end;
 		if (l1 = true) then begin
 				if HasSlot(self.pickItems[a1], 'mark) then begin
-						if ((l2 := self.pickItems[a1].mark) = $ ) then begin
-								l2 := nil
+						if ((mark := self.pickItems[a1].mark) = $ ) then begin
+								mark := nil
 							end
 					end
 			end;
-		l2
+		mark
 	end,
 	viewOriginY: 0,
 	viewJustify: vjCenterH + vjCenterV,
 	scrollingSleepTime: 3,
 	SetScrollers: func() begin
-		local l1;
-		if ((l1 := self:GetScrollerValues())[0] < 0) then begin
+		local scrollerValues;
+		if ((scrollerValues := self:GetScrollerValues())[0] < 0) then begin
 				scrollers:SetArrow('up, 'more)
 			end else begin
 				scrollers:SetArrow('up, 'normal)
 			end;
-		(if (l1[1] > 0) then scrollers:SetArrow('down, 'more) else scrollers:SetArrow('down, 'normal))
+		(if (scrollerValues[1] > 0) then scrollers:SetArrow('down, 'more) else scrollers:SetArrow('down, 'normal))
 	end,
 	GetScrollerValues: {class: #132, funcPtr: 7050428, numArgs: 0},
 	pickLeftMargin: 4,
 	pickMaxWidth: 180,
 	viewEffect: 393216,
-	pickActionScript: func(a1) begin
+	pickActionScript: func(index) begin
 		nil
 	end,
 	pickBottomMargin: 2,

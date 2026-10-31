@@ -5,38 +5,38 @@ protoContentArea := {
 	viewFlags: vVisible + vReadOnly + vClipping + vGesturesAllowed,
 	viewSetupFormScript: func() begin
 		self.bookScripts := Clone(protoBookScripts);
-		if (l3 := (l1 := self:CurrentBook()).scripts) then begin
-				local l1;
-				local l2;
+		if (l3 := (currentBook := self:CurrentBook()).scripts) then begin
+				local currentBook;
+				local i;
 				local l3;
-				(for l2 := 0 to (Length(l3) - 1) by 2 do begin
-						local l6;
-						self.bookScripts.(l3[l2]) := l3[(l2 + 1)]
+				(for i := 0 to (Length(l3) - 1) by 2 do begin
+						local pageSize;
+						self.bookScripts.(l3[i]) := l3[(i + 1)]
 					end)
 			end;
 		self._proto := bookScripts;
-		l6 := self:PageSize(nil);
-		self.viewBounds := RelBounds(0, 0, l6.width, l6.height);
-		(if (pagesShowing = 2) then (viewBounds.right := ((l6.width * 2) + 15)))
+		pageSize := self:PageSize(nil);
+		self.viewBounds := RelBounds(0, 0, pageSize.width, pageSize.height);
+		(if (pagesShowing = 2) then (viewBounds.right := ((pageSize.width * 2) + 15)))
 	end,
 	protoBookScripts: {
 		_proto: protoContentAreaProto,
 		mungeContentScript: nil,
 		HideMarkup: func() begin
-			local l1;
-			local l2;
-			(foreach l1 in (l2 := self:ChildViewFrames()) do begin
-					if l1.Scroller then begin
-							l1:ShowScroller()
+			local item;
+			local childViewFrames;
+			(foreach item in (childViewFrames := self:ChildViewFrames()) do begin
+					if item.Scroller then begin
+							item:ShowScroller()
 						end
 				end)
 		end,
 		ShowMarkup: func() begin
-			local l1;
-			local l2;
-			(foreach l1 in (l2 := self:ChildViewFrames()) do begin
-					if l1.Scroller then begin
-							l1:HideScroller()
+			local item;
+			local childViewFrames;
+			(foreach item in (childViewFrames := self:ChildViewFrames()) do begin
+					if item.Scroller then begin
+							item:HideScroller()
 						end
 				end)
 		end,
@@ -50,7 +50,7 @@ protoContentArea := {
 		buttonClickScript: func() begin
 			nil
 		end,
-		viewClickScript: func(a1) begin
+		viewClickScript: func(unit) begin
 			self:buttonClickScript();
 			true
 		end,

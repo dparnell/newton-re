@@ -5,19 +5,19 @@ basicCallTransport := {
 	PowerOffCheck: func(a1) begin
 		(if (status = 'Listening) then true else (if (a1 = 'idle) then nil else inherited:PowerOffCheck(a1)))
 	end,
-	InstallEndpoint: func(a1, a2) begin
+	InstallEndpoint: func(transportProvider, a2) begin
 		abortCall := nil;
-		if a1.serviceId then begin
+		if transportProvider.serviceId then begin
 				self:SetStatusDialog('Connecting, 'vStatus, {primary: {text: "Stop", script: func() begin
 					(GetRoot().(appSymbol).abortCall := true)
 				end}})
 			end;
-		callEndpoint := {_proto: @protoTapiEndpoint, _parent: self, configOptions: a1.config.configOptions, afterOptions: a1.config.afterOptions, serviceId: a1.serviceId};
+		callEndpoint := {_proto: @protoTapiEndpoint, _parent: self, configOptions: transportProvider.config.configOptions, afterOptions: transportProvider.config.afterOptions, serviceId: transportProvider.serviceId};
 		callEndpoint:Open(a2);
 		(if abortCall then begin
 				status := 'cancelling;
 				self:CancelRequest('userCancel);
-				Throw('|evt.ex.comm|, -16005)
+				Throw('|evt.ex.comm|, kCommErrRequestCanceled)
 			end)
 	end,
 	Shutdown: func() begin
@@ -81,40 +81,40 @@ basicCallTransport := {
 	lastRing: nil,
 	dismissCall: nil,
 	GetItemTitle: func(a1) begin
-		local l1, l2, l3;
-		if ((l1 := a1.title) = nil) then begin
+		local title, l2, l3;
+		if ((title := a1.title) = nil) then begin
 				l2 := (if StrFilled(a1.name) then a1.name else (if StrFilled(a1.phoneNumber) then a1.phoneNumber));
 				l3 := (a1.state = 'Received);
 				if l2 then begin
 						if l3 then begin
-								l1 := ParamStr("Call from ^0", [Array: l2])
+								title := ParamStr("Call from ^0", [Array: l2])
 							end else begin
-								l1 := ParamStr("Call to ^0", [Array: l2])
+								title := ParamStr("Call to ^0", [Array: l2])
 							end
 					end else begin
 						if l3 then begin
-								l1 := "Call received"
+								title := "Call received"
 							end else begin
-								l1 := "Call placed"
+								title := "Call placed"
 							end
 					end
 			end;
-		l1
+		title
 	end,
-	DelayDialing: func(a1) begin
+	DelayDialing: func(outgoingNeededDelay) begin
 		(try begin
 				if abortCall then begin
 						status := 'cancelling;
 						self:CancelRequest('userCancel);
 						return nil
 					end;
-				(if (a1 > 0) then begin
-						self:SetStatus('Connecting, {statusText: (if (a1 > 1) then ParamStr("^0 seconds to dialing\u2026\u", [Array: NumberStr(a1)]) else "1 second to dialing\u2026\u"), primary: {text: "Stop", script: func() begin
+				(if (outgoingNeededDelay > 0) then begin
+						self:SetStatus('Connecting, {statusText: (if (outgoingNeededDelay > 1) then ParamStr("^0 seconds to dialing\u2026\u", [Array: NumberStr(outgoingNeededDelay)]) else "1 second to dialing\u2026\u"), primary: {text: "Stop", script: func() begin
 							(GetRoot().(appSymbol).abortCall := true)
 						end}});
 						AddDelayedCall(func(a1) begin
 							self:DelayDialing(a1)
-						end, [Array: (a1 - 1)], 1000)
+						end, [Array: (outgoingNeededDelay - 1)], 1000)
 					end else self:FinishDialing())
 			end onexception |evt.ex| do begin
 				(if self:HandleThrow() then self:Shutdown())
@@ -140,7 +140,7 @@ basicCallTransport := {
 		(if (if (status = 'RingingFrom) then currentItem) then GetRoot().(appSymbol):receiveRequestComplete())
 	end,
 	statusTemplate: {declareSelf: 'base, vPhoneKeypad: @vPhoneKeypad, _proto: @protoStatusTemplate},
-	GetFolderName: func(a1) begin
+	GetFolderName: func(target) begin
 		self:GetConfig('phoneCompletedFiling)
 	end,
 	receiveRequestComplete: func() begin
@@ -155,12 +155,12 @@ basicCallTransport := {
 	end,
 	appSymbol: '|PhoneHome:Newton|,
 	SetTransportProvider: func(a1) begin
-		local l1;
+		local transportProvider2;
 		RegCommConfigChange(appSymbol, func(a1, a2) begin
 			self:Redo(a1)
 		end);
-		l1 := transportProvider;
-		if (if (if (if a1 then l1) then l1.symbol) then (a1 <> l1.symbol)) then begin
+		transportProvider2 := transportProvider;
+		if (if (if (if a1 then transportProvider2) then transportProvider2.symbol) then (a1 <> transportProvider2.symbol)) then begin
 				self:SetConfig('phoneAutoReceive, nil);
 				if callEndpoint then begin
 						callEndpoint:Close();
@@ -171,43 +171,43 @@ basicCallTransport := {
 	end,
 	icon: @routeCallBitmap,
 	title: phone,
-	CancelRequest: func(a1) begin
+	CancelRequest: func(symbol2) begin
 		(if (status = 'Connecting) then begin
 				abortCall := true;
 				nil
 			end else begin
 				abortCall := nil;
-				self:ItemCompleted(currentItem, nil, a1);
+				self:ItemCompleted(currentItem, nil, symbol2);
 				self:Shutdown();
 				true
 			end)
 	end,
 	dataTypes: [|Array|: ],
-	MakeOutgoingDone: func(a1) begin
-		if (a1 = -54021) then begin
-				a1 := -24001
+	MakeOutgoingDone: func(error) begin
+		if (error = -54021) then begin
+				error := -24001
 			end;
-		GetRoot().(appSymbol):DialingComplete(a1)
+		GetRoot().(appSymbol):DialingComplete(error)
 	end,
 	GetStatusString: func() begin
-		local l1, l2;
-		l1 := inherited:?GetStatusString();
+		local text, name;
+		text := inherited:?GetStatusString();
 		if ((((status = 'DialingTo) or (status = 'DialingDoneTo)) or (status = 'DialingDoneFrom)) or (status = 'RingingFrom)) then begin
-				if StrFilled((l2 := currentItem.name)) then begin
-						l1 := ParamStr(l1, [Array: l2])
+				if StrFilled((name := currentItem.name)) then begin
+						text := ParamStr(text, [Array: name])
 					end else begin
 						if (status = 'RingingFrom) then begin
-								l1 := dialogStatusMsgs.Ringing
+								text := dialogStatusMsgs.Ringing
 							end else begin
-								l1 := dialogStatusMsgs.DialingDone
+								text := dialogStatusMsgs.DialingDone
 							end
 					end
 			end else begin
 				if (status = 'Connecting) then begin
-						l1 := ParamStr(l1, [Array: transportProvider.name])
+						text := ParamStr(text, [Array: transportProvider.name])
 					end
 			end;
-		l1
+		text
 	end,
 	defaultConfiguration: {
 		phonenocalllogging: nil,
@@ -234,8 +234,8 @@ basicCallTransport := {
 			end)
 	end,
 	modalStatus: nil,
-	ItemCompleted: func(a1, a2, a3) begin
-		local l1;
+	ItemCompleted: func(a1, state2, error) begin
+		local state;
 		// ROM BUG (fixed): the call is hung up only if the status is one of a
 		//  call's - but it is read after SetStatusDialog has made it 'HangingUp
 		//  (or 'cancelling), so the endpoint is never told: the keypad's Hang
@@ -256,17 +256,17 @@ basicCallTransport := {
 			end;
 		manualStatus := true;
 		if a1 then begin
-				l1 := a1.state;
-				if IsInstance(a3, 'symbol) then begin
+				state := a1.state;
+				if IsInstance(error, 'symbol) then begin
 						a1.error := 0;
-						a1.hangupreason := a3;
-						a3 := nil
+						a1.hangupreason := error;
+						error := nil
 					end;
-				if ((a3 = nil) or (a3 = 0)) then begin
-						l1 := 'log
+				if ((error = nil) or (error = 0)) then begin
+						state := 'log
 					end;
 				a1.endTime := TimeInSeconds();
-				inherited:ItemCompleted(a1, l1, a3)
+				inherited:ItemCompleted(a1, state, error)
 			end;
 		currentItem := nil;
 		self:CloseStatusDialog(nil)
@@ -276,9 +276,9 @@ basicCallTransport := {
 		GetRoot().(appSymbol):DialingComplete(a1)
 	end,
 	debug: 8202,
-	NewItem: func(a1) begin
+	NewItem: func(viewfrontmostapp) begin
 		local l1;
-		(l1 := inherited:NewItem(a1)).toRef := nil;
+		(l1 := inherited:NewItem(viewfrontmostapp)).toRef := nil;
 		l1.fromRef := nil;
 		l1.phoneNumber := "";
 		l1.name := "";
@@ -315,8 +315,8 @@ basicCallTransport := {
 			SetKeyView(self, 0)
 		end,
 		viewQuitScript: func() begin
-			local l1;
-			(if (if (l1 := transport:GetConfig('phoneAutoReceive)) then (wasAutoReceive = nil)) then transport:StartAutoReceive() else (if (if (not l1) then (wasAutoReceive = true)) then transport:StopAutoReceive()))
+			local phoneAutoReceive;
+			(if (if (phoneAutoReceive := transport:GetConfig('phoneAutoReceive)) then (wasAutoReceive = nil)) then transport:StartAutoReceive() else (if (if (not phoneAutoReceive) then (wasAutoReceive = true)) then transport:StopAutoReceive()))
 		end,
 		ReOrientToScreen: @defRotateFunc,
 		viewChildren: [viewChildren:
@@ -367,20 +367,20 @@ basicCallTransport := {
 					(if (not transport:GetConfig('enableAutoUI)) then self:Hide())
 				end,
 				DefaultProvider: func() begin
-					local l1, l2;
-					if ((((not (l2 := GetTAPICommFrame((l1 := GetUserConfig('currentDialSpeaker))))) or (not l2.config)) or (not l2.config.supportsEventIncoming)) or (not transport:GetConfig('phoneAutoReceive))) then begin
-							l1 := nil
+					local currentDialSpeaker2, currentDialSpeaker;
+					if ((((not (currentDialSpeaker := GetTAPICommFrame((currentDialSpeaker2 := GetUserConfig('currentDialSpeaker))))) or (not currentDialSpeaker.config)) or (not currentDialSpeaker.config.supportsEventIncoming)) or (not transport:GetConfig('phoneAutoReceive))) then begin
+							currentDialSpeaker2 := nil
 						end;
-					transport:SetConfig('phoneAutoReceive, (l1 <> nil));
-					l1
+					transport:SetConfig('phoneAutoReceive, (currentDialSpeaker2 <> nil));
+					currentDialSpeaker2
 				end,
-				SetProvider: func(a1) begin
-					local l1;
-					if (((not (l1 := GetTAPICommFrame(a1))) or (not l1.config)) or (not l1.config.supportsEventIncoming)) then begin
-							a1 := nil
+				SetProvider: func(slot) begin
+					local tAPICommFrame;
+					if (((not (tAPICommFrame := GetTAPICommFrame(slot))) or (not tAPICommFrame.config)) or (not tAPICommFrame.config.supportsEventIncoming)) then begin
+							slot := nil
 						end;
-					transport:SetConfig('phoneAutoReceive, (a1 <> nil));
-					SetUserConfig('currentDialSpeaker, a1)
+					transport:SetConfig('phoneAutoReceive, (slot <> nil));
+					SetUserConfig('currentDialSpeaker, slot)
 				end
 			},
 			{_proto: @protoCancelButton}
@@ -411,41 +411,41 @@ basicCallTransport := {
 				end, nil, 8000)
 			end)
 	end,
-	DialingComplete: func(a1) begin
-		local l1, l2, l3, l4;
+	DialingComplete: func(error) begin
+		local numberToDial, frame2, l3, l4;
 		if (currentItem = nil) then begin
 				return nil
 			end;
 		(try begin
-				if a1 then begin
-						Throw('|evt.ex.comm|, a1)
+				if error then begin
+						Throw('|evt.ex.comm|, error)
 					end;
 				(if (status <> 'DialingDoneTo) then begin
 						currentItem.startTime := TimeInSeconds();
-						l2 := {keyedDigits: (l1 := currentItem.numberToDial), SpeakerToggle: transportProvider.config.supportsSpeaker, closeBox: func() begin
+						frame2 := {keyedDigits: (numberToDial := currentItem.numberToDial), SpeakerToggle: transportProvider.config.supportsSpeaker, closeBox: func() begin
 							GetRoot().(appSymbol):CloseStatusDialog(nil)
 						end};
 						l3 := nil;
 						if currentItem.saveAsLog then begin
-								l2.primary := nil;
-								if (StrFilled(l1) or (status <> 'DialingTo)) then begin
+								frame2.primary := nil;
+								if (StrFilled(numberToDial) or (status <> 'DialingTo)) then begin
 										l3 := true
 									end
 							end;
 						l4 := (if (status = 'DialingTo) then 'DialingDoneTo else 'DialingDoneFrom);
 						(if l3 then begin
 								self:CloseStatusDialog(nil);
-								self:UpdateStatusSlots(l4, 'vPhoneKeypad, l2);
+								self:UpdateStatusSlots(l4, 'vPhoneKeypad, frame2);
 								(userClosedStatus := nil)
-							end else self:SetStatusDialog(l4, 'vPhoneKeypad, l2))
+							end else self:SetStatusDialog(l4, 'vPhoneKeypad, frame2))
 					end)
 			end onexception |evt.ex| do begin
 				(if self:HandleThrow() then self:Shutdown())
 			end)
 	end,
-	SendRequest: func(a1) begin
-		local l1;
-		if (a1.cause = 'submit) then begin
+	SendRequest: func(request) begin
+		local routingInfoItem;
+		if (request.cause = 'submit) then begin
 				return nil
 			end;
 		if currentItem then begin
@@ -458,13 +458,13 @@ basicCallTransport := {
 						self:ItemCompleted(currentItem, nil, nil)
 					end
 			end;
-		if ((currentItem := self:ItemRequest(a1)).serviceProvider = nil) then begin
+		if ((currentItem := self:ItemRequest(request)).serviceProvider = nil) then begin
 				currentItem.startTime := TimeInSeconds();
 				status := 'DialingDoneTo;
 				return nil
 			end;
-		l1 := GetDataDefs('|nameRef.phone|):GetRoutingInfo(currentItem.toRef[0])[0];
-		currentItem.numberToDial := l1.phoneNumber;
+		routingInfoItem := GetDataDefs('|nameRef.phone|):GetRoutingInfo(currentItem.toRef[0])[0];
+		currentItem.numberToDial := routingInfoItem.phoneNumber;
 		// DEVIATION (host addition): a provider whose config says dialsAsWritten
 		//  - the host's cellular one (comms/host/HostCell.ns) - is given the
 		//  number as the card has it, not as the worksite's dialling rules make
@@ -475,7 +475,7 @@ basicCallTransport := {
 		//  (docs/host-tdeck-pro-phone.md).  Other providers dial as the ROM does.
 		local dialProvider := GetTAPICommFrame(currentItem.serviceProvider);
 		if dialProvider and dialProvider.config and dialProvider.config.dialsAsWritten then
-			currentItem.numberToDial := l1.rawNumber;
+			currentItem.numberToDial := routingInfoItem.rawNumber;
 		manualStatus := currentItem.saveAsLog;
 		(try begin
 				self:SetTransportProvider(currentItem.serviceProvider);
@@ -503,22 +503,22 @@ basicCallTransport := {
 				DefaultProvider: func() begin
 					(if (if HasPath(fields, 'serviceProvider) then (not transport:GetConfig('phoneAutoReceive))) then fields.serviceProvider else (fields.serviceProvider := GetUserConfig('currentDialSpeaker)))
 				end,
-				SetProvider: func(a1) begin
-					local l1, l2, l3;
-					l1 := transport.transportProvider.symbol;
-					newProvider := a1;
-					(if (if (if transport:GetConfig('phoneAutoReceive) then a1) then (a1 <> l1)) then begin
-							l2 := GetTAPICommFrame(a1);
-							l3 := transport.transportProvider;
-							self:Confirm("PhoneHome", ParamStr("Changing the service to \u201C\u^0\u201D\u will turn off your preference to receive calls using the \u201C\u^1\u201D\u service.", [Array: l2.name, l3.name]), self, 'ConfirmChange)
+				SetProvider: func(slot) begin
+					local symbol2, tAPICommFrame, transportProvider;
+					symbol2 := transport.transportProvider.symbol;
+					newProvider := slot;
+					(if (if (if transport:GetConfig('phoneAutoReceive) then slot) then (slot <> symbol2)) then begin
+							tAPICommFrame := GetTAPICommFrame(slot);
+							transportProvider := transport.transportProvider;
+							self:Confirm("PhoneHome", ParamStr("Changing the service to \u201C\u^0\u201D\u will turn off your preference to receive calls using the \u201C\u^1\u201D\u service.", [Array: tAPICommFrame.name, transportProvider.name]), self, 'ConfirmChange)
 						end else self:ConfirmChange(true))
 				end,
 				ConfirmChange: func(a1) begin
-					local l1;
+					local transportProvider;
 					(if a1 then begin
 							fields.serviceProvider := newProvider;
 							(if (not transport:GetConfig('phoneAutoReceive)) then SetUserConfig('currentDialSpeaker, newProvider))
-						end else self:UpdateText((l1 := transport.transportProvider).name))
+						end else self:UpdateText((transportProvider := transport.transportProvider).name))
 				end
 			},
 			logcheck,
@@ -538,9 +538,9 @@ basicCallTransport := {
 		],
 		ReOrientToScreen: @defRotateFunc,
 		UpdatePhone: func() begin
-			local l1;
+			local routingInfoItem;
 			if (if (if callOptionsSlip.viewCObject then fields.toRef) then (Length(fields.toRef) > 0)) then begin
-					if (if (if (l1 := GetDataDefs('|nameRef.phone|):GetRoutingInfo(fields.toRef[0])[0]) then l1.phoneNumber) then (StrCompare(l1.phoneNumber, callOptionsSlip.outNumber.text) <> 0)) then begin
+					if (if (if (routingInfoItem := GetDataDefs('|nameRef.phone|):GetRoutingInfo(fields.toRef[0])[0]) then routingInfoItem.phoneNumber) then (StrCompare(routingInfoItem.phoneNumber, callOptionsSlip.outNumber.text) <> 0)) then begin
 							fields.toRef[0].asIsPhone := callOptionsSlip.outNumber.text
 						end
 				end;
@@ -652,23 +652,23 @@ _defaultButton_22 := {
 		self:ValidateConfig('location, nil, '[Array: areacode, country], "Where are you calling from?", 'validateDialog, 'DoCall)
 	end,
 	DoCall: func(a1) begin
-		local l1, l2;
+		local routingInfoItem, fields2;
 		fields.title := transport:GetItemTitle(fields);
 		fields.fromRef := GetUserConfig('currentPersona);
 		if ((fields.toRef = nil) or (Length(fields.toRef) = 0)) then begin
 				fields.toRef := [Array: GetDataDefs('|nameRef.phone|):MakeNameRef({}, '|nameRef.phone|)];
 				fields.toRef[0].phone := ""
 			end;
-		l1 := GetDataDefs('|nameRef.phone|):GetRoutingInfo(fields.toRef[0])[0];
-		fields.name := l1.name;
-		fields.phoneNumber := l1.rawNumber;
-		userConfiguration.currentDialNumber := l1.rawNumber;
+		routingInfoItem := GetDataDefs('|nameRef.phone|):GetRoutingInfo(fields.toRef[0])[0];
+		fields.name := routingInfoItem.name;
+		fields.phoneNumber := routingInfoItem.rawNumber;
+		userConfiguration.currentDialNumber := routingInfoItem.rawNumber;
 		fields.error := nil;
 		fields.hangupreason := nil;
 		fields.state := 'ready;
-		l2 := fields;
+		fields2 := fields;
 		base:Close();
-		transport:ItemSubmit(l2)
+		transport:ItemSubmit(fields2)
 	end,
 	debug: 33744,
 	preallocatedContext: '_defaultButton,
@@ -677,12 +677,12 @@ _defaultButton_22 := {
 
 callassist := {
 	buttonClickScript: func() begin
-		local l1;
+		local routingInfoItem;
 		if (if fields.toRef then (Length(fields.toRef) > 0)) then begin
 				RemoveSlot(fields.toRef[0], 'asIsPhone);
-				l1 := GetDataDefs('|nameRef.phone|):GetRoutingInfo(fields.toRef[0])[0];
-				callOptionsSlip.inNumber := l1.rawNumber;
-				callOptionsSlip.inCountry := l1.country
+				routingInfoItem := GetDataDefs('|nameRef.phone|):GetRoutingInfo(fields.toRef[0])[0];
+				callOptionsSlip.inNumber := routingInfoItem.rawNumber;
+				callOptionsSlip.inCountry := routingInfoItem.country
 			end else begin
 				callOptionsSlip.inNumber := nil;
 				callOptionsSlip.inCountry := nil
@@ -711,13 +711,13 @@ callPhoneLine_2 := {
 				callOptionsSlip:Close()
 			end;
 		optionsUp := nil;
-		(foreach l1 in selected do begin
-				RemoveSlot(l1, 'asIsPhone)
+		(foreach item in selected do begin
+				RemoveSlot(item, 'asIsPhone)
 			end);
 		inherited:buttonClickScript()
 	end,
-	pickActionScript: func(a1) begin
-		inherited:?pickActionScript(a1);
+	pickActionScript: func(index) begin
+		inherited:?pickActionScript(index);
 		self:Retarget()
 	end,
 	preallocatedContext: 'callPhoneLine,
@@ -735,9 +735,9 @@ willDial_2 := {
 		callassist:buttonClickScript()
 	end,
 	viewClickScript: viewClickScript,
-	viewHiliteScript: func(a1) begin
-		local l1, l2;
-		self:DrawShape(MakeRoundRect((l2 := ((((l1 := self:LocalBox()).right - StrFontWidth(text, viewFont)) div 2) - 2)), 0, (l1.right - l2), l1.bottom, 8), '{transferMode: 2, penPattern: 0, fillPattern: 5});
+	viewHiliteScript: func(on) begin
+		local box, l2;
+		self:DrawShape(MakeRoundRect((l2 := ((((box := self:LocalBox()).right - StrFontWidth(text, viewFont)) div 2) - 2)), 0, (box.right - l2), box.bottom, 8), '{transferMode: 2, penPattern: 0, fillPattern: 5});
 		true
 	end,
 	InkConvert: nil,
@@ -755,21 +755,21 @@ willDial_2 := {
 	end,
 	GetPhoneText: func() begin
 		local theInfo;
-		local l1;
-		l1 := "";
+		local text;
+		text := "";
 		if (if fields.toRef then (Length(fields.toRef) > 0)) then begin
 				if IsRichString((theInfo := GetDataDefs('|nameRef.phone|):GetRoutingInfo(fields.toRef[0])[0]).rawNumber) then begin
 						AddDeferredCall(func() begin
 							self:ConvertStart(theInfo)
 						end, nil)
 					end else begin
-						l1 := theInfo.phoneNumber
+						text := theInfo.phoneNumber
 					end
 			end;
-		l1
+		text
 	end,
-	ConvertStart: func(a1) begin
-		self:ConvertInkText(a1.rawNumber, 'phone, 262144, ParamStr("Phone for ^0 ", [Array: a1.name]), ParamStr("Please verify that ^0 is converted correctly", [Array: a1.rawNumber]), 'InkConvert, 'ConvertComplete, a1)
+	ConvertStart: func(theInfo) begin
+		self:ConvertInkText(theInfo.rawNumber, 'phone, 262144, ParamStr("Phone for ^0 ", [Array: theInfo.name]), ParamStr("Please verify that ^0 is converted correctly", [Array: theInfo.rawNumber]), 'InkConvert, 'ConvertComplete, theInfo)
 	end,
 	ConvertComplete: func(a1, a2, a3) begin
 		InkConvert := nil;

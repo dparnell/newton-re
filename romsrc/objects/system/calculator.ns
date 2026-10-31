@@ -42,30 +42,30 @@ calculator := {
 		constants: {
 			kLiteral_4e1865: "%.8G"
 		},
-		func(a1) begin
-			local l1, l2, l3;
-			if (a1 < 0) then begin
-					l1 := Stringer([Array: "-", FormattedNumberStr((-a1), kLiteral_4e1865)])
+		func(value) begin
+			local text, pos, formattedNumberStr2;
+			if (value < 0) then begin
+					text := Stringer([Array: "-", FormattedNumberStr((-value), kLiteral_4e1865)])
 				end else begin
-					l1 := FormattedNumberStr(a1, kLiteral_4e1865)
+					text := FormattedNumberStr(value, kLiteral_4e1865)
 				end;
-			if (l2 := StrPos(l1, "e", 0)) then begin
-					l1 := Substr(l1, 0, l2);
-					l2 := StrPos((l3 := FormattedNumberStr(a1, "%.8g")), "e", 0);
-					l3 := Substr(l3, l2, 9999);
-					l1 := Stringer([Array: l1, l3])
+			if (pos := StrPos(text, "e", 0)) then begin
+					text := Substr(text, 0, pos);
+					pos := StrPos((formattedNumberStr2 := FormattedNumberStr(value, "%.8g")), "e", 0);
+					formattedNumberStr2 := Substr(formattedNumberStr2, pos, 9999);
+					text := Stringer([Array: text, formattedNumberStr2])
 				end;
-			l1
+			text
 		end),
 	ReOrientToScreen: @defRotateFunc,
 	memory: nil,
 	lastKey: -1,
 	viewBounds: {left: 0, top: 0, right: 170, bottom: 257},
-	viewKeyDownScript: func(a1, a2) begin
-		if (if (a1 <> $\00) then (not IsCommandKeystroke(a1, a2))) then begin
-				(foreach l1 in lookup do begin
-						if (a1 = l1[0]) then begin
-								keys:keyPressScript(l1[1]);
+	viewKeyDownScript: func(char2, flags) begin
+		if (if (char2 <> $\00) then (not IsCommandKeystroke(char2, flags))) then begin
+				(foreach item in lookup do begin
+						if (char2 = item[0]) then begin
+								keys:keyPressScript(item[1]);
 								RefreshViews()
 							end
 					end)
@@ -73,20 +73,20 @@ calculator := {
 		nil
 	end,
 	calcPaperDisplay: func() begin
-		l1 := SmartStart(120);
+		smartStart2 := SmartStart(120);
 		l2 := (maxLines - 1);
-		l3 := 0;
-		local l1;
+		smartConcat2 := 0;
+		local smartStart2;
 		local l2;
-		local l3;
-		(for l4 := 0 to l2 do begin
-				l3 := SmartConcat(l1, l3, paper[(index + l4)]);
-				if (l4 <> l2) then begin
-						l3 := SmartConcat(l1, l3, $\n)
+		local smartConcat2;
+		(for i := 0 to l2 do begin
+				smartConcat2 := SmartConcat(smartStart2, smartConcat2, paper[(index + i)]);
+				if (i <> l2) then begin
+						smartConcat2 := SmartConcat(smartStart2, smartConcat2, $\n)
 					end
 			end);
-		SmartStop(l1, l3);
-		SetValue(paperDisplay, 'text, l1)
+		SmartStop(smartStart2, smartConcat2);
+		SetValue(paperDisplay, 'text, smartStart2)
 	end,
 	allocateContext: [|Array|: 'paperDisplay, paperDisplay, 'Display, Display, 'keys, keys],
 	index: 24,
@@ -96,11 +96,11 @@ calculator := {
 	paperDisplay: nil,
 	textFlags: 1024,
 	value: stack,
-	printToPaper: func(a1) begin
-		(for l1 := 1 to 29 do begin
-				paper[(l1 - 1)] := paper[l1]
+	printToPaper: func(text) begin
+		(for i := 1 to 29 do begin
+				paper[(i - 1)] := paper[i]
 			end);
-		paper[29] := a1;
+		paper[29] := text;
 		index := (30 - maxLines);
 		self:calcPaperDisplay();
 		paperDisplay:Dirty()
@@ -223,14 +223,14 @@ paperDisplay := {
 		(if rotated then (viewBounds := RelBounds(3, 3, 133, (15 * maxLines))))
 	end,
 	viewSetupDoneScript: func() begin
-		(if rotated then SetValue(self, 'viewJustify, 1))
+		(if rotated then SetValue(self, 'viewJustify, vjRightH))
 	end,
 	viewDrawScript: func() begin
 		(if memory then begin
 				if (not pix) then begin
 						pix := [Array: MakeText("M", 3, -2, 16, 11), MakeRect(1, 1, 15, 13)]
 					end;
-				self:DrawShape(pix, '{font: 1058816})
+				self:DrawShape(pix, '{font: tsSystem + tsSize(10) + tsBold})
 			end)
 	end,
 	preallocatedContext: 'paperDisplay,
@@ -361,16 +361,16 @@ keys := {
 			kROM_736: @keyCommaBitmap
 		},
 		func() begin
-			if ((l1 := GetLocale().numberformat.decimalpoint)[0] <> $.) then begin
+			if ((decimalpoint := GetLocale().numberformat.decimalpoint)[0] <> $.) then begin
 					self.keyDefinitions := Clone(self.keyDefinitions);
 					self.keyDefinitions[4] := Clone(self.keyDefinitions[4]);
-					self.keyDefinitions[4][5] := (if (l1[0] = $,) then kROM_736 else l1[0]);
+					self.keyDefinitions[4][5] := (if (decimalpoint[0] = $,) then kROM_736 else decimalpoint[0]);
 					base.lookup := Clone(base.lookup);
-					local l1;
-					(for l2 := 0 to (Length(base.lookup) - 1) do begin
-							if (base.lookup[l2][0] = $.) then begin
-									base.lookup[l2] := Clone(base.lookup[l2]);
-									base.lookup[l2][0] := l1[0];
+					local decimalpoint;
+					(for i := 0 to (Length(base.lookup) - 1) do begin
+							if (base.lookup[i][0] = $.) then begin
+									base.lookup[i] := Clone(base.lookup[i]);
+									base.lookup[i][0] := decimalpoint[0];
 									break
 								end
 						end)
@@ -380,11 +380,11 @@ keys := {
 	viewSetupDoneScript: func() begin
 		(if (if (if Clear then (ClassOf(inputKeys) <> 'char)) then (StrLen(inputKeys) = 0)) then self:JamDisplay(self:CalcFormattedNumberStr(value)) else self:JamDisplay(inputKeys))
 	end,
-	JamDisplay: func(a1) begin
-		(if (ClassOf(a1) = 'char) then begin
-				(x := Clone(" "))[0] := a1;
+	JamDisplay: func(inputKeys) begin
+		(if (ClassOf(inputKeys) = 'char) then begin
+				(x := Clone(" "))[0] := inputKeys;
 				SetValue(Display, 'text, x)
-			end else SetValue(Display, 'text, a1))
+			end else SetValue(Display, 'text, inputKeys))
 	end,
 	ResetValue: func(a1) begin
 		value := 0.0;
@@ -428,17 +428,17 @@ keys := {
 		self:UpdateDisplay();
 		paperDisplay:Dirty()
 	end,
-	DoOp: func(a1) begin
-		local l1, l2, l3, l4, l5, l6;
+	DoOp: func(char2) begin
+		local l1, l2, value2, l4, l5, text;
 		l2 := nil;
-		l3 := value;
+		value2 := value;
 		l5 := true;
-		if (a1 = 101) then begin
+		if (char2 = 101) then begin
 				if isUnary then begin
 						if (value < 0) then begin
 								pendingOp := 114;
 								value := ((stack * (-value)) / 100);
-								l3 := (-l3)
+								value2 := (-value2)
 							end else begin
 								pendingOp := 113;
 								value := ((stack * value) / 100)
@@ -452,9 +452,9 @@ keys := {
 							end
 					end;
 				l4 := $%;
-				a1 := 108
+				char2 := 108
 			end;
-		if (a1 = 152) then begin
+		if (char2 = 152) then begin
 				if (value >= 0.0) then begin
 						value := sqrt(value)
 					end else begin
@@ -463,7 +463,7 @@ keys := {
 						value := 0.0
 					end;
 				l2 := $\u221A;
-				a1 := 108
+				char2 := 108
 			end;
 		if (pendingOp = 113) then begin
 				value := (stack + value);
@@ -491,7 +491,7 @@ keys := {
 												l1 := (if (value < 0) then $- else $+);
 												value := (stack + value);
 												if (l1 = $-) then begin
-														l3 := (-l3)
+														value2 := (-value2)
 													end
 											end
 									end
@@ -503,49 +503,49 @@ keys := {
 						playsound(grind)
 					end;
 				if l2 then begin
-						l6 := Stringer([Array: l1, " ", l2, " ", self:CalcFormattedNumberStr(l3), l4])
+						text := Stringer([Array: l1, " ", l2, " ", self:CalcFormattedNumberStr(value2), l4])
 					end else begin
-						l6 := Stringer([Array: l1, " ", self:CalcFormattedNumberStr(l3), l4])
+						text := Stringer([Array: l1, " ", self:CalcFormattedNumberStr(value2), l4])
 					end;
-				base:printToPaper(l6)
+				base:printToPaper(text)
 			end;
-		if (a1 = 108) then begin
+		if (char2 = 108) then begin
 				base:printToPaper(Stringer([Array: $=, " ", self:CalcFormattedNumberStr(value)]));
 				self:JamDisplay(self:CalcFormattedNumberStr(value));
 				inputKeys := ""
 			end else begin
-				if (if (a1 >= 113) then (a1 <= 116)) then begin
-						self:JamDisplay((inputKeys := "+-x\u00F7\u"[(a1 - 113)]))
+				if (if (char2 >= 113) then (char2 <= 116)) then begin
+						self:JamDisplay((inputKeys := "+-x\u00F7\u"[(char2 - 113)]))
 					end
 			end;
 		stack := value;
-		pendingOp := a1;
+		pendingOp := char2;
 		Clear := true;
 		unary := nil;
 		(isUnary := nil)
 	end,
-	keyPressScript: func(a1) begin
-		local l1, l2;
+	keyPressScript: func(char2) begin
+		local l1, formattedNumberStr;
 		playsound(click);
-		if (a1 = 117) then begin
-				a1 := 0
+		if (char2 = 117) then begin
+				char2 := 0
 			end;
-		if (if (if (a1 = 114) then Clear) then (lastKey <> 112)) then begin
+		if (if (if (char2 = 114) then Clear) then (lastKey <> 112)) then begin
 				unary := 114;
 				self:ResetValue(true)
 			end else begin
-				if (if (if (a1 = 113) then Clear) then (lastKey <> 112)) then begin
+				if (if (if (char2 = 113) then Clear) then (lastKey <> 112)) then begin
 						unary := 113;
 						self:ResetValue(true)
 					end else begin
-						if (a1 = 111) then begin
+						if (char2 = 111) then begin
 								self:ClearKey()
 							end else begin
-								if (a1 = 112) then begin
+								if (char2 = 112) then begin
 										self:ClearEntry()
 									end else begin
-										if ((a1 = 153) or (a1 = 154)) then begin
-												l1 := (if (a1 = 153) then value else (-value));
+										if ((char2 = 153) or (char2 = 154)) then begin
+												l1 := (if (char2 = 153) then value else (-value));
 												if memory then begin
 														if ((memory := (memory + l1)) = 0) then begin
 																memory := nil;
@@ -557,7 +557,7 @@ keys := {
 													end;
 												self:ResetValue(true)
 											end else begin
-												if (a1 = 102) then begin
+												if (char2 = 102) then begin
 														value := (if memory then memory else 0.0);
 														if (unary = 114) then begin
 																value := (-value);
@@ -569,31 +569,31 @@ keys := {
 																		isUnary := true
 																	end
 															end;
-														digitCount := StrLen((l2 := self:CalcFormattedNumberStr(value)));
-														if (l2[0] = $-) then begin
+														digitCount := StrLen((formattedNumberStr := self:CalcFormattedNumberStr(value)));
+														if (formattedNumberStr[0] = $-) then begin
 																digitCount := (digitCount - 1)
 															end;
 														if (if (if HasSlot(base, 'pendingOp) then (pendingOp >= 113)) then (pendingOp <= 116)) then begin
-																inputKeys := Stringer([Array: "+-x\u00F7\u"[(pendingOp - 113)], l2])
+																inputKeys := Stringer([Array: "+-x\u00F7\u"[(pendingOp - 113)], formattedNumberStr])
 															end else begin
-																inputKeys := l2
+																inputKeys := formattedNumberStr
 															end;
 														self:JamDisplay(inputKeys);
 														Clear := nil
 													end else begin
-														if (a1 > 100) then begin
+														if (char2 > 100) then begin
 																if ((not Clear) or (((pendingOp = 108) or (pendingOp = 0)) or (pendingOp = 115))) then begin
-																		self:DoOp(a1)
+																		self:DoOp(char2)
 																	end else begin
 																		self:SysBeep();
-																		a1 := lastKey
+																		char2 := lastKey
 																	end
 															end else begin
 																if (Clear or (lastKey = 102)) then begin
 																		self:ResetValue((lastKey = 102));
 																		Clear := nil
 																	end;
-																if (a1 = 100) then begin
+																if (char2 = 100) then begin
 																		if valueFactor then begin
 																				valueFactor := nil;
 																				self:JamDisplay((inputKeys := Stringer([Array: inputKeys, GetLocale().numberformat.decimalpoint])))
@@ -602,24 +602,24 @@ keys := {
 																		if (digitCount >= 10) then begin
 																				self:SysBeep()
 																			end else begin
-																				inputKeys := Stringer([Array: inputKeys, a1]);
+																				inputKeys := Stringer([Array: inputKeys, char2]);
 																				digitCount := (digitCount + 1);
 																				if valueFactor then begin
 																						value := (value * valueFactor)
 																					end else begin
 																						keyFactor := (keyFactor / 10.0)
 																					end;
-																				if (if unary then (a1 <> 0)) then begin
+																				if (if unary then (char2 <> 0)) then begin
 																						if (unary = 114) then begin
-																								a1 := (-a1)
+																								char2 := (-char2)
 																							end;
 																						unary := nil;
 																						isUnary := true
 																					end;
 																				if (value < 0) then begin
-																						value := (value - (a1 * keyFactor))
+																						value := (value - (char2 * keyFactor))
 																					end else begin
-																						value := (value + (a1 * keyFactor))
+																						value := (value + (char2 * keyFactor))
 																					end;
 																				self:JamDisplay(inputKeys)
 																			end
@@ -631,7 +631,7 @@ keys := {
 							end
 					end
 			end;
-		lastKey := a1;
+		lastKey := char2;
 		true
 	end,
 	UpdateDisplay: func() begin

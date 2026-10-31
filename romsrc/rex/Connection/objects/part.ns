@@ -99,20 +99,20 @@ part := array(nil, {
 				(if (a1 = 'connect) then GetRoot().Connection:autodock())
 			end
 		},
-		func(a1) begin
-			local l1;
-			functions.ConnOpenFileBrowser := a1.theForm.FileBrowserOpen;
-			functions.ConnOpenUserPsswdSlip := a1.theForm.OpenUsernameSlip;
-			functions.ConnImportFile := a1.theForm.ImportFile;
+		func(partFrame) begin
+			local connection;
+			functions.ConnOpenFileBrowser := partFrame.theForm.FileBrowserOpen;
+			functions.ConnOpenUserPsswdSlip := partFrame.theForm.OpenUsernameSlip;
+			functions.ConnImportFile := partFrame.theForm.ImportFile;
 			functions.GetApplicationNames := kFunction_7638d9;
-			(if (l1 := GetAppPrefs('Connection, '{type: serial})).autodock then RegAutoDock('Connection, kFunction_757359))
+			(if (connection := GetAppPrefs('Connection, '{type: serial})).autodock then RegAutoDock('Connection, kFunction_757359))
 		end),
-	installScript: func(a1) begin
-		a1:?devInstallScript(a1);
-		if HasSlot(a1, 'devInstallScript) then begin
-				RemoveSlot(a1, 'devInstallScript)
+	installScript: func(partFrame) begin
+		partFrame:?devInstallScript(partFrame);
+		if HasSlot(partFrame, 'devInstallScript) then begin
+				RemoveSlot(partFrame, 'devInstallScript)
 			end;
-		(a1.installScript := nil)
+		(partFrame.installScript := nil)
 	end
 });
 

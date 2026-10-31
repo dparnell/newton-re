@@ -26,49 +26,49 @@ export117 := {
 			kLiteral_771cbd: "Currency Exchange"
 		},
 		func() begin
-			local l1;
-			l1 := GetExchangeRate(Country1Field.country, Country2Field.country);
+			local exchangeRate;
+			exchangeRate := GetExchangeRate(Country1Field.country, Country2Field.country);
 			if (Country1Field.country = Country2Field.country) then begin
-					l1 := 1;
+					exchangeRate := 1;
 					self:Notify(3, kLiteral_771cbd, "Choose two different countries to calculate exchange rates.")
 				end;
-			if (l1 = nil) then begin
+			if (exchangeRate = nil) then begin
 					self:ClearAllFields();
 					self:Notify(3, kLiteral_771cbd, ParamStr("The exchange rate between ^0 and ^1 is unknown.", [Array: GetCountryEntry(Country1Field.country)[0].name, GetCountryEntry(Country2Field.country)[0].name]))
 				end;
-			ExchangeRateField:SetNumericValue(l1)
+			ExchangeRateField:SetNumericValue(exchangeRate)
 		end),
 	formulaSymbol: 'CurrencyExchange,
 	viewQuitScript: func() begin
-		local l1;
-		(l1 := self:GetFormulaValues()).(formulaSymbol).country1 := Country1Field.country;
-		l1.(formulaSymbol).country2 := Country2Field.country;
+		local formulaValues;
+		(formulaValues := self:GetFormulaValues()).(formulaSymbol).country1 := Country1Field.country;
+		formulaValues.(formulaSymbol).country2 := Country2Field.country;
 		inherited:?viewQuitScript()
 	end,
 	viewSetupFormScript: func() begin
-		local l1, l2, l3;
+		local formulaValues, l2, l3;
 		inherited:?viewSetupFormScript();
-		if ((l1 := self:GetFormulaValues()).(formulaSymbol).country1 = nil) then begin
+		if ((formulaValues := self:GetFormulaValues()).(formulaSymbol).country1 = nil) then begin
 				l2 := 'USA
 			end else begin
-				l2 := l1.(formulaSymbol).country1
+				l2 := formulaValues.(formulaSymbol).country1
 			end;
 		SetValue(Country1Field, 'country, l2);
-		if (l1.(formulaSymbol).country2 = nil) then begin
+		if (formulaValues.(formulaSymbol).country2 = nil) then begin
 				l3 := 'Japan
 			end else begin
-				l3 := l1.(formulaSymbol).country2
+				l3 := formulaValues.(formulaSymbol).country2
 			end;
 		SetValue(Country2Field, 'country, l3);
-		(if (l1.(formulaSymbol) <> nil) then begin
-				l1.(formulaSymbol).values[1] := GetExchangeRate(l2, l3);
-				EntryChange(l1)
+		(if (formulaValues.(formulaSymbol) <> nil) then begin
+				formulaValues.(formulaSymbol).values[1] := GetExchangeRate(l2, l3);
+				EntryChange(formulaValues)
 			end)
 	end,
 	overview: currencyExchange,
-	SolveFormula: func(a1) begin
-		inherited:SolveFormula(a1);
-		(if (a1 = 1) then SetExchangeRate(Country1Field.country, Country2Field.country, ExchangeRateField:GetNumericValue()))
+	SolveFormula: func(lineNumber) begin
+		inherited:SolveFormula(lineNumber);
+		(if (lineNumber = 1) then SetExchangeRate(Country1Field.country, Country2Field.country, ExchangeRateField:GetNumericValue()))
 	end,
 	ClearAllFields: func() begin
 		solvingFormula := true;
@@ -94,11 +94,11 @@ export117 := {
 currencyExchange := "Currency Exchange";
 
 export117Item := {
-	ComputeValue: func(a1) begin
-		local l1, l2, l3;
-		l1 := a1[0];
-		l2 := a1[1];
-		return ((l3 := a1[2]) / l2)
+	ComputeValue: func(list) begin
+		local listItem, listItem2, listItem3;
+		listItem := list[0];
+		listItem2 := list[1];
+		return ((listItem3 := list[2]) / listItem2)
 	end,
 	country: 'USA,
 	lineNumber: 0,
@@ -112,11 +112,11 @@ export117Item := {
 
 export117Item_2 := {
 	calcLineLabel: "Exchange Rate",
-	ComputeValue: func(a1) begin
-		local l1, l2, l3;
-		l1 := a1[0];
-		l2 := a1[1];
-		return ((l3 := a1[2]) / l1)
+	ComputeValue: func(list) begin
+		local listItem, listItem2, listItem3;
+		listItem := list[0];
+		listItem2 := list[1];
+		return ((listItem3 := list[2]) / listItem)
 	end,
 	integerField: nil,
 	lineNumber: 1,
@@ -126,12 +126,12 @@ export117Item_2 := {
 };
 
 export117Item_3 := {
-	ComputeValue: func(a1) begin
-		local l1, l2, l3;
-		l1 := a1[0];
-		l2 := a1[1];
-		l3 := a1[2];
-		return (l1 * l2)
+	ComputeValue: func(list) begin
+		local listItem, listItem2, listItem3;
+		listItem := list[0];
+		listItem2 := list[1];
+		listItem3 := list[2];
+		return (listItem * listItem2)
 	end,
 	country: 'Japan,
 	lineNumber: 2,

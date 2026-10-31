@@ -14,8 +14,8 @@ Connection := {
 	infoFrame: {
 		checkPrefix: [|Array|: true, nil],
 		checkPaths: [|Array|: 'connectionPhone, 'connectionNetwork],
-		formatFunc: func(a1) begin
-			ParamStr("^?1^1\n||^?0Modem Phone: ^0||", [Array: MakeDisplayPhone(a1[0]), GetNames(a1[1])])
+		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+			ParamStr("^?1^1\n||^?0Modem Phone: ^0||", [Array: MakeDisplayPhone(v20_wwwwwwwwwwvvvvvv[0]), GetNames(v20_wwwwwwwwwwvvvvvv[1])])
 		end
 	},
 	_recogSettings: nil,

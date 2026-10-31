@@ -8,34 +8,34 @@ protoEmailExpando := {
 		self:SetLabelText(self:setup1(target));
 		inherited:TextSetup()
 	end,
-	setup1: func(a1) begin
-		l1 := EmailSystems.emailText.|string.email|;
-		if a1 then begin
-				l2 := ClassOf(a1.(path));
+	setup1: func(target) begin
+		labelCommand := EmailSystems.emailText.|string.email|;
+		if target then begin
+				cls := ClassOf(target.(path));
 				labelCommands := [Array: ];
-				local l1;
-				local l2;
-				(foreach l3, l4 in (labelSymbols := EmailSystems.emailClasses) do begin
-						AddArraySlot(labelCommands, EmailSystems.emailText.(l4));
-						if (l4 = l2) then begin
-								l1 := labelCommands[l3]
+				local labelCommand;
+				local cls;
+				(foreach key, value in (labelSymbols := EmailSystems.emailClasses) do begin
+						AddArraySlot(labelCommands, EmailSystems.emailText.(value));
+						if (value = cls) then begin
+								labelCommand := labelCommands[key]
 							end
 					end)
 			end;
-		l1
+		labelCommand
 	end,
 	textChanged: func() begin
 		local l1;
 		l1 := (if (not target.(path)) then labelSymbols[0] else ClassOf(target.(path)));
 		(target.(path) := SetClass(entryLine.text, l1))
 	end,
-	LabelActionScript: func(a1) begin
-		self:SetLabelText(labelCommands[a1]);
+	LabelActionScript: func(index) begin
+		self:SetLabelText(labelCommands[index]);
 		labelLine:Dirty();
 		if (not target.(path)) then begin
 				target.(path) := Clone("")
 			end;
-		SetClass(target.(path), labelSymbols[a1]);
+		SetClass(target.(path), labelSymbols[index]);
 		true
 	end
 };

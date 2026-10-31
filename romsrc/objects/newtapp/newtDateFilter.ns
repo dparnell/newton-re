@@ -10,11 +10,11 @@ newtDateFilter := {
 		(if IsString(target.(path)) then Clone(target.(path)) else (if longFormat then LongDateStr(target.(path), longFormat) else ShortDateStr(target.(path), shortFormat)))
 	end,
 	TextToPath: func(a1) begin
-		local l1, l2;
+		local l1, stringToDate2;
 		(if ((not StrFilled(a1)) or IsRichString(a1)) then a1 else begin
 				validDate := IsValidDate(a1);
 				l1 := target.(path);
-				(if (l2 := StringToDate(a1)) then (if (if l1 then IsImmediate(l1)) then ((l2 - (l2 mod 1440)) + (l1 mod 1440)) else (l2 - (l2 mod 1440))))
+				(if (stringToDate2 := StringToDate(a1)) then (if (if l1 then IsImmediate(l1)) then ((stringToDate2 - (stringToDate2 mod 1440)) + (l1 mod 1440)) else (stringToDate2 - (stringToDate2 mod 1440))))
 			end)
 	end,
 	QuitFilter: func() begin
@@ -26,9 +26,9 @@ newtDateFilter := {
 	picker: func() begin
 		@datePopup:New((if (if target.(path) then (not IsRichString(target.(path)))) then [Array: target.(path)]), self:GlobalLabelBounds(), self)
 	end,
-	pickActionScript: func(a1) begin
+	pickActionScript: func(index) begin
 		if target then begin
-				target.(path) := a1[0];
+				target.(path) := index[0];
 				baseLine:Retarget()
 			end;
 		baseLine:hilite(nil)

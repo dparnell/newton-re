@@ -15,8 +15,8 @@ prefsSlipProto := {
 				l1 := true;
 				(if (if StrEqual(a1.name, a2.name) then (Length(a1.soups) = Length(a2.soups))) then begin
 						local l1;
-						(foreach l2 in a1.soups do begin
-								if (not LSearch(a2.soups, l2, 0, '|str=|, nil)) then begin
+						(foreach item in a1.soups do begin
+								if (not LSearch(a2.soups, item, 0, '|str=|, nil)) then begin
 										break (l1 := nil)
 									end
 							end);
@@ -54,10 +54,10 @@ prefsSlipProto := {
 				end)
 		end),
 	New: func(a1) begin
-		local l1;
-		(l1 := BuildContext(self)).godParent := a1;
-		l1.prefsCache := a1.prefsCache;
-		l1:FilterDialog()
+		local context;
+		(context := BuildContext(self)).godParent := a1;
+		context.prefsCache := a1.prefsCache;
+		context:FilterDialog()
 	end,
 	viewSetupFormScript: func() begin
 		godParent.(whoAmI) := self;

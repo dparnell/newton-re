@@ -6,36 +6,36 @@ newtSimpleDateFilter := {
 	longFormat: 745,
 	shortFormat: nil,
 	PathToText: func() begin
-		local l1, l2, l3, l4;
+		local l1, year, l3, longFormat2;
 		(if IsString((l1 := target.(path))) then Clone(l1) else begin
-				l3 := (if (l2 := Date(l1).year) then (l2 < 2920));
+				l3 := (if (year := Date(l1).year) then (year < 2920));
 				(if longFormat then begin
 						if l3 then begin
-								l4 := @datetimeStrSpecs.yearMonthDayStrSpec
+								longFormat2 := @datetimeStrSpecs.yearMonthDayStrSpec
 							end else begin
-								l4 := longFormat
+								longFormat2 := longFormat
 							end;
-						LongDateStr(l1, l4)
+						LongDateStr(l1, longFormat2)
 					end else begin
 						if l3 then begin
-								l4 := @datetimeStrSpecs.yearMonthDayStrSpec
+								longFormat2 := @datetimeStrSpecs.yearMonthDayStrSpec
 							end else begin
-								l4 := shortFormat
+								longFormat2 := shortFormat
 							end;
-						ShortDateStr(l1, l4)
+						ShortDateStr(l1, longFormat2)
 					end)
 			end)
 	end,
 	TextToPath: func(a1) begin
-		local l1, l2, l3;
+		local stringToDateFrame2, totalMinutes2, l3;
 		(if ((not StrFilled(a1)) or IsRichString(a1)) then a1 else begin
-				validDate := IsValidDate((l1 := StringToDateFrame(a1)));
-				if (l1.year = nil) then begin
-						l1.year := 2920
+				validDate := IsValidDate((stringToDateFrame2 := StringToDateFrame(a1)));
+				if (stringToDateFrame2.year = nil) then begin
+						stringToDateFrame2.year := 2920
 					end;
-				l2 := TotalMinutes(l1);
+				totalMinutes2 := TotalMinutes(stringToDateFrame2);
 				l3 := target.(path);
-				(if l2 then (if (if l3 then IsImmediate(l3)) then ((l2 - (l2 mod 1440)) + (l3 mod 1440)) else (l2 - (l2 mod 1440))))
+				(if totalMinutes2 then (if (if l3 then IsImmediate(l3)) then ((totalMinutes2 - (totalMinutes2 mod 1440)) + (l3 mod 1440)) else (totalMinutes2 - (totalMinutes2 mod 1440))))
 			end)
 	end
 };

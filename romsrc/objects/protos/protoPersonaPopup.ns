@@ -7,24 +7,24 @@ protoPersonaPopup := {
 	viewJustify: vjCenterV,
 	viewSetupFormScript: viewSetupFormScript,
 	SetupText: func() begin
-		local l1, l2;
-		(if (l1 := GetUserConfig('currentPersona)) then begin
-				l2 := ResolveEntryAlias(l1);
-				(text := Stringer([Array: (if (Length(GetUserConfig('personae)) > 1) then $\uFC01), self:PrimaryName(l2)]))
+		local currentPersona, resolveEntryAlias2;
+		(if (currentPersona := GetUserConfig('currentPersona)) then begin
+				resolveEntryAlias2 := ResolveEntryAlias(currentPersona);
+				(text := Stringer([Array: (if (Length(GetUserConfig('personae)) > 1) then $\uFC01), self:PrimaryName(resolveEntryAlias2)]))
 			end else (text := ""))
 	end,
 	JamIt: JamIt,
 	buttonClickScript: func() begin
-		(if (if (l2 := GetUserConfig('personae)) then (Length(l2) > 1)) then begin
-				local l1;
-				local l2;
-				popup := (foreach l3 in l2 collect (if (l1 := self:PrimaryName(ResolveEntryAlias(l3))) then l1 else "(unnamed owner)"));
+		(if (if (personae := GetUserConfig('personae)) then (Length(personae) > 1)) then begin
+				local primaryName;
+				local personae;
+				popup := (foreach item in personae collect (if (primaryName := self:PrimaryName(ResolveEntryAlias(item))) then primaryName else "(unnamed owner)"));
 				inherited:buttonClickScript()
 			end else self:hilite(nil))
 	end,
 	viewDrawScript: viewDrawScript_2,
-	pickActionScript: func(a1) begin
-		SetUserConfig('currentPersona, GetUserConfig('personae)[a1]);
+	pickActionScript: func(index) begin
+		SetUserConfig('currentPersona, GetUserConfig('personae)[index]);
 		UseCurrentPersona();
 		self:hilite(nil)
 	end,

@@ -8,15 +8,15 @@ protoTransportheader := {
 	height: 0,
 	addedHeight: 0,
 	New: func(a1, a2, a3, a4) begin
-		local l1;
-		(l1 := BuildContext(self)).transport := a2;
-		l1.target := a1;
-		l1.icon := a2.icon;
-		l1.description := a2.title;
-		l1.context := a4;
-		l1.bbox := a3;
-		l1:Open();
-		l1
+		local context;
+		(context := BuildContext(self)).transport := a2;
+		context.target := a1;
+		context.icon := a2.icon;
+		context.description := a2.title;
+		context.context := a4;
+		context.bbox := a3;
+		context:Open();
+		context
 	end,
 	viewSetupFormScript: func() begin
 		textWidth := (((displayParams.appAreaWidth - 42) - 10) - 18);
@@ -36,11 +36,11 @@ protoTransportheader := {
 	GetTitle: func() begin
 		transport:GetItemTitle(target)
 	end,
-	addText: func(a1) begin
+	addText: func(text) begin
 		currentOffset := (currentOffset + 1);
 		textWidth := textWidth;
-		a1 := StyledStrTruncate(Clone(a1), textWidth, 1058816);
-		AddArraySlot(pix, self:addTextLine(a1, currentOffset))
+		text := StyledStrTruncate(Clone(text), textWidth, 1058816);
+		AddArraySlot(pix, self:addTextLine(text, currentOffset))
 	end,
 	debug: 46321264,
 	_proto: @newtInfoBox

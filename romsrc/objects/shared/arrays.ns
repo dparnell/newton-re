@@ -29,10 +29,10 @@ page2GutsViewChildren := [|Array|:
 			(self.viewBounds := self:Parent():LocalBox())
 		end,
 		viewSetupChildrenScript: func() begin
-			local l1;
+			local box;
 			if (if (not kids) then data) then begin
-					(l1 := self:LocalBox()).bottom := (l1.bottom - 60);
-					kids := ReFlow(data, '{reflowFont: 12289, unistyle: nil, graphicsGutter: 16, textGutter: -16, viewLineSpacing: 28}, fields.targetBox, l1)
+					(box := self:LocalBox()).bottom := (box.bottom - 60);
+					kids := ReFlow(data, '{reflowFont: tsFancy + tsSize(12), unistyle: nil, graphicsGutter: 16, textGutter: -16, viewLineSpacing: 28}, fields.targetBox, box)
 				end;
 			(if kids then (self.stepChildren := ArrayMunger([Array: ], 0, 0, kids, reflowStart, nil)))
 		end,

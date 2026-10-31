@@ -6,16 +6,16 @@ protoLongLatTextPicker := {
 	longitude: nil,
 	latitude: nil,
 	worldClock: nil,
-	Popit: func(a1) begin
-		local l1;
-		(l1 := self:GlobalBox()).right := (l1.left + a1);
-		@longLatPicker:New(longitude, latitude, worldClock, l1, self)
+	Popit: func(x) begin
+		local box;
+		(box := self:GlobalBox()).right := (box.left + x);
+		@longLatPicker:New(longitude, latitude, worldClock, box, self)
 	end,
 	TextSetup: func() begin
 		Stringer([Array: LatitudeToString(latitude), " ", $ , " ", LongitudeToString(longitude)])
 	end,
-	pickActionScript: func(a1, a2) begin
-		longitude := a1;
+	pickActionScript: func(index, a2) begin
+		longitude := index;
 		latitude := a2;
 		inherited:pickActionScript(nil)
 	end,

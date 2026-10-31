@@ -8,9 +8,9 @@ newtSymbolFilter := {
 		(if IsString(target.(path)) then Clone(target.(path)) else (if textFrame then (if textFramePath then textFrame.(target.(path)).(textFramePath) else textFrame.(target.(path))) else Stringer([Array: target.(path)])))
 	end,
 	TextToPath: func(a1) begin
-		(if ((not StrFilled(a1)) or IsRichString(a1)) then a1 else (if textFrame then (foreach l1, l2 in textFrame do begin
-						if StrEqual((if textFramePath then l2.(textFramePath) else l2), a1) then begin
-								break l1
+		(if ((not StrFilled(a1)) or IsRichString(a1)) then a1 else (if textFrame then (foreach key, value in textFrame do begin
+						if StrEqual((if textFramePath then value.(textFramePath) else value), a1) then begin
+								break key
 							end
 					end) else Intern(a1)))
 	end

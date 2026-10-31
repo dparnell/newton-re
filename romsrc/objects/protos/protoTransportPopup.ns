@@ -44,39 +44,39 @@ protoTransportPopup := {
 		l10 := FontHeight(viewFont);
 		(viewBounds := RelBounds((l8 - l9), (23 - (l10 div 2)), l9, l10))
 	end,
-	PadText: func(a1) begin
-		a1
+	PadText: func(text) begin
+		text
 	end,
 	viewDrawScript: func() begin
 		nil
 	end,
-	viewClickScript: func(a1) begin
-		(if showit then inherited:viewClickScript(a1))
+	viewClickScript: func(unit) begin
+		(if showit then inherited:viewClickScript(unit))
 	end,
 	buttonClickScript: func() begin
 		popup := [Array: ];
 		local l1;
-		(foreach l2 in transports do begin
+		(foreach item in transports do begin
 				local l4;
-				if (if (if (l4 := GetRoot().(l2)) then (l4.group = transport.group)) then SetOverlaps(routingTypes, l4.dataTypes)) then begin
+				if (if (if (l4 := GetRoot().(item)) then (l4.group = transport.group)) then SetOverlaps(routingTypes, l4.dataTypes)) then begin
 						AddArraySlot(popup, {item: l4.title, transportSym: l4.appSymbol})
 					end
 			end);
 		inherited:buttonClickScript()
 	end,
-	pickActionScript: func(a1) begin
-		local l1, l2, l3, l4;
-		if self:?TransportChanged((l1 := EnsureInternal(popup[a1].transportSym))) then begin
+	pickActionScript: func(index) begin
+		local ensureInternal2, transportGroups, l3, item;
+		if self:?TransportChanged((ensureInternal2 := EnsureInternal(popup[index].transportSym))) then begin
 				return inherited:pickCancelledScript()
 			end;
-		if ((l2 := GetUserConfig('transportGroups)) = nil) then begin
-				l2 := {}
+		if ((transportGroups := GetUserConfig('transportGroups)) = nil) then begin
+				transportGroups := {}
 			end;
-		l2.(EnsureInternal(transport.group)) := l1;
-		SetUserConfig('transportGroups, l2);
-		inherited:pickActionScript(a1);
-		(if (transport.appSymbol <> l1) then (if (l3 := GetRoot().(l1)) then begin
-					OpenRoutingSlip((l4 := l3:NewItem(targetView)), base);
+		transportGroups.(EnsureInternal(transport.group)) := ensureInternal2;
+		SetUserConfig('transportGroups, transportGroups);
+		inherited:pickActionScript(index);
+		(if (transport.appSymbol <> ensureInternal2) then (if (l3 := GetRoot().(ensureInternal2)) then begin
+					OpenRoutingSlip((item := l3:NewItem(targetView)), base);
 					base:Close()
 				end))
 	end

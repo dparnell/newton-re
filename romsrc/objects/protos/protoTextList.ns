@@ -13,41 +13,41 @@ protoTextList := {
 	selectedItems: nil,
 	viewFormat: vfFillWhite + vfFrameBlack + vfPen(1),
 	SetupList: func() begin
-		local l1, l2, l3, l4;
+		local shapeBounds2, setViewHeight, copy, box;
 		if (if useMultipleSelections then (not selectedItems)) then begin
 				selectedItems := [Array: ]
 			end;
 		numItems := Length(ListItems);
 		if (if isShapeList then (Length(ListItems) > 0)) then begin
-				lineHeight := (((l1 := ShapeBounds(ListItems[0])).bottom - l1.top) + 1)
+				lineHeight := (((shapeBounds2 := ShapeBounds(ListItems[0])).bottom - shapeBounds2.top) + 1)
 			end else begin
 				lineHeight := FontHeight(viewFont)
 			end;
-		l2 := self:setViewHeight();
-		l3 := Clone(viewBounds);
-		l4 := self:LocalBox();
+		setViewHeight := self:setViewHeight();
+		copy := Clone(viewBounds);
+		box := self:LocalBox();
 		if useMultipleSelections then begin
-				l3.bottom := ((l3.bottom + viewHeight) - l4.bottom)
+				copy.bottom := ((copy.bottom + viewHeight) - box.bottom)
 			end else begin
-				l3.bottom := (l3.top + l2)
+				copy.bottom := (copy.top + setViewHeight)
 			end;
-		self.viewBounds := l3;
-		(viewWidth := l4.right)
+		self.viewBounds := copy;
+		(viewWidth := box.right)
 	end,
 	ShowScrollers: func() begin
 		return (if useScrollers then (self:GetTotalLines() > self:GetVisibleLines()))
 	end,
-	HiliteLine: func(a1) begin
-		local l1;
-		(if useMultipleSelections then (if (if (if a1 then (a1 < numItems)) then (a1 >= 0)) then (if (l1 := SetContains(selectedItems, a1)) then begin
-						ArrayRemoveCount(selectedItems, l1, 1);
-						self:InvertLine(a1, nil)
+	HiliteLine: func(temp) begin
+		local setContains2;
+		(if useMultipleSelections then (if (if (if temp then (temp < numItems)) then (temp >= 0)) then (if (setContains2 := SetContains(selectedItems, temp)) then begin
+						ArrayRemoveCount(selectedItems, setContains2, 1);
+						self:InvertLine(temp, nil)
 					end else begin
-						AddArraySlot(selectedItems, a1);
-						self:InvertLine(a1, true)
-					end)) else (if (Selection <> a1) then begin
+						AddArraySlot(selectedItems, temp);
+						self:InvertLine(temp, true)
+					end)) else (if (Selection <> temp) then begin
 					self:InvertLine(Selection, nil);
-					self:InvertLine((Selection := a1), true)
+					self:InvertLine((Selection := temp), true)
 				end))
 	end,
 	viewHeight: 0,
@@ -73,19 +73,19 @@ protoTextList := {
 		constants: {
 			kLiteral_3c5eed: '{transferMode: 2, penPattern: 0, fillPattern: 5}
 		},
-		func(a1, a2) begin
-			local l1, l2, l3;
-			(if (if (if a1 then (a1 < numItems)) then (a1 >= 0)) then (if (if ((l1 := (a1 * lineHeight)) >= viewOriginY) then (l1 < (viewOriginY + viewHeight))) then (if useMultipleSelections then begin
+		func(selection, setContains) begin
+			local l1, rect, region;
+			(if (if (if selection then (selection < numItems)) then (selection >= 0)) then (if (if ((l1 := (selection * lineHeight)) >= viewOriginY) then (l1 < (viewOriginY + viewHeight))) then (if useMultipleSelections then begin
 							l1 := (l1 - viewOriginY);
-							(if a2 then self:DoDrawing('CopyBits, [Array: CheckOn, 4, l1, 0]) else self:DoDrawing('CopyBits, [Array: CheckOff, 4, l1, 0]))
+							(if setContains then self:DoDrawing('CopyBits, [Array: CheckOn, 4, l1, 0]) else self:DoDrawing('CopyBits, [Array: CheckOff, 4, l1, 0]))
 						end else (if self:ShowScrollers() then begin
 								l1 := (l1 - viewOriginY);
-								l3 := MakeRegion([Array: (l2 := MakeRect(0, l1, viewWidth, (l1 + lineHeight))), MakeRect((viewWidth + textListScrollers.viewBounds.left), textListScrollers.viewBounds.top, viewWidth, textListScrollers.viewBounds.bottom)]);
-								self:DrawShape(l2, {_proto: kLiteral_3c5eed, clipping: l3})
+								region := MakeRegion([Array: (rect := MakeRect(0, l1, viewWidth, (l1 + lineHeight))), MakeRect((viewWidth + textListScrollers.viewBounds.left), textListScrollers.viewBounds.top, viewWidth, textListScrollers.viewBounds.bottom)]);
+								self:DrawShape(rect, {_proto: kLiteral_3c5eed, clipping: region})
 							end else begin
 								l1 := (l1 - viewOriginY);
-								l2 := MakeRect(0, l1, viewWidth, (l1 + lineHeight));
-								self:DoDrawing('DrawShape, [Array: l2, kLiteral_3c5eed])
+								rect := MakeRect(0, l1, viewWidth, (l1 + lineHeight));
+								self:DoDrawing('DrawShape, [Array: rect, kLiteral_3c5eed])
 							end))))
 		end),
 	CheckOff: CheckOff,
@@ -102,19 +102,19 @@ protoTextList := {
 		return viewLines
 	end,
 	isShapeList: nil,
-	viewClickScript: func(a1) begin
-		local l1, l2, l3;
-		InkOff(a1);
+	viewClickScript: func(unit) begin
+		local box, l2, l3;
+		InkOff(unit);
 		self:Dirty();
 		RefreshViews();
-		l1 := self:GlobalBox();
+		box := self:GlobalBox();
 		l3 := -1;
 		(loop begin
-				x := GetPoint(4, a1);
-				if ((l2 := (GetPoint(5, a1) - l1.top)) > 0) then begin
+				x := GetPoint(4, unit);
+				if ((l2 := (GetPoint(5, unit) - box.top)) > 0) then begin
 						l2 := (l2 div lineHeight)
 					end;
-				if (((numItems = 0) or (x < l1.left)) or (x > l1.right)) then begin
+				if (((numItems = 0) or (x < box.left)) or (x > box.right)) then begin
 						l2 := -1
 					end else begin
 						if (l2 < 0) then begin
@@ -143,7 +143,7 @@ protoTextList := {
 						self:HiliteLine((l2 + (viewOriginY div lineHeight)));
 						l3 := l2
 					end;
-				(if StrokeDone(a1) then break)
+				(if StrokeDone(unit) then break)
 			end);
 		(if (l2 >= 0) then self:buttonClickScript((Selection := (l2 + (viewOriginY div lineHeight)))))
 	end,
@@ -163,8 +163,8 @@ protoTextList := {
 	viewFont: @fontSystem10,
 	drawHilite: func() begin
 		local l1;
-		(if useMultipleSelections then (for l2 := (l1 := (viewOriginY div lineHeight)) to ((l1 + viewLines) - 1) do begin
-					self:InvertLine(l2, SetContains(selectedItems, l2))
+		(if useMultipleSelections then (for i := (l1 := (viewOriginY div lineHeight)) to ((l1 + viewLines) - 1) do begin
+					self:InvertLine(i, SetContains(selectedItems, i))
 				end) else self:InvertLine(Selection, true))
 	end,
 	viewLines: 0,
@@ -198,11 +198,11 @@ textList := {
 				self.inset := 18
 			end;
 		TextBase:SetChild(self);
-		local l1;
-		(foreach l2 in ListItems do begin
-				l1 := Stringer([Array: l1, l2, "\n"])
+		local text;
+		(foreach item in ListItems do begin
+				text := Stringer([Array: text, item, "\n"])
 			end);
-		self.text := l1;
+		self.text := text;
 		(self.viewBounds := SetBounds(inset, 0, 1000, (Length(ListItems) * self:GetLineHeight())))
 	end,
 	viewDrawScript: func() begin
@@ -223,22 +223,22 @@ pictList := {
 				self.inset := 18
 			end;
 		TextBase:SetChild(self);
-		l1 := [Array: {font: viewFont}];
-		l2 := self:GetLineHeight();
-		l3 := FontAscent(viewFont);
+		list := [Array: {font: viewFont}];
+		lineHeight := self:GetLineHeight();
+		fontAscent2 := FontAscent(viewFont);
 		l4 := 0;
-		local l1;
-		local l2;
-		local l3;
+		local list;
+		local lineHeight;
+		local fontAscent2;
 		local l4;
-		(foreach l5 in ListItems do begin
-				local l7;
-				OffsetShape((l7 := Clone(l5)), 0, l4);
-				AddArraySlot(l1, l7);
-				l4 := (l4 + l2)
+		(foreach item in ListItems do begin
+				local copy;
+				OffsetShape((copy := Clone(item)), 0, l4);
+				AddArraySlot(list, copy);
+				l4 := (l4 + lineHeight)
 			end);
-		self.icon := l1;
-		(self.viewBounds := SetBounds(inset, 0, (-inset), (Length(ListItems) * l2)))
+		self.icon := list;
+		(self.viewBounds := SetBounds(inset, 0, (-inset), (Length(ListItems) * lineHeight)))
 	end,
 	viewDrawScript: func() begin
 		self:Parent():drawHilite()
@@ -259,14 +259,14 @@ textListScrollers := {
 	scrollersHidden: nil,
 	scrollersSetup: nil,
 	SetupScrollers: func() begin
-		local l1, l2;
+		local totalLines, bounds;
 		self.scrollersSetup := true;
-		l1 := TextBase:GetTotalLines();
-		(if (totalItems <> l1) then begin
-				self.totalItems := l1;
-				l2 := SetBounds(0, 0, 0, l1);
-				self.ScrollRect := l2;
-				self.DataRect := l2;
+		totalLines := TextBase:GetTotalLines();
+		(if (totalItems <> totalLines) then begin
+				self.totalItems := totalLines;
+				bounds := SetBounds(0, 0, 0, totalLines);
+				self.ScrollRect := bounds;
+				self.DataRect := bounds;
 				if TextBase.ScrollAmounts then begin
 						self.ScrollAmounts := TextBase.ScrollAmounts
 					end;
@@ -274,19 +274,19 @@ textListScrollers := {
 			end)
 	end,
 	viewSetupFormScript: func() begin
-		local l1, l2, l3, l4;
+		local l1, viewHeight, copy, visibleLines;
 		if (not scrollersSetup) then begin
 				self.savedViewFlags := viewFlags;
 				l1 := (viewBounds.bottom - viewBounds.top);
-				l2 := TextBase:GetViewHeight();
-				(l3 := Clone(viewBounds)).top := ((l2 div 2) - (l1 div 2));
-				l3.bottom := (l3.top + l1);
-				l3.left := l3.left;
-				l3.right := l3.right;
-				self.viewBounds := l3;
+				viewHeight := TextBase:GetViewHeight();
+				(copy := Clone(viewBounds)).top := ((viewHeight div 2) - (l1 div 2));
+				copy.bottom := (copy.top + l1);
+				copy.left := copy.left;
+				copy.right := copy.right;
+				self.viewBounds := copy;
 				self.viewJustify := anchoredViewJustify;
-				if ((l4 := TextBase:GetVisibleLines()) > 0) then begin
-						self.ViewRect := SetBounds(0, 0, 0, l4);
+				if ((visibleLines := TextBase:GetVisibleLines()) > 0) then begin
+						self.ViewRect := SetBounds(0, 0, 0, visibleLines);
 						self:SetupScrollers()
 					end
 			end;
@@ -296,13 +296,13 @@ textListScrollers := {
 		self:ShowHideScrollers();
 		inherited:?viewSetupDoneScript()
 	end,
-	viewScroll2DScript: func(a1, a2) begin
+	viewScroll2DScript: func(arrowDirection, a2) begin
 		inScrollArrow := true;
-		(for l1 := 1 to abs(a2.amount) do begin
-				if (a1 = 'up) then begin
+		(for i := 1 to abs(a2.amount) do begin
+				if (arrowDirection = 'up) then begin
 						TextBase:viewScrollUpScript()
 					end else begin
-						if (a1 = 'down) then begin
+						if (arrowDirection = 'down) then begin
 								TextBase:viewScrollDownScript()
 							end
 					end

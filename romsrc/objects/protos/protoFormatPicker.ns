@@ -14,16 +14,16 @@ protoFormatPicker := {
 	end,
 	TextSetup: func() begin
 		if GetVariable(self, 'formats) then begin
-				labelCommands := (foreach l1 in formats collect l1.title);
+				labelCommands := (foreach item in formats collect item.title);
 				if activeFormat then begin
 						return activeFormat.title
 					end
 			end;
 		"Format Missing"
 	end,
-	LabelActionScript: func(a1) begin
+	LabelActionScript: func(index) begin
 		local l1;
-		activeFormat := formats[a1];
+		activeFormat := formats[index];
 		fields.currentFormat := activeFormat.symbol;
 		if (fields.currentFormat = nil) then begin
 				Throw('|evt.ex.msg|, "Format is missing symbol")

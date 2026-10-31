@@ -9,48 +9,48 @@ export35 := {
 			viewBounds: {left: 0, top: 20, right: 0, bottom: 0},
 			viewJustify: vjParentFullH + vjParentFullV,
 			forceNewEntry: nil,
-			Abstract: func(a1, a2) begin
-				local l1, l2, l3, l4, l5, l6, l7, l8, l9;
-				l5 := "";
-				l6 := a2.left;
-				l7 := a2.right;
-				l8 := a2.top;
-				l9 := (a2.bottom - 2);
-				if (if (not hilitedIndex) then (a1 = hiliteEntry)) then begin
+			Abstract: func(items2Item, copy) begin
+				local dataDefs, stringExtract, pos, part, text, left, right, top, l9;
+				text := "";
+				left := copy.left;
+				right := copy.right;
+				top := copy.top;
+				l9 := (copy.bottom - 2);
+				if (if (not hilitedIndex) then (items2Item = hiliteEntry)) then begin
 						hilitedIndex := hiliteCount
 					end;
-				if a1.class then begin
-						l1 := GetDataDefs(a1.class)
+				if items2Item.class then begin
+						dataDefs := GetDataDefs(items2Item.class)
 					end else begin
-						if (ClassOf(a1.sorton) = 'name) then begin
-								l1 := GetDataDefs('person)
+						if (ClassOf(items2Item.sorton) = 'name) then begin
+								dataDefs := GetDataDefs('person)
 							end else begin
-								l1 := GetDataDefs('company)
+								dataDefs := GetDataDefs('company)
 							end
 					end;
-				(if l1 then begin
+				(if dataDefs then begin
 						hiliteCount := (hiliteCount + 1);
-						if (l3 := StrPos((l2 := l1:StringExtract(a1, 2)), "\n", 0)) then begin
-								l4 := Substr(l2, 0, l3);
-								l5 := Substr(l2, l3, Length(l2));
-								phoneIndent := (l7 - 95)
+						if (pos := StrPos((stringExtract := dataDefs:StringExtract(items2Item, 2)), "\n", 0)) then begin
+								part := Substr(stringExtract, 0, pos);
+								text := Substr(stringExtract, pos, Length(stringExtract));
+								phoneIndent := (right - 95)
 							end else begin
-								l4 := l2;
-								phoneIndent := l7
+								part := stringExtract;
+								phoneIndent := right
 							end;
-						[Array: OffsetShape(MakeShape(l1.overviewIcon), l6, l8), MakeText(l4, (l6 + 20), l8, phoneIndent, l9), MakeText(l5, phoneIndent, l8, l7, l9)]
-					end else inherited:Abstract(a1, a2))
+						[Array: OffsetShape(MakeShape(dataDefs.overviewIcon), left, top), MakeText(part, (left + 20), top, phoneIndent, l9), MakeText(text, phoneIndent, top, right, l9)]
+					end else inherited:Abstract(items2Item, copy))
 			end,
-			HitItem: func(a1, a2, a3) begin
-				local l1, l2, l3;
-				(if (if (a2 > phoneIndent) then (newtAppBase.superSymbol <> 'ownerNames)) then begin
-						l2 := cursor:clone();
-						(if (if HasSlot((l3 := l2:Move(a1)), 'phones) then (Length(l3.phones) > 0)) then begin
-								self.hilitItem := l3;
-								call kDoCallSlip with (self, l3, l3.phones[0]);
+			HitItem: func(a1, trackScrollingItem, trackScrollingItem2) begin
+				local l1, copy, move;
+				(if (if (trackScrollingItem > phoneIndent) then (newtAppBase.superSymbol <> 'ownerNames)) then begin
+						copy := cursor:clone();
+						(if (if HasSlot((move := copy:Move(a1)), 'phones) then (Length(move.phones) > 0)) then begin
+								self.hilitItem := move;
+								call kDoCallSlip with (self, move, move.phones[0]);
 								(self.hilitItem := nil)
-							end else inherited:HitItem(a1, a2, a3))
-					end else inherited:HitItem(a1, a2, a3))
+							end else inherited:HitItem(a1, trackScrollingItem, trackScrollingItem2))
+					end else inherited:HitItem(a1, trackScrollingItem, trackScrollingItem2))
 			end,
 			lineHeight: 12,
 			GetTargetInfo: func(a1) begin
@@ -62,20 +62,20 @@ export35 := {
 				(target := dataCursor:entry())
 			end,
 			checkBoxVertOffset: -1,
-			Scroller: func(a1) begin
-				inherited:Scroller(a1);
+			Scroller: func(maxLines) begin
+				inherited:Scroller(maxLines);
 				self:Retarget(nil)
 			end,
 			viewSetupDoneScript: func() begin
 				(bookmark := nil)
 			end,
-			newEntry: func(a1, a2, a3) begin
-				masterSoup:AddEntry(a1, a3);
-				if a2 then begin
+			newEntry: func(a1, _context, store) begin
+				masterSoup:AddEntry(a1, store);
+				if _context then begin
 						dataCursor:Goto(a1)
 					end;
 				AddUndoSend(layout, 'KillEntry, [Array: a1]);
-				(if a2 then layout:NewTarget() else layout:Retarget(true))
+				(if _context then layout:NewTarget() else layout:Retarget(true))
 			end,
 			viewSetupFormScript: func() begin
 				if (superSymbol = 'ownerNames) then begin

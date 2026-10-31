@@ -1,14 +1,14 @@
 // export91, and what only it reaches
 
 export91 := func(a1) begin
-	local l1, l2;
+	local name, countryEntry;
 	if (if a1 then a1.country) then begin
-			if (if (l2 := GetCountryEntry(a1.country)) then (Length(l2) > 0)) then begin
-					l1 := l2[0].name
+			if (if (countryEntry := GetCountryEntry(a1.country)) then (Length(countryEntry) > 0)) then begin
+					name := countryEntry[0].name
 				end
 		end;
-	if (not l1) then begin
-			l1 := "USA"
+	if (not name) then begin
+			name := "USA"
 		end;
-	return l1
+	return name
 end;

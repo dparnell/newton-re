@@ -6,20 +6,20 @@ protoExtrasControlButton := {
 	viewFlags: vVisible + vClickable,
 	viewJustify: vjParentCenterH + vjParentCenterV,
 	viewSetupFormScript: func() begin
-		local l1, l2, l3, l4;
-		l1 := displayParams.buttonBarPosition;
-		l2 := displayParams.bellyButtonPosition;
-		l3 := displayParams.buttonBarControlsPosition;
-		if (l2 = 'outside) then begin
-				l2 := (if ((l1 = 'right) or (l3 = 'right)) then 'right else 'left)
+		local buttonBarPosition, bellyButtonPosition, buttonBarControlsPosition, viewBounds;
+		buttonBarPosition := displayParams.buttonBarPosition;
+		bellyButtonPosition := displayParams.bellyButtonPosition;
+		buttonBarControlsPosition := displayParams.buttonBarControlsPosition;
+		if (bellyButtonPosition = 'outside) then begin
+				bellyButtonPosition := (if ((buttonBarPosition = 'right) or (buttonBarControlsPosition = 'right)) then 'right else 'left)
 			end else begin
-				if (l2 = 'inside) then begin
-						l2 := (if ((l1 = 'left) or (l3 = 'left)) then 'right else 'left)
+				if (bellyButtonPosition = 'inside) then begin
+						bellyButtonPosition := (if ((buttonBarPosition = 'left) or (buttonBarControlsPosition = 'left)) then 'right else 'left)
 					end
 			end;
-		(if (l2 = 'right) then begin
-				l4 := self._proto.viewBounds;
-				(self.viewBounds := RelBounds((-l4.left), l4.top, (l4.right - l4.left), (l4.bottom - l4.top)))
+		(if (bellyButtonPosition = 'right) then begin
+				viewBounds := self._proto.viewBounds;
+				(self.viewBounds := RelBounds((-viewBounds.left), viewBounds.top, (viewBounds.right - viewBounds.left), (viewBounds.bottom - viewBounds.top)))
 			end)
 	end,
 	viewDrawScript: func() begin
@@ -27,37 +27,37 @@ protoExtrasControlButton := {
 		l1 := (BAnd(GetViewFlags(self), 33554432) <> 0);
 		self:CopyBits(iconPro.((if l1 then 'hilited else 'unhilited)), 0, 0, 8)
 	end,
-	viewClickScript: func(a1) begin
-		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
-		InkOff(a1);
+	viewClickScript: func(unit) begin
+		local box, l2, top, hilited, l5, l6, y2, pt, l9, y, l11;
+		InkOff(unit);
 		clicker();
-		l2 := (l1 := self:GlobalBox()).left;
-		l3 := l1.top;
+		l2 := (box := self:GlobalBox()).left;
+		top := box.top;
 		self:hilite(true);
 		RefreshViews();
-		l4 := iconPro.hilited;
+		hilited := iconPro.hilited;
 		l5 := true;
 		(repeat if l5 then begin
 					self:?buttonPressedScript()
-				end; l9 := (l8 := GetPoint(8, a1)).x; l10 := l8.y; if ((l9 <> l6) or (l10 <> l7)) then begin
-					l11 := (PtInPicture((l9 - l2), (l10 - l3), l4) <> nil);
+				end; l9 := (pt := GetPoint(8, unit)).x; y := pt.y; if ((l9 <> l6) or (y <> y2)) then begin
+					l11 := (PtInPicture((l9 - l2), (y - top), hilited) <> nil);
 					if (l5 <> l11) then begin
 							self:hilite(l11);
 							RefreshViews();
 							l5 := l11;
-							l4 := iconPro.((if l11 then 'hilited else 'unhilited))
+							hilited := iconPro.((if l11 then 'hilited else 'unhilited))
 						end;
 					l6 := l9;
-					l7 := l10
-				end until StrokeDone(a1));
+					y2 := y
+				end until StrokeDone(unit));
 		if l5 then begin
 				self:hilite(nil);
 				self:?buttonClickScript()
 			end;
 		true
 	end,
-	viewHiliteScript: func(a1) begin
-		if a1 then begin
+	viewHiliteScript: func(on) begin
+		if on then begin
 				if self.justHilited then begin
 						RemoveSlot(self, 'justHilited)
 					end else begin

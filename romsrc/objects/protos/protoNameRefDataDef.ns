@@ -17,65 +17,65 @@ protoNameRefDataDef := {
 	_edited: nil,
 	_selectOnly: nil,
 	editTitle: "New Item",
-	PopVal: func(a1) begin
-		a1.value
+	PopVal: func(popupItem) begin
+		popupItem.value
 	end,
-	NewEntry: func(a1, a2) begin
-		local l1, l2;
-		(if (l1 := a2:GetStoreSoup()) then begin
-				l2 := self:PrepareToAdd(a1);
-				if IsInstance(l1, 'UnionSoup) then begin
-						l1:AddToDefaultStoreXmit(l2, 'entryAdded)
+	NewEntry: func(a1, _context) begin
+		local storeSoup, prepareToAdd;
+		(if (storeSoup := _context:GetStoreSoup()) then begin
+				prepareToAdd := self:PrepareToAdd(a1);
+				if IsInstance(storeSoup, 'UnionSoup) then begin
+						storeSoup:AddToDefaultStoreXmit(prepareToAdd, 'entryAdded)
 					end else begin
-						l1:AddXmit(l2, 'entryAdded)
+						storeSoup:AddXmit(prepareToAdd, 'entryAdded)
 					end;
-				(if IsSoupEntry(l2) then self:FixupPostAdd(a1, l2))
+				(if IsSoupEntry(prepareToAdd) then self:FixupPostAdd(a1, prepareToAdd))
 			end)
 	end,
 	GetPrimaryPath: func(a1) begin
 		nil
 	end,
-	Validate: func(a1, a2) begin
-		(if validationFrame then ValidityCheck(a1, validationFrame, a2, nil, nil) else begin
-				l1 := [Array: ];
-				local l1;
-				(foreach l2 in a2 do begin
-						if (not a1.(l2)) then begin
-								AddArraySlot(l1, l2)
+	Validate: func(nameRef, a2) begin
+		(if validationFrame then ValidityCheck(nameRef, validationFrame, a2, nil, nil) else begin
+				list := [Array: ];
+				local list;
+				(foreach item in a2 do begin
+						if (not nameRef.(item)) then begin
+								AddArraySlot(list, item)
 							end
 					end);
-				l1
+				list
 			end)
 	end,
-	ModifyEntry: func(a1, a2) begin
-		if (l1 := EntryFromObj(a1)) then begin
-				local l1;
-				(foreach l2 in a2 do begin
-						l1.(l2) := a1.(l2)
+	ModifyEntry: func(nameRef, equivalent) begin
+		if (entryFromObj2 := EntryFromObj(nameRef)) then begin
+				local entryFromObj2;
+				(foreach item in equivalent do begin
+						entryFromObj2.(item) := nameRef.(item)
 					end);
-				EntryChangeXmit(l1, 'entryChanged)
+				EntryChangeXmit(entryFromObj2, 'entryChanged)
 			end;
-		l1
+		entryFromObj2
 	end,
 	GetSuffix: func(a1) begin
 		return nil
 	end,
-	Equivalent: func(a1, a2, a3) begin
-		l1 := [Array: ];
-		local l1;
-		(foreach l2 in a3 do begin
-				if ((not (if (if IsInstance(a1.(l2), 'string) then IsInstance(a2.(l2), 'string)) then StrEqual(a1.(l2), a2.(l2)))) or (a1.(l2) <> a2.(l2))) then begin
-						AddArraySlot(l1, l2)
+	Equivalent: func(nameRef, _dirtyValues, _dirtyPaths) begin
+		list := [Array: ];
+		local list;
+		(foreach item in _dirtyPaths do begin
+				if ((not (if (if IsInstance(nameRef.(item), 'string) then IsInstance(_dirtyValues.(item), 'string)) then StrEqual(nameRef.(item), _dirtyValues.(item)))) or (nameRef.(item) <> _dirtyValues.(item))) then begin
+						AddArraySlot(list, item)
 					end
 			end);
-		l1
+		list
 	end,
 	Get: compile(
 		constants: {
 			kLiteral_450465: SetClass(Clone("--"), '|string.noData|)
 		},
 		func(a1, a2, a3) begin
-			local l1;
+			local objSlot;
 			if (if (not a1) then ((a3 = 'text) or (a3 = 'sortText))) then begin
 					return ""
 				end else begin
@@ -83,88 +83,88 @@ protoNameRefDataDef := {
 							return nil
 						end
 				end;
-			l1 := self:GetObjSlot(a1, a2);
-			(if ((a3 = 'text) or (a3 = 'sortText)) then (if l1 then (if IsInstance(l1, 'string) then return l1 else return SPrintObject(l1)) else return kLiteral_450465) else l1)
+			objSlot := self:GetObjSlot(a1, a2);
+			(if ((a3 = 'text) or (a3 = 'sortText)) then (if objSlot then (if IsInstance(objSlot, 'string) then return objSlot else return SPrintObject(objSlot)) else return kLiteral_450465) else objSlot)
 		end),
-	MakeCanonicalNameRef: func(a1, a2) begin
-		local l1, l2, l3, l4;
-		l1 := (if a2 then a2 else ClassOf(self));
-		l2 := EntryFromObj(a1);
-		l3 := (if IsFrame(a1) then a1 else '{});
-		if (not (l4 := {class: l1, _alias: AliasFromObj(a1), _entryClass: ObjEntryClass(a1), _Unselected: l3._Unselected, _fakeID: l3._fakeID, labels: l3.labels})._entryClass) then begin
-				l4._entryClass := entryType
+	MakeCanonicalNameRef: func(frame3, cls) begin
+		local l1, entryFromObj2, l3, frame2;
+		l1 := (if cls then cls else ClassOf(self));
+		entryFromObj2 := EntryFromObj(frame3);
+		l3 := (if IsFrame(frame3) then frame3 else '{});
+		if (not (frame2 := {class: l1, _alias: AliasFromObj(frame3), _entryClass: ObjEntryClass(frame3), _Unselected: l3._Unselected, _fakeID: l3._fakeID, labels: l3.labels})._entryClass) then begin
+				frame2._entryClass := entryType
 			end;
-		l4
+		frame2
 	end,
-	MakePopup: func(a1, a2) begin
+	MakePopup: func(a1, fieldPath) begin
 		nil
 	end,
-	FixupPostAdd: func(a1, a2) begin
-		a1._alias := MakeEntryAlias(a2);
-		(a1._entryClass := ClassOf(a2))
+	FixupPostAdd: func(a1, addcard) begin
+		a1._alias := MakeEntryAlias(addcard);
+		(a1._entryClass := ClassOf(addcard))
 	end,
 	New: func(a1, a2) begin
 		_tapinfo := a1;
 		_context := a2;
 		(if self.OpenEditor then self:OpenEditor(a1, a2, 'New) else self:DefaultOpenEditor(a1, a2, 'New))
 	end,
-	pickCancelledScript: func(a1, a2) begin
+	pickCancelledScript: func(fTapinfo, a2) begin
 		a2:Tapped(nil)
 	end,
 	PrepareToAdd: func(a1) begin
-		local l1, l2;
-		l1 := ObjEntryClass(a1);
-		(l2 := Clone(a1)).class := (if l1 then l1 else entryType);
-		RemoveSlot(l2, '_alias);
-		RemoveSlot(l2, '_entryClass);
-		RemoveSlot(l2, '_Unselected);
-		RemoveSlot(l2, '_fakeID);
-		l2
+		local objEntryClass2, copy;
+		objEntryClass2 := ObjEntryClass(a1);
+		(copy := Clone(a1)).class := (if objEntryClass2 then objEntryClass2 else entryType);
+		RemoveSlot(copy, '_alias);
+		RemoveSlot(copy, '_entryClass);
+		RemoveSlot(copy, '_Unselected);
+		RemoveSlot(copy, '_fakeID);
+		copy
 	end,
-	HitItem: func(a1, a2) begin
-		local l1, l2, l3;
-		self._context := a2;
+	HitItem: func(a1, trackScrollingItem) begin
+		local popup, box, bounds;
+		self._context := trackScrollingItem;
 		self._tapinfo := a1;
 		self._selectOnly := nil;
-		(if (l1 := self:MakePopup(a1.nameRef, a1.fieldPath)) then begin
-				a1.popup := l1;
-				l2 := a2:GlobalBox();
-				l3 := SetBounds((a1.bbox.left + 13), (a1.bbox.bottom - l2.top), (a1.bbox.left + 13), (a1.bbox.bottom - l2.top));
-				a2:PopupMenu(l1, {bounds: l3})
-			end else (if self.OpenEditor then self:OpenEditor(a1, a2, 'edit) else (if (if validationFrame then a1.nameRef._Unselected) then self:DefaultOpenEditor(a1, a2, 'edit) else a2:Tapped('Toggle))))
+		(if (popup := self:MakePopup(a1.nameRef, a1.fieldPath)) then begin
+				a1.popup := popup;
+				box := trackScrollingItem:GlobalBox();
+				bounds := SetBounds((a1.bbox.left + 13), (a1.bbox.bottom - box.top), (a1.bbox.left + 13), (a1.bbox.bottom - box.top));
+				trackScrollingItem:PopupMenu(popup, {bounds: bounds})
+			end else (if self.OpenEditor then self:OpenEditor(a1, trackScrollingItem, 'edit) else (if (if validationFrame then a1.nameRef._Unselected) then self:DefaultOpenEditor(a1, trackScrollingItem, 'edit) else trackScrollingItem:Tapped('Toggle))))
 	end,
 	GetObjSlot: func(a1, a2) begin
-		local l1;
+		local entryFromObj2;
 		if (not a1) then begin
 				return nil
 			end;
 		if IsNameRef(a1) then begin
-				l1 := EntryFromObj(a1)
+				entryFromObj2 := EntryFromObj(a1)
 			end;
-		if ((not l1) or (not HasSlot(l1, a2))) then begin
-				l1 := a1;
+		if ((not entryFromObj2) or (not HasSlot(entryFromObj2, a2))) then begin
+				entryFromObj2 := a1;
 				if IsEntryAlias(a1) then begin
-						l1 := ResolveEntryAlias(a1)
+						entryFromObj2 := ResolveEntryAlias(a1)
 					end;
-				if (not l1) then begin
-						l1 := a1
+				if (not entryFromObj2) then begin
+						entryFromObj2 := a1
 					end
 			end;
-		l1.(a2)
+		entryFromObj2.(a2)
 	end,
-	pickActionScript: func(a1, a2, a3) begin
-		local l1, l2, l3, l4;
-		l1 := a2.popup;
-		l2 := a2.nameRef;
-		l3 := a2.fieldPath;
-		(if (if ((l4 := self:PopVal(l1[a1])) = 'OpenEditor) then (self.OpenEditor or validationFrame)) then begin
-				a2.cryoNameRefData := DeepClone(l2.(l3));
-				l2.(l3) := nil;
-				a2.editPaths := [Array: l3];
+	pickActionScript: func(index, a2, a3) begin
+		local popup, nameRef, fieldPath, popVal;
+		popup := a2.popup;
+		nameRef := a2.nameRef;
+		fieldPath := a2.fieldPath;
+		(if (if ((popVal := self:PopVal(popup[index])) = 'OpenEditor) then (self.OpenEditor or validationFrame)) then begin
+				a2.cryoNameRefData := DeepClone(nameRef.(fieldPath));
+				nameRef.(fieldPath) := nil;
+				a2.editPaths := [Array: fieldPath];
 				_selectOnly := true;
 				(if self.OpenEditor then self:OpenEditor(a2, a3, 'edit) else self:DefaultOpenEditor(a2, a3, 'edit))
 			end else begin
-				l2.(l3) := l4;
+				nameRef.(fieldPath) := popVal;
 				a3:Tapped('select);
 				_tapinfo := nil;
 				_dirtyPaths := nil;
@@ -172,10 +172,10 @@ protoNameRefDataDef := {
 			end)
 	end,
 	defaultNewDone: func(a1) begin
-		local l1, l2;
-		if (l2 := (Length(self:Validate((l1 := _tapinfo.nameRef), _tapinfo.editPaths)) <> Length(_tapinfo.editPaths))) then begin
-				self:NewEntry(l1, _context);
-				_context:insert(l1, (if l2 then 'select))
+		local nameRef, l2;
+		if (l2 := (Length(self:Validate((nameRef := _tapinfo.nameRef), _tapinfo.editPaths)) <> Length(_tapinfo.editPaths))) then begin
+				self:NewEntry(nameRef, _context);
+				_context:insert(nameRef, (if l2 then 'select))
 			end else begin
 				_context:Tapped(nil)
 			end;
@@ -183,36 +183,36 @@ protoNameRefDataDef := {
 		_dirtyPaths := nil;
 		(_dirtyValues := nil)
 	end,
-	DefaultOpenEditor: func(a1, a2, a3) begin
-		l1 := {titleText: editTitle, context: self, receiver: self, message: '{edit: defaultEditDone, New: defaultNewDone}.(a3)};
-		l2 := a1.nameRef;
+	DefaultOpenEditor: func(a1, trackScrollingItem, a3) begin
+		frame2 := {titleText: editTitle, context: self, receiver: self, message: '{edit: defaultEditDone, New: defaultNewDone}.(a3)};
+		nameRef := a1.nameRef;
 		self._subclass := (if preferredRouting then preferredRouting[0]);
-		self._dirtyPaths := self:Validate(l2, a1.editPaths);
+		self._dirtyPaths := self:Validate(nameRef, a1.editPaths);
 		_edited := (Length(_dirtyPaths) > 0);
-		l3 := ValidateConfigGuts(l2, validationFrame, a1.editPaths, l1);
+		validateConfigGuts2 := ValidateConfigGuts(nameRef, validationFrame, a1.editPaths, frame2);
 		if _edited then begin
 				self._dirtyValues := {};
-				local l1;
-				local l2;
-				local l3;
-				(foreach l4 in _dirtyPaths do begin
-						self._dirtyValues.(l4) := DeepClone(l2.(l4))
+				local frame2;
+				local nameRef;
+				local validateConfigGuts2;
+				(foreach item in _dirtyPaths do begin
+						self._dirtyValues.(item) := DeepClone(nameRef.(item))
 					end)
 			end;
-		l3.slip
+		validateConfigGuts2.slip
 	end,
 	defaultEditDone: func(a1) begin
-		local l1, l2, l3, l4;
-		l1 := _tapinfo.nameRef;
-		l2 := _tapinfo.fieldPath;
+		local nameRef, fieldPath, l3, equivalent;
+		nameRef := _tapinfo.nameRef;
+		fieldPath := _tapinfo.fieldPath;
 		l3 := nil;
 		if _edited then begin
-				if (if _tapinfo.cryoNameRefData then (not l1.(l2))) then begin
-						l1.(l2) := _tapinfo.cryoNameRefData;
+				if (if _tapinfo.cryoNameRefData then (not nameRef.(fieldPath))) then begin
+						nameRef.(fieldPath) := _tapinfo.cryoNameRefData;
 						l3 := true
 					end else begin
-						if (Length((l4 := self:Equivalent(l1, _dirtyValues, _dirtyPaths))) > 0) then begin
-								self:ModifyEntry(l1, l4)
+						if (Length((equivalent := self:Equivalent(nameRef, _dirtyValues, _dirtyPaths))) > 0) then begin
+								self:ModifyEntry(nameRef, equivalent)
 							end else begin
 								l3 := true
 							end
@@ -223,16 +223,16 @@ protoNameRefDataDef := {
 		_dirtyPaths := nil;
 		(_dirtyValues := nil)
 	end,
-	MakeNameRef: func(a1, a2) begin
-		l1 := self:MakeCanonicalNameRef(a1, a2);
-		if IsFrame(a1) then begin
-				local l1;
-				(foreach l2 in columns do begin
-						local l4;
-						l4 := l2.fieldPath;
-						l1.(l4) := a1.(l4)
+	MakeNameRef: func(frame2, cls) begin
+		canonicalNameRef := self:MakeCanonicalNameRef(frame2, cls);
+		if IsFrame(frame2) then begin
+				local canonicalNameRef;
+				(foreach item in columns do begin
+						local fieldPath;
+						fieldPath := item.fieldPath;
+						canonicalNameRef.(fieldPath) := frame2.(fieldPath)
 					end)
 			end;
-		l1
+		canonicalNameRef
 	end
 };

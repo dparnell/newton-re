@@ -8,61 +8,61 @@ export46 := {
 			end)
 	end,
 	viewSetupChildrenScript: func() begin
-		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12, l13, l14;
-		l5 := (l4 := self:LocalBox()).right;
-		l6 := l4.bottom;
+		local l1, l2, l3, box, l5, bottom, layout, l8, addHeader, right, addPrintChild, count, l13, count2;
+		l5 := (box := self:LocalBox()).right;
+		bottom := box.bottom;
 		l8 := nil;
 		self.stepChildren := [Array: ];
 		l1 := 20;
-		if (l9 := self:?AddHeader()) then begin
-				l1 := (l1 + l9)
+		if (addHeader := self:?AddHeader()) then begin
+				l1 := (l1 + addHeader)
 			end;
 		l2 := l1;
 		(while target do begin
-				l9 := 0;
+				addHeader := 0;
 				l3 := 50;
 				(while target do begin
-						l7 := GetRoot().cardfile:GetBCLayout(target).layout;
-						l12 := Length(stepChildren);
-						if (l11 := self:AddPrintChild(l7, target, l3, l1)) then begin
-								if ((if ((l11.bottom + l1) > l6) then (l1 > l2)) or ((l11.right + l3) > l5)) then begin
-										l14 := Length(stepChildren);
-										SetLength(stepChildren, l12);
-										break (l8 := (if ((l11.bottom + l1) > l6) then (l1 > l2)))
+						layout := GetRoot().cardfile:GetBCLayout(target).layout;
+						count := Length(stepChildren);
+						if (addPrintChild := self:AddPrintChild(layout, target, l3, l1)) then begin
+								if ((if ((addPrintChild.bottom + l1) > bottom) then (l1 > l2)) or ((addPrintChild.right + l3) > l5)) then begin
+										count2 := Length(stepChildren);
+										SetLength(stepChildren, count);
+										break (l8 := (if ((addPrintChild.bottom + l1) > bottom) then (l1 > l2)))
 									end else begin
-										l9 := max(l9, l11.bottom);
-										l10 := l11.right
+										addHeader := max(addHeader, addPrintChild.bottom);
+										right := addPrintChild.right
 									end
 							end else begin
 								break (l8 := true)
 							end;
-						l3 := ((l3 + l10) + 20);
+						l3 := ((l3 + right) + 20);
 						(if (if (target := targetCursor:Next()) then (not target.class)) then call GetRoot().cardfile.kUpdateClass with (target))
 					end);
 				if l8 then begin
 						break
 					end;
-				(l1 := ((l1 + l9) + 20))
+				(l1 := ((l1 + addHeader) + 20))
 			end);
 		inherited:?viewSetupChildrenScript()
 	end,
 	viewSetupFormScript: func() begin
-		local l1;
+		local copy;
 		inherited:?viewSetupFormScript();
 		if (not targetCursor) then begin
-				l1 := Clone(GetRoot().cardfile.allSoups.names);
-				l1:MakeSoup(GetRoot().cardfile.appSymbol);
-				l1.soupQuery := Clone(l1.soupQuery);
-				l1.soupQuery.IndexPath := 'sorton;
-				l1:SetupCursor();
-				targetCursor := l1.theCursor
+				copy := Clone(GetRoot().cardfile.allSoups.names);
+				copy:MakeSoup(GetRoot().cardfile.appSymbol);
+				copy.soupQuery := Clone(copy.soupQuery);
+				copy.soupQuery.IndexPath := 'sorton;
+				copy:SetupCursor();
+				targetCursor := copy.theCursor
 			end;
 		(if (if (target := targetCursor:entry()) then (not target.class)) then call GetRoot().cardfile.kUpdateClass with (target))
 	end,
 	usesCursors: true,
-	SetupItem: func(a1, a2) begin
-		a1.title := name;
-		inherited:SetupItem(a1, a2)
+	SetupItem: func(fields, frame2) begin
+		fields.title := name;
+		inherited:SetupItem(fields, frame2)
 	end,
 	name: nil,
 	_proto: @protoPrintFormat

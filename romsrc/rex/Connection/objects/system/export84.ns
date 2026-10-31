@@ -22,23 +22,23 @@ export84 := {
 	],
 	configOptions: nil,
 	viewSetupFormScript: func() begin
-		local l1, l2, l3;
-		l1 := configOptions;
+		local configOptions2, l2, l3;
+		configOptions2 := configOptions;
 		l2 := 0;
-		if (not l1.|name?|) then begin
+		if (not configOptions2.|name?|) then begin
 				nameInput.viewFlags := BAnd(nameInput.viewFlags, -2);
 				l2 := (l2 + 55)
 			end;
 		l3 := true;
-		if ((if (not l1.|password?|.guest) then (not l1.|password?|.users)) or (if (not l1.|guest?|) then (not l1.|password?|.users))) then begin
+		if ((if (not configOptions2.|password?|.guest) then (not configOptions2.|password?|.users)) or (if (not configOptions2.|guest?|) then (not configOptions2.|password?|.users))) then begin
 				passwordInput.viewFlags := BAnd(passwordInput.viewFlags, -2);
 				l3 := nil;
 				l2 := (l2 + 55)
 			end;
-		if (not l1.buttonTitle) then begin
+		if (not configOptions2.buttonTitle) then begin
 				cancelButton.viewFlags := BAnd(cancelButton.viewFlags, -2)
 			end;
-		if ((not l1.Keyboard) or (if (not l1.|name?|) then (not l3))) then begin
+		if ((not configOptions2.Keyboard) or (if (not configOptions2.|name?|) then (not l3))) then begin
 				Keyboard.viewFlags := BAnd(Keyboard.viewFlags, -2);
 				l2 := (l2 + 91)
 			end;
@@ -50,12 +50,12 @@ export84 := {
 	end,
 	endpoint: nil,
 	callback: nil,
-	OpenOn: func(a1, a2, a3) begin
-		local l1;
-		(l1 := BuildContext(self)).endpoint := a1;
-		l1.callback := a2;
-		l1.configOptions := a3;
-		(if a3.modal then l1:ModalDialog() else l1:FilterDialog())
+	OpenOn: func(options, a2, a3) begin
+		local context;
+		(context := BuildContext(self)).endpoint := options;
+		context.callback := a2;
+		context.configOptions := a3;
+		(if a3.modal then context:ModalDialog() else context:FilterDialog())
 	end,
 	viewIdleScript: func() begin
 		(if (if endpoint then endpoint.connected) then return endpoint:IdleConnection(true) else begin
@@ -65,7 +65,7 @@ export84 := {
 			end)
 	end,
 	viewQuitScript: func() begin
-		local l1;
+		local frame2;
 		if needToAbort then begin
 				if configOptions.modal then begin
 						call callback with (nil)
@@ -77,28 +77,28 @@ export84 := {
 		if endpoint then begin
 				endpoint:StopIdle(self)
 			end;
-		l1 := {userName: nil, password: nil, userCancel: nil};
+		frame2 := {userName: nil, password: nil, userCancel: nil};
 		if configOptions.|name?| then begin
-				l1.userName := nameInput.entryLine.text;
+				frame2.userName := nameInput.entryLine.text;
 				if (if configOptions.|guest?| then (nameInput.curLabelCommand = (Length(nameInput.labelCommands) - 1))) then begin
-						l1.userName := 'guest
+						frame2.userName := 'guest
 					end
 			end;
 		if (configOptions.|password?|.guest or configOptions.|password?|.users) then begin
-				if ((if (l1.userName = 'guest) then configOptions.|password?|.guest) or (if (not (l1.userName = 'guest)) then configOptions.|password?|.users)) then begin
+				if ((if (frame2.userName = 'guest) then configOptions.|password?|.guest) or (if (not (frame2.userName = 'guest)) then configOptions.|password?|.users)) then begin
 						if passwordInput.passwordVisible then begin
-								l1.password := passwordInput.entryLine.text
+								frame2.password := passwordInput.entryLine.text
 							end else begin
-								l1.password := passwordInput.realText
+								frame2.password := passwordInput.realText
 							end
 					end
 			end;
-		l1.userCancel := userCancel;
+		frame2.userCancel := userCancel;
 		if callback then begin
 				if configOptions.modal then begin
-						call callback with (l1)
+						call callback with (frame2)
 					end else begin
-						AddDeferredCall(callback, [Array: l1])
+						AddDeferredCall(callback, [Array: frame2])
 					end
 			end;
 		inherited:?viewQuitScript()
@@ -142,11 +142,11 @@ name := {
 	viewJustify: 8396848,
 	label: "Name",
 	memory: nil,
-	labelActionScript: func(a1) begin
+	labelActionScript: func(index) begin
 		local l1;
-		self:ShowHidePasswordInput((l1 := (if configOptions.|guest?| then (a1 = (Length(labelCommands) - 1)))));
+		self:ShowHidePasswordInput((l1 := (if configOptions.|guest?| then (index = (Length(labelCommands) - 1)))));
 		guestMode := l1;
-		curLabelCommand := a1;
+		curLabelCommand := index;
 		nil
 	end,
 	guestMode: nil,
@@ -163,21 +163,21 @@ name := {
 		},
 		func() begin
 			if IsFunction(configOptions.memory) then begin
-					self.labelCommands := (l1 := call configOptions.memory with ());
-					local l1;
-					local l2;
-					(foreach l3, l4 in labelCommands do begin
-							if (if IsFrame(l4) then l4.mark) then begin
-									break (l2 := l3)
+					self.labelCommands := (memoryItems := call configOptions.memory with ());
+					local memoryItems;
+					local key2;
+					(foreach key, value in labelCommands do begin
+							if (if IsFrame(value) then value.mark) then begin
+									break (key2 := key)
 								end
 						end)
 				end else begin
 					self.memory := configOptions.memory;
-					l1 := GetMemoryItems(memory)
+					memoryItems := GetMemoryItems(memory)
 				end;
-			if (if IsArray(l1) then (Length(l1) > 0)) then begin
-					if l2 then begin
-							self.curLabelCommand := l2
+			if (if IsArray(memoryItems) then (Length(memoryItems) > 0)) then begin
+					if key2 then begin
+							self.curLabelCommand := key2
 						end else begin
 							self.curLabelCommand := 0
 						end;
@@ -213,38 +213,38 @@ name := {
 		(guestMode := l1)
 	end,
 	labelLineFix: func(a1) begin
-		local l1, l2, l3;
+		local labelCommands2, labelCommand, item;
 		(if (if (not self:labelClick(a1)) then labelCommands) then begin
 				if self:TrackHilite(a1) then begin
 						if curLabelCommand then begin
-								if IsFrame((l2 := labelCommands[curLabelCommand])) then begin
-										l3 := l2.item
+								if IsFrame((labelCommand := labelCommands[curLabelCommand])) then begin
+										item := labelCommand.item
 									end else begin
-										l3 := l2
+										item := labelCommand
 									end;
-								if (not StrEqual(entryLine.text, l3)) then begin
+								if (not StrEqual(entryLine.text, item)) then begin
 										curLabelCommand := nil
 									end
 							end;
 						if (curLabelCommand = nil) then begin
-								l1 := labelCommands
+								labelCommands2 := labelCommands
 							end else begin
-								if (not IsFrame((l1 := Clone(labelCommands))[curLabelCommand])) then begin
-										l1[curLabelCommand] := {item: l1[curLabelCommand], mark: $\uFC0B}
+								if (not IsFrame((labelCommands2 := Clone(labelCommands))[curLabelCommand])) then begin
+										labelCommands2[curLabelCommand] := {item: labelCommands2[curLabelCommand], mark: $\uFC0B}
 									end else begin
-										(l1[curLabelCommand] := Clone(l1[curLabelCommand])).mark := $\uFC0B
+										(labelCommands2[curLabelCommand] := Clone(labelCommands2[curLabelCommand])).mark := $\uFC0B
 									end
 							end;
-						self:PopupMenu(l1, {indent: indent});
+						self:PopupMenu(labelCommands2, {indent: indent});
 						entryLine:dirty()
 					end;
 				true
 			end)
 	end,
-	ShowHidePasswordInput: func(a1) begin
+	ShowHidePasswordInput: func(guestMode) begin
 		local l1, l2;
 		l1 := true;
-		if ((if a1 then (not configOptions.|password?|.guest)) or (if (not a1) then (not configOptions.|password?|.users))) then begin
+		if ((if guestMode then (not configOptions.|password?|.guest)) or (if (not guestMode) then (not configOptions.|password?|.users))) then begin
 				l1 := nil
 			end;
 		(if (if passwordInput then passwordInput.viewCObject) then begin
@@ -256,7 +256,7 @@ name := {
 				SetValue(passwordInput.entryLine, 'text, "");
 				SetValue(passwordInput, 'realText, "");
 				(if l1 then begin
-						if ((if a1 then (configOptions.|password?|.guest = 'Visible)) or (if (not a1) then (configOptions.|password?|.users = 'Visible))) then begin
+						if ((if guestMode then (configOptions.|password?|.guest = 'Visible)) or (if (not guestMode) then (configOptions.|password?|.users = 'Visible))) then begin
 								l2 := true
 							end;
 						(passwordInput.passwordVisible := l2)

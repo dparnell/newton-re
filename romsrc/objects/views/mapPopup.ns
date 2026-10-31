@@ -6,22 +6,22 @@ mapPopup := {
 	result: 'name,
 	params: nil,
 	New: func(a1, a2, a3) begin
-		local l1;
-		(l1 := self:Init()).params := a1;
-		l1.context := a3;
-		l1:popup(a2)
+		local init;
+		(init := self:Init()).params := a1;
+		init.context := a3;
+		init:popup(a2)
 	end,
 	stepChildren: [stepChildren:
 		{
 			viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
 			viewJustify: vjParentFullH + vjParentFullV,
 			viewSetupFormScript: func() begin
-				(if params then (foreach l1, l2 in params do begin
-							self.(l1) := l2
+				(if params then (foreach key, value in params do begin
+							self.(key) := value
 						end))
 			end,
-			PickWorld: func(a1) begin
-				context:?pickActionScript((if result then a1.(result) else a1))
+			PickWorld: func(place) begin
+				context:?pickActionScript((if result then place.(result) else place))
 			end,
 			_proto: @worldPicker
 		}

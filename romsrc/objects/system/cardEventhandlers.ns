@@ -16,38 +16,38 @@ cardEventhandlers := {
 			kLiteral_56a7fd: call kBinaryFromHex with ("a975975bb33737cb", 'deskey)
 		},
 		func(a1) begin
-			l1 := a1:GetName();
-			l2 := a1:CardSlot();
-			l3 := a1:IsReadOnly();
-			if (l4 := a1:CheckUnion()) then begin
-					if l3 then begin
-							ModalCardAlert('incompatibleSoups, l2, l1)
+			name := a1:GetName();
+			cardSlot := a1:CardSlot();
+			isReadOnly := a1:IsReadOnly();
+			if (checkUnion := a1:CheckUnion()) then begin
+					if isReadOnly then begin
+							ModalCardAlert('incompatibleSoups, cardSlot, name)
 						end else begin
-							if ((l5 := ModalCardAlert('|ConvertIncompatibleSoups?|, l2, l1)) = 'cardYanked) then begin
+							if ((modalCardAlert2 := ModalCardAlert('|ConvertIncompatibleSoups?|, cardSlot, name)) = 'cardYanked) then begin
 									return nil
 								end else begin
-									if l5 then begin
-											local l1;
-											local l2;
-											local l3;
-											local l4;
-											local l5;
-											(foreach l6 in l4 do begin
-													local l8, l9, l10;
-													a1:ConvertSoupSortTables(l6)
+									if modalCardAlert2 then begin
+											local name;
+											local cardSlot;
+											local isReadOnly;
+											local checkUnion;
+											local modalCardAlert2;
+											(foreach item in checkUnion do begin
+													local l8, modalCardAlert3, dESCreatePasswordKey2;
+													a1:ConvertSoupSortTables(item)
 												end)
 										end
 								end
 						end
 				end;
 			l8 := (a1:GetSignature() = GetUserConfig('defaultStoreSig));
-			if (not l3) then begin
+			if (not isReadOnly) then begin
 					if a1:GetInfo('defaultStore) then begin
 							if (not l8) then begin
-									if ((l9 := ModalCardAlert('|MakeDefaultStore?|, l2, l1)) = 'cardYanked) then begin
+									if ((modalCardAlert3 := ModalCardAlert('|MakeDefaultStore?|, cardSlot, name)) = 'cardYanked) then begin
 											return nil
 										end else begin
-											if l9 then begin
+											if modalCardAlert3 then begin
 													SetDefaultStore(a1);
 													l8 := true
 												end else begin
@@ -65,19 +65,19 @@ cardEventhandlers := {
 					return nil
 				end;
 			if (not GetRoot().SleepScreen.viewCObject) then begin
-					l10 := DESCreatePasswordKey(Downcase(Clone(l1)));
-					if BinEqual(kLiteral_56a7e9, l10) then begin
+					dESCreatePasswordKey2 := DESCreatePasswordKey(Downcase(Clone(name)));
+					if BinEqual(kLiteral_56a7e9, dESCreatePasswordKey2) then begin
 							BuildContext(@drawpokerTemplate):Open()
 						end else begin
-							if BinEqual(kLiteral_56a7fd, l10) then begin
+							if BinEqual(kLiteral_56a7fd, dESCreatePasswordKey2) then begin
 									BuildContext(@solopokerTemplate):Open()
 								end else begin
 									OpenStoreSlip(a1)
 								end
 						end
 				end;
-			if (if l3 then l8) then begin
-					CardAlert('LockedDefaultStore, l2, l1)
+			if (if isReadOnly then l8) then begin
+					CardAlert('LockedDefaultStore, cardSlot, name)
 				end;
 			CheckCardBattery();
 			CallFrameBasedRegistryFns(StoreChangeRegistry, [Array: a1, 'StoreEnters, nil]);
@@ -85,8 +85,8 @@ cardEventhandlers := {
 			true
 		end),
 	StoreUnMounted: func(a1) begin
-		local l1;
-		if (if (l1 := GetKeyView()) then (not IsValid(l1._proto))) then begin
+		local keyView;
+		if (if (keyView := GetKeyView()) then (not IsValid(keyView._proto))) then begin
 				SetKeyView(nil, 0)
 			end;
 		CloseStoreSlip(a1);
@@ -116,12 +116,12 @@ cardEventhandlers := {
 		l2 := nil;
 		local l1;
 		local l2;
-		(foreach l3 in a2 do begin
+		(foreach item in a2 do begin
 				local l5;
-				if @storageCardTypes.(l3) then begin
+				if @storageCardTypes.(item) then begin
 						l2 := true
 					end else begin
-						if (l3 = 'comm) then begin
+						if (item = 'comm) then begin
 								l1 := true
 							end else begin
 								if (l5 := GetRoot().(cardType)) then begin
@@ -143,20 +143,20 @@ cardEventhandlers := {
 		AddDeferredCall(functions.CallFrameBasedRegistryFns, [Array: WeirdCardEventRegistry, [Array: a1, 'cardInserted]])
 	end,
 	|Convert1.XCard?|: func(a1) begin
-		local l1;
-		(if ((l1 := ModalCardAlert('|Convert1.XCard?|, a1, nil)) = true) then ModalCardAlert('|Convert1.XCardReally?|, a1, nil) else l1)
+		local modalCardAlert2;
+		(if ((modalCardAlert2 := ModalCardAlert('|Convert1.XCard?|, a1, nil)) = true) then ModalCardAlert('|Convert1.XCardReally?|, a1, nil) else modalCardAlert2)
 	end,
 	|FormatWithExtremePrejudice?|: func(a1) begin
-		local l1;
+		local modalCardAlert2;
 		(if GetRoot().preferenceRoll.viewCObject then begin
-				l1 := ModalCardAlert('|FormatWithExtremePrejudice?|, a1, nil);
-				HandleCardEvent('|FormatReally?|, [Array: a1, l1])
+				modalCardAlert2 := ModalCardAlert('|FormatWithExtremePrejudice?|, a1, nil);
+				HandleCardEvent('|FormatReally?|, [Array: a1, modalCardAlert2])
 			end)
 	end,
 	|Format?|: func(a1) begin
-		local l1;
-		l1 := ModalCardAlert('|Format?|, a1, nil);
-		HandleCardEvent('|FormatReallyNoCancel?|, [Array: a1, l1])
+		local modalCardAlert2;
+		modalCardAlert2 := ModalCardAlert('|Format?|, a1, nil);
+		HandleCardEvent('|FormatReallyNoCancel?|, [Array: a1, modalCardAlert2])
 	end,
 	FormatLockedCard: func(a1) begin
 		ModalCardAlert('FormatLockedCard, a1, nil)
@@ -165,9 +165,9 @@ cardEventhandlers := {
 		ModalCardAlert('FormatBadVppCard, a1, nil)
 	end,
 	|FormatAfterMountError?|: func(a1, a2) begin
-		local l1;
-		l1 := ModalCardAlert('|FormatAfterMountError?|, a1, a2);
-		HandleCardEvent('|FormatReallyNoCancel?|, [Array: a1, l1])
+		local modalCardAlert2;
+		modalCardAlert2 := ModalCardAlert('|FormatAfterMountError?|, a1, a2);
+		HandleCardEvent('|FormatReallyNoCancel?|, [Array: a1, modalCardAlert2])
 	end,
 	|FormatReallyNoCancel?|: func(a1, a2) begin
 		(if (a2 = true) then ModalCardAlert('|FormatReallyNoCancel?|, a1, nil) else a2)

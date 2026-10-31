@@ -3,15 +3,15 @@
 newtTextTimeView := {
 	_proto: @newtroTextTimeView,
 	viewFlags: vVisible + vClickable + vGesturesAllowed + vTimeField,
-	viewChangedScript: func(a1, a2) begin
-		local l1;
-		(if (if (not GetVariable(a2, 'hack)) then (a1 = 'text)) then begin
-				if StrFilled(a2.(a1)) then begin
-						if (l1 := StringToTime(a2.(a1))) then begin
-								GetVariable(a2, 'target).(path) := l1
+	viewChangedScript: func(slot, view) begin
+		local stringToTime2;
+		(if (if (not GetVariable(view, 'hack)) then (slot = 'text)) then begin
+				if StrFilled(view.(slot)) then begin
+						if (stringToTime2 := StringToTime(view.(slot))) then begin
+								GetVariable(view, 'target).(path) := stringToTime2
 							end
 					end else begin
-						GetVariable(a2, 'target).(path) := nil
+						GetVariable(view, 'target).(path) := nil
 					end;
 				self:StartFlush()
 			end)

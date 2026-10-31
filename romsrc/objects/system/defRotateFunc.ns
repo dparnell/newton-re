@@ -1,10 +1,10 @@
 // defRotateFunc, and what only it reaches
 
 defRotateFunc := func() begin
-	local l1, l2;
-	l1 := self:GlobalBox();
+	local box, displayParams2;
+	box := self:GlobalBox();
 	self:_Close();
-	if ((((((l2 := displayParams).appAreaGlobalLeft + l2.appAreaWidth) < l1.right) or ((l2.appAreaGlobalLeft + l2.appAreaHeight) < l1.bottom)) or (l2.appAreaGlobalLeft > l1.left)) or (l2.appAreaGlobalLeft > l1.top)) then begin
+	if ((((((displayParams2 := displayParams).appAreaGlobalLeft + displayParams2.appAreaWidth) < box.right) or ((displayParams2.appAreaGlobalLeft + displayParams2.appAreaHeight) < box.bottom)) or (displayParams2.appAreaGlobalLeft > box.left)) or (displayParams2.appAreaGlobalLeft > box.top)) then begin
 			RemoveSlot(self, 'viewBounds)
 		end;
 	self:Open()

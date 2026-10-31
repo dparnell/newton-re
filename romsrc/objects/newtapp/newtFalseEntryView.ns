@@ -30,9 +30,9 @@ newtFalseEntryView := {
 		targetViewDef := (currentViewDef := nil);
 		targetDataDef := (currentDataDef := nil);
 		currentStatView := nil;
-		(foreach l1 in self:ChildViewFrames() do begin
-				if HasPath(l1, 'Retarget) then begin
-						l1:Retarget()
+		(foreach item in self:ChildViewFrames() do begin
+				if HasPath(item, 'Retarget) then begin
+						item:Retarget()
 					end
 			end)
 	end,
@@ -43,15 +43,15 @@ newtFalseEntryView := {
 	dataCursor: nil,
 	dataCursorSlot: 'dataCursor,
 	viewSetupFormScript: func() begin
-		local l1, l2;
+		local entryDataView, dataDefs;
 		target := GetVariable((parentView := self:Parent()), targetSlot);
 		targetView := self;
 		dataCursor := GetVariable(parentView, dataCursorSlot);
 		dataSoup := GetVariable(parentView, dataSoupSlot);
 		soupQuery := GetVariable(parentView, soupQuerySlot);
-		targetViewDef := (entryViewDefs := [Array: (l1 := GetEntryDataView(target, viewDef))]);
-		viewDef := l1.symbol;
-		(if (l2 := GetDataDefs(DataClassOf(target))) then l2:?SetupForm(target, self))
+		targetViewDef := (entryViewDefs := [Array: (entryDataView := GetEntryDataView(target, viewDef))]);
+		viewDef := entryDataView.symbol;
+		(if (dataDefs := GetDataDefs(DataClassOf(target))) then dataDefs:?SetupForm(target, self))
 	end,
 	parentView: nil,
 	FilingChangedX: func() begin

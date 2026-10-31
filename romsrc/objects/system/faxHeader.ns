@@ -13,24 +13,24 @@ faxHeader := {
 			viewJustify: vjCenterH + vjParentFullH,
 			viewFont: tsFancy + tsSize(9),
 			viewSetupFormScript: func() begin
-				local l1, l2;
+				local currentPersona, faxPhone;
 				self.text := fromFrame.name;
-				if IsEntryAlias((l1 := GetUserConfig('currentPersona))) then begin
-						l1 := ResolveEntryAlias(l1)
+				if IsEntryAlias((currentPersona := GetUserConfig('currentPersona))) then begin
+						currentPersona := ResolveEntryAlias(currentPersona)
 					end;
-				if (not l1) then begin
+				if (not currentPersona) then begin
 						return nil
 					end;
-				if (if (l2 := GetRoot().cardfile:bcPhoneNumber(l1, 'faxPhone)) then StrFilled(l2[0])) then begin
-						self.text := Stringer([Array: self.text, " ", MakeDisplayPhone(l2[0])]);
-						if (if (l2 := GetRoot().cardfile:bcPhoneNumber(l1, 'workPhone)) then StrFilled(l2[0])) then begin
-								self.text := Stringer([Array: self.text, " ", MakeDisplayPhone(l2[0])])
+				if (if (faxPhone := GetRoot().cardfile:bcPhoneNumber(currentPersona, 'faxPhone)) then StrFilled(faxPhone[0])) then begin
+						self.text := Stringer([Array: self.text, " ", MakeDisplayPhone(faxPhone[0])]);
+						if (if (faxPhone := GetRoot().cardfile:bcPhoneNumber(currentPersona, 'workPhone)) then StrFilled(faxPhone[0])) then begin
+								self.text := Stringer([Array: self.text, " ", MakeDisplayPhone(faxPhone[0])])
 							end;
 						return nil
 					end;
-				(if (if (l2 := GetRoot().cardfile:bcPhoneNumber(l1, 'homefaxPhone)) then StrFilled(l2[0])) then begin
-						self.text := Stringer([Array: self.text, " ", MakeDisplayPhone(l2[0])]);
-						(if (if (l2 := GetRoot().cardfile:bcPhoneNumber(l1, 'homePhone)) then StrFilled(l2[0])) then (self.text := Stringer([Array: self.text, " ", MakeDisplayPhone(l2[0])])))
+				(if (if (faxPhone := GetRoot().cardfile:bcPhoneNumber(currentPersona, 'homefaxPhone)) then StrFilled(faxPhone[0])) then begin
+						self.text := Stringer([Array: self.text, " ", MakeDisplayPhone(faxPhone[0])]);
+						(if (if (faxPhone := GetRoot().cardfile:bcPhoneNumber(currentPersona, 'homePhone)) then StrFilled(faxPhone[0])) then (self.text := Stringer([Array: self.text, " ", MakeDisplayPhone(faxPhone[0])])))
 					end)
 			end,
 			_proto: @protoStaticText

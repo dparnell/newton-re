@@ -17,18 +17,18 @@ recorderchassIs := {
 	HandleConfigChange: func(a1) begin
 		(if (a1 = 'inputDevice) then self:SetState(fSoundState))
 	end,
-	SetState: func(a1) begin
-		local l1, l2;
-		l1 := fSoundState;
-		l2 := self:HasSoundFrames();
-		inherited:SetState(a1);
+	SetState: func(fSoundState3) begin
+		local fSoundState2, hasSoundFrames;
+		fSoundState2 := fSoundState;
+		hasSoundFrames := self:HasSoundFrames();
+		inherited:SetState(fSoundState3);
 		if (recordButton exists) then begin
-				recordButton:SetState(l1, a1, l2)
+				recordButton:SetState(fSoundState2, fSoundState3, hasSoundFrames)
 			end;
 		if (playButton exists) then begin
-				playButton:SetState(l1, a1, l2)
+				playButton:SetState(fSoundState2, fSoundState3, hasSoundFrames)
 			end;
-		(if (statusText exists) then statusText:SetState(l1, a1, l2))
+		(if (statusText exists) then statusText:SetState(fSoundState2, fSoundState3, hasSoundFrames))
 	end,
 	PlayCompletion: func(a1, a2) begin
 		inherited:PlayCompletion(a1, a2);
@@ -48,8 +48,8 @@ recorderchassIs := {
 				AddDelayedSend(base, 'FlushVBO, [Array: ], 200)
 			end)
 	end,
-	RecordCompletion: func(a1, a2) begin
-		inherited:RecordCompletion(a1, a2);
+	RecordCompletion: func(sounds, a2) begin
+		inherited:RecordCompletion(sounds, a2);
 		(if self:TestState(1) then self:Rewind())
 	end,
 	play: func() begin

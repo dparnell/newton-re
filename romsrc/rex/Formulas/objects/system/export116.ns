@@ -52,13 +52,13 @@ netPresentValue := "Net Present Value";
 
 export116Item := {
 	calcLineLabel: "Periods",
-	ComputeValue: func(a1) begin
-		local l1;
-		if (((l1 := self:SolveForPeriod(a1[1], a1[2], a1[3], a1[4])) = nil) or (l1 < 0)) then begin
-				l1 := nil;
+	ComputeValue: func(list) begin
+		local solveForPeriod;
+		if (((solveForPeriod := self:SolveForPeriod(list[1], list[2], list[3], list[4])) = nil) or (solveForPeriod < 0)) then begin
+				solveForPeriod := nil;
 				self:Notify(3, "Net Present Value", "No solution.")
 			end;
-		return l1
+		return solveForPeriod
 	end,
 	lineNumber: 0,
 	viewSetupDoneScript: func() begin
@@ -71,12 +71,12 @@ export116Item := {
 
 export116Item_2 := {
 	calcLineLabel: interestRate,
-	ComputeValue: func(a1) begin
-		local l1;
-		if ((l1 := self:SolveForInterestRate(a1[0], a1[2], a1[3], a1[4])) = nil) then begin
+	ComputeValue: func(list) begin
+		local solveForInterestRate;
+		if ((solveForInterestRate := self:SolveForInterestRate(list[0], list[2], list[3], list[4])) = nil) then begin
 				self:Notify(3, "Net Present Value", "Interest rate out of range.")
 			end;
-		return l1
+		return solveForInterestRate
 	end,
 	lineNumber: 1,
 	_proto: @8297,
@@ -85,12 +85,12 @@ export116Item_2 := {
 
 export116Item_3 := {
 	calcLineLabel: "Present Value",
-	ComputeValue: func(a1) begin
-		local l1;
-		if ((l1 := self:SolveForPresentValue(a1[0], a1[1], a1[3], a1[4])) = nil) then begin
+	ComputeValue: func(list) begin
+		local solveForPresentValue;
+		if ((solveForPresentValue := self:SolveForPresentValue(list[0], list[1], list[3], list[4])) = nil) then begin
 				self:Notify(3, "Net Present Value", "Interest rate out of range.")
 			end;
-		return l1
+		return solveForPresentValue
 	end,
 	lineNumber: 2,
 	_proto: @8296,
@@ -99,12 +99,12 @@ export116Item_3 := {
 
 export116Item_4 := {
 	calcLineLabel: "Future Value",
-	ComputeValue: func(a1) begin
-		local l1;
-		if ((l1 := self:SolveForFutureValue(a1[0], a1[1], a1[2], a1[4])) = nil) then begin
+	ComputeValue: func(list) begin
+		local solveForFutureValue;
+		if ((solveForFutureValue := self:SolveForFutureValue(list[0], list[1], list[2], list[4])) = nil) then begin
 				self:Notify(3, "Net Present Value", "Interest rate out of range.")
 			end;
-		return l1
+		return solveForFutureValue
 	end,
 	lineNumber: 3,
 	_proto: @8296,
@@ -113,12 +113,12 @@ export116Item_4 := {
 
 export116Item_5 := {
 	calcLineLabel: "Payment",
-	ComputeValue: func(a1) begin
-		local l1;
-		if ((l1 := self:SolveForPayment(a1[0], a1[1], a1[2], a1[3])) = nil) then begin
+	ComputeValue: func(list) begin
+		local solveForPayment;
+		if ((solveForPayment := self:SolveForPayment(list[0], list[1], list[2], list[3])) = nil) then begin
 				self:Notify(3, "Net Present Value", "No solution.")
 			end;
-		return l1
+		return solveForPayment
 	end,
 	lineNumber: 4,
 	_proto: @8296,

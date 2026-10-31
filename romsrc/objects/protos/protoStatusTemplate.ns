@@ -8,9 +8,9 @@ protoStatusTemplate := {
 		self:EventPause(true);
 		valueData := a1;
 		(if curView then begin
-				(foreach l1 in self:ChildViewFrames() do begin
-						if l1.indicator then begin
-								l1:?viewUpdateFormScript()
+				(foreach item in self:ChildViewFrames() do begin
+						if item.indicator then begin
+								item:?viewUpdateFormScript()
 							end
 					end);
 				RefreshViews()
@@ -45,37 +45,37 @@ protoStatusTemplate := {
 	curView: nil,
 	width: 185,
 	ReOrientToScreen: func() begin
-		local l1, l2;
-		l1 := self:GlobalBox();
+		local box, screenOrientation;
+		box := self:GlobalBox();
 		self:Close();
-		l2 := GetUserConfig('screenOrientation);
-		viewBounds := self:MungeBounds(l1.left, topValues[l2], l1.right, (topValues[l2] + curView.height));
+		screenOrientation := GetUserConfig('screenOrientation);
+		viewBounds := self:MungeBounds(box.left, topValues[screenOrientation], box.right, (topValues[screenOrientation] + curView.height));
 		self:Open()
 	end,
 	_proto: @protoFloater,
 	_defaultButton: nil,
 	initialSetup: nil,
-	MungeBounds: func(a1, a2, a3, a4) begin
-		local l1, l2, l3, l4, l5, l6, l7, l8, l9;
-		l1 := SetBounds(a1, a2, a3, a4);
+	MungeBounds: func(left, topValue, right, a4) begin
+		local bounds, l2, l3, params, l5, l6, parent, box, l9;
+		bounds := SetBounds(left, topValue, right, a4);
 		l2 := 0;
 		l3 := 0;
-		l5 := (((l4 := GetAppParams()).appAreaLeft + l4.appAreaWidth) - slop);
-		if (l1.right > l5) then begin
-				l2 := (-(l1.right - l5))
+		l5 := (((params := GetAppParams()).appAreaLeft + params.appAreaWidth) - slop);
+		if (bounds.right > l5) then begin
+				l2 := (-(bounds.right - l5))
 			end;
-		l6 := ((l4.appAreaTop + l4.appAreaHeight) - slop);
-		if (l1.bottom > l6) then begin
-				l3 := (-(l1.bottom - l6))
+		l6 := ((params.appAreaTop + params.appAreaHeight) - slop);
+		if (bounds.bottom > l6) then begin
+				l3 := (-(bounds.bottom - l6))
 			end;
-		if (if (l7 := self:Parent()) then (l7 <> GetRoot())) then begin
-				l8 := l7:GlobalBox();
-				l2 := (l2 - l8.left);
-				l3 := (l3 - l8.top)
+		if (if (parent := self:Parent()) then (parent <> GetRoot())) then begin
+				box := parent:GlobalBox();
+				l2 := (l2 - box.left);
+				l3 := (l3 - box.top)
 			end;
 		if ((l2 <> 0) or (l3 <> 0)) then begin
-				if (((l1 := OffsetRect(l1, l2, l3)).left < (l4.appAreaLeft + slop)) or (l1.top < (l4.appAreaTop + slop))) then begin
-						Throw(exRootException, -8501)
+				if (((bounds := OffsetRect(bounds, l2, l3)).left < (params.appAreaLeft + slop)) or (bounds.top < (params.appAreaTop + slop))) then begin
+						Throw(exRootException, kViewErrCouldNotCreate)
 					end
 			end;
 		if (if screenRelativeH then (displayParams.appAreaWidth <> displayParams.scrWidth)) then begin
@@ -83,15 +83,15 @@ protoStatusTemplate := {
 				if (displayParams.appAreaGlobalLeft <> 0) then begin
 						l9 := (-l9)
 					end;
-				l1 := OffsetRect(l1, l9, 0)
+				bounds := OffsetRect(bounds, l9, 0)
 			end;
-		l1
+		bounds
 	end,
 	appSymbol: nil,
 	slop: 8,
-	viewSet: func(a1) begin
+	viewSet: func(currentStatusSetup) begin
 		self:EventPause(true);
-		(if (valueData := a1) then begin
+		(if (valueData := currentStatusSetup) then begin
 				if HasSlot(valueData, 'appSymbol) then begin
 						appSymbol := valueData.appSymbol
 					end;
@@ -102,15 +102,15 @@ protoStatusTemplate := {
 						curView := self.(valueData.name);
 						self.stepChildren := curView.kids;
 						(if (if self.viewCObject then (not initialSetup)) then begin
-								l1 := self.viewBounds;
-								SetValue(self, 'viewBounds, self:MungeBounds(l1.left, l1.top, l1.right, (l1.top + curView.height)));
+								viewBounds := self.viewBounds;
+								SetValue(self, 'viewBounds, self:MungeBounds(viewBounds.left, viewBounds.top, viewBounds.right, (viewBounds.top + curView.height)));
 								self:RedoChildren()
 							end)
 					end else (if self.viewCObject then begin
-							local l1;
-							(foreach l2 in self:ChildViewFrames() do begin
-									if (if l2.name then HasSlot(valueData.values, l2.name)) then begin
-											l2:?viewUpdateFormScript()
+							local viewBounds;
+							(foreach item in self:ChildViewFrames() do begin
+									if (if item.name then HasSlot(valueData.values, item.name)) then begin
+											item:?viewUpdateFormScript()
 										end
 								end);
 							RefreshViews()
@@ -121,17 +121,17 @@ protoStatusTemplate := {
 	screenRelativeH: nil,
 	declareSelf: 'base,
 	viewSetupFormScript: func() begin
-		local l1, l2, l3, l4;
+		local screenOrientation, params, l3, l4;
 		if (if initialSetup then (not valueData)) then begin
 				self:viewSet(initialSetup);
 				initialSetup := nil
 			end;
 		if ((not HasSlot(self, 'viewBounds)) or (curView = nil)) then begin
 				self.viewJustify := 0;
-				l1 := GetUserConfig('screenOrientation);
-				l3 := (((l2 := GetAppParams()).appAreaWidth - width) >> 1);
-				l4 := (if curView then (topValues[l1] + curView.height) else 0);
-				self.viewBounds := self:MungeBounds(l3, topValues[l1], (l3 + width), l4)
+				screenOrientation := GetUserConfig('screenOrientation);
+				l3 := (((params := GetAppParams()).appAreaWidth - width) >> 1);
+				l4 := (if curView then (topValues[screenOrientation] + curView.height) else 0);
+				self.viewBounds := self:MungeBounds(l3, topValues[screenOrientation], (l3 + width), l4)
 			end;
 		inherited:?viewSetupFormScript();
 		SetKeyView(self, 0)

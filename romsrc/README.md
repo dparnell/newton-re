@@ -25,7 +25,7 @@ are kept. How it was made, and why it is shaped as it is, is in
 |---|---|
 | `objects/` | The objects, as definitions `name := value;` in a notation that is NewtonScript's literals plus a few constructors (below), every function written in the frame that holds it. A file holds a root object - one a magic pointer or the ROM's C code names - and what only it reaches, and is named after it; the directories say what the roots are: `apps/` (`calendar.ns`, `cardfile.ns`, ...), `protos/` (`protoFloatNGo.ns`, ...), `newtapp/` (the NewtApp framework's protos), `canonical/` (the frames the C code makes its objects from), `slips/`, `views/` (pickers, popups, filters), `pictures/`, `sounds/`, `soups/`, `recognition/`, `system/` (the rest: `builtinFunctions.ns`, `viewRoot.ns`, ...). `values.ns` holds the roots that are plain values (strings, numbers), `shared/` what several roots reach and none alone. A definition may be moved to any file: the files only group them. |
 | `maps.ns` | The frame maps (the slot names of the ROM's frames). |
-| `constants.tsv` | The constants the notation may name: the views' flags, justification, formats and classes (from `src/views/ViewFlags.h`) and the packed font specs' families, sizes and faces. |
+| `constants.tsv` | The constants the notation and the functions may name: the views' flags, justification, formats and classes (from `src/views/ViewFlags.h`), the packed font specs' families, sizes and faces, and the error codes (the DDK headers', then `src/frames/NSErrors.h`'s and the reconstruction's other names). |
 | `renames.tsv` | Each definition's name as the extractor wrote it (`obj_4f901d`, its address; `Rbuiltinfunctions`, its R-constant) and its name now - for reading older notes, `docs/work-log.md` among them. A package's part tree has its own. |
 | `resources/` | The binaries: bitmaps as PNG (`bits`, `mask`, `cbits`), simple sounds as WAV, QuickDraw pictures as directories - `picture.txt`, the opcodes as text, and a PNG per bitmap (`tools/pict/README.md`) - fonts as directories - a BDF file per bitmap strike and a text file per other table, which the builder packs back into the `'sfnt` binary (`tools/fonts/README.md`; what the tables hold, `docs/qd/fonts-sfnt.md`). The Unicode frame's tables (the encodings' maps, the character classes and case tables), the sorting tables, the locales' word- and line-break tables, the ink codec's code books, the letter trigrams, the Letter Shapes pictures and the cursive recogniser's trained tables (DTEHeader, DTEMain, PPDMain, DTETrigrams) are text too, `texttable(...)`, each saying its format (`tools/tables/README.md`). The locales' Airus dictionaries (`'AirusA`) are `.lex` graphs as the lexicons are (`lexicon(...)`). Nothing here is `.bin` any more. |
 | `lexicons/`, `lexicons.tsv` | The recognisers' lexicons, with their ROM addresses: the word lists as `.words` files (a word to a line, with its attribute after a tab where the list gives one - add or take out a line to add or take out a word) and the lexical grammars - dates, times, numbers, money, phone numbers - as `.lex` graphs of character sets. The builder makes the ROM's Airus dictionaries out of them, byte for byte (`tools/lexicons/README.md`); a list grown past its room in the ROM needs `--relayout`, which moves it. |
@@ -56,9 +56,19 @@ calendar := {
 
 - **A function is written where it is**, `slot: func(...) begin ... end`,
   as the decompiler (`tools/newton-rom/analysis/nsdecompile.py`) wrote
-  it - its arguments and locals `a1`, `l1`, because the ROM keeps no
-  names for them - and the builder compiles it with the host's own
-  compiler. Comments in it are kept. A function that had constants of
+  it, and the builder compiles it with the host's own compiler. The ROM
+  keeps no names for arguments and locals; most now have one
+  (`tools/newton-rom/analysis/naturalcode.py`): a script's after the
+  system's (`viewClickScript: func(unit)`), another argument after what
+  the calls of its function pass (`FindInSoup(title, findWords, dateRange,
+  soup, ...)`), a local after what it is first given (`pt := GetPoint(0,
+  unit)`, `mtgDuration := self:GetMeetingSlot(m, 'mtgDuration)`). Those
+  it could not name are still the decompiler's `a1`, `l1`; a name can be
+  changed freely, as the compiler keeps none - but not to a word the
+  function uses as a variable, and not in a function whose argument frame
+  passes 20 slots (its arguments, locals and the hidden ones of its
+  loops, and three more), whose map the compiler keeps sorted by name.
+  Comments in it are kept. A function that had constants of
   its own when it was built (a function it makes into a closure, a value
   computed at build time), options for the compiler, or that is a value
   computed rather than a `func`, is `compile([constants: {name: value,
@@ -68,7 +78,11 @@ calendar := {
   `@387` still works. A bare name is the definition of that name.
 - **Integers may be sums of constants** (`constants.tsv`): `viewFlags:
   vVisible + vClickable`, `viewFormat: vfFillWhite + vfFrameBlack + vfPen(1)`,
-  `titleFont: tsSystem + tsSize(9) + tsBold`.
+  `titleFont: tsSystem + tsSize(9) + tsBold`, `errorCode:
+  kEndpointErrNoOptions` - in the functions too (`.viewFont := tsHWFont +
+  tsSize(10)`, `Throw('|evt.ex.comm|, kCommErrRequestCanceled)`), where the
+  builder makes a sum that is a whole operand one number before compiling,
+  so it compiles to what the number did.
 - **`same("path")`** is an object only compiled functions hold and share:
   the one a function holds at that path. These come last in a file.
 - The binaries are files of `resources/`: `bitmap(...)`, `sound(...)`,

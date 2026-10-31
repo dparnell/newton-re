@@ -5,10 +5,10 @@ export162 := {
 	viewFont: @fontSystem12Bold,
 	viewJustify: vjCenterH + vjParentCenterH,
 	viewSetupFormScript: func() begin
-		local l1;
-		l1 := self:parent():LocalBox().right;
+		local right;
+		right := self:parent():LocalBox().right;
 		self.text := titleTExt;
-		(self.viewBounds := TextBounds(text, {font: viewFont}, RelBounds(0, viewBounds.top, l1, 0)))
+		(self.viewBounds := TextBounds(text, {font: viewFont}, RelBounds(0, viewBounds.top, right, 0)))
 	end,
 	viewFlags: vVisible + vReadOnly,
 	_proto: @protoStaticText

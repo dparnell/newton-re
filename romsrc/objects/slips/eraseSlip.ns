@@ -15,16 +15,16 @@ eraseSlip := {
 			viewBounds: {left: -41, top: 0, right: -7, bottom: 0},
 			text: erase,
 			buttonClickScript: func() begin
-				local l1, l2, l3;
-				l1 := GetVariable(self:Parent(), eraseTypeCluster.clusterValue);
-				if (StrLen((l2 := godParent:getDestStore():GetName())) = 0) then begin
-						l2 := godParent:getDestStore():GetKind()
+				local value, name, l3;
+				value := GetVariable(self:Parent(), eraseTypeCluster.clusterValue);
+				if (StrLen((name := godParent:getDestStore():GetName())) = 0) then begin
+						name := godParent:getDestStore():GetKind()
 					end;
 				l3 := eraseStrs.(eraseTypeCluster.clusterValue);
-				if (not ModalConfirm(ParamStr("Warning! Erase will remove ^0 on \u201C\u^1\u201D\u. Are you sure you want to do this?", [Array: l3, l2]), nil)) then begin
-						l1 := nil
+				if (not ModalConfirm(ParamStr("Warning! Erase will remove ^0 on \u201C\u^1\u201D\u. Are you sure you want to do this?", [Array: l3, name]), nil)) then begin
+						value := nil
 					end;
-				(if l1 then AddDeferredCall(l1, [Array: base, godParent, store]))
+				(if value then AddDeferredCall(value, [Array: base, godParent, store]))
 			end,
 			_proto: @protoTextButton
 		},
@@ -51,10 +51,10 @@ eraseSlip := {
 	viewJustify: vjParentCenterH + vjParentCenterV,
 	icon: nil,
 	New: func(a1, a2) begin
-		local l1;
-		(l1 := BuildContext(self)).godParent := a1;
-		l1.store := a2;
-		l1:FilterDialog()
+		local context;
+		(context := BuildContext(self)).godParent := a1;
+		context.store := a2;
+		context:FilterDialog()
 	end,
 	eraseStrs: {
 		eraseStore: "all the information and packages",
@@ -74,8 +74,8 @@ eraseSlip := {
 		SetKeyView(self, 0)
 	end,
 	godParent: nil,
-	eraseStore: func(a1, a2, a3) begin
-		a1:Close();
+	eraseStore: func(getDestStore, a2, a3) begin
+		getDestStore:Close();
 		(try begin
 				a2:eraseStore(a3)
 			end onexception |evt.ex| do begin

@@ -2,10 +2,10 @@
 
 reviewDict := {
 	SafeQuit: func() begin
-		local l1;
+		local word;
 		self:GrabCaret();
-		if StrFilled((l1 := self:GetWord())) then begin
-				self:AddWord(l1)
+		if StrFilled((word := self:GetWord())) then begin
+				self:AddWord(word)
 			end;
 		self:ExpandOff();
 		self:Close()
@@ -35,14 +35,14 @@ reviewDict := {
 	SelectFirst: func() begin
 		self:SelectEntry(0)
 	end,
-	SetWord: func(a1) begin
-		local l1;
-		Display.realText := Clone(a1);
-		l1 := Display.realText;
+	SetWord: func(text) begin
+		local realText;
+		Display.realText := Clone(text);
+		realText := Display.realText;
 		if expandFlag then begin
-				StrReplace((l1 := Clone(a1)), SPrintObject($\n), "\u00AC\u", nil)
+				StrReplace((realText := Clone(text)), SPrintObject($\n), "\u00AC\u", nil)
 			end;
-		SetValue(Display, 'text, l1)
+		SetValue(Display, 'text, realText)
 	end,
 	viewQuitScript: func() begin
 		try begin
@@ -56,8 +56,8 @@ reviewDict := {
 				RemoveSlot(self, 'window)
 			end;
 		viewBounds := nil;
-		(foreach l1 in [Array: 'expandDict, 'dictionary, 'selectedEntry, 'selectedWord, 'lineHeight, 'selectedIndex, 'viewFlags] do begin
-				RemoveSlot(self, l1)
+		(foreach item in [Array: 'expandDict, 'dictionary, 'selectedEntry, 'selectedWord, 'lineHeight, 'selectedIndex, 'viewFlags] do begin
+				RemoveSlot(self, item)
 			end)
 	end,
 	expandFlag: nil,
@@ -89,14 +89,14 @@ reviewDict := {
 			viewJustify: 8390790,
 			text: remove,
 			buttonClickScript: func() begin
-				local l1, l2;
+				local copy, l2;
 				self:GrabCaret();
 				if expandFlag then begin
 						self:ExpandOff()
 					end;
 				(if selectedEntry then begin
-						dictionary:DecodeRecognitionWord((l1 := Clone(selectedWord)), selectedEntry.attribute);
-						self:RemoveWord(l1)
+						dictionary:DecodeRecognitionWord((copy := Clone(selectedWord)), selectedEntry.attribute);
+						self:RemoveWord(copy)
 					end else begin
 						l2 := (if (window:GetNumberEntries() = 0) then "There are no more words to remove." else "Tap on a word in the list above and then tap \u201C\uRemove.\u201D\u");
 						self:Notify(3, notifyTitle, l2)
@@ -111,15 +111,15 @@ reviewDict := {
 			text: "Expand",
 			notifyTitle: "Expand Word",
 			buttonClickScript: func() begin
-				local l1, l2, l3;
+				local word, addWord, l3;
 				self:GrabCaret();
-				l1 := self:GetWord();
-				(if expandFlag then (if StrFilled(l1) then self:AddWord(l1) else self:ExpandOff()) else begin
-						l2 := true;
-						if StrFilled(l1) then begin
-								l2 := self:AddWord(l1)
+				word := self:GetWord();
+				(if expandFlag then (if StrFilled(word) then self:AddWord(word) else self:ExpandOff()) else begin
+						addWord := true;
+						if StrFilled(word) then begin
+								addWord := self:AddWord(word)
 							end;
-						(if l2 then (if selectedEntry then self:ExpandOn(selectedWord) else begin
+						(if addWord then (if selectedEntry then self:ExpandOn(selectedWord) else begin
 									l3 := (if (window:GetNumberEntries() = 0) then "There are no more words to expand." else "Tap on a word in the list above and then tap \u201C\uExpand.\u201D\u");
 									self:Notify(3, notifyTitle, l3)
 								end) else self:SetWord(""))
@@ -131,16 +131,16 @@ reviewDict := {
 	],
 	viewFlags: vApplication + vFloating + vClickable,
 	GetExpandedWord: func(a1) begin
-		local l1, l2, l3;
+		local listItem, frame2, word;
 		self:SetUpDictionary();
-		l1 := nil;
-		l2 := {attribute: nil, terminalClass: nil};
-		if (((l3 := expandDict:LookupWord(a1, l2)) = 2) or (l3 = 3)) then begin
-				if l2.attribute then begin
-						l1 := expandDict.list[l2.attribute]
+		listItem := nil;
+		frame2 := {attribute: nil, terminalClass: nil};
+		if (((word := expandDict:LookupWord(a1, frame2)) = 2) or (word = 3)) then begin
+				if frame2.attribute then begin
+						listItem := expandDict.list[frame2.attribute]
 					end
 			end;
-		l1
+		listItem
 	end,
 	SetUpDictionary: func() begin
 		(if (not dictionary) then begin
@@ -153,46 +153,46 @@ reviewDict := {
 	end,
 	reviewKeys: nil,
 	ReOrientToScreen: @defRotateFunc,
-	SelectEntry: func(a1) begin
-		if a1 then begin
-				selectedEntry := window:GetEntry(a1)
+	SelectEntry: func(selectedIndex2) begin
+		if selectedIndex2 then begin
+				selectedEntry := window:GetEntry(selectedIndex2)
 			end else begin
 				selectedEntry := nil
 			end;
 		(if selectedEntry then begin
 				selectedWord := selectedEntry.word;
-				(selectedIndex := a1)
+				(selectedIndex := selectedIndex2)
 			end else begin
 				selectedWord := nil;
 				(selectedIndex := nil)
 			end)
 	end,
 	GrabCaret: func() begin
-		local l1, l2;
+		local word, l2;
 		(if (if Display then (GetKeyView() <> Display)) then begin
-				l2 := (if (l1 := self:GetWord()) then StrLen(l1) else 0);
+				l2 := (if (word := self:GetWord()) then StrLen(word) else 0);
 				SetKeyView(Display, l2)
 			end)
 	end,
 	expandDict: nil,
 	viewBounds: nil,
-	DoAddWord: func(a1, a2) begin
-		local l1;
-		if (if a2 then self.viewCObject) then begin
-				self:RemoveWord(a2)
+	DoAddWord: func(word, copy) begin
+		local addEncodedWord;
+		if (if copy then self.viewCObject) then begin
+				self:RemoveWord(copy)
 			end;
-		if ((l1 := dictionary:AddEncodedWord(a1, true)) = 0) then begin
+		if ((addEncodedWord := dictionary:AddEncodedWord(word, true)) = 0) then begin
 				if self.viewCObject then begin
-						window:Reposition(a1);
+						window:Reposition(word);
 						base:SelectFirst();
 						words:Dirty();
-						if a2 then begin
-								self:AddExpandWord(selectedWord, a1)
+						if copy then begin
+								self:AddExpandWord(selectedWord, word)
 							end
 					end;
-				AddUndoAction('RemoveWord, [Array: a1])
+				AddUndoAction('RemoveWord, [Array: word])
 			end;
-		return (l1 = 0)
+		return (addEncodedWord = 0)
 	end,
 	allocateContext: [|Array|:
 		'words,
@@ -208,28 +208,28 @@ reviewDict := {
 		'addButton,
 		addButton
 	],
-	RemoveExpandedWord: func(a1) begin
-		local l1, l2, l3, l4;
+	RemoveExpandedWord: func(copy) begin
+		local frame2, word, list, count;
 		self:SetUpDictionary();
-		l1 := {attribute: nil, terminalClass: nil};
-		(if (((l2 := expandDict:LookupWord(a1, l1)) = 2) or (l2 = 3)) then (if l1.attribute then begin
-					expandDict:DeleteWord(a1);
-					expanded := (l3 := expandDict.list)[l1.attribute];
-					l3[l1.attribute] := nil;
-					(while (if ((l4 := Length(l3)) > 0) then (not l3[(l4 - 1)])) do ArrayRemoveCount(l3, (l4 - 1), 1));
-					AddUndoAction('AddExpandWord, [Array: a1, expanded]);
+		frame2 := {attribute: nil, terminalClass: nil};
+		(if (((word := expandDict:LookupWord(copy, frame2)) = 2) or (word = 3)) then (if frame2.attribute then begin
+					expandDict:DeleteWord(copy);
+					expanded := (list := expandDict.list)[frame2.attribute];
+					list[frame2.attribute] := nil;
+					(while (if ((count := Length(list)) > 0) then (not list[(count - 1)])) do ArrayRemoveCount(list, (count - 1), 1));
+					AddUndoAction('AddExpandWord, [Array: copy, expanded]);
 					(if self.viewCObject then words:Dirty())
 				end))
 	end,
 	_proto: @protoFloater,
-	AddExpandWord: func(a1, a2) begin
-		local l1, l2, l3;
+	AddExpandWord: func(selectedWord, word) begin
+		local l1, index, addWord;
 		l1 := nil;
 		self:SetUpDictionary();
-		if (l2 := self:GetIndex()) then begin
-				if ((l3 := expandDict:AddWord(a1, l2)) = 0) then begin
-						expandDict.list[l2] := a2;
-						AddUndoAction('RemoveExpandedWord, [Array: a1]);
+		if (index := self:GetIndex()) then begin
+				if ((addWord := expandDict:AddWord(selectedWord, index)) = 0) then begin
+						expandDict.list[index] := word;
+						AddUndoAction('RemoveExpandedWord, [Array: selectedWord]);
 						l1 := true
 					end;
 				if self.viewCObject then begin
@@ -253,40 +253,40 @@ reviewDict := {
 		constants: {
 			kLiteral_5a8909: "This word is already in a word list"
 		},
-		func(a1) begin
-			local l1, l2, l3;
+		func(word) begin
+			local copy, yesNoDefaultNo, text;
 			self:SetUpDictionary();
 			if (if expandFlag then self.viewCObject) then begin
-					self:AddExpandWord(selectedWord, a1);
+					self:AddExpandWord(selectedWord, word);
 					return nil
 				end;
 			if (not WRecIsBeingUsed()) then begin
 					if (GetLocale().enabledlanguage <> 'Swedish) then begin
-							StripDiacriticals((l1 := Clone(a1)));
-							if (StrExactCompare(a1, l1) = 0) then begin
-									l1 := nil
+							StripDiacriticals((copy := Clone(word)));
+							if (StrExactCompare(word, copy) = 0) then begin
+									copy := nil
 								end
 						end
 				end;
-			l2 := true;
+			yesNoDefaultNo := true;
 			if self.viewCObject then begin
-					if (BAnd((errorCode := ValidateWord(Clone(a1), nil)), 128) <> 0) then begin
+					if (BAnd((errorCode := ValidateWord(Clone(word), nil)), 128) <> 0) then begin
 							if (BAnd(errorCode, 8192) <> 0) then begin
-									l3 := kLiteral_5a8909
+									text := kLiteral_5a8909
 								end else begin
 									if (BAnd(errorCode, 16) <> 0) then begin
-											l3 := "This word contains symbols that can't be recognized"
+											text := "This word contains symbols that can't be recognized"
 										end else begin
 											if (BAnd(errorCode, 4096) <> 0) then begin
-													l3 := "The lower case version of this word is already in a word list"
+													text := "The lower case version of this word is already in a word list"
 												end else begin
 													if (BAnd(errorCode, 8) <> 0) then begin
-															l3 := "There are no alphabetic letters in this word"
+															text := "There are no alphabetic letters in this word"
 														end else begin
 															if (BAnd(errorCode, 2) <> 0) then begin
-																	l3 := "Short words may decrease recognition accuracy"
+																	text := "Short words may decrease recognition accuracy"
 																end else begin
-																	l3 := kLiteral_5a8909
+																	text := kLiteral_5a8909
 																end
 														end
 												end
@@ -295,22 +295,22 @@ reviewDict := {
 						end else begin
 							if (BAnd(errorCode, 4096) <> 0) then begin
 									if (BAnd(errorCode, 1024) = 0) then begin
-											l3 := "The capitalized version of this word is already in a word list"
+											text := "The capitalized version of this word is already in a word list"
 										end
 								end else begin
-									if l1 then begin
-											l3 := "This word contains diacritical characters, which will be stripped and added as a word expansion.  The word should be written without diacriticals"
+									if copy then begin
+											text := "This word contains diacritical characters, which will be stripped and added as a word expansion.  The word should be written without diacriticals"
 										end
 								end
 						end;
-					if l3 then begin
-							l2 := ModalConfirm(Stringer([Array: l3, ".  Do you really want to add it?"]), 'yesNoDefaultNo)
+					if text then begin
+							yesNoDefaultNo := ModalConfirm(Stringer([Array: text, ".  Do you really want to add it?"]), 'yesNoDefaultNo)
 						end
 				end;
-			if l2 then begin
-					l2 := self:DoAddWord(a1, l1)
+			if yesNoDefaultNo then begin
+					yesNoDefaultNo := self:DoAddWord(word, copy)
 				end;
-			return l2
+			return yesNoDefaultNo
 		end),
 	viewJustify: vjParentCenterH + vjParentCenterV,
 	numLines: 6,
@@ -325,27 +325,27 @@ reviewDict := {
 	end,
 	A2Z: nil,
 	SetupExpand: func() begin
-		local l1;
-		expandDict := (l1 := GetDictionary(35));
-		(if (not l1.list) then (l1.list := [Array: ]))
+		local dictionary;
+		expandDict := (dictionary := GetDictionary(35));
+		(if (not dictionary.list) then (dictionary.list := [Array: ]))
 	end,
 	window: nil,
 	viewSetupFormScript: func() begin
-		local l1, l2, l3, l4, l5, l6, l7;
+		local appAreaHeight, appAreaWidth, l3, l4, l5, l6, least;
 		self:SetupExpand();
-		l1 := displayParams.appAreaHeight;
-		l2 := displayParams.appAreaWidth;
-		numLines := (if (l1 >= 320) then 6 else 4);
+		appAreaHeight := displayParams.appAreaHeight;
+		appAreaWidth := displayParams.appAreaWidth;
+		numLines := (if (appAreaHeight >= 320) then 6 else 4);
 		lineHeight := FontHeight(1058816);
 		l3 := (170 + (numLines * lineHeight));
 		l4 := 226;
-		l5 := (l2 div 14);
-		if (BAnd((l7 := min((l7 := min((l6 := (16 + ((l1 - l3) div 5))), l5)), 20)), 1) > 0) then begin
-				l7 := (l7 - 1)
+		l5 := (appAreaWidth div 14);
+		if (BAnd((least := min((least := min((l6 := (16 + ((appAreaHeight - l3) div 5))), l5)), 20)), 1) > 0) then begin
+				least := (least - 1)
 			end;
-		if (l7 > 16) then begin
-				l4 := ((l4 + ((l7 - 16) * 14)) + 3);
-				l3 := (l3 + ((l7 - 16) * 5))
+		if (least > 16) then begin
+				l4 := ((l4 + ((least - 16) * 14)) + 3);
+				l3 := (l3 + ((least - 16) * 5))
 			end;
 		(viewBounds := RelBounds(0, 0, l4, l3))
 	end,
@@ -354,47 +354,47 @@ reviewDict := {
 	end,
 	viewEffect: 165920,
 	GetIndex: func() begin
-		l2 := (Length((l1 := expandDict.list)) - 1);
-		local l1;
+		l2 := (Length((list := expandDict.list)) - 1);
+		local list;
 		local l2;
-		(for l3 := 0 to l2 do begin
-				if (not l1[l3]) then begin
-						return l3
+		(for i := 0 to l2 do begin
+				if (not list[i]) then begin
+						return i
 					end
 			end);
 		if ((l2 := (l2 + 1)) >= 255) then begin
 				return nil
 			end;
-		AddArraySlot(l1, nil);
+		AddArraySlot(list, nil);
 		l2
 	end,
-	RemoveWord: func(a1) begin
-		local l1, l2, l3, l4;
+	RemoveWord: func(word) begin
+		local deleteEncodedWord, copy, entryKey, numberEntries;
 		self:SetUpDictionary();
-		if ((l1 := dictionary:DeleteEncodedWord(a1)) = 0) then begin
-				dictionary:EncodeRecognitionWord((l2 := Clone(a1)));
-				if self:GetExpandedWord(l2) then begin
-						self:RemoveExpandedWord(l2)
+		if ((deleteEncodedWord := dictionary:DeleteEncodedWord(word)) = 0) then begin
+				dictionary:EncodeRecognitionWord((copy := Clone(word)));
+				if self:GetExpandedWord(copy) then begin
+						self:RemoveExpandedWord(copy)
 					end;
-				AddUndoAction('AddWord, [Array: a1]);
+				AddUndoAction('AddWord, [Array: word]);
 				if self.viewCObject then begin
-						self:RebuildCursorWindow((l3 := window:EntryKey(0)));
-						if (if selectedEntry then StrEqual(a1, selectedWord)) then begin
+						self:RebuildCursorWindow((entryKey := window:EntryKey(0)));
+						if (if selectedEntry then StrEqual(word, selectedWord)) then begin
 								self:SelectEntry(selectedIndex);
 								if (not selectedEntry) then begin
-										if ((l4 := window:GetNumberEntries()) <= 0) then begin
+										if ((numberEntries := window:GetNumberEntries()) <= 0) then begin
 												self:viewScrollUpScript();
-												l4 := window:GetNumberEntries()
+												numberEntries := window:GetNumberEntries()
 											end;
-										if (l4 > 0) then begin
-												self:SelectEntry((l4 - 1))
+										if (numberEntries > 0) then begin
+												self:SelectEntry((numberEntries - 1))
 											end
 									end
 							end;
 						words:Dirty()
 					end
 			end;
-		return (l1 = 0)
+		return (deleteEncodedWord = 0)
 	end,
 	selectedWord: nil,
 	debug: 43430,
@@ -406,20 +406,20 @@ reviewDict := {
 				a1.word
 			end
 		},
-		func(a1) begin
-			local l1;
+		func(text) begin
+			local first;
 			if (if (window exists) then window) then begin
 					window:GetCursor():Dispose()
 				end;
-			l1 := dictionary:MakeCursor(a1, nil, 'first);
-			(window := l1:MakeWindow(numLines)).entryFilter := kFunction_5a9579;
+			first := dictionary:MakeCursor(text, nil, 'first);
+			(window := first:MakeWindow(numLines)).entryFilter := kFunction_5a9579;
 			return nil
 		end),
-	ExpandOn: func(a1) begin
-		expandFlag := a1;
+	ExpandOn: func(selectedWord) begin
+		expandFlag := selectedWord;
 		SetValue(displayText, 'text, "Expand to:");
 		self:SetWord("");
-		(if self:GetExpandedWord(a1) then self:RemoveExpandedWord(a1))
+		(if self:GetExpandedWord(selectedWord) then self:RemoveExpandedWord(selectedWord))
 	end,
 	viewSetupChildrenScript: func() begin
 		self:SetUpDictionary();
@@ -444,59 +444,59 @@ words_2 := {
 		(viewBounds := SetBounds(9, 20, -8, (20 + (numLines * lineHeight))))
 	end,
 	WordHilite: func() begin
-		local l1;
-		(if (l1 := selectedIndex) then begin
-				l1 := (l1 * lineHeight);
-				self:InvertRect(0, l1, self:LocalBox().right, (l1 + lineHeight))
+		local selectedIndex2;
+		(if (selectedIndex2 := selectedIndex) then begin
+				selectedIndex2 := (selectedIndex2 * lineHeight);
+				self:InvertRect(0, selectedIndex2, self:LocalBox().right, (selectedIndex2 + lineHeight))
 			end)
 	end,
-	viewClickScript: func(a1) begin
+	viewClickScript: func(unit) begin
 		self:ExpandOff();
-		words:DoDrawing('trackLinesHilite, [Array: a1])
+		words:DoDrawing('trackLinesHilite, [Array: unit])
 	end,
 	doscrollscript: func(a1) begin
 		self:Dirty()
 	end,
 	trackLinesHilite: func(a1) begin
-		local l1, l2, l3;
+		local l1, box, selectedIndex;
 		l1 := nil;
 		InkOff(a1);
 		playsound(@click);
-		(l2 := self:GlobalBox()).top := l2.top;
-		l3 := base.selectedIndex;
+		(box := self:GlobalBox()).top := box.top;
+		selectedIndex := base.selectedIndex;
 		(loop begin
-				if ((l1 := ((GetPoint(5, a1) - l2.top) div lineHeight)) >= window:GetNumberEntries()) then begin
+				if ((l1 := ((GetPoint(5, a1) - box.top) div lineHeight)) >= window:GetNumberEntries()) then begin
 						l1 := nil
 					end;
-				if (l3 <> l1) then begin
+				if (selectedIndex <> l1) then begin
 						self:WordHilite();
 						base:SelectEntry(l1);
 						self:WordHilite();
-						l3 := l1
+						selectedIndex := l1
 					end;
 				(if StrokeDone(a1) then break)
 			end)
 	end,
 	viewDrawScript: func() begin
-		l1 := {font: 1058816};
-		l2 := window:GetNumberEntries();
-		if (if (A2Z exists) then (l2 > 0)) then begin
+		frame2 := {font: tsSystem + tsSize(10) + tsBold};
+		numberEntries := window:GetNumberEntries();
+		if (if (A2Z exists) then (numberEntries > 0)) then begin
 				A2Z:setLetter(window:EntryKey(0)[0])
 			end;
 		l5 := -4;
-		local l1;
-		local l2;
-		local l3;
-		local l4;
+		local frame2;
+		local numberEntries;
+		local entry;
+		local decodeRecognitionWord;
 		local l5;
-		(for l6 := 0 to (l2 - 1) do begin
-				local l9, l10;
-				l4 := dictionary:DecodeRecognitionWord(Clone((l3 := window:GetEntry(l6)).word), l3.attribute);
-				if (l9 := self:GetExpandedWord(l3.word)) then begin
-						StrReplace((l9 := Clone(l9)), SPrintObject($\n), "\u00AC\u", nil);
-						l4 := Stringer([Array: l4, " ", "->", " ", l9])
+		(for i := 0 to (numberEntries - 1) do begin
+				local expandedWord, text;
+				decodeRecognitionWord := dictionary:DecodeRecognitionWord(Clone((entry := window:GetEntry(i)).word), entry.attribute);
+				if (expandedWord := self:GetExpandedWord(entry.word)) then begin
+						StrReplace((expandedWord := Clone(expandedWord)), SPrintObject($\n), "\u00AC\u", nil);
+						decodeRecognitionWord := Stringer([Array: decodeRecognitionWord, " ", "->", " ", expandedWord])
 					end;
-				self:DrawShape((l10 := MakeText(l4, 9, l5, 216, (l5 + lineHeight))), l1);
+				self:DrawShape((text := MakeText(decodeRecognitionWord, 9, l5, 216, (l5 + lineHeight))), frame2);
 				l5 := (l5 + lineHeight)
 			end);
 		self:WordHilite()
@@ -533,15 +533,15 @@ A2Z := {
 				end)
 		end),
 	find: func(a1) begin
-		l1 := SPrintObject(a1);
-		l2 := SPrintObject($a);
-		local l1;
-		local l2;
+		sPrintObject2 := SPrintObject(a1);
+		sPrintObject3 := SPrintObject($a);
+		local sPrintObject2;
+		local sPrintObject3;
 		local l3;
-		l3 := (if (StrCompare(l1, "a") <= 0) then 0 else (if (StrCompare(l1, "z") >= 0) then 25 else (for l4 := 1 to 24 do begin
-						l2[0] := letters[l4];
-						if (StrCompare(l1, l2) = 0) then begin
-								break l4
+		l3 := (if (StrCompare(sPrintObject2, "a") <= 0) then 0 else (if (StrCompare(sPrintObject2, "z") >= 0) then 25 else (for i := 1 to 24 do begin
+						sPrintObject3[0] := letters[i];
+						if (StrCompare(sPrintObject2, sPrintObject3) = 0) then begin
+								break i
 							end
 					end)));
 		if (not l3) then begin
@@ -549,16 +549,16 @@ A2Z := {
 			end;
 		l3
 	end,
-	setLetter: func(a1) begin
-		local l1;
-		(if ((l1 := self:find(a1)) <> curIndex) then begin
-				curIndex := l1;
+	setLetter: func(entryKeyItem) begin
+		local find;
+		(if ((find := self:find(entryKeyItem)) <> curIndex) then begin
+				curIndex := find;
 				self:Dirty()
 			end)
 	end,
-	IndexClickScript: func(a1) begin
-		local l1;
-		window:Reposition((l1 := Stringer([Array: letters[a1]])));
+	IndexClickScript: func(curIndex) begin
+		local text;
+		window:Reposition((text := Stringer([Array: letters[curIndex]])));
 		if (not window:GetEntry(0)) then begin
 				base:viewScrollUpScript()
 			end;
@@ -589,61 +589,61 @@ Display_2 := {
 	viewFont: tsSystem + tsSize(10) + tsBold,
 	realText: nil,
 	preallocatedContext: 'Display,
-	viewChangedScript: func(a1, a2) begin
-		(if (a1 = 'text) then begin
+	viewChangedScript: func(slot, view) begin
+		(if (slot = 'text) then begin
 				realText := text;
 				(if expandFlag then StrReplace((realText := Clone(realText)), "\u00AC\u", SPrintObject($\n), nil))
 			end)
 	end,
-	viewKeyDownScript: func(a1, a2) begin
-		local l1, l2, l3;
-		l1 := self:GetWord();
+	viewKeyDownScript: func(char2, flags) begin
+		local word, selectedIndex2, numberEntries;
+		word := self:GetWord();
 		self:GrabCaret();
-		if (if (if (theWord := self:GetWord()) then (StrLen(theWord) >= 30)) then (not StrPos("\n\u0003\u\u0008\u\u001C\u\u001D\u", SPrintObject(a1), 0))) then begin
+		if (if (if (theWord := self:GetWord()) then (StrLen(theWord) >= 30)) then (not StrPos("\n\u0003\u\u0008\u\u001C\u\u001D\u", SPrintObject(char2), 0))) then begin
 				return true
 			end;
-		if (if expandFlag then (a1 = $\n)) then begin
-				self:SetWord(Stringer([Array: theWord, SPrintObject(a1)]));
-				AddUndoAction('SetWord, [Array: l1]);
+		if (if expandFlag then (char2 = $\n)) then begin
+				self:SetWord(Stringer([Array: theWord, SPrintObject(char2)]));
+				AddUndoAction('SetWord, [Array: word]);
 				return true
 			end;
-		if ((a1 = $\03) or (a1 = $\n)) then begin
+		if ((char2 = $\03) or (char2 = $\n)) then begin
 				addButton:buttonClickScript();
 				return true
 			end;
-		if (a1 = $\1E) then begin
-				l2 := 0;
+		if (char2 = $\1E) then begin
+				selectedIndex2 := 0;
 				if selectedEntry then begin
-						if ((l2 := ((l2 := selectedIndex) - 1)) < 0) then begin
+						if ((selectedIndex2 := ((selectedIndex2 := selectedIndex) - 1)) < 0) then begin
 								self:viewScrollScript(-1);
-								l2 := 0
+								selectedIndex2 := 0
 							end
 					end;
-				if (l2 < window:GetNumberEntries()) then begin
-						self:SelectEntry(l2);
+				if (selectedIndex2 < window:GetNumberEntries()) then begin
+						self:SelectEntry(selectedIndex2);
 						words:Dirty()
 					end;
 				return true
 			end;
-		if (a1 = $\1F) then begin
-				if ((l3 := window:GetNumberEntries()) > 0) then begin
-						l2 := (l3 - 1);
+		if (char2 = $\1F) then begin
+				if ((numberEntries := window:GetNumberEntries()) > 0) then begin
+						selectedIndex2 := (numberEntries - 1);
 						if selectedEntry then begin
-								if ((l2 := (selectedIndex + 1)) = numLines) then begin
+								if ((selectedIndex2 := (selectedIndex + 1)) = numLines) then begin
 										self:viewScrollScript(1);
-										l2 := (window:GetNumberEntries() - 1)
+										selectedIndex2 := (window:GetNumberEntries() - 1)
 									end
 							end;
-						if (l2 < window:GetNumberEntries()) then begin
-								self:SelectEntry(l2);
+						if (selectedIndex2 < window:GetNumberEntries()) then begin
+								self:SelectEntry(selectedIndex2);
 								words:Dirty()
 							end
 					end;
 				return true
 			end;
-		if (if (ORD(a1) >= 32) then (not IsCommandKeystroke(a1, a2))) then begin
-				self:SetWord(Stringer([Array: theWord, SPrintObject(a1)]));
-				AddUndoAction('SetWord, [Array: l1]);
+		if (if (ORD(char2) >= 32) then (not IsCommandKeystroke(char2, flags))) then begin
+				self:SetWord(Stringer([Array: theWord, SPrintObject(char2)]));
+				AddUndoAction('SetWord, [Array: word]);
 				return true
 			end;
 		return nil
@@ -656,18 +656,18 @@ reviewKeys := {
 	newt_feature: true,
 	preallocatedContext: 'reviewKeys,
 	viewSetupFormScript: func() begin
-		local l1, l2, l3;
+		local box, l2, l3;
 		inherited:viewSetupFormScript();
 		self.viewBounds := Clone(viewBounds);
 		viewBounds.bottom := (viewBounds.bottom - 22);
-		if (BAnd((l3 := ((l2 := ((l1 := self:Parent():LocalBox()).right - l1.left)) div 14)), 1) > 0) then begin
+		if (BAnd((l3 := ((l2 := ((box := self:Parent():LocalBox()).right - box.left)) div 14)), 1) > 0) then begin
 				l3 := (l3 - 1)
 			end;
 		viewBounds.top := (viewBounds.bottom - (5 * l3));
 		viewBounds.left := 0;
 		(viewBounds.right := (14 * l3))
 	end,
-	keyPressScript: func(a1) begin
+	keyPressScript: func(char2) begin
 		self:GrabCaret();
 		nil
 	end,
@@ -679,10 +679,10 @@ addButton := {
 	viewJustify: 8390790,
 	text: add,
 	buttonClickScript: func() begin
-		local l1;
+		local word;
 		self:GrabCaret();
-		if StrFilled((l1 := self:GetWord())) then begin
-				self:AddWord(l1)
+		if StrFilled((word := self:GetWord())) then begin
+				self:AddWord(word)
 			end else begin
 				self:Notify(3, notifyTitle, "Enter a word and then tap \u201C\uAdd.\u201D\u")
 			end;

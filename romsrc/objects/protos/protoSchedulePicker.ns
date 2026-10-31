@@ -9,17 +9,17 @@ protoSchedulePicker := {
 		nil
 	end,
 	DoOpenPicker: func() begin
-		local l1;
+		local copy;
 		if (if pickerSlip then pickerSlip.viewCObject) then begin
 				return nil
 			end;
 		inPeoplePicker := true;
 		if singleSelect then begin
-				(l1 := Clone(GetDataDefs(class))).singleSelect := true
+				(copy := Clone(GetDataDefs(class))).singleSelect := true
 			end else begin
-				l1 := class
+				copy := class
 			end;
-		(pickerSlip := _picker:New(l1, DeepClone(selected), self, nil))
+		(pickerSlip := _picker:New(copy, DeepClone(selected), self, nil))
 	end,
 	AddMemoryItem: func() begin
 		(if (if selected then (Length(selected) > 0)) then AddMemoryItemUnique(memory, selected, func(a1, a2) begin
@@ -27,40 +27,40 @@ protoSchedulePicker := {
 			end))
 	end,
 	ToRefEquality: func(a1, a2) begin
-		local l1, l2, l3;
-		l1 := GetDataDefs(class);
-		l2 := self:TextFromRef(a1);
-		l3 := self:TextFromRef(a2);
-		(if (if StrFilled(l2) then StrFilled(l3)) then StrEqual(l2, l3))
+		local dataDefs, textFromRef, textFromRef2;
+		dataDefs := GetDataDefs(class);
+		textFromRef := self:TextFromRef(a1);
+		textFromRef2 := self:TextFromRef(a2);
+		(if (if StrFilled(textFromRef) then StrFilled(textFromRef2)) then StrEqual(textFromRef, textFromRef2))
 	end,
-	TextFromRef: func(a1) begin
-		l2 := GetDataDefs(class);
-		if (if (if a1 then (IsArray(a1) = nil)) then l2) then begin
-				l1 := l2:Get(a1, textSlot, 'text)
+	TextFromRef: func(selected) begin
+		dataDefs := GetDataDefs(class);
+		if (if (if selected then (IsArray(selected) = nil)) then dataDefs) then begin
+				text := dataDefs:Get(selected, textSlot, 'text)
 			end else begin
-				if (if (if a1 then (Length(a1) > 0)) then l2) then begin
-						local l1;
-						local l2;
-						(foreach l3 in a1 do begin
-								local l5, l6, l7;
-								l5 := l2:Get(l3, textSlot, 'text);
-								if (if l1 then StrFilled(l1)) then begin
-										l1 := ParamStr("^0, ^1", [Array: l1, l5])
+				if (if (if selected then (Length(selected) > 0)) then dataDefs) then begin
+						local text;
+						local dataDefs;
+						(foreach item in selected do begin
+								local text2, box, l7;
+								text2 := dataDefs:Get(item, textSlot, 'text);
+								if (if text then StrFilled(text)) then begin
+										text := ParamStr("^0, ^1", [Array: text, text2])
 									end else begin
-										l1 := l5
+										text := text2
 									end
 							end);
-						if (if l1 then StrFilled(l1)) then begin
-								l6 := self:LocalBox();
+						if (if text then StrFilled(text)) then begin
+								box := self:LocalBox();
 								l7 := 12291;
-								l1 := StrTruncate(l1, ((l6.right - l6.left) - indent))
+								text := StrTruncate(text, ((box.right - box.left) - indent))
 							end else begin
-								l1 := "???"
+								text := "???"
 							end
 					end else begin
-						l1 := "None"
+						text := "None"
 					end
 			end;
-		l1
+		text
 	end
 };

@@ -9,12 +9,12 @@ protoStatusClosebox := {
 	viewFlags: vVisible + vReadOnly + vClickable,
 	visibleAction: nil,
 	viewSetupFormScript: func() begin
-		local l1, l2;
+		local path, l2;
 		inherited:?viewSetupFormScript();
-		l1 := self:path();
+		path := self:path();
 		visibleAction := nil;
-		(if (if l1 then HasSlot(l1, name)) then begin
-				if (l2 := l1.(name)) then begin
+		(if (if path then HasSlot(path, name)) then begin
+				if (l2 := path.(name)) then begin
 						buttonClickScript := l2
 					end;
 				(if l2 then (visibleAction := 'makeVisible) else (visibleAction := 'makeInvisible))

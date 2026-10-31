@@ -11,7 +11,7 @@ protoPictRadioButton := {
 	UpdateBitmap: func() begin
 		base:Dirty()
 	end,
-	viewClickScript: func(a1) begin
+	viewClickScript: func(unit) begin
 		if (viewValue = nil) then begin
 				cluster:SetCluster(base)
 			end;

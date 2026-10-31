@@ -5,80 +5,80 @@ protoRoutingFormat := {
 	storeCursors: true,
 	noClone: nil,
 	storeAlias: nil,
-	SetupItem: func(a1, a2) begin
+	SetupItem: func(fields, frame2) begin
 		if noDefaults then begin
-				return a1
+				return fields
 			end;
 		if storeAlias then begin
-				a1.body := self:ProcessAlias(a1, a2)
+				fields.body := self:ProcessAlias(fields, frame2)
 			end else begin
-				a1.body := a2.target
+				fields.body := frame2.target
 			end;
-		a1
+		fields
 	end,
-	MakeBodyAlias: func(a1) begin
-		local l1, l2;
-		l1 := a1.targetEntry;
-		l2 := a1.target;
-		if l1 then begin
-				l2 := {class: DataClassOf(l2), _ioAlias: MakeEntryAlias(l1), path: 'body}
+	MakeBodyAlias: func(frame2) begin
+		local targetEntry, target;
+		targetEntry := frame2.targetEntry;
+		target := frame2.target;
+		if targetEntry then begin
+				target := {class: DataClassOf(target), _ioAlias: MakeEntryAlias(targetEntry), path: 'body}
 			end else begin
-				if IsSoupEntry(l2) then begin
-						l2 := {class: DataClassOf(l2), _ioAlias: MakeEntryAlias(l2)}
+				if IsSoupEntry(target) then begin
+						target := {class: DataClassOf(target), _ioAlias: MakeEntryAlias(target)}
 					end
 			end;
-		l2
+		target
 	end,
 	routingType: 'frame,
-	ProcessAlias: func(a1, a2) begin
-		local l1, l2, l3, l4, l5;
-		l1 := a2.target;
-		if (l2 := self:TargetSize(a2)) then begin
-				if (not (l3 := (if sizeLimit then (l2 > sizeLimit)))) then begin
-						l5 := ((l4 := GetItemTransport(a1):GetDefaultOwnerStore()):TotalSize() - l4:UsedSize());
-						l3 := (l2 > (l5 - 1000))
+	ProcessAlias: func(fields, frame2) begin
+		local target, targetSize, l3, defaultOwnerStore, l5;
+		target := frame2.target;
+		if (targetSize := self:TargetSize(frame2)) then begin
+				if (not (l3 := (if sizeLimit then (targetSize > sizeLimit)))) then begin
+						l5 := ((defaultOwnerStore := GetItemTransport(fields):GetDefaultOwnerStore()):TotalSize() - defaultOwnerStore:UsedSize());
+						l3 := (targetSize > (l5 - 1000))
 					end;
 				if l3 then begin
-						if (l1 := self:MakeBodyAlias(a2)) then begin
-								a1.needsResolve := true;
+						if (target := self:MakeBodyAlias(frame2)) then begin
+								fields.needsResolve := true;
 								if showMessage then begin
 										GetRoot():Notify(3, "Routing", "To save storage space, this item will have references to the original.  Make sure the original is available when this item is sent.")
 									end
 							end
 					end
 			end;
-		l1
+		target
 	end,
 	sizeLimit: nil,
-	FindCursorFormat: func(a1) begin
-		l1 := nil;
-		if ((l2 := GetViewDefs(DataClassOf(a1))) <> nil) then begin
+	FindCursorFormat: func(target) begin
+		item2 := nil;
+		if ((viewDefs := GetViewDefs(DataClassOf(target))) <> nil) then begin
 				if defaultFormat then begin
-						l1 := l2.(defaultFormat)
+						item2 := viewDefs.(defaultFormat)
 					end else begin
-						l1 := l2.(symbol)
+						item2 := viewDefs.(symbol)
 					end;
-				if (l1 = nil) then begin
-						local l1;
-						local l2;
-						(foreach l3 in l2 do begin
-								if (if (if (if l3 then l3.dataTypes) then SetOverlaps(l3.dataTypes, dataTypes)) then (not l3.usesCursors)) then begin
-										l1 := l3;
+				if (item2 = nil) then begin
+						local item2;
+						local viewDefs;
+						(foreach item in viewDefs do begin
+								if (if (if (if item then item.dataTypes) then SetOverlaps(item.dataTypes, dataTypes)) then (not item.usesCursors)) then begin
+										item2 := item;
 										break
 									end
 							end)
 					end
 			end;
-		l1
+		item2
 	end,
 	ResolveItem: func(a1) begin
-		local l1;
+		local resolveBody;
 		if a1.needsResolve then begin
-				if ((l1 := self:ResolveBody(a1)) = nil) then begin
+				if ((resolveBody := self:ResolveBody(a1)) = nil) then begin
 						return nil
 					end;
 				a1._saveBodyAlias := a1.body;
-				a1.body := l1
+				a1.body := resolveBody
 			end;
 		a1
 	end,
@@ -86,28 +86,28 @@ protoRoutingFormat := {
 	usesCursors: nil,
 	title: default_3,
 	dataTypes: [|Array|: 'frame, 'text],
-	ParseCursor: func(a1, a2) begin
-		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
-		if TargetIsCursor(a1.body) then begin
-				l1 := GetItemTransport(a1);
-				if (if storeCursors then l1.allowBodyCursors) then begin
-						return a1
+	ParseCursor: func(fields, frame3) begin
+		local itemTransport, targetCursor, next, l4, list, copy, frame2, cursorFormat, l9, error, category;
+		if TargetIsCursor(fields.body) then begin
+				itemTransport := GetItemTransport(fields);
+				if (if storeCursors then itemTransport.allowBodyCursors) then begin
+						return fields
 					end;
-				l3 := (l2 := GetTargetCursor(a1.body, nil)):entry();
+				next := (targetCursor := GetTargetCursor(fields.body, nil)):entry();
 				l4 := 0;
-				l5 := [Array: ];
-				l1 := GetItemTransport(a1);
-				(while l3 do begin
-						(l6 := Clone(a1)).title := nil;
-						if (l7 := {fields: l6, target: l3, targetView: a2.targetView}) then begin
-								l8 := self:FindCursorFormat(l7.target);
+				list := [Array: ];
+				itemTransport := GetItemTransport(fields);
+				(while next do begin
+						(copy := Clone(fields)).title := nil;
+						if (frame2 := {fields: copy, target: next, targetView: frame3.targetView}) then begin
+								cursorFormat := self:FindCursorFormat(frame2.target);
 								l9 := nil;
-								if l8 then begin
-										l6.currentFormat := l8.symbol;
-										if HasSlot(l8, 'SetupSlip) then begin
-												l8:?SetupSlip(l7, l7.fields)
+								if cursorFormat then begin
+										copy.currentFormat := cursorFormat.symbol;
+										if HasSlot(cursorFormat, 'SetupSlip) then begin
+												cursorFormat:?SetupSlip(frame2, frame2.fields)
 											end else begin
-												if ((l6 := l8:?SetupItem(l6, l7)) = nil) then begin
+												if ((copy := cursorFormat:?SetupItem(copy, frame2)) = nil) then begin
 														l9 := true
 													end
 											end
@@ -117,68 +117,68 @@ protoRoutingFormat := {
 								if l9 then begin
 										l4 := (l4 + 1)
 									end else begin
-										l1:?VerifyRoutingInfo(l6, a1, l3, l8);
+										itemTransport:?VerifyRoutingInfo(copy, fields, next, cursorFormat);
 										try begin
-												l6 := GetRoot().(l1.owner):addOneItem('outbox, l6)
+												copy := GetRoot().(itemTransport.owner):addOneItem('outbox, copy)
 											end onexception |evt.ex| do begin
-												l10 := CurrentException().error;
+												error := CurrentException().error;
 												l4 := (l4 + 1);
-												l6 := nil;
-												if (l10 := -10617) then begin
-														GetRoot():Notify(3, GetItemTransport(a1).title, "The store is full.")
+												copy := nil;
+												if (error := -10617) then begin
+														GetRoot():Notify(3, GetItemTransport(fields).title, "The store is full.")
 													end else begin
 														Rethrow()
 													end
 											end;
-										if l6 then begin
-												AddArraySlot(l5, MakeEntryAlias(l6))
+										if copy then begin
+												AddArraySlot(list, MakeEntryAlias(copy))
 											end
 									end
 							end;
-						(l3 := l2:Next())
+						(next := targetCursor:Next())
 					end);
-				l11 := a1.category;
-				(a1 := CreateTargetCursor('ioCursor, l5)).category := l11;
+				category := fields.category;
+				(fields := CreateTargetCursor('ioCursor, list)).category := category;
 				if (l4 > 0) then begin
-						GetRoot():Notify(3, GetItemTransport(a1).title, "Some items could not be sent.");
-						a1.skipped := l4
+						GetRoot():Notify(3, GetItemTransport(fields).title, "Some items could not be sent.");
+						fields.skipped := l4
 					end;
-				a1
+				fields
 			end;
-		return a1
+		return fields
 	end,
-	SetupSlip: func(a1, a2) begin
-		self:SetupItem(a2, {target: a1.target, targetView: a1.targetView})
+	SetupSlip: func(a1, fields) begin
+		self:SetupItem(fields, {target: a1.target, targetView: a1.targetView})
 	end,
-	TextScript: func(a1, a2) begin
-		local l1;
-		if (l1 := GetDataDefs(DataClassOf(a2))) then begin
-				if l1.TextScript then begin
-						return l1:TextScript(a1, a2)
+	TextScript: func(entry, target) begin
+		local dataDefs;
+		if (dataDefs := GetDataDefs(DataClassOf(target))) then begin
+				if dataDefs.TextScript then begin
+						return dataDefs:TextScript(entry, target)
 					end else begin
-						if l1.description then begin
-								return l1.description
+						if dataDefs.description then begin
+								return dataDefs.description
 							end else begin
-								return l1.name
+								return dataDefs.name
 							end
 					end
 			end;
-		(if TargetIsCursor(a2) then return "This is a list of items. The text for each item can be edited in the outbox." else return "No Text available for this item")
+		(if TargetIsCursor(target) then return "This is a list of items. The text for each item can be edited in the outbox." else return "No Text available for this item")
 	end,
 	noDefaults: nil,
-	ResolveBody: func(a1) begin
-		local l1, l2;
-		if (if IsFrame((l1 := (if a1.body then a1.body else a1))) then l1._ioAlias) then begin
-				if (l2 := ResolveEntryAlias(l1._ioAlias)) then begin
-						l1 := (if l1.path then l2.(l1.path) else l2)
+	ResolveBody: func(fields) begin
+		local l1, resolveEntryAlias2;
+		if (if IsFrame((l1 := (if fields.body then fields.body else fields))) then l1._ioAlias) then begin
+				if (resolveEntryAlias2 := ResolveEntryAlias(l1._ioAlias)) then begin
+						l1 := (if l1.path then resolveEntryAlias2.(l1.path) else resolveEntryAlias2)
 					end else begin
 						l1 := nil
 					end
 			end;
 		l1
 	end,
-	TargetSize: func(a1) begin
-		(if a1.targetEntry then EntrySize(a1.targetEntry) else (if IsSoupEntry(a1.target) then EntrySize(a1.target)))
+	TargetSize: func(frame2) begin
+		(if frame2.targetEntry then EntrySize(frame2.targetEntry) else (if IsSoupEntry(frame2.target) then EntrySize(frame2.target)))
 	end,
 	showMessage: true,
 	version: 0,

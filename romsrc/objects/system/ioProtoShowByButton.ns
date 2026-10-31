@@ -18,10 +18,10 @@ ioProtoShowByButton := {
 			end;
 		inherited:?viewSetupFormScript()
 	end,
-	pickActionScript: func(a1) begin
-		inherited:pickActionScript(a1);
-		(if (self:GetAppPreferences().sortby <> popup[a1].val) then begin
-				self:GetAppPreferences().sortby := popup[a1].val;
+	pickActionScript: func(index) begin
+		inherited:pickActionScript(index);
+		(if (self:GetAppPreferences().sortby <> popup[index].val) then begin
+				self:GetAppPreferences().sortby := popup[index].val;
 				self:FilterChanged()
 			end)
 	end,

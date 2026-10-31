@@ -5,15 +5,15 @@ address := {
 	symbol: 'address,
 	stepChildren: [stepChildren: addressItem, addressItem_2, addressItem_3, addressItem_4, addressItem_5, country],
 	UpdateCountryInfo: func() begin
-		local l1, l2, l3;
-		l1 := GetLocale();
+		local locale, countryEntry, l3;
+		locale := GetLocale();
 		l3 := true;
 		if target.(country.path) then begin
-				if (Length((l2 := GetCountryEntry(target.(country.path)))) > 0) then begin
-						l3 := (l2[0].symbol = 'USA)
+				if (Length((countryEntry := GetCountryEntry(target.(country.path)))) > 0) then begin
+						l3 := (countryEntry[0].symbol = 'USA)
 					end
 			end;
-		(if l3 then SetValue(State.entryLine, 'dictionaries, l1.recogStateDictionaries) else SetValue(State.entryLine, 'viewFlags, 12618241))
+		(if l3 then SetValue(State.entryLine, 'dictionaries, locale.recogStateDictionaries) else SetValue(State.entryLine, 'viewFlags, vVisible + vClickable + vGesturesAllowed + vPunctuationAllowed + vNameField + vCapsRequired))
 	end,
 	viewSetupDoneScript: func() begin
 		self:UpdateCountryInfo();
@@ -24,8 +24,8 @@ address := {
 	infoFrame: {
 		checkPrefix: [|Array|: true, [pathExpr: 'addresses]],
 		checkPaths: [|Array|: 'address, 'address2, 'city, 'region, 'postal_code, 'country],
-		formatFunc: func(a1) begin
-			(if (if StrFilled(a1[2]) then StrFilled(a1[3])) then ParamStr("^?0^0\n||^?1^1\n||^?2^2, ||^?3^3 ||^?4^4||^?5\n^5||", a1) else ParamStr("^?0^0\n||^?1^1\n||^?2^2 ||^?3^3 ||^?4^4||^?5\n^5||", a1))
+		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+			(if (if StrFilled(v20_wwwwwwwwwwvvvvvv[2]) then StrFilled(v20_wwwwwwwwwwvvvvvv[3])) then ParamStr("^?0^0\n||^?1^1\n||^?2^2, ||^?3^3 ||^?4^4||^?5\n^5||", v20_wwwwwwwwwwvvvvvv) else ParamStr("^?0^0\n||^?1^1\n||^?2^2 ||^?3^3 ||^?4^4||^?5\n^5||", v20_wwwwwwwwwwvvvvvv))
 		end
 	},
 	protection: 'private,
@@ -71,8 +71,8 @@ addressItem := {
 		inherited:?viewSetupDoneScript()
 	end,
 	viewSetupFormScript: func() begin
-		local l1;
-		label := (l1 := GetLocale()).streetLabel;
+		local locale;
+		label := (locale := GetLocale()).streetLabel;
 		inherited:?viewSetupFormScript()
 	end,
 	_proto: @newtLabelInputLine,
@@ -99,9 +99,9 @@ addressItem_3 := {
 	label: nil,
 	newDictionaries: nil,
 	viewSetupFormScript: func() begin
-		local l1;
-		label := (l1 := GetLocale()).cityLabel;
-		newDictionaries := l1.recogCityDictionaries;
+		local locale;
+		label := (locale := GetLocale()).cityLabel;
+		newDictionaries := locale.recogCityDictionaries;
 		inherited:?viewSetupFormScript()
 	end,
 	memory: 'cityName,
@@ -156,21 +156,21 @@ country := {
 	flavor: {
 		_proto: @newtCountryFilter,
 		Picker: func() begin
-			if (if (if (not (l1 := (if StrFilled(target.country) then target.country))) then (l2 := target.addresses)) then ((l3 := Length(l2)) > 0)) then begin
-					local l1;
-					local l2;
-					local l3;
-					local l4;
-					(for l5 := 0 to (l3 - 1) do begin
-							if (if l2[l5] then StrFilled(l2[l5].country)) then begin
-									break (l1 := l2[l5].country)
+			if (if (if (not (country := (if StrFilled(target.country) then target.country))) then (addresses := target.addresses)) then ((count := Length(addresses)) > 0)) then begin
+					local country;
+					local addresses;
+					local count;
+					local countryEntry;
+					(for i := 0 to (count - 1) do begin
+							if (if addresses[i] then StrFilled(addresses[i].country)) then begin
+									break (country := addresses[i].country)
 								end
 						end)
 				end;
-			if (not l1) then begin
-					l1 := UserConfiguration.currentCountry
+			if (not country) then begin
+					country := UserConfiguration.currentCountry
 				end;
-			@locationPopup:new({default: (if (Length((l4 := GetCountryEntry(l1))) > 0) then l4[0]), spots: @countrySoupName, result: 'name}, self:GlobalLabelBounds(), self)
+			@locationPopup:new({default: (if (Length((countryEntry := GetCountryEntry(country))) > 0) then countryEntry[0]), spots: @countrySoupName, result: 'name}, self:GlobalLabelBounds(), self)
 		end
 	},
 	label: "Country",

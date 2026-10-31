@@ -18,14 +18,14 @@ protoGlance := {
 	viewIdleScript: func() begin
 		self:Close()
 	end,
-	viewKeyDownScript: func(a1, a2) begin
-		(if (a1 <> $\00) then begin
+	viewKeyDownScript: func(char2, flags) begin
+		(if (char2 <> $\00) then begin
 				clicker();
 				self:Close();
 				true
 			end)
 	end,
-	viewClickScript: func(a1) begin
+	viewClickScript: func(unit) begin
 		self:Close()
 	end,
 	debug: 90867

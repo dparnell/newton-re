@@ -9,35 +9,35 @@ blindEntryLine := {
 	realText: uCardPositionAlertButton,
 	dummyChar: $\u2022,
 	textChanged: func() begin
-		l2 := StrLen((l1 := entryLine.text));
-		l3 := StrLen(realText);
-		l4 := GetCaretInfo().info.offset;
-		(if (l2 < l3) then (realText := Stringer([Array: Substr(realText, 0, l4), Substr(realText, ((l4 + l3) - l2), l3)])) else (if (l2 > l3) then begin
-					l5 := (l2 - l3);
-					realText := Stringer([Array: Substr(realText, 0, (l4 - l5)), Substr(l1, (l4 - l5), l5), Substr(realText, (l4 - l5), ((l3 - l4) + l5))]);
-					local l1;
-					local l2;
-					local l3;
-					local l4;
+		len := StrLen((text := entryLine.text));
+		len2 := StrLen(realText);
+		offset := GetCaretInfo().info.offset;
+		(if (len < len2) then (realText := Stringer([Array: Substr(realText, 0, offset), Substr(realText, ((offset + len2) - len), len2)])) else (if (len > len2) then begin
+					l5 := (len - len2);
+					realText := Stringer([Array: Substr(realText, 0, (offset - l5)), Substr(text, (offset - l5), l5), Substr(realText, (offset - l5), ((len2 - offset) + l5))]);
+					local text;
+					local len;
+					local len2;
+					local offset;
 					local l5;
-					(for l6 := (-l5) to -1 do begin
-							l1[(l4 + l6)] := dummyChar
+					(for i := (-l5) to -1 do begin
+							text[(offset + i)] := dummyChar
 						end);
-					SetValue(entryLine, 'text, l1);
-					SetKeyView(entryLine, l4)
+					SetValue(entryLine, 'text, text);
+					SetKeyView(entryLine, offset)
 				end))
 	end,
 	UpdateText: func(a1) begin
-		l1 := Clone(a1);
+		copy := Clone(a1);
 		realText := a1;
-		local l1;
-		(for l2 := 0 to (StrLen(l1) - 1) do begin
-				l1[l2] := dummyChar
+		local copy;
+		(for i := 0 to (StrLen(copy) - 1) do begin
+				copy[i] := dummyChar
 			end);
-		SetValue(entryLine, 'text, l1);
+		SetValue(entryLine, 'text, copy);
 		entryLine:SetHilite(9999, 9999, true)
 	end,
-	viewClickScript: func(a1) begin
+	viewClickScript: func(unit) begin
 		playsound(@click);
 		SetKeyView(entryLine, 99999);
 		true

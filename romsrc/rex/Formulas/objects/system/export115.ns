@@ -34,16 +34,16 @@ export115 := {
 	formulaSymbol: 'LoanPayment,
 	overview: loanPayment,
 	FillInTheSolution: func(a1, a2) begin
-		local l1, l2, l3, l4;
+		local numericValue, numericValue2, numericValue3, numericValue4;
 		inherited:FillInTheSolution(a1, a2);
-		l1 := FSViews[0]:GetNumericValue();
-		l2 := FSViews[1]:GetNumericValue();
-		l3 := FSViews[2]:GetNumericValue();
-		l4 := FSViews[3]:GetNumericValue();
-		(if (if (if (if (l1 <> nil) then (l2 <> nil)) then (l3 <> nil)) then (l4 <> nil)) then begin
-				l4 := abs(l4);
-				TotalPayments:SetNumericValueString(FormattedNumberStr(((l1 * 12) * l4), "%.2f"));
-				TotalInterest:SetNumericValueString(FormattedNumberStr((((l1 * 12) * l4) - l3), "%.2f"))
+		numericValue := FSViews[0]:GetNumericValue();
+		numericValue2 := FSViews[1]:GetNumericValue();
+		numericValue3 := FSViews[2]:GetNumericValue();
+		numericValue4 := FSViews[3]:GetNumericValue();
+		(if (if (if (if (numericValue <> nil) then (numericValue2 <> nil)) then (numericValue3 <> nil)) then (numericValue4 <> nil)) then begin
+				numericValue4 := abs(numericValue4);
+				TotalPayments:SetNumericValueString(FormattedNumberStr(((numericValue * 12) * numericValue4), "%.2f"));
+				TotalInterest:SetNumericValueString(FormattedNumberStr((((numericValue * 12) * numericValue4) - numericValue3), "%.2f"))
 			end)
 	end,
 	_proto: @8304,
@@ -73,15 +73,15 @@ loanPayment := "Loan Payment";
 
 export115Item := {
 	calcLineLabel: "Number of Years",
-	ComputeValue: func(a1) begin
-		local l1;
-		if (((l1 := self:SolveForPeriod((a1[1] / 12), a1[2], 0, (-a1[3]))) = nil) or (l1 < 0)) then begin
-				l1 := nil;
+	ComputeValue: func(list) begin
+		local solveForPeriod;
+		if (((solveForPeriod := self:SolveForPeriod((list[1] / 12), list[2], 0, (-list[3]))) = nil) or (solveForPeriod < 0)) then begin
+				solveForPeriod := nil;
 				self:Notify(3, "Loan Payment", "No solution.")
 			end else begin
-				l1 := (l1 / 12)
+				solveForPeriod := (solveForPeriod / 12)
 			end;
-		return l1
+		return solveForPeriod
 	end,
 	lineNumber: 0,
 	viewSetupDoneScript: func() begin
@@ -94,14 +94,14 @@ export115Item := {
 
 export115Item_2 := {
 	calcLineLabel: interestRate,
-	ComputeValue: func(a1) begin
-		local l1;
-		if ((l1 := self:SolveForInterestRate((a1[0] * 12), a1[2], 0, (-a1[3]))) = nil) then begin
+	ComputeValue: func(list) begin
+		local solveForInterestRate;
+		if ((solveForInterestRate := self:SolveForInterestRate((list[0] * 12), list[2], 0, (-list[3]))) = nil) then begin
 				self:Notify(3, "Loan Payment", "Interest rate out of range.")
 			end else begin
-				l1 := (l1 * 12)
+				solveForInterestRate := (solveForInterestRate * 12)
 			end;
-		return l1
+		return solveForInterestRate
 	end,
 	lineNumber: 1,
 	decimalPlaces: 4,
@@ -111,14 +111,14 @@ export115Item_2 := {
 
 export115Item_3 := {
 	calcLineLabel: "Loan Amount",
-	ComputeValue: func(a1) begin
-		local l1;
-		if ((l1 := self:SolveForPresentValue((a1[0] * 12), (a1[1] / 12), 0, (-a1[3]))) = nil) then begin
+	ComputeValue: func(list) begin
+		local solveForPresentValue;
+		if ((solveForPresentValue := self:SolveForPresentValue((list[0] * 12), (list[1] / 12), 0, (-list[3]))) = nil) then begin
 				self:Notify(3, "Loan Payment", "Interest rate out of range.")
 			end else begin
-				l1 := abs(l1)
+				solveForPresentValue := abs(solveForPresentValue)
 			end;
-		return l1
+		return solveForPresentValue
 	end,
 	lineNumber: 2,
 	_proto: @8296,
@@ -127,14 +127,14 @@ export115Item_3 := {
 
 export115Item_4 := {
 	calcLineLabel: "Monthly Payment",
-	ComputeValue: func(a1) begin
-		local l1;
-		if ((l1 := self:SolveForPayment((a1[0] * 12), (a1[1] / 12), a1[2], 0)) = nil) then begin
+	ComputeValue: func(list) begin
+		local solveForPayment;
+		if ((solveForPayment := self:SolveForPayment((list[0] * 12), (list[1] / 12), list[2], 0)) = nil) then begin
 				self:Notify(3, "Loan Payment", "No solution.")
 			end else begin
-				l1 := abs(l1)
+				solveForPayment := abs(solveForPayment)
 			end;
-		return l1
+		return solveForPayment
 	end,
 	lineNumber: 3,
 	_proto: @8296,

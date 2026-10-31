@@ -8,34 +8,34 @@ cfPhoneListFormat := {
 	symbol: 'cfPhoneListFormat,
 	usesCursors: true,
 	AddHeader: func() begin
-		local l1, l2;
-		l2 := 0;
-		l1 := target;
+		local target2, none;
+		none := 0;
+		target2 := target;
 		if (not currentLetter) then begin
-				if (IsRichString(l1.sorton) or (not StrFilled(l1.sorton))) then begin
-						l2 := self:StartNewLetter('none)
+				if (IsRichString(target2.sorton) or (not StrFilled(target2.sorton))) then begin
+						none := self:StartNewLetter('none)
 					end else begin
-						l2 := self:StartNewLetter(l1.sorton[0])
+						none := self:StartNewLetter(target2.sorton[0])
 					end
 			end else begin
-				if ((currentLetter = 'none) or (StrCompare(SPrintObject(l1.sorton[0]), SPrintObject(currentLetter)) > 0)) then begin
-						l2 := self:StartNewLetter(l1.sorton[0])
+				if ((currentLetter = 'none) or (StrCompare(SPrintObject(target2.sorton[0]), SPrintObject(currentLetter)) > 0)) then begin
+						none := self:StartNewLetter(target2.sorton[0])
 					end
 			end;
-		l2
+		none
 	end,
-	AddPrintChild: func(a1, a2, a3, a4) begin
-		local l1, l2, l3;
+	AddPrintChild: func(layout, target2, a3, a4) begin
+		local frame2, addStepView2, l3;
 		if (currentLetter = 'none) then begin
-				if (if (not IsRichString(a2.sorton)) then StrFilled(a2.sorton)) then begin
+				if (if (not IsRichString(target2.sorton)) then StrFilled(target2.sorton)) then begin
 						return nil
 					end
 			end else begin
-				if (StrCompare(SPrintObject(a2.sorton[0]), SPrintObject(currentLetter)) > 0) then begin
+				if (StrCompare(SPrintObject(target2.sorton[0]), SPrintObject(currentLetter)) > 0) then begin
 						return nil
 					end
 			end;
-		l1 := {_proto: infoDisplay, target: a2, viewSetupFormScript: func() begin
+		frame2 := {_proto: infoDisplay, target: target2, viewSetupFormScript: func() begin
 			local l1, l2;
 			(if (if target then target.class) then begin
 					if (not layouts) then begin
@@ -46,26 +46,26 @@ cfPhoneListFormat := {
 						end;
 					SetRemove(layouts.(target.class), 'phone);
 					SetRemove(layouts.(target.class), 'pager);
-					(if (GetVariable(self, 'newtAppBase) <> GetRoot().cardfile) then (self.viewFlags := 1))
+					(if (GetVariable(self, 'newtAppBase) <> GetRoot().cardfile) then (self.viewFlags := vVisible))
 				end)
 		end, viewBounds: RelBounds(a3, a4, 150, 2000), viewJustify: 0, showMultipleData: true, boldTitle: true};
-		l3 := (l2 := AddStepView(self, l1)):GetBottom();
-		RemoveStepView(self, l2);
+		l3 := (addStepView2 := AddStepView(self, frame2)):GetBottom();
+		RemoveStepView(self, addStepView2);
 		self.stepChildren := Clone(self.stepChildren);
-		l1.viewBounds := RelBounds(a3, a4, 150, l3);
-		AddArraySlot(stepChildren, l1);
-		AddArraySlot(stepChildren, {_proto: infoDisplay, target: a2, viewBounds: RelBounds(((a3 + 150) + 20), a4, 150, l3), viewJustify: 0, layouts: {person: '[Array: phone, pager], owner: '[Array: phone], company: '[Array: phone]}, showMultipleData: true});
+		frame2.viewBounds := RelBounds(a3, a4, 150, l3);
+		AddArraySlot(stepChildren, frame2);
+		AddArraySlot(stepChildren, {_proto: infoDisplay, target: target2, viewBounds: RelBounds(((a3 + 150) + 20), a4, 150, l3), viewJustify: 0, layouts: {person: '[Array: phone, pager], owner: '[Array: phone], company: '[Array: phone]}, showMultipleData: true});
 		{bottom: l3, right: 320}
 	end,
 	currentLetter: nil,
 	infoDisplay: @8242,
-	StartNewLetter: func(a1) begin
-		local l1, l2;
-		l1 := (if (a1 = 'none) then "Untitled" else SPrintObject(a1));
-		l2 := {family: 'newyork, size: 14, face: 1};
-		AddStepView(self, {_proto: @protoBorder, viewJustify: 48, viewBounds: SetBounds(0, 15, 0, 18), viewFormat: 3});
-		AddStepView(self, {_proto: @protoStaticText, viewBounds: RelBounds(5, 10, (StrFontWidth(l1, l2) + 2), fontHeight(l2)), viewFont: l2, viewFormat: 1, text: l1});
-		currentLetter := a1;
+	StartNewLetter: func(sortonItem) begin
+		local l1, frame2;
+		l1 := (if (sortonItem = 'none) then "Untitled" else SPrintObject(sortonItem));
+		frame2 := {family: 'newyork, size: 14, face: 1};
+		AddStepView(self, {_proto: @protoBorder, viewJustify: vjParentFullH, viewBounds: SetBounds(0, 15, 0, 18), viewFormat: vfFillGray});
+		AddStepView(self, {_proto: @protoStaticText, viewBounds: RelBounds(5, 10, (StrFontWidth(l1, frame2) + 2), fontHeight(frame2)), viewFont: frame2, viewFormat: vfFillWhite, text: l1});
+		currentLetter := sortonItem;
 		25
 	end,
 	protection: 'private,

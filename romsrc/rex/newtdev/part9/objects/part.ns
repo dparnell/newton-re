@@ -2,11 +2,11 @@
 
 part := array(nil, {
 	_ImportTable: [|Array|: {name: '|NameServerInterface:NSG|, major: 1, minor: 0}],
-	installScript: func(a1) begin
-		local l1;
-		l1 := EnsureInternal({removeScript: a1.devRemoveScript});
-		a1:devInstallScript(a1, l1);
-		l1
+	installScript: func(partFrame) begin
+		local ensureInternal2;
+		ensureInternal2 := EnsureInternal({removeScript: partFrame.devRemoveScript});
+		partFrame:devInstallScript(partFrame, ensureInternal2);
+		ensureInternal2
 	end,
 	devInstallScript: compile(
 		constants: {
@@ -15,22 +15,22 @@ part := array(nil, {
 					self:Close()
 				end, [Array: ])
 			end,
-			kLiteral_1010fed: {viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewSetupDoneScript: kFunction_101115d, viewClass: 74},
+			kLiteral_1010fed: {viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewFlags: vVisible, viewFormat: 0, viewSetupDoneScript: kFunction_101115d, viewClass: clView},
 			kROM_8192: @8192,
 			kLiteral_1011391: "Lantern",
 			kFunction_1010e19: func(a1, a2) begin
 				DeviceRegistry.(EnsureInternal(a1)) := {_proto: a2};
 				if StrFilled(a2.DeviceType) then begin
-						l1 := {_proto: kLiteral_1010fed};
-						GetRoot().(EnsureInternal(Intern(a2.DeviceType))) := BuildContext(l1)
+						frame2 := {_proto: kLiteral_1010fed};
+						GetRoot().(EnsureInternal(Intern(a2.DeviceType))) := BuildContext(frame2)
 					end;
 				if a2.configView then begin
 						RegDataView('worksite, a2.configView)
 					end;
 				if IsArray(a2.DeviceCISProductName) then begin
-						local l1;
-						(foreach l2, l3 in a2.DeviceCISProductName do begin
-								call kROM_8192 with (Clone(a2.DeviceCISProductName[l2]), Clone(kLiteral_1011391), Clone(a2.DeviceProtocolClassName), Clone(a2.DeviceType))
+						local frame2;
+						(foreach key, value in a2.DeviceCISProductName do begin
+								call kROM_8192 with (Clone(a2.DeviceCISProductName[key]), Clone(kLiteral_1011391), Clone(a2.DeviceProtocolClassName), Clone(a2.DeviceType))
 							end)
 					end else begin
 						call kROM_8192 with (Clone(a2.DeviceCISProductName), Clone(kLiteral_1011391), Clone(a2.DeviceProtocolClassName), Clone(a2.DeviceType))
@@ -42,26 +42,26 @@ part := array(nil, {
 			end,
 			kROM_8193: @8193,
 			kFunction_1011565: func(a1) begin
-				if IsArray((l1 := Clone(DeviceRegistry.(a1).DeviceCISProductName))) then begin
-						local l1;
-						(foreach l2, l3 in l1 do begin
-								call kROM_8193 with (Clone(l1[l2]), Clone(kLiteral_1011391), nil)
+				if IsArray((copy := Clone(DeviceRegistry.(a1).DeviceCISProductName))) then begin
+						local copy;
+						(foreach key, value in copy do begin
+								call kROM_8193 with (Clone(copy[key]), Clone(kLiteral_1011391), nil)
 							end)
 					end else begin
-						call kROM_8193 with (Clone(l1), Clone(kLiteral_1011391), nil)
+						call kROM_8193 with (Clone(copy), Clone(kLiteral_1011391), nil)
 					end;
-				if (l5 := GetUserConfig('AppleTalkChoice)) then begin
+				if (appleTalkChoice := GetUserConfig('AppleTalkChoice)) then begin
 						l6 := nil;
-						if IsArray(l1) then begin
-								(foreach l2, l3 in l1 do begin
-										local l5, l6;
-										if StrEqual(l5, l1[l2]) then begin
+						if IsArray(copy) then begin
+								(foreach key, value in copy do begin
+										local appleTalkChoice, l6;
+										if StrEqual(appleTalkChoice, copy[key]) then begin
 												l6 := true;
 												break
 											end
 									end)
 							end else begin
-								if StrEqual(l5, l1) then begin
+								if StrEqual(appleTalkChoice, copy) then begin
 										l6 := true
 									end
 							end;
@@ -81,71 +81,71 @@ part := array(nil, {
 				nil
 			end,
 			kFunction_10118ad: func(a1) begin
-				local l1;
-				(if (l1 := ResolveEntryAlias(GetUserConfig('currentEmporium))) then (if l1.(a1) then l1.(a1)))
+				local currentEmporium;
+				(if (currentEmporium := ResolveEntryAlias(GetUserConfig('currentEmporium))) then (if currentEmporium.(a1) then currentEmporium.(a1)))
 			end,
 			kFunction_1011971: func(a1) begin
-				(foreach l1 in DeviceRegistry do begin
-						if IsArray(l1.DeviceCISProductName) then begin
-								(foreach l3, l4 in l1.DeviceCISProductName do begin
-										if StrEqual(l1.DeviceCISProductName[l3], a1) then begin
-												return l1
+				(foreach item in DeviceRegistry do begin
+						if IsArray(item.DeviceCISProductName) then begin
+								(foreach key, value in item.DeviceCISProductName do begin
+										if StrEqual(item.DeviceCISProductName[key], a1) then begin
+												return item
 											end
 									end)
 							end else begin
-								if StrEqual(l1.DeviceCISProductName, a1) then begin
-										return l1
+								if StrEqual(item.DeviceCISProductName, a1) then begin
+										return item
 									end
 							end
 					end);
 				nil
 			end,
 			kFunction_1011a45: func(a1) begin
-				l1 := [Array: ];
-				local l1;
-				(foreach l2 in vars.DeviceRegistry do begin
-						if ((not a1) or (l2.DeviceClass = a1)) then begin
-								if IsArray(l2.DeviceCISProductName) then begin
-										(foreach l4, l5 in l2.DeviceCISProductName do begin
-												BInsert(l1, {item: l2.DeviceDisplayName[l4], cisName: l2.DeviceCISProductName[l4]}, '|str<|, '[pathExpr: item], nil)
+				list := [Array: ];
+				local list;
+				(foreach item2 in vars.DeviceRegistry do begin
+						if ((not a1) or (item2.DeviceClass = a1)) then begin
+								if IsArray(item2.DeviceCISProductName) then begin
+										(foreach key, value in item2.DeviceCISProductName do begin
+												BInsert(list, {item: item2.DeviceDisplayName[key], cisName: item2.DeviceCISProductName[key]}, '|str<|, '[pathExpr: item], nil)
 											end)
 									end else begin
-										BInsert(l1, {item: l2.DeviceDisplayName, cisName: l2.DeviceCISProductName}, '|str<|, '[pathExpr: item], nil)
+										BInsert(list, {item: item2.DeviceDisplayName, cisName: item2.DeviceCISProductName}, '|str<|, '[pathExpr: item], nil)
 									end
 							end
 					end);
-				l1
+				list
 			end,
 			kFunction_1011dd1: func() begin
 				OriginalOpenForCardIcon()
 			end,
 			kFunction_1011cad: func() begin
-				(foreach l1, l2 in GetCardTypes() do begin
-						if l2 then begin
-								AddDeferredCall(functions.CallFrameBasedRegistryFns, [Array: WeirdCardEventRegistry, [Array: l1, 'SlipOpenRequest]])
+				(foreach key, value in GetCardTypes() do begin
+						if value then begin
+								AddDeferredCall(functions.CallFrameBasedRegistryFns, [Array: WeirdCardEventRegistry, [Array: key, 'SlipOpenRequest]])
 							end
 					end);
 				AddDeferredCall(kFunction_1011dd1, [Array: ]);
 				nil
 			end,
 			kFunction_1011ec5: func(a1) begin
-				(foreach l1, l2 in WeirdCardSlipsOpen do begin
-						if (l2.cardSlot = a1) then begin
-								return l1
+				(foreach key, value in WeirdCardSlipsOpen do begin
+						if (value.cardSlot = a1) then begin
+								return key
 							end
 					end);
 				nil
 			end,
 			kFunction_10122f9: func() begin
 				RegUserConfigChange((whoAmI := Intern(Stringer([Array: "WDSC.", viewCObject]))), func(a1) begin
-					local l1, l2;
+					local viewValue, same2;
 					if (if (a1 = 'AppleTalkChoice) then (not hack)) then begin
-							l1 := useForATalk.viewValue;
-							if (if (l2 := StrEqual(cisName, GetUserConfig('AppleTalkChoice))) then (not l1)) then begin
+							viewValue := useForATalk.viewValue;
+							if (if (same2 := StrEqual(cisName, GetUserConfig('AppleTalkChoice))) then (not viewValue)) then begin
 									hack := true;
 									useForATalk:toggleCheck()
 								end else begin
-									if (if (not l2) then l1) then begin
+									if (if (not same2) then viewValue) then begin
 											hack := true;
 											useForATalk:toggleCheck()
 										end
@@ -169,35 +169,35 @@ part := array(nil, {
 				inherited:?viewQuitScript()
 			end,
 			kFunction_10125c5: func() begin
-				local l1;
-				(foreach l2, l3 in (l1 := GetCardInfo().socketInfos) do begin
-						if (l3.socketNumber = cardSlot) then begin
-								return l3
+				local socketInfos;
+				(foreach key, value in (socketInfos := GetCardInfo().socketInfos) do begin
+						if (value.socketNumber = cardSlot) then begin
+								return value
 							end
 					end);
 				nil
 			end,
 			kFunction_1012695: func() begin
-				local l1;
-				(if (if (l1 := device:?MakeMessageText()) then StrFilled(l1)) then SetValue(displayMessage, 'text, l1))
+				local messageText;
+				(if (if (messageText := device:?MakeMessageText()) then StrFilled(messageText)) then SetValue(displayMessage, 'text, messageText))
 			end,
 			kFunction_1012b25: func() begin
 				self.title := name;
 				inherited:?viewSetupFormScript()
 			end,
 			kFunction_1012dad: func() begin
-				if (l2 := GetUserConfig('emporia)) then begin
-						l1 := [Array: ];
-						local l1;
-						local l2;
-						(foreach l3 in l2 do begin
-								local l5;
-								if StrFilled((l5 := ResolveEntryAlias(l3)).place) then begin
-										AddArraySlot(l1, {item: l5.place, value: l3})
+				if (emporia := GetUserConfig('emporia)) then begin
+						list := [Array: ];
+						local list;
+						local emporia;
+						(foreach item in emporia do begin
+								local resolveEntryAlias2;
+								if StrFilled((resolveEntryAlias2 := ResolveEntryAlias(item)).place) then begin
+										AddArraySlot(list, {item: resolveEntryAlias2.place, value: item})
 									end
 							end)
 					end;
-				l1
+				list
 			end,
 			kFunction_1012e75: func() begin
 				labelCommands := self:BuildLabelCommands();
@@ -215,7 +215,7 @@ part := array(nil, {
 					end;
 				inherited:?viewQuitScript()
 			end,
-			kLiteral_1012a31: {viewBounds: '{left: 0, top: 0, right: 208, bottom: 135}, viewJustify: 80, stepChildren: [stepChildren: {viewSetupFormScript: kFunction_1012b25, _proto: @protoTitle}, '{text: "There is no current worksite. You must select a worksite before you can configure this card.", viewBounds: {left: 4, top: 10, right: -4, bottom: 58}, viewJustify: 8240, _proto: @protoStaticText, preAllocatedContext: message}, {text: "Worksite", viewBounds: '{left: 0, top: 5, right: 0, bottom: 21}, viewJustify: 8398336, BuildLabelCommands: kFunction_1012dad, viewSetupFormScript: kFunction_1012e75, textSetup: kFunction_1012ee1, labelActionScript: kFunction_1012f39, _proto: @protoLabelPicker}, '{_proto: @protoClosebox}], newEmporium: nil, viewQuitScript: kFunction_1012fa9, _proto: @protoFloater, message: nil, stepAllocateContext: '[Array: message, {text: "There is no current worksite. You must select a worksite before you can configure this card.", viewBounds: {left: 4, top: 10, right: -4, bottom: 58}, viewJustify: 8240, _proto: @protoStaticText, preAllocatedContext: message}]},
+			kLiteral_1012a31: {viewBounds: '{left: 0, top: 0, right: 208, bottom: 135}, viewJustify: vjParentCenterH + vjParentCenterV, stepChildren: [stepChildren: {viewSetupFormScript: kFunction_1012b25, _proto: @protoTitle}, '{text: "There is no current worksite. You must select a worksite before you can configure this card.", viewBounds: {left: 4, top: 10, right: -4, bottom: 58}, viewJustify: vjParentFullH + vjSiblingBottomV, _proto: @protoStaticText, preAllocatedContext: message}, {text: "Worksite", viewBounds: '{left: 0, top: 5, right: 0, bottom: 21}, viewJustify: 8398336, BuildLabelCommands: kFunction_1012dad, viewSetupFormScript: kFunction_1012e75, textSetup: kFunction_1012ee1, labelActionScript: kFunction_1012f39, _proto: @protoLabelPicker}, '{_proto: @protoClosebox}], newEmporium: nil, viewQuitScript: kFunction_1012fa9, _proto: @protoFloater, message: nil, stepAllocateContext: '[Array: message, {text: "There is no current worksite. You must select a worksite before you can configure this card.", viewBounds: {left: 4, top: 10, right: -4, bottom: 58}, viewJustify: vjParentFullH + vjSiblingBottomV, _proto: @protoStaticText, preAllocatedContext: message}]},
 			kFunction_1013249: func() begin
 				(if self.viewCObject then self:SyncView())
 			end,
@@ -228,17 +228,17 @@ part := array(nil, {
 				inherited:?viewSetupFormScript()
 			end,
 			kFunction_1013579: func() begin
-				local l1, l2, l3;
-				l1 := viewChildren[0];
+				local viewChildrenItem, viewBounds, keyboardConnected2;
+				viewChildrenItem := viewChildren[0];
 				stepChildren := Clone(stepChildren);
-				l3 := KeyboardConnected();
-				if (if l1.usePhoneKeys then (not l3)) then begin
-						stepChildren[0] := {_proto: @phonePad, viewJustify: 144, viewBounds: SetBounds(0, (-126 - extraChildrenHeight), 124, (-extraChildrenHeight))}
+				keyboardConnected2 := KeyboardConnected();
+				if (if viewChildrenItem.usePhoneKeys then (not keyboardConnected2)) then begin
+						stepChildren[0] := {_proto: @phonePad, viewJustify: vjParentCenterH + vjParentBottomV, viewBounds: SetBounds(0, (-126 - extraChildrenHeight), 124, (-extraChildrenHeight))}
 					end else begin
-						if (if l1.useNumericKeys then (not l3)) then begin
-								stepChildren[0] := {_proto: @numericKeys, viewJustify: 144, viewBounds: SetBounds(0, (-101 - extraChildrenHeight), 105, (-extraChildrenHeight)), viewFont: keypadFont}
+						if (if viewChildrenItem.useNumericKeys then (not keyboardConnected2)) then begin
+								stepChildren[0] := {_proto: @numericKeys, viewJustify: vjParentCenterH + vjParentBottomV, viewBounds: SetBounds(0, (-101 - extraChildrenHeight), 105, (-extraChildrenHeight)), viewFont: keypadFont}
 							end else begin
-								if (l1.noKeyboard or l3) then begin
+								if (viewChildrenItem.noKeyboard or keyboardConnected2) then begin
 										ArrayMunger(stepChildren, 0, 1, nil, 0, nil)
 									end else begin
 										if knoAlphaKeyboard then begin
@@ -248,26 +248,26 @@ part := array(nil, {
 									end
 							end
 					end;
-				if (not l1.noKeyboard) then begin
-						l2 := stepChildren[0].viewBounds;
-						extraChildrenHeight := ((extraChildrenHeight + l2.bottom) - l2.top)
+				if (not viewChildrenItem.noKeyboard) then begin
+						viewBounds := stepChildren[0].viewBounds;
+						extraChildrenHeight := ((extraChildrenHeight + viewBounds.bottom) - viewBounds.top)
 					end;
 				inherited:?viewSetupChildrenScript()
 			end,
 			kFunction_1013811: func() begin
-				local l1, l2, l3, l4, l5, l6, l7, l8, l9;
-				l8 := GetAppParams().appAreaHeight;
-				l9 := self:LocalBox();
-				l1 := Length((l2 := self:ChildViewFrames()[0]:ChildViewFrames()));
-				l3 := Clone(base.viewBounds);
-				l4 := (l2[(l1 - 1)]:GlobalBox().bottom + extraChildrenHeight);
-				if (if (if (not viewChildren[0].noKeyboard) then (l4 > l8)) then (not knoAlphaKeyboard)) then begin
-						l7 := self:ChildViewFrames()[1];
-						RemoveStepView(self, l7);
+				local count, childViewFrames, copy, l4, l5, l6, childViewFrame, appAreaHeight, box;
+				appAreaHeight := GetAppParams().appAreaHeight;
+				box := self:LocalBox();
+				count := Length((childViewFrames := self:ChildViewFrames()[0]:ChildViewFrames()));
+				copy := Clone(base.viewBounds);
+				l4 := (childViewFrames[(count - 1)]:GlobalBox().bottom + extraChildrenHeight);
+				if (if (if (not viewChildren[0].noKeyboard) then (l4 > appAreaHeight)) then (not knoAlphaKeyboard)) then begin
+						childViewFrame := self:ChildViewFrames()[1];
+						RemoveStepView(self, childViewFrame);
 						l4 := ((l4 - extraChildrenHeight) + kEditSlipBtnHt)
 					end;
-				l3.top := max(7, ((l8 - l4) - 3));
-				SetValue(base, 'viewBounds, l3);
+				copy.top := max(7, ((appAreaHeight - l4) - 3));
+				SetValue(base, 'viewBounds, copy);
 				inherited:?viewSetupDoneScript()
 			end,
 			kFunction_1013a29: func() begin
@@ -286,21 +286,21 @@ part := array(nil, {
 					end;
 				inherited:?viewQuitScript()
 			end,
-			kLiteral_1013045: {viewBounds: '{left: 7, top: 7, right: -7, bottom: -7}, viewJustify: 240, viewFlags: 581, stepChildren: [stepChildren: {Retarget: kFunction_1013249, viewSetupFormScript: kFunction_10132b5, _proto: @protoTitle, preAllocatedContext: 'header}, {viewBounds: '{left: 0, top: 15, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewJustify: 240, stepChildren: '[stepChildren: {viewBounds: {left: 0, top: -135, right: 283, bottom: -24}, viewJustify: 144, _proto: @alphaKeys, preAllocatedContext: alphaKeys}, {_proto: @protoCancelButton}], extraChildrenHeight: 28, keypadFont: 1058816, viewSetupChildrenScript: kFunction_1013579, viewSetupDoneScript: kFunction_1013811, viewSetupFormScript: kFunction_1013a29, viewClass: 74, keyButton: '{viewBounds: {left: 6, top: -18, right: 34, bottom: -5}, viewFlags: 515, viewJustify: 134, _proto: @protoKeyboardButton, preAllocatedContext: keyButton}, alphaKeys: nil, stepAllocateContext: '[Array: alphaKeys, {viewBounds: {left: 0, top: -135, right: 283, bottom: -24}, viewJustify: 144, _proto: @alphaKeys, preAllocatedContext: alphaKeys}], preAllocatedContext: 'editViewStat}], target: nil, appSymbol: nil, StartFlush: kFunction_1013b0d, knoAlphaKeyboard: nil, slip: nil, viewQuitScript: kFunction_1013b6d, ReorientToScreen: @defRotateFunc, _proto: @protoFloater, header: nil, stepAllocateContext: [Array: 'header, {Retarget: kFunction_1013249, viewSetupFormScript: kFunction_10132b5, _proto: @protoTitle, preAllocatedContext: 'header}, 'keyButton, '{viewBounds: {left: 6, top: -18, right: 34, bottom: -5}, viewFlags: 515, viewJustify: 134, _proto: @protoKeyboardButton, preAllocatedContext: keyButton}, 'editViewStat, {viewBounds: '{left: 0, top: 15, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewJustify: 240, stepChildren: '[stepChildren: {viewBounds: {left: 0, top: -135, right: 283, bottom: -24}, viewJustify: 144, _proto: @alphaKeys, preAllocatedContext: alphaKeys}, {_proto: @protoCancelButton}], extraChildrenHeight: 28, keypadFont: 1058816, viewSetupChildrenScript: kFunction_1013579, viewSetupDoneScript: kFunction_1013811, viewSetupFormScript: kFunction_1013a29, viewClass: 74, keyButton: '{viewBounds: {left: 6, top: -18, right: 34, bottom: -5}, viewFlags: 515, viewJustify: 134, _proto: @protoKeyboardButton, preAllocatedContext: keyButton}, alphaKeys: nil, stepAllocateContext: '[Array: alphaKeys, {viewBounds: {left: 0, top: -135, right: 283, bottom: -24}, viewJustify: 144, _proto: @alphaKeys, preAllocatedContext: alphaKeys}], preAllocatedContext: 'editViewStat}], keyButton: nil, editViewStat: nil},
+			kLiteral_1013045: {viewBounds: '{left: 7, top: 7, right: -7, bottom: -7}, viewJustify: vjParentFullH + vjParentFullV, viewFlags: vVisible + vApplication + vFloating + vClickable, stepChildren: [stepChildren: {Retarget: kFunction_1013249, viewSetupFormScript: kFunction_10132b5, _proto: @protoTitle, preAllocatedContext: 'header}, {viewBounds: '{left: 0, top: 15, right: 0, bottom: 0}, viewFlags: vVisible, viewFormat: 0, viewJustify: vjParentFullH + vjParentFullV, stepChildren: '[stepChildren: {viewBounds: {left: 0, top: -135, right: 283, bottom: -24}, viewJustify: vjParentCenterH + vjParentBottomV, _proto: @alphaKeys, preAllocatedContext: alphaKeys}, {_proto: @protoCancelButton}], extraChildrenHeight: 28, keypadFont: tsSystem + tsSize(10) + tsBold, viewSetupChildrenScript: kFunction_1013579, viewSetupDoneScript: kFunction_1013811, viewSetupFormScript: kFunction_1013a29, viewClass: clView, keyButton: '{viewBounds: {left: 6, top: -18, right: 34, bottom: -5}, viewFlags: vVisible + vReadOnly + vClickable, viewJustify: vjCenterH + vjCenterV + vjParentBottomV, _proto: @protoKeyboardButton, preAllocatedContext: keyButton}, alphaKeys: nil, stepAllocateContext: '[Array: alphaKeys, {viewBounds: {left: 0, top: -135, right: 283, bottom: -24}, viewJustify: vjParentCenterH + vjParentBottomV, _proto: @alphaKeys, preAllocatedContext: alphaKeys}], preAllocatedContext: 'editViewStat}], target: nil, appSymbol: nil, StartFlush: kFunction_1013b0d, knoAlphaKeyboard: nil, slip: nil, viewQuitScript: kFunction_1013b6d, ReorientToScreen: @defRotateFunc, _proto: @protoFloater, header: nil, stepAllocateContext: [Array: 'header, {Retarget: kFunction_1013249, viewSetupFormScript: kFunction_10132b5, _proto: @protoTitle, preAllocatedContext: 'header}, 'keyButton, '{viewBounds: {left: 6, top: -18, right: 34, bottom: -5}, viewFlags: vVisible + vReadOnly + vClickable, viewJustify: vjCenterH + vjCenterV + vjParentBottomV, _proto: @protoKeyboardButton, preAllocatedContext: keyButton}, 'editViewStat, {viewBounds: '{left: 0, top: 15, right: 0, bottom: 0}, viewFlags: vVisible, viewFormat: 0, viewJustify: vjParentFullH + vjParentFullV, stepChildren: '[stepChildren: {viewBounds: {left: 0, top: -135, right: 283, bottom: -24}, viewJustify: vjParentCenterH + vjParentBottomV, _proto: @alphaKeys, preAllocatedContext: alphaKeys}, {_proto: @protoCancelButton}], extraChildrenHeight: 28, keypadFont: tsSystem + tsSize(10) + tsBold, viewSetupChildrenScript: kFunction_1013579, viewSetupDoneScript: kFunction_1013811, viewSetupFormScript: kFunction_1013a29, viewClass: clView, keyButton: '{viewBounds: {left: 6, top: -18, right: 34, bottom: -5}, viewFlags: vVisible + vReadOnly + vClickable, viewJustify: vjCenterH + vjCenterV + vjParentBottomV, _proto: @protoKeyboardButton, preAllocatedContext: keyButton}, alphaKeys: nil, stepAllocateContext: '[Array: alphaKeys, {viewBounds: {left: 0, top: -135, right: 283, bottom: -24}, viewJustify: vjParentCenterH + vjParentBottomV, _proto: @alphaKeys, preAllocatedContext: alphaKeys}], preAllocatedContext: 'editViewStat}], keyButton: nil, editViewStat: nil},
 			kFunction_1012851: func() begin
-				local l1, l2;
-				if (not (l1 := ResolveEntryAlias(GetUserConfig('currentEmporium)))) then begin
-						if ((not (l2 := GetUserConfig('emporia))) or (Length(l2) = 0)) then begin
-								l1 := GetRoot().cardFile:AddCard('worksite, {place: "Worksite"});
-								SetUserConfig('currentEmporium, MakeEntryAlias(l1))
+				local currentEmporium, emporia;
+				if (not (currentEmporium := ResolveEntryAlias(GetUserConfig('currentEmporium)))) then begin
+						if ((not (emporia := GetUserConfig('emporia))) or (Length(emporia) = 0)) then begin
+								currentEmporium := GetRoot().cardFile:AddCard('worksite, {place: "Worksite"});
+								SetUserConfig('currentEmporium, MakeEntryAlias(currentEmporium))
 							end
 					end;
-				if (not l1) then begin
+				if (not currentEmporium) then begin
 						(setupOpenView := BuildContext({_proto: kLiteral_1012a31, name: name})):ModalDialog();
-						l1 := ResolveEntryAlias(GetUserConfig('currentEmporium))
+						currentEmporium := ResolveEntryAlias(GetUserConfig('currentEmporium))
 					end;
-				(if l1 then begin
-						(setupOpenView := BuildContext({_proto: kLiteral_1013045, appSymbol: deviceSym, target: l1, setupName: name, slip: self})):Open();
+				(if currentEmporium then begin
+						(setupOpenView := BuildContext({_proto: kLiteral_1013045, appSymbol: deviceSym, target: currentEmporium, setupName: name, slip: self})):Open();
 						setupOpenView:dirty()
 					end)
 			end,
@@ -334,10 +334,10 @@ part := array(nil, {
 				(if cardSlot then self:DrawCardSlotIcon(cardSlot, RelBounds(0, 0, 36, 36), 0))
 			end,
 			kFunction_10140dd: func() begin
-				local l1;
+				local box;
 				self.viewBounds := SetBounds((locIcon.viewBounds.right + 5), 0, -5, 0);
-				l1 := self:LocalBox();
-				(self.text := StyledStrTruncate(name, (l1.right - l1.left), self.viewFont))
+				box := self:LocalBox();
+				(self.text := StyledStrTruncate(name, (box.right - box.left), self.viewFont))
 			end,
 			kFunction_10142a1: func() begin
 				text := messageText;
@@ -395,9 +395,9 @@ part := array(nil, {
 			end,
 			kFunction_1014c45: func(a1, a2) begin
 				if IsArray(a1.DeviceCISProductName) then begin
-						(foreach l1, l2 in a1.DeviceCISProductName do begin
-								if StrEqual(l2, a2) then begin
-										return Clone(a1.DeviceDisplayName[l1])
+						(foreach key, value in a1.DeviceCISProductName do begin
+								if StrEqual(value, a2) then begin
+										return Clone(a1.DeviceDisplayName[key])
 									end
 							end)
 					end else begin
@@ -406,59 +406,59 @@ part := array(nil, {
 				""
 			end,
 			kFunction_1014ae1: func() begin
-				local l1, l2;
+				local cISData, messageText2;
 				if deviceSym then begin
 						device := DeviceRegistry.(deviceSym)
 					end;
-				cisName := Clone((l1 := self:GetCISData()).cisProductName);
+				cisName := Clone((cISData := self:GetCISData()).cisProductName);
 				if device then begin
-						name := call (kFunction_1014c45) with (device, l1.cisProductName);
-						messageText := (if (l2 := device:?MakeMessageText()) then l2 else "")
+						name := call (kFunction_1014c45) with (device, cISData.cisProductName);
+						messageText := (if (messageText2 := device:?MakeMessageText()) then messageText2 else "")
 					end;
 				viewBounds := RelBounds(0, 50, 200, height);
 				if cardSlot then begin
-						if l1 then begin
+						if cISData then begin
 								if (not StrFilled(name)) then begin
-										name := Clone(l1.cisProductName)
+										name := Clone(cISData.cisProductName)
 									end;
 								if (not StrFilled(messageText)) then begin
-										messageText := Stringer([Array: "Manufacturer:", " ", l1.cisManufacturerName, "\n", (if l1.cisProductInfo0 then Stringer([Array: l1.cisProductInfo0, "\n"]))])
+										messageText := Stringer([Array: "Manufacturer:", " ", cISData.cisManufacturerName, "\n", (if cISData.cisProductInfo0 then Stringer([Array: cISData.cisProductInfo0, "\n"]))])
 									end
 							end
 					end;
 				AddArraySlot(OpenCardViews, self)
 			end,
-			kLiteral_1011f4d: {viewSetupDoneScript: kFunction_10122f9, viewQuitScript: kFunction_10124ad, confirmedValue: nil, nameArea: nil, cardSlot: nil, ReorientToScreen: @defRotateFunc, viewBounds: '{left: 0, top: 50, right: 200, bottom: 220}, messageText: "", statsViewOpen: nil, _proto: @protoFloater, hack: nil, cisName: nil, statsBtn: nil, GetCISData: kFunction_10125c5, height: 170, displayMessage: nil, name: "", UpdateDisplayText: kFunction_1012695, setupOpenView: nil, stepAllocateContext: [Array: 'setupBtn, {buttonClickScript: kFunction_1012851, text: "Setup", viewBounds: '{left: 5, top: 0, right: 41, bottom: 0}, viewJustify: 8400902, viewSetupFormScript: kFunction_1013c89, viewQuitScript: kFunction_1013cdd, _proto: @protoTextButton, preAllocatedContext: 'setupBtn}, 'statsBtn, {buttonClickScript: kFunction_1013d55, text: "Statistics", viewBounds: '{left: 8, top: 0, right: 65, bottom: 0}, viewJustify: 8401926, viewSetupFormScript: kFunction_1013e09, viewQuitScript: kFunction_1013f1d, _proto: @protoTextButton, preAllocatedContext: 'statsBtn}, 'locIcon, {viewBounds: '{left: 5, top: 6, right: 41, bottom: 42}, viewFlags: 1, viewFormat: 0, viewDrawScript: kFunction_1013ffd, viewClass: 74, preAllocatedContext: 'locIcon}, 'nameArea, {viewJustify: 8401144, viewSetupFormScript: kFunction_10140dd, viewFont: '{family: tsHWFont, face: 0, size: 12}, _proto: @protoStaticText, preAllocatedContext: 'nameArea}, 'displayMessage, {viewBounds: '{left: 15, top: 10, right: 195, bottom: 80}, viewJustify: 8192, viewSetupFormScript: kFunction_10142a1, _proto: @protoStaticText, preAllocatedContext: 'displayMessage}, 'useForATalk, {text: "Use card for AppleTalk", viewBounds: '{left: 5, top: 9, right: -5, bottom: 25}, viewJustify: 8244, viewSetupFormScript: kFunction_10144c9, viewQuitScript: kFunction_1014629, valueChanged: kFunction_1014681, UpdateAppleTalk: kFunction_10146f5, originalATDevice: "", originalATLink: "", viewClickScript: kFunction_10147e1, _proto: @protoCheckbox, preAllocatedContext: 'useForATalk}], declareSelf: 'base, viewSetupFormScript: kFunction_1014ae1, setupBtn: nil, locIcon: nil, useForATalk: nil, stepChildren: [stepChildren: '{_proto: @protoCancelButton}, {buttonClickScript: kFunction_1012851, text: "Setup", viewBounds: '{left: 5, top: 0, right: 41, bottom: 0}, viewJustify: 8400902, viewSetupFormScript: kFunction_1013c89, viewQuitScript: kFunction_1013cdd, _proto: @protoTextButton, preAllocatedContext: 'setupBtn}, {buttonClickScript: kFunction_1013d55, text: "Statistics", viewBounds: '{left: 8, top: 0, right: 65, bottom: 0}, viewJustify: 8401926, viewSetupFormScript: kFunction_1013e09, viewQuitScript: kFunction_1013f1d, _proto: @protoTextButton, preAllocatedContext: 'statsBtn}, {viewBounds: '{left: 5, top: 6, right: 41, bottom: 42}, viewFlags: 1, viewFormat: 0, viewDrawScript: kFunction_1013ffd, viewClass: 74, preAllocatedContext: 'locIcon}, {viewJustify: 8401144, viewSetupFormScript: kFunction_10140dd, viewFont: '{family: tsHWFont, face: 0, size: 12}, _proto: @protoStaticText, preAllocatedContext: 'nameArea}, {viewBounds: '{left: 15, top: 10, right: 195, bottom: 80}, viewJustify: 8192, viewSetupFormScript: kFunction_10142a1, _proto: @protoStaticText, preAllocatedContext: 'displayMessage}, {text: "Use card for AppleTalk", viewBounds: '{left: 5, top: 9, right: -5, bottom: 25}, viewJustify: 8244, viewSetupFormScript: kFunction_10144c9, viewQuitScript: kFunction_1014629, valueChanged: kFunction_1014681, UpdateAppleTalk: kFunction_10146f5, originalATDevice: "", originalATLink: "", viewClickScript: kFunction_10147e1, _proto: @protoCheckbox, preAllocatedContext: 'useForATalk}], deviceSym: nil, whoAmI: nil, device: nil},
+			kLiteral_1011f4d: {viewSetupDoneScript: kFunction_10122f9, viewQuitScript: kFunction_10124ad, confirmedValue: nil, nameArea: nil, cardSlot: nil, ReorientToScreen: @defRotateFunc, viewBounds: '{left: 0, top: 50, right: 200, bottom: 220}, messageText: "", statsViewOpen: nil, _proto: @protoFloater, hack: nil, cisName: nil, statsBtn: nil, GetCISData: kFunction_10125c5, height: 170, displayMessage: nil, name: "", UpdateDisplayText: kFunction_1012695, setupOpenView: nil, stepAllocateContext: [Array: 'setupBtn, {buttonClickScript: kFunction_1012851, text: "Setup", viewBounds: '{left: 5, top: 0, right: 41, bottom: 0}, viewJustify: 8400902, viewSetupFormScript: kFunction_1013c89, viewQuitScript: kFunction_1013cdd, _proto: @protoTextButton, preAllocatedContext: 'setupBtn}, 'statsBtn, {buttonClickScript: kFunction_1013d55, text: "Statistics", viewBounds: '{left: 8, top: 0, right: 65, bottom: 0}, viewJustify: 8401926, viewSetupFormScript: kFunction_1013e09, viewQuitScript: kFunction_1013f1d, _proto: @protoTextButton, preAllocatedContext: 'statsBtn}, 'locIcon, {viewBounds: '{left: 5, top: 6, right: 41, bottom: 42}, viewFlags: vVisible, viewFormat: 0, viewDrawScript: kFunction_1013ffd, viewClass: clView, preAllocatedContext: 'locIcon}, 'nameArea, {viewJustify: 8401144, viewSetupFormScript: kFunction_10140dd, viewFont: '{family: tsHWFont, face: 0, size: 12}, _proto: @protoStaticText, preAllocatedContext: 'nameArea}, 'displayMessage, {viewBounds: '{left: 15, top: 10, right: 195, bottom: 80}, viewJustify: vjSiblingBottomV, viewSetupFormScript: kFunction_10142a1, _proto: @protoStaticText, preAllocatedContext: 'displayMessage}, 'useForATalk, {text: "Use card for AppleTalk", viewBounds: '{left: 5, top: 9, right: -5, bottom: 25}, viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV, viewSetupFormScript: kFunction_10144c9, viewQuitScript: kFunction_1014629, valueChanged: kFunction_1014681, UpdateAppleTalk: kFunction_10146f5, originalATDevice: "", originalATLink: "", viewClickScript: kFunction_10147e1, _proto: @protoCheckbox, preAllocatedContext: 'useForATalk}], declareSelf: 'base, viewSetupFormScript: kFunction_1014ae1, setupBtn: nil, locIcon: nil, useForATalk: nil, stepChildren: [stepChildren: '{_proto: @protoCancelButton}, {buttonClickScript: kFunction_1012851, text: "Setup", viewBounds: '{left: 5, top: 0, right: 41, bottom: 0}, viewJustify: 8400902, viewSetupFormScript: kFunction_1013c89, viewQuitScript: kFunction_1013cdd, _proto: @protoTextButton, preAllocatedContext: 'setupBtn}, {buttonClickScript: kFunction_1013d55, text: "Statistics", viewBounds: '{left: 8, top: 0, right: 65, bottom: 0}, viewJustify: 8401926, viewSetupFormScript: kFunction_1013e09, viewQuitScript: kFunction_1013f1d, _proto: @protoTextButton, preAllocatedContext: 'statsBtn}, {viewBounds: '{left: 5, top: 6, right: 41, bottom: 42}, viewFlags: vVisible, viewFormat: 0, viewDrawScript: kFunction_1013ffd, viewClass: clView, preAllocatedContext: 'locIcon}, {viewJustify: 8401144, viewSetupFormScript: kFunction_10140dd, viewFont: '{family: tsHWFont, face: 0, size: 12}, _proto: @protoStaticText, preAllocatedContext: 'nameArea}, {viewBounds: '{left: 15, top: 10, right: 195, bottom: 80}, viewJustify: vjSiblingBottomV, viewSetupFormScript: kFunction_10142a1, _proto: @protoStaticText, preAllocatedContext: 'displayMessage}, {text: "Use card for AppleTalk", viewBounds: '{left: 5, top: 9, right: -5, bottom: 25}, viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV, viewSetupFormScript: kFunction_10144c9, viewQuitScript: kFunction_1014629, valueChanged: kFunction_1014681, UpdateAppleTalk: kFunction_10146f5, originalATDevice: "", originalATLink: "", viewClickScript: kFunction_10147e1, _proto: @protoCheckbox, preAllocatedContext: 'useForATalk}], deviceSym: nil, whoAmI: nil, device: nil},
 			kFunction_1011e59: func(a1, a2) begin
-				local l1, l2;
+				local l1, addArraySlot2;
 				if (l1 := call (kFunction_1011ec5) with (a1)) then begin
 						return nil
 					end;
-				(l2 := AddArraySlot(WeirdCardSlipsOpen, BuildContext({_proto: kLiteral_1011f4d, cardSlot: a1, deviceSym: a2}))):Open()
+				(addArraySlot2 := AddArraySlot(WeirdCardSlipsOpen, BuildContext({_proto: kLiteral_1011f4d, cardSlot: a1, deviceSym: a2}))):Open()
 			end,
 			kFunction_1014de5: func(a1) begin
 				local l1;
 				(if (l1 := call (kFunction_1011ec5) with (a1)) then WeirdCardSlipsOpen[l1]:Close())
 			end,
 			kFunction_1014f65: func(a1) begin
-				(foreach l1 in GetCardTypes() do begin
-						if (l1 = a1) then begin
+				(foreach item in GetCardTypes() do begin
+						if (item = a1) then begin
 								return true
 							end
 					end)
 			end,
 			kFunction_1014e59: func(a1) begin
-				local l1;
-				(if (a1 = 'currentEmporium) then (if (l1 := ResolveEntryAlias(GetUserConfig('currentEmporium))) then (foreach l2, l3 in DeviceRegistry do begin
-								if HasSlot(l1, l2) then begin
-										if (if HasSlot(l3, 'ConfigChanged) then call (kFunction_1014f65) with (Intern(l3.DeviceType))) then begin
-												AddDeferredSend(l3, 'ConfigChanged, [Array: l1.(l2)])
+				local currentEmporium;
+				(if (a1 = 'currentEmporium) then (if (currentEmporium := ResolveEntryAlias(GetUserConfig('currentEmporium))) then (foreach key, value in DeviceRegistry do begin
+								if HasSlot(currentEmporium, key) then begin
+										if (if HasSlot(value, 'ConfigChanged) then call (kFunction_1014f65) with (Intern(value.DeviceType))) then begin
+												AddDeferredSend(value, 'ConfigChanged, [Array: currentEmporium.(key)])
 											end
 									end
 							end)))
 			end
 		},
-		func(a1, a2) begin
+		func(partFrame, removeFrame) begin
 			if (not vars.DeviceRegistry) then begin
 					DefGlobalVar('DeviceRegistry, EnsureInternal({}))
 				end;
@@ -481,26 +481,26 @@ part := array(nil, {
 			kROM_8193: @8193,
 			kLiteral_1011391: "Lantern",
 			kFunction_1011565: func(a1) begin
-				if IsArray((l1 := Clone(DeviceRegistry.(a1).DeviceCISProductName))) then begin
-						local l1;
-						(foreach l2, l3 in l1 do begin
-								call kROM_8193 with (Clone(l1[l2]), Clone(kLiteral_1011391), nil)
+				if IsArray((copy := Clone(DeviceRegistry.(a1).DeviceCISProductName))) then begin
+						local copy;
+						(foreach key, value in copy do begin
+								call kROM_8193 with (Clone(copy[key]), Clone(kLiteral_1011391), nil)
 							end)
 					end else begin
-						call kROM_8193 with (Clone(l1), Clone(kLiteral_1011391), nil)
+						call kROM_8193 with (Clone(copy), Clone(kLiteral_1011391), nil)
 					end;
-				if (l5 := GetUserConfig('AppleTalkChoice)) then begin
+				if (appleTalkChoice := GetUserConfig('AppleTalkChoice)) then begin
 						l6 := nil;
-						if IsArray(l1) then begin
-								(foreach l2, l3 in l1 do begin
-										local l5, l6;
-										if StrEqual(l5, l1[l2]) then begin
+						if IsArray(copy) then begin
+								(foreach key, value in copy do begin
+										local appleTalkChoice, l6;
+										if StrEqual(appleTalkChoice, copy[key]) then begin
 												l6 := true;
 												break
 											end
 									end)
 							end else begin
-								if StrEqual(l5, l1) then begin
+								if StrEqual(appleTalkChoice, copy) then begin
 										l6 := true
 									end
 							end;
@@ -520,13 +520,13 @@ part := array(nil, {
 				nil
 			end,
 			kFunction_1015089: func() begin
-				(foreach l1, l2 in DeviceRegistry do begin
+				(foreach key, value in DeviceRegistry do begin
 						needReboot := true;
-						call (kFunction_1011565) with (l1)
+						call (kFunction_1011565) with (key)
 					end)
 			end
 		},
-		func(a1) begin
+		func(partFrame) begin
 			call (kFunction_1015089) with ();
 			UnDefGlobalFn('RegisterDevice);
 			UnDefGlobalFn('UnRegisterDevice);

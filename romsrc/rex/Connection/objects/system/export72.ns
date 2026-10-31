@@ -18,13 +18,13 @@ export72 := {
 					self.stopping := nil;
 					self.closing := nil;
 					AddDeferredCall(func() begin
-						local l1, l2;
+						local callReadCommand, error;
 						(try begin
 								if (whichFiles = 1) then begin
-										l1 := protoContext:CallReadCommand(endpoint, "gist");
+										callReadCommand := protoContext:CallReadCommand(endpoint, "gist");
 										endpoint:WriteCommand("isto", protoContext:BuildStoreFrame(GetStores()[0], nil, nil), true)
 									end;
-								l1 := protoContext:CallReadCommand(endpoint, "dres");
+								callReadCommand := protoContext:CallReadCommand(endpoint, "dres");
 								if (endpoint:DesktopType() = 0) then begin
 										self.theFileBrowser := BuildContext(kROM_8261)
 									end else begin
@@ -40,8 +40,8 @@ export72 := {
 								theFileBrowser.endpoint := endpoint;
 								theFileBrowser:FilterDialog()
 							end onexception |evt.ex| do begin
-								if ((l2 := CurrentException().error) <> -16005) then begin
-										endpoint:ConnectionDone(l2)
+								if ((error := CurrentException().error) <> -16005) then begin
+										endpoint:ConnectionDone(error)
 									end;
 								closing := true;
 								self:Close()
@@ -60,7 +60,7 @@ export72 := {
 		(inited := nil)
 	end,
 	viewFlags: vApplication + vFloating + vClickable,
-	CancelRequest: func(a1) begin
+	CancelRequest: func(symbol2) begin
 		(if (not stopping) then begin
 				stopping := true;
 				currentStatusSetup.values.titleText := "Stopping...";

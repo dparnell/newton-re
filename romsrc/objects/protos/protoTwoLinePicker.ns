@@ -10,23 +10,23 @@ protoTwoLinePicker := {
 	label: uCardPositionAlertButton,
 	choices: [|Array|: ],
 	otherChoices: [|Array|: ],
-	pickActionScript: func(a1) begin
+	pickActionScript: func(index) begin
 		pickChild:hilite(nil);
-		SetValue(textDisplay, 'text, choices[a1]);
-		(if (a1 = (Length(choices) - 1)) then begin
+		SetValue(textDisplay, 'text, choices[index]);
+		(if (index = (Length(choices) - 1)) then begin
 				otherPicker:Show();
 				otherInput:Show();
 				-1
 			end else begin
 				otherPicker:Hide();
 				otherInput:Hide();
-				a1
+				index
 			end)
 	end,
-	chooseOtherScript: func(a1) begin
+	chooseOtherScript: func(index) begin
 		otherPicker:hilite(nil);
-		otherSelection := a1;
-		(if (Length(otherChoices) > 1) then SetValue(otherPicker, 'text, Stringer([Array: "\uFC01\u", " ", otherChoices[a1]])) else SetValue(otherPicker, 'text, otherChoices[a1]))
+		otherSelection := index;
+		(if (Length(otherChoices) > 1) then SetValue(otherPicker, 'text, Stringer([Array: "\uFC01\u", " ", otherChoices[index]])) else SetValue(otherPicker, 'text, otherChoices[index]))
 	end,
 	currentChoice: compile(
 		constants: {
@@ -73,15 +73,15 @@ pickChild := {
 				(self.viewFlags := (viewFlags - 512))
 			end)
 	end,
-	viewClickScript: func(a1) begin
-		local l1, l2;
-		(if self:TrackHilite(a1) then begin
-				if (l1 := self:currentChoice()) then begin
-						(l2 := Clone(choices))[l1] := {item: l2[l1], mark: $\uFC0B}
+	viewClickScript: func(unit) begin
+		local currentChoice, copy;
+		(if self:TrackHilite(unit) then begin
+				if (currentChoice := self:currentChoice()) then begin
+						(copy := Clone(choices))[currentChoice] := {item: copy[currentChoice], mark: $\uFC0B}
 					end else begin
-						l2 := choices
+						copy := choices
 					end;
-				DoPopup(l2, 15, 0, self:Parent())
+				DoPopup(copy, 15, 0, self:Parent())
 			end)
 	end,
 	preallocatedContext: 'pickChild,
@@ -108,15 +108,15 @@ otherPicker := {
 				(self.viewFlags := (viewFlags - 512))
 			end)
 	end,
-	viewClickScript: func(a1) begin
-		local l1;
-		(if self:TrackHilite(a1) then begin
-				(l1 := Clone(otherChoices))[otherSelection] := {item: l1[otherSelection], mark: $\uFC0B};
-				DoPopup(l1, 15, 0, self)
+	viewClickScript: func(unit) begin
+		local copy;
+		(if self:TrackHilite(unit) then begin
+				(copy := Clone(otherChoices))[otherSelection] := {item: copy[otherSelection], mark: $\uFC0B};
+				DoPopup(copy, 15, 0, self)
 			end)
 	end,
-	pickActionScript: func(a1) begin
-		self:Parent():chooseOtherScript(a1)
+	pickActionScript: func(index) begin
+		self:Parent():chooseOtherScript(index)
 	end,
 	preallocatedContext: 'otherPicker,
 	_proto: @protoTextButton
@@ -128,21 +128,21 @@ otherInput := {
 	textFlags: 10,
 	viewBounds: {left: -40, top: 0, right: -10, bottom: 0},
 	oldValue: uCardPositionAlertButton,
-	viewChangedScript: func(a1, a2) begin
-		local l1, l2, l3;
+	viewChangedScript: func(slot, view) begin
+		local l1, text2, number;
 		l1 := nil;
-		(if (a1 = 'text) then (if (not StrEqual(a2.text, "")) then begin
-					if ((not (l3 := StringToNumber(a2.text))) or (trunc(l3) <> l3)) then begin
+		(if (slot = 'text) then (if (not StrEqual(view.text, "")) then begin
+					if ((not (number := StringToNumber(view.text))) or (trunc(number) <> number)) then begin
 							l1 := true;
-							l2 := "The value for the advance notice must be a whole number."
+							text2 := "The value for the advance notice must be a whole number."
 						end else begin
-							if (not LimitInt(l3, 0, 999)) then begin
+							if (not LimitInt(number, 0, 999)) then begin
 									l1 := true;
-									l2 := "The value for the advance notice must be between 0 and 999."
+									text2 := "The value for the advance notice must be between 0 and 999."
 								end
 						end;
-					(if (not l1) then (oldValue := Clone(a2.text)) else begin
-							self:Notify(3, "Alarm", l2);
+					(if (not l1) then (oldValue := Clone(view.text)) else begin
+							self:Notify(3, "Alarm", text2);
 							text := Clone(oldValue);
 							self:Dirty()
 						end)

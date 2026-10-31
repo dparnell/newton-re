@@ -129,8 +129,8 @@ export75Item_4 := {
 	viewBounds: {left: 15, top: 7, right: 180, bottom: 67},
 	buttonClickScript: func(a1) begin
 		fResults.appList := Array(Length(self.selectedItems), nil);
-		(foreach l1, l2 in self.selectedItems do begin
-				fResults.appList[l1] := self.listItems[l2]
+		(foreach key, value in self.selectedItems do begin
+				fResults.appList[key] := self.listItems[value]
 			end)
 	end,
 	viewJustify: vjSiblingBottomV,
@@ -143,8 +143,8 @@ export75Item_4 := {
 			end;
 		self:SetupList();
 		fResults.appList := Array(Length(self.selectedItems), nil);
-		(foreach l1, l2 in self.selectedItems do begin
-				fResults.appList[l1] := self.listItems[l2]
+		(foreach key, value in self.selectedItems do begin
+				fResults.appList[key] := self.listItems[value]
 			end)
 	end,
 	useMultipleSelections: true,
@@ -176,11 +176,11 @@ export75Item_6 := {
 	viewJustify: vjSiblingBottomV,
 	labelFont: @fontSystem9Bold,
 	longFormat: nil,
-	pickActionScript: func(a1, a2) begin
-		self.startTime := a1;
+	pickActionScript: func(index, a2) begin
+		self.startTime := index;
 		self.stopTime := a2;
-		fResults.Dates := [Array: a1, a2];
-		inherited:?pickActionScript(a1, a2)
+		fResults.Dates := [Array: index, a2];
+		inherited:?pickActionScript(index, a2)
 	end,
 	label: export85Item_3Text,
 	startTime: 0,

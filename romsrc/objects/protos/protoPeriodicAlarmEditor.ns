@@ -12,64 +12,64 @@ protoPeriodicAlarmEditor := {
 		(Time := Time())
 	end,
 	viewSetupDoneScript: func() begin
-		local l1, l2;
+		local appAlarmKeys, callBackParam;
 		inherited:?viewSetupDoneScript();
 		self:Dirty();
-		(if (Length((l1 := GetAppAlarmKeys(ownerName))) > 0) then begin
-				clock:ShowTime((l2 := GetAlarm(l1[0]).callBackParams[0]).hours, l2.minutes);
-				days:Initialize(l2.days, nil)
+		(if (Length((appAlarmKeys := GetAppAlarmKeys(ownerName))) > 0) then begin
+				clock:ShowTime((callBackParam := GetAlarm(appAlarmKeys[0]).callBackParams[0]).hours, callBackParam.minutes);
+				days:Initialize(callBackParam.days, nil)
 			end else days:Initialize(4064, nil))
 	end,
-	GetDaysStr: func(a1) begin
-		l1 := GetLocale().longDateFormat;
-		if (a1 = 4064) then begin
+	GetDaysStr: func(days) begin
+		longDateFormat := GetLocale().longDateFormat;
+		if (days = 4064) then begin
 				return "Everyday"
 			end;
-		if (a1 = 1984) then begin
+		if (days = 1984) then begin
 				return "Weekdays"
 			end;
-		if (a1 = 2080) then begin
+		if (days = 2080) then begin
 				return "Weekends"
 			end;
-		if (a1 = 2048) then begin
-				return l1.abbrDofWeek[0]
+		if (days = 2048) then begin
+				return longDateFormat.abbrDofWeek[0]
 			end;
-		if (a1 = 1024) then begin
-				return l1.abbrDofWeek[1]
+		if (days = 1024) then begin
+				return longDateFormat.abbrDofWeek[1]
 			end;
-		if (a1 = 512) then begin
-				return l1.abbrDofWeek[2]
+		if (days = 512) then begin
+				return longDateFormat.abbrDofWeek[2]
 			end;
-		if (a1 = 256) then begin
-				return l1.abbrDofWeek[3]
+		if (days = 256) then begin
+				return longDateFormat.abbrDofWeek[3]
 			end;
-		if (a1 = 128) then begin
-				return l1.abbrDofWeek[4]
+		if (days = 128) then begin
+				return longDateFormat.abbrDofWeek[4]
 			end;
-		if (a1 = 64) then begin
-				return l1.abbrDofWeek[5]
+		if (days = 64) then begin
+				return longDateFormat.abbrDofWeek[5]
 			end;
-		if (a1 = 32) then begin
-				return l1.abbrDofWeek[6]
+		if (days = 32) then begin
+				return longDateFormat.abbrDofWeek[6]
 			end;
-		if (a1 = 0) then begin
+		if (days = 0) then begin
 				return "Never"
 			end;
-		l2 := Clone("       ");
-		if (not (l3 := GetLocale().firstDayOfWeek)) then begin
-				l3 := 0
+		copy := Clone("       ");
+		if (not (firstDayOfWeek := GetLocale().firstDayOfWeek)) then begin
+				firstDayOfWeek := 0
 			end;
-		local l1;
-		local l2;
-		local l3;
-		(for l4 := 0 to 6 do begin
+		local longDateFormat;
+		local copy;
+		local firstDayOfWeek;
+		(for i := 0 to 6 do begin
 				local l7;
-				if (BAnd(a1, '[Array: 2048, 1024, 512, 256, 128, 64, 32, 2048, 1024, 512, 256, 128, 64, 32][l4]) <> 0) then begin
-						l7 := (((l4 - l3) + 7) mod 7);
-						l2[l7] := l1.shortDofWeek[l4][0]
+				if (BAnd(days, '[Array: 2048, 1024, 512, 256, 128, 64, 32, 2048, 1024, 512, 256, 128, 64, 32][i]) <> 0) then begin
+						l7 := (((i - firstDayOfWeek) + 7) mod 7);
+						copy[l7] := longDateFormat.shortDofWeek[i][0]
 					end
 			end);
-		return StringFilter(l2, " ", 'rejectAll)
+		return StringFilter(copy, " ", 'rejectAll)
 	end,
 	debug: 23027604,
 	ReOrientToScreen: @defRotateFunc,
@@ -83,9 +83,9 @@ protoPeriodicAlarmEditor := {
 			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingBottomV,
 			text: add,
 			buttonClickScript: func() begin
-				local l1, l2;
+				local l1, selected;
 				l1 := (Time mod 1440);
-				(if ((l2 := days:GetSelected()) <> 0) then schedule:Add({hours: (l1 div 60), minutes: (l1 mod 60), days: l2}) else GetRoot():Notify(3, "", "Please choose days"))
+				(if ((selected := days:GetSelected()) <> 0) then schedule:Add({hours: (l1 div 60), minutes: (l1 mod 60), days: selected}) else GetRoot():Notify(3, "", "Please choose days"))
 			end,
 			_proto: @protoTextButton
 		},
@@ -110,9 +110,9 @@ protoPeriodicAlarmEditor := {
 clock_2 := {
 	viewBounds: {left: 0, top: 20, right: 119, bottom: 48},
 	viewJustify: vjParentCenterH,
-	ShowTime: func(a1, a2) begin
+	ShowTime: func(a1, minutes2) begin
 		hours := (a1 mod 12);
-		minutes := a2;
+		minutes := minutes2;
 		self:Dirty()
 	end,
 	preallocatedContext: 'clock,
@@ -138,8 +138,8 @@ schedule := {
 		self.ListItems := [Array: ];
 		l1 := (StrLen(ownerName) + 1);
 		local l1;
-		(foreach l2 in GetAppAlarmKeys(ownerName) do begin
-				AddArraySlot(self.ListItems, Substr(l2, 0, (StrLen(l2) - l1)))
+		(foreach item in GetAppAlarmKeys(ownerName) do begin
+				AddArraySlot(self.ListItems, Substr(item, 0, (StrLen(item) - l1)))
 			end);
 		if (Length(self.ListItems) > 0) then begin
 				self.Selection := 0
@@ -149,9 +149,9 @@ schedule := {
 		self:SetupList()
 	end,
 	buttonClickScript: func(a1) begin
-		local l1;
-		clock:ShowTime((l1 := GetAlarm(Stringer([Array: self.ListItems[a1], $:, ownerName])).callBackParams[0]).hours, l1.minutes);
-		days:Initialize(l1.days, nil)
+		local callBackParam;
+		clock:ShowTime((callBackParam := GetAlarm(Stringer([Array: self.ListItems[a1], $:, ownerName])).callBackParams[0]).hours, callBackParam.minutes);
+		days:Initialize(callBackParam.days, nil)
 	end,
 	Add: compile(
 		constants: {

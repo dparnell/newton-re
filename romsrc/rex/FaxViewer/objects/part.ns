@@ -1,19 +1,19 @@
 // part, and what only it reaches
 
 part := array(nil, {
-	installScript: func(a1) begin
-		local l1;
-		l1 := EnsureInternal({removeScript: a1.devRemoveScript});
-		a1:devInstallScript(a1, l1);
-		l1
+	installScript: func(partFrame) begin
+		local ensureInternal2;
+		ensureInternal2 := EnsureInternal({removeScript: partFrame.devRemoveScript});
+		partFrame:devInstallScript(partFrame, ensureInternal2);
+		ensureInternal2
 	end,
-	devInstallScript: func(a1, a2) begin
-		RegDataDef('ImageView, a1.partData.ImageDataDef);
-		RegDataView('ImageView, a1.partData.ImageViewerDef);
-		RegDataView('ImageView, a1.partData.ImagePrintFormat);
-		RegDataView('ImageView, a1.partData.faxViewerRouteFormat)
+	devInstallScript: func(partFrame, removeFrame) begin
+		RegDataDef('ImageView, partFrame.partData.ImageDataDef);
+		RegDataView('ImageView, partFrame.partData.ImageViewerDef);
+		RegDataView('ImageView, partFrame.partData.ImagePrintFormat);
+		RegDataView('ImageView, partFrame.partData.faxViewerRouteFormat)
 	end,
-	devRemoveScript: func(a1) begin
+	devRemoveScript: func(partFrame) begin
 		UnRegDataDef('ImageView);
 		UnRegDataView('ImageView, 'default);
 		UnRegDataView('ImageView, 'ImagePrintFormatSym);
@@ -35,11 +35,11 @@ part := array(nil, {
 			icon: nil,
 			version: 1,
 			metadata: nil,
-			SetupForm: func(a1, a2) begin
+			SetupForm: func(entry, a2) begin
 				nil
 			end,
-			StringExtract: func(a1, a2) begin
-				(if (if a1.title then (Length(a1.title) > 0)) then a1.title else "Untitled fax")
+			StringExtract: func(entry, nLines) begin
+				(if (if entry.title then (Length(entry.title) > 0)) then entry.title else "Untitled fax")
 			end,
 			viewClass: clView
 		},
@@ -58,8 +58,8 @@ part := array(nil, {
 			end,
 			fPageIndex: 0,
 			margins: {left: 0, top: 0, right: 0, bottom: 0},
-			CountPages: func(a1, a2) begin
-				Length(a2.pages)
+			CountPages: func(fields, target) begin
+				Length(target.pages)
 			end,
 			declareSelf: 'printBase,
 			viewSetupFormScript: func() begin
@@ -88,19 +88,19 @@ part := array(nil, {
 			vPageNavigator: nil,
 			symbol: 'default,
 			ShowFoundItem: func(a1, a2) begin
-				(if (a2.findType = 'text) then (for l1 := 0 to (Length(a1.pages) - 1) do begin
-							if (l4 := a1.pages[l1].annotations) then begin
-									local l4;
-									(foreach l5 in l4 do begin
-											local l7, l8, l9, l10, l11, l12;
-											if FindStringInFrame(l5, a2.findWords, 'text) then begin
-													imageContainer:GotoPage((l1 + 1));
+				(if (a2.findType = 'text) then (for i := 0 to (Length(a1.pages) - 1) do begin
+							if (annotations := a1.pages[i].annotations) then begin
+									local annotations;
+									(foreach item in annotations do begin
+											local viewBounds, l8, l9, box, l11, l12;
+											if FindStringInFrame(item, a2.findWords, 'text) then begin
+													imageContainer:GotoPage((i + 1));
 													ImageTarget:ZoomTo('fullSize);
-													l8 := (((l7 := l5.viewBounds).right - l7.left) div 2);
-													l9 := ((l7.bottom - l7.top) div 2);
-													l11 := (((l10 := self:LocalBox()).right - l10.left) div 2);
-													l12 := ((l10.bottom - l10.top) div 2);
-													ImageTarget:ScrollTo(((l7.left + l8) - l11), ((l7.top + l9) - l12));
+													l8 := (((viewBounds := item.viewBounds).right - viewBounds.left) div 2);
+													l9 := ((viewBounds.bottom - viewBounds.top) div 2);
+													l11 := (((box := self:LocalBox()).right - box.left) div 2);
+													l12 := ((box.bottom - box.top) div 2);
+													ImageTarget:ScrollTo(((viewBounds.left + l8) - l11), ((viewBounds.top + l9) - l12));
 													return nil
 												end
 										end)
@@ -163,9 +163,9 @@ partItem_2 := {
 	annotations: nil,
 	image: nil,
 	PrepareToPrint: func(a1) begin
-		local l1;
+		local page;
 		(if (a1 < target.info.pageCount) then begin
-				ImageTarget:setup((l1 := target.pages[a1]).image, l1.annotations, nil);
+				ImageTarget:setup((page := target.pages[a1]).image, page.annotations, nil);
 				ImageTarget:ZoomTo('fitInWindow);
 				true
 			end)
@@ -199,8 +199,8 @@ partItem_4 := {
 		inherited:?viewSetupFormScript();
 		(self.scrollView := imageContainer)
 	end,
-	Update: func(a1) begin
-		(if (a1.zoomedTo = 'fitInWindow) then begin
+	Update: func(scalingInfo) begin
+		(if (scalingInfo.zoomedTo = 'fitInWindow) then begin
 				hidden := true;
 				self:Hide();
 				return nil
@@ -208,11 +208,11 @@ partItem_4 := {
 				if hidden then begin
 						self:Open()
 					end;
-				scrollRect := a1.extent;
-				dataRect := a1.extent;
-				viewRect := a1.viewBox;
-				xPos := a1.OffsetX;
-				yPos := a1.OffsetY;
+				scrollRect := scalingInfo.extent;
+				dataRect := scalingInfo.extent;
+				viewRect := scalingInfo.viewBox;
+				xPos := scalingInfo.OffsetX;
+				yPos := scalingInfo.OffsetY;
 				self:AdjustArrows()
 			end)
 	end,
@@ -229,8 +229,8 @@ partItem_4 := {
 pageOf := {
 	viewBounds: {left: 0, top: 0, right: 74, bottom: 17},
 	viewJustify: 8388678,
-	Update: func(a1) begin
-		SetValue(self, 'text, ParamStr("^0 ^1 of ^2", [Array: "\uFC01\u", a1, Length(target.pages)]))
+	Update: func(scalingInfo) begin
+		SetValue(self, 'text, ParamStr("^0 ^1 of ^2", [Array: "\uFC01\u", scalingInfo, Length(target.pages)]))
 	end,
 	popup: [|Array|: ],
 	viewFlags: vVisible + vReadOnly + vClickable,
@@ -240,32 +240,32 @@ pageOf := {
 		l1 := (numVisiblePages + (if (numVisiblePages > 1) then 2 else 0));
 		self.popup := Array(l1, nil);
 		local l1;
-		(for l2 := 1 to numVisiblePages do begin
-				local l5;
-				l5 := ParamStr("Page ^0", [Array: l2]);
-				popup[(l2 - 1)] := {item: l5}
+		(for i := 1 to numVisiblePages do begin
+				local text;
+				text := ParamStr("Page ^0", [Array: i]);
+				popup[(i - 1)] := {item: text}
 			end);
 		(if (numVisiblePages > 1) then begin
 				popup[numVisiblePages] := 'pickSeparator;
 				(popup[(numVisiblePages + 1)] := "Show Previewer")
 			end)
 	end,
-	pickActionScript: func(a1) begin
-		if ((a1 + 1) <= numVisiblePages) then begin
-				imageContainer:GotoPage((a1 + 1))
+	pickActionScript: func(index) begin
+		if ((index + 1) <= numVisiblePages) then begin
+				imageContainer:GotoPage((index + 1))
 			end else begin
 				vPageNavigator:ToggleNavigator(imageContainer:GetCurrentPage())
 			end;
 		self:hilite(nil)
 	end,
 	buttonClickScript: func() begin
-		local l1;
+		local currentPage;
 		if markedPage then begin
 				popup[markedPage].mark := $ 
 			end;
 		markedPage := nil;
-		if ((l1 := imageContainer:GetCurrentPage()) <= numVisiblePages) then begin
-				markedPage := (l1 - 1);
+		if ((currentPage := imageContainer:GetCurrentPage()) <= numVisiblePages) then begin
+				markedPage := (currentPage - 1);
 				popup[markedPage].mark := $\uFC0B
 			end;
 		if (numVisiblePages > 1) then begin
@@ -284,8 +284,8 @@ pageOf := {
 	markedPage: nil,
 	numVisiblePages: nil,
 	text: "ﰁPage 9 of 9",
-	viewClickScript: func(a1) begin
-		if self:TrackHilite(a1) then begin
+	viewClickScript: func(unit) begin
+		if self:TrackHilite(unit) then begin
 				self:buttonClickScript()
 			end;
 		true
@@ -314,11 +314,11 @@ tools := {
 		mark: $\u0020,
 		item: "Fit In Window",
 		zoomStop: 'fitInWindow,
-		doit: func(a1) begin
-			local l1;
-			(if ((l1 := GetVariable(a1, 'ImageTarget)):GetScalingInfo().zoomedTo <> 'fitInWindow) then begin
-					l1:SetAnnotationMode('Show);
-					l1:ZoomTo('fitInWindow)
+		doit: func(imageContainer) begin
+			local value;
+			(if ((value := GetVariable(imageContainer, 'ImageTarget)):GetScalingInfo().zoomedTo <> 'fitInWindow) then begin
+					value:SetAnnotationMode('Show);
+					value:ZoomTo('fitInWindow)
 				end)
 		end
 	},
@@ -326,11 +326,11 @@ tools := {
 		mark: $\u0020,
 		item: "Full Resolution",
 		zoomStop: 'fullResolution,
-		doit: func(a1) begin
-			local l1;
-			(if ((l1 := GetVariable(a1, 'ImageTarget)):GetScalingInfo().zoomedTo <> 'fullResolution) then begin
-					l1:SetAnnotationMode('Show);
-					l1:ZoomTo('fullResolution)
+		doit: func(imageContainer) begin
+			local value;
+			(if ((value := GetVariable(imageContainer, 'ImageTarget)):GetScalingInfo().zoomedTo <> 'fullResolution) then begin
+					value:SetAnnotationMode('Show);
+					value:ZoomTo('fullResolution)
 				end)
 		end
 	},
@@ -338,33 +338,33 @@ tools := {
 		mark: $\u0020,
 		item: "Original Size",
 		zoomStop: 'fullSize,
-		doit: func(a1) begin
-			local l1;
-			(if ((l1 := GetVariable(a1, 'ImageTarget)):GetScalingInfo().zoomedTo <> 'fullSize) then begin
-					l1:SetAnnotationMode('Show);
-					l1:ZoomTo('fullSize)
+		doit: func(imageContainer) begin
+			local value;
+			(if ((value := GetVariable(imageContainer, 'ImageTarget)):GetScalingInfo().zoomedTo <> 'fullSize) then begin
+					value:SetAnnotationMode('Show);
+					value:ZoomTo('fullSize)
 				end)
 		end
 	},
 	preAllocatedContext: 'FaxTools,
 	viewFlags: vVisible + vReadOnly + vClickable,
 	buttonClickScript: func() begin
-		popup := [Array: (l1 := {_proto: popItem_ShowThumb, item: (if Visible(imageContainer.vThumbFloater) then "Hide Thumbnail" else "Show Thumbnail")}), 'pickSeparator];
-		l2 := ImageTarget.zoomStops;
-		l3 := ImageTarget:GetScalingInfo().zoomedTo;
-		local l1;
-		local l2;
-		local l3;
+		popup := [Array: (frame2 := {_proto: popItem_ShowThumb, item: (if Visible(imageContainer.vThumbFloater) then "Hide Thumbnail" else "Show Thumbnail")}), 'pickSeparator];
+		zoomStops := ImageTarget.zoomStops;
+		zoomedTo := ImageTarget:GetScalingInfo().zoomedTo;
+		local frame2;
+		local zoomStops;
+		local zoomedTo;
 		local l4;
 		local l5;
-		(foreach l6 in popSizeItems do begin
-				local l8, l9;
-				l1 := self.(l6);
-				if ArrayPos(l2, l1.zoomStop, 0, nil) then begin
-						if (l1.zoomStop = l3) then begin
-								l1 := {_proto: l1, item: l1.item, mark: $\uFC0B}
+		(foreach item in popSizeItems do begin
+				local l8, popItem_Drag2;
+				frame2 := self.(item);
+				if ArrayPos(zoomStops, frame2.zoomStop, 0, nil) then begin
+						if (frame2.zoomStop = zoomedTo) then begin
+								frame2 := {_proto: frame2, item: frame2.item, mark: $\uFC0B}
 							end;
-						AddArraySlot(popup, l1)
+						AddArraySlot(popup, frame2)
 					end
 			end);
 		AddArraySlot(popup, 'pickSeparator);
@@ -381,15 +381,15 @@ tools := {
 				if l8 then begin
 						AddArraySlot(popup, 'pickSeparator)
 					end;
-				l1 := popItem_Annotate;
-				l9 := popItem_Drag;
+				frame2 := popItem_Annotate;
+				popItem_Drag2 := popItem_Drag;
 				if (ImageTarget:GetAnnotationMode() = 'edit) then begin
-						(l1 := Clone(l1)).mark := $\uFC0B
+						(frame2 := Clone(frame2)).mark := $\uFC0B
 					end else begin
-						(l9 := Clone(l9)).mark := $\uFC0B
+						(popItem_Drag2 := Clone(popItem_Drag2)).mark := $\uFC0B
 					end;
-				AddArraySlot(popup, l1);
-				AddArraySlot(popup, l9)
+				AddArraySlot(popup, frame2);
+				AddArraySlot(popup, popItem_Drag2)
 			end;
 		if (not fEntryStore:IsReadOnly()) then begin
 				AddArraySlot(popup, 'pickSeparator);
@@ -403,71 +403,71 @@ tools := {
 	popItem_Rotate180: {
 		item: "Rotate 180°",
 		mark: $\u0020,
-		doit: func(a1) begin
-			a1:DoMunge('rotate180)
+		doit: func(imageContainer) begin
+			imageContainer:DoMunge('rotate180)
 		end
 	},
 	_proto: @protoPopupButton,
 	popItem_ShowThumb: {
 		item: "",
-		doit: func(a1) begin
-			GetVariable(a1, 'vThumbFloater):ToggleThumbnail(a1:MakeAndStashThumbnail(a1:GetCurrentPage()))
+		doit: func(imageContainer) begin
+			GetVariable(imageContainer, 'vThumbFloater):ToggleThumbnail(imageContainer:MakeAndStashThumbnail(imageContainer:GetCurrentPage()))
 		end
 	},
 	popItem_Drag: {
 		item: "Drag with Stylus",
 		mark: $\u0020,
-		doit: func(a1) begin
-			GetVariable(a1, 'ImageTarget):SetAnnotationMode('Show)
+		doit: func(imageContainer) begin
+			GetVariable(imageContainer, 'ImageTarget):SetAnnotationMode('Show)
 		end
 	},
 	viewJustify: 8388710,
 	popItem_Reduce: {
 		item: "Reduce Fax",
-		doit: func(a1) begin
-			GetVariable(a1, 'ImageTarget):SetAnnotationMode('Show);
-			GetVariable(a1, 'ImageTarget):ZoomBy(-1)
+		doit: func(imageContainer) begin
+			GetVariable(imageContainer, 'ImageTarget):SetAnnotationMode('Show);
+			GetVariable(imageContainer, 'ImageTarget):ZoomBy(-1)
 		end
 	},
 	popItem_RotateLeft: {
 		item: "Rotate left",
 		mark: $\u0020,
-		doit: func(a1) begin
-			a1:DoMunge('rotateLeft)
+		doit: func(imageContainer) begin
+			imageContainer:DoMunge('rotateLeft)
 		end
 	},
 	popup: [|Array|: ],
 	popItem_Annotate: {
 		item: "Write with Stylus",
 		mark: $\u0020,
-		doit: func(a1) begin
-			local l1;
-			if ((l1 := GetVariable(a1, 'ImageTarget)):GetScalingInfo().zoomedTo <> 'fullSize) then begin
-					l1:ZoomTo('fullSize)
+		doit: func(imageContainer) begin
+			local value;
+			if ((value := GetVariable(imageContainer, 'ImageTarget)):GetScalingInfo().zoomedTo <> 'fullSize) then begin
+					value:ZoomTo('fullSize)
 				end;
-			l1:SetAnnotationMode('edit)
+			value:SetAnnotationMode('edit)
 		end
 	},
-	pickActionScript: func(a1) begin
-		local l1;
-		if (if IsFrame((l1 := popup[a1])) then l1.doit) then begin
-				l1:doit(imageContainer)
+	pickActionScript: func(index) begin
+		local popupItem;
+		if (if IsFrame((popupItem := popup[index])) then popupItem.doit) then begin
+				popupItem:doit(imageContainer)
 			end;
-		inherited:?pickActionScript(a1)
+		inherited:?pickActionScript(index)
 	end,
 	text: "  Tools",
 	popItem_Enlarge: {
 		item: "Enlarge Fax",
-		doit: func(a1) begin
-			GetVariable(a1, 'ImageTarget):SetAnnotationMode('Show);
-			GetVariable(a1, 'ImageTarget):ZoomBy(1)
+		doit: func(imageContainer) begin
+			GetVariable(imageContainer, 'ImageTarget):SetAnnotationMode('Show);
+			GetVariable(imageContainer, 'ImageTarget):ZoomBy(1)
 		end
 	},
 	popItem_RotateRight: {
 		item: "Rotate right",
 		mark: $\u0020,
-		doit: func(a1) begin
-			a1:DoMunge('rotateRight)
+		doit: func(imageContainer) begin
+			imageContainer:DoMunge('rotateRight)
 		end
 	},
 	popSizeItems: [|Array|: 'popItem_FitInWindow, 'popItem_FullSize, 'popItem_FullRes]
@@ -498,7 +498,7 @@ partItem_6 := {
 	ZoomTo: compile(
 		constants: {
 			kFunction_7670a5: func(a1, a2, a3) begin
-				local l1;
+				local frame2;
 				warningName := (if (not a1) then 'vBarber else (if (ClassOf(a1) <> 'symbol) then 'vGauge else a1));
 				if (a3 = 'default) then begin
 						a3 := nil
@@ -507,7 +507,7 @@ partItem_6 := {
 						a2 := fTitle
 					end;
 				fTitle := a2;
-				self:viewset((l1 := {name: warningName, values: {icon: @routeFaxBitmap, statusText: a2, titleText: a3, barber: (warningName = 'vBarber), gauge: (if (warningName = 'vGauge) then 1), closeBox: nil, primary: nil}}));
+				self:viewset((frame2 := {name: warningName, values: {icon: @routeFaxBitmap, statusText: a2, titleText: a3, barber: (warningName = 'vBarber), gauge: (if (warningName = 'vGauge) then 1), closeBox: nil, primary: nil}}));
 				self:Open();
 				(if (warningName = 'vBarber) then self:SetupIdle(300) else self:SetupIdle(0))
 			end,
@@ -536,7 +536,7 @@ partItem_6 := {
 	ZoomBy: compile(
 		constants: {
 			kFunction_7670a5: func(a1, a2, a3) begin
-				local l1;
+				local frame2;
 				warningName := (if (not a1) then 'vBarber else (if (ClassOf(a1) <> 'symbol) then 'vGauge else a1));
 				if (a3 = 'default) then begin
 						a3 := nil
@@ -545,7 +545,7 @@ partItem_6 := {
 						a2 := fTitle
 					end;
 				fTitle := a2;
-				self:viewset((l1 := {name: warningName, values: {icon: @routeFaxBitmap, statusText: a2, titleText: a3, barber: (warningName = 'vBarber), gauge: (if (warningName = 'vGauge) then 1), closeBox: nil, primary: nil}}));
+				self:viewset((frame2 := {name: warningName, values: {icon: @routeFaxBitmap, statusText: a2, titleText: a3, barber: (warningName = 'vBarber), gauge: (if (warningName = 'vGauge) then 1), closeBox: nil, primary: nil}}));
 				self:Open();
 				(if (warningName = 'vBarber) then self:SetupIdle(300) else self:SetupIdle(0))
 			end,
@@ -593,17 +593,17 @@ partItem_7 := {
 	GetItemCount: func() begin
 		Length(target.pages)
 	end,
-	Abstract: func(a1, a2) begin
-		local l1, l2, l3, l4, l5, l6, l7;
-		(if (l1 := (if (a1 <= Length(target.pages)) then imageContainer:MakeAndStashThumbnail(a1))) then begin
-				l2 := ((a2.right - a2.left) - 2);
-				l3 := RelBounds((a2.left + 1), 1, l2, l2);
-				l5 := MakeShape((l3 := FitToBox((l4 := ShapeBounds(l1)), l3, 6)));
-				l6 := MakeText((l6 := ParamStr("Page ^0", [Array: NumberStr(a1)])), a2.left, (a2.top + l2), a2.right, ((a2.top + l2) + fontHeight(viewFont)));
-				if (l7 := MakeShape(l1)) then begin
-						l1 := l7
+	Abstract: func(items2Item, copy) begin
+		local shape22, l2, bounds, shapeBounds2, shape, text, shape2;
+		(if (shape22 := (if (items2Item <= Length(target.pages)) then imageContainer:MakeAndStashThumbnail(items2Item))) then begin
+				l2 := ((copy.right - copy.left) - 2);
+				bounds := RelBounds((copy.left + 1), 1, l2, l2);
+				shape := MakeShape((bounds := FitToBox((shapeBounds2 := ShapeBounds(shape22)), bounds, 6)));
+				text := MakeText((text := ParamStr("Page ^0", [Array: NumberStr(items2Item)])), copy.left, (copy.top + l2), copy.right, ((copy.top + l2) + fontHeight(viewFont)));
+				if (shape2 := MakeShape(shape22)) then begin
+						shape22 := shape2
 					end;
-				[Array: {justification: 'center, font: viewFont}, l6, l5, {transform: [Array: l4, l3]}, l1]
+				[Array: {justification: 'center, font: viewFont}, text, shape, {transform: [Array: shapeBounds2, bounds]}, shape22]
 			end)
 	end,
 	SelectItem: func(a1) begin
@@ -625,11 +625,11 @@ partItem_8 := {
 	viewBounds: {top: -100, left: 8, right: -8, bottom: -26},
 	stepChildren: [stepChildren: partItem_7, partItem_8Item],
 	viewJustify: vjParentFullH + vjParentBottomV,
-	ToggleNavigator: func(a1) begin
-		(if ((not a1) or Visible(self)) then self:Close() else self:OpenNavigator(a1))
+	ToggleNavigator: func(currentPage) begin
+		(if ((not currentPage) or Visible(self)) then self:Close() else self:OpenNavigator(currentPage))
 	end,
-	OpenNavigator: func(a1) begin
-		pagePalette.selectedPage := a1;
+	OpenNavigator: func(currentPage) begin
+		pagePalette.selectedPage := currentPage;
 		self:Open()
 	end,
 	viewSetupDoneScript: func() begin
@@ -696,14 +696,14 @@ partItem_9 := {
 	end,
 	WarningDialog: nil,
 	viewSetupDoneScript: func() begin
-		local l1, l2;
+		local l1, box;
 		WarningDialog:Update(nil);
 		l1 := self:GetAppPreferences().|dFaxViewer:Dondo|;
 		if Visible(vThumbFloater) then begin
 				vThumbFloater:RelocateGreyBox(ImageTarget:GetScalingInfo())
 			end;
-		fPageScrollWidth := ((l2 := ImageTarget:LocalBox()).right - (l2.right div 10));
-		fPageScrollHeight := (l2.bottom - (l2.bottom div 10));
+		fPageScrollWidth := ((box := ImageTarget:LocalBox()).right - (box.right div 10));
+		fPageScrollHeight := (box.bottom - (box.bottom div 10));
 		WarningDialog:Update(nil);
 		self:Update();
 		if WarningDialog then begin
@@ -715,19 +715,19 @@ partItem_9 := {
 	fPageScrollHeight: 10,
 	viewFormat: nil,
 	MakeAndStashThumbnail: func(a1) begin
-		local l1, l2, l3, l4;
-		if (not (l1 := target.pages[(a1 - 1)]).thumbnail) then begin
-				l4 := MakeBitmap((l3 := FitToBox((l2 := ShapeBounds(l1.image)), '{left: 0, top: 0, right: 96, bottom: 96}, nil)).right, l3.bottom, nil);
-				DrawIntoBitmap(l1.image, {transform: [Array: l2, l3]}, l4);
-				l1.thumbnail := l4;
+		local page, shapeBounds2, fitToBox2, bitmap;
+		if (not (page := target.pages[(a1 - 1)]).thumbnail) then begin
+				bitmap := MakeBitmap((fitToBox2 := FitToBox((shapeBounds2 := ShapeBounds(page.image)), '{left: 0, top: 0, right: 96, bottom: 96}, nil)).right, fitToBox2.bottom, nil);
+				DrawIntoBitmap(page.image, {transform: [Array: shapeBounds2, fitToBox2]}, bitmap);
+				page.thumbnail := bitmap;
 				self:StartFlush()
 			end;
-		l1.thumbnail
+		page.thumbnail
 	end,
 	DoMungeREally: compile(
 		constants: {
 			kFunction_7670a5: func(a1, a2, a3) begin
-				local l1;
+				local frame2;
 				warningName := (if (not a1) then 'vBarber else (if (ClassOf(a1) <> 'symbol) then 'vGauge else a1));
 				if (a3 = 'default) then begin
 						a3 := nil
@@ -736,7 +736,7 @@ partItem_9 := {
 						a2 := fTitle
 					end;
 				fTitle := a2;
-				self:viewset((l1 := {name: warningName, values: {icon: @routeFaxBitmap, statusText: a2, titleText: a3, barber: (warningName = 'vBarber), gauge: (if (warningName = 'vGauge) then 1), closeBox: nil, primary: nil}}));
+				self:viewset((frame2 := {name: warningName, values: {icon: @routeFaxBitmap, statusText: a2, titleText: a3, barber: (warningName = 'vBarber), gauge: (if (warningName = 'vGauge) then 1), closeBox: nil, primary: nil}}));
 				self:Open();
 				(if (warningName = 'vBarber) then self:SetupIdle(300) else self:SetupIdle(0))
 			end,
@@ -750,7 +750,7 @@ partItem_9 := {
 			kLiteral_766fc5: {OpenDlog: kFunction_7670a5, Update: kFunction_7672d5, viewIdleScript: kFunction_76738d, fTitle: nil, warningName: nil, viewEffect: 236577, _proto: @protoStatusTemplate}
 		},
 		func(a1) begin
-			local l1, l2;
+			local frame2, fn;
 			if (not a1) then begin
 					return nil
 				end;
@@ -760,11 +760,11 @@ partItem_9 := {
 					WarningDialog := BuildContext(kLiteral_766fc5)
 				end;
 			WarningDialog:OpenDlog('vGauge, "Rotating the fax\u2026\u", 'default);
-			l1 := {receiver: WarningDialog, message: 'Update};
-			l2 := func(a1) begin
+			frame2 := {receiver: WarningDialog, message: 'Update};
+			fn := func(a1) begin
 				WarningDialog:Update(a1)
 			end;
-			fPage.image := MungeBitmap(fPage.image, mungeType, {callback: l2});
+			fPage.image := MungeBitmap(fPage.image, mungeType, {callback: fn});
 			WarningDialog:OpenDlog('vBarber, nil, "Finishing\u2026\u");
 			mungeType := nil;
 			self:UpdatePage();
@@ -822,7 +822,7 @@ partItem_9 := {
 	GotoPage: compile(
 		constants: {
 			kFunction_7670a5: func(a1, a2, a3) begin
-				local l1;
+				local frame2;
 				warningName := (if (not a1) then 'vBarber else (if (ClassOf(a1) <> 'symbol) then 'vGauge else a1));
 				if (a3 = 'default) then begin
 						a3 := nil
@@ -831,7 +831,7 @@ partItem_9 := {
 						a2 := fTitle
 					end;
 				fTitle := a2;
-				self:viewset((l1 := {name: warningName, values: {icon: @routeFaxBitmap, statusText: a2, titleText: a3, barber: (warningName = 'vBarber), gauge: (if (warningName = 'vGauge) then 1), closeBox: nil, primary: nil}}));
+				self:viewset((frame2 := {name: warningName, values: {icon: @routeFaxBitmap, statusText: a2, titleText: a3, barber: (warningName = 'vBarber), gauge: (if (warningName = 'vGauge) then 1), closeBox: nil, primary: nil}}));
 				self:Open();
 				(if (warningName = 'vBarber) then self:SetupIdle(300) else self:SetupIdle(0))
 			end,
@@ -863,16 +863,16 @@ partItem_9 := {
 					(WarningDialog := nil)
 				end)
 		end),
-	ViewScroll2DScript: func(a1, a2) begin
+	ViewScroll2DScript: func(arrowDirection, a2) begin
 		local l1, l2;
-		l1 := (if (a1 = 'left) then (-fPageScrollWidth) else (if (a1 = 'right) then fPageScrollWidth else 0));
-		l2 := (if (a1 = 'up) then (-fPageScrollHeight) else (if (a1 = 'down) then fPageScrollHeight else 0));
+		l1 := (if (arrowDirection = 'left) then (-fPageScrollWidth) else (if (arrowDirection = 'right) then fPageScrollWidth else 0));
+		l2 := (if (arrowDirection = 'up) then (-fPageScrollHeight) else (if (arrowDirection = 'down) then fPageScrollHeight else 0));
 		self:LockScreen(true);
 		if (not ImageTarget:ScrollBy(l1, l2)) then begin
-				vScrollers:SetArrow(a1, 'done)
+				vScrollers:SetArrow(arrowDirection, 'done)
 			end;
 		if (a2.count = 0) then begin
-				vScrollers:SetArrow('{left: right, right: left, up: down, down: up}.(a1), 'more)
+				vScrollers:SetArrow('{left: right, right: left, up: down, down: up}.(arrowDirection), 'more)
 			end;
 		vScrollers:dirty();
 		RefreshViews();
@@ -889,7 +889,7 @@ partItem_9 := {
 	viewSetupFormScript: compile(
 		constants: {
 			kFunction_7670a5: func(a1, a2, a3) begin
-				local l1;
+				local frame2;
 				warningName := (if (not a1) then 'vBarber else (if (ClassOf(a1) <> 'symbol) then 'vGauge else a1));
 				if (a3 = 'default) then begin
 						a3 := nil
@@ -898,7 +898,7 @@ partItem_9 := {
 						a2 := fTitle
 					end;
 				fTitle := a2;
-				self:viewset((l1 := {name: warningName, values: {icon: @routeFaxBitmap, statusText: a2, titleText: a3, barber: (warningName = 'vBarber), gauge: (if (warningName = 'vGauge) then 1), closeBox: nil, primary: nil}}));
+				self:viewset((frame2 := {name: warningName, values: {icon: @routeFaxBitmap, statusText: a2, titleText: a3, barber: (warningName = 'vBarber), gauge: (if (warningName = 'vGauge) then 1), closeBox: nil, primary: nil}}));
 				self:Open();
 				(if (warningName = 'vBarber) then self:SetupIdle(300) else self:SetupIdle(0))
 			end,
@@ -912,18 +912,18 @@ partItem_9 := {
 			kLiteral_766fc5: {OpenDlog: kFunction_7670a5, Update: kFunction_7672d5, viewIdleScript: kFunction_76738d, fTitle: nil, warningName: nil, viewEffect: 236577, _proto: @protoStatusTemplate}
 		},
 		func() begin
-			local l1, l2, l3;
+			local target, appPreferences, selectPage;
 			if (WarningDialog = nil) then begin
 					WarningDialog := BuildContext(kLiteral_766fc5)
 				end;
 			WarningDialog:OpenDlog('vStatusTitle, "Preparing to view fax", "Retrieving image\u2026\u");
-			fEntryStore := (if (l1 := newtAppBase.target) then EntryStore(l1));
-			l2 := (if (not (l2 := self:GetAppPreferences()).|dFaxViewer:Dondo|) then (l2.|dFaxViewer:Dondo| := Clone('{scaling: nil, ShowThumbnail: nil})) else l2.|dFaxViewer:Dondo|);
-			l3 := self:SelectPage(1);
+			fEntryStore := (if (target := newtAppBase.target) then EntryStore(target));
+			appPreferences := (if (not (appPreferences := self:GetAppPreferences()).|dFaxViewer:Dondo|) then (appPreferences.|dFaxViewer:Dondo| := Clone('{scaling: nil, ShowThumbnail: nil})) else appPreferences.|dFaxViewer:Dondo|);
+			selectPage := self:SelectPage(1);
 			image := fPage.image;
 			annotations := fPage.annotations;
-			scalingInfo := l2.scaling;
-			if l2.ShowThumbnail then begin
+			scalingInfo := appPreferences.scaling;
+			if appPreferences.ShowThumbnail then begin
 					vThumbFloater.image := self:MakeAndStashThumbnail(1);
 					vThumbFloater.viewFlags := BOr(vThumbFloater.viewFlags, 1)
 				end;
@@ -940,10 +940,10 @@ partItem_9 := {
 	annotations: nil,
 	mungeType: nil,
 	UpdatePage: func() begin
-		local l1;
-		l1 := fPage;
+		local fPage2;
+		fPage2 := fPage;
 		WarningDialog:Update(nil);
-		ImageTarget:setup(l1.image, l1.annotations, nil);
+		ImageTarget:setup(fPage2.image, fPage2.annotations, nil);
 		if Visible(vThumbFloater) then begin
 				vThumbFloater:setup(self:MakeAndStashThumbnail(fPageNum))
 			end;
@@ -963,8 +963,8 @@ partItem_9Item := {
 	GetScalingInfo: func() begin
 		(if ImageTarget.viewCObject then ImageTarget:GetScalingInfo())
 	end,
-	ScrollTo: func(a1, a2) begin
-		ImageTarget:ScrollTo(a1, a2);
+	ScrollTo: func(a1, offsetY) begin
+		ImageTarget:ScrollTo(a1, offsetY);
 		imageContainer:UpdateScrollers()
 	end,
 	_proto: @protoThumbnailFloater,

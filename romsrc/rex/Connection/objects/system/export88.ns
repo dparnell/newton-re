@@ -1,6 +1,6 @@
 // export88, and what only it reaches
 
 export88 := func() begin
-	local l1;
-	(if (l1 := GetUserConfig('emporia)) then return l1 else return '[Array: ])
+	local emporia;
+	(if (emporia := GetUserConfig('emporia)) then return emporia else return '[Array: ])
 end;

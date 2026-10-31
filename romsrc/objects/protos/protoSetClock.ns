@@ -42,16 +42,16 @@ protoSetClock := {
 		1045,
 		0
 	],
-	FastEnoughAtan: func(a1, a2) begin
+	FastEnoughAtan: func(left, top) begin
 		local l1, l2, l3;
 		l1 := nil;
-		if (a1 = 0) then begin
+		if (left = 0) then begin
 				l1 := 15
 			end else begin
-				if (a2 = 0) then begin
+				if (top = 0) then begin
 						l1 := 0
 					end else begin
-						l2 := ((a2 * 10000) div a1);
+						l2 := ((top * 10000) div left);
 						l3 := 0;
 						(loop begin
 								if (l2 < atanTable[l3]) then begin
@@ -67,24 +67,24 @@ protoSetClock := {
 			end;
 		return l1
 	end,
-	GetHandShape: func(a1, a2, a3) begin
-		local l1, l2, l3, l4;
-		l1 := (a1 div 15);
-		l2 := (a1 - (l1 * 15));
-		l4 := sinTable[l2];
+	GetHandShape: func(minutes, a2, a3) begin
+		local l1, sinTableItem22, sinTableItem2, sinTableItem;
+		l1 := (minutes div 15);
+		sinTableItem22 := (minutes - (l1 * 15));
+		sinTableItem := sinTable[sinTableItem22];
 		if ((l1 = 0) or (l1 = 3)) then begin
-				l4 := (-l4)
+				sinTableItem := (-sinTableItem)
 			end;
-		l3 := sinTable[(15 - l2)];
+		sinTableItem2 := sinTable[(15 - sinTableItem22)];
 		if (l1 > 1) then begin
-				l3 := (-l3)
+				sinTableItem2 := (-sinTableItem2)
 			end;
 		if ((l1 = 1) or (l1 = 3)) then begin
-				l2 := l3;
-				l3 := l4;
-				l4 := l2
+				sinTableItem22 := sinTableItem2;
+				sinTableItem2 := sinTableItem;
+				sinTableItem := sinTableItem22
 			end;
-		MakeLine(a2, a2, (a2 + ((l3 * a2) div a3)), (a2 + ((l4 * a2) div a3)))
+		MakeLine(a2, a2, (a2 + ((sinTableItem2 * a2) div a3)), (a2 + ((sinTableItem * a2) div a3)))
 	end,
 	viewDrawScript: func() begin
 		local l1, l2;
@@ -98,18 +98,18 @@ protoSetClock := {
 	diff: func(a1, a2) begin
 		(if (a1 > a2) then return (a1 - a2) else return (a2 - a1))
 	end,
-	distance: func(a1, a2) begin
-		(if (a1 > a2) then return (a1 + (a2 div 2)) else return (a2 + (a1 div 2)))
+	distance: func(diff, diff2) begin
+		(if (diff > diff2) then return (diff + (diff2 div 2)) else return (diff2 + (diff div 2)))
 	end,
-	viewStrokeScript: func(a1) begin
-		local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+	viewStrokeScript: func(unit) begin
+		local l1, left, top, l4, l5, l6, l7, l8, l9;
 		l1 := ((viewBounds.right - viewBounds.left) div 2);
-		l2 := self:GlobalBox().left;
-		l4 := (GetPoint(4, a1) - l2);
-		l6 := (GetPoint(0, a1) - l2);
-		l3 := self:GlobalBox().top;
-		l5 := (GetPoint(5, a1) - l3);
-		l7 := (GetPoint(1, a1) - l3);
+		left := self:GlobalBox().left;
+		l4 := (GetPoint(4, unit) - left);
+		l6 := (GetPoint(0, unit) - left);
+		top := self:GlobalBox().top;
+		l5 := (GetPoint(5, unit) - top);
+		l7 := (GetPoint(1, unit) - top);
 		if (self:distance(self:diff(l1, l4), self:diff(l1, l5)) < self:distance(self:diff(l1, l6), self:diff(l1, l7))) then begin
 				l4 := (l6 - l1);
 				l5 := (l1 - l7)
@@ -118,16 +118,16 @@ protoSetClock := {
 				l5 := (l1 - l5)
 			end;
 		if (l4 < 0) then begin
-				l2 := (-l4)
+				left := (-l4)
 			end else begin
-				l2 := l4
+				left := l4
 			end;
 		if (l5 < 0) then begin
-				l3 := (-l5)
+				top := (-l5)
 			end else begin
-				l3 := l5
+				top := l5
 			end;
-		l8 := (15 - self:FastEnoughAtan(l2, l3));
+		l8 := (15 - self:FastEnoughAtan(left, top));
 		if ((l4 * l5) < 0) then begin
 				l8 := (30 - l8)
 			end;
@@ -137,10 +137,10 @@ protoSetClock := {
 		if (l8 = 60) then begin
 				l8 := 0
 			end;
-		if (l2 > l3) then begin
-				l9 := (l2 + (l3 div 2))
+		if (left > top) then begin
+				l9 := (left + (top div 2))
 			end else begin
-				l9 := (l3 + (l2 div 2))
+				l9 := (top + (left div 2))
 			end;
 		if (l9 > ((viewBounds.right - viewBounds.left) div 3)) then begin
 				minutes := l8

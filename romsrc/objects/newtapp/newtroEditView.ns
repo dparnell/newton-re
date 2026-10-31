@@ -17,62 +17,62 @@ newtroEditView := {
 	viewBounds: nil,
 	scrollYAmount: nil,
 	UpdateBounds: func() begin
-		if (l1 := editor:ChildViewFrames()) then begin
-				local l1;
-				local l2;
-				(foreach l3 in l1 do begin
-						l2 := UnionRect(l2, l3.viewBounds)
+		if (childViewFrames := editor:ChildViewFrames()) then begin
+				local childViewFrames;
+				local unionRect2;
+				(foreach item in childViewFrames do begin
+						unionRect2 := UnionRect(unionRect2, item.viewBounds)
 					end)
 			end;
-		(if l2 then (self.DataRect := l2))
+		(if unionRect2 then (self.DataRect := unionRect2))
 	end,
 	jamSlot: nil,
 	viewOriginY: 0,
 	initialDataRect: {left: 0, top: 0, right: 0, bottom: 0},
-	viewScroll2DScript: func(a1, a2) begin
-		local l1, l2, l3, l4;
-		l1 := 0;
-		l2 := 0;
-		if (a1 = 'left) then begin
-				l1 := (-scrollXAmount)
+	viewScroll2DScript: func(arrowDirection, a2) begin
+		local scrollXAmount2, scrollYAmount2, viewOriginX2, viewOriginY2;
+		scrollXAmount2 := 0;
+		scrollYAmount2 := 0;
+		if (arrowDirection = 'left) then begin
+				scrollXAmount2 := (-scrollXAmount)
 			end else begin
-				if (a1 = 'right) then begin
-						l1 := scrollXAmount
+				if (arrowDirection = 'right) then begin
+						scrollXAmount2 := scrollXAmount
 					end else begin
-						if (a1 = 'up) then begin
-								l2 := (-scrollYAmount)
+						if (arrowDirection = 'up) then begin
+								scrollYAmount2 := (-scrollYAmount)
 							end else begin
-								if (a1 = 'down) then begin
-										l2 := scrollYAmount
+								if (arrowDirection = 'down) then begin
+										scrollYAmount2 := scrollYAmount
 									end
 							end
 					end
 			end;
-		l3 := viewOriginX;
-		l4 := viewOriginY;
-		if (l1 <> 0) then begin
-				if (l1 > 0) then begin
+		viewOriginX2 := viewOriginX;
+		viewOriginY2 := viewOriginY;
+		if (scrollXAmount2 <> 0) then begin
+				if (scrollXAmount2 > 0) then begin
 						if self.ScrollRect then begin
-								l1 := min(((ScrollRect.right - l3) - viewWidth), l1)
+								scrollXAmount2 := min(((ScrollRect.right - viewOriginX2) - viewWidth), scrollXAmount2)
 							end
 					end else begin
-						l1 := max((-l3), l1)
+						scrollXAmount2 := max((-viewOriginX2), scrollXAmount2)
 					end;
-				l3 := (l3 + l1)
+				viewOriginX2 := (viewOriginX2 + scrollXAmount2)
 			end;
-		if (l2 <> 0) then begin
-				if (l2 > 0) then begin
+		if (scrollYAmount2 <> 0) then begin
+				if (scrollYAmount2 > 0) then begin
 						if self.ScrollRect then begin
-								l2 := min(((ScrollRect.bottom - l4) - viewHeight), l2)
+								scrollYAmount2 := min(((ScrollRect.bottom - viewOriginY2) - viewHeight), scrollYAmount2)
 							end
 					end else begin
-						l2 := max((-l4), l2)
+						scrollYAmount2 := max((-viewOriginY2), scrollYAmount2)
 					end;
-				l4 := (l4 + l2)
+				viewOriginY2 := (viewOriginY2 + scrollYAmount2)
 			end;
 		editor:DropHilites();
-		editor:SetOrigin(l3, l4);
-		ViewRect := OffsetRect(ViewRect, l1, l2);
+		editor:SetOrigin(viewOriginX2, viewOriginY2);
+		ViewRect := OffsetRect(ViewRect, scrollXAmount2, scrollYAmount2);
 		self:UpdateBounds();
 		RefreshViews()
 	end,
@@ -118,21 +118,21 @@ newtroEditView := {
 		end
 	},
 	viewSetupChildrenScript: func() begin
-		viewWidth := (l2 := editor:LocalBox()).right;
-		viewHeight := l2.bottom;
+		viewWidth := (box := editor:LocalBox()).right;
+		viewHeight := box.bottom;
 		if (not scrollOverlap) then begin
 				scrollOverlap := floor((viewHeight / 3))
 			end;
 		scrollXAmount := (viewWidth - scrollOverlap);
 		scrollYAmount := (viewHeight - scrollOverlap);
 		if (self.viewChildren := (if target then target.(path))) then begin
-				local l1;
-				local l2;
-				(foreach l3 in self.viewChildren do begin
-						l1 := UnionRect(l1, l3.viewBounds)
+				local unionRect2;
+				local box;
+				(foreach item in self.viewChildren do begin
+						unionRect2 := UnionRect(unionRect2, item.viewBounds)
 					end);
-				if l1 then begin
-						self.initialDataRect := l1
+				if unionRect2 then begin
+						self.initialDataRect := unionRect2
 					end
 			end;
 		(self.stepChildren := (if (if optionFlags then (optionFlags = 1)) then (if (initialDataRect.right <= viewWidth) then [Array: OneDscroller] else [Array: TwoDscroller])))

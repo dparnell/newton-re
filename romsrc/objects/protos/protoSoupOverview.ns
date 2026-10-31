@@ -2,15 +2,15 @@
 
 protoSoupOverview := {
 	_proto: @protoOverview,
-	Abstract: func(a1, a2) begin
+	Abstract: func(items2Item, copy) begin
 		nil
 	end,
 	viewSetupChildrenScript: func() begin
 		self:SetupAbstracts(cursor:clone())
 	end,
 	SelectItem: SelectItem,
-	HitItem: func(a1, a2, a3) begin
-		(if (not inherited:HitItem(a1, a2, a3)) then begin
+	HitItem: func(a1, trackScrollingItem, trackScrollingItem2) begin
+		(if (not inherited:HitItem(a1, trackScrollingItem, trackScrollingItem2)) then begin
 				self:Dirty();
 				true
 			end)

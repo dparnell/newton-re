@@ -14,27 +14,27 @@ frame_2 := {
 		inherited:?viewSetupFormScript()
 	end,
 	textSetup: func() begin
-		local l1, l2;
-		(if StrFilled((l2 := target.(path))) then (if (l1 := self:GetIndex(l2)) then labelCommands[l1].item else "<Unrecognized Card>") else "None Selected")
+		local index, l2;
+		(if StrFilled((l2 := target.(path))) then (if (index := self:GetIndex(l2)) then labelCommands[index].item else "<Unrecognized Card>") else "None Selected")
 	end,
 	GetIndex: compile(
 		constants: {
 			kFunction_101de65: func(a1, a2) begin
 				if a1 then begin
-						(for l1 := 0 to (Length(a2) - 1) do begin
-								if (if a2[l1].CISName then StrEqual(a2[l1].CISName, a1)) then begin
-										return l1
+						(for i := 0 to (Length(a2) - 1) do begin
+								if (if a2[i].CISName then StrEqual(a2[i].CISName, a1)) then begin
+										return i
 									end
 							end)
 					end;
 				nil
 			end
 		},
-		func(a1) begin
-			call (kFunction_101de65) with (a1, labelCommands)
+		func(value) begin
+			call (kFunction_101de65) with (value, labelCommands)
 		end),
-	labelActionScript: func(a1) begin
-		target.(path) := labelCommands[a1].CISName;
+	labelActionScript: func(index) begin
+		target.(path) := labelCommands[index].CISName;
 		newtAppbase.targetView:?StartFlush()
 	end,
 	_proto: @protoLabelPicker

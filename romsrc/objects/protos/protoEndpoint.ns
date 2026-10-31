@@ -3,40 +3,40 @@
 protoEndpoint := {
 	xconnect: {class: #132, funcPtr: 6958459, numArgs: 2},
 	OptionAttribute: func(a1) begin
-		local l1;
-		l1 := nil;
+		local count;
+		count := nil;
 		if a1 then begin
 				if IsArray(a1) then begin
-						l1 := Length(a1)
+						count := Length(a1)
 					end else begin
-						l1 := 'standalone
+						count := 'standalone
 					end
 			end;
-		l1
+		count
 	end,
 	reject: {class: #132, funcPtr: 6959502, numArgs: 0},
 	flushPartial: {class: #132, funcPtr: 6959489, numArgs: 0},
 	release: {class: #132, funcPtr: 6959503, numArgs: 0},
 	Disconnect: {class: #132, funcPtr: 6958460, numArgs: 0},
 	GetOptions: {class: #132, funcPtr: 6959491, numArgs: 1},
-	SplitOption: func(a1, a2) begin
-		l1 := nil;
-		if a2 then begin
-				l2 := Length(a1);
-				if (a2 = 'standalone) then begin
-						l1 := a1[(l2 - 1)];
-						SetLength(a1, (l2 - 1))
+	SplitOption: func(addInOption, optionAttribute) begin
+		list := nil;
+		if optionAttribute then begin
+				count := Length(addInOption);
+				if (optionAttribute = 'standalone) then begin
+						list := addInOption[(count - 1)];
+						SetLength(addInOption, (count - 1))
 					end else begin
-						l1 := [Array: ];
-						local l1;
-						local l2;
-						(for l3 := (l2 - a2) to (l2 - 1) do begin
-								AddArraySlot(l1, a1[l3])
+						list := [Array: ];
+						local list;
+						local count;
+						(for i := (count - optionAttribute) to (count - 1) do begin
+								AddArraySlot(list, addInOption[i])
 							end);
-						SetLength(a1, (l2 - a2))
+						SetLength(addInOption, (count - optionAttribute))
 					end
 			end;
-		l1
+		list
 	end,
 	disposeLeavingTEndpoint: {class: #132, funcPtr: 6958462, numArgs: 0},
 	justConnect: func(a1, a2) begin
@@ -47,14 +47,14 @@ protoEndpoint := {
 	Listen: {class: #132, funcPtr: 6959496, numArgs: 1},
 	output: {class: #132, funcPtr: 6959497, numArgs: 2},
 	input: {class: #132, funcPtr: 6959492, numArgs: 0},
-	AddrOptionGlue: func(a1, a2, a3) begin
-		local l1, l2, l3, l4;
-		l1 := self:OptionAttribute(a1);
-		l2 := self:OptionAttribute(a2);
-		l3 := self:AddInOption((l3 := self:AddInOption((l3 := [Array: ]), l1, a1)), l2, a2);
-		l4 := call a3 with (nil, l3);
-		a2 := self:SplitOption(l3, l2);
-		a1 := self:SplitOption(l3, l1);
+	AddrOptionGlue: func(a1, a2, fn) begin
+		local optionAttribute, optionAttribute2, addInOption, l4;
+		optionAttribute := self:OptionAttribute(a1);
+		optionAttribute2 := self:OptionAttribute(a2);
+		addInOption := self:AddInOption((addInOption := self:AddInOption((addInOption := [Array: ]), optionAttribute, a1)), optionAttribute2, a2);
+		l4 := call fn with (nil, addInOption);
+		a2 := self:SplitOption(addInOption, optionAttribute2);
+		a1 := self:SplitOption(addInOption, optionAttribute);
 		l4
 	end,
 	instantiateFromTEndpoint: {class: #132, funcPtr: 6959495, numArgs: 3},
@@ -86,13 +86,13 @@ protoEndpoint := {
 	caller: {class: #132, funcPtr: 6958458, numArgs: 0},
 	SetInputSpec: {class: #132, funcPtr: 6959504, numArgs: 1},
 	outputDone: {class: #132, funcPtr: 6959498, numArgs: 0},
-	AddInOption: func(a1, a2, a3) begin
-		if a2 then begin
-				if (a2 = 'standalone) then begin
+	AddInOption: func(a1, optionAttribute, a3) begin
+		if optionAttribute then begin
+				if (optionAttribute = 'standalone) then begin
 						AddArraySlot(a1, a3)
 					end else begin
-						(foreach l1 in a3 do begin
-								AddArraySlot(a1, l1)
+						(foreach item in a3 do begin
+								AddArraySlot(a1, item)
 							end)
 					end
 			end;

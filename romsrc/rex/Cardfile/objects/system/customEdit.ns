@@ -43,13 +43,13 @@ customEdit := {
 			viewSetupFormScript: func() begin
 				if (target := customInfo) then begin
 						firstLine := nil;
-						local l1;
-						local l2;
-						local l3;
-						(foreach l1, l2 in lines do begin
-								l3 := l2.path;
-								if ((not target.(l3)) or (not StrFilled(target.(l3).label))) then begin
-										firstLine := l1;
+						local key;
+						local value;
+						local path;
+						(foreach key, value in lines do begin
+								path := value.path;
+								if ((not target.(path)) or (not StrFilled(target.(path).label))) then begin
+										firstLine := key;
 										break
 									end
 							end)

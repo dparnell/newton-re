@@ -3,17 +3,17 @@
 newtqbeTextView := {
 	_proto: @newtroTextView,
 	viewFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed,
-	viewClickScript: func(a1) begin
+	viewClickScript: func(unit) begin
 		self:SetupIdle(1000);
 		nil
 	end,
-	viewChangedScript: func(a1, a2) begin
-		(if (if (not hack) then (a1 = 'text)) then self:SetupIdle(1000))
+	viewChangedScript: func(slot, view) begin
+		(if (if (not hack) then (slot = 'text)) then self:SetupIdle(1000))
 	end,
 	viewIdleScript: func() begin
-		local l1, l2;
+		local cursor, l2;
 		(if StrFilled(text) then begin
-				if (if (l2 := (l1 := dataSoup:Query({type: 'words, words: SplitString(text), indexPath: soupQuery.indexPath})):entry()) then (l2 <> 'deleted)) then begin
+				if (if (l2 := (cursor := dataSoup:Query({type: 'words, words: SplitString(text), indexPath: soupQuery.indexPath})):entry()) then (l2 <> 'deleted)) then begin
 						dataCursor:Goto(l2);
 						self:DoRetarget()
 					end;

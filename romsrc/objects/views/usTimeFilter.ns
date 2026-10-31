@@ -5,18 +5,18 @@ usTimeFilter := {
 	|string|: "        ",
 	format: format,
 	filters: [|Array|: digits, usStdDateFilterItem, "012", "012345", "aApP"],
-	SetupString: func(a1) begin
-		local l1;
-		if (not (l1 := StringToTime(a1))) then begin
-				l1 := Time()
+	SetupString: func(currentWord) begin
+		local stringToTime2;
+		if (not (stringToTime2 := StringToTime(currentWord))) then begin
+				stringToTime2 := Time()
 			end;
-		if ((a1 := HourMinute(l1))[1] = $:) then begin
-				StrMunger(a1, 0, 0, "0", 0, 1)
+		if ((currentWord := HourMinute(stringToTime2))[1] = $:) then begin
+				StrMunger(currentWord, 0, 0, "0", 0, 1)
 			end;
-		return a1
+		return currentWord
 	end,
-	CleanupString: func(a1) begin
-		local l1;
-		(a1 := (if (l1 := StringToTime(a1)) then HourMinute(l1) else ""))
+	CleanupString: func(currentWord) begin
+		local stringToTime2;
+		(currentWord := (if (stringToTime2 := StringToTime(currentWord)) then HourMinute(stringToTime2) else ""))
 	end
 };

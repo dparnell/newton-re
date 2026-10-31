@@ -19,8 +19,8 @@ protoDigitBase := {
 								value := a1
 							end
 					end;
-				(foreach l1 in self:ChildViewFrames() do begin
-						l1:?Update()
+				(foreach item in self:ChildViewFrames() do begin
+						item:?Update()
 					end)
 			end)
 	end

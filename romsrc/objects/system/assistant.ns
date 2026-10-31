@@ -3,9 +3,9 @@
 assistant := {
 	viewBounds: {left: 8, top: -98, right: -8, bottom: -8},
 	viewJustify: vjParentFullH + vjParentBottomV,
-	Duh: func(a1) begin
-		if a1 then begin
-				SetValue(assistLine.entryLine, 'text, a1)
+	Duh: func(cleanString) begin
+		if cleanString then begin
+				SetValue(assistLine.entryLine, 'text, cleanString)
 			end;
 		SetValue(assistMsg, 'text, "The Assistant cannot interpret this.");
 		RefreshViews()
@@ -31,21 +31,21 @@ assistant := {
 	end,
 	debug: 319180,
 	preallocatedContext: 'assistant,
-	TryIt: func(a1) begin
-		local l1;
-		(if (ClassOf(a1) = 'string) then (if (Length(a1) <= 2) then assistant:ButtonToggle() else begin
+	TryIt: func(gleanIntendedText) begin
+		local cleanString2;
+		(if (ClassOf(gleanIntendedText) = 'string) then (if (Length(gleanIntendedText) <= 2) then assistant:ButtonToggle() else begin
 					assistant:Open();
-					(if (if (not ParseUtter((l1 := CleanString(Clone(a1))))) then assistant.viewCObject) then assistant:Duh(l1) else true)
+					(if (if (not ParseUtter((cleanString2 := CleanString(Clone(gleanIntendedText))))) then assistant.viewCObject) then assistant:Duh(cleanString2) else true)
 				end) else assistant:ButtonToggle())
 	end,
 	PrimeAndOpen: func() begin
-		local l1, l2;
-		if (l2 := GleanIntendedText()) then begin
-				l1 := self:TryIt(l2)
+		local tryIt, gleanIntendedText2;
+		if (gleanIntendedText2 := GleanIntendedText()) then begin
+				tryIt := self:TryIt(gleanIntendedText2)
 			end else begin
-				l1 := assistant:ButtonToggle()
+				tryIt := assistant:ButtonToggle()
 			end;
-		l1
+		tryIt
 	end,
 	viewChildren: [viewChildren:
 		assistLine,
@@ -57,23 +57,23 @@ assistant := {
 			viewJustify: 8388742,
 			text: "How Do I?",
 			buttonClickScript: func() begin
-				local l1, l2, l3;
+				local viewHelpTopic, viewfrontmost, tinyTim;
 				GetRoot().assistant:Close();
-				if (l2 := GetView('viewfrontmost)) then begin
-						l1 := l2.viewHelpTopic;
-						if l2.HelpIndex then begin
-								l1 := l2.HelpIndex
+				if (viewfrontmost := GetView('viewfrontmost)) then begin
+						viewHelpTopic := viewfrontmost.viewHelpTopic;
+						if viewfrontmost.HelpIndex then begin
+								viewHelpTopic := viewfrontmost.HelpIndex
 							end;
-						if l2.HelpManual then begin
-								l3 := GetRoot().TinyTim;
-								if l1 then begin
-										l3:OpenManualTo(l2.HelpManual, l1)
+						if viewfrontmost.HelpManual then begin
+								tinyTim := GetRoot().TinyTim;
+								if viewHelpTopic then begin
+										tinyTim:OpenManualTo(viewfrontmost.HelpManual, viewHelpTopic)
 									end else begin
-										l3:OpenManual(l2.HelpManual)
+										tinyTim:OpenManual(viewfrontmost.HelpManual)
 									end
 							end
 					end;
-				(if l1 then OpenHelpTo(l1) else ShowManual())
+				(if viewHelpTopic then OpenHelpTo(viewHelpTopic) else ShowManual())
 			end,
 			_proto: @protoTextButton
 		}
@@ -100,16 +100,16 @@ assistant := {
 
 assistLine := {
 	entryFlags: nil,
-	LabelActionScript: func(a1) begin
-		local l1;
-		if IsFrame((l1 := labelCommands[a1])) then begin
-				l1 := Clone(l1.item)
+	LabelActionScript: func(index) begin
+		local labelCommand;
+		if IsFrame((labelCommand := labelCommands[index])) then begin
+				labelCommand := Clone(labelCommand.item)
 			end else begin
 				if StrFilled(entryLine.text) then begin
-						l1 := Stringer([Array: l1, " ", entryLine.text])
+						labelCommand := Stringer([Array: labelCommand, " ", entryLine.text])
 					end
 			end;
-		self:UpdateText(l1);
+		self:UpdateText(labelCommand);
 		defaultChoices := nil;
 		self:SetLabelCommands(Sort(Clone((defaultFullCommands := GenFullCommands())), '|str<|, nil))
 	end,
@@ -123,12 +123,12 @@ assistLine := {
 	viewBounds: {left: 8, top: 6, right: -8, bottom: 84},
 	defaultFullCommands: nil,
 	_proto: @protoLabelInputLine,
-	SetLabelCommands: func(a1) begin
-		local l1;
-		inherited:SetLabelCommands(a1);
-		(if (l1 := GetMemoryItems(memory)) then begin
+	SetLabelCommands: func(sort) begin
+		local memoryItems;
+		inherited:SetLabelCommands(sort);
+		(if (memoryItems := GetMemoryItems(memory)) then begin
 				AddArraySlot(labelCommands, 'pickseparator);
-				(labelCommands := ArrayMunger(Clone(l1), 0, 0, labelCommands, 0, nil))
+				(labelCommands := ArrayMunger(Clone(memoryItems), 0, 0, labelCommands, 0, nil))
 			end)
 	end,
 	dictionaries: nil,
@@ -158,9 +158,9 @@ assistLine := {
 	end,
 	FindCustomDicts: func() begin
 		assistLine.dictionaries := [Array: ];
-		(foreach l1 in vars.dictionaries do begin
-				if (if HasPath(l1, 'custom) then (l1.custom = 'roger)) then begin
-						Append(assistLine.dictionaries, l1.dictID)
+		(foreach item in vars.dictionaries do begin
+				if (if HasPath(item, 'custom) then (item.custom = 'roger)) then begin
+						Append(assistLine.dictionaries, item.dictID)
 					end
 			end)
 	end

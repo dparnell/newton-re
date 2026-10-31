@@ -23,22 +23,22 @@ buttonBar := {
 		viewFlags: vClickable + vGesturesAllowed
 	},
 	GetPartEntries: func() begin
-		local l1, l2, l3, l4, l5;
-		l1 := [Array: ];
-		l2 := [Array: ];
-		l3 := userConfiguration.blessedapp;
-		l5 := (l4 := GetRoot().ExtrasDrawer:GetPartCursor(nil, nil, '_buttonBar)):entry();
-		(while l5 do begin
-				if (l5.app <> l3) then begin
-						if (l5.sequence < 0) then begin
-								AddArraySlot(l1, l5)
+		local list, list2, blessedapp, _buttonBar, next;
+		list := [Array: ];
+		list2 := [Array: ];
+		blessedapp := userConfiguration.blessedapp;
+		next := (_buttonBar := GetRoot().ExtrasDrawer:GetPartCursor(nil, nil, '_buttonBar)):entry();
+		(while next do begin
+				if (next.app <> blessedapp) then begin
+						if (next.sequence < 0) then begin
+								AddArraySlot(list, next)
 							end else begin
-								AddArraySlot(l2, l5)
+								AddArraySlot(list2, next)
 							end
 					end;
-				(l5 := l4:Next())
+				(next := _buttonBar:Next())
 			end);
-		{fixed: l1, mobile: l2}
+		{fixed: list, mobile: list2}
 	end,
 	GetQuerySpec: func(a1) begin
 		'{type: index, indexPath: sequence, tagspec: {all: [Array: _icon, _buttonBar], none: [Array: _soups, _frozen]}}
@@ -69,28 +69,28 @@ buttonBar := {
 		(if (displayParams.buttonBarPosition <> 'none) then self:Open())
 	end,
 	viewDrawScript: func() begin
-		l2 := GraphicSize((l1 := backgrounds.(displayParams.buttonBarPosition)));
-		l3 := self:LocalBox();
+		graphicSize2 := GraphicSize((l1 := backgrounds.(displayParams.buttonBarPosition)));
+		box := self:LocalBox();
 		local l1;
-		local l2;
-		local l3;
-		(for l4 := 0 to l3.right by l2.right do begin
-				(for l7 := 0 to l3.bottom by l2.bottom do begin
-						self:CopyBits(l1, l4, l7, 0)
+		local graphicSize2;
+		local box;
+		(for i := 0 to box.right by graphicSize2.right do begin
+				(for j := 0 to box.bottom by graphicSize2.bottom do begin
+						self:CopyBits(l1, i, j, 0)
 					end)
 			end)
 	end,
 	IconCapacity: func() begin
-		local l1, l2;
-		if (l1 := GetUserConfig('buttonBarIconSpacingH)) then begin
-				self.iconSpacingH := l1
+		local buttonBarIconSpacingH, buttonBarIconSpacingV;
+		if (buttonBarIconSpacingH := GetUserConfig('buttonBarIconSpacingH)) then begin
+				self.iconSpacingH := buttonBarIconSpacingH
 			end else begin
 				if self.iconSpacingH then begin
 						RemoveSlot(self, 'iconSpacingH)
 					end
 			end;
-		if (l2 := GetUserConfig('buttonBarIconSpacingV)) then begin
-				self.iconSpacingV := l2
+		if (buttonBarIconSpacingV := GetUserConfig('buttonBarIconSpacingV)) then begin
+				self.iconSpacingV := buttonBarIconSpacingV
 			end else begin
 				if self.iconSpacingV then begin
 						RemoveSlot(self, 'iconSpacingV)
@@ -111,33 +111,33 @@ buttonBar := {
 	viewBounds: nil,
 	_proto: @protoFinderWindow,
 	labelsFilter: '_buttonBar,
-	ResequencePartEntriesQT: func(a1, a2) begin
-		if a1 then begin
-				l1 := Length(a1);
-				local l1;
-				(foreach l2, l3 in a1 do begin
-						l3.sequence := (l2 - l1);
-						EntryChange(l3)
+	ResequencePartEntriesQT: func(fixed, mobile) begin
+		if fixed then begin
+				count := Length(fixed);
+				local count;
+				(foreach key, value in fixed do begin
+						value.sequence := (key - count);
+						EntryChange(value)
 					end)
 			end;
-		(if a2 then (foreach l2, l3 in a2 do begin
-					l3.sequence := (1000 + l2);
-					EntryChange(l3)
+		(if mobile then (foreach key, value in mobile do begin
+					value.sequence := (1000 + key);
+					EntryChange(value)
 				end))
 	end,
 	ProtoSoftButtonBarIconV: {
 		viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
 		viewJustify: vjCenterH + vjBottomV + vjParentFullH + vjSiblingBottomV,
 		GetAdjustedProto: func() begin
-			local l1, l2;
-			l1 := inherited:GetAdjustedProto();
-			if ((l2 := GetRoot().buttons.iconSpacingV) <> 40) then begin
-					if IsReadOnly(l1) then begin
-							l1 := {_proto: l1, viewBounds: nil}
+			local frame2, iconSpacingV;
+			frame2 := inherited:GetAdjustedProto();
+			if ((iconSpacingV := GetRoot().buttons.iconSpacingV) <> 40) then begin
+					if IsReadOnly(frame2) then begin
+							frame2 := {_proto: frame2, viewBounds: nil}
 						end;
-					l1.viewBounds := SetBounds(0, 0, 0, l2)
+					frame2.viewBounds := SetBounds(0, 0, 0, iconSpacingV)
 				end;
-			l1
+			frame2
 		end,
 		_proto: @protoSoftButtonBarIcon
 	},
@@ -171,18 +171,18 @@ buttonBar := {
 	title: "Button Bar",
 	iconSpacingH: 40,
 	visibleItems: nil,
-	RedoIconsAfterDrop: func(a1) begin
+	RedoIconsAfterDrop: func(externalDrop) begin
 		self:RedoIcons();
-		(if a1 then GetRoot().ExtrasDrawer:RedoIconsAfterDrop(nil))
+		(if externalDrop then GetRoot().ExtrasDrawer:RedoIconsAfterDrop(nil))
 	end,
 	vSpacing: 40,
 	closeable: nil,
 	viewSetupFormScript: func() begin
 		(self.viewBounds := OffsetRect(displayParams.buttonBarBounds, (-displayParams.appAreaGlobalLeft), (-displayParams.appAreaGlobalTop)))
 	end,
-	viewClickScript: func(a1) begin
-		InkOffUnHobbled(a1);
-		inherited:?viewClickScript(a1)
+	viewClickScript: func(unit) begin
+		InkOffUnHobbled(unit);
+		inherited:?viewClickScript(unit)
 	end,
 	hasBackground: true,
 	ProtoSoftButtonBarIconH: {
@@ -190,15 +190,15 @@ buttonBar := {
 		viewJustify: vjCenterH + vjBottomV + vjParentFullV + vjSiblingRightH,
 		iconSpacingV: 40,
 		GetAdjustedProto: func() begin
-			local l1, l2;
-			l1 := inherited:GetAdjustedProto();
-			if ((l2 := GetRoot().buttons.iconSpacingH) <> 40) then begin
-					if IsReadOnly(l1) then begin
-							l1 := {_proto: self, viewBounds: nil}
+			local frame2, iconSpacingH;
+			frame2 := inherited:GetAdjustedProto();
+			if ((iconSpacingH := GetRoot().buttons.iconSpacingH) <> 40) then begin
+					if IsReadOnly(frame2) then begin
+							frame2 := {_proto: self, viewBounds: nil}
 						end;
-					l1.viewBounds := SetBounds(0, 4, l2, 0)
+					frame2.viewBounds := SetBounds(0, 4, iconSpacingH, 0)
 				end;
-			l1
+			frame2
 		end,
 		_proto: @protoSoftButtonBarIcon
 	},
@@ -248,30 +248,30 @@ buttonBar := {
 		nil
 	end,
 	AddPartEntry: func(a1, a2, a3) begin
-		local l1, l2;
-		l1 := GetRoot().ExtrasDrawer:GetPartEntry(a1);
-		l2 := self:GetPartEntries();
-		if (l1.labels = '_buttonBar) then begin
-				if (l1.sequence < 0) then begin
-						SetRemove(l2.fixed, l1)
+		local partEntry, partEntries;
+		partEntry := GetRoot().ExtrasDrawer:GetPartEntry(a1);
+		partEntries := self:GetPartEntries();
+		if (partEntry.labels = '_buttonBar) then begin
+				if (partEntry.sequence < 0) then begin
+						SetRemove(partEntries.fixed, partEntry)
 					end else begin
-						SetRemove(l2.mobile, l1)
+						SetRemove(partEntries.mobile, partEntry)
 					end
 			end else begin
-				self:ChangeTagListAndLabels(l1, '_buttonBar)
+				self:ChangeTagListAndLabels(partEntry, '_buttonBar)
 			end;
 		if a3 then begin
 				if (not a2) then begin
-						a2 := Length(l2.fixed)
+						a2 := Length(partEntries.fixed)
 					end;
-				ArrayInsert(l2.fixed, l1, a2);
-				self:ResequencePartEntriesQT(l2.fixed, nil)
+				ArrayInsert(partEntries.fixed, partEntry, a2);
+				self:ResequencePartEntriesQT(partEntries.fixed, nil)
 			end else begin
 				if (not a2) then begin
-						a2 := Length(l2.mobile)
+						a2 := Length(partEntries.mobile)
 					end;
-				ArrayInsert(l2.mobile, l1, a2);
-				self:ResequencePartEntriesQT(nil, l2.mobile)
+				ArrayInsert(partEntries.mobile, partEntry, a2);
+				self:ResequencePartEntriesQT(nil, partEntries.mobile)
 			end;
 		XmitSoupChange("Packages", 'ButtonBar, 'whatThe, nil);
 		nil
@@ -335,14 +335,14 @@ buttonBar := {
 		(if ((displayParams.buttonBarControlsPosition = 'top) or (displayParams.buttonBarControlsPosition = 'left)) then ArrayInsert(viewChildren, bbarControls, 0) else AddArraySlot(viewChildren, bbarControls))
 	end,
 	GetChildIconViews: func() begin
-		local l1;
-		l1 := self:ChildViewFrames();
+		local childViewFrames;
+		childViewFrames := self:ChildViewFrames();
 		if ((displayParams.buttonBarControlsPosition = 'top) or (displayParams.buttonBarControlsPosition = 'left)) then begin
-				RemoveSlot(l1, 0)
+				RemoveSlot(childViewFrames, 0)
 			end else begin
-				RemoveSlot(l1, (Length(l1) - 1))
+				RemoveSlot(childViewFrames, (Length(childViewFrames) - 1))
 			end;
-		l1
+		childViewFrames
 	end
 };
 

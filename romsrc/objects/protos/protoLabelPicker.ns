@@ -1,15 +1,15 @@
 // protoLabelPicker, and what only it reaches
 
 protoLabelPicker := {
-	LabelActionScript: func(a1) begin
+	LabelActionScript: func(index) begin
 		nil
 	end,
 	indent: nil,
 	viewFormat: vfInset(1) + vfRound(3),
 	iconBounds: nil,
 	viewFlags: vVisible + vReadOnly + vClickable,
-	UpdateIcon: func(a1) begin
-		SetValue(entryLineIcon, 'icon, a1)
+	UpdateIcon: func(icon) begin
+		SetValue(entryLineIcon, 'icon, icon)
 	end,
 	viewBounds: nil,
 	iconSetup: func() begin
@@ -32,16 +32,16 @@ protoLabelPicker := {
 	labelCommands: nil,
 	iconIndent: nil,
 	TextSetup: func() begin
-		local l1, l2;
-		l1 := "";
+		local text, l2;
+		text := "";
 		if (if labelCommands then (Length(labelCommands) > 0)) then begin
-				if IsFrame((l2 := (l1 := labelCommands[0]))) then begin
-						if (if (not (l1 := l2.item)) then l2.keyMessage) then begin
-								l1 := MatchKeyMessage(self, l2.keyMessage).name
+				if IsFrame((l2 := (text := labelCommands[0]))) then begin
+						if (if (not (text := l2.item)) then l2.keyMessage) then begin
+								text := MatchKeyMessage(self, l2.keyMessage).name
 							end
 					end
 			end;
-		l1
+		text
 	end,
 	textChanged: func() begin
 		nil
@@ -82,62 +82,62 @@ protoLabelPicker := {
 		(height := FontHeight(viewFont))
 	end,
 	alwaysCallPickActionScript: nil,
-	Popit: func(a1) begin
+	Popit: func(x) begin
 		(if self:pickerSetup() then begin
-				l1 := Clone(labelCommands);
+				copy := Clone(labelCommands);
 				if checkCurrentItem then begin
-						local l1;
-						(foreach l2, l3 in l1 do begin
-								local l5, l6, l7;
-								l5 := l3;
-								if IsFrame(l3) then begin
-										if (if (not (l5 := l3.item)) then l3.keyMessage) then begin
-												l5 := MatchKeyMessage(self, l3.keyMessage).name
+						local copy;
+						(foreach key, value in copy do begin
+								local item, copy2, popupHiliteBox;
+								item := value;
+								if IsFrame(value) then begin
+										if (if (not (item := value.item)) then value.keyMessage) then begin
+												item := MatchKeyMessage(self, value.keyMessage).name
 											end
 									end;
-								if (if IsString(l5) then StrEqual(entryLine.text, l5)) then begin
-										if IsFrame(l3) then begin
-												(l6 := Clone(l1[l2])).mark := $\uFC0B
+								if (if IsString(item) then StrEqual(entryLine.text, item)) then begin
+										if IsFrame(value) then begin
+												(copy2 := Clone(copy[key])).mark := $\uFC0B
 											end else begin
-												l6 := {item: l5, mark: $\uFC0B}
+												copy2 := {item: item, mark: $\uFC0B}
 											end;
-										l1[l2] := l6
+										copy[key] := copy2
 									end
 							end)
 					end;
-				(l7 := self:PopupHiliteBox()).right := a1;
-				self:PopupMenu(l1, {bounds: l7});
+				(popupHiliteBox := self:PopupHiliteBox()).right := x;
+				self:PopupMenu(copy, {bounds: popupHiliteBox});
 				true
 			end)
 	end,
-	viewClickScript: func(a1) begin
-		if self:TrackHilite(a1) then begin
+	viewClickScript: func(unit) begin
+		if self:TrackHilite(unit) then begin
 				self:Popit((indent - 2))
 			end;
 		true
 	end,
-	viewHiliteScript: func(a1) begin
-		local l1;
-		l1 := self:PopupHiliteBox();
-		self:DrawShape(MakeRoundRect(-2, l1.top, indent, l1.bottom, 4), '{transferMode: 2, penPattern: 0, fillPattern: 5});
+	viewHiliteScript: func(on) begin
+		local popupHiliteBox;
+		popupHiliteBox := self:PopupHiliteBox();
+		self:DrawShape(MakeRoundRect(-2, popupHiliteBox.top, indent, popupHiliteBox.bottom, 4), '{transferMode: 2, penPattern: 0, fillPattern: 5});
 		true
 	end,
-	pickActionScript: func(a1) begin
-		local l1, l2, l3;
-		if IsFrame((l1 := labelCommands[a1])) then begin
-				l2 := l1.icon;
-				if (if (not (l3 := l1.item)) then l1.keyMessage) then begin
-						l3 := MatchKeyMessage(self, l1.keyMessage).name
+	pickActionScript: func(index) begin
+		local labelCommand, icon, item;
+		if IsFrame((labelCommand := labelCommands[index])) then begin
+				icon := labelCommand.icon;
+				if (if (not (item := labelCommand.item)) then labelCommand.keyMessage) then begin
+						item := MatchKeyMessage(self, labelCommand.keyMessage).name
 					end
 			end else begin
-				l2 := nil;
-				l3 := l1
+				icon := nil;
+				item := labelCommand
 			end;
-		self:UpdateText(l3);
+		self:UpdateText(item);
 		if iconBounds then begin
-				self:UpdateIcon(l2)
+				self:UpdateIcon(icon)
 			end;
-		self:LabelActionScript(a1);
+		self:LabelActionScript(index);
 		base:hilite(nil)
 	end,
 	viewCaretActivateScript: func(a1) begin
@@ -155,13 +155,13 @@ protoLabelPicker := {
 	debug: 2911004,
 	viewFont: @fontSystem9Bold,
 	PopupHiliteBox: func() begin
-		local l1;
-		l1 := self:LocalBox();
+		local box;
+		box := self:LocalBox();
 		if HasPath(self, 'viewLineSpacing) then begin
-				l1.top := (viewLineSpacing - FontAscent(viewFont));
-				l1.bottom := (l1.top + FontHeight(viewFont))
+				box.top := (viewLineSpacing - FontAscent(viewFont));
+				box.bottom := (box.top + FontHeight(viewFont))
 			end;
-		l1
+		box
 	end,
 	textIndent: nil,
 	viewChildren: [viewChildren: entryLineIcon, entryLine_4],
@@ -186,7 +186,7 @@ entryLine_4 := {
 	viewFlags: vVisible + vReadOnly + vClickable,
 	viewJustify: 8388800,
 	viewFont: tsHWFont + tsSize(10),
-	viewClickScript: func(a1) begin
+	viewClickScript: func(unit) begin
 		nil
 	end,
 	preallocatedContext: 'entryLine

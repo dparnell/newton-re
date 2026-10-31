@@ -17,14 +17,14 @@ frame := {
 			if ((not IsFrame(a1)) or IsFunction(a1)) then begin
 					Throw('|evt.ex.msg|, "ProtoClone only works with frames.")
 				end;
-			l1 := {_proto: a1};
-			local l1;
-			(foreach l2, l3 in a1 do begin
-					if (if IsFrame(l3) then (not IsFunction(l3))) then begin
-							l1.(l2) := call f with (l3)
+			frame2 := {_proto: a1};
+			local frame2;
+			(foreach key, value in a1 do begin
+					if (if IsFrame(value) then (not IsFunction(value))) then begin
+							frame2.(key) := call f with (value)
 						end
 				end);
-			l1
+			frame2
 		end)
 };
 

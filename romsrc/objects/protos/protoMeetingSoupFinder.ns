@@ -19,8 +19,8 @@ protoMeetingSoupFinder := {
 			end)
 	end,
 	ShowFoundItem: func(a1) begin
-		local l1, l2;
-		(if (l2 := (l1 := Query(a1.soup, {type: 'index, indexPath: '_uniqueID, beginKey: a1.entryID})):entry()) then begin
+		local cursor2, l2;
+		(if (l2 := (cursor2 := Query(a1.soup, {type: 'index, indexPath: '_uniqueID, beginKey: a1.entryID})):entry()) then begin
 				cursor:Goto(l2);
 				self:ShowEntry(l2)
 			end)
@@ -30,13 +30,13 @@ protoMeetingSoupFinder := {
 		masterFinder.zeroOneOrMoreResult := nil;
 		(masterFinder.cacheCount := nil)
 	end,
-	CheckState: func(a1) begin
-		local l1;
-		(if (if (l1 := Query(a1.soup, {type: 'index, indexPath: '_uniqueID, beginKey: a1.entryID}):entry()) then LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], l1.viewStationery, 0, '|=|, nil)) then self:isSelected(a1) else 'NotCheckable)
+	CheckState: func(indexEntry) begin
+		local entry;
+		(if (if (entry := Query(indexEntry.soup, {type: 'index, indexPath: '_uniqueID, beginKey: indexEntry.entryID}):entry()) then LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], entry.viewStationery, 0, '|=|, nil)) then self:isSelected(indexEntry) else 'NotCheckable)
 	end,
 	SelectItem: func(a1) begin
-		local l1;
-		(if (if (l1 := Query(a1.soup, {type: 'index, indexPath: '_uniqueID, beginKey: a1.entryID}):entry()) then LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], l1.viewStationery, 0, '|=|, nil)) then inherited:SelectItem(a1))
+		local entry;
+		(if (if (entry := Query(a1.soup, {type: 'index, indexPath: '_uniqueID, beginKey: a1.entryID}):entry()) then LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], entry.viewStationery, 0, '|=|, nil)) then inherited:SelectItem(a1))
 	end,
 	GetCurrentItem: func() begin
 		cursor:entry()
@@ -52,48 +52,48 @@ protoMeetingSoupFinder := {
 		isReset := nil;
 		cursor:prev()
 	end,
-	FindNextAfterItem: func(a1, a2) begin
-		local l1, l2;
-		l1 := ((l1 := a2) - (l1 mod 1440));
+	FindNextAfterItem: func(meetingType2, instanceTime) begin
+		local instanceTime2, instanceTime22;
+		instanceTime2 := ((instanceTime2 := instanceTime) - (instanceTime2 mod 1440));
 		if (meetingType = 'meeting) then begin
-				if (a1 = 'cribNote) then begin
-						l2 := l1
+				if (meetingType2 = 'cribNote) then begin
+						instanceTime22 := instanceTime2
 					end else begin
-						l2 := (a2 + 1)
+						instanceTime22 := (instanceTime + 1)
 					end
 			end else begin
-				l2 := (l1 + 1440)
+				instanceTime22 := (instanceTime2 + 1440)
 			end;
-		cursor:GotoKey(l2)
+		cursor:GotoKey(instanceTime22)
 	end,
 	GoToLastMeeting: func() begin
 		cursor:ResetToEnd()
 	end,
-	AddTargetItems: func(a1, a2) begin
+	AddTargetItems: func(list, addTargetItems) begin
 		if selected then begin
-				l1 := Query(cursor:soup(), '{type: index});
-				l2 := masterFinder.owner;
-				local l1;
-				local l2;
-				(foreach l3 in selected do begin
-						local l5, l6;
-						l5 := l1:GotoKey(l3._uniqueID);
+				cursor2 := Query(cursor:soup(), '{type: index});
+				owner := masterFinder.owner;
+				local cursor2;
+				local owner;
+				(foreach item in selected do begin
+						local gotoKey, copy;
+						gotoKey := cursor2:GotoKey(item._uniqueID);
 						(loop begin
-								if (l5._uniqueID <> l3._uniqueID) then begin
-										break (l5 := nil)
+								if (gotoKey._uniqueID <> item._uniqueID) then begin
+										break (gotoKey := nil)
 									end;
-								(if (EntryStore(l5):GetSignature() <> l3._storeID) then (l5 := l1:Next()) else break)
+								(if (EntryStore(gotoKey):GetSignature() <> item._storeID) then (gotoKey := cursor2:Next()) else break)
 							end);
-						if l5 then begin
-								(l6 := Clone(l2.canonicalOverviewSelectedItem)).index := a2;
-								l6.instanceTime := l5.mtgStartDate;
-								l6.entryAlias := MakeEntryAlias(l5);
-								AddArraySlot(a1, l6);
-								a2 := (a2 + 1)
+						if gotoKey then begin
+								(copy := Clone(owner.canonicalOverviewSelectedItem)).index := addTargetItems;
+								copy.instanceTime := gotoKey.mtgStartDate;
+								copy.entryAlias := MakeEntryAlias(gotoKey);
+								AddArraySlot(list, copy);
+								addTargetItems := (addTargetItems + 1)
 							end
 					end)
 			end;
-		a2
+		addTargetItems
 	end
 };
 

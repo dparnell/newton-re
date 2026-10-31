@@ -19,28 +19,28 @@ newtPageLayout := {
 			end;
 		layout:Retarget(nil)
 	end,
-	Scroller: func(a1) begin
-		local l1, l2, l3;
+	Scroller: func(maxLines) begin
+		local box, entry, height;
 		if HiliteOwner() then begin
 				PostCommand(HiliteOwner(), 48)
 			end;
-		l1 := self:LocalBox();
-		if (a1 > 0) then begin
-				l3 := (if ((l2 := dataCursor:entry()).height = nil) then 0 else (l2.height + (l1.bottom div 3)));
-				if (if (l2 <> lastItem) then ((l3 - viewOriginY) < l1.bottom)) then begin
+		box := self:LocalBox();
+		if (maxLines > 0) then begin
+				height := (if ((entry := dataCursor:entry()).height = nil) then 0 else (entry.height + (box.bottom div 3)));
+				if (if (entry <> lastItem) then ((height - viewOriginY) < box.bottom)) then begin
 						viewOriginY := 0;
 						self:ScrollCursor(1)
 					end else begin
-						viewOriginY := (viewOriginY + l1.bottom)
+						viewOriginY := (viewOriginY + box.bottom)
 					end
 			end else begin
 				if (viewOriginY > 0) then begin
-						viewOriginY := max(0, (viewOriginY - l1.bottom))
+						viewOriginY := max(0, (viewOriginY - box.bottom))
 					end else begin
 						if self:ScrollCursor(-1) then begin
-								l3 := dataCursor:entry().height;
-								if (if (scrollingUpBehavior = 'bottom) then l3) then begin
-										viewOriginY := ((l3 div l1.bottom) * l1.bottom)
+								height := dataCursor:entry().height;
+								if (if (scrollingUpBehavior = 'bottom) then height) then begin
+										viewOriginY := ((height div box.bottom) * box.bottom)
 									end else begin
 										viewOriginY := 0
 									end

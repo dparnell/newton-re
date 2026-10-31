@@ -49,7 +49,7 @@ export50 := {
 					end;
 				(if (if (if (if reduceFont then (not v29_xwwwwwwwwwwwwwwww)) then v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww) then (Length(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww) > 1)) then begin
 						v29_xwwwwwwwwwwwwwwww := true;
-						a10.font := 1060865;
+						a10.font := tsFancy + tsSize(12) + tsBold;
 						v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := fontHeight(a10.font);
 						v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.bottom := ((a7 + a8.bottom) - a8.top);
 						(v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top := (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.bottom - v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy))
@@ -160,9 +160,9 @@ export50 := {
 	viewJustSym: nil,
 	viewOriginX: 0,
 	viewOriginY: 0,
-	SetOrigin: func(a1, a2) begin
-		OffsetShape(shapeArray, (viewOriginX - a1), (viewOriginY - a2));
-		viewOriginX := a1;
+	SetOrigin: func(viewOriginX2, a2) begin
+		OffsetShape(shapeArray, (viewOriginX - viewOriginX2), (viewOriginY - a2));
+		viewOriginX := viewOriginX2;
 		viewOriginY := a2;
 		self:dirty()
 	end,
@@ -173,68 +173,68 @@ export50 := {
 	showBullet: nil,
 	showMultipleData: nil,
 	viewFormat: nil,
-	viewClickScript: func(a1) begin
+	viewClickScript: func(unit) begin
 		l2 := (Length(hitArray) - 1);
-		InkOff(a1);
-		l3 := ((GetPoint(5, a1) + viewOriginY) - origin);
-		l4 := (GetPoint(4, a1) - self:GlobalBox().left);
-		l5 := 0;
-		local l1;
+		InkOff(unit);
+		l3 := ((GetPoint(5, unit) + viewOriginY) - origin);
+		l4 := (GetPoint(4, unit) - self:GlobalBox().left);
+		vOffset := 0;
+		local i;
 		local l2;
 		local l3;
 		local l4;
-		local l5;
-		local l6;
-		local l7;
-		local l8;
-		(for l1 := 0 to l2 do begin
-				if (l3 <= hitArray[l1].vOffset) then begin
+		local vOffset;
+		local layout;
+		local box;
+		local infoFrame;
+		(for i := 0 to l2 do begin
+				if (l3 <= hitArray[i].vOffset) then begin
 						PlaySound(@click);
-						l6 := hitArray[l1].layout;
-						(l7 := self:LocalBox()).top := (if (l1 = 0) then 0 else (hitArray[(l1 - 1)].vOffset - viewOriginY));
-						l7.bottom := (hitArray[l1].vOffset - viewOriginY);
-						if (l8 := newtAppBase:GetInfoFrame(l6, target.class)).actionFunc then begin
-								if l8:actionFunc(l4, (l3 - l5), self, l7, target, hitArray[l1].path, hitArray[l1].misc) then begin
+						layout := hitArray[i].layout;
+						(box := self:LocalBox()).top := (if (i = 0) then 0 else (hitArray[(i - 1)].vOffset - viewOriginY));
+						box.bottom := (hitArray[i].vOffset - viewOriginY);
+						if (infoFrame := newtAppBase:GetInfoFrame(layout, target.class)).actionFunc then begin
+								if infoFrame:actionFunc(l4, (l3 - vOffset), self, box, target, hitArray[i].path, hitArray[i].misc) then begin
 										return true
 									end
 							end;
-						self:DoDrawing('Hiliter, [Array: MakeShape(l7)]);
-						if (l6 = target.class) then begin
-								l6 := 'default
+						self:DoDrawing('Hiliter, [Array: MakeShape(box)]);
+						if (layout = target.class) then begin
+								layout := 'default
 							end;
-						newtAppBase:ShowEditSlip(l6, hitArray[l1].path, nil, nil, nil);
+						newtAppBase:ShowEditSlip(layout, hitArray[i].path, nil, nil, nil);
 						self:dirty();
 						return true
 					end;
-				l5 := hitArray[l1].vOffset
+				vOffset := hitArray[i].vOffset
 			end);
 		nil
 	end,
-	Hiliter: func(a1) begin
-		self:DrawShape(a1, {transferMode: 2, penPattern: 0, fillPattern: 5})
+	Hiliter: func(hiliteShape) begin
+		self:DrawShape(hiliteShape, {transferMode: 2, penPattern: 0, fillPattern: 5})
 	end,
 	GetBottom: func() begin
-		local l1;
-		(if ((l1 := Length(hitArray)) > 0) then hitArray[(l1 - 1)].vOffset else 0)
+		local count;
+		(if ((count := Length(hitArray)) > 0) then hitArray[(count - 1)].vOffset else 0)
 	end,
 	GetMaxTextWidth: func() begin
-		l2 := 0;
-		l3 := viewFont;
-		local l1;
-		local l2;
-		local l3;
-		(foreach l1 in shapeArray do begin
-				if (ClassOf(l1) = 'text) then begin
-						l2 := max(l2, StrFontWidth(GetShapeInfo(l1).text, l3))
+		most := 0;
+		viewFont2 := viewFont;
+		local item;
+		local most;
+		local viewFont2;
+		(foreach item in shapeArray do begin
+				if (ClassOf(item) = 'text) then begin
+						most := max(most, StrFontWidth(GetShapeInfo(item).text, viewFont2))
 					end else begin
-						if (ClassOf(l1) = 'frame) then begin
-								if l1.font then begin
-										l3 := l1.font
+						if (ClassOf(item) = 'frame) then begin
+								if item.font then begin
+										viewFont2 := item.font
 									end
 							end
 					end
 			end);
-		l2
+		most
 	end,
 	reduceFont: nil,
 	canScroll: nil,

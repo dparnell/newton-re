@@ -29,9 +29,9 @@ protoTitle := {
 		(self.viewBounds := SetBounds(0, -3, titleWidth, (titleHeight + 2)))
 	end,
 	viewDrawScript: func() begin
-		local l1;
-		l1 := self:LocalBox();
-		self:DrawShape([Array: MakeRect(0, (l1.bottom - 3), l1.right, (l1.bottom - 1)), MakeLine(1, (l1.bottom - 1), (l1.right - 2), (l1.bottom - 1)), (if titleicon then OffsetShape(MakeShape(titleicon), 1, ((l1.bottom - (titleicon.bounds.bottom - titleicon.bounds.top)) div 2)))], nil)
+		local box;
+		box := self:LocalBox();
+		self:DrawShape([Array: MakeRect(0, (box.bottom - 3), box.right, (box.bottom - 1)), MakeLine(1, (box.bottom - 1), (box.right - 2), (box.bottom - 1)), (if titleicon then OffsetShape(MakeShape(titleicon), 1, ((box.bottom - (titleicon.bounds.bottom - titleicon.bounds.top)) div 2)))], nil)
 	end,
 	debug: 45061
 };

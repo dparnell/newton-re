@@ -40,13 +40,13 @@ name := {
 	end,
 	titleTExt: "Enter \u000dyour Name",
 	description: "Tap on a line, then use\u000dyour Newton pen to type \u000dyour name on the \u000dkeyboard.  To go to\u000dthe next line, just tap it.\u000d\u000d\u000d",
-	AddWordsToDict: func(a1, a2) begin
-		local l1;
-		(foreach l2 in (l1 := SplitString(StringFilter(a1, ",./:;!@#$%^&*()_+=", 'rejectAll))) do begin
-				local l4;
-				if (if l2 then (StrLen(l2) > 1)) then begin
-						if (l4 := LookupWord(l2)) then begin
-								GetRoot().ReviewDict:AddWord(l4)
+	AddWordsToDict: func(fFirstName, a2) begin
+		local rejectAll;
+		(foreach item in (rejectAll := SplitString(StringFilter(fFirstName, ",./:;!@#$%^&*()_+=", 'rejectAll))) do begin
+				local word;
+				if (if item then (StrLen(item) > 1)) then begin
+						if (word := LookupWord(item)) then begin
+								GetRoot().ReviewDict:AddWord(word)
 							end
 					end
 			end)

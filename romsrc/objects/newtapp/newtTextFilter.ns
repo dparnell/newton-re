@@ -20,19 +20,19 @@ newtTextFilter := {
 	PathQuery: func(a1) begin
 		dataSoup:Query({type: 'words, words: a1})
 	end,
-	QueryItem: func(a1, a2) begin
-		(if (if a1.(path) then FindStringInFrame(a1.(path), a2, nil)) then {item: a1.(path), id: MakeEntryAlias(a1)})
+	QueryItem: func(entry, preQuery) begin
+		(if (if entry.(path) then FindStringInFrame(entry.(path), preQuery, nil)) then {item: entry.(path), id: MakeEntryAlias(entry)})
 	end,
 	ResolveItem: func(a1) begin
 		dataCursor:Goto(ResolveEntryAlias(a1.id));
 		self:DoRetarget()
 	end,
-	EntryToPath: func(a1) begin
-		(target.(path) := a1.(path))
+	EntryToPath: func(resolveEntryAlias) begin
+		(target.(path) := resolveEntryAlias.(path))
 	end,
-	pickActionScript: func(a1) begin
+	pickActionScript: func(index) begin
 		if target then begin
-				target.(path) := a1;
+				target.(path) := index;
 				baseLine:Retarget()
 			end;
 		baseLine:hilite(nil)

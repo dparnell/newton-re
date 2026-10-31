@@ -2,8 +2,8 @@
 
 scheduleSlip := {
 	viewSetupDoneScript: func() begin
-		local l1;
-		SetKeyView((l1 := ScheduleTitle.entryLine), 9999)
+		local entryLine;
+		SetKeyView((entryLine := ScheduleTitle.entryLine), 9999)
 	end,
 	Invitees: nil,
 	nameEntries: nil,
@@ -96,22 +96,22 @@ scheduleSlip := {
 				startTime := newMtgStartTime;
 				(stopTime := newMtgStopTime)
 			end,
-			pickActionScript: func(a1, a2) begin
+			pickActionScript: func(index, a2) begin
 				local l1, l2;
-				newMtgStartTime := (a1 mod 1440);
-				l1 := (a1 - newMtgStartTime);
+				newMtgStartTime := (index mod 1440);
+				l1 := (index - newMtgStartTime);
 				newMtgStopTime := min((a2 - l1), 1440);
 				a2 := (l1 + newMtgStopTime);
 				l2 := 1410;
 				if (newMtgStartTime > l2) then begin
 						newMtgStartTime := l2;
-						a1 := (l1 + newMtgStartTime)
+						index := (l1 + newMtgStartTime)
 					end;
 				if (newMtgStopTime < newMtgStartTime) then begin
 						newMtgStopTime := min(1440, (newMtgStartTime + 60));
 						a2 := (l1 + newMtgStopTime)
 					end;
-				inherited:pickActionScript(a1, a2)
+				inherited:pickActionScript(index, a2)
 			end,
 			debug: 741783,
 			_proto: @protoDurationTextPicker
@@ -161,14 +161,14 @@ scheduleSlip := {
 				startTime := newFirstDate;
 				(stopTime := newStopDate)
 			end,
-			pickActionScript: func(a1, a2) begin
-				newFirstDate := a1;
+			pickActionScript: func(index, a2) begin
+				newFirstDate := index;
 				newStopDate := a2;
 				if (newFirstDate > newMtgDate) then begin
 						DateValue.Date := newFirstDate;
 						DateValue:viewSetupChildrenScript()
 					end;
-				inherited:pickActionScript(a1, a2)
+				inherited:pickActionScript(index, a2)
 			end,
 			debug: 9104503,
 			_proto: @protoDateDurationTextPicker
@@ -176,47 +176,47 @@ scheduleSlip := {
 	],
 	newMtgStartTime: nil,
 	LayoutSlip: func() begin
-		local l1, l2, l3;
+		local dpSlip2, l2, slipTitleHt;
 		self.dpSlip := {};
-		(l1 := dpSlip).slipTitleHt := 13;
-		l1.titleFieldHt := 70;
-		l1.dateFieldHt := 24;
-		l1.timeFieldHt := 24;
-		l1.peopleFieldHt := 22;
-		l1.locFieldHt := 22;
-		l1.repeatFieldHt := 22;
-		l1.mtgMsgHeaderTop := 0;
-		l1.dateFieldTop := 0;
-		l1.timeFieldTop := 0;
-		l1.peopleFieldTop := 0;
-		l1.locFieldTop := 0;
-		l1.repeatFieldTop := 0;
-		l1.seriesMsgHeaderTop := 0;
-		l1.dateRangeTop := 0;
+		(dpSlip2 := dpSlip).slipTitleHt := 13;
+		dpSlip2.titleFieldHt := 70;
+		dpSlip2.dateFieldHt := 24;
+		dpSlip2.timeFieldHt := 24;
+		dpSlip2.peopleFieldHt := 22;
+		dpSlip2.locFieldHt := 22;
+		dpSlip2.repeatFieldHt := 22;
+		dpSlip2.mtgMsgHeaderTop := 0;
+		dpSlip2.dateFieldTop := 0;
+		dpSlip2.timeFieldTop := 0;
+		dpSlip2.peopleFieldTop := 0;
+		dpSlip2.locFieldTop := 0;
+		dpSlip2.repeatFieldTop := 0;
+		dpSlip2.seriesMsgHeaderTop := 0;
+		dpSlip2.dateRangeTop := 0;
 		l2 := 12;
-		l3 := l1.slipTitleHt;
-		l1.titleFieldTop := l3;
-		l3 := ((l3 + l1.titleFieldHt) + 2);
+		slipTitleHt := dpSlip2.slipTitleHt;
+		dpSlip2.titleFieldTop := slipTitleHt;
+		slipTitleHt := ((slipTitleHt + dpSlip2.titleFieldHt) + 2);
 		(if event then begin
-				l1.peopleFieldTop := l3;
-				l3 := ((l3 + l1.peopleFieldHt) + 2);
-				l1.mtgMsgHeaderTop := l3;
-				l3 := ((l3 + l2) + 2);
-				l1.dateFieldTop := l3;
-				l3 := ((l3 + l1.dateFieldHt) + 2);
-				l1.seriesMsgHeaderTop := l3;
-				l3 := ((l3 + l2) + 2);
-				l1.dateRangeTop := l3;
-				(l3 := ((l3 + l1.dateFieldHt) + 2))
+				dpSlip2.peopleFieldTop := slipTitleHt;
+				slipTitleHt := ((slipTitleHt + dpSlip2.peopleFieldHt) + 2);
+				dpSlip2.mtgMsgHeaderTop := slipTitleHt;
+				slipTitleHt := ((slipTitleHt + l2) + 2);
+				dpSlip2.dateFieldTop := slipTitleHt;
+				slipTitleHt := ((slipTitleHt + dpSlip2.dateFieldHt) + 2);
+				dpSlip2.seriesMsgHeaderTop := slipTitleHt;
+				slipTitleHt := ((slipTitleHt + l2) + 2);
+				dpSlip2.dateRangeTop := slipTitleHt;
+				(slipTitleHt := ((slipTitleHt + dpSlip2.dateFieldHt) + 2))
 			end else begin
-				l1.dateFieldTop := l3;
-				l3 := ((l3 + l1.dateFieldHt) + 2);
-				l1.timeFieldTop := l3;
-				l3 := ((l3 + l1.timeFieldHt) + 2);
-				l1.peopleFieldTop := l3;
-				l3 := ((l3 + l1.peopleFieldHt) + 2);
-				l1.locFieldTop := l3;
-				(l3 := ((l3 + l1.locFieldHt) + 2))
+				dpSlip2.dateFieldTop := slipTitleHt;
+				slipTitleHt := ((slipTitleHt + dpSlip2.dateFieldHt) + 2);
+				dpSlip2.timeFieldTop := slipTitleHt;
+				slipTitleHt := ((slipTitleHt + dpSlip2.timeFieldHt) + 2);
+				dpSlip2.peopleFieldTop := slipTitleHt;
+				slipTitleHt := ((slipTitleHt + dpSlip2.peopleFieldHt) + 2);
+				dpSlip2.locFieldTop := slipTitleHt;
+				(slipTitleHt := ((slipTitleHt + dpSlip2.locFieldHt) + 2))
 			end)
 	end,
 	viewFlags: vClipping + vFloating + vClickable,
@@ -241,9 +241,9 @@ scheduleSlip := {
 		'location,
 		location
 	],
-	PopOne: func(a1, a2) begin
-		local l1;
-		ArrayMunger((l1 := Array((a2 - 1), nil)), 0, (a2 - 1), a1, 1, nil)
+	PopOne: func(nameEntries, count) begin
+		local list;
+		ArrayMunger((list := Array((count - 1), nil)), 0, (count - 1), nameEntries, 1, nil)
 	end,
 	_proto: @protoFloater,
 	_defaultButton: nil,
@@ -272,7 +272,7 @@ scheduleSlip := {
 			kLiteral_4d457d: {bits: call kBinaryFromHex with ("0000000000040059005900d7006400e67ffc0000fffe0000cfe60000c7c60000d3960000c1060000e7ce0000dff60000c7c60000fffe00007ffc0000", 'bits), bounds: '{left: 0, top: 0, right: 15, bottom: 11}}
 		},
 		func() begin
-			local l1, l2;
+			local count, nameEntries2;
 			(try begin
 					if (not rotationInProgress) then begin
 							newMtgStartTime := (totMin mod 1440);
@@ -283,10 +283,10 @@ scheduleSlip := {
 								end else begin
 									newMtgStopTime := (newMtgStartTime + 60)
 								end;
-							if (if (l2 := nameEntries) then (Length(l2) > 0)) then begin
-									selectedNames := [Array: l2[0]];
-									if ((l1 := Length(l2)) > 1) then begin
-											alternativeNames := self:PopOne(l2, l1)
+							if (if (nameEntries2 := nameEntries) then (Length(nameEntries2) > 0)) then begin
+									selectedNames := [Array: nameEntries2[0]];
+									if ((count := Length(nameEntries2)) > 1) then begin
+											alternativeNames := self:PopOne(nameEntries2, count)
 										end
 								end;
 							if event then begin
@@ -297,10 +297,10 @@ scheduleSlip := {
 								end else begin
 									newHeaderText := "Meeting";
 									newHeaderIcon := kLiteral_4d457d;
-									if (if (l2 := locationEntries) then (Length(l2) > 0)) then begin
-											selectedLocations := [Array: l2[0]];
-											if ((l1 := Length(l2)) > 1) then begin
-													alternativeLocations := self:PopOne(l2, l1)
+									if (if (nameEntries2 := locationEntries) then (Length(nameEntries2) > 0)) then begin
+											selectedLocations := [Array: nameEntries2[0]];
+											if ((count := Length(nameEntries2)) > 1) then begin
+													alternativeLocations := self:PopOne(nameEntries2, count)
 												end
 										end
 								end
@@ -311,7 +311,7 @@ scheduleSlip := {
 							self.viewBounds := Clone(viewBounds);
 							self.viewBounds.top := 8;
 							self.viewBounds.bottom := (viewBounds.top + 210);
-							self.viewJustify := 80
+							self.viewJustify := vjParentCenterH + vjParentCenterV
 						end;
 					self:LayoutSlip()
 				end onexception |evt.ex.outofmem| do begin
@@ -333,10 +333,10 @@ _defaultButton_14 := {
 	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingTopV,
 	text: schedule_2,
 	buttonClickScript: func() begin
-		local l1, l2, l3, l4, l5, l6;
-		l1 := GetRoot();
+		local root, calendar, newTitle2, yearly, selectedName, entryFromObj2;
+		root := GetRoot();
 		if (newMtgStartTime >= newMtgStopTime) then begin
-				l1:Notify(3, "Assist", "Please specify a meeting/event time");
+				root:Notify(3, "Assist", "Please specify a meeting/event time");
 				return nil
 			end;
 		if selectedNames then begin
@@ -345,41 +345,41 @@ _defaultButton_14 := {
 		if selectedLocations then begin
 				location:AddMemoryItem()
 			end;
-		l2 := l1.calendar;
+		calendar := root.calendar;
 		ClearUndoStacks();
 		if (not whoIsUp('calendar)) then begin
-				l2:Open()
+				calendar:Open()
 			end;
 		if newMtgDate then begin
-				l3 := newTitle;
+				newTitle2 := newTitle;
 				if event then begin
 						if (if selectedNames then (Length(selectedNames) > 0)) then begin
-								l5 := selectedNames[0];
+								selectedName := selectedNames[0];
 								if HasSlot(action, 'GetTitle) then begin
-										l3 := action:GetTitle(l5)
+										newTitle2 := action:GetTitle(selectedName)
 									end
 							end;
-						l4 := l2:AddEvent(l3, newMtgDate, 'yearly, nil)
+						yearly := calendar:AddEvent(newTitle2, newMtgDate, 'yearly, nil)
 					end else begin
-						l4 := l2:AddAppointment(l3, (newMtgDate + newMtgStartTime), (newMtgStopTime - newMtgStartTime), nil, nil)
+						yearly := calendar:AddAppointment(newTitle2, (newMtgDate + newMtgStartTime), (newMtgStopTime - newMtgStartTime), nil, nil)
 					end;
-				if l4 then begin
+				if yearly then begin
 						if event then begin
-								l4.mtgIconType := 'annualEvent;
-								if (l6 := EntryFromObj(l5)) then begin
-										action:?AddToCardfile(l6, newMtgDate, l4)
+								yearly.mtgIconType := 'annualEvent;
+								if (entryFromObj2 := EntryFromObj(selectedName)) then begin
+										action:?AddToCardfile(entryFromObj2, newMtgDate, yearly)
 									end
 							end else begin
 								if (if (selectedLocations <> nil) then (Length(selectedLocations) > 0)) then begin
-										l4.mtgLocation := selectedLocations[0]
+										yearly.mtgLocation := selectedLocations[0]
 									end
 							end;
-						l4.mtgInvitees := selectedNames;
-						EntryChangeXmit(l4, 'calendarAPI);
-						l2:ScrollToMeeting(l4)
+						yearly.mtgInvitees := selectedNames;
+						EntryChangeXmit(yearly, 'calendarAPI);
+						calendar:ScrollToMeeting(yearly)
 					end
 			end;
-		l2:redisplayScript();
+		calendar:redisplayScript();
 		scheduleSlip:Close()
 	end,
 	preallocatedContext: '_defaultButton,
@@ -418,10 +418,10 @@ DateValue := {
 		viewBounds := RelBounds(0, dpSlip.dateFieldTop, 220, 18);
 		(Date := newMtgDate)
 	end,
-	pickActionScript: func(a1) begin
-		local l1;
-		newMtgDate := ((l1 := a1[0]) - (l1 mod 1440));
-		inherited:pickActionScript(a1)
+	pickActionScript: func(index) begin
+		local indexItem;
+		newMtgDate := ((indexItem := index[0]) - (indexItem mod 1440));
+		inherited:pickActionScript(index)
 	end,
 	debug: 16503,
 	preallocatedContext: 'DateValue,
@@ -447,8 +447,8 @@ Invitees := {
 		alternatives := alternativeNames;
 		inherited:?viewSetupFormScript()
 	end,
-	pickActionScript: func(a1) begin
-		inherited:pickActionScript(a1);
+	pickActionScript: func(index) begin
+		inherited:pickActionScript(index);
 		(selectedNames := selected)
 	end,
 	preallocatedContext: 'Invitees,
@@ -475,8 +475,8 @@ location := {
 		alternatives := alternativeLocations;
 		inherited:?viewSetupFormScript()
 	end,
-	pickActionScript: func(a1) begin
-		inherited:pickActionScript(a1);
+	pickActionScript: func(index) begin
+		inherited:pickActionScript(index);
 		(selectedLocations := selected)
 	end,
 	preallocatedContext: 'location,

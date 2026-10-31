@@ -9,10 +9,10 @@ protoStatusIcon := {
 	icon: nil,
 	name: 'icon,
 	viewSetupFormScript: func() begin
-		local l1, l2;
-		(if (if (l1 := self:path()) then HasSlot(l1, name)) then (icon := l1.(name)) else begin
-				l2 := GetRoot();
-				(if (if appSymbol then HasSlot(l2, appSymbol)) then (icon := l2.(appSymbol).icon))
+		local path, root;
+		(if (if (path := self:path()) then HasSlot(path, name)) then (icon := path.(name)) else begin
+				root := GetRoot();
+				(if (if appSymbol then HasSlot(root, appSymbol)) then (icon := root.(appSymbol).icon))
 			end)
 	end,
 	viewUpdateFormScript: func() begin

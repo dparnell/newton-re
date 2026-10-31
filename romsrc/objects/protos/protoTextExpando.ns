@@ -32,7 +32,7 @@ protoTextExpando := {
 		target.(path) := entryLine.text;
 		(if (specialClass exists) then SetClass(entryLine.text, specialClass))
 	end,
-	setup1: func(a1) begin
+	setup1: func(target) begin
 		label
 	end,
 	setup2: func(a1) begin

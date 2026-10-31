@@ -11,8 +11,8 @@ protoIoStateMachine := {
 	},
 	DoOutput: {
 		action: func() begin
-			local l1;
-			fEndpoint:output((l1 := {dataArray: Clone(fOutgoingData)}), fOptionsOut, CallbackSpec);
+			local frame2;
+			fEndpoint:output((frame2 := {dataArray: Clone(fOutgoingData)}), fOptionsOut, CallbackSpec);
 			fOutgoingData := [Array: ];
 			'waitAsync
 		end,
@@ -21,20 +21,20 @@ protoIoStateMachine := {
 	},
 	legalModes: {InputFrame: true, OutputFrame: true, AutoInAndOut: true},
 	StdExceptionHandler: func(a1) begin
-		local l1;
-		(if (l1 := stateMachine:DoError(a1)) then stateMachine:Run(l1))
+		local error;
+		(if (error := stateMachine:DoError(a1)) then stateMachine:Run(error))
 	end,
 	GetOptions: func() begin
 		return fOptionsIn
 	end,
-	SetCallback: func(a1) begin
-		(self.fCallBack := a1)
+	SetCallback: func(singleSelect) begin
+		(self.fCallBack := singleSelect)
 	end,
 	fOptionsOut: nil,
 	fStage: 0,
 	fOptionsIn: nil,
-	SetEndpoint: func(a1, a2) begin
-		(if (fEndpoint := {_proto: a1, configOptions: a2, ExceptionHandler: StdExceptionHandler, stateMachine: self})._parent then (fEndpoint._parent := fEndpoint._parent))
+	SetEndpoint: func(frame2, list) begin
+		(if (fEndpoint := {_proto: frame2, configOptions: list, ExceptionHandler: StdExceptionHandler, stateMachine: self})._parent then (fEndpoint._parent := fEndpoint._parent))
 	end,
 	fMode: nil,
 	_proto: @protoStateMachine,
@@ -69,11 +69,11 @@ protoIoStateMachine := {
 		OnError: 'DoCompletion
 	},
 	fEndpoint: nil,
-	AddSendData: func(a1) begin
+	AddSendData: func(body) begin
 		if IsReadOnly(fOutgoingData) then begin
 				fOutgoingData := Clone(fOutgoingData)
 			end;
-		(if a1 then AddArraySlot(fOutgoingData, a1))
+		(if body then AddArraySlot(fOutgoingData, body))
 	end,
 	DoAfterOutput: {
 		action: func() begin
@@ -132,12 +132,12 @@ protoIoStateMachine := {
 	Cancel: compile(
 		constants: {
 			kFunction_4977bd: func(a1, a2, a3) begin
-				local l1;
-				if (l1 := a1.stateMachine).tracing then begin
-						l1:Trace("Cancel completion", {result: a3, occupancy: l1.occupancy})
+				local stateMachine;
+				if (stateMachine := a1.stateMachine).tracing then begin
+						stateMachine:Trace("Cancel completion", {result: a3, occupancy: stateMachine.occupancy})
 					end;
-				l1.fOptionsIn := a2;
-				(if (l1.occupancy <= 1) then l1:AsyncWaitComplete((if a3 then a3 else -16005)) else (l1.occupancy := (l1.occupancy - 1)))
+				stateMachine.fOptionsIn := a2;
+				(if (stateMachine.occupancy <= 1) then stateMachine:AsyncWaitComplete((if a3 then a3 else -16005)) else (stateMachine.occupancy := (stateMachine.occupancy - 1)))
 			end,
 			kLiteral_4977dd: {_proto: @protoStateMachineInputSpec, completionscript: kFunction_4977bd}
 		},
@@ -151,7 +151,7 @@ protoIoStateMachine := {
 							fEndpoint:Cancel(kLiteral_4977dd)
 						end onexception |evt.ex| do begin
 							occupancy := (occupancy - 1);
-							(if (CurrentException().error <> -36003) then Rethrow())
+							(if (CurrentException().error <> kEndpointErrAborting) then Rethrow())
 						end)
 				end)
 		end),
@@ -182,10 +182,10 @@ protoIoStateMachine := {
 	DoPutAway: {
 		action: func() begin
 			fEndpoint:SetInputSpec(nil);
-			l1 := fCallBack;
-			local l1;
-			(foreach l2 in fIncomingData.dataArray do begin
-					call l1 with ('data, l2)
+			fCallBack2 := fCallBack;
+			local fCallBack2;
+			(foreach item in fIncomingData.dataArray do begin
+					call fCallBack2 with ('data, item)
 				end);
 			'DoAfterInput
 		end,

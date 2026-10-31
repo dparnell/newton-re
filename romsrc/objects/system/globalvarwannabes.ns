@@ -47,12 +47,12 @@ globalvarwannabes := {
 	],
 	PoweringOff: nil,
 	BusySlots: func() begin
-		l1 := [Array: ];
-		local l1;
-		(for l2 := 1 to getCardInfo().totalSockets do begin
-				AddArraySlot(l1, [Array: ])
+		list := [Array: ];
+		local list;
+		(for i := 1 to getCardInfo().totalSockets do begin
+				AddArraySlot(list, [Array: ])
 			end);
-		l1
+		list
 	end,
 	CardSlotIcons: [|Array|:
 		{

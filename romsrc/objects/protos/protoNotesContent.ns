@@ -62,10 +62,10 @@ notesArea := {
 	viewQuitScript: func() begin
 		self:teardownForm()
 	end,
-	viewChangedScript: func(a1, a2) begin
+	viewChangedScript: func(slot, view) begin
 		(notesDirty := true)
 	end,
-	viewAddChildScript: func(a1) begin
+	viewAddChildScript: func(aNewOne) begin
 		notesDirty := true;
 		nil
 	end,

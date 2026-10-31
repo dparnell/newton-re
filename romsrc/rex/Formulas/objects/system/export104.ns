@@ -11,7 +11,7 @@ export104 := {
 	end,
 	integerField: nil,
 	indent: 115,
-	CalcLineLabelClickScript: func(a1) begin
+	CalcLineLabelClickScript: func(unit) begin
 		return true
 	end,
 	changeInProgress: nil,
@@ -33,9 +33,9 @@ export104Item := {
 	text: staticText,
 	viewBounds: {left: 5, top: 15, right: 110, bottom: 28},
 	viewFont: @fontSystem10Bold,
-	viewClickScript: func(a1) begin
-		(if self:TrackHilite(a1) then begin
-				self:CalcLineLabelClickScript(a1);
+	viewClickScript: func(unit) begin
+		(if self:TrackHilite(unit) then begin
+				self:CalcLineLabelClickScript(unit);
 				self:hilite(nil)
 			end)
 	end,

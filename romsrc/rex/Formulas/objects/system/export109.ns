@@ -12,15 +12,15 @@ export109 := {
 		label:RestyleString()
 	end,
 	integerField: nil,
-	CalcLineLabelClickScript: func(a1) begin
-		local l1;
-		(l1 := label:GlobalBox()).right := (l1.left + StrFontWidth(label.text, label.viewFont));
-		@locationPopup:new({spots: @countrySoupName}, l1, {_parent: self, PickActionScript: func(a1) begin
-			self:ChangeCountry(a1)
+	CalcLineLabelClickScript: func(unit) begin
+		local box;
+		(box := label:GlobalBox()).right := (box.left + StrFontWidth(label.text, label.viewFont));
+		@locationPopup:new({spots: @countrySoupName}, box, {_parent: self, PickActionScript: func(index) begin
+			self:ChangeCountry(index)
 		end})
 	end,
-	ChangeCountry: func(a1) begin
-		country := a1.symbol;
+	ChangeCountry: func(index) begin
+		country := index.symbol;
 		SetValue(label, 'text, Stringer([Array: $\uFC01, GetCountryEntry(country)[0].name]));
 		SetValue(Currency, 'text, GetCountryEntry(country)[0].Currency);
 		self:ComputeExchangeRate();
@@ -47,16 +47,16 @@ export109Item := {
 	text: staticText,
 	viewBounds: {left: 5, top: 15, right: 110, bottom: 28},
 	viewFont: @fontSystem10Bold,
-	viewClickScript: func(a1) begin
-		(if self:TrackHilite(a1) then begin
-				self:CalcLineLabelClickScript(a1);
+	viewClickScript: func(unit) begin
+		(if self:TrackHilite(unit) then begin
+				self:CalcLineLabelClickScript(unit);
 				self:hilite(nil)
 			end)
 	end,
 	viewFlags: vVisible + vReadOnly + vClickable,
 	RestyleString: func() begin
-		local l1, l2;
-		l2 := ((l1 := Clone(viewBounds)).right - l1.left);
+		local copy, l2;
+		l2 := ((copy := Clone(viewBounds)).right - copy.left);
 		(text := StyledStrTruncate(text, l2, viewFont))
 	end,
 	_proto: @protoStaticText,
@@ -69,8 +69,8 @@ export109Item_2 := {
 	viewFont: @fontSystem10Bold,
 	viewJustify: 8396928,
 	RestyleString: func() begin
-		local l1, l2;
-		l2 := ((l1 := Clone(viewBounds)).right - l1.left);
+		local copy, l2;
+		l2 := ((copy := Clone(viewBounds)).right - copy.left);
 		(text := StyledStrTruncate(text, l2, viewFont))
 	end,
 	_proto: @protoStaticText,

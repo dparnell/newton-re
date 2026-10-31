@@ -9,34 +9,34 @@ frame_2 := {
 		if StrFilled(target.(path)) then begin
 				BInsert(labelCommands, self:ConvertToDefaultText(target.(path)), '|str<|, nil, true)
 			end;
-		if (l1 := GetUserConfig('currentPrinter).printerName) then begin
-				BInsert(labelCommands, self:ConvertToDefaultText(GetZoneFromName(l1)), '|str<|, nil, true)
+		if (printerName := GetUserConfig('currentPrinter).printerName) then begin
+				BInsert(labelCommands, self:ConvertToDefaultText(GetZoneFromName(printerName)), '|str<|, nil, true)
 			end;
 		BInsert(labelCommands, self:ConvertToDefaultText(GetUserConfig('currentZone)), '|str<|, nil, true);
-		local l1;
+		local printerName;
 		local l2;
-		local l3;
-		(foreach l4 in UserConfiguration.emporia do begin
-				local l6;
-				if (l2 := (l3 := ResolveEntryAlias(l4)).connectionNetwork) then begin
+		local resolveEntryAlias2;
+		(foreach item in UserConfiguration.emporia do begin
+				local count;
+				if (l2 := (resolveEntryAlias2 := ResolveEntryAlias(item)).connectionNetwork) then begin
 						BInsert(labelCommands, self:ConvertToDefaultText(GetZoneFromName(l2)), '|str<|, nil, true)
 					end;
-				if (if l3.printer then l3.printer.printerName) then begin
-						BInsert(labelCommands, self:ConvertToDefaultText(GetZoneFromName(l3.printer.printerName)), '|str<|, nil, true)
+				if (if resolveEntryAlias2.printer then resolveEntryAlias2.printer.printerName) then begin
+						BInsert(labelCommands, self:ConvertToDefaultText(GetZoneFromName(resolveEntryAlias2.printer.printerName)), '|str<|, nil, true)
 					end
 			end);
-		l6 := Length(labelCommands);
-		ArrayInsert(labelCommands, 'pickSeparator, l6);
-		ArrayInsert(labelCommands, "Other AppleTalk Zone", (l6 + 1))
+		count := Length(labelCommands);
+		ArrayInsert(labelCommands, 'pickSeparator, count);
+		ArrayInsert(labelCommands, "Other AppleTalk Zone", (count + 1))
 	end,
 	viewSetupFormScript: func() begin
 		labelCommands := [Array: ];
 		self:MakePopup();
 		inherited:?viewSetupFormScript()
 	end,
-	labelActionScript: func(a1) begin
-		(if (a1 = (Length(labelCommands) - 1)) then self:DoChooser() else begin
-				target.(path) := Clone(self:ConvertDefaultToStar(labelCommands[a1]));
+	labelActionScript: func(index) begin
+		(if (index = (Length(labelCommands) - 1)) then self:DoChooser() else begin
+				target.(path) := Clone(self:ConvertDefaultToStar(labelCommands[index]));
 				newtAppbase.targetView:?StartFlush()
 			end)
 	end,
@@ -60,17 +60,17 @@ frame_2 := {
 				(if StrEqual(a1, "*") then "<Current AppleTalk Zone>" else a1)
 			end
 		},
-		func(a1, a2) begin
+		func(currentSelection, currentZone) begin
 			chooserIsOpen := nil;
-			target.(path) := a2;
+			target.(path) := currentZone;
 			if Visible(self) then begin
 					self:updateText(call (kFunction_102108d) with (target.(path)))
 				end;
 			newtAppbase.targetView:?StartFlush()
 		end),
 	ConvertToDefaultText: ConvertToDefaultText,
-	ConvertDefaultToStar: func(a1) begin
-		(if StrEqual(a1, "<Current AppleTalk Zone>") then "*" else a1)
+	ConvertDefaultToStar: func(labelCommand) begin
+		(if StrEqual(labelCommand, "<Current AppleTalk Zone>") then "*" else labelCommand)
 	end,
 	labelCommands: [|Array|: ],
 	_proto: @protoLabelPicker

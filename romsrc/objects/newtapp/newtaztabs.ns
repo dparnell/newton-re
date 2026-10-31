@@ -12,11 +12,11 @@ newtaztabs := {
 		self:ChainOut('retargetChain)
 	end,
 	RetargetNotify: func() begin
-		local l1;
-		(if (l1 := layout.dataCursor:entry()) then AddDeferredSend(self, 'setLetter, [Array: l1.(layout.dataCursor:indexPath())[0], true]))
+		local entry;
+		(if (entry := layout.dataCursor:entry()) then AddDeferredSend(self, 'setLetter, [Array: entry.(layout.dataCursor:indexPath())[0], true]))
 	end,
-	PickLetterScript: func(a1) begin
-		local l1;
-		(if ((l1 := layout.dataCursor:entry()) <> layout.dataCursor:GotoKey(a1)) then layout:Effect(133120, nil, @flip, 'Retarget, [Array: true]))
+	PickLetterScript: func(part) begin
+		local entry;
+		(if ((entry := layout.dataCursor:entry()) <> layout.dataCursor:GotoKey(part)) then layout:Effect(133120, nil, @flip, 'Retarget, [Array: true]))
 	end
 };

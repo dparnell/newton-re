@@ -15,89 +15,89 @@ newTrollEntryView := {
 	cutoffMaxDT: 67,
 	minimumHeight: 23,
 	viewSetupFormScript: func() begin
-		local l1, l2;
+		local height, params;
 		inherited:viewSetupFormScript();
-		l1 := target.height;
+		height := target.height;
 		if (if targetViewDef then targetViewDef.viewDefHeight) then begin
 				minimumHeight := (23 + targetViewDef.viewDefHeight)
 			end;
 		if (nextEntry >= Length(entries)) then begin
-				l1 := max(minimumHeight, (lastHeight + viewOriginY))
+				height := max(minimumHeight, (lastHeight + viewOriginY))
 			end;
-		self.viewBounds := SetBounds(0, 0, 0, l1);
-		(if (not cutoffMinWidth) then (cutoffMinWidth := ((l2 := GetAppParams()).appAreaWidth - 40)))
+		self.viewBounds := SetBounds(0, 0, 0, height);
+		(if (not cutoffMinWidth) then (cutoffMinWidth := ((params := GetAppParams()).appAreaWidth - 40)))
 	end,
 	StartFlushWithChild: func(a1) begin
-		if (if (l1 := GetCaretInfo()) then (l1.view = a1)) then begin
+		if (if (caretInfo := GetCaretInfo()) then (caretInfo.view = a1)) then begin
 				AddProcrastinatedSend('checkCaret, targetView, 'checkCaret, nil, 500)
 			end;
 		if (((l2 := (a1.viewBounds.bottom + minimumHeight)) > target.height) or (if (if path then (Length(target.(path)) = 0)) then (target = lastItem))) then begin
 				l3 := (l2 - target.height);
 				target.height := l2;
-				(l4 := Clone(targetView.viewBounds)).bottom := (l4.bottom + l3);
-				targetView.viewBounds := l4;
-				l5 := nextEntry;
+				(copy := Clone(targetView.viewBounds)).bottom := (copy.bottom + l3);
+				targetView.viewBounds := copy;
+				nextEntry2 := nextEntry;
 				nextEntry := 0;
-				local l1;
+				local caretInfo;
 				local l2;
 				local l3;
-				local l4;
-				local l5;
-				(foreach l6 in layout:ChildViewFrames() do begin
-						l6:SyncView()
+				local copy;
+				local nextEntry2;
+				(foreach item in layout:ChildViewFrames() do begin
+						item:SyncView()
 					end);
-				nextEntry := l5;
+				nextEntry := nextEntry2;
 				AddProcrastinatedSend('Dirty, layout, 'Dirty, nil, 500)
 			end;
 		self:StartFlush()
 	end,
 	checkCaret: checkCaret,
-	SetAndSaveNoteHeight: func(a1, a2) begin
-		AddUndoAction('SetAndSaveNoteHeight, [Array: a1, a1.height]);
-		a1.height := a2;
+	SetAndSaveNoteHeight: func(target, most) begin
+		AddUndoAction('SetAndSaveNoteHeight, [Array: target, target.height]);
+		target.height := most;
 		settingHeight := true;
-		self:FlushEntry(a1);
+		self:FlushEntry(target);
 		settingHeight := nil;
 		layout:Retarget(true)
 	end,
-	viewgesturescript: func(a1, a2) begin
-		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12;
-		if (a2 = 16) then begin
-				l2 := StrokeBounds(a1);
-				l3 := GetPoint(5, a1);
-				l4 := GetPoint(1, a1);
-				if (if (if ((l2.right - l2.left) > cutoffMinWidth) then ((l2.bottom - l2.top) < cutoffMaxHeight)) then (abs((l3 - l4)) < cutoffMaxDY)) then begin
-						l5 := target.height;
-						l6 := ((l3 + l4) div 2);
-						l7 := minimumHeight;
-						if (l8 := targetViewDef:?MinimalBounds(target)) then begin
-								l7 := (l7 + l8.bottom)
+	viewgesturescript: func(unit, gesture) begin
+		local l1, strokeBounds2, pt, pt2, height, l6, minimumHeight2, minimalBounds, adoptEntry, l10, store, internalStore;
+		if (gesture = 16) then begin
+				strokeBounds2 := StrokeBounds(unit);
+				pt := GetPoint(5, unit);
+				pt2 := GetPoint(1, unit);
+				if (if (if ((strokeBounds2.right - strokeBounds2.left) > cutoffMinWidth) then ((strokeBounds2.bottom - strokeBounds2.top) < cutoffMaxHeight)) then (abs((pt - pt2)) < cutoffMaxDY)) then begin
+						height := target.height;
+						l6 := ((pt + pt2) div 2);
+						minimumHeight2 := minimumHeight;
+						if (minimalBounds := targetViewDef:?MinimalBounds(target)) then begin
+								minimumHeight2 := (minimumHeight2 + minimalBounds.bottom)
 							end;
 						if (not EntryStore(target):IsReadOnly()) then begin
-								self:SetAndSaveNoteHeight(target, max((l6 - self:GlobalBox().top), l7))
+								self:SetAndSaveNoteHeight(target, max((l6 - self:GlobalBox().top), minimumHeight2))
 							end;
-						l9 := layout.masterSoup:AdoptEntry(nil, target.class);
+						adoptEntry := layout.masterSoup:AdoptEntry(nil, target.class);
 						if (if labelsFilter then (labelsFilter <> '_all)) then begin
-								l9.labels := labelsFilter
+								adoptEntry.labels := labelsFilter
 							end;
 						if (target = lastItem) then begin
-								l10 := (l9.timestamp < lastItem.timestamp)
+								l10 := (adoptEntry.timestamp < lastItem.timestamp)
 							end else begin
-								l9.timestamp := target.timestamp;
-								l9.height := max((l5 - target.height), minimumHeight);
+								adoptEntry.timestamp := target.timestamp;
+								adoptEntry.height := max((height - target.height), minimumHeight);
 								l10 := nil
 							end;
 						if (GetAppPreferences exists) then begin
-								if (l12 := self:GetAppPreferences().internalStore) then begin
-										l11 := GetStores()[0]
+								if (internalStore := self:GetAppPreferences().internalStore) then begin
+										store := GetStores()[0]
 									end else begin
-										l11 := GetDefaultStore()
+										store := GetDefaultStore()
 									end;
-								if (if l11 then l11:IsReadOnly()) then begin
-										l11 := nil
+								if (if store then store:IsReadOnly()) then begin
+										store := nil
 									end
 							end;
-						self:NewEntry(l9, l10, l11);
+						self:NewEntry(adoptEntry, l10, store);
 						l1 := true
 					end
 			end;

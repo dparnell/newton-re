@@ -20,8 +20,8 @@ ioTransportheader := {
 				(routeSlip := nil)
 			end)
 	end,
-	InfoChanged: func(a1) begin
-		if a1 then begin
+	InfoChanged: func(changed) begin
+		if changed then begin
 				layout:FlushData();
 				title:viewUpdateFormScript()
 			end;

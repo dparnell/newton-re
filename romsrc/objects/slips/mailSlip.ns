@@ -3,21 +3,21 @@
 mailSlip := {
 	key: 'mailSlip,
 	ConvertedPassword: func(a1, a2, a3) begin
-		local l1, l2;
+		local mailPassword, resolveEntryAlias2;
 		(if a1 then begin
-				if IsRichString((l1 := GetUserConfig('mailPassword))) then begin
+				if IsRichString((mailPassword := GetUserConfig('mailPassword))) then begin
 						SetUserConfig('mailPassword, a2);
-						if (l2 := ResolveEntryAlias(userConfiguration.currentPersona)) then begin
-								GetRoot().cardfile:ReplaceInkData(l2, 'email, l1, 'emailPassword, a2)
+						if (resolveEntryAlias2 := ResolveEntryAlias(userConfiguration.currentPersona)) then begin
+								GetRoot().cardfile:ReplaceInkData(resolveEntryAlias2, 'email, mailPassword, 'emailPassword, a2)
 							end
 					end;
 				self:ConvertInkText(GetUserConfig('mailPhoneFull), 'phone, 262144, "Converting network phone number", "Please verify that the ink text was converted correctly.", 'InkConvert, 'ConvertedMailPhone, nil)
 			end else (eworld := nil))
 	end,
 	ReallyDoReply: func(a1, a2) begin
-		local l1, l2, l3;
-		if (if (l1 := GetHilitedTextItems()) then (Length(l1) > 0)) then begin
-				l1 := l1[0]
+		local hilitedTextItems, rejectAll, l3;
+		if (if (hilitedTextItems := GetHilitedTextItems()) then (Length(hilitedTextItems) > 0)) then begin
+				hilitedTextItems := hilitedTextItems[0]
 			end;
 		a1.reply := true;
 		a1.box := nil;
@@ -29,17 +29,17 @@ mailSlip := {
 		RemoveSlot(a1, 'labels);
 		RemoveSlot(a1, 'timestamp);
 		if (if (if a1.title then IsString(a1.title)) then StrFilled(a1.title)) then begin
-				if (if (not BeginsWith((l2 := StringFilter(Substr(a1.title, 0, 6), " 0123456789()", 'rejectAll)), "Re>")) then (not BeginsWith(l2, "Re:"))) then begin
+				if (if (not BeginsWith((rejectAll := StringFilter(Substr(a1.title, 0, 6), " 0123456789()", 'rejectAll)), "Re>")) then (not BeginsWith(rejectAll, "Re:"))) then begin
 						a1.title := Stringer([Array: "Re: ", a1.title])
 					end
 			end;
 		RemoveSlot(a1, 'text);
 		RemoveSlot(a1, 'edited);
 		RemoveSlot(a1, 'account);
-		if (if IsString(l1) then StrFilled(l1)) then begin
-				l1 := StringFilter(l1, " \n", 'rejectBeginning);
-				(while (EndsWith(l1, "\n") or EndsWith(l1, " ")) do (l1 := Substr(l1, 0, (StrLen(l1) - 1))));
-				a1.body := GetRoot().paperroll:MakeTextNoteFont(Stringer([Array: "\n------\n", l1, "\n------\n"]), nil, [Array: 8, GetUserConfig('userFont), StrLen(l1), 2109441, 8, GetUserConfig('userFont)])
+		if (if IsString(hilitedTextItems) then StrFilled(hilitedTextItems)) then begin
+				hilitedTextItems := StringFilter(hilitedTextItems, " \n", 'rejectBeginning);
+				(while (EndsWith(hilitedTextItems, "\n") or EndsWith(hilitedTextItems, " ")) do (hilitedTextItems := Substr(hilitedTextItems, 0, (StrLen(hilitedTextItems) - 1))));
+				a1.body := GetRoot().paperroll:MakeTextNoteFont(Stringer([Array: "\n------\n", hilitedTextItems, "\n------\n"]), nil, [Array: 8, GetUserConfig('userFont), StrLen(hilitedTextItems), 2109441, 8, GetUserConfig('userFont)])
 			end else begin
 				a1.body := GetDataDefs('paperroll):MakeNewEntry()
 			end;
@@ -49,8 +49,8 @@ mailSlip := {
 		l3 := GetRoot().(GetVariable(a2, 'appSymbol));
 		l3:ItemCompleted(a1, 'save)
 	end,
-	ReceiveRequest: func(a1) begin
-		if (a1.cause = 'user) then begin
+	ReceiveRequest: func(frame2) begin
+		if (frame2.cause = 'user) then begin
 				if (if eworld then eworld.connected) then begin
 						if (status = 'connected) then begin
 								self:?SetStatusDialog('Checking, 'vStatus, nil);
@@ -60,13 +60,13 @@ mailSlip := {
 								if (lastRequest = 'ReceiveRequest) then begin
 										return nil
 									end else begin
-										self:QueueRequest('ReceiveRequest, a1);
+										self:QueueRequest('ReceiveRequest, frame2);
 										return nil
 									end
 							end
 					end else begin
 						if (if (not (if connectSlip then connectSlip.viewCObject)) then (status = 'idle)) then begin
-								(connectSlip := BuildContext(connectOptionsSlip)).request := a1;
+								(connectSlip := BuildContext(connectOptionsSlip)).request := frame2;
 								connectSlip.theApp := GetRoot().(owner);
 								connectSlip.theTransport := self;
 								connectSlip.connectionType := 'receive;
@@ -81,15 +81,15 @@ mailSlip := {
 							end
 					end
 			end else begin
-				if (if (if (a1.cause = 'Remote) then eworld) then eworld.connected) then begin
+				if (if (if (frame2.cause = 'Remote) then eworld) then eworld.connected) then begin
 						if (status = 'connected) then begin
-								eworld.request := a1;
+								eworld.request := frame2;
 								eworld:GetNextMessage()
 							end else begin
 								if (lastRequest = 'ReceiveRequest) then begin
-										self:QueueRequest(eworld.request, a1)
+										self:QueueRequest(eworld.request, frame2)
 									end else begin
-										self:QueueRequest('ReceiveRequest, a1);
+										self:QueueRequest('ReceiveRequest, frame2);
 										return nil
 									end
 							end
@@ -138,14 +138,14 @@ mailSlip := {
 					popup := DeepClone(pop);
 					inherited:viewSetupFormScript()
 				end,
-				pickActionScript: func(a1) begin
-					local l1;
-					if ((l1 := LSearch(popup, listMethod, 0, '|=|, 'val)) <> a1) then begin
-							RemoveSlot(popup[l1], 'mark);
-							popup[a1].mark := $\uFC0B;
-							listMethod := popup[a1].val
+				pickActionScript: func(index) begin
+					local pos;
+					if ((pos := LSearch(popup, listMethod, 0, '|=|, 'val)) <> index) then begin
+							RemoveSlot(popup[pos], 'mark);
+							popup[index].mark := $\uFC0B;
+							listMethod := popup[index].val
 						end;
-					inherited:pickActionScript(a1)
+					inherited:pickActionScript(index)
 				end,
 				_proto: @protoPopupButton
 			},
@@ -205,10 +205,10 @@ mailSlip := {
 						end else (SetPersona := (not self:ValidateConfig('owner, nil, '[Array: email, emailPassword], msgValidateSource, 'ValidateSlip, 'MoreValidation))))
 				end,
 				MoreValidation: func(a1) begin
-					local l1;
+					local mailPhoneFull;
 					(if a1 then begin
 							setEmporia := nil;
-							(if (if (l1 := GetUserConfig('mailPhoneFull)) then StrFilled(l1)) then self:ValidationComplete(true) else (setEmporia := (not self:ValidateConfig('location, nil, '[Array: mailPhone], msgValidateNumber, 'ValidateSlip, 'ValidationComplete))))
+							(if (if (mailPhoneFull := GetUserConfig('mailPhoneFull)) then StrFilled(mailPhoneFull)) then self:ValidationComplete(true) else (setEmporia := (not self:ValidateConfig('location, nil, '[Array: mailPhone], msgValidateNumber, 'ValidateSlip, 'ValidationComplete))))
 						end)
 				end,
 				ValidationComplete: func(a1) begin
@@ -294,7 +294,7 @@ mailSlip := {
 		(if (if (if eworld then eworld.connected) then (eworld.mode = 'interactive)) then self:Confirm(title, "Do you want to disconnect from America Online? Staying connected may affect handwriting recognition.", self, 'DoShutdown))
 	end,
 	doForward: func(a1, a2) begin
-		local l1, l2, l3;
+		local l1, textHeader, rejectAll;
 		l1 := GetRoot().(GetVariable(a2, 'appSymbol));
 		l1:?MarkRead(a1);
 		(a1 := DeepClone(a1)).reply := true;
@@ -313,11 +313,11 @@ mailSlip := {
 		a1.bcc := [Array: ];
 		a1.edited := true;
 		if (not a1.body) then begin
-				l2 := GetRoot().mailSlip:TextHeader(a1);
-				a1.text := Stringer([Array: l2, $\n, a1.text])
+				textHeader := GetRoot().mailSlip:TextHeader(a1);
+				a1.text := Stringer([Array: textHeader, $\n, a1.text])
 			end;
 		if (if (if a1.title then IsString(a1.title)) then StrFilled(a1.title)) then begin
-				if (if (not BeginsWith((l3 := StringFilter(Substr(a1.title, 0, 6), " 0123456789()", 'rejectAll)), "Fwd>")) then (not BeginsWith(l3, "Fwd:"))) then begin
+				if (if (not BeginsWith((rejectAll := StringFilter(Substr(a1.title, 0, 6), " 0123456789()", 'rejectAll)), "Fwd>")) then (not BeginsWith(rejectAll, "Fwd:"))) then begin
 						a1.title := Stringer([Array: "Fwd: ", a1.title])
 					end
 			end;
@@ -328,26 +328,26 @@ mailSlip := {
 		self:SetStatus(status, {barber: true})
 	end,
 	GetItemTitle: func(a1) begin
-		local l1, l2, l3, l4;
-		l1 := "";
+		local text, targetFromEntry, dataDefs, stringExtract;
+		text := "";
 		if a1 then begin
 				if StrFilled(a1.title) then begin
-						l1 := a1.title
+						text := a1.title
 					end else begin
-						if (l3 := GetDataDefs(DataClassOf((l2 := GetTargetFromEntry(a1))))) then begin
-								if (l4 := l3:?StringExtract(l2, 1)) then begin
-										l1 := (if (StrLen(l4) > 32) then Stringer([Array: Substr(l4, 0, 31), $\u2026]) else l4)
+						if (dataDefs := GetDataDefs(DataClassOf((targetFromEntry := GetTargetFromEntry(a1))))) then begin
+								if (stringExtract := dataDefs:?StringExtract(targetFromEntry, 1)) then begin
+										text := (if (StrLen(stringExtract) > 32) then Stringer([Array: Substr(stringExtract, 0, 31), $\u2026]) else stringExtract)
 									end
 							end
 					end
 			end;
-		Clone(l1)
+		Clone(text)
 	end,
 	AppInFront: func(a1, a2) begin
 		(if (not a1) then self:AppClosed(a2))
 	end,
-	EnableAlarms: func(a1) begin
-		SetUserConfig('mailAlarms, a1)
+	EnableAlarms: func(viewValue) begin
+		SetUserConfig('mailAlarms, viewValue)
 	end,
 	AlarmsEnabled: func() begin
 		GetUserConfig('mailAlarms)
@@ -356,58 +356,58 @@ mailSlip := {
 	msgValidateNumber: yourConfigurationIsIncomplete_2,
 	_proto: @protoTransport,
 	saveAddress: func(a1, a2) begin
-		local l1, l2, l3, l4, l5;
+		local l1, fromRef, part, text, pos;
 		l1 := @protoPeopleDataDef;
-		if (if (l2 := a1.fromRef).name.last then StrEqual(l2.name.last, l2.email)) then begin
-				l2.name.last := nil
+		if (if (fromRef := a1.fromRef).name.last then StrEqual(fromRef.name.last, fromRef.email)) then begin
+				fromRef.name.last := nil
 			end;
 		if (if a1.fromName then (StrLen(a1.fromName) > 0)) then begin
-				if (if (l5 := StrPos((l4 := TrimString(a1.fromName)), " ", 0)) then (l5 > 0)) then begin
-						l3 := Substr(l4, (l5 + 1), StrLen(l4));
-						l4 := Substr(l4, 0, l5)
+				if (if (pos := StrPos((text := TrimString(a1.fromName)), " ", 0)) then (pos > 0)) then begin
+						part := Substr(text, (pos + 1), StrLen(text));
+						text := Substr(text, 0, pos)
 					end;
-				l2.name.last := l3;
-				l2.name.first := l4
+				fromRef.name.last := part;
+				fromRef.name.first := text
 			end;
-		GetRoot().mailSlip.nameToAdd := l2;
-		ValidateConfigGuts(l2, l1.validationFrame, [Array: 'name], {userText: ParamStr("Please specify a name for eMail address \u201C\u^0\u201D\u", [Array: l2.email]), titleText: "E-Mail Name", context: GetRoot().mailSlip, receiver: GetRoot().mailSlip, message: 'DoAddName})
+		GetRoot().mailSlip.nameToAdd := fromRef;
+		ValidateConfigGuts(fromRef, l1.validationFrame, [Array: 'name], {userText: ParamStr("Please specify a name for eMail address \u201C\u^0\u201D\u", [Array: fromRef.email]), titleText: "E-Mail Name", context: GetRoot().mailSlip, receiver: GetRoot().mailSlip, message: 'DoAddName})
 	end,
-	VerifyRoutingInfo: func(a1, a2, a3, a4) begin
-		local l1, l2;
-		if (not a1.title) then begin
-				a1.title := self:?GetItemTitle(a3);
-				if (not a1.title) then begin
-						a1.title := self:?GetItemTitle(NewItem)
+	VerifyRoutingInfo: func(copy, fields, next, cursorFormat) begin
+		local textScript, l2;
+		if (not copy.title) then begin
+				copy.title := self:?GetItemTitle(next);
+				if (not copy.title) then begin
+						copy.title := self:?GetItemTitle(NewItem)
 					end;
-				if (not a1.title) then begin
-						a1.title := Clone(a2.title)
+				if (not copy.title) then begin
+						copy.title := Clone(fields.title)
 					end
 			end;
-		if IsRichString(a1.title) then begin
-				StripInk(a1.title, $\uFC02);
-				StrReplace(a1.title, "\uFC02\u", "-ink-", nil);
-				if (StrLen(a1.title) > 61) then begin
-						a1.title := Substr(a1.title, 0, 61)
+		if IsRichString(copy.title) then begin
+				StripInk(copy.title, $\uFC02);
+				StrReplace(copy.title, "\uFC02\u", "-ink-", nil);
+				if (StrLen(copy.title) > 61) then begin
+						copy.title := Substr(copy.title, 0, 61)
 					end
 			end;
-		if a1.reply then begin
+		if copy.reply then begin
 				return nil
 			end;
-		l2 := GetRoot().(a1.appSymbol);
-		l1 := a4.TextScript;
-		a1.text := " ";
-		if l1 then begin
-				if IsSymbol(l1) then begin
-						a1.text := Perform(l2, l1, [Array: a1, a3])
+		l2 := GetRoot().(copy.appSymbol);
+		textScript := cursorFormat.TextScript;
+		copy.text := " ";
+		if textScript then begin
+				if IsSymbol(textScript) then begin
+						copy.text := Perform(l2, textScript, [Array: copy, next])
 					end else begin
-						a1.text := call l1 with (a1, a3)
+						copy.text := call textScript with (copy, next)
 					end
 			end;
-		if IsRichString(a1.text) then begin
-				StripInk(a1.text, $\uFC02);
-				StrReplace(a1.text, "\uFC02\u", "-ink-", nil)
+		if IsRichString(copy.text) then begin
+				StripInk(copy.text, $\uFC02);
+				StrReplace(copy.text, "\uFC02\u", "-ink-", nil)
 			end;
-		(if (if a1.body then (not a1.attachment)) then (a1.body := nil))
+		(if (if copy.body then (not copy.attachment)) then (copy.body := nil))
 	end,
 	connectSlip: nil,
 	DoConnect: func(a1, a2, a3, a4, a5) begin
@@ -419,58 +419,58 @@ mailSlip := {
 		eworld._owner := a2;
 		AddDeferredSend(self, 'ConvertStart, nil)
 	end,
-	IOBoxExtensions: func(a1, a2, a3, a4) begin
-		if ((a1.class = 'smartMail) or (a1.state = 'InLog)) then begin
+	IOBoxExtensions: func(entry, targetFromEntry, copy, routeScripts) begin
+		if ((entry.class = 'smartMail) or (entry.state = 'InLog)) then begin
 				return nil
 			end;
-		if a1.package then begin
-				a3.packageTextView := GetViewDefs('packageFrame).default
+		if entry.package then begin
+				copy.packageTextView := GetViewDefs('packageFrame).default
 			end;
-		(if ((if a1.edited then (not IsInstance(a2, 'mailText))) or (if (Length(a3) = 0) then a1.text)) then begin
-				a3.mailTextView := GetViewDefs('mailText).default;
+		(if ((if entry.edited then (not IsInstance(targetFromEntry, 'mailText))) or (if (Length(copy) = 0) then entry.text)) then begin
+				copy.mailTextView := GetViewDefs('mailText).default;
 				'mailTextView
 			end)
 	end,
 	addressingClass: '|nameRef.email|,
 	InkConvert: nil,
 	error: nil,
-	TextHeader: func(a1) begin
-		l1 := ParamStr("Subject: ^0\n", [Array: a1.title]);
-		l2 := (if (if a1.fromName then (StrLen(a1.fromName) > 0)) then ParamStr("From: ^0 (^1)\n", [Array: a1.fromName, a1.fromRef.email]) else ParamStr("From: ^0\n", [Array: a1.fromRef.email]));
-		l1 := Stringer([Array: (l1 := Stringer([Array: (l1 := Stringer([Array: l1, l2])), "Sent: ", a1.dateStr, $\n])), ParamStr("Received: ^2 ^0 ^1\n", [Array: LongDateStr(a1.timestamp, @datetimeStrSpecs.abbrDayOfWeekStrSpec), ShortDateStr(a1.timestamp, @datetimeStrSpecs.numericDateStrSpec), HourMinute(a1.timestamp)])]);
-		if (Length(a1.toRef) > 0) then begin
-				local l1;
+	TextHeader: func(target) begin
+		text := ParamStr("Subject: ^0\n", [Array: target.title]);
+		l2 := (if (if target.fromName then (StrLen(target.fromName) > 0)) then ParamStr("From: ^0 (^1)\n", [Array: target.fromName, target.fromRef.email]) else ParamStr("From: ^0\n", [Array: target.fromRef.email]));
+		text := Stringer([Array: (text := Stringer([Array: (text := Stringer([Array: text, l2])), "Sent: ", target.dateStr, $\n])), ParamStr("Received: ^2 ^0 ^1\n", [Array: LongDateStr(target.timestamp, @datetimeStrSpecs.abbrDayOfWeekStrSpec), ShortDateStr(target.timestamp, @datetimeStrSpecs.numericDateStrSpec), HourMinute(target.timestamp)])]);
+		if (Length(target.toRef) > 0) then begin
+				local text;
 				local l2;
-				(for l3 := 0 to (Length(a1.toRef) - 1) do begin
-						if (l3 = 0) then begin
-								l1 := Stringer([Array: l1, "To: ", a1.toRef[0].email])
+				(for i := 0 to (Length(target.toRef) - 1) do begin
+						if (i = 0) then begin
+								text := Stringer([Array: text, "To: ", target.toRef[0].email])
 							end else begin
-								l1 := Stringer([Array: l1, ", ", a1.toRef[l3].email])
+								text := Stringer([Array: text, ", ", target.toRef[i].email])
 							end
 					end);
-				l1 := Stringer([Array: l1, $\n])
+				text := Stringer([Array: text, $\n])
 			end;
-		if (Length(a1.cc) > 0) then begin
-				(for l3 := 0 to (Length(a1.cc) - 1) do begin
-						if (l3 = 0) then begin
-								l1 := Stringer([Array: l1, "Cc: ", a1.cc[0].email])
+		if (Length(target.cc) > 0) then begin
+				(for i := 0 to (Length(target.cc) - 1) do begin
+						if (i = 0) then begin
+								text := Stringer([Array: text, "Cc: ", target.cc[0].email])
 							end else begin
-								l1 := Stringer([Array: l1, ", ", a1.cc[l3].email])
+								text := Stringer([Array: text, ", ", target.cc[i].email])
 							end
 					end);
-				l1 := Stringer([Array: l1, $\n])
+				text := Stringer([Array: text, $\n])
 			end;
-		if (Length(a1.bcc) > 0) then begin
-				(for l3 := 0 to (Length(a1.bcc) - 1) do begin
-						if (l3 = 0) then begin
-								l1 := Stringer([Array: l1, "Bcc: ", a1.bcc[0].email])
+		if (Length(target.bcc) > 0) then begin
+				(for i := 0 to (Length(target.bcc) - 1) do begin
+						if (i = 0) then begin
+								text := Stringer([Array: text, "Bcc: ", target.bcc[0].email])
 							end else begin
-								l1 := Stringer([Array: l1, ", ", a1.bcc[l3].email])
+								text := Stringer([Array: text, ", ", target.bcc[i].email])
 							end
 					end);
-				l1 := Stringer([Array: l1, $\n])
+				text := Stringer([Array: text, $\n])
 			end;
-		l1
+		text
 	end,
 	appSymbol: 'mailSlip,
 	mailNetworks: [|Array|:
@@ -500,9 +500,9 @@ mailSlip := {
 			end,
 			mailEndPoint: {
 				_proto: @protoBasicEndpoint,
-				ExceptionHandler: func(a1) begin
+				ExceptionHandler: func(ex) begin
 					if (curerror = nil) then begin
-							curerror := a1.data
+							curerror := ex.data
 						end;
 					self:quit()
 				end,
@@ -564,7 +564,7 @@ mailSlip := {
 		bounds: {left: 0, top: 0, right: 22, bottom: 16}
 	},
 	title: americaOnline,
-	CancelRequest: func(a1) begin
+	CancelRequest: func(symbol2) begin
 		self:?SetStatusDialog('Canceling, 'vStatus, {primary: nil});
 		if eworld then begin
 				if eworld.navigator then begin
@@ -598,11 +598,11 @@ mailSlip := {
 		firstTime: nil,
 		_proto: @protoEworldEndpoint,
 		LogoutIfNoRequests: func() begin
-			local l1;
+			local requestQueueItem;
 			(if (if requestQueue then (Length(requestQueue) > 0)) then begin
-					l1 := requestQueue[0];
-					SetRemove(requestQueue, l1);
-					AddDeferredSend(self, l1.function, [Array: l1])
+					requestQueueItem := requestQueue[0];
+					SetRemove(requestQueue, requestQueueItem);
+					AddDeferredSend(self, requestQueueItem.function, [Array: requestQueueItem])
 				end else self:Logout())
 		end,
 		LogoutScript: func() begin
@@ -616,24 +616,24 @@ mailSlip := {
 			self:SendNextMessage()
 		end,
 		SendNextMessage: func() begin
-			local l1, l2, l3;
+			local mailMode, cause, firstTime;
 			eworld.msg := self:?ItemRequest(eworld.request);
 			(if msg then begin
 					self:?SetStatusDialog('Sending, 'vStatusTitle, {titleText: msg.title});
 					msg.error := nil;
 					self:Mail_Send(msg)
 				end else begin
-					l1 := GetUserConfig('mailMode);
-					l2 := eworld.request.cause;
-					l3 := eworld.firstTime;
+					mailMode := GetUserConfig('mailMode);
+					cause := eworld.request.cause;
+					firstTime := eworld.firstTime;
 					eworld.request := nil;
 					eworld.msg := nil;
 					eworld.firstTime := nil;
-					if (not l1) then begin
-							l1 := 'interactive
+					if (not mailMode) then begin
+							mailMode := 'interactive
 						end;
-					(if l3 then (if (if GetUserConfig('mailautodisconnect) then (lastRequest = 'SendRequest)) then self:LogoutIfNoRequests() else begin
-								eworld.mode := (if (l2 = 'periodic) then 'batch else l1);
+					(if firstTime then (if (if GetUserConfig('mailautodisconnect) then (lastRequest = 'SendRequest)) then self:LogoutIfNoRequests() else begin
+								eworld.mode := (if (cause = 'periodic) then 'batch else mailMode);
 								self:?SetStatusDialog('Checking, 'vStatus, nil);
 								GetRoot().iobox:RemoveTempItems(appSymbol);
 								Perform(eworld, listMethod, [Array: ])
@@ -643,48 +643,48 @@ mailSlip := {
 						end)
 				end)
 		end,
-		File_UploadStart: func(a1) begin
-			self:?SetStatusDialog('SendFile, 'vGauge, {titleText: msg.title, gauge: [Array: 0, 0, a1.filesize]});
-			self:uploadfile(a1.data, a1.filesize, transport, a1.type, a1.creator);
-			(if a1.reply then self:output(a1.reply, nil, nil))
+		File_UploadStart: func(file_out) begin
+			self:?SetStatusDialog('SendFile, 'vGauge, {titleText: msg.title, gauge: [Array: 0, 0, file_out.filesize]});
+			self:uploadfile(file_out.data, file_out.filesize, transport, file_out.type, file_out.creator);
+			(if file_out.reply then self:output(file_out.reply, nil, nil))
 		end,
-		Mail_SendDone: func(a1) begin
-			if a1 then begin
-					self:?ItemCompleted(eworld.msg, nil, a1)
+		Mail_SendDone: func(string2) begin
+			if string2 then begin
+					self:?ItemCompleted(eworld.msg, nil, string2)
 				end else begin
 					self:?ItemCompleted(eworld.msg, 'Sent, nil)
 				end;
 			self:SendNextMessage()
 		end,
-		ListDone: func(a1) begin
-			local l1, l2, l3;
-			if (not a1) then begin
-					if ((l1 := GetUserConfig('mailListMethod)) = 'Mail_ListUnread) then begin
-							l2 := "new"
+		ListDone: func(list) begin
+			local mailListMethod, text, unflattenListItem;
+			if (not list) then begin
+					if ((mailListMethod := GetUserConfig('mailListMethod)) = 'Mail_ListUnread) then begin
+							text := "new"
 						end else begin
-							if (l1 = 'Mail_ListRead) then begin
-									l2 := "read"
+							if (mailListMethod = 'Mail_ListRead) then begin
+									text := "read"
 								end else begin
-									if (l1 = 'Mail_ListSent) then begin
-											l2 := "sent"
+									if (mailListMethod = 'Mail_ListSent) then begin
+											text := "sent"
 										end
 								end
 						end;
-					GetRoot():Notify(3, transport.title, ParamStr("No ^0 mail", [Array: l2]))
+					GetRoot():Notify(3, transport.title, ParamStr("No ^0 mail", [Array: text]))
 				end;
 			(if (mode = 'batch) then begin
-					self.mail_list := a1;
-					(if a1 then self:GetNextMessage() else self:LogoutIfNoRequests())
+					self.mail_list := list;
+					(if list then self:GetNextMessage() else self:LogoutIfNoRequests())
 				end else begin
 					try begin
-							if (if a1 then a1.items) then begin
-									(while (Length(a1.items) > 0) do begin
-											l3 := self:UnflattenListItem(a1.items);
-											(while (if (l3.id = 0) then (Length(a1.items) > 0)) do (l3 := self:UnflattenListItem(a1.items)));
-											l3.Remote := true;
-											l3.category := appSymbol;
-											self:?SetStatusDialog('Storing, 'vBarber, {titleText: Stringer([Array: l3.from, ", ", l3.title]), barber: true});
-											self:?ItemCompleted(l3, 'Received, nil)
+							if (if list then list.items) then begin
+									(while (Length(list.items) > 0) do begin
+											unflattenListItem := self:UnflattenListItem(list.items);
+											(while (if (unflattenListItem.id = 0) then (Length(list.items) > 0)) do (unflattenListItem := self:UnflattenListItem(list.items)));
+											unflattenListItem.Remote := true;
+											unflattenListItem.category := appSymbol;
+											self:?SetStatusDialog('Storing, 'vBarber, {titleText: Stringer([Array: unflattenListItem.from, ", ", unflattenListItem.title]), barber: true});
+											self:?ItemCompleted(unflattenListItem, 'Received, nil)
 										end)
 								end
 						end onexception |evt.ex.outofmem| do begin
@@ -697,45 +697,45 @@ mailSlip := {
 					self:?CloseStatusDialog(nil)
 				end)
 		end,
-		ListItem: func(a1) begin
-			local l1, l2;
-			l1 := ExtractLong(a1, 0);
-			(if (Length((l2 := StrParse(ExtractBytes(a1, 12, (l1 - 12), 'string), "\t"))) = 3) then self:?SetStatusDialog('Checking, 'vBarber, {titleText: Stringer([Array: l2[1], ", ", l2[2]]), barber: true}))
+		ListItem: func(listentry) begin
+			local extractLong2, string2;
+			extractLong2 := ExtractLong(listentry, 0);
+			(if (Length((string2 := StrParse(ExtractBytes(listentry, 12, (extractLong2 - 12), 'string), "\t"))) = 3) then self:?SetStatusDialog('Checking, 'vBarber, {titleText: Stringer([Array: string2[1], ", ", string2[2]]), barber: true}))
 		end,
-		UnflattenListItem: func(a1) begin
-			local l1, l2, l3, l4, l5, l6;
-			l1 := Clone('{id: nil, Display: nil, label: nil, Date: nil, from: nil, title: nil});
-			l2 := ExtractLong(a1, 0);
-			l1.id := ExtractLong(a1, 4);
-			l1.Display := ExtractLong(a1, 8);
-			l1.label := ExtractBytes(a1, 12, (l2 - 12), 'string);
-			if (Length((l3 := StrParse(l1.label, "\t"))) = 3) then begin
-					l1.Date := l3[0];
-					l1.from := l3[1];
-					l1.title := l3[2];
-					if l1.Date then begin
-							if (Length((l4 := StrParse(l1.Date, "/"))) > 1) then begin
-									if ((l6 := {year: (l5 := Date(Time())).year, month: floor(StringToNumber(l4[0])), Date: floor(StringToNumber(l4[1])), hour: 0, minute: 0, second: 0}).month > l5.month) then begin
-											l6.year := (l6.year - 1)
+		UnflattenListItem: func(items) begin
+			local copy, extractLong2, strParse2, strParse3, date2, frame2;
+			copy := Clone('{id: nil, Display: nil, label: nil, Date: nil, from: nil, title: nil});
+			extractLong2 := ExtractLong(items, 0);
+			copy.id := ExtractLong(items, 4);
+			copy.Display := ExtractLong(items, 8);
+			copy.label := ExtractBytes(items, 12, (extractLong2 - 12), 'string);
+			if (Length((strParse2 := StrParse(copy.label, "\t"))) = 3) then begin
+					copy.Date := strParse2[0];
+					copy.from := strParse2[1];
+					copy.title := strParse2[2];
+					if copy.Date then begin
+							if (Length((strParse3 := StrParse(copy.Date, "/"))) > 1) then begin
+									if ((frame2 := {year: (date2 := Date(Time())).year, month: floor(StringToNumber(strParse3[0])), Date: floor(StringToNumber(strParse3[1])), hour: 0, minute: 0, second: 0}).month > date2.month) then begin
+											frame2.year := (frame2.year - 1)
 										end;
-									l1.timestamp := TotalMinutes(l6)
+									copy.timestamp := TotalMinutes(frame2)
 								end else begin
-									l1.timestamp := Time()
+									copy.timestamp := Time()
 								end
 						end
 				end else begin
-					l1.Date := (l1.from := (l1.title := ""))
+					copy.Date := (copy.from := (copy.title := ""))
 				end;
-			BinaryMunger(a1, 0, l2, nil, 0, nil);
-			l1
+			BinaryMunger(items, 0, extractLong2, nil, 0, nil);
+			copy
 		end,
 		GetNextMessage: func() begin
-			local l1;
+			local unflattenListItem;
 			(if (mode = 'batch) then (if (Length(mail_list.items) > 0) then begin
-						l1 := self:UnflattenListItem(mail_list.items);
-						(while (if (l1.id = 0) then (Length(mail_list.items) > 0)) do (l1 := self:UnflattenListItem(mail_list.items)));
-						self:?SetStatusDialog('Receiving, 'vBarber, {titleText: Stringer([Array: l1.from, ", ", l1.title]), barber: true});
-						self:Mail_Read(l1.id, transport)
+						unflattenListItem := self:UnflattenListItem(mail_list.items);
+						(while (if (unflattenListItem.id = 0) then (Length(mail_list.items) > 0)) do (unflattenListItem := self:UnflattenListItem(mail_list.items)));
+						self:?SetStatusDialog('Receiving, 'vBarber, {titleText: Stringer([Array: unflattenListItem.from, ", ", unflattenListItem.title]), barber: true});
+						self:Mail_Read(unflattenListItem.id, transport)
 					end else begin
 						eworld.msg := nil;
 						eworld.mail_list := nil;
@@ -751,157 +751,157 @@ mailSlip := {
 						end)
 				end)
 		end,
-		Mail_Message: func(a1) begin
+		Mail_Message: func(mail_in) begin
 			(if (mode = 'batch) then begin
-					if (not a1) then begin
+					if (not mail_in) then begin
 							return self:GetNextMessage()
 						end;
-					(if a1.hasfile then begin
-							self:?SetStatusDialog('ReceiveFile, 'vGauge, {titleText: a1.title, gauge: [Array: 0, 0, a1.filesize]});
-							self:Mail_Download(a1, transport)
-						end else self:submit(a1))
+					(if mail_in.hasfile then begin
+							self:?SetStatusDialog('ReceiveFile, 'vGauge, {titleText: mail_in.title, gauge: [Array: 0, 0, mail_in.filesize]});
+							self:Mail_Download(mail_in, transport)
+						end else self:submit(mail_in))
 				end else begin
-					if ((a1 = nil) or (message = nil)) then begin
+					if ((mail_in = nil) or (message = nil)) then begin
 							return self:GetNextMessage()
 						end;
-					(foreach l1, l2 in a1 do begin
-							message.(l1) := l2
+					(foreach key, value in mail_in do begin
+							message.(key) := value
 						end);
 					(if message.hasfile then begin
-							self:?SetStatusDialog('ReceiveFile, 'vGauge, {titleText: a1.title, gauge: [Array: 0, 0, a1.filesize]});
+							self:?SetStatusDialog('ReceiveFile, 'vGauge, {titleText: mail_in.title, gauge: [Array: 0, 0, mail_in.filesize]});
 							self:Mail_Download(message, transport)
 						end else self:submit(message))
 				end)
 		end,
-		submit: func(a1) begin
-			l1 := GetRoot().iobox;
-			if (if (mode = 'interactive) then (not l1.viewCObject)) then begin
-					l1:OpenAsInBox()
+		submit: func(message) begin
+			iobox := GetRoot().iobox;
+			if (if (mode = 'interactive) then (not iobox.viewCObject)) then begin
+					iobox:OpenAsInBox()
 				end else begin
-					if l1.viewCObject then begin
-							l1:SetBox('inbox)
+					if iobox.viewCObject then begin
+							iobox:SetBox('inbox)
 						end
 				end;
-			self:?SetStatusDialog('Storing, 'vStatusTitle, {titleText: a1.title});
-			a1.category := appSymbol;
-			a1.class := 'mailText;
+			self:?SetStatusDialog('Storing, 'vStatusTitle, {titleText: message.title});
+			message.category := appSymbol;
+			message.class := 'mailText;
 			if (mode = 'batch) then begin
-					a1.progress := "";
-					a1.state := 'Received
+					message.progress := "";
+					message.state := 'Received
 				end else begin
-					a1.Remote := nil
+					message.Remote := nil
 				end;
-			if a1.dateStr then begin
-					if (Length((l2 := StrParse(a1.dateStr, " "))) > 1) then begin
-							l3 := StrParse(l2[0], "-");
-							l4 := StrParse(l2[1], ":");
-							if (if (Length(l3) = 3) then (Length(l4) = 3)) then begin
-									if ((l5 := {year: floor(StringToNumber(l3[0])), month: floor(StringToNumber(l3[1])), Date: floor(StringToNumber(l3[2])), hour: floor(StringToNumber(l4[0])), minute: floor(StringToNumber(l4[1])), second: floor(StringToNumber(l4[2]))}).year >= 95) then begin
-											l5.year := (l5.year + 1900)
+			if message.dateStr then begin
+					if (Length((strParse2 := StrParse(message.dateStr, " "))) > 1) then begin
+							strParse3 := StrParse(strParse2[0], "-");
+							strParse4 := StrParse(strParse2[1], ":");
+							if (if (Length(strParse3) = 3) then (Length(strParse4) = 3)) then begin
+									if ((frame2 := {year: floor(StringToNumber(strParse3[0])), month: floor(StringToNumber(strParse3[1])), Date: floor(StringToNumber(strParse3[2])), hour: floor(StringToNumber(strParse4[0])), minute: floor(StringToNumber(strParse4[1])), second: floor(StringToNumber(strParse4[2]))}).year >= 95) then begin
+											frame2.year := (frame2.year + 1900)
 										end else begin
-											l5.year := (l5.year + 2000)
+											frame2.year := (frame2.year + 2000)
 										end;
-									a1.timestamp := TotalMinutes(l5)
+									message.timestamp := TotalMinutes(frame2)
 								end else begin
-									a1.timestamp := Time()
+									message.timestamp := Time()
 								end
 						end
 				end;
-			if (if a1.text then (StrLen(a1.text) > 4096)) then begin
-					l6 := [Array: 0];
-					l7 := 4095;
-					l8 := a1.text;
-					a1.text := nil;
-					(while (l7 < StrLen(l8)) do begin
-							(while (not IsWhiteSpace(l8[l7])) do (l7 := (l7 - 1)));
-							AddArraySlot(l6, (l7 * 2));
-							(l7 := (l7 + 4096))
+			if (if message.text then (StrLen(message.text) > 4096)) then begin
+					list := [Array: 0];
+					i := 4095;
+					text := message.text;
+					message.text := nil;
+					(while (i < StrLen(text)) do begin
+							(while (not IsWhiteSpace(text[i])) do (i := (i - 1)));
+							AddArraySlot(list, (i * 2));
+							(i := (i + 4096))
 						end);
-					AddArraySlot(l6, (StrLen(l8) * 2));
-					l10 := (Length(l6) - 1);
-					local l1;
-					local l2;
-					local l3;
-					local l4;
-					local l5;
-					local l6;
-					local l7;
-					local l8;
-					local l9;
+					AddArraySlot(list, (StrLen(text) * 2));
+					l10 := (Length(list) - 1);
+					local iobox;
+					local strParse2;
+					local strParse3;
+					local strParse4;
+					local frame2;
+					local list;
+					local i;
+					local text;
+					local copy;
 					local l10;
-					(for l7 := 0 to (Length(l6) - 2) do begin
-							if (l7 = 0) then begin
-									a1 := DeepClone((l9 := a1))
+					(for i := 0 to (Length(list) - 2) do begin
+							if (i = 0) then begin
+									message := DeepClone((copy := message))
 								end else begin
-									l9 := DeepClone(a1)
+									copy := DeepClone(message)
 								end;
-							l9.title := Stringer([Array: (l7 + 1), $/, l10, " ", l9.title]);
-							l9.text := self:GetDefaultOwnerStore():NewVBO('string, 2);
-							BinaryMunger(l9.text, 0, 0, l8, l6[l7], (l6[(l7 + 1)] - l6[l7]));
-							if (if (l7 = 0) then (mode = 'interactive)) then begin
-									self:?ItemCompleted(l9, 'Received, nil)
+							copy.title := Stringer([Array: (i + 1), $/, l10, " ", copy.title]);
+							copy.text := self:GetDefaultOwnerStore():NewVBO('string, 2);
+							BinaryMunger(copy.text, 0, 0, text, list[i], (list[(i + 1)] - list[i]));
+							if (if (i = 0) then (mode = 'interactive)) then begin
+									self:?ItemCompleted(copy, 'Received, nil)
 								end else begin
-									self:?ItemCommit(l9)
+									self:?ItemCommit(copy)
 								end
 						end)
 				end else begin
 					if (mode = 'batch) then begin
-							self:?ItemCommit(a1)
+							self:?ItemCommit(message)
 						end else begin
-							self:?ItemCompleted(a1, 'Received, nil)
+							self:?ItemCompleted(message, 'Received, nil)
 						end
 				end;
 			if (mode = 'interactive) then begin
-					l1:Refresh();
+					iobox:Refresh();
 					self.message := nil
 				end;
 			self:GetNextMessage()
 		end,
-		Mail_DownloadDoneScript: func(a1) begin
-			(if (mode = 'batch) then self:submit(a1) else begin
-					(foreach l1, l2 in a1 do begin
-							message.(l1) := l2
+		Mail_DownloadDoneScript: func(mailmessage) begin
+			(if (mode = 'batch) then self:submit(mailmessage) else begin
+					(foreach key, value in mailmessage do begin
+							message.(key) := value
 						end);
 					self:submit(message)
 				end)
 		end
 	},
-	GetFromText: func(a1) begin
-		(if a1.fromRef then GetDataDefs(addressingClass):GetRoutingTitle(a1.fromRef, nil, nil) else a1.from)
+	GetFromText: func(target) begin
+		(if target.fromRef then GetDataDefs(addressingClass):GetRoutingTitle(target.fromRef, nil, nil) else target.from)
 	end,
 	DoAddName: func(a1) begin
 		@protoPeopleDataDef:NewEntry(GetRoot().mailSlip.nameToAdd, nil)
 	end,
 	DoRegister: func(a1) begin
-		local l1;
+		local context;
 		if (not self:GetConfig('onlineRegEnabled)) then begin
 				self:Notify(4, title, "Your mail account information is not complete or is not valid.  Please make sure you have a valid America Online account and all the account settings are correct.");
 				return nil
 			end;
 		(if ((not userConfiguration.mailAccount) or (not StrFilled(userConfiguration.mailAccount))) then begin
-				(l1 := BuildContext(newAccountSlip)).request := a1;
-				l1.theApp := GetRoot().(owner);
-				l1.theTransport := self;
-				l1:Open()
+				(context := BuildContext(newAccountSlip)).request := a1;
+				context.theApp := GetRoot().(owner);
+				context.theTransport := self;
+				context:Open()
 			end else begin
 				mailRegister.request := a1;
 				mailRegister:Open()
 			end)
 	end,
 	doReplyAll: func(a1, a2) begin
-		local l1, l2;
+		local pos, l2;
 		l2 := GetRoot().(GetVariable(a2, 'appSymbol));
 		l2:?MarkRead(a1);
 		ArrayInsert((a1 := DeepClone(a1)).toRef, a1.fromRef, 0);
 		a1.name := a1.fromName;
-		if (if (l1 := LSearch(a1.toRef, a1.account, 0, '|str=|, 'email)) then (Length(a1.toRef) > 1)) then begin
-				ArrayRemoveCount(a1.toRef, l1, 1)
+		if (if (pos := LSearch(a1.toRef, a1.account, 0, '|str=|, 'email)) then (Length(a1.toRef) > 1)) then begin
+				ArrayRemoveCount(a1.toRef, pos, 1)
 			end;
-		if (l1 := LSearch(a1.cc, a1.account, 0, '|str=|, 'email)) then begin
-				ArrayRemoveCount(a1.cc, l1, 1)
+		if (pos := LSearch(a1.cc, a1.account, 0, '|str=|, 'email)) then begin
+				ArrayRemoveCount(a1.cc, pos, 1)
 			end;
-		if (l1 := LSearch(a1.bcc, a1.account, 0, '|str=|, 'email)) then begin
-				ArrayRemoveCount(a1.bcc, l1, 1)
+		if (pos := LSearch(a1.bcc, a1.account, 0, '|str=|, 'email)) then begin
+				ArrayRemoveCount(a1.bcc, pos, 1)
 			end;
 		GetRoot().mailSlip:ReallyDoReply(a1, a2)
 	end,
@@ -923,38 +923,38 @@ mailSlip := {
 			end,
 			kROM_772: @routeAddSender
 		},
-		func(a1) begin
-			local l1, l2, l3;
-			if ((a1.state = 'pending) or (a1.state = 'ready)) then begin
+		func(target) begin
+			local list, soup, cursor;
+			if ((target.state = 'pending) or (target.state = 'ready)) then begin
 					return nil
 				end;
-			l1 := [Array: ];
-			if a1.account then begin
-					AddArraySlot(l1, {GetTitle: kFunction_5a3471, routeScript: doReply, icon: kROM_756});
-					if (((if IsArray(a1.toRef) then (Length(a1.toRef) > 1)) or (if IsArray(a1.cc) then (Length(a1.cc) > 0))) or (if IsArray(a1.bcc) then (Length(a1.bcc) > 0))) then begin
-							AddArraySlot(l1, {GetTitle: kFunction_5a3491, routeScript: doReplyAll, icon: kROM_756})
+			list := [Array: ];
+			if target.account then begin
+					AddArraySlot(list, {GetTitle: kFunction_5a3471, routeScript: doReply, icon: kROM_756});
+					if (((if IsArray(target.toRef) then (Length(target.toRef) > 1)) or (if IsArray(target.cc) then (Length(target.cc) > 0))) or (if IsArray(target.bcc) then (Length(target.bcc) > 0))) then begin
+							AddArraySlot(list, {GetTitle: kFunction_5a3491, routeScript: doReplyAll, icon: kROM_756})
 						end;
-					AddArraySlot(l1, {GetTitle: kFunction_5a34b1, routeScript: doForward, icon: kROM_771})
+					AddArraySlot(list, {GetTitle: kFunction_5a34b1, routeScript: doForward, icon: kROM_771})
 				end;
-			if a1.fromRef then begin
-					l2 := GetUnionSoup(@cardfileSoupName);
-					if ((l3 := l2:Query({type: 'words, words: [Array: a1.fromRef.email]})):CountEntries() = 0) then begin
-							AddArraySlot(l1, {GetTitle: kFunction_5a356d, routeScript: saveAddress, icon: kROM_772})
+			if target.fromRef then begin
+					soup := GetUnionSoup(@cardfileSoupName);
+					if ((cursor := soup:Query({type: 'words, words: [Array: target.fromRef.email]})):CountEntries() = 0) then begin
+							AddArraySlot(list, {GetTitle: kFunction_5a356d, routeScript: saveAddress, icon: kROM_772})
 						end
 				end;
-			(if (Length(l1) > 0) then l1)
+			(if (Length(list) > 0) then list)
 		end),
 	CanPutAway: compile(
 		constants: {
 			kROM_144: @paperrollSoupName
 		},
-		func(a1) begin
+		func(next) begin
 			local l1;
 			l1 := nil;
-			if (if a1.text then ((a1.edited or (a1.class = 'smartMail)) or (if (not a1.body) then (not a1.package)))) then begin
+			if (if next.text then ((next.edited or (next.class = 'smartMail)) or (if (not next.body) then (not next.package)))) then begin
 					l1 := kROM_144
 				end;
-			if a1.package then begin
+			if next.package then begin
 					l1 := (if l1 then "Notes and Extras" else "Extras")
 				end;
 			(if l1 then {appName: l1, appSymbol: appSymbol})
@@ -966,72 +966,72 @@ mailSlip := {
 		GetRoot():Notify(3, title, "The host has failed to respond.");
 		self:CancelRequest('hostCancel)
 	end,
-	Convert: func(a1, a2, a3) begin
-		if (if HasPath(GetRoot(), 'MotoConvertEmail) then ((not IsString(a1.toEmailAddress)) or (not IsString(a1.fromName)))) then begin
-				return GetRoot():MotoConvertEmail(a1, a2, a3)
+	Convert: func(body, a2, a3) begin
+		if (if HasPath(GetRoot(), 'MotoConvertEmail) then ((not IsString(body.toEmailAddress)) or (not IsString(body.fromName)))) then begin
+				return GetRoot():MotoConvertEmail(body, a2, a3)
 			end;
 		if (a3 = 'oneO) then begin
 				return nil
 			end;
-		(l1 := Clone(a1)).class := 'mailText;
-		l2 := nil;
-		l3 := nil;
-		if IsArray(a1.fromName) then begin
-				a1.fromName := a1.fromName[0]
+		(copy := Clone(body)).class := 'mailText;
+		part := nil;
+		text := nil;
+		if IsArray(body.fromName) then begin
+				body.fromName := body.fromName[0]
 			end;
-		if (if a1.fromName then (not IsString(a1.fromName))) then begin
-				l4 := ClassOf(a1.fromName);
-				SetClass(a1.fromName, Intern(Stringer([Array: "string.email.", l4])))
+		if (if body.fromName then (not IsString(body.fromName))) then begin
+				cls := ClassOf(body.fromName);
+				SetClass(body.fromName, Intern(Stringer([Array: "string.email.", cls])))
 			end;
-		if (if a1.fromName then StrFilled(a1.fromName)) then begin
-				if (if (l5 := StrPos((l3 := TrimString(a1.fromName)), " ", 0)) then (l5 > 0)) then begin
-						l2 := Substr(l3, (l5 + 1), StrLen(l3));
-						l3 := Substr(l3, 0, l5)
+		if (if body.fromName then StrFilled(body.fromName)) then begin
+				if (if (pos := StrPos((text := TrimString(body.fromName)), " ", 0)) then (pos > 0)) then begin
+						part := Substr(text, (pos + 1), StrLen(text));
+						text := Substr(text, 0, pos)
 					end
 			end;
-		l6 := GetDataDefs('|nameRef.email|);
-		l1.fromRef := l6:MakeNameRef({name: {first: l3, last: l2}, email: SetClass(a1.fromEmailAddress, '|string.email.aol|)}, '|nameRef.email|);
-		l1.toRef := [Array: ];
-		if a1.toEmailAddress then begin
-				if IsArray(a1.toEmailAddress) then begin
-						a1.toEmailAddress := a1.toEmailAddress[0]
+		dataDefs := GetDataDefs('|nameRef.email|);
+		copy.fromRef := dataDefs:MakeNameRef({name: {first: text, last: part}, email: SetClass(body.fromEmailAddress, '|string.email.aol|)}, '|nameRef.email|);
+		copy.toRef := [Array: ];
+		if body.toEmailAddress then begin
+				if IsArray(body.toEmailAddress) then begin
+						body.toEmailAddress := body.toEmailAddress[0]
 					end;
-				if (not IsString(a1.toEmailAddress)) then begin
-						l4 := ClassOf(a1.toEmailAddress);
-						SetClass(a1.toEmailAddress, Intern(Stringer([Array: "string.email.", l4])));
-						if a1.ccEmailAddress then begin
-								a1.ccEmailAddress := nil
+				if (not IsString(body.toEmailAddress)) then begin
+						cls := ClassOf(body.toEmailAddress);
+						SetClass(body.toEmailAddress, Intern(Stringer([Array: "string.email.", cls])));
+						if body.ccEmailAddress then begin
+								body.ccEmailAddress := nil
 							end;
-						if a1.bccEmailAddress then begin
-								a1.bccEmailAddress := nil
+						if body.bccEmailAddress then begin
+								body.bccEmailAddress := nil
 							end
 					end;
-				local l1;
-				local l2;
-				local l3;
-				local l4;
-				local l5;
-				local l6;
-				local l7;
-				(foreach l8 in (l7 := StrParseTrimmed(a1.toEmailAddress, ",")) do begin
-						AddArraySlot(l1.toRef, l6:MakeNameRef({name: l8, email: SetClass(l8, '|string.email|)}, '|nameRef.email|))
+				local copy;
+				local part;
+				local text;
+				local cls;
+				local pos;
+				local dataDefs;
+				local strParseTrimmed2;
+				(foreach item in (strParseTrimmed2 := StrParseTrimmed(body.toEmailAddress, ",")) do begin
+						AddArraySlot(copy.toRef, dataDefs:MakeNameRef({name: item, email: SetClass(item, '|string.email|)}, '|nameRef.email|))
 					end)
 			end;
-		if (Length(l1.toRef) = 0) then begin
-				l8 := Clone("unknown");
-				AddArraySlot(l1.toRef, l6:MakeNameRef({name: l8, email: SetClass(l8, '|string.email|)}, '|nameRef.email|))
+		if (Length(copy.toRef) = 0) then begin
+				item := Clone("unknown");
+				AddArraySlot(copy.toRef, dataDefs:MakeNameRef({name: item, email: SetClass(item, '|string.email|)}, '|nameRef.email|))
 			end;
-		l1.currentFormat := 'targetFrameFormat;
-		l1.cc := [Array: ];
-		l1.bcc := [Array: ];
-		RemoveSlot(l1, 'fromEmailAddress);
-		RemoveSlot(l1, 'toEmailAddress);
-		l1
+		copy.currentFormat := 'targetFrameFormat;
+		copy.cc := [Array: ];
+		copy.bcc := [Array: ];
+		RemoveSlot(copy, 'fromEmailAddress);
+		RemoveSlot(copy, 'toEmailAddress);
+		copy
 	end,
 	RegisterStart: func() begin
-		local l1;
-		if (l1 := GetRoot().iobox).viewCObject then begin
-				l1:Close()
+		local iobox;
+		if (iobox := GetRoot().iobox).viewCObject then begin
+				iobox:Close()
 			end;
 		(GetRoot().mailSlip.setEmporia := (not self:ValidateConfig('location, nil, '[Array: mailPhone], msgValidateNumber, 'ValidateSlip, 'RegisterValidationComplete)))
 	end,
@@ -1046,11 +1046,11 @@ mailSlip := {
 		GetRoot().iobox:StartSend(self, 'periodic, nil, nil)
 	end,
 	doLoad: func(a1, a2) begin
-		local l1, l2, l3;
-		l1 := Length(GetPackages());
+		local count, pkgRefInfo, l3;
+		count := Length(GetPackages());
 		GetRoot().mailSlip:GetDefaultOwnerStore():RestorePackage(a1.package);
-		(if (Length(GetPackages()) > l1) then begin
-				l3 := (l2 := GetPkgRefInfo(a1.package)).title;
+		(if (Length(GetPackages()) > count) then begin
+				l3 := (pkgRefInfo := GetPkgRefInfo(a1.package)).title;
 				GetRoot():Notify(3, title, ParamStr("The package ^0 has been loaded in Extras.", [Array: l3]))
 			end)
 	end,
@@ -1071,27 +1071,27 @@ mailSlip := {
 				true
 			end)
 	end,
-	MakeLogEntry: func(a1, a2) begin
-		a1.dateStr := Clone(a2.dateStr);
-		a1.fromRef := Clone(a2.fromRef);
-		a1.filename := Clone(a2.filename);
-		a1.fromName := Clone(a2.fromName);
-		a1.cc := DeepClone(a2.cc);
-		a1.bcc := DeepClone(a2.bcc);
-		if HasSlot(a2, 'body) then begin
-				a1.body := nil
+	MakeLogEntry: func(next, next2) begin
+		next.dateStr := Clone(next2.dateStr);
+		next.fromRef := Clone(next2.fromRef);
+		next.filename := Clone(next2.filename);
+		next.fromName := Clone(next2.fromName);
+		next.cc := DeepClone(next2.cc);
+		next.bcc := DeepClone(next2.bcc);
+		if HasSlot(next2, 'body) then begin
+				next.body := nil
 			end;
-		if HasSlot(a2, 'package) then begin
-				a1.package := nil
+		if HasSlot(next2, 'package) then begin
+				next.package := nil
 			end;
-		if HasSlot(a2, 'sentTimeStamp) then begin
-				a1.sentTimeStamp := a2.sentTimeStamp
+		if HasSlot(next2, 'sentTimeStamp) then begin
+				next.sentTimeStamp := next2.sentTimeStamp
 			end;
-		inherited:MakeLogEntry(a1, a2)
+		inherited:MakeLogEntry(next, next2)
 	end,
-	NewItem: func(a1) begin
+	NewItem: func(viewfrontmostapp) begin
 		local l1;
-		(l1 := inherited:NewItem(a1)).class := 'mailText;
+		(l1 := inherited:NewItem(viewfrontmostapp)).class := 'mailText;
 		l1
 	end,
 	transportInfoForm: {
@@ -1112,21 +1112,21 @@ mailSlip := {
 				end;
 			(if transport:IsInItem(target) then begin
 					self:addText(Stringer([Array: "Sent: ", (if StrFilled(target.dateStr) then target.dateStr else "--")]));
-					self:addText((l2 := ParamStr("From: ^0", [Array: target.fromRef.email])));
+					self:addText((text := ParamStr("From: ^0", [Array: target.fromRef.email])));
 					(if (((Length(target.toRef) > 0) or (Length(target.cc) > 0)) or (Length(target.bcc) > 0)) then (addedHeight := 93) else (addedHeight := 18))
 				end else (if target.toRef then begin
-						l3 := GetDataDefs('|nameRef.email|):GetRoutingInfo(target.toRef);
-						l4 := "";
+						routingInfo := GetDataDefs('|nameRef.email|):GetRoutingInfo(target.toRef);
+						text2 := "";
 						local l1;
-						local l2;
-						local l3;
-						local l4;
-						(foreach l5 in l3 do begin
-								if (if HasSlot(l5, 'email) then StrFilled(l5.email)) then begin
-										l4 := (if StrFilled(l4) then ParamStr("^0, ^1", [Array: l4, l5.email]) else l5.email)
+						local text;
+						local routingInfo;
+						local text2;
+						(foreach item in routingInfo do begin
+								if (if HasSlot(item, 'email) then StrFilled(item.email)) then begin
+										text2 := (if StrFilled(text2) then ParamStr("^0, ^1", [Array: text2, item.email]) else item.email)
 									end
 							end);
-						(if StrFilled(l4) then self:addText(ParamStr("To: ^0", [Array: l4])))
+						(if StrFilled(text2) then self:addText(ParamStr("To: ^0", [Array: text2])))
 					end))
 		end,
 		debug: "mailRoutingTemplate",
@@ -1201,7 +1201,7 @@ mailSlip := {
 					(setEmporia := (not self:ValidateConfig('location, nil, '[Array: mailPhone], msgValidateNumber, 'ValidateSlip, 'ValidationComplete)))
 				end,
 				ValidationComplete: func(a1) begin
-					local l1, l2;
+					local owner, l2;
 					(if a1 then begin
 							if setEmporia then begin
 									UseCurrentEmporium()
@@ -1213,8 +1213,8 @@ mailSlip := {
 									mailRegister.request := nil;
 									mailRegister:Open()
 								end;
-							l1 := GetRoot().mailSlip.owner;
-							(if (l2 := GetRoot().(l1)).viewCObject then AddDeferredSend(l2, 'RememberedClose, [Array: base]) else base:Close())
+							owner := GetRoot().mailSlip.owner;
+							(if (l2 := GetRoot().(owner)).viewCObject then AddDeferredSend(l2, 'RememberedClose, [Array: base]) else base:Close())
 						end)
 				end,
 				viewSetupDoneScript: func() begin
@@ -1229,14 +1229,14 @@ mailSlip := {
 				labelCommands: [|Array|: "Browse mail", "Download mail"],
 				labelValues: [|Array|: 'interactive, 'batch],
 				GetIndex: func() begin
-					local l1;
-					if ((l1 := LSearch(labelValues, GetUserConfig('mailMode), 0, '|=|, nil)) = nil) then begin
-							l1 := 0
+					local pos;
+					if ((pos := LSearch(labelValues, GetUserConfig('mailMode), 0, '|=|, nil)) = nil) then begin
+							pos := 0
 						end;
-					l1
+					pos
 				end,
-				LabelActionScript: func(a1) begin
-					SetUserConfig('mailMode, labelValues[a1])
+				LabelActionScript: func(index) begin
+					SetUserConfig('mailMode, labelValues[index])
 				end,
 				TextSetup: func() begin
 					labelCommands[self:GetIndex()]
@@ -1290,9 +1290,9 @@ mailSlip := {
 				viewBounds: {left: 7, top: 0, right: 84, bottom: 0},
 				text: "Auto Delivery",
 				buttonClickScript: func() begin
-					local l1;
-					(l1 := BuildContext({_proto: periodicAlarmEditor, ownerName: Stringer([Array: "Mail:", appSymbol]), ownerSymbol: appSymbol, title: text})):Open();
-					(alarmsUp := l1)
+					local context;
+					(context := BuildContext({_proto: periodicAlarmEditor, ownerName: Stringer([Array: "Mail:", appSymbol]), ownerSymbol: appSymbol, title: text})):Open();
+					(alarmsUp := context)
 				end,
 				_proto: @protoTextButton
 			}
@@ -1413,32 +1413,32 @@ mailSlip := {
 		(if a1 then eworld:ConnectionAbort())
 	end,
 	groupTitle: mail_2,
-	SendRequest: func(a1) begin
-		local l1, l2;
-		(if (a1.cause <> 'submit) then begin
+	SendRequest: func(request) begin
+		local resolveEntryAlias2, resolveEntryAlias3;
+		(if (request.cause <> 'submit) then begin
 				if (if eworld then eworld.connected) then begin
-						if (a1.cause = 'periodic) then begin
+						if (request.cause = 'periodic) then begin
 								return nil
 							end;
 						if (status = 'connected) then begin
-								eworld.request := a1;
+								eworld.request := request;
 								eworld:SendNextMessage()
 							end else begin
 								if (lastRequest = 'SendRequest) then begin
-										self:QueueRequest(eworld.request, a1)
+										self:QueueRequest(eworld.request, request)
 									end else begin
-										self:QueueRequest('SendRequest, a1);
+										self:QueueRequest('SendRequest, request);
 										return nil
 									end
 							end
 					end else begin
-						if (a1.cause = 'periodic) then begin
-								l1 := ResolveEntryAlias(userConfiguration.currentEmporium);
-								l2 := ResolveEntryAlias(userConfiguration.currentPersona);
-								AddDeferredSend(self, 'DoConnect, [Array: l1, l2, a1, 'batch, 'Mail_ListUnread])
+						if (request.cause = 'periodic) then begin
+								resolveEntryAlias2 := ResolveEntryAlias(userConfiguration.currentEmporium);
+								resolveEntryAlias3 := ResolveEntryAlias(userConfiguration.currentPersona);
+								AddDeferredSend(self, 'DoConnect, [Array: resolveEntryAlias2, resolveEntryAlias3, request, 'batch, 'Mail_ListUnread])
 							end else begin
 								if (if (not (if connectSlip then connectSlip.viewCObject)) then (status = 'idle)) then begin
-										(connectSlip := BuildContext(connectOptionsSlip)).request := a1;
+										(connectSlip := BuildContext(connectOptionsSlip)).request := request;
 										connectSlip.theApp := GetRoot().(owner);
 										connectSlip.theTransport := self;
 										connectSlip.connectionType := 'send;
@@ -1457,9 +1457,9 @@ mailSlip := {
 			end)
 	end,
 	ConvertedMailPhone: func(a1, a2, a3) begin
-		local l1;
+		local mailPhoneFull;
 		(if a1 then begin
-				if IsRichString((l1 := GetUserConfig('mailPhoneFull))) then begin
+				if IsRichString((mailPhoneFull := GetUserConfig('mailPhoneFull))) then begin
 						SetUserConfig('mailPhoneFull, a2)
 					end;
 				eworld.firstTime := true;
@@ -1467,73 +1467,73 @@ mailSlip := {
 			end else (eworld := nil))
 	end,
 	RegisterValidationComplete: func(a1) begin
-		local l1;
-		l1 := GetRoot().mailSlip;
+		local mailSlip;
+		mailSlip := GetRoot().mailSlip;
 		(if a1 then begin
-				if l1.setEmporia then begin
+				if mailSlip.setEmporia then begin
 						UseCurrentEmporium()
 					end;
-				l1.setEmporia := nil;
-				(if ((not userConfiguration.mailAccount) or (not StrFilled(userConfiguration.mailAccount))) then l1:DoRegister(nil) else begin
+				mailSlip.setEmporia := nil;
+				(if ((not userConfiguration.mailAccount) or (not StrFilled(userConfiguration.mailAccount))) then mailSlip:DoRegister(nil) else begin
 						mailRegister.request := nil;
 						mailRegister:Open()
 					end)
 			end)
 	end,
 	ConvertedAccount: func(a1, a2, a3) begin
-		local l1, l2;
+		local mailAccount, resolveEntryAlias2;
 		(if a1 then begin
-				if IsRichString((l1 := GetUserConfig('mailAccount))) then begin
+				if IsRichString((mailAccount := GetUserConfig('mailAccount))) then begin
 						SetUserConfig('mailAccount, a2);
-						if (l2 := ResolveEntryAlias(userConfiguration.currentPersona)) then begin
-								GetRoot().cardfile:ReplaceInkData(l2, 'email, l1, 'email, a2)
+						if (resolveEntryAlias2 := ResolveEntryAlias(userConfiguration.currentPersona)) then begin
+								GetRoot().cardfile:ReplaceInkData(resolveEntryAlias2, 'email, mailAccount, 'email, a2)
 							end
 					end;
 				self:ConvertInkText(GetUserConfig('mailPassword), 'alpha, nil, "Converting e-mail password", "Please verify that the ink text was converted correctly.", 'InkConvert, 'ConvertedPassword, nil)
 			end else (eworld := nil))
 	end,
-	GetItemTime: func(a1) begin
-		(if a1.Remote then ShortDate(a1.timestamp) else Stringer([Array: ShortDate(a1.timestamp), " ", HourMinute(a1.timestamp)]))
+	GetItemTime: func(target) begin
+		(if target.Remote then ShortDate(target.timestamp) else Stringer([Array: ShortDate(target.timestamp), " ", HourMinute(target.timestamp)]))
 	end,
 	translate: nil,
-	SetStatusDialog: func(a1, a2, a3) begin
-		local l1, l2;
-		l1 := nil;
-		if (a1 = 'connected) then begin
-				l1 := "Disconnect";
+	SetStatusDialog: func(status2, a2, frame2) begin
+		local text, requestQueueItem;
+		text := nil;
+		if (status2 = 'connected) then begin
+				text := "Disconnect";
 				if (if requestQueue then (Length(requestQueue) > 0)) then begin
-						l2 := requestQueue[0];
-						SetRemove(requestQueue, l2);
-						AddDeferredSend(self, l2.function, [Array: l2])
+						requestQueueItem := requestQueue[0];
+						SetRemove(requestQueue, requestQueueItem);
+						AddDeferredSend(self, requestQueueItem.function, [Array: requestQueueItem])
 					end
 			end else begin
 				if (status = 'connected) then begin
-						l1 := "Stop"
+						text := "Stop"
 					end
 			end;
-		if l1 then begin
-				if (a3 = nil) then begin
-						a3 := {}
+		if text then begin
+				if (frame2 = nil) then begin
+						frame2 := {}
 					end;
-				if (not (a3:primary exists)) then begin
-						a3.primary := {text: l1, script: func() begin
+				if (not (frame2:primary exists)) then begin
+						frame2.primary := {text: text, script: func() begin
 							GetRoot().(appSymbol):CancelRequest('userCancel)
 						end}
 					end
 			end;
-		if (if IsFrame(a3) then StrFilled(a3.titleText)) then begin
-				a3.titleText := ParamStr("^0", [Array: a3.titleText])
+		if (if IsFrame(frame2) then StrFilled(frame2.titleText)) then begin
+				frame2.titleText := ParamStr("^0", [Array: frame2.titleText])
 			end;
-		inherited:SetStatusDialog(a1, a2, a3)
+		inherited:SetStatusDialog(status2, a2, frame2)
 	end,
-	filetransferstatus: func(a1, a2) begin
-		self:SetStatus(status, {gauge: a1})
+	filetransferstatus: func(offset, filesize) begin
+		self:SetStatus(status, {gauge: offset})
 	end,
 	routingSlip: {
-		editSubject: func(a1) begin
+		editSubject: func(fn) begin
 			mailEditor.message := fields;
 			mailEditor.path := 'title;
-			mailEditor.updateScript := a1;
+			mailEditor.updateScript := fn;
 			mailEditor.appName := appName;
 			mailEditor:Open();
 			true
@@ -1552,23 +1552,23 @@ mailSlip := {
 					self:changeformat()
 				end else formatPicker:revertCommand())
 		end,
-		BadAddress: func(a1, addr) begin
+		BadAddress: func(dataDefs, addr) begin
 			local name;
-			l1 := a1:Get(addr, 'email, nil);
-			name := a1:Get(addr, 'name, 'text);
-			if IsArray(l1) then begin
-					local l1;
-					(foreach l2 in l1 do begin
-							if self:BadAddress(a1, l2) then begin
+			email := dataDefs:Get(addr, 'email, nil);
+			name := dataDefs:Get(addr, 'name, 'text);
+			if IsArray(email) then begin
+					local email;
+					(foreach item in email do begin
+							if self:BadAddress(dataDefs, item) then begin
 									return true
 								end
 						end);
 					return nil
 				end else begin
-					if (((not l1) or (not IsString(l1))) or (not StrFilled(l1))) then begin
+					if (((not email) or (not IsString(email))) or (not StrFilled(email))) then begin
 							self:Notify(3, appName, ParamStr("^0 does not have an e-mail address.", [Array: name]))
 						end else begin
-							if IsRichString(l1) then begin
+							if IsRichString(email) then begin
 									inkCount := (inkCount + 1);
 									AddDeferredCall(func() begin
 										self:ConvertStart({addr: addr, name: name})
@@ -1610,19 +1610,19 @@ mailSlip := {
 				end)
 		end,
 		ConvertComplete: func(a1, a2, a3) begin
-			local l1, l2;
+			local email, resolveEntryAlias2;
 			InkConvert := nil;
 			(if (if a1 then a2) then begin
-					l1 := a3.addr.email;
+					email := a3.addr.email;
 					a3.addr.email := SetClass(a2, a3.type);
-					if (l2 := ResolveEntryAlias(a3.addr._alias)) then begin
-							GetRoot().cardfile:ReplaceInkData(l2, 'email, l1, 'email, a2)
+					if (resolveEntryAlias2 := ResolveEntryAlias(a3.addr._alias)) then begin
+							GetRoot().cardfile:ReplaceInkData(resolveEntryAlias2, 'email, email, 'email, a2)
 						end;
 					(if ((inkCount := (inkCount - 1)) < 1) then self:PrepareToSend(noworlater))
 				end)
 		end,
-		FormatChanged: func(a1) begin
-			chosenFormat := a1;
+		FormatChanged: func(format) begin
+			chosenFormat := format;
 			if fields.edited then begin
 					self:Confirm(appName, "Changing the format will cause your text changes to be lost. Do you want to continue?", self, 'doChangeFormat)
 				end else begin
@@ -1644,12 +1644,12 @@ mailSlip := {
 		end,
 		attachCheck: nil,
 		SetupTitle: func() begin
-			local l1;
+			local itemTransport;
 			(if TargetIsCursor(target) then (fields.title := 'multiple) else begin
-					l1 := GetItemTransport(fields);
-					fields.title := l1:?GetItemTitle(target);
+					itemTransport := GetItemTransport(fields);
+					fields.title := itemTransport:?GetItemTitle(target);
 					if (not fields.title) then begin
-							fields.title := l1:?GetItemTitle(fields)
+							fields.title := itemTransport:?GetItemTitle(fields)
 						end;
 					if ((not fields.title) or (not StrFilled(fields.title))) then begin
 							fields.title := " "
@@ -1659,12 +1659,12 @@ mailSlip := {
 		end,
 		_proto: @protoFullRouteSlip,
 		InkConvert: nil,
-		PrepareToSend2: func(a1, a2, a3) begin
+		PrepareToSend2: func(a1, title, a3) begin
 			(if a1 then begin
-					if (if IsString(a2) then (StrLen(a2) > 61)) then begin
-							fields.title := Substr(a2, 0, 61)
+					if (if IsString(title) then (StrLen(title) > 61)) then begin
+							fields.title := Substr(title, 0, 61)
 						end else begin
-							fields.title := a2
+							fields.title := title
 						end;
 					(if IsRichString(fields.text) then AsyncConfirm("The text copy of the mail contains ink which can not be sent.  You may remove or convert the ink words.", [Array: {value: true, text: "Remove"}, {value: nil, text: "Convert"}], func(a1) begin
 							self:StripInkFromText(a1)
@@ -1678,8 +1678,8 @@ mailSlip := {
 		appSymbol: 'mail,
 		bccLine: nil,
 		inkCount: 0,
-		PrepareToSend: func(a1) begin
-			noworlater := a1;
+		PrepareToSend: func(noworlater2) begin
+			noworlater := noworlater2;
 			fields.toRef := toLine.selected;
 			fields.cc := ccLine.selected;
 			fields.bcc := bccLine.selected;
@@ -1688,23 +1688,23 @@ mailSlip := {
 					return nil
 				end;
 			inkCount := 0;
-			l1 := GetDataDefs('|nameRef.email|);
-			local l1;
-			(foreach l2, l3 in fields.toRef do begin
-					if self:BadAddress(l1, l3) then begin
+			dataDefs := GetDataDefs('|nameRef.email|);
+			local dataDefs;
+			(foreach key, value in fields.toRef do begin
+					if self:BadAddress(dataDefs, value) then begin
 							return nil
 						end
 				end);
 			if (if fields.cc then (Length(fields.cc) > 0)) then begin
-					(foreach l2, l3 in fields.cc do begin
-							if self:BadAddress(l1, l3) then begin
+					(foreach key, value in fields.cc do begin
+							if self:BadAddress(dataDefs, value) then begin
 									return nil
 								end
 						end)
 				end;
 			if (if fields.bcc then (Length(fields.bcc) > 0)) then begin
-					(foreach l2, l3 in fields.bcc do begin
-							if self:BadAddress(l1, l3) then begin
+					(foreach key, value in fields.bcc do begin
+							if self:BadAddress(dataDefs, value) then begin
 									return nil
 								end
 						end)
@@ -1713,19 +1713,19 @@ mailSlip := {
 		end,
 		currentPickerLine: nil,
 		generateText: func() begin
-			local l1, l2;
+			local textScript, l2;
 			l2 := (if fields.appSymbol then GetVariable(self, fields.appSymbol));
-			l1 := activeFormat.TextScript;
+			textScript := activeFormat.TextScript;
 			fields.text := " ";
-			(if l1 then (if (if IsSymbol(l1) then l2) then (fields.text := Perform(l2, l1, [Array: fields, target])) else (if IsFunction(l1) then (fields.text := call l1 with (fields, target)))))
+			(if textScript then (if (if IsSymbol(textScript) then l2) then (fields.text := Perform(l2, textScript, [Array: fields, target])) else (if IsFunction(textScript) then (fields.text := call textScript with (fields, target)))))
 		end,
 		appName: americaOnline,
 		shrinkMessage: func() begin
 			local l1;
-			l1 := (foreach l2, l3 in fields collect (if (not l3) then l2));
-			(foreach l2 in l1 do begin
-					if l2 then begin
-							RemoveSlot(fields, l2)
+			l1 := (foreach key, value in fields collect (if (not value) then key));
+			(foreach key in l1 do begin
+					if key then begin
+							RemoveSlot(fields, key)
 						end
 				end);
 			RemoveSlot(fields, 'formats);
@@ -1843,8 +1843,8 @@ mailSlip := {
 			self:SetFieldDefaults()
 		end,
 		ccLine: nil,
-		ConvertStart: func(a1) begin
-			self:ConvertInkText(a1.addr.email, 'alpha, nil, ParamStr("eMail address for ^0 ", [Array: a1.name]), ParamStr("Please verify that ^0 is converted correctly.", [Array: a1.addr.email]), 'InkConvert, 'ConvertComplete, {addr: a1.addr, type: ClassOf(a1.addr.email)})
+		ConvertStart: func(theInfo) begin
+			self:ConvertInkText(theInfo.addr.email, 'alpha, nil, ParamStr("eMail address for ^0 ", [Array: theInfo.name]), ParamStr("Please verify that ^0 is converted correctly.", [Array: theInfo.addr.email]), 'InkConvert, 'ConvertComplete, {addr: theInfo.addr, type: ClassOf(theInfo.addr.email)})
 		end,
 		stepChildren: [stepChildren:
 			{
@@ -1872,29 +1872,29 @@ mailSlip := {
 			subject:Popit(0)
 		end,
 		getAttachment: func() begin
-			local l1, l2;
+			local pkgRefInfo, text;
 			(if fields.attachment then begin
 					if (fields.body = nil) then begin
 							fields.body := DeepClone(target)
 						end;
 					(if fields.body.package then begin
 							fields.IsPackage := true;
-							l1 := GetPkgRefInfo(fields.body.package);
+							pkgRefInfo := GetPkgRefInfo(fields.body.package);
 							try begin
-									if (if (if (l1.numparts > 0) then (l1.parttypes[0] = 'form)) then l1.parts[0].text) then begin
-											l2 := l1.parts[0].text
+									if (if (if (pkgRefInfo.numparts > 0) then (pkgRefInfo.parttypes[0] = 'form)) then pkgRefInfo.parts[0].text) then begin
+											text := pkgRefInfo.parts[0].text
 										end else begin
-											l2 := l1.title
+											text := pkgRefInfo.title
 										end
 								end onexception |evt.ex| do begin
-									l2 := l1.title
+									text := pkgRefInfo.title
 								end;
 							fields.body.class := 'packageFrame;
 							fields.body.data := fields.body.package;
-							fields.body.filesize := l1.size;
+							fields.body.filesize := pkgRefInfo.size;
 							fields.body.type := "pkg ";
 							fields.body.creator := "pkgX";
-							(if (not fields.edited) then (fields.text := ParamStr("Attached package information:\nName: ^0\nSize: ^1 bytes\n^2", [Array: fields.body.filename, l1.size, l1.copyright])))
+							(if (not fields.edited) then (fields.text := ParamStr("Attached package information:\nName: ^0\nSize: ^1 bytes\n^2", [Array: fields.body.filename, pkgRefInfo.size, pkgRefInfo.copyright])))
 						end)
 				end else (if (not TargetIsCursor(target)) then (fields.body := nil)))
 		end,
@@ -1946,14 +1946,14 @@ bccLineProto := {
 		selected := target.(path);
 		inherited:?viewSetupFormScript()
 	end,
-	Popit: func(a1) begin
-		local l1;
+	Popit: func(x) begin
+		local list;
 		if (Length(selected) = 0) then begin
-				l1 := [Array: GetDataDefs('|nameRef.email|):MakeNameRef({name: {last: "None"}}, '|nameRef.email|)]
+				list := [Array: GetDataDefs('|nameRef.email|):MakeNameRef({name: {last: "None"}}, '|nameRef.email|)]
 			end else begin
-				l1 := DeepClone(selected)
+				list := DeepClone(selected)
 			end;
-		_picker:New(class, l1, self, {readOnly: true, suppressFolderTabs: true, suppressCounter: true});
+		_picker:New(class, list, self, {readOnly: true, suppressFolderTabs: true, suppressCounter: true});
 		base:hilite(nil);
 		true
 	end,
@@ -1963,7 +1963,7 @@ bccLineProto := {
 	viewQuitScript: func() begin
 		nil
 	end,
-	pickActionScript: func(a1) begin
+	pickActionScript: func(index) begin
 		nil
 	end
 };
@@ -2008,16 +2008,16 @@ labelLine_3 := {
 	viewSetupFormScript: func() begin
 		(if (addedHeight < 20) then begin
 				text := "Internet Mail Item";
-				(viewJustify := 186)
+				(viewJustify := vjCenterH + vjBottomV + vjParentFullH + vjParentBottomV)
 			end else begin
 				text := "Addressees";
-				(viewJustify := 16442)
+				(viewJustify := vjCenterH + vjBottomV + vjParentFullH + vjSiblingTopV)
 			end)
 	end,
 	viewDrawScript: func() begin
-		local l1;
+		local box;
 		if (not pix) then begin
-				pix := MakeLine((l1 := self:LocalBox()).left, l1.top, l1.right, l1.top)
+				pix := MakeLine((box := self:LocalBox()).left, box.top, box.right, box.top)
 			end;
 		self:DrawShape(pix, nil)
 	end,
@@ -2064,7 +2064,7 @@ subject := {
 	TextSetup: func() begin
 		(if (fields.title = 'multiple) then "Multiple Items" else fields.title)
 	end,
-	Popit: func(a1) begin
+	Popit: func(x) begin
 		self:hilite(nil);
 		(if (fields.title = 'multiple) then self:Notify(3, appName, "The Subject for multiple items can\u2019\ut be changed.") else self:editSubject(func(a1) begin
 				if a1 then begin
@@ -2143,15 +2143,15 @@ mailNetworksProto := {
 	curerror: nil,
 	speed: 0,
 	networkIdentifier: func() begin
-		local l1;
-		l1 := "eworld2";
+		local text;
+		text := "eworld2";
 		if (speed <= 9600) then begin
-				l1 := "eworld1"
+				text := "eworld1"
 			end;
 		if (speed <= 2400) then begin
-				l1 := "eworld0"
+				text := "eworld0"
 			end;
-		l1
+		text
 	end,
 	cancelSpec: {
 		async: true,
@@ -2172,12 +2172,12 @@ mailNetworksProto := {
 	end,
 	mailEndPoint: {
 		_proto: @protoBasicEndpoint,
-		ExceptionHandler: func(a1) begin
+		ExceptionHandler: func(ex) begin
 			if (mailEndPoint.curstate = nil) then begin
 					return nil
 				end;
 			if (curerror = nil) then begin
-					curerror := a1.data
+					curerror := ex.data
 				end;
 			AddDeferredSend(ep, 'stopCCL, nil)
 		end,
@@ -2345,10 +2345,10 @@ mailPhonePicker := {
 			end;
 		inherited:?viewSetupFormScript()
 	end,
-	pickActionScript: func(a1) begin
-		local l1;
-		if IsFrame((l1 := labelCommands[a1])) then begin
-				mailAccess := [Array: {mailPhone: l1.number, mailNetwork: l1.network}];
+	pickActionScript: func(index) begin
+		local labelCommand;
+		if IsFrame((labelCommand := labelCommands[index])) then begin
+				mailAccess := [Array: {mailPhone: labelCommand.number, mailNetwork: labelCommand.network}];
 				self:JamIt(true)
 			end else begin
 				mailAccess := nil;
@@ -2357,23 +2357,23 @@ mailPhonePicker := {
 		base:hilite(nil)
 	end,
 	TextSetup: func() begin
-		local l1, l2;
-		(if StrFilled(GetUserConfig('mailPhone)) then GetUserConfig('mailPhone) else (if IsFrame(labelCommands[0]) then (if (l2 := StrPos((l1 := labelCommands[0].item), "(", 0)) then Substr(l1, 0, (l2 - 1)) else l1) else "(no number)"))
+		local item, pos;
+		(if StrFilled(GetUserConfig('mailPhone)) then GetUserConfig('mailPhone) else (if IsFrame(labelCommands[0]) then (if (pos := StrPos((item := labelCommands[0].item), "(", 0)) then Substr(item, 0, (pos - 1)) else item) else "(no number)"))
 	end,
 	JamIt: func(a1) begin
-		local l1, l2;
+		local mailPhone, mailNetwork;
 		(if a1 then begin
-				l1 := mailAccess[0].mailPhone;
-				l2 := mailAccess[0].mailNetwork;
-				if (not StrEqual(l1, GetUserConfig('mailPhone))) then begin
-						SetUserConfig('mailPhone, l1)
+				mailPhone := mailAccess[0].mailPhone;
+				mailNetwork := mailAccess[0].mailNetwork;
+				if (not StrEqual(mailPhone, GetUserConfig('mailPhone))) then begin
+						SetUserConfig('mailPhone, mailPhone)
 					end;
-				if (l2 <> GetUserConfig('mailNetwork)) then begin
-						SetUserConfig('mailNetwork, l2)
+				if (mailNetwork <> GetUserConfig('mailNetwork)) then begin
+						SetUserConfig('mailNetwork, mailNetwork)
 					end;
-				willDialNum := self:MungePhone(l1, GetUserConfig('currentCountry));
+				willDialNum := self:MungePhone(mailPhone, GetUserConfig('currentCountry));
 				SetValue(willDial, 'text, willDialNum);
-				(if StrFilled(l1) then self:UpdateText(l1))
+				(if StrFilled(mailPhone) then self:UpdateText(mailPhone))
 			end)
 	end,
 	preallocatedContext: 'mailPhonePicker,
@@ -2390,9 +2390,9 @@ willDial_3 := {
 		callassist:buttonClickScript()
 	end,
 	viewClickScript: viewClickScript,
-	viewHiliteScript: func(a1) begin
-		local l1, l2;
-		self:DrawShape(MakeRoundRect((l2 := ((((l1 := self:LocalBox()).right - StrFontWidth(text, viewFont)) div 2) - 2)), 0, (l1.right - l2), l1.bottom, 8), '{transferMode: 2, penPattern: 0, fillPattern: 5});
+	viewHiliteScript: func(on) begin
+		local box, l2;
+		self:DrawShape(MakeRoundRect((l2 := ((((box := self:LocalBox()).right - StrFontWidth(text, viewFont)) div 2) - 2)), 0, (box.right - l2), box.bottom, 8), '{transferMode: 2, penPattern: 0, fillPattern: 5});
 		true
 	end,
 	viewSetupDoneScript: func() begin

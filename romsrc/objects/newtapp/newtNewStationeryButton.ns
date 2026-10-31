@@ -4,8 +4,8 @@ newtNewStationeryButton := {
 	form: 'dataDef,
 	keyButton: '_newKeyButton,
 	text: new_3,
-	statScript: func(a1) begin
-		self:AddEntryFromStationery(a1.symbol)
+	statScript: func(statArrayItem) begin
+		self:AddEntryFromStationery(statArrayItem.symbol)
 	end,
 	SetUpStatArray: func() begin
 		GetDefs(form, [Array: superSymbol], nil)

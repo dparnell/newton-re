@@ -8,10 +8,10 @@ notifyIcon := {
 	blinkDelay: nil,
 	viewFlags: vReadOnly + vFloating + vClickable,
 	viewIdleScript: func() begin
-		local l1;
-		l1 := Length(blinkList);
-		SetValue(self, 'icon, blinkList[(blinkCount mod l1)]);
-		(if (blinkCount < (blinkReps * l1)) then begin
+		local count;
+		count := Length(blinkList);
+		SetValue(self, 'icon, blinkList[(blinkCount mod count)]);
+		(if (blinkCount < (blinkReps * count)) then begin
 				blinkCount := (blinkCount + 1);
 				blinkRate
 			end else begin
@@ -25,14 +25,14 @@ notifyIcon := {
 	poppedView: nil,
 	viewJustify: vjCenterH + vjCenterV + vjParentCenterH,
 	icon: @filledStarBitmap,
-	ExecMessage: func(a1) begin
-		local l1;
-		l1 := messageList[a1];
-		RemoveSlot(messageList, a1);
+	ExecMessage: func(index) begin
+		local messageListItem;
+		messageListItem := messageList[index];
+		RemoveSlot(messageList, index);
 		if (Length(messageList) = 0) then begin
 				AddDeferredSend(self, 'Close, nil)
 			end;
-		(if (ClassOf(l1) = 'NotifyAction) then Apply(l1.fn, l1.args) else notification:ShowItem(l1, nil))
+		(if (ClassOf(messageListItem) = 'NotifyAction) then Apply(messageListItem.fn, messageListItem.args) else notification:ShowItem(messageListItem, nil))
 	end,
 	StartBlinking: func() begin
 		SetValue(self, 'icon, blinkList[0]);
@@ -46,7 +46,7 @@ notifyIcon := {
 	end,
 	minDelay: 5000,
 	blinkList: [|Array|: @filledStarBitmap, @hollowstarBitmap],
-	AddMessage: func(a1) begin
+	AddMessage: func(frame2) begin
 		if (if poppedView then (poppedView = GetPopup())) then begin
 				poppedView:Close();
 				poppedView := nil
@@ -54,15 +54,15 @@ notifyIcon := {
 		if (not messageList) then begin
 				messageList := [Array: ]
 			end;
-		ArrayInsert(messageList, a1, 0);
+		ArrayInsert(messageList, frame2, 0);
 		AddDeferredSend(self, func() begin
 			self:Open();
 			self:StartBlinking()
 		end, nil);
-		a1
+		frame2
 	end,
-	viewClickScript: func(a1) begin
-		(if self:TrackHilite(a1) then (if ((not messageList) or (Length(messageList) = 0)) then begin
+	viewClickScript: func(unit) begin
+		(if self:TrackHilite(unit) then (if ((not messageList) or (Length(messageList) = 0)) then begin
 					self:hilite(nil);
 					AddDeferredSend(self, 'Close, nil)
 				end else (if (if (Length(messageList) = 1) then (ClassOf(messageList[0]) <> 'NotifyAction)) then begin
@@ -71,20 +71,20 @@ notifyIcon := {
 						self:ExecMessage(0)
 					end else begin
 						local l1;
-						l1 := (foreach l2 in messageList collect l2.overview);
+						l1 := (foreach item in messageList collect item.overview);
 						(poppedView := self:PopupMenu(l1, nil))
 					end)))
 	end,
-	pickActionScript: func(a1) begin
+	pickActionScript: func(index) begin
 		poppedView := nil;
 		self:hilite(nil);
-		self:ExecMessage(a1)
+		self:ExecMessage(index)
 	end,
 	messageList: nil,
 	viewClass: clPictureView,
 	blinkRate: 500,
-	AddAction: func(a1, a2, a3) begin
-		self:AddMessage({class: 'NotifyAction, fn: a2, args: a3, overview: a1})
+	AddAction: func(text, a2, list) begin
+		self:AddMessage({class: 'NotifyAction, fn: a2, args: list, overview: text})
 	end,
 	maxDelay: 300000,
 	preallocatedContext: 'notifyIcon,

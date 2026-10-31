@@ -3,8 +3,8 @@
 notification := {
 	maxNotifications: 8,
 	ShowItem: func(a1, a2) begin
-		local l1;
-		l1 := self:AddItem(a1, a2);
+		local addItem;
+		addItem := self:AddItem(a1, a2);
 		if ((a1.nfType = 5) or (a1.nfType = 6)) then begin
 				self:ModalDialog()
 			end else begin
@@ -14,30 +14,30 @@ notification := {
 						self:Open()
 					end
 			end;
-		l1
+		addItem
 	end,
-	AddItem: func(a1, a2) begin
-		local l1, l2;
-		if (not IsValid((l1 := a1.sound))) then begin
-				l1 := 'simpleBeep
+	AddItem: func(a1, message) begin
+		local sound, lFetch2;
+		if (not IsValid((sound := a1.sound))) then begin
+				sound := 'simpleBeep
 			end;
-		if (if l1 then (l1 <> '_stfu)) then begin
-				if (ClassOf(l1) = 'symbol) then begin
-						l1 := GetRegisteredSound(l1)
+		if (if sound then (sound <> '_stfu)) then begin
+				if (ClassOf(sound) = 'symbol) then begin
+						sound := GetRegisteredSound(sound)
 					end;
-				PlaySoundIrregardlessAtVolume(l1, a1.volume)
+				PlaySoundIrregardlessAtVolume(sound, a1.volume)
 			end;
-		if (not (l2 := LFetch(Notifications, a1, 0, func(a1, a2) begin
+		if (not (lFetch2 := LFetch(Notifications, a1, 0, func(a1, a2) begin
 			(if (not a2.seenByUser) then self:IsSimilarItem(a1, a2))
 		end, nil))) then begin
 				ArrayInsert(Notifications, a1, 0);
-				if a2 then begin
+				if message then begin
 						self:MarkItemSeen(0, nil)
 					end;
 				if (Length(Notifications) > maxNotifications) then begin
 						SetLength(Notifications, maxNotifications)
 					end;
-				l2 := a1
+				lFetch2 := a1
 			end;
 		if viewCObject then begin
 				self:SyncView();
@@ -48,37 +48,37 @@ notification := {
 						self:GyreStart()
 					end
 			end;
-		l2
+		lFetch2
 	end,
 	IsSimilarItem: func(a1, a2) begin
 		((a1 = a2) or (if (if (a1.nfType = a2.nfType) then StrEqual(a1.overview, a2.overview)) then StrEqual(a1.nfText, a2.nfText)))
 	end,
-	MarkItemSeen: func(a1, a2) begin
-		local l1;
-		if (not (l1 := Notifications[a1]).seenByUser) then begin
-				l1.seenByUser := true
+	MarkItemSeen: func(index, a2) begin
+		local notification;
+		if (not (notification := Notifications[index]).seenByUser) then begin
+				notification.seenByUser := true
 			end;
-		(if (if (if (if a2 then viewCObject) then (roll.index = a1)) then (not roll.allCollapsed)) then AddDeferredSend(self, 'Close, nil))
+		(if (if (if (if a2 then viewCObject) then (roll.index = index)) then (not roll.allCollapsed)) then AddDeferredSend(self, 'Close, nil))
 	end,
 	viewQuitScript: func() begin
 		self:MarkItemSeen(roll.index, nil);
-		(foreach l1 in Notifications do begin
-				if (not l1.seenByUser) then begin
-						SetRemove(Notifications, l1);
-						AddDeferredSend(self, 'ShowItem, [Array: l1, nil]);
+		(foreach item in Notifications do begin
+				if (not item.seenByUser) then begin
+						SetRemove(Notifications, item);
+						AddDeferredSend(self, 'ShowItem, [Array: item, nil]);
 						break
 					end
 			end);
 		inherited:?viewQuitScript()
 	end,
 	snoozeARoos: [|Array|: 5, 9, 15, 30, 60, 1440],
-	YouSnoozeYouLose: func(a1) begin
-		local l1, l2, l3;
-		l1 := Time();
-		l2 := roll.index;
-		l3 := Notifications[l2];
-		self:MarkItemSeen(l2, nil);
-		AddAlarm(Stringer([Array: l1, ":snooze"]), (l1 + a1), [Array: l3.overview, l3.nfText], nil, nil);
+	YouSnoozeYouLose: func(snoozeARoo) begin
+		local now, index, notification;
+		now := Time();
+		index := roll.index;
+		notification := Notifications[index];
+		self:MarkItemSeen(index, nil);
+		AddAlarm(Stringer([Array: now, ":snooze"]), (now + snoozeARoo), [Array: notification.overview, notification.nfText], nil, nil);
 		AddDeferredSend(self, 'Close, nil)
 	end,
 	debug: 78008,

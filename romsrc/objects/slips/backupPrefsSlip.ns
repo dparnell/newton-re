@@ -24,12 +24,12 @@ backupPrefsSlip := {
 				(self.viewValue := (prefsCache.packageType = 'all))
 			end,
 			viewSetupDoneScript: func() begin
-				local l1, l2;
+				local entry, backupAllPackagesCursor;
 				inherited:?viewSetupDoneScript();
-				if (l2 := GetBackupAllPackagesCursor(godParent:getSrcStore())) then begin
-						l1 := l2:entry()
+				if (backupAllPackagesCursor := GetBackupAllPackagesCursor(godParent:getSrcStore())) then begin
+						entry := backupAllPackagesCursor:entry()
 					end;
-				(if ((not l2) or (not l1)) then self:Hide())
+				(if ((not backupAllPackagesCursor) or (not entry)) then self:Hide())
 			end,
 			valueChanged: func() begin
 				prefsCache.packageType := (if viewValue then 'all else 'none);

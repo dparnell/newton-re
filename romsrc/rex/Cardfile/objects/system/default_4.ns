@@ -20,34 +20,34 @@ default_4 := {
 		},
 		{
 			viewBounds: {left: 0, top: 10, right: 0, bottom: 24},
-			pickActionScript: func(a1) begin
+			pickActionScript: func(index) begin
 				local l1;
-				self:UpdateText(Clone(a1.name));
+				self:UpdateText(Clone(index.name));
 				base:hilite(nil);
-				target.cityAlias := [Array: a1.name, a1.longitude, a1.latitude];
-				target.countrySymbol := a1.country;
-				target.country := GetCountryEntry(a1.country)[0].name;
+				target.cityAlias := [Array: index.name, index.longitude, index.latitude];
+				target.countrySymbol := index.country;
+				target.country := GetCountryEntry(index.country)[0].name;
 				if (not target.areacode) then begin
-						areacode:UpdateText(SPrintObject(a1.areacode))
+						areacode:UpdateText(SPrintObject(index.areacode))
 					end;
 				self:StartFlush()
 			end,
 			text: "Closest City",
 			pickerSetup: func() begin
-				local l1, l2;
+				local city2, box;
 				if (if target.countrySymbol then (city := appBase:GetCity(target))) then begin
-						l1 := city
+						city2 := city
 					end else begin
-						l1 := [Array: UserConfiguration.location.country, UserConfiguration.location.name]
+						city2 := [Array: UserConfiguration.location.country, UserConfiguration.location.name]
 					end;
-				(l2 := self:GlobalBox()).right := (l2.left + indent);
-				@locationPopup:new({default: l1}, l2, self);
+				(box := self:GlobalBox()).right := (box.left + indent);
+				@locationPopup:new({default: city2}, box, self);
 				nil
 			end,
 			viewJustify: 8396976,
 			textSetup: func() begin
-				local l1;
-				(if (if target.cityAlias then (l1 := appBase:GetCity(target))) then l1.name)
+				local city;
+				(if (if target.cityAlias then (city := appBase:GetCity(target))) then city.name)
 			end,
 			_proto: @protoLabelPicker
 		},
@@ -100,9 +100,9 @@ default_4 := {
 					end;
 				true
 			end,
-			labelActionScript: func(a1) begin
-				local l1;
-				(if (noneIsChosen := (if (ClassOf((l1 := labelCommands[a1])) = 'frame) then l1.isNoneItem)) then self:UpdateText(l1.item) else inherited:labelActionScript(a1))
+			labelActionScript: func(index) begin
+				local labelCommand;
+				(if (noneIsChosen := (if (ClassOf((labelCommand := labelCommands[index])) = 'frame) then labelCommand.isNoneItem)) then self:UpdateText(labelCommand.item) else inherited:labelActionScript(index))
 			end,
 			noneIsChosen: nil,
 			textSetup: func() begin

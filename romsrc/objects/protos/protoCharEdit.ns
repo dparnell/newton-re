@@ -29,14 +29,14 @@ protoCharEdit := {
 	viewClass: clView,
 	text: nil,
 	dispIndent: nil,
-	GetFilter: func(a1) begin
-		local l1;
+	GetFilter: func(lastChar) begin
+		local formatItem;
 		result := nil;
 		if template then begin
 				if template.format then begin
-						if (if (if (a1 >= wordLeft) then (a1 < wordRight)) then (template.format[(a1 - wordLeft)] <> $_)) then begin
-								l1 := (ORD((l1 := template.format[(a1 - wordLeft)])) - ORD($0));
-								result := template.filters[l1]
+						if (if (if (lastChar >= wordLeft) then (lastChar < wordRight)) then (template.format[(lastChar - wordLeft)] <> $_)) then begin
+								formatItem := (ORD((formatItem := template.format[(lastChar - wordLeft)])) - ORD($0));
+								result := template.filters[formatItem]
 							end
 					end else begin
 						if template.filters then begin
@@ -47,43 +47,43 @@ protoCharEdit := {
 		return result
 	end,
 	UseTextAndTemplate: func() begin
-		local l1, l2, l3;
+		local template2, box, fixedWordLength;
 		self:SetNewWord(text, nil);
-		l1 := template;
+		template2 := template;
 		template := nil;
-		self:SetNewTemplate(l1);
+		self:SetNewTemplate(template2);
 		template:?Init(self:CurrentWord());
 		if self._proto.viewBounds then begin
-				maxChars := (((l2 := self:LocalBox()).right - l2.left) div cellWidth)
+				maxChars := (((box := self:LocalBox()).right - box.left) div cellWidth)
 			end else begin
 				maxChars := self._proto.maxChars
 			end;
-		if (l3 := self:FixedWordLength()) then begin
-				maxChars := min(maxChars, l3)
+		if (fixedWordLength := self:FixedWordLength()) then begin
+				maxChars := min(maxChars, fixedWordLength)
 			end;
 		self:UseNewTemplate(true)
 	end,
 	uppers: ucLetters,
-	HandleTap: func(a1) begin
-		local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+	HandleTap: func(unit) begin
+		local l1, strokeBounds2, l3, cell, hit, bounds, box, frame2, frame3;
 		l1 := nil;
 		if popChars then begin
 				return true
 			end;
-		if (l4 := self:FindCell((l3 := (((l2 := StrokeBounds(a1)).left + l2.right) div 2)))).hit then begin
-				l5 := l4.hit;
-				l6 := l4.bounds;
-				l7 := self:GlobalBox();
-				if (not self:CellLocked((l5 := (l5 + dispLeft)))) then begin
-						lastChar := l5;
+		if (cell := self:FindCell((l3 := (((strokeBounds2 := StrokeBounds(unit)).left + strokeBounds2.right) div 2)))).hit then begin
+				hit := cell.hit;
+				bounds := cell.bounds;
+				box := self:GlobalBox();
+				if (not self:CellLocked((hit := (hit + dispLeft)))) then begin
+						lastChar := hit;
 						if (if (not (popChars := self:GetAlternates())) then (not self:FixedWord())) then begin
-								if (l5 = wordRight) then begin
+								if (hit = wordRight) then begin
 										AddArraySlot((popChars := [Array: ]), @correctortrailBits)
 									end else begin
-										if (l5 = (wordLeft - 1)) then begin
+										if (hit = (wordLeft - 1)) then begin
 												AddArraySlot((popChars := [Array: ]), @correctorleadBits)
 											end else begin
-												if (if (l5 >= wordLeft) then (l5 < wordRight)) then begin
+												if (if (hit >= wordLeft) then (hit < wordRight)) then begin
 														AddArraySlot((popChars := [Array: ]), @correctorMidBits)
 													end
 											end
@@ -97,25 +97,25 @@ protoCharEdit := {
 										AddArraySlot(popChars, {item: "Delete", action: 'deleteItem});
 										AddArraySlot(popChars, {item: "Insert", action: 'insertItem});
 										if (AddNewWord exists) then begin
-												if (l5 = wordRight) then begin
-														l8 := {item: "Add Word", action: 'appendWord}
+												if (hit = wordRight) then begin
+														frame2 := {item: "Add Word", action: 'appendWord}
 													end else begin
-														if (l5 = (wordLeft - 1)) then begin
-																l9 := {item: "Add Word", action: 'insertWord}
+														if (hit = (wordLeft - 1)) then begin
+																frame3 := {item: "Add Word", action: 'insertWord}
 															end
 													end;
-												if (l8 or l9) then begin
+												if (frame2 or frame3) then begin
 														AddArraySlot(popChars, 'pickseparator)
 													end;
-												if l8 then begin
-														AddArraySlot(popChars, l8)
+												if frame2 then begin
+														AddArraySlot(popChars, frame2)
 													end;
-												if l9 then begin
-														AddArraySlot(popChars, l9)
+												if frame3 then begin
+														AddArraySlot(popChars, frame3)
 													end
 											end
 									end;
-								DoPopup(popChars, (l6.right - l7.left), (((l6.top - l7.top) + viewLineSpacing) - 30), self);
+								DoPopup(popChars, (bounds.right - box.left), (((bounds.top - box.top) + viewLineSpacing) - 30), self);
 								l1 := true
 							end
 					end
@@ -123,96 +123,96 @@ protoCharEdit := {
 		return l1
 	end,
 	GetAlternates: func() begin
-		l2 := self:CurrentWord();
+		currentWord := self:CurrentWord();
 		l3 := (lastChar - wordLeft);
-		if (if (l4 := self:GetFilter(lastChar)) then (StrLen(l4) <= 10)) then begin
-				l1 := self:MakeWordArray(l4)
+		if (if (filter := self:GetFilter(lastChar)) then (StrLen(filter) <= 10)) then begin
+				wordArray := self:MakeWordArray(filter)
 			end else begin
 				if altChars[lastChar] then begin
-						l1 := self:MakeWordArray(altChars[lastChar])
+						wordArray := self:MakeWordArray(altChars[lastChar])
 					end
 			end;
-		if l1 then begin
-				local l1;
-				local l2;
+		if wordArray then begin
+				local wordArray;
+				local currentWord;
 				local l3;
-				local l4;
-				(foreach l5, l6 in l1 do begin
-						MapAmbiguousCharacters((l6 := Clone(l6)));
-						l1[l5] := l6
+				local filter;
+				(foreach key, value in wordArray do begin
+						MapAmbiguousCharacters((value := Clone(value)));
+						wordArray[key] := value
 					end)
 			end;
-		(l1 := Clone(l1))
+		(wordArray := Clone(wordArray))
 	end,
 	viewSetupDoneScript: func() begin
-		local l1, l2;
+		local box, l2;
 		(recConfig := PrepRecConfig(recConfig)).inputmask := 16779776;
-		l2 := ((l1 := self:GlobalBox()).left + dispIndent);
-		recConfig.rcBaseInfo := {base: (l1.top + viewLineSpacing), smallHeight: 11};
+		l2 := ((box := self:GlobalBox()).left + dispIndent);
+		recConfig.rcBaseInfo := {base: (box.top + viewLineSpacing), smallHeight: 11};
 		recConfig.rcGridInfo := {boxLeft: l2, boxRight: (l2 + cellWidth), xSpace: cellWidth};
 		PurgeAreaCache()
 	end,
 	TrimLeft: func() begin
-		local l1, l2, l3;
-		l1 := self.text;
-		l2 := self.dispLeft;
+		local text, dispLeft2, wordLeft2;
+		text := self.text;
+		dispLeft2 := self.dispLeft;
 		(if (not self:FixedWord()) then begin
-				l3 := 0;
-				(while (if (l3 < l2) then (l1[l3] = $ )) do (l3 := (l3 + 1)));
-				if (wordLeft < l3) then begin
-						l3 := wordLeft
+				wordLeft2 := 0;
+				(while (if (wordLeft2 < dispLeft2) then (text[wordLeft2] = $ )) do (wordLeft2 := (wordLeft2 + 1)));
+				if (wordLeft < wordLeft2) then begin
+						wordLeft2 := wordLeft
 					end;
-				(if (l3 > 0) then begin
-						StrMunger(l1, 0, l3, nil, 0, 0);
-						ArrayMunger(altChars, 0, l3, nil, 0, 0);
-						dispLeft := (l2 - l3);
-						wordLeft := (wordLeft - l3);
-						wordRight := (wordRight - l3);
-						(if lastChar then (lastChar := (lastChar - l3)))
+				(if (wordLeft2 > 0) then begin
+						StrMunger(text, 0, wordLeft2, nil, 0, 0);
+						ArrayMunger(altChars, 0, wordLeft2, nil, 0, 0);
+						dispLeft := (dispLeft2 - wordLeft2);
+						wordLeft := (wordLeft - wordLeft2);
+						wordRight := (wordRight - wordLeft2);
+						(if lastChar then (lastChar := (lastChar - wordLeft2)))
 					end)
 			end)
 	end,
-	viewgesturescript: func(a1, a2) begin
-		local l1;
-		l1 := nil;
-		if (a2 = 49) then begin
-				l1 := self:HandleTap(a1)
+	viewgesturescript: func(unit, gesture) begin
+		local handleTap;
+		handleTap := nil;
+		if (gesture = 49) then begin
+				handleTap := self:HandleTap(unit)
 			end else begin
-				if (a2 = 50) then begin
-						l1 := self:HandleTap(a1)
+				if (gesture = 50) then begin
+						handleTap := self:HandleTap(unit)
 					end else begin
-						if (a2 = 15) then begin
-								l1 := self:HandleCaret(a1)
+						if (gesture = 15) then begin
+								handleTap := self:HandleCaret(unit)
 							end else begin
-								if (a2 = 13) then begin
-										l1 := self:HandleScrub(a1)
+								if (gesture = 13) then begin
+										handleTap := self:HandleScrub(unit)
 									end
 							end
 					end
 			end;
-		return l1
+		return handleTap
 	end,
-	Scroll: func(a1) begin
-		local l1, l2, l3, l4;
+	Scroll: func(arrowDirection) begin
+		local l1, dispLeft2, wordRight2, maxChars2;
 		l1 := nil;
-		l2 := dispLeft;
-		if (a1 > 0) then begin
+		dispLeft2 := dispLeft;
+		if (arrowDirection > 0) then begin
 				if self:FixedWord() then begin
-						l3 := wordRight;
-						l4 := maxChars
+						wordRight2 := wordRight;
+						maxChars2 := maxChars
 					end else begin
-						l3 := (wordRight + 1);
-						l4 := 3
+						wordRight2 := (wordRight + 1);
+						maxChars2 := 3
 					end;
-				if (l3 > (l2 + maxChars)) then begin
-						dispLeft := (l2 := min((l2 := (l2 + maxChars)), (wordRight - l4)));
+				if (wordRight2 > (dispLeft2 + maxChars)) then begin
+						dispLeft := (dispLeft2 := min((dispLeft2 := (dispLeft2 + maxChars)), (wordRight - maxChars2)));
 						self:TrimLeft();
 						self:PadRight();
 						l1 := true
 					end
 			end else begin
-				if (a1 < 0) then begin
-						if (l2 > 0) then begin
+				if (arrowDirection < 0) then begin
+						if (dispLeft2 > 0) then begin
 								dispLeft := 0;
 								l1 := true
 							end
@@ -243,27 +243,27 @@ protoCharEdit := {
 			kLiteral_44be59: {penPattern: call kBinaryFromHex with ("aa55aa55aa55aa550000", 'pattern), fillPattern: 0, transferMode: 1}
 		},
 		func() begin
-			local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
-			l1 := self:LocalBox();
-			l2 := self.maxChars;
-			l3 := ((l1.left + dispIndent) + (cellGap div 2));
-			l4 := (l1.top + viewLineSpacing);
+			local box, maxChars, l3, l4, l5, l6, l7, l8, l9, copy, copyItem;
+			box := self:LocalBox();
+			maxChars := self.maxChars;
+			l3 := ((box.left + dispIndent) + (cellGap div 2));
+			l4 := (box.top + viewLineSpacing);
 			if (not lines) then begin
 					l5 := true;
-					lines := Array(l2, nil)
+					lines := Array(maxChars, nil)
 				end;
 			if (not chars) then begin
 					l6 := true;
-					chars := Array(l2, nil)
+					chars := Array(maxChars, nil)
 				end;
 			if (not frames) then begin
 					l7 := true;
-					l8 := (l1.left + dispIndent);
-					frames := Array((2 * l2), nil)
+					l8 := (box.left + dispIndent);
+					frames := Array((2 * maxChars), nil)
 				end;
 			l9 := 0;
-			MapAmbiguousCharacters((l10 := Clone(text)));
-			(while (l9 < l2) do begin
+			MapAmbiguousCharacters((copy := Clone(text)));
+			(while (l9 < maxChars) do begin
 					if l5 then begin
 							if (not self:CellLocked((dispLeft + l9))) then begin
 									lines[l9] := MakeLine(l3, (l4 + 1), ((l3 + cellWidth) - cellGap), (l4 + 1))
@@ -272,10 +272,10 @@ protoCharEdit := {
 								end
 						end;
 					if l6 then begin
-							if IsInk((l11 := l10[(dispLeft + l9)])) then begin
-									l11 := $\uF7FF
+							if IsInk((copyItem := copy[(dispLeft + l9)])) then begin
+									copyItem := $\uF7FF
 								end;
-							chars[l9] := MakeText(SPrintObject(l11), l3, l1.top, ((l3 + cellWidth) - cellGap), l4)
+							chars[l9] := MakeText(SPrintObject(copyItem), l3, box.top, ((l3 + cellWidth) - cellGap), l4)
 						end;
 					if l7 then begin
 							if (not self:CellLocked((dispLeft + l9))) then begin
@@ -290,7 +290,7 @@ protoCharEdit := {
 					l3 := (l3 + cellWidth);
 					(l9 := (l9 + 1))
 				end);
-			self:DrawShape(chars, '{font: 18435, justification: center, transferMode: 0});
+			self:DrawShape(chars, '{font: tsHWFont + tsSize(18), justification: center, transferMode: 0});
 			self:DrawShape(lines, kLiteral_44f3ad);
 			if frames then begin
 					self:DrawShape(frames, kLiteral_44be59)
@@ -303,41 +303,41 @@ protoCharEdit := {
 		self:UseNewTemplate(nil);
 		(altChars := a1.alts)
 	end,
-	CellLocked: func(a1) begin
-		local l1;
-		(if (if (l1 := template) then l1.format) then (if (((a1 < wordLeft) or (a1 >= wordRight)) or (l1.format[(a1 - wordLeft)] = $_)) then true))
+	CellLocked: func(lastChar) begin
+		local template2;
+		(if (if (template2 := template) then template2.format) then (if (((lastChar < wordLeft) or (lastChar >= wordRight)) or (template2.format[(lastChar - wordLeft)] = $_)) then true))
 	end,
-	HandleScrub: func(a1) begin
-		local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+	HandleScrub: func(unit) begin
+		local l1, strokeBounds2, l3, countGesturePoints2, l5, cell, cell2, edge, edge2;
 		l1 := nil;
-		l2 := StrokeBounds(a1);
+		strokeBounds2 := StrokeBounds(unit);
 		l3 := (cellWidth - cellGap);
-		l4 := CountGesturePoints(a1);
-		if ((l5 := (l2.right - l2.left)) > l3) then begin
-				l6 := self:FindCell(l2.left);
-				l7 := self:FindCell(l2.right);
-				l8 := l6.edge;
-				l9 := l7.edge;
-				if (if l8 then l9) then begin
-						if ((l8 + 1) = l9) then begin
-								if ((l2.left - l6.edgeX) > (l3 div 3)) then begin
-										l8 := (l8 + 1)
+		countGesturePoints2 := CountGesturePoints(unit);
+		if ((l5 := (strokeBounds2.right - strokeBounds2.left)) > l3) then begin
+				cell := self:FindCell(strokeBounds2.left);
+				cell2 := self:FindCell(strokeBounds2.right);
+				edge := cell.edge;
+				edge2 := cell2.edge;
+				if (if edge then edge2) then begin
+						if ((edge + 1) = edge2) then begin
+								if ((strokeBounds2.left - cell.edgeX) > (l3 div 3)) then begin
+										edge := (edge + 1)
 									end
 							end;
-						if (l9 > l8) then begin
+						if (edge2 > edge) then begin
 								l1 := true
 							end
 					end
 			end else begin
-				if (l4 >= 7) then begin
-						l9 := ((l8 := (l6 := self:FindCell(l2.left)).hit) + 1);
+				if (countGesturePoints2 >= 7) then begin
+						edge2 := ((edge := (cell := self:FindCell(strokeBounds2.left)).hit) + 1);
 						l1 := true
 					end
 			end;
 		if l1 then begin
 				l1 := nil;
-				if self:DeleteText((l8 + dispLeft), (l9 + dispLeft)) then begin
-						DoScrubEffect(a1);
+				if self:DeleteText((edge + dispLeft), (edge2 + dispLeft)) then begin
+						DoScrubEffect(unit);
 						l1 := true
 					end
 			end;
@@ -348,14 +348,14 @@ protoCharEdit := {
 			kLiteral_466b49: "0Oo",
 			kLiteral_466c65: "1Ili|"
 		},
-		func(a1, a2, a3) begin
+		func(a1, unit, bias) begin
 			if (StrLen(a1) <= 1) then begin
 					return nil
 				end;
-			if (CountUnitStrokes(a2) > 1) then begin
+			if (CountUnitStrokes(unit) > 1) then begin
 					return nil
 				end;
-			(if (a3 = 'numbers) then begin
+			(if (bias = 'numbers) then begin
 					self:BubbleUp(a1, $0, kLiteral_466b49);
 					self:BubbleUp(a1, $1, kLiteral_466c65);
 					self:BubbleUp(a1, $2, "2zZ")
@@ -365,60 +365,60 @@ protoCharEdit := {
 					self:BubbleDown(a1, $0, kLiteral_466b49)
 				end)
 		end),
-	viewStrokeScript: func(a1) begin
+	viewStrokeScript: func(unit) begin
 		nil
 	end,
-	CharPos: func(a1, a2) begin
-		l1 := (StrLen(a1) - 1);
+	CharPos: func(delimiters, strItem) begin
+		l1 := (StrLen(delimiters) - 1);
 		local l1;
-		(for l2 := 0 to l1 do begin
-				if (a1[l2] = a2) then begin
-						break l2
+		(for i := 0 to l1 do begin
+				if (delimiters[i] = strItem) then begin
+						break i
 					end
 			end)
 	end,
-	HandleCaret: func(a1) begin
-		local l1, l2, l3, l4, l5;
+	HandleCaret: func(unit) begin
+		local l1, gesturePoint2, box, l4, cell;
 		l1 := nil;
-		l2 := GesturePoint(1, a1);
-		l3 := self:GlobalBox();
-		l4 := (l2.y - (l3.top + viewLineSpacing));
-		if (if (if (l2.line = 0) then (l4 < 8)) then (l4 > -4)) then begin
-				self:InsertSpace((lastChar := ((l5 := self:FindCell(l2.x)).edge + dispLeft)));
+		gesturePoint2 := GesturePoint(1, unit);
+		box := self:GlobalBox();
+		l4 := (gesturePoint2.y - (box.top + viewLineSpacing));
+		if (if (if (gesturePoint2.line = 0) then (l4 < 8)) then (l4 > -4)) then begin
+				self:InsertSpace((lastChar := ((cell := self:FindCell(gesturePoint2.x)).edge + dispLeft)));
 				l1 := true
 			end;
 		return l1
 	end,
-	BubbleDown: func(a1, a2, a3) begin
-		l1 := SPrintObject(a2);
-		(if (l2 := StrPos(a1, l1, 0)) then begin
+	BubbleDown: func(a1, a2, text) begin
+		sPrintObject2 := SPrintObject(a2);
+		(if (pos := StrPos(a1, sPrintObject2, 0)) then begin
 				l3 := (StrLen(a1) - 1);
-				local l1;
-				local l2;
+				local sPrintObject2;
+				local pos;
 				local l3;
-				(for l4 := (l2 + 1) to l3 do begin
-						l1[0] := a1[l4];
-						if (not StrPos(a3, l1, 0)) then begin
+				(for i := (pos + 1) to l3 do begin
+						sPrintObject2[0] := a1[i];
+						if (not StrPos(text, sPrintObject2, 0)) then begin
 								break
 							end;
-						a1[(l4 - 1)] := l1[0];
-						a1[l4] := a2
+						a1[(i - 1)] := sPrintObject2[0];
+						a1[i] := a2
 					end)
 			end)
 	end,
 	digits: digits,
 	CurrentWord: func() begin
-		local l1, l2;
-		l1 := self.wordLeft;
-		l2 := self.wordRight;
-		(if (if l1 then l2) then return Substr(text, l1, (l2 - l1)) else return text)
+		local wordLeft, wordRight;
+		wordLeft := self.wordLeft;
+		wordRight := self.wordRight;
+		(if (if wordLeft then wordRight) then return Substr(text, wordLeft, (wordRight - wordLeft)) else return text)
 	end,
-	viewChangedScript: func(a1, a2) begin
-		(if (a1 = 'text) then begin
+	viewChangedScript: func(slot, view) begin
+		(if (slot = 'text) then begin
 				self:SetNewWord(text, 'single);
 				self:SetNewTemplate(nil);
 				self:UseNewTemplate(true)
-			end else (if (a1 = 'template) then self:SetNewTemplate(template)))
+			end else (if (slot = 'template) then self:SetNewTemplate(template)))
 	end,
 	UseNewTemplate: func(a1) begin
 		if HasPath(template, 'SetupString) then begin
@@ -431,7 +431,7 @@ protoCharEdit := {
 		self:Dirty()
 	end,
 	UseNewWord: func() begin
-		local l1, l2, l3, l4, l5;
+		local l1, box, len, textItem, cHR2;
 		if self:FixedWord() then begin
 				wordLeft := 0;
 				trailers := 0
@@ -442,21 +442,21 @@ protoCharEdit := {
 		wordRight := (StrLen(text) - trailers);
 		dispLeft := 0;
 		l1 := (StrLen(text) * cellWidth);
-		if ((dispIndent := ((((l2 := self:LocalBox()).right - l2.left) - l1) div 2)) < 0) then begin
+		if ((dispIndent := ((((box := self:LocalBox()).right - box.left) - l1) div 2)) < 0) then begin
 				dispIndent := 0
 			end;
 		lastChar := nil;
 		ClearTryString();
-		altChars := Array((l3 := StrLen(text)), nil);
-		(while (l3 > 0) do (if (if ((l3 := (l3 - 1)) < wordRight) then (l3 >= wordLeft)) then (if (not IsWhiteSpace((l4 := text[l3]))) then begin
-						if IsLower(l4) then begin
-								l5 := CHR((ORD(l4) - 32))
+		altChars := Array((len := StrLen(text)), nil);
+		(while (len > 0) do (if (if ((len := (len - 1)) < wordRight) then (len >= wordLeft)) then (if (not IsWhiteSpace((textItem := text[len]))) then begin
+						if IsLower(textItem) then begin
+								cHR2 := CHR((ORD(textItem) - 32))
 							end else begin
-								if IsUpper(l4) then begin
-										l5 := CHR((ORD(l4) + 32))
+								if IsUpper(textItem) then begin
+										cHR2 := CHR((ORD(textItem) + 32))
 									end
 							end;
-						(altChars[l3] := Stringer([Array: l4, l5]))
+						(altChars[len] := Stringer([Array: textItem, cHR2]))
 					end)));
 		self:Dirty()
 	end,
@@ -471,59 +471,59 @@ protoCharEdit := {
 					end)))
 	end,
 	AddEndCaps: func() begin
-		local l1, l2;
-		l1 := self.text;
+		local text, len;
+		text := self.text;
 		if (wordLeft > 0) then begin
-				StrMunger(l1, 0, 0, blankText, 0, wordLeft)
+				StrMunger(text, 0, 0, blankText, 0, wordLeft)
 			end;
-		l2 := StrLen(l1);
-		(if ((trailers := (maxChars - l2)) <= 0) then (trailers := 0) else StrMunger(l1, l2, 0, blankText, 0, trailers))
+		len := StrLen(text);
+		(if ((trailers := (maxChars - len)) <= 0) then (trailers := 0) else StrMunger(text, len, 0, blankText, 0, trailers))
 	end,
 	AddUpperCase: func(a1) begin
-		local l1, l2, l3;
+		local l1, sPrintObject2, pos;
 		(if (if a1 then (StrLen(a1) > 0)) then (if IsAlpha((l1 := a1[0])) then begin
-					l2 := SPrintObject((l1 := (if (l1 < $a) then CHR((ORD(l1) + 32)) else CHR((ORD(l1) - 32)))));
-					(if (not (l3 := StrPos(a1, l2, 1))) then StrMunger(a1, 1, 0, l2, 0, 1))
+					sPrintObject2 := SPrintObject((l1 := (if (l1 < $a) then CHR((ORD(l1) + 32)) else CHR((ORD(l1) - 32)))));
+					(if (not (pos := StrPos(a1, sPrintObject2, 1))) then StrMunger(a1, 1, 0, sPrintObject2, 0, 1))
 				end))
 	end,
-	BubbleUp: func(a1, a2, a3) begin
+	BubbleUp: func(a1, a2, text) begin
 		StrReverse(a1);
-		self:BubbleDown(a1, a2, a3);
+		self:BubbleDown(a1, a2, text);
 		StrReverse(a1)
 	end,
 	GetWordForDisplay: func() begin
-		local l1;
-		l1 := self:CurrentWord();
+		local currentWord;
+		currentWord := self:CurrentWord();
 		if (if template then HasPath(template, 'CleanupString)) then begin
-				l1 := template:CleanupString(l1)
+				currentWord := template:CleanupString(currentWord)
 			end;
-		return l1
+		return currentWord
 	end,
 	FindCell: func(a1) begin
-		local l1, l2, l3, l4, l5, l6, l7;
+		local box, cellWidth2, l3, l4, l5, l6, l7;
 		cell := Clone('{hit: nil, bounds: nil, edge: nil, edgeX: nil});
-		l1 := self:GlobalBox();
-		l2 := cellWidth;
-		l3 := (l1.left + dispIndent);
-		l4 := ((a1 - l3) div l2);
-		l5 := ((a1 - l3) mod l2);
+		box := self:GlobalBox();
+		cellWidth2 := cellWidth;
+		l3 := (box.left + dispIndent);
+		l4 := ((a1 - l3) div cellWidth2);
+		l5 := ((a1 - l3) mod cellWidth2);
 		l6 := (if self:FixedWord() then wordRight else maxChars);
-		l7 := (l3 + (l2 * l6));
+		l7 := (l3 + (cellWidth2 * l6));
 		if (if (a1 >= l3) then (a1 < l7)) then begin
 				cell.hit := l4;
-				cell.bounds := Clone(l1);
-				cell.bounds.left := ((l3 + (l2 * l4)) + (cellGap div 2));
-				cell.bounds.right := ((cell.bounds.left + l2) - cellGap)
+				cell.bounds := Clone(box);
+				cell.bounds.left := ((l3 + (cellWidth2 * l4)) + (cellGap div 2));
+				cell.bounds.right := ((cell.bounds.left + cellWidth2) - cellGap)
 			end;
 		cell.edge := l4;
-		if (l5 > (l2 div 2)) then begin
+		if (l5 > (cellWidth2 div 2)) then begin
 				cell.edge := (l4 + 1)
 			end;
 		if ((cell.edge < 0) or (cell.edge > l6)) then begin
 				cell.edge := nil
 			end;
 		if cell.edge then begin
-				cell.edgeX := (l3 + (l2 * cell.edge))
+				cell.edgeX := (l3 + (cellWidth2 * cell.edge))
 			end;
 		return cell
 	end,
@@ -577,35 +577,35 @@ protoCharEdit := {
 			end;
 		return l1
 	end,
-	ReplaceChar: func(a1, a2, a3) begin
+	ReplaceChar: func(lastChar2, a2, a3) begin
 		local l1;
-		(if (if (not self:CellLocked(a1)) then a3) then begin
+		(if (if (not self:CellLocked(lastChar2)) then a3) then begin
 				self:SaveUndoState(nil);
 				if ((l1 := (wordRight - wordLeft)) = 0) then begin
-						wordLeft := a1;
-						wordRight := a1;
+						wordLeft := lastChar2;
+						wordRight := lastChar2;
 						trailers := (StrLen(text) - wordRight)
 					end;
-				text[a1] := a3;
-				if (a1 < wordLeft) then begin
-						wordLeft := a1
+				text[lastChar2] := a3;
+				if (lastChar2 < wordLeft) then begin
+						wordLeft := lastChar2
 					end else begin
-						if (if (if (a1 > wordRight) then (AddNewWord exists)) then HasPath(template, '_MultiWord)) then begin
-								a1 := (a1 - dispLeft);
+						if (if (if (lastChar2 > wordRight) then (AddNewWord exists)) then HasPath(template, '_MultiWord)) then begin
+								lastChar2 := (lastChar2 - dispLeft);
 								self:AddNewWord(1);
-								lastChar := a1;
-								wordLeft := a1;
-								wordRight := (a1 + 1);
+								lastChar := lastChar2;
+								wordLeft := lastChar2;
+								wordRight := (lastChar2 + 1);
 								trailers := (StrLen(text) - wordRight);
-								text[a1] := a3
+								text[lastChar2] := a3
 							end else begin
-								if (a1 >= wordRight) then begin
-										wordRight := (a1 + 1);
+								if (lastChar2 >= wordRight) then begin
+										wordRight := (lastChar2 + 1);
 										trailers := (StrLen(text) - wordRight)
 									end
 							end
 					end;
-				altChars[a1] := a2;
+				altChars[lastChar2] := a2;
 				wordSource := 'Editing;
 				self:InvalDrawCache('chars);
 				self:DisplayExternal(true);
@@ -618,11 +618,11 @@ protoCharEdit := {
 		local l1;
 		local l2;
 		local l3;
-		(for l4 := 0 to l3 do begin
-				if (not InTryString((l1 := a1[l4]))) then begin
+		(for i := 0 to l3 do begin
+				if (not InTryString((l1 := a1[i]))) then begin
 						l2 := l1;
-						if (l4 > 0) then begin
-								StrMunger(a1, l4, 1, nil, 0, 0);
+						if (i > 0) then begin
+								StrMunger(a1, i, 1, nil, 0, 0);
 								StrMunger(a1, 0, 0, SPrintObject(l1), 0, 1)
 							end;
 						break
@@ -639,142 +639,142 @@ protoCharEdit := {
 			kLiteral_44c6a5: "            "
 		},
 		func() begin
-			local l1, l2, l3, l4, l5;
-			l1 := self.maxChars;
-			l2 := self.cellHeight;
+			local maxChars, cellHeight, box, fixedWordLength, len;
+			maxChars := self.maxChars;
+			cellHeight := self.cellHeight;
 			if viewBounds then begin
-					l1 := (((l3 := self:LocalBox()).right - l3.left) div cellWidth);
-					l2 := (l3.bottom - l3.top)
+					maxChars := (((box := self:LocalBox()).right - box.left) div cellWidth);
+					cellHeight := (box.bottom - box.top)
 				end else begin
-					self.viewBounds := RelBounds(left, top, ((l1 * cellWidth) + 1), l2)
+					self.viewBounds := RelBounds(left, top, ((maxChars * cellWidth) + 1), cellHeight)
 				end;
-			if (l4 := self:FixedWordLength()) then begin
-					l1 := min(l1, l4)
+			if (fixedWordLength := self:FixedWordLength()) then begin
+					maxChars := min(maxChars, fixedWordLength)
 				end;
-			l5 := StrLen(kLiteral_44c6a5);
-			if (l1 <= l5) then begin
-					blankText := Substr(kLiteral_44c6a5, 0, l1)
+			len := StrLen(kLiteral_44c6a5);
+			if (maxChars <= len) then begin
+					blankText := Substr(kLiteral_44c6a5, 0, maxChars)
 				end else begin
-					l4 := l1;
+					fixedWordLength := maxChars;
 					blankText := nil;
-					(while (l4 > l5) do begin
+					(while (fixedWordLength > len) do begin
 							blankText := Stringer([Array: blankText, kLiteral_44c6a5]);
-							(l4 := (l4 - l5))
+							(fixedWordLength := (fixedWordLength - len))
 						end);
-					blankText := Stringer([Array: blankText, Substr(kLiteral_44c6a5, 0, l4)])
+					blankText := Stringer([Array: blankText, Substr(kLiteral_44c6a5, 0, fixedWordLength)])
 				end;
-			self.maxChars := l1;
-			self.cellHeight := l2;
+			self.maxChars := maxChars;
+			self.cellHeight := cellHeight;
 			self:InvalDrawCache('all);
 			self:UseNewTemplate(nil)
 		end),
 	PadRight: func() begin
-		local l1, l2, l3;
-		l1 := self.text;
+		local text, len, l3;
+		text := self.text;
 		(if (not self:FixedWord()) then begin
-				l2 := StrLen(l1);
-				if ((l3 := (maxChars - (l2 - dispLeft))) > 0) then begin
-						StrMunger(l1, l2, 0, blankText, 0, l3);
-						SetLength(altChars, (l2 + l3))
+				len := StrLen(text);
+				if ((l3 := (maxChars - (len - dispLeft))) > 0) then begin
+						StrMunger(text, len, 0, blankText, 0, l3);
+						SetLength(altChars, (len + l3))
 					end;
-				(trailers := (StrLen(l1) - wordRight))
+				(trailers := (StrLen(text) - wordRight))
 			end)
 	end,
 	FixedWord: func() begin
-		local l1;
-		(if (l1 := template) then l1.format)
+		local template2;
+		(if (template2 := template) then template2.format)
 	end,
 	MakeWordArray: func(a1) begin
-		l2 := Array((l1 := StrLen(a1)), nil);
-		l3 := (l1 - 1);
-		local l1;
-		local l2;
+		list := Array((len := StrLen(a1)), nil);
+		l3 := (len - 1);
+		local len;
+		local list;
 		local l3;
-		(for l4 := 0 to l3 do begin
-				l2[l4] := SPrintObject(a1[l4])
+		(for i := 0 to l3 do begin
+				list[i] := SPrintObject(a1[i])
 			end);
-		return l2
+		return list
 	end,
-	SetNewTemplate: func(a1) begin
-		if (not a1) then begin
-				a1 := @noFilter
+	SetNewTemplate: func(template2) begin
+		if (not template2) then begin
+				template2 := @noFilter
 			end;
-		if (template <> a1) then begin
+		if (template <> template2) then begin
 				self:InvalDrawCache('all);
-				if ((not HasPath(a1, '_RAMBased)) or (if template then (template._proto <> a1))) then begin
-						a1 := {_parent: self, _proto: a1, _RAMBased: true}
+				if ((not HasPath(template2, '_RAMBased)) or (if template then (template._proto <> template2))) then begin
+						template2 := {_parent: self, _proto: template2, _RAMBased: true}
 					end
 			end;
-		(template := a1)
+		(template := template2)
 	end,
-	SetNewWord: func(a1, a2) begin
+	SetNewWord: func(a1, wordSource2) begin
 		text := Clone(a1);
 		wordLeft := 0;
 		wordRight := StrLen(a1);
-		wordSource := a2;
+		wordSource := wordSource2;
 		self:InvalDrawCache('chars);
 		0
 	end,
-	viewClickScript: func(a1) begin
+	viewClickScript: func(unit) begin
 		nil
 	end,
 	SaveUndoState: func(a1) begin
-		local l1;
-		l1 := {alts: Clone(altChars), word: self:CurrentWord(), template: template, source: wordSource, parm: a1};
-		AddUndoAction('RestoreUndoState, [Array: l1]);
-		return l1
+		local frame2;
+		frame2 := {alts: Clone(altChars), word: self:CurrentWord(), template: template, source: wordSource, parm: a1};
+		AddUndoAction('RestoreUndoState, [Array: frame2]);
+		return frame2
 	end,
 	DeleteSpace: func(a1, a2) begin
 		return nil
 	end,
-	pickActionScript: func(a1) begin
-		local l1, l2, l3, l4, l5, l6;
+	pickActionScript: func(index) begin
+		local copyItem, popChar, l3, word, copy, pos;
 		if popChars then begin
-				l1 := nil;
-				if IsFrame(a1) then begin
-						l3 := (((l2 := popChars[a1.index]).width * a1.y) + a1.x);
-						l4 := l2.words[l3];
-						self:ReplaceChar(lastChar, l4, l4[0])
+				copyItem := nil;
+				if IsFrame(index) then begin
+						l3 := (((popChar := popChars[index.index]).width * index.y) + index.x);
+						word := popChar.words[l3];
+						self:ReplaceChar(lastChar, word, word[0])
 					end else begin
-						if IsFrame((l2 := popChars[a1])) then begin
-								if (l2.action = 'deleteItem) then begin
+						if IsFrame((popChar := popChars[index])) then begin
+								if (popChar.action = 'deleteItem) then begin
 										self:DeleteText(lastChar, (lastChar + 1))
 									end else begin
-										if (l2.action = 'insertItem) then begin
+										if (popChar.action = 'insertItem) then begin
 												self:InsertSpace(lastChar)
 											end else begin
-												if (l2.action = 'appendWord) then begin
+												if (popChar.action = 'appendWord) then begin
 														self:AddNewWord(1)
 													end else begin
-														if (l2.action = 'insertWord) then begin
+														if (popChar.action = 'insertWord) then begin
 																self:AddNewWord(-1)
 															end
 													end
 											end
 									end
 							end else begin
-								if (l2 <> 'pickseparator) then begin
-										if (l6 := ArrayPos((l5 := Clone(popChars)), 'pickseparator, 0, nil)) then begin
-												ArrayRemoveCount(l5, l6, (Length(l5) - l6))
+								if (popChar <> 'pickseparator) then begin
+										if (pos := ArrayPos((copy := Clone(popChars)), 'pickseparator, 0, nil)) then begin
+												ArrayRemoveCount(copy, pos, (Length(copy) - pos))
 											end;
-										UnmapAmbiguousCharacters((l1 := l5[a1]));
-										UnmapAmbiguousCharacters((l5 := Stringer(l5)));
-										StrMunger(l5, a1, 1, nil, 0, 0);
-										StrMunger(l5, 0, 0, l1, 0, 1);
-										self:ReplaceChar(lastChar, l5, l1[0])
+										UnmapAmbiguousCharacters((copyItem := copy[index]));
+										UnmapAmbiguousCharacters((copy := Stringer(copy)));
+										StrMunger(copy, index, 1, nil, 0, 0);
+										StrMunger(copy, 0, 0, copyItem, 0, 1);
+										self:ReplaceChar(lastChar, copy, copyItem[0])
 									end
 							end
 					end
 			end;
 		(popChars := nil)
 	end,
-	InsertSpace: func(a1) begin
+	InsertSpace: func(lastChar) begin
 		local l1;
 		l1 := nil;
-		if (if (a1 <= wordRight) then (not self:FixedWord())) then begin
+		if (if (lastChar <= wordRight) then (not self:FixedWord())) then begin
 				self:SaveUndoState(nil);
-				StrMunger(text, a1, 0, " ", 0, 1);
-				ArrayInsert(altChars, nil, a1);
+				StrMunger(text, lastChar, 0, " ", 0, 1);
+				ArrayInsert(altChars, nil, lastChar);
 				wordRight := (wordRight + 1);
 				l1 := true;
 				wordSource := 'single;
@@ -784,25 +784,25 @@ protoCharEdit := {
 			end;
 		return l1
 	end,
-	viewWordScript: func(a1) begin
-		local l1, l2, l3, l4, l5, l6, l7, l8;
-		l1 := Stringer(GetEditArray(a1));
-		l4 := self:FindCell((((l3 := StrokeBounds(a1)).left + l3.right) div 2));
+	viewWordScript: func(unit) begin
+		local text, l2, strokeBounds2, cell, l5, l6, filter, pickBestChar;
+		text := Stringer(GetEditArray(unit));
+		cell := self:FindCell((((strokeBounds2 := StrokeBounds(unit)).left + strokeBounds2.right) div 2));
 		l5 := nil;
-		if l4.hit then begin
-				if (not self:CellLocked((l6 := (l4.hit + dispLeft)))) then begin
+		if cell.hit then begin
+				if (not self:CellLocked((l6 := (cell.hit + dispLeft)))) then begin
 						if (l6 <> lastChar) then begin
 								ClearTryString()
 							end;
 						lastChar := l6;
-						l2 := (if (l7 := self:GetFilter(l6)) then StringFilter(l1, l7, 'passAll) else l1);
-						if (not l7) then begin
-								self:SortMatches(l2, a1, template.bias)
+						l2 := (if (filter := self:GetFilter(l6)) then StringFilter(text, filter, 'passAll) else text);
+						if (not filter) then begin
+								self:SortMatches(l2, unit, template.bias)
 							end;
-						if (l8 := self:PickBestChar(l2)) then begin
+						if (pickBestChar := self:PickBestChar(l2)) then begin
 								self:AddUpperCase(l2);
-								self:ReplaceChar(lastChar, l2, l8);
-								if (if (l4.hit = (maxChars - 1)) then (not (if self:FixedWord() then (l6 = (wordRight - 1))))) then begin
+								self:ReplaceChar(lastChar, l2, pickBestChar);
+								if (if (cell.hit = (maxChars - 1)) then (not (if self:FixedWord() then (l6 = (wordRight - 1))))) then begin
 										self:Scroll(1)
 									end;
 								l5 := true
@@ -810,7 +810,7 @@ protoCharEdit := {
 					end
 			end;
 		if (not l5) then begin
-				DoScrubEffect(a1)
+				DoScrubEffect(unit)
 			end;
 		true
 	end,

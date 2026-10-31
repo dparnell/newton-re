@@ -7,9 +7,9 @@ protoConfirm := {
 		_proto: @protoTextButton,
 		viewJustify: 8390886,
 		viewSetupFormScript: func() begin
-			local l1;
-			l1 := StdButtonWidth(text);
-			(self.viewBounds := SetBounds((-(l1 + 6)), 0, -7, 0))
+			local stdButtonWidth2;
+			stdButtonWidth2 := StdButtonWidth(text);
+			(self.viewBounds := SetBounds((-(stdButtonWidth2 + 6)), 0, -7, 0))
 		end,
 		buttonClickScript: func() begin
 			confirmedValue := buttonValue;
@@ -20,9 +20,9 @@ protoConfirm := {
 		_proto: @protoTextButton,
 		viewJustify: 8390886,
 		viewSetupFormScript: func() begin
-			local l1;
-			l1 := StdButtonWidth(text);
-			self.viewBounds := SetBounds((-(l1 + 6)), 0, -7, 0);
+			local stdButtonWidth2;
+			stdButtonWidth2 := StdButtonWidth(text);
+			self.viewBounds := SetBounds((-(stdButtonWidth2 + 6)), 0, -7, 0);
 			(base._defaultButton := self)
 		end,
 		buttonClickScript: func() begin
@@ -34,9 +34,9 @@ protoConfirm := {
 		_proto: @protoTextButton,
 		viewJustify: 8390886,
 		viewSetupFormScript: func() begin
-			local l1;
-			l1 := StdButtonWidth(text);
-			self.viewBounds := SetBounds((-(l1 + 6)), 0, -7, 0);
+			local stdButtonWidth2;
+			stdButtonWidth2 := StdButtonWidth(text);
+			self.viewBounds := SetBounds((-(stdButtonWidth2 + 6)), 0, -7, 0);
 			(base._closeBox := self)
 		end,
 		buttonClickScript: func() begin
@@ -50,11 +50,11 @@ protoConfirm := {
 			viewJustify: vjParentFullH + vjParentFullV,
 			viewBounds: {left: 15, top: 15, right: -15, bottom: -15},
 			viewSetupFormScript: func() begin
-				local l1;
+				local copy;
 				self.text := message;
 				(if messageHIndent then begin
-						(l1 := Clone(self.viewBounds)).left := (l1.left + messageHIndent);
-						(self.viewBounds := l1)
+						(copy := Clone(self.viewBounds)).left := (copy.left + messageHIndent);
+						(self.viewBounds := copy)
 					end)
 			end,
 			_proto: @protoStaticText
@@ -65,20 +65,20 @@ protoConfirm := {
 			viewJustify: vjParentFullH + vjParentBottomV,
 			viewBounds: {left: 15, top: -28, right: -8, bottom: -15},
 			viewSetupChildrenScript: func() begin
-				(self.viewChildren := (foreach l1, l2 in buttonList collect begin
-					local l6;
-					{_proto: (if IsFrame(l2) then begin
-							if (l2.keyValue = 'default) then begin
-									l6 := buttonTemplateDefault
+				(self.viewChildren := (foreach key, value in buttonList collect begin
+					local buttonTemplateDefault2;
+					{_proto: (if IsFrame(value) then begin
+							if (value.keyValue = 'default) then begin
+									buttonTemplateDefault2 := buttonTemplateDefault
 								end;
-							if (l2.keyValue = 'Close) then begin
-									l6 := buttonTemplateClose
+							if (value.keyValue = 'Close) then begin
+									buttonTemplateDefault2 := buttonTemplateClose
 								end;
-							if (not l2.keyValue) then begin
-									l6 := buttonTemplate
+							if (not value.keyValue) then begin
+									buttonTemplateDefault2 := buttonTemplate
 								end;
-							l6
-						end else buttonTemplate), buttonValue: (if IsFrame(l2) then l2.value else l1), text: (if IsFrame(l2) then l2.text else l2)}
+							buttonTemplateDefault2
+						end else buttonTemplate), buttonValue: (if IsFrame(value) then value.value else key), text: (if IsFrame(value) then value.text else value)}
 				end))
 			end
 		}

@@ -8,46 +8,46 @@ protoRadioCluster := {
 	clusterValue: nil,
 	clusterChild: nil,
 	viewSetupDoneScript: func() begin
-		local l1;
-		(foreach l2 in (l1 := self:ChildViewFrames()) do begin
-				if (clusterValue = l2.buttonValue) then begin
-						clusterChild := l2;
-						l2.viewValue := l2.buttonValue;
-						l2:UpdateBitmap()
+		local childViewFrames;
+		(foreach item in (childViewFrames := self:ChildViewFrames()) do begin
+				if (clusterValue = item.buttonValue) then begin
+						clusterChild := item;
+						item.viewValue := item.buttonValue;
+						item:UpdateBitmap()
 					end
 			end)
 	end,
-	SetClusterValue: func(a1) begin
-		local l1;
-		(foreach l2 in (l1 := self:ChildViewFrames()) do begin
-				if (a1 = l2.buttonValue) then begin
-						self:SetCluster(l2)
+	SetClusterValue: func(scope) begin
+		local childViewFrames;
+		(foreach item in (childViewFrames := self:ChildViewFrames()) do begin
+				if (scope = item.buttonValue) then begin
+						self:SetCluster(item)
 					end
 			end)
 	end,
-	SetCluster: func(a1) begin
-		(if (clusterChild <> a1) then begin
+	SetCluster: func(base) begin
+		(if (clusterChild <> base) then begin
 				if clusterChild then begin
 						AddUndoAction('UndoAction, [Array: clusterChild]);
 						clusterChild.viewValue := nil;
 						clusterChild:UpdateBitmap()
 					end;
-				clusterChild := a1;
-				clusterValue := a1.buttonValue;
-				a1.viewValue := a1.buttonValue;
-				a1:UpdateBitmap();
+				clusterChild := base;
+				clusterValue := base.buttonValue;
+				base.viewValue := base.buttonValue;
+				base:UpdateBitmap();
 				RefreshViews();
 				self:ClusterChanged()
 			end)
 	end,
 	InitClusterValue: func(a1) begin
 		l2 := nil;
-		local l1;
+		local childViewFrames;
 		local l2;
-		(foreach l3 in (l1 := self:ChildViewFrames()) do begin
-				if (a1 = l3.buttonValue) then begin
+		(foreach item in (childViewFrames := self:ChildViewFrames()) do begin
+				if (a1 = item.buttonValue) then begin
 						l2 := true;
-						self:InitCluster(l3)
+						self:InitCluster(item)
 					end
 			end);
 		(if (if (not l2) then clusterChild) then begin
@@ -56,16 +56,16 @@ protoRadioCluster := {
 				(clusterChild := nil)
 			end)
 	end,
-	InitCluster: func(a1) begin
-		(if (clusterChild <> a1) then begin
+	InitCluster: func(item) begin
+		(if (clusterChild <> item) then begin
 				if clusterChild then begin
 						clusterChild.viewValue := nil;
 						clusterChild:UpdateBitmap()
 					end;
-				clusterChild := a1;
-				clusterValue := a1.buttonValue;
-				a1.viewValue := a1.buttonValue;
-				a1:UpdateBitmap()
+				clusterChild := item;
+				clusterValue := item.buttonValue;
+				item.viewValue := item.buttonValue;
+				item:UpdateBitmap()
 			end)
 	end,
 	ClusterChanged: func() begin

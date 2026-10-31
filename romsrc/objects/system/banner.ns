@@ -9,26 +9,26 @@ banner := {
 	viewFont: tsSimple + tsSize(18) + tsBold,
 	viewFormat: 0,
 	viewDrawScript: func() begin
-		l1 := StrLen(text);
-		l2 := self:LocalBox();
-		l3 := Clone(" ");
-		l4 := (((FontAscent(viewFont) + l2.bottom) - FontDescent(viewFont)) div 2);
-		l5 := Array((l1 + 2), nil);
-		local l1;
-		local l2;
-		local l3;
+		len := StrLen(text);
+		box := self:LocalBox();
+		copy := Clone(" ");
+		l4 := (((FontAscent(viewFont) + box.bottom) - FontDescent(viewFont)) div 2);
+		list := Array((len + 2), nil);
+		local len;
+		local box;
+		local copy;
 		local l4;
-		local l5;
-		(for l6 := 0 to (l1 - 1) do begin
+		local list;
+		(for i := 0 to (len - 1) do begin
 				local l9;
-				l3[0] := text[l6];
-				l9 := (((l6 * l2.right) div l1) - ((StrWidth(l3) - (l2.right div l1)) div 2));
-				l5[l6] := MakeText(l3, l9, (l4 - 20), l2.right, l4)
+				copy[0] := text[i];
+				l9 := (((i * box.right) div len) - ((StrWidth(copy) - (box.right div len)) div 2));
+				list[i] := MakeText(copy, l9, (l4 - 20), box.right, l4)
 			end);
-		l6 := (l2.right - drawPenSizeX);
-		l5[l1] := MakeLine(0, 0, l6, 0);
-		l4 := (l2.bottom - drawPenSizeY);
-		l5[(l1 + 1)] := MakeLine(0, l4, l6, l4);
-		self:DrawShape(l5, {pensize: [Array: drawPenSizeX, drawPenSizeY], font: viewFont})
+		i := (box.right - drawPenSizeX);
+		list[len] := MakeLine(0, 0, i, 0);
+		l4 := (box.bottom - drawPenSizeY);
+		list[(len + 1)] := MakeLine(0, l4, i, l4);
+		self:DrawShape(list, {pensize: [Array: drawPenSizeX, drawPenSizeY], font: viewFont})
 	end
 };

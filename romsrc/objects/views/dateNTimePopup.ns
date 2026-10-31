@@ -6,23 +6,23 @@ dateNTimePopup := {
 	Time: nil,
 	increment: 5,
 	New: func(a1, a2, a3, a4) begin
-		local l1, l2;
-		l1 := self:Init();
+		local init, l2;
+		init := self:Init();
 		if (not a1) then begin
 				a1 := Time()
 			end;
 		l2 := (a1 + (a2 div 2));
-		l1.Time := (l2 - (l2 mod a2));
-		l1.selectedDates := [Array: l1.Time];
-		l1.increment := a2;
-		l1.context := a4;
-		l1:popup(a3)
+		init.Time := (l2 - (l2 mod a2));
+		init.selectedDates := [Array: init.Time];
+		init.increment := a2;
+		init.context := a4;
+		init:popup(a3)
 	end,
 	viewSetupFormScript: func() begin
 		(clock.increment := increment)
 	end,
-	DateChanged: func(a1) begin
-		selectedDates[0] := (Time := (((Time mod 1440) + a1[0]) - (a1[0] mod 1440)));
+	DateChanged: func(selectedDates2) begin
+		selectedDates[0] := (Time := (((Time mod 1440) + selectedDates2[0]) - (selectedDates2[0] mod 1440)));
 		context:?NewTime(Time)
 	end,
 	TimeChanged: func() begin

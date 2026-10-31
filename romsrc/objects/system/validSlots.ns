@@ -21,21 +21,21 @@ validSlots := {
 				viewJustify: vjParentFullH + vjSiblingBottomV,
 				text: country,
 				pickerSetup: func() begin
-					local l1;
-					(l1 := self:GlobalBox()).right := ((l1.left + indent) - 2);
-					@locationPopup:New({default: GetCountryEntry(GetUserConfig('currentCountry))[0], spots: @countrySoupName, result: 'symbol}, l1, self);
+					local box;
+					(box := self:GlobalBox()).right := ((box.left + indent) - 2);
+					@locationPopup:New({default: GetCountryEntry(GetUserConfig('currentCountry))[0], spots: @countrySoupName, result: 'symbol}, box, self);
 					nil
 				end,
-				pickActionScript: func(a1) begin
-					local l1;
-					l1 := GetCountryEntry(a1)[0].name;
+				pickActionScript: func(index) begin
+					local name;
+					name := GetCountryEntry(index)[0].name;
 					if (target = GetUserConfig('location)) then begin
-							target.country := a1
+							target.country := index
 						end else begin
-							target.countrySymbol := a1;
-							target.country := l1
+							target.countrySymbol := index;
+							target.country := name
 						end;
-					self:UpdateText(l1);
+					self:UpdateText(name);
 					self:hilite(nil);
 					self:StartFlush()
 				end
@@ -52,23 +52,23 @@ validSlots := {
 					params := {spots: @citySoupName, result: nil};
 					inherited:?viewSetupFormScript()
 				end,
-				pickActionScript: func(a1) begin
-					target.cityAlias := [Array: a1.name, a1.longitude, a1.latitude];
+				pickActionScript: func(index) begin
+					target.cityAlias := [Array: index.name, index.longitude, index.latitude];
 					if (not target.countrySymbol) then begin
-							target.countrySymbol := a1.country
+							target.countrySymbol := index.country
 						end;
 					if (not target.areacode) then begin
-							target.areacode := a1.areacode
+							target.areacode := index.areacode
 						end;
 					if (not StrFilled(target.country)) then begin
-							target.country := GetCountryEntry(a1.country)[0].name
+							target.country := GetCountryEntry(index.country)[0].name
 						end;
 					self:StartFlush();
-					inherited:pickActionScript(a1.name)
+					inherited:pickActionScript(index.name)
 				end
 			},
-			HasData: func(a1) begin
-				(if (if (if a1.cityAlias then a1.countrySymbol) then a1.areacode) then StrFilled(a1.country))
+			HasData: func(key) begin
+				(if (if (if key.cityAlias then key.countrySymbol) then key.areacode) then StrFilled(key.country))
 			end,
 			theText: closestCity,
 			type: 'symbol
@@ -80,9 +80,9 @@ validSlots := {
 				viewFormat: 0,
 				viewBounds: {left: 0, top: 0, right: 0, bottom: 50},
 				viewJustify: vjParentFullH + vjSiblingBottomV,
-				DataChangeNotify: func(a1, a2) begin
-					local l1, l2;
-					(if (a1 = 'mailNetwork) then (if (if (l1 := GetCityFromAlias(target.cityAlias)) then (l2 := GetRoot().cardfile:bcEmailNetwork(l1, a2))) then mailPhone:UpdateText(ConvertIntToPhone(l2[0].mailPhone))))
+				DataChangeNotify: func(a1, id) begin
+					local cityFromAlias, bcEmailNetwork;
+					(if (a1 = 'mailNetwork) then (if (if (cityFromAlias := GetCityFromAlias(target.cityAlias)) then (bcEmailNetwork := GetRoot().cardfile:bcEmailNetwork(cityFromAlias, id))) then mailPhone:UpdateText(ConvertIntToPhone(bcEmailNetwork[0].mailPhone))))
 				end,
 				viewQuitScript: func() begin
 					(if (not target.(mailPhone.path)) then begin
@@ -101,10 +101,10 @@ validSlots := {
 					end;
 				'[pathExpr: mailAccess, 0]
 			end,
-			HasData: func(a1) begin
-				local l1;
-				l1 := ConvertIntToPhone(a1.mailAccess[0].mailPhone);
-				(if a1.mailAccess[0].mailNetwork then StrFilled(l1))
+			HasData: func(key) begin
+				local convertIntToPhone2;
+				convertIntToPhone2 := ConvertIntToPhone(key.mailAccess[0].mailPhone);
+				(if key.mailAccess[0].mailNetwork then StrFilled(convertIntToPhone2))
 			end,
 			type: 'number
 		},
@@ -122,9 +122,9 @@ validSlots := {
 				newRecTextFlags: 10,
 				emailclass: nil,
 				viewSetupFormScript: func() begin
-					local l1;
-					if (Length((l1 := GetVariable(context, 'addressSymbols))) > 0) then begin
-							emailclass := l1[0]
+					local value;
+					if (Length((value := GetVariable(context, 'addressSymbols))) > 0) then begin
+							emailclass := value[0]
 						end;
 					inherited:viewSetupFormScript()
 				end,
@@ -138,20 +138,20 @@ validSlots := {
 			},
 			theText: "E-Mail Acct",
 			getPath: func(a1, a2) begin
-				l2 := GetVariable(a2, 'addressSymbols);
-				(if (if (if a1.email then (Length(l2) > 0)) then IsInstance(a1.email, l2[0])) then return 'email else begin
-						local l1;
-						local l2;
-						(foreach l3, l4 in a1.emailAddrs do begin
-								if (not l4.email) then begin
-										l1 := [pathExpr: 'emailAddrs, l3, 'email]
+				value2 := GetVariable(a2, 'addressSymbols);
+				(if (if (if a1.email then (Length(value2) > 0)) then IsInstance(a1.email, value2[0])) then return 'email else begin
+						local list;
+						local value2;
+						(foreach key, value in a1.emailAddrs do begin
+								if (not value.email) then begin
+										list := [pathExpr: 'emailAddrs, key, 'email]
 									end else begin
-										if (if (Length(l2) > 0) then IsInstance(l4.email, l2[0])) then begin
-												return [pathExpr: 'emailAddrs, l3, 'email]
+										if (if (Length(value2) > 0) then IsInstance(value.email, value2[0])) then begin
+												return [pathExpr: 'emailAddrs, key, 'email]
 											end
 									end
 							end);
-						(if (not a1.email) then return 'email else (if l1 then return l1 else begin
+						(if (not a1.email) then return 'email else (if list then return list else begin
 									AddArraySlot(a1.emailAddrs, {});
 									return [pathExpr: 'emailAddrs, (Length(a1.emailAddrs) - 1), 'email]
 								end))
@@ -163,20 +163,20 @@ validSlots := {
 			inputProto: @newtLabelInputLine,
 			theText: "E-Mail Password",
 			getPath: func(a1, a2) begin
-				l2 := GetVariable(a2, 'addressSymbols);
-				(if (if (if a1.email then (Length(l2) > 0)) then IsInstance(a1.email, l2[0])) then return 'emailPassword else begin
-						local l1;
-						local l2;
-						(foreach l3, l4 in a1.emailAddrs do begin
-								if (not l4.email) then begin
-										l1 := [pathExpr: 'emailAddrs, l3, 'emailPassword]
+				value2 := GetVariable(a2, 'addressSymbols);
+				(if (if (if a1.email then (Length(value2) > 0)) then IsInstance(a1.email, value2[0])) then return 'emailPassword else begin
+						local list;
+						local value2;
+						(foreach key, value in a1.emailAddrs do begin
+								if (not value.email) then begin
+										list := [pathExpr: 'emailAddrs, key, 'emailPassword]
 									end else begin
-										if (if (Length(l2) > 0) then IsInstance(l4.email, l2[0])) then begin
-												return [pathExpr: 'emailAddrs, l3, 'emailPassword]
+										if (if (Length(value2) > 0) then IsInstance(value.email, value2[0])) then begin
+												return [pathExpr: 'emailAddrs, key, 'emailPassword]
 											end
 									end
 							end);
-						(if (not a1.email) then return 'emailPassword else return l1)
+						(if (not a1.email) then return 'emailPassword else return list)
 					end)
 			end,
 			type: 'text

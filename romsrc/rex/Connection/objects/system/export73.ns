@@ -15,22 +15,22 @@ export73 := {
 					self.stopping := nil;
 					self.closing := nil;
 					AddDeferredCall((temp := func() begin
-						local l1, l2, l3;
+						local data, callReadCommand, context;
 						try begin
 								endpoint:WriteCommand("grop", nil, nil);
-								if (not IsFrame((l2 := protoContext:CallReadCommand(endpoint, "ropt")).data)) then begin
-										Throw('|evt.ex.error|, -28012)
+								if (not IsFrame((callReadCommand := protoContext:CallReadCommand(endpoint, "ropt")).data)) then begin
+										Throw('|evt.ex.error|, kDockErrDesktopError)
 									end;
-								l1 := l2.data
+								data := callReadCommand.data
 							end onexception |evt.ex| do begin
 								protoContext:HandleException(CurrentException().error, endpoint);
 								closing := true;
 								self:Close()
 							end;
 						(if (if (not closing) then (not stopping)) then begin
-								(l3 := BuildContext(kROM_8258)).endpoint := endpoint;
-								l3.restoreOptions := l1;
-								l3:FilterDialog();
+								(context := BuildContext(kROM_8258)).endpoint := endpoint;
+								context.restoreOptions := data;
+								context:FilterDialog();
 								closing := true;
 								AddDeferredSend(self, 'Close, [Array: ])
 							end)
@@ -48,7 +48,7 @@ export73 := {
 		(inited := nil)
 	end,
 	viewFlags: vApplication + vFloating + vClickable,
-	CancelRequest: func(a1) begin
+	CancelRequest: func(symbol2) begin
 		(if (not stopping) then begin
 				stopping := true;
 				currentStatusSetup.values.titleText := "Stopping...";

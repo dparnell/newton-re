@@ -26,18 +26,18 @@ vPhoneKeypad := {
 					viewQuitScript: func() begin
 						(base.keyedDigits := nil)
 					end,
-					AddKey: func(a1, a2) begin
-						local l1, l2;
-						l1 := "";
+					AddKey: func(text2, a2) begin
+						local text, right;
+						text := "";
 						if (firstTime or a2) then begin
-								l1 := a1;
+								text := text2;
 								firstTime := a2
 							end else begin
-								l2 := self:Parent():LocalBox().right;
-								l1 := Stringer([Array: keyedDigits.text, a1]);
-								(while (StrWidth(l1) > l2) do (l1 := Substr(l1, 1, (StrLen(l1) - 1))))
+								right := self:Parent():LocalBox().right;
+								text := Stringer([Array: keyedDigits.text, text2]);
+								(while (StrWidth(text) > right) do (text := Substr(text, 1, (StrLen(text) - 1))))
 							end;
-						SetValue(keyedDigits, 'text, l1)
+						SetValue(keyedDigits, 'text, text)
 					end,
 					name: 'keyedDigits,
 					debug: 81047,
@@ -48,9 +48,9 @@ vPhoneKeypad := {
 		{
 			viewBounds: {left: 50, top: 13, right: -50, bottom: 110},
 			viewJustify: vjParentFullH + vjParentFullV + vjSiblingBottomV,
-			keyPressScript: func(a1) begin
-				keyedDigits:AddKey(Stringer([Array: "", a1]), nil);
-				GetRoot().(appSymbol).callEndpoint:SendDigit(a1, true);
+			keyPressScript: func(char2) begin
+				keyedDigits:AddKey(Stringer([Array: "", char2]), nil);
+				GetRoot().(appSymbol).callEndpoint:SendDigit(char2, true);
 				true
 			end,
 			name: 'phonePad,
@@ -109,12 +109,12 @@ vPhoneKeypad := {
 			viewSetupDoneScript: func() begin
 				(if (if popup then (Length(popup) > 0)) then inherited:?viewSetupDoneScript() else self:Hide())
 			end,
-			pickActionScript: func(a1) begin
-				local l1;
-				inherited:pickActionScript(a1);
-				(if StrFilled((l1 := popup[a1].value)) then begin
-						keyedDigits:AddKey((l1 := strtophone(l1)), true);
-						GetRoot().(appSymbol).callEndpoint:MakeOutgoing(l1, true)
+			pickActionScript: func(index) begin
+				local value;
+				inherited:pickActionScript(index);
+				(if StrFilled((value := popup[index].value)) then begin
+						keyedDigits:AddKey((value := strtophone(value)), true);
+						GetRoot().(appSymbol).callEndpoint:MakeOutgoing(value, true)
 					end)
 			end,
 			name: 'QuickDial,
@@ -148,8 +148,8 @@ vPhoneKeypad := {
 					end)
 			end,
 			viewSetupDoneScript: func() begin
-				local l1;
-				(if (l1 := self:path()).(name) then self:Show() else self:Hide())
+				local path;
+				(if (path := self:path()).(name) then self:Show() else self:Hide())
 			end,
 			name: 'SpeakerToggle,
 			debug: 371049,

@@ -17,8 +17,8 @@ newtEmbeddedEntryView := {
 	viewIdleScript: func() begin
 		nil
 	end,
-	jamFromEntry: func(a1) begin
-		parentView:jamFromEntry(a1)
+	jamFromEntry: func(resolveEntryAlias) begin
+		parentView:jamFromEntry(resolveEntryAlias)
 	end,
 	_proto: @newtEntryView,
 	EndFlush: func() begin
@@ -35,9 +35,9 @@ newtEmbeddedEntryView := {
 		targetViewDef := (currentViewDef := nil);
 		targetDataDef := (currentDataDef := nil);
 		currentStatView := nil;
-		(foreach l1 in self:ChildViewFrames() do begin
-				if HasPath(l1, 'Retarget) then begin
-						l1:Retarget()
+		(foreach item in self:ChildViewFrames() do begin
+				if HasPath(item, 'Retarget) then begin
+						item:Retarget()
 					end
 			end)
 	end,
@@ -57,7 +57,7 @@ newtEmbeddedEntryView := {
 	end,
 	targetView: nil,
 	viewSetupChildrenScript: func() begin
-		local l1;
+		local copy;
 		viewChildren := (target := nil);
 		if (parentTarget := GetVariable((parentView := self:Parent()), 'target)) then begin
 				targetDataDef := (currentDataDef := GetEntryDataDef((target := self:GetTargetFromEntry(parentTarget))));
@@ -66,10 +66,10 @@ newtEmbeddedEntryView := {
 					end else begin
 						targetViewDef := parentView.targetViewDef
 					end;
-				if (l1 := Clone(targetViewDef)) then begin
-						l1.realData := target;
-						l1:?SetupForm(target, self);
-						viewChildren := [Array: l1]
+				if (copy := Clone(targetViewDef)) then begin
+						copy.realData := target;
+						copy:?SetupForm(target, self);
+						viewChildren := [Array: copy]
 					end
 			end;
 		(targetView := self)

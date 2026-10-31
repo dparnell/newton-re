@@ -16,125 +16,125 @@ newtSoup := {
 		{}
 	end,
 	UseNilLabelsAsUnfiled: nil,
-	MakeSoup: func(a1) begin
+	MakeSoup: func(appSymbol) begin
 		l1 := nil;
 		local l1;
-		local l2;
-		(foreach l3 in (l2 := GetStores()) do begin
-				l1 := (l1 or l3:HasSoup(soupName))
+		local stores;
+		(foreach item in (stores := GetStores()) do begin
+				l1 := (l1 or item:HasSoup(soupName))
 			end);
-		self.appSymbol := a1;
-		theSoup := RegUnionSoup(a1, {name: soupName, userName: soupName, ownerApp: a1, userDescr: soupDescr, indexes: soupIndices});
+		self.appSymbol := appSymbol;
+		theSoup := RegUnionSoup(appSymbol, {name: soupName, userName: soupName, ownerApp: appSymbol, userDescr: soupDescr, indexes: soupIndices});
 		(if (not l1) then self:FillNewSoup())
 	end,
 	FillNewSoup: func() begin
 		nil
 	end,
 	SetupCursor: func() begin
-		local l1;
+		local soupQuery2;
 		querySoup := (if (if storesFilter then storesFilter:IsValid()) then theSoup:GetMember(storesFilter) else begin
 				storesFilter := nil;
 				theSoup
 			end);
-		l1 := soupQuery;
+		soupQuery2 := soupQuery;
 		if (not soupFilter) then begin
-				l1 := Clone(l1);
+				soupQuery2 := Clone(soupQuery2);
 				if theSoup:HasTags() then begin
-						l1.tagspec := {none: GetFolderList(appSymbol, nil)}
+						soupQuery2.tagspec := {none: GetFolderList(appSymbol, nil)}
 					end else begin
-						RemoveSlot(l1, 'tagspec);
-						l1.validTest := FilterNone
+						RemoveSlot(soupQuery2, 'tagspec);
+						soupQuery2.validTest := FilterNone
 					end
 			end else begin
 				if (soupFilter <> '_all) then begin
-						l1 := Clone(l1);
+						soupQuery2 := Clone(soupQuery2);
 						if theSoup:HasTags() then begin
-								l1.tagspec := {all: soupFilter}
+								soupQuery2.tagspec := {all: soupFilter}
 							end else begin
-								RemoveSlot(l1, 'tagspec);
-								l1.validTest := func(a1) begin
+								RemoveSlot(soupQuery2, 'tagspec);
+								soupQuery2.validTest := func(a1) begin
 									call FilterSome with (a1, soupFilter)
 								end
 							end
 					end else begin
-						if (if l1.tagspec then (not theSoup:HasTags())) then begin
-								RemoveSlot((l1 := Clone(l1)), 'tagspec)
+						if (if soupQuery2.tagspec then (not theSoup:HasTags())) then begin
+								RemoveSlot((soupQuery2 := Clone(soupQuery2)), 'tagspec)
 							end
 					end
 			end;
-		(theCursor := querySoup:Query(l1))
+		(theCursor := querySoup:Query(soupQuery2))
 	end,
 	GetCursor: func() begin
 		theCursor
 	end,
-	AddEntry: func(a1, a2) begin
-		local l1;
-		if ((a2 = nil) or (not a2:IsValid())) then begin
-				l1 := theSoup:AddToDefaultStore(a1)
+	AddEntry: func(adoptEntry, store) begin
+		local addToDefaultStore;
+		if ((store = nil) or (not store:IsValid())) then begin
+				addToDefaultStore := theSoup:AddToDefaultStore(adoptEntry)
 			end else begin
-				l1 := theSoup:AddToStore(a1, a2)
+				addToDefaultStore := theSoup:AddToStore(adoptEntry, store)
 			end;
-		XmitSoupChange(soupName, appSymbol, 'entryAdded, a1);
-		l1
+		XmitSoupChange(soupName, appSymbol, 'entryAdded, adoptEntry);
+		addToDefaultStore
 	end,
-	DeleteEntry: func(a1) begin
-		local l1, l2;
-		l1 := EntrySoup(a1);
-		l2 := EntryRemoveFromSoup(a1);
-		XmitSoupChange(soupName, appSymbol, 'entryRemoved, {oldSoup: l1, entry: a1});
-		l2
+	DeleteEntry: func(next) begin
+		local soup, entryRemoveFromSoup2;
+		soup := EntrySoup(next);
+		entryRemoveFromSoup2 := EntryRemoveFromSoup(next);
+		XmitSoupChange(soupName, appSymbol, 'entryRemoved, {oldSoup: soup, entry: next});
+		entryRemoveFromSoup2
 	end,
-	DoneWithSoup: func(a1) begin
-		UnRegSoupChange(soupName, a1);
-		UnRegUnionSoup(soupName, a1)
+	DoneWithSoup: func(appSymbol) begin
+		UnRegSoupChange(soupName, appSymbol);
+		UnRegUnionSoup(soupName, appSymbol)
 	end,
-	DuplicateEntry: func(a1, a2) begin
-		EntryUndoChanges((New := self:AddEntry(Clone(a1), a2)));
+	DuplicateEntry: func(a1, store) begin
+		EntryUndoChanges((New := self:AddEntry(Clone(a1), store)));
 		New
 	end,
-	AdoptEntry: func(a1, a2) begin
-		l1 := a2;
+	AdoptEntry: func(a1, class3) begin
+		class2 := class3;
 		if (if a1 then a1.class) then begin
-				l1 := a1.class
+				class2 := a1.class
 			end;
-		if (not l1) then begin
-				l1 := defaultDataType
+		if (not class2) then begin
+				class2 := defaultDataType
 			end;
-		l2 := self:CreateBlankEntry();
-		if l1 then begin
-				l2.class := l1
+		blankEntry := self:CreateBlankEntry();
+		if class2 then begin
+				blankEntry.class := class2
 			end;
-		if (l3 := GetDataDefs(l1)) then begin
-				if HasPath(l3, 'FillNewEntry) then begin
-						l2 := l3:FillNewEntry(l2)
+		if (dataDefs := GetDataDefs(class2)) then begin
+				if HasPath(dataDefs, 'FillNewEntry) then begin
+						blankEntry := dataDefs:FillNewEntry(blankEntry)
 					end else begin
-						if (l4 := l3:?MakeNewEntry()) then begin
-								local l1;
-								local l2;
-								local l3;
-								local l4;
-								(foreach l5, l6 in l4 do begin
-										l2.(l5) := l6
+						if (newEntry := dataDefs:?MakeNewEntry()) then begin
+								local class2;
+								local blankEntry;
+								local dataDefs;
+								local newEntry;
+								(foreach key, value in newEntry do begin
+										blankEntry.(key) := value
 									end)
 							end
 					end
 			end;
-		if (if UseNilLabelsAsUnfiled then (not l2.labels)) then begin
-				l2.labels := nil
+		if (if UseNilLabelsAsUnfiled then (not blankEntry.labels)) then begin
+				blankEntry.labels := nil
 			end else begin
-				if (if (if (not l2.labels) then soupFilter) then (soupFilter <> '_all)) then begin
-						l2.labels := soupFilter
+				if (if (if (not blankEntry.labels) then soupFilter) then (soupFilter <> '_all)) then begin
+						blankEntry.labels := soupFilter
 					end
 			end;
 		if a1 then begin
-				(foreach l5, l6 in a1 do begin
-						l2.(l5) := l6
+				(foreach key, value in a1 do begin
+						blankEntry.(key) := value
 					end)
 			end;
-		if l3 then begin
-				l3:?CheckNewEntry(l2)
+		if dataDefs then begin
+				dataDefs:?CheckNewEntry(blankEntry)
 			end;
-		l2
+		blankEntry
 	end,
 	FilterNone: func(a1) begin
 		(not a1.labels)
@@ -142,40 +142,40 @@ newtSoup := {
 	FilterSome: func(a1, a2) begin
 		(a1.labels = a2)
 	end,
-	GetAlias: func(a1) begin
-		(if a1 then MakeEntryAlias(a1))
+	GetAlias: func(entry) begin
+		(if entry then MakeEntryAlias(entry))
 	end,
 	GetCursorPosition: func() begin
-		local l1;
-		(if IsSoupEntry((l1 := theCursor:entry())) then self:GetAlias(l1))
+		local entry;
+		(if IsSoupEntry((entry := theCursor:entry())) then self:GetAlias(entry))
 	end,
 	GotoAlias: func(a1) begin
-		local l1;
+		local resolveEntryAlias2;
 		(if a1 then begin
 				if (not theCursor) then begin
 						self:SetupCursor()
 					end;
-				(if (l1 := ResolveEntryAlias(a1)) then theCursor:Goto(l1))
+				(if (resolveEntryAlias2 := ResolveEntryAlias(a1)) then theCursor:Goto(resolveEntryAlias2))
 			end)
 	end,
 	GetCursorKey: func() begin
-		local l1;
-		if (if IsString((l1 := theCursor:EntryKey())) then (StrLen(l1) > 6)) then begin
-				l1 := Substr(l1, 0, 6)
+		local entryKey;
+		if (if IsString((entryKey := theCursor:EntryKey())) then (StrLen(entryKey) > 6)) then begin
+				entryKey := Substr(entryKey, 0, 6)
 			end;
-		l1
+		entryKey
 	end,
-	GotoCursorKey: func(a1) begin
-		local l1;
+	GotoCursorKey: func(cursorKey) begin
+		local gotoKey;
 		if (not theCursor) then begin
 				self:SetupCursor()
 			end;
-		if (not (l1 := theCursor:GotoKey(a1))) then begin
-				if (not (l1 := theCursor:prev())) then begin
-						l1 := theCursor:Reset()
+		if (not (gotoKey := theCursor:GotoKey(cursorKey))) then begin
+				if (not (gotoKey := theCursor:prev())) then begin
+						gotoKey := theCursor:Reset()
 					end
 			end;
-		l1
+		gotoKey
 	end
 };
 

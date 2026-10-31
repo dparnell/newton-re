@@ -9,18 +9,18 @@ solopokerTemplate := {
 			deck := kROM_828:New();
 			self:Deal()
 		end),
-	EvalCol: func(a1) begin
+	EvalCol: func(j) begin
 		l1 := 0;
 		local l1;
 		local l2;
-		l2 := (foreach l3 in '[Array: 0, 5, 10, 15, 20] collect table[(l3 + a1)]);
+		l2 := (foreach item in '[Array: 0, 5, 10, 15, 20] collect table[(item + j)]);
 		deck:Eval5(l2)
 	end,
 	dButton: nil,
-	EvalRow: func(a1) begin
-		local l1, l2;
+	EvalRow: func(i) begin
+		local l1, arrayMunger2;
 		l1 := 0;
-		deck:Eval5((l2 := ArrayMunger([Array: ], 0, nil, table, (5 * a1), 5)))
+		deck:Eval5((arrayMunger2 := ArrayMunger([Array: ], 0, nil, table, (5 * i), 5)))
 	end,
 	bankLimit: 5000,
 	money: 1000,
@@ -32,11 +32,11 @@ solopokerTemplate := {
 	EvalTable: func() begin
 		l1 := 0;
 		local l1;
-		(for l2 := 0 to 4 do begin
-				l1 := (l1 + deck.SoloPayOffs.(self:EvalRow(l2)))
+		(for i := 0 to 4 do begin
+				l1 := (l1 + deck.SoloPayOffs.(self:EvalRow(i)))
 			end);
-		(for l5 := 0 to 4 do begin
-				l1 := (l1 + deck.SoloPayOffs.(self:EvalCol(l5)))
+		(for j := 0 to 4 do begin
+				l1 := (l1 + deck.SoloPayOffs.(self:EvalCol(j)))
 			end);
 		SetValue(handValue, 'text, Stringer([Array: "", l1]));
 		l1
@@ -45,15 +45,15 @@ solopokerTemplate := {
 	table: nil,
 	viewJustify: vjParentCenterH + vjParentCenterV,
 	stepallocatecontext: [|Array|: 'bankroll, bankroll_2, 'dButton, dButton_2, 'handValue, handValue_2],
-	Swap: func(a1, a2) begin
-		local l1;
-		l1 := table[a1.cardIndex];
-		table[a1.cardIndex] := table[a2.cardIndex];
-		table[a2.cardIndex] := l1;
+	Swap: func(a1, dragee) begin
+		local tableItem;
+		tableItem := table[a1.cardIndex];
+		table[a1.cardIndex] := table[dragee.cardIndex];
+		table[dragee.cardIndex] := tableItem;
 		a1:Dirty();
-		a2:Dirty();
+		dragee:Dirty();
 		base:EvalTable();
-		base:AddUndoAction('Swap, [Array: a1, a2])
+		base:AddUndoAction('Swap, [Array: a1, dragee])
 	end,
 	viewSetupFormScript: func() begin
 		(self.rowViews := [Array: ])
@@ -130,8 +130,8 @@ solopokerTemplateProto := {
 	GetCard: func() begin
 		table[cardIndex]
 	end,
-	viewClickScript: func(a1) begin
-		self:DragAndDropLtd(a1, self:GlobalOuterBox(), base:GlobalBox(), nil, [Array: {types: '[Array: card], dragRef: cardIndex, dragView: self}]);
+	viewClickScript: func(unit) begin
+		self:DragAndDropLtd(unit, self:GlobalOuterBox(), base:GlobalBox(), nil, [Array: {types: '[Array: card], dragRef: cardIndex, dragView: self}]);
 		true
 	end,
 	viewDropApproveScript: func(a1) begin
@@ -141,9 +141,9 @@ solopokerTemplateProto := {
 		'[Array: card]
 	end,
 	viewdragfeedbackscript: func(a1, a2, a3) begin
-		local l1;
-		l1 := a1[0].dragView;
-		if (if (self <> l1) then (self:Parent() = l1:Parent())) then begin
+		local dragView;
+		dragView := a1[0].dragView;
+		if (if (self <> dragView) then (self:Parent() = dragView:Parent())) then begin
 				self:hilite(a3)
 			end;
 		true
@@ -151,8 +151,8 @@ solopokerTemplateProto := {
 	viewGetDropDataScript: func(a1, a2) begin
 		{dragee: self}
 	end,
-	viewDropScript: func(a1, a2, a3) begin
-		base:Swap(self, a2.dragee);
+	viewDropScript: func(dragInfo, dropPt, a3) begin
+		base:Swap(self, dropPt.dragee);
 		true
 	end
 };

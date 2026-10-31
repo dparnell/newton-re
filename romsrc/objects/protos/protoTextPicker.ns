@@ -10,16 +10,16 @@ protoTextPicker := {
 	indent: nil,
 	label: uCardPositionAlertButton,
 	pix: nil,
-	MakePickLine: func(a1, a2, a3) begin
-		local l1, l2, l3;
-		a1 := self:LocalBox();
+	MakePickLine: func(box, label2, textSetup) begin
+		local fontHeight2, l2, l3;
+		box := self:LocalBox();
 		if (not indent) then begin
 				indent := (StrFontWidth(label, labelFont) + 6)
 			end;
-		l1 := FontHeight(labelFont);
-		l2 := (((a1.bottom - l1) >> 1) + FontAscent(labelFont));
-		l3 := (((a1.bottom - FontHeight(entryFont)) >> 1) + FontAscent(entryFont));
-		(pix := [Array: {font: labelFont}, MakeText(a2, a1.left, a1.top, (a1.left + indent), (a1.top + l2)), {font: entryFont}, MakeText(a3, (a1.left + indent), a1.top, a1.right, (a1.top + l3))])
+		fontHeight2 := FontHeight(labelFont);
+		l2 := (((box.bottom - fontHeight2) >> 1) + FontAscent(labelFont));
+		l3 := (((box.bottom - FontHeight(entryFont)) >> 1) + FontAscent(entryFont));
+		(pix := [Array: {font: labelFont}, MakeText(label2, box.left, box.top, (box.left + indent), (box.top + l2)), {font: entryFont}, MakeText(textSetup, (box.left + indent), box.top, box.right, (box.top + l3))])
 	end,
 	viewSetupChildrenScript: func() begin
 		self:MakePickLine(self:LocalBox(), label, self:TextSetup())
@@ -27,21 +27,21 @@ protoTextPicker := {
 	viewDrawScript: func() begin
 		self:DrawShape(pix, nil)
 	end,
-	viewHiliteScript: func(a1) begin
-		local l1, l2, l3, l4;
-		l1 := self:LocalBox();
-		l2 := FontHeight(labelFont);
-		l4 := (((l3 := (((l1.bottom - l2) >> 1) - 1)) + l2) + 2);
+	viewHiliteScript: func(on) begin
+		local box, fontHeight2, l3, l4;
+		box := self:LocalBox();
+		fontHeight2 := FontHeight(labelFont);
+		l4 := (((l3 := (((box.bottom - fontHeight2) >> 1) - 1)) + fontHeight2) + 2);
 		self:DrawShape(MakeRoundRect(-2, l3, indent, l4, 8), '{transferMode: 2, penPattern: 0, fillPattern: 5});
 		true
 	end,
-	viewClickScript: func(a1) begin
-		(if self:TrackHilite(a1) then self:Popit((indent - 2)))
+	viewClickScript: func(unit) begin
+		(if self:TrackHilite(unit) then self:Popit((indent - 2)))
 	end,
-	Popit: func(a1) begin
+	Popit: func(x) begin
 		nil
 	end,
-	pickActionScript: func(a1) begin
+	pickActionScript: func(index) begin
 		self:viewSetupChildrenScript();
 		self:hilite(nil);
 		self:Dirty()

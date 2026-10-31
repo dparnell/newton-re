@@ -8,57 +8,57 @@ newtStationeryView := {
 	viewJustify: nil,
 	path: nil,
 	viewSetupFormScript: func() begin
-		local l1, l2;
+		local l1, copy;
 		viewChildren := nil;
 		(if target then begin
 				targetDataDef := (currentDataDef := GetEntryDataDef((l1 := (if (if path then target.path) then target.(path) else target))));
 				if (viewDef <> nil) then begin
 						targetViewDef := (currentViewDef := GetEntryDataView(l1, viewDef))
 					end;
-				(if (l2 := Clone(targetViewDef)) then begin
-						l2.realData := (if path then target.(path) else target);
-						(viewChildren := [Array: l2])
+				(if (copy := Clone(targetViewDef)) then begin
+						copy.realData := (if path then target.(path) else target);
+						(viewChildren := [Array: copy])
 					end)
 			end)
 	end,
 	Retarget: func() begin
-		(foreach l1 in self:ChildViewFrames() do begin
-				if HasPath(l1, 'Retarget) then begin
-						l1:Retarget()
+		(foreach item in self:ChildViewFrames() do begin
+				if HasPath(item, 'Retarget) then begin
+						item:Retarget()
 					end else begin
-						(foreach l3 in l1:ChildViewFrames() do begin
-								if HasPath(l3, 'Retarget) then begin
-										l3:Retarget()
+						(foreach item2 in item:ChildViewFrames() do begin
+								if HasPath(item2, 'Retarget) then begin
+										item2:Retarget()
 									end
 							end)
 					end
 			end)
 	end,
-	jamFromEntry: func(a1) begin
-		(foreach l1 in self:ChildViewFrames() do begin
-				if HasPath(l1, 'jamFromEntry) then begin
-						l1:jamFromEntry(a1)
+	jamFromEntry: func(resolveEntryAlias) begin
+		(foreach item in self:ChildViewFrames() do begin
+				if HasPath(item, 'jamFromEntry) then begin
+						item:jamFromEntry(resolveEntryAlias)
 					end else begin
-						(foreach l3 in l1:ChildViewFrames() do begin
-								if HasPath(l3, 'jamFromEntry) then begin
-										l3:jamFromEntry(a1)
+						(foreach item2 in item:ChildViewFrames() do begin
+								if HasPath(item2, 'jamFromEntry) then begin
+										item2:jamFromEntry(resolveEntryAlias)
 									end
 							end)
 					end
 			end)
 	end,
 	TextScript: func() begin
-		if (Length((l2 := self:ChildViewFrames())) > 0) then begin
-				local l1;
-				local l2;
-				(foreach l3 in l2[0]:ChildViewFrames() do begin
-						local l5;
-						if (l5 := l3:?TextScript()) then begin
-								l1 := Stringer([Array: l1, $\n, l5])
+		if (Length((childViewFrames := self:ChildViewFrames())) > 0) then begin
+				local text;
+				local childViewFrames;
+				(foreach item in childViewFrames[0]:ChildViewFrames() do begin
+						local textScript;
+						if (textScript := item:?TextScript()) then begin
+								text := Stringer([Array: text, $\n, textScript])
 							end
 					end)
 			end;
-		l1
+		text
 	end,
 	viewSetupDoneScript: func() begin
 		currentStatView := (if (if target then viewChildren) then self:ChildViewFrames()[0]);
@@ -66,10 +66,10 @@ newtStationeryView := {
 			self:HandleStationeryChange(a1, a2, a3, a4)
 		end)
 	end,
-	viewChangedScript: func(a1, a2) begin
-		(foreach l1 in self:ChildViewFrames() do begin
-				if HasPath(l1, 'viewChangedScript) then begin
-						l1:viewChangedScript(a1, a2)
+	viewChangedScript: func(slot, view) begin
+		(foreach item in self:ChildViewFrames() do begin
+				if HasPath(item, 'viewChangedScript) then begin
+						item:viewChangedScript(slot, view)
 					end
 			end)
 	end,

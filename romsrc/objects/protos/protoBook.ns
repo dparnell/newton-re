@@ -8,8 +8,8 @@ protoBook := {
 	CuPage: nil,
 	viewLineSpacing: 0,
 	AppFindTargets: func() begin
-		local l1;
-		result := (foreach l2 in (l1 := self:GetOnlineBooks()) collect {name: l2.title, target: l2.isbn});
+		local onlineBooks;
+		result := (foreach item in (onlineBooks := self:GetOnlineBooks()) collect {name: item.title, target: item.isbn});
 		result
 	end,
 	TurnToContent: {class: #132, funcPtr: 6984864, numArgs: 2},
@@ -28,34 +28,34 @@ protoBook := {
 	CountPages: {class: #132, funcPtr: 6961630, numArgs: 0},
 	bookRef: nil,
 	ShowStoryCard: func(a1, a2, a3) begin
-		local l1, l2;
+		local frame2, data;
 		(if (storyCard <> nil) then self:HideStoryCard() else (if (Length((theContent := self:FindContentByValue(a1, a2, true))) <> 0) then begin
-					l1 := {_proto: @protoStoryCard, viewBounds: a3};
-					if (ClassOf((l2 := theContent[0].data)) = 'picture) then begin
-							l1.viewClass := 76;
-							l1.icon := l2
+					frame2 := {_proto: @protoStoryCard, viewBounds: a3};
+					if (ClassOf((data := theContent[0].data)) = 'picture) then begin
+							frame2.viewClass := clPictureView;
+							frame2.icon := data
 						end else begin
-							l1.text := l2
+							frame2.text := data
 						end;
 					if theContent[0].viewFont then begin
-							l1.viewFont := theContent[0].viewFont
+							frame2.viewFont := theContent[0].viewFont
 						end;
 					if theContent[0].styles then begin
-							l1.styles := theContent[0].styles
+							frame2.styles := theContent[0].styles
 						end;
 					if theContent[0].tabs then begin
-							l1.tabs := theContent[0].tabs
+							frame2.tabs := theContent[0].tabs
 						end;
 					if theContent[0].viewJustify then begin
-							l1.viewJustify := theContent[0].viewJustify
+							frame2.viewJustify := theContent[0].viewJustify
 						end else begin
 							if theContent[0].layout then begin
 									if (BAnd(theContent[0].layout, 4) <> 0) then begin
-											l1.viewJustify := 2
+											frame2.viewJustify := vjCenterH
 										end
 								end
 						end;
-					(storyCard := self:InsertForm(l1)):Show()
+					(storyCard := self:InsertForm(frame2)):Show()
 				end))
 	end,
 	TurnToSubject: func(a1) begin
@@ -70,25 +70,25 @@ protoBook := {
 			end,
 			kLiteral_5198f9: {_proto: @compatibleFinder, CheckState: kFunction_5198d9, SelectItem: nil, MoveTo: nil}
 		},
-		func(a1, a2, a3, a4, a5) begin
-			l2 := [Array: ];
-			local l1;
-			local l2;
-			(if self:CuFind(a1, self, l2, a3, a4, [Array: {isbn: a5}]) then (foreach l1 in l2 do begin
-						AddArraySlot(a2, {_proto: kLiteral_5198f9, owner: self, title: l1.title, findType: 'text, findWords: SplitString(a1), items: l1.items})
+		func(findText, findAllResults, a3, a4, target) begin
+			list := [Array: ];
+			local item;
+			local list;
+			(if self:CuFind(findText, self, list, a3, a4, [Array: {isbn: target}]) then (foreach item in list do begin
+						AddArraySlot(findAllResults, {_proto: kLiteral_5198f9, owner: self, title: item.title, findType: 'text, findWords: SplitString(findText), items: item.items})
 					end))
 		end),
 	ShowFoundItem: func(a1) begin
-		local l1, l2;
+		local found, page;
 		self:OpenBook(a1.isbn);
-		if (l1 := a1.found).page then begin
-				l2 := l1.page
+		if (found := a1.found).page then begin
+				page := found.page
 			end else begin
-				l2 := self:FindPageByContent(l1.item, l1.char, l1.bookSoup);
-				l1.page := l2
+				page := self:FindPageByContent(found.item, found.char, found.bookSoup);
+				found.page := page
 			end;
-		self:TurnToPage(l2);
-		self:HiliteBlock(l1.item, l1.char, l1.len)
+		self:TurnToPage(page);
+		self:HiliteBlock(found.item, found.char, found.len)
 	end,
 	FindContentBySlot: {class: #132, funcPtr: 6966900, numArgs: 2},
 	ZoomView: {class: #132, funcPtr: 6985935, numArgs: 4},
@@ -105,17 +105,17 @@ protoBook := {
 		},
 		func(a1, a2, a3, a4) begin
 			(if (bookRef = nil) then begin
-					l2 := [Array: ];
+					list := [Array: ];
 					if (a3 = 'globalFind) then begin
-							l3 := self:GetOnlineBooks()
+							onlineBooks := self:GetOnlineBooks()
 						end else begin
-							l3 := [Array: {isbn: self.isbn}]
+							onlineBooks := [Array: {isbn: self.isbn}]
 						end;
-					local l1;
-					local l2;
-					local l3;
-					(if self:CuFind(a1, self, l2, a3, a4, l3) then (foreach l1 in l2 do begin
-								AddArraySlot(a2, {_proto: kLiteral_5198f9, owner: self, title: l1.title, findType: 'text, findWords: SplitString(a1), items: l1.items})
+					local item;
+					local list;
+					local onlineBooks;
+					(if self:CuFind(a1, self, list, a3, a4, onlineBooks) then (foreach item in list do begin
+								AddArraySlot(a2, {_proto: kLiteral_5198f9, owner: self, title: item.title, findType: 'text, findWords: SplitString(a1), items: item.items})
 							end))
 				end)
 		end),

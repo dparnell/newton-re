@@ -22,29 +22,29 @@ protoSoundFrame := {
 		(if samplingRate then samplingRate else 22026.43172)
 	end,
 	GetPlayingTime: func() begin
-		local l1;
-		l1 := self:GetSampleCount();
+		local sampleCount;
+		sampleCount := self:GetSampleCount();
 		if (compressionRatio exists) then begin
-				l1 := (l1 * compressionRatio)
+				sampleCount := (sampleCount * compressionRatio)
 			end;
-		(l1 / self:GetSamplingRate())
+		(sampleCount / self:GetSamplingRate())
 	end,
-	SetRecordingLength: func(a1, a2) begin
-		local l1;
-		l1 := self:GetSampleSize();
-		if (((IsReadOnly(samples) or (not IsInteger(a1))) or (a1 < 0)) or ((a1 * l1) > Length(samples))) then begin
+	SetRecordingLength: func(index, fn) begin
+		local sampleSize;
+		sampleSize := self:GetSampleSize();
+		if (((IsReadOnly(samples) or (not IsInteger(index))) or (index < 0)) or ((index * sampleSize) > Length(samples))) then begin
 				Throw('|evt.ex.msg|, "numSamples invalid")
 			end;
-		self.length := a1;
-		AddDeferredSend(self, 'DeferredSetLength, [Array: a2])
+		self.length := index;
+		AddDeferredSend(self, 'DeferredSetLength, [Array: fn])
 	end,
-	SetRecordingLengthNow: func(a1) begin
-		local l1;
-		l1 := self:GetSampleSize();
-		if (((IsReadOnly(samples) or (not IsInteger(a1))) or (a1 < 0)) or ((a1 * l1) > Length(samples))) then begin
+	SetRecordingLengthNow: func(index) begin
+		local sampleSize;
+		sampleSize := self:GetSampleSize();
+		if (((IsReadOnly(samples) or (not IsInteger(index))) or (index < 0)) or ((index * sampleSize) > Length(samples))) then begin
 				Throw('|evt.ex.msg|, "numSamples invalid")
 			end;
-		self.length := a1;
+		self.length := index;
 		self:DeferredSetLength(nil)
 	end,
 	DeferredSetLength: func(a1) begin

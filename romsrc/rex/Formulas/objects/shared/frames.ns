@@ -2,12 +2,12 @@
 
 clear := {
 	buttonClickScript: func() begin
-		l1 := {solvedFor: solvedFor, values: [Array: ]};
-		local l1;
-		(foreach l2 in FSViews do begin
-				AddArraySlot(l1.values, l2:GetNumericValue())
+		frame2 := {solvedFor: solvedFor, values: [Array: ]};
+		local frame2;
+		(foreach item in FSViews do begin
+				AddArraySlot(frame2.values, item:GetNumericValue())
 			end);
-		AddUndoAction('UndoClear, [Array: l1]);
+		AddUndoAction('UndoClear, [Array: frame2]);
 		self:ClearAllFields()
 	end,
 	text: "Clear",

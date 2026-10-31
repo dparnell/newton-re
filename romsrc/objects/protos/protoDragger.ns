@@ -6,11 +6,11 @@ protoDragger := {
 	viewBounds: protoDraggerViewBounds,
 	viewFormat: vfFillWhite + vfFrameDragShadow + vfPen(7) + vfInset(1) + vfRound(5),
 	declareSelf: 'base,
-	DragWindow: func(a1) begin
-		local l1, l2;
-		InkOff(a1);
+	DragWindow: func(unit) begin
+		local parent, l2;
+		InkOff(unit);
 		clicker();
-		l2 := (if ((l1 := self:Parent()) = GetRoot()) then RelBounds(displayParams.appAreaGlobalLeft, displayParams.appAreaGlobalTop, displayParams.appAreaWidth, displayParams.appAreaHeight) else l1:GlobalBox());
+		l2 := (if ((parent := self:Parent()) = GetRoot()) then RelBounds(displayParams.appAreaGlobalLeft, displayParams.appAreaGlobalTop, displayParams.appAreaWidth, displayParams.appAreaHeight) else parent:GlobalBox());
 		if (if (if (not ViewContainsCaretView(self)) then CommandKeyboardConnected()) then (not RestoreKeyView(self))) then begin
 				if self.defaultKeyViewName then begin
 						SetKeyView(self.(defaultKeyViewName), 0)
@@ -21,17 +21,17 @@ protoDragger := {
 					end
 			end;
 		self:MoveBehind(nil);
-		self:Drag(a1, l2);
+		self:Drag(unit, l2);
 		self:Dirty()
 	end,
-	viewClickScript: func(a1) begin
-		local l1, l2, l3;
+	viewClickScript: func(unit) begin
+		local pt, pt2, box;
 		(if (if (self = base) then (BAnd(viewFormat, 240) = 208)) then begin
-				l1 := GetPoint(0, a1);
-				l2 := GetPoint(1, a1);
-				l3 := self:GlobalBox();
-				(if (if ((l2 - l3.top) < 10) then (abs((l1 - ((l3.left + l3.right) >> 1))) < 10)) then begin
-						base:DragWindow(a1);
+				pt := GetPoint(0, unit);
+				pt2 := GetPoint(1, unit);
+				box := self:GlobalBox();
+				(if (if ((pt2 - box.top) < 10) then (abs((pt - ((box.left + box.right) >> 1))) < 10)) then begin
+						base:DragWindow(unit);
 						true
 					end)
 			end)
@@ -40,8 +40,8 @@ protoDragger := {
 	noOverview: "This application does not support Overview",
 	beenThereDoneThat: nil,
 	viewSetupFormScript: func() begin
-		local l1, l2;
-		(if (l1 := self:?GlobalBox()) then (if ((((((l2 := displayParams).appAreaGlobalLeft + l2.appAreaWidth) < l1.right) or ((l2.appAreaGlobalTop + l2.appAreaHeight) < l1.bottom)) or (l2.appAreaGlobalLeft > l1.left)) or (l2.appAreaGlobalTop > l1.top)) then RemoveSlot(self, 'viewBounds)))
+		local box, displayParams2;
+		(if (box := self:?GlobalBox()) then (if ((((((displayParams2 := displayParams).appAreaGlobalLeft + displayParams2.appAreaWidth) < box.right) or ((displayParams2.appAreaGlobalTop + displayParams2.appAreaHeight) < box.bottom)) or (displayParams2.appAreaGlobalLeft > box.left)) or (displayParams2.appAreaGlobalTop > box.top)) then RemoveSlot(self, 'viewBounds)))
 	end,
 	viewScrollUpScript: func() begin
 		(if (not beenThereDoneThat) then begin

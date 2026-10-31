@@ -4,29 +4,29 @@ export67 := {
 	inited: nil,
 	backupPackages: nil,
 	ShowPackagesCheckbox: func() begin
-		local l1;
-		return (if (l1 := protoContext:ConnectionPrefsRead('neverSyncPackages)) then nil else protoContext.applications[0].packages)
+		local neverSyncPackages;
+		return (if (neverSyncPackages := protoContext:ConnectionPrefsRead('neverSyncPackages)) then nil else protoContext.applications[0].packages)
 	end,
 	AdjustForStores: func() begin
-		l1 := protoContext:GetBackupStoreVersion();
+		backupStoreVersion := protoContext:GetBackupStoreVersion();
 		self.StoreMap := [Array: ];
-		local l1;
-		(foreach l2 in GetStores() do begin
-				local l4;
-				if (l2.version > l1) then begin
-						AddArraySlot(StoreMap, l2)
+		local backupStoreVersion;
+		(foreach item in GetStores() do begin
+				local copy;
+				if (item.version > backupStoreVersion) then begin
+						AddArraySlot(StoreMap, item)
 					end
 			end);
 		self.numStores := Length(StoreMap);
-		l4 := Clone(OriginalViewBounds);
+		copy := Clone(OriginalViewBounds);
 		self.packagesCheckboxVisible := self:ShowPackagesCheckbox();
 		if (not packagesCheckboxVisible) then begin
 				self.checkAdjust := 15;
-				l4.bottom := (l4.bottom - 15)
+				copy.bottom := (copy.bottom - 15)
 			end else begin
 				self.checkAdjust := nil
 			end;
-		SetValue(self, 'viewBounds, l4)
+		SetValue(self, 'viewBounds, copy)
 	end,
 	GetStoreFromWhichstores: func(a1) begin
 		return LFetch(whichStores, a1, 0, '|str<|, '[pathExpr: name])
@@ -51,8 +51,8 @@ export67 := {
 	_proto: @protoFloater,
 	StoreMap: nil,
 	RegisterMyStoreChange: func() begin
-		local l1;
-		l1 := func(a1, a2, a3) begin
+		local fn;
+		fn := func(a1, a2, a3) begin
 			protoContext:InvalidateApplicationList();
 			protoContext:BuildApplicationList(func() begin
 				endpoint:IdleConnection(true)
@@ -61,7 +61,7 @@ export67 := {
 			self:AdjustForStores();
 			base:RedoChildren()
 		end;
-		RegStoreChange('Connection, l1)
+		RegStoreChange('Connection, fn)
 	end,
 	storeList: nil,
 	stepAllocateContext: [|Array|:
@@ -147,19 +147,19 @@ export67 := {
 					kROM_8269: @8269
 				},
 				func() begin
-					local l1, l2;
+					local text, syncOptions;
 					self:SaveOptions();
 					(if (Length(storeList.selectedItems) = 0) then begin
-							l1 := "You must check Internal or a card checkbox before proceeding.";
+							text := "You must check Internal or a card checkbox before proceeding.";
 							if (numStores = 1) then begin
-									l1 := "You must check the Internal checkbox before proceeding."
+									text := "You must check the Internal checkbox before proceeding."
 								end;
-							AddDeferredSend(GetRoot(), 'Notify, [Array: 5, kLiteral_745f61, l1])
+							AddDeferredSend(GetRoot(), 'Notify, [Array: 5, kLiteral_745f61, text])
 						end else (if (if (Length(appList.selectedItems) = 0) then (not backupPackages.viewValue)) then AddDeferredSend(GetRoot(), 'Notify, [Array: 5, kLiteral_745f61, "You didn\u2019\ut select anything to backup."]) else begin
-								l2 := self:BuildSyncOptions();
+								syncOptions := self:BuildSyncOptions();
 								closing := true;
 								base:Close();
-								kROM_8269:OpenOnEndpoint(l2, endpoint, nil)
+								kROM_8269:OpenOnEndpoint(syncOptions, endpoint, nil)
 							end))
 				end),
 			viewBounds: {left: -49, top: 0, right: -7, bottom: 13},
@@ -177,7 +177,7 @@ export67 := {
 	end,
 	|SelectAll?|: func() begin
 		(if (Length(listItems) = Length(selectedItems)) then (selectedItems := [Array: ]) else begin
-				selectedItems := (foreach l1, l2 in listItems collect l1);
+				selectedItems := (foreach key, value in listItems collect key);
 				selectedItems
 			end)
 	end,
@@ -234,24 +234,24 @@ export67Item := {
 	viewBounds: {left: 0, top: 5, right: 184, bottom: 89},
 	viewFont: @fontSystem10,
 	viewSetupFormScript: func() begin
-		l2 := Length((l1 := protoContext.applications));
+		count := Length((applications := protoContext.applications));
 		l3 := (if protoContext.applications[0].packages then 1 else 0);
-		l4 := Array((l2 - l3), nil);
-		local l1;
-		local l2;
+		list := Array((count - l3), nil);
+		local applications;
+		local count;
 		local l3;
-		local l4;
-		(for l5 := l3 to (l2 - 1) do begin
-				l4[(l5 - l3)] := l1[l5].name
+		local list;
+		(for i := l3 to (count - 1) do begin
+				list[(i - l3)] := applications[i].name
 			end);
-		self.listItems := l4;
+		self.listItems := list;
 		self.selectedItems := [Array: ];
-		l8 := protoContext:ConnectionPrefsRead('allApps);
+		allApps := protoContext:ConnectionPrefsRead('allApps);
 		if soupOptions then begin
-				local l8;
-				(foreach l9, l10 in l4 do begin
-						if (LSearch(soupOptions, l10, 0, '|str<|, nil) or (if l8 then (not LSearch(l8, l10, 0, '|str<|, nil)))) then begin
-								AddArraySlot(selectedItems, l9)
+				local allApps;
+				(foreach key, value in list do begin
+						if (LSearch(soupOptions, value, 0, '|str<|, nil) or (if allApps then (not LSearch(allApps, value, 0, '|str<|, nil)))) then begin
+								AddArraySlot(selectedItems, key)
 							end
 					end)
 			end else begin
@@ -266,7 +266,7 @@ export67Item := {
 	CollectOptions: func() begin
 		if (Length(appList.selectedItems) <> Length(appList.listItems)) then begin
 				local l1;
-				l1 := (foreach l2 in appList.selectedItems collect appList.listItems[l2])
+				l1 := (foreach item in appList.selectedItems collect appList.listItems[item])
 			end;
 		return l1
 	end,
@@ -326,12 +326,12 @@ export67Item_2 := {
 	viewBounds: {left: 0, top: 5, right: 184, bottom: 55},
 	viewLines: 3,
 	viewSetupFormScript: func() begin
-		self.listItems := (foreach l1 in StoreMap collect begin
-			local l5;
-			if (not StrFilled((l5 := l1:GetName()))) then begin
-					l5 := l1:GetKind()
+		self.listItems := (foreach item in StoreMap collect begin
+			local name;
+			if (not StrFilled((name := item:GetName()))) then begin
+					name := item:GetKind()
 				end;
-			l5
+			name
 		end);
 		self.selectedItems := [Array: ];
 		self:|SelectAll?|();

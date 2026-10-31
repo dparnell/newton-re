@@ -16,16 +16,16 @@ newtFilter := {
 	PathQuery: func(a1) begin
 		nil
 	end,
-	QueryItem: func(a1, a2) begin
+	QueryItem: func(entry, preQuery) begin
 		nil
 	end,
 	ResolveItem: func(a1) begin
 		nil
 	end,
-	EntryToPath: func(a1) begin
+	EntryToPath: func(resolveEntryAlias) begin
 		nil
 	end,
-	ChooseItem: func(a1) begin
+	ChooseItem: func(index) begin
 		nil
 	end
 };

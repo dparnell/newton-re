@@ -48,11 +48,11 @@ export159 := {
 	GetTextArea: func() begin
 		vInputCityCode.text
 	end,
-	SetTextLocal: func(a1) begin
-		SetValue(vInputLocalNum, 'text, a1)
+	SetTextLocal: func(phone) begin
+		SetValue(vInputLocalNum, 'text, phone)
 	end,
-	SetTextArea: func(a1) begin
-		SetValue(vInputCityCode, 'text, a1)
+	SetTextArea: func(areaCode) begin
+		SetValue(vInputCityCode, 'text, areaCode)
 	end,
 	viewClass: clView,
 	vInputCityCode: nil,
@@ -72,7 +72,7 @@ export159Item := {
 	TextLength: func() begin
 		(if self.text then StrLen(self.text) else 0)
 	end,
-	viewChangedScript: func(a1, a2) begin
+	viewChangedScript: func(slot, view) begin
 		self:?textChanged();
 		(if (if (if (StrLen(self.text) = 3) then fPersona.country) then StrEqual(fPersona.country, "USA")) then AddDeferredSend(self, 'moveKeyView, nil))
 	end,
@@ -97,7 +97,7 @@ export159Item_2 := {
 	TextLength: func() begin
 		(if self.text then StrLen(self.text) else 0)
 	end,
-	viewChangedScript: func(a1, a2) begin
+	viewChangedScript: func(slot, view) begin
 		self:?textChanged()
 	end,
 	viewFont: tsFancy + tsSize(12),

@@ -4,35 +4,35 @@ newtRolloverLayout := {
 	_proto: @newtOverLayout,
 	Abstract: compile(
 		constants: {
-			kLiteral_49cdf1: '{font: 9216, justification: right}
+			kLiteral_49cdf1: '{font: tsSystem + tsSize(9), justification: right}
 		},
-		func(a1, a2) begin
-			local l1, l2, l3, l4, l5, l6, l7;
-			if (a1 = hiliteEntry) then begin
+		func(items2Item, copy) begin
+			local list, l2, name, entryDataDef, icon, stringExtract, l7;
+			if (items2Item = hiliteEntry) then begin
 					hilitedIndex := hiliteCount
 				end;
 			hiliteCount := (hiliteCount + 1);
-			l1 := [Array: '{font: 9216}, MakeText(Stringer([Array: ShortDate(a1.timestamp), " ", HourMinute(a1.timestamp)]), ((a2.left + 16) + 12), a2.top, a2.right, (a2.top + 25))];
-			if (if (labelsFilter = '_all) then a1.labels) then begin
-					if (l2 := userConfiguration.userFolders.(a1.labels)) then begin
-							AddArraySlot(l1, kLiteral_49cdf1);
-							AddArraySlot(l1, MakeText(l2, ((a2.left + 16) + 12), a2.top, (a2.right - 2), (a2.top + 25)))
+			list := [Array: '{font: tsSystem + tsSize(9)}, MakeText(Stringer([Array: ShortDate(items2Item.timestamp), " ", HourMinute(items2Item.timestamp)]), ((copy.left + 16) + 12), copy.top, copy.right, (copy.top + 25))];
+			if (if (labelsFilter = '_all) then items2Item.labels) then begin
+					if (l2 := userConfiguration.userFolders.(items2Item.labels)) then begin
+							AddArraySlot(list, kLiteral_49cdf1);
+							AddArraySlot(list, MakeText(l2, ((copy.left + 16) + 12), copy.top, (copy.right - 2), (copy.top + 25)))
 						end
 				end;
 			if (if showStoreName then (Length(GetStores()) > 1)) then begin
-					l3 := EntryStore(a1):GetName();
-					AddArraySlot(l1, kLiteral_49cdf1);
-					AddArraySlot(l1, MakeText(l3, a2.left, a2.top, (a2.right - 2), (a2.top + 11)))
+					name := EntryStore(items2Item):GetName();
+					AddArraySlot(list, kLiteral_49cdf1);
+					AddArraySlot(list, MakeText(name, copy.left, copy.top, (copy.right - 2), (copy.top + 11)))
 				end;
-			(if (l4 := GetEntryDataDef(a1)) then begin
-					l5 := l4.icon;
-					l6 := l4:StringExtract(a1, 1);
-					l7 := (a2.right - ((a2.left + 16) + 2));
+			(if (entryDataDef := GetEntryDataDef(items2Item)) then begin
+					icon := entryDataDef.icon;
+					stringExtract := entryDataDef:StringExtract(items2Item, 1);
+					l7 := (copy.right - ((copy.left + 16) + 2));
 					if (if showStoreName then (Length(GetStores()) > 1)) then begin
-							l7 := (l7 - StrFontWidth(l3, 9216))
+							l7 := (l7 - StrFontWidth(name, 9216))
 						end;
-					[Array: OffsetShape(MakeShape(l5), a2.left, (a2.top + 2)), MakeText(StrTruncate(l6, l7), ((a2.left + 16) + 2), a2.top, a2.right, (a2.top + 11)), l1]
-				end else [Array: OffsetShape(MakeShape(@infoBitmap), a2.left, (a2.top + 2)), l1])
+					[Array: OffsetShape(MakeShape(icon), copy.left, (copy.top + 2)), MakeText(StrTruncate(stringExtract, l7), ((copy.left + 16) + 2), copy.top, copy.right, (copy.top + 11)), list]
+				end else [Array: OffsetShape(MakeShape(@infoBitmap), copy.left, (copy.top + 2)), list])
 		end)
 };
 

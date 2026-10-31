@@ -11,20 +11,20 @@ previewRemoteView := {
 	_DoDefaultButton: _DoDefaultButton,
 	textFlags: 50176,
 	viewSetupFormScript: func() begin
-		local l1, l2, l3, l4, l5;
-		(l1 := Clone(self:Parent():LocalBox())).bottom := (l1.bottom - margin);
-		l1.right := (l1.right - margin);
-		l3 := ((l2 := fields.printerPageBounds).bottom / l2.right);
-		l4 := floor((l1.bottom / l3));
-		l5 := floor((l1.right * l3));
-		if (l4 < l1.right) then begin
-				l1.right := l4;
-				l1.bottom := floor((l4 * l3))
+		local copy, printerPageBounds, l3, floor2, floor3;
+		(copy := Clone(self:Parent():LocalBox())).bottom := (copy.bottom - margin);
+		copy.right := (copy.right - margin);
+		l3 := ((printerPageBounds := fields.printerPageBounds).bottom / printerPageBounds.right);
+		floor2 := floor((copy.bottom / l3));
+		floor3 := floor((copy.right * l3));
+		if (floor2 < copy.right) then begin
+				copy.right := floor2;
+				copy.bottom := floor((floor2 * l3))
 			end else begin
-				l1.bottom := l5;
-				l1.right := floor((l5 / l3))
+				copy.bottom := floor3;
+				copy.right := floor((floor3 / l3))
 			end;
-		self.viewBounds := l1;
+		self.viewBounds := copy;
 		SetKeyView(self, 0)
 	end,
 	viewChildren: [viewChildren: {_proto: @protoPrintForm}]

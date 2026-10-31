@@ -6,41 +6,41 @@ newtMailNetChooser := {
 	labelCommands: nil,
 	text: "E-Mail Network",
 	GetSymArray: func() begin
-		(foreach l1 in GetRoot().mailcategory.mailNetworks collect l1.id)
+		(foreach item in GetRoot().mailcategory.mailNetworks collect item.id)
 	end,
 	TextSetup: func() begin
-		l2 := GetRoot().mailcategory.mailNetworks;
-		l3 := self:GetSymArray();
+		mailNetworks := GetRoot().mailcategory.mailNetworks;
+		symArray := self:GetSymArray();
 		labelCommands := [Array: ];
-		local l1;
-		local l2;
-		local l3;
-		(foreach l4 in l3 do begin
-				local l6;
-				if (l1 := FindMailNetwork(l2, l4)) then begin
-						AddArraySlot(labelCommands, l1.title)
+		local mailNetwork;
+		local mailNetworks;
+		local symArray;
+		(foreach item in symArray do begin
+				local mailNetwork2;
+				if (mailNetwork := FindMailNetwork(mailNetworks, item)) then begin
+						AddArraySlot(labelCommands, mailNetwork.title)
 					end else begin
 						AddArraySlot(labelCommands, "Unknown")
 					end
 			end);
 		if (not target.(path)) then begin
-				if (l6 := GetUserConfig('mailNetwork)) then begin
-						target.(path) := l6
+				if (mailNetwork2 := GetUserConfig('mailNetwork)) then begin
+						target.(path) := mailNetwork2
 					end else begin
 						target.(path) := GetRoot().mailcategory.mailNetworks[0].id
 					end;
 				self:StartFlush()
 			end;
-		(if (l1 := FindMailNetwork(l2, target.(path))) then begin
+		(if (mailNetwork := FindMailNetwork(mailNetworks, target.(path))) then begin
 				self:Parent():?DataChangeNotify('mailNetwork, target.(path));
-				l1.title
+				mailNetwork.title
 			end else "")
 	end,
-	LabelActionScript: func(a1) begin
-		local l1, l2;
-		(if (l1 := GetRoot().mailcategory.mailNetworks[a1]) then begin
-				target.(path) := l1.id;
-				self:Parent():?DataChangeNotify('mailNetwork, l1.id);
+	LabelActionScript: func(index) begin
+		local mailNetwork, l2;
+		(if (mailNetwork := GetRoot().mailcategory.mailNetworks[index]) then begin
+				target.(path) := mailNetwork.id;
+				self:Parent():?DataChangeNotify('mailNetwork, mailNetwork.id);
 				self:StartFlush()
 			end)
 	end,

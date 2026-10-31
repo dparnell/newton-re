@@ -14,15 +14,15 @@ protoDateNYearPicker := {
 		value := Date(selectedDates[0]).year;
 		(calendar.singleDay := singleDay)
 	end,
-	DateChanged: func(a1) begin
-		self:?NewTime(a1);
+	DateChanged: func(selectedDates) begin
+		self:?NewTime(selectedDates);
 		RefreshViews();
 		yearPicker:SetYear(monthView.year)
 	end,
 	ClickDone: func() begin
-		local l1;
-		(l1 := Date(selectedDates[0])).year := value;
-		selectedDates[0] := TotalMinutes(l1);
+		local date2;
+		(date2 := Date(selectedDates[0])).year := value;
+		selectedDates[0] := TotalMinutes(date2);
 		calendar:SetTitle();
 		calendar:Dirty();
 		self:?NewTime(selectedDates)

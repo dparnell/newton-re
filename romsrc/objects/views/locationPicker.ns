@@ -8,15 +8,15 @@ locationPicker := {
 	viewFormat: vfFillWhite + vfRound(8),
 	currentCountry: nil,
 	viewDrawScript: func() begin
-		local l1;
-		l1 := self:LocalBox();
-		self:DrawShape(MakeRoundRect(0, 0, l1.right, l1.bottom, 8), '{penPattern: 5, pensize: 2, fillPattern: 0})
+		local box;
+		box := self:LocalBox();
+		self:DrawShape(MakeRoundRect(0, 0, box.right, box.bottom, 8), '{penPattern: 5, pensize: 2, fillPattern: 0})
 	end,
-	viewScroll2DScript: func(a1, a2) begin
-		(if (a1 = 'up) then cityList:viewScrollUpScript() else (if (a1 = 'down) then cityList:viewScrollDownScript()))
+	viewScroll2DScript: func(arrowDirection, a2) begin
+		(if (arrowDirection = 'up) then cityList:viewScrollUpScript() else (if (arrowDirection = 'down) then cityList:viewScrollDownScript()))
 	end,
-	SetResult: func(a1) begin
-		(result := a1)
+	SetResult: func(entry) begin
+		(result := entry)
 	end,
 	Affirmative: func() begin
 		(if result then context:?pickActionScript((if returnSlot then result.(returnSlot) else result)) else context:?pickCancelledScript())
@@ -36,22 +36,22 @@ locationPicker := {
 				(if countryAndName then (text := Stringer([Array: $\uFC01, GetCountryEntry(currentCountry)[0].name])) else (viewBounds := SetBounds(3, -300, 4, -290)))
 			end,
 			buttonClickScript: func() begin
-				local l1;
-				l1 := OffsetRect(self:GlobalBox(), 15, 15);
-				@locationPopup:New({spots: @countrySoupName, result: 'symbol, default: GetCountryEntry(currentCountry)[0]}, l1, self);
+				local offsetRect2;
+				offsetRect2 := OffsetRect(self:GlobalBox(), 15, 15);
+				@locationPopup:New({spots: @countrySoupName, result: 'symbol, default: GetCountryEntry(currentCountry)[0]}, offsetRect2, self);
 				self:hilite(nil)
 			end,
-			pickActionScript: func(a1) begin
-				local l1, l2;
-				l1 := GetLocationSoup(spots);
-				(l2 := DeepClone('{type: index, indexPath: [Array: country, name, region]})).beginKey := [Array: a1, "\u0000\u"];
-				l2.endKey := [Array: a1, "\u7FFF\u"];
-				cityList.cursor := l1:Query(l2);
-				currentCountry := a1;
+			pickActionScript: func(index2) begin
+				local locationSoup, copy;
+				locationSoup := GetLocationSoup(spots);
+				(copy := DeepClone('{type: index, indexPath: [Array: country, name, region]})).beginKey := [Array: index2, "\u0000\u"];
+				copy.endKey := [Array: index2, "\u7FFF\u"];
+				cityList.cursor := locationSoup:Query(copy);
+				currentCountry := index2;
 				cityList.hilitedIndex := 0;
 				self:SetResult(cityList.cursor:entry());
 				cityList:RedoChildren();
-				SetValue(self, 'text, Stringer([Array: $\uFC01, GetCountryEntry(a1)[0].name]))
+				SetValue(self, 'text, Stringer([Array: $\uFC01, GetCountryEntry(index2)[0].name]))
 			end,
 			_proto: @protoTextButton
 		}
@@ -66,20 +66,20 @@ cityList := {
 	viewFormat: vfFillWhite,
 	preallocatedContext: 'cityList,
 	viewFlags: vVisible + vApplication + vClickable,
-	Abstract: func(a1, a2) begin
+	Abstract: func(items2Item, copy) begin
 		if hiliteHack then begin
-				if (a1 = result) then begin
+				if (items2Item = result) then begin
 						hilitedIndex := hiliteHack
 					end;
 				hiliteHack := (hiliteHack + 1)
 			end;
-		MakeText(Stringer([Array: a1.name, (if countryAndName then Stringer([Array: $ , " ", a1.region]))]), 2, a2.top, a2.right, (a2.top + 10))
+		MakeText(Stringer([Array: items2Item.name, (if countryAndName then Stringer([Array: $ , " ", items2Item.region]))]), 2, copy.top, copy.right, (copy.top + 10))
 	end,
 	viewBounds: {left: 3, top: 3, right: -26, bottom: -2},
 	_proto: @protoSoupOverview,
 	cursor: nil,
-	SetupAbstracts: func(a1) begin
-		inherited:SetupAbstracts(a1);
+	SetupAbstracts: func(copy) begin
+		inherited:SetupAbstracts(copy);
 		(if Visible(upDown) then upDown:FiddleWithArrows())
 	end,
 	prevCountry: nil,
@@ -93,11 +93,11 @@ cityList := {
 			kLiteral_435a99: '{type: index, indexPath: [Array: country, name, region]}
 		},
 		func() begin
-			local l1, l2, l3, l4;
+			local locationSoup, l2, entry, copy;
 			if countryAndName then begin
 					viewBounds := SetBounds(3, 20, -26, -2)
 				end;
-			l1 := GetLocationSoup(spots);
+			locationSoup := GetLocationSoup(spots);
 			if countryAndName then begin
 					l2 := kLiteral_435a99
 				end else begin
@@ -107,7 +107,7 @@ cityList := {
 							l2 := '{type: index, indexPath: [Array: name, country, region]}
 						end
 				end;
-			cursor := l1:Query(l2);
+			cursor := locationSoup:Query(l2);
 			if initialSpot then begin
 					if IsFrame(initialSpot) then begin
 							cursor:Goto(initialSpot)
@@ -122,27 +122,27 @@ cityList := {
 						end
 				end;
 			(if countryAndName then begin
-					currentCountry := (l3 := cursor:entry()).country;
-					(l4 := DeepClone(kLiteral_435a99)).beginKey := [Array: currentCountry, "\u0000\u"];
-					l4.endKey := [Array: currentCountry, "\u7FFF\u"];
-					cursor := l1:Query(l4);
-					cursor:Goto(l3)
+					currentCountry := (entry := cursor:entry()).country;
+					(copy := DeepClone(kLiteral_435a99)).beginKey := [Array: currentCountry, "\u0000\u"];
+					copy.endKey := [Array: currentCountry, "\u7FFF\u"];
+					cursor := locationSoup:Query(copy);
+					cursor:Goto(entry)
 				end)
 		end),
 	canScrollDown: nil,
-	HitItem: func(a1, a2, a3) begin
+	HitItem: func(a1, trackScrollingItem, trackScrollingItem2) begin
 		(if (a1 >= 0) then self:SetResult(cursor:clone():move(a1)))
 	end,
 	viewEffect: 165920,
 	viewFont: tsSystem + tsSize(10) + tsBold,
 	canScrollUp: nil,
 	viewSetupChildrenScript: func() begin
-		local l1, l2;
+		local entry, l2;
 		hiliteHack := 0;
 		inherited:viewSetupChildrenScript();
 		hiliteHack := nil;
 		prevCountry := nil;
-		tabs:setLetter((l2 := (if (if (l1 := cursor:entry()) then StrFilled(l1.name)) then l1.name[0] else $A)), nil)
+		tabs:setLetter((l2 := (if (if (entry := cursor:entry()) then StrFilled(entry.name)) then entry.name[0] else $A)), nil)
 	end,
 	autoDeselect: nil,
 	selectIndent: 0
@@ -151,9 +151,9 @@ cityList := {
 tabs := {
 	viewBounds: {left: -25, top: 0, right: 0, bottom: 137},
 	viewJustify: vjParentRightH,
-	PickLetterScript: func(a1) begin
+	PickLetterScript: func(part) begin
 		cityList.hilitedIndex := nil;
-		cityList.cursor:GotoKey((if countryAndName then [Array: currentCountry, a1] else a1));
+		cityList.cursor:GotoKey((if countryAndName then [Array: currentCountry, part] else part));
 		cityList:RedoChildren()
 	end,
 	preallocatedContext: 'tabs,

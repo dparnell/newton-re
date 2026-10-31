@@ -6,11 +6,11 @@ part := array(nil, {
 		AddDeferredCall(GetGlobalVar('|Newton Devices:NIE_TapActionFunc|), nil);
 		nil
 	end,
-	installScript: func(a1) begin
-		local l1;
-		l1 := EnsureInternal({removeScript: a1.devRemoveScript});
-		a1:devInstallScript(a1, l1);
-		l1
+	installScript: func(partFrame) begin
+		local ensureInternal2;
+		ensureInternal2 := EnsureInternal({removeScript: partFrame.devRemoveScript});
+		partFrame:devInstallScript(partFrame, ensureInternal2);
+		ensureInternal2
 	end,
 	devInstallScript: compile(
 		constants: {
@@ -18,10 +18,10 @@ part := array(nil, {
 				GetRoot():Notify(4, "Newton Devices", ParamStr("Version ^0^1", [Array: "1.0    ", ""]))
 			end
 		},
-		func(a1, a2) begin
+		func(partFrame, removeFrame) begin
 			DefGlobalVar('|Newton Devices:NIE_TapActionFunc|, kFunction_1000939)
 		end),
-	devRemoveScript: func(a1) begin
+	devRemoveScript: func(partFrame) begin
 		UnDefGlobalVar('|Newton Devices:NIE_TapActionFunc|)
 	end
 });

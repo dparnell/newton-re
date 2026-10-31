@@ -30,92 +30,92 @@ Formulas_2 := {
 	InitFormulas: compile(
 		constants: {
 			kFunction_7736e9: func(a1, a2) begin
-				local l1;
+				local formulas;
 				FormulasRegistry.(EnsureInternal(a1)) := a2;
-				if (if (l1 := GetRoot().Formulas) then l1.viewCObject) then begin
-						l1:RedoChildren()
+				if (if (formulas := GetRoot().Formulas) then formulas.viewCObject) then begin
+						formulas:RedoChildren()
 					end;
 				nil
 			end,
 			kFunction_7737f5: func(a1) begin
-				local l1;
+				local formulas;
 				RemoveSlot(FormulasRegistry, a1);
-				if (if (l1 := GetRoot().Formulas) then l1.viewCObject) then begin
-						l1:RedoChildren()
+				if (if (formulas := GetRoot().Formulas) then formulas.viewCObject) then begin
+						formulas:RedoChildren()
 					end;
 				nil
 			end,
 			kLiteral_7739f1: '[Array: MetricConversion, LoanPayment, NetPresentValue, CurrencyExchange, DateCalculator, DateConversion],
 			kFunction_773909: func() begin
-				l1 := [Array: ];
-				l2 := [Array: ];
-				local l1;
-				local l2;
-				(foreach l3 in kLiteral_7739f1 do begin
-						if (l5 := FormulasRegistry.(l3)) then begin
-								AddArraySlot(l1, l5)
+				list := [Array: ];
+				list2 := [Array: ];
+				local list;
+				local list2;
+				(foreach item in kLiteral_7739f1 do begin
+						if (value := FormulasRegistry.(item)) then begin
+								AddArraySlot(list, value)
 							end
 					end);
-				(foreach l3, l5 deeply in FormulasRegistry do begin
-						if (if (not SetContains(kLiteral_7739f1, l3)) then (l5 = FormulasRegistry.(l3))) then begin
-								AddArraySlot(l2, l5)
+				(foreach item, value deeply in FormulasRegistry do begin
+						if (if (not SetContains(kLiteral_7739f1, item)) then (value = FormulasRegistry.(item))) then begin
+								AddArraySlot(list2, value)
 							end
 					end);
-				Sort(l2, '|str<|, 'overview);
-				ArrayMunger(l1, Length(l1), nil, l2, 0, nil)
+				Sort(list2, '|str<|, 'overview);
+				ArrayMunger(list, Length(list), nil, list2, 0, nil)
 			end,
 			kLiteral_773b31: "UpdatedExchangeRates:Apple",
 			kFunction_773aa5: func() begin
-				local l1, l2;
-				if ((l2 := Query((l1 := GetStores()[0]:GetSoup(@systemSoupName)), {type: 'index, IndexPath: 'tag, beginKey: kLiteral_773b31, endKey: kLiteral_773b31}):entry()) = nil) then begin
-						l2 := l1:Add({tag: kLiteral_773b31})
+				local soup, entry;
+				if ((entry := Query((soup := GetStores()[0]:GetSoup(@systemSoupName)), {type: 'index, IndexPath: 'tag, beginKey: kLiteral_773b31, endKey: kLiteral_773b31}):entry()) = nil) then begin
+						entry := soup:Add({tag: kLiteral_773b31})
 					end;
-				return l2
+				return entry
 			end,
 			kROM_8294: @8294,
 			kFunction_773b89: func(a1, a2) begin
-				local l1, l2;
-				if (l1 := GetUpdatedExchangeRates()).(a1) then begin
-						if (l2 := l1.(a1).(a2)) then begin
+				local updatedExchangeRates, l2;
+				if (updatedExchangeRates := GetUpdatedExchangeRates()).(a1) then begin
+						if (l2 := updatedExchangeRates.(a1).(a2)) then begin
 								return l2
 							end
 					end;
-				if l1.(a2) then begin
-						if (l2 := l1.(a2).(a1)) then begin
+				if updatedExchangeRates.(a2) then begin
+						if (l2 := updatedExchangeRates.(a2).(a1)) then begin
 								return (1 / l2)
 							end
 					end;
 				(if ((kROM_8294.(a1) = nil) or (kROM_8294.(a2) = nil)) then return nil else (if (a1 = 'USA) then return kROM_8294.(a2) else return (kROM_8294.(a2) / kROM_8294.(a1))))
 			end,
 			kFunction_773c2d: func(a1, a2, a3) begin
-				local l1;
-				if (l1 := GetUpdatedExchangeRates()).(a1) then begin
-						if l1.(a1).(a2) then begin
-								l1.(a1).(a2) := a3;
-								EntryChange(l1);
+				local updatedExchangeRates;
+				if (updatedExchangeRates := GetUpdatedExchangeRates()).(a1) then begin
+						if updatedExchangeRates.(a1).(a2) then begin
+								updatedExchangeRates.(a1).(a2) := a3;
+								EntryChange(updatedExchangeRates);
 								return nil
 							end
 					end;
-				if l1.(a2) then begin
-						if l1.(a2).(a1) then begin
-								l1.(a2).(a1) := (1 / a3);
-								EntryChange(l1);
+				if updatedExchangeRates.(a2) then begin
+						if updatedExchangeRates.(a2).(a1) then begin
+								updatedExchangeRates.(a2).(a1) := (1 / a3);
+								EntryChange(updatedExchangeRates);
 								return nil
 							end
 					end;
-				if l1.(a1) then begin
-						l1.(a1).(a2) := a3;
-						EntryChange(l1);
+				if updatedExchangeRates.(a1) then begin
+						updatedExchangeRates.(a1).(a2) := a3;
+						EntryChange(updatedExchangeRates);
 						return nil
 					end;
-				if l1.(a2) then begin
-						l1.(a2).(a1) := (1 / a3);
-						EntryChange(l1);
+				if updatedExchangeRates.(a2) then begin
+						updatedExchangeRates.(a2).(a1) := (1 / a3);
+						EntryChange(updatedExchangeRates);
 						return nil
 					end;
-				l1.(a1) := {};
-				l1.(a1).(a2) := a3;
-				EntryChange(l1)
+				updatedExchangeRates.(a1) := {};
+				updatedExchangeRates.(a1).(a2) := a3;
+				EntryChange(updatedExchangeRates)
 			end
 		},
 		func() begin
@@ -141,15 +141,15 @@ Formulas_2 := {
 
 Formulas_2Item := {
 	buttonClickScript: func(a1) begin
-		local l1, l2, l3, l4;
+		local formulasListItem, box, box2, frame2;
 		selection := nil;
 		if openChild then begin
 				openChild:Close()
 			end;
-		l1 := formulasList[a1];
-		l2 := mainFormulasView:GlobalBox();
-		l3 := mainFormulasView:LocalBox();
-		(openChild := BuildContext({viewBounds: (l4 := {left: l2.left, top: (l2.top + 25), right: (l3.right + l2.left), bottom: ((l2.top + 25) + l1.viewBounds.bottom)}), _proto: l1})):Open()
+		formulasListItem := formulasList[a1];
+		box := mainFormulasView:GlobalBox();
+		box2 := mainFormulasView:LocalBox();
+		(openChild := BuildContext({viewBounds: (frame2 := {left: box.left, top: (box.top + 25), right: (box2.right + box.left), bottom: ((box.top + 25) + formulasListItem.viewBounds.bottom)}), _proto: formulasListItem})):Open()
 	end,
 	viewBounds: {top: 20, left: 5, right: -5, bottom: 130},
 	viewFont: @fontSystem10Bold,
@@ -158,8 +158,8 @@ Formulas_2Item := {
 		formulasList := GetFormulas();
 		self.selection := nil;
 		self.listItems := Array(Length(formulasList), nil);
-		(foreach l1, l2 in formulasList do begin
-				self.listItems[l1] := Stringer([Array: "\u2022\u", " ", l2.overview])
+		(foreach key, value in formulasList do begin
+				self.listItems[key] := Stringer([Array: "\u2022\u", " ", value.overview])
 			end);
 		self:SetupList()
 	end,

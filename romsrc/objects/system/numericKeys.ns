@@ -5,13 +5,13 @@ numericKeys := {
 	keyResultsAreKeycodes: nil,
 	keyDefinitions: keyDefinitions,
 	viewSetupFormScript: func() begin
-		local l1;
+		local decimalpoint;
 		inherited:viewSetupFormScript();
-		(if ((l1 := international.currentlocalebundle.numberformat.decimalpoint)[0] <> $.) then begin
+		(if ((decimalpoint := international.currentlocalebundle.numberformat.decimalpoint)[0] <> $.) then begin
 				self.keyDefinitions := Clone(keyDefinitionsOrig);
 				self.keyDefinitions[3] := Clone(self.keyDefinitions[3]);
-				self.keyDefinitions[3][5] := l1[0];
-				(self.keyDefinitions[3][6] := l1[0])
+				self.keyDefinitions[3][5] := decimalpoint[0];
+				(self.keyDefinitions[3][6] := decimalpoint[0])
 			end)
 	end,
 	debug: 71773,

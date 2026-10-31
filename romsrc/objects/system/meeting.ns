@@ -8,29 +8,29 @@ meeting := {
 	targetView: nil,
 	declareSelf: 'meetingview,
 	viewSetupFormScript: func() begin
-		local l1, l2, l3, l4;
+		local kidBound, pos, realData2, l4;
 		if (viewBounds = nil) then begin
 				if kidBounds then begin
-						if (l2 := LSearch(dayView.viewChildren, realData, 0, '|=|, nil)) then begin
-								l1 := kidBounds[l2]
+						if (pos := LSearch(dayView.viewChildren, realData, 0, '|=|, nil)) then begin
+								kidBound := kidBounds[pos]
 							end
 					end;
-				self.viewBounds := (if l1 then l1 else LayoutMeeting(realData, viewHeight, tabWidths, nil))
+				self.viewBounds := (if kidBound then kidBound else LayoutMeeting(realData, viewHeight, tabWidths, nil))
 			end;
-		if (l3 := realData).repeatTemplate then begin
-				l3 := l3.repeatTemplate
+		if (realData2 := realData).repeatTemplate then begin
+				realData2 := realData2.repeatTemplate
 			end;
-		if (l3.version <> 2) then begin
-				if EntryStore(l3):IsReadOnly() then begin
+		if (realData2.version <> 2) then begin
+				if EntryStore(realData2):IsReadOnly() then begin
 						if realData.viewBounds then begin
 								l4 := (realData.mtgStartDate mod 1440);
 								self.viewBounds := {left: viewBounds.left, top: TimeToPosition(dayView, l4), right: viewBounds.right, bottom: TimeToPosition(dayView, (l4 + self:GetMeetingSlot(realData, 'mtgDuration)))}
 							end
 					end else begin
-						self:Convert10to20(l3, nil);
-						EntryChangeXmit(l3, 'calendar);
+						self:Convert10to20(realData2, nil);
+						EntryChangeXmit(realData2, 'calendar);
 						if realData.repeatTemplate then begin
-								realData := self:MakeInstanceOfRepeatingMeeting(l3, realData.mtgStartDate)
+								realData := self:MakeInstanceOfRepeatingMeeting(realData2, realData.mtgStartDate)
 							end
 					end
 			end;
@@ -39,14 +39,14 @@ meeting := {
 		inherited:viewSetupFormScript()
 	end,
 	viewFindTargetScript: func(a1) begin
-		(foreach l1 in a1 do begin
-				if SetContains(l1.types, 'meeting) then begin
+		(foreach item in a1 do begin
+				if SetContains(item.types, 'meeting) then begin
 						return dayView
 					end
 			end);
 		self
 	end,
-	viewDropScript: func(a1, a2, a3) begin
+	viewDropScript: func(dragInfo, dropPt, a3) begin
 		nil
 	end,
 	SetMeetingBounds: func(a1, a2) begin
@@ -165,16 +165,16 @@ textView := {
 		self.viewFont := dayView.viewFont;
 		(self.viewLineSpacing := dayView.viewLineSpacing)
 	end,
-	updateAndSave: func(a1) begin
-		local l1, l2, l3;
-		l1 := MakeRichString(a1.text, a1.styles);
-		self:ChangeMeeting(realData, 'mtgText, l1);
-		(if (l2 := realData.repeatTemplate) then self:CarefulChange((l3 := EntrySoup(l2)), l2, true) else self:CarefulChange(EntrySoup(realData), realData, true))
+	updateAndSave: func(unsavedContext) begin
+		local richString, repeatTemplate, soup;
+		richString := MakeRichString(unsavedContext.text, unsavedContext.styles);
+		self:ChangeMeeting(realData, 'mtgText, richString);
+		(if (repeatTemplate := realData.repeatTemplate) then self:CarefulChange((soup := EntrySoup(repeatTemplate)), repeatTemplate, true) else self:CarefulChange(EntrySoup(realData), realData, true))
 	end,
 	iAmKey: nil,
-	viewChangedScript: func(a1, a2) begin
-		(if (a1 = 'text) then begin
-				self.unsavedContext := a2;
+	viewChangedScript: func(slot, view) begin
+		(if (slot = 'text) then begin
+				self.unsavedContext := view;
 				self:SetupIdle(500)
 			end)
 	end,

@@ -87,33 +87,33 @@ protoOrientation := {
 		RemoveSlot(self, 'popup);
 		inherited:pickCancelledScript()
 	end,
-	pickActionScript: func(a1) begin
-		local l1;
-		l1 := popup[a1];
+	pickActionScript: func(index) begin
+		local popupItem;
+		popupItem := popup[index];
 		RemoveSlot(self, 'popup);
-		AddDeferredSend(self, l1.msg, l1.args);
-		inherited:?pickActionScript(a1)
+		AddDeferredSend(self, popupItem.msg, popupItem.args);
+		inherited:?pickActionScript(index)
 	end,
 	RelRotate: func(a1) begin
-		local l1;
-		l1 := BAnd((GetOrientation() + a1), 3);
-		(if (GetOrientation() <> l1) then SetScreenOrientation(l1))
+		local bAnd2;
+		bAnd2 := BAnd((GetOrientation() + a1), 3);
+		(if (GetOrientation() <> bAnd2) then SetScreenOrientation(bAnd2))
 	end,
 	FlipBBar: func(a1) begin
-		local l1;
-		if (not (l1 := GetUserConfig('buttonBarPositions))) then begin
-				l1 := Array(4, nil)
+		local buttonBarPositions;
+		if (not (buttonBarPositions := GetUserConfig('buttonBarPositions))) then begin
+				buttonBarPositions := Array(4, nil)
 			end;
-		l1[GetOrientation()] := a1;
-		SetUserConfig('buttonBarPositions, l1)
+		buttonBarPositions[GetOrientation()] := a1;
+		SetUserConfig('buttonBarPositions, buttonBarPositions)
 	end,
 	FlipBBarControls: func(a1) begin
-		local l1;
-		if (not (l1 := GetUserConfig('buttonBarControlsPositions))) then begin
-				l1 := Array(4, nil)
+		local buttonBarControlsPositions;
+		if (not (buttonBarControlsPositions := GetUserConfig('buttonBarControlsPositions))) then begin
+				buttonBarControlsPositions := Array(4, nil)
 			end;
-		l1[GetOrientation()] := a1;
-		SetUserConfig('buttonBarControlsPositions, l1)
+		buttonBarControlsPositions[GetOrientation()] := a1;
+		SetUserConfig('buttonBarControlsPositions, buttonBarControlsPositions)
 	end,
 	_proto: @protoPopupButton
 };

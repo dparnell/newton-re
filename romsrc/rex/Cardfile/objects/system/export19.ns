@@ -10,9 +10,9 @@ export19 := {
 			_proto: @protoStaticText
 		},
 		{
-			pickActionScript: func(a1) begin
-				theEntry := ResolveEntryAlias(UserConfiguration.personae[a1]);
-				SetValue(self, 'text, Stringer([Array: $\uFC01, popup[a1]]));
+			pickActionScript: func(index) begin
+				theEntry := ResolveEntryAlias(UserConfiguration.personae[index]);
+				SetValue(self, 'text, Stringer([Array: $\uFC01, popup[index]]));
 				self:hilite(nil)
 			end,
 			viewBounds: {left: 80, top: 10, right: 0, bottom: 23},
@@ -40,16 +40,16 @@ export19 := {
 			viewBounds: {top: 0, left: -71, right: -10, bottom: 0},
 			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV,
 			buttonClickScript: func() begin
-				local l1, l2;
-				l1 := {target: theEntry};
-				l2 := {};
+				local frame2, frame3;
+				frame2 := {target: theEntry};
+				frame3 := {};
 				if theEntry then begin
-						GetViewDefs(theEntry.class).cardfileRouteFormat:SetupSlip(l1, l2)
+						GetViewDefs(theEntry.class).cardfileRouteFormat:SetupSlip(frame2, frame3)
 					end;
-				if l2.body then begin
-						l2.body.class := 'person;
-						l2.body.labels := nil;
-						beamer:AddSendData(l2.body);
+				if frame3.body then begin
+						frame3.body.class := 'person;
+						frame3.body.labels := nil;
+						beamer:AddSendData(frame3.body);
 						beamer:start();
 						appBase.barber := BuildContext(barberDialog);
 						appBase.barber.beamer := beamer;
@@ -60,13 +60,13 @@ export19 := {
 			end,
 			barberDialog: @8198,
 			beamerPutAway: func(a1, a2) begin
-				local l1, l2;
-				(if (a1 = 'data) then GetUnionSoup(@cardfileSoupName):AddToDefaultStoreXmit(a2, 'beaming) else (if (l2 := '{canceled: "Card exchange canceled by user.", error: "An error occurred during card exchange.", complete: "Cards exchanged successfully."}.(a1)) then begin
+				local l1, text;
+				(if (a1 = 'data) then GetUnionSoup(@cardfileSoupName):AddToDefaultStoreXmit(a2, 'beaming) else (if (text := '{canceled: "Card exchange canceled by user.", error: "An error occurred during card exchange.", complete: "Cards exchanged successfully."}.(a1)) then begin
 							if ((a2 = -16005) or (a2 = -16013)) then begin
-									l2 := "Card exchange canceled by user."
+									text := "Card exchange canceled by user."
 								end;
 							call GetRoot().cardfile.kDoneWithBeaming with (beamer, GetRoot().cardfile.barber);
-							GetRoot():Notify(3, "Names", l2)
+							GetRoot():Notify(3, "Names", text)
 						end))
 			end,
 			viewSetupFormScript: func() begin

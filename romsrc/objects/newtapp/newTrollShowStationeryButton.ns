@@ -1,29 +1,29 @@
 // newTrollShowStationeryButton, and what only it reaches
 
 newTrollShowStationeryButton := {
-	statScript: func(a1) begin
+	statScript: func(statArrayItem) begin
 		if (newtAppBase.currentLayout = 'overview) then begin
 				newtAppBase:ShowLayout(nil)
 			end;
-		preferredViewDef := a1.symbol;
-		layout.viewDef := a1.symbol;
+		preferredViewDef := statArrayItem.symbol;
+		layout.viewDef := statArrayItem.symbol;
 		layout:Retarget(true)
 	end,
 	SetUpStatArray: func() begin
 		local l1;
-		l1 := (foreach l2 in layout.entries collect (if l2 then l2.class));
-		l6 := GetDefs(form, l1, types);
-		l7 := [Array: ];
-		local l6;
-		local l7;
-		(foreach l8 in l6 do begin
-				if (not SetContains(l7, l8.symbol)) then begin
-						SetAdd(l7, l8.symbol, true)
+		l1 := (foreach item in layout.entries collect (if item then item.class));
+		defs := GetDefs(form, l1, types);
+		list := [Array: ];
+		local defs;
+		local list;
+		(foreach item2 in defs do begin
+				if (not SetContains(list, item2.symbol)) then begin
+						SetAdd(list, item2.symbol, true)
 					end else begin
-						SetRemove(l6, l8)
+						SetRemove(defs, item2)
 					end
 			end);
-		l6
+		defs
 	end,
 	_proto: @newtShowStationeryButton
 };

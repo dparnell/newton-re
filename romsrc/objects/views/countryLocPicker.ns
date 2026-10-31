@@ -6,7 +6,7 @@ countryLocPicker := {
 	countryAndName: nil,
 	result: nil,
 	initialSpot: nil,
-	SetResult: func(a1) begin
-		self:?PickWorld(a1)
+	SetResult: func(entry) begin
+		self:?PickWorld(entry)
 	end
 };

@@ -6,13 +6,13 @@ protoStateMachine := {
 	fRunning: nil,
 	fState: nil,
 	cPollAfter: 30,
-	DoError: func(a1) begin
+	DoError: func(ex) begin
 		local l1;
 		if tracing then begin
-				self:Trace("DoError(...)", a1)
+				self:Trace("DoError(...)", ex)
 			end;
 		if (not fException) then begin
-				fException := a1
+				fException := ex
 			end;
 		(if (occupancy <= 1) then begin
 				if (not (l1 := (if fState then self.(fState).OnError))) then begin
@@ -35,73 +35,73 @@ protoStateMachine := {
 	GetState: func() begin
 		fState
 	end,
-	Run: func(a1) begin
-		local l1, l2, l3;
+	Run: func(error) begin
+		local fState2, frame2, _parent;
 		if fRunning then begin
 				if tracing then begin
-						self:Trace(Stringer([Array: "Machine is already running; run(", a1, ") ignored."]), nil)
+						self:Trace(Stringer([Array: "Machine is already running; run(", error, ") ignored."]), nil)
 					end;
 				Throw('|evt.ex.proto|, -8607);
 				return nil
 			end;
 		fRunning := true;
-		if a1 then begin
-				l1 := a1
+		if error then begin
+				fState2 := error
 			end else begin
-				l1 := fState
+				fState2 := fState
 			end;
-		(while l1 do begin
-				fState := l1;
+		(while fState2 do begin
+				fState := fState2;
 				(try begin
-						(while l1 do begin
+						(while fState2 do begin
 								if tracing then begin
-										self:Trace(Stringer([Array: "Run(", l1, ")"]), nil)
+										self:Trace(Stringer([Array: "Run(", fState2, ")"]), nil)
 									end;
-								if (not (l2 := self.(l1))) then begin
+								if (not (frame2 := self.(fState2))) then begin
 										Throw('|evt.ex.proto|, -8601)
 									end;
-								if (IsReadOnly(l2) or (not HasSlot(l2, '_parent))) then begin
-										l3 := l2._parent;
-										l2 := {_proto: l2, _parent: self};
-										if l3 then begin
-												l2._parent := l3
+								if (IsReadOnly(frame2) or (not HasSlot(frame2, '_parent))) then begin
+										_parent := frame2._parent;
+										frame2 := {_proto: frame2, _parent: self};
+										if _parent then begin
+												frame2._parent := _parent
 											end
 									end;
-								if (not (fTimeout := l2.timeOut)) then begin
+								if (not (fTimeout := frame2.timeOut)) then begin
 										fTimeout := 200000
 									end;
 								CallbackSpec.reqTimeout := fTimeout;
-								l1 := l2:action();
-								self.cancelBlocked := self.(l1).cancelBlocked;
-								(if ((l1 = 'waitAsync) or (l1 = 'exit)) then begin
-										if (l1 = 'exit) then begin
+								fState2 := frame2:action();
+								self.cancelBlocked := self.(fState2).cancelBlocked;
+								(if ((fState2 = 'waitAsync) or (fState2 = 'exit)) then begin
+										if (fState2 = 'exit) then begin
 												occupancy := 0;
 												fState := nil
 											end;
-										(l1 := nil)
+										(fState2 := nil)
 									end else begin
-										if (ClassOf(l1) <> 'symbol) then begin
-												l1 := nil
+										if (ClassOf(fState2) <> 'symbol) then begin
+												fState2 := nil
 											end;
-										if (l1 = nil) then begin
+										if (fState2 = nil) then begin
 												Throw('|evt.ex.proto|, -8601)
 											end;
-										(fState := l1)
+										(fState := fState2)
 									end)
 							end)
 					end onexception |evt.ex| do begin
 						if tracing then begin
 								self:Trace(Stringer([Array: "Run(", fState, ") - Exception occurred:"]), CurrentException())
 							end;
-						(l1 := self:DoError(CurrentException()))
+						(fState2 := self:DoError(CurrentException()))
 					end)
 			end);
 		fRunning := nil;
 		(if tracing then (if fState then self:Trace("AsyncWait", nil) else self:Trace("Run() complete.", nil)))
 	end,
 	AsyncWaitComplete: func(a1) begin
-		local l1, l2;
-		(if a1 then (if (l1 := self:DoError(a1)) then self:Run(l1)) else (if (occupancy <= 1) then (if (l2 := self.(fState).WaitComplete) then self:Run(l2) else Throw('|evt.ex.proto|, -8603)) else (occupancy := (occupancy - 1))))
+		local error, l2;
+		(if a1 then (if (error := self:DoError(a1)) then self:Run(error)) else (if (occupancy <= 1) then (if (l2 := self.(fState).WaitComplete) then self:Run(l2) else Throw('|evt.ex.proto|, -8603)) else (occupancy := (occupancy - 1))))
 	end,
 	traceArray: nil,
 	GetTraces: func() begin
@@ -115,38 +115,38 @@ protoStateMachine := {
 	end,
 	autoNotify: nil,
 	Advance: func(a1) begin
-		local l1, l2, l3, l4;
-		l1 := fState;
+		local fState2, action, frame2, _parent;
+		fState2 := fState;
 		if a1 then begin
-				l1 := self.(fState).(a1)
+				fState2 := self.(fState).(a1)
 			end;
-		l2 := nil;
-		if l1 then begin
-				if (l3 := self.(l1)) then begin
-						if (IsReadOnly(l3) or (not HasSlot(l3, '_parent))) then begin
-								l4 := l3._parent;
-								l3 := {_proto: l3, _parent: self};
-								if l4 then begin
-										l3._parent := l4
+		action := nil;
+		if fState2 then begin
+				if (frame2 := self.(fState2)) then begin
+						if (IsReadOnly(frame2) or (not HasSlot(frame2, '_parent))) then begin
+								_parent := frame2._parent;
+								frame2 := {_proto: frame2, _parent: self};
+								if _parent then begin
+										frame2._parent := _parent
 									end;
-								self.(l1) := l3
+								self.(fState2) := frame2
 							end;
-						fState := l1;
-						l2 := l3:?action()
+						fState := fState2;
+						action := frame2:?action()
 					end else begin
 						Throw('|evt.ex.proto|, -8601)
 					end
 			end;
-		l2
+		action
 	end,
-	SetState: func(a1) begin
-		(fState := a1)
+	SetState: func(fSoundState) begin
+		(fState := fSoundState)
 	end,
-	Trace: func(a1, a2) begin
+	Trace: func(text, frame2) begin
 		if (not traceArray) then begin
 				return nil
 			end;
-		AddArraySlot(traceArray, {state: fState, exception: fException, text: a1, data: a2, Ticks: Ticks(), Time: Time()})
+		AddArraySlot(traceArray, {state: fState, exception: fException, text: text, data: frame2, Ticks: Ticks(), Time: Time()})
 	end,
 	cancelBlocked: nil,
 	fException: nil,

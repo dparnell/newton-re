@@ -11,122 +11,122 @@ protoExtrasIcon := {
 	shape: nil,
 	iconBottom: 29,
 	GetAdjustedProto: func() begin
-		local l1, l2;
-		(if (if (l1 := GetUserConfig('extraFont)) then (iconStyle.font <> l1)) then begin
-				(l2 := Clone(iconStyle)).font := l1;
-				{_proto: self, iconStyle: l2}
+		local extraFont, copy;
+		(if (if (extraFont := GetUserConfig('extraFont)) then (iconStyle.font <> extraFont)) then begin
+				(copy := Clone(iconStyle)).font := extraFont;
+				{_proto: self, iconStyle: copy}
 			end else self)
 	end,
 	GetIconShapeText: func() begin
-		l1 := iconStyle.font;
-		local l1;
-		local l2;
-		(foreach l3 in (l2 := MakeTextLines(target.fentry.text, SetBounds(0, iconBottom, hSpacing, (iconBottom + 20)), (FontAscent(l1) - 1), l1)) do begin
-				SetClass(l3.data, 'string)
+		font := iconStyle.font;
+		local font;
+		local textLines;
+		(foreach item in (textLines := MakeTextLines(target.fentry.text, SetBounds(0, iconBottom, hSpacing, (iconBottom + 20)), (FontAscent(font) - 1), font)) do begin
+				SetClass(item.data, 'string)
 			end);
-		l2
+		textLines
 	end,
 	GetIconShapeTextHilited: func() begin
 		if shape then begin
-				l1 := shape[(Length(shape) - 1)]
+				shapeItem := shape[(Length(shape) - 1)]
 			end else begin
-				l1 := self:GetIconShapeText()
+				shapeItem := self:GetIconShapeText()
 			end;
-		l2 := iconStyle.font;
-		l3 := 0;
-		local l1;
-		local l2;
-		local l3;
-		(foreach l4 in l1 do begin
-				local l6;
-				l3 := max(l3, StrFontWidth(l4.data, l2))
+		font := iconStyle.font;
+		most := 0;
+		local shapeItem;
+		local font;
+		local most;
+		(foreach item in shapeItem do begin
+				local bounds;
+				most := max(most, StrFontWidth(item.data, font))
 			end);
-		l6 := RelBounds(((hSpacing - l3) div 2), iconBottom, (l3 + 1), (3 + (Length(l1) * (FontAscent(l2) - 1))));
-		[Array: l1, '{transferMode: 2, penPattern: 0, fillPattern: 5}, MakeShape(l6)]
+		bounds := RelBounds(((hSpacing - most) div 2), iconBottom, (most + 1), (3 + (Length(shapeItem) * (FontAscent(font) - 1))));
+		[Array: shapeItem, '{transferMode: 2, penPattern: 0, fillPattern: 5}, MakeShape(bounds)]
 	end,
-	CenterIconShape: func(a1) begin
-		(foreach l1 in a1 do begin
-				local l3;
-				if IsPrimShape(l1) then begin
-						l3 := ShapeBounds(l1);
-						OffsetShape(l1, (((hSpacing - l3.right) - l3.left) div 2), (iconBottom - l3.bottom))
+	CenterIconShape: func(list) begin
+		(foreach item in list do begin
+				local shapeBounds2;
+				if IsPrimShape(item) then begin
+						shapeBounds2 := ShapeBounds(item);
+						OffsetShape(item, (((hSpacing - shapeBounds2.right) - shapeBounds2.left) div 2), (iconBottom - shapeBounds2.bottom))
 					end else begin
-						if IsArray(l1) then begin
-								self:CenterIconShape(l1)
+						if IsArray(item) then begin
+								self:CenterIconShape(item)
 							end
 					end
 			end);
-		a1
+		list
 	end,
 	GetIconShape: func() begin
-		local l1, l2, l3;
-		if IsInteger((l1 := target.fentry).iconPro) then begin
-				l1 := @extrasRomIcons[l1.iconPro]
+		local fentry, shape, list;
+		if IsInteger((fentry := target.fentry).iconPro) then begin
+				fentry := @extrasRomIcons[fentry.iconPro]
 			end else begin
-				if IsInteger(l1.icon) then begin
-						l1 := @extrasRomIcons[l1.icon]
+				if IsInteger(fentry.icon) then begin
+						fentry := @extrasRomIcons[fentry.icon]
 					end
 			end;
-		if l1.iconPro then begin
-				l2 := MakeShape(l1.iconPro.unhilited)
+		if fentry.iconPro then begin
+				shape := MakeShape(fentry.iconPro.unhilited)
 			end else begin
-				l2 := [Array: '{transferMode: 1}, MakeShape(l1.icon)]
+				shape := [Array: '{transferMode: 1}, MakeShape(fentry.icon)]
 			end;
-		l3 := [Array: l2];
+		list := [Array: shape];
 		if target.notActive then begin
-				AddArraySlot(l3, MakeShape(@extrasRomIcons[10].icon))
+				AddArraySlot(list, MakeShape(@extrasRomIcons[10].icon))
 			end;
-		self:CenterIconShape(l3);
-		AddArraySlot(l3, self:GetIconShapeText());
+		self:CenterIconShape(list);
+		AddArraySlot(list, self:GetIconShapeText());
 		if IsSoupEntry(target.fentry) then begin
 				EntryUndoChanges(target.fentry)
 			end;
-		l3
+		list
 	end,
 	GetIconShapeHilited: compile(
 		constants: {
 			kLiteral_3c5eed: '{transferMode: 2, penPattern: 0, fillPattern: 5}
 		},
 		func() begin
-			local l1, l2, l3, l4, l5, l6, l7;
-			if IsInteger((l1 := target.fentry).iconPro) then begin
-					l1 := @extrasRomIcons[l1.iconPro]
+			local fentry, shape, shape2, iconPro, icon, copy, list;
+			if IsInteger((fentry := target.fentry).iconPro) then begin
+					fentry := @extrasRomIcons[fentry.iconPro]
 				end else begin
-					if IsInteger(l1.icon) then begin
-							l1 := @extrasRomIcons[l1.icon]
+					if IsInteger(fentry.icon) then begin
+							fentry := @extrasRomIcons[fentry.icon]
 						end
 				end;
-			if l1.iconPro then begin
-					if (l4 := l1.iconPro).hilited then begin
-							l2 := MakeShape(l4.hilited)
+			if fentry.iconPro then begin
+					if (iconPro := fentry.iconPro).hilited then begin
+							shape := MakeShape(iconPro.hilited)
 						end else begin
-							l3 := MakeShape(l4.unhilited)
+							shape2 := MakeShape(iconPro.unhilited)
 						end
 				end else begin
-					if (if (l5 := l1.icon).mask then (not hasBackground)) then begin
-							(l6 := Clone(l5)).bits := l5.mask;
-							l2 := [Array: MakeShape(l5), kLiteral_3c5eed, MakeShape(l6)]
+					if (if (icon := fentry.icon).mask then (not hasBackground)) then begin
+							(copy := Clone(icon)).bits := icon.mask;
+							shape := [Array: MakeShape(icon), kLiteral_3c5eed, MakeShape(copy)]
 						end else begin
-							l3 := MakeShape(l5)
+							shape2 := MakeShape(icon)
 						end
 				end;
-			if (not l2) then begin
+			if (not shape) then begin
 					if hasBackground then begin
-							l2 := [Array: '{transferMode: 1}, l3]
+							shape := [Array: '{transferMode: 1}, shape2]
 						end else begin
-							l2 := [Array: l3, kLiteral_3c5eed, MakeShape(ShapeBounds(l3))]
+							shape := [Array: shape2, kLiteral_3c5eed, MakeShape(ShapeBounds(shape2))]
 						end
 				end;
-			l7 := [Array: l2];
+			list := [Array: shape];
 			if target.notActive then begin
-					AddArraySlot(l7, MakeShape(@extrasRomIcons[10].icon))
+					AddArraySlot(list, MakeShape(@extrasRomIcons[10].icon))
 				end;
-			self:CenterIconShape(l7);
-			AddArraySlot(l7, self:GetIconShapeTextHilited());
+			self:CenterIconShape(list);
+			AddArraySlot(list, self:GetIconShapeTextHilited());
 			if IsSoupEntry(target.fentry) then begin
 					EntryUndoChanges(target.fentry)
 				end;
-			l7
+			list
 		end),
 	viewDrawScript: func() begin
 		local l1;
@@ -142,8 +142,8 @@ protoExtrasIcon := {
 				self:DrawShape(self.shape, iconStyle)
 			end)
 	end,
-	viewHiliteScript: func(a1) begin
-		if a1 then begin
+	viewHiliteScript: func(on) begin
+		if on then begin
 				if self.justHilited then begin
 						RemoveSlot(self, 'justHilited)
 					end else begin
@@ -261,11 +261,11 @@ protoExtrasIcon := {
 			end;
 		(if (if iconSpace then iconSpace.viewCObject) then iconSpace:SelectNone())
 	end,
-	viewgesturescript: func(a1, a2) begin
-		(if (a2 = 13) then begin
+	viewgesturescript: func(unit, gesture) begin
+		(if (gesture = 13) then begin
 				SetValue(self, 'viewFlags, BOr(GetViewFlags(self), 33554432));
 				if self:SetupFakeTarget() then begin
-						InkOff(a1);
+						InkOff(unit);
 						self:DeleteActionScript(nil, self)
 					end;
 				true

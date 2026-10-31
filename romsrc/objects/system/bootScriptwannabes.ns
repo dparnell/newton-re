@@ -88,19 +88,19 @@ bootScriptwannabes := {
 			end, nil))
 	end,
 	SetBatteryTypes: func() begin
-		local l1;
-		(if (l1 := GetUserConfig('batteryTypes)) then (foreach l2 in l1 do begin
-					SetBatteryType(l2.whichBattery, l2.batteryType)
+		local batteryTypes;
+		(if (batteryTypes := GetUserConfig('batteryTypes)) then (foreach item in batteryTypes do begin
+					SetBatteryType(item.whichBattery, item.batteryType)
 				end))
 	end,
 	CheckSerialNumber: func() begin
 		local msg;
-		local l1, l2;
-		l1 := call @getSerialNumber with ();
-		l2 := GetStores()[0]:GetSignature();
-		if l1 then begin
-				if ((l1 := ExtractLong(l1, 4)) <> l2) then begin
-						if (l2 = 0) then begin
+		local extractLong2, signature;
+		extractLong2 := call @getSerialNumber with ();
+		signature := GetStores()[0]:GetSignature();
+		if extractLong2 then begin
+				if ((extractLong2 := ExtractLong(extractLong2, 4)) <> signature) then begin
+						if (signature = 0) then begin
 								msg := "The internal store's signature is invalid. A hard reset may correct the problem."
 							end else begin
 								msg := "The internal store's signature has been altered. A hard reset may correct the problem."
@@ -116,14 +116,14 @@ bootScriptwannabes := {
 	ReadPreferences: compile(
 		constants: {
 			kFunction_5aced1: func() begin
-				local l1, l2, l3;
-				if (l2 := GetUserConfig('Keyboard)) then begin
-						if (l1 := LookupTitle(international.keyboards, l2)) then begin
-								international.Keyboard := l1
+				local title, keyboard, sortID;
+				if (keyboard := GetUserConfig('Keyboard)) then begin
+						if (title := LookupTitle(international.keyboards, keyboard)) then begin
+								international.Keyboard := title
 							end
 					end;
-				if ((l3 := GetUserConfig('sortID)) <> GetSortID(nil)) then begin
-						SetSortID(l3)
+				if ((sortID := GetUserConfig('sortID)) <> GetSortID(nil)) then begin
+						SetSortID(sortID)
 					end;
 				SetLocale(GetUserConfig('locale));
 				SetInkerPenSize(GetUserConfig('userPenSize));

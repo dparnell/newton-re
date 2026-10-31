@@ -13,8 +13,8 @@ proto1_2Exformentry := {
 			end
 		},
 		func() begin
-			local l1, l2;
-			(if (if (l2 := ArrayPos((l1 := GetPackages()), fentry.packageId, 0, kFunction_537665)) then l1[l2].size) then Stringer([Array: (l1[l2].size div 1024), "K"]) else "")
+			local packages, pos;
+			(if (if (pos := ArrayPos((packages := GetPackages()), fentry.packageId, 0, kFunction_537665)) then packages[pos].size) then Stringer([Array: (packages[pos].size div 1024), "K"]) else "")
 		end),
 	copyprotected: func() begin
 		nil
@@ -26,10 +26,10 @@ proto1_2Exformentry := {
 			end
 		},
 		func() begin
-			local l1, l2;
-			(if (l2 := ArrayPos((l1 := GetPackages()), fentry.packageId, 0, kFunction_5376a5)) then l1[l2].store)
+			local packages, pos;
+			(if (pos := ArrayPos((packages := GetPackages()), fentry.packageId, 0, kFunction_5376a5)) then packages[pos].store)
 		end),
-	Preflight: func(a1, a2) begin
+	Preflight: func(a1, kids) begin
 		"locked"
 	end,
 	delete: delete_3,

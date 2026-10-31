@@ -19,9 +19,9 @@ faxSlip := {
 	validateDialog: nil,
 	_previewButton: nil,
 	UpdatePhone: func() begin
-		local l1;
+		local routingInfoItem;
 		if (if (if callOptionsSlip.viewCObject then fields.toRef) then (Length(fields.toRef) > 0)) then begin
-				if (if (if (l1 := GetDataDefs('|nameRef.fax|):GetRoutingInfo(fields.toRef[0])[0]) then l1.phoneNumber) then (StrCompare(l1.phoneNumber, callOptionsSlip.outNumber.text) <> 0)) then begin
+				if (if (if (routingInfoItem := GetDataDefs('|nameRef.fax|):GetRoutingInfo(fields.toRef[0])[0]) then routingInfoItem.phoneNumber) then (StrCompare(routingInfoItem.phoneNumber, callOptionsSlip.outNumber.text) <> 0)) then begin
 						fields.toRef[0].asIsPhone := callOptionsSlip.outNumber.text
 					end
 			end;
@@ -37,8 +37,8 @@ faxSlip := {
 		willDial:SetWillDial()
 	end,
 	appSymbol: '|faxsend:newton|,
-	PrepareToSend: func(a1) begin
-		noworlater := a1;
+	PrepareToSend: func(noworlater2) begin
+		noworlater := noworlater2;
 		self:ValidateConfig('location, nil, '[Array: areacode, country], "Your configuration is incomplete. Please identify your faxing location:", 'validateDialog, 'DoTheSend)
 	end,
 	CommitFaxInfo: func() begin
@@ -62,12 +62,12 @@ faxSlip := {
 	],
 	noworlater: nil,
 	SetPreviewInfo: func() begin
-		local l1;
-		l1 := nil;
+		local routingInfoItem;
+		routingInfoItem := nil;
 		if (if fields.toRef then (Length(fields.toRef) > 0)) then begin
-				l1 := GetDataDefs('|nameRef.fax|):GetRoutingInfo(fields.toRef[0])[0]
+				routingInfoItem := GetDataDefs('|nameRef.fax|):GetRoutingInfo(fields.toRef[0])[0]
 			end;
-		transport:SetupAddressInfo(fields, l1)
+		transport:SetupAddressInfo(fields, routingInfoItem)
 	end,
 	viewSetupFormScript: func() begin
 		self:ToRefCheck('|nameRef.fax|);
@@ -88,19 +88,19 @@ faxSlip := {
 				viewSetupFormScript: func() begin
 					labelCommands := [Array: "None", 'pickseparator];
 					labelCommandsId := [Array: nil, nil];
-					(foreach l1, l2 deeply in CoverPageRegistry do begin
-							AddArraySlot(labelCommands, l2.name);
-							AddArraySlot(labelCommandsId, l1)
+					(foreach key, value deeply in CoverPageRegistry do begin
+							AddArraySlot(labelCommands, value.name);
+							AddArraySlot(labelCommandsId, key)
 						end);
 					inherited:?viewSetupFormScript()
 				end,
 				TextSetup: func() begin
 					(if fields.coverPage then return CoverPageRegistry.(fields.coverPage).name else return labelCommands[0])
 				end,
-				LabelActionScript: func(a1) begin
-					fields.coverPage := labelCommandsId[a1];
-					userConfiguration.currentcoverpage := labelCommandsId[a1];
-					(if (if labelCommandsId[a1] then CoverPageRegistry.(labelCommandsId[a1]).hasNotes) then notes:Show() else notes:Hide())
+				LabelActionScript: func(index) begin
+					fields.coverPage := labelCommandsId[index];
+					userConfiguration.currentcoverpage := labelCommandsId[index];
+					(if (if labelCommandsId[index] then CoverPageRegistry.(labelCommandsId[index]).hasNotes) then notes:Show() else notes:Hide())
 				end,
 				debug: "CoverPagePicker",
 				_proto: @protoLabelPicker
@@ -153,13 +153,13 @@ callPhoneLine := {
 				callOptionsSlip:Close()
 			end;
 		optionsUp := nil;
-		(foreach l1 in selected do begin
-				RemoveSlot(l1, 'asIsPhone)
+		(foreach item in selected do begin
+				RemoveSlot(item, 'asIsPhone)
 			end);
 		inherited:buttonClickScript()
 	end,
-	pickActionScript: func(a1) begin
-		inherited:?pickActionScript(a1);
+	pickActionScript: func(index) begin
+		inherited:?pickActionScript(index);
 		self:Retarget()
 	end,
 	preallocatedContext: 'callPhoneLine,
@@ -177,16 +177,16 @@ willDial := {
 	buttonClickScript: func() begin
 		faxAssist:buttonClickScript()
 	end,
-	viewClickScript: func(a1) begin
-		if self:TrackHilite(a1) then begin
+	viewClickScript: func(unit) begin
+		if self:TrackHilite(unit) then begin
 				self:buttonClickScript();
 				self:hilite(nil)
 			end;
 		true
 	end,
-	viewHiliteScript: func(a1) begin
-		local l1, l2;
-		self:DrawShape(MakeRoundRect((l2 := ((((l1 := self:LocalBox()).right - StrFontWidth(text, viewFont)) div 2) - 2)), 0, (l1.right - l2), l1.bottom, 8), '{transferMode: 2, penPattern: 0, fillPattern: 5});
+	viewHiliteScript: func(on) begin
+		local box, l2;
+		self:DrawShape(MakeRoundRect((l2 := ((((box := self:LocalBox()).right - StrFontWidth(text, viewFont)) div 2) - 2)), 0, (box.right - l2), box.bottom, 8), '{transferMode: 2, penPattern: 0, fillPattern: 5});
 		true
 	end,
 	viewSetupDoneScript: func() begin
@@ -203,34 +203,34 @@ willDial := {
 	end,
 	GetPhoneText: func() begin
 		local theInfo;
-		l1 := "";
+		text := "";
 		if (if (if (not fields.manualDialing) then fields.toRef) then (Length(fields.toRef) > 0)) then begin
-				l2 := GetDataDefs('|nameRef.phone|):GetRoutingInfo(fields.toRef);
+				routingInfo := GetDataDefs('|nameRef.phone|):GetRoutingInfo(fields.toRef);
 				l3 := true;
-				local l1;
-				local l2;
+				local text;
+				local routingInfo;
 				local l3;
-				(foreach l4, theInfo in l2 do begin
+				(foreach key, theInfo in routingInfo do begin
 						if IsRichString(theInfo.rawNumber) then begin
 								AddDeferredCall(func() begin
 									self:ConvertStart(theInfo)
 								end, nil);
 								break
 							end else begin
-								if (l4 = 0) then begin
-										l1 := theInfo.phoneNumber
+								if (key = 0) then begin
+										text := theInfo.phoneNumber
 									end else begin
-										if (l4 = 1) then begin
-												l1 := ParamStr("^0\u2026\u", [Array: l1])
+										if (key = 1) then begin
+												text := ParamStr("^0\u2026\u", [Array: text])
 											end
 									end
 							end
 					end)
 			end;
-		l1
+		text
 	end,
-	ConvertStart: func(a1) begin
-		self:ConvertInkText(a1.rawNumber, 'phone, 262144, ParamStr("Phone for ^0 ", [Array: a1.name]), ParamStr("Please verify that ^0 is converted correctly\u2026\u", [Array: a1.rawNumber]), 'InkConvert, 'ConvertComplete, a1)
+	ConvertStart: func(theInfo) begin
+		self:ConvertInkText(theInfo.rawNumber, 'phone, 262144, ParamStr("Phone for ^0 ", [Array: theInfo.name]), ParamStr("Please verify that ^0 is converted correctly\u2026\u", [Array: theInfo.rawNumber]), 'InkConvert, 'ConvertComplete, theInfo)
 	end,
 	ConvertComplete: func(a1, a2, a3) begin
 		InkConvert := nil;
@@ -298,12 +298,12 @@ faxAssist := {
 		(viewBounds.bottom := (viewBounds.top + 13))
 	end,
 	buttonClickScript: func() begin
-		local l1;
+		local routingInfoItem;
 		if (if fields.toRef then (Length(fields.toRef) > 0)) then begin
 				RemoveSlot(fields.toRef[0], 'asIsPhone);
-				l1 := GetDataDefs('|nameRef.fax|):GetRoutingInfo(fields.toRef[0])[0];
-				callOptionsSlip.inNumber := l1.rawNumber;
-				callOptionsSlip.inCountry := l1.country
+				routingInfoItem := GetDataDefs('|nameRef.fax|):GetRoutingInfo(fields.toRef[0])[0];
+				callOptionsSlip.inNumber := routingInfoItem.rawNumber;
+				callOptionsSlip.inCountry := routingInfoItem.country
 			end else begin
 				callOptionsSlip.inNumber := nil;
 				callOptionsSlip.inCountry := nil

@@ -23,12 +23,12 @@ newtInfoButton := {
 			end)
 	end,
 	DoInfoHelp: func() begin
-		local l1, l2, l3;
-		(if (if (l1 := GetRoot().TinyTim) then l1.viewCObject) then l1:Close() else begin
+		local tinyTim, viewHelpTopic, l3;
+		(if (if (tinyTim := GetRoot().TinyTim) then tinyTim.viewCObject) then tinyTim:Close() else begin
 				if newtAppBase.viewHelpTopic then begin
-						l2 := newtAppBase.viewHelpTopic
+						viewHelpTopic := newtAppBase.viewHelpTopic
 					end;
-				(if newtAppBase.HelpManual then (if l2 then l1:OpenManualTo(newtAppBase.HelpManual, l2) else l1:OpenManual(newtAppBase.HelpManual)) else (if l2 then l1:OpenHelpTo(l2) else l1:Open()))
+				(if newtAppBase.HelpManual then (if viewHelpTopic then tinyTim:OpenManualTo(newtAppBase.HelpManual, viewHelpTopic) else tinyTim:OpenManual(newtAppBase.HelpManual)) else (if viewHelpTopic then tinyTim:OpenHelpTo(viewHelpTopic) else tinyTim:Open()))
 			end)
 	end
 };

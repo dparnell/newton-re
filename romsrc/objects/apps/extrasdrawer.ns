@@ -2,28 +2,28 @@
 
 extrasdrawer := {
 	systemFoldersToo: true,
-	SizeForRows: func(a1) begin
-		local l1, l2;
-		(if (a1 <> nRows) then begin
-				nRows := a1;
-				l1 := Clone(viewBounds);
+	SizeForRows: func(v10_qqqqq) begin
+		local copy, l2;
+		(if (v10_qqqqq <> nRows) then begin
+				nRows := v10_qqqqq;
+				copy := Clone(viewBounds);
 				l2 := ((nRows * vSpacing) + 13);
-				l1.top := (l1.bottom - (l2 + 50));
-				if (l1.top < ((-displayParams.appAreaHeight) + 6)) then begin
-						l1.top := (-displayParams.appAreaHeight)
+				copy.top := (copy.bottom - (l2 + 50));
+				if (copy.top < ((-displayParams.appAreaHeight) + 6)) then begin
+						copy.top := (-displayParams.appAreaHeight)
 					end;
-				(if viewCObject then SetValue(self, 'viewBounds, l1) else (viewBounds := l1))
+				(if viewCObject then SetValue(self, 'viewBounds, copy) else (viewBounds := copy))
 			end)
 	end,
 	hSpacing: nil,
 	Fileit: func() begin
-		local l1;
-		self:GenericActionScript((l1 := func(a1) begin
-			local l1;
-			if (if (if ((l1 := (if (if fakeTarget.storeChanged then (fakeTarget.newStore <> a1.target:store())) then a1.target:Preflight('move, fakeTarget.kids) else 'OK)) = 'OK) then fakeTarget.labelsChanged) then (fakeTarget.labels <> a1.target.fentry.labels)) then begin
-					l1 := a1.target:Preflight('Filing, fakeTarget.kids)
+		local fn;
+		self:GenericActionScript((fn := func(a1) begin
+			local filing;
+			if (if (if ((filing := (if (if fakeTarget.storeChanged then (fakeTarget.newStore <> a1.target:store())) then a1.target:Preflight('move, fakeTarget.kids) else 'OK)) = 'OK) then fakeTarget.labelsChanged) then (fakeTarget.labels <> a1.target.fentry.labels)) then begin
+					filing := a1.target:Preflight('Filing, fakeTarget.kids)
 				end;
-			l1
+			filing
 		end), 'FileSelectedIcons, true, "file ^1", "This icon can\u2019\ut be filed^?0 because it is ^0||.", "These icons can\u2019\ut be filed^?0 because they are ^0||.")
 	end,
 	RedoIcons: func() begin
@@ -46,33 +46,33 @@ extrasdrawer := {
 				SetUnion(a1, a2, true)
 			end
 		},
-		func(a1, a2, a3) begin
+		func(a1, a2, frame2) begin
 			(if (l1 := (if a2 then a2:GetSoup(kLiteral_5a74d1) else GetUnionSoupAlways(kLiteral_5a74d1))) then begin
-					l2 := self:GetQuerySpec((if IsFrame(a3) then '_all else a3));
+					_all := self:GetQuerySpec((if IsFrame(frame2) then '_all else frame2));
 					l3 := kFunction_554015;
-					if IsFrame(a3) then begin
+					if IsFrame(frame2) then begin
 							local l1;
-							local l2;
+							local _all;
 							local l3;
 							local l4;
-							(foreach l5, l6 in a3 do begin
-									if ((l6 = '_buttonBar) or (if IsArray(l6) then SetContains(l6, '_buttonBar))) then begin
+							(foreach key, value in frame2 do begin
+									if ((value = '_buttonBar) or (if IsArray(value) then SetContains(value, '_buttonBar))) then begin
 											l4 := true
 										end;
-									l2.tagspec.(l5) := call l3 with (l2.tagspec.(l5), l6)
+									_all.tagspec.(key) := call l3 with (_all.tagspec.(key), value)
 								end)
 						end else begin
-							l4 := (a3 = '_buttonBar)
+							l4 := (frame2 = '_buttonBar)
 						end;
 					if (not l4) then begin
-							l2.tagspec.none := call l3 with (l2.tagspec.none, '[Array: _buttonBar])
+							_all.tagspec.none := call l3 with (_all.tagspec.none, '[Array: _buttonBar])
 						end;
 					if a1 then begin
-							l2.indexPath := 'packageName;
-							l2.startKey := a1;
-							l2.endKey := a1
+							_all.indexPath := 'packageName;
+							_all.startKey := a1;
+							_all.endKey := a1
 						end;
-					l1:Query(l2)
+					l1:Query(_all)
 				end)
 		end),
 	viewSetupDoneScript: func() begin
@@ -131,39 +131,39 @@ extrasdrawer := {
 			end else self:Notify(3, title, ParamStr((if (v12_jiiii = 1) then a5 else a6), [Array: v23_tttttsssssss])))
 	end,
 	GetExtraIcons: func(a1, a2, a3) begin
-		local l1, l2, l3;
+		local l1, soup, frame2;
 		l1 := specifiableExtraIconTypes.(a1);
-		l2 := a3:GetSoup("Packages");
-		(if (if l1 then l2) then MapCursor(l2:Query((l3 := {beginKey: a2, endKey: a2, indexPath: 'packageName, tagspec: {all: l1, none: '_package}})), nil))
+		soup := a3:GetSoup("Packages");
+		(if (if l1 then soup) then MapCursor(soup:Query((frame2 := {beginKey: a2, endKey: a2, indexPath: 'packageName, tagspec: {all: l1, none: '_package}})), nil))
 	end,
 	contrastSliderTweakRight: nil,
 	GetPartEntry: compile(
 		constants: {
 			kLiteral_5a74d1: "Packages"
 		},
-		func(a1) begin
+		func(value) begin
 			local appSymbol;
-			local l1, l2, l3, l4, l5, l6, l7;
-			if (if IsSoupEntry(a1) then StrEqual(EntrySoup(a1):GetName(), kLiteral_5a74d1)) then begin
-					l1 := a1
+			local app, store, packageName, l4, fn, l6, cursor;
+			if (if IsSoupEntry(value) then StrEqual(EntrySoup(value):GetName(), kLiteral_5a74d1)) then begin
+					app := value
 				end else begin
-					if (ClassOf(a1) = 'symbol) then begin
-							a1 := {appSymbol: a1}
+					if (ClassOf(value) = 'symbol) then begin
+							value := {appSymbol: value}
 						end;
-					l2 := a1.store;
-					appSymbol := a1.appSymbol;
-					l3 := a1.packageName;
-					if (l4 := (if l2 then l2:GetSoup(kLiteral_5a74d1) else GetUnionSoup(kLiteral_5a74d1))) then begin
-							l5 := func(a1) begin
+					store := value.store;
+					appSymbol := value.appSymbol;
+					packageName := value.packageName;
+					if (l4 := (if store then store:GetSoup(kLiteral_5a74d1) else GetUnionSoup(kLiteral_5a74d1))) then begin
+							fn := func(a1) begin
 								(a1.app = appSymbol)
 							end;
-							l1 := (l7 := l4:Query((l6 := (if l3 then {tagspec: '{all: _icon}, validTest: l5, indexPath: 'packageName, beginKey: l3, endKey: l3} else {tagspec: '{all: _icon}, validTest: l5})))):entry()
+							app := (cursor := l4:Query((l6 := (if packageName then {tagspec: '{all: _icon}, validTest: fn, indexPath: 'packageName, beginKey: packageName, endKey: packageName} else {tagspec: '{all: _icon}, validTest: fn})))):entry()
 						end;
-					if (not l1) then begin
-							l1 := LFetch(|Parts1.x|, appSymbol, 0, '|=|, 'app)
+					if (not app) then begin
+							app := LFetch(|Parts1.x|, appSymbol, 0, '|=|, 'app)
 						end
 				end;
-			l1
+			app
 		end),
 	needsRecalc: 'all,
 	BlessSelectedIcon: func(a1) begin
@@ -210,11 +210,11 @@ extrasdrawer := {
 		folderItems: nil
 	},
 	HandleRemovedPackage: func(a1) begin
-		local l1, l2, l3, l4;
-		l4 := (l3 := a1.oldSoup:Query((l2 := {beginKey: (l1 := a1.entry.packageName), endKey: l1, indexPath: 'packageName, tagspec: '{none: _package}}))):entry();
-		(while l4 do begin
-				EntryRemoveFromSoupXmit(l4, 'ExtrasDrawer);
-				(l4 := l3:Next())
+		local packageName, frame2, cursor, next;
+		next := (cursor := a1.oldSoup:Query((frame2 := {beginKey: (packageName := a1.entry.packageName), endKey: packageName, indexPath: 'packageName, tagspec: '{none: _package}}))):entry();
+		(while next do begin
+				EntryRemoveFromSoupXmit(next, 'ExtrasDrawer);
+				(next := cursor:Next())
 			end)
 	end,
 	contrastSlider: nil,
@@ -223,13 +223,13 @@ extrasdrawer := {
 			kLiteral_54ebbd: '{type: index, indexPath: sequence, startKey: nil, endKey: nil, tagspec: {all: _icon, none: [Array: _soups, _frozen]}}
 		},
 		func(a1) begin
-			local l1;
+			local copy;
 			(if (a1 = '_all) then DeepClone(kLiteral_54ebbd) else (if (not a1) then begin
-						(l1 := DeepClone(kLiteral_54ebbd)).tagspec.none := SetUnion(l1.tagspec.none, GetAppFolderSyms('ExtrasDrawer, true, true), true);
-						l1
+						(copy := DeepClone(kLiteral_54ebbd)).tagspec.none := SetUnion(copy.tagspec.none, GetAppFolderSyms('ExtrasDrawer, true, true), true);
+						copy
 					end else begin
-						(l1 := DeepClone('{type: index, indexPath: sequence, startKey: nil, endKey: nil, tagspec: {all: [Array: _icon, nil], none: [Array: _frozen]}})).tagspec.all[1] := a1;
-						l1
+						(copy := DeepClone('{type: index, indexPath: sequence, startKey: nil, endKey: nil, tagspec: {all: [Array: _icon, nil], none: [Array: _frozen]}})).tagspec.all[1] := a1;
+						copy
 					end))
 		end),
 	viewQuitScript: func() begin
@@ -250,29 +250,29 @@ extrasdrawer := {
 	preallocatedContext: 'ExtrasDrawer,
 	AppAll: "All Icons",
 	viewDrawScript: func() begin
-		local l1;
-		l1 := self:LocalBox();
+		local box;
+		box := self:LocalBox();
 		if (not pieces) then begin
-				pieces := [Array: '{pensize: 0, penPattern: 5, fillPattern: 5}, MakeRect(4, 0, (l1.right - 4), 1), '{font: 9216, justification: center}];
+				pieces := [Array: '{pensize: 0, penPattern: 5, fillPattern: 5}, MakeRect(4, 0, (box.right - 4), 1), '{font: tsSystem + tsSize(9), justification: center}];
 				if (VolumeSlider.viewFlags <> 0) then begin
 						AddArraySlot(pieces, MakeText("Volume", 12, 13, 65, 23))
 					end;
 				if (contrastSlider.viewFlags <> 0) then begin
-						AddArraySlot(pieces, MakeText("Contrast", 90, 13, (l1.right - 90), 23))
+						AddArraySlot(pieces, MakeText("Contrast", 90, 13, (box.right - 90), 23))
 					end
 			end;
-		self:DrawShape(pieces, {transform: [Array: 0, ((l1.bottom - 50) + 6)]})
+		self:DrawShape(pieces, {transform: [Array: 0, ((box.bottom - 50) + 6)]})
 	end,
 	baseListSmall: @protoExtrasListItem,
 	target: nil,
-	AddIconEntryQT: func(a1, a2, a3) begin
-		local l1, l2;
+	AddIconEntryQT: func(a1, frame2, a3) begin
+		local l1, iconEntry;
 		l1 := (if a3 then a3 else GetDefaultStore()):GetSoup("Packages");
-		if (not (l2 := self:MakeIconEntry(a1, a2)).sequence) then begin
-				l2.sequence := self:GetNewSequence(l2.labels)
+		if (not (iconEntry := self:MakeIconEntry(a1, frame2)).sequence) then begin
+				iconEntry.sequence := self:GetNewSequence(iconEntry.labels)
 			end;
-		l1:AddFlushedXmit(l2, 'ExtrasDrawer);
-		l2
+		l1:AddFlushedXmit(iconEntry, 'ExtrasDrawer);
+		iconEntry
 	end,
 	memexForm: {
 		viewFlags: vClickable,
@@ -293,8 +293,8 @@ extrasdrawer := {
 		end,
 		viewDrawScript: compile(
 			constants: {
-				kLiteral_536791: '{font: 9216},
-				kLiteral_5367b5: '{font: 1058816}
+				kLiteral_536791: '{font: tsSystem + tsSize(9)},
+				kLiteral_5367b5: '{font: tsSystem + tsSize(10) + tsBold}
 			},
 			func() begin
 				l1 := self:LocalBox();
@@ -303,7 +303,7 @@ extrasdrawer := {
 				l4 := ((3 * l1.right) div 4);
 				l5 := (l1.right - 10);
 				l6 := Length(GetStores());
-				l7 := [Array: '{font: 1058816, justification: center}, MakeText("Memory Info", l2, 5, l5, 13), kLiteral_536791, MakeText("Name", l2, 20, l3, 30), '{font: 9216, justification: right}, MakeText("Used", l3, 20, l4, 30), MakeText("Free", l4, 20, l5, 30), MakeLine(l2, 32, l5, 32), kLiteral_5367b5];
+				l7 := [Array: '{font: tsSystem + tsSize(10) + tsBold, justification: center}, MakeText("Memory Info", l2, 5, l5, 13), kLiteral_536791, MakeText("Name", l2, 20, l3, 30), '{font: tsSystem + tsSize(9), justification: right}, MakeText("Used", l3, 20, l4, 30), MakeText("Free", l4, 20, l5, 30), MakeLine(l2, 32, l5, 32), kLiteral_5367b5];
 				local l1;
 				local l2;
 				local l3;
@@ -320,16 +320,16 @@ extrasdrawer := {
 						l13 := (l3 - l2);
 						l14 := StyledStrTruncate(Clone(l9:GetName()), l13, 1058816);
 						l15 := (35 + (l8 * 16));
-						AddArraySlot(l7, [Array: MakeText(l14, l2, l15, l3, (l15 + 10)), '{font: 1058816, justification: right}, MakeText(Stringer([Array: l11, "K"]), l3, l15, l4, (l15 + 10)), MakeText(Stringer([Array: l12, "K"]), l4, l15, l5, (l15 + 10))])
+						AddArraySlot(l7, [Array: MakeText(l14, l2, l15, l3, (l15 + 10)), '{font: tsSystem + tsSize(10) + tsBold, justification: right}, MakeText(Stringer([Array: l11, "K"]), l3, l15, l4, (l15 + 10)), MakeText(Stringer([Array: l12, "K"]), l4, l15, l5, (l15 + 10))])
 					end);
 				l16 := Gestalt(16777219);
 				l15 := (l15 + 22);
 				AddArraySlot(l7, [Array: kLiteral_536791, MakeText(ParamStr("ROM Version ^0-^1", [Array: l16.ROMversionstring, l16.patchVersion]), l2, l15, l5, (l15 + 10)), MakeText(ParamStr("System RAM Installed ^0K", [Array: (l16.RAMSize div 1024)]), l2, (l15 + 16), l5, (l15 + 22)), MakeLine(l2, (l15 + 28), l5, (l15 + 28))]);
 				self:DrawShape(l7, kLiteral_5367b5)
 			end),
-		viewClickScript: func(a1) begin
-			InkOff(a1);
-			inherited:?viewClickScript(a1)
+		viewClickScript: func(unit) begin
+			InkOff(unit);
+			inherited:?viewClickScript(unit)
 		end,
 		viewSetupFormScript: func() begin
 			if (userConfiguration.blessedapp = 'ExtrasDrawer) then begin
@@ -343,29 +343,29 @@ extrasdrawer := {
 		stepallocatecontext: [|Array|: 'makeBackDrop, makeBackDrop_2],
 		_proto: @protoFloatNGo
 	},
-	HandleNewPackage: func(a1) begin
+	HandleNewPackage: func(packageEntry) begin
 		l1 := 0;
 		local l1;
-		local l2;
-		(foreach l3, l4 in (l2 := GetPkgRefInfo(a1.pkgRef)).parttypes do begin
-				local l6;
-				if (if IsFrame((l6 := l2.parts[l3])) then (l6.text or (l4 = 'Book))) then begin
-						if self:HandleNewPartEntry(l2.store, l4, l6, a1.packageName) then begin
+		local pkgRefInfo;
+		(foreach key, value in (pkgRefInfo := GetPkgRefInfo(packageEntry.pkgRef)).parttypes do begin
+				local part;
+				if (if IsFrame((part := pkgRefInfo.parts[key])) then (part.text or (value = 'Book))) then begin
+						if self:HandleNewPartEntry(pkgRefInfo.store, value, part, packageEntry.packageName) then begin
 								l1 := (l1 + 1)
 							end
 					end
 			end);
-		(if (l1 = 0) then self:HandleNewPartEntry(l2.store, '|????|, '{}, a1.packageName))
+		(if (l1 = 0) then self:HandleNewPartEntry(pkgRefInfo.store, '|????|, '{}, packageEntry.packageName))
 	end,
 	_actionKeyScript: func(a1) begin
 		PressButton(routingButton)
 	end,
 	legalese: nil,
-	AddIconEntry: func(a1, a2, a3) begin
-		local l1;
-		l1 := self:AddIconEntryQT(a1, a2, a3);
+	AddIconEntry: func(a1, frame2, a3) begin
+		local addIconEntryQT;
+		addIconEntryQT := self:AddIconEntryQT(a1, frame2, a3);
 		self:InvalIcons();
-		l1
+		addIconEntryQT
 	end,
 	viewChildren: [viewChildren:
 		iconSpace,
@@ -381,17 +381,17 @@ extrasdrawer := {
 		},
 		status_4
 	],
-	FolderChanged: func(a1, a2) begin
-		local l1, l2, l3;
-		(if a1 then begin
-				l3 := (l2 := GetUnionSoup("Packages"):Query({type: 'index, indexPath: '_uniqueID, tagspec: '{any: _icon}})):entry();
-				(while l3 do begin
-						if (if (l3.labels = a1) then (not EntryStore(l3):IsReadOnly())) then begin
-								self:ChangeTagListAndLabels(l3, a2);
-								EntryChange(l3);
+	FolderChanged: func(soupNotifyItem, a2) begin
+		local l1, cursor, next;
+		(if soupNotifyItem then begin
+				next := (cursor := GetUnionSoup("Packages"):Query({type: 'index, indexPath: '_uniqueID, tagspec: '{any: _icon}})):entry();
+				(while next do begin
+						if (if (next.labels = soupNotifyItem) then (not EntryStore(next):IsReadOnly())) then begin
+								self:ChangeTagListAndLabels(next, a2);
+								EntryChange(next);
 								l1 := true
 							end;
-						(l3 := l2:Next())
+						(next := cursor:Next())
 					end);
 				(if l1 then self:RedoIcons())
 			end)
@@ -453,10 +453,10 @@ extrasdrawer := {
 								end
 						end);
 					DoProgress('vBarber, {barber: true, statusText: "Deleting selected icons.", primary: nil, icon: kLiteral_54b9f5, closeBox: nil}, func(a1) begin
-						(foreach l1 in fakeTarget.kids do begin
-								a1:SetStatus('vBarber, {titleText: ParamStr("Deleting \u201C\u^0\u201D\u", [Array: l1.target.fentry.text]), barber: true});
+						(foreach item in fakeTarget.kids do begin
+								a1:SetStatus('vBarber, {titleText: ParamStr("Deleting \u201C\u^0\u201D\u", [Array: item.target.fentry.text]), barber: true});
 								try begin
-										l1.target:delete()
+										item.target:delete()
 									end onexception |evt.ex.msg| do begin
 										self:Notify(3, title, CurrentException().message)
 									end
@@ -487,8 +487,8 @@ extrasdrawer := {
 	end,
 	blessedBounds: {left: 0, top: 0, right: 0, bottom: 0},
 	conversion: {
-		Convert: func(a1, a2, a3, a4) begin
-			(if (a3 <> 'oneO) then a1)
+		Convert: func(body, a2, a3, a4) begin
+			(if (a3 <> 'oneO) then body)
 		end
 	},
 	viewBounds: _cacheContextViewBounds_2,
@@ -553,26 +553,26 @@ extrasdrawer := {
 		l1
 	end,
 	RestoreBuiltInExtrasState: func(a1) begin
-		local l1, l2, l3, l4, l5, l6;
+		local builtInExtrasState, soup, cursor, next, app, l6;
 		(if BFind(a1, @systemSoupName, '|str<|, nil) then begin
-				l1 := GetAppPrefs('BuiltInExtrasState, nil);
-				l2 := GetStores()[0]:GetSoup("Packages");
-				(if (if l1 then l2) then begin
-						l4 := (l3 := l2:Query('{tagspec: {all: [Array: _icon, _noBackup], none: _soups}})):entry();
-						(while l4 do begin
-								if (l5 := l4.app) then begin
-										if (l6 := l1.(l5)) then begin
-												l4.sequence := l6.sequence;
-												self:ChangeTagListAndLabels(l4, l6.labels);
-												EntryChange(l4)
+				builtInExtrasState := GetAppPrefs('BuiltInExtrasState, nil);
+				soup := GetStores()[0]:GetSoup("Packages");
+				(if (if builtInExtrasState then soup) then begin
+						next := (cursor := soup:Query('{tagspec: {all: [Array: _icon, _noBackup], none: _soups}})):entry();
+						(while next do begin
+								if (app := next.app) then begin
+										if (l6 := builtInExtrasState.(app)) then begin
+												next.sequence := l6.sequence;
+												self:ChangeTagListAndLabels(next, l6.labels);
+												EntryChange(next)
 											end
 									end;
-								(l4 := l3:Next())
+								(next := cursor:Next())
 							end)
 					end)
 			end)
 	end,
-	HandleRemovedHighROMPart: func(a1) begin
+	HandleRemovedHighROMPart: func(packageId) begin
 		nil
 	end,
 	appObject: [|Array|: "Icon", "Icons"],
@@ -594,24 +594,24 @@ extrasdrawer := {
 		status_4
 	],
 	GetPartEntryData: func(a1) begin
-		local l1, l2, l3, l4;
+		local l1, icon, iconPro, frame2;
 		l1 := (if IsSoupEntry(a1) then (not EntryIsResident(a1)));
-		if IsInteger((l2 := a1.icon)) then begin
-				l2 := @extrasRomIcons[l2].icon
+		if IsInteger((icon := a1.icon)) then begin
+				icon := @extrasRomIcons[icon].icon
 			end;
-		if IsInteger((l3 := a1.iconPro)) then begin
-				l3 := @extrasRomIcons[l3].iconPro
+		if IsInteger((iconPro := a1.iconPro)) then begin
+				iconPro := @extrasRomIcons[iconPro].iconPro
 			end;
-		l4 := {icon: l2, iconPro: l3, text: a1.text, labels: a1.labels, appSymbol: a1.app, packageName: a1.packageName};
+		frame2 := {icon: icon, iconPro: iconPro, text: a1.text, labels: a1.labels, appSymbol: a1.app, packageName: a1.packageName};
 		if l1 then begin
 				EntryUndoChanges(a1)
 			end;
-		l4
+		frame2
 	end,
 	|HandleRemoved1.XPart|: func(a1) begin
-		local l1;
-		l1 := 0;
-		(while (l1 := LSearch(|Parts1.x|, a1, l1, '|=|, 'packageId)) do ArrayRemoveCount(|Parts1.x|, l1, 1))
+		local pos;
+		pos := 0;
+		(while (pos := LSearch(|Parts1.x|, a1, pos, '|=|, 'packageId)) do ArrayRemoveCount(|Parts1.x|, pos, 1))
 	end,
 	Show: nil,
 	FileSelectedIcons: compile(
@@ -632,13 +632,13 @@ extrasdrawer := {
 			(if a1 then begin
 					soupNotifyChangesFakeTarget := Clone(fakeTarget);
 					DoProgress('vBarber, {barber: true, statusText: "Filing selected icons.", primary: nil, icon: kLiteral_54b9f5, closeBox: nil}, func(a1) begin
-						(foreach l1 in soupNotifyChangesFakeTarget.kids do begin
-								a1:SetStatus('vBarber, {titleText: ParamStr("Filing \u201C\u^0\u201D\u", [Array: l1.target.fentry.text]), barber: true});
-								if (if soupNotifyChangesFakeTarget.labelsChanged then (soupNotifyChangesFakeTarget.labels <> l1.target.fentry.labels)) then begin
-										l1.target:file(soupNotifyChangesFakeTarget.labels)
+						(foreach item in soupNotifyChangesFakeTarget.kids do begin
+								a1:SetStatus('vBarber, {titleText: ParamStr("Filing \u201C\u^0\u201D\u", [Array: item.target.fentry.text]), barber: true});
+								if (if soupNotifyChangesFakeTarget.labelsChanged then (soupNotifyChangesFakeTarget.labels <> item.target.fentry.labels)) then begin
+										item.target:file(soupNotifyChangesFakeTarget.labels)
 									end;
-								if (if soupNotifyChangesFakeTarget.storeChanged then (soupNotifyChangesFakeTarget.newStore <> l1.target:store())) then begin
-										l1.target:move(soupNotifyChangesFakeTarget.newStore)
+								if (if soupNotifyChangesFakeTarget.storeChanged then (soupNotifyChangesFakeTarget.newStore <> item.target:store())) then begin
+										item.target:move(soupNotifyChangesFakeTarget.newStore)
 									end
 							end)
 					end);
@@ -646,14 +646,14 @@ extrasdrawer := {
 				end)
 		end),
 	_proto: @protoDrawer,
-	VerifyRoutingInfo: func(a1, a2) begin
-		local l1;
-		(if (fakeTarget = nil) then a1 else begin
-				l1 := {_proto: self, beam: func(a1) begin
+	VerifyRoutingInfo: func(copy, fields) begin
+		local frame2;
+		(if (fakeTarget = nil) then copy else begin
+				frame2 := {_proto: self, beam: func(a1) begin
 					(yep := a1)
 				end, yep: nil};
-				l1:GenericActionScript('send, 'beam, true, SubstituteChars(Downcase(ParamStr("^0 \u2022\u1", [Array: GetItemTransport(a2).actionTitle])), "\u2022\u", "^"), "This icon can\u2019\ut be sent^?0 because it is ^0||.", "These icons can\u2019\ut be sent^?0 because they are ^0||.");
-				(if l1.yep then a1)
+				frame2:GenericActionScript('send, 'beam, true, SubstituteChars(Downcase(ParamStr("^0 \u2022\u1", [Array: GetItemTransport(fields).actionTitle])), "\u2022\u", "^"), "This icon can\u2019\ut be sent^?0 because it is ^0||.", "These icons can\u2019\ut be sent^?0 because they are ^0||.");
+				(if frame2.yep then copy)
 			end)
 	end,
 	topIndexText: 0,
@@ -662,46 +662,46 @@ extrasdrawer := {
 	end,
 	labelsFilter: nil,
 	HandleNewHighROMPart: func(a1) begin
-		local l1, l2, l3;
-		l1 := GetStores()[0]:GetSoup("Packages");
-		l2 := a1.partFrame;
-		(if (if (a1.partType = 'form) then (not l1:GetInfo('extrasState))) then begin
-				(l3 := @extraProtos.ROMPackageEntry:New()).text := l2.text;
-				l3.icon := l2.icon;
-				l3.app := l2.app;
-				if l2.iconPro then begin
-						l3.iconPro := l2.iconPro
+		local soup, partFrame, l3;
+		soup := GetStores()[0]:GetSoup("Packages");
+		partFrame := a1.partFrame;
+		(if (if (a1.partType = 'form) then (not soup:GetInfo('extrasState))) then begin
+				(l3 := @extraProtos.ROMPackageEntry:New()).text := partFrame.text;
+				l3.icon := partFrame.icon;
+				l3.app := partFrame.app;
+				if partFrame.iconPro then begin
+						l3.iconPro := partFrame.iconPro
 					end;
-				if l2.sequence then begin
-						l3.sequence := l2.sequence
+				if partFrame.sequence then begin
+						l3.sequence := partFrame.sequence
 					end;
-				if l2._tagList then begin
-						l3._tagList := l2._tagList;
-						l3.labels := l2.labels
+				if partFrame._tagList then begin
+						l3._tagList := partFrame._tagList;
+						l3.labels := partFrame.labels
 					end;
 				if (not l3.sequence) then begin
 						l3.sequence := root.ExtrasDrawer:GetNewSequence(nil)
 					end;
-				l1:AddFlushed(l3)
+				soup:AddFlushed(l3)
 			end)
 	end,
 	VolumeSlider: nil,
 	|HandleNew1.XPart|: func(a1) begin
-		local l1, l2;
+		local l1, partFrame;
 		(if (a1.partType = 'form) then begin
 				l1 := @extraProtos.|1.XFormEntry|:New();
-				l2 := a1.partFrame;
-				l1.app := EnsureInternal(l2.app);
-				l1.icon := EnsureInternal(l2.icon);
-				l1.text := EnsureInternal(l2.text);
+				partFrame := a1.partFrame;
+				l1.app := EnsureInternal(partFrame.app);
+				l1.icon := EnsureInternal(partFrame.icon);
+				l1.text := EnsureInternal(partFrame.text);
 				l1.packageId := a1.packageId;
 				AddArraySlot(|Parts1.x|, l1)
 			end)
 	end,
 	LaunchPartEntry: func(a1) begin
-		local l1, l2, l3;
+		local l1, frame2, l3;
 		l1 := (not EntryIsResident(a1));
-		l3 := (l2 := {_proto: @extraProtos.(a1.class), fentry: a1}):?TapAction();
+		l3 := (frame2 := {_proto: @extraProtos.(a1.class), fentry: a1}):?TapAction();
 		if l1 then begin
 				EntryUndoChanges(a1)
 			end;
@@ -715,14 +715,14 @@ extrasdrawer := {
 	InvalIcons: func() begin
 		AddProcrastinatedSend('_extrasdrawer, self, 'RedoIcons, [Array: ], 0)
 	end,
-	Scroller: func(a1) begin
-		local l1, l2, l3, l4;
+	Scroller: func(maxLines) begin
+		local l1, l2, l3, folderItemsLen2;
 		l1 := (((displayParams.appAreaHeight - 13) - 50) div vSpacing);
 		l2 := (self:LocalBox().right div hSpacing);
 		l3 := (l1 * l2);
-		l4 := folderItemsLen;
-		(if (((if overUp then topIndexText else topIndexIcon) + l4) > l3) then begin
-				if a1 then begin
+		folderItemsLen2 := folderItemsLen;
+		(if (((if overUp then topIndexText else topIndexIcon) + folderItemsLen2) > l3) then begin
+				if maxLines then begin
 						if overUp then begin
 								topIndexText := max(((topIndexText - l3) + 1), 0)
 							end else begin
@@ -730,11 +730,11 @@ extrasdrawer := {
 							end
 					end else begin
 						if overUp then begin
-								if (((topIndexText + l3) - 1) < l4) then begin
+								if (((topIndexText + l3) - 1) < folderItemsLen2) then begin
 										topIndexText := ((topIndexText + l3) - 1)
 									end
 							end else begin
-								if ((topIndexIcon + l3) < l4) then begin
+								if ((topIndexIcon + l3) < folderItemsLen2) then begin
 										topIndexIcon := (topIndexIcon + l3)
 									end
 							end
@@ -743,16 +743,16 @@ extrasdrawer := {
 				iconSpace:RedoChildren()
 			end)
 	end,
-	GetNewSequence: func(a1) begin
-		local l1;
-		(l1 := GetUnionSoup("Packages"):Query(self:GetQuerySpec(a1))):ResetToEnd();
-		(if l1:entry() then (l1:entry().sequence + 1) else 0)
+	GetNewSequence: func(labels) begin
+		local cursor;
+		(cursor := GetUnionSoup("Packages"):Query(self:GetQuerySpec(labels))):ResetToEnd();
+		(if cursor:entry() then (cursor:entry().sequence + 1) else 0)
 	end,
 	BlessActionScript: func(a1, a2) begin
 		fakeTarget.blessedapp := fakeTarget.kids[0].target.fentry.app;
 		self:GenericActionScript('Backdrop, 'BlessSelectedIcon, nil, "make ^1 the backdrop", "This icon can\u2019\ut be the backdrop^?0 because it is ^0||.", "Only one icon can be the backdrop. Try again with just one.")
 	end,
-	AddAuxButton: func(a1) begin
+	AddAuxButton: func(frame2) begin
 		status:?RedoChildren()
 	end,
 	viewScrollDownScript: func() begin
@@ -768,16 +768,16 @@ extrasdrawer := {
 	specifiableExtraIconSlots: [|Array|: 'icon, 'iconPro, 'text, 'labels, 'TapAction, 'soupNames],
 	specifiableExtraIconTypes: {ScriptEntry: '_scriptIcon, SoupEntry: '_soups},
 	GetActiveView: func() begin
-		local l1;
-		if (l1 := iconSpace:SetupFakeTargetHelper()) then begin
-				iconSpace:PostSetupFakeTarget(l1)
+		local setupFakeTargetHelper;
+		if (setupFakeTargetHelper := iconSpace:SetupFakeTargetHelper()) then begin
+				iconSpace:PostSetupFakeTarget(setupFakeTargetHelper)
 			end;
 		self
 	end,
 	DropIcon: func(a1) begin
-		(foreach l1 in |Parts1.x| do begin
-				if (if ('copperfield = l1.app) then StrEqual(a1.isbn, l1.isbn)) then begin
-						SetRemove(|Parts1.x|, l1);
+		(foreach item in |Parts1.x| do begin
+				if (if ('copperfield = item.app) then StrEqual(a1.isbn, item.isbn)) then begin
+						SetRemove(|Parts1.x|, item);
 						break
 					end
 			end);
@@ -795,13 +795,13 @@ extrasdrawer := {
 			@extraProtos.AutoEntry:New()
 		end,
 		Book: func(a1, a2) begin
-			local l1, l2;
+			local l1, book;
 			l1 := @extraProtos.((if a2.help then 'HelpBookEntry else 'BookEntry)):New();
-			l2 := a2.Book;
-			l1.isbn := l2.isbn;
-			l1.text := (if l2.shortTitle then l2.shortTitle else l2.title);
-			if l2.icon then begin
-					l1.icon := l2.icon
+			book := a2.Book;
+			l1.isbn := book.isbn;
+			l1.text := (if book.shortTitle then book.shortTitle else book.title);
+			if book.icon then begin
+					l1.icon := book.icon
 				end;
 			l1
 		end,
@@ -817,32 +817,32 @@ extrasdrawer := {
 	},
 	AddExtraIcon: func(a1, a2, a3, a4) begin
 		(if specifiableExtraIconTypes.(a1) then begin
-				l1 := {packageName: a3};
-				local l1;
-				(foreach l2 in specifiableExtraIconSlots do begin
-						if HasSlot(a2, l2) then begin
-								l1.(l2) := a2.(l2)
+				frame2 := {packageName: a3};
+				local frame2;
+				(foreach item in specifiableExtraIconSlots do begin
+						if HasSlot(a2, item) then begin
+								frame2.(item) := a2.(item)
 							end
 					end);
-				self:AddIconEntry(a1, l1, a4)
+				self:AddIconEntry(a1, frame2, a4)
 			end)
 	end,
-	MakeNewPart: func(a1, a2, a3) begin
-		l1 := Perform(NewPartMakers, a1, [Array: a1, a2]);
-		if HasSlot(a2, 'labels) then begin
-				l1._tagList := Clone(l1._tagList);
-				self:ChangeTagListAndLabels(l1, a2.labels)
+	MakeNewPart: func(value, part, packageName) begin
+		perform2 := Perform(NewPartMakers, value, [Array: value, part]);
+		if HasSlot(part, 'labels) then begin
+				perform2._tagList := Clone(perform2._tagList);
+				self:ChangeTagListAndLabels(perform2, part.labels)
 			end;
-		local l1;
-		(foreach l2 in specifiablePartSlots do begin
-				if HasSlot(a2, l2) then begin
-						l1.(l2) := a2.(l2)
+		local perform2;
+		(foreach item in specifiablePartSlots do begin
+				if HasSlot(part, item) then begin
+						perform2.(item) := part.(item)
 					end
 			end);
-		if (not StrFilled(l1.text)) then begin
-				l1.text := a3
+		if (not StrFilled(perform2.text)) then begin
+				perform2.text := packageName
 			end;
-		l1
+		perform2
 	end,
 	fineprint: {
 		viewFlags: vClickable,
@@ -876,11 +876,11 @@ extrasdrawer := {
 		AddProcrastinatedCall('_SaveExtrasPrefs, functions.EntryFlush, [Array: prefsEntry], 0)
 	end,
 	DoInfoMemory: func() begin
-		local l1, l2;
+		local l1, count;
 		(if memex then memex:Close() else begin
 				(l1 := (memex := BuildContext(memexForm))).extras := base;
-				l2 := Length(GetStores());
-				l1.viewBounds := SetBounds(8, (-(121 + (16 * l2))), -8, -8);
+				count := Length(GetStores());
+				l1.viewBounds := SetBounds(8, (-(121 + (16 * count))), -8, -8);
 				l1:Open()
 			end)
 	end,
@@ -901,11 +901,11 @@ extrasdrawer := {
 		func(a1) begin
 			(if a1 then begin
 					DoProgress('vBarber, {barber: true, statusText: "Freezing selected icons.", primary: nil, icon: kLiteral_54b9f5, closeBox: nil}, func(a1) begin
-						(foreach l1 in fakeTarget.kids do begin
-								local l3;
-								a1:SetStatus('vBarber, {titleText: ParamStr("Freezing \u201C\u^0\u201D\u", [Array: l1.target.fentry.text]), barber: true});
+						(foreach item in fakeTarget.kids do begin
+								local soupPackage;
+								a1:SetStatus('vBarber, {titleText: ParamStr("Freezing \u201C\u^0\u201D\u", [Array: item.target.fentry.text]), barber: true});
 								try begin
-										SafeFreezePackageQT((l3 := l1.target:LookupSoupPackage()))
+										SafeFreezePackageQT((soupPackage := item.target:LookupSoupPackage()))
 									end onexception |evt.ex.msg| do begin
 										self:Notify(3, title, CurrentException().message)
 									end
@@ -983,8 +983,8 @@ extrasdrawer := {
 	viewScrollUpScript: func() begin
 		self:Scroller(true)
 	end,
-	RedoIconsAfterDrop: func(a1) begin
-		if a1 then begin
+	RedoIconsAfterDrop: func(externalDrop) begin
+		if externalDrop then begin
 				GetRoot().buttons:RedoIcons()
 			end;
 		needsRecalc := 'all;
@@ -1019,13 +1019,13 @@ extrasdrawer := {
 			end
 		},
 		func() begin
-			local l1, l2;
+			local gestalt2, gestalt3;
 			needsRecalc := 'all;
 			labelsFilter := (prefsEntry := GetAppPrefs('extras, '{})).labelsFilter;
 			overUp := prefsEntry.overUp;
 			if (userConfiguration.blessedapp = 'ExtrasDrawer) then begin
 					viewBounds := blessedBounds;
-					viewJustify := 240;
+					viewJustify := vjParentFullH + vjParentFullV;
 					Show._proto := @protoClockShowBar
 				end else begin
 					if (Show._proto <> @protoShowBar) then begin
@@ -1034,12 +1034,12 @@ extrasdrawer := {
 							Show._proto := @protoShowBar
 						end
 				end;
-			if (not (if (l1 := Gestalt('[Array: 33554435, [Array: struct, boolean, long, long], 1])) then l1[0])) then begin
+			if (not (if (gestalt2 := Gestalt('[Array: 33554435, [Array: struct, boolean, long, long], 1])) then gestalt2[0])) then begin
 					contrastSlider.viewFlags := 0;
 					contrastSliderTweakLeft.viewFlags := 0;
 					contrastSliderTweakRight.viewFlags := 0
 				end;
-			if (if (l2 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1])) then l2[2]) then begin
+			if (if (gestalt3 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1])) then gestalt3[2]) then begin
 					VolumeSlider.viewFlags := 0
 				end;
 			if GetUserConfig('ExtraPackageFreezing) then begin
@@ -1058,11 +1058,11 @@ extrasdrawer := {
 	RedoPackageEntries: func(packageName, store) begin
 		local PackageEntry;
 		(if (PackageEntry := GetPackageEntry(packageName, store)) then store:AtomicAction(func() begin
-				local l1, l2, l3;
-				l3 := (l2 := store:GetSoup("Packages"):Query((l1 := {beginKey: packageName, endKey: packageName, indexPath: 'packageName, tagspec: '{none: _package}}))):entry();
-				(while l3 do begin
-						EntryRemoveFromSoupXmit(l3, 'ExtrasDrawer);
-						(l3 := l2:Next())
+				local frame2, cursor, next;
+				next := (cursor := store:GetSoup("Packages"):Query((frame2 := {beginKey: packageName, endKey: packageName, indexPath: 'packageName, tagspec: '{none: _package}}))):entry();
+				(while next do begin
+						EntryRemoveFromSoupXmit(next, 'ExtrasDrawer);
+						(next := cursor:Next())
 					end);
 				self:HandleNewPackage(PackageEntry);
 				(if IsPackageEntryFrozen(PackageEntry) then self:HandleFreezingOrThawing(PackageEntry))
@@ -1075,17 +1075,17 @@ extrasdrawer := {
 		self:SavePrefs();
 		self:RedoIcons()
 	end,
-	MakeIconEntry: func(a1, a2) begin
+	MakeIconEntry: func(a1, frame2) begin
 		(if @extraProtos.(a1) then begin
 				l1 := @extraProtos.(a1):New();
-				if HasSlot(a2, 'labels) then begin
+				if HasSlot(frame2, 'labels) then begin
 						l1._tagList := Clone(l1._tagList);
-						self:ChangeTagListAndLabels(l1, a2.labels)
+						self:ChangeTagListAndLabels(l1, frame2.labels)
 					end;
 				local l1;
-				(foreach l2, l3 in a2 do begin
-						if l3 then begin
-								l1.(l2) := l3
+				(foreach key, value in frame2 do begin
+						if value then begin
+								l1.(key) := value
 							end
 					end);
 				l1
@@ -1093,19 +1093,19 @@ extrasdrawer := {
 	end,
 	prefsEntry: nil,
 	nRows: 0,
-	addIcon: func(a1) begin
-		RemoveSlot(a1, '_proto);
-		AddArraySlot(|Parts1.x|, self:MakeIconEntry('|1.XBookEntry|, a1));
+	addIcon: func(icon) begin
+		RemoveSlot(icon, '_proto);
+		AddArraySlot(|Parts1.x|, self:MakeIconEntry('|1.XBookEntry|, icon));
 		self:InvalIcons()
 	end,
 	folderItemsLen: nil,
 	contrastSliderTweakLeft: nil,
-	HandleNewPartEntry: func(a1, a2, a3, a4) begin
-		local l1;
-		(if (l1 := self:MakeNewPart(a2, a3, a4)) then begin
-				l1.sequence := self:GetNewSequence(nil);
-				l1.packageName := a4;
-				GetUnionSoupAlways("Packages"):GetMember(a1):AddFlushedXmit(l1, 'ExtrasDrawer);
+	HandleNewPartEntry: func(store, value, part, packageName) begin
+		local newPart;
+		(if (newPart := self:MakeNewPart(value, part, packageName)) then begin
+				newPart.sequence := self:GetNewSequence(nil);
+				newPart.packageName := packageName;
+				GetUnionSoupAlways("Packages"):GetMember(store):AddFlushedXmit(newPart, 'ExtrasDrawer);
 				true
 			end)
 	end,
@@ -1114,29 +1114,29 @@ extrasdrawer := {
 		status:?RedoChildren()
 	end,
 	viewEffect: 133120,
-	FileThis: func(a1, a2, a3, a4, a5) begin
+	FileThis: func(target, labelsChanged, a3, storeChanged, a5) begin
 		if (not self.viewCObject) then begin
 				return nil
 			end;
-		a1.labelsChanged := a2;
-		a1.storeChanged := a4;
-		if a2 then begin
-				a1.labels := a3
+		target.labelsChanged := labelsChanged;
+		target.storeChanged := storeChanged;
+		if labelsChanged then begin
+				target.labels := a3
 			end;
-		if a4 then begin
-				a1.newStore := a5
+		if storeChanged then begin
+				target.newStore := a5
 			end;
 		self:Fileit()
 	end,
 	HandleMovedPackage: func(a1) begin
-		local l1, l2, l3, l4, l5, l6, l7;
-		l1 := a1.entry;
-		l2 := a1.oldSoup;
-		(if ((l3 := EntrySoup(l1)) <> l2) then begin
-				l7 := (l6 := l2:Query((l5 := {beginKey: (l4 := l1.packageName), endKey: l4, indexPath: 'packageName, tagspec: '{none: _package}}))):entry();
-				(while l7 do begin
-						EntryMoveXmit(l7, l3, 'ExtrasDrawer);
-						(l7 := l6:Next())
+		local entry, oldSoup, soup, packageName, frame2, cursor, next;
+		entry := a1.entry;
+		oldSoup := a1.oldSoup;
+		(if ((soup := EntrySoup(entry)) <> oldSoup) then begin
+				next := (cursor := oldSoup:Query((frame2 := {beginKey: (packageName := entry.packageName), endKey: packageName, indexPath: 'packageName, tagspec: '{none: _package}}))):entry();
+				(while next do begin
+						EntryMoveXmit(next, soup, 'ExtrasDrawer);
+						(next := cursor:Next())
 					end)
 			end)
 	end,
@@ -1165,18 +1165,18 @@ extrasdrawer := {
 	end,
 	viewHelpTopic: learn,
 	SaveBuiltInExtrasState: func(a1) begin
-		local l1, l2, l3, l4;
-		(if BFind(a1, @systemSoupName, '|str<|, nil) then (if (l1 := GetStores()[0]:GetSoup("Packages")) then begin
-					l2 := l1:Query('{tagspec: {all: [Array: _icon, _noBackup], none: _soups}});
-					l3 := GetAppPrefs('BuiltInExtrasState, '{});
-					l4 := l2:entry();
-					(while l4 do begin
-							if l4.app then begin
-									l3.(l4.app) := {sequence: l4.sequence, labels: l4.labels}
+		local soup, cursor, builtInExtrasState, entry;
+		(if BFind(a1, @systemSoupName, '|str<|, nil) then (if (soup := GetStores()[0]:GetSoup("Packages")) then begin
+					cursor := soup:Query('{tagspec: {all: [Array: _icon, _noBackup], none: _soups}});
+					builtInExtrasState := GetAppPrefs('BuiltInExtrasState, '{});
+					entry := cursor:entry();
+					(while entry do begin
+							if entry.app then begin
+									builtInExtrasState.(entry.app) := {sequence: entry.sequence, labels: entry.labels}
 								end;
-							(l4 := l2:Next())
+							(entry := cursor:Next())
 						end);
-					EntryChange(l3)
+					EntryChange(builtInExtrasState)
 				end))
 	end,
 	folderItems: nil,
@@ -1203,24 +1203,24 @@ iconSpace := {
 	HandleChildClick: func() begin
 		SetKeyView(iconSpace, 0)
 	end,
-	viewClickScript: func(a1) begin
-		local l1, l2, l3, l4;
-		l2 := (l1 := GetPoint(6, a1)).x;
-		l3 := l1.y;
-		l4 := self:GlobalBox();
-		(if ((((l2 < l4.left) or (l2 > l4.right)) or (l3 < l4.top)) or (l3 > l4.bottom)) then begin
-				InkOff(a1);
+	viewClickScript: func(unit) begin
+		local pt, l2, y, box;
+		l2 := (pt := GetPoint(6, unit)).x;
+		y := pt.y;
+		box := self:GlobalBox();
+		(if ((((l2 < box.left) or (l2 > box.right)) or (y < box.top)) or (y > box.bottom)) then begin
+				InkOff(unit);
 				true
 			end else begin
 				SetKeyView(self, 0);
-				inherited:?viewClickScript(a1)
+				inherited:?viewClickScript(unit)
 			end)
 	end,
 	SetupFakeTargetHelper: func() begin
-		if (Length((l1 := iconSpace:GetSelectedIcons())) = 0) then begin
+		if (Length((selectedIcons := iconSpace:GetSelectedIcons())) = 0) then begin
 				return (fakeTarget.kids := nil)
 			end;
-		if (Length(l1) > 1) then begin
+		if (Length(selectedIcons) > 1) then begin
 				targetView.AppObjectFileThisOn := "File these icons on";
 				targetView.appObjectFileThisIn := "File these icons in"
 			end else begin
@@ -1228,49 +1228,49 @@ iconSpace := {
 				RemoveSlot(targetView, 'appObjectFileThisIn)
 			end;
 		fakeTarget.packs := nil;
-		fakeTarget.labels := l1[0].target.fentry.labels;
-		fakeTarget.targetStore := l1[0].target:store();
+		fakeTarget.labels := selectedIcons[0].target.fentry.labels;
+		fakeTarget.targetStore := selectedIcons[0].target:store();
 		dontStartWithFolder := nil;
-		local l1;
-		(foreach l2 in l1 do begin
-				if (l2.target.fentry.labels <> fakeTarget.labels) then begin
+		local selectedIcons;
+		(foreach item in selectedIcons do begin
+				if (item.target.fentry.labels <> fakeTarget.labels) then begin
 						fakeTarget.labels := nil;
 						dontStartWithFolder := true
 					end;
-				if (l2.target:store() <> fakeTarget.targetStore) then begin
+				if (item.target:store() <> fakeTarget.targetStore) then begin
 						fakeTarget.targetStore := nil
 					end
 			end);
 		fakeTarget.newStore := nil;
-		(fakeTarget.kids := l1)
+		(fakeTarget.kids := selectedIcons)
 	end,
 	SetupFakeTarget: func() begin
-		local l1;
-		if (not (l1 := self:SetupFakeTargetHelper())) then begin
+		local setupFakeTargetHelper;
+		if (not (setupFakeTargetHelper := self:SetupFakeTargetHelper())) then begin
 				self:Notify(3, title, "Nothing is selected.")
 			end;
-		l1
+		setupFakeTargetHelper
 	end,
 	PostSetupFakeTarget: func(a1) begin
-		l1 := [Array: ];
-		l2 := [Array: ];
-		local l1;
-		local l2;
-		(foreach l3 in a1 do begin
-				local l5;
-				if (if (l3.target:Preflight('route, a1) = 'OK) then (not l3.target.fentry.locked)) then begin
-						if (if (l5 := l3.target:LookupSoupPackage()) then (not l3.target:copyprotected())) then begin
-								SetAdd(l2, {class: 'packageFrame, package: l5.pkgRef}, true)
+		list := [Array: ];
+		list2 := [Array: ];
+		local list;
+		local list2;
+		(foreach item in a1 do begin
+				local soupPackage;
+				if (if (item.target:Preflight('route, a1) = 'OK) then (not item.target.fentry.locked)) then begin
+						if (if (soupPackage := item.target:LookupSoupPackage()) then (not item.target:copyprotected())) then begin
+								SetAdd(list2, {class: 'packageFrame, package: soupPackage.pkgRef}, true)
 							end;
-						SetAdd(l1, l3, true)
+						SetAdd(list, item, true)
 					end
 			end);
-		(if (Length(l1) > 0) then begin
-				if (Length(l2) = 1) then begin
-						fakeTarget.packs := l2[0]
+		(if (Length(list) > 0) then begin
+				if (Length(list2) = 1) then begin
+						fakeTarget.packs := list2[0]
 					end else begin
-						if (Length(l2) > 1) then begin
-								fakeTarget.packs := CreateTargetCursor('packageList, l2)
+						if (Length(list2) > 1) then begin
+								fakeTarget.packs := CreateTargetCursor('packageList, list2)
 							end
 					end;
 				true
@@ -1295,11 +1295,11 @@ contrastSlider := {
 	viewBounds: {left: 0, top: -40, right: 60, bottom: -31},
 	viewJustify: vjParentCenterH + vjParentBottomV,
 	viewSetupFormScript: func() begin
-		local l1;
+		local gestalt2;
 		self.viewValue := GetUserConfig('lcdContrast);
-		l1 := Gestalt('[Array: 33554435, [Array: struct, boolean, long, long], 1]);
-		self.minValue := l1[1];
-		(self.maxValue := l1[2])
+		gestalt2 := Gestalt('[Array: 33554435, [Array: struct, boolean, long, long], 1]);
+		self.minValue := gestalt2[1];
+		(self.maxValue := gestalt2[2])
 	end,
 	viewSetupDoneScript: func() begin
 		self.userConfigChangeSym := Intern(Stringer([Array: "ContrastSlider.", viewCObject]));
@@ -1311,9 +1311,9 @@ contrastSlider := {
 		UnRegUserConfigChange(userConfigChangeSym)
 	end,
 	HandleConfigChange: func(a1) begin
-		local l1;
-		l1 := GetUserConfig('lcdContrast);
-		(if (if (a1 = 'lcdContrast) then (viewValue <> l1)) then SetValue(self, 'viewValue, l1))
+		local lcdContrast;
+		lcdContrast := GetUserConfig('lcdContrast);
+		(if (if (a1 = 'lcdContrast) then (viewValue <> lcdContrast)) then SetValue(self, 'viewValue, lcdContrast))
 	end,
 	ChangedSlider: func() begin
 		SetUserConfig('lcdContrast, viewValue)
@@ -1332,12 +1332,12 @@ contrastSliderTweakLeft := {
 	viewFormat: 0,
 	viewFlags: vVisible + vClickable,
 	increment: -1,
-	viewClickScript: func(a1) begin
+	viewClickScript: func(unit) begin
 		local l1;
-		InkOff(a1);
+		InkOff(unit);
 		l1 := (contrastSlider.viewValue + increment);
 		if (if (contrastSlider.minValue < l1) then (l1 < contrastSlider.maxValue)) then begin
-				if self:TrackHilite(a1) then begin
+				if self:TrackHilite(unit) then begin
 						SetValue(contrastSlider, 'viewValue, l1);
 						self:hilite(nil)
 					end
@@ -1361,11 +1361,11 @@ status_4 := {
 	viewBounds: {left: 0, top: -18, right: 0, bottom: 0},
 	viewChildren: nil,
 	viewSetupChildrenScript: func() begin
-		if (Length((l1 := GetAuxButtons(appSymbol))) > 0) then begin
+		if (Length((auxButtons := GetAuxButtons(appSymbol))) > 0) then begin
 				menuLeftButtons := Clone(OrigMenuLeftButtons);
-				local l1;
+				local auxButtons;
 				local l2;
-				l2 := (foreach l3 deeply in l1 collect l3.butt);
+				l2 := (foreach item deeply in auxButtons collect item.butt);
 				ArrayMunger(menuLeftButtons, Length(menuLeftButtons), nil, l2, 0, nil)
 			end else begin
 				menuLeftButtons := OrigMenuLeftButtons
@@ -1407,18 +1407,18 @@ status_4 := {
 				routingButton := nil;
 				inherited:?viewQuitScript()
 			end,
-			pickActionScript: func(a1) begin
-				inherited:pickActionScript(a1);
+			pickActionScript: func(index) begin
+				inherited:pickActionScript(index);
 				iconSpace:SelectNone()
 			end,
 			buttonClickScript: func() begin
-				local l1;
-				if (not (l1 := iconSpace:SetupFakeTarget())) then begin
+				local setupFakeTarget;
+				if (not (setupFakeTarget := iconSpace:SetupFakeTarget())) then begin
 						self:hilite(nil);
 						return nil
 					end;
-				(if iconSpace:PostSetupFakeTarget(l1) then inherited:buttonClickScript() else begin
-						self:Notify(3, title, (if (Length(l1) > 1) then "Can\u2019\ut route these types of icons." else "Can\u2019\ut route this type of icon."));
+				(if iconSpace:PostSetupFakeTarget(setupFakeTarget) then inherited:buttonClickScript() else begin
+						self:Notify(3, title, (if (Length(setupFakeTarget) > 1) then "Can\u2019\ut route these types of icons." else "Can\u2019\ut route this type of icon."));
 						self:hilite(nil)
 					end)
 			end,
@@ -1438,8 +1438,8 @@ status_4 := {
 				iconInt
 			end,
 			buttonClickScript: func() begin
-				local l1;
-				if (not (l1 := iconSpace:SetupFakeTarget())) then begin
+				local setupFakeTarget;
+				if (not (setupFakeTarget := iconSpace:SetupFakeTarget())) then begin
 						self:hilite(nil);
 						return nil
 					end;

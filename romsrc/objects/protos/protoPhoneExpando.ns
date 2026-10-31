@@ -14,7 +14,7 @@ protoPhoneExpando := {
 				keys := GetVariable(self, self.Keyboard)
 			end;
 		AddDeferredAction(ExpandKeys, [Array: self.entryLine]);
-		labelCommands := (foreach l1 in (labelSymbols := PhoneTypes.phoneClasses) collect PhoneTypes.phoneText.(l1));
+		labelCommands := (foreach item in (labelSymbols := PhoneTypes.phoneClasses) collect PhoneTypes.phoneText.(item));
 		labelLine.viewBounds := RelBounds(0, 0, indent, height);
 		entryLine.viewBounds.top := (entryLine.viewBounds.top + height);
 		entryLine.viewBounds.left := 4;
@@ -25,40 +25,40 @@ protoPhoneExpando := {
 	end,
 	textChanged: func() begin
 		(if (phoneIndex < Length(target.(path))) then (target.(path)[phoneIndex] := SetClass(entryLine.text, ClassOf(target.(path)[phoneIndex]))) else begin
-				(for l1 := (Length(target.(path)) + 1) to phoneIndex do begin
+				(for i := (Length(target.(path)) + 1) to phoneIndex do begin
 						AddArraySlot(target.(path), SetClass(Clone(""), 'phone))
 					end);
 				AddArraySlot(target.(path), SetClass(entryLine.text, 'phone))
 			end)
 	end,
-	setup1: func(a1) begin
-		(if (if a1 then (phoneIndex < Length(a1.(path)))) then begin
-				l1 := ClassOf(a1.(path)[phoneIndex]);
-				l2 := labelCommands[0];
-				local l1;
-				local l2;
-				(foreach l3, l4 in labelSymbols do begin
-						if (l4 = l1) then begin
-								l2 := labelCommands[l3];
+	setup1: func(target) begin
+		(if (if target then (phoneIndex < Length(target.(path)))) then begin
+				cls := ClassOf(target.(path)[phoneIndex]);
+				labelCommand := labelCommands[0];
+				local cls;
+				local labelCommand;
+				(foreach key, value in labelSymbols do begin
+						if (value = cls) then begin
+								labelCommand := labelCommands[key];
 								break
 							end
 					end);
-				l2
+				labelCommand
 			end else labelCommands[0])
 	end,
 	setup2: func(a1) begin
 		(if (if a1 then (phoneIndex < Length(a1.(path)))) then a1.(path)[phoneIndex])
 	end,
-	LabelActionScript: func(a1) begin
-		self:SetLabelText(labelCommands[a1]);
+	LabelActionScript: func(index) begin
+		self:SetLabelText(labelCommands[index]);
 		labelLine:Dirty();
 		if (phoneIndex < Length(target.(path))) then begin
-				SetClass(target.(path)[phoneIndex], labelSymbols[a1])
+				SetClass(target.(path)[phoneIndex], labelSymbols[index])
 			end else begin
-				(for l1 := (Length(target.(path)) + 1) to phoneIndex do begin
+				(for i := (Length(target.(path)) + 1) to phoneIndex do begin
 						AddArraySlot(target.(path), SetClass(Clone(""), 'phone))
 					end);
-				AddArraySlot(target.(path), SetClass(Clone(""), labelSymbols[a1]))
+				AddArraySlot(target.(path), SetClass(Clone(""), labelSymbols[index]))
 			end;
 		true
 	end,

@@ -12,8 +12,8 @@ addressItem_5Proto := {
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
 	viewLineSpacing: 32,
 	flavor: flavor,
-	viewChangedScript: func(a1, a2) begin
-		inherited:viewChangedScript(a1, a2);
+	viewChangedScript: func(slot, view) begin
+		inherited:viewChangedScript(slot, view);
 		(if (not target.(path)) then begin
 				target.(path) := Clone("");
 				self:StartFlush()
@@ -56,59 +56,59 @@ defaultProto := {
 };
 
 infoFrameProto := {
-	shapeFunc: func(a1, a2, a3, a4) begin
-		local l1, l2, l3, l4, l5, l6;
-		l5 := FontAscent(a4.font);
-		(if StrFilled(a1[0]) then begin
-				l1 := StrFontWidth((l3 := ParamStr("^0 ^1", [Array: MakeDisplayPhone(a1[0]), phoneTypes.phoneLabels.(ClassOf(a1[0]))])), a4.font);
-				l2 := (a2.right - a2.left);
+	shapeFunc: func(v20_wwwwwwwwwwvvvvvv, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, a3, a4) begin
+		local strFontWidth2, l2, text, leftInfo, fontAscent2, frame2;
+		fontAscent2 := FontAscent(a4.font);
+		(if StrFilled(v20_wwwwwwwwwwvvvvvv[0]) then begin
+				strFontWidth2 := StrFontWidth((text := ParamStr("^0 ^1", [Array: MakeDisplayPhone(v20_wwwwwwwwwwvvvvvv[0]), phoneTypes.phoneLabels.(ClassOf(v20_wwwwwwwwwwvvvvvv[0]))])), a4.font);
+				l2 := (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.right - v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.left);
 				if a4.leftInfo then begin
-						l4 := a4.leftInfo
+						leftInfo := a4.leftInfo
 					end else begin
 						if (a4.justification = 'right) then begin
-								l4 := ((l2 - l1) - 16)
+								leftInfo := ((l2 - strFontWidth2) - 16)
 							end else begin
 								if (a4.justification = 'center) then begin
-										l4 := ceiling((((l2 - l1) - 16) / 2))
+										leftInfo := ceiling((((l2 - strFontWidth2) - 16) / 2))
 									end else begin
-										l4 := a2.left
+										leftInfo := v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.left
 									end
 							end
 					end;
-				l6 := {shape: [Array: {font: a4.font, justification: 'left}, OffsetShape(MakeShape(@phoneBitmap), l4, (a2.top + 2)), MakeText(l3, (l4 + 16), a2.top, a2.right, (a2.top + l5)), a4], misc: {bbox: RelBounds(l4, (a2.top - a3), 16, 16)}};
-				a2.top := (a2.top + fontHeight(a4.font));
-				l6
+				frame2 := {shape: [Array: {font: a4.font, justification: 'left}, OffsetShape(MakeShape(@phoneBitmap), leftInfo, (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top + 2)), MakeText(text, (leftInfo + 16), v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.right, (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top + fontAscent2)), a4], misc: {bbox: RelBounds(leftInfo, (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top - a3), 16, 16)}};
+				v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top := (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top + fontHeight(a4.font));
+				frame2
 			end)
 	end,
-	actionFunc: func(a1, a2, a3, a4, a5, a6, a7) begin
-		(if (if (if (if (a1 >= a7.bbox.left) then (a1 <= a7.bbox.right)) then (a2 >= a7.bbox.top)) then (a2 <= a7.bbox.bottom)) then begin
-				a4 := SetBounds((a4.left + a7.bbox.left), (a4.top + a7.bbox.top), ((a4.left + a7.bbox.right) - 3), ((a4.top + a7.bbox.bottom) - 3));
-				a3:DoDrawing('Hiliter, [Array: MakeShape(a4)]);
-				call GetRoot().cardfile.kDoCallSlip with (a3, a5, (if a7.phoneNum then a7.phoneNum else a5.(a6)));
+	actionFunc: func(a1, a2, a3, box, target, path, misc) begin
+		(if (if (if (if (a1 >= misc.bbox.left) then (a1 <= misc.bbox.right)) then (a2 >= misc.bbox.top)) then (a2 <= misc.bbox.bottom)) then begin
+				box := SetBounds((box.left + misc.bbox.left), (box.top + misc.bbox.top), ((box.left + misc.bbox.right) - 3), ((box.top + misc.bbox.bottom) - 3));
+				a3:DoDrawing('Hiliter, [Array: MakeShape(box)]);
+				call GetRoot().cardfile.kDoCallSlip with (a3, target, (if misc.phoneNum then misc.phoneNum else target.(path)));
 				true
 			end)
 	end,
-	formatFunc: func(a1) begin
-		ParamStr("^0 ^1", [Array: MakeDisplayPhone(a1[0]), phoneTypes.phoneLabels.(ClassOf(a1[0]))])
+	formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+		ParamStr("^0 ^1", [Array: MakeDisplayPhone(v20_wwwwwwwwwwvvvvvv[0]), phoneTypes.phoneLabels.(ClassOf(v20_wwwwwwwwwwvvvvvv[0]))])
 	end
 };
 
 infoFrameProto_2 := {
 	_proto: infoFrameProto,
-	shapeFunc: func(a1, a2, a3, a4) begin
-		local l1, l2, l3, l4;
-		l2 := nil;
-		if StrFilled((l4 := self:formatFunc(a1))) then begin
-				l1 := fontHeight(a4.font);
-				l2 := MakeTextLines(l4, a2, l1, a4.font);
-				a2.top := (a2.top + (l1 * Length(l2)))
+	shapeFunc: func(v20_wwwwwwwwwwvvvvvv, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, a3, a4) begin
+		local fontHeight2, textLines, l3, formatFunc;
+		textLines := nil;
+		if StrFilled((formatFunc := self:formatFunc(v20_wwwwwwwwwwvvvvvv))) then begin
+				fontHeight2 := fontHeight(a4.font);
+				textLines := MakeTextLines(formatFunc, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, fontHeight2, a4.font);
+				v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top := (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top + (fontHeight2 * Length(textLines)))
 			end;
-		(if (l3 := inherited:shapeFunc(a1, a2, a3, a4)) then begin
-				if l2 then begin
-						ArrayMunger(l3.shape, Length(l3.shape), 0, l2, 0, nil)
+		(if (l3 := inherited:shapeFunc(v20_wwwwwwwwwwvvvvvv, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, a3, a4)) then begin
+				if textLines then begin
+						ArrayMunger(l3.shape, Length(l3.shape), 0, textLines, 0, nil)
 					end;
-				l3.misc.phoneNum := a1[0];
+				l3.misc.phoneNum := v20_wwwwwwwwwwvvvvvv[0];
 				l3
-			end else {shape: l2, misc: {bbox: SetBounds(0, 0, 0, 0), phoneNum: a1[0]}})
+			end else {shape: textLines, misc: {bbox: SetBounds(0, 0, 0, 0), phoneNum: v20_wwwwwwwwwwvvvvvv[0]}})
 	end
 };

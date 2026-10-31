@@ -118,56 +118,56 @@ mailRegister := {
 		constants: {
 			kLiteral_5a450d: "Mail Registration"
 		},
-		func(a1, a2) begin
-			local l1;
+		func(integer2, string2) begin
+			local scrId;
 			pleaseWaitForm:Close();
-			if a2 then begin
-					self:Notify(3, kLiteral_5a450d, a2)
+			if string2 then begin
+					self:Notify(3, kLiteral_5a450d, string2)
 				end else begin
-					if (a1 < 0) then begin
-							self:Notify(3, a1, kLiteral_5a450d)
+					if (integer2 < 0) then begin
+							self:Notify(3, integer2, kLiteral_5a450d)
 						end
 				end;
 			(if (not sendScreen) then begin
-					l1 := -1;
-					if (if (a1 > 0) then (a1 <= 25)) then begin
-							l1 := scrIds[a1]
+					scrId := -1;
+					if (if (integer2 > 0) then (integer2 <= 25)) then begin
+							scrId := scrIds[integer2]
 						end;
-					(if (if (index <> l1) then (l1 <> -1)) then begin
+					(if (if (index <> scrId) then (scrId <> -1)) then begin
 							pages[index]:Hide();
-							index := l1;
+							index := scrId;
 							pages[index]:Show()
 						end)
 				end)
 		end),
 	declareSelf: 'base,
 	viewSetupFormScript: func() begin
-		local l1, l2, l3, l4;
-		l3 := ResolveEntryAlias(GetUserConfig('currentPersona));
+		local l1, l2, currentPersona, workPhone;
+		currentPersona := ResolveEntryAlias(GetUserConfig('currentPersona));
 		sendScreen := nil;
 		if (not info) then begin
 				info := Clone('{firstName: nil, lastName: nil, cardfirst: nil, cardlast: nil, address: nil, city: nil, state: nil, zip: nil, country: nil, dayphone: nil, homePhone: nil, mailAccount: nil, mailPassword: nil, creditcard: nil, SleepTime: nil, language: nil});
-				if l3 then begin
-						info.firstName := Clone(l3.name.first);
-						info.lastName := Clone(l3.name.last);
+				if currentPersona then begin
+						info.firstName := Clone(currentPersona.name.first);
+						info.lastName := Clone(currentPersona.name.last);
 						info.cardfirst := Clone(info.firstName);
 						info.cardlast := Clone(info.lastName);
-						if StrFilled(l3.address2) then begin
-								info.address := Stringer([Array: l3.address, " ", l3.address2])
+						if StrFilled(currentPersona.address2) then begin
+								info.address := Stringer([Array: currentPersona.address, " ", currentPersona.address2])
 							end else begin
-								info.address := Clone(l3.address)
+								info.address := Clone(currentPersona.address)
 							end;
-						info.city := Clone(l3.city);
-						info.state := Clone(l3.region);
-						info.zip := Clone(l3.postal_code);
-						info.country := Clone(l3.country);
-						if (l4 := GetRoot().cardfile:bcPhoneNumber(l3, 'workPhone)) then begin
-								info.dayphone := MakeDisplayPhone(l4[0])
+						info.city := Clone(currentPersona.city);
+						info.state := Clone(currentPersona.region);
+						info.zip := Clone(currentPersona.postal_code);
+						info.country := Clone(currentPersona.country);
+						if (workPhone := GetRoot().cardfile:bcPhoneNumber(currentPersona, 'workPhone)) then begin
+								info.dayphone := MakeDisplayPhone(workPhone[0])
 							end else begin
 								info.dayphone := ""
 							end;
-						if (l4 := GetRoot().cardfile:bcPhoneNumber(l3, 'homePhone)) then begin
-								info.homePhone := MakeDisplayPhone(l4[0])
+						if (workPhone := GetRoot().cardfile:bcPhoneNumber(currentPersona, 'homePhone)) then begin
+								info.homePhone := MakeDisplayPhone(workPhone[0])
 							end else begin
 								info.homePhone := ""
 							end
@@ -189,8 +189,8 @@ mailRegister := {
 	register2: nil,
 	request: nil,
 	AllDone: func(a1) begin
-		local l1, l2, l3;
-		l1 := GetRoot().mailSlip;
+		local mailSlip, resolveEntryAlias2, resolveEntryAlias3;
+		mailSlip := GetRoot().mailSlip;
 		if eworld then begin
 				eworld:ConnectionAbort()
 			end;
@@ -205,11 +205,11 @@ mailRegister := {
 		pages := nil;
 		index := 0;
 		sendScreen := nil;
-		l1.eworld := nil;
+		mailSlip.eworld := nil;
 		if (if request then a1) then begin
-				l2 := ResolveEntryAlias(userConfiguration.currentEmporium);
-				l3 := ResolveEntryAlias(userConfiguration.currentPersona);
-				AddDeferredSend(l1, 'DoConnect, [Array: l2, l3, request, GetUserConfig('mailMode), GetUserConfig('mailListMethod)])
+				resolveEntryAlias2 := ResolveEntryAlias(userConfiguration.currentEmporium);
+				resolveEntryAlias3 := ResolveEntryAlias(userConfiguration.currentPersona);
+				AddDeferredSend(mailSlip, 'DoConnect, [Array: resolveEntryAlias2, resolveEntryAlias3, request, GetUserConfig('mailMode), GetUserConfig('mailListMethod)])
 			end;
 		base:Close()
 	end,
@@ -248,26 +248,26 @@ mailRegister := {
 	end,
 	debug: 162496,
 	RegDone: func() begin
-		local l1, l2;
+		local cardfile, currentPersona;
 		pleaseWaitForm:Close();
-		l1 := GetRoot().cardfile;
-		l1:AddCardData((l2 := ResolveEntryAlias(GetUserConfig('currentPersona))), 'email, {email: SetClass(info.mailAccount, '|string.email.aol|), emailPassword: info.mailPassword});
+		cardfile := GetRoot().cardfile;
+		cardfile:AddCardData((currentPersona := ResolveEntryAlias(GetUserConfig('currentPersona))), 'email, {email: SetClass(info.mailAccount, '|string.email.aol|), emailPassword: info.mailPassword});
 		if addToOwner then begin
-				l2.name := {first: info.firstName, last: info.lastName};
-				l2.address := info.address;
-				l2.city := info.city;
-				l2.region := info.state;
-				l2.postal_code := info.zip;
-				l2.country := info.country;
-				l2.phones := [Array: ];
+				currentPersona.name := {first: info.firstName, last: info.lastName};
+				currentPersona.address := info.address;
+				currentPersona.city := info.city;
+				currentPersona.region := info.state;
+				currentPersona.postal_code := info.zip;
+				currentPersona.country := info.country;
+				currentPersona.phones := [Array: ];
 				if StrFilled(info.dayphone) then begin
-						AddArraySlot(l2.phones, SetClass(info.dayphone, 'workPhone))
+						AddArraySlot(currentPersona.phones, SetClass(info.dayphone, 'workPhone))
 					end;
 				if StrFilled(info.homePhone) then begin
-						AddArraySlot(l2.phones, SetClass(info.homePhone, 'homePhone))
+						AddArraySlot(currentPersona.phones, SetClass(info.homePhone, 'homePhone))
 					end;
-				l2.sorton := Stringer([Array: info.lastName, " ", info.firstName]);
-				EntryChange(l2)
+				currentPersona.sorton := Stringer([Array: info.lastName, " ", info.firstName]);
+				EntryChange(currentPersona)
 			end;
 		UseCurrentPersona();
 		self:Notify(3, "Mail Registration", "Your account has been created.  You are now ready to send and receive mail.");
@@ -275,14 +275,14 @@ mailRegister := {
 	end,
 	eworld: nil,
 	ConvertedMailPhone: func(a1, a2, a3) begin
-		local l1, l2;
+		local mailPhoneFull, register;
 		if (not a1) then begin
 				return nil
 			end;
-		if IsRichString((l1 := GetUserConfig('mailPhoneFull))) then begin
+		if IsRichString((mailPhoneFull := GetUserConfig('mailPhoneFull))) then begin
 				SetUserConfig('mailPhoneFull, a2)
 			end;
-		(if (not (l2 := eworld:Register(nil, nil))) then (GetRoot().mailSlip.eworld := nil))
+		(if (not (register := eworld:Register(nil, nil))) then (GetRoot().mailSlip.eworld := nil))
 	end,
 	register4: nil
 };
@@ -442,19 +442,19 @@ zip := {_proto: city_2Proto, configPath: 'zip, debug: 2658, preallocatedContext:
 register2 := {
 	_proto: register1Proto,
 	viewSetupFormScript: func() begin
-		local l1;
-		l1 := GetLocale();
-		city.label := l1.cityLabel;
-		state.label := l1.regionLabel;
-		zip.label := l1.postalCodeLabel;
+		local locale;
+		locale := GetLocale();
+		city.label := locale.cityLabel;
+		state.label := locale.regionLabel;
+		zip.label := locale.postalCodeLabel;
 		inherited:?viewSetupFormScript()
 	end,
 	viewSetupDoneScript: func() begin
-		local l1;
+		local locale;
 		inherited:?viewSetupDoneScript();
-		l1 := GetLocale();
-		city.entryLine.dictionaries := l1.recogCityDictionaries;
-		(state.entryLine.dictionaries := l1.recogStateDictionaries)
+		locale := GetLocale();
+		city.entryLine.dictionaries := locale.recogCityDictionaries;
+		(state.entryLine.dictionaries := locale.recogStateDictionaries)
 	end,
 	debug: 20914,
 	preallocatedContext: 'register2,
@@ -534,8 +534,8 @@ register3 := {
 			items: [|Array|: vISA, "Master", "AMEX", "DISCVR"],
 			labelCommands: [|Array|: vISA, masterCard, "American Express", discover],
 			configPath: 'creditcard,
-			LabelActionScript: func(a1) begin
-				(info.(configPath) := items[a1])
+			LabelActionScript: func(index) begin
+				(info.(configPath) := items[index])
 			end,
 			debug: 5196,
 			_proto: @protoLabelPicker

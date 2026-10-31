@@ -10,12 +10,12 @@ protoCategorizedOverview := {
 				(if (a1._uniqueID = a2._uniqueID) then (a1._storeID = a2._storeID))
 			end
 		},
-		func(a1) begin
-			local l1, l2;
-			(if a1.finder.IsThisItemSelected then a1.finder:IsThisItemSelected(a1) else begin
-					l1 := {_uniqueID: a1.entryID, _storeID: a1.storeID};
-					if a1.finder.selected then begin
-							if (l2 := ArrayPos(a1.finder.selected, l1, 0, kFunction_5610a1)) then begin
+		func(item) begin
+			local frame2, pos;
+			(if item.finder.IsThisItemSelected then item.finder:IsThisItemSelected(item) else begin
+					frame2 := {_uniqueID: item.entryID, _storeID: item.storeID};
+					if item.finder.selected then begin
+							if (pos := ArrayPos(item.finder.selected, frame2, 0, kFunction_5610a1)) then begin
 									return true
 								end
 						end;
@@ -30,41 +30,41 @@ protoCategorizedOverview := {
 		items[l2]
 	end,
 	SelectItem: func(a1) begin
-		local l1, l2, l3, l4;
-		(if (if (not (l1 := items[a1]).category) then GetVariable(l1.finder, 'SelectItem)) then begin
-				l1.finder:SelectItem(l1);
-				(l2 := self:LocalBox()).bottom := ((l2.top := (lineHeight * a1)) + lineHeight);
-				l3 := MakeShape((if self:IsThisItemSelected(l1) then CheckOn else CheckOff));
-				l4 := self:GetThisCategoryItem(a1);
-				pieces[l1.listIndex][(((l1.itemIndex - l4.skip) * 2) + 1)] := OffsetShape(l3, (l2.left + checkBoxHorzOffset), (l2.top + checkBoxVertOffset));
+		local item, box, shape, thisCategoryItem;
+		(if (if (not (item := items[a1]).category) then GetVariable(item.finder, 'SelectItem)) then begin
+				item.finder:SelectItem(item);
+				(box := self:LocalBox()).bottom := ((box.top := (lineHeight * a1)) + lineHeight);
+				shape := MakeShape((if self:IsThisItemSelected(item) then CheckOn else CheckOff));
+				thisCategoryItem := self:GetThisCategoryItem(a1);
+				pieces[item.listIndex][(((item.itemIndex - thisCategoryItem.skip) * 2) + 1)] := OffsetShape(shape, (box.left + checkBoxHorzOffset), (box.top + checkBoxVertOffset));
 				self:Dirty();
 				RefreshViews()
 			end else self:Dirty())
 	end,
 	checkBoxHorzOffset: 2,
-	CheckState: func(a1) begin
-		(if (a1.category or (not GetVariable(a1.finder, 'SelectItem))) then 'NotCheckable else (if GetVariable(a1.finder, 'CheckState) then a1.finder:CheckState(a1) else self:IsThisItemSelected(a1)))
+	CheckState: func(indexEntry) begin
+		(if (indexEntry.category or (not GetVariable(indexEntry.finder, 'SelectItem))) then 'NotCheckable else (if GetVariable(indexEntry.finder, 'CheckState) then indexEntry.finder:CheckState(indexEntry) else self:IsThisItemSelected(indexEntry)))
 	end,
 	viewFlags: vVisible + vApplication + vClipping + vClickable,
-	GetIndexEntry: func(a1) begin
-		(if (if (a1 >= 0) then (a1 < Length(items))) then items[a1])
+	GetIndexEntry: func(indexEntry) begin
+		(if (if (indexEntry >= 0) then (indexEntry < Length(items))) then items[indexEntry])
 	end,
 	CheckOn: CheckOn,
 	viewBounds: {left: 5, top: 18, right: -5, bottom: -21},
 	_proto: @protoOverview,
-	Scroller: func(a1) begin
-		if ((a1 < 0) or moreBelow) then begin
-				scrollOrigin := max((scrollOrigin + a1), 0)
+	Scroller: func(maxLines) begin
+		if ((maxLines < 0) or moreBelow) then begin
+				scrollOrigin := max((scrollOrigin + maxLines), 0)
 			end;
 		self:RedoChildren()
 	end,
 	lineHeight: 14,
 	viewJustify: vjParentFullH + vjParentFullV,
-	setAndBump: func(a1, a2, a3) begin
-		local l1;
-		l1 := MakeText(a1, (a3.left + a2), a3.top, a3.right, (a3.bottom - 2));
+	setAndBump: func(title, a2, a3) begin
+		local text;
+		text := MakeText(title, (a3.left + a2), a3.top, a3.right, (a3.bottom - 2));
 		a3.bottom := ((a3.top := a3.bottom) + lineHeight);
-		l1
+		text
 	end,
 	MakeCategoryFrame: func(a1) begin
 		cat := {_proto: @protoFindCategory, skip: 0, title: nil, count: 0, category: a1};
@@ -77,21 +77,21 @@ protoCategorizedOverview := {
 		cat
 	end,
 	CheckOff: CheckOff,
-	HitItem: func(a1, a2, a3) begin
-		local l1;
-		if (not inherited:HitItem(a1, a2, a3)) then begin
-				if (l1 := items[a1]).category then begin
-						if (l1.category.collapsed := (not l1.category.collapsed)) then begin
-								scrollOrigin := (((scrollOrigin - l1.skip) div scrollAmount) * scrollAmount)
+	HitItem: func(a1, trackScrollingItem, trackScrollingItem2) begin
+		local item;
+		if (not inherited:HitItem(a1, trackScrollingItem, trackScrollingItem2)) then begin
+				if (item := items[a1]).category then begin
+						if (item.category.collapsed := (not item.category.collapsed)) then begin
+								scrollOrigin := (((scrollOrigin - item.skip) div scrollAmount) * scrollAmount)
 							end;
 						self:RedoChildren()
 					end else begin
 						if doUpdates then begin
-								caller:HideOtherApps(l1.finder.owner);
-								SetValue(caller.radioCluster.frontMostAppRadioButton, 'text, (if l1.finder.owner.title then l1.finder.owner.title else "Frontmost app"))
+								caller:HideOtherApps(item.finder.owner);
+								SetValue(caller.radioCluster.frontMostAppRadioButton, 'text, (if item.finder.owner.title then item.finder.owner.title else "Frontmost app"))
 							end;
 						base.savedScrollOrigin := scrollOrigin;
-						caller:ShowItem(l1.finder, l1);
+						caller:ShowItem(item.finder, item);
 						AddDeferredSend(base, 'Close, nil)
 					end
 			end;
@@ -105,7 +105,7 @@ protoCategorizedOverview := {
 		self.maxLines := (l1.bottom div lineHeight);
 		l1.bottom := lineHeight;
 		self.scrollAmount := (maxLines - 2);
-		self.pieces := [Array: '{font: 1058816}];
+		self.pieces := [Array: '{font: tsSystem + tsSize(10) + tsBold}];
 		l2 := [Array: ];
 		l3 := maxLines;
 		l4 := scrollOrigin;
@@ -148,7 +148,7 @@ protoCategorizedOverview := {
 						if (not l9) then begin
 								l11 := [Array: ];
 								l3 := (l3 - self:AddCategoryItem(l11, l8, l4, l3));
-								l12 := [Array: '{font: 9216}];
+								l12 := [Array: '{font: tsSystem + tsSize(9)}];
 								AddArraySlot(pieces, l12);
 								l13 := GetVariable(l6, 'SelectItem);
 								local l8;

@@ -14,7 +14,7 @@ protoDisplayClock := {
 		self:SetupIdle(viewIdleFrequency);
 		inherited:viewSetupFormScript()
 	end,
-	viewClickScript: func(a1) begin
+	viewClickScript: func(unit) begin
 		nil
 	end,
 	viewIdleScript: func() begin

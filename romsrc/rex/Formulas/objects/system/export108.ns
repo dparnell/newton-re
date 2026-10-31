@@ -46,9 +46,9 @@ uS := {
 	indent: 108,
 	viewFont: @fontSystem10Bold,
 	text: "U.S.",
-	labelActionScript: func(a1) begin
-		pickerItemNumber := a1;
-		SetValue(self, 'text, Stringer([Array: $\uFC01, labelCommands[a1]]));
+	labelActionScript: func(index) begin
+		pickerItemNumber := index;
+		SetValue(self, 'text, Stringer([Array: $\uFC01, labelCommands[index]]));
 		self:ClearAllFields()
 	end,
 	textSetup: func() begin

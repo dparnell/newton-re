@@ -12,8 +12,8 @@ default_2 := {
 			newDictionaries: nil,
 			newRecFlags: 29403649,
 			viewSetupFormScript: func() begin
-				local l1;
-				newDictionaries := (l1 := GetLocale()).recogCompanyDictionaries;
+				local locale;
+				newDictionaries := (locale := GetLocale()).recogCompanyDictionaries;
 				inherited:?viewSetupFormScript()
 			end,
 			memory: 'companyName,
@@ -48,10 +48,10 @@ default_2 := {
 			labelCommands: nil,
 			newDictionaries: nil,
 			viewSetupFormScript: func() begin
-				local l1;
-				newDictionaries := (l1 := GetLocale()).recogHonorificDictionaries;
-				labelCommands := l1.commonHonorifics;
-				label := l1.honorificLabel;
+				local locale;
+				newDictionaries := (locale := GetLocale()).recogHonorificDictionaries;
+				labelCommands := locale.commonHonorifics;
+				label := locale.honorificLabel;
 				inherited:?viewSetupFormScript()
 			end,
 			_proto: @newtLabelInputLine
@@ -67,8 +67,8 @@ default_2 := {
 	infoFrame: {
 		checkPrefix: [|Array|: true, nil],
 		checkPaths: [|Array|: 'company, 'title],
-		formatFunc: func(a1) begin
-			ParamStr("^0", a1)
+		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
+			ParamStr("^0", v20_wwwwwwwwwwvvvvvv)
 		end
 	},
 	fieldOrder: [|Array|: 0, 1, 2, 3, 4],
@@ -82,8 +82,8 @@ default_2 := {
 			newDictionaries: nil,
 			newRecFlags: 29403649,
 			viewSetupFormScript: func() begin
-				local l1;
-				newDictionaries := (l1 := GetLocale()).recogCompanyDictionaries;
+				local locale;
+				newDictionaries := (locale := GetLocale()).recogCompanyDictionaries;
 				inherited:?viewSetupFormScript()
 			end,
 			memory: 'companyReading,

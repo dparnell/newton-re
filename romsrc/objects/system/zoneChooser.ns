@@ -11,15 +11,15 @@ zoneChooser := {
 	currentZone: nil,
 	zoneTableWidth: 170,
 	viewIdleScript: func() begin
-		local l1, l2;
+		local timesUpScript, l2;
 		l2 := 0;
 		if formOpen then begin
 				if ((timeoutCounter := (timeoutCounter - idleFrequency)) < 0) then begin
-						l1 := self:timesUpScript()
+						timesUpScript := self:timesUpScript()
 					end else begin
-						l1 := true
+						timesUpScript := true
 					end;
-				if l1 then begin
+				if timesUpScript then begin
 						if (if formOpen then (not HaveZones())) then begin
 								self:CloseAndNotify("The network connection was lost, check your cables.")
 							end;
@@ -47,8 +47,8 @@ zoneChooser := {
 		return l1
 	end,
 	selectCurrentZone: func() begin
-		local l1;
-		(if (selectedZoneIndex <> nil) then (if (if ((l1 := theZoneTable:ChildViewFrames()) <> nil) then (selectedZoneIndex < Length(l1))) then theZoneTable:selectThisCell(l1[selectedZoneIndex])))
+		local childViewFrames;
+		(if (selectedZoneIndex <> nil) then (if (if ((childViewFrames := theZoneTable:ChildViewFrames()) <> nil) then (selectedZoneIndex < Length(childViewFrames))) then theZoneTable:selectThisCell(childViewFrames[selectedZoneIndex])))
 	end,
 	preallocatedContext: 'zoneChooser,
 	viewChildren: [viewChildren:
@@ -136,7 +136,7 @@ theZoneTable := {
 	def: @protoTableDef,
 	entryProto: {
 		_proto: @protoTableEntry,
-		viewClickScript: func(a1) begin
+		viewClickScript: func(unit) begin
 			timeoutCounter := 300000;
 			currentZone := text;
 			(if (chooserNBPTable:stopScript() = 0) then (if (chooserNBPTable:startScript() = 0) then begin
@@ -182,9 +182,9 @@ theZoneTable := {
 					self:selectCurrentZone()
 				end))
 	end,
-	viewScroll2DScript: func(a1, a2) begin
+	viewScroll2DScript: func(arrowDirection, a2) begin
 		timeoutCounter := 300000;
-		inherited:viewScroll2DScript(a1, a2);
+		inherited:viewScroll2DScript(arrowDirection, a2);
 		RefreshViews()
 	end,
 	preallocatedContext: 'theZoneTable

@@ -15,26 +15,26 @@ soupFinder := {
 			end)
 	end,
 	ZeroOneOrMore: func() begin
-		local l1, l2, l3;
+		local entry, reset, l3;
 		(if self.cacheCount then cacheCount else begin
 				if self.zeroOneOrMoreResult then begin
 						return self.zeroOneOrMoreResult
 					end;
-				l1 := cursor:entry();
+				entry := cursor:entry();
 				if self.isReset then begin
-						l2 := l1
+						reset := entry
 					end else begin
-						l2 := cursor:Reset()
+						reset := cursor:Reset()
 					end;
 				l3 := 0;
-				(while (l2 <> nil) do begin
+				(while (reset <> nil) do begin
 						if ((l3 := (l3 + 1)) >= 2) then begin
 								break
 							end;
-						(l2 := cursor:Next())
+						(reset := cursor:Next())
 					end);
-				if l1 then begin
-						cursor:Goto(l1)
+				if entry then begin
+						cursor:Goto(entry)
 					end;
 				(self.zeroOneOrMoreResult := l3)
 			end)
@@ -65,17 +65,17 @@ soupFinder := {
 				end))
 	end,
 	ShowFoundItem: func(a1) begin
-		local l1;
+		local cursor;
 		currentItem := a1.itemIndex;
-		self:ShowEntry((l1 := Query(a1.soup, {type: 'index, indexPath: '_uniqueID, beginKey: a1.entryID})):entry())
+		self:ShowEntry((cursor := Query(a1.soup, {type: 'index, indexPath: '_uniqueID, beginKey: a1.entryID})):entry())
 	end,
 	ShowOrdinalItem: func(a1) begin
-		local l1;
+		local currentItem2;
 		(if (a1 = 'first) then begin
 				currentItem := 0;
 				self:ShowEntry(self:Reset())
 			end else begin
-				l1 := currentItem;
+				currentItem2 := currentItem;
 				if (a1 = 'prev) then begin
 						currentItem := (currentItem - 1)
 					end else begin
@@ -87,46 +87,46 @@ soupFinder := {
 					end;
 				currentItem := min(max(currentItem, 0), (self:count() - 1));
 				self.isReset := nil;
-				self:ShowEntry(cursor:move((currentItem - l1)))
+				self:ShowEntry(cursor:move((currentItem - currentItem2)))
 			end)
 	end,
-	MakeFoundItem: func(a1, a2) begin
-		local l1;
-		if a2 then begin
-				if (StrLen((l1 := a2:FindSoupExcerpt(a1, self))) > 50) then begin
-						l1 := Substr(l1, 0, 80)
+	MakeFoundItem: func(a1, owner) begin
+		local soupExcerpt;
+		if owner then begin
+				if (StrLen((soupExcerpt := owner:FindSoupExcerpt(a1, self))) > 50) then begin
+						soupExcerpt := Substr(soupExcerpt, 0, 80)
 					end
 			end;
-		{_proto: @protoFindItem, finder: (if self.masterFinder then masterFinder else self), realFinder: self, entryID: EntryUniqueID(a1), soup: EntrySoup(a1), storeID: EntryStore(a1):GetSignature(), selected: nil, itemIndex: nil, title: l1}
+		{_proto: @protoFindItem, finder: (if self.masterFinder then masterFinder else self), realFinder: self, entryID: EntryUniqueID(a1), soup: EntrySoup(a1), storeID: EntryStore(a1):GetSignature(), selected: nil, itemIndex: nil, title: soupExcerpt}
 	end,
 	AddFoundItems: func(a1, a2, a3) begin
-		local l1, l2, l3, l4;
-		l2 := (l1 := cursor:entry());
+		local entry, reset, l3, foundItem;
+		reset := (entry := cursor:entry());
 		if (not self.isReset) then begin
-				l2 := cursor:Reset()
+				reset := cursor:Reset()
 			end;
 		if (a2 > 0) then begin
-				l2 := cursor:move(a2)
+				reset := cursor:move(a2)
 			end;
 		l3 := 0;
 		try begin
-				(while (if (l2 <> nil) then (l3 < a3)) do begin
-						(l4 := self:MakeFoundItem(l2, owner)).itemIndex := (l3 + a2);
-						l4.selected := self:isSelected({_uniqueID: l4.entryID, _storeID: l4.storeID});
-						AddArraySlot(a1, l4);
+				(while (if (reset <> nil) then (l3 < a3)) do begin
+						(foundItem := self:MakeFoundItem(reset, owner)).itemIndex := (l3 + a2);
+						foundItem.selected := self:isSelected({_uniqueID: foundItem.entryID, _storeID: foundItem.storeID});
+						AddArraySlot(a1, foundItem);
 						l3 := (l3 + 1);
-						(l2 := cursor:Next())
+						(reset := cursor:Next())
 					end)
 			end onexception |evt.ex| do begin
-				cursor:Goto(l1);
-				l1 := nil;
-				l2 := nil
+				cursor:Goto(entry);
+				entry := nil;
+				reset := nil
 			end;
-		if (l1 = 'deleted) then begin
+		if (entry = 'deleted) then begin
 				cursor:Reset()
 			end else begin
-				if l1 then begin
-						cursor:Goto(l1)
+				if entry then begin
+						cursor:Goto(entry)
 					end
 			end;
 		l3

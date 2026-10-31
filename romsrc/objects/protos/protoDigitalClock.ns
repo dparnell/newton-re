@@ -23,8 +23,8 @@ protoDigitalClock := {
 			viewFlags: vVisible + vClickable,
 			viewBounds: nil,
 			viewSetupFormScript: func() begin
-				local l1, l2;
-				(if (useAmPm := ((l1 := GetLocale().timeformat).timeCycle = 1)) then (viewBounds := SetBounds(-4, 0, 119, 28)) else (viewBounds := SetBounds((l2 := 10), 0, (119 - l2), 28)))
+				local timeformat, l2;
+				(if (useAmPm := ((timeformat := GetLocale().timeformat).timeCycle = 1)) then (viewBounds := SetBounds(-4, 0, 119, 28)) else (viewBounds := SetBounds((l2 := 10), 0, (119 - l2), 28)))
 			end,
 			viewDrawScript: compile(
 				constants: {
@@ -34,8 +34,8 @@ protoDigitalClock := {
 					kROM_604: @ampmSlides
 				},
 				func() begin
-					local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
-					l1 := GetLocale().timeformat;
+					local timeformat, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
+					timeformat := GetLocale().timeformat;
 					l2 := (if useAmPm then 4 else 9);
 					l5 := 0;
 					l6 := (if (increment < 5) then 1 else 0);
@@ -43,12 +43,12 @@ protoDigitalClock := {
 					if useAmPm then begin
 							l8 := (l8 mod 12)
 						end;
-					if (if (l8 = 0) then (l1.midNightForm <> 0)) then begin
+					if (if (l8 = 0) then (timeformat.midNightForm <> 0)) then begin
 							l8 := 12
 						end;
 					l9 := (l7 mod 60);
 					l10 := (l8 div 10);
-					l11 := ((l1.hourLeadingZ <> 1) or (if (l1.hourLeadingZ = 1) then (l10 <> 0)));
+					l11 := ((timeformat.hourLeadingZ <> 1) or (if (timeformat.hourLeadingZ = 1) then (l10 <> 0)));
 					if useAmPm then begin
 							l3 := '{left: 9, top: 2, right: 26, bottom: 26};
 							l4 := (if l11 then '{left: 24, top: 2, right: 41, bottom: 26} else '{left: 18, top: 2, right: 35, bottom: 26});
@@ -62,7 +62,7 @@ protoDigitalClock := {
 							DrawXBitmap(l3, kROM_622, l10, 1)
 						end;
 					DrawXBitmap(l4, kROM_622, (l8 mod 10), 1);
-					if (l1.timeSepStr1[0] = $:) then begin
+					if (timeformat.timeSepStr1[0] = $:) then begin
 							DrawXBitmap('{left: 46, top: 6, right: 52, bottom: 21}, kROM_603, 0, 0)
 						end;
 					DrawXBitmap('{left: 52, top: 0, right: 97, bottom: 28}, kROM_651, l6, 0);
@@ -70,33 +70,33 @@ protoDigitalClock := {
 					DrawXBitmap('{left: 77, top: 2, right: 94, bottom: 26}, kROM_622, (l9 mod 10), 1);
 					(if useAmPm then DrawXBitmap('{left: 100, top: 0, right: 119, bottom: 28}, kROM_604, (l7 div 720), 0))
 				end),
-			viewClickScript: func(a1) begin
-				local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
-				InkOff(a1);
-				l1 := self:GlobalBox();
-				if ((l3 := (GetPoint(0, a1) - l1.left)) > 100) then begin
-						l2 := 720
+			viewClickScript: func(unit) begin
+				local box, increment2, l3, l4, l5, l6, time2, least, most, copy;
+				InkOff(unit);
+				box := self:GlobalBox();
+				if ((l3 := (GetPoint(0, unit) - box.left)) > 100) then begin
+						increment2 := 720
 					end else begin
 						if (l3 <= 45) then begin
-								l2 := 60
+								increment2 := 60
 							end else begin
 								if (increment < 5) then begin
-										l2 := (if (l3 <= 77) then 10 else increment)
+										increment2 := (if (l3 <= 77) then 10 else increment)
 									end else begin
-										l2 := increment
+										increment2 := increment
 									end
 							end
 					end;
 				if (l3 > 100) then begin
 						if (((Time mod 1440) div 720) > 0) then begin
-								l2 := (-l2);
+								increment2 := (-increment2);
 								l4 := -28
 							end else begin
 								l4 := 28
 							end
 					end else begin
-						if (GetPoint(1, a1) > ((l1.bottom + l1.top) div 2)) then begin
-								l2 := (-l2);
+						if (GetPoint(1, unit) > ((box.bottom + box.top) div 2)) then begin
+								increment2 := (-increment2);
 								l4 := -28
 							end else begin
 								l4 := 28
@@ -105,7 +105,7 @@ protoDigitalClock := {
 				l5 := (Time mod 1440);
 				basedate := ((Time - l5) + (if (if midnite then (l5 = 0)) then -1440 else 0));
 				l6 := (Ticks() + firstTapDelay);
-				(repeat l7 := Time; if (if (not wrapping) then (increment <> 1)) then begin
+				(repeat time2 := Time; if (if (not wrapping) then (increment <> 1)) then begin
 							if midnite then begin
 									if (Time = (basedate + 1)) then begin
 											Time := (Time - 1)
@@ -115,7 +115,7 @@ protoDigitalClock := {
 											Time := (Time + 1)
 										end
 								end
-						end; Time := (Time + l2); if wrapping then begin
+						end; Time := (Time + increment2); if wrapping then begin
 							if (Time > (basedate + (if midnite then 1440 else 1439))) then begin
 									Time := (Time - 1440)
 								end;
@@ -125,26 +125,26 @@ protoDigitalClock := {
 						end else begin
 							Time := min((basedate + (if midnite then 1440 else 1439)), Time);
 							Time := max((basedate + (if midnite then 1 else 0)), Time)
-						end; l8 := 9999; l9 := 0; if ((l7 mod 10) <> (Time mod 10)) then begin
-							l8 := 77;
-							l9 := 94
-						end; if (((l7 mod 60) div 10) <> ((Time mod 60) div 10)) then begin
-							l8 := min(l8, 55);
-							l9 := max(l9, 72)
-						end; if ((l7 div 60) <> (Time div 60)) then begin
-							l8 := 3;
-							l9 := max(l9, 42)
-						end; if (if useAmPm then ((l7 div 720) <> (Time div 720))) then begin
-							l8 := min(l8, 100);
-							l9 := 119;
-							if (abs(l2) = 720) then begin
-									l8 := 100
+						end; least := 9999; most := 0; if ((time2 mod 10) <> (Time mod 10)) then begin
+							least := 77;
+							most := 94
+						end; if (((time2 mod 60) div 10) <> ((Time mod 60) div 10)) then begin
+							least := min(least, 55);
+							most := max(most, 72)
+						end; if ((time2 div 60) <> (Time div 60)) then begin
+							least := 3;
+							most := max(most, 42)
+						end; if (if useAmPm then ((time2 div 720) <> (Time div 720))) then begin
+							least := min(least, 100);
+							most := 119;
+							if (abs(increment2) = 720) then begin
+									least := 100
 								end
-						end; (l10 := Clone('{left: 77, top: 2, right: 94, bottom: 26})).left := l8; l10.right := l9; if (l9 <> 0) then begin
-							self:RevealEffect(l4, l10, @click, 'Advance, nil)
+						end; (copy := Clone('{left: 77, top: 2, right: 94, bottom: 26})).left := least; copy.right := most; if (most <> 0) then begin
+							self:RevealEffect(l4, copy, @click, 'Advance, nil)
 						end; if ((l6 := (l6 - Ticks())) > 0) then begin
 							Sleep(l6)
-						end; l6 := (Ticks() + repeatingTapDelay) until StrokeDone(a1));
+						end; l6 := (Ticks() + repeatingTapDelay) until StrokeDone(unit));
 				self:?TimeChanged();
 				true
 			end

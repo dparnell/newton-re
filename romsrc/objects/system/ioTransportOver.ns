@@ -2,31 +2,31 @@
 
 ioTransportOver := {
 	GetTargetInfo: func(a1) begin
-		local l1;
+		local frame2;
 		if (if selected then (Length(selected) > 0)) then begin
 				if (Length(selected) = 1) then begin
-						if (l1 := {target: ResolveEntryAlias(selected[0]), targetView: self}).target then begin
-								l1.appSymbol := l1.target.appSymbol
+						if (frame2 := {target: ResolveEntryAlias(selected[0]), targetView: self}).target then begin
+								frame2.appSymbol := frame2.target.appSymbol
 							end
 					end else begin
-						l1 := {target: CreateTargetCursor('newtOverview, selected), targetView: self};
+						frame2 := {target: CreateTargetCursor('newtOverview, selected), targetView: self};
 						if (a1 = 'Filing) then begin
-								l1.target.labels := '__XXTempLabel
+								frame2.target.labels := '__XXTempLabel
 							end
 					end
 			end else begin
-				l1 := {target: nil, targetView: nil}
+				frame2 := {target: nil, targetView: nil}
 			end;
-		layout.target := l1.target;
+		layout.target := frame2.target;
 		if (a1 = 'Filing) then begin
-				l1.targetView := newtAppBase
+				frame2.targetView := newtAppBase
 			end;
-		l1
+		frame2
 	end,
 	overviewMode: nil,
-	NewEntry: func(a1, a2, a3) begin
-		masterSoup:AddEntry(a1, a3);
-		if a2 then begin
+	NewEntry: func(a1, _context, store) begin
+		masterSoup:AddEntry(a1, store);
+		if _context then begin
 				dataCursor:Goto(a1)
 			end;
 		AddProcrastinatedSend(appSymbol, layout, 'Retarget, '[Array: true], 0)
@@ -44,23 +44,23 @@ ioTransportOver := {
 			end
 		},
 		func(a1) begin
-			local l1, l2, l3, l4;
-			if (l2 := self:GetIndexEntry((l1 := (a1 + scrollOrigin)))) then begin
-					l3 := MakeEntryAlias(l2);
+			local pos, indexEntry, entryAlias, box;
+			if (indexEntry := self:GetIndexEntry((pos := (a1 + scrollOrigin)))) then begin
+					entryAlias := MakeEntryAlias(indexEntry);
 					if self.selected then begin
-							if (l1 := ArrayPos(self.selected, l3, 0, kFunction_4c44f5)) then begin
-									RemoveSlot(self.selected, l1)
+							if (pos := ArrayPos(self.selected, entryAlias, 0, kFunction_4c44f5)) then begin
+									RemoveSlot(self.selected, pos)
 								end else begin
-									AddArraySlot(self.selected, l3)
+									AddArraySlot(self.selected, entryAlias)
 								end
 						end else begin
-							self.selected := [Array: l3]
+							self.selected := [Array: entryAlias]
 						end;
-					(l4 := self:LocalBox()).bottom := ((l4.top := (a1 * lineHeight)) + lineHeight);
+					(box := self:LocalBox()).bottom := ((box.top := (a1 * lineHeight)) + lineHeight);
 					if (if selected then (Length(selected) > 0)) then begin
 							newtAppBase.target := ResolveEntryAlias(selected[0])
 						end;
-					pieces[a1] := self:GetTheRightShape((a1 + scrollOrigin), l4)
+					pieces[a1] := self:GetTheRightShape((a1 + scrollOrigin), box)
 				end else begin
 					pieces := nil
 				end;
@@ -81,27 +81,27 @@ ioTransportOver := {
 				IsSameEntry(a1, a2)
 			end
 		},
-		func(a1) begin
+		func(indexEntry) begin
 			l1 := nil;
 			local l1;
-			(foreach l2 in headings do begin
-					if (l2.index = a1) then begin
+			(foreach item in headings do begin
+					if (item.index = indexEntry) then begin
 							l1 := 'NotCheckable
 						end
 				end);
 			if (not l1) then begin
-					l1 := (if self.selected then ArrayPos(self.selected, self:GetIndexEntry(a1), 0, kFunction_4c4619))
+					l1 := (if self.selected then ArrayPos(self.selected, self:GetIndexEntry(indexEntry), 0, kFunction_4c4619))
 				end;
 			l1
 		end),
 	selectIndex: 0,
 	viewFlags: vVisible + vClipping + vClickable,
-	GetIndexEntry: func(a1) begin
+	GetIndexEntry: func(indexEntry) begin
 		local l1;
 		l1 := (Length(headings) - 1);
-		(while (headings[l1].index > a1) do (l1 := (l1 - 1)));
+		(while (headings[l1].index > indexEntry) do (l1 := (l1 - 1)));
 		currentHeadingIndex := l1;
-		if (a1 = headings[l1].index) then begin
+		if (indexEntry = headings[l1].index) then begin
 				if overviewMode then begin
 						headings[l1].collapsed := nil
 					end else begin
@@ -111,7 +111,7 @@ ioTransportOver := {
 				if (not overviewMode) then begin
 						return nil
 					end else begin
-						a1 := (a1 + 1)
+						indexEntry := (indexEntry + 1)
 					end
 			end;
 		if headings[l1].curs then begin
@@ -119,7 +119,7 @@ ioTransportOver := {
 			end else begin
 				headings[l1].curs := self:MakeCursor(currentSoupSymbol, headings[l1].spec)
 			end;
-		headings[l1].curs:move(((a1 - headings[l1].index) - 1))
+		headings[l1].curs:move(((indexEntry - headings[l1].index) - 1))
 	end,
 	stateStrings: {
 		pending: pending,
@@ -130,34 +130,34 @@ ioTransportOver := {
 		Read: read,
 		InLog: logged
 	},
-	Abstract: func(a1, a2) begin
-		local l1, l2, l3, l4, l5, l6, l7, l8;
-		if (a1 >= numItems) then begin
+	Abstract: func(items2Item, copy2) begin
+		local text, strWidth2, list, l4, l5, move, itemTransport, copy;
+		if (items2Item >= numItems) then begin
 				return nil
 			end;
 		l4 := (Length(headings) - 1);
-		(while (headings[l4].index > a1) do (l4 := (l4 - 1)));
-		if (a1 = headings[l4].index) then begin
-				l3 := [Array: (l5 := (if (headings[l4].collapsed or overviewMode) then '{fillPattern: 5} else '{pensize: 2})), MakeOval(((a2.left - selectIndent) + 3), (a2.bottom - 17), ((a2.left - selectIndent) + 11), (a2.bottom - 9)), '{pensize: 1, fillPattern: 0, font: 1058816}, MakeText(headings[l4].title, (a2.left + 1), a2.top, a2.right, (a2.bottom - 8))];
-				l2 := StrWidth((l1 := ParamStr("^0 ^1", [Array: headings[l4].count, (if (headings[l4].count = 1) then "Item" else "Items")])));
-				AddArraySlot(l3, MakeText(l1, ((a2.right - l2) - 5), a2.top, a2.right, (a2.bottom - 8)));
-				AddArraySlot(l3, MakeLine((a2.left + 1), (a2.bottom - 4), a2.right, (a2.bottom - 4)))
+		(while (headings[l4].index > items2Item) do (l4 := (l4 - 1)));
+		if (items2Item = headings[l4].index) then begin
+				list := [Array: (l5 := (if (headings[l4].collapsed or overviewMode) then '{fillPattern: 5} else '{pensize: 2})), MakeOval(((copy2.left - selectIndent) + 3), (copy2.bottom - 17), ((copy2.left - selectIndent) + 11), (copy2.bottom - 9)), '{pensize: 1, fillPattern: 0, font: tsSystem + tsSize(10) + tsBold}, MakeText(headings[l4].title, (copy2.left + 1), copy2.top, copy2.right, (copy2.bottom - 8))];
+				strWidth2 := StrWidth((text := ParamStr("^0 ^1", [Array: headings[l4].count, (if (headings[l4].count = 1) then "Item" else "Items")])));
+				AddArraySlot(list, MakeText(text, ((copy2.right - strWidth2) - 5), copy2.top, copy2.right, (copy2.bottom - 8)));
+				AddArraySlot(list, MakeLine((copy2.left + 1), (copy2.bottom - 4), copy2.right, (copy2.bottom - 4)))
 			end else begin
 				if headings[l4].curs then begin
 						headings[l4].curs:Reset()
 					end else begin
 						headings[l4].curs := self:MakeCursor(currentSoupSymbol, headings[l4].spec)
 					end;
-				l7 := GetItemTransport((l6 := headings[l4].curs:move(((a1 - headings[l4].index) - 1))));
-				(l8 := Clone(a2)).left := (a2.left + 30);
-				l8.right := a2.right;
+				itemTransport := GetItemTransport((move := headings[l4].curs:move(((items2Item - headings[l4].index) - 1))));
+				(copy := Clone(copy2)).left := (copy2.left + 30);
+				copy.right := copy2.right;
 				try begin
-						l3 := [Array: OffsetShape(MakeShape(l7.icon), a2.left, (a2.top + 2)), l7:GetTitleInfoShape(l6, l8)]
+						list := [Array: OffsetShape(MakeShape(itemTransport.icon), copy2.left, (copy2.top + 2)), itemTransport:GetTitleInfoShape(move, copy)]
 					end onexception |evt.ex| do begin
-						l3 := [Array: ]
+						list := [Array: ]
 					end
 			end;
-		l3
+		list
 	end,
 	viewBounds: {left: 0, top: 38, right: 0, bottom: -22},
 	dataSoup: nil,
@@ -178,40 +178,40 @@ ioTransportOver := {
 						theTagSpec.all := labelsFilter
 					end
 			end;
-		local l1;
+		local spec;
 		(if (sortby = 'Date) then begin
 				lastItem := -1;
 				dayEnd := (dayStart := 0);
-				(l1 := self:GetSpec(sortby, theTagSpec, nil)).IndexValidTest := func(a1) begin
-					local l1, l2;
+				(spec := self:GetSpec(sortby, theTagSpec, nil)).IndexValidTest := func(a1) begin
+					local copy, l2;
 					if ((a1 >= dayEnd) or (a1 < dayStart)) then begin
 							dayEnd := ((dayStart := ((l2 := (a1 div 1440)) * 1440)) + 1440);
-							(l1 := Clone('{title: nil, collapsed: nil, count: 1, spec: nil})).sortTag := dayStart;
-							l1.title := LongDateStr(dayStart, 0);
-							l1.spec := self:GetSpec(sortby, theTagSpec, a1);
-							AddArraySlot(headings, l1);
+							(copy := Clone('{title: nil, collapsed: nil, count: 1, spec: nil})).sortTag := dayStart;
+							copy.title := LongDateStr(dayStart, 0);
+							copy.spec := self:GetSpec(sortby, theTagSpec, a1);
+							AddArraySlot(headings, copy);
 							lastItem := (lastItem + 1)
 						end else begin
-							(l1 := headings[lastItem]).count := (l1.count + 1);
+							(copy := headings[lastItem]).count := (copy.count + 1);
 							if sortUp then begin
-									l1.spec.endKey := a1
+									copy.spec.endKey := a1
 								end else begin
-									l1.spec.beginKey := a1
+									copy.spec.beginKey := a1
 								end
 						end;
 					return nil
 				end;
-				self:MakeCursor(currentSoupSymbol, l1)
-			end else (if (sortby = 'transport) then (foreach l2 in transports do begin
-						local l4, l5, l6, l7;
-						if (if (if (l4 := GetRoot().(l2)) then l4.(checkSlot)) then (l4.owner = appSymbol)) then begin
-								(l5 := Clone('{title: nil, collapsed: nil, count: 1, spec: nil})).title := l4.title;
-								l6 := (l5.spec := self:GetSpec(sortby, theTagSpec, l2));
-								l7 := self:MakeCursor(currentSoupSymbol, l6);
-								l5.count := l7:CountEntries();
-								l5.sortTag := l2;
-								l5.collapsed := l4:GetConfig(collapsedSym);
-								AddArraySlot(headings, l5)
+				self:MakeCursor(currentSoupSymbol, spec)
+			end else (if (sortby = 'transport) then (foreach item in transports do begin
+						local l4, copy, l6, cursor;
+						if (if (if (l4 := GetRoot().(item)) then l4.(checkSlot)) then (l4.owner = appSymbol)) then begin
+								(copy := Clone('{title: nil, collapsed: nil, count: 1, spec: nil})).title := l4.title;
+								l6 := (copy.spec := self:GetSpec(sortby, theTagSpec, item));
+								cursor := self:MakeCursor(currentSoupSymbol, l6);
+								copy.count := cursor:CountEntries();
+								copy.sortTag := item;
+								copy.collapsed := l4:GetConfig(collapsedSym);
+								AddArraySlot(headings, copy)
 							end
 					end) else (if (sortby = 'status) then (if (currentSoupSymbol = 'outbox) then begin
 							self:AddStateHeading('pending, theTagSpec);
@@ -232,100 +232,100 @@ ioTransportOver := {
 			end else begin
 				self.checkSlot := 'ReceiveRequest
 			end;
-		l1 := masterSoup.theCursor:entry();
+		entry := masterSoup.theCursor:entry();
 		masterSoup:SetupCursor();
 		dataCursor := masterSoup:GetCursor();
-		if IsSoupEntry(l1) then begin
-				dataCursor:Goto(l1)
+		if IsSoupEntry(entry) then begin
+				dataCursor:Goto(entry)
 			end;
-		l2 := [Array: ];
-		l3 := dataCursor:clone();
+		list := [Array: ];
+		copy := dataCursor:clone();
 		if selected then begin
-				local l1;
-				local l2;
-				local l3;
-				(foreach l4 in selected do begin
-						local l6;
-						if (if IsSoupEntry((l6 := ResolveEntryAlias(l4))) then l3:Goto(l6)) then begin
-								AddArraySlot(l2, l4)
+				local entry;
+				local list;
+				local copy;
+				(foreach item in selected do begin
+						local resolveEntryAlias2;
+						if (if IsSoupEntry((resolveEntryAlias2 := ResolveEntryAlias(item))) then copy:Goto(resolveEntryAlias2)) then begin
+								AddArraySlot(list, item)
 							end
 					end);
-				selected := l2
+				selected := list
 			end;
 		self:Retarget(true)
 	end,
 	EndFlush: func() begin
 		nil
 	end,
-	Scroller: func(a1) begin
-		if (a1 < 0) then begin
-				scrollOrigin := max(0, (scrollOrigin + a1))
+	Scroller: func(maxLines2) begin
+		if (maxLines2 < 0) then begin
+				scrollOrigin := max(0, (scrollOrigin + maxLines2))
 			end else begin
-				scrollOrigin := min(max(0, (numItems - maxLines)), (scrollOrigin + a1))
+				scrollOrigin := min(max(0, (numItems - maxLines)), (scrollOrigin + maxLines2))
 			end;
 		pieces := nil;
 		self:Dirty()
 	end,
 	SetupAbstracts: func() begin
 		self:Retarget(nil);
-		l1 := dataCursor:entry();
-		l2 := self:LocalBox();
-		self.maxLines := (l2.bottom div lineHeight);
-		l2.bottom := lineHeight;
+		entry := dataCursor:entry();
+		box := self:LocalBox();
+		self.maxLines := (box.bottom div lineHeight);
+		box.bottom := lineHeight;
 		hilitedIndex := nil;
 		self.numItems := 0;
 		l3 := (scrollOrigin = -1);
 		l4 := nil;
-		l5 := self:GetAppPreferences().sortby;
-		local l1;
-		local l2;
+		sortby := self:GetAppPreferences().sortby;
+		local entry;
+		local box;
 		local l3;
 		local l4;
-		local l5;
-		(foreach l6 in headings do begin
-				l6.index := numItems;
-				if (if l3 then l1) then begin
-						if (l5 = 'Date) then begin
-								l4 := (if (l1.timestamp >= l6.sortTag) then (l1.timestamp < (l6.sortTag + 1440)))
+		local sortby;
+		(foreach item in headings do begin
+				item.index := numItems;
+				if (if l3 then entry) then begin
+						if (sortby = 'Date) then begin
+								l4 := (if (entry.timestamp >= item.sortTag) then (entry.timestamp < (item.sortTag + 1440)))
 							end else begin
-								if (l5 = 'transport) then begin
-										l4 := (l1.category = l6.sortTag)
+								if (sortby = 'transport) then begin
+										l4 := (entry.category = item.sortTag)
 									end else begin
-										if (l5 = 'status) then begin
-												l4 := (l1.state = l6.sortTag)
+										if (sortby = 'status) then begin
+												l4 := (entry.state = item.sortTag)
 											end
 									end
 							end;
 						if l4 then begin
-								if (overviewMode or l6.collapsed) then begin
-										scrollOrigin := l6.index
+								if (overviewMode or item.collapsed) then begin
+										scrollOrigin := item.index
 									end else begin
 										l8 := 0;
-										if (not (l9 := l6.curs)) then begin
-												l9 := self:MakeCursor(currentSoupSymbol, l6.spec)
+										if (not (curs := item.curs)) then begin
+												curs := self:MakeCursor(currentSoupSymbol, item.spec)
 											end;
-										l9:Goto(l1);
-										(while l9:prev() do (l8 := (l8 + 1)));
+										curs:Goto(entry);
+										(while curs:prev() do (l8 := (l8 + 1)));
 										scrollOrigin := (numItems + l8)
 									end
 							end
 					end;
-				if (if (not overviewMode) then (not l6.collapsed)) then begin
-						numItems := ((numItems + l6.count) + 1)
+				if (if (not overviewMode) then (not item.collapsed)) then begin
+						numItems := ((numItems + item.count) + 1)
 					end else begin
 						numItems := (numItems + 1)
 					end;
-				if (if (if (not l3) then (scrollOrigin >= l6.index)) then (scrollOrigin < numItems)) then begin
-						if l6.curs then begin
-								l6.curs:Reset()
+				if (if (if (not l3) then (scrollOrigin >= item.index)) then (scrollOrigin < numItems)) then begin
+						if item.curs then begin
+								item.curs:Reset()
 							end else begin
-								l6.curs := self:MakeCursor(currentSoupSymbol, l6.spec)
+								item.curs := self:MakeCursor(currentSoupSymbol, item.spec)
 							end;
-						if (scrollOrigin > l6.index) then begin
-								l6.curs:move(((scrollOrigin - l6.index) - 1))
+						if (scrollOrigin > item.index) then begin
+								item.curs:move(((scrollOrigin - item.index) - 1))
 							end;
-						if (l1 := l6.curs:entry()) then begin
-								dataCursor:Goto(l1)
+						if (entry := item.curs:entry()) then begin
+								dataCursor:Goto(entry)
 							end
 					end
 			end);
@@ -339,24 +339,24 @@ ioTransportOver := {
 		checkBoxVertOffset := 2;
 		self.pieces := Array(min(maxLines, max((numItems - scrollOrigin), 0)), nil);
 		local l8;
-		local l9;
+		local curs;
 		local l10;
-		(for l11 := 0 to (Length(pieces) - 1) do begin
-				pieces[l11] := self:GetTheRightShape((l11 + scrollOrigin), l2);
-				l2.bottom := ((l2.top := l2.bottom) + lineHeight)
+		(for i := 0 to (Length(pieces) - 1) do begin
+				pieces[i] := self:GetTheRightShape((i + scrollOrigin), box);
+				box.bottom := ((box.top := box.bottom) + lineHeight)
 			end);
 		self.numLines := Length(pieces);
 		nil
 	end,
 	SyncItems: func() begin
-		l1 := self:GetAppPreferences().sortby;
-		local l1;
-		(foreach l2 in headings do begin
-				local l4;
-				l4 := self:MakeCursor(currentSoupSymbol, l2.spec);
-				l2.count := l4:CountEntries();
-				if (if (l2.count = 0) then (l1 = 'Date)) then begin
-						SetRemove(headings, l2)
+		sortby := self:GetAppPreferences().sortby;
+		local sortby;
+		(foreach item in headings do begin
+				local cursor;
+				cursor := self:MakeCursor(currentSoupSymbol, item.spec);
+				item.count := cursor:CountEntries();
+				if (if (item.count = 0) then (sortby = 'Date)) then begin
+						SetRemove(headings, item)
 					end
 			end)
 	end,
@@ -371,7 +371,7 @@ ioTransportOver := {
 				end))
 	end,
 	Retarget: func(a1) begin
-		if (((l1 := dataCursor:entry()) = 'deleted) or (l1 = nil)) then begin
+		if (((entry := dataCursor:entry()) = 'deleted) or (entry = nil)) then begin
 				dataCursor:Next();
 				if (dataCursor:entry() = nil) then begin
 						dataCursor:prev()
@@ -387,9 +387,9 @@ ioTransportOver := {
 				pieces := nil;
 				self:Dirty()
 			end;
-		local l1;
-		(if retargetChain then (foreach l2 in retargetChain do begin
-					l2:RetargetNotify()
+		local entry;
+		(if retargetChain then (foreach item in retargetChain do begin
+					item:RetargetNotify()
 				end))
 	end,
 	viewJustify: vjParentFullH + vjParentFullV,
@@ -407,25 +407,25 @@ ioTransportOver := {
 		self:ioDuplicateEntry(a1)
 	end,
 	dataCursor: nil,
-	AddStateHeading: func(a1, a2) begin
-		local l1;
-		(l1 := Clone('{title: nil, collapsed: nil, count: 1, spec: nil})).sortTag := a1;
-		l1.title := stateStrings.(a1);
-		l1.spec := self:GetSpec('status, a2, a1);
-		curs := self:MakeCursor(currentSoupSymbol, l1.spec);
-		l1.count := curs:CountEntries();
-		l1.collapsed := statesCollapsed.(a1);
-		AddArraySlot(headings, l1)
+	AddStateHeading: func(a1, theTagSpec) begin
+		local copy;
+		(copy := Clone('{title: nil, collapsed: nil, count: 1, spec: nil})).sortTag := a1;
+		copy.title := stateStrings.(a1);
+		copy.spec := self:GetSpec('status, theTagSpec, a1);
+		curs := self:MakeCursor(currentSoupSymbol, copy.spec);
+		copy.count := curs:CountEntries();
+		copy.collapsed := statesCollapsed.(a1);
+		AddArraySlot(headings, copy)
 	end,
 	viewSetupFormScript: func() begin
-		local l1;
+		local blessedapp;
 		mastersoupSlot := currentSoupSymbol;
 		masterSoup := allSoups.(mastersoupSlot);
-		(if (if (l1 := GetUserConfig('blessedapp)) then (GetRoot().(l1) = newtAppBase)) then newtAppBase:FileUsedItems())
+		(if (if (blessedapp := GetUserConfig('blessedapp)) then (GetRoot().(blessedapp) = newtAppBase)) then newtAppBase:FileUsedItems())
 	end,
-	SaveHeadingState: func(a1) begin
-		local l1, l2;
-		(if ((l1 := ClassOf(headings)) = 'transport) then (if (l2 := GetRoot().(a1.sortTag)) then l2:SetConfig(collapsedSym, a1.collapsed)) else (if (l1 = 'status) then (statesCollapsed.(a1.sortTag) := a1.collapsed)))
+	SaveHeadingState: func(heading) begin
+		local cls, l2;
+		(if ((cls := ClassOf(headings)) = 'transport) then (if (l2 := GetRoot().(heading.sortTag)) then l2:SetConfig(collapsedSym, heading.collapsed)) else (if (cls = 'status) then (statesCollapsed.(heading.sortTag) := heading.collapsed)))
 	end,
 	FilingChangedX: func() begin
 		(if IsSoupEntry(target) then begin
@@ -435,19 +435,19 @@ ioTransportOver := {
 				layout:Retarget(true)
 			end)
 	end,
-	HitItem: func(a1, a2, a3) begin
-		local l1;
+	HitItem: func(a1, trackScrollingItem, trackScrollingItem2) begin
+		local indexEntry;
 		(if ((a1 + scrollOrigin) < numItems) then begin
-				if (if (a2 < selectIndent) then (not overviewMode)) then begin
+				if (if (trackScrollingItem < selectIndent) then (not overviewMode)) then begin
 						self:SelectItem(a1)
 					end else begin
-						if (l1 := self:GetIndexEntry((a1 + scrollOrigin))) then begin
+						if (indexEntry := self:GetIndexEntry((a1 + scrollOrigin))) then begin
 								if (self:GetAppPreferences().sortby <> 'Date) then begin
 										masterSoup.soupQuery := headings[currentHeadingIndex].spec;
 										masterSoup:SetupCursor();
 										dataCursor := masterSoup:GetCursor()
 									end;
-								dataCursor:Goto(l1);
+								dataCursor:Goto(indexEntry);
 								if overviewMode then begin
 										overviewMode := nil;
 										pieces := nil;
@@ -464,29 +464,29 @@ ioTransportOver := {
 				true
 			end)
 	end,
-	FileThis: func(a1, a2, a3, a4, a5) begin
-		local l1, l2;
-		l2 := (l1 := GetTargetCursor(a1, nil)):entry();
-		(while l2 do begin
-				if a2 then begin
+	FileThis: func(target, labelsChanged, a3, storeChanged, a5) begin
+		local targetCursor, next;
+		next := (targetCursor := GetTargetCursor(target, nil)):entry();
+		(while next do begin
+				if labelsChanged then begin
 						if (not a3) then begin
-								if l2.labels then begin
-										RemoveSlot(l2, 'labels);
-										self:Fileit(l2);
-										EntryChange(l2)
+								if next.labels then begin
+										RemoveSlot(next, 'labels);
+										self:Fileit(next);
+										EntryChange(next)
 									end
 							end else begin
-								if (a3 <> l2.labels) then begin
-										l2.labels := a3;
-										self:Fileit(l2);
-										EntryChange(l2)
+								if (a3 <> next.labels) then begin
+										next.labels := a3;
+										self:Fileit(next);
+										EntryChange(next)
 									end
 							end
 					end;
-				if a4 then begin
-						self:MoveTarget(l2, a5)
+				if storeChanged then begin
+						self:MoveTarget(next, a5)
 					end;
-				(l2 := l1:Next())
+				(next := targetCursor:Next())
 			end);
 		selected := nil;
 		layout:Retarget(true)
@@ -498,20 +498,20 @@ ioTransportOver := {
 	FlushData: func() begin
 		nil
 	end,
-	KillEntry: func(a1) begin
-		self:ioKillEntry(a1)
+	KillEntry: func(target) begin
+		self:ioKillEntry(target)
 	end,
 	viewSetupChildrenScript: func() begin
-		local l1;
+		local entry;
 		inherited:?viewSetupChildrenScript();
 		mastersoupSlot := currentSoupSymbol;
 		dataSoup := (masterSoup := allSoups.(mastersoupSlot)).theSoup;
-		l1 := masterSoup:GetCursor():entry();
+		entry := masterSoup:GetCursor():entry();
 		masterSoup.soupQuery := {type: 'index, indexPath: 'timestamp};
 		masterSoup:SetupCursor();
 		dataCursor := masterSoup:GetCursor();
-		if IsSoupEntry(l1) then begin
-				dataCursor:Goto(l1)
+		if IsSoupEntry(entry) then begin
+				dataCursor:Goto(entry)
 			end;
 		newtAppBase.layout := self;
 		newtAppBase.targetView := self;
@@ -530,19 +530,19 @@ ioTransportOver := {
 		constants: {
 			kLiteral_3c5eed: '{transferMode: 2, penPattern: 0, fillPattern: 5}
 		},
-		func(a1, a2, a3) begin
-			local l1, l2, l3, l4;
-			l1 := ShapeBounds(a1);
-			(if a2 then (if (l1.left < selectIndent) then begin
-						l2 := self:CheckState((a2 + scrollOrigin));
-						(l3 := Clone(kLiteral_3c5eed)).fillPattern := 5;
-						(if (l2 = 'NotCheckable) then self:DrawShape(OffsetShape((l4 := [Array: l3, MakeOval((l1.left + 5), (l1.bottom - 15), (l1.left + 9), (l1.bottom - 11))]), l1.left, (l1.top + (a2 * lineHeight))), kLiteral_3c5eed) else begin
+		func(hiliteShape, hilitedIndex, a3) begin
+			local shapeBounds2, checkState, copy, list;
+			shapeBounds2 := ShapeBounds(hiliteShape);
+			(if hilitedIndex then (if (shapeBounds2.left < selectIndent) then begin
+						checkState := self:CheckState((hilitedIndex + scrollOrigin));
+						(copy := Clone(kLiteral_3c5eed)).fillPattern := 5;
+						(if (checkState = 'NotCheckable) then self:DrawShape(OffsetShape((list := [Array: copy, MakeOval((shapeBounds2.left + 5), (shapeBounds2.bottom - 15), (shapeBounds2.left + 9), (shapeBounds2.bottom - 11))]), shapeBounds2.left, (shapeBounds2.top + (hilitedIndex * lineHeight))), kLiteral_3c5eed) else begin
 								if (a3 = 'on) then begin
-										l2 := (not l2)
+										checkState := (not checkState)
 									end;
-								self:DrawShape(OffsetShape((l4 := (if l2 then MakeShape(CheckOn) else MakeShape(CheckOff))), (l1.left + checkBoxHorzOffset), ((l1.top + checkBoxVertOffset) + (a2 * lineHeight))), '{transferMode: 0, penPattern: 0, fillPattern: 1})
+								self:DrawShape(OffsetShape((list := (if checkState then MakeShape(CheckOn) else MakeShape(CheckOff))), (shapeBounds2.left + checkBoxHorzOffset), ((shapeBounds2.top + checkBoxVertOffset) + (hilitedIndex * lineHeight))), '{transferMode: 0, penPattern: 0, fillPattern: 1})
 							end)
-					end else self:DrawShape(a1, {transform: [Array: 0, (a2 * lineHeight)]})))
+					end else self:DrawShape(hiliteShape, {transform: [Array: 0, (hilitedIndex * lineHeight)]})))
 		end),
 	atEnd: nil,
 	currentHeadingIndex: nil,

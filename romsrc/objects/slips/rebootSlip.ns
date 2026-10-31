@@ -9,11 +9,11 @@ rebootSlip := {
 	title: nil,
 	message: nil,
 	New: func(a1, a2) begin
-		local l1;
-		(l1 := BuildContext(self)).title := a1;
-		l1.message := a2;
-		l1:Open();
-		SetKeyView(l1, 0)
+		local context;
+		(context := BuildContext(self)).title := a1;
+		context.message := a2;
+		context:Open();
+		SetKeyView(context, 0)
 	end,
 	ReOrientToScreen: @defRotateFunc,
 	viewChildren: [viewChildren:

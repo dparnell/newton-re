@@ -2,9 +2,9 @@
 
 defaultInfoPrefs := {
 	DoInfoHelp: func() begin
-		local l1, l2;
+		local l1, tinyTim;
 		l1 := GetRoot().(appSymbol);
-		(if (if (l2 := GetRoot().TinyTim) then l2.viewCObject) then l2:Close() else OpenHelpTo("Route"))
+		(if (if (tinyTim := GetRoot().TinyTim) then tinyTim.viewCObject) then tinyTim:Close() else OpenHelpTo("Route"))
 	end,
 	GetTitle: func() begin
 		GetRoot().(appSymbol).title

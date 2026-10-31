@@ -4,9 +4,9 @@ newtTextView := {
 	_proto: @newtroTextView,
 	viewFlags: vVisible + vClipping + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed,
 	recConfig: @rcInkorText,
-	viewChangedScript: func(a1, a2) begin
-		(if (if (not hack) then (a1 = 'text)) then begin
-				target.(path) := a2:GetRichString();
+	viewChangedScript: func(slot, view) begin
+		(if (if (not hack) then (slot = 'text)) then begin
+				target.(path) := view:GetRichString();
 				self:StartFlush()
 			end)
 	end

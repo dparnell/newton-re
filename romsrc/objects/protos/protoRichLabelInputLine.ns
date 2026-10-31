@@ -40,8 +40,8 @@ entryLine_2 := {
 	viewJustify: 8388800,
 	viewFont: tsHWFont + tsSize(12),
 	viewFormat: vfLinesGray,
-	viewChangedScript: func(a1, a2) begin
-		(if (a1 = 'text) then self:textChanged())
+	viewChangedScript: func(slot, view) begin
+		(if (slot = 'text) then self:textChanged())
 	end,
 	preallocatedContext: 'entryLine
 };

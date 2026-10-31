@@ -7,28 +7,28 @@ volumeSlider := {
 	hwMode: nil,
 	hwUpdateFreq: 333,
 	viewSetupFormScript: func() begin
-		local l1;
-		l1 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1]);
-		self.maxValue := (l1[5] + 1);
-		self.dbIncr := (l1[4] / (maxValue - 1));
-		(if (if hwSavy then l1[2]) then begin
+		local gestalt2;
+		gestalt2 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1]);
+		self.maxValue := (gestalt2[5] + 1);
+		self.dbIncr := (gestalt2[4] / (maxValue - 1));
+		(if (if hwSavy then gestalt2[2]) then begin
 				self.viewFlags := ((viewFlags - 512) + 2);
 				self.viewValue := self:DbToViewValue(GetSystemVolume());
 				self:SetupIdle(hwUpdateFreq)
 			end else (self.viewValue := self:DbToViewValue(GetUserConfig(userConfigSlot))))
 	end,
 	viewIdleScript: func() begin
-		local l1;
-		if ((l1 := self:DbToViewValue(GetSystemVolume())) <> self.viewValue) then begin
-				SetValue(self, 'viewValue, l1)
+		local dbToViewValue;
+		if ((dbToViewValue := self:DbToViewValue(GetSystemVolume())) <> self.viewValue) then begin
+				SetValue(self, 'viewValue, dbToViewValue)
 			end;
 		return hwUpdateFreq
 	end,
 	DbToViewValue: func(a1) begin
 		max(0, (maxValue - rinttol((a1 / dbIncr))))
 	end,
-	ViewValueToDb: func(a1) begin
-		(if (a1 = 0) then (-32768.0) else ((maxValue - a1) * dbIncr))
+	ViewValueToDb: func(viewValue) begin
+		(if (viewValue = 0) then (-32768.0) else ((maxValue - viewValue) * dbIncr))
 	end,
 	viewSetupDoneScript: func() begin
 		(if (not hwMode) then begin
@@ -42,34 +42,34 @@ volumeSlider := {
 		(if (not hwMode) then UnRegUserConfigChange(userConfigChangeSym))
 	end,
 	HandleConfigChange: func(a1) begin
-		local l1, l2;
+		local gestalt2, dbToViewValue;
 		(if (a1 = 'outputDevice) then begin
-				l1 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1]);
-				SetValue(self, 'maxValue, (l1[5] + 1));
-				(self.dbIncr := (l1[4] / (maxValue - 1)))
+				gestalt2 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1]);
+				SetValue(self, 'maxValue, (gestalt2[5] + 1));
+				(self.dbIncr := (gestalt2[4] / (maxValue - 1)))
 			end else (if (a1 = userConfigSlot) then begin
-					l2 := self:DbToViewValue(GetUserConfig(userConfigSlot));
-					(if (viewValue <> l2) then SetValue(self, 'viewValue, l2))
+					dbToViewValue := self:DbToViewValue(GetUserConfig(userConfigSlot));
+					(if (viewValue <> dbToViewValue) then SetValue(self, 'viewValue, dbToViewValue))
 				end))
 	end,
 	trackSlider: func() begin
-		local l1;
+		local viewValueToDb;
 		(if (not hwMode) then begin
-				l1 := self:ViewValueToDb(viewValue);
+				viewValueToDb := self:ViewValueToDb(viewValue);
 				(if (userConfigSlot = 'soundVolumeDb) then begin
-						SetSystemVolume(l1);
+						SetSystemVolume(viewValueToDb);
 						PlaySoundIrregardless(@ratchetSound)
-					end else PlaySoundIrregardlessAtVolume(@ratchetSound, l1))
+					end else PlaySoundIrregardlessAtVolume(@ratchetSound, viewValueToDb))
 			end)
 	end,
 	ChangedSlider: func() begin
-		local l1;
-		l1 := self:ViewValueToDb(viewValue);
-		SetUserConfig(userConfigSlot, l1);
-		self:VolumeChangeAction(l1)
+		local viewValueToDb;
+		viewValueToDb := self:ViewValueToDb(viewValue);
+		SetUserConfig(userConfigSlot, viewValueToDb);
+		self:VolumeChangeAction(viewValueToDb)
 	end,
-	VolumeChangeAction: func(a1) begin
-		(if (userConfigSlot = 'soundVolumeDb) then self:SysBeep() else (if (userConfigSlot = 'alarmVolumeDb) then PlaySoundIrregardlessAtVolume(GetRegisteredSound(GetUserConfig('alarmSound)), a1)))
+	VolumeChangeAction: func(viewValueToDb) begin
+		(if (userConfigSlot = 'soundVolumeDb) then self:SysBeep() else (if (userConfigSlot = 'alarmVolumeDb) then PlaySoundIrregardlessAtVolume(GetRegisteredSound(GetUserConfig('alarmSound)), viewValueToDb)))
 	end,
 	_proto: @protoSlider
 };

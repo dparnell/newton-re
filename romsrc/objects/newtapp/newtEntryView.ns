@@ -17,16 +17,16 @@ newtEntryView := {
 	viewDef: 'default,
 	_entryViewForFiling: nil,
 	viewSetupFormScript: func() begin
-		local l1, l2, l3;
+		local nextEntry2, l2, entryDataDef;
 		_entryViewForFiling := self;
-		(if ((l1 := nextEntry) < Length(entries)) then begin
-				l2 := (target := entries[l1]);
+		(if ((nextEntry2 := nextEntry) < Length(entries)) then begin
+				l2 := (target := entries[nextEntry2]);
 				targetView := self;
-				viewDef := (if (targetViewDef := (if entryViewDefs then entryViewDefs[l1])) then targetViewDef.symbol);
-				if (l3 := GetEntryDataDef(l2)) then begin
-						l3:?SetupForm(l2, self)
+				viewDef := (if (targetViewDef := (if entryViewDefs then entryViewDefs[nextEntry2])) then targetViewDef.symbol);
+				if (entryDataDef := GetEntryDataDef(l2)) then begin
+						entryDataDef:?SetupForm(l2, self)
 					end;
-				(nextEntry := (l1 + 1))
+				(nextEntry := (nextEntry2 + 1))
 			end)
 	end,
 	ShowFoundItem: func(a1, a2) begin
@@ -40,19 +40,19 @@ newtEntryView := {
 		targetViewDef := (currentViewDef := nil);
 		targetDataDef := (currentDataDef := nil);
 		currentStatView := nil;
-		(foreach l1 in self:ChildViewFrames() do begin
-				if HasPath(l1, 'Retarget) then begin
-						l1:Retarget()
+		(foreach item in self:ChildViewFrames() do begin
+				if HasPath(item, 'Retarget) then begin
+						item:Retarget()
 					end
 			end)
 	end,
-	jamFromEntry: func(a1) begin
-		(foreach l1 in self:ChildViewFrames() do begin
-				if HasPath(l1, 'jamFromEntry) then begin
-						l1:jamFromEntry(a1)
+	jamFromEntry: func(resolveEntryAlias) begin
+		(foreach item in self:ChildViewFrames() do begin
+				if HasPath(item, 'jamFromEntry) then begin
+						item:jamFromEntry(resolveEntryAlias)
 					end;
-				if HasPath(l1, 'Retarget) then begin
-						l1:Retarget()
+				if HasPath(item, 'Retarget) then begin
+						item:Retarget()
 					end
 			end);
 		self:StartFlush()
@@ -82,27 +82,27 @@ newtEntryView := {
 			end)
 	end,
 	FlushEntry: func(a1) begin
-		local l1, l2, l3, l4, l5;
+		local entrySizeWithoutVBOs2, error, name, text, entrySizeWithoutVBOs3;
 		(if EntryValid(a1) then begin
 				try begin
-						l1 := EntrySizeWithoutVBOs(a1)
+						entrySizeWithoutVBOs2 := EntrySizeWithoutVBOs(a1)
 					end onexception |evt.ex| do begin
-						l1 := 0
+						entrySizeWithoutVBOs2 := 0
 					end;
 				try begin
 						EntryChange(a1)
 					end onexception |evt.ex.fr.store| do begin
-						l2 := CurrentException().error;
-						l3 := EntryStore(a1):GetName();
-						if (l2 = -10605) then begin
-								l4 := "^0 changes could not be saved (\u201C\u^1\u201D\u is write-protected)"
+						error := CurrentException().error;
+						name := EntryStore(a1):GetName();
+						if (error = -10605) then begin
+								text := "^0 changes could not be saved (\u201C\u^1\u201D\u is write-protected)"
 							end else begin
-								if (l2 = -10617) then begin
-										l4 := "^0 changes could not be saved (\u201C\u^1\u201D\u is full)"
+								if (error = -10617) then begin
+										text := "^0 changes could not be saved (\u201C\u^1\u201D\u is full)"
 									end
 							end;
-						if l4 then begin
-								self:Notify(3, title, ParamStr(l4, [Array: title, l3]))
+						if text then begin
+								self:Notify(3, title, ParamStr(text, [Array: title, name]))
 							end else begin
 								Rethrow()
 							end;
@@ -110,8 +110,8 @@ newtEntryView := {
 						self:RedoChildren()
 					end;
 				(if (self:AppMaxSizeExceeded exists) then (try begin
-							l5 := EntrySizeWithoutVBOs(a1);
-							(if (if (if (if (not settingHeight) then maxEntrySizeBytes) then (l5 > maxEntrySizeBytes)) then (l5 > l1)) then AddDeferredSend(self, 'AppMaxSizeExceeded, [Array: a1]))
+							entrySizeWithoutVBOs3 := EntrySizeWithoutVBOs(a1);
+							(if (if (if (if (not settingHeight) then maxEntrySizeBytes) then (entrySizeWithoutVBOs3 > maxEntrySizeBytes)) then (entrySizeWithoutVBOs3 > entrySizeWithoutVBOs2)) then AddDeferredSend(self, 'AppMaxSizeExceeded, [Array: a1]))
 						end onexception |evt.ex| do begin
 							nil
 						end))

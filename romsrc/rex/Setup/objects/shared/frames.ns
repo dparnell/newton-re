@@ -74,7 +74,7 @@ nameItemProto := {
 	viewSetupDoneScript: func() begin
 		(if (fformat = 'wide) then self:Hide() else self:Show())
 	end,
-	viewClickScript: func(a1) begin
+	viewClickScript: func(unit) begin
 		self:viewOverviewScript();
 		true
 	end,
@@ -91,7 +91,7 @@ nameItemProto_2 := {
 	viewSetupDoneScript: func() begin
 		(if (not (fformat = 'wide)) then self:Hide() else self:Show())
 	end,
-	viewClickScript: func(a1) begin
+	viewClickScript: func(unit) begin
 		self:viewOverviewScript();
 		true
 	end,
@@ -197,13 +197,13 @@ nameItem_5 := {
 		(self.viewLineSpacing := fontHeight(viewFont))
 	end,
 	AdjustHeight: func() begin
-		local l1, l2;
+		local l1, textBounds2;
 		(if (not (feedbackTop exists)) then begin
 				l1 := (if (feedbackWidth exists) then feedbackWidth else 240);
-				(if ((l2 := TextBounds(text, {font: viewFont}, RelBounds(0, 0, l1, 0))).bottom > self:LocalBox().bottom) then begin
-						l2.top := ((-l2.bottom) - 30);
-						l2.bottom := -30;
-						SetValue(self, 'viewBounds, l2)
+				(if ((textBounds2 := TextBounds(text, {font: viewFont}, RelBounds(0, 0, l1, 0))).bottom > self:LocalBox().bottom) then begin
+						textBounds2.top := ((-textBounds2.bottom) - 30);
+						textBounds2.bottom := -30;
+						SetValue(self, 'viewBounds, textBounds2)
 					end)
 			end)
 	end,

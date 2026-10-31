@@ -20,13 +20,13 @@ protoPeoplePicker := {
 				(dataClass := ClassOf(pickerDef))
 			end else (self.pickerDef := GetDataDefs(dataClass)))
 	end,
-	ChangeDataClass: func(a1) begin
-		local l1;
-		dataClass := a1;
-		if (not (l1 := GetDataDefs(a1))) then begin
+	ChangeDataClass: func(symbol2) begin
+		local dataDefs;
+		dataClass := symbol2;
+		if (not (dataDefs := GetDataDefs(symbol2))) then begin
 				Throw('|evt.ex.msg,invalid.dataClass|, "Invalid dataClass symbol")
 			end;
-		self:ChangePickerDef(l1)
+		self:ChangePickerDef(dataDefs)
 	end
 };
 

@@ -9,6 +9,37 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-31: romsrc/'s functions - numbers by name, arguments and locals named
+
+The owner asked next for the functions' numbers by name and their
+arguments named.  `tools/newton-rom/analysis/naturalcode.py` rewrote the
+tree's function source in place; it builds the same object file.
+
+- **Numbers.**  `constants.tsv` gained the error codes: the DDK headers'
+  `#define`s and enums evaluated (`naturalize.py`'s `header_values`), then
+  the reconstruction's (`src/frames/NSErrors.h` names NewtonScript's own,
+  which the DDK has no header for).  478 numbers in functions are named:
+  a view's slot (`viewJustify:`, `.viewFont :=`, `SetValue(v, 'viewFlags,
+  ...)`) and an error code given to a throw or error function or put in or
+  compared with an `error` slot.  Not every number in the codes' range is
+  one: -21600 and -10800 are time zones' offsets, and -10800 is also
+  `kError_DMA_Base`.  The builder makes each name its number before
+  compiling, and a sum of names that is a whole operand one number
+  (`romsrc.py`'s `code_with_constants`).
+- **Names.**  The compiler keeps none (`dbgNoVarNames`), so any name will
+  do - provided it is no word the function uses as a variable (a free
+  variable would be captured) and the function's argument frame stays
+  under 21 slots: past 20 the host's compiler, as the ROM's, keeps the
+  map sorted (`AddSlot`), so a name decides a variable's place - found
+  when Handwriting's `wordExample.drawExampleScript`, grown by the host's
+  engines, compiled to `c2a4` where it had `c2a3`.  6,786 were named after
+  a script's signature or a local's first value (the last step of a chain:
+  a slot, a call less its verb, the one symbol a getter is given), then
+  2,167 arguments after what their function's calls pass, in four rounds
+  as names spread.  About 40% of the uses are still `a1`, `l1`.
+- `CODE_TOKEN` has numbers; ctest `tools.ROMSourceNotation` checks the
+  constants' substitution.
+
 ## 2026-10-31: romsrc/ in its natural form
 
 The owner asked for the NewtonScript source the default boot is built

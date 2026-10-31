@@ -1,156 +1,156 @@
 // assistUtilities, and what only it reaches
 
 assistUtilities := {
-	FilterAction: func(a1, a2, a3, a4) begin
-		(foreach l1, l2 in a1 do begin
-				if (isa(l2, a4) <> nil) then begin
-						a3 := FilterStrings(a2[l1], a3)
+	FilterAction: func(input, phrases, copy, a4) begin
+		(foreach key, value in input do begin
+				if (isa(value, a4) <> nil) then begin
+						copy := FilterStrings(phrases[key], copy)
 					end
 			end);
-		(if (Length(a3) = 0) then return nil else return a3)
+		(if (Length(copy) = 0) then return nil else return copy)
 	end,
-	IsNoise: func(a1) begin
-		local l1;
-		if (((l1 := StrLen(a1)) < 2) or (l1 > 4)) then begin
+	IsNoise: func(prevStr) begin
+		local len;
+		if (((len := StrLen(prevStr)) < 2) or (len > 4)) then begin
 				return nil
 			end;
-		return FindStringInArray(@stopWordList, a1)
+		return FindStringInArray(@stopWordList, prevStr)
 	end,
-	FilterNoise: func(a1, a2) begin
-		(foreach l1, l2 in a1 do begin
-				if (FindStringInArray(a2, l2) <> nil) then begin
-						a1 := FilterStrings(l2, a1)
+	FilterNoise: func(copy, a2) begin
+		(foreach key, value in copy do begin
+				if (FindStringInArray(a2, value) <> nil) then begin
+						copy := FilterStrings(value, copy)
 					end
 			end);
-		(if (Length(a1) = 0) then return nil else return a1)
+		(if (Length(copy) = 0) then return nil else return copy)
 	end,
-	RemoveFromString: func(a1, a2, a3) begin
-		local l1, l2, l3, l4;
-		l1 := StrLen(a2);
-		if ((l2 := StrPos(a1, a2, 0)) > 0) then begin
-				if (if (l3 := self:prevStr(a1, l2)) then self:IsNoise(l3)) then begin
-						l4 := (StrLen(l3) + 1);
-						l2 := (l2 - l4);
-						l1 := (l1 + l4)
+	RemoveFromString: func(glueStrings, phrase, a3) begin
+		local len, pos, prevStr, l4;
+		len := StrLen(phrase);
+		if ((pos := StrPos(glueStrings, phrase, 0)) > 0) then begin
+				if (if (prevStr := self:prevStr(glueStrings, pos)) then self:IsNoise(prevStr)) then begin
+						l4 := (StrLen(prevStr) + 1);
+						pos := (pos - l4);
+						len := (len + l4)
 					end
 			end;
-		if ((l2 + l1) < StrLen(a1)) then begin
-				l1 := (l1 + 1)
+		if ((pos + len) < StrLen(glueStrings)) then begin
+				len := (len + 1)
 			end;
-		StrMunger(a1, l2, l1, nil, 0, 0);
-		return a1
+		StrMunger(glueStrings, pos, len, nil, 0, 0);
+		return glueStrings
 	end,
-	prevStr: func(a1, a2) begin
-		local l1, l2;
-		a2 := (a2 - 2);
-		if ((l2 := PrevSubStr(a1, a2)) < a2) then begin
-				l1 := Substr(a1, l2, ((a2 + 1) - l2))
+	prevStr: func(glueStrings, pos) begin
+		local part, prevSubStr2;
+		pos := (pos - 2);
+		if ((prevSubStr2 := PrevSubStr(glueStrings, pos)) < pos) then begin
+				part := Substr(glueStrings, prevSubStr2, ((pos + 1) - prevSubStr2))
 			end;
-		return l1
+		return part
 	end,
-	GetTime: func(a1, a2) begin
+	GetTime: func(a1, frame2) begin
 		if a1 then begin
-				a2.givenTime := self:GetUserTime(a1, a2)
+				frame2.givenTime := self:GetUserTime(a1, frame2)
 			end else begin
-				if a2.usualTime then begin
-						a2.givenTime := a2.usualTime
+				if frame2.usualTime then begin
+						frame2.givenTime := frame2.usualTime
 					end
 			end;
-		(if a2.givenTime then return self:GetActionTime(a2) else return a2.currentTime)
+		(if frame2.givenTime then return self:GetActionTime(frame2) else return frame2.currentTime)
 	end,
-	GetUserTime: func(a1, a2) begin
-		l5 := Array((l4 := Length(a1)), nil);
-		local l1;
-		local l2;
-		local l3;
-		local l4;
-		local l5;
-		(for l1 := 0 to (l4 - 1) do begin
-				local l8, l9, l10;
-				l8 := getSlot((l3 := a1[l1][0]), 'value);
-				l5[l1] := l8;
-				if HasSlot(l3, 'Time) then begin
-						a2.hasTime := true;
-						if (if (not StrEqual(StringFilter(l8, "am", 'passAll), "am")) then (not StrEqual(StringFilter(l8, "pm", 'passAll), "pm"))) then begin
-								l2 := (l2 := Date(StringToTime(l8))).hour
+	GetUserTime: func(a1, frame2) begin
+		list := Array((count := Length(a1)), nil);
+		local i;
+		local date2;
+		local a1ItemItem;
+		local count;
+		local list;
+		(for i := 0 to (count - 1) do begin
+				local value, glueStrings2, stringToDateFrame2;
+				value := getSlot((a1ItemItem := a1[i][0]), 'value);
+				list[i] := value;
+				if HasSlot(a1ItemItem, 'Time) then begin
+						frame2.hasTime := true;
+						if (if (not StrEqual(StringFilter(value, "am", 'passAll), "am")) then (not StrEqual(StringFilter(value, "pm", 'passAll), "pm"))) then begin
+								date2 := (date2 := Date(StringToTime(value))).hour
 							end
 					end;
-				if HasSlot(l3, 'Date) then begin
-						a2.hasDate := true
+				if HasSlot(a1ItemItem, 'Date) then begin
+						frame2.hasDate := true
 					end
 			end);
-		if (if (a2.hasTime = nil) then (a2.usualTime <> nil)) then begin
-				AddArraySlot(l5, a2.usualValue)
+		if (if (frame2.hasTime = nil) then (frame2.usualTime <> nil)) then begin
+				AddArraySlot(list, frame2.usualValue)
 			end;
-		l9 := GlueStrings(l5);
-		if a2.hasDate then begin
-				l10 := StringToDateFrame(l9);
-				a2.dayOfWeek := (if (if l10.dayOfWeek then (not l10.Date)) then (not l10.month))
+		glueStrings2 := GlueStrings(list);
+		if frame2.hasDate then begin
+				stringToDateFrame2 := StringToDateFrame(glueStrings2);
+				frame2.dayOfWeek := (if (if stringToDateFrame2.dayOfWeek then (not stringToDateFrame2.Date)) then (not stringToDateFrame2.month))
 			end;
-		l3 := StringToDate(l9);
-		if (l2 <> nil) then begin
-				if (if (l2 >= 1) then (l2 < 7)) then begin
-						l3 := (l3 + 720)
+		a1ItemItem := StringToDate(glueStrings2);
+		if (date2 <> nil) then begin
+				if (if (date2 >= 1) then (date2 < 7)) then begin
+						a1ItemItem := (a1ItemItem + 720)
 					end
 			end;
-		return l3
+		return a1ItemItem
 	end,
-	GetActionTime: func(a1) begin
-		local l1, l2, l3, l4;
-		l1 := a1.givenTime;
-		l2 := a1.usualTime;
-		if (a1.givenTime <> nil) then begin
-				if (((l3 := self:delayTime(a1)) > 0) or (l3 < 0)) then begin
-						if (l3 > 0) then begin
-								l1 := (l1 + l3)
+	GetActionTime: func(frame2) begin
+		local givenTime, usualTime, delayTime, date2;
+		givenTime := frame2.givenTime;
+		usualTime := frame2.usualTime;
+		if (frame2.givenTime <> nil) then begin
+				if (((delayTime := self:delayTime(frame2)) > 0) or (delayTime < 0)) then begin
+						if (delayTime > 0) then begin
+								givenTime := (givenTime + delayTime)
 							end else begin
-								if a1.hasDate then begin
-										(l4 := Date(l1)).year := (l4.year + 1);
-										l1 := TotalMinutes(l4)
+								if frame2.hasDate then begin
+										(date2 := Date(givenTime)).year := (date2.year + 1);
+										givenTime := TotalMinutes(date2)
 									end else begin
-										l1 := (a1.givenTime + 1440)
+										givenTime := (frame2.givenTime + 1440)
 									end
 							end
 					end
 			end else begin
-				l1 := a1.currentTime
+				givenTime := frame2.currentTime
 			end;
-		return l1
+		return givenTime
 	end,
-	delayTime: func(a1) begin
-		local l1, l2;
-		l1 := a1.givenTime;
-		l2 := a1.currentTime;
-		if (l1 >= l2) then begin
+	delayTime: func(frame2) begin
+		local givenTime, currentTime;
+		givenTime := frame2.givenTime;
+		currentTime := frame2.currentTime;
+		if (givenTime >= currentTime) then begin
 				return 0
 			end;
-		if (if (a1.hasTime = nil) then (a1.usualTime <> nil)) then begin
-				if ((l1 + 30) > l2) then begin
+		if (if (frame2.hasTime = nil) then (frame2.usualTime <> nil)) then begin
+				if ((givenTime + 30) > currentTime) then begin
 						return 30
 					end;
-				if ((l1 + 60) > l2) then begin
+				if ((givenTime + 60) > currentTime) then begin
 						return 60
 					end
 			end;
-		if a1.dayOfWeek then begin
+		if frame2.dayOfWeek then begin
 				return 10080
 			end;
 		return -1
 	end,
-	SetDisplayName: func(a1, a2, a3) begin
-		local l1, l2, l3;
-		if ((l1 := ClassOf(a2)) = 'custom) then begin
-				a1.name := {last: Clone(a3.(a2.path))};
+	SetDisplayName: func(listItem, a2, resolveEntryAlias) begin
+		local cls, l2, name;
+		if ((cls := ClassOf(a2)) = 'custom) then begin
+				listItem.name := {last: Clone(resolveEntryAlias.(a2.path))};
 				l2 := true
 			end else begin
-				if (l1 = 'affiliate) then begin
+				if (cls = 'affiliate) then begin
 						l2 := true;
-						l3 := a3.names[a2.path];
-						if (ObjEntryClass(a1) = 'company) then begin
-								a1.company := Clone(GetRoot():bcFullName(l3))
+						name := resolveEntryAlias.names[a2.path];
+						if (ObjEntryClass(listItem) = 'company) then begin
+								listItem.company := Clone(GetRoot():bcFullName(name))
 							end else begin
-								if (ObjEntryClass(a1) = 'person) then begin
-										a1.name := l3
+								if (ObjEntryClass(listItem) = 'person) then begin
+										listItem.name := name
 									end
 							end
 					end
@@ -216,68 +216,68 @@ assistUtilities := {
 					(a1.toRef := [Array: l1])
 				end))
 	end,
-	RemoveAllGroups: func(a1) begin
+	RemoveAllGroups: func(allEntries) begin
 		l1 := 0;
 		local l1;
-		(foreach l2, l3 in a1 do begin
-				if (ObjEntryClass(l3.alias) <> 'group) then begin
-						if (l1 <> l2) then begin
-								a1[l1] := a1[l2]
+		(foreach key, value in allEntries do begin
+				if (ObjEntryClass(value.alias) <> 'group) then begin
+						if (l1 <> key) then begin
+								allEntries[l1] := allEntries[key]
 							end;
 						l1 := (l1 + 1)
 					end
 			end);
-		SetLength(a1, l1)
+		SetLength(allEntries, l1)
 	end,
-	RemoveGroupsExcept: func(a1, a2) begin
+	RemoveGroupsExcept: func(allEntries, a2) begin
 		l1 := 0;
 		local l1;
-		local l2;
-		local l3;
-		(foreach l4, l5 in a1 do begin
-				if ((not IsSubclass((l2 := ObjEntryClass((l3 := ResolveEntryAlias(l5.alias)))), 'group)) or IsInstance(l3.members, a2)) then begin
-						if (l1 <> l4) then begin
-								a1[l1] := a1[l4]
+		local objEntryClass2;
+		local resolveEntryAlias2;
+		(foreach key, value in allEntries do begin
+				if ((not IsSubclass((objEntryClass2 := ObjEntryClass((resolveEntryAlias2 := ResolveEntryAlias(value.alias)))), 'group)) or IsInstance(resolveEntryAlias2.members, a2)) then begin
+						if (l1 <> key) then begin
+								allEntries[l1] := allEntries[key]
 							end;
 						l1 := (l1 + 1)
 					end
 			end);
-		SetLength(a1, l1)
+		SetLength(allEntries, l1)
 	end,
 	GetTransportTags: func(a1) begin
-		local l1, l2;
-		if (l1 := GetGroupTransport(taskType)) then begin
-				if (if (l2 := GetRoot().(l1)) then l2.(a1)) then begin
+		local groupTransport, l2;
+		if (groupTransport := GetGroupTransport(taskType)) then begin
+				if (if (l2 := GetRoot().(groupTransport)) then l2.(a1)) then begin
 						return l2.(a1)
 					end
 			end;
 		return nil
 	end,
 	GetPreferredSymb: func() begin
-		local l1, l2, l3;
-		l2 := (l1 := Date(Time())).dayOfWeek;
-		l3 := ((l1.hour * 60) + l1.minute);
+		local date2, l2, l3;
+		l2 := (date2 := Date(Time())).dayOfWeek;
+		l3 := ((date2.hour * 60) + date2.minute);
 		(if (if (if (l2 > 0) then (l2 < 6)) then (if (l3 >= 540) then (l3 <= 1080))) then 'iaWorkTags else 'iaHomeTags)
 	end,
 	GetSelectedPhones: func(a1, a2) begin
 		if HasSlot(a1, 'phoneTag) then begin
-				if (l2 := GetRoot().cardfile:bcPhoneNumber(a2, '[Array: string])) then begin
-						l1 := Array(Length(l2), nil);
+				if (bcPhoneNumber := GetRoot().cardfile:bcPhoneNumber(a2, '[Array: string])) then begin
+						list := Array(Length(bcPhoneNumber), nil);
 						l3 := 0;
-						local l1;
-						local l2;
+						local list;
+						local bcPhoneNumber;
 						local l3;
-						(foreach l4 in a1.phoneTag do begin
-								(foreach l6 in l2 do begin
-										if l6 then begin
-												if (l4 = 'phone) then begin
-														if ((ClassOf(l6) = 'phone) or (ClassOf(l6) = '|string.phone|)) then begin
-																l1[l3] := l6;
+						(foreach item in a1.phoneTag do begin
+								(foreach item2 in bcPhoneNumber do begin
+										if item2 then begin
+												if (item = 'phone) then begin
+														if ((ClassOf(item2) = 'phone) or (ClassOf(item2) = '|string.phone|)) then begin
+																list[l3] := item2;
 																l3 := (l3 + 1)
 															end
 													end else begin
-														if IsInstance(l6, l4) then begin
-																l1[l3] := l6;
+														if IsInstance(item2, item) then begin
+																list[l3] := item2;
 																l3 := (l3 + 1)
 															end
 													end
@@ -285,49 +285,49 @@ assistUtilities := {
 									end)
 							end);
 						if (l3 > 0) then begin
-								SetLength(l1, l3)
+								SetLength(list, l3)
 							end else begin
-								l1 := nil
+								list := nil
 							end
 					end
 			end;
-		l1
+		list
 	end,
-	iaGetTargetInfo: func(a1, a2, a3) begin
-		if (not (l1 := a1:GetActiveView())) then begin
-				GetRoot():Notify(3, "Assist", ParamStr("There is nothing to ^0.", [Array: Lower(Clone(a3))]));
+	iaGetTargetInfo: func(a1, groupTransport, transportStr) begin
+		if (not (activeView := a1:GetActiveView())) then begin
+				GetRoot():Notify(3, "Assist", ParamStr("There is nothing to ^0.", [Array: Lower(Clone(transportStr))]));
 				return nil
 			end;
-		l2 := l1:GetTargetInfo('Routing);
-		if (not (l3 := GetVariable(a1, 'appSymbol))) then begin
-				GetRoot():Notify(3, "Assist", ParamStr("^0 not supported for frontmost window.", [Array: a3]));
+		routing := activeView:GetTargetInfo('Routing);
+		if (not (value := GetVariable(a1, 'appSymbol))) then begin
+				GetRoot():Notify(3, "Assist", ParamStr("^0 not supported for frontmost window.", [Array: transportStr]));
 				return nil
 			end;
-		if (l2.target = nil) then begin
-				GetRoot():Notify(3, "Assist", ParamStr("There is nothing to ^0.", [Array: Lower(Clone(a3))]));
+		if (routing.target = nil) then begin
+				GetRoot():Notify(3, "Assist", ParamStr("There is nothing to ^0.", [Array: Lower(Clone(transportStr))]));
 				return nil
 			end;
-		if ((l4 := GetAppFormats(l3)) = nil) then begin
-				l4 := GetRouteFormats(l2.target)
+		if ((appFormats := GetAppFormats(value)) = nil) then begin
+				appFormats := GetRouteFormats(routing.target)
 			end;
-		local l1;
-		local l2;
-		local l3;
-		local l4;
-		local l5;
+		local activeView;
+		local routing;
+		local value;
+		local appFormats;
+		local formatTransports;
 		local l6;
-		(foreach l7 in (l5 := GetFormatTransports(l4, l2.target)) do begin
-				local l9;
-				if ((l9 := GetVariable(l7, 'appSymbol)) = a2) then begin
+		(foreach item in (formatTransports := GetFormatTransports(appFormats, routing.target)) do begin
+				local value2;
+				if ((value2 := GetVariable(item, 'appSymbol)) = groupTransport) then begin
 						l6 := true;
 						break
 					end
 			end);
 		if (not l6) then begin
-				GetRoot():Notify(3, "Assist", ParamStr("^0 not supported for frontmost window.", [Array: a3]));
+				GetRoot():Notify(3, "Assist", ParamStr("^0 not supported for frontmost window.", [Array: transportStr]));
 				return nil
 			end;
-		return l2
+		return routing
 	end
 };
 

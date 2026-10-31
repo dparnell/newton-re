@@ -10,49 +10,49 @@ unionSoupPrototype := {
 			self:AddToStore(a1, GetStores()[0])
 		end,
 		HasTags: func() begin
-			local l1, l2, l3;
-			if ((l1 := Length(self.soupList)) <> 0) then begin
-					(repeat l1 := (l1 - 1); if (not self.soupList[l1]:HasTags()) then begin
+			local count, soupDef, indexes;
+			if ((count := Length(self.soupList)) <> 0) then begin
+					(repeat count := (count - 1); if (not self.soupList[count]:HasTags()) then begin
 								return nil
-							end until (l1 = 0));
+							end until (count = 0));
 					return true
 				end;
-			if (l2 := GetSoupDef(self:GetName())) then begin
-					if (l3 := l2.indexes) then begin
-							l1 := Length(l3);
-							(while (l1 > 0) do begin
-									l1 := (l1 - 1);
-									(if (l3[l1].type = 'tags) then return true)
+			if (soupDef := GetSoupDef(self:GetName())) then begin
+					if (indexes := soupDef.indexes) then begin
+							count := Length(indexes);
+							(while (count > 0) do begin
+									count := (count - 1);
+									(if (indexes[count].type = 'tags) then return true)
 								end)
 						end
 				end;
 			nil
 		end,
-		AddToStore: func(a1, a2) begin
-			self:GetMember(a2):Add(a1)
+		AddToStore: func(adoptEntry, store) begin
+			self:GetMember(store):Add(adoptEntry)
 		end,
-		AddToStoreXmit: func(a1, a2, a3) begin
-			local l1;
-			l1 := self:AddToStore(a1, a2);
+		AddToStoreXmit: func(a1, store, a3) begin
+			local addToStore;
+			addToStore := self:AddToStore(a1, store);
 			if a3 then begin
 					XmitSoupChange(self:GetName(), a3, 'entryAdded, a1)
 				end;
-			l1
+			addToStore
 		end,
-		GetMember: func(a1) begin
-			local l1, l2;
-			if (not (l2 := a1:GetSoup((l1 := self:GetName())))) then begin
-					l2 := CreateUSoupMember(l1, a1)
+		GetMember: func(store) begin
+			local name, soup;
+			if (not (soup := store:GetSoup((name := self:GetName())))) then begin
+					soup := CreateUSoupMember(name, store)
 				end;
-			l2
+			soup
 		end,
 		AddFlushedXmit: func(a1, a2) begin
 			self:AddToStoreFlushedXmit(a1, GetDefaultStore(), a2)
 		end,
 		AddTags: {class: #132, funcPtr: 6898206, numArgs: 1},
 		AddTagsXmit: AddTagsXmit,
-		AddToStoreFlushedXmit: func(a1, a2, a3) begin
-			self:GetMember(a2):AddFlushedXmit(a1, a3)
+		AddToStoreFlushedXmit: func(a1, store, a3) begin
+			self:GetMember(store):AddFlushedXmit(a1, a3)
 		end,
 		AddIndex: {class: #132, funcPtr: 6915108, numArgs: 1},
 		AddIndexXmit: AddIndexXmit,
@@ -68,12 +68,12 @@ unionSoupPrototype := {
 			self:AddToStore(a1, GetDefaultStore())
 		end,
 		AddToDefaultStoreXmit: func(a1, a2) begin
-			local l1;
-			l1 := self:AddToDefaultStore(a1);
+			local addToDefaultStore;
+			addToDefaultStore := self:AddToDefaultStore(a1);
 			if a2 then begin
 					XmitSoupChange(self:GetName(), a2, 'entryAdded, a1)
 				end;
-			l1
+			addToDefaultStore
 		end,
 		RemoveIndex: {class: #132, funcPtr: 6915110, numArgs: 1},
 		RemoveIndexXmit: RemoveIndexXmit,

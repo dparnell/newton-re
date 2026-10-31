@@ -1,17 +1,17 @@
 // locationCursor, and what only it reaches
 
 locationCursor := {
-	move: func(a1) begin
+	move: func(maxLines) begin
 		if romOnly then begin
-				return realCurs:move(a1)
+				return realCurs:move(maxLines)
 			end;
-		if (a1 <> 0) then begin
-				if (a1 < 0) then begin
-						(for l1 := 1 to abs(a1) do begin
+		if (maxLines <> 0) then begin
+				if (maxLines < 0) then begin
+						(for i := 1 to abs(maxLines) do begin
 								self:prev()
 							end)
 					end else begin
-						(for l1 := 1 to a1 do begin
+						(for i := 1 to maxLines do begin
 								self:Next()
 							end)
 					end
@@ -22,122 +22,122 @@ locationCursor := {
 		realCurs:Goto(a1)
 	end,
 	GotoKey: func(a1) begin
-		local l1;
-		if (if (l1 := realCurs:GotoKey(a1)) then (l1.kind = 'delete)) then begin
-				l1 := self:Next()
+		local gotoKey;
+		if (if (gotoKey := realCurs:GotoKey(a1)) then (gotoKey.kind = 'delete)) then begin
+				gotoKey := self:Next()
 			end;
-		l1
+		gotoKey
 	end,
 	Next: func() begin
-		local l1;
+		local entry;
 		if romOnly then begin
 				return realCurs:Next()
 			end;
-		if (((not (l1 := self:entry())) or (not l1.kind)) or (l1.kind = 'Add)) then begin
-				l1 := realCurs:Next()
+		if (((not (entry := self:entry())) or (not entry.kind)) or (entry.kind = 'Add)) then begin
+				entry := realCurs:Next()
 			end else begin
-				l1 := realCurs:move(2)
+				entry := realCurs:move(2)
 			end;
-		(while (if l1 then (l1.kind = 'delete)) do (l1 := realCurs:move(2)));
-		l1
+		(while (if entry then (entry.kind = 'delete)) do (entry := realCurs:move(2)));
+		entry
 	end,
 	prev: func() begin
-		local l1, l2;
+		local prev, prev2;
 		if romOnly then begin
 				return realCurs:prev()
 			end;
 		(while true do begin
-				if ((not (l1 := realCurs:prev())) or (l1.kind = 'Add)) then begin
-						return l1
+				if ((not (prev := realCurs:prev())) or (prev.kind = 'Add)) then begin
+						return prev
 					end;
-				if (not (l2 := realCurs:prev())) then begin
+				if (not (prev2 := realCurs:prev())) then begin
 						realCurs:Reset();
-						return l1
+						return prev
 					end;
-				if ((not l2.kind) or (l2.kind = 'Add)) then begin
+				if ((not prev2.kind) or (prev2.kind = 'Add)) then begin
 						return realCurs:Next()
 					end;
-				(if (l2.kind = 'Replace) then return l2)
+				(if (prev2.kind = 'Replace) then return prev2)
 			end)
 	end,
 	Reset: func() begin
-		local l1;
-		l1 := realCurs:Reset();
+		local reset;
+		reset := realCurs:Reset();
 		self:entry()
 	end,
 	ResetToEnd: func() begin
-		local l1, l2;
-		l1 := realCurs:ResetToEnd();
+		local resetToEnd, move;
+		resetToEnd := realCurs:ResetToEnd();
 		if romOnly then begin
-				return l1
+				return resetToEnd
 			end;
-		if (not (l2 := realCurs:move(-1))) then begin
+		if (not (move := realCurs:move(-1))) then begin
 				return realCurs:ResetToEnd()
 			end;
-		if (l2.kind = 'delete) then begin
+		if (move.kind = 'delete) then begin
 				return self:prev()
 			end;
-		if (l2.kind = 'Replace) then begin
-				return l2
+		if (move.kind = 'Replace) then begin
+				return move
 			end;
 		realCurs:move(1)
 	end,
 	entry: func() begin
-		local l1;
-		l1 := realCurs:entry();
+		local entry;
+		entry := realCurs:entry();
 		if (not romOnly) then begin
-				(while (if l1 then ((l1 = 'deleted) or (l1.kind = 'delete))) do (if (l1 = 'deleted) then (l1 := realCurs:Next()) else (l1 := realCurs:move(2))))
+				(while (if entry then ((entry = 'deleted) or (entry.kind = 'delete))) do (if (entry = 'deleted) then (entry := realCurs:Next()) else (entry := realCurs:move(2))))
 			end;
-		l1
+		entry
 	end,
 	clone: func() begin
-		local l1;
-		(l1 := Clone(self)).realCurs := realCurs:clone();
-		l1
+		local copy;
+		(copy := Clone(self)).realCurs := realCurs:clone();
+		copy
 	end,
 	|map|: func(a1) begin
-		local l1, l2;
-		l1 := [Array: ];
-		l2 := self:entry();
-		(while l2 do begin
-				if ((not a1) or (if a1 then call a1 with (l2))) then begin
-						AddArraySlot(l1, l2)
+		local list, entry;
+		list := [Array: ];
+		entry := self:entry();
+		(while entry do begin
+				if ((not a1) or (if a1 then call a1 with (entry))) then begin
+						AddArraySlot(list, entry)
 					end;
-				(l2 := self:Next())
+				(entry := self:Next())
 			end);
-		l1
+		list
 	end,
 	mapadd: func(a1, a2) begin
-		local l1, l2;
-		(l1 := self:clone()):Reset();
-		l2 := l1:entry();
-		(while l2 do begin
-				if ((not a1) or (if a1 then call a1 with (l2))) then begin
-						AddArraySlot(a2, l2)
+		local copy, entry;
+		(copy := self:clone()):Reset();
+		entry := copy:entry();
+		(while entry do begin
+				if ((not a1) or (if a1 then call a1 with (entry))) then begin
+						AddArraySlot(a2, entry)
 					end;
-				(l2 := l1:Next())
+				(entry := copy:Next())
 			end);
 		a2
 	end,
 	CountEntries: func() begin
-		local l1, l2, l3, l4;
+		local countEntries, indexPath, soup, cursor;
 		if romOnly then begin
 				return realCurs:CountEntries()
 			end;
-		l1 := realCurs:CountEntries();
-		l2 := realCurs:indexPath();
-		l3 := GetStores()[0]:GetSoup(realCurs:soup():GetName());
-		l4 := l3:Query({type: 'index, indexPath: 'kind, beginKey: 'delete, endKey: 'Replace});
-		(l1 - l4:CountEntries())
+		countEntries := realCurs:CountEntries();
+		indexPath := realCurs:indexPath();
+		soup := GetStores()[0]:GetSoup(realCurs:soup():GetName());
+		cursor := soup:Query({type: 'index, indexPath: 'kind, beginKey: 'delete, endKey: 'Replace});
+		(countEntries - cursor:CountEntries())
 	end,
 	SlowCountEntries: func() begin
-		local l1, l2;
+		local l1, copy;
 		if romOnly then begin
 				return realCurs:CountEntries()
 			end;
 		l1 := 1;
-		(l2 := self:clone()):Reset();
-		(while l2:Next() do (l1 := (l1 + 1)));
+		(copy := self:clone()):Reset();
+		(while copy:Next() do (l1 := (l1 + 1)));
 		l1
 	end,
 	WhichEnd: func() begin

@@ -1,13 +1,13 @@
 // protoRepeatView, and what only it reaches
 
 protoRepeatView := {
-	NumberOfDays: func(a1, a2) begin
+	NumberOfDays: func(bAnd2, a2) begin
 		l1 := 0;
 		l2 := 2048;
 		local l1;
 		local l2;
-		(for l3 := 1 to 7 do begin
-				if (BAnd(a1, l2) <> 0) then begin
+		(for i := 1 to 7 do begin
+				if (BAnd(bAnd2, l2) <> 0) then begin
 						l1 := (l1 + 1)
 					end;
 				if (l1 > a2) then begin
@@ -18,13 +18,13 @@ protoRepeatView := {
 		l1
 	end,
 	viewSetupDoneScript: func() begin
-		local l1;
+		local repeatType2;
 		if self:IsCurrentSettingsSameAsEveryDay() then begin
-				l1 := 6
+				repeatType2 := 6
 			end else begin
-				l1 := repeatType
+				repeatType2 := repeatType
 			end;
-		self:SetupRepeatViews(l1)
+		self:SetupRepeatViews(repeatType2)
 	end,
 	originalMtgDate: nil,
 	mtgDate: nil,
@@ -34,12 +34,12 @@ protoRepeatView := {
 		(if (repeatType = 0) then (mtgInfo = BOr(4064, 31)))
 	end,
 	SetupRepeatViews: func(a1) begin
-		local l1, l2, l3;
-		(l1 := repeatPickers).DayPicker:Hide();
-		l1.datepicker:Hide();
-		l1.DateAndMonthPicker:Hide();
-		l1.WeekPicker:Hide();
-		l1.LastWeekPicker:Hide();
+		local repeatPickers2, bAnd2, date2;
+		(repeatPickers2 := repeatPickers).DayPicker:Hide();
+		repeatPickers2.datepicker:Hide();
+		repeatPickers2.DateAndMonthPicker:Hide();
+		repeatPickers2.WeekPicker:Hide();
+		repeatPickers2.LastWeekPicker:Hide();
 		repeatType := a1;
 		if (a1 = 6) then begin
 				repeatType := 0;
@@ -55,34 +55,34 @@ protoRepeatView := {
 											end
 									end
 							end;
-						l2 := 0;
+						bAnd2 := 0;
 						if (repeatType = 0) then begin
-								l2 := BAnd(mtgInfo, 4064)
+								bAnd2 := BAnd(mtgInfo, 4064)
 							end else begin
-								l3 := Date((l3 := ((mtgInfo >> 8) * 1440)));
-								l2 := (2048 >> l3.dayOfWeek)
+								date2 := Date((date2 := ((mtgInfo >> 8) * 1440)));
+								bAnd2 := (2048 >> date2.dayOfWeek)
 							end;
-						l1.DayPicker:Initialize(l2, (repeatType = 4));
-						l1.DayPicker:Show()
+						repeatPickers2.DayPicker:Initialize(bAnd2, (repeatType = 4));
+						repeatPickers2.DayPicker:Show()
 					end else begin
 						if (a1 = 2) then begin
-								l1.datepicker:Initialize();
-								l1.datepicker:Show()
+								repeatPickers2.datepicker:Initialize();
+								repeatPickers2.datepicker:Show()
 							end else begin
 								if (a1 = 3) then begin
-										l1.DateAndMonthPicker:Initialize();
-										l1.DateAndMonthPicker:Show()
+										repeatPickers2.DateAndMonthPicker:Initialize();
+										repeatPickers2.DateAndMonthPicker:Show()
 									end else begin
 										if (a1 = 1) then begin
-												l1.WeekPicker:Initialize();
-												l1.WeekPicker:Show()
+												repeatPickers2.WeekPicker:Initialize();
+												repeatPickers2.WeekPicker:Show()
 											end else begin
 												if (a1 = 7) then begin
-														l1.DateAndMonthPicker:Initialize();
-														l1.DateAndMonthPicker:Show();
+														repeatPickers2.DateAndMonthPicker:Initialize();
+														repeatPickers2.DateAndMonthPicker:Show();
 														if self:IsAmbiguousWeek(mtgDate) then begin
-																l1.LastWeekPicker:Initialize();
-																l1.LastWeekPicker:Show()
+																repeatPickers2.LastWeekPicker:Initialize();
+																repeatPickers2.LastWeekPicker:Show()
 															end
 													end
 											end
@@ -104,12 +104,12 @@ protoRepeatView := {
 		(if ((l1 := (((a1.Date - 1) div 7) + 1)) = 4) then ((a1.Date + 7) > self:daysInMonth(a1.month, a1.year)))
 	end,
 	UpdateText: func() begin
-		local l1;
-		l1 := meetingInstance.mtgStartDate;
+		local mtgStartDate;
+		mtgStartDate := meetingInstance.mtgStartDate;
 		if Visible(repeatPickers.DateAndMonthPicker) then begin
-				l1 := repeatPickers.DateAndMonthPicker.selectedDates[0]
+				mtgStartDate := repeatPickers.DateAndMonthPicker.selectedDates[0]
 			end;
-		(if (mtgInfo <> 0) then SetValue(MessageBox, 'text, RepeatInfoToText(mtgInfo, repeatType, l1)) else SetValue(MessageBox, 'text, ""))
+		(if (mtgInfo <> 0) then SetValue(MessageBox, 'text, RepeatInfoToText(mtgInfo, repeatType, mtgStartDate)) else SetValue(MessageBox, 'text, ""))
 	end,
 	stepallocatecontext: [|Array|: 'repeatPickers, repeatPickers, 'MessageBox, MessageBox],
 	declareSelf: 'base,
@@ -119,49 +119,49 @@ protoRepeatView := {
 		(mtgDate := Date(meetingInstance.mtgStartDate))
 	end,
 	GetRepeatSpec: func() begin
-		local l1, l2, l3, l4, l5, l6, l7, l8, l9;
-		(if ((if ((l1 := meetingInstance.repeatTemplate) = nil) then (repeatType = 5)) or (if (if l1 then (l1.mtgInfo = mtgInfo)) then (l1.repeatType = repeatType))) then l1 else (if (repeatType = 5) then nil else begin
-					l4 := Date((l3 := ((l2 := newMtgDate) - (l2 mod 1440))));
-					if ((l5 := (if l1 then Clone(l1) else Clone(meetingInstance))).viewStationery = 'meeting) then begin
-							l5.viewStationery := 'RepeatingMeeting
+		local repeatTemplate, newMtgDate2, l3, date2, copy, mtgStopDate, l7, firstDayOfWeek, totalMinutes2;
+		(if ((if ((repeatTemplate := meetingInstance.repeatTemplate) = nil) then (repeatType = 5)) or (if (if repeatTemplate then (repeatTemplate.mtgInfo = mtgInfo)) then (repeatTemplate.repeatType = repeatType))) then repeatTemplate else (if (repeatType = 5) then nil else begin
+					date2 := Date((l3 := ((newMtgDate2 := newMtgDate) - (newMtgDate2 mod 1440))));
+					if ((copy := (if repeatTemplate then Clone(repeatTemplate) else Clone(meetingInstance))).viewStationery = 'meeting) then begin
+							copy.viewStationery := 'RepeatingMeeting
 						end;
-					if (not (l6 := l5.mtgStopDate)) then begin
-							l6 := 536870911
+					if (not (mtgStopDate := copy.mtgStopDate)) then begin
+							mtgStopDate := 536870911
 						end;
 					l7 := (if IsSoupEntry(meetingInstance) then EntryStore(meetingInstance));
-					GetRoot().calendar:ConvertToRepeating(l5, repeatType, mtgInfo, l6, l7);
+					GetRoot().calendar:ConvertToRepeating(copy, repeatType, mtgInfo, mtgStopDate, l7);
 					if ((if (repeatType = 0) then (self:NumberOfDays(BAnd(mtgInfo, 4064), 1) = 1)) or (repeatType = 4)) then begin
-							if (not (l8 := GetUserConfig('firstDayOfWeek))) then begin
-									l8 := GetLocale().firstDayOfWeek
+							if (not (firstDayOfWeek := GetUserConfig('firstDayOfWeek))) then begin
+									firstDayOfWeek := GetLocale().firstDayOfWeek
 								end;
-							if (not l8) then begin
-									l8 := 0
+							if (not firstDayOfWeek) then begin
+									firstDayOfWeek := 0
 								end;
-							l4.Date := ((l4.Date - l4.dayOfWeek) + l8)
+							date2.Date := ((date2.Date - date2.dayOfWeek) + firstDayOfWeek)
 						end else begin
 							if ((repeatType = 2) or (repeatType = 1)) then begin
-									l4.Date := 1
+									date2.Date := 1
 								end else begin
 									if ((repeatType = 3) or (repeatType = 7)) then begin
-											l4.month := 1;
-											l4.Date := 1
+											date2.month := 1;
+											date2.Date := 1
 										end
 								end
 						end;
-					l9 := TotalMinutes(l4);
-					l5.mtgStartDate := NextMeeting(l9, l5);
-					(l5 := DeepClone(l5))
+					totalMinutes2 := TotalMinutes(date2);
+					copy.mtgStartDate := NextMeeting(totalMinutes2, copy);
+					(copy := DeepClone(copy))
 				end))
 	end,
 	HitItem: func(a1) begin
-		local l1, l2, l3;
+		local selected, date2, l3;
 		if (repeatType = 0) then begin
-				mtgInfo := BOr((l1 := DayPicker:GetSelected()), 31)
+				mtgInfo := BOr((selected := DayPicker:GetSelected()), 31)
 			end else begin
-				l2 := Date(((mtgInfo >> 8) * 1440));
-				l3 := (a1 - l2.dayOfWeek);
-				l2.Date := (l2.Date + l3);
-				mtgInfo := (((TotalMinutes((l2 := Date(TotalMinutes(l2)))) div 1440) << 8) + 14)
+				date2 := Date(((mtgInfo >> 8) * 1440));
+				l3 := (a1 - date2.dayOfWeek);
+				date2.Date := (date2.Date + l3);
+				mtgInfo := (((TotalMinutes((date2 := Date(TotalMinutes(date2)))) div 1440) << 8) + 14)
 			end;
 		self:UpdateText()
 	end,
@@ -256,8 +256,8 @@ protoRepeatView := {
 		repeatPickers,
 		MessageBox
 	],
-	daysInMonth: func(a1, a2) begin
-		(if ArrayPos('[Array: 1, 3, 5, 7, 8, 10, 12], a1, 0, nil) then 31 else (if ArrayPos('[Array: 4, 6, 9, 11], a1, 0, nil) then 30 else (if (((a2 mod 4) <> 0) or ((a2 mod 400) <> 0)) then 28 else 29)))
+	daysInMonth: func(month, year) begin
+		(if ArrayPos('[Array: 1, 3, 5, 7, 8, 10, 12], month, 0, nil) then 31 else (if ArrayPos('[Array: 4, 6, 9, 11], month, 0, nil) then 30 else (if (((year mod 4) <> 0) or ((year mod 400) <> 0)) then 28 else 29)))
 	end,
 	meetingInstance: nil
 };
@@ -291,10 +291,10 @@ datepicker := {
 		datepicker:Dirty()
 	end,
 	monthChangedScript: func() begin
-		local l1;
-		l1 := Date(selectedDates[0]);
+		local date2;
+		date2 := Date(selectedDates[0]);
 		if (repeatType = 2) then begin
-				mtgInfo := l1.Date
+				mtgInfo := date2.Date
 			end;
 		self:UpdateText();
 		self:Dirty()
@@ -322,20 +322,20 @@ DateAndMonthPicker := {
 		self:SetTitle();
 		DateAndMonthPicker:Dirty()
 	end,
-	DateChanged: func(a1) begin
-		local l1, l2;
-		l1 := Date(selectedDates[0]);
+	DateChanged: func(selectedDates2) begin
+		local date2, clusterValue;
+		date2 := Date(selectedDates[0]);
 		if (repeatType = 3) then begin
-				mtgInfo := ((l1.month << 8) + l1.Date)
+				mtgInfo := ((date2.month << 8) + date2.Date)
 			end else begin
-				if self:IsAmbiguousWeek(l1) then begin
-						l2 := LastWeekPicker.clusterValue;
+				if self:IsAmbiguousWeek(date2) then begin
+						clusterValue := LastWeekPicker.clusterValue;
 						LastWeekPicker:Show()
 					end else begin
-						l2 := (16 >> ((l1.Date - 1) div 7));
+						clusterValue := (16 >> ((date2.Date - 1) div 7));
 						LastWeekPicker:Hide()
 					end;
-				mtgInfo := (((l1.month << 12) + (2048 >> l1.dayOfWeek)) + l2)
+				mtgInfo := (((date2.month << 12) + (2048 >> date2.dayOfWeek)) + clusterValue)
 			end;
 		self:UpdateText();
 		self:Dirty()
@@ -349,12 +349,12 @@ LastWeekPicker := {
 	viewJustify: vjParentFullH + vjParentBottomV,
 	clusterValue: 2,
 	Initialize: func() begin
-		local l1;
-		self:SetClusterValue((l1 := BAnd(mtgInfo, 31)))
+		local bAnd2;
+		self:SetClusterValue((bAnd2 := BAnd(mtgInfo, 31)))
 	end,
 	ClusterChanged: func() begin
-		local l1;
-		(if ((l1 := BAnd(mtgInfo, 31)) <> clusterValue) then begin
+		local bAnd2;
+		(if ((bAnd2 := BAnd(mtgInfo, 31)) <> clusterValue) then begin
 				mtgInfo := (BAnd(mtgInfo, bnot(31)) + clusterValue);
 				self:Initialize();
 				self:UpdateText()
@@ -421,35 +421,35 @@ WeekPicker := {
 	viewBounds: {left: 25, top: 11, right: 0, bottom: 81},
 	viewJustify: vjParentFullH,
 	Initialize: func() begin
-		l2 := RepeatingView.mtgInfo;
-		l1 := repeatType;
-		if (l2 = 0) then begin
+		mtgInfo := RepeatingView.mtgInfo;
+		repeatType2 := repeatType;
+		if (mtgInfo = 0) then begin
 				l3 := ((mtgDate.Date - 1) div 7);
-				l2 := (weekBit[l3] + (2048 >> mtgDate.dayOfWeek));
-				RepeatingView.mtgInfo := l2
+				mtgInfo := (weekBit[l3] + (2048 >> mtgDate.dayOfWeek));
+				RepeatingView.mtgInfo := mtgInfo
 			end;
-		local l1;
-		local l2;
+		local repeatType2;
+		local mtgInfo;
 		local l3;
-		local l4;
-		local l5;
-		(foreach l6 in (l4 := WeekPicker:ChildViewFrames()) do begin
-				l6.viewValue := nil
+		local childViewFrames;
+		local childViewFrame;
+		(foreach item in (childViewFrames := WeekPicker:ChildViewFrames()) do begin
+				item.viewValue := nil
 			end);
-		(for l8 := 0 to 4 do begin
-				l5 := l4[l8];
-				if (BAnd(weekBit[l8], l2) > 0) then begin
-						l5.viewValue := true
+		(for i := 0 to 4 do begin
+				childViewFrame := childViewFrames[i];
+				if (BAnd(weekBit[i], mtgInfo) > 0) then begin
+						childViewFrame.viewValue := true
 					end else begin
-						l5.viewValue := nil
+						childViewFrame.viewValue := nil
 					end;
-				l5:UpdateBitmap()
+				childViewFrame:UpdateBitmap()
 			end)
 	end,
 	AddWeek: func(a1) begin
-		local l1;
-		(if (BAnd((l1 := bxor(mtgInfo, a1)), 31) > 0) then begin
-				mtgInfo := l1;
+		local bxor2;
+		(if (BAnd((bxor2 := bxor(mtgInfo, a1)), 31) > 0) then begin
+				mtgInfo := bxor2;
 				self:Initialize();
 				self:UpdateText()
 			end else self:Initialize())

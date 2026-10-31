@@ -18,10 +18,10 @@ onlineservices := {
 			viewJustify: 8390790,
 			text: call_2,
 			buttonClickScript: func() begin
-				local l1;
-				l1 := strtophone((l1 := phoneNum.entryLine.text));
+				local strtophone2;
+				strtophone2 := strtophone((strtophone2 := phoneNum.entryLine.text));
 				base:Close();
-				AddDeferredSend(transport, 'ConnectNow, [Array: l1])
+				AddDeferredSend(transport, 'ConnectNow, [Array: strtophone2])
 			end,
 			_proto: @protoTextButton
 		}

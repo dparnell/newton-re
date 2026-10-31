@@ -17,7 +17,7 @@ allinfo := {
 				if (not layouts.(target.class)) then begin
 						layouts.(target.class) := call GetRoot().cardfile.kViewsToDisplay with (target)
 					end;
-				(if (GetVariable(self, 'newtAppBase) <> GetRoot().cardfile) then (self.viewFlags := 1))
+				(if (GetVariable(self, 'newtAppBase) <> GetRoot().cardfile) then (self.viewFlags := vVisible))
 			end)
 	end,
 	protection: 'public,

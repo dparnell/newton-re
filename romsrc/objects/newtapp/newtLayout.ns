@@ -20,24 +20,24 @@ newtLayout := {
 	filedChild: nil,
 	duringScroll: nil,
 	checkAllPrimed: nil,
-	TypeScrollScript: func(a1) begin
-		local l1;
-		(if ((l1 := layout.dataCursor:entry()) <> layout.dataCursor:GotoKey(a1)) then layout:Effect(133120, nil, @flip, 'Retarget, [Array: true]))
+	TypeScrollScript: func(keyString) begin
+		local entry;
+		(if ((entry := layout.dataCursor:entry()) <> layout.dataCursor:GotoKey(keyString)) then layout:Effect(133120, nil, @flip, 'Retarget, [Array: true]))
 	end,
-	NewEntry: func(a1, a2, a3) begin
-		masterSoup:AddEntry(a1, a3);
-		if a2 then begin
+	NewEntry: func(a1, _context, store) begin
+		masterSoup:AddEntry(a1, store);
+		if _context then begin
 				dataCursor:Goto(a1)
 			end;
 		AddUndoSend(layout, 'KillEntry, [Array: a1]);
-		(if a2 then layout:NewTarget() else layout:Retarget(true))
+		(if _context then layout:NewTarget() else layout:Retarget(true))
 	end,
 	viewSetupDoneScript: func() begin
 		self:Retarget(nil)
 	end,
 	keyDownTime: 0,
-	BroadcastChange: func(a1, a2) begin
-		(if (a1 = 'quit) then XmitSoupChangeNow(masterSoup.soupName, appSymbol, 'whatThe, a2))
+	BroadcastChange: func(a1, target) begin
+		(if (a1 = 'quit) then XmitSoupChangeNow(masterSoup.soupName, appSymbol, 'whatThe, target))
 	end,
 	keyString: uCardPositionAlertButton,
 	viewQuitScript: func() begin
@@ -50,32 +50,32 @@ newtLayout := {
 			end)
 	end,
 	AddBlankEntry: func() begin
-		local l1, l2, l3;
-		l1 := masterSoup:AdoptEntry(nil, nil);
+		local adoptEntry, store, internalStore;
+		adoptEntry := masterSoup:AdoptEntry(nil, nil);
 		try begin
-				if (l3 := self:GetAppPreferences().internalStore) then begin
-						l2 := GetStores()[0]
+				if (internalStore := self:GetAppPreferences().internalStore) then begin
+						store := GetStores()[0]
 					end else begin
-						l2 := GetDefaultStore()
+						store := GetDefaultStore()
 					end
 			end onexception |evt.ex| do begin
-				l2 := nil
+				store := nil
 			end;
-		masterSoup:AddEntry(l1, l2);
-		l1
+		masterSoup:AddEntry(adoptEntry, store);
+		adoptEntry
 	end,
 	viewDrawScript: func() begin
 		(if (if (not forceNewEntry) then (not dataCursor:entry())) then self:DrawShape(self:AppEmpty(), '{}))
 	end,
 	SetupCursor: func() begin
-		local l1;
+		local entry;
 		dataCursor := masterSoup:GetCursor();
 		try begin
-				l1 := dataCursor:entry()
+				entry := dataCursor:entry()
 			end onexception |evt.ex| do begin
-				l1 := nil
+				entry := nil
 			end;
-		if l1 then begin end else begin
+		if entry then begin end else begin
 				if forceNewEntry then begin
 						self:AddBlankEntry();
 						dataCursor:Reset()
@@ -83,33 +83,33 @@ newtLayout := {
 			end;
 		dataCursor
 	end,
-	DuplicateEntryGuts: func(a1, a2) begin
-		local l1, l2, l3;
+	DuplicateEntryGuts: func(a1, store) begin
+		local targetCursor, next, duplicateEntry;
 		(if TargetIsCursor(a1) then begin
-				l2 := (l1 := GetTargetCursor(a1, nil)):entry();
-				(while l2 do begin
-						masterSoup:DuplicateEntry(l2, a2);
-						(l2 := l1:Next())
+				next := (targetCursor := GetTargetCursor(a1, nil)):entry();
+				(while next do begin
+						masterSoup:DuplicateEntry(next, store);
+						(next := targetCursor:Next())
 					end);
 				selected := nil;
 				layout:NewTarget()
 			end else begin
-				dataCursor:Goto((l3 := masterSoup:DuplicateEntry(a1, a2)));
-				AddUndoSend(layout, 'KillEntry, [Array: l3]);
+				dataCursor:Goto((duplicateEntry := masterSoup:DuplicateEntry(a1, store)));
+				AddUndoSend(layout, 'KillEntry, [Array: duplicateEntry]);
 				layout:NewTarget()
 			end)
 	end,
-	viewKeyDownScript: func(a1, a2) begin
-		local l1, l2;
+	viewKeyDownScript: func(char2, flags) begin
+		local l1, ticks2;
 		if useTypeScrolling then begin
-				if (if (if (BAnd(a2, 33554432) = 0) then (a1 >= $ )) then (not (if (a1 >= $\uF721) then (a1 <= $\uF72F)))) then begin
-						l2 := Ticks();
-						if ((not self.keyDownTime) or ((l2 - keyDownTime) > 100)) then begin
+				if (if (if (BAnd(flags, 33554432) = 0) then (char2 >= $ )) then (not (if (char2 >= $\uF721) then (char2 <= $\uF72F)))) then begin
+						ticks2 := Ticks();
+						if ((not self.keyDownTime) or ((ticks2 - keyDownTime) > 100)) then begin
 								self.keyString := nil
 							end;
-						self.keyString := Stringer([Array: self.keyString, a1]);
+						self.keyString := Stringer([Array: self.keyString, char2]);
 						self:TypeScrollScript(keyString);
-						self.keyDownTime := l2;
+						self.keyDownTime := ticks2;
 						l1 := true
 					end
 			end;
@@ -134,11 +134,11 @@ newtLayout := {
 			end;
 		(duringScroll := nil)
 	end,
-	Scroller: func(a1) begin
+	Scroller: func(maxLines) begin
 		if HiliteOwner() then begin
 				PostCommand(HiliteOwner(), 48)
 			end;
-		layout:ScrollCursor(a1);
+		layout:ScrollCursor(maxLines);
 		layout:NewTarget()
 	end,
 	PixelScrollBy: func(a1, a2) begin
@@ -156,9 +156,9 @@ newtLayout := {
 	ShowFoundItem: func(a1, a2) begin
 		dataCursor:Goto(a1);
 		layout:NewTarget();
-		(foreach l1 in layout:ChildViewFrames() do begin
-				if (l1.target = a1) then begin
-						l1:?ShowFoundItem(a1, a2);
+		(foreach item in layout:ChildViewFrames() do begin
+				if (item.target = a1) then begin
+						item:?ShowFoundItem(a1, a2);
 						break
 					end
 			end)
@@ -167,7 +167,7 @@ newtLayout := {
 		self:Effect(44171264, true, @flip, 'Scroller, [Array: 1])
 	end,
 	Retarget: func(a1) begin
-		if (((l1 := dataCursor:entry()) = 'deleted) or (l1 = nil)) then begin
+		if (((entry := dataCursor:entry()) = 'deleted) or (entry = nil)) then begin
 				dataCursor:Next();
 				if (dataCursor:entry() = nil) then begin
 						dataCursor:prev()
@@ -179,17 +179,17 @@ newtLayout := {
 		if a1 then begin
 				self:RedoChildren()
 			end;
-		local l1;
-		(if retargetChain then (foreach l2 in retargetChain do begin
-					l2:RetargetNotify()
+		local entry;
+		(if retargetChain then (foreach item in retargetChain do begin
+					item:RetargetNotify()
 				end))
 	end,
-	ScrollCursor: func(a1) begin
-		local l1, l2;
+	ScrollCursor: func(maxLines) begin
+		local l1, dataCursor2;
 		l1 := true;
-		l2 := dataCursor;
-		if (if (a1 <> 0) then l2) then begin
-				if (not l2:move(a1)) then begin
+		dataCursor2 := dataCursor;
+		if (if (maxLines <> 0) then dataCursor2) then begin
+				if (not dataCursor2:move(maxLines)) then begin
 						l1 := nil;
 						if ((scrollingEndBehavior = 'beepAndWrap) or (scrollingEndBehavior = 'beepAndStop)) then begin
 								playsound(@flip);
@@ -197,17 +197,17 @@ newtLayout := {
 								playsound(@flip)
 							end;
 						if ((scrollingEndBehavior = 'stop) or (scrollingEndBehavior = 'beepAndStop)) then begin
-								if (a1 > 0) then begin
-										l2:prev()
+								if (maxLines > 0) then begin
+										dataCursor2:prev()
 									end else begin
-										l2:Next()
+										dataCursor2:Next()
 									end
 							end else begin
 								if ((scrollingEndBehavior = 'wrap) or (scrollingEndBehavior = 'beepAndWrap)) then begin
-										if (a1 > 0) then begin
-												l2:Reset()
+										if (maxLines > 0) then begin
+												dataCursor2:Reset()
 											end else begin
-												l2:ResetToEnd()
+												dataCursor2:ResetToEnd()
 											end
 									end
 							end
@@ -219,11 +219,11 @@ newtLayout := {
 		self:Effect(44171264, nil, @flip, 'Scroller, [Array: -1])
 	end,
 	DuplicateEntry: func(a1) begin
-		local l1, l2;
-		if (if (l2 := self:GetAppPreferences()) then l2.internalStore) then begin
-				l1 := GetStores()[0]
+		local store, appPreferences;
+		if (if (appPreferences := self:GetAppPreferences()) then appPreferences.internalStore) then begin
+				store := GetStores()[0]
 			end;
-		self:DuplicateEntryGuts(a1, l1)
+		self:DuplicateEntryGuts(a1, store)
 	end,
 	viewSetupFormScript: func() begin
 		layout := self;
@@ -239,28 +239,28 @@ newtLayout := {
 			end)
 	end,
 	FilingChangedX: func() begin
-		l1 := masterSoup:GetCursorKey();
+		cursorKey := masterSoup:GetCursorKey();
 		if filedChild then begin
 				if filedChild.FilingChangedX then begin
 						filedChild:FilingChangedX()
 					end
 			end else begin
-				local l1;
-				(foreach l2 in self:ChildViewFrames() do begin
-						local l4;
-						if l2.FilingChangedX then begin
-								l2:FilingChangedX()
+				local cursorKey;
+				(foreach item in self:ChildViewFrames() do begin
+						local entry;
+						if item.FilingChangedX then begin
+								item:FilingChangedX()
 							end
 					end)
 			end;
-		l4 := dataCursor:entry();
+		entry := dataCursor:entry();
 		masterSoup:SetupCursor();
 		layout:SetupCursor();
-		if IsSoupEntry(l4) then begin
-				dataCursor:Goto(l4)
+		if IsSoupEntry(entry) then begin
+				dataCursor:Goto(entry)
 			end else begin
-				if l1 then begin
-						masterSoup:GotoCursorKey(l1);
+				if cursorKey then begin
+						masterSoup:GotoCursorKey(cursorKey);
 						layout:SetupCursor()
 					end else begin
 						layout:SetupCursor();
@@ -280,32 +280,32 @@ newtLayout := {
 	end,
 	useTypeScrolling: nil,
 	FlushData: func() begin
-		(foreach l1 in self:ChildViewFrames() do begin
-				if HasPath(l1, 'FlushEntry) then begin
-						l1:FlushEntry(GetVariable(l1, 'target))
+		(foreach item in self:ChildViewFrames() do begin
+				if HasPath(item, 'FlushEntry) then begin
+						item:FlushEntry(GetVariable(item, 'target))
 					end
 			end)
 	end,
-	KillEntry: func(a1) begin
-		local l1, l2, l3, l4;
-		if TargetIsCursor(a1) then begin
-				l2 := (l1 := GetTargetCursor(a1, nil)):entry();
-				(while l2 do begin
-						if (l3 := GetEntryDataDef(l2)) then begin
-								l3:?AboutToDeleteEntry(l2)
+	KillEntry: func(target) begin
+		local targetCursor, next, entryDataDef, store;
+		if TargetIsCursor(target) then begin
+				next := (targetCursor := GetTargetCursor(target, nil)):entry();
+				(while next do begin
+						if (entryDataDef := GetEntryDataDef(next)) then begin
+								entryDataDef:?AboutToDeleteEntry(next)
 							end;
-						masterSoup:DeleteEntry(l2);
-						(l2 := l1:Next())
+						masterSoup:DeleteEntry(next);
+						(next := targetCursor:Next())
 					end);
 				selected := nil
 			end else begin
-				if a1 then begin
-						l4 := EntryStore(a1);
-						if (l3 := GetEntryDataDef(a1)) then begin
-								l3:?AboutToDeleteEntry(a1)
+				if target then begin
+						store := EntryStore(target);
+						if (entryDataDef := GetEntryDataDef(target)) then begin
+								entryDataDef:?AboutToDeleteEntry(target)
 							end;
-						masterSoup:DeleteEntry(a1);
-						AddUndoSend(layout, 'NewEntry, [Array: a1, true, l4])
+						masterSoup:DeleteEntry(target);
+						AddUndoSend(layout, 'NewEntry, [Array: target, true, store])
 					end
 			end;
 		layout:Retarget(true)
@@ -314,9 +314,9 @@ newtLayout := {
 		targetView
 	end,
 	viewSetupChildrenScript: func() begin
-		local l1, l2;
-		entries := [Array: (l1 := dataCursor:entry())];
-		entryViewDefs := [Array: GetEntryDataView(l1, viewDef)];
+		local entry, l2;
+		entries := [Array: (entry := dataCursor:entry())];
+		entryViewDefs := [Array: GetEntryDataView(entry, viewDef)];
 		(nextEntry := 0)
 	end
 };

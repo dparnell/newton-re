@@ -18,52 +18,52 @@ protoCategoryRoll := {
 		self.items := nil;
 		self.viewChildren := nil;
 		self.moreBelow := nil;
-		l1 := [Array: ];
-		l2 := maxItems;
-		l3 := scrollOrigin;
-		local l1;
-		local l2;
-		local l3;
-		(foreach l4 in categoryFrames do begin
-				local l6, l7, l8;
-				l6 := self:MakeCategoryItem(l4);
-				if (l7 := (allCollapsed or l4.collapsed)) then begin
-						l8 := 0
+		list := [Array: ];
+		maxItems2 := maxItems;
+		scrollOrigin2 := scrollOrigin;
+		local list;
+		local maxItems2;
+		local scrollOrigin2;
+		(foreach item in categoryFrames do begin
+				local categoryItem, l7, count;
+				categoryItem := self:MakeCategoryItem(item);
+				if (l7 := (allCollapsed or item.collapsed)) then begin
+						count := 0
 					end else begin
-						l8 := l6.count
+						count := categoryItem.count
 					end;
-				if (l3 > 0) then begin
+				if (scrollOrigin2 > 0) then begin
 						if l7 then begin
-								l8 := 0
+								count := 0
 							end;
-						if (l8 > l3) then begin
-								l3 := (-l3)
+						if (count > scrollOrigin2) then begin
+								scrollOrigin2 := (-scrollOrigin2)
 							end else begin
-								l3 := (l3 - l8)
+								scrollOrigin2 := (scrollOrigin2 - count)
 							end;
-						if (l3 = 0) then begin
-								l3 := 1
+						if (scrollOrigin2 = 0) then begin
+								scrollOrigin2 := 1
 							end
 					end;
-				if (l3 <= 0) then begin
-						l3 := (-l3);
-						l6.skip := l3;
-						AddArraySlot(l1, l6);
-						l2 := (l2 - 1);
+				if (scrollOrigin2 <= 0) then begin
+						scrollOrigin2 := (-scrollOrigin2);
+						categoryItem.skip := scrollOrigin2;
+						AddArraySlot(list, categoryItem);
+						maxItems2 := (maxItems2 - 1);
 						if (not l7) then begin
-								l2 := (l2 - self:AddCategory(l1, l6, l3, l2))
+								maxItems2 := (maxItems2 - self:AddCategory(list, categoryItem, scrollOrigin2, maxItems2))
 							end;
-						if (l2 <= 0) then begin
+						if (maxItems2 <= 0) then begin
 								break
 							end;
-						l3 := 0
+						scrollOrigin2 := 0
 					end else begin
-						l3 := (l3 - 1)
+						scrollOrigin2 := (scrollOrigin2 - 1)
 					end
 			end);
-		self.moreBelow := (l2 <= 0);
-		self.items := l1;
-		(self.viewChildren := self:LayoutColumn(l1, index))
+		self.moreBelow := (maxItems2 <= 0);
+		self.items := list;
+		(self.viewChildren := self:LayoutColumn(list, index))
 	end,
 	viewScrollUpScript: func() begin
 		local l1;

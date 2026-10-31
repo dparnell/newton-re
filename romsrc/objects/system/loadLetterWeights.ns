@@ -1,15 +1,15 @@
 // loadLetterWeights, and what only it reaches
 
 loadLetterWeights := func() begin
-	local l1, l2;
+	local l1, taggedEntry;
 	if (userConfiguration.letterSetSelection <> 2) then begin
-			if (if (l2 := GetTaggedEntry("LetterWeights2.0")) then l2.data) then begin
-					SetLetterWeights(l2.data);
+			if (if (taggedEntry := GetTaggedEntry("LetterWeights2.0")) then taggedEntry.data) then begin
+					SetLetterWeights(taggedEntry.data);
 					l1 := true
 				end;
 			if userConfiguration.bigLearningEnabled then begin
-					if (if (l2 := GetTaggedEntry("LearningData2.0")) then l2.data) then begin
-							SetLearningData(l2.data)
+					if (if (taggedEntry := GetTaggedEntry("LearningData2.0")) then taggedEntry.data) then begin
+							SetLearningData(taggedEntry.data)
 						end
 				end
 		end;

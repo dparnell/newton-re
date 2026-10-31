@@ -9,15 +9,15 @@ protoPopupButton := {
 	buttonClickScript: func() begin
 		self:PopupMenu(popup, nil)
 	end,
-	viewClickScript: func(a1) begin
-		if self:TrackHilite(a1) then begin
+	viewClickScript: func(unit) begin
+		if self:TrackHilite(unit) then begin
 				self:buttonClickScript()
 			end else begin
 				self:hilite(nil)
 			end;
 		true
 	end,
-	pickActionScript: func(a1) begin
+	pickActionScript: func(index) begin
 		self:hilite(nil)
 	end,
 	pickCancelledScript: func() begin

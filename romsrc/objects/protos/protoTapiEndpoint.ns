@@ -30,34 +30,34 @@ protoTapiEndpoint := {
 		if ((currentDevice := serviceId) = nil) then begin
 				return nil
 			end;
-		l1 := [Array: {label: currentDevice, type: 'service, opCode: 512}];
+		list := [Array: {label: currentDevice, type: 'service, opCode: 512}];
 		if configOptions then begin
-				l2 := configOptions;
+				configOptions2 := configOptions;
 				if IsFunction(configOptions) then begin
-						l2 := Apply(configOptions, '[Array: ])
+						configOptions2 := Apply(configOptions, '[Array: ])
 					end;
-				if (if l2 then IsArray(l2)) then begin
-						local l1;
-						local l2;
-						(foreach l3, l4 in l2 do begin
-								AddArraySlot(l1, l4)
+				if (if configOptions2 then IsArray(configOptions2)) then begin
+						local list;
+						local configOptions2;
+						(foreach key, value in configOptions2 do begin
+								AddArraySlot(list, value)
 							end)
 					end
 			end;
-		l6 := Length(l1);
-		(foreach l3, l4 in passiveClaim do begin
-				local l6, l7;
-				AddArraySlot(l1, DeepClone(l4))
+		count := Length(list);
+		(foreach key, value in passiveClaim do begin
+				local count, list2;
+				AddArraySlot(list, DeepClone(value))
 			end);
-		l1[l6].data.arglist := [Array: currentDevice];
+		list[count].data.arglist := [Array: currentDevice];
 		if a1 then begin
-				l1[(l6 + 1)].data.arglist := [Array: nil]
+				list[(count + 1)].data.arglist := [Array: nil]
 			end;
-		self:Instantiate(self, l1);
+		self:Instantiate(self, list);
 		self:Bind(nil, {reqTimeout: openTimeout});
 		self:Connect(serviceOption, {reqTimeout: openTimeout});
-		(l7 := [Array: DeepClone(passiveState[0]), passiveState[1]])[0].data.arglist := [Array: currentDevice];
-		self:option(l7, nil)
+		(list2 := [Array: DeepClone(passiveState[0]), passiveState[1]])[0].data.arglist := [Array: currentDevice];
+		self:option(list2, nil)
 	end,
 	Close: func() begin
 		(if (currentDevice <> nil) then begin
@@ -73,12 +73,12 @@ protoTapiEndpoint := {
 				(currentDevice := nil)
 			end)
 	end,
-	SendDigit: func(a1, a2) begin
-		self:SendOption("sdgt", a1, a2)
+	SendDigit: func(char2, a2) begin
+		self:SendOption("sdgt", char2, a2)
 	end,
-	SpeakerOptionDone: func(a1, a2, a3) begin
+	SpeakerOptionDone: func(command, error, symbol2) begin
 		Sleep(10);
-		(if a3 then (if (a1 = "outg") then self:?MakeOutgoingDone(a2) else (if (a1 = "sdgt") then self:?SendDigitDone(a2))) else (if a2 then Throw('|evt.ex.comm|, a2)))
+		(if symbol2 then (if (command = "outg") then self:?MakeOutgoingDone(error) else (if (command = "sdgt") then self:?SendDigitDone(error))) else (if error then Throw('|evt.ex.comm|, error)))
 	end,
 	serviceOption: {
 		label: "taps",
@@ -115,8 +115,8 @@ protoTapiEndpoint := {
 		(if a1 then self:SpeakerOption(confirmStore.command, confirmStore.phone, confirmStore.idx, true) else self:SpeakerOptionDone(confirmStore.command, -16005, true))
 	end,
 	GetCallerId: func() begin
-		local l1, l2;
-		(if ((l2 := self:option((l1 := {label: "rout", type: 'address, opCode: 1024, data: {arglist: [Array: 3, 100, "Caller ID not available                                                                             "], typelist: [Array: 10, 1, 2, [Array: 11, 13, 0]]}}), nil)).result = nil) then return l2.data.arglist[2] else Throw('|evt.ex.comm|, l2.result))
+		local frame2, address;
+		(if ((address := self:option((frame2 := {label: "rout", type: 'address, opCode: 1024, data: {arglist: [Array: 3, 100, "Caller ID not available                                                                             "], typelist: [Array: 10, 1, 2, [Array: 11, 13, 0]]}}), nil)).result = nil) then return address.data.arglist[2] else Throw('|evt.ex.comm|, address.result))
 	end,
 	confirmStore: nil,
 	SendOption: compile(
@@ -125,56 +125,56 @@ protoTapiEndpoint := {
 				a1:ReturnOption(a2, a3)
 			end
 		},
-		func(command, stringOrBool, a3) begin
-			local l1, l2, l3, l4, l5;
+		func(command, stringOrBool, symbol2) begin
+			local l1, frame2, frame3, option, checkOptionResult;
 			if (if (l1 := (if (stringOrBool <> 'ignore) then ((if (not IsImmediate(stringOrBool)) then StrFilled(stringOrBool)) or (ClassOf(stringOrBool) = 'char)))) then (ClassOf(stringOrBool) = 'char)) then begin
 					stringOrBool := Stringer([Array: "", stringOrBool])
 				end;
-			(if (currentDevice = nil) then (if l1 then (if (not a3) then self:SpeakerOption(command, stringOrBool, 0, nil) else AddDeferredCall(func() begin
+			(if (currentDevice = nil) then (if l1 then (if (not symbol2) then self:SpeakerOption(command, stringOrBool, 0, nil) else AddDeferredCall(func() begin
 							self:SpeakerOption(command, stringOrBool, 0, true)
-						end, nil)) else self:SpeakerOptionDone(command, nil, a3)) else (if (currentDevice <> nil) then begin
-						l2 := {label: command, type: 'option, opCode: 512};
+						end, nil)) else self:SpeakerOptionDone(command, nil, symbol2)) else (if (currentDevice <> nil) then begin
+						frame2 := {label: command, type: 'option, opCode: 512};
 						if (if (stringOrBool <> 'ignore) then IsImmediate(stringOrBool)) then begin
-								l2.data := {arglist: [Array: stringOrBool], typelist: [Array: 'struct, 'boolean]}
+								frame2.data := {arglist: [Array: stringOrBool], typelist: [Array: 'struct, 'boolean]}
 							end;
-						l3 := nil;
-						if a3 then begin
-								l3 := {async: true, completionscript: kFunction_52e295}
+						frame3 := nil;
+						if symbol2 then begin
+								frame3 := {async: true, completionscript: kFunction_52e295}
 							end;
 						if l1 then begin
-								l2 := [Array: l2, MakePhoneOption(stringOrBool)]
+								frame2 := [Array: frame2, MakePhoneOption(stringOrBool)]
 							end;
-						l4 := self:option(l2, l3);
-						(if (if (not a3) then ((l5 := self:CheckOptionResult(l4)) <> nil)) then Throw('|evt.ex.comm|, l5.result))
+						option := self:option(frame2, frame3);
+						(if (if (not symbol2) then ((checkOptionResult := self:CheckOptionResult(option)) <> nil)) then Throw('|evt.ex.comm|, checkOptionResult.result))
 					end))
 		end),
-	SpeakerOption: func(a1, a2, a3, a4) begin
-		l1 := nil;
+	SpeakerOption: func(command, stringOrBool, idx, a4) begin
+		error := nil;
 		l2 := nil;
 		try begin
-				local l1;
+				local error;
 				local l2;
-				local l3;
-				local l4;
-				(for l3 := a3 to (StrLen(a2) - 1) do begin
-						local l7;
-						l4 := a2[l3];
+				local i;
+				local stringOrBoolItem;
+				(for i := idx to (StrLen(stringOrBool) - 1) do begin
+						local convertToSoundFrame2;
+						stringOrBoolItem := stringOrBool[i];
 						toneIndex := -1;
-						if (if (l4 >= $0) then (l4 <= $9)) then begin
-								toneIndex := (ORD(l4) - ORD($0))
+						if (if (stringOrBoolItem >= $0) then (stringOrBoolItem <= $9)) then begin
+								toneIndex := (ORD(stringOrBoolItem) - ORD($0))
 							end else begin
-								if (l4 = $*) then begin
+								if (stringOrBoolItem = $*) then begin
 										toneIndex := 10
 									end else begin
-										if (l4 = $#) then begin
+										if (stringOrBoolItem = $#) then begin
 												toneIndex := 11
 											end else begin
-												if ((l4 = $,) or (l4 = $p)) then begin
+												if ((stringOrBoolItem = $,) or (stringOrBoolItem = $p)) then begin
 														Sleep((userConfiguration.commaDelay * 60))
 													end else begin
-														if (l4 = $w) then begin
+														if (stringOrBoolItem = $w) then begin
 																l2 := true;
-																confirmStore := {command: a1, phone: a2, idx: (l3 + 1)};
+																confirmStore := {command: command, phone: stringOrBool, idx: (i + 1)};
 																GetRoot():Confirm("", "Waiting for a second dial tone. Tap \u201C\uOK\u201D\u to continue dialing.", self, 'SpeakerOptionContinue);
 																break
 															end
@@ -183,38 +183,38 @@ protoTapiEndpoint := {
 									end
 							end;
 						if (toneIndex >= 0) then begin
-								(l7 := ConvertToSoundFrame(@dialTones[toneIndex])).volume := 4;
-								PlaySoundSync(l7)
+								(convertToSoundFrame2 := ConvertToSoundFrame(@dialTones[toneIndex])).volume := 4;
+								PlaySoundSync(convertToSoundFrame2)
 							end
 					end)
 			end onexception |evt.ex| do begin
 				nextIndex := 0;
-				l1 := CurrentException().error
+				error := CurrentException().error
 			end;
-		(if (not l2) then self:SpeakerOptionDone(a1, l1, a4))
+		(if (not l2) then self:SpeakerOptionDone(command, error, a4))
 	end,
 	openTimeout: 15000,
-	CheckOptionResult: func(a1) begin
-		l1 := nil;
-		l2 := nil;
-		if IsArray(a1) then begin
-				local l1;
-				(foreach l2 in a1 do begin
-						if (l2.result <> nil) then begin
-								l1 := l2;
+	CheckOptionResult: func(option) begin
+		item2 := nil;
+		item := nil;
+		if IsArray(option) then begin
+				local item2;
+				(foreach item in option do begin
+						if (item.result <> nil) then begin
+								item2 := item;
 								break
 							end
 					end)
 			end else begin
-				if (a1.result <> nil) then begin
-						l1 := a1
+				if (option.result <> nil) then begin
+						item2 := option
 					end
 			end;
-		l1
+		item2
 	end,
 	declareSelf: 'tapiEndpoint,
-	hangup: func(a1) begin
-		self:SendOption("disc", 'ignore, a1)
+	hangup: func(symbol2) begin
+		self:SendOption("disc", 'ignore, symbol2)
 	end,
 	eventHandler: func(a1) begin
 		(if (a1.eventCode = 7) then (if (a1.data = 1) then self:?EventIncoming() else (if (a1.data = 2) then self:?EventRinger() else (if (a1.data = 4) then self:?EventClearDisplay() else (if (a1.data = 5) then self:?EventOffHook() else (if (a1.data = 6) then self:?EventOnHook() else (if (a1.data = 8) then self:?EventConversation() else (if (a1.data = 9) then self:?EventDialTone() else (if (a1.data = 10) then self:?EventRingbackTone() else (if (a1.data = 11) then self:?EventBusyTone() else (if (a1.data = 12) then self:?EventReorder() else self:?EventUnknown(a1.eventCode, a1.data))))))))))) else self:?EventUnknown(a1.eventCode, a1.data))
@@ -226,18 +226,18 @@ protoTapiEndpoint := {
 		self:SendOption("outg", a1, a2)
 	end,
 	ReturnOption: func(a1, a2) begin
-		local l1, l2;
+		local label, checkOptionResult;
 		if IsArray(a1) then begin
-				l1 := a1[0].label
+				label := a1[0].label
 			end else begin
-				l1 := a1.label
+				label := a1.label
 			end;
 		if (not a2) then begin
-				if (l2 := self:CheckOptionResult(a1)) then begin
-						a2 := l2.result
+				if (checkOptionResult := self:CheckOptionResult(a1)) then begin
+						a2 := checkOptionResult.result
 					end
 			end else nil;
-		(if StrEqual(l1, "outg") then self:?MakeOutgoingDone(a2) else (if StrEqual(l1, "sdgt") then self:?SendDigitDone(a2) else (if StrEqual(l1, "answ") then self:?AnswerIncomingDone(a2) else (if StrEqual(l1, "disc") then self:?HangUpDone(a2) else (if StrEqual(l1, "answ") then self:?AnswerIncomingDone(a2) else (if StrEqual(l1, "hold") then self:?HoldDone(a2) else (if StrEqual(l1, "unho") then self:?UnHoldDone(a2) else (if StrEqual(l1, "forw") then self:?ForwardDone(a2) else (if StrEqual(l1, "focr") then self:?ForwardClearDone(a2) else (if StrEqual(l1, "tran") then self:?TransferDone(a2) else (if StrEqual(l1, "tasp") then self:?SetSpeakerDone(a2) else self:?UnknownDone(a1, a2))))))))))))
+		(if StrEqual(label, "outg") then self:?MakeOutgoingDone(a2) else (if StrEqual(label, "sdgt") then self:?SendDigitDone(a2) else (if StrEqual(label, "answ") then self:?AnswerIncomingDone(a2) else (if StrEqual(label, "disc") then self:?HangUpDone(a2) else (if StrEqual(label, "answ") then self:?AnswerIncomingDone(a2) else (if StrEqual(label, "hold") then self:?HoldDone(a2) else (if StrEqual(label, "unho") then self:?UnHoldDone(a2) else (if StrEqual(label, "forw") then self:?ForwardDone(a2) else (if StrEqual(label, "focr") then self:?ForwardClearDone(a2) else (if StrEqual(label, "tran") then self:?TransferDone(a2) else (if StrEqual(label, "tasp") then self:?SetSpeakerDone(a2) else self:?UnknownDone(a1, a2))))))))))))
 	end
 };
 

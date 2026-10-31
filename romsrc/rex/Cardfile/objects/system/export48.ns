@@ -9,8 +9,8 @@ export48 := {
 				local l1;
 				local l2;
 				local l3;
-				(for l4 := 0 to l3 by 2 do begin
-						(l1 := self.(stepAllocateContext[l4])).path := self:MakeDataPaths(selectedPath, [Array: l1.addPath], nil)[0]
+				(for i := 0 to l3 by 2 do begin
+						(l1 := self.(stepAllocateContext[i])).path := self:MakeDataPaths(selectedPath, [Array: l1.addPath], nil)[0]
 					end)
 			end)
 	end,

@@ -29,9 +29,9 @@ protoTransportPrefs := {
 			viewSetupFormScript: func() begin
 				(if (infoPrefs = nil) then (self.viewFlags := BAnd(viewFlags, bnot(1))) else begin
 						stdItems := [Array: ];
-						(foreach l1, l2 deeply in infoPrefs do begin
-								if (not HasSlot(self, l1)) then begin
-										self.(l1) := l2
+						(foreach key, value deeply in infoPrefs do begin
+								if (not HasSlot(self, key)) then begin
+										self.(key) := value
 									end
 							end);
 						if (DoInfoAbout exists) then begin
@@ -51,11 +51,11 @@ protoTransportPrefs := {
 		{
 			title: nil,
 			viewSetupFormScript: func() begin
-				local l1;
-				if ((l1 := self:Parent().title) = nil) then begin
-						l1 := GetRoot().(appSymbol).title
+				local title2;
+				if ((title2 := self:Parent().title) = nil) then begin
+						title2 := GetRoot().(appSymbol).title
 					end;
-				title := ParamStr("^0 Preferences", [Array: l1]);
+				title := ParamStr("^0 Preferences", [Array: title2]);
 				inherited:viewSetupFormScript()
 			end,
 			_proto: @protoTitle
@@ -76,21 +76,21 @@ protoTransportPrefs := {
 				self:doTheShuffle();
 				if info then begin
 						text := info.routeText;
-						labelCommands := (foreach l1 in info.routeChoices collect ParamStr(l1, [Array: info.routeVerb]))
+						labelCommands := (foreach item in info.routeChoices collect ParamStr(item, [Array: info.routeVerb]))
 					end;
 				inherited:?viewSetupFormScript()
 			end,
 			GetIndex: func() begin
 				(if info then ArrayPos(info.routeActions, self:GetTransport():GetConfig(info.routeConfig), 0, nil))
 			end,
-			LabelActionScript: func(a1) begin
-				(if info then self:GetTransport():SetConfig(info.routeConfig, info.routeActions[a1]))
+			LabelActionScript: func(index) begin
+				(if info then self:GetTransport():SetConfig(info.routeConfig, info.routeActions[index]))
 			end,
 			TextSetup: func() begin
-				local l1;
+				local index;
 				(if info then begin
-						l1 := self:GetIndex();
-						ParamStr(info.routeChoices[l1], [Array: info.routeVerb])
+						index := self:GetIndex();
+						ParamStr(info.routeChoices[index], [Array: info.routeVerb])
 					end)
 			end
 		},

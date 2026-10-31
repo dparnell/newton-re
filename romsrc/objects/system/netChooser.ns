@@ -11,17 +11,17 @@ netChooser := {
 	zoneTimer: nil,
 	nbpLookupName: nil,
 	idleFrequency: 250,
-	openNetChooser: func(a1, a2, a3, a4, a5, a6, a7) begin
+	openNetChooser: func(a1, text, a3, a4, text2, text3, text4) begin
 		(if Visible(netChooser) then self:Notify(3, "Chooser", "The network chooser is already open") else begin
 				if (if a1 then (StrLen(a1) = 0)) then begin
 						a1 := nil
 					end;
 				netChooser.currentZone := a1;
-				netChooser.nbpLookupName := a2;
+				netChooser.nbpLookupName := text;
 				netChooser.startSelection := a3;
 				netChooser.notifyOnClose := a4;
-				netChooser.headerText := a6;
-				netChooser.lookForText := a7;
+				netChooser.headerText := text3;
+				netChooser.lookForText := text4;
 				netChooser:Open()
 			end)
 	end,
@@ -95,15 +95,15 @@ netChooser := {
 		zonesButton:Hide()
 	end,
 	viewIdleScript: func() begin
-		local l1, l2, l3;
-		l1 := 0;
+		local chooserIdleFrequency, timesUpScript, l3;
+		chooserIdleFrequency := 0;
 		if formOpen then begin
 				if ((timeoutCounter := (timeoutCounter - idleFrequency)) < 0) then begin
-						l2 := self:timesUpScript()
+						timesUpScript := self:timesUpScript()
 					end else begin
-						l2 := true
+						timesUpScript := true
 					end;
-				if l2 then begin
+				if timesUpScript then begin
 						l3 := (if formOpen then HaveZones());
 						if formOpen then begin
 								if (HaveZones <> l3) then begin
@@ -117,22 +117,22 @@ netChooser := {
 									end;
 								zoneTimer := (zoneTimer + 1);
 								if HaveZones then begin
-										l1 := self:chooserIdleFrequency(3)
+										chooserIdleFrequency := self:chooserIdleFrequency(3)
 									end else begin
 										if (zoneTimer > 30) then begin
-												l1 := self:chooserIdleFrequency(2)
+												chooserIdleFrequency := self:chooserIdleFrequency(2)
 											end else begin
 												if (zoneTimer > 20) then begin
-														l1 := self:chooserIdleFrequency(1)
+														chooserIdleFrequency := self:chooserIdleFrequency(1)
 													end else begin
-														l1 := self:chooserIdleFrequency(0)
+														chooserIdleFrequency := self:chooserIdleFrequency(0)
 													end
 											end
 									end
 							end
 					end
 			end;
-		return l1
+		return chooserIdleFrequency
 	end,
 	debug: 37436,
 	preallocatedContext: 'netChooser,

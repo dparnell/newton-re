@@ -9,19 +9,19 @@ restorePrefsSlip := {
 	prefsArray: 'restoreSoups,
 	pkgNames: nil,
 	viewSetupFormScript: func() begin
-		local l1, l2, l3;
-		if (l1 := godParent.backupCursor) then begin
-				(l1 := l1:clone()):Reset();
-				self.soupNameList := godParent:getRestoreApplicationNames(l1)
+		local backupCursor, count, appAreaHeight;
+		if (backupCursor := godParent.backupCursor) then begin
+				(backupCursor := backupCursor:clone()):Reset();
+				self.soupNameList := godParent:getRestoreApplicationNames(backupCursor)
 			end else begin
 				self.soupNameList := '[Array: ]
 			end;
 		self:getPkgNamesFromBackup();
-		l2 := Length(pkgNames);
-		l3 := GetAppParams().appAreaHeight;
-		if ((l2 = 0) or (l3 > 240)) then begin
+		count := Length(pkgNames);
+		appAreaHeight := GetAppParams().appAreaHeight;
+		if ((count = 0) or (appAreaHeight > 240)) then begin
 				scrollList.viewBounds := SetBounds(18, 5, -18, 97);
-				if (l2 = 0) then begin
+				if (count = 0) then begin
 						self.viewBounds := SetBounds(0, 0, 220, 150)
 					end else begin
 						self.viewBounds := SetBounds(0, 0, 220, 250)
@@ -31,14 +31,14 @@ restorePrefsSlip := {
 	end,
 	getPkgNamesFromBackup: func() begin
 		local tempPkgNames;
-		local l1, l2;
+		local copy, soup;
 		tempPkgNames := [Array: ];
-		if (l2 := godParent:getDestStore():GetSoup("BACKUP_Packages")) then begin
-				tempPkgNames := GetBackedUpPackageNames(l2)
+		if (soup := godParent:getDestStore():GetSoup("BACKUP_Packages")) then begin
+				tempPkgNames := GetBackedUpPackageNames(soup)
 			end;
-		if (l1 := godParent.backupCursor:clone()) then begin
-				l1:Reset();
-				MapCursor(l1, func(a1) begin
+		if (copy := godParent.backupCursor:clone()) then begin
+				copy:Reset();
+				MapCursor(copy, func(a1) begin
 					(if (if (a1.package or a1.segmentedPackage) then (not a1.patches)) then AddArraySlot(tempPkgNames, a1.name))
 				end)
 			end;
@@ -64,17 +64,17 @@ restorePrefsSlip := {
 			viewBounds: {left: 0, top: 7, right: 36, bottom: 20},
 			text: all,
 			buttonClickScript: func() begin
-				local l1;
-				if (not (l1 := packageList).checkAll) then begin
+				local packageList2;
+				if (not (packageList2 := packageList).checkAll) then begin
 						prefsCache.restorePackages := 'all
 					end else begin
 						prefsCache.restorePackages := 'Partial;
 						prefsCache.restorePackNames := [Array: ]
 					end;
-				l1.checkAll := (not l1.checkAll);
+				packageList2.checkAll := (not packageList2.checkAll);
 				EntryChangeXmit(prefsCache, 'backup);
-				l1:figureAllItems();
-				l1:RedoChildren()
+				packageList2:figureAllItems();
+				packageList2:RedoChildren()
 			end,
 			_proto: @protoTextButton
 		},
@@ -109,11 +109,11 @@ packageList := {
 	viewSetupDoneScript: func() begin
 		(if (Length(pkgNames) = 0) then self:Hide())
 	end,
-	HiliteLine: func(a1) begin
+	HiliteLine: func(temp) begin
 		if (prefsCache.restorePackages = 'all) then begin
 				prefsCache.restorePackages := 'Partial
 			end;
-		inherited:HiliteLine(a1);
+		inherited:HiliteLine(temp);
 		(if (Length(selectedItems) = Length(ListItems)) then (checkAll := true) else (checkAll := nil))
 	end,
 	viewQuitScript: func() begin
@@ -128,22 +128,22 @@ packageList := {
 	figureAllItems: func() begin
 		l5 := (self.ListItems := pkgNames);
 		(if (prefsCache.restorePackages = 'all) then begin
-				l2 := Length(l5);
-				l6 := (self.selectedItems := Array(l2, nil));
-				local l1;
-				local l2;
-				local l3;
-				local l4;
+				count := Length(l5);
+				l6 := (self.selectedItems := Array(count, nil));
+				local i;
+				local count;
+				local item;
+				local pos;
 				local l5;
 				local l6;
-				(if (l2 > 0) then (for l1 := 0 to (l2 - 1) do begin
-							l6[l1] := l1
+				(if (count > 0) then (for i := 0 to (count - 1) do begin
+							l6[i] := i
 						end))
 			end else begin
 				l6 := (self.selectedItems := [Array: ]);
-				(foreach l3 in prefsCache.restorePackNames do begin
-						if (l4 := LSearch(l5, l3, 0, '|str=|, nil)) then begin
-								AddArraySlot(l6, l4)
+				(foreach item in prefsCache.restorePackNames do begin
+						if (pos := LSearch(l5, item, 0, '|str=|, nil)) then begin
+								AddArraySlot(l6, pos)
 							end
 					end)
 			end)

@@ -6,37 +6,37 @@ protoPreferencesPopup := {
 	TextSetup: func() begin
 		labelCommands[self:LabelIndex(vars.(configPath))]
 	end,
-	LabelActionScript: func(a1) begin
+	LabelActionScript: func(index) begin
 		AddUndoAction('setLabelScript, [Array: vars.(configPath)]);
-		(vars.(configPath) := items[a1])
+		(vars.(configPath) := items[index])
 	end,
 	setLabelScript: func(a1) begin
 		self:UpdateText(labelCommands[self:LabelIndex(a1)]);
 		self:LabelActionScript(self:LabelIndex(a1))
 	end,
 	LabelIndex: func(a1) begin
-		l1 := 0;
-		local l1;
-		(for l2 := 0 to (Length(items) - 1) do begin
+		i2 := 0;
+		local i2;
+		(for i := 0 to (Length(items) - 1) do begin
 				if (ClassOf(a1) = 'string) then begin
-						if StrEqual(a1, items[l2].title) then begin
-								l1 := l2;
+						if StrEqual(a1, items[i].title) then begin
+								i2 := i;
 								break
 							end
 					end else begin
 						if (if IsFrame(a1) then a1.title) then begin
-								if (if items[l2].title then StrEqual(a1.title, items[l2].title)) then begin
-										l1 := l2;
+								if (if items[i].title then StrEqual(a1.title, items[i].title)) then begin
+										i2 := i;
 										break
 									end
 							end
 					end;
-				if (a1 = items[l2]) then begin
-						l1 := l2;
+				if (a1 = items[i]) then begin
+						i2 := i;
 						break
 					end
 			end);
-		l1
+		i2
 	end,
 	_proto: @protoLabelPicker
 };

@@ -15,9 +15,9 @@ protoAddressPicker := {
 		(pickerSlip := nil)
 	end,
 	EntryLineSetup: func() begin
-		local l1;
-		l1 := self:LocalBox();
-		StyledStrTruncate(Clone(self:TextFromRef(selected)), ((l1.right - l1.left) - indent), entryLine.viewFont)
+		local box;
+		box := self:LocalBox();
+		StyledStrTruncate(Clone(self:TextFromRef(selected)), ((box.right - box.left) - indent), entryLine.viewFont)
 	end,
 	memory: nil,
 	_picker: @protoPeoplePopup,
@@ -122,8 +122,8 @@ protoAddressPicker := {
 			end;
 		labelCommands
 	end,
-	PopupSetup: func(a1) begin
-		StyledStrTruncate(Clone(self:TextFromRef(a1)), 200, @fontSystem10Bold)
+	PopupSetup: func(labelNameRef) begin
+		StyledStrTruncate(Clone(self:TextFromRef(labelNameRef)), 200, @fontSystem10Bold)
 	end,
 	viewJustify: vjParentFullH,
 	selected: nil,
@@ -136,26 +136,26 @@ protoAddressPicker := {
 	end,
 	labelCommands: nil,
 	TextSetup: func() begin
-		l1 := GetMemoryItems(memory);
-		if (if alternatives then l1) then begin
-				ArrayMunger((l4 := Clone(alternatives)), 0, 0, selected, 0, nil);
-				local l1;
-				local l2;
-				local l3;
-				local l4;
-				(foreach l5, l6 in l1 do begin
-						local l8;
-						l2 := l6.item;
-						if (l3 := ArrayPos(l4, l2, 0, func(a1, a2) begin
+		memoryItems := GetMemoryItems(memory);
+		if (if alternatives then memoryItems) then begin
+				ArrayMunger((copy := Clone(alternatives)), 0, 0, selected, 0, nil);
+				local memoryItems;
+				local item;
+				local pos;
+				local copy;
+				(foreach key, value in memoryItems do begin
+						local copyItem;
+						item := value.item;
+						if (pos := ArrayPos(copy, item, 0, func(a1, a2) begin
 							self:ToRefEquality(a1, a2)
 						end)) then begin
 								break
 							end
 					end);
-				if (if l3 then (l3 > 0)) then begin
-						l8 := l4[0];
-						selected := l2;
-						alternatives[(l3 - 1)] := l8
+				if (if pos then (pos > 0)) then begin
+						copyItem := copy[0];
+						selected := item;
+						alternatives[(pos - 1)] := copyItem
 					end
 			end;
 		return self:EntryLineSetup()
@@ -166,55 +166,55 @@ protoAddressPicker := {
 			end;
 		inherited:?viewSetupFormScript()
 	end,
-	Popit: func(a1) begin
+	Popit: func(x) begin
 		if self:pickerSetup() then begin
 				pop := Clone(labelCommands);
 				if selectedIndex then begin
 						pop[selectedIndex] := {item: pop[selectedIndex], mark: $\uFC0B}
 					end;
-				DoPopup(pop, a1, nil, self)
+				DoPopup(pop, x, nil, self)
 			end else begin
 				self:DoOpenPicker()
 			end;
 		true
 	end,
 	ToRefEquality: func(a1, a2) begin
-		local l1, l2, l3;
-		l1 := GetDataDefs(class);
-		l2 := self:TextFromRef(a1);
-		l3 := self:TextFromRef(a2);
-		(if (if StrFilled(l2) then StrFilled(l3)) then StrEqual(l2, l3))
+		local dataDefs, textFromRef, textFromRef2;
+		dataDefs := GetDataDefs(class);
+		textFromRef := self:TextFromRef(a1);
+		textFromRef2 := self:TextFromRef(a2);
+		(if (if StrFilled(textFromRef) then StrFilled(textFromRef2)) then StrEqual(textFromRef, textFromRef2))
 	end,
-	TextFromRef: func(a1) begin
-		local l1, l2, l3;
-		l1 := GetDataDefs(class);
-		l2 := l1:GetRoutingTitle(a1, nil, nil);
-		l3 := nil;
-		if (if IsArray(a1) then (Length(a1) = 1)) then begin
-				l3 := l1:GetSuffix(a1[0])
+	TextFromRef: func(selected) begin
+		local dataDefs, routingTitle, suffix;
+		dataDefs := GetDataDefs(class);
+		routingTitle := dataDefs:GetRoutingTitle(selected, nil, nil);
+		suffix := nil;
+		if (if IsArray(selected) then (Length(selected) = 1)) then begin
+				suffix := dataDefs:GetSuffix(selected[0])
 			end else begin
-				if IsFrame(a1) then begin
-						l3 := l1:GetSuffix(a1)
+				if IsFrame(selected) then begin
+						suffix := dataDefs:GetSuffix(selected)
 					end
 			end;
-		if l3 then begin
-				l2 := ParamStr("^0 ^1", [Array: l2, l3])
+		if suffix then begin
+				routingTitle := ParamStr("^0 ^1", [Array: routingTitle, suffix])
 			end;
-		l2
+		routingTitle
 	end,
 	useMemory: true,
-	pickActionScript: func(a1) begin
-		local l1;
+	pickActionScript: func(index) begin
+		local count;
 		(if inPeoplePicker then begin
-				selected := a1;
+				selected := index;
 				self:UpdateText(self:EntryLineSetup());
 				base:hilite(nil);
 				(pickerSlip := nil)
 			end else begin
-				l1 := Length(labelNameRefs);
-				(if (a1 < l1) then begin
-						selected := labelNameRefs[a1];
-						selectedIndex := a1;
+				count := Length(labelNameRefs);
+				(if (index < count) then begin
+						selected := labelNameRefs[index];
+						selectedIndex := index;
 						if (not IsArray(selected)) then begin
 								selected := [Array: selected]
 							end;

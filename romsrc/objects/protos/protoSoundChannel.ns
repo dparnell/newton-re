@@ -4,20 +4,20 @@ protoSoundChannel := {
 	schedule: {class: #132, funcPtr: 7018715, numArgs: 1},
 	getInputGain: {class: #132, funcPtr: 7046194, numArgs: 0},
 	newRecording: func() begin
-		local l1;
-		(l1 := {_proto: self, direction: 'record})
+		local frame2;
+		(frame2 := {_proto: self, direction: 'record})
 	end,
 	pause: {class: #132, funcPtr: 7018713, numArgs: 0},
 	Open: {class: #132, funcPtr: 7018712, numArgs: 0},
 	Close: {class: #132, funcPtr: 7018709, numArgs: 0},
 	GetVolume: {class: #132, funcPtr: 7046191, numArgs: 0},
 	outputDevice: nil,
-	newInputBlock: func(a1) begin
-		local l1, l2;
-		if (not (l1 := self.recordingStore)) then begin
-				l1 := GetDefaultStore()
+	newInputBlock: func(fn) begin
+		local recordingStore, frame2;
+		if (not (recordingStore := self.recordingStore)) then begin
+				recordingStore := GetDefaultStore()
 			end;
-		(l2 := {_proto: @protoSoundFrame, samples: l1:NewVBO('samples, inputBlockSize), callback: a1, dataType: 8, compressionType: 1, samplingRate: 10800})
+		(frame2 := {_proto: @protoSoundFrame, samples: recordingStore:NewVBO('samples, inputBlockSize), callback: fn, dataType: 8, compressionType: 1, samplingRate: 10800})
 	end,
 	inputDevice: nil,
 	inputBlockSize: 65536,

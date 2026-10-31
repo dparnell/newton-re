@@ -20,18 +20,18 @@ export119 := {
 		WeekInYearField:SetNumericValueString(nil);
 		DayInYearField:SetNumericValueString(nil)
 	end,
-	SolveFormula: func(a1) begin
-		local l1, l2, l3, l4, l5;
+	SolveFormula: func(lineNumber) begin
+		local calcLineValue, longDateStr2, date2, totalMinutes2, totalMinutes3;
 		(if (DateField.calcLineValue <> nil) then begin
-				DayOfWeekField:SetNumericValueString((l2 := LongDateStr((l1 := DateField.calcLineValue), @datetimeStrSpecs.longDayOfWeekStrSpec)));
-				WeekInYearField:SetNumericValueString(WeekNumber(l1, nil));
-				(l3 := Date(l1)).month := 1;
-				l3.Date := 1;
-				l4 := TotalMinutes(l3);
-				l3.month := 12;
-				l3.Date := 31;
-				l5 := TotalMinutes(l3);
-				DayInYearField:SetNumericValueString(Stringer([Array: NumberStr((1 + ((l1 - l4) div 1440))), "/", NumberStr(((l5 - l1) div 1440))]))
+				DayOfWeekField:SetNumericValueString((longDateStr2 := LongDateStr((calcLineValue := DateField.calcLineValue), @datetimeStrSpecs.longDayOfWeekStrSpec)));
+				WeekInYearField:SetNumericValueString(WeekNumber(calcLineValue, nil));
+				(date2 := Date(calcLineValue)).month := 1;
+				date2.Date := 1;
+				totalMinutes2 := TotalMinutes(date2);
+				date2.month := 12;
+				date2.Date := 31;
+				totalMinutes3 := TotalMinutes(date2);
+				DayInYearField:SetNumericValueString(Stringer([Array: NumberStr((1 + ((calcLineValue - totalMinutes2) div 1440))), "/", NumberStr(((totalMinutes3 - calcLineValue) div 1440))]))
 			end)
 	end,
 	viewBounds: {left: 0, top: 0, right: 224, bottom: 189},

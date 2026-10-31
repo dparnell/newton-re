@@ -18,13 +18,13 @@ protoRepeatPicker := {
 	currentLabelIndex: nil,
 	meetingInstance: nil,
 	viewSetupFormScript: func() begin
-		local l1, l2;
+		local calendar, exception;
 		if selectedMeeting.repeatType then begin
-				l1 := GetRoot().calendar;
-				if (l2 := l1:FindException(originalMtgDate, selectedMeeting)) then begin
-						meetingInstance := l2
+				calendar := GetRoot().calendar;
+				if (exception := calendar:FindException(originalMtgDate, selectedMeeting)) then begin
+						meetingInstance := exception
 					end else begin
-						meetingInstance := l1:MakeInstanceOfRepeatingMeeting(selectedMeeting, originalMtgDate)
+						meetingInstance := calendar:MakeInstanceOfRepeatingMeeting(selectedMeeting, originalMtgDate)
 					end
 			end else begin
 				meetingInstance := selectedMeeting
@@ -34,34 +34,34 @@ protoRepeatPicker := {
 		inherited:viewSetupFormScript()
 	end,
 	TextSetup: func() begin
-		local l1, l2, l3;
-		if (l1 := meetingInstance.repeatTemplate) then begin
-				RepeatingView.repeatType := l1.repeatType;
-				RepeatingView.mtgInfo := l1.mtgInfo
+		local repeatTemplate, l2, date2;
+		if (repeatTemplate := meetingInstance.repeatTemplate) then begin
+				RepeatingView.repeatType := repeatTemplate.repeatType;
+				RepeatingView.mtgInfo := repeatTemplate.mtgInfo
 			end;
-		l3 := Date(meetingInstance.mtgStartDate);
-		if (l1 = nil) then begin
+		date2 := Date(meetingInstance.mtgStartDate);
+		if (repeatTemplate = nil) then begin
 				l2 := 0
 			end else begin
-				if (if (l1.repeatType = 0) then (l1.mtgInfo = BOr(4064, 31))) then begin
+				if (if (repeatTemplate.repeatType = 0) then (repeatTemplate.mtgInfo = BOr(4064, 31))) then begin
 						l2 := 1
 					end else begin
-						if (if (l1.repeatType = 0) then (l1.mtgInfo = BOr((2048 >> l3.dayOfWeek), 31))) then begin
+						if (if (repeatTemplate.repeatType = 0) then (repeatTemplate.mtgInfo = BOr((2048 >> date2.dayOfWeek), 31))) then begin
 								l2 := 2
 							end else begin
-								if (l1.repeatType = 4) then begin
+								if (repeatTemplate.repeatType = 4) then begin
 										l2 := 3
 									end else begin
-										if (l1.repeatType = 2) then begin
+										if (repeatTemplate.repeatType = 2) then begin
 												l2 := 4
 											end else begin
-												if (if (l1.repeatType = 1) then (l1.mtgInfo = BOr((16 >> ((l3.Date - 1) div 7)), (2048 >> l3.dayOfWeek)))) then begin
+												if (if (repeatTemplate.repeatType = 1) then (repeatTemplate.mtgInfo = BOr((16 >> ((date2.Date - 1) div 7)), (2048 >> date2.dayOfWeek)))) then begin
 														l2 := 5
 													end else begin
-														if (l1.repeatType = 3) then begin
+														if (repeatTemplate.repeatType = 3) then begin
 																l2 := 6
 															end else begin
-																if (l1.repeatType = 7) then begin
+																if (repeatTemplate.repeatType = 7) then begin
 																		l2 := 7
 																	end else begin
 																		l2 := 8
@@ -83,40 +83,40 @@ protoRepeatPicker := {
 				nil
 			end else true)
 	end,
-	LabelActionScript: func(a1) begin
-		local l1;
-		l1 := Date(newMtgDate);
-		if (a1 = 0) then begin
+	LabelActionScript: func(index) begin
+		local date2;
+		date2 := Date(newMtgDate);
+		if (index = 0) then begin
 				RepeatingView.repeatType := 5;
 				RepeatingView.mtgInfo := 0
 			end else begin
-				if (a1 = 1) then begin
+				if (index = 1) then begin
 						RepeatingView.repeatType := 0;
 						RepeatingView.mtgInfo := BOr(4064, 31)
 					end else begin
-						if (a1 = 2) then begin
+						if (index = 2) then begin
 								RepeatingView.repeatType := 0;
-								RepeatingView.mtgInfo := BOr((2048 >> l1.dayOfWeek), 31)
+								RepeatingView.mtgInfo := BOr((2048 >> date2.dayOfWeek), 31)
 							end else begin
-								if (a1 = 3) then begin
+								if (index = 3) then begin
 										RepeatingView.repeatType := 4;
 										RepeatingView.mtgInfo := (((newMtgDate div 1440) << 8) + 14)
 									end else begin
-										if (a1 = 4) then begin
+										if (index = 4) then begin
 												RepeatingView.repeatType := 2;
-												RepeatingView.mtgInfo := l1.Date
+												RepeatingView.mtgInfo := date2.Date
 											end else begin
-												if (a1 = 5) then begin
+												if (index = 5) then begin
 														RepeatingView.repeatType := 1;
-														RepeatingView.mtgInfo := BOr((16 >> ((l1.Date - 1) div 7)), (2048 >> l1.dayOfWeek))
+														RepeatingView.mtgInfo := BOr((16 >> ((date2.Date - 1) div 7)), (2048 >> date2.dayOfWeek))
 													end else begin
-														if (a1 = 6) then begin
+														if (index = 6) then begin
 																RepeatingView.repeatType := 3;
-																RepeatingView.mtgInfo := ((l1.month << 8) + l1.Date)
+																RepeatingView.mtgInfo := ((date2.month << 8) + date2.Date)
 															end else begin
-																if (a1 = 7) then begin
+																if (index = 7) then begin
 																		RepeatingView.repeatType := 7;
-																		RepeatingView.mtgInfo := (((l1.month << 12) + (2048 >> l1.dayOfWeek)) + (16 >> ((l1.Date - 1) div 7)))
+																		RepeatingView.mtgInfo := (((date2.month << 12) + (2048 >> date2.dayOfWeek)) + (16 >> ((date2.Date - 1) div 7)))
 																	end else begin
 																		RepeatingView:Open()
 																	end
@@ -127,7 +127,7 @@ protoRepeatPicker := {
 							end
 					end
 			end;
-		(currentLabelIndex := a1)
+		(currentLabelIndex := index)
 	end,
 	_proto: @protoLabelPicker
 };

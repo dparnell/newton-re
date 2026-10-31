@@ -11,14 +11,14 @@ notePaper := {
 	name: note,
 	protection: 'private,
 	path: 'data,
-	MinimalBounds: func(a1) begin
-		if a1.data then begin
-				local l1;
-				(foreach l2 in a1.data do begin
-						l1 := UnionRect(l1, l2.viewBounds)
+	MinimalBounds: func(target) begin
+		if target.data then begin
+				local unionRect2;
+				(foreach item in target.data do begin
+						unionRect2 := UnionRect(unionRect2, item.viewBounds)
 					end)
 			end;
-		l1
+		unionRect2
 	end,
 	viewSetupDoneScript: func() begin
 		if (if (if KeyboardConnected() then (BAnd(self.viewFlags, 130) = 0)) then (if target then (not target.data))) then begin

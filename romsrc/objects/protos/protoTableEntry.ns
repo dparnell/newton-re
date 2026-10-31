@@ -8,17 +8,17 @@ protoTableEntry := {
 	viewJustify: 8388612,
 	text: nil,
 	viewBounds: nil,
-	viewClickScript: func(a1) begin
+	viewClickScript: func(unit) begin
 		currentSelection := text;
 		self:selectThisCell(self);
 		true
 	end,
-	viewHiliteScript: func(a1) begin
-		local l1, l2;
+	viewHiliteScript: func(on) begin
+		local l1, viewBounds;
 		l1 := nil;
 		if def.indentX then begin
-				l2 := self.viewBounds;
-				self:DrawShape(MakeRect((-def.indentX), 0, (l2.right - def.indentX), (l2.bottom - l2.top)), '{transferMode: 2, penPattern: 0, fillPattern: 5});
+				viewBounds := self.viewBounds;
+				self:DrawShape(MakeRect((-def.indentX), 0, (viewBounds.right - def.indentX), (viewBounds.bottom - viewBounds.top)), '{transferMode: 2, penPattern: 0, fillPattern: 5});
 				l1 := true
 			end;
 		return l1

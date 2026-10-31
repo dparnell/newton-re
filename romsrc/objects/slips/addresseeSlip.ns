@@ -18,12 +18,12 @@ addresseeSlip := {
 				explanation_2,
 				{
 					flavor: {
-						EntryToPath: func(a1) begin
-							local l1;
-							target.toName := self:PrimaryName(a1);
-							l1 := GetRoot().cardfile:bcStreetAddress(a1, 'string);
-							target.(path) := self:PrimaryName(a1);
-							(if l1 then (target.(path) := Stringer([Array: target.(path), $\n, self:bcFullAddress(l1[0])])))
+						EntryToPath: func(resolveEntryAlias) begin
+							local string2;
+							target.toName := self:PrimaryName(resolveEntryAlias);
+							string2 := GetRoot().cardfile:bcStreetAddress(resolveEntryAlias, 'string);
+							target.(path) := self:PrimaryName(resolveEntryAlias);
+							(if string2 then (target.(path) := Stringer([Array: target.(path), $\n, self:bcFullAddress(string2[0])])))
 						end,
 						picker: func() begin
 							@protoPeoplePopup:New({_proto: GetDataDefs('|nameRef.people|), singleSelect: true}, nil, self, nil)
@@ -37,7 +37,7 @@ addresseeSlip := {
 					viewLineSpacing: 30,
 					viewSetupFormScript: func() begin
 						inherited:viewSetupFormScript();
-						(entryLine.viewJustify := 192)
+						(entryLine.viewJustify := vjParentFullV)
 					end,
 					viewSetupDoneScript: func() begin
 						SetKeyView(self.entryLine, 9999)
@@ -52,8 +52,8 @@ addresseeSlip := {
 					text: "Sign Letter",
 					added: nil,
 					viewSetupFormScript: func() begin
-						local l1;
-						if ((not (l1 := ResolveEntryAlias(userConfiguration.currentPersona))) or (not l1.owner.signature)) then begin
+						local resolveEntryAlias2;
+						if ((not (resolveEntryAlias2 := ResolveEntryAlias(userConfiguration.currentPersona))) or (not resolveEntryAlias2.owner.signature)) then begin
 								viewFlags := 0
 							end else begin
 								added := true

@@ -7,11 +7,11 @@ protoDictionaryCursor := {
 	validTest: nil,
 	currentEntry: nil,
 	clone: func() begin
-		local l1;
-		(l1 := self:PrivateClone()).currentEntry := Clone(currentEntry);
-		l1.index := Clone(index);
-		l1.validTest := Clone(validTest);
-		return l1
+		local privateClone;
+		(privateClone := self:PrivateClone()).currentEntry := Clone(currentEntry);
+		privateClone.index := Clone(index);
+		privateClone.validTest := Clone(validTest);
+		return privateClone
 	end,
 	ThisWord: func() begin
 		(if self:PrivateEntry(currentEntry) then return currentEntry.word else return nil)
@@ -35,18 +35,18 @@ protoDictionaryCursor := {
 			end);
 		return nil
 	end,
-	move: func(a1) begin
-		local l1, l2, l3;
-		l1 := (if (a1 < 0) then 'prev else 'Next);
+	move: func(maxLines) begin
+		local l1, l2, abs2;
+		l1 := (if (maxLines < 0) then 'prev else 'Next);
 		l2 := 0;
-		l3 := abs(a1);
-		(while (l2 < l3) do begin
+		abs2 := abs(maxLines);
+		(while (l2 < abs2) do begin
 				if (not Perform(self, l1, [Array: ])) then begin
 						break
 					end;
 				(l2 := (l2 + 1))
 			end);
-		return (l2 * (if (a1 < 0) then -1 else 1))
+		return (l2 * (if (maxLines < 0) then -1 else 1))
 	end,
 	first: func() begin
 		(while self:prev() do nil)
@@ -67,14 +67,14 @@ protoDictionaryCursor := {
 	entry: func() begin
 		(if self:PrivateEntry(currentEntry) then return Clone(currentEntry) else return nil)
 	end,
-	MakeWindow: func(a1) begin
-		local l1;
-		l1 := {_proto: protoCursorWindow};
-		l1:Initialize(self, a1);
-		return l1
+	MakeWindow: func(numLines) begin
+		local frame2;
+		frame2 := {_proto: protoCursorWindow};
+		frame2:Initialize(self, numLines);
+		return frame2
 	end,
-	ChangeAttribute: func(a1) begin
-		(if (if dict then currentEntry.word) then dict:ChangeAttribute(currentEntry.word, a1))
+	ChangeAttribute: func(word) begin
+		(if (if dict then currentEntry.word) then dict:ChangeAttribute(currentEntry.word, word))
 	end,
 	PrivateEntry: {class: #132, funcPtr: 6995427, numArgs: 1},
 	Dispose: func() begin
@@ -98,9 +98,9 @@ protoDictionaryCursor := {
 		entryFilter: func(a1) begin
 			a1
 		end,
-		Initialize: func(a1, a2) begin
-			self.buffer := Array(a2, nil);
-			self.bufferSize := a2;
+		Initialize: func(a1, singleSelect) begin
+			self.buffer := Array(singleSelect, nil);
+			self.bufferSize := singleSelect;
 			self.cursor := a1;
 			self.dipStick := self:FillBuffer();
 			return self
@@ -108,8 +108,8 @@ protoDictionaryCursor := {
 		EntryKey: func(a1) begin
 			(if (Length(buffer) > a1) then call entryFilter with (buffer[a1]))
 		end,
-		GetEntry: func(a1) begin
-			(if (Length(buffer) > a1) then buffer[a1])
+		GetEntry: func(i) begin
+			(if (Length(buffer) > i) then buffer[i])
 		end,
 		GetBuffer: func() begin
 			return buffer
@@ -123,15 +123,15 @@ protoDictionaryCursor := {
 		GetCursor: func() begin
 			return cursor
 		end,
-		Scroll: func(a1) begin
-			local l1, l2;
+		Scroll: func(arrowDirection) begin
+			local moveCursor, l2;
 			if (if (dipStick > 0) then (not cursor:entry())) then begin
 					Throw('|evt.ex.msg|, "cursorLoc out of whack before Scroll")
 				end;
-			l1 := 0;
-			l1 := self:MoveCursor((a1 - cursorLoc));
+			moveCursor := 0;
+			moveCursor := self:MoveCursor((arrowDirection - cursorLoc));
 			if (not cursor:entry()) then begin
-					if (a1 < 0) then begin
+					if (arrowDirection < 0) then begin
 							self:MoveCursor(1)
 						end else begin
 							self:MoveCursor(-1)
@@ -141,14 +141,14 @@ protoDictionaryCursor := {
 			if (if (dipStick > 0) then (not cursor:entry())) then begin
 					Throw('|evt.ex.msg|, "cursorLoc out of whack after Scroll")
 				end;
-			return l1
+			return moveCursor
 		end,
 		Reset: func() begin
 			cursor:Reset();
 			self:FillBuffer()
 		end,
-		Reposition: func(a1) begin
-			cursor:Initialize(a1, nil, 'first);
+		Reposition: func(word) begin
+			cursor:Initialize(word, nil, 'first);
 			self:FillBuffer()
 		end,
 		RepositionLast: func(a1) begin
@@ -156,12 +156,12 @@ protoDictionaryCursor := {
 			self:FillBuffer()
 		end,
 		FillBuffer: func() begin
-			if ((l1 := self:FillFromEntry(0, bufferSize)) = 0) then begin
+			if ((fillFromEntry := self:FillFromEntry(0, bufferSize)) = 0) then begin
 					cursorLoc := -1
 				end;
-			local l1;
-			(for l2 := l1 to (bufferSize - 1) do begin
-					buffer[l2] := nil
+			local fillFromEntry;
+			(for i := fillFromEntry to (bufferSize - 1) do begin
+					buffer[i] := nil
 				end);
 			if (not cursor:entry()) then begin
 					self:MoveCursor(-1)
@@ -169,28 +169,28 @@ protoDictionaryCursor := {
 			(dipStick := (cursorLoc + 1))
 		end,
 		MoveCursor: func(a1) begin
-			local l1;
-			l1 := cursor:move(a1);
-			cursorLoc := (cursorLoc + l1);
-			return l1
+			local move;
+			move := cursor:move(a1);
+			cursorLoc := (cursorLoc + move);
+			return move
 		end,
-		FillFromEntry: func(a1, a2) begin
-			local l1, l2, l3;
+		FillFromEntry: func(a1, bufferSize) begin
+			local l1, l2, entry;
 			l1 := a1;
-			l2 := (a1 + a2);
-			if (if (l3 := cursor:entry()) then (l1 < l2)) then begin
+			l2 := (a1 + bufferSize);
+			if (if (entry := cursor:entry()) then (l1 < l2)) then begin
 					(loop begin
-							if (not l3) then begin
+							if (not entry) then begin
 									break
 								end else begin
-									buffer[l1] := l3
+									buffer[l1] := entry
 								end;
 							(if ((l1 := (l1 + 1)) = l2) then break else begin
 									cursorLoc := l1;
 									if (not cursor:Next()) then begin
 											break
 										end;
-									(l3 := cursor:entry())
+									(entry := cursor:entry())
 								end)
 						end)
 				end;
@@ -198,11 +198,11 @@ protoDictionaryCursor := {
 		end,
 		SlideUp: func(a1) begin
 			local l1;
-			(for l2 := ((l1 := (dipStick - max(0, ((dipStick + a1) - bufferSize)))) - 1) to 0 by -1 do begin
-					buffer[(l2 + a1)] := buffer[l2]
+			(for i := ((l1 := (dipStick - max(0, ((dipStick + a1) - bufferSize)))) - 1) to 0 by -1 do begin
+					buffer[(i + a1)] := buffer[i]
 				end);
-			(for l2 := 0 to (a1 - 1) do begin
-					buffer[l2] := nil
+			(for i := 0 to (a1 - 1) do begin
+					buffer[i] := nil
 				end);
 			cursorLoc := (cursorLoc + a1);
 			(dipStick := (a1 + l1))
@@ -210,24 +210,24 @@ protoDictionaryCursor := {
 		SlideDown: func(a1) begin
 			l1 := (bufferSize - a1);
 			local l1;
-			(for l2 := 0 to (l1 - 1) do begin
-					buffer[l2] := buffer[(l2 + a1)]
+			(for i := 0 to (l1 - 1) do begin
+					buffer[i] := buffer[(i + a1)]
 				end);
-			(for l2 := l1 to (bufferSize - 1) do begin
-					buffer[l2] := nil
+			(for i := l1 to (bufferSize - 1) do begin
+					buffer[i] := nil
 				end);
 			cursorLoc := (cursorLoc - a1);
 			(dipStick := (dipStick - a1))
 		end
 	},
 	prev: {class: #132, funcPtr: 6995425, numArgs: 0},
-	Initialize: func(a1, a2, a3) begin
+	Initialize: func(a1, singleSelect, loc) begin
 		self.prefix := a1;
-		self.pin := a2;
-		self.loc := a3;
+		self.pin := singleSelect;
+		self.loc := loc;
 		self.currentEntry := {};
 		self.currentEntry := {word: nil, attribute: nil, terminalClass: nil};
-		self:PrivateReset(a1, a2, a3)
+		self:PrivateReset(a1, singleSelect, loc)
 	end
 };
 

@@ -18,12 +18,12 @@ aliasCursor := {
 		self:entry()
 	end,
 	entry: func() begin
-		local l1;
+		local thing;
 		(if (if (index >= 0) then (index < Length(things))) then begin
-				if (ClassOf((l1 := things[index])) = 'alias) then begin
-						l1 := ResolveEntryAlias(l1)
+				if (ClassOf((thing := things[index])) = 'alias) then begin
+						thing := ResolveEntryAlias(thing)
 					end;
-				(if l1 then (if (if (if targetpath then IsFrame(l1)) then l1.(targetpath)) then l1.(targetpath) else l1) else 'deleted)
+				(if thing then (if (if (if targetpath then IsFrame(thing)) then thing.(targetpath)) then thing.(targetpath) else thing) else 'deleted)
 			end)
 	end,
 	_proto: @arrayErsatzCursor

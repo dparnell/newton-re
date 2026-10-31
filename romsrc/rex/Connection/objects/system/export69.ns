@@ -38,41 +38,41 @@ export69 := {
 		}
 	],
 	getinfoButton: nil,
-	RebuildFileList: func(a1, a2) begin
+	RebuildFileList: func(a1, callReadCommand) begin
 		fileList.listItems := [Array: ];
 		if aborting then begin
 				return true
 			end;
-		l1 := (if a2 then "spth");
+		l1 := (if callReadCommand then "spth");
 		checkCommandsInIdle := nil;
-		l2 := protoContext:GetNewFiles(endpoint, currentPath, l1, func(a1) begin
+		newFiles := protoContext:GetNewFiles(endpoint, currentPath, l1, func(a1) begin
 			browseFolder:SetNewPath(a1)
 		end);
 		checkCommandsInIdle := true;
-		(if l2 then begin
-				currentFiles := l2;
-				l3 := [Array: ];
-				l4 := FontAscent(fileList.viewFont);
+		(if newFiles then begin
+				currentFiles := newFiles;
+				list := [Array: ];
+				fontAscent2 := FontAscent(fileList.viewFont);
 				local l1;
-				local l2;
-				local l3;
-				local l4;
-				(foreach l5 in currentFiles do begin
-						local l7, l8, l9, l10;
-						l7 := macIcons[1];
-						if (if (l5.type >= 0) then (l5.type <= 9)) then begin
-								l7 := macIcons[l5.type]
+				local newFiles;
+				local list;
+				local fontAscent2;
+				(foreach item in currentFiles do begin
+						local macIcon, copy, text, list2;
+						macIcon := macIcons[1];
+						if (if (item.type >= 0) then (item.type <= 9)) then begin
+								macIcon := macIcons[item.type]
 							end;
-						l8 := DeepClone(l7);
-						l9 := MakeText(l5.name, 16, 0, (StrFontWidth(l5.name, fileList.viewFont) + 16), l4);
-						if HasPath(l5, 'alias) then begin
-								l10 := [Array: l8, DeepClone(fileList.italicStyle), l9]
+						copy := DeepClone(macIcon);
+						text := MakeText(item.name, 16, 0, (StrFontWidth(item.name, fileList.viewFont) + 16), fontAscent2);
+						if HasPath(item, 'alias) then begin
+								list2 := [Array: copy, DeepClone(fileList.italicStyle), text]
 							end else begin
-								l10 := [Array: l8, l9]
+								list2 := [Array: copy, text]
 							end;
-						AddArraySlot(l3, l10)
+						AddArraySlot(list, list2)
 					end);
-				fileList.listItems := l3;
+				fileList.listItems := list;
 				fileList:SetupList();
 				if a1 then begin
 						fileList:RedoChildren()
@@ -103,15 +103,15 @@ export69 := {
 	viewFlags: vApplication + vFloating + vClickable,
 	fileList: nil,
 	viewIdleScript: func() begin
-		local l1;
-		if (if ((l1 := endpoint:IdleConnection(checkCommandsInIdle)) = 0) then (not endpoint.closingDown)) then begin
+		local idleConnection;
+		if (if ((idleConnection := endpoint:IdleConnection(checkCommandsInIdle)) = 0) then (not endpoint.closingDown)) then begin
 				closing := true;
 				protoContext:FileBrowserClose(endpoint);
 				if (callWhenDone exists) then begin
 						call callWhenDone with (endpoint, true, nil, nil, nil)
 					end
 			end;
-		return l1
+		return idleConnection
 	end,
 	currentFiles: nil,
 	viewBounds: {left: 0, top: 40, right: 210, bottom: 250},
@@ -121,18 +121,18 @@ export69 := {
 	currentFolder: nil,
 	checkCommandsInIdle: true,
 	aborting: nil,
-	VerifyAlias: func(a1) begin
-		local l1, l2;
+	VerifyAlias: func(currentFile) begin
+		local l1, frame2;
 		l1 := true;
-		if a1.alias then begin
+		if currentFile.alias then begin
 				try begin
-						if HasPath(a1, 'whichVol) then begin
-								l2 := {name: a1.name, whichVol: a1.whichVol}
+						if HasPath(currentFile, 'whichVol) then begin
+								frame2 := {name: currentFile.name, whichVol: currentFile.whichVol}
 							end else begin
-								l2 := a1.name
+								frame2 := currentFile.name
 							end;
 						checkCommandsInIdle := nil;
-						endpoint:WriteCommand("rali", l2, true);
+						endpoint:WriteCommand("rali", frame2, true);
 						l1 := (protoContext:CallReadCommand(endpoint, "alir").data = 1);
 						checkCommandsInIdle := true
 					end onexception |evt.ex| do begin
@@ -144,11 +144,11 @@ export69 := {
 			end;
 		return l1
 	end,
-	StopOpen: func(a1) begin
-		if (not a1) then begin
-				a1 := -1
+	StopOpen: func(error) begin
+		if (not error) then begin
+				error := -1
 			end;
-		aborting := a1;
+		aborting := error;
 		endpoint:StopIdle(self)
 	end,
 	checks: nil,
@@ -173,21 +173,21 @@ export69 := {
 		protoContext:AddOpenWindow(self);
 		self.closing := nil;
 		if IsReadOnly(macIcons) then begin
-				macIcons := Array(Length((l1 := macIcons)), nil);
-				local l1;
-				(foreach l2, l3 in l1 do begin
-						local l5;
-						macIcons[l2] := MakeShape(l1[l2])
+				macIcons := Array(Length((macIcons2 := macIcons)), nil);
+				local macIcons2;
+				(foreach key, value in macIcons2 do begin
+						local callReadCommand;
+						macIcons[key] := MakeShape(macIcons2[key])
 					end)
 			end;
 		currentPath := [Array: ];
 		aborting := nil;
 		(try begin
 				endpoint:WriteCommand("dpth", nil, nil);
-				if (not IsArray((l5 := protoContext:CallReadCommand(endpoint, "path")).data)) then begin
-						Throw('|evt.ex.error|, -28012)
+				if (not IsArray((callReadCommand := protoContext:CallReadCommand(endpoint, "path")).data)) then begin
+						Throw('|evt.ex.error|, kDockErrDesktopError)
 					end;
-				(currentPath := l5.data)
+				(currentPath := callReadCommand.data)
 			end onexception |evt.ex| do begin
 				self:StopOpen(CurrentException().error)
 			end)
@@ -225,22 +225,22 @@ export69 := {
 		bits: bitmap('bits, "resources/bits/74f2a5.png", "000000000004000000000000000c0012", 1),
 		bounds: {left: 0, top: 0, right: 18, bottom: 12}
 	},
-	GetIcon: func(a1) begin
-		local l1;
-		if (a1.type = 0) then begin
-				l1 := macDesktop
+	GetIcon: func(currentPathItem) begin
+		local macDesktop2;
+		if (currentPathItem.type = 0) then begin
+				macDesktop2 := macDesktop
 			end else begin
-				if (a1.type = 2) then begin
-						l1 := macOpenFolder
+				if (currentPathItem.type = 2) then begin
+						macDesktop2 := macOpenFolder
 					end else begin
-						if (a1.type = 3) then begin
-								l1 := macDisk
+						if (currentPathItem.type = 3) then begin
+								macDesktop2 := macDisk
 							end else begin
-								l1 := macFile
+								macDesktop2 := macFile
 							end
 					end
 			end;
-		return l1
+		return macDesktop2
 	end
 };
 
@@ -249,25 +249,25 @@ macIconsBits := bitmap('bits, "resources/bits/74d2b1.png", "00000000000400000000
 macIconsBits_2 := bitmap('bits, "resources/bits/74d32d.png", "000000000004000000000000000c000c", 1);
 
 export69Item := {
-	labelActionScript: func(a1) begin
-		l1 := Length(labelCommands);
-		local l1;
-		(for l2 := a1 to (l1 - 1) do begin
-				labelCommands[(l2 - a1)] := labelCommands[l2]
+	labelActionScript: func(index) begin
+		count := Length(labelCommands);
+		local count;
+		(for i := index to (count - 1) do begin
+				labelCommands[(i - index)] := labelCommands[i]
 			end);
-		SetLength(labelCommands, (l1 - a1));
-		SetLength(currentPath, (l1 - a1));
+		SetLength(labelCommands, (count - index));
+		SetLength(currentPath, (count - index));
 		fileList:UpdateAndRebuildFileList()
 	end,
 	indent: 0,
 	preAllocatedContext: 'browseFolder,
 	iconBounds: {left: 0, top: 0, right: 16, bottom: 12},
-	MakeListItem: func(a1, a2) begin
-		return {item: a1, icon: a2, fixedHeight: 16}
+	MakeListItem: func(a1, icon) begin
+		return {item: a1, icon: icon, fixedHeight: 16}
 	end,
-	MyUpdate: func(a1, a2) begin
+	MyUpdate: func(a1, icon) begin
 		self:UpdateText(a1);
-		self:UpdateIcon(a2);
+		self:UpdateIcon(icon);
 		self:ReCenter()
 	end,
 	viewBounds: {left: 0, top: 9, right: 173, bottom: 22},
@@ -277,9 +277,9 @@ export69Item := {
 				currentPath := a1
 			end;
 		labelCommands := [Array: ];
-		(for l1 := (Length(currentPath) - 1) to 0 by -1 do begin
+		(for i := (Length(currentPath) - 1) to 0 by -1 do begin
 				local l4;
-				AddArraySlot(labelCommands, self:MakeListItem(currentPath[l1].name, self:GetIcon(currentPath[l1])))
+				AddArraySlot(labelCommands, self:MakeListItem(currentPath[i].name, self:GetIcon(currentPath[i])))
 			end);
 		(if (a1 <> nil) then begin
 				l4 := (Length(currentPath) - 1);
@@ -287,9 +287,9 @@ export69Item := {
 			end)
 	end,
 	GetEntryLineBounds: func() begin
-		local l1;
-		(l1 := Clone(entryLine.viewBounds)).right := self:LocalBox().right;
-		return l1
+		local copy;
+		(copy := Clone(entryLine.viewBounds)).right := self:LocalBox().right;
+		return copy
 	end,
 	viewJustify: 8396824,
 	checkCurrentItem: nil,
@@ -305,14 +305,14 @@ export69Item := {
 		inherited:?viewSetupFormScript()
 	end,
 	ReCenter: func() begin
-		local l1, l2;
-		l1 := self:GetTextBounds();
-		SetValue(self, 'viewBounds, l1);
-		l2 := self:GetEntryLineBounds();
-		SetValue(entryLine, 'viewBounds, l2)
+		local textBounds, entryLineBounds;
+		textBounds := self:GetTextBounds();
+		SetValue(self, 'viewBounds, textBounds);
+		entryLineBounds := self:GetEntryLineBounds();
+		SetValue(entryLine, 'viewBounds, entryLineBounds)
 	end,
-	pickActionScript: func(a1) begin
-		inherited:?pickActionScript(a1);
+	pickActionScript: func(index) begin
+		inherited:?pickActionScript(index);
 		self:ReCenter()
 	end,
 	text: "ﰁ",
@@ -322,9 +322,9 @@ export69Item := {
 		(entryLine.viewBounds := self:GetEntryLineBounds())
 	end,
 	GetTextBounds: func() begin
-		local l1;
-		(l1 := Clone(viewBounds)).right := min(savedViewBounds.right, (textIndent + StrFontWidth(entryLine.text, entryLine.viewFont)));
-		return l1
+		local copy;
+		(copy := Clone(viewBounds)).right := min(savedViewBounds.right, (textIndent + StrFontWidth(entryLine.text, entryLine.viewFont)));
+		return copy
 	end
 };
 
@@ -338,24 +338,24 @@ export69Item_2 := {
 	end,
 	viewFont: @fontSystem10,
 	buttonClickScript: func(a1) begin
-		local l1, l2, l3, l4, l5;
+		local currentFile, l2, name, icon, frame2;
 		if (a1 >= Length(currentFiles)) then begin
 				return nil
 			end;
-		l2 := (l1 := currentFiles[a1]).type;
-		l3 := l1.name;
-		(if ((l2 = 2) or (l2 = 3)) then (if self:VerifyAlias(l1) then begin
-					l4 := self:GetIcon(l1);
-					ArrayInsert(browseFolder.labelCommands, browseFolder:MakeListItem(Clone(l3), l4), 0);
-					l5 := {name: Clone(l3), type: l2};
-					if HasPath(l1, 'whichVol) then begin
-							l5.whichVol := l1.whichVol
+		l2 := (currentFile := currentFiles[a1]).type;
+		name := currentFile.name;
+		(if ((l2 = 2) or (l2 = 3)) then (if self:VerifyAlias(currentFile) then begin
+					icon := self:GetIcon(currentFile);
+					ArrayInsert(browseFolder.labelCommands, browseFolder:MakeListItem(Clone(name), icon), 0);
+					frame2 := {name: Clone(name), type: l2};
+					if HasPath(currentFile, 'whichVol) then begin
+							frame2.whichVol := currentFile.whichVol
 						end;
-					AddArraySlot(currentPath, l5);
-					browseFolder:MyUpdate(Clone(l3), l4);
+					AddArraySlot(currentPath, frame2);
+					browseFolder:MyUpdate(Clone(name), icon);
 					self:UpdateAndRebuildFileList()
 				end) else begin
-				currentSelection := l3;
+				currentSelection := name;
 				currentIndex := a1;
 				protoContext:ShowIfNotVisible(doitButton);
 				protoContext:ShowIfNotVisible(getinfoButton)
@@ -382,16 +382,16 @@ export69Item_2 := {
 export69Item_3 := {
 	text: nil,
 	buttonClickScript: func() begin
-		local l1, l2;
-		(if (currentSelection <> nil) then (if self:VerifyAlias((l1 := currentFiles[currentIndex])) then begin
-					if HasPath(l1, 'whichVol) then begin
-							l2 := {name: l1.name, whichVol: l1.whichVol}
+		local currentFile, frame2;
+		(if (currentSelection <> nil) then (if self:VerifyAlias((currentFile := currentFiles[currentIndex])) then begin
+					if HasPath(currentFile, 'whichVol) then begin
+							frame2 := {name: currentFile.name, whichVol: currentFile.whichVol}
 						end else begin
-							l2 := l1.name
+							frame2 := currentFile.name
 						end;
 					closing := true;
 					protoContext:FileBrowserClose(endpoint);
-					(if (callWhenDone exists) then call callWhenDone with (endpoint, nil, whichFiles, l2, currentPath))
+					(if (callWhenDone exists) then call callWhenDone with (endpoint, nil, whichFiles, frame2, currentPath))
 				end))
 	end,
 	viewBounds: {top: -18, left: -47, right: -7, bottom: -5},
@@ -411,15 +411,15 @@ export69Item_3 := {
 export69Item_4 := {
 	text: fileInfo,
 	buttonClickScript: func() begin
-		local l1, l2;
-		(if (currentSelection <> nil) then (if self:VerifyAlias((l1 := currentFiles[currentIndex])) then begin
-					if HasPath(l1, 'whichVol) then begin
-							l2 := {name: l1.name, whichVol: l1.whichVol}
+		local currentFile, frame2;
+		(if (currentSelection <> nil) then (if self:VerifyAlias((currentFile := currentFiles[currentIndex])) then begin
+					if HasPath(currentFile, 'whichVol) then begin
+							frame2 := {name: currentFile.name, whichVol: currentFile.whichVol}
 						end else begin
-							l2 := l1.name
+							frame2 := currentFile.name
 						end;
 					checkCommandsInIdle := nil;
-					protoContext:OpenGetInfoDialog(endpoint, l2, currentSelection, currentPath);
+					protoContext:OpenGetInfoDialog(endpoint, frame2, currentSelection, currentPath);
 					AddDeferredCall(func() begin
 						(checkCommandsInIdle := true)
 					end, [Array: ])

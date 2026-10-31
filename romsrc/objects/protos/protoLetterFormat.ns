@@ -12,28 +12,28 @@ protoLetterFormat := {
 			viewJustify: vjParentCenterH + vjParentCenterV + vjChildrenLasso + vjReflow,
 			viewSetupFormScript: func() begin
 				if (firstPage = 'top) then begin
-						viewJustify := 98320
+						viewJustify := vjParentCenterH + vjChildrenLasso + vjReflow
 					end else begin
 						if (firstPage = 'center) then begin
-								viewJustify := 98384
+								viewJustify := vjParentCenterH + vjParentCenterV + vjChildrenLasso + vjReflow
 							end else begin
-								viewJustify := 98448
+								viewJustify := vjParentCenterH + vjParentBottomV + vjChildrenLasso + vjReflow
 							end
 					end;
 				(self.viewBounds := RelBounds(0, 0, pageWidth, (pageHeight - bottomMargin)))
 			end,
 			viewSetupChildrenScript: func() begin
-				local l1, l2, l3;
+				local box, insetRect2, copy;
 				if (not kids) then begin
 						kids := Clone(headerKids);
-						(l1 := self:LocalBox()).top := (l1.top + headerHeight);
-						l1.bottom := (l1.bottom - bottomMargin);
-						(l2 := InsetRect(fields.printerPageBounds, 60, 0)).top := (l2.top + bottomMargin);
-						l2.bottom := (l2.bottom - bottomMargin);
-						if (not (l3 := Clone(reflowParams)).pageBounds) then begin
-								l3.pageBounds := l2
+						(box := self:LocalBox()).top := (box.top + headerHeight);
+						box.bottom := (box.bottom - bottomMargin);
+						(insetRect2 := InsetRect(fields.printerPageBounds, 60, 0)).top := (insetRect2.top + bottomMargin);
+						insetRect2.bottom := (insetRect2.bottom - bottomMargin);
+						if (not (copy := Clone(reflowParams)).pageBounds) then begin
+								copy.pageBounds := insetRect2
 							end;
-						ArrayMunger(kids, Length(headerKids), 0, ReFlow(data, l3, fields.targetBox, l1), 0, nil)
+						ArrayMunger(kids, Length(headerKids), 0, ReFlow(data, copy, fields.targetBox, box), 0, nil)
 					end;
 				(if kids then (self.stepChildren := ArrayMunger([Array: ], 0, 0, kids, reflowStart, nil)))
 			end,
@@ -72,9 +72,9 @@ protoLetterFormat := {
 			viewJustify: vjParentFullH + vjParentFullV,
 			viewFormat: 0,
 			viewSetupFormScript: func() begin
-				local l1;
-				l1 := self:GlobalBox();
-				(viewBounds := SetBounds(max((60 - l1.left), 0), max((60 - l1.top), 0), 0, 0))
+				local box;
+				box := self:GlobalBox();
+				(viewBounds := SetBounds(max((60 - box.left), 0), max((60 - box.top), 0), 0, 0))
 			end,
 			viewChildren: page2GutsViewChildren
 		}

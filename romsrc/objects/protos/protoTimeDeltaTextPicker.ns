@@ -6,17 +6,17 @@ protoTimeDeltaTextPicker := {
 	Time: nil,
 	increment: 1,
 	minValue: nil,
-	Popit: func(a1) begin
-		local l1;
-		(l1 := self:GlobalBox()).right := (l1.left + a1);
-		@timeDeltaPopup:New(Time, {increment: increment, minValue: minValue}, l1, self)
+	Popit: func(x) begin
+		local box;
+		(box := self:GlobalBox()).right := (box.left + x);
+		@timeDeltaPopup:New(Time, {increment: increment, minValue: minValue}, box, self)
 	end,
 	TextSetup: func() begin
 		Stringer([Array: (if (Time < 0) then $-), TimerToString(abs(Time))])
 	end,
-	pickActionScript: func(a1) begin
-		Time := a1;
-		inherited:pickActionScript(a1)
+	pickActionScript: func(index) begin
+		Time := index;
+		inherited:pickActionScript(index)
 	end,
 	_proto: @protoTextPicker
 };

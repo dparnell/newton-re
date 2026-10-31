@@ -27,7 +27,7 @@ azverttabs := {
 			end,
 			kLiteral_43ded9: {bits: call kBinaryFromHex with ("0000000000040127012701fd01350213fffff000fffff000fffff800fffff800fffff800fffff800fffff800fffff800fffff800fffff800fffff800fffff800fffff80000000c00", 'bits), bounds: '{left: 0, top: 0, right: 22, bottom: 14}}
 		},
-		func(a1) begin
-			(if (if viewCObject then (a1 >= 0)) then self:DoDrawing('CopyBits, [Array: kLiteral_43ded9, 2, ((2 + startLeft) + ((a1 * (iconBBox.bottom - 2)) div numIndices)), 2]))
+		func(hiliteShape) begin
+			(if (if viewCObject then (hiliteShape >= 0)) then self:DoDrawing('CopyBits, [Array: kLiteral_43ded9, 2, ((2 + startLeft) + ((hiliteShape * (iconBBox.bottom - 2)) div numIndices)), 2]))
 		end)
 };

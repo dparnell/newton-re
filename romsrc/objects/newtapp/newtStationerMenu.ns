@@ -12,26 +12,26 @@ newtStationerMenu := {
 		inherited:?viewSetupDoneScript();
 		(if keyButton then (newtAppBase.(keyButton) := self))
 	end,
-	pickActionScript: func(a1) begin
-		local l1;
-		inherited:pickActionScript(a1);
-		l1 := self:AddEntryFromStationery(popup[a1].symbol);
+	pickActionScript: func(index) begin
+		local addEntryFromStationery;
+		inherited:pickActionScript(index);
+		addEntryFromStationery := self:AddEntryFromStationery(popup[index].symbol);
 		popup := nil;
-		l1
+		addEntryFromStationery
 	end,
 	pickCancelledScript: func() begin
 		inherited:pickCancelledScript();
 		(popup := nil)
 	end,
 	buttonClickScript: func() begin
-		l1 := self:GlobalBox();
+		box := self:GlobalBox();
 		popup := [Array: ];
-		local l1;
-		(foreach l2 deeply in GetGlobals()._dataDefs do begin
+		local box;
+		(foreach item deeply in GetGlobals()._dataDefs do begin
 				local l4;
-				if (l2.superSymbol = superSymbol) then begin
-						l4 := (if l2.title then l2.title else l2.name);
-						AddArraySlot(popup, {item: l4, icon: l2.icon, symbol: l2.symbol, indent: 24})
+				if (item.superSymbol = superSymbol) then begin
+						l4 := (if item.title then item.title else item.name);
+						AddArraySlot(popup, {item: l4, icon: item.icon, symbol: item.symbol, indent: 24})
 					end
 			end);
 		if sorter then begin

@@ -6,21 +6,21 @@ export55 := {
 	forceNewEntry: nil,
 	viewJustify: vjParentFullH + vjParentFullV,
 	Retarget: func(a1) begin
-		local l1;
-		if (((l1 := dataCursor:entry()) = 'deleted) or (not l1)) then begin
-				if (not (l1 := dataCursor:Next())) then begin
-						l1 := dataCursor:Prev()
+		local entry;
+		if (((entry := dataCursor:entry()) = 'deleted) or (not entry)) then begin
+				if (not (entry := dataCursor:Next())) then begin
+						entry := dataCursor:Prev()
 					end;
-				if (not l1) then begin
+				if (not entry) then begin
 						self:SetupCursor();
-						l1 := dataCursor:entry()
+						entry := dataCursor:entry()
 					end
 			end;
-		if (if l1 then (not l1.class)) then begin
-				if (ClassOf(l1.sorton) = 'name) then begin
-						l1.class := 'person
+		if (if entry then (not entry.class)) then begin
+				if (ClassOf(entry.sorton) = 'name) then begin
+						entry.class := 'person
 					end else begin
-						l1.class := 'company
+						entry.class := 'company
 					end
 			end;
 		target := dataCursor:entry();
@@ -46,15 +46,15 @@ export55 := {
 	end,
 	viewSetupDoneScript: func() begin
 		(if (superSymbol = 'ownerNames) then AddDeferredCall(func() begin
-				(if retargetChain then (foreach l1 in retargetChain do begin
-							l1:RetargetNotify()
+				(if retargetChain then (foreach item in retargetChain do begin
+							item:RetargetNotify()
 						end))
 			end, '[Array: ]))
 	end,
 	useTypeScrolling: true,
-	TypeScrollScript: func(a1) begin
-		local l1;
-		(if (l1 := azTabs:PickLetterScript(a1)) then (if (l1.newEntry <> l1.currEntry) then self:Effect(133120, nil, @flip, 'Retarget, [Array: true]) else azTabs:RetargetNotify()))
+	TypeScrollScript: func(keyString) begin
+		local pickLetterScript;
+		(if (pickLetterScript := azTabs:PickLetterScript(keyString)) then (if (pickLetterScript.newEntry <> pickLetterScript.currEntry) then self:Effect(133120, nil, @flip, 'Retarget, [Array: true]) else azTabs:RetargetNotify()))
 	end,
 	_proto: @newtLayout
 };

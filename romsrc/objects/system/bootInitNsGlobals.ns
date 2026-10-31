@@ -1,14 +1,14 @@
 // bootInitNsGlobals, and what only it reaches
 
 bootInitNsGlobals := func() begin
-	(foreach l1, l2 in @globalvarwannabes do begin
-			if (not vars.(l1)) then begin
-					vars.(l1) := (if IsFunction(l2) then call l2 with () else l2)
+	(foreach key, value in @globalvarwannabes do begin
+			if (not vars.(key)) then begin
+					vars.(key) := (if IsFunction(value) then call value with () else value)
 				end else nil
 		end);
-	(foreach l1, l2 in @globalHeapvarwannabes do begin
-			if (not vars.(l1)) then begin
-					vars.(l1) := Clone(l2)
+	(foreach key, value in @globalHeapvarwannabes do begin
+			if (not vars.(key)) then begin
+					vars.(key) := Clone(value)
 				end else nil
 		end);
 	call @loadGlobals with ();

@@ -5,10 +5,10 @@ protoPinWindowWithoutLogic := {
 	viewJustify: vjParentCenterH + vjParentCenterV,
 	newPinKey: nil,
 	declareSelf: 'base,
-	BuildMeUp: func(a1) begin
-		local l1;
-		(l1 := BuildContext(self)).promptText := a1;
-		l1
+	BuildMeUp: func(text) begin
+		local context;
+		(context := BuildContext(self)).promptText := text;
+		context
 	end,
 	viewChildren: [viewChildren: {_proto: @protoClosebox}, pin],
 	pin: nil,

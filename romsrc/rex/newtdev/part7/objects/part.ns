@@ -2,11 +2,11 @@
 
 part := array(nil, {
 	_ImportTable: [|Array|: {name: '|NameServerInterface:NSG|, major: 1, minor: 0}],
-	installScript: func(a1) begin
-		local l1;
-		l1 := EnsureInternal({removeScript: a1.devRemoveScript});
-		a1:devInstallScript(a1, l1);
-		l1
+	installScript: func(partFrame) begin
+		local ensureInternal2;
+		ensureInternal2 := EnsureInternal({removeScript: partFrame.devRemoveScript});
+		partFrame:devInstallScript(partFrame, ensureInternal2);
+		ensureInternal2
 	end,
 	devInstallScript: compile(
 		constants: {
@@ -33,16 +33,16 @@ part := array(nil, {
 				inherited:?viewSetupFormScript()
 			end,
 			kFunction_100d615: func(a1) begin
-				l1 := nil;
-				local l1;
-				(foreach l2, l3 in labelCommands do begin
-						if StrEqual(l3.id, a1) then begin
-								l1 := l2
+				key2 := nil;
+				local key2;
+				(foreach key, value in labelCommands do begin
+						if StrEqual(value.id, a1) then begin
+								key2 := key
 							end
 					end);
-				(if l1 then begin
-						curLinkSym := labelCommands[l1].sym;
-						return labelCommands[l1].item
+				(if key2 then begin
+						curLinkSym := labelCommands[key2].sym;
+						return labelCommands[key2].item
 					end else return "")
 			end,
 			kFunction_100d6d1: func() begin
@@ -67,16 +67,16 @@ part := array(nil, {
 				inherited:?viewSetupFormScript()
 			end,
 			kFunction_100db2d: func(a1) begin
-				l1 := nil;
+				key2 := nil;
 				if (if labelCommands then a1) then begin
-						local l1;
-						(foreach l2, l3 in labelCommands do begin
-								if StrEqual(l3.CISName, a1) then begin
-										l1 := l2
+						local key2;
+						(foreach key, value in labelCommands do begin
+								if StrEqual(value.CISName, a1) then begin
+										key2 := key
 									end
 							end)
 					end;
-				(if l1 then return labelCommands[l1].item else (if (Length(labelCommands) = 1) then begin
+				(if key2 then return labelCommands[key2].item else (if (Length(labelCommands) = 1) then begin
 							curDevice := labelCommands[0].CISName;
 							return labelCommands[0].item
 						end else return "None Selected"))
@@ -98,14 +98,14 @@ part := array(nil, {
 			kFunction_100dd39: func() begin
 				items := [Array: ];
 				if DeviceRegistry then begin
-						(foreach l1, l2 in DeviceRegistry do begin
-								if (if (l2.DeviceClass = curLinkSym) then l2.AppleTalkAvailable) then begin
-										if IsArray(l2.DeviceDisplayName) then begin
-												(foreach l4, l5 in l2.DeviceDisplayName do begin
-														BInsert(items, {item: l2.DeviceDisplayName[l4], choiceSym: l1, CISName: l2.DeviceCISProductName[l4]}, '|str<|, 'item, true)
+						(foreach key, value in DeviceRegistry do begin
+								if (if (value.DeviceClass = curLinkSym) then value.AppleTalkAvailable) then begin
+										if IsArray(value.DeviceDisplayName) then begin
+												(foreach key2, value2 in value.DeviceDisplayName do begin
+														BInsert(items, {item: value.DeviceDisplayName[key2], choiceSym: key, CISName: value.DeviceCISProductName[key2]}, '|str<|, 'item, true)
 													end)
 											end else begin
-												BInsert(items, {item: l2.DeviceDisplayName, choiceSym: l1, CISName: l2.DeviceCISProductName}, '|str<|, 'item, true)
+												BInsert(items, {item: value.DeviceDisplayName, choiceSym: key, CISName: value.DeviceCISProductName}, '|str<|, 'item, true)
 											end
 									end
 							end)
@@ -142,7 +142,7 @@ part := array(nil, {
 				call kROM_8192 with (Clone("ATalk"), Clone("enet"), Clone(GetUserConfig('AppleTalkChoice)), nil)
 			end
 		},
-		func(a1, a2) begin
+		func(partFrame, removeFrame) begin
 			DefGlobalVar('AppleTalkLinkRegistry, EnsureInternal([Array: ]));
 			if (not GetUserConfig('AppleTalkChoice)) then begin
 					SetUserConfig('AppleTalkChoice, Clone(""))
@@ -155,7 +155,7 @@ part := array(nil, {
 			// the host has no AppleTalk; was RegPrefs(EnsureInternal('AppleTalk), kLiteral_100d0cd)
 			(if StrEqual("pnet", GetUserConfig('appletalkLink)) then AddDeferredCall(kFunction_100e321, [Array: ]))
 		end),
-	devRemoveScript: func(a1) begin
+	devRemoveScript: func(partFrame) begin
 		UnDefGlobalVar('AppleTalkLinkRegistry);
 		UnDefGlobalFn('RegAppleTalklink);
 		UnDefGlobalFn('UnRegAppleTalklink);

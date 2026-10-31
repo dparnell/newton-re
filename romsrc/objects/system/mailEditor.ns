@@ -43,10 +43,10 @@ mailEditor := {
 	declareSelf: 'base,
 	viewSetupFormScript: func() begin
 		(if (path = 'title) then begin
-				viewJustify := 112;
+				viewJustify := vjParentFullH + vjParentCenterV;
 				(viewBounds := titleBounds)
 			end else begin
-				viewJustify := 240;
+				viewJustify := vjParentFullH + vjParentFullV;
 				(viewBounds := fullBounds)
 			end)
 	end,
@@ -68,23 +68,23 @@ messageHolder := {
 	viewOriginY: nil,
 	scrollDy: 100,
 	viewScrollUpScript: func() begin
-		local l1;
-		(if ((l1 := min(messageField.scrollDy, viewOriginY)) > 0) then self:SetOrigin(0, (viewOriginY - l1)))
+		local least;
+		(if ((least := min(messageField.scrollDy, viewOriginY)) > 0) then self:SetOrigin(0, (viewOriginY - least)))
 	end,
 	viewScrollDownScript: func() begin
-		l3 := 99999;
-		l4 := 0;
-		local l1;
+		least := 99999;
+		most := 0;
+		local least2;
 		local l2;
-		local l3;
-		local l4;
-		(foreach l5 in messageField:ChildViewFrames() do begin
-				l3 := min(l3, l5.viewBounds.top);
-				l4 := max(l4, l5.viewBounds.bottom)
+		local least;
+		local most;
+		(foreach item in messageField:ChildViewFrames() do begin
+				least := min(least, item.viewBounds.top);
+				most := max(most, item.viewBounds.bottom)
 			end);
-		l2 := ((l4 - l3) + 50);
+		l2 := ((most - least) + 50);
 		SetValue(messageField, 'viewBounds, SetBounds(2, 0, -2, max(l2, self:LocalBox().bottom)));
-		(if ((l1 := min((l2 - (viewOriginY + self:LocalBox().bottom)), messageField.scrollDy)) > 0) then self:SetOrigin(0, (viewOriginY + l1)))
+		(if ((least2 := min((l2 - (viewOriginY + self:LocalBox().bottom)), messageField.scrollDy)) > 0) then self:SetOrigin(0, (viewOriginY + least2)))
 	end,
 	viewSetupFormScript: func() begin
 		viewOriginY := 0;
@@ -119,29 +119,29 @@ messageField := {
 		a1
 	end,
 	viewSetupChildrenScript: func() begin
-		local l1;
+		local text;
 		viewOriginY := 0;
-		if (not (l1 := message.(path))) then begin
-				message.(path) := (l1 := "")
+		if (not (text := message.(path))) then begin
+				message.(path) := (text := "")
 			end;
-		(while (if (StrLen(l1) > 0) then (l1[(StrLen(l1) - 1)] = $\n)) do (l1 := Substr(l1, 0, (StrLen(l1) - 1))));
-		message.(path) := l1;
-		(self.viewChildren := [Array: {_proto: @protoParagraph, viewBounds: SetBounds(0, 0, 636, (displayParams.appAreaHeight - 34)), viewStationery: 'para, text: (if IsRichString(l1) then "" else l1), viewFont: viewFont, viewLineSpacing: viewLineSpacing}])
+		(while (if (StrLen(text) > 0) then (text[(StrLen(text) - 1)] = $\n)) do (text := Substr(text, 0, (StrLen(text) - 1))));
+		message.(path) := text;
+		(self.viewChildren := [Array: {_proto: @protoParagraph, viewBounds: SetBounds(0, 0, 636, (displayParams.appAreaHeight - 34)), viewStationery: 'para, text: (if IsRichString(text) then "" else text), viewFont: viewFont, viewLineSpacing: viewLineSpacing}])
 	end,
 	GetTheText: func() begin
-		local l1, l2;
-		if (not (l1 := self:?ChildViewFrames())) then begin
-				l1 := viewChildren
+		local childViewFrames, notesText2;
+		if (not (childViewFrames := self:?ChildViewFrames())) then begin
+				childViewFrames := viewChildren
 			end;
-		l2 := notesText(l1);
-		(while (if (StrLen(l2) > 0) then (l2[(StrLen(l2) - 1)] = $\n)) do (l2 := Substr(l2, 0, (StrLen(l2) - 1))));
-		l2
+		notesText2 := notesText(childViewFrames);
+		(while (if (StrLen(notesText2) > 0) then (notesText2[(StrLen(notesText2) - 1)] = $\n)) do (notesText2 := Substr(notesText2, 0, (StrLen(notesText2) - 1))));
+		notesText2
 	end,
 	viewQuitScript: func() begin
-		local l1;
-		l1 := self:GetTheText();
-		if (if (not (message.(path) = l1)) then (((not message.(path)) or (not l1)) or (StrExactCompare(message.(path), l1) <> 0))) then begin
-				message.(path) := l1
+		local theText;
+		theText := self:GetTheText();
+		if (if (not (message.(path) = theText)) then (((not message.(path)) or (not theText)) or (StrExactCompare(message.(path), theText) <> 0))) then begin
+				message.(path) := theText
 			end;
 		if (if (if changed then IsSoupEntry(message)) then FrameDirty(message)) then begin
 				EntryChange(message)
@@ -161,8 +161,8 @@ messageField := {
 			end;
 		AddProcrastinatedCall('_SetKeyView, functions.SetKeyView, [Array: self.viewChildren[0], 99999], 1000)
 	end,
-	viewChangedScript: func(a1, a2) begin
-		(if (a1 = 'text) then begin
+	viewChangedScript: func(slot, view) begin
+		(if (slot = 'text) then begin
 				changed := true;
 				(if (path = 'text) then (message.edited := true) else (if (StrLen(self:Parent():GetTheText()) > 61) then self:Notify(3, appName, ParamStr("The Subject is limited to ^0 characters.", [Array: 61]))))
 			end)

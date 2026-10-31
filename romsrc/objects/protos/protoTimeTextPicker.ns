@@ -6,17 +6,17 @@ protoTimeTextPicker := {
 	Time: nil,
 	format: 'shortTimeStrSpec,
 	increment: 12,
-	Popit: func(a1) begin
-		local l1;
-		(l1 := self:GlobalBox()).right := (l1.left + a1);
-		@digitalTimePopup:New(Time, increment, l1, self)
+	Popit: func(x) begin
+		local box;
+		(box := self:GlobalBox()).right := (box.left + x);
+		@digitalTimePopup:New(Time, increment, box, self)
 	end,
 	TextSetup: func() begin
 		TimeStr(Time, @datetimeStrSpecs.(format))
 	end,
-	pickActionScript: func(a1) begin
-		Time := a1;
-		inherited:pickActionScript(a1)
+	pickActionScript: func(index) begin
+		Time := index;
+		inherited:pickActionScript(index)
 	end,
 	_proto: @protoTextPicker
 };

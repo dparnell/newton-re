@@ -23,7 +23,7 @@ worldPicker := {
 	dstRect: nil,
 	worldRect: srcRect,
 	viewSetupChildrenScript: func() begin
-		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+		local l1, l2, l3, l4, l5, l6, l7, l8, l9, shape2;
 		dstRect := self:LocalBox();
 		if (if zoomer then ((zoomer = 'srcRect) or continents.(zoomer))) then begin
 				if (zoomer <> 'srcRect) then begin
@@ -55,49 +55,49 @@ worldPicker := {
 			end else begin
 				srcRect := GraphicSize(@worldMapBitmap)
 			end;
-		l10 := MakeShape(mapPict);
-		(shape := OffsetShape(ScaleShape((if l1 then [Array: l10, OffsetShape(MakeShape(mapPict), worldRect.right, 0)] else l10), srcRect, dstRect), 0, 0))
+		shape2 := MakeShape(mapPict);
+		(shape := OffsetShape(ScaleShape((if l1 then [Array: shape2, OffsetShape(MakeShape(mapPict), worldRect.right, 0)] else shape2), srcRect, dstRect), 0, 0))
 	end,
-	viewClickScript: func(a1) begin
-		InkOff(a1);
+	viewClickScript: func(unit) begin
+		InkOff(unit);
 		playsound(@click);
-		l3 := self:GlobalBox();
-		(loop (if StrokeDone(a1) then break));
-		l4 := (GetPoint(4, a1) - l3.left);
-		l5 := (GetPoint(5, a1) - l3.top);
-		l4 := min(max(l4, 0), dstRect.right);
-		l5 := min(max(l5, 0), dstRect.bottom);
-		l1 := MapPtX(l4, dstRect, srcRect);
-		l2 := MapPtY(l5, dstRect, srcRect);
-		if ((l6 := Length((list := ClosestLocations(GetLocationSoup(spots), listLimit, radius, l1, l2, (if filter then {width: worldRect.right, height: worldRect.bottom, slot: slot, filter: filter} else {width: worldRect.right, height: worldRect.bottom}))))) > 0) then begin
-				local l1;
-				local l2;
-				local l3;
-				local l4;
-				local l5;
-				local l6;
-				(foreach l7 in list do begin
-						local l9;
-						if (l9 := l7.place.region) then begin
-								l7.item := Stringer([Array: l7.item, " ", l9])
+		box := self:GlobalBox();
+		(loop (if StrokeDone(unit) then break));
+		least := (GetPoint(4, unit) - box.left);
+		least2 := (GetPoint(5, unit) - box.top);
+		least := min(max(least, 0), dstRect.right);
+		least2 := min(max(least2, 0), dstRect.bottom);
+		mapPtX2 := MapPtX(least, dstRect, srcRect);
+		mapPtY2 := MapPtY(least2, dstRect, srcRect);
+		if ((count := Length((list := ClosestLocations(GetLocationSoup(spots), listLimit, radius, mapPtX2, mapPtY2, (if filter then {width: worldRect.right, height: worldRect.bottom, slot: slot, filter: filter} else {width: worldRect.right, height: worldRect.bottom}))))) > 0) then begin
+				local mapPtX2;
+				local mapPtY2;
+				local box;
+				local least;
+				local least2;
+				local count;
+				(foreach item in list do begin
+						local region;
+						if (region := item.place.region) then begin
+								item.item := Stringer([Array: item.item, " ", region])
 							end
 					end)
 			end else begin
 				AddArraySlot(list, {item: "Middle of Nowhere"})
 			end;
-		if (if shortCircuit then (l6 = 1)) then begin
+		if (if shortCircuit then (count = 1)) then begin
 				self:pickActionScript(0)
 			end else begin
-				DoPopup(list, l4, l5, self)
+				DoPopup(list, least, least2, self)
 			end;
 		true
 	end,
 	viewDrawScript: func() begin
-		self:DrawShape(shape, '{font: 1057792, fillPattern: 5, transferMode: 0, penPattern: 0})
+		self:DrawShape(shape, '{font: tsSystem + tsSize(9) + tsBold, fillPattern: 5, transferMode: 0, penPattern: 0})
 	end,
-	pickActionScript: func(a1) begin
-		if list[a1].place then begin
-				self:?PickWorld(list[a1].place)
+	pickActionScript: func(index) begin
+		if list[index].place then begin
+				self:?PickWorld(list[index].place)
 			end;
 		list := nil;
 		(if autoClose then base:Close())

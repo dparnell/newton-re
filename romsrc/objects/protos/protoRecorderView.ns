@@ -23,8 +23,8 @@ protoRecorderView := {
 	viewDrawScript: func() begin
 		self:DrawShape(self.outsideFrame, self.outsideStyle)
 	end,
-	viewChangedScript: func(a1, a2) begin
-		(if (a1 = 'sounds) then begin
+	viewChangedScript: func(slot, view) begin
+		(if (slot = 'sounds) then begin
 				RecordEngine.fSoundArray := self.sounds;
 				RecordEngine:SetState(RecordEngine.fSoundState)
 			end)
@@ -38,20 +38,20 @@ protoRecorderView := {
 				end))
 	end,
 	FlushVBO: func() begin
-		local l1, l2;
+		local l1, fSoundArrayItem;
 		(if RecordEngine:TestState(6) then begin
 				if ((l1 := (Length(RecordEngine.fSoundArray) - 2)) >= 0) then begin
-						ClearVBOCache((l2 := RecordEngine.fSoundArray[l1]).samples)
+						ClearVBOCache((fSoundArrayItem := RecordEngine.fSoundArray[l1]).samples)
 					end;
 				AddDelayedSend(base, 'FlushVBO, [Array: ], 200)
 			end)
 	end,
 	GetSounds: func() begin
-		local l1;
-		(foreach l2 in (l1 := RecordEngine.fSoundArray) do begin
-				l2.callback := nil
+		local fSoundArray;
+		(foreach item in (fSoundArray := RecordEngine.fSoundArray) do begin
+				item.callback := nil
 			end);
-		l1
+		fSoundArray
 	end,
 	stop: func() begin
 		stopButton:buttonClickScript()
@@ -94,7 +94,7 @@ recordButton_2Proto := {
 	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingCenterV,
 	viewBounds: {left: 2, top: 0, right: 21, bottom: 19},
 	_sound: nil,
-	SetState: func(a1, a2, a3) begin
+	SetState: func(fSoundState, fSoundState2, hasSoundFrames) begin
 		nil
 	end,
 	_proto: @protoPictureButton
@@ -133,7 +133,7 @@ recordButton_2 := {
 			end
 		},
 		func() begin
-			local l1;
+			local testStore;
 			if (GetUserConfig('inputDevice) = nil) then begin
 					AsyncConfirm("To record, you must pick a recording source from the \u201C\uRecording\u201D\u preference.  Would you like to open the \u201C\uRecording\u201D\u preference now?", 'yesNoDefaultYes, kFunction_427f75);
 					return nil
@@ -143,11 +143,11 @@ recordButton_2 := {
 					RecordEngine:SetState(1)
 				end;
 			if (not RecordEngine:TestState(16)) then begin
-					if ((l1 := RecordEngine:TestStore()) = 3) then begin
+					if ((testStore := RecordEngine:TestStore()) = 3) then begin
 							self:Notify(3, notifyTitle, "Sorry, you must unlock the card before recording.");
 							return nil
 						end;
-					if (l1 = 1) then begin
+					if (testStore = 1) then begin
 							self:Notify(3, notifyTitle, "Sorry, there is not enough memory available for a new recording. The internal memory or storage card is almost full.");
 							return nil
 						end
@@ -167,8 +167,8 @@ recordButton_2 := {
 			end,
 			kLiteral_423fad: {bits: call kBinaryFromHex with ("000000000004004e004e01950059019ee3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000", 'bits), bounds: '{left: 0, top: 0, right: 9, bottom: 11}}
 		},
-		func(a1, a2, a3) begin
-			(if (a2 = 2) then (if (self.icon <> kLiteral_423fad) then SetValue(self, 'icon, kLiteral_423fad)) else (if (self.icon <> self:GetIcon()) then SetValue(self, 'icon, self:GetIcon())))
+		func(fSoundState, fSoundState2, hasSoundFrames) begin
+			(if (fSoundState2 = 2) then (if (self.icon <> kLiteral_423fad) then SetValue(self, 'icon, kLiteral_423fad)) else (if (self.icon <> self:GetIcon()) then SetValue(self, 'icon, self:GetIcon())))
 		end),
 	preallocatedContext: 'recordButton
 };
@@ -209,8 +209,8 @@ playButton_2 := {
 			kLiteral_423fad: {bits: call kBinaryFromHex with ("000000000004004e004e01950059019ee3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000", 'bits), bounds: '{left: 0, top: 0, right: 9, bottom: 11}},
 			kLiteral_423f35: {bits: call kBinaryFromHex with ("000000000004004d004d016a005a0171c0000000e0000000f0000000f8000000fc000000fe000000fe000000fe000000fc000000f8000000f0000000e0000000c0000000", 'bits), bounds: '{left: 0, top: 0, right: 7, bottom: 13}}
 		},
-		func(a1, a2, a3) begin
-			if (a2 = 4) then begin
+		func(fSoundState, fSoundState2, hasSoundFrames) begin
+			if (fSoundState2 = 4) then begin
 					if (self.icon <> kLiteral_423fad) then begin
 							SetValue(self, 'icon, kLiteral_423fad)
 						end
@@ -219,7 +219,7 @@ playButton_2 := {
 							SetValue(self, 'icon, kLiteral_423f35)
 						end
 				end;
-			(if (a2 = 32) then (if (RecordEngine.fEngineError <> 0) then (if (RecordEngine.fEngineError = 1) then self:Notify(3, notifyTitle, "Sorry, the recording was stopped because the internal memory or storage card is almost full.") else self:Notify(3, notifyTitle, "Sorry, the recording was stopped due to an internal error."))))
+			(if (fSoundState2 = 32) then (if (RecordEngine.fEngineError <> 0) then (if (RecordEngine.fEngineError = 1) then self:Notify(3, notifyTitle, "Sorry, the recording was stopped because the internal memory or storage card is almost full.") else self:Notify(3, notifyTitle, "Sorry, the recording was stopped due to an internal error."))))
 		end),
 	preallocatedContext: 'playButton
 };

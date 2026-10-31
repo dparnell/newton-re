@@ -8,17 +8,17 @@ rubricPopup := {
 		context:?pickActionScript(returnKey)
 	end,
 	New: func(a1, a2, a3, a4) begin
-		local l1;
-		(l1 := self:Init()).context := a4;
-		l1.message := a1;
-		l1.returnKey := a2;
-		l1:popup(a3)
+		local init;
+		(init := self:Init()).context := a4;
+		init.message := a1;
+		init.returnKey := a2;
+		init:popup(a3)
 	end,
 	viewDrawScript: func() begin
-		local l1;
-		(l1 := self:LocalBox()).left := (l1.left + 5);
-		l1.right := (l1.right - 30);
-		self:DrawShape([Array: MakeTextLines(message, l1, nil, 1058816), '{font: 18435}, MakeText(Stringer([Array: returnKey, $ ]), l1.right, 5, (l1.right + 20), 22)], '{font: 1058816})
+		local box;
+		(box := self:LocalBox()).left := (box.left + 5);
+		box.right := (box.right - 30);
+		self:DrawShape([Array: MakeTextLines(message, box, nil, 1058816), '{font: tsHWFont + tsSize(18)}, MakeText(Stringer([Array: returnKey, $ ]), box.right, 5, (box.right + 20), 22)], '{font: tsSystem + tsSize(10) + tsBold})
 	end,
 	stepChildren: [stepChildren:
 		{
@@ -159,8 +159,8 @@ rubricPopup := {
 					279971848
 				]
 			],
-			keyPressScript: func(a1) begin
-				returnKey := a1;
+			keyPressScript: func(char2) begin
+				returnKey := char2;
 				base:Dirty();
 				playsound(click);
 				true

@@ -19,18 +19,18 @@ protoPrintForm := {
 	theFormat: nil,
 	viewChildren: nil,
 	viewSetupFormScript: func() begin
-		local l1;
+		local resolveEntryAlias2;
 		printView := self;
 		coverForm := nil;
 		self.viewBounds := Clone(fields.printerPageBounds);
 		target := GetTargetFromEntry(fields);
 		usingCoverPage := (if (not (fields.coverPage = nil)) then (not _counterForm));
-		if (if (not (l1 := (if fields.fromRef then ResolveEntryAlias(fields.fromRef)))) then userConfiguration.currentPersona) then begin
-				l1 := ResolveEntryAlias(userConfiguration.currentPersona)
+		if (if (not (resolveEntryAlias2 := (if fields.fromRef then ResolveEntryAlias(fields.fromRef)))) then userConfiguration.currentPersona) then begin
+				resolveEntryAlias2 := ResolveEntryAlias(userConfiguration.currentPersona)
 			end;
 		fromFrame := {};
-		if l1 then begin
-				SetPersona(l1, fromFrame)
+		if resolveEntryAlias2 then begin
+				SetPersona(resolveEntryAlias2, fromFrame)
 			end;
 		(if ((theFormat := GetCurrentFormat(fields)) = nil) then self:Notify(3, "Print", "The print format for this item is missing") else begin
 				theFormat := {_proto: theFormat};

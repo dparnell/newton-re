@@ -6,18 +6,18 @@ filingSlip := {
 		constants: {
 			kLiteral_4836e1: "Filing"
 		},
-		func(a1, a2, a3, a4) begin
-			(if (not a2.target) then self:Notify(3, kLiteral_4836e1, "There is nothing to file.") else (if (if (a3 = 'onlyCardRouting) then (Length(GetStores()) = 1)) then self:Notify(3, kLiteral_4836e1, "This item is already filed internally.  If you would like to file it on a card, please insert one.") else (if self.viewCObject then (if (a2.targetView = self.targetView) then self:Close() else self:Notify(3, kLiteral_4836e1, "The filing form is already open.")) else begin
+		func(newLabels, a2, value, value2) begin
+			(if (not a2.target) then self:Notify(3, kLiteral_4836e1, "There is nothing to file.") else (if (if (value = 'onlyCardRouting) then (Length(GetStores()) = 1)) then self:Notify(3, kLiteral_4836e1, "This item is already filed internally.  If you would like to file it on a card, please insert one.") else (if self.viewCObject then (if (a2.targetView = self.targetView) then self:Close() else self:Notify(3, kLiteral_4836e1, "The filing form is already open.")) else begin
 							self.target := a2.target;
 							self.targetView := a2.targetView;
 							self._nextKeyView := targetView;
 							self.targetStore := a2.targetStore;
-							self.doCardRouting := a3;
-							self.filingButton := a1;
+							self.doCardRouting := value;
+							self.filingButton := newLabels;
 							self.otherOtherTargetView := a2.otherOtherTargetView;
-							self.dontStartWithFolder := a4;
+							self.dontStartWithFolder := value2;
 							if (if targetStore then targetStore:IsReadOnly()) then begin
-									if a3 then begin
+									if value then begin
 											self.doCardRouting := 'onlyCardRouting
 										end else begin
 											self:Notify(3, kLiteral_4836e1, "This app does not support card routing and the card is locked");
@@ -121,10 +121,10 @@ filingSlip := {
 	kidsJustCardRouting: [viewChildren: storeSelector, filingSlipItem, _defaultButton_5],
 	declareSelf: 'base,
 	viewSetupFormScript: func() begin
-		local l1, l2;
-		l1 := GetVariable(targetView, 'localFoldersOnly);
-		l2 := GetVariable(targetView, 'systemFoldersToo);
-		folderList := GetAppFolderSyms(GetVariable(targetView, 'appSymbol), l1, l2);
+		local value, value2;
+		value := GetVariable(targetView, 'localFoldersOnly);
+		value2 := GetVariable(targetView, 'systemFoldersToo);
+		folderList := GetAppFolderSyms(GetVariable(targetView, 'appSymbol), value, value2);
 		if (dontStartWithFolder or target.dontStartWithFolder) then begin
 				newLabels := 42
 			end else begin
@@ -159,11 +159,11 @@ filingSlip := {
 		{char: $n, modifiers: 33554432, keyMessage: '_newKeyScript, name: new_2, category: creating}
 	],
 	debug: 32890,
-	UpdateToFolder: func(a1) begin
+	UpdateToFolder: func(newSymbol) begin
 		(if Visible(self) then begin
 				filingSlip:SyncView();
 				filingSlip:RedoChildren();
-				(if (doCardRouting <> 'onlyCardRouting) then fileArea.folderCluster:SetToFolder(a1))
+				(if (doCardRouting <> 'onlyCardRouting) then fileArea.folderCluster:SetToFolder(newSymbol))
 			end)
 	end,
 	targetView: nil
@@ -189,17 +189,17 @@ storeCluster := {
 	childViewBounds: {left: 3, right: 100, top: 2, bottom: 12},
 	viewSetupFormScript: func() begin
 		self.viewBounds := SetBounds(5, 4, -5, (storeClusterHeight + 4));
-		itemTitles := Array(Length((l1 := GetStores())), nil);
-		local l1;
-		(foreach l2, l3 in l1 do begin
-				local l5;
-				if StrFilled((l5 := l3:GetName())) then begin
-						itemTitles[l2] := l5
+		itemTitles := Array(Length((stores := GetStores())), nil);
+		local stores;
+		(foreach key, value in stores do begin
+				local name;
+				if StrFilled((name := value:GetName())) then begin
+						itemTitles[key] := name
 					end else begin
-						itemTitles[l2] := "Unnamed Card"
+						itemTitles[key] := "Unnamed Card"
 					end;
-				if (l3 = targetStore) then begin
-						clusterValue := l2
+				if (value = targetStore) then begin
+						clusterValue := key
 					end
 			end)
 	end,
@@ -231,14 +231,14 @@ fileArea := {
 	viewJustify: 0,
 	text: nil,
 	viewSetupFormScript: func() begin
-		local l1;
+		local text2;
 		(text := (if ((not doCardRouting) or (Length(GetStores()) <= 1)) then (if (targetView:appObjectFileThisIn exists) then GetVariable(targetView, 'appObjectFileThisIn) else begin
 					if ((not target._cursor) or (Length(target._cursor) = 1)) then begin
-							l1 := ParamStr("File this ^0 in", [Array: GetVariable(targetView, 'appObject)[0]])
+							text2 := ParamStr("File this ^0 in", [Array: GetVariable(targetView, 'appObject)[0]])
 						end else begin
-							l1 := ParamStr("File the selected ^0 in", [Array: GetVariable(targetView, 'appObject)[1]])
+							text2 := ParamStr("File the selected ^0 in", [Array: GetVariable(targetView, 'appObject)[1]])
 						end;
-					l1
+					text2
 				end) else "And file in"))
 	end,
 	preallocatedContext: 'fileArea,
@@ -253,10 +253,10 @@ folderCluster := {
 	viewSetupFormScript: func() begin
 		itemTitles := [Array: "None (Unfiled)"];
 		clusterValue := nil;
-		(foreach l1, l2 in folderList do begin
-				AddArraySlot(itemTitles, StyledStrTruncate(Clone(GetFolderStr(l2)), 76, viewFont));
-				if (if (if newLabels then (newLabels <> 42)) then (target.labels = l2)) then begin
-						clusterValue := (l1 + 1)
+		(foreach key, value in folderList do begin
+				AddArraySlot(itemTitles, StyledStrTruncate(Clone(GetFolderStr(value)), 76, viewFont));
+				if (if (if newLabels then (newLabels <> 42)) then (target.labels = value)) then begin
+						clusterValue := (key + 1)
 					end
 			end);
 		if (not (dontStartWithFolder or clusterValue)) then begin
@@ -267,9 +267,9 @@ folderCluster := {
 	ClusterChanged: func() begin
 		(if (clusterValue = 0) then (newLabels := nil) else (newLabels := folderList[(clusterValue - 1)]))
 	end,
-	SetToFolder: func(a1) begin
-		local l1;
-		(if (l1 := SetContains(folderList, a1)) then self:SetClusterValue((l1 + 1)) else self:SetClusterValue(0))
+	SetToFolder: func(newSymbol) begin
+		local setContains2;
+		(if (setContains2 := SetContains(folderList, newSymbol)) then self:SetClusterValue((setContains2 + 1)) else self:SetClusterValue(0))
 	end,
 	preallocatedContext: 'folderCluster,
 	_proto: @protoSmartCluster
@@ -331,17 +331,17 @@ _defaultButton_5 := {
 			end)
 	end,
 	buttonClickScript: func() begin
-		local l1, l2, l3, l4;
+		local selectedStore, l2, l3, l4;
 		if (not (fileArea.folderCluster.clusterValue or storeSelector.storeCluster.clusterValue)) then begin
 				self:Notify(3, "Filing", "A folder or store must be chosen to continue.");
 				return nil
 			end;
-		l2 := (if (if (l1 := storeSelector:GetSelectedStore()) then doCardRouting) then (targetStore <> l1));
+		l2 := (if (if (selectedStore := storeSelector:GetSelectedStore()) then doCardRouting) then (targetStore <> selectedStore));
 		l3 := (if (if (doCardRouting <> 'onlyCardRouting) then ((target.labels <> newLabels) or TargetIsCursor(target))) then (newLabels <> 42));
 		if ((if otherOtherTargetView then (otherOtherTargetView:FileThis exists)) or (targetView:FileThis exists)) then begin
 				l4 := (if otherOtherTargetView then otherOtherTargetView else targetView);
 				try begin
-						l4:FileThis(target, l3, newLabels, l2, l1)
+						l4:FileThis(target, l3, newLabels, l2, selectedStore)
 					end onexception |evt.ex| do begin
 						self:hilite(nil);
 						Rethrow()
@@ -364,22 +364,22 @@ _defaultButton_5 := {
 		base:Close()
 	end,
 	UpdateTargetStore: func() begin
-		(if (if (l2 := storeSelector:GetSelectedStore()) then (targetStore <> l2)) then begin
+		(if (if (selectedStore := storeSelector:GetSelectedStore()) then (targetStore <> selectedStore)) then begin
 				if target._cursor then begin
-						local l1;
-						local l2;
-						(foreach l3 in target._cursor do begin
-								if (ClassOf(l3) = 'alias) then begin
-										l1 := ResolveEntryAlias(l3)
+						local resolveEntryAlias2;
+						local selectedStore;
+						(foreach item in target._cursor do begin
+								if (ClassOf(item) = 'alias) then begin
+										resolveEntryAlias2 := ResolveEntryAlias(item)
 									end else begin
-										l1 := l3
+										resolveEntryAlias2 := item
 									end;
-								if l1 then begin
-										targetView:MoveTarget(l1, l2)
+								if resolveEntryAlias2 then begin
+										targetView:MoveTarget(resolveEntryAlias2, selectedStore)
 									end
 							end)
 					end else begin
-						targetView:MoveTarget(target, l2)
+						targetView:MoveTarget(target, selectedStore)
 					end;
 				filingButton:?Update()
 			end)

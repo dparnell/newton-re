@@ -205,13 +205,17 @@ Where the binaries-to-text work left off (`docs/rom-free/README.md`,
 - The ARM sources of the protocol parts are not run: the host has its own
   screen driver, and armcpu runs no protocol part (below, Comms).
 - **Left of the natural form** (2026-10-31, `romsrc/README.md`, "Reading
-  it"): the functions' arguments and locals are still the decompiler's
-  `a1`, `l1` - the ROM keeps no names, and the builder compiles with
-  `dbgNoVarNames`, so naming them in the source changes nothing built; a
-  number in a function's source is still a number (`BAnd(a1.viewFlags,
-  -65)`: only slots of the objects are written with `constants.tsv`); a
-  few made-up names read oddly (`japanPrefectuRename`, `viewSetupFormScript_literal6`):
-  `romsrc.py rename` fixes one, the build unchanged.
+  it"): about 40% of the functions' arguments and locals are still the
+  decompiler's `a1`, `l1` (25,005 of 62,975 uses) - what neither a
+  script's signature, nor the calls of its function, nor its first value
+  names, and every variable of a function with more than 17 (its argument
+  frame's map is sorted, so a name moves a variable); naming more is
+  hand work, the build unchanged.  A number in a function's source is
+  named only in a view's slot and as an error code: masks (`BAnd(x.viewFlags,
+  -65)`), the time zones' offsets, the NIE's -60xxx codes (no header names
+  them) and the rest are numbers; a few made-up names read oddly
+  (`japanPrefectuRename`, `viewSetupFormScript_literal6`): `romsrc.py
+  rename` fixes one.
 
 ### Left by decision or out of reach
 

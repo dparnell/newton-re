@@ -30,16 +30,16 @@ newtProtoLineBase := {
 		{char: $\u000d, modifiers: 33554432, keyMessage: '_popKeyScript, name: choose, category: nil}
 	],
 	SetupCommands: func() begin
-		local l1;
+		local memoryItems;
 		if (access = 'readOnly) then begin
 				return nil
 			end;
-		if (l1 := GetMemoryItems(memory)) then begin
+		if (memoryItems := GetMemoryItems(memory)) then begin
 				if (not labelCommands) then begin
-						labelCommands := l1
+						labelCommands := memoryItems
 					end else begin
 						AddArraySlot((labelCommands := Clone(labelCommands)), 'pickseparator);
-						AddArraySlot(labelCommands, l1[0])
+						AddArraySlot(labelCommands, memoryItems[0])
 					end
 			end;
 		(if (if labelCommands then filter.picker) then begin
@@ -48,10 +48,10 @@ newtProtoLineBase := {
 			end)
 	end,
 	GlobalLabelBounds: func() begin
-		local l1;
-		(l1 := OffsetRect(self:GlobalBox(), labelBox.left, labelBox.top)).right := (l1.left + (labelBox.right - labelBox.left));
-		l1.bottom := (l1.top + (labelBox.bottom - labelBox.top));
-		l1
+		local offsetRect2;
+		(offsetRect2 := OffsetRect(self:GlobalBox(), labelBox.left, labelBox.top)).right := (offsetRect2.left + (labelBox.right - labelBox.left));
+		offsetRect2.bottom := (offsetRect2.top + (labelBox.bottom - labelBox.top));
+		offsetRect2
 	end,
 	viewSetupFormScript: func() begin
 		if (if (if (targetView exists) then targetView) then (BAnd(targetView.viewFlags, 130) <> 0)) then begin
@@ -70,24 +70,24 @@ newtProtoLineBase := {
 	viewDrawScript: func() begin
 		(if pix then self:DrawShape(pix, {font: labelFont}))
 	end,
-	viewHiliteScript: func(a1) begin
+	viewHiliteScript: func(on) begin
 		self:DrawShape(MakeRoundRect(labelBox.left, labelBox.top, labelBox.right, (labelBox.top + height), 4), '{transferMode: 2, penPattern: 0, fillPattern: 5});
 		true
 	end,
-	viewStrokeScript: func(a1) begin
-		local l1;
+	viewStrokeScript: func(unit) begin
+		local labelCommands2;
 		if (if ((((access = 'readWrite) or (access = 'Query)) or (access = 'queryOnly)) or (access = 'pickOnly)) then labelCommands) then begin
-				if self:TrackHilite(a1) then begin
+				if self:TrackHilite(unit) then begin
 						if (curLabelCommand = nil) then begin
-								l1 := labelCommands
+								labelCommands2 := labelCommands
 							end else begin
-								(l1 := Clone(labelCommands))[curLabelCommand] := {item: l1[curLabelCommand], mark: $\uFC0B}
+								(labelCommands2 := Clone(labelCommands))[curLabelCommand] := {item: labelCommands2[curLabelCommand], mark: $\uFC0B}
 							end;
-						self:PopupMenu(l1, {bounds: labelBox})
+						self:PopupMenu(labelCommands2, {bounds: labelBox})
 					end
 			end else begin
 				if (if filter.picker then (access <> 'readOnly)) then begin
-						if self:TrackHilite(a1) then begin
+						if self:TrackHilite(unit) then begin
 								filter:picker()
 							end
 					end
@@ -95,14 +95,14 @@ newtProtoLineBase := {
 		true
 	end,
 	_popKeyScript: func(a1) begin
-		local l1;
+		local labelCommands2;
 		if (if ((((access = 'readWrite) or (access = 'Query)) or (access = 'queryOnly)) or (access = 'pickOnly)) then labelCommands) then begin
 				if (curLabelCommand = nil) then begin
-						l1 := labelCommands
+						labelCommands2 := labelCommands
 					end else begin
-						(l1 := Clone(labelCommands))[curLabelCommand] := {item: l1[curLabelCommand], mark: $\uFC0B}
+						(labelCommands2 := Clone(labelCommands))[curLabelCommand] := {item: labelCommands2[curLabelCommand], mark: $\uFC0B}
 					end;
-				self:PopupMenu(l1, {bounds: labelBox})
+				self:PopupMenu(labelCommands2, {bounds: labelBox})
 			end else begin
 				if (if filter.picker then (access <> 'readOnly)) then begin
 						filter:picker()
@@ -113,21 +113,21 @@ newtProtoLineBase := {
 	Retarget: func() begin
 		nil
 	end,
-	jamFromEntry: func(a1) begin
+	jamFromEntry: func(resolveEntryAlias) begin
 		target.(path) := nil;
-		(if a1 then filter:EntryToPath(a1))
+		(if resolveEntryAlias then filter:EntryToPath(resolveEntryAlias))
 	end,
-	pickActionScript: func(a1) begin
-		local l1;
-		(if HasPath(labelCommands[a1], 'id) then begin
-				filter:ResolveItem(labelCommands[a1]);
+	pickActionScript: func(index) begin
+		local labelCommand;
+		(if HasPath(labelCommands[index], 'id) then begin
+				filter:ResolveItem(labelCommands[index]);
 				self:hilite(nil)
-			end else (if (if filter.picker then (a1 = (Length(labelCommands) - 1))) then filter:picker() else (if (not filter:?ChooseItem(a1)) then begin
-						if IsFrame((l1 := labelCommands[a1])) then begin
-								l1 := (if l1.value then l1.value else l1.item)
+			end else (if (if filter.picker then (index = (Length(labelCommands) - 1))) then filter:picker() else (if (not filter:?ChooseItem(index)) then begin
+						if IsFrame((labelCommand := labelCommands[index])) then begin
+								labelCommand := (if labelCommand.value then labelCommand.value else labelCommand.item)
 							end;
-						lastPicked := l1;
-						self:UpdateText(Clone(l1));
+						lastPicked := labelCommand;
+						self:UpdateText(Clone(labelCommand));
 						self:hilite(nil)
 					end)))
 	end,
@@ -141,30 +141,30 @@ newtProtoLineBase := {
 		Stringer([Array: label, " ", (if (if (if target then path) then target.(path)) then filter:PathToText() else "")])
 	end,
 	SetLabelText: func(a1) begin
-		local l1, l2;
+		local l1, box;
 		l1 := (if (if (labelCommands or filter.picker) then (access <> 'readOnly)) then Stringer([Array: $\uFC01, a1]) else Stringer([Array: $\uFC02, a1]));
 		if ((not dontResizeLabel) or (not indent)) then begin
 				indent := (StrFontWidth(l1, labelFont) + 6)
 			end;
 		if ((not dontResizeLabel) or (not labelBox)) then begin
-				l2 := self:LocalBox();
+				box := self:LocalBox();
 				labelBox := RelBounds(0, ((viewLineSpacing - FontAscent(labelFont)) - 1), indent, height)
 			end;
 		pix := MakeText(l1, labelBox.left, labelBox.top, labelBox.right, (labelBox.top + FontAscent(labelFont)));
 		l1
 	end,
-	SetLabelCommands: func(a1) begin
-		local l1;
+	SetLabelCommands: func(sort) begin
+		local memoryItems;
 		(if (access <> 'readOnly) then begin
-				if (if (l1 := GetMemoryItems(memory)) then (not a1)) then begin
-						a1 := l1;
+				if (if (memoryItems := GetMemoryItems(memory)) then (not sort)) then begin
+						sort := memoryItems;
 						if filter.picker then begin
-								AddArraySlot((a1 := Clone(a1)), 'pickseparator);
-								AddArraySlot(a1, "Other")
+								AddArraySlot((sort := Clone(sort)), 'pickseparator);
+								AddArraySlot(sort, "Other")
 							end
 					end;
-				(if (a1 <> oldLabelCommands) then begin
-						labelCommands := a1;
+				(if (sort <> oldLabelCommands) then begin
+						labelCommands := sort;
 						self:SetLabelText(label);
 						self:Dirty();
 						(oldLabelCommands := labelCommands)
@@ -172,37 +172,37 @@ newtProtoLineBase := {
 			end)
 	end,
 	viewIdleScript: func() begin
-		local l1, l2, l3, l4, l5, l6;
-		(if StrFilled((l1 := filter:PathToText())) then begin
-				l3 := filter:PathQuery((l2 := filter:PreQuery(l1)));
-				if (if usePopup then l3) then begin
-						l4 := nil;
-						l5 := l3:entry();
+		local pathToText, preQuery, pathQuery, list, entry, queryItem;
+		(if StrFilled((pathToText := filter:PathToText())) then begin
+				pathQuery := filter:PathQuery((preQuery := filter:PreQuery(pathToText)));
+				if (if usePopup then pathQuery) then begin
+						list := nil;
+						entry := pathQuery:entry();
 						(loop begin
-								if (not l5) then begin
+								if (not entry) then begin
 										break
 									end;
-								if (l6 := filter:QueryItem(l5, l2)) then begin
-										if (not l4) then begin
-												l4 := [Array: ]
+								if (queryItem := filter:QueryItem(entry, preQuery)) then begin
+										if (not list) then begin
+												list := [Array: ]
 											end;
-										self:?ChangePopup(l6, l5);
-										AddArraySlot(l4, l6)
+										self:?ChangePopup(queryItem, entry);
+										AddArraySlot(list, queryItem)
 									end;
-								(l5 := l3:Next())
+								(entry := pathQuery:Next())
 							end);
-						if (if l4 then (access = 'queryOnly)) then begin
-								filter:ResolveItem(l4[0])
+						if (if list then (access = 'queryOnly)) then begin
+								filter:ResolveItem(list[0])
 							end;
-						if (if l4 then filter.picker) then begin
-								AddArraySlot(l4, 'pickseparator);
-								AddArraySlot(l4, "Other")
+						if (if list then filter.picker) then begin
+								AddArraySlot(list, 'pickseparator);
+								AddArraySlot(list, "Other")
 							end;
-						self:SetLabelCommands(l4)
+						self:SetLabelCommands(list)
 					end else begin
-						if l3 then begin
-								if (l5 := l3:entry()) then begin
-										dataCursor:Goto(l5);
+						if pathQuery then begin
+								if (entry := pathQuery:entry()) then begin
+										dataCursor:Goto(entry);
 										self:DoRetarget()
 									end
 							end else begin
@@ -218,15 +218,15 @@ newtProtoLineBase := {
 					nil
 				end))
 	end,
-	viewChangedScript: func(a1, a2) begin
-		local l1;
-		(if (a1 = 'text) then begin
+	viewChangedScript: func(slot, view) begin
+		local textToPath;
+		(if (slot = 'text) then begin
 				if ((access = 'Query) or (access = 'queryOnly)) then begin
 						self:SetupIdle(500)
 					end;
 				(if (access <> 'queryOnly) then begin
-						l1 := filter:TextToPath(a2:GetRichString());
-						target.(path) := (if StrFilled(a2.text) then l1);
+						textToPath := filter:TextToPath(view:GetRichString());
+						target.(path) := (if StrFilled(view.text) then textToPath);
 						self:StartFlush()
 					end)
 			end)

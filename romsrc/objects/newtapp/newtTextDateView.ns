@@ -3,15 +3,15 @@
 newtTextDateView := {
 	_proto: @newtroTextDateView,
 	viewFlags: vVisible + vClickable + vGesturesAllowed + vDateField,
-	viewChangedScript: func(a1, a2) begin
-		local l1;
-		(if (if (not GetVariable(a2, 'hack)) then (a1 = 'text)) then begin
-				if StrFilled(a2.(a1)) then begin
-						if (l1 := StringToDate(a2.(a1))) then begin
-								GetVariable(a2, 'target).(path) := l1
+	viewChangedScript: func(slot, view) begin
+		local stringToDate2;
+		(if (if (not GetVariable(view, 'hack)) then (slot = 'text)) then begin
+				if StrFilled(view.(slot)) then begin
+						if (stringToDate2 := StringToDate(view.(slot))) then begin
+								GetVariable(view, 'target).(path) := stringToDate2
 							end
 					end else begin
-						GetVariable(a2, 'target).(path) := nil
+						GetVariable(view, 'target).(path) := nil
 					end;
 				self:StartFlush()
 			end)

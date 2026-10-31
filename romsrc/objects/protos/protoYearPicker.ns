@@ -13,9 +13,9 @@ protoYearPicker := {
 	viewSetupFormScript: func() begin
 		(if (value = 2920) then SetValue(self, 'viewFlags, 0))
 	end,
-	SetYear: func(a1) begin
-		(if (value <> a1) then begin
-				value := a1;
+	SetYear: func(year) begin
+		(if (value <> year) then begin
+				value := year;
 				years:Update();
 				decades:Update();
 				centuries:Update()
@@ -41,8 +41,8 @@ decades := {
 	viewBounds: {left: -22, top: 0, right: 0, bottom: 28},
 	icon: @digitflap,
 	increment: 10,
-	GetIndex: func(a1) begin
-		((a1 mod 100) div 10)
+	GetIndex: func(value) begin
+		((value mod 100) div 10)
 	end,
 	nextDigit: 'centuries,
 	debug: 4529,
@@ -54,13 +54,13 @@ centuries := {
 	viewBounds: {left: -36, top: 0, right: 1, bottom: 28},
 	icon: @digitWideflap,
 	increment: 100,
-	GetIndex: func(a1) begin
-		((a1 mod 10000) div 100)
+	GetIndex: func(value) begin
+		((value mod 10000) div 100)
 	end,
 	viewDrawScript: func() begin
-		local l1;
-		DrawXBitmap((l1 := OffsetRect((l1 := Clone(digitFrame)), (1 - l1.left), 0)), digits, (currentIndex div 10), copyMode);
-		DrawXBitmap((l1 := OffsetRect(l1, (l1.right - 1), 0)), digits, (currentIndex mod 10), copyMode)
+		local offsetRect2;
+		DrawXBitmap((offsetRect2 := OffsetRect((offsetRect2 := Clone(digitFrame)), (1 - offsetRect2.left), 0)), digits, (currentIndex div 10), copyMode);
+		DrawXBitmap((offsetRect2 := OffsetRect(offsetRect2, (offsetRect2.right - 1), 0)), digits, (currentIndex mod 10), copyMode)
 	end,
 	debug: 16733,
 	preallocatedContext: 'centuries,
