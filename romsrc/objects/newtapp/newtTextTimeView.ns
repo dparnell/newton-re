@@ -1,8 +1,13 @@
-// newtTextTimeView, and what only it reaches
+// newtTextTimeView: the editable NewtApp slot view for a time (NPR 2.0), based on
+// newtroTextTimeView.
+//
+// This file holds newtTextTimeView and what only it reaches.
 
 newtTextTimeView := {
 	_proto: @newtroTextTimeView,
 	viewFlags: vVisible + vClickable + vGesturesAllowed + vTimeField,
+	// the user changed the text: store the time written (unchanged when it cannot be read; nil when empty) in target.(path) and start the flush timer
+	// (not while Retarget sets the text: then the view's hack slot is true)
 	viewChangedScript: func(slot, view) begin
 		local stringToTime2;
 		(if (if (not GetVariable(view, 'hack)) then (slot = 'text)) then begin

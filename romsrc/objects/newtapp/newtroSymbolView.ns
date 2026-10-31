@@ -1,9 +1,14 @@
-// newtroSymbolView, and what only it reaches
+// newtroSymbolView: a read-only NewtApp slot view for a slot that holds a symbol: the
+// symbol's text from textFrame (as newtSymbolFilter), or its own name.  Not in the NPR.
+//
+// This file holds newtroSymbolView and what only it reaches.
 
 newtroSymbolView := {
 	_proto: @newtroTextView,
+	// {symbol: text (or a frame whose textFramePath slot is the text)}; nil: the symbols' names
 	textFrame: nil,
 	textFramePath: nil,
+	// the text for target.(path), "" when there is no entry, path or value
 	TargetData: func() begin
 		(if (if (if target then path) then target.(path)) then (if textFrame then (if textFramePath then textFrame.(target.(path)).(textFramePath) else textFrame.(target.(path))) else Stringer([Array: target.(path)])) else "")
 	end

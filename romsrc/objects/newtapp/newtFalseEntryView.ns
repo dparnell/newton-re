@@ -1,14 +1,23 @@
-// newtFalseEntryView, and what only it reaches
+// newtFalseEntryView: an entry view for the NewtApp slot views and stationery
+// outside a NewtApp application (NPR 2.0): it takes target, dataCursor, dataSoup and
+// soupQuery from its parent (the slots named by targetSlot and the others), and
+// leaves writing a changed entry back to the application, so its flushing methods
+// do nothing.  Send it Retarget whenever the parent's target changes.
+//
+// This file holds newtFalseEntryView and what only it reaches.
 
 newtFalseEntryView := {
 	FlushEntry: func(a1) begin
 		nil
 	end,
 	soupQuery: nil,
+	// the parent's slot that holds the soup query
 	soupQuerySlot: 'soupQuery,
 	target: nil,
+	// the parent's slot that holds the current entry
 	targetSlot: 'target,
 	entryViewDefs: nil,
+	// take the parent's entry and rebuild the children for it
 	DoRetarget: func() begin
 		entryViewDefs := [Array: GetEntryDataView((target := GetVariable(parentView, targetSlot)), viewDef)];
 		targetViewDef := (currentViewDef := nil);
@@ -22,9 +31,11 @@ newtFalseEntryView := {
 	EndFlush: func() begin
 		nil
 	end,
+	// the entry may always be changed
 	EntryCool: func(a1) begin
 		true
 	end,
+	// take the parent's entry and tell the children of it
 	Retarget: func() begin
 		entryViewDefs := [Array: GetEntryDataView((target := GetVariable(parentView, targetSlot)), viewDef)];
 		targetViewDef := (currentViewDef := nil);
@@ -41,7 +52,10 @@ newtFalseEntryView := {
 	end,
 	viewDef: 'default,
 	dataCursor: nil,
+	// the parent's slot that holds the soup cursor
 	dataCursorSlot: 'dataCursor,
+	// take the parent's entry, cursor, soup and query, choose the viewDef (viewDef
+	// becomes the one found) and call the dataDef's SetupForm
 	viewSetupFormScript: func() begin
 		local entryDataView, dataDefs;
 		target := GetVariable((parentView := self:Parent()), targetSlot);

@@ -1,9 +1,14 @@
-// newtroTextDateView, and what only it reaches
+// newtroTextDateView: the read-only NewtApp slot view for a date (the NPR's
+// newtROTextDateView): LongDateStr with longFormat, or ShortDateStr with shortFormat
+// when longFormat is nil.
+//
+// This file holds newtroTextDateView and what only it reaches.
 
 newtroTextDateView := {
 	_proto: @newtroTextView,
-	longFormat: 180969,
+	longFormat: 180969, // yearMonthDayStrSpec's value (@datetimeStrSpecs)
 	shortFormat: nil,
+	// the text for target.(path), "" when there is no entry, path or value
 	TargetData: func() begin
 		(if (if (if target then path) then target.(path)) then (if longFormat then LongDateStr(target.(path), longFormat) else ShortDateStr(target.(path), shortFormat)) else "")
 	end
