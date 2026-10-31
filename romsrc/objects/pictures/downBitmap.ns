@@ -1,4 +1,4 @@
-// downBitmap, and what only it reaches
+// A down arrow. A 1-bit bitmap frame (bits, bounds), 18 x 12 pixels. Magic pointer @324.
 
 downBitmap := {
 	bits: bitmap('bits, "resources/bits/3d5e31.png", "000000000004006800680097007400a9", 1),

@@ -1,4 +1,4 @@
-// smalllogoBitmap, and what only it reaches
+// A small logo. A 1-bit bitmap frame (bits, bounds), 44 x 45 pixels.
 
 smalllogoBitmap := {
 	bits: bitmap('bits, "resources/bits/3d594d.png", "00000000000800ca00ca018600f701b2", 1),

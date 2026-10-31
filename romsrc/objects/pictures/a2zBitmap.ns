@@ -1,4 +1,6 @@
-// a2zBitmap, and what only it reaches
+// The letters A to Z in a strip, for alphabet tabs and the review dictionary's index. A
+// 1-bit bitmap frame (bits, bounds), 208 x 8 pixels. Magic pointer @349. Used by
+// globalHeapvarwannabes, reviewDict.
 
 a2zBitmap := {
 	bits: bitmap('bits, "resources/bits/3d6799.png", "00000000001c016d016d006101750131", 1),

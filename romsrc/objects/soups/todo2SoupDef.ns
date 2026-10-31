@@ -1,4 +1,6 @@
-// todo2SoupDef, and what only it reaches
+// The To Do List's soup of tasks, repeating and not. A soup definition (the soupDef frame
+// RegUnionSoup and RegSoupDef take: name, userName, ownerApp, userDescr, indexes). Magic
+// pointer @370. Used by bootSoupwannabes, globalvarwannabes.
 
 todo2SoupDef := {
 	name: toDoList,

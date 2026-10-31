@@ -1,4 +1,6 @@
-// poof, and what only it reaches
+// The poof sound (an item vanishing in a cloud). A 'codec sound frame whose samples the
+// tIMACodec codec decompresses (IMA ADPCM) when it is played. Magic pointer @314. Used by
+// part, protoRouteSlip.
 
 poof := {
 	sndFrameType: 'codec,

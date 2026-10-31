@@ -1,4 +1,5 @@
-// bookmarkBitmap, and what only it reaches
+// A bookmark symbol (as the book reader's bookmarks use it). A 1-bit bitmap frame (bits,
+// bounds), 19 x 17 pixels. Magic pointer @344.
 
 bookmarkBitmap := {
 	bits: bitmap('bits, "resources/bits/3d6709.png", "000000000004003c003c01f3004d0206", 1),

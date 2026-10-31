@@ -1,4 +1,5 @@
-// keyDivideBitmap, and what only it reaches
+// The divide key of the Calculator. A 1-bit bitmap frame (bits, bounds), 10 x 10 pixels.
+// Magic pointer @737. Used by calculator.
 
 keyDivideBitmap := {
 	bits: bitmap('bits, "resources/bits/3d8f91.png", "000000000004008a008a02800094028a", 1),

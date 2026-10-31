@@ -1,4 +1,5 @@
-// recInkBitmap, and what only it reaches
+// The ink-text recognition setting's icon. A 1-bit bitmap frame (bits, bounds), 12 x 9
+// pixels. Magic pointer @722. Used by recognizerUserChoices.
 
 recInkBitmap := {
 	bits: bitmap('bits, "resources/bits/3dade1.png", "0000000000040042004200ed004b00f9", 1),

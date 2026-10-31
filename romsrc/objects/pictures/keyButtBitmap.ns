@@ -1,4 +1,5 @@
-// keyButtBitmap, and what only it reaches
+// A keyboard button. A 1-bit bitmap frame (bits, bounds) with a mask, 31 x 17 pixels. Magic
+// pointer @332.
 
 keyButtBitmap := {
 	mask: bitmap('mask, "resources/mask/3d6001.png", "000000000004003800380097004900b6", 1),

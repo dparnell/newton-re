@@ -1,4 +1,4 @@
-// checkOnBitmap, and what only it reaches
+// A checked check box. A 1-bit bitmap frame (bits, bounds) with a mask, 12 x 11 pixels.
 
 checkOnBitmap := {
 	mask: checkOnBitmapMask,

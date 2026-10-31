@@ -1,4 +1,4 @@
-// rulerPicts, and what only it reaches
+// A set of ruler images. An array of images.
 
 rulerPicts := [|Array|:
 	bitmap('bits, "resources/bits/46e5ad.png", "0000000000040191019100b5019f00c8", 1),

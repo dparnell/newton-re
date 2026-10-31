@@ -1,4 +1,5 @@
-// recShapeBitmap, and what only it reaches
+// The shape recognition setting's icon. A 1-bit bitmap frame (bits, bounds), 13 x 11
+// pixels. Magic pointer @721. Used by recognizerUserChoices.
 
 recShapeBitmap := {
 	bits: bitmap('bits, "resources/bits/3dad7d.png", "0000000000040055005500ec006000f9", 1),

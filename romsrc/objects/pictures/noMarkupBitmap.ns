@@ -1,4 +1,5 @@
-// noMarkupBitmap, and what only it reaches
+// The "markup" toggle's icon, off. A 1-bit bitmap frame (bits, bounds) with a mask, 17 x 17
+// pixels. Magic pointer @343. Used by copperfield.
 
 noMarkupBitmap := {
 	mask: onWithMask,

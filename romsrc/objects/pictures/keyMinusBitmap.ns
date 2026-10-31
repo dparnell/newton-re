@@ -1,4 +1,5 @@
-// keyMinusBitmap, and what only it reaches
+// The minus key. A 1-bit bitmap frame (bits, bounds), 10 x 2 pixels. Magic pointer @740.
+// Used by arrays, calculator, numericKeys, viewRoot.
 
 keyMinusBitmap := {
 	bits: bitmap('bits, "resources/bits/3d90b9.png", "00000000000400ad00ad028000af028a", 1),

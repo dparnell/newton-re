@@ -1,4 +1,5 @@
-// routeForward, and what only it reaches
+// The Action menu icon of Forward. A 1-bit bitmap frame (bits, bounds), 22 x 15 pixels.
+// Magic pointer @771. Used by mailSlip.
 
 routeForward := {
 	bits: bitmap('bits, "resources/bits/463a51.png", "0000000000040031003100ab004000c1", 1),

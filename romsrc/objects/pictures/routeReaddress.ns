@@ -1,4 +1,5 @@
-// routeReaddress, and what only it reaches
+// The Action menu icon of Readdress. A 1-bit bitmap frame (bits, bounds), 21 x 15 pixels.
+// Magic pointer @757. Used by viewRoot.
 
 routeReaddress := {
 	bits: bitmap('bits, "resources/bits/463c11.png", "000000000004008e008e007a009d008f", 1),

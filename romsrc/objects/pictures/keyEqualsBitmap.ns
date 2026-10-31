@@ -1,4 +1,5 @@
-// keyEqualsBitmap, and what only it reaches
+// The equals key. A 1-bit bitmap frame (bits, bounds), 10 x 7 pixels. Magic pointer @738.
+// Used by calculator, numericKeys.
 
 keyEqualsBitmap := {
 	bits: bitmap('bits, "resources/bits/3d8ff1.png", "00000000000400d200d2028000d9028a", 1),

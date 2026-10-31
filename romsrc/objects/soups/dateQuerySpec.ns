@@ -1,3 +1,4 @@
-// dateQuerySpec, and what only it reaches
+// The query of the calendar's meetings by start date. A soup query specification (a
+// querySpec frame for Query). Magic pointer @65. Used by calendar.
 
 dateQuerySpec := {type: 'index, indexPath: 'mtgStartDate, beginKey: 0, endExclKey: nil};

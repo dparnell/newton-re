@@ -1,4 +1,6 @@
-// removeSound, and what only it reaches
+// The sound played when something is removed. A 'codec sound frame whose samples are a tone
+// score (tonescore: frequencies and envelopes) that the tDTMFCodec synthesises when it is
+// played. Magic pointer @304.
 
 removeSound := {
 	sndFrameType: 'codec,

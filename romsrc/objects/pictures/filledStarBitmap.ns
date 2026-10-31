@@ -1,4 +1,6 @@
-// filledStarBitmap, and what only it reaches
+// A filled star (a notification not yet read). A 1-bit bitmap frame (bits, bounds) with a
+// mask, 15 x 14 pixels. Magic pointer @14. Used by builtinFunctions, newtStationery,
+// notifyIcon.
 
 filledStarBitmap := {
 	mask: filledStarBitmapMask,

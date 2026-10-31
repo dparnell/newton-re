@@ -1,4 +1,5 @@
-// keyButtonBitmap, and what only it reaches
+// The keyboard button image of protoKeyboardButton. A 1-bit bitmap frame (bits, bounds), 21
+// x 9 pixels. Magic pointer @714. Used by canonicalCharCorrector, protoKeyboardButton.
 
 keyButtonBitmap := {
 	bits: bitmap('bits, "resources/bits/3dab19.png", "000000000004010a010a006201130077", 1),

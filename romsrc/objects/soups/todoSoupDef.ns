@@ -1,4 +1,6 @@
-// todoSoupDef, and what only it reaches
+// A To Do soup definition (its user name and description are the same string). A soup
+// definition (the soupDef frame RegUnionSoup and RegSoupDef take: name, userName, ownerApp,
+// userDescr, indexes). Magic pointer @369. Used by bootSoupwannabes, globalvarwannabes.
 
 todoSoupDef := {
 	name: @todoSoupName,

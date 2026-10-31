@@ -1,4 +1,6 @@
-// click, and what only it reaches
+// The click sound of buttons. A 'simpleSound sound frame of uncompressed 8-bit samples, as
+// PlaySound takes it. Magic pointer @51. Used by blindEntryLine, calculator, calendar,
+// canonicalCharCorrector, canonicalCompass, clicks and others.
 
 click := {
 	sndFrameType: 'simpleSound,

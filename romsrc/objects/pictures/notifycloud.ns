@@ -1,3 +1,4 @@
-// notifycloud, and what only it reaches
+// The cloud the notification slip is drawn in. A QuickDraw picture (PICT). Magic pointer
+// @13. Used by protoNotifyForm.
 
 notifycloud := picture('picture, "resources/picture/63b2cd");

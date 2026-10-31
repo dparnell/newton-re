@@ -1,3 +1,4 @@
-// alarmQuerySpec, and what only it reaches
+// The query of the calendar's meetings by their alarm time. A soup query specification (a
+// querySpec frame for Query). Magic pointer @3. Used by calendar.
 
 alarmQuerySpec := {type: 'index, indexPath: 'mtgAlarm, beginKey: 0};

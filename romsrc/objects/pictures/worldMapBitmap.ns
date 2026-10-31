@@ -1,3 +1,4 @@
-// worldMapBitmap, and what only it reaches
+// The world map of Time Zones and the city picker. A QuickDraw picture (PICT). Magic
+// pointer @321. Used by worldClock, worldPicker.
 
 worldMapBitmap := picture('picture, "resources/picture/6430d9");

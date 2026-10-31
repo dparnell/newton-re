@@ -1,4 +1,6 @@
-// tickSound, and what only it reaches
+// The tick of a clock. A 'codec sound frame whose samples the tIMACodec codec decompresses
+// (IMA ADPCM) when it is played. Magic pointer @299. Used by protoDisplayClock,
+// protoNewSetClock, viewRoot.
 
 tickSound := {
 	sndFrameType: 'codec,

@@ -1,4 +1,5 @@
-// finepentipBitmap, and what only it reaches
+// The fine pen tip of the pen-size menu. A 1-bit bitmap frame (bits, bounds), 1 x 1 pixels.
+// Magic pointer @707. Used by protoPensizeMenu.
 
 finepentipBitmap := {
 	bits: bitmap('bits, "resources/bits/3d633d.png", "0000000000040010001002190011021a", 1),

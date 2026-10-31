@@ -1,4 +1,6 @@
-// onlineBitmap, and what only it reaches
+// The Extras drawer icon of Online Services. A 2.x icon frame: an unhilited and a hilited
+// image, each with bounds, a mask and colordata (a 4-bit grey and a 1-bit version). Magic
+// pointer @346. Used by extrasRomIcons.
 
 onlineBitmap := {
 	unhilited: {

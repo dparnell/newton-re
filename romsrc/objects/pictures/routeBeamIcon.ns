@@ -1,4 +1,5 @@
-// routeBeamIcon, and what only it reaches
+// The Action menu icon of Beam. A 1-bit bitmap frame (bits, bounds), 21 x 15 pixels. Magic
+// pointer @731. Used by viewRoot.
 
 routeBeamIcon := {
 	bits: bitmap('bits, "resources/bits/3d5be9.png", "00000000000400ab00ab007e00ba0093", 1),

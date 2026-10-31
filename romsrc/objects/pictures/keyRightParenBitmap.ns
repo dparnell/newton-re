@@ -1,4 +1,5 @@
-// keyRightParenBitmap, and what only it reaches
+// The right parenthesis key. A 1-bit bitmap frame (bits, bounds), 4 x 15 pixels. Magic
+// pointer @744. Used by arrays, numericKeys.
 
 keyRightParenBitmap := {
 	bits: bitmap('bits, "resources/bits/3d9231.png", "00000000000400360036027a0045027e", 1),

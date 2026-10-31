@@ -1,4 +1,4 @@
-// trashBitmap, and what only it reaches
+// A trash can. A 1-bit bitmap frame (bits, bounds) with a mask, 28 x 34 pixels.
 
 trashBitmap := {
 	mask: bitmap('mask, "resources/mask/3cd221.png", "000000000004015b015b017e017d019a", 1),

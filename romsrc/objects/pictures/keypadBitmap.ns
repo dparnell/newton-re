@@ -1,4 +1,5 @@
-// keypadBitmap, and what only it reaches
+// The keypad button's icon. A 1-bit bitmap frame (bits, bounds), 8 x 11 pixels. Magic
+// pointer @716. Used by viewRoot.
 
 keypadBitmap := {
 	bits: bitmap('bits, "resources/bits/3dabd1.png", "00000000000400260026011a00310122", 1),

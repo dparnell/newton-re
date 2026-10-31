@@ -1,4 +1,5 @@
-// stylusupBitmap, and what only it reaches
+// A stylus held up from the screen. A 1-bit bitmap frame (bits, bounds), 33 x 32 pixels.
+// Magic pointer @776.
 
 stylusupBitmap := {
 	bits: bitmap('bits, "resources/bits/3db341.png", "000000000008003d003d0031005d0052", 1),

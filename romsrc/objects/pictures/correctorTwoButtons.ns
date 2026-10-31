@@ -1,4 +1,5 @@
-// correctorTwoButtons, and what only it reaches
+// The two buttons of the corrector (protoCorrector). An image of a grid of width x height
+// cells, 42 x 17 pixels. Magic pointer @800. Used by protoCorrector.
 
 correctorTwoButtons := {
 	bits: bitmap('bits, "resources/bits/46cbb1.png", "00000000000800820082012700930151", 1),

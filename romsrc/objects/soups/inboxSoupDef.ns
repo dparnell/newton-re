@@ -1,4 +1,6 @@
-// inboxSoupDef, and what only it reaches
+// The In Box soup. A soup definition (the soupDef frame RegUnionSoup and RegSoupDef take:
+// name, userName, ownerApp, userDescr, indexes). Magic pointer @538. Used by
+// bootSoupwannabes, globalvarwannabes.
 
 inboxSoupDef := {
 	name: inBox_3,

@@ -1,4 +1,4 @@
-// checkBitmap, and what only it reaches
+// A check mark. A 1-bit bitmap frame (bits, bounds), 9 x 11 pixels. Magic pointer @763.
 
 checkBitmap := {
 	bits: bitmap('bits, "resources/bits/3c89b9.png", "000000000004012a012a01eb013501f4", 1),

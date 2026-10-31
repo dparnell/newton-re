@@ -1,4 +1,5 @@
-// kbdDictBitmap, and what only it reaches
+// The dictionary key of the keyboard. A 1-bit bitmap frame (bits, bounds) with a mask, 19 x
+// 15 pixels. Magic pointer @751. Used by viewRoot.
 
 kbdDictBitmap := {
 	mask: bitmap('mask, "resources/mask/3d7785.png", "000000000004024f024f010d025e0120", 1),

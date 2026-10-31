@@ -1,4 +1,5 @@
-// recsketchBitmap, and what only it reaches
+// The sketch recognition setting's icon. A 1-bit bitmap frame (bits, bounds), 15 x 8
+// pixels. Magic pointer @723. Used by recognizerUserChoices.
 
 recsketchBitmap := {
 	bits: bitmap('bits, "resources/bits/3dae3d.png", "0000000000040065006500eb006d00fa", 1),

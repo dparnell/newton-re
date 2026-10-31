@@ -1,4 +1,6 @@
-// romphrasalLexicon, and what only it reaches
+// Not a picture: the ROM's phrasal lexicon, arrays of word symbols ('anniversary,
+// 'about_act, ...) for the recognizer's phrase dictionary. An array of images. Magic
+// pointer @248.
 
 romphrasalLexicon := [|Array|:
 	nil,

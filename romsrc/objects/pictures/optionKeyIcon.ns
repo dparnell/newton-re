@@ -1,4 +1,5 @@
-// optionKeyIcon, and what only it reaches
+// The Option key symbol (as keyboard command lists show it). A 1-bit bitmap frame (bits,
+// bounds), 10 x 7 pixels.
 
 optionKeyIcon := {
 	bits: bitmap('bits, "resources/bits/3c8c45.png", "0000000000040000000000000007000a", 1),

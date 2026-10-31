@@ -1,4 +1,6 @@
-// alarmWakeup, and what only it reaches
+// The alarm sound. A 'codec sound frame whose samples are a tone score (tonescore:
+// frequencies and envelopes) that the tDTMFCodec synthesises when it is played. Magic
+// pointer @4. Used by soundOff.
 
 alarmWakeup := {
 	sndFrameType: 'codec,

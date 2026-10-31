@@ -1,4 +1,5 @@
-// copier, and what only it reaches
+// The copier sound. A 'codec sound frame whose samples the tIMACodec codec decompresses
+// (IMA ADPCM) when it is played. Magic pointer @380. Used by newtApplication.
 
 copier := {
 	sndFrameType: 'codec,

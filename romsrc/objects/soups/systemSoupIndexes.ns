@@ -1,4 +1,6 @@
-// systemSoupIndexes, and what only it reaches
+// The indexes of the system soup (on tag and modemName). An array of soup index
+// specifications (the indexes of a soup definition). Magic pointer @275. Used by
+// loadGlobals.
 
 systemSoupIndexes := [|Array|:
 	{structure: 'slot, type: '|string|, path: 'tag},

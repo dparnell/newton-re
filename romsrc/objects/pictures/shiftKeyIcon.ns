@@ -1,4 +1,5 @@
-// shiftKeyIcon, and what only it reaches
+// The Shift key symbol (as keyboard command lists show it). A 1-bit bitmap frame (bits,
+// bounds), 9 x 7 pixels.
 
 shiftKeyIcon := {
 	bits: bitmap('bits, "resources/bits/3c8bdd.png", "00000000000400000000000000070009", 1),

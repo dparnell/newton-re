@@ -1,4 +1,5 @@
-// kbdOptionBitmap, and what only it reaches
+// The option key of the keyboard. A 1-bit bitmap frame (bits, bounds), 15 x 6 pixels. Magic
+// pointer @754. Used by alphaKeys.
 
 kbdOptionBitmap := {
 	bits: bitmap('bits, "resources/bits/3d7911.png", "000000000004005f005f009f006500ae", 1),

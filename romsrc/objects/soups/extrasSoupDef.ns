@@ -1,4 +1,6 @@
-// extrasSoupDef, and what only it reaches
+// The Extras drawer's soup (userName extras). A soup definition (the soupDef frame
+// RegUnionSoup and RegSoupDef take: name, userName, ownerApp, userDescr, indexes). Magic
+// pointer @307. Used by bootSoupwannabes, globalvarwannabes.
 
 extrasSoupDef := {
 	name: extrasSoupName,
