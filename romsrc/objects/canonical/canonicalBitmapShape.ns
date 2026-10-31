@@ -1,0 +1,3 @@
+// canonicalBitmapShape, and what only it reaches
+
+canonicalBitmapShape := {class: 'bitmap, bounds: nil, data: nil, colordata: nil, mask: nil};

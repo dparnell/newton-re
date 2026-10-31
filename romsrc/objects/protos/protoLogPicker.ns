@@ -1,0 +1,65 @@
+// protoLogPicker, and what only it reaches
+
+protoLogPicker := {
+	_proto: @protoMultiLinePicker,
+	viewJustify: 8388608,
+	fileTarget: nil,
+	viewSetupFormScript: func() begin
+		self:doTheShuffle();
+		if info then begin
+				text := info.logText;
+				labelCommands := info.logChoices
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	GetIndex: func() begin
+		(if (if info then info.logConfig) then ArrayPos(info.logActions, self:GetTransport():GetConfig(info.logConfig), 0, nil))
+	end,
+	Popit: func(a1) begin
+		(if (if info then info.logConfig) then inherited:Popit(a1) else (if info then begin
+					self:BringUpFiling(info.logText);
+					self:pickCancelledScript();
+					true
+				end))
+	end,
+	TextSetup: func() begin
+		local l1, l2, l3;
+		l1 := self:GetIndex();
+		if (not info) then begin
+				return ""
+			end;
+		if l1 then begin
+				if info.fileChoices[l1] then begin
+						l3 := StrTruncate(Clone(self:GetFolderString()), 120);
+						l2 := ParamStr("^0 in \u201C\u^1\u201D\u", [Array: info.logChoices[l1], l3])
+					end else begin
+						l2 := info.logChoices[l1]
+					end
+			end else begin
+				l3 := StrTruncate(Clone(self:GetFolderString()), 150);
+				l2 := ParamStr("\u201C\u^0\u201D\u", [Array: l3])
+			end;
+		return l2
+	end,
+	GetFolderString: func() begin
+		local l1;
+		(if (((l1 := self:GetTransport():GetConfig(info.fileConfig)) = nil) or (GetFolderStr(l1) = nil)) then "Unfiled Items" else GetFolderStr(l1))
+	end,
+	BringUpFiling: func(a1) begin
+		local l1;
+		fileTarget := {labels: self:GetTransport():GetConfig(info.fileConfig)};
+		l1 := {_parent: GetRoot().(self:GetTransport().owner), appObjectFileThisIn: a1, appObjectFileAction: "Set", caller: self, FileThis: func(a1, a2, a3, a4, a5) begin
+			caller:FileThis((if a2 then a3))
+		end};
+		GetRoot().filingSlip:OpenForUser(self, {target: fileTarget, targetView: l1}, nil, nil)
+	end,
+	LabelActionScript: func(a1) begin
+		self:GetTransport():SetConfig(info.logConfig, info.logActions[a1]);
+		self:UpdateText(self:TextSetup());
+		(if info.fileChoices[a1] then self:BringUpFiling(ParamStr(info.fileText, [Array: info.fileChoices[a1]])))
+	end,
+	FileThis: func(a1) begin
+		self:GetTransport():SetConfig(info.fileConfig, a1);
+		self:UpdateText(self:TextSetup())
+	end
+};

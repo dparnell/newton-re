@@ -1,5 +1,0 @@
-@@ 0x481b09
-func() begin
-	(if visibleAction then (if (visibleAction = 'makeVisible) then self:Show() else self:Hide()))
-end
-@@end

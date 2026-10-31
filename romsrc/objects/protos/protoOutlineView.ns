@@ -1,0 +1,3 @@
+// protoOutlineView, and what only it reaches
+
+protoOutlineView := {viewClass: clOutline, _proto: @protoView};

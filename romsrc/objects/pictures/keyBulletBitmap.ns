@@ -1,0 +1,6 @@
+// keyBulletBitmap, and what only it reaches
+
+keyBulletBitmap := {
+	bits: bitmap('bits, "resources/bits/3d8e55.png", "00000000000400bb00bb028400c50289", 1),
+	bounds: {left: 0, top: 0, right: 5, bottom: 10}
+};

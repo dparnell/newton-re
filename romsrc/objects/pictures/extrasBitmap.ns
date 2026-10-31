@@ -1,0 +1,29 @@
+// extrasBitmap, and what only it reaches
+
+extrasBitmap := {
+	unhilited: {
+		bounds: unhilitedBounds_25,
+		mask: bitmap('mask, "resources/mask/5434d1.png", "00000000000400000000000000160020", 1),
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/5435b9.png", "00000000001000000000000000160020", 4),
+				bitdepth: 4
+			},
+			{cbits: colordataCbits_25, bitdepth: 1}
+		]
+	},
+	hilited: {
+		bounds: {left: 0, top: 0, right: 32, bottom: 22},
+		mask: bitmap('mask, "resources/mask/5431fd.png", "00000000000400000000000000160020", 1),
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/5432e5.png", "00000000001000000000000000160020", 4),
+				bitdepth: 4
+			},
+			{
+				cbits: bitmap('bits, "resources/bits/543271.png", "00000000000400000000000000160020", 1),
+				bitdepth: 1
+			}
+		]
+	}
+};

@@ -1,0 +1,3 @@
+// rcTryLettersConfig, and what only it reaches
+
+rcTryLettersConfig := {_proto: @rcDefaultConfig, letterSpaceCursiveOption: nil, inputmask: 16384};

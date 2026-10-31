@@ -1,0 +1,3 @@
+// repeatQuerySpec, and what only it reaches
+
+repeatQuerySpec := {type: 'index, indexPath: 'mtgStopDate, beginKey: 0};

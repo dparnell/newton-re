@@ -1,5 +1,0 @@
-@@ 0x743f5d
-func() begin
-	deviceSpecificStuff:DisplayDeviceSpecificViews(conntype.currentChoice)
-end
-@@end

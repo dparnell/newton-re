@@ -1,0 +1,20 @@
+// espyFont, and what only it reaches
+
+espyFont := {
+	name: @systemSoupName,
+	encoding: 0,
+	macFontID: 0,
+	screenSym: 'espyFont,
+	psName: 'helvetica,
+	psScale: 65536,
+	badFontMap: 1,
+	plainData: sfnt('sfnt, "resources/sfnt/3db801"),
+	boldData: sfnt('sfnt, "resources/sfnt/3e21c1"),
+	italicData: nil,
+	boldItalicData: nil,
+	userSizes: userSizes,
+	usable: nil,
+	tsID: 0
+};
+
+userSizes := [|Array|: 9, 10, 12, 18];

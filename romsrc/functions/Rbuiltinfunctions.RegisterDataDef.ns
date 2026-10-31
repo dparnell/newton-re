@@ -1,5 +1,0 @@
-@@ 0x4a8d19
-func(a1) begin
-	RegDataDef(a1.symbol, a1)
-end
-@@end

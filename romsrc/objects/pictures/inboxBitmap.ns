@@ -1,0 +1,7 @@
+// inboxBitmap, and what only it reaches
+
+inboxBitmap := {
+	mask: bitmap('mask, "resources/mask/53e499.png", "000000000004001100110019002e0032", 1),
+	bits: bitmap('bits, "resources/bits/53e529.png", "000000000004001100110019002e0032", 1),
+	bounds: {left: 0, top: 0, right: 25, bottom: 29}
+};

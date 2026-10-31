@@ -1,6 +1,0 @@
-@@ 0x634065
-func() begin
-	BadWickedNaughtyNoot("defaultStore()", 'undocumented);
-	GetDefaultStore()
-end
-@@end

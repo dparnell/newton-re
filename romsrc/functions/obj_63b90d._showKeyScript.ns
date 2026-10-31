@@ -1,5 +1,0 @@
-@@ 0x4f7f95
-func(a1) begin
-	PressButton(statusbar.ShowButton)
-end
-@@end

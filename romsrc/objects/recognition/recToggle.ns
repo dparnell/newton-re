@@ -1,0 +1,260 @@
+// recToggle, and what only it reaches
+
+recToggle := {
+	_proto: @protoPopupButton,
+	viewClass: clPictureView,
+	viewBounds: {left: 25, top: 2, right: 43, bottom: 15},
+	viewJustify: 8388614,
+	icon: @recTextBitmap,
+	defaultItem: nil,
+	_cachedSettings: nil,
+	_recogPopup: [|Array|:
+		'recogText,
+		'recogInkText,
+		'pickseparator,
+		'recogShapes,
+		'recogSketches,
+		'pickseparator,
+		'recToggleSettings
+	],
+	BuildInputMask: func() begin
+		local l1, l2;
+		l1 := 0;
+		if ((l2 := self:GetSettings()).doTextRecognition or l2.doInkWordRecognition) then begin
+				if l2.wordsCursiveOption then begin
+						l1 := BOr(l1, 4096)
+					end;
+				if l2.lettersCursiveOption then begin
+						l1 := BOr(l1, 24576)
+					end;
+				if l2.numbersCursiveOption then begin
+						l1 := BOr(l1, 1843200)
+					end;
+				if (if (l1 <> 0) then l2.punctuationcursiveoption) then begin
+						l1 := BOr(l1, 32768)
+					end
+			end;
+		if l2.doShapeRecognition then begin
+				l1 := BOr(l1, 65536)
+			end;
+		return l1
+	end,
+	InitRecogSettings: func() begin
+		if (not (_recogSettings exists)) then begin
+				GetRoot()._recogSettings := nil
+			end;
+		if (not self:ValidItem(defaultItem)) then begin
+				defaultItem := _recogPopup[0]
+			end;
+		if (not _recogSettings) then begin
+				_recogSettings := self:itemIndex(defaultItem)
+			end;
+		if IsFrame(_recogSettings) then begin
+				_recogSettings := self:CompactSettingsFrame(_recogSettings)
+			end;
+		(self._cachedSettings := self:ExpandSettingsFrame(_recogSettings))
+	end,
+	SetItem: func(a1) begin
+		(if self:ValidItem(a1) then (_cachedSettings.curItem := a1))
+	end,
+	ClearSettings: func() begin
+		l1 := self:GetRecognizers();
+		l2 := self:GetSettings();
+		local l1;
+		local l2;
+		(foreach l3, l4 in l1 do begin
+				l2.(l4.symbol) := nil;
+				if l4.all then begin
+						(foreach l6 in l4.all do begin
+								l2.(l6) := nil
+							end)
+					end else begin
+						l2.(l4.targetSymbol) := nil
+					end
+			end)
+	end,
+	viewQuitScript: func() begin
+		SetRemove(recTogglers, self)
+	end,
+	viewDrawScript: nil,
+	RecognizerUsed: func(a1) begin
+		(foreach l1 in popup do begin
+				if (l1 <> 'pickseparator) then begin
+						if (if (if HasPath(l1, 'commands) then (l1.commands.(a1) exists)) then l1.commands.(a1).recState) then begin
+								return true
+							end
+					end
+			end);
+		return nil
+	end,
+	GetDefaultSettings: func(a1) begin
+		l1 := self:GetDefaults(a1);
+		if (l2 := self:GetSettings()) then begin
+				if (l3 := self:GetRecognizers().(a1)) then begin
+						if l3.all then begin
+								local l1;
+								local l2;
+								local l3;
+								(foreach l4 in l3.all do begin
+										l2.(l4) := (if SetContains(l1, l4) then true)
+									end)
+							end else begin
+								l2.(l3.targetSymbol) := l1
+							end
+					end
+			end;
+		return l2
+	end,
+	GetDefaults: func(a1) begin
+		local l1;
+		(if (l1 := self:GetRecognizers().(a1)) then l1.default)
+	end,
+	buttonClickScript: func() begin
+		inherited:buttonClickScript()
+	end,
+	ParseCommands: func(a1) begin
+		l1 := self:GetRecognizers();
+		l2 := self:GetSettings();
+		local l1;
+		local l2;
+		(foreach l3, l4 in a1.commands do begin
+				local l6, l7;
+				if (l6 := l1.(l3)) then begin
+						l2.(l6.symbol) := l4.recState;
+						if ((l7 := l4.recSettings) = 'default) then begin
+								self:GetDefaultSettings(l3)
+							end else begin
+								l2.(l7) := true
+							end
+					end
+			end)
+	end,
+	CompactSettingsFrame: func(a1) begin
+		local l1, l2;
+		l1 := self:itemIndex(a1.curItem);
+		if (l2 := a1.settings).doTextRecognition then begin
+				l1 := BOr(l1, 32)
+			end;
+		if l2.doShapeRecognition then begin
+				l1 := BOr(l1, 128)
+			end;
+		if l2.doInkWordRecognition then begin
+				l1 := BOr(l1, 64)
+			end;
+		if l2.wordsCursiveOption then begin
+				l1 := BOr(l1, 256)
+			end;
+		if l2.numbersCursiveOption then begin
+				l1 := BOr(l1, 512)
+			end;
+		return l1
+	end,
+	GetRecognizers: func() begin
+		GetRoot()._recognizerUserChoices.recognizers
+	end,
+	ExpandSettingsFrame: func(a1) begin
+		local l1;
+		(l1 := Clone('{settings: nil, curItem: nil})).curItem := _recogPopup[BAnd(a1, 31)];
+		l1.settings := ExpandSettings(a1);
+		return l1
+	end,
+	SetupPopup: func() begin
+		popup := Clone(_recogPopup);
+		l1 := self:GetUserChoices();
+		local l1;
+		(foreach l2, l3 in popup do begin
+				if (l3 <> 'pickseparator) then begin
+						popup[l2] := l1.(l3)
+					end
+			end)
+	end,
+	JamIt: func(a1) begin
+		(foreach l1, l2 in popup do begin
+				if (if (ClassOf(l2) = 'frame) then (l2.symbol = a1)) then begin
+						self:PickItem(l2);
+						self:UpdateTogglers();
+						break
+					end
+			end)
+	end,
+	PickItem: func(a1) begin
+		self:SetItem(a1.symbol);
+		self:ClearSettings();
+		self:ParseCommands(a1);
+		PurgeAreaCache();
+		if (RecogSettingsChanged exists) then begin
+				self:RecogSettingsChanged(self:BuildInputMask())
+			end;
+		_recogSettings := self:CompactSettingsFrame(_cachedSettings);
+		RecSettingsChanged()
+	end,
+	itemIndex: func(a1) begin
+		local l1;
+		if (not (l1 := self:ValidItem(a1))) then begin
+				l1 := 0
+			end;
+		return l1
+	end,
+	ValidItem: func(a1) begin
+		(if (a1 <> 'pickseparator) then SetContains(_recogPopup, a1))
+	end,
+	GetItem: func() begin
+		local l1;
+		(if (l1 := SetContains(_recogPopup, _cachedSettings.curItem)) then popup[l1])
+	end,
+	GetSettings: func() begin
+		_cachedSettings.settings
+	end,
+	viewSetupFormScript: func() begin
+		if (not GetRoot().recTogglers) then begin
+				GetRoot().recTogglers := [Array: ]
+			end;
+		SetAdd(recTogglers, self, true);
+		if (icon <> recTogglers[0].icon) then begin
+				self.icon := recTogglers[0].icon
+			end;
+		if (not HasPath(GetRoot(), '_recognizerUserChoices)) then begin
+				GetRoot()._recognizerUserChoices := @recognizerUserChoices
+			end;
+		self:SetupPopup();
+		self:InitRecogSettings();
+		if (not _cachedSettings.curItem) then begin
+				self:JamIt(defaultItem)
+			end else begin
+				self:JamIt(_cachedSettings.curItem)
+			end;
+		(_cachedSettings := nil)
+	end,
+	GetUserChoices: func() begin
+		GetRoot()._recognizerUserChoices
+	end,
+	pickActionScript: func(a1) begin
+		local l1;
+		_cachedSettings := self:ExpandSettingsFrame(_recogSettings);
+		if IsFrame((l1 := popup[a1])) then begin
+				if (l1.symbol = 'recToggleSettings) then begin
+						OpenPrefsTo(PrefsRegistry.HWRecPreferencesForm)
+					end else begin
+						self:PickItem(l1);
+						self:UpdateTogglers()
+					end;
+				inherited:pickActionScript(a1)
+			end;
+		(_cachedSettings := nil)
+	end,
+	UpdateTogglers: func() begin
+		(foreach l1 in recTogglers do begin
+				l1:SetRecognizers()
+			end)
+	end,
+	SetRecognizers: func() begin
+		local l1, l2;
+		if (not (l1 := _cachedSettings)) then begin
+				self._cachedSettings := self:ExpandSettingsFrame(_recogSettings)
+			end;
+		if (l2 := self:GetItem()) then begin
+				SetValue(self, 'icon, l2.icon)
+			end;
+		(_cachedSettings := l1)
+	end
+};

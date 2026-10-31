@@ -1,6 +1,0 @@
-@@ 0x74bbb1
-func() begin
-	appList:|SelectAll?|();
-	appList:DrawHilite()
-end
-@@end

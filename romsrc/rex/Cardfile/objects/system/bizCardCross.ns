@@ -1,0 +1,58 @@
+// bizCardCross, and what only it reaches
+
+bizCardCross := {
+	name: "bizCardCross",
+	symbol: 'bizCardCross,
+	type: 'bizcard,
+	bizCardNum: 3,
+	bizCardIcon: {
+		bits: bitmap('bits, "resources/bits/728765.png", "00000000000800cc00cc008400e300aa", 1),
+		bounds: {left: 0, top: 0, right: 38, bottom: 23}
+	},
+	stepChildren: [stepChildren:
+		{
+			viewBounds: {left: 43, top: 4, right: 0, bottom: 28},
+			viewFont: tsFancy + tsSize(18),
+			viewJustify: vjBottomV + vjParentFullH + vjSiblingBottomV,
+			layouts: layouts_2,
+			reduceFont: true,
+			_proto: @8242
+		},
+		{
+			viewBounds: {top: 0, left: 10, right: -10, bottom: 3},
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			viewFlags: vVisible,
+			viewFormat: vfFillBlack,
+			_proto: @protoBorder
+		},
+		{
+			viewBounds: {left: 43, top: 0, right: 0, bottom: 16},
+			viewFont: tsFancy + tsSize(12),
+			viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
+			layouts: layouts,
+			_proto: @8242
+		},
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 58},
+			viewFont: tsFancy + tsSize(10),
+			viewJustify: vjCenterV + vjParentFullH + vjSiblingFullH + vjSiblingBottomV,
+			layouts: layouts_3,
+			_proto: @8242
+		},
+		{
+			viewBounds: {top: -55, left: 0, right: 0, bottom: -3},
+			viewFont: tsFancy + tsSize(10),
+			viewJustify: vjCenterV + vjParentFullH + vjParentBottomV + vjSiblingFullH,
+			layouts: layouts_4,
+			showMultipleData: true,
+			_proto: @8242
+		},
+		{
+			viewBounds: {top: 10, left: 37, right: 40, bottom: -10},
+			viewJustify: vjParentFullV,
+			viewFormat: vfFillBlack,
+			_proto: @protoBorder
+		}
+	],
+	_proto: @8236
+};

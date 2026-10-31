@@ -1,5 +1,0 @@
-@@ 0x7461a5
-func(a1) begin
-	return Clone(a1)
-end
-@@end

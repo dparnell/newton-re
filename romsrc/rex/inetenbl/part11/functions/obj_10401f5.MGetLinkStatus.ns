@@ -1,7 +1,0 @@
-@@ 0x1046771
-func(a1) begin
-	local l1;
-	l1 := (if a1 then a1 else self:MGetLinkDefaultID());
-	(if (if fLinkEntry then (fLinkEntry.linkID = l1)) then fLinkStatus else 'idle)
-end
-@@end

@@ -1,0 +1,32 @@
+// protoGlance, and what only it reaches
+
+protoGlance := {
+	viewClass: clTextView,
+	viewFlags: vReadOnly + vClickable,
+	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2) + vfInset(1),
+	viewFont: @fontSystem9Bold,
+	viewEffect: 327680,
+	viewJustify: vjCenterV,
+	viewBounds: nil,
+	textFlags: 33792,
+	viewIdleFrequency: 3000,
+	viewSetupDoneScript: func() begin
+		self:SetPopup();
+		self:SetupIdle(viewIdleFrequency);
+		SetKeyView(self, 0)
+	end,
+	viewIdleScript: func() begin
+		self:Close()
+	end,
+	viewKeyDownScript: func(a1, a2) begin
+		(if (a1 <> $\00) then begin
+				clicker();
+				self:Close();
+				true
+			end)
+	end,
+	viewClickScript: func(a1) begin
+		self:Close()
+	end,
+	debug: 90867
+};

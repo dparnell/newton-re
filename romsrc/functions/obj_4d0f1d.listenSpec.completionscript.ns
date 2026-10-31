@@ -1,5 +1,0 @@
-@@ 0x4d0011
-func(a1, a2, a3) begin
-	a1:DoAccept(a2, a3)
-end
-@@end

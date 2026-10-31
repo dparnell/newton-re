@@ -1,0 +1,6 @@
+// commandKeyIcon, and what only it reaches
+
+commandKeyIcon := {
+	bits: bitmap('bits, "resources/bits/3c8b75.png", "00000000000400000000000000070009", 1),
+	bounds: {left: 0, top: 0, right: 9, bottom: 7}
+};

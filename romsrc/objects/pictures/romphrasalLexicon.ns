@@ -1,0 +1,120 @@
+// romphrasalLexicon, and what only it reaches
+
+romphrasalLexicon := [|Array|:
+	nil,
+	[|Array|: 'anniversary],
+	[|Array|: 'about_act],
+	romphrasalLexiconItem,
+	romphrasalLexiconItem,
+	romphrasalLexiconItem_2,
+	romphrasalLexiconItem_2,
+	romphrasalLexiconItem_3,
+	romphrasalLexiconItem_2,
+	romphrasalLexiconItem_4,
+	romphrasalLexiconItem_4,
+	romphrasalLexiconItem_5,
+	romphrasalLexiconItem_5,
+	nil,
+	romphrasalLexiconItem_6,
+	romphrasalLexiconItem_7,
+	nil,
+	romphrasalLexiconItem_7,
+	romphrasalLexiconItem_7,
+	romphrasalLexiconItem_8,
+	romphrasalLexiconItem_8,
+	romphrasalLexiconItem_8,
+	romphrasalLexiconItem,
+	romphrasalLexiconItem_6,
+	romphrasalLexiconItem_9,
+	romphrasalLexiconItem_9,
+	romphrasalLexiconItem_10,
+	romphrasalLexiconItem_10,
+	romphrasalLexiconItem_11,
+	[|Array|: 'fax_act],
+	[|Array|: 'faxPhone],
+	romphrasalLexiconItem_12,
+	romphrasalLexiconItem,
+	[|Array|: 'holiday],
+	romphrasalLexiconItem_13,
+	romphrasalLexiconItem_13,
+	romphrasalLexiconItem_12,
+	romphrasalLexiconItem_12,
+	romphrasalLexiconItem_14,
+	romphrasalLexiconItem_14,
+	romphrasalLexiconItem_11,
+	romphrasalLexiconItem_15,
+	romphrasalLexiconItem_15,
+	romphrasalLexiconItem_15,
+	romphrasalLexiconItem_15,
+	romphrasalLexiconItem_15,
+	romphrasalLexiconItem_8,
+	romphrasalLexiconItem_8,
+	romphrasalLexiconItem_8,
+	romphrasalLexiconItem_3,
+	romphrasalLexiconItem_3,
+	romphrasalLexiconItem_6,
+	[|Array|: 'phone],
+	[|Array|: 'print_act],
+	romphrasalLexiconItem_10,
+	romphrasalLexiconItem_10,
+	romphrasalLexiconItem_10,
+	romphrasalLexiconItem_10,
+	romphrasalLexiconItem_10,
+	romphrasalLexiconItem_6,
+	[|Array|: 'schedule_act],
+	romphrasalLexiconItem_12,
+	romphrasalLexiconItem_15,
+	romphrasalLexiconItem_11,
+	romphrasalLexiconItem_15,
+	romphrasalLexiconItem_15,
+	romphrasalLexiconItem_16,
+	romphrasalLexiconItem_16,
+	romphrasalLexiconItem_16,
+	romphrasalLexiconItem,
+	romphrasalLexiconItem_10,
+	romphrasalLexiconItem_10,
+	romphrasalLexiconItem_16,
+	romphrasalLexiconItem_16,
+	romphrasalLexiconItem_16,
+	romphrasalLexiconItem_16,
+	romphrasalLexiconItem_16,
+	romphrasalLexiconItem_16,
+	romphrasalLexiconItem_16,
+	romphrasalLexiconItem_17,
+	romphrasalLexiconItem_17,
+	nil
+];
+
+romphrasalLexiconItem := [|Array|: 'salutationPrefix];
+
+romphrasalLexiconItem_2 := [|Array|: 'birthday];
+
+romphrasalLexiconItem_3 := [|Array|: 'beeper];
+
+romphrasalLexiconItem_4 := [|Array|: 'breakfast_act];
+
+romphrasalLexiconItem_5 := [|Array|: 'brunch_act];
+
+romphrasalLexiconItem_6 := [|Array|: 'call_act];
+
+romphrasalLexiconItem_7 := [|Array|: 'carPhone];
+
+romphrasalLexiconItem_8 := [|Array|: 'mobilePhone];
+
+romphrasalLexiconItem_9 := [|Array|: 'dinner_act];
+
+romphrasalLexiconItem_10 := [|Array|: 'remind_act];
+
+romphrasalLexiconItem_11 := [|Array|: 'mail_act];
+
+romphrasalLexiconItem_12 := [|Array|: 'find_act];
+
+romphrasalLexiconItem_13 := [|Array|: 'homePhone];
+
+romphrasalLexiconItem_14 := [|Array|: 'lunch_act];
+
+romphrasalLexiconItem_15 := [|Array|: 'meet_act];
+
+romphrasalLexiconItem_16 := [|Array|: 'time_act];
+
+romphrasalLexiconItem_17 := [|Array|: 'workPhone];

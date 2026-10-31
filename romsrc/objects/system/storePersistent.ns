@@ -1,0 +1,3 @@
+// storePersistent, and what only it reaches
+
+storePersistent := {nameIndex: nil, name: nil, signature: nil, ephemerals: nil};

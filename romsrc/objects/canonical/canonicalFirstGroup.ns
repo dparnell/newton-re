@@ -1,0 +1,12 @@
+// canonicalFirstGroup, and what only it reaches
+
+canonicalFirstGroup := {
+	_parent: nil,
+	viewCObject: nil,
+	viewClass: clView,
+	viewFlags: vVisible + vCalculateBounds,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 80},
+	viewJustify: vjParentFullH + vjSiblingBottomV + vjChildrenLasso,
+	viewChildren: nil,
+	debug: 1222
+};

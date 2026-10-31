@@ -1,8 +1,0 @@
-@@ 0x1049f1d
-func(a1) begin
-	(if a1 then self:DoEvent('ReleaseTimerExpired, nil) else (if (fLinkEntry.hangupDelay = 'never) then self:MNotifyIconOn() else (if (if IsNumber(fLinkEntry.hangupDelay) then (fLinkEntry.hangupDelay > 0)) then begin
-					self:MNotifyIconOn();
-					self:DoPeriodicEvent('ReleaseTimerExpired, nil, 'normal, 'State, 1, fLinkEntry.hangupDelay)
-				end else self:DoEvent('ReleaseTimerExpired, nil))))
-end
-@@end

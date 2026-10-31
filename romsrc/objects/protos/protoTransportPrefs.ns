@@ -1,0 +1,127 @@
+// protoTransportPrefs, and what only it reaches
+
+protoTransportPrefs := {
+	viewBounds: {left: 0, top: 0, right: 215, bottom: 170},
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	title: nil,
+	appSymbol: nil,
+	transport: nil,
+	outboxPrefs: {_proto: @defaultOutboxPrefInfo},
+	inboxPrefs: {_proto: @defaultInboxPrefInfo},
+	sendPrefs: {_proto: @defaultSendPrefInfo},
+	silentPrefs: {_proto: @defaultSilentPrefInfo},
+	infoPrefs: {_proto: @defaultInfoPrefs},
+	ClosePrefs: func() begin
+		local l1;
+		(if (if (l1 := GetRoot().(transport.owner)) then l1.viewCObject) then AddDeferredSend(l1, 'RememberedClose, [Array: self]) else self:Close())
+	end,
+	viewChildren: [viewChildren:
+		{
+			buttonClickScript: func() begin
+				base:ClosePrefs()
+			end,
+			_proto: @protoCancelButton
+		},
+		{
+			viewBounds: {left: 5, top: -18, right: 18, bottom: -5},
+			viewJustify: vjCenterH + vjCenterV + vjParentBottomV,
+			theAboutBox: nil,
+			viewSetupFormScript: func() begin
+				(if (infoPrefs = nil) then (self.viewFlags := BAnd(viewFlags, bnot(1))) else begin
+						stdItems := [Array: ];
+						(foreach l1, l2 deeply in infoPrefs do begin
+								if (not HasSlot(self, l1)) then begin
+										self.(l1) := l2
+									end
+							end);
+						if (DoInfoAbout exists) then begin
+								AddArraySlot(stdItems, {item: "About", msg: 'DoInfoAbout})
+							end;
+						(if (DoInfoHelp exists) then AddArraySlot(stdItems, {item: "Help", msg: 'DoInfoHelp}))
+					end)
+			end,
+			viewQuitScript: func() begin
+				if theAboutBox then begin
+						theAboutBox:Close()
+					end;
+				(theAboutBox := nil)
+			end,
+			_proto: @protoInfoButton
+		},
+		{
+			title: nil,
+			viewSetupFormScript: func() begin
+				local l1;
+				if ((l1 := self:Parent().title) = nil) then begin
+						l1 := GetRoot().(appSymbol).title
+					end;
+				title := ParamStr("^0 Preferences", [Array: l1]);
+				inherited:viewSetupFormScript()
+			end,
+			_proto: @protoTitle
+		},
+		siblingCheck,
+		{
+			viewBounds: {left: 0, top: -35, right: 0, bottom: -3},
+			viewJustify: 8406576,
+			infoSymbol: 'outboxPrefs,
+			_proto: @protoLogPicker
+		},
+		{
+			_proto: @protoMultiLinePicker,
+			viewBounds: {left: 0, top: -19, right: 0, bottom: -3},
+			viewJustify: 8406576,
+			infoSymbol: 'sendPrefs,
+			viewSetupFormScript: func() begin
+				self:doTheShuffle();
+				if info then begin
+						text := info.routeText;
+						labelCommands := (foreach l1 in info.routeChoices collect ParamStr(l1, [Array: info.routeVerb]))
+					end;
+				inherited:?viewSetupFormScript()
+			end,
+			GetIndex: func() begin
+				(if info then ArrayPos(info.routeActions, self:GetTransport():GetConfig(info.routeConfig), 0, nil))
+			end,
+			LabelActionScript: func(a1) begin
+				(if info then self:GetTransport():SetConfig(info.routeConfig, info.routeActions[a1]))
+			end,
+			TextSetup: func() begin
+				local l1;
+				(if info then begin
+						l1 := self:GetIndex();
+						ParamStr(info.routeChoices[l1], [Array: info.routeVerb])
+					end)
+			end
+		},
+		{
+			text: nil,
+			viewBounds: {left: 0, top: -19, right: 205, bottom: -3},
+			viewJustify: 8407044,
+			viewFont: @fontSystem10,
+			viewValue: true,
+			viewSetupFormScript: func() begin
+				(if (silentPrefs = nil) then (self.viewFlags := BAnd(viewFlags, bnot(1))) else begin
+						viewValue := GetRoot().(appSymbol):GetConfig(silentPrefs.configuration);
+						(text := silentPrefs.text)
+					end)
+			end,
+			valueChanged: func() begin
+				GetRoot().(appSymbol):SetConfig(silentPrefs.configuration, viewValue)
+			end,
+			_proto: @protoCheckbox
+		}
+	],
+	siblingCheck: nil,
+	allocateContext: [|Array|: 'siblingCheck, siblingCheck],
+	_proto: @protoFloater,
+	ReOrientToScreen: @defRotateFunc
+};
+
+siblingCheck := {
+	viewBounds: {left: 10, top: -60, right: 10, bottom: -28},
+	viewJustify: 8388784,
+	infoSymbol: 'inboxPrefs,
+	preallocatedContext: 'siblingCheck,
+	_proto: @protoLogPicker
+};

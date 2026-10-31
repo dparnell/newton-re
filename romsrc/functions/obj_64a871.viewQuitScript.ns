@@ -1,5 +1,0 @@
-@@ 0x423a35
-func() begin
-	(if (not hwMode) then UnRegUserConfigChange(userConfigChangeSym))
-end
-@@end

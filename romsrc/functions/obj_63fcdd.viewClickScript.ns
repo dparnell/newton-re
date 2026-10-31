@@ -1,9 +1,0 @@
-@@ 0x429cc1
-func(a1) begin
-	if self:TrackHilite(a1) then begin
-			self:toggleCheck();
-			self:hilite(nil)
-		end;
-	true
-end
-@@end

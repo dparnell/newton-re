@@ -1,0 +1,6 @@
+// protousStatesTextPicker, and what only it reaches
+
+protousStatesTextPicker := {
+	params: {spots: @usStateSoupName, zoomer: 'northAmerica, result: 'name},
+	_proto: @protoMapTextPicker
+};

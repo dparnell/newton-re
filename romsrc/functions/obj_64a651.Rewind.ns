@@ -1,6 +1,0 @@
-@@ 0x42653d
-func() begin
-	inherited:Rewind();
-	(if SoundProgressSlider then SoundProgressSlider:ResetSlider())
-end
-@@end

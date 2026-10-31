@@ -1,6 +1,0 @@
-@@ 0x5b0769
-func() begin
-	userConfiguration.letterSpaceCursiveOption := (9 - viewValue);
-	wordExample:Dirty()
-end
-@@end

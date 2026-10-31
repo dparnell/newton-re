@@ -1,0 +1,6 @@
+// smalllogoBitmap, and what only it reaches
+
+smalllogoBitmap := {
+	bits: bitmap('bits, "resources/bits/3d594d.png", "00000000000800ca00ca018600f701b2", 1),
+	bounds: {left: 0, top: 0, right: 44, bottom: 45}
+};

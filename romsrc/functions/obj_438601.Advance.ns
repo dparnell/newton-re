@@ -1,5 +1,0 @@
-@@ 0x4385e1
-func(a1) begin
-	inherited:Advance((if (value < 0) then (-a1) else a1))
-end
-@@end

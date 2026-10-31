@@ -1,0 +1,12 @@
+// messageNotification, and what only it reaches
+
+messageNotification := {
+	viewFormat: 0,
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	height: 114,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 114},
+	viewChildren: [viewChildren: snoozeNotificationItem, timeStampField, snoozeNotificationItem_2],
+	timeStampField: nil,
+	allocateContext: [|Array|: 'timeStampField, timeStampField],
+	_proto: @protoRollItem
+};

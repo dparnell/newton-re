@@ -1,5 +1,0 @@
-@@ 0x481479
-func() begin
-	(self.box := MakeShape(self:LocalBox()))
-end
-@@end

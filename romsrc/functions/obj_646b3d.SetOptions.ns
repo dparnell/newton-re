@@ -1,5 +1,0 @@
-@@ 0x4993c1
-func(a1) begin
-	(fOptionsOut := a1)
-end
-@@end

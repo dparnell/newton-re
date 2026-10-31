@@ -1,0 +1,10 @@
+// export160, and what only it reaches
+
+export160 := {
+	viewJustify: vjParentCenterH,
+	viewSetupFormScript: func() begin
+		nil
+	end,
+	viewBounds: {left: 0, top: 166, right: 121, bottom: 292},
+	_proto: @phonePad
+};

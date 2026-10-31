@@ -1,0 +1,28 @@
+// pagePreviewForm, and what only it reaches
+
+pagePreviewForm := {
+	viewBounds: {left: 8, top: 8, right: -8, bottom: -8},
+	viewJustify: vjParentFullH + vjParentFullV,
+	debug: "previewForm",
+	declareSelf: 'base,
+	fields: nil,
+	printView: nil,
+	viewChildren: [viewChildren: @previewRemoteView, {_proto: @protoCancelButton}, _defaultButton_12],
+	_defaultButton: nil,
+	allocateContext: [|Array|: '_defaultButton, _defaultButton_12],
+	_proto: @protoFloater,
+	ReOrientToScreen: @defRotateFunc
+};
+
+_defaultButton_12 := {
+	viewBounds: {left: -39, top: -18, right: -8, bottom: -5},
+	viewJustify: 8390790,
+	text: next,
+	buttonClickScript: func() begin
+		local l1;
+		l1 := true;
+		(if (l1 := (not printView:printNextPageScript())) then base:Close() else base:Dirty())
+	end,
+	preallocatedContext: '_defaultButton,
+	_proto: @protoTextButton
+};

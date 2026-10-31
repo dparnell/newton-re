@@ -1,5 +1,0 @@
-@@ 0x7599b5
-func() begin
-	endpoint:StopIdle(base)
-end
-@@end

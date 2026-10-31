@@ -1,0 +1,36 @@
+// protoSoundChannel, and what only it reaches
+
+protoSoundChannel := {
+	schedule: {class: #132, funcPtr: 7018715, numArgs: 1},
+	getInputGain: {class: #132, funcPtr: 7046194, numArgs: 0},
+	newRecording: func() begin
+		local l1;
+		(l1 := {_proto: self, direction: 'record})
+	end,
+	pause: {class: #132, funcPtr: 7018713, numArgs: 0},
+	Open: {class: #132, funcPtr: 7018712, numArgs: 0},
+	Close: {class: #132, funcPtr: 7018709, numArgs: 0},
+	GetVolume: {class: #132, funcPtr: 7046191, numArgs: 0},
+	outputDevice: nil,
+	newInputBlock: func(a1) begin
+		local l1, l2;
+		if (not (l1 := self.recordingStore)) then begin
+				l1 := GetDefaultStore()
+			end;
+		(l2 := {_proto: @protoSoundFrame, samples: l1:NewVBO('samples, inputBlockSize), callback: a1, dataType: 8, compressionType: 1, samplingRate: 10800})
+	end,
+	inputDevice: nil,
+	inputBlockSize: 65536,
+	SetInputGain: {class: #132, funcPtr: 7046193, numArgs: 1},
+	stop: {class: #132, funcPtr: 7018717, numArgs: 0},
+	isPaused: {class: #132, funcPtr: 7018711, numArgs: 0},
+	IsOpen: func() begin
+		return (_channel <> nil)
+	end,
+	SetVolume: {class: #132, funcPtr: 7046190, numArgs: 1},
+	inputGain: nil,
+	isActive: {class: #132, funcPtr: 7018710, numArgs: 0},
+	_channel: nil,
+	direction: 'play,
+	start: {class: #132, funcPtr: 7018716, numArgs: 1}
+};

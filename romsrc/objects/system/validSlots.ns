@@ -1,0 +1,205 @@
+// validSlots, and what only it reaches
+
+validSlots := {
+	location: {
+		place: {
+			inputProto: {
+				_proto: @newtLabelInputLine,
+				viewQuitScript: func() begin
+					target.sorton := target.(path);
+					self:StartFlush()
+				end
+			},
+			theText: "Worksite",
+			type: 'text
+		},
+		areacode: {inputProto: @newtAreacodeLine, theText: areaCode_2, type: 'number},
+		country: {
+			inputProto: {
+				_proto: @protoLabelPicker,
+				viewBounds: {left: 0, top: 4, right: 0, bottom: 20},
+				viewJustify: vjParentFullH + vjSiblingBottomV,
+				text: country,
+				pickerSetup: func() begin
+					local l1;
+					(l1 := self:GlobalBox()).right := ((l1.left + indent) - 2);
+					@locationPopup:New({default: GetCountryEntry(GetUserConfig('currentCountry))[0], spots: @countrySoupName, result: 'symbol}, l1, self);
+					nil
+				end,
+				pickActionScript: func(a1) begin
+					local l1;
+					l1 := GetCountryEntry(a1)[0].name;
+					if (target = GetUserConfig('location)) then begin
+							target.country := a1
+						end else begin
+							target.countrySymbol := a1;
+							target.country := l1
+						end;
+					self:UpdateText(l1);
+					self:hilite(nil);
+					self:StartFlush()
+				end
+			},
+			type: 'symbol
+		},
+		closestcity: {
+			inputProto: {
+				_proto: @protoCitiesTextPicker,
+				viewBounds: {left: 0, top: 4, right: 0, bottom: 20},
+				viewJustify: vjParentFullH + vjSiblingBottomV,
+				viewLineSpacing: 14,
+				viewSetupFormScript: func() begin
+					params := {spots: @citySoupName, result: nil};
+					inherited:?viewSetupFormScript()
+				end,
+				pickActionScript: func(a1) begin
+					target.cityAlias := [Array: a1.name, a1.longitude, a1.latitude];
+					if (not target.countrySymbol) then begin
+							target.countrySymbol := a1.country
+						end;
+					if (not target.areacode) then begin
+							target.areacode := a1.areacode
+						end;
+					if (not StrFilled(target.country)) then begin
+							target.country := GetCountryEntry(a1.country)[0].name
+						end;
+					self:StartFlush();
+					inherited:pickActionScript(a1.name)
+				end
+			},
+			HasData: func(a1) begin
+				(if (if (if a1.cityAlias then a1.countrySymbol) then a1.areacode) then StrFilled(a1.country))
+			end,
+			theText: closestCity,
+			type: 'symbol
+		},
+		mailPhone: {
+			inputProto: {
+				viewClass: clView,
+				viewFlags: vVisible + vClickable,
+				viewFormat: 0,
+				viewBounds: {left: 0, top: 0, right: 0, bottom: 50},
+				viewJustify: vjParentFullH + vjSiblingBottomV,
+				DataChangeNotify: func(a1, a2) begin
+					local l1, l2;
+					(if (a1 = 'mailNetwork) then (if (if (l1 := GetCityFromAlias(target.cityAlias)) then (l2 := GetRoot().cardfile:bcEmailNetwork(l1, a2))) then mailPhone:UpdateText(ConvertIntToPhone(l2[0].mailPhone))))
+				end,
+				viewQuitScript: func() begin
+					(if (not target.(mailPhone.path)) then begin
+							target.(mailNetwork.path) := nil;
+							self:StartFlush()
+						end)
+				end,
+				viewChildren: [viewChildren: mailPhone, mailNetwork],
+				mailPhone: nil,
+				allocateContext: [|Array|: 'mailPhone, mailPhone, 'mailNetwork, mailNetwork],
+				mailNetwork: nil
+			},
+			getPath: func(a1, a2) begin
+				if ((not a1.mailAccess) or (Length(a1.mailAccess) < 1)) then begin
+						a1.mailAccess := [Array: {}]
+					end;
+				'[pathExpr: mailAccess, 0]
+			end,
+			HasData: func(a1) begin
+				local l1;
+				l1 := ConvertIntToPhone(a1.mailAccess[0].mailPhone);
+				(if a1.mailAccess[0].mailNetwork then StrFilled(l1))
+			end,
+			type: 'number
+		},
+		connectionPhone: {inputProto: @newtLabelPhoneInputLine, theText: phone, type: 'number},
+		connectionNetwork: {inputProto: @newtNetChooser, type: 'symbol},
+		KServerNetwork: {inputProto: {memory: 'KServer, NBPLookupType: "DockerK", _proto: @newtNetChooser}, type: 'symbol}
+	},
+	owner: {
+		email: {
+			inputProto: {
+				_proto: @newtPopupEdit,
+				viewBounds: {left: 0, top: 0, right: 0, bottom: 32},
+				viewLineSpacing: 25,
+				newRecFlags: 64001,
+				newRecTextFlags: 10,
+				emailclass: nil,
+				viewSetupFormScript: func() begin
+					local l1;
+					if (Length((l1 := GetVariable(context, 'addressSymbols))) > 0) then begin
+							emailclass := l1[0]
+						end;
+					inherited:viewSetupFormScript()
+				end,
+				viewQuitScript: func() begin
+					inherited:?viewQuitScript();
+					(if (if emailclass then target.(path)) then begin
+							SetClass(target.(path), emailclass);
+							self:StartFlush()
+						end)
+				end
+			},
+			theText: "E-Mail Acct",
+			getPath: func(a1, a2) begin
+				l2 := GetVariable(a2, 'addressSymbols);
+				(if (if (if a1.email then (Length(l2) > 0)) then IsInstance(a1.email, l2[0])) then return 'email else begin
+						local l1;
+						local l2;
+						(foreach l3, l4 in a1.emailAddrs do begin
+								if (not l4.email) then begin
+										l1 := [pathExpr: 'emailAddrs, l3, 'email]
+									end else begin
+										if (if (Length(l2) > 0) then IsInstance(l4.email, l2[0])) then begin
+												return [pathExpr: 'emailAddrs, l3, 'email]
+											end
+									end
+							end);
+						(if (not a1.email) then return 'email else (if l1 then return l1 else begin
+									AddArraySlot(a1.emailAddrs, {});
+									return [pathExpr: 'emailAddrs, (Length(a1.emailAddrs) - 1), 'email]
+								end))
+					end)
+			end,
+			type: 'text
+		},
+		emailPassword: {
+			inputProto: @newtLabelInputLine,
+			theText: "E-Mail Password",
+			getPath: func(a1, a2) begin
+				l2 := GetVariable(a2, 'addressSymbols);
+				(if (if (if a1.email then (Length(l2) > 0)) then IsInstance(a1.email, l2[0])) then return 'emailPassword else begin
+						local l1;
+						local l2;
+						(foreach l3, l4 in a1.emailAddrs do begin
+								if (not l4.email) then begin
+										l1 := [pathExpr: 'emailAddrs, l3, 'emailPassword]
+									end else begin
+										if (if (Length(l2) > 0) then IsInstance(l4.email, l2[0])) then begin
+												return [pathExpr: 'emailAddrs, l3, 'emailPassword]
+											end
+									end
+							end);
+						(if (not a1.email) then return 'emailPassword else return l1)
+					end)
+			end,
+			type: 'text
+		}
+	}
+};
+
+mailPhone := {
+	label: "E-Mail Access #",
+	path: [pathExpr: 'mailAccess, 0, 'mailPhone],
+	preallocatedContext: 'mailPhone,
+	_proto: @newtLabelPhoneInputLine
+};
+
+mailNetwork := {
+	GetSymArray: func() begin
+		GetVariable(context, 'networkSymbols)
+	end,
+	path: [pathExpr: 'mailAccess, 0, 'mailNetwork],
+	preallocatedContext: 'mailNetwork,
+	_proto: @newtMailNetChooser
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+GetSymArray_code := same("mailNetwork.GetSymArray.instructions");

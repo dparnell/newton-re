@@ -1,0 +1,27 @@
+// newtStationery, and what only it reaches
+
+newtStationery := {
+	symbol: nil,
+	superSymbol: nil,
+	name: uCardPositionAlertButton,
+	description: uCardPositionAlertButton,
+	icon: @filledStarBitmap,
+	version: 0,
+	height: 200,
+	metadata: nil,
+	MakeNewEntry: func() begin
+		{}
+	end,
+	MinimalBounds: func(a1) begin
+		nil
+	end,
+	SetupForm: func(a1, a2) begin
+		nil
+	end,
+	StringExtract: func(a1, a2) begin
+		""
+	end,
+	TextScript: func(a1, a2) begin
+		""
+	end
+};

@@ -1,0 +1,7 @@
+// hollowstarBitmap, and what only it reaches
+
+hollowstarBitmap := {
+	mask: filledStarBitmapMask,
+	bits: bitmap('bits, "resources/bits/3d8b19.png", "00000000000400d600d601be00e401cd", 1),
+	bounds: {left: 0, top: 0, right: 15, bottom: 14}
+};

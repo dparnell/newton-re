@@ -1,0 +1,33 @@
+// autodockTemplate, and what only it reaches
+
+autodockTemplate := {
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	viewBounds: {left: 0, top: 0, right: 192, bottom: 75},
+	ReOrientToScreen: @defRotateFunc,
+	viewChildren: [viewChildren:
+		{viewBounds: {left: 8, top: 20, right: 208, bottom: 46}, _proto: @protoSenderPopup},
+		{title: autoDock, titleicon: @autodockIcon, _proto: @protoTitle},
+		{_proto: @protoCancelButton},
+		{
+			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV,
+			viewBounds: {left: -66, top: 0, right: -7, bottom: 0},
+			text: autoDock,
+			buttonClickScript: func() begin
+				base:Close();
+				CallFrameBasedRegistryFns(AutoDockRegistry, [Array: dockMessage])
+			end,
+			viewQuitScript: func() begin
+				UnDefGlobalVar('AutoDockSlip)
+			end,
+			_proto: @protoTextButton
+		},
+		{
+			viewJustify: vjCenterH + vjCenterV + vjSiblingTopV,
+			DoInfoPrefs: func() begin
+				OpenPrefsTo("Auto Dock")
+			end,
+			_proto: @protoInfoButton
+		}
+	],
+	_proto: @protoFloater
+};

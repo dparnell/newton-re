@@ -1,0 +1,87 @@
+// protoCategoryRoll, and what only it reaches
+
+protoCategoryRoll := {
+	_proto: @protoRoll,
+	viewBounds: {left: 5, top: 5, right: -5, bottom: -5},
+	viewFormat: 0,
+	viewFlags: vVisible + vApplication + vClipping,
+	viewJustify: vjParentFullH + vjParentFullV,
+	declareSelf: 'roll,
+	categoryFrames: nil,
+	scrollOrigin: 0,
+	maxItems: 0,
+	scrollAmount: 0,
+	moreBelow: nil,
+	collapsedHeight: 14,
+	viewSetupChildrenScript: func() begin
+		scrollAmount := ((maxItems := (self:LocalBox().bottom div 14)) - 2);
+		self.items := nil;
+		self.viewChildren := nil;
+		self.moreBelow := nil;
+		l1 := [Array: ];
+		l2 := maxItems;
+		l3 := scrollOrigin;
+		local l1;
+		local l2;
+		local l3;
+		(foreach l4 in categoryFrames do begin
+				local l6, l7, l8;
+				l6 := self:MakeCategoryItem(l4);
+				if (l7 := (allCollapsed or l4.collapsed)) then begin
+						l8 := 0
+					end else begin
+						l8 := l6.count
+					end;
+				if (l3 > 0) then begin
+						if l7 then begin
+								l8 := 0
+							end;
+						if (l8 > l3) then begin
+								l3 := (-l3)
+							end else begin
+								l3 := (l3 - l8)
+							end;
+						if (l3 = 0) then begin
+								l3 := 1
+							end
+					end;
+				if (l3 <= 0) then begin
+						l3 := (-l3);
+						l6.skip := l3;
+						AddArraySlot(l1, l6);
+						l2 := (l2 - 1);
+						if (not l7) then begin
+								l2 := (l2 - self:AddCategory(l1, l6, l3, l2))
+							end;
+						if (l2 <= 0) then begin
+								break
+							end;
+						l3 := 0
+					end else begin
+						l3 := (l3 - 1)
+					end
+			end);
+		self.moreBelow := (l2 <= 0);
+		self.items := l1;
+		(self.viewChildren := self:LayoutColumn(l1, index))
+	end,
+	viewScrollUpScript: func() begin
+		local l1;
+		(if (scrollOrigin > 0) then roll:SlideEffect(((-((l1 := (max((scrollOrigin - scrollAmount), 0) - scrollOrigin)) - 2)) * 14), 0, scrollUpSound, 'doscrollscript, [Array: l1]))
+	end,
+	viewScrollDownScript: func() begin
+		(if moreBelow then roll:SlideEffect(((-(scrollAmount + 2)) * 14), 0, scrollDownSound, 'doscrollscript, [Array: scrollAmount]))
+	end,
+	doscrollscript: func(a1) begin
+		scrollOrigin := (scrollOrigin + a1);
+		roll:recalc()
+	end,
+	recalc: func() begin
+		self:RedoChildren()
+	end,
+	debug: 5800646
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+recalc_code := same("protoCategoryRoll.recalc.instructions");

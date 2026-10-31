@@ -1,0 +1,3 @@
+// canonicalCurrentExport, and what only it reaches
+
+canonicalCurrentExport := {name: nil, major: nil, minor: nil, refCount: nil, ExportTable: nil};

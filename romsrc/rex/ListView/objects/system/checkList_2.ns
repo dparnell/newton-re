@@ -1,0 +1,26 @@
+// checkList_2, and what only it reaches
+
+checkList_2 := {
+	_proto: @8317,
+	symbol: 'checkList,
+	name: checklist,
+	icon: {
+		bits: bitmap('bits, "resources/bits/78eea5.png", "0000000000040185018500d9019400e8", 1),
+		bounds: {left: 0, top: 0, right: 15, bottom: 15}
+	},
+	description: checklist,
+	superSymbol: 'notes,
+	mailBulletDone: "+ ",
+	mailBulletNotDone: "- ",
+	MakeNewEntry: compile(
+		options: "names",
+		func() begin
+			{class: 'checkList, height: 200, topics: [Array: ], timestamp: Time(), makeNewTopic: true}
+		end)
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+MakeNewEntry_code := same("checkList_2.MakeNewEntry.instructions");
+
+MakeNewEntry_literal3 := same("checkList_2.MakeNewEntry.literals[3]");

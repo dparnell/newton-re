@@ -1,0 +1,58 @@
+// protoCheckboxIcon, and what only it reaches
+
+protoCheckboxIcon := {
+	viewClass: clPictureView,
+	viewFlags: vVisible + vClickable,
+	viewFormat: 0,
+	viewJustify: vjCenterV,
+	icon: CheckOff,
+	declareSelf: 'base,
+	viewValue: nil,
+	buttonValue: true,
+	onBitmap: CheckOn,
+	offBitmap: CheckOff,
+	text: uCardPositionAlertButton,
+	viewFont: @fontSystem9,
+	viewSetupDoneScript: func() begin
+		self:UpdateBitmap()
+	end,
+	viewClickScript: func(a1) begin
+		if self:TrackHilite(a1) then begin
+				self:toggleCheck();
+				self:hilite(nil)
+			end;
+		true
+	end,
+	toggleCheck: func() begin
+		AddUndoAction('toggleCheck, [Array: ]);
+		if (viewValue = nil) then begin
+				viewValue := buttonValue
+			end else begin
+				viewValue := nil
+			end;
+		self:valueChanged();
+		self:UpdateBitmap()
+	end,
+	UpdateBitmap: func() begin
+		if viewValue then begin
+				base.icon := onBitmap
+			end else begin
+				base.icon := offBitmap
+			end;
+		base:Dirty()
+	end,
+	SetCheck: func(a1) begin
+		(if (viewValue <> a1) then begin
+				viewValue := (if a1 then buttonValue);
+				self:valueChanged();
+				self:UpdateBitmap()
+			end)
+	end,
+	valueChanged: func() begin
+		nil
+	end,
+	viewChangedScript: func(a1, a2) begin
+		(if (a1 = 'viewValue) then self:valueChanged())
+	end,
+	debug: 5800980
+};

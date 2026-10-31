@@ -1,0 +1,9 @@
+// correctorleadBits, and what only it reaches
+
+correctorleadBits := {
+	bits: leadingpunctBitmapBits,
+	bounds: leadingpunctBitmapBounds,
+	width: 3,
+	height: 1,
+	words: [|Array|: correctorleadBitsItem_2, correctorleadBitsItem_3, correctorleadBitsItem]
+};

@@ -1,0 +1,21 @@
+// canonicalPackageFrame, and what only it reaches
+
+canonicalPackageFrame := {
+	id: nil,
+	size: nil,
+	store: nil,
+	pssid: nil,
+	title: nil,
+	version: nil,
+	timestamp: nil,
+	creationdate: nil,
+	dispatchonly: nil,
+	copyprotection: nil,
+	flags: nil,
+	copyright: nil,
+	compressed: nil,
+	cmprsdSz: nil,
+	numparts: nil,
+	parts: nil,
+	parttypes: nil
+};

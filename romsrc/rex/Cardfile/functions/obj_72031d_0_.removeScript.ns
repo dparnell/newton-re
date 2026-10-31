@@ -1,8 +1,0 @@
-@@ 0x720aa5
-func(a1) begin
-	UnRegSoupChange(a1.soupName, a1.appSymbol);
-	UnRegUnionSoup(a1.soupName, a1.appSymbol);
-	call a1.theStuff.NewtRemoveScript with (a1.theStuff);
-	nil
-end
-@@end

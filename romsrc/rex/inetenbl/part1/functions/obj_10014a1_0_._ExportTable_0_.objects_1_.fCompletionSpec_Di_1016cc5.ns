@@ -1,5 +1,0 @@
-@@ 0x1016cc5
-func(a1, a2, a3) begin
-	(if a3 then self:DoEvent('DisconnectFailure, [Array: a3]) else self:DoEvent('DisconnectSuccess, nil))
-end
-@@end

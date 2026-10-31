@@ -1,0 +1,6 @@
+// northSouthBitmap, and what only it reaches
+
+northSouthBitmap := {
+	bits: bitmap('bits, "resources/bits/3da985.png", "00000000000400de00de014200f00160", 1),
+	bounds: {left: 0, top: 0, right: 30, bottom: 18}
+};

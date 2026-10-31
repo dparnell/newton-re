@@ -1,0 +1,7 @@
+// outboxBitmap, and what only it reaches
+
+outboxBitmap := {
+	mask: bitmap('mask, "resources/mask/53e5d5.png", "000000000004001100110049002e0062", 1),
+	bits: bitmap('bits, "resources/bits/53e665.png", "000000000004001100110049002e0062", 1),
+	bounds: {left: 0, top: 0, right: 25, bottom: 29}
+};

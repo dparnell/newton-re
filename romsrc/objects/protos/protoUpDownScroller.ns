@@ -1,0 +1,28 @@
+// protoUpDownScroller, and what only it reaches
+
+protoUpDownScroller := {
+	viewBounds: {left: -17, top: 0, right: 0, bottom: 33},
+	viewJustify: vjParentRightH + vjParentCenterV,
+	Arrows: {
+		bits: bitmap('bits, "resources/bits/440c21.png", "00000000001001140114002001250086", 1),
+		bounds: {left: 0, top: 0, right: 102, bottom: 17}
+	},
+	DirMap: {up: 0, down: 1},
+	StateMap: {normal: 0, more: 2, hilite: 4},
+	ArrowCount: 2,
+	viewChildren: [viewChildren:
+		{
+			viewBounds: {left: 0, top: 0, right: 17, bottom: 17},
+			arrowIndex: 0,
+			arrowDirection: 'up,
+			_proto: @abstractArrow
+		},
+		{
+			viewBounds: {left: 0, top: 16, right: 17, bottom: 33},
+			arrowIndex: 1,
+			arrowDirection: 'down,
+			_proto: @abstractArrow
+		}
+	],
+	_proto: @abstractScroller
+};

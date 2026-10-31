@@ -1,5 +1,0 @@
-@@ 0x101334d argframe=nil,0
-func() begin
-	(Length(queue) = 0)
-end
-@@end

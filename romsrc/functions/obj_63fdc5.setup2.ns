@@ -1,5 +1,0 @@
-@@ 0x42e8c9
-func(a1) begin
-	(if (if a1 then a1.(path)) then ShortDateStr(a1.(path), Date))
-end
-@@end

@@ -1,0 +1,31 @@
+// findBitmap, and what only it reaches
+
+findBitmap := {
+	unhilited: {
+		bounds: unhilitedBounds_27,
+		mask: unhilitedMask_6,
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/544145.png", "00000000000c00000000000000190017", 4),
+				bitdepth: 4
+			},
+			{cbits: colordataCbits_27, bitdepth: 1}
+		]
+	},
+	hilited: {
+		bounds: {left: 0, top: 0, right: 23, bottom: 25},
+		mask: unhilitedMask_6,
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/543f0d.png", "00000000000c00000000000000190017", 4),
+				bitdepth: 4
+			},
+			{
+				cbits: bitmap('bits, "resources/bits/543e8d.png", "00000000000400000000000000190017", 1),
+				bitdepth: 1
+			}
+		]
+	}
+};
+
+unhilitedMask_6 := bitmap('mask, "resources/mask/543e0d.png", "00000000000400000000000000190017", 1);

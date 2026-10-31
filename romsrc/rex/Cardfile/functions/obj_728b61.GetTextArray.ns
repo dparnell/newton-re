@@ -1,5 +1,0 @@
-@@ 0x728cd1
-func() begin
-	GetGlobals().EmailSystems.emailText
-end
-@@end

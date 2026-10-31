@@ -1,0 +1,93 @@
+// romAvailablePrinters, and what only it reaches
+
+romAvailablePrinters := [|Array|:
+	styleWriterIII,
+	{
+		name: "StyleWriter 1200",
+		driverName: tSWGroupDriver,
+		imagingName: tDotPrinter,
+		type: 'serialSym,
+		printerPageBounds: {eightByEleven: {bottom: 752, right: 576}, a4: {bottom: 796, right: 556}},
+		printableOrigin: {top: 14, left: 18}
+	},
+	{
+		name: "StyleWriter 1500",
+		driverName: tSWGroupDriver,
+		imagingName: tDotPrinter,
+		type: 'serialSym,
+		printerPageBounds: {eightByEleven: {bottom: 752, right: 576}, a4: {bottom: 796, right: 556}},
+		printableOrigin: {top: 14, left: 18}
+	},
+	{
+		name: "StyleWriter 2200",
+		driverName: tSWGroupDriver,
+		imagingName: tDotPrinter,
+		type: 'serialSym,
+		printerPageBounds: {eightByEleven: {bottom: 759, right: 581}, a4: {bottom: 810, right: 566}},
+		printableOrigin: {top: 9, left: 15}
+	},
+	{
+		name: "StyleWriter 2400",
+		driverName: tSWGroupDriver,
+		imagingName: tDotPrinter,
+		type: 'serialSym,
+		printerPageBounds: {eightByEleven: {bottom: 759, right: 581}, a4: {bottom: 810, right: 566}},
+		printableOrigin: {top: 9, left: 15}
+	},
+	{
+		name: "StyleWriter 2500",
+		driverName: tSWGroupDriver,
+		imagingName: tDotPrinter,
+		type: 'serialSym,
+		printerPageBounds: {eightByEleven: {bottom: 759, right: 581}, a4: {bottom: 810, right: 566}},
+		printableOrigin: {top: 9, left: 15}
+	},
+	{
+		name: "HP DeskWriter",
+		driverName: thpPCL,
+		imagingName: tDotPrinter,
+		type: 'serialSym,
+		prModel: 0,
+		printerPageBounds: {eightByEleven: {bottom: 756, right: 576}, a4: {bottom: 797, right: 559}},
+		printableOrigin: {top: 14, left: 18}
+	},
+	{
+		name: "HP LaserJet 5MP (IrDA)",
+		driverName: thpPCL,
+		imagingName: tDotPrinter,
+		type: 'serialSym,
+		prModel: 1,
+		printerPageBounds: {eightByEleven: {bottom: 756, right: 576}, a4: {bottom: 797, right: 559}},
+		printableOrigin: {top: 14, left: 18}
+	},
+	{
+		name: "HP DeskJet 340 (IrDA)",
+		driverName: thpPCL,
+		imagingName: tDotPrinter,
+		type: 'serialSym,
+		prModel: 2,
+		printerPageBounds: {eightByEleven: {bottom: 728, right: 576}, a4: {bottom: 776, right: 558}},
+		printableOrigin: {top: 18, left: 18}
+	},
+	{
+		name: "Pers. LaserWriter 300",
+		driverName: "TLaserWriterLSDriver",
+		imagingName: tDotPrinter,
+		type: 'serialSym,
+		printerPageBounds: {eightByEleven: {bottom: 763, right: 576}, a4: {bottom: 810, right: 560}},
+		printableOrigin: {top: 14, left: 18}
+	},
+	{
+		name: laserWriter,
+		driverName: "TPSPAPDriver",
+		imagingName: "TPSPrinter",
+		type: 'networkSym,
+		nbpType: laserWriter,
+		printerPageBounds: {eightByEleven: {bottom: 775, right: 576}, a4: {bottom: 797, right: 559}},
+		printableOrigin: {top: 8, left: 8}
+	}
+];
+
+laserWriter := "LaserWriter";
+
+thpPCL := "ThpPCL";

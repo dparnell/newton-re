@@ -1,0 +1,97 @@
+// export4, and what only it reaches
+
+export4 := {
+	name: allInfo_2,
+	stepChildren: [stepChildren:
+		export4Item,
+		{
+			viewBounds: {top: -2, left: 0, right: 0, bottom: 0},
+			viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV,
+			_proto: @protoBorder
+		},
+		export4Item_2,
+		export4Item_3
+	],
+	allinfoHeight: 0,
+	childBottom: 0,
+	childToScroll: nil,
+	ViewScroll2DScript: func(a1, a2) begin
+		local l1, l2, l3;
+		l1 := childToScroll.viewOriginY;
+		l2 := (max(a2.count, 1) * 16);
+		if (if (a1 = 'up) then (l1 > 0)) then begin
+				l3 := max(0, (l1 - l2))
+			end else begin
+				if ((l1 + allinfoHeight) < childBottom) then begin
+						l3 := min((childBottom - allinfoHeight), (l1 + l2))
+					end
+			end;
+		(if l3 then begin
+				childToScroll:SetOrigin(0, l3);
+				scrollArrows.yPos := l3;
+				scrollArrows:AdjustArrows();
+				RefreshViews()
+			end)
+	end,
+	viewSetupFormScript: func() begin
+		if (superSymbol = 'ownerNames) then begin
+				if IsReadOnly(stepChildren) then begin
+						stepChildren := Clone(stepChildren)
+					end;
+				ArrayMunger(stepChildren, 0, 2, nil, 0, 0)
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	_proto: @8247,
+	azTabs: nil,
+	stepAllocateContext: [|Array|: 'azTabs, export4Item, 'scrollArrows, export4Item_2, 'entryView, export4Item_3],
+	scrollArrows: nil,
+	entryView: nil
+};
+
+export4Item := {_proto: @8235, preAllocatedContext: 'azTabs};
+
+export4Item_2 := {viewClass: clView, _proto: @protoUpDownScroller, preAllocatedContext: 'scrollArrows};
+
+export4Item_3 := {
+	viewBounds: {top: 20, left: 0, right: -20, bottom: 0},
+	viewSetupChildrenScript: func() begin
+		local l1;
+		if (if (if (if target then IsSoupEntry(target)) then (l1 := GetViewDefs(target.class))) then l1.allinfo) then begin
+				self.stepChildren := [Array: l1.allinfo]
+			end;
+		inherited:?viewSetupChildrenScript()
+	end,
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewSetupFormScript: func() begin
+		if (superSymbol = 'ownerNames) then begin
+				if IsReadOnly(viewBounds) then begin
+						viewBounds := Clone(viewBounds)
+					end;
+				viewBounds.top := 0
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	viewFlags: vVisible + vClipping,
+	viewSetupDoneScript: func() begin
+		local l1, l2;
+		inherited:?viewSetupDoneScript();
+		if (if (l2 := self:ChildViewFrames()) then (Length(l2) > 0)) then begin
+				allinfoHeight := ((l1 := (childToScroll := l2[0]):GlobalBox()).bottom - l1.top);
+				childBottom := childToScroll:GetBottom()
+			end;
+		(if (childBottom <= allinfoHeight) then (if scrollArrows.viewCObject then scrollArrows:Hide()) else begin
+				scrollArrows.scrollRect := (scrollArrows.dataRect := SetBounds(0, 0, 0, childBottom));
+				scrollArrows.viewRect := SetBounds(0, 0, 0, allinfoHeight);
+				scrollArrows.yPos := 0;
+				if scrollArrows.viewCObject then begin
+						scrollArrows:Show()
+					end else begin
+						scrollArrows:Open()
+					end;
+				scrollArrows:AdjustArrows()
+			end)
+	end,
+	_proto: @newtEntryView,
+	preAllocatedContext: 'entryView
+};

@@ -1,5 +1,0 @@
-@@ 0x4ae2d1
-func() begin
-	GetDefs(form, symbols, types)
-end
-@@end

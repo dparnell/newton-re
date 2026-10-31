@@ -1,0 +1,9 @@
+// caretSpaceBits, and what only it reaches
+
+caretSpaceBits := {
+	bits: bitmap('bits, "resources/bits/46e321.png", "00000000000800c300c3023800d40263", 1),
+	bounds: {left: 0, top: 0, right: 43, bottom: 17},
+	width: 1,
+	height: 1,
+	words: [|Array|: groupSepStr]
+};

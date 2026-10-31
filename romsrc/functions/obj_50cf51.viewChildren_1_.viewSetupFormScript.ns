@@ -1,5 +1,0 @@
-@@ 0x50d011
-func() begin
-	(self.singleDay := monthController.singleDay)
-end
-@@end

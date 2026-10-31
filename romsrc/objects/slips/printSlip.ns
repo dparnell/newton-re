@@ -1,0 +1,36 @@
+// printSlip, and what only it reaches
+
+printSlip := {
+	hideOtherCity: true,
+	bottomIndent: 29,
+	appSymbol: '|print:newton|,
+	OwnerInfoChanged: func() begin
+		local l1;
+		l1 := userConfiguration;
+		fields.fromTitle := l1.currentFaxTitle;
+		printChoose:SyncView();
+		printChoose:RedoChildren();
+		(fields.fromRef := l1.currentPersona)
+	end,
+	debug: 23370,
+	stepChildren: [stepChildren: printChoose, _previewButton],
+	printChoose: nil,
+	stepallocatecontext: [|Array|: 'printChoose, printChoose, '_previewButton, _previewButton],
+	_previewButton: nil,
+	_previewKeyScript: func(a1) begin
+		PressButton(_previewButton)
+	end,
+	_keyCommands: [|Array|:
+		{char: $i, modifiers: 33554432, keyMessage: '_previewKeyScript, name: preview, category: viewing}
+	],
+	_proto: @protoFullRouteSlip
+};
+
+printChoose := {
+	viewBounds: {left: 40, top: 55, right: -10, bottom: 71},
+	viewJustify: 8388656,
+	preallocatedContext: 'printChoose,
+	_proto: @printerChooserButton
+};
+
+_previewButton := {_proto: _previewButtonProto, preallocatedContext: '_previewButton};

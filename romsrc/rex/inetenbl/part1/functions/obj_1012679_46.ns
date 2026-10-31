@@ -1,5 +1,0 @@
-@@ 0x1012985
-func(a1) begin
-	(if a1.waitView then a1.waitView:Close())
-end
-@@end

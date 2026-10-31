@@ -1,0 +1,57 @@
+// newtProtoLine, and what only it reaches
+
+newtProtoLine := {
+	entryFont: tsHWFont + tsSize(12),
+	viewSetupFormScript: func() begin
+		local l1;
+		inherited:viewSetupFormScript();
+		if HasPath(self, 'viewLineSpacing) then begin
+				entryLine.viewLineSpacing := self.viewLineSpacing
+			end;
+		entryLine.viewFont := entryFont;
+		if (((access = 'readWrite) or (access = 'Query)) or (access = 'queryOnly)) then begin
+				entryLine.viewFlags := filter.recFlags;
+				entryLine.textFlags := filter.recTextFlags;
+				entryLine.dictionaries := filter.dictionaries;
+				entryLine.recConfig := filter.recConfig
+			end;
+		if (BAnd(entryLine.viewFlags, 2) <> 0) then begin
+				entryLine.viewFormat := 0
+			end;
+		l1 := self:LocalBox();
+		entryLine.viewBounds := SetBounds(indent, 0, l1.right, 0);
+		(entryLine.text := (if (if (if target then path) then target.(path)) then filter:PathToText() else ""))
+	end,
+	Retarget: func() begin
+		SetValue(self.entryLine, 'text, (if (if (if target then path) then target.(path)) then filter:PathToText() else ""));
+		entryLine:viewChangedScript('text, entryLine)
+	end,
+	UpdateText: func(a1) begin
+		AddUndoAction('UpdateText, [Array: Clone(entryLine:GetRichString())]);
+		SetValue(entryLine, 'text, a1);
+		entryLine:viewChangedScript('text, entryLine)
+	end,
+	viewQuitScript: func() begin
+		local l1;
+		l1 := entryLine:GetRichString();
+		inherited:viewQuitScript();
+		(if ((not lastPicked) or (not StrEqual(lastPicked, l1))) then AddMemoryItem(memory, l1))
+	end,
+	viewChildren: [viewChildren: entryLine_5],
+	entryLine: nil,
+	allocateContext: [|Array|: 'entryLine, entryLine_5],
+	_proto: @newtProtoLineBase
+};
+
+entryLine_5 := {
+	viewJustify: 8388800,
+	viewFont: nil,
+	viewFormat: vfLinesGray,
+	viewFlags: vVisible + vReadOnly,
+	viewLineSpacing: 25,
+	preallocatedContext: 'entryLine,
+	viewChangedScript: func(a1, a2) begin
+		(if (a1 = 'text) then baseLine:viewChangedScript(a1, a2))
+	end,
+	_proto: @protoInputLine
+};

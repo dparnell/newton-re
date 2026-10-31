@@ -1,0 +1,3 @@
+// canonicalPictureShape, and what only it reaches
+
+canonicalPictureShape := {class: 'picture, bounds: nil, data: nil};

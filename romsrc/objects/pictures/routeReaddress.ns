@@ -1,0 +1,6 @@
+// routeReaddress, and what only it reaches
+
+routeReaddress := {
+	bits: bitmap('bits, "resources/bits/463c11.png", "000000000004008e008e007a009d008f", 1),
+	bounds: {left: 0, top: 0, right: 21, bottom: 15}
+};

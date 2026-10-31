@@ -1,0 +1,189 @@
+// protoCorrector, and what only it reaches
+
+protoCorrector := {
+	viewSetupFormScript: func() begin
+		local v4_mmlll, v6_sssssssssssr, v7_zzzzzzzyy, v13_uuuttttttttt, v14_ssssrrrrrr, v15_vvvvvvvvvuuuuuuuuuu, v18_zzzyyyyyyyyyyyyyyyyyyyy, v19_yyx, v20_zzzzzzzyyyyy, v21_yyyyyyyyxx, v22_yyyyyyyyyyyyyyyyxxx, v23_yyyyyxxxxxxxxxxxx;
+		v4_mmlll := refCon;
+		v19_yyx := self.wordInfo;
+		v15_vvvvvvvvvuuuuuuuuuu := self.pickItems;
+		if v19_yyx then begin
+				v19_yyx:RemoveAddedEntries(1);
+				v23_yyyyyxxxxxxxxxxxx := Length(v19_yyx.words);
+				v19_yyx:AddCapitalized();
+				v15_vvvvvvvvvuuuuuuuuuu := v19_yyx:GetWords();
+				if (v23_yyyyyxxxxxxxxxxxx = 1) then begin
+						if (v14_ssssrrrrrr := SpellCorrect((v20_zzzzzzzyyyyy := SpellDocBegin()), Clone(v15_vvvvvvvvvuuuuuuuuuu[0]))) then begin
+								(foreach v11_ssssssssss, v16_zzzzzzzzzzzzzyyy in v14_ssssrrrrrr do begin
+										v23_yyyyyxxxxxxxxxxxx := Length(v15_vvvvvvvvvuuuuuuuuuu);
+										v13_uuuttttttttt := (for v9_yyyyyyyyyyyyyxxx := 0 to (v23_yyyyyxxxxxxxxxxxx - 1) do begin
+												if (StrExactCompare(v16_zzzzzzzzzzzzzyyy, v15_vvvvvvvvvuuuuuuuuuu[v9_yyyyyyyyyyyyyxxx]) = 0) then begin
+														break v9_yyyyyyyyyyyyyxxx
+													end
+											end);
+										if (not v13_uuuttttttttt) then begin
+												(v21_yyyyyyyyxx := Clone(@protoWordInterp)).word := v16_zzzzzzzzzzzzzyyy;
+												v21_yyyyyyyyxx.index := -2;
+												AddArraySlot(v19_yyx.words, v21_yyyyyyyyxx)
+											end;
+										if (v11_ssssssssss = 4) then begin
+												break
+											end
+									end)
+							end;
+						SpellDocEnd(v20_zzzzzzzyyyyy);
+						v15_vvvvvvvvvuuuuuuuuuu := v19_yyx:GetWords()
+					end;
+				(foreach v5_aaa, v8_zzzzzzyyyyyyyyyyyy in v15_vvvvvvvvvuuuuuuuuuu do begin
+						MapAmbiguousCharacters((v22_yyyyyyyyyyyyyyyyxxx := Clone(v8_zzzzzzyyyyyyyyyyyy)));
+						v15_vvvvvvvvvuuuuuuuuuu[v5_aaa] := v22_yyyyyyyyyyyyyyyyxxx
+					end);
+				if v19_yyx.strokes then begin
+						(v7_zzzzzzzyy := Clone(@protoStrokesItem)).bounds := v19_yyx.strokes.bounds;
+						v7_zzzzzzzyy.strokelist := v19_yyx.strokes;
+						v7_zzzzzzzyy.pickable := true;
+						AddArraySlot(v15_vvvvvvvvvuuuuuuuuuu, v7_zzzzzzzyy)
+					end;
+				if TryLettersNeeded(v4_mmlll.form, v19_yyx) then begin
+						AddArraySlot(v15_vvvvvvvvvuuuuuuuuuu, @tryLettersBitmap)
+					end
+			end;
+		AddArraySlot(v15_vvvvvvvvvuuuuuuuuuu, @correctorTwoButtons);
+		if (v6_sssssssssssr := (if (v18_zzzyyyyyyyyyyyyyyyyyyyy := GetView('viewfrontmost)) then v18_zzzyyyyyyyyyyyyyyyyyyyy:?CorrectorItems())) then begin
+				ArrayMunger(v15_vvvvvvvvvuuuuuuuuuu, Length(pickItems), 0, v6_sssssssssssr, 0, nil)
+			end;
+		(self.pickItems := v15_vvvvvvvvvuuuuuuuuuu)
+	end,
+	pickActionScript: func(a1) begin
+		local l1, l2, l3, l4, l5, l6;
+		l1 := nil;
+		l2 := GetRoot().correct;
+		l3 := nil;
+		l4 := refCon;
+		if IsFrame(a1) then begin
+				if (a1.x = 0) then begin
+						if l4.form.text then begin
+								l4.form:SetHilite(l4.wordOffset, (l4.wordOffset + l4.wordLength), true)
+							end;
+						OpenKeypadFor(l4.form)
+					end else begin
+						if (not l4.form:?ViewCorrectorScript(l4)) then begin
+								l2.refCon := l4;
+								l6 := wordInfo:GetWords();
+								l2.pickItems := (if (Length(l6) > 0) then l6);
+								l2.wordInfo := wordInfo;
+								if l2.viewCObject then begin
+										l2.cText:SetupAll(Clone(pickItems[0]), 'external, nil, nil)
+									end;
+								l2:Open()
+							end
+					end;
+				l1 := true
+			end else begin
+				if (ClassOf((l5 := pickItems[a1])) = 'string) then begin
+						UnmapAmbiguousCharacters(l5)
+					end
+			end;
+		(if (if IsFrame(l5) then l5.context) then l5.context:?CorrectorActionScript(l5) else (if (not l1) then begin
+					self:LockScreen(true);
+					if (ClassOf(l5) = 'string) then begin
+							self:ReplaceWord(a1, true)
+						end;
+					if IsFrame(l5) then begin
+							if (l5 = @tryLettersBitmap) then begin
+									self:LockScreen(nil);
+									self:HandleTryLetters();
+									self:LockScreen(true)
+								end else begin
+									self:CorrectInk(l5)
+								end
+						end;
+					if l2.viewCObject then begin
+							l4.form:SetHilite(l4.wordOffset, (l4.wordOffset + l4.wordLength), true)
+						end;
+					self:LockScreen(nil)
+				end))
+	end,
+	FindNewGuess: func(a1) begin
+		l1 := wordInfo:GetWords();
+		l3 := (Length((l2 := a1:GetWords())) - 1);
+		local l1;
+		local l2;
+		local l3;
+		(for l4 := 0 to l3 do begin
+				if (not FindStringInArray(l1, l2[l4])) then begin
+						break self:MoveToFirst(a1, l4)
+					end
+			end)
+	end,
+	HandleTryLetters: func() begin
+		local l1, l2, l3, l4, l5, l6;
+		l1 := Clone(self.bounds);
+		l4 := ((l3 := Clone((l2 := GetRoot().busyDialog).viewBounds)).bottom - l3.top);
+		l3.top := ((l1.top + 4) - l4);
+		if (l3.top < 32) then begin
+				l3.top := (l1.bottom - 4)
+			end;
+		l3.bottom := (l3.top + l4);
+		l2:Open();
+		l5 := Recognize([Array: wordInfo.strokes], @rcTryLettersConfig, nil);
+		l2:Close();
+		if (Length(l5.info) = 1) then begin
+				self:FindNewGuess((l6 := l5.info[0]));
+				self.wordInfo := l6;
+				l6 := self:ReplaceWord(0, nil)
+			end else nil;
+		if l6 then begin
+				l6:ClearFlags(2)
+			end;
+		l6
+	end,
+	MoveToFirst: func(a1, a2) begin
+		local l1, l2;
+		(if (a2 > 0) then begin
+				l2 := (l1 := a1.words)[a2];
+				ArrayRemoveCount(l1, a2, 1);
+				ArrayInsert(l1, l2, 0)
+			end)
+	end,
+	ReplaceWord: func(a1, a2) begin
+		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
+		l1 := correctInfo;
+		l2 := refCon;
+		(l3 := self.wordInfo):AutoRemove();
+		if a2 then begin
+				l3:Learn(a1)
+			end;
+		l4 := DeepClone(l3);
+		if (a1 > 0) then begin
+				self:MoveToFirst(l4, a1)
+			end;
+		l5 := l2.form;
+		l6 := l2.wordOffset;
+		l7 := l2.wordLength;
+		if (l8 := GetRoot().correct).viewCObject then begin
+				l9 := true;
+				l8:SetCaret(l2.wordOffset)
+			end;
+		l10 := l5:GetStyleAtOffset(l6);
+		l5:HandleInsertItems((l11 := {insertItems: l4, insertOffset: l6, replaceChars: l7, defaultFontSpec: l10, addspace: nil, moveCaret: l9}));
+		if l9 then begin
+				l2.wordOffset := l8.refCon.wordOffset;
+				l2.wordLength := l8.refCon.wordLength
+			end;
+		return l4
+	end,
+	CorrectInk: func(a1) begin
+		local l1, l2;
+		(if ViewAllowsInkWords((l1 := refCon).form) then begin
+				l1.form:HandleInsertItems((l2 := {insertItems: StrokeBundleToInkWord(a1.strokelist), insertOffset: l1.wordOffset, replaceChars: l1.wordLength, addspace: nil, moveCaret: nil}));
+				(l1.wordLength := 1)
+			end)
+	end,
+	debug: 726132,
+	ReOrientToScreen: @defRotateFunc,
+	_proto: @protoPicker
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+ReplaceWord_literal15 := same("protoCorrector.ReplaceWord.literals[15]");

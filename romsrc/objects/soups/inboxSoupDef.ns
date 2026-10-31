@@ -1,0 +1,11 @@
+// inboxSoupDef, and what only it reaches
+
+inboxSoupDef := {
+	name: inBox_3,
+	userName: inBox,
+	ownerApp: 'iobox,
+	ownerAppName: inOutBox,
+	userDescr: "Received data for InBox",
+	indexes: @ioIndices,
+	initHook: nil
+};

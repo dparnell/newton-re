@@ -1,0 +1,19 @@
+// protoTextButton, and what only it reaches
+
+protoTextButton := {
+	viewClass: clTextView,
+	viewBounds: nil,
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2) + vfRound(4),
+	viewTransferMode: 1,
+	viewFont: @fontSystem9Bold,
+	viewJustify: 8388614,
+	styles: nil,
+	tabs: nil,
+	text: nil,
+	buttonClickScript: func() begin
+		nil
+	end,
+	viewClickScript: viewClickScript,
+	debug: 1444304
+};

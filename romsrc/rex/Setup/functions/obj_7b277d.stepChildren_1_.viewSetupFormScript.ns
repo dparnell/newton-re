@@ -1,5 +1,0 @@
-@@ 0x7b2935
-func() begin
-	(self.label.text := "")
-end
-@@end

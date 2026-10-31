@@ -1,0 +1,32 @@
+// protoPersonaPopup, and what only it reaches
+
+protoPersonaPopup := {
+	_proto: @protoPopInPlace,
+	viewBounds: {left: 10, top: 10, right: 210, bottom: 23},
+	viewFormat: 0,
+	viewJustify: vjCenterV,
+	viewSetupFormScript: viewSetupFormScript,
+	SetupText: func() begin
+		local l1, l2;
+		(if (l1 := GetUserConfig('currentPersona)) then begin
+				l2 := ResolveEntryAlias(l1);
+				(text := Stringer([Array: (if (Length(GetUserConfig('personae)) > 1) then $\uFC01), self:PrimaryName(l2)]))
+			end else (text := ""))
+	end,
+	JamIt: JamIt,
+	buttonClickScript: func() begin
+		(if (if (l2 := GetUserConfig('personae)) then (Length(l2) > 1)) then begin
+				local l1;
+				local l2;
+				popup := (foreach l3 in l2 collect (if (l1 := self:PrimaryName(ResolveEntryAlias(l3))) then l1 else "(unnamed owner)"));
+				inherited:buttonClickScript()
+			end else self:hilite(nil))
+	end,
+	viewDrawScript: viewDrawScript_2,
+	pickActionScript: func(a1) begin
+		SetUserConfig('currentPersona, GetUserConfig('personae)[a1]);
+		UseCurrentPersona();
+		self:hilite(nil)
+	end,
+	viewQuitScript: viewQuitScript
+};

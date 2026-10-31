@@ -1,5 +1,0 @@
-@@ 0x484435
-func() begin
-	(if (not storeCluster) then GetStores()[0] else (if storeCluster.clusterValue then GetStores()[storeCluster.clusterValue]))
-end
-@@end

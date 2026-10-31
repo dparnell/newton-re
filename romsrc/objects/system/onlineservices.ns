@@ -1,0 +1,45 @@
+// onlineservices, and what only it reaches
+
+onlineservices := {
+	viewBounds: {left: 0, top: 120, right: 200, bottom: 245},
+	declareSelf: 'base,
+	debug: 611997,
+	viewChildren: [viewChildren:
+		{
+			viewJustify: 0,
+			viewBounds: {left: 10, top: 10, right: 190, bottom: 60},
+			text: "Enter the phone number of a provider of Newton updates.",
+			_proto: @protoStaticText
+		},
+		phoneNum,
+		{_proto: @protoCancelButton},
+		{
+			viewBounds: {left: -42, top: -18, right: -7, bottom: -5},
+			viewJustify: 8390790,
+			text: call_2,
+			buttonClickScript: func() begin
+				local l1;
+				l1 := strtophone((l1 := phoneNum.entryLine.text));
+				base:Close();
+				AddDeferredSend(transport, 'ConnectNow, [Array: l1])
+			end,
+			_proto: @protoTextButton
+		}
+	],
+	phoneNum: nil,
+	allocateContext: [|Array|: 'phoneNum, phoneNum],
+	_proto: @protoFloater
+};
+
+phoneNum := {
+	indent: 55,
+	viewLineSpacing: 24,
+	entryFlags: 264705,
+	viewBounds: {left: 5, top: 55, right: 180, bottom: 90},
+	label: "Phone #",
+	viewSetupFormScript: func() begin
+		(indent := (StrFontWidth(label, labelFont) + 16))
+	end,
+	preallocatedContext: 'phoneNum,
+	_proto: @protoLabelInputLine
+};

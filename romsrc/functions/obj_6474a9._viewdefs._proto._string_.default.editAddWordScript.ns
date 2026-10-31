@@ -1,6 +1,0 @@
-@@ 0x477191
-func(a1, a2) begin
-	a1.viewFont := viewFont;
-	a1
-end
-@@end

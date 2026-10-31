@@ -1,5 +1,0 @@
-@@ 0x4b0411
-func(a1) begin
-	(if (if _sendKeyButton then _sendKeyButton.viewCObject) then PressButton(_sendKeyButton))
-end
-@@end

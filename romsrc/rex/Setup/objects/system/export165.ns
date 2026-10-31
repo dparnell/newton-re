@@ -1,0 +1,96 @@
+// export165, and what only it reaches
+
+export165 := {
+	viewFlags: vClickable,
+	viewFormat: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewClickScript: func(a1) begin
+		PlaySound(@click);
+		(while (not StrokeDone(a1)) do nil);
+		self:LeaveWelcomeScreen();
+		true
+	end,
+	stepChildren: [stepChildren: export165Item],
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewSetupFormScript: func() begin
+		SetKeyView(self, 0)
+	end,
+	LeaveWelcomeScreen: func() begin
+		(if (not CalibrateTablet()) then (if (nil = base:NextPage()) then AddDeferredSend(base, 'Close, nil)))
+	end,
+	_proto: @protoContainerView,
+	_defaultButton: nil,
+	stepAllocateContext: [|Array|: '_defaultButton, export165Item_2, 'vVisibleCover, export165Item],
+	vVisibleCover: nil
+};
+
+export165Item := {
+	viewFlags: vVisible,
+	viewFormat: vfFillWhite + vfPen(1),
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	stepChildren: [stepChildren:
+		{
+			viewFlags: vVisible,
+			viewFormat: nil,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+			stepChildren: [stepChildren:
+				{_proto: nameItemProto},
+				{_proto: nameItemProto_2},
+				{_proto: nameItemProto_3},
+				{titleTExt: "Welcome", _proto: @8354},
+				{
+					viewFont: @fontSystem10Bold,
+					viewBounds: {left: 2, top: 80, right: 240, bottom: 120},
+					text: "Please take a few minutes to go through this tour.\u000d\u000dYou’ll have an opportunity to personalize your Newton device.\u000d\u000dTap Continue when you’re ready.",
+					viewJustify: vjParentCenterH + vjParentFullV,
+					_proto: @protoStaticText
+				},
+				export165Item_2,
+				{
+					viewSetupDoneScript: func() begin
+						(if fFirstTime then self:Hide())
+					end,
+					viewJustify: 8388774,
+					viewBounds: {left: -15, top: -19, right: -2, bottom: -6},
+					_proto: @protoCancelButton
+				}
+			],
+			viewJustify: vjParentFullH + vjParentFullV,
+			viewSetupFormScript: func() begin
+				nil
+			end,
+			viewClass: clView
+		}
+	],
+	viewSetupFormScript: func() begin
+		nil
+	end,
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewClass: clView,
+	preAllocatedContext: 'vVisibleCover
+};
+
+export165Item_2 := {
+	viewBounds: {top: -22, left: 0, right: -2, bottom: -6},
+	viewJustify: 8388774,
+	viewSetupFormScript: func() begin
+		if (buttonText exists) then begin
+				self.text := buttonText
+			end else begin
+				self.text := "Continue"
+			end;
+		viewBounds := Clone(viewBounds);
+		if (not fFirstTime) then begin
+				viewBounds.right := (viewBounds.right - 22)
+			end;
+		viewBounds.left := ((viewBounds.right - StrFontWidth(text, viewFont)) - 6);
+		(viewBounds.top := (viewBounds.bottom - fontHeight(viewFont)))
+	end,
+	text: nameItem_2Text,
+	buttonClickScript: func() begin
+		self:LeaveWelcomeScreen()
+	end,
+	viewFont: @fontSystem9Bold,
+	_proto: @protoTextButton,
+	preAllocatedContext: '_defaultButton
+};

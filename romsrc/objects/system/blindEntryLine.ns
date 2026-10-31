@@ -1,0 +1,46 @@
+// blindEntryLine, and what only it reaches
+
+blindEntryLine := {
+	viewJustify: 8396848,
+	viewBounds: {left: 0, top: 0, right: -10, bottom: 26},
+	viewLineSpacing: 24,
+	indent: 110,
+	entryFlags: 513,
+	realText: uCardPositionAlertButton,
+	dummyChar: $\u2022,
+	textChanged: func() begin
+		l2 := StrLen((l1 := entryLine.text));
+		l3 := StrLen(realText);
+		l4 := GetCaretInfo().info.offset;
+		(if (l2 < l3) then (realText := Stringer([Array: Substr(realText, 0, l4), Substr(realText, ((l4 + l3) - l2), l3)])) else (if (l2 > l3) then begin
+					l5 := (l2 - l3);
+					realText := Stringer([Array: Substr(realText, 0, (l4 - l5)), Substr(l1, (l4 - l5), l5), Substr(realText, (l4 - l5), ((l3 - l4) + l5))]);
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					local l5;
+					(for l6 := (-l5) to -1 do begin
+							l1[(l4 + l6)] := dummyChar
+						end);
+					SetValue(entryLine, 'text, l1);
+					SetKeyView(entryLine, l4)
+				end))
+	end,
+	UpdateText: func(a1) begin
+		l1 := Clone(a1);
+		realText := a1;
+		local l1;
+		(for l2 := 0 to (StrLen(l1) - 1) do begin
+				l1[l2] := dummyChar
+			end);
+		SetValue(entryLine, 'text, l1);
+		entryLine:SetHilite(9999, 9999, true)
+	end,
+	viewClickScript: func(a1) begin
+		playsound(@click);
+		SetKeyView(entryLine, 99999);
+		true
+	end,
+	_proto: @protoLabelInputLine
+};

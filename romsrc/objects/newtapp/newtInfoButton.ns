@@ -1,0 +1,38 @@
+// newtInfoButton, and what only it reaches
+
+newtInfoButton := {
+	_proto: @protoInfoButton,
+	boutView: nil,
+	prefView: nil,
+	DoInfoAbout: func() begin
+		(if (if boutView then boutView.viewCObject) then begin
+				newtAppBase:RememberedClose(boutView);
+				RemoveSlot(self, 'boutView)
+			end else begin
+				(boutView := BuildContext(aboutView)).theApp := newtAppBase;
+				newtAppBase:RememberedOpen(boutView)
+			end)
+	end,
+	DoInfoPrefs: func() begin
+		(if (if prefView then prefView.viewCObject) then begin
+				newtAppBase:RememberedClose(prefView);
+				RemoveSlot(self, 'prefView)
+			end else begin
+				(prefView := BuildContext(prefsView)).theApp := newtAppBase;
+				newtAppBase:RememberedOpen(prefView)
+			end)
+	end,
+	DoInfoHelp: func() begin
+		local l1, l2, l3;
+		(if (if (l1 := GetRoot().TinyTim) then l1.viewCObject) then l1:Close() else begin
+				if newtAppBase.viewHelpTopic then begin
+						l2 := newtAppBase.viewHelpTopic
+					end;
+				(if newtAppBase.HelpManual then (if l2 then l1:OpenManualTo(newtAppBase.HelpManual, l2) else l1:OpenManual(newtAppBase.HelpManual)) else (if l2 then l1:OpenHelpTo(l2) else l1:Open()))
+			end)
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+DoInfoAbout_code := same("newtInfoButton.DoInfoAbout.instructions");

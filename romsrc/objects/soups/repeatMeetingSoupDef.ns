@@ -1,0 +1,10 @@
+// repeatMeetingSoupDef, and what only it reaches
+
+repeatMeetingSoupDef := {
+	name: @repeatMeetingName,
+	userName: "repeating meetings",
+	ownerApp: 'calendar,
+	ownerAppName: dates_2,
+	userDescr: "repeating meetings in the calendar",
+	indexes: @repeatIndices
+};

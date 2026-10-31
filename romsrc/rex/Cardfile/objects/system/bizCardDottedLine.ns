@@ -1,0 +1,56 @@
+// bizCardDottedLine, and what only it reaches
+
+bizCardDottedLine := {
+	bizCardIcon: {
+		bits: bitmap('bits, "resources/bits/725d7d.png", "00000000000800f100f10084010800aa", 1),
+		bounds: {left: 0, top: 0, right: 38, bottom: 23}
+	},
+	bizCardNum: 5,
+	name: "bizCardDottedLine",
+	symbol: 'bizCardDottedLine,
+	type: 'bizcard,
+	stepChildren: [stepChildren:
+		{
+			viewJustify: vjCenterH + vjParentFullH,
+			viewBounds: {left: 0, top: 5, right: 0, bottom: 21},
+			viewFont: tsFancy + tsSize(12),
+			layouts: layouts,
+			_proto: @8242
+		},
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 24},
+			viewJustify: vjCenterH + vjParentFullH + vjSiblingBottomV,
+			layouts: layouts_2,
+			viewFont: tsFancy + tsSize(18),
+			reduceFont: true,
+			_proto: @8242
+		},
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 2},
+			viewJustify: vjCenterH + vjParentFullH + vjSiblingBottomV,
+			icon: {
+				bits: bitmap('bits, "resources/bits/7260b1.png", "000000000018017a017a013d017c01f4", 1),
+				bounds: {left: 0, top: 0, right: 183, bottom: 2}
+			},
+			viewFlags: vVisible,
+			viewFormat: nil,
+			viewClass: clPictureView
+		},
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 58},
+			viewJustify: vjCenterH + vjParentFullH + vjSiblingBottomV,
+			layouts: layouts_3,
+			viewFont: tsFancy + tsSize(10),
+			_proto: @8242
+		},
+		{
+			viewBounds: {top: -55, left: 10, right: -10, bottom: -3},
+			viewJustify: vjParentFullH + vjParentBottomV,
+			layouts: layouts_4,
+			viewFont: tsFancy + tsSize(10),
+			showMultipleData: true,
+			_proto: @8242
+		}
+	],
+	_proto: @8236
+};

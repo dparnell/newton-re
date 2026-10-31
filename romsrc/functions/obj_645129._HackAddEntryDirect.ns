@@ -1,5 +1,0 @@
-@@ 0x4ac339
-func(a1, a2) begin
-	layout:NewEntry(a1, true, a2)
-end
-@@end

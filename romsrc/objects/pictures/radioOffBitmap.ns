@@ -1,0 +1,7 @@
+// radioOffBitmap, and what only it reaches
+
+radioOffBitmap := {
+	mask: bitmap('mask, "resources/mask/3c8db9.png", "00000000000400690069003900730044", 1),
+	bits: bitmap('bits, "resources/bits/3c8dfd.png", "00000000000400690069002800730033", 1),
+	bounds: {left: 0, top: 0, right: 11, bottom: 10}
+};

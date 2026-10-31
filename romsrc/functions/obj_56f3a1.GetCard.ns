@@ -1,5 +1,0 @@
-@@ 0x56f341
-func() begin
-	hand[cardIndex]
-end
-@@end

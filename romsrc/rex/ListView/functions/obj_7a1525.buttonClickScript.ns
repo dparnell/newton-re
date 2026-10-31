@@ -1,5 +1,0 @@
-@@ 0x78da2d names
-func() begin
-	editor:NewRelative('daughter)
-end
-@@end

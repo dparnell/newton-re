@@ -1,0 +1,306 @@
+// ioItemLayout, and what only it reaches
+
+ioItemLayout := {
+	viewSetupDoneScript: func() begin
+		nil
+	end,
+	viewChildren: [viewChildren:
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+			viewJustify: vjParentFullH + vjParentFullV,
+			viewFlags: vVisible + vClipping,
+			transport: nil,
+			declareSelf: 'ioEntrybase,
+			firstTime: true,
+			checkCaret: checkCaret,
+			viewSetupFormScript: func() begin
+				local l1, l2, l3, l4, l5;
+				if firstTime then begin
+						inherited:?viewSetupFormScript();
+						viewBounds := Clone(viewBounds)
+					end;
+				if target then begin
+						l1 := target;
+						if (if (if targetViewDef then targetViewDef.rollScrolling) then l1.height) then begin
+								viewJustify := 48;
+								viewBounds.bottom := l1.height;
+								l3 := ((l2 := self:Parent():LocalBox()).bottom - l2.top);
+								if (currentSoupSymbol = 'outbox) then begin
+										l4 := (l3 div 3);
+										viewBounds.bottom := (viewBounds.bottom + l4)
+									end;
+								if (viewBounds.bottom < (viewOriginY + l3)) then begin
+										viewBounds.bottom := (viewOriginY + l3)
+									end
+							end else begin
+								viewJustify := 240;
+								viewBounds.bottom := 0
+							end;
+						if firstTime then begin
+								transport := GetItemTransport(target);
+								if (if (if target then transport) then (not transport:ignoreError(target.error))) then begin
+										l5 := transport:TranslateError(target.error);
+										self:Notify(3, "Last error detected:", l5);
+										target.error := nil;
+										EntryChange(target)
+									end;
+								if target.Remote then begin
+										self:DoRequest(transport, 'ReceiveRequest, 'Remote, target)
+									end;
+								firstTime := nil
+							end
+					end;
+				(newtAppBase.ioEntryView := self)
+			end,
+			viewQuitScript: func() begin
+				transport := nil;
+				if (not scrolling) then begin
+						self:?MarkRead(target)
+					end;
+				inherited:?viewQuitScript()
+			end,
+			SetViewDef: func(a1) begin
+				local l1;
+				l1 := viewDefFrame.(a1);
+				(if (targetViewDef <> l1) then begin
+						targetViewDef := l1;
+						layout.entryViewDefs := [Array: targetViewDef];
+						target.dataView := a1;
+						EntryChange(target);
+						self:SyncView();
+						self:RedoChildren()
+					end)
+			end,
+			StartFlushWithChild: func(a1) begin
+				local l1, l2;
+				if (if (l1 := GetCaretInfo()) then (l1.view = a1)) then begin
+						AddProcrastinatedSend('checkCaret, targetView, 'checkCaret, nil, 500)
+					end;
+				l2 := a1.viewBounds.bottom;
+				if (if target.height then (l2 > target.height)) then begin
+						target.height := (l2 + 5);
+						nextEntry := 0
+					end;
+				self:StartFlush()
+			end,
+			FlushEntry: func(a1) begin
+				inherited:?FlushEntry(a1);
+				(if (nextEntry = 0) then self:SyncView())
+			end,
+			EntryCool: func(a1) begin
+				if (currentSoupSymbol = 'inbox) then begin
+						return nil
+					end;
+				inherited:EntryCool(a1)
+			end,
+			FilingChangedX: func() begin
+				self:Fileit(target);
+				inherited:FilingChangedX()
+			end,
+			debug: 81529,
+			viewChildren: [viewChildren: entryview],
+			entryview: nil,
+			allocateContext: [|Array|: 'entryview, entryview],
+			_proto: @newtEntryView
+		}
+	],
+	SetupCursor: func() begin
+		local l1;
+		l1 := masterSoup.theCursor:entry();
+		masterSoup:SetupCursor();
+		if IsSoupEntry(l1) then begin
+				masterSoup.theCursor:Goto(l1)
+			end;
+		inherited:?SetupCursor()
+	end,
+	scrolling: nil,
+	viewBounds: {left: 0, top: 32, right: 0, bottom: -25},
+	_proto: @newtPageLayout,
+	mastersoupSlot: nil,
+	FilterChanged: func() begin
+		self:SetupCursor();
+		self:SyncView();
+		self:NewTarget()
+	end,
+	Scroller: func(a1) begin
+		if HiliteOwner() then begin
+				PostCommand(HiliteOwner(), 48)
+			end;
+		self:Retarget(true)
+	end,
+	ShowFoundItem: func(a1, a2) begin
+		(if (if ioEntryView then ioEntryView.entryview) then ioEntryView.entryview:?ShowFoundItem(self:GetTargetFromEntry(a1), a2))
+	end,
+	theEntry: nil,
+	viewScrollDownScript: func() begin
+		self:PrepScroller(true)
+	end,
+	prevScrollEntry: nil,
+	Retarget: func(a1) begin
+		if (((l1 := dataCursor:entry()) = 'deleted) or (l1 = nil)) then begin
+				dataCursor:Next();
+				if (dataCursor:entry() = nil) then begin
+						dataCursor:prev()
+					end;
+				if (dataCursor:entry() = nil) then begin
+						self:SetupCursor()
+					end
+			end;
+		if a1 then begin
+				if (not dataCursor:entry()) then begin
+						newtAppBase:ShowLayout('overview)
+					end else begin
+						self:RedoChildren()
+					end
+			end;
+		local l1;
+		(if retargetChain then (foreach l2 in retargetChain do begin
+					l2:RetargetNotify()
+				end))
+	end,
+	viewJustify: vjParentFullH + vjParentFullV,
+	name: "IOList",
+	saveviewBounds: {left: 0, top: 32, right: 0, bottom: -25},
+	viewScrollUpScript: func() begin
+		self:PrepScroller(nil)
+	end,
+	DuplicateEntry: func(a1) begin
+		self:ioDuplicateEntry(a1)
+	end,
+	PrepScroller: func(a1) begin
+		local l1, l2, l3, l4, l5, l6;
+		scrolling := nil;
+		l1 := nil;
+		l2 := nil;
+		l4 := ((l3 := self:LocalBox()).bottom - 16);
+		l5 := dataCursor:entry();
+		if (((not entryViewDefs) or (not l5)) or (l5 = 'deleted)) then begin
+				l1 := true
+			end else begin
+				if a1 then begin
+						if (((l6 := (if (if entryViewDefs[0].rollScrolling then l5.height) then (l5.height + (l3.bottom div 3)) else 0)) - viewOriginY) <= l3.bottom) then begin
+								l2 := nextScrollEntry
+							end else begin
+								scrolling := true;
+								viewOriginY := (viewOriginY + l4)
+							end
+					end else begin
+						if (viewOriginY > 0) then begin
+								scrolling := true;
+								viewOriginY := max(0, (viewOriginY - l4))
+							end else begin
+								l2 := prevScrollEntry
+							end
+					end
+			end;
+		if l2 then begin
+				viewOriginY := 0;
+				dataCursor:Goto(l2);
+				nextScrollEntry := dataCursor:Next();
+				dataCursor:Goto(l2);
+				prevScrollEntry := dataCursor:prev();
+				dataCursor:Goto(l2)
+			end;
+		(if (l1 or (if (not l2) then (not scrolling))) then begin
+				self:Retarget(nil);
+				newtAppBase:ShowLayout('overview)
+			end else (if a1 then self:Effect(77725696, true, @flip, 'Scroller, [Array: 1]) else self:Effect(77725696, nil, @flip, 'Scroller, [Array: -1])))
+	end,
+	declareSelf: 'base,
+	viewSetupFormScript: func() begin
+		mastersoupSlot := currentSoupSymbol;
+		masterSoup := allSoups.(mastersoupSlot);
+		inherited:?viewSetupFormScript();
+		transport := GetItemTransport((fields := dataCursor:entry()));
+		activeFormat := GetCurrentFormat(fields);
+		theEntry := nil;
+		nextScrollEntry := dataCursor:Next();
+		dataCursor:Goto(fields);
+		prevScrollEntry := dataCursor:prev();
+		dataCursor:Goto(fields)
+	end,
+	routeScripts: [|Array|: ],
+	nextScrollEntry: nil,
+	KillEntry: func(a1) begin
+		self:ioKillEntry(a1)
+	end,
+	_closeBox: nil,
+	debug: 160442,
+	forceNewEntry: nil,
+	viewSetupChildrenScript: func() begin
+		nextEntry := 0;
+		if scrolling then begin
+				scrolling := nil;
+				return nil
+			end;
+		target := (theEntry := (l1 := dataCursor:entry()));
+		transport := GetItemTransport((fields := theEntry));
+		activeFormat := GetCurrentFormat(fields);
+		entryViewDefs := nil;
+		routeScripts := Clone(base.routeScripts);
+		entries := (if l1 then [Array: l1] else [Array: ]);
+		if (if (l3 := DataClassOf(l1)) then (l2 := Clone(GetDataViews(l3)))) then begin
+				l4 := 'default;
+				if (if l1 then l1.dataView) then begin
+						l4 := l1.dataView
+					end;
+				if transport then begin
+						if (l5 := transport:?IOBoxExtensions(l1, self:GetTargetFromEntry(l1), l2, routeScripts)) then begin
+								l4 := l5
+							end
+					end;
+				currentViewSymbol := nil;
+				if (if (l6 := l2.(l4)) then (l6.protection <> 'private)) then begin
+						currentViewSymbol := l4
+					end else begin
+						local l1;
+						local l2;
+						local l3;
+						local l4;
+						local l5;
+						(foreach l3, l6 in l2 do begin
+								if (if ((l6.type = 'editor) or (l6.type = 'viewer)) then ((l6.protection = 'public) or (l6.protection = nil))) then begin
+										currentViewSymbol := l3;
+										break
+									end
+							end)
+					end;
+				if currentViewSymbol then begin
+						entryViewDefs := [Array: l2.(currentViewSymbol)]
+					end
+			end else begin
+				entryViewDefs := nil
+			end;
+		viewDefFrame := l2;
+		if transportheader.viewCObject then begin
+				transportheader:RedoChildren()
+			end;
+		if itemStatus.viewCObject then begin
+				itemStatus:RedoChildren()
+			end;
+		(if (l1 = nil) then AddDeferredSend(newtAppBase, 'ShowLayout, [Array: 'overview]))
+	end,
+	viewDefFrame: nil
+};
+
+entryview := {
+	viewFlags: vVisible + vClipping + vWriteProtected,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewChildren: nil,
+	viewDef: nil,
+	path: 'body,
+	viewSetupFormScript: func() begin
+		(if self:Parent():EntryCool(nil) then (viewFlags := 33))
+	end,
+	viewSetupChildrenScript: func() begin
+		inherited:viewSetupChildrenScript();
+		(self.fields := parentTarget)
+	end,
+	GetTargetFromEntry: func(a1) begin
+		GetTargetFromEntry(a1)
+	end,
+	debug: 642633,
+	preallocatedContext: 'entryview,
+	_proto: @newtEmbeddedEntryView
+};

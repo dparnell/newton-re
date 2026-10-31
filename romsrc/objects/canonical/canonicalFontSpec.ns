@@ -1,0 +1,3 @@
+// canonicalFontSpec, and what only it reaches
+
+canonicalFontSpec := {size: nil, face: nil, family: nil};

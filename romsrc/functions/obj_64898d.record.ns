@@ -1,5 +1,0 @@
-@@ 0x52ceed
-func(a1, a2) begin
-	(if active then self:cfrecord(_traceMap.(a1), a2))
-end
-@@end

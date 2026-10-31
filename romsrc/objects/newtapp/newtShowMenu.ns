@@ -1,0 +1,46 @@
+// newtShowMenu, and what only it reaches
+
+newtShowMenu := {
+	_proto: @protoPopupButton,
+	viewBounds: {left: 7, top: 0, right: 45, bottom: 13},
+	viewJustify: vjSiblingRightH + vjSiblingTopV,
+	text: show_2,
+	keyButton: '_showKeyButton,
+	viewSetupDoneScript: func() begin
+		inherited:?viewSetupDoneScript();
+		(if keyButton then (newtAppBase.(keyButton) := self))
+	end,
+	buttonClickScript: func() begin
+		popup := [Array: ];
+		(foreach l1, l2 in allLayouts do begin
+				local l4;
+				if (l1 <> 'overview) then begin
+						l4 := {item: l2.name, slot: l1};
+						if (l1 = currentLayout) then begin
+								l4.mark := $\uFC0B
+							end;
+						AddArraySlot(popup, l4)
+					end
+			end);
+		inherited:buttonClickScript()
+	end,
+	pickActionScript: func(a1) begin
+		inherited:pickActionScript(a1);
+		newtAppBase:ShowLayout(popup[a1].slot);
+		(popup := nil)
+	end,
+	pickCancelledScript: func() begin
+		inherited:pickCancelledScript();
+		(popup := nil)
+	end,
+	viewQuitScript: func() begin
+		if keyButton then begin
+				RemoveSlot(newtAppBase, keyButton)
+			end;
+		inherited:?viewQuitScript()
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+buttonClickScript_literal5 := same("newtShowMenu.buttonClickScript.literals[5]");

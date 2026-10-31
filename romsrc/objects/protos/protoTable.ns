@@ -1,0 +1,84 @@
+// protoTable, and what only it reaches
+
+protoTable := {
+	viewClass: clView,
+	viewFlags: vVisible + vReadOnly,
+	viewFormat: vfFillWhite + vfFrameBlack + vfPen(1),
+	declareSelf: 'tabbase,
+	hOrg: 0,
+	vOrg: 0,
+	scrollAmount: 1,
+	selectedCells: [|Array|: ],
+	selectThisCell: func(a1) begin
+		local l1, l2, l3;
+		l2 := Length(tabbase.selectedCells);
+		(if def.tabUniqueSelection then begin
+				tabbase.selectedCells := [Array: a1.vIndex];
+				a1:HiliteUnique(true)
+			end else begin
+				l3 := nil;
+				l1 := 0;
+				(loop begin
+						if (l1 >= l2) then begin
+								AddArraySlot(tabbase.selectedCells, a1.vIndex);
+								break
+							end;
+						if (tabbase.selectedCells[l1] = a1.vIndex) then begin
+								l3 := true;
+								break
+							end;
+						(l1 := (l1 + 1))
+					end);
+				a1:hilite((not l3));
+				(if l3 then RemoveSlot(tabbase.selectedCells, l1))
+			end)
+	end,
+	updateSelection: func() begin
+		l4 := tabbase:ChildViewFrames();
+		l1 := (vOrg * (hOrg + 1));
+		if l4 then begin
+				l2 := Length(l4)
+			end else begin
+				l2 := 0
+			end;
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		(foreach l3 in tabbase.selectedCells do begin
+				if (if (l3 >= l1) then ((l3 - l1) < l2)) then begin
+						l4[(l3 - l1)]:hilite(true)
+					end
+			end)
+	end,
+	viewSetupChildrenScript: func() begin
+		if (def.tabHeights = 0) then begin
+				def.tabHeights := FontHeight(GetVariable(self, 'viewFont))
+			end;
+		(self.viewChildren := self:LayoutTable(def, hOrg, vOrg))
+	end,
+	viewScrollDownScript: func() begin
+		local l1;
+		l1 := max(0, ((def.tabDown - ((viewBounds.bottom - viewBounds.top) div def.tabHeights)) - 1));
+		(if (vOrg < l1) then begin
+				if ((vOrg := (vOrg + scrollAmount)) > l1) then begin
+						vOrg := l1
+					end;
+				tabbase:RedoChildren();
+				self:updateSelection()
+			end)
+	end,
+	viewScrollUpScript: func() begin
+		(if (vOrg > 0) then begin
+				if ((vOrg := (vOrg - scrollAmount)) < 0) then begin
+						vOrg := 0
+					end;
+				tabbase:RedoChildren();
+				self:updateSelection()
+			end)
+	end,
+	viewScroll2DScript: func(a1, a2) begin
+		(if (a1 = 'up) then self:viewScrollUpScript() else (if (a1 = 'down) then self:viewScrollDownScript()))
+	end,
+	debug: 45085
+};

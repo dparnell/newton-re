@@ -1,0 +1,6 @@
+// largepentip, and what only it reaches
+
+largepentip := {
+	bits: bitmap('bits, "resources/bits/3d6409.png", "000000000004002d002d02160034021d", 1),
+	bounds: {left: 0, top: 0, right: 7, bottom: 7}
+};

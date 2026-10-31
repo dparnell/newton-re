@@ -1,0 +1,10 @@
+// correctorTwoButtons, and what only it reaches
+
+correctorTwoButtons := {
+	bits: bitmap('bits, "resources/bits/46cbb1.png", "00000000000800820082012700930151", 1),
+	bounds: {left: 0, top: 0, right: 42, bottom: 17},
+	width: 2,
+	height: 1,
+	outerframe: 0,
+	cellframe: 0
+};

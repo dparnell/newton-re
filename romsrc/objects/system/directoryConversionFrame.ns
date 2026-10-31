@@ -1,0 +1,7 @@
+// directoryConversionFrame, and what only it reaches
+
+directoryConversionFrame := {
+	Convert: func(a1, a2, a3, a4) begin
+		(if (if a1.app then LSearch('[Array: calendar, cardfile, paperroll, iobox, system, systemDirectory], a1.app, 0, '|=|, nil)) then return nil else return a1)
+	end
+};

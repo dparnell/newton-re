@@ -1,8 +1,0 @@
-@@ 0x101ba55
-func() begin
-	SetValue(self, 'text, labelText);
-	labelCommands := [Array: ];
-	labelCommands := self:?MakePopup();
-	inherited:?viewSetupFormScript()
-end
-@@end

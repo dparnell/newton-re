@@ -1,0 +1,51 @@
+// protoDateNYearPicker, and what only it reaches
+
+protoDateNYearPicker := {
+	viewClass: clView,
+	viewBounds: nil,
+	viewFlags: vVisible + vClickable,
+	selectedDates: nil,
+	singleDay: true,
+	value: nil,
+	viewSetupFormScript: func() begin
+		if (not selectedDates) then begin
+				selectedDates := [Array: Time()]
+			end;
+		value := Date(selectedDates[0]).year;
+		(calendar.singleDay := singleDay)
+	end,
+	DateChanged: func(a1) begin
+		self:?NewTime(a1);
+		RefreshViews();
+		yearPicker:SetYear(monthView.year)
+	end,
+	ClickDone: func() begin
+		local l1;
+		(l1 := Date(selectedDates[0])).year := value;
+		selectedDates[0] := TotalMinutes(l1);
+		calendar:SetTitle();
+		calendar:Dirty();
+		self:?NewTime(selectedDates)
+	end,
+	viewChildren: [viewChildren: calendar_2, yearPicker],
+	calendar: nil,
+	allocateContext: [|Array|: 'calendar, calendar_2, 'yearPicker, yearPicker],
+	yearPicker: nil
+};
+
+calendar_2 := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: -30},
+	viewJustify: vjParentFullH + vjParentFullV,
+	labelFont: @fontSystem9Bold,
+	titleFont: @fontSystem12,
+	datesFont: @fontSystem12,
+	preallocatedContext: 'calendar,
+	_proto: @protoDatepicker
+};
+
+yearPicker := {
+	viewBounds: {left: 0, top: -28, right: 84, bottom: 0},
+	viewJustify: vjParentCenterH + vjParentBottomV,
+	preallocatedContext: 'yearPicker,
+	_proto: @protoYearPicker
+};

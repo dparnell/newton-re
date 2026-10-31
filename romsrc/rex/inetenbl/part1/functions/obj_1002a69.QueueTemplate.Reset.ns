@@ -1,5 +1,0 @@
-@@ 0x1012fe9
-func() begin
-	SetLength(queue, 0)
-end
-@@end

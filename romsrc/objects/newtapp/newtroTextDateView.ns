@@ -1,0 +1,10 @@
+// newtroTextDateView, and what only it reaches
+
+newtroTextDateView := {
+	_proto: @newtroTextView,
+	longFormat: 180969,
+	shortFormat: nil,
+	TargetData: func() begin
+		(if (if (if target then path) then target.(path)) then (if longFormat then LongDateStr(target.(path), longFormat) else ShortDateStr(target.(path), shortFormat)) else "")
+	end
+};

@@ -1,0 +1,20 @@
+// protoKeypad, and what only it reaches
+
+protoKeypad := {
+	viewClass: clKeyboardView,
+	viewFlags: vVisible + vClickable,
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	viewFormat: vfFillWhite,
+	keyArrayIndex: 0,
+	keyHighlightKeys: nil,
+	keyResultsAreKeycodes: true,
+	keyReceiverView: 'viewfrontkey,
+	keySound: @typewriter,
+	keyDefinitions: nil,
+	viewSetupFormScript: func() begin
+		self:RegisterOpenKeyboard(5)
+	end,
+	viewQuitScript: func() begin
+		self:UnregisterOpenKeyboard()
+	end
+};

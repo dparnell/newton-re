@@ -1,0 +1,60 @@
+// stdForms, and what only it reaches
+
+stdForms := {
+	protoRoll: {viewClass: 65610, _proto: @protoRoll},
+	protoFloater: {viewClass: 65610, _proto: @protoFloater},
+	protoTable: {viewClass: 65610, _proto: @protoTable},
+	analogClock: {viewClass: 65610, _proto: @analogClock},
+	ioItem: nil,
+	poly: @protoPolygon,
+	protoTitle: {viewClass: 65634, _proto: @protoTitle},
+	protoTextExpando: {viewClass: 65610, _proto: @protoTextExpando},
+	protoBorder: {viewClass: 65610, _proto: @protoBorder},
+	protoStaticText: {viewClass: 65617, _proto: @protoStaticText},
+	protoLabelInputLine: {viewClass: 65610, _proto: @protoLabelInputLine},
+	protoRollItem: {viewClass: 65610, _proto: @protoRollItem},
+	protoSlider: {viewClass: 65628, _proto: @protoSlider},
+	protoDivider: {viewClass: 65610, _proto: @protoDivider},
+	para: @protoParagraph,
+	DayItem: nil,
+	MathForm: {
+		viewClass: clMathExpView,
+		viewFlags: vVisible + vCalculateBounds,
+		dummy: 'MathForm,
+		viewSetupChildrenScript: func() begin
+			(self.viewChildren := self.data)
+		end
+	},
+	protoPictRadioButton: {viewClass: 65612, _proto: @protoPictRadioButton},
+	cribNote: @cribNote,
+	exceptionMeeting: @meeting,
+	protoPictureButton: {viewClass: 65612, _proto: @protoPictureButton},
+	protoOverview: {viewClass: 65610, _proto: @protoOverview},
+	protoRoutingSlip: {viewClass: 65612, _proto: @protoRoutingSlip},
+	protoCancelButton: {viewClass: 65612, _proto: @protoCancelButton},
+	protoRadioButton: {viewClass: 65612, _proto: @protoRadioButton},
+	RepeatingMeeting: @meeting,
+	topic: nil,
+	protoTextButton: {viewClass: 65634, _proto: @protoTextButton},
+	protoFloatNGo: {viewClass: 65610, _proto: @protoFloatNGo},
+	protoApp: {viewClass: 65610, _proto: @protoApp},
+	protoExpandoShell: {viewClass: 65610, _proto: @protoExpandoShell},
+	protoGauge: {viewClass: 65628, _proto: @protoGauge},
+	protoRollBrowser: {viewClass: 65610, _proto: @protoRollBrowser},
+	protoStatus: {viewClass: 65610, _proto: @protoStatus},
+	paperroll: @notePaper,
+	protoClosebox: {viewClass: 65612, _proto: @protoClosebox},
+	protoInputLine: {viewClass: 65617, _proto: @protoInputLine},
+	TodoItem: nil,
+	protoLabelPicker: {viewClass: 65617, _proto: @protoLabelPicker},
+	pict: {
+		viewClass: 65612,
+		viewFlags: vVisible + vNoScripts,
+		viewJustify: vjCenterH + vjCenterV,
+		debug: 5605
+	},
+	protoRadioCluster: {viewClass: 65610, _proto: @protoRadioCluster},
+	protoGlance: {viewClass: 65634, _proto: @protoGlance},
+	meeting: @meeting,
+	protoCheckbox: {viewClass: 65612, _proto: @protoCheckbox}
+};

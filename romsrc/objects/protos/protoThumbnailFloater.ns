@@ -1,0 +1,71 @@
+// protoThumbnailFloater, and what only it reaches
+
+protoThumbnailFloater := {
+	trackWhileScrolling: true,
+	setup: func(a1) begin
+		local l1;
+		if HasSlot(self, 'image) then begin
+				l1 := true
+			end;
+		self.image := a1;
+		self:SyncView();
+		self:RedoChildren();
+		(if l1 then RemoveSlot(self, 'image))
+	end,
+	Update: func() begin
+		actualThumbnail:Update()
+	end,
+	RelocateGreyBox: func(a1) begin
+		actualThumbnail:RelocateGreyBox(a1)
+	end,
+	ToggleThumbnail: func(a1) begin
+		local l1;
+		if HasSlot(self, 'image) then begin
+				l1 := true
+			end;
+		self.image := a1;
+		if (not image) then begin
+				self:Close()
+			end else begin
+				self:Toggle()
+			end;
+		(if l1 then RemoveSlot(self, 'image))
+	end,
+	OpenThumbnail: func(a1) begin
+		local l1;
+		if Visible(self) then begin
+				self:setup(a1);
+				return nil
+			end;
+		if HasSlot(self, 'image) then begin
+				l1 := true
+			end;
+		self.image := a1;
+		self:Open();
+		(if l1 then RemoveSlot(self, 'image))
+	end,
+	baseBounds: {left: -120, top: -142, right: -20, bottom: -28},
+	viewJustify: vjParentRightH + vjParentBottomV,
+	viewEffect: 35718144,
+	maxW: nil,
+	maxH: nil,
+	viewSetupFormScript: func() begin
+		(if image then begin
+				self.viewBounds := FitToBox(ShapeBounds(image), Clone(baseBounds), viewJustify);
+				viewBounds.right := (viewBounds.right + 4);
+				viewBounds.bottom := ((viewBounds.bottom + 4) + 14);
+				(actualThumbnail.trackWhileScrolling := trackWhileScrolling)
+			end)
+	end,
+	stepChildren: [stepChildren: actualThumbnail],
+	actualThumbnail: nil,
+	stepallocatecontext: [|Array|: 'actualThumbnail, actualThumbnail],
+	_proto: @protoFloatNGo
+};
+
+actualThumbnail := {
+	viewBounds: {left: 2, top: 2, right: -2, bottom: -16},
+	viewJustify: vjParentFullH + vjParentFullV,
+	preallocatedContext: 'actualThumbnail,
+	_proto: @protoThumbnail
+};

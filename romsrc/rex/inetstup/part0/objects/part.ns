@@ -1,0 +1,3173 @@
+// part, and what only it reaches
+
+part := array(nil, {
+	_ExportTable: [|Array|:
+		{
+			name: '|InternetSetup:NIE|,
+			major: 1,
+			minor: 0,
+			objects: [|Array|:
+				{
+					name: allInfo,
+					protection: 'public,
+					symbol: 'IOAllInfo,
+					type: 'viewer,
+					viewSetupFormScript: func() begin
+						local l1, l2;
+						(if (if target then target.class) then begin
+								if (not layouts) then begin
+										layouts := {}
+									end;
+								if (not layouts.(target.class)) then begin
+										layouts.(target.class) := call GetRoot().|InternetSetup:NIE|.GetViewsToDisplay with (target)
+									end;
+								(if (GetVariable(self, 'newtAppBase) <> GetRoot().|InternetSetup:NIE|) then (self.viewFlags := 1))
+							end)
+					end,
+					boldTitle: true,
+					CanScroll: true,
+					layouts: nil,
+					showBullet: true,
+					showMultipleData: true,
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+					viewClickScript: func(a1) begin
+						true
+					end,
+					_proto: objectsProto
+				}
+			]
+		}
+	],
+	labels: '_Setup,
+	_taglist: [|Array|: '_icon, '_Setup],
+	doNotInstall: func() begin
+		if (if LFetch(GetPackages(), "InternetSetup", 0, '|str=|, 'title) then GetRoot().|InternetSetup:Newton|) then begin
+				GetRoot():Notify(3, "Internet Setup", "Please remove the Internet Setup package before installing a new version.");
+				return true
+			end;
+		nil
+	end,
+	app: '|InternetSetup:NIE|,
+	text: internetSetup,
+	iconPro: {
+		unhilited: {
+			bounds: unhilitedBounds,
+			bits: unhilitedBits,
+			mask: bitmap('mask, "resources/mask/10025e1.png", "000000000004000000000000001e001e", 1),
+			colorData: [|Array|:
+				{cbits: colorDataCbits, bitDepth: 8},
+				{
+					cbits: bitmap('cbits, "resources/cbits/1002a95.png", "000000000010000000000000001e001e", 4),
+					bitDepth: 4
+				},
+				{
+					cbits: bitmap('cbits, "resources/cbits/1002ca5.png", "000000000008000000000000001e001e", 2),
+					bitDepth: 2
+				},
+				{cbits: unhilitedBits, bitDepth: 1}
+			]
+		},
+		hilited: {
+			bounds: {left: 0, top: 0, right: 30, bottom: 30},
+			bits: hilitedBits,
+			mask: bitmap('mask, "resources/mask/1002e91.png", "000000000004000000000000001e001e", 1),
+			colorData: [|Array|:
+				{cbits: colorDataCbits, bitDepth: 8},
+				{
+					cbits: bitmap('cbits, "resources/cbits/1002f69.png", "000000000010000000000000001e001e", 4),
+					bitDepth: 4
+				},
+				{
+					cbits: bitmap('cbits, "resources/cbits/1003179.png", "000000000008000000000000001e001e", 2),
+					bitDepth: 2
+				},
+				{cbits: hilitedBits, bitDepth: 1}
+			]
+		}
+	},
+	icon: {
+		bits: unhilitedBits,
+		bounds: unhilitedBounds,
+		mask: bitmap('bits, "resources/bits/10032cd.png", "000000000004000000000000001e001e", 1)
+	},
+	theForm: {
+		allViewDefs: {},
+		superSymbol: 'INET,
+		GetNewPath: func(a1, a2) begin
+			local l1, l2, l3, l4, l5, l6, l7;
+			l4 := 0;
+			l6 := nil;
+			if (l3 := self:GetInfoFrame(a2, a1.class)) then begin
+					if (if (l1 := self:MakeDataPaths(l3.checkPrefix[0], l3.checkPaths, l3.stringData)) then (not self:HasPathData(a1, l1, l3.stringData))) then begin
+							if l3.frameData then begin
+									if HasSlot(l3, 'FillFrameData) then begin
+											a1.(l3.checkPrefix[1]) := l3:?FillFrameData(l3.frameData)
+										end else begin
+											a1.(l3.checkPrefix[1]) := DeepClone(l3.frameData)
+										end;
+									targetView:?StartFlush()
+								end;
+							l7 := l3.checkPrefix[0]
+						end else begin
+							if (l2 := l3.checkPrefix[1]) then begin
+									l4 := 0;
+									if (not a1.(l2)) then begin
+											a1.(l2) := [Array: ]
+										end;
+									l5 := Length(a1.(l2));
+									(while (l4 < l5) do begin
+											AddArraySlot((newPath := Clone(l3.checkPrefix[1])), l4);
+											if (if (l1 := self:MakeDataPaths(newPath, l3.checkPaths, l3.stringData)) then (not self:HasPathData(a1, l1, l3.stringData))) then begin
+													break (l6 := true)
+												end;
+											(l4 := (l4 + 1))
+										end);
+									if (not l6) then begin
+											if l3.stringData then begin
+													AddArraySlot(a1.(l3.checkPrefix[1]), "")
+												end else begin
+													if l3.arrayData then begin
+															AddArraySlot(a1.(l3.checkPrefix[1]), DeepClone(l3.arrayData))
+														end else begin
+															if l3.frameData then begin
+																	if HasSlot(l3, 'FillFrameData) then begin
+																			a1.(l3.checkPrefix[1]) := l3:?FillFrameData(l3.frameData)
+																		end else begin
+																			a1.(l3.checkPrefix[1]) := DeepClone(l3.frameData)
+																		end
+																end else begin
+																	AddArraySlot(a1.(l3.checkPrefix[1]), {})
+																end
+														end
+												end
+										end;
+									if IsArray((l7 := Clone(l3.checkPrefix[1]))) then begin
+											AddArraySlot(l7, l4)
+										end
+								end else begin
+									l7 := nil
+								end
+						end
+				end;
+			l7
+		end,
+		previousLayout: 'overview,
+		API_AddEntry: compile(
+			constants: {
+				kFunction_1003dc5: func(a1) begin
+					l1 := '{serial: |Serial:NIE|, Modem: |Modem:NIE|, MacIP: |LocalTalk:NIE|, ethernet: |Ethernet:NIE|};
+					l2 := Clone(GetRoot().|InternetSetup:NIE|.allSoups.INETSetupSoup);
+					l2:MakeSoup('|InternetSetup:NIE|);
+					if a1 then begin
+							if a1.physicalLayer then begin
+									l3 := (if l1.(a1.physicalLayer) then l1.(a1.physicalLayer) else a1.physicalLayer)
+								end else begin
+									l3 := '|Modem:NIE|
+								end
+						end else begin
+							l3 := '|Modem:NIE|
+						end;
+					l4 := l2:AdoptEntry(nil, l3);
+					if a1 then begin
+							local l1;
+							local l2;
+							local l3;
+							local l4;
+							(foreach l5, l6 deeply in a1 do begin
+									local l8;
+									if (if (l5 <> 'class) then (l5 <> 'physicalLayer)) then begin
+											l4.(l5) := DeepClone(l6)
+										end
+								end);
+							if ((not a1.version) or (a1.version < 2)) then begin
+									l8 := GetDataDefs(l3);
+									l4 := l8:?DataConversion(l4)
+								end
+						end;
+					l4
+				end
+			},
+			func(a1, a2) begin
+				local l1, l2, l3;
+				l1 := call (kFunction_1003dc5) with (a1);
+				l2 := self:GetAppPreferences().internalStore;
+				if (not a2) then begin
+						if l2 then begin
+								a2 := GetStores()[0]
+							end else begin
+								a2 := GetDefaultStore()
+							end
+					end;
+				l3 := GetUnionSoupAlways("Internet Setups");
+				l3:AddToStoreXmit(l1, a2, nil);
+				l1.linkID
+			end),
+		viewQuitScript: func() begin
+			(if _coolToStart then begin
+					if (currentLayout <> 'overview) then begin
+							currentLayout := 'overview
+						end;
+					updated := nil;
+					HandHoldStart := nil;
+					(foreach l1, l2 in '{GenericSecurID: {generic: true, setupName: "SecurID\u00AE\u", class: |Modem:NIE|, version: 2, linkLayer: |PPP:NIE|, physicalLayer: |Modem:NIE|, loginScript: {interpreterSymbol: |Script Manager:NIE|, timeout: 60, instructions: [Array: {type: sendCR}, {type: waitFor, data: "ogin"}, {type: userName}, {type: sendCR}, {type: waitFor, data: "word"}, {type: password}, {type: sendCR}, {type: waitFor, data: "CODE"}, {type: sendPrompt, data: "Please enter your pin number"}, {type: sendCR}, {type: waitFor, data: "ccepted"}]}}, GenericUNIX: {generic: true, setupName: "UNIX\u00AE\u", class: |Modem:NIE|, version: 2, linkLayer: |PPP:NIE|, physicalLayer: |Modem:NIE|, loginScript: {interpreterSymbol: |Script Manager:NIE|, timeout: 60, instructions: [Array: {type: sendCR}, {type: waitFor, data: "ogin"}, {type: userName}, {type: sendCR}, {type: waitFor, data: "word"}, {type: password}, {type: sendCR}, {type: waitFor, data: "."}]}}} do begin
+							RemoveSlot(LinkTemplateRegistry, l1)
+						end);
+					inherited:?viewQuitScript()
+				end)
+		end,
+		appAll: "All Setups",
+		GetViewsToDisplay: func(a1) begin
+			if (l3 := GetDataDefs(a1.class)) then begin
+					l2 := Clone(l3.viewsToDisplay);
+					local l1;
+					local l2;
+					local l3;
+					(foreach l4, l5 in (l1 := GetViewDefs(a1.class)) do begin
+							if (if (l5.type = 'editor) then (l4 <> 'default)) then begin
+									SetAdd(l2, l4, true)
+								end
+						end)
+				end;
+			l2
+		end,
+		GetInfoFrame: func(a1, a2) begin
+			local l1, l2;
+			if ((not (l2 := GetViewDefs(a2).(a1))) or (not (l1 := l2.infoFrame))) then begin
+					l1 := GetRoot().|InternetSetup:NIE|.layoutDataMap.(a1)
+				end;
+			l1
+		end,
+		helpManual: {
+			version: 2,
+			isbn: "NIE2.0",
+			title: "Internet Enabler Help 2.0",
+			copyright: "1997 Newton, Inc.",
+			author: "Laura Elliott",
+			publicationDate: 49266720,
+			help: true,
+			contents: [|Array|:
+				start,
+				listItem,
+				blocksItem,
+				know,
+				blocksItem_2,
+				gse,
+				blocksItem_3,
+				gsat,
+				blocksItem_4,
+				gsm,
+				blocksItem_5,
+				gss,
+				blocksItem_6,
+				gather,
+				blocksItem_7,
+				create,
+				new,
+				blocksItem_8,
+				ethernet,
+				ethernet1,
+				blocksItem_9,
+				ethernet2,
+				blocksItem_10,
+				atalk,
+				atalk1,
+				blocksItem_11,
+				listItem_2,
+				blocksItem_12,
+				modem,
+				modem1,
+				blocksItem_13,
+				listItem_3,
+				blocksItem_14,
+				listItem_4,
+				blocksItem_15,
+				serial,
+				serial1,
+				blocksItem_16,
+				listItem_5,
+				blocksItem_17,
+				add,
+				addinfo,
+				blocksItem_18,
+				accessno,
+				blocksItem_19,
+				listItem_6,
+				blocksItem_20,
+				script,
+				steps,
+				blocksItem_21,
+				addscript,
+				blocksItem_22,
+				listItem_7,
+				blocksItem_23,
+				discodelay,
+				blocksItem_24,
+				advanced,
+				blocksItem_25,
+				redial,
+				blocksItem_26,
+				country,
+				blocksItem_27,
+				edit,
+				editing,
+				blocksItem_28,
+				configuration,
+				blocksItem_29,
+				subnet,
+				blocksItem_30,
+				ipaddress,
+				blocksItem_31,
+				gateway,
+				blocksItem_32,
+				listItem_8,
+				blocksItem_33,
+				domain,
+				blocksItem_34,
+				idpassword,
+				blocksItem_35,
+				use,
+				view,
+				blocksItem_36,
+				worksite,
+				blocksItem_37,
+				store,
+				blocksItem_38,
+				move,
+				blocksItem_39,
+				send,
+				blocksItem_40,
+				delete,
+				blocksItem_41,
+				connect,
+				connectinternet,
+				blocksItem_42,
+				disconnect,
+				blocksItem_43,
+				override,
+				blocksItem_44
+			],
+			styles: [|Array|: {family: 'geneva, face: 0, size: 9}, viewFont_2, viewFont],
+			browsers: [|Array|:
+				{
+					name: "Contents",
+					list: [|Array|:
+						{item: start},
+						{level: 2, item: listItem},
+						{level: 2, item: know},
+						{level: 2, item: gse},
+						{level: 2, item: gsat},
+						{level: 2, item: gsm},
+						{level: 2, item: gss},
+						{level: 2, item: gather},
+						{item: create},
+						{level: 2, item: new},
+						{level: 2, item: ethernet},
+						{level: 3, item: ethernet1},
+						{level: 3, item: ethernet2},
+						{level: 2, item: atalk},
+						{level: 3, item: atalk1},
+						{level: 3, item: listItem_2},
+						{level: 2, item: modem},
+						{level: 3, item: modem1},
+						{level: 3, item: listItem_3},
+						{level: 3, item: listItem_4},
+						{level: 2, item: serial},
+						{level: 3, item: serial1},
+						{level: 3, item: listItem_5},
+						{item: add},
+						{level: 2, item: addinfo},
+						{level: 2, item: accessno},
+						{level: 2, item: listItem_6},
+						{level: 2, item: script},
+						{level: 3, item: steps},
+						{level: 3, item: addscript},
+						{level: 2, item: listItem_7},
+						{level: 2, item: discodelay},
+						{level: 2, item: advanced},
+						{level: 2, item: redial},
+						{level: 2, item: country},
+						{item: edit},
+						{level: 2, item: editing},
+						{level: 2, item: configuration},
+						{level: 2, item: subnet},
+						{level: 2, item: ipaddress},
+						{level: 2, item: gateway},
+						{level: 2, item: listItem_8},
+						{level: 2, item: domain},
+						{level: 2, item: idpassword},
+						{item: use},
+						{level: 2, item: view},
+						{level: 2, item: worksite},
+						{level: 2, item: store},
+						{level: 2, item: move},
+						{level: 2, item: send},
+						{level: 2, item: delete},
+						{item: connect},
+						{level: 2, item: connectinternet},
+						{level: 2, item: disconnect},
+						{level: 2, item: override}
+					]
+				}
+			],
+			templates: [|Array|: template],
+			rendering: [|Array|:
+				{
+					pageSize: {left: 0, top: 0, right: 206, bottom: 214},
+					pages: [|Array|:
+						{
+							template: template,
+							blocks: [|Array|: {bounds: blocksBounds, item: listItem}, {bounds: blocksBounds_2, item: blocksItem}]
+						},
+						{
+							template: template,
+							blocks: [|Array|: {bounds: blocksBounds, item: know}, {bounds: blocksBounds_2, item: blocksItem_2}]
+						},
+						{
+							template: template,
+							blocks: [|Array|: {bounds: blocksBounds, item: gse}, {bounds: blocksBounds_2, item: blocksItem_3}]
+						},
+						{
+							template: template,
+							blocks: [|Array|: {bounds: blocksBounds, item: gsat}, {bounds: blocksBounds_2, item: blocksItem_4}]
+						},
+						{
+							template: template,
+							blocks: [|Array|: {bounds: blocksBounds, item: gsm}, {bounds: blocksBounds_2, item: blocksItem_5}]
+						},
+						{
+							template: template,
+							blocks: [|Array|: {bounds: blocksBounds_3, item: gss}, {bounds: blocksBounds_4, item: blocksItem_6}]
+						},
+						{
+							template: template,
+							blocks: [|Array|: {bounds: blocksBounds, item: gather}, {bounds: blocksBounds_2, item: blocksItem_7}]
+						},
+						{
+							template: template,
+							blocks: [|Array|: {bounds: blocksBounds, item: new}, {bounds: blocksBounds_2, item: blocksItem_8}]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: ethernet1},
+								{bounds: blocksBounds_2, item: blocksItem_9}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: ethernet2},
+								{bounds: blocksBounds_2, item: blocksItem_10}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: atalk1},
+								{bounds: blocksBounds_2, item: blocksItem_11}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: listItem_2},
+								{bounds: blocksBounds_2, item: blocksItem_12}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: modem1},
+								{bounds: blocksBounds_2, item: blocksItem_13}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: listItem_3},
+								{bounds: blocksBounds_2, item: blocksItem_14}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: listItem_4},
+								{bounds: blocksBounds_2, item: blocksItem_15}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: serial1},
+								{bounds: blocksBounds_2, item: blocksItem_16}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: listItem_5},
+								{bounds: blocksBounds_2, item: blocksItem_17}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: addinfo},
+								{bounds: blocksBounds_2, item: blocksItem_18}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: accessno},
+								{bounds: blocksBounds_2, item: blocksItem_19}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: listItem_6},
+								{bounds: blocksBounds_2, item: blocksItem_20}
+							]
+						},
+						{template: template, blocks: [|Array|: {bounds: [|Array|: 0, 0, 206, 214], item: script}]},
+						{
+							template: template,
+							blocks: [|Array|: {bounds: blocksBounds, item: steps}, {bounds: blocksBounds_2, item: blocksItem_21}]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: addscript},
+								{bounds: blocksBounds_2, item: blocksItem_22}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: listItem_7},
+								{bounds: blocksBounds_2, item: blocksItem_23}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: discodelay},
+								{bounds: blocksBounds_2, item: blocksItem_24}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: advanced},
+								{bounds: blocksBounds_2, item: blocksItem_25}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: redial},
+								{bounds: blocksBounds_2, item: blocksItem_26}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: country},
+								{bounds: blocksBounds_2, item: blocksItem_27}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: editing},
+								{bounds: blocksBounds_2, item: blocksItem_28}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: configuration},
+								{bounds: blocksBounds_2, item: blocksItem_29}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: subnet},
+								{bounds: blocksBounds_2, item: blocksItem_30}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: ipaddress},
+								{bounds: blocksBounds_2, item: blocksItem_31}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds_3, item: gateway},
+								{bounds: blocksBounds_4, item: blocksItem_32}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: listItem_8},
+								{bounds: blocksBounds_2, item: blocksItem_33}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: domain},
+								{bounds: blocksBounds_2, item: blocksItem_34}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: idpassword},
+								{bounds: blocksBounds_2, item: blocksItem_35}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|: {bounds: blocksBounds, item: view}, {bounds: blocksBounds_2, item: blocksItem_36}]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: worksite},
+								{bounds: blocksBounds_2, item: blocksItem_37}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|: {bounds: blocksBounds, item: store}, {bounds: blocksBounds_2, item: blocksItem_38}]
+						},
+						{
+							template: template,
+							blocks: [|Array|: {bounds: blocksBounds, item: move}, {bounds: blocksBounds_2, item: blocksItem_39}]
+						},
+						{
+							template: template,
+							blocks: [|Array|: {bounds: blocksBounds, item: send}, {bounds: blocksBounds_2, item: blocksItem_40}]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: delete},
+								{bounds: blocksBounds_2, item: blocksItem_41}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: connectinternet},
+								{bounds: blocksBounds_2, item: blocksItem_42}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: disconnect},
+								{bounds: blocksBounds_2, item: blocksItem_43}
+							]
+						},
+						{
+							template: template,
+							blocks: [|Array|:
+								{bounds: blocksBounds, item: override},
+								{bounds: [|Array|: 0, 14, 206, 168], item: blocksItem_44}
+							]
+						}
+					]
+				}
+			]
+		},
+		HandHoldStart: nil,
+		viewFlags: vApplication + vClickable,
+		HasPathData: func(a1, a2, a3) begin
+			if IsArray(a2) then begin
+					(foreach l1 in a2 do begin
+							if a1.(l1) then begin
+									if (a3 or IsInstance(a1.(l1), 'string)) then begin
+											return StrFilled(a1.(l1))
+										end else begin
+											return true
+										end
+								end
+						end)
+				end else begin
+					if a1.(a2) then begin
+							return true
+						end
+				end;
+			nil
+		end,
+		doCardRouting: 'onlyCardRouting,
+		viewBounds: {left: 0, top: -312, right: 238, bottom: -8},
+		MakeDataPaths: func(a1, a2, a3) begin
+			local l1;
+			local l2;
+			(if (not a1) then nil else (if (if IsArray(a2) then (Length(a2) < 1)) then (if a3 then (l2 := [Array: Clone(a1)]) else a1) else (if (a1 = true) then (if IsArray(a2) then (foreach l1 in a2 collect [pathExpr: l1]) else a1) else (foreach l1 in a2 collect begin
+							l2 := Clone(a1);
+							if l1 then begin
+									AddArraySlot(l2, l1)
+								end;
+							l2
+						end))))
+		end,
+		appObject: [|Array|: "Setup", "Setups"],
+		_proto: @newtApplication,
+		WhichPage: nil,
+		_coolToStart: nil,
+		currentLayout: 'overview,
+		allSoups: {
+			INETSetupSoup: {
+				_proto: @newtSoup,
+				soupName: internetSetups,
+				soupIndices: [|Array|:
+					{structure: 'slot, path: 'setupName, type: '|string|},
+					{structure: 'slot, path: 'tags, type: 'tags, tags: [|Array|: 'INET]},
+					{structure: 'slot, path: 'linkID, type: 'int}
+				],
+				soupQuery: {type: 'index, IndexPath: 'setupName},
+				soupDescr: "The Internet Setup soup.",
+				defaultDataType: 'INET,
+				CreateBlankEntry: func() begin
+					(newEntry := {version: 2, tags: Clone('INET)}).linkID := (if functions.InetStartUp then InetStartUp():MGetLinkUniqueID() else Random(0, 10000));
+					newEntry
+				end,
+				DuplicateEntry: compile(
+					constants: {
+						kLiteral_100ea69: "Copy",
+						kLiteral_1004161: "Internet Setups",
+						kFunction_100e96d: func(a1) begin
+							l1 := Stringer([Array: a1.setupName, " ", kLiteral_100ea69]);
+							if (not (l2 := Query(GetUnionSoupAlways(kLiteral_1004161), {IndexPath: 'setupName, beginKey: l1, endKey: l1})):entry()) then begin
+									return Clone(l1)
+								end else begin
+									local l1;
+									local l2;
+									(for l3 := 1 to 99 do begin
+											l1 := Stringer([Array: a1.setupName, " ", kLiteral_100ea69, " ", NumberStr(l3)]);
+											if (not (l2 := Query(GetUnionSoupAlways(kLiteral_1004161), {IndexPath: 'setupName, beginKey: l1, endKey: l1})):entry()) then begin
+													return Clone(l1)
+												end
+										end)
+								end;
+							a1.setupName
+						end
+					},
+					func(a1, a2) begin
+						(a1 := Clone(a1)).linkID := (if functions.InetStartUp then InetStartUp():MGetLinkUniqueID() else Random(0, 10000));
+						a1.setupName := call (kFunction_100e96d) with (a1);
+						inherited:?DuplicateEntry(a1, a2)
+					end)
+			}
+		},
+		viewOverviewScript: func() begin
+			(if (if (currentLayout = 'overview) then (layout.dataCursor:CountEntries() = 0)) then return nil else inherited:?viewOverviewScript())
+		end,
+		editSlip: {
+			noOverview: "This window does not support Overview.",
+			deleteButton: nil,
+			closeBox: nil,
+			verfyFunc: nil,
+			viewQuitScript: func() begin
+				newtAppBase.viewHelpTopic := nil;
+				if _deletedData then begin
+						newtAppBase:AddUndoAction('HandleUndoDelete, [Array: _deletedData])
+					end else begin
+						ClearUndoStacks()
+					end;
+				inherited:?viewQuitScript()
+			end,
+			noScroll: "This window does not support scrolling.",
+			keyButton: nil,
+			viewFlags: vVisible + vApplication + vClickable,
+			ReorientToScreen: @defRotateFunc,
+			goBackBtn: nil,
+			viewBounds: {left: 0, top: -320, right: 320, bottom: 0},
+			MakeDataPaths: func(a1, a2, a3) begin
+				newtAppBase:MakeDataPaths(a1, a2, a3)
+			end,
+			_proto: @protoFloater,
+			info: nil,
+			helpText: nil,
+			_defaultButton: nil,
+			viewJustify: vjParentCenterH + vjParentBottomV,
+			doneBtn: nil,
+			editNewtLayout: nil,
+			header: nil,
+			stepAllocateContext: [|Array|:
+				'header,
+				partItem,
+				'closeBox,
+				partItem_2,
+				'doneBtn,
+				done,
+				'ContinueBtn,
+				partItem_3,
+				'goBackBtn,
+				goBack,
+				'info,
+				partItem_4,
+				'keyButton,
+				keyButton,
+				'helpText,
+				blahBlahBlah,
+				'deleteButton,
+				delete_2,
+				'editNewtLayout,
+				editFields
+			],
+			viewSetupFormScript: compile(
+				constants: {
+					kFunction_100f7a1: func() begin
+						local l1, l2, l3;
+						l2 := (if ((l1 := GetAppParams()).appAreaWidth > 320) then 320 else l1.appAreaWidth);
+						l3 := (if (l1.appAreaHeight > 320) then 320 else l1.appAreaHeight);
+						SetBounds(0, (-(l3 - 8)), (l2 - 16), -8)
+					end
+				},
+				func() begin
+					// DEVIATION (romsrc/rex/inetstup/README.md): both layouts take the walk-through
+					// layout's bounds, which fit the screen; the other layout's were
+					// SetBounds(0, (-(GetAppParams().appAreaHeight - 8)), 304, -8)
+					self.viewBounds := call (kFunction_100f7a1) with ();
+					inherited:?viewSetupFormScript()
+				end),
+			ContinueBtn: nil,
+			CloseAction: func() begin
+				local l1, l2, l3;
+				l1 := GetDataDefs(target.class);
+				l2 := true;
+				if (selectedLayout = 'walkThru) then begin
+						if (if (l3 := l1:?ConfirmWalkThru(target)) then StrFilled(l3)) then begin
+								l2 := ModalConfirm(ParamStr("This setup is missing information in the ^0 field(s) and may not function properly. Are you sure you want to close?", [Array: l3]), 'okCancelDefaultCancel)
+							end
+					end;
+				(if l2 then begin
+						target := l1:?ValidateTarget(target);
+						if (appBase.editSlipLayout = base) then begin
+								appBase.editSlipLayout := nil
+							end;
+						newtAppBase.WhichPage := 0;
+						AddDeferredSend(appBase, 'RememberedClose, [Array: base])
+					end)
+			end,
+			stepChildren: [stepChildren: editFields],
+			_deletedData: nil,
+			retargetChain: nil
+		},
+		appSymbol: '|InternetSetup:NIE|,
+		HandleRedoDelete: func(a1) begin
+			RemoveSlot(self.target, a1[0]);
+			targetView:?StartFlush();
+			self:AddUndoAction('HandleUndoDelete, [Array: a1]);
+			self:RedoChildren()
+		end,
+		viewJustify: vjParentCenterH + vjParentBottomV,
+		title: internetSetup,
+		ChooseNewEntry: compile(
+			constants: {
+				kBinaryFromHex: func(hex, cls) begin
+					local b := MakeBinary(StrLen(hex) div 2, cls);
+					for i := 0 to Length(b) - 1 do begin
+						local h := Ord(hex[2 * i]);
+						local l := Ord(hex[2 * i + 1]);
+						StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+					end;
+					b
+				end,
+				kFunction_1011921: func() begin
+					labelCommands := self:BuildLabelCommands();
+					inherited:?viewSetupFormScript()
+				end,
+				kFunction_101198d: func() begin
+					local l1;
+					(if labelCommands then begin
+							l1 := self:FindItem('|Modem:NIE|);
+							newDef := labelCommands[l1].symbol;
+							self:AdjustHelpText(labelCommands[l1].help);
+							return labelCommands[l1].item
+						end else "")
+				end,
+				kFunction_1011a11: func(a1) begin
+					inherited:labelActionScript(a1);
+					(if labelCommands then begin
+							newDef := labelCommands[a1].symbol;
+							self:AdjustHelpText(labelCommands[a1].help)
+						end)
+				end,
+				kFunction_1011a7d: func(a1) begin
+					(if labelCommands then inherited:?Popit(a1) else self:hilite(nil))
+				end,
+				kFunction_1011c05: func() begin
+					appBase.viewHelpTopic := nil;
+					inherited:?buttonClickScript()
+				end,
+				kFunction_1011ca5: func() begin
+					(if newDef then begin
+							appBase:?BeginNewEntry(newDef, nil);
+							base:Close()
+						end else GetRoot():Notify(3, "Internet Setup", "Please select a connection method from the connect using popup menu."))
+				end,
+				kFunction_1011dd5: func() begin
+					(_defaultButton := self)
+				end,
+				kFunction_100faad: func() begin
+					local l1, l2, l3;
+					(if (if (l1 := GetRoot().TinyTim) then l1.viewCObject) then l1:Close() else begin
+							if newtAppBase.viewHelpTopic then begin
+									l2 := newtAppBase.viewHelpTopic
+								end;
+							(if newtAppBase.helpManual then (if l2 then l1:OpenManualTo(newtAppBase.helpManual, l2) else l1:OpenManual(newtAppBase.helpManual)) else (if l2 then l1:OpenHelpTo(l2) else l1:Open()))
+						end)
+				end,
+				kFunction_1011e39: func() begin
+					l1 := GetDefs('dataDef, [Array: 'INET], nil);
+					l2 := [Array: ];
+					if (Length(l1) > 0) then begin
+							local l1;
+							local l2;
+							(foreach l3 in l1 do begin
+									if l3:?DependenciesLoaded() then begin
+											BInsert(l2, {item: l3.name, icon: l3.icon, symbol: l3.symbol, help: (if l3.helpText then l3.helpText else "")}, '|str<|, '[pathExpr: item], nil)
+										end
+								end)
+						end;
+					l2
+				end,
+				kFunction_1011fc5: func(a1) begin
+					(foreach l1, l2 in labelCommands do begin
+							if (l2.symbol = a1) then begin
+									return l1
+								end
+						end);
+					return 0
+				end,
+				kFunction_1012031: func(a1) begin
+					SetValue(help, 'text, a1)
+				end,
+				kFunction_101207d: func() begin
+					SetKeyView(self, 0)
+				end,
+				kFunction_100f7a1: func() begin
+					local l1, l2, l3;
+					l2 := (if ((l1 := GetAppParams()).appAreaWidth > 320) then 320 else l1.appAreaWidth);
+					l3 := (if (l1.appAreaHeight > 320) then 320 else l1.appAreaHeight);
+					SetBounds(0, (-(l3 - 8)), (l2 - 16), -8)
+				end,
+				kFunction_10120c1: func() begin
+					self.viewBounds := call (kFunction_100f7a1) with ();
+					appBase.viewHelpTopic := helpTopic;
+					self.newtAppBase := appBase;
+					inherited:?viewSetupFormScript()
+				end,
+				kFunction_1012125: func() begin
+					inherited:?viewQuitScript()
+				end,
+				kLiteral_1011549: {viewBounds: '{left: 0, top: -328, right: 320, bottom: -8}, stepChildren: [stepChildren: '{title: "New Internet Setup", _proto: @protoTitle}, '{text: "Select a connection method for this new Internet setup.", viewBounds: {left: 5, top: 10, right: -5, bottom: 46}, viewFont: {family: espy, face: 1, size: 10}, viewJustify: 8240, _proto: @protoStaticText}, {text: "Connect using", viewBounds: '{left: 5, top: 5, right: -5, bottom: 21}, viewJustify: 8396848, viewSetupFormScript: kFunction_1011921, textSetup: kFunction_101198d, labelActionScript: kFunction_1011a11, Popit: kFunction_1011a7d, _proto: @protoLabelPicker, preAllocatedContext: 'picker}, '{text: "", viewBounds: {left: 5, top: 10, right: -5, bottom: 74}, viewJustify: 8368, viewFont: @fontSystem10, viewFlags: 1, viewFormat: 196944, _proto: @protoStaticText, preAllocatedContext: help}, '{text: "Tap ? if you need help.", viewBounds: {left: 5, top: 20, right: -5, bottom: 36}, viewFont: {family: espy, face: 1, size: 10}, viewJustify: 8396976, _proto: @protoStaticText}, {buttonClickScript: kFunction_1011c05, _proto: @protoCancelButton}, {buttonClickScript: kFunction_1011ca5, text: "Continue", viewBounds: '{left: -59, top: 0, right: -7, bottom: 0}, viewJustify: 8402950, viewSetupFormScript: kFunction_1011dd5, _proto: @protoTextButton, preAllocatedContext: '_defaultButton}, {_proto: {viewFlags: 515, viewJustify: 134, viewBounds: '{left: 5, top: -18, right: 18, bottom: -5}, buttonClickScript: kFunction_100faad, icon: {bounds: '{left: 0, top: 0, right: 11, bottom: 11}, bits: call kBinaryFromHex with ("000000000004000000000000000b000b000000001f0000003f8000003180000003800000070000000e0000000e000000000000000e0000000e000000", 'bits), colorData: {cbits: call kBinaryFromHex with ("000000000004000000000000000b000b000000001f0000003f8000003180000003800000070000000e0000000e000000000000000e0000000e000000", 'bits), bitDepth: 1}}, _proto: @protoPictureButton}}], viewJustify: 144, appBase: nil, newDef: nil, BuildLabelCommands: kFunction_1011e39, FindItem: kFunction_1011fc5, AdjustHelpText: kFunction_1012031, declareSelf: 'base, viewSetupDoneScript: kFunction_101207d, viewSetupFormScript: kFunction_10120c1, helpTopic: "determine", viewQuitScript: kFunction_1012125, _proto: @protoFloater, picker: nil, stepAllocateContext: [Array: 'picker, {text: "Connect using", viewBounds: '{left: 5, top: 5, right: -5, bottom: 21}, viewJustify: 8396848, viewSetupFormScript: kFunction_1011921, textSetup: kFunction_101198d, labelActionScript: kFunction_1011a11, Popit: kFunction_1011a7d, _proto: @protoLabelPicker, preAllocatedContext: 'picker}, 'help, '{text: "", viewBounds: {left: 5, top: 10, right: -5, bottom: 74}, viewJustify: 8368, viewFont: @fontSystem10, viewFlags: 1, viewFormat: 196944, _proto: @protoStaticText, preAllocatedContext: help}, '_defaultButton, {buttonClickScript: kFunction_1011ca5, text: "Continue", viewBounds: '{left: -59, top: 0, right: -7, bottom: 0}, viewJustify: 8402950, viewSetupFormScript: kFunction_1011dd5, _proto: @protoTextButton, preAllocatedContext: '_defaultButton}], help: nil, _defaultButton: nil}
+			},
+			func() begin
+				local l1;
+				(l1 := BuildContext(kLiteral_1011549)).appBase := newtAppBase;
+				newtAppBase:RememberedOpen(l1)
+			end),
+		Find: func(what, a2, a3, a4) begin
+			local l1, l2, l3;
+			l2 := GetUnionSoupAlways("Internet Setups");
+			(if (l3 := l2:Query({text: what, validTest: func(a1) begin
+				local l1;
+				if (l1 := FindStringInFrame(a1, [Array: what], true)) then begin
+						if (not SetContains(l1, 'password)) then begin
+								return true
+							end;
+						if (if SetContains(l1, 'password) then (Length(l1) > 3)) then begin
+								return true
+							end
+					end;
+				nil
+			end})):entry() then begin
+					l1 := {_proto: @soupFinder, owner: self, findtype: 'text, findWords: [Array: what], cursor: l3};
+					AddArraySlot(a2, l1)
+				end)
+		end,
+		allDataDefs: {},
+		AppEmpty: func() begin
+			local l1;
+			l1 := self:LocalBox();
+			HandHoldStart := true;
+			l1.left := (l1.left + 10);
+			l1.right := (l1.right - 10);
+			l1.top := ((l1.bottom - l1.top) div 3);
+			(appEmptyStr := [Array: '{font: 1058816, justification: left}, MakeTextLines(ParamStr("No current ^0 exists. To create a new ^0, tap New and in the pop-up list, tap a choice\u2014\uGeneric Setup, SecurID, UNIX, or an Internet Service Provider (ISP).", [Array: title]), l1, fontHeight(1058816), 1058816)])
+		end,
+		stepAllocateContext: [|Array|: 'statusBar, partItem_5],
+		BeginNewEntry: compile(
+			constants: {
+				kFunction_1003dc5: func(a1) begin
+					l1 := '{serial: |Serial:NIE|, Modem: |Modem:NIE|, MacIP: |LocalTalk:NIE|, ethernet: |Ethernet:NIE|};
+					l2 := Clone(GetRoot().|InternetSetup:NIE|.allSoups.INETSetupSoup);
+					l2:MakeSoup('|InternetSetup:NIE|);
+					if a1 then begin
+							if a1.physicalLayer then begin
+									l3 := (if l1.(a1.physicalLayer) then l1.(a1.physicalLayer) else a1.physicalLayer)
+								end else begin
+									l3 := '|Modem:NIE|
+								end
+						end else begin
+							l3 := '|Modem:NIE|
+						end;
+					l4 := l2:AdoptEntry(nil, l3);
+					if a1 then begin
+							local l1;
+							local l2;
+							local l3;
+							local l4;
+							(foreach l5, l6 deeply in a1 do begin
+									local l8;
+									if (if (l5 <> 'class) then (l5 <> 'physicalLayer)) then begin
+											l4.(l5) := DeepClone(l6)
+										end
+								end);
+							if ((not a1.version) or (a1.version < 2)) then begin
+									l8 := GetDataDefs(l3);
+									l4 := l8:?DataConversion(l4)
+								end
+						end;
+					l4
+				end
+			},
+			func(a1, a2) begin
+				local l1, l2, l3, l4;
+				if a2 then begin
+						l1 := call (kFunction_1003dc5) with ((l2 := LinkTemplateRegistry.(a2)));
+						if (l3 := self:GetAppPreferences().internalStore) then begin
+								l4 := GetStores()[0]
+							end else begin
+								l4 := GetDefaultStore()
+							end;
+						self:AddEntryDirect(l1, l4)
+					end else begin
+						l1 := self:AddEntryFromStationery(a1)
+					end;
+				oldTarget := target;
+				WhichPage := 0;
+				target := l1;
+				self:ShowEditSlip('walkThru, nil, oldTarget, true, nil)
+			end),
+		viewSetupFormScript: compile(
+			constants: {
+				kBinaryFromHex: func(hex, cls) begin
+					local b := MakeBinary(StrLen(hex) div 2, cls);
+					for i := 0 to Length(b) - 1 do begin
+						local h := Ord(hex[2 * i]);
+						local l := Ord(hex[2 * i + 1]);
+						StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+					end;
+					b
+				end,
+				kFunction_1003dc5: func(a1) begin
+					l1 := '{serial: |Serial:NIE|, Modem: |Modem:NIE|, MacIP: |LocalTalk:NIE|, ethernet: |Ethernet:NIE|};
+					l2 := Clone(GetRoot().|InternetSetup:NIE|.allSoups.INETSetupSoup);
+					l2:MakeSoup('|InternetSetup:NIE|);
+					if a1 then begin
+							if a1.physicalLayer then begin
+									l3 := (if l1.(a1.physicalLayer) then l1.(a1.physicalLayer) else a1.physicalLayer)
+								end else begin
+									l3 := '|Modem:NIE|
+								end
+						end else begin
+							l3 := '|Modem:NIE|
+						end;
+					l4 := l2:AdoptEntry(nil, l3);
+					if a1 then begin
+							local l1;
+							local l2;
+							local l3;
+							local l4;
+							(foreach l5, l6 deeply in a1 do begin
+									local l8;
+									if (if (l5 <> 'class) then (l5 <> 'physicalLayer)) then begin
+											l4.(l5) := DeepClone(l6)
+										end
+								end);
+							if ((not a1.version) or (a1.version < 2)) then begin
+									l8 := GetDataDefs(l3);
+									l4 := l8:?DataConversion(l4)
+								end
+						end;
+					l4
+				end,
+				kLiteral_101485d: {bits: call kBinaryFromHex with ("000000000004000000000000001e001e000000000000000000000000000300000003c0000001f000000ffc00007ffe0001fffe0003fffc400781f0000c03c00008030000100000201000002000030040000f00c0003e078008ffff0001fffe0001fff80000ffc000003e0000000f0000000300000000000000000000000000000000000000000000", 'bits), bounds: '{left: 0, top: 0, right: 30, bottom: 30}},
+				kFunction_1013fad: func(caller) begin
+					local oldSoupQuery;
+					local l1, l2;
+					if ((oldSoupQuery := Query(GetUnionSoupAlways("LinkSetups"), '{})):CountEntries() > 0) then begin
+							l1 := ModalConfirm("You have Internet Setup information for an older version of the Newton Internet Enabler. Do you want to update these now?", 'yesNoDefaultYes)
+						end else begin
+							return nil
+						end;
+					l2 := func(a1) begin
+						a1.CancelRequest := func(a1) begin
+							(self.cancelled := a1)
+						end;
+						caller.allSoups.INETSetupSoup:MakeSoup('|InternetSetup:NIE|);
+						l1 := GetUnionSoupAlways("Internet Setups");
+						if (l2 := oldSoupQuery:entry()) then begin
+								l5 := 0
+							end;
+						l7 := oldSoupQuery:CountEntries();
+						(while l2 do begin
+								l5 := (l5 + 1);
+								if (if (l8 := (l3 := EntryStore(l2)):IsReadOnly()) then (not l9)) then begin
+										l9 := l8
+									end;
+								a1:SetStatus('vGauge, {titleText: Stringer([Array: "Converting:\n", l2.setupName]), gauge: rinttol(((l5 / l7) * 100))});
+								if a1.cancelled then begin
+										break
+									end;
+								l6 := call (kFunction_1003dc5) with (l2);
+								if l8 then begin
+										caller.allSoups.INETSetupSoup:AddEntry(l6, GetStores()[0])
+									end else begin
+										caller.allSoups.INETSetupSoup:AddEntry(l6, l3)
+									end;
+								if (not l8) then begin
+										EntryRemoveFromSoupXmit(oldSoupQuery:entry(), '|InternetSetup:NIE|)
+									end;
+								(l2 := oldSoupQuery:Next())
+							end);
+						local l1;
+						local l2;
+						local l3;
+						local l4;
+						local l5;
+						local l6;
+						local l7;
+						local l8;
+						local l9;
+						(foreach l10 in GetStores() do begin
+								if (not l10:IsReadOnly()) then begin
+										if (Soup := l10:GetSoup("LinkSetups")) then begin
+												if (Soup:Query(nil):CountEntries() = 0) then begin
+														Soup:RemoveFromStoreXmit(nil)
+													end
+											end
+									end
+							end);
+						(if l9 then GetRoot():Notify(3, "Internet Setup", "There are old setups on a locked card. These setups were converted and are now stored in the internal memory. Please unlock the card and delete the old setup information."))
+					end;
+					(if l1 then begin
+							DoProgress('vGauge, {gauge: 0, statusText: "Internet Setup", titleText: "Preparing to convert data...", closeBox: nil, icon: kLiteral_101485d}, l2);
+							return true
+						end else return nil)
+				end,
+				kFunction_100f7a1: func() begin
+					local l1, l2, l3;
+					l2 := (if ((l1 := GetAppParams()).appAreaWidth > 320) then 320 else l1.appAreaWidth);
+					l3 := (if (l1.appAreaHeight > 320) then 320 else l1.appAreaHeight);
+					SetBounds(0, (-(l3 - 8)), (l2 - 16), -8)
+				end,
+				kLiteral_1004281: '{GenericSecurID: {generic: true, setupName: "SecurID\u00AE\u", class: |Modem:NIE|, version: 2, linkLayer: |PPP:NIE|, physicalLayer: |Modem:NIE|, loginScript: {interpreterSymbol: |Script Manager:NIE|, timeout: 60, instructions: [Array: {type: sendCR}, {type: waitFor, data: "ogin"}, {type: userName}, {type: sendCR}, {type: waitFor, data: "word"}, {type: password}, {type: sendCR}, {type: waitFor, data: "CODE"}, {type: sendPrompt, data: "Please enter your pin number"}, {type: sendCR}, {type: waitFor, data: "ccepted"}]}}, GenericUNIX: {generic: true, setupName: "UNIX\u00AE\u", class: |Modem:NIE|, version: 2, linkLayer: |PPP:NIE|, physicalLayer: |Modem:NIE|, loginScript: {interpreterSymbol: |Script Manager:NIE|, timeout: 60, instructions: [Array: {type: sendCR}, {type: waitFor, data: "ogin"}, {type: userName}, {type: sendCR}, {type: waitFor, data: "word"}, {type: password}, {type: sendCR}, {type: waitFor, data: "."}]}}}
+			},
+			func() begin
+				(if (_coolToStart := self:OkToStart()) then begin
+						inherited:?viewSetupFormScript();
+						self.updated := call (kFunction_1013fad) with (self);
+						self.viewBounds := call (kFunction_100f7a1) with ();
+						if (not GetGlobals().LinkTemplateRegistry) then begin
+								GetGlobals().(EnsureInternal('LinkTemplateRegistry)) := Clone(kLiteral_1004281)
+							end else begin
+								(foreach l1, l2 in kLiteral_1004281 do begin
+										LinkTemplateRegistry.(EnsureInternal(l1)) := l2
+									end)
+							end;
+						(if (currentLayout = previousLayout) then (if (previousLayout = 'overview) then (previousLayout := 'default)))
+					end else begin
+						self._kiddos := nil;
+						AddDeferredSend(self, 'Close, [Array: ])
+					end)
+			end),
+		updated: nil,
+		statusBar: nil,
+		ShowLayout: func(a1) begin
+			if (not a1) then begin
+					a1 := previousLayout
+				end;
+			if (if (a1 <> currentLayout) then (a1 <> 'overview)) then begin
+					previousLayout := a1
+				end;
+			currentLayout := a1;
+			self:RedoChildren()
+		end,
+		viewEffect: 133120,
+		allLayouts: {
+			default: {
+				stepChildren: [stepChildren: partItem_6, partItem_7],
+				name: allInfo,
+				allInfoHeight: 0,
+				childBottom: 0,
+				childToScroll: nil,
+				ViewScroll2DScript: func(a1, a2) begin
+					local l1, l2, l3;
+					l1 := childToScroll.viewOriginY;
+					l2 := (max(a2.count, 1) * 16);
+					if (if (a1 = 'up) then (l1 > 0)) then begin
+							l3 := max(0, (l1 - l2))
+						end else begin
+							if ((l1 + allInfoHeight) < childBottom) then begin
+									l3 := min((childBottom - allInfoHeight), (l1 + l2))
+								end
+						end;
+					(if l3 then begin
+							childToScroll:SetOrigin(0, l3);
+							scrollArrows.yPos := l3;
+							scrollArrows:AdjustArrows();
+							RefreshViews()
+						end)
+				end,
+				_proto: {
+					viewBounds: {left: 0, top: 21, right: 0, bottom: -18},
+					masterSoupSlot: 'INETSetupSoup,
+					forceNewEntry: nil,
+					viewJustify: vjParentFullH + vjParentFullV,
+					Retarget: func(a1) begin
+						local l1;
+						if (((l1 := dataCursor:entry()) = 'deleted) or (not l1)) then begin
+								if (not (l1 := dataCursor:Next())) then begin
+										l1 := dataCursor:Prev()
+									end;
+								if (not l1) then begin
+										self:SetupCursor();
+										l1 := dataCursor:entry()
+									end
+							end;
+						target := dataCursor:entry();
+						inherited:Retarget(nil);
+						if a1 then begin
+								entryView:?viewQuitScript();
+								self:viewSetupChildrenScript();
+								entryView:?viewSetupFormScript();
+								entryView:RedoChildren();
+								entryView:?viewSetupDoneScript()
+							end;
+						SetKeyView(self, 0)
+					end,
+					viewScrollDownScript: func() begin
+						ClearUndoStacks();
+						entryView:Effect(77725696, true, @flip, 'Scroller, [Array: 1])
+					end,
+					viewScrollUpScript: func() begin
+						ClearUndoStacks();
+						entryView:Effect(77725696, nil, @flip, 'Scroller, [Array: -1])
+					end,
+					viewSetupFormScript: func() begin
+						inherited:?viewSetupFormScript();
+						self:Retarget(nil)
+					end,
+					_proto: @newtLayout
+				},
+				scrollArrows: nil,
+				stepAllocateContext: [|Array|: 'scrollArrows, partItem_6, 'entryView, partItem_7],
+				entryView: nil
+			},
+			overview: {
+				viewBounds: {left: 0, top: 2, right: 0, bottom: -18},
+				viewFlags: vVisible,
+				viewFormat: vfPen(1),
+				viewJustify: vjParentFullH + vjParentFullV,
+				name: "Overview",
+				stepChildren: [stepChildren: layout],
+				masterSoupSlot: 'INETSetupSoup,
+				viewClass: clView,
+				realOverview: nil,
+				stepAllocateContext: [|Array|: 'realOverview, layout]
+			}
+		},
+		stepChildren: [stepChildren: {title: internetSetup, _proto: @protoTitle}, partItem_5],
+		PutAwayScript: func(a1) begin
+			local l1, l2, l3;
+			if (a1.appSymbol = '|InternetSetup:Newton|) then begin
+					if (not a1.body.physicalLayer) then begin
+							a1.body.physicalLayer := 'Modem
+						end;
+					a1.body.physicalLayer := '{serial: |Serial:NIE|, Modem: |Modem:NIE|, MacIP: |LocalTalk:NIE|, ethernet: |Ethernet:NIE|}.(a1.body.physicalLayer);
+					a1.body.class := a1.body.physicalLayer;
+					if (if (l2 := GetDataDefs(a1.body.physicalLayer)) then ((not HasSlot(a1.body, 'version)) or (a1.body.version < 2))) then begin
+							a1.body := l2:?DataConversion(a1.body)
+						end;
+					l1 := true
+				end;
+			(l3 := inherited:?PutAwayScript(a1)).linkID := (if functions.InetStartUp then InetStartUp():MGetLinkUniqueID() else Random(0, 10000));
+			if l1 then begin
+					EntryUndoChanges(a1)
+				end;
+			l3
+		end,
+		OkToStart: compile(
+			constants: {
+				kLiteral_1002399: "Internet Setup",
+				kLiteral_1015e69: "You cannot use Internet Setup because there are no module packages installed."
+			},
+			func() begin
+				l1 := true;
+				if (not functions.InetGetService) then begin
+						GetRoot():Notify(3, kLiteral_1002399, "You cannot use Internet Setup because the Newton Internet Enabler package is not installed.");
+						return nil
+					end;
+				if (Length((l2 := GetDefs('dataDef, [Array: 'INET], nil))) > 0) then begin
+						local l1;
+						local l2;
+						(foreach l3 in l2 do begin
+								if l3:?DependenciesLoaded() then begin
+										return true
+									end
+							end);
+						GetRoot():Notify(3, kLiteral_1002399, kLiteral_1015e69);
+						return nil
+					end else begin
+						GetRoot():Notify(3, kLiteral_1002399, kLiteral_1015e69);
+						return nil
+					end;
+				l1
+			end),
+		aboutView: {
+			viewBounds: {left: 0, top: 0, right: 200, bottom: 225},
+			viewJustify: vjParentCenterH + vjParentCenterV,
+			stepChildren: [stepChildren:
+				{title: internetSetup, _proto: @protoTitle},
+				{
+					text: "Newton Internet Setup",
+					viewBounds: {left: 8, top: 5, right: -8, bottom: 17},
+					viewJustify: 8396848,
+					viewFont: {family: 'espy, face: 1, size: 10},
+					_proto: @protoStaticText
+				},
+				{
+					text: "Version 2.0    ",
+					viewBounds: {left: 8, top: 2, right: -8, bottom: 14},
+					viewJustify: 8396848,
+					viewFont: {family: 'espy, face: 0, size: 10},
+					_proto: @protoStaticText
+				},
+				{
+					text: "Newton Internet Enabler",
+					viewBounds: {left: 8, top: 10, right: -8, bottom: 22},
+					viewJustify: 8396848,
+					viewFont: {family: 'espy, face: 1, size: 10},
+					viewSetupFormScript: func() begin
+						if inetMgr then begin
+								text := inetMgr.name
+							end;
+						inherited:?viewSetupFormScript()
+					end,
+					_proto: @protoStaticText
+				},
+				{
+					text: "Is not installed.",
+					viewBounds: {left: 8, top: 2, right: -8, bottom: 14},
+					viewJustify: 8396848,
+					viewFont: {family: 'espy, face: 0, size: 10},
+					viewSetupFormScript: func() begin
+						if inetMgr then begin
+								if inetMgr.versionStr then begin
+										text := ParamStr("Version ^0", [Array: inetMgr.versionStr])
+									end else begin
+										text := ""
+									end
+							end;
+						inherited:?viewSetupFormScript()
+					end,
+					_proto: @protoStaticText
+				},
+				{
+					text: "Installed Components",
+					viewBounds: {left: 8, top: 15, right: -8, bottom: 27},
+					viewJustify: 8396848,
+					viewFont: {family: 'espy, face: 0, size: 10},
+					_proto: @protoStaticText
+				},
+				{
+					text: "Static Text",
+					viewBounds: {left: 8, top: 2, right: -8, bottom: 50},
+					viewJustify: vjParentFullH + vjSiblingBottomV,
+					viewSetupFormScript: func() begin
+						text := self:BuildComponentList();
+						inherited:?viewSetupFormScript()
+					end,
+					BuildComponentList: func() begin
+						local theList;
+						theList := "";
+						if functions.InetGetServiceList then begin
+								map(InetGetServiceList('physicalService), func(a1, a2) begin
+									(theList := Stringer([Array: theList, Clone(a2.name), ", "]))
+								end)
+							end;
+						if functions.InetGetServiceList then begin
+								map(InetGetServiceList('logicalService), func(a1, a2) begin
+									(theList := Stringer([Array: theList, Clone(a2.name), ", "]))
+								end)
+							end;
+						Substr(theList, 0, (StrLen(theList) - 2))
+					end,
+					_proto: @protoStaticText
+				},
+				{
+					text: "\u000d©1997 Apple Computer, Inc.",
+					viewBounds: {left: 8, top: -28, right: -8, bottom: -16},
+					viewJustify: 8388786,
+					_proto: @protoStaticText
+				},
+				{
+					text: aboutViewText,
+					viewBounds: {left: 8, top: -22, right: -8, bottom: -10},
+					viewSetupFormScript: func() begin
+						l1 := 0;
+						l2 := 0;
+						local l1;
+						local l2;
+						(foreach l3 in theSoups do begin
+								local l5;
+								l5 := l3:Query(nil);
+								l2 := (l2 + l5:CountEntries());
+								l1 := (l1 + l3:GetSize())
+							end);
+						if (l1 > 0) then begin
+								l1 := max((l1 div 1024), 1);
+								text := Stringer([Array: text, (if (l2 = 0) then ParamStr("\n^0K storage used", [Array: l1]) else (if (l2 = 1) then ParamStr("\n^0K storage used for 1 ^1", [Array: l1, theApp.appObject[0]]) else ParamStr("\n^0K storage used for ^1 ^2", [Array: l1, l2, theApp.appObject[1]])))])
+							end;
+						inherited:?viewSetupFormScript()
+					end,
+					viewFont: {family: 'espy, face: 0, size: 10},
+					viewJustify: 8405042,
+					_proto: @protoStaticText
+				}
+			],
+			theApp: nil,
+			viewSetupFormScript: func() begin
+				if (not theSoups) then begin
+						theSoups := (foreach l1 in theApp.allSoups collect l1.theSoup)
+					end;
+				if functions.InetGetService then begin
+						inetMgr := InetGetService('|Inet Manager:NIE|)
+					end;
+				inherited:?viewSetupFormScript()
+			end,
+			theSoups: nil,
+			inetMgr: nil,
+			_proto: @protoFloatNGo
+		},
+		ShowEditSlip: func(a1, a2, a3, a4, a5) begin
+			local l1;
+			(if target then begin
+					if (if editSlipLayout then editSlipLayout.viewCObject) then begin
+							editSlipLayout.closeBox:buttonClickScript()
+						end;
+					(l1 := BuildContext(editSlip)).appBase := (l1.newtAppBase := newtAppBase);
+					l1.title := title;
+					l1.appSymbol := appSymbol;
+					l1.allSoups := allSoups;
+					l1.saveEntry := a3;
+					l1.target := target;
+					l1.targetView := self:GetTargetView();
+					l1.addingData := a4;
+					l1.makingNewCard := a5;
+					l1.selectedLayout := a1;
+					l1.selectedPath := a2;
+					newtAppBase:RememberedOpen(l1);
+					(newtAppBase.editSlipLayout := l1)
+				end)
+		end,
+		viewSetupChildrenScript: func() begin
+			(if _coolToStart then begin
+					if (not allLayouts.(currentLayout)) then begin
+							currentLayout := 'default
+						end;
+					inherited:?viewSetupChildrenScript()
+				end)
+		end,
+		viewHelpTopic: nil,
+		editSlipLayout: nil,
+		HandleUndoDelete: func(a1) begin
+			self.target.(a1[0]) := a1[1];
+			targetView:?StartFlush();
+			self:AddUndoAction('HandleRedoDelete, [Array: a1]);
+			self:RedoChildren()
+		end,
+		HandleNewButtonAction: func(a1) begin
+			local l1;
+			(if (a1.dataDef = 'newEntry) then self:ChooseNewEntry() else self:BeginNewEntry((if (l1 := '{serial: |Serial:NIE|, Modem: |Modem:NIE|, MacIP: |LocalTalk:NIE|, ethernet: |Ethernet:NIE|}.(a1.dataDef)) then l1 else a1.dataDef), a1.symbol))
+		end
+	},
+	devInstallScript: compile(
+		constants: {
+			kFunction_1016e7d: func(a1) begin
+				GetRoot().|InternetSetup:NIE|:?PutAwayScript(a1)
+			end
+		},
+		func(a1) begin
+			local l1;
+			if (not GetRoot().|InternetSetup:Newton|) then begin
+					GetRoot().(EnsureInternal('|InternetSetup:Newton|)) := {PutAwayScript: kFunction_1016e7d}
+				end;
+			l1 := a1.theForm;
+			(a1.removeFrame := l1:NewtInstallScript(l1))
+		end),
+	removeScript: func(a1) begin
+		local l1;
+		if GetRoot().|InternetSetup:Newton| then begin
+				RemoveSlot(GetRoot(), '|InternetSetup:Newton|)
+			end;
+		call l1.NewtRemoveScript with ((l1 := a1.removeFrame))
+	end,
+	installScript: func(a1) begin
+		a1:?devInstallScript(a1);
+		if HasSlot(a1, 'devInstallScript) then begin
+				RemoveSlot(a1, 'devInstallScript)
+			end;
+		(a1.installScript := nil)
+	end
+});
+
+allInfo := "All Info";
+
+objectsProto := {
+	AddAllInfoItem: func(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) begin
+		local v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v14_yyyyyyyyyyyyyyyyyyyyyyyyyyyxxxxxxxxxxxxxxxxx, v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyy, v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy, v20_wwwwwwwwwwvvvvvv, v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v22_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyy, v23_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww, v26_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyy, v27_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v29_xwwwwwwwwwwwwwwww;
+		v26_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyy := a7;
+		v27_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := nil;
+		v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww := nil;
+		if a5.showEmptyData then begin
+				v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy := true
+			end;
+		if (if (ClassOf(a1) = 'pathExpr) then IsArray(target.(a1))) then begin
+				v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy := true;
+				(a5 := Clone(a5)).whichOne := a1[1];
+				v20_wwwwwwwwwwvvvvvv := [Array: target.(a1)]
+			end else begin
+				if IsArray(a1) then begin
+						v20_wwwwwwwwwwvvvvvv := (foreach v18_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy in a1 collect begin
+							v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyy := target.(v18_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy);
+							if (not v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy) then begin
+									if IsInstance(v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyy, 'string) then begin
+											v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy := v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyy
+										end else begin
+											v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy := v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyy
+										end
+								end;
+							v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyy
+						end)
+					end else begin
+						v20_wwwwwwwwwwvvvvvv := [Array: target.(a1)];
+						v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy := target.(a1)
+					end
+			end;
+		if a5.HideIfTrue then begin
+				if (target.(a5.HideIfTrue[0]) = a5.HideIfTrue[1]) then begin
+						v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy := nil
+					end
+			end;
+		if (not v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy) then begin
+				return a7
+			end;
+		v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := SetBounds(a8.left, a7, a8.right, ((a7 + a8.bottom) - a8.top));
+		a10.font := (if a9 then @fontSystem14Bold else viewFont);
+		v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := fontHeight(a10.font);
+		(while true do begin
+				if (if reduceFont then (not v29_xwwwwwwwwwwwwwwww)) then begin
+						v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.bottom := (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top + (v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy * 2))
+					end;
+				if a5.shapeFunc then begin
+						if (v22_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyy := a5:shapeFunc(v20_wwwwwwwwwwvvvvvv, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, a7, a10)) then begin
+								v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww := v22_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyy.shape;
+								v27_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := v22_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyy.misc
+							end
+					end else begin
+						if a5.formatFunc then begin
+								v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := a5:formatFunc(v20_wwwwwwwwwwvvvvvv)
+							end else begin
+								v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := ParamStr(a5.format, v20_wwwwwwwwwwvvvvvv)
+							end;
+						TrimString(v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy);
+						if StrFilled(v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy) then begin
+								v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww := MakeTextLines(v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, a10.font)
+							end
+					end;
+				(if (if (if (if reduceFont then (not v29_xwwwwwwwwwwwwwwww)) then v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww) then (Length(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww) > 1)) then begin
+						v29_xwwwwwwwwwwwwwwww := true;
+						a10.font := 1060865;
+						v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := fontHeight(a10.font);
+						v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.bottom := ((a7 + a8.bottom) - a8.top);
+						(v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top := (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.bottom - v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy))
+					end else break)
+			end);
+		if (if v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww then (Length(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww) > 0)) then begin
+				addHt := (((v14_yyyyyyyyyyyyyyyyyyyyyyyyyyyxxxxxxxxxxxxxxxxx := ShapeBounds(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww)).bottom + v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy) - FontAscent(a10.font));
+				if (CanScroll or (addHt <= a8.bottom)) then begin
+						a7 := addHt
+					end else begin
+						return a7
+					end;
+				if (if reduceFont then v29_xwwwwwwwwwwwwwwww) then begin
+						ArrayInsert(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww, a10, 0)
+					end else begin
+						if a9 then begin
+								v23_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := MakeShape(GetDataDefs(target.class).overviewIcon);
+								ArrayMunger(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww, 0, 0, [Array: a10, OffsetShape(v23_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, 0, ((v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy - ShapeBounds(v23_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy).bottom) div 2))], 0, nil);
+								AddArraySlot(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww, {font: viewFont, justification: a10.justification})
+							end else begin
+								if showBullet then begin
+										AddArraySlot(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww, OffsetShape(MakeShape(tapIcon), 0, (v14_yyyyyyyyyyyyyyyyyyyyyyyyyyyxxxxxxxxxxxxxxxxx.top + ((v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy - 4) div 2))))
+									end
+							end
+					end;
+				ArrayMunger(a3, Length(a3), 0, v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww, 0, nil)
+			end;
+		if (a7 > v26_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyy) then begin
+				AddArraySlot(a4, {vOffset: a7, layout: a6, path: a2, misc: v27_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy})
+			end;
+		a7
+	end,
+	viewJustSym: nil,
+	tapIcon: {
+		bounds: {left: 0, top: 0, right: 14, bottom: 3},
+		bits: tapIconBits,
+		colorData: {cbits: tapIconBits, bitDepth: 1}
+	},
+	viewFormat: vfPen(1),
+	reduceFont: nil,
+	boldTitle: nil,
+	viewDrawScript: func() begin
+		(if shapeArray then self:DrawShape(shapeArray, {font: viewFont, justification: viewJustSym}))
+	end,
+	showBullet: nil,
+	hitArray: nil,
+	viewFlags: vVisible + vClickable + vGesturesAllowed,
+	GetBottom: func() begin
+		local l1;
+		(if ((l1 := Length(hitArray)) > 0) then hitArray[(l1 - 1)].vOffset else 0)
+	end,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewOriginY: 0,
+	viewJustify: vjParentFullH + vjParentFullV,
+	SetOrigin: func(a1, a2) begin
+		OffsetShape(shapeArray, (viewOriginX - a1), (viewOriginY - a2));
+		viewOriginX := a1;
+		viewOriginY := a2;
+		self:dirty()
+	end,
+	layouts: nil,
+	shapeArray: nil,
+	GetMaxTextWidth: func() begin
+		l2 := 0;
+		l3 := viewFont;
+		local l1;
+		local l2;
+		local l3;
+		(foreach l1 in shapeArray do begin
+				if (ClassOf(l1) = 'text) then begin
+						l2 := max(l2, StrFontWidth(GetShapeInfo(l1).text, l3))
+					end else begin
+						if (ClassOf(l1) = 'frame) then begin
+								if l1.font then begin
+										l3 := l1.font
+									end
+							end
+					end
+			end);
+		l2
+	end,
+	viewClickScript: func(a1) begin
+		l2 := (Length(hitArray) - 1);
+		InkOff(a1);
+		l3 := ((GetPoint(5, a1) + viewOriginY) - origin);
+		l4 := (GetPoint(4, a1) - self:GlobalBox().left);
+		l5 := 0;
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		local l5;
+		local l6;
+		local l7;
+		local l8;
+		(for l1 := 0 to l2 do begin
+				if (l3 <= hitArray[l1].vOffset) then begin
+						PlaySound(@click);
+						l6 := hitArray[l1].layout;
+						(l7 := self:LocalBox()).top := (if (l1 = 0) then 0 else (hitArray[(l1 - 1)].vOffset - viewOriginY));
+						l7.bottom := (hitArray[l1].vOffset - viewOriginY);
+						if (l8 := newtAppBase:GetInfoFrame(l6, target.class)).actionFunc then begin
+								if l8:actionFunc(l4, (l3 - l5), self, l7, target, hitArray[l1].path, hitArray[l1].misc) then begin
+										return true
+									end
+							end;
+						self:DoDrawing('Hiliter, [Array: MakeShape(l7)]);
+						if (l6 = 'setupName) then begin
+								WhichPage := 0;
+								newtAppBase:ShowEditSlip('walkThru, nil, nil, nil, nil)
+							end else begin
+								newtAppBase:ShowEditSlip(l6, hitArray[l1].path, nil, nil, nil)
+							end;
+						self:dirty();
+						return true
+					end;
+				l5 := hitArray[l1].vOffset
+			end);
+		nil
+	end,
+	origin: nil,
+	showMultipleData: nil,
+	viewFont: tsFancy + tsSize(12),
+	viewOriginX: 0,
+	viewSetupChildrenScript: func() begin
+		l12 := BAnd(viewJustify, 3);
+		l13 := true;
+		hitArray := [Array: ];
+		shapeArray := [Array: ];
+		origin := self:GlobalBox().top;
+		(l8 := self:LocalBox()).left := (if (showBullet or boldTitle) then 19 else 0);
+		l9 := 0;
+		if (l12 = 0) then begin
+				viewJustSym := 'left
+			end else begin
+				if (l12 = 1) then begin
+						viewJustSym := 'right
+					end else begin
+						if (l12 = 2) then begin
+								viewJustSym := 'center
+							end else begin
+								if (l12 = 3) then begin
+										viewJustSym := 'full
+									end
+							end
+					end
+			end;
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		local l5;
+		local l6;
+		local l7;
+		local l8;
+		local l9;
+		local l10;
+		local l11;
+		local l12;
+		local l13;
+		local l14;
+		local l15;
+		(if (if target then (l3 := layouts.(target.class))) then (for l16 := 0 to (Length(l3) - 1) do begin
+					l2 := GetRoot().|InternetSetup:NIE|:GetInfoFrame((l1 := l3[l16]), target.class);
+					l14 := l9;
+					if (l4 := GetRoot().|InternetSetup:NIE|:MakeDataPaths(l2.checkPrefix[0], l2.checkPaths, l2.stringData)) then begin
+							l9 := self:AddAllInfoItem(l4, l2.checkPrefix[0], shapeArray, hitArray, l2, l1, l9, l8, (if l13 then boldTitle), {justification: viewJustSym, font: viewFont})
+						end;
+					l13 := nil;
+					if (if (if (if IsArray(l2.checkPrefix[1]) then (l6 := l2.checkPrefix[1])) then (l7 := target.(l6))) then (showMultipleData or (l9 = l14))) then begin
+							if showMultipleData then begin
+									l15 := Length(l7)
+								end else begin
+									l15 := 1
+								end;
+							(for l10 := 0 to (l15 - 1) do begin
+									AddArraySlot((l5 := Clone(l2.checkPrefix[1])), l10);
+									if (if (not CanScroll) then (((l8.top + l9) + fontHeight(viewFont)) > l8.bottom)) then begin
+											break
+										end else begin
+											if (l4 := GetRoot().|InternetSetup:NIE|:MakeDataPaths(l5, l2.checkPaths, l2.stringData)) then begin
+													l9 := self:AddAllInfoItem(l4, l5, shapeArray, hitArray, l2, l1, l9, l8, nil, {justification: viewJustSym, font: viewFont})
+												end
+										end
+								end)
+						end
+				end))
+	end,
+	CanScroll: nil,
+	Hiliter: func(a1) begin
+		self:DrawShape(a1, {transferMode: 2, penPattern: 0, fillPattern: 5})
+	end,
+	viewClass: clView
+};
+
+tapIconBits := bitmap('bits, "resources/bits/100171d.png", "0000000000040000000000000003000e", 1);
+
+internetSetup := "Internet Setup";
+
+unhilitedBounds := {left: 0, top: 0, right: 30, bottom: 30};
+
+unhilitedBits := bitmap('bits, "resources/bits/100254d.png", "000000000004000000000000001e001e", 1);
+
+colorDataCbits := bitmap('cbits, "resources/cbits/10026a5.png", "000000000020000000000000001e001e", 8);
+
+hilitedBits := bitmap('bits, "resources/bits/1002dfd.png", "000000000004000000000000001e001e", 1);
+
+aboutViewText := "";
+
+internetSetups := "Internet Setups";
+
+start := {data: "Get Started\u000d", layout: 2080, name: "start"};
+
+listItem := {data: "Determine how to connect", viewFont: viewFont, layout: 32, name: determine};
+
+viewFont := {family: 'espy, face: 1, size: 10};
+
+determine := "determine";
+
+blocksItem := {
+	data: "Choose one of the following:\u000d• Ethernet to connect to an Ethernet network for Internet access\u000d• LocalTalk to use a LocalTalk cable to connect to an AppleTalk network bridged to a TCP/IP network and a MacIP server\u000d• Modem to use a Newton-compatible modem to connect to the Internet\u000d• Serial to use a serial cable to connect to a computer that’s connected to the Internet\u000d",
+	styles: [|Array|:
+		31,
+		viewFont_2,
+		8,
+		viewFont,
+		57,
+		viewFont_2,
+		9,
+		viewFont,
+		110,
+		viewFont_2,
+		5,
+		viewFont,
+		63,
+		viewFont_2,
+		6,
+		viewFont,
+		82,
+		viewFont_2
+	]
+};
+
+viewFont_2 := {family: 'espy, face: 0, size: 10};
+
+know := {data: "Know what I need", viewFont: viewFont, layout: 32, name: "know"};
+
+blocksItem_2 := {
+	data: "You can connect to the Internet using Ethernet, LocalTalk, modem, or serial connections.\u000dYou’ll need:\u000d• an account with an Internet Service Provider (ISP) or one set up through work or school, or access to a private company intranet\u000d• one or more Internet applications for your Newton device\u000d",
+	viewFont: viewFont_2
+};
+
+gse := {data: "Get started using Ethernet", viewFont: viewFont, layout: 32, name: "gse"};
+
+blocksItem_3 := {
+	data: "For the basic requirements, see the subtopic “Know What I Need.”\u000d\u000dYou’ll also need\u000d• an Ethernet PC card compatible with your Newton device\u000d• an Ethernet network\u000d",
+	viewFont: viewFont_2
+};
+
+gsat := {data: "Get started using AppleTalk", viewFont: viewFont, layout: 32, name: "gsat"};
+
+blocksItem_4 := {
+	data: "For the basic requirements, see the subtopic “Know What I Need.”\u000d\u000dYou’ll also need\u000d• a LocalTalk cable connected to an AppleTalk network bridged to a TCP/IP network and a Mac IP server\u000dOR\u000d•an Ethernet PC card connected to an EtherTalk network bridged to a TCP/IP network and a Mac IP server\u000d",
+	viewFont: viewFont_2
+};
+
+gsm := {data: "Get started using a modem", viewFont: viewFont, layout: 32, name: "gsm"};
+
+blocksItem_5 := {
+	data: "For the basic requirements, see the subtopic “Know What I Need.”\u000d\u000dYou’ll also need\u000d• an analog phone line or cellular telephone\u000d• an external modem or PC card modem compatible with your Newton device\u000d• a setup file for your modem \u000dSetups for some modems are included with your Newton device. Check with your modem manufacturer for more information.\u000d",
+	viewFont: viewFont_2
+};
+
+gss := {data: "Get started using a serial connection", viewFont: viewFont, layout: 32, name: "gss"};
+
+blocksItem_6 := {
+	data: "For the basic requirements, see the subtopic “Know What I Need.”\u000d\u000dYou’ll also need\u000d• a serial cable to connect your Newton device to a computer connected to the Internet\u000d",
+	viewFont: viewFont_2
+};
+
+gather := {data: "Gather information", viewFont: viewFont, layout: 32, name: "gather"};
+
+blocksItem_7 := {
+	data: "Get the necessary information from your ISP or network administrator: \u000d• IP addresses for your Newton device and your gateway, or router\u000d• a domain name\u000dYou may also need:\u000d• the subnet mask\u000d• your user ID and password\u000d• access telephone numbers\u000d• which link protocol to use—PPP or SLIP\u000d• an ISP template\u000d• steps in the login or logout script\u000d",
+	viewFont: viewFont_2
+};
+
+create := {data: "Create an Internet Setup\u000d", layout: 2080, name: "create"};
+
+new := {data: "Create a new Internet setup", viewFont: viewFont, layout: 32, name: "new"};
+
+blocksItem_8 := {
+	data: "An Internet setup is a collection of information you need to connect to the Internet via a network or an ISP. To create an Internet setup, you use a template—Generic Setup, SecurID, UNIX, or your ISP.\u000d1. Tap New.\u000d2. In the pop-up list, tap the desired template.\u000d",
+	viewFont: viewFont_2
+};
+
+ethernet := {data: "Using Ethernet\u000d", layout: 2080, name: "ethernet"};
+
+ethernet1 := {data: enterInformationOnSlip, viewFont: viewFont, layout: 32, name: "ethernet1"};
+
+enterInformationOnSlip := "Enter Information on Slip 1";
+
+blocksItem_9 := {
+	data: "• Setup Name—name for this setup, such as Work, Home, School, Field Office\u000d• Configuration—Manual or DHCP Server\u000d• Card—the type of Ethernet PC card you’re using\u000d",
+	viewFont: viewFont_2
+};
+
+ethernet2 := {data: enterInformationOnSlip_2, viewFont: viewFont, layout: 32, name: "ethernet2"};
+
+enterInformationOnSlip_2 := "Enter Information on Slip 2";
+
+blocksItem_10 := {
+	data: "• Local IP Address—a numeric address for your Newton device\u000d• Subnet Mask—identifies the subnetwork\u000d• Gateway/Router Address—a numeric address for the gateway that directs information to/from your Newton device\u000d• Primary DNS/Name Server Address— identifies the computer that contains a list of IP addresses and their associated names\u000d• Domain Name—an alphabetic address for the network you’re connected to\u000d",
+	viewFont: viewFont_2
+};
+
+atalk := {data: "Using LocalTalk\u000d ", layout: 2080, name: "atalk"};
+
+atalk1 := {data: enterInformationOnSlip, viewFont: viewFont, layout: 32, name: "atalk1"};
+
+blocksItem_11 := {
+	data: "• Setup Name—name for this setup, such as Work, Home, School, Field Office\u000d• Configuration—Manual or MacIP Server\u000d• Zone—the AppleTalk zone that contains the MacIP server (or router) you are connecting to\u000d",
+	viewFont: viewFont_2
+};
+
+listItem_2 := {data: enterInformationOnSlip_2, viewFont: viewFont, layout: 32, name: enterinfo};
+
+enterinfo := "enterinfo";
+
+blocksItem_12 := {
+	data: "• Local IP Address—a numeric address for your Newton device \u000d• Gateway/Router Address—a numeric address for the gateway that directs information to/from your Newton device\u000d• Primary DNS/Name Server Address— identifies the computer that contains a list of IP addresses and associated names\u000d• Domain Name—an alphabetic address for the network you’re connected to\u000d",
+	viewFont: viewFont_2
+};
+
+modem := {data: "Using a modem", layout: 2080, name: "modem"};
+
+modem1 := {data: enterInformationOnSlip, viewFont: viewFont, layout: 32, name: "modem1"};
+
+blocksItem_13 := {
+	data: "• Setup Name—name for this setup, such as Work, Home, School, Field Office\u000d• Protocol—Point-to-Point or Serial Line Interface Protocol\u000d• Configuration—Manual or Server\u000d• Access Number—the telephone number you use to connect\u000d• User ID—your user or login name\u000d• Set/Edit Password—your user password\u000d• When closing, disconnect—the time until the connection is dropped after you close an Internet application\u000d ",
+	viewFont: viewFont_2
+};
+
+listItem_3 := {data: enterInformationOnSlip_2, viewFont: viewFont, layout: 32, name: enterinfo};
+
+blocksItem_14 := {data: localIPAddressA, viewFont: viewFont_2};
+
+localIPAddressA := "• Local IP Address—a numeric address for your Newton device\u000d• Gateway/Router Address—a numeric address for the gateway that directs information to/from your Newton device\u000d• Primary DNS/Name Server Address— identifies the computer that contains a list of IP addresses and associated names\u000d• Domain Name—an alphabetic address for the network you’re connected to\u000d";
+
+listItem_4 := {data: "Add or edit modem settings", viewFont: viewFont, layout: 32, name: modemsettings};
+
+modemsettings := "modemsettings";
+
+blocksItem_15 := {
+	data: "1. Go to the desired setup.\u000d2. Do one of the following:\u000d• Tap Add, then tap Modem Settings.\u000d• Tap Modem Settings.\u000d3. Enter settings for your modem. See the documentation that came with your modem or contact your modem manufacturer.\u000d4. When you’re finished, tap X.\u000d",
+	viewFont: viewFont_2
+};
+
+serial := {data: "Using a serial connection\u000d", layout: 2080, name: "serial"};
+
+serial1 := {data: enterInformationOnSlip, viewFont: viewFont, layout: 32, name: "serial1"};
+
+blocksItem_16 := {
+	data: "• Setup Name—name for this setup, such as Work, Home, School, Field Office\u000d• Protocol—Point-to-Point or Serial Line Interface Protocol\u000d• Configuration—Manual or Server\u000d• User ID—your user or login name\u000d• Set/Edit Password—your user password\u000d• When closing, disconnect—the time until the connection is dropped after you close an Internet application\u000d",
+	viewFont: viewFont_2
+};
+
+listItem_5 := {data: enterInformationOnSlip_2, viewFont: viewFont, layout: 32, name: enterinfo};
+
+blocksItem_17 := {data: localIPAddressA, viewFont: viewFont_2};
+
+add := {data: "Add Information to a Setup\u000d", layout: 2080, name: "add"};
+
+addinfo := {data: "Add information", viewFont: viewFont, layout: 32, name: "addinfo"};
+
+blocksItem_18 := {
+	data: "You can add information to an existing setup. \u000d1. Go to the desired setup.\u000d2. Tap Add and in the pop-up list, tap your choice.\u000d3. In the slip, enter the new information.\u000d4. When you’re finished, tap X.\u000d",
+	viewFont: viewFont_2
+};
+
+accessno := {data: "Add alternate access numbers", viewFont: viewFont, layout: 32, name: "accessno"};
+
+blocksItem_19 := {
+	data: "1. Go to the desired setup.\u000d2. Tap Add, then tap Alternate Access Number.\u000d3. Enter the number.\u000d4. When you’re finished, tap X.\u000d",
+	viewFont: viewFont_2
+};
+
+listItem_6 := {data: "Add DNS/Name server addresses", viewFont: viewFont, layout: 32, name: dns};
+
+dns := "dns";
+
+blocksItem_20 := {
+	data: "1. Go to the desired setup.\u000d2. Tap Add, then tap DNS/Name Server Address.\u000d3. Enter the address.\u000d4. When you’re finished, tap X.\u000d",
+	viewFont: viewFont_2
+};
+
+script := {
+	data: "Add a login/logout script\u000d",
+	styles: [|Array|: 26, viewFont, 1, viewFont_2],
+	layout: 32,
+	name: "script"
+};
+
+steps := {data: "Determine the script steps", viewFont: viewFont, layout: 32, name: "steps"};
+
+blocksItem_21 := {
+	data: "If your ISP doesn’t use PAP or CHAP authentication, you need to enter a login script. You may also need a logout script.\u000d\u000dTo determine the steps for scripts, contact your ISP. Or, use a terminal emulator program on your Newton device or your computer to log into the host, noting the steps you take to log in and log out. \u000d",
+	viewFont: viewFont_2
+};
+
+addscript := {data: "Create a login/logout script", viewFont: viewFont, layout: 32, name: "addscript"};
+
+blocksItem_22 := {
+	data: "1. Go to the desired setup.\u000d2. Tap Add, then tap Login Script or Logout Script.\u000d3. Tap Done, then tap the first command. \u000d4. Continue choosing commands until the script is completed. Leave the final “Done.”\u000d5. Tap Timeout, then tap your choice.\u000d6. If you want, tap the checkbox next to “Display script activity.”\u000d",
+	viewFont: viewFont_2
+};
+
+listItem_7 := {data: "Add modem settings", viewFont: viewFont, layout: 32, name: modemsettings};
+
+blocksItem_23 := {
+	data: "You can add modem settings to a particular Internet setup. When you use this setup, it overrides the modem settings in Prefs.\u000d1. Go to the desired setup.\u000d2. Tap Add, then tap Modem Settings.\u000d3. Enter the appropriate settings. \u000d4. When you’re finished, tap X.\u000d",
+	viewFont: viewFont_2
+};
+
+discodelay := {data: "Add a disconnect delay", viewFont: viewFont, layout: 32, name: "discodelay"};
+
+blocksItem_24 := {
+	data: "You can set a disconnect delay if you want to wait a specified time before disconnecting from the Internet, after you close Internet applications.\u000d1. Go to the desired setup.\u000d2. Tap Add, then tap Disconnect Delay.\u000d3. Tap “When closing, disconnect,” then tap your choice.\u000d4. When you’re finished, tap X.\u000d",
+	viewFont: viewFont_2
+};
+
+advanced := {data: "Add advanced serial settings", viewFont: viewFont, layout: 32, name: "advanced"};
+
+blocksItem_25 := {
+	data: "1. Go to the desired setup.\u000d2. Tap Add, then tap Advanced Settings.\u000d3. Enter settings, then tap X.\u000d• Port—the port or card slot you’re using \u000d• Data Rate—speed of data transfer\u000d• Parity—error detection that appends a bit to each data byte\u000d• Stop Bits—one or more bits that signal the end of a byte\u000d• Use Hardware Flow Control—hardware signals that control data flow\u000d",
+	viewFont: viewFont_2
+};
+
+redial := {data: "Add redial settings", viewFont: viewFont, layout: 32, name: "redial"};
+
+blocksItem_26 := {
+	data: "1. Go to the desired setup.\u000d2. Tap Add, then tap Redial Settings.\u000d3. Enter your settings, then tap X.\u000d• Redial—specifies access numbers to redial\u000d• Try to redial—sets the number of times you want to redial \u000d• Wait before redialing—specifies the time before redialing\u000d",
+	viewFont: viewFont_2
+};
+
+country := {data: "Add the country of my ISP", viewFont: viewFont, layout: 32, name: "country"};
+
+blocksItem_27 := {
+	data: "1. Go to the desired setup.\u000d2. Tap Add, then tap Country.\u000d3. Do one of the following:\u000d• Enter the country.\u000d• Tap Country, then tap the scroll arrows or tap a lettered tab to move through the list. Tap your country, then tap X. \u000d4. When you’re finished, tap X.\u000d",
+	viewFont: viewFont_2
+};
+
+edit := {data: "Change Information\u000d", layout: 2080, name: "edit"};
+
+editing := {data: "Change information in a setup ", viewFont: viewFont, layout: 32, name: "editing"};
+
+blocksItem_28 := {
+	data: "1. Go to the setup you want to change.\u000d2. Tap the item you want to edit.\u000d3. In the slip, enter the information.\u000d4. When you’re finished, tap X.\u000d",
+	viewFont: viewFont_2
+};
+
+configuration := {data: "Change my configuration ", viewFont: viewFont, layout: 32, name: "configuration"};
+
+blocksItem_29 := {
+	data: "The configuration tells your Newton device how you are going to connect—manually, using information you enter, or via a server, which allows the server to send the settings.\u000d1. Go to the setup you want to change.\u000d2. Tap Configuration.\u000d3. Tap Configuration again, then tap your choice.\u000d4. When you’re finished, tap X.\u000d",
+	viewFont: viewFont_2
+};
+
+subnet := {data: "Change the subnet mask", viewFont: viewFont, layout: 32, name: "subnet"};
+
+blocksItem_30 := {
+	data: "The subnet mask is a numeric address that identifies the subnetwork your device is connected to.\u000d\u000d1. Go to the setup you want to change.\u000d2. Tap Subnet Mask.\u000d3. Enter the new subnet mask.\u000d4. When you’re finished, tap X.\u000d",
+	viewFont: viewFont_2
+};
+
+ipaddress := {data: "Change the local IP address", viewFont: viewFont, layout: 32, name: "ipaddress"};
+
+blocksItem_31 := {
+	data: "The local IP address is a numeric address that identifies your Newton device.\u000d\u000d1. Go to the setup you want to change.\u000d2. Tap Local IP Address.\u000d3. Enter the new address.\u000d4. When you’re finished, tap X.\u000d",
+	viewFont: viewFont_2
+};
+
+gateway := {data: "Change the gateway/router address ", viewFont: viewFont, layout: 32, name: "gateway"};
+
+blocksItem_32 := {
+	data: "The gateway, or router, address is a numeric address that identifies the gateway that directs information to and from your Newton device.\u000d\u000d1. Go to the setup you want to change.\u000d2. Tap Gateway/Router Address.\u000d3. Enter the new address.\u000d4. When you’re finished, tap X.\u000d",
+	viewFont: viewFont_2
+};
+
+listItem_8 := {data: "Change the name server addresses", viewFont: viewFont, layout: 32, name: dns};
+
+blocksItem_33 := {
+	data: "The DNS (Domain Name System)/Name server address identifies the computer that contains a list of IP addresses and names associated with those numeric addresses.\u000d\u000d1. Go to the setup you want to change.\u000d2. Tap the address you want to edit.\u000d3. Enter the new address.\u000d4. When you’re finished, tap X.\u000d",
+	viewFont: viewFont_2
+};
+
+domain := {data: "Change the domain name", viewFont: viewFont, layout: 32, name: "domain"};
+
+blocksItem_34 := {
+	data: "The domain name is an alphabetic Internet address for the network you’re connected to.\u000d\u000d1. Go to the setup you want to change.\u000d2. Tap the domain name you want to edit.\u000d3. Enter the address.\u000d4. When you’re finished, tap X.\u000d",
+	viewFont: viewFont_2
+};
+
+idpassword := {data: "Change my user ID or password", viewFont: viewFont, layout: 32, name: "idpassword"};
+
+blocksItem_35 := {
+	data: "Your user ID, also called your login name, and your password are provided by your ISP or network administrator.\u000d\u000d1. Go to the setup you want to change.\u000d2. Tap User ID.\u000d3. If necessary, enter your new user ID.\u000d4. If necessary, tap Set/Edit Password. Enter your password, press or tap the Tab key, then enter the password again. When you’re ready, tap Set.\u000d5. Tap X to close the slip.\u000d",
+	viewFont: viewFont_2
+};
+
+use := {data: "Working with Internet Setups\u000d", layout: 2080, name: "use"};
+
+view := {data: "View Internet setups ", viewFont: viewFont, layout: 32, name: "view"};
+
+blocksItem_36 := {
+	data: "From the Overview:\u000d1. Tap the name of the setup you want to view.\u000d2. Tap X to return to the Overview.\u000d\u000dFrom an Internet setup:\u000d• To view the summary slip, tap or press the Scroll Up/Scroll Down arrows or keys.\u000d• To see a list of all your setups, tap or press Overview.\u000d",
+	viewFont: viewFont_2
+};
+
+worksite := {data: "Add an Internet setup to a worksite", viewFont: viewFont, layout: 32, name: "worksite"};
+
+blocksItem_37 := {
+	data: "1. Tap or press Extras, tap the folder tab, then tap All Icons.\u000d2. Tap Owner Info, then tap a worksite.\u000d3. Tap Add, then tap Internet Access.\u000d4. Tap Internet Setup, then tap a setup. \u000d5. Tap X to close the slip.\u000d6. Tap Show, then tap All Info. The selected setup should appear.\u000d7. When you’re finished, tap X.\u000d",
+	viewFont: viewFont_2
+};
+
+store := {data: "Store an Internet setup on a PC card", viewFont: viewFont, layout: 32, name: "store"};
+
+blocksItem_38 := {
+	data: "Before you create your Internet setup:\u000d1. Tap the i button in the lower-left corner, then tap Prefs.\u000d2. Make sure the checkbox “Always store new setups internally” is not checked. \u000d3. Insert a PC storage card, then create your Internet setup.\u000d",
+	viewFont: viewFont_2
+};
+
+move := {data: "Move an Internet setup", viewFont: viewFont, layout: 32, name: "move"};
+
+blocksItem_39 := {
+	data: "1. Go to the desired setup.\u000d2. Tap the Folder button. \u000d3. Do one of the following:\u000d•To store the setup in the internal memory, tap Internal.\u000d• To store the setup on a card, tap the card’s name.\u000d4. Tap File.\u000d",
+	viewFont: viewFont_2
+};
+
+send := {data: "Send an Internet setup", viewFont: viewFont, layout: 32, name: "send"};
+
+blocksItem_40 := {
+	data: "You can fax, beam, or mail Internet setups to other Newton devices.\u000d1. Go to the desired setup.\u000d2. Tap the Routing button.\u000d3. In the pop-up list, tap your choice.\u000d• If you’re beaming, make sure the infrared windows of the two Newton devices are aligned and within three feet or each other.\u000d• If you’re printing or mailing, enter information in the routing slip, then tap Fax or Mail. In the pop-up list, tap Now or Later.\u000d",
+	viewFont: viewFont_2
+};
+
+delete := {data: "Delete an Internet setup", viewFont: viewFont, layout: 32, name: "delete"};
+
+blocksItem_41 := {
+	data: "From the Overview:\u000d1. Tap the checkbox next to each setup you want to delete.\u000d2. Tap the Routing button, then tap Delete.\u000d3. When the message appears asking if you want to delete, tap OK.\u000d\u000dFrom an Internet setup:\u000d1. Tap the Routing button, then tap Delete.\u000d2. When the message appears asking if you want to delete, tap OK.\u000d",
+	viewFont: viewFont_2
+};
+
+connect := {data: "Connect and Disconnect\u000d", layout: 2080, name: "connect"};
+
+connectinternet := {data: "Connect to the Internet", viewFont: viewFont, layout: 32, name: "connectinternet"};
+
+blocksItem_42 := {
+	data: "1. Create an Internet setup.\u000d2. Start your Internet application. \u000dA connection slip appears. You can\u000d• use the default Internet setup \u000d• select a different Internet setup\u000d• switch to a different worksite\u000d3. Choose the settings you want, then tap Connect.\u000d",
+	viewFont: viewFont_2
+};
+
+disconnect := {data: "Disconnect from the Internet", viewFont: viewFont, layout: 32, name: "disconnect"};
+
+blocksItem_43 := {
+	data: "• Close any Internet applications that are open.\u000d\u000dIf you want to set a time delay, see the subtopic “Add a Disconnect Delay” under the topic “Add Information to a Setup.”\u000d\u000dIf you set a time delay and want to disconnect before this time, see the subtopic “Override the Disconnect Delay.”\u000d",
+	viewFont: viewFont_2
+};
+
+override := {data: "Override the disconnect delay", viewFont: viewFont, layout: 32, name: "override"};
+
+blocksItem_44 := {
+	data: "If you specified a time delay before disconnecting and closed all Internet application before this time, a blinking star appears at the top of the screen.  \u000d\u000dTo disconnect sooner than the time delay:\u000d1. Tap the blinking star, then tap Internet.\u000d2. In the slip that appears, tap OK.\u000d",
+	viewFont: viewFont_2
+};
+
+template := {nColumns: 1, column: [|Array|: {width: 12, type: 0}]};
+
+blocksBounds := [|Array|: 0, 0, 206, 14];
+
+blocksBounds_2 := [|Array|: 0, 14, 206, 214];
+
+blocksBounds_3 := [|Array|: 0, 0, 206, 28];
+
+blocksBounds_4 := [|Array|: 0, 28, 206, 214];
+
+partItem := {
+	_proto: {
+		title: aboutViewText,
+		viewBounds: {left: 0, top: 0, right: 0, bottom: 15},
+		Retarget: func() begin
+			(if self.viewCObject then self:SyncView())
+		end,
+		viewFlags: vVisible + vReadOnly + vClipping,
+		viewSetupFormScript: func() begin
+			local l1, l2, l3;
+			l1 := GetDataDefs(target.class):StringExtract(target, 1);
+			if (if GetVariable(self, 'selectedLayout) then (selectedLayout <> 'default)) then begin
+					if (l3 := GetViewDefs(target.class).(selectedLayout)) then begin
+							l2 := (if l3.nameByClass then l3.nameByClass.(target.class) else l3.name)
+						end
+				end;
+			if (base.selectedLayout = 'walkThru) then begin
+					self.title := ParamStr("^0 ^1  Page ^2 of ^3", [Array: l1, l2, NumberStr((newtAppBase.WhichPage + 1)), NumberStr(Length(GetDataDefs(base.target.class).newEntryViews))])
+				end else begin
+					if l2 then begin
+							self.title := ParamStr("^0 ^1", [Array: l1, l2])
+						end else begin
+							self.title := ParamStr("^0", [Array: l1])
+						end
+				end;
+			self.titleIcon := GetDataDefs(target.class).overviewIcon;
+			inherited:?viewSetupFormScript()
+		end,
+		_proto: @protoTitle
+	},
+	preAllocatedContext: 'header
+};
+
+partItem_2 := {
+	buttonClickScript: func() begin
+		base:CloseAction()
+	end,
+	_proto: @protoCancelButton,
+	preAllocatedContext: 'closeBox
+};
+
+done := {
+	buttonClickScript: func() begin
+		self:hilite(nil);
+		base:CloseAction()
+	end,
+	text: "Done",
+	viewBounds: {left: -37, top: -18, right: -5, bottom: -5},
+	viewJustify: 8388774,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'doneBtn
+};
+
+partItem_3 := {
+	buttonClickScript: compile(
+		constants: {
+			kFunction_100f7a1: func() begin
+				local l1, l2, l3;
+				l2 := (if ((l1 := GetAppParams()).appAreaWidth > 320) then 320 else l1.appAreaWidth);
+				l3 := (if (l1.appAreaHeight > 320) then 320 else l1.appAreaHeight);
+				SetBounds(0, (-(l3 - 8)), (l2 - 16), -8)
+			end
+		},
+		func() begin
+			local l1;
+			self:hilite(nil);
+			if verifyFunc then begin
+					l1 := base:verifyFunc()
+				end;
+			(if (if l1 then StrFilled(l1)) then GetRoot():Notify(3, "Internet Setup", l1) else begin
+					newtAppBase.WhichPage := (newtAppBase.WhichPage + 1);
+					if (selectedLayout = 'walkThru) then begin
+							base.viewBounds := call (kFunction_100f7a1) with ()
+						end else begin
+							base.viewBounds := SetBounds(0, (-(GetAppParams().appAreaHeight - 8)), -304, -8)
+						end;
+					base:SyncView();
+					newtAppBase.editSlipLayout:RedoChildren()
+				end)
+		end),
+	text: continue,
+	viewBounds: {left: -59, top: -18, right: -7, bottom: -5},
+	viewJustify: 8390790,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'ContinueBtn
+};
+
+continue := "Continue";
+
+goBack := {
+	buttonClickScript: func() begin
+		newtAppBase.WhichPage := (newtAppBase.WhichPage - 1);
+		self:hilite(nil);
+		SetValue(base, 'viewBounds, base._proto.viewBounds);
+		base:SyncView();
+		newtAppBase.editSlipLayout:RedoChildren()
+	end,
+	text: "Go Back",
+	viewBounds: {left: -53, top: -18, right: -7, bottom: -5},
+	viewJustify: 8390790,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'goBackBtn
+};
+
+partItem_4 := {_proto: partItem_4Proto, preAllocatedContext: 'info};
+
+partItem_4Proto := {
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV,
+	viewBounds: {left: 5, top: -18, right: 18, bottom: -5},
+	buttonClickScript: func() begin
+		local l1, l2, l3;
+		(if (if (l1 := GetRoot().TinyTim) then l1.viewCObject) then l1:Close() else begin
+				if newtAppBase.viewHelpTopic then begin
+						l2 := newtAppBase.viewHelpTopic
+					end;
+				(if newtAppBase.helpManual then (if l2 then l1:OpenManualTo(newtAppBase.helpManual, l2) else l1:OpenManual(newtAppBase.helpManual)) else (if l2 then l1:OpenHelpTo(l2) else l1:Open()))
+			end)
+	end,
+	icon: {
+		bounds: {left: 0, top: 0, right: 11, bottom: 11},
+		bits: partItem_4ProtoBits,
+		colorData: {cbits: partItem_4ProtoBits, bitDepth: 1}
+	},
+	_proto: @protoPictureButton
+};
+
+partItem_4ProtoBits := bitmap('bits, "resources/bits/100fc3d.png", "000000000004000000000000000b000b", 1);
+
+keyButton := {
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV,
+	viewBounds: {left: 25, top: -18, right: 48, bottom: -5},
+	_proto: @protoKeyboardButton,
+	preAllocatedContext: 'keyButton
+};
+
+blahBlahBlah := {
+	text: "Blah... Blah... Blah...",
+	viewBounds: {left: 10, top: -64, right: -10, bottom: -32},
+	viewFormat: vfFrameBlack + vfPen(1) + vfInset(3),
+	viewJustify: vjParentFullH + vjParentBottomV,
+	viewSetupFormScript: func() begin
+		inherited:?viewSetupFormScript();
+		self.text := self:parent():ChildViewFrames()[0].helpText;
+		(if Visible(AlphaKeys) then (self.viewBounds := SetBounds(viewBounds.left, (AlphaKeys.viewBounds.top - 42), viewBounds.right, (AlphaKeys.viewBounds.top - 10))))
+	end,
+	viewFont: @fontSystem10,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'helpText
+};
+
+delete_2 := {
+	buttonClickScript: func() begin
+		_deletedData := [Array: deleteSlot, target.(deleteSlot)];
+		RemoveSlot(target, deleteSlot);
+		self:StartFlush();
+		base:CloseAction()
+	end,
+	text: "Delete",
+	viewBounds: {left: -66, top: -18, right: -25, bottom: -5},
+	viewJustify: 8388774,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'deleteButton
+};
+
+editFields := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	masterSoupSlot: 'INETSetupSoup,
+	name: "Edit Fields",
+	viewJustify: vjParentFullH + vjParentFullV,
+	forceNewEntry: nil,
+	stepChildren: [stepChildren:
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+			viewJustify: vjParentFullH + vjParentFullV,
+			declareSelf: 'editEntryView,
+			stepChildren: [stepChildren:
+				partItem,
+				{
+					viewBounds: {left: 0, top: 15, right: 0, bottom: 0},
+					viewJustify: vjParentFullH + vjParentFullV,
+					declareSelf: 'editView,
+					extraChildrenHeight: 28,
+					keypadFont: tsSystem + tsSize(10) + tsBold,
+					viewDef: 'default,
+					viewSetupFormScript: func() begin
+						local l1;
+						if (if (if selectedLayout then target) then GetViewDefs(target.class).(selectedLayout)) then begin
+								self.viewDef := selectedLayout
+							end else begin
+								self.viewDef := 'default
+							end;
+						if (ClassOf(selectedPath) = 'pathExpr) then begin
+								self.path := selectedPath
+							end;
+						inherited:?viewSetupFormScript();
+						(if (selectedLayout = 'walkThru) then begin
+								l1 := GetDataDefs(target.class);
+								l1:?SetupViews(target);
+								header:Retarget();
+								viewChildren := [Array: l1.newEntryViews[newtAppBase.WhichPage]];
+								(base.verifyFunc := l1.newEntryViews[newtAppBase.WhichPage].verifyFunc)
+							end)
+					end,
+					viewSetupDoneScript: compile(
+						constants: {
+							kFunction_100f7a1: func() begin
+								local l1, l2, l3;
+								l2 := (if ((l1 := GetAppParams()).appAreaWidth > 320) then 320 else l1.appAreaWidth);
+								l3 := (if (l1.appAreaHeight > 320) then 320 else l1.appAreaHeight);
+								SetBounds(0, (-(l3 - 8)), (l2 - 16), -8)
+							end
+						},
+						func() begin
+							local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
+							l9 := (if (if ((l8 := GetAppParams()).appAreaHeight > 320) then (selectedLayout = 'walkThru)) then 320 else l8.appAreaHeight);
+							l10 := self:LocalBox();
+							l11 := base:GlobalBox();
+							l1 := Length((l2 := self:ChildViewFrames()[0]:ChildViewFrames()));
+							l3 := Clone(base.viewBounds);
+							l4 := ((l2[(l1 - 1)]:GlobalBox().bottom - l11.top) + extraChildrenHeight);
+							if (if (if (not viewChildren[0].noKeyboard) then ((l4 + 5) > l9)) then (not KeyboardConnected())) then begin
+									l7 := self:ChildViewFrames()[1];
+									RemoveStepView(self, l7);
+									l4 := ((l4 - extraChildrenHeight) + 18);
+									AddStepView(self, keyButton)
+								end;
+							if viewChildren[0].helpTopic then begin
+									newtAppBase.viewHelpTopic := viewChildren[0].helpTopic
+								end else begin
+									newtAppBase.viewHelpTopic := nil
+								end;
+							if (if (if (selectedLayout = 'walkThru) then viewChildren[0].helpText) then StrFilled(viewChildren[0].helpText)) then begin
+									if ((l4 + 52) < l9) then begin
+											AddStepView(self, helpText)
+										end
+								end;
+							if viewChildren[0].deleteButton then begin
+									deleteSlot := viewChildren[0].deleteButton;
+									AddStepView(self, deleteButton)
+								end else begin
+									deleteSlot := nil
+								end;
+							l3.top := (-(l4 + 14));
+							if (selectedLayout = 'walkThru) then begin
+									base.viewBounds := call (kFunction_100f7a1) with ()
+								end else begin
+									SetValue(base, 'viewBounds, l3)
+								end;
+							if (viewDef <> 'editNotes) then begin
+									if (l5 := NextKeyView(l2[0], 0, 0)) then begin
+											SetCaretInfo(l5, SetClass({offset: 0, length: 999}, 'paraCaret))
+										end else begin
+											SetKeyView(base, nil)
+										end
+								end;
+							if Visible(ContinueBtn) then begin
+									_defaultButton := ContinueBtn
+								end else begin
+									if Visible(doneBtn) then begin
+											_defaultButton := doneBtn
+										end else begin
+											_defaultButton := closeBox
+										end
+								end;
+							base:dirty();
+							inherited:?viewSetupDoneScript()
+						end),
+					viewSetupChildrenScript: func() begin
+						local l1, l2, l3, l4, l5;
+						l1 := viewChildren[0];
+						stepChildren := Clone(stepChildren);
+						if (selectedLayout = 'walkThru) then begin
+								if IsReadOnly((l3 := GetDataDefs(target.class)).newEntryViews) then begin
+										l3.newEntryViews := Clone(l3.newEntryViews)
+									end;
+								if (target.configuration = 'manual) then begin
+										l3.newEntryViews := l3._proto.newEntryViews
+									end else begin
+										if (if l3.AlternateNewViews then (Length(l3.AlternateNewViews) > 0)) then begin
+												l3.newEntryViews := l3.AlternateNewViews
+											end else begin
+												l3.newEntryViews := l3._proto.newEntryViews
+											end
+									end;
+								l4 := Length(l3.newEntryViews);
+								if (newtAppBase.WhichPage = 0) then begin
+										ArrayMunger(stepChildren, 4, 1, nil, 0, nil)
+									end;
+								if (newtAppBase.WhichPage = (l4 - 1)) then begin
+										ArrayMunger(stepChildren, 3, 1, nil, 0, nil);
+										ArrayMunger(stepChildren, 1, 1, nil, 0, nil)
+									end else begin
+										ArrayMunger(stepChildren, 2, 1, nil, 0, nil)
+									end
+							end else begin
+								ArrayMunger(stepChildren, 2, 3, nil, 0, nil)
+							end;
+						l5 := KeyboardConnected();
+						if (if l1.usePhoneKeys then (not l5)) then begin
+								stepChildren[0] := {_proto: @phonePad, viewJustify: 144, viewBounds: SetBounds(0, (-126 - extraChildrenHeight), 124, (-extraChildrenHeight))}
+							end else begin
+								if (if l1.useNumericKeys then (not l5)) then begin
+										stepChildren[0] := {_proto: @numericKeys, viewJustify: 144, viewBounds: SetBounds(0, (-101 - extraChildrenHeight), 105, (-extraChildrenHeight)), viewFont: keypadFont}
+									end else begin
+										if (l1.noKeyboard or l5) then begin
+												ArrayMunger(stepChildren, 0, 1, nil, 0, nil)
+											end else nil
+									end
+							end;
+						if (not l1.noKeyboard) then begin
+								l2 := stepChildren[0].viewBounds;
+								extraChildrenHeight := ((extraChildrenHeight + l2.bottom) - l2.top)
+							end;
+						inherited:?viewSetupChildrenScript()
+					end,
+					stepChildren: [stepChildren: editFieldsItem, partItem_2, done, partItem_3, goBack, partItem_4],
+					deleteSlot: nil,
+					_proto: @newtStationeryView,
+					keyButton: keyButton,
+					helpText: blahBlahBlah,
+					deleteButton: delete_2,
+					AlphaKeys: nil,
+					stepAllocateContext: [|Array|: 'AlphaKeys, editFieldsItem]
+				}
+			],
+			hasData: func(a1, a2) begin
+				l3 := nil;
+				if (IsFrame(a2) or IsArray(a2)) then begin
+						local l1;
+						local l2;
+						local l3;
+						(foreach l1, l2 in a2 do begin
+								if self:hasData(l1, l2) then begin
+										break (l3 := l1)
+									end
+							end)
+					end else begin
+						if ((not IsInstance(a1, 'symbol)) or (not appBase.kDatalessSlots.(a1))) then begin
+								if IsInstance(a2, 'string) then begin
+										l3 := StrFilled(a2)
+									end else begin
+										if a2 then begin
+												l3 := a1
+											end
+									end
+							end
+					end;
+				l3
+			end,
+			viewSetupFormScript: func() begin
+				self.startTarget := TotalClone(target);
+				inherited:?viewSetupFormScript()
+			end,
+			viewQuitScript: func() begin
+				'postQuit
+			end,
+			ViewPostQuitScript: func() begin
+				local l1, l2, l3, l4;
+				self:EndFlush();
+				if (not EntryValid(target)) then begin
+						return nil
+					end;
+				(if (not self:hasData(nil, target)) then begin
+						l4 := target;
+						if saveEntry then begin
+								appBase.layout.dataCursor:Goto(saveEntry)
+							end;
+						appBase.layout:KillEntry(l4)
+					end else begin
+						if makingNewCard then begin
+								appBase:AddUndoAction('UndoNewCard, [Array: target, saveEntry])
+							end else begin
+								appBase:AddUndoAction('UndoAddData, [Array: target, startTarget])
+							end;
+						appBase.layout.dataCursor:Goto(target);
+						appBase.layout:Retarget(true)
+					end)
+			end,
+			_proto: @newtEntryView
+		}
+	],
+	_proto: @newtLayout,
+	preAllocatedContext: 'editNewtLayout
+};
+
+editFieldsItem := {
+	viewBounds: {left: 10, top: -135, right: -11, bottom: -24},
+	viewJustify: vjParentFullH + vjParentBottomV,
+	xviewFont: tsSystem + tsSize(10) + tsBold,
+	_proto: @alphaKeys,
+	preAllocatedContext: 'AlphaKeys
+};
+
+partItem_5 := {
+	menuLeftButtons: [|Array|:
+		{
+			_proto: @newtInfoButton,
+			DoInfoAbout: compile(
+				constants: {
+					kFunction_1012a75: func() begin
+						self:DrawMovingIcon(RelBounds(0, 0, 36, 36))
+					end,
+					kFunction_1012ae1: func() begin
+						self:SetupIdle(500)
+					end,
+					kFunction_1012b41: func() begin
+						self:dirty();
+						500
+					end,
+					kFunction_1012ccd: func() begin
+						if (index = (Length(credits) - 1)) then begin
+								index := 0
+							end else begin
+								index := (index + 1)
+							end;
+						SetValue(self, 'text, credits[index]);
+						10000
+					end,
+					kFunction_1012d39: func() begin
+						self:SetupIdle(10000)
+					end,
+					kFunction_1012d81: func() begin
+						index := 0;
+						SetValue(self, 'text, credits[index])
+					end,
+					kFunction_1012e4d: func() begin
+						index := 0;
+						SetValue(self, 'text, credits[index])
+					end,
+					kFunction_1013285: func() begin
+						self:SetupIdle(2500)
+					end,
+					kFunction_10132c9: func() begin
+						if (index = (Length(credits) - 1)) then begin
+								index := 0
+							end else begin
+								index := (index + 1)
+							end;
+						SetValue(self, 'text, credits[index]);
+						2500
+					end,
+					kFunction_1013331: func(a1) begin
+						DrawXBitmap(a1, CardSlotIcons[Random(0, (Length(CardSlotIcons) - 1))], Random(0, 3), 0)
+					end,
+					kLiteral_1012939: {viewBounds: '{left: 0, top: 50, right: 200, bottom: 220}, stepChildren: [stepChildren: '{_proto: @protoCancelButton}, {viewBounds: '{left: 5, top: 6, right: 41, bottom: 42}, viewFlags: 1, viewFormat: 0, viewDrawScript: kFunction_1012a75, viewSetupDoneScript: kFunction_1012ae1, viewIdleScript: kFunction_1012b41, viewClass: 74}, {viewJustify: 8401144, viewFont: '{family: tsHWFont, face: 0, size: 12}, viewBounds: '{left: 41, top: 0, right: -5, bottom: 0}, credits: '[Array: "The NIE 2.0 Team", "We do support cards!"], index: nil, viewIdleScript: kFunction_1012ccd, viewSetupDoneScript: kFunction_1012d39, viewSetupFormScript: kFunction_1012d81, _proto: @protoStaticText}, {viewBounds: '{left: 15, top: 10, right: 195, bottom: 106}, viewJustify: 8192, viewSetupFormScript: kFunction_1012e4d, credits: '[Array: "The Engineering Team:\n\t\nRob Sirota, Jim Schram, Tim Wiegman, Avi Weiss, Jason Rukman, Lieh-Wuu Wang, Charles Leu, Dan Chernikoff, Guy McIlroy", "Support:\n\t\nBruce Thompson, Ryan Robertson, Bob Ebert, Greg Christie, Joe Hayashi, Art Cabral, David Fedor, Eric Welch, and all of Partner Engineering", "SQA: \n\t\nYun Shia Lauw, Jeff Brickman, Ping Li, Larry Bolton, Alex Hamdy, Sylvia Cruz-Loebach, Ping Zhou, Flash Sheridan", "Documentation:\n\t\nGary Hillerson, Laura Elliott, Gerry Kane"], index: nil, viewSetupDoneScript: kFunction_1013285, viewIdleScript: kFunction_10132c9, _proto: @protoStaticText}], declareSelf: 'base, DrawMovingIcon: kFunction_1013331, _proto: @protoFloater}
+				},
+				func() begin
+					(if (if newtAppBase.target then StrEqual(newtAppBase.target.setupName, "WDSC")) then (if (if boutView then boutView.viewCObject) then begin
+								newtAppBase:RememberedClose(boutView);
+								RemoveSlot(self, 'boutView)
+							end else begin
+								(boutView := BuildContext(kLiteral_1012939)).theApp := newtAppBase;
+								newtAppBase:RememberedOpen(boutView)
+							end) else inherited:?DoInfoAbout())
+				end)
+		},
+		{
+			StatScript: func(a1) begin
+				newtAppBase:?HandleNewButtonAction(a1);
+				nil
+			end,
+			BuildPopUp: func() begin
+				popup := [Array: ];
+				statArray := [Array: ];
+				l1 := [Array: ];
+				l2 := [Array: ];
+				if HasSlot(GetGlobals(), 'LinkTemplateRegistry) then begin
+						local l1;
+						local l2;
+						(foreach l3, l4 in LinkTemplateRegistry do begin
+								if ((if HasSlot(l4, 'generic) then l4.generic) or BeginsWith(l4.setupName, "Generic")) then begin
+										BInsert(l2, {item: l4.setupName, symbol: l3, dataDef: (if HasSlot(l4, 'physicalLayer) then l4.physicalLayer else '|Modem:NIE|)}, '|str<|, '[pathExpr: item], nil)
+									end else begin
+										BInsert(l1, {item: l4.setupName, symbol: l3, dataDef: (if HasSlot(l4, 'physicalLayer) then l4.physicalLayer else '|Modem:NIE|)}, '|str<|, '[pathExpr: item], nil)
+									end
+							end);
+						if (Length(l1) > 0) then begin
+								ArrayMunger(popup, 0, 0, l1, 0, nil);
+								ArrayInsert(popup, 'pickSeparator, 0)
+							end;
+						if (Length(l2) > 0) then begin
+								ArrayMunger(popup, 0, 0, l2, 0, nil);
+								ArrayInsert(popup, 'pickSeparator, 0)
+							end
+					end;
+				ArrayInsert(popup, '{item: "Generic Setup", symbol: Blank, dataDef: newEntry}, 0);
+				(statArray := popup)
+			end,
+			shortCircuit: nil,
+			_proto: @newtNewStationeryButton
+		}
+	],
+	menuRightButtons: [|Array|: @newtRoutingButton, @newtFilingButton],
+	viewSetupChildrenScript: compile(
+		constants: {
+			kFunction_1013921: func() begin
+				popup := [Array: ];
+				(if target then begin
+						l3 := GetViewDefs(target.class);
+						if (not (l10 := GetDataDefs(target.class))) then begin
+								self:hilite(nil);
+								return nil
+							end;
+						local l1;
+						local l2;
+						local l3;
+						local l4;
+						local l5;
+						local l6;
+						local l7;
+						local l8;
+						local l9;
+						local l10;
+						(foreach l1 in (l4 := l10.viewsToDisplay) do begin
+								if (l3.(l1).type = 'editor) then begin
+										self:AddLayout(popup, l3, l1)
+									end
+							end);
+						(foreach l1, l2 in l3 do begin
+								if (if (if (not SetContains(l4, l1)) then (l2.type = 'editor)) then (l1 <> 'default)) then begin
+										self:AddLayout(popup, l3, l1)
+									end
+							end);
+						inherited:buttonClickScript()
+					end else self:hilite(nil))
+			end,
+			kFunction_1013a71: func(a1, a2, a3) begin
+				local l1, l2, l3, l4, l5;
+				if (if (l1 := self:GetInfoFrame(a3, target.class)) then ((not l1.checkPrefix[1]) or (not IsArray(l1.checkPrefix[1])))) then begin
+						if (l2 := self:MakeDataPaths(l1.checkPrefix[0], l1.checkPaths, l1.stringData)) then begin
+								if l1.showEmptyData then begin
+										l3 := true
+									end else begin
+										if l1.HasDataFunc then begin
+												l3 := call l1.HasDataFunc with (target, l2)
+											end else begin
+												l3 := self:HasPathData(target, l2, l1.stringData)
+											end
+									end;
+								if l1.HideIfTrue then begin
+										if (target.(l1.HideIfTrue[0]) = l1.HideIfTrue[1]) then begin
+												l4 := nil
+											end
+									end else begin
+										if (not l3) then begin
+												l4 := true
+											end
+									end
+							end
+					end else begin
+						if l1.HideIfTrue then begin
+								if (target.(l1.HideIfTrue[0]) = l1.HideIfTrue[1]) then begin
+										l4 := nil
+									end else begin
+										l4 := true
+									end
+							end else begin
+								l4 := true
+							end
+					end;
+				(if l4 then begin
+						l5 := (if a2.(a3).nameByClass then a2.(a3).nameByClass.(target.class) else a2.(a3).name);
+						AddArraySlot(a1, {item: l5, slot: a3})
+					end)
+			end,
+			kFunction_1013c35: func(a1) begin
+				local l1, l2;
+				l1 := popup[a1].slot;
+				l2 := self:GetNewPath(target, l1);
+				newtAppBase:ShowEditSlip(l1, l2, nil, true, nil);
+				inherited:?pickActionScript(a1)
+			end,
+			kFunction_1013ca5: func() begin
+				RemoveSlot(newtAppBase, keyButton);
+				inherited:?viewQuitScript()
+			end,
+			kFunction_1013cf5: func() begin
+				inherited:?viewSetupDoneScript();
+				(newtAppBase.(keyButton) := self)
+			end,
+			kLiteral_101386d: {buttonClickScript: kFunction_1013921, text: "  Add", AddLayout: kFunction_1013a71, pickActionScript: kFunction_1013c35, popup: nil, viewQuitScript: kFunction_1013ca5, viewSetupDoneScript: kFunction_1013cf5, keyButton: '_addKeyButton, viewBounds: nil, viewFlags: 515, _proto: @protoPopupButton}
+		},
+		func() begin
+			local l1, l2, l3;
+			(if _coolToStart then begin
+					l1 := menuLeftButtons;
+					l2 := menuRightButtons;
+					if (currentLayout = 'overview) then begin
+							menuRightButtons := Clone(menuRightButtons);
+							if (layout.dataCursor:CountEntries() > 0) then begin
+									AddArraySlot(menuRightButtons, {_proto: @newtCheckAllButton})
+								end else begin
+									menuRightButtons := [Array: ]
+								end
+						end else begin
+							AddArraySlot((menuLeftButtons := Clone(menuLeftButtons)), {_proto: kLiteral_101386d})
+						end;
+					inherited:viewSetupChildrenScript();
+					menuLeftButtons := l1;
+					(menuRightButtons := l2)
+				end)
+		end),
+	_proto: @newtStatusBar,
+	preAllocatedContext: 'statusBar
+};
+
+partItem_6 := {_proto: @protoUpDownScroller, preAllocatedContext: 'scrollArrows};
+
+partItem_7 := {
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewBounds: {left: 0, top: 0, right: -20, bottom: 0},
+	viewFlags: vVisible + vClipping,
+	viewSetupChildrenScript: compile(
+		constants: {
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			kFunction_1014d91: func() begin
+				local l1, l2;
+				(if (if target then target.class) then begin
+						if (not layouts) then begin
+								layouts := {}
+							end;
+						if (not layouts.(target.class)) then begin
+								layouts.(target.class) := call GetRoot().|InternetSetup:NIE|.GetViewsToDisplay with (target)
+							end;
+						(if (GetVariable(self, 'newtAppBase) <> GetRoot().|InternetSetup:NIE|) then (self.viewFlags := 1))
+					end)
+			end,
+			kFunction_1000e19: func(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) begin
+				local v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v14_yyyyyyyyyyyyyyyyyyyyyyyyyyyxxxxxxxxxxxxxxxxx, v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyy, v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy, v20_wwwwwwwwwwvvvvvv, v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v22_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyy, v23_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww, v26_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyy, v27_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v29_xwwwwwwwwwwwwwwww;
+				v26_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyy := a7;
+				v27_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := nil;
+				v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww := nil;
+				if a5.showEmptyData then begin
+						v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy := true
+					end;
+				if (if (ClassOf(a1) = 'pathExpr) then IsArray(target.(a1))) then begin
+						v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy := true;
+						(a5 := Clone(a5)).whichOne := a1[1];
+						v20_wwwwwwwwwwvvvvvv := [Array: target.(a1)]
+					end else begin
+						if IsArray(a1) then begin
+								v20_wwwwwwwwwwvvvvvv := (foreach v18_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy in a1 collect begin
+									v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyy := target.(v18_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy);
+									if (not v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy) then begin
+											if IsInstance(v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyy, 'string) then begin
+													v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy := v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyy
+												end else begin
+													v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy := v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyy
+												end
+										end;
+									v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyy
+								end)
+							end else begin
+								v20_wwwwwwwwwwvvvvvv := [Array: target.(a1)];
+								v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy := target.(a1)
+							end
+					end;
+				if a5.HideIfTrue then begin
+						if (target.(a5.HideIfTrue[0]) = a5.HideIfTrue[1]) then begin
+								v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy := nil
+							end
+					end;
+				if (not v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy) then begin
+						return a7
+					end;
+				v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := SetBounds(a8.left, a7, a8.right, ((a7 + a8.bottom) - a8.top));
+				a10.font := (if a9 then @fontSystem14Bold else viewFont);
+				v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := fontHeight(a10.font);
+				(while true do begin
+						if (if reduceFont then (not v29_xwwwwwwwwwwwwwwww)) then begin
+								v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.bottom := (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top + (v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy * 2))
+							end;
+						if a5.shapeFunc then begin
+								if (v22_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyy := a5:shapeFunc(v20_wwwwwwwwwwvvvvvv, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, a7, a10)) then begin
+										v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww := v22_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyy.shape;
+										v27_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := v22_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyy.misc
+									end
+							end else begin
+								if a5.formatFunc then begin
+										v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := a5:formatFunc(v20_wwwwwwwwwwvvvvvv)
+									end else begin
+										v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := ParamStr(a5.format, v20_wwwwwwwwwwvvvvvv)
+									end;
+								TrimString(v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy);
+								if StrFilled(v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy) then begin
+										v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww := MakeTextLines(v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, a10.font)
+									end
+							end;
+						(if (if (if (if reduceFont then (not v29_xwwwwwwwwwwwwwwww)) then v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww) then (Length(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww) > 1)) then begin
+								v29_xwwwwwwwwwwwwwwww := true;
+								a10.font := 1060865;
+								v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := fontHeight(a10.font);
+								v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.bottom := ((a7 + a8.bottom) - a8.top);
+								(v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top := (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.bottom - v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy))
+							end else break)
+					end);
+				if (if v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww then (Length(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww) > 0)) then begin
+						addHt := (((v14_yyyyyyyyyyyyyyyyyyyyyyyyyyyxxxxxxxxxxxxxxxxx := ShapeBounds(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww)).bottom + v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy) - FontAscent(a10.font));
+						if (CanScroll or (addHt <= a8.bottom)) then begin
+								a7 := addHt
+							end else begin
+								return a7
+							end;
+						if (if reduceFont then v29_xwwwwwwwwwwwwwwww) then begin
+								ArrayInsert(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww, a10, 0)
+							end else begin
+								if a9 then begin
+										v23_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := MakeShape(GetDataDefs(target.class).overviewIcon);
+										ArrayMunger(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww, 0, 0, [Array: a10, OffsetShape(v23_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, 0, ((v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy - ShapeBounds(v23_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy).bottom) div 2))], 0, nil);
+										AddArraySlot(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww, {font: viewFont, justification: a10.justification})
+									end else begin
+										if showBullet then begin
+												AddArraySlot(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww, OffsetShape(MakeShape(tapIcon), 0, (v14_yyyyyyyyyyyyyyyyyyyyyyyyyyyxxxxxxxxxxxxxxxxx.top + ((v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy - 4) div 2))))
+											end
+									end
+							end;
+						ArrayMunger(a3, Length(a3), 0, v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww, 0, nil)
+					end;
+				if (a7 > v26_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyy) then begin
+						AddArraySlot(a4, {vOffset: a7, layout: a6, path: a2, misc: v27_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy})
+					end;
+				a7
+			end,
+			kFunction_10017a5: func() begin
+				(if shapeArray then self:DrawShape(shapeArray, {font: viewFont, justification: viewJustSym}))
+			end,
+			kFunction_1001821: func() begin
+				local l1;
+				(if ((l1 := Length(hitArray)) > 0) then hitArray[(l1 - 1)].vOffset else 0)
+			end,
+			kFunction_1001899: func(a1, a2) begin
+				OffsetShape(shapeArray, (viewOriginX - a1), (viewOriginY - a2));
+				viewOriginX := a1;
+				viewOriginY := a2;
+				self:dirty()
+			end,
+			kFunction_1001911: func() begin
+				l2 := 0;
+				l3 := viewFont;
+				local l1;
+				local l2;
+				local l3;
+				(foreach l1 in shapeArray do begin
+						if (ClassOf(l1) = 'text) then begin
+								l2 := max(l2, StrFontWidth(GetShapeInfo(l1).text, l3))
+							end else begin
+								if (ClassOf(l1) = 'frame) then begin
+										if l1.font then begin
+												l3 := l1.font
+											end
+									end
+							end
+					end);
+				l2
+			end,
+			kFunction_1001a25: func(a1) begin
+				l2 := (Length(hitArray) - 1);
+				InkOff(a1);
+				l3 := ((GetPoint(5, a1) + viewOriginY) - origin);
+				l4 := (GetPoint(4, a1) - self:GlobalBox().left);
+				l5 := 0;
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				local l5;
+				local l6;
+				local l7;
+				local l8;
+				(for l1 := 0 to l2 do begin
+						if (l3 <= hitArray[l1].vOffset) then begin
+								PlaySound(@click);
+								l6 := hitArray[l1].layout;
+								(l7 := self:LocalBox()).top := (if (l1 = 0) then 0 else (hitArray[(l1 - 1)].vOffset - viewOriginY));
+								l7.bottom := (hitArray[l1].vOffset - viewOriginY);
+								if (l8 := newtAppBase:GetInfoFrame(l6, target.class)).actionFunc then begin
+										if l8:actionFunc(l4, (l3 - l5), self, l7, target, hitArray[l1].path, hitArray[l1].misc) then begin
+												return true
+											end
+									end;
+								self:DoDrawing('Hiliter, [Array: MakeShape(l7)]);
+								if (l6 = 'setupName) then begin
+										WhichPage := 0;
+										newtAppBase:ShowEditSlip('walkThru, nil, nil, nil, nil)
+									end else begin
+										newtAppBase:ShowEditSlip(l6, hitArray[l1].path, nil, nil, nil)
+									end;
+								self:dirty();
+								return true
+							end;
+						l5 := hitArray[l1].vOffset
+					end);
+				nil
+			end,
+			kFunction_1001d6d: func() begin
+				l12 := BAnd(viewJustify, 3);
+				l13 := true;
+				hitArray := [Array: ];
+				shapeArray := [Array: ];
+				origin := self:GlobalBox().top;
+				(l8 := self:LocalBox()).left := (if (showBullet or boldTitle) then 19 else 0);
+				l9 := 0;
+				if (l12 = 0) then begin
+						viewJustSym := 'left
+					end else begin
+						if (l12 = 1) then begin
+								viewJustSym := 'right
+							end else begin
+								if (l12 = 2) then begin
+										viewJustSym := 'center
+									end else begin
+										if (l12 = 3) then begin
+												viewJustSym := 'full
+											end
+									end
+							end
+					end;
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				local l5;
+				local l6;
+				local l7;
+				local l8;
+				local l9;
+				local l10;
+				local l11;
+				local l12;
+				local l13;
+				local l14;
+				local l15;
+				(if (if target then (l3 := layouts.(target.class))) then (for l16 := 0 to (Length(l3) - 1) do begin
+							l2 := GetRoot().|InternetSetup:NIE|:GetInfoFrame((l1 := l3[l16]), target.class);
+							l14 := l9;
+							if (l4 := GetRoot().|InternetSetup:NIE|:MakeDataPaths(l2.checkPrefix[0], l2.checkPaths, l2.stringData)) then begin
+									l9 := self:AddAllInfoItem(l4, l2.checkPrefix[0], shapeArray, hitArray, l2, l1, l9, l8, (if l13 then boldTitle), {justification: viewJustSym, font: viewFont})
+								end;
+							l13 := nil;
+							if (if (if (if IsArray(l2.checkPrefix[1]) then (l6 := l2.checkPrefix[1])) then (l7 := target.(l6))) then (showMultipleData or (l9 = l14))) then begin
+									if showMultipleData then begin
+											l15 := Length(l7)
+										end else begin
+											l15 := 1
+										end;
+									(for l10 := 0 to (l15 - 1) do begin
+											AddArraySlot((l5 := Clone(l2.checkPrefix[1])), l10);
+											if (if (not CanScroll) then (((l8.top + l9) + fontHeight(viewFont)) > l8.bottom)) then begin
+													break
+												end else begin
+													if (l4 := GetRoot().|InternetSetup:NIE|:MakeDataPaths(l5, l2.checkPaths, l2.stringData)) then begin
+															l9 := self:AddAllInfoItem(l4, l5, shapeArray, hitArray, l2, l1, l9, l8, nil, {justification: viewJustSym, font: viewFont})
+														end
+												end
+										end)
+								end
+						end))
+			end,
+			kFunction_100214d: func(a1) begin
+				self:DrawShape(a1, {transferMode: 2, penPattern: 0, fillPattern: 5})
+			end,
+			kLiteral_1014cfd: {name: "All Info", protection: 'public, symbol: 'allinfo, type: 'viewer, viewSetupFormScript: kFunction_1014d91, boldTitle: true, CanScroll: true, layouts: nil, showBullet: true, showMultipleData: true, viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, _proto: {AddAllInfoItem: kFunction_1000e19, viewJustSym: nil, tapIcon: {bounds: '{left: 0, top: 0, right: 14, bottom: 3}, bits: call kBinaryFromHex with ("0000000000040000000000000003000e038000000380000003800000", 'bits), colorData: {cbits: call kBinaryFromHex with ("0000000000040000000000000003000e038000000380000003800000", 'bits), bitDepth: 1}}, viewFormat: 256, reduceFont: nil, boldTitle: nil, viewDrawScript: kFunction_10017a5, showBullet: nil, hitArray: nil, viewFlags: 2561, GetBottom: kFunction_1001821, viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewOriginY: 0, viewJustify: 240, SetOrigin: kFunction_1001899, layouts: nil, shapeArray: nil, GetMaxTextWidth: kFunction_1001911, viewClickScript: kFunction_1001a25, origin: nil, showMultipleData: nil, viewFont: 12289, viewOriginX: 0, viewSetupChildrenScript: kFunction_1001d6d, CanScroll: nil, Hiliter: kFunction_100214d, viewClass: 74}}
+		},
+		func() begin
+			if (if (if target then IsSoupEntry(target)) then (currentLayout = 'default)) then begin
+					self.stepChildren := [Array: kLiteral_1014cfd]
+				end;
+			inherited:?viewSetupChildrenScript()
+		end),
+	viewSetupDoneScript: func() begin
+		local l1, l2;
+		inherited:?viewSetupDoneScript();
+		if (if (l2 := self:ChildViewFrames()) then (Length(l2) > 0)) then begin
+				allInfoHeight := ((l1 := (childToScroll := l2[0]):GlobalBox()).bottom - l1.top);
+				childBottom := childToScroll:GetBottom()
+			end;
+		(if (childBottom <= allInfoHeight) then (if scrollArrows.viewCObject then scrollArrows:Hide()) else begin
+				scrollArrows.scrollRect := (scrollArrows.dataRect := SetBounds(0, 0, 0, childBottom));
+				scrollArrows.viewRect := SetBounds(0, 0, 0, allInfoHeight);
+				scrollArrows.yPos := 0;
+				if scrollArrows.viewCObject then begin
+						scrollArrows:Show()
+					end else begin
+						scrollArrows:Open()
+					end;
+				scrollArrows:AdjustArrows()
+			end)
+	end,
+	_proto: @newtEntryView,
+	preAllocatedContext: 'entryView
+};
+
+layout := {
+	viewBounds: {left: 0, top: 20, right: 0, bottom: -25},
+	masterSoupSlot: 'INETSetupSoup,
+	dataCursor: nil,
+	name: "Layout",
+	forceNewEntry: nil,
+	Abstract: func(a1, a2) begin
+		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12, l13, l14, l15;
+		l5 := "";
+		l6 := ((a2.left + 16) + 2);
+		l7 := a2.right;
+		l8 := a2.top;
+		l9 := (a2.bottom - 2);
+		l12 := (a2.right - l6);
+		l13 := Length(GetStores());
+		(if (l1 := GetDataDefs(a1.class)) then begin
+				if (l3 := StrPos((l2 := l1:?StringExtract(a1, 2)), "\n", 0)) then begin
+						l4 := Substr(l2, 0, l3);
+						l5 := Substr(l2, l3, Length(l2))
+					end else begin
+						l4 := l2
+					end;
+				l10 := StrFontWidth(l4, 1058816);
+				l11 := [Array: OffsetShape(MakeShape(l1.overviewIcon), a2.left, (l8 + 2)), MakeText(StrTruncate(l4, l12), l6, l8, l7, (a2.top + 11)), '{font: 9216, justification: left}, MakeText(l5, l6, l8, l7, (a2.top + 25))];
+				if (l13 > 1) then begin
+						l15 := Clone((l14 := EntryStore(a1)):GetName());
+						AddArraySlot(l11, '{font: 9216, justification: right});
+						AddArraySlot(l11, MakeText(StyledStrTruncate(l15, ((a2.right - 2) - (l10 + l6)), 9216), (l10 + l6), a2.top, (a2.right - 2), (a2.top + 11)))
+					end;
+				l11
+			end else inherited:Abstract(a1, a2))
+	end,
+	GetTargetInfo: func(a1) begin
+		(if self.hilitItem then {target: hilitItem, targetView: self} else inherited:GetTargetInfo(a1))
+	end,
+	Retarget: func(a1) begin
+		a1 := true;
+		dataCursor:Reset();
+		inherited:Retarget(a1);
+		(target := dataCursor:entry())
+	end,
+	_proto: @newtOverLayout,
+	preAllocatedContext: 'realOverview
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code := same("part[0]._ExportTable[0].objects[0].viewSetupFormScript.instructions");
+
+viewSetupChildrenScript_literal26 := same("objectsProto.viewSetupChildrenScript.literals[26]");
+
+API_AddEntry_literal0 := same("part[0].theForm.API_AddEntry.literals[0]");
+
+PutAwayScript_literal6 := same("part[0].theForm.PutAwayScript.literals[6]");
+
+viewQuitScript_literal5 := same("part[0].theForm.viewQuitScript.literals[5]");
+
+DuplicateEntry_literal1 := same("part[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals[7].literals[1]");
+
+DuplicateEntry_literal6 := same("part[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals[7].literals[6]");
+
+viewSetupFormScript_literal6 := same("part[0].theForm.viewSetupFormScript.literals[6]");
+
+stepChildren_value := same("part[0].theForm.ChooseNewEntry.literals[0].stepChildren[2]");
+
+viewSetupFormScript_code_2 := same("part[0].theForm.aboutView.stepChildren[6].viewSetupFormScript.instructions");
+
+stepChildren_value_2 := same("part[0].theForm.ChooseNewEntry.literals[0].stepChildren[3]");
+
+stepChildren_value_3 := same("part[0].theForm.ChooseNewEntry.literals[0].stepChildren[6]");
+
+viewSetupFormScript_code_3 := same("partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewSetupFormScript.instructions");
+
+viewSetupFormScript_literal1 := same("part[0].theForm.viewSetupFormScript.literals[4].literals[1]");
+
+BuildComponentList_code := same("part[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[5].instructions");
+
+BuildComponentList_literal2 := same("part[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[5].literals[2]");

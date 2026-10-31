@@ -1,0 +1,246 @@
+// export50, and what only it reaches
+
+export50 := {
+	layouts: nil,
+	AddAllInfoItem: func(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) begin
+		local v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v14_yyyyyyyyyyyyyyyyyyyyyyyyyyyxxxxxxxxxxxxxxxxx, v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyy, v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy, v20_wwwwwwwwwwvvvvvv, v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v22_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyy, v23_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww, v26_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyy, v27_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v29_xwwwwwwwwwwwwwwww;
+		v26_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyy := a7;
+		v27_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := nil;
+		v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww := nil;
+		if a5.showEmptyData then begin
+				v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy := true
+			end;
+		v20_wwwwwwwwwwvvvvvv := (foreach v18_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy in a1 collect begin
+			v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyy := target.(v18_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy);
+			if (not v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy) then begin
+					if IsInstance(v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyy, 'string) then begin
+							v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy := StrFilled(v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyy)
+						end else begin
+							v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy := v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyy
+						end
+				end;
+			v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyy
+		end);
+		if (not v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy) then begin
+				return a7
+			end;
+		v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := SetBounds(a8.left, a7, a8.right, ((a7 + a8.bottom) - a8.top));
+		a10.font := (if a9 then @fontSystem14Bold else viewFont);
+		v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := fontHeight(a10.font);
+		(while true do begin
+				if (if reduceFont then (not v29_xwwwwwwwwwwwwwwww)) then begin
+						v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.bottom := (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top + (v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy * 2))
+					end;
+				if a5.shapeFunc then begin
+						if (v22_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyy := a5:shapeFunc(v20_wwwwwwwwwwvvvvvv, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, a7, a10)) then begin
+								v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww := v22_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyy.shape;
+								v27_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := v22_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyy.misc
+							end
+					end else begin
+						if a5.formatFunc then begin
+								v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := a5:formatFunc(v20_wwwwwwwwwwvvvvvv)
+							end else begin
+								v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := ParamStr(a5.format, v20_wwwwwwwwwwvvvvvv)
+							end;
+						TrimString(v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy);
+						if StrFilled(v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy) then begin
+								v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww := MakeTextLines(v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, a10.font)
+							end
+					end;
+				(if (if (if (if reduceFont then (not v29_xwwwwwwwwwwwwwwww)) then v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww) then (Length(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww) > 1)) then begin
+						v29_xwwwwwwwwwwwwwwww := true;
+						a10.font := 1060865;
+						v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := fontHeight(a10.font);
+						v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.bottom := ((a7 + a8.bottom) - a8.top);
+						(v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.top := (v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.bottom - v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy))
+					end else break)
+			end);
+		if (if v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww then (Length(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww) > 0)) then begin
+				addHt := (((v14_yyyyyyyyyyyyyyyyyyyyyyyyyyyxxxxxxxxxxxxxxxxx := ShapeBounds(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww)).bottom + v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy) - FontAscent(a10.font));
+				if (canScroll or (addHt <= a8.bottom)) then begin
+						a7 := addHt
+					end else begin
+						return a7
+					end;
+				if (if reduceFont then v29_xwwwwwwwwwwwwwwww) then begin
+						ArrayInsert(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww, a10, 0)
+					end else begin
+						if a9 then begin
+								v23_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy := MakeShape(GetDataDefs(target.class).overviewIcon);
+								ArrayMunger(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww, 0, 0, [Array: a10, OffsetShape(v23_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, 0, ((v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy - ShapeBounds(v23_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy).bottom) div 2))], 0, nil);
+								AddArraySlot(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww, {font: viewFont, justification: a10.justification})
+							end else begin
+								if showBullet then begin
+										AddArraySlot(v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww, OffsetShape(MakeShape(tapIcon), 0, (v14_yyyyyyyyyyyyyyyyyyyyyyyyyyyxxxxxxxxxxxxxxxxx.top + ((v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy - 4) div 2))))
+									end
+							end
+					end;
+				ArrayMunger(a3, Length(a3), 0, v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww, 0, nil)
+			end;
+		if (a7 > v26_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyy) then begin
+				AddArraySlot(a4, {vOffset: a7, layout: a6, path: a2, misc: v27_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy})
+			end;
+		a7
+	end,
+	hitArray: nil,
+	shapeArray: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewDrawScript: func() begin
+		(if shapeArray then self:DrawShape(shapeArray, {font: viewFont, justification: viewJustSym}))
+	end,
+	viewFlags: vVisible + vClickable + vGesturesAllowed,
+	viewFont: tsFancy + tsSize(12),
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewSetupChildrenScript: func() begin
+		l12 := BAnd(viewJustify, 3);
+		l13 := true;
+		hitArray := [Array: ];
+		shapeArray := [Array: ];
+		origin := self:GlobalBox().top;
+		(l8 := self:LocalBox()).left := (if (showBullet or boldTitle) then 19 else 0);
+		l9 := 0;
+		if (l12 = 0) then begin
+				viewJustSym := 'left
+			end else begin
+				if (l12 = 1) then begin
+						viewJustSym := 'right
+					end else begin
+						if (l12 = 2) then begin
+								viewJustSym := 'center
+							end else begin
+								if (l12 = 3) then begin
+										viewJustSym := 'full
+									end
+							end
+					end
+			end;
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		local l5;
+		local l6;
+		local l7;
+		local l8;
+		local l9;
+		local l10;
+		local l11;
+		local l12;
+		local l13;
+		local l14;
+		local l15;
+		(if (if target then (l3 := layouts.(target.class))) then (for l16 := 0 to (Length(l3) - 1) do begin
+					l2 := GetRoot().cardfile:GetInfoFrame((l1 := l3[l16]), target.class);
+					l14 := l9;
+					if (l4 := GetRoot().cardfile:MakeDataPaths(l2.checkPrefix[0], l2.checkPaths, l2.stringData)) then begin
+							l9 := self:AddAllInfoItem(l4, l2.checkPrefix[0], shapeArray, hitArray, l2, l1, l9, l8, (if l13 then boldTitle), {justification: viewJustSym, font: viewFont})
+						end;
+					l13 := nil;
+					if (if (if (l6 := l2.checkPrefix[1]) then (l7 := target.(l6))) then (showMultipleData or (l9 = l14))) then begin
+							if showMultipleData then begin
+									l15 := Length(l7)
+								end else begin
+									l15 := 1
+								end;
+							(for l10 := 0 to (l15 - 1) do begin
+									AddArraySlot((l5 := Clone(l2.checkPrefix[1])), l10);
+									if (if (not canScroll) then (((l8.top + l9) + fontHeight(viewFont)) > l8.bottom)) then begin
+											break
+										end else begin
+											if (l4 := GetRoot().cardfile:MakeDataPaths(l5, l2.checkPaths, l2.stringData)) then begin
+													l9 := self:AddAllInfoItem(l4, l5, shapeArray, hitArray, l2, l1, l9, l8, nil, {justification: viewJustSym, font: viewFont})
+												end
+										end
+								end)
+						end
+				end))
+	end,
+	origin: nil,
+	boldTitle: nil,
+	viewJustSym: nil,
+	viewOriginX: 0,
+	viewOriginY: 0,
+	SetOrigin: func(a1, a2) begin
+		OffsetShape(shapeArray, (viewOriginX - a1), (viewOriginY - a2));
+		viewOriginX := a1;
+		viewOriginY := a2;
+		self:dirty()
+	end,
+	tapIcon: {
+		bits: bitmap('bits, "resources/bits/724d25.png", "000000000004014e014e02610151026f", 1),
+		bounds: {left: 0, top: 0, right: 14, bottom: 3}
+	},
+	showBullet: nil,
+	showMultipleData: nil,
+	viewFormat: nil,
+	viewClickScript: func(a1) begin
+		l2 := (Length(hitArray) - 1);
+		InkOff(a1);
+		l3 := ((GetPoint(5, a1) + viewOriginY) - origin);
+		l4 := (GetPoint(4, a1) - self:GlobalBox().left);
+		l5 := 0;
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		local l5;
+		local l6;
+		local l7;
+		local l8;
+		(for l1 := 0 to l2 do begin
+				if (l3 <= hitArray[l1].vOffset) then begin
+						PlaySound(@click);
+						l6 := hitArray[l1].layout;
+						(l7 := self:LocalBox()).top := (if (l1 = 0) then 0 else (hitArray[(l1 - 1)].vOffset - viewOriginY));
+						l7.bottom := (hitArray[l1].vOffset - viewOriginY);
+						if (l8 := newtAppBase:GetInfoFrame(l6, target.class)).actionFunc then begin
+								if l8:actionFunc(l4, (l3 - l5), self, l7, target, hitArray[l1].path, hitArray[l1].misc) then begin
+										return true
+									end
+							end;
+						self:DoDrawing('Hiliter, [Array: MakeShape(l7)]);
+						if (l6 = target.class) then begin
+								l6 := 'default
+							end;
+						newtAppBase:ShowEditSlip(l6, hitArray[l1].path, nil, nil, nil);
+						self:dirty();
+						return true
+					end;
+				l5 := hitArray[l1].vOffset
+			end);
+		nil
+	end,
+	Hiliter: func(a1) begin
+		self:DrawShape(a1, {transferMode: 2, penPattern: 0, fillPattern: 5})
+	end,
+	GetBottom: func() begin
+		local l1;
+		(if ((l1 := Length(hitArray)) > 0) then hitArray[(l1 - 1)].vOffset else 0)
+	end,
+	GetMaxTextWidth: func() begin
+		l2 := 0;
+		l3 := viewFont;
+		local l1;
+		local l2;
+		local l3;
+		(foreach l1 in shapeArray do begin
+				if (ClassOf(l1) = 'text) then begin
+						l2 := max(l2, StrFontWidth(GetShapeInfo(l1).text, l3))
+					end else begin
+						if (ClassOf(l1) = 'frame) then begin
+								if l1.font then begin
+										l3 := l1.font
+									end
+							end
+					end
+			end);
+		l2
+	end,
+	reduceFont: nil,
+	canScroll: nil,
+	viewClass: clView
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupChildrenScript_literal26 := same("export50.viewSetupChildrenScript.literals[26]");

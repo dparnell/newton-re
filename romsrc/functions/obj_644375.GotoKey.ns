@@ -1,5 +1,0 @@
-@@ 0x5b969d
-func(a1) begin
-	Throw('|evt.ex.msg|, "GotoKey NYI")
-end
-@@end

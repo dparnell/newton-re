@@ -1,0 +1,368 @@
+// export66, and what only it reaches
+
+export66 := {
+	viewBounds: {top: 10, left: 0, right: 220, bottom: 278},
+	viewFlags: vApplication + vFloating + vClickable,
+	stepChildren: [stepChildren:
+		{
+			text: information,
+			viewBounds: {left: 7, top: 6, right: 179, bottom: 18},
+			viewJustify: 8396800,
+			viewFont: @fontSystem10Bold,
+			_proto: @protoStaticText
+		},
+		export66Item,
+		{
+			buttonClickScript: func() begin
+				if (Length(appsList.selectedItems) = Length(appsList.listItems)) then begin
+						appsList.selectedItems := [Array: ]
+					end else begin
+						self:SelectAll(appsList)
+					end;
+				appsList:DrawHilite()
+			end,
+			text: all,
+			viewBounds: {left: 0, top: 7, right: 36, bottom: 20},
+			viewJustify: 8398854,
+			_proto: @protoTextButton
+		},
+		export66Item_2,
+		export66Item_3,
+		export66Item_4,
+		export66Item_5,
+		{
+			buttonClickScript: func() begin
+				protoContext:SendCancelToDesktop(endpoint);
+				protoContext:OpenWhichConnection(endpoint);
+				inherited:?buttonClickScript()
+			end,
+			_proto: @protoCancelButton
+		},
+		{
+			buttonClickScript: func() begin
+				(if (not restoring) then begin
+						restoring := true;
+						(if (ModalConfirm("Restore replaces the information on your Newton device with the information in the backup and then restarts. Are you sure you want to do this?", '[Array: {value: Restore, text: "Restore"}, {value: cancel, text: "Cancel"}]) = 'Restore) then begin
+								endpoint:StopIdle(base);
+								protoContext:BuildApplicationList(func() begin
+									endpoint:IdleConnection(true)
+								end);
+								AddDeferredSend(base, 'DoRestore, [Array: ])
+							end else (restoring := nil))
+					end)
+			end,
+			text: restore,
+			viewBounds: {left: -54, top: 0, right: -7, bottom: 13},
+			viewJustify: 8407046,
+			_proto: @protoTextButton
+		}
+	],
+	viewSetupFormScript: func() begin
+		local l1;
+		self.protoContext := GetRoot().Connection;
+		protoContext:AddOpenWindow(self);
+		if ((not restoreOptions.packages) or (Length(restoreOptions.packages) = 0)) then begin
+				(l1 := Clone(self.viewBounds)).top := (l1.top + 40);
+				l1.bottom := (l1.bottom - 60);
+				viewBounds := l1
+			end;
+		endpoint:StartIdle(self, 2000)
+	end,
+	viewQuitScript: func() begin
+		endpoint:StopIdle(self);
+		protoContext:RemoveOpenWindow(self)
+	end,
+	InitializeTextList: func(a1, a2) begin
+		if (not a2) then begin
+				a2 := [Array: ]
+			end;
+		a1.listItems := a2;
+		a1.selectedItems := self:SelectAll(a1);
+		a1:SetupList()
+	end,
+	SelectAll: func(a1) begin
+		l2 := Array((l1 := Length(a1.listItems)), nil);
+		local l1;
+		local l2;
+		(for l3 := 0 to (l1 - 1) do begin
+				l2[l3] := l3
+			end);
+		(a1.selectedItems := l2)
+	end,
+	CollectOptions: func(a1) begin
+		local l1;
+		l1 := (foreach l2 in appsList.selectedItems collect appsList.listItems[l2]);
+		l6 := (if packageList.selectedItems then (foreach l2 in packageList.selectedItems collect begin
+				local l6;
+				packageList.listItems[l2]
+			end) else '[Array: ]);
+		a1.applications := l1;
+		a1.packages := l6;
+		(a1.merge := nil)
+	end,
+	DoRestore: compile(
+		constants: {
+			kROM_8269: @8269
+		},
+		func() begin
+			local l1, l2, l3, l4;
+			if endpoint.closingDown then begin
+					return nil
+				end;
+			self:CollectOptions((l1 := {}));
+			l2 := nil;
+			if (if IsArray(storePicker.labelCommands) then (Length(storePicker.labelCommands) > 0)) then begin
+					l1.storeToUse := storePicker.labelCommands[storePicker.indexValue].store
+				end;
+			(if (if (Length(l1.applications) = 0) then (Length(l1.packages) = 0)) then begin
+					AddDeferredSend(self, 'Notify, [Array: 5, "Dock", "You didn\u2019\ut select anything to restore."]);
+					(restoring := nil)
+				end else begin
+					l3 := 0;
+					if l2 then begin
+							l4 := 0;
+							try begin
+									endpoint:WriteCommand("rall", l4, true)
+								end onexception |evt.ex| do begin
+									endpoint:ConnectionDone((l3 := CurrentException().error))
+								end
+						end else begin
+							try begin
+									endpoint:WriteCommand("ropt", l1, true)
+								end onexception |evt.ex| do begin
+									endpoint:ConnectionDone((l3 := CurrentException().error))
+								end
+						end;
+					base:Close();
+					(if (l3 = 0) then kROM_8269:OpenOnEndpoint(nil, endpoint, nil))
+				end)
+		end),
+	viewIdleScript: func() begin
+		return endpoint:IdleConnection(true)
+	end,
+	viewSetupChildrenScript: func() begin
+		packageTitle:SetupViewflags();
+		packageList:SetupViewflags();
+		checkAllPackages:SetupViewflags();
+		storePicker:SetupViewflags()
+	end,
+	restoring: nil,
+	_proto: @protoFloater,
+	appsList: nil,
+	stepAllocateContext: [|Array|:
+		'appsList,
+		export66Item,
+		'packageTitle,
+		export66Item_2,
+		'packageList,
+		export66Item_3,
+		'checkAllPackages,
+		export66Item_4,
+		'storePicker,
+		export66Item_5
+	],
+	packageTitle: nil,
+	packageList: nil,
+	checkAllPackages: nil,
+	storePicker: nil
+};
+
+export66Item := {
+	viewBounds: {left: 0, top: 5, right: 184, bottom: 100},
+	viewFont: @fontSystem10,
+	viewSetupFormScript: func() begin
+		self:InitializeTextList(self, restoreOptions.applications);
+		inherited:?viewSetupFormScript()
+	end,
+	viewJustify: 8396816,
+	useScrollers: true,
+	useMultipleSelections: true,
+	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2),
+	_proto: @protoTextList,
+	preAllocatedContext: 'appsList
+};
+
+export66Item_2 := {
+	text: packages,
+	viewBounds: {left: 7, top: 8, right: 79, bottom: 20},
+	viewJustify: 8396800,
+	viewFont: @fontSystem10Bold,
+	SetupViewflags: func() begin
+		(if (Length(restoreOptions.packages) = 0) then (self.viewFlags := (viewFlags - 1)))
+	end,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'packageTitle
+};
+
+packages := "Packages";
+
+export66Item_3 := {
+	viewBounds: {left: 0, top: 5, right: 184, bottom: 70},
+	viewFont: @fontSystem10,
+	viewSetupFormScript: func() begin
+		self:InitializeTextList(self, restoreOptions.packages);
+		inherited:?viewSetupFormScript()
+	end,
+	viewJustify: 8396816,
+	useScrollers: true,
+	useMultipleSelections: true,
+	selectedItems: nil,
+	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2),
+	SetupViewflags: func() begin
+		local l1;
+		(if ((not (l1 := restoreOptions.packages)) or (Length(l1) = 0)) then (self.viewFlags := (viewFlags - 1)))
+	end,
+	_proto: @protoTextList,
+	preAllocatedContext: 'packageList
+};
+
+export66Item_4 := {
+	buttonClickScript: func() begin
+		if (Length(packageList.selectedItems) = Length(packageList.listItems)) then begin
+				packageList.selectedItems := [Array: ]
+			end else begin
+				self:SelectAll(packageList)
+			end;
+		packageList:DrawHilite()
+	end,
+	text: all,
+	viewBounds: {left: 0, top: 7, right: 36, bottom: 20},
+	viewJustify: 8398854,
+	SetupViewflags: func() begin
+		(if (Length(restoreOptions.packages) = 0) then (self.viewFlags := (viewFlags - 1)))
+	end,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'checkAllPackages
+};
+
+export66Item_5 := {
+	viewBounds: {left: 0, top: 5, right: 184, bottom: 21},
+	viewFlags: vVisible,
+	viewFormat: 0,
+	viewJustify: 8396816,
+	stepChildren: [stepChildren: restoreTo, export66Item_5Item],
+	SetupViewflags: func() begin
+		(if (if (not (restoreOptions.storeType = 0)) then ((not restoreOptions.stores) or (Length(GetStores()) = 1))) then (self.viewFlags := BAnd(viewFlags, -2)))
+	end,
+	FindCandidateStore: func(a1) begin
+		l1 := a1.name;
+		l2 := a1.signature;
+		l3 := [Array: ];
+		local l1;
+		local l2;
+		local l3;
+		(foreach l4 in popup do begin
+				if (l4.store:GetSignature() = l2) then begin
+						break (l3 := [Array: l4.store])
+					end else begin
+						if StrEqual(l4.store:GetName(), l1) then begin
+								SetAdd(l3, l4.store, true)
+							end
+					end
+			end);
+		if (Length(l3) = 0) then begin
+				selectedStore := popup[0].store
+			end else begin
+				selectedStore := l3[0]
+			end;
+		(restoreOptions.stores := [Array: {name: selectedStore:GetName(), signature: selectedStore:GetSignature()}])
+	end,
+	viewSetupFormScript: func() begin
+		l2 := (l1 := GetStores())[0];
+		(if (restoreOptions.storeType = 0) then begin
+				self.popup := [Array: {item: l2:GetName(), store: l2, mark: $\uFC0B}];
+				(selectedStore := l2)
+			end else begin
+				self.popup := [Array: ];
+				local l1;
+				local l2;
+				(for l3 := 1 to (Length(l1) - 1) do begin
+						local l6, l7, l8;
+						if (not (l6 := l1[l3]):IsReadOnly()) then begin
+								l7 := l6:GetName()
+							end;
+						if (not StrFilled(l7)) then begin
+								l7 := l6:GetKind()
+							end;
+						AddArraySlot(popup, {item: l7, store: l6})
+					end);
+				self:FindCandidateStore(restoreOptions.stores[0]);
+				((l8 := LFetch(popup, selectedStore, 0, '|=|, 'store)).mark := $\uFC0B)
+			end)
+	end,
+	popup: nil,
+	selectedStore: nil,
+	viewClass: clView,
+	picker: nil,
+	stepAllocateContext: [|Array|: 'picker, restoreTo, 'storeName, export66Item_5Item],
+	storeName: nil,
+	preAllocatedContext: 'storePicker
+};
+
+restoreTo := {
+	text: "ﰁ Restore to",
+	viewBounds: {left: 0, top: 0, right: 50, bottom: 0},
+	viewJustify: 8388806,
+	viewSetupFormScript: func() begin
+		(self.viewBounds := SetBounds(0, 0, StdButtonWidth(text), 0))
+	end,
+	pickActionScript: func(a1) begin
+		local l1;
+		RemoveSlot((l1 := LFetch(popup, selectedStore, 0, '|=|, 'store)), 'mark);
+		selectedStore := popup[a1].store;
+		restoreOptions.stores := [Array: {name: selectedStore:GetName(), signature: selectedStore:GetSignature()}];
+		popup[a1].mark := $\uFC0B;
+		SetValue(storeName, 'text, popup[a1].item);
+		self:hilite(nil)
+	end,
+	viewFormat: vfFillWhite + vfRound(4),
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewClickScript: func(a1) begin
+		if self:TrackHilite(a1) then begin
+				self:PopupMenu(popup, {bounds: self:LocalBox()})
+			end else begin
+				self:hilite(nil)
+			end;
+		true
+	end,
+	pickCancelledScript: func() begin
+		self:hilite(nil)
+	end,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'picker
+};
+
+export66Item_5Item := {
+	text: export85Item_3Text,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewJustify: 8388852,
+	viewSetupFormScript: func() begin
+		self.viewBounds := SetBounds(picker:LocalBox().right, 0, 0, 0);
+		(self.text := LFetch(popup, selectedStore, 0, '|=|, 'store).item)
+	end,
+	viewFont: tsHWFont + tsSize(10),
+	_proto: @protoStaticText,
+	preAllocatedContext: 'storeName
+};
+
+restore := "Restore";
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code := same("export66Item.viewSetupFormScript.instructions");
+
+buttonClickScript_code := same("export66.stepChildren[2].buttonClickScript.instructions");
+
+SetupViewflags_code := same("export66Item_2.SetupViewflags.instructions");
+
+FindCandidateStore_literal12 := same("export66Item_5.FindCandidateStore.literals[12]");
+
+pickCancelledScript_code := same("restoreTo.pickCancelledScript.instructions");
+
+text_value := same("export66.stepChildren[8].buttonClickScript.literals[2][1].text");
+
+buttonClickScript_code_2 := same("export66.stepChildren[8].buttonClickScript.literals[8].instructions");
+
+DoRestore_literal24 := same("export66.DoRestore.literals[24]");
+
+viewIdleScript_code := same("export66.viewIdleScript.instructions");

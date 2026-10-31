@@ -1,0 +1,3 @@
+// newtLabelSymbolInputLine, and what only it reaches
+
+newtLabelSymbolInputLine := {_proto: @newtProtoLine, flavor: @newtSymbolFilter};

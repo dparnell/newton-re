@@ -1,0 +1,15 @@
+// _knownglobalsymbols, and what only it reaches
+
+_knownglobalsymbols := [|Array|:
+	'ProtoNewsHowBar,
+	'ProToyEarPicker,
+	'NewTabOutView,
+	'ProtoValidAteSlip,
+	'NewTinFoBox,
+	'NewTinFoButton,
+	'NewTrollEntryView,
+	'NewTrollLayout,
+	'NewTrollOverLayout,
+	'NewTenTryView,
+	'ProToadDressPicker
+];

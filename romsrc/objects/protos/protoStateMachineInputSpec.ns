@@ -1,0 +1,19 @@
+// protoStateMachineInputSpec, and what only it reaches
+
+protoStateMachineInputSpec := {
+	async: true,
+	reqTimeout: 200000,
+	completionscript: func(a1, a2, a3) begin
+		local l1;
+		(l1 := a1.stateMachine).fOptionsIn := a2;
+		l1:AsyncWaitComplete(a3)
+	end,
+	form: '|string|,
+	InputScript: func(a1, a2, a3, a4) begin
+		local l1;
+		(l1 := a1.stateMachine).fIncomingData := a2;
+		l1.fOptionsIn := a4;
+		l1.fTerminatorIn := a3;
+		l1:AsyncWaitComplete(nil)
+	end
+};

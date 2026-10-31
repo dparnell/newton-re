@@ -1,0 +1,6 @@
+// newtonNewtBitmap, and what only it reaches
+
+newtonNewtBitmap := {
+	bits: bitmap('bits, "resources/bits/3db5a9.png", "00000000000c008e008e002700b50076", 1),
+	bounds: {left: 0, top: 0, right: 79, bottom: 39}
+};

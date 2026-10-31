@@ -1,5 +1,0 @@
-@@ 0x4c5965
-func() begin
-	self:Retarget(true)
-end
-@@end

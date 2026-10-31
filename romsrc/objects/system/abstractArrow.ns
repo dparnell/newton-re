@@ -1,0 +1,68 @@
+// abstractArrow, and what only it reaches
+
+abstractArrow := {
+	viewClass: clView,
+	viewFlags: vVisible + vClickable,
+	viewFormat: 0,
+	lastTap: 0,
+	extras: nil,
+	baseFrame: {tap: 'single, count: 0, unit: nil},
+	arrowIndex: nil,
+	arrowDirection: nil,
+	hilite: nil,
+	viewDrawScript: func() begin
+		local l1;
+		l1 := (if hilite then (StateMap.hilite + arrowIndex) else (scrollerState[arrowIndex] + arrowIndex));
+		DrawXBitmap(self:LocalBox(), Arrows, l1, 0)
+	end,
+	EndOfTheLine: func(a1) begin
+		(if (if ScrollRect then ViewRect) then (if ((((if (a1 = 'up) then (yPos <= ScrollRect.top)) or (if (a1 = 'down) then (yPos >= (ScrollRect.bottom - (ViewRect.bottom - ViewRect.top))))) or (if (a1 = 'left) then (xPos <= ScrollRect.left))) or (if (a1 = 'right) then (xPos >= (ScrollRect.right - (ViewRect.right - ViewRect.left))))) then begin
+					self:PlayStopSound();
+					Sleep(10);
+					true
+				end))
+	end,
+	viewClickScript: func(a1) begin
+		local l1;
+		InkOff(a1);
+		l1 := self:GetArrow(arrowDirection);
+		hilite := true;
+		self:DoDrawing('viewDrawScript, [Array: ]);
+		if self:EndOfTheLine(arrowDirection) then begin
+				hilite := nil;
+				self:DoDrawing('viewDrawScript, [Array: ]);
+				return true
+			end;
+		clicker();
+		(extras := Clone(baseFrame)).unit := a1;
+		if ((Ticks() - lastTap) < 60) then begin
+				extras.tap := 'double
+			end;
+		lastTap := Ticks();
+		(loop begin
+				if self:EndOfTheLine(arrowDirection) then begin
+						break
+					end;
+				self:SetupExtras(arrowDirection, extras);
+				scrollView:?viewScroll2DScript(arrowDirection, extras);
+				self:AdjustArrows();
+				l1 := self:GetArrow(arrowDirection);
+				extras.count := (extras.count + 1);
+				// DEVIATION: the repeat paced - a first step, then after a
+				//  third of a second one every tenth while the pen stays down.
+				//  The ROM's loop has no pacing of its own: each step (the
+				//  list's abstracts set up again from the soup, redrawn) took
+				//  the SA-110 long enough that a tap scrolled once; the host
+				//  does a step in half a millisecond, so one tap ran through
+				//  the whole list (Time Zones' cities went to the last).
+				local pace := if extras.count = 1 then 20 else 6;
+				local started := Ticks();
+				while not StrokeDone(a1) and (Ticks() - started) < pace do Sleep(1);
+				(if StrokeDone(a1) then break)
+			end);
+		scrollView:?viewScrollDoneScript();
+		hilite := nil;
+		self:DoDrawing('viewDrawScript, [Array: ]);
+		true
+	end
+};

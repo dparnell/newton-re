@@ -1,0 +1,25 @@
+// protoLongitudePicker, and what only it reaches
+
+protoLongitudePicker := {
+	_proto: @protoLatitudePicker,
+	maxValue: 10800,
+	minValue: -10800,
+	icon: nil,
+	compass: @eastwestBitmap,
+	viewChildren: [viewChildren:
+		protoLatitudePickerItem,
+		protoLatitudePickerItem_2,
+		minutes10,
+		hours1,
+		hours10,
+		{
+			viewBounds: {left: -22, top: 0, right: 0, bottom: 28},
+			icon: @digitflap,
+			increment: 6000,
+			GetIndex: func(a1) begin
+				((abs(a1) div 6000) mod 10)
+			end,
+			_proto: @protoDigit
+		}
+	]
+};

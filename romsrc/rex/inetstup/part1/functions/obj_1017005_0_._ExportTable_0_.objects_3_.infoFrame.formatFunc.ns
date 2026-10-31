@@ -1,5 +1,0 @@
-@@ 0x101b121
-func(a1) begin
-	(if StrFilled(a1[0]) then ParamStr("User ID: ^0", [Array: a1[0]]) else "User ID: <None>")
-end
-@@end

@@ -1,0 +1,22 @@
+// usTimeFilter, and what only it reaches
+
+usTimeFilter := {
+	item: time,
+	|string|: "        ",
+	format: format,
+	filters: [|Array|: digits, usStdDateFilterItem, "012", "012345", "aApP"],
+	SetupString: func(a1) begin
+		local l1;
+		if (not (l1 := StringToTime(a1))) then begin
+				l1 := Time()
+			end;
+		if ((a1 := HourMinute(l1))[1] = $:) then begin
+				StrMunger(a1, 0, 0, "0", 0, 1)
+			end;
+		return a1
+	end,
+	CleanupString: func(a1) begin
+		local l1;
+		(a1 := (if (l1 := StringToTime(a1)) then HourMinute(l1) else ""))
+	end
+};

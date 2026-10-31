@@ -1,6 +1,0 @@
-@@ 0x1016bd5
-func(a1, a2, a3) begin
-	fConfigOptionsAfter_Accept := a2;
-	(if a3 then self:DoEvent('AcceptFailure, [Array: a3]) else self:DoEvent('AcceptSuccess, nil))
-end
-@@end

@@ -1,0 +1,11 @@
+// defaultSendPrefInfo, and what only it reaches
+
+defaultSendPrefInfo := {
+	routeText: "When Sending",
+	routeChoices: [|Array|: "Send now", "Send later", "Specify when"],
+	routeVerb: send,
+	routeConfig: 'noworlater,
+	routeActions: [|Array|: 'Now, 'Later, nil],
+	transport: nil,
+	testMethod: 'SendRequest
+};

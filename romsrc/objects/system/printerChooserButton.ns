@@ -1,0 +1,109 @@
+// printerChooserButton, and what only it reaches
+
+printerChooserButton := {
+	text: printer,
+	indent: 55,
+	labelCommands: nil,
+	printersInList: 0,
+	TextSetup: func() begin
+		(if userConfiguration.currentPrinter.printerName then GetNames(userConfiguration.currentPrinter.printerName) else GetNames(userConfiguration.currentPrinter.name))
+	end,
+	nbpString: func() begin
+		local l1;
+		l1 := "LaserWriter";
+		if userConfiguration.currentPrinter.npbType then begin
+				l1 := userConfiguration.currentPrinter.nbpType
+			end;
+		l1
+	end,
+	pickActionScript: func(a1) begin
+		if (a1 < printersInList) then begin
+				self:UpdateText(labelCommands[a1])
+			end;
+		self:LabelActionScript(a1);
+		base:hilite(nil)
+	end,
+	pickerSetup: func() begin
+		if (userConfiguration.printers = nil) then begin
+				labelCommands := [Array: self:TextSetup()]
+			end else begin
+				labelCommands := GetNames((foreach l1 in userConfiguration.printers collect l1.printerName))
+			end;
+		printersInList := Length(labelCommands);
+		AddArraySlot(labelCommands, 'pickseparator);
+		AddArraySlot(labelCommands, "Choose Network LaserWriter");
+		AddArraySlot(labelCommands, "Choose Other Printer");
+		true
+	end,
+	LabelActionScript: func(a1) begin
+		(if (a1 = (printersInList + 1)) then AddDeferredAction(openNetworkScript, [Array: ]) else (if (a1 = (printersInList + 2)) then AddDeferredAction(openSerialScript, [Array: ]) else (if (if (userConfiguration.printers <> nil) then (Length(userConfiguration.printers) > a1)) then (userConfiguration.currentPrinter := Clone(userConfiguration.printers[a1])))))
+	end,
+	getPrinterProto: func(a1, a2) begin
+		local slot;
+		slot := '{networkSym: nbpType, serialSym: name}.(a2);
+		LFetch(AvailablePrinters, a1, 0, '|str=|, func(a1) begin
+			(if a1.(slot) then a1.(slot) else "")
+		end)
+	end,
+	saveNew: func(a1, a2, a3) begin
+		(if (not StrEqual(a1, "")) then (if (l2 := self:getPrinterProto(a2, a3)) then begin
+					(l1 := Clone(l2)).printerType := a3;
+					l1.printerName := a1;
+					userConfiguration.currentPrinter := l1;
+					if (userConfiguration.printers = nil) then begin
+							userConfiguration.printers := [Array: ]
+						end;
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					l2 := FindStringInArray((foreach l5 in (l3 := userConfiguration.printers) collect l5.printerName), a1);
+					if (l2 = nil) then begin
+							if ((l4 := Length(l3)) < 2) then begin
+									SetLength(l3, (l4 + 1));
+									l4 := (l4 + 1)
+								end;
+							(for l9 := 1 to (l4 - 1) do begin
+									l3[l9] := l3[(l9 - 1)]
+								end)
+						end else begin
+							(for l9 := 1 to l2 do begin
+									l3[l9] := l3[(l9 - 1)]
+								end)
+						end;
+					(l3[0] := Clone(l1))
+				end))
+	end,
+	ChooserDone: func(a1, a2, a3) begin
+		self:saveNew(a1, a2, a3);
+		self:UpdateText(self:TextSetup())
+	end,
+	openSerialScript: func() begin
+		printerSerialPicker.notifyOnClose := self;
+		printerSerialPicker.currentSelection := self:TextSetup();
+		printerSerialPicker:Open()
+	end,
+	openNetworkScript: func() begin
+		local l1;
+		netChooser:openNetChooser((l1 := nil), Stringer([Array: "=:", self:nbpString(), "@"]), self:TextSetup(), self, "Use printer", "Printer", "printers")
+	end,
+	networkChooserDone: func(a1, a2) begin
+		local l1, l2;
+		(if (if (a1 <> nil) then (not StrEqual(a1, ""))) then begin
+				if (a2 = nil) then begin
+						tempZone := "*"
+					end else begin
+						tempZone := a2
+					end;
+				l2 := self:nbpString();
+				self:ChooserDone((l1 := Stringer([Array: a1, Stringer([Array: ":", l2, "@"]), tempZone])), l2, 'networkSym)
+			end)
+	end,
+	_proto: @protoLabelPicker
+};
+
+printer := "Printer";
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+openNetworkScript_literal0 := same("printerChooserButton.openNetworkScript.literals[0]");

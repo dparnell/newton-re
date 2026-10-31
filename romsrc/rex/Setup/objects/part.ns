@@ -1,0 +1,81 @@
+// part, and what only it reaches
+
+part := array(nil, {
+	sequence: 22,
+	labels: '_Setup,
+	_taglist: [|Array|: '_icon, '_nobackup, '_Setup],
+	iconPro: {
+		unhilited: {
+			bounds: {left: 0, top: 0, right: 34, bottom: 26},
+			mask: bitmap('mask, "resources/mask/7a6cbd.png", "000000000008000000000000001a0022", 1),
+			colorData: [|Array|:
+				{
+					cbits: bitmap('cbits, "resources/cbits/7a6e1d.png", "000000000014000000000000001a0022", 4),
+					bitDepth: 4
+				},
+				{
+					cbits: bitmap('bits, "resources/bits/7a7055.png", "000000000008000000000000001a0022", 1),
+					bitDepth: 1
+				}
+			]
+		},
+		hilited: {
+			bounds: {left: 0, top: 0, right: 34, bottom: 26},
+			mask: bitmap('mask, "resources/mask/7a718d.png", "000000000008000000000000001a0022", 1),
+			colorData: [|Array|:
+				{
+					cbits: bitmap('cbits, "resources/cbits/7a72a1.png", "000000000014000000000000001a0022", 4),
+					bitDepth: 4
+				},
+				{
+					cbits: bitmap('bits, "resources/bits/7a74d9.png", "000000000008000000000000001a0022", 1),
+					bitDepth: 1
+				}
+			]
+		}
+	},
+	_ExportTable: [|Array|:
+		{
+			name: 'SetUp,
+			major: 1,
+			minor: 0,
+			objects: [|Array|:
+				@8339,
+				@8340,
+				@8341,
+				@8342,
+				@8343,
+				@8344,
+				@8345,
+				@8346,
+				@8347,
+				@8348,
+				@8349,
+				@8350,
+				@8351,
+				@8352,
+				@8353,
+				@8354,
+				@8355,
+				@8356,
+				@8357
+			]
+		}
+	],
+	app: 'SetUp,
+	text: "Setup",
+	icon: {
+		mask: bitmap('mask, "resources/mask/7b4a59.png", "00000000000800ef00ef004f01090071", 1),
+		bits: bitmap('bits, "resources/bits/7b4b45.png", "00000000000800ef00ef002701090049", 1),
+		bounds: {left: 0, top: 0, right: 34, bottom: 26}
+	},
+	theForm: @8339,
+	autoClose: 'noAutoclose,
+	installScript: func(a1) begin
+		a1:?devInstallScript(a1);
+		if HasSlot(a1, 'devInstallScript) then begin
+				RemoveSlot(a1, 'devInstallScript)
+			end;
+		(a1.installScript := nil)
+	end
+});

@@ -1,0 +1,402 @@
+// extraProtos, and what only it reaches
+
+extraProtos := {
+	|1.XFormEntry|: proto1_2Exformentry,
+	|1.XBookEntry|: {
+		_proto: proto1_2Exformentry,
+		iconEntry: {class: '|1.XBookEntry|, text: uCardPositionAlertButton, icon: 0, packageId: nil, isbn: nil},
+		Preflight: func(a1, a2) begin
+			"locked"
+		end,
+		New: func() begin
+			Clone(iconEntry)
+		end,
+		TapAction: TapAction_3
+	},
+	|????Entry|: AutoEntryProto,
+	FormEntry: proto1_2ExformentryProto,
+	ROMFormEntry: ROMHelpBookEntryProto,
+	AutoEntry: AutoEntry,
+	FontEntry: {
+		_proto: AutoEntryProto,
+		iconEntry: {
+			class: 'FontEntry,
+			text: uCardPositionAlertButton,
+			icon: 7,
+			sequence: nil,
+			labels: '_extensions,
+			_tagList: [|Array|: '_icon, '_extensions],
+			packageName: nil
+		}
+	},
+	DictEntry: {
+		_proto: AutoEntryProto,
+		iconEntry: {
+			class: 'DictEntry,
+			text: uCardPositionAlertButton,
+			icon: 8,
+			sequence: nil,
+			labels: '_extensions,
+			_tagList: [|Array|: '_icon, '_extensions],
+			packageName: nil
+		}
+	},
+	BookEntry: {
+		_proto: proto1_2ExformentryProto,
+		iconEntry: {
+			class: 'BookEntry,
+			text: uCardPositionAlertButton,
+			icon: 0,
+			sequence: nil,
+			labels: nil,
+			_tagList: [|Array|: '_icon],
+			packageName: nil,
+			isbn: nil
+		},
+		Preflight: Preflight,
+		TapAction: TapAction_3
+	},
+	HelpBookEntry: {
+		_proto: proto1_2ExformentryProto,
+		iconEntry: {
+			class: 'HelpBookEntry,
+			text: uCardPositionAlertButton,
+			icon: 1,
+			sequence: nil,
+			labels: '_help,
+			_tagList: [|Array|: '_icon, '_help],
+			packageName: nil,
+			isbn: nil
+		},
+		Preflight: Preflight,
+		TapAction: TapAction_4
+	},
+	ROMHelpBookEntry: {
+		_proto: ROMHelpBookEntryProto,
+		iconEntry: {
+			class: 'ROMHelpBookEntry,
+			text: uCardPositionAlertButton,
+			icon: 1,
+			sequence: nil,
+			labels: '_help,
+			_tagList: [|Array|: '_icon, '_help, '_noBackup],
+			isbn: nil,
+			app: nil,
+			packageId: nil,
+			type: nil
+		},
+		Preflight: func(a1, a2) begin
+			(if (a1 = 'Filing) then 'OK else "built-in")
+		end,
+		file: func(a1) begin
+			fentry.labels := a1;
+			true
+		end,
+		TapAction: TapAction_4
+	},
+	FrozenEntry: {
+		_proto: proto1_2ExformentryProto,
+		iconEntry: {
+			class: 'FrozenEntry,
+			text: uCardPositionAlertButton,
+			icon: 9,
+			sequence: nil,
+			labels: nil,
+			_tagList: [|Array|: '_icon, '_snowflake],
+			packageName: nil
+		},
+		Preflight: compile(
+			constants: {
+				kLiteral_536a15: "locked"
+			},
+			func(a1, a2) begin
+				(if ((a1 = 'Filing) or (a1 = 'delete)) then (if (not EntryStore(fentry):IsReadOnly()) then 'OK else kLiteral_536a15) else (if (a1 = 'move) then (if self:copyprotected() then "copy protected" else (if EntryStore(fentry):IsReadOnly() then kLiteral_536a15 else 'OK)) else (if (a1 = 'route) then 'OK else (if (a1 = 'freeze) then "already frozen" else "frozen"))))
+			end),
+		TapAction: func() begin
+			ThawPackage(self:LookupSoupPackage());
+			nil
+		end
+	},
+	SoupEntry: {
+		_proto: proto1_2ExformentryProto,
+		iconEntry: {
+			class: 'SoupEntry,
+			text: uCardPositionAlertButton,
+			icon: 4,
+			sequence: nil,
+			labels: '_soups,
+			_tagList: [|Array|: '_icon, '_soups],
+			soupNames: nil,
+			closeControl: 'leaveOpen
+		},
+		size: size_2,
+		store: delete_3,
+		where: where,
+		Preflight: Preflight_2,
+		delete: delete_4,
+		TapAction: TapAction_2
+	},
+	ROMSoupEntry: {
+		_proto: ROMHelpBookEntryProto,
+		iconEntry: {
+			class: 'ROMSoupEntry,
+			text: uCardPositionAlertButton,
+			icon: 4,
+			sequence: nil,
+			labels: '_soups,
+			_tagList: [|Array|: '_icon, '_soups, '_noBackup],
+			soupNames: nil,
+			closeControl: 'leaveOpen
+		},
+		Preflight: Preflight_2,
+		TapAction: TapAction_2,
+		delete: delete_4,
+		where: where
+	},
+	ScriptEntry: {
+		_proto: proto1_2ExformentryProto,
+		iconEntry: {
+			class: 'ScriptEntry,
+			text: uCardPositionAlertButton,
+			icon: 5,
+			sequence: nil,
+			labels: nil,
+			_tagList: [|Array|: '_icon, '_scriptIcon],
+			packageName: nil,
+			TapAction: nil
+		},
+		Preflight: func(a1, a2) begin
+			(if (((a1 = 'Filing) or (a1 = 'move)) or (a1 = 'delete)) then (if (not EntryStore(fentry):IsReadOnly()) then 'OK else "locked") else (if (a1 = 'route) then 'OK else (if (if self:LookupSoupPackage() then (a1 = 'freeze)) then 'OK else "the wrong kind")))
+		end,
+		size: func() begin
+			Stringer([Array: max(1, (EntrySize(fentry) div 1024)), "K"])
+		end,
+		delete: func() begin
+			(if self:LookupSoupPackage() then inherited:delete() else EntryRemoveFromSoup(fentry))
+		end,
+		move: func(a1) begin
+			local l1, l2;
+			(if self:LookupSoupPackage() then inherited:move(a1) else begin
+					l2 := a1:GetSoup((l1 := EntrySoup(fentry):GetName()));
+					if EntryStore(fentry):IsReadOnly() then begin
+							EntryCopyXmit(fentry, l2, '_newt)
+						end else begin
+							EntryMoveXmit(fentry, l2, '_newt)
+						end;
+					true
+				end)
+		end,
+		TapAction: TapAction
+	},
+	ROMScriptEntry: {
+		_proto: ROMHelpBookEntryProto,
+		iconEntry: {
+			class: 'ROMScriptEntry,
+			text: uCardPositionAlertButton,
+			icon: 5,
+			sequence: nil,
+			labels: nil,
+			_tagList: [|Array|: '_icon, '_noBackup],
+			TapAction: nil
+		},
+		Preflight: func(a1, a2) begin
+			(if ((a1 = 'Filing) or (a1 = 'route)) then 'OK else (if ((a1 = 'delete) or (a1 = 'move)) then "built-in" else "the wrong kind"))
+		end,
+		file: file_2,
+		move: move,
+		TapAction: TapAction
+	},
+	PackageEntry: proto1_2ExformentryProto,
+	ROMPackageEntry: ROMHelpBookEntryProto,
+	AutoPackageEntry: AutoEntry
+};
+
+size_2 := func() begin
+	"--"
+end;
+
+ROMHelpBookEntryProto := {
+	_proto: proto1_2Exformentry,
+	iconEntry: {
+		class: 'ROMFormEntry,
+		text: uCardPositionAlertButton,
+		icon: 2,
+		sequence: nil,
+		labels: nil,
+		_tagList: _tagList,
+		app: nil
+	},
+	New: func() begin
+		Clone(iconEntry)
+	end,
+	where: func() begin
+		"Built-in"
+	end,
+	size: size_2,
+	store: func() begin
+		GetStores()[0]
+	end,
+	move: move,
+	Preflight: func(a1, a2) begin
+		local l1;
+		(if ((a1 = 'Filing) or (a1 = 'route)) then 'OK else (if (if (a1 = 'Backdrop) then (Length(a2) = 1)) then begin
+					if (l1 := GetRoot().(fentry.app)).noBackdrop then begin
+							return "the wrong kind"
+						end;
+					if (if (displayParams.appAreaHeight < 320) then (not l1.ReOrientToScreen)) then begin
+							return "not designed for this orientation"
+						end;
+					'OK
+				end else "built-in"))
+	end,
+	file: func(a1) begin
+		if IsReadOnly(fentry._tagList) then begin
+				fentry._tagList := Clone(fentry._tagList)
+			end;
+		if fentry.labels then begin
+				SetRemove(fentry._tagList, fentry.labels)
+			end;
+		if a1 then begin
+				SetAdd(fentry._tagList, a1, true);
+				fentry.labels := a1
+			end else begin
+				fentry.labels := nil
+			end;
+		EntryChange(fentry);
+		true
+	end,
+	delete: func() begin
+		EntryRemoveFromSoup(fentry)
+	end
+};
+
+Preflight := compile(
+	constants: {
+		kLiteral_536a15: "locked",
+		kLiteral_536afd: "copy protected"
+	},
+	func(a1, a2) begin
+		(if (((a1 = 'Filing) or (a1 = 'delete)) or (a1 = 'freeze)) then (if (not EntryStore(fentry):IsReadOnly()) then 'OK else kLiteral_536a15) else (if (a1 = 'route) then 'OK else (if (a1 = 'move) then (if self:copyprotected() then kLiteral_536afd else (if EntryStore(fentry):IsReadOnly() then kLiteral_536a15 else 'OK)) else (if (a1 = 'send) then (if self:copyprotected() then kLiteral_536afd else 'OK) else "the wrong kind"))))
+	end);
+
+AutoEntryProto := {
+	_proto: proto1_2ExformentryProto,
+	iconEntry: {
+		class: '|????Entry|,
+		text: uCardPositionAlertButton,
+		icon: 6,
+		sequence: nil,
+		labels: '_extensions,
+		_tagList: [|Array|: '_icon, '_extensions],
+		packageName: nil
+	},
+	Preflight: Preflight,
+	TapAction: func() begin
+		local l1;
+		(if (l1 := self:LookupSoupPackageAndActivate()) then (if fentry.TapAction then fentry:TapAction() else (if (l1 <> 'justActivated) then begin
+						GetRoot():Notify(3, "Packages", "Tapping this does nothing.");
+						nil
+					end)))
+	end
+};
+
+AutoEntry := {
+	_proto: AutoEntryProto,
+	iconEntry: {
+		class: 'AutoEntry,
+		text: uCardPositionAlertButton,
+		icon: 3,
+		sequence: nil,
+		labels: '_extensions,
+		_tagList: [|Array|: '_icon, '_extensions],
+		packageName: nil
+	}
+};
+
+TapAction := func() begin
+	(if (if fentry.TapAction then self:LookupSoupPackageAndActivate()) then fentry:TapAction())
+end;
+
+where := func() begin
+	local l1;
+	local l2;
+	(foreach l3 in (l1 := GetValidStores()) do begin
+			(foreach l5 in fentry.soupNames do begin
+					if l3:HasSoup(l5) then begin
+							l2 := Stringer([Array: (if l2 then Stringer([Array: l2, $,])), " ", l3:GetName()]);
+							break
+						end
+				end)
+		end);
+	(if (not l2) then "" else l2)
+end;
+
+Preflight_2 := func(a1, a2) begin
+	(if (if (not fentry.emptyInternal) then ((a1 = 'route) or (a1 = 'delete))) then 'OK else "the wrong kind")
+end;
+
+delete_4 := func() begin
+	local l1;
+	local l2;
+	(foreach l3 in (l2 := (if (l1 := GetRoot().ExtrasDrawer.storesFilter) then [Array: l1] else GetStores())) do begin
+			if (not l3:IsReadOnly()) then begin
+					if (not (l5 := (if fentry.ownerApp then GetRoot().(fentry.ownerApp)))) then begin
+							l5 := GetRoot().ExtrasDrawer
+						end;
+					local l5;
+					(foreach l6 in fentry.soupNames do begin
+							local l8;
+							if (l8 := l3:GetSoup(l6)) then begin
+									try begin
+											l8:RemoveFromStoreXmit(l5.appSymbol)
+										end onexception |evt.ex| do begin
+											self:Notify(3, "Packages", ParamStr("Unable to delete the data from ^0", [Array: l3:GetName()]))
+										end
+								end
+						end)
+				end
+		end)
+end;
+
+TapAction_2 := func() begin
+	local l1;
+	(if (l1 := GetRoot().soupervisor) then begin
+			l1:OpenTo(fentry);
+			(if fentry.closeControl then (fentry.closeControl = 'alwaysClose) else GetUserConfig('ExtraAlwaysClose))
+		end)
+end;
+
+TapAction_3 := func() begin
+	local l1, l2;
+	(if self:LookupSoupPackageAndActivate() then begin
+			if (l2 := (l1 := GetRoot().copperfield):CurrentBook()) then begin
+					if (not StrEqual(l2.isbn, fentry.isbn)) then begin
+							l1:Close();
+							l1:viewPreOpenScript(fentry.isbn)
+						end
+				end else begin
+					l1:PrepBook(fentry.isbn)
+				end;
+			self:_Open(l1)
+		end)
+end;
+
+TapAction_4 := func() begin
+	local l1;
+	(if self:LookupSoupPackageAndActivate() then begin
+			if (if (l1 := GetRoot().TinyTim).viewCObject then StrEqual(l1.isbn, fentry.isbn)) then begin
+					l1:Close();
+					return nil
+				end;
+			AddDeferredSend(l1, 'OpenHelpBook, [Array: fentry.isbn]);
+			(if fentry.closeControl then (fentry.closeControl = 'alwaysClose) else GetUserConfig('ExtraAlwaysClose))
+		end)
+end;
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+store_code := same("ROMHelpBookEntryProto.store.instructions");
+
+Preflight_literal13 := same("ROMHelpBookEntryProto.Preflight.literals[13]");
+
+delete_4_literal14 := same("delete_4.literals[14]");

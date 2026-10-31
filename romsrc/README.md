@@ -23,20 +23,63 @@ are kept. How it was made, and why it is shaped as it is, is in
 
 | Path | What it is |
 |---|---|
-| `objects/*.ns` | The objects, as definitions `name := value;` in a notation that is a subset of NewtonScript's literals. A file holds the definitions one root object dominates, named after it (`Rbuiltinfunctions.ns`, `calendar_mp18.ns`). What several roots share is in `misc-NNN.ns`. |
-| `functions/*.ns` | Each NewtonScript function, as the decompiler wrote it (`tools/newton-rom/analysis/nsdecompile.py`), named by the slot that holds it: `Rbuiltinfunctions.AddAlarm.ns`. |
+| `objects/` | The objects, as definitions `name := value;` in a notation that is NewtonScript's literals plus a few constructors (below), every function written in the frame that holds it. A file holds a root object - one a magic pointer or the ROM's C code names - and what only it reaches, and is named after it; the directories say what the roots are: `apps/` (`calendar.ns`, `cardfile.ns`, ...), `protos/` (`protoFloatNGo.ns`, ...), `newtapp/` (the NewtApp framework's protos), `canonical/` (the frames the C code makes its objects from), `slips/`, `views/` (pickers, popups, filters), `pictures/`, `sounds/`, `soups/`, `recognition/`, `system/` (the rest: `builtinFunctions.ns`, `viewRoot.ns`, ...). `values.ns` holds the roots that are plain values (strings, numbers), `shared/` what several roots reach and none alone. A definition may be moved to any file: the files only group them. |
 | `maps.ns` | The frame maps (the slot names of the ROM's frames). |
+| `constants.tsv` | The constants the notation may name: the views' flags, justification, formats and classes (from `src/views/ViewFlags.h`) and the packed font specs' families, sizes and faces. |
+| `renames.tsv` | Each definition's name as the extractor wrote it (`obj_4f901d`, its address; `Rbuiltinfunctions`, its R-constant) and its name now - for reading older notes, `docs/work-log.md` among them. A package's part tree has its own. |
 | `resources/` | The binaries: bitmaps as PNG (`bits`, `mask`, `cbits`), simple sounds as WAV, QuickDraw pictures as directories - `picture.txt`, the opcodes as text, and a PNG per bitmap (`tools/pict/README.md`) - fonts as directories - a BDF file per bitmap strike and a text file per other table, which the builder packs back into the `'sfnt` binary (`tools/fonts/README.md`; what the tables hold, `docs/qd/fonts-sfnt.md`). The Unicode frame's tables (the encodings' maps, the character classes and case tables), the sorting tables, the locales' word- and line-break tables, the ink codec's code books, the letter trigrams, the Letter Shapes pictures and the cursive recogniser's trained tables (DTEHeader, DTEMain, PPDMain, DTETrigrams) are text too, `texttable(...)`, each saying its format (`tools/tables/README.md`). The locales' Airus dictionaries (`'AirusA`) are `.lex` graphs as the lexicons are (`lexicon(...)`). Nothing here is `.bin` any more. |
 | `lexicons/`, `lexicons.tsv` | The recognisers' lexicons, with their ROM addresses: the word lists as `.words` files (a word to a line, with its attribute after a tab where the list gives one - add or take out a line to add or take out a word) and the lexical grammars - dates, times, numbers, money, phone numbers - as `.lex` graphs of character sets. The builder makes the ROM's Airus dictionaries out of them, byte for byte (`tools/lexicons/README.md`); a list grown past its room in the ROM needs `--relayout`, which moves it. |
 | `romdata/`, `romdata.tsv` | The ROM's other data that code reads at its ROM address: the parameter block `gParamBlock` (0x1000, a page - `gROMVersion`, `gROMStage`, `gHardwareType`, ...), whose version words a package's native code reads (`armcpu`), as text: `gParamBlock.txt` names each word by the ROM's symbol (`0x13dc gROMVersion 0x00020002`) with the runs of nought one line each (`tools/rex/README.md`, format `words`). Added with `romsrc.py romdata build/MP2x00US romsrc`, the extractor's own code for it. |
 | `rex/`, `rex.tsv` | The ROM extension, in pieces: its header and config entries, and the ten packages. The pieces around the packages are text (`tools/rex/README.md`): the header (`header.txt` - its config entries name the pieces they cover, and its length and offsets are worked out on build), the config entries `dio`, `gpio` and `ralc` as rows of words, the page tables `ptpt`/`glpt`, the export table `fexp` (each ref with its package and object), the patch table `jump` (each branch's target) and the padding (a fill byte and an alignment). A package with a frames part is `<Package>.head.txt` (its directory: names, flags and strings, the sizes and offsets worked out from the part) and the part as a tree of its own in `<Package>/` (the same layout as this one). WorldData is `WorldData.head.txt` and its soup part `WorldData/` (`rex.tsv`: `store`), the store as text - its 753 countries and cities one entry to a line in `entries.ns`, its indexes and word hints made on build (`tools/stores/README.md`). ScreenBuffer and ScreenDrivers are directories (`package`): `package.txt` and each protocol part as ARM source, `part0.s`, assembled where the package falls (`tools/armpart/README.md`). The three packages added to it (`newtdev/`, `inetenbl/`, `inetstup/`, at address `-`, `rom-form`) are directories too: `package.txt`, each frames part a tree (`partN/`), each protocol part and native module ARM source; each has a README, which for the two that needed changing says what was changed and why. |
-| `magic.tsv` | The magic-pointer table: `@index` and the object it names. |
+| `magic.tsv` | The magic-pointer table: `@index`, the object it names, and any other names it goes by (the ROM's R-constants that are magic pointers name them). |
 | `layout.tsv` | The manifest: every object's address, path in the source and header flags, each frame's map, and aliases (shared objects that a compiled function makes afresh). |
 | `bytecode.tsv` (in a part's tree) | The functions kept as bytecode, with the reason, when any are. None are now. |
 
-The notation, `same("path")`, `function("…")`, `bitmap(…)` and the rest,
-is described in the documentation of `romsrc.py` (`python
-tools/newton-rom/analysis/romsrc.py --help`).
+## Reading it
+
+A file of `objects/` reads as NewtonScript a person might have written:
+
+```
+protoFloatNGo := {_proto: @protoFloater, viewChildren: [|Array|: {_proto: @protoClosebox}], debug: 363081};
+
+calendar := {
+	...
+	prefsView: {
+		viewBounds: {left: 0, top: 0, right: 200, bottom: 200},
+		viewJustify: vjParentCenterH + vjParentCenterV,
+		viewQuitScript: func() begin
+			(theApp.prefsOpen := nil)
+		end,
+		ReOrientToScreen: @defRotateFunc,
+		...
+```
+
+- **A function is written where it is**, `slot: func(...) begin ... end`,
+  as the decompiler (`tools/newton-rom/analysis/nsdecompile.py`) wrote
+  it - its arguments and locals `a1`, `l1`, because the ROM keeps no
+  names for them - and the builder compiles it with the host's own
+  compiler. Comments in it are kept. A function that had constants of
+  its own when it was built (a function it makes into a closure, a value
+  computed at build time), options for the compiler, or that is a value
+  computed rather than a `func`, is `compile([constants: {name: value,
+  ...},] [options: "...",] source)`.
+- **`@name` is a magic pointer** (`magic.tsv`), in the objects and in the
+  functions alike: `_proto: @protoFloater`, `GetUnionSoupAlways(@calendarSoupName)`.
+  `@387` still works. A bare name is the definition of that name.
+- **Integers may be sums of constants** (`constants.tsv`): `viewFlags:
+  vVisible + vClickable`, `viewFormat: vfFillWhite + vfFrameBlack + vfPen(1)`,
+  `titleFont: tsSystem + tsSize(9) + tsBold`.
+- **`same("path")`** is an object only compiled functions hold and share:
+  the one a function holds at that path. These come last in a file.
+- The binaries are files of `resources/`: `bitmap(...)`, `sound(...)`,
+  `picture(...)`, `sfnt(...)`, `texttable(...)` and the rest.
+
+The notation is described in full in the documentation of `romsrc.py`
+(`python tools/newton-rom/analysis/romsrc.py --help`). The tree was put
+in this form by `tools/newton-rom/analysis/naturalize.py`, once, from the
+extractor's (a definition named after its address, each function in a
+file of its own under `functions/`, magic pointers and flags as numbers);
+the two build to the same object file byte for byte.
 
 ## Building it
 
@@ -59,7 +102,8 @@ python tools/newton-rom/analysis/romsrc.py build romsrc --relayout -o build/obje
   Enabler has been added to its extension (below), the letter-set box of
   the Handwriting Recognition slip and Setup's handwriting page offers the
   host's handwriting engines (`docs/recognition/engines.md`: the cluster
-  `obj_5afced`, the box `obj_646c8d`, the example `obj_5b033d`), the help
+  `LetterSetCluster`, the box `protoRecognitionCluster`, the example
+  `wordExample`), the help
   book has two topics on writing with them (`rex/help_book`: the
   `unistrokeHelp*` items and their two pages; the pictures made by
   `test_Unistroke --pict`), `InstallFormPart` writes a card's socket from
@@ -68,12 +112,12 @@ python tools/newton-rom/analysis/romsrc.py build romsrc --relayout -o build/obje
   (`docs/rom-bugs.md`; `NEWTON_ROM_BUGS=1` runs the ROM's code), and a
   screen smaller than any MessagePad's (the T-Deck Pro's 240x320) is
   allowed for: an application is not asked to turn an upright screen
-  upright (`obj_642059.Open`), the Typewriter keyboard is made the
+  upright (`viewRoot.Open`), the Typewriter keyboard is made the
   screen's width when its small size does not fit
-  (`obj_630d25.viewSetupFormScript`), Internet Setup's edit slip and
+  (`alphaKeyboard.viewSetupFormScript`), Internet Setup's edit slip and
   its keyboard fit the screen (`rex/inetstup/README.md`), and so does
   the slip that asks for a missing piece of a worksite or the owner's
-  card - Time Zones' "choose the closest city" (`obj_646cf1`, @508) - and it
+  card - Time Zones' "choose the closest city" (`protoValidateSlip`, @508) - and it
   may be changed further to enhance the
   system. The git tag `romsrc-rom` keeps the last
   tree that is the ROM's but for the additions: `--git-ref romsrc-rom`
@@ -99,6 +143,19 @@ python tools/newton-rom/analysis/romsrc.py build romsrc --relayout -o build/obje
 - The object file records where each object moved. The host's constants
   still name the ROM's addresses and follow that record, so a data edit
   needs no new build of the host.
+
+A definition can be moved to another file, or a new file made under
+`objects/`, freely. Renaming one needs the layout to follow, as the
+layout knows the objects by their names, so it is done with
+
+```
+python tools/newton-rom/analysis/romsrc.py rename romsrc OLD NEW
+```
+
+which renames the definition, every reference to it, the `same("...")`
+paths that start at it and its lines in `layout.tsv` and `magic.tsv`
+(for a magic pointer's object, every `@OLD` too, the packages' trees
+included). The object file it builds is the same.
 
 `romsrc.py edit-test` is the test that this works: it edits a copy and
 the copy still boots (ctests `host.ROMSourceEdit`,

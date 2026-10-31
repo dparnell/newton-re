@@ -1,6 +1,0 @@
-@@ 0x5adc3d
-func() begin
-	self.curIndex := self:OriginIndex();
-	(if (curIndex >= 0) then letterShapeLabel:UpdateText())
-end
-@@end

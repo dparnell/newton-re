@@ -1,0 +1,7 @@
+// cloud2, and what only it reaches
+
+cloud2 := {
+	mask: bitmap('mask, "resources/mask/3ca899.png", "000000000018003b003b007f00a80131", 1),
+	bits: bitmap('bits, "resources/bits/3cb2ed.png", "000000000018003b003b007f00a80131", 1),
+	bounds: {left: 0, top: 0, right: 178, bottom: 109}
+};

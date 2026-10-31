@@ -1,0 +1,17 @@
+// export56, and what only it reaches
+
+export56 := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+	label: title,
+	flavor: @newtCustomFilter,
+	newDictionaries: nil,
+	labelCommands: nil,
+	viewSetupFormScript: func() begin
+		newDictionaries := GetLocale().recogHonorificDictionaries;
+		inherited:?viewSetupFormScript()
+	end,
+	viewLineSpacing: 32,
+	newRecFlags: 25201153,
+	_proto: @newtLabelInputLine
+};

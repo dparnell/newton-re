@@ -1,0 +1,6 @@
+// cardfileIndices, and what only it reaches
+
+cardfileIndices := [|Array|:
+	{structure: 'slot, path: 'sorton, type: '|string|},
+	{structure: 'slot, path: 'labels, type: 'tags, tags: nil}
+];

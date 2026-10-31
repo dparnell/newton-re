@@ -1,5 +1,0 @@
-@@ 0x1043ba5
-func() begin
-	(fNotifyIconObj := GetRoot().notifyIcon:AddAction("Internet Connection", MNotifyIconCallback, [Array: fsm]))
-end
-@@end

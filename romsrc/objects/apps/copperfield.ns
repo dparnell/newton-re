@@ -1,0 +1,1402 @@
+// copperfield, and what only it reaches
+
+copperfield := {
+	PrepBook: compile(
+		constants: {
+			kFunction_51bdf9: func() begin
+				true
+			end
+		},
+		func(a1) begin
+			local l1, l2;
+			self.isbn := a1;
+			l1 := self:GetLibraryEntry(a1);
+			self.curRendering := l1.curRendering;
+			self:PrepBookX(a1);
+			(if ((if ((l2 := self:CurrentBook()).version > 1) then (l2.help = true)) or (if l2.flags then (BAnd(l2.flags, 64) <> 0))) then begin
+					self.ReOrientToScreen := _ReOrientToScreen;
+					(GetRoot().theBrowser.ReOrientToScreen := kFunction_51bdf9)
+				end else RemoveSlot(self, 'ReOrientToScreen))
+		end),
+	RemoveOldestBook: func() begin
+		l1 := 535999999;
+		l2 := 0;
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		local l5;
+		(foreach l6 in (l5 := self:GetOfflineBooks()) do begin
+				l2 := (l2 + 1);
+				if ((l3 := EntryModTime(l6)) < l1) then begin
+						l1 := l3;
+						l4 := l6
+					end
+			end);
+		(if (l2 = 8) then EntryRemoveFromSoup(l4))
+	end,
+	pageSound: @flip,
+	pagesShowing: 1,
+	SaveMarkup: func() begin
+		(if Visible(markupLayer) then markupLayer:SaveMarks())
+	end,
+	_ReOrientToScreen: func() begin
+		(if (l1 := self:CurrentBook()) then begin
+				self:Close();
+				self:viewPreOpenScript(l1.isbn);
+				l3 := (l2 := displayParams).appAreaWidth;
+				l4 := l2.appAreaHeight;
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				local l5;
+				(for l6 := 0 to (Length(l1.rendering) - 1) do begin
+						if (if ((l5 := self:PageSize(l6)).width <= l3) then (l5.height <= l4)) then begin
+								if (l6 <> curRendering) then begin
+										curRendering := l6;
+										self:ResetCachedPages(l1.isbn);
+										break
+									end
+							end
+					end);
+				self:Open()
+			end)
+	end,
+	HideMarkup: func() begin
+		self:SaveMarkup();
+		contentArea:HideMarkup();
+		markupLayer:Close()
+	end,
+	GetTargetInfo: func(a1) begin
+		local l1;
+		self:SaveMarkup();
+		(l1 := {}).class := 'copperfield;
+		l1.title := self:BookTitle();
+		l1.isbn := isbn;
+		l1.CurrentPage := self:CurrentPage();
+		l1.fromPage := l1.CurrentPage;
+		l1.nPages := self:CountPages();
+		l1.toPage := l1.nPages;
+		l1.printData := contentArea:?BookPrint();
+		l1.curRendering := curRendering;
+		l1.printMarks := copperfield:InkMarks(nil);
+		{target: l1, targetView: targetView}
+	end,
+	viewSetupDoneScript: func() begin
+		local l1;
+		browserRefnum := (Length((browsers := Clone((l1 := self:CurrentBook()).browsers))) - 1);
+		self.targetView := contentArea;
+		if HasPath(l1, 'flags) then begin
+				self.bookFlags := l1.flags
+			end;
+		(if (self:CurrentPage() = 0) then self:TurnToPage(1) else self:ScrollPage(0))
+	end,
+	SetStatusBarButtons: func(a1) begin
+		cntrlPanel:SetStatusBarButtons(a1)
+	end,
+	BookOKClose: func() begin
+		contentArea:BookOKClose()
+	end,
+	ScrollReceiver: func(a1) begin
+		(scrollStealer := a1)
+	end,
+	ShowMarkup: func() begin
+		self:HideStoryCard();
+		contentArea:ShowMarkup();
+		markupLayer:Open()
+	end,
+	viewQuitScript: func() begin
+		self:CloseBrowser();
+		contentArea:bookHideScript();
+		self:SaveMarkup();
+		self:BookClosed();
+		isbn := nil;
+		browsers := nil;
+		targetView := nil;
+		bookFlags := 0;
+		viewChildren := nil;
+		curRendering := 0;
+		if (not floating) then begin
+				RemoveSlot(self, 'viewFormat);
+				RemoveSlot(self, 'viewEffect)
+			end;
+		if (cntrlPanel exists) then begin
+				cntrlPanel := nil
+			end;
+		if (markupButton exists) then begin
+				markupButton := nil
+			end;
+		if (pageNumber exists) then begin
+				pageNumber := nil
+			end;
+		if (bookAbout exists) then begin
+				bookAbout := nil
+			end;
+		RemoveSlot(self, 'pageNumsShowing);
+		RemoveSlot(self, 'title);
+		(if HasPath(self, 'routeScripts) then begin
+				(foreach l1 in routeScripts do begin
+						RemoveSlot(self, l1.routeScript)
+					end);
+				RemoveSlot(self, 'routeScripts)
+			end)
+	end,
+	AddBookRouting: func(a1) begin
+		local scriptSym;
+		if HasPath(base, 'routeScripts) then begin
+				(foreach l1 in routeScripts do begin
+						RemoveSlot(base, l1.routeScript)
+					end);
+				RemoveSlot(base, 'routeScripts)
+			end;
+		(if (Length(a1) > 0) then begin
+				base.routeScripts := TotalClone(a1);
+				(foreach l1 in base.routeScripts do begin
+						scriptSym := l1.routeScript;
+						base.(scriptSym) := func(a1, a2) begin
+							Perform(contentArea, scriptSym, [Array: a1, a2])
+						end
+					end)
+			end)
+	end,
+	viewDrawScript: func() begin
+		local l1, l2;
+		(if (pagesShowing = 2) then self:DrawShape(MakeLine((l2 := ((l1 := self:PageSize(nil)).width + 7)), 0, l2, l1.height), nil))
+	end,
+	SetMarkIcon: func() begin
+		(if (panelOpen = true) then markupButton:SetMarkIcon())
+	end,
+	RemoveBrowser: func(a1) begin
+		(foreach l1 in browsers do begin
+				if (l1.refNum = a1) then begin
+						if browser.viewCObject then begin
+								if (browsers[browser.paneIndex] = l1) then begin
+										browser:Close()
+									end
+							end;
+						SetRemove(browsers, l1)
+					end
+			end);
+		nil
+	end,
+	viewFlags: vApplication + vClipping + vClickable,
+	SetBrowserPosition: func() begin
+		(if Visible(browser) then browser.Outline:ScrollToCurrent(browser.Outline))
+	end,
+	ScrollPage: {class: #132, funcPtr: 6976411, numArgs: 1},
+	GetLibraryEntry: func(a1) begin
+		local l1, l2;
+		l2 := (l1 := self:CreateGetSoup():Query({type: 'text, text: a1})):entry();
+		l1 := nil;
+		l2
+	end,
+	PageCThumbnail: {class: #132, funcPtr: 6976412, numArgs: 1},
+	BookTitle: {class: #132, funcPtr: 6957403, numArgs: 0},
+	pageNumsShowing: [|Array|: 0, nil],
+	viewBounds: copperfieldViewBounds,
+	VerifyLibrarySoup: func() begin
+		local theISBNs, onlines, offlines;
+		theISBNs := [Array: ];
+		onlines := [Array: ];
+		offlines := [Array: ];
+		MapCursor((l1 := GetRoot().ExtrasDrawer:GetPartCursor(nil, nil, nil)), func(a1) begin
+			local l1;
+			l1 := (not EntryIsResident(a1));
+			if HasSlot(a1, 'isbn) then begin
+					if a1.isbn then begin
+							AddArraySlot(theISBNs, a1.isbn)
+						end
+				end;
+			if l1 then begin
+					EntryUndoChanges(a1)
+				end;
+			nil
+		end);
+		local l1;
+		(foreach l2 in GetGlobals().|Parts1.x| do begin
+				local l4;
+				if HasSlot(l2, 'isbn) then begin
+						if l2.isbn then begin
+								AddArraySlot(theISBNs, l2.isbn)
+							end
+					end
+			end);
+		MapCursor((l4 := self:CreateGetSoup():Query({})), func(a1) begin
+			(if LSearch(theISBNs, a1.isbn, 0, '|str=|, nil) then begin
+					AddArraySlot(onlines, a1);
+					(if (a1.bookPresent = 0) then begin
+							a1.bookPresent := 1;
+							EntryChange(a1)
+						end)
+				end else begin
+					AddArraySlot(offlines, a1);
+					(if (a1.bookPresent = 1) then begin
+							a1.bookPresent := 0;
+							EntryChange(a1)
+						end)
+				end)
+		end);
+		{online: onlines, offline: offlines}
+	end,
+	appObject: [|Array|: book, "Books"],
+	bookFlags: 0,
+	PrepBookX: {class: #132, funcPtr: 6978497, numArgs: 1},
+	isbn: nil,
+	viewPreOpenScript: func(a1) begin
+		(if (ClassOf(a1) = 'frame) then self:PrepBook(a1.isbn) else self:PrepBook(a1))
+	end,
+	SetPageNumber: func(a1, a2) begin
+		pageNumsShowing := [Array: a1, a2];
+		(if (panelOpen = true) then pageNumber:SetPageNumber(a1, a2))
+	end,
+	scrollStealer: nil,
+	GetOnlineBooks: func() begin
+		self:VerifyLibrarySoup().online
+	end,
+	OpenIndex: func() begin
+		nil
+	end,
+	viewScrollDownScript: func() begin
+		(if (scrollStealer <> nil) then PostCommand(scrollStealer, 46) else begin
+				if Visible(pageDialog) then begin
+						pageDialog:Close()
+					end;
+				if Visible(pageNumberDialog) then begin
+						pageNumberDialog:Close()
+					end;
+				if ((pagesShowing = 1) or (self:CurrentPage() = 1)) then begin
+						self:ScrollPage(1)
+					end else begin
+						self:ScrollPage(2)
+					end;
+				(if Visible(markupLayer) then contentArea:ShowMarkup())
+			end)
+	end,
+	viewOverviewScript: func() begin
+		if Visible(pageDialog) then begin
+				pageDialog:Close()
+			end;
+		if Visible(pageNumberDialog) then begin
+				pageNumberDialog:Close()
+			end;
+		browser:Toggle()
+	end,
+	appSymbol: 'copperfield,
+	panelOpen: true,
+	PageContents: {class: #132, funcPtr: 7023995, numArgs: 1},
+	browserRefnum: 0,
+	UpdateBookmarks: {class: #132, funcPtr: 7025042, numArgs: 1},
+	viewScrollUpScript: func() begin
+		(if (scrollStealer <> nil) then PostCommand(scrollStealer, 45) else begin
+				if Visible(pageDialog) then begin
+						pageDialog:Close()
+					end;
+				if Visible(pageNumberDialog) then begin
+						pageNumberDialog:Close()
+					end;
+				if ((pagesShowing = 1) or (self:CurrentPage() = 2)) then begin
+						self:ScrollPage(-1)
+					end else begin
+						self:ScrollPage(-2)
+					end;
+				(if Visible(markupLayer) then contentArea:ShowMarkup())
+			end)
+	end,
+	curRendering: 0,
+	viewSetupFormScript: func() begin
+		self:BuildDisplayParams();
+		self.viewBounds := RelBounds(dpCu.left, dpCu.top, dpCu.width, dpCu.height);
+		if (floating = 'Partial) then begin
+				viewFormat := 131665;
+				viewEffect := 133120
+			end else begin
+				if (floating = nil) then begin
+						viewFormat := 81;
+						viewEffect := 133120
+					end else begin
+						RemoveSlot(self, 'viewFormat);
+						RemoveSlot(self, 'viewEffect)
+					end
+			end;
+		CuPage := self;
+		self.browser := GetRoot().theBrowser;
+		self.title := self:BookTitle();
+		SetKeyView(self, 0)
+	end,
+	InkMarks: {class: #132, funcPtr: 6973246, numArgs: 1},
+	ResetCachedPages: func(a1) begin
+		local l1;
+		(l1 := self:GetLibraryEntry(a1)).curpage := 1;
+		l1.prevpage := 1;
+		EntryChange(l1)
+	end,
+	bookmarking: nil,
+	OpenBrowser: func(a1) begin
+		browser.paneIndex := a1;
+		browser.curIndex := 0;
+		browser:Open()
+	end,
+	AddBookmark: {class: #132, funcPtr: 6956332, numArgs: 1},
+	SetupRoutingSlip: func(a1) begin
+		if (isbn = nil) then begin
+				self:Notify(3, "Book", "No book open to print");
+				return nil
+			end;
+		a1.title := self:BookTitle();
+		self:SaveMarkup()
+	end,
+	GetOfflineBooks: func() begin
+		self:VerifyLibrarySoup().offline
+	end,
+	BuildDisplayParams: func() begin
+		local l1, l2, l3, l4;
+		l1 := displayParams;
+		(l2 := self:PageSize(nil)).width := min(l2.width, l1.appAreaWidth);
+		l2.height := min(l2.height, l1.appAreaHeight);
+		l3 := self:GetLibraryEntry(isbn);
+		l4 := (l2.height + 18);
+		self.dpCu := {};
+		if (pagesShowing <> 1) then begin
+				pagesShowing := 1
+			end;
+		if (if (l1.appAreaWidth >= ((l2.width * 2) + 15)) then (l1.appAreaHeight >= l2.height)) then begin
+				if (BAnd(l3.flags, 2) = 0) then begin
+						pagesShowing := 2
+					end
+			end;
+		dpCu.fullBar := true;
+		if (l1.appAreaHeight < l4) then begin
+				dpCu.fullBar := nil;
+				l4 := l1.appAreaHeight
+			end;
+		(if (if (l1.appAreaWidth >= l2.width) then (l1.appAreaHeight >= l4)) then begin
+				dpCu.left := (((l1.appAreaWidth - l2.width) - 6) div 2);
+				if (dpCu.fullBar = nil) then begin
+						dpCu.top := 0
+					end else begin
+						dpCu.top := ((((l1.appAreaHeight - l2.height) - 18) - 6) - 4);
+						dpCu.top := max(0, dpCu.top);
+						dpCu.top := (dpCu.top div 2)
+					end;
+				if (pagesShowing = 2) then begin
+						dpCu.left := (((self.dpCu.left - l2.width) - 15) - 6);
+						dpCu.width := ((l2.width * 2) + 15)
+					end else begin
+						dpCu.width := l2.width
+					end;
+				dpCu.height := l4;
+				(if (if (l1.appAreaHeight = l4) then (l1.appAreaWidth = l2.width)) then (self.floating := nil) else (if ((l1.appAreaHeight = l4) or (l1.appAreaWidth = l2.width)) then (self.floating := 'Partial) else (self.floating := true)))
+			end else begin
+				dpCu.left := 0;
+				if (l1.fullBar = nil) then begin
+						dpCu.top := 0
+					end else begin
+						dpCu.top := ((l1.appAreaHeight - l2.height) - 18)
+					end;
+				self.floating := nil;
+				dpCu.width := l2.width;
+				(dpCu.height := l4)
+			end)
+	end,
+	PageSize: func(a1) begin
+		local l1, l2, l3;
+		l1 := self:CurrentBook();
+		if (not a1) then begin
+				a1 := curRendering
+			end;
+		l3 := {width: (l2 := l1.rendering[a1].PageSize).right, height: l2.bottom};
+		if (l1.version = 1) then begin
+				l3.height := 318
+			end;
+		l3
+	end,
+	CloseBrowser: func() begin
+		(if Visible(browser) then browser:Close())
+	end,
+	PreviousPage: {class: #132, funcPtr: 6978501, numArgs: 0},
+	debug: 67840,
+	Bookmarks: {class: #132, funcPtr: 6957402, numArgs: 0},
+	AddBrowser: func(a1) begin
+		local l1;
+		if (not HasPath((l1 := Clone(a1)), 'dynamic)) then begin
+				l1.dynamic := true
+			end;
+		browserRefnum := (browserRefnum + 1);
+		l1.refNum := browserRefnum;
+		AddArraySlot(browsers, l1);
+		browserRefnum
+	end,
+	OpenBook: func(a1) begin
+		if (self.viewCObject = nil) then begin
+				self:PrepBook(a1);
+				self:Open()
+			end else begin
+				if (if (self.isbn <> nil) then (not StrEqual(a1, self.isbn))) then begin
+						self:Close();
+						self:PrepBook(a1);
+						self:Open()
+					end
+			end;
+		RefreshViews()
+	end,
+	viewSetupChildrenScript: func() begin
+		self.viewChildren := Clone(kids);
+		(if (dpCu.fullBar = true) then AddArraySlot(viewChildren, fullCtrlPanel) else begin
+				AddArraySlot(viewChildren, miniCtrlPanel);
+				(panelOpen := nil)
+			end)
+	end,
+	viewShowScript: func() begin
+		contentArea:bookShowScript()
+	end,
+	PageThumbnail: func(a1) begin
+		local l1, l2;
+		l1 := self:PageCThumbnail(a1);
+		l2 := MakeBitmap(60, 80, nil);
+		l1:ViewIntoBitmap(nil, nil, l2);
+		l1:Close();
+		l2
+	end,
+	BookClosed: {class: #132, funcPtr: 6957401, numArgs: 0},
+	browsers: nil,
+	AddInkMarks: {class: #132, funcPtr: 6956344, numArgs: 2},
+	CreateGetSoup: func() begin
+		local l1, l2;
+		l1 := GetStores()[0];
+		if ((l2 := l1:GetSoup("Library")) = nil) then begin
+				l2 := l1:CreateSoup("Library", [Array: {structure: 'slot, path: 'isbn, type: 'string}, {structure: 'slot, path: 'bookPresent, type: 'int}])
+			end;
+		l2
+	end,
+	_keyCommands: [|Array|:
+		{
+			char: $r,
+			modifiers: 33554432,
+			keyMessage: '_keyButtonRouteScript,
+			name: route,
+			category: routing
+		},
+		{
+			char: $m,
+			modifiers: 33554432,
+			keyMessage: '_keyButtonMarkupScript,
+			name: "Markup",
+			category: editing
+		},
+		{
+			char: $b,
+			modifiers: 33554432,
+			keyMessage: '_keyButtonBookMarkScript,
+			name: "Bookmarks",
+			category: viewing
+		},
+		{
+			char: $g,
+			modifiers: 33554432,
+			keyMessage: '_keyButtonGotoScript,
+			name: "Go to",
+			category: viewing
+		}
+	],
+	_keyButtonGotoScript: func(a1) begin
+		PressButton(pageNumber)
+	end,
+	_keyButtonBookMarkScript: func(a1) begin
+		pageDialog:Toggle()
+	end,
+	_keyButtonMarkupScript: func(a1) begin
+		PressButton(markupButton)
+	end,
+	_keyButtonRouteScript: func(a1) begin
+		PressButton(routingButton)
+	end,
+	routingButton: nil,
+	contentArea: nil,
+	allocateContext: [|Array|:
+		'contentArea,
+		protoContentArea,
+		'markupLayer,
+		markupLayer,
+		'pageNumberDialog,
+		pageNumberDialog,
+		'pageDialog,
+		pageDialog,
+		'bookAbout,
+		bookAbout,
+		'bookPrefs,
+		bookPrefs
+	],
+	markupLayer: nil,
+	fullCtrlPanel: {
+		viewSetupChildrenScript: func() begin
+			self.viewChildren := Clone(kids);
+			if (not stepChildren) then begin
+					stepChildren := [Array: ]
+				end else begin
+					self.stepChildren := [Array: ]
+				end;
+			if leftButtons then begin
+					(foreach l1, l2 in leftButtons do begin
+							if (if HasPath(l2, 'text) then HasPath(l2, 'viewFont)) then begin
+									l4 := (StrFontWidth(l2.text, l2.viewFont) + 6)
+								end else begin
+									l4 := (l2.viewBounds.right - l2.viewBounds.left)
+								end;
+							AddArraySlot(stepChildren, (if (l1 > 0) then {_proto: l2, viewBounds: RelBounds(6, 0, l4, 13), viewJustify: 17414} else {_proto: l2, viewBounds: RelBounds(65, 2, l4, 13), viewJustify: 6}))
+						end)
+				end;
+			(if rightButtons then (foreach l1, l2 in rightButtons do begin
+						local l4;
+						if (if HasPath(l2, 'text) then HasPath(l2, 'viewFont)) then begin
+								l4 := (StrFontWidth(l2.text, l2.viewFont) + 6)
+							end else begin
+								l4 := (l2.viewBounds.right - l2.viewBounds.left)
+							end;
+						AddArraySlot(stepChildren, (if (l1 > 0) then {_proto: l2, viewBounds: RelBounds(((-l4) - 6), 0, l4, 13), viewJustify: 18438} else {_proto: l2, viewBounds: RelBounds(((-l4) - 48), 2, l4, 13), viewJustify: 38}))
+					end))
+		end,
+		viewShowScript: func() begin
+			true
+		end,
+		viewSetupDoneScript: func() begin
+			(copperfield.cntrlPanel := self)
+		end,
+		SetStatusBarButtons: func(a1) begin
+			if HasPath(a1, 'left) then begin
+					leftButtons := a1.left
+				end;
+			if HasPath(a1, 'right) then begin
+					rightButtons := a1.right
+				end;
+			self:RedoChildren()
+		end,
+		viewChildren: [|Array|: ],
+		kids: [|Array|:
+			{_proto: kidsProto, viewBounds: {left: -19, top: -16, right: -6, bottom: -3}},
+			{
+				_proto: @protoRoutingSlip,
+				debug: pgRouting,
+				viewSetupFormScript: func() begin
+					routingButton := self;
+					inherited:?viewSetupFormScript()
+				end,
+				viewQuitScript: func() begin
+					routingButton := nil;
+					inherited:?viewQuitScript()
+				end
+			},
+			copperfieldItem,
+			copperfieldItem_2,
+			copperfieldItem_3,
+			copperfieldItem_4
+		],
+		stepChildren: nil,
+		leftButtons: nil,
+		rightButtons: nil,
+		miniBar: nil,
+		pgButWidth: 30,
+		page: 0,
+		debug: "ctrlPanel",
+		_proto: @protoStatusBar
+	},
+	miniCtrlPanel: {
+		viewSetupDoneScript: func() begin
+			(copperfield.cntrlPanel := self)
+		end,
+		SetStatusBarButtons: func(a1) begin
+			if HasPath(a1, 'left) then begin
+					leftButtons := a1.left
+				end;
+			if HasPath(a1, 'right) then begin
+					rightButtons := a1.right
+				end;
+			(if (copperfield.panelOpen = true) then self:RedoChildren())
+		end,
+		extraWidth: 0,
+		viewFormat: 0,
+		page: 0,
+		viewDrawScript: func() begin
+			self:DrawShape(MakeRect(2, 4, (self:LocalBox().right - 2), 6), nil)
+		end,
+		viewChildren: [|Array|: ],
+		viewFlags: vVisible + vFloating + vClickable,
+		leftButtons: nil,
+		expandedKids: [|Array|:
+			{_proto: kidsProto, viewBounds: {left: -19, top: -15, right: -6, bottom: -2}},
+			{
+				viewBounds: {left: -21, top: 0, right: -4, bottom: 17},
+				viewFormat: vfFillWhite,
+				icon: {
+					mask: bitmap('mask, "resources/mask/51f055.png", "000000000004015d015d01e3016e01f4", 1),
+					bits: bitmap('bits, "resources/bits/51f0b5.png", "000000000004015d015d01e3016e01f4", 1),
+					bounds: {left: 0, top: 0, right: 17, bottom: 17}
+				},
+				viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH,
+				buttonClickScript: func() begin
+					if Visible(markupLayer) then begin
+							self:HideMarkup()
+						end;
+					cntrlPanel:ChangeState()
+				end,
+				_proto: @protoPictureButton
+			},
+			{
+				_proto: @protoRoutingSlip,
+				viewBounds: {left: -21, top: 2, right: -4, bottom: 15},
+				viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH,
+				debug: pgRouting,
+				viewSetupFormScript: func() begin
+					routingButton := self;
+					inherited:?viewSetupFormScript()
+				end,
+				viewQuitScript: func() begin
+					routingButton := nil;
+					inherited:?viewQuitScript()
+				end
+			},
+			copperfieldItem_3,
+			copperfieldItem,
+			copperfieldItem_2,
+			copperfieldItem_4
+		],
+		viewBounds: {left: -30, top: -14, right: 0, bottom: 0},
+		viewJustify: vjParentRightH + vjParentBottomV,
+		collapsedKids: [|Array|:
+			{
+				buttonClickScript: func() begin
+					(if base:BookOKClose() then base:Close())
+				end,
+				_proto: @protoClosebox
+			},
+			{
+				viewBounds: {left: 1, top: 0, right: 13, bottom: 12},
+				viewFormat: vfFillWhite,
+				icon: {
+					mask: bitmap('mask, "resources/mask/51eee5.png", "0000000000040163016302100170021d", 1),
+					bits: bitmap('bits, "resources/bits/51ef35.png", "0000000000040165016501710172017e", 1),
+					bounds: {left: 0, top: 0, right: 13, bottom: 13}
+				},
+				buttonClickScript: func() begin
+					cntrlPanel:ChangeState()
+				end,
+				_proto: @protoPictureButton
+			}
+		],
+		rightButtons: nil,
+		ButnWidthChanged: func(a1) begin
+			viewBounds.left := (viewBounds.left - a1);
+			self:SyncView()
+		end,
+		miniBar: true,
+		ChangeState: func() begin
+			if (copperfield.panelOpen = nil) then begin
+					copperfield.panelOpen := true;
+					pgButWidth := max((StrFontWidth(Stringer([Array: "p.", SPrintObject(page)]), @protoTextButton.viewFont) + 6), 30)
+				end else begin
+					copperfield.panelOpen := nil
+				end;
+			self:RedoChildren()
+		end,
+		viewEffect: nil,
+		viewClass: clView,
+		stepChildren: nil,
+		debug: 19734,
+		pgButWidth: 30,
+		viewSetupChildrenScript: func() begin
+			if (not stepChildren) then begin
+					stepChildren := [Array: ]
+				end else begin
+					self.stepChildren := [Array: ]
+				end;
+			if (not copperfield.panelOpen) then begin
+					self.viewChildren := Clone(collapsedKids);
+					SetValue(self, 'viewBounds, RelBounds(-30, -14, 30, 14))
+				end else begin
+					extraWidth := 0;
+					if leftButtons then begin
+							(foreach l1, l2 in leftButtons do begin
+									if (if HasPath(l2, 'text) then HasPath(l2, 'viewFont)) then begin
+											l4 := (StrFontWidth(l2.text, l2.viewFont) + 6)
+										end else begin
+											l4 := (l2.viewBounds.right - l2.viewBounds.left)
+										end;
+									extraWidth := ((extraWidth + l4) + 6);
+									AddArraySlot(stepChildren, (if (l1 > 0) then {_proto: l2, viewBounds: RelBounds(6, 0, l4, 13), viewJustify: 17414} else {_proto: l2, viewBounds: RelBounds(46, 2, l4, 13), viewJustify: 6}))
+								end)
+						end;
+					if rightButtons then begin
+							(foreach l1, l2 in rightButtons do begin
+									local l4;
+									if (if HasPath(l2, 'text) then HasPath(l2, 'viewFont)) then begin
+											l4 := (StrFontWidth(l2.text, l2.viewFont) + 6)
+										end else begin
+											l4 := (l2.viewBounds.right - l2.viewBounds.left)
+										end;
+									extraWidth := ((extraWidth + l4) + 6);
+									AddArraySlot(stepChildren, (if (l1 > 0) then {_proto: l2, viewBounds: RelBounds(((-l4) - 6), 0, l4, 13), viewJustify: 18438} else {_proto: l2, viewBounds: RelBounds(((-l4) - 67), 2, l4, 13), viewJustify: 38}))
+								end)
+						end;
+					self.viewChildren := Clone(expandedKids);
+					SetValue(self, 'viewBounds, RelBounds(((-128 - pgButWidth) - extraWidth), -17, ((128 + pgButWidth) + extraWidth), 17))
+				end;
+			self:Parent():Dirty()
+		end,
+		viewShowScript: func() begin
+			true
+		end
+	},
+	pageNumberDialog: nil,
+	pageDialog: nil,
+	preallocatedContext: 'copperfield,
+	bookAbout: nil,
+	bookPrefs: nil,
+	kids: [viewChildren: protoContentArea, markupLayer, pageNumberDialog, pageDialog, bookAbout, bookPrefs],
+	_proto: @protoBook,
+	_cacheContext: {
+		storyCard: nil,
+		bookAbout: nil,
+		CuPage: nil,
+		bookPrefs: nil,
+		pageDialog: nil,
+		viewChildren: nil,
+		markupLayer: nil,
+		viewFlags: vApplication + vClipping + vClickable,
+		floating: nil,
+		viewBounds: copperfieldViewBounds,
+		bookFlags: 0,
+		viewclipper: nil,
+		_proto: nil,
+		viewCObject: nil,
+		dpCu: nil,
+		isbn: nil,
+		library: nil,
+		pageNumberDialog: nil,
+		pageNumber: nil,
+		browserRefnum: 0,
+		cntrlPanel: nil,
+		browser: nil,
+		curRendering: 0,
+		_parent: nil,
+		contentArea: nil,
+		targetView: nil,
+		base: nil,
+		markupButton: nil,
+		browsers: nil
+	}
+};
+
+route := "Route";
+
+copperfieldViewBounds := {left: 360, top: 0, right: 640, bottom: 480};
+
+markupLayer := {
+	viewClass: clView,
+	viewFlags: vClipping + vClickable + vGesturesAllowed,
+	protoEditChild: {
+		viewClass: clEditView,
+		viewFlags: vVisible + vClipping + vClickable + vGesturesAllowed,
+		viewAddChildScript: func(a1) begin
+			if (Length(viewChildren) = 0) then begin
+					markupButton:SetDynamicMarkIcon(1)
+				end;
+			nil
+		end,
+		viewDropChildScript: func(a1) begin
+			if (Length(viewChildren) = 1) then begin
+					markupButton:SetDynamicMarkIcon(0)
+				end;
+			nil
+		end
+	},
+	viewSetupChildrenScript: func() begin
+		local l1, l2, l3, l4;
+		self.viewChildren := [Array: ];
+		l1 := self:PageSize(nil);
+		l2 := self:CurrentPage();
+		l3 := {_proto: protoEditChild, page: l2};
+		(if (pagesShowing = 1) then begin
+				l3.viewBounds := RelBounds(0, 0, l1.width, l1.height);
+				l3.viewChildren := self:InkMarks(l3.page);
+				AddArraySlot(viewChildren, l3)
+			end else (if (l2 = 1) then begin
+					l3.viewBounds := RelBounds((l1.width + 15), 0, l1.width, l1.height);
+					l3.viewChildren := self:InkMarks(l3.page);
+					AddArraySlot(viewChildren, l3)
+				end else (if ((l2 = Stringer([Array: self:CountPages(), " ", (l2 mod 2)])) = 0) then begin
+						l3.viewBounds := RelBounds(0, 0, l1.width, l1.height);
+						l3.viewChildren := self:InkMarks(l3.page);
+						AddArraySlot(viewChildren, l3)
+					end else begin
+						l3.viewBounds := RelBounds(0, 0, l1.width, l1.height);
+						if ((l2 mod 2) = 1) then begin
+								l3.page := (l2 - 1)
+							end;
+						l3.viewChildren := self:InkMarks(l3.page);
+						AddArraySlot(viewChildren, l3);
+						l4 := {_proto: protoEditChild};
+						if ((l2 mod 2) = 0) then begin
+								l4.page := (l2 + 1)
+							end;
+						l4.viewBounds := RelBounds((l1.width + 15), 0, l1.width, l1.height);
+						l4.viewChildren := self:InkMarks(l4.page);
+						AddArraySlot(viewChildren, l4)
+					end)))
+	end,
+	viewSetupFormScript: func() begin
+		local l1;
+		l1 := self:PageSize(nil);
+		(if (pagesShowing = 1) then (self.viewBounds := RelBounds(0, 0, l1.width, l1.height)) else (self.viewBounds := RelBounds(0, 0, ((l1.width * 2) + 15), l1.height)))
+	end,
+	viewShowScript: func() begin
+		true
+	end,
+	SaveMarks: func() begin
+		(foreach l1 in viewChildren do begin
+				if l1.viewChildren then begin
+						self:AddInkMarks(l1.page, l1.viewChildren)
+					end
+			end)
+	end,
+	debug: 75348,
+	preallocatedContext: 'markupLayer
+};
+
+pgRouting := "pgRouting";
+
+copperfieldItem := {
+	viewBounds: {left: 44, top: 0, right: 61, bottom: 17},
+	viewFormat: vfFillWhite,
+	viewJustify: vjCenterH + vjCenterV,
+	icon: @noMarkupBitmap,
+	on: @markupBitmap,
+	onWith: {
+		mask: onWithMask,
+		bits: bitmap('bits, "resources/bits/51e6d1.png", "0000000000040134013400a8014500b9", 1),
+		bounds: {left: 0, top: 0, right: 17, bottom: 17}
+	},
+	off: @noMarkupBitmap,
+	offWith: {
+		mask: onWithMask,
+		bits: bitmap('bits, "resources/bits/51e765.png", "0000000000040036003600a2004700b3", 1),
+		bounds: {left: 0, top: 0, right: 17, bottom: 17}
+	},
+	state: 'off,
+	viewSetupFormScript: func() begin
+		(if miniBar then begin
+				self.viewBounds := RelBounds(42, 0, 17, 17);
+				self:SetMarkIcon()
+			end)
+	end,
+	viewSetupDoneScript: func() begin
+		(copperfield.markupButton := self)
+	end,
+	buttonClickScript: func() begin
+		if (state = 'on) then begin
+				self:Parent():HideMarkup();
+				state := 'off
+			end else begin
+				self:Parent():ShowMarkup();
+				state := 'on
+			end;
+		self:SetMarkIcon()
+	end,
+	SetDynamicMarkIcon: func(a1) begin
+		if (state = 'off) then begin
+				if (a1 <> 0) then begin
+						self.icon := offWith
+					end else begin
+						self.icon := off
+					end
+			end else begin
+				if (a1 <> 0) then begin
+						self.icon := onWith
+					end else begin
+						self.icon := on
+					end
+			end;
+		self:Dirty()
+	end,
+	SetMarkIcon: func() begin
+		local l1;
+		if pageNumsShowing[0] then begin
+				l1 := Length(self:InkMarks(pageNumsShowing[0]))
+			end else begin
+				l1 := Length(self:InkMarks(pageNumsShowing[1]))
+			end;
+		self:SetDynamicMarkIcon(l1)
+	end,
+	debug: 18878,
+	_proto: @protoPictureButton
+};
+
+copperfieldItem_2 := {
+	viewBounds: {left: 23, top: 0, right: 40, bottom: 17},
+	viewJustify: vjCenterH + vjCenterV,
+	viewFormat: vfFillWhite,
+	icon: {
+		mask: bitmap('mask, "resources/mask/51e931.png", "00000000000401860186003101970044", 1),
+		bits: bitmap('bits, "resources/bits/51e991.png", "00000000000401860186003101970044", 1),
+		bounds: {left: 0, top: 0, right: 19, bottom: 17}
+	},
+	viewSetupFormScript: func() begin
+		(if miniBar then (self.viewBounds := RelBounds(22, 0, 17, 17)))
+	end,
+	buttonClickScript: func() begin
+		pageDialog:Toggle()
+	end,
+	debug: 9203,
+	_proto: @protoPictureButton
+};
+
+copperfieldItem_3 := {
+	viewBounds: {left: 0, top: 2, right: 30, bottom: 15},
+	viewJustify: vjCenterH + vjParentCenterH,
+	text: nil,
+	buttonClickScript: func() begin
+		pageNumberDialog:Toggle()
+	end,
+	SetPageNumber: func(a1, a2) begin
+		local l1;
+		self.text := Stringer([Array: "p.", NumberStr(a1)]);
+		if (a2 <> nil) then begin
+				text := Stringer([Array: text, "-", NumberStr(a2)])
+			end;
+		pgButWidth := max((StrWidth(text) + 6), 30);
+		if miniBar then begin
+				if ((l1 := (pgButWidth - (viewBounds.right - viewBounds.left))) <> 0) then begin
+						self:Parent():ButnWidthChanged(l1)
+					end
+			end;
+		self:SyncView()
+	end,
+	viewSetupFormScript: func() begin
+		page := self:CurrentPage();
+		(if (miniBar = nil) then (self.viewBounds := RelBounds(0, 2, pgButWidth, 13)) else begin
+				self.viewBounds := RelBounds(-2, 2, pgButWidth, 13);
+				(self.viewJustify := 22)
+			end)
+	end,
+	viewSetupDoneScript: func() begin
+		self.text := Stringer([Array: "p.", SPrintObject(page)]);
+		(copperfield.pageNumber := self)
+	end,
+	debug: 1405,
+	_proto: @protoTextButton
+};
+
+copperfieldItem_4 := {
+	viewBounds: {left: 6, top: 0, right: 19, bottom: 13},
+	viewJustify: vjCenterH + vjCenterV + vjParentCenterV,
+	DoInfoAbout: func() begin
+		bookAbout:Open()
+	end,
+	DoInfoHelp: func() begin
+		OpenHelpTo("Learn")
+	end,
+	DoInfoPrefs: func() begin
+		bookPrefs:Open()
+	end,
+	debug: 595,
+	_proto: @protoInfoButton
+};
+
+kidsProto := {
+	buttonClickScript: func() begin
+		(if base:BookOKClose() then base:Close())
+	end,
+	_proto: @protoCancelButton
+};
+
+pageNumberDialog := {
+	viewFlags: vReadOnly + vFloating + vClickable,
+	viewBounds: {left: 20, top: -100, right: 214, bottom: -42},
+	viewJustify: vjParentBottomV,
+	viewEffect: 393216,
+	declareSelf: 'base,
+	viewSetupFormScript: func() begin
+		(self.maxValue := self:CountPages())
+	end,
+	viewShowScript: func() begin
+		true
+	end,
+	NumberEntered: func(a1) begin
+		if Visible(pageDialog) then begin
+				pageDialog:Close()
+			end;
+		self:TurnToPage(a1)
+	end,
+	debug: 87889,
+	viewChildren: [viewChildren:
+		{_proto: @protoClosebox},
+		{_proto: turnToPage, viewJustify: vjCenterV},
+		{
+			viewBounds: {left: 138, top: 25, right: 188, bottom: 45},
+			viewSetupDoneScript: func() begin
+				(text := Stringer([Array: " of", " ", self:CountPages()]))
+			end,
+			debug: 286,
+			_proto: @protoStaticText
+		}
+	],
+	preallocatedContext: 'pageNumberDialog,
+	_proto: @protoFloater
+};
+
+pageDialog := {
+	theKiosk: nil,
+	firstMark: nil,
+	marks: [|Array|: ],
+	markWidth: 44,
+	secondMark: nil,
+	viewChildren: [|Array|: ],
+	viewFlags: vReadOnly + vFloating + vClickable,
+	_defaultButton: nil,
+	recentKiosk: 0,
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	recentPage: 0,
+	protoMarkButton: {
+		_proto: @protoTextButton,
+		viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH,
+		viewSetupFormScript: func() begin
+			local l1;
+			l1 := StrWidth(NumberStr(thisPage));
+			self.viewBounds := RelBounds((((-markWidth) - l1) - 6), -16, (markWidth + l1), 13);
+			self.text := Stringer([Array: "Mark p.", NumberStr(thisPage)]);
+			(pageDialog._defaultButton := self)
+		end,
+		buttonClickScript: func() begin
+			self:AddBookmark(thisPage);
+			base:SyncView();
+			base:RedoChildren();
+			base:Parent():Dirty();
+			RefreshViews()
+		end,
+		viewQuitScript: func() begin
+			RemoveSlot(pageDialog, '_defaultButton);
+			inherited:?viewQuitScript()
+		end
+	},
+	declareSelf: 'base,
+	returnToWidth: 63,
+	viewSetupFormScript: func() begin
+		local l1, l2, l3, l4;
+		self:UpDatePrevs();
+		l4 := 24;
+		if ((recentPage <> 0) or (recentKiosk <> 0)) then begin
+				l4 := ((l4 + returnToWidth) + 7)
+			end;
+		if ((l3 := Length(marks)) > 0) then begin
+				l4 := ((l4 + unmarkWidth) + 7)
+			end;
+		if firstMark then begin
+				l4 := (((l4 + markWidth) + 7) + StrWidth(NumberStr(firstMark)))
+			end;
+		if secondMark then begin
+				l4 := (((l4 + markWidth) + 7) + StrWidth(NumberStr(secondMark)))
+			end;
+		l2 := 0;
+		if (l3 > 0) then begin
+				l2 := 1
+			end;
+		if (l3 > 3) then begin
+				l2 := 2
+			end;
+		l3 := min(3, l3);
+		l1 := max(l4, (l3 * 66));
+		l2 := ((((l2 * 98) + 13) + (l2 + 4)) + 6);
+		self.viewBounds := RelBounds(0, 0, l1, l2);
+		SetKeyView(self, nil)
+	end,
+	viewEffect: 393216,
+	unmarkWidth: 52,
+	debug: 2649,
+	viewFont: @fontSystem9,
+	viewSetupChildrenScript: func() begin
+		self:UpDatePrevs();
+		self.viewChildren := [Array: ];
+		l1 := 0;
+		l2 := 0;
+		local l1;
+		local l2;
+		(foreach l3 in marks do begin
+				AddArraySlot(self.viewChildren, {_proto: @protoBookmark, viewBounds: RelBounds(((l2 * 66) + 2), ((l1 * 97) + 3), 62, 93), icon: self:PageThumbnail(l3), text: Stringer([Array: l3]), pageNumber: l3});
+				if ((l2 := (l2 + 1)) >= 3) then begin
+						l2 := 0;
+						l1 := (l1 + 1)
+					end
+			end);
+		AddArraySlot(self.viewChildren, {_proto: @protoClosebox});
+		if ((recentKiosk <> 0) or (recentPage <> 0)) then begin
+				AddArraySlot(self.viewChildren, {_proto: @protoPopupButton, text: " Return to", viewJustify: 2182, viewBounds: RelBounds(((-returnToWidth) - 6), -16, returnToWidth, 13), contains: nil, popup: nil, viewSetupFormScript: func() begin
+					popup := [Array: ];
+					contains := [Array: ];
+					if (if (recentPage <> 0) then (recentPage <> self:CurrentPage())) then begin
+							AddArraySlot(popup, Stringer([Array: "Page", " ", recentPage]));
+							AddArraySlot(contains, 0)
+						end;
+					(if (recentKiosk <> 0) then begin
+							AddArraySlot(popup, self:CurrentKiosk().name);
+							AddArraySlot(contains, 1)
+						end)
+				end, pickActionScript: func(a1) begin
+					local l1;
+					if ((l1 := contains[a1]) = 0) then begin
+							self:TurnToPage(recentPage)
+						end else begin
+							if (l1 = 1) then begin
+									self:TurnToPage(recentKiosk)
+								end
+						end;
+					inherited:pickActionScript(a1);
+					base:Close()
+				end})
+			end;
+		if (Length(marks) > 0) then begin
+				AddArraySlot(self.viewChildren, {_proto: @protoPopupButton, viewJustify: 2182, viewBounds: RelBounds(((-unmarkWidth) - 6), -16, unmarkWidth, 13), text: " Unmark", popup: nil, contains: nil, viewSetupFormScript: func() begin
+					popup := [Array: ];
+					contains := [Array: ];
+					(foreach l1 in marks do begin
+							AddArraySlot(popup, Stringer([Array: "Page", " ", NumberStr(l1)]));
+							AddArraySlot(contains, l1)
+						end);
+					AddArraySlot(popup, 'pickseparator);
+					AddArraySlot(contains, nil);
+					AddArraySlot(popup, "All Marks");
+					AddArraySlot(contains, 666)
+				end, pickActionScript: func(a1) begin
+					local l1;
+					if ((l1 := contains[a1]) = 666) then begin
+							SetLength(marks, 0)
+						end else begin
+							SetRemove((marks := self:Bookmarks()), l1)
+						end;
+					self:UpdateBookmarks(marks);
+					inherited:pickActionScript(a1);
+					base:SyncView();
+					base:RedoChildren();
+					base:Parent():Dirty()
+				end})
+			end;
+		if secondMark then begin
+				AddArraySlot(self.viewChildren, {_proto: protoMarkButton, thisPage: secondMark})
+			end;
+		(if firstMark then AddArraySlot(self.viewChildren, {_proto: protoMarkButton, thisPage: firstMark}))
+	end,
+	viewShowScript: func() begin
+		true
+	end,
+	UpDatePrevs: func() begin
+		local l1;
+		marks := self:Bookmarks();
+		secondMark := nil;
+		firstMark := nil;
+		if (l1 := pageNumsShowing[0]) then begin
+				if (not SetContains(marks, l1)) then begin
+						firstMark := l1
+					end
+			end;
+		if (l1 := pageNumsShowing[1]) then begin
+				if (not SetContains(marks, l1)) then begin
+						secondMark := l1
+					end
+			end;
+		if ((recentPage := self:PreviousPage()) = self:CurrentPage()) then begin
+				recentPage := 0
+			end;
+		(if (theKiosk := self:CurrentKiosk()) then (recentKiosk := theKiosk.page) else (recentKiosk := 0))
+	end,
+	preallocatedContext: 'pageDialog,
+	_proto: @protoFloater
+};
+
+bookAbout := {
+	viewBounds: {left: 0, top: 0, right: 200, bottom: 120},
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	viewFlags: vReadOnly + vClickable + vGesturesAllowed,
+	aboutText: nil,
+	secret: nil,
+	newtPict: @newtonNewtBitmap,
+	newtPictBnds: {left: 0, top: -40, right: 79, bottom: -1},
+	HideStoryCard: func() begin
+		base:Close()
+	end,
+	viewClickScript: func(a1) begin
+		InkOff(a1);
+		nil
+	end,
+	viewSetupChildrenScript: func() begin
+		local l1, l2;
+		(if secret then begin
+				self.viewChildren := Clone(viewChildren);
+				AddArraySlot(viewChildren, {viewClass: 76, viewBounds: newtPictBnds, icon: newtPict, viewFlags: 515, viewJustify: 144, viewClickScript: func(a1) begin
+					self:HideStoryCard();
+					true
+				end});
+				(aboutText := [Array: {font: @fontSystem10Bold, justification: 'center}, MakeText("\u201C\uI only ask for information\u201D\u", 10, 6, 180, 18), MakeText("- Copperfield", 10, 22, 180, 36)])
+			end else begin
+				l1 := self:CurrentBook();
+				self.aboutText := [Array: ];
+				AddArraySlot(aboutText, {font: @fontSystem10Bold, justification: 'center});
+				l2 := MakeText(self:BookTitle(), 5, 6, 195, 18);
+				AddArraySlot(aboutText, l2);
+				if (if HasPath(l1, 'author) then (StrLen(l1.author) > 0)) then begin
+						AddArraySlot(aboutText, {font: @fontSystem10, justification: 'center});
+						l2 := MakeText(Stringer([Array: "by ", l1.author]), 5, 24, 185, 38);
+						AddArraySlot(aboutText, l2)
+					end;
+				if HasPath(l1, 'publisher) then begin
+						l2 := MakeText(l1.publisher, 5, 40, 180, 54);
+						AddArraySlot(aboutText, l2)
+					end;
+				if HasPath(l1, 'copyright) then begin
+						l2 := MakeText(l1.copyright, 5, 56, 185, 70);
+						AddArraySlot(aboutText, l2)
+					end;
+				if HasPath(l1, 'publicationDate) then begin
+						l2 := MakeText(LongDateStr(l1.publicationDate, dateShort), 5, 72, 185, 86);
+						AddArraySlot(aboutText, l2)
+					end;
+				(if HasPath(l1, 'expirationDate) then begin
+						l2 := MakeText(Stringer([Array: "Expires: ", LongDateStr(l1.expirationDate, dateShort)]), 5, 88, 185, 102);
+						AddArraySlot(aboutText, l2)
+					end)
+			end)
+	end,
+	viewDrawScript: func() begin
+		self:DrawShape(aboutText, nil)
+	end,
+	viewgesturescript: func(a1, a2) begin
+		(if (if (a2 = 50) then (not secret)) then begin
+				secret := true;
+				self:RedoChildren()
+			end)
+	end,
+	dateShort: 80492,
+	viewQuitScript: func() begin
+		RemoveSlot(self, 'aboutText);
+		RemoveSlot(self, 'secret);
+		RemoveSlot(self, 'viewChildren)
+	end,
+	debug: 725250,
+	preallocatedContext: 'bookAbout,
+	_proto: @protoStoryCard
+};
+
+bookPrefs := {
+	viewFlags: vReadOnly + vClipping + vClickable,
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	viewBounds: {left: 0, top: 0, right: 180, bottom: 126},
+	index: nil,
+	sizesList: nil,
+	declareSelf: 'base,
+	debug: 725147,
+	viewChildren: [viewChildren:
+		{title: "Display", _proto: @protoTitle},
+		{_proto: @protoCancelButton},
+		{
+			viewBounds: {left: -49, top: -18, right: -7, bottom: -5},
+			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH,
+			text: choose,
+			buttonClickScript: func() begin
+				local l1, l2, l3;
+				if ((l1 := self:GetLibraryEntry(isbn)).curRendering <> sizesList[index].rendering) then begin
+						l1.curpage := 1;
+						l1.prevpage := 1;
+						l1.curRendering := sizesList[index].rendering
+					end;
+				l1.flags := BAnd(l1.flags, -4);
+				l2 := 2;
+				if (sizesList[index].spread = true) then begin
+						l2 := 1
+					end;
+				l1.flags := BOr(l1.flags, l2);
+				EntryChange(l1);
+				l3 := isbn;
+				base:Close();
+				GetRoot().copperfield:Close();
+				GetRoot().copperfield:OpenBook(l3)
+			end,
+			_proto: @protoTextButton
+		},
+		{
+			viewJustify: vjCenterH,
+			viewBounds: {left: 10, top: 16, right: 170, bottom: 16},
+			ListItems: nil,
+			viewLines: 6,
+			viewSetupFormScript: func() begin
+				l2 := (l1 := self:CurrentBook()).rendering;
+				l7 := displayParams;
+				l8 := 0;
+				ListItems := [Array: ];
+				sizesList := [Array: ];
+				index := 0;
+				Selection := 0;
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				local l5;
+				local l6;
+				local l7;
+				local l8;
+				(foreach l3 in l2 do begin
+						l4 := {width: l3.PageSize.right, height: l3.PageSize.bottom, spread: nil, rendering: l8};
+						if (l1.version = 1) then begin
+								l4.height := 318
+							end;
+						AddArraySlot(sizesList, l4);
+						if (if (l7.appAreaWidth >= ((l3.PageSize.right * 2) + 15)) then (l7.appAreaHeight >= l3.PageSize.bottom)) then begin
+								(l5 := Clone(l4)).spread := true;
+								AddArraySlot(sizesList, l5)
+							end;
+						l8 := (l8 + 1)
+					end);
+				(foreach l4 in sizesList do begin
+						if (l4.rendering <> curRendering) then begin
+								Selection := (Selection + 1)
+							end;
+						l6 := Stringer([Array: NumberStr(l4.width), " ", "x", " ", NumberStr(l4.height)]);
+						if (l4.spread = true) then begin
+								if (pagesShowing = 2) then begin
+										Selection := (Selection + 1)
+									end;
+								l6 := Stringer([Array: l6, " ", " Double Page"])
+							end;
+						AddArraySlot(ListItems, l6)
+					end);
+				self:SetupList()
+			end,
+			buttonClickScript: func(a1) begin
+				(index := a1)
+			end,
+			_proto: @protoTextList
+		}
+	],
+	preallocatedContext: 'bookPrefs,
+	_proto: @protoFloater
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupDoneScript_code_12 := same("copperfieldItem.viewSetupDoneScript.instructions");
+
+viewDrawScript_code_3 := same("bookAbout.viewDrawScript.instructions");
+
+viewSetupFormScript_literal22 := same("bookPrefs.viewChildren[3].viewSetupFormScript.literals[22]");
+
+buttonClickScript_code_18 := same("bookPrefs.viewChildren[3].buttonClickScript.instructions");
+
+SaveMarkup_code := same("copperfield.SaveMarkup.instructions");
+
+HideMarkup_code := same("copperfield.HideMarkup.instructions");
+
+GetOnlineBooks_code := same("copperfield.GetOnlineBooks.instructions");
+
+SetPageNumber_literal1 := same("copperfieldItem_3.SetPageNumber.literals[1]");
+
+buttonClickScript_code_20 := same("kidsProto.buttonClickScript.instructions");
+
+viewSetupChildrenScript_literal23 := same("pageDialog.viewSetupChildrenScript.literals[23]");
+
+DoInfoHelp_code := same("copperfieldItem_4.DoInfoHelp.instructions");

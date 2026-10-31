@@ -1,7 +1,0 @@
-@@ 0x769559
-func() begin
-	self:UpdateScrollers();
-	PageButton:Update(fPageNum);
-	self:dirty()
-end
-@@end

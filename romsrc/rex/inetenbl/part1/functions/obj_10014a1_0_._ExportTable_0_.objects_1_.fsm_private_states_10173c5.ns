@@ -1,7 +1,0 @@
-@@ 0x10173c5
-func(a1, a2) begin
-	fClientCallbackFrame := a1;
-	fClientCallbackSymbol := a2;
-	self:DoEvent('Instantiate, [Array: 'Listen])
-end
-@@end

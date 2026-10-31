@@ -1,5 +1,0 @@
-@@ 0x74ff11
-func() begin
-	self:UpdateFileList(nil)
-end
-@@end

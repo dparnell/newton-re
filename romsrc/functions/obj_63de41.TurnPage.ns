@@ -1,5 +1,0 @@
-@@ 0x4cc1dd
-func() begin
-	(self.text := Stringer([Array: "Page", " ", fields.pageNumber]))
-end
-@@end

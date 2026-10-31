@@ -1,9 +1,0 @@
-@@ 0x104b7ed
-func() begin
-	(if fScriptServiceFSM then begin
-			fScriptServiceFSM:DoEvent('Cancel, nil);
-			fScriptServiceFSM:DoEvent('Dispose, nil);
-			(fScriptServiceFSM := fScriptServiceFSM:Release())
-		end)
-end
-@@end

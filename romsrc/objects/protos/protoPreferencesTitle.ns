@@ -1,0 +1,10 @@
+// protoPreferencesTitle, and what only it reaches
+
+protoPreferencesTitle := {
+	viewClass: clTextView,
+	viewFlags: vVisible + vReadOnly,
+	viewBounds: {left: 4, top: 1, right: 204, bottom: 16},
+	viewFormat: 0,
+	viewFont: @fontSystem10Bold,
+	viewJustify: 8388608
+};

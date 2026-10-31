@@ -1,0 +1,172 @@
+// mailEditor, and what only it reaches
+
+mailEditor := {
+	path: nil,
+	_cacheContext: {
+		_parent: nil,
+		_proto: nil,
+		viewCObject: nil,
+		message: nil,
+		path: nil,
+		updateScript: nil,
+		appName: uCardPositionAlertButton,
+		mailTitle: nil,
+		messageHolder: nil,
+		messageField: nil,
+		viewJustify: vjParentFullH + vjParentFullV,
+		viewBounds: nil,
+		viewclipper: nil,
+		base: nil,
+		viewFlags: vApplication + vClipping + vFloating + vClickable + vStrokesAllowed
+	},
+	messageHolder: nil,
+	preallocatedContext: 'mailEditor,
+	titleBounds: {left: 18, top: 57, right: -18, bottom: 157},
+	viewFlags: vApplication + vClipping + vFloating + vClickable + vStrokesAllowed,
+	ReOrientToScreen: @defRotateFunc,
+	viewBounds: nil,
+	_proto: @protoFloatNGo,
+	mailTitle: nil,
+	fullBounds: {left: 18, top: 18, right: -18, bottom: -18},
+	viewScrollDownScript: func() begin
+		messageHolder:viewScrollDownScript()
+	end,
+	message: nil,
+	messageField: nil,
+	viewJustify: vjParentFullH + vjParentFullV,
+	updateScript: nil,
+	viewScrollUpScript: func() begin
+		messageHolder:viewScrollUpScript()
+	end,
+	appName: uCardPositionAlertButton,
+	stepallocatecontext: [|Array|: 'mailTitle, mailTitle, 'messageHolder, messageHolder, 'messageField, messageField],
+	declareSelf: 'base,
+	viewSetupFormScript: func() begin
+		(if (path = 'title) then begin
+				viewJustify := 112;
+				(viewBounds := titleBounds)
+			end else begin
+				viewJustify := 240;
+				(viewBounds := fullBounds)
+			end)
+	end,
+	viewEffect: 133120,
+	stepChildren: [stepChildren: mailTitle, messageHolder],
+	debug: 40020,
+	viewSetupChildrenScript: func() begin
+		(if (path = 'title) then (mailTitle.title := "Letter Subject"))
+	end
+};
+
+mailTitle := {title: letterText, preallocatedContext: 'mailTitle, _proto: @protoTitle};
+
+messageHolder := {
+	viewClass: clView,
+	viewBounds: {left: 2, top: 14, right: -2, bottom: -14},
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewFlags: vVisible + vClipping + vStrokesAllowed,
+	viewOriginY: nil,
+	scrollDy: 100,
+	viewScrollUpScript: func() begin
+		local l1;
+		(if ((l1 := min(messageField.scrollDy, viewOriginY)) > 0) then self:SetOrigin(0, (viewOriginY - l1)))
+	end,
+	viewScrollDownScript: func() begin
+		l3 := 99999;
+		l4 := 0;
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		(foreach l5 in messageField:ChildViewFrames() do begin
+				l3 := min(l3, l5.viewBounds.top);
+				l4 := max(l4, l5.viewBounds.bottom)
+			end);
+		l2 := ((l4 - l3) + 50);
+		SetValue(messageField, 'viewBounds, SetBounds(2, 0, -2, max(l2, self:LocalBox().bottom)));
+		(if ((l1 := min((l2 - (viewOriginY + self:LocalBox().bottom)), messageField.scrollDy)) > 0) then self:SetOrigin(0, (viewOriginY + l1)))
+	end,
+	viewSetupFormScript: func() begin
+		viewOriginY := 0;
+		messageField.viewBounds := Clone(messageField.viewBounds);
+		(messageField.viewBounds.bottom := self:LocalBox().bottom)
+	end,
+	debug: 299128,
+	preallocatedContext: 'messageHolder,
+	viewChildren: [viewChildren: messageField]
+};
+
+messageField := {
+	viewClass: clEditView,
+	viewBounds: {left: 2, top: 0, right: -2, bottom: 0},
+	viewFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed + vPunctuationAllowed + vPhoneField + vDateField + vTimeField,
+	viewFormat: vfLinesLtGray,
+	viewJustify: vjParentFullH,
+	viewLineSpacing: 28,
+	viewFont: tsHWFont + tsSize(18),
+	changed: nil,
+	scrollDy: 150,
+	viewSetupFormScript: func() begin
+		scrollDy := ((150 div viewLineSpacing) * viewLineSpacing);
+		(if GetUserConfig('lettersInFieldsOption) then (viewFlags := BOr(viewFlags, 16384)))
+	end,
+	editAddWordScript: func(a1, a2) begin
+		a1.viewFont := viewFont;
+		if (path = 'text) then begin
+				message.edited := true
+			end;
+		changed := true;
+		a1
+	end,
+	viewSetupChildrenScript: func() begin
+		local l1;
+		viewOriginY := 0;
+		if (not (l1 := message.(path))) then begin
+				message.(path) := (l1 := "")
+			end;
+		(while (if (StrLen(l1) > 0) then (l1[(StrLen(l1) - 1)] = $\n)) do (l1 := Substr(l1, 0, (StrLen(l1) - 1))));
+		message.(path) := l1;
+		(self.viewChildren := [Array: {_proto: @protoParagraph, viewBounds: SetBounds(0, 0, 636, (displayParams.appAreaHeight - 34)), viewStationery: 'para, text: (if IsRichString(l1) then "" else l1), viewFont: viewFont, viewLineSpacing: viewLineSpacing}])
+	end,
+	GetTheText: func() begin
+		local l1, l2;
+		if (not (l1 := self:?ChildViewFrames())) then begin
+				l1 := viewChildren
+			end;
+		l2 := notesText(l1);
+		(while (if (StrLen(l2) > 0) then (l2[(StrLen(l2) - 1)] = $\n)) do (l2 := Substr(l2, 0, (StrLen(l2) - 1))));
+		l2
+	end,
+	viewQuitScript: func() begin
+		local l1;
+		l1 := self:GetTheText();
+		if (if (not (message.(path) = l1)) then (((not message.(path)) or (not l1)) or (StrExactCompare(message.(path), l1) <> 0))) then begin
+				message.(path) := l1
+			end;
+		if (if (if changed then IsSoupEntry(message)) then FrameDirty(message)) then begin
+				EntryChange(message)
+			end;
+		if (if updateScript then changed) then begin
+				call updateScript with (message.(path))
+			end;
+		(message := nil)
+	end,
+	viewSetupDoneScript: func() begin
+		inherited:?viewSetupDoneScript();
+		AddDeferredSend(self, 'Recognize, nil)
+	end,
+	Recognize: func() begin
+		if IsRichString(message.(path)) then begin
+				SetValue(viewChildren[0], 'text, message.(path))
+			end;
+		AddProcrastinatedCall('_SetKeyView, functions.SetKeyView, [Array: self.viewChildren[0], 99999], 1000)
+	end,
+	viewChangedScript: func(a1, a2) begin
+		(if (a1 = 'text) then begin
+				changed := true;
+				(if (path = 'text) then (message.edited := true) else (if (StrLen(self:Parent():GetTheText()) > 61) then self:Notify(3, appName, ParamStr("The Subject is limited to ^0 characters.", [Array: 61]))))
+			end)
+	end,
+	debug: 149728,
+	preallocatedContext: 'messageField
+};

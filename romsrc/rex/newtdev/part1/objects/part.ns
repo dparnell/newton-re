@@ -1,0 +1,34 @@
+// part, and what only it reaches
+
+part := array(nil, {
+	_ExportTable: [|Array|:
+		{
+			name: '|NameServerInterface:NSG|,
+			major: 1,
+			minor: 0,
+			objects: [|Array|:
+				{class: 'BinCFunction, code: code, numArgs: 4, offset: 972},
+				{class: 'BinCFunction, code: code, numArgs: 3, offset: 892},
+				{class: 'BinCFunction, code: code, numArgs: 2, offset: 456}
+			]
+		}
+	],
+	installScript: func(a1) begin
+		local l1;
+		l1 := EnsureInternal({removeScript: a1.devRemoveScript});
+		a1:devInstallScript(a1, l1);
+		l1
+	end,
+	devInstallScript: func(a1, a2) begin
+		nil
+	end,
+	devRemoveScript: func(a1) begin
+		nil
+	end
+});
+
+code := native('nativeModule, "resources/nativeModule/1000d71.s");
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+devInstallScript_code := same("part[0].devInstallScript.instructions");

@@ -1,5 +1,0 @@
-@@ 0x7453ad
-func() begin
-	phonePicker:OpenCallOptionsSlip()
-end
-@@end

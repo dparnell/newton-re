@@ -1,0 +1,190 @@
+// newtroEditView, and what only it reaches
+
+newtroEditView := {
+	viewWidth: nil,
+	scrollOverlap: nil,
+	viewSetupDoneScript: func() begin
+		(if scrollerView then scrollerView:AdjustArrows())
+	end,
+	viewFormat: vfLinesLtGray,
+	viewLineSpacing: 28,
+	scrollerView: nil,
+	viewChildren: nil,
+	viewHeight: nil,
+	emptyRect: {left: 0, top: 0, right: 0, bottom: 0},
+	viewFlags: vAnythingAllowed + vVisible + vClipping,
+	notesize: nil,
+	viewBounds: nil,
+	scrollYAmount: nil,
+	UpdateBounds: func() begin
+		if (l1 := editor:ChildViewFrames()) then begin
+				local l1;
+				local l2;
+				(foreach l3 in l1 do begin
+						l2 := UnionRect(l2, l3.viewBounds)
+					end)
+			end;
+		(if l2 then (self.DataRect := l2))
+	end,
+	jamSlot: nil,
+	viewOriginY: 0,
+	initialDataRect: {left: 0, top: 0, right: 0, bottom: 0},
+	viewScroll2DScript: func(a1, a2) begin
+		local l1, l2, l3, l4;
+		l1 := 0;
+		l2 := 0;
+		if (a1 = 'left) then begin
+				l1 := (-scrollXAmount)
+			end else begin
+				if (a1 = 'right) then begin
+						l1 := scrollXAmount
+					end else begin
+						if (a1 = 'up) then begin
+								l2 := (-scrollYAmount)
+							end else begin
+								if (a1 = 'down) then begin
+										l2 := scrollYAmount
+									end
+							end
+					end
+			end;
+		l3 := viewOriginX;
+		l4 := viewOriginY;
+		if (l1 <> 0) then begin
+				if (l1 > 0) then begin
+						if self.ScrollRect then begin
+								l1 := min(((ScrollRect.right - l3) - viewWidth), l1)
+							end
+					end else begin
+						l1 := max((-l3), l1)
+					end;
+				l3 := (l3 + l1)
+			end;
+		if (l2 <> 0) then begin
+				if (l2 > 0) then begin
+						if self.ScrollRect then begin
+								l2 := min(((ScrollRect.bottom - l4) - viewHeight), l2)
+							end
+					end else begin
+						l2 := max((-l4), l2)
+					end;
+				l4 := (l4 + l2)
+			end;
+		editor:DropHilites();
+		editor:SetOrigin(l3, l4);
+		ViewRect := OffsetRect(ViewRect, l1, l2);
+		self:UpdateBounds();
+		RefreshViews()
+	end,
+	doCaret: true,
+	declareSelf: 'editor,
+	TextScript: func() begin
+		notesText(target.(path))
+	end,
+	scrollXAmount: nil,
+	viewClass: clEditView,
+	viewOriginX: 0,
+	optionFlags: 0,
+	CommonScrollerSetupFormScript: func() begin
+		self.ViewRect := editor:LocalBox();
+		self.DataRect := editor.initialDataRect;
+		if (not self.ScrollRect) then begin
+				if notesize then begin
+						self.ScrollRect := SetBounds(0, 0, notesize[0], notesize[1])
+					end else begin
+						self.ScrollRect := SetBounds(0, 0, max(ViewRect.right, DataRect.right), 2000)
+					end
+			end;
+		self.scrollXUnits := editor.scrollXAmount;
+		self.scrollYUnits := editor.scrollYAmount;
+		(scrollerView := self)
+	end,
+	TwoDscroller: {
+		_proto: @protoHorizontal2Dscroller,
+		viewFlags: vVisible + vReadOnly + vFloating,
+		viewJustify: vjParentCenterH + vjParentBottomV + vjParentClip,
+		viewSetupFormScript: func() begin
+			inherited:?viewSetupFormScript();
+			self:CommonScrollerSetupFormScript()
+		end
+	},
+	OneDscroller: {
+		_proto: @protoUpDownScroller,
+		viewFlags: vVisible + vReadOnly + vFloating,
+		viewJustify: vjParentRightH + vjParentCenterV + vjParentClip,
+		viewSetupFormScript: func() begin
+			inherited:?viewSetupFormScript();
+			self:CommonScrollerSetupFormScript()
+		end
+	},
+	viewSetupChildrenScript: func() begin
+		viewWidth := (l2 := editor:LocalBox()).right;
+		viewHeight := l2.bottom;
+		if (not scrollOverlap) then begin
+				scrollOverlap := floor((viewHeight / 3))
+			end;
+		scrollXAmount := (viewWidth - scrollOverlap);
+		scrollYAmount := (viewHeight - scrollOverlap);
+		if (self.viewChildren := (if target then target.(path))) then begin
+				local l1;
+				local l2;
+				(foreach l3 in self.viewChildren do begin
+						l1 := UnionRect(l1, l3.viewBounds)
+					end);
+				if l1 then begin
+						self.initialDataRect := l1
+					end
+			end;
+		(self.stepChildren := (if (if optionFlags then (optionFlags = 1)) then (if (initialDataRect.right <= viewWidth) then [Array: OneDscroller] else [Array: TwoDscroller])))
+	end,
+	Retarget: func() begin
+		self:RedoChildren()
+	end,
+	jamFromEntry: jamFromEntry,
+	ScrollToWord: func(a1, a2) begin
+		l4 := (if IsArray(a1) then a1 else SplitString(a1));
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		(foreach l5 in viewChildren do begin
+				(foreach l7 in l4 do begin
+						local l9, l10, l11, l12, l13, l14, l15, l16;
+						if (l2 := FindStringInFrame(l5, [Array: l7], true)) then begin
+								l1 := l5;
+								l3 := l7;
+								break (matchedTextSlot := (if l5.text then l5.text))
+							end
+					end);
+				if l1 then begin
+						break
+					end
+			end);
+		if l1 then begin
+				l9 := 0;
+				if IsSymbol(l2[1]) then begin
+						l10 := (l1.viewBounds.bottom - l1.viewBounds.top);
+						if ((l11 := StrLen(l1.(l2[1]))) > 0) then begin
+								l9 := ((l2[2] * l10) div l11)
+							end
+					end;
+				l13 := ((l12 := self:LocalBox()).bottom - l12.top);
+				l14 := ((l12.bottom - l12.top) div 2);
+				if ((l15 := ((l1.viewBounds.top + l9) - l14)) < 0) then begin
+						l15 := 0
+					end;
+				self:DropHilites();
+				self:SetOrigin(viewOriginX, l15);
+				if scrollerView then begin
+						scrollerView.yPos := l15;
+						scrollerView:AdjustArrows()
+					end;
+				RefreshViews()
+			end;
+		(if (if (if a2 then l2) then (Length(l2) > 2)) then (if (l16 := LFetch(self:ChildViewFrames(), matchedTextSlot, 0, '|str=|, '[pathExpr: text])) then l16:SetHilite(l2[2], (l2[2] + StrLen(l3)), true)))
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_11 := same("newtroEditView.TwoDscroller.viewSetupFormScript.instructions");

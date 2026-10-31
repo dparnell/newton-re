@@ -1,5 +1,0 @@
-@@ 0x5158e9
-func() begin
-	(if (not ShowCribNotes) then (viewFlags := 0))
-end
-@@end

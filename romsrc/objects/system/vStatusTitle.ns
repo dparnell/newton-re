@@ -1,0 +1,7 @@
+// vStatusTitle, and what only it reaches
+
+vStatusTitle := {
+	height: 85,
+	name: 'vStatusTitle,
+	kids: [|Array|: @protoStatusText, @protoTitleText, @protoDefaultStatusButton]
+};

@@ -1,0 +1,14 @@
+// protoPrefInfo, and what only it reaches
+
+protoPrefInfo := {
+	logText: nil,
+	logChoices: [|Array|: file, log, delete],
+	logConfig: nil,
+	logActions: [|Array|: 'save, 'log, nil],
+	fileText: fileIn,
+	fileChoices: [|Array|: "copies", logEntries, nil],
+	fileConfig: nil,
+	transport: nil,
+	testMethod: nil,
+	sibling: nil
+};

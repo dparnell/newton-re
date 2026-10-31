@@ -1,0 +1,8 @@
+// protoCursiveCheckbox, and what only it reaches
+
+protoCursiveCheckbox := {
+	_proto: @protoRecognitionCheckbox,
+	RecalcRecognition: func() begin
+		ReadCursiveOptions()
+	end
+};

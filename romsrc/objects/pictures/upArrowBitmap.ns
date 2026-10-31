@@ -1,0 +1,40 @@
+// upArrowBitmap, and what only it reaches
+
+upArrowBitmap := {
+	unhilited: {
+		bounds: unhilitedBounds_29,
+		mask: unhilitedMask_7,
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/544d45.png", "00000000000c00000000000000110012", 4),
+				bitdepth: 4
+			},
+			{cbits: colordataCbits_29, bitdepth: 1}
+		]
+	},
+	hilited: {
+		bounds: {left: 0, top: 0, right: 18, bottom: 17},
+		mask: unhilitedMask_7,
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/544b8d.png", "00000000000c00000000000000110012", 4),
+				bitdepth: 4
+			},
+			{
+				cbits: bitmap('bits, "resources/bits/544b2d.png", "00000000000400000000000000110012", 1),
+				bitdepth: 1
+			}
+		]
+	},
+	bw: {
+		bits: colordataCbits_29,
+		bounds: unhilitedBounds_29,
+		mask: bitmap('mask, "resources/mask/544e9d.png", "00000000000400000000000000110012", 1)
+	}
+};
+
+unhilitedMask_7 := bitmap('mask, "resources/mask/544acd.png", "00000000000400000000000000110012", 1);
+
+colordataCbits_29 := bitmap('bits, "resources/bits/544ce5.png", "00000000000400000000000000110012", 1);
+
+unhilitedBounds_29 := {left: 0, top: 0, right: 18, bottom: 17};

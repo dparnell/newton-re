@@ -1,5 +1,0 @@
-@@ 0x54f6dd
-func() begin
-	SetLCDContrast(viewValue)
-end
-@@end

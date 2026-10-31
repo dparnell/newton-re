@@ -1,0 +1,49 @@
+// bizCardBulletLine, and what only it reaches
+
+bizCardBulletLine := {
+	bizCardIcon: {
+		bits: bitmap('bits, "resources/bits/72ab65.png", "00000000000800f100f100bb010800e1", 1),
+		bounds: {left: 0, top: 0, right: 38, bottom: 23}
+	},
+	bizCardNum: 6,
+	name: "bizCardBulletLine",
+	symbol: 'bizCardBulletLine,
+	type: 'bizcard,
+	stepChildren: [stepChildren:
+		{
+			viewBounds: {left: 5, top: 30, right: 230, bottom: 36},
+			viewJustify: 0,
+			viewFormat: vfFillBlack + vfFrameBlack,
+			icon: {
+				bits: bitmap('bits, "resources/bits/72ad21.png", "00000000002001750175022c017b030d", 1),
+				bounds: {left: 0, top: 0, right: 225, bottom: 6}
+			},
+			viewFlags: vVisible,
+			viewClass: clPictureView
+		},
+		{
+			viewBounds: {top: 21, left: 15, right: 300, bottom: 45},
+			viewJustify: 0,
+			viewFont: tsFancy + tsSize(18),
+			layouts: layouts_2,
+			reduceFont: true,
+			_proto: @8243
+		},
+		{
+			viewBounds: {top: 5, left: 10, right: -10, bottom: 60},
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			viewFont: tsFancy + tsSize(10),
+			layouts: layouts_3,
+			_proto: @8242
+		},
+		{
+			viewJustify: vjRightH + vjParentFullH,
+			viewBounds: {top: 5, left: 10, right: -10, bottom: 21},
+			viewFont: tsFancy + tsSize(12),
+			layouts: layouts,
+			_proto: @8242
+		},
+		{_proto: @8234}
+	],
+	_proto: @8236
+};

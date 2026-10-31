@@ -1,66 +1,66 @@
 # the objects' area: 0x100c95c, 0x1b5c bytes; the byte between objects; the objects' alignment
 area	100c95c	1b5c	bf	4
-100c95c	obj_100c95d	41	gc=1
-100c96c	obj_100c95d[0]	43	map=map_100c989
+100c95c	part	41	gc=1
+100c96c	part[0]	43	map=map_100c989
 100c988	map_100c989	41
 100c9a8	'_ImportTable	40
 100c9c8	'installScript	40
 100c9e8	'devInstallScript	40
 100ca0c	'devRemoveScript	40
-100ca2c	obj_100c95d[0]._ImportTable	41
+100ca2c	part[0]._ImportTable	41
 100ca3c	'|Array|	40
-100ca54	obj_100c95d[0]._ImportTable[0]	43	map=map_100ca6d
+100ca54	part[0]._ImportTable[0]	43	map=map_100ca6d
 100ca6c	map_100ca6d	41
 100ca88	'name	40
 100caa0	'major	40
 100cab8	'minor	40
 100cad0	'|NameServerInterface:NSG|	40
-100caf8	obj_100c95d[0].installScript	43	map=map_100cb19
+100caf8	part[0].installScript	43	map=map_100cb19
 100cb18	map_100cb19	41
 100cb3c	'class	40
 100cb54	'instructions	40
 100cb74	'literals	40
 100cb90	'argFrame	40
 100cbac	'numArgs	40
-100cbc4	obj_100c95d[0].installScript.instructions	40
-100cbe0	obj_100c95d[0].installScript.literals	41
-100cbfc	obj_100c95d[0].installScript.literals[1]	41
+100cbc4	part[0].installScript.instructions	40
+100cbe0	part[0].installScript.literals	41
+100cbfc	part[0].installScript.literals[1]	41
 100cc10	'removeScript	40
 100cc30	'EnsureInternal	40
-100cc50	obj_100c95d[0].devInstallScript	43	map=map_100cb19
-100cc70	obj_100c95d[0].devInstallScript.instructions	40
-100ccfc	obj_100c95d[0].devInstallScript.literals	41
+100cc50	part[0].devInstallScript	43	map=map_100cb19
+100cc70	part[0].devInstallScript.instructions	40
+100ccfc	part[0].devInstallScript.literals	41
 100cd78	'AppleTalkLinkRegistry	40
 100cda0	'DefGlobalVar	40
 100cdc0	'AppleTalkChoice	40
 100cde0	'GetUserConfig	40
-100ce00	obj_100ce01	40
+100ce00	devInstallScript_literal6	40
 100ce10	'|string|	40
 100ce28	'SetUserConfig	40
 100ce48	'RegAppleTalklink	40
-100ce6c	obj_100c95d[0].devInstallScript.literals[9]	43	map=map_100cb19
-100ce8c	obj_100c95d[0].devInstallScript.literals[9].instructions	40
-100cea8	obj_100c95d[0].devInstallScript.literals[9].literals	41
+100ce6c	part[0].devInstallScript.literals[9]	43	map=map_100cb19
+100ce8c	part[0].devInstallScript.literals[9].instructions	40
+100cea8	part[0].devInstallScript.literals[9].literals	41
 100cecc	'vars	40
 100cee4	'|str<|	40
 100cefc	'id	40
 100cf10	'BInsert	40
 100cf28	'DefGlobalFn	40
 100cf44	'UnRegAppleTalklink	40
-100cf68	obj_100c95d[0].devInstallScript.literals[12]	43	map=map_100cb19
-100cf88	obj_100c95d[0].devInstallScript.literals[12].instructions	40
-100cfa4	obj_100c95d[0].devInstallScript.literals[12].literals	41
+100cf68	part[0].devInstallScript.literals[12]	43	map=map_100cb19
+100cf88	part[0].devInstallScript.literals[12].instructions	40
+100cfa4	part[0].devInstallScript.literals[12].literals	41
 100cfc4	'BDelete	40
-100cfdc	obj_100c95d[0].devInstallScript.literals[13]	40
-100cffc	obj_100cffd	40
-100d014	obj_100d015	41
+100cfdc	part[0].devInstallScript.literals[13]	40
+100cffc	devInstallScript_literal14	40
+100d014	devInstallScript_literal15	41
 100d030	'item	40
 100d048	'sym	40
-100d05c	obj_100c95d[0].devInstallScript.literals[16]	40
-100d07c	obj_100d07d	40
+100d05c	part[0].devInstallScript.literals[16]	40
+100d07c	devInstallScript_literal17	40
 100d094	'ethernet	40
 100d0b0	'AppleTalk	40
-100d0cc	obj_100c95d[0].devInstallScript.literals[21]	43	map=map_100d115
+100d0cc	part[0].devInstallScript.literals[21]	43	map=map_100d115
 100d114	map_100d115	41
 100d160	'height	40
 100d178	'overview	40
@@ -77,75 +77,75 @@ area	100c95c	1b5c	bf	4
 100d2a8	'closeBox	40
 100d2c4	'stepAllocateContext	40
 100d2e8	'DevicePicker	40
-100d308	obj_100d309	40
-100d328	obj_100c95d[0].devInstallScript.literals[21].viewBounds	43	map=map_100d345
+100d308	overview_value	40
+100d328	part[0].devInstallScript.literals[21].viewBounds	43	map=map_100d345
 100d344	map_100d345	41
 100d364	'left	40
 100d37c	'top	40
 100d390	'right	40
 100d3a8	'bottom	40
-100d3c0	obj_100c95d[0].devInstallScript.literals[21].stepChildren	41
-100d3d8	obj_100d3d9	43	map=map_100d3ed
+100d3c0	part[0].devInstallScript.literals[21].stepChildren	41
+100d3d8	stepChildren_value	43	map=map_100d3ed
 100d3ec	map_100d3ed	41
 100d404	'preAllocatedContext	40
-100d428	obj_100c95d[0].devInstallScript.literals[21].stepChildren[1]	43	map=map_100d455
+100d428	part[0].devInstallScript.literals[21].stepChildren[1]	43	map=map_100d455
 100d454	map_100d455	41
 100d484	'text	40
 100d49c	'viewJustify	40
 100d4b8	'FindService	40
 100d4d4	'textSetup	40
 100d4f0	'labelActionScript	40
-100d514	obj_100c95d[0].devInstallScript.literals[21].stepChildren[1].text	40
-100d53c	obj_100c95d[0].devInstallScript.literals[21].stepChildren[1].viewBounds	43	map=map_100d559
+100d514	part[0].devInstallScript.literals[21].stepChildren[1].text	40
+100d53c	part[0].devInstallScript.literals[21].stepChildren[1].viewBounds	43	map=map_100d559
 100d558	map_100d559	41
-100d578	obj_100c95d[0].devInstallScript.literals[21].stepChildren[1].viewSetupFormScript	43	map=map_100cb19
-100d598	obj_100c95d[0].devInstallScript.literals[21].stepChildren[1].viewSetupFormScript.instructions	40
-100d5b0	obj_100c95d[0].devInstallScript.literals[21].stepChildren[1].viewSetupFormScript.literals	41
+100d578	part[0].devInstallScript.literals[21].stepChildren[1].viewSetupFormScript	43	map=map_100cb19
+100d598	part[0].devInstallScript.literals[21].stepChildren[1].viewSetupFormScript.instructions	40
+100d5b0	part[0].devInstallScript.literals[21].stepChildren[1].viewSetupFormScript.literals	41
 100d5d4	'appletalkLink	40
 100d5f4	'labelCommands	40
-100d614	obj_100c95d[0].devInstallScript.literals[21].stepChildren[1].FindService	43	map=map_100cb19
-100d634	obj_100c95d[0].devInstallScript.literals[21].stepChildren[1].FindService.instructions	40
-100d68c	obj_100c95d[0].devInstallScript.literals[21].stepChildren[1].FindService.literals	41
+100d614	part[0].devInstallScript.literals[21].stepChildren[1].FindService	43	map=map_100cb19
+100d634	part[0].devInstallScript.literals[21].stepChildren[1].FindService.instructions	40
+100d68c	part[0].devInstallScript.literals[21].stepChildren[1].FindService.literals	41
 100d6b4	'StrEqual	40
-100d6d0	obj_100c95d[0].devInstallScript.literals[21].stepChildren[1].textSetup	43	map=map_100cb19
-100d6f0	obj_100d6f1	40
-100d704	obj_100c95d[0].devInstallScript.literals[21].stepChildren[1].textSetup.literals	41
-100d718	obj_100c95d[0].devInstallScript.literals[21].stepChildren[1].labelActionScript	43	map=map_100cb19
-100d738	obj_100c95d[0].devInstallScript.literals[21].stepChildren[1].labelActionScript.instructions	40
-100d79c	obj_100c95d[0].devInstallScript.literals[21].stepChildren[1].labelActionScript.literals	41
+100d6d0	part[0].devInstallScript.literals[21].stepChildren[1].textSetup	43	map=map_100cb19
+100d6f0	textSetup_code	40
+100d704	part[0].devInstallScript.literals[21].stepChildren[1].textSetup.literals	41
+100d718	part[0].devInstallScript.literals[21].stepChildren[1].labelActionScript	43	map=map_100cb19
+100d738	part[0].devInstallScript.literals[21].stepChildren[1].labelActionScript.instructions	40
+100d79c	part[0].devInstallScript.literals[21].stepChildren[1].labelActionScript.literals	41
 100d7ec	'AppleTalkOpenCount	40
 100d810	'updateText	40
-100d82c	obj_100d82d	40
+100d82c	labelActionScript_literal5	40
 100d920	'GetRoot	40
 100d938	'Notify	40
 100d950	'SetupDevicePicker	40
 100d974	'SetDisplay	40
-100d990	obj_100d991	43	map=map_100d9d5
+100d990	stepChildren_value_2	43	map=map_100d9d5
 100d9d4	map_100d9d5	41
 100da1c	'MakeLabelCommands	40
 100da40	'viewSetupDoneScript	40
 100da64	'viewShowScript	40
-100da84	obj_100d991.text	40
-100da9c	obj_100d991.viewBounds	43	map=map_100d345
-100dab8	obj_100d991.viewSetupFormScript	43	map=map_100cb19
-100dad8	obj_100d991.viewSetupFormScript.instructions	40
-100db04	obj_100d991.viewSetupFormScript.literals	41
-100db2c	obj_100d991.FindService	43	map=map_100cb19
-100db4c	obj_100d991.FindService.instructions	40
-100dbc4	obj_100d991.FindService.literals	41
+100da84	stepChildren_value_2.text	40
+100da9c	stepChildren_value_2.viewBounds	43	map=map_100d345
+100dab8	stepChildren_value_2.viewSetupFormScript	43	map=map_100cb19
+100dad8	stepChildren_value_2.viewSetupFormScript.instructions	40
+100db04	stepChildren_value_2.viewSetupFormScript.literals	41
+100db2c	stepChildren_value_2.FindService	43	map=map_100cb19
+100db4c	stepChildren_value_2.FindService.instructions	40
+100dbc4	stepChildren_value_2.FindService.literals	41
 100dbe8	'CISName	40
-100dc00	obj_100d991.FindService.literals[5]	40
-100dc28	obj_100d991.textSetup	43	map=map_100cb19
-100dc48	obj_100d991.textSetup.literals	41
-100dc5c	obj_100d991.labelActionScript	43	map=map_100cb19
-100dc7c	obj_100d991.labelActionScript.instructions	40
-100dcb8	obj_100d991.labelActionScript.literals	41
-100dcf0	obj_100d991.SetupDevicePicker	43	map=map_100cb19
-100dd10	obj_100d991.SetupDevicePicker.instructions	40
-100dd24	obj_100d991.SetupDevicePicker.literals	41
-100dd38	obj_100d991.MakeLabelCommands	43	map=map_100cb19
-100dd58	obj_100d991.MakeLabelCommands.instructions	40
-100de10	obj_100d991.MakeLabelCommands.literals	41
+100dc00	stepChildren_value_2.FindService.literals[5]	40
+100dc28	stepChildren_value_2.textSetup	43	map=map_100cb19
+100dc48	stepChildren_value_2.textSetup.literals	41
+100dc5c	stepChildren_value_2.labelActionScript	43	map=map_100cb19
+100dc7c	stepChildren_value_2.labelActionScript.instructions	40
+100dcb8	stepChildren_value_2.labelActionScript.literals	41
+100dcf0	stepChildren_value_2.SetupDevicePicker	43	map=map_100cb19
+100dd10	stepChildren_value_2.SetupDevicePicker.instructions	40
+100dd24	stepChildren_value_2.SetupDevicePicker.literals	41
+100dd38	stepChildren_value_2.MakeLabelCommands	43	map=map_100cb19
+100dd58	stepChildren_value_2.MakeLabelCommands.instructions	40
+100de10	stepChildren_value_2.MakeLabelCommands.literals	41
 100de54	'items	40
 100de6c	'DeviceRegistry	40
 100de8c	'DeviceClass	40
@@ -153,74 +153,74 @@ area	100c95c	1b5c	bf	4
 100decc	'DeviceDisplayName	40
 100def0	'IsArray	40
 100df08	'DeviceCISProductName	40
-100df30	obj_100df31	41
+100df30	MakeLabelCommands_literal9	41
 100df4c	'choiceSym	40
-100df68	obj_100d991.SetDisplay	43	map=map_100cb19
-100df88	obj_100d991.SetDisplay.instructions	40
-100dfa4	obj_100d991.SetDisplay.literals	41
+100df68	stepChildren_value_2.SetDisplay	43	map=map_100cb19
+100df88	stepChildren_value_2.SetDisplay.instructions	40
+100dfa4	stepChildren_value_2.SetDisplay.literals	41
 100dfbc	'Show	40
 100dfd4	'Hide	40
-100dfec	obj_100d991.viewSetupDoneScript	43	map=map_100cb19
-100e00c	obj_100d991.viewSetupDoneScript.instructions	40
-100e01c	obj_100d991.viewSetupDoneScript.literals	41
-100e02c	obj_100d991.viewShowScript	43	map=map_100cb19
-100e04c	obj_100d991.viewShowScript.instructions	40
-100e060	obj_100d991.viewShowScript.literals	41
-100e074	obj_100c95d[0].devInstallScript.literals[21].icon	43	map=map_100e089
+100dfec	stepChildren_value_2.viewSetupDoneScript	43	map=map_100cb19
+100e00c	stepChildren_value_2.viewSetupDoneScript.instructions	40
+100e01c	stepChildren_value_2.viewSetupDoneScript.literals	41
+100e02c	stepChildren_value_2.viewShowScript	43	map=map_100cb19
+100e04c	stepChildren_value_2.viewShowScript.instructions	40
+100e060	stepChildren_value_2.viewShowScript.literals	41
+100e074	part[0].devInstallScript.literals[21].icon	43	map=map_100e089
 100e088	map_100e089	41
 100e0a0	'bits	40
 100e0b8	'bounds	40
-100e0d0	obj_100c95d[0].devInstallScript.literals[21].icon.bits	40
-100e11c	obj_100c95d[0].devInstallScript.literals[21].icon.bounds	43	map=map_100d345
-100e138	obj_100c95d[0].devInstallScript.literals[21].viewSetupFormScript	43	map=map_100cb19
-100e158	obj_100c95d[0].devInstallScript.literals[21].viewSetupFormScript.instructions	40
-100e16c	obj_100c95d[0].devInstallScript.literals[21].viewSetupFormScript.literals	41
-100e180	obj_100c95d[0].devInstallScript.literals[21].SetPref	43	map=map_100cb19
-100e1a0	obj_100c95d[0].devInstallScript.literals[21].SetPref.instructions	40
-100e230	obj_100c95d[0].devInstallScript.literals[21].SetPref.literals	41
+100e0d0	part[0].devInstallScript.literals[21].icon.bits	40
+100e11c	part[0].devInstallScript.literals[21].icon.bounds	43	map=map_100d345
+100e138	part[0].devInstallScript.literals[21].viewSetupFormScript	43	map=map_100cb19
+100e158	part[0].devInstallScript.literals[21].viewSetupFormScript.instructions	40
+100e16c	part[0].devInstallScript.literals[21].viewSetupFormScript.literals	41
+100e180	part[0].devInstallScript.literals[21].SetPref	43	map=map_100cb19
+100e1a0	part[0].devInstallScript.literals[21].SetPref.instructions	40
+100e230	part[0].devInstallScript.literals[21].SetPref.literals	41
 100e278	'StrFilled	40
 100e294	'LoadHardwareEntry	40
-100e2b8	obj_100e2b9	40
-100e2d0	obj_100e2d1	40
-100e2e8	obj_100c95d[0].devInstallScript.literals[21].stepAllocateContext	41
+100e2b8	SetPref_literal11	40
+100e2d0	SetPref_literal12	40
+100e2e8	part[0].devInstallScript.literals[21].stepAllocateContext	41
 100e304	'RegPrefs	40
-100e320	obj_100c95d[0].devInstallScript.literals[26]	43	map=map_100cb19
-100e340	obj_100c95d[0].devInstallScript.literals[26].instructions	40
-100e360	obj_100c95d[0].devInstallScript.literals[26].literals	41
+100e320	part[0].devInstallScript.literals[26]	43	map=map_100cb19
+100e340	part[0].devInstallScript.literals[26].instructions	40
+100e360	part[0].devInstallScript.literals[26].literals	41
 100e380	'AddDeferredCall	40
-100e3a0	obj_100c95d[0].devRemoveScript	43	map=map_100cb19
-100e3c0	obj_100c95d[0].devRemoveScript.instructions	40
-100e3e8	obj_100c95d[0].devRemoveScript.literals	41
+100e3a0	part[0].devRemoveScript	43	map=map_100cb19
+100e3c0	part[0].devRemoveScript.instructions	40
+100e3e8	part[0].devRemoveScript.literals	41
 100e41c	'UnDefGlobalVar	40
 100e43c	'UnDefGlobalFn	40
 100e45c	'UserConfiguration	40
 100e480	'RemoveSlot	40
 100e49c	'UnRegPrefs	40
-alias	obj_100c95d[0].devInstallScript.literals[6]	obj_100ce01
-alias	obj_100c95d[0].devInstallScript.literals[14]	obj_100cffd
-alias	obj_100c95d[0].devInstallScript.literals[15]	obj_100d015
-alias	obj_100c95d[0].devInstallScript.literals[17]	obj_100d07d
-alias	obj_100c95d[0].devInstallScript.literals[19]	obj_100d015
-alias	obj_100c95d[0].devInstallScript.literals[21].overview	obj_100d309
-alias	obj_100c95d[0].devInstallScript.literals[21].stepChildren[0]	obj_100d3d9
-alias	obj_100c95d[0].devInstallScript.literals[21].stepChildren[1].FindService.literals[6]	obj_100ce01
-alias	obj_100c95d[0].devInstallScript.literals[21].stepChildren[1].textSetup.instructions	obj_100d6f1
-alias	obj_100c95d[0].devInstallScript.literals[21].stepChildren[1].labelActionScript.literals[4]	obj_100d309
-alias	obj_100c95d[0].devInstallScript.literals[21].stepChildren[1].labelActionScript.literals[5]	obj_100d82d
-alias	obj_100c95d[0].devInstallScript.literals[21].stepChildren[2]	obj_100d991
-alias	obj_100c95d[0].devInstallScript.literals[21].curDevice	obj_100ce01
-alias	obj_100c95d[0].devInstallScript.literals[21].SetPref.literals[7]	obj_100cffd
-alias	obj_100c95d[0].devInstallScript.literals[21].SetPref.literals[10]	obj_100cffd
-alias	obj_100c95d[0].devInstallScript.literals[21].SetPref.literals[11]	obj_100e2b9
-alias	obj_100c95d[0].devInstallScript.literals[21].SetPref.literals[12]	obj_100e2d1
-alias	obj_100c95d[0].devInstallScript.literals[21].stepAllocateContext[1]	obj_100d3d9
-alias	obj_100c95d[0].devInstallScript.literals[21].stepAllocateContext[3]	obj_100d991
-alias	obj_100c95d[0].devInstallScript.literals[23]	obj_100d07d
-alias	obj_100c95d[0].devInstallScript.literals[26].literals[0]	obj_100e2b9
-alias	obj_100c95d[0].devInstallScript.literals[26].literals[1]	obj_100e2d1
-alias	obj_100d991.viewSetupFormScript.literals[3]	obj_100ce01
-alias	obj_100d991.textSetup.instructions	obj_100d6f1
-alias	obj_100d991.labelActionScript.literals[4]	obj_100d309
-alias	obj_100d991.labelActionScript.literals[5]	obj_100d82d
-alias	obj_100d991.MakeLabelCommands.literals[9]	obj_100df31
-alias	obj_100d991.MakeLabelCommands.literals[13]	obj_100df31
+alias	part[0].devInstallScript.literals[6]	devInstallScript_literal6
+alias	part[0].devInstallScript.literals[14]	devInstallScript_literal14
+alias	part[0].devInstallScript.literals[15]	devInstallScript_literal15
+alias	part[0].devInstallScript.literals[17]	devInstallScript_literal17
+alias	part[0].devInstallScript.literals[19]	devInstallScript_literal15
+alias	part[0].devInstallScript.literals[21].overview	overview_value
+alias	part[0].devInstallScript.literals[21].stepChildren[0]	stepChildren_value
+alias	part[0].devInstallScript.literals[21].stepChildren[1].FindService.literals[6]	devInstallScript_literal6
+alias	part[0].devInstallScript.literals[21].stepChildren[1].textSetup.instructions	textSetup_code
+alias	part[0].devInstallScript.literals[21].stepChildren[1].labelActionScript.literals[4]	overview_value
+alias	part[0].devInstallScript.literals[21].stepChildren[1].labelActionScript.literals[5]	labelActionScript_literal5
+alias	part[0].devInstallScript.literals[21].stepChildren[2]	stepChildren_value_2
+alias	part[0].devInstallScript.literals[21].curDevice	devInstallScript_literal6
+alias	part[0].devInstallScript.literals[21].SetPref.literals[7]	devInstallScript_literal14
+alias	part[0].devInstallScript.literals[21].SetPref.literals[10]	devInstallScript_literal14
+alias	part[0].devInstallScript.literals[21].SetPref.literals[11]	SetPref_literal11
+alias	part[0].devInstallScript.literals[21].SetPref.literals[12]	SetPref_literal12
+alias	part[0].devInstallScript.literals[21].stepAllocateContext[1]	stepChildren_value
+alias	part[0].devInstallScript.literals[21].stepAllocateContext[3]	stepChildren_value_2
+alias	part[0].devInstallScript.literals[23]	devInstallScript_literal17
+alias	part[0].devInstallScript.literals[26].literals[0]	SetPref_literal11
+alias	part[0].devInstallScript.literals[26].literals[1]	SetPref_literal12
+alias	stepChildren_value_2.viewSetupFormScript.literals[3]	devInstallScript_literal6
+alias	stepChildren_value_2.textSetup.instructions	textSetup_code
+alias	stepChildren_value_2.labelActionScript.literals[4]	overview_value
+alias	stepChildren_value_2.labelActionScript.literals[5]	labelActionScript_literal5
+alias	stepChildren_value_2.MakeLabelCommands.literals[9]	MakeLabelCommands_literal9
+alias	stepChildren_value_2.MakeLabelCommands.literals[13]	MakeLabelCommands_literal9

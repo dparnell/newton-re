@@ -1,0 +1,6 @@
+// colonSlides, and what only it reaches
+
+colonSlides := {
+	bits: bitmap('bits, "resources/bits/3d9f99.png", "000000000004015e015e003a016d0040", 1),
+	bounds: {left: 0, top: 0, right: 6, bottom: 15}
+};

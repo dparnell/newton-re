@@ -1,0 +1,3 @@
+// newtNumberFilter, and what only it reaches
+
+newtNumberFilter := {_proto: @newtIntegerFilter, integerOnly: nil};

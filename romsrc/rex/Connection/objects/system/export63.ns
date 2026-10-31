@@ -1,0 +1,30 @@
+// export63, and what only it reaches
+
+export63 := {
+	connectTimeout: 255,
+	idletimeout: 30,
+	openOptions: func() begin
+		AddArraySlot((result := [Array: {label: "mods", type: 'service, opCode: 512}, {label: "mecp", type: 'option, opCode: 512, data: {arglist: [Array: 16], typeList: [Array: 10, 1]}}, {label: "mnpc", type: 'option, opCode: 512, data: {arglist: [Array: 11], typeList: [Array: 10, 1]}}, {label: "mnpa", type: 'option, opCode: 512, data: {arglist: [Array: nil], typeList: [Array: 10, 5]}}]), MakeModemOption());
+		return result
+	end,
+	connectOptions: func() begin
+		(result := [Array: {label: "rout", type: 'address, opCode: 512, data: {arglist: [Array: 3, 0, ""], typeList: [Array: 10, 1, 2, [Array: 11, 13, 0]]}}])[0].data.arglist[1] := StrLen(self.phonenumber);
+		result[0].data.arglist[2] := self.phonenumber;
+		return result
+	end,
+	useEOP: nil
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+openOptions_literal2 := same("export63.openOptions.literals[2]");
+
+openOptions_literal6 := same("export63.openOptions.literals[6]");
+
+openOptions_literal7 := same("export63.openOptions.literals[7]");
+
+openOptions_literal8 := same("export63.openOptions.literals[8]");
+
+openOptions_literal11 := same("export63.openOptions.literals[11]");
+
+connectOptions_literal0 := same("export63.connectOptions.literals[0]");

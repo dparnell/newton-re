@@ -1,0 +1,18 @@
+// helveticaFont, and what only it reaches
+
+helveticaFont := {
+	name: helvetica,
+	encoding: 0,
+	macFontID: 21,
+	psSym: 'helveticaFont,
+	normal: helvetica,
+	bold: "Helvetica-Bold",
+	italic: "Helvetica-Oblique",
+	bolditalic: "Helvetica-BoldOblique",
+	plainData: sfnt('sfnt, "resources/sfnt/412165"),
+	boldData: sfnt('sfnt, "resources/sfnt/412991"),
+	italicData: sfnt('sfnt, "resources/sfnt/4131bd"),
+	boldItalicData: sfnt('sfnt, "resources/sfnt/4139e9")
+};
+
+helvetica := "Helvetica";

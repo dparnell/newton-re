@@ -1,0 +1,44 @@
+// bizCardSeparate, and what only it reaches
+
+bizCardSeparate := {
+	bizCardIcon: {
+		bits: bitmap('bits, "resources/bits/72d191.png", "00000000000800cc00cc00f200e30118", 1),
+		bounds: {left: 0, top: 0, right: 38, bottom: 23}
+	},
+	bizCardNum: 2,
+	name: "bizCardSeparate",
+	symbol: 'bizCardSeparate,
+	type: 'bizcard,
+	stepChildren: [stepChildren:
+		{
+			viewBounds: {top: 5, left: 0, right: -10, bottom: 53},
+			viewJustify: vjRightH + vjParentFullH + vjSiblingBottomV,
+			viewFont: tsFancy + tsSize(12),
+			layouts: layouts_3,
+			_proto: @8242
+		},
+		{
+			viewBounds: {left: 10, top: 0, right: 0, bottom: 24},
+			viewJustify: vjBottomV + vjParentFullH + vjSiblingBottomV,
+			viewFont: tsFancy + tsSize(18),
+			layouts: layouts_2,
+			reduceFont: true,
+			_proto: @8242
+		},
+		{
+			viewBounds: {top: 0, left: 10, right: -10, bottom: 3},
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			viewFormat: vfFillBlack + vfFrameBlack,
+			_proto: @protoBorder
+		},
+		{
+			viewJustify: vjCenterV + vjParentFullH + vjSiblingFullH + vjSiblingBottomV,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 16},
+			viewFont: tsFancy + tsSize(12),
+			layouts: layouts,
+			_proto: @8242
+		},
+		{_proto: @8234}
+	],
+	_proto: @8236
+};

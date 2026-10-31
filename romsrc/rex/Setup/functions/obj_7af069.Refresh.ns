@@ -1,5 +1,0 @@
-@@ 0x7aff51
-func() begin
-	self:SetFeedback(Stringer([Array: "The current time is\n", HourMinute(Time)]))
-end
-@@end

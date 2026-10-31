@@ -1,0 +1,19 @@
+// canonicalGestaltSystemInfo, and what only it reaches
+
+canonicalGestaltSystemInfo := {
+	manufacturer: nil,
+	machineType: nil,
+	ROMStage: nil,
+	ROMVersion: nil,
+	RAMSize: nil,
+	screenwidth: nil,
+	screenheight: nil,
+	screenresolutionx: nil,
+	screenresolutiony: nil,
+	screendepth: nil,
+	patchVersion: nil,
+	tabletresolutionx: nil,
+	tabletresolutiony: nil,
+	cputype: nil,
+	cpuspeed: nil
+};

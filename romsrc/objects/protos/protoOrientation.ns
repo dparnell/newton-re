@@ -1,0 +1,127 @@
+// protoOrientation, and what only it reaches
+
+protoOrientation := {
+	text: "  Rotate",
+	viewBounds: {left: 7, top: 0, right: 54, bottom: 13},
+	popup: [|Array|:
+		{
+			item: "Left",
+			icon: {
+				bits: bitmap('bits, "resources/bits/43f6fd.png", "00000000000400fb00fb01f8010c0205", 1),
+				bounds: {left: 0, top: 0, right: 13, bottom: 17}
+			},
+			indent: 24,
+			msg: 'RelRotate,
+			args: [|Array|: 1]
+		},
+		{
+			item: "Right",
+			icon: {
+				bits: bitmap('bits, "resources/bits/43f78d.png", "00000000000400fb00fb0209010c0216", 1),
+				bounds: {left: 0, top: 0, right: 13, bottom: 17}
+			},
+			indent: 24,
+			msg: 'RelRotate,
+			args: [|Array|: -1]
+		},
+		{
+			item: "180°",
+			icon: {
+				bits: bitmap('bits, "resources/bits/43f81d.png", "00000000000400fb00fb0219010c0224", 1),
+				bounds: {left: 0, top: 0, right: 11, bottom: 17}
+			},
+			indent: 24,
+			msg: 'RelRotate,
+			args: [|Array|: 2]
+		}
+	],
+	bBarItems: {
+		left: {
+			item: "Buttons Right",
+			icon: {bits: leftBits, bounds: {left: 0, top: 0, right: 11, bottom: 17}},
+			indent: 24,
+			msg: 'FlipBBar,
+			args: [|Array|: 'right]
+		},
+		right: {
+			item: "Buttons Left",
+			icon: {bits: rightBits, bounds: {left: 0, top: 0, right: 11, bottom: 17}},
+			indent: 24,
+			msg: 'FlipBBar,
+			args: [|Array|: 'left]
+		}
+	},
+	bBarControlsItems: {
+		left: {
+			item: "Controls Right",
+			icon: {bits: leftBits, bounds: {left: 0, top: 0, right: 11, bottom: 17}},
+			indent: 24,
+			msg: 'FlipBBarControls,
+			args: [|Array|: 'right]
+		},
+		right: {
+			item: "Controls Left",
+			icon: {bits: rightBits, bounds: {left: 0, top: 0, right: 11, bottom: 17}},
+			indent: 24,
+			msg: 'FlipBBarControls,
+			args: [|Array|: 'left]
+		}
+	},
+	buttonClickScript: func() begin
+		local l1, l2;
+		if (displayParams.buttonBarPosition <> 'none) then begin
+				l1 := bBarControlsItems.(displayParams.buttonBarControlsPosition);
+				if ((l2 := bBarItems.(displayParams.buttonBarPosition)) or l1) then begin
+						AddArraySlot((popup := Clone(popup)), 'pickseparator);
+						if l1 then begin
+								AddArraySlot(popup, l1)
+							end;
+						if l2 then begin
+								AddArraySlot(popup, l2)
+							end
+					end
+			end;
+		inherited:?buttonClickScript()
+	end,
+	pickCancelledScript: func() begin
+		RemoveSlot(self, 'popup);
+		inherited:pickCancelledScript()
+	end,
+	pickActionScript: func(a1) begin
+		local l1;
+		l1 := popup[a1];
+		RemoveSlot(self, 'popup);
+		AddDeferredSend(self, l1.msg, l1.args);
+		inherited:?pickActionScript(a1)
+	end,
+	RelRotate: func(a1) begin
+		local l1;
+		l1 := BAnd((GetOrientation() + a1), 3);
+		(if (GetOrientation() <> l1) then SetScreenOrientation(l1))
+	end,
+	FlipBBar: func(a1) begin
+		local l1;
+		if (not (l1 := GetUserConfig('buttonBarPositions))) then begin
+				l1 := Array(4, nil)
+			end;
+		l1[GetOrientation()] := a1;
+		SetUserConfig('buttonBarPositions, l1)
+	end,
+	FlipBBarControls: func(a1) begin
+		local l1;
+		if (not (l1 := GetUserConfig('buttonBarControlsPositions))) then begin
+				l1 := Array(4, nil)
+			end;
+		l1[GetOrientation()] := a1;
+		SetUserConfig('buttonBarControlsPositions, l1)
+	end,
+	_proto: @protoPopupButton
+};
+
+leftBits := bitmap('bits, "resources/bits/43f5ad.png", "0000000000040000000000000011000b", 1);
+
+rightBits := bitmap('bits, "resources/bits/43f63d.png", "0000000000040000000000000011000b", 1);
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+FlipBBar_code := same("protoOrientation.FlipBBar.instructions");

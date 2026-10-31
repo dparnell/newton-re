@@ -1,6 +1,0 @@
-@@ 0x101ada1
-func(a1, a2) begin
-	inherited:?viewChangedScript(a1, a2);
-	(if (not target.(path)) then (target.(path) := ""))
-end
-@@end

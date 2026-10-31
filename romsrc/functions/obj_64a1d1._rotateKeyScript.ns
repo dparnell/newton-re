@@ -1,5 +1,0 @@
-@@ 0x54c251
-func(a1) begin
-	PressButton(rotateButton)
-end
-@@end

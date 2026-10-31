@@ -1,6 +1,0 @@
-@@ 0x1040ab1
-func(a1) begin
-	self:MCancelCurrentRequest(a1.fLinkID);
-	self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrame(a1.fLinkID, 'Canceled, nil, nil, nil, nil), nil])
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x101b019
-func() begin
-	(viewBounds := Clone(viewBounds))
-end
-@@end

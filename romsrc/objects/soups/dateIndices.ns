@@ -1,0 +1,6 @@
+// dateIndices, and what only it reaches
+
+dateIndices := [|Array|:
+	{structure: 'slot, path: 'mtgStartDate, type: 'int},
+	{structure: 'slot, path: 'mtgAlarm, type: 'int}
+];

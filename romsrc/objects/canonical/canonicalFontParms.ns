@@ -1,0 +1,3 @@
+// canonicalFontParms, and what only it reaches
+
+canonicalFontParms := {family: nil, size: nil, face: nil, pensize: nil};

@@ -1,0 +1,18 @@
+// newYorkFont, and what only it reaches
+
+newYorkFont := {
+	name: "Fancy",
+	encoding: 0,
+	macFontID: 2,
+	screenSym: 'newYorkFont,
+	psName: 'timesroman,
+	psScale: 75366,
+	badFontMap: 1,
+	plainData: sfnt('sfnt, "resources/sfnt/3e9319"),
+	boldData: nil,
+	italicData: nil,
+	boldItalicData: nil,
+	userSizes: [|Array|: 9, 10, 12, 18],
+	usable: true,
+	tsID: 1
+};

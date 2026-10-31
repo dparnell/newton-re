@@ -1,8 +1,0 @@
-@@ 0x5217e5
-func() begin
-	(if (bookPage <= printTo) then begin
-			self:RedoChildren();
-			true
-		end)
-end
-@@end

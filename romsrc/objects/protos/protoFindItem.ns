@@ -1,0 +1,25 @@
+// protoFindItem, and what only it reaches
+
+protoFindItem := {
+	_proto: @protoRollItem,
+	viewJustify: 8396852,
+	CloseFindAll: func() begin
+		findOverview:Close()
+	end,
+	click: func() begin
+		findDrawer:HideOtherApps(self.finder.owner);
+		AddDeferredSend(self, 'CloseFindAll, nil);
+		findDrawer:ShowItem(self.finder, self)
+	end,
+	viewChildren: [|Array|:
+		{
+			_proto: @protoStaticText,
+			viewJustify: 8388656,
+			viewFont: @fontSystem9,
+			viewBounds: {left: 15, top: 0, right: 0, bottom: 15},
+			viewSetupFormScript: func() begin
+				(self.text := title)
+			end
+		}
+	]
+};

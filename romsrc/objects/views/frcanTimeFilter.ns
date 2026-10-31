@@ -1,0 +1,3 @@
+// frcanTimeFilter, and what only it reaches
+
+frcanTimeFilter := {_proto: @usTimeFilter, |string|: "     ", format: "20_30"};

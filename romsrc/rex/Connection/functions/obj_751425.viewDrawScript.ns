@@ -1,5 +1,0 @@
-@@ 0x751629
-func() begin
-	self:DrawShape(icon, nil)
-end
-@@end

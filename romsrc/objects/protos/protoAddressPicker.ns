@@ -1,0 +1,238 @@
+// protoAddressPicker, and what only it reaches
+
+protoAddressPicker := {
+	labelNameRefs: nil,
+	class: nil,
+	viewQuitScript: func() begin
+		if (if (if useMemory then selected) then (Length(selected) > 0)) then begin
+				AddMemoryItemUnique(memory, selected, func(a1, a2) begin
+					self:ToRefEquality(a1, a2)
+				end)
+			end;
+		if (if pickerSlip then pickerSlip.viewCObject) then begin
+				pickerSlip:Close()
+			end;
+		(pickerSlip := nil)
+	end,
+	EntryLineSetup: func() begin
+		local l1;
+		l1 := self:LocalBox();
+		StyledStrTruncate(Clone(self:TextFromRef(selected)), ((l1.right - l1.left) - indent), entryLine.viewFont)
+	end,
+	memory: nil,
+	_picker: @protoPeoplePopup,
+	viewBounds: {left: 30, top: 55, right: -20, bottom: 71},
+	_proto: @protoLabelPicker,
+	otherText: otherNames,
+	pickerSlip: nil,
+	pickerSetup: func() begin
+		if inPeoplePicker then begin
+				labelNameRefs := nil;
+				l1 := (if useMemory then GetMemoryItems(memory));
+				if (alternatives or l1) then begin
+						l2 := 0;
+						if (if selected then (Length(selected) > 0)) then begin
+								if (Length(selected) = 1) then begin
+										labelNameRefs := Clone(selected)
+									end else begin
+										labelNameRefs := [Array: selected]
+									end;
+								selectedIndex := 0
+							end else begin
+								labelNameRefs := [Array: ]
+							end;
+						if alternatives then begin
+								ArrayMunger(labelNameRefs, 1, 0, alternatives, 0, nil)
+							end;
+						labLen := Length(labelNameRefs);
+						if l1 then begin
+								l3 := 0;
+								l4 := 0;
+								l5 := 0;
+								l2 := Length(l1);
+								l6 := Array(labLen, nil);
+								l7 := Array(l2, nil);
+								l8 := nil;
+								local l1;
+								local l2;
+								local l3;
+								local l4;
+								local l5;
+								local l6;
+								local l7;
+								local l8;
+								(foreach l9, l10 in l1 do begin
+										l12 := l10.item;
+										if (l13 := ArrayPos(labelNameRefs, l12, 0, func(a1, a2) begin
+											self:ToRefEquality(a1, a2)
+										end)) then begin
+												l6[l4] := l12;
+												labelNameRefs[l13] := nil;
+												l3 := (l3 + 1);
+												if (if selectedIndex then (l13 = selectedIndex)) then begin
+														l8 := true;
+														selectedIndex := l4
+													end;
+												l4 := (l4 + 1)
+											end else begin
+												l7[l5] := l12;
+												l5 := (l5 + 1)
+											end
+									end);
+								if (if (not l8) then selectedIndex) then begin
+										selectedIndex := (selectedIndex + l4)
+									end;
+								if (l3 > 0) then begin
+										local l12;
+										local l13;
+										(foreach l10 in labelNameRefs do begin
+												if l10 then begin
+														l6[l4] := l10;
+														l4 := (l4 + 1)
+													end
+											end);
+										labelNameRefs := l6;
+										l2 := (l2 - l3);
+										SetLength(l7, l2)
+									end;
+								if (l2 > 0) then begin
+										if (labLen > 0) then begin
+												SetLength(labelNameRefs, ((labLen + l2) + 1));
+												labelNameRefs[labLen] := nil;
+												labLen := (labLen + 1)
+											end else begin
+												SetLength(labelNameRefs, l2)
+											end;
+										(foreach l10 in l7 do begin
+												labelNameRefs[labLen] := l10;
+												labLen := (labLen + 1)
+											end)
+									end
+							end;
+						labelCommands := Array(((labLen := Length(labelNameRefs)) + 2), nil);
+						(for l9 := 0 to (labLen - 1) do begin
+								labelCommands[l9] := (if (labelNameRefs[l9] = nil) then 'pickseparator else self:PopupSetup(labelNameRefs[l9]))
+							end);
+						labelCommands[labLen] := 'pickseparator;
+						labelCommands[(labLen + 1)] := otherText
+					end else begin
+						labelCommands := nil
+					end;
+				inPeoplePicker := nil
+			end;
+		labelCommands
+	end,
+	PopupSetup: func(a1) begin
+		StyledStrTruncate(Clone(self:TextFromRef(a1)), 200, @fontSystem10Bold)
+	end,
+	viewJustify: vjParentFullH,
+	selected: nil,
+	DoOpenPicker: func() begin
+		if (if pickerSlip then pickerSlip.viewCObject) then begin
+				return nil
+			end;
+		inPeoplePicker := true;
+		(pickerSlip := _picker:New(class, DeepClone(selected), self, nil))
+	end,
+	labelCommands: nil,
+	TextSetup: func() begin
+		l1 := GetMemoryItems(memory);
+		if (if alternatives then l1) then begin
+				ArrayMunger((l4 := Clone(alternatives)), 0, 0, selected, 0, nil);
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				(foreach l5, l6 in l1 do begin
+						local l8;
+						l2 := l6.item;
+						if (l3 := ArrayPos(l4, l2, 0, func(a1, a2) begin
+							self:ToRefEquality(a1, a2)
+						end)) then begin
+								break
+							end
+					end);
+				if (if l3 then (l3 > 0)) then begin
+						l8 := l4[0];
+						selected := l2;
+						alternatives[(l3 - 1)] := l8
+					end
+			end;
+		return self:EntryLineSetup()
+	end,
+	viewSetupFormScript: func() begin
+		if (memory = nil) then begin
+				memory := class
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	Popit: func(a1) begin
+		if self:pickerSetup() then begin
+				pop := Clone(labelCommands);
+				if selectedIndex then begin
+						pop[selectedIndex] := {item: pop[selectedIndex], mark: $\uFC0B}
+					end;
+				DoPopup(pop, a1, nil, self)
+			end else begin
+				self:DoOpenPicker()
+			end;
+		true
+	end,
+	ToRefEquality: func(a1, a2) begin
+		local l1, l2, l3;
+		l1 := GetDataDefs(class);
+		l2 := self:TextFromRef(a1);
+		l3 := self:TextFromRef(a2);
+		(if (if StrFilled(l2) then StrFilled(l3)) then StrEqual(l2, l3))
+	end,
+	TextFromRef: func(a1) begin
+		local l1, l2, l3;
+		l1 := GetDataDefs(class);
+		l2 := l1:GetRoutingTitle(a1, nil, nil);
+		l3 := nil;
+		if (if IsArray(a1) then (Length(a1) = 1)) then begin
+				l3 := l1:GetSuffix(a1[0])
+			end else begin
+				if IsFrame(a1) then begin
+						l3 := l1:GetSuffix(a1)
+					end
+			end;
+		if l3 then begin
+				l2 := ParamStr("^0 ^1", [Array: l2, l3])
+			end;
+		l2
+	end,
+	useMemory: true,
+	pickActionScript: func(a1) begin
+		local l1;
+		(if inPeoplePicker then begin
+				selected := a1;
+				self:UpdateText(self:EntryLineSetup());
+				base:hilite(nil);
+				(pickerSlip := nil)
+			end else begin
+				l1 := Length(labelNameRefs);
+				(if (a1 < l1) then begin
+						selected := labelNameRefs[a1];
+						selectedIndex := a1;
+						if (not IsArray(selected)) then begin
+								selected := [Array: selected]
+							end;
+						self:UpdateText(self:EntryLineSetup());
+						base:hilite(nil)
+					end else begin
+						alternatives := nil;
+						self:DoOpenPicker()
+					end)
+			end)
+	end,
+	text: name,
+	debug: 265948,
+	alternatives: nil,
+	selectedIndex: nil,
+	inPeoplePicker: true
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+ToRefEquality_code := same("protoAddressPicker.ToRefEquality.instructions");

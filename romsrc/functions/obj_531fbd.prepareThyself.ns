@@ -1,8 +1,0 @@
-@@ 0x531f5d
-func() begin
-	(if fields.fromCallApp then begin
-			viewFlags := 0;
-			(fields.saveAsLog := true)
-		end)
-end
-@@end

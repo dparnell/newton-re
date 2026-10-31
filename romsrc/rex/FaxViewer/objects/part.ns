@@ -1,0 +1,992 @@
+// part, and what only it reaches
+
+part := array(nil, {
+	installScript: func(a1) begin
+		local l1;
+		l1 := EnsureInternal({removeScript: a1.devRemoveScript});
+		a1:devInstallScript(a1, l1);
+		l1
+	end,
+	devInstallScript: func(a1, a2) begin
+		RegDataDef('ImageView, a1.partData.ImageDataDef);
+		RegDataView('ImageView, a1.partData.ImageViewerDef);
+		RegDataView('ImageView, a1.partData.ImagePrintFormat);
+		RegDataView('ImageView, a1.partData.faxViewerRouteFormat)
+	end,
+	devRemoveScript: func(a1) begin
+		UnRegDataDef('ImageView);
+		UnRegDataView('ImageView, 'default);
+		UnRegDataView('ImageView, 'ImagePrintFormatSym);
+		UnRegDataView('ImageView, 'imageRouteFormat)
+	end,
+	partData: {
+		faxViewerRouteFormat: {
+			_proto: @targetFrameFormat,
+			symbol: 'imageRouteFormat,
+			storeAlias: true,
+			sizeLimit: nil,
+			dataTypes: [|Array|: 'frame]
+		},
+		ImageDataDef: {
+			symbol: 'ImageView,
+			name: image,
+			superSymbol: 'imagery,
+			description: "Picture",
+			icon: nil,
+			version: 1,
+			metadata: nil,
+			SetupForm: func(a1, a2) begin
+				nil
+			end,
+			StringExtract: func(a1, a2) begin
+				(if (if a1.title then (Length(a1.title) > 0)) then a1.title else "Untitled fax")
+			end,
+			viewClass: clView
+		},
+		ImagePrintFormat: {
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+			name: image,
+			symbol: 'ImagePrintFormatSym,
+			title: image,
+			version: 1,
+			stepChildren: [stepChildren: partItem, partItem_2],
+			printNextPageScript: func() begin
+				if (not target) then begin
+						return nil
+					end;
+				ImageTarget:PrepareToPrint((fPageIndex := (fPageIndex + 1)))
+			end,
+			fPageIndex: 0,
+			margins: {left: 0, top: 0, right: 0, bottom: 0},
+			CountPages: func(a1, a2) begin
+				Length(a2.pages)
+			end,
+			declareSelf: 'printBase,
+			viewSetupFormScript: func() begin
+				inherited:?viewSetupFormScript();
+				(if (not target) then begin
+						nodata.viewFlags := BOr(nodata.viewFlags, 1);
+						(ImageTarget.viewFlags := 0)
+					end)
+			end,
+			PrintType: 'ReceivedFax,
+			storeAlias: true,
+			sizeLimit: nil,
+			_proto: @protoPrintFormat,
+			nodata: nil,
+			stepAllocateContext: [|Array|: 'nodata, partItem, 'ImageTarget, partItem_2],
+			ImageTarget: nil
+		},
+		ImageViewerDef: {
+			type: 'editor,
+			fEntryStore: nil,
+			viewFormat: nil,
+			viewFlags: vVisible,
+			nodata: nil,
+			PageButton: nil,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+			vPageNavigator: nil,
+			symbol: 'default,
+			ShowFoundItem: func(a1, a2) begin
+				(if (a2.findType = 'text) then (for l1 := 0 to (Length(a1.pages) - 1) do begin
+							if (l4 := a1.pages[l1].annotations) then begin
+									local l4;
+									(foreach l5 in l4 do begin
+											local l7, l8, l9, l10, l11, l12;
+											if FindStringInFrame(l5, a2.findWords, 'text) then begin
+													imageContainer:GotoPage((l1 + 1));
+													ImageTarget:ZoomTo('fullSize);
+													l8 := (((l7 := l5.viewBounds).right - l7.left) div 2);
+													l9 := ((l7.bottom - l7.top) div 2);
+													l11 := (((l10 := self:LocalBox()).right - l10.left) div 2);
+													l12 := ((l10.bottom - l10.top) div 2);
+													ImageTarget:ScrollTo(((l7.left + l8) - l11), ((l7.top + l9) - l12));
+													return nil
+												end
+										end)
+								end
+						end))
+			end,
+			viewJustify: vjParentFullH + vjParentFullV,
+			imageContainer: nil,
+			ImageTarget: nil,
+			name: image,
+			stepAllocateContext: [|Array|:
+				'nodata,
+				partItem_3,
+				'vScrollers,
+				partItem_4,
+				'PageButton,
+				pageOf,
+				'floatingBar,
+				partItem_5,
+				'ImageTarget,
+				partItem_6,
+				'pagePalette,
+				partItem_7,
+				'vPageNavigator,
+				partItem_8,
+				'imageContainer,
+				partItem_9
+			],
+			viewSetupFormScript: func() begin
+				(if (not target) then begin
+						nodata.viewFlags := BOr(nodata.viewFlags, 1);
+						floatingBar.viewFlags := 0;
+						(imageContainer.viewFlags := 0)
+					end)
+			end,
+			viewClass: clView,
+			pagePalette: nil,
+			stepChildren: [stepChildren: partItem_3, partItem_5, partItem_9],
+			vScrollers: nil,
+			floatingBar: nil
+		}
+	}
+});
+
+image := "Image";
+
+partItem := {
+	text: dataUnavailable,
+	viewBounds: {left: 0, top: 90, right: 250, bottom: 120},
+	viewFlags: vReadOnly,
+	viewFont: tsSystem + tsSize(24) + tsBold,
+	viewJustify: 8388630,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'nodata
+};
+
+dataUnavailable := "Data unavailable";
+
+partItem_2 := {
+	annotations: nil,
+	image: nil,
+	PrepareToPrint: func(a1) begin
+		local l1;
+		(if (a1 < target.info.pageCount) then begin
+				ImageTarget:setup((l1 := target.pages[a1]).image, l1.annotations, nil);
+				ImageTarget:ZoomTo('fitInWindow);
+				true
+			end)
+	end,
+	scalingInfo: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewFormat: vfFillWhite,
+	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjParentFullV,
+	viewSetupDoneScript: func() begin
+		self:PrepareToPrint((fPageIndex := 0))
+	end,
+	fImage: nil,
+	fAnnotations: nil,
+	imageFormat: 1,
+	_proto: @protoImageView,
+	preAllocatedContext: 'ImageTarget
+};
+
+partItem_3 := {
+	text: dataUnavailable,
+	viewBounds: {left: 0, top: 90, right: 180, bottom: 120},
+	viewFlags: vReadOnly,
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	viewJustify: 8388630,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'nodata
+};
+
+partItem_4 := {
+	viewSetupFormScript: func() begin
+		inherited:?viewSetupFormScript();
+		(self.scrollView := imageContainer)
+	end,
+	Update: func(a1) begin
+		(if (a1.zoomedTo = 'fitInWindow) then begin
+				hidden := true;
+				self:Hide();
+				return nil
+			end else begin
+				if hidden then begin
+						self:Open()
+					end;
+				scrollRect := a1.extent;
+				dataRect := a1.extent;
+				viewRect := a1.viewBox;
+				xPos := a1.OffsetX;
+				yPos := a1.OffsetY;
+				self:AdjustArrows()
+			end)
+	end,
+	ViewScrollDoneScript: func() begin
+		self:Update(ImageTarget:GetScalingInfo())
+	end,
+	viewBounds: {top: -19, left: 0, right: 65, bottom: -1},
+	viewFlags: 0,
+	hidden: true,
+	_proto: @protoHorizontal2Dscroller,
+	preAllocatedContext: 'vScrollers
+};
+
+pageOf := {
+	viewBounds: {left: 0, top: 0, right: 74, bottom: 17},
+	viewJustify: 8388678,
+	Update: func(a1) begin
+		SetValue(self, 'text, ParamStr("^0 ^1 of ^2", [Array: "\uFC01\u", a1, Length(target.pages)]))
+	end,
+	popup: [|Array|: ],
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewFormat: vfFillWhite + vfRound(4),
+	viewSetupFormScript: func() begin
+		self.numVisiblePages := min(9, Length(target.pages));
+		l1 := (numVisiblePages + (if (numVisiblePages > 1) then 2 else 0));
+		self.popup := Array(l1, nil);
+		local l1;
+		(for l2 := 1 to numVisiblePages do begin
+				local l5;
+				l5 := ParamStr("Page ^0", [Array: l2]);
+				popup[(l2 - 1)] := {item: l5}
+			end);
+		(if (numVisiblePages > 1) then begin
+				popup[numVisiblePages] := 'pickSeparator;
+				(popup[(numVisiblePages + 1)] := "Show Previewer")
+			end)
+	end,
+	pickActionScript: func(a1) begin
+		if ((a1 + 1) <= numVisiblePages) then begin
+				imageContainer:GotoPage((a1 + 1))
+			end else begin
+				vPageNavigator:ToggleNavigator(imageContainer:GetCurrentPage())
+			end;
+		self:hilite(nil)
+	end,
+	buttonClickScript: func() begin
+		local l1;
+		if markedPage then begin
+				popup[markedPage].mark := $ 
+			end;
+		markedPage := nil;
+		if ((l1 := imageContainer:GetCurrentPage()) <= numVisiblePages) then begin
+				markedPage := (l1 - 1);
+				popup[markedPage].mark := $\uFC0B
+			end;
+		if (numVisiblePages > 1) then begin
+				popup[(Length(popup) - 1)] := (if Visible(vPageNavigator) then "Hide Page View" else "Show Page View")
+			end;
+		DoPopup(popup, self:LocalBox().right, 2, self)
+	end,
+	fPageProto: {
+		item: "1",
+		mark: $\u0020,
+		page: 1,
+		doit: func() begin
+			imageContainer:GotoPage(page)
+		end
+	},
+	markedPage: nil,
+	numVisiblePages: nil,
+	text: "ﰁPage 9 of 9",
+	viewClickScript: func(a1) begin
+		if self:TrackHilite(a1) then begin
+				self:buttonClickScript()
+			end;
+		true
+	end,
+	pickCancelledScript: func() begin
+		self:hilite(nil)
+	end,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'PageButton
+};
+
+partItem_5 := {
+	viewBounds: {left: 0, top: -20, right: 0, bottom: 0},
+	viewFlags: vVisible,
+	viewFormat: nil,
+	stepChildren: [stepChildren: partItem_4, tools, pageOf],
+	viewJustify: vjParentFullH + vjParentBottomV,
+	_proto: @newtFloatingBar,
+	FaxTools: nil,
+	stepAllocateContext: [|Array|: 'FaxTools, tools],
+	preAllocatedContext: 'floatingBar
+};
+
+tools := {
+	popItem_FitInWindow: {
+		mark: $\u0020,
+		item: "Fit In Window",
+		zoomStop: 'fitInWindow,
+		doit: func(a1) begin
+			local l1;
+			(if ((l1 := GetVariable(a1, 'ImageTarget)):GetScalingInfo().zoomedTo <> 'fitInWindow) then begin
+					l1:SetAnnotationMode('Show);
+					l1:ZoomTo('fitInWindow)
+				end)
+		end
+	},
+	popItem_FullRes: {
+		mark: $\u0020,
+		item: "Full Resolution",
+		zoomStop: 'fullResolution,
+		doit: func(a1) begin
+			local l1;
+			(if ((l1 := GetVariable(a1, 'ImageTarget)):GetScalingInfo().zoomedTo <> 'fullResolution) then begin
+					l1:SetAnnotationMode('Show);
+					l1:ZoomTo('fullResolution)
+				end)
+		end
+	},
+	popItem_FullSize: {
+		mark: $\u0020,
+		item: "Original Size",
+		zoomStop: 'fullSize,
+		doit: func(a1) begin
+			local l1;
+			(if ((l1 := GetVariable(a1, 'ImageTarget)):GetScalingInfo().zoomedTo <> 'fullSize) then begin
+					l1:SetAnnotationMode('Show);
+					l1:ZoomTo('fullSize)
+				end)
+		end
+	},
+	preAllocatedContext: 'FaxTools,
+	viewFlags: vVisible + vReadOnly + vClickable,
+	buttonClickScript: func() begin
+		popup := [Array: (l1 := {_proto: popItem_ShowThumb, item: (if Visible(imageContainer.vThumbFloater) then "Hide Thumbnail" else "Show Thumbnail")}), 'pickSeparator];
+		l2 := ImageTarget.zoomStops;
+		l3 := ImageTarget:GetScalingInfo().zoomedTo;
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		local l5;
+		(foreach l6 in popSizeItems do begin
+				local l8, l9;
+				l1 := self.(l6);
+				if ArrayPos(l2, l1.zoomStop, 0, nil) then begin
+						if (l1.zoomStop = l3) then begin
+								l1 := {_proto: l1, item: l1.item, mark: $\uFC0B}
+							end;
+						AddArraySlot(popup, l1)
+					end
+			end);
+		AddArraySlot(popup, 'pickSeparator);
+		l8 := nil;
+		if ImageTarget:CanZoomBy(1) then begin
+				AddArraySlot(popup, popItem_Enlarge);
+				l8 := true
+			end;
+		if ImageTarget:CanZoomBy(-1) then begin
+				AddArraySlot(popup, popItem_Reduce);
+				l8 := true
+			end;
+		if self:?EntryCool(nil) then begin
+				if l8 then begin
+						AddArraySlot(popup, 'pickSeparator)
+					end;
+				l1 := popItem_Annotate;
+				l9 := popItem_Drag;
+				if (ImageTarget:GetAnnotationMode() = 'edit) then begin
+						(l1 := Clone(l1)).mark := $\uFC0B
+					end else begin
+						(l9 := Clone(l9)).mark := $\uFC0B
+					end;
+				AddArraySlot(popup, l1);
+				AddArraySlot(popup, l9)
+			end;
+		if (not fEntryStore:IsReadOnly()) then begin
+				AddArraySlot(popup, 'pickSeparator);
+				AddArraySlot(popup, popItem_RotateRight);
+				AddArraySlot(popup, popItem_Rotate180);
+				AddArraySlot(popup, popItem_RotateLeft)
+			end;
+		inherited:?buttonClickScript()
+	end,
+	viewBounds: {left: -43, top: 0, right: -6, bottom: 13},
+	popItem_Rotate180: {
+		item: "Rotate 180°",
+		mark: $\u0020,
+		doit: func(a1) begin
+			a1:DoMunge('rotate180)
+		end
+	},
+	_proto: @protoPopupButton,
+	popItem_ShowThumb: {
+		item: "",
+		doit: func(a1) begin
+			GetVariable(a1, 'vThumbFloater):ToggleThumbnail(a1:MakeAndStashThumbnail(a1:GetCurrentPage()))
+		end
+	},
+	popItem_Drag: {
+		item: "Drag with Stylus",
+		mark: $\u0020,
+		doit: func(a1) begin
+			GetVariable(a1, 'ImageTarget):SetAnnotationMode('Show)
+		end
+	},
+	viewJustify: 8388710,
+	popItem_Reduce: {
+		item: "Reduce Fax",
+		doit: func(a1) begin
+			GetVariable(a1, 'ImageTarget):SetAnnotationMode('Show);
+			GetVariable(a1, 'ImageTarget):ZoomBy(-1)
+		end
+	},
+	popItem_RotateLeft: {
+		item: "Rotate left",
+		mark: $\u0020,
+		doit: func(a1) begin
+			a1:DoMunge('rotateLeft)
+		end
+	},
+	popup: [|Array|: ],
+	popItem_Annotate: {
+		item: "Write with Stylus",
+		mark: $\u0020,
+		doit: func(a1) begin
+			local l1;
+			if ((l1 := GetVariable(a1, 'ImageTarget)):GetScalingInfo().zoomedTo <> 'fullSize) then begin
+					l1:ZoomTo('fullSize)
+				end;
+			l1:SetAnnotationMode('edit)
+		end
+	},
+	pickActionScript: func(a1) begin
+		local l1;
+		if (if IsFrame((l1 := popup[a1])) then l1.doit) then begin
+				l1:doit(imageContainer)
+			end;
+		inherited:?pickActionScript(a1)
+	end,
+	text: "  Tools",
+	popItem_Enlarge: {
+		item: "Enlarge Fax",
+		doit: func(a1) begin
+			GetVariable(a1, 'ImageTarget):SetAnnotationMode('Show);
+			GetVariable(a1, 'ImageTarget):ZoomBy(1)
+		end
+	},
+	popItem_RotateRight: {
+		item: "Rotate right",
+		mark: $\u0020,
+		doit: func(a1) begin
+			a1:DoMunge('rotateRight)
+		end
+	},
+	popSizeItems: [|Array|: 'popItem_FitInWindow, 'popItem_FullSize, 'popItem_FullRes]
+};
+
+partItem_6 := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	ScalingInfoChanged: func(a1) begin
+		if Visible(vThumbFloater) then begin
+				vThumbFloater:Update()
+			end;
+		if ImageTarget:CanScroll() then begin
+				if (not Visible(vScrollers)) then begin
+						vScrollers:Open()
+					end;
+				vScrollers:Update(ImageTarget:GetScalingInfo())
+			end else begin
+				vScrollers:Close()
+			end;
+		ImageTarget:dirty()
+	end,
+	viewFlags: vVisible + vClipping + vClickable,
+	viewFormat: vfFillWhite + vfPen(1),
+	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjParentFullV,
+	cacheScaledImage: true,
+	dragCorridor: 15,
+	dragAcceleration: 50,
+	ZoomTo: compile(
+		constants: {
+			kFunction_7670a5: func(a1, a2, a3) begin
+				local l1;
+				warningName := (if (not a1) then 'vBarber else (if (ClassOf(a1) <> 'symbol) then 'vGauge else a1));
+				if (a3 = 'default) then begin
+						a3 := nil
+					end;
+				if (not a2) then begin
+						a2 := fTitle
+					end;
+				fTitle := a2;
+				self:viewset((l1 := {name: warningName, values: {icon: @routeFaxBitmap, statusText: a2, titleText: a3, barber: (warningName = 'vBarber), gauge: (if (warningName = 'vGauge) then 1), closeBox: nil, primary: nil}}));
+				self:Open();
+				(if (warningName = 'vBarber) then self:SetupIdle(300) else self:SetupIdle(0))
+			end,
+			kFunction_7672d5: func(a1) begin
+				(if ((warningName = 'vGauge) or (warningName = 'vBarber)) then self:UpdateIndicator({name: warningName, values: {gauge: (if (warningName = 'vGauge) then a1[0]), barber: (warningName = 'vBarber)}}))
+			end,
+			kFunction_76738d: func() begin
+				self:Update(nil);
+				300
+			end,
+			kLiteral_766fc5: {OpenDlog: kFunction_7670a5, Update: kFunction_7672d5, viewIdleScript: kFunction_76738d, fTitle: nil, warningName: nil, viewEffect: 236577, _proto: @protoStatusTemplate}
+		},
+		func(a1) begin
+			if (not initializing) then begin
+					if (WarningDialog = nil) then begin
+							WarningDialog := BuildContext(kLiteral_766fc5)
+						end;
+					WarningDialog:OpenDlog('vStatus, "Changing magnification", nil)
+				end;
+			inherited:ZoomTo(a1);
+			(if (if (not initializing) then WarningDialog) then begin
+					WarningDialog:Close();
+					(WarningDialog := nil)
+				end)
+		end),
+	ZoomBy: compile(
+		constants: {
+			kFunction_7670a5: func(a1, a2, a3) begin
+				local l1;
+				warningName := (if (not a1) then 'vBarber else (if (ClassOf(a1) <> 'symbol) then 'vGauge else a1));
+				if (a3 = 'default) then begin
+						a3 := nil
+					end;
+				if (not a2) then begin
+						a2 := fTitle
+					end;
+				fTitle := a2;
+				self:viewset((l1 := {name: warningName, values: {icon: @routeFaxBitmap, statusText: a2, titleText: a3, barber: (warningName = 'vBarber), gauge: (if (warningName = 'vGauge) then 1), closeBox: nil, primary: nil}}));
+				self:Open();
+				(if (warningName = 'vBarber) then self:SetupIdle(300) else self:SetupIdle(0))
+			end,
+			kFunction_7672d5: func(a1) begin
+				(if ((warningName = 'vGauge) or (warningName = 'vBarber)) then self:UpdateIndicator({name: warningName, values: {gauge: (if (warningName = 'vGauge) then a1[0]), barber: (warningName = 'vBarber)}}))
+			end,
+			kFunction_76738d: func() begin
+				self:Update(nil);
+				300
+			end,
+			kLiteral_766fc5: {OpenDlog: kFunction_7670a5, Update: kFunction_7672d5, viewIdleScript: kFunction_76738d, fTitle: nil, warningName: nil, viewEffect: 236577, _proto: @protoStatusTemplate}
+		},
+		func(a1) begin
+			if (WarningDialog = nil) then begin
+					WarningDialog := BuildContext(kLiteral_766fc5)
+				end;
+			WarningDialog:OpenDlog('vStatus, "Changing magnification", nil);
+			inherited:ZoomBy(a1);
+			(if WarningDialog then begin
+					WarningDialog:Close();
+					(WarningDialog := nil)
+				end)
+		end),
+	viewSetupFormScript: func() begin
+		bitmapStore := (if ((not fEntryStore) or fEntryStore:IsReadOnly()) then GetDefaultStore() else fEntryStore);
+		inherited:?viewSetupFormScript()
+	end,
+	TargetChanged: func() begin
+		self:StoreCurrentFaxPage()
+	end,
+	_proto: @protoImageView,
+	preAllocatedContext: 'ImageTarget
+};
+
+partItem_7 := {
+	viewBounds: {top: 8, left: 0, right: -14, bottom: 72},
+	viewFlags: vVisible + vClickable,
+	viewFormat: nil,
+	tileSize: 50,
+	viewJustify: vjParentFullH,
+	Scrolled: func() begin
+		arrowContainer:ShowArrow('leftArrow, (firstVisibleItem > 1));
+		arrowContainer:ShowArrow('rightArrow, (firstVisibleItem < maxFirstItem))
+	end,
+	GetItemCount: func() begin
+		Length(target.pages)
+	end,
+	Abstract: func(a1, a2) begin
+		local l1, l2, l3, l4, l5, l6, l7;
+		(if (l1 := (if (a1 <= Length(target.pages)) then imageContainer:MakeAndStashThumbnail(a1))) then begin
+				l2 := ((a2.right - a2.left) - 2);
+				l3 := RelBounds((a2.left + 1), 1, l2, l2);
+				l5 := MakeShape((l3 := FitToBox((l4 := ShapeBounds(l1)), l3, 6)));
+				l6 := MakeText((l6 := ParamStr("Page ^0", [Array: NumberStr(a1)])), a2.left, (a2.top + l2), a2.right, ((a2.top + l2) + fontHeight(viewFont)));
+				if (l7 := MakeShape(l1)) then begin
+						l1 := l7
+					end;
+				[Array: {justification: 'center, font: viewFont}, l6, l5, {transform: [Array: l4, l3]}, l1]
+			end)
+	end,
+	SelectItem: func(a1) begin
+		imageContainer:GotoPage(a1)
+	end,
+	viewSetupFormScript: func() begin
+		selectedItem := imageContainer:GetCurrentPage();
+		inherited:?viewSetupFormScript()
+	end,
+	SetPage: func(a1) begin
+		selectedItem := a1;
+		self:Update()
+	end,
+	_proto: @protoPalette,
+	preAllocatedContext: 'pagePalette
+};
+
+partItem_8 := {
+	viewBounds: {top: -100, left: 8, right: -8, bottom: -26},
+	stepChildren: [stepChildren: partItem_7, partItem_8Item],
+	viewJustify: vjParentFullH + vjParentBottomV,
+	ToggleNavigator: func(a1) begin
+		(if ((not a1) or Visible(self)) then self:Close() else self:OpenNavigator(a1))
+	end,
+	OpenNavigator: func(a1) begin
+		pagePalette.selectedPage := a1;
+		self:Open()
+	end,
+	viewSetupDoneScript: func() begin
+		pagePalette:Scrolled()
+	end,
+	_proto: @protoFloatNGo,
+	viewEffect: 35717120,
+	arrowContainer: nil,
+	stepAllocateContext: [|Array|: 'arrowContainer, partItem_8Item],
+	preAllocatedContext: 'vPageNavigator
+};
+
+partItem_8Item := {
+	viewBounds: {top: 0, left: -11, right: -1, bottom: 28},
+	viewFlags: vVisible,
+	viewFormat: nil,
+	stepChildren: [stepChildren: partItem_8ItemItem, partItem_8ItemItem_2],
+	viewJustify: vjParentRightH + vjParentCenterV + vjSiblingCenterV,
+	ShowArrow: func(a1, a2) begin
+		(if a2 then self.(a1):Open() else begin
+				self.(a1):hilite(nil);
+				self.(a1):Close()
+			end)
+	end,
+	viewClass: clView,
+	leftArrow: nil,
+	stepAllocateContext: [|Array|: 'leftArrow, partItem_8ItemItem, 'rightArrow, partItem_8ItemItem_2],
+	rightArrow: nil,
+	preAllocatedContext: 'arrowContainer
+};
+
+partItem_8ItemItem := {
+	viewBounds: {top: 0, left: -11, right: -1, bottom: 12},
+	buttonPressedScript: func() begin
+		pagePalette:ScrollBy(-1)
+	end,
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH,
+	viewFlags: vReadOnly + vClickable,
+	viewFormat: vfFillWhite + vfPen(2) + vfRound(4),
+	_proto: @protoPictureButton,
+	icon: @leftBitmap,
+	preAllocatedContext: 'leftArrow
+};
+
+partItem_8ItemItem_2 := {
+	viewBounds: {top: -12, left: 0, right: 0, bottom: 0},
+	buttonPressedScript: func() begin
+		pagePalette:ScrollBy(1)
+	end,
+	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjParentBottomV,
+	viewFormat: vfFillWhite + vfPen(2) + vfRound(4),
+	_proto: @protoPictureButton,
+	icon: @rightBitmap,
+	preAllocatedContext: 'rightArrow
+};
+
+partItem_9 := {
+	SelectPage: func(a1) begin
+		if (fPage <> nil) then begin
+				self:StoreCurrentFaxPage()
+			end;
+		fPageNum := max(1, min(a1, Length(target.pages)));
+		(fPage := target.pages[(fPageNum - 1)])
+	end,
+	WarningDialog: nil,
+	viewSetupDoneScript: func() begin
+		local l1, l2;
+		WarningDialog:Update(nil);
+		l1 := self:GetAppPreferences().|dFaxViewer:Dondo|;
+		if Visible(vThumbFloater) then begin
+				vThumbFloater:RelocateGreyBox(ImageTarget:GetScalingInfo())
+			end;
+		fPageScrollWidth := ((l2 := ImageTarget:LocalBox()).right - (l2.right div 10));
+		fPageScrollHeight := (l2.bottom - (l2.bottom div 10));
+		WarningDialog:Update(nil);
+		self:Update();
+		if WarningDialog then begin
+				AddDeferredSend(WarningDialog, 'Close, [Array: ]);
+				WarningDialog := nil
+			end;
+		(self.initializing := nil)
+	end,
+	fPageScrollHeight: 10,
+	viewFormat: nil,
+	MakeAndStashThumbnail: func(a1) begin
+		local l1, l2, l3, l4;
+		if (not (l1 := target.pages[(a1 - 1)]).thumbnail) then begin
+				l4 := MakeBitmap((l3 := FitToBox((l2 := ShapeBounds(l1.image)), '{left: 0, top: 0, right: 96, bottom: 96}, nil)).right, l3.bottom, nil);
+				DrawIntoBitmap(l1.image, {transform: [Array: l2, l3]}, l4);
+				l1.thumbnail := l4;
+				self:StartFlush()
+			end;
+		l1.thumbnail
+	end,
+	DoMungeREally: compile(
+		constants: {
+			kFunction_7670a5: func(a1, a2, a3) begin
+				local l1;
+				warningName := (if (not a1) then 'vBarber else (if (ClassOf(a1) <> 'symbol) then 'vGauge else a1));
+				if (a3 = 'default) then begin
+						a3 := nil
+					end;
+				if (not a2) then begin
+						a2 := fTitle
+					end;
+				fTitle := a2;
+				self:viewset((l1 := {name: warningName, values: {icon: @routeFaxBitmap, statusText: a2, titleText: a3, barber: (warningName = 'vBarber), gauge: (if (warningName = 'vGauge) then 1), closeBox: nil, primary: nil}}));
+				self:Open();
+				(if (warningName = 'vBarber) then self:SetupIdle(300) else self:SetupIdle(0))
+			end,
+			kFunction_7672d5: func(a1) begin
+				(if ((warningName = 'vGauge) or (warningName = 'vBarber)) then self:UpdateIndicator({name: warningName, values: {gauge: (if (warningName = 'vGauge) then a1[0]), barber: (warningName = 'vBarber)}}))
+			end,
+			kFunction_76738d: func() begin
+				self:Update(nil);
+				300
+			end,
+			kLiteral_766fc5: {OpenDlog: kFunction_7670a5, Update: kFunction_7672d5, viewIdleScript: kFunction_76738d, fTitle: nil, warningName: nil, viewEffect: 236577, _proto: @protoStatusTemplate}
+		},
+		func(a1) begin
+			local l1, l2;
+			if (not a1) then begin
+					return nil
+				end;
+			fPage.thumbnail := nil;
+			fPage.annotations := nil;
+			if (WarningDialog = nil) then begin
+					WarningDialog := BuildContext(kLiteral_766fc5)
+				end;
+			WarningDialog:OpenDlog('vGauge, "Rotating the fax\u2026\u", 'default);
+			l1 := {receiver: WarningDialog, message: 'Update};
+			l2 := func(a1) begin
+				WarningDialog:Update(a1)
+			end;
+			fPage.image := MungeBitmap(fPage.image, mungeType, {callback: l2});
+			WarningDialog:OpenDlog('vBarber, nil, "Finishing\u2026\u");
+			mungeType := nil;
+			self:UpdatePage();
+			self:StoreCurrentFaxPage();
+			(if WarningDialog then begin
+					WarningDialog:Close();
+					(WarningDialog := nil)
+				end)
+		end),
+	viewQuitScript: func() begin
+		local l1;
+		if (fPage <> nil) then begin
+				self:StoreCurrentFaxPage();
+				self:EndFlush()
+			end;
+		(l1 := self:GetAppPreferences().|dFaxViewer:Dondo|).ShowThumbnail := Visible(vThumbFloater);
+		(l1.scaling := ImageTarget:GetScalingInfo())
+	end,
+	preAllocatedContext: 'imageContainer,
+	viewFlags: vVisible,
+	NextPage: func() begin
+		self:GotoPage((fPageNum + 1))
+	end,
+	ScalingInfoChanged: func(a1) begin
+		if (a1 <> 'scroll) then begin
+				self:UpdateScrollers()
+			end;
+		vThumbFloater:Update()
+	end,
+	RedoPage: func() begin
+		self:GotoPage(fPageNum)
+	end,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: -25},
+	StoreCurrentFaxPage: func() begin
+		if (not self:?EntryCool(nil)) then begin
+				return nil
+			end;
+		fPage.annotations := ImageTarget:GetAnnotations();
+		self:StartFlush()
+	end,
+	ViewScrollDoneScript: func() begin
+		self:UpdateScrollers()
+	end,
+	fPage: nil,
+	image: nil,
+	scalingInfo: nil,
+	UpdateScrollers: func() begin
+		(if ImageTarget:CanScroll() then begin
+				vScrollers:Open();
+				vScrollers:Update(ImageTarget:GetScalingInfo())
+			end else (if Visible(vScrollers) then vScrollers:Hide()))
+	end,
+	viewJustify: vjParentFullH + vjParentFullV,
+	initializing: nil,
+	GotoPage: compile(
+		constants: {
+			kFunction_7670a5: func(a1, a2, a3) begin
+				local l1;
+				warningName := (if (not a1) then 'vBarber else (if (ClassOf(a1) <> 'symbol) then 'vGauge else a1));
+				if (a3 = 'default) then begin
+						a3 := nil
+					end;
+				if (not a2) then begin
+						a2 := fTitle
+					end;
+				fTitle := a2;
+				self:viewset((l1 := {name: warningName, values: {icon: @routeFaxBitmap, statusText: a2, titleText: a3, barber: (warningName = 'vBarber), gauge: (if (warningName = 'vGauge) then 1), closeBox: nil, primary: nil}}));
+				self:Open();
+				(if (warningName = 'vBarber) then self:SetupIdle(300) else self:SetupIdle(0))
+			end,
+			kFunction_7672d5: func(a1) begin
+				(if ((warningName = 'vGauge) or (warningName = 'vBarber)) then self:UpdateIndicator({name: warningName, values: {gauge: (if (warningName = 'vGauge) then a1[0]), barber: (warningName = 'vBarber)}}))
+			end,
+			kFunction_76738d: func() begin
+				self:Update(nil);
+				300
+			end,
+			kLiteral_766fc5: {OpenDlog: kFunction_7670a5, Update: kFunction_7672d5, viewIdleScript: kFunction_76738d, fTitle: nil, warningName: nil, viewEffect: 236577, _proto: @protoStatusTemplate}
+		},
+		func(a1) begin
+			if (a1 = fPageNum) then begin
+					return nil
+				end;
+			if (WarningDialog = nil) then begin
+					WarningDialog := BuildContext(kLiteral_766fc5)
+				end;
+			WarningDialog:OpenDlog('vStatus, "Retrieving fax page\u2026\u", nil);
+			self:SelectPage(a1);
+			WarningDialog:Update(nil);
+			self:UpdatePage();
+			if Visible(pagePalette) then begin
+					pagePalette:SetPage(a1)
+				end;
+			(if WarningDialog then begin
+					WarningDialog:Close();
+					(WarningDialog := nil)
+				end)
+		end),
+	ViewScroll2DScript: func(a1, a2) begin
+		local l1, l2;
+		l1 := (if (a1 = 'left) then (-fPageScrollWidth) else (if (a1 = 'right) then fPageScrollWidth else 0));
+		l2 := (if (a1 = 'up) then (-fPageScrollHeight) else (if (a1 = 'down) then fPageScrollHeight else 0));
+		self:LockScreen(true);
+		if (not ImageTarget:ScrollBy(l1, l2)) then begin
+				vScrollers:SetArrow(a1, 'done)
+			end;
+		if (a2.count = 0) then begin
+				vScrollers:SetArrow('{left: right, right: left, up: down, down: up}.(a1), 'more)
+			end;
+		vScrollers:dirty();
+		RefreshViews();
+		self:LockScreen(nil)
+	end,
+	GetCurrentPage: func() begin
+		fPageNum
+	end,
+	stepAllocateContext: [|Array|: 'vThumbFloater, partItem_9Item],
+	DoMunge: func(a1) begin
+		self.mungeType := a1;
+		(if (Length(ImageTarget:GetAnnotations()) > 0) then GetRoot():Confirm("Fax Rotation", "Your annotations for this page will be lost.  Do you want to continue?", self, 'DoMungeREally) else self:DoMungeREally(true))
+	end,
+	viewSetupFormScript: compile(
+		constants: {
+			kFunction_7670a5: func(a1, a2, a3) begin
+				local l1;
+				warningName := (if (not a1) then 'vBarber else (if (ClassOf(a1) <> 'symbol) then 'vGauge else a1));
+				if (a3 = 'default) then begin
+						a3 := nil
+					end;
+				if (not a2) then begin
+						a2 := fTitle
+					end;
+				fTitle := a2;
+				self:viewset((l1 := {name: warningName, values: {icon: @routeFaxBitmap, statusText: a2, titleText: a3, barber: (warningName = 'vBarber), gauge: (if (warningName = 'vGauge) then 1), closeBox: nil, primary: nil}}));
+				self:Open();
+				(if (warningName = 'vBarber) then self:SetupIdle(300) else self:SetupIdle(0))
+			end,
+			kFunction_7672d5: func(a1) begin
+				(if ((warningName = 'vGauge) or (warningName = 'vBarber)) then self:UpdateIndicator({name: warningName, values: {gauge: (if (warningName = 'vGauge) then a1[0]), barber: (warningName = 'vBarber)}}))
+			end,
+			kFunction_76738d: func() begin
+				self:Update(nil);
+				300
+			end,
+			kLiteral_766fc5: {OpenDlog: kFunction_7670a5, Update: kFunction_7672d5, viewIdleScript: kFunction_76738d, fTitle: nil, warningName: nil, viewEffect: 236577, _proto: @protoStatusTemplate}
+		},
+		func() begin
+			local l1, l2, l3;
+			if (WarningDialog = nil) then begin
+					WarningDialog := BuildContext(kLiteral_766fc5)
+				end;
+			WarningDialog:OpenDlog('vStatusTitle, "Preparing to view fax", "Retrieving image\u2026\u");
+			fEntryStore := (if (l1 := newtAppBase.target) then EntryStore(l1));
+			l2 := (if (not (l2 := self:GetAppPreferences()).|dFaxViewer:Dondo|) then (l2.|dFaxViewer:Dondo| := Clone('{scaling: nil, ShowThumbnail: nil})) else l2.|dFaxViewer:Dondo|);
+			l3 := self:SelectPage(1);
+			image := fPage.image;
+			annotations := fPage.annotations;
+			scalingInfo := l2.scaling;
+			if l2.ShowThumbnail then begin
+					vThumbFloater.image := self:MakeAndStashThumbnail(1);
+					vThumbFloater.viewFlags := BOr(vThumbFloater.viewFlags, 1)
+				end;
+			(self.initializing := true)
+		end),
+	fPageNum: nil,
+	Update: func() begin
+		self:UpdateScrollers();
+		PageButton:Update(fPageNum);
+		self:dirty()
+	end,
+	viewClass: clView,
+	stepChildren: [stepChildren: partItem_6, partItem_9Item, partItem_8],
+	annotations: nil,
+	mungeType: nil,
+	UpdatePage: func() begin
+		local l1;
+		l1 := fPage;
+		WarningDialog:Update(nil);
+		ImageTarget:setup(l1.image, l1.annotations, nil);
+		if Visible(vThumbFloater) then begin
+				vThumbFloater:setup(self:MakeAndStashThumbnail(fPageNum))
+			end;
+		self:Update()
+	end,
+	fPageScrollWidth: 10,
+	PriorPage: func() begin
+		self:GotoPage((fPageNum - 1))
+	end,
+	GetCurrentImage: func() begin
+		return fPage.image
+	end,
+	vThumbFloater: nil
+};
+
+partItem_9Item := {
+	GetScalingInfo: func() begin
+		(if ImageTarget.viewCObject then ImageTarget:GetScalingInfo())
+	end,
+	ScrollTo: func(a1, a2) begin
+		ImageTarget:ScrollTo(a1, a2);
+		imageContainer:UpdateScrollers()
+	end,
+	_proto: @protoThumbnailFloater,
+	preAllocatedContext: 'vThumbFloater
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_literal6 := same("pageOf.viewSetupFormScript.literals[6]");
+
+doit_code := same("tools.popItem_FitInWindow.doit.instructions");
+
+doit_code_2 := same("tools.popItem_Rotate180.doit.instructions");
+
+ZoomTo_literal2 := same("partItem_6.ZoomTo.literals[2]");
+
+OpenDlog_literal7 := same("ZoomTo_literal2.OpenDlog.literals[7]");
+
+ZoomTo_literal5 := same("partItem_6.ZoomTo.literals[5]");
+
+TargetChanged_code := same("partItem_6.TargetChanged.instructions");
+
+Abstract_literal20 := same("partItem_7.Abstract.literals[20]");
+
+SelectItem_code := same("partItem_7.SelectItem.instructions");

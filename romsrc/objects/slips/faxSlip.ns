@@ -1,0 +1,347 @@
+// faxSlip, and what only it reaches
+
+faxSlip := {
+	_previewKeyScript: func(a1) begin
+		PressButton(_previewButton)
+	end,
+	callPhoneLine: nil,
+	DoTheSend: func(a1) begin
+		(if a1 then begin
+				if (if (not callPhoneLine.selected) then (not fields.manualDialing)) then begin
+						self:Notify(3, "Fax", "You have not chosen a recipient! Please fill in the 'Name' field and try again.");
+						return nil
+					end;
+				self:CommitFaxInfo();
+				self:ContinueSend(noworlater)
+			end)
+	end,
+	willDial: nil,
+	validateDialog: nil,
+	_previewButton: nil,
+	UpdatePhone: func() begin
+		local l1;
+		if (if (if callOptionsSlip.viewCObject then fields.toRef) then (Length(fields.toRef) > 0)) then begin
+				if (if (if (l1 := GetDataDefs('|nameRef.fax|):GetRoutingInfo(fields.toRef[0])[0]) then l1.phoneNumber) then (StrCompare(l1.phoneNumber, callOptionsSlip.outNumber.text) <> 0)) then begin
+						fields.toRef[0].asIsPhone := callOptionsSlip.outNumber.text
+					end
+			end;
+		self:Retarget()
+	end,
+	OwnerInfoChanged: func() begin
+		self:Retarget()
+	end,
+	_proto: @protoFullRouteSlip,
+	Retarget: func() begin
+		fields.toRef := callPhoneLine.selected;
+		self:SetPreviewInfo();
+		willDial:SetWillDial()
+	end,
+	appSymbol: '|faxsend:newton|,
+	PrepareToSend: func(a1) begin
+		noworlater := a1;
+		self:ValidateConfig('location, nil, '[Array: areacode, country], "Your configuration is incomplete. Please identify your faxing location:", 'validateDialog, 'DoTheSend)
+	end,
+	CommitFaxInfo: func() begin
+		fields.fromTitle := GetRoot().(appSymbol):GetItemTitle(fields);
+		fields.fromRef := userConfiguration.currentPersona;
+		(fields.localId := MakeDisplayPhone(userConfiguration.faxPhone))
+	end,
+	stepallocatecontext: [|Array|:
+		'callPhoneLine,
+		callPhoneLine,
+		'willDial,
+		willDial,
+		'manualDial,
+		manualDial,
+		'_previewButton,
+		_previewButton_2,
+		'notes,
+		notes,
+		'faxAssist,
+		faxAssist
+	],
+	noworlater: nil,
+	SetPreviewInfo: func() begin
+		local l1;
+		l1 := nil;
+		if (if fields.toRef then (Length(fields.toRef) > 0)) then begin
+				l1 := GetDataDefs('|nameRef.fax|):GetRoutingInfo(fields.toRef[0])[0]
+			end;
+		transport:SetupAddressInfo(fields, l1)
+	end,
+	viewSetupFormScript: func() begin
+		self:ToRefCheck('|nameRef.fax|);
+		inherited:viewSetupFormScript();
+		self:SetPreviewInfo()
+	end,
+	_keyCommands: [|Array|:
+		{char: $i, modifiers: 33554432, keyMessage: '_previewKeyScript, name: preview, category: viewing}
+	],
+	stepChildren: [stepChildren:
+		callPhoneLine,
+		willDial,
+		{
+			_proto: {
+				text: "Cover Page",
+				labelCommands: nil,
+				labelCommandsId: nil,
+				viewSetupFormScript: func() begin
+					labelCommands := [Array: "None", 'pickseparator];
+					labelCommandsId := [Array: nil, nil];
+					(foreach l1, l2 deeply in CoverPageRegistry do begin
+							AddArraySlot(labelCommands, l2.name);
+							AddArraySlot(labelCommandsId, l1)
+						end);
+					inherited:?viewSetupFormScript()
+				end,
+				TextSetup: func() begin
+					(if fields.coverPage then return CoverPageRegistry.(fields.coverPage).name else return labelCommands[0])
+				end,
+				LabelActionScript: func(a1) begin
+					fields.coverPage := labelCommandsId[a1];
+					userConfiguration.currentcoverpage := labelCommandsId[a1];
+					(if (if labelCommandsId[a1] then CoverPageRegistry.(labelCommandsId[a1]).hasNotes) then notes:Show() else notes:Hide())
+				end,
+				debug: "CoverPagePicker",
+				_proto: @protoLabelPicker
+			},
+			viewBounds: {left: 10, top: 0, right: 180, bottom: 13},
+			viewSetupFormScript: func() begin
+				(viewBounds := DeepClone(viewBounds)).top := (((envelopeHeight + bottomIndent) - 58) - 2);
+				viewBounds.bottom := (viewBounds.top + 13);
+				inherited:viewSetupFormScript()
+			end
+		},
+		{
+			viewBounds: {left: 10, top: 5, right: 90, bottom: 17},
+			viewJustify: vjSiblingLeftH + vjSiblingBottomV,
+			text: "Fine resolution",
+			buttonValue: true,
+			viewSetupFormScript: func() begin
+				(viewValue := (fields.faxResolution = 'fine))
+			end,
+			valueChanged: func() begin
+				fields.faxResolution := (if viewValue then 'fine else 'normal);
+				SetUserConfig('faxResolution, fields.faxResolution)
+			end,
+			_proto: @protoCheckbox
+		},
+		manualDial,
+		_previewButton_2,
+		notes,
+		faxAssist
+	],
+	debug: 4266,
+	notes: nil,
+	faxAssist: nil,
+	manualDial: nil,
+	bottomIndent: 68
+};
+
+callPhoneLine := {
+	text: name,
+	selected: nil,
+	alternatives: nil,
+	class: '|nameRef.fax|,
+	viewSetupFormScript: func() begin
+		selected := fields.toRef;
+		alternatives := fields.alternatives;
+		inherited:?viewSetupFormScript()
+	end,
+	buttonClickScript: func() begin
+		if optionsUp then begin
+				callOptionsSlip:Close()
+			end;
+		optionsUp := nil;
+		(foreach l1 in selected do begin
+				RemoveSlot(l1, 'asIsPhone)
+			end);
+		inherited:buttonClickScript()
+	end,
+	pickActionScript: func(a1) begin
+		inherited:?pickActionScript(a1);
+		self:Retarget()
+	end,
+	preallocatedContext: 'callPhoneLine,
+	_proto: @protoAddressPicker
+};
+
+willDial := {
+	text: uCardPositionAlertButton,
+	asIs: nil,
+	InkConvert: nil,
+	viewBounds: {left: 10, top: 5, right: -10, bottom: 18},
+	viewJustify: 8396850,
+	viewFont: tsSimple + tsSize(9),
+	viewFlags: vVisible + vClickable,
+	buttonClickScript: func() begin
+		faxAssist:buttonClickScript()
+	end,
+	viewClickScript: func(a1) begin
+		if self:TrackHilite(a1) then begin
+				self:buttonClickScript();
+				self:hilite(nil)
+			end;
+		true
+	end,
+	viewHiliteScript: func(a1) begin
+		local l1, l2;
+		self:DrawShape(MakeRoundRect((l2 := ((((l1 := self:LocalBox()).right - StrFontWidth(text, viewFont)) div 2) - 2)), 0, (l1.right - l2), l1.bottom, 8), '{transferMode: 2, penPattern: 0, fillPattern: 5});
+		true
+	end,
+	viewSetupDoneScript: func() begin
+		(text := self:GetPhoneText())
+	end,
+	viewQuitScript: func() begin
+		if InkConvert then begin
+				InkConvert:Close()
+			end;
+		(InkConvert := nil)
+	end,
+	SetWillDial: func() begin
+		SetValue(self, 'text, self:GetPhoneText())
+	end,
+	GetPhoneText: func() begin
+		local theInfo;
+		l1 := "";
+		if (if (if (not fields.manualDialing) then fields.toRef) then (Length(fields.toRef) > 0)) then begin
+				l2 := GetDataDefs('|nameRef.phone|):GetRoutingInfo(fields.toRef);
+				l3 := true;
+				local l1;
+				local l2;
+				local l3;
+				(foreach l4, theInfo in l2 do begin
+						if IsRichString(theInfo.rawNumber) then begin
+								AddDeferredCall(func() begin
+									self:ConvertStart(theInfo)
+								end, nil);
+								break
+							end else begin
+								if (l4 = 0) then begin
+										l1 := theInfo.phoneNumber
+									end else begin
+										if (l4 = 1) then begin
+												l1 := ParamStr("^0\u2026\u", [Array: l1])
+											end
+									end
+							end
+					end)
+			end;
+		l1
+	end,
+	ConvertStart: func(a1) begin
+		self:ConvertInkText(a1.rawNumber, 'phone, 262144, ParamStr("Phone for ^0 ", [Array: a1.name]), ParamStr("Please verify that ^0 is converted correctly\u2026\u", [Array: a1.rawNumber]), 'InkConvert, 'ConvertComplete, a1)
+	end,
+	ConvertComplete: func(a1, a2, a3) begin
+		InkConvert := nil;
+		(if (if a1 then a2) then begin
+				a3.entry.phone := a2;
+				self:SetWillDial()
+			end)
+	end,
+	debug: 10410,
+	preallocatedContext: 'willDial,
+	_proto: @protoStaticText
+};
+
+manualDial := {
+	viewBounds: {left: -104, top: 0, right: -10, bottom: 0},
+	viewJustify: vjParentRightH + vjSiblingFullV,
+	text: "Manually connect",
+	buttonValue: true,
+	viewSetupFormScript: func() begin
+		(viewValue := fields.manualDialing)
+	end,
+	valueChanged: func() begin
+		fields.manualDialing := viewValue;
+		self:Retarget()
+	end,
+	preallocatedContext: 'manualDial,
+	_proto: @protoCheckbox
+};
+
+_previewButton_2 := {
+	_proto: _previewButtonProto,
+	buttonClickScript: func() begin
+		self:ValidateConfig('location, nil, '[Array: areacode, country], "Your configuration is not complete. Please identify your faxing location:", 'validateDialog, 'DoThePreview)
+	end,
+	DoThePreview: func(a1) begin
+		(if a1 then begin
+				self:CommitFaxInfo();
+				inherited:buttonClickScript()
+			end)
+	end,
+	preallocatedContext: '_previewButton
+};
+
+notes := {
+	viewJustify: 8406022,
+	viewBounds: {left: 7, top: 0, right: 43, bottom: 13},
+	text: @paperrollSoupName,
+	viewSetupDoneScript: func() begin
+		(if (not (if fields.coverPage then CoverPageRegistry.(fields.coverPage).hasNotes)) then self:Hide())
+	end,
+	buttonClickScript: func() begin
+		notesSlip.fields := fields;
+		notesSlip:Toggle();
+		(notesUp := notesSlip.viewCObject)
+	end,
+	preallocatedContext: 'notes,
+	_proto: @protoTextButton
+};
+
+faxAssist := {
+	viewBounds: {left: 109, top: 0, right: 160, bottom: 13},
+	viewJustify: 8388614,
+	viewSetupFormScript: func() begin
+		(viewBounds := DeepClone(viewBounds)).top := (((envelopeHeight + bottomIndent) - 19) - 2);
+		(viewBounds.bottom := (viewBounds.top + 13))
+	end,
+	buttonClickScript: func() begin
+		local l1;
+		if (if fields.toRef then (Length(fields.toRef) > 0)) then begin
+				RemoveSlot(fields.toRef[0], 'asIsPhone);
+				l1 := GetDataDefs('|nameRef.fax|):GetRoutingInfo(fields.toRef[0])[0];
+				callOptionsSlip.inNumber := l1.rawNumber;
+				callOptionsSlip.inCountry := l1.country
+			end else begin
+				callOptionsSlip.inNumber := nil;
+				callOptionsSlip.inCountry := nil
+			end;
+		inherited:buttonClickScript();
+		(optionsUp := callOptionsSlip.viewCObject)
+	end,
+	debug: 16702,
+	preallocatedContext: 'faxAssist,
+	_proto: @protoCallassistButton
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewQuitScript_code_5 := same("willDial.viewQuitScript.instructions");
+
+viewSetupDoneScript_code_15 := same("willDial.viewSetupDoneScript.instructions");
+
+pickActionScript_code_6 := same("callPhoneLine.pickActionScript.instructions");
+
+ConvertStart_literal3 := same("willDial.ConvertStart.literals[3]");
+
+SetWillDial_code := same("willDial.SetWillDial.instructions");
+
+viewSetupFormScript_code_13 := same("manualDial.viewSetupFormScript.instructions");
+
+UpdatePhone_code := same("faxSlip.UpdatePhone.instructions");
+
+buttonClickScript_code_7 := same("_previewButton_2.buttonClickScript.instructions");
+
+buttonClickScript_code_8 := same("faxAssist.buttonClickScript.instructions");
+
+viewSetupFormScript_code_22 := same("callPhoneLine.viewSetupFormScript.instructions");
+
+buttonClickScript_code_9 := same("callPhoneLine.buttonClickScript.instructions");
+
+viewHiliteScript_code := same("willDial.viewHiliteScript.instructions");
+
+ConvertStart_code := same("willDial.ConvertStart.instructions");
+
+viewSetupFormScript_code_24 := same("faxSlip.viewSetupFormScript.instructions");

@@ -1,0 +1,584 @@
+// soundOff, and what only it reaches
+
+soundOff := {
+	simpleBeep: @alarmWakeup,
+	wakeupBeep: @bootSound,
+	plinkBeep: @plinkBeep,
+	funBeep: @funBeep,
+	bizarreBeep: {
+		sndFrameType: 'codec,
+		codecName: tDTMFCodec,
+		dataType: 16,
+		bufferSize: 6400,
+		bufferCount: 4,
+		compressionType: 6,
+		samplingRate: 21600,
+		samples: tonescore('samples, {version: 1, algorithm: 3, reserved: 0, repeats: 0}, [tones:
+			{
+				frequency: 300,
+				fraction: 0,
+				peak: 10000,
+				delay: 0,
+				attack: 10,
+				decay: 200,
+				hold: 1000,
+				release: 1000,
+				sustain: 32000,
+				tail: 0
+			},
+			{
+				frequency: 15,
+				fraction: 0,
+				peak: 500,
+				delay: 0,
+				attack: 0,
+				decay: 0,
+				hold: 100,
+				release: 0,
+				sustain: 0,
+				tail: 0
+			},
+			{
+				frequency: 2,
+				fraction: 0,
+				peak: 10000,
+				delay: 0,
+				attack: 0,
+				decay: 0,
+				hold: 100,
+				release: 0,
+				sustain: 0,
+				tail: 0
+			}
+		]),
+		userName: "Echo"
+	},
+	whackyBeep: {
+		sndFrameType: 'codec,
+		codecName: tDTMFCodec,
+		dataType: 16,
+		bufferSize: 6400,
+		bufferCount: 4,
+		compressionType: 6,
+		samplingRate: 21600,
+		samples: tonescore('samples, {version: 1, algorithm: 2, reserved: 0, repeats: 1}, [tones:
+			{
+				frequency: 600,
+				fraction: 0,
+				peak: 10000,
+				delay: 0,
+				attack: 100,
+				decay: 0,
+				hold: 800,
+				release: 100,
+				sustain: 0,
+				tail: 0
+			},
+			{
+				frequency: 10,
+				fraction: 0,
+				peak: 1700,
+				delay: 0,
+				attack: 500,
+				decay: 0,
+				hold: 100,
+				release: 500,
+				sustain: 0,
+				tail: 0
+			},
+			{
+				frequency: 100,
+				fraction: 0,
+				peak: 1700,
+				delay: 0,
+				attack: 500,
+				decay: 0,
+				hold: 100,
+				release: 500,
+				sustain: 0,
+				tail: 0
+			}
+		]),
+		userName: "Out There"
+	},
+	pleasantBeep: {
+		sndFrameType: 'codec,
+		codecName: tDTMFCodec,
+		dataType: 16,
+		bufferSize: 6400,
+		bufferCount: 4,
+		compressionType: 6,
+		samplingRate: 21600,
+		samples: tonescore('samples, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
+			{
+				frequency: 523,
+				fraction: 16450,
+				peak: 22000,
+				delay: 0,
+				attack: 10,
+				decay: 20,
+				hold: 100,
+				release: 500,
+				sustain: 32000,
+				tail: 0
+			},
+			{
+				frequency: 659,
+				fraction: 16712,
+				peak: 22000,
+				delay: 630,
+				attack: 10,
+				decay: 20,
+				hold: 100,
+				release: 500,
+				sustain: 32000,
+				tail: 0
+			},
+			{
+				frequency: 783,
+				fraction: 64946,
+				peak: 22000,
+				delay: 1260,
+				attack: 10,
+				decay: 20,
+				hold: 100,
+				release: 500,
+				sustain: 32000,
+				tail: 0
+			}
+		]),
+		userName: "Do Re Mi"
+	},
+	gongBeep: {
+		sndFrameType: 'codec,
+		codecName: tDTMFCodec,
+		dataType: 16,
+		bufferSize: 6400,
+		bufferCount: 4,
+		compressionType: 6,
+		samplingRate: 21600,
+		samples: tonescore('samples, {version: 1, algorithm: 1, reserved: 0, repeats: 0}, [tones:
+			{
+				frequency: 261,
+				fraction: 41026,
+				peak: 7000,
+				delay: 0,
+				attack: 1,
+				decay: 20,
+				hold: 500,
+				release: 1000,
+				sustain: 8000,
+				tail: 0
+			},
+			{
+				frequency: 200,
+				fraction: 0,
+				peak: 100,
+				delay: 0,
+				attack: 1,
+				decay: 20,
+				hold: 500,
+				release: 1000,
+				sustain: 300,
+				tail: 0
+			},
+			{
+				frequency: 329,
+				fraction: 41157,
+				peak: 7000,
+				delay: 0,
+				attack: 1,
+				decay: 20,
+				hold: 500,
+				release: 1000,
+				sustain: 8000,
+				tail: 0
+			},
+			{
+				frequency: 200,
+				fraction: 0,
+				peak: 100,
+				delay: 0,
+				attack: 1,
+				decay: 20,
+				hold: 500,
+				release: 1000,
+				sustain: 300,
+				tail: 0
+			},
+			{
+				frequency: 391,
+				fraction: 65208,
+				peak: 7000,
+				delay: 0,
+				attack: 1,
+				decay: 20,
+				hold: 500,
+				release: 1000,
+				sustain: 8000,
+				tail: 0
+			},
+			{
+				frequency: 200,
+				fraction: 0,
+				peak: 100,
+				delay: 0,
+				attack: 1,
+				decay: 20,
+				hold: 500,
+				release: 1000,
+				sustain: 300,
+				tail: 0
+			},
+			{
+				frequency: 523,
+				fraction: 16450,
+				peak: 7000,
+				delay: 0,
+				attack: 1,
+				decay: 20,
+				hold: 500,
+				release: 1000,
+				sustain: 8000,
+				tail: 0
+			},
+			{
+				frequency: 400,
+				fraction: 0,
+				peak: 100,
+				delay: 0,
+				attack: 1,
+				decay: 20,
+				hold: 500,
+				release: 1000,
+				sustain: 300,
+				tail: 0
+			}
+		]),
+		userName: "Gong"
+	},
+	zapBeep: {
+		sndFrameType: 'codec,
+		codecName: tDTMFCodec,
+		dataType: 16,
+		bufferSize: 6400,
+		bufferCount: 4,
+		compressionType: 6,
+		samplingRate: 21600,
+		samples: tonescore('samples, {version: 1, algorithm: 1, reserved: 0, repeats: 0}, [tones:
+			{
+				frequency: 1600,
+				fraction: 0,
+				peak: 12000,
+				delay: 0,
+				attack: 0,
+				decay: 0,
+				hold: 100,
+				release: 200,
+				sustain: 0,
+				tail: 0
+			},
+			{
+				frequency: 3,
+				fraction: 0,
+				peak: 22000,
+				delay: 0,
+				attack: 0,
+				decay: 0,
+				hold: 130,
+				release: 170,
+				sustain: 0,
+				tail: 0
+			}
+		]),
+		userName: "Chirp"
+	},
+	wildBeep: {
+		sndFrameType: 'codec,
+		codecName: tDTMFCodec,
+		dataType: 16,
+		bufferSize: 6400,
+		bufferCount: 4,
+		compressionType: 6,
+		samplingRate: 21600,
+		samples: tonescore('samples, {version: 1, algorithm: 3, reserved: 0, repeats: 0}, [tones:
+			{
+				frequency: 8000,
+				fraction: 0,
+				peak: 20000,
+				delay: 0,
+				attack: 1,
+				decay: 0,
+				hold: 0,
+				release: 500,
+				sustain: 0,
+				tail: 0
+			},
+			{
+				frequency: 5302,
+				fraction: 0,
+				peak: 30000,
+				delay: 0,
+				attack: 0,
+				decay: 0,
+				hold: 100,
+				release: 0,
+				sustain: 0,
+				tail: 0
+			},
+			{
+				frequency: 8617,
+				fraction: 0,
+				peak: 30000,
+				delay: 0,
+				attack: 0,
+				decay: 0,
+				hold: 100,
+				release: 0,
+				sustain: 0,
+				tail: 0
+			},
+			{
+				frequency: 150,
+				fraction: 0,
+				peak: 13000,
+				delay: 0,
+				attack: 1,
+				decay: 10,
+				hold: 100,
+				release: 100,
+				sustain: 32000,
+				tail: 0
+			}
+		]),
+		userName: "Psssssst"
+	},
+	alerterBeep: {
+		sndFrameType: 'codec,
+		codecName: tDTMFCodec,
+		dataType: 16,
+		bufferSize: 6400,
+		bufferCount: 4,
+		compressionType: 6,
+		samplingRate: 21600,
+		samples: tonescore('samples, {version: 1, algorithm: 2, reserved: 0, repeats: 0}, [tones:
+			{
+				frequency: 800,
+				fraction: 0,
+				peak: 8000,
+				delay: 0,
+				attack: 1,
+				decay: 10,
+				hold: 100,
+				release: 400,
+				sustain: 22000,
+				tail: 0
+			},
+			{
+				frequency: 0,
+				fraction: 45875,
+				peak: 32000,
+				delay: 0,
+				attack: 0,
+				decay: 0,
+				hold: 10,
+				release: 0,
+				sustain: 0,
+				tail: 0
+			},
+			{
+				frequency: 20,
+				fraction: 0,
+				peak: 10000,
+				delay: 0,
+				attack: 0,
+				decay: 0,
+				hold: 10,
+				release: 0,
+				sustain: 0,
+				tail: 0
+			}
+		]),
+		userName: "Spring"
+	},
+	clickBeep: {
+		sndFrameType: 'codec,
+		codecName: tDTMFCodec,
+		dataType: 16,
+		bufferSize: 6400,
+		bufferCount: 4,
+		compressionType: 6,
+		samplingRate: 21600,
+		samples: tonescore('samples, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
+			{
+				frequency: 2990,
+				fraction: 0,
+				peak: 22200,
+				delay: 0,
+				attack: 0,
+				decay: 14,
+				hold: 2,
+				release: 10,
+				sustain: 32768,
+				tail: 0
+			}
+		]),
+		userName: "Click"
+	},
+	oneBeep: {
+		sndFrameType: 'codec,
+		codecName: tDTMFCodec,
+		dataType: 16,
+		bufferSize: 6400,
+		bufferCount: 4,
+		compressionType: 6,
+		samplingRate: 21600,
+		samples: tonescore('samples, {version: 1, algorithm: 1, reserved: 0, repeats: 9}, [tones:
+			{
+				frequency: 300,
+				fraction: 0,
+				peak: 30000,
+				delay: 0,
+				attack: 10,
+				decay: 0,
+				hold: 10,
+				release: 10,
+				sustain: 0,
+				tail: 10
+			},
+			{
+				frequency: 100,
+				fraction: 0,
+				peak: 1000,
+				delay: 0,
+				attack: 0,
+				decay: 0,
+				hold: 10,
+				release: 0,
+				sustain: 0,
+				tail: 0
+			}
+		]),
+		userName: "Buzzer"
+	},
+	twoBeep: {
+		sndFrameType: 'codec,
+		codecName: tDTMFCodec,
+		dataType: 16,
+		bufferSize: 6400,
+		bufferCount: 4,
+		compressionType: 6,
+		samplingRate: 21600,
+		samples: tonescore('samples, {version: 1, algorithm: 1, reserved: 0, repeats: 0}, [tones:
+			{
+				frequency: 500,
+				fraction: 0,
+				peak: 22000,
+				delay: 0,
+				attack: 100,
+				decay: 10,
+				hold: 50,
+				release: 2,
+				sustain: 12000,
+				tail: 0
+			},
+			{
+				frequency: 60,
+				fraction: 0,
+				peak: 320,
+				delay: 0,
+				attack: 149,
+				decay: 0,
+				hold: 1,
+				release: 0,
+				sustain: 200,
+				tail: 0
+			}
+		]),
+		userName: "Whoop"
+	},
+	wilderBeep: {
+		sndFrameType: 'codec,
+		codecName: tDTMFCodec,
+		dataType: 16,
+		bufferSize: 6400,
+		bufferCount: 4,
+		compressionType: 6,
+		samplingRate: 21600,
+		samples: tonescore('samples, {version: 1, algorithm: 2, reserved: 0, repeats: 0}, [tones:
+			{
+				frequency: 1600,
+				fraction: 0,
+				peak: 12000,
+				delay: 0,
+				attack: 0,
+				decay: 0,
+				hold: 100,
+				release: 70,
+				sustain: 0,
+				tail: 0
+			},
+			{
+				frequency: 3,
+				fraction: 0,
+				peak: 12000,
+				delay: 0,
+				attack: 0,
+				decay: 0,
+				hold: 200,
+				release: 0,
+				sustain: 0,
+				tail: 0
+			},
+			{
+				frequency: 2,
+				fraction: 0,
+				peak: 11000,
+				delay: 0,
+				attack: 0,
+				decay: 0,
+				hold: 90,
+				release: 0,
+				sustain: 0,
+				tail: 0
+			}
+		]),
+		userName: "Birdie"
+	},
+	wildestBeep: {
+		sndFrameType: 'codec,
+		codecName: tDTMFCodec,
+		dataType: 16,
+		bufferSize: 6400,
+		bufferCount: 4,
+		compressionType: 6,
+		samplingRate: 21600,
+		samples: tonescore('samples, {version: 1, algorithm: 1, reserved: 0, repeats: 0}, [tones:
+			{
+				frequency: 63936,
+				fraction: 0,
+				peak: 12000,
+				delay: 0,
+				attack: 0,
+				decay: 0,
+				hold: 100,
+				release: 70,
+				sustain: 0,
+				tail: 0
+			},
+			{
+				frequency: 3,
+				fraction: 0,
+				peak: 12000,
+				delay: 0,
+				attack: 0,
+				decay: 0,
+				hold: 90,
+				release: 0,
+				sustain: 0,
+				tail: 0
+			}
+		]),
+		userName: "Wheep"
+	}
+};

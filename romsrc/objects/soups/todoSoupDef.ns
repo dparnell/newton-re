@@ -1,0 +1,12 @@
+// todoSoupDef, and what only it reaches
+
+todoSoupDef := {
+	name: @todoSoupName,
+	userName: toDoItems_2,
+	ownerApp: 'calendar,
+	ownerAppName: dates_2,
+	userDescr: toDoItems_2,
+	indexes: @dateIndices
+};
+
+toDoItems_2 := "1.0 To Do items";

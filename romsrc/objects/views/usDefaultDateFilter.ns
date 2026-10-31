@@ -1,0 +1,3 @@
+// usDefaultDateFilter, and what only it reaches
+
+usDefaultDateFilter := {item: anyFormat, bias: 'numbers};

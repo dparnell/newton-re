@@ -1,0 +1,152 @@
+// export115, and what only it reaches
+
+export115 := {
+	viewBounds: {left: 0, top: 0, right: 224, bottom: 261},
+	stepChildren: [stepChildren:
+		clear,
+		export111Item,
+		{title: loanPayment, viewBounds: {left: 2, top: 2, right: 138, bottom: 26}, _proto: @protoTitle},
+		export115Item,
+		export115Item_2,
+		export115Item_3,
+		export115Item_4,
+		export115Item_5,
+		export115Item_6
+	],
+	changeInProgress: nil,
+	solvedFor: nil,
+	viewSetupDoneScript: func() begin
+		AddArraySlot((FSViews := [Array: ]), NumberOfYears);
+		AddArraySlot(FSViews, InterestRate);
+		AddArraySlot(FSViews, LoanAmount);
+		AddArraySlot(FSViews, MonthlyPayment);
+		inherited:?viewSetupDoneScript()
+	end,
+	ClearAllFields: func() begin
+		inherited:ClearAllFields();
+		TotalPayments:SetNumericValueString(nil);
+		TotalInterest:SetNumericValueString(nil)
+	end,
+	ClearFormula: func() begin
+		TotalPayments:SetNumericValueString(nil);
+		TotalInterest:SetNumericValueString(nil)
+	end,
+	formulaSymbol: 'LoanPayment,
+	overview: loanPayment,
+	FillInTheSolution: func(a1, a2) begin
+		local l1, l2, l3, l4;
+		inherited:FillInTheSolution(a1, a2);
+		l1 := FSViews[0]:GetNumericValue();
+		l2 := FSViews[1]:GetNumericValue();
+		l3 := FSViews[2]:GetNumericValue();
+		l4 := FSViews[3]:GetNumericValue();
+		(if (if (if (if (l1 <> nil) then (l2 <> nil)) then (l3 <> nil)) then (l4 <> nil)) then begin
+				l4 := abs(l4);
+				TotalPayments:SetNumericValueString(FormattedNumberStr(((l1 * 12) * l4), "%.2f"));
+				TotalInterest:SetNumericValueString(FormattedNumberStr((((l1 * 12) * l4) - l3), "%.2f"))
+			end)
+	end,
+	_proto: @8304,
+	NumberOfYears: nil,
+	stepAllocateContext: [|Array|:
+		'NumberOfYears,
+		export115Item,
+		'InterestRate,
+		export115Item_2,
+		'LoanAmount,
+		export115Item_3,
+		'MonthlyPayment,
+		export115Item_4,
+		'TotalPayments,
+		export115Item_5,
+		'TotalInterest,
+		export115Item_6
+	],
+	InterestRate: nil,
+	LoanAmount: nil,
+	MonthlyPayment: nil,
+	TotalPayments: nil,
+	TotalInterest: nil
+};
+
+loanPayment := "Loan Payment";
+
+export115Item := {
+	calcLineLabel: "Number of Years",
+	ComputeValue: func(a1) begin
+		local l1;
+		if (((l1 := self:SolveForPeriod((a1[1] / 12), a1[2], 0, (-a1[3]))) = nil) or (l1 < 0)) then begin
+				l1 := nil;
+				self:Notify(3, "Loan Payment", "No solution.")
+			end else begin
+				l1 := (l1 / 12)
+			end;
+		return l1
+	end,
+	lineNumber: 0,
+	viewSetupDoneScript: func() begin
+		inherited:?viewSetupDoneScript();
+		SetKeyView(self.value.value, 9999)
+	end,
+	_proto: @8296,
+	preAllocatedContext: 'NumberOfYears
+};
+
+export115Item_2 := {
+	calcLineLabel: interestRate,
+	ComputeValue: func(a1) begin
+		local l1;
+		if ((l1 := self:SolveForInterestRate((a1[0] * 12), a1[2], 0, (-a1[3]))) = nil) then begin
+				self:Notify(3, "Loan Payment", "Interest rate out of range.")
+			end else begin
+				l1 := (l1 * 12)
+			end;
+		return l1
+	end,
+	lineNumber: 1,
+	decimalPlaces: 4,
+	_proto: @8296,
+	preAllocatedContext: 'InterestRate
+};
+
+export115Item_3 := {
+	calcLineLabel: "Loan Amount",
+	ComputeValue: func(a1) begin
+		local l1;
+		if ((l1 := self:SolveForPresentValue((a1[0] * 12), (a1[1] / 12), 0, (-a1[3]))) = nil) then begin
+				self:Notify(3, "Loan Payment", "Interest rate out of range.")
+			end else begin
+				l1 := abs(l1)
+			end;
+		return l1
+	end,
+	lineNumber: 2,
+	_proto: @8296,
+	preAllocatedContext: 'LoanAmount
+};
+
+export115Item_4 := {
+	calcLineLabel: "Monthly Payment",
+	ComputeValue: func(a1) begin
+		local l1;
+		if ((l1 := self:SolveForPayment((a1[0] * 12), (a1[1] / 12), a1[2], 0)) = nil) then begin
+				self:Notify(3, "Loan Payment", "No solution.")
+			end else begin
+				l1 := abs(l1)
+			end;
+		return l1
+	end,
+	lineNumber: 3,
+	_proto: @8296,
+	preAllocatedContext: 'MonthlyPayment
+};
+
+export115Item_5 := {infoLineLabel: "Total Payments", _proto: @8299, preAllocatedContext: 'TotalPayments};
+
+export115Item_6 := {infoLineLabel: "Total Interest", _proto: @8299, preAllocatedContext: 'TotalInterest};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+ComputeValue_literal3 := same("export115Item.ComputeValue.literals[3]");
+
+ComputeValue_literal3_2 := same("export115Item_2.ComputeValue.literals[3]");

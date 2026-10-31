@@ -1,0 +1,15 @@
+// canonicalSocketInfo, and what only it reaches
+
+canonicalSocketInfo := {
+	socketNumber: 0,
+	cisManufacturerName: uCardPositionAlertButton,
+	cisProductName: uCardPositionAlertButton,
+	cisProductInfo0: uCardPositionAlertButton,
+	cisProductInfo1: uCardPositionAlertButton,
+	cisManufacturerId: 0,
+	cisManufacturerIdInfo: 0,
+	cisFunctions: [|Array|: ],
+	cisDeviceTypes: [|Array|: ],
+	cardTypes: [|Array|: ],
+	cardHWLocationIds: nil
+};

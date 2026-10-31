@@ -1,0 +1,3 @@
+// newtLabelSimpleDateInputLine, and what only it reaches
+
+newtLabelSimpleDateInputLine := {_proto: @newtProtoLine, flavor: @newtSimpleDateFilter};

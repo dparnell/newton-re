@@ -1,0 +1,134 @@
+// default_4, and what only it reaches
+
+default_4 := {
+	viewFlags: vVisible,
+	viewFormat: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewJustify: vjParentFullH + vjParentFullV,
+	name: "Worksite Info",
+	symbol: 'default,
+	type: 'editor,
+	stepChildren: [stepChildren:
+		{
+			path: 'place,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+			viewLineSpacing: 32,
+			label: worksite,
+			flavor: flavor,
+			newRecFlags: 8428033,
+			_proto: @newtLabelInputLine
+		},
+		{
+			viewBounds: {left: 0, top: 10, right: 0, bottom: 24},
+			pickActionScript: func(a1) begin
+				local l1;
+				self:UpdateText(Clone(a1.name));
+				base:hilite(nil);
+				target.cityAlias := [Array: a1.name, a1.longitude, a1.latitude];
+				target.countrySymbol := a1.country;
+				target.country := GetCountryEntry(a1.country)[0].name;
+				if (not target.areacode) then begin
+						areacode:UpdateText(SPrintObject(a1.areacode))
+					end;
+				self:StartFlush()
+			end,
+			text: "Closest City",
+			pickerSetup: func() begin
+				local l1, l2;
+				if (if target.countrySymbol then (city := appBase:GetCity(target))) then begin
+						l1 := city
+					end else begin
+						l1 := [Array: UserConfiguration.location.country, UserConfiguration.location.name]
+					end;
+				(l2 := self:GlobalBox()).right := (l2.left + indent);
+				@locationPopup:new({default: l1}, l2, self);
+				nil
+			end,
+			viewJustify: 8396976,
+			textSetup: func() begin
+				local l1;
+				(if (if target.cityAlias then (l1 := appBase:GetCity(target))) then l1.name)
+			end,
+			_proto: @protoLabelPicker
+		},
+		default_4Item,
+		{
+			path: 'dialingPrefix,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+			label: "Dialing Prefix",
+			labelCommands: nil,
+			viewLineSpacing: 32,
+			flavor: @newtCustomFilter,
+			viewSetupFormScript: func() begin
+				labelCommands := GetLocale().commonDialingPrefixes;
+				inherited:?viewSetupFormScript()
+			end,
+			newRecFlags: 264705,
+			UpdateText: func(a1) begin
+				inherited:UpdateText(StringFilter(a1, "0123456789>!,#*wp", 'passAll))
+			end,
+			_proto: @newtLabelInputLine
+		},
+		{
+			viewBounds: {left: 0, top: 6, right: 0, bottom: 30},
+			viewSetupFormScript: func() begin
+				saveCurrentPrinter := UserConfiguration.currentPrinter;
+				if (not (noneIsChosen := (not target.printer))) then begin
+						UserConfiguration.currentPrinter := target.printer
+					end;
+				inherited:?viewSetupFormScript()
+			end,
+			viewQuitScript: func() begin
+				if target then begin
+						if noneIsChosen then begin
+								target.printer := nil
+							end else begin
+								target.printer := UserConfiguration.currentPrinter
+							end;
+						targetView:StartFlush()
+					end;
+				(UserConfiguration.currentPrinter := saveCurrentPrinter)
+			end,
+			entryFont: tsHWFont + tsSize(18),
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			saveCurrentPrinter: nil,
+			pickerSetup: func() begin
+				inherited:pickerSetup();
+				if (not noneIsChosen) then begin
+						AddArraySlot(labelCommands, 'pickseparator);
+						AddArraySlot(labelCommands, {item: "None", isNoneItem: true})
+					end;
+				true
+			end,
+			labelActionScript: func(a1) begin
+				local l1;
+				(if (noneIsChosen := (if (ClassOf((l1 := labelCommands[a1])) = 'frame) then l1.isNoneItem)) then self:UpdateText(l1.item) else inherited:labelActionScript(a1))
+			end,
+			noneIsChosen: nil,
+			textSetup: func() begin
+				(if noneIsChosen then "None" else inherited:textSetup())
+			end,
+			_proto: @printerChooserButton
+		}
+	],
+	infoFrame: {
+		checkPrefix: [|Array|: true, nil],
+		checkPaths: [|Array|: 'place, 'dialingPrefix, 'areacode, 'cityAlias, 'countrySymbol, 'printers],
+		format: format_2
+	},
+	protection: 'private,
+	viewClass: clView,
+	areacode: nil,
+	stepAllocateContext: [|Array|: 'areacode, default_4Item]
+};
+
+format_2 := "^?0^0||";
+
+default_4Item := {
+	path: 'areacode,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+	viewLineSpacing: 32,
+	label: areaCode,
+	_proto: @newtAreacodeLine,
+	preAllocatedContext: 'areacode
+};

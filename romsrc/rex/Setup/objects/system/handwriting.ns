@@ -1,0 +1,23 @@
+// handwriting, and what only it reaches
+
+handwriting := {
+	titleTExt: "Describe your \u000dHandwriting",
+	description: "Tap the phrase that best describes how you write.",
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	declareSelf: 'sample,
+	stepChildren: [stepChildren:
+		nameItem,
+		{
+			viewFlags: vVisible + vReadOnly,
+			viewBounds: {left: 0, top: 15, right: 200, bottom: 140},
+			viewJustify: vjParentCenterH + vjSiblingBottomV,
+			viewSetupFormScript: func() begin
+				(self.label.text := "")
+			end,
+			viewClass: clView,
+			_proto: @protoRecognitionCluster
+		}
+	],
+	debug: "handwriting",
+	_proto: @8353
+};

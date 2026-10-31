@@ -1,0 +1,52 @@
+// analogTimePopup, and what only it reaches
+
+analogTimePopup := {
+	viewBounds: {left: 0, top: 0, right: 116, bottom: 138},
+	Time: nil,
+	increment: 1,
+	New: New,
+	TimeChanged: func() begin
+		if (setter.hours >= 12) then begin
+				if (ampmButtons.clusterValue = 'morningStr) then begin
+						ampmButtons:SetClusterValue('eveningStr)
+					end
+			end else begin
+				if (ampmButtons.clusterValue = 'eveningStr) then begin
+						ampmButtons:SetClusterValue('morningStr)
+					end
+			end;
+		context:?NewTime(Time)
+	end,
+	Affirmative: func() begin
+		context:?pickActionScript(Time)
+	end,
+	stepChildren: [stepChildren: setter, ampmButtons],
+	setter: nil,
+	stepallocatecontext: [|Array|: 'setter, setter, 'ampmButtons, ampmButtons],
+	ampmButtons: nil,
+	_proto: @protoGeneralPopup
+};
+
+setter := {
+	viewBounds: {left: 2, top: 2, right: 118, bottom: 118},
+	viewJustify: vjFullH + vjFullV,
+	viewFormat: 0,
+	quantize: 5,
+	viewSetupFormScript: func() begin
+		quantize := increment;
+		inherited:viewSetupFormScript()
+	end,
+	preallocatedContext: 'setter,
+	_proto: @protoNewSetClock
+};
+
+ampmButtons := {
+	_proto: @protoAmpmCluster,
+	viewBounds: {left: 0, top: 2, right: 70, bottom: 20},
+	viewJustify: vjCenterH + vjSiblingCenterH + vjSiblingBottomV,
+	preallocatedContext: 'ampmButtons
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_30 := same("setter.viewSetupFormScript.instructions");

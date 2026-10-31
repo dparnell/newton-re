@@ -1,5 +1,0 @@
-@@ 0x51f729
-func() begin
-	(copperfield.cntrlPanel := self)
-end
-@@end

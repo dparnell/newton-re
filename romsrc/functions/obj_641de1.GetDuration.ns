@@ -1,5 +1,0 @@
-@@ 0x432601
-func(a1) begin
-	DurationStr(a1)
-end
-@@end

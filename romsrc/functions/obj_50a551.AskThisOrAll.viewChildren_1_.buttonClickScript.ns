@@ -1,6 +1,0 @@
-@@ 0x5093f1
-func() begin
-	MeetingNotes.needToChangeThisOrFutureOccurrences := 'ThisAndFuture;
-	base:Close()
-end
-@@end

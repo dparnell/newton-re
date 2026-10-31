@@ -1,0 +1,57 @@
+// export104, and what only it reaches
+
+export104 := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 36},
+	viewFlags: vVisible,
+	viewFormat: vfPen(1),
+	stepChildren: [stepChildren: export104Item, export104Item_2],
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	viewSetupFormScript: func() begin
+		SetValue(label, 'text, calcLineLabel)
+	end,
+	integerField: nil,
+	indent: 115,
+	CalcLineLabelClickScript: func(a1) begin
+		return true
+	end,
+	changeInProgress: nil,
+	GetNumericValue: func() begin
+		return value:GetNumericValue()
+	end,
+	SetNumericValue: func(a1) begin
+		value:SetNumericValue(a1)
+	end,
+	rightmargin: 0,
+	decimalPlaces: 2,
+	viewClass: clView,
+	label: nil,
+	stepAllocateContext: [|Array|: 'label, export104Item, 'value, export104Item_2],
+	value: nil
+};
+
+export104Item := {
+	text: staticText,
+	viewBounds: {left: 5, top: 15, right: 110, bottom: 28},
+	viewFont: @fontSystem10Bold,
+	viewClickScript: func(a1) begin
+		(if self:TrackHilite(a1) then begin
+				self:CalcLineLabelClickScript(a1);
+				self:hilite(nil)
+			end)
+	end,
+	viewFlags: vVisible + vReadOnly,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'label
+};
+
+export104Item_2 := {_proto: @8295, preAllocatedContext: 'value};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewClickScript_code := same("export104Item.viewClickScript.instructions");
+
+viewSetupFormScript_code := same("export104.viewSetupFormScript.instructions");
+
+GetNumericValue_code_2 := same("export104.GetNumericValue.instructions");
+
+SetNumericValue_code := same("export104.SetNumericValue.instructions");

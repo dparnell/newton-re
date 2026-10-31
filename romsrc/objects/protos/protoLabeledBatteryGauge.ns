@@ -1,0 +1,30 @@
+// protoLabeledBatteryGauge, and what only it reaches
+
+protoLabeledBatteryGauge := {
+	_proto: @protoBatteryGauge,
+	viewChildren: [viewChildren: gauge, batteryLabelForm],
+	batteryLabelForm: nil,
+	allocateContext: [|Array|: 'gauge, gauge, 'batteryLabelForm, batteryLabelForm]
+};
+
+battery := "Battery";
+
+batteryLabelForm := {
+	viewBounds: {left: 0, top: -12, right: 0, bottom: 0},
+	viewJustify: vjCenterH + vjParentFullH + vjParentBottomV,
+	viewFont: @fontSystem9,
+	viewFlags: vVisible + vClickable,
+	lastClick: 0,
+	text: battery,
+	viewClickScript: func(a1) begin
+		local l1;
+		if (if (((l1 := Ticks()) - lastClick) < 30) then HasSlot(GetRoot(), 'batteryInfo)) then begin
+				GetRoot().batteryInfo:Open()
+			end else begin
+				lastClick := l1
+			end;
+		true
+	end,
+	preallocatedContext: 'batteryLabelForm,
+	_proto: @protoStaticText
+};

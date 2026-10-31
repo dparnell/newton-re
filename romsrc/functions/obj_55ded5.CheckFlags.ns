@@ -1,8 +1,0 @@
-@@ 0x55d991
-func() begin
-	if (userConfiguration.lettersInFieldsOption <> nil) then begin
-			return 16384
-		end;
-	return 0
-end
-@@end

@@ -1,0 +1,56 @@
+// newtStationerMenu, and what only it reaches
+
+newtStationerMenu := {
+	_proto: @protoPopupButton,
+	viewBounds: {left: 7, top: 0, right: 39, bottom: 13},
+	viewJustify: vjSiblingRightH + vjSiblingTopV,
+	text: new_3,
+	popup: nil,
+	sorter: '|str<|,
+	keyButton: '_newKeyButton,
+	viewSetupDoneScript: func() begin
+		inherited:?viewSetupDoneScript();
+		(if keyButton then (newtAppBase.(keyButton) := self))
+	end,
+	pickActionScript: func(a1) begin
+		local l1;
+		inherited:pickActionScript(a1);
+		l1 := self:AddEntryFromStationery(popup[a1].symbol);
+		popup := nil;
+		l1
+	end,
+	pickCancelledScript: func() begin
+		inherited:pickCancelledScript();
+		(popup := nil)
+	end,
+	buttonClickScript: func() begin
+		l1 := self:GlobalBox();
+		popup := [Array: ];
+		local l1;
+		(foreach l2 deeply in GetGlobals()._dataDefs do begin
+				local l4;
+				if (l2.superSymbol = superSymbol) then begin
+						l4 := (if l2.title then l2.title else l2.name);
+						AddArraySlot(popup, {item: l4, icon: l2.icon, symbol: l2.symbol, indent: 24})
+					end
+			end);
+		if sorter then begin
+				Sort(popup, sorter, 'item)
+			end;
+		inherited:buttonClickScript()
+	end,
+	viewQuitScript: func() begin
+		if keyButton then begin
+				RemoveSlot(newtAppBase, keyButton)
+			end;
+		inherited:?viewQuitScript()
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewQuitScript_code := same("newtStationerMenu.viewQuitScript.instructions");
+
+viewSetupDoneScript_code_4 := same("newtStationerMenu.viewSetupDoneScript.instructions");
+
+pickCancelledScript_code_3 := same("newtStationerMenu.pickCancelledScript.instructions");

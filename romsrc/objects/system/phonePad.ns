@@ -1,0 +1,40 @@
+// phonePad, and what only it reaches
+
+phonePad := {
+	viewClass: clView,
+	viewBounds: {left: 0, top: 0, right: 121, bottom: 126},
+	viewFlags: vVisible,
+	viewChildren: [viewChildren:
+		{_proto: @touchtonePad},
+		{
+			viewBounds: {left: 5, top: 0, right: 45, bottom: 0},
+			viewJustify: vjSiblingRightH + vjSiblingFullV,
+			keyResultsAreKeycodes: nil,
+			keyDefinitions: [|Array|: phonePadItem, phonePadItem_2, phonePadItem_3, phonePadItem_4, phonePadItem_5],
+			_proto: @protoKeypad
+		},
+		{
+			viewBounds: {left: 0, top: 106, right: 120, bottom: 126},
+			keyResultsAreKeycodes: nil,
+			keyDefinitions: [|Array|:
+				[|Array|:
+					8,
+					8,
+					@kbdTabBitmap,
+					$\u0009,
+					288360456,
+					$\u0020,
+					$\u0020,
+					288364552,
+					@kbdLeftBitmap,
+					$\u001c,
+					288360456,
+					@kbdRightBitmap,
+					$\u001d,
+					288360456
+				]
+			],
+			_proto: @protoKeypad
+		}
+	]
+};

@@ -1,0 +1,13 @@
+// newtTextView, and what only it reaches
+
+newtTextView := {
+	_proto: @newtroTextView,
+	viewFlags: vVisible + vClipping + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed,
+	recConfig: @rcInkorText,
+	viewChangedScript: func(a1, a2) begin
+		(if (if (not hack) then (a1 = 'text)) then begin
+				target.(path) := a2:GetRichString();
+				self:StartFlush()
+			end)
+	end
+};

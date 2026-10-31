@@ -1,5 +1,0 @@
-@@ 0x4c1761
-func() begin
-	newtAppBase:ShowLayout('overview)
-end
-@@end

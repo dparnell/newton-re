@@ -1,9 +1,0 @@
-@@ 0x484109
-func() begin
-	if Visible(self) then begin
-			filingSlip:SyncView();
-			filingSlip:RedoChildren()
-		end;
-	nil
-end
-@@end

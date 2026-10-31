@@ -1,5 +1,0 @@
-@@ 0x1040bc1
-func(a1) begin
-	(if IsNumber(a1) then a1 else (if IsFrame(a1) then (if HasSlot(a1, 'error) then a1.error else (if IsNumber(a1.data) then a1.data else (if (if IsFrame(a1.data) then HasSlot(a1.data, 'errorCode)) then a1.data.errorCode else -1))) else -1))
-end
-@@end

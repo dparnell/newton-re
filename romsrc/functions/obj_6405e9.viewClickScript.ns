@@ -1,8 +1,0 @@
-@@ 0x43cb99
-func(a1) begin
-	if self:DoDrawing('trackPictHilite, [Array: a1]) then begin
-			self:IndexClickScript(curIndex)
-		end;
-	true
-end
-@@end

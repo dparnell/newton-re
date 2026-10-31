@@ -1,0 +1,14 @@
+// newtNewStationeryButton, and what only it reaches
+
+newtNewStationeryButton := {
+	form: 'dataDef,
+	keyButton: '_newKeyButton,
+	text: new_3,
+	statScript: func(a1) begin
+		self:AddEntryFromStationery(a1.symbol)
+	end,
+	SetUpStatArray: func() begin
+		GetDefs(form, [Array: superSymbol], nil)
+	end,
+	_proto: @newtStationeryPopupButton
+};

@@ -1,6 +1,0 @@
-@@ 0x1010e41
-func() begin
-	self.startTarget := TotalClone(target);
-	inherited:?viewSetupFormScript()
-end
-@@end

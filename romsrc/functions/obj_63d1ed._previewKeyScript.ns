@@ -1,5 +1,0 @@
-@@ 0x4c9da1
-func(a1) begin
-	PressButton(_previewButton)
-end
-@@end

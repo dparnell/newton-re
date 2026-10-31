@@ -1,8 +1,0 @@
-@@ 0x4cab8d
-func() begin
-	if (recTogOptions exists) then begin
-			_recogPopup := recTogOptions
-		end;
-	inherited:?viewSetupFormScript()
-end
-@@end

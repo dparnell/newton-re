@@ -1,0 +1,28 @@
+// protoDateDurationTextPicker, and what only it reaches
+
+protoDateDurationTextPicker := {
+	viewBounds: nil,
+	label: uCardPositionAlertButton,
+	startTime: 7911360,
+	stopTime: 15740640,
+	durationPop: nil,
+	GetDuration: nil,
+	shortFormat: nil,
+	longFormat: 'yearMonthDayStrSpec,
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	entryFont: tsHWFont + tsSize(10),
+	Popit: func(a1) begin
+		local l1;
+		(l1 := self:GlobalBox()).right := (l1.left + a1);
+		@dateIntervalPopup:New([Array: startTime, stopTime], l1, self)
+	end,
+	TextSetup: func() begin
+		ParamStr("^0 - ^?1ongoing|^2|", [Array: (if longFormat then LongDateStr(startTime, @datetimeStrSpecs.(longFormat)) else ShortDateStr(startTime, @datetimeStrSpecs.(shortFormat))), (stopTime = 536870911), (if longFormat then LongDateStr(stopTime, @datetimeStrSpecs.(longFormat)) else ShortDateStr(stopTime, @datetimeStrSpecs.(shortFormat)))])
+	end,
+	pickActionScript: func(a1, a2) begin
+		startTime := a1;
+		stopTime := a2;
+		inherited:pickActionScript(nil)
+	end,
+	_proto: @protoTextPicker
+};

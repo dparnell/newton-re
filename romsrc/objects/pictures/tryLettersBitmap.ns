@@ -1,0 +1,6 @@
+// tryLettersBitmap, and what only it reaches
+
+tryLettersBitmap := {
+	bits: bitmap('bits, "resources/bits/46cc99.png", "00000000000c010b010b0077011c00b9", 1),
+	bounds: {left: 0, top: 0, right: 66, bottom: 17}
+};

@@ -1,9 +1,0 @@
-@@ 0x768c19
-func() begin
-	if (not self:?EntryCool(nil)) then begin
-			return nil
-		end;
-	fPage.annotations := ImageTarget:GetAnnotations();
-	self:StartFlush()
-end
-@@end

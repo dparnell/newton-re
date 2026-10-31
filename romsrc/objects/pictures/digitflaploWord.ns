@@ -1,0 +1,6 @@
+// digitflaploWord, and what only it reaches
+
+digitflaploWord := {
+	bits: bitmap('bits, "resources/bits/3da605.png", "00000000000401ef01ef016e020b0185", 1),
+	bounds: {left: 0, top: 0, right: 23, bottom: 28}
+};

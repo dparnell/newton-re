@@ -1,0 +1,20 @@
+// newtDateNTimeFilter, and what only it reaches
+
+newtDateNTimeFilter := {
+	_proto: @newtTextFilter,
+	recFlags: 1575425,
+	increment: 15,
+	longFormat: 180969,
+	shortFormat: nil,
+	format: 170636,
+	PathToText: func() begin
+		(if IsString(target.(path)) then Clone(target.(path)) else Stringer([Array: (if longFormat then LongDateStr(target.(path), longFormat) else ShortDateStr(target.(path), shortFormat)), " ", TimeStr(target.(path), format)]))
+	end,
+	TextToPath: func(a1) begin
+		local l1;
+		(if ((not StrFilled(a1)) or IsRichString(a1)) then a1 else (if (l1 := StringToDate(a1)) then l1))
+	end,
+	picker: func() begin
+		@dateNTimePopup:New(target.(path), increment, self:GlobalLabelBounds(), self)
+	end
+};

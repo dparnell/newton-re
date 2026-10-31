@@ -1,6 +1,0 @@
-@@ 0x10150a5
-func(a1) begin
-	GetRoot():Notify(3, "Newton Internet Enabler", a1);
-	nil
-end
-@@end

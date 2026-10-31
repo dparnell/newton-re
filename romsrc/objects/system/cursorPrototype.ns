@@ -1,0 +1,22 @@
+// cursorPrototype, and what only it reaches
+
+cursorPrototype := {
+	_parent: {
+		move: {class: #132, funcPtr: 737606, numArgs: 1},
+		Goto: {class: #132, funcPtr: 737623, numArgs: 1},
+		GotoKey: {class: #132, funcPtr: 737632, numArgs: 1},
+		Next: {class: #132, funcPtr: 737878, numArgs: 0},
+		prev: {class: #132, funcPtr: 737885, numArgs: 0},
+		Reset: {class: #132, funcPtr: 737898, numArgs: 0},
+		ResetToEnd: {class: #132, funcPtr: 737904, numArgs: 0},
+		entry: {class: #132, funcPtr: 737892, numArgs: 0},
+		clone: {class: #132, funcPtr: 737910, numArgs: 0},
+		CountEntries: {class: #132, funcPtr: 737917, numArgs: 0},
+		WhichEnd: {class: #132, funcPtr: 737926, numArgs: 0},
+		soup: {class: #132, funcPtr: 737932, numArgs: 0},
+		indexPath: {class: #132, funcPtr: 737938, numArgs: 0},
+		EntryKey: {class: #132, funcPtr: 737966, numArgs: 0},
+		status: {class: #132, funcPtr: 737972, numArgs: 0}
+	},
+	tcursor: nil
+};

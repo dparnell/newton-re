@@ -61,8 +61,8 @@
 
 		// Booted from romsrc/, the letter-set box knows the engines itself
 		// (its hostEngineRow; the cluster's buttons, the box's height and
-		// the example drawn for an engine are its own - romsrc/functions/
-		// obj_5afced.*, obj_646c8d.*, obj_5b033d.drawExampleScript), and
+		// the example drawn for an engine are its own - romsrc/'s
+		// LetterSetCluster, protoRecognitionCluster, wordExample.drawExampleScript), and
 		// Setup's handwriting page has them too: only the form is grown.
 		if box.hostEngineRow then begin
 			RegPrefs('HWRecPreferencesForm, newForm);

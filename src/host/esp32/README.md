@@ -131,15 +131,15 @@ MessagePad shows): an application that wants more than 320 high is no
 longer asked to turn the screen when it is upright already - turning it
 to upright changed nothing, and the OK rebuilt the display (and put up
 the button bar's "couldn't hold all the icons") for nothing
-(`romsrc/functions/obj_642059.Open.ns`).  Internet Setup's edit slip
+(`viewRoot.Open`, `romsrc/objects/system/viewRoot.ns`).  Internet Setup's edit slip
 takes the bounds its walk-through layout has, which fit the screen, and
 its keyboard is the slip's width (`romsrc/rex/inetstup/README.md`); the
 Typewriter keyboard is the screen's width where its small size will not
-fit (`obj_630d25.viewSetupFormScript.ns`) - a keyboard view makes its
+fit (`alphaKeyboard.viewSetupFormScript`) - a keyboard view makes its
 keys to fit its bounds.  The slip that asks for what a worksite or the
 owner's card is missing (`ValidateConfig`: Time Zones' "This worksite is
 incomplete.  Please choose the closest city", 284 wide) is the screen's
-width, its keyboard too (`obj_646cf1.viewSetupFormScript.ns`,
+width, its keyboard too (`protoValidateSlip.viewSetupFormScript`,
 `viewSetupChildrenScript.ns`).
 
 **The keyboard is built in**, as an eMate 300's is: the board answers the

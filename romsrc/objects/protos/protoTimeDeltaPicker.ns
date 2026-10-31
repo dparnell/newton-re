@@ -1,0 +1,104 @@
+// protoTimeDeltaPicker, and what only it reaches
+
+protoTimeDeltaPicker := {
+	maxValue: 1439,
+	minValue: -1439,
+	minuteIncrement: nil,
+	viewSetupFormScript: func() begin
+		(if (minValue >= 0) then (plusminus.viewFlags := 0))
+	end,
+	viewDrawScript: compile(
+		constants: {
+			kROM_603: @colonSlides
+		},
+		func() begin
+			local l1, l2;
+			if minuteIncrement then begin
+					minutes1.increment;
+					if (minuteIncrement > 10) then begin
+							minutes10.increment := minuteIncrement
+						end
+				end;
+			(if ((l1 := GetLocale().timeformat).timeSepStr1[0] = $:) then DrawXBitmap((l2 := RelBounds((((((l2 := self:LocalBox()).right - 23) - 23) - 6) - 1), ((l2.bottom - 15) div 2), 6, 15)), kROM_603, 0, 0))
+		end),
+	viewChildren: [viewChildren: minutes1, minutes10_2, hours1_2, hours10_2, plusminus],
+	minutes1: nil,
+	allocateContext: [|Array|:
+		'minutes1,
+		minutes1,
+		'minutes10,
+		minutes10_2,
+		'hours1,
+		hours1_2,
+		'hours10,
+		hours10_2,
+		'plusminus,
+		plusminus
+	],
+	minutes10: nil,
+	hours1: nil,
+	hours10: nil,
+	plusminus: nil,
+	_proto: @protoDigitBase
+};
+
+minutes1 := {
+	viewBounds: {left: -23, top: 0, right: 0, bottom: 28},
+	icon: @digitflaploWord,
+	GetIndex: func(a1) begin
+		(abs(a1) mod 10)
+	end,
+	nextDigit: 'minutes10,
+	preallocatedContext: 'minutes1,
+	_proto: @protoDigit
+};
+
+minutes10_2 := {
+	viewBounds: {left: -22, top: 0, right: 0, bottom: 28},
+	icon: @digitflap,
+	increment: 10,
+	GetIndex: func(a1) begin
+		((abs(a1) mod 60) div 10)
+	end,
+	nextDigit: 'hours1,
+	preallocatedContext: 'minutes10,
+	_proto: @protoDigit
+};
+
+hours1_2 := {
+	viewBounds: {left: -33, top: 0, right: -10, bottom: 28},
+	icon: @digitflaploWord,
+	increment: 60,
+	GetIndex: func(a1) begin
+		((abs(a1) div 60) mod 10)
+	end,
+	nextDigit: 'hours10,
+	preallocatedContext: 'hours1,
+	_proto: @protoDigit
+};
+
+hours10_2 := {
+	viewBounds: {left: -22, top: 0, right: 0, bottom: 28},
+	icon: @digitflap,
+	increment: 600,
+	GetIndex: func(a1) begin
+		(abs(a1) div 600)
+	end,
+	preallocatedContext: 'hours10,
+	_proto: @protoDigit
+};
+
+plusminus := {
+	viewBounds: {left: -16, top: 0, right: 0, bottom: 28},
+	digits: @plusminusBitmap,
+	totalFrames: 2,
+	Advance: func(a1) begin
+		inherited:Advance((-2 * value))
+	end,
+	GetIndex: func(a1) begin
+		(if (a1 >= 0) then 0 else 1)
+	end,
+	nextDigit: 'minutes1,
+	preallocatedContext: 'plusminus,
+	_proto: @protoDigit
+};

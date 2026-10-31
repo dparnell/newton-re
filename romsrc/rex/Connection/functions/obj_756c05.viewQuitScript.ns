@@ -1,6 +1,0 @@
-@@ 0x757835
-func() begin
-	self:SavePrefs();
-	protoContext:RemoveOpenWindow(self)
-end
-@@end

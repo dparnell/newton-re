@@ -1,9 +1,0 @@
-@@ 0x1013a29
-func() begin
-	if appSymbol then begin
-			header:Retarget();
-			self.viewChildren := [Array: DeviceRegistry.(appSymbol).configView]
-		end;
-	inherited:?viewSetupFormScript()
-end
-@@end

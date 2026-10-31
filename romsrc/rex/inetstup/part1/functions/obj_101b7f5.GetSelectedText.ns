@@ -1,9 +1,0 @@
-@@ 0x101b8f9
-func() begin
-	(if (Length(labelCommands) > 0) then (foreach l1, l2 in labelCommands do begin
-				if (l2.symbol = target.(path)) then begin
-						return l2.item
-					end
-			end) else "")
-end
-@@end

@@ -1,0 +1,74 @@
+// newtStationeryPopupButton, and what only it reaches
+
+newtStationeryPopupButton := {
+	viewBounds: {left: 7, top: 0, right: 45, bottom: 13},
+	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingTopV,
+	keyButton: nil,
+	sorter: '|str<|,
+	types: nil,
+	symbols: nil,
+	form: nil,
+	shortCircuit: true,
+	statArray: nil,
+	viewSetupFormScript: func() begin
+		inherited:viewSetupFormScript();
+		(if (if shortCircuit then (Length(self:SetUpStatArray()) = 1)) then begin
+				viewBounds.right := (viewBounds.right - StrFontWidth("  ", viewFont));
+				text := Substr(text, 2, nil);
+				(viewDrawScript := nil)
+			end)
+	end,
+	viewSetupDoneScript: func() begin
+		inherited:?viewSetupDoneScript();
+		(if keyButton then (newtAppBase.(keyButton) := self))
+	end,
+	pickActionScript: func(a1) begin
+		local l1;
+		l1 := statArray[a1];
+		inherited:pickActionScript(a1);
+		self:statScript(l1);
+		popup := nil;
+		(statArray := nil)
+	end,
+	pickCancelledScript: func() begin
+		inherited:pickCancelledScript();
+		popup := nil;
+		(statArray := nil)
+	end,
+	buttonClickScript: func() begin
+		self:BuildPopup();
+		(if (if shortCircuit then (Length(popup) = 1)) then self:pickActionScript(0) else inherited:buttonClickScript())
+	end,
+	statScript: func(a1) begin
+		nil
+	end,
+	SetUpStatArray: func() begin
+		GetDefs(form, symbols, types)
+	end,
+	BuildPopup: func() begin
+		popup := [Array: ];
+		statArray := self:SetUpStatArray();
+		if sorter then begin
+				Sort(statArray, sorter, 'name)
+			end;
+		l1 := nil;
+		local l1;
+		(foreach l2 in statArray do begin
+				local l4, l5;
+				l4 := (if l2.name then l2.name else l2.title);
+				l5 := (if l2.icon then begin
+						l1 := true;
+						{item: l4, icon: l2.icon}
+					end else {item: l4});
+				AddArraySlot(popup, l5)
+			end);
+		(if l1 then (popup[0].indent := 24))
+	end,
+	viewQuitScript: func() begin
+		if keyButton then begin
+				RemoveSlot(newtAppBase, keyButton)
+			end;
+		inherited:?viewQuitScript()
+	end,
+	_proto: @protoPopupButton
+};

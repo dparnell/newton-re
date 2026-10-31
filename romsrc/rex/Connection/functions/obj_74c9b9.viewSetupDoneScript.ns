@@ -1,5 +1,0 @@
-@@ 0x74caa5
-func() begin
-	(if (not config.button2) then self:Hide())
-end
-@@end

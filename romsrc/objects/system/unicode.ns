@@ -1,0 +1,28 @@
+// unicode, and what only it reaches
+
+unicode := {
+	charEncodings: [|Array|:
+		{
+			encodingID: 1,
+			mapFromUnicode: texttable('UniC, "resources/UniC/62b65d.txt"),
+			mapToUnicode: texttable('UniC, "resources/UniC/62b835.txt")
+		},
+		{
+			encodingID: 2,
+			mapFromUnicode: texttable('UniC, "resources/UniC/62ba49.txt"),
+			mapToUnicode: texttable('UniC, "resources/UniC/62bc61.txt")
+		},
+		{
+			encodingID: 4,
+			mapFromUnicode: texttable('UniC, "resources/UniC/62be75.txt"),
+			mapToUnicode: texttable('UniC, "resources/UniC/62c085.txt")
+		}
+	],
+	charClass: texttable('UniC, "resources/UniC/62c2b5.txt"),
+	numCharTypes: 70,
+	typelist: texttable('UniC, "resources/UniC/62c3c1.txt"),
+	upperList: texttable('UniC, "resources/UniC/62c415.txt"),
+	lowerList: texttable('UniC, "resources/UniC/62c489.txt"),
+	upperNoMarkList: texttable('UniC, "resources/UniC/62c4dd.txt"),
+	noMarkList: texttable('UniC, "resources/UniC/62c551.txt")
+};

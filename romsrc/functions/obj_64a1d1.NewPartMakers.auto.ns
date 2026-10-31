@@ -1,5 +1,0 @@
-@@ 0x54b07d
-func(a1, a2) begin
-	@589.AutoEntry:New()
-end
-@@end

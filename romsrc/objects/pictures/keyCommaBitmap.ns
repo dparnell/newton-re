@@ -1,0 +1,6 @@
+// keyCommaBitmap, and what only it reaches
+
+keyCommaBitmap := {
+	bits: bitmap('bits, "resources/bits/3d8f15.png", "000000000004001a001a0292002b0296", 1),
+	bounds: {left: 0, top: 0, right: 4, bottom: 17}
+};

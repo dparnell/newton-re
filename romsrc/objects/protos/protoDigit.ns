@@ -1,0 +1,94 @@
+// protoDigit, and what only it reaches
+
+protoDigit := {
+	viewClass: clPictureView,
+	viewFormat: nil,
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentCenterV + vjSiblingLeftH + vjSiblingCenterV,
+	viewBounds: {left: -23, top: 0, right: 0, bottom: 28},
+	viewFlags: vVisible + vClickable,
+	icon: nil,
+	digits: @digitSlides,
+	totalFrames: 10,
+	digitFrame: nil,
+	increment: 1,
+	GetIndex: func(a1) begin
+		(a1 mod 10)
+	end,
+	nextDigit: nil,
+	copyMode: 1,
+	repeatingTapDelay: 15,
+	firstTapDelay: 30,
+	currentIndex: 0,
+	viewSetupDoneScript: func() begin
+		local l1, l2, l3;
+		currentIndex := self:GetIndex(value);
+		if (not (canHideDigits exists)) then begin
+				self.canHideDigits := nil
+			end;
+		(if (not digitFrame) then begin
+				(digitFrame := SetBounds(0, 0, (digits.bounds.right - digits.bounds.left), (digits.bounds.bottom - digits.bounds.top))).right := (digitFrame.right div totalFrames);
+				l1 := self:LocalBox();
+				if (BAnd((l2 := viewJustify), 1) <> 0) then begin
+						digitFrame.left := (l1.right - digitFrame.right);
+						digitFrame.right := l1.right
+					end else begin
+						if (BAnd(l2, 2) <> 0) then begin
+								l3 := ((l1.right - digitFrame.right) div 2);
+								digitFrame.left := l3;
+								digitFrame.right := (digitFrame.right + l3)
+							end
+					end;
+				(if (BAnd(l2, 8) <> 0) then begin
+						digitFrame.top := (l1.bottom - digitFrame.bottom);
+						(digitFrame.bottom := l1.bottom)
+					end else (if (BAnd(l2, 4) <> 0) then begin
+							l3 := ((l1.bottom - digitFrame.bottom) div 2);
+							digitFrame.top := l3;
+							(digitFrame.bottom := (digitFrame.bottom + l3))
+						end))
+			end)
+	end,
+	viewDrawScript: func() begin
+		DrawXBitmap(digitFrame, digits, currentIndex, copyMode)
+	end,
+	viewClickScript: func(a1) begin
+		local l1, l2, l3;
+		InkOff(a1);
+		self:?PrepareForClick();
+		l1 := self:GlobalBox();
+		l2 := (if (GetPoint(1, a1) > ((l1.bottom + l1.top) div 2)) then (-increment) else increment);
+		l3 := (Ticks() + firstTapDelay);
+		(repeat self:Advance(l2); if ((l3 := (l3 - Ticks())) > 0) then begin
+					Sleep(l3)
+				end; l3 := (Ticks() + repeatingTapDelay) until StrokeDone(a1));
+		self:?ClickDone();
+		return true
+	end,
+	Advance: func(a1) begin
+		if (((l1 := (value + a1)) > maxValue) or (l1 < minValue)) then begin
+				return nil
+			end;
+		l2 := self:GlobalBox();
+		local l1;
+		local l2;
+		(foreach l3 in digitBase:ChildViewFrames() do begin
+				local l5, l6;
+				if (l3 <> self) then begin
+						if ((l5 := l3:?GetIndex(l1)) <> l3.currentIndex) then begin
+								l3.currentIndex := l5;
+								l2 := UnionRect(l2, l3:GlobalBox())
+							end
+					end
+			end);
+		value := l1;
+		currentIndex := self:GetIndex(l1);
+		l6 := digitBase:GlobalBox();
+		l2 := OffsetRect(l2, (-l6.left), (-l6.top));
+		digitBase:RevealEffect((if (a1 > 0) then (-l2.bottom) else l2.bottom), l2, @click, nil, nil);
+		l1
+	end,
+	Update: func() begin
+		currentIndex := self:GetIndex(value);
+		self:Dirty()
+	end
+};

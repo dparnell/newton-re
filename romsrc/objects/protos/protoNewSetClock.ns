@@ -1,0 +1,243 @@
+// protoNewSetClock, and what only it reaches
+
+protoNewSetClock := {
+	exactHour: nil,
+	sinTable: [|Array|:
+		10000,
+		9945,
+		9781,
+		9511,
+		9135,
+		8660,
+		8090,
+		7431,
+		6691,
+		5878,
+		5000,
+		4067,
+		3090,
+		2079,
+		1045,
+		0
+	],
+	viewFormat: nil,
+	viewDrawScript: func() begin
+		local l1, l2, l3, l4, l5, l6, l7;
+		if (not pix) then begin
+				pix := Array(5, nil);
+				l1 := self:LocalBox();
+				ScaleShape((fIconAsShape := MakeShape(icon)), ShapeBounds(fIconAsShape), l1);
+				self.inset := (if (inset exists) then inset else ((l1.right * 1000) div 11600));
+				l3 := (((l2 := ShapeBounds(fIconAsShape).right) div 2) - 2);
+				if (not (suppressAnnotations exists)) then begin
+						pix[0] := fIconAsShape;
+						l4 := FontAscent(clockFont);
+						l6 := StrFontWidth((l5 := annotations[0]), clockFont);
+						OffsetShape((l5 := MakeText(l5, 0, 0, l6, l4)), ((l3 - (l6 div 2)) + 2), (inset - 2));
+						pix[1] := l5;
+						l6 := StrFontWidth((l5 := annotations[1]), clockFont);
+						OffsetShape((l5 := MakeText(l5, 0, 0, l6, l4)), (((l2 - inset) - l6) - 1), (l3 - (l4 div 2)));
+						pix[2] := l5;
+						l6 := StrFontWidth((l5 := annotations[2]), clockFont);
+						OffsetShape((l5 := MakeText(l5, 0, 0, l6, l4)), ((l3 - (l6 div 2)) + 2), (((l2 - inset) - l4) - 2));
+						pix[3] := l5;
+						l6 := StrFontWidth((l5 := annotations[3]), clockFont);
+						OffsetShape((l5 := MakeText(l5, 0, 0, l6, l4)), (inset + 2), (l3 - (l4 div 2)));
+						pix[4] := l5
+					end else begin
+						pix := fIconAsShape
+					end
+			end;
+		self:DrawShape(pix, {font: clockFont});
+		l3 := ((l2 := ((l1 := self:LocalBox()).right - l1.left)) div 2);
+		self:DrawHand(minutes, l3, 13000);
+		l7 := ((hours mod 12) * 5);
+		if (not exactHour) then begin
+				l7 := (l7 + (minutes div 12))
+			end;
+		self:DrawHand(l7, l3, 22000)
+	end,
+	viewFlags: vVisible + vClickable,
+	quantize: nil,
+	minutes: 30,
+	fIconAsShape: nil,
+	viewBounds: {left: 30, top: 30, right: 146, bottom: 146},
+	DrawHand: func(a1, a2, a3) begin
+		local l1, l2, l3, l4, l5;
+		l1 := (a1 div 15);
+		l2 := (a1 - (l1 * 15));
+		l4 := sinTable[l2];
+		if ((l1 = 0) or (l1 = 3)) then begin
+				l4 := (-l4)
+			end;
+		l3 := sinTable[(15 - l2)];
+		if (l1 > 1) then begin
+				l3 := (-l3)
+			end;
+		if ((l1 = 1) or (l1 = 3)) then begin
+				l2 := l3;
+				l3 := l4;
+				l4 := l2
+			end;
+		self:DrawShape((l5 := MakeLine((a2 - 2), (a2 - 2), ((a2 + ((l3 * a2) div a3)) - 2), ((a2 + ((l4 * a2) div a3)) - 2))), '{pensize: 4})
+	end,
+	icon: picture('picture, "resources/picture/445b1d"),
+	diff: func(a1, a2) begin
+		(if (a1 > a2) then return (a1 - a2) else return (a2 - a1))
+	end,
+	FastEnoughAtan: func(a1, a2) begin
+		local l1, l2;
+		if (a1 = 0) then begin
+				return 15
+			end;
+		if (a2 = 0) then begin
+				return 0
+			end;
+		l1 := ((a2 * 10000) div a1);
+		l2 := 0;
+		(while (l2 < 15) do begin
+				if (l1 < atanTable[l2]) then begin
+						break
+					end;
+				(l2 := (l2 + 1))
+			end);
+		return l2
+	end,
+	Refresh: func() begin
+		hours := ((Time div 60) mod 24);
+		minutes := (Time mod 60);
+		self:Dirty()
+	end,
+	viewSetupFormScript: func() begin
+		if (not (Time exists)) then begin
+				self.Time := Time()
+			end;
+		hours := ((Time div 60) mod 24);
+		minutes := (Time mod 60);
+		if (not (annotations exists)) then begin
+				self.annotations := [Array: "12", "3", "6", "9"]
+			end;
+		(if (not (clockFont exists)) then (self.clockFont := @fontSystem12))
+	end,
+	distance: func(a1, a2) begin
+		(if (a1 > a2) then return (a1 + (a2 div 2)) else return (a2 + (a1 div 2)))
+	end,
+	viewClickScript: func(a1) begin
+		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12, l13, l14;
+		l6 := ((l5 := ((l4 := self:GlobalBox()).right - l4.left)) div 2);
+		l7 := ((GetPoint(0, a1) - l4.left) - l6);
+		l8 := (l6 - (GetPoint(1, a1) - l4.top));
+		l9 := (if (l7 < 0) then (-l7) else l7);
+		l10 := (if (l8 < 0) then (-l8) else l8);
+		if (l9 > l10) then begin
+				l2 := (l9 + (l10 div 2))
+			end else begin
+				l2 := (l10 + (l9 div 2))
+			end;
+		l11 := (l2 < (l5 div 8));
+		playsound(@tickSound);
+		if (not l11) then begin
+				InkOff(a1)
+			end;
+		(repeat l7 := ((GetPoint(4, a1) - l4.left) - l6); l8 := (l6 - (GetPoint(5, a1) - l4.top)); l9 := (if (l7 < 0) then (-l7) else l7); l10 := (if (l8 < 0) then (-l8) else l8); l1 := (15 - self:FastEnoughAtan(l9, l10)); if ((l7 * l8) < 0) then begin
+					l1 := (30 - l1)
+				end; if ((l7 < 0) or (if (l7 = 0) then (l8 < 0))) then begin
+					l1 := (l1 + 30)
+				end; if (l1 = 60) then begin
+					l1 := 0
+				end; if (l9 > l10) then begin
+					l2 := (l9 + (l10 div 2))
+				end else begin
+					l2 := (l10 + (l9 div 2))
+				end; if (not l11) then begin
+					if (l3 = nil) then begin
+							if (l2 > (l5 div 4)) then begin
+									l3 := 'minutes
+								end else begin
+									l3 := 'hours
+								end
+						end;
+					if (l3 = 'minutes) then begin
+							if (not l14) then begin
+									l14 := minutes
+								end;
+							if (if (l14 <= 10) then (l1 >= 50)) then begin
+									if ((hours := (hours - 1)) < 0) then begin
+											hours := 23
+										end;
+									playsound(@cuckooSound)
+								end else begin
+									if (if (l14 >= 50) then (l1 <= 10)) then begin
+											if ((hours := (hours + 1)) >= 24) then begin
+													hours := 0
+												end;
+											playsound(@cuckooSound)
+										end
+								end;
+							if quantize then begin
+									l1 := ((l1 := (l1 + (quantize div 2))) - (l1 mod quantize))
+								end;
+							minutes := l1
+						end else begin
+							if (not l14) then begin
+									l14 := l1
+								end;
+							exactHour := true;
+							hours := ((if (hours > 11) then 12 else 0) + ((l1 div 5) mod 60));
+							if ((if (l14 <= 10) then (l1 >= 50)) or (if (l14 >= 50) then (l1 <= 10))) then begin
+									if (hours > 11) then begin
+											hours := (hours - 12)
+										end else begin
+											hours := (hours + 12)
+										end;
+									playsound(@cuckooSound)
+								end
+						end;
+					l14 := l1;
+					Time := ((((Time div 1440) * 1440) + (hours * 60)) + minutes);
+					self:?TimeChanged();
+					self:Dirty();
+					RefreshViews()
+				end until StrokeDone(a1));
+		if l11 then begin
+				if (l2 > (l5 div 4)) then begin
+						minutes := l1
+					end else begin
+						hours := ((if (hours > 11) then 12 else 0) + ((l1 div 5) mod 60))
+					end;
+				Time := ((((Time div 1440) * 1440) + (hours * 60)) + minutes);
+				self:?TimeChanged();
+				self:Dirty();
+				RefreshViews()
+			end;
+		if exactHour then begin
+				Time := ((((Time div 1440) * 1440) + (hours * 60)) + minutes);
+				self:?TimeChanged();
+				self:Dirty();
+				RefreshViews()
+			end;
+		exactHour := nil;
+		playsound(@tockSound);
+		true
+	end,
+	viewClass: clView,
+	hours: 12,
+	pix: nil,
+	atanTable: [|Array|:
+		524,
+		1584,
+		2679,
+		3839,
+		5095,
+		6494,
+		8098,
+		10000,
+		12349,
+		15399,
+		19626,
+		26051,
+		37321,
+		63138,
+		190811
+	]
+};

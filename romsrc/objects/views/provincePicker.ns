@@ -1,0 +1,9 @@
+// provincePicker, and what only it reaches
+
+provincePicker := {
+	_proto: @worldPicker,
+	spots: @canadianProvinceName,
+	radius: 500,
+	listLimit: 8,
+	zoomer: 'northAmerica
+};

@@ -1,0 +1,3 @@
+// classinfoPrototype, and what only it reaches
+
+classinfoPrototype := {_parent: classinfoEnabler, _proto: nil, _classinfo: nil};

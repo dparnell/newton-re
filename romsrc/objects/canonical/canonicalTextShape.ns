@@ -1,0 +1,3 @@
+// canonicalTextShape, and what only it reaches
+
+canonicalTextShape := {class: 'text, bounds: nil, data: nil};

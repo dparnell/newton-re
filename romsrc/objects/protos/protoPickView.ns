@@ -1,0 +1,3 @@
+// protoPickView, and what only it reaches
+
+protoPickView := {viewClass: clPickView, _proto: @protoView};

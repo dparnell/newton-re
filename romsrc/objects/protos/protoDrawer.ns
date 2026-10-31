@@ -1,0 +1,11 @@
+// protoDrawer, and what only it reaches
+
+protoDrawer := {
+	_proto: @protoContainerView,
+	viewEffect: 133120,
+	viewFlags: vApplication + vFloating,
+	viewFormat: vfFrameBlack + vfPen(3),
+	showSound: @drawerOpen,
+	hideSound: @drawerClose,
+	viewBounds: nil
+};

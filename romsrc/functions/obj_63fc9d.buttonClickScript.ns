@@ -1,5 +1,0 @@
-@@ 0x41d2dd
-func() begin
-	(if icon then base:Close())
-end
-@@end

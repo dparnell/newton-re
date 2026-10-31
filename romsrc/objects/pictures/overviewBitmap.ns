@@ -1,0 +1,40 @@
+// overviewBitmap, and what only it reaches
+
+overviewBitmap := {
+	unhilited: {
+		bounds: unhilitedBounds_31,
+		mask: unhilitedMask_9,
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/5455bd.png", "00000000000c00000000000000100011", 4),
+				bitdepth: 4
+			},
+			{cbits: colordataCbits_31, bitdepth: 1}
+		]
+	},
+	hilited: {
+		bounds: {left: 0, top: 0, right: 17, bottom: 16},
+		mask: unhilitedMask_9,
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/545415.png", "00000000000c00000000000000100011", 4),
+				bitdepth: 4
+			},
+			{
+				cbits: bitmap('bits, "resources/bits/5453b9.png", "00000000000400000000000000100011", 1),
+				bitdepth: 1
+			}
+		]
+	},
+	bw: {
+		bits: colordataCbits_31,
+		bounds: unhilitedBounds_31,
+		mask: bitmap('mask, "resources/mask/545709.png", "00000000000400000000000000100011", 1)
+	}
+};
+
+unhilitedMask_9 := bitmap('mask, "resources/mask/54535d.png", "00000000000400000000000000100011", 1);
+
+colordataCbits_31 := bitmap('bits, "resources/bits/545561.png", "00000000000400000000000000100011", 1);
+
+unhilitedBounds_31 := {left: 0, top: 0, right: 17, bottom: 16};

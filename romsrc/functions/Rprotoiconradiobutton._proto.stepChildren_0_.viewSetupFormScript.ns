@@ -1,5 +1,0 @@
-@@ 0x42a6ed
-func() begin
-	(self.icon := labelIcon)
-end
-@@end

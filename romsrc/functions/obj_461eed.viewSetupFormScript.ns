@@ -1,5 +1,0 @@
-@@ 0x461ead
-func() begin
-	(self.text := Stringer([Array: $\uFC05, overview]))
-end
-@@end

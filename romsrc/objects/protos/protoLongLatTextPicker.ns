@@ -1,0 +1,27 @@
+// protoLongLatTextPicker, and what only it reaches
+
+protoLongLatTextPicker := {
+	viewBounds: nil,
+	label: "ﰁWhere",
+	longitude: nil,
+	latitude: nil,
+	worldClock: nil,
+	Popit: func(a1) begin
+		local l1;
+		(l1 := self:GlobalBox()).right := (l1.left + a1);
+		@longLatPicker:New(longitude, latitude, worldClock, l1, self)
+	end,
+	TextSetup: func() begin
+		Stringer([Array: LatitudeToString(latitude), " ", $ , " ", LongitudeToString(longitude)])
+	end,
+	pickActionScript: func(a1, a2) begin
+		longitude := a1;
+		latitude := a2;
+		inherited:pickActionScript(nil)
+	end,
+	_proto: @protoTextPicker
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+pickActionScript_code := same("protoLongLatTextPicker.pickActionScript.instructions");

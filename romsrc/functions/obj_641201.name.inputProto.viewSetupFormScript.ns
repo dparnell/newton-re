@@ -1,5 +1,0 @@
-@@ 0x455a99
-func() begin
-	(if (not target.name) then (target.name := Clone({})))
-end
-@@end

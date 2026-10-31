@@ -1,0 +1,125 @@
+// eraseSlip, and what only it reaches
+
+eraseSlip := {
+	slot: nil,
+	viewQuitScript: func() begin
+		(godParent.openEraseSlip := nil)
+	end,
+	viewDrawScript: func() begin
+		DrawXBitmap(iconBounds, icon, screenOrientation, 0)
+	end,
+	viewChildren: [viewChildren:
+		{_proto: @protoCancelButton},
+		{
+			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV,
+			viewBounds: {left: -41, top: 0, right: -7, bottom: 0},
+			text: erase,
+			buttonClickScript: func() begin
+				local l1, l2, l3;
+				l1 := GetVariable(self:Parent(), eraseTypeCluster.clusterValue);
+				if (StrLen((l2 := godParent:getDestStore():GetName())) = 0) then begin
+						l2 := godParent:getDestStore():GetKind()
+					end;
+				l3 := eraseStrs.(eraseTypeCluster.clusterValue);
+				if (not ModalConfirm(ParamStr("Warning! Erase will remove ^0 on \u201C\u^1\u201D\u. Are you sure you want to do this?", [Array: l3, l2]), nil)) then begin
+						l1 := nil
+					end;
+				(if l1 then AddDeferredCall(l1, [Array: base, godParent, store]))
+			end,
+			_proto: @protoTextButton
+		},
+		{
+			viewJustify: vjParentFullH,
+			viewBounds: {left: 47, top: 8, right: -8, bottom: 32},
+			viewFont: @fontSystem10Bold,
+			text: "What would you like to erase?",
+			_proto: @protoStaticText
+		},
+		eraseTypeCluster
+	],
+	iconBounds: nil,
+	ReOrientToScreen: @defRotateFunc,
+	viewBounds: {left: 0, top: 0, right: 210, bottom: 100},
+	store: nil,
+	allocateContext: [|Array|: 'eraseTypeCluster, eraseTypeCluster],
+	wipeInfo: func(a1, a2, a3) begin
+		a1:Close();
+		a2:wipeInfo(a3)
+	end,
+	_proto: @protoFloater,
+	screenOrientation: nil,
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	icon: nil,
+	New: func(a1, a2) begin
+		local l1;
+		(l1 := BuildContext(self)).godParent := a1;
+		l1.store := a2;
+		l1:FilterDialog()
+	end,
+	eraseStrs: {
+		eraseStore: "all the information and packages",
+		wipeInfo: "all the information",
+		wipeBackup: "all the backup information"
+	},
+	wipeBackup: func(a1, a2, a3) begin
+		a1:Close();
+		a2:wipeBackup(a3)
+	end,
+	viewSetupFormScript: func() begin
+		godParent.openEraseSlip := self;
+		self.slot := store:CardSlot();
+		self.icon := CardSlotIcons[slot];
+		self.screenOrientation := GetUserConfig('screenOrientation);
+		self.iconBounds := {left: 5, top: 5, right: (5 + (icon.bounds.right div 4)), bottom: (5 + icon.bounds.bottom)};
+		SetKeyView(self, 0)
+	end,
+	godParent: nil,
+	eraseStore: func(a1, a2, a3) begin
+		a1:Close();
+		(try begin
+				a2:eraseStore(a3)
+			end onexception |evt.ex| do begin
+				a2:Close();
+				Rethrow()
+			end)
+	end,
+	eraseTypeCluster: nil
+};
+
+eraseTypeCluster := {
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	viewBounds: {left: 47, top: 5, right: -8, bottom: 41},
+	clusterValue: 'eraseStore,
+	preallocatedContext: 'eraseTypeCluster,
+	viewChildren: [viewChildren:
+		{
+			viewJustify: vjParentFullH,
+			viewBounds: {left: 5, top: 0, right: 0, bottom: 12},
+			viewFont: @fontSystem10Bold,
+			text: "Entire card",
+			buttonValue: 'eraseStore,
+			_proto: @protoRadioButton
+		},
+		{
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			viewBounds: {left: 5, top: 0, right: 0, bottom: 12},
+			viewFont: @fontSystem10Bold,
+			text: "Backup only",
+			buttonValue: 'wipeBackup,
+			_proto: @protoRadioButton
+		},
+		{
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			viewBounds: {left: 5, top: 0, right: 0, bottom: 12},
+			viewFont: @fontSystem10Bold,
+			text: "Information only",
+			buttonValue: 'wipeInfo,
+			_proto: @protoRadioButton
+		}
+	],
+	_proto: @protoRadioCluster
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+wipeInfo_code := same("eraseSlip.wipeInfo.instructions");

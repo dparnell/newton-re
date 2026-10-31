@@ -1,0 +1,3 @@
+// txCanonicalTab, and what only it reaches
+
+txCanonicalTab := {value: nil, kind: nil};

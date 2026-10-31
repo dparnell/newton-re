@@ -1,5 +1,0 @@
-@@ 0x46c875
-func() begin
-	self:Recognize()
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x5a5add
-func() begin
-	self:doGoBack()
-end
-@@end

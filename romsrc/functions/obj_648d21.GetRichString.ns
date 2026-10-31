@@ -1,5 +1,0 @@
-@@ 0x41e281
-func() begin
-	MakeRichString(entryLine.text, entryLine.styles)
-end
-@@end

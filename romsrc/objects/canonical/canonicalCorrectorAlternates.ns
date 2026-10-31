@@ -1,0 +1,3 @@
+// canonicalCorrectorAlternates, and what only it reaches
+
+canonicalCorrectorAlternates := {words: nil, ink: nil};

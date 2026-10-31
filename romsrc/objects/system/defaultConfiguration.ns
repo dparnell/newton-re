@@ -1,0 +1,3 @@
+// defaultConfiguration, and what only it reaches
+
+defaultConfiguration := {autoStatus: true};

@@ -1,0 +1,7 @@
+// keyCapsBitmap, and what only it reaches
+
+keyCapsBitmap := {
+	mask: bitmap('mask, "resources/mask/3d6199.png", "000000000004012c012c0018013b0037", 1),
+	bits: bitmap('bits, "resources/bits/3d61f1.png", "000000000004012c012c0018013b0037", 1),
+	bounds: {left: 0, top: 0, right: 31, bottom: 15}
+};

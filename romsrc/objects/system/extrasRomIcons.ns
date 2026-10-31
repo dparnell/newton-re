@@ -1,0 +1,549 @@
+// extrasRomIcons, and what only it reaches
+
+extrasRomIcons := [|Array|:
+	{
+		iconPro: {
+			unhilited: {
+				bounds: unhilitedBounds,
+				mask: bitmap('mask, "resources/mask/539709.png", "000000000004000000000000001a001f", 1),
+				colordata: [|Array|:
+					{
+						cbits: bitmap('cbits, "resources/cbits/539811.png", "000000000010000000000000001a001f", 4),
+						bitdepth: 4
+					},
+					{cbits: colordataCbits, bitdepth: 1}
+				]
+			},
+			hilited: {
+				bounds: {left: 0, top: 0, right: 31, bottom: 26},
+				mask: bitmap('mask, "resources/mask/5393d5.png", "000000000004000000000000001a001f", 1),
+				colordata: [|Array|:
+					{
+						cbits: bitmap('cbits, "resources/cbits/5394dd.png", "000000000010000000000000001a001f", 4),
+						bitdepth: 4
+					},
+					{
+						cbits: bitmap('bits, "resources/bits/539459.png", "000000000004000000000000001a001f", 1),
+						bitdepth: 1
+					}
+				]
+			}
+		},
+		icon: {
+			bits: colordataCbits,
+			bounds: unhilitedBounds,
+			mask: bitmap('mask, "resources/mask/539a3d.png", "000000000004000000000000001a001f", 1)
+		}
+	},
+	{
+		iconPro: {
+			unhilited: {
+				bounds: unhilitedBounds_2,
+				mask: unhilitedMask,
+				colordata: [|Array|:
+					{
+						cbits: bitmap('cbits, "resources/cbits/539eb5.png", "00000000001000000000000000190020", 4),
+						bitdepth: 4
+					},
+					{cbits: colordataCbits_2, bitdepth: 1}
+				]
+			},
+			hilited: {
+				bounds: {left: 0, top: 0, right: 32, bottom: 25},
+				mask: unhilitedMask,
+				colordata: [|Array|:
+					{
+						cbits: bitmap('cbits, "resources/cbits/539c19.png", "00000000001000000000000000190020", 4),
+						bitdepth: 4
+					},
+					{
+						cbits: bitmap('bits, "resources/bits/539b99.png", "00000000000400000000000000190020", 1),
+						bitdepth: 1
+					}
+				]
+			}
+		},
+		icon: {
+			bits: colordataCbits_2,
+			bounds: unhilitedBounds_2,
+			mask: bitmap('mask, "resources/mask/53a0d1.png", "00000000000400000000000000190020", 1)
+		}
+	},
+	{
+		iconPro: {
+			unhilited: {
+				bounds: unhilitedBounds_3,
+				mask: bitmap('mask, "resources/mask/53a47d.png", "0000000000040000000000000017001e", 1),
+				colordata: [|Array|:
+					{
+						cbits: bitmap('cbits, "resources/cbits/53a56d.png", "0000000000100000000000000017001e", 4),
+						bitdepth: 4
+					},
+					{cbits: colordataCbits_3, bitdepth: 1}
+				]
+			},
+			hilited: {
+				bounds: {left: 0, top: 0, right: 30, bottom: 23},
+				mask: bitmap('mask, "resources/mask/53a191.png", "0000000000040000000000000017001e", 1),
+				colordata: [|Array|:
+					{
+						cbits: bitmap('cbits, "resources/cbits/53a281.png", "0000000000100000000000000017001e", 4),
+						bitdepth: 4
+					},
+					{
+						cbits: bitmap('bits, "resources/bits/53a209.png", "0000000000040000000000000017001e", 1),
+						bitdepth: 1
+					}
+				]
+			}
+		},
+		icon: {
+			bits: colordataCbits_3,
+			bounds: unhilitedBounds_3,
+			mask: bitmap('mask, "resources/mask/53a769.png", "0000000000040000000000000017001e", 1)
+		}
+	},
+	{
+		iconPro: {
+			unhilited: {
+				bounds: unhilitedBounds_4,
+				mask: unhilitedMask_3,
+				colordata: [|Array|: {cbits: colordataCbits_9, bitdepth: 4}, {cbits: colordataCbits_8, bitdepth: 1}]
+			},
+			hilited: {
+				bounds: {left: 0, top: 0, right: 34, bottom: 27},
+				mask: hilitedMask,
+				colordata: [|Array|: {cbits: colordataCbits_6, bitdepth: 4}, {cbits: colordataCbits_7, bitdepth: 1}]
+			}
+		},
+		icon: {bits: colordataCbits_8, bounds: unhilitedBounds_4, mask: extrasRomIconsMask}
+	},
+	{
+		iconPro: {
+			unhilited: {
+				bounds: unhilitedBounds_5,
+				mask: unhilitedMask_2,
+				colordata: [|Array|:
+					{
+						cbits: bitmap('cbits, "resources/cbits/53aded.png", "000000000010000000000000001a0019", 4),
+						bitdepth: 4
+					},
+					{cbits: colordataCbits_4, bitdepth: 1}
+				]
+			},
+			hilited: {
+				bounds: {left: 0, top: 0, right: 25, bottom: 26},
+				mask: unhilitedMask_2,
+				colordata: [|Array|:
+					{
+						cbits: bitmap('cbits, "resources/cbits/53ab3d.png", "000000000010000000000000001a0019", 4),
+						bitdepth: 4
+					},
+					{
+						cbits: bitmap('bits, "resources/bits/53aab9.png", "000000000004000000000000001a0019", 1),
+						bitdepth: 1
+					}
+				]
+			}
+		},
+		icon: {
+			bits: colordataCbits_4,
+			bounds: unhilitedBounds_5,
+			mask: bitmap('mask, "resources/mask/53b019.png", "000000000004000000000000001a0019", 1)
+		}
+	},
+	{
+		iconPro: {
+			unhilited: {
+				bounds: unhilitedBounds_6,
+				mask: bitmap('mask, "resources/mask/53b3e1.png", "0000000000040000000000000018001e", 1),
+				colordata: [|Array|:
+					{
+						cbits: bitmap('cbits, "resources/cbits/53b4d9.png", "0000000000100000000000000018001e", 4),
+						bitdepth: 4
+					},
+					{cbits: colordataCbits_5, bitdepth: 1}
+				]
+			},
+			hilited: {
+				bounds: {left: 0, top: 0, right: 30, bottom: 24},
+				mask: bitmap('mask, "resources/mask/53b0dd.png", "0000000000040000000000000018001e", 1),
+				colordata: [|Array|:
+					{
+						cbits: bitmap('cbits, "resources/cbits/53b1d5.png", "0000000000100000000000000018001e", 4),
+						bitdepth: 4
+					},
+					{
+						cbits: bitmap('bits, "resources/bits/53b159.png", "0000000000040000000000000018001e", 1),
+						bitdepth: 1
+					}
+				]
+			}
+		},
+		icon: {
+			bits: colordataCbits_5,
+			bounds: unhilitedBounds_6,
+			mask: bitmap('mask, "resources/mask/53b6e5.png", "0000000000040000000000000018001e", 1)
+		}
+	},
+	{
+		iconPro: {
+			unhilited: {
+				bounds: unhilitedBounds_7,
+				mask: unhilitedMask_3,
+				colordata: [|Array|: {cbits: colordataCbits_9, bitdepth: 4}, {cbits: colordataCbits_8, bitdepth: 1}]
+			},
+			hilited: {
+				bounds: {left: 0, top: 0, right: 34, bottom: 27},
+				mask: hilitedMask,
+				colordata: [|Array|: {cbits: colordataCbits_6, bitdepth: 4}, {cbits: colordataCbits_7, bitdepth: 1}]
+			}
+		},
+		icon: {bits: colordataCbits_8, bounds: unhilitedBounds_7, mask: extrasRomIconsMask}
+	},
+	{
+		iconPro: {
+			unhilited: {
+				bounds: unhilitedBounds_8,
+				mask: unhilitedMask_3,
+				colordata: [|Array|: {cbits: colordataCbits_9, bitdepth: 4}, {cbits: colordataCbits_8, bitdepth: 1}]
+			},
+			hilited: {
+				bounds: {left: 0, top: 0, right: 34, bottom: 27},
+				mask: hilitedMask,
+				colordata: [|Array|: {cbits: colordataCbits_6, bitdepth: 4}, {cbits: colordataCbits_7, bitdepth: 1}]
+			}
+		},
+		icon: {bits: colordataCbits_8, bounds: unhilitedBounds_8, mask: extrasRomIconsMask}
+	},
+	{
+		iconPro: {
+			unhilited: {
+				bounds: unhilitedBounds_9,
+				mask: unhilitedMask_3,
+				colordata: [|Array|: {cbits: colordataCbits_9, bitdepth: 4}, {cbits: colordataCbits_8, bitdepth: 1}]
+			},
+			hilited: {
+				bounds: {left: 0, top: 0, right: 34, bottom: 27},
+				mask: hilitedMask,
+				colordata: [|Array|: {cbits: colordataCbits_6, bitdepth: 4}, {cbits: colordataCbits_7, bitdepth: 1}]
+			}
+		},
+		icon: {bits: colordataCbits_8, bounds: unhilitedBounds_9, mask: extrasRomIconsMask}
+	},
+	{
+		iconPro: {
+			unhilited: {
+				bounds: unhilitedBounds_10,
+				mask: bitmap('mask, "resources/mask/53c6a5.png", "000000000004000000000000001c001d", 1),
+				colordata: [|Array|:
+					{
+						cbits: bitmap('cbits, "resources/cbits/53c7bd.png", "000000000010000000000000001c001d", 4),
+						bitdepth: 4
+					},
+					{cbits: colordataCbits_10, bitdepth: 1}
+				]
+			},
+			hilited: {
+				bounds: {left: 0, top: 0, right: 29, bottom: 28},
+				mask: bitmap('mask, "resources/mask/53c341.png", "000000000004000000000000001c001d", 1),
+				colordata: [|Array|:
+					{
+						cbits: bitmap('cbits, "resources/cbits/53c459.png", "000000000010000000000000001c001d", 4),
+						bitdepth: 4
+					},
+					{
+						cbits: bitmap('bits, "resources/bits/53c3cd.png", "000000000004000000000000001c001d", 1),
+						bitdepth: 1
+					}
+				]
+			}
+		},
+		icon: {
+			bits: colordataCbits_10,
+			bounds: unhilitedBounds_10,
+			mask: bitmap('mask, "resources/mask/53ca09.png", "000000000004000000000000001c001d", 1)
+		}
+	},
+	{
+		iconPro: {
+			unhilited: {
+				bounds: unhilitedBounds_11,
+				mask: bitmap('mask, "resources/mask/53d021.png", "000000000008000000000000001d002f", 1),
+				colordata: [|Array|:
+					{
+						cbits: bitmap('cbits, "resources/cbits/53d229.png", "000000000018000000000000001d002f", 4),
+						bitdepth: 4
+					},
+					{cbits: colordataCbits_11, bitdepth: 1}
+				]
+			},
+			hilited: {
+				bounds: {left: 0, top: 0, right: 47, bottom: 29},
+				mask: bitmap('mask, "resources/mask/53cad5.png", "000000000008000000000000001d002f", 1),
+				colordata: [|Array|:
+					{
+						cbits: bitmap('cbits, "resources/cbits/53ccdd.png", "000000000018000000000000001d002f", 4),
+						bitdepth: 4
+					},
+					{
+						cbits: bitmap('bits, "resources/bits/53cbd9.png", "000000000008000000000000001d002f", 1),
+						bitdepth: 1
+					}
+				]
+			}
+		},
+		icon: {
+			bits: colordataCbits_11,
+			bounds: unhilitedBounds_11,
+			mask: bitmap('mask, "resources/mask/53d56d.png", "000000000008000000000000001d002f", 1)
+		}
+	},
+	{
+		iconPro: @notesBitmap,
+		icon: {
+			bits: colordataCbits_19,
+			bounds: unhilitedBounds_19,
+			mask: bitmap('mask, "resources/mask/540ed9.png", "000000000004000000000000001b0015", 1)
+		}
+	},
+	{
+		iconPro: @onlineBitmap,
+		icon: {
+			bits: colordataCbits_17,
+			bounds: unhilitedBounds_17,
+			mask: bitmap('mask, "resources/mask/54023d.png", "000000000004000000000000001d001c", 1)
+		}
+	},
+	{
+		iconPro: @cardBitmap,
+		icon: {
+			bits: colordataCbits_18,
+			bounds: unhilitedBounds_18,
+			mask: bitmap('mask, "resources/mask/54087d.png", "000000000004000000000000001a0013", 1)
+		}
+	},
+	{
+		iconPro: @calculatorBitmap,
+		icon: {
+			bits: colordataCbits_15,
+			bounds: unhilitedBounds_15,
+			mask: bitmap('mask, "resources/mask/53f305.png", "000000000004000000000000001b0016", 1)
+		}
+	},
+	{
+		iconPro: @globeBitmap,
+		icon: {
+			bits: colordataCbits_14,
+			bounds: unhilitedBounds_14,
+			mask: bitmap('mask, "resources/mask/53ecad.png", "00000000000400000000000000190020", 1)
+		}
+	},
+	{
+		iconPro: @alarmIconBitmap,
+		icon: {
+			bits: colordataCbits_20,
+			bounds: unhilitedBounds_20,
+			mask: bitmap('mask, "resources/mask/5415e1.png", "000000000004000000000000001a0020", 1)
+		}
+	},
+	{
+		iconPro: @paletteBitmap,
+		icon: {
+			bits: colordataCbits_16,
+			bounds: unhilitedBounds_16,
+			mask: bitmap('mask, "resources/mask/53fa9d.png", "000000000004000000000000001d001b", 1)
+		}
+	},
+	{
+		iconPro: @prefsBitmap,
+		icon: {
+			bits: colordataCbits_21,
+			bounds: unhilitedBounds_21,
+			mask: bitmap('mask, "resources/mask/541bc5.png", "00000000000400000000000000180015", 1)
+		}
+	},
+	{
+		iconPro: @ownerBitmap,
+		icon: {
+			bits: colordataCbits_22,
+			bounds: unhilitedBounds_22,
+			mask: bitmap('mask, "resources/mask/542135.png", "0000000000040000000000000014001e", 1)
+		}
+	},
+	{
+		iconPro: {
+			unhilited: {
+				bounds: unhilitedBounds_13,
+				mask: bitmap('mask, "resources/mask/53e0ed.png", "0000000000040000000000000017001a", 1),
+				colordata: [|Array|:
+					{
+						cbits: bitmap('cbits, "resources/cbits/53e1dd.png", "0000000000100000000000000017001a", 4),
+						bitdepth: 4
+					},
+					{cbits: colordataCbits_13, bitdepth: 1}
+				]
+			},
+			hilited: {
+				bounds: {left: 0, top: 0, right: 26, bottom: 23},
+				mask: bitmap('mask, "resources/mask/53de01.png", "0000000000040000000000000017001a", 1),
+				colordata: [|Array|:
+					{
+						cbits: bitmap('cbits, "resources/cbits/53def1.png", "0000000000100000000000000017001a", 4),
+						bitdepth: 4
+					},
+					{
+						cbits: bitmap('bits, "resources/bits/53de79.png", "0000000000040000000000000017001a", 1),
+						bitdepth: 1
+					}
+				]
+			}
+		},
+		icon: {
+			bits: colordataCbits_13,
+			bounds: unhilitedBounds_13,
+			mask: bitmap('mask, "resources/mask/53e3d9.png", "0000000000040000000000000017001a", 1)
+		}
+	},
+	{
+		iconPro: {
+			unhilited: {
+				bounds: unhilitedBounds_12,
+				mask: bitmap('mask, "resources/mask/53d9b5.png", "000000000004000000000000001d001e", 1),
+				colordata: [|Array|:
+					{
+						cbits: bitmap('cbits, "resources/cbits/53dad5.png", "000000000010000000000000001d001e", 4),
+						bitdepth: 4
+					},
+					{cbits: colordataCbits_12, bitdepth: 1}
+				]
+			},
+			hilited: {
+				bounds: {left: 0, top: 0, right: 30, bottom: 29},
+				mask: bitmap('mask, "resources/mask/53d6c9.png", "000000000004000000000000001d001e", 1),
+				colordata: [|Array|:
+					{
+						cbits: bitmap('cbits, "resources/cbits/53d759.png", "000000000010000000000000001d001e", 4),
+						bitdepth: 4
+					},
+					{cbits: colordataCbits_12, bitdepth: 1}
+				]
+			}
+		},
+		icon: {
+			bits: colordataCbits_12,
+			bounds: unhilitedBounds_12,
+			mask: bitmap('mask, "resources/mask/53dd31.png", "000000000004000000000000001d001e", 1)
+		}
+	},
+	{
+		iconPro: @namesBitmap,
+		icon: {
+			bits: colordataCbits_23,
+			bounds: unhilitedBounds_23,
+			mask: bitmap('mask, "resources/mask/542a49.png", "00000000000800000000000000190022", 1)
+		}
+	},
+	{
+		iconPro: @datesBitmap,
+		icon: {
+			bits: colordataCbits_24,
+			bounds: unhilitedBounds_24,
+			mask: bitmap('mask, "resources/mask/543169.png", "0000000000040000000000000018001d", 1)
+		}
+	},
+	{
+		iconPro: @extrasBitmap,
+		icon: {
+			bits: colordataCbits_25,
+			bounds: unhilitedBounds_25,
+			mask: bitmap('mask, "resources/mask/5437a5.png", "00000000000400000000000000160020", 1)
+		}
+	},
+	{
+		iconPro: @undoBitmap,
+		icon: {
+			bits: colordataCbits_26,
+			bounds: unhilitedBounds_26,
+			mask: bitmap('mask, "resources/mask/543d79.png", "00000000000400000000000000180015", 1)
+		}
+	},
+	{
+		iconPro: @findBitmap,
+		icon: {
+			bits: colordataCbits_27,
+			bounds: unhilitedBounds_27,
+			mask: bitmap('mask, "resources/mask/5442fd.png", "00000000000400000000000000190017", 1)
+		}
+	},
+	{
+		iconPro: @assistBitmap,
+		icon: {
+			bits: colordataCbits_28,
+			bounds: unhilitedBounds_28,
+			mask: bitmap('mask, "resources/mask/544a2d.png", "000000000004000000000000001b0019", 1)
+		}
+	}
+];
+
+colordataCbits := bitmap('bits, "resources/bits/53978d.png", "000000000004000000000000001a001f", 1);
+
+unhilitedBounds := {left: 0, top: 0, right: 31, bottom: 26};
+
+unhilitedMask := bitmap('mask, "resources/mask/539b19.png", "00000000000400000000000000190020", 1);
+
+colordataCbits_2 := bitmap('bits, "resources/bits/539e35.png", "00000000000400000000000000190020", 1);
+
+unhilitedBounds_2 := {left: 0, top: 0, right: 32, bottom: 25};
+
+colordataCbits_3 := bitmap('bits, "resources/bits/53a4f5.png", "0000000000040000000000000017001e", 1);
+
+unhilitedBounds_3 := {left: 0, top: 0, right: 30, bottom: 23};
+
+hilitedMask := bitmap('mask, "resources/mask/53a821.png", "000000000008000000000000001b0022", 1);
+
+unhilitedBounds_4 := {left: 0, top: 0, right: 34, bottom: 27};
+
+unhilitedMask_2 := bitmap('mask, "resources/mask/53aa35.png", "000000000004000000000000001a0019", 1);
+
+colordataCbits_4 := bitmap('bits, "resources/bits/53ad69.png", "000000000004000000000000001a0019", 1);
+
+unhilitedBounds_5 := {left: 0, top: 0, right: 25, bottom: 26};
+
+colordataCbits_5 := bitmap('bits, "resources/bits/53b45d.png", "0000000000040000000000000018001e", 1);
+
+unhilitedBounds_6 := {left: 0, top: 0, right: 30, bottom: 24};
+
+unhilitedMask_3 := bitmap('mask, "resources/mask/53b811.png", "000000000008000000000000001b0022", 1);
+
+unhilitedBounds_7 := {left: 0, top: 0, right: 34, bottom: 27};
+
+colordataCbits_6 := bitmap('cbits, "resources/cbits/53b9b5.png", "000000000014000000000000001b0022", 4);
+
+unhilitedBounds_8 := {left: 0, top: 0, right: 34, bottom: 27};
+
+extrasRomIconsMask := bitmap('mask, "resources/mask/53bccd.png", "000000000008000000000000001b0022", 1);
+
+colordataCbits_7 := bitmap('bits, "resources/bits/53be01.png", "000000000008000000000000001b0022", 1);
+
+colordataCbits_8 := bitmap('bits, "resources/bits/53bf65.png", "000000000008000000000000001b0022", 1);
+
+colordataCbits_9 := bitmap('cbits, "resources/cbits/53c059.png", "000000000014000000000000001b0022", 4);
+
+unhilitedBounds_9 := {left: 0, top: 0, right: 34, bottom: 27};
+
+colordataCbits_10 := bitmap('bits, "resources/bits/53c731.png", "000000000004000000000000001c001d", 1);
+
+unhilitedBounds_10 := {left: 0, top: 0, right: 29, bottom: 28};
+
+colordataCbits_11 := bitmap('bits, "resources/bits/53d125.png", "000000000008000000000000001d002f", 1);
+
+unhilitedBounds_11 := {left: 0, top: 0, right: 47, bottom: 29};
+
+colordataCbits_12 := bitmap('bits, "resources/bits/53da45.png", "000000000004000000000000001d001e", 1);
+
+unhilitedBounds_12 := {left: 0, top: 0, right: 30, bottom: 29};
+
+colordataCbits_13 := bitmap('bits, "resources/bits/53e165.png", "0000000000040000000000000017001a", 1);
+
+unhilitedBounds_13 := {left: 0, top: 0, right: 26, bottom: 23};

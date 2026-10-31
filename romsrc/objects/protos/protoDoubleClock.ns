@@ -1,0 +1,38 @@
+// protoDoubleClock, and what only it reaches
+
+protoDoubleClock := {
+	viewFlags: vVisible,
+	viewFormat: nil,
+	viewBounds: {left: 2, top: 5, right: 130, bottom: 156},
+	viewClass: clView,
+	viewChildren: [viewChildren: analogClock_2, DigitalClock],
+	analogClock: nil,
+	allocateContext: [|Array|: 'analogClock, analogClock_2, 'DigitalClock, DigitalClock],
+	DigitalClock: nil
+};
+
+analogClock_2 := {
+	viewBounds: {left: 0, top: 0, right: 116, bottom: 116},
+	viewJustify: vjParentCenterH,
+	TimeChanged: func() begin
+		DigitalClock:Refresh();
+		self:Parent():?TimeChanged()
+	end,
+	preallocatedContext: 'analogClock,
+	_proto: @protoNewSetClock
+};
+
+DigitalClock := {
+	viewBounds: {left: 0, top: 123, right: 124, bottom: 151},
+	viewJustify: vjParentCenterH,
+	TimeChanged: func() begin
+		analogClock:Refresh();
+		self:Parent():?TimeChanged()
+	end,
+	preallocatedContext: 'DigitalClock,
+	_proto: @protoDigitalClock
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+TimeChanged_code_2 := same("analogClock_2.TimeChanged.instructions");

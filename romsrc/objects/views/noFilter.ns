@@ -1,0 +1,3 @@
+// noFilter, and what only it reaches
+
+noFilter := {item: "Any", _MultiWord: true};

@@ -1,0 +1,8 @@
+// protoConfigServer, and what only it reaches
+
+protoConfigServer := {
+	Dispose: {class: #132, funcPtr: 6990161, numArgs: 0},
+	Instantiate: {class: #132, funcPtr: 6990163, numArgs: 2},
+	getdefaultConfig: {class: #132, funcPtr: 6990162, numArgs: 0},
+	setdefaultConfig: {class: #132, funcPtr: 6990164, numArgs: 1}
+};

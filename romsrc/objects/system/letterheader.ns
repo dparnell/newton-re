@@ -1,0 +1,33 @@
+// letterheader, and what only it reaches
+
+letterheader := {
+	viewClass: clView,
+	viewBounds: {left: 0, top: 10, right: 400, bottom: 62},
+	viewFlags: vVisible + vReadOnly,
+	viewFormat: 0,
+	viewJustify: vjParentCenterH,
+	viewChildren: [|Array|:
+		{
+			viewClass: clTextView,
+			viewBounds: {left: 0, top: 10, right: 400, bottom: 26},
+			viewFlags: vVisible + vReadOnly,
+			viewJustify: vjCenterH,
+			viewFont: tsSimple + tsSize(12) + tsBold,
+			text: nil,
+			viewSetupFormScript: func() begin
+				(text := userConfiguration.name)
+			end
+		},
+		{
+			viewClass: clParagraphView,
+			viewBounds: {left: 0, top: 26, right: 400, bottom: 52},
+			viewFlags: vVisible + vReadOnly,
+			viewJustify: vjCenterH,
+			viewFont: tsSimple + tsSize(10),
+			text: nil,
+			viewSetupFormScript: func() begin
+				(text := Stringer([Array: userConfiguration.address, $\n, userConfiguration.cityZip]))
+			end
+		}
+	]
+};

@@ -1,0 +1,25 @@
+// protoRecognitionCluster, and what only it reaches
+
+protoRecognitionCluster := {
+	viewClass: clView,
+	viewFlags: vVisible + vClipping,
+	viewFormat: vfFillWhite,
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	viewBounds: {left: 0, top: 5, right: 0, bottom: 83},
+	viewSetupFormScript: func() begin
+		// (an addition: a row taller for each of the host's handwriting
+		//  engines, recognition/WordEngines.h, whose buttons the cluster adds)
+		if GlobalFnExists('HostWordEngines) then begin
+			local n := Length(HostWordEngines());
+			if n > 0 then
+				self.viewBounds := {left: viewBounds.left, top: viewBounds.top, right: viewBounds.right,
+									bottom: viewBounds.bottom + hostEngineRow * n};
+		end;
+	end,
+	hostEngineRow: 13,
+	viewChildren: [viewChildren: label, LetterSetCluster, wordExample],
+	label: nil,
+	allocateContext: [|Array|: 'label, label, 'LetterSetCluster, LetterSetCluster, 'wordExample, wordExample],
+	LetterSetCluster: nil,
+	wordExample: nil
+};

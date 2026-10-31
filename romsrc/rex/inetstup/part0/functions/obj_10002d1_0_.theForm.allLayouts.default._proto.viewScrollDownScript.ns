@@ -1,6 +1,0 @@
-@@ 0x1015339
-func() begin
-	ClearUndoStacks();
-	entryView:Effect(77725696, true, @85, 'Scroller, [Array: 1])
-end
-@@end

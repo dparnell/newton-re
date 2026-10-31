@@ -1,6 +1,0 @@
-@@ 0x525185
-func() begin
-	SetValue(assistMsg, 'text, "Please check ink translation, then tap Do");
-	RefreshViews()
-end
-@@end

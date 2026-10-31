@@ -1,6 +1,0 @@
-@@ 0x49d8bd
-func(a1) begin
-	clicker();
-	newtAppBase:ShowLayout(nil)
-end
-@@end

@@ -1,0 +1,11 @@
+// protoRadioButton, and what only it reaches
+
+protoRadioButton := {
+	_proto: @protoCheckbox,
+	icon: @radioOffBitmap,
+	onBitmap: @radioOnBitmap,
+	offBitmap: @radioOffBitmap,
+	radioClickScript: radioClickScript,
+	viewClickScript: viewClickScript_2,
+	debug: 2887824
+};

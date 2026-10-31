@@ -1,0 +1,316 @@
+// export84, and what only it reaches
+
+export84 := {
+	viewBounds: {left: 0, top: 30, right: 224, bottom: 280},
+	stepChildren: [stepChildren:
+		{
+			title: nil,
+			viewSetupFormScript: func() begin
+				self.title := configOptions.title;
+				if (not title) then begin
+						self.title := "Dock"
+					end;
+				inherited:?viewSetupFormScript()
+			end,
+			_proto: @protoTitle
+		},
+		name,
+		password,
+		export84Item,
+		export84Item_2,
+		export84Item_3
+	],
+	configOptions: nil,
+	viewSetupFormScript: func() begin
+		local l1, l2, l3;
+		l1 := configOptions;
+		l2 := 0;
+		if (not l1.|name?|) then begin
+				nameInput.viewFlags := BAnd(nameInput.viewFlags, -2);
+				l2 := (l2 + 55)
+			end;
+		l3 := true;
+		if ((if (not l1.|password?|.guest) then (not l1.|password?|.users)) or (if (not l1.|guest?|) then (not l1.|password?|.users))) then begin
+				passwordInput.viewFlags := BAnd(passwordInput.viewFlags, -2);
+				l3 := nil;
+				l2 := (l2 + 55)
+			end;
+		if (not l1.buttonTitle) then begin
+				cancelButton.viewFlags := BAnd(cancelButton.viewFlags, -2)
+			end;
+		if ((not l1.Keyboard) or (if (not l1.|name?|) then (not l3))) then begin
+				Keyboard.viewFlags := BAnd(Keyboard.viewFlags, -2);
+				l2 := (l2 + 91)
+			end;
+		if (l2 > 0) then begin
+				self.viewBounds := Clone(viewBounds);
+				viewBounds.bottom := (viewBounds.bottom - l2)
+			end;
+		(if endpoint then endpoint:StartIdle(self, 2000))
+	end,
+	endpoint: nil,
+	callback: nil,
+	OpenOn: func(a1, a2, a3) begin
+		local l1;
+		(l1 := BuildContext(self)).endpoint := a1;
+		l1.callback := a2;
+		l1.configOptions := a3;
+		(if a3.modal then l1:ModalDialog() else l1:FilterDialog())
+	end,
+	viewIdleScript: func() begin
+		(if (if endpoint then endpoint.connected) then return endpoint:IdleConnection(true) else begin
+				self.needToAbort := true;
+				AddDeferredSend(self, 'Close, nil);
+				return 0
+			end)
+	end,
+	viewQuitScript: func() begin
+		local l1;
+		if needToAbort then begin
+				if configOptions.modal then begin
+						call callback with (nil)
+					end else begin
+						AddDeferredCall(callback, [Array: nil])
+					end;
+				return nil
+			end;
+		if endpoint then begin
+				endpoint:StopIdle(self)
+			end;
+		l1 := {userName: nil, password: nil, userCancel: nil};
+		if configOptions.|name?| then begin
+				l1.userName := nameInput.entryLine.text;
+				if (if configOptions.|guest?| then (nameInput.curLabelCommand = (Length(nameInput.labelCommands) - 1))) then begin
+						l1.userName := 'guest
+					end
+			end;
+		if (configOptions.|password?|.guest or configOptions.|password?|.users) then begin
+				if ((if (l1.userName = 'guest) then configOptions.|password?|.guest) or (if (not (l1.userName = 'guest)) then configOptions.|password?|.users)) then begin
+						if passwordInput.passwordVisible then begin
+								l1.password := passwordInput.entryLine.text
+							end else begin
+								l1.password := passwordInput.realText
+							end
+					end
+			end;
+		l1.userCancel := userCancel;
+		if callback then begin
+				if configOptions.modal then begin
+						call callback with (l1)
+					end else begin
+						AddDeferredCall(callback, [Array: l1])
+					end
+			end;
+		inherited:?viewQuitScript()
+	end,
+	userCancel: nil,
+	viewSetupDoneScript: func() begin
+		if Visible(nameInput) then begin
+				SetKeyView(nameInput.entryLine, 9999)
+			end else begin
+				if Visible(passwordInput) then begin
+						SetKeyView(passwordInput.entryLine, 0)
+					end
+			end;
+		inherited:?viewSetupDoneScript();
+		nameInput:ShowHidePasswordInput(nameInput.guestMode)
+	end,
+	needToAbort: nil,
+	viewFlags: vFloating + vClickable,
+	_proto: @protoFloater,
+	nameInput: nil,
+	stepAllocateContext: [|Array|:
+		'nameInput,
+		name,
+		'passwordInput,
+		password,
+		'_defaultButton,
+		export84Item,
+		'cancelButton,
+		export84Item_2,
+		'Keyboard,
+		export84Item_3
+	],
+	passwordInput: nil,
+	_defaultButton: nil,
+	cancelButton: nil,
+	Keyboard: nil
+};
+
+name := {
+	viewBounds: {left: 3, top: 10, right: -3, bottom: 55},
+	viewJustify: 8396848,
+	label: "Name",
+	memory: nil,
+	labelActionScript: func(a1) begin
+		local l1;
+		self:ShowHidePasswordInput((l1 := (if configOptions.|guest?| then (a1 = (Length(labelCommands) - 1)))));
+		guestMode := l1;
+		curLabelCommand := a1;
+		nil
+	end,
+	guestMode: nil,
+	viewLineSpacing: 32,
+	viewQuitScript: func() begin
+		(if (not guestMode) then inherited:?viewQuitScript())
+	end,
+	textSetup: func() begin
+		(if (if IsArray(labelCommands) then (Length(labelCommands) > 0)) then (if IsFrame(labelCommands[curLabelCommand]) then Clone(labelCommands[curLabelCommand].item) else Clone(labelCommands[curLabelCommand])))
+	end,
+	viewSetupChildrenScript: compile(
+		constants: {
+			kLiteral_76021d: "Guest"
+		},
+		func() begin
+			if IsFunction(configOptions.memory) then begin
+					self.labelCommands := (l1 := call configOptions.memory with ());
+					local l1;
+					local l2;
+					(foreach l3, l4 in labelCommands do begin
+							if (if IsFrame(l4) then l4.mark) then begin
+									break (l2 := l3)
+								end
+						end)
+				end else begin
+					self.memory := configOptions.memory;
+					l1 := GetMemoryItems(memory)
+				end;
+			if (if IsArray(l1) then (Length(l1) > 0)) then begin
+					if l2 then begin
+							self.curLabelCommand := l2
+						end else begin
+							self.curLabelCommand := 0
+						end;
+					inherited:?viewSetupChildrenScript();
+					if configOptions.|guest?| then begin
+							AddArraySlot((labelCommands := Clone(labelCommands)), 'pickseparator);
+							AddArraySlot(labelCommands, kLiteral_76021d)
+						end
+				end else begin
+					if configOptions.|guest?| then begin
+							self.labelCommands := [Array: kLiteral_76021d]
+						end;
+					if (if IsArray(labelCommands) then (Length(labelCommands) > 0)) then begin
+							self.curLabelCommand := 0
+						end;
+					inherited:?viewSetupChildrenScript()
+				end;
+			if (if configOptions.|guest?| then (curLabelCommand = (Length(labelCommands) - 1))) then begin
+					guestMode := true
+				end;
+			(labelLine.viewClickScript := labelLineFix)
+		end),
+	textChanged: func() begin
+		local l1;
+		if (if configOptions.|guest?| then StrEqual(entryLine.text, labelCommands[(Length(labelCommands) - 1)])) then begin
+				l1 := true;
+				curLabelCommand := (Length(labelCommands) - 1)
+			end else begin
+				l1 := nil;
+				curLabelCommand := nil
+			end;
+		self:ShowHidePasswordInput(l1);
+		(guestMode := l1)
+	end,
+	labelLineFix: func(a1) begin
+		local l1, l2, l3;
+		(if (if (not self:labelClick(a1)) then labelCommands) then begin
+				if self:TrackHilite(a1) then begin
+						if curLabelCommand then begin
+								if IsFrame((l2 := labelCommands[curLabelCommand])) then begin
+										l3 := l2.item
+									end else begin
+										l3 := l2
+									end;
+								if (not StrEqual(entryLine.text, l3)) then begin
+										curLabelCommand := nil
+									end
+							end;
+						if (curLabelCommand = nil) then begin
+								l1 := labelCommands
+							end else begin
+								if (not IsFrame((l1 := Clone(labelCommands))[curLabelCommand])) then begin
+										l1[curLabelCommand] := {item: l1[curLabelCommand], mark: $\uFC0B}
+									end else begin
+										(l1[curLabelCommand] := Clone(l1[curLabelCommand])).mark := $\uFC0B
+									end
+							end;
+						self:PopupMenu(l1, {indent: indent});
+						entryLine:dirty()
+					end;
+				true
+			end)
+	end,
+	ShowHidePasswordInput: func(a1) begin
+		local l1, l2;
+		l1 := true;
+		if ((if a1 then (not configOptions.|password?|.guest)) or (if (not a1) then (not configOptions.|password?|.users))) then begin
+				l1 := nil
+			end;
+		(if (if passwordInput then passwordInput.viewCObject) then begin
+				if l1 then begin
+						passwordInput:Show()
+					end else begin
+						passwordInput:Hide()
+					end;
+				SetValue(passwordInput.entryLine, 'text, "");
+				SetValue(passwordInput, 'realText, "");
+				(if l1 then begin
+						if ((if a1 then (configOptions.|password?|.guest = 'Visible)) or (if (not a1) then (configOptions.|password?|.users = 'Visible))) then begin
+								l2 := true
+							end;
+						(passwordInput.passwordVisible := l2)
+					end)
+			end)
+	end,
+	_proto: @protoLabelInputLine,
+	preAllocatedContext: 'nameInput
+};
+
+password := {
+	viewBounds: {left: 3, top: 10, right: -3, bottom: 55},
+	viewJustify: 8396848,
+	label: "Password",
+	viewLineSpacing: 32,
+	indent: nil,
+	passwordVisible: nil,
+	textChanged: func() begin
+		(if (not passwordVisible) then inherited:textChanged())
+	end,
+	UpdateText: func(a1) begin
+		(if (not passwordVisible) then inherited:UpdateText(a1) else begin
+				AddUndoAction('UpdateText, [Array: Clone(entryLine.text)]);
+				SetValue(entryLine, 'text, a1);
+				entryLine:SetHilite(9999, 9999, true)
+			end)
+	end,
+	_proto: @blindEntryLine,
+	preAllocatedContext: 'passwordInput
+};
+
+export84Item := {_proto: @protoCancelButton, preAllocatedContext: '_defaultButton};
+
+export84Item_2 := {
+	buttonClickScript: func() begin
+		base.userCancel := true;
+		AddDeferredAction(func() begin
+			base:Close()
+		end, nil)
+	end,
+	text: nil,
+	viewBounds: {left: -100, top: 0, right: -6, bottom: 0},
+	viewJustify: 8402950,
+	viewSetupFormScript: func() begin
+		self.text := configOptions.buttonTitle;
+		(self.viewBounds := {left: (((-StrWidth(text)) - 6) - 7), top: 0, right: -7, bottom: 0})
+	end,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'cancelButton
+};
+
+export84Item_3 := {
+	viewBounds: {top: -91, left: 0, right: 226, bottom: -10},
+	viewJustify: vjParentCenterH + vjSiblingTopV,
+	_proto: @alphaKeys,
+	preAllocatedContext: 'Keyboard
+};

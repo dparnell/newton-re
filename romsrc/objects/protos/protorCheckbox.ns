@@ -1,0 +1,21 @@
+// protorCheckbox, and what only it reaches
+
+protorCheckbox := {
+	_proto: @protoCheckboxIcon,
+	icon: CheckOff,
+	onBitmap: CheckOn,
+	offBitmap: CheckOff,
+	viewJustify: vjRightH + vjCenterV,
+	viewSetupFormScript: func() begin
+		viewBounds := Clone(viewBounds);
+		(self.viewBounds.right := (((self.viewBounds.left + indent) + onBitmap.bounds.right) - onBitmap.bounds.left))
+	end,
+	viewChildren: [viewChildren:
+		{
+			viewClass: clTextView,
+			viewFlags: vVisible + vReadOnly,
+			viewJustify: 8388852,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 0}
+		}
+	]
+};

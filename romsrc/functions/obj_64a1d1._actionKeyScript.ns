@@ -1,5 +1,0 @@
-@@ 0x54c1bd
-func(a1) begin
-	PressButton(routingButton)
-end
-@@end

@@ -1,0 +1,6 @@
+// filingExtBitmap, and what only it reaches
+
+filingExtBitmap := {
+	bits: bitmap('bits, "resources/bits/3c8fad.png", "000000000004002e002e016400390173", 1),
+	bounds: {left: 0, top: 0, right: 15, bottom: 11}
+};

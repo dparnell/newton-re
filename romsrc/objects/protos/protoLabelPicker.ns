@@ -1,0 +1,197 @@
+// protoLabelPicker, and what only it reaches
+
+protoLabelPicker := {
+	LabelActionScript: func(a1) begin
+		nil
+	end,
+	indent: nil,
+	viewFormat: vfInset(1) + vfRound(3),
+	iconBounds: nil,
+	viewFlags: vVisible + vReadOnly + vClickable,
+	UpdateIcon: func(a1) begin
+		SetValue(entryLineIcon, 'icon, a1)
+	end,
+	viewBounds: nil,
+	iconSetup: func() begin
+		(if (if (if (if labelCommands then iconBounds) then (Length(labelCommands) > 0)) then IsFrame(labelCommands[0])) then labelCommands[0].icon)
+	end,
+	_proto: @protoStaticText,
+	pickerSetup: func() begin
+		true
+	end,
+	viewJustify: 8388608,
+	height: nil,
+	UpdateText: func(a1) begin
+		SetValue(entryLine, 'text, a1);
+		self:textChanged()
+	end,
+	pickCancelledScript: func() begin
+		base:hilite(nil)
+	end,
+	checkCurrentItem: true,
+	labelCommands: nil,
+	iconIndent: nil,
+	TextSetup: func() begin
+		local l1, l2;
+		l1 := "";
+		if (if labelCommands then (Length(labelCommands) > 0)) then begin
+				if IsFrame((l2 := (l1 := labelCommands[0]))) then begin
+						if (if (not (l1 := l2.item)) then l2.keyMessage) then begin
+								l1 := MatchKeyMessage(self, l2.keyMessage).name
+							end
+					end
+			end;
+		l1
+	end,
+	textChanged: func() begin
+		nil
+	end,
+	declareSelf: 'base,
+	viewSetupFormScript: func() begin
+		local l1, l2;
+		if (not (if text then BeginsWith(text, "\uFC01\u"))) then begin
+				text := Stringer([Array: $\uFC01, text])
+			end;
+		if (not indent) then begin
+				indent := (StrFontWidth(text, viewFont) + 6)
+			end;
+		if (if iconBounds then (not iconIndent)) then begin
+				iconIndent := 3
+			end;
+		if iconBounds then begin
+				l1 := (iconBounds.bottom - iconBounds.top)
+			end else begin
+				l1 := 0
+			end;
+		entryLine.text := self:TextSetup();
+		textIndent := indent;
+		if iconBounds then begin
+				entryLineIcon.icon := self:iconSetup();
+				l2 := (iconBounds.right - iconBounds.left);
+				entryLineIcon.viewBounds := SetBounds(textIndent, 0, (textIndent + l2), (iconBounds.bottom - iconBounds.top));
+				textIndent := ((textIndent + l2) + iconIndent)
+			end else begin
+				self.viewChildren := [Array: entryLine]
+			end;
+		entryLine.viewBounds := SetBounds(textIndent, 0, self:LocalBox().right, 0);
+		if HasPath(self, 'viewLineSpacing) then begin
+				entryLine.viewLineSpacing := self.viewLineSpacing
+			end else begin
+				self.viewLineSpacing := 10
+			end;
+		(height := FontHeight(viewFont))
+	end,
+	alwaysCallPickActionScript: nil,
+	Popit: func(a1) begin
+		(if self:pickerSetup() then begin
+				l1 := Clone(labelCommands);
+				if checkCurrentItem then begin
+						local l1;
+						(foreach l2, l3 in l1 do begin
+								local l5, l6, l7;
+								l5 := l3;
+								if IsFrame(l3) then begin
+										if (if (not (l5 := l3.item)) then l3.keyMessage) then begin
+												l5 := MatchKeyMessage(self, l3.keyMessage).name
+											end
+									end;
+								if (if IsString(l5) then StrEqual(entryLine.text, l5)) then begin
+										if IsFrame(l3) then begin
+												(l6 := Clone(l1[l2])).mark := $\uFC0B
+											end else begin
+												l6 := {item: l5, mark: $\uFC0B}
+											end;
+										l1[l2] := l6
+									end
+							end)
+					end;
+				(l7 := self:PopupHiliteBox()).right := a1;
+				self:PopupMenu(l1, {bounds: l7});
+				true
+			end)
+	end,
+	viewClickScript: func(a1) begin
+		if self:TrackHilite(a1) then begin
+				self:Popit((indent - 2))
+			end;
+		true
+	end,
+	viewHiliteScript: func(a1) begin
+		local l1;
+		l1 := self:PopupHiliteBox();
+		self:DrawShape(MakeRoundRect(-2, l1.top, indent, l1.bottom, 4), '{transferMode: 2, penPattern: 0, fillPattern: 5});
+		true
+	end,
+	pickActionScript: func(a1) begin
+		local l1, l2, l3;
+		if IsFrame((l1 := labelCommands[a1])) then begin
+				l2 := l1.icon;
+				if (if (not (l3 := l1.item)) then l1.keyMessage) then begin
+						l3 := MatchKeyMessage(self, l1.keyMessage).name
+					end
+			end else begin
+				l2 := nil;
+				l3 := l1
+			end;
+		self:UpdateText(l3);
+		if iconBounds then begin
+				self:UpdateIcon(l2)
+			end;
+		self:LabelActionScript(a1);
+		base:hilite(nil)
+	end,
+	viewCaretActivateScript: func(a1) begin
+		local l1;
+		(if a1 then begin
+				if indent then begin
+						l1 := (indent - 2)
+					end else begin
+						l1 := 0
+					end;
+				self:Popit(l1)
+			end)
+	end,
+	text: uCardPositionAlertButton,
+	debug: 2911004,
+	viewFont: @fontSystem9Bold,
+	PopupHiliteBox: func() begin
+		local l1;
+		l1 := self:LocalBox();
+		if HasPath(self, 'viewLineSpacing) then begin
+				l1.top := (viewLineSpacing - FontAscent(viewFont));
+				l1.bottom := (l1.top + FontHeight(viewFont))
+			end;
+		l1
+	end,
+	textIndent: nil,
+	viewChildren: [viewChildren: entryLineIcon, entryLine_4],
+	entryLineIcon: nil,
+	allocateContext: [|Array|: 'entryLineIcon, entryLineIcon, 'entryLine, entryLine_4],
+	entryLine: nil
+};
+
+entryLineIcon := {
+	viewFlags: vVisible,
+	icon: nil,
+	viewFormat: nil,
+	viewJustify: vjCenterH + vjCenterV,
+	viewBounds: {left: 0, top: 0, right: 16, bottom: 16},
+	viewClass: clPictureView,
+	debug: 280740,
+	preallocatedContext: 'entryLineIcon
+};
+
+entryLine_4 := {
+	_proto: @protoStaticText,
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewJustify: 8388800,
+	viewFont: tsHWFont + tsSize(10),
+	viewClickScript: func(a1) begin
+		nil
+	end,
+	preallocatedContext: 'entryLine
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+pickCancelledScript_code := same("protoLabelPicker.pickCancelledScript.instructions");

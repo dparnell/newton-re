@@ -1,6 +1,0 @@
-@@ 0x1039aa9
-func() begin
-	local l1;
-	(if (l1 := InetStartUp():MGetDomainService()) then l1.fProcessPortID)
-end
-@@end

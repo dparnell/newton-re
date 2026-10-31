@@ -1,0 +1,3 @@
+// countryPicker, and what only it reaches
+
+countryPicker := {_proto: @worldPicker};

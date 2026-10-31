@@ -1,0 +1,6 @@
+// recogArrowUpOutside, and what only it reaches
+
+recogArrowUpOutside := {
+	bits: bitmap('bits, "resources/bits/3d8b89.png", "0000000000040054005402ed00640306", 1),
+	bounds: {left: 0, top: 0, right: 25, bottom: 16}
+};

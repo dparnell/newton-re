@@ -1,9 +1,0 @@
-@@ 0x1025449
-func(a1, a2) begin
-	inherited:viewChangedScript(a1, a2);
-	if (target.(path) = nil) then begin
-			target.(path) := ""
-		end;
-	self:StartFlush()
-end
-@@end

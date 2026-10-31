@@ -1,5 +1,0 @@
-@@ 0x4b780d
-func(a1) begin
-	parentView:FlushEntry(a1)
-end
-@@end

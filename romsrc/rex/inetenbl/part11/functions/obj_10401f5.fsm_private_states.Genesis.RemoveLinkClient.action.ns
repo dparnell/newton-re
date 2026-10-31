@@ -1,5 +1,0 @@
-@@ 0x10484a1
-func(a1) begin
-	self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(nil), nil])
-end
-@@end

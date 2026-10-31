@@ -1,0 +1,3 @@
+// fontSystem10, and what only it reaches
+
+fontSystem10 := {family: 'espy, face: 0, size: 10};

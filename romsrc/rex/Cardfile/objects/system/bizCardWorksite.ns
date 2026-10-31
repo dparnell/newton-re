@@ -1,0 +1,42 @@
+// bizCardWorksite, and what only it reaches
+
+bizCardWorksite := {
+	bizCardIcon: {bits: bizCardIconBits, bounds: {left: 0, top: 0, right: 38, bottom: 23}},
+	bizCardNum: 1,
+	name: "bizCardWorksite",
+	symbol: 'bizCardWorksite,
+	type: 'bizcard,
+	stepChildren: [stepChildren:
+		{
+			icon: {
+				bits: bitmap('bits, "resources/bits/734d35.png", "00000000000401000100003a011e0056", 1),
+				bounds: {left: 0, top: 0, right: 28, bottom: 30}
+			},
+			viewBounds: {left: 11, top: 7, right: 39, bottom: 37},
+			viewFlags: vVisible,
+			viewFormat: 0,
+			viewClass: clPictureView
+		},
+		{
+			viewBounds: {left: 33, top: 17, right: 0, bottom: 19},
+			viewJustify: vjParentFullH + vjSiblingTopV,
+			_proto: @protoBorder
+		},
+		{
+			viewBounds: {left: 38, top: 4, right: 0, bottom: 28},
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			layouts: {worksite: [|Array|: 'default]},
+			viewFont: tsFancy + tsSize(18),
+			reduceFont: true,
+			_proto: @8242
+		},
+		{
+			viewBounds: {left: 38, top: 0, right: 0, bottom: 115},
+			layouts: {worksite: [|Array|: 'worksite, 'Connection, 'accessNumbers]},
+			viewFont: tsFancy + tsSize(10),
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			_proto: @8242
+		}
+	],
+	_proto: @8236
+};

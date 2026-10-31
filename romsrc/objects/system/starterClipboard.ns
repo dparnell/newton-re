@@ -1,0 +1,12 @@
+// starterClipboard, and what only it reaches
+
+starterClipboard := {
+	viewClass: 65637,
+	viewBounds: {left: 0, top: 0, right: 240, bottom: 0},
+	viewFlags: vVisible + vClickable + vClipboard,
+	viewFormat: vfFillBlack,
+	ReOrientToScreen: func() begin
+		true
+	end,
+	debug: 17692
+};

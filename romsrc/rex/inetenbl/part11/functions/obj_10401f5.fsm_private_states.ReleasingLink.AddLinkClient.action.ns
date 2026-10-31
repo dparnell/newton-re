@@ -1,5 +1,0 @@
-@@ 0x1048be1
-func(a1) begin
-	(if a1.fLinkID then (if (a1.fLinkID = fLinkEntry.linkID) then self:DoEvent('ReleaseTimerAddLinkClient, [Array: a1]) else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60506), -60506])) else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60501), -60501]))
-end
-@@end

@@ -1,0 +1,17 @@
+// initialinheritanceFrame, and what only it reaches
+
+initialinheritanceFrame := {
+	phone: '|string|,
+	homePhone: 'phone,
+	workPhone: 'phone,
+	faxPhone: 'phone,
+	otherPhone: 'phone,
+	carPhone: 'phone,
+	beeperPhone: 'phone,
+	mobilePhone: 'phone,
+	homefaxPhone: 'phone,
+	company: '|string|,
+	address: '|string|,
+	title: '|string|,
+	name: '|string|
+};

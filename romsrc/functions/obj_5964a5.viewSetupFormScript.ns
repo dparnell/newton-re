@@ -1,6 +1,0 @@
-@@ 0x596465
-func() begin
-	selected := target.(path);
-	inherited:?viewSetupFormScript()
-end
-@@end

@@ -1,0 +1,10 @@
+// paperrollSoupDef, and what only it reaches
+
+paperrollSoupDef := {
+	name: @paperrollSoupName,
+	userName: "notepad",
+	ownerApp: 'paperroll,
+	ownerAppName: @paperrollSoupName,
+	userDescr: private,
+	indexes: @paperrollIndices
+};

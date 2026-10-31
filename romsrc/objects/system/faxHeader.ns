@@ -1,0 +1,65 @@
+// faxHeader, and what only it reaches
+
+faxHeader := {
+	viewClass: clView,
+	viewFlags: vVisible + vReadOnly,
+	viewJustify: vjParentFullH,
+	viewBounds: {left: 20, top: 0, right: -20, bottom: 20},
+	viewFormat: 0,
+	viewChildren: [|Array|:
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 20},
+			viewFlags: vVisible + vReadOnly,
+			viewJustify: vjCenterH + vjParentFullH,
+			viewFont: tsFancy + tsSize(9),
+			viewSetupFormScript: func() begin
+				local l1, l2;
+				self.text := fromFrame.name;
+				if IsEntryAlias((l1 := GetUserConfig('currentPersona))) then begin
+						l1 := ResolveEntryAlias(l1)
+					end;
+				if (not l1) then begin
+						return nil
+					end;
+				if (if (l2 := GetRoot().cardfile:bcPhoneNumber(l1, 'faxPhone)) then StrFilled(l2[0])) then begin
+						self.text := Stringer([Array: self.text, " ", MakeDisplayPhone(l2[0])]);
+						if (if (l2 := GetRoot().cardfile:bcPhoneNumber(l1, 'workPhone)) then StrFilled(l2[0])) then begin
+								self.text := Stringer([Array: self.text, " ", MakeDisplayPhone(l2[0])])
+							end;
+						return nil
+					end;
+				(if (if (l2 := GetRoot().cardfile:bcPhoneNumber(l1, 'homefaxPhone)) then StrFilled(l2[0])) then begin
+						self.text := Stringer([Array: self.text, " ", MakeDisplayPhone(l2[0])]);
+						(if (if (l2 := GetRoot().cardfile:bcPhoneNumber(l1, 'homePhone)) then StrFilled(l2[0])) then (self.text := Stringer([Array: self.text, " ", MakeDisplayPhone(l2[0])])))
+					end)
+			end,
+			_proto: @protoStaticText
+		},
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 20},
+			viewJustify: vjRightH + vjParentFullH,
+			viewFont: tsFancy + tsSize(9),
+			TurnPage: func() begin
+				(self.text := ParamStr("Page ^0 of ^1", [Array: fields.pageNumber, fields.pageCount]))
+			end,
+			viewSetupFormScript: func() begin
+				_pageTurner := self;
+				self:TurnPage()
+			end,
+			_proto: @protoStaticText
+		},
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 20},
+			viewJustify: vjParentFullH,
+			viewFont: tsFancy + tsSize(9),
+			viewSetupFormScript: func() begin
+				(self.text := DateNTime(Time()))
+			end,
+			_proto: @protoStaticText
+		}
+	]
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_14 := same("faxHeader.viewChildren[1].viewSetupFormScript.instructions");

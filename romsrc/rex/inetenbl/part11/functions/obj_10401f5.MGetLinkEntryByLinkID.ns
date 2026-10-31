@@ -1,9 +1,0 @@
-@@ 0x1045d5d
-func(a1) begin
-	local l1, l2;
-	if IsEntryAlias(a1) then begin
-			return ResolveEntryAlias(a1)
-		end;
-	(if IsInteger(a1) then (if (l1 := self:MGetLinkSoup()) then (if (l2 := l1:Query({type: 'index, IndexPath: 'linkID, beginKey: a1, endKey: a1})) then l2:entry())))
-end
-@@end

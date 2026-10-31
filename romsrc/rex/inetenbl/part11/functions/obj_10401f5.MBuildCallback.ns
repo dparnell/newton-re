@@ -1,5 +1,0 @@
-@@ 0x1040e0d
-func(a1, a2, a3) begin
-	(if (if (if IsFrame(a2) then IsSymbol(a3)) then GetVariable(a2, a3)) then {fLinkID: (if a1 then a1 else self:MGetLinkDefaultID()), fFrame: a2, fSymbol: a3, fImmediate: nil, fVerbose: nil} else Throw('|evt.ex.msg|, "Inet Manager:MBuildCallback --> callbackFrame.(callbackSymbol) is undefined via direct ref or _proto or _parent inheritance."))
-end
-@@end

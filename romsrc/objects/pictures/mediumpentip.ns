@@ -1,0 +1,6 @@
+// mediumpentip, and what only it reaches
+
+mediumpentip := {
+	bits: bitmap('bits, "resources/bits/3d63bd.png", "00000000000400610061025100660256", 1),
+	bounds: {left: 0, top: 0, right: 5, bottom: 5}
+};

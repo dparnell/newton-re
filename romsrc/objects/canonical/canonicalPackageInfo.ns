@@ -1,0 +1,11 @@
+// canonicalPackageInfo, and what only it reaches
+
+canonicalPackageInfo := {
+	icons: [|Array|: ],
+	iconTitles: [|Array|: ],
+	packageName: nil,
+	packageDataEntryId: nil,
+	appTitles: [|Array|: ],
+	partIndices: [|Array|: ],
+	DeletionScript: [|Array|: ]
+};

@@ -1,0 +1,51 @@
+// export107, and what only it reaches
+
+export107 := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 36},
+	viewFlags: vVisible,
+	viewFormat: nil,
+	stepChildren: [stepChildren: export107Item, export107Item_2],
+	viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV,
+	viewSetupFormScript: func() begin
+		SetValue(label, 'text, infoLineLabel)
+	end,
+	infoLineLabel: nil,
+	indent: 115,
+	SetNumericValueString: func(a1) begin
+		(if (a1 = nil) then SetValue(value, 'text, Clone("")) else SetValue(value, 'text, a1))
+	end,
+	viewClass: clView,
+	label: nil,
+	stepAllocateContext: [|Array|: 'label, export107Item, 'value, export107Item_2],
+	value: nil
+};
+
+export107Item_2Text := "";
+
+export107Item := {
+	text: changeMe,
+	viewBounds: {left: 5, top: 15, right: 110, bottom: 28},
+	viewFont: @fontSystem10Bold,
+	viewSetupFormScript: func() begin
+		((viewBounds := Clone(viewBounds)).right := indent)
+	end,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'label
+};
+
+export107Item_2 := {
+	text: export107Item_2Text,
+	viewBounds: {left: 93, top: 19, right: 215, bottom: 35},
+	viewFont: tsHWFont + tsSize(12),
+	viewSetupFormScript: func() begin
+		(viewBounds := Clone(viewBounds)).top := 13;
+		viewBounds.left := indent;
+		viewBounds.bottom := 29;
+		(viewBounds.right := 215)
+	end,
+	viewFlags: vVisible,
+	viewFormat: vfFillWhite + vfPen(1),
+	viewLineSpacing: 15,
+	viewClass: clParagraphView,
+	preAllocatedContext: 'value
+};

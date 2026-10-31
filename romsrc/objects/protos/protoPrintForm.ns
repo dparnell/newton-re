@@ -1,0 +1,65 @@
+// protoPrintForm, and what only it reaches
+
+protoPrintForm := {
+	viewClass: clView,
+	viewFlags: vVisible + vReadOnly,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewFormat: 0,
+	viewJustify: 0,
+	target: nil,
+	coverForm: nil,
+	printForm: nil,
+	usingCoverPage: nil,
+	targetCursor: nil,
+	targetIndex: 0,
+	fromFrame: nil,
+	_counterForm: nil,
+	_pageTurner: nil,
+	_setupChildrenNow: true,
+	theFormat: nil,
+	viewChildren: nil,
+	viewSetupFormScript: func() begin
+		local l1;
+		printView := self;
+		coverForm := nil;
+		self.viewBounds := Clone(fields.printerPageBounds);
+		target := GetTargetFromEntry(fields);
+		usingCoverPage := (if (not (fields.coverPage = nil)) then (not _counterForm));
+		if (if (not (l1 := (if fields.fromRef then ResolveEntryAlias(fields.fromRef)))) then userConfiguration.currentPersona) then begin
+				l1 := ResolveEntryAlias(userConfiguration.currentPersona)
+			end;
+		fromFrame := {};
+		if l1 then begin
+				SetPersona(l1, fromFrame)
+			end;
+		(if ((theFormat := GetCurrentFormat(fields)) = nil) then self:Notify(3, "Print", "The print format for this item is missing") else begin
+				theFormat := {_proto: theFormat};
+				theFormat:?formatInitScript(fields, target);
+				if (if fields.faxResolution then (not _counterForm)) then begin
+						fields.pageCount := theFormat:?CountPages(fields, target);
+						if fields.coverPage then begin
+								fields.pageCount := (fields.pageCount + 1)
+							end
+					end;
+				(fields.pageNumber := 1)
+			end)
+	end,
+	viewSetupChildrenScript: func() begin
+		local l1;
+		(if (if _setupChildrenNow then theFormat) then (if usingCoverPage then (if (l1 := CoverPageRegistry.(fields.coverPage)) then (self.viewChildren := [Array: @faxHeader, l1.form])) else (if fields.faxResolution then (self.viewChildren := [Array: @faxHeader, theFormat]) else (self.viewChildren := [Array: theFormat]))))
+	end,
+	printNextPageScript: func() begin
+		if fields.pageNumber then begin
+				fields.pageNumber := (fields.pageNumber + 1)
+			end;
+		if _pageTurner then begin
+				_pageTurner:TurnPage()
+			end;
+		(if usingCoverPage then begin
+				usingCoverPage := nil;
+				self:RedoChildren();
+				true
+			end else (if (if coverForm then coverForm.printNextPageScriptX) then coverForm:printNextPageScriptX()))
+	end,
+	ReOrientToScreen: @defRotateFunc
+};

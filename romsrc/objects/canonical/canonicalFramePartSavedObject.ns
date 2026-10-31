@@ -1,0 +1,3 @@
+// canonicalFramePartSavedObject, and what only it reaches
+
+canonicalFramePartSavedObject := {partFrame: nil, packageStyle: nil, removeCookie: nil};

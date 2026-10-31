@@ -1,0 +1,126 @@
+// listFormat, and what only it reaches
+
+listFormat := {
+	type: 'printFormat,
+	path: 'listFormat,
+	viewSetupDoneScript: compile(
+		options: "names",
+		func() begin
+			topics := editor.topics;
+			if reflowOptions then begin
+					local ti;
+					local topics;
+					(for ti := 0 to (Length(topics) - 1) do begin
+							if ((topics[ti].hideCount = 0) or (topics[ti].hideCount = nil)) then begin
+									totalKids := (totalKids + 1)
+								end
+						end)
+				end else begin
+					totalKids := Length(editor.topics)
+				end;
+			inherited:?viewSetupDoneScript()
+		end),
+	reflowStart: 0,
+	routingType: 'Print,
+	editor: nil,
+	printAddExtra: nil,
+	symbol: 'listFormat,
+	printNextPageScript: compile(
+		options: "names",
+		func() begin
+			if (printAddExtra = 'done) then begin
+					return nil
+				end;
+			if editor.viewChildren then begin
+					reflowStart := (reflowStart + Length(editor.viewChildren))
+				end;
+			if (printAddExtra = true) then begin
+					self:RedoChildren();
+					return true
+				end;
+			if (if editor.topics then (reflowStart < totalKids)) then begin
+					self:RedoChildren();
+					return true
+				end;
+			nil
+		end),
+	viewJustify: vjParentFullH + vjParentFullV + vjReflow,
+	title: "All Topics",
+	totalKids: 0,
+	name: outline,
+	viewSetupFormScript: compile(
+		options: "names",
+		func() begin
+			self.reflowStart := 0;
+			inherited:viewSetupFormScript()
+		end),
+	reflowOptions: nil,
+	stepChildren: [|Array|: ],
+	debug: 162780,
+	version: 1,
+	viewSetupChildrenScript: compile(
+		options: "names",
+		func() begin
+			if (if (symbol = 'listMemoFormat) then (reflowStart = 0)) then begin
+					stepChildren := [Array: {_proto: @banner, viewBounds: RelBounds(0, 0, 200, 30), viewJustify: 16, text: "\u2022\uMemo\u2022\u"}, {viewClass: 98, viewBounds: SetBounds(20, 40, -20, 80), viewFlags: 3, viewFormat: 0, viewJustify: 48, viewFont: 12289, viewSetupFormScript: func() begin
+						self.text := "";
+						if StrFilled(fields.toName) then begin
+								self.text := Stringer([Array: self.text, "To:", " ", fields.toName, $\n])
+							end;
+						(if StrFilled(fields.title) then (self.text := Stringer([Array: self.text, "Subject:", " ", SubStr(fields.title, 0, 32)])))
+					end}, {viewClass: 98, viewBounds: SetBounds(20, 40, -20, 80), viewFlags: 3, viewFormat: 0, viewJustify: 49, viewFont: 12289, viewSetupFormScript: func() begin
+						self.text := "";
+						if StrFilled(fields.fromName) then begin
+								self.text := Stringer([Array: "From:", " ", fields.fromName, $\n])
+							end;
+						(self.text := Stringer([Array: self.text, LongDateStr(fields.timestamp, @datetimeStrSpecs.yearMonthDayStrSpec)]))
+					end}, {_proto: protoList, viewBounds: SetBounds(-12, 100, 0, 0)}]
+				end else begin
+					if (symbol = 'listLetterFormat) then begin
+							if (reflowStart = 0) then begin
+									stepChildren := [Array: GetUserConfig('letterheadForm), @stdAddressee, {_proto: protoList, viewBounds: SetBounds(-12, 172, 0, 0)}]
+								end else begin
+									stepChildren := [Array: {_proto: protoList, viewBounds: SetBounds(-12, 36, 0, 0)}]
+								end
+						end else begin
+							stepChildren := [Array: {_proto: protoList, viewBounds: SetBounds(-12, 36, 0, 0)}]
+						end
+				end;
+			inherited:viewSetupChildrenScript()
+		end),
+	printListViewFlags: 0,
+	margins: {left: 60, top: 0, right: 60, bottom: 0},
+	protoList: {
+		viewFormat: vfFillWhite,
+		topMargin: 0,
+		reflow: true,
+		viewJustify: vjParentFullH + vjParentFullV,
+		viewSetupChildrenScript: compile(
+			options: "names",
+			func() begin
+				local numKids;
+				inherited:viewSetupChildrenScript();
+				(if (symbol = 'listLetterFormat) then (if ((printAddExtra = true) or (nTopics = 0)) then begin
+							self.viewChildren := [Array: @stdClosing];
+							printAddExtra := 'done;
+							(topics := [Array: ])
+						end else (if (((numKids := Length(viewChildren)) + reflowStart) >= nTopics) then (if ((self:LocalBox().bottom - self:TopicBottom(topics[(nTopics - 1)])) >= 80) then AddArraySlot(self.viewChildren, @stdClosing) else (printAddExtra := true)))))
+			end),
+		viewSetupFormScript: compile(
+			options: "names",
+			func() begin
+				listViewFlags := printListViewFlags;
+				editor := self;
+				firstTopic := reflowStart;
+				inherited:viewSetupFormScript()
+			end),
+		_proto: @8313
+	},
+	_proto: @coverPageFormat
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupChildrenScript_literal9 := same("listFormat.viewSetupChildrenScript.literals[9]");
+
+viewSetupChildrenScript_literal13 := same("listFormat.viewSetupChildrenScript.literals[13]");

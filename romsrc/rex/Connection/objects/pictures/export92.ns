@@ -1,0 +1,6 @@
+// export92, and what only it reaches
+
+export92 := {
+	bits: bitmap('bits, "resources/bits/761e15.png", "00000000000800000000000000320032", 1),
+	bounds: {left: 0, top: 0, right: 50, bottom: 50}
+};

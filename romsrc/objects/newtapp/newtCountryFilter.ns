@@ -1,0 +1,10 @@
+// newtCountryFilter, and what only it reaches
+
+newtCountryFilter := {
+	_proto: @newtTextFilter,
+	recFlags: 25168385,
+	dictionaries: [|Array|: 8, 31],
+	picker: func() begin
+		@locationPopup:New({default: GetCountryEntry(GetUserConfig('currentCountry))[0], spots: @countrySoupName, result: 'name}, self:GlobalLabelBounds(), self)
+	end
+};

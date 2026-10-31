@@ -1,0 +1,12 @@
+// paragraphData, and what only it reaches
+
+paragraphData := {
+	DTEHeader: DTEHeader,
+	DTEMain: DTEMain,
+	PPDMain: PPDMain,
+	DTETrigrams: DTETrigrams,
+	letterimages: letterimages,
+	hwImages: @handwritingStyleImages,
+	codebook1: texttable('Comp, "resources/Comp/5bc4ed.txt"),
+	codebook2: @paragraphCodebook2
+};

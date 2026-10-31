@@ -1,0 +1,6 @@
+// upBitmap, and what only it reaches
+
+upBitmap := {
+	bits: bitmap('bits, "resources/bits/3d5dc9.png", "000000000004004900490097005500a9", 1),
+	bounds: {left: 0, top: 0, right: 18, bottom: 12}
+};

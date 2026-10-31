@@ -1,6 +1,0 @@
-@@ 0x1018739
-func(a1) begin
-	self:?DoErrorCallback("Endpoint Dispose", a1);
-	self:DoEvent('CleanUp, nil)
-end
-@@end

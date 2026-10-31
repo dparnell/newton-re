@@ -1,0 +1,3 @@
+// alarmQuerySpec, and what only it reaches
+
+alarmQuerySpec := {type: 'index, indexPath: 'mtgAlarm, beginKey: 0};

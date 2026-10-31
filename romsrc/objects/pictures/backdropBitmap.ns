@@ -1,0 +1,6 @@
+// backdropBitmap, and what only it reaches
+
+backdropBitmap := {
+	bits: bitmap('bits, "resources/bits/3db23d.png", "00000000000400bf00bf005b00cc006d", 1),
+	bounds: {left: 0, top: 0, right: 18, bottom: 13}
+};

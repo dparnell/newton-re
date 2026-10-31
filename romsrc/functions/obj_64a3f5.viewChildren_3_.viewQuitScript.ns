@@ -1,5 +1,0 @@
-@@ 0x5709f1
-func() begin
-	UnDefGlobalVar('AutoDockSlip)
-end
-@@end

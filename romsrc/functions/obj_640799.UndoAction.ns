@@ -1,5 +1,0 @@
-@@ 0x42a339
-func(a1) begin
-	self:SetCluster(a1)
-end
-@@end

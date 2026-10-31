@@ -1,6 +1,0 @@
-@@ 0x1016899
-func(a1, a2, a3) begin
-	fConfigOptionsAfter_Connect := a2;
-	(if a3 then self:DoEvent('ConnectFailure, [Array: a3]) else self:DoEvent('ConnectSuccess, nil))
-end
-@@end

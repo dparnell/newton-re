@@ -1,0 +1,187 @@
+// protoCategorizedOverview, and what only it reaches
+
+protoCategorizedOverview := {
+	AddCategoryItem: func(a1, a2, a3, a4) begin
+		a2.category:AddFoundItems(a1, a3, a4)
+	end,
+	IsThisItemSelected: compile(
+		constants: {
+			kFunction_5610a1: func(a1, a2) begin
+				(if (a1._uniqueID = a2._uniqueID) then (a1._storeID = a2._storeID))
+			end
+		},
+		func(a1) begin
+			local l1, l2;
+			(if a1.finder.IsThisItemSelected then a1.finder:IsThisItemSelected(a1) else begin
+					l1 := {_uniqueID: a1.entryID, _storeID: a1.storeID};
+					if a1.finder.selected then begin
+							if (l2 := ArrayPos(a1.finder.selected, l1, 0, kFunction_5610a1)) then begin
+									return true
+								end
+						end;
+					nil
+				end)
+		end),
+	GetThisCategoryItem: func(a1) begin
+		local l1, l2;
+		l1 := nil;
+		l2 := a1;
+		(while (not l1) do (if items[l2].category then (l1 := true) else (l2 := (l2 - 1))));
+		items[l2]
+	end,
+	SelectItem: func(a1) begin
+		local l1, l2, l3, l4;
+		(if (if (not (l1 := items[a1]).category) then GetVariable(l1.finder, 'SelectItem)) then begin
+				l1.finder:SelectItem(l1);
+				(l2 := self:LocalBox()).bottom := ((l2.top := (lineHeight * a1)) + lineHeight);
+				l3 := MakeShape((if self:IsThisItemSelected(l1) then CheckOn else CheckOff));
+				l4 := self:GetThisCategoryItem(a1);
+				pieces[l1.listIndex][(((l1.itemIndex - l4.skip) * 2) + 1)] := OffsetShape(l3, (l2.left + checkBoxHorzOffset), (l2.top + checkBoxVertOffset));
+				self:Dirty();
+				RefreshViews()
+			end else self:Dirty())
+	end,
+	checkBoxHorzOffset: 2,
+	CheckState: func(a1) begin
+		(if (a1.category or (not GetVariable(a1.finder, 'SelectItem))) then 'NotCheckable else (if GetVariable(a1.finder, 'CheckState) then a1.finder:CheckState(a1) else self:IsThisItemSelected(a1)))
+	end,
+	viewFlags: vVisible + vApplication + vClipping + vClickable,
+	GetIndexEntry: func(a1) begin
+		(if (if (a1 >= 0) then (a1 < Length(items))) then items[a1])
+	end,
+	CheckOn: CheckOn,
+	viewBounds: {left: 5, top: 18, right: -5, bottom: -21},
+	_proto: @protoOverview,
+	Scroller: func(a1) begin
+		if ((a1 < 0) or moreBelow) then begin
+				scrollOrigin := max((scrollOrigin + a1), 0)
+			end;
+		self:RedoChildren()
+	end,
+	lineHeight: 14,
+	viewJustify: vjParentFullH + vjParentFullV,
+	setAndBump: func(a1, a2, a3) begin
+		local l1;
+		l1 := MakeText(a1, (a3.left + a2), a3.top, a3.right, (a3.bottom - 2));
+		a3.bottom := ((a3.top := a3.bottom) + lineHeight);
+		l1
+	end,
+	MakeCategoryFrame: func(a1) begin
+		cat := {_proto: @protoFindCategory, skip: 0, title: nil, count: 0, category: a1};
+		if a1.title then begin
+				cat.title := Substr(a1.title, 0, StrPos(a1.title, ",", 0))
+			end else begin
+				cat.title := GetVariable(a1.owner, 'title)
+			end;
+		cat.count := a1:count();
+		cat
+	end,
+	CheckOff: CheckOff,
+	HitItem: func(a1, a2, a3) begin
+		local l1;
+		if (not inherited:HitItem(a1, a2, a3)) then begin
+				if (l1 := items[a1]).category then begin
+						if (l1.category.collapsed := (not l1.category.collapsed)) then begin
+								scrollOrigin := (((scrollOrigin - l1.skip) div scrollAmount) * scrollAmount)
+							end;
+						self:RedoChildren()
+					end else begin
+						if doUpdates then begin
+								caller:HideOtherApps(l1.finder.owner);
+								SetValue(caller.radioCluster.frontMostAppRadioButton, 'text, (if l1.finder.owner.title then l1.finder.owner.title else "Frontmost app"))
+							end;
+						base.savedScrollOrigin := scrollOrigin;
+						caller:ShowItem(l1.finder, l1);
+						AddDeferredSend(base, 'Close, nil)
+					end
+			end;
+		true
+	end,
+	doUpdates: true,
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	checkBoxVertOffset: 2,
+	viewSetupChildrenScript: func() begin
+		l1 := self:LocalBox();
+		self.maxLines := (l1.bottom div lineHeight);
+		l1.bottom := lineHeight;
+		self.scrollAmount := (maxLines - 2);
+		self.pieces := [Array: '{font: 1058816}];
+		l2 := [Array: ];
+		l3 := maxLines;
+		l4 := scrollOrigin;
+		l5 := 0;
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		local l5;
+		(foreach l6 in categoryArray do begin
+				if doUpdates then begin
+						caller:SetStatus(nil)
+					end;
+				l8 := self:MakeCategoryFrame(l6);
+				if (l9 := l6.collapsed) then begin
+						l10 := 0
+					end else begin
+						l10 := l8.count
+					end;
+				if (l4 > 0) then begin
+						if l9 then begin
+								l10 := 0
+							end;
+						if (l10 > l4) then begin
+								l4 := (-l4)
+							end else begin
+								l4 := (l4 - l10)
+							end;
+						if (l4 = 0) then begin
+								l4 := 1
+							end
+					end;
+				if (l4 <= 0) then begin
+						l4 := (-l4);
+						l8.skip := l4;
+						l5 := (l5 + 2);
+						AddArraySlot(l2, l8);
+						AddArraySlot(pieces, self:setAndBump(l8.title, 0, l1));
+						l3 := (l3 - 1);
+						if (not l9) then begin
+								l11 := [Array: ];
+								l3 := (l3 - self:AddCategoryItem(l11, l8, l4, l3));
+								l12 := [Array: '{font: 9216}];
+								AddArraySlot(pieces, l12);
+								l13 := GetVariable(l6, 'SelectItem);
+								local l8;
+								local l9;
+								local l10;
+								local l11;
+								local l12;
+								local l13;
+								(foreach l14 in l11 do begin
+										local l16;
+										if l13 then begin
+												l16 := MakeShape((if l14.selected then CheckOn else CheckOff));
+												AddArraySlot(l12, OffsetShape(l16, (l1.left + checkBoxHorzOffset), (l1.top + checkBoxVertOffset)));
+												l14.listIndex := l5
+											end;
+										AddArraySlot(l12, self:setAndBump(l14.title, 18, l1))
+									end);
+								ArrayMunger(l2, Length(l2), 0, l11, 0, nil)
+							end else begin
+								l5 := (l5 - 1)
+							end;
+						if (l3 <= 0) then begin
+								break
+							end;
+						l4 := 0
+					end else begin
+						l4 := (l4 - 1)
+					end
+			end);
+		self.moreBelow := (l3 <= 0);
+		self.items := l2;
+		(self.numLines := min(maxLines, Length(items)))
+	end,
+	scrollOrigin: 0,
+	autoDeselect: true
+};

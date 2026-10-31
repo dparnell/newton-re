@@ -1,5 +1,0 @@
-@@ 0x471be5
-func() begin
-	RemovePowerOffHandler(self)
-end
-@@end

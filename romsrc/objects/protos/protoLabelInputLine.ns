@@ -1,0 +1,130 @@
+// protoLabelInputLine, and what only it reaches
+
+protoLabelInputLine := {
+	entryFlags: 14849,
+	LabelActionScript: func(a1) begin
+		nil
+	end,
+	indent: nil,
+	viewFormat: 0,
+	viewQuitScript: func() begin
+		AddMemoryItem(memory, entryLine.text)
+	end,
+	viewFlags: vVisible + vClickable,
+	SetLabelText: func(a1) begin
+		(labelLine.text := Stringer([Array: (if labelCommands then $\uFC01 else $\uFC02), a1]))
+	end,
+	_popKeyScript: func(a1) begin
+		self:Popit()
+	end,
+	width: nil,
+	memory: nil,
+	viewBounds: nil,
+	oldLabelCommands: nil,
+	SetLabelCommands: func(a1) begin
+		local l1;
+		if (if (l1 := GetMemoryItems(memory)) then (not a1)) then begin
+				a1 := l1
+			end;
+		(if (a1 <> oldLabelCommands) then begin
+				labelCommands := a1;
+				self:SetLabelText(label);
+				labelLine:Dirty();
+				(oldLabelCommands := labelCommands)
+			end)
+	end,
+	label: uCardPositionAlertButton,
+	height: nil,
+	UpdateText: func(a1) begin
+		AddUndoAction('UpdateText, [Array: Clone(entryLine.text)]);
+		SetValue(entryLine, 'text, a1);
+		entryLine:SetHilite(9999, 9999, true)
+	end,
+	pickCancelledScript: func() begin
+		self:hilite(nil)
+	end,
+	labelCommands: nil,
+	TextSetup: func() begin
+		text
+	end,
+	textChanged: func() begin
+		nil
+	end,
+	alwaysCallPickActionScript: nil,
+	Popit: func() begin
+		local l1, l2;
+		(if labelCommands then begin
+				l1 := labelCommands;
+				if curLabelCommand then begin
+						if IsFrame((l2 := (l1 := Clone(l1))[curLabelCommand])) then begin
+								(l2 := (l1[curLabelCommand] := Clone(l2))).mark := $\uFC0B
+							end else begin
+								l1[curLabelCommand] := {item: l2, mark: $\uFC0B}
+							end
+					end;
+				labelLine.alwaysCallPickActionScript := alwaysCallPickActionScript;
+				labelLine:PopupMenu(l1, {indent: indent});
+				entryLine:Dirty()
+			end)
+	end,
+	labelFont: @fontSystem9Bold,
+	labelClick: func(a1) begin
+		nil
+	end,
+	pickActionScript: func(a1) begin
+		local l1;
+		if (not self:LabelActionScript(a1)) then begin
+				if IsFrame((l1 := labelCommands[a1])) then begin
+						if (if (not l1.item) then l1.keyMessage) then begin
+								l1 := MatchKeyMessage(self, l1.keyMessage).name
+							end else begin
+								l1 := l1.item
+							end
+					end;
+				self:UpdateText(Clone(l1))
+			end;
+		self:hilite(nil)
+	end,
+	viewClass: clView,
+	text: uCardPositionAlertButton,
+	debug: 23283101,
+	entryTextFlags: 8,
+	viewSetupChildrenScript: func() begin
+		local l1, l2;
+		if (l1 := GetMemoryItems(memory)) then begin
+				if (not labelCommands) then begin
+						labelCommands := l1
+					end else begin
+						AddArraySlot((labelCommands := Clone(labelCommands)), 'pickseparator);
+						AddArraySlot(labelCommands, l1[0])
+					end
+			end;
+		self:SetLabelText(label);
+		labelLine.viewFont := labelFont;
+		width := (StrFontWidth(labelLine.text, labelFont) + 4);
+		if (not indent) then begin
+				indent := (width + 2)
+			end;
+		height := FontHeight(labelFont);
+		if HasPath(self, 'viewLineSpacing) then begin
+				entryLine.viewLineSpacing := self.viewLineSpacing
+			end;
+		if HasPath(self, 'entryFont) then begin
+				entryLine.viewFont := self.entryFont
+			end;
+		l2 := self:LocalBox();
+		labelLine.viewBounds := RelBounds(0, (entryLine.viewLineSpacing - height), indent, height);
+		entryLine.viewFlags := self.entryFlags;
+		entryLine.viewBounds := SetBounds(indent, 0, l2.right, 0);
+		entryLine.textFlags := self.entryTextFlags;
+		(entryLine.text := self:TextSetup())
+	end,
+	curLabelCommand: nil,
+	viewChildren: [viewChildren: entryLine, labelLine],
+	entryLine: nil,
+	allocateContext: [|Array|: 'entryLine, entryLine, 'labelLine, labelLine],
+	labelLine: nil,
+	_keyCommands: [|Array|:
+		{char: $\u000d, modifiers: 33554432, keyMessage: '_popKeyScript, name: "Pick", category: nil}
+	]
+};

@@ -1,0 +1,6 @@
+// keyEqualsBitmap, and what only it reaches
+
+keyEqualsBitmap := {
+	bits: bitmap('bits, "resources/bits/3d8ff1.png", "00000000000400d200d2028000d9028a", 1),
+	bounds: {left: 0, top: 0, right: 10, bottom: 7}
+};

@@ -1,0 +1,76 @@
+// export119, and what only it reaches
+
+export119 := {
+	stepChildren: [stepChildren:
+		clear,
+		export111Item,
+		{
+			title: dateConversion,
+			viewBounds: {left: 14, top: 0, right: 102, bottom: 16},
+			_proto: @protoTitle
+		},
+		export119Item,
+		export119Item_2,
+		export119Item_3,
+		export119Item_4
+	],
+	ClearAllFields: func() begin
+		DateField:SetNumericValue(nil);
+		DayOfWeekField:SetNumericValueString(nil);
+		WeekInYearField:SetNumericValueString(nil);
+		DayInYearField:SetNumericValueString(nil)
+	end,
+	SolveFormula: func(a1) begin
+		local l1, l2, l3, l4, l5;
+		(if (DateField.calcLineValue <> nil) then begin
+				DayOfWeekField:SetNumericValueString((l2 := LongDateStr((l1 := DateField.calcLineValue), @datetimeStrSpecs.longDayOfWeekStrSpec)));
+				WeekInYearField:SetNumericValueString(WeekNumber(l1, nil));
+				(l3 := Date(l1)).month := 1;
+				l3.Date := 1;
+				l4 := TotalMinutes(l3);
+				l3.month := 12;
+				l3.Date := 31;
+				l5 := TotalMinutes(l3);
+				DayInYearField:SetNumericValueString(Stringer([Array: NumberStr((1 + ((l1 - l4) div 1440))), "/", NumberStr(((l5 - l1) div 1440))]))
+			end)
+	end,
+	viewBounds: {left: 0, top: 0, right: 224, bottom: 189},
+	formulaSymbol: 'DateConversion,
+	viewSetupDoneScript: func() begin
+		AddArraySlot((FSViews := [Array: ]), DateField);
+		inherited:?viewSetupDoneScript();
+		self:SolveFormula(nil)
+	end,
+	overview: dateConversion,
+	_proto: @8303,
+	DateField: nil,
+	stepAllocateContext: [|Array|:
+		'DateField,
+		export119Item,
+		'DayOfWeekField,
+		export119Item_2,
+		'WeekInYearField,
+		export119Item_3,
+		'DayInYearField,
+		export119Item_4
+	],
+	DayOfWeekField: nil,
+	WeekInYearField: nil,
+	DayInYearField: nil
+};
+
+dateConversion := "Date Conversion";
+
+export119Item := {calcLineLabel: "ﰁDate", lineNumber: 0, indent: 93, _proto: @8302, preAllocatedContext: 'DateField};
+
+export119Item_2 := {
+	integerField: true,
+	infoLineLabel: "Day of Week",
+	indent: 93,
+	_proto: @8299,
+	preAllocatedContext: 'DayOfWeekField
+};
+
+export119Item_3 := {infoLineLabel: "Week in Year", indent: 93, _proto: @8299, preAllocatedContext: 'WeekInYearField};
+
+export119Item_4 := {infoLineLabel: "Day in Year", indent: 93, _proto: @8299, preAllocatedContext: 'DayInYearField};

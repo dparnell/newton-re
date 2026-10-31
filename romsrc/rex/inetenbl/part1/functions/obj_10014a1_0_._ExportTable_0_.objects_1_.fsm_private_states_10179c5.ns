@@ -1,6 +1,0 @@
-@@ 0x10179c5
-func(a1) begin
-	self:?DoErrorCallback("Endpoint Bind", a1);
-	self:DoEvent('Dispose, nil)
-end
-@@end

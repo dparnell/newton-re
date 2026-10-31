@@ -1,0 +1,15 @@
+// protoCallassistButton, and what only it reaches
+
+protoCallassistButton := {
+	_proto: @protoPictTextButton,
+	viewJustify: vjRightH + vjCenterV + vjSiblingLeftH + vjSiblingTopV,
+	viewBounds: {left: -58, top: 0, right: -7, bottom: 13},
+	text: assist,
+	icon: @phoneBitmap,
+	buttonClickScript: func() begin
+		(if (not StrFilled(callOptionsSlip.inNumber)) then self:Notify(3, text, "No phone number is specified. Please choose or enter a phone number.") else begin
+				callOptionsSlip.invoker := self;
+				callOptionsSlip:Toggle()
+			end)
+	end
+};

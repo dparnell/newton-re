@@ -1,0 +1,17 @@
+// newtAreacodeLine, and what only it reaches
+
+newtAreacodeLine := {
+	_proto: @newtProtoLine,
+	flavor: {
+		_proto: @newtTextFilter,
+		recFlags: 16779777,
+		dictionaries: 117,
+		InitFilter: func() begin
+			nil
+		end
+	},
+	viewSetupFormScript: func() begin
+		inherited:viewSetupFormScript();
+		(entryLine._keyboard := GetRoot().phoneKeyboard)
+	end
+};

@@ -1,0 +1,27 @@
+// protoSlider, and what only it reaches
+
+protoSlider := {
+	_proto: @protoGauge,
+	viewFlags: vVisible + vClickable,
+	declareSelf: 'baseGauge,
+	_sound: @ratchetSound,
+	trackSlider: func() begin
+		nil
+	end,
+	ChangedSlider: func() begin
+		(vars.(valuePath) := viewValue)
+	end,
+	viewChangedScript: func(a1, a2) begin
+		(if (a1 = 'viewValue) then self:trackSlider())
+	end,
+	viewFinalChangeScript: func(a1, a2) begin
+		(if (a2 <> a1) then begin
+				AddUndoAction('viewFinalChangeScript, [Array: a2, a1]);
+				if (viewValue <> a2) then begin
+						SetValue(baseGauge, 'viewValue, a2)
+					end;
+				self:ChangedSlider()
+			end)
+	end,
+	debug: 90112
+};

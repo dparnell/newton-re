@@ -1,0 +1,115 @@
+// export35, and what only it reaches
+
+export35 := {
+	name: overview,
+	stepChildren: [stepChildren:
+		{
+			masterSoupSlot: 'names,
+			name: overview,
+			viewBounds: {left: 0, top: 20, right: 0, bottom: 0},
+			viewJustify: vjParentFullH + vjParentFullV,
+			forceNewEntry: nil,
+			Abstract: func(a1, a2) begin
+				local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+				l5 := "";
+				l6 := a2.left;
+				l7 := a2.right;
+				l8 := a2.top;
+				l9 := (a2.bottom - 2);
+				if (if (not hilitedIndex) then (a1 = hiliteEntry)) then begin
+						hilitedIndex := hiliteCount
+					end;
+				if a1.class then begin
+						l1 := GetDataDefs(a1.class)
+					end else begin
+						if (ClassOf(a1.sorton) = 'name) then begin
+								l1 := GetDataDefs('person)
+							end else begin
+								l1 := GetDataDefs('company)
+							end
+					end;
+				(if l1 then begin
+						hiliteCount := (hiliteCount + 1);
+						if (l3 := StrPos((l2 := l1:StringExtract(a1, 2)), "\n", 0)) then begin
+								l4 := Substr(l2, 0, l3);
+								l5 := Substr(l2, l3, Length(l2));
+								phoneIndent := (l7 - 95)
+							end else begin
+								l4 := l2;
+								phoneIndent := l7
+							end;
+						[Array: OffsetShape(MakeShape(l1.overviewIcon), l6, l8), MakeText(l4, (l6 + 20), l8, phoneIndent, l9), MakeText(l5, phoneIndent, l8, l7, l9)]
+					end else inherited:Abstract(a1, a2))
+			end,
+			HitItem: func(a1, a2, a3) begin
+				local l1, l2, l3;
+				(if (if (a2 > phoneIndent) then (newtAppBase.superSymbol <> 'ownerNames)) then begin
+						l2 := cursor:clone();
+						(if (if HasSlot((l3 := l2:Move(a1)), 'phones) then (Length(l3.phones) > 0)) then begin
+								self.hilitItem := l3;
+								call kDoCallSlip with (self, l3, l3.phones[0]);
+								(self.hilitItem := nil)
+							end else inherited:HitItem(a1, a2, a3))
+					end else inherited:HitItem(a1, a2, a3))
+			end,
+			lineHeight: 12,
+			GetTargetInfo: func(a1) begin
+				(if self.hilitItem then {target: hilitItem, targetView: self} else inherited:GetTargetInfo(a1))
+			end,
+			phoneIndent: nil,
+			Retarget: func(a1) begin
+				inherited:Retarget(a1);
+				(target := dataCursor:entry())
+			end,
+			checkBoxVertOffset: -1,
+			Scroller: func(a1) begin
+				inherited:Scroller(a1);
+				self:Retarget(nil)
+			end,
+			viewSetupDoneScript: func() begin
+				(bookmark := nil)
+			end,
+			newEntry: func(a1, a2, a3) begin
+				masterSoup:AddEntry(a1, a3);
+				if a2 then begin
+						dataCursor:Goto(a1)
+					end;
+				AddUndoSend(layout, 'KillEntry, [Array: a1]);
+				(if a2 then layout:NewTarget() else layout:Retarget(true))
+			end,
+			viewSetupFormScript: func() begin
+				if (superSymbol = 'ownerNames) then begin
+						if IsReadOnly(viewBounds) then begin
+								viewBounds := Clone(viewBounds)
+							end;
+						viewBounds.top := 3
+					end;
+				inherited:?viewSetupFormScript()
+			end,
+			useTypeScrolling: true,
+			_proto: @newtOverLayout,
+			stepChildren: [|Array|: ]
+		},
+		export35Item
+	],
+	viewBounds: {top: 21, left: 0, right: 0, bottom: -18},
+	viewFlags: vVisible,
+	viewFormat: nil,
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewSetupFormScript: func() begin
+		if (superSymbol = 'ownerNames) then begin
+				if IsReadOnly(stepChildren) then begin
+						stepChildren := Clone(stepChildren)
+					end;
+				RemoveSlot(stepChildren, 1)
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	viewClass: clView,
+	azTabs: nil,
+	stepAllocateContext: [|Array|: 'azTabs, export35Item]
+};
+
+overview := "Overview";
+
+export35Item := {_proto: @8235, preAllocatedContext: 'azTabs};

@@ -1,0 +1,234 @@
+// part, and what only it reaches
+
+part := array(nil, {
+	_ImportTable: [|Array|:
+		{name: '|SetupProtos:NIE|, major: 1, minor: 0},
+		{name: '|InternetSetup:NIE|, major: 1, minor: 0}
+	],
+	installScript: func(a1) begin
+		local l1;
+		l1 := EnsureInternal({removeScript: a1.devRemoveScript});
+		a1:devInstallScript(a1, l1);
+		l1
+	end,
+	devInstallScript: compile(
+		constants: {
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			kFunction_1023b19: func(a1, a2) begin
+				(try begin
+						RegDataDef(a1, a2)
+					end onexception |evt.ex| do begin
+						nil
+					end)
+			end,
+			kFunction_1023ba1: func(a1, a2) begin
+				(if IsArray(a2) then (foreach l1 in a2 do begin
+							try begin
+									RegisterViewDef(l1, a1)
+								end onexception |evt.ex| do begin end
+						end))
+			end,
+			kFunction_1023acd: func(a1, a2, a3) begin
+				call (kFunction_1023b19) with (a1, a2);
+				call (kFunction_1023ba1) with (a1, a3)
+			end,
+			kFunction_1020ef1: func(a1) begin
+				inherited:DataConversion(a1)
+			end,
+			kFunction_102108d: func(a1) begin
+				(if StrEqual(a1, "*") then "<Current AppleTalk Zone>" else a1)
+			end,
+			kFunction_1020fe5: func(a1) begin
+				(if a1.macIPGatewayZone then ParamStr("Zone ^0", [Array: call (kFunction_102108d) with (a1.macIPGatewayZone)]) else "Unknown Zone")
+			end,
+			kFunction_1021799: func(a1) begin
+				local l1;
+				inherited:?labelActionScript(a1);
+				if IsReadOnly((l1 := GetDataDefs('|LocalTalk:NIE|)).newEntryViews) then begin
+						l1.newEntryViews := Clone(l1.newEntryViews)
+					end;
+				if (labelCommands[a1].symbol = 'manual) then begin
+						l1.newEntryViews := l1._proto.newEntryViews
+					end else begin
+						l1.newEntryViews := l1.AlternateNewViews
+					end;
+				SetValue(newtAppbase.editSlipLayout, 'viewBounds, newtAppbase.editSlipLayout._proto.viewBounds);
+				newtAppbase.editSlipLayout:SyncView();
+				newtAppbase.editSlipLayout:RedoChildren()
+			end,
+			kFunction_1021a41: func() begin
+				'[Array: {item: "Manual", symbol: manual}, {item: "MacIP Server", symbol: usingServer}]
+			end,
+			kFunction_1021d39: func() begin
+				if StrFilled(target.(path)) then begin
+						BInsert(labelCommands, self:ConvertToDefaultText(target.(path)), '|str<|, nil, true)
+					end;
+				if (l1 := GetUserConfig('currentPrinter).printerName) then begin
+						BInsert(labelCommands, self:ConvertToDefaultText(GetZoneFromName(l1)), '|str<|, nil, true)
+					end;
+				BInsert(labelCommands, self:ConvertToDefaultText(GetUserConfig('currentZone)), '|str<|, nil, true);
+				local l1;
+				local l2;
+				local l3;
+				(foreach l4 in UserConfiguration.emporia do begin
+						local l6;
+						if (l2 := (l3 := ResolveEntryAlias(l4)).connectionNetwork) then begin
+								BInsert(labelCommands, self:ConvertToDefaultText(GetZoneFromName(l2)), '|str<|, nil, true)
+							end;
+						if (if l3.printer then l3.printer.printerName) then begin
+								BInsert(labelCommands, self:ConvertToDefaultText(GetZoneFromName(l3.printer.printerName)), '|str<|, nil, true)
+							end
+					end);
+				l6 := Length(labelCommands);
+				ArrayInsert(labelCommands, 'pickSeparator, l6);
+				ArrayInsert(labelCommands, "Other AppleTalk Zone", (l6 + 1))
+			end,
+			kFunction_10220dd: func() begin
+				labelCommands := [Array: ];
+				self:MakePopup();
+				inherited:?viewSetupFormScript()
+			end,
+			kFunction_1022131: func(a1) begin
+				(if (a1 = (Length(labelCommands) - 1)) then self:DoChooser() else begin
+						target.(path) := Clone(self:ConvertDefaultToStar(labelCommands[a1]));
+						newtAppbase.targetView:?StartFlush()
+					end)
+			end,
+			kFunction_10221e9: func() begin
+				labelCommands[FindStringInArray(labelCommands, call (kFunction_102108d) with (target.(path)))]
+			end,
+			kFunction_1022265: func() begin
+				self:updateText(self:ConvertToDefaultText(target.(path)));
+				chooserIsOpen := true;
+				GetRoot().NetChooser:OpenNetChooser((if HaveZones() then target.(path) else "*"), "=:IPGATEWAY@", nil, self, "Use IP Gateway", "MacIP Gateway", "Gateway")
+			end,
+			kFunction_1022451: func(a1, a2) begin
+				chooserIsOpen := nil;
+				target.(path) := a2;
+				if Visible(self) then begin
+						self:updateText(call (kFunction_102108d) with (target.(path)))
+					end;
+				newtAppbase.targetView:?StartFlush()
+			end,
+			kFunction_10224e5: func(a1) begin
+				(if StrEqual(a1, "<Current AppleTalk Zone>") then "*" else a1)
+			end,
+			kFunction_10228e9: func(a1) begin
+				l1 := inherited:FillNewEntry(a1);
+				local l1;
+				(foreach l2, l3 in blankEntry do begin
+						a1.(l2) := DeepClone(l3)
+					end);
+				l1
+			end,
+			kFunction_1022a71: func(a1) begin
+				if IsReadOnly(newEntryViews) then begin
+						newEntryViews := Clone(newEntryViews)
+					end;
+				(if (a1.configuration = 'manual) then (newEntryViews := _proto.newEntryViews) else (newEntryViews := AlternateNewViews))
+			end,
+			kFunction_1022ca5: func(a1) begin
+				(Length(SetDifference(a1[0], '[Array: 0, 0, 0, 0])) = 0)
+			end,
+			kLiteral_1020c51: {DataConversion: kFunction_1020ef1, description: "LocalTalk", helpText: "Use this if you are connecting to an AppleTalk network.", MakeNextLine: kFunction_1020fe5, name: "LocalTalk", OverviewIcon: {bits: call kBinaryFromHex with ("000000000004018801880080019400900fe000001ff00000183000001bb000001bb0000018300000183000001ff0000007e00000070000003df8000038f80000", 'bits), bounds: '{left: 0, top: 0, right: 16, bottom: 12}}, symbol: '|LocalTalk:NIE|, unusedSlots: '{phonenumber: true, password: true, userName: true, loginInfo: true, loginScript: true}, NeededSlots: '{linkLayer: |MacIP:NIE|, configuration: manual, macIPGatewayZone: "*"}, blankEntry: '{linkLayer: |MacIP:NIE|, configuration: usingServer, localAddress: [Array: 0, 0, 0, 0], gatewayaddress: [Array: 0, 0, 0, 0], macIPGatewayZone: "*", defaultDomain: "", DNSServers: [Array: [Array: 0, 0, 0, 0]]}, newEntryViews: [Array: {viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewJustify: 240, stepChildren: [stepChildren: '{_proto: @8205}, {labelActionScript: kFunction_1021799, labelCommands: '[Array: {item: "Manual", symbol: manual}, {item: "MacIP Server", symbol: usingServer}], MakePopup: kFunction_1021a41, _proto: '{text: "Configuration", labelText: "Configuration", path: configuration, _proto: @8200}}, {path: 'macIPGatewayZone, _proto: {text: "Zone", viewBounds: '{left: 3, top: 10, right: -3, bottom: 36}, alwaysCallPickActionScript: true, viewJustify: 8396848, MakePopup: kFunction_1021d39, viewSetupFormScript: kFunction_10220dd, labelActionScript: kFunction_1022131, textSetup: kFunction_10221e9, DoChooser: kFunction_1022265, NetworkChooserDone: kFunction_1022451, ConvertToDefaultText: kFunction_102108d, ConvertDefaultToStar: kFunction_10224e5, labelCommands: '[Array: ], _proto: @protoLabelPicker}}], helpText: "Tap ? if you need help.", helpTopic: "atalk1", viewClass: 74}, '{viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewJustify: 240, stepChildren: [stepChildren: {viewBounds: {left: 4, top: 10, right: -4, bottom: 60}, viewJustify: 8396848, path: localAddress, name: "Local IP Address", _proto: @8192}, {viewBounds: {left: 4, top: 10, right: -4, bottom: 60}, viewJustify: 8396848, path: gatewayaddress, name: "Gateway/Router Address", _proto: @8192}, {viewBounds: {left: 4, top: 10, right: -4, bottom: 60}, viewJustify: 8396848, path: [pathExpr: DNSServers, 0], _proto: @8192}, {path: defaultDomain, label: "Domain Name", viewBounds: {left: -4, top: 0, right: -4, bottom: 32}, _proto: @newtLabelInputLine}], helpText: "You will be able to add multiple DNS servers after you've completed this setup.", helpTopic: "enterinfo", viewClass: 74}], FillNewEntry: kFunction_10228e9, AlternateNewViews: [Array: {viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewJustify: 240, stepChildren: [stepChildren: '{_proto: @8205}, {labelActionScript: kFunction_1021799, labelCommands: '[Array: {item: "Manual", symbol: manual}, {item: "MacIP Server", symbol: usingServer}], MakePopup: kFunction_1021a41, _proto: '{text: "Configuration", labelText: "Configuration", path: configuration, _proto: @8200}}, {path: 'macIPGatewayZone, _proto: {text: "Zone", viewBounds: '{left: 3, top: 10, right: -3, bottom: 36}, alwaysCallPickActionScript: true, viewJustify: 8396848, MakePopup: kFunction_1021d39, viewSetupFormScript: kFunction_10220dd, labelActionScript: kFunction_1022131, textSetup: kFunction_10221e9, DoChooser: kFunction_1022265, NetworkChooserDone: kFunction_1022451, ConvertToDefaultText: kFunction_102108d, ConvertDefaultToStar: kFunction_10224e5, labelCommands: '[Array: ], _proto: @protoLabelPicker}}], helpText: "Tap ? if you need help.", helpTopic: "atalk1", viewClass: 74}, '{viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewJustify: 240, stepChildren: [stepChildren: {viewBounds: {left: 4, top: 10, right: -4, bottom: 60}, viewJustify: 8396848, path: [pathExpr: DNSServers, 0], _proto: @8192}, {path: defaultDomain, label: "Domain Name", viewBounds: {left: 0, top: 0, right: -4, bottom: 32}, _proto: @newtLabelInputLine}], helpText: "You will be able to add multiple DNS servers after you've completed this setup.", helpTopic: "enterinfo", viewClass: 74}], SetupViews: kFunction_1022a71, icon: {bits: call kBinaryFromHex with ("000000000004018c018c0175019b018a0000000003fe000007ff00000603000006fb000006fb000006fb000006030000063b00000603000007ff000003fe000000e000000fbf80000f1f8000", 'bits), bounds: '{left: 0, top: 0, right: 21, bottom: 15}}, DontCloseSlots: {setupName: '{value: "", name: "setup name"}, DNSServers: {value: '[Array: 0, 0, 0, 0], name: "DNS/Name Server address", checkFunc: kFunction_1022ca5}}, viewsToDisplay: '[Array: setupName, configuration, macIPGatewayZone, localAddress, gatewayaddress, DNSServers, defaultDomain, hangupDelay], _proto: '{_proto: @8193}},
+			kROM_8203: @8203,
+			kFunction_1022f79: func(a1) begin
+				ParamStr("Configuration: ^0", [Array: call kROM_8203 with ('[Array: {item: "Manual", symbol: manual}, {item: "MacIP Server", symbol: usingServer}], a1[0])])
+			end,
+			kFunction_102305d: func(a1) begin
+				inherited:?labelActionScript(a1)
+			end,
+			kFunction_102309d: func() begin
+				'[Array: {item: "Manual", symbol: manual}, {item: "MacIP Server", symbol: usingServer}]
+			end,
+			kLiteral_1022db9: {viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewJustify: 240, infoFrame: {checkPrefix: '[Array: true, nil], checkPaths: '[Array: configuration], formatFunc: kFunction_1022f79}, noKeyboard: true, path: 'configuration, protection: 'private, symbol: 'configuration, type: 'editor, stepChildren: [stepChildren: {labelActionScript: kFunction_102305d, labelCommands: '[Array: {item: "Manual", symbol: manual}, {item: "MacIP Server", symbol: usingServer}], MakePopup: kFunction_102309d, _proto: '{text: "Configuration", labelText: "Configuration", path: configuration, _proto: @8200}}], name: "Configuration", helpTopic: "configuration", viewClass: 74},
+			kFunction_10231d9: func(a1) begin
+				local l1;
+				l1 := call (kFunction_102108d) with (a1[0]);
+				(if StrFilled(a1[0]) then ParamStr("Zone: ^0", [Array: l1]) else "Zone: <Invalid Zone>")
+			end,
+			kLiteral_10230f5: {viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewJustify: 240, infoFrame: {checkPrefix: '[Array: true, nil], checkPaths: '[Array: macIPGatewayZone], formatFunc: kFunction_10231d9}, path: 'macIPGatewayZone, symbol: 'macIPGatewayZone, protection: 'private, type: 'editor, noKeyboard: true, stepChildren: [stepChildren: {_proto: {text: "Zone", viewBounds: '{left: 3, top: 10, right: -3, bottom: 36}, alwaysCallPickActionScript: true, viewJustify: 8396848, MakePopup: kFunction_1021d39, viewSetupFormScript: kFunction_10220dd, labelActionScript: kFunction_1022131, textSetup: kFunction_10221e9, DoChooser: kFunction_1022265, NetworkChooserDone: kFunction_1022451, ConvertToDefaultText: kFunction_102108d, ConvertDefaultToStar: kFunction_10224e5, labelCommands: '[Array: ], _proto: @protoLabelPicker}}], name: "Zone", helpTopic: "atalk1", viewClass: 74},
+			kROM_8206: @8206,
+			kFunction_10236e9: func(a1) begin
+				ParamStr("When closing, disconnect: ^0", [Array: call kROM_8203 with (kROM_8206, a1[0])])
+			end,
+			kFunction_10237b1: func() begin
+				kROM_8206
+			end,
+			kLiteral_10235fd: {infoFrame: {checkPrefix: '[Array: true, nil], checkPaths: '[Array: hangupDelay], formatFunc: kFunction_10236e9}, labelText: "When closing, disconnect", MakePopup: kFunction_10237b1, noKeyboard: true, path: 'hangupDelay, symbol: 'hangupDelay, typeFrame: @8206, name: "Disconnect Delay", deleteButton: 'hangupDelay, helpTopic: "discodelay", _proto: '{viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 8388848, _proto: @8197}},
+			kFunction_10238e9: func() begin
+				nil
+			end,
+			kFunction_1023a25: func() begin
+				local l1;
+				(text := GetEntryDataDef(target):?TextScript((l1 := {}), target))
+			end,
+			kLiteral_1023869: {printNextPageScript: kFunction_10238e9, title: "LocalTalk Setup", symbol: 'protoRoutingFormat, stepChildren: [stepChildren: {viewBounds: '{top: 30, left: 30, right: -30, bottom: -30}, viewFlags: 1, viewFont: 12289, text: "", viewJustify: 240, viewSetupFormScript: kFunction_1023a25, viewClass: 81}], _proto: @protoPrintFormat},
+			kROM_12288: @12288
+		},
+		func(a1, a2) begin
+			call (kFunction_1023acd) with ('|LocalTalk:NIE|, {_proto: kLiteral_1020c51}, [Array: '{viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 8388848, _proto: @8196}, kLiteral_1022db9, kLiteral_10230f5, '{infoFrame: {_proto: @8204, labelText: "Local IP Address: ^0.^1.^2.^3", checkPaths: [Array: localAddress], HideIfTrue: [Array: configuration, usingServer]}, path: localAddress, symbol: localAddress, viewBounds: {left: 0, top: 0, right: -4, bottom: 0}, name: "Local IP Address", helpTopic: "ipaddress", _proto: {viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 8388848, name: "DNS/Name Server Address", helpTopic: "dns", _proto: @8194}}, '{infoFrame: {_proto: @8204, labelText: "Gateway/Router Address: ^0.^1.^2.^3", checkPaths: [Array: gatewayaddress], HideIfTrue: [Array: configuration, usingServer]}, path: gatewayaddress, symbol: gatewayaddress, viewBounds: {left: 0, top: 0, right: -4, bottom: 0}, name: "Gateway/Router Address", helpTopic: "gateway", _proto: {viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 8388848, name: "DNS/Name Server Address", helpTopic: "dns", _proto: @8194}}, '{viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 8388848, name: "DNS/Name Server Address", helpTopic: "dns", _proto: @8194}, '{viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 8388848, _proto: @8199}, kLiteral_10235fd, {_proto: @protoFrameFormat}, kLiteral_1023869, {_proto: kROM_12288}])
+		end),
+	devRemoveScript: compile(
+		constants: {
+			kFunction_1023d75: func(a1) begin
+				(try begin
+						UnRegDataDef(a1)
+					end onexception |evt.ex| do begin
+						nil
+					end)
+			end,
+			kFunction_1023de9: func(a1, a2) begin
+				(if IsArray(a2) then (foreach l1 in a2 do begin
+							try begin
+									UnRegisterViewDef(l1, a1)
+								end onexception |evt.ex| do begin end
+						end))
+			end,
+			kFunction_1023d29: func(a1, a2) begin
+				call (kFunction_1023d75) with (a1);
+				call (kFunction_1023de9) with (a1, a2)
+			end
+		},
+		func(a1) begin
+			call (kFunction_1023d29) with ('|LocalTalk:NIE|, [Array: 'setupName, 'configuration, 'macIPGatewayZone, 'localAddress, 'gatewayaddress, 'DNSServers, 'defaultDomain, 'hangupDelay, 'protoFrameFormat, 'protoRoutingFormat, 'IOAllInfo])
+		end)
+});
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+description_value := same("part[0].devInstallScript.literals[1].description");
+
+macIPGatewayZone_value := same("part[0].devInstallScript.literals[1].NeededSlots.macIPGatewayZone");
+
+localAddress_value := same("part[0].devInstallScript.literals[1].blankEntry.localAddress");
+
+defaultDomain_value := same("part[0].devInstallScript.literals[1].blankEntry.defaultDomain");
+
+newEntryViews_value := same("part[0].devInstallScript.literals[1].newEntryViews[0]");
+
+MakePopup_code := same("part[0].devInstallScript.literals[4].stepChildren[0].MakePopup.instructions");
+
+name_value := same("part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[0].name");
+
+name_value_2 := same("part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[1].name");
+
+label_value := same("part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[3].label");
+
+helpText_value := same("part[0].devInstallScript.literals[1].newEntryViews[1].helpText");
+
+helpTopic_value := same("part[0].devInstallScript.literals[1].newEntryViews[1].helpTopic");
+
+formatFunc_code := same("part[0].devInstallScript.literals[4].infoFrame.formatFunc.instructions");
+
+_proto_value := same("part[0].devInstallScript.literals[6]._proto");
+
+devInstallScript_code := same("part[0].devInstallScript.literals[16].literals[1].instructions");

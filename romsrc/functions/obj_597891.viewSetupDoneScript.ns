@@ -1,6 +1,0 @@
-@@ 0x5977cd
-func() begin
-	inherited:?viewSetupDoneScript();
-	AddDeferredSend(self, 'Recognize, nil)
-end
-@@end

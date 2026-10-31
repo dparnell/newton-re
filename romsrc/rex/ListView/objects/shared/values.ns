@@ -1,0 +1,25 @@
+// objects several roots reach, none alone (naturalize.py)
+
+task := "task";
+
+tasks := "tasks";
+
+letter := "Letter";
+
+memo := "Memo";
+
+checklist := "Checklist";
+
+outline := "Outline";
+
+toDoList := "To Do List";
+
+toDo := "To Do";
+
+singleTask := "Single Task";
+
+priority := "Priority";
+
+completed := "Completed";
+
+task_2 := "Task";

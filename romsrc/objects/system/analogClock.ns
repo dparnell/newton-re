@@ -1,0 +1,52 @@
+// analogClock, and what only it reaches
+
+analogClock := {
+	viewClass: clView,
+	viewFlags: vVisible + vClickable,
+	viewFormat: vfRound(6),
+	viewBounds: {left: 4, top: 0, right: 21, bottom: 17},
+	viewJustify: vjParentCenterV,
+	drawFillPat: 5,
+	smallClocks: {
+		bits: bitmap('bits, "resources/bits/3d8449.png", "00000000003401ab01ab003501bc01cd", 1),
+		bounds: {left: 0, top: 0, right: 408, bottom: 17}
+	},
+	handsBounds: {left: 0, top: 0, right: 17, bottom: 17},
+	hours: 0,
+	minutes: 0,
+	lastSeed: 0,
+	calcTime: func() begin
+		local l1;
+		hours := ((minutes := ((l1 := TimeInSeconds()) div 60)) div 60);
+		if ((minutes := ((minutes mod 60) div 5)) > 6) then begin
+				hours := (hours + 1)
+			end;
+		hours := (hours mod 12);
+		((300 - (l1 mod 300)) * 1000)
+	end,
+	viewSetupFormScript: func() begin
+		self:SetupIdle(self:calcTime())
+	end,
+	viewDrawScript: func() begin
+		if (lastSeed <> setTimeSeed) then begin
+				lastSeed := setTimeSeed;
+				self:SetupIdle(self:calcTime())
+			end;
+		DrawXBitmap(handsBounds, smallClocks, hours, 0);
+		DrawXBitmap(handsBounds, smallClocks, (12 + minutes), 1)
+	end,
+	viewClickScript: func(a1) begin
+		InkOff(a1);
+		self:hilite(true);
+		timeField:Toggle();
+		self:hilite(nil);
+		true
+	end,
+	viewIdleScript: func() begin
+		local l1;
+		l1 := self:calcTime();
+		self:Dirty();
+		l1
+	end,
+	debug: 72801
+};

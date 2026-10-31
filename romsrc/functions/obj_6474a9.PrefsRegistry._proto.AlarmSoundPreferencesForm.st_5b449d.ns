@@ -1,5 +1,0 @@
-@@ 0x5b449d
-func() begin
-	(viewValue := GetUserConfig('AlarmAnnoyOn))
-end
-@@end

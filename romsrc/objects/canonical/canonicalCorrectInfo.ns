@@ -1,0 +1,3 @@
+// canonicalCorrectInfo, and what only it reaches
+
+canonicalCorrectInfo := {styles: nil, correctInfo: nil};

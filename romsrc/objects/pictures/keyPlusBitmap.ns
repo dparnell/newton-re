@@ -1,0 +1,6 @@
+// keyPlusBitmap, and what only it reaches
+
+keyPlusBitmap := {
+	bits: bitmap('bits, "resources/bits/3d9175.png", "000000000004009a009a028000a4028a", 1),
+	bounds: {left: 0, top: 0, right: 10, bottom: 10}
+};

@@ -1,6 +1,0 @@
-@@ 0x45b269
-func(a1) begin
-	Time := a1;
-	inherited:pickActionScript(a1)
-end
-@@end

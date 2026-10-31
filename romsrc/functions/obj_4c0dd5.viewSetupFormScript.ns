@@ -1,5 +1,0 @@
-@@ 0x4c0cf1
-func() begin
-	(clusterValue := theApp:GetAppPreferences().sortby)
-end
-@@end

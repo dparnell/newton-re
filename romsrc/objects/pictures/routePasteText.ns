@@ -1,0 +1,6 @@
+// routePasteText, and what only it reaches
+
+routePasteText := {
+	bits: bitmap('bits, "resources/bits/463b29.png", "0000000000040098009801ba00a601cb", 1),
+	bounds: {left: 0, top: 0, right: 17, bottom: 14}
+};

@@ -1,0 +1,12 @@
+// defaultStatusMsgs, and what only it reaches
+
+defaultStatusMsgs := {
+	idle: uCardPositionAlertButton,
+	Connecting: @connectMessage,
+	Sending: sending,
+	Receiving: receiving,
+	Confirming: "Confirming…",
+	Disconnecting: @disconnectMessage,
+	Canceling: canceling,
+	Listening: "Listening…"
+};

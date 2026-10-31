@@ -1,0 +1,3 @@
+// listViewRouteDef, and what only it reaches
+
+listViewRouteDef := {_proto: @targetFrameFormat, symbol: 'listViewRouteDef};

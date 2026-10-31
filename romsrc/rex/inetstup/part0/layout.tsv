@@ -1,7 +1,7 @@
 # the objects' area: 0x10002d0, 0x16d34 bytes; the byte between objects; the objects' alignment
 area	10002d0	16d34	bf	4
-10002d0	obj_10002d1	41	gc=1
-10002e0	obj_10002d1[0]	43	map=map_100031d
+10002d0	part	41	gc=1
+10002e0	part[0]	43	map=map_100031d
 100031c	map_100031d	41
 100035c	'_ExportTable	40
 100037c	'labels	40
@@ -15,17 +15,17 @@ area	10002d0	16d34	bf	4
 1000444	'devInstallScript	40
 1000468	'removeScript	40
 1000488	'installScript	40
-10004a8	obj_10002d1[0]._ExportTable	41
+10004a8	part[0]._ExportTable	41
 10004b8	'|Array|	40
-10004d0	obj_10002d1[0]._ExportTable[0]	43	map=map_10004ed
+10004d0	part[0]._ExportTable[0]	43	map=map_10004ed
 10004ec	map_10004ed	41
 100050c	'name	40
 1000524	'major	40
 100053c	'minor	40
 1000554	'objects	40
 100056c	'|InternetSetup:NIE|	40
-1000590	obj_10002d1[0]._ExportTable[0].objects	41
-10005a0	obj_10002d1[0]._ExportTable[0].objects[0]	43	map=map_10005e1
+1000590	part[0]._ExportTable[0].objects	41
+10005a0	part[0]._ExportTable[0].objects[0]	43	map=map_10005e1
 10005e0	map_10005e1	41
 1000624	'protection	40
 1000640	'symbol	40
@@ -39,38 +39,38 @@ area	10002d0	16d34	bf	4
 1000724	'viewBounds	40
 1000740	'viewClickScript	40
 1000760	'_proto	40
-1000778	obj_1000779	40
+1000778	allInfo	40
 1000798	'|string|	40
 10007b0	'public	40
 10007c8	'IOAllInfo	40
 10007e4	'viewer	40
-10007fc	obj_10002d1[0]._ExportTable[0].objects[0].viewSetupFormScript	43	map=map_100081d
+10007fc	part[0]._ExportTable[0].objects[0].viewSetupFormScript	43	map=map_100081d
 100081c	map_100081d	41
 1000840	'class	40
 1000858	'instructions	40
 1000878	'literals	40
 1000894	'argFrame	40
 10008b0	'numArgs	40
-10008c8	obj_10008c9	40
-1000920	obj_10002d1[0]._ExportTable[0].objects[0].viewSetupFormScript.literals	41
+10008c8	viewSetupFormScript_code	40
+1000920	part[0]._ExportTable[0].objects[0].viewSetupFormScript.literals	41
 1000954	'target	40
 100096c	map_100096d	41
 100097c	'GetRoot	40
-1000994	obj_10002d1[0]._ExportTable[0].objects[0].viewSetupFormScript.literals[5]	41
+1000994	part[0]._ExportTable[0].objects[0].viewSetupFormScript.literals[5]	41
 10009a8	'pathExpr	40
 10009c4	'GetViewsToDisplay	40
 10009e8	'newtAppBase	40
 1000a04	'GetVariable	40
 1000a20	'viewFlags	40
-1000a3c	obj_10002d1[0]._ExportTable[0].objects[0].viewBounds	43	map=map_1000a59
+1000a3c	part[0]._ExportTable[0].objects[0].viewBounds	43	map=map_1000a59
 1000a58	map_1000a59	41
 1000a78	'left	40
 1000a90	'top	40
 1000aa4	'right	40
 1000abc	'bottom	40
-1000ad4	obj_10002d1[0]._ExportTable[0].objects[0].viewClickScript	43	map=map_100081d
-1000af4	obj_10002d1[0]._ExportTable[0].objects[0].viewClickScript.instructions	40
-1000b04	obj_1000b05	43	map=map_1000b7d
+1000ad4	part[0]._ExportTable[0].objects[0].viewClickScript	43	map=map_100081d
+1000af4	part[0]._ExportTable[0].objects[0].viewClickScript.instructions	40
+1000b04	objectsProto	43	map=map_1000b7d
 1000b7c	map_1000b7d	41
 1000bf8	'AddAllInfoItem	40
 1000c18	'viewJustSym	40
@@ -91,9 +91,9 @@ area	10002d0	16d34	bf	4
 1000dbc	'viewSetupChildrenScript	40
 1000de4	'Hiliter	40
 1000dfc	'viewClass	40
-1000e18	obj_1000b05.AddAllInfoItem	43	map=map_100081d
-1000e38	obj_1000b05.AddAllInfoItem.instructions	40
-1001238	obj_1000b05.AddAllInfoItem.literals	41
+1000e18	objectsProto.AddAllInfoItem	43	map=map_100081d
+1000e38	objectsProto.AddAllInfoItem.instructions	40
+1001238	objectsProto.AddAllInfoItem.literals	41
 10012f4	'showEmptyData	40
 1001314	'IsArray	40
 100132c	'whichOne	40
@@ -122,44 +122,44 @@ area	10002d0	16d34	bf	4
 10015a4	'ArrayMunger	40
 10015c0	'justification	40
 10015e0	map_10015e1	41
-10015f8	obj_1000b05.AddAllInfoItem.literals[43]	41
+10015f8	objectsProto.AddAllInfoItem.literals[43]	41
 1001618	'vOffset	40
 1001630	'layout	40
 1001648	'path	40
-1001660	obj_1000b05.tapIcon	43	map=map_1001679
+1001660	objectsProto.tapIcon	43	map=map_1001679
 1001678	map_1001679	41
 1001694	'bounds	40
 10016ac	'bits	40
 10016c4	'colorData	40
-10016e0	obj_1000b05.tapIcon.bounds	43	map=map_10016fd
+10016e0	objectsProto.tapIcon.bounds	43	map=map_10016fd
 10016fc	map_10016fd	41
-100171c	obj_100171d	40
-1001744	obj_1000b05.tapIcon.colorData	43	map=map_1001759
+100171c	tapIconBits	40
+1001744	objectsProto.tapIcon.colorData	43	map=map_1001759
 1001758	map_1001759	41
 1001770	'cbits	40
 1001788	'bitDepth	40
-10017a4	obj_1000b05.viewDrawScript	43	map=map_100081d
-10017c4	obj_1000b05.viewDrawScript.instructions	40
-10017e4	obj_1000b05.viewDrawScript.literals	41
+10017a4	objectsProto.viewDrawScript	43	map=map_100081d
+10017c4	objectsProto.viewDrawScript.instructions	40
+10017e4	objectsProto.viewDrawScript.literals	41
 1001804	'DrawShape	40
-1001820	obj_1000b05.GetBottom	43	map=map_100081d
-1001840	obj_1000b05.GetBottom.instructions	40
-1001868	obj_1000b05.GetBottom.literals	41
-100187c	obj_1000b05.viewBounds	43	map=map_1000a59
-1001898	obj_1000b05.SetOrigin	43	map=map_100081d
-10018b8	obj_1000b05.SetOrigin.instructions	40
-10018d8	obj_1000b05.SetOrigin.literals	41
+1001820	objectsProto.GetBottom	43	map=map_100081d
+1001840	objectsProto.GetBottom.instructions	40
+1001868	objectsProto.GetBottom.literals	41
+100187c	objectsProto.viewBounds	43	map=map_1000a59
+1001898	objectsProto.SetOrigin	43	map=map_100081d
+10018b8	objectsProto.SetOrigin.instructions	40
+10018d8	objectsProto.SetOrigin.literals	41
 10018f8	'dirty	40
-1001910	obj_1000b05.GetMaxTextWidth	43	map=map_100081d
-1001930	obj_1000b05.GetMaxTextWidth.instructions	40
-100198c	obj_1000b05.GetMaxTextWidth.literals	41
+1001910	objectsProto.GetMaxTextWidth	43	map=map_100081d
+1001930	objectsProto.GetMaxTextWidth.instructions	40
+100198c	objectsProto.GetMaxTextWidth.literals	41
 10019b8	'GetShapeInfo	40
 10019d8	'StrFontWidth	40
 10019f8	'max	40
 1001a0c	'frame	40
-1001a24	obj_1000b05.viewClickScript	43	map=map_100081d
-1001a44	obj_1000b05.viewClickScript.instructions	40
-1001b98	obj_1000b05.viewClickScript.literals	41
+1001a24	objectsProto.viewClickScript	43	map=map_100081d
+1001a44	objectsProto.viewClickScript.instructions	40
+1001b98	objectsProto.viewClickScript.literals	41
 1001c18	'InkOff	40
 1001c30	'GetPoint	40
 1001c4c	'GlobalBox	40
@@ -172,71 +172,71 @@ area	10002d0	16d34	bf	4
 1001d14	'WhichPage	40
 1001d30	'walkThru	40
 1001d4c	'ShowEditSlip	40
-1001d6c	obj_1000b05.viewSetupChildrenScript	43	map=map_100081d
-1001d8c	obj_1000b05.viewSetupChildrenScript.instructions	40
-1001ffc	obj_1000b05.viewSetupChildrenScript.literals	41
+1001d6c	objectsProto.viewSetupChildrenScript	43	map=map_100081d
+1001d8c	objectsProto.viewSetupChildrenScript.instructions	40
+1001ffc	objectsProto.viewSetupChildrenScript.literals	41
 1002090	'center	40
 10020a8	'full	40
 10020c0	'checkPrefix	40
 10020dc	'checkPaths	40
 10020f8	'stringData	40
 1002114	'MakeDataPaths	40
-1002134	obj_1002135	41
-100214c	obj_1000b05.Hiliter	43	map=map_100081d
-100216c	obj_1000b05.Hiliter.instructions	40
-1002188	obj_1000b05.Hiliter.literals	41
-100219c	obj_1000b05.Hiliter.literals[0]	41
+1002134	viewSetupChildrenScript_literal26	41
+100214c	objectsProto.Hiliter	43	map=map_100081d
+100216c	objectsProto.Hiliter.instructions	40
+1002188	objectsProto.Hiliter.literals	41
+100219c	objectsProto.Hiliter.literals[0]	41
 10021b8	'transferMode	40
 10021d8	'penPattern	40
 10021f4	'fillPattern	40
 1002210	'_Setup	40
-1002228	obj_10002d1[0]._taglist	41
+1002228	part[0]._taglist	41
 100223c	'_icon	40
-1002254	obj_10002d1[0].doNotInstall	43	map=map_100081d
-1002274	obj_10002d1[0].doNotInstall.instructions	40
-10022b0	obj_10002d1[0].doNotInstall.literals	41
+1002254	part[0].doNotInstall	43	map=map_100081d
+1002274	part[0].doNotInstall.instructions	40
+10022b0	part[0].doNotInstall.literals	41
 10022e4	'GetPackages	40
-1002300	obj_10002d1[0].doNotInstall.literals[1]	40
+1002300	part[0].doNotInstall.literals[1]	40
 1002328	'|str=|	40
 1002340	'title	40
 1002358	'LFetch	40
 1002370	'|InternetSetup:Newton|	40
-1002398	obj_1002399	40
-10023c4	obj_10002d1[0].doNotInstall.literals[8]	40
+1002398	internetSetup	40
+10023c4	part[0].doNotInstall.literals[8]	40
 1002464	'Notify	40
-100247c	obj_10002d1[0].iconPro	43	map=map_1002491
+100247c	part[0].iconPro	43	map=map_1002491
 1002490	map_1002491	41
 10024a8	'unhilited	40
 10024c4	'hilited	40
-10024dc	obj_10002d1[0].iconPro.unhilited	43	map=map_10024f9
+10024dc	part[0].iconPro.unhilited	43	map=map_10024f9
 10024f8	map_10024f9	41
 1002518	'mask	40
-1002530	obj_1002531	43	map=map_10016fd
-100254c	obj_100254d	40
-10025e0	obj_10002d1[0].iconPro.unhilited.mask	40
-1002674	obj_10002d1[0].iconPro.unhilited.colorData	41
-1002690	obj_10002d1[0].iconPro.unhilited.colorData[0]	43	map=map_1001759
-10026a4	obj_10026a5	40
-1002a80	obj_10002d1[0].iconPro.unhilited.colorData[1]	43	map=map_1001759
-1002a94	obj_10002d1[0].iconPro.unhilited.colorData[1].cbits	40
-1002c90	obj_10002d1[0].iconPro.unhilited.colorData[2]	43	map=map_1001759
-1002ca4	obj_10002d1[0].iconPro.unhilited.colorData[2].cbits	40
-1002db0	obj_10002d1[0].iconPro.unhilited.colorData[3]	43	map=map_1001759
-1002dc4	obj_10002d1[0].iconPro.hilited	43	map=map_10024f9
-1002de0	obj_10002d1[0].iconPro.hilited.bounds	43	map=map_10016fd
-1002dfc	obj_1002dfd	40
-1002e90	obj_10002d1[0].iconPro.hilited.mask	40
-1002f24	obj_10002d1[0].iconPro.hilited.colorData	41
-1002f40	obj_10002d1[0].iconPro.hilited.colorData[0]	43	map=map_1001759
-1002f54	obj_10002d1[0].iconPro.hilited.colorData[1]	43	map=map_1001759
-1002f68	obj_10002d1[0].iconPro.hilited.colorData[1].cbits	40
-1003164	obj_10002d1[0].iconPro.hilited.colorData[2]	43	map=map_1001759
-1003178	obj_10002d1[0].iconPro.hilited.colorData[2].cbits	40
-1003284	obj_10002d1[0].iconPro.hilited.colorData[3]	43	map=map_1001759
-1003298	obj_10002d1[0].icon	43	map=map_10032b1
+1002530	unhilitedBounds	43	map=map_10016fd
+100254c	unhilitedBits	40
+10025e0	part[0].iconPro.unhilited.mask	40
+1002674	part[0].iconPro.unhilited.colorData	41
+1002690	part[0].iconPro.unhilited.colorData[0]	43	map=map_1001759
+10026a4	colorDataCbits	40
+1002a80	part[0].iconPro.unhilited.colorData[1]	43	map=map_1001759
+1002a94	part[0].iconPro.unhilited.colorData[1].cbits	40
+1002c90	part[0].iconPro.unhilited.colorData[2]	43	map=map_1001759
+1002ca4	part[0].iconPro.unhilited.colorData[2].cbits	40
+1002db0	part[0].iconPro.unhilited.colorData[3]	43	map=map_1001759
+1002dc4	part[0].iconPro.hilited	43	map=map_10024f9
+1002de0	part[0].iconPro.hilited.bounds	43	map=map_10016fd
+1002dfc	hilitedBits	40
+1002e90	part[0].iconPro.hilited.mask	40
+1002f24	part[0].iconPro.hilited.colorData	41
+1002f40	part[0].iconPro.hilited.colorData[0]	43	map=map_1001759
+1002f54	part[0].iconPro.hilited.colorData[1]	43	map=map_1001759
+1002f68	part[0].iconPro.hilited.colorData[1].cbits	40
+1003164	part[0].iconPro.hilited.colorData[2]	43	map=map_1001759
+1003178	part[0].iconPro.hilited.colorData[2].cbits	40
+1003284	part[0].iconPro.hilited.colorData[3]	43	map=map_1001759
+1003298	part[0].icon	43	map=map_10032b1
 10032b0	map_10032b1	41
-10032cc	obj_10002d1[0].icon.mask	40
-1003360	obj_10002d1[0].theForm	43	map=map_1003435
+10032cc	part[0].icon.mask	40
+1003360	part[0].theForm	43	map=map_1003435
 1003434	map_1003435	41
 100350c	'allViewDefs	40
 1003528	'superSymbol	40
@@ -276,11 +276,11 @@ area	10002d0	16d34	bf	4
 100391c	'editSlipLayout	40
 100393c	'HandleUndoDelete	40
 1003960	'HandleNewButtonAction	40
-1003988	obj_10002d1[0].theForm.allViewDefs	43	map=map_100096d
+1003988	part[0].theForm.allViewDefs	43	map=map_100096d
 1003994	'INET	40
-10039ac	obj_10002d1[0].theForm.GetNewPath	43	map=map_100081d
-10039cc	obj_10002d1[0].theForm.GetNewPath.instructions	40
-1003bd0	obj_10002d1[0].theForm.GetNewPath.literals	41
+10039ac	part[0].theForm.GetNewPath	43	map=map_100081d
+10039cc	part[0].theForm.GetNewPath.instructions	40
+1003bd0	part[0].theForm.GetNewPath.literals	41
 1003c28	'frameData	40
 1003c44	'FillFrameData	40
 1003c64	'HasSlot	40
@@ -288,16 +288,16 @@ area	10002d0	16d34	bf	4
 1003c98	'targetView	40
 1003cb4	'StartFlush	40
 1003cd0	'newPath	40
-1003ce8	obj_1003ce9	40
+1003ce8	aboutViewText	40
 1003cf8	'arrayData	40
 1003d14	'overview	40
-1003d30	obj_10002d1[0].theForm.API_AddEntry	43	map=map_100081d
-1003d50	obj_10002d1[0].theForm.API_AddEntry.instructions	40
-1003d94	obj_10002d1[0].theForm.API_AddEntry.literals	41
-1003dc4	obj_1003dc5	43	map=map_100081d
-1003de4	obj_1003dc5.instructions	40
-1003ec0	obj_1003dc5.literals	41
-1003f00	obj_1003f01	43	map=map_1003f1d
+1003d30	part[0].theForm.API_AddEntry	43	map=map_100081d
+1003d50	part[0].theForm.API_AddEntry.instructions	40
+1003d94	part[0].theForm.API_AddEntry.literals	41
+1003dc4	API_AddEntry_literal0	43	map=map_100081d
+1003de4	API_AddEntry_literal0.instructions	40
+1003ec0	API_AddEntry_literal0.literals	41
+1003f00	PutAwayScript_literal6	43	map=map_1003f1d
 1003f1c	map_1003f1d	41
 1003f3c	'serial	40
 1003f54	'Modem	40
@@ -307,7 +307,7 @@ area	10002d0	16d34	bf	4
 1003fbc	'|Modem:NIE|	40
 1003fd8	'|LocalTalk:NIE|	40
 1003ff8	'|Ethernet:NIE|	40
-1004018	obj_1003dc5.literals[2]	41
+1004018	API_AddEntry_literal0.literals[2]	41
 1004030	'INETSetupSoup	40
 1004050	'MakeSoup	40
 100406c	'physicalLayer	40
@@ -318,85 +318,85 @@ area	10002d0	16d34	bf	4
 1004104	'internalStore	40
 1004124	'GetStores	40
 1004140	'GetDefaultStore	40
-1004160	obj_1004161	40
+1004160	internetSetups	40
 100418c	'GetUnionSoupAlways	40
 10041b0	'AddToStoreXmit	40
 10041d0	'linkID	40
-10041e8	obj_10002d1[0].theForm.viewQuitScript	43	map=map_100081d
-1004208	obj_10002d1[0].theForm.viewQuitScript.instructions	40
-1004250	obj_10002d1[0].theForm.viewQuitScript.literals	41
-1004280	obj_1004281	43	map=map_1004295
+10041e8	part[0].theForm.viewQuitScript	43	map=map_100081d
+1004208	part[0].theForm.viewQuitScript.instructions	40
+1004250	part[0].theForm.viewQuitScript.literals	41
+1004280	viewQuitScript_literal5	43	map=map_1004295
 1004294	map_1004295	41
 10042ac	'GenericSecurID	40
 10042cc	'GenericUNIX	40
-10042e8	obj_1004281.GenericSecurID	43	map=map_1004311
+10042e8	viewQuitScript_literal5.GenericSecurID	43	map=map_1004311
 1004310	map_1004311	41
 100433c	'generic	40
 1004354	'linkLayer	40
 1004370	'loginScript	40
-100438c	obj_1004281.GenericSecurID.setupName	40
+100438c	viewQuitScript_literal5.GenericSecurID.setupName	40
 10043ac	'|PPP:NIE|	40
-10043c4	obj_1004281.GenericSecurID.loginScript	43	map=map_10043dd
+10043c4	viewQuitScript_literal5.GenericSecurID.loginScript	43	map=map_10043dd
 10043dc	map_10043dd	41
 10043f8	'interpreterSymbol	40
 100441c	'timeout	40
 1004434	'|Script Manager:NIE|	40
-1004458	obj_1004281.GenericSecurID.loginScript.instructions	41
-1004490	obj_1004281.GenericSecurID.loginScript.instructions[0]	43	map=map_10044a1
+1004458	viewQuitScript_literal5.GenericSecurID.loginScript.instructions	41
+1004490	viewQuitScript_literal5.GenericSecurID.loginScript.instructions[0]	43	map=map_10044a1
 10044a0	map_10044a1	41
 10044b4	'sendCR	40
-10044cc	obj_1004281.GenericSecurID.loginScript.instructions[1]	43	map=map_10044e1
+10044cc	viewQuitScript_literal5.GenericSecurID.loginScript.instructions[1]	43	map=map_10044e1
 10044e0	map_10044e1	41
 10044f8	'data	40
 1004510	'waitFor	40
-1004528	obj_1004529	40
-1004540	obj_1004281.GenericSecurID.loginScript.instructions[2]	43	map=map_10044a1
+1004528	ogin	40
+1004540	viewQuitScript_literal5.GenericSecurID.loginScript.instructions[2]	43	map=map_10044a1
 1004550	'userName	40
-100456c	obj_1004281.GenericSecurID.loginScript.instructions[3]	43	map=map_10044a1
-100457c	obj_1004281.GenericSecurID.loginScript.instructions[4]	43	map=map_10044e1
-1004590	obj_1004591	40
-10045a8	obj_1004281.GenericSecurID.loginScript.instructions[5]	43	map=map_10044a1
+100456c	viewQuitScript_literal5.GenericSecurID.loginScript.instructions[3]	43	map=map_10044a1
+100457c	viewQuitScript_literal5.GenericSecurID.loginScript.instructions[4]	43	map=map_10044e1
+1004590	word	40
+10045a8	viewQuitScript_literal5.GenericSecurID.loginScript.instructions[5]	43	map=map_10044a1
 10045b8	'password	40
-10045d4	obj_1004281.GenericSecurID.loginScript.instructions[6]	43	map=map_10044a1
-10045e4	obj_1004281.GenericSecurID.loginScript.instructions[7]	43	map=map_10044e1
-10045f8	obj_1004281.GenericSecurID.loginScript.instructions[7].data	40
-1004610	obj_1004281.GenericSecurID.loginScript.instructions[8]	43	map=map_10044e1
+10045d4	viewQuitScript_literal5.GenericSecurID.loginScript.instructions[6]	43	map=map_10044a1
+10045e4	viewQuitScript_literal5.GenericSecurID.loginScript.instructions[7]	43	map=map_10044e1
+10045f8	viewQuitScript_literal5.GenericSecurID.loginScript.instructions[7].data	40
+1004610	viewQuitScript_literal5.GenericSecurID.loginScript.instructions[8]	43	map=map_10044e1
 1004624	'sendPrompt	40
-1004640	obj_1004281.GenericSecurID.loginScript.instructions[8].data	40
-1004688	obj_1004281.GenericSecurID.loginScript.instructions[9]	43	map=map_10044a1
-1004698	obj_1004281.GenericSecurID.loginScript.instructions[10]	43	map=map_10044e1
-10046ac	obj_1004281.GenericSecurID.loginScript.instructions[10].data	40
-10046c8	obj_1004281.GenericUNIX	43	map=map_1004311
-10046f0	obj_1004281.GenericUNIX.setupName	40
-1004708	obj_1004281.GenericUNIX.loginScript	43	map=map_10043dd
-1004720	obj_1004281.GenericUNIX.loginScript.instructions	41
-100474c	obj_1004281.GenericUNIX.loginScript.instructions[0]	43	map=map_10044a1
-100475c	obj_1004281.GenericUNIX.loginScript.instructions[1]	43	map=map_10044e1
-1004770	obj_1004281.GenericUNIX.loginScript.instructions[2]	43	map=map_10044a1
-1004780	obj_1004281.GenericUNIX.loginScript.instructions[3]	43	map=map_10044a1
-1004790	obj_1004281.GenericUNIX.loginScript.instructions[4]	43	map=map_10044e1
-10047a4	obj_1004281.GenericUNIX.loginScript.instructions[5]	43	map=map_10044a1
-10047b4	obj_1004281.GenericUNIX.loginScript.instructions[6]	43	map=map_10044a1
-10047c4	obj_1004281.GenericUNIX.loginScript.instructions[7]	43	map=map_10044e1
-10047d8	obj_1004281.GenericUNIX.loginScript.instructions[7].data	40
+1004640	viewQuitScript_literal5.GenericSecurID.loginScript.instructions[8].data	40
+1004688	viewQuitScript_literal5.GenericSecurID.loginScript.instructions[9]	43	map=map_10044a1
+1004698	viewQuitScript_literal5.GenericSecurID.loginScript.instructions[10]	43	map=map_10044e1
+10046ac	viewQuitScript_literal5.GenericSecurID.loginScript.instructions[10].data	40
+10046c8	viewQuitScript_literal5.GenericUNIX	43	map=map_1004311
+10046f0	viewQuitScript_literal5.GenericUNIX.setupName	40
+1004708	viewQuitScript_literal5.GenericUNIX.loginScript	43	map=map_10043dd
+1004720	viewQuitScript_literal5.GenericUNIX.loginScript.instructions	41
+100474c	viewQuitScript_literal5.GenericUNIX.loginScript.instructions[0]	43	map=map_10044a1
+100475c	viewQuitScript_literal5.GenericUNIX.loginScript.instructions[1]	43	map=map_10044e1
+1004770	viewQuitScript_literal5.GenericUNIX.loginScript.instructions[2]	43	map=map_10044a1
+1004780	viewQuitScript_literal5.GenericUNIX.loginScript.instructions[3]	43	map=map_10044a1
+1004790	viewQuitScript_literal5.GenericUNIX.loginScript.instructions[4]	43	map=map_10044e1
+10047a4	viewQuitScript_literal5.GenericUNIX.loginScript.instructions[5]	43	map=map_10044a1
+10047b4	viewQuitScript_literal5.GenericUNIX.loginScript.instructions[6]	43	map=map_10044a1
+10047c4	viewQuitScript_literal5.GenericUNIX.loginScript.instructions[7]	43	map=map_10044e1
+10047d8	viewQuitScript_literal5.GenericUNIX.loginScript.instructions[7].data	40
 10047e8	'LinkTemplateRegistry	40
 1004810	'RemoveSlot	40
-100482c	obj_10002d1[0].theForm.appAll	40
-1004850	obj_10002d1[0].theForm.GetViewsToDisplay	43	map=map_100081d
-1004870	obj_10002d1[0].theForm.GetViewsToDisplay.instructions	40
-10048e4	obj_10002d1[0].theForm.GetViewsToDisplay.literals	41
+100482c	part[0].theForm.appAll	40
+1004850	part[0].theForm.GetViewsToDisplay	43	map=map_100081d
+1004870	part[0].theForm.GetViewsToDisplay.instructions	40
+10048e4	part[0].theForm.GetViewsToDisplay.literals	41
 1004910	'viewsToDisplay	40
 1004930	'GetViewDefs	40
 100494c	'editor	40
 1004964	'default	40
 100497c	'SetAdd	40
-1004994	obj_10002d1[0].theForm.GetInfoFrame	43	map=map_100081d
-10049b4	obj_10002d1[0].theForm.GetInfoFrame.instructions	40
-10049e4	obj_10002d1[0].theForm.GetInfoFrame.literals	41
+1004994	part[0].theForm.GetInfoFrame	43	map=map_100081d
+10049b4	part[0].theForm.GetInfoFrame.instructions	40
+10049e4	part[0].theForm.GetInfoFrame.literals	41
 1004a00	'infoFrame	40
-1004a1c	obj_10002d1[0].theForm.GetInfoFrame.literals[3]	41
+1004a1c	part[0].theForm.GetInfoFrame.literals[3]	41
 1004a30	'layoutDataMap	40
-1004a50	obj_10002d1[0].theForm.helpManual	43	map=map_1004a8d
+1004a50	part[0].theForm.helpManual	43	map=map_1004a8d
 1004a8c	map_1004a8d	41
 1004acc	'isbn	40
 1004ae4	'copyright	40
@@ -408,555 +408,555 @@ area	10002d0	16d34	bf	4
 1004b84	'browsers	40
 1004ba0	'templates	40
 1004bbc	'rendering	40
-1004bd8	obj_10002d1[0].theForm.helpManual.isbn	40
-1004bf4	obj_10002d1[0].theForm.helpManual.title	40
-1004c34	obj_10002d1[0].theForm.helpManual.copyright	40
-1004c64	obj_10002d1[0].theForm.helpManual.author	40
-1004c8c	obj_10002d1[0].theForm.helpManual.contents	41
-1004e24	obj_1004e25	43	map=map_1004e3d
+1004bd8	part[0].theForm.helpManual.isbn	40
+1004bf4	part[0].theForm.helpManual.title	40
+1004c34	part[0].theForm.helpManual.copyright	40
+1004c64	part[0].theForm.helpManual.author	40
+1004c8c	part[0].theForm.helpManual.contents	41
+1004e24	start	43	map=map_1004e3d
 1004e3c	map_1004e3d	41
-1004e58	obj_1004e25.data	40
-1004e80	obj_1004e25.name	40
-1004e98	obj_1004e99	43	map=map_1004eb5
+1004e58	start.data	40
+1004e80	start.name	40
+1004e98	listItem	43	map=map_1004eb5
 1004eb4	map_1004eb5	41
-1004ed4	obj_1004e99.data	40
-1004f14	obj_1004f15	43	map=map_1004f2d
+1004ed4	listItem.data	40
+1004f14	viewFont	43	map=map_1004f2d
 1004f2c	map_1004f2d	41
 1004f48	'family	40
 1004f60	'face	40
 1004f78	'size	40
 1004f90	'espy	40
-1004fa8	obj_1004fa9	40
-1004fc8	obj_1004fc9	43	map=map_1004fdd
+1004fa8	determine	40
+1004fc8	blocksItem	43	map=map_1004fdd
 1004fdc	map_1004fdd	41
-1004ff4	obj_1004fc9.data	40
-10052e8	obj_1004fc9.styles	41
-100533c	obj_100533d	43	map=map_1004f2d
-1005354	obj_1005355	43	map=map_1004eb5
-1005370	obj_1005355.data	40
-10053a0	obj_1005355.name	40
-10053b8	obj_10053b9	43	map=map_10053cd
+1004ff4	blocksItem.data	40
+10052e8	blocksItem.styles	41
+100533c	viewFont_2	43	map=map_1004f2d
+1005354	know	43	map=map_1004eb5
+1005370	know.data	40
+10053a0	know.name	40
+10053b8	blocksItem_2	43	map=map_10053cd
 10053cc	map_10053cd	41
-10053e4	obj_10053b9.data	40
-100563c	obj_100563d	43	map=map_1004eb5
-1005658	obj_100563d.data	40
-100569c	obj_100563d.name	40
-10056b0	obj_10056b1	43	map=map_10053cd
-10056c4	obj_10056b1.data	40
-1005818	obj_1005819	43	map=map_1004eb5
-1005834	obj_1005819.data	40
-1005878	obj_1005819.name	40
-1005890	obj_1005891	43	map=map_10053cd
-10058a4	obj_1005891.data	40
-1005af8	obj_1005af9	43	map=map_1004eb5
-1005b14	obj_1005af9.data	40
-1005b54	obj_1005af9.name	40
-1005b68	obj_1005b69	43	map=map_10053cd
-1005b7c	obj_1005b69.data	40
-1005e44	obj_1005e45	43	map=map_1004eb5
-1005e60	obj_1005e45.data	40
-1005eb8	obj_1005e45.name	40
-1005ecc	obj_1005ecd	43	map=map_10053cd
-1005ee0	obj_1005ecd.data	40
-1006044	obj_1006045	43	map=map_1004eb5
-1006060	obj_1006045.data	40
-1006094	obj_1006045.name	40
-10060b0	obj_10060b1	43	map=map_10053cd
-10060c4	obj_10060b1.data	40
-1006380	obj_1006381	43	map=map_1004e3d
-1006398	obj_1006381.data	40
-10063d8	obj_1006381.name	40
-10063f4	obj_10063f5	43	map=map_1004eb5
-1006410	obj_10063f5.data	40
-1006454	obj_10063f5.name	40
-1006468	obj_1006469	43	map=map_10053cd
-100647c	obj_1006469.data	40
-1006698	obj_1006699	43	map=map_1004e3d
-10066b0	obj_1006699.data	40
-10066dc	obj_1006699.name	40
-10066fc	obj_10066fd	43	map=map_1004eb5
-1006718	obj_1006719	40
-100675c	obj_10066fd.name	40
-100677c	obj_100677d	43	map=map_10053cd
-1006790	obj_100677d.data	40
-10068e4	obj_10068e5	43	map=map_1004eb5
-1006900	obj_1006901	40
-1006944	obj_10068e5.name	40
-1006964	obj_1006965	43	map=map_10053cd
-1006978	obj_1006965.data	40
-1006cb4	obj_1006cb5	43	map=map_1004e3d
-1006ccc	obj_1006cb5.data	40
-1006cfc	obj_1006cb5.name	40
-1006d14	obj_1006d15	43	map=map_1004eb5
-1006d30	obj_1006d15.name	40
-1006d4c	obj_1006d4d	43	map=map_10053cd
-1006d60	obj_1006d4d.data	40
-1006f08	obj_1006f09	43	map=map_1004eb5
-1006f24	obj_1006f25	40
-1006f44	obj_1006f45	43	map=map_10053cd
-1006f58	obj_1006f45.data	40
-1007238	obj_1007239	43	map=map_1004e3d
-1007250	obj_1007239.data	40
-1007278	obj_1007239.name	40
-1007290	obj_1007291	43	map=map_1004eb5
-10072ac	obj_1007291.name	40
-10072c8	obj_10072c9	43	map=map_10053cd
-10072dc	obj_10072c9.data	40
-1007618	obj_1007619	43	map=map_1004eb5
-1007634	obj_1007635	43	map=map_10053cd
-1007648	obj_1007649	40
-1007928	obj_1007929	43	map=map_1004eb5
-1007944	obj_1007929.data	40
-1007988	obj_1007989	40
-10079b0	obj_10079b1	43	map=map_10053cd
-10079c4	obj_10079b1.data	40
-1007be4	obj_1007be5	43	map=map_1004e3d
-1007bfc	obj_1007be5.data	40
-1007c40	obj_1007be5.name	40
-1007c5c	obj_1007c5d	43	map=map_1004eb5
-1007c78	obj_1007c5d.name	40
-1007c94	obj_1007c95	43	map=map_10053cd
-1007ca8	obj_1007c95.data	40
-1007f70	obj_1007f71	43	map=map_1004eb5
-1007f8c	obj_1007f8d	43	map=map_10053cd
-1007fa0	obj_1007fa1	43	map=map_1004e3d
-1007fb8	obj_1007fa1.data	40
-1007ffc	obj_1007fa1.name	40
-1008010	obj_1008011	43	map=map_1004eb5
-100802c	obj_1008011.data	40
-1008058	obj_1008011.name	40
-1008074	obj_1008075	43	map=map_10053cd
-1008088	obj_1008075.data	40
-100822c	obj_100822d	43	map=map_1004eb5
-1008248	obj_100822d.data	40
-1008290	obj_100822d.name	40
-10082b0	obj_10082b1	43	map=map_10053cd
-10082c4	obj_10082b1.data	40
-10083d0	obj_10083d1	43	map=map_1004eb5
-10083ec	obj_10083d1.data	40
-1008434	obj_1008435	40
-1008448	obj_1008449	43	map=map_10053cd
-100845c	obj_1008449.data	40
-100856c	obj_100856d	43	map=map_1008589
+10053e4	blocksItem_2.data	40
+100563c	gse	43	map=map_1004eb5
+1005658	gse.data	40
+100569c	gse.name	40
+10056b0	blocksItem_3	43	map=map_10053cd
+10056c4	blocksItem_3.data	40
+1005818	gsat	43	map=map_1004eb5
+1005834	gsat.data	40
+1005878	gsat.name	40
+1005890	blocksItem_4	43	map=map_10053cd
+10058a4	blocksItem_4.data	40
+1005af8	gsm	43	map=map_1004eb5
+1005b14	gsm.data	40
+1005b54	gsm.name	40
+1005b68	blocksItem_5	43	map=map_10053cd
+1005b7c	blocksItem_5.data	40
+1005e44	gss	43	map=map_1004eb5
+1005e60	gss.data	40
+1005eb8	gss.name	40
+1005ecc	blocksItem_6	43	map=map_10053cd
+1005ee0	blocksItem_6.data	40
+1006044	gather	43	map=map_1004eb5
+1006060	gather.data	40
+1006094	gather.name	40
+10060b0	blocksItem_7	43	map=map_10053cd
+10060c4	blocksItem_7.data	40
+1006380	create	43	map=map_1004e3d
+1006398	create.data	40
+10063d8	create.name	40
+10063f4	new	43	map=map_1004eb5
+1006410	new.data	40
+1006454	new.name	40
+1006468	blocksItem_8	43	map=map_10053cd
+100647c	blocksItem_8.data	40
+1006698	ethernet	43	map=map_1004e3d
+10066b0	ethernet.data	40
+10066dc	ethernet.name	40
+10066fc	ethernet1	43	map=map_1004eb5
+1006718	enterInformationOnSlip	40
+100675c	ethernet1.name	40
+100677c	blocksItem_9	43	map=map_10053cd
+1006790	blocksItem_9.data	40
+10068e4	ethernet2	43	map=map_1004eb5
+1006900	enterInformationOnSlip_2	40
+1006944	ethernet2.name	40
+1006964	blocksItem_10	43	map=map_10053cd
+1006978	blocksItem_10.data	40
+1006cb4	atalk	43	map=map_1004e3d
+1006ccc	atalk.data	40
+1006cfc	atalk.name	40
+1006d14	atalk1	43	map=map_1004eb5
+1006d30	atalk1.name	40
+1006d4c	blocksItem_11	43	map=map_10053cd
+1006d60	blocksItem_11.data	40
+1006f08	listItem_2	43	map=map_1004eb5
+1006f24	enterinfo	40
+1006f44	blocksItem_12	43	map=map_10053cd
+1006f58	blocksItem_12.data	40
+1007238	modem	43	map=map_1004e3d
+1007250	modem.data	40
+1007278	modem.name	40
+1007290	modem1	43	map=map_1004eb5
+10072ac	modem1.name	40
+10072c8	blocksItem_13	43	map=map_10053cd
+10072dc	blocksItem_13.data	40
+1007618	listItem_3	43	map=map_1004eb5
+1007634	blocksItem_14	43	map=map_10053cd
+1007648	localIPAddressA	40
+1007928	listItem_4	43	map=map_1004eb5
+1007944	listItem_4.data	40
+1007988	modemsettings	40
+10079b0	blocksItem_15	43	map=map_10053cd
+10079c4	blocksItem_15.data	40
+1007be4	serial	43	map=map_1004e3d
+1007bfc	serial.data	40
+1007c40	serial.name	40
+1007c5c	serial1	43	map=map_1004eb5
+1007c78	serial1.name	40
+1007c94	blocksItem_16	43	map=map_10053cd
+1007ca8	blocksItem_16.data	40
+1007f70	listItem_5	43	map=map_1004eb5
+1007f8c	blocksItem_17	43	map=map_10053cd
+1007fa0	add	43	map=map_1004e3d
+1007fb8	add.data	40
+1007ffc	add.name	40
+1008010	addinfo	43	map=map_1004eb5
+100802c	addinfo.data	40
+1008058	addinfo.name	40
+1008074	blocksItem_18	43	map=map_10053cd
+1008088	blocksItem_18.data	40
+100822c	accessno	43	map=map_1004eb5
+1008248	accessno.data	40
+1008290	accessno.name	40
+10082b0	blocksItem_19	43	map=map_10053cd
+10082c4	blocksItem_19.data	40
+10083d0	listItem_6	43	map=map_1004eb5
+10083ec	listItem_6.data	40
+1008434	dns	40
+1008448	blocksItem_20	43	map=map_10053cd
+100845c	blocksItem_20.data	40
+100856c	script	43	map=map_1008589
 1008588	map_1008589	41
-10085a8	obj_100856d.data	40
-10085ec	obj_100856d.styles	41
-1008608	obj_100856d.name	40
-1008624	obj_1008625	43	map=map_1004eb5
-1008640	obj_1008625.data	40
-1008684	obj_1008625.name	40
-100869c	obj_100869d	43	map=map_10053cd
-10086b0	obj_100869d.data	40
-1008944	obj_1008945	43	map=map_1004eb5
-1008960	obj_1008945.data	40
-10089a8	obj_1008945.name	40
-10089c8	obj_10089c9	43	map=map_10053cd
-10089dc	obj_10089c9.data	40
-1008c5c	obj_1008c5d	43	map=map_1004eb5
-1008c78	obj_1008c5d.data	40
-1008cac	obj_1008cad	43	map=map_10053cd
-1008cc0	obj_1008cad.data	40
-1008ed4	obj_1008ed5	43	map=map_1004eb5
-1008ef0	obj_1008ed5.data	40
-1008f2c	obj_1008ed5.name	40
-1008f50	obj_1008f51	43	map=map_10053cd
-1008f64	obj_1008f51.data	40
-10091d0	obj_10091d1	43	map=map_1004eb5
-10091ec	obj_10091d1.data	40
-1009234	obj_10091d1.name	40
-1009254	obj_1009255	43	map=map_10053cd
-1009268	obj_1009255.data	40
-1009554	obj_1009555	43	map=map_1004eb5
-1009570	obj_1009555.data	40
-10095a4	obj_1009555.name	40
-10095c0	obj_10095c1	43	map=map_10053cd
-10095d4	obj_10095c1.data	40
-10097f8	obj_10097f9	43	map=map_1004eb5
-1009814	obj_10097f9.data	40
-1009854	obj_10097f9.name	40
-1009870	obj_1009871	43	map=map_10053cd
-1009884	obj_1009871.data	40
-1009a9c	obj_1009a9d	43	map=map_1004e3d
-1009ab4	obj_1009a9d.data	40
-1009ae8	obj_1009a9d.name	40
-1009b00	obj_1009b01	43	map=map_1004eb5
-1009b1c	obj_1009b01.data	40
-1009b68	obj_1009b01.name	40
-1009b84	obj_1009b85	43	map=map_10053cd
-1009b98	obj_1009b85.data	40
-1009cc8	obj_1009cc9	43	map=map_1004eb5
-1009ce4	obj_1009cc9.data	40
-1009d24	obj_1009cc9.name	40
-1009d4c	obj_1009d4d	43	map=map_10053cd
-1009d60	obj_1009d4d.data	40
-1009fe8	obj_1009fe9	43	map=map_1004eb5
-100a004	obj_1009fe9.data	40
-100a040	obj_1009fe9.name	40
-100a05c	obj_100a05d	43	map=map_10053cd
-100a070	obj_100a05d.data	40
-100a234	obj_100a235	43	map=map_1004eb5
-100a250	obj_100a235.data	40
-100a294	obj_100a235.name	40
-100a2b4	obj_100a2b5	43	map=map_10053cd
-100a2c8	obj_100a2b5.data	40
-100a468	obj_100a469	43	map=map_1004eb5
-100a484	obj_100a469.data	40
-100a4d8	obj_100a469.name	40
-100a4f4	obj_100a4f5	43	map=map_10053cd
-100a508	obj_100a4f5.data	40
-100a72c	obj_100a72d	43	map=map_1004eb5
-100a748	obj_100a72d.data	40
-100a798	obj_100a799	43	map=map_10053cd
-100a7ac	obj_100a799.data	40
-100aa0c	obj_100aa0d	43	map=map_1004eb5
-100aa28	obj_100aa0d.data	40
-100aa64	obj_100aa0d.name	40
-100aa80	obj_100aa81	43	map=map_10053cd
-100aa94	obj_100aa81.data	40
-100ac60	obj_100ac61	43	map=map_1004eb5
-100ac7c	obj_100ac61.data	40
-100acc4	obj_100ac61.name	40
-100ace8	obj_100ace9	43	map=map_10053cd
-100acfc	obj_100ace9.data	40
-100b008	obj_100b009	43	map=map_1004e3d
-100b020	obj_100b009.data	40
-100b068	obj_100b009.name	40
-100b07c	obj_100b07d	43	map=map_1004eb5
-100b098	obj_100b07d.data	40
-100b0d0	obj_100b07d.name	40
-100b0e8	obj_100b0e9	43	map=map_10053cd
-100b0fc	obj_100b0e9.data	40
-100b324	obj_100b325	43	map=map_1004eb5
-100b340	obj_100b325.data	40
-100b394	obj_100b325.name	40
-100b3b4	obj_100b3b5	43	map=map_10053cd
-100b3c8	obj_100b3b5.data	40
-100b644	obj_100b645	43	map=map_1004eb5
-100b660	obj_100b645.data	40
-100b6b8	obj_100b645.name	40
-100b6d0	obj_100b6d1	43	map=map_10053cd
-100b6e4	obj_100b6d1.data	40
-100b8d8	obj_100b8d9	43	map=map_1004eb5
-100b8f4	obj_100b8d9.data	40
-100b930	obj_100b8d9.name	40
-100b948	obj_100b949	43	map=map_10053cd
-100b95c	obj_100b949.data	40
-100bb08	obj_100bb09	43	map=map_1004eb5
-100bb24	obj_100bb09.data	40
-100bb60	obj_100bb09.name	40
-100bb78	obj_100bb79	43	map=map_10053cd
-100bb8c	obj_100bb79.data	40
-100bee8	obj_100bee9	43	map=map_1004eb5
-100bf04	obj_100bee9.data	40
-100bf44	obj_100bee9.name	40
-100bf60	obj_100bf61	43	map=map_10053cd
-100bf74	obj_100bf61.data	40
-100c208	obj_100c209	43	map=map_1004e3d
-100c220	obj_100c209.data	40
-100c25c	obj_100c209.name	40
-100c278	obj_100c279	43	map=map_1004eb5
-100c294	obj_100c279.data	40
-100c2d0	obj_100c279.name	40
-100c2fc	obj_100c2fd	43	map=map_10053cd
-100c310	obj_100c2fd.data	40
-100c51c	obj_100c51d	43	map=map_1004eb5
-100c538	obj_100c51d.data	40
-100c580	obj_100c51d.name	40
-100c5a4	obj_100c5a5	43	map=map_10053cd
-100c5b8	obj_100c5a5.data	40
-100c804	obj_100c805	43	map=map_1004eb5
-100c820	obj_100c805.data	40
-100c868	obj_100c805.name	40
-100c888	obj_100c889	43	map=map_10053cd
-100c89c	obj_100c889.data	40
-100cae0	obj_10002d1[0].theForm.helpManual.styles	41
-100caf8	obj_10002d1[0].theForm.helpManual.styles[0]	43	map=map_1004f2d
+10085a8	script.data	40
+10085ec	script.styles	41
+1008608	script.name	40
+1008624	steps	43	map=map_1004eb5
+1008640	steps.data	40
+1008684	steps.name	40
+100869c	blocksItem_21	43	map=map_10053cd
+10086b0	blocksItem_21.data	40
+1008944	addscript	43	map=map_1004eb5
+1008960	addscript.data	40
+10089a8	addscript.name	40
+10089c8	blocksItem_22	43	map=map_10053cd
+10089dc	blocksItem_22.data	40
+1008c5c	listItem_7	43	map=map_1004eb5
+1008c78	listItem_7.data	40
+1008cac	blocksItem_23	43	map=map_10053cd
+1008cc0	blocksItem_23.data	40
+1008ed4	discodelay	43	map=map_1004eb5
+1008ef0	discodelay.data	40
+1008f2c	discodelay.name	40
+1008f50	blocksItem_24	43	map=map_10053cd
+1008f64	blocksItem_24.data	40
+10091d0	advanced	43	map=map_1004eb5
+10091ec	advanced.data	40
+1009234	advanced.name	40
+1009254	blocksItem_25	43	map=map_10053cd
+1009268	blocksItem_25.data	40
+1009554	redial	43	map=map_1004eb5
+1009570	redial.data	40
+10095a4	redial.name	40
+10095c0	blocksItem_26	43	map=map_10053cd
+10095d4	blocksItem_26.data	40
+10097f8	country	43	map=map_1004eb5
+1009814	country.data	40
+1009854	country.name	40
+1009870	blocksItem_27	43	map=map_10053cd
+1009884	blocksItem_27.data	40
+1009a9c	edit	43	map=map_1004e3d
+1009ab4	edit.data	40
+1009ae8	edit.name	40
+1009b00	editing	43	map=map_1004eb5
+1009b1c	editing.data	40
+1009b68	editing.name	40
+1009b84	blocksItem_28	43	map=map_10053cd
+1009b98	blocksItem_28.data	40
+1009cc8	configuration	43	map=map_1004eb5
+1009ce4	configuration.data	40
+1009d24	configuration.name	40
+1009d4c	blocksItem_29	43	map=map_10053cd
+1009d60	blocksItem_29.data	40
+1009fe8	subnet	43	map=map_1004eb5
+100a004	subnet.data	40
+100a040	subnet.name	40
+100a05c	blocksItem_30	43	map=map_10053cd
+100a070	blocksItem_30.data	40
+100a234	ipaddress	43	map=map_1004eb5
+100a250	ipaddress.data	40
+100a294	ipaddress.name	40
+100a2b4	blocksItem_31	43	map=map_10053cd
+100a2c8	blocksItem_31.data	40
+100a468	gateway	43	map=map_1004eb5
+100a484	gateway.data	40
+100a4d8	gateway.name	40
+100a4f4	blocksItem_32	43	map=map_10053cd
+100a508	blocksItem_32.data	40
+100a72c	listItem_8	43	map=map_1004eb5
+100a748	listItem_8.data	40
+100a798	blocksItem_33	43	map=map_10053cd
+100a7ac	blocksItem_33.data	40
+100aa0c	domain	43	map=map_1004eb5
+100aa28	domain.data	40
+100aa64	domain.name	40
+100aa80	blocksItem_34	43	map=map_10053cd
+100aa94	blocksItem_34.data	40
+100ac60	idpassword	43	map=map_1004eb5
+100ac7c	idpassword.data	40
+100acc4	idpassword.name	40
+100ace8	blocksItem_35	43	map=map_10053cd
+100acfc	blocksItem_35.data	40
+100b008	use	43	map=map_1004e3d
+100b020	use.data	40
+100b068	use.name	40
+100b07c	view	43	map=map_1004eb5
+100b098	view.data	40
+100b0d0	view.name	40
+100b0e8	blocksItem_36	43	map=map_10053cd
+100b0fc	blocksItem_36.data	40
+100b324	worksite	43	map=map_1004eb5
+100b340	worksite.data	40
+100b394	worksite.name	40
+100b3b4	blocksItem_37	43	map=map_10053cd
+100b3c8	blocksItem_37.data	40
+100b644	store	43	map=map_1004eb5
+100b660	store.data	40
+100b6b8	store.name	40
+100b6d0	blocksItem_38	43	map=map_10053cd
+100b6e4	blocksItem_38.data	40
+100b8d8	move	43	map=map_1004eb5
+100b8f4	move.data	40
+100b930	move.name	40
+100b948	blocksItem_39	43	map=map_10053cd
+100b95c	blocksItem_39.data	40
+100bb08	send	43	map=map_1004eb5
+100bb24	send.data	40
+100bb60	send.name	40
+100bb78	blocksItem_40	43	map=map_10053cd
+100bb8c	blocksItem_40.data	40
+100bee8	delete	43	map=map_1004eb5
+100bf04	delete.data	40
+100bf44	delete.name	40
+100bf60	blocksItem_41	43	map=map_10053cd
+100bf74	blocksItem_41.data	40
+100c208	connect	43	map=map_1004e3d
+100c220	connect.data	40
+100c25c	connect.name	40
+100c278	connectinternet	43	map=map_1004eb5
+100c294	connectinternet.data	40
+100c2d0	connectinternet.name	40
+100c2fc	blocksItem_42	43	map=map_10053cd
+100c310	blocksItem_42.data	40
+100c51c	disconnect	43	map=map_1004eb5
+100c538	disconnect.data	40
+100c580	disconnect.name	40
+100c5a4	blocksItem_43	43	map=map_10053cd
+100c5b8	blocksItem_43.data	40
+100c804	override	43	map=map_1004eb5
+100c820	override.data	40
+100c868	override.name	40
+100c888	blocksItem_44	43	map=map_10053cd
+100c89c	blocksItem_44.data	40
+100cae0	part[0].theForm.helpManual.styles	41
+100caf8	part[0].theForm.helpManual.styles[0]	43	map=map_1004f2d
 100cb10	'geneva	40
-100cb28	obj_10002d1[0].theForm.helpManual.browsers	41
-100cb38	obj_10002d1[0].theForm.helpManual.browsers[0]	43	map=map_100cb4d
+100cb28	part[0].theForm.helpManual.browsers	41
+100cb38	part[0].theForm.helpManual.browsers[0]	43	map=map_100cb4d
 100cb4c	map_100cb4d	41
 100cb64	'list	40
-100cb7c	obj_10002d1[0].theForm.helpManual.browsers[0].name	40
-100cb9c	obj_10002d1[0].theForm.helpManual.browsers[0].list	41
-100cc84	obj_10002d1[0].theForm.helpManual.browsers[0].list[0]	43	map=map_100cc95
+100cb7c	part[0].theForm.helpManual.browsers[0].name	40
+100cb9c	part[0].theForm.helpManual.browsers[0].list	41
+100cc84	part[0].theForm.helpManual.browsers[0].list[0]	43	map=map_100cc95
 100cc94	map_100cc95	41
 100cca8	'item	40
-100ccc0	obj_10002d1[0].theForm.helpManual.browsers[0].list[1]	43	map=map_100ccd5
+100ccc0	part[0].theForm.helpManual.browsers[0].list[1]	43	map=map_100ccd5
 100ccd4	map_100ccd5	41
 100ccec	'level	40
-100cd04	obj_10002d1[0].theForm.helpManual.browsers[0].list[2]	43	map=map_100ccd5
-100cd18	obj_10002d1[0].theForm.helpManual.browsers[0].list[3]	43	map=map_100ccd5
-100cd2c	obj_10002d1[0].theForm.helpManual.browsers[0].list[4]	43	map=map_100ccd5
-100cd40	obj_10002d1[0].theForm.helpManual.browsers[0].list[5]	43	map=map_100ccd5
-100cd54	obj_10002d1[0].theForm.helpManual.browsers[0].list[6]	43	map=map_100ccd5
-100cd68	obj_10002d1[0].theForm.helpManual.browsers[0].list[7]	43	map=map_100ccd5
-100cd7c	obj_10002d1[0].theForm.helpManual.browsers[0].list[8]	43	map=map_100cc95
-100cd8c	obj_10002d1[0].theForm.helpManual.browsers[0].list[9]	43	map=map_100ccd5
-100cda0	obj_10002d1[0].theForm.helpManual.browsers[0].list[10]	43	map=map_100ccd5
-100cdb4	obj_10002d1[0].theForm.helpManual.browsers[0].list[11]	43	map=map_100ccd5
-100cdc8	obj_10002d1[0].theForm.helpManual.browsers[0].list[12]	43	map=map_100ccd5
-100cddc	obj_10002d1[0].theForm.helpManual.browsers[0].list[13]	43	map=map_100ccd5
-100cdf0	obj_10002d1[0].theForm.helpManual.browsers[0].list[14]	43	map=map_100ccd5
-100ce04	obj_10002d1[0].theForm.helpManual.browsers[0].list[15]	43	map=map_100ccd5
-100ce18	obj_10002d1[0].theForm.helpManual.browsers[0].list[16]	43	map=map_100ccd5
-100ce2c	obj_10002d1[0].theForm.helpManual.browsers[0].list[17]	43	map=map_100ccd5
-100ce40	obj_10002d1[0].theForm.helpManual.browsers[0].list[18]	43	map=map_100ccd5
-100ce54	obj_10002d1[0].theForm.helpManual.browsers[0].list[19]	43	map=map_100ccd5
-100ce68	obj_10002d1[0].theForm.helpManual.browsers[0].list[20]	43	map=map_100ccd5
-100ce7c	obj_10002d1[0].theForm.helpManual.browsers[0].list[21]	43	map=map_100ccd5
-100ce90	obj_10002d1[0].theForm.helpManual.browsers[0].list[22]	43	map=map_100ccd5
-100cea4	obj_10002d1[0].theForm.helpManual.browsers[0].list[23]	43	map=map_100cc95
-100ceb4	obj_10002d1[0].theForm.helpManual.browsers[0].list[24]	43	map=map_100ccd5
-100cec8	obj_10002d1[0].theForm.helpManual.browsers[0].list[25]	43	map=map_100ccd5
-100cedc	obj_10002d1[0].theForm.helpManual.browsers[0].list[26]	43	map=map_100ccd5
-100cef0	obj_10002d1[0].theForm.helpManual.browsers[0].list[27]	43	map=map_100ccd5
-100cf04	obj_10002d1[0].theForm.helpManual.browsers[0].list[28]	43	map=map_100ccd5
-100cf18	obj_10002d1[0].theForm.helpManual.browsers[0].list[29]	43	map=map_100ccd5
-100cf2c	obj_10002d1[0].theForm.helpManual.browsers[0].list[30]	43	map=map_100ccd5
-100cf40	obj_10002d1[0].theForm.helpManual.browsers[0].list[31]	43	map=map_100ccd5
-100cf54	obj_10002d1[0].theForm.helpManual.browsers[0].list[32]	43	map=map_100ccd5
-100cf68	obj_10002d1[0].theForm.helpManual.browsers[0].list[33]	43	map=map_100ccd5
-100cf7c	obj_10002d1[0].theForm.helpManual.browsers[0].list[34]	43	map=map_100ccd5
-100cf90	obj_10002d1[0].theForm.helpManual.browsers[0].list[35]	43	map=map_100cc95
-100cfa0	obj_10002d1[0].theForm.helpManual.browsers[0].list[36]	43	map=map_100ccd5
-100cfb4	obj_10002d1[0].theForm.helpManual.browsers[0].list[37]	43	map=map_100ccd5
-100cfc8	obj_10002d1[0].theForm.helpManual.browsers[0].list[38]	43	map=map_100ccd5
-100cfdc	obj_10002d1[0].theForm.helpManual.browsers[0].list[39]	43	map=map_100ccd5
-100cff0	obj_10002d1[0].theForm.helpManual.browsers[0].list[40]	43	map=map_100ccd5
-100d004	obj_10002d1[0].theForm.helpManual.browsers[0].list[41]	43	map=map_100ccd5
-100d018	obj_10002d1[0].theForm.helpManual.browsers[0].list[42]	43	map=map_100ccd5
-100d02c	obj_10002d1[0].theForm.helpManual.browsers[0].list[43]	43	map=map_100ccd5
-100d040	obj_10002d1[0].theForm.helpManual.browsers[0].list[44]	43	map=map_100cc95
-100d050	obj_10002d1[0].theForm.helpManual.browsers[0].list[45]	43	map=map_100ccd5
-100d064	obj_10002d1[0].theForm.helpManual.browsers[0].list[46]	43	map=map_100ccd5
-100d078	obj_10002d1[0].theForm.helpManual.browsers[0].list[47]	43	map=map_100ccd5
-100d08c	obj_10002d1[0].theForm.helpManual.browsers[0].list[48]	43	map=map_100ccd5
-100d0a0	obj_10002d1[0].theForm.helpManual.browsers[0].list[49]	43	map=map_100ccd5
-100d0b4	obj_10002d1[0].theForm.helpManual.browsers[0].list[50]	43	map=map_100ccd5
-100d0c8	obj_10002d1[0].theForm.helpManual.browsers[0].list[51]	43	map=map_100cc95
-100d0d8	obj_10002d1[0].theForm.helpManual.browsers[0].list[52]	43	map=map_100ccd5
-100d0ec	obj_10002d1[0].theForm.helpManual.browsers[0].list[53]	43	map=map_100ccd5
-100d100	obj_10002d1[0].theForm.helpManual.browsers[0].list[54]	43	map=map_100ccd5
-100d114	obj_10002d1[0].theForm.helpManual.templates	41
-100d124	obj_100d125	43	map=map_100d139
+100cd04	part[0].theForm.helpManual.browsers[0].list[2]	43	map=map_100ccd5
+100cd18	part[0].theForm.helpManual.browsers[0].list[3]	43	map=map_100ccd5
+100cd2c	part[0].theForm.helpManual.browsers[0].list[4]	43	map=map_100ccd5
+100cd40	part[0].theForm.helpManual.browsers[0].list[5]	43	map=map_100ccd5
+100cd54	part[0].theForm.helpManual.browsers[0].list[6]	43	map=map_100ccd5
+100cd68	part[0].theForm.helpManual.browsers[0].list[7]	43	map=map_100ccd5
+100cd7c	part[0].theForm.helpManual.browsers[0].list[8]	43	map=map_100cc95
+100cd8c	part[0].theForm.helpManual.browsers[0].list[9]	43	map=map_100ccd5
+100cda0	part[0].theForm.helpManual.browsers[0].list[10]	43	map=map_100ccd5
+100cdb4	part[0].theForm.helpManual.browsers[0].list[11]	43	map=map_100ccd5
+100cdc8	part[0].theForm.helpManual.browsers[0].list[12]	43	map=map_100ccd5
+100cddc	part[0].theForm.helpManual.browsers[0].list[13]	43	map=map_100ccd5
+100cdf0	part[0].theForm.helpManual.browsers[0].list[14]	43	map=map_100ccd5
+100ce04	part[0].theForm.helpManual.browsers[0].list[15]	43	map=map_100ccd5
+100ce18	part[0].theForm.helpManual.browsers[0].list[16]	43	map=map_100ccd5
+100ce2c	part[0].theForm.helpManual.browsers[0].list[17]	43	map=map_100ccd5
+100ce40	part[0].theForm.helpManual.browsers[0].list[18]	43	map=map_100ccd5
+100ce54	part[0].theForm.helpManual.browsers[0].list[19]	43	map=map_100ccd5
+100ce68	part[0].theForm.helpManual.browsers[0].list[20]	43	map=map_100ccd5
+100ce7c	part[0].theForm.helpManual.browsers[0].list[21]	43	map=map_100ccd5
+100ce90	part[0].theForm.helpManual.browsers[0].list[22]	43	map=map_100ccd5
+100cea4	part[0].theForm.helpManual.browsers[0].list[23]	43	map=map_100cc95
+100ceb4	part[0].theForm.helpManual.browsers[0].list[24]	43	map=map_100ccd5
+100cec8	part[0].theForm.helpManual.browsers[0].list[25]	43	map=map_100ccd5
+100cedc	part[0].theForm.helpManual.browsers[0].list[26]	43	map=map_100ccd5
+100cef0	part[0].theForm.helpManual.browsers[0].list[27]	43	map=map_100ccd5
+100cf04	part[0].theForm.helpManual.browsers[0].list[28]	43	map=map_100ccd5
+100cf18	part[0].theForm.helpManual.browsers[0].list[29]	43	map=map_100ccd5
+100cf2c	part[0].theForm.helpManual.browsers[0].list[30]	43	map=map_100ccd5
+100cf40	part[0].theForm.helpManual.browsers[0].list[31]	43	map=map_100ccd5
+100cf54	part[0].theForm.helpManual.browsers[0].list[32]	43	map=map_100ccd5
+100cf68	part[0].theForm.helpManual.browsers[0].list[33]	43	map=map_100ccd5
+100cf7c	part[0].theForm.helpManual.browsers[0].list[34]	43	map=map_100ccd5
+100cf90	part[0].theForm.helpManual.browsers[0].list[35]	43	map=map_100cc95
+100cfa0	part[0].theForm.helpManual.browsers[0].list[36]	43	map=map_100ccd5
+100cfb4	part[0].theForm.helpManual.browsers[0].list[37]	43	map=map_100ccd5
+100cfc8	part[0].theForm.helpManual.browsers[0].list[38]	43	map=map_100ccd5
+100cfdc	part[0].theForm.helpManual.browsers[0].list[39]	43	map=map_100ccd5
+100cff0	part[0].theForm.helpManual.browsers[0].list[40]	43	map=map_100ccd5
+100d004	part[0].theForm.helpManual.browsers[0].list[41]	43	map=map_100ccd5
+100d018	part[0].theForm.helpManual.browsers[0].list[42]	43	map=map_100ccd5
+100d02c	part[0].theForm.helpManual.browsers[0].list[43]	43	map=map_100ccd5
+100d040	part[0].theForm.helpManual.browsers[0].list[44]	43	map=map_100cc95
+100d050	part[0].theForm.helpManual.browsers[0].list[45]	43	map=map_100ccd5
+100d064	part[0].theForm.helpManual.browsers[0].list[46]	43	map=map_100ccd5
+100d078	part[0].theForm.helpManual.browsers[0].list[47]	43	map=map_100ccd5
+100d08c	part[0].theForm.helpManual.browsers[0].list[48]	43	map=map_100ccd5
+100d0a0	part[0].theForm.helpManual.browsers[0].list[49]	43	map=map_100ccd5
+100d0b4	part[0].theForm.helpManual.browsers[0].list[50]	43	map=map_100ccd5
+100d0c8	part[0].theForm.helpManual.browsers[0].list[51]	43	map=map_100cc95
+100d0d8	part[0].theForm.helpManual.browsers[0].list[52]	43	map=map_100ccd5
+100d0ec	part[0].theForm.helpManual.browsers[0].list[53]	43	map=map_100ccd5
+100d100	part[0].theForm.helpManual.browsers[0].list[54]	43	map=map_100ccd5
+100d114	part[0].theForm.helpManual.templates	41
+100d124	template	43	map=map_100d139
 100d138	map_100d139	41
 100d150	'nColumns	40
 100d16c	'column	40
-100d184	obj_100d125.column	41
-100d194	obj_100d125.column[0]	43	map=map_100d1a9
+100d184	template.column	41
+100d194	template.column[0]	43	map=map_100d1a9
 100d1a8	map_100d1a9	41
 100d1c0	'width	40
-100d1d8	obj_10002d1[0].theForm.helpManual.rendering	41
-100d1e8	obj_10002d1[0].theForm.helpManual.rendering[0]	43	map=map_100d1fd
+100d1d8	part[0].theForm.helpManual.rendering	41
+100d1e8	part[0].theForm.helpManual.rendering[0]	43	map=map_100d1fd
 100d1fc	map_100d1fd	41
 100d214	'pageSize	40
 100d230	'pages	40
-100d248	obj_10002d1[0].theForm.helpManual.rendering[0].pageSize	43	map=map_10016fd
-100d264	obj_10002d1[0].theForm.helpManual.rendering[0].pages	41
-100d324	obj_10002d1[0].theForm.helpManual.rendering[0].pages[0]	43	map=map_100d339
+100d248	part[0].theForm.helpManual.rendering[0].pageSize	43	map=map_10016fd
+100d264	part[0].theForm.helpManual.rendering[0].pages	41
+100d324	part[0].theForm.helpManual.rendering[0].pages[0]	43	map=map_100d339
 100d338	map_100d339	41
 100d350	'template	40
 100d36c	'blocks	40
-100d384	obj_10002d1[0].theForm.helpManual.rendering[0].pages[0].blocks	41
-100d398	obj_10002d1[0].theForm.helpManual.rendering[0].pages[0].blocks[0]	43	map=map_100d3ad
+100d384	part[0].theForm.helpManual.rendering[0].pages[0].blocks	41
+100d398	part[0].theForm.helpManual.rendering[0].pages[0].blocks[0]	43	map=map_100d3ad
 100d3ac	map_100d3ad	41
-100d3c4	obj_100d3c5	41
-100d3e0	obj_10002d1[0].theForm.helpManual.rendering[0].pages[0].blocks[1]	43	map=map_100d3ad
-100d3f4	obj_100d3f5	41
-100d410	obj_10002d1[0].theForm.helpManual.rendering[0].pages[1]	43	map=map_100d339
-100d424	obj_10002d1[0].theForm.helpManual.rendering[0].pages[1].blocks	41
-100d438	obj_10002d1[0].theForm.helpManual.rendering[0].pages[1].blocks[0]	43	map=map_100d3ad
-100d44c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[1].blocks[1]	43	map=map_100d3ad
-100d460	obj_10002d1[0].theForm.helpManual.rendering[0].pages[2]	43	map=map_100d339
-100d474	obj_10002d1[0].theForm.helpManual.rendering[0].pages[2].blocks	41
-100d488	obj_10002d1[0].theForm.helpManual.rendering[0].pages[2].blocks[0]	43	map=map_100d3ad
-100d49c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[2].blocks[1]	43	map=map_100d3ad
-100d4b0	obj_10002d1[0].theForm.helpManual.rendering[0].pages[3]	43	map=map_100d339
-100d4c4	obj_10002d1[0].theForm.helpManual.rendering[0].pages[3].blocks	41
-100d4d8	obj_10002d1[0].theForm.helpManual.rendering[0].pages[3].blocks[0]	43	map=map_100d3ad
-100d4ec	obj_10002d1[0].theForm.helpManual.rendering[0].pages[3].blocks[1]	43	map=map_100d3ad
-100d500	obj_10002d1[0].theForm.helpManual.rendering[0].pages[4]	43	map=map_100d339
-100d514	obj_10002d1[0].theForm.helpManual.rendering[0].pages[4].blocks	41
-100d528	obj_10002d1[0].theForm.helpManual.rendering[0].pages[4].blocks[0]	43	map=map_100d3ad
-100d53c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[4].blocks[1]	43	map=map_100d3ad
-100d550	obj_10002d1[0].theForm.helpManual.rendering[0].pages[5]	43	map=map_100d339
-100d564	obj_10002d1[0].theForm.helpManual.rendering[0].pages[5].blocks	41
-100d578	obj_10002d1[0].theForm.helpManual.rendering[0].pages[5].blocks[0]	43	map=map_100d3ad
-100d58c	obj_100d58d	41
-100d5a8	obj_10002d1[0].theForm.helpManual.rendering[0].pages[5].blocks[1]	43	map=map_100d3ad
-100d5bc	obj_100d5bd	41
-100d5d8	obj_10002d1[0].theForm.helpManual.rendering[0].pages[6]	43	map=map_100d339
-100d5ec	obj_10002d1[0].theForm.helpManual.rendering[0].pages[6].blocks	41
-100d600	obj_10002d1[0].theForm.helpManual.rendering[0].pages[6].blocks[0]	43	map=map_100d3ad
-100d614	obj_10002d1[0].theForm.helpManual.rendering[0].pages[6].blocks[1]	43	map=map_100d3ad
-100d628	obj_10002d1[0].theForm.helpManual.rendering[0].pages[7]	43	map=map_100d339
-100d63c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[7].blocks	41
-100d650	obj_10002d1[0].theForm.helpManual.rendering[0].pages[7].blocks[0]	43	map=map_100d3ad
-100d664	obj_10002d1[0].theForm.helpManual.rendering[0].pages[7].blocks[1]	43	map=map_100d3ad
-100d678	obj_10002d1[0].theForm.helpManual.rendering[0].pages[8]	43	map=map_100d339
-100d68c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[8].blocks	41
-100d6a0	obj_10002d1[0].theForm.helpManual.rendering[0].pages[8].blocks[0]	43	map=map_100d3ad
-100d6b4	obj_10002d1[0].theForm.helpManual.rendering[0].pages[8].blocks[1]	43	map=map_100d3ad
-100d6c8	obj_10002d1[0].theForm.helpManual.rendering[0].pages[9]	43	map=map_100d339
-100d6dc	obj_10002d1[0].theForm.helpManual.rendering[0].pages[9].blocks	41
-100d6f0	obj_10002d1[0].theForm.helpManual.rendering[0].pages[9].blocks[0]	43	map=map_100d3ad
-100d704	obj_10002d1[0].theForm.helpManual.rendering[0].pages[9].blocks[1]	43	map=map_100d3ad
-100d718	obj_10002d1[0].theForm.helpManual.rendering[0].pages[10]	43	map=map_100d339
-100d72c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[10].blocks	41
-100d740	obj_10002d1[0].theForm.helpManual.rendering[0].pages[10].blocks[0]	43	map=map_100d3ad
-100d754	obj_10002d1[0].theForm.helpManual.rendering[0].pages[10].blocks[1]	43	map=map_100d3ad
-100d768	obj_10002d1[0].theForm.helpManual.rendering[0].pages[11]	43	map=map_100d339
-100d77c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[11].blocks	41
-100d790	obj_10002d1[0].theForm.helpManual.rendering[0].pages[11].blocks[0]	43	map=map_100d3ad
-100d7a4	obj_10002d1[0].theForm.helpManual.rendering[0].pages[11].blocks[1]	43	map=map_100d3ad
-100d7b8	obj_10002d1[0].theForm.helpManual.rendering[0].pages[12]	43	map=map_100d339
-100d7cc	obj_10002d1[0].theForm.helpManual.rendering[0].pages[12].blocks	41
-100d7e0	obj_10002d1[0].theForm.helpManual.rendering[0].pages[12].blocks[0]	43	map=map_100d3ad
-100d7f4	obj_10002d1[0].theForm.helpManual.rendering[0].pages[12].blocks[1]	43	map=map_100d3ad
-100d808	obj_10002d1[0].theForm.helpManual.rendering[0].pages[13]	43	map=map_100d339
-100d81c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[13].blocks	41
-100d830	obj_10002d1[0].theForm.helpManual.rendering[0].pages[13].blocks[0]	43	map=map_100d3ad
-100d844	obj_10002d1[0].theForm.helpManual.rendering[0].pages[13].blocks[1]	43	map=map_100d3ad
-100d858	obj_10002d1[0].theForm.helpManual.rendering[0].pages[14]	43	map=map_100d339
-100d86c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[14].blocks	41
-100d880	obj_10002d1[0].theForm.helpManual.rendering[0].pages[14].blocks[0]	43	map=map_100d3ad
-100d894	obj_10002d1[0].theForm.helpManual.rendering[0].pages[14].blocks[1]	43	map=map_100d3ad
-100d8a8	obj_10002d1[0].theForm.helpManual.rendering[0].pages[15]	43	map=map_100d339
-100d8bc	obj_10002d1[0].theForm.helpManual.rendering[0].pages[15].blocks	41
-100d8d0	obj_10002d1[0].theForm.helpManual.rendering[0].pages[15].blocks[0]	43	map=map_100d3ad
-100d8e4	obj_10002d1[0].theForm.helpManual.rendering[0].pages[15].blocks[1]	43	map=map_100d3ad
-100d8f8	obj_10002d1[0].theForm.helpManual.rendering[0].pages[16]	43	map=map_100d339
-100d90c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[16].blocks	41
-100d920	obj_10002d1[0].theForm.helpManual.rendering[0].pages[16].blocks[0]	43	map=map_100d3ad
-100d934	obj_10002d1[0].theForm.helpManual.rendering[0].pages[16].blocks[1]	43	map=map_100d3ad
-100d948	obj_10002d1[0].theForm.helpManual.rendering[0].pages[17]	43	map=map_100d339
-100d95c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[17].blocks	41
-100d970	obj_10002d1[0].theForm.helpManual.rendering[0].pages[17].blocks[0]	43	map=map_100d3ad
-100d984	obj_10002d1[0].theForm.helpManual.rendering[0].pages[17].blocks[1]	43	map=map_100d3ad
-100d998	obj_10002d1[0].theForm.helpManual.rendering[0].pages[18]	43	map=map_100d339
-100d9ac	obj_10002d1[0].theForm.helpManual.rendering[0].pages[18].blocks	41
-100d9c0	obj_10002d1[0].theForm.helpManual.rendering[0].pages[18].blocks[0]	43	map=map_100d3ad
-100d9d4	obj_10002d1[0].theForm.helpManual.rendering[0].pages[18].blocks[1]	43	map=map_100d3ad
-100d9e8	obj_10002d1[0].theForm.helpManual.rendering[0].pages[19]	43	map=map_100d339
-100d9fc	obj_10002d1[0].theForm.helpManual.rendering[0].pages[19].blocks	41
-100da10	obj_10002d1[0].theForm.helpManual.rendering[0].pages[19].blocks[0]	43	map=map_100d3ad
-100da24	obj_10002d1[0].theForm.helpManual.rendering[0].pages[19].blocks[1]	43	map=map_100d3ad
-100da38	obj_10002d1[0].theForm.helpManual.rendering[0].pages[20]	43	map=map_100d339
-100da4c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[20].blocks	41
-100da5c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[20].blocks[0]	43	map=map_100d3ad
-100da70	obj_10002d1[0].theForm.helpManual.rendering[0].pages[20].blocks[0].bounds	41
-100da8c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[21]	43	map=map_100d339
-100daa0	obj_10002d1[0].theForm.helpManual.rendering[0].pages[21].blocks	41
-100dab4	obj_10002d1[0].theForm.helpManual.rendering[0].pages[21].blocks[0]	43	map=map_100d3ad
-100dac8	obj_10002d1[0].theForm.helpManual.rendering[0].pages[21].blocks[1]	43	map=map_100d3ad
-100dadc	obj_10002d1[0].theForm.helpManual.rendering[0].pages[22]	43	map=map_100d339
-100daf0	obj_10002d1[0].theForm.helpManual.rendering[0].pages[22].blocks	41
-100db04	obj_10002d1[0].theForm.helpManual.rendering[0].pages[22].blocks[0]	43	map=map_100d3ad
-100db18	obj_10002d1[0].theForm.helpManual.rendering[0].pages[22].blocks[1]	43	map=map_100d3ad
-100db2c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[23]	43	map=map_100d339
-100db40	obj_10002d1[0].theForm.helpManual.rendering[0].pages[23].blocks	41
-100db54	obj_10002d1[0].theForm.helpManual.rendering[0].pages[23].blocks[0]	43	map=map_100d3ad
-100db68	obj_10002d1[0].theForm.helpManual.rendering[0].pages[23].blocks[1]	43	map=map_100d3ad
-100db7c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[24]	43	map=map_100d339
-100db90	obj_10002d1[0].theForm.helpManual.rendering[0].pages[24].blocks	41
-100dba4	obj_10002d1[0].theForm.helpManual.rendering[0].pages[24].blocks[0]	43	map=map_100d3ad
-100dbb8	obj_10002d1[0].theForm.helpManual.rendering[0].pages[24].blocks[1]	43	map=map_100d3ad
-100dbcc	obj_10002d1[0].theForm.helpManual.rendering[0].pages[25]	43	map=map_100d339
-100dbe0	obj_10002d1[0].theForm.helpManual.rendering[0].pages[25].blocks	41
-100dbf4	obj_10002d1[0].theForm.helpManual.rendering[0].pages[25].blocks[0]	43	map=map_100d3ad
-100dc08	obj_10002d1[0].theForm.helpManual.rendering[0].pages[25].blocks[1]	43	map=map_100d3ad
-100dc1c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[26]	43	map=map_100d339
-100dc30	obj_10002d1[0].theForm.helpManual.rendering[0].pages[26].blocks	41
-100dc44	obj_10002d1[0].theForm.helpManual.rendering[0].pages[26].blocks[0]	43	map=map_100d3ad
-100dc58	obj_10002d1[0].theForm.helpManual.rendering[0].pages[26].blocks[1]	43	map=map_100d3ad
-100dc6c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[27]	43	map=map_100d339
-100dc80	obj_10002d1[0].theForm.helpManual.rendering[0].pages[27].blocks	41
-100dc94	obj_10002d1[0].theForm.helpManual.rendering[0].pages[27].blocks[0]	43	map=map_100d3ad
-100dca8	obj_10002d1[0].theForm.helpManual.rendering[0].pages[27].blocks[1]	43	map=map_100d3ad
-100dcbc	obj_10002d1[0].theForm.helpManual.rendering[0].pages[28]	43	map=map_100d339
-100dcd0	obj_10002d1[0].theForm.helpManual.rendering[0].pages[28].blocks	41
-100dce4	obj_10002d1[0].theForm.helpManual.rendering[0].pages[28].blocks[0]	43	map=map_100d3ad
-100dcf8	obj_10002d1[0].theForm.helpManual.rendering[0].pages[28].blocks[1]	43	map=map_100d3ad
-100dd0c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[29]	43	map=map_100d339
-100dd20	obj_10002d1[0].theForm.helpManual.rendering[0].pages[29].blocks	41
-100dd34	obj_10002d1[0].theForm.helpManual.rendering[0].pages[29].blocks[0]	43	map=map_100d3ad
-100dd48	obj_10002d1[0].theForm.helpManual.rendering[0].pages[29].blocks[1]	43	map=map_100d3ad
-100dd5c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[30]	43	map=map_100d339
-100dd70	obj_10002d1[0].theForm.helpManual.rendering[0].pages[30].blocks	41
-100dd84	obj_10002d1[0].theForm.helpManual.rendering[0].pages[30].blocks[0]	43	map=map_100d3ad
-100dd98	obj_10002d1[0].theForm.helpManual.rendering[0].pages[30].blocks[1]	43	map=map_100d3ad
-100ddac	obj_10002d1[0].theForm.helpManual.rendering[0].pages[31]	43	map=map_100d339
-100ddc0	obj_10002d1[0].theForm.helpManual.rendering[0].pages[31].blocks	41
-100ddd4	obj_10002d1[0].theForm.helpManual.rendering[0].pages[31].blocks[0]	43	map=map_100d3ad
-100dde8	obj_10002d1[0].theForm.helpManual.rendering[0].pages[31].blocks[1]	43	map=map_100d3ad
-100ddfc	obj_10002d1[0].theForm.helpManual.rendering[0].pages[32]	43	map=map_100d339
-100de10	obj_10002d1[0].theForm.helpManual.rendering[0].pages[32].blocks	41
-100de24	obj_10002d1[0].theForm.helpManual.rendering[0].pages[32].blocks[0]	43	map=map_100d3ad
-100de38	obj_10002d1[0].theForm.helpManual.rendering[0].pages[32].blocks[1]	43	map=map_100d3ad
-100de4c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[33]	43	map=map_100d339
-100de60	obj_10002d1[0].theForm.helpManual.rendering[0].pages[33].blocks	41
-100de74	obj_10002d1[0].theForm.helpManual.rendering[0].pages[33].blocks[0]	43	map=map_100d3ad
-100de88	obj_10002d1[0].theForm.helpManual.rendering[0].pages[33].blocks[1]	43	map=map_100d3ad
-100de9c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[34]	43	map=map_100d339
-100deb0	obj_10002d1[0].theForm.helpManual.rendering[0].pages[34].blocks	41
-100dec4	obj_10002d1[0].theForm.helpManual.rendering[0].pages[34].blocks[0]	43	map=map_100d3ad
-100ded8	obj_10002d1[0].theForm.helpManual.rendering[0].pages[34].blocks[1]	43	map=map_100d3ad
-100deec	obj_10002d1[0].theForm.helpManual.rendering[0].pages[35]	43	map=map_100d339
-100df00	obj_10002d1[0].theForm.helpManual.rendering[0].pages[35].blocks	41
-100df14	obj_10002d1[0].theForm.helpManual.rendering[0].pages[35].blocks[0]	43	map=map_100d3ad
-100df28	obj_10002d1[0].theForm.helpManual.rendering[0].pages[35].blocks[1]	43	map=map_100d3ad
-100df3c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[36]	43	map=map_100d339
-100df50	obj_10002d1[0].theForm.helpManual.rendering[0].pages[36].blocks	41
-100df64	obj_10002d1[0].theForm.helpManual.rendering[0].pages[36].blocks[0]	43	map=map_100d3ad
-100df78	obj_10002d1[0].theForm.helpManual.rendering[0].pages[36].blocks[1]	43	map=map_100d3ad
-100df8c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[37]	43	map=map_100d339
-100dfa0	obj_10002d1[0].theForm.helpManual.rendering[0].pages[37].blocks	41
-100dfb4	obj_10002d1[0].theForm.helpManual.rendering[0].pages[37].blocks[0]	43	map=map_100d3ad
-100dfc8	obj_10002d1[0].theForm.helpManual.rendering[0].pages[37].blocks[1]	43	map=map_100d3ad
-100dfdc	obj_10002d1[0].theForm.helpManual.rendering[0].pages[38]	43	map=map_100d339
-100dff0	obj_10002d1[0].theForm.helpManual.rendering[0].pages[38].blocks	41
-100e004	obj_10002d1[0].theForm.helpManual.rendering[0].pages[38].blocks[0]	43	map=map_100d3ad
-100e018	obj_10002d1[0].theForm.helpManual.rendering[0].pages[38].blocks[1]	43	map=map_100d3ad
-100e02c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[39]	43	map=map_100d339
-100e040	obj_10002d1[0].theForm.helpManual.rendering[0].pages[39].blocks	41
-100e054	obj_10002d1[0].theForm.helpManual.rendering[0].pages[39].blocks[0]	43	map=map_100d3ad
-100e068	obj_10002d1[0].theForm.helpManual.rendering[0].pages[39].blocks[1]	43	map=map_100d3ad
-100e07c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[40]	43	map=map_100d339
-100e090	obj_10002d1[0].theForm.helpManual.rendering[0].pages[40].blocks	41
-100e0a4	obj_10002d1[0].theForm.helpManual.rendering[0].pages[40].blocks[0]	43	map=map_100d3ad
-100e0b8	obj_10002d1[0].theForm.helpManual.rendering[0].pages[40].blocks[1]	43	map=map_100d3ad
-100e0cc	obj_10002d1[0].theForm.helpManual.rendering[0].pages[41]	43	map=map_100d339
-100e0e0	obj_10002d1[0].theForm.helpManual.rendering[0].pages[41].blocks	41
-100e0f4	obj_10002d1[0].theForm.helpManual.rendering[0].pages[41].blocks[0]	43	map=map_100d3ad
-100e108	obj_10002d1[0].theForm.helpManual.rendering[0].pages[41].blocks[1]	43	map=map_100d3ad
-100e11c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[42]	43	map=map_100d339
-100e130	obj_10002d1[0].theForm.helpManual.rendering[0].pages[42].blocks	41
-100e144	obj_10002d1[0].theForm.helpManual.rendering[0].pages[42].blocks[0]	43	map=map_100d3ad
-100e158	obj_10002d1[0].theForm.helpManual.rendering[0].pages[42].blocks[1]	43	map=map_100d3ad
-100e16c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[43]	43	map=map_100d339
-100e180	obj_10002d1[0].theForm.helpManual.rendering[0].pages[43].blocks	41
-100e194	obj_10002d1[0].theForm.helpManual.rendering[0].pages[43].blocks[0]	43	map=map_100d3ad
-100e1a8	obj_10002d1[0].theForm.helpManual.rendering[0].pages[43].blocks[1]	43	map=map_100d3ad
-100e1bc	obj_10002d1[0].theForm.helpManual.rendering[0].pages[44]	43	map=map_100d339
-100e1d0	obj_10002d1[0].theForm.helpManual.rendering[0].pages[44].blocks	41
-100e1e4	obj_10002d1[0].theForm.helpManual.rendering[0].pages[44].blocks[0]	43	map=map_100d3ad
-100e1f8	obj_10002d1[0].theForm.helpManual.rendering[0].pages[44].blocks[1]	43	map=map_100d3ad
-100e20c	obj_10002d1[0].theForm.helpManual.rendering[0].pages[44].blocks[1].bounds	41
-100e228	obj_10002d1[0].theForm.HasPathData	43	map=map_100081d
-100e248	obj_10002d1[0].theForm.HasPathData.instructions	40
-100e2b4	obj_10002d1[0].theForm.HasPathData.literals	41
+100d3c4	blocksBounds	41
+100d3e0	part[0].theForm.helpManual.rendering[0].pages[0].blocks[1]	43	map=map_100d3ad
+100d3f4	blocksBounds_2	41
+100d410	part[0].theForm.helpManual.rendering[0].pages[1]	43	map=map_100d339
+100d424	part[0].theForm.helpManual.rendering[0].pages[1].blocks	41
+100d438	part[0].theForm.helpManual.rendering[0].pages[1].blocks[0]	43	map=map_100d3ad
+100d44c	part[0].theForm.helpManual.rendering[0].pages[1].blocks[1]	43	map=map_100d3ad
+100d460	part[0].theForm.helpManual.rendering[0].pages[2]	43	map=map_100d339
+100d474	part[0].theForm.helpManual.rendering[0].pages[2].blocks	41
+100d488	part[0].theForm.helpManual.rendering[0].pages[2].blocks[0]	43	map=map_100d3ad
+100d49c	part[0].theForm.helpManual.rendering[0].pages[2].blocks[1]	43	map=map_100d3ad
+100d4b0	part[0].theForm.helpManual.rendering[0].pages[3]	43	map=map_100d339
+100d4c4	part[0].theForm.helpManual.rendering[0].pages[3].blocks	41
+100d4d8	part[0].theForm.helpManual.rendering[0].pages[3].blocks[0]	43	map=map_100d3ad
+100d4ec	part[0].theForm.helpManual.rendering[0].pages[3].blocks[1]	43	map=map_100d3ad
+100d500	part[0].theForm.helpManual.rendering[0].pages[4]	43	map=map_100d339
+100d514	part[0].theForm.helpManual.rendering[0].pages[4].blocks	41
+100d528	part[0].theForm.helpManual.rendering[0].pages[4].blocks[0]	43	map=map_100d3ad
+100d53c	part[0].theForm.helpManual.rendering[0].pages[4].blocks[1]	43	map=map_100d3ad
+100d550	part[0].theForm.helpManual.rendering[0].pages[5]	43	map=map_100d339
+100d564	part[0].theForm.helpManual.rendering[0].pages[5].blocks	41
+100d578	part[0].theForm.helpManual.rendering[0].pages[5].blocks[0]	43	map=map_100d3ad
+100d58c	blocksBounds_3	41
+100d5a8	part[0].theForm.helpManual.rendering[0].pages[5].blocks[1]	43	map=map_100d3ad
+100d5bc	blocksBounds_4	41
+100d5d8	part[0].theForm.helpManual.rendering[0].pages[6]	43	map=map_100d339
+100d5ec	part[0].theForm.helpManual.rendering[0].pages[6].blocks	41
+100d600	part[0].theForm.helpManual.rendering[0].pages[6].blocks[0]	43	map=map_100d3ad
+100d614	part[0].theForm.helpManual.rendering[0].pages[6].blocks[1]	43	map=map_100d3ad
+100d628	part[0].theForm.helpManual.rendering[0].pages[7]	43	map=map_100d339
+100d63c	part[0].theForm.helpManual.rendering[0].pages[7].blocks	41
+100d650	part[0].theForm.helpManual.rendering[0].pages[7].blocks[0]	43	map=map_100d3ad
+100d664	part[0].theForm.helpManual.rendering[0].pages[7].blocks[1]	43	map=map_100d3ad
+100d678	part[0].theForm.helpManual.rendering[0].pages[8]	43	map=map_100d339
+100d68c	part[0].theForm.helpManual.rendering[0].pages[8].blocks	41
+100d6a0	part[0].theForm.helpManual.rendering[0].pages[8].blocks[0]	43	map=map_100d3ad
+100d6b4	part[0].theForm.helpManual.rendering[0].pages[8].blocks[1]	43	map=map_100d3ad
+100d6c8	part[0].theForm.helpManual.rendering[0].pages[9]	43	map=map_100d339
+100d6dc	part[0].theForm.helpManual.rendering[0].pages[9].blocks	41
+100d6f0	part[0].theForm.helpManual.rendering[0].pages[9].blocks[0]	43	map=map_100d3ad
+100d704	part[0].theForm.helpManual.rendering[0].pages[9].blocks[1]	43	map=map_100d3ad
+100d718	part[0].theForm.helpManual.rendering[0].pages[10]	43	map=map_100d339
+100d72c	part[0].theForm.helpManual.rendering[0].pages[10].blocks	41
+100d740	part[0].theForm.helpManual.rendering[0].pages[10].blocks[0]	43	map=map_100d3ad
+100d754	part[0].theForm.helpManual.rendering[0].pages[10].blocks[1]	43	map=map_100d3ad
+100d768	part[0].theForm.helpManual.rendering[0].pages[11]	43	map=map_100d339
+100d77c	part[0].theForm.helpManual.rendering[0].pages[11].blocks	41
+100d790	part[0].theForm.helpManual.rendering[0].pages[11].blocks[0]	43	map=map_100d3ad
+100d7a4	part[0].theForm.helpManual.rendering[0].pages[11].blocks[1]	43	map=map_100d3ad
+100d7b8	part[0].theForm.helpManual.rendering[0].pages[12]	43	map=map_100d339
+100d7cc	part[0].theForm.helpManual.rendering[0].pages[12].blocks	41
+100d7e0	part[0].theForm.helpManual.rendering[0].pages[12].blocks[0]	43	map=map_100d3ad
+100d7f4	part[0].theForm.helpManual.rendering[0].pages[12].blocks[1]	43	map=map_100d3ad
+100d808	part[0].theForm.helpManual.rendering[0].pages[13]	43	map=map_100d339
+100d81c	part[0].theForm.helpManual.rendering[0].pages[13].blocks	41
+100d830	part[0].theForm.helpManual.rendering[0].pages[13].blocks[0]	43	map=map_100d3ad
+100d844	part[0].theForm.helpManual.rendering[0].pages[13].blocks[1]	43	map=map_100d3ad
+100d858	part[0].theForm.helpManual.rendering[0].pages[14]	43	map=map_100d339
+100d86c	part[0].theForm.helpManual.rendering[0].pages[14].blocks	41
+100d880	part[0].theForm.helpManual.rendering[0].pages[14].blocks[0]	43	map=map_100d3ad
+100d894	part[0].theForm.helpManual.rendering[0].pages[14].blocks[1]	43	map=map_100d3ad
+100d8a8	part[0].theForm.helpManual.rendering[0].pages[15]	43	map=map_100d339
+100d8bc	part[0].theForm.helpManual.rendering[0].pages[15].blocks	41
+100d8d0	part[0].theForm.helpManual.rendering[0].pages[15].blocks[0]	43	map=map_100d3ad
+100d8e4	part[0].theForm.helpManual.rendering[0].pages[15].blocks[1]	43	map=map_100d3ad
+100d8f8	part[0].theForm.helpManual.rendering[0].pages[16]	43	map=map_100d339
+100d90c	part[0].theForm.helpManual.rendering[0].pages[16].blocks	41
+100d920	part[0].theForm.helpManual.rendering[0].pages[16].blocks[0]	43	map=map_100d3ad
+100d934	part[0].theForm.helpManual.rendering[0].pages[16].blocks[1]	43	map=map_100d3ad
+100d948	part[0].theForm.helpManual.rendering[0].pages[17]	43	map=map_100d339
+100d95c	part[0].theForm.helpManual.rendering[0].pages[17].blocks	41
+100d970	part[0].theForm.helpManual.rendering[0].pages[17].blocks[0]	43	map=map_100d3ad
+100d984	part[0].theForm.helpManual.rendering[0].pages[17].blocks[1]	43	map=map_100d3ad
+100d998	part[0].theForm.helpManual.rendering[0].pages[18]	43	map=map_100d339
+100d9ac	part[0].theForm.helpManual.rendering[0].pages[18].blocks	41
+100d9c0	part[0].theForm.helpManual.rendering[0].pages[18].blocks[0]	43	map=map_100d3ad
+100d9d4	part[0].theForm.helpManual.rendering[0].pages[18].blocks[1]	43	map=map_100d3ad
+100d9e8	part[0].theForm.helpManual.rendering[0].pages[19]	43	map=map_100d339
+100d9fc	part[0].theForm.helpManual.rendering[0].pages[19].blocks	41
+100da10	part[0].theForm.helpManual.rendering[0].pages[19].blocks[0]	43	map=map_100d3ad
+100da24	part[0].theForm.helpManual.rendering[0].pages[19].blocks[1]	43	map=map_100d3ad
+100da38	part[0].theForm.helpManual.rendering[0].pages[20]	43	map=map_100d339
+100da4c	part[0].theForm.helpManual.rendering[0].pages[20].blocks	41
+100da5c	part[0].theForm.helpManual.rendering[0].pages[20].blocks[0]	43	map=map_100d3ad
+100da70	part[0].theForm.helpManual.rendering[0].pages[20].blocks[0].bounds	41
+100da8c	part[0].theForm.helpManual.rendering[0].pages[21]	43	map=map_100d339
+100daa0	part[0].theForm.helpManual.rendering[0].pages[21].blocks	41
+100dab4	part[0].theForm.helpManual.rendering[0].pages[21].blocks[0]	43	map=map_100d3ad
+100dac8	part[0].theForm.helpManual.rendering[0].pages[21].blocks[1]	43	map=map_100d3ad
+100dadc	part[0].theForm.helpManual.rendering[0].pages[22]	43	map=map_100d339
+100daf0	part[0].theForm.helpManual.rendering[0].pages[22].blocks	41
+100db04	part[0].theForm.helpManual.rendering[0].pages[22].blocks[0]	43	map=map_100d3ad
+100db18	part[0].theForm.helpManual.rendering[0].pages[22].blocks[1]	43	map=map_100d3ad
+100db2c	part[0].theForm.helpManual.rendering[0].pages[23]	43	map=map_100d339
+100db40	part[0].theForm.helpManual.rendering[0].pages[23].blocks	41
+100db54	part[0].theForm.helpManual.rendering[0].pages[23].blocks[0]	43	map=map_100d3ad
+100db68	part[0].theForm.helpManual.rendering[0].pages[23].blocks[1]	43	map=map_100d3ad
+100db7c	part[0].theForm.helpManual.rendering[0].pages[24]	43	map=map_100d339
+100db90	part[0].theForm.helpManual.rendering[0].pages[24].blocks	41
+100dba4	part[0].theForm.helpManual.rendering[0].pages[24].blocks[0]	43	map=map_100d3ad
+100dbb8	part[0].theForm.helpManual.rendering[0].pages[24].blocks[1]	43	map=map_100d3ad
+100dbcc	part[0].theForm.helpManual.rendering[0].pages[25]	43	map=map_100d339
+100dbe0	part[0].theForm.helpManual.rendering[0].pages[25].blocks	41
+100dbf4	part[0].theForm.helpManual.rendering[0].pages[25].blocks[0]	43	map=map_100d3ad
+100dc08	part[0].theForm.helpManual.rendering[0].pages[25].blocks[1]	43	map=map_100d3ad
+100dc1c	part[0].theForm.helpManual.rendering[0].pages[26]	43	map=map_100d339
+100dc30	part[0].theForm.helpManual.rendering[0].pages[26].blocks	41
+100dc44	part[0].theForm.helpManual.rendering[0].pages[26].blocks[0]	43	map=map_100d3ad
+100dc58	part[0].theForm.helpManual.rendering[0].pages[26].blocks[1]	43	map=map_100d3ad
+100dc6c	part[0].theForm.helpManual.rendering[0].pages[27]	43	map=map_100d339
+100dc80	part[0].theForm.helpManual.rendering[0].pages[27].blocks	41
+100dc94	part[0].theForm.helpManual.rendering[0].pages[27].blocks[0]	43	map=map_100d3ad
+100dca8	part[0].theForm.helpManual.rendering[0].pages[27].blocks[1]	43	map=map_100d3ad
+100dcbc	part[0].theForm.helpManual.rendering[0].pages[28]	43	map=map_100d339
+100dcd0	part[0].theForm.helpManual.rendering[0].pages[28].blocks	41
+100dce4	part[0].theForm.helpManual.rendering[0].pages[28].blocks[0]	43	map=map_100d3ad
+100dcf8	part[0].theForm.helpManual.rendering[0].pages[28].blocks[1]	43	map=map_100d3ad
+100dd0c	part[0].theForm.helpManual.rendering[0].pages[29]	43	map=map_100d339
+100dd20	part[0].theForm.helpManual.rendering[0].pages[29].blocks	41
+100dd34	part[0].theForm.helpManual.rendering[0].pages[29].blocks[0]	43	map=map_100d3ad
+100dd48	part[0].theForm.helpManual.rendering[0].pages[29].blocks[1]	43	map=map_100d3ad
+100dd5c	part[0].theForm.helpManual.rendering[0].pages[30]	43	map=map_100d339
+100dd70	part[0].theForm.helpManual.rendering[0].pages[30].blocks	41
+100dd84	part[0].theForm.helpManual.rendering[0].pages[30].blocks[0]	43	map=map_100d3ad
+100dd98	part[0].theForm.helpManual.rendering[0].pages[30].blocks[1]	43	map=map_100d3ad
+100ddac	part[0].theForm.helpManual.rendering[0].pages[31]	43	map=map_100d339
+100ddc0	part[0].theForm.helpManual.rendering[0].pages[31].blocks	41
+100ddd4	part[0].theForm.helpManual.rendering[0].pages[31].blocks[0]	43	map=map_100d3ad
+100dde8	part[0].theForm.helpManual.rendering[0].pages[31].blocks[1]	43	map=map_100d3ad
+100ddfc	part[0].theForm.helpManual.rendering[0].pages[32]	43	map=map_100d339
+100de10	part[0].theForm.helpManual.rendering[0].pages[32].blocks	41
+100de24	part[0].theForm.helpManual.rendering[0].pages[32].blocks[0]	43	map=map_100d3ad
+100de38	part[0].theForm.helpManual.rendering[0].pages[32].blocks[1]	43	map=map_100d3ad
+100de4c	part[0].theForm.helpManual.rendering[0].pages[33]	43	map=map_100d339
+100de60	part[0].theForm.helpManual.rendering[0].pages[33].blocks	41
+100de74	part[0].theForm.helpManual.rendering[0].pages[33].blocks[0]	43	map=map_100d3ad
+100de88	part[0].theForm.helpManual.rendering[0].pages[33].blocks[1]	43	map=map_100d3ad
+100de9c	part[0].theForm.helpManual.rendering[0].pages[34]	43	map=map_100d339
+100deb0	part[0].theForm.helpManual.rendering[0].pages[34].blocks	41
+100dec4	part[0].theForm.helpManual.rendering[0].pages[34].blocks[0]	43	map=map_100d3ad
+100ded8	part[0].theForm.helpManual.rendering[0].pages[34].blocks[1]	43	map=map_100d3ad
+100deec	part[0].theForm.helpManual.rendering[0].pages[35]	43	map=map_100d339
+100df00	part[0].theForm.helpManual.rendering[0].pages[35].blocks	41
+100df14	part[0].theForm.helpManual.rendering[0].pages[35].blocks[0]	43	map=map_100d3ad
+100df28	part[0].theForm.helpManual.rendering[0].pages[35].blocks[1]	43	map=map_100d3ad
+100df3c	part[0].theForm.helpManual.rendering[0].pages[36]	43	map=map_100d339
+100df50	part[0].theForm.helpManual.rendering[0].pages[36].blocks	41
+100df64	part[0].theForm.helpManual.rendering[0].pages[36].blocks[0]	43	map=map_100d3ad
+100df78	part[0].theForm.helpManual.rendering[0].pages[36].blocks[1]	43	map=map_100d3ad
+100df8c	part[0].theForm.helpManual.rendering[0].pages[37]	43	map=map_100d339
+100dfa0	part[0].theForm.helpManual.rendering[0].pages[37].blocks	41
+100dfb4	part[0].theForm.helpManual.rendering[0].pages[37].blocks[0]	43	map=map_100d3ad
+100dfc8	part[0].theForm.helpManual.rendering[0].pages[37].blocks[1]	43	map=map_100d3ad
+100dfdc	part[0].theForm.helpManual.rendering[0].pages[38]	43	map=map_100d339
+100dff0	part[0].theForm.helpManual.rendering[0].pages[38].blocks	41
+100e004	part[0].theForm.helpManual.rendering[0].pages[38].blocks[0]	43	map=map_100d3ad
+100e018	part[0].theForm.helpManual.rendering[0].pages[38].blocks[1]	43	map=map_100d3ad
+100e02c	part[0].theForm.helpManual.rendering[0].pages[39]	43	map=map_100d339
+100e040	part[0].theForm.helpManual.rendering[0].pages[39].blocks	41
+100e054	part[0].theForm.helpManual.rendering[0].pages[39].blocks[0]	43	map=map_100d3ad
+100e068	part[0].theForm.helpManual.rendering[0].pages[39].blocks[1]	43	map=map_100d3ad
+100e07c	part[0].theForm.helpManual.rendering[0].pages[40]	43	map=map_100d339
+100e090	part[0].theForm.helpManual.rendering[0].pages[40].blocks	41
+100e0a4	part[0].theForm.helpManual.rendering[0].pages[40].blocks[0]	43	map=map_100d3ad
+100e0b8	part[0].theForm.helpManual.rendering[0].pages[40].blocks[1]	43	map=map_100d3ad
+100e0cc	part[0].theForm.helpManual.rendering[0].pages[41]	43	map=map_100d339
+100e0e0	part[0].theForm.helpManual.rendering[0].pages[41].blocks	41
+100e0f4	part[0].theForm.helpManual.rendering[0].pages[41].blocks[0]	43	map=map_100d3ad
+100e108	part[0].theForm.helpManual.rendering[0].pages[41].blocks[1]	43	map=map_100d3ad
+100e11c	part[0].theForm.helpManual.rendering[0].pages[42]	43	map=map_100d339
+100e130	part[0].theForm.helpManual.rendering[0].pages[42].blocks	41
+100e144	part[0].theForm.helpManual.rendering[0].pages[42].blocks[0]	43	map=map_100d3ad
+100e158	part[0].theForm.helpManual.rendering[0].pages[42].blocks[1]	43	map=map_100d3ad
+100e16c	part[0].theForm.helpManual.rendering[0].pages[43]	43	map=map_100d339
+100e180	part[0].theForm.helpManual.rendering[0].pages[43].blocks	41
+100e194	part[0].theForm.helpManual.rendering[0].pages[43].blocks[0]	43	map=map_100d3ad
+100e1a8	part[0].theForm.helpManual.rendering[0].pages[43].blocks[1]	43	map=map_100d3ad
+100e1bc	part[0].theForm.helpManual.rendering[0].pages[44]	43	map=map_100d339
+100e1d0	part[0].theForm.helpManual.rendering[0].pages[44].blocks	41
+100e1e4	part[0].theForm.helpManual.rendering[0].pages[44].blocks[0]	43	map=map_100d3ad
+100e1f8	part[0].theForm.helpManual.rendering[0].pages[44].blocks[1]	43	map=map_100d3ad
+100e20c	part[0].theForm.helpManual.rendering[0].pages[44].blocks[1].bounds	41
+100e228	part[0].theForm.HasPathData	43	map=map_100081d
+100e248	part[0].theForm.HasPathData.instructions	40
+100e2b4	part[0].theForm.HasPathData.literals	41
 100e2d0	'onlyCardRouting	40
-100e2f0	obj_10002d1[0].theForm.viewBounds	43	map=map_100e30d
+100e2f0	part[0].theForm.viewBounds	43	map=map_100e30d
 100e30c	map_100e30d	41
-100e32c	obj_10002d1[0].theForm.MakeDataPaths	43	map=map_100081d
-100e34c	obj_10002d1[0].theForm.MakeDataPaths.instructions	40
-100e45c	obj_10002d1[0].theForm.MakeDataPaths.literals	41
-100e474	obj_10002d1[0].theForm.appObject	41
-100e488	obj_10002d1[0].theForm.appObject[0]	40
-100e4a0	obj_10002d1[0].theForm.appObject[1]	40
-100e4bc	obj_10002d1[0].theForm.allSoups	43	map=map_100e4cd
+100e32c	part[0].theForm.MakeDataPaths	43	map=map_100081d
+100e34c	part[0].theForm.MakeDataPaths.instructions	40
+100e45c	part[0].theForm.MakeDataPaths.literals	41
+100e474	part[0].theForm.appObject	41
+100e488	part[0].theForm.appObject[0]	40
+100e4a0	part[0].theForm.appObject[1]	40
+100e4bc	part[0].theForm.allSoups	43	map=map_100e4cd
 100e4cc	map_100e4cd	41
-100e4e0	obj_10002d1[0].theForm.allSoups.INETSetupSoup	43	map=map_100e50d
+100e4e0	part[0].theForm.allSoups.INETSetupSoup	43	map=map_100e50d
 100e50c	map_100e50d	41
 100e53c	'soupName	40
 100e558	'soupIndices	40
@@ -965,51 +965,51 @@ area	10002d0	16d34	bf	4
 100e5ac	'defaultDataType	40
 100e5cc	'CreateBlankEntry	40
 100e5f0	'DuplicateEntry	40
-100e610	obj_10002d1[0].theForm.allSoups.INETSetupSoup.soupIndices	41
-100e628	obj_10002d1[0].theForm.allSoups.INETSetupSoup.soupIndices[0]	43	map=map_100e641
+100e610	part[0].theForm.allSoups.INETSetupSoup.soupIndices	41
+100e628	part[0].theForm.allSoups.INETSetupSoup.soupIndices[0]	43	map=map_100e641
 100e640	map_100e641	41
 100e65c	'structure	40
 100e678	'slot	40
-100e690	obj_10002d1[0].theForm.allSoups.INETSetupSoup.soupIndices[1]	43	map=map_100e6ad
+100e690	part[0].theForm.allSoups.INETSetupSoup.soupIndices[1]	43	map=map_100e6ad
 100e6ac	map_100e6ad	41
 100e6cc	'tags	40
-100e6e4	obj_10002d1[0].theForm.allSoups.INETSetupSoup.soupIndices[1].tags	41
-100e6f4	obj_10002d1[0].theForm.allSoups.INETSetupSoup.soupIndices[2]	43	map=map_100e641
+100e6e4	part[0].theForm.allSoups.INETSetupSoup.soupIndices[1].tags	41
+100e6f4	part[0].theForm.allSoups.INETSetupSoup.soupIndices[2]	43	map=map_100e641
 100e70c	'int	40
-100e720	obj_10002d1[0].theForm.allSoups.INETSetupSoup.soupQuery	43	map=map_100e735
+100e720	part[0].theForm.allSoups.INETSetupSoup.soupQuery	43	map=map_100e735
 100e734	map_100e735	41
 100e74c	'IndexPath	40
 100e768	'index	40
-100e780	obj_10002d1[0].theForm.allSoups.INETSetupSoup.soupDescr	40
-100e7c0	obj_10002d1[0].theForm.allSoups.INETSetupSoup.CreateBlankEntry	43	map=map_100081d
-100e7e0	obj_10002d1[0].theForm.allSoups.INETSetupSoup.CreateBlankEntry.instructions	40
-100e810	obj_10002d1[0].theForm.allSoups.INETSetupSoup.CreateBlankEntry.literals	41
-100e840	obj_10002d1[0].theForm.allSoups.INETSetupSoup.CreateBlankEntry.literals[1]	41
+100e780	part[0].theForm.allSoups.INETSetupSoup.soupDescr	40
+100e7c0	part[0].theForm.allSoups.INETSetupSoup.CreateBlankEntry	43	map=map_100081d
+100e7e0	part[0].theForm.allSoups.INETSetupSoup.CreateBlankEntry.instructions	40
+100e810	part[0].theForm.allSoups.INETSetupSoup.CreateBlankEntry.literals	41
+100e840	part[0].theForm.allSoups.INETSetupSoup.CreateBlankEntry.literals[1]	41
 100e858	'newEntry	40
 100e874	'functions	40
 100e890	'InetStartUp	40
 100e8ac	'MGetLinkUniqueID	40
 100e8d0	'Random	40
-100e8e8	obj_10002d1[0].theForm.allSoups.INETSetupSoup.DuplicateEntry	43	map=map_100081d
-100e908	obj_10002d1[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.instructions	40
-100e93c	obj_10002d1[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals	41
-100e96c	obj_10002d1[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals[7]	43	map=map_100081d
-100e98c	obj_10002d1[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals[7].instructions	40
-100ea18	obj_10002d1[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals[7].literals	41
-100ea58	obj_100ea59	40
-100ea68	obj_10002d1[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals[7].literals[2]	40
-100ea80	obj_100ea81	41
+100e8e8	part[0].theForm.allSoups.INETSetupSoup.DuplicateEntry	43	map=map_100081d
+100e908	part[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.instructions	40
+100e93c	part[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals	41
+100e96c	part[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals[7]	43	map=map_100081d
+100e98c	part[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals[7].instructions	40
+100ea18	part[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals[7].literals	41
+100ea58	DuplicateEntry_literal1	40
+100ea68	part[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals[7].literals[2]	40
+100ea80	DuplicateEntry_literal6	41
 100ea9c	'beginKey	40
 100eab8	'endKey	40
 100ead0	'Query	40
 100eae8	'entry	40
 100eb00	'NumberStr	40
-100eb1c	obj_10002d1[0].theForm.viewOverviewScript	43	map=map_100081d
-100eb3c	obj_10002d1[0].theForm.viewOverviewScript.instructions	40
-100eb64	obj_10002d1[0].theForm.viewOverviewScript.literals	41
+100eb1c	part[0].theForm.viewOverviewScript	43	map=map_100081d
+100eb3c	part[0].theForm.viewOverviewScript.instructions	40
+100eb64	part[0].theForm.viewOverviewScript.literals	41
 100eb88	'dataCursor	40
 100eba4	'CountEntries	40
-100ebc4	obj_10002d1[0].theForm.editSlip	43	map=map_100ec3d
+100ebc4	part[0].theForm.editSlip	43	map=map_100ec3d
 100ec3c	map_100ec3d	41
 100ecb8	'noOverview	40
 100ecd4	'deleteButton	40
@@ -1029,153 +1029,153 @@ area	10002d0	16d34	bf	4
 100ee64	'CloseAction	40
 100ee80	'_deletedData	40
 100eea0	'retargetChain	40
-100eec0	obj_10002d1[0].theForm.editSlip.noOverview	40
-100ef1c	obj_10002d1[0].theForm.editSlip.viewQuitScript	43	map=map_100081d
-100ef3c	obj_10002d1[0].theForm.editSlip.viewQuitScript.instructions	40
-100ef64	obj_10002d1[0].theForm.editSlip.viewQuitScript.literals	41
+100eec0	part[0].theForm.editSlip.noOverview	40
+100ef1c	part[0].theForm.editSlip.viewQuitScript	43	map=map_100081d
+100ef3c	part[0].theForm.editSlip.viewQuitScript.instructions	40
+100ef64	part[0].theForm.editSlip.viewQuitScript.literals	41
 100ef90	'AddUndoAction	40
 100efb0	'ClearUndoStacks	40
-100efd0	obj_10002d1[0].theForm.editSlip.noScroll	40
-100f02c	obj_10002d1[0].theForm.editSlip.viewBounds	43	map=map_100e30d
-100f048	obj_10002d1[0].theForm.editSlip.MakeDataPaths	43	map=map_100081d
-100f068	obj_10002d1[0].theForm.editSlip.MakeDataPaths.instructions	40
-100f07c	obj_10002d1[0].theForm.editSlip.MakeDataPaths.literals	41
-100f090	obj_10002d1[0].theForm.editSlip.stepAllocateContext	41
-100f0ec	obj_100f0ed	43	map=map_100f101
+100efd0	part[0].theForm.editSlip.noScroll	40
+100f02c	part[0].theForm.editSlip.viewBounds	43	map=map_100e30d
+100f048	part[0].theForm.editSlip.MakeDataPaths	43	map=map_100081d
+100f068	part[0].theForm.editSlip.MakeDataPaths.instructions	40
+100f07c	part[0].theForm.editSlip.MakeDataPaths.literals	41
+100f090	part[0].theForm.editSlip.stepAllocateContext	41
+100f0ec	partItem	43	map=map_100f101
 100f100	map_100f101	41
 100f118	'preAllocatedContext	40
-100f13c	obj_100f0ed._proto	43	map=map_100f161
+100f13c	partItem._proto	43	map=map_100f161
 100f160	map_100f161	41
 100f188	'Retarget	40
-100f1a4	obj_100f0ed._proto.viewBounds	43	map=map_1000a59
-100f1c0	obj_100f0ed._proto.Retarget	43	map=map_100081d
-100f1e0	obj_100f0ed._proto.Retarget.instructions	40
-100f1fc	obj_100f0ed._proto.Retarget.literals	41
+100f1a4	partItem._proto.viewBounds	43	map=map_1000a59
+100f1c0	partItem._proto.Retarget	43	map=map_100081d
+100f1e0	partItem._proto.Retarget.instructions	40
+100f1fc	partItem._proto.Retarget.literals	41
 100f210	'viewCObject	40
 100f22c	'SyncView	40
-100f248	obj_100f0ed._proto.viewSetupFormScript	43	map=map_100081d
-100f268	obj_100f0ed._proto.viewSetupFormScript.instructions	40
-100f338	obj_100f0ed._proto.viewSetupFormScript.literals	41
+100f248	partItem._proto.viewSetupFormScript	43	map=map_100081d
+100f268	partItem._proto.viewSetupFormScript.instructions	40
+100f338	partItem._proto.viewSetupFormScript.literals	41
 100f3ac	'StringExtract	40
 100f3cc	'selectedLayout	40
 100f3ec	'nameByClass	40
 100f408	'base	40
-100f420	obj_100f0ed._proto.viewSetupFormScript.literals[13]	40
-100f458	obj_100f0ed._proto.viewSetupFormScript.literals[17]	41
+100f420	partItem._proto.viewSetupFormScript.literals[13]	40
+100f458	partItem._proto.viewSetupFormScript.literals[17]	41
 100f46c	'newEntryViews	40
-100f48c	obj_100f0ed._proto.viewSetupFormScript.literals[21]	40
-100f4a4	obj_100f0ed._proto.viewSetupFormScript.literals[22]	40
+100f48c	partItem._proto.viewSetupFormScript.literals[21]	40
+100f4a4	partItem._proto.viewSetupFormScript.literals[22]	40
 100f4b8	'titleIcon	40
-100f4d4	obj_100f4d5	43	map=map_100f4ed
+100f4d4	partItem_2	43	map=map_100f4ed
 100f4ec	map_100f4ed	41
 100f508	'buttonClickScript	40
-100f52c	obj_100f4d5.buttonClickScript	43	map=map_100081d
-100f54c	obj_100f4d5.buttonClickScript.instructions	40
-100f55c	obj_100f4d5.buttonClickScript.literals	41
-100f570	obj_100f571	43	map=map_100f595
+100f52c	partItem_2.buttonClickScript	43	map=map_100081d
+100f54c	partItem_2.buttonClickScript.instructions	40
+100f55c	partItem_2.buttonClickScript.literals	41
+100f570	done	43	map=map_100f595
 100f594	map_100f595	41
-100f5bc	obj_100f571.buttonClickScript	43	map=map_100081d
-100f5dc	obj_100f571.buttonClickScript.instructions	40
-100f5f4	obj_100f571.buttonClickScript.literals	41
+100f5bc	done.buttonClickScript	43	map=map_100081d
+100f5dc	done.buttonClickScript.instructions	40
+100f5f4	done.buttonClickScript.literals	41
 100f60c	'hilite	40
-100f624	obj_100f571.text	40
-100f63c	obj_100f571.viewBounds	43	map=map_10016fd
-100f658	obj_100f659	43	map=map_100f595
-100f67c	obj_100f659.buttonClickScript	43	map=map_100081d
-100f69c	obj_100f659.buttonClickScript.instructions	40
-100f728	obj_100f659.buttonClickScript.literals	41
+100f624	done.text	40
+100f63c	done.viewBounds	43	map=map_10016fd
+100f658	partItem_3	43	map=map_100f595
+100f67c	partItem_3.buttonClickScript	43	map=map_100081d
+100f69c	partItem_3.buttonClickScript.instructions	40
+100f728	partItem_3.buttonClickScript.literals	41
 100f784	'verifyFunc	40
-100f7a0	obj_100f7a1	43	map=map_100081d
-100f7c0	obj_100f7a1.instructions	40
-100f810	obj_100f7a1.literals	41
+100f7a0	viewSetupFormScript_literal6	43	map=map_100081d
+100f7c0	viewSetupFormScript_literal6.instructions	40
+100f810	viewSetupFormScript_literal6.literals	41
 100f830	'GetAppParams	40
 100f850	'appAreaWidth	40
 100f870	'appAreaHeight	40
 100f890	'negate	40
 100f8a8	'RedoChildren	40
-100f8c8	obj_100f8c9	40
-100f8e8	obj_100f659.viewBounds	43	map=map_10016fd
-100f904	obj_100f905	43	map=map_100f595
-100f928	obj_100f905.buttonClickScript	43	map=map_100081d
-100f948	obj_100f905.buttonClickScript.instructions	40
-100f97c	obj_100f905.buttonClickScript.literals	41
-100f9b0	obj_100f905.buttonClickScript.literals[5]	41
+100f8c8	continue	40
+100f8e8	partItem_3.viewBounds	43	map=map_10016fd
+100f904	goBack	43	map=map_100f595
+100f928	goBack.buttonClickScript	43	map=map_100081d
+100f948	goBack.buttonClickScript.instructions	40
+100f97c	goBack.buttonClickScript.literals	41
+100f9b0	goBack.buttonClickScript.literals[5]	41
 100f9c4	'SetValue	40
-100f9e0	obj_100f905.text	40
-100f9fc	obj_100f905.viewBounds	43	map=map_10016fd
-100fa18	obj_100fa19	43	map=map_100fa2d
+100f9e0	goBack.text	40
+100f9fc	goBack.viewBounds	43	map=map_10016fd
+100fa18	partItem_4	43	map=map_100fa2d
 100fa2c	map_100fa2d	41
-100fa44	obj_100fa45	43	map=map_100fa69
+100fa44	partItem_4Proto	43	map=map_100fa69
 100fa68	map_100fa69	41
-100fa90	obj_100fa45.viewBounds	43	map=map_100e30d
-100faac	obj_100fa45.buttonClickScript	43	map=map_100081d
-100facc	obj_100fa45.buttonClickScript.instructions	40
-100fb30	obj_100fa45.buttonClickScript.literals	41
+100fa90	partItem_4Proto.viewBounds	43	map=map_100e30d
+100faac	partItem_4Proto.buttonClickScript	43	map=map_100081d
+100facc	partItem_4Proto.buttonClickScript.instructions	40
+100fb30	partItem_4Proto.buttonClickScript.literals	41
 100fb68	'TinyTim	40
 100fb80	'Close	40
 100fb98	'OpenManualTo	40
 100fbb8	'OpenManual	40
 100fbd4	'OpenHelpTo	40
 100fbf0	'Open	40
-100fc08	obj_100fa45.icon	43	map=map_1001679
-100fc20	obj_100fa45.icon.bounds	43	map=map_10016fd
-100fc3c	obj_100fc3d	40
-100fc84	obj_100fa45.icon.colorData	43	map=map_1001759
-100fc98	obj_100fc99	43	map=map_100fcb9
+100fc08	partItem_4Proto.icon	43	map=map_1001679
+100fc20	partItem_4Proto.icon.bounds	43	map=map_10016fd
+100fc3c	partItem_4ProtoBits	40
+100fc84	partItem_4Proto.icon.colorData	43	map=map_1001759
+100fc98	keyButton	43	map=map_100fcb9
 100fcb8	map_100fcb9	41
-100fcdc	obj_100fc99.viewBounds	43	map=map_100e30d
-100fcf8	obj_100fcf9	43	map=map_100fd25
+100fcdc	keyButton.viewBounds	43	map=map_100e30d
+100fcf8	blahBlahBlah	43	map=map_100fd25
 100fd24	map_100fd25	41
-100fd54	obj_100fcf9.text	40
-100fd90	obj_100fcf9.viewBounds	43	map=map_100e30d
-100fdac	obj_100fcf9.viewSetupFormScript	43	map=map_100081d
-100fdcc	obj_100fcf9.viewSetupFormScript.instructions	40
-100fe1c	obj_100fcf9.viewSetupFormScript.literals	41
+100fd54	blahBlahBlah.text	40
+100fd90	blahBlahBlah.viewBounds	43	map=map_100e30d
+100fdac	blahBlahBlah.viewSetupFormScript	43	map=map_100081d
+100fdcc	blahBlahBlah.viewSetupFormScript.instructions	40
+100fe1c	blahBlahBlah.viewSetupFormScript.literals	41
 100fe5c	'parent	40
 100fe74	'ChildViewFrames	40
 100fe94	'AlphaKeys	40
 100feb0	'Visible	40
-100fec8	obj_100fcf9.viewSetupFormScript.literals[9]	41
-100fedc	obj_100fcf9.viewSetupFormScript.literals[11]	41
-100fef0	obj_100fef1	43	map=map_100f595
-100ff14	obj_100fef1.buttonClickScript	43	map=map_100081d
-100ff34	obj_100fef1.buttonClickScript.instructions	40
-100ff58	obj_100fef1.buttonClickScript.literals	41
+100fec8	blahBlahBlah.viewSetupFormScript.literals[9]	41
+100fedc	blahBlahBlah.viewSetupFormScript.literals[11]	41
+100fef0	delete_2	43	map=map_100f595
+100ff14	delete_2.buttonClickScript	43	map=map_100081d
+100ff34	delete_2.buttonClickScript.instructions	40
+100ff58	delete_2.buttonClickScript.literals	41
 100ff84	'deleteSlot	40
-100ffa0	obj_100fef1.text	40
-100ffbc	obj_100fef1.viewBounds	43	map=map_10016fd
-100ffd8	obj_100ffd9	43	map=map_1010005
+100ffa0	delete_2.text	40
+100ffbc	delete_2.viewBounds	43	map=map_10016fd
+100ffd8	editFields	43	map=map_1010005
 1010004	map_1010005	41
 1010034	'masterSoupSlot	40
 1010054	'forceNewEntry	40
-1010074	obj_100ffd9.viewBounds	43	map=map_1000a59
-1010090	obj_100ffd9.name	40
-10100b4	obj_100ffd9.stepChildren	41
-10100c4	obj_100ffd9.stepChildren[0]	43	map=map_10100f5
+1010074	editFields.viewBounds	43	map=map_1000a59
+1010090	editFields.name	40
+10100b4	editFields.stepChildren	41
+10100c4	editFields.stepChildren[0]	43	map=map_10100f5
 10100f4	map_10100f5	41
 1010128	'declareSelf	40
 1010144	'hasData	40
 101015c	'ViewPostQuitScript	40
-1010180	obj_100ffd9.stepChildren[0].viewBounds	43	map=map_1000a59
+1010180	editFields.stepChildren[0].viewBounds	43	map=map_1000a59
 101019c	'editEntryView	40
-10101bc	obj_100ffd9.stepChildren[0].stepChildren	41
-10101d0	obj_100ffd9.stepChildren[0].stepChildren[1]	43	map=map_1010221
+10101bc	editFields.stepChildren[0].stepChildren	41
+10101d0	editFields.stepChildren[0].stepChildren[1]	43	map=map_1010221
 1010220	map_1010221	41
 1010274	'extraChildrenHeight	40
 1010298	'keypadFont	40
 10102b4	'viewDef	40
 10102cc	'viewSetupDoneScript	40
-10102f0	obj_100ffd9.stepChildren[0].stepChildren[1].viewBounds	43	map=map_1000a59
+10102f0	editFields.stepChildren[0].stepChildren[1].viewBounds	43	map=map_1000a59
 101030c	'editView	40
-1010328	obj_100ffd9.stepChildren[0].stepChildren[1].viewSetupFormScript	43	map=map_100081d
-1010348	obj_100ffd9.stepChildren[0].stepChildren[1].viewSetupFormScript.instructions	40
-10103e0	obj_100ffd9.stepChildren[0].stepChildren[1].viewSetupFormScript.literals	41
+1010328	editFields.stepChildren[0].stepChildren[1].viewSetupFormScript	43	map=map_100081d
+1010348	editFields.stepChildren[0].stepChildren[1].viewSetupFormScript.instructions	40
+10103e0	editFields.stepChildren[0].stepChildren[1].viewSetupFormScript.literals	41
 1010444	'selectedPath	40
 1010464	'SetupViews	40
 1010480	'viewChildren	40
-10104a0	obj_100ffd9.stepChildren[0].stepChildren[1].viewSetupDoneScript	43	map=map_100081d
-10104c0	obj_100ffd9.stepChildren[0].stepChildren[1].viewSetupDoneScript.instructions	40
-10106b4	obj_100ffd9.stepChildren[0].stepChildren[1].viewSetupDoneScript.literals	41
+10104a0	editFields.stepChildren[0].stepChildren[1].viewSetupDoneScript	43	map=map_100081d
+10104c0	editFields.stepChildren[0].stepChildren[1].viewSetupDoneScript.instructions	40
+10106b4	editFields.stepChildren[0].stepChildren[1].viewSetupDoneScript.literals	41
 1010768	'noKeyboard	40
 1010784	'KeyboardConnected	40
 10107a8	'RemoveStepView	40
@@ -1183,389 +1183,389 @@ area	10002d0	16d34	bf	4
 10107e4	'helpTopic	40
 1010800	'editNotes	40
 101081c	'NextKeyView	40
-1010838	obj_100ffd9.stepChildren[0].stepChildren[1].viewSetupDoneScript.literals[31]	41
+1010838	editFields.stepChildren[0].stepChildren[1].viewSetupDoneScript.literals[31]	41
 1010850	'offset	40
 1010868	'length	40
 1010880	'paraCaret	40
 101089c	'SetCaretInfo	40
 10108bc	'SetKeyView	40
-10108d8	obj_100ffd9.stepChildren[0].stepChildren[1].viewSetupChildrenScript	43	map=map_100081d
-10108f8	obj_100ffd9.stepChildren[0].stepChildren[1].viewSetupChildrenScript.instructions	40
-1010ab0	obj_100ffd9.stepChildren[0].stepChildren[1].viewSetupChildrenScript.literals	41
+10108d8	editFields.stepChildren[0].stepChildren[1].viewSetupChildrenScript	43	map=map_100081d
+10108f8	editFields.stepChildren[0].stepChildren[1].viewSetupChildrenScript.instructions	40
+1010ab0	editFields.stepChildren[0].stepChildren[1].viewSetupChildrenScript.literals	41
 1010b38	'IsReadOnly	40
 1010b54	'configuration	40
 1010b74	'manual	40
-1010b8c	obj_100ffd9.stepChildren[0].stepChildren[1].viewSetupChildrenScript.literals[11]	41
+1010b8c	editFields.stepChildren[0].stepChildren[1].viewSetupChildrenScript.literals[11]	41
 1010ba0	'AlternateNewViews	40
-1010bc4	obj_100ffd9.stepChildren[0].stepChildren[1].viewSetupChildrenScript.literals[13]	41
+1010bc4	editFields.stepChildren[0].stepChildren[1].viewSetupChildrenScript.literals[13]	41
 1010bd8	'usePhoneKeys	40
-1010bf8	obj_100ffd9.stepChildren[0].stepChildren[1].viewSetupChildrenScript.literals[22]	41
+1010bf8	editFields.stepChildren[0].stepChildren[1].viewSetupChildrenScript.literals[22]	41
 1010c14	'useNumericKeys	40
-1010c34	obj_100ffd9.stepChildren[0].stepChildren[1].viewSetupChildrenScript.literals[25]	41
-1010c54	obj_100ffd9.stepChildren[0].stepChildren[1].stepChildren	41
-1010c78	obj_1010c79	43	map=map_1010c99
+1010c34	editFields.stepChildren[0].stepChildren[1].viewSetupChildrenScript.literals[25]	41
+1010c54	editFields.stepChildren[0].stepChildren[1].stepChildren	41
+1010c78	editFieldsItem	43	map=map_1010c99
 1010c98	map_1010c99	41
 1010cbc	'xviewFont	40
-1010cd8	obj_1010c79.viewBounds	43	map=map_100e30d
-1010cf4	obj_100ffd9.stepChildren[0].stepChildren[1].stepAllocateContext	41
-1010d08	obj_100ffd9.stepChildren[0].hasData	43	map=map_100081d
-1010d28	obj_100ffd9.stepChildren[0].hasData.instructions	40
-1010dc0	obj_100ffd9.stepChildren[0].hasData.literals	41
+1010cd8	editFieldsItem.viewBounds	43	map=map_100e30d
+1010cf4	editFields.stepChildren[0].stepChildren[1].stepAllocateContext	41
+1010d08	editFields.stepChildren[0].hasData	43	map=map_100081d
+1010d28	editFields.stepChildren[0].hasData.instructions	40
+1010dc0	editFields.stepChildren[0].hasData.literals	41
 1010df0	'IsFrame	40
 1010e08	'appBase	40
 1010e20	'kDatalessSlots	40
-1010e40	obj_100ffd9.stepChildren[0].viewSetupFormScript	43	map=map_100081d
-1010e60	obj_100ffd9.stepChildren[0].viewSetupFormScript.instructions	40
-1010e78	obj_100ffd9.stepChildren[0].viewSetupFormScript.literals	41
+1010e40	editFields.stepChildren[0].viewSetupFormScript	43	map=map_100081d
+1010e60	editFields.stepChildren[0].viewSetupFormScript.instructions	40
+1010e78	editFields.stepChildren[0].viewSetupFormScript.literals	41
 1010e94	'startTarget	40
 1010eb0	'TotalClone	40
-1010ecc	obj_100ffd9.stepChildren[0].viewQuitScript	43	map=map_100081d
-1010eec	obj_100ffd9.stepChildren[0].viewQuitScript.instructions	40
-1010efc	obj_100ffd9.stepChildren[0].viewQuitScript.literals	41
+1010ecc	editFields.stepChildren[0].viewQuitScript	43	map=map_100081d
+1010eec	editFields.stepChildren[0].viewQuitScript.instructions	40
+1010efc	editFields.stepChildren[0].viewQuitScript.literals	41
 1010f0c	'postQuit	40
-1010f28	obj_100ffd9.stepChildren[0].ViewPostQuitScript	43	map=map_100081d
-1010f48	obj_100ffd9.stepChildren[0].ViewPostQuitScript.instructions	40
-1010fc8	obj_100ffd9.stepChildren[0].ViewPostQuitScript.literals	41
+1010f28	editFields.stepChildren[0].ViewPostQuitScript	43	map=map_100081d
+1010f48	editFields.stepChildren[0].ViewPostQuitScript.instructions	40
+1010fc8	editFields.stepChildren[0].ViewPostQuitScript.literals	41
 101101c	'EndFlush	40
 1011038	'EntryValid	40
 1011054	'saveEntry	40
-1011070	obj_100ffd9.stepChildren[0].ViewPostQuitScript.literals[6]	41
+1011070	editFields.stepChildren[0].ViewPostQuitScript.literals[6]	41
 1011084	'Goto	40
 101109c	'KillEntry	40
 10110b8	'makingNewCard	40
 10110d8	'UndoNewCard	40
 10110f4	'UndoAddData	40
-1011110	obj_100ffd9.stepChildren[0].ViewPostQuitScript.literals[16]	41
-1011124	obj_10002d1[0].theForm.editSlip.viewSetupFormScript	43	map=map_100081d
-1011144	obj_10002d1[0].theForm.editSlip.viewSetupFormScript.instructions	40
-101117c	obj_10002d1[0].theForm.editSlip.viewSetupFormScript.literals	41
-10111ac	obj_10002d1[0].theForm.editSlip.CloseAction	43	map=map_100081d
-10111cc	obj_10002d1[0].theForm.editSlip.CloseAction.instructions	40
-1011250	obj_10002d1[0].theForm.editSlip.CloseAction.literals	41
+1011110	editFields.stepChildren[0].ViewPostQuitScript.literals[16]	41
+1011124	part[0].theForm.editSlip.viewSetupFormScript	43	map=map_100081d
+1011144	part[0].theForm.editSlip.viewSetupFormScript.instructions	40
+101117c	part[0].theForm.editSlip.viewSetupFormScript.literals	41
+10111ac	part[0].theForm.editSlip.CloseAction	43	map=map_100081d
+10111cc	part[0].theForm.editSlip.CloseAction.instructions	40
+1011250	part[0].theForm.editSlip.CloseAction.literals	41
 10112ac	'ConfirmWalkThru	40
-10112cc	obj_10002d1[0].theForm.editSlip.CloseAction.literals[7]	40
+10112cc	part[0].theForm.editSlip.CloseAction.literals[7]	40
 10113c0	'okCancelDefaultCancel	40
 10113e8	'ModalConfirm	40
 1011408	'ValidateTarget	40
 1011428	'RememberedClose	40
 1011448	'AddDeferredSend	40
-1011468	obj_10002d1[0].theForm.editSlip.stepChildren	41
-1011478	obj_10002d1[0].theForm.HandleRedoDelete	43	map=map_100081d
-1011498	obj_10002d1[0].theForm.HandleRedoDelete.instructions	40
-10114c0	obj_10002d1[0].theForm.HandleRedoDelete.literals	41
-10114ec	obj_10002d1[0].theForm.ChooseNewEntry	43	map=map_100081d
-101150c	obj_10002d1[0].theForm.ChooseNewEntry.instructions	40
-1011528	obj_10002d1[0].theForm.ChooseNewEntry.literals	41
-1011548	obj_10002d1[0].theForm.ChooseNewEntry.literals[0]	43	map=map_101159d
+1011468	part[0].theForm.editSlip.stepChildren	41
+1011478	part[0].theForm.HandleRedoDelete	43	map=map_100081d
+1011498	part[0].theForm.HandleRedoDelete.instructions	40
+10114c0	part[0].theForm.HandleRedoDelete.literals	41
+10114ec	part[0].theForm.ChooseNewEntry	43	map=map_100081d
+101150c	part[0].theForm.ChooseNewEntry.instructions	40
+1011528	part[0].theForm.ChooseNewEntry.literals	41
+1011548	part[0].theForm.ChooseNewEntry.literals[0]	43	map=map_101159d
 101159c	map_101159d	41
 10115f4	'newDef	40
 101160c	'BuildLabelCommands	40
 1011630	'FindItem	40
 101164c	'AdjustHelpText	40
 101166c	'picker	40
-1011684	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].viewBounds	43	map=map_100e30d
-10116a0	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepChildren	41
-10116cc	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepChildren[0]	43	map=map_10116e1
+1011684	part[0].theForm.ChooseNewEntry.literals[0].viewBounds	43	map=map_100e30d
+10116a0	part[0].theForm.ChooseNewEntry.literals[0].stepChildren	41
+10116cc	part[0].theForm.ChooseNewEntry.literals[0].stepChildren[0]	43	map=map_10116e1
 10116e0	map_10116e1	41
-10116f8	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepChildren[0].title	40
-101172c	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepChildren[1]	43	map=map_101174d
+10116f8	part[0].theForm.ChooseNewEntry.literals[0].stepChildren[0].title	40
+101172c	part[0].theForm.ChooseNewEntry.literals[0].stepChildren[1]	43	map=map_101174d
 101174c	map_101174d	41
-1011770	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepChildren[1].text	40
-10117ec	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepChildren[1].viewBounds	43	map=map_100e30d
-1011808	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepChildren[1].viewFont	43	map=map_1004f2d
-1011820	obj_1011821	43	map=map_1011851
+1011770	part[0].theForm.ChooseNewEntry.literals[0].stepChildren[1].text	40
+10117ec	part[0].theForm.ChooseNewEntry.literals[0].stepChildren[1].viewBounds	43	map=map_100e30d
+1011808	part[0].theForm.ChooseNewEntry.literals[0].stepChildren[1].viewFont	43	map=map_1004f2d
+1011820	stepChildren_value	43	map=map_1011851
 1011850	map_1011851	41
 1011884	'textSetup	40
 10118a0	'labelActionScript	40
 10118c4	'Popit	40
-10118dc	obj_1011821.text	40
-1011904	obj_1011821.viewBounds	43	map=map_100e30d
-1011920	obj_1011821.viewSetupFormScript	43	map=map_100081d
-1011940	obj_1011941	40
-1011954	obj_1011821.viewSetupFormScript.literals	41
+10118dc	stepChildren_value.text	40
+1011904	stepChildren_value.viewBounds	43	map=map_100e30d
+1011920	stepChildren_value.viewSetupFormScript	43	map=map_100081d
+1011940	viewSetupFormScript_code_2	40
+1011954	stepChildren_value.viewSetupFormScript.literals	41
 101196c	'labelCommands	40
-101198c	obj_1011821.textSetup	43	map=map_100081d
-10119ac	obj_1011821.textSetup.instructions	40
-10119e0	obj_1011821.textSetup.literals	41
-1011a10	obj_1011821.labelActionScript	43	map=map_100081d
-1011a30	obj_1011821.labelActionScript.instructions	40
-1011a58	obj_1011821.labelActionScript.literals	41
-1011a7c	obj_1011821.Popit	43	map=map_100081d
-1011a9c	obj_1011821.Popit.instructions	40
-1011ab8	obj_1011821.Popit.literals	41
-1011ad0	obj_1011ad1	43	map=map_1011afd
+101198c	stepChildren_value.textSetup	43	map=map_100081d
+10119ac	stepChildren_value.textSetup.instructions	40
+10119e0	stepChildren_value.textSetup.literals	41
+1011a10	stepChildren_value.labelActionScript	43	map=map_100081d
+1011a30	stepChildren_value.labelActionScript.instructions	40
+1011a58	stepChildren_value.labelActionScript.literals	41
+1011a7c	stepChildren_value.Popit	43	map=map_100081d
+1011a9c	stepChildren_value.Popit.instructions	40
+1011ab8	stepChildren_value.Popit.literals	41
+1011ad0	stepChildren_value_2	43	map=map_1011afd
 1011afc	map_1011afd	41
-1011b2c	obj_1011ad1.viewBounds	43	map=map_100e30d
-1011b48	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepChildren[4]	43	map=map_101174d
-1011b68	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepChildren[4].text	40
-1011ba4	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepChildren[4].viewBounds	43	map=map_100e30d
-1011bc0	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepChildren[4].viewFont	43	map=map_1004f2d
-1011bd8	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepChildren[5]	43	map=map_1011bed
+1011b2c	stepChildren_value_2.viewBounds	43	map=map_100e30d
+1011b48	part[0].theForm.ChooseNewEntry.literals[0].stepChildren[4]	43	map=map_101174d
+1011b68	part[0].theForm.ChooseNewEntry.literals[0].stepChildren[4].text	40
+1011ba4	part[0].theForm.ChooseNewEntry.literals[0].stepChildren[4].viewBounds	43	map=map_100e30d
+1011bc0	part[0].theForm.ChooseNewEntry.literals[0].stepChildren[4].viewFont	43	map=map_1004f2d
+1011bd8	part[0].theForm.ChooseNewEntry.literals[0].stepChildren[5]	43	map=map_1011bed
 1011bec	map_1011bed	41
-1011c04	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepChildren[5].buttonClickScript	43	map=map_100081d
-1011c24	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepChildren[5].buttonClickScript.instructions	40
-1011c38	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepChildren[5].buttonClickScript.literals	41
-1011c50	obj_1011c51	43	map=map_1011c79
+1011c04	part[0].theForm.ChooseNewEntry.literals[0].stepChildren[5].buttonClickScript	43	map=map_100081d
+1011c24	part[0].theForm.ChooseNewEntry.literals[0].stepChildren[5].buttonClickScript.instructions	40
+1011c38	part[0].theForm.ChooseNewEntry.literals[0].stepChildren[5].buttonClickScript.literals	41
+1011c50	stepChildren_value_3	43	map=map_1011c79
 1011c78	map_1011c79	41
-1011ca4	obj_1011c51.buttonClickScript	43	map=map_100081d
-1011cc4	obj_1011c51.buttonClickScript.instructions	40
-1011cf0	obj_1011c51.buttonClickScript.literals	41
-1011d20	obj_1011c51.buttonClickScript.literals[6]	40
-1011db8	obj_1011c51.viewBounds	43	map=map_10016fd
-1011dd4	obj_1011c51.viewSetupFormScript	43	map=map_100081d
-1011df4	obj_1011c51.viewSetupFormScript.instructions	40
-1011e04	obj_1011c51.viewSetupFormScript.literals	41
-1011e14	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepChildren[7]	43	map=map_1011e25
+1011ca4	stepChildren_value_3.buttonClickScript	43	map=map_100081d
+1011cc4	stepChildren_value_3.buttonClickScript.instructions	40
+1011cf0	stepChildren_value_3.buttonClickScript.literals	41
+1011d20	stepChildren_value_3.buttonClickScript.literals[6]	40
+1011db8	stepChildren_value_3.viewBounds	43	map=map_10016fd
+1011dd4	stepChildren_value_3.viewSetupFormScript	43	map=map_100081d
+1011df4	stepChildren_value_3.viewSetupFormScript.instructions	40
+1011e04	stepChildren_value_3.viewSetupFormScript.literals	41
+1011e14	part[0].theForm.ChooseNewEntry.literals[0].stepChildren[7]	43	map=map_1011e25
 1011e24	map_1011e25	41
-1011e38	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].BuildLabelCommands	43	map=map_100081d
-1011e58	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].BuildLabelCommands.instructions	40
-1011ecc	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].BuildLabelCommands.literals	41
+1011e38	part[0].theForm.ChooseNewEntry.literals[0].BuildLabelCommands	43	map=map_100081d
+1011e58	part[0].theForm.ChooseNewEntry.literals[0].BuildLabelCommands.instructions	40
+1011ecc	part[0].theForm.ChooseNewEntry.literals[0].BuildLabelCommands.literals	41
 1011f10	'dataDef	40
 1011f28	'GetDefs	40
 1011f40	'DependenciesLoaded	40
-1011f64	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].BuildLabelCommands.literals[10]	41
+1011f64	part[0].theForm.ChooseNewEntry.literals[0].BuildLabelCommands.literals[10]	41
 1011f84	'|str<|	40
-1011f9c	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].BuildLabelCommands.literals[12]	41
+1011f9c	part[0].theForm.ChooseNewEntry.literals[0].BuildLabelCommands.literals[12]	41
 1011fac	'BInsert	40
-1011fc4	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].FindItem	43	map=map_100081d
-1011fe4	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].FindItem.instructions	40
-101201c	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].FindItem.literals	41
-1012030	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].AdjustHelpText	43	map=map_100081d
-1012050	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].AdjustHelpText.instructions	40
-1012064	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].AdjustHelpText.literals	41
-101207c	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].viewSetupDoneScript	43	map=map_100081d
-101209c	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].viewSetupDoneScript.instructions	40
-10120b0	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].viewSetupDoneScript.literals	41
-10120c0	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].viewSetupFormScript	43	map=map_100081d
-10120e0	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].viewSetupFormScript.instructions	40
-10120fc	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].viewSetupFormScript.literals	41
-1012124	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].viewQuitScript	43	map=map_100081d
-1012144	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].viewQuitScript.instructions	40
-1012154	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].viewQuitScript.literals	41
-1012164	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepAllocateContext	41
+1011fc4	part[0].theForm.ChooseNewEntry.literals[0].FindItem	43	map=map_100081d
+1011fe4	part[0].theForm.ChooseNewEntry.literals[0].FindItem.instructions	40
+101201c	part[0].theForm.ChooseNewEntry.literals[0].FindItem.literals	41
+1012030	part[0].theForm.ChooseNewEntry.literals[0].AdjustHelpText	43	map=map_100081d
+1012050	part[0].theForm.ChooseNewEntry.literals[0].AdjustHelpText.instructions	40
+1012064	part[0].theForm.ChooseNewEntry.literals[0].AdjustHelpText.literals	41
+101207c	part[0].theForm.ChooseNewEntry.literals[0].viewSetupDoneScript	43	map=map_100081d
+101209c	part[0].theForm.ChooseNewEntry.literals[0].viewSetupDoneScript.instructions	40
+10120b0	part[0].theForm.ChooseNewEntry.literals[0].viewSetupDoneScript.literals	41
+10120c0	part[0].theForm.ChooseNewEntry.literals[0].viewSetupFormScript	43	map=map_100081d
+10120e0	part[0].theForm.ChooseNewEntry.literals[0].viewSetupFormScript.instructions	40
+10120fc	part[0].theForm.ChooseNewEntry.literals[0].viewSetupFormScript.literals	41
+1012124	part[0].theForm.ChooseNewEntry.literals[0].viewQuitScript	43	map=map_100081d
+1012144	part[0].theForm.ChooseNewEntry.literals[0].viewQuitScript.instructions	40
+1012154	part[0].theForm.ChooseNewEntry.literals[0].viewQuitScript.literals	41
+1012164	part[0].theForm.ChooseNewEntry.literals[0].stepAllocateContext	41
 1012188	'BuildContext	40
 10121a8	'RememberedOpen	40
-10121c8	obj_10002d1[0].theForm.Find	43	map=map_100081d
-10121e8	obj_10002d1[0].theForm.Find.instructions	40
-1012234	obj_10002d1[0].theForm.Find.literals	41
+10121c8	part[0].theForm.Find	43	map=map_100081d
+10121e8	part[0].theForm.Find.instructions	40
+1012234	part[0].theForm.Find.literals	41
 1012268	'what	40
-1012280	obj_10002d1[0].theForm.Find.literals[3]	43	map=map_100081d
-10122a0	obj_10002d1[0].theForm.Find.literals[3].instructions	40
-10122e8	obj_10002d1[0].theForm.Find.literals[3].literals	41
+1012280	part[0].theForm.Find.literals[3]	43	map=map_100081d
+10122a0	part[0].theForm.Find.literals[3].instructions	40
+10122e8	part[0].theForm.Find.literals[3].literals	41
 1012308	'FindStringInFrame	40
 101232c	'SetContains	40
-1012348	obj_10002d1[0].theForm.Find.literals[3].argFrame	43	map=map_1012361
+1012348	part[0].theForm.Find.literals[3].argFrame	43	map=map_1012361
 1012360	map_1012361	41
 101237c	'_nextArgFrame	40
 101239c	'_parent	40
 10123b4	'_implementor	40
-10123d4	obj_10002d1[0].theForm.Find.literals[4]	41
+10123d4	part[0].theForm.Find.literals[4]	41
 10123ec	'validTest	40
-1012408	obj_10002d1[0].theForm.Find.literals[9]	41
+1012408	part[0].theForm.Find.literals[9]	41
 101242c	'owner	40
 1012444	'findtype	40
 1012460	'findWords	40
 101247c	'cursor	40
-1012494	obj_10002d1[0].theForm.Find.argFrame	43	map=map_10124b1
+1012494	part[0].theForm.Find.argFrame	43	map=map_10124b1
 10124b0	map_10124b1	41
-10124d0	obj_10002d1[0].theForm.allDataDefs	43	map=map_100096d
-10124dc	obj_10002d1[0].theForm.AppEmpty	43	map=map_100081d
-10124fc	obj_10002d1[0].theForm.AppEmpty.instructions	40
-1012560	obj_10002d1[0].theForm.AppEmpty.literals	41
-10125a8	obj_10002d1[0].theForm.AppEmpty.literals[6]	43	map=map_10015e1
-10125bc	obj_10002d1[0].theForm.AppEmpty.literals[7]	40
+10124d0	part[0].theForm.allDataDefs	43	map=map_100096d
+10124dc	part[0].theForm.AppEmpty	43	map=map_100081d
+10124fc	part[0].theForm.AppEmpty.instructions	40
+1012560	part[0].theForm.AppEmpty.literals	41
+10125a8	part[0].theForm.AppEmpty.literals[6]	43	map=map_10015e1
+10125bc	part[0].theForm.AppEmpty.literals[7]	40
 1012700	'appEmptyStr	40
-101271c	obj_10002d1[0].theForm.stepAllocateContext	41
-1012730	obj_1012731	43	map=map_1012751
+101271c	part[0].theForm.stepAllocateContext	41
+1012730	partItem_5	43	map=map_1012751
 1012750	map_1012751	41
 1012774	'menuLeftButtons	40
 1012794	'menuRightButtons	40
-10127b8	obj_1012731.menuLeftButtons	41
-10127cc	obj_1012731.menuLeftButtons[0]	43	map=map_10127e1
+10127b8	partItem_5.menuLeftButtons	41
+10127cc	partItem_5.menuLeftButtons[0]	43	map=map_10127e1
 10127e0	map_10127e1	41
 10127f8	'DoInfoAbout	40
-1012814	obj_1012731.menuLeftButtons[0].DoInfoAbout	43	map=map_100081d
-1012834	obj_1012731.menuLeftButtons[0].DoInfoAbout.instructions	40
-1012890	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals	41
-10128d4	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[2]	41
-10128e8	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[3]	40
+1012814	partItem_5.menuLeftButtons[0].DoInfoAbout	43	map=map_100081d
+1012834	partItem_5.menuLeftButtons[0].DoInfoAbout.instructions	40
+1012890	partItem_5.menuLeftButtons[0].DoInfoAbout.literals	41
+10128d4	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[2]	41
+10128e8	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[3]	40
 1012900	'StrEqual	40
 101291c	'boutView	40
-1012938	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9]	43	map=map_1012959
+1012938	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9]	43	map=map_1012959
 1012958	map_1012959	41
 101297c	'DrawMovingIcon	40
-101299c	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].viewBounds	43	map=map_1000a59
-10129b8	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren	41
-10129d4	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[0]	43	map=map_1011e25
-10129e4	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[1]	43	map=map_1012a0d
+101299c	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].viewBounds	43	map=map_1000a59
+10129b8	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren	41
+10129d4	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[0]	43	map=map_1011e25
+10129e4	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[1]	43	map=map_1012a0d
 1012a0c	map_1012a0d	41
 1012a38	'viewIdleScript	40
-1012a58	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[1].viewBounds	43	map=map_1000a59
-1012a74	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[1].viewDrawScript	43	map=map_100081d
-1012a94	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[1].viewDrawScript.instructions	40
-1012ab0	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[1].viewDrawScript.literals	41
+1012a58	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[1].viewBounds	43	map=map_1000a59
+1012a74	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[1].viewDrawScript	43	map=map_100081d
+1012a94	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[1].viewDrawScript.instructions	40
+1012ab0	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[1].viewDrawScript.literals	41
 1012ac4	'RelBounds	40
-1012ae0	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[1].viewSetupDoneScript	43	map=map_100081d
-1012b00	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[1].viewSetupDoneScript.instructions	40
-1012b14	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[1].viewSetupDoneScript.literals	41
+1012ae0	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[1].viewSetupDoneScript	43	map=map_100081d
+1012b00	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[1].viewSetupDoneScript.instructions	40
+1012b14	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[1].viewSetupDoneScript.literals	41
 1012b24	'SetupIdle	40
-1012b40	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[1].viewIdleScript	43	map=map_100081d
-1012b60	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[1].viewIdleScript.instructions	40
-1012b74	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[1].viewIdleScript.literals	41
-1012b84	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2]	43	map=map_1012bb5
+1012b40	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[1].viewIdleScript	43	map=map_100081d
+1012b60	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[1].viewIdleScript.instructions	40
+1012b74	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[1].viewIdleScript.literals	41
+1012b84	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2]	43	map=map_1012bb5
 1012bb4	map_1012bb5	41
 1012be8	'credits	40
-1012c00	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewFont	43	map=map_1004f2d
+1012c00	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewFont	43	map=map_1004f2d
 1012c18	'tsHWFont	40
-1012c34	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewBounds	43	map=map_100e30d
-1012c50	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].credits	41
-1012c64	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].credits[0]	40
-1012c94	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].credits[1]	40
-1012ccc	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewIdleScript	43	map=map_100081d
-1012cec	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewIdleScript.instructions	40
-1012d18	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewIdleScript.literals	41
-1012d38	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewSetupDoneScript	43	map=map_100081d
-1012d58	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewSetupDoneScript.instructions	40
-1012d6c	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewSetupDoneScript.literals	41
-1012d80	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewSetupFormScript	43	map=map_100081d
-1012da0	obj_1012da1	40
-1012db8	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewSetupFormScript.literals	41
-1012dd4	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3]	43	map=map_1012e01
+1012c34	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewBounds	43	map=map_100e30d
+1012c50	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].credits	41
+1012c64	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].credits[0]	40
+1012c94	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].credits[1]	40
+1012ccc	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewIdleScript	43	map=map_100081d
+1012cec	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewIdleScript.instructions	40
+1012d18	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewIdleScript.literals	41
+1012d38	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewSetupDoneScript	43	map=map_100081d
+1012d58	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewSetupDoneScript.instructions	40
+1012d6c	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewSetupDoneScript.literals	41
+1012d80	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewSetupFormScript	43	map=map_100081d
+1012da0	viewSetupFormScript_code_3	40
+1012db8	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewSetupFormScript.literals	41
+1012dd4	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3]	43	map=map_1012e01
 1012e00	map_1012e01	41
-1012e30	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].viewBounds	43	map=map_1000a59
-1012e4c	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].viewSetupFormScript	43	map=map_100081d
-1012e6c	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].viewSetupFormScript.literals	41
-1012e88	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].credits	41
-1012ea4	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].credits[0]	40
-1012fcc	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].credits[1]	40
-1013104	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].credits[2]	40
-1013200	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].credits[3]	40
-1013284	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].viewSetupDoneScript	43	map=map_100081d
-10132a4	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].viewSetupDoneScript.instructions	40
-10132b8	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].viewSetupDoneScript.literals	41
-10132c8	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].viewIdleScript	43	map=map_100081d
-10132e8	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].viewIdleScript.instructions	40
-1013314	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].viewIdleScript.literals	41
-1013330	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].DrawMovingIcon	43	map=map_100081d
-1013350	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].DrawMovingIcon.instructions	40
-1013374	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].DrawMovingIcon.literals	41
+1012e30	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].viewBounds	43	map=map_1000a59
+1012e4c	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].viewSetupFormScript	43	map=map_100081d
+1012e6c	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].viewSetupFormScript.literals	41
+1012e88	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].credits	41
+1012ea4	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].credits[0]	40
+1012fcc	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].credits[1]	40
+1013104	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].credits[2]	40
+1013200	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].credits[3]	40
+1013284	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].viewSetupDoneScript	43	map=map_100081d
+10132a4	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].viewSetupDoneScript.instructions	40
+10132b8	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].viewSetupDoneScript.literals	41
+10132c8	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].viewIdleScript	43	map=map_100081d
+10132e8	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].viewIdleScript.instructions	40
+1013314	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].viewIdleScript.literals	41
+1013330	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].DrawMovingIcon	43	map=map_100081d
+1013350	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].DrawMovingIcon.instructions	40
+1013374	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].DrawMovingIcon.literals	41
 101338c	'CardSlotIcons	40
 10133ac	'DrawXBitmap	40
 10133c8	'theApp	40
-10133e0	obj_1012731.menuLeftButtons[1]	43	map=map_10133fd
+10133e0	partItem_5.menuLeftButtons[1]	43	map=map_10133fd
 10133fc	map_10133fd	41
 101341c	'StatScript	40
 1013438	'BuildPopUp	40
 1013454	'shortCircuit	40
-1013474	obj_1012731.menuLeftButtons[1].StatScript	43	map=map_100081d
-1013494	obj_1012731.menuLeftButtons[1].StatScript.instructions	40
-10134a8	obj_1012731.menuLeftButtons[1].StatScript.literals	41
-10134bc	obj_1012731.menuLeftButtons[1].BuildPopUp	43	map=map_100081d
-10134dc	obj_1012731.menuLeftButtons[1].BuildPopUp.instructions	40
-10135f4	obj_1012731.menuLeftButtons[1].BuildPopUp.literals	41
+1013474	partItem_5.menuLeftButtons[1].StatScript	43	map=map_100081d
+1013494	partItem_5.menuLeftButtons[1].StatScript.instructions	40
+10134a8	partItem_5.menuLeftButtons[1].StatScript.literals	41
+10134bc	partItem_5.menuLeftButtons[1].BuildPopUp	43	map=map_100081d
+10134dc	partItem_5.menuLeftButtons[1].BuildPopUp.instructions	40
+10135f4	partItem_5.menuLeftButtons[1].BuildPopUp.literals	41
 1013658	'popup	40
 1013670	'statArray	40
 101368c	'GetGlobals	40
-10136a8	obj_1012731.menuLeftButtons[1].BuildPopUp.literals[8]	40
+10136a8	partItem_5.menuLeftButtons[1].BuildPopUp.literals[8]	40
 10136c4	'BeginsWith	40
 10136e0	map_10136e1	41
-10136fc	obj_1012731.menuLeftButtons[1].BuildPopUp.literals[14]	41
-101370c	obj_1012731.menuLeftButtons[1].BuildPopUp.literals[17]	41
+10136fc	partItem_5.menuLeftButtons[1].BuildPopUp.literals[14]	41
+101370c	partItem_5.menuLeftButtons[1].BuildPopUp.literals[17]	41
 101371c	'pickSeparator	40
-101373c	obj_1012731.menuLeftButtons[1].BuildPopUp.literals[21]	43	map=map_10136e1
-1013754	obj_1012731.menuLeftButtons[1].BuildPopUp.literals[21].item	40
+101373c	partItem_5.menuLeftButtons[1].BuildPopUp.literals[21]	43	map=map_10136e1
+1013754	partItem_5.menuLeftButtons[1].BuildPopUp.literals[21].item	40
 101377c	'Blank	40
-1013794	obj_1012731.menuRightButtons	41
-10137a8	obj_1012731.viewSetupChildrenScript	43	map=map_100081d
-10137c8	obj_1012731.viewSetupChildrenScript.instructions	40
-101382c	obj_1012731.viewSetupChildrenScript.literals	41
-101386c	obj_1012731.viewSetupChildrenScript.literals[10]	43	map=map_10138a5
+1013794	partItem_5.menuRightButtons	41
+10137a8	partItem_5.viewSetupChildrenScript	43	map=map_100081d
+10137c8	partItem_5.viewSetupChildrenScript.instructions	40
+101382c	partItem_5.viewSetupChildrenScript.literals	41
+101386c	partItem_5.viewSetupChildrenScript.literals[10]	43	map=map_10138a5
 10138a4	map_10138a5	41
 10138e0	'AddLayout	40
 10138fc	'pickActionScript	40
-1013920	obj_1012731.viewSetupChildrenScript.literals[10].buttonClickScript	43	map=map_100081d
-1013940	obj_1012731.viewSetupChildrenScript.literals[10].buttonClickScript.instructions	40
-1013a14	obj_1012731.viewSetupChildrenScript.literals[10].buttonClickScript.literals	41
-1013a58	obj_1012731.viewSetupChildrenScript.literals[10].text	40
-1013a70	obj_1012731.viewSetupChildrenScript.literals[10].AddLayout	43	map=map_100081d
-1013a90	obj_1012731.viewSetupChildrenScript.literals[10].AddLayout.instructions	40
-1013bb8	obj_1012731.viewSetupChildrenScript.literals[10].AddLayout.literals	41
+1013920	partItem_5.viewSetupChildrenScript.literals[10].buttonClickScript	43	map=map_100081d
+1013940	partItem_5.viewSetupChildrenScript.literals[10].buttonClickScript.instructions	40
+1013a14	partItem_5.viewSetupChildrenScript.literals[10].buttonClickScript.literals	41
+1013a58	partItem_5.viewSetupChildrenScript.literals[10].text	40
+1013a70	partItem_5.viewSetupChildrenScript.literals[10].AddLayout	43	map=map_100081d
+1013a90	partItem_5.viewSetupChildrenScript.literals[10].AddLayout.instructions	40
+1013bb8	partItem_5.viewSetupChildrenScript.literals[10].AddLayout.literals	41
 1013c00	'HasDataFunc	40
-1013c1c	obj_1012731.viewSetupChildrenScript.literals[10].AddLayout.literals[14]	41
-1013c34	obj_1012731.viewSetupChildrenScript.literals[10].pickActionScript	43	map=map_100081d
-1013c54	obj_1012731.viewSetupChildrenScript.literals[10].pickActionScript.instructions	40
-1013c7c	obj_1012731.viewSetupChildrenScript.literals[10].pickActionScript.literals	41
-1013ca4	obj_1012731.viewSetupChildrenScript.literals[10].viewQuitScript	43	map=map_100081d
-1013cc4	obj_1012731.viewSetupChildrenScript.literals[10].viewQuitScript.instructions	40
-1013cd8	obj_1012731.viewSetupChildrenScript.literals[10].viewQuitScript.literals	41
-1013cf4	obj_1012731.viewSetupChildrenScript.literals[10].viewSetupDoneScript	43	map=map_100081d
-1013d14	obj_1012731.viewSetupChildrenScript.literals[10].viewSetupDoneScript.instructions	40
-1013d28	obj_1012731.viewSetupChildrenScript.literals[10].viewSetupDoneScript.literals	41
+1013c1c	partItem_5.viewSetupChildrenScript.literals[10].AddLayout.literals[14]	41
+1013c34	partItem_5.viewSetupChildrenScript.literals[10].pickActionScript	43	map=map_100081d
+1013c54	partItem_5.viewSetupChildrenScript.literals[10].pickActionScript.instructions	40
+1013c7c	partItem_5.viewSetupChildrenScript.literals[10].pickActionScript.literals	41
+1013ca4	partItem_5.viewSetupChildrenScript.literals[10].viewQuitScript	43	map=map_100081d
+1013cc4	partItem_5.viewSetupChildrenScript.literals[10].viewQuitScript.instructions	40
+1013cd8	partItem_5.viewSetupChildrenScript.literals[10].viewQuitScript.literals	41
+1013cf4	partItem_5.viewSetupChildrenScript.literals[10].viewSetupDoneScript	43	map=map_100081d
+1013d14	partItem_5.viewSetupChildrenScript.literals[10].viewSetupDoneScript.instructions	40
+1013d28	partItem_5.viewSetupChildrenScript.literals[10].viewSetupDoneScript.literals	41
 1013d40	'_addKeyButton	40
-1013d60	obj_10002d1[0].theForm.BeginNewEntry	43	map=map_100081d
-1013d80	obj_10002d1[0].theForm.BeginNewEntry.instructions	40
-1013de8	obj_10002d1[0].theForm.BeginNewEntry.literals	41
+1013d60	part[0].theForm.BeginNewEntry	43	map=map_100081d
+1013d80	part[0].theForm.BeginNewEntry.instructions	40
+1013de8	part[0].theForm.BeginNewEntry.literals	41
 1013e28	'AddEntryDirect	40
 1013e48	'AddEntryFromStationery	40
 1013e70	'oldTarget	40
-1013e8c	obj_10002d1[0].theForm.viewSetupFormScript	43	map=map_100081d
-1013eac	obj_10002d1[0].theForm.viewSetupFormScript.instructions	40
-1013f54	obj_10002d1[0].theForm.viewSetupFormScript.literals	41
-1013fac	obj_10002d1[0].theForm.viewSetupFormScript.literals[4]	43	map=map_100081d
-1013fcc	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].instructions	40
-1014028	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals	41
+1013e8c	part[0].theForm.viewSetupFormScript	43	map=map_100081d
+1013eac	part[0].theForm.viewSetupFormScript.instructions	40
+1013f54	part[0].theForm.viewSetupFormScript.literals	41
+1013fac	part[0].theForm.viewSetupFormScript.literals[4]	43	map=map_100081d
+1013fcc	part[0].theForm.viewSetupFormScript.literals[4].instructions	40
+1014028	part[0].theForm.viewSetupFormScript.literals[4].literals	41
 1014078	'caller	40
-1014090	obj_1014091	40
-10140b4	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[3]	43	map=map_100096d
+1014090	viewSetupFormScript_literal1	40
+10140b4	part[0].theForm.viewSetupFormScript.literals[4].literals[3]	43	map=map_100096d
 10140c0	'oldSoupQuery	40
-10140e0	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[7]	40
+10140e0	part[0].theForm.viewSetupFormScript.literals[4].literals[7]	40
 10141e0	'yesNoDefaultYes	40
-1014200	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[10]	43	map=map_100081d
-1014220	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[10].instructions	40
-1014398	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[10].literals	41
+1014200	part[0].theForm.viewSetupFormScript.literals[4].literals[10]	43	map=map_100081d
+1014220	part[0].theForm.viewSetupFormScript.literals[4].literals[10].instructions	40
+1014398	part[0].theForm.viewSetupFormScript.literals[4].literals[10].literals	41
 1014438	'CancelRequest	40
-1014458	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[1]	43	map=map_100081d
-1014478	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[1].instructions	40
-101448c	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[1].literals	41
+1014458	part[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[1]	43	map=map_100081d
+1014478	part[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[1].instructions	40
+101448c	part[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[1].literals	41
 101449c	'cancelled	40
-10144b8	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[1].argFrame	43	map=map_1012361
-10144d0	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[4]	41
+10144b8	part[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[1].argFrame	43	map=map_1012361
+10144d0	part[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[4]	41
 10144e4	'EntryStore	40
 1014500	'vGauge	40
-1014518	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[14]	40
+1014518	part[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[14]	40
 1014540	'rinttol	40
-1014558	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[18]	41
+1014558	part[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[18]	41
 1014570	'titleText	40
 101458c	'gauge	40
 10145a4	'SetStatus	40
-10145c0	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[23]	41
+10145c0	part[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[23]	41
 10145d4	'AddEntry	40
-10145f0	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[25]	41
+10145f0	part[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[25]	41
 1014604	'EntryRemoveFromSoupXmit	40
 101462c	'Next	40
 1014644	'GetSoup	40
 101465c	'Soup	40
 1014674	'RemoveFromStoreXmit	40
-1014698	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[34]	40
-10147fc	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[10].argFrame	43	map=map_1012361
-1014814	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[13]	40
-101485c	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[14]	43	map=map_1014871
+1014698	part[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[34]	40
+10147fc	part[0].theForm.viewSetupFormScript.literals[4].literals[10].argFrame	43	map=map_1012361
+1014814	part[0].theForm.viewSetupFormScript.literals[4].literals[13]	40
+101485c	part[0].theForm.viewSetupFormScript.literals[4].literals[14]	43	map=map_1014871
 1014870	map_1014871	41
-1014888	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[14].bits	40
-101491c	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[14].bounds	43	map=map_1000a59
-1014938	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[15]	41
+1014888	part[0].theForm.viewSetupFormScript.literals[4].literals[14].bits	40
+101491c	part[0].theForm.viewSetupFormScript.literals[4].literals[14].bounds	43	map=map_1000a59
+1014938	part[0].theForm.viewSetupFormScript.literals[4].literals[15]	41
 101495c	'statusText	40
 1014978	'DoProgress	40
-1014994	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].argFrame	43	map=map_10149b5
+1014994	part[0].theForm.viewSetupFormScript.literals[4].argFrame	43	map=map_10149b5
 10149b4	map_10149b5	41
 10149d8	'EnsureInternal	40
 10149f8	'_kiddos	40
-1014a10	obj_10002d1[0].theForm.ShowLayout	43	map=map_100081d
-1014a30	obj_10002d1[0].theForm.ShowLayout.instructions	40
-1014a5c	obj_10002d1[0].theForm.ShowLayout.literals	41
-1014a78	obj_10002d1[0].theForm.allLayouts	43	map=map_1014a8d
+1014a10	part[0].theForm.ShowLayout	43	map=map_100081d
+1014a30	part[0].theForm.ShowLayout.instructions	40
+1014a5c	part[0].theForm.ShowLayout.literals	41
+1014a78	part[0].theForm.allLayouts	43	map=map_1014a8d
 1014a8c	map_1014a8d	41
-1014aa4	obj_10002d1[0].theForm.allLayouts.default	43	map=map_1014ad9
+1014aa4	part[0].theForm.allLayouts.default	43	map=map_1014ad9
 1014ad8	map_1014ad9	41
 1014b10	'allInfoHeight	40
 1014b30	'childBottom	40
@@ -1573,25 +1573,25 @@ area	10002d0	16d34	bf	4
 1014b6c	'ViewScroll2DScript	40
 1014b90	'scrollArrows	40
 1014bb0	'entryView	40
-1014bcc	obj_10002d1[0].theForm.allLayouts.default.stepChildren	41
-1014be0	obj_1014be1	43	map=map_100fa2d
-1014bf4	obj_1014bf5	43	map=map_1014c1d
+1014bcc	part[0].theForm.allLayouts.default.stepChildren	41
+1014be0	partItem_6	43	map=map_100fa2d
+1014bf4	partItem_7	43	map=map_1014c1d
 1014c1c	map_1014c1d	41
-1014c48	obj_1014bf5.viewBounds	43	map=map_100e30d
-1014c64	obj_1014bf5.viewSetupChildrenScript	43	map=map_100081d
-1014c84	obj_1014bf5.viewSetupChildrenScript.instructions	40
-1014cb4	obj_1014bf5.viewSetupChildrenScript.literals	41
+1014c48	partItem_7.viewBounds	43	map=map_100e30d
+1014c64	partItem_7.viewSetupChildrenScript	43	map=map_100081d
+1014c84	partItem_7.viewSetupChildrenScript.instructions	40
+1014cb4	partItem_7.viewSetupChildrenScript.literals	41
 1014ce0	'IsSoupEntry	40
-1014cfc	obj_1014bf5.viewSetupChildrenScript.literals[5]	43	map=map_1014d39
+1014cfc	partItem_7.viewSetupChildrenScript.literals[5]	43	map=map_1014d39
 1014d38	map_1014d39	41
 1014d78	'allinfo	40
-1014d90	obj_1014bf5.viewSetupChildrenScript.literals[5].viewSetupFormScript	43	map=map_100081d
-1014db0	obj_1014bf5.viewSetupChildrenScript.literals[5].viewSetupFormScript.literals	41
-1014de4	obj_1014bf5.viewSetupChildrenScript.literals[5].viewSetupFormScript.literals[5]	41
-1014df8	obj_1014bf5.viewSetupChildrenScript.literals[5].viewBounds	43	map=map_1000a59
-1014e14	obj_1014bf5.viewSetupDoneScript	43	map=map_100081d
-1014e34	obj_1014bf5.viewSetupDoneScript.instructions	40
-1014ee8	obj_1014bf5.viewSetupDoneScript.literals	41
+1014d90	partItem_7.viewSetupChildrenScript.literals[5].viewSetupFormScript	43	map=map_100081d
+1014db0	partItem_7.viewSetupChildrenScript.literals[5].viewSetupFormScript.literals	41
+1014de4	partItem_7.viewSetupChildrenScript.literals[5].viewSetupFormScript.literals[5]	41
+1014df8	partItem_7.viewSetupChildrenScript.literals[5].viewBounds	43	map=map_1000a59
+1014e14	partItem_7.viewSetupDoneScript	43	map=map_100081d
+1014e34	partItem_7.viewSetupDoneScript.instructions	40
+1014ee8	partItem_7.viewSetupDoneScript.literals	41
 1014f44	'Hide	40
 1014f5c	'scrollRect	40
 1014f78	'dataRect	40
@@ -1599,276 +1599,276 @@ area	10002d0	16d34	bf	4
 1014fb0	'yPos	40
 1014fc8	'Show	40
 1014fe0	'AdjustArrows	40
-1015000	obj_10002d1[0].theForm.allLayouts.default.ViewScroll2DScript	43	map=map_100081d
-1015020	obj_10002d1[0].theForm.allLayouts.default.ViewScroll2DScript.instructions	40
-10150a0	obj_10002d1[0].theForm.allLayouts.default.ViewScroll2DScript.literals	41
+1015000	part[0].theForm.allLayouts.default.ViewScroll2DScript	43	map=map_100081d
+1015020	part[0].theForm.allLayouts.default.ViewScroll2DScript.instructions	40
+10150a0	part[0].theForm.allLayouts.default.ViewScroll2DScript.literals	41
 10150e0	'count	40
 10150f8	'up	40
 101510c	'min	40
 1015120	'RefreshViews	40
-1015140	obj_10002d1[0].theForm.allLayouts.default._proto	43	map=map_1015171
+1015140	part[0].theForm.allLayouts.default._proto	43	map=map_1015171
 1015170	map_1015171	41
 10151a4	'viewScrollDownScript	40
 10151cc	'viewScrollUpScript	40
-10151f0	obj_10002d1[0].theForm.allLayouts.default._proto.viewBounds	43	map=map_100e30d
-101520c	obj_10002d1[0].theForm.allLayouts.default._proto.Retarget	43	map=map_100081d
-101522c	obj_10002d1[0].theForm.allLayouts.default._proto.Retarget.instructions	40
-10152a4	obj_10002d1[0].theForm.allLayouts.default._proto.Retarget.literals	41
+10151f0	part[0].theForm.allLayouts.default._proto.viewBounds	43	map=map_100e30d
+101520c	part[0].theForm.allLayouts.default._proto.Retarget	43	map=map_100081d
+101522c	part[0].theForm.allLayouts.default._proto.Retarget.instructions	40
+10152a4	part[0].theForm.allLayouts.default._proto.Retarget.literals	41
 10152ec	'deleted	40
 1015304	'Prev	40
 101531c	'SetupCursor	40
-1015338	obj_10002d1[0].theForm.allLayouts.default._proto.viewScrollDownScript	43	map=map_100081d
-1015358	obj_10002d1[0].theForm.allLayouts.default._proto.viewScrollDownScript.instructions	40
-1015378	obj_10002d1[0].theForm.allLayouts.default._proto.viewScrollDownScript.literals	41
+1015338	part[0].theForm.allLayouts.default._proto.viewScrollDownScript	43	map=map_100081d
+1015358	part[0].theForm.allLayouts.default._proto.viewScrollDownScript.instructions	40
+1015378	part[0].theForm.allLayouts.default._proto.viewScrollDownScript.literals	41
 101539c	'Scroller	40
 10153b8	'Effect	40
-10153d0	obj_10002d1[0].theForm.allLayouts.default._proto.viewScrollUpScript	43	map=map_100081d
-10153f0	obj_10002d1[0].theForm.allLayouts.default._proto.viewScrollUpScript.instructions	40
-1015410	obj_10002d1[0].theForm.allLayouts.default._proto.viewScrollUpScript.literals	41
-1015434	obj_10002d1[0].theForm.allLayouts.default._proto.viewSetupFormScript	43	map=map_100081d
-1015454	obj_10002d1[0].theForm.allLayouts.default._proto.viewSetupFormScript.instructions	40
-1015468	obj_10002d1[0].theForm.allLayouts.default._proto.viewSetupFormScript.literals	41
-101547c	obj_10002d1[0].theForm.allLayouts.default.stepAllocateContext	41
-1015498	obj_10002d1[0].theForm.allLayouts.overview	43	map=map_10154cd
+10153d0	part[0].theForm.allLayouts.default._proto.viewScrollUpScript	43	map=map_100081d
+10153f0	part[0].theForm.allLayouts.default._proto.viewScrollUpScript.instructions	40
+1015410	part[0].theForm.allLayouts.default._proto.viewScrollUpScript.literals	41
+1015434	part[0].theForm.allLayouts.default._proto.viewSetupFormScript	43	map=map_100081d
+1015454	part[0].theForm.allLayouts.default._proto.viewSetupFormScript.instructions	40
+1015468	part[0].theForm.allLayouts.default._proto.viewSetupFormScript.literals	41
+101547c	part[0].theForm.allLayouts.default.stepAllocateContext	41
+1015498	part[0].theForm.allLayouts.overview	43	map=map_10154cd
 10154cc	map_10154cd	41
 1015504	'realOverview	40
-1015524	obj_10002d1[0].theForm.allLayouts.overview.viewBounds	43	map=map_100e30d
-1015540	obj_10002d1[0].theForm.allLayouts.overview.name	40
-1015560	obj_10002d1[0].theForm.allLayouts.overview.stepChildren	41
-1015570	obj_1015571	43	map=map_10155a5
+1015524	part[0].theForm.allLayouts.overview.viewBounds	43	map=map_100e30d
+1015540	part[0].theForm.allLayouts.overview.name	40
+1015560	part[0].theForm.allLayouts.overview.stepChildren	41
+1015570	layout	43	map=map_10155a5
 10155a4	map_10155a5	41
 10155dc	'Abstract	40
 10155f8	'GetTargetInfo	40
-1015618	obj_1015571.viewBounds	43	map=map_100e30d
-1015634	obj_1015571.name	40
-1015650	obj_1015571.Abstract	43	map=map_100081d
-1015670	obj_1015571.Abstract.instructions	40
-10157d8	obj_1015571.Abstract.literals	41
-1015850	obj_1015571.Abstract.literals[9]	40
+1015618	layout.viewBounds	43	map=map_100e30d
+1015634	layout.name	40
+1015650	layout.Abstract	43	map=map_100081d
+1015670	layout.Abstract.instructions	40
+10157d8	layout.Abstract.literals	41
+1015850	layout.Abstract.literals[9]	40
 1015860	'StrPos	40
 1015878	'Substr	40
 1015890	'StrTruncate	40
 10158ac	'MakeText	40
-10158c8	obj_1015571.Abstract.literals[19]	43	map=map_10015e1
+10158c8	layout.Abstract.literals[19]	43	map=map_10015e1
 10158dc	'GetName	40
-10158f4	obj_1015571.Abstract.literals[23]	43	map=map_10015e1
+10158f4	layout.Abstract.literals[23]	43	map=map_10015e1
 1015908	'StyledStrTruncate	40
-101592c	obj_1015571.GetTargetInfo	43	map=map_100081d
-101594c	obj_1015571.GetTargetInfo.instructions	40
-101596c	obj_1015571.GetTargetInfo.literals	41
+101592c	layout.GetTargetInfo	43	map=map_100081d
+101594c	layout.GetTargetInfo.instructions	40
+101596c	layout.GetTargetInfo.literals	41
 1015984	'hilitItem	40
-10159a0	obj_1015571.GetTargetInfo.literals[1]	41
-10159b8	obj_1015571.Retarget	43	map=map_100081d
-10159d8	obj_1015571.Retarget.instructions	40
-10159f8	obj_1015571.Retarget.literals	41
+10159a0	layout.GetTargetInfo.literals[1]	41
+10159b8	layout.Retarget	43	map=map_100081d
+10159d8	layout.Retarget.instructions	40
+10159f8	layout.Retarget.literals	41
 1015a18	'Reset	40
-1015a30	obj_10002d1[0].theForm.allLayouts.overview.stepAllocateContext	41
-1015a44	obj_10002d1[0].theForm.stepChildren	41
-1015a58	obj_10002d1[0].theForm.stepChildren[0]	43	map=map_1015a6d
+1015a30	part[0].theForm.allLayouts.overview.stepAllocateContext	41
+1015a44	part[0].theForm.stepChildren	41
+1015a58	part[0].theForm.stepChildren[0]	43	map=map_1015a6d
 1015a6c	map_1015a6d	41
-1015a84	obj_10002d1[0].theForm.PutAwayScript	43	map=map_100081d
-1015aa4	obj_10002d1[0].theForm.PutAwayScript.instructions	40
-1015b54	obj_10002d1[0].theForm.PutAwayScript.literals	41
-1015bc4	obj_10002d1[0].theForm.PutAwayScript.literals[2]	41
+1015a84	part[0].theForm.PutAwayScript	43	map=map_100081d
+1015aa4	part[0].theForm.PutAwayScript.instructions	40
+1015b54	part[0].theForm.PutAwayScript.literals	41
+1015bc4	part[0].theForm.PutAwayScript.literals[2]	41
 1015bd8	'body	40
-1015bf0	obj_10002d1[0].theForm.PutAwayScript.literals[3]	41
-1015c04	obj_10002d1[0].theForm.PutAwayScript.literals[5]	41
-1015c18	obj_10002d1[0].theForm.PutAwayScript.literals[7]	41
-1015c2c	obj_10002d1[0].theForm.PutAwayScript.literals[8]	41
-1015c40	obj_10002d1[0].theForm.PutAwayScript.literals[9]	41
-1015c54	obj_10002d1[0].theForm.PutAwayScript.literals[10]	41
-1015c68	obj_10002d1[0].theForm.PutAwayScript.literals[15]	41
+1015bf0	part[0].theForm.PutAwayScript.literals[3]	41
+1015c04	part[0].theForm.PutAwayScript.literals[5]	41
+1015c18	part[0].theForm.PutAwayScript.literals[7]	41
+1015c2c	part[0].theForm.PutAwayScript.literals[8]	41
+1015c40	part[0].theForm.PutAwayScript.literals[9]	41
+1015c54	part[0].theForm.PutAwayScript.literals[10]	41
+1015c68	part[0].theForm.PutAwayScript.literals[15]	41
 1015c7c	'EntryUndoChanges	40
-1015ca0	obj_10002d1[0].theForm.OkToStart	43	map=map_100081d
-1015cc0	obj_10002d1[0].theForm.OkToStart.instructions	40
-1015d48	obj_10002d1[0].theForm.OkToStart.literals	41
+1015ca0	part[0].theForm.OkToStart	43	map=map_100081d
+1015cc0	part[0].theForm.OkToStart.instructions	40
+1015d48	part[0].theForm.OkToStart.literals	41
 1015d84	'InetGetService	40
-1015da4	obj_10002d1[0].theForm.OkToStart.literals[3]	40
-1015e68	obj_10002d1[0].theForm.OkToStart.literals[11]	40
-1015f10	obj_10002d1[0].theForm.aboutView	43	map=map_1015f3d
+1015da4	part[0].theForm.OkToStart.literals[3]	40
+1015e68	part[0].theForm.OkToStart.literals[11]	40
+1015f10	part[0].theForm.aboutView	43	map=map_1015f3d
 1015f3c	map_1015f3d	41
 1015f6c	'theSoups	40
 1015f88	'inetMgr	40
-1015fa0	obj_10002d1[0].theForm.aboutView.viewBounds	43	map=map_1000a59
-1015fbc	obj_10002d1[0].theForm.aboutView.stepChildren	41
-1015fec	obj_10002d1[0].theForm.aboutView.stepChildren[0]	43	map=map_1015a6d
-1016000	obj_10002d1[0].theForm.aboutView.stepChildren[1]	43	map=map_1016021
+1015fa0	part[0].theForm.aboutView.viewBounds	43	map=map_1000a59
+1015fbc	part[0].theForm.aboutView.stepChildren	41
+1015fec	part[0].theForm.aboutView.stepChildren[0]	43	map=map_1015a6d
+1016000	part[0].theForm.aboutView.stepChildren[1]	43	map=map_1016021
 1016020	map_1016021	41
-1016044	obj_10002d1[0].theForm.aboutView.stepChildren[1].text	40
-101607c	obj_10002d1[0].theForm.aboutView.stepChildren[1].viewBounds	43	map=map_100e30d
-1016098	obj_10002d1[0].theForm.aboutView.stepChildren[1].viewFont	43	map=map_1004f2d
-10160b0	obj_10002d1[0].theForm.aboutView.stepChildren[2]	43	map=map_1016021
-10160d0	obj_10002d1[0].theForm.aboutView.stepChildren[2].text	40
-10160fc	obj_10002d1[0].theForm.aboutView.stepChildren[2].viewBounds	43	map=map_100e30d
-1016118	obj_10002d1[0].theForm.aboutView.stepChildren[2].viewFont	43	map=map_1004f2d
-1016130	obj_10002d1[0].theForm.aboutView.stepChildren[3]	43	map=map_1016155
+1016044	part[0].theForm.aboutView.stepChildren[1].text	40
+101607c	part[0].theForm.aboutView.stepChildren[1].viewBounds	43	map=map_100e30d
+1016098	part[0].theForm.aboutView.stepChildren[1].viewFont	43	map=map_1004f2d
+10160b0	part[0].theForm.aboutView.stepChildren[2]	43	map=map_1016021
+10160d0	part[0].theForm.aboutView.stepChildren[2].text	40
+10160fc	part[0].theForm.aboutView.stepChildren[2].viewBounds	43	map=map_100e30d
+1016118	part[0].theForm.aboutView.stepChildren[2].viewFont	43	map=map_1004f2d
+1016130	part[0].theForm.aboutView.stepChildren[3]	43	map=map_1016155
 1016154	map_1016155	41
-101617c	obj_10002d1[0].theForm.aboutView.stepChildren[3].text	40
-10161b8	obj_10002d1[0].theForm.aboutView.stepChildren[3].viewBounds	43	map=map_100e30d
-10161d4	obj_10002d1[0].theForm.aboutView.stepChildren[3].viewFont	43	map=map_1004f2d
-10161ec	obj_10002d1[0].theForm.aboutView.stepChildren[3].viewSetupFormScript	43	map=map_100081d
-101620c	obj_10002d1[0].theForm.aboutView.stepChildren[3].viewSetupFormScript.instructions	40
-1016224	obj_10002d1[0].theForm.aboutView.stepChildren[3].viewSetupFormScript.literals	41
-1016240	obj_10002d1[0].theForm.aboutView.stepChildren[4]	43	map=map_1016155
-1016264	obj_10002d1[0].theForm.aboutView.stepChildren[4].text	40
-1016294	obj_10002d1[0].theForm.aboutView.stepChildren[4].viewBounds	43	map=map_100e30d
-10162b0	obj_10002d1[0].theForm.aboutView.stepChildren[4].viewFont	43	map=map_1004f2d
-10162c8	obj_10002d1[0].theForm.aboutView.stepChildren[4].viewSetupFormScript	43	map=map_100081d
-10162e8	obj_10002d1[0].theForm.aboutView.stepChildren[4].viewSetupFormScript.instructions	40
-1016314	obj_10002d1[0].theForm.aboutView.stepChildren[4].viewSetupFormScript.literals	41
+101617c	part[0].theForm.aboutView.stepChildren[3].text	40
+10161b8	part[0].theForm.aboutView.stepChildren[3].viewBounds	43	map=map_100e30d
+10161d4	part[0].theForm.aboutView.stepChildren[3].viewFont	43	map=map_1004f2d
+10161ec	part[0].theForm.aboutView.stepChildren[3].viewSetupFormScript	43	map=map_100081d
+101620c	part[0].theForm.aboutView.stepChildren[3].viewSetupFormScript.instructions	40
+1016224	part[0].theForm.aboutView.stepChildren[3].viewSetupFormScript.literals	41
+1016240	part[0].theForm.aboutView.stepChildren[4]	43	map=map_1016155
+1016264	part[0].theForm.aboutView.stepChildren[4].text	40
+1016294	part[0].theForm.aboutView.stepChildren[4].viewBounds	43	map=map_100e30d
+10162b0	part[0].theForm.aboutView.stepChildren[4].viewFont	43	map=map_1004f2d
+10162c8	part[0].theForm.aboutView.stepChildren[4].viewSetupFormScript	43	map=map_100081d
+10162e8	part[0].theForm.aboutView.stepChildren[4].viewSetupFormScript.instructions	40
+1016314	part[0].theForm.aboutView.stepChildren[4].viewSetupFormScript.literals	41
 1016340	'versionStr	40
-101635c	obj_10002d1[0].theForm.aboutView.stepChildren[4].viewSetupFormScript.literals[2]	40
-1016380	obj_10002d1[0].theForm.aboutView.stepChildren[5]	43	map=map_10163a1
+101635c	part[0].theForm.aboutView.stepChildren[4].viewSetupFormScript.literals[2]	40
+1016380	part[0].theForm.aboutView.stepChildren[5]	43	map=map_10163a1
 10163a0	map_10163a1	41
-10163c4	obj_10002d1[0].theForm.aboutView.stepChildren[5].text	40
-10163fc	obj_10002d1[0].theForm.aboutView.stepChildren[5].viewBounds	43	map=map_100e30d
-1016418	obj_10002d1[0].theForm.aboutView.stepChildren[5].viewFont	43	map=map_1004f2d
-1016430	obj_10002d1[0].theForm.aboutView.stepChildren[6]	43	map=map_1016455
+10163c4	part[0].theForm.aboutView.stepChildren[5].text	40
+10163fc	part[0].theForm.aboutView.stepChildren[5].viewBounds	43	map=map_100e30d
+1016418	part[0].theForm.aboutView.stepChildren[5].viewFont	43	map=map_1004f2d
+1016430	part[0].theForm.aboutView.stepChildren[6]	43	map=map_1016455
 1016454	map_1016455	41
 101647c	'BuildComponentList	40
-10164a0	obj_10002d1[0].theForm.aboutView.stepChildren[6].text	40
-10164c4	obj_10002d1[0].theForm.aboutView.stepChildren[6].viewBounds	43	map=map_100e30d
-10164e0	obj_10002d1[0].theForm.aboutView.stepChildren[6].viewSetupFormScript	43	map=map_100081d
-1016500	obj_10002d1[0].theForm.aboutView.stepChildren[6].viewSetupFormScript.literals	41
-1016518	obj_10002d1[0].theForm.aboutView.stepChildren[6].BuildComponentList	43	map=map_100081d
-1016538	obj_10002d1[0].theForm.aboutView.stepChildren[6].BuildComponentList.instructions	40
-1016578	obj_10002d1[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals	41
+10164a0	part[0].theForm.aboutView.stepChildren[6].text	40
+10164c4	part[0].theForm.aboutView.stepChildren[6].viewBounds	43	map=map_100e30d
+10164e0	part[0].theForm.aboutView.stepChildren[6].viewSetupFormScript	43	map=map_100081d
+1016500	part[0].theForm.aboutView.stepChildren[6].viewSetupFormScript.literals	41
+1016518	part[0].theForm.aboutView.stepChildren[6].BuildComponentList	43	map=map_100081d
+1016538	part[0].theForm.aboutView.stepChildren[6].BuildComponentList.instructions	40
+1016578	part[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals	41
 10165b0	'theList	40
 10165c8	'InetGetServiceList	40
 10165ec	'physicalService	40
-101660c	obj_10002d1[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[5]	43	map=map_100081d
-101662c	obj_101662d	40
-1016648	obj_10002d1[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[5].literals	41
-1016664	obj_1016665	40
-1016678	obj_10002d1[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[5].argFrame	43	map=map_1012361
+101660c	part[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[5]	43	map=map_100081d
+101662c	BuildComponentList_code	40
+1016648	part[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[5].literals	41
+1016664	BuildComponentList_literal2	40
+1016678	part[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[5].argFrame	43	map=map_1012361
 1016690	'|map|	40
 10166a4	'logicalService	40
-10166c4	obj_10002d1[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[8]	43	map=map_100081d
-10166e4	obj_10002d1[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[8].literals	41
-1016700	obj_10002d1[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[8].argFrame	43	map=map_1012361
+10166c4	part[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[8]	43	map=map_100081d
+10166e4	part[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[8].literals	41
+1016700	part[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[8].argFrame	43	map=map_1012361
 1016718	'StrLen	40
-1016730	obj_10002d1[0].theForm.aboutView.stepChildren[6].BuildComponentList.argFrame	43	map=map_101674d
+1016730	part[0].theForm.aboutView.stepChildren[6].BuildComponentList.argFrame	43	map=map_101674d
 101674c	map_101674d	41
-101676c	obj_10002d1[0].theForm.aboutView.stepChildren[7]	43	map=map_1016789
+101676c	part[0].theForm.aboutView.stepChildren[7]	43	map=map_1016789
 1016788	map_1016789	41
-10167a8	obj_10002d1[0].theForm.aboutView.stepChildren[7].text	40
-10167ec	obj_10002d1[0].theForm.aboutView.stepChildren[7].viewBounds	43	map=map_100e30d
-1016808	obj_10002d1[0].theForm.aboutView.stepChildren[8]	43	map=map_101682d
+10167a8	part[0].theForm.aboutView.stepChildren[7].text	40
+10167ec	part[0].theForm.aboutView.stepChildren[7].viewBounds	43	map=map_100e30d
+1016808	part[0].theForm.aboutView.stepChildren[8]	43	map=map_101682d
 101682c	map_101682d	41
-1016854	obj_10002d1[0].theForm.aboutView.stepChildren[8].viewBounds	43	map=map_100e30d
-1016870	obj_10002d1[0].theForm.aboutView.stepChildren[8].viewSetupFormScript	43	map=map_100081d
-1016890	obj_10002d1[0].theForm.aboutView.stepChildren[8].viewSetupFormScript.instructions	40
-1016938	obj_10002d1[0].theForm.aboutView.stepChildren[8].viewSetupFormScript.literals	41
+1016854	part[0].theForm.aboutView.stepChildren[8].viewBounds	43	map=map_100e30d
+1016870	part[0].theForm.aboutView.stepChildren[8].viewSetupFormScript	43	map=map_100081d
+1016890	part[0].theForm.aboutView.stepChildren[8].viewSetupFormScript.instructions	40
+1016938	part[0].theForm.aboutView.stepChildren[8].viewSetupFormScript.literals	41
 101697c	'GetSize	40
-1016994	obj_10002d1[0].theForm.aboutView.stepChildren[8].viewSetupFormScript.literals[6]	40
-10169c4	obj_10002d1[0].theForm.aboutView.stepChildren[8].viewSetupFormScript.literals[9]	40
-1016a08	obj_10002d1[0].theForm.aboutView.stepChildren[8].viewSetupFormScript.literals[12]	40
-1016a4c	obj_10002d1[0].theForm.aboutView.stepChildren[8].viewFont	43	map=map_1004f2d
-1016a64	obj_10002d1[0].theForm.aboutView.viewSetupFormScript	43	map=map_100081d
-1016a84	obj_10002d1[0].theForm.aboutView.viewSetupFormScript.instructions	40
-1016ae4	obj_10002d1[0].theForm.aboutView.viewSetupFormScript.literals	41
+1016994	part[0].theForm.aboutView.stepChildren[8].viewSetupFormScript.literals[6]	40
+10169c4	part[0].theForm.aboutView.stepChildren[8].viewSetupFormScript.literals[9]	40
+1016a08	part[0].theForm.aboutView.stepChildren[8].viewSetupFormScript.literals[12]	40
+1016a4c	part[0].theForm.aboutView.stepChildren[8].viewFont	43	map=map_1004f2d
+1016a64	part[0].theForm.aboutView.viewSetupFormScript	43	map=map_100081d
+1016a84	part[0].theForm.aboutView.viewSetupFormScript.instructions	40
+1016ae4	part[0].theForm.aboutView.viewSetupFormScript.literals	41
 1016b18	'theSoup	40
 1016b30	'|Inet Manager:NIE|	40
-1016b54	obj_10002d1[0].theForm.ShowEditSlip	43	map=map_100081d
-1016b74	obj_10002d1[0].theForm.ShowEditSlip.instructions	40
-1016c24	obj_10002d1[0].theForm.ShowEditSlip.literals	41
+1016b54	part[0].theForm.ShowEditSlip	43	map=map_100081d
+1016b74	part[0].theForm.ShowEditSlip.instructions	40
+1016c24	part[0].theForm.ShowEditSlip.literals	41
 1016c80	'GetTargetView	40
 1016ca0	'addingData	40
-1016cbc	obj_10002d1[0].theForm.viewSetupChildrenScript	43	map=map_100081d
-1016cdc	obj_10002d1[0].theForm.viewSetupChildrenScript.instructions	40
-1016cfc	obj_10002d1[0].theForm.viewSetupChildrenScript.literals	41
-1016d1c	obj_10002d1[0].theForm.HandleUndoDelete	43	map=map_100081d
-1016d3c	obj_10002d1[0].theForm.HandleUndoDelete.instructions	40
-1016d64	obj_10002d1[0].theForm.HandleUndoDelete.literals	41
-1016d8c	obj_10002d1[0].theForm.HandleNewButtonAction	43	map=map_100081d
-1016dac	obj_10002d1[0].theForm.HandleNewButtonAction.instructions	40
-1016de0	obj_10002d1[0].theForm.HandleNewButtonAction.literals	41
-1016e04	obj_10002d1[0].devInstallScript	43	map=map_100081d
-1016e24	obj_10002d1[0].devInstallScript.instructions	40
-1016e50	obj_10002d1[0].devInstallScript.literals	41
-1016e7c	obj_10002d1[0].devInstallScript.literals[3]	43	map=map_100081d
-1016e9c	obj_10002d1[0].devInstallScript.literals[3].instructions	40
-1016eb0	obj_10002d1[0].devInstallScript.literals[3].literals	41
-1016ec8	obj_10002d1[0].devInstallScript.literals[4]	41
+1016cbc	part[0].theForm.viewSetupChildrenScript	43	map=map_100081d
+1016cdc	part[0].theForm.viewSetupChildrenScript.instructions	40
+1016cfc	part[0].theForm.viewSetupChildrenScript.literals	41
+1016d1c	part[0].theForm.HandleUndoDelete	43	map=map_100081d
+1016d3c	part[0].theForm.HandleUndoDelete.instructions	40
+1016d64	part[0].theForm.HandleUndoDelete.literals	41
+1016d8c	part[0].theForm.HandleNewButtonAction	43	map=map_100081d
+1016dac	part[0].theForm.HandleNewButtonAction.instructions	40
+1016de0	part[0].theForm.HandleNewButtonAction.literals	41
+1016e04	part[0].devInstallScript	43	map=map_100081d
+1016e24	part[0].devInstallScript.instructions	40
+1016e50	part[0].devInstallScript.literals	41
+1016e7c	part[0].devInstallScript.literals[3]	43	map=map_100081d
+1016e9c	part[0].devInstallScript.literals[3].instructions	40
+1016eb0	part[0].devInstallScript.literals[3].literals	41
+1016ec8	part[0].devInstallScript.literals[4]	41
 1016edc	'removeFrame	40
 1016ef8	'NewtInstallScript	40
-1016f1c	obj_10002d1[0].removeScript	43	map=map_100081d
-1016f3c	obj_10002d1[0].removeScript.instructions	40
-1016f60	obj_10002d1[0].removeScript.literals	41
+1016f1c	part[0].removeScript	43	map=map_100081d
+1016f3c	part[0].removeScript.instructions	40
+1016f60	part[0].removeScript.literals	41
 1016f80	'NewtRemoveScript	40
-1016fa4	obj_10002d1[0].installScript	43	map=map_100081d
-1016fc4	obj_10002d1[0].installScript.instructions	40
-1016fe8	obj_10002d1[0].installScript.literals	41
-alias	obj_10002d1[0]._ExportTable[0].objects[0].viewSetupFormScript.instructions	obj_10008c9
-alias	obj_10002d1[0]._ExportTable[0].objects[0].viewSetupFormScript.literals[3]	map_100096d
-alias	obj_10002d1[0].doNotInstall.literals[7]	obj_1002399
-alias	obj_10002d1[0].theForm.GetNewPath.literals[15]	obj_1003ce9
-alias	obj_10002d1[0].theForm.GetNewPath.literals[17]	map_100096d
-alias	obj_10002d1[0].theForm.API_AddEntry.literals[0]	obj_1003dc5
-alias	obj_10002d1[0].theForm.API_AddEntry.literals[5]	obj_1004161
-alias	obj_10002d1[0].theForm.viewQuitScript.literals[5]	obj_1004281
-alias	obj_10002d1[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals[7].literals[1]	obj_100ea59
-alias	obj_10002d1[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals[7].literals[4]	obj_1004161
-alias	obj_10002d1[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals[7].literals[6]	obj_100ea81
-alias	obj_10002d1[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals[7].literals[9]	obj_100ea59
-alias	obj_10002d1[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals[7].literals[10]	obj_100ea59
-alias	obj_10002d1[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals[7].literals[12]	obj_100ea81
-alias	obj_10002d1[0].theForm.editSlip.viewSetupFormScript.literals[1]	obj_100f7a1
-alias	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepChildren[2]	obj_1011821
-alias	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepChildren[3]	obj_1011ad1
-alias	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepChildren[6]	obj_1011c51
-alias	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepChildren[7]._proto	obj_100fa45
-alias	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].BuildLabelCommands.literals[9]	obj_1003ce9
-alias	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].viewSetupFormScript.literals[1]	obj_100f7a1
-alias	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].helpTopic	obj_1004fa9
-alias	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepAllocateContext[1]	obj_1011821
-alias	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepAllocateContext[3]	obj_1011ad1
-alias	obj_10002d1[0].theForm.ChooseNewEntry.literals[0].stepAllocateContext[5]	obj_1011c51
-alias	obj_10002d1[0].theForm.Find.literals[1]	obj_1004161
-alias	obj_10002d1[0].theForm.BeginNewEntry.literals[1]	obj_1003dc5
-alias	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[1]	obj_1014091
-alias	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[6]	obj_1004161
-alias	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[21]	obj_1003dc5
-alias	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[28]	obj_1014091
-alias	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[33]	obj_1002399
-alias	obj_10002d1[0].theForm.viewSetupFormScript.literals[4].literals[12]	obj_1002399
-alias	obj_10002d1[0].theForm.viewSetupFormScript.literals[6]	obj_100f7a1
-alias	obj_10002d1[0].theForm.viewSetupFormScript.literals[10]	obj_1004281
-alias	obj_10002d1[0].theForm.PutAwayScript.literals[6]	obj_1003f01
-alias	obj_10002d1[0].theForm.OkToStart.literals[2]	obj_1002399
-alias	obj_10002d1[0].theForm.aboutView.stepChildren[4].viewSetupFormScript.literals[6]	obj_1003ce9
-alias	obj_10002d1[0].theForm.aboutView.stepChildren[6].viewSetupFormScript.instructions	obj_1011941
-alias	obj_10002d1[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[0]	obj_1003ce9
-alias	obj_10002d1[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[5].instructions	obj_101662d
-alias	obj_10002d1[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[5].literals[2]	obj_1016665
-alias	obj_10002d1[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[8].instructions	obj_101662d
-alias	obj_10002d1[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[8].literals[2]	obj_1016665
-alias	obj_10002d1[0].theForm.HandleNewButtonAction.literals[3]	obj_1003f01
-alias	obj_1000b05.AddAllInfoItem.literals[40]	map_10015e1
-alias	obj_1000b05.viewDrawScript.literals[3]	map_10015e1
-alias	obj_1000b05.viewSetupChildrenScript.literals[26]	obj_1002135
-alias	obj_1000b05.viewSetupChildrenScript.literals[33]	obj_1002135
-alias	obj_1003dc5.literals[0]	obj_1003f01
-alias	obj_100f659.buttonClickScript.literals[4]	obj_1002399
-alias	obj_100f659.buttonClickScript.literals[12]	obj_100f7a1
-alias	obj_100ffd9.stepChildren[0].stepChildren[1].viewSetupDoneScript.literals[26]	obj_100f7a1
-alias	obj_1011821.viewSetupFormScript.instructions	obj_1011941
-alias	obj_1011821.textSetup.literals[8]	obj_1003ce9
-alias	obj_1011c51.buttonClickScript.literals[5]	obj_1002399
-alias	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewSetupFormScript.instructions	obj_1012da1
-alias	obj_1012731.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].viewSetupFormScript.instructions	obj_1012da1
-alias	obj_1012731.menuLeftButtons[1].BuildPopUp.literals[12]	map_10136e1
-alias	obj_1012731.menuLeftButtons[1].BuildPopUp.literals[16]	map_10136e1
-alias	obj_1012731.viewSetupChildrenScript.literals[8]	map_1011e25
-alias	obj_1012731.viewSetupChildrenScript.literals[11]	map_1011e25
-alias	obj_1014bf5.viewSetupChildrenScript.literals[5].name	obj_1000779
-alias	obj_1014bf5.viewSetupChildrenScript.literals[5].viewSetupFormScript.instructions	obj_10008c9
-alias	obj_1014bf5.viewSetupChildrenScript.literals[5].viewSetupFormScript.literals[3]	map_100096d
-alias	obj_1014bf5.viewSetupChildrenScript.literals[5]._proto	obj_1000b05
-alias	obj_1015571.Abstract.literals[0]	obj_1003ce9
-alias	obj_1004281.GenericSecurID.loginScript.instructions[1].data	obj_1004529
-alias	obj_1004281.GenericSecurID.loginScript.instructions[4].data	obj_1004591
-alias	obj_1004281.GenericUNIX.loginScript.instructions[1].data	obj_1004529
-alias	obj_1004281.GenericUNIX.loginScript.instructions[4].data	obj_1004591
-alias	obj_1011ad1.text	obj_1003ce9
-alias	obj_1011c51.text	obj_100f8c9
+1016fa4	part[0].installScript	43	map=map_100081d
+1016fc4	part[0].installScript.instructions	40
+1016fe8	part[0].installScript.literals	41
+alias	part[0]._ExportTable[0].objects[0].viewSetupFormScript.instructions	viewSetupFormScript_code
+alias	part[0]._ExportTable[0].objects[0].viewSetupFormScript.literals[3]	map_100096d
+alias	part[0].doNotInstall.literals[7]	internetSetup
+alias	part[0].theForm.GetNewPath.literals[15]	aboutViewText
+alias	part[0].theForm.GetNewPath.literals[17]	map_100096d
+alias	part[0].theForm.API_AddEntry.literals[0]	API_AddEntry_literal0
+alias	part[0].theForm.API_AddEntry.literals[5]	internetSetups
+alias	part[0].theForm.viewQuitScript.literals[5]	viewQuitScript_literal5
+alias	part[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals[7].literals[1]	DuplicateEntry_literal1
+alias	part[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals[7].literals[4]	internetSetups
+alias	part[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals[7].literals[6]	DuplicateEntry_literal6
+alias	part[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals[7].literals[9]	DuplicateEntry_literal1
+alias	part[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals[7].literals[10]	DuplicateEntry_literal1
+alias	part[0].theForm.allSoups.INETSetupSoup.DuplicateEntry.literals[7].literals[12]	DuplicateEntry_literal6
+alias	part[0].theForm.editSlip.viewSetupFormScript.literals[1]	viewSetupFormScript_literal6
+alias	part[0].theForm.ChooseNewEntry.literals[0].stepChildren[2]	stepChildren_value
+alias	part[0].theForm.ChooseNewEntry.literals[0].stepChildren[3]	stepChildren_value_2
+alias	part[0].theForm.ChooseNewEntry.literals[0].stepChildren[6]	stepChildren_value_3
+alias	part[0].theForm.ChooseNewEntry.literals[0].stepChildren[7]._proto	partItem_4Proto
+alias	part[0].theForm.ChooseNewEntry.literals[0].BuildLabelCommands.literals[9]	aboutViewText
+alias	part[0].theForm.ChooseNewEntry.literals[0].viewSetupFormScript.literals[1]	viewSetupFormScript_literal6
+alias	part[0].theForm.ChooseNewEntry.literals[0].helpTopic	determine
+alias	part[0].theForm.ChooseNewEntry.literals[0].stepAllocateContext[1]	stepChildren_value
+alias	part[0].theForm.ChooseNewEntry.literals[0].stepAllocateContext[3]	stepChildren_value_2
+alias	part[0].theForm.ChooseNewEntry.literals[0].stepAllocateContext[5]	stepChildren_value_3
+alias	part[0].theForm.Find.literals[1]	internetSetups
+alias	part[0].theForm.BeginNewEntry.literals[1]	API_AddEntry_literal0
+alias	part[0].theForm.viewSetupFormScript.literals[4].literals[1]	viewSetupFormScript_literal1
+alias	part[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[6]	internetSetups
+alias	part[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[21]	API_AddEntry_literal0
+alias	part[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[28]	viewSetupFormScript_literal1
+alias	part[0].theForm.viewSetupFormScript.literals[4].literals[10].literals[33]	internetSetup
+alias	part[0].theForm.viewSetupFormScript.literals[4].literals[12]	internetSetup
+alias	part[0].theForm.viewSetupFormScript.literals[6]	viewSetupFormScript_literal6
+alias	part[0].theForm.viewSetupFormScript.literals[10]	viewQuitScript_literal5
+alias	part[0].theForm.PutAwayScript.literals[6]	PutAwayScript_literal6
+alias	part[0].theForm.OkToStart.literals[2]	internetSetup
+alias	part[0].theForm.aboutView.stepChildren[4].viewSetupFormScript.literals[6]	aboutViewText
+alias	part[0].theForm.aboutView.stepChildren[6].viewSetupFormScript.instructions	viewSetupFormScript_code_2
+alias	part[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[0]	aboutViewText
+alias	part[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[5].instructions	BuildComponentList_code
+alias	part[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[5].literals[2]	BuildComponentList_literal2
+alias	part[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[8].instructions	BuildComponentList_code
+alias	part[0].theForm.aboutView.stepChildren[6].BuildComponentList.literals[8].literals[2]	BuildComponentList_literal2
+alias	part[0].theForm.HandleNewButtonAction.literals[3]	PutAwayScript_literal6
+alias	objectsProto.AddAllInfoItem.literals[40]	map_10015e1
+alias	objectsProto.viewDrawScript.literals[3]	map_10015e1
+alias	objectsProto.viewSetupChildrenScript.literals[26]	viewSetupChildrenScript_literal26
+alias	objectsProto.viewSetupChildrenScript.literals[33]	viewSetupChildrenScript_literal26
+alias	API_AddEntry_literal0.literals[0]	PutAwayScript_literal6
+alias	partItem_3.buttonClickScript.literals[4]	internetSetup
+alias	partItem_3.buttonClickScript.literals[12]	viewSetupFormScript_literal6
+alias	editFields.stepChildren[0].stepChildren[1].viewSetupDoneScript.literals[26]	viewSetupFormScript_literal6
+alias	stepChildren_value.viewSetupFormScript.instructions	viewSetupFormScript_code_2
+alias	stepChildren_value.textSetup.literals[8]	aboutViewText
+alias	stepChildren_value_3.buttonClickScript.literals[5]	internetSetup
+alias	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[2].viewSetupFormScript.instructions	viewSetupFormScript_code_3
+alias	partItem_5.menuLeftButtons[0].DoInfoAbout.literals[9].stepChildren[3].viewSetupFormScript.instructions	viewSetupFormScript_code_3
+alias	partItem_5.menuLeftButtons[1].BuildPopUp.literals[12]	map_10136e1
+alias	partItem_5.menuLeftButtons[1].BuildPopUp.literals[16]	map_10136e1
+alias	partItem_5.viewSetupChildrenScript.literals[8]	map_1011e25
+alias	partItem_5.viewSetupChildrenScript.literals[11]	map_1011e25
+alias	partItem_7.viewSetupChildrenScript.literals[5].name	allInfo
+alias	partItem_7.viewSetupChildrenScript.literals[5].viewSetupFormScript.instructions	viewSetupFormScript_code
+alias	partItem_7.viewSetupChildrenScript.literals[5].viewSetupFormScript.literals[3]	map_100096d
+alias	partItem_7.viewSetupChildrenScript.literals[5]._proto	objectsProto
+alias	layout.Abstract.literals[0]	aboutViewText
+alias	viewQuitScript_literal5.GenericSecurID.loginScript.instructions[1].data	ogin
+alias	viewQuitScript_literal5.GenericSecurID.loginScript.instructions[4].data	word
+alias	viewQuitScript_literal5.GenericUNIX.loginScript.instructions[1].data	ogin
+alias	viewQuitScript_literal5.GenericUNIX.loginScript.instructions[4].data	word
+alias	stepChildren_value_2.text	aboutViewText
+alias	stepChildren_value_3.text	continue

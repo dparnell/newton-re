@@ -1,0 +1,3 @@
+// protoMonthView, and what only it reaches
+
+protoMonthView := {viewClass: clMonthView, _proto: @protoView};

@@ -1,0 +1,19 @@
+// correctortrailBits, and what only it reaches
+
+correctortrailBits := {
+	bits: trailingpunctBitmapBits,
+	bounds: trailingpunctBitmapBounds,
+	width: 3,
+	height: 3,
+	words: [|Array|:
+		decimalpoint,
+		correctortrailBitsItem,
+		correctortrailBitsItem_2,
+		groupSepStr_2,
+		correctorleadBitsItem_2,
+		correctorleadBitsItem_3,
+		correctortrailBitsItem_3,
+		timeSepStr1,
+		salutationSuffixItem
+	]
+};

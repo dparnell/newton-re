@@ -1,0 +1,87 @@
+// protoTransportPopup, and what only it reaches
+
+protoTransportPopup := {
+	_proto: @protoPopInPlace,
+	viewBounds: nil,
+	viewFormat: 0,
+	viewJustify: vjCenterV,
+	text: nil,
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	showit: nil,
+	routingTypes: nil,
+	viewSetupFormScript: func() begin
+		showit := nil;
+		routingTypes := [Array: ];
+		if IsArray(formats) then begin
+				(foreach l1 in formats do begin
+						if (if (l1.title or l1:?GetTitle(target)) then IsArray(l1.dataTypes)) then begin
+								(foreach l3 in l1.dataTypes do begin
+										SetAdd(routingTypes, l3, true)
+									end)
+							end
+					end)
+			end;
+		if (if transport.group then (not Editing)) then begin
+				(foreach l5 in transports do begin
+						local l7, l8, l9, l10;
+						if (if (if (if (l7 := GetRoot().(l5)) then (l7.group = transport.group)) then (l7.appSymbol <> transport.appSymbol)) then SetOverlaps(routingTypes, l7.dataTypes)) then begin
+								showit := true;
+								break
+							end
+					end)
+			end;
+		if (not text) then begin
+				text := transport.title
+			end;
+		if (not text) then begin
+				text := ""
+			end;
+		if showit then begin
+				text := Stringer([Array: $\uFC01, text])
+			end;
+		l8 := ((envelopeWidth - 31) - 10);
+		l9 := (StrFontWidth(text, viewFont) + 8);
+		l10 := FontHeight(viewFont);
+		(viewBounds := RelBounds((l8 - l9), (23 - (l10 div 2)), l9, l10))
+	end,
+	PadText: func(a1) begin
+		a1
+	end,
+	viewDrawScript: func() begin
+		nil
+	end,
+	viewClickScript: func(a1) begin
+		(if showit then inherited:viewClickScript(a1))
+	end,
+	buttonClickScript: func() begin
+		popup := [Array: ];
+		local l1;
+		(foreach l2 in transports do begin
+				local l4;
+				if (if (if (l4 := GetRoot().(l2)) then (l4.group = transport.group)) then SetOverlaps(routingTypes, l4.dataTypes)) then begin
+						AddArraySlot(popup, {item: l4.title, transportSym: l4.appSymbol})
+					end
+			end);
+		inherited:buttonClickScript()
+	end,
+	pickActionScript: func(a1) begin
+		local l1, l2, l3, l4;
+		if self:?TransportChanged((l1 := EnsureInternal(popup[a1].transportSym))) then begin
+				return inherited:pickCancelledScript()
+			end;
+		if ((l2 := GetUserConfig('transportGroups)) = nil) then begin
+				l2 := {}
+			end;
+		l2.(EnsureInternal(transport.group)) := l1;
+		SetUserConfig('transportGroups, l2);
+		inherited:pickActionScript(a1);
+		(if (transport.appSymbol <> l1) then (if (l3 := GetRoot().(l1)) then begin
+					OpenRoutingSlip((l4 := l3:NewItem(targetView)), base);
+					base:Close()
+				end))
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewClickScript_code := same("protoTransportPopup.viewClickScript.instructions");

@@ -1,0 +1,3 @@
+// canonicalGestaltRebootInfo, and what only it reaches
+
+canonicalGestaltRebootInfo := {rebootreason: nil, rebootCount: nil};

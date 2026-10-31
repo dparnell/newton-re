@@ -1,5 +1,0 @@
-@@ 0x4c84c1
-func() begin
-	self:preview(fields)
-end
-@@end

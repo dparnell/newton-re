@@ -1,0 +1,31 @@
+// newtFilter, and what only it reaches
+
+newtFilter := {
+	_parent: nil,
+	recFlags: nil,
+	recTextFlags: nil,
+	recConfig: nil,
+	dictionaries: nil,
+	PathToText: func() begin
+		nil
+	end,
+	TextToPath: func(a1) begin
+		nil
+	end,
+	picker: nil,
+	PathQuery: func(a1) begin
+		nil
+	end,
+	QueryItem: func(a1, a2) begin
+		nil
+	end,
+	ResolveItem: func(a1) begin
+		nil
+	end,
+	EntryToPath: func(a1) begin
+		nil
+	end,
+	ChooseItem: func(a1) begin
+		nil
+	end
+};

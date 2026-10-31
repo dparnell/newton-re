@@ -1,8 +1,0 @@
-@@ 0x10161ed
-func() begin
-	if inetMgr then begin
-			text := inetMgr.name
-		end;
-	inherited:?viewSetupFormScript()
-end
-@@end

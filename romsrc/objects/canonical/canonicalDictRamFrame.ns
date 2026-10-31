@@ -1,0 +1,3 @@
+// canonicalDictRamFrame, and what only it reaches
+
+canonicalDictRamFrame := {_proto: nil, dict: nil, ROMDictID: nil};

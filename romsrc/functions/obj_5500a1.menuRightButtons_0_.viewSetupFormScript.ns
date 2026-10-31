@@ -1,6 +1,0 @@
-@@ 0x54feb5
-func() begin
-	routingButton := self;
-	inherited:?viewSetupFormScript()
-end
-@@end

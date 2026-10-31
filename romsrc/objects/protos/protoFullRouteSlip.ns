@@ -1,0 +1,134 @@
+// protoFullRouteSlip, and what only it reaches
+
+protoFullRouteSlip := {
+	viewSetupFormScript: func() begin
+		if firstTime then begin
+				if (if formats then (Length(formats) > 1)) then begin
+						bottomIndent := ((bottomIndent + 13) + 8)
+					end;
+				if GetUserConfig('KSimpleMode) then begin
+						senderPopup.viewFlags := 0
+					end
+			end;
+		inherited:viewSetupFormScript()
+	end,
+	PrepareToSend: func(a1) begin
+		self:ContinueSend(a1)
+	end,
+	ContinueSend: func(when) begin
+		(if (when = 'readdress) then begin
+				transport:itemchanged(fields);
+				base:Close()
+			end else begin
+				base:AnimateSend();
+				AddDelayedCall(func() begin
+					(if sendButton then sendButton:SubmitIt(when))
+				end, nil, 1000)
+			end)
+	end,
+	SlipClosed: func() begin
+		(if (Editing or (fields.state = 'pending)) then self:PrepareToSend('readdress) else base:Close())
+	end,
+	viewChildren: [viewChildren: senderPopup, fromTransport, formatPicker, _closeBox, sendButton],
+	senderPopup: nil,
+	allocateContext: [|Array|:
+		'senderPopup,
+		senderPopup,
+		'fromTransport,
+		fromTransport,
+		'formatPicker,
+		formatPicker,
+		'_closeBox,
+		_closeBox,
+		'sendButton,
+		sendButton
+	],
+	fromTransport: nil,
+	formatPicker: nil,
+	_closeBox: nil,
+	sendButton: nil,
+	_proto: @protoRouteSlip,
+	ReOrientToScreen: @defRotateFunc
+};
+
+senderPopup := {
+	JamIt: func() begin
+		if fields.fromRef then begin
+				fields.fromRef := GetUserConfig('currentPersona)
+			end;
+		self:?OwnerInfoChanged();
+		inherited:?JamIt()
+	end,
+	preallocatedContext: 'senderPopup,
+	_proto: @protoSenderPopup
+};
+
+fromTransport := {preallocatedContext: 'fromTransport, _proto: @protoTransportPopup};
+
+formatPicker := {
+	viewBounds: {left: 10, top: 0, right: 130, bottom: 16},
+	lastCmd: nil,
+	viewSetupFormScript: func() begin
+		viewBounds := DeepClone(viewBounds);
+		if (if formats then (Length(formats) > 1)) then begin
+				viewBounds.top := (envelopeHeight + 8);
+				viewBounds.bottom := (viewBounds.top + 16);
+				viewBounds.right := (envelopeWidth - 10)
+			end else begin
+				self.viewFlags := BAnd(self.viewFlags, bnot(1))
+			end;
+		inherited:viewSetupFormScript()
+	end,
+	LabelActionScript: func(a1) begin
+		lastCmd := a1;
+		if self:?FormatChanged(formats[a1]) then begin
+				return nil
+			end;
+		if auxUp then begin
+				auxUp:Close()
+			end;
+		auxUp := nil;
+		inherited:LabelActionScript(a1)
+	end,
+	revertCommand: func() begin
+		self:UpdateText(labelCommands[lastCmd])
+	end,
+	preallocatedContext: 'formatPicker,
+	_proto: @protoFormatPicker
+};
+
+_closeBox := {
+	viewBounds: {left: -24, top: 0, right: -11, bottom: 13},
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH,
+	viewSetupFormScript: func() begin
+		(viewBounds := DeepClone(viewBounds)).top := (((envelopeHeight + bottomIndent) - 19) - 2);
+		(viewBounds.bottom := (viewBounds.top + 13))
+	end,
+	buttonClickScript: func() begin
+		local l1;
+		(try begin
+				self:SlipClosed()
+			end onexception |evt.ex| do begin
+				if ((l1 := CurrentException().error) = -10605) then begin
+						inherited:?buttonClickScript()
+					end;
+				Rethrow()
+			end)
+	end,
+	preallocatedContext: '_closeBox,
+	_proto: @protoCancelButton
+};
+
+sendButton := {
+	PrepareForSubmission: func(a1) begin
+		self:PrepareToSend(a1)
+	end,
+	preallocatedContext: 'sendButton,
+	_proto: @protoSendButton
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_31 := same("_closeBox.viewSetupFormScript.instructions");
+
+PrepareForSubmission_code := same("sendButton.PrepareForSubmission.instructions");

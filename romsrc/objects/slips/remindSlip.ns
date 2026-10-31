@@ -1,0 +1,154 @@
+// remindSlip, and what only it reaches
+
+remindSlip := {
+	viewBounds: {left: 0, top: 0, right: 218, bottom: 184},
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	totMin: nil,
+	title: nil,
+	declareSelf: 'base,
+	priority: 3,
+	rotationInProgress: nil,
+	ReOrientToScreen: func() begin
+		rotationInProgress := true;
+		self:Close();
+		self:Open()
+	end,
+	viewSetupFormScript: func() begin
+		rotationInProgress := nil;
+		inherited:?viewSetupFormScript()
+	end,
+	viewSetupDoneScript: func() begin
+		local l1;
+		SetKeyView((l1 := meetingTitle.entryLine), 9999)
+	end,
+	viewQuitScript: func() begin
+		(if (not rotationInProgress) then begin
+				totMin := nil;
+				title := nil;
+				RemoveSlot(self, 'priority)
+			end)
+	end,
+	debug: 42186,
+	preallocatedContext: 'remindSlip,
+	viewChildren: [viewChildren:
+		{
+			buttonClickScript: func() begin
+				remindSlip:Close()
+			end,
+			debug: -382561072,
+			_proto: @protoCancelButton
+		},
+		_defaultButton_15,
+		{titleicon: smallIcon_3, title: toDoTask, _proto: @protoTitle},
+		meetingTitle,
+		{
+			viewBounds: {left: 0, top: 3, right: 198, bottom: 21},
+			label: date,
+			labelFont: tsSystem + tsSize(9) + tsBold,
+			viewJustify: vjCenterV + vjSiblingBottomV,
+			longFormat: 'abbrDateStrSpec,
+			entryFont: tsHWFont + tsSize(10),
+			viewSetupFormScript: func() begin
+				(Date := totMin)
+			end,
+			pickActionScript: func(a1) begin
+				local l1;
+				l1 := a1[0];
+				dirtyFlag := true;
+				totMin := (l1 - (l1 mod 1440));
+				inherited:pickActionScript(a1)
+			end,
+			_proto: @protoDateTextPicker
+		},
+		{
+			viewFont: tsSystem + tsSize(9) + tsBold,
+			viewBounds: {left: 0, top: 3, right: 2, bottom: 20},
+			viewJustify: 8396848,
+			text: "Priority",
+			iconBounds: {left: 0, top: 0, right: 16, bottom: 16},
+			labelCommands: nil,
+			priorityItems: @priorityItems,
+			viewLineSpacing: 12,
+			viewSetupFormScript: func() begin
+				labelCommands := [Array: {item: "High", icon: priorityItems[0], indent: 18}, {item: "Medium", icon: priorityItems[1]}, {item: "Low", icon: priorityItems[2]}, {item: "None", icon: priorityItems[3]}];
+				inherited:?viewSetupFormScript()
+			end,
+			iconSetup: func() begin
+				labelCommands[3].icon
+			end,
+			LabelActionScript: func(a1) begin
+				(priority := a1)
+			end,
+			TextSetup: func() begin
+				return labelCommands[3].item
+			end,
+			_proto: @protoLabelPicker
+		}
+	],
+	_defaultButton: nil,
+	allocateContext: [|Array|: '_defaultButton, _defaultButton_15, 'meetingTitle, meetingTitle],
+	meetingTitle: nil,
+	_proto: @protoFloater,
+	_cacheContext: {
+		_parent: nil,
+		_proto: nil,
+		viewCObject: nil,
+		totMin: nil,
+		title: nil,
+		rotationInProgress: nil,
+		viewclipper: nil,
+		base: nil,
+		viewFlags: vFloating + vClickable,
+		_defaultButton: nil,
+		meetingTitle: nil
+	}
+};
+
+_defaultButton_15 := {
+	viewBounds: {left: -27, top: 0, right: -7, bottom: 13},
+	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingCenterV,
+	text: do_2,
+	buttonClickScript: func() begin
+		local l1, l2;
+		l1 := GetRoot().calendar;
+		ClearUndoStacks();
+		if (not whoIsUp('calendar)) then begin
+				l1:Open()
+			end;
+		l2 := l1:GetToDo();
+		l2:CreateToDoItemAll(totMin, title, nil, nil, priority, nil);
+		l1:ShowToDoList(totMin);
+		remindSlip:Close()
+	end,
+	preallocatedContext: '_defaultButton,
+	_proto: @protoTextButton
+};
+
+meetingTitle := {
+	debug: 156805,
+	viewFont: tsHWFont + tsSize(12),
+	viewBounds: {left: 0, top: 16, right: -12, bottom: 112},
+	entryFlags: 326145,
+	viewJustify: 8388656,
+	label: title_2,
+	memory: 'todoTitle,
+	textFlags: 24,
+	viewLineSpacing: 30,
+	text: nil,
+	TextSetup: func() begin
+		(if (title <> nil) then title else "")
+	end,
+	textChanged: func() begin
+		(title := MakeRichString(text, styles))
+	end,
+	preallocatedContext: 'meetingTitle,
+	_proto: @protoRichLabelInputLine
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupDoneScript_code_6 := same("remindSlip.viewSetupDoneScript.instructions");
+
+ReOrientToScreen_code := same("remindSlip.ReOrientToScreen.instructions");
+
+viewSetupFormScript_literal4_2 := same("remindSlip.viewChildren[5].viewSetupFormScript.literals[4]");

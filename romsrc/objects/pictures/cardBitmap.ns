@@ -1,0 +1,29 @@
+// cardBitmap, and what only it reaches
+
+cardBitmap := {
+	unhilited: {
+		bounds: unhilitedBounds_18,
+		mask: bitmap('mask, "resources/mask/5405b1.png", "000000000004000000000000001a0013", 1),
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/5406b9.png", "00000000000c000000000000001a0013", 4),
+				bitdepth: 4
+			},
+			{cbits: colordataCbits_18, bitdepth: 1}
+		]
+	},
+	hilited: {
+		bounds: {left: 0, top: 0, right: 19, bottom: 26},
+		mask: bitmap('mask, "resources/mask/5402e5.png", "000000000004000000000000001a0013", 1),
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/5403ed.png", "00000000000c000000000000001a0013", 4),
+				bitdepth: 4
+			},
+			{
+				cbits: bitmap('bits, "resources/bits/540369.png", "000000000004000000000000001a0013", 1),
+				bitdepth: 1
+			}
+		]
+	}
+};

@@ -1,0 +1,21 @@
+// rulerPicts, and what only it reaches
+
+rulerPicts := [|Array|:
+	bitmap('bits, "resources/bits/46e5ad.png", "0000000000040191019100b5019f00c8", 1),
+	bitmap('bits, "resources/bits/46e601.png", "0000000000040191019100cb019f00de", 1),
+	bitmap('bits, "resources/bits/46e655.png", "0000000000040191019100e1019f00f4", 1),
+	bitmap('bits, "resources/bits/46e6a9.png", "0000000000040191019100f7019f010a", 1),
+	bitmap('bits, "resources/bits/46e6fd.png", "00000000000400a800a800fa00ae0105", 1),
+	bitmap('bits, "resources/bits/46e731.png", "00000000000400a800a800fa00ae0105", 1),
+	bitmap('bits, "resources/bits/46e765.png", "00000000000400a800a800fa00ae0105", 1),
+	bitmap('bits, "resources/bits/46e799.png", "00000000000400a800a800fa00ae0105", 1),
+	bitmap('bits, "resources/bits/46e7cd.png", "000000000004018d018d0034019b0047", 1),
+	bitmap('bits, "resources/bits/46e821.png", "000000000004018d018d004a019b005d", 1),
+	bitmap('bits, "resources/bits/46e875.png", "000000000004018d018d0060019b0073", 1),
+	bitmap('bits, "resources/bits/46e8c9.png", "000000000004018d018d0076019b0089", 1),
+	bitmap('bits, "resources/bits/46e91d.png", "000000000004009d009d004b00a60052", 1),
+	bitmap('bits, "resources/bits/46e95d.png", "000000000004009e009e002e00a70034", 1),
+	bitmap('bits, "resources/bits/46e99d.png", "00000000000400ae00ae013400b70139", 1),
+	bitmap('bits, "resources/bits/46e9dd.png", "00000000000401970197017601a50182", 1),
+	bitmap('bits, "resources/bits/46ea31.png", "00000000000401970197018201a5018e", 1)
+];

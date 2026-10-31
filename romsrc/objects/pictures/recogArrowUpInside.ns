@@ -1,0 +1,6 @@
+// recogArrowUpInside, and what only it reaches
+
+recogArrowUpInside := {
+	bits: bitmap('bits, "resources/bits/3d8c15.png", "0000000000040054005402d1006102e6", 1),
+	bounds: {left: 0, top: 0, right: 21, bottom: 13}
+};

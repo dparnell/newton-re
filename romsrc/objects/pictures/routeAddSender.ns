@@ -1,0 +1,6 @@
+// routeAddSender, and what only it reaches
+
+routeAddSender := {
+	bits: bitmap('bits, "resources/bits/463ac5.png", "00000000000401a101a100c901ac00df", 1),
+	bounds: {left: 0, top: 0, right: 22, bottom: 11}
+};

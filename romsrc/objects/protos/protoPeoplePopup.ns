@@ -1,0 +1,56 @@
+// protoPeoplePopup, and what only it reaches
+
+protoPeoplePopup := {
+	viewJustify: vjParentCenterH + vjParentBottomV,
+	viewBounds: {left: 0, top: -235, right: 238, bottom: 0},
+	viewFlags: vApplication + vFloating,
+	viewFormat: vfFillWhite + vfRound(2),
+	viewEffect: 133120,
+	selected: nil,
+	dataClass: nil,
+	context: nil,
+	ReOrientToScreen: @defRotateFunc,
+	Init: func() begin
+		BuildContext({_proto: self})
+	end,
+	New: func(a1, a2, a3, a4) begin
+		(pop := self:Init()).dataClass := a1;
+		pop.context := a3;
+		pop.selected := a2;
+		pop.options := a4;
+		pop:Open();
+		pop
+	end,
+	stepChildren: [stepChildren: list],
+	list: nil,
+	stepallocatecontext: [|Array|: 'list, list],
+	_proto: @protoFloatNGo
+};
+
+list := {
+	_proto: @protoPeoplePicker,
+	viewSetupFormScript: func() begin
+		if options then begin
+				(foreach l1, l2 in options do begin
+						self.(l1) := l2
+					end)
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	viewQuitScript: func() begin
+		inherited:?viewQuitScript();
+		(if (if context then (context:pickActionScript exists)) then 'postQuit)
+	end,
+	viewPostQuitScript: func() begin
+		context:pickActionScript(selected)
+	end,
+	preallocatedContext: 'list
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+Init_code_2 := same("protoPeoplePopup.Init.instructions");
+
+viewSetupFormScript_code_4 := same("list.viewSetupFormScript.instructions");
+
+viewPostQuitScript_code := same("list.viewPostQuitScript.instructions");

@@ -1,0 +1,215 @@
+// protoDesktopEndpoint, and what only it reaches
+
+protoDesktopEndpoint := {
+	ReadCommandHeader: {class: #132, funcPtr: 7012369, numArgs: 1},
+	ProcessBuiltinCommand: {class: #132, funcPtr: 7013409, numArgs: 0},
+	lastcommunicationwithdesktop: 0,
+	idleUseCount: nil,
+	whichIcons: nil,
+	InstallAnyProtocolExtension: {class: #132, funcPtr: 7012364, numArgs: 2},
+	maxIdleTime: 300,
+	ReadBytes: {class: #132, funcPtr: 7012366, numArgs: 2},
+	StopIdle: func(a1) begin
+		local l1;
+		(if (idleUseCount > 0) then (if (not a1) then (idleUseCount := (idleUseCount - 1)) else (if (l1 := LSearch(idlingViews, a1, 0, '|=|, nil)) then begin
+						ArrayRemoveCount(idlingViews, l1, 1);
+						idleUseCount := (idleUseCount - 1);
+						a1:SetupIdle(0)
+					end)))
+	end,
+	Disconnecting: nil,
+	lastHello: 0,
+	connected: nil,
+	idlingViews: nil,
+	packageCallback: nil,
+	ConnInstantiate: {class: #132, funcPtr: 7012365, numArgs: 0},
+	ReadCommand: {class: #132, funcPtr: 7012367, numArgs: 1},
+	callWhenDone: nil,
+	Abort: {class: #132, funcPtr: 7012354, numArgs: 1},
+	DoKeyboardPassthrough: {class: #132, funcPtr: 7012359, numArgs: 0},
+	GetState: {class: #132, funcPtr: 7012377, numArgs: 0},
+	RetryPassword: {class: #132, funcPtr: 7012371, numArgs: 1},
+	ConnectionDone: func(a1) begin
+		local l1;
+		(if (not closingDown) then begin
+				if (not a1) then begin
+						a1 := -1
+					end;
+				closingDown := true;
+				if connected then begin
+						try begin
+								self:Abort(a1)
+							end onexception |evt.ex| do begin
+								l1 := CurrentException().error;
+								if (if (if (a1 = 0) then l1) then (l1 <> -28009)) then begin
+										a1 := l1
+									end
+							end
+					end;
+				if (if (callWhenDone exists) then callWhenDone) then begin
+						call callWhenDone with (a1)
+					end;
+				if (if (secretDoneCallback exists) then secretDoneCallback) then begin
+						call secretDoneCallback with (self)
+					end;
+				UnRegPowerOff('Connection);
+				UnRegPowerOn('Connection);
+				connected := nil;
+				idlingViews := nil;
+				(idleUseCount := 0)
+			end)
+	end,
+	GetSyncChanges: {class: #132, funcPtr: 7012363, numArgs: 0},
+	stop: {class: #132, funcPtr: 7012373, numArgs: 0},
+	DesktopType: {class: #132, funcPtr: 7012357, numArgs: 0},
+	IdleConnection: compile(
+		constants: {
+			kLiteral_472c5d: "helo"
+		},
+		func(a1) begin
+			local l1, l2, l3;
+			if (((idleUseCount = 0) or closingDown) or (not connected)) then begin
+					return 0
+				end;
+			if a1 then begin
+					try begin
+							if (self:BytesAvailable() >= 2) then begin
+									l1 := self:ReadCommand(nil);
+									if StrEqual("opca", l1.command) then begin
+											self:WriteCommand("ocaa", nil, nil);
+											return 0
+										end else begin
+											if StrEqual("disc", l1.command) then begin
+													self:ConnectionDone(0);
+													return 0
+												end else begin
+													if (not StrEqual(kLiteral_472c5d, l1.command)) then begin
+															Throw('|evt.ex.error|, -28012)
+														end
+												end
+										end
+								end
+						end onexception |evt.ex| do begin
+							if ((l2 := CurrentException().error) <> -28009) then begin
+									self:ConnectionDone(l2)
+								end
+						end;
+					if closingDown then begin
+							return 0
+						end
+				end;
+			if (if (if (maxIdleTime <> nil) then ((TimeInSeconds() - lastcommunicationwithdesktop) > maxIdleTime)) then (BatteryStatus(0).acPower <> 'yes)) then begin
+					self:ConnectionDone(-28024);
+					return 0
+				end;
+			if (lastHello < lastcommunicationwithdesktop) then begin
+					lastHello := lastcommunicationwithdesktop
+				end;
+			if ((l3 := ((TimeInSeconds() - lastHello) * 1000)) < 0) then begin
+					lastHello := TimeInSeconds()
+				end;
+			if (l3 >= 5000) then begin
+					try begin
+							self:WriteCommand(kLiteral_472c5d, nil, nil);
+							lastHello := TimeInSeconds()
+						end onexception |evt.ex| do begin
+							if ((l2 := CurrentException().error) <> -28009) then begin
+									self:ConnectionDone(l2)
+								end
+						end
+				end;
+			return 1000
+		end),
+	closingDown: nil,
+	WriteCommandHeader: {class: #132, funcPtr: 7012376, numArgs: 2},
+	DoConnection: {class: #132, funcPtr: 7012358, numArgs: 2},
+	Connect: {class: #132, funcPtr: 7012356, numArgs: 2},
+	ReadCommandData: {class: #132, funcPtr: 7012368, numArgs: 0},
+	percentDone: 0,
+	FlushCommandData: {class: #132, funcPtr: 7012361, numArgs: 0},
+	RemoveProtocolExtension: {class: #132, funcPtr: 7012370, numArgs: 1},
+	Instantiate: func(a1, a2) begin
+		self.appSymbol := a1;
+		self.appName := a2;
+		self.closingDown := nil;
+		self.idleUseCount := 0;
+		self.idlingViews := nil;
+		if (not self.packageCallback) then begin
+				self.packageCallback := func(a1) begin
+					self.percentDone := (if (if (if a1 then a1.packageSize) then a1.amountRead) then ceiling(((a1.amountRead / a1.packageSize) * 100)) else 100);
+					(self.packageName := a1.packageName)
+				end
+			end;
+		self:ConnInstantiate();
+		thefunc := func(a1) begin
+			local l1, l2;
+			l1 := self:ReadCommandData();
+			l2 := GetRoot().Connection:GetAppNames(self, l1);
+			self:WriteCommand("appn", l2, true);
+			return nil
+		end;
+		self:InstallAnyProtocolExtension("gapp", thefunc);
+		if (if vars.protocolExtensions then IsArray(vars.protocolExtensions)) then begin
+				(foreach l1 in vars.protocolExtensions do begin
+						if (if IsArray(l1) then (Length(l1) = 2)) then begin
+								self:InstallAnyProtocolExtension(l1[0], l1[1])
+							end
+					end)
+			end;
+		lastcommunicationwithdesktop := TimeInSeconds();
+		powerOnCallback := func(a1) begin
+			(if (if (a1 = 'emergencyPowerOn) then connected) then self:ConnectionDone(0))
+		end;
+		RegPowerOn('Connection, powerOnCallback);
+		powerOffCallback := func(a1, a2) begin
+			if (a1 = 'okToPowerOff) then begin
+					return (if connected then nil else true)
+				end;
+			if (a1 = 'PowerOff) then begin
+					return true
+				end;
+			return nil
+		end;
+		RegPowerOff('Connection, powerOffCallback)
+	end,
+	StartIdle: func(a1, a2) begin
+		(if (not a1) then (idleUseCount := (idleUseCount + 1)) else begin
+				if (not idlingViews) then begin
+						idlingViews := [Array: a1];
+						idleUseCount := (idleUseCount + 1)
+					end else begin
+						if (not LSearch(idlingViews, a1, 0, '|=|, nil)) then begin
+								AddArraySlot(idlingViews, a1);
+								idleUseCount := (idleUseCount + 1)
+							end
+					end;
+				a1:SetupIdle(a2)
+			end)
+	end,
+	WriteBytes: {class: #132, funcPtr: 7012374, numArgs: 1},
+	InstallProtocolExtension: func(a1, a2) begin
+		l1 := Downcase(Clone(a1));
+		l2 := true;
+		local l1;
+		local l2;
+		(for l3 := 0 to (StrLen(l1) - 1) do begin
+				if (ORD(l1[l3]) <> ORD(a1[l3])) then begin
+						l2 := nil;
+						break
+					end
+			end);
+		if l2 then begin
+				Throw('|evt.ex.error|, -28020)
+			end;
+		self:InstallAnyProtocolExtension(a1, a2)
+	end,
+	SetState: {class: #132, funcPtr: 7012372, numArgs: 1},
+	protocolversion: 11,
+	BytesAvailable: {class: #132, funcPtr: 7012355, numArgs: 0},
+	GetCurrentStore: {class: #132, funcPtr: 7012362, numArgs: 0},
+	WriteCommand: {class: #132, funcPtr: 7012375, numArgs: 3}
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+IdleConnection_literal11 := same("protoDesktopEndpoint.IdleConnection.literals[11]");

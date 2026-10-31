@@ -1,0 +1,26 @@
+// newtSmartPhoneFilter, and what only it reaches
+
+newtSmartPhoneFilter := {
+	_proto: @newtPhoneFilter,
+	PathQuery: func(a1) begin
+		Query(GetUnionSoup(@cardfileSoupName), {type: 'words, words: a1})
+	end,
+	QueryItem: func(a1, a2) begin
+		local l1, l2;
+		(if a1.phones then (if (l1 := FindStringInFrame(a1.phones, a2, true)) then begin
+					l2 := a1.phones[l1[1]];
+					{item: ParamStr("^0 ^?1(^1)||", [Array: MakeDisplayPhone(l2), PhoneTypes.phoneText.(ClassOf(l2))]), id: MakeEntryAlias(a1)}
+				end))
+	end,
+	ResolveItem: func(a1) begin
+		targetView:jamFromEntry(ResolveEntryAlias(a1.id))
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+QueryItem_literal9 := same("newtSmartPhoneFilter.QueryItem.literals[9]");
+
+PathQuery_code := same("newtSmartPhoneFilter.PathQuery.instructions");
+
+ResolveItem_code := same("newtSmartPhoneFilter.ResolveItem.instructions");

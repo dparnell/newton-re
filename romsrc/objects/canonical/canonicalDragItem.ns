@@ -1,0 +1,3 @@
+// canonicalDragItem, and what only it reaches
+
+canonicalDragItem := {dragRef: nil, label: nil, types: nil, view: nil};

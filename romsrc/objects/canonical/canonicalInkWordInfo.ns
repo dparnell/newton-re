@@ -1,0 +1,19 @@
+// canonicalInkWordInfo, and what only it reaches
+
+canonicalInkWordInfo := {
+	origWidth: nil,
+	origAscent: nil,
+	origDescent: nil,
+	origXHeight: nil,
+	fontFace: nil,
+	scale: nil,
+	origPenSize: nil,
+	origFontSize: nil,
+	curFontSize: nil,
+	curPenSize: nil,
+	curWidth: nil,
+	curHeight: nil,
+	curAscent: nil,
+	curXHeight: nil,
+	curDescent: nil
+};

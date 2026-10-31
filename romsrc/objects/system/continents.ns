@@ -1,0 +1,102 @@
+// continents, and what only it reaches
+
+continents := {
+	continentalUSA: {
+		name: "Continental US",
+		topLatitude: 74565404,
+		leftLongitude: 343000860,
+		bottomLatitude: 32808777,
+		rightLongitude: 441427194
+	},
+	Japan: {
+		name: "Japanese Archipelago",
+		topLatitude: 68600172,
+		leftLongitude: 189396127,
+		bottomLatitude: 29826161,
+		rightLongitude: 231152753
+	},
+	northAmerica: {
+		name: "North America",
+		topLatitude: 104391566,
+		leftLongitude: 343000860,
+		bottomLatitude: 32808777,
+		rightLongitude: 447392426
+	},
+	centralAmerica: {
+		name: "Caribbean",
+		topLatitude: 49213166,
+		leftLongitude: 360896557,
+		bottomLatitude: 7456540,
+		rightLongitude: 454848967
+	},
+	southAmerica: {
+		name: "South America",
+		topLatitude: 17895697,
+		leftLongitude: 414583648,
+		bottomLatitude: 447392426,
+		rightLongitude: 486166436
+	},
+	europe: {
+		name: "Europe",
+		topLatitude: 104391566,
+		leftLongitude: 499588209,
+		bottomLatitude: 49213166,
+		rightLongitude: 59652323
+	},
+	middleEast: {
+		name: "Middle East",
+		topLatitude: 64126247,
+		leftLongitude: 37282702,
+		bottomLatitude: 7456540,
+		rightLongitude: 96935025
+	},
+	africa: {
+		name: "Africa",
+		topLatitude: 56669707,
+		leftLongitude: 510027366,
+		bottomLatitude: 480201204,
+		rightLongitude: 82021944
+	},
+	Australia: {
+		name: australia,
+		topLatitude: 521957831,
+		leftLongitude: 167026505,
+		bottomLatitude: 465288123,
+		rightLongitude: 266944147
+	},
+	Indonesia: {
+		name: "South Asia",
+		topLatitude: 29826161,
+		leftLongitude: 137200344,
+		bottomLatitude: 514501290,
+		rightLongitude: 234135369
+	},
+	indian: {
+		name: "Indian Pennisula",
+		topLatitude: 56669707,
+		leftLongitude: 89478485,
+		bottomLatitude: 0,
+		rightLongitude: 141674268
+	},
+	Russia: {
+		name: russia,
+		topLatitude: 96935025,
+		leftLongitude: 37282702,
+		bottomLatitude: 59652323,
+		rightLongitude: 253522375
+	},
+	eastAsia: {
+		name: "East Asia",
+		topLatitude: 80530636,
+		leftLongitude: 149130808,
+		bottomLatitude: 14913080,
+		rightLongitude: 223696213
+	},
+	oceania: {
+		name: "Pacific Ocean",
+		topLatitude: 29826161,
+		leftLongitude: 238609294,
+		bottomLatitude: 447392426,
+		rightLongitude: 425022805
+	}
+};

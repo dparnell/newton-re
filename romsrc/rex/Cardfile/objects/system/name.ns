@@ -1,0 +1,129 @@
+// name, and what only it reaches
+
+name := {
+	stepChildren: [|Array|: nameItem, nameItem_2, nameItem_3],
+	name: affiliate,
+	symbol: 'name,
+	type: 'editor,
+	infoFrame: {
+		checkPrefix: [|Array|: nil, [pathExpr: 'names]],
+		checkPaths: [|Array|: 'honorific, 'first, 'last, 'title],
+		format: format
+	},
+	viewSetupChildrenScript: func() begin
+		stepChildren := Clone(stepChildren);
+		if (target.class = 'company) then begin
+				AddArraySlot(stepChildren, title)
+			end else begin
+				AddArraySlot(stepChildren, affiliate)
+			end;
+		inherited:?viewSetupChildrenScript()
+	end,
+	protection: 'private,
+	fieldOrder: [|Array|: 0, 1, 2],
+	nameByClass: {person: affiliate, company: affiliate},
+	_proto: @8240,
+	first: nil,
+	stepAllocateContext: [|Array|:
+		'first,
+		nameItem,
+		'last,
+		nameItem_2,
+		'honorific,
+		nameItem_3,
+		'affiliate,
+		{
+			path: nil,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+			viewLineSpacing: 32,
+			label: "Affiliation",
+			labelCommands: [|Array|: "Spouse", "Child", "Relative", "Assistant"],
+			addPath: 'title,
+			memory: 'affiliation,
+			flavor: @newtCustomFilter,
+			newRecFlags: 8428033,
+			_proto: @newtLabelInputLine,
+			preAllocatedContext: 'affiliate
+		},
+		'title,
+		{addPath: 'title, memory: 'personTitle, _proto: @8248, preAllocatedContext: 'title},
+		'reading,
+		{
+			path: nil,
+			flavor: @newtCustomFilter,
+			label: label,
+			newDictionaries: newDictionaries,
+			addPath: 'nameReading,
+			viewSetupFormScript: func() begin
+				if (selectedPath <> true) then begin
+						RemoveSlot(self, 'viewChangedScript)
+					end;
+				inherited:?viewSetupFormScript()
+			end,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 67},
+			viewLineSpacing: 30,
+			_proto: addressItem_5Proto,
+			preAllocatedContext: 'reading
+		}
+	],
+	last: nil,
+	honorific: nil,
+	affiliate: nil,
+	title: nil,
+	reading: nil
+};
+
+nameItem := {
+	path: nil,
+	flavor: @newtCustomFilter,
+	label: first,
+	newDictionaries: newDictionaries,
+	addPath: 'first,
+	viewSetupFormScript: func() begin
+		if (selectedPath <> true) then begin
+				RemoveSlot(self, 'viewChangedScript)
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	_proto: addressItem_5Proto,
+	preAllocatedContext: 'first
+};
+
+nameItem_2 := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+	viewLineSpacing: 32,
+	flavor: @newtCustomFilter,
+	label: last,
+	newDictionaries: newDictionaries_2,
+	memory: 'lastName,
+	addPath: 'last,
+	_proto: @newtLabelInputLine,
+	preAllocatedContext: 'last
+};
+
+nameItem_3 := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+	viewLineSpacing: 32,
+	flavor: @newtCustomFilter,
+	label: nil_2,
+	labelCommands: nil,
+	newDictionaries: nil,
+	viewSetupFormScript: func() begin
+		local l1;
+		newDictionaries := (l1 := GetLocale()).recogHonorificDictionaries;
+		labelCommands := l1.commonHonorifics;
+		label := l1.honorificLabel;
+		inherited:?viewSetupFormScript()
+	end,
+	addPath: 'honorific,
+	_proto: @newtLabelInputLine,
+	preAllocatedContext: 'honorific
+};
+
+affiliate := "Affiliate";
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_7 := same("name.stepAllocateContext[11].viewSetupFormScript.instructions");

@@ -1,0 +1,19 @@
+// export6, and what only it reaches
+
+export6 := {
+	initialSetup: {
+		name: 'vBarber,
+		values: {statusText: "Exchanging cards", barber: true, closeBox: nil},
+		appSymbol: 'cardfile
+	},
+	CancelRequest: func(a1) begin
+		beamer:Cancel();
+		base:Close();
+		(GetRoot().cardfile.barber := nil)
+	end,
+	viewIdleScript: func() begin
+		self:UpdateIndicator(initialSetup);
+		500
+	end,
+	_proto: @protoStatusTemplate
+};

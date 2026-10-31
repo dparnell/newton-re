@@ -1,5 +1,0 @@
-@@ 0x101aa1d
-func(a1) begin
-	(if (Length(a1[0]) = 4) then (if (whichOne = 0) then ParamStr("Primary DNS/Name Server Address: ^0.^1.^2.^3", [Array: a1[0][0], a1[0][1], a1[0][2], a1[0][3]]) else ParamStr("Alternate DNS/Name Server Address: ^0.^1.^2.^3", [Array: a1[0][0], a1[0][1], a1[0][2], a1[0][3]])) else "")
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x7aec49
-func(a1) begin
-	(dateValue := a1[0])
-end
-@@end

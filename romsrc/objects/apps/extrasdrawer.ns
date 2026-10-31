@@ -1,0 +1,1497 @@
+// extrasdrawer, and what only it reaches
+
+extrasdrawer := {
+	systemFoldersToo: true,
+	SizeForRows: func(a1) begin
+		local l1, l2;
+		(if (a1 <> nRows) then begin
+				nRows := a1;
+				l1 := Clone(viewBounds);
+				l2 := ((nRows * vSpacing) + 13);
+				l1.top := (l1.bottom - (l2 + 50));
+				if (l1.top < ((-displayParams.appAreaHeight) + 6)) then begin
+						l1.top := (-displayParams.appAreaHeight)
+					end;
+				(if viewCObject then SetValue(self, 'viewBounds, l1) else (viewBounds := l1))
+			end)
+	end,
+	hSpacing: nil,
+	Fileit: func() begin
+		local l1;
+		self:GenericActionScript((l1 := func(a1) begin
+			local l1;
+			if (if (if ((l1 := (if (if fakeTarget.storeChanged then (fakeTarget.newStore <> a1.target:store())) then a1.target:Preflight('move, fakeTarget.kids) else 'OK)) = 'OK) then fakeTarget.labelsChanged) then (fakeTarget.labels <> a1.target.fentry.labels)) then begin
+					l1 := a1.target:Preflight('Filing, fakeTarget.kids)
+				end;
+			l1
+		end), 'FileSelectedIcons, true, "file ^1", "This icon can\u2019\ut be filed^?0 because it is ^0||.", "These icons can\u2019\ut be filed^?0 because they are ^0||.")
+	end,
+	RedoIcons: func() begin
+		self:RedoIconsAfterDrop(true)
+	end,
+	GetTargetInfo: func(a1) begin
+		{target: (if (a1 = 'Routing) then fakeTarget.packs else fakeTarget), targetType: 'package, targetView: base, targetStore: fakeTarget.targetStore}
+	end,
+	localFoldersOnly: true,
+	GetPartCursor: compile(
+		constants: {
+			kLiteral_5a74d1: "Packages",
+			kFunction_554015: func(a1, a2) begin
+				if IsSymbol(a1) then begin
+						a1 := [Array: a1]
+					end;
+				if IsSymbol(a2) then begin
+						a2 := [Array: a2]
+					end;
+				SetUnion(a1, a2, true)
+			end
+		},
+		func(a1, a2, a3) begin
+			(if (l1 := (if a2 then a2:GetSoup(kLiteral_5a74d1) else GetUnionSoupAlways(kLiteral_5a74d1))) then begin
+					l2 := self:GetQuerySpec((if IsFrame(a3) then '_all else a3));
+					l3 := kFunction_554015;
+					if IsFrame(a3) then begin
+							local l1;
+							local l2;
+							local l3;
+							local l4;
+							(foreach l5, l6 in a3 do begin
+									if ((l6 = '_buttonBar) or (if IsArray(l6) then SetContains(l6, '_buttonBar))) then begin
+											l4 := true
+										end;
+									l2.tagspec.(l5) := call l3 with (l2.tagspec.(l5), l6)
+								end)
+						end else begin
+							l4 := (a3 = '_buttonBar)
+						end;
+					if (not l4) then begin
+							l2.tagspec.none := call l3 with (l2.tagspec.none, '[Array: _buttonBar])
+						end;
+					if a1 then begin
+							l2.indexPath := 'packageName;
+							l2.startKey := a1;
+							l2.endKey := a1
+						end;
+					l1:Query(l2)
+				end)
+		end),
+	viewSetupDoneScript: func() begin
+		SetKeyView(iconSpace, 0)
+	end,
+	GenericActionScript: func(a1, a2, a3, a4, a5, a6) begin
+		local v9_yyyyyyyxxxxx, v10_zzyyyyyyyyyyyyy, v11_wwwwwwwwwwwwwwwwvvv, v12_jiiii, v13_uuuuuuut, v16_tttttttttttt, v17_yxxxxxxxxxxxxxx, v20_xxxxxxwwwwwwwwwwwww, v21_zzzzzzzzzzzzzzyyyyyyyy, v22_vvvvvvvv, v23_tttttsssssss;
+		if (not fakeTarget.kids) then begin
+				return nil
+			end;
+		v13_uuuuuuut := nil;
+		v12_jiiii := 0;
+		v17_yxxxxxxxxxxxxxx := [Array: ];
+		v16_tttttttttttt := [Array: ];
+		(foreach v19_xxww in fakeTarget.kids do begin
+				if ((v11_wwwwwwwwwwwwwwwwvvv := (if (ClassOf(a1) = 'symbol) then v19_xxww.target:Preflight(a1, fakeTarget.kids) else call a1 with (v19_xxww))) = 'OK) then begin
+						if v13_uuuuuuut then begin
+								v22_vvvvvvvv := StrLen(v13_uuuuuuut);
+								v13_uuuuuuut := ParamStr("^0, ", [Array: v13_uuuuuuut])
+							end;
+						v13_uuuuuuut := Stringer([Array: v13_uuuuuuut, v19_xxww.target:name()]);
+						AddArraySlot(v16_tttttttttttt, v19_xxww)
+					end else begin
+						v12_jiiii := (v12_jiiii + 1);
+						if v11_wwwwwwwwwwwwwwwwvvv then begin
+								SetAdd(v17_yxxxxxxxxxxxxxx, v11_wwwwwwwwwwwwwwwwvvv, true)
+							end
+					end
+			end);
+		fakeTarget.kids := v16_tttttttttttt;
+		(foreach v15_yyyyxxxxxxxxxxxxxxxxxxxxxx in v17_yxxxxxxxxxxxxxx do begin
+				if v23_tttttsssssss then begin
+						v20_xxxxxxwwwwwwwwwwwww := StrLen(v23_tttttsssssss);
+						v23_tttttsssssss := ParamStr("^0, ^1", [Array: v23_tttttsssssss, v15_yyyyxxxxxxxxxxxxxxxxxxxxxx])
+					end else begin
+						v23_tttttsssssss := v15_yyyyxxxxxxxxxxxxxxxxxxxxxx
+					end
+			end);
+		if v20_xxxxxxwwwwwwwwwwwww then begin
+				v23_tttttsssssss := StrMunger(v23_tttttsssssss, v20_xxxxxxwwwwwwwwwwwww, 1, " or", 0, nil)
+			end;
+		(if (Length(v16_tttttttttttt) > 0) then begin
+				v10_zzyyyyyyyyyyyyy := (if (v12_jiiii = 0) then 100 else 75);
+				if (StrLen(v13_uuuuuuut) > v10_zzyyyyyyyyyyyyy) then begin
+						v13_uuuuuuut := "the selected icons"
+					end else begin
+						if v22_vvvvvvvv then begin
+								v13_uuuuuuut := StrMunger(v13_uuuuuuut, v22_vvvvvvvv, 1, " and", 0, nil)
+							end
+					end;
+				v13_uuuuuuut := SubstituteChars(v13_uuuuuuut, "\n", " ");
+				(if ((not a3) or (v12_jiiii > 0)) then begin
+						v9_yyyyyyyxxxxx := ModalConfirm(ParamStr((v21_zzzzzzzzzzzzzzyyyyyyyy := (if (v12_jiiii = 0) then "Are you sure you want to ^0?" else (if (v12_jiiii = 1) then "Are you sure you want to ^0?\n\nNote -- One icon was skipped because it is ^2." else "Are you sure you want to ^0?\n\nNote -- Some icons were skipped because they are ^2."))), [Array: a4, v13_uuuuuuut, v23_tttttsssssss]), 'okCancelDefaultCancel);
+						Perform(self, a2, [Array: v9_yyyyyyyxxxxx])
+					end else Perform(self, a2, [Array: true]))
+			end else self:Notify(3, title, ParamStr((if (v12_jiiii = 1) then a5 else a6), [Array: v23_tttttsssssss])))
+	end,
+	GetExtraIcons: func(a1, a2, a3) begin
+		local l1, l2, l3;
+		l1 := specifiableExtraIconTypes.(a1);
+		l2 := a3:GetSoup("Packages");
+		(if (if l1 then l2) then MapCursor(l2:Query((l3 := {beginKey: a2, endKey: a2, indexPath: 'packageName, tagspec: {all: l1, none: '_package}})), nil))
+	end,
+	contrastSliderTweakRight: nil,
+	GetPartEntry: compile(
+		constants: {
+			kLiteral_5a74d1: "Packages"
+		},
+		func(a1) begin
+			local appSymbol;
+			local l1, l2, l3, l4, l5, l6, l7;
+			if (if IsSoupEntry(a1) then StrEqual(EntrySoup(a1):GetName(), kLiteral_5a74d1)) then begin
+					l1 := a1
+				end else begin
+					if (ClassOf(a1) = 'symbol) then begin
+							a1 := {appSymbol: a1}
+						end;
+					l2 := a1.store;
+					appSymbol := a1.appSymbol;
+					l3 := a1.packageName;
+					if (l4 := (if l2 then l2:GetSoup(kLiteral_5a74d1) else GetUnionSoup(kLiteral_5a74d1))) then begin
+							l5 := func(a1) begin
+								(a1.app = appSymbol)
+							end;
+							l1 := (l7 := l4:Query((l6 := (if l3 then {tagspec: '{all: _icon}, validTest: l5, indexPath: 'packageName, beginKey: l3, endKey: l3} else {tagspec: '{all: _icon}, validTest: l5})))):entry()
+						end;
+					if (not l1) then begin
+							l1 := LFetch(|Parts1.x|, appSymbol, 0, '|=|, 'app)
+						end
+				end;
+			l1
+		end),
+	needsRecalc: 'all,
+	BlessSelectedIcon: func(a1) begin
+		(if a1 then AddDelayedSend(GetRoot(), 'BlessApp, [Array: fakeTarget.blessedapp], 500))
+	end,
+	topIndexIcon: 0,
+	viewFormat: vfFillWhite,
+	_filingKeyScript: func(a1) begin
+		PressButton(filingButton)
+	end,
+	status: nil,
+	_cacheContext: {
+		hSpacing: nil,
+		prefsDirty: nil,
+		contrastSliderTweakRight: nil,
+		needsRecalc: 'all,
+		topIndexIcon: 0,
+		status: nil,
+		saturationCheck: nil,
+		contrastSlider: nil,
+		vSpacingIcon: nil,
+		iconProto: nil,
+		overUp: nil,
+		viewBounds: _cacheContextViewBounds_2,
+		viewclipper: nil,
+		Show: nil,
+		_proto: nil,
+		viewCObject: nil,
+		topIndexText: 0,
+		labelsFilter: nil,
+		VolumeSlider: nil,
+		iconSpace: nil,
+		pieces: nil,
+		hSpacingIcon: nil,
+		fakeTarget: nil,
+		visibleItems: nil,
+		vSpacing: nil,
+		_parent: nil,
+		nRows: 0,
+		folderItemsLen: nil,
+		contrastSliderTweakLeft: nil,
+		targetView: nil,
+		base: nil,
+		folderItems: nil
+	},
+	HandleRemovedPackage: func(a1) begin
+		local l1, l2, l3, l4;
+		l4 := (l3 := a1.oldSoup:Query((l2 := {beginKey: (l1 := a1.entry.packageName), endKey: l1, indexPath: 'packageName, tagspec: '{none: _package}}))):entry();
+		(while l4 do begin
+				EntryRemoveFromSoupXmit(l4, 'ExtrasDrawer);
+				(l4 := l3:Next())
+			end)
+	end,
+	contrastSlider: nil,
+	GetQuerySpec: compile(
+		constants: {
+			kLiteral_54ebbd: '{type: index, indexPath: sequence, startKey: nil, endKey: nil, tagspec: {all: _icon, none: [Array: _soups, _frozen]}}
+		},
+		func(a1) begin
+			local l1;
+			(if (a1 = '_all) then DeepClone(kLiteral_54ebbd) else (if (not a1) then begin
+						(l1 := DeepClone(kLiteral_54ebbd)).tagspec.none := SetUnion(l1.tagspec.none, GetAppFolderSyms('ExtrasDrawer, true, true), true);
+						l1
+					end else begin
+						(l1 := DeepClone('{type: index, indexPath: sequence, startKey: nil, endKey: nil, tagspec: {all: [Array: _icon, nil], none: [Array: _frozen]}})).tagspec.all[1] := a1;
+						l1
+					end))
+		end),
+	viewQuitScript: func() begin
+		prefsEntry := nil;
+		folderItems := nil;
+		visibleItems := nil;
+		fakeTarget := nil;
+		if memex then begin
+				memex:Close()
+			end;
+		if legalese then begin
+				legalese:Close()
+			end;
+		pieces := nil;
+		UnRegFolderChanged(appSymbol);
+		UnRegStoreChange(appSymbol)
+	end,
+	preallocatedContext: 'ExtrasDrawer,
+	AppAll: "All Icons",
+	viewDrawScript: func() begin
+		local l1;
+		l1 := self:LocalBox();
+		if (not pieces) then begin
+				pieces := [Array: '{pensize: 0, penPattern: 5, fillPattern: 5}, MakeRect(4, 0, (l1.right - 4), 1), '{font: 9216, justification: center}];
+				if (VolumeSlider.viewFlags <> 0) then begin
+						AddArraySlot(pieces, MakeText("Volume", 12, 13, 65, 23))
+					end;
+				if (contrastSlider.viewFlags <> 0) then begin
+						AddArraySlot(pieces, MakeText("Contrast", 90, 13, (l1.right - 90), 23))
+					end
+			end;
+		self:DrawShape(pieces, {transform: [Array: 0, ((l1.bottom - 50) + 6)]})
+	end,
+	baseListSmall: @protoExtrasListItem,
+	target: nil,
+	AddIconEntryQT: func(a1, a2, a3) begin
+		local l1, l2;
+		l1 := (if a3 then a3 else GetDefaultStore()):GetSoup("Packages");
+		if (not (l2 := self:MakeIconEntry(a1, a2)).sequence) then begin
+				l2.sequence := self:GetNewSequence(l2.labels)
+			end;
+		l1:AddFlushedXmit(l2, 'ExtrasDrawer);
+		l2
+	end,
+	memexForm: {
+		viewFlags: vClickable,
+		viewBounds: nil,
+		viewJustify: vjParentFullH + vjParentBottomV,
+		extras: nil,
+		newBlessed: nil,
+		ReOrientToScreen: @defRotateFunc,
+		viewQuitScript: func() begin
+			extras.memex := nil;
+			(if (newBlessed <> userConfiguration.blessedapp) then begin
+					if (not newBlessed) then begin
+							newBlessed := 'paperroll
+						end;
+					extras.fakeTarget.blessedapp := newBlessed;
+					self:Confirm(extras.title, ParamStr("Are you sure you want to make ^0 the backdrop?", [Array: GetRoot().(newBlessed).title]), extras, 'BlessSelectedIcon)
+				end)
+		end,
+		viewDrawScript: compile(
+			constants: {
+				kLiteral_536791: '{font: 9216},
+				kLiteral_5367b5: '{font: 1058816}
+			},
+			func() begin
+				l1 := self:LocalBox();
+				l2 := 10;
+				l3 := (l1.right div 2);
+				l4 := ((3 * l1.right) div 4);
+				l5 := (l1.right - 10);
+				l6 := Length(GetStores());
+				l7 := [Array: '{font: 1058816, justification: center}, MakeText("Memory Info", l2, 5, l5, 13), kLiteral_536791, MakeText("Name", l2, 20, l3, 30), '{font: 9216, justification: right}, MakeText("Used", l3, 20, l4, 30), MakeText("Free", l4, 20, l5, 30), MakeLine(l2, 32, l5, 32), kLiteral_5367b5];
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				local l5;
+				local l6;
+				local l7;
+				(foreach l8, l9 in GetStores() do begin
+						local l11, l12, l13, l14, l15, l16;
+						l11 := (l9:UsedSize() div 1024);
+						if ((l12 := ((l9:TotalSize() div 1024) - l11)) < 0) then begin
+								l12 := 0
+							end;
+						l13 := (l3 - l2);
+						l14 := StyledStrTruncate(Clone(l9:GetName()), l13, 1058816);
+						l15 := (35 + (l8 * 16));
+						AddArraySlot(l7, [Array: MakeText(l14, l2, l15, l3, (l15 + 10)), '{font: 1058816, justification: right}, MakeText(Stringer([Array: l11, "K"]), l3, l15, l4, (l15 + 10)), MakeText(Stringer([Array: l12, "K"]), l4, l15, l5, (l15 + 10))])
+					end);
+				l16 := Gestalt(16777219);
+				l15 := (l15 + 22);
+				AddArraySlot(l7, [Array: kLiteral_536791, MakeText(ParamStr("ROM Version ^0-^1", [Array: l16.ROMversionstring, l16.patchVersion]), l2, l15, l5, (l15 + 10)), MakeText(ParamStr("System RAM Installed ^0K", [Array: (l16.RAMSize div 1024)]), l2, (l15 + 16), l5, (l15 + 22)), MakeLine(l2, (l15 + 28), l5, (l15 + 28))]);
+				self:DrawShape(l7, kLiteral_5367b5)
+			end),
+		viewClickScript: func(a1) begin
+			InkOff(a1);
+			inherited:?viewClickScript(a1)
+		end,
+		viewSetupFormScript: func() begin
+			if (userConfiguration.blessedapp = 'ExtrasDrawer) then begin
+					makeBackDrop.viewFlags := 0
+				end;
+			newBlessed := userConfiguration.blessedapp;
+			inherited:?viewSetupFormScript()
+		end,
+		stepChildren: [stepChildren: makeBackDrop_2],
+		makeBackDrop: nil,
+		stepallocatecontext: [|Array|: 'makeBackDrop, makeBackDrop_2],
+		_proto: @protoFloatNGo
+	},
+	HandleNewPackage: func(a1) begin
+		l1 := 0;
+		local l1;
+		local l2;
+		(foreach l3, l4 in (l2 := GetPkgRefInfo(a1.pkgRef)).parttypes do begin
+				local l6;
+				if (if IsFrame((l6 := l2.parts[l3])) then (l6.text or (l4 = 'Book))) then begin
+						if self:HandleNewPartEntry(l2.store, l4, l6, a1.packageName) then begin
+								l1 := (l1 + 1)
+							end
+					end
+			end);
+		(if (l1 = 0) then self:HandleNewPartEntry(l2.store, '|????|, '{}, a1.packageName))
+	end,
+	_actionKeyScript: func(a1) begin
+		PressButton(routingButton)
+	end,
+	legalese: nil,
+	AddIconEntry: func(a1, a2, a3) begin
+		local l1;
+		l1 := self:AddIconEntryQT(a1, a2, a3);
+		self:InvalIcons();
+		l1
+	end,
+	viewChildren: [viewChildren:
+		iconSpace,
+		Show_3,
+		VolumeSlider_2,
+		contrastSlider,
+		contrastSliderTweakLeft,
+		contrastSliderTweakRight,
+		{
+			viewBounds: {left: -67, top: -40, right: -12, bottom: -19},
+			viewJustify: vjParentRightH + vjParentBottomV,
+			_proto: @protoLabeledBatteryGauge
+		},
+		status_4
+	],
+	FolderChanged: func(a1, a2) begin
+		local l1, l2, l3;
+		(if a1 then begin
+				l3 := (l2 := GetUnionSoup("Packages"):Query({type: 'index, indexPath: '_uniqueID, tagspec: '{any: _icon}})):entry();
+				(while l3 do begin
+						if (if (l3.labels = a1) then (not EntryStore(l3):IsReadOnly())) then begin
+								self:ChangeTagListAndLabels(l3, a2);
+								EntryChange(l3);
+								l1 := true
+							end;
+						(l3 := l2:Next())
+					end);
+				(if l1 then self:RedoIcons())
+			end)
+	end,
+	storesFilter: nil,
+	DeleteSelectedIcons: compile(
+		constants: {
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			kLiteral_54b9f5: {bits: call kBinaryFromHex with ("000000000004007a007a025c0095027c000000000000000000000000000000000000000000000000000000000007f000007fff0007ff8ff03fff80fc7fff803e7fff80fe6fff87f661ffbf86643ffc066603e00667f1c00663f1800660f180066001800e7001801e3e0180fc1fc187f003f9bf80007ffc00000fe000", 'bits), bounds: '{left: 0, top: 0, right: 32, bottom: 27}}
+		},
+		func(a1) begin
+			(if a1 then begin
+					l1 := [Array: ];
+					local l1;
+					(foreach l2 in fakeTarget.kids do begin
+							if (l4 := l2.target:LookupSoupPackage()) then begin
+									l5 := l4.packageName;
+									local l4;
+									local l5;
+									local l6;
+									l6 := (foreach l7 in l1 do begin
+											local l9, l10, l11, l12, l13, l14, l15;
+											if StrEqual(l7, l5) then begin
+													break true
+												end
+										end);
+									if (not l6) then begin
+											l9 := l2.target.fentry.text;
+											l10 := GetUnionSoupAlways("Packages"):GetMember(l2.target:store());
+											l11 := l10:Query({type: 'index, indexPath: 'packageName, beginKey: l5, endKey: l5, tagspec: '{any: _icon, none: [Array: _package, _snowflake]}});
+											l12 := nil;
+											l13 := l11:entry();
+											l14 := 0;
+											(while l13 do begin
+													if l12 then begin
+															l15 := StrLen(l12);
+															l12 := ParamStr("^0, ", [Array: l12])
+														end;
+													l12 := Stringer([Array: l12, l13.text]);
+													l14 := (l14 + 1);
+													(l13 := l11:Next())
+												end);
+											if (l14 > 1) then begin
+													l12 := StrMunger(l12, l15, 1, " and", 0, nil);
+													if (not ModalConfirm(ParamStr("The icon, \u201C\u^0\u201D\u, is part of a package that contains multiple parts (^1).  All the parts will be deleted.", [Array: l9, l12]), nil)) then begin
+															return nil
+														end
+												end
+										end;
+									AddArraySlot(l1, l5)
+								end
+						end);
+					DoProgress('vBarber, {barber: true, statusText: "Deleting selected icons.", primary: nil, icon: kLiteral_54b9f5, closeBox: nil}, func(a1) begin
+						(foreach l1 in fakeTarget.kids do begin
+								a1:SetStatus('vBarber, {titleText: ParamStr("Deleting \u201C\u^0\u201D\u", [Array: l1.target.fentry.text]), barber: true});
+								try begin
+										l1.target:delete()
+									end onexception |evt.ex.msg| do begin
+										self:Notify(3, title, CurrentException().message)
+									end
+							end)
+					end);
+					fakeTarget.packs := nil;
+					XmitPackageOp('RemovingInBulk)
+				end)
+		end),
+	viewFlags: vApplication,
+	SetupROMHelpBook: func(a1) begin
+		AddArraySlot(|Parts1.x|, self:MakeIconEntry('ROMHelpBookEntry, a1))
+	end,
+	overUp: nil,
+	doCardRouting: true,
+	ChangeTagListAndLabels: ChangeTagListAndLabels,
+	ReOrientToScreen: func() begin
+		pieces := nil;
+		topIndexIcon := 0;
+		topIndexText := 0;
+		self:_Close();
+		self:Open()
+	end,
+	rotateButton: nil,
+	routingButton: nil,
+	DeleteActionScript: func(a1, a2) begin
+		self:GenericActionScript('delete, 'DeleteSelectedIcons, nil, "delete ^1", "This icon can\u2019\ut be deleted^?0 because it is ^0||.", "These icons can\u2019\ut be deleted^?0 because they are ^0||.")
+	end,
+	blessedBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	conversion: {
+		Convert: func(a1, a2, a3, a4) begin
+			(if (a3 <> 'oneO) then a1)
+		end
+	},
+	viewBounds: _cacheContextViewBounds_2,
+	SetExtrasInfo: func(a1, a2) begin
+		if (l2 := self:GetPartEntry(a1)) then begin
+				if (if a2 then (Length(a2) > 0)) then begin
+						if (if HasSlot(a2, 'labels) then (a2.labels <> l2.labels)) then begin
+								l3 := a2.labels;
+								if (if (l2.labels = '_buttonBar) then (l2.sequence < 0)) then begin
+										l2.sequence := self:GetNewSequence(l3)
+									end;
+								if (l3 = '_buttonBar) then begin
+										if (Length((l4 := GetRoot().buttons:GetPartEntries()).mobile) > 0) then begin
+												l2.sequence := max(0, (l4.mobile[0].sequence - 1))
+											end else begin
+												l2.sequence := 0
+											end
+									end;
+								l2._tagList := Clone(l2._tagList);
+								self:ChangeTagListAndLabels(l2, l3)
+							end;
+						local l1;
+						local l2;
+						local l3;
+						local l4;
+						(foreach l5 in extrasInfoSlots do begin
+								if HasSlot(a2, l5) then begin
+										l2.(l5) := a2.(l5)
+									end
+							end);
+						if (l7 := a2.AddTags) then begin
+								if (not IsArray(l7)) then begin
+										l7 := [Array: l7]
+									end;
+								l2._tagList := SetUnion(l2._tagList, l7, true)
+							end;
+						if (l8 := a2.RemoveTags) then begin
+								if (not IsArray(l8)) then begin
+										l8 := [Array: l8]
+									end;
+								l2._tagList := SetDifference(l2._tagList, l8)
+							end;
+						if IsSoupEntry(l2) then begin
+								EntryChangeXmit(l2, 'ExtrasDrawer)
+							end;
+						self:InvalIcons()
+					end;
+				l1 := {};
+				(foreach l5 in extrasInfoSlots do begin
+						local l7, l8;
+						if HasSlot(l2, l5) then begin
+								l1.(l5) := l2.(l5)
+							end
+					end);
+				if IsNumber(l1.icon) then begin
+						l1.icon := @extrasRomIcons[l1.icon].icon
+					end;
+				if IsNumber(l1.iconPro) then begin
+						l1.iconPro := @extrasRomIcons[l1.iconPro].iconPro
+					end
+			end;
+		l1
+	end,
+	RestoreBuiltInExtrasState: func(a1) begin
+		local l1, l2, l3, l4, l5, l6;
+		(if BFind(a1, @systemSoupName, '|str<|, nil) then begin
+				l1 := GetAppPrefs('BuiltInExtrasState, nil);
+				l2 := GetStores()[0]:GetSoup("Packages");
+				(if (if l1 then l2) then begin
+						l4 := (l3 := l2:Query('{tagspec: {all: [Array: _icon, _noBackup], none: _soups}})):entry();
+						(while l4 do begin
+								if (l5 := l4.app) then begin
+										if (l6 := l1.(l5)) then begin
+												l4.sequence := l6.sequence;
+												self:ChangeTagListAndLabels(l4, l6.labels);
+												EntryChange(l4)
+											end
+									end;
+								(l4 := l3:Next())
+							end)
+					end)
+			end)
+	end,
+	HandleRemovedHighROMPart: func(a1) begin
+		nil
+	end,
+	appObject: [|Array|: "Icon", "Icons"],
+	specifiablePartSlots: [|Array|: 'icon, 'iconPro, 'text, 'labels, 'app, 'TapAction, 'closeControl],
+	allocateContext: [|Array|:
+		'iconSpace,
+		iconSpace,
+		'Show,
+		Show_3,
+		'VolumeSlider,
+		VolumeSlider_2,
+		'contrastSlider,
+		contrastSlider,
+		'contrastSliderTweakLeft,
+		contrastSliderTweakLeft,
+		'contrastSliderTweakRight,
+		contrastSliderTweakRight,
+		'status,
+		status_4
+	],
+	GetPartEntryData: func(a1) begin
+		local l1, l2, l3, l4;
+		l1 := (if IsSoupEntry(a1) then (not EntryIsResident(a1)));
+		if IsInteger((l2 := a1.icon)) then begin
+				l2 := @extrasRomIcons[l2].icon
+			end;
+		if IsInteger((l3 := a1.iconPro)) then begin
+				l3 := @extrasRomIcons[l3].iconPro
+			end;
+		l4 := {icon: l2, iconPro: l3, text: a1.text, labels: a1.labels, appSymbol: a1.app, packageName: a1.packageName};
+		if l1 then begin
+				EntryUndoChanges(a1)
+			end;
+		l4
+	end,
+	|HandleRemoved1.XPart|: func(a1) begin
+		local l1;
+		l1 := 0;
+		(while (l1 := LSearch(|Parts1.x|, a1, l1, '|=|, 'packageId)) do ArrayRemoveCount(|Parts1.x|, l1, 1))
+	end,
+	Show: nil,
+	FileSelectedIcons: compile(
+		constants: {
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			kLiteral_54b9f5: {bits: call kBinaryFromHex with ("000000000004007a007a025c0095027c000000000000000000000000000000000000000000000000000000000007f000007fff0007ff8ff03fff80fc7fff803e7fff80fe6fff87f661ffbf86643ffc066603e00667f1c00663f1800660f180066001800e7001801e3e0180fc1fc187f003f9bf80007ffc00000fe000", 'bits), bounds: '{left: 0, top: 0, right: 32, bottom: 27}}
+		},
+		func(a1) begin
+			local soupNotifyChangesFakeTarget;
+			(if a1 then begin
+					soupNotifyChangesFakeTarget := Clone(fakeTarget);
+					DoProgress('vBarber, {barber: true, statusText: "Filing selected icons.", primary: nil, icon: kLiteral_54b9f5, closeBox: nil}, func(a1) begin
+						(foreach l1 in soupNotifyChangesFakeTarget.kids do begin
+								a1:SetStatus('vBarber, {titleText: ParamStr("Filing \u201C\u^0\u201D\u", [Array: l1.target.fentry.text]), barber: true});
+								if (if soupNotifyChangesFakeTarget.labelsChanged then (soupNotifyChangesFakeTarget.labels <> l1.target.fentry.labels)) then begin
+										l1.target:file(soupNotifyChangesFakeTarget.labels)
+									end;
+								if (if soupNotifyChangesFakeTarget.storeChanged then (soupNotifyChangesFakeTarget.newStore <> l1.target:store())) then begin
+										l1.target:move(soupNotifyChangesFakeTarget.newStore)
+									end
+							end)
+					end);
+					XmitPackageOp('FilingAndMovingInBulk)
+				end)
+		end),
+	_proto: @protoDrawer,
+	VerifyRoutingInfo: func(a1, a2) begin
+		local l1;
+		(if (fakeTarget = nil) then a1 else begin
+				l1 := {_proto: self, beam: func(a1) begin
+					(yep := a1)
+				end, yep: nil};
+				l1:GenericActionScript('send, 'beam, true, SubstituteChars(Downcase(ParamStr("^0 \u2022\u1", [Array: GetItemTransport(a2).actionTitle])), "\u2022\u", "^"), "This icon can\u2019\ut be sent^?0 because it is ^0||.", "These icons can\u2019\ut be sent^?0 because they are ^0||.");
+				(if l1.yep then a1)
+			end)
+	end,
+	topIndexText: 0,
+	HandleSoupChange: func(a1, a2, a3, a4) begin
+		(if (a2 <> 'ExtrasDrawer) then (if (if (a3 = 'entryAdded) then IsPackageEntry(a4)) then self:HandleNewPackage(a4) else (if (a3 = 'entryRemoved) then self:HandleRemovedPackage(a4) else (if (if (a3 = 'entryMoved) then IsPackageEntry(a4.entry)) then self:HandleMovedPackage(a4) else (if (a3 = 'SoupEnters) then nil else (if (if (a2 = '|Mr.Freeze|) then IsPackageEntry(a4)) then self:HandleFreezingOrThawing(a4) else (if (a2 = 'XmitPackageOp) then self:RedoIcons() else self:InvalIcons())))))))
+	end,
+	labelsFilter: nil,
+	HandleNewHighROMPart: func(a1) begin
+		local l1, l2, l3;
+		l1 := GetStores()[0]:GetSoup("Packages");
+		l2 := a1.partFrame;
+		(if (if (a1.partType = 'form) then (not l1:GetInfo('extrasState))) then begin
+				(l3 := @extraProtos.ROMPackageEntry:New()).text := l2.text;
+				l3.icon := l2.icon;
+				l3.app := l2.app;
+				if l2.iconPro then begin
+						l3.iconPro := l2.iconPro
+					end;
+				if l2.sequence then begin
+						l3.sequence := l2.sequence
+					end;
+				if l2._tagList then begin
+						l3._tagList := l2._tagList;
+						l3.labels := l2.labels
+					end;
+				if (not l3.sequence) then begin
+						l3.sequence := root.ExtrasDrawer:GetNewSequence(nil)
+					end;
+				l1:AddFlushed(l3)
+			end)
+	end,
+	VolumeSlider: nil,
+	|HandleNew1.XPart|: func(a1) begin
+		local l1, l2;
+		(if (a1.partType = 'form) then begin
+				l1 := @extraProtos.|1.XFormEntry|:New();
+				l2 := a1.partFrame;
+				l1.app := EnsureInternal(l2.app);
+				l1.icon := EnsureInternal(l2.icon);
+				l1.text := EnsureInternal(l2.text);
+				l1.packageId := a1.packageId;
+				AddArraySlot(|Parts1.x|, l1)
+			end)
+	end,
+	LaunchPartEntry: func(a1) begin
+		local l1, l2, l3;
+		l1 := (not EntryIsResident(a1));
+		l3 := (l2 := {_proto: @extraProtos.(a1.class), fentry: a1}):?TapAction();
+		if l1 then begin
+				EntryUndoChanges(a1)
+			end;
+		l3
+	end,
+	baseIconSmall: {
+		_proto: @protoExtrasIcon,
+		iconStyle: {font: tsSystem + tsSize(9), justification: 'center, transferMode: 8}
+	},
+	baseIcon: @protoExtrasIcon,
+	InvalIcons: func() begin
+		AddProcrastinatedSend('_extrasdrawer, self, 'RedoIcons, [Array: ], 0)
+	end,
+	Scroller: func(a1) begin
+		local l1, l2, l3, l4;
+		l1 := (((displayParams.appAreaHeight - 13) - 50) div vSpacing);
+		l2 := (self:LocalBox().right div hSpacing);
+		l3 := (l1 * l2);
+		l4 := folderItemsLen;
+		(if (((if overUp then topIndexText else topIndexIcon) + l4) > l3) then begin
+				if a1 then begin
+						if overUp then begin
+								topIndexText := max(((topIndexText - l3) + 1), 0)
+							end else begin
+								topIndexIcon := max((topIndexIcon - l3), 0)
+							end
+					end else begin
+						if overUp then begin
+								if (((topIndexText + l3) - 1) < l4) then begin
+										topIndexText := ((topIndexText + l3) - 1)
+									end
+							end else begin
+								if ((topIndexIcon + l3) < l4) then begin
+										topIndexIcon := (topIndexIcon + l3)
+									end
+							end
+					end;
+				needsRecalc := (if folderItems then 'Scroll else 'all);
+				iconSpace:RedoChildren()
+			end)
+	end,
+	GetNewSequence: func(a1) begin
+		local l1;
+		(l1 := GetUnionSoup("Packages"):Query(self:GetQuerySpec(a1))):ResetToEnd();
+		(if l1:entry() then (l1:entry().sequence + 1) else 0)
+	end,
+	BlessActionScript: func(a1, a2) begin
+		fakeTarget.blessedapp := fakeTarget.kids[0].target.fentry.app;
+		self:GenericActionScript('Backdrop, 'BlessSelectedIcon, nil, "make ^1 the backdrop", "This icon can\u2019\ut be the backdrop^?0 because it is ^0||.", "Only one icon can be the backdrop. Try again with just one.")
+	end,
+	AddAuxButton: func(a1) begin
+		status:?RedoChildren()
+	end,
+	viewScrollDownScript: func() begin
+		self:Scroller(nil)
+	end,
+	viewOverviewScript: func() begin
+		overUp := (not overUp);
+		nRows := 0;
+		self:SavePrefs();
+		self:RedoIcons()
+	end,
+	iconSpace: nil,
+	specifiableExtraIconSlots: [|Array|: 'icon, 'iconPro, 'text, 'labels, 'TapAction, 'soupNames],
+	specifiableExtraIconTypes: {ScriptEntry: '_scriptIcon, SoupEntry: '_soups},
+	GetActiveView: func() begin
+		local l1;
+		if (l1 := iconSpace:SetupFakeTargetHelper()) then begin
+				iconSpace:PostSetupFakeTarget(l1)
+			end;
+		self
+	end,
+	DropIcon: func(a1) begin
+		(foreach l1 in |Parts1.x| do begin
+				if (if ('copperfield = l1.app) then StrEqual(a1.isbn, l1.isbn)) then begin
+						SetRemove(|Parts1.x|, l1);
+						break
+					end
+			end);
+		self:InvalIcons()
+	end,
+	appSymbol: 'ExtrasDrawer,
+	viewJustify: vjParentFullH + vjParentBottomV,
+	pieces: nil,
+	title: extras,
+	NewPartMakers: {
+		form: func(a1, a2) begin
+			@extraProtos.FormEntry:New()
+		end,
+		auto: func(a1, a2) begin
+			@extraProtos.AutoEntry:New()
+		end,
+		Book: func(a1, a2) begin
+			local l1, l2;
+			l1 := @extraProtos.((if a2.help then 'HelpBookEntry else 'BookEntry)):New();
+			l2 := a2.Book;
+			l1.isbn := l2.isbn;
+			l1.text := (if l2.shortTitle then l2.shortTitle else l2.title);
+			if l2.icon then begin
+					l1.icon := l2.icon
+				end;
+			l1
+		end,
+		font: func(a1, a2) begin
+			@extraProtos.FontEntry:New()
+		end,
+		dict: func(a1, a2) begin
+			@extraProtos.DictEntry:New()
+		end,
+		|????|: func(a1, a2) begin
+			@extraProtos.|????Entry|:New()
+		end
+	},
+	AddExtraIcon: func(a1, a2, a3, a4) begin
+		(if specifiableExtraIconTypes.(a1) then begin
+				l1 := {packageName: a3};
+				local l1;
+				(foreach l2 in specifiableExtraIconSlots do begin
+						if HasSlot(a2, l2) then begin
+								l1.(l2) := a2.(l2)
+							end
+					end);
+				self:AddIconEntry(a1, l1, a4)
+			end)
+	end,
+	MakeNewPart: func(a1, a2, a3) begin
+		l1 := Perform(NewPartMakers, a1, [Array: a1, a2]);
+		if HasSlot(a2, 'labels) then begin
+				l1._tagList := Clone(l1._tagList);
+				self:ChangeTagListAndLabels(l1, a2.labels)
+			end;
+		local l1;
+		(foreach l2 in specifiablePartSlots do begin
+				if HasSlot(a2, l2) then begin
+						l1.(l2) := a2.(l2)
+					end
+			end);
+		if (not StrFilled(l1.text)) then begin
+				l1.text := a3
+			end;
+		l1
+	end,
+	fineprint: {
+		viewFlags: vClickable,
+		viewBounds: {left: 0, top: -198, right: 200, bottom: -8},
+		viewJustify: vjParentCenterH + vjParentBottomV,
+		extras: nil,
+		ReOrientToScreen: @defRotateFunc,
+		viewQuitScript: func() begin
+			(extras.legalese := nil)
+		end,
+		stepChildren: [stepChildren:
+			{
+				viewClass: clPictureView,
+				viewBounds: {left: 0, top: 0, right: 95, bottom: 25},
+				viewJustify: vjParentCenterH,
+				viewFlags: vVisible,
+				icon: fineprintIcon
+			},
+			{
+				viewBounds: {left: 4, top: 34, right: -4, bottom: -14},
+				viewJustify: vjCenterH + vjParentFullH + vjParentFullV,
+				text: "Newton Operating System\u000d©1993-1997 Apple Computer, Inc.\u000d\u000dApple, Newton, MessagePad, eMate and the light bulb logo are trademarks of Apple Computer, Inc.\u000d\u000dRecognition Word Lists ©1994\u000dInfoSoft International, Inc.",
+				_proto: @protoStaticText
+			}
+		],
+		_proto: @protoFloatNGo
+	},
+	SavePrefs: func() begin
+		(prefsEntry := GetAppPrefs('extras, '{})).labelsFilter := labelsFilter;
+		prefsEntry.overUp := overUp;
+		AddProcrastinatedCall('_SaveExtrasPrefs, functions.EntryFlush, [Array: prefsEntry], 0)
+	end,
+	DoInfoMemory: func() begin
+		local l1, l2;
+		(if memex then memex:Close() else begin
+				(l1 := (memex := BuildContext(memexForm))).extras := base;
+				l2 := Length(GetStores());
+				l1.viewBounds := SetBounds(8, (-(121 + (16 * l2))), -8, -8);
+				l1:Open()
+			end)
+	end,
+	visiblePartTypes: {form: true, Book: true},
+	FreezeSelectedIcon: compile(
+		constants: {
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			kLiteral_54b9f5: {bits: call kBinaryFromHex with ("000000000004007a007a025c0095027c000000000000000000000000000000000000000000000000000000000007f000007fff0007ff8ff03fff80fc7fff803e7fff80fe6fff87f661ffbf86643ffc066603e00667f1c00663f1800660f180066001800e7001801e3e0180fc1fc187f003f9bf80007ffc00000fe000", 'bits), bounds: '{left: 0, top: 0, right: 32, bottom: 27}}
+		},
+		func(a1) begin
+			(if a1 then begin
+					DoProgress('vBarber, {barber: true, statusText: "Freezing selected icons.", primary: nil, icon: kLiteral_54b9f5, closeBox: nil}, func(a1) begin
+						(foreach l1 in fakeTarget.kids do begin
+								local l3;
+								a1:SetStatus('vBarber, {titleText: ParamStr("Freezing \u201C\u^0\u201D\u", [Array: l1.target.fentry.text]), barber: true});
+								try begin
+										SafeFreezePackageQT((l3 := l1.target:LookupSoupPackage()))
+									end onexception |evt.ex.msg| do begin
+										self:Notify(3, title, CurrentException().message)
+									end
+							end)
+					end);
+					XmitPackageOp('SafeFreezePackage)
+				end)
+		end),
+	HandleFreezingOrThawing: func(a1) begin
+		l1 := IsPackageEntryFrozen(a1);
+		l2 := a1.packageName;
+		l3 := EntryStore(a1);
+		l6 := (l5 := l3:GetSoup("Packages"):Query((l4 := {beginKey: l2, endKey: l2, indexPath: 'packageName, tagspec: '{none: _package}}))):entry();
+		l7 := [Array: ];
+		l8 := [Array: ];
+		l9 := [Array: ];
+		l10 := (if Visible(ExtrasDrawer) then ExtrasDrawer.labelsFilter else -1);
+		l13 := [Array: ];
+		(while l6 do begin
+				if (l6.class = 'FrozenEntry) then begin
+						l12 := l6;
+						EntryRemoveFromSoup(l6)
+					end else begin
+						if l1 then begin
+								SetAdd(l6._tagList, '_frozen, true);
+								AddArraySlot(l9, l6.text);
+								if (not l11) then begin
+										if (l10 = l6.labels) then begin
+												l7 := [Array: l6.labels];
+												l8 := [Array: l6.sequence];
+												l11 := true
+											end else begin
+												SetAdd(l7, l6.labels, true);
+												SetAdd(l8, l6.sequence, true)
+											end
+									end
+							end else begin
+								SetRemove(l6._tagList, '_frozen);
+								AddArraySlot(l13, l6);
+								SetAdd(l7, l6.labels, true)
+							end;
+						EntryFlushXmit(l6, 'ExtrasDrawer)
+					end;
+				(l6 := l5:Next())
+			end);
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		local l5;
+		local l6;
+		local l7;
+		local l8;
+		local l9;
+		local l10;
+		local l11;
+		local l12;
+		local l13;
+		local l14;
+		local l15;
+		local l16;
+		(if l1 then begin
+				l14 := (if (Length(l7) = 1) then l7[0]);
+				l15 := (if (Length(l8) = 1) then l8[0]);
+				l16 := (if (Length(l9) = 1) then l9[0] else l2);
+				self:AddIconEntryQT('FrozenEntry, {text: l16, packageName: l2, labels: l14, sequence: l15}, l3)
+			end else (if (if (if l12 then (Length(l7) = 1)) then (l12.labels <> l7[0])) then (foreach l6 in l13 do begin
+						self:ChangeTagListAndLabels(l6, l12.labels);
+						EntryFlush(l6)
+					end)))
+	end,
+	fakeTarget: nil,
+	visibleItems: nil,
+	dontStartWithFolder: nil,
+	viewScrollUpScript: func() begin
+		self:Scroller(true)
+	end,
+	RedoIconsAfterDrop: func(a1) begin
+		if a1 then begin
+				GetRoot().buttons:RedoIcons()
+			end;
+		needsRecalc := 'all;
+		(if viewCObject then begin
+				iconSpace:RedoChildren();
+				(if memex then begin
+						memex:Close();
+						self:DoInfoMemory()
+					end)
+			end)
+	end,
+	vSpacing: nil,
+	declareSelf: 'base,
+	closeable: true,
+	_rotateKeyScript: func(a1) begin
+		PressButton(rotateButton)
+	end,
+	viewSetupFormScript: compile(
+		constants: {
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			kLiteral_54bbb5: [Array: '{title: "Make Backdrop", icon: @backdropBitmap, routeScript: BlessActionScript}, {title: "Freeze", icon: {bits: call kBinaryFromHex with ("0000000000040128012801a6013701b60180000005a00000d7eb0000f3cf0000799e0000fdbf0000eff7000003c00000eff70000fdbf0000799e0000f3cf0000d7eb000005a0000001800000", 'bits), bounds: '{left: 0, top: 0, right: 16, bottom: 15}}, routeScript: 'FreezeActionScript}, '{title: "Delete", icon: @routetrashBitmap, routeScript: DeleteActionScript}],
+			kFunction_54c2cd: func(a1, a2, a3) begin
+				(if (a2 = 'storeReNamed) then GetRoot().ExtrasDrawer:InvalIcons())
+			end
+		},
+		func() begin
+			local l1, l2;
+			needsRecalc := 'all;
+			labelsFilter := (prefsEntry := GetAppPrefs('extras, '{})).labelsFilter;
+			overUp := prefsEntry.overUp;
+			if (userConfiguration.blessedapp = 'ExtrasDrawer) then begin
+					viewBounds := blessedBounds;
+					viewJustify := 240;
+					Show._proto := @protoClockShowBar
+				end else begin
+					if (Show._proto <> @protoShowBar) then begin
+							RemoveSlot(self, 'viewJustify);
+							nRows := 0;
+							Show._proto := @protoShowBar
+						end
+				end;
+			if (not (if (l1 := Gestalt('[Array: 33554435, [Array: struct, boolean, long, long], 1])) then l1[0])) then begin
+					contrastSlider.viewFlags := 0;
+					contrastSliderTweakLeft.viewFlags := 0;
+					contrastSliderTweakRight.viewFlags := 0
+				end;
+			if (if (l2 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1])) then l2[2]) then begin
+					VolumeSlider.viewFlags := 0
+				end;
+			if GetUserConfig('ExtraPackageFreezing) then begin
+					self.routeScripts := kLiteral_54bbb5
+				end else begin
+					RemoveSlot(self, 'routeScripts)
+				end;
+			fakeTarget := {class: 'packageFrame, labels: nil, kids: nil, targetStore: nil, packs: nil, newStore: nil, blessedapp: nil, labelsChanged: nil, storeChanged: nil};
+			targetView := self;
+			RegFolderChanged(appSymbol, func(a1, a2) begin
+				self:FolderChanged(a1, a2)
+			end);
+			RegStoreChange(appSymbol, kFunction_54c2cd)
+		end),
+	filingButton: nil,
+	RedoPackageEntries: func(packageName, store) begin
+		local PackageEntry;
+		(if (PackageEntry := GetPackageEntry(packageName, store)) then store:AtomicAction(func() begin
+				local l1, l2, l3;
+				l3 := (l2 := store:GetSoup("Packages"):Query((l1 := {beginKey: packageName, endKey: packageName, indexPath: 'packageName, tagspec: '{none: _package}}))):entry();
+				(while l3 do begin
+						EntryRemoveFromSoupXmit(l3, 'ExtrasDrawer);
+						(l3 := l2:Next())
+					end);
+				self:HandleNewPackage(PackageEntry);
+				(if IsPackageEntryFrozen(PackageEntry) then self:HandleFreezingOrThawing(PackageEntry))
+			end))
+	end,
+	routeScripts: [|Array|: makeBackdrop, extrasdrawerItem],
+	NewFilingFilter: func(a1) begin
+		topIndexIcon := 0;
+		topIndexText := 0;
+		self:SavePrefs();
+		self:RedoIcons()
+	end,
+	MakeIconEntry: func(a1, a2) begin
+		(if @extraProtos.(a1) then begin
+				l1 := @extraProtos.(a1):New();
+				if HasSlot(a2, 'labels) then begin
+						l1._tagList := Clone(l1._tagList);
+						self:ChangeTagListAndLabels(l1, a2.labels)
+					end;
+				local l1;
+				(foreach l2, l3 in a2 do begin
+						if l3 then begin
+								l1.(l2) := l3
+							end
+					end);
+				l1
+			end)
+	end,
+	prefsEntry: nil,
+	nRows: 0,
+	addIcon: func(a1) begin
+		RemoveSlot(a1, '_proto);
+		AddArraySlot(|Parts1.x|, self:MakeIconEntry('|1.XBookEntry|, a1));
+		self:InvalIcons()
+	end,
+	folderItemsLen: nil,
+	contrastSliderTweakLeft: nil,
+	HandleNewPartEntry: func(a1, a2, a3, a4) begin
+		local l1;
+		(if (l1 := self:MakeNewPart(a2, a3, a4)) then begin
+				l1.sequence := self:GetNewSequence(nil);
+				l1.packageName := a4;
+				GetUnionSoupAlways("Packages"):GetMember(a1):AddFlushedXmit(l1, 'ExtrasDrawer);
+				true
+			end)
+	end,
+	extrasInfoSlots: [|Array|: 'icon, 'iconPro, 'text, 'labels, 'closeControl, 'soupNames, 'ownerApp],
+	RemoveAuxButton: func(a1) begin
+		status:?RedoChildren()
+	end,
+	viewEffect: 133120,
+	FileThis: func(a1, a2, a3, a4, a5) begin
+		if (not self.viewCObject) then begin
+				return nil
+			end;
+		a1.labelsChanged := a2;
+		a1.storeChanged := a4;
+		if a2 then begin
+				a1.labels := a3
+			end;
+		if a4 then begin
+				a1.newStore := a5
+			end;
+		self:Fileit()
+	end,
+	HandleMovedPackage: func(a1) begin
+		local l1, l2, l3, l4, l5, l6, l7;
+		l1 := a1.entry;
+		l2 := a1.oldSoup;
+		(if ((l3 := EntrySoup(l1)) <> l2) then begin
+				l7 := (l6 := l2:Query((l5 := {beginKey: (l4 := l1.packageName), endKey: l4, indexPath: 'packageName, tagspec: '{none: _package}}))):entry();
+				(while l7 do begin
+						EntryMoveXmit(l7, l3, 'ExtrasDrawer);
+						(l7 := l6:Next())
+					end)
+			end)
+	end,
+	_keyCommands: [|Array|:
+		{char: $r, modifiers: 100663296, keyMessage: '_rotateKeyScript, name: rotate, category: general},
+		{char: $r, modifiers: 33554432, keyMessage: '_actionKeyScript, name: routing, category: routing},
+		{char: $f, modifiers: 100663296, keyMessage: '_filingKeyScript, name: file, category: filing},
+		{char: $t, modifiers: 100663296, keyMessage: '_folderKeyScript, name: folder, category: filing}
+	],
+	memex: nil,
+	PutAwayScript: func(a1) begin
+		local l1;
+		(if IsBinary((l1 := (if a1.body then a1.body.package))) then (if IsPackage(l1) then RegisterNewPackage(l1, GetDefaultStore(), true) else GetDefaultStore():SuckPackageFromBinary(l1, nil)))
+	end,
+	RemoveExtraIcon: func(a1) begin
+		EntryRemoveFromSoupXmit(a1, 'ExtrasDrawer);
+		self:InvalIcons()
+	end,
+	targetView: nil,
+	DoInfoLegal: func() begin
+		local l1;
+		(if legalese then legalese:Close() else begin
+				(l1 := (legalese := BuildContext(fineprint))).extras := base;
+				l1:Open()
+			end)
+	end,
+	viewHelpTopic: learn,
+	SaveBuiltInExtrasState: func(a1) begin
+		local l1, l2, l3, l4;
+		(if BFind(a1, @systemSoupName, '|str<|, nil) then (if (l1 := GetStores()[0]:GetSoup("Packages")) then begin
+					l2 := l1:Query('{tagspec: {all: [Array: _icon, _noBackup], none: _soups}});
+					l3 := GetAppPrefs('BuiltInExtrasState, '{});
+					l4 := l2:entry();
+					(while l4 do begin
+							if l4.app then begin
+									l3.(l4.app) := {sequence: l4.sequence, labels: l4.labels}
+								end;
+							(l4 := l2:Next())
+						end);
+					EntryChange(l3)
+				end))
+	end,
+	folderItems: nil,
+	_folderKeyScript: func(a1) begin
+		PressButton(Show.showBarText)
+	end,
+	FreezeActionScript: func(a1, a2) begin
+		self:GenericActionScript('freeze, 'FreezeSelectedIcon, nil, "freeze ^1", "This icon can\u2019\ut be frozen^?0 because it is ^0||.", "These icons can\u2019\ut be frozen^?0 because they are ^0||.")
+	end
+};
+
+rotate := "Rotate";
+
+makeBackdrop := {title: "Make Backdrop", icon: @backdropBitmap, routeScript: 'BlessActionScript};
+
+extrasdrawerItem := {title: delete, icon: @routetrashBitmap, routeScript: 'DeleteActionScript};
+
+_cacheContextViewBounds_2 := {left: 0, top: -184, right: 0, bottom: 0};
+
+iconSpace := {
+	viewBounds: {left: 0, top: 13, right: 0, bottom: -44},
+	viewJustify: vjParentFullH + vjParentFullV,
+	preallocatedContext: 'iconSpace,
+	HandleChildClick: func() begin
+		SetKeyView(iconSpace, 0)
+	end,
+	viewClickScript: func(a1) begin
+		local l1, l2, l3, l4;
+		l2 := (l1 := GetPoint(6, a1)).x;
+		l3 := l1.y;
+		l4 := self:GlobalBox();
+		(if ((((l2 < l4.left) or (l2 > l4.right)) or (l3 < l4.top)) or (l3 > l4.bottom)) then begin
+				InkOff(a1);
+				true
+			end else begin
+				SetKeyView(self, 0);
+				inherited:?viewClickScript(a1)
+			end)
+	end,
+	SetupFakeTargetHelper: func() begin
+		if (Length((l1 := iconSpace:GetSelectedIcons())) = 0) then begin
+				return (fakeTarget.kids := nil)
+			end;
+		if (Length(l1) > 1) then begin
+				targetView.AppObjectFileThisOn := "File these icons on";
+				targetView.appObjectFileThisIn := "File these icons in"
+			end else begin
+				RemoveSlot(targetView, 'AppObjectFileThisOn);
+				RemoveSlot(targetView, 'appObjectFileThisIn)
+			end;
+		fakeTarget.packs := nil;
+		fakeTarget.labels := l1[0].target.fentry.labels;
+		fakeTarget.targetStore := l1[0].target:store();
+		dontStartWithFolder := nil;
+		local l1;
+		(foreach l2 in l1 do begin
+				if (l2.target.fentry.labels <> fakeTarget.labels) then begin
+						fakeTarget.labels := nil;
+						dontStartWithFolder := true
+					end;
+				if (l2.target:store() <> fakeTarget.targetStore) then begin
+						fakeTarget.targetStore := nil
+					end
+			end);
+		fakeTarget.newStore := nil;
+		(fakeTarget.kids := l1)
+	end,
+	SetupFakeTarget: func() begin
+		local l1;
+		if (not (l1 := self:SetupFakeTargetHelper())) then begin
+				self:Notify(3, title, "Nothing is selected.")
+			end;
+		l1
+	end,
+	PostSetupFakeTarget: func(a1) begin
+		l1 := [Array: ];
+		l2 := [Array: ];
+		local l1;
+		local l2;
+		(foreach l3 in a1 do begin
+				local l5;
+				if (if (l3.target:Preflight('route, a1) = 'OK) then (not l3.target.fentry.locked)) then begin
+						if (if (l5 := l3.target:LookupSoupPackage()) then (not l3.target:copyprotected())) then begin
+								SetAdd(l2, {class: 'packageFrame, package: l5.pkgRef}, true)
+							end;
+						SetAdd(l1, l3, true)
+					end
+			end);
+		(if (Length(l1) > 0) then begin
+				if (Length(l2) = 1) then begin
+						fakeTarget.packs := l2[0]
+					end else begin
+						if (Length(l2) > 1) then begin
+								fakeTarget.packs := CreateTargetCursor('packageList, l2)
+							end
+					end;
+				true
+			end else begin
+				fakeTarget.packs := nil;
+				nil
+			end)
+	end,
+	_proto: @protoFinderWindow
+};
+
+Show_3 := {preallocatedContext: 'Show, _proto: @protoShowBar};
+
+VolumeSlider_2 := {
+	viewBounds: {left: 12, top: -40, right: 77, bottom: -31},
+	viewJustify: vjParentBottomV,
+	preallocatedContext: 'VolumeSlider,
+	_proto: @volumeSlider
+};
+
+contrastSlider := {
+	viewBounds: {left: 0, top: -40, right: 60, bottom: -31},
+	viewJustify: vjParentCenterH + vjParentBottomV,
+	viewSetupFormScript: func() begin
+		local l1;
+		self.viewValue := GetUserConfig('lcdContrast);
+		l1 := Gestalt('[Array: 33554435, [Array: struct, boolean, long, long], 1]);
+		self.minValue := l1[1];
+		(self.maxValue := l1[2])
+	end,
+	viewSetupDoneScript: func() begin
+		self.userConfigChangeSym := Intern(Stringer([Array: "ContrastSlider.", viewCObject]));
+		RegUserConfigChange(userConfigChangeSym, func(a1) begin
+			self:HandleConfigChange(a1)
+		end)
+	end,
+	viewQuitScript: func() begin
+		UnRegUserConfigChange(userConfigChangeSym)
+	end,
+	HandleConfigChange: func(a1) begin
+		local l1;
+		l1 := GetUserConfig('lcdContrast);
+		(if (if (a1 = 'lcdContrast) then (viewValue <> l1)) then SetValue(self, 'viewValue, l1))
+	end,
+	ChangedSlider: func() begin
+		SetUserConfig('lcdContrast, viewValue)
+	end,
+	trackSlider: func() begin
+		SetLCDContrast(viewValue)
+	end,
+	preallocatedContext: 'contrastSlider,
+	_proto: @protoSlider
+};
+
+contrastSliderTweakLeft := {
+	viewClass: clView,
+	viewBounds: {left: -5, top: 0, right: 0, bottom: 5},
+	viewJustify: vjSiblingLeftH + vjSiblingCenterV,
+	viewFormat: 0,
+	viewFlags: vVisible + vClickable,
+	increment: -1,
+	viewClickScript: func(a1) begin
+		local l1;
+		InkOff(a1);
+		l1 := (contrastSlider.viewValue + increment);
+		if (if (contrastSlider.minValue < l1) then (l1 < contrastSlider.maxValue)) then begin
+				if self:TrackHilite(a1) then begin
+						SetValue(contrastSlider, 'viewValue, l1);
+						self:hilite(nil)
+					end
+			end;
+		true
+	end,
+	preallocatedContext: 'contrastSliderTweakLeft
+};
+
+contrastSliderTweakRight := {
+	_proto: contrastSliderTweakLeft,
+	viewBounds: {left: 60, top: 0, right: 65, bottom: 5},
+	viewJustify: vjSiblingRightH + vjSiblingCenterV,
+	increment: 1,
+	preallocatedContext: 'contrastSliderTweakRight
+};
+
+memoryInfo := "Memory Info";
+
+status_4 := {
+	viewBounds: {left: 0, top: -18, right: 0, bottom: 0},
+	viewChildren: nil,
+	viewSetupChildrenScript: func() begin
+		if (Length((l1 := GetAuxButtons(appSymbol))) > 0) then begin
+				menuLeftButtons := Clone(OrigMenuLeftButtons);
+				local l1;
+				local l2;
+				l2 := (foreach l3 deeply in l1 collect l3.butt);
+				ArrayMunger(menuLeftButtons, Length(menuLeftButtons), nil, l2, 0, nil)
+			end else begin
+				menuLeftButtons := OrigMenuLeftButtons
+			end;
+		inherited:?viewSetupChildrenScript()
+	end,
+	OrigMenuLeftButtons: [|Array|:
+		{
+			viewBounds: {left: 0, top: 0, right: 13, bottom: 13},
+			stdItems: [|Array|: {item: memoryInfo, msg: 'DoInfoMemory}, {item: "Credits", msg: 'DoInfoLegal}],
+			viewSetupDoneScript: func() begin
+				inherited:?viewSetupDoneScript();
+				(if (if (LicenseeInfoItem exists) then (not LSearch(stdItems, LicenseeInfoItem.item, 0, '|str=|, 'item))) then AddArraySlot((stdItems := Clone(stdItems)), {item: LicenseeInfoItem.item, msg: 'DoInfoLicensee}))
+			end,
+			DoInfoLicensee: func() begin
+				LicenseeInfoItem:?action()
+			end,
+			_proto: @protoInfoButton
+		},
+		{
+			viewSetupFormScript: func() begin
+				rotateButton := self;
+				inherited:?viewSetupFormScript()
+			end,
+			viewQuitScript: func() begin
+				rotateButton := nil;
+				inherited:?viewQuitScript()
+			end,
+			_proto: @protoOrientation
+		}
+	],
+	menuRightButtons: [|Array|:
+		{
+			viewSetupFormScript: func() begin
+				routingButton := self;
+				inherited:?viewSetupFormScript()
+			end,
+			viewQuitScript: func() begin
+				routingButton := nil;
+				inherited:?viewQuitScript()
+			end,
+			pickActionScript: func(a1) begin
+				inherited:pickActionScript(a1);
+				iconSpace:SelectNone()
+			end,
+			buttonClickScript: func() begin
+				local l1;
+				if (not (l1 := iconSpace:SetupFakeTarget())) then begin
+						self:hilite(nil);
+						return nil
+					end;
+				(if iconSpace:PostSetupFakeTarget(l1) then inherited:buttonClickScript() else begin
+						self:Notify(3, title, (if (Length(l1) > 1) then "Can\u2019\ut route these types of icons." else "Can\u2019\ut route this type of icon."));
+						self:hilite(nil)
+					end)
+			end,
+			_proto: @protoRoutingSlip
+		},
+		{
+			viewBounds: {left: -23, top: 2, right: -6, bottom: 15},
+			viewSetupFormScript: func() begin
+				filingButton := self;
+				inherited:?viewSetupFormScript()
+			end,
+			viewQuitScript: func() begin
+				filingButton := nil;
+				inherited:?viewQuitScript()
+			end,
+			PickIcon: func() begin
+				iconInt
+			end,
+			buttonClickScript: func() begin
+				local l1;
+				if (not (l1 := iconSpace:SetupFakeTarget())) then begin
+						self:hilite(nil);
+						return nil
+					end;
+				inherited:buttonClickScript()
+			end,
+			_proto: @protoFilingButton
+		}
+	],
+	preallocatedContext: 'status,
+	_proto: @newtStatusBar
+};
+
+makeBackDrop_2 := {
+	viewBounds: {left: 0, top: -20, right: 170, bottom: -7},
+	viewJustify: 8388758,
+	text: "Make “Extras” the Backdrop",
+	buttonClickScript: func() begin
+		newBlessed := 'ExtrasDrawer;
+		base:Close()
+	end,
+	preallocatedContext: 'makeBackDrop,
+	_proto: @protoTextButton
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_literal3 := same("contrastSlider.viewSetupFormScript.literals[3]");
+
+viewQuitScript_code_9 := same("status_4.OrigMenuLeftButtons[1].viewQuitScript.instructions");
+
+viewSetupFormScript_code_38 := same("status_4.OrigMenuLeftButtons[1].viewSetupFormScript.instructions");
+
+form_code := same("extrasdrawer.NewPartMakers.form.instructions");
+
+HandleRemovedPackage_literal2 := same("extrasdrawer.HandleRemovedPackage.literals[2]");
+
+GenericActionScript_literal8 := same("extrasdrawer.GenericActionScript.literals[8]");
+
+GenericActionScript_literal16 := same("extrasdrawer.GenericActionScript.literals[16]");
+
+DeleteSelectedIcons_literal28 := same("extrasdrawer.DeleteSelectedIcons.literals[28]");
+
+RestoreBuiltInExtrasState_literal7 := same("extrasdrawer.RestoreBuiltInExtrasState.literals[7]");
+
+DeleteActionScript_code := same("extrasdrawer.DeleteActionScript.instructions");
+
+DeleteSelectedIcons_literal29 := same("extrasdrawer.DeleteSelectedIcons.literals[29]");
+
+HandleChildClick_code := same("iconSpace.HandleChildClick.instructions");
+
+SetupFakeTarget_literal2 := same("iconSpace.SetupFakeTarget.literals[2]");
+
+PostSetupFakeTarget_literal10 := same("iconSpace.PostSetupFakeTarget.literals[10]");
+
+DoInfoLicensee_code := same("status_4.OrigMenuLeftButtons[0].DoInfoLicensee.instructions");

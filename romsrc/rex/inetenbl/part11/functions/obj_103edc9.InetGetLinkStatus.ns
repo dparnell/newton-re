@@ -1,5 +1,0 @@
-@@ 0x103fa3d
-func(a1) begin
-	InetStartUp():MGetLinkStatus(a1)
-end
-@@end

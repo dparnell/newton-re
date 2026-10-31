@@ -1,0 +1,79 @@
+// toSubjectSlip, and what only it reaches
+
+toSubjectSlip := {
+	viewJustify: vjParentCenterH + vjParentBottomV,
+	viewBounds: {left: 0, top: -156, right: 220, bottom: -26},
+	viewEffect: 0,
+	viewSetupFormScript: func() begin
+		nil
+	end,
+	debug: 350698,
+	ReOrientToScreen: @defRotateFunc,
+	stepChildren: [stepChildren:
+		{
+			_proto: addresseeSlipProto,
+			viewJustify: vjParentFullH + vjParentFullV,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: -16},
+			targetSlot: 'fields,
+			viewChildren: [viewChildren:
+				explanation,
+				toSubject,
+				{
+					viewBounds: {left: 0, top: 50, right: -5, bottom: 115},
+					viewJustify: vjParentFullH,
+					viewLineSpacing: 30,
+					newRecFlags: 1636865,
+					label: "Subject",
+					indent: 55,
+					jamFromEntry: func(a1) begin
+						nil
+					end,
+					path: 'title,
+					memory: 'memoSubject,
+					_proto: @newtLabelCustomInputLine
+				}
+			],
+			explanation: nil,
+			allocateContext: [|Array|: 'explanation, explanation, 'toSubject, toSubject],
+			toSubject: nil
+		}
+	],
+	_proto: @protoFloatNGo
+};
+
+explanation := {
+	viewJustify: 8388658,
+	viewBounds: {left: 0, top: 1, right: 0, bottom: 14},
+	text: "Memo Header",
+	preallocatedContext: 'explanation,
+	_proto: @protoStaticText
+};
+
+toSubject := {
+	flavor: {
+		_proto: @newtSmartNameFilter,
+		picker: func() begin
+			@protoPeoplePopup:New({_proto: GetDataDefs('|nameRef.people|), singleSelect: true}, nil, self, nil)
+		end
+	},
+	viewBounds: {left: 0, top: 13, right: -5, bottom: 47},
+	viewJustify: vjParentFullH,
+	label: name,
+	indent: 55,
+	viewLineSpacing: 30,
+	path: 'toName,
+	memory: 'memoAddresee,
+	viewSetupDoneScript: func() begin
+		SetKeyView(self.entryLine, 9999)
+	end,
+	preallocatedContext: 'toSubject,
+	_proto: @newtSmartNameView
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+picker_literal2 := same("toSubject.flavor.picker.literals[2]");
+
+viewSetupDoneScript_code_17 := same("toSubject.viewSetupDoneScript.instructions");
+
+picker_code_2 := same("toSubject.flavor.picker.instructions");

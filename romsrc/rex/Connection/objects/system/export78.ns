@@ -1,0 +1,39 @@
+// export78, and what only it reaches
+
+export78 := {
+	viewQuitScript: func() begin
+		protoContext:RemoveOpenWindow(self)
+	end,
+	viewIdleScript: func() begin
+		(if (not protoContext.keyPassthroughOn) then begin
+				AddDeferredSend(base, 'Close, nil);
+				if doneCallback then begin
+						call doneCallback with ()
+					end;
+				return 0
+			end else begin
+				self:updateIndicator(initialSetup);
+				500
+			end)
+	end,
+	viewBounds: {left: 0, top: 40, right: 180, bottom: 125},
+	initialSetup: {
+		name: 'vBarber,
+		values: {
+			statusText: dock,
+			titleText: "Waiting for desktop.",
+			icon: valuesIcon,
+			primary: nil,
+			closeBox: nil
+		},
+		appSymbol: 'kAppSymbol
+	},
+	viewSetupFormScript: func() begin
+		self.protoContext := GetRoot().Connection;
+		protoContext:AddOpenWindow(self);
+		self:SetupIdle(500);
+		inherited:?viewSetupFormScript()
+	end,
+	protoContext: nil,
+	_proto: @protoStatusTemplate
+};

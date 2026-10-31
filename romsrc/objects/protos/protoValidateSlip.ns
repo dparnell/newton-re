@@ -1,0 +1,132 @@
+// protoValidateSlip, and what only it reaches
+
+protoValidateSlip := {
+	viewBounds: {left: 0, top: 0, right: 284, bottom: 270},
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	extraHeight: 20,
+	targetView: nil,
+	titleText: nil,
+	viewSetupChildrenScript: func() begin
+		local l1, l2, l3, l4;
+		l2 := 'symbol;
+		targetView := self;
+		if userText then begin
+				infoText.text := userText
+			end else begin
+				infoText.viewFlags := 0
+			end;
+		if (if (not (l4 := titleText)) then (l1 := GetDataDefs(target.class))) then begin
+				l4 := l1:?StringExtract(target, 1)
+			end;
+		if (not l4) then begin
+				l4 := target.name
+			end;
+		if l4 then begin
+				headerText.title := l4
+			end else begin
+				headerText.viewFlags := 0
+			end;
+		if (kbdType = 'alpha) then begin
+				l3 := '{_proto: @alphaKeys, viewBounds: {left: 1, top: -130, right: 284, bottom: -20}, viewJustify: 144};
+				// DEVIATION: a slip made narrower than the keyboard (its
+				//  viewSetupFormScript) has a keyboard its width
+				if (viewBounds.right < l3.viewBounds.right) then begin
+						l3 := {_proto: @alphaKeys, viewBounds: {left: 1, top: -130, right: viewBounds.right, bottom: -20}, viewJustify: 144}
+					end
+			end else begin
+				if (kbdType = 'number) then begin
+						l3 := '{_proto: @phonePad, viewBounds: {left: 0, top: -141, right: 151, bottom: -20}, viewJustify: 144}
+					end
+			end;
+		if l3 then begin
+				AddArraySlot(stepChildren, l3);
+				extraHeight := (((extraHeight + 10) + l3.viewBounds.bottom) - l3.viewBounds.top);
+				AddArraySlot(stepChildren, '{_proto: @recToggle, viewBounds: {left: 2, top: -18, right: 20, bottom: -5}, viewJustify: 8388742, _recogPopup: [Array: recogText, recogInkText, pickseparator, recToggleSettings]})
+			end;
+		inherited:?viewSetupChildrenScript()
+	end,
+	viewSetupFormScript: func() begin
+		local l1;
+		// DEVIATION: on a screen narrower than the slip (284: the T-Deck Pro's
+		//  240), the slip as wide as the screen, not cut off at both sides - its
+		//  header, text and fields are as wide as it is.  A MessagePad's screen
+		//  is never so narrow.
+		l1 := GetAppParams().appAreaWidth;
+		if (l1 < (viewBounds.right - viewBounds.left)) then begin
+				viewBounds := {left: 0, top: viewBounds.top, right: l1, bottom: viewBounds.bottom}
+			end;
+		nil
+	end,
+	viewSetupDoneScript: func() begin
+		local l1, l2, l3, l4, l5, l6;
+		l5 := GetAppParams().appAreaHeight;
+		l6 := self:LocalBox();
+		l4 := (Length((l2 := self:ChildViewFrames())) - (if kbdType then 3 else 1));
+		if (if kbdType then ((l6.bottom - l6.top) > l5)) then begin
+				RemoveStepView(self, l2[(l4 + 1)]);
+				extraHeight := 20
+			end;
+		(l1 := Clone(self.viewBounds)).bottom := ((l2[l4]:GlobalBox().bottom - self:GlobalBox().top) + extraHeight);
+		SetValue(self, 'viewBounds, l1);
+		inherited:?viewSetupDoneScript();
+		(if (l3 := NextKeyView(l2[0], 0, 0)) then SetKeyView(l3, 0))
+	end,
+	StartFlush: func() begin
+		(if base.viewCObject then base:SetupIdle(5000))
+	end,
+	viewIdleScript: func() begin
+		self:EndFlush();
+		nil
+	end,
+	viewQuitScript: func() begin
+		'postQuit
+	end,
+	viewPostQuitScript: func() begin
+		self:EndFlush()
+	end,
+	EndFlush: func() begin
+		(if IsSoupEntry(target) then begin
+				EntryChange(target);
+				(if (target.class = 'owner) then UseCurrentPersona() else UseCurrentEmporium())
+			end else (if self.isUserConfig then EntryChange(userConfiguration)))
+	end,
+	ReOrientToScreen: @defRotateFunc,
+	viewChildren: [viewChildren:
+		{
+			buttonClickScript: func() begin
+				local l1;
+				local l2;
+				(foreach l3 in base:ChildViewFrames() do begin
+						if (l2 := l3.path) then begin
+								if l3.HasData then begin
+										l1 := call l3.HasData with (target)
+									end else begin
+										l1 := (if IsInstance(target.(l2), 'string) then StrFilled(target.(l2)) else target.(l2))
+									end;
+								if (not l1) then begin
+										break
+									end
+							end
+					end);
+				base:Close();
+				(if compMsg then Perform(compView, compMsg, [Array: l1]))
+			end,
+			_proto: @protoCancelButton
+		},
+		headerText_2,
+		infoText_2
+	],
+	headerText: nil,
+	allocateContext: [|Array|: 'headerText, headerText_2, 'infoText, infoText_2],
+	infoText: nil,
+	_proto: @protoFloater
+};
+
+headerText_2 := {preallocatedContext: 'headerText, _proto: @protoTitle};
+
+infoText_2 := {
+	viewBounds: {left: 10, top: 5, right: -10, bottom: 30},
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	preallocatedContext: 'infoText,
+	_proto: @protoStaticText
+};

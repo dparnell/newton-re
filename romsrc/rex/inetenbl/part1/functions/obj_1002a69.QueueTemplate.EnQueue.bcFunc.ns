@@ -1,6 +1,0 @@
-@@ 0x1013215 argframe=nil,0
-func(a1) begin
-	AddArraySlot(queue, a1);
-	nil
-end
-@@end

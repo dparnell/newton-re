@@ -1,0 +1,3 @@
+// ukstdDateFilter, and what only it reaches
+
+ukstdDateFilter := {_proto: @usStdDateFilter, item: "dd/mm/yy", format: "20_10_00", offsets: [|Array|: 3, 0, 6]};

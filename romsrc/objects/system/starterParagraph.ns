@@ -1,0 +1,3 @@
+// starterParagraph, and what only it reaches
+
+starterParagraph := {viewStationery: 'para, viewBounds: nil, text: nil};

@@ -1,0 +1,91 @@
+// protoInfoButton, and what only it reaches
+
+protoInfoButton := {
+	_proto: @protoPictureButton,
+	viewBounds: {left: 6, top: 0, right: 19, bottom: 13},
+	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingTopV,
+	icon: protoInfoButtonIcon,
+	lowerCaseIcon: protoInfoButtonIcon,
+	upperCaseIcon: {
+		bits: bitmap('bits, "resources/bits/43131d.png", "00000000000400000000000000090005", 1),
+		bounds: {left: 0, top: 0, right: 5, bottom: 9}
+	},
+	items: nil,
+	auxItems: nil,
+	stdItems: [|Array|:
+		{item: about, msg: 'DoInfoAbout},
+		{item: help, msg: 'DoInfoHelp},
+		{item: prefs, msg: 'DoInfoPrefs}
+	],
+	popUpView: nil,
+	viewSetupFormScript: func() begin
+		(if CommandKeyboardConnected() then begin
+				if (not vars._infoButtons) then begin
+						vars._infoButtons := [Array: ]
+					end;
+				SetAdd(vars._infoButtons, self, true);
+				(if IsKeyDown(57, true) then (self.icon := self.upperCaseIcon))
+			end)
+	end,
+	viewQuitScript: func() begin
+		if vars._infoButtons then begin
+				SetRemove(vars._infoButtons, self)
+			end;
+		(if popUpView then popUpView:?Close())
+	end,
+	SetCapsLock: func(a1) begin
+		(if a1 then SetValue(self, 'icon, self.upperCaseIcon) else SetValue(self, 'icon, self.lowerCaseIcon))
+	end,
+	viewClickScript: func(a1) begin
+		if self:TrackHilite(a1) then begin
+				if (not (auxItems := self:?GenInfoAuxItems())) then begin
+						auxItems := '[Array: ]
+					end;
+				if (Length((items := self:GenInfoItems(auxItems))) > 0) then begin
+						popUpView := self:PopupMenu(items, nil)
+					end else begin
+						self:hilite(nil)
+					end
+			end else begin
+				self:hilite(nil)
+			end;
+		true
+	end,
+	GenInfoItems: func(a1) begin
+		l1 := [Array: ];
+		local l1;
+		(foreach l2 in stdItems do begin
+				if GetVariable(self, l2.msg) then begin
+						AddArraySlot(l1, l2)
+					end
+			end);
+		if (if (Length(l1) > 0) then (Length(a1) > 0)) then begin
+				AddArraySlot(l1, 'pickseparator)
+			end;
+		ArrayMunger(l1, Length(l1), nil, a1, 0, nil);
+		l1
+	end,
+	pickActionScript: func(a1) begin
+		local l1;
+		l1 := (Length(items) - Length(auxItems));
+		if (a1 < l1) then begin
+				Perform(self, items[a1].msg, '[Array: ])
+			end else begin
+				self:DoInfoAux(auxItems, (a1 - l1))
+			end;
+		self:pickCancelledScript()
+	end,
+	pickCancelledScript: func() begin
+		self:hilite(nil);
+		items := nil;
+		auxItems := nil;
+		(popUpView := nil)
+	end
+};
+
+protoInfoButtonIcon := {
+	bits: bitmap('bits, "resources/bits/430df5.png", "000000000004000b000b000d00140012", 1),
+	bounds: {left: 0, top: 0, right: 5, bottom: 9}
+};
+
+about := "About";

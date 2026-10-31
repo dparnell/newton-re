@@ -1,9 +1,0 @@
-@@ 0x79efc5 names
-func() begin
-	local filter;
-	if (if (filter := calendar.labelsFilter) then (target.labels <> filter)) then begin
-			EntryChange(target)
-		end;
-	filingButton:Update()
-end
-@@end

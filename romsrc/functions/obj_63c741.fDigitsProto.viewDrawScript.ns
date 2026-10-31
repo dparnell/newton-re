@@ -1,5 +1,0 @@
-@@ 0x4421a5
-func() begin
-	(if ((ArrayPos <= hiOrd) or showLeadingZeros) then DrawXBitmap(digitFrame, digits, currentIndex, copyMode))
-end
-@@end

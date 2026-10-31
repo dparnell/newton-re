@@ -1,0 +1,47 @@
+// inboxCard, and what only it reaches
+
+inboxCard := {
+	viewBounds: {left: 0, top: 0, right: 236, bottom: 160},
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	viewSetupFormScript: compile(
+		constants: {
+			kFunction_72b339: func(a1) begin
+				true
+			end
+		},
+		func() begin
+			if target then begin
+					self.viewDef := GetRoot().cardfile:GetBCLayout(target).slot
+				end;
+			inherited:viewSetupFormScript();
+			(if (GetVariable(self, 'newtAppBase) <> GetRoot().cardfile) then AddArraySlot(viewChildren, {viewClass: 74, viewBounds: viewChildren[0].viewBounds, viewFormat: 0, viewFlags: 513, viewClickScript: kFunction_72b339}))
+		end),
+	viewDef: 'default,
+	GetMaxBottom: func() begin
+		local l1, l2, l3, l4;
+		l4 := 0;
+		if (Length((l1 := self:ChildViewFrames())) > 0) then begin
+				l3 := Length((l2 := l1[0]:ChildViewFrames()));
+				l4 := l2[(l3 - 1)]:GlobalBox().bottom
+			end;
+		l4
+	end,
+	SetNewBottom: func(a1) begin
+		local l1, l2, l3, l4;
+		(if (Length((l1 := self:ChildViewFrames())) > 0) then begin
+				(l4 := Clone(l1[0].viewBounds)).bottom := (l4.bottom - a1);
+				l1[0].viewJustify := 0;
+				SetValue(l1[0], 'viewBounds, l4)
+			end)
+	end,
+	name: card,
+	protection: 'public,
+	symbol: 'inboxCard,
+	type: 'viewer,
+	viewFormat: vfFrameBlack + vfPen(2),
+	_proto: @newtStationeryView
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_6 := same("inboxCard.viewSetupFormScript.literals[11].instructions");

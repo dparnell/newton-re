@@ -1,5 +1,0 @@
-@@ 0x43b34d
-func() begin
-	self:SetupAbstracts(cursor:clone())
-end
-@@end

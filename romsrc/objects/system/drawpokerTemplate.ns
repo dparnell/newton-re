@@ -1,0 +1,131 @@
+// drawpokerTemplate, and what only it reaches
+
+drawpokerTemplate := {
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	viewBounds: {left: 0, top: 0, right: 192, bottom: 75},
+	deck: nil,
+	hand: nil,
+	gameState: nil,
+	money: 10,
+	bet: 1,
+	bankLimit: 1000,
+	viewSetupDoneScript: compile(
+		constants: {
+			kROM_828: @protoDeckOfCards
+		},
+		func() begin
+			(foreach l1, l2 in cardHolder:ChildViewFrames() do begin
+					l2.cardIndex := l1
+				end);
+			deck := kROM_828:New();
+			self:Deal()
+		end),
+	Deal: func() begin
+		gameState := 'dealt;
+		deck:Shuffle();
+		hand := deck:Deal(5);
+		money := (money - bet);
+		SetValue(handValue, 'text, "");
+		SetValue(dButton, 'text, "Draw");
+		SetValue(bankroll, 'text, Stringer([Array: $$, money]));
+		cardHolder:Dirty()
+	end,
+	Draw: func() begin
+		gameState := 'over;
+		(foreach l1, l2 in cardHolder:ChildViewFrames() do begin
+				if (BAnd(GetViewFlags(l2), 33554432) <> 0) then begin
+						hand[l1] := nil
+					end
+			end);
+		l4 := deck:Eval5((hand := deck:Draw(hand)));
+		if ((money := (money + deck.DrawPayOffs.(l4))) < bet) then begin
+				GetRoot():Notify(3, "Draw Poker", "Your line of credit has been terminated.");
+				AddDeferredSend(base, 'Close, nil)
+			end else begin
+				if (money > bankLimit) then begin
+						GetRoot():Notify(3, "Draw Poker", "Congratulations! You broke the bank.");
+						AddDeferredSend(base, 'Close, nil)
+					end
+			end;
+		SetValue(handValue, 'text, SymbolName(l4));
+		SetValue(dButton, 'text, "Deal");
+		SetValue(bankroll, 'text, Stringer([Array: $$, money]));
+		(foreach l1, l2 in cardHolder:ChildViewFrames() do begin
+				local l4;
+				if (BAnd(GetViewFlags(l2), 33554432) <> 0) then begin
+						l2:hilite(nil)
+					end
+			end);
+		cardHolder:Dirty()
+	end,
+	ReOrientToScreen: @defRotateFunc,
+	stepChildren: [stepChildren: cardHolder, bankroll, dButton, handValue],
+	cardHolder: nil,
+	stepallocatecontext: [|Array|: 'cardHolder, cardHolder, 'bankroll, bankroll, 'dButton, dButton, 'handValue, handValue],
+	bankroll: nil,
+	dButton: nil,
+	handValue: nil,
+	_proto: @protoDragngo
+};
+
+cardHolderItem := {
+	_proto: @protoCard,
+	GetCard: func() begin
+		hand[cardIndex]
+	end,
+	viewClickScript: func(a1) begin
+		local l1;
+		l1 := (BAnd(GetViewFlags(self), 33554432) <> 0);
+		(if (if (gameState = 'dealt) then self:TrackHilite(a1)) then begin
+				self:hilite((not l1));
+				self:Dirty();
+				true
+			end)
+	end,
+	viewDrawScript: func() begin
+		(if (BAnd(GetViewFlags(self), 33554432) = 0) then inherited:viewDrawScript())
+	end
+};
+
+cardHolder := {
+	viewClass: clView,
+	viewFlags: vVisible,
+	viewJustify: vjParentFullH,
+	viewBounds: {left: 0, top: 7, right: 0, bottom: 52},
+	preallocatedContext: 'cardHolder,
+	viewChildren: [viewChildren: cardHolderItem, cardHolderItem, cardHolderItem, cardHolderItem, cardHolderItem]
+};
+
+bankroll := {
+	viewJustify: vjCenterV + vjSiblingLeftH + vjSiblingBottomV,
+	viewBounds: {left: 5, top: 7, right: 45, bottom: 20},
+	text: bankrollText,
+	preallocatedContext: 'bankroll,
+	_proto: @protoStaticText
+};
+
+dButton := {
+	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingFullV,
+	viewBounds: {left: 5, top: 0, right: 40, bottom: 0},
+	text: uCardPositionAlertButton,
+	buttonClickScript: func() begin
+		(if (gameState = 'dealt) then self:Draw() else self:Deal())
+	end,
+	preallocatedContext: 'dButton,
+	_proto: @protoTextButton
+};
+
+handValue := {
+	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingFullV,
+	viewBounds: {left: 5, top: 0, right: 90, bottom: 0},
+	viewFont: @fontSystem9,
+	text: uCardPositionAlertButton,
+	preallocatedContext: 'handValue,
+	_proto: @protoStaticText
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+Draw_literal13 := same("drawpokerTemplate.Draw.literals[13]");
+
+GetCard_code := same("cardHolderItem.GetCard.instructions");

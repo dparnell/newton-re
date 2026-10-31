@@ -1,0 +1,3 @@
+// starterMath, and what only it reaches
+
+starterMath := {viewClass: 65620, viewBounds: nil, viewFlags: vVisible + vCalculateBounds, viewChildren: nil};

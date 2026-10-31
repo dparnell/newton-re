@@ -1,8 +1,0 @@
-@@ 0x100c895
-func(a1) begin
-	UnDefGlobalFn('MapLanternError);
-	UnDefGlobalVar('LanternEventRegistry);
-	UnDefGlobalVar('LanternClientCount);
-	UnRegWeirdCardEvent('LanternNewtAPI)
-end
-@@end

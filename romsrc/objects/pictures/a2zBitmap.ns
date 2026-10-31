@@ -1,0 +1,6 @@
+// a2zBitmap, and what only it reaches
+
+a2zBitmap := {
+	bits: bitmap('bits, "resources/bits/3d6799.png", "00000000001c016d016d006101750131", 1),
+	bounds: {left: 0, top: 0, right: 208, bottom: 8}
+};

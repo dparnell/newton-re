@@ -1,5 +1,0 @@
-@@ 0x5b05a5
-func() begin
-	EntryChange(userConfiguration)
-end
-@@end

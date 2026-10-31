@@ -1,5 +1,0 @@
-@@ 0x751ca1
-func() begin
-	filesIcon:SetupViewflags()
-end
-@@end

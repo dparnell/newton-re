@@ -1,5 +1,0 @@
-@@ 0x54a709
-func() begin
-	(viewLineSpacing := FontHeight((viewFont := GetUserConfig('mailFont))))
-end
-@@end

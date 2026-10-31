@@ -1,0 +1,240 @@
+// protoDictionaryCursor, and what only it reaches
+
+protoDictionaryCursor := {
+	dict: nil,
+	cursor: nil,
+	index: nil,
+	validTest: nil,
+	currentEntry: nil,
+	clone: func() begin
+		local l1;
+		(l1 := self:PrivateClone()).currentEntry := Clone(currentEntry);
+		l1.index := Clone(index);
+		l1.validTest := Clone(validTest);
+		return l1
+	end,
+	ThisWord: func() begin
+		(if self:PrivateEntry(currentEntry) then return currentEntry.word else return nil)
+	end,
+	Next: {class: #132, funcPtr: 6995424, numArgs: 0},
+	PrivateClone: {class: #132, funcPtr: 6994397, numArgs: 0},
+	Reset: func() begin
+		if (not prefix) then begin
+				self.prefix := "";
+				self.pin := true;
+				self.loc := 'first
+			end;
+		self.currentEntry := {word: nil, attribute: nil, terminalClass: nil};
+		self:PrivateReset(prefix, pin, loc)
+	end,
+	|map|: func(a1) begin
+		self:Reset();
+		(while self:ThisWord() do begin
+				call a1 with (currentEntry);
+				self:Next()
+			end);
+		return nil
+	end,
+	move: func(a1) begin
+		local l1, l2, l3;
+		l1 := (if (a1 < 0) then 'prev else 'Next);
+		l2 := 0;
+		l3 := abs(a1);
+		(while (l2 < l3) do begin
+				if (not Perform(self, l1, [Array: ])) then begin
+						break
+					end;
+				(l2 := (l2 + 1))
+			end);
+		return (l2 * (if (a1 < 0) then -1 else 1))
+	end,
+	first: func() begin
+		(while self:prev() do nil)
+	end,
+	word: func() begin
+		self:PrivateEntry(nil)
+	end,
+	PrivateReset: {class: #132, funcPtr: 6995426, numArgs: 3},
+	last: func() begin
+		(while self:Next() do nil)
+	end,
+	terminalClass: func() begin
+		self:entry().terminalClass
+	end,
+	GotoKey: func(a1) begin
+		Throw('|evt.ex.msg|, "GotoKey NYI")
+	end,
+	entry: func() begin
+		(if self:PrivateEntry(currentEntry) then return Clone(currentEntry) else return nil)
+	end,
+	MakeWindow: func(a1) begin
+		local l1;
+		l1 := {_proto: protoCursorWindow};
+		l1:Initialize(self, a1);
+		return l1
+	end,
+	ChangeAttribute: func(a1) begin
+		(if (if dict then currentEntry.word) then dict:ChangeAttribute(currentEntry.word, a1))
+	end,
+	PrivateEntry: {class: #132, funcPtr: 6995427, numArgs: 1},
+	Dispose: func() begin
+		if dict then begin
+				SetRemove(dict.cursors, self);
+				RemoveSlot(self, 'dict)
+			end;
+		self:PrivateDispose()
+	end,
+	attribute: func() begin
+		self:entry().attribute
+	end,
+	PrivateDispose: {class: #132, funcPtr: 6994398, numArgs: 0},
+	protoCursorWindow: {
+		buffer: nil,
+		bufferSize: nil,
+		dipStick: nil,
+		cursor: nil,
+		cursorLoc: nil,
+		lastQuery: nil,
+		entryFilter: func(a1) begin
+			a1
+		end,
+		Initialize: func(a1, a2) begin
+			self.buffer := Array(a2, nil);
+			self.bufferSize := a2;
+			self.cursor := a1;
+			self.dipStick := self:FillBuffer();
+			return self
+		end,
+		EntryKey: func(a1) begin
+			(if (Length(buffer) > a1) then call entryFilter with (buffer[a1]))
+		end,
+		GetEntry: func(a1) begin
+			(if (Length(buffer) > a1) then buffer[a1])
+		end,
+		GetBuffer: func() begin
+			return buffer
+		end,
+		GetNumberEntries: func() begin
+			return dipStick
+		end,
+		GetBufferSize: func() begin
+			return bufferSize
+		end,
+		GetCursor: func() begin
+			return cursor
+		end,
+		Scroll: func(a1) begin
+			local l1, l2;
+			if (if (dipStick > 0) then (not cursor:entry())) then begin
+					Throw('|evt.ex.msg|, "cursorLoc out of whack before Scroll")
+				end;
+			l1 := 0;
+			l1 := self:MoveCursor((a1 - cursorLoc));
+			if (not cursor:entry()) then begin
+					if (a1 < 0) then begin
+							self:MoveCursor(1)
+						end else begin
+							self:MoveCursor(-1)
+						end
+				end;
+			self:FillBuffer();
+			if (if (dipStick > 0) then (not cursor:entry())) then begin
+					Throw('|evt.ex.msg|, "cursorLoc out of whack after Scroll")
+				end;
+			return l1
+		end,
+		Reset: func() begin
+			cursor:Reset();
+			self:FillBuffer()
+		end,
+		Reposition: func(a1) begin
+			cursor:Initialize(a1, nil, 'first);
+			self:FillBuffer()
+		end,
+		RepositionLast: func(a1) begin
+			cursor:Initialize(a1, nil, 'last);
+			self:FillBuffer()
+		end,
+		FillBuffer: func() begin
+			if ((l1 := self:FillFromEntry(0, bufferSize)) = 0) then begin
+					cursorLoc := -1
+				end;
+			local l1;
+			(for l2 := l1 to (bufferSize - 1) do begin
+					buffer[l2] := nil
+				end);
+			if (not cursor:entry()) then begin
+					self:MoveCursor(-1)
+				end;
+			(dipStick := (cursorLoc + 1))
+		end,
+		MoveCursor: func(a1) begin
+			local l1;
+			l1 := cursor:move(a1);
+			cursorLoc := (cursorLoc + l1);
+			return l1
+		end,
+		FillFromEntry: func(a1, a2) begin
+			local l1, l2, l3;
+			l1 := a1;
+			l2 := (a1 + a2);
+			if (if (l3 := cursor:entry()) then (l1 < l2)) then begin
+					(loop begin
+							if (not l3) then begin
+									break
+								end else begin
+									buffer[l1] := l3
+								end;
+							(if ((l1 := (l1 + 1)) = l2) then break else begin
+									cursorLoc := l1;
+									if (not cursor:Next()) then begin
+											break
+										end;
+									(l3 := cursor:entry())
+								end)
+						end)
+				end;
+			return (l1 - a1)
+		end,
+		SlideUp: func(a1) begin
+			local l1;
+			(for l2 := ((l1 := (dipStick - max(0, ((dipStick + a1) - bufferSize)))) - 1) to 0 by -1 do begin
+					buffer[(l2 + a1)] := buffer[l2]
+				end);
+			(for l2 := 0 to (a1 - 1) do begin
+					buffer[l2] := nil
+				end);
+			cursorLoc := (cursorLoc + a1);
+			(dipStick := (a1 + l1))
+		end,
+		SlideDown: func(a1) begin
+			l1 := (bufferSize - a1);
+			local l1;
+			(for l2 := 0 to (l1 - 1) do begin
+					buffer[l2] := buffer[(l2 + a1)]
+				end);
+			(for l2 := l1 to (bufferSize - 1) do begin
+					buffer[l2] := nil
+				end);
+			cursorLoc := (cursorLoc - a1);
+			(dipStick := (dipStick - a1))
+		end
+	},
+	prev: {class: #132, funcPtr: 6995425, numArgs: 0},
+	Initialize: func(a1, a2, a3) begin
+		self.prefix := a1;
+		self.pin := a2;
+		self.loc := a3;
+		self.currentEntry := {};
+		self.currentEntry := {word: nil, attribute: nil, terminalClass: nil};
+		self:PrivateReset(a1, a2, a3)
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+Reset_literal6 := same("protoDictionaryCursor.Reset.literals[6]");
+
+first_code := same("protoDictionaryCursor.first.instructions");
+
+Reposition_code := same("protoDictionaryCursor.protoCursorWindow.Reposition.instructions");

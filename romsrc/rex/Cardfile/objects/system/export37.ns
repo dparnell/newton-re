@@ -1,0 +1,20 @@
+// export37, and what only it reaches
+
+export37 := {
+	SetPassword: func(a1) begin
+		(if target then begin
+				target.(path) := a1;
+				EntryChange(target)
+			end)
+	end,
+	VerifyPassword: nil,
+	requirePassword: true,
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	viewSetupFormScript: func() begin
+		local l1;
+		inherited:viewSetupFormScript();
+		l1 := self.viewBounds;
+		(self.viewBounds := SetBounds(l1.left, 0, l1.right, (l1.bottom - l1.top)))
+	end,
+	_proto: @passwordSlip
+};

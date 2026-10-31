@@ -1,5 +1,0 @@
-@@ 0x104d04d
-func(a1) begin
-	(if InetIsValidIPAddress(a1) then Stringer([Array: a1[0], ".", a1[1], ".", a1[2], ".", a1[3]]) else "")
-end
-@@end

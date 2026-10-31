@@ -1,5 +1,0 @@
-@@ 0x456ad5
-func(a1, a2) begin
-	a2:Tapped(nil)
-end
-@@end

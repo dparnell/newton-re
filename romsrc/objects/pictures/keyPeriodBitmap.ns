@@ -1,0 +1,6 @@
+// keyPeriodBitmap, and what only it reaches
+
+keyPeriodBitmap := {
+	bits: bitmap('bits, "resources/bits/3d90f9.png", "000000000004001a001a0284002b0288", 1),
+	bounds: {left: 0, top: 0, right: 4, bottom: 17}
+};

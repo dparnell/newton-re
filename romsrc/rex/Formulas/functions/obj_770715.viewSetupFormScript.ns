@@ -1,5 +1,0 @@
-@@ 0x7707ed
-func() begin
-	(self.labelItems := USLabels[curMeasurement])
-end
-@@end

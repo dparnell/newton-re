@@ -1,0 +1,6 @@
+// routeMailBitmap, and what only it reaches
+
+routeMailBitmap := {
+	bits: bitmap('bits, "resources/bits/3d5c5d.png", "000000000004008e008e00cb009c00e0", 1),
+	bounds: {left: 0, top: 0, right: 21, bottom: 14}
+};

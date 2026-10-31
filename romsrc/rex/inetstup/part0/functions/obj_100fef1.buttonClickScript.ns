@@ -1,8 +1,0 @@
-@@ 0x100ff15
-func() begin
-	_deletedData := [Array: deleteSlot, target.(deleteSlot)];
-	RemoveSlot(target, deleteSlot);
-	self:StartFlush();
-	base:CloseAction()
-end
-@@end

@@ -1,0 +1,131 @@
+// singleTaskPrintDef, and what only it reaches
+
+singleTaskPrintDef := {
+	title: singleTask,
+	mainFormat: {
+		viewClass: clView,
+		viewFlags: vVisible + vReadOnly,
+		viewBounds: {left: 40, top: 40, right: -40, bottom: -40},
+		viewJustify: vjParentFullH + vjParentFullV,
+		viewFormat: vfFrameBlack + vfPen(2) + vfRound(8),
+		target: nil,
+		task: nil,
+		viewSetupFormScript: compile(
+			options: "names",
+			func() begin
+				target := fields.body;
+				(task := fields.task)
+			end),
+		viewChildren: [viewChildren:
+			{
+				_proto: mainFormatProto,
+				viewJustify: vjParentFullH,
+				height: 30,
+				labelText: "Due",
+				GetContent: compile(
+					options: "names",
+					func() begin
+						LongDateStr(target.date, @datetimeStrSpecs.longDateStrSpec)
+					end)
+			},
+			{
+				_proto: mainFormatProto,
+				viewBounds: {left: 10, top: 10, right: -10, bottom: 40},
+				height: 30,
+				labelText: completed,
+				GetContent: compile(
+					options: "names",
+					func() begin
+						(if task.mtgDone then "Yes" else "No")
+					end)
+			},
+			{
+				_proto: mainFormatProto,
+				viewBounds: {left: 10, top: 10, right: -10, bottom: 40},
+				height: 30,
+				labelText: priority,
+				GetContent: compile(
+					options: "names",
+					func() begin
+						'[Array: "High", "Medium", "Low", "None"][task.mtgPriority]
+					end)
+			},
+			{
+				_proto: mainFormatProto,
+				viewBounds: {left: 10, top: 10, right: -10, bottom: 40},
+				height: 120,
+				labelText: task_2,
+				GetContent: compile(
+					options: "names",
+					func() begin
+						MakeRichString(task.text, task.styles)
+					end)
+			}
+		]
+	},
+	version: 1,
+	symbol: 'singleTaskPrintDef,
+	SetupSlip: compile(
+		options: "names",
+		func(slip, item) begin
+			if slip.target.class then begin
+					item.body := slip.target;
+					item.task := slip.target
+				end else begin
+					item.body := slip.targetView.target;
+					item.body.class := 'todo;
+					item.task := slip.targetView.task
+				end;
+			inherited:SetupSlip(slip, item)
+		end),
+	_proto: @coverPageFormat
+};
+
+mainFormatProto := {
+	viewClass: clView,
+	viewFlags: vVisible + vReadOnly,
+	viewBounds: nil,
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	DeclareSelf: 'displayLine,
+	height: nil,
+	contentText: nil,
+	labelText: nil,
+	viewSetupFormScript: compile(
+		options: "names",
+		func() begin
+			(if (if (contentText := self:GetContent()) then (StrLen(contentText) > 0)) then (if (not viewBounds) then (viewBounds := SetBounds(10, 0, -10, height))) else (viewBounds := SetBounds(0, 0, 0, 0)))
+		end),
+	viewChildren: [viewChildren:
+		{
+			viewJustify: vjParentFullH,
+			viewBounds: {left: 0, top: 0, right: 110, bottom: 30},
+			viewFont: tsSimple + tsSize(18) + tsBold,
+			viewSetupFormScript: compile(
+				options: "names",
+				func() begin
+					(text := displayLine.labelText)
+				end),
+			_proto: @protoStaticText
+		},
+		{
+			viewJustify: vjParentFullH,
+			viewBounds: {left: 110, top: 0, right: 0, bottom: 30},
+			viewFont: tsSimple + tsSize(18),
+			viewSetupFormScript: compile(
+				options: "names",
+				func() begin
+					text := displayLine.contentText;
+					(viewBounds := SetBounds(110, 0, 0, height))
+				end),
+			_proto: @protoStaticText
+		}
+	]
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+GetContent_literal0 := same("singleTaskPrintDef.mainFormat.viewChildren[2].GetContent.literals[0]");
+
+GetContent_literal2 := same("singleTaskPrintDef.mainFormat.viewChildren[1].GetContent.literals[2]");
+
+GetContent_literal3 := same("singleTaskPrintDef.mainFormat.viewChildren[1].GetContent.literals[3]");

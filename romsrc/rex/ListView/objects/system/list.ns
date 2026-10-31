@@ -1,0 +1,69 @@
+// list, and what only it reaches
+
+list := {
+	symbol: 'list,
+	name: outline,
+	description: outline,
+	icon: {
+		bits: bitmap('bits, "resources/bits/78ed0d.png", "0000000000040198019800d901a700e8", 1),
+		bounds: {left: 0, top: 0, right: 15, bottom: 15}
+	},
+	version: 1,
+	height: 200,
+	metaData: nil,
+	superSymbol: 'notes,
+	mailBulletDone: mailBulletDone,
+	mailBulletNotDone: mailBulletDone,
+	MakeNewEntry: compile(
+		options: "names",
+		func() begin
+			{class: 'list, height: 200, topics: [Array: ], timestamp: Time(), makeNewTopic: true}
+		end),
+	SheetBounds: compile(
+		options: "names",
+		func(anEntry) begin
+			RelBounds(0, 0, 240, 312)
+		end),
+	StringExtract: compile(
+		constants: {
+			kLiteral_785c65: "-empty-"
+		},
+		options: "names",
+		func(anEntry, nLines) begin
+			local guts;
+			if (StrLen((guts := (if (if anEntry.topics then (Length(anEntry.topics) > 0)) then ExtractData(anEntry.topics, "...", 50) else kLiteral_785c65))) = 0) then begin
+					guts := kLiteral_785c65
+				end;
+			(if anEntry.title then Stringer([Array: anEntry.title, " ", guts]) else guts)
+		end),
+	TextScript: compile(
+		options: "names",
+		func(fields, target) begin
+			local topic;
+			local t;
+			local theText;
+			local bullet;
+			(foreach topic in target.topics do begin
+					if topic.mtgDone then begin
+							bullet := mailBulletDone
+						end else begin
+							bullet := mailBulletNotDone
+						end;
+					if theText then begin
+							theText := Stringer([Array: theText, "\n"]);
+							if topic.level then begin
+									(for t := 2 to topic.level do begin
+											theText := Stringer([Array: theText, "\t"])
+										end)
+								end;
+							theText := Stringer([Array: theText, bullet, MakeRichString(topic.text, topic.styles)])
+						end else begin
+							theText := Stringer([Array: bullet, MakeRichString(topic.text, topic.styles)])
+						end
+				end);
+			theText
+		end),
+	_proto: @newtStationery
+};
+
+mailBulletDone := "* ";

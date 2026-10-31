@@ -1,0 +1,94 @@
+// company_2, and what only it reaches
+
+company_2 := {
+	stepChildren: [|Array|: company_2Item, company_2Item_2],
+	name: company,
+	symbol: 'company,
+	type: 'editor,
+	infoFrame: {
+		checkPrefix: [|Array|: true, [pathExpr: 'companies]],
+		checkPaths: [|Array|: 'company, 'title],
+		formatFunc: func(a1) begin
+			local l1, l2;
+			l1 := StrFilled(a1[0]);
+			l2 := StrFilled(a1[1]);
+			(if (if l1 then l2) then ParamStr("^1, ^0", a1) else (if l1 then a1[0] else (if l2 then a1[1] else "")))
+		end
+	},
+	protection: 'private,
+	fieldOrder: [|Array|: 0, 1],
+	_proto: @8240,
+	company: nil,
+	stepAllocateContext: [|Array|:
+		'company,
+		company_2Item,
+		'title,
+		company_2Item_2,
+		'reading,
+		{
+			path: nil,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 65},
+			viewLineSpacing: 30,
+			flavor: @newtCustomFilter,
+			newRecFlags: 29403649,
+			addPath: 'companyReading,
+			label: label,
+			viewSetupDoneScript: func() begin
+				AddDeferredCall(functions.KeyIn, [Array: 56, nil]);
+				inherited:?viewSetupDoneScript()
+			end,
+			_proto: @newtLabelInputLine,
+			preAllocatedContext: 'reading
+		},
+		'section,
+		{
+			path: nil,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 65},
+			viewLineSpacing: 30,
+			flavor: @newtCustomFilter,
+			newRecFlags: 29403649,
+			addPath: 'section,
+			label: label,
+			viewSetupDoneScript: func() begin
+				AddDeferredCall(functions.KeyIn, [Array: 56, nil]);
+				inherited:?viewSetupDoneScript()
+			end,
+			_proto: @newtLabelInputLine,
+			preAllocatedContext: 'section
+		}
+	],
+	title: nil,
+	reading: nil,
+	section: nil
+};
+
+company_2Item := {
+	path: nil,
+	viewBounds: {left: 0, top: 6, right: 0, bottom: 80},
+	viewLineSpacing: 30,
+	label: company,
+	flavor: @newtCustomFilter,
+	newDictionaries: nil,
+	newRecFlags: 29403649,
+	viewSetupFormScript: func() begin
+		local l1;
+		newDictionaries := (l1 := GetLocale()).recogCompanyDictionaries;
+		if (selectedPath <> true) then begin
+				RemoveSlot(self, 'viewChangedScript)
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	memory: 'companyName,
+	addPath: 'company,
+	_proto: addressItem_5Proto,
+	preAllocatedContext: 'company
+};
+
+company_2Item_2 := {
+	addPath: 'title,
+	memory: 'companyTitle,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 35},
+	viewLineSpacing: 28,
+	_proto: @8248,
+	preAllocatedContext: 'title
+};

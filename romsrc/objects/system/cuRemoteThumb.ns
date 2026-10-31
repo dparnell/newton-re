@@ -1,0 +1,59 @@
+// cuRemoteThumb, and what only it reaches
+
+cuRemoteThumb := {
+	viewClass: clRemoteView,
+	viewBounds: {left: 0, top: 0, right: 60, bottom: 80},
+	viewFlags: vVisible,
+	viewJustify: 0,
+	viewFormat: 0,
+	protoRemotee: {
+		viewClass: clView,
+		viewFlags: vVisible,
+		viewChildren: [|Array|: ],
+		viewSetupFormScript: func() begin
+			(self.viewBounds := pageBounds)
+		end
+	},
+	viewChildren: [|Array|: ],
+	contentArea: nil,
+	protoStubby: {
+		viewSetupFormScript: func() begin
+			true
+		end,
+		viewSetupDoneScript: func() begin
+			true
+		end,
+		viewShowScript: func() begin
+			true
+		end,
+		viewDrawScript: func() begin
+			true
+		end,
+		viewSetupChildrenScript: func() begin
+			true
+		end
+	},
+	form: [|Array|: ],
+	scripts: [|Array|: ],
+	bookmarking: true,
+	pagesShowing: 1,
+	isbn: nil,
+	viewSetupChildrenScript: func() begin
+		(l3 := Clone(protoStubby))._proto := contentArea;
+		l4 := {_proto: l3, preallocatedContext: nil, isbn: isbn, viewChildren: form};
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		(for l2 := 0 to (Length(scripts) - 1) by 2 do begin
+				l1 := scripts[l2];
+				l4.(l1) := scripts[(l2 + 1)]
+			end);
+		(self.viewChildren := [Array: {_proto: protoRemotee, viewChildren: [Array: {_proto: protoRemotee, viewChildren: [Array: l4]}]}])
+	end,
+	debug: 85068
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupChildrenScript_literal10 := same("cuRemoteThumb.viewSetupChildrenScript.literals[10]");

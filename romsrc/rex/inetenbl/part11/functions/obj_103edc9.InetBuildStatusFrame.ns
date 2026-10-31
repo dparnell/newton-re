@@ -1,5 +1,0 @@
-@@ 0x104ca71
-func(a1, a2, a3, a4, a5, a6) begin
-	InetStartUp():MBuildStatusFrame(a1, a2, a3, a4, a5, a6)
-end
-@@end

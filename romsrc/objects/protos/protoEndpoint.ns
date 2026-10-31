@@ -1,0 +1,107 @@
+// protoEndpoint, and what only it reaches
+
+protoEndpoint := {
+	xconnect: {class: #132, funcPtr: 6958459, numArgs: 2},
+	OptionAttribute: func(a1) begin
+		local l1;
+		l1 := nil;
+		if a1 then begin
+				if IsArray(a1) then begin
+						l1 := Length(a1)
+					end else begin
+						l1 := 'standalone
+					end
+			end;
+		l1
+	end,
+	reject: {class: #132, funcPtr: 6959502, numArgs: 0},
+	flushPartial: {class: #132, funcPtr: 6959489, numArgs: 0},
+	release: {class: #132, funcPtr: 6959503, numArgs: 0},
+	Disconnect: {class: #132, funcPtr: 6958460, numArgs: 0},
+	GetOptions: {class: #132, funcPtr: 6959491, numArgs: 1},
+	SplitOption: func(a1, a2) begin
+		l1 := nil;
+		if a2 then begin
+				l2 := Length(a1);
+				if (a2 = 'standalone) then begin
+						l1 := a1[(l2 - 1)];
+						SetLength(a1, (l2 - 1))
+					end else begin
+						l1 := [Array: ];
+						local l1;
+						local l2;
+						(for l3 := (l2 - a2) to (l2 - 1) do begin
+								AddArraySlot(l1, a1[l3])
+							end);
+						SetLength(a1, (l2 - a2))
+					end
+			end;
+		l1
+	end,
+	disposeLeavingTEndpoint: {class: #132, funcPtr: 6958462, numArgs: 0},
+	justConnect: func(a1, a2) begin
+		self:AddrOptionGlue(a1, a2, func(a1, a2) begin
+			self:xjustConnect(a1, a2)
+		end)
+	end,
+	Listen: {class: #132, funcPtr: 6959496, numArgs: 1},
+	output: {class: #132, funcPtr: 6959497, numArgs: 2},
+	input: {class: #132, funcPtr: 6959492, numArgs: 0},
+	AddrOptionGlue: func(a1, a2, a3) begin
+		local l1, l2, l3, l4;
+		l1 := self:OptionAttribute(a1);
+		l2 := self:OptionAttribute(a2);
+		l3 := self:AddInOption((l3 := self:AddInOption((l3 := [Array: ]), l1, a1)), l2, a2);
+		l4 := call a3 with (nil, l3);
+		a2 := self:SplitOption(l3, l2);
+		a1 := self:SplitOption(l3, l1);
+		l4
+	end,
+	instantiateFromTEndpoint: {class: #132, funcPtr: 6959495, numArgs: 3},
+	justUnBind: {class: #132, funcPtr: 6989110, numArgs: 0},
+	inputAvailable: {class: #132, funcPtr: 6959493, numArgs: 0},
+	Abort: {class: #132, funcPtr: 6958455, numArgs: 0},
+	readyForOutput: {class: #132, funcPtr: 6959501, numArgs: 1},
+	Partial: {class: #132, funcPtr: 6959500, numArgs: 0},
+	xjustConnect: {class: #132, funcPtr: 6989105, numArgs: 2},
+	SetOptions: {class: #132, funcPtr: 6959505, numArgs: 1},
+	OutputFrame: {class: #132, funcPtr: 6959499, numArgs: 2},
+	justRelease: {class: #132, funcPtr: 6989109, numArgs: 0},
+	justOpen: {class: #132, funcPtr: 6989108, numArgs: 0},
+	Connect: func(a1, a2) begin
+		self:AddrOptionGlue(a1, a2, func(a1, a2) begin
+			self:xconnect(a1, a2)
+		end)
+	end,
+	justBind: {class: #132, funcPtr: 6989103, numArgs: 0},
+	justClose: {class: #132, funcPtr: 6989104, numArgs: 0},
+	justListen: {class: #132, funcPtr: 6989107, numArgs: 1},
+	Dispose: {class: #132, funcPtr: 6958461, numArgs: 0},
+	Instantiate: {class: #132, funcPtr: 6959494, numArgs: 2},
+	flushOutput: {class: #132, funcPtr: 6959488, numArgs: 0},
+	justDisconnnect: {class: #132, funcPtr: 6989106, numArgs: 0},
+	setSync: {class: #132, funcPtr: 6990160, numArgs: 1},
+	flushInput: {class: #132, funcPtr: 6958463, numArgs: 0},
+	BytesAvailable: {class: #132, funcPtr: 6958457, numArgs: 0},
+	caller: {class: #132, funcPtr: 6958458, numArgs: 0},
+	SetInputSpec: {class: #132, funcPtr: 6959504, numArgs: 1},
+	outputDone: {class: #132, funcPtr: 6959498, numArgs: 0},
+	AddInOption: func(a1, a2, a3) begin
+		if a2 then begin
+				if (a2 = 'standalone) then begin
+						AddArraySlot(a1, a3)
+					end else begin
+						(foreach l1 in a3 do begin
+								AddArraySlot(a1, l1)
+							end)
+					end
+			end;
+		a1
+	end,
+	state: {class: #132, funcPtr: 6959507, numArgs: 0},
+	Accept: {class: #132, funcPtr: 6958456, numArgs: 0}
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+justConnect_code := same("protoEndpoint.justConnect.instructions");

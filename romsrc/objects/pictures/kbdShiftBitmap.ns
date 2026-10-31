@@ -1,0 +1,6 @@
+// kbdShiftBitmap, and what only it reaches
+
+kbdShiftBitmap := {
+	bits: bitmap('bits, "resources/bits/3d78a1.png", "0000000000040149014900c9015700db", 1),
+	bounds: {left: 0, top: 0, right: 18, bottom: 14}
+};

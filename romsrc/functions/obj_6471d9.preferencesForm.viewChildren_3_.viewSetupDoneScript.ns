@@ -1,5 +1,0 @@
-@@ 0x531799
-func() begin
-	(if (not transport:GetConfig('enableAutoUI)) then self:Hide())
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x10488f9
-func(a1) begin
-	AddArraySlot(fLinkClients_ReleasePending, a1)
-end
-@@end

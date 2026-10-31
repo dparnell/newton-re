@@ -1,0 +1,25 @@
+// canonicalTextBlock, and what only it reaches
+
+canonicalTextBlock := {
+	viewFlags: vVisible + vReadOnly + vClickable + vGesturesAllowed,
+	viewFormat: 0,
+	viewJustify: 0,
+	textFlags: 256,
+	tabs: [|Array|: 18, 36, 54, 72, 90, 108, 126, 144, 162, 180, 198, 216, 234],
+	viewClickScript: func(a1) begin
+		nil
+	end,
+	viewgesturescript: func(a1, a2) begin
+		local l1;
+		l1 := nil;
+		if (a2 = 49) then begin
+				l1 := self:?buttonClickScript()
+			end;
+		l1
+	end,
+	buttonClickScript: func() begin
+		nil
+	end,
+	debug: 8554065,
+	_proto: @protoStaticText
+};

@@ -1,0 +1,3 @@
+// indexDescPrototype, and what only it reaches
+
+indexDescPrototype := {structure: 'slot, path: '_uniqueID, type: 'int, index: nil};

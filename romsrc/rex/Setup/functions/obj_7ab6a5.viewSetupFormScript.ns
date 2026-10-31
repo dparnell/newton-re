@@ -1,5 +1,0 @@
-@@ 0x7ab6f9
-func() begin
-	(self.vInputLine.viewFlags := (self.vInputLine.viewFlags + 8388608))
-end
-@@end

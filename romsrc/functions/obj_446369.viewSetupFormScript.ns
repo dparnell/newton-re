@@ -1,5 +1,0 @@
-@@ 0x446349
-func() begin
-	(text := StringFilter(GetLocale().timeformat.(buttonValue), " ", 'rejectAll))
-end
-@@end

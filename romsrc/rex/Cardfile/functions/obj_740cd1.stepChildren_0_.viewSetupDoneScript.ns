@@ -1,5 +1,0 @@
-@@ 0x741365
-func() begin
-	(bookmark := nil)
-end
-@@end

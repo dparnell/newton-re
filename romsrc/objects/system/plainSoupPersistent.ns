@@ -1,0 +1,11 @@
+// plainSoupPersistent, and what only it reaches
+
+plainSoupPersistent := {
+	class: 'DiskSoup,
+	lastUID: nil,
+	signature: nil,
+	indexes: nil,
+	flags: nil,
+	indexesModTime: nil,
+	infoModTime: nil
+};

@@ -1,0 +1,3 @@
+// connValidTestExclusion, and what only it reaches
+
+connValidTestExclusion := {notes: [|Array|: 'timestamp]};

@@ -1,0 +1,119 @@
+// personal, and what only it reaches
+
+personal := {
+	name: "Dates",
+	symbol: 'personal,
+	type: 'editor,
+	stepChildren: [|Array|: birthday, anniversary],
+	useNumericKeys: true,
+	infoFrame: {
+		checkPrefix: [|Array|: true, nil],
+		checkPaths: [|Array|: 'bday, 'anniversary],
+		formatFunc: func(a1) begin
+			local l1;
+			l1 := "";
+			if a1[0] then begin
+					l1 := Stringer([Array: l1, " ", ParamStr("Bday: ^0", [Array: (if (if IsInstance(a1[0], 'string) then IsRichString(a1[0])) then a1[0] else ShortDateStr(a1[0], 0))])])
+				end;
+			if a1[1] then begin
+					l1 := Stringer([Array: l1, " ", "\n", " ", ParamStr("Anniv.: ^0", [Array: (if (if IsInstance(a1[1], 'string) then IsRichString(a1[1])) then a1[1] else ShortDateStr(a1[1], 0))])])
+				end;
+			l1
+		end
+	},
+	protection: 'private,
+	fieldOrder: [|Array|: 0, 1],
+	_proto: @8240,
+	birthday: nil,
+	stepAllocateContext: [|Array|:
+		'birthday,
+		birthday,
+		'anniversary,
+		anniversary,
+		'jbirthday,
+		{
+			viewFlags: vVisible,
+			viewFormat: 0,
+			addPath: 'bday,
+			eventPath: 'bdayEvent,
+			eventStr: bday,
+			label: label,
+			path: nil,
+			viewClass: clView,
+			viewQuitScript: viewQuitScript,
+			preAllocatedContext: 'jbirthday
+		},
+		'jAnniv,
+		{
+			viewFlags: vVisible,
+			viewFormat: 0,
+			addPath: 'anniversary,
+			eventPath: 'anniversaryEvent,
+			eventStr: anniv,
+			label: label,
+			path: nil,
+			viewClass: clView,
+			viewQuitScript: viewQuitScript,
+			preAllocatedContext: 'jAnniv
+		}
+	],
+	anniversary: nil,
+	jbirthday: nil,
+	jAnniv: nil
+};
+
+birthday := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+	viewLineSpacing: 32,
+	changed: nil,
+	label: "Birthday",
+	addPath: 'bday,
+	flavor: flavor_2,
+	eventStr: bday,
+	eventPath: 'bdayEvent,
+	_proto: @newtLabelSimpleDateInputLine,
+	viewQuitScript: viewQuitScript,
+	preAllocatedContext: 'birthday
+};
+
+flavor_2 := {
+	_proto: @newtSimpleDateFilter,
+	longFormat: 180969,
+	shortFormat: nil,
+	TextToPath: func(a1) begin
+		baseLine.changed := true;
+		inherited:TextToPath(a1)
+	end
+};
+
+bday := "Bday: ^0";
+
+viewQuitScript := func() begin
+	local l1, l2;
+	if (if self.changed then (ClassOf(target.(path)) <> 'string)) then begin
+			appBase:AddBdayToCalendar(target, path, eventPath, eventStr)
+		end else begin
+			if (if (not target.(path)) then target.(eventPath)) then begin
+					appBase:RemoveBdayFromCalendar(target)
+				end
+		end;
+	inherited:?viewQuitScript()
+end;
+
+anniversary := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+	viewLineSpacing: 32,
+	label: "Anniversary",
+	addPath: 'anniversary,
+	flavor: flavor_2,
+	changed: nil,
+	eventPath: 'anniversaryEvent,
+	eventStr: anniv,
+	_proto: @newtLabelSimpleDateInputLine,
+	viewQuitScript: viewQuitScript,
+	preAllocatedContext: 'anniversary
+};
+
+anniv := "Anniv.: ^0";

@@ -1,0 +1,3 @@
+// txLocalPrototype, and what only it reaches
+
+txLocalPrototype := {text: nil, styles: nil, rulers: nil};

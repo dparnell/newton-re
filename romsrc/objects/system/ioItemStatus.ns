@@ -1,0 +1,124 @@
+// ioItemStatus, and what only it reaches
+
+ioItemStatus := {
+	declareSelf: 'base,
+	spacing: 6,
+	simpleSendButton: {
+		width: nil,
+		viewBounds: {left: -57, top: 14, right: -7, bottom: 30},
+		viewJustify: vjCenterH + vjParentRightH,
+		text: send,
+		viewSetupFormScript: func() begin
+			width := (StrFontWidth(text, viewFont) + 6);
+			(viewBounds := Clone(viewBounds)).left := (viewBounds.right - width);
+			(_sendKeyButton := self)
+		end,
+		buttonClickScript: func() begin
+			local l1;
+			(if (fields.state = 'pending) then OpenRoutingSlip(fields, nil) else (if (l1 := GetItemTransport(fields)) then self:DoRequest(l1, 'SendRequest, 'user, fields)))
+		end,
+		viewQuitScript: func() begin
+			(_sendKeyButton := nil)
+		end,
+		_proto: @protoTextButton
+	},
+	transportButton: @ioTransportButton,
+	menuLeftButtonsDef: [|Array|:
+		{
+			_proto: {
+				text: show_2,
+				viewSetupFormScript: func() begin
+					popup := [Array: ];
+					if (if layout then layout.viewDefFrame) then begin
+							(foreach l1, l2 in layout.viewDefFrame do begin
+									if (if ((l2.type = 'viewer) or (l2.type = 'editor)) then ((l2.protection = nil) or (l2.protection = 'public))) then begin
+											self:AddToPopup(l1, l2)
+										end
+								end)
+						end;
+					if (Length(popup) > 1) then begin
+							self.viewFlags := BOr(self.viewFlags, 1)
+						end else begin
+							self.viewFlags := BAnd(self.viewFlags, bnot(1))
+						end;
+					inherited:?viewSetupFormScript();
+					(_showKeyButton := self)
+				end,
+				pickActionScript: func(a1) begin
+					inherited:pickActionScript(a1);
+					currentViewSymbol := popup[a1].symbol;
+					(foreach l1 in popup do begin
+							if (l1.symbol = currentViewSymbol) then begin
+									l1.mark := $\uFC0B
+								end else begin
+									if l1.mark then begin
+											RemoveSlot(l1, 'mark)
+										end
+								end
+						end);
+					(if (ioEntryView exists) then begin
+							ioEntryView:SetViewDef(popup[a1].symbol);
+							(if itemStatus.viewCObject then itemStatus:RedoChildren())
+						end)
+				end,
+				AddToPopup: func(a1, a2) begin
+					local l1;
+					l1 := {item: (if a2.title then a2.title else a2.name), symbol: a1};
+					if (a1 = currentViewSymbol) then begin
+							l1.mark := $\uFC0B
+						end;
+					AddArraySlot(popup, l1)
+				end,
+				popup: nil,
+				viewQuitScript: func() begin
+					(_showKeyButton := nil)
+				end,
+				debug: 657,
+				_proto: @protoPopupButton
+			}
+		}
+	],
+	menuRightButtonsDef: [|Array|:
+		{
+			viewSetupFormScript: func() begin
+				inherited:?viewSetupFormScript();
+				(_closeBox := self)
+			end,
+			buttonClickScript: func() begin
+				newtAppBase:ShowLayout('overview)
+			end,
+			_proto: @protoCancelButton
+		},
+		{_proto: menuRightButtonsDefProto},
+		{_proto: menuRightButtonsDefProto_2},
+		{_proto: @ioTransportButton}
+	],
+	viewSetupChildrenScript: func() begin
+		local l1, l2;
+		self.menuLeftButtons := menuLeftButtonsDef;
+		self.menuRightButtons := Clone(menuRightButtonsDef);
+		if (currentSoupSymbol = 'outbox) then begin
+				if (if layout.entryViewDefs then (layout.entryViewDefs[0].type = 'editor)) then begin
+						menuLeftButtons := Clone(menuLeftButtons);
+						if (((l1 := layout.entryViewDefs[0].IOEditFlags) = nil) or (BAnd(l1, 2) <> 0)) then begin
+								ArrayInsert(menuLeftButtons, {_proto: @protoSmallKeyboardButton}, 0)
+							end;
+						if ((l1 = nil) or (BAnd(l1, 1) <> 0)) then begin
+								ArrayInsert(menuLeftButtons, {_proto: @recToggle}, 0);
+								if layout.entryViewDefs[0]._recogPopup then begin
+										menuLeftButtons[0] := {_proto: @recToggle, _recogPopup: layout.entryViewDefs[0]._recogPopup}
+									end
+							end
+					end;
+				if (if (l2 := layout.dataCursor:entry()) then ((l2.state = 'ready) or (l2.state = 'pending))) then begin
+						AddArraySlot(menuRightButtons, simpleSendButton)
+					end
+			end;
+		inherited:?viewSetupChildrenScript()
+	end,
+	viewDrawScript: func() begin
+		nil
+	end,
+	preallocatedContext: 'itemStatus,
+	_proto: @newtStatusBarNoClose
+};

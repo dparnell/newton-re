@@ -1,0 +1,6 @@
+// smallClockBitmaps, and what only it reaches
+
+smallClockBitmaps := {
+	bits: bitmap('bits, "resources/bits/3d8271.png", "000000000024000000000000000b0108", 1),
+	bounds: {left: 0, top: 0, right: 264, bottom: 11}
+};

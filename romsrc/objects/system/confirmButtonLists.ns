@@ -1,0 +1,28 @@
+// confirmButtonLists, and what only it reaches
+
+confirmButtonLists := {
+	okCancel: [|Array|:
+		{value: true, text: uErasePersistentConfirmButton1Str},
+		{value: nil, text: uErasePersistentConfirmButton0Str}
+	],
+	okCancelDefaultOk: [|Array|:
+		{value: true, text: uErasePersistentConfirmButton1Str, keyValue: 'default},
+		{value: nil, text: uErasePersistentConfirmButton0Str, keyValue: 'Close}
+	],
+	okCancelDefaultCancel: [|Array|:
+		{value: true, text: uErasePersistentConfirmButton1Str, keyValue: nil},
+		{value: nil, text: uErasePersistentConfirmButton0Str, keyValue: 'default}
+	],
+	yesNo: [|Array|:
+		{value: true, text: uErasePersistentDataButton1Str},
+		{value: nil, text: uErasePersistentDataButton0Str}
+	],
+	yesNoDefaultYes: [|Array|:
+		{value: true, text: uErasePersistentDataButton1Str, keyValue: 'default},
+		{value: nil, text: uErasePersistentDataButton0Str, keyValue: 'Close}
+	],
+	yesNoDefaultNo: [|Array|:
+		{value: true, text: uErasePersistentDataButton1Str, keyValue: nil},
+		{value: nil, text: uErasePersistentDataButton0Str, keyValue: 'default}
+	]
+};

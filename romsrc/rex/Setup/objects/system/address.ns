@@ -1,0 +1,130 @@
+// address, and what only it reaches
+
+address := {
+	stepChildren: [|Array|:
+		nameItem,
+		address_2,
+		addressItem,
+		city,
+		state,
+		zipCode,
+		{
+			viewBounds: {left: 0, top: 0, right: 240, bottom: 50},
+			viewFlags: vVisible,
+			viewJustify: vjCenterH + vjParentCenterH + vjSiblingBottomV,
+			viewTransferMode: 2,
+			viewClass: clPictureView,
+			icon: picture('picture, "resources/picture/7b1359")
+		},
+		{
+			viewBounds: {left: 0, top: 214, right: 226, bottom: 298},
+			viewJustify: vjParentCenterH,
+			_proto: @8348
+		}
+	],
+	description: nameItem_2Text,
+	TearDown: func() begin
+		fReviewDone := true;
+		fPersona.address := vAddr1:GetText();
+		fPersona.address2 := vAddr2:GetText();
+		fPersona.city := vCity:GetText();
+		fPersona.region := vRegion:GetText();
+		(fPersona.postal_code := vZipInput:GetText())
+	end,
+	declareSelf: 'PageBase,
+	viewSetupDoneScript: func() begin
+		SetKeyView(vAddr1.vInputLine, 0);
+		inherited:?viewSetupDoneScript();
+		vAddr1:SetText(fPersona.address);
+		vAddr2:SetText(fPersona.address2);
+		vCity:SetText(fPersona.city);
+		vRegion:SetText(fPersona.region);
+		vZipInput:SetText(fPersona.postal_code)
+	end,
+	titleTExt: "Enter your \u000dMailing Address",
+	debug: "address",
+	fieldOrder: [|Array|: 0, 1, 2, 3, 4, 5, 6, 7],
+	_proto: @8353,
+	vAddr1: nil,
+	stepAllocateContext: [|Array|:
+		'_defaultButton,
+		nameItem_2,
+		'vGoBackButton,
+		nameItem_3,
+		'vCloser,
+		nameItem_4,
+		'vFeedback,
+		nameItem_5,
+		'vAddr1,
+		address_2,
+		'vAddr2,
+		addressItem,
+		'vCity,
+		city,
+		'vRegion,
+		state,
+		'vZipInput,
+		zipCode
+	],
+	vAddr2: nil,
+	vCity: nil,
+	vRegion: nil,
+	vZipInput: nil
+};
+
+address_2 := {
+	viewBounds: {left: 0, top: 2, right: 236, bottom: 23},
+	label: "Address",
+	viewSetupFormScript: func() begin
+		self.vInputLine.viewFlags := (self.vInputLine.viewFlags + 8388608);
+		AddDelayedCall(functions.KeyIn, [Array: 56, nil], 100)
+	end,
+	_proto: @8350,
+	preAllocatedContext: 'vAddr1
+};
+
+addressItem := {
+	viewBounds: {left: 0, top: 2, right: 236, bottom: 23},
+	label: nameItem_2Text,
+	viewSetupFormScript: func() begin
+		(self.vInputLine.viewFlags := (self.vInputLine.viewFlags + 8388608))
+	end,
+	_proto: @8350,
+	preAllocatedContext: 'vAddr2
+};
+
+city := {
+	viewBounds: {left: 0, top: 2, right: 236, bottom: 23},
+	label: "City",
+	viewSetupFormScript: func() begin
+		label := GetLocale().cityLabel;
+		(self.vInputLine.viewFlags := (self.vInputLine.viewFlags + 8388608))
+	end,
+	_proto: @8350,
+	preAllocatedContext: 'vCity
+};
+
+state := {
+	viewBounds: {left: 0, top: 2, right: 236, bottom: 23},
+	label: "State",
+	viewSetupFormScript: func() begin
+		label := GetLocale().regionLabel;
+		(self.vInputLine.viewFlags := (self.vInputLine.viewFlags + 8388608))
+	end,
+	_proto: @8350,
+	preAllocatedContext: 'vRegion
+};
+
+zipCode := {
+	viewBounds: {left: 0, top: 2, right: 236, bottom: 23},
+	label: "Zip Code",
+	viewSetupFormScript: func() begin
+		(label := GetLocale().postalCodeLabel)
+	end,
+	_proto: @8350,
+	preAllocatedContext: 'vZipInput
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_5 := same("city.viewSetupFormScript.instructions");

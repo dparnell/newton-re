@@ -1,6 +1,0 @@
-@@ 0x1018521
-func(a1) begin
-	self:?DoErrorCallback("Endpoint UnBind", a1);
-	self:DoEvent('Dispose, nil)
-end
-@@end

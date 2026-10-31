@@ -1,0 +1,10 @@
+// export101, and what only it reaches
+
+export101 := {
+	_proto: @8256,
+	speedOption: 2400,
+	useEOP: nil,
+	openOptions: func() begin
+		inherited:openOptions()
+	end
+};

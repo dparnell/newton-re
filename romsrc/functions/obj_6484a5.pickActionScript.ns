@@ -1,6 +1,0 @@
-@@ 0x45af51
-func(a1) begin
-	Date := a1;
-	inherited:pickActionScript(a1)
-end
-@@end

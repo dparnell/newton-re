@@ -1,0 +1,46 @@
+// protoStatusProgress, and what only it reaches
+
+protoStatusProgress := {
+	debug: 11649,
+	indicator: true,
+	viewClass: clView,
+	viewValue: 0,
+	viewBounds: {left: 0, top: 7, right: 32, bottom: 47},
+	minValue: 0,
+	maxValue: 100,
+	viewFlags: vVisible + vReadOnly,
+	viewJustify: vjParentCenterH + vjSiblingBottomV,
+	viewFormat: 0,
+	Dogear: 10,
+	name: 'progress,
+	viewSetupFormScript: func() begin
+		(if ((data := self:path().(name)) = nil) then (viewValue := maxValue) else (if (ClassOf(data) = 'Array) then begin
+					viewValue := data[0];
+					minValue := data[1];
+					(maxValue := data[2])
+				end else (viewValue := data)))
+	end,
+	viewUpdateFormScript: func() begin
+		self:viewSetupFormScript();
+		self:Dirty()
+	end,
+	viewDrawScript: func() begin
+		local l1, l2, l3;
+		l1 := self:LocalBox();
+		l2 := 2;
+		if (viewValue >= maxValue) then begin
+				l2 := 5
+			end;
+		self:DrawShape(MakeRoundRect(l1.left, l1.top, l1.right, l1.bottom, 4), {transferMode: 0, fillPattern: l2, pensize: 2});
+		if (if (viewValue > 0) then (viewValue < maxValue)) then begin
+				l3 := floor((viewValue * (l1.bottom / (maxValue - minValue))));
+				self:DrawShape(MakeRoundRect(l1.left, l1.top, l1.right, l3, 4), {transferMode: 0, fillPattern: 5})
+			end;
+		self:DrawShape(MakeRoundRect((l1.right - Dogear), l1.top, l1.right, (l1.top + Dogear), 4), {transferMode: 0, fillPattern: 1, penPattern: 0, pensize: 2});
+		self:DrawShape(MakePolygon([Array: ((l1.right - Dogear) - 1), l1.top, ((l1.right - Dogear) - 1), (l1.top + Dogear), (l1.right - 2), (l1.top + Dogear), ((l1.right - Dogear) - 1), l1.top]), {transferMode: 0, fillPattern: 1, penPattern: 5, pensize: 2})
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewDrawScript_literal14 := same("protoStatusProgress.viewDrawScript.literals[14]");

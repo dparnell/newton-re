@@ -1,0 +1,867 @@
+// part, and what only it reaches
+
+part := array(nil, {
+	_ExportTable: [|Array|:
+		{
+			name: '|SetupProtos:NIE|,
+			major: 1,
+			minor: 0,
+			objects: [|Array|:
+				partItem_2Proto,
+				{
+					symbol: nil,
+					name: name,
+					description: name,
+					superSymbol: 'INET,
+					helpText: name,
+					OverviewIcon: {
+						bounds: {left: 0, top: 0, right: 30, bottom: 30},
+						bits: OverviewIconBits,
+						colorData: {cbits: OverviewIconBits, bitDepth: 1}
+					},
+					version: 2,
+					StringExtract: func(a1, a2) begin
+						local l1, l2;
+						if (not StrFilled((l1 := a1.setupName))) then begin
+								l1 := "<No Name>"
+							end;
+						if (a2 > 1) then begin
+								l2 := "";
+								l2 := self:?MakeNextLine(a1);
+								l1 := Stringer([Array: l1, "\n", l2])
+							end;
+						l1
+					end,
+					MakeNextLine: func(a1) begin
+						""
+					end,
+					viewsToDisplay: [|Array|: ],
+					newEntryViews: [|Array|: ],
+					DataConversion: compile(
+						constants: {
+							kFunction_1019491: func(a1) begin
+								l1 := "bogusPassword";
+								l2 := "<EnterNameHere>";
+								a1.version := 2;
+								if (l3 := '{ppp: |PPP:NIE|, slip: |SLIP:NIE|, macIP: |MacIP:NIE|}.(a1.linkLayer)) then begin
+										a1.linkLayer := l3
+									end;
+								if (if HasSlot(a1, 'userName) then StrEqual(a1.userName, l2)) then begin
+										a1.userName := ""
+									end;
+								if (if HasSlot(a1, 'password) then StrEqual(a1.password, l1)) then begin
+										a1.password := ""
+									end;
+								if a1.gatewayAddressFixed then begin
+										SetClass(a1.gatewayAddress, 'static)
+									end else begin
+										SetClass(a1.gatewayAddress, 'dynamic)
+									end;
+								RemoveSlot(a1, 'gatewayAddressFixed);
+								if a1.localAddressFixed then begin
+										SetClass(a1.localAddress, 'static)
+									end else begin
+										SetClass(a1.localAddress, 'dynamic)
+									end;
+								RemoveSlot(a1, 'localAddressFixed);
+								a1.configuration := (if (if (ClassOf(a1.localAddress) = 'dynamic) then (ClassOf(a1.gatewayAddress) = 'dynamic)) then 'usingServer else 'Manual);
+								a1.DNSServers := [Array: DeepClone(a1.dnsServerAddress)];
+								if HasSlot(a1, 'dnsServerAddressAlternates) then begin
+										local l1;
+										local l2;
+										local l3;
+										(foreach l4 in a1.dnsServerAddressAlternates do begin
+												AddArraySlot(a1.DNSServers, DeepClone(l4))
+											end);
+										RemoveSlot(a1, 'dnsServerAddressAlternates)
+									end;
+								RemoveSlot(a1, 'dnsServerAddress);
+								if HasSlot(a1, 'loginInfo) then begin
+										a1.LoginScript := {instructions: DeepClone(a1.loginInfo.loginInstructions), interpreterSymbol: '|Script Manager:NIE|, timeout: DeepClone(a1.loginInfo.loginScriptTimeout)}
+									end;
+								a1
+							end
+						},
+						func(a1) begin
+							(a1 := self:?ValidateTarget((a1 := self:?CheckSlots((a1 := call (kFunction_1019491) with (a1))))))
+						end),
+					TextScript: func(a1, a2) begin
+						l1 := "";
+						l3 := Clone(viewsToDisplay);
+						local l1;
+						local l2;
+						local l3;
+						local l4;
+						local l5;
+						local l6;
+						local l7;
+						local l8;
+						local l9;
+						local l10;
+						(foreach l11, l12 in (l2 := GetViewDefs(a2.class)) do begin
+								if (if (l12.type = 'editor) then (l11 <> 'default)) then begin
+										SetAdd(l3, l11, true)
+									end
+							end);
+						if (if a2 then l3) then begin
+								(foreach l14 in l3 do begin
+										if (l6 := self:MakeDataPaths((l5 := l2.(l14).infoFrame).checkPrefix[0], l5.checkPaths, l5.stringData)) then begin
+												if (l7 := self:GetText(a2, l6, l5)) then begin
+														l1 := Stringer([Array: l1, "\n", l7])
+													end
+											end;
+										if (if (if IsArray(l5.checkPrefix[1]) then (l8 := l5.checkPrefix[1])) then (l9 := a2.(l8))) then begin
+												l10 := Length(l9);
+												(for l16 := 0 to (l10 - 1) do begin
+														AddArraySlot((origPath := Clone(l5.checkPrefix[1])), l16);
+														if (l6 := self:MakeDataPaths(origPath, l5.checkPaths, l5.stringData)) then begin
+																if (l7 := self:GetText(a2, origPath, l5)) then begin
+																		l1 := Stringer([Array: l1, "\n", l7])
+																	end
+															end
+													end)
+											end
+									end)
+							end;
+						TrimString(l1)
+					end,
+					CheckSlots: func(a1) begin
+						(foreach l1, l2 in unusedSlots do begin
+								RemoveSlot(a1, l1)
+							end);
+						(foreach l1, l2 in NeededSlots do begin
+								if (not HasSlot(a1, l1)) then begin
+										a1.(l1) := DeepClone(l2)
+									end
+							end);
+						a1
+					end,
+					FillNewEntry: func(a1) begin
+						a1.setupName := ParamStr("Untitled ^0 Setup", [Array: Clone(name)]);
+						a1.physicalLayer := Clone(symbol);
+						a1
+					end,
+					ValidateTarget: func(a1) begin
+						if (Length(a1.DNSServers) > 1) then begin
+								(foreach l1, l2 in a1.DNSServers do begin
+										if (Length(SetDifference(l2, [Array: 0, 0, 0, 0])) = 0) then begin
+												ArrayRemoveCount(a1.DNSServers, l1, 1)
+											end
+									end);
+								if (Length(a1.DNSServers) = 0) then begin
+										AddArraySlot(a1.DNSServers, Clone([Array: 0, 0, 0, 0]))
+									end
+							end;
+						a1
+					end,
+					unusedSlots: {},
+					NeededSlots: {},
+					confirmWalkThru: func(a1) begin
+						l1 := "";
+						l2 := [Array: ];
+						local l1;
+						local l2;
+						local l3;
+						(foreach l4, l5 in DontCloseSlots do begin
+								if HasSlot(l5, 'checkData) then begin
+										l3 := l5:checkData(a1, a1.(l4))
+									end else begin
+										if HasSlot(l5, 'checkFunc) then begin
+												l3 := l5:checkFunc(a1.(l4))
+											end else begin
+												l3 := StrEqual(l5.value, a1.(l4))
+											end
+									end;
+								if l3 then begin
+										AddArraySlot(l2, l5.name)
+									end
+							end);
+						(foreach l7 in l2 do begin
+								l1 := Stringer([Array: l1, l7, ", "])
+							end);
+						(l1 := Substr(l1, 0, (StrLen(l1) - 2)))
+					end,
+					DontCloseSlots: {},
+					DependenciesLoaded: compile(
+						constants: {
+							kFunction_101a311: func(a1) begin
+								if functions.InetGetServiceList then begin
+										l1 := InetGetServiceList('LogicalService)
+									end else begin
+										return nil
+									end;
+								if (Length(l1) = 0) then begin
+										return nil
+									end;
+								l2 := [Array: ];
+								local l1;
+								local l2;
+								local l3;
+								(foreach l4 in l1 do begin
+										l3 := nil;
+										(foreach l6 in l4.excludeFrom do begin
+												if (l6 = a1) then begin
+														l3 := true;
+														break
+													end
+											end);
+										if (not l3) then begin
+												AddArraySlot(l2, l4)
+											end
+									end);
+								(if (Length(l2) > 0) then l2)
+							end
+						},
+						func() begin
+							call (kFunction_101a311) with (symbol)
+						end),
+					MakeDataPaths: func(a1, a2, a3) begin
+						local l1;
+						local l2;
+						(if (not a1) then nil else (if (if IsArray(a2) then (Length(a2) < 1)) then (if a3 then (l2 := [Array: Clone(a1)]) else a1) else (if (a1 = true) then (if IsArray(a2) then (foreach l1 in a2 collect [pathExpr: l1]) else a1) else (foreach l1 in a2 collect begin
+										l2 := Clone(a1);
+										if l1 then begin
+												AddArraySlot(l2, l1)
+											end;
+										l2
+									end))))
+					end,
+					GetText: func(a1, a2, a3) begin
+						if a3.showEmptyData then begin
+								l2 := true
+							end;
+						if (ClassOf(a2) = 'pathExpr) then begin
+								l2 := true;
+								(a3 := Clone(a3)).whichOne := a2[1];
+								l4 := [Array: a1.(a2)]
+							end else begin
+								if IsArray(a2) then begin
+										local l1;
+										local l2;
+										local l3;
+										local l4;
+										l4 := (foreach l5 in a2 collect begin
+											l3 := a1.(l5);
+											if (not l2) then begin
+													if IsInstance(l3, 'string) then begin
+															l2 := l3
+														end else begin
+															l2 := l3
+														end
+												end;
+											l3
+										end)
+									end else begin
+										l4 := [Array: a1.(a2)];
+										l2 := a1.(a2)
+									end
+							end;
+						if a3.HideIfTrue then begin
+								if (a1.(a3.HideIfTrue[0]) = a3.HideIfTrue[1]) then begin
+										l2 := nil
+									end
+							end;
+						if (not l2) then begin
+								return nil
+							end;
+						if a3.printFunc then begin
+								l1 := a3:printFunc(l4)
+							end else begin
+								if a3.formatFunc then begin
+										l1 := a3:formatFunc(l4)
+									end else begin
+										l1 := ParamStr(a3.format, l4)
+									end
+							end;
+						TrimString(l1);
+						l1
+					end,
+					_proto: @newtStationery
+				},
+				{
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+					viewFlags: vVisible,
+					viewFormat: 0,
+					viewJustify: vjParentFullH + vjParentFullV,
+					stepChildren: [stepChildren: partItem_2],
+					useNumericKeys: true,
+					infoFrame: {
+						checkPrefix: [|Array|: nil, [pathExpr: 'DNSServers]],
+						checkPaths: [|Array|: ],
+						whichOne: nil,
+						arrayData: [|Array|: 0, 0, 0, 0],
+						formatFunc: func(a1) begin
+							(if (Length(a1[0]) = 4) then (if (whichOne = 0) then ParamStr("Primary DNS/Name Server Address: ^0.^1.^2.^3", [Array: a1[0][0], a1[0][1], a1[0][2], a1[0][3]]) else ParamStr("Alternate DNS/Name Server Address: ^0.^1.^2.^3", [Array: a1[0][0], a1[0][1], a1[0][2], a1[0][3]])) else "")
+						end
+					},
+					protection: 'private,
+					symbol: 'DNSServers,
+					type: 'editor,
+					helpTopic: "dns",
+					viewClass: clView,
+					line: nil,
+					stepAllocateContext: [|Array|: 'line, partItem_2]
+				},
+				{
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+					viewFlags: vVisible,
+					viewFormat: 0,
+					viewJustify: vjParentFullH + vjParentFullV,
+					stepChildren: [stepChildren:
+						{
+							path: 'userName,
+							label: "User ID",
+							viewBounds: {left: 0, top: 0, right: -4, bottom: 32},
+							viewChangedScript: func(a1, a2) begin
+								inherited:?viewChangedScript(a1, a2);
+								(if (not target.(path)) then (target.(path) := ""))
+							end,
+							_proto: @newtLabelInputLine
+						},
+						partItem_3
+					],
+					infoFrame: {
+						checkPrefix: [|Array|: true, nil],
+						checkPaths: [|Array|: 'userName],
+						showEmptyData: true,
+						formatFunc: func(a1) begin
+							(if StrFilled(a1[0]) then ParamStr("User ID: ^0", [Array: a1[0]]) else "User ID: <None>")
+						end
+					},
+					path: 'userName,
+					protection: 'private,
+					symbol: 'userName,
+					type: 'editor,
+					passwordSlip: nil,
+					viewQuitScript: func() begin
+						if passwordSlip then begin
+								passwordSlip:Close()
+							end;
+						passwordSlip := nil;
+						inherited:?viewQuitScript()
+					end,
+					EditPassword: EditPassword,
+					name: "User ID/Password",
+					helpTopic: "idpassword",
+					viewClass: clView,
+					pwBtn: nil,
+					stepAllocateContext: [|Array|: 'pwBtn, partItem_3]
+				},
+				{
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+					viewFlags: vVisible,
+					viewFormat: 0,
+					viewJustify: vjParentFullH + vjParentFullV,
+					infoFrame: {
+						checkPrefix: [|Array|: true, nil],
+						checkPaths: [|Array|: 'setupName],
+						showEmptyData: true,
+						formatFunc: func(a1) begin
+							(if StrFilled(a1[0]) then a1[0] else "<No Name>")
+						end,
+						printFunc: func(a1) begin
+							(if StrFilled(a1[0]) then ParamStr("Setup Name: ^0", [Array: a1[0]]) else "Setup Name: <None>")
+						end
+					},
+					protection: 'private,
+					symbol: 'setupName,
+					type: 'editor,
+					viewClass: clView
+				},
+				{
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+					viewFlags: vVisible,
+					viewFormat: 0,
+					viewJustify: vjParentFullH + vjParentFullV,
+					protection: 'private,
+					type: 'editor,
+					stepChildren: [stepChildren: {_proto: objectsProto}],
+					viewClass: clView
+				},
+				{
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+					viewFlags: vVisible,
+					viewFormat: 0,
+					viewJustify: vjParentFullH + vjParentFullV,
+					stepChildren: [stepChildren:
+						{
+							_proto: {
+								viewBounds: {left: 4, top: 10, right: -4, bottom: 60},
+								viewFlags: vVisible,
+								viewFormat: 0,
+								viewJustify: vjParentFullH + vjSiblingBottomV,
+								stepChildren: [stepChildren: partItem_4, partItem_5],
+								masterlock: nil,
+								LockDown: func() begin
+									(if (not masterlock) then nil)
+								end,
+								GetOption: func(a1) begin
+									(foreach l1, l2 in labelCommands do begin
+											if (l2.symbol = a1) then begin
+													return l1
+												end
+										end);
+									0
+								end,
+								viewClass: clView,
+								picker: nil,
+								stepAllocateContext: [|Array|: 'picker, partItem_4, 'IPLine, partItem_5],
+								IPLine: nil
+							}
+						}
+					],
+					protection: 'private,
+					type: 'editor,
+					useNumericKeys: true,
+					viewClass: clView
+				},
+				{
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+					viewFlags: vVisible,
+					viewFormat: 0,
+					viewJustify: vjParentFullH + vjParentFullV,
+					stepChildren: [stepChildren:
+						{
+							path: 'defaultDomain,
+							label: domainName,
+							viewBounds: {left: 0, top: 0, right: -4, bottom: 32},
+							_proto: @newtLabelInputLine
+						}
+					],
+					protection: 'private,
+					type: 'editor,
+					infoFrame: {
+						checkPrefix: [|Array|: true, nil],
+						checkPaths: [|Array|: 'defaultDomain],
+						showEmptyData: true,
+						formatFunc: func(a1) begin
+							(if StrFilled(a1[0]) then ParamStr("Domain Name: ^0", [Array: a1[0]]) else "Domain Name: <None>")
+						end
+					},
+					path: 'defaultDomain,
+					symbol: 'defaultDomain,
+					name: domainName,
+					helpTopic: "domain",
+					viewClass: clView
+				},
+				objectsProto,
+				partItem_3Proto,
+				EditPassword,
+				GetString,
+				{
+					labelText: "IP : ^0.^1.^2.^3",
+					GetString: GetString,
+					checkPrefix: [|Array|: true, nil],
+					formatFunc: func(a1) begin
+						(if (Length(a1[0]) = 4) then ParamStr(labelText, [Array: a1[0][0], a1[0][1], a1[0][2], a1[0][3]]) else "")
+					end
+				},
+				{
+					path: 'setupName,
+					label: "Setup Name",
+					viewChangedScript: func(a1, a2) begin
+						inherited:?viewChangedScript(a1, a2);
+						if (not target.(path)) then begin
+								target.(path) := ""
+							end;
+						header:Retarget()
+					end,
+					viewBounds: {left: 0, top: 0, right: -4, bottom: 32},
+					_proto: @newtLabelInputLine
+				},
+				[|Array|:
+					{item: "immediately", symbol: nil},
+					{item: "after 1 minute", symbol: 60000},
+					{item: "after 2 minutes", symbol: 120000},
+					{item: "after 5 minutes", symbol: 300000},
+					{item: "after 10 minutes", symbol: 600000},
+					{item: "never", symbol: 'never}
+				],
+				partItem,
+				compile(
+					constants: {
+						kLiteral_101c7b9: '[Array: {item: "PPP", symbol: |PPP:NIE|}, {item: "SLIP", symbol: |SLIP:NIE|}]
+					},
+					func(a1) begin
+						l1 := [Array: ];
+						if ((not a1) or (Length(a1) = 0)) then begin
+								return kLiteral_101c7b9
+							end else begin
+								local l1;
+								(foreach l2 in a1 do begin
+										BInsert(l1, {item: Clone(l2.name), symbol: Clone(l2.symbol)}, '|str<|, '[pathExpr: item], nil)
+									end)
+							end;
+						(if (Length(l1) > 0) then return l1 else return kLiteral_101c7b9)
+					end),
+				func(a1) begin
+					l1 := ModemLocations;
+					l2 := GetUserConfig('screenOrientation);
+					l4 := 0;
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					(for l5 := 0 to (Length(l1) - 1) do begin
+							if (if (if a1 then l1[l5].id) then StrEqual(a1, l1[l5].id)) then begin
+									l4 := l5
+								end
+						end);
+					if IsArray(l1[l4].title) then begin
+							return l1[l4].title[l2]
+						end else begin
+							return l1[l4].title
+						end;
+					""
+				end
+			]
+		}
+	],
+	installScript: func(a1) begin
+		local l1;
+		l1 := EnsureInternal({removeScript: a1.devRemoveScript});
+		a1:devInstallScript(a1, l1);
+		l1
+	end,
+	devInstallScript: func(a1, a2) begin
+		nil
+	end,
+	devRemoveScript: func(a1) begin
+		nil
+	end
+});
+
+partItem_2Proto := {
+	viewBounds: {left: 4, top: 10, right: -4, bottom: 60},
+	viewFlags: vVisible,
+	viewFormat: 0,
+	stepChildren: [stepChildren: partItem_2ProtoItem, partItem_2ProtoItem_2],
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	viewClass: clView,
+	labelText: nil,
+	stepAllocateContext: [|Array|: 'labelText, partItem_2ProtoItem, 'IPLine, partItem_2ProtoItem_2],
+	IPLine: nil
+};
+
+partItem_2ProtoItem := {
+	viewBounds: {left: 3, top: 0, right: -3, bottom: 16},
+	viewJustify: 8388660,
+	viewSetupFormScript: func() begin
+		self.viewBounds := Clone(self.viewBounds);
+		self.viewBounds.right := (StrWidth(name) + 8);
+		(if (ClassOf(path) = 'pathExpr) then (self.text := (if (path[1] = 0) then "Primary DNS/Name Server Address" else "Alternate DNS/Name Server Address")) else (self.text := name))
+	end,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'labelText
+};
+
+partItem_2ProtoItem_2 := {
+	viewSetupFormScript: func() begin
+		self.viewBounds := Clone(self.viewBounds);
+		if (if HasSlot(self, 'LabelOnSide) then LabelOnSide) then begin
+				self.viewBounds := SetBounds((labelText.viewBounds.right + 3), labelText.viewBounds.top, viewBounds.right, 24)
+			end else begin
+				self.viewBounds := RelBounds(0, (labelText.viewBounds.bottom + 3), 0, 24)
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	_proto: partItem_2ProtoItem_2Proto,
+	preAllocatedContext: 'IPLine
+};
+
+partItem_2ProtoItem_2Proto := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 24},
+	viewFlags: vVisible,
+	viewFormat: 0,
+	numSegs: 4,
+	numPeriods: 3,
+	viewSetupChildrenScript: compile(
+		constants: {
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			kFunction_1017cbd: func(a1, a2) begin
+				local l1, l2;
+				if hack then begin
+						return nil
+					end;
+				l2 := Clone(self.text);
+				if CharPos(self.text, $ , 0) then begin
+						StrReplace(self.text, NumberStr(target.(path)[IPsegment]), "", 1)
+					end;
+				if (StrLen((l1 := StringFilter(self.text, "0123456789", 'passAll))) = 0) then begin
+						l1 := l2
+					end;
+				if (not (l1 := NumberStr(StringToNumber(l1)))) then begin
+						l1 := "0"
+					end;
+				hack := true;
+				SetValue(self, 'text, l1);
+				hack := nil;
+				self:?textChanged();
+				(if (l1 := self:IPOutofRange()) then (target.(path)[IPsegment] := l1) else begin
+						GetRoot():SysBeep();
+						SetCaretInfo(self, SetClass({offset: 0, length: 999}, 'paraCaret))
+					end)
+			end,
+			kFunction_1017ff5: func() begin
+				inherited:?viewSetupFormScript();
+				self.viewBounds := Clone(self.viewBounds);
+				self.viewBounds.right := self:CalculateBounds();
+				self.text := NumberStr(target.(path)[IPsegment]);
+				(if (not hack) then self:LockCell())
+			end,
+			kFunction_10180a1: func() begin
+				local l1, l2, l3, l4;
+				l1 := self:parent():GlobalBox();
+				l3 := (l2 := '{text: ".", viewBounds: {left: 0, top: 0, right: 4, bottom: -3}, viewJustify: 8389834, viewFont: @fontSystem12Bold, _proto: @protoStaticText}).viewBounds.right;
+				return (l4 := (((l1.right - l1.left) - (l3 * numPeriods)) div numSegs))
+			end,
+			kFunction_10181f1: func() begin
+				local l1;
+				(if StrFilled(self.text) then begin
+						if (l1 := StringToNumber(self.text)) then begin
+								l1 := rinttol(l1)
+							end;
+						(if (if (if l1 then (l1 >= 0)) then (l1 <= 255)) then l1)
+					end)
+			end,
+			kFunction_10182ad: func() begin
+				(if Locked then begin
+						hack := true;
+						SetValue(self, 'viewFormat, 0);
+						SetValue(self, 'viewFlags, 3);
+						(hack := nil)
+					end else (if HasSlot(self, 'viewFormat) then begin
+							hack := true;
+							SetValue(self, 'viewFormat, self._proto.viewFormat);
+							SetValue(self, 'viewFlags, self._proto.viewFlags);
+							(hack := nil)
+						end))
+			end,
+			kFunction_1018371: func(a1) begin
+				(Locked := a1[IPsegment])
+			end,
+			kFunction_10189e9: func(a1) begin
+				local l1, l2, l3;
+				l2 := (l1 := popup[a1.index]).words[((a1.y * l1.width) + a1.x)];
+				l3 := GetView('viewfrontkey);
+				if (l2[0] = $\u2022) then begin
+						if (if (if (if l3 then l3.text) then GetCaretInfo().info) then (GetCaretInfo().info.offset > 0)) then begin
+								l2 := Stringer([Array: $\n, l2])
+							end
+					end;
+				PostKeyString(l3, l2)
+			end,
+			kFunction_1018bb1: func(a1, a2) begin
+				if (a1 = $.) then begin
+						self:?textChanged();
+						PostKeyString(self, "\t");
+						return true
+					end;
+				nil
+			end,
+			kLiteral_1017ae5: {viewBounds: '{left: 0, top: 0, right: 48, bottom: 0}, viewJustify: 8389826, viewFlags: 11009, viewChangedScript: kFunction_1017cbd, IPsegment: nil, viewSetupFormScript: kFunction_1017ff5, CalculateBounds: kFunction_10180a1, IPOutofRange: kFunction_10181f1, Locked: nil, hack: nil, LockCell: kFunction_10182ad, AdjustLocks: kFunction_1018371, _caretPopup: {popup: [Array: {bits: call kBinaryFromHex with ("00000000000800f400f40119016f0144aaaaaaaaaaa000005555555555400000800000000020000040000400004000008000000000200000400004000040000080000000002000004000040000400000860180180c200000460184180c4000008f39e079cc200000460db4db6c400000863db0dbec200000466db4db0c400000833de079ec2000004000040000400000800000000020000040000400004000008000000000200000400004000040000080000000002000005555555555400000aaaaaaaaaaa000004000040000400000800000000020000040180407c04000008038000ce0200000407804187040000080380018702000004038040070400000803800007020000040380400e040000080380000c02000004038040180400000803800030020000040380406004000008038000c302000004038041ff0400000807c001ff020000040000400004000008000000000200000555555555540000080000000002000004000040000400000807c00006020000040de0400c0400000818e000180200000400e040300400000801c0006602000004038040ce0400000807c0018e020000040ce0430e04000008007003ff020000040070400e040000080070000e020000040070400e040000081860000e020000041cc0401f040000080f80000002000004000040000400000800000000020000055555555554000008000000000200000400004000040000081fe0000e020000041fe04038040000081800007002000004180040e0040000081f8000e0020000041fc041c00400000801e001de0200000400f041ff04000008007001c782000004007041c384000008007001c382000004007041c384000008006000e30200000400c040e6040000080380003c020000043e00400004000008000000000200000555555555540000080000000002000004000040000400000800000000020000043ff0403c040000083ff0007602000004303040e304000008003000e302000004006040f6040000080060007c0200000400c0403e0400000800c0006f02000004018040c784000008018001838200000403004183840000080300018382000004060040c7040000080600007e020000040000400004000008000000000200000555555555540000080000000002000004000040000400000807800000020000040ce0407c0400000818e000ee02000004387040c604000008387001c702000004387041c7040000083cf001c7020000041ff041c7040000080f7001c702000004007041c70400000800e001c70200000400e041c70400000801c000c602000004038040ee040000080e00007c0200000400004000040000080000000002000005555555555400000aaaaaaaaaaa00000", 'bits), bounds: '{left: 0, top: 0, right: 43, bottom: 123}, width: 2, height: 6, words: '[Array: "\t", "\u0008\u", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]}], pickActionScript: kFunction_10189e9}, ViewKeyDownScript: kFunction_1018bb1, _proto: @protoInputLine}
+		},
+		func() begin
+			(for l1 := 1 to numSegs do begin
+					AddArraySlot(stepChildren, {_proto: kLiteral_1017ae5, _parent: self, IPsegment: (l1 - 1), Locked: (if (Length(CellLocks) = numSegs) then CellLocks[(l1 - 1)])});
+					if (l1 < numSegs) then begin
+							AddArraySlot(stepChildren, {_proto: '{text: ".", viewBounds: {left: 0, top: 0, right: 4, bottom: -3}, viewJustify: 8389834, viewFont: @fontSystem12Bold, _proto: @protoStaticText}})
+						end
+				end)
+		end),
+	viewSetupFormScript: func() begin
+		(self.stepChildren := [Array: ])
+	end,
+	viewJustify: vjParentFullH,
+	CellLocks: [|Array|: nil, nil, nil, nil],
+	CheckCellLocks: func() begin
+		(foreach l1 in self:ChildViewFrames() do begin
+				if (Length(CellLocks) = numSegs) then begin
+						l1:?AdjustLocks(CellLocks)
+					end;
+				l1:?LockCell()
+			end)
+	end,
+	viewQuitScript: func() begin
+		newtAppBase.targetView:?StartFlush();
+		inherited:?viewQuitScript()
+	end,
+	viewClass: clView
+};
+
+name := "";
+
+OverviewIconBits := bitmap('bits, "resources/bits/1019229.png", "000000000004000000000000001e001e", 1);
+
+partItem := func(a1) begin
+	if functions.InetGetServiceList then begin
+			l1 := InetGetServiceList('LogicalService)
+		end else begin
+			return nil
+		end;
+	if (Length(l1) = 0) then begin
+			return nil
+		end;
+	l2 := [Array: ];
+	local l1;
+	local l2;
+	local l3;
+	(foreach l4 in l1 do begin
+			l3 := nil;
+			(foreach l6 in l4.excludeFrom do begin
+					if (l6 = a1) then begin
+							l3 := true;
+							break
+						end
+				end);
+			if (not l3) then begin
+					AddArraySlot(l2, l4)
+				end
+		end);
+	(if (Length(l2) > 0) then l2)
+end;
+
+partItem_2 := {_proto: partItem_2Proto, preAllocatedContext: 'line};
+
+partItem_3 := {_proto: partItem_3Proto, preAllocatedContext: 'pwBtn};
+
+partItem_3Proto := {
+	buttonClickScript: func() begin
+		self:EditPassword()
+	end,
+	viewBounds: {left: 0, top: 10, right: 30, bottom: 23},
+	path: 'password,
+	AdjustBounds: func() begin
+		SetValue(self, 'text, (if StrFilled(target.(path)) then "Edit Password" else "Set Password"));
+		(self.viewBounds.right := (StrWidth(self.text) + 8))
+	end,
+	viewJustify: 8396822,
+	viewSetupFormScript: func() begin
+		(viewBounds := Clone(viewBounds))
+	end,
+	viewSetupDoneScript: func() begin
+		self:AdjustBounds();
+		self:SyncView()
+	end,
+	_proto: @protoTextButton
+};
+
+EditPassword := func() begin
+	(passwordSlip := BuildContext({_proto: @passwordSlip, path: 'password, currentPassword: func() begin
+		target.(path)
+	end, verifyPassword: nil})).target := target;
+	passwordSlip.targetView := self;
+	passwordSlip.setpassword := func(a1) begin
+		target.(path) := a1;
+		targetView:?StartFlush();
+		targetView:AdjustBounds();
+		targetView:SyncView()
+	end;
+	passwordSlip.viewQuitScript := func() begin
+		targetView.passwordSlip := nil;
+		inherited:?viewQuitScript()
+	end;
+	passwordSlip:Open()
+end;
+
+objectsProto := {
+	viewBounds: {left: 3, top: 10, right: -3, bottom: 26},
+	alwaysCallPickActionScript: true,
+	GetSelectedText: func() begin
+		(if (Length(labelCommands) > 0) then (foreach l1, l2 in labelCommands do begin
+					if (l2.symbol = target.(path)) then begin
+							return l2.item
+						end
+				end) else "")
+	end,
+	labelActionScript: func(a1) begin
+		target.(path) := Clone(labelCommands[a1].symbol);
+		newtAppBase.targetView:?StartFlush()
+	end,
+	textSetup: func() begin
+		self:GetSelectedText()
+	end,
+	viewJustify: 8396848,
+	viewSetupFormScript: func() begin
+		SetValue(self, 'text, labelText);
+		labelCommands := [Array: ];
+		labelCommands := self:?MakePopup();
+		inherited:?viewSetupFormScript()
+	end,
+	_proto: @protoLabelPicker
+};
+
+partItem_4 := {
+	viewBounds: {left: 0, top: 2, right: 0, bottom: 16},
+	viewJustify: 8388656,
+	viewSetupFormScript: func() begin
+		text := labelText;
+		labelCommands := popupOptions;
+		inherited:?viewSetupFormScript()
+	end,
+	textSetup: func() begin
+		labelCommands[self:GetOption(ClassOf(target.(path)))].item
+	end,
+	labelActionScript: func(a1) begin
+		SetClass(target.(path), labelCommands[a1].symbol);
+		newtAppBase.targetView:?StartFlush()
+	end,
+	_proto: @protoLabelPicker,
+	preAllocatedContext: 'picker
+};
+
+partItem_5 := {
+	viewSetupFormScript: func() begin
+		self.viewBounds := Clone(self.viewBounds);
+		self.viewBounds := RelBounds(0, (picker.viewBounds.bottom + 3), 0, 24);
+		if masterlock then begin
+				self.CellLocks := Array(numSegs, true)
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	viewQuitScript: func() begin
+		inherited:?viewQuitScript()
+	end,
+	_proto: partItem_2ProtoItem_2Proto,
+	preAllocatedContext: 'IPLine
+};
+
+domainName := "Domain Name";
+
+GetString := func(a1, a2) begin
+	if (not a1) then begin
+			return ""
+		end;
+	(foreach l1, l2 in a1 do begin
+			if (l2.symbol = a2) then begin
+					return l2.item
+				end
+		end);
+	SPrintObject(a2)
+end;
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewChangedScript_literal14 := same("partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].viewChangedScript.literals[14]");
+
+CalculateBounds_literal2 := same("partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2].CalculateBounds.literals[2]");
+
+words_value := same("partItem_2ProtoItem_2Proto.viewSetupChildrenScript.literals[2]._caretPopup.popup[0].words[0]");
+
+StringExtract_literal2 := same("part[0]._ExportTable[0].objects[1].StringExtract.literals[2]");
+
+StringExtract_literal5 := same("part[0]._ExportTable[0].objects[1].StringExtract.literals[5]");
+
+buttonClickScript_code := same("partItem_3Proto.buttonClickScript.instructions");
+
+formatFunc_code := same("part[0]._ExportTable[0].objects[3].infoFrame.formatFunc.instructions");
+
+devInstallScript_code := same("part[0].devInstallScript.instructions");

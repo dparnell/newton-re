@@ -1,0 +1,3 @@
+// rcBuildChains, and what only it reaches
+
+rcBuildChains := {inputmask: 4096, inhibitSymbolsDictionary: 1};

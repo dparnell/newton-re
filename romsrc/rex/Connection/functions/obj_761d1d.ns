@@ -1,5 +1,0 @@
-@@ 0x761d1d
-func(a1) begin
-	(if self.thecallback then call self.thecallback with (a1))
-end
-@@end

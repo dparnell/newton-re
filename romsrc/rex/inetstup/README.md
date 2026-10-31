@@ -56,11 +56,11 @@ become the insets 10 and -11.
 
 The changes were first made to Apple's bytes (`romsrc/rex/inetstup.patches.tsv`,
 in the history); they are now made to the source:
-`part0/functions/obj_10002d1_0_.theForm.editSlip.viewSetupFormScript.ns`
+`part[0].theForm.editSlip.viewSetupFormScript` in `part0/objects/part.ns`
 sets the walk-through layout's bounds whatever the layout (a `//
 DEVIATION` comment keeps the other layout's), and the keyboard
-`obj_1010c79` in `part0/objects/obj_10002d1.ns` has viewJustify 176 and
+`editFieldsItem` in `part0/objects/part.ns` has viewJustify 176 and
 viewBounds' left 10 and right -11.  The function the edit slip shares
-with four others (`obj_100f7a1`, the walk-through layout's bounds) is
+with four others (`viewSetupFormScript_literal6`, the walk-through layout's bounds) is
 now `same()` as `theForm.viewSetupFormScript`'s literal, and the edit
 slip's alias in `part0/layout.tsv` names its new place, literals[1].

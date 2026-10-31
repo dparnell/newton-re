@@ -1,0 +1,8 @@
+// protoRichInputLine, and what only it reaches
+
+protoRichInputLine := {
+	_proto: @protoInputLine,
+	viewFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed,
+	recConfig: @rcInkorText,
+	debug: 11541917
+};

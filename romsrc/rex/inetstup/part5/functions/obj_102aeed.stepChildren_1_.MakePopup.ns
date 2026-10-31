@@ -1,5 +1,0 @@
-@@ 0x102b1e5
-func() begin
-	self:GetProtoCols()
-end
-@@end

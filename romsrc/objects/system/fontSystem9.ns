@@ -1,0 +1,3 @@
+// fontSystem9, and what only it reaches
+
+fontSystem9 := {family: 'espy, face: 0, size: 9};

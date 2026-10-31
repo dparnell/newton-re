@@ -1,0 +1,14 @@
+// export53, and what only it reaches
+
+export53 := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+	viewLineSpacing: 32,
+	GetSymArray: func() begin
+		GetGlobals().phoneTypes.phoneClasses
+	end,
+	GetTextArray: func() begin
+		GetGlobals().phoneTypes.phoneText
+	end,
+	newRecFlags: 264705,
+	_proto: @newtPopupEdit
+};

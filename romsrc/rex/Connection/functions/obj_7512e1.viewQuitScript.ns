@@ -1,5 +1,0 @@
-@@ 0x751c59
-func() begin
-	protoContext:RemoveOpenWindow(self)
-end
-@@end

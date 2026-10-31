@@ -1,0 +1,6 @@
+// shiftKeyIcon, and what only it reaches
+
+shiftKeyIcon := {
+	bits: bitmap('bits, "resources/bits/3c8bdd.png", "00000000000400000000000000070009", 1),
+	bounds: {left: 0, top: 0, right: 9, bottom: 7}
+};

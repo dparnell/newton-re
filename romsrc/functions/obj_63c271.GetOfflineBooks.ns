@@ -1,5 +1,0 @@
-@@ 0x51c911
-func() begin
-	self:VerifyLibrarySoup().offline
-end
-@@end

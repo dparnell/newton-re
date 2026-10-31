@@ -1,0 +1,3 @@
+// stateLocPicker, and what only it reaches
+
+stateLocPicker := {_proto: @countryLocPicker, spots: @usStateSoupName};

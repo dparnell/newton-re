@@ -1,6 +1,0 @@
-@@ 0x43a161
-func() begin
-	self:ShowHideScrollers();
-	inherited:?viewSetupDoneScript()
-end
-@@end

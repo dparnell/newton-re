@@ -1,0 +1,6 @@
+// ampmSlides, and what only it reaches
+
+ampmSlides := {
+	bits: bitmap('bits, "resources/bits/3da00d.png", "00000000000800a200a200c500be00eb", 1),
+	bounds: {left: 0, top: 0, right: 38, bottom: 28}
+};

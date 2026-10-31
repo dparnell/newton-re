@@ -1,0 +1,22 @@
+// protoFilingButton, and what only it reaches
+
+protoFilingButton := {
+	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH,
+	icon: nil,
+	iconInt: @filingBitmap,
+	iconExt: @filingExtBitmap,
+	PickIcon: func() begin
+		local l1;
+		(if (((not (l1 := self:GetTargetInfo('Filing))) or (not l1.targetStore)) or (l1.targetStore = GetStores()[0])) then iconInt else iconExt)
+	end,
+	viewSetupFormScript: func() begin
+		(icon := self:PickIcon())
+	end,
+	Update: func() begin
+		local l1;
+		l1 := self:PickIcon();
+		(if (icon <> l1) then SetValue(self, 'icon, l1))
+	end,
+	buttonClickScript: buttonClickScript_2,
+	_proto: @protoPictureButton
+};

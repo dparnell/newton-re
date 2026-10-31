@@ -1,0 +1,397 @@
+// filingSlip, and what only it reaches
+
+filingSlip := {
+	otherOtherTargetView: nil,
+	OpenForUser: compile(
+		constants: {
+			kLiteral_4836e1: "Filing"
+		},
+		func(a1, a2, a3, a4) begin
+			(if (not a2.target) then self:Notify(3, kLiteral_4836e1, "There is nothing to file.") else (if (if (a3 = 'onlyCardRouting) then (Length(GetStores()) = 1)) then self:Notify(3, kLiteral_4836e1, "This item is already filed internally.  If you would like to file it on a card, please insert one.") else (if self.viewCObject then (if (a2.targetView = self.targetView) then self:Close() else self:Notify(3, kLiteral_4836e1, "The filing form is already open.")) else begin
+							self.target := a2.target;
+							self.targetView := a2.targetView;
+							self._nextKeyView := targetView;
+							self.targetStore := a2.targetStore;
+							self.doCardRouting := a3;
+							self.filingButton := a1;
+							self.otherOtherTargetView := a2.otherOtherTargetView;
+							self.dontStartWithFolder := a4;
+							if (if targetStore then targetStore:IsReadOnly()) then begin
+									if a3 then begin
+											self.doCardRouting := 'onlyCardRouting
+										end else begin
+											self:Notify(3, kLiteral_4836e1, "This app does not support card routing and the card is locked");
+											return nil
+										end
+								end;
+							self:Open()
+						end)))
+		end),
+	_cacheContext: {
+		otherOtherTargetView: nil,
+		target: nil,
+		newFolderButton: nil,
+		viewChildren: nil,
+		viewFlags: vFloating + vClickable,
+		doCardRouting: nil,
+		viewBounds: protoDraggerViewBounds,
+		storeClusterHeight: nil,
+		viewclipper: nil,
+		_proto: nil,
+		viewCObject: nil,
+		folderClusterHeight: nil,
+		_defaultButton: nil,
+		newLabels: nil,
+		targetStore: nil,
+		editFoldersButton: nil,
+		fileArea: nil,
+		folderList: nil,
+		filingButton: nil,
+		storeSelector: nil,
+		_parent: nil,
+		targetView: nil,
+		base: nil
+	},
+	viewQuitScript: func() begin
+		if folderEdit.viewCObject then begin
+				folderEdit:Close()
+			end;
+		target := nil;
+		targetView := nil;
+		targetStore := nil;
+		filingButton := nil;
+		folderList := nil;
+		otherOtherTargetView := nil;
+		_nextKeyView := nil;
+		UnRegStoreChange('_filing)
+	end,
+	preallocatedContext: 'filingSlip,
+	_newKeyScript: func(a1) begin
+		PressButton(newFolderButton)
+	end,
+	target: nil,
+	newFolderButton: nil,
+	viewChildren: nil,
+	viewFlags: vFloating + vClickable,
+	_editKeyScript: func(a1) begin
+		PressButton(editFoldersButton)
+	end,
+	doCardRouting: nil,
+	viewIdleScript: func() begin
+		if Visible(self) then begin
+				filingSlip:SyncView();
+				filingSlip:RedoChildren()
+			end;
+		nil
+	end,
+	ReOrientToScreen: @defRotateFunc,
+	storeClusterHeight: nil,
+	allocateContext: [|Array|:
+		'storeSelector,
+		storeSelector,
+		'fileArea,
+		fileArea_2,
+		'newFolderButton,
+		newFolderButton,
+		'editFoldersButton,
+		editFoldersButton,
+		'_defaultButton,
+		_defaultButton_5
+	],
+	_proto: @protoFloater,
+	folderClusterHeight: nil,
+	_defaultButton: nil,
+	newLabels: nil,
+	kidsWithoutRouting: [viewChildren: fileArea_2, newFolderButton, editFoldersButton, filingSlipItem, _defaultButton_5],
+	kidsWithCardRouting: [viewChildren:
+		storeSelector,
+		fileArea_2,
+		newFolderButton,
+		editFoldersButton,
+		filingSlipItem,
+		_defaultButton_5
+	],
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	_nextKeyView: nil,
+	targetStore: nil,
+	editFoldersButton: nil,
+	dontStartWithFolder: nil,
+	fileArea: nil,
+	folderList: nil,
+	kidsJustCardRouting: [viewChildren: storeSelector, filingSlipItem, _defaultButton_5],
+	declareSelf: 'base,
+	viewSetupFormScript: func() begin
+		local l1, l2;
+		l1 := GetVariable(targetView, 'localFoldersOnly);
+		l2 := GetVariable(targetView, 'systemFoldersToo);
+		folderList := GetAppFolderSyms(GetVariable(targetView, 'appSymbol), l1, l2);
+		if (dontStartWithFolder or target.dontStartWithFolder) then begin
+				newLabels := 42
+			end else begin
+				newLabels := target.labels
+			end;
+		if (if (newLabels <> 42) then (not GetFolderStr(newLabels))) then begin
+				newLabels := 42
+			end;
+		folderClusterHeight := (ceiling(((Length(folderList) + 1) / 2)) * 14);
+		storeClusterHeight := (ceiling((Length(GetStores()) / 2)) * 14);
+		if (doCardRouting = 'onlyCardRouting) then begin
+				viewChildren := kidsJustCardRouting;
+				self.viewBounds := RelBounds(0, -20, 220, (storeClusterHeight + 49))
+			end else begin
+				if (if doCardRouting then (Length(GetStores()) > 1)) then begin
+						viewChildren := kidsWithCardRouting;
+						self.viewBounds := RelBounds(0, 0, 220, ((folderClusterHeight + storeClusterHeight) + 74))
+					end else begin
+						viewChildren := kidsWithoutRouting;
+						self.viewBounds := RelBounds(0, 0, 220, (folderClusterHeight + 49))
+					end
+			end;
+		RegStoreChange('_filing, func(a1, a2, a3) begin
+			(if (if (a2 = 'storeLeaves) then (doCardRouting or (a1 = targetStore))) then AddDeferredSend(self, 'Close, nil))
+		end);
+		SetKeyView(self, 0)
+	end,
+	filingButton: nil,
+	storeSelector: nil,
+	_keyCommands: [|Array|:
+		{char: $e, modifiers: 33554432, keyMessage: '_editKeyScript, name: editFolder, category: editing},
+		{char: $n, modifiers: 33554432, keyMessage: '_newKeyScript, name: new_2, category: creating}
+	],
+	debug: 32890,
+	UpdateToFolder: func(a1) begin
+		(if Visible(self) then begin
+				filingSlip:SyncView();
+				filingSlip:RedoChildren();
+				(if (doCardRouting <> 'onlyCardRouting) then fileArea.folderCluster:SetToFolder(a1))
+			end)
+	end,
+	targetView: nil
+};
+
+editFolder := "Edit Folder";
+
+fileInText := {
+	viewBounds: {left: 9, top: 0, right: -5, bottom: 12},
+	viewJustify: vjParentFullH,
+	text: nil,
+	viewSetupFormScript: func() begin
+		(text := (if doCardRouting then (if (targetView:AppObjectFileThisOn exists) then GetVariable(targetView, 'AppObjectFileThisOn) else (if (targetView:appObject exists) then (if ((not target._cursor) or (Length(target._cursor) = 1)) then ParamStr("File this ^0 on", [Array: GetVariable(targetView, 'appObject)[0]]) else ParamStr("File the selected ^0 on", [Array: GetVariable(targetView, 'appObject)[1]])) else "File on"))))
+	end,
+	preallocatedContext: 'fileInText,
+	_proto: @protoStaticText
+};
+
+storeCluster := {
+	viewBounds: nil,
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	itemTitles: nil,
+	childViewBounds: {left: 3, right: 100, top: 2, bottom: 12},
+	viewSetupFormScript: func() begin
+		self.viewBounds := SetBounds(5, 4, -5, (storeClusterHeight + 4));
+		itemTitles := Array(Length((l1 := GetStores())), nil);
+		local l1;
+		(foreach l2, l3 in l1 do begin
+				local l5;
+				if StrFilled((l5 := l3:GetName())) then begin
+						itemTitles[l2] := l5
+					end else begin
+						itemTitles[l2] := "Unnamed Card"
+					end;
+				if (l3 = targetStore) then begin
+						clusterValue := l2
+					end
+			end)
+	end,
+	preallocatedContext: 'storeCluster,
+	_proto: @protoSmartCluster
+};
+
+storeSelector := {
+	viewClass: clView,
+	viewBounds: nil,
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	viewFlags: vVisible + vClickable,
+	viewFormat: vfFillWhite,
+	viewSetupFormScript: func() begin
+		(self.viewBounds := SetBounds(5, 5, -5, (storeClusterHeight + 23)))
+	end,
+	GetSelectedStore: func() begin
+		(if (not storeCluster) then GetStores()[0] else (if storeCluster.clusterValue then GetStores()[storeCluster.clusterValue]))
+	end,
+	preallocatedContext: 'storeSelector,
+	viewChildren: [viewChildren: fileInText, storeCluster],
+	fileInText: nil,
+	allocateContext: [|Array|: 'fileInText, fileInText, 'storeCluster, storeCluster],
+	storeCluster: nil
+};
+
+fileArea := {
+	viewBounds: {left: 9, top: 0, right: 219, bottom: 12},
+	viewJustify: 0,
+	text: nil,
+	viewSetupFormScript: func() begin
+		local l1;
+		(text := (if ((not doCardRouting) or (Length(GetStores()) <= 1)) then (if (targetView:appObjectFileThisIn exists) then GetVariable(targetView, 'appObjectFileThisIn) else begin
+					if ((not target._cursor) or (Length(target._cursor) = 1)) then begin
+							l1 := ParamStr("File this ^0 in", [Array: GetVariable(targetView, 'appObject)[0]])
+						end else begin
+							l1 := ParamStr("File the selected ^0 in", [Array: GetVariable(targetView, 'appObject)[1]])
+						end;
+					l1
+				end) else "And file in"))
+	end,
+	preallocatedContext: 'fileArea,
+	_proto: @protoStaticText
+};
+
+folderCluster := {
+	viewBounds: nil,
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	itemTitles: nil,
+	childViewBounds: {left: 3, right: 100, top: 2, bottom: 12},
+	viewSetupFormScript: func() begin
+		itemTitles := [Array: "None (Unfiled)"];
+		clusterValue := nil;
+		(foreach l1, l2 in folderList do begin
+				AddArraySlot(itemTitles, StyledStrTruncate(Clone(GetFolderStr(l2)), 76, viewFont));
+				if (if (if newLabels then (newLabels <> 42)) then (target.labels = l2)) then begin
+						clusterValue := (l1 + 1)
+					end
+			end);
+		if (not (dontStartWithFolder or clusterValue)) then begin
+				clusterValue := 0
+			end;
+		(self.viewBounds := SetBounds(5, 4, -5, (folderClusterHeight + 4)))
+	end,
+	ClusterChanged: func() begin
+		(if (clusterValue = 0) then (newLabels := nil) else (newLabels := folderList[(clusterValue - 1)]))
+	end,
+	SetToFolder: func(a1) begin
+		local l1;
+		(if (l1 := SetContains(folderList, a1)) then self:SetClusterValue((l1 + 1)) else self:SetClusterValue(0))
+	end,
+	preallocatedContext: 'folderCluster,
+	_proto: @protoSmartCluster
+};
+
+fileArea_2 := {
+	viewClass: clView,
+	viewBounds: nil,
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	viewFlags: vVisible + vClickable,
+	viewFormat: vfFillWhite,
+	viewSetupFormScript: func() begin
+		(self.viewBounds := SetBounds(5, 5, -5, (folderClusterHeight + 23)))
+	end,
+	preallocatedContext: 'fileArea,
+	viewChildren: [viewChildren: fileArea, folderCluster],
+	fileArea: nil,
+	allocateContext: [|Array|: 'fileArea, fileArea, 'folderCluster, folderCluster],
+	folderCluster: nil
+};
+
+newFolderButton := {
+	viewJustify: 8388742,
+	viewBounds: {left: 5, top: -18, right: 33, bottom: -5},
+	text: new_2,
+	buttonClickScript: func() begin
+		folderEdit:OpenForUser(nil, GetVariable(targetView, 'appSymbol), GetVariable(targetView, 'localFoldersOnly), GetVariable(targetView, 'globalFoldersOnly))
+	end,
+	preallocatedContext: 'newFolderButton,
+	_proto: @protoTextButton
+};
+
+editFoldersButton := {
+	viewJustify: 8389766,
+	viewBounds: {left: 7, top: -18, right: 67, bottom: -5},
+	text: editFolder,
+	buttonClickScript: func() begin
+		if ((fileArea.folderCluster.clusterValue = 0) or (Length(SetDifference(GetFolderGroups(newLabels), '[Array: _System])) = 0)) then begin
+				self:Notify(3, "Filing", "This folder name cannot be edited.");
+				return nil
+			end;
+		folderEdit:OpenForUser(newLabels, GetVariable(targetView, 'appSymbol), GetVariable(targetView, 'localFoldersOnly), GetVariable(targetView, 'globalFoldersOnly))
+	end,
+	preallocatedContext: 'editFoldersButton,
+	_proto: @protoTextButton
+};
+
+filingSlipItem := {_proto: @protoCancelButton};
+
+_defaultButton_5 := {
+	viewJustify: 8390790,
+	viewBounds: {left: -30, top: -18, right: -7, bottom: -5},
+	text: file,
+	viewSetupFormScript: func() begin
+		(if (targetView:appObjectFileAction exists) then begin
+				self.text := GetVariable(targetView, 'appObjectFileAction);
+				self.viewBounds := Clone(viewBounds);
+				(self.viewBounds.left := (-(StrWidth(self.text) + 12)))
+			end)
+	end,
+	buttonClickScript: func() begin
+		local l1, l2, l3, l4;
+		if (not (fileArea.folderCluster.clusterValue or storeSelector.storeCluster.clusterValue)) then begin
+				self:Notify(3, "Filing", "A folder or store must be chosen to continue.");
+				return nil
+			end;
+		l2 := (if (if (l1 := storeSelector:GetSelectedStore()) then doCardRouting) then (targetStore <> l1));
+		l3 := (if (if (doCardRouting <> 'onlyCardRouting) then ((target.labels <> newLabels) or TargetIsCursor(target))) then (newLabels <> 42));
+		if ((if otherOtherTargetView then (otherOtherTargetView:FileThis exists)) or (targetView:FileThis exists)) then begin
+				l4 := (if otherOtherTargetView then otherOtherTargetView else targetView);
+				try begin
+						l4:FileThis(target, l3, newLabels, l2, l1)
+					end onexception |evt.ex| do begin
+						self:hilite(nil);
+						Rethrow()
+					end;
+				if l2 then begin
+						filingButton:?Update()
+					end
+			end else begin
+				if l3 then begin
+						target.labels := newLabels;
+						if ((not doCardRouting) or (doCardRouting <> 'onlyCardRouting)) then begin
+								targetView:?filingChanged()
+							end;
+						targetView:?filingChanged()
+					end;
+				if l2 then begin
+						self:UpdateTargetStore()
+					end
+			end;
+		base:Close()
+	end,
+	UpdateTargetStore: func() begin
+		(if (if (l2 := storeSelector:GetSelectedStore()) then (targetStore <> l2)) then begin
+				if target._cursor then begin
+						local l1;
+						local l2;
+						(foreach l3 in target._cursor do begin
+								if (ClassOf(l3) = 'alias) then begin
+										l1 := ResolveEntryAlias(l3)
+									end else begin
+										l1 := l3
+									end;
+								if l1 then begin
+										targetView:MoveTarget(l1, l2)
+									end
+							end)
+					end else begin
+						targetView:MoveTarget(target, l2)
+					end;
+				filingButton:?Update()
+			end)
+	end,
+	preallocatedContext: '_defaultButton,
+	_proto: @protoTextButton
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+OpenForUser_literal2 := same("filingSlip.OpenForUser.literals[2]");
+
+viewSetupFormScript_literal8_3 := same("storeCluster.viewSetupFormScript.literals[8]");
+
+viewSetupFormScript_code_8 := same("storeSelector.viewSetupFormScript.instructions");

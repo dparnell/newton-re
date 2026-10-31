@@ -1,0 +1,817 @@
+// assistFrames, and what only it reaches
+
+assistFrames := {
+	debug: 157285,
+	meet_act: {isa: birthdayIsaIsa, Lexicon: [|Array|: [|Array|: "meet", "meet me", "see", "talk to"]]},
+	printing_task: printing_task,
+	fax_act: faxing_taskPrimary_act,
+	scheduling_task: scheduling_task,
+	faxing_sig: faxing_taskSignature,
+	mail_act: mailing_taskPrimary_act,
+	mailing_sig: mailing_taskSignature,
+	dinner_act: {isa: dinner_actIsa, usualTime: "7:00 pm", Lexicon: [|Array|: [|Array|: "dinner"]]},
+	person: groupIsa,
+	address: {isa: homePhoneIsaIsaIsa},
+	who_obj: groupIsaIsa,
+	homePhone: {isa: homePhoneIsa, tagSymbol: 'homePhone, Lexicon: [|Array|: [|Array|: "home phone", "home"]]},
+	calling_task: calling_task,
+	about_precond: about_taskPreconditions,
+	when_obj: TimeIsa,
+	birthday: {
+		isa: birthdayIsa,
+		repeatIt: 'yearly,
+		Lexicon: [|Array|: [|Array|: "birthday", "bday", "b-day"]],
+		GetTitle: func(a1) begin
+			return ParamStr("Bday: ^0", [Array: GetDataDefs('|nameRef.people|):Get(a1, 'name, 'text)])
+		end,
+		AddToCardfile: func(a1, a2, a3) begin
+			(if GetRoot().cardfile:AddCardData(a1, 'personal, {bday: a2}) then begin
+					a1.bdayEvent := MakeEntryAlias(a3);
+					EntryChange(a1)
+				end)
+		end
+	},
+	time_precond: time_taskPreconditions,
+	user_obj: TimeIsaIsaIsa,
+	schedule_act: birthdayIsaIsa,
+	postal_code: {isa: homePhoneIsaIsaIsa},
+	about_sig: about_taskSignature,
+	workPhone: {isa: homePhoneIsa, tagSymbol: 'workPhone, Lexicon: [|Array|: [|Array|: "work", "work phone"]]},
+	dsQuery: {type: 'words, words: nil, entirewords: true},
+	matched: {person: nil, places: nil},
+	Time: {isa: TimeIsa, value: nil},
+	finding_task: finding_task,
+	time_sig: time_taskSignature,
+	phone_tag: homePhoneIsa,
+	where_obj: homePhoneIsaIsaIsa,
+	brunch_act: {isa: dinner_actIsa, usualTime: "10:00 am", Lexicon: [|Array|: [|Array|: "brunch"]]},
+	anniversary: {
+		isa: birthdayIsa,
+		repeatIt: 'yearly,
+		Lexicon: [|Array|: [|Array|: "anniversary"]],
+		GetTitle: func(a1) begin
+			return ParamStr("Anniv.: ^0", [Array: GetDataDefs('|nameRef.people|):Get(a1, 'name, 'text)])
+		end,
+		AddToCardfile: func(a1, a2, a3) begin
+			(if GetRoot().cardfile:AddCardData(a1, 'personal, {anniversary: a2}) then begin
+					a1.anniversaryEvent := MakeEntryAlias(a3);
+					EntryChange(a1)
+				end)
+		end
+	},
+	dyna_user_obj: {isa: TimeIsaIsaIsa},
+	region: {isa: homePhoneIsaIsaIsa},
+	form: form,
+	group: {isa: groupIsa},
+	remembering_precond: remembering_taskPreconditions,
+	parsed_number: TimeIsaIsa,
+	what_obj: formIsa,
+	faxPhone: {isa: homePhoneIsa, tagSymbol: 'faxPhone, Lexicon: [|Array|: "fax number"]},
+	about_act: about_taskPrimary_act,
+	city: {isa: cityIsa},
+	default_precond: default_taskPreconditions,
+	remembering_sig: remembering_taskSignature,
+	remind_act: remembering_taskPrimary_act,
+	province: {isa: cityIsa},
+	time_act: time_taskPrimary_act,
+	faxing_task: faxing_task,
+	breakfast_act: {isa: dinner_actIsa, usualTime: "7:00 am", Lexicon: [|Array|: [|Array|: "breakfast"]]},
+	mailing_task: mailing_task,
+	entries: {person: nil, places: nil, personadded: nil, placeadded: nil, exception: nil},
+	printing_precond: printing_taskPreconditions,
+	scheduling_precond: scheduling_taskPreconditions,
+	default_sig: default_taskSignature,
+	special_event_act: birthdayIsa,
+	mobilePhone: {
+		isa: homePhoneIsa,
+		tagSymbol: 'mobilePhone,
+		Lexicon: [|Array|:
+			[|Array|:
+				"cellular",
+				"cellular phone",
+				"cellular number",
+				"mobile",
+				"moibile phone",
+				"mobile number"
+			]
+		]
+	},
+	title: {isa: groupIsaIsa},
+	custom: {isa: groupIsa},
+	iacalendar: {isa: formIsa},
+	print_act: printing_taskPrimary_act,
+	printing_sig: printing_taskSignature,
+	country: {isa: cityIsa},
+	meal_act: dinner_actIsa,
+	scheduling_sig: scheduling_taskSignature,
+	parsed_phone: {isa: homePhoneIsaIsa},
+	holiday: {isa: birthdayIsa, repeatIt: nil, Lexicon: [|Array|: [|Array|: "holiday"]]},
+	phone: homePhoneIsaIsa,
+	affiliate: {isa: groupIsa},
+	dyna_user_action: {isa: finding_taskPrimary_actIsa},
+	action: finding_taskPrimary_actIsa,
+	company: {isa: cityIsa, value: nil},
+	salutationPrefix: {
+		isa: salutationPrefixIsa,
+		Lexicon: [|Array|: [|Array|: dear, to_3, "attention", "attn", "attn.", hey]]
+	},
+	lexical: {isa: nil, value: nil},
+	calling_precond: calling_taskPreconditions,
+	about_task: about_task,
+	time_task: time_task,
+	town: {isa: cityIsa},
+	call_act: calling_taskPrimary_act,
+	calling_sig: calling_taskSignature,
+	default_act: default_taskPrimary_act,
+	task_template: scheduling_taskIsa,
+	task_list: [|Array|:
+		scheduling_task,
+		finding_task,
+		remembering_task,
+		mailing_task,
+		faxing_task,
+		printing_task,
+		calling_task,
+		time_task,
+		default_task,
+		about_task
+	],
+	Date: {isa: TimeIsa, value: nil},
+	finding_precond: finding_taskPreconditions,
+	find_act: finding_taskPrimary_act,
+	finding_sig: finding_taskSignature,
+	lunch_act: {isa: dinner_actIsa, usualTime: "12:00 pm", Lexicon: [|Array|: [|Array|: "lunch"]]},
+	beeper: {
+		isa: homePhoneIsa,
+		tagSymbol: '|string.pager|,
+		Lexicon: [|Array|: [|Array|: "pager", "pager number", "beeper"]]
+	},
+	iaref: {class: nil, alias: nil},
+	carPhone: {
+		isa: homePhoneIsa,
+		tagSymbol: 'carPhone,
+		Lexicon: [|Array|: [|Array|: "car", carPhone, carPhone, "car number"]]
+	},
+	county: {isa: cityIsa},
+	remembering_task: remembering_task,
+	places: cityIsa,
+	state: {isa: cityIsa},
+	faxing_precond: faxing_taskPreconditions,
+	default_task: default_task,
+	parser_obj: salutationPrefixIsa,
+	mailing_precond: mailing_taskPreconditions
+};
+
+salutationPrefixIsa := {};
+
+default_taskPrimary_act := {isa: finding_taskPrimary_actIsa};
+
+TimeIsaIsaIsa := {};
+
+scheduling_taskIsa := {};
+
+theTimeIn := "the time in";
+
+time_taskPrimary_act := {
+	isa: finding_taskPrimary_actIsa,
+	Lexicon: [|Array|:
+		[|Array|:
+			time_2,
+			"time in",
+			theTimeIn,
+			"what time is it",
+			"what time is it in",
+			theTimeIn,
+			"what time",
+			"what is the time",
+			"what is the time in"
+		]
+	]
+};
+
+birthdayIsa := {isa: birthdayIsaIsa};
+
+dinner_actIsa := {isa: birthdayIsaIsa};
+
+TimeIsaIsa := {isa: TimeIsaIsaIsa};
+
+groupIsaIsa := {isa: TimeIsaIsaIsa};
+
+groupIsa := {isa: groupIsaIsa, value: nil};
+
+formIsa := {isa: TimeIsaIsaIsa};
+
+form := {isa: formIsa};
+
+TimeIsa := {isa: TimeIsaIsa};
+
+homePhoneIsaIsaIsa := {isa: TimeIsaIsaIsa};
+
+homePhoneIsaIsa := {isa: homePhoneIsaIsaIsa, value: nil, Lexicon: [|Array|: "phone number"]};
+
+homePhoneIsa := {isa: homePhoneIsaIsa};
+
+carPhone := "car phone";
+
+cityIsa := {isa: homePhoneIsaIsaIsa};
+
+scheduling_taskSignature := [|Array|: birthdayIsaIsa, groupIsaIsa, cityIsa, TimeIsa];
+
+scheduling_taskPreconditions := [|Array|: 'action, 'who, 'where, 'when];
+
+scheduling_task := {
+	_proto: @assistUtilities,
+	isa: scheduling_taskIsa,
+	primary_act: birthdayIsaIsa,
+	signature: scheduling_taskSignature,
+	preconditions: scheduling_taskPreconditions,
+	taskSlip: 'scheduleSlip,
+	SetTitle: func() begin
+		l1 := self.input;
+		l2 := GlueStrings(self.OrigPhrase);
+		l3 := self.phrases;
+		local l1;
+		local l2;
+		local l3;
+		(foreach l4, l5 in l1 do begin
+				if (if isa(l5, 'schedule_act) then HasSlot(l5, 'removeIt)) then begin
+						self:RemoveFromString(l2, l3[l4], nil)
+					end else begin
+						if isa(l5, 'when_obj) then begin
+								self:RemoveFromString(l2, l3[l4], true)
+							end
+					end
+			end);
+		if l2 then begin
+				l2 := TrimString(l2)
+			end;
+		return l2
+	end,
+	SetInvitees: func(a1) begin
+		if (l2 := GetMatchedEntries('person, self.entries)) then begin
+				l4 := Array((l3 := Length(l2)), nil);
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				(for l5 := 0 to (l3 - 1) do begin
+						local l8, l9;
+						l9 := ResolveEntryAlias((l8 := l2[l5]).alias);
+						l4[l5] := GetDataDefs('|nameRef.people|):MakeNameRef(l9, '|nameRef.people|);
+						if self:SetDisplayName(l4[l5], l8, l9) then begin
+								l4[l5]._alias := nil
+							end
+					end);
+				a1.nameEntries := l4
+			end else begin
+				if (l1 := FindPossibleName(self.noisewords, self.OrigPhrase)) then begin
+						a1.nameEntries := [Array: GetDataDefs('|nameRef.people|):MakeNameRef({name: {last: l1}}, '|nameRef.people|)]
+					end
+			end;
+		return l1
+	end,
+	SetLocation: func(a1, a2) begin
+		(if (l1 := GetMatchedEntries('places, self.entries)) then begin
+				l3 := Array((l2 := Length(l1)), nil);
+				local l1;
+				local l2;
+				local l3;
+				(for l4 := 0 to (l2 - 1) do begin
+						local l7, l8;
+						l8 := ResolveEntryAlias((l7 := l1[l4]).alias);
+						l3[l4] := GetDataDefs('|nameRef.meetingPlace|):MakeNameRef(l8, '|nameRef.meetingPlace|);
+						if self:SetDisplayName(l3[l4], l7, l8) then begin
+								l3[l4]._alias := nil
+							end
+					end);
+				(a1.locationEntries := l3)
+			end else (if (not a2) then (if (a2 := FindPossibleLocation(self.noisewords, self.OrigPhrase)) then (a1.locationEntries := [Array: GetDataDefs('|nameRef.meetingPlace|):MakeNameRef({company: a2}, '|nameRef.meetingPlace|)]))))
+	end,
+	postParse: func() begin
+		l1 := {givenTime: nil, usualTime: nil, usualValue: nil, currentTime: Time(), hasDate: nil, hasTime: nil};
+		l2 := GetRoot();
+		if (l3 := GetVariable(self, 'action)) then begin
+				local l1;
+				local l2;
+				local l3;
+				(for l4 := 0 to (Length(l3) - 1) do begin
+						local l7, l8, l9, l10;
+						if (if isa((l7 := l3[l4][0]), 'schedule_act) then HasPath(l7, 'usualTime)) then begin
+								l1.usualValue := getSlot(l7, 'usualTime);
+								l1.usualTime := StringToDate(l1.usualValue);
+								break
+							end
+					end);
+				l3 := l3[0][0]
+			end;
+		l8 := GetVariable(self, 'when);
+		(l9 := l2.(taskSlip)).totMin := self:GetTime(l8, l1);
+		l9.newTitle := self:SetTitle();
+		l10 := self:SetInvitees(l9);
+		if (if l3 then isa(l3, 'special_event_act)) then begin
+				l9.event := true;
+				l9.repeatIt := GetVariable(l3, 'repeatIt);
+				l9.action := l3
+			end else begin
+				l9.event := nil;
+				l9.repeatIt := nil;
+				self:SetLocation(l9, l10)
+			end;
+		l9:Open();
+		l2.assistant:Close()
+	end,
+	score: nil
+};
+
+finding_taskSignature := [|Array|: finding_taskPrimary_act, TimeIsaIsaIsa];
+
+finding_taskPreconditions := [|Array|: 'action, 'user_obj];
+
+finding_task := {
+	_proto: @assistUtilities,
+	isa: scheduling_taskIsa,
+	primary_act: finding_taskPrimary_act,
+	signature: finding_taskSignature,
+	preconditions: finding_taskPreconditions,
+	taskSlip: 'findslip,
+	postParse: func() begin
+		local l1, l2, l3;
+		(l2 := (l1 := GetRoot()).findDrawer):Open();
+		l1.assistant:Close();
+		l3 := Clone(OrigPhrase);
+		if (l3 := self:FilterAction(input, phrases, l3, 'find_act)) then begin
+				l3 := GlueStrings(l3)
+			end;
+		l2:setfindtext(l3);
+		RefreshViews()
+	end,
+	score: nil
+};
+
+remembering_taskSignature := [|Array|: remembering_taskPrimary_act, TimeIsa];
+
+remembering_taskPreconditions := [|Array|: 'action, 'when];
+
+remembering_task := {
+	_proto: @assistUtilities,
+	isa: scheduling_taskIsa,
+	primary_act: remembering_taskPrimary_act,
+	signature: remembering_taskSignature,
+	preconditions: remembering_taskPreconditions,
+	taskSlip: 'remindSlip,
+	SetTitle: func() begin
+		l1 := self.input;
+		l2 := GlueStrings(self.OrigPhrase);
+		local l1;
+		local l2;
+		(foreach l3, l4 in l1 do begin
+				if isa(l4, 'remind_act) then begin
+						self:RemoveFromString(l2, self.phrases[l3], nil)
+					end else begin
+						if (if isa(l4, 'when_obj) then HasSlot(l4, 'Date)) then begin
+								self:RemoveFromString(l2, self.phrases[l3], true)
+							end
+					end
+			end);
+		if l2 then begin
+				l2 := TrimString(l2)
+			end;
+		return l2
+	end,
+	postParse: func() begin
+		local l1, l2, l3;
+		l1 := {givenTime: nil, usualTime: nil, usualValue: nil, currentTime: Time(), hasDate: nil, hasTime: nil};
+		(l3 := (l2 := GetRoot()).(taskSlip)).totMin := self:GetTime(self.when, l1);
+		l3.title := self:SetTitle();
+		l3:Open();
+		l2.assistant:Close()
+	end,
+	score: nil
+};
+
+mailing_taskSignature := [|Array|: mailing_taskPrimary_act, groupIsaIsa];
+
+mailing_taskPreconditions := [|Array|: 'action, 'who];
+
+mailing_task := {
+	isa: scheduling_taskIsa,
+	primary_act: mailing_taskPrimary_act,
+	signature: mailing_taskSignature,
+	preconditions: mailing_taskPreconditions,
+	_proto: @assistUtilities,
+	taskType: 'mail,
+	mailTag: nil,
+	transportStr: mail_2,
+	SetEmailTags: func(a1) begin
+		local l1;
+		(if (l1 := self:GetTransportTags('iaTags)) then (a1.mailTag := l1) else (a1.mailTag := EmailSystems.emailClasses))
+	end,
+	postParse: func() begin
+		l1 := GetRoot();
+		if (not (l2 := GetGroupTransport(taskType))) then begin
+				l1:Notify(3, "Assist", "No mail transport installed.");
+				l1.assistant:Close();
+				return nil
+			end;
+		if ((l4 := self:iaGetTargetInfo((l3 := GetView('viewfrontmostapp)), l2, transportStr)) = nil) then begin
+				l1.assistant:Close();
+				return nil
+			end;
+		if (l5 := GetMatchedEntries('allEntries, self.entries)) then begin
+				self:RemoveGroupsExcept(l5, '|nameRef.email|)
+			end;
+		(if (if l5 then (Length(l5) = 0)) then l1:Notify(3, "Assist", "Cannot mail to a group that is not a E-mail type group.") else begin
+				if ((l2 := l1.(l2):NewItem(l3)) <> nil) then begin
+						self:SetEmailTags(l2);
+						if (l5 <> nil) then begin
+								l8 := 0;
+								l9 := true;
+								local l1;
+								local l2;
+								local l3;
+								local l4;
+								local l5;
+								local l6;
+								local l7;
+								local l8;
+								local l9;
+								(foreach l10, l11 in l5 do begin
+										if self:SetDisplayName((l7 := GetDataDefs('|nameRef.email|):MakeNameRef((l13 := ResolveEntryAlias(l11.alias)), '|nameRef.email|)), l11, l13) then begin
+												l7._alias := nil
+											end;
+										l14 := nil;
+										if (ObjEntryClass(l13) <> 'group) then begin
+												l14 := (l7.email := dsGetCandidateEMail(l2, l13))
+											end;
+										if (l9 <> nil) then begin
+												l2.toRef := [Array: l7];
+												l9 := nil
+											end else begin
+												if (not l2.alternatives) then begin
+														l2.alternatives := [Array: ]
+													end;
+												ArrayInsert(l2.alternatives, l7, l8);
+												l8 := (l8 + 1)
+											end;
+										if (if (if (l15 := GetRoot().cardfile:bcEMailAddress(l13, '[Array: |string.email|])) then (Length(l15) > 0)) then l14) then begin
+												local l13;
+												local l14;
+												local l15;
+												(foreach l16 in l15 do begin
+														local l18, l19, l20;
+														if (if (not StrEqual((l18 := l16.email), l14)) then (if l2.mailTag then SetContains(l2.mailTag, ClassOf(l18)))) then begin
+																(l19 := Clone(l7)).name := Clone(l19.name);
+																l19.email := l18;
+																if (not l2.alternatives) then begin
+																		l2.alternatives := [Array: ]
+																	end;
+																ArrayInsert(l2.alternatives, l19, l8);
+																l8 := (l8 + 1)
+															end
+													end)
+											end
+									end)
+							end else begin
+								if (l20 := FindPossibleName(self.noisewords, self.OrigPhrase)) then begin
+										l2.toRef := [Array: GetDataDefs('|nameRef.email|):MakeNameRef({name: {last: l20}}, '|nameRef.email|)]
+									end
+							end;
+						l6 := OpenRoutingSlip(l2, l4);
+						l1.assistant:Close()
+					end;
+				(if (not l6) then l1:Notify(3, "Assist", "There is nothing to mail."))
+			end)
+	end,
+	score: nil
+};
+
+faxing_taskSignature := [|Array|: faxing_taskPrimary_act, groupIsaIsa, cityIsa, homePhoneIsaIsa, form];
+
+faxing_taskPreconditions := [|Array|: 'action, 'who, 'places, 'phone, 'form];
+
+faxing_task := {
+	isa: scheduling_taskIsa,
+	primary_act: faxing_taskPrimary_act,
+	signature: faxing_taskSignature,
+	preconditions: faxing_taskPreconditions,
+	_proto: @assistUtilities,
+	iaWorkTags: [|Array|: 'faxPhone, '|string.phone.faxPhone|, 'homefaxPhone, '|string.phone.homefaxPhone|, 'phone],
+	iaHomeTags: [|Array|: 'homefaxPhone, '|string.phone.homefaxPhone|, 'faxPhone, '|string.phone.faxPhone|, 'phone],
+	taskType: 'fax,
+	transportStr: fax,
+	GetFaxTags: func(a1) begin
+		local l1;
+		(if HasSlot(a1, 'phoneTag) then (if (a1.phoneTag = 'homefaxPhone) then self.iaHomeTags else self.iaWorkTags) else (if (not (tags := self:GetTransportTags((l1 := self:GetPreferredSymb())))) then self.(l1) else tags))
+	end,
+	postParse: func() begin
+		local l1, l2, l3, l4, l5, l6;
+		l1 := GetRoot();
+		if (not (l2 := GetGroupTransport(taskType))) then begin
+				l1:Notify(3, "Assist", "No fax transport installed.");
+				return nil
+			end;
+		if ((l4 := self:iaGetTargetInfo((l3 := GetView('viewfrontmostapp)), l2, transportStr)) = nil) then begin
+				l1.assistant:Close();
+				return nil
+			end;
+		if (l5 := GetMatchedEntries('allEntries, self.entries)) then begin
+				self:RemoveGroupsExcept(l5, '|nameRef.fax|)
+			end;
+		(if (if l5 then (Length(l5) = 0)) then l1:Notify(3, "Assist", "Cannot fax a group that is not a Faxes type group.") else begin
+				if ((l2 := l1.(l2):NewItem(l3)) <> nil) then begin
+						PhoneUtility(l2, self);
+						if (not HasSlot(l2, 'dialdirect)) then begin
+								l2.phoneTag := self:GetFaxTags(l2)
+							end;
+						l2.candidates := l5;
+						self:FillPhoneSlip(l2, '|nameRef.fax|);
+						l6 := OpenRoutingSlip(l2, l4);
+						l1.assistant:Close()
+					end;
+				(if (not l6) then l1:Notify(3, "Assist", "There is nothing to fax."))
+			end)
+	end,
+	score: nil
+};
+
+printing_taskSignature := [|Array|: printing_taskPrimary_act];
+
+printing_taskPreconditions := [|Array|: 'action];
+
+printing_task := {
+	_proto: @assistUtilities,
+	isa: scheduling_taskIsa,
+	primary_act: printing_taskPrimary_act,
+	signature: printing_taskSignature,
+	preconditions: printing_taskPreconditions,
+	taskType: 'Print,
+	transportStr: print,
+	postParse: func() begin
+		local l1, l2, l3, l4, l5;
+		l1 := GetRoot();
+		if (not (l2 := GetGroupTransport(taskType))) then begin
+				l1:Notify(3, "Assist", "No print transport installed.");
+				return nil
+			end;
+		if ((l4 := self:iaGetTargetInfo((l3 := GetView('viewfrontmostapp)), l2, transportStr)) = nil) then begin
+				l1.assistant:Close();
+				return nil
+			end;
+		if ((l2 := l1.(l2):NewItem(l3)) <> nil) then begin
+				l5 := OpenRoutingSlip(l2, l4);
+				l1.assistant:Close()
+			end;
+		(if (not l5) then l1:Notify(3, "Assist", "There is nothing to print."))
+	end,
+	score: nil
+};
+
+calling_taskSignature := [|Array|: calling_taskPrimary_act, groupIsaIsa, cityIsa, homePhoneIsaIsa];
+
+calling_taskPreconditions := [|Array|: 'action, 'who, 'places, 'phone];
+
+calling_task := {
+	isa: scheduling_taskIsa,
+	primary_act: calling_taskPrimary_act,
+	signature: calling_taskSignature,
+	preconditions: calling_taskPreconditions,
+	_proto: @assistUtilities,
+	taskSlip: '|PhoneHome:Newton|,
+	iaHomeTags: [|Array|:
+		'homePhone,
+		'|string.phone.homePhone|,
+		'workPhone,
+		'|string.phone.workPhone|,
+		'carPhone,
+		'|string.phone.carPhone|,
+		'mobilePhone,
+		'|string.phone.mobilePhone|,
+		'|string.pager|,
+		'phone
+	],
+	iaWorkTags: [|Array|:
+		'workPhone,
+		'|string.phone.workPhone|,
+		'homePhone,
+		'|string.phone.homePhone|,
+		'carPhone,
+		'|string.phone.carPhone|,
+		'mobilePhone,
+		'|string.phone.mobilePhone|,
+		'|string.pager|,
+		'phone
+	],
+	GetPhoneTags: func(a1) begin
+		local l1;
+		(if HasSlot(a1, 'phoneTag) then [Array: a1.phoneTag, Intern(Stringer([Array: "string.phone.", a1.phoneTag])), 'phone] else begin
+				l1 := self:GetPreferredSymb();
+				self.(l1)
+			end)
+	end,
+	postParse: func() begin
+		local l1, l2, l3, l4, l5;
+		l1 := GetRoot();
+		if (l2 := GetMatchedEntries('allEntries, self.entries)) then begin
+				self:RemoveAllGroups(l2)
+			end;
+		if (if l2 then (Length(l2) = 0)) then begin
+				l1:Notify(3, "Assist", "Cannot call a group.")
+			end else begin
+				l4 := (l3 := GetView('viewfrontmostapp)):GetActiveView();
+				l5 := l1.(taskSlip):NewItem(l3);
+				if l4 then begin
+						if (not (l4 := l4:GetTargetInfo('Routing)).view) then begin
+								l4.view := {}
+							end;
+						if (not l4.target) then begin
+								l4.target := {}
+							end
+					end else begin
+						l4 := {view: {}, target: {}}
+					end;
+				l5.candidates := l2;
+				PhoneUtility(l5, self);
+				if (not HasSlot(l5, 'dialdirect)) then begin
+						l5.phoneTag := self:GetPhoneTags(l5)
+					end;
+				self:FillPhoneSlip(l5, '|nameRef.phone|);
+				l5.assistnoverify := true;
+				OpenRoutingSlip(l5, l4)
+			end;
+		l1.assistant:Close()
+	end,
+	score: nil
+};
+
+default_taskSignature := [|Array|: TimeIsaIsaIsa];
+
+default_taskPreconditions := [|Array|: 'user_obj];
+
+default_task := {
+	value: "Default Task",
+	isa: scheduling_taskIsa,
+	primary_act: default_taskPrimary_act,
+	signature: default_taskSignature,
+	preconditions: default_taskPreconditions,
+	taskSlip: nil,
+	choices: nil,
+	postParse: func() begin
+		(if ((choices := GetRelevantTemplates(self.user_obj[0][0])) <> nil) then begin
+				(ass := GetRoot().assistant).assistLine.defaultChoices := choices;
+				ass.assistLine:SetLabelCommands(Sort(Clone(choices), '|str<|, nil));
+				ass:PickOne()
+			end)
+	end,
+	score: nil
+};
+
+about_taskSignature := [|Array|: about_taskPrimary_act];
+
+about_taskPreconditions := [|Array|: 'about_act];
+
+about_task := {
+	value: "About Task",
+	isa: scheduling_taskIsa,
+	primary_act: about_taskPrimary_act,
+	signature: about_taskSignature,
+	preconditions: about_taskPreconditions,
+	taskSlip: nil,
+	choices: nil,
+	postParse: func() begin
+		call @aboutNewton with ()
+	end,
+	score: nil
+};
+
+title_4 := {title: nil, preallocatedContext: 'title, _proto: @protoTitle};
+
+overview_2 := {
+	viewFlags: vVisible + vApplication + vClickable,
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewBounds: {left: 0, top: 16, right: 0, bottom: -16},
+	cursor: nil,
+	autoDeselect: true,
+	selectIndent: 0,
+	nothingCheckable: true,
+	viewSetupFormScript: func() begin
+		(cursor := @arrayErsatzCursor:New('{}, items))
+	end,
+	viewSetupChildrenScript: func() begin
+		self:SetupAbstracts(cursor:clone())
+	end,
+	Abstract: compile(
+		constants: {
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			kLiteral_52ac79: {mask: call kBinaryFromHex with ("00000000000400970097004b00b40066000000000000000000000000000000000000000000000000180406001e001e000b8474000d002c0007003800041e080000798000007c800000fdc0001475000000bc8a00007dc0000074c00000300000041d0800070038000d002c000b8874001e001e0018080600000000000000000000000000", 'mask), bits: call kBinaryFromHex with ("00000000000400970097004b00b40066000000000000000000000000000c0000000c0000001e0000181a06001e3f1e000bfbf4000dffec0006e1d800078c7800070038000f0c3c003e0c1f00ea8c5fc0fe9c55c03e0e1f000f073c000701b800078c780006e1d8000dffec000bf7f4001e3f1e0018160600001e0000000c0000000c0000", 'bits), bounds: '{left: 0, top: 0, right: 27, bottom: 29}}
+		},
+		func(a1, a2) begin
+			local l1, l2;
+			l1 := ResolveEntryAlias(a1.entry);
+			l2 := LocalTime(nil, l1);
+			[Array: MakeText(a1.title, (a2.left + 37), a2.top, a2.right, (a2.top + 11)), MakeText(Stringer([Array: HourMinute(l2), "  ", ShortDate(l2)]), (a2.left + 37), ((a2.top + 11) + 2), a2.right, ((a2.top + 22) + 2)), ScaleShape(MakeShape(kLiteral_52ac79), nil, RelBounds((a2.left + 10), (a2.top + 4), 16, 16))]
+		end),
+	HitItem: func(a1, a2, a3) begin
+		local l1, l2, l3;
+		l1 := cursor:clone();
+		l1:move(a1);
+		l2 := l1:entry();
+		(l3 := GetRoot().worldClock):Open();
+		openChild := l3:ShowFoundItem(l2);
+		base:Close()
+	end,
+	Scroller: func(a1) begin
+		cursor:move(a1);
+		self:RedoChildren();
+		self:Dirty()
+	end,
+	preallocatedContext: 'overview,
+	_proto: @protoOverview
+};
+
+time_taskSignature := [|Array|: time_taskPrimary_act];
+
+time_taskPreconditions := [|Array|: 'time_act];
+
+time_task := {
+	_proto: @assistUtilities,
+	isa: scheduling_taskIsa,
+	primary_act: time_taskPrimary_act,
+	signature: time_taskSignature,
+	preconditions: time_taskPreconditions,
+	taskSlip: nil,
+	pseudoOverview: {
+		viewFlags: vApplication + vClickable,
+		viewBounds: {left: 0, top: 0, right: 224, bottom: 210},
+		viewJustify: vjParentCenterH + vjParentCenterV,
+		items: nil,
+		city: nil,
+		declareSelf: 'base,
+		debug: 2115625,
+		viewSetupFormScript: func() begin
+			inherited:?viewSetupFormScript();
+			self.overview.items := items;
+			(self.title.title := ParamStr("Time in ^0", [Array: city]))
+		end,
+		ReOrientToScreen: @defRotateFunc,
+		stepChildren: [stepChildren: title_4, overview_2],
+		title: nil,
+		stepallocatecontext: [|Array|: 'title, title_4, 'overview, overview_2],
+		overview: nil,
+		_proto: @protoFloatNGo
+	},
+	postParse: func() begin
+		local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+		l2 := (l1 := GetRoot()).assistant;
+		l3 := Clone(OrigPhrase);
+		if (l3 := self:FilterAction(input, phrases, l3, 'time_act)) then begin
+				l3 := self:FilterNoise(l3, @stopWordList)
+			end;
+		if l3 then begin
+				l3 := GlueStrings(l3)
+			end;
+		(if l3 then begin
+				l4 := l1.worldClock;
+				l5 := [Array: ];
+				(if (l6 := l4:find(l3, l5, 'localFind, nil)) then begin
+						l7 := l6.items;
+						if ((l8 := Length(l6.items)) = 1) then begin
+								l4:Open();
+								l4:ShowFoundItem(l7[0])
+							end else begin
+								(l9 := BuildContext(pseudoOverview)).items := l7;
+								l9.city := l3;
+								l9:Open()
+							end;
+						l2:Close()
+					end else l2:Duh(nil))
+			end else begin
+				l2:Close();
+				l1.worldClock:Open()
+			end)
+	end,
+	score: nil
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+Abstract_literal9 := same("overview_2.Abstract.literals[9]");
+
+AddToCardfile_code := same("assistFrames.birthday.AddToCardfile.instructions");
+
+GetTitle_code := same("assistFrames.birthday.GetTitle.instructions");
+
+postParse_literal1 := same("scheduling_task.postParse.literals[1]");
+
+postParse_literal4 := same("printing_task.postParse.literals[4]");
+
+viewSetupChildrenScript_code_2 := same("overview_2.viewSetupChildrenScript.instructions");
+
+Scroller_code := same("overview_2.Scroller.instructions");

@@ -1,0 +1,20 @@
+// protoMeetingPlacePicker, and what only it reaches
+
+protoMeetingPlacePicker := {
+	_proto: @protoListpicker,
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewFlags: vVisible + vApplication + vClickable,
+	appObject: [|Array|: "Place", "Places"],
+	AppAll: "All places",
+	soupToQuery: @cardfileSoupName,
+	viewSetupFormScript: func() begin
+		if (not self.appSymbol) then begin
+				self.appSymbol := GetRoot().cardfile.appSymbol
+			end;
+		(if IsFrame(dataClass) then begin
+				self.pickerDef := dataClass;
+				(dataClass := ClassOf(pickerDef))
+			end else (self.pickerDef := GetDataDefs(dataClass)))
+	end
+};

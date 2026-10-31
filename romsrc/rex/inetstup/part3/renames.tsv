@@ -1,0 +1,25 @@
+# each definition's name before the tree was put in its natural form (tools/newton-rom/analysis/naturalize.py), and after
+obj_1020859	part
+obj_1020f31	description_value
+obj_102108d	ConvertToDefaultText
+obj_10210ad	ConvertToDefaultText_code
+obj_10210e1	macIPGatewayZone_value
+obj_102110d	ConvertToDefaultText_literal2
+obj_1021531	localAddress_value
+obj_102154d	defaultDomain_value
+obj_1021581	newEntryViews_value
+obj_1021991	array
+obj_1021a61	MakePopup_code
+obj_1021a81	frame
+obj_1021b09	configuration
+obj_1021b5d	frame_2
+obj_1021ce5	zone
+obj_1022565	atalk1
+obj_1022675	name_value
+obj_10226e1	name_value_2
+obj_10227dd	label_value
+obj_102281d	helpText_value
+obj_10228c9	helpTopic_value
+obj_1022f99	formatFunc_code
+obj_1023425	_proto_value
+obj_1023bc1	devInstallScript_code

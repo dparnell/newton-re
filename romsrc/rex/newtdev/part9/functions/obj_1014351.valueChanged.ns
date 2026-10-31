@@ -1,5 +1,0 @@
-@@ 0x1014681
-func() begin
-	(if (not hack) then (if viewValue then self:UpdateAppleTalk("pnet", cisName) else self:UpdateAppleTalk("llap", Clone(""))))
-end
-@@end

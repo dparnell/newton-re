@@ -1,0 +1,6 @@
+// stylusDownBitmap, and what only it reaches
+
+stylusDownBitmap := {
+	bits: bitmap('bits, "resources/bits/3db479.png", "0000000000080143014300c7016200e8", 1),
+	bounds: {left: 0, top: 0, right: 33, bottom: 31}
+};

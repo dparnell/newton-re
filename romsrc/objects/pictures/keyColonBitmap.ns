@@ -1,0 +1,6 @@
+// keyColonBitmap, and what only it reaches
+
+keyColonBitmap := {
+	bits: bitmap('bits, "resources/bits/3d8eb5.png", "00000000000401ba01ba01c001c401c4", 1),
+	bounds: {left: 0, top: 0, right: 4, bottom: 10}
+};

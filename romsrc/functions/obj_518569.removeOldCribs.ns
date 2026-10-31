@@ -1,5 +1,0 @@
-@@ 0x518505
-func(a1) begin
-	self:removeOldSoupEntries(a1, notes, RepeatNotes)
-end
-@@end

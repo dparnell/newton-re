@@ -1,0 +1,7 @@
+// keyButtBitmap, and what only it reaches
+
+keyButtBitmap := {
+	mask: bitmap('mask, "resources/mask/3d6001.png", "000000000004003800380097004900b6", 1),
+	bits: bitmap('bits, "resources/bits/3d6061.png", "000000000004017401740187018501a6", 1),
+	bounds: {left: 0, top: 0, right: 31, bottom: 17}
+};

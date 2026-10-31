@@ -1,0 +1,3 @@
+// canonicalGroupee, and what only it reaches
+
+canonicalGroupee := {_proto: nil, viewBounds: nil, textFlags: 0};

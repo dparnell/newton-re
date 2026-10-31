@@ -1,0 +1,12 @@
+// letterWeightQuery, and what only it reaches
+
+letterWeightQuery := {
+	type: 'index,
+	indexPath: 'tag,
+	startKey: letterWeights2,
+	validTest: func(a1) begin
+		StrEqual(a1.tag, "LetterWeights2.0")
+	end
+};
+
+letterWeights2 := "LetterWeights2.0";

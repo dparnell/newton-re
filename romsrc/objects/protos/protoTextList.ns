@@ -1,0 +1,350 @@
+// protoTextList, and what only it reaches
+
+protoTextList := {
+	viewWidth: 0,
+	Selection: 0,
+	setViewHeight: func() begin
+		if (viewLines = 0) then begin
+				self.viewLines := (self:LocalBox().bottom div lineHeight)
+			end;
+		spillHeight := ((numItems - viewLines) * lineHeight);
+		return (viewHeight := (lineHeight * viewLines))
+	end,
+	selectedItems: nil,
+	viewFormat: vfFillWhite + vfFrameBlack + vfPen(1),
+	SetupList: func() begin
+		local l1, l2, l3, l4;
+		if (if useMultipleSelections then (not selectedItems)) then begin
+				selectedItems := [Array: ]
+			end;
+		numItems := Length(ListItems);
+		if (if isShapeList then (Length(ListItems) > 0)) then begin
+				lineHeight := (((l1 := ShapeBounds(ListItems[0])).bottom - l1.top) + 1)
+			end else begin
+				lineHeight := FontHeight(viewFont)
+			end;
+		l2 := self:setViewHeight();
+		l3 := Clone(viewBounds);
+		l4 := self:LocalBox();
+		if useMultipleSelections then begin
+				l3.bottom := ((l3.bottom + viewHeight) - l4.bottom)
+			end else begin
+				l3.bottom := (l3.top + l2)
+			end;
+		self.viewBounds := l3;
+		(viewWidth := l4.right)
+	end,
+	ShowScrollers: func() begin
+		return (if useScrollers then (self:GetTotalLines() > self:GetVisibleLines()))
+	end,
+	HiliteLine: func(a1) begin
+		local l1;
+		(if useMultipleSelections then (if (if (if a1 then (a1 < numItems)) then (a1 >= 0)) then (if (l1 := SetContains(selectedItems, a1)) then begin
+						ArrayRemoveCount(selectedItems, l1, 1);
+						self:InvertLine(a1, nil)
+					end else begin
+						AddArraySlot(selectedItems, a1);
+						self:InvertLine(a1, true)
+					end)) else (if (Selection <> a1) then begin
+					self:InvertLine(Selection, nil);
+					self:InvertLine((Selection := a1), true)
+				end))
+	end,
+	viewHeight: 0,
+	useScrollers: nil,
+	viewFlags: vVisible + vClipping + vClickable,
+	buttonClickScript: func(a1) begin
+		nil
+	end,
+	CheckOn: CheckOn,
+	spillHeight: 0,
+	GetViewWidth: func() begin
+		return viewWidth
+	end,
+	GetTotalLines: func() begin
+		return numItems
+	end,
+	lineHeight: 0,
+	viewOriginY: 0,
+	viewScrollDownScript: func() begin
+		self:doscrollscript(lineHeight)
+	end,
+	InvertLine: compile(
+		constants: {
+			kLiteral_3c5eed: '{transferMode: 2, penPattern: 0, fillPattern: 5}
+		},
+		func(a1, a2) begin
+			local l1, l2, l3;
+			(if (if (if a1 then (a1 < numItems)) then (a1 >= 0)) then (if (if ((l1 := (a1 * lineHeight)) >= viewOriginY) then (l1 < (viewOriginY + viewHeight))) then (if useMultipleSelections then begin
+							l1 := (l1 - viewOriginY);
+							(if a2 then self:DoDrawing('CopyBits, [Array: CheckOn, 4, l1, 0]) else self:DoDrawing('CopyBits, [Array: CheckOff, 4, l1, 0]))
+						end else (if self:ShowScrollers() then begin
+								l1 := (l1 - viewOriginY);
+								l3 := MakeRegion([Array: (l2 := MakeRect(0, l1, viewWidth, (l1 + lineHeight))), MakeRect((viewWidth + textListScrollers.viewBounds.left), textListScrollers.viewBounds.top, viewWidth, textListScrollers.viewBounds.bottom)]);
+								self:DrawShape(l2, {_proto: kLiteral_3c5eed, clipping: l3})
+							end else begin
+								l1 := (l1 - viewOriginY);
+								l2 := MakeRect(0, l1, viewWidth, (l1 + lineHeight));
+								self:DoDrawing('DrawShape, [Array: l2, kLiteral_3c5eed])
+							end))))
+		end),
+	CheckOff: CheckOff,
+	viewScrollUpScript: func() begin
+		self:doscrollscript((-lineHeight))
+	end,
+	GetViewHeight: func() begin
+		return viewHeight
+	end,
+	ScrollAmounts: nil,
+	declareSelf: 'TextBase,
+	scrollableChild: nil,
+	GetVisibleLines: func() begin
+		return viewLines
+	end,
+	isShapeList: nil,
+	viewClickScript: func(a1) begin
+		local l1, l2, l3;
+		InkOff(a1);
+		self:Dirty();
+		RefreshViews();
+		l1 := self:GlobalBox();
+		l3 := -1;
+		(loop begin
+				x := GetPoint(4, a1);
+				if ((l2 := (GetPoint(5, a1) - l1.top)) > 0) then begin
+						l2 := (l2 div lineHeight)
+					end;
+				if (((numItems = 0) or (x < l1.left)) or (x > l1.right)) then begin
+						l2 := -1
+					end else begin
+						if (l2 < 0) then begin
+								if (viewOriginY > 0) then begin
+										self:viewScrollUpScript();
+										RefreshViews();
+										l3 := -1
+									end;
+								l2 := 0
+							end else begin
+								if (l2 > (numItems - 1)) then begin
+										l2 := -1
+									end else begin
+										if (l2 >= viewLines) then begin
+												if (viewOriginY < spillHeight) then begin
+														self:viewScrollDownScript();
+														RefreshViews();
+														l3 := -1
+													end;
+												l2 := (viewLines - 1)
+											end
+									end
+							end
+					end;
+				if (l2 <> l3) then begin
+						self:HiliteLine((l2 + (viewOriginY div lineHeight)));
+						l3 := l2
+					end;
+				(if StrokeDone(a1) then break)
+			end);
+		(if (l2 >= 0) then self:buttonClickScript((Selection := (l2 + (viewOriginY div lineHeight)))))
+	end,
+	viewClass: clView,
+	doscrollscript: func(a1) begin
+		local l1;
+		(if (if ((l1 := (viewOriginY + a1)) >= 0) then (l1 <= spillHeight)) then begin
+				self:SetOrigin(0, l1);
+				(if useScrollers then textListScrollers:UpdateScrollers((a1 div lineHeight)))
+			end)
+	end,
+	debug: 361046,
+	SetChild: func(a1) begin
+		(self.scrollableChild := a1)
+	end,
+	numItems: 0,
+	viewFont: @fontSystem10,
+	drawHilite: func() begin
+		local l1;
+		(if useMultipleSelections then (for l2 := (l1 := (viewOriginY div lineHeight)) to ((l1 + viewLines) - 1) do begin
+					self:InvertLine(l2, SetContains(selectedItems, l2))
+				end) else self:InvertLine(Selection, true))
+	end,
+	viewLines: 0,
+	viewSetupChildrenScript: func() begin
+		local l1;
+		l1 := (if isShapeList then pictList else textList);
+		(if useScrollers then begin
+				viewChildren := [Array: l1, textListScrollers];
+				(if (viewOriginY > spillHeight) then self:SetOrigin(0, max(spillHeight, 0)))
+			end else (viewChildren := [Array: l1]))
+	end,
+	GetLineHeight: func() begin
+		return lineHeight
+	end,
+	useMultipleSelections: nil,
+	viewChildren: [viewChildren: textList, pictList, textListScrollers],
+	textList: nil,
+	allocateContext: [|Array|: 'textList, textList, 'pictList, pictList, 'textListScrollers, textListScrollers],
+	pictList: nil,
+	textListScrollers: nil
+};
+
+textList := {
+	debug: 71574,
+	viewClass: clTextView,
+	viewFlags: vVisible,
+	viewJustify: 0,
+	inset: 3,
+	viewSetupFormScript: func() begin
+		if useMultipleSelections then begin
+				self.inset := 18
+			end;
+		TextBase:SetChild(self);
+		local l1;
+		(foreach l2 in ListItems do begin
+				l1 := Stringer([Array: l1, l2, "\n"])
+			end);
+		self.text := l1;
+		(self.viewBounds := SetBounds(inset, 0, 1000, (Length(ListItems) * self:GetLineHeight())))
+	end,
+	viewDrawScript: func() begin
+		self:Parent():drawHilite()
+	end,
+	preallocatedContext: 'textList
+};
+
+pictList := {
+	debug: 1144630,
+	viewClass: clPictureView,
+	viewFlags: vVisible,
+	viewJustify: vjParentFullH,
+	icon: nil,
+	inset: 3,
+	viewSetupFormScript: func() begin
+		if useMultipleSelections then begin
+				self.inset := 18
+			end;
+		TextBase:SetChild(self);
+		l1 := [Array: {font: viewFont}];
+		l2 := self:GetLineHeight();
+		l3 := FontAscent(viewFont);
+		l4 := 0;
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		(foreach l5 in ListItems do begin
+				local l7;
+				OffsetShape((l7 := Clone(l5)), 0, l4);
+				AddArraySlot(l1, l7);
+				l4 := (l4 + l2)
+			end);
+		self.icon := l1;
+		(self.viewBounds := SetBounds(inset, 0, (-inset), (Length(ListItems) * l2)))
+	end,
+	viewDrawScript: func() begin
+		self:Parent():drawHilite()
+	end,
+	preallocatedContext: 'pictList
+};
+
+textListScrollers := {
+	debug: 5438275,
+	viewBounds: {left: -18, top: 0, right: -1, bottom: 33},
+	viewJustify: vjParentRightH,
+	anchoredViewJustify: 288,
+	ScrollRect: nil,
+	DataRect: nil,
+	ViewRect: nil,
+	totalItems: 0,
+	inScrollArrow: nil,
+	scrollersHidden: nil,
+	scrollersSetup: nil,
+	SetupScrollers: func() begin
+		local l1, l2;
+		self.scrollersSetup := true;
+		l1 := TextBase:GetTotalLines();
+		(if (totalItems <> l1) then begin
+				self.totalItems := l1;
+				l2 := SetBounds(0, 0, 0, l1);
+				self.ScrollRect := l2;
+				self.DataRect := l2;
+				if TextBase.ScrollAmounts then begin
+						self.ScrollAmounts := TextBase.ScrollAmounts
+					end;
+				(self.yPos := (self:Parent().viewOriginY div lineHeight))
+			end)
+	end,
+	viewSetupFormScript: func() begin
+		local l1, l2, l3, l4;
+		if (not scrollersSetup) then begin
+				self.savedViewFlags := viewFlags;
+				l1 := (viewBounds.bottom - viewBounds.top);
+				l2 := TextBase:GetViewHeight();
+				(l3 := Clone(viewBounds)).top := ((l2 div 2) - (l1 div 2));
+				l3.bottom := (l3.top + l1);
+				l3.left := l3.left;
+				l3.right := l3.right;
+				self.viewBounds := l3;
+				self.viewJustify := anchoredViewJustify;
+				if ((l4 := TextBase:GetVisibleLines()) > 0) then begin
+						self.ViewRect := SetBounds(0, 0, 0, l4);
+						self:SetupScrollers()
+					end
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	viewSetupDoneScript: func() begin
+		self:ShowHideScrollers();
+		inherited:?viewSetupDoneScript()
+	end,
+	viewScroll2DScript: func(a1, a2) begin
+		inScrollArrow := true;
+		(for l1 := 1 to abs(a2.amount) do begin
+				if (a1 = 'up) then begin
+						TextBase:viewScrollUpScript()
+					end else begin
+						if (a1 = 'down) then begin
+								TextBase:viewScrollDownScript()
+							end
+					end
+			end);
+		RefreshViews();
+		(inScrollArrow := nil)
+	end,
+	UpdateScrollers: func(a1) begin
+		(if (if scrollersSetup then (not inScrollArrow)) then begin
+				if (a1 = 0) then begin
+						self:SetupScrollers();
+						self:ShowHideScrollers();
+						self.yPos := 0;
+						self:SetOrigin(0, 0)
+					end else begin
+						self.yPos := (yPos + a1)
+					end;
+				self:AdjustArrows()
+			end)
+	end,
+	ShowHideScrollers: func() begin
+		(if TextBase:ShowScrollers() then (if scrollersHidden then begin
+					self.scrollersHidden := nil;
+					self:Show()
+				end) else (if (not scrollersHidden) then begin
+					self.scrollersHidden := true;
+					self:Hide()
+				end))
+	end,
+	viewQuitScript: func() begin
+		self.scrollersSetup := nil;
+		viewFlags := savedViewFlags;
+		(scrollersHidden := nil)
+	end,
+	preallocatedContext: 'textListScrollers,
+	_proto: @protoUpDownScroller
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+GetViewWidth_code := same("protoTextList.GetViewWidth.instructions");
+
+viewSetupDoneScript_code_10 := same("textListScrollers.viewSetupDoneScript.instructions");
+
+SetChild_code := same("protoTextList.SetChild.instructions");

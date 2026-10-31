@@ -1,5 +1,0 @@
-@@ 0x49e3fd
-func(a1) begin
-	self:StartFlush()
-end
-@@end

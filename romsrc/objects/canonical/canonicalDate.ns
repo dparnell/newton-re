@@ -1,0 +1,12 @@
+// canonicalDate, and what only it reaches
+
+canonicalDate := {
+	year: nil,
+	month: nil,
+	Date: nil,
+	dayOfWeek: nil,
+	hour: nil,
+	minute: nil,
+	second: nil,
+	daysInMonth: nil
+};

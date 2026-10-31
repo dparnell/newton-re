@@ -1,5 +1,0 @@
-@@ 0x50af25
-func(a1) begin
-	self:Parent():chooseOtherScript(a1)
-end
-@@end

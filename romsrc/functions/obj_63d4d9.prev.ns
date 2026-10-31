@@ -1,5 +1,0 @@
-@@ 0x44fa91
-func() begin
-	self:mover('prev)
-end
-@@end

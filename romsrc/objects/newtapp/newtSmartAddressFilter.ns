@@ -1,0 +1,18 @@
+// newtSmartAddressFilter, and what only it reaches
+
+newtSmartAddressFilter := {
+	_proto: @newtTextFilter,
+	recFlags: 8436225,
+	PathQuery: func(a1) begin
+		Query(GetUnionSoup(@cardfileSoupName), {type: 'words, words: a1})
+	end,
+	QueryItem: func(a1, a2) begin
+		(if (if a1.address then FindStringInFrame(a1.address, a2, nil)) then {item: a1.address, id: MakeEntryAlias(a1)})
+	end,
+	ResolveItem: func(a1) begin
+		targetView:jamFromEntry(ResolveEntryAlias(a1.id))
+	end,
+	EntryToPath: func(a1) begin
+		(target.(path) := a1.address)
+	end
+};

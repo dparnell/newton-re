@@ -1,5 +1,0 @@
-@@ 0x51c609
-func() begin
-	(if (panelOpen = true) then markupButton:SetMarkIcon())
-end
-@@end

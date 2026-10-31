@@ -1,0 +1,40 @@
+// bizCardPlain, and what only it reaches
+
+bizCardPlain := {
+	bizCardIcon: {bits: bizCardIconBits, bounds: {left: 0, top: 0, right: 38, bottom: 23}},
+	bizCardNum: 1,
+	name: "bizCardPlain",
+	symbol: 'bizCardPlain,
+	type: 'bizcard,
+	stepChildren: [stepChildren:
+		{
+			viewBounds: {left: 0, top: 4, right: 0, bottom: 28},
+			viewJustify: vjCenterH + vjBottomV + vjParentFullH,
+			layouts: layouts_2,
+			viewFont: tsFancy + tsSize(18),
+			reduceFont: true,
+			_proto: @8242
+		},
+		{
+			viewBounds: {left: 0, top: 0, right: 112, bottom: 2},
+			viewJustify: vjParentCenterH + vjSiblingBottomV,
+			_proto: @protoBorder
+		},
+		{
+			viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjSiblingBottomV,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 16},
+			viewFont: tsFancy + tsSize(12),
+			layouts: layouts,
+			_proto: @8242
+		},
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 60},
+			viewJustify: vjCenterH + vjParentFullH + vjSiblingBottomV,
+			layouts: layouts_3,
+			viewFont: tsFancy + tsSize(10),
+			_proto: @8242
+		},
+		{viewJustify: vjCenterH + vjParentFullH + vjParentBottomV, _proto: @8234}
+	],
+	_proto: @8236
+};

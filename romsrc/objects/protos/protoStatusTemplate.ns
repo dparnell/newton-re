@@ -1,0 +1,145 @@
+// protoStatusTemplate, and what only it reaches
+
+protoStatusTemplate := {
+	path: func() begin
+		(if valueData then valueData.values)
+	end,
+	updateIndicator: func(a1) begin
+		self:EventPause(true);
+		valueData := a1;
+		(if curView then begin
+				(foreach l1 in self:ChildViewFrames() do begin
+						if l1.indicator then begin
+								l1:?viewUpdateFormScript()
+							end
+					end);
+				RefreshViews()
+			end)
+	end,
+	viewChildren: [viewChildren:
+		{_proto: @protoStatusIcon},
+		{
+			viewSetupFormScript: func() begin
+				base.cancelButton := self;
+				inherited:?viewSetupFormScript()
+			end,
+			buttonClickScript: func() begin
+				local l1;
+				if appSymbol then begin
+						if (if (l1 := GetRoot().(appSymbol)) then l1.CloseStatusDialog) then begin
+								return l1:CloseStatusDialog(true)
+							end
+					end;
+				inherited:buttonClickScript()
+			end,
+			viewQuitScript: func() begin
+				(base.cancelButton := nil)
+			end,
+			_proto: @protoStatusClosebox
+		}
+	],
+	vConfirm: @vConfirm,
+	vGauge: @vGauge,
+	viewFlags: vFloating + vClickable,
+	vStatus: @vStatus,
+	curView: nil,
+	width: 185,
+	ReOrientToScreen: func() begin
+		local l1, l2;
+		l1 := self:GlobalBox();
+		self:Close();
+		l2 := GetUserConfig('screenOrientation);
+		viewBounds := self:MungeBounds(l1.left, topValues[l2], l1.right, (topValues[l2] + curView.height));
+		self:Open()
+	end,
+	_proto: @protoFloater,
+	_defaultButton: nil,
+	initialSetup: nil,
+	MungeBounds: func(a1, a2, a3, a4) begin
+		local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+		l1 := SetBounds(a1, a2, a3, a4);
+		l2 := 0;
+		l3 := 0;
+		l5 := (((l4 := GetAppParams()).appAreaLeft + l4.appAreaWidth) - slop);
+		if (l1.right > l5) then begin
+				l2 := (-(l1.right - l5))
+			end;
+		l6 := ((l4.appAreaTop + l4.appAreaHeight) - slop);
+		if (l1.bottom > l6) then begin
+				l3 := (-(l1.bottom - l6))
+			end;
+		if (if (l7 := self:Parent()) then (l7 <> GetRoot())) then begin
+				l8 := l7:GlobalBox();
+				l2 := (l2 - l8.left);
+				l3 := (l3 - l8.top)
+			end;
+		if ((l2 <> 0) or (l3 <> 0)) then begin
+				if (((l1 := OffsetRect(l1, l2, l3)).left < (l4.appAreaLeft + slop)) or (l1.top < (l4.appAreaTop + slop))) then begin
+						Throw(exRootException, -8501)
+					end
+			end;
+		if (if screenRelativeH then (displayParams.appAreaWidth <> displayParams.scrWidth)) then begin
+				l9 := ((displayParams.scrWidth - displayParams.appAreaWidth) div 2);
+				if (displayParams.appAreaGlobalLeft <> 0) then begin
+						l9 := (-l9)
+					end;
+				l1 := OffsetRect(l1, l9, 0)
+			end;
+		l1
+	end,
+	appSymbol: nil,
+	slop: 8,
+	viewSet: func(a1) begin
+		self:EventPause(true);
+		(if (valueData := a1) then begin
+				if HasSlot(valueData, 'appSymbol) then begin
+						appSymbol := valueData.appSymbol
+					end;
+				if (if valueData.values then HasSlot(valueData.values, 'screenRelativeH)) then begin
+						screenRelativeH := valueData.values.screenRelativeH
+					end;
+				(if ((curView = nil) or (if valueData.name then (curView.name <> valueData.name))) then begin
+						curView := self.(valueData.name);
+						self.stepChildren := curView.kids;
+						(if (if self.viewCObject then (not initialSetup)) then begin
+								l1 := self.viewBounds;
+								SetValue(self, 'viewBounds, self:MungeBounds(l1.left, l1.top, l1.right, (l1.top + curView.height)));
+								self:RedoChildren()
+							end)
+					end else (if self.viewCObject then begin
+							local l1;
+							(foreach l2 in self:ChildViewFrames() do begin
+									if (if l2.name then HasSlot(valueData.values, l2.name)) then begin
+											l2:?viewUpdateFormScript()
+										end
+								end);
+							RefreshViews()
+						end))
+			end)
+	end,
+	_nextKeyView: 'none,
+	screenRelativeH: nil,
+	declareSelf: 'base,
+	viewSetupFormScript: func() begin
+		local l1, l2, l3, l4;
+		if (if initialSetup then (not valueData)) then begin
+				self:viewSet(initialSetup);
+				initialSetup := nil
+			end;
+		if ((not HasSlot(self, 'viewBounds)) or (curView = nil)) then begin
+				self.viewJustify := 0;
+				l1 := GetUserConfig('screenOrientation);
+				l3 := (((l2 := GetAppParams()).appAreaWidth - width) >> 1);
+				l4 := (if curView then (topValues[l1] + curView.height) else 0);
+				self.viewBounds := self:MungeBounds(l3, topValues[l1], (l3 + width), l4)
+			end;
+		inherited:?viewSetupFormScript();
+		SetKeyView(self, 0)
+	end,
+	valueData: nil,
+	vStatusTitle: @vStatusTitle,
+	debug: 739977,
+	vProgress: @vProgress,
+	vBarber: @vBarber,
+	topValues: [|Array|: 75, 25, 75, 25]
+};

@@ -1,0 +1,190 @@
+// protoPeriodicAlarmEditor, and what only it reaches
+
+protoPeriodicAlarmEditor := {
+	viewBounds: {left: 0, top: 0, right: 140, bottom: 208},
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	declareSelf: 'base,
+	ownerName: nil,
+	ownerSymbol: nil,
+	Time: nil,
+	tolerance: 10,
+	viewSetupFormScript: func() begin
+		(Time := Time())
+	end,
+	viewSetupDoneScript: func() begin
+		local l1, l2;
+		inherited:?viewSetupDoneScript();
+		self:Dirty();
+		(if (Length((l1 := GetAppAlarmKeys(ownerName))) > 0) then begin
+				clock:ShowTime((l2 := GetAlarm(l1[0]).callBackParams[0]).hours, l2.minutes);
+				days:Initialize(l2.days, nil)
+			end else days:Initialize(4064, nil))
+	end,
+	GetDaysStr: func(a1) begin
+		l1 := GetLocale().longDateFormat;
+		if (a1 = 4064) then begin
+				return "Everyday"
+			end;
+		if (a1 = 1984) then begin
+				return "Weekdays"
+			end;
+		if (a1 = 2080) then begin
+				return "Weekends"
+			end;
+		if (a1 = 2048) then begin
+				return l1.abbrDofWeek[0]
+			end;
+		if (a1 = 1024) then begin
+				return l1.abbrDofWeek[1]
+			end;
+		if (a1 = 512) then begin
+				return l1.abbrDofWeek[2]
+			end;
+		if (a1 = 256) then begin
+				return l1.abbrDofWeek[3]
+			end;
+		if (a1 = 128) then begin
+				return l1.abbrDofWeek[4]
+			end;
+		if (a1 = 64) then begin
+				return l1.abbrDofWeek[5]
+			end;
+		if (a1 = 32) then begin
+				return l1.abbrDofWeek[6]
+			end;
+		if (a1 = 0) then begin
+				return "Never"
+			end;
+		l2 := Clone("       ");
+		if (not (l3 := GetLocale().firstDayOfWeek)) then begin
+				l3 := 0
+			end;
+		local l1;
+		local l2;
+		local l3;
+		(for l4 := 0 to 6 do begin
+				local l7;
+				if (BAnd(a1, '[Array: 2048, 1024, 512, 256, 128, 64, 32, 2048, 1024, 512, 256, 128, 64, 32][l4]) <> 0) then begin
+						l7 := (((l4 - l3) + 7) mod 7);
+						l2[l7] := l1.shortDofWeek[l4][0]
+					end
+			end);
+		return StringFilter(l2, " ", 'rejectAll)
+	end,
+	debug: 23027604,
+	ReOrientToScreen: @defRotateFunc,
+	stepChildren: [stepChildren:
+		{_proto: @protoTitle},
+		clock_2,
+		days,
+		schedule,
+		{
+			viewBounds: {left: 1, top: 6, right: 27, bottom: 19},
+			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingBottomV,
+			text: add,
+			buttonClickScript: func() begin
+				local l1, l2;
+				l1 := (Time mod 1440);
+				(if ((l2 := days:GetSelected()) <> 0) then schedule:Add({hours: (l1 div 60), minutes: (l1 mod 60), days: l2}) else GetRoot():Notify(3, "", "Please choose days"))
+			end,
+			_proto: @protoTextButton
+		},
+		{
+			viewBounds: {left: 7, top: 0, right: 53, bottom: 13},
+			viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingTopV,
+			text: remove,
+			buttonClickScript: func() begin
+				schedule:remove()
+			end,
+			_proto: @protoTextButton
+		},
+		{_proto: @protoClosebox}
+	],
+	clock: nil,
+	stepallocatecontext: [|Array|: 'clock, clock_2, 'days, days, 'schedule, schedule],
+	days: nil,
+	schedule: nil,
+	_proto: @protoFloatNGo
+};
+
+clock_2 := {
+	viewBounds: {left: 0, top: 20, right: 119, bottom: 48},
+	viewJustify: vjParentCenterH,
+	ShowTime: func(a1, a2) begin
+		hours := (a1 mod 12);
+		minutes := a2;
+		self:Dirty()
+	end,
+	preallocatedContext: 'clock,
+	_proto: @protoDigitalClock
+};
+
+days := {
+	viewBounds: {left: 0, top: 4, right: 107, bottom: 21},
+	viewJustify: vjParentCenterH + vjSiblingBottomV,
+	preallocatedContext: 'days,
+	_proto: @protoDayPicker
+};
+
+schedule := {
+	viewBounds: {left: 0, top: 12, right: 124, bottom: 96},
+	viewJustify: vjParentCenterH + vjSiblingBottomV,
+	viewFont: @fontSystem9Bold,
+	viewLines: 6,
+	Time: 0,
+	callback: nil,
+	useScrollers: true,
+	viewSetupFormScript: func() begin
+		self.ListItems := [Array: ];
+		l1 := (StrLen(ownerName) + 1);
+		local l1;
+		(foreach l2 in GetAppAlarmKeys(ownerName) do begin
+				AddArraySlot(self.ListItems, Substr(l2, 0, (StrLen(l2) - l1)))
+			end);
+		if (Length(self.ListItems) > 0) then begin
+				self.Selection := 0
+			end else begin
+				self.Selection := nil
+			end;
+		self:SetupList()
+	end,
+	buttonClickScript: func(a1) begin
+		local l1;
+		clock:ShowTime((l1 := GetAlarm(Stringer([Array: self.ListItems[a1], $:, ownerName])).callBackParams[0]).hours, l1.minutes);
+		days:Initialize(l1.days, nil)
+	end,
+	Add: compile(
+		constants: {
+			kFunction_45bd5d: func(a1, a2) begin
+				StrEqual(a1, a2)
+			end
+		},
+		func(a1) begin
+			local l1;
+			l1 := ((a1.hours * 60) + a1.minutes);
+			a1.name := Stringer([Array: TimeStr(l1, @datetimeStrSpecs.shortTimeStrSpec), " ", self:GetDaysStr(a1.days)]);
+			(if ArrayPos(ListItems, a1.name, 0, kFunction_45bd5d) then self:SysBeep() else begin
+					a1.owner := ownerSymbol;
+					a1.ownerName := ownerName;
+					a1.tolerance := tolerance;
+					AddArraySlot(ListItems, a1.name);
+					Selection := (Length(ListItems) - 1);
+					self:SetupList();
+					self:RedoChildren();
+					AddAlarm(Stringer([Array: a1.name, $:, ownerName]), UpdatePeriodicAlarmTime(a1), nil, functions.PeriodicAlarmFunc, [Array: a1])
+				end)
+		end),
+	remove: func() begin
+		(if (if self.Selection then (self.Selection >= 0)) then begin
+				RemoveAlarm(Stringer([Array: self.ListItems[self.Selection], $:, ownerName]));
+				ArrayRemoveCount(self.ListItems, self.Selection, 1);
+				if (self.Selection >= Length(self.ListItems)) then begin
+						self.Selection := (Length(self.ListItems) - 1)
+					end;
+				self:SetupList();
+				self:RedoChildren()
+			end)
+	end,
+	preallocatedContext: 'schedule,
+	_proto: @protoTextList
+};

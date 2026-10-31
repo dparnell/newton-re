@@ -1,0 +1,2118 @@
+// objects several roots reach, none alone (naturalize.py)
+
+export145Proto := {
+	PutAway: compile(
+		options: "names",
+		func(anItem) begin
+			local beamedEntry, task, added, today, date, text, reminder;
+			reminder := nil;
+			self:GetToDoSoup();
+			if ((beamedEntry := anItem.body).viewStationery = 'TodoItem) then begin
+					if beamedEntry.data then begin
+							text := ExtractData(beamedEntry.data, "...", 256)
+						end else begin
+							text := ""
+						end;
+					date := beamedEntry.mtgStartDate
+				end else begin
+					text := MakeRichString(beamedEntry.text, beamedEntry.styles);
+					date := beamedEntry.date;
+					if beamedEntry.remindForDate then begin
+							reminder := beamedEntry.remindForDate
+						end
+				end;
+			date := (date - (date mod 1440));
+			today := ((today := Time()) - (today mod 1440));
+			if (if (date < today) then (beamedEntry.mtgDone = nil)) then begin
+					date := today
+				end;
+			task := (added := self:AddTask(text, date, beamedEntry.mtgPriority, beamedEntry.mtgDone, reminder)).topic;
+			added.Entry.needsSort := true;
+			EntryChangeXmit(added.Entry, 'todo);
+			measureTopics := true;
+			self:RedoTopics()
+		end),
+	FlushEntry: compile(
+		options: "names",
+		func(Entry) begin
+			local where, error, msg;
+			(if EntryValid(Entry) then (try begin
+						EntryChangeXmit(Entry, 'todo)
+					end onexception |evt.ex.fr.store| do begin
+						error := CurrentException().error;
+						where := EntryStore(Entry):GetName();
+						if (error = -10605) then begin
+								msg := "To Do changes could not be saved (\u201C\u^0\u201D\u is write-protected)"
+							end else begin
+								if (error = -10617) then begin
+										msg := "To Do changes could not be saved (\u201C\u^0\u201D\u is full)"
+									end
+							end;
+						if msg then begin
+								self:Notify(3, "To Do", ParamStr(msg, [Array: where]))
+							end else begin
+								Rethrow()
+							end;
+						EntryUndoChanges(Entry)
+					end))
+		end),
+	UndoMoveTaskToDate: compile(
+		options: "names",
+		func(aTask, aTarget, aDate, aWasDate) begin
+			if (selectedDates[0] <> aDate) then begin
+					return nil
+				end;
+			self:MoveTaskToDate(aTask, aTarget, aDate, aWasDate);
+			selectedDates[0] := aWasDate;
+			self:RedisplayScript()
+		end),
+	FirstVisibleTopic: compile(
+		options: "names",
+		func() begin
+			firstTopic
+		end),
+	TaskStore: compile(
+		options: "names",
+		func(aTask) begin
+			(if ((not HasPath(aTask, 'source)) or (aTask.source = nil)) then nil else (if (ClassOf(aTask.source) = 'symbol) then GetStores()[SetContains('[Array: RO0, RO1, RO2, RO3, RO4], aTask.source)] else (if (if HasPath(aTask, 'repeatInfo) then repeatTargets) then EntryStore(repeatTargets[aTask.source]) else (if targets then EntryStore(targets[aTask.source])))))
+		end),
+	topicMarkers: {
+		bits: bitmap('bits, "resources/bits/7973a5.png", "0000000000080087008700d0009200fa", 1),
+		bounds: {left: 0, top: 0, right: 42, bottom: 11}
+	},
+	GetToDoSoup: compile(
+		options: "names",
+		func() begin
+			if (dataSoup = nil) then begin
+					masterSoup := Clone(masterSoup);
+					masterSoup:MakeSoup('toDoApp);
+					dataSoup := masterSoup.theSoup
+				end;
+			(if (oldTodoSoup = nil) then (oldTodoSoup := GetUnionSoup("To Do")))
+		end),
+	viewLineSpacing: 24,
+	LastVisibleTopic: compile(
+		options: "names",
+		func() begin
+			lastTopic
+		end),
+	MoveConvertedEntry: compile(
+		options: "names",
+		func(anEntry) begin
+			local theStore;
+			theStore := EntryStore(anEntry);
+			anEntry
+		end),
+	viewQuitScript: compile(
+		options: "names",
+		func() begin
+			if (if todoSlip then Visible(todoSlip)) then begin
+					todoSlip:ApplyAllChanges();
+					self:UpdateMultipleStores(true)
+				end;
+			self:EndFlush();
+			UnRegSoupChange("To Do", 'todo);
+			UnRegSoupChange("To Do List", 'todo);
+			self.viewChildren := nil;
+			RemoveSlot(self, 'masterSoup);
+			self.dataSoup := nil;
+			self.oldTodoSoup := nil;
+			self.target := nil;
+			self.targets := nil;
+			self.repeatTargets := nil;
+			(self.topics := nil)
+		end),
+	UndoDeleteTask: compile(
+		options: "names",
+		func(aDate, aTask) begin
+			local Entry;
+			(Entry := self:GetToDoEntryDefaultStore(aDate, nil).Entry).needsSort := true;
+			AddArraySlot(Entry.topics, aTask);
+			EntryChangeXmit(Entry, 'todo);
+			AddUndoAction('DeleteTask, [Array: aDate, aTask, true]);
+			self:RedoTopics();
+			self:CalculateScrollRects()
+		end),
+	AddOldSoupTasks: compile(
+		options: "names",
+		func(aTopicList, aStart) begin
+			local tomorrow, itemDate;
+			local today, querySpec, spec, cursor, pastTest, presentTest, futureTest, Entry, task, result;
+			querySpec := '{type: index, indexPath: mtgStartDate, startKey: 0, validTest: nil};
+			today := ((today := Time()) - (today mod 1440));
+			pastTest := func(item) begin
+				itemDate := item.mtgStartDate;
+				item.mtgDone
+			end;
+			presentTest := func(item) begin
+				itemDate := item.mtgStartDate;
+				((not item.mtgDone) or (itemDate >= aStart))
+			end;
+			futureTest := func(item) begin
+				true
+			end;
+			endTest := func(item) begin
+				itemDate := item.mtgStartDate;
+				(item.mtgStartDate >= tomorrow)
+			end;
+			(spec := Clone(querySpec)).endTest := endTest;
+			if (today = aStart) then begin
+					spec.validTest := presentTest;
+					spec.startKey := 0
+				end else begin
+					if (today < aStart) then begin
+							spec.validTest := futureTest;
+							spec.startKey := aStart
+						end else begin
+							spec.validTest := pastTest;
+							spec.startKey := aStart
+						end
+				end;
+			tomorrow := (aStart + 1440);
+			if ((cursor := oldTodoSoup:Query(spec)):CountEntries() > 0) then begin
+					Entry := cursor:Entry();
+					(while Entry do begin
+							if HasPath(Entry, 'converted) then begin
+									AddArraySlot(aTopicList, self:MoveConvertedEntry(Entry));
+									result := true
+								end else begin
+									if (task := GetDataDefs('convertTodo):ConvertOldEntry(Entry)) then begin
+											AddArraySlot(aTopicList, task);
+											result := true
+										end
+								end;
+							(Entry := cursor:Next())
+						end)
+				end;
+			return result
+		end),
+	RollEntryOver: compile(
+		options: "names",
+		func(anEntry, aNewDate) begin
+			deleteList := [Array: ];
+			if EntryStore(anEntry):IsReadOnly() then begin
+					EntryUndoChanges(anEntry);
+					return nil
+				end;
+			if (Length(anEntry.topics) = 0) then begin
+					EntryRemoveFromSoupXmit(anEntry, 'todo);
+					return true
+				end;
+			local topic;
+			local doneItems;
+			local notDoneItems;
+			local newEntry;
+			local newTopics;
+			local ti;
+			local ki;
+			local nToDelete;
+			local deleteList;
+			(foreach topic in anEntry.topics do begin
+					if ((topic.level = nil) or (topic.level = 1)) then begin
+							if topic.mtgDone then begin
+									doneItems := true
+								end else begin
+									notDoneItems := true
+								end
+						end
+				end);
+			if (if doneItems then notDoneItems) then begin
+					newTopics := (newEntry := self:GetToDoEntryDefaultStore(aNewDate, nil).Entry).topics;
+					(for ti := 0 to (Length(anEntry.topics) - 1) do begin
+							if (((topic := anEntry.topics[ti]).level = nil) or (topic.level = 1)) then begin
+									if (topic.mtgDone = nil) then begin
+											AddArraySlot(deleteList, ti);
+											AddArraySlot(newTopics, topic)
+										end
+								end
+						end);
+					if ((nToDelete := Length(deleteList)) > 0) then begin
+							self:DeleteRolledTopics(anEntry, deleteList)
+						end;
+					newEntry.needsSort := true;
+					EntryChangeXmit(newEntry, 'todo)
+				end else begin
+					if notDoneItems then begin
+							anEntry.date := aNewDate;
+							EntryChangeXmit(anEntry, 'todo)
+						end else begin
+							EntryUndoChanges(anEntry)
+						end
+				end;
+			true
+		end),
+	target: nil,
+	RollRepeatOver: compile(
+		options: "names",
+		func(anEntry, aNewDate, aPrevDate) begin
+			changed := nil;
+			rollDate := aPrevDate;
+			if EntryStore(anEntry):IsReadOnly() then begin
+					return nil
+				end;
+			newTopics := (newEntry := self:GetToDoEntryDefaultStore(aNewDate, nil).Entry).topics;
+			if anEntry.lastRollover then begin
+					rollDate := anEntry.lastRollover
+				end;
+			local date;
+			local topic;
+			local newEntry;
+			local newTopics;
+			local checkedEntry;
+			local doneIndex;
+			local changed;
+			local rollDate;
+			(foreach topic in anEntry.topics do begin
+					date := NextMeeting(rollDate, topic.repeatInfo);
+					if topic.repeatInfo.reminderInterval then begin
+							date := (date - topic.repeatInfo.reminderInterval)
+						end;
+					if (if (doneIndex := ArrayPos(topic.repeatDone, date, 0, nil)) then (date < aNewDate)) then begin
+							ArrayRemoveCount(topic.repeatDone, doneIndex, 1);
+							changed := true;
+							checkedEntry := self:GetToDoEntryDefaultStore(date, nil).Entry;
+							RemoveSlot((topic := DeepClone(topic)), 'repeatInfo);
+							RemoveSlot(topic, 'repeatDone);
+							topic.mtgDone := true;
+							AddArraySlot(checkedEntry.topics, topic);
+							EntryChangeXmit(checkedEntry, 'todo)
+						end else begin
+							if (date < aNewDate) then begin
+									RemoveSlot((topic := DeepClone(topic)), 'repeatInfo);
+									RemoveSlot(topic, 'repeatDone);
+									topic.mtgDone := nil;
+									AddArraySlot(newEntry.topics, topic);
+									changed := true
+								end
+						end
+				end);
+			anEntry.lastRollover := aNewDate;
+			EntryChangeXmit(anEntry, 'todo);
+			if changed then begin
+					newEntry.needsSort := true;
+					EntryChangeXmit(newEntry, 'todo)
+				end;
+			true
+		end),
+	entryChanged: nil,
+	CalculateScrollRects: compile(
+		options: "names",
+		func() begin
+			local scroller;
+			(scroller := upDownScroller).scrollRect := (scroller.dataRect := (scroller.viewRect := nil));
+			if (firstTopic > 0) then begin
+					scroller:SetArrow('up, 'more)
+				end else begin
+					scroller:SetArrow('up, 'normal)
+				end;
+			if (nTopics = 0) then begin
+					scroller:SetArrow('down, 'normal)
+				end else begin
+					if (lastTopic = (nTopics - 1)) then begin
+							if (topics[lastTopic].viewBounds.bottom < self:LocalBox().bottom) then begin
+									scroller:SetArrow('down, 'normal)
+								end else begin
+									scroller:SetArrow('down, 'more)
+								end
+						end else begin
+							scroller:SetArrow('down, 'more)
+						end
+				end;
+			scroller:Dirty()
+		end),
+	SetTaskDone: compile(
+		options: "names",
+		func(aDate, aTask) begin
+			nil
+		end),
+	viewIdleScript: compile(
+		options: "names",
+		func() begin
+			self:EndFlush();
+			nil
+		end),
+	RollItemsOver: compile(
+		constants: {
+			kLiteral_791bbd: "To Do"
+		},
+		options: "names",
+		func(aFromAlarm) begin
+			lastChecked := GetUserConfig('lastRollover);
+			protectError := nil;
+			if ((today := ((today := Time()) - (today mod 1440))) > lastChecked) then begin
+					self:GetToDoSoup();
+					dataCursor := dataSoup:Query({type: 'index, beginKey: Max(1, lastChecked), indexPath: 'date, endKey: (today - 1)});
+					try begin
+							rollEm := MapCursor(dataCursor, nil);
+							dataCursor := nil;
+							local today;
+							local oldDate;
+							local Entry;
+							local repeatEntries;
+							local dataCursor;
+							local lastChecked;
+							local rollEm;
+							local protectError;
+							local result;
+							(foreach Entry in rollEm do begin
+									if Entry then begin
+											if (self:RollEntryOver(Entry, today) = nil) then begin
+													protectError := true
+												end
+										end
+								end);
+							if (lastChecked <> 0) then begin
+									if (repeatEntries := self:GetToDoEntry(0, nil)) then begin
+											(foreach Entry in repeatEntries do begin
+													if Entry then begin
+															if (self:RollRepeatOver(Entry, today, lastChecked) = nil) then begin
+																	protectError := true
+																end
+														end
+												end)
+										end
+								end
+						end onexception |evt.ex| do begin
+							rollEm := nil;
+							self:Notify(3, kLiteral_791bbd, "There was not enough memory to roll tasks over so they were left untouched. Marking completed tasks may help.");
+							return nil
+						end;
+					if (if aFromAlarm then Visible(self)) then begin
+							self:RedoTopics()
+						end
+				end;
+			SetUserConfig(EnsureInternal('lastRollover), today);
+			FlushUserConfig();
+			(if protectError then self:Notify(3, kLiteral_791bbd, "Couldn\u2019\ut roll some tasks over because they were write-protected"))
+		end),
+	minimalChildren: true,
+	CreateToDoItem: compile(
+		options: "names",
+		func(aDate, aRichString, aReminder, aFrequency) begin
+			self:CreateToDoItemAll(aDate, aRichString, aReminder, aFrequency, 3, nil)
+		end),
+	flushDate: nil,
+	RollOverAlarm: compile(
+		options: "names",
+		func() begin
+			local nextAlarm;
+			self:GetToDo():RollItemsOver(true);
+			nextAlarm := (((nextAlarm := (Time() + 1440)) - (nextAlarm mod 1440)) + 180);
+			AddAlarm("To Do", nextAlarm, nil, func() begin
+				GetRoot().calendar:RollOverAlarm()
+			end, [Array: ])
+		end),
+	GetToDoEntryDefaultStore: compile(
+		constants: {
+			kLiteral_785d9d: "To Do List"
+		},
+		options: "names",
+		func(aDate, aSeedStore) begin
+			local Entry, dataCursor, storeIndex;
+			storeIndex := 0;
+			if (not aSeedStore) then begin
+					if self:GetAppPreferences().toDoInternalStore then begin
+							aSeedStore := GetStores()[0]
+						end else begin
+							aSeedStore := GetDefaultStore()
+						end
+				end;
+			if aSeedStore:IsReadOnly() then begin
+					aSeedStore := GetStores()[0]
+				end;
+			if (not aSeedStore:HasSoup(kLiteral_785d9d)) then begin
+					aSeedStore:CreateSoup(kLiteral_785d9d, masterSoup.soupIndices)
+				end;
+			Entry := (dataCursor := dataSoup:Query({type: 'index, startKey: aDate, indexPath: 'date, endTest: func(e) begin
+				(e.date > aDate)
+			end})):Entry();
+			(while (if (Entry <> nil) then (EntryStore(Entry) <> aSeedStore)) do begin
+					Entry := dataCursor:Next();
+					(storeIndex := (storeIndex + 1))
+				end);
+			if (Entry = nil) then begin
+					(Entry := masterSoup:CreateBlankEntry()).date := aDate;
+					if (aDate = 0) then begin
+							Entry.lastRollover := ((Time() div 1440) * 1440)
+						end;
+					aSeedStore:GetSoup(kLiteral_785d9d):AddXmit(Entry, 'todo)
+				end;
+			return {Entry: Entry, storeIndex: storeIndex}
+		end),
+	SetTaskPriority: compile(
+		options: "names",
+		func(aDate, aTask) begin
+			nil
+		end),
+	appObject: [|Array|: task, tasks],
+	dataSoup: nil,
+	allDropTypes: [|Array|: 'task, 'text, 'topic],
+	markerDropTypes: [|Array|: 'task],
+	masterSoup: {
+		soupName: toDoList,
+		soupIndices: [|Array|: {structure: 'slot, path: 'date, type: 'int}],
+		soupQuery: {type: 'index, indexPath: 'date},
+		defaultDataType: 'todo,
+		CreateBlankEntry: compile(
+			options: "names",
+			func() begin
+				{class: 'todo, date: ((Time() div 1440) * 1440), needsSort: nil, topics: [Array: ]}
+			end),
+		_proto: @newtSoup
+	},
+	scrollCausedRedo: nil,
+	CreateToDoItemAll: compile(
+		options: "names",
+		func(aDate, aRichString, aReminder, aFrequency, aPriority, aComplete) begin
+			local todoTask, newView, ti, isVisible;
+			if (isVisible := Visible(self)) then begin
+					self:EndFlush()
+				end;
+			self:GetToDoSoup();
+			aDate := ((aDate div 1440) * 1440);
+			if aFrequency then begin
+					todoTask := self:AddTask(aRichString, 0, aPriority, aComplete, nil);
+					if (not HasPath((aFrequency := Clone(aFrequency)), 'mtgStartDate)) then begin
+							aFrequency.mtgStartDate := aDate
+						end else begin
+							aFrequency.mtgStartDate := ((aFrequency.mtgStartDate div 1440) * 1440)
+						end;
+					if isVisible then begin
+							aDate := selectedDates[0]
+						end;
+					if (if aReminder then (aReminder <> 0)) then begin
+							aFrequency.reminderInterval := (aReminder * 1440)
+						end;
+					todoTask.topic.repeatInfo := aFrequency;
+					todoTask.topic.repeatDone := [Array: ];
+					EntryChangeXmit(todoTask.Entry, nil)
+				end else begin
+					if (if aReminder then (aReminder <> 0)) then begin
+							todoTask := self:AddTask(aRichString, (aDate - (Abs(aReminder) * 1440)), aPriority, aComplete, aDate);
+							aDate := (aDate - (Abs(aReminder) * 1440))
+						end else begin
+							todoTask := self:AddTask(aRichString, aDate, aPriority, aComplete, nil)
+						end
+				end;
+			if (if (if isVisible then (selectedDates <> nil)) then (aDate = selectedDates[0])) then begin
+					self:RedoChildren();
+					if (ti := ArrayPos(topics, todoTask.topic, 0, nil)) then begin
+							if (mainDisplay <> agendaView) then begin
+									if (ti < firstTopic) then begin
+											firstTopic := Max(0, (ti - 1));
+											self:RedoChildren()
+										end else begin
+											if (ti > lastTopic) then begin
+													firstTopic := ((firstTopic + ti) - lastTopic);
+													self:RedoChildren()
+												end
+										end
+								end
+						end else begin
+							Write("Couldn't find ");
+							Print(todoTask)
+						end;
+					self:CalculateScrollRects()
+				end else begin
+					ti := todoTask.index
+				end;
+			if Visible(self) then begin
+					self:AddUndoAction('UndoNewTask, [Array: aDate, todoTask.topic])
+				end;
+			ti
+		end),
+	EndFlush: compile(
+		options: "names",
+		func() begin
+			(if entryChanged then begin
+					originalLen := Length(targets);
+					local t;
+					local counts;
+					local i;
+					local whichTarget;
+					local originalLen;
+					(foreach index, target in targets do begin
+							if (not EntryValid(target)) then begin
+									self:Notify(3, title, "The storage card was ejected so the last few changes have been lost.");
+									return nil
+								end
+						end);
+					counts := Array(Length(targets), 0);
+					(foreach t in targets do begin
+							t.topics := Array(nTopics, nil)
+						end);
+					(foreach t in topics do begin
+							if (not HasPath(t, 'repeatInfo)) then begin
+									if (if ((whichTarget := t.source) <> nil) then (ClassOf(whichTarget) <> 'symbol)) then begin
+											targets[whichTarget].topics[counts[whichTarget]] := t;
+											counts[whichTarget] := (counts[whichTarget] + 1)
+										end
+								end
+						end);
+					(for i := 0 to (Length(targets) - 1) do begin
+							setlength(targets[i].topics, counts[i])
+						end);
+					(foreach t in topics do begin
+							if HasPath(t, 'repeatInfo) then begin
+									if t.mtgDone then begin
+											SetAdd(t.repeatDone, flushDate, true)
+										end else begin
+											SetRemove(t.repeatDone, flushDate)
+										end
+								end
+						end);
+					(foreach t in targets do begin
+							if (if EntryValid(t) then (not EntryStore(t):IsReadOnly())) then begin
+									self:FlushEntry(t)
+								end
+						end);
+					(foreach t in repeatTargets do begin
+							if (if EntryValid(t) then (not EntryStore(t):IsReadOnly())) then begin
+									self:FlushEntry(t)
+								end
+						end);
+					(entryChanged := nil)
+				end)
+		end),
+	MoveTaskToDate: compile(
+		options: "names",
+		func(aTask, aTarget, anOldDate, aDate) begin
+			local Entry;
+			if ((if HasPath(aTask, 'source) then (aTask.source = nil)) or (ClassOf(aTask.source) = 'symbol)) then begin
+					self:Notify(3, title, "Can\u2019\ut move a 1.x formatted To Do item");
+					return nil
+				end;
+			self:DeleteTask(anOldDate, aTask, 'noUndoOrDraw);
+			AddArraySlot((Entry := self:GetToDoEntryDefaultStore(aDate, nil).Entry).topics, aTask);
+			Entry.needsSort := true;
+			EntryChangeXmit(Entry, 'todo);
+			self:GetTarget(nil);
+			(if Visible(self) then self:AddUndoAction('UndoMoveTaskToDate, [Array: aTask, aTarget, aDate, anOldDate]))
+		end),
+	textFlags: 200,
+	EntryCool: compile(
+		options: "names",
+		func(bother) begin
+			true
+		end),
+	GetToDoEntry: compile(
+		options: "names",
+		func(aDate, aMakeNewEntry) begin
+			local Entry, dataCursor, cachedSoup, soup;
+			aDate := ((aDate div 1440) * 1440);
+			if ((cachedSoup := dataSoup) = nil) then begin
+					soup := Clone(masterSoup);
+					soup:MakeSoup('toDoApp);
+					cachedSoup := soup.theSoup
+				end;
+			if (if ((Entry := (dataCursor := cachedSoup:Query({type: 'index, beginKey: aDate, indexPath: 'date, endKey: aDate})):Entry()) = nil) then aMakeNewEntry) then begin
+					(Entry := masterSoup:CreateBlankEntry()).date := aDate;
+					if (aDate = 0) then begin
+							Entry.lastRollover := ((Time() div 1440) * 1440)
+						end;
+					try begin
+							cachedSoup:AddToDefaultStoreXmit(Entry, 'todo)
+						end onexception |evt.ex.fr.store| do begin
+							GetStores()[0]:GetSoup("To Do List"):AddXmit(Entry, 'todo)
+						end;
+					return [Array: Entry]
+				end;
+			(if Entry then MapCursor(dataCursor, nil))
+		end),
+	soupervisor: {type: 'moveOnly},
+	ShowChanges: compile(
+		options: "names",
+		func() begin
+			self:RedoTopics()
+		end),
+	NextToDoDate: compile(
+		options: "names",
+		func(aDate) begin
+			earliestDate := 536870911;
+			self:GetToDoSoup();
+			aDate := ((aDate div 1440) * 1440);
+			Entry := (cursor := dataSoup:Query({type: 'index, indexPath: 'date, startKey: 0, endTest: func(e) begin
+				(e.date > 0)
+			end})):Entry();
+			(while Entry do begin
+					local cursor;
+					local Entry;
+					local earliestDate;
+					local date;
+					(foreach t in Entry.topics do begin
+							date := NextMeeting(aDate, t.repeatInfo);
+							if t.repeatInfo.reminderInterval then begin
+									date := (date - t.repeatInfo.reminderInterval)
+								end;
+							if (if (date = aDate) then (date > 0)) then begin
+									return aDate
+								end;
+							if (if (if (date <> 0) then (date >= aDate)) then (date < earliestDate)) then begin
+									earliestDate := date
+								end
+						end);
+					(Entry := cursor:Next())
+				end);
+			if (aDate = 0) then begin
+					aDate := 1440
+				end;
+			Entry := (cursor := dataSoup:Query({type: 'index, indexPath: 'date, startKey: aDate})):Entry();
+			(while Entry do begin
+					if (if (if (Entry.date < earliestDate) then Entry.topics) then (Length(Entry.topics) > 0)) then begin
+							earliestDate := Entry.date;
+							break
+						end;
+					(Entry := cursor:Next())
+				end);
+			if oldTodoSoup then begin
+					if (if (Entry := (cursor := oldTodoSoup:Query({type: 'index, indexPath: 'mtgStartDate, startKey: aDate})):Entry()) then (Entry.mtgStartDate < earliestDate)) then begin
+							earliestDate := Entry.mtgStartDate
+						end
+				end;
+			(if (earliestDate = 536870911) then nil else earliestDate)
+		end),
+	targets: [|Array|: ],
+	RemoveOldTodoItems: compile(
+		options: "names",
+		func(aBeforeDate, aRemoveWhich, progressContext) begin
+			self:RollItemsOver(nil);
+			aBeforeDate := (aBeforeDate - (aBeforeDate mod 1440));
+			self:GetToDoSoup();
+			cursor := dataSoup:Query({type: 'index, indexPath: 'date, startKey: 1, validTest: func(e) begin
+				(e.date < aBeforeDate)
+			end});
+			(loop begin
+					if ((Entry := cursor:Entry()) = nil) then begin
+							break
+						end;
+					entryChanged := nil;
+					local cursor;
+					local Entry;
+					local topics;
+					local entryChanged;
+					local nTasks;
+					(for ti := ((nTasks := Length((topics := Entry.topics))) - 1) to 0 by -1 do begin
+							if (aRemoveWhich = 'done) then begin
+									if topics[ti].mtgDone then begin
+											ArrayRemoveCount(topics, ti, 1);
+											entryChanged := true
+										end
+								end else begin
+									ArrayRemoveCount(topics, ti, 1);
+									entryChanged := true
+								end
+						end);
+					if (Length(topics) = 0) then begin
+							EntryRemoveFromSoupXmit(Entry, 'todo)
+						end else begin
+							if entryChanged then begin
+									EntryChangeXmit(Entry, 'todo)
+								end
+						end;
+					cursor:Next();
+					(if progressContext then progressContext:UpdateProgressBar(5))
+				end);
+			cursor := dataSoup:Query({type: 'index, indexPath: 'date, startKey: 0, endTest: func(e) begin
+				(e.date > 0)
+			end});
+			(loop begin
+					if ((Entry := cursor:Entry()) = nil) then begin
+							break
+						end;
+					entryChanged := nil;
+					(for ti := ((nTasks := Length((topics := Entry.topics))) - 1) to 0 by -1 do begin
+							if topics[ti].repeatDone then begin
+									local d;
+									local s;
+									local which;
+									(foreach s, d in topics[ti].repeatDone do begin
+											if (d < aBeforeDate) then begin
+													ArrayRemoveCount(topics[ti].repeatDone, s, 1);
+													entryChanged := true
+												end
+										end)
+								end
+						end);
+					if (Length(topics) = 0) then begin
+							EntryRemoveFromSoupXmit(Entry, 'todo)
+						end else begin
+							if entryChanged then begin
+									EntryChangeXmit(Entry, 'todo)
+								end
+						end;
+					cursor:Next()
+				end)
+		end),
+	ShowFoundItem: compile(
+		options: "names",
+		func(anEntry, itemTime, aFinder) begin
+			local ti, topic, hit;
+			if (not HasPath((hit := aFinder.items[aFinder.currentItem]), 'topicIndex)) then begin
+					Write("ToDo ShowFoundItem - non todo item");
+					return nil
+				end;
+			topic := anEntry.topics[hit.topicIndex];
+			self:EnsureVisibleTopic((ti := ArrayPos(topics, topic, 0, nil)));
+			self:ShowFoundTopic(ti, hit.offset, aFinder)
+		end),
+	oldTodoSoup: nil,
+	viewScrollDownScript: compile(
+		options: "names",
+		func() begin
+			local oldFirst;
+			oldFirst := firstTopic;
+			firstTopic := Max(0, Min((nTopics - 1), ((firstTopic + ((lastTopic - firstTopic) div 2)) + 1)));
+			(if (oldFirst <> firstTopic) then begin
+					scrollCausedRedo := true;
+					self:RedoChildren();
+					scrollCausedRedo := nil;
+					ClearUndoStacks()
+				end)
+		end),
+	ConvertToDoSoup: compile(
+		constants: {
+			kLiteral_785d9d: "To Do List"
+		},
+		options: "names",
+		func() begin
+			local cursor, oldEntry, Entry, task, converted, whatStore, theSoup, error, where, msg;
+			converted := nil;
+			if (oldEntry := (cursor := oldTodoSoup:Query({type: 'index})):Entry()) then begin
+					if (whatStore := EntryStore(oldEntry)):IsReadOnly() then begin
+							return converted
+						end;
+					converted := true;
+					if (not whatStore:HasSoup(kLiteral_785d9d)) then begin
+							theSoup := whatStore:CreateSoup(kLiteral_785d9d, masterSoup.soupIndices)
+						end
+				end;
+			(while oldEntry do begin
+					if (if (oldEntry <> 'deleted) then (not whatStore:IsReadOnly())) then begin
+							if (not oldEntry.converted) then begin
+									task := GetDataDefs('convertTodo):ConvertOldEntry(oldEntry)
+								end else begin
+									(task := {}).text := oldEntry.text;
+									task.styles := oldEntry.styles;
+									task.viewBounds := oldEntry.viewBounds;
+									task.mtgPriority := oldEntry.mtgPriority;
+									task.mtgDone := oldEntry.mtgDone;
+									task.mtgStartDate := oldEntry.mtgStartDate
+								end;
+							if task then begin
+									AddArraySlot((Entry := self:GetToDoEntryDefaultStore(task.mtgStartDate, whatStore).Entry).topics, task);
+									Entry.needsSort := true;
+									try begin
+											EntryChangeXmit(Entry, nil)
+										end onexception |evt.ex.fr.store| do begin
+											error := CurrentException().error;
+											where := EntryStore(Entry):GetName();
+											if (error = -10605) then begin
+													msg := "To Do changes could not be saved (\u201C\u^0\u201D\u is write-protected)"
+												end else begin
+													if (error = -10617) then begin
+															msg := "To Do changes could not be saved (\u201C\u^0\u201D\u is full)"
+														end
+												end;
+											if msg then begin
+													self:Notify(3, "To Do", ParamStr(msg, [Array: where]))
+												end else begin
+													Rethrow()
+												end;
+											EntryUndoChanges(Entry);
+											self:RedoTopics();
+											return nil
+										end
+								end;
+							EntryRemoveFromSoupXmit(oldEntry, 'todo)
+						end;
+					(oldEntry := cursor:Next())
+				end);
+			if converted then begin
+					XmitSoupChange(kLiteral_785d9d, 'todo, 'whatThe, nil);
+					XmitSoupChange("To do", 'todo, 'whatThe, nil)
+				end;
+			converted
+		end),
+	AddEmptyTopic: compile(
+		options: "names",
+		func(anIndex, aLevel) begin
+			local topicFrame, gtdeds;
+			gtdeds := self:GetToDoEntryDefaultStore(selectedDates[0], nil);
+			SetAdd(targets, gtdeds.Entry, true);
+			(topicFrame := self:MakeTopicFrame(aLevel)).source := gtdeds.storeIndex;
+			ArrayInsert(topics, topicFrame, anIndex);
+			nTopics := (nTopics + 1);
+			topicFrame
+		end),
+	maxLevel: 1,
+	StartFlush: compile(
+		options: "names",
+		func() begin
+			list:SetupIdle(5000);
+			flushDate := selectedDates[0];
+			(entryChanged := true)
+		end),
+	StringToTopic: compile(
+		options: "names",
+		func(aRichString, aTop) begin
+			local topicFrame, height, newTopicFont, wealth, rightMargin;
+			rightMargin := 240;
+			if (if (if (appSymbol exists) then (appSymbol = 'calendar)) then Visible(self:parent())) then begin
+					rightMargin := self:parent():LocalBox().right
+				end;
+			topicFrame := self:MakeTopicFrame(1);
+			newTopicFont := topicFont;
+			height := viewLineSpacing;
+			wealth := DecodeRichString(aRichString, newTopicFont);
+			topicFrame.text := wealth.text;
+			topicFrame.styles := wealth.styles;
+			if (StrFontWidth(topicFrame.text, newTopicFont) > rightMargin) then begin
+					height := (height * 2)
+				end;
+			topicFrame.viewBounds := SetBounds((((baseLeftGap + 13) + 2) + 20), aTop, rightMargin, (aTop + height));
+			topicFrame
+		end),
+	viewJustify: vjParentFullH + vjParentFullV,
+	topicsLabel: tasks,
+	NewSoupChanged: compile(
+		options: "names",
+		func(aSoupName, aAppSymbol, aChangeType, aChangeData) begin
+			local cal, theSlip;
+			(if ((((aChangeType = 'soupLeaves) or (aChangeType = 'soupEnters)) or (aChangeType = 'soupDeleted)) or (aChangeType = 'whatThe)) then begin
+					if (if (theSlip := (cal := GetRoot().calendar).todoSlip) then Visible(theSlip)) then begin
+							if (if IsSoupEntry(theSlip.target) then (not EntryValid(theSlip.target))) then begin
+									theSlip:CloseSlip()
+								end
+						end;
+					if (aChangeType = 'soupEnters) then begin
+							SetUserConfig(EnsureInternal('lastRollover), 1);
+							FlushUserConfig()
+						end;
+					(if Visible(cal) then cal:RedisplayScript())
+				end)
+		end),
+	listViewFlags: 30,
+	DeleteCheckedTask: compile(
+		options: "names",
+		func(aDate, aTask) begin
+			local textPart1, result;
+			(if HasPath(aTask, 'repeatInfo) then (if (result := ModalConfirm(Stringer([Array: (textPart1 := SubStr(MakeRichString(aTask.text, aTask.styles), 0, 24)), "\u2026\u", " ", "is a recurring task. Delete all occurrences?"]), 'yesNo)) then self:DeleteTask(0, aTask, nil) else return nil) else self:DeleteTask(aDate, aTask, nil))
+		end),
+	UpdateMultipleStores: compile(
+		options: "names",
+		func(aStart) begin
+			if (aStart = 'now) then begin
+					self:StartFlush();
+					self:EndFlush();
+					return nil
+				end else begin
+					if (aStart = true) then begin
+							self:StartFlush()
+						end
+				end;
+			(if ((Length(targets) > 1) or (Length(repeatTargets) > 0)) then begin
+					if (not aStart) then begin
+							self:StartFlush()
+						end;
+					self:EndFlush()
+				end)
+		end),
+	DeleteTask: compile(
+		options: "names",
+		func(aDate, aTask, aRedraw) begin
+			if ((if HasPath(aTask, 'source) then (aTask.source = nil)) or (ClassOf(aTask.source) = 'symbol)) then begin
+					self:Notify(3, "To Do", "Can\u2019\ut delete a 1.x formatted To Do item");
+					return nil
+				end;
+			self:GetToDoSoup();
+			self:EndFlush();
+			local index;
+			local task;
+			local entries;
+			(foreach Entry in (entries := self:GetToDoEntry(aDate, nil)) do begin
+					if HasPath(aTask, 'unique) then begin
+							(foreach task in Entry.topics do begin
+									if HasPath(task, 'unique) then begin
+											if (task.unique = aTask.unique) then begin
+													aTask := task
+												end
+										end
+								end)
+						end;
+					if (index := SetContains(Entry.topics, aTask)) then begin
+							if self:CheckReadOnly(Entry) then begin
+									return nil
+								end;
+							ArrayRemoveCount(Entry.topics, index, 1);
+							EntryChangeXmit(Entry, 'todo);
+							if (if (if (aDate = selectedDates[0]) then topics) then (Length(topics) > 0)) then begin
+									if (index := SetContains(topics, aTask)) then begin
+											ArrayRemoveCount(topics, index, 1)
+										end
+								end;
+							if (aRedraw <> 'noUndoOrDraw) then begin
+									AddUndoAction('UndoDeleteTask, [Array: aDate, aTask])
+								end;
+							if (if (if aRedraw then (aRedraw <> 'noUndoOrDraw)) then viewCObject) then begin
+									self:RedoTopics()
+								end;
+							break
+						end
+				end)
+		end),
+	ScrollToTask: compile(
+		options: "names",
+		func(aDate, aTask) begin
+			local index;
+			(if (index := SetContains(topics, aTask)) then begin
+					if (index < firstTopic) then begin
+							firstTopic := Max(0, (index - 1));
+							self:RedoTopics()
+						end else begin
+							if (index >= (firstTopic + Length(viewChildren))) then begin
+									firstTopic := (index - 1);
+									self:RedoTopics()
+								end
+						end;
+					self:CalculateScrollRects();
+					self:ActiveTopic(index)
+				end)
+		end),
+	AppendTopic: compile(
+		options: "names",
+		func(aTopic, aNewIndex, aTop, aLevelDelta) begin
+			local gtdeds;
+			gtdeds := self:GetToDoEntryDefaultStore(selectedDates[0], nil);
+			SetAdd(targets, gtdeds.Entry, true);
+			if ((if HasPath(aTopic, 'source) then (aTopic.source <> nil)) or (ClassOf(aTopic.source) <> 'symbol)) then begin
+					if (((Length(targets) - 1) < aTopic.source) or EntryStore(targets[aTopic.source]):IsReadOnly()) then begin
+							aTopic.source := gtdeds.storeIndex
+						end
+				end else begin
+					aTopic.source := gtdeds.storeIndex
+				end;
+			inherited:AppendTopic(aTopic, aNewIndex, aTop, aLevelDelta)
+		end),
+	GetTarget: compile(
+		options: "names",
+		func(anOldTarget) begin
+			if scrollCausedRedo then begin
+					return nil
+				end;
+			curWidth := GetRoot():GlobalBox().right;
+			if entryChanged then begin
+					self:EndFlush()
+				end;
+			if ((target := (targets := self:GetToDoEntry(selectedDates[0], true))[0]) <> anOldTarget) then begin
+					firstTopic := 0;
+					curTopic := nil
+				end;
+			if ((repeatTargets := self:GetToDoEntry(0, nil)) = nil) then begin
+					repeatTargets := [Array: ]
+				end;
+			if (((Length(targets) > 1) or (Length(repeatTargets) > 0)) or oldTodoSoup) then begin
+					curWidth := GetRoot():GlobalBox().right;
+					nTopics := 0;
+					local curWidth;
+					local Entry;
+					local t;
+					local i;
+					local store;
+					local hasOtherTasks;
+					(foreach Entry in targets do begin
+							nTopics := (nTopics + Length(Entry.topics))
+						end);
+					self.topics := Array(nTopics, nil);
+					i := 0;
+					store := 0;
+					(foreach Entry in targets do begin
+							if Entry.needsSort then begin
+									self:SortToDoItems(Entry)
+								end;
+							(foreach t in Entry.topics do begin
+									t.source := store;
+									topics[i] := t;
+									i := (i + 1)
+								end);
+							store := (store + 1)
+						end);
+					if oldTodoSoup then begin
+							hasOtherTasks := (self:AddOldSoupTasks(topics, selectedDates[0]) or hasOtherTasks)
+						end;
+					hasOtherTasks := (self:AddRepeatingTasks(topics, selectedDates[0]) or hasOtherTasks);
+					if (if ((store > 1) or hasOtherTasks) then (Length(topics) > 1)) then begin
+							StableSort(topics, '|<|, func(t) begin
+								(t.mtgPriority + (if t.mtgDone then 10 else 0))
+							end)
+						end
+				end else begin
+					if (if (if (if (anOldTarget <> nil) then (target <> anOldTarget)) then (target <> nil)) then target.needsSort) then begin
+							self:SortToDoItems(target)
+						end;
+					self.topics := target.topics
+				end;
+			(nTopics := Length(topics))
+		end),
+	canonicalParaTopic: {
+		viewBounds: nil,
+		viewFlags: vVisible + vCalculateBounds,
+		viewStationery: 'para,
+		viewFont: tsHWFont + tsSize(12),
+		textFlags: 265,
+		styles: [|Array|: ],
+		text: nil,
+		viewCaretActivateScript: compile(
+			options: "names",
+			func(state) begin
+				(if state then (curTopic := index))
+			end)
+	},
+	viewScrollUpScript: compile(
+		options: "names",
+		func() begin
+			local oldFirst;
+			oldFirst := firstTopic;
+			firstTopic := Max(0, ((firstTopic - ((lastTopic - firstTopic) div 2)) - 1));
+			(if (oldFirst <> firstTopic) then begin
+					scrollCausedRedo := true;
+					self:RedoChildren();
+					scrollCausedRedo := nil;
+					ClearUndoStacks()
+				end)
+		end),
+	LastToDoDate: compile(
+		options: "names",
+		func(aDate) begin
+			earliestDate := 536870911;
+			self:GetToDoSoup();
+			if ((aDate := ((aDate div 1440) * 1440)) = 0) then begin
+					aDate := 1440
+				end;
+			yesterday := (((aDate div 1440) * 1440) - 1440);
+			(cursor := dataSoup:Query({type: 'index, indexPath: 'date, beginKey: 1, endKey: yesterday})):ResetToEnd();
+			Entry := cursor:Entry();
+			(while Entry do begin
+					if (if Entry.topics then (Length(Entry.topics) > 0)) then begin
+							earliestDate := Entry.date;
+							break
+						end;
+					(Entry := cursor:Prev())
+				end);
+			if (earliestDate = yesterday) then begin
+					return earliestDate
+				end;
+			if oldTodoSoup then begin
+					(cursor := oldTodoSoup:Query({type: 'index, indexPath: 'mtgStartDate, beginKey: 1, endKey: yesterday})):ResetToEnd();
+					Entry := cursor:Entry();
+					(while Entry do begin
+							if (if Entry.topics then (Length(Entry.topics) > 0)) then begin
+									break
+								end;
+							(Entry := cursor:Prev())
+						end)
+				end;
+			if (if Entry then (Entry.mtgStartDate < earliestDate)) then begin
+					earliestDate := Entry.mtgStartDate
+				end;
+			if (earliestDate = yesterday) then begin
+					return earliestDate
+				end;
+			Entry := (cursor := dataSoup:Query({type: 'index, indexPath: 'date, startKey: 0, endTest: func(e) begin
+				(e.date > 0)
+			end})):Entry();
+			(while Entry do begin
+					local cursor;
+					local Entry;
+					local earliestDate;
+					local date;
+					local t;
+					local yesterday;
+					(foreach t in Entry.topics do begin
+							date := PrevMeeting(aDate, t.repeatInfo);
+							if t.repeatInfo.reminderInterval then begin
+									date := (date - t.repeatInfo.reminderInterval)
+								end;
+							if (if (date <> 0) then (date = yesterday)) then begin
+									return yesterday
+								end;
+							if (if (date <> 0) then (date < earliestDate)) then begin
+									earliestDate := date
+								end
+						end);
+					(Entry := cursor:Next())
+				end);
+			(if (earliestDate = 536870911) then nil else earliestDate)
+		end),
+	viewSetupFormScript: compile(
+		options: "names",
+		func() begin
+			self.viewBounds := SetBounds(0, 74, 0, -18);
+			self:GetToDoSoup();
+			self:RollItemsOver(nil);
+			firstTopic := 0;
+			RegSoupChange("To Do", 'todo, OldSoupChanged);
+			RegSoupChange("To Do List", 'todo, NewSoupChanged);
+			if oldTodoSoup then begin
+					self:ConvertToDoSoup()
+				end;
+			inherited:viewSetupFormScript();
+			SetCaretInfo(self, {x: 43, y: 20})
+		end),
+	GrowNote: compile(
+		options: "names",
+		func() begin
+			nil
+		end),
+	OldSoupChanged: compile(
+		options: "names",
+		func(aSoupName, anAppSymbol, aChangeType, aChangeData) begin
+			local cal, theToDo;
+			(theToDo := (cal := GetRoot().calendar):GetToDo()).oldTodoSoup := GetUnionSoup("To Do");
+			(if ((((aChangeType = 'soupLeaves) or (aChangeType = 'soupCreated)) or (aChangeType = 'soupEnters)) or (aChangeType = 'soupDeleted)) then (if Visible(cal) then begin
+						theToDo:ConvertToDoSoup();
+						cal:RedisplayScript()
+					end))
+		end),
+	ValidateToDo: compile(
+		options: "names",
+		func(aEntry) begin
+			(if (if (if (aEntry.class = 'todo) then aEntry.topics) then aEntry.date) then aEntry)
+		end),
+	viewAddChildScript: compile(
+		options: "names",
+		func(aNewOne) begin
+			if (selectedDates[0] < ((Time() div 1440) * 1440)) then begin
+					aNewOne.mtgDone := true
+				end;
+			aNewOne.mtgPriority := 3;
+			inherited:viewAddChildScript(aNewOne);
+			lastTopic := (Length(topics) - 1);
+			self:CalculateScrollRects()
+		end),
+	EnsureVisibleTopic: compile(
+		options: "names",
+		func(anIndex) begin
+			(if (anIndex < firstTopic) then begin
+					firstTopic := anIndex;
+					self:RedoChildren()
+				end else (if (anIndex > lastTopic) then begin
+						firstTopic := ((firstTopic + anIndex) - lastTopic);
+						self:RedoChildren()
+					end))
+		end),
+	MakeTopicFrame: compile(
+		options: "names",
+		func(aLevel) begin
+			{unique: (((TimeInSeconds() * 4) + (Ticks() mod 4)) - 60000000), mtgPriority: 3, mtgDone: nil, text: nil, styles: nil, viewBounds: nil, source: 0}
+		end),
+	ToggleTopic: compile(
+		options: "names",
+		func(anIndex) begin
+			local task, Entry;
+			task := topics[anIndex];
+			if Visible(todoSlip) then begin
+					todoSlip:Close()
+				end;
+			todoSlip.list := self;
+			todoSlip.task := task;
+			todoSlip.paraView := self:TopicIndexToView(anIndex);
+			if HasPath(task, 'repeatInfo) then begin
+					if (if (if HasPath(task, 'source) then (task.source <> nil)) then (ClassOf(task.source) <> 'symbol)) then begin
+							todoSlip.target := repeatTargets[task.source]
+						end else begin
+							todoSlip.target := repeatTargets[0]
+						end
+				end else begin
+					if (if (if HasPath(task, 'source) then (task.source <> nil)) then (ClassOf(task.source) <> 'symbol)) then begin
+							todoSlip.target := targets[task.source]
+						end else begin
+							todoSlip.target := target
+						end
+				end;
+			Entry := todoSlip.target;
+			if (((not HasPath(task, 'source)) or (task.source = nil)) or (ClassOf(task.source) = 'symbol)) then begin
+					todoSlip.readOnly := true
+				end else begin
+					if (if IsSoupEntry(Entry) then EntryStore(Entry):IsReadOnly()) then begin
+							todoSlip.readOnly := true
+						end else begin
+							todoSlip.readOnly := nil
+						end
+				end;
+			if (if HasPath(task, 'remindForDate) then (task.remindForDate > selectedDates[0])) then begin
+					todoSlip.originalMtgDate := task.remindForDate;
+					todoSlip.nominalDate := selectedDates[0]
+				end else begin
+					if (if HasPath(task, 'repeatInfo) then task.repeatInfo.reminderInterval) then begin
+							todoSlip.originalMtgDate := (selectedDates[0] + task.repeatInfo.reminderInterval);
+							todoSlip.nominalDate := selectedDates[0]
+						end else begin
+							todoSlip.originalMtgDate := selectedDates[0]
+						end
+				end;
+			todoSlip:Open()
+		end),
+	topMargin: 5,
+	HandleCheck: compile(
+		options: "names",
+		func(anIndex, aTopic) begin
+			local checkTarget, lastChecked;
+			if HasPath(aTopic, 'repeatInfo) then begin
+					checkTarget := repeatTargets
+				end else begin
+					checkTarget := targets
+				end;
+			if self:CheckReadOnly(checkTarget[aTopic.source]) then begin
+					return nil
+				end;
+			target.needsSort := true;
+			inherited:HandleCheck(anIndex, aTopic);
+			(if (not aTopic.mtgDone) then begin
+					lastChecked := GetUserConfig('lastRollover);
+					(if (selectedDates[0] < lastChecked) then SetUserConfig(EnsureInternal('lastRollover), selectedDates[0]))
+				end)
+		end),
+	CheckReadOnly: compile(
+		options: "names",
+		func(aEntry) begin
+			local whatStore, name;
+			if (whatStore := EntryStore(aEntry)):IsReadOnly() then begin
+					name := whatStore:GetName();
+					self:Notify(3, "To Do", ParamStr("To Do changes could not be saved (\u201C\u^0\u201D\u is write-protected)", [Array: name]));
+					return true
+				end;
+			nil
+		end),
+	DeleteTopics: compile(
+		options: "names",
+		func(aList) begin
+			self:EndFlush();
+			if ((nItems := Length(aList)) > 1) then begin
+					Sort(aList, '|>|, nil)
+				end;
+			local nItems;
+			local task;
+			local i;
+			local theIndex;
+			local entries;
+			local Entry;
+			local index;
+			(for i := 0 to (nItems - 1) do begin
+					theIndex := aList[i];
+					if HasPath((task := topics[theIndex]), 'repeatInfo) then begin
+							if (result := ModalConfirm(Stringer([Array: (textPart1 := SubStr(MakeRichString(task.text, task.styles), 0, 24)), "\u2026\u", " ", "is a recurring task. Delete all occurrences?"]), 'yesNo)) then begin
+									self:DeleteTask(0, task, true)
+								end else begin
+									return nil
+								end
+						end else begin
+							if ((if HasPath(task, 'source) then (task.source = nil)) or (ClassOf(task.source) = 'symbol)) then begin
+									self:Notify(3, "To Do", "Can\u2019\ut delete a 1.x formatted To Do item");
+									return nil
+								end;
+							local textPart1;
+							local result;
+							(foreach Entry in (entries := self:GetToDoEntry(selectedDates[0], nil)) do begin
+									if (index := SetContains(Entry.topics, task)) then begin
+											if self:CheckReadOnly(Entry) then begin
+													return nil
+												end;
+											ArrayRemoveCount(Entry.topics, index, 1);
+											EntryChangeXmit(Entry, 'todo)
+										end
+								end)
+						end
+				end);
+			curTopic := nil;
+			if viewCObject then begin
+					self:RedoTopics()
+				end;
+			true
+		end),
+	SortToDoItems: compile(
+		options: "names",
+		func(anEntry) begin
+			if EntryStore(anEntry):IsReadOnly() then begin
+					return nil
+				end;
+			StableSort(anEntry.topics, '|<|, func(t) begin
+				(t.mtgPriority + (if t.mtgDone then 10 else 0))
+			end);
+			anEntry.needsSort := nil;
+			EntryChangeXmit(anEntry, 'todo)
+		end),
+	debug: 699,
+	topicDragInfo: {types: [|Array|: 'task, 'text], dragRef: nil, label: task},
+	viewFont: tsHWFont + tsSize(12),
+	topicFont: tsHWFont + tsSize(12),
+	viewSetupChildrenScript: compile(
+		options: "names",
+		func() begin
+			inherited:viewSetupChildrenScript();
+			self:CalculateScrollRects()
+		end),
+	GetToDoItemsForRange: compile(
+		options: "names",
+		func(aDate1, aDate2) begin
+			theList := [Array: ];
+			local day;
+			local theList;
+			local dayTopics;
+			(for day := (aDate1 := ((aDate1 div 1440) * 1440)) to aDate2 by 1440 do begin
+					if (if ((dayTopics := self:GetToDoItemsForThisDate(day)) <> nil) then (Length(dayTopics) > 0)) then begin
+							AddArraySlot(theList, {date: day, topics: dayTopics})
+						end
+				end);
+			theList
+		end),
+	GetToDoItemsForThisDate: compile(
+		options: "names",
+		func(aDate) begin
+			store := 0;
+			self:GetToDoSoup();
+			if (entries := self:GetToDoEntry(aDate, nil)) then begin
+					nDayTopics := 0;
+					local entries;
+					local Entry;
+					local dayTopics;
+					local nDayTopics;
+					local t;
+					local i;
+					local store;
+					local hasOtherTasks;
+					(foreach Entry in entries do begin
+							nDayTopics := (nDayTopics + Length(Entry.topics))
+						end);
+					dayTopics := Array(nDayTopics, nil);
+					i := 0;
+					store := 0;
+					(foreach Entry in entries do begin
+							(foreach t in Entry.topics do begin
+									t.source := store;
+									dayTopics[i] := t;
+									i := (i + 1)
+								end);
+							store := (store + 1);
+							if Entry.needsSort then begin
+									hasOtherTasks := true
+								end
+						end)
+				end else begin
+					dayTopics := [Array: ]
+				end;
+			if oldTodoSoup then begin
+					hasOtherTasks := (self:AddOldSoupTasks(dayTopics, aDate) or hasOtherTasks)
+				end;
+			if (repeatTargets := self:GetToDoEntry(0, nil)) then begin
+					hasOtherTasks := (self:AddRepeatingTasks(dayTopics, aDate) or hasOtherTasks)
+				end else begin
+					repeatTargets := [Array: ]
+				end;
+			if (if ((store > 1) or hasOtherTasks) then (Length(dayTopics) > 1)) then begin
+					StableSort(dayTopics, '|<|, func(t) begin
+						(t.mtgPriority + (if t.mtgDone then 10 else 0))
+					end)
+				end;
+			dayTopics
+		end),
+	MoveTask: compile(
+		constants: {
+			kLiteral_791bbd: "To Do"
+		},
+		options: "names",
+		func(aTask, aTarget, aDestStore) begin
+			i := 0;
+			if ((if HasPath(aTask, 'source) then (aTask.source = nil)) or (ClassOf(aTask.source) = 'symbol)) then begin
+					self:Notify(3, kLiteral_791bbd, "Can\u2019\ut move a 1.x formatted To Do item");
+					return nil
+				end;
+			if HasPath(aTask, 'repeatInfo) then begin
+					if ((result := ModalConfirm(Stringer([Array: (textPart1 := SubStr(MakeRichString(aTask.text, aTask.styles), 0, 24)), "\u2026\u", " ", "is a recurring task. Move all instances?"]), 'yesNo)) = nil) then begin
+							return nil
+						end
+				end;
+			try begin
+					aDestStore:CheckWriteProtect();
+					if HasPath(aTask, 'repeatInfo) then begin
+							local originalEntry;
+							local Entry;
+							local i;
+							local destSoup;
+							local possibleTargets;
+							local textPart1;
+							local result;
+							(foreach Entry in repeatTargets do begin
+									if SetContains(Entry.topics, aTask) then begin
+											originalEntry := Entry;
+											break
+										end
+								end);
+							if (EntryStore(originalEntry) = aDestStore) then begin
+									return originalEntry
+								end;
+							self:UpdateMultipleStores('now);
+							SetRemove(originalEntry.topics, aTask);
+							EntryChangeXmit(originalEntry, 'todo);
+							(foreach Entry in repeatTargets do begin
+									if (EntryStore(Entry) = aDestStore) then begin
+											aTask.source := i;
+											AddArraySlot(Entry.topics, aTask);
+											Entry.needsSort := true;
+											EntryChangeXmit(Entry, 'todo);
+											self:RedoTopics();
+											return Entry
+										end;
+									i := (i + 1)
+								end)
+						end else begin
+							(foreach Entry in targets do begin
+									if (EntryStore(Entry) = aDestStore) then begin
+											aTask.source := i;
+											self:UpdateMultipleStores(nil);
+											self:RedoTopics();
+											return Entry
+										end;
+									i := (i + 1)
+								end)
+						end;
+					if ((destSoup := aDestStore:GetSoup(masterSoup.soupName)) = nil) then begin
+							destSoup := CreateUSoupMember(masterSoup.soupName, aDestStore)
+						end;
+					Entry := masterSoup:CreateBlankEntry();
+					if HasPath(aTask, 'repeatInfo) then begin
+							Entry.date := 0;
+							Entry.lastRollover := ((Time() div 1440) * 1440)
+						end else begin
+							Entry.date := aTarget.date
+						end;
+					destSoup:AddXmit(Entry, nil)
+				end onexception |evt.ex.fr.store| do begin
+					error := CurrentException().error;
+					where := aDestStore:GetName();
+					if (error = -10605) then begin
+							msg := "To Do changes could not be saved (\u201C\u^0\u201D\u is write-protected)"
+						end else begin
+							if (error = -10617) then begin
+									msg := "To Do changes could not be saved (\u201C\u^0\u201D\u is full)"
+								end
+						end;
+					if msg then begin
+							self:Notify(3, kLiteral_791bbd, ParamStr(msg, [Array: where]))
+						end else begin
+							Rethrow()
+						end;
+					return nil
+				end;
+			if HasPath(aTask, 'repeatInfo) then begin
+					SetAdd(repeatTargets, Entry, true);
+					possibleTargets := repeatTargets
+				end else begin
+					SetAdd(targets, Entry, true);
+					possibleTargets := targets
+				end;
+			i := 0;
+			(foreach Entry in possibleTargets do begin
+					local error, msg, where;
+					if (EntryStore(Entry) <> aDestStore) then begin
+							i := (i + 1)
+						end
+				end);
+			aTask.source := i;
+			if HasPath(aTask, 'repeatInfo) then begin
+					Entry.topics := [Array: aTask];
+					EntryChangeXmit(Entry, 'todo)
+				end else begin
+					self:UpdateMultipleStores(nil)
+				end;
+			self:RedoTopics();
+			return Entry
+		end),
+	UndoNewTask: compile(
+		options: "names",
+		func(aDate, aTask) begin
+			(if Visible(self) then self:DeleteTask(aDate, aTask, true) else self:DeleteTask(aDate, aTask, nil))
+		end),
+	AddRepeatingTasks: compile(
+		options: "names",
+		func(aTopicList, aDate) begin
+			store := 0;
+			curWidth := GetRoot():GlobalBox().right;
+			today := ((Time() div 1440) * 1440);
+			if (aDate < today) then begin
+					return nil
+				end;
+			local Entry;
+			local t;
+			local addedTasks;
+			local date;
+			local today;
+			local store;
+			local curWidth;
+			(foreach Entry in repeatTargets do begin
+					(foreach t in Entry.topics do begin
+							local nextDate;
+							date := NextMeeting(aDate, t.repeatInfo);
+							if t.repeatInfo.reminderInterval then begin
+									date := (date - t.repeatInfo.reminderInterval)
+								end;
+							if (date < aDate) then begin
+									nextDate := aDate;
+									(while (date < aDate) do begin
+											if ((date := NextMeeting((nextDate := (nextDate + 1440)), t.repeatInfo)) = 0) then begin
+													break
+												end;
+											(date := (date - t.repeatInfo.reminderInterval))
+										end)
+								end;
+							if (date = aDate) then begin
+									if ArrayPos(t.repeatDone, date, 0, nil) then begin
+											t.mtgDone := true
+										end else begin
+											t.mtgDone := nil
+										end;
+									t.source := store;
+									AddArraySlot(aTopicList, t);
+									addedTasks := true
+								end
+						end);
+					store := (store + 1)
+				end);
+			addedTasks
+		end),
+	AddTask: compile(
+		options: "names",
+		func(aRichString, aDate, aPriority, aComplete, aReminder) begin
+			local topicFrame, Entry, top, nDayTopics, gtdeds;
+			if ((nDayTopics := Length((Entry := (gtdeds := self:GetToDoEntryDefaultStore(aDate, nil)).Entry).topics)) > 0) then begin
+					top := self:TopicBottom(Entry.topics[(nDayTopics - 1)])
+				end else begin
+					top := 0
+				end;
+			(topicFrame := self:StringToTopic(aRichString, top)).source := gtdeds.storeIndex;
+			topicFrame.mtgPriority := Min(aPriority, 3);
+			topicFrame.mtgDone := aComplete;
+			if aReminder then begin
+					topicFrame.remindForDate := aReminder
+				end;
+			if (if (aDate <> 0) then (aDate < ((Time() div 1440) * 1440))) then begin
+					topicFrame.mtgDone := true
+				end;
+			if (nDayTopics > 0) then begin
+					if ((Entry.topics[(nDayTopics - 1)].mtgDone <> topicFrame.mtgDone) or (topicFrame.mtgPriority <> 3)) then begin
+							Entry.needsSort := true
+						end
+				end;
+			AddArraySlot(Entry.topics, topicFrame);
+			if (StrLen(aRichString) > 0) then begin
+					Entry.lastWidth := 0
+				end;
+			EntryChangeXmit(Entry, 'todo);
+			{index: (Length(Entry.topics) - 1), topic: topicFrame, Entry: Entry}
+		end),
+	DeleteRolledTopics: compile(
+		options: "names",
+		func(anEntry, aList) begin
+			if ((nItems := Length(aList)) > 1) then begin
+					Sort(aList, '|>|, nil)
+				end;
+			local nItems;
+			(foreach theIndex in aList do begin
+					ArrayRemoveCount(anEntry.topics, theIndex, 1)
+				end);
+			EntryChangeXmit(anEntry, 'todo)
+		end),
+	DuplicateTask: compile(
+		options: "names",
+		func(aDate, aTask) begin
+			local newTask, oldLen, text, reminder;
+			reminder := nil;
+			self:GetToDoSoup();
+			if aTask.remindForDate then begin
+					reminder := aTask.remindForDate
+				end;
+			if (if HasPath(aTask, 'repeatInfo) then (aDate <> 0)) then begin
+					aDate := 0
+				end;
+			if ((oldLen := StrLen(aTask.text)) > 0) then begin
+					text := ParamStr("copy of ^0", [Array: MakeRichString(aTask.text, aTask.styles)])
+				end else begin
+					text := "copy of blank task"
+				end;
+			newTask := self:AddTask(text, aDate, aTask.mtgPriority, aTask.mtgDone, reminder);
+			if HasPath(aTask, 'repeatInfo) then begin
+					newTask.topic.repeatInfo := Clone(aTask.repeatInfo);
+					newTask.topic.repeatDone := Clone(aTask.repeatDone);
+					EntryChangeXmit(newTask.Entry, nil)
+				end;
+			AddUndoAction('DeleteTask, [Array: aDate, newTask.topic, true]);
+			newTask
+		end),
+	whoAmI: 'toDoListView,
+	repeatTargets: [|Array|: ],
+	DateFind: compile(
+		options: "names",
+		func(aWhat, aFindType, aSoupFinders, aMasterFinder, aContext) begin
+			aContext:SetStatus("Searching in To Do\u2026\u");
+			self:GetToDoSoup();
+			self:EndFlush();
+			if (aFindType = 'dateBefore) then begin
+					singleTest := func(item) begin
+						(if (item.date < aWhat) then (item.date > 0))
+					end;
+					repeatTest := func(item) begin
+						local date;
+						date := NextMeeting(0, item);
+						if item.reminderInterval then begin
+								date := (date - item.reminderInterval)
+							end;
+						(date < aWhat)
+					end;
+					startKey := 1
+				end else begin
+					if (aFindType = 'dateAfter) then begin
+							singleTest := func(item) begin
+								(item.date > aWhat)
+							end;
+							repeatTest := func(item) begin
+								local date;
+								date := NextMeeting((aWhat + 1), item);
+								if item.reminderInterval then begin
+										date := (date - item.reminderInterval)
+									end;
+								(date > 0)
+							end;
+							startKey := aWhat
+						end else begin
+							singleTest := func(item) begin
+								(item.date = aWhat)
+							end;
+							repeatTest := func(item) begin
+								local date;
+								date := NextMeeting(aWhat, item);
+								if item.reminderInterval then begin
+										date := (date - item.reminderInterval)
+									end;
+								(date = aWhat)
+							end;
+							startKey := aWhat
+						end
+				end;
+			if (cursor := dataSoup:Query({type: 'index, indexPath: 'date, startKey: startKey, validTest: singleTest})):Entry() then begin
+					AddArraySlot(aSoupFinders, {_proto: protoToDoFinder, masterFinder: aMasterFinder, owner: GetRoot().calendar, findType: aFindType, findWords: aWhat, cursor: cursor})
+				end;
+			local cursor;
+			local Entry;
+			local task;
+			local repeatTargets;
+			(if (repeatTargets := MapCursor((cursor := dataSoup:Query({type: 'index, startKey: 0, indexPath: 'date, endTest: func(e) begin
+				(e.date > 0)
+			end})), nil)) then (foreach Entry in repeatTargets do begin
+						(foreach task in Entry.topics do begin
+								if call repeatTest with (task.repeatInfo) then begin
+										AddArraySlot(aSoupFinders, {_proto: protoToDoFinder, masterFinder: aMasterFinder, owner: GetRoot().calendar, findType: aFindType, findWords: aWhat, cursor: cursor});
+										break
+									end
+							end)
+					end))
+		end),
+	Find: compile(
+		options: "names",
+		func(aFindWords, aSoupFinders, aMasterFinder, aContext) begin
+			local cursor;
+			aContext:SetStatus("Searching in To Do\u2026\u");
+			self:GetToDoSoup();
+			self:EndFlush();
+			(if (cursor := dataSoup:Query({type: 'words, words: aFindWords, indexPath: 'date})):Entry() then AddArraySlot(aSoupFinders, {_proto: protoToDoFinder, masterFinder: aMasterFinder, owner: GetRoot().calendar, findType: 'text, findWords: aFindWords, cursor: cursor}))
+		end),
+	protoToDoFinder: {
+		ForEachSelected: compile(
+			options: "names",
+			func(callback) begin
+				(if selected then begin
+						c := Query(cursor:soup(), '{type: index});
+						local c;
+						(foreach alias in selected do begin
+								local e;
+								e := c:gotokey(alias._uniqueID);
+								(loop begin
+										if (e._uniqueID <> alias._uniqueID) then begin
+												break (e := nil)
+											end;
+										(if (EntryStore(e):GetSignature() <> alias._storeID) then (e := c:Next()) else break)
+									end);
+								if e then begin
+										call callback with (e, alias.topicIndex)
+									end else nil
+							end)
+					end)
+			end),
+		IsThisItemSelected: compile(
+			options: "names",
+			func(item) begin
+				local alias;
+				(if item.realFinder:IsSelected((alias := {_uniqueID: item.entryID, _storeID: item.storeID, instanceTime: item.instanceTime, topicIndex: item.topicIndex})) then true)
+			end),
+		SelectItem: compile(
+			options: "names",
+			func(item) begin
+				local alias, index;
+				alias := {_uniqueID: item.entryID, _storeID: item.storeID, instanceTime: item.instanceTime, topicIndex: item.topicIndex};
+				(if selected then (if (index := ArrayPos(selected, alias, 0, func(e, t) begin
+						(if (if (if (e._uniqueID = t._uniqueID) then (e._storeID = t._storeID)) then (e.instanceTime = t.instanceTime)) then (e.topicIndex = t.topicIndex))
+					end)) then RemoveSlot(selected, index) else AddArraySlot(selected, alias)) else (selected := [Array: alias]))
+			end),
+		Reset: compile(
+			options: "names",
+			func() begin
+				cursor:Reset()
+			end),
+		ReSync: compile(
+			options: "names",
+			func() begin
+				cacheEntryCount := nil;
+				currentItem := 0;
+				self:Reset();
+				(zeroOneOrMoreResult := nil)
+			end),
+		TaskMatches: compile(
+			options: "names",
+			func(aTask) begin
+				local date, match;
+				if (findType = 'dateBefore) then begin
+						date := NextMeeting(0, aTask.repeatInfo)
+					end else begin
+						if (findType = 'dateAfter) then begin
+								date := NextMeeting((findWords + 1), aTask.repeatInfo)
+							end else begin
+								date := NextMeeting(findWords, aTask.repeatInfo)
+							end
+					end;
+				if aTask.repeatInfo.reminderInterval then begin
+						date := (date - aTask.repeatInfo.reminderInterval)
+					end;
+				if (findType = 'dateBefore) then begin
+						match := (date < findWords)
+					end else begin
+						if (findType = 'dateAfter) then begin
+								match := (date > 0)
+							end else begin
+								match := (date = findWords)
+							end
+					end;
+				(if match then date)
+			end),
+		currentItem: 0,
+		GetEntryIndexForInstanceIndex: compile(
+			options: "names",
+			func(instanceIndex) begin
+				(if (cacheInstanceArrayCount = nil) then instanceIndex else begin
+						totalInstances := 0;
+						i := 0;
+						local totalInstances;
+						(foreach instanceCount in cacheInstanceArrayCount do begin
+								if ((totalInstances := (totalInstances + instanceCount)) > instanceIndex) then begin
+										break
+									end else begin
+										i := (i + 1)
+									end
+							end);
+						i
+					end)
+			end),
+		FileAs: compile(
+			options: "names",
+			func(labels) begin
+				return nil
+			end),
+		cacheEntryCount: nil,
+		AddTasksForEntry: compile(
+			options: "names",
+			func(anEntry, aResults, anOffset, aPrevCount, aMaxCount) begin
+				found := [Array: ];
+				i := 0;
+				if (findType = 'text) then begin
+						local excerpt;
+						local newFindItem;
+						local found;
+						local i;
+						local f;
+						local value;
+						local path;
+						local date;
+						local ti;
+						local t;
+						local r;
+						(for ti := 0 to (Length(anEntry.topics) - 1) do begin
+								if (r := FindStringInFrame((t := anEntry.topics[ti]), findWords, true)) then begin
+										AddArraySlot(found, r[0]);
+										AddArraySlot(found, [Array: ti]);
+										AddArraySlot(found, r[2])
+									end
+							end)
+					end else begin
+						if (anEntry.date <> 0) then begin
+								found := Array((Length(anEntry.topics) * 3), nil);
+								(for ti := 0 to (Length(anEntry.topics) - 1) do begin
+										f := (ti * 3);
+										found[f] := anEntry.topics[ti].text;
+										found[(f + 1)] := [Array: ti]
+									end)
+							end else begin
+								Write(Stringer([Array: "repeating task may match, anOffset=", anOffset, " ", "aPrevCount=", aPrevCount, " ", "findType="]));
+								Print(findType);
+								found := [Array: ];
+								(for ti := 0 to (Length(anEntry.topics) - 1) do begin
+										if self:TaskMatches((t := anEntry.topics[ti])) then begin
+												AddArraySlot(found, t.text);
+												AddArraySlot(found, [Array: ti]);
+												AddArraySlot(found, nil)
+											end
+									end)
+							end
+					end;
+				(for f := 0 to (Length(found) - 1) by 3 do begin
+						value := found[f];
+						path := found[(f + 1)];
+						if ((i + aPrevCount) > aMaxCount) then begin
+								break
+							end;
+						if (anEntry.date = 0) then begin
+								t := anEntry.topics[path[0]];
+								date := NextMeeting(((Time() div 1440) * 1440), t.repeatInfo);
+								if t.repeatInfo.reminderInterval then begin
+										date := (date - t.repeatInfo.reminderInterval)
+									end
+							end else begin
+								date := anEntry.date
+							end;
+						if (date(date).year = date(Time()).year) then begin
+								excerpt := Stringer([Array: LongDateStr(date, 74985), " ", value])
+							end else begin
+								excerpt := Stringer([Array: LongDateStr(date, 4799084), " ", value])
+							end;
+						if (StrLen(excerpt) > 50) then begin
+								excerpt := SubStr(excerpt, 0, 50)
+							end;
+						(newFindItem := {_proto: @protoFindItem, finder: (if self.masterFinder then masterFinder else self), realFinder: self, entryID: anEntry._uniqueID, soup: EntrySoup(anEntry), storeID: EntryStore(anEntry):GetSignature(), selected: nil, itemIndex: ((anOffset + aPrevCount) + i), title: excerpt, topicIndex: path[0], offset: found[(f + 2)], instanceTime: date}).selected := self:IsSelected({_uniqueID: newFindItem.entryID, _storeID: newFindItem.storeID, instanceTime: newFindItem.instanceTime, topicIndex: newFindItem.topicIndex});
+						AddArraySlot(aResults, newFindItem);
+						i := (i + 1)
+					end);
+				i
+			end),
+		ShowFoundItem: compile(
+			options: "names",
+			func(item) begin
+				local c, Entry;
+				currentItem := item.itemIndex;
+				(if (Entry := (c := Query(item.soup, {type: 'index, indexPath: '_uniqueID, startKey: item.entryID})):Entry()) then begin
+						cursor:Goto(Entry);
+						self:ShowItem(item, Entry)
+					end)
+			end),
+		selected: nil,
+		items: nil,
+		AddFoundItems: compile(
+			options: "names",
+			func(results, offset, maxCount) begin
+				local c, Entry, i;
+				(c := cursor:clone()):Reset();
+				indexFirstItem := Length(results);
+				Entry := c:Entry();
+				i := 0;
+				(loop begin
+						if ((Entry = nil) or (i >= maxCount)) then begin
+								break
+							end;
+						(try begin
+								i := (i + self:AddTasksForEntry(Entry, results, offset, i, maxCount));
+								(Entry := c:Next())
+							end onexception |evt.ex| do begin
+								breakloop();
+								(Entry := nil)
+							end)
+					end);
+				items := results;
+				i
+			end),
+		ShowOrdinalItem: compile(
+			options: "names",
+			func(ordinal) begin
+				local results, oldItem, currentEntryIndex, oldEntryIndex;
+				if (items = nil) then begin
+						self:AddFoundItems((results := [Array: ]), 0, 1)
+					end;
+				(if (ordinal = 'first) then begin
+						currentItem := 0;
+						self:ShowItem(items[indexFirstItem], cursor:Reset())
+					end else begin
+						oldItem := currentItem;
+						if (ordinal = 'Prev) then begin
+								currentItem := (currentItem - 1)
+							end else begin
+								if (ordinal = 'Next) then begin
+										currentItem := (currentItem + 1)
+									end else begin
+										currentItem := ordinal
+									end
+							end;
+						currentEntryIndex := self:GetEntryIndexForInstanceIndex((currentItem := Min(Max(currentItem, 0), (self:Count() - 1))));
+						oldEntryIndex := self:GetEntryIndexForInstanceIndex(oldItem);
+						self:ShowItem(items[(indexFirstItem + currentItem)], cursor:Move((currentEntryIndex - oldEntryIndex)))
+					end)
+			end),
+		ShowItem: compile(
+			options: "names",
+			func(anItem, anEntry) begin
+				if ((anEntry = 'deleted) or (anEntry = nil)) then begin
+						self:ReSync();
+						anEntry := nil
+					end else begin
+						cursor:Goto(anEntry)
+					end;
+				if (not Visible(owner)) then begin
+						if (anEntry <> nil) then begin
+								owner:?viewPreOpenScript(anEntry)
+							end;
+						owner:Open()
+					end;
+				owner:ShowToDoList(anItem.instanceTime);
+				owner.toDoListView:ShowFoundItem(anEntry, anItem.instanceTime, self)
+			end),
+		ZeroOneOrMore: compile(
+			options: "names",
+			func() begin
+				(if self.cacheCount then cacheCount else (if self.zeroOneOrMoreResult then zeroOneOrMoreResult else (self.zeroOneOrMoreResult := self:Count())))
+			end),
+		cacheInstanceArrayCount: nil,
+		Delete: compile(
+			options: "names",
+			func() begin
+				local delList;
+				local index;
+				self:ForEachSelected(func(Entry, topicIndex) begin
+					if (not Entry.deleteList) then begin
+							Entry.deleteList := [Array: ]
+						end;
+					AddArraySlot(Entry.deleteList, topicIndex)
+				end);
+				self:ForEachSelected(func(Entry, topicIndex) begin
+					(if Entry.deleteList then begin
+							delList := Entry.deleteList;
+							RemoveSlot(Entry, 'deleteList);
+							GetRoot().calendar:GetToDo():DeleteRolledTopics(Entry, delList)
+						end)
+				end);
+				selected := nil;
+				self.zeroOneOrMoreResult := nil;
+				masterFinder.zeroOneOrMoreResult := nil;
+				self.cacheCount := nil;
+				masterFinder.cacheCount := nil;
+				GetRoot().calendar:GetToDo():ShowChanges()
+			end),
+		debug: 1444552,
+		Count: compile(
+			options: "names",
+			func() begin
+				local c, i, Entry, instanceCount;
+				(if cacheEntryCount then cacheEntryCount else begin
+						cacheInstanceArrayCount := nil;
+						(c := cursor:clone()):Reset();
+						i := 0;
+						Entry := c:Entry();
+						(loop begin
+								if (Entry = nil) then begin
+										break
+									end;
+								if (cacheInstanceArrayCount = nil) then begin
+										cacheInstanceArrayCount := [Array: ]
+									end;
+								if ((instanceCount := self:CountTasks(Entry)) = 0) then begin
+										Print("**** entry has 0 instances! ****")
+									end;
+								AddArraySlot(cacheInstanceArrayCount, instanceCount);
+								i := (i + instanceCount);
+								(Entry := c:Next())
+							end);
+						(cacheEntryCount := i)
+					end)
+			end),
+		indexFirstItem: 0,
+		CountTasks: compile(
+			options: "names",
+			func(anEntry) begin
+				(if (findType = 'text) then begin
+						if (found := FindStringInFrame(anEntry.topics, findWords, 'first)) then begin
+								return (Length(found) / 3)
+							end;
+						return 0
+					end else (if (anEntry.date = 0) then begin
+							Print("gotta count repeating");
+							Count := 0;
+							local found;
+							local topic;
+							local Count;
+							(foreach topic in anEntry.topics do begin
+									if self:TaskMatches(topic) then begin
+											Count := (Count + 1)
+										end
+								end);
+							Count
+						end else Length(anEntry.topics)))
+			end),
+		MoveTo: compile(
+			options: "names",
+			func(toStore) begin
+				local toSoup;
+				local soupName;
+				toSoup := toStore:GetSoup((soupName := cursor:soup():GetName()));
+				self:ForEachSelected(func(e, topicIndex) begin
+					(if (EntryStore(e) <> toStore) then EntryMove(e, toSoup))
+				end);
+				selected := nil;
+				XmitSoupChange("To Do List", 'todo, 'whatThe, nil)
+			end),
+		IsSelected: compile(
+			options: "names",
+			func(itemAlias) begin
+				(if selected then ArrayPos(selected, itemAlias, 0, func(e, test) begin
+						(if (if (if (e._uniqueID = test._uniqueID) then (e._storeID = test._storeID)) then (e.instanceTime = test.instanceTime)) then (e.topicIndex = test.topicIndex))
+					end))
+			end)
+	},
+	GetToDoShapes: compile(
+		options: "names",
+		func(aDate, aYOffset, aWidth, aFont) begin
+			shapes := [Array: {font: aFont, justification: 'left}];
+			lineHt := (GetFontSize(aFont) + 2);
+			local task;
+			local iconShape;
+			local shapes;
+			local lineHt;
+			local result;
+			(foreach task in self:GetToDoItemsForThisDate(aDate) do begin
+					result := self:GetTaskShapes(shapes, task, aYOffset, aWidth, aFont);
+					aYOffset := ((aYOffset + result.height) + 5)
+				end);
+			(if (Length(shapes) = 1) then nil else shapes)
+		end),
+	GetTaskShapes: compile(
+		options: "names",
+		func(aShapes, aTask, aYOffset, aWidth, aFont) begin
+			local box, left, shapes, iconShape, height, textShapes;
+			if (aShapes = nil) then begin
+					shapes := [Array: {font: aFont, justification: 'left}]
+				end else begin
+					shapes := aShapes
+				end;
+			iconShape := OffsetShape(MakeShape(checkBitmaps[(if aTask.mtgDone then 1 else 0)]), 20, (aYOffset + 1));
+			AddArraySlot(shapes, iconShape);
+			iconShape := OffsetShape(MakeShape(priorityItems[aTask.mtgPriority]), 35, (aYOffset + 1));
+			AddArraySlot(shapes, iconShape);
+			box := SetBounds(55, (aYOffset + 1), aWidth, 9999);
+			textShapes := MakeTextLines(MakeRichString(aTask.text, aTask.styles), box, nil, aFont);
+			AddArraySlot(shapes, textShapes);
+			height := Max(((box := ShapeBounds(textShapes)).bottom - box.top), GetFontSize(aFont));
+			{shapes: shapes, height: height}
+		end),
+	_proto: @8313
+};

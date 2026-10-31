@@ -1,0 +1,38 @@
+// protoFormatPicker, and what only it reaches
+
+protoFormatPicker := {
+	_proto: @protoLabelPicker,
+	text: "Format",
+	labelCommands: [|Array|: ],
+	parentBase: nil,
+	viewSetupFormScript: func() begin
+		parentBase := GetVariable(self:Parent(), 'base);
+		inherited:?viewSetupFormScript();
+		(if (if activeFormat then activeFormat.auxForm) then AddDeferredCall(func() begin
+				parentBase:auxSetup()
+			end, nil))
+	end,
+	TextSetup: func() begin
+		if GetVariable(self, 'formats) then begin
+				labelCommands := (foreach l1 in formats collect l1.title);
+				if activeFormat then begin
+						return activeFormat.title
+					end
+			end;
+		"Format Missing"
+	end,
+	LabelActionScript: func(a1) begin
+		local l1;
+		activeFormat := formats[a1];
+		fields.currentFormat := activeFormat.symbol;
+		if (fields.currentFormat = nil) then begin
+				Throw('|evt.ex.msg|, "Format is missing symbol")
+			end;
+		activeFormat:?SetupSlip(parentBase, fields);
+		if activeFormat.auxForm then begin
+				self:auxSetup()
+			end else nil;
+		(if (if fields.appSymbol then (l1 := GetRoot().(fields.appSymbol))) then l1:SetDefaultFormat(fields.category, target, fields.currentFormat))
+	end,
+	debug: 1451126
+};

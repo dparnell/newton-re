@@ -1,9 +1,0 @@
-@@ 0x562fb5
-func(a1) begin
-	if (not PoweringOff) then begin
-			return nil
-		end;
-	HideBatteryAlerts();
-	(if (if (not PowerOffFenceSitters) then PowerOffJooHooShuuShuu(a1)) then PowerOffYobiKaiGi(a1))
-end
-@@end

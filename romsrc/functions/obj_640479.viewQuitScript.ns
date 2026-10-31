@@ -1,6 +1,0 @@
-@@ 0x5b5af9
-func() begin
-	pin := nil;
-	(tempString := nil)
-end
-@@end

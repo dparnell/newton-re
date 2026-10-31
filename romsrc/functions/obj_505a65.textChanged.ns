@@ -1,6 +1,0 @@
-@@ 0x505a45
-func() begin
-	dirtyFlag := true;
-	(newTitle := MakeRichString(text, styles))
-end
-@@end

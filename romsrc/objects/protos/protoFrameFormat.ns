@@ -1,0 +1,3 @@
+// protoFrameFormat, and what only it reaches
+
+protoFrameFormat := {symbol: 'protoFrameFormat, _proto: @protoRoutingFormat};

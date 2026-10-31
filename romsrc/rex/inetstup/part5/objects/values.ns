@@ -1,0 +1,5 @@
+// the plain values the magic pointers and the C code name
+
+protocol := "Protocol";
+
+whenClosingDisconnect := "When closing, disconnect";

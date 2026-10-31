@@ -1,7 +1,0 @@
-@@ 0x72f83d
-func() begin
-	_recogSettings := appBase._notesRecogSettings;
-	inherited:?viewSetupFormScript();
-	(self.newtAppBase := appBase)
-end
-@@end

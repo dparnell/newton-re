@@ -1,5 +1,0 @@
-@@ 0x4d558d
-func() begin
-	(newTitle := MakeRichString(text, styles))
-end
-@@end

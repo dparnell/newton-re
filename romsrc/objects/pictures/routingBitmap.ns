@@ -1,0 +1,6 @@
+// routingBitmap, and what only it reaches
+
+routingBitmap := {
+	bits: bitmap('bits, "resources/bits/3c8ecd.png", "0000000000040233023301eb023e01f8", 1),
+	bounds: {left: 0, top: 0, right: 13, bottom: 11}
+};

@@ -1,0 +1,15 @@
+// protoParagraph, and what only it reaches
+
+protoParagraph := {
+	viewClass: 65617,
+	viewFlags: vVisible + vCalculateBounds + vNoScripts,
+	viewFormat: 0,
+	viewJustify: 0,
+	viewTransferMode: 1,
+	textFlags: 4,
+	text: nil,
+	viewFont: tsHWFont + tsSize(18),
+	styles: nil,
+	tabs: nil,
+	debug: 21708
+};

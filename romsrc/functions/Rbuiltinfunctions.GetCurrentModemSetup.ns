@@ -1,5 +1,0 @@
-@@ 0x56822d
-func() begin
-	GetModemSetUp(GetUserConfig('currentModem))
-end
-@@end

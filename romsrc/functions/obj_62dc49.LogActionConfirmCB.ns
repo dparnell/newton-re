@@ -1,5 +1,0 @@
-@@ 0x4b1c95
-func(a1) begin
-	(if a1 then self:LogActionHelper())
-end
-@@end

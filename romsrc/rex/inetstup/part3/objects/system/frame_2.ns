@@ -1,0 +1,89 @@
+// frame_2, and what only it reaches
+
+frame_2 := {
+	text: zone,
+	viewBounds: {left: 3, top: 10, right: -3, bottom: 36},
+	alwaysCallPickActionScript: true,
+	viewJustify: 8396848,
+	MakePopup: func() begin
+		if StrFilled(target.(path)) then begin
+				BInsert(labelCommands, self:ConvertToDefaultText(target.(path)), '|str<|, nil, true)
+			end;
+		if (l1 := GetUserConfig('currentPrinter).printerName) then begin
+				BInsert(labelCommands, self:ConvertToDefaultText(GetZoneFromName(l1)), '|str<|, nil, true)
+			end;
+		BInsert(labelCommands, self:ConvertToDefaultText(GetUserConfig('currentZone)), '|str<|, nil, true);
+		local l1;
+		local l2;
+		local l3;
+		(foreach l4 in UserConfiguration.emporia do begin
+				local l6;
+				if (l2 := (l3 := ResolveEntryAlias(l4)).connectionNetwork) then begin
+						BInsert(labelCommands, self:ConvertToDefaultText(GetZoneFromName(l2)), '|str<|, nil, true)
+					end;
+				if (if l3.printer then l3.printer.printerName) then begin
+						BInsert(labelCommands, self:ConvertToDefaultText(GetZoneFromName(l3.printer.printerName)), '|str<|, nil, true)
+					end
+			end);
+		l6 := Length(labelCommands);
+		ArrayInsert(labelCommands, 'pickSeparator, l6);
+		ArrayInsert(labelCommands, "Other AppleTalk Zone", (l6 + 1))
+	end,
+	viewSetupFormScript: func() begin
+		labelCommands := [Array: ];
+		self:MakePopup();
+		inherited:?viewSetupFormScript()
+	end,
+	labelActionScript: func(a1) begin
+		(if (a1 = (Length(labelCommands) - 1)) then self:DoChooser() else begin
+				target.(path) := Clone(self:ConvertDefaultToStar(labelCommands[a1]));
+				newtAppbase.targetView:?StartFlush()
+			end)
+	end,
+	textSetup: compile(
+		constants: {
+			kFunction_102108d: func(a1) begin
+				(if StrEqual(a1, "*") then "<Current AppleTalk Zone>" else a1)
+			end
+		},
+		func() begin
+			labelCommands[FindStringInArray(labelCommands, call (kFunction_102108d) with (target.(path)))]
+		end),
+	DoChooser: func() begin
+		self:updateText(self:ConvertToDefaultText(target.(path)));
+		chooserIsOpen := true;
+		GetRoot().NetChooser:OpenNetChooser((if HaveZones() then target.(path) else "*"), "=:IPGATEWAY@", nil, self, "Use IP Gateway", "MacIP Gateway", "Gateway")
+	end,
+	NetworkChooserDone: compile(
+		constants: {
+			kFunction_102108d: func(a1) begin
+				(if StrEqual(a1, "*") then "<Current AppleTalk Zone>" else a1)
+			end
+		},
+		func(a1, a2) begin
+			chooserIsOpen := nil;
+			target.(path) := a2;
+			if Visible(self) then begin
+					self:updateText(call (kFunction_102108d) with (target.(path)))
+				end;
+			newtAppbase.targetView:?StartFlush()
+		end),
+	ConvertToDefaultText: ConvertToDefaultText,
+	ConvertDefaultToStar: func(a1) begin
+		(if StrEqual(a1, "<Current AppleTalk Zone>") then "*" else a1)
+	end,
+	labelCommands: [|Array|: ],
+	_proto: @protoLabelPicker
+};
+
+ConvertToDefaultText := func(a1) begin
+	(if StrEqual(a1, "*") then "<Current AppleTalk Zone>" else a1)
+end;
+
+zone := "Zone";
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+ConvertToDefaultText_code := same("ConvertToDefaultText.instructions");
+
+ConvertToDefaultText_literal2 := same("ConvertToDefaultText.literals[2]");

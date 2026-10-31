@@ -1,0 +1,3 @@
+// protoKeyboardView, and what only it reaches
+
+protoKeyboardView := {viewClass: clKeyboardView, _proto: @protoView};

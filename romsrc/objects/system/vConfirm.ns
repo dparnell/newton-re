@@ -1,0 +1,27 @@
+// vConfirm, and what only it reaches
+
+vConfirm := {
+	height: 96,
+	name: 'vConfirm,
+	kids: [|Array|:
+		{_proto: @protoStatusText, viewBounds: {left: 42, top: 5, right: 175, bottom: 65}, viewJustify: 0},
+		{
+			_proto: @protoDefaultStatusButton,
+			viewBounds: {left: 0, top: -18, right: 132, bottom: -5},
+			viewJustify: 8388758,
+			shiftItem: func() begin
+				nil
+			end
+		},
+		{
+			debug: 20601,
+			_proto: @protoStatusButton,
+			viewBounds: {left: 0, top: -21, right: 132, bottom: -8},
+			viewJustify: 8405014,
+			name: 'secondary,
+			shiftItem: func() begin
+				nil
+			end
+		}
+	]
+};

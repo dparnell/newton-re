@@ -1,0 +1,171 @@
+// accessNumbers, and what only it reaches
+
+accessNumbers := {
+	symbol: 'accessNumbers,
+	name: accessNumber,
+	type: 'editor,
+	infoFrame: {
+		checkPrefix: [|Array|: nil, [pathExpr: 'mailAccess]],
+		checkPaths: [|Array|: 'mailPhone, 'baud, 'mailNetwork],
+		formatFunc: func(a1) begin
+			local l1, l2;
+			if (ClassOf((l2 := a1[1])) = 'int) then begin
+					l2 := NumberStr(l2)
+				end;
+			l1 := ParamStr("^?0Access Number: ^0||^?1 [^1]||", [Array: a1[0], l2]);
+			if (if a1[2] then GlobalVarExists('DialinNetworkRegistry)) then begin
+					l1 := Stringer([Array: l1, ParamStr("\n Network: ^0", [Array: DialinNetworkRegistry.(a1[2]).title])])
+				end;
+			l1
+		end
+	},
+	usePhoneKeys: true,
+	protection: 'private,
+	stepChildren: [stepChildren: network, accessNumbersItem, baudRate],
+	fieldOrder: nil,
+	viewSetupChildrenScript: func() begin
+		local l1;
+		inherited:?viewSetupChildrenScript();
+		allNetworks := GetAllDialinNetworks();
+		if (not (l1 := target.(networkChooser.path))) then begin
+				l1 := (target.(networkChooser.path) := allNetworks[0].id)
+			end;
+		self:UpdateNetwork(l1)
+	end,
+	allNetworks: nil,
+	UpdateNetwork: func(a1) begin
+		numbersArray := nil;
+		baudArray := nil;
+		l3 := appBase:GetCity(target);
+		l4 := target.countrySymbol;
+		if a1 then begin
+				if (l1 := DialinNetworkRegistry.(a1):?GetAccessNumbers(nil, l3)) then begin
+						local l1;
+						local l2;
+						local l3;
+						local l4;
+						numbersArray := (foreach l5 in l1 collect {item: l5.mailPhone, country: l4});
+						l2 := (foreach l5 in l1 collect l5.mailPhone);
+						baudArray := (foreach l5 in l1 collect l5.baud)
+					end
+			end;
+		if numberChooser.viewCObject then begin
+				numberChooser:JamFromEntry({phones: l2});
+				numberChooser:Retarget()
+			end;
+		(if (if (if baudChooser.viewCObject then l1) then (Length(l1) > 0)) then begin
+				target.(baudChooser.path) := l1[0].baud;
+				baudChooser:UpdateText(NumberStr(l1[0].baud));
+				self:StartFlush();
+				baudChooser:Retarget()
+			end)
+	end,
+	numbersArray: nil,
+	baudArray: nil,
+	_proto: @8240,
+	networkChooser: nil,
+	stepAllocateContext: [|Array|: 'networkChooser, network, 'numberChooser, accessNumbersItem, 'baudChooser, baudRate],
+	numberChooser: nil,
+	baudChooser: nil
+};
+
+accessNumber := "Access Number";
+
+network := {
+	labelCommands: nil,
+	text: "Network",
+	viewBounds: {left: 0, top: 15, right: 0, bottom: 37},
+	labelActionScript: func(a1) begin
+		local l1;
+		l1 := allNetworks[a1].id;
+		target.(path) := l1;
+		self:StartFlush();
+		self:UpdateNetwork(l1)
+	end,
+	textSetup: func() begin
+		l1 := (if labelCommands then labelCommands[0] else "");
+		local l1;
+		(foreach l2 in allNetworks do begin
+				if (l2.id = target.(path)) then begin
+						break (l1 := l2.title)
+					end
+			end);
+		l1
+	end,
+	viewSetupFormScript: func() begin
+		labelCommands := [Array: ];
+		labelCommands := GetDialinNetworkSlot('title);
+		inherited:?viewSetupFormScript()
+	end,
+	viewJustify: 8396848,
+	addPath: 'mailNetwork,
+	path: nil,
+	_proto: @protoLabelPicker,
+	preAllocatedContext: 'networkChooser
+};
+
+accessNumbersItem := {
+	label: accessNumber,
+	viewQuitScript: func() begin
+		inherited:?viewQuitScript();
+		(if (not StrFilled(target.(path))) then begin
+				target.(networkChooser.path) := nil;
+				target.(baudChooser.path) := nil;
+				(target.(path) := nil)
+			end)
+	end,
+	addPath: 'mailPhone,
+	path: nil,
+	pickActionScript: func(a1) begin
+		inherited:pickActionScript(a1);
+		(if (if baudArray then (Length(baudArray) > 0)) then begin
+				target.(baudChooser.path) := baudArray[a1];
+				self:StartFlush();
+				baudChooser:Retarget()
+			end)
+	end,
+	viewSetupFormScript: func() begin
+		labelCommands := numbersArray;
+		if (if (if (not target.(path)) then labelCommands) then (Length(labelCommands) > 0)) then begin
+				target.(path) := labelCommands[0].item
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	_proto: @newtLabelPhoneInputLine,
+	preAllocatedContext: 'numberChooser
+};
+
+baudRate := {
+	labelCommands: nil,
+	text: "Baud Rate",
+	viewBounds: {left: 0, top: 6, right: 0, bottom: 28},
+	labelActionScript: func(a1) begin
+		target.(path) := labelCommands[a1].baudRate;
+		self:StartFlush()
+	end,
+	textSetup: func() begin
+		l1 := (if labelCommands then labelCommands[0].item else "");
+		local l1;
+		(foreach l2 in labelCommands do begin
+				if (l2.baudRate = target.(path)) then begin
+						break (l1 := l2.item)
+					end
+			end);
+		if (if (not target.(path)) then labelCommands) then begin
+				target.(path) := labelCommands[0].baudRate
+			end;
+		l1
+	end,
+	viewJustify: 8396848,
+	viewSetupFormScript: func() begin
+		labelCommands := [Array: ];
+		(for l1 := 0 to (Length(BaudTypes.baudRates) - 1) do begin
+				AddArraySlot(labelCommands, {item: BaudTypes.baudText[l1], baudRate: BaudTypes.baudRates[l1]})
+			end);
+		inherited:?viewSetupFormScript()
+	end,
+	addPath: 'baud,
+	path: nil,
+	_proto: @protoLabelPicker,
+	preAllocatedContext: 'baudChooser
+};

@@ -1,0 +1,97 @@
+// newtInfoBox, and what only it reaches
+
+newtInfoBox := {
+	GetTitle: func() begin
+		(if HasPath(target, 'title) then target.title else MakeRichString(Stringer([Array: LongDateStr(target.timestamp, @datetimeStrSpecs.abbrDayOfWeekStrSpec), " ", ShortDateStr(target.timestamp, @datetimeStrSpecs.numericMDStrSpec)]), nil))
+	end,
+	addTextLine: func(a1, a2) begin
+		MakeText(a1, 42, (49 + (a2 * lineHeight)), self:LocalBox().right, ((49 + (a2 * lineHeight)) + 10))
+	end,
+	theApp: nil,
+	viewQuitScript: func() begin
+		context:?InfoChanged(changed);
+		context:?InfoClosed();
+		(if theApp then (GetRoot().(theApp).newtInfoBoxSlip := nil))
+	end,
+	viewDrawScript: func() begin
+		if (not pix) then begin
+				pix := self:buildPix()
+			end;
+		self:DrawShape(pix, '{font: 1058816})
+	end,
+	target: nil,
+	viewChildren: [viewChildren: _defaultButton_10],
+	context: nil,
+	ReOrientToScreen: @defRotateFunc,
+	allocateContext: [|Array|: '_defaultButton, _defaultButton_10],
+	buildPix: func() begin
+		local l1;
+		l1 := self:LocalBox();
+		(pix := [Array: self:addIcon(icon, 0), self:addIconLine(description, 0), self:addTextLine(ParamStr("Date: ^2 ^0 ^1", [Array: LongDateStr(target.timestamp, @datetimeStrSpecs.abbrDayOfWeekStrSpec), ShortDateStr(target.timestamp, @datetimeStrSpecs.numericDateStrSpec), HourMinute(target.timestamp)]), 1), self:addTextLine(ParamStr("Size: ^0 bytes", [Array: EntrySize(target)]), 2), self:addTextLine(ParamStr("Where: ^0", [Array: EntryStore(target):GetName()]), 3)])
+	end,
+	_proto: @protoFloater,
+	_defaultButton: nil,
+	lineHeight: 16,
+	viewJustify: vjParentFullH,
+	height: 116,
+	icon: nil,
+	New: func(a1, a2, a3, a4, a5) begin
+		local l1, l2;
+		(l1 := BuildContext(self)).target := a1;
+		l1.icon := a2;
+		l1.description := a3;
+		l1.context := a5;
+		l1.viewBounds := l1:CalcBounds(a4);
+		if (if a5 then (a5:appSymbol exists)) then begin
+				l2 := GetVariable(a5, 'appSymbol);
+				l1.theApp := l2;
+				l1._recogSettings := GetRoot().(l2)._recogSettings;
+				GetRoot().(l2).newtInfoBoxSlip := l1
+			end;
+		l1:Open();
+		l1
+	end,
+	CalcBounds: func(a1) begin
+		local l1, l2, l3;
+		if ((l3 := ((l2 := ((l1 := max((l1 := (a1.bottom + 9)), 9)) + height)) - ((displayParams.appAreaTop + displayParams.appAreaHeight) - 9))) > 0) then begin
+				l1 := (l1 - l3);
+				l2 := (l2 - l3)
+			end;
+		return SetBounds(9, l1, -9, l2)
+	end,
+	description: nil,
+	addIconLine: func(a1, a2) begin
+		MakeText(a1, (46 + icon.bounds.right), (49 + (a2 * lineHeight)), self:LocalBox().right, ((49 + (a2 * lineHeight)) + 10))
+	end,
+	addIcon: func(a1, a2) begin
+		OffsetShape(MakeShape(a1), 42, (47 + (a2 * lineHeight)))
+	end,
+	viewEffect: 393216,
+	changed: nil,
+	stepChildren: [stepChildren:
+		{
+			viewBounds: {left: 1, top: 0, right: -4, bottom: 40},
+			viewJustify: vjParentFullH,
+			label: title_2,
+			viewLineSpacing: 32,
+			indent: 42,
+			entryFont: tsHWFont + tsSize(12),
+			entryFlags: 26798593,
+			TextSetup: func() begin
+				entryLine.dictionaries := '[Array: 48, 7, 31, 0];
+				self:GetTitle()
+			end,
+			textChanged: func() begin
+				changed := true;
+				(target.title := entryLine:GetRichString())
+			end,
+			viewSetupDoneScript: func() begin
+				AddDeferredSend(entryLine, 'SetHilite, [Array: 0, 9999, true])
+			end,
+			_proto: @protoRichLabelInputLine
+		}
+	],
+	pix: nil
+};
+
+_defaultButton_10 := {preallocatedContext: '_defaultButton, _proto: @protoClosebox};

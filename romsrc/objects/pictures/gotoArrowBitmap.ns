@@ -1,0 +1,6 @@
+// gotoArrowBitmap, and what only it reaches
+
+gotoArrowBitmap := {
+	bits: bitmap('bits, "resources/bits/3c8e5d.png", "00000000000400ad00ad01b300b601bc", 1),
+	bounds: {left: 0, top: 0, right: 9, bottom: 9}
+};

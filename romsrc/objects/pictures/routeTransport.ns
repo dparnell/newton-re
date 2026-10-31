@@ -1,0 +1,6 @@
+// routeTransport, and what only it reaches
+
+routeTransport := {
+	bits: bitmap('bits, "resources/bits/46390d.png", "00000000000400550055007c00610091", 1),
+	bounds: {left: 0, top: 0, right: 21, bottom: 12}
+};

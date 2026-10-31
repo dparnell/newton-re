@@ -1,0 +1,6 @@
+// keyradicalBitmap, and what only it reaches
+
+keyradicalBitmap := {
+	bits: bitmap('bits, "resources/bits/3d91d5.png", "0000000000040175017501c9017e01d5", 1),
+	bounds: {left: 0, top: 0, right: 12, bottom: 9}
+};

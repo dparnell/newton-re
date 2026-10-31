@@ -1,0 +1,57 @@
+// rebootSlip, and what only it reaches
+
+rebootSlip := {
+	viewFlags: vApplication + vFloating + vClickable,
+	viewBounds: {left: 0, top: 40, right: 210, bottom: 150},
+	declareSelf: 'base,
+	_nextKeyView: 'none,
+	textFlags: 33792,
+	title: nil,
+	message: nil,
+	New: func(a1, a2) begin
+		local l1;
+		(l1 := BuildContext(self)).title := a1;
+		l1.message := a2;
+		l1:Open();
+		SetKeyView(l1, 0)
+	end,
+	ReOrientToScreen: @defRotateFunc,
+	viewChildren: [viewChildren:
+		{
+			viewJustify: vjCenterH + vjCenterV + vjParentCenterH,
+			viewBounds: {left: 0, top: 5, right: 100, bottom: 18},
+			viewFont: @fontSystem10Bold,
+			viewSetupFormScript: func() begin
+				(self.text := title)
+			end,
+			_proto: @protoStaticText
+		},
+		{
+			viewJustify: vjParentCenterH + vjSiblingBottomV,
+			viewBounds: {left: 0, top: 10, right: 195, bottom: 60},
+			viewFont: @fontSystem10Bold,
+			viewSetupFormScript: func() begin
+				(self.text := message)
+			end,
+			_proto: @protoStaticText
+		},
+		_defaultButton_7
+	],
+	_defaultButton: nil,
+	allocateContext: [|Array|: '_defaultButton, _defaultButton_7],
+	_proto: @protoFloater
+};
+
+_defaultButton_7 := {
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV,
+	viewBounds: {left: -52, top: -18, right: -5, bottom: -5},
+	text: restart,
+	buttonClickScript: func() begin
+		ReBoot()
+	end,
+	viewSetupFormScript: func() begin
+		(self.viewBounds := SetBounds((-5 - StdButtonWidth(text)), -18, -5, -5))
+	end,
+	preallocatedContext: '_defaultButton,
+	_proto: @protoTextButton
+};

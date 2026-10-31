@@ -1,5 +1,0 @@
-@@ 0x54fdc9
-func() begin
-	LicenseeInfoItem:?action()
-end
-@@end

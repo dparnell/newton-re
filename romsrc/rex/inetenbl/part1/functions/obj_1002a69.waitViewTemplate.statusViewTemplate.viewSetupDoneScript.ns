@@ -1,7 +1,0 @@
-@@ 0x1013da5
-func() begin
-	inherited:?viewSetupDoneScript();
-	self:SetupIdle(100);
-	(self.delayUntilAbortTimer := 0)
-end
-@@end

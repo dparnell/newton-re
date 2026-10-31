@@ -1,0 +1,10 @@
+// newtroSymbolView, and what only it reaches
+
+newtroSymbolView := {
+	_proto: @newtroTextView,
+	textFrame: nil,
+	textFramePath: nil,
+	TargetData: func() begin
+		(if (if (if target then path) then target.(path)) then (if textFrame then (if textFramePath then textFrame.(target.(path)).(textFramePath) else textFrame.(target.(path))) else Stringer([Array: target.(path)])) else "")
+	end
+};

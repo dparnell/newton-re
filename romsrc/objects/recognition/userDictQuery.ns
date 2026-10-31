@@ -1,0 +1,5 @@
+// userDictQuery, and what only it reaches
+
+userDictQuery := {type: 'index, indexPath: 'tag, startKey: userDictionary};
+
+userDictionary := "UserDictionary";

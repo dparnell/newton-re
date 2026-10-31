@@ -1,0 +1,13 @@
+// touchtonePad, and what only it reaches
+
+touchtonePad := {
+	_proto: touchtonePadProto,
+	_noRepeat: true,
+	viewBounds: {left: 0, top: 0, right: 75, bottom: 100},
+	keyDefinitions: [|Array|:
+		touchtonePadProtoItem,
+		touchtonePadProtoItem_2,
+		touchtonePadProtoItem_3,
+		touchtonePadProtoItem_4
+	]
+};

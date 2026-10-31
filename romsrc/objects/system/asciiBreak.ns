@@ -1,0 +1,3 @@
+// asciiBreak, and what only it reaches
+
+asciiBreak := hexfile('table, "resources/table/63ae4d.txt");

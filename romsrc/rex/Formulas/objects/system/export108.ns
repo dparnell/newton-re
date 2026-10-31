@@ -1,0 +1,65 @@
+// export108, and what only it reaches
+
+export108 := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 36},
+	viewFlags: vVisible,
+	viewFormat: vfFrameBlack,
+	stepChildren: [stepChildren: uS, export108Item],
+	indent: 115,
+	rightmargin: 0,
+	GetNumericValue: func() begin
+		return value:GetNumericValue()
+	end,
+	SetNumericValue: func(a1) begin
+		value:SetNumericValue(a1)
+	end,
+	viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV,
+	pickerItemNumber: 0,
+	GetPickerItemNumber: func() begin
+		return pickerItemNumber
+	end,
+	ResetPicker: func() begin
+		SetValue(label, 'labelCommands, labelItems);
+		SetValue(label, 'text, Stringer([Array: $\uFC01, labelItems[defaultItem]]));
+		pickerItemNumber := defaultItem;
+		label:UpdateText(labelItems[defaultItem])
+	end,
+	SetIntegerField: func(a1) begin
+		SetValue(value, 'integerField, a1)
+	end,
+	decimalPlaces: 2,
+	viewClass: clView,
+	label: nil,
+	stepAllocateContext: [|Array|: 'label, uS, 'value, export108Item],
+	value: nil
+};
+
+uS := {
+	labelCommands: [|Array|: "item 1", "item 2"],
+	viewBounds: {left: 5, top: 15, right: 110, bottom: 28},
+	viewSetupFormScript: func() begin
+		pickerItemNumber := defaultItem;
+		labelCommands := labelItems;
+		self.text := labelCommands[defaultItem];
+		inherited:?viewSetupFormScript()
+	end,
+	indent: 108,
+	viewFont: @fontSystem10Bold,
+	text: "U.S.",
+	labelActionScript: func(a1) begin
+		pickerItemNumber := a1;
+		SetValue(self, 'text, Stringer([Array: $\uFC01, labelCommands[a1]]));
+		self:ClearAllFields()
+	end,
+	textSetup: func() begin
+		return labelCommands[defaultItem]
+	end,
+	_proto: @protoLabelPicker,
+	preAllocatedContext: 'label
+};
+
+export108Item := {integerField: nil, _proto: @8295, preAllocatedContext: 'value};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+textSetup_code := same("uS.textSetup.instructions");

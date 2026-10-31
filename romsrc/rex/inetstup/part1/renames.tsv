@@ -1,0 +1,26 @@
+# each definition's name before the tree was put in its natural form (tools/newton-rom/analysis/naturalize.py), and after
+obj_1017005	part
+obj_101720d	partItem_2Proto
+obj_1017421	partItem_2ProtoItem
+obj_1017751	partItem_2ProtoItem_2
+obj_10178dd	partItem_2ProtoItem_2Proto
+obj_1017e39	name
+obj_1017ef9	viewChangedScript_literal14
+obj_1018151	CalculateBounds_literal2
+obj_1018939	words_value
+obj_1019229	OverviewIconBits
+obj_10193b5	StringExtract_literal2
+obj_10193d5	StringExtract_literal5
+obj_101a311	partItem
+obj_101a945	partItem_2
+obj_101ae01	partItem_3
+obj_101ae15	partItem_3Proto
+obj_101aef9	buttonClickScript_code
+obj_101b141	formatFunc_code
+obj_101b241	EditPassword
+obj_101b7f5	objectsProto
+obj_101bc8d	partItem_4
+obj_101be35	partItem_5
+obj_101c12d	domainName
+obj_101c269	GetString
+obj_101ca99	devInstallScript_code

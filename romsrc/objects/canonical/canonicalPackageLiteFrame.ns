@@ -1,0 +1,3 @@
+// canonicalPackageLiteFrame, and what only it reaches
+
+canonicalPackageLiteFrame := {id: nil, size: nil, store: nil, pssid: nil};

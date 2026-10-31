@@ -1,0 +1,172 @@
+// rubricPopup, and what only it reaches
+
+rubricPopup := {
+	viewBounds: {left: 0, top: 0, right: 210, bottom: 128},
+	message: nil,
+	returnKey: nil,
+	Affirmative: func() begin
+		context:?pickActionScript(returnKey)
+	end,
+	New: func(a1, a2, a3, a4) begin
+		local l1;
+		(l1 := self:Init()).context := a4;
+		l1.message := a1;
+		l1.returnKey := a2;
+		l1:popup(a3)
+	end,
+	viewDrawScript: func() begin
+		local l1;
+		(l1 := self:LocalBox()).left := (l1.left + 5);
+		l1.right := (l1.right - 30);
+		self:DrawShape([Array: MakeTextLines(message, l1, nil, 1058816), '{font: 18435}, MakeText(Stringer([Array: returnKey, $ ]), l1.right, 5, (l1.right + 20), 22)], '{font: 1058816})
+	end,
+	stepChildren: [stepChildren:
+		{
+			viewBounds: {left: 5, top: 35, right: -5, bottom: -5},
+			viewJustify: vjParentFullH + vjParentFullV,
+			viewFormat: 0,
+			click: @typewriter,
+			keyResultsAreKeycodes: nil,
+			keyDefinitions: [|Array|:
+				[|Array|:
+					8,
+					8,
+					nil,
+					$1,
+					279971848,
+					nil,
+					$2,
+					279971848,
+					nil,
+					$3,
+					279971848,
+					nil,
+					$4,
+					279971848,
+					nil,
+					$5,
+					279971848,
+					nil,
+					$6,
+					279971848,
+					nil,
+					$7,
+					279971848,
+					nil,
+					$8,
+					279971848,
+					nil,
+					$9,
+					279971848,
+					nil,
+					$0,
+					279971848
+				],
+				[|Array|:
+					8,
+					8,
+					nil,
+					$Q,
+					279971848,
+					nil,
+					$W,
+					279971848,
+					nil,
+					$E,
+					279971848,
+					nil,
+					$R,
+					279971848,
+					nil,
+					$T,
+					279971848,
+					nil,
+					$Y,
+					279971848,
+					nil,
+					$U,
+					279971848,
+					nil,
+					$I,
+					279971848,
+					nil,
+					$O,
+					279971848,
+					nil,
+					$P,
+					279971848
+				],
+				[|Array|:
+					8,
+					8,
+					nil,
+					nil,
+					-536869880,
+					nil,
+					$A,
+					279971848,
+					nil,
+					$S,
+					279971848,
+					nil,
+					$D,
+					279971848,
+					nil,
+					$F,
+					279971848,
+					nil,
+					$G,
+					279971848,
+					nil,
+					$H,
+					279971848,
+					nil,
+					$J,
+					279971848,
+					nil,
+					$K,
+					279971848,
+					nil,
+					$L,
+					279971848
+				],
+				[|Array|:
+					8,
+					8,
+					nil,
+					nil,
+					-536867832,
+					nil,
+					$Z,
+					279971848,
+					nil,
+					$X,
+					279971848,
+					nil,
+					$C,
+					279971848,
+					nil,
+					$V,
+					279971848,
+					nil,
+					$B,
+					279971848,
+					nil,
+					$N,
+					279971848,
+					nil,
+					$M,
+					279971848
+				]
+			],
+			keyPressScript: func(a1) begin
+				returnKey := a1;
+				base:Dirty();
+				playsound(click);
+				true
+			end,
+			_proto: @protoKeypad
+		}
+	],
+	_proto: @protoGeneralPopup
+};

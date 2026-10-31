@@ -1,5 +1,0 @@
-@@ 0x750141
-func() begin
-	self:UpdateFolderList(nil)
-end
-@@end

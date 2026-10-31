@@ -1,5 +1,0 @@
-@@ 0x1013ffd
-func() begin
-	(if cardSlot then self:DrawCardSlotIcon(cardSlot, RelBounds(0, 0, 36, 36), 0))
-end
-@@end

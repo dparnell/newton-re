@@ -1,0 +1,31 @@
+// timeDeltaPopup, and what only it reaches
+
+timeDeltaPopup := {
+	viewBounds: {left: 0, top: 0, right: 137, bottom: 32},
+	params: nil,
+	New: func(a1, a2, a3, a4) begin
+		local l1;
+		(l1 := self:Init()).value := a1;
+		l1.params := a2;
+		l1.context := a4;
+		l1:popup(a3)
+	end,
+	Affirmative: func() begin
+		context:?pickActionScript(value)
+	end,
+	stepChildren: [stepChildren:
+		{
+			viewBounds: {left: 2, top: 2, right: 121, bottom: 30},
+			viewJustify: 0,
+			viewSetupFormScript: func() begin
+				minuteIncrement := params.increment;
+				if params.minValue then begin
+						minValue := params.minValue
+					end;
+				(if params.maxValue then (maxValue := params.maxValue))
+			end,
+			_proto: @protoTimeDeltaPicker
+		}
+	],
+	_proto: @protoGeneralPopup
+};

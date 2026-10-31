@@ -1,0 +1,3 @@
+// canonicalGesturePoint, and what only it reaches
+
+canonicalGesturePoint := {x: nil, y: nil, line: nil};

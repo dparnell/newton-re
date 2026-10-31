@@ -1,5 +1,0 @@
-@@ 0x4aa311
-func() begin
-	self:ShowLayout((if (currentLayout = 'overview) then nil else 'overview))
-end
-@@end

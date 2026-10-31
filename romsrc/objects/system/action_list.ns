@@ -1,0 +1,12 @@
+// action_list, and what only it reaches
+
+action_list := [|Array|:
+	finding_taskPrimary_act,
+	faxing_taskPrimary_act,
+	printing_taskPrimary_act,
+	remembering_taskPrimary_act,
+	mailing_taskPrimary_act,
+	birthdayIsaIsa,
+	calling_taskPrimary_act,
+	about_taskPrimary_act
+];

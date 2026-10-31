@@ -1,0 +1,24 @@
+// protoDurationTextPicker, and what only it reaches
+
+protoDurationTextPicker := {
+	viewBounds: nil,
+	label: uCardPositionAlertButton,
+	startTime: nil,
+	stopTime: nil,
+	format: 'shortTimeStrSpec,
+	increment: 1,
+	Popit: func(a1) begin
+		local l1;
+		(l1 := self:GlobalBox()).right := (l1.left + a1);
+		@timeIntervalPopup:New([Array: startTime, stopTime], increment, l1, self)
+	end,
+	TextSetup: func() begin
+		ParamStr("^0 - ^1", [Array: TimeStr(startTime, @datetimeStrSpecs.(format)), TimeStr(stopTime, @datetimeStrSpecs.(format))])
+	end,
+	pickActionScript: func(a1, a2) begin
+		startTime := a1;
+		stopTime := a2;
+		inherited:pickActionScript(nil)
+	end,
+	_proto: @protoTextPicker
+};

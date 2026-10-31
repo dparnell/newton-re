@@ -1,0 +1,43 @@
+// newtTextFilter, and what only it reaches
+
+newtTextFilter := {
+	_proto: @newtFilter,
+	recFlags: 14849,
+	recTextFlags: 8,
+	recConfig: @rcInkorText,
+	InitFilter: func() begin
+		(if (if (BAnd(recFlags, 23072768) <> 0) then GetUserConfig('lettersInFieldsOption)) then (recFlags := BOr(recFlags, 16384)))
+	end,
+	PathToText: func() begin
+		Clone(target.(path))
+	end,
+	TextToPath: func(a1) begin
+		Clone(a1)
+	end,
+	PreQuery: func(a1) begin
+		SplitString(a1)
+	end,
+	PathQuery: func(a1) begin
+		dataSoup:Query({type: 'words, words: a1})
+	end,
+	QueryItem: func(a1, a2) begin
+		(if (if a1.(path) then FindStringInFrame(a1.(path), a2, nil)) then {item: a1.(path), id: MakeEntryAlias(a1)})
+	end,
+	ResolveItem: func(a1) begin
+		dataCursor:Goto(ResolveEntryAlias(a1.id));
+		self:DoRetarget()
+	end,
+	EntryToPath: func(a1) begin
+		(target.(path) := a1.(path))
+	end,
+	pickActionScript: func(a1) begin
+		if target then begin
+				target.(path) := a1;
+				baseLine:Retarget()
+			end;
+		baseLine:hilite(nil)
+	end,
+	pickCancelledScript: func() begin
+		baseLine:hilite(nil)
+	end
+};

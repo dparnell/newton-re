@@ -1,0 +1,3 @@
+// newtLabelTimeInputLine, and what only it reaches
+
+newtLabelTimeInputLine := {_proto: @newtProtoLine, flavor: @newtTimeFilter};

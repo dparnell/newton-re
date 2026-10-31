@@ -1,0 +1,141 @@
+// protoRepeatDateDurationTextPicker, and what only it reaches
+
+protoRepeatDateDurationTextPicker := {
+	viewJustify: 0,
+	longFormat: nil,
+	shortFormat: 'numericDateStrSpec,
+	repeatType: nil,
+	mtgInfo: nil,
+	durationPop: nil,
+	fakeTemplate: {mtgStartDate: nil, mtgStopDate: 536870911, repeatType: nil, mtgInfo: nil},
+	viewSetupFormScript: func() begin
+		(if (not HasSlot(self, 'fakeTemplate)) then (fakeTemplate := Clone(fakeTemplate)))
+	end,
+	Popit: func(a1) begin
+		if ((repeatType = 6) or (if (repeatType = 0) then (mtgInfo = BOr(4064, 31)))) then begin
+				durationPop := '[Array: {item: "2 days", skipDay: 2}, {item: "5 days", skipDay: 5}, {item: "1 week", skipDay: 7}, {item: "2 weeks", skipDay: 14}, {item: "1 month", skipMonth: 1}, {item: "6 months", skipMonth: 6}, {item: "Ongoing", Ongoing: true}]
+			end else begin
+				if (repeatType = 0) then begin
+						durationPop := '[Array: {item: "2 weeks", skipDay: 8}, {item: "3 weeks", skipDay: 15}, {item: "4 weeks", skipDay: 22}, {item: "5 weeks", skipDay: 29}, {item: "6 months", skipDay: 176}, {item: "1 year", skipDay: 365}, {item: "Ongoing", Ongoing: true}]
+					end else begin
+						if (repeatType = 4) then begin
+								durationPop := '[Array: {item: "2 times", skipDay: 15}, {item: "3 times", skipDay: 29}, {item: "4 times", skipDay: 43}, {item: "5 times", skipDay: 57}, {item: "6 months", skipDay: 169}, {item: "1 year", skipDay: 365}, {item: "Ongoing", Ongoing: true}]
+							end else begin
+								if (repeatType = 2) then begin
+										durationPop := '[Array: {item: "2 months", skipMonth: 1, plusDay: true}, {item: "3 months", skipMonth: 2, plusDay: true}, {item: "4 months", skipMonth: 3, plusDay: true}, {item: "6 months", skipMonth: 5, plusDay: true}, {item: "1 year", skipMonth: 11, plusDay: true}, {item: "2 years", skipMonth: 23, plusDay: true}, {item: "Ongoing", Ongoing: true}]
+									end else begin
+										if (repeatType = 1) then begin
+												durationPop := '[Array: {item: "2 months", skipMonth: 1, skipToMonthEnd: true}, {item: "3 months", skipMonth: 2, skipToMonthEnd: true}, {item: "4 months", skipMonth: 3, skipToMonthEnd: true}, {item: "6 months", skipMonth: 5, skipToMonthEnd: true}, {item: "1 year", skipMonth: 11, skipToMonthEnd: true}, {item: "2 years", skipMonth: 23, skipToMonthEnd: true}, {item: "Ongoing", Ongoing: true}]
+											end else begin
+												if (repeatType = 3) then begin
+														durationPop := '[Array: {item: "2 years", skipYear: 1, plusDay: true}, {item: "3 years", skipYear: 2, plusDay: true}, {item: "4 years", skipYear: 3, plusDay: true}, {item: "5 years", skipYear: 4, plusDay: true}, {item: "10 years", skipYear: 9, plusDay: true}, {item: "30 years", skipYear: 29, plusDay: true}, {item: "Ongoing", Ongoing: true}]
+													end else begin
+														if (repeatType = 7) then begin
+																durationPop := '[Array: {item: "2 years", skipYear: 1, skipToMonthEnd: true}, {item: "3 years", skipYear: 2, skipToMonthEnd: true}, {item: "4 years", skipYear: 3, skipToMonthEnd: true}, {item: "5 years", skipYear: 4, skipToMonthEnd: true}, {item: "10 years", skipYear: 9, skipToMonthEnd: true}, {item: "30 years", skipYear: 29, skipToMonthEnd: true}, {item: "Ongoing", Ongoing: true}]
+															end else begin
+																durationPop := nil
+															end
+													end
+											end
+									end
+							end
+					end
+			end;
+		inherited:Popit(a1)
+	end,
+	GetDuration: func(a1) begin
+		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12;
+		l1 := ((a1 := (a1 + 1440)) div 1440);
+		l2 := context.repeatType;
+		l3 := context.mtgInfo;
+		l4 := context.fakeTemplate;
+		(if (a1 <= 0) then [Array: "", ""] else (if ((l2 = 6) or (if (l2 = 0) then (l3 = BOr(4064, 31)))) then begin
+					l5 := (l1 div 7);
+					l1 := (l1 mod 7);
+					[Array: (if (l5 > 1) then ParamStr("^0 weeks", [Array: l5]) else (if (l5 = 1) then "1 week" else "")), (if (l1 > 1) then ParamStr("^0 days", [Array: l1]) else (if (l1 = 1) then "1 day" else ""))]
+				end else (if (l2 = 0) then [Array: (if ((l5 := ((l1 + 6) div 7)) > 1) then ParamStr("^0 weeks", [Array: l5]) else (if (l5 = 1) then "1 week" else "")), ""] else (if (l2 = 4) then [Array: (if ((l6 := ((l1 + 13) div 14)) > 1) then ParamStr("^0 times", [Array: l6]) else (if (l6 = 1) then "1 time" else "")), ""] else begin
+							l7 := Date(startTime);
+							l8 := Date(stopTime);
+							(if ((l2 = 2) or (l2 = 1)) then begin
+									if (l8.year = l7.year) then begin
+											l9 := ((l8.month - l7.month) + 1)
+										end else begin
+											l9 := (((13 - l7.month) + l8.month) + (((l8.year - l7.year) - 1) * 12))
+										end;
+									if (l2 = 2) then begin
+											if (l8.Date < l7.Date) then begin
+													l9 := (l9 - 1)
+												end
+										end else begin
+											l8.Date := 1;
+											l10 := TotalMinutes(l8);
+											l4.mtgStartDate := (startTime - (startTime mod 1440));
+											l4.repeatType := 1;
+											l4.mtgInfo := l3;
+											l11 := NextMeeting(l10, l4);
+											if (stopTime < l11) then begin
+													l9 := (l9 - 1)
+												end
+										end;
+									l12 := (l9 div 12);
+									l9 := (l9 mod 12);
+									[Array: (if (l12 > 1) then ParamStr("^0 years", [Array: l12]) else (if (l12 = 1) then "1 year" else "")), (if (l9 > 1) then ParamStr("^0 months", [Array: l9]) else (if (l9 = 1) then "1 month" else ""))]
+								end else (if ((l2 = 3) or (l2 = 7)) then begin
+										l12 := ((l8.year - l7.year) + 1);
+										if (l8.month < l7.month) then begin
+												l12 := (l12 - 1)
+											end else begin
+												if (l8.month = l7.month) then begin
+														if (l2 = 3) then begin
+																if (l8.Date < l7.Date) then begin
+																		l12 := (l12 - 1)
+																	end
+															end else begin
+																l8.Date := 1;
+																l10 := TotalMinutes(l8);
+																l4.mtgStartDate := (startTime - (startTime mod 1440));
+																l4.repeatType := 7;
+																l4.mtgInfo := l3;
+																l11 := NextMeeting(l10, l4);
+																if (stopTime < l11) then begin
+																		l12 := (l12 - 1)
+																	end
+															end
+													end
+											end;
+										[Array: (if (l12 > 1) then ParamStr("^0 years", [Array: l12]) else (if (l12 = 1) then "1 year" else "")), ""]
+									end else inherited:GetDuration((a1 - 1440))))
+						end))))
+	end,
+	_proto: @protoDateDurationTextPicker
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+item_value := same("protoRepeatDateDurationTextPicker.Popit.literals[2][3].item");
+
+item_value_2 := same("protoRepeatDateDurationTextPicker.Popit.literals[2][4].item");
+
+item_value_3 := same("protoRepeatDateDurationTextPicker.Popit.literals[2][5].item");
+
+item_value_4 := same("protoRepeatDateDurationTextPicker.Popit.literals[4][5].item");
+
+item_value_5 := same("protoRepeatDateDurationTextPicker.Popit.literals[6][0].item");
+
+item_value_6 := same("protoRepeatDateDurationTextPicker.Popit.literals[6][1].item");
+
+item_value_7 := same("protoRepeatDateDurationTextPicker.Popit.literals[6][2].item");
+
+item_value_8 := same("protoRepeatDateDurationTextPicker.Popit.literals[6][5].item");
+
+item_value_9 := same("protoRepeatDateDurationTextPicker.Popit.literals[8][3].item");
+
+item_value_10 := same("protoRepeatDateDurationTextPicker.Popit.literals[8][4].item");
+
+item_value_11 := same("protoRepeatDateDurationTextPicker.Popit.literals[8][1].item");
+
+item_value_12 := same("protoRepeatDateDurationTextPicker.Popit.literals[8][2].item");
+
+item_value_13 := same("protoRepeatDateDurationTextPicker.Popit.literals[8][5].item");
+
+GetDuration_literal31 := same("protoRepeatDateDurationTextPicker.GetDuration.literals[31]");

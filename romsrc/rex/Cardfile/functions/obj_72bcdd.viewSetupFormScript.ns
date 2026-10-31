@@ -1,6 +1,0 @@
-@@ 0x72c549
-func() begin
-	self.path := selectedPath;
-	inherited:viewSetupFormScript()
-end
-@@end

@@ -1,0 +1,13 @@
+// protoLettersPreferencesField, and what only it reaches
+
+protoLettersPreferencesField := {
+	viewLineSpacing: 24,
+	indent: 65,
+	TextSetup: func() begin
+		GetUserConfig(configPath)
+	end,
+	textChanged: func() begin
+		SetUserConfig(configPath, text)
+	end,
+	_proto: @protoLabelInputLine
+};

@@ -1,0 +1,23 @@
+// protoBookmark, and what only it reaches
+
+protoBookmark := {
+	_proto: @protoPictureButton,
+	viewFormat: vfFillWhite + vfFrameBlack + vfPen(1),
+	viewJustify: vjCenterH,
+	viewLineSpacing: 0,
+	buttonClickScript: func() begin
+		base:Close();
+		self:TurnToPage(pageNumber)
+	end,
+	viewChildren: [|Array|:
+		{
+			viewClass: clParagraphView,
+			viewFlags: vVisible + vReadOnly,
+			viewFormat: 0,
+			viewTransferMode: 1,
+			viewBounds: {left: 0, top: -11, right: 0, bottom: 0},
+			viewJustify: 8388786
+		}
+	],
+	debug: 362739
+};

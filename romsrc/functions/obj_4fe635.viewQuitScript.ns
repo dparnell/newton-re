@@ -1,5 +1,0 @@
-@@ 0x4fe50d
-func() begin
-	(if unsavedContext then self:viewIdleScript())
-end
-@@end

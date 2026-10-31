@@ -1,0 +1,2457 @@
+// mailSlip, and what only it reaches
+
+mailSlip := {
+	key: 'mailSlip,
+	ConvertedPassword: func(a1, a2, a3) begin
+		local l1, l2;
+		(if a1 then begin
+				if IsRichString((l1 := GetUserConfig('mailPassword))) then begin
+						SetUserConfig('mailPassword, a2);
+						if (l2 := ResolveEntryAlias(userConfiguration.currentPersona)) then begin
+								GetRoot().cardfile:ReplaceInkData(l2, 'email, l1, 'emailPassword, a2)
+							end
+					end;
+				self:ConvertInkText(GetUserConfig('mailPhoneFull), 'phone, 262144, "Converting network phone number", "Please verify that the ink text was converted correctly.", 'InkConvert, 'ConvertedMailPhone, nil)
+			end else (eworld := nil))
+	end,
+	ReallyDoReply: func(a1, a2) begin
+		local l1, l2, l3;
+		if (if (l1 := GetHilitedTextItems()) then (Length(l1) > 0)) then begin
+				l1 := l1[0]
+			end;
+		a1.reply := true;
+		a1.box := nil;
+		a1._proto := nil;
+		a1.state := 'pending;
+		RemoveSlot(a1, '_uniqueID);
+		RemoveSlot(a1, '_modTime);
+		RemoveSlot(a1, 'xlabels);
+		RemoveSlot(a1, 'labels);
+		RemoveSlot(a1, 'timestamp);
+		if (if (if a1.title then IsString(a1.title)) then StrFilled(a1.title)) then begin
+				if (if (not BeginsWith((l2 := StringFilter(Substr(a1.title, 0, 6), " 0123456789()", 'rejectAll)), "Re>")) then (not BeginsWith(l2, "Re:"))) then begin
+						a1.title := Stringer([Array: "Re: ", a1.title])
+					end
+			end;
+		RemoveSlot(a1, 'text);
+		RemoveSlot(a1, 'edited);
+		RemoveSlot(a1, 'account);
+		if (if IsString(l1) then StrFilled(l1)) then begin
+				l1 := StringFilter(l1, " \n", 'rejectBeginning);
+				(while (EndsWith(l1, "\n") or EndsWith(l1, " ")) do (l1 := Substr(l1, 0, (StrLen(l1) - 1))));
+				a1.body := GetRoot().paperroll:MakeTextNoteFont(Stringer([Array: "\n------\n", l1, "\n------\n"]), nil, [Array: 8, GetUserConfig('userFont), StrLen(l1), 2109441, 8, GetUserConfig('userFont)])
+			end else begin
+				a1.body := GetDataDefs('paperroll):MakeNewEntry()
+			end;
+		a1.currentFormat := 'prFrameFormat;
+		a1.appSymbol := 'paperroll;
+		a1.attachment := true;
+		l3 := GetRoot().(GetVariable(a2, 'appSymbol));
+		l3:ItemCompleted(a1, 'save)
+	end,
+	ReceiveRequest: func(a1) begin
+		if (a1.cause = 'user) then begin
+				if (if eworld then eworld.connected) then begin
+						if (status = 'connected) then begin
+								self:?SetStatusDialog('Checking, 'vStatus, nil);
+								GetRoot().iobox:RemoveTempItems(appSymbol);
+								Perform(eworld, GetUserConfig('mailListMethod), [Array: ])
+							end else begin
+								if (lastRequest = 'ReceiveRequest) then begin
+										return nil
+									end else begin
+										self:QueueRequest('ReceiveRequest, a1);
+										return nil
+									end
+							end
+					end else begin
+						if (if (not (if connectSlip then connectSlip.viewCObject)) then (status = 'idle)) then begin
+								(connectSlip := BuildContext(connectOptionsSlip)).request := a1;
+								connectSlip.theApp := GetRoot().(owner);
+								connectSlip.theTransport := self;
+								connectSlip.connectionType := 'receive;
+								connectSlip.clearOnClose := 'connectSlip;
+								if connectSlip.theApp.viewCObject then begin
+										connectSlip.theApp:RememberedOpen(connectSlip)
+									end else begin
+										connectSlip:Open()
+									end
+							end else begin
+								return nil
+							end
+					end
+			end else begin
+				if (if (if (a1.cause = 'Remote) then eworld) then eworld.connected) then begin
+						if (status = 'connected) then begin
+								eworld.request := a1;
+								eworld:GetNextMessage()
+							end else begin
+								if (lastRequest = 'ReceiveRequest) then begin
+										self:QueueRequest(eworld.request, a1)
+									end else begin
+										self:QueueRequest('ReceiveRequest, a1);
+										return nil
+									end
+							end
+					end
+			end;
+		(lastRequest := 'ReceiveRequest)
+	end,
+	connectOptionsSlip: {
+		clearOnClose: nil,
+		mailPhonePicker: nil,
+		willDial: nil,
+		theApp: nil,
+		networkSymbols: networkSymbols,
+		theTransport: nil,
+		viewChildren: [viewChildren:
+			{
+				viewBounds: {left: 2, top: 2, right: 200, bottom: 15},
+				viewSetupFormScript: func() begin
+					(if (connectionType = 'send) then (text := "Send mail for") else (text := "Receive mail for"))
+				end,
+				_proto: @protoStaticText
+			},
+			{
+				viewBounds: {left: 0, top: 16, right: 200, bottom: 42},
+				JamIt: func() begin
+					inherited:JamIt();
+					mailPhonePicker:SyncView();
+					mailPhonePicker:RedoChildren();
+					mailPhonePicker:JamIt(true)
+				end,
+				_proto: @protoSenderPopup
+			},
+			mailPhonePicker,
+			willDial_3,
+			{
+				viewBounds: {left: 5, top: -18, right: 56, bottom: -5},
+				viewJustify: 8388742,
+				text: options,
+				popup: nil,
+				pop: [|Array|:
+					{item: "Retrieve Unread Mail", val: 'Mail_ListUnread, mark: $\ufc0b},
+					{item: "Retrieve Read Mail", val: 'Mail_ListRead},
+					{item: "Retrieve Sent Mail", val: 'Mail_ListSent}
+				],
+				viewSetupFormScript: func() begin
+					popup := DeepClone(pop);
+					inherited:viewSetupFormScript()
+				end,
+				pickActionScript: func(a1) begin
+					local l1;
+					if ((l1 := LSearch(popup, listMethod, 0, '|=|, 'val)) <> a1) then begin
+							RemoveSlot(popup[l1], 'mark);
+							popup[a1].mark := $\uFC0B;
+							listMethod := popup[a1].val
+						end;
+					inherited:pickActionScript(a1)
+				end,
+				_proto: @protoPopupButton
+			},
+			{
+				buttonClickScript: func() begin
+					if theApp.viewCObject then begin
+							AddDeferredSend(theApp, 'RememberedClose, [Array: base])
+						end else begin
+							base:Close()
+						end;
+					if callOptionsSlip.viewCObject then begin
+							callOptionsSlip:Close()
+						end;
+					(if clearOnClose then (theTransport.(clearOnClose) := nil))
+				end,
+				_proto: @protoCancelButton
+			},
+			{
+				viewBounds: {left: -55, top: 0, right: -7, bottom: 13},
+				viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingTopV,
+				ValidateSlip: nil,
+				SetPersona: nil,
+				setEmporia: nil,
+				spasticUser: nil,
+				text: "Connect",
+				viewQuitScript: func() begin
+					if ValidateSlip then begin
+							ValidateSlip:Close()
+						end;
+					inherited:?viewQuitScript();
+					(spasticUser := nil)
+				end,
+				buttonClickScript: func() begin
+					if spasticUser then begin
+							return nil
+						end;
+					spasticUser := true;
+					if (listMethod <> GetUserConfig('mailListMethod)) then begin
+							SetUserConfig('mailListMethod, listMethod)
+						end;
+					if (not StrEqual(willDialNum, GetUserConfig('mailPhoneFull))) then begin
+							SetUserConfig('mailPhoneFull, willDialNum)
+						end;
+					(if ((not userConfiguration.mailAccount) or (not StrFilled(userConfiguration.mailAccount))) then begin
+							if theApp.viewCObject then begin
+									AddDeferredSend(theApp, 'RememberedClose, [Array: base])
+								end else begin
+									base:Close()
+								end;
+							if callOptionsSlip.viewCObject then begin
+									callOptionsSlip:Close()
+								end;
+							if clearOnClose then begin
+									theTransport.(clearOnClose) := nil
+								end;
+							AddDeferredSend(theTransport, 'DoRegister, [Array: request])
+						end else (SetPersona := (not self:ValidateConfig('owner, nil, '[Array: email, emailPassword], msgValidateSource, 'ValidateSlip, 'MoreValidation))))
+				end,
+				MoreValidation: func(a1) begin
+					local l1;
+					(if a1 then begin
+							setEmporia := nil;
+							(if (if (l1 := GetUserConfig('mailPhoneFull)) then StrFilled(l1)) then self:ValidationComplete(true) else (setEmporia := (not self:ValidateConfig('location, nil, '[Array: mailPhone], msgValidateNumber, 'ValidateSlip, 'ValidationComplete))))
+						end)
+				end,
+				ValidationComplete: func(a1) begin
+					(if a1 then begin
+							if callOptionsSlip.viewCObject then begin
+									callOptionsSlip:Close()
+								end;
+							theEmporium := ResolveEntryAlias(userConfiguration.currentEmporium);
+							thePersona := ResolveEntryAlias(userConfiguration.currentPersona);
+							if SetPersona then begin
+									UseCurrentPersona()
+								end;
+							if setEmporia then begin
+									UseCurrentEmporium()
+								end;
+							SetPersona := nil;
+							setEmporia := nil;
+							if theApp.viewCObject then begin
+									AddDeferredSend(theApp, 'RememberedClose, [Array: base])
+								end else begin
+									base:Close()
+								end;
+							if clearOnClose then begin
+									theTransport.(clearOnClose) := nil
+								end;
+							AddDeferredSend(theTransport, 'DoConnect, [Array: theEmporium, thePersona, request, GetUserConfig('mailMode), listMethod])
+						end)
+				end,
+				_proto: @protoTextButton
+			},
+			callassist_2
+		],
+		msgValidateSource: yourConfigurationIsIncomplete,
+		thePersona: nil,
+		ReOrientToScreen: @defRotateFunc,
+		UpdatePhone: func() begin
+			willDialNum := callOptionsSlip.outNumber.text;
+			SetValue(willDial, 'text, willDialNum)
+		end,
+		viewBounds: {left: 0, top: 0, right: 210, bottom: 130},
+		msgValidateNumber: yourConfigurationIsIncomplete_2,
+		allocateContext: [|Array|: 'mailPhonePicker, mailPhonePicker, 'willDial, willDial_3, 'callassist, callassist_2],
+		_proto: @protoFloater,
+		willDialNum: nil,
+		theEmporium: nil,
+		viewJustify: vjParentCenterH + vjParentCenterV,
+		callassist: nil,
+		declareSelf: 'base,
+		viewSetupFormScript: func() begin
+			listMethod := 'Mail_ListUnread;
+			willDialNum := self:MungePhone(GetUserConfig('mailPhone), GetUserConfig('currentCountry));
+			inherited:?viewSetupFormScript()
+		end,
+		request: nil,
+		listMethod: 'Mail_ListUnread,
+		addressSymbols: addressSymbols
+	},
+	lastRequest: nil,
+	doCopyToNotes: func(a1, a2) begin
+		playsound(@plunk);
+		GetRoot().paperroll:MakeTextNote(a1.text, true)
+	end,
+	networkSymbols: networkSymbols,
+	preallocatedContext: 'mailcategory,
+	dialogStatusMsgs: {
+		idle: uCardPositionAlertButton,
+		Initializing: "Initializing Modem…",
+		dialing: @connectMessage,
+		Connecting: "Connecting to Network…",
+		Login: "Connecting to America Online…",
+		connected: "Connected…",
+		Sending: sending,
+		SendFile: "Sending Attachment…",
+		Checking: "Checking for Mail…",
+		Storing: "Storing…",
+		Receiving: receiving,
+		ReceiveFile: "Receiving Attachment…",
+		Disconnecting: @disconnectMessage,
+		Canceling: canceling
+	},
+	actionTitle: mail_2,
+	AppClosed: func(a1) begin
+		(if (if (if eworld then eworld.connected) then (eworld.mode = 'interactive)) then self:Confirm(title, "Do you want to disconnect from America Online? Staying connected may affect handwriting recognition.", self, 'DoShutdown))
+	end,
+	doForward: func(a1, a2) begin
+		local l1, l2, l3;
+		l1 := GetRoot().(GetVariable(a2, 'appSymbol));
+		l1:?MarkRead(a1);
+		(a1 := DeepClone(a1)).reply := true;
+		a1.box := nil;
+		a1._proto := nil;
+		a1.state := 'pending;
+		a1.Connect := 'notreally;
+		RemoveSlot(a1, '_uniqueID);
+		RemoveSlot(a1, '_modTime);
+		RemoveSlot(a1, 'xlabels);
+		RemoveSlot(a1, 'labels);
+		RemoveSlot(a1, 'timestamp);
+		RemoveSlot(a1, 'account);
+		a1.toRef := [Array: ];
+		a1.cc := [Array: ];
+		a1.bcc := [Array: ];
+		a1.edited := true;
+		if (not a1.body) then begin
+				l2 := GetRoot().mailSlip:TextHeader(a1);
+				a1.text := Stringer([Array: l2, $\n, a1.text])
+			end;
+		if (if (if a1.title then IsString(a1.title)) then StrFilled(a1.title)) then begin
+				if (if (not BeginsWith((l3 := StringFilter(Substr(a1.title, 0, 6), " 0123456789()", 'rejectAll)), "Fwd>")) then (not BeginsWith(l3, "Fwd:"))) then begin
+						a1.title := Stringer([Array: "Fwd: ", a1.title])
+					end
+			end;
+		l1 := GetRoot().(GetVariable(a2, 'appSymbol));
+		l1:ItemCompleted(a1, 'save)
+	end,
+	MailReceiveStatus: func() begin
+		self:SetStatus(status, {barber: true})
+	end,
+	GetItemTitle: func(a1) begin
+		local l1, l2, l3, l4;
+		l1 := "";
+		if a1 then begin
+				if StrFilled(a1.title) then begin
+						l1 := a1.title
+					end else begin
+						if (l3 := GetDataDefs(DataClassOf((l2 := GetTargetFromEntry(a1))))) then begin
+								if (l4 := l3:?StringExtract(l2, 1)) then begin
+										l1 := (if (StrLen(l4) > 32) then Stringer([Array: Substr(l4, 0, 31), $\u2026]) else l4)
+									end
+							end
+					end
+			end;
+		Clone(l1)
+	end,
+	AppInFront: func(a1, a2) begin
+		(if (not a1) then self:AppClosed(a2))
+	end,
+	EnableAlarms: func(a1) begin
+		SetUserConfig('mailAlarms, a1)
+	end,
+	AlarmsEnabled: func() begin
+		GetUserConfig('mailAlarms)
+	end,
+	group: 'mail,
+	msgValidateNumber: yourConfigurationIsIncomplete_2,
+	_proto: @protoTransport,
+	saveAddress: func(a1, a2) begin
+		local l1, l2, l3, l4, l5;
+		l1 := @protoPeopleDataDef;
+		if (if (l2 := a1.fromRef).name.last then StrEqual(l2.name.last, l2.email)) then begin
+				l2.name.last := nil
+			end;
+		if (if a1.fromName then (StrLen(a1.fromName) > 0)) then begin
+				if (if (l5 := StrPos((l4 := TrimString(a1.fromName)), " ", 0)) then (l5 > 0)) then begin
+						l3 := Substr(l4, (l5 + 1), StrLen(l4));
+						l4 := Substr(l4, 0, l5)
+					end;
+				l2.name.last := l3;
+				l2.name.first := l4
+			end;
+		GetRoot().mailSlip.nameToAdd := l2;
+		ValidateConfigGuts(l2, l1.validationFrame, [Array: 'name], {userText: ParamStr("Please specify a name for eMail address \u201C\u^0\u201D\u", [Array: l2.email]), titleText: "E-Mail Name", context: GetRoot().mailSlip, receiver: GetRoot().mailSlip, message: 'DoAddName})
+	end,
+	VerifyRoutingInfo: func(a1, a2, a3, a4) begin
+		local l1, l2;
+		if (not a1.title) then begin
+				a1.title := self:?GetItemTitle(a3);
+				if (not a1.title) then begin
+						a1.title := self:?GetItemTitle(NewItem)
+					end;
+				if (not a1.title) then begin
+						a1.title := Clone(a2.title)
+					end
+			end;
+		if IsRichString(a1.title) then begin
+				StripInk(a1.title, $\uFC02);
+				StrReplace(a1.title, "\uFC02\u", "-ink-", nil);
+				if (StrLen(a1.title) > 61) then begin
+						a1.title := Substr(a1.title, 0, 61)
+					end
+			end;
+		if a1.reply then begin
+				return nil
+			end;
+		l2 := GetRoot().(a1.appSymbol);
+		l1 := a4.TextScript;
+		a1.text := " ";
+		if l1 then begin
+				if IsSymbol(l1) then begin
+						a1.text := Perform(l2, l1, [Array: a1, a3])
+					end else begin
+						a1.text := call l1 with (a1, a3)
+					end
+			end;
+		if IsRichString(a1.text) then begin
+				StripInk(a1.text, $\uFC02);
+				StrReplace(a1.text, "\uFC02\u", "-ink-", nil)
+			end;
+		(if (if a1.body then (not a1.attachment)) then (a1.body := nil))
+	end,
+	connectSlip: nil,
+	DoConnect: func(a1, a2, a3, a4, a5) begin
+		self.eworld := {_proto: protoEworld, mode: a4, _parent: self};
+		eworld.request := a3;
+		eworld.transport := self;
+		eworld.listMethod := a5;
+		eworld._worksite := a1;
+		eworld._owner := a2;
+		AddDeferredSend(self, 'ConvertStart, nil)
+	end,
+	IOBoxExtensions: func(a1, a2, a3, a4) begin
+		if ((a1.class = 'smartMail) or (a1.state = 'InLog)) then begin
+				return nil
+			end;
+		if a1.package then begin
+				a3.packageTextView := GetViewDefs('packageFrame).default
+			end;
+		(if ((if a1.edited then (not IsInstance(a2, 'mailText))) or (if (Length(a3) = 0) then a1.text)) then begin
+				a3.mailTextView := GetViewDefs('mailText).default;
+				'mailTextView
+			end)
+	end,
+	addressingClass: '|nameRef.email|,
+	InkConvert: nil,
+	error: nil,
+	TextHeader: func(a1) begin
+		l1 := ParamStr("Subject: ^0\n", [Array: a1.title]);
+		l2 := (if (if a1.fromName then (StrLen(a1.fromName) > 0)) then ParamStr("From: ^0 (^1)\n", [Array: a1.fromName, a1.fromRef.email]) else ParamStr("From: ^0\n", [Array: a1.fromRef.email]));
+		l1 := Stringer([Array: (l1 := Stringer([Array: (l1 := Stringer([Array: l1, l2])), "Sent: ", a1.dateStr, $\n])), ParamStr("Received: ^2 ^0 ^1\n", [Array: LongDateStr(a1.timestamp, @datetimeStrSpecs.abbrDayOfWeekStrSpec), ShortDateStr(a1.timestamp, @datetimeStrSpecs.numericDateStrSpec), HourMinute(a1.timestamp)])]);
+		if (Length(a1.toRef) > 0) then begin
+				local l1;
+				local l2;
+				(for l3 := 0 to (Length(a1.toRef) - 1) do begin
+						if (l3 = 0) then begin
+								l1 := Stringer([Array: l1, "To: ", a1.toRef[0].email])
+							end else begin
+								l1 := Stringer([Array: l1, ", ", a1.toRef[l3].email])
+							end
+					end);
+				l1 := Stringer([Array: l1, $\n])
+			end;
+		if (Length(a1.cc) > 0) then begin
+				(for l3 := 0 to (Length(a1.cc) - 1) do begin
+						if (l3 = 0) then begin
+								l1 := Stringer([Array: l1, "Cc: ", a1.cc[0].email])
+							end else begin
+								l1 := Stringer([Array: l1, ", ", a1.cc[l3].email])
+							end
+					end);
+				l1 := Stringer([Array: l1, $\n])
+			end;
+		if (Length(a1.bcc) > 0) then begin
+				(for l3 := 0 to (Length(a1.bcc) - 1) do begin
+						if (l3 = 0) then begin
+								l1 := Stringer([Array: l1, "Bcc: ", a1.bcc[0].email])
+							end else begin
+								l1 := Stringer([Array: l1, ", ", a1.bcc[l3].email])
+							end
+					end);
+				l1 := Stringer([Array: l1, $\n])
+			end;
+		l1
+	end,
+	appSymbol: 'mailSlip,
+	mailNetworks: [|Array|:
+		mailNetworksProto,
+		{
+			_proto: mailNetworksProto,
+			title: "Concert",
+			id: 'concert,
+			curerror: nil,
+			mailStart: func() begin
+				speed := (speed := mailEndPoint:option((speed := [Array: {label: "mspd", type: 'option, opCode: 1024, data: {arglist: [Array: 0], typelist: [Array: 10, 1]}}]), nil))[0].data.arglist[0];
+				if (transport exists) then begin
+						transport:?SetStatusDialog('Connecting, 'vStatusTitle, {titleText: Stringer([Array: title, " ", "-", " ", speed, " ", "baud"])})
+					end;
+				mailEndPoint.curstate := 'waitForLogin;
+				mailEndPoint:SetInputSpec(mailEndPoint.waitForLogin);
+				AddDelayedCall(func() begin
+					self:mailStartContinue()
+				end, nil, 10000)
+			end,
+			mailStartContinue: func() begin
+				(if (mailEndPoint.curstate = 'waitForLogin) then (try begin
+							mailEndPoint:output($A, nil, {async: true})
+						end onexception |evt.ex| do begin
+							self:quit()
+						end))
+			end,
+			mailEndPoint: {
+				_proto: @protoBasicEndpoint,
+				ExceptionHandler: func(a1) begin
+					if (curerror = nil) then begin
+							curerror := a1.data
+						end;
+					self:quit()
+				end,
+				waitForLogin: {
+					form: '|string|,
+					filter: {sevenbit: true},
+					termination: {endsequence: "log in:"},
+					InputScript: func(a1, a2, a3, a4) begin
+						(if (a1.curstate = 'waitForLogin) then begin
+								a1.curstate := 'waitForPlus;
+								(try begin
+										a1:SetInputSpec(a1.waitForPlus);
+										a1:output(Stringer([Array: a1:networkIdentifier(), "\n"]), nil, {async: true})
+									end onexception |evt.ex| do begin
+										self:quit()
+									end)
+							end)
+					end,
+					completionscript: completionscript,
+					reqTimeout: 20000
+				},
+				waitForPlus: {
+					form: '|string|,
+					filter: {sevenbit: true},
+					termination: {endsequence: $+},
+					InputScript: func(a1, a2, a3, a4) begin
+						(if (a1.curstate = 'waitForPlus) then begin
+								a1.curstate := 'waitForConnected;
+								(try begin
+										a1:SetInputSpec(a1.waitForConnected);
+										a1:output("NEWTMAIL0001\n", nil, {async: true})
+									end onexception |evt.ex| do begin
+										self:quit()
+									end)
+							end)
+					end,
+					completionscript: completionscript,
+					reqTimeout: 30000
+				},
+				waitForConnected: {
+					form: '|string|,
+					filter: {sevenbit: true},
+					termination: {endsequence: "call connected"},
+					InputScript: func(a1, a2, a3, a4) begin
+						(if (a1.curstate = 'waitForConnected) then begin
+								a1.curstate := nil;
+								a1:SetInputSpec(nil);
+								AddDeferredSend(a1, 'stopCCL, nil)
+							end)
+					end,
+					completionscript: completionscript,
+					reqTimeout: 30000
+				}
+			}
+		}
+	],
+	icon: {
+		bits: bitmap('bits, "resources/bits/5a3eb9.png", "000000000004003f003f0198004f01ae", 1),
+		bounds: {left: 0, top: 0, right: 22, bottom: 16}
+	},
+	title: americaOnline,
+	CancelRequest: func(a1) begin
+		self:?SetStatusDialog('Canceling, 'vStatus, {primary: nil});
+		if eworld then begin
+				if eworld.navigator then begin
+						eworld.navigator:quit()
+					end else begin
+						if (eworld.connectState = 'Bind) then begin
+								eworld:Cancel(nil)
+							end else begin
+								eworld:ConnectionAbort()
+							end
+					end
+			end else begin
+				self:SetStatus('idle, nil)
+			end;
+		(not eworld)
+	end,
+	dataTypes: [|Array|: 'text, 'frame, 'mail],
+	doReply: func(a1, a2) begin
+		local l1, l2;
+		l2 := GetRoot().(GetVariable(a2, 'appSymbol));
+		l2:?MarkRead(a1);
+		(a1 := DeepClone(a1)).name := a1.fromName;
+		a1.toRef := [Array: a1.fromRef];
+		a1.cc := '[Array: ];
+		a1.bcc := '[Array: ];
+		GetRoot().mailSlip:ReallyDoReply(a1, a2)
+	end,
+	protoEworld: {
+		msg: nil,
+		mode: nil,
+		firstTime: nil,
+		_proto: @protoEworldEndpoint,
+		LogoutIfNoRequests: func() begin
+			local l1;
+			(if (if requestQueue then (Length(requestQueue) > 0)) then begin
+					l1 := requestQueue[0];
+					SetRemove(requestQueue, l1);
+					AddDeferredSend(self, l1.function, [Array: l1])
+				end else self:Logout())
+		end,
+		LogoutScript: func() begin
+			self:?SetStatusDialog('Disconnecting, 'vStatus, {primary: nil})
+		end,
+		LogoutDoneScript: func() begin
+			self:SetStatus('idle, nil);
+			(if (self.mode = 'interactive) then GetRoot().iobox:RemoveTempItems(appSymbol))
+		end,
+		LoginDoneScript: func() begin
+			self:SendNextMessage()
+		end,
+		SendNextMessage: func() begin
+			local l1, l2, l3;
+			eworld.msg := self:?ItemRequest(eworld.request);
+			(if msg then begin
+					self:?SetStatusDialog('Sending, 'vStatusTitle, {titleText: msg.title});
+					msg.error := nil;
+					self:Mail_Send(msg)
+				end else begin
+					l1 := GetUserConfig('mailMode);
+					l2 := eworld.request.cause;
+					l3 := eworld.firstTime;
+					eworld.request := nil;
+					eworld.msg := nil;
+					eworld.firstTime := nil;
+					if (not l1) then begin
+							l1 := 'interactive
+						end;
+					(if l3 then (if (if GetUserConfig('mailautodisconnect) then (lastRequest = 'SendRequest)) then self:LogoutIfNoRequests() else begin
+								eworld.mode := (if (l2 = 'periodic) then 'batch else l1);
+								self:?SetStatusDialog('Checking, 'vStatus, nil);
+								GetRoot().iobox:RemoveTempItems(appSymbol);
+								Perform(eworld, listMethod, [Array: ])
+							end) else begin
+							self:?SetStatusDialog('connected, 'vStatus, nil);
+							self:?CloseStatusDialog(nil)
+						end)
+				end)
+		end,
+		File_UploadStart: func(a1) begin
+			self:?SetStatusDialog('SendFile, 'vGauge, {titleText: msg.title, gauge: [Array: 0, 0, a1.filesize]});
+			self:uploadfile(a1.data, a1.filesize, transport, a1.type, a1.creator);
+			(if a1.reply then self:output(a1.reply, nil, nil))
+		end,
+		Mail_SendDone: func(a1) begin
+			if a1 then begin
+					self:?ItemCompleted(eworld.msg, nil, a1)
+				end else begin
+					self:?ItemCompleted(eworld.msg, 'Sent, nil)
+				end;
+			self:SendNextMessage()
+		end,
+		ListDone: func(a1) begin
+			local l1, l2, l3;
+			if (not a1) then begin
+					if ((l1 := GetUserConfig('mailListMethod)) = 'Mail_ListUnread) then begin
+							l2 := "new"
+						end else begin
+							if (l1 = 'Mail_ListRead) then begin
+									l2 := "read"
+								end else begin
+									if (l1 = 'Mail_ListSent) then begin
+											l2 := "sent"
+										end
+								end
+						end;
+					GetRoot():Notify(3, transport.title, ParamStr("No ^0 mail", [Array: l2]))
+				end;
+			(if (mode = 'batch) then begin
+					self.mail_list := a1;
+					(if a1 then self:GetNextMessage() else self:LogoutIfNoRequests())
+				end else begin
+					try begin
+							if (if a1 then a1.items) then begin
+									(while (Length(a1.items) > 0) do begin
+											l3 := self:UnflattenListItem(a1.items);
+											(while (if (l3.id = 0) then (Length(a1.items) > 0)) do (l3 := self:UnflattenListItem(a1.items)));
+											l3.Remote := true;
+											l3.category := appSymbol;
+											self:?SetStatusDialog('Storing, 'vBarber, {titleText: Stringer([Array: l3.from, ", ", l3.title]), barber: true});
+											self:?ItemCompleted(l3, 'Received, nil)
+										end)
+								end
+						end onexception |evt.ex.outofmem| do begin
+							self:?SetStatusDialog('connected, 'vStatus, nil);
+							self:?CloseStatusDialog(nil);
+							GetRoot().(owner):?UpdateLayout();
+							Rethrow()
+						end;
+					self:?SetStatusDialog('connected, 'vStatus, nil);
+					self:?CloseStatusDialog(nil)
+				end)
+		end,
+		ListItem: func(a1) begin
+			local l1, l2;
+			l1 := ExtractLong(a1, 0);
+			(if (Length((l2 := StrParse(ExtractBytes(a1, 12, (l1 - 12), 'string), "\t"))) = 3) then self:?SetStatusDialog('Checking, 'vBarber, {titleText: Stringer([Array: l2[1], ", ", l2[2]]), barber: true}))
+		end,
+		UnflattenListItem: func(a1) begin
+			local l1, l2, l3, l4, l5, l6;
+			l1 := Clone('{id: nil, Display: nil, label: nil, Date: nil, from: nil, title: nil});
+			l2 := ExtractLong(a1, 0);
+			l1.id := ExtractLong(a1, 4);
+			l1.Display := ExtractLong(a1, 8);
+			l1.label := ExtractBytes(a1, 12, (l2 - 12), 'string);
+			if (Length((l3 := StrParse(l1.label, "\t"))) = 3) then begin
+					l1.Date := l3[0];
+					l1.from := l3[1];
+					l1.title := l3[2];
+					if l1.Date then begin
+							if (Length((l4 := StrParse(l1.Date, "/"))) > 1) then begin
+									if ((l6 := {year: (l5 := Date(Time())).year, month: floor(StringToNumber(l4[0])), Date: floor(StringToNumber(l4[1])), hour: 0, minute: 0, second: 0}).month > l5.month) then begin
+											l6.year := (l6.year - 1)
+										end;
+									l1.timestamp := TotalMinutes(l6)
+								end else begin
+									l1.timestamp := Time()
+								end
+						end
+				end else begin
+					l1.Date := (l1.from := (l1.title := ""))
+				end;
+			BinaryMunger(a1, 0, l2, nil, 0, nil);
+			l1
+		end,
+		GetNextMessage: func() begin
+			local l1;
+			(if (mode = 'batch) then (if (Length(mail_list.items) > 0) then begin
+						l1 := self:UnflattenListItem(mail_list.items);
+						(while (if (l1.id = 0) then (Length(mail_list.items) > 0)) do (l1 := self:UnflattenListItem(mail_list.items)));
+						self:?SetStatusDialog('Receiving, 'vBarber, {titleText: Stringer([Array: l1.from, ", ", l1.title]), barber: true});
+						self:Mail_Read(l1.id, transport)
+					end else begin
+						eworld.msg := nil;
+						eworld.mail_list := nil;
+						self:ConnectionAbort()
+					end) else begin
+					self.message := self:ItemRequest(eworld.request);
+					(if message then begin
+							self:?SetStatusDialog('Receiving, 'vBarber, {titleText: message.label, barber: true});
+							self:Mail_Read(message.id, transport)
+						end else begin
+							self:?SetStatusDialog('connected, 'vStatus, nil);
+							self:?CloseStatusDialog(nil)
+						end)
+				end)
+		end,
+		Mail_Message: func(a1) begin
+			(if (mode = 'batch) then begin
+					if (not a1) then begin
+							return self:GetNextMessage()
+						end;
+					(if a1.hasfile then begin
+							self:?SetStatusDialog('ReceiveFile, 'vGauge, {titleText: a1.title, gauge: [Array: 0, 0, a1.filesize]});
+							self:Mail_Download(a1, transport)
+						end else self:submit(a1))
+				end else begin
+					if ((a1 = nil) or (message = nil)) then begin
+							return self:GetNextMessage()
+						end;
+					(foreach l1, l2 in a1 do begin
+							message.(l1) := l2
+						end);
+					(if message.hasfile then begin
+							self:?SetStatusDialog('ReceiveFile, 'vGauge, {titleText: a1.title, gauge: [Array: 0, 0, a1.filesize]});
+							self:Mail_Download(message, transport)
+						end else self:submit(message))
+				end)
+		end,
+		submit: func(a1) begin
+			l1 := GetRoot().iobox;
+			if (if (mode = 'interactive) then (not l1.viewCObject)) then begin
+					l1:OpenAsInBox()
+				end else begin
+					if l1.viewCObject then begin
+							l1:SetBox('inbox)
+						end
+				end;
+			self:?SetStatusDialog('Storing, 'vStatusTitle, {titleText: a1.title});
+			a1.category := appSymbol;
+			a1.class := 'mailText;
+			if (mode = 'batch) then begin
+					a1.progress := "";
+					a1.state := 'Received
+				end else begin
+					a1.Remote := nil
+				end;
+			if a1.dateStr then begin
+					if (Length((l2 := StrParse(a1.dateStr, " "))) > 1) then begin
+							l3 := StrParse(l2[0], "-");
+							l4 := StrParse(l2[1], ":");
+							if (if (Length(l3) = 3) then (Length(l4) = 3)) then begin
+									if ((l5 := {year: floor(StringToNumber(l3[0])), month: floor(StringToNumber(l3[1])), Date: floor(StringToNumber(l3[2])), hour: floor(StringToNumber(l4[0])), minute: floor(StringToNumber(l4[1])), second: floor(StringToNumber(l4[2]))}).year >= 95) then begin
+											l5.year := (l5.year + 1900)
+										end else begin
+											l5.year := (l5.year + 2000)
+										end;
+									a1.timestamp := TotalMinutes(l5)
+								end else begin
+									a1.timestamp := Time()
+								end
+						end
+				end;
+			if (if a1.text then (StrLen(a1.text) > 4096)) then begin
+					l6 := [Array: 0];
+					l7 := 4095;
+					l8 := a1.text;
+					a1.text := nil;
+					(while (l7 < StrLen(l8)) do begin
+							(while (not IsWhiteSpace(l8[l7])) do (l7 := (l7 - 1)));
+							AddArraySlot(l6, (l7 * 2));
+							(l7 := (l7 + 4096))
+						end);
+					AddArraySlot(l6, (StrLen(l8) * 2));
+					l10 := (Length(l6) - 1);
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					local l5;
+					local l6;
+					local l7;
+					local l8;
+					local l9;
+					local l10;
+					(for l7 := 0 to (Length(l6) - 2) do begin
+							if (l7 = 0) then begin
+									a1 := DeepClone((l9 := a1))
+								end else begin
+									l9 := DeepClone(a1)
+								end;
+							l9.title := Stringer([Array: (l7 + 1), $/, l10, " ", l9.title]);
+							l9.text := self:GetDefaultOwnerStore():NewVBO('string, 2);
+							BinaryMunger(l9.text, 0, 0, l8, l6[l7], (l6[(l7 + 1)] - l6[l7]));
+							if (if (l7 = 0) then (mode = 'interactive)) then begin
+									self:?ItemCompleted(l9, 'Received, nil)
+								end else begin
+									self:?ItemCommit(l9)
+								end
+						end)
+				end else begin
+					if (mode = 'batch) then begin
+							self:?ItemCommit(a1)
+						end else begin
+							self:?ItemCompleted(a1, 'Received, nil)
+						end
+				end;
+			if (mode = 'interactive) then begin
+					l1:Refresh();
+					self.message := nil
+				end;
+			self:GetNextMessage()
+		end,
+		Mail_DownloadDoneScript: func(a1) begin
+			(if (mode = 'batch) then self:submit(a1) else begin
+					(foreach l1, l2 in a1 do begin
+							message.(l1) := l2
+						end);
+					self:submit(message)
+				end)
+		end
+	},
+	GetFromText: func(a1) begin
+		(if a1.fromRef then GetDataDefs(addressingClass):GetRoutingTitle(a1.fromRef, nil, nil) else a1.from)
+	end,
+	DoAddName: func(a1) begin
+		@protoPeopleDataDef:NewEntry(GetRoot().mailSlip.nameToAdd, nil)
+	end,
+	DoRegister: func(a1) begin
+		local l1;
+		if (not self:GetConfig('onlineRegEnabled)) then begin
+				self:Notify(4, title, "Your mail account information is not complete or is not valid.  Please make sure you have a valid America Online account and all the account settings are correct.");
+				return nil
+			end;
+		(if ((not userConfiguration.mailAccount) or (not StrFilled(userConfiguration.mailAccount))) then begin
+				(l1 := BuildContext(newAccountSlip)).request := a1;
+				l1.theApp := GetRoot().(owner);
+				l1.theTransport := self;
+				l1:Open()
+			end else begin
+				mailRegister.request := a1;
+				mailRegister:Open()
+			end)
+	end,
+	doReplyAll: func(a1, a2) begin
+		local l1, l2;
+		l2 := GetRoot().(GetVariable(a2, 'appSymbol));
+		l2:?MarkRead(a1);
+		ArrayInsert((a1 := DeepClone(a1)).toRef, a1.fromRef, 0);
+		a1.name := a1.fromName;
+		if (if (l1 := LSearch(a1.toRef, a1.account, 0, '|str=|, 'email)) then (Length(a1.toRef) > 1)) then begin
+				ArrayRemoveCount(a1.toRef, l1, 1)
+			end;
+		if (l1 := LSearch(a1.cc, a1.account, 0, '|str=|, 'email)) then begin
+				ArrayRemoveCount(a1.cc, l1, 1)
+			end;
+		if (l1 := LSearch(a1.bcc, a1.account, 0, '|str=|, 'email)) then begin
+				ArrayRemoveCount(a1.bcc, l1, 1)
+			end;
+		GetRoot().mailSlip:ReallyDoReply(a1, a2)
+	end,
+	GetTransportScripts: compile(
+		constants: {
+			kFunction_5a3471: func(a1) begin
+				"Reply"
+			end,
+			kROM_756: @routeReply,
+			kFunction_5a3491: func(a1) begin
+				"Reply to All"
+			end,
+			kFunction_5a34b1: func(a1) begin
+				"Forward"
+			end,
+			kROM_771: @routeForward,
+			kFunction_5a356d: func(a1) begin
+				"Add to Names"
+			end,
+			kROM_772: @routeAddSender
+		},
+		func(a1) begin
+			local l1, l2, l3;
+			if ((a1.state = 'pending) or (a1.state = 'ready)) then begin
+					return nil
+				end;
+			l1 := [Array: ];
+			if a1.account then begin
+					AddArraySlot(l1, {GetTitle: kFunction_5a3471, routeScript: doReply, icon: kROM_756});
+					if (((if IsArray(a1.toRef) then (Length(a1.toRef) > 1)) or (if IsArray(a1.cc) then (Length(a1.cc) > 0))) or (if IsArray(a1.bcc) then (Length(a1.bcc) > 0))) then begin
+							AddArraySlot(l1, {GetTitle: kFunction_5a3491, routeScript: doReplyAll, icon: kROM_756})
+						end;
+					AddArraySlot(l1, {GetTitle: kFunction_5a34b1, routeScript: doForward, icon: kROM_771})
+				end;
+			if a1.fromRef then begin
+					l2 := GetUnionSoup(@cardfileSoupName);
+					if ((l3 := l2:Query({type: 'words, words: [Array: a1.fromRef.email]})):CountEntries() = 0) then begin
+							AddArraySlot(l1, {GetTitle: kFunction_5a356d, routeScript: saveAddress, icon: kROM_772})
+						end
+				end;
+			(if (Length(l1) > 0) then l1)
+		end),
+	CanPutAway: compile(
+		constants: {
+			kROM_144: @paperrollSoupName
+		},
+		func(a1) begin
+			local l1;
+			l1 := nil;
+			if (if a1.text then ((a1.edited or (a1.class = 'smartMail)) or (if (not a1.body) then (not a1.package)))) then begin
+					l1 := kROM_144
+				end;
+			if a1.package then begin
+					l1 := (if l1 then "Notes and Extras" else "Extras")
+				end;
+			(if l1 then {appName: l1, appSymbol: appSymbol})
+		end),
+	ConvertStart: func() begin
+		self:ConvertInkText(GetUserConfig('mailAccount), 'alpha, nil, "Converting e-mail account", "Please verify that the ink text was converted correctly.", 'InkConvert, 'ConvertedAccount, nil)
+	end,
+	transactionAbortedScript: func(a1) begin
+		GetRoot():Notify(3, title, "The host has failed to respond.");
+		self:CancelRequest('hostCancel)
+	end,
+	Convert: func(a1, a2, a3) begin
+		if (if HasPath(GetRoot(), 'MotoConvertEmail) then ((not IsString(a1.toEmailAddress)) or (not IsString(a1.fromName)))) then begin
+				return GetRoot():MotoConvertEmail(a1, a2, a3)
+			end;
+		if (a3 = 'oneO) then begin
+				return nil
+			end;
+		(l1 := Clone(a1)).class := 'mailText;
+		l2 := nil;
+		l3 := nil;
+		if IsArray(a1.fromName) then begin
+				a1.fromName := a1.fromName[0]
+			end;
+		if (if a1.fromName then (not IsString(a1.fromName))) then begin
+				l4 := ClassOf(a1.fromName);
+				SetClass(a1.fromName, Intern(Stringer([Array: "string.email.", l4])))
+			end;
+		if (if a1.fromName then StrFilled(a1.fromName)) then begin
+				if (if (l5 := StrPos((l3 := TrimString(a1.fromName)), " ", 0)) then (l5 > 0)) then begin
+						l2 := Substr(l3, (l5 + 1), StrLen(l3));
+						l3 := Substr(l3, 0, l5)
+					end
+			end;
+		l6 := GetDataDefs('|nameRef.email|);
+		l1.fromRef := l6:MakeNameRef({name: {first: l3, last: l2}, email: SetClass(a1.fromEmailAddress, '|string.email.aol|)}, '|nameRef.email|);
+		l1.toRef := [Array: ];
+		if a1.toEmailAddress then begin
+				if IsArray(a1.toEmailAddress) then begin
+						a1.toEmailAddress := a1.toEmailAddress[0]
+					end;
+				if (not IsString(a1.toEmailAddress)) then begin
+						l4 := ClassOf(a1.toEmailAddress);
+						SetClass(a1.toEmailAddress, Intern(Stringer([Array: "string.email.", l4])));
+						if a1.ccEmailAddress then begin
+								a1.ccEmailAddress := nil
+							end;
+						if a1.bccEmailAddress then begin
+								a1.bccEmailAddress := nil
+							end
+					end;
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				local l5;
+				local l6;
+				local l7;
+				(foreach l8 in (l7 := StrParseTrimmed(a1.toEmailAddress, ",")) do begin
+						AddArraySlot(l1.toRef, l6:MakeNameRef({name: l8, email: SetClass(l8, '|string.email|)}, '|nameRef.email|))
+					end)
+			end;
+		if (Length(l1.toRef) = 0) then begin
+				l8 := Clone("unknown");
+				AddArraySlot(l1.toRef, l6:MakeNameRef({name: l8, email: SetClass(l8, '|string.email|)}, '|nameRef.email|))
+			end;
+		l1.currentFormat := 'targetFrameFormat;
+		l1.cc := [Array: ];
+		l1.bcc := [Array: ];
+		RemoveSlot(l1, 'fromEmailAddress);
+		RemoveSlot(l1, 'toEmailAddress);
+		l1
+	end,
+	RegisterStart: func() begin
+		local l1;
+		if (l1 := GetRoot().iobox).viewCObject then begin
+				l1:Close()
+			end;
+		(GetRoot().mailSlip.setEmporia := (not self:ValidateConfig('location, nil, '[Array: mailPhone], msgValidateNumber, 'ValidateSlip, 'RegisterValidationComplete)))
+	end,
+	PeriodicAlarm: func(a1) begin
+		if (if GetUserConfig('mailautodisconnect) then (GetRoot().iobox:NumItemsToSend(GetRoot().mailSlip, nil) = 0)) then begin
+				return nil
+			end;
+		GetRoot():SysBeep();
+		GetRoot():SysBeep();
+		GetRoot():SysBeep();
+		GetRoot():SysBeep();
+		GetRoot().iobox:StartSend(self, 'periodic, nil, nil)
+	end,
+	doLoad: func(a1, a2) begin
+		local l1, l2, l3;
+		l1 := Length(GetPackages());
+		GetRoot().mailSlip:GetDefaultOwnerStore():RestorePackage(a1.package);
+		(if (Length(GetPackages()) > l1) then begin
+				l3 := (l2 := GetPkgRefInfo(a1.package)).title;
+				GetRoot():Notify(3, title, ParamStr("The package ^0 has been loaded in Extras.", [Array: l3]))
+			end)
+	end,
+	AppOpened: func(a1) begin
+		(if (not (if eworld then eworld.connected)) then GetRoot().iobox:RemoveTempItems(appSymbol))
+	end,
+	Register: func(a1, a2) begin
+		AddDeferredSend(GetRoot().mailSlip, 'RegisterStart, nil)
+	end,
+	PutAwayScript: func(a1) begin
+		(if (a1.text or a1.package) then begin
+				if (if a1.text then ((a1.edited or (a1.class = 'smartMail)) or (if (not a1.body) then (not a1.package)))) then begin
+						self:doCopyToNotes(a1, nil)
+					end;
+				if a1.package then begin
+						self:doLoad(a1, nil)
+					end;
+				true
+			end)
+	end,
+	MakeLogEntry: func(a1, a2) begin
+		a1.dateStr := Clone(a2.dateStr);
+		a1.fromRef := Clone(a2.fromRef);
+		a1.filename := Clone(a2.filename);
+		a1.fromName := Clone(a2.fromName);
+		a1.cc := DeepClone(a2.cc);
+		a1.bcc := DeepClone(a2.bcc);
+		if HasSlot(a2, 'body) then begin
+				a1.body := nil
+			end;
+		if HasSlot(a2, 'package) then begin
+				a1.package := nil
+			end;
+		if HasSlot(a2, 'sentTimeStamp) then begin
+				a1.sentTimeStamp := a2.sentTimeStamp
+			end;
+		inherited:MakeLogEntry(a1, a2)
+	end,
+	NewItem: func(a1) begin
+		local l1;
+		(l1 := inherited:NewItem(a1)).class := 'mailText;
+		l1
+	end,
+	transportInfoForm: {
+		viewSetupChildrenScript: func() begin
+			(if (addedHeight < 20) then begin
+					toLine.viewFlags := 0;
+					ccLine.viewFlags := 0;
+					bccLine.viewFlags := 0;
+					(if (addedHeight = 0) then (labelLine.viewFlags := 0))
+				end)
+		end,
+		BuildText: func() begin
+			if target.Remote then begin
+					return self:addText("Remote Message")
+				end;
+			if (l1 := (if target.package then ParamStr("Enclosed: ^0 (^1 bytes)", [Array: target.filename, Length(target.package)]) else (if (if (if StrFilled(target.filename) then HasSlot(target, 'package)) then (target.state = 'InLog)) then ParamStr("Was Enclosed: ^0", [Array: target.filename]) else (if (not HasSlot(target, 'body)) then "Text only message")))) then begin
+					self:addText(l1)
+				end;
+			(if transport:IsInItem(target) then begin
+					self:addText(Stringer([Array: "Sent: ", (if StrFilled(target.dateStr) then target.dateStr else "--")]));
+					self:addText((l2 := ParamStr("From: ^0", [Array: target.fromRef.email])));
+					(if (((Length(target.toRef) > 0) or (Length(target.cc) > 0)) or (Length(target.bcc) > 0)) then (addedHeight := 93) else (addedHeight := 18))
+				end else (if target.toRef then begin
+						l3 := GetDataDefs('|nameRef.email|):GetRoutingInfo(target.toRef);
+						l4 := "";
+						local l1;
+						local l2;
+						local l3;
+						local l4;
+						(foreach l5 in l3 do begin
+								if (if HasSlot(l5, 'email) then StrFilled(l5.email)) then begin
+										l4 := (if StrFilled(l4) then ParamStr("^0, ^1", [Array: l4, l5.email]) else l5.email)
+									end
+							end);
+						(if StrFilled(l4) then self:addText(ParamStr("To: ^0", [Array: l4])))
+					end))
+		end,
+		debug: "mailRoutingTemplate",
+		viewChildren: [viewChildren: bccLine, ccLine, toLine, labelLine_3, {_proto: @protoClosebox}],
+		bccLine: nil,
+		allocateContext: [|Array|: 'bccLine, bccLine, 'ccLine, ccLine, 'toLine, toLine, 'labelLine, labelLine_3],
+		ccLine: nil,
+		toLine: nil,
+		labelLine: nil,
+		_proto: @protoTransportheader
+	},
+	preferencesForm: {
+		viewBounds: {left: 0, top: 0, right: 215, bottom: 210},
+		appSymbol: 'mailSlip,
+		fontPickerUp: nil,
+		alarmsUp: nil,
+		outboxPrefs: {_proto: @defaultOutboxPrefInfo, logText: "After mailing"},
+		inboxPrefs: {_proto: @defaultInboxPrefInfo, logText: "File read mail in"},
+		sendPrefs: {_proto: @defaultSendPrefInfo, routeText: "When mailing", routeVerb: mail_2},
+		infoPrefs: {
+			_proto: @defaultInfoPrefs,
+			aboutInfo: {
+				tagline: "In/Out Box Transport",
+				version: "AOL Mail Transport v2.0 ",
+				Date: uCardPositionAlertButton,
+				copyright: "©1992-1995 Apple Computer.  All rights reserved.",
+				trademarks: uCardPositionAlertButton,
+				credits: nil
+			}
+		},
+		silentPrefs: nil,
+		viewQuitScript: func() begin
+			if (if fontPickerUp then fontPickerUp.viewCObject) then begin
+					fontPickerUp:Close()
+				end;
+			fontPickerUp := nil;
+			if (if alarmsUp then alarmsUp.viewCObject) then begin
+					alarmsUp:Close()
+				end;
+			alarmsUp := nil;
+			inherited:?viewQuitScript()
+		end,
+		viewSetupDoneScript: func() begin
+			local l1, l2;
+			(if (if GetRoot().(appSymbol).eworld then GetRoot().(appSymbol).eworld.connected) then begin
+					GetRoot():Notify(3, GetRoot().(appSymbol).title, ParamStr("Please disconnect from ^0 before changing your preferences", [Array: GetRoot().(appSymbol).title]));
+					l1 := GetRoot().(appSymbol).owner;
+					(if (l2 := GetRoot().(l1)).viewCObject then AddDeferredSend(l2, 'RememberedClose, [Array: self]) else AddDeferredSend(self, 'Close, nil))
+				end)
+		end,
+		periodicAlarmEditor: {
+			viewSetupDoneScript: func() begin
+				inherited:viewSetupDoneScript();
+				(if GetRoot().mailSlip:AlarmsEnabled() then enableCheckbox:toggleCheck())
+			end,
+			viewChildren: [viewChildren: enableCheckbox_2],
+			enableCheckbox: nil,
+			allocateContext: [|Array|: 'enableCheckbox, enableCheckbox_2],
+			_proto: @protoPeriodicAlarmEditor
+		},
+		declareSelf: 'base,
+		debug: 20475,
+		stepChildren: [stepChildren:
+			{
+				viewJustify: 8388630,
+				viewBounds: {left: 0, top: 24, right: 83, bottom: 37},
+				text: "Set Up Account",
+				msgValidateNumber: yourConfigurationIsIncomplete_2,
+				networkSymbols: networkSymbols,
+				setEmporia: nil,
+				buttonClickScript: func() begin
+					(setEmporia := (not self:ValidateConfig('location, nil, '[Array: mailPhone], msgValidateNumber, 'ValidateSlip, 'ValidationComplete)))
+				end,
+				ValidationComplete: func(a1) begin
+					local l1, l2;
+					(if a1 then begin
+							if setEmporia then begin
+									UseCurrentEmporium()
+								end;
+							setEmporia := nil;
+							if ((not userConfiguration.mailAccount) or (not StrFilled(userConfiguration.mailAccount))) then begin
+									GetRoot().mailSlip:DoRegister(nil)
+								end else begin
+									mailRegister.request := nil;
+									mailRegister:Open()
+								end;
+							l1 := GetRoot().mailSlip.owner;
+							(if (l2 := GetRoot().(l1)).viewCObject then AddDeferredSend(l2, 'RememberedClose, [Array: base]) else base:Close())
+						end)
+				end,
+				viewSetupDoneScript: func() begin
+					(if (not transport:GetConfig('onlineRegEnabled)) then self:Hide())
+				end,
+				_proto: @protoTextButton
+			},
+			{
+				viewBounds: {left: 10, top: 8, right: 215, bottom: 24},
+				viewJustify: 8396800,
+				text: "When connecting",
+				labelCommands: [|Array|: "Browse mail", "Download mail"],
+				labelValues: [|Array|: 'interactive, 'batch],
+				GetIndex: func() begin
+					local l1;
+					if ((l1 := LSearch(labelValues, GetUserConfig('mailMode), 0, '|=|, nil)) = nil) then begin
+							l1 := 0
+						end;
+					l1
+				end,
+				LabelActionScript: func(a1) begin
+					SetUserConfig('mailMode, labelValues[a1])
+				end,
+				TextSetup: func() begin
+					labelCommands[self:GetIndex()]
+				end,
+				_proto: @protoMultiLinePicker
+			},
+			{
+				viewBounds: {left: 0, top: 1, right: 205, bottom: 17},
+				viewJustify: 8398852,
+				viewFormat: 0,
+				viewTransferMode: 0,
+				viewFont: @fontSystem10,
+				text: "Disconnect after sending mail",
+				buttonValue: true,
+				viewSetupFormScript: func() begin
+					(viewValue := GetUserConfig('mailautodisconnect))
+				end,
+				valueChanged: func() begin
+					SetUserConfig('mailautodisconnect, viewValue)
+				end,
+				_proto: @protoCheckbox
+			},
+			{
+				viewBounds: {left: 0, top: 0, right: 185, bottom: 16},
+				viewJustify: 8398852,
+				viewFormat: 0,
+				viewTransferMode: 0,
+				viewFont: @fontSystem10,
+				text: "Strip Internet headers",
+				buttonValue: true,
+				viewSetupFormScript: func() begin
+					(viewValue := GetUserConfig('mailStripHeaders))
+				end,
+				valueChanged: func() begin
+					SetUserConfig('mailStripHeaders, viewValue)
+				end,
+				_proto: @protoCheckbox
+			},
+			{
+				viewJustify: 8388742,
+				viewBounds: {left: 25, top: -18, right: 78, bottom: -5},
+				text: "Mail Font",
+				buttonClickScript: func() begin
+					fontPicker:choose(userConfiguration, 'mailFont);
+					(fontPickerUp := fontPicker)
+				end,
+				_proto: @protoTextButton
+			},
+			{
+				viewJustify: 8401926,
+				viewBounds: {left: 7, top: 0, right: 84, bottom: 0},
+				text: "Auto Delivery",
+				buttonClickScript: func() begin
+					local l1;
+					(l1 := BuildContext({_proto: periodicAlarmEditor, ownerName: Stringer([Array: "Mail:", appSymbol]), ownerSymbol: appSymbol, title: text})):Open();
+					(alarmsUp := l1)
+				end,
+				_proto: @protoTextButton
+			}
+		],
+		_proto: @protoTransportPrefs
+	},
+	eworld: nil,
+	addressSymbols: addressSymbols,
+	newAccountSlip: {
+		viewBounds: {left: 0, top: 0, right: 210, bottom: 76},
+		viewJustify: vjParentCenterH + vjParentCenterV,
+		declareSelf: 'base,
+		theApp: nil,
+		theTransport: nil,
+		request: nil,
+		thePersona: nil,
+		theEmporium: nil,
+		accountType: 'New,
+		msgValidateSource: yourConfigurationIsIncomplete,
+		msgValidateNumber: yourConfigurationIsIncomplete_2,
+		addressSymbols: addressSymbols,
+		networkSymbols: networkSymbols,
+		ReOrientToScreen: @defRotateFunc,
+		viewChildren: [viewChildren:
+			{
+				viewBounds: {left: 0, top: 3, right: 0, bottom: 16},
+				viewJustify: 8388658,
+				viewFont: @fontSystem10,
+				text: nil,
+				viewSetupFormScript: func() begin
+					(if request then (text := "Your Newton is not set up for mail") else (text := "Set up America Online mail account"))
+				end,
+				_proto: @protoStaticText
+			},
+			{
+				viewBounds: {left: 38, top: 6, right: 198, bottom: 30},
+				viewJustify: vjSiblingBottomV,
+				viewSetupFormScript: func() begin
+					(clusterValue := accountType)
+				end,
+				ClusterChanged: func() begin
+					(accountType := clusterValue)
+				end,
+				viewChildren: [viewChildren:
+					{
+						viewBounds: {left: 0, top: 0, right: 180, bottom: 13},
+						viewJustify: vjSiblingLeftH + vjSiblingBottomV,
+						viewFont: @fontSystem10,
+						text: "Create a new account",
+						buttonValue: 'New,
+						_proto: @protoRadioButton
+					},
+					{
+						viewBounds: {left: 0, top: 0, right: 180, bottom: 13},
+						viewJustify: vjSiblingLeftH + vjSiblingBottomV,
+						viewFont: @fontSystem10,
+						text: "Use an existing account",
+						buttonValue: 'existing,
+						_proto: @protoRadioButton
+					}
+				],
+				_proto: @protoRadioCluster
+			},
+			{_proto: @protoCancelButton},
+			{
+				viewBounds: {left: -46, top: 0, right: -7, bottom: 13},
+				viewJustify: 8407046,
+				ValidateSlip: nil,
+				SetPersona: nil,
+				setEmporia: nil,
+				text: "Set Up",
+				viewQuitScript: func() begin
+					if ValidateSlip then begin
+							ValidateSlip:Close()
+						end;
+					inherited:?viewQuitScript()
+				end,
+				buttonClickScript: func() begin
+					(if (accountType = 'New) then (setEmporia := (not self:ValidateConfig('location, nil, '[Array: mailPhone], msgValidateNumber, 'ValidateSlip, 'RegValidationComplete))) else (SetPersona := (not self:ValidateConfig('owner, nil, '[Array: email, emailPassword], msgValidateSource, 'ValidateSlip, 'MoreValidation))))
+				end,
+				MoreValidation: func(a1) begin
+					(if a1 then (if request then (setEmporia := self:ValidateConfig('location, nil, '[Array: mailPhone], msgValidateNumber, 'ValidateSlip, 'ValidationComplete)) else begin
+								base:Close();
+								UseCurrentPersona();
+								GetRoot():Notify(3, theTransport.title, ParamStr("Your e-mail information has been placed in your owner card in Owner Info. You can now send and receive mail with the account \u201C\u^0\u201D\u", [Array: userConfiguration.mailAccount]))
+							end))
+				end,
+				ValidationComplete: func(a1) begin
+					(if a1 then begin
+							theEmporium := ResolveEntryAlias(userConfiguration.currentEmporium);
+							thePersona := ResolveEntryAlias(userConfiguration.currentPersona);
+							if SetPersona then begin
+									UseCurrentPersona()
+								end;
+							if setEmporia then begin
+									UseCurrentEmporium()
+								end;
+							SetPersona := nil;
+							setEmporia := nil;
+							base:Close();
+							AddDeferredSend(theTransport, 'DoConnect, [Array: theEmporium, thePersona, request, GetUserConfig('mailMode), GetUserConfig('mailListMethod)])
+						end)
+				end,
+				RegValidationComplete: func(a1) begin
+					(if a1 then begin
+							mailRegister.request := request;
+							base:Close();
+							mailRegister:Open()
+						end)
+				end,
+				_proto: @protoTextButton
+			}
+		],
+		_proto: @protoFloater
+	},
+	groupIcon: @routeMailBitmap,
+	DoShutdown: func(a1) begin
+		(if a1 then eworld:ConnectionAbort())
+	end,
+	groupTitle: mail_2,
+	SendRequest: func(a1) begin
+		local l1, l2;
+		(if (a1.cause <> 'submit) then begin
+				if (if eworld then eworld.connected) then begin
+						if (a1.cause = 'periodic) then begin
+								return nil
+							end;
+						if (status = 'connected) then begin
+								eworld.request := a1;
+								eworld:SendNextMessage()
+							end else begin
+								if (lastRequest = 'SendRequest) then begin
+										self:QueueRequest(eworld.request, a1)
+									end else begin
+										self:QueueRequest('SendRequest, a1);
+										return nil
+									end
+							end
+					end else begin
+						if (a1.cause = 'periodic) then begin
+								l1 := ResolveEntryAlias(userConfiguration.currentEmporium);
+								l2 := ResolveEntryAlias(userConfiguration.currentPersona);
+								AddDeferredSend(self, 'DoConnect, [Array: l1, l2, a1, 'batch, 'Mail_ListUnread])
+							end else begin
+								if (if (not (if connectSlip then connectSlip.viewCObject)) then (status = 'idle)) then begin
+										(connectSlip := BuildContext(connectOptionsSlip)).request := a1;
+										connectSlip.theApp := GetRoot().(owner);
+										connectSlip.theTransport := self;
+										connectSlip.connectionType := 'send;
+										connectSlip.clearOnClose := 'connectSlip;
+										if connectSlip.theApp.viewCObject then begin
+												connectSlip.theApp:RememberedOpen(connectSlip)
+											end else begin
+												connectSlip:Open()
+											end
+									end else begin
+										return nil
+									end
+							end
+					end;
+				(lastRequest := 'SendRequest)
+			end)
+	end,
+	ConvertedMailPhone: func(a1, a2, a3) begin
+		local l1;
+		(if a1 then begin
+				if IsRichString((l1 := GetUserConfig('mailPhoneFull))) then begin
+						SetUserConfig('mailPhoneFull, a2)
+					end;
+				eworld.firstTime := true;
+				AddDeferredSend(eworld, 'LoginToHost, [Array: eworld._worksite, eworld._owner, nil, nil, nil, nil])
+			end else (eworld := nil))
+	end,
+	RegisterValidationComplete: func(a1) begin
+		local l1;
+		l1 := GetRoot().mailSlip;
+		(if a1 then begin
+				if l1.setEmporia then begin
+						UseCurrentEmporium()
+					end;
+				l1.setEmporia := nil;
+				(if ((not userConfiguration.mailAccount) or (not StrFilled(userConfiguration.mailAccount))) then l1:DoRegister(nil) else begin
+						mailRegister.request := nil;
+						mailRegister:Open()
+					end)
+			end)
+	end,
+	ConvertedAccount: func(a1, a2, a3) begin
+		local l1, l2;
+		(if a1 then begin
+				if IsRichString((l1 := GetUserConfig('mailAccount))) then begin
+						SetUserConfig('mailAccount, a2);
+						if (l2 := ResolveEntryAlias(userConfiguration.currentPersona)) then begin
+								GetRoot().cardfile:ReplaceInkData(l2, 'email, l1, 'email, a2)
+							end
+					end;
+				self:ConvertInkText(GetUserConfig('mailPassword), 'alpha, nil, "Converting e-mail password", "Please verify that the ink text was converted correctly.", 'InkConvert, 'ConvertedPassword, nil)
+			end else (eworld := nil))
+	end,
+	GetItemTime: func(a1) begin
+		(if a1.Remote then ShortDate(a1.timestamp) else Stringer([Array: ShortDate(a1.timestamp), " ", HourMinute(a1.timestamp)]))
+	end,
+	translate: nil,
+	SetStatusDialog: func(a1, a2, a3) begin
+		local l1, l2;
+		l1 := nil;
+		if (a1 = 'connected) then begin
+				l1 := "Disconnect";
+				if (if requestQueue then (Length(requestQueue) > 0)) then begin
+						l2 := requestQueue[0];
+						SetRemove(requestQueue, l2);
+						AddDeferredSend(self, l2.function, [Array: l2])
+					end
+			end else begin
+				if (status = 'connected) then begin
+						l1 := "Stop"
+					end
+			end;
+		if l1 then begin
+				if (a3 = nil) then begin
+						a3 := {}
+					end;
+				if (not (a3:primary exists)) then begin
+						a3.primary := {text: l1, script: func() begin
+							GetRoot().(appSymbol):CancelRequest('userCancel)
+						end}
+					end
+			end;
+		if (if IsFrame(a3) then StrFilled(a3.titleText)) then begin
+				a3.titleText := ParamStr("^0", [Array: a3.titleText])
+			end;
+		inherited:SetStatusDialog(a1, a2, a3)
+	end,
+	filetransferstatus: func(a1, a2) begin
+		self:SetStatus(status, {gauge: a1})
+	end,
+	routingSlip: {
+		editSubject: func(a1) begin
+			mailEditor.message := fields;
+			mailEditor.path := 'title;
+			mailEditor.updateScript := a1;
+			mailEditor.appName := appName;
+			mailEditor:Open();
+			true
+		end,
+		viewSetupDoneScript: func() begin
+			inherited:viewSetupDoneScript();
+			self:changeformat();
+			(if (not fields.edited) then self:generateText())
+		end,
+		doChangeFormat: func(a1) begin
+			(if a1 then begin
+					fields.edited := nil;
+					RemoveSlot(fields, 'text);
+					fields.currentFormat := chosenFormat.symbol;
+					chosenFormat := nil;
+					self:changeformat()
+				end else formatPicker:revertCommand())
+		end,
+		BadAddress: func(a1, addr) begin
+			local name;
+			l1 := a1:Get(addr, 'email, nil);
+			name := a1:Get(addr, 'name, 'text);
+			if IsArray(l1) then begin
+					local l1;
+					(foreach l2 in l1 do begin
+							if self:BadAddress(a1, l2) then begin
+									return true
+								end
+						end);
+					return nil
+				end else begin
+					if (((not l1) or (not IsString(l1))) or (not StrFilled(l1))) then begin
+							self:Notify(3, appName, ParamStr("^0 does not have an e-mail address.", [Array: name]))
+						end else begin
+							if IsRichString(l1) then begin
+									inkCount := (inkCount + 1);
+									AddDeferredCall(func() begin
+										self:ConvertStart({addr: addr, name: name})
+									end, nil)
+								end else begin
+									return nil
+								end
+						end
+				end;
+			true
+		end,
+		receiptCheck: nil,
+		networkSymbols: networkSymbols,
+		viewQuitScript: func() begin
+			if (if (ValidateSlip exists) then ValidateSlip.viewCObject) then begin
+					ValidateSlip:Close()
+				end;
+			ValidateSlip := nil;
+			inherited:?viewQuitScript()
+		end,
+		editMessage: func(a1) begin
+			mailEditor.message := fields;
+			mailEditor.path := 'text;
+			mailEditor.updateScript := a1;
+			mailEditor.appName := appName;
+			mailEditor:Open()
+		end,
+		changeformat: func() begin
+			(if ((activeFormat.routingType = 'frame) or (activeFormat.routingType = 'view)) then begin
+					if (not fields.reply) then begin
+							fields.attachment := (not GetUserConfig('mailTextOnly))
+						end;
+					attachCheck:AllowChecking(true)
+				end else begin
+					if (not fields.reply) then begin
+							fields.attachment := nil
+						end;
+					attachCheck:AllowChecking(nil)
+				end)
+		end,
+		ConvertComplete: func(a1, a2, a3) begin
+			local l1, l2;
+			InkConvert := nil;
+			(if (if a1 then a2) then begin
+					l1 := a3.addr.email;
+					a3.addr.email := SetClass(a2, a3.type);
+					if (l2 := ResolveEntryAlias(a3.addr._alias)) then begin
+							GetRoot().cardfile:ReplaceInkData(l2, 'email, l1, 'email, a2)
+						end;
+					(if ((inkCount := (inkCount - 1)) < 1) then self:PrepareToSend(noworlater))
+				end)
+		end,
+		FormatChanged: func(a1) begin
+			chosenFormat := a1;
+			if fields.edited then begin
+					self:Confirm(appName, "Changing the format will cause your text changes to be lost. Do you want to continue?", self, 'doChangeFormat)
+				end else begin
+					self:doChangeFormat(true)
+				end;
+			true
+		end,
+		fields: nil,
+		chosenFormat: nil,
+		subject: nil,
+		StripInkFromText: func(a1) begin
+			(if a1 then begin
+					StripInk(fields.text, $\uFC02);
+					StrReplace(fields.text, "\uFC02\u", "-ink-", nil);
+					self:getAttachment();
+					self:shrinkMessage();
+					self:ContinueSend(noworlater)
+				end else self:editMessage(nil))
+		end,
+		attachCheck: nil,
+		SetupTitle: func() begin
+			local l1;
+			(if TargetIsCursor(target) then (fields.title := 'multiple) else begin
+					l1 := GetItemTransport(fields);
+					fields.title := l1:?GetItemTitle(target);
+					if (not fields.title) then begin
+							fields.title := l1:?GetItemTitle(fields)
+						end;
+					if ((not fields.title) or (not StrFilled(fields.title))) then begin
+							fields.title := " "
+						end;
+					(if (StrLen(fields.title) > 61) then (fields.title := Substr(fields.title, 0, 61)))
+				end)
+		end,
+		_proto: @protoFullRouteSlip,
+		InkConvert: nil,
+		PrepareToSend2: func(a1, a2, a3) begin
+			(if a1 then begin
+					if (if IsString(a2) then (StrLen(a2) > 61)) then begin
+							fields.title := Substr(a2, 0, 61)
+						end else begin
+							fields.title := a2
+						end;
+					(if IsRichString(fields.text) then AsyncConfirm("The text copy of the mail contains ink which can not be sent.  You may remove or convert the ink words.", [Array: {value: true, text: "Remove"}, {value: nil, text: "Convert"}], func(a1) begin
+							self:StripInkFromText(a1)
+						end) else begin
+							self:getAttachment();
+							self:shrinkMessage();
+							self:ContinueSend(noworlater)
+						end)
+				end)
+		end,
+		appSymbol: 'mail,
+		bccLine: nil,
+		inkCount: 0,
+		PrepareToSend: func(a1) begin
+			noworlater := a1;
+			fields.toRef := toLine.selected;
+			fields.cc := ccLine.selected;
+			fields.bcc := bccLine.selected;
+			if ((not fields.toRef) or (Length(fields.toRef) = 0)) then begin
+					self:Notify(3, appName, "You have not chosen a recipient. Please fill in the 'To' address and try again.");
+					return nil
+				end;
+			inkCount := 0;
+			l1 := GetDataDefs('|nameRef.email|);
+			local l1;
+			(foreach l2, l3 in fields.toRef do begin
+					if self:BadAddress(l1, l3) then begin
+							return nil
+						end
+				end);
+			if (if fields.cc then (Length(fields.cc) > 0)) then begin
+					(foreach l2, l3 in fields.cc do begin
+							if self:BadAddress(l1, l3) then begin
+									return nil
+								end
+						end)
+				end;
+			if (if fields.bcc then (Length(fields.bcc) > 0)) then begin
+					(foreach l2, l3 in fields.bcc do begin
+							if self:BadAddress(l1, l3) then begin
+									return nil
+								end
+						end)
+				end;
+			(if (if IsString(fields.title) then IsRichString(fields.title)) then self:ConvertInkText(fields.title, 'alpha, nil, "Converting e-mail subject", "Please verify that the ink text was converted correctly.", 'InkConvert, 'PrepareToSend2, nil) else self:PrepareToSend2(true, fields.title, nil))
+		end,
+		currentPickerLine: nil,
+		generateText: func() begin
+			local l1, l2;
+			l2 := (if fields.appSymbol then GetVariable(self, fields.appSymbol));
+			l1 := activeFormat.TextScript;
+			fields.text := " ";
+			(if l1 then (if (if IsSymbol(l1) then l2) then (fields.text := Perform(l2, l1, [Array: fields, target])) else (if IsFunction(l1) then (fields.text := call l1 with (fields, target)))))
+		end,
+		appName: americaOnline,
+		shrinkMessage: func() begin
+			local l1;
+			l1 := (foreach l2, l3 in fields collect (if (not l3) then l2));
+			(foreach l2 in l1 do begin
+					if l2 then begin
+							RemoveSlot(fields, l2)
+						end
+				end);
+			RemoveSlot(fields, 'formats);
+			RemoveSlot(fields, 'targetBox);
+			RemoveSlot(fields, 'alternatives);
+			RemoveSlot(fields, 'pageCount);
+			RemoveSlot(fields, 'pageID);
+			RemoveSlot(fields, 'pageNumber);
+			(if (fields.state = 'pending) then RemoveSlot(fields, 'Connect))
+		end,
+		stepallocatecontext: [|Array|:
+			'toLine,
+			toLine_2,
+			'ccLine,
+			ccLine_2,
+			'bccLine,
+			bccLine_2,
+			'subject,
+			subject,
+			'attachCheck,
+			attachCheck,
+			'receiptCheck,
+			receiptCheck
+		],
+		toLine: nil,
+		noworlater: nil,
+		SetFieldDefaults: func() begin
+			l1 := ResolveEntryAlias(GetUserConfig('currentPersona));
+			if (not fields.reply) then begin
+					fields.attachment := (not GetUserConfig('mailTextOnly))
+				end;
+			if l1 then begin
+					fields.fromName := GetRoot():PrimaryName(l1);
+					if (l2 := GetRoot().cardfile:bcEMailAddress(l1, addressSymbols)) then begin
+							fields.fromRef := Clone(l2[0])
+						end
+				end;
+			fields.dateStr := LongDateStr(Time(), @datetimeStrSpecs.longDateStrSpec);
+			if TargetIsCursor(target) then begin
+					if ((l3 := GetTargetCursor(target, nil)):CountEntries() = 1) then begin
+							target := l3:entry();
+							fields.body := target;
+							l4 := nil;
+							if ((l5 := GetViewDefs(DataClassOf(target))) <> nil) then begin
+									if ((l4 := l5.prFrameFormat) = nil) then begin
+											local l1;
+											local l2;
+											local l3;
+											local l4;
+											local l5;
+											(foreach l6 in l5 do begin
+													local l8, l9, l10, l11, l12, l13, l14, l15;
+													if (if (if l6 then ((l6.routingType = 'frame) or (l6.routingType = 'view))) then (not l6.usesCursors)) then begin
+															l4 := l6;
+															break
+														end
+												end)
+										end
+								end;
+							if l4 then begin
+									l8 := {fields: fields, target: target, targetView: targetView};
+									fields.currentFormat := l4.symbol;
+									if HasSlot(l4, 'SetupSlip) then begin
+											l4:?SetupSlip(l8, l8.fields)
+										end else begin
+											l4:?SetupItem(fields, l8)
+										end;
+									activeFormat := l4
+								end
+						end else begin
+							fields.title := 'multiple;
+							l9 := nil;
+							l10 := (if fields.appSymbol then GetVariable(self, fields.appSymbol));
+							l11 := activeFormat.TextScript;
+							l12 := GetItemTransport(fields);
+							l13 := l3:entry();
+							(while (if l13 then (not l9)) do begin
+									if (not (l14 := l12:?GetItemTitle(l13))) then begin
+											l14 := l12:?GetItemTitle(fields)
+										end;
+									if ((not l14) or (not StrFilled(l14))) then begin
+											l14 := " "
+										end;
+									if IsRichString(l14) then begin
+											l9 := true
+										end else begin
+											l15 := " ";
+											if l11 then begin
+													if (if IsSymbol(l11) then l10) then begin
+															l15 := Perform(l10, l11, [Array: fields, l13])
+														end else begin
+															if IsFunction(l11) then begin
+																	l15 := call l11 with (fields, l13)
+																end
+														end
+												end;
+											if IsRichString(l15) then begin
+													l9 := true
+												end
+										end;
+									(l13 := l3:Next())
+								end);
+							l3:Reset();
+							if l9 then begin
+									self:Notify(3, appName, "Some of the items contain ink, which will be replaced with the word \u201C\u-ink-\u201D\u.")
+								end
+						end
+				end;
+			(if (not fields.title) then self:SetupTitle())
+		end,
+		currentPicker: nil,
+		viewSetupFormScript: func() begin
+			self:ToRefCheck('|nameRef.email|);
+			inherited:viewSetupFormScript();
+			self:SetFieldDefaults()
+		end,
+		ccLine: nil,
+		ConvertStart: func(a1) begin
+			self:ConvertInkText(a1.addr.email, 'alpha, nil, ParamStr("eMail address for ^0 ", [Array: a1.name]), ParamStr("Please verify that ^0 is converted correctly.", [Array: a1.addr.email]), 'InkConvert, 'ConvertComplete, {addr: a1.addr, type: ClassOf(a1.addr.email)})
+		end,
+		stepChildren: [stepChildren:
+			{
+				viewJustify: 8388614,
+				viewBounds: {left: 11, top: 0, right: 71, bottom: 13},
+				text: "Show Text",
+				viewSetupFormScript: func() begin
+					(viewBounds := DeepClone(viewBounds)).top := (((envelopeHeight + bottomIndent) - 18) - 2);
+					(viewBounds.bottom := (viewBounds.top + 13))
+				end,
+				buttonClickScript: func() begin
+					self:editMessage(nil)
+				end,
+				_proto: @protoTextButton
+			},
+			toLine_2,
+			ccLine_2,
+			bccLine_2,
+			subject,
+			attachCheck,
+			receiptCheck
+		],
+		debug: 1301114,
+		doEditSubject: func() begin
+			subject:Popit(0)
+		end,
+		getAttachment: func() begin
+			local l1, l2;
+			(if fields.attachment then begin
+					if (fields.body = nil) then begin
+							fields.body := DeepClone(target)
+						end;
+					(if fields.body.package then begin
+							fields.IsPackage := true;
+							l1 := GetPkgRefInfo(fields.body.package);
+							try begin
+									if (if (if (l1.numparts > 0) then (l1.parttypes[0] = 'form)) then l1.parts[0].text) then begin
+											l2 := l1.parts[0].text
+										end else begin
+											l2 := l1.title
+										end
+								end onexception |evt.ex| do begin
+									l2 := l1.title
+								end;
+							fields.body.class := 'packageFrame;
+							fields.body.data := fields.body.package;
+							fields.body.filesize := l1.size;
+							fields.body.type := "pkg ";
+							fields.body.creator := "pkgX";
+							(if (not fields.edited) then (fields.text := ParamStr("Attached package information:\nName: ^0\nSize: ^1 bytes\n^2", [Array: fields.body.filename, l1.size, l1.copyright])))
+						end)
+				end else (if (not TargetIsCursor(target)) then (fields.body := nil)))
+		end,
+		addressSymbols: addressSymbols,
+		bottomIndent: 74
+	},
+	ValidateSlip: nil
+};
+
+endsequence := "@";
+
+addressSymbols := [|Array|: '|string.email.aol|, '|string.email|, '|string|];
+
+networkSymbols := [|Array|: 'sprint, 'concert];
+
+yourConfigurationIsIncomplete := "Your configuration is incomplete. Please enter your America Online account information:";
+
+yourConfigurationIsIncomplete_2 := "Your configuration is incomplete. Please enter the America Online access information:";
+
+toLine_2Proto := {
+	_proto: @protoAddressPicker,
+	indent: 35,
+	selected: nil,
+	class: '|nameRef.email|,
+	viewSetupFormScript: func() begin
+		selected := fields.(path);
+		inherited:?viewSetupFormScript()
+	end,
+	DoOpenPicker: func() begin
+		if (if currentPicker then currentPicker.viewCObject) then begin
+				if (currentPickerLine = path) then begin
+						return nil
+					end;
+				currentPicker:Close()
+			end;
+		inherited:DoOpenPicker();
+		currentPicker := pickerSlip;
+		(currentPickerLine := path)
+	end
+};
+
+bccLineProto := {
+	_proto: @protoAddressPicker,
+	indent: 35,
+	selected: nil,
+	class: '|nameRef.email|,
+	readOnly: true,
+	viewSetupFormScript: func() begin
+		selected := target.(path);
+		inherited:?viewSetupFormScript()
+	end,
+	Popit: func(a1) begin
+		local l1;
+		if (Length(selected) = 0) then begin
+				l1 := [Array: GetDataDefs('|nameRef.email|):MakeNameRef({name: {last: "None"}}, '|nameRef.email|)]
+			end else begin
+				l1 := DeepClone(selected)
+			end;
+		_picker:New(class, l1, self, {readOnly: true, suppressFolderTabs: true, suppressCounter: true});
+		base:hilite(nil);
+		true
+	end,
+	pickerSetup: func() begin
+		true
+	end,
+	viewQuitScript: func() begin
+		nil
+	end,
+	pickActionScript: func(a1) begin
+		nil
+	end
+};
+
+bcc := "Bcc";
+
+bccLine := {
+	_proto: bccLineProto,
+	viewBounds: {left: 20, top: -33, right: -10, bottom: -18},
+	viewJustify: vjParentFullH + vjParentBottomV,
+	text: bcc,
+	path: 'bcc,
+	preallocatedContext: 'bccLine
+};
+
+cc := "Cc";
+
+ccLine := {
+	_proto: bccLineProto,
+	viewBounds: {left: 20, top: -15, right: -10, bottom: -5},
+	viewJustify: vjParentFullH + vjSiblingTopV,
+	text: cc,
+	path: 'cc,
+	preallocatedContext: 'ccLine
+};
+
+toLine := {
+	_proto: bccLineProto,
+	viewBounds: {left: 20, top: -15, right: -10, bottom: -5},
+	viewJustify: vjParentFullH + vjSiblingTopV,
+	text: to_2,
+	path: 'toRef,
+	preallocatedContext: 'toLine
+};
+
+labelLine_3 := {
+	viewBounds: {left: 15, top: -23, right: -15, bottom: -5},
+	viewJustify: vjCenterH + vjBottomV + vjParentFullH + vjSiblingTopV,
+	text: nil,
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	pix: nil,
+	viewSetupFormScript: func() begin
+		(if (addedHeight < 20) then begin
+				text := "Internet Mail Item";
+				(viewJustify := 186)
+			end else begin
+				text := "Addressees";
+				(viewJustify := 16442)
+			end)
+	end,
+	viewDrawScript: func() begin
+		local l1;
+		if (not pix) then begin
+				pix := MakeLine((l1 := self:LocalBox()).left, l1.top, l1.right, l1.top)
+			end;
+		self:DrawShape(pix, nil)
+	end,
+	preallocatedContext: 'labelLine,
+	_proto: @protoStaticText
+};
+
+toLine_2 := {
+	_proto: toLine_2Proto,
+	viewBounds: {left: 50, top: 45, right: -10, bottom: 60},
+	text: to_2,
+	path: 'toRef,
+	viewSetupFormScript: func() begin
+		alternatives := fields.alternatives;
+		inherited:?viewSetupFormScript()
+	end,
+	preallocatedContext: 'toLine
+};
+
+ccLine_2 := {
+	_proto: toLine_2Proto,
+	viewBounds: {left: 50, top: 60, right: -10, bottom: 75},
+	text: cc,
+	path: 'cc,
+	preallocatedContext: 'ccLine
+};
+
+bccLine_2 := {
+	_proto: toLine_2Proto,
+	viewBounds: {left: 50, top: 75, right: -10, bottom: 90},
+	text: bcc,
+	path: 'bcc,
+	preallocatedContext: 'bccLine
+};
+
+subject := {
+	viewBounds: nil,
+	label: "ﰁSubject",
+	viewJustify: vjParentFullH,
+	viewSetupFormScript: func() begin
+		viewBounds := RelBounds(10, (self:BottomOfSlip() - 64), -20, 15);
+		inherited:?viewSetupFormScript()
+	end,
+	TextSetup: func() begin
+		(if (fields.title = 'multiple) then "Multiple Items" else fields.title)
+	end,
+	Popit: func(a1) begin
+		self:hilite(nil);
+		(if (fields.title = 'multiple) then self:Notify(3, appName, "The Subject for multiple items can\u2019\ut be changed.") else self:editSubject(func(a1) begin
+				if a1 then begin
+						if (StrLen((a1 := SubstituteChars(a1, "\n\t", " "))) > 61) then begin
+								a1 := Substr(a1, 0, 61);
+								self:Notify(3, appName, ParamStr("The Subject is limited to ^0 characters and has been truncated.", [Array: 61]))
+							end
+					end;
+				fields.title := a1;
+				self:viewSetupChildrenScript();
+				base:Dirty()
+			end))
+	end,
+	preallocatedContext: 'subject,
+	_proto: @protoTextPicker
+};
+
+attachCheck := {
+	viewBounds: {left: 2, top: 5, right: 92, bottom: 20},
+	viewJustify: vjSiblingLeftH + vjSiblingBottomV,
+	allowable: true,
+	text: "Text Only",
+	viewSetupFormScript: func() begin
+		(self.viewValue := (not fields.attachment))
+	end,
+	valueChanged: func() begin
+		(if allowable then begin
+				fields.attachment := (not viewValue);
+				SetUserConfig('mailTextOnly, viewValue)
+			end else (if (viewValue = nil) then begin
+					SetValue(self, 'viewValue, true);
+					self:Notify(3, appName, "Sorry, only text is supported by your chosen format!")
+				end))
+	end,
+	AllowChecking: func(a1) begin
+		if (not (allowable := a1)) then begin
+				SetValue(self, 'viewValue, true)
+			end;
+		self:UpdateBitmap()
+	end,
+	preallocatedContext: 'attachCheck,
+	_proto: @protoCheckbox
+};
+
+receiptCheck := {
+	viewBounds: {left: 0, top: 0, right: 120, bottom: 15},
+	viewJustify: vjSiblingRightH + vjSiblingTopV,
+	text: "Receipt Requested",
+	viewSetupFormScript: func() begin
+		(self.viewValue := (fields.receipt := GetUserConfig('mailReceipt)))
+	end,
+	valueChanged: func() begin
+		SetUserConfig('mailReceipt, viewValue);
+		(fields.receipt := viewValue)
+	end,
+	viewSetupDoneScript: func() begin
+		(if (not userConfiguration.mailReceipt) then self:Hide())
+	end,
+	preallocatedContext: 'receiptCheck,
+	_proto: @protoCheckbox
+};
+
+completionscript := func(a1, a2, a3) begin
+	if (a3 = -16005) then begin
+			a3 := -38001
+		end;
+	if (if a3 then (a1._parent.curerror = nil)) then begin
+			a1._parent.curerror := a3
+		end;
+	(if a1.curstate then AddDeferredSend(a1, 'stopCCL, nil))
+end;
+
+mailNetworksProto := {
+	title: sprintNet,
+	id: 'sprint,
+	curerror: nil,
+	speed: 0,
+	networkIdentifier: func() begin
+		local l1;
+		l1 := "eworld2";
+		if (speed <= 9600) then begin
+				l1 := "eworld1"
+			end;
+		if (speed <= 2400) then begin
+				l1 := "eworld0"
+			end;
+		l1
+	end,
+	cancelSpec: {
+		async: true,
+		completionscript: func(a1, a2, a3) begin
+			a1:SetInputSpec(nil);
+			AddDeferredSend(a1, 'stopCCL, nil)
+		end
+	},
+	quit: func() begin
+		if (not mailEndPoint.curstate) then begin
+				return nil
+			end;
+		mailEndPoint.curstate := nil;
+		(if (curerror = nil) then begin
+				mailEndPoint:Cancel(cancelSpec);
+				(curerror := -16005)
+			end else AddDeferredSend(mailEndPoint, 'stopCCL, nil))
+	end,
+	mailEndPoint: {
+		_proto: @protoBasicEndpoint,
+		ExceptionHandler: func(a1) begin
+			if (mailEndPoint.curstate = nil) then begin
+					return nil
+				end;
+			if (curerror = nil) then begin
+					curerror := a1.data
+				end;
+			AddDeferredSend(ep, 'stopCCL, nil)
+		end,
+		waitForTerminal: {
+			form: '|string|,
+			filter: {sevenbit: true},
+			discardafter: 200,
+			termination: {endsequence: "="},
+			InputScript: func(a1, a2, a3, a4) begin
+				(if (a1.curstate = 'waitForTerminal) then begin
+						a1.curstate := 'waitForAt;
+						(try begin
+								a1:SetInputSpec(a1.waitForAt);
+								a1:output("D1\n", nil, {async: true})
+							end onexception |evt.ex| do begin
+								self:quit()
+							end)
+					end)
+			end,
+			completionscript: completionscript,
+			reqTimeout: 20000
+		},
+		waitForAt: {
+			form: '|string|,
+			filter: {sevenbit: true},
+			termination: {endsequence: endsequence},
+			InputScript: func(a1, a2, a3, a4) begin
+				(if (a1.curstate = 'waitForAt) then begin
+						a1.curstate := 'waitForConnected;
+						(try begin
+								a1:SetInputSpec(a1.waitForConnected);
+								a1:output(Stringer([Array: "c ", a1:networkIdentifier(), "*NEWTMAIL0001\n"]), nil, {async: true})
+							end onexception |evt.ex| do begin
+								self:quit()
+							end)
+					end)
+			end,
+			completionscript: completionscript,
+			reqTimeout: 20000
+		},
+		waitForConnected: {
+			form: '|string|,
+			filter: {sevenbit: true},
+			termination: {endsequence: " CONNECTED"},
+			InputScript: func(a1, a2, a3, a4) begin
+				(if (a1.curstate = 'waitForConnected) then begin
+						a1.curstate := nil;
+						a1:SetInputSpec(nil);
+						AddDeferredSend(a1, 'stopCCL, nil)
+					end)
+			end,
+			completionscript: completionscript,
+			reqTimeout: 20000
+		}
+	},
+	mailSetup: func(a1) begin
+		mailEndPoint:instantiateFromTEndpoint((mailEndPoint := {_proto: mailEndPoint, _parent: self}), nil, a1)
+	end,
+	mailStart: func() begin
+		mailEndPoint.curstate := 'waitForTerminal;
+		mailEndPoint:SetInputSpec(mailEndPoint.waitForTerminal);
+		speed := [Array: {label: "mspd", type: 'option, opCode: 1024, data: {arglist: [Array: 0], typelist: [Array: 10, 1]}}];
+		try begin
+				speed := mailEndPoint:option(speed, nil)
+			end onexception |evt.ex| do begin
+				self:quit()
+			end;
+		speed := speed[0].data.arglist[0];
+		if (transport exists) then begin
+				transport:?SetStatusDialog('Connecting, 'vStatusTitle, {titleText: Stringer([Array: title, " ", "-", " ", speed, " ", "baud"])})
+			end;
+		try begin
+				if ((speed > 1200) or (speed = 0)) then begin
+						mailEndPoint:output($@, nil, {async: true})
+					end else begin
+						mailEndPoint:output($\n, nil, {async: true})
+					end
+			end onexception |evt.ex| do begin
+				self:quit()
+			end;
+		AddDelayedCall(func() begin
+			self:mailStartContinue1()
+		end, nil, 300)
+	end,
+	mailStartContinue1: func() begin
+		(if (mailEndPoint.curstate = 'waitForTerminal) then begin
+				try begin
+						mailEndPoint:output($D, nil, {async: true})
+					end onexception |evt.ex| do begin
+						self:quit()
+					end;
+				AddDelayedCall(func() begin
+					self:mailStartContinue2()
+				end, nil, 300)
+			end)
+	end,
+	mailStartContinue2: func() begin
+		(if (mailEndPoint.curstate = 'waitForTerminal) then begin
+				try begin
+						mailEndPoint:output($\n, nil, {async: true})
+					end onexception |evt.ex| do begin
+						self:quit()
+					end;
+				nil
+			end)
+	end,
+	mailCleanup: func() begin
+		mailEndPoint:disposeLeavingTEndpoint()
+	end,
+	mailNavigate: func(a1) begin
+		curerror := nil;
+		self:mailSetup(a1);
+		self:mailStart();
+		self:startCCL();
+		self:mailCleanup();
+		curerror
+	end,
+	_proto: @protoNavigator
+};
+
+enableCheckbox_2 := {
+	text: enabled,
+	viewBounds: {left: 0, top: -17, right: 120, bottom: -2},
+	viewJustify: vjParentCenterH + vjParentBottomV,
+	valueChanged: func() begin
+		(if GetRoot().(ownerSymbol) then GetRoot().(ownerSymbol):EnableAlarms(self.viewValue))
+	end,
+	preallocatedContext: 'enableCheckbox,
+	_proto: @protoCheckbox
+};
+
+mailPhonePicker := {
+	text: "At",
+	viewBounds: {left: 55, top: 14, right: -10, bottom: 30},
+	viewJustify: 8396848,
+	mailAccess: nil,
+	staticLabelCommands: [|Array|: "Other Number"],
+	viewSetupFormScript: func() begin
+		l1 := GetRoot().mailcategory.mailNetworks;
+		labelCommands := Clone(staticLabelCommands);
+		if ((not (l4 := GetUserConfig('currentEmporium))) or (not (l4 := ResolveEntryAlias(l4)))) then begin
+				l4 := GetUserConfig('location)
+			end;
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		local l5;
+		l2 := (foreach l6 in l1 collect l6.id);
+		if (l3 := GetRoot().cardfile:bcEmailNetwork(l4, l2)) then begin
+				l5 := (foreach l6 in l3 collect begin
+					local l10, l11, l12;
+					l10 := FindMailNetwork(l1, l6.mailNetwork).title;
+					l11 := (if (if l6.baud then l10) then Stringer([Array: l6.baud, " ", l10]) else (if l6.baud then l6.baud else l10));
+					{item: ParamStr("^0^?1 (^1)||", [Array: ConvertIntToPhone(l6.mailPhone), l11]), number: ConvertIntToPhone(l6.mailPhone), network: l6.mailNetwork}
+				end);
+				AddArraySlot(l5, 'pickseparator);
+				ArrayMunger(labelCommands, 0, 0, l5, 0, nil)
+			end;
+		if (if (Length(labelCommands) > 1) then (not StrFilled(GetUserConfig('mailPhone)))) then begin
+				mailAccess := [Array: {mailPhone: (l12 := labelCommands[0]).number, mailNetwork: l12.network}];
+				self:JamIt(true)
+			end else begin
+				mailAccess := [Array: {mailPhone: GetUserConfig('mailPhone), mailNetwork: GetUserConfig('mailNetwork)}]
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	pickActionScript: func(a1) begin
+		local l1;
+		if IsFrame((l1 := labelCommands[a1])) then begin
+				mailAccess := [Array: {mailPhone: l1.number, mailNetwork: l1.network}];
+				self:JamIt(true)
+			end else begin
+				mailAccess := nil;
+				ValidateConfigGuts(self, 'location, '[Array: mailPhone], {userText: "Enter other E-Mail access number:", titleText: "E-Mail", context: self, receiver: self, message: 'JamIt})
+			end;
+		base:hilite(nil)
+	end,
+	TextSetup: func() begin
+		local l1, l2;
+		(if StrFilled(GetUserConfig('mailPhone)) then GetUserConfig('mailPhone) else (if IsFrame(labelCommands[0]) then (if (l2 := StrPos((l1 := labelCommands[0].item), "(", 0)) then Substr(l1, 0, (l2 - 1)) else l1) else "(no number)"))
+	end,
+	JamIt: func(a1) begin
+		local l1, l2;
+		(if a1 then begin
+				l1 := mailAccess[0].mailPhone;
+				l2 := mailAccess[0].mailNetwork;
+				if (not StrEqual(l1, GetUserConfig('mailPhone))) then begin
+						SetUserConfig('mailPhone, l1)
+					end;
+				if (l2 <> GetUserConfig('mailNetwork)) then begin
+						SetUserConfig('mailNetwork, l2)
+					end;
+				willDialNum := self:MungePhone(l1, GetUserConfig('currentCountry));
+				SetValue(willDial, 'text, willDialNum);
+				(if StrFilled(l1) then self:UpdateText(l1))
+			end)
+	end,
+	preallocatedContext: 'mailPhonePicker,
+	_proto: @protoLabelPicker
+};
+
+willDial_3 := {
+	text: uCardPositionAlertButton,
+	viewBounds: {left: 5, top: 5, right: -5, bottom: 18},
+	viewJustify: 8396850,
+	viewFont: tsSimple + tsSize(9),
+	viewFlags: vVisible + vClickable,
+	buttonClickScript: func() begin
+		callassist:buttonClickScript()
+	end,
+	viewClickScript: viewClickScript,
+	viewHiliteScript: func(a1) begin
+		local l1, l2;
+		self:DrawShape(MakeRoundRect((l2 := ((((l1 := self:LocalBox()).right - StrFontWidth(text, viewFont)) div 2) - 2)), 0, (l1.right - l2), l1.bottom, 8), '{transferMode: 2, penPattern: 0, fillPattern: 5});
+		true
+	end,
+	viewSetupDoneScript: func() begin
+		(text := willDialNum)
+	end,
+	preallocatedContext: 'willDial,
+	_proto: @protoStaticText
+};
+
+callassist_2 := {
+	buttonClickScript: func() begin
+		callOptionsSlip.inNumber := GetUserConfig('mailPhone);
+		callOptionsSlip.inCountry := GetUserConfig('currentCountry);
+		inherited:buttonClickScript()
+	end,
+	preallocatedContext: 'callassist,
+	_proto: @protoCallassistButton
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+SetFieldDefaults_literal32 := same("mailSlip.routingSlip.SetFieldDefaults.literals[32]");
+
+GetTransportScripts_literal24 := same("mailSlip.GetTransportScripts.literals[24]");
+
+getAttachment_literal23 := same("mailSlip.routingSlip.getAttachment.literals[23]");
+
+viewSetupFormScript_code_40 := same("toLine_2Proto.viewSetupFormScript.instructions");
+
+VerifyRoutingInfo_literal7 := same("mailSlip.VerifyRoutingInfo.literals[7]");
+
+mailStart_literal22 := same("mailNetworksProto.mailStart.literals[22]");
+
+mailStart_literal4 := same("mailNetworksProto.mailStart.literals[4]");
+
+InputScript_literal6 := same("mailNetworksProto.mailEndPoint.waitForTerminal.InputScript.literals[6]");
+
+InputScript_code := same("mailNetworksProto.mailEndPoint.waitForTerminal.InputScript.instructions");
+
+InputScript_code_2 := same("mailNetworksProto.mailEndPoint.waitForConnected.InputScript.instructions");
+
+viewSetupDoneScript_code_8 := same("mailSlip.preferencesForm.stepChildren[0].viewSetupDoneScript.instructions");
+
+ListItem_literal3 := same("mailSlip.protoEworld.ListItem.literals[3]");
+
+File_UploadStart_literal6 := same("mailSlip.protoEworld.File_UploadStart.literals[6]");
+
+UnflattenListItem_literal17 := same("mailSlip.protoEworld.UnflattenListItem.literals[17]");
+
+viewSetupFormScript_literal27_2 := same("mailPhonePicker.viewSetupFormScript.literals[27]");
+
+buttonClickScript_code_21 := same("callassist_2.buttonClickScript.instructions");
+
+ReallyDoReply_literal34 := same("mailSlip.ReallyDoReply.literals[34]");
+
+ReallyDoReply_literal16 := same("mailSlip.ReallyDoReply.literals[16]");
+
+pickActionScript_literal12 := same("mailPhonePicker.pickActionScript.literals[12]");
+
+TextHeader_literal10 := same("mailSlip.TextHeader.literals[10]");
+
+Convert_literal9 := same("mailSlip.Convert.literals[9]");

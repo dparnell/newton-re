@@ -1,0 +1,29 @@
+// newtCheckbox, and what only it reaches
+
+newtCheckbox := {
+	viewJustify: 0,
+	path: nil,
+	assert: true,
+	negate: nil,
+	jamSlot: nil,
+	viewChildren: nil,
+	viewSetupFormScript: func() begin
+		(viewValue := (if target then (target.(path) = assert)))
+	end,
+	Retarget: func() begin
+		self:SetCheck((if target then (target.(path) = assert)))
+	end,
+	valueChanged: func() begin
+		(if target then (target.(path) := (if viewValue then assert else negate)))
+	end,
+	viewDrawScript: func() begin
+		local l1;
+		(l1 := self:LocalBox()).left := 16;
+		TextBox(text, {font: viewFont, justification: 'left}, l1)
+	end,
+	TextScript: func() begin
+		(if viewValue then "true" else "false")
+	end,
+	jamFromEntry: jamFromEntry,
+	_proto: @protoCheckbox
+};

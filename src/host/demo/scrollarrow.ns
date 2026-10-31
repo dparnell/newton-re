@@ -2,7 +2,7 @@
 // The Time Zones city picker: a tap on its down arrow moves the list a page
 // on, not to its last city - the arrow's click loop repeats until the pen
 // comes up, which on the host took a few hundred steps in a tap until the
-// repeat was paced (romsrc/functions/obj_6479ad.viewClickScript.ns).
+// repeat was paced (abstractArrow.viewClickScript, romsrc/objects/system/abstractArrow.ns).
 HostInclude("common.ns");
 scrollArrowName := func(v) begin local e := v.cursor:Entry(); if e then e.name else nil end;
 scrollArrowWalk := func(v, depth) begin

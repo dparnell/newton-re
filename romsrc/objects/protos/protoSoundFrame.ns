@@ -1,0 +1,60 @@
+// protoSoundFrame, and what only it reaches
+
+protoSoundFrame := {
+	sndFrameType: 'simpleSound,
+	dataType: 8,
+	samples: nil,
+	length: nil,
+	compressionType: 0,
+	samplingRate: samplingRate,
+	start: nil,
+	count: nil,
+	loops: nil,
+	callback: nil,
+	volume: nil,
+	GetSampleCount: func() begin
+		(if self.length then self.length else (if samples then (Length(samples) div self:GetSampleSize()) else 0))
+	end,
+	GetSampleSize: func() begin
+		(if (sndFrameType = 'codec) then 1 else (if ((dataType = 16) or (dataType = 2)) then 2 else 1))
+	end,
+	GetSamplingRate: func() begin
+		(if samplingRate then samplingRate else 22026.43172)
+	end,
+	GetPlayingTime: func() begin
+		local l1;
+		l1 := self:GetSampleCount();
+		if (compressionRatio exists) then begin
+				l1 := (l1 * compressionRatio)
+			end;
+		(l1 / self:GetSamplingRate())
+	end,
+	SetRecordingLength: func(a1, a2) begin
+		local l1;
+		l1 := self:GetSampleSize();
+		if (((IsReadOnly(samples) or (not IsInteger(a1))) or (a1 < 0)) or ((a1 * l1) > Length(samples))) then begin
+				Throw('|evt.ex.msg|, "numSamples invalid")
+			end;
+		self.length := a1;
+		AddDeferredSend(self, 'DeferredSetLength, [Array: a2])
+	end,
+	SetRecordingLengthNow: func(a1) begin
+		local l1;
+		l1 := self:GetSampleSize();
+		if (((IsReadOnly(samples) or (not IsInteger(a1))) or (a1 < 0)) or ((a1 * l1) > Length(samples))) then begin
+				Throw('|evt.ex.msg|, "numSamples invalid")
+			end;
+		self.length := a1;
+		self:DeferredSetLength(nil)
+	end,
+	DeferredSetLength: func(a1) begin
+		SetLength(samples, (length * self:GetSampleSize()));
+		(if a1 then call a1 with ())
+	end
+};
+
+samplingRate := real('|Real|, 22026.43172);
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+SetRecordingLength_literal5 := same("protoSoundFrame.SetRecordingLength.literals[5]");

@@ -1,0 +1,3 @@
+// objects several roots reach, none alone (naturalize.py)
+
+valuesIcon := {bits: titleIconBits, bounds: {left: 0, top: 0, right: 19, bottom: 11}};

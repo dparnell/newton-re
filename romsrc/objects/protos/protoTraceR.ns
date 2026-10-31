@@ -1,0 +1,26 @@
+// protoTraceR, and what only it reaches
+
+protoTraceR := {
+	Instantiate: func() begin
+		self._traceMap := {};
+		(foreach l1, l2 in traceElements do begin
+				local l4;
+				if (l4 := l2.label) then begin
+						_traceMap.(l4) := l1
+					end
+			end);
+		self:cfinstantiate()
+	end,
+	Dispose: {class: #132, funcPtr: 6989100, numArgs: 0},
+	record: func(a1, a2) begin
+		(if active then self:cfrecord(_traceMap.(a1), a2))
+	end,
+	indexrecord: func(a1, a2) begin
+		(if active then self:cfrecord(a1, a2))
+	end,
+	traceElements: nil,
+	name: "Client Trace",
+	active: true,
+	cfinstantiate: {class: #132, funcPtr: 6989101, numArgs: 0},
+	cfrecord: {class: #132, funcPtr: 6989102, numArgs: 2}
+};

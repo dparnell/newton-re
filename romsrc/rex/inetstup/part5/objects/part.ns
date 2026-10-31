@@ -1,0 +1,316 @@
+// part, and what only it reaches
+
+part := array(nil, {
+	_ImportTable: [|Array|:
+		{name: '|SetupProtos:NIE|, major: 1, minor: 0},
+		{name: '|InternetSetup:NIE|, major: 1, minor: 0}
+	],
+	installScript: func(a1) begin
+		local l1;
+		l1 := EnsureInternal({removeScript: a1.devRemoveScript});
+		a1:devInstallScript(a1, l1);
+		l1
+	end,
+	devInstallScript: compile(
+		constants: {
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			kFunction_102eb6d: func(a1, a2) begin
+				(try begin
+						RegDataDef(a1, a2)
+					end onexception |evt.ex| do begin
+						nil
+					end)
+			end,
+			kFunction_102ebf5: func(a1, a2) begin
+				(if IsArray(a2) then (foreach l1 in a2 do begin
+							try begin
+									RegisterViewDef(l1, a1)
+								end onexception |evt.ex| do begin end
+						end))
+			end,
+			kFunction_102eb21: func(a1, a2, a3) begin
+				call (kFunction_102eb6d) with (a1, a2);
+				call (kFunction_102ebf5) with (a1, a3)
+			end,
+			kFunction_102a989: func(a1) begin
+				inherited:DataConversion(a1)
+			end,
+			kFunction_102ab51: func(a1) begin
+				local l1;
+				(if (l1 := InetGetService(a1.linkLayer)) then ParamStr("^0 Connection", [Array: l1.name]) else "Unknown Connection Type")
+			end,
+			kFunction_102ae45: func(a1) begin
+				l1 := inherited:FillNewEntry(a1);
+				local l1;
+				(foreach l2, l3 in blankEntry do begin
+						a1.(l2) := DeepClone(l3)
+					end);
+				l1
+			end,
+			kFunction_102b1e5: func() begin
+				self:GetProtoCols()
+			end,
+			kROM_8208: @8208,
+			kROM_8207: @8207,
+			kFunction_102b225: func() begin
+				local l1;
+				call kROM_8208 with ((l1 := call kROM_8207 with (target.class)))
+			end,
+			kFunction_102b311: func(a1) begin
+				local l1;
+				inherited:?labelActionScript(a1);
+				if IsReadOnly((l1 := GetDataDefs('|Serial:NIE|)).newEntryViews) then begin
+						l1.newEntryViews := Clone(l1.newEntryViews)
+					end;
+				if (labelCommands[a1].symbol = 'manual) then begin
+						l1.newEntryViews := l1._proto.newEntryViews
+					end else begin
+						l1.newEntryViews := l1.AlternateNewViews
+					end;
+				SetValue(newtAppBase.editSlipLayout, 'viewBounds, newtAppBase.editSlipLayout._proto.viewBounds);
+				newtAppBase.editSlipLayout:SyncView();
+				newtAppBase.editSlipLayout:RedoChildren()
+			end,
+			kFunction_102b5c5: func() begin
+				'[Array: {item: "Manual", symbol: manual}, {item: "Server", symbol: usingServer}]
+			end,
+			kFunction_102b741: func(a1, a2) begin
+				inherited:?viewChangedScript(a1, a2);
+				(if (not target.(path)) then (target.(path) := ""))
+			end,
+			kROM_8206: @8206,
+			kFunction_102b879: func() begin
+				kROM_8206
+			end,
+			kFunction_102bf65: func(a1) begin
+				(if (Length(SetDifference(a1[0], [Array: 0, 0, 0, 0])) = 0) then true)
+			end,
+			kLiteral_102a70d: {DataConversion: kFunction_102a989, description: "Serial", helpText: "Use this if you are connecting to an Internet Service Provider (ISP) using a serial cable.", name: "Serial", symbol: '|Serial:NIE|, unusedSlots: '{macIPGatewayZone: true, phonenumber: true, loginInfo: true}, MakeNextLine: kFunction_102ab51, blankEntry: '{phonenumber: "", userName: "", passWord: "", linkLayer: |PPP:NIE|, gatewayAddress: [Array: 0, 0, 0, 0], localAddress: [Array: 0, 0, 0, 0], defaultDomain: "", DNSServers: [Array: [Array: 0, 0, 0, 0]], hangupDelay: nil, configuration: usingServer}, FillNewEntry: kFunction_102ae45, newEntryViews: [Array: {viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewJustify: 240, stepChildren: [stepChildren: '{_proto: @8205}, {text: "Protocol", path: 'linkLayer, labelText: "Protocol", MakePopup: kFunction_102b1e5, GetProtoCols: kFunction_102b225, _proto: @8200}, {labelActionScript: kFunction_102b311, labelCommands: '[Array: {item: "Manual", symbol: manual}, {item: "Server", symbol: usingServer}], MakePopup: kFunction_102b5c5, _proto: '{text: "Configuration", labelText: "Configuration", path: configuration, _proto: @8200}}, {path: 'userName, label: "User ID", viewBounds: '{left: 0, top: 0, right: -4, bottom: 32}, viewChangedScript: kFunction_102b741, _proto: @newtLabelInputLine}, '{EditPassword: @8202, _proto: @8201}, {text: "When closing, disconnect", path: 'hangupDelay, labelCommands: @8206, labelText: "When closing, disconnect", MakePopup: kFunction_102b879, _proto: @8200}], helpText: "Tap ? if you need help.", helpTopic: "serial1", viewClass: 74}, '{viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewJustify: 240, stepChildren: [stepChildren: {viewBounds: {left: 4, top: 10, right: -4, bottom: 60}, viewJustify: 8396848, path: localAddress, name: "Local IP Address", _proto: @8192}, {viewBounds: {left: 4, top: 10, right: -4, bottom: 60}, viewJustify: 8396848, path: gatewayAddress, name: "Gateway/Router Address", _proto: @8192}, {viewBounds: {left: 4, top: 10, right: -4, bottom: 60}, viewJustify: 8396848, path: [pathExpr: DNSServers, 0], _proto: @8192}, {path: defaultDomain, label: "Domain Name", viewBounds: {left: -4, top: 0, right: -4, bottom: 32}, _proto: @newtLabelInputLine}], helpText: "You will be able to add multiple DNS servers after you've completed this setup.", helpTopic: "enterinfo", viewClass: 74}], NeededSlots: '{linkLayer: |PPP:NIE|, configuration: manual}, OverviewIcon: {bits: call kBinaryFromHex with ("00000000000401960196008001a20090000000000070000030f0000079800000b58c0000318c0000318c0000318c000031ad0000019e00000f0c00000e000000", 'bits), bounds: '{left: 0, top: 0, right: 16, bottom: 12}}, icon: {bits: call kBinaryFromHex with ("00000000000401a001a0017601af018b00000000000000000c1c00001e3c00003f7000002d6300000c6300000c6300000c6300000c6300000c6b400000efc00003c780000383000000000000", 'bits), bounds: '{left: 0, top: 0, right: 21, bottom: 15}}, DontCloseSlots: {setupName: '{value: "", name: "setup name"}, userName: '{value: "", name: "user ID"}, passWord: '{value: "", name: "password"}, DNSServers: {value: '[Array: 0, 0, 0, 0], name: "DNS/Name server address", checkFunc: kFunction_102bf65}}, AlternateNewViews: [Array: {viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewJustify: 240, stepChildren: [stepChildren: '{_proto: @8205}, {text: "Protocol", path: 'linkLayer, labelText: "Protocol", MakePopup: kFunction_102b1e5, GetProtoCols: kFunction_102b225, _proto: @8200}, {labelActionScript: kFunction_102b311, labelCommands: '[Array: {item: "Manual", symbol: manual}, {item: "Server", symbol: usingServer}], MakePopup: kFunction_102b5c5, _proto: '{text: "Configuration", labelText: "Configuration", path: configuration, _proto: @8200}}, {path: 'userName, label: "User ID", viewBounds: '{left: 0, top: 0, right: -4, bottom: 32}, viewChangedScript: kFunction_102b741, _proto: @newtLabelInputLine}, '{EditPassword: @8202, _proto: @8201}, {text: "When closing, disconnect", path: 'hangupDelay, labelCommands: @8206, labelText: "When closing, disconnect", MakePopup: kFunction_102b879, _proto: @8200}], helpText: "Tap ? if you need help.", helpTopic: "serial1", viewClass: 74}, '{viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewJustify: 240, stepChildren: [stepChildren: {viewBounds: {left: 4, top: 10, right: -4, bottom: 60}, viewJustify: 8396848, path: [pathExpr: DNSServers, 0], _proto: @8192}, {path: defaultDomain, label: "Domain Name", viewBounds: {left: -4, top: 0, right: -4, bottom: 32}, _proto: @newtLabelInputLine}], helpText: "You will be able to add multiple DNS servers after you've completed this setup.", helpTopic: "enterinfo", viewClass: 74}], viewsToDisplay: '[Array: setupName, linkLayer, configuration, userName, hangupDelay, localAddress, gatewayAddress, DNSServers, defaultDomain, loginScript, serialSettings, logoutScript], _proto: '{_proto: @8193}},
+			kFunction_102c395: func(a1) begin
+				local l1;
+				(if (if (l1 := InetGetService(a1[0])) then StrFilled(l1.name)) then ParamStr("Protocol: ^0", [Array: l1.name]) else "Protocol: <Unknown>")
+			end,
+			kFunction_102c485: func() begin
+				self:GetProtoCols()
+			end,
+			kFunction_102c4b5: func() begin
+				local l1;
+				call kROM_8208 with ((l1 := call kROM_8207 with (target.class)))
+			end,
+			kFunction_102c4f1: func() begin
+				typeFrame := self:GetProtoCols();
+				inherited:?viewSetupFormScript()
+			end,
+			kLiteral_102c1fd: {infoFrame: {checkPrefix: '[Array: true, nil], checkPaths: '[Array: linkLayer], formatFunc: kFunction_102c395}, path: 'linkLayer, symbol: 'linkLayer, MakePopup: kFunction_102c485, typeFrame: nil, labelText: "Protocol", noKeyboard: true, GetProtoCols: kFunction_102c4b5, viewSetupFormScript: kFunction_102c4f1, name: "Protocol", _proto: '{viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 8388848, _proto: @8197}},
+			kROM_8203: @8203,
+			kFunction_102c689: func(a1) begin
+				ParamStr("Configuration: ^0", [Array: call kROM_8203 with ('[Array: {item: "Manual", symbol: manual}, {item: "Server", symbol: usingServer}], a1[0])])
+			end,
+			kFunction_102c76d: func(a1) begin
+				inherited:?labelActionScript(a1)
+			end,
+			kFunction_102c7ad: func() begin
+				'[Array: {item: "Manual", symbol: manual}, {item: "Server", symbol: usingServer}]
+			end,
+			kLiteral_102c571: {viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewJustify: 240, infoFrame: {checkPrefix: '[Array: true, nil], checkPaths: '[Array: configuration], formatFunc: kFunction_102c689}, noKeyboard: true, path: 'configuration, protection: 'private, symbol: 'configuration, type: 'editor, stepChildren: [stepChildren: {labelActionScript: kFunction_102c76d, labelCommands: '[Array: {item: "Manual", symbol: manual}, {item: "Server", symbol: usingServer}], MakePopup: kFunction_102c7ad, _proto: '{text: "Configuration", labelText: "Configuration", path: configuration, _proto: @8200}}], name: "Configuration", helpTopic: "configuration", viewClass: 74},
+			kFunction_102c925: func(a1) begin
+				ParamStr("When closing, disconnect: ^0", [Array: call kROM_8203 with (kROM_8206, a1[0])])
+			end,
+			kFunction_102c9ad: func() begin
+				kROM_8206
+			end,
+			kLiteral_102c839: {infoFrame: {checkPrefix: '[Array: true, nil], checkPaths: '[Array: hangupDelay], showEmptyData: true, formatFunc: kFunction_102c925}, labelText: "When closing, disconnect", MakePopup: kFunction_102c9ad, noKeyboard: true, path: 'hangupDelay, symbol: 'hangupDelay, typeFrame: @8206, name: "Disconnect Delay", helpTopic: "discodelay", _proto: '{viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 8388848, _proto: @8197}},
+			kFunction_102cf7d: func(a1) begin
+				(if (Length(a1[0].instructions) > 0) then ParamStr("Login Script [^0 Step(s)]", [Array: Length(a1[0].instructions)]) else "Login Script: <None>")
+			end,
+			kFunction_102d065: func(a1) begin
+				local l1, l2;
+				l2 := "";
+				(if a1[0] then (if (Length(a1[0].instructions) > 0) then begin
+							l2 := ParamStr("Login Script [^0 Step(s)]", [Array: Length(a1[0].instructions)]);
+							(if (if (l1 := GetDataDefs(a1[0].interpreterSymbol)) then l1.ScriptToText) then Stringer([Array: l2, "\n", l1:ScriptToText(a1[0])]))
+						end else (l2 := "Login Script: <None>")))
+			end,
+			kFunction_102d2f9: func() begin
+				(if (not self.viewChildren) then self:DrawShape(self:ScriptNotFound(), '{}))
+			end,
+			kFunction_102d3ad: func() begin
+				local l1;
+				l1 := self:LocalBox();
+				(appEmptyStr := [Array: (kAppEmptyFont := {font: 1058816, justification: 'center}), MakeTextLines("A script editor was not found.", l1, fontHeight(kAppEmptyFont.font), kAppEmptyFont.font)])
+			end,
+			kFunction_102d581: func() begin
+				local l1;
+				inherited:?viewSetupFormScript();
+				(if target.(superPath) then (if (if (l1 := GetDataDefs(target.(superPath).interpreterSymbol)) then l1.scriptEditor) then (self.viewChildren := [Array: l1.scriptEditor])))
+			end,
+			kLiteral_102cd79: {viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewJustify: 240, infoFrame: {checkPrefix: '[Array: loginScript, loginScript], checkPaths: '[Array: ], frameData: '{instructions: [Array: ], interpreterSymbol: |Script Manager:NIE|, timeout: 60}, formatFunc: kFunction_102cf7d, PrintFunc: kFunction_102d065}, path: 'loginScript, symbol: 'loginScript, stepChildren: [stepChildren: '{text: "Login Script", viewBounds: {left: 4, top: 10, right: -10, bottom: 26}, viewJustify: 8400944, viewFont: @fontSystem10Bold, _proto: @protoStaticText}, {_proto: {viewBounds: '{left: 4, top: 0, right: -4, bottom: 220}, viewFlags: 1, viewFormat: 0, viewJustify: 8240, viewDrawScript: kFunction_102d2f9, ScriptNotFound: kFunction_102d3ad, viewSetupFormScript: kFunction_102d581, superPath: 'loginScript, viewClass: 74}}], protection: 'private, type: 'editor, name: "Login Script", deleteButton: 'loginScript, helpTopic: "script", viewClass: 74},
+			kFunction_102d831: func(a1) begin
+				(if a1[0] then ParamStr("Advanced Setting: ^0-^1-^2", [Array: call kROM_8203 with ('[Array: {item: "1200", symbol: 1200}, {item: "2400", symbol: 2400}, {item: "4800", symbol: 4800}, {item: "9600", symbol: 9600}, {item: "19200", symbol: 19200}, {item: "38400", symbol: 38400}, {item: "57600", symbol: 57600}, {item: "115200", symbol: 115200}, {item: "230400", symbol: 230400}], a1[0].baudRate), call kROM_8203 with ('[Array: {item: "None", symbol: 0}, {item: "Even", symbol: 2}, {item: "Odd", symbol: 1}], a1[0].parity), call kROM_8203 with ('[Array: {item: "1", symbol: 1}, {item: "1.5", symbol: 1.5}, {item: "2", symbol: 2}], a1[0].stopBits)]))
+			end,
+			kROM_8209: @8209,
+			kFunction_102dc15: func(a1) begin
+				(if a1[0] then ParamStr("Advanced Settings\n\tPort: ^0\n\tBaud Rate: ^1\n\tParity: ^2\n\tStop Bits: ^3\n\tHardware Flow Control: ^4\n", [Array: call kROM_8209 with (a1[0].serialHardwareLocation), call kROM_8203 with ('[Array: {item: "1200", symbol: 1200}, {item: "2400", symbol: 2400}, {item: "4800", symbol: 4800}, {item: "9600", symbol: 9600}, {item: "19200", symbol: 19200}, {item: "38400", symbol: 38400}, {item: "57600", symbol: 57600}, {item: "115200", symbol: 115200}, {item: "230400", symbol: 230400}], a1[0].baudRate), call kROM_8203 with ('[Array: {item: "None", symbol: 0}, {item: "Even", symbol: 2}, {item: "Odd", symbol: 1}], a1[0].parity), call kROM_8203 with ('[Array: {item: "1", symbol: 1}, {item: "1.5", symbol: 1.5}, {item: "2", symbol: 2}], a1[0].stopBits), (if a1[0].HardwareflowControl then "on" else "off")]))
+			end,
+			kFunction_102df21: func() begin
+				self.items := ModemLocations;
+				l1 := GetUserConfig('screenOrientation);
+				local l1;
+				labelCommands := (foreach l2 in items collect (if l2.title then (if IsArray(l2.title) then l2.title[l1] else l2.title) else 'pickSeparator));
+				inherited:?viewSetupFormScript()
+			end,
+			kFunction_102e0a1: func(a1) begin
+				(for l1 := 0 to (Length(items) - 1) do begin
+						if (if (if a1 then items[l1].id) then StrEqual(a1, items[l1].id)) then begin
+								return l1
+							end
+					end);
+				0
+			end,
+			kFunction_102e151: func() begin
+				labelCommands[self:labelIndex(target.(path))]
+			end,
+			kFunction_102e1a5: func(a1) begin
+				target.(path) := items[a1].id;
+				newtAppBase.targetView:?StartFlush()
+			end,
+			kFunction_102e2c9: func() begin
+				'[Array: {item: "1200", symbol: 1200}, {item: "2400", symbol: 2400}, {item: "4800", symbol: 4800}, {item: "9600", symbol: 9600}, {item: "19200", symbol: 19200}, {item: "38400", symbol: 38400}, {item: "57600", symbol: 57600}, {item: "115200", symbol: 115200}, {item: "230400", symbol: 230400}]
+			end,
+			kFunction_102e399: func() begin
+				'[Array: {item: "None", symbol: 0}, {item: "Even", symbol: 2}, {item: "Odd", symbol: 1}]
+			end,
+			kFunction_102e441: func() begin
+				'[Array: {item: "1", symbol: 1}, {item: "1.5", symbol: 1.5}, {item: "2", symbol: 2}]
+			end,
+			kFunction_102e571: func() begin
+				target.(path) := viewValue;
+				newtAppBase.targetView:?StartFlush()
+			end,
+			kFunction_102e619: func() begin
+				inherited:?viewSetupFormScript();
+				(viewValue := target.(path))
+			end,
+			kLiteral_102d649: {viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, deleteButton: 'serialSettings, infoFrame: {checkPrefix: '[Array: serialSettings, serialSettings], checkPaths: '[Array: ], frameData: '{serialHardwareLocation: nil, baudRate: 9600, parity: 0, stopBits: 1, HardwareflowControl: nil}, formatFunc: kFunction_102d831, PrintFunc: kFunction_102dc15}, name: "Advanced Settings", noKeyboard: true, protection: 'private, symbol: 'serialSettings, title: "Advanced Settings", type: 'editor, viewJustify: 240, stepChildren: [stepChildren: {text: "Port", viewBounds: '{left: 4, top: 10, right: -4, bottom: 26}, alwaysCallPickActionScript: true, viewJustify: 8396848, viewSetupFormScript: kFunction_102df21, labelIndex: kFunction_102e0a1, textSetup: kFunction_102e151, labelActionScript: kFunction_102e1a5, path: 'serialSettings.serialHardwareLocation, _proto: @protoLabelPicker}, {labelText: "Data Rate", MakePopup: kFunction_102e2c9, typeFrame: '[Array: {item: "1200", symbol: 1200}, {item: "2400", symbol: 2400}, {item: "4800", symbol: 4800}, {item: "9600", symbol: 9600}, {item: "19200", symbol: 19200}, {item: "38400", symbol: 38400}, {item: "57600", symbol: 57600}, {item: "115200", symbol: 115200}, {item: "230400", symbol: 230400}], viewBounds: '{left: 0, top: 0, right: 0, bottom: 26}, viewJustify: 8396848, path: 'serialSettings.baudRate, _proto: '{viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 8388848, _proto: @8197}}, {labelText: "Parity", MakePopup: kFunction_102e399, typeFrame: '[Array: {item: "None", symbol: 0}, {item: "Even", symbol: 2}, {item: "Odd", symbol: 1}], viewBounds: '{left: 0, top: 0, right: 0, bottom: 26}, viewJustify: 8396848, path: 'serialSettings.parity, _proto: '{viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 8388848, _proto: @8197}}, {labelText: "Stop Bits", MakePopup: kFunction_102e441, typeFrame: '[Array: {item: "1", symbol: 1}, {item: "1.5", symbol: 1.5}, {item: "2", symbol: 2}], viewBounds: '{left: 0, top: 0, right: 0, bottom: 26}, viewJustify: 8396848, path: 'serialSettings.stopBits, _proto: '{viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 8388848, _proto: @8197}}, {text: "Use Hardware Flow Control", viewBounds: '{left: 4, top: 0, right: -10, bottom: 24}, viewJustify: 8244, valueChanged: kFunction_102e571, path: 'serialSettings.flowControl, viewSetupFormScript: kFunction_102e619, _proto: @protoCheckbox}], helpTopic: "advanced", viewClass: 74},
+			kFunction_102e751: func(a1) begin
+				(if (Length(a1[0].instructions) > 0) then ParamStr("Logout Script [^0 Step(s)]", [Array: Length(a1[0].instructions)]) else "Logout Script: <None>")
+			end,
+			kFunction_102e80d: func(a1) begin
+				local l1, l2;
+				l2 := "";
+				(if a1[0] then (if (Length(a1[0].instructions) > 0) then begin
+							l2 := ParamStr("Logout Script [^0 Step(s)]", [Array: Length(a1[0].instructions)]);
+							(if (if (l1 := GetDataDefs(a1[0].interpreterSymbol)) then l1.ScriptToText) then Stringer([Array: l2, "\n", l1:ScriptToText(a1[0])]))
+						end else (l2 := "Logout Script: <None>")))
+			end,
+			kLiteral_102e68d: {viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewJustify: 240, infoFrame: {checkPrefix: '[Array: logoutScript, logoutScript], checkPaths: '[Array: ], frameData: '{instructions: [Array: ], interpreterSymbol: |Script Manager:NIE|, timeout: 60}, formatFunc: kFunction_102e751, PrintFunc: kFunction_102e80d}, path: 'logoutScript, symbol: 'logoutScript, stepChildren: [stepChildren: '{text: "Logout Script", viewBounds: {left: 4, top: 10, right: -10, bottom: 26}, viewJustify: 8400944, viewFont: @fontSystem10Bold, _proto: @protoStaticText}, {superPath: 'logoutScript, _proto: {viewBounds: '{left: 4, top: 0, right: -4, bottom: 220}, viewFlags: 1, viewFormat: 0, viewJustify: 8240, viewDrawScript: kFunction_102d2f9, ScriptNotFound: kFunction_102d3ad, viewSetupFormScript: kFunction_102d581, superPath: 'loginScript, viewClass: 74}}], protection: 'private, type: 'editor, name: "Logout Script", deleteButton: 'logoutScript, helpTopic: "script", viewClass: 74},
+			kFunction_102e96d: func() begin
+				nil
+			end,
+			kFunction_102ea89: func() begin
+				local l1;
+				(text := GetEntryDataDef(target):?TextScript((l1 := {}), target))
+			end,
+			kLiteral_102e905: {printNextPageScript: kFunction_102e96d, title: "Serial Setup", symbol: 'protoRoutingFormat, stepChildren: [stepChildren: {viewBounds: '{top: 30, left: 30, right: -30, bottom: -30}, viewFlags: 1, viewFont: 12289, text: "", viewJustify: 240, viewSetupFormScript: kFunction_102ea89, viewClass: 81}], _proto: @protoPrintFormat},
+			kROM_12288: @12288
+		},
+		func(a1, a2) begin
+			call (kFunction_102eb21) with ('|Serial:NIE|, {_proto: kLiteral_102a70d}, [Array: '{viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 8388848, _proto: @8196}, kLiteral_102c1fd, kLiteral_102c571, '{viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 240, _proto: @8195}, kLiteral_102c839, '{infoFrame: {_proto: @8204, labelText: "Local IP Address: ^0.^1.^2.^3", checkPaths: [Array: localAddress], HideIfTrue: [Array: configuration, usingServer]}, path: localAddress, symbol: localAddress, viewBounds: {left: 0, top: 0, right: -4, bottom: 0}, name: "Local IP Address", helpTopic: "ipaddress", _proto: {viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 8388848, name: "DNS/Name Server Address", helpTopic: "dns", _proto: @8194}}, '{infoFrame: {_proto: @8204, labelText: "Gateway/Router Address: ^0.^1.^2.^3", checkPaths: [Array: gatewayAddress], HideIfTrue: [Array: configuration, usingServer]}, path: gatewayAddress, symbol: gatewayAddress, viewBounds: {left: 0, top: 0, right: -4, bottom: 0}, name: "Gateway/Router Address", helpTopic: "gateway", _proto: {viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 8388848, name: "DNS/Name Server Address", helpTopic: "dns", _proto: @8194}}, '{viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 8388848, name: "DNS/Name Server Address", helpTopic: "dns", _proto: @8194}, '{viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 8388848, _proto: @8199}, kLiteral_102cd79, kLiteral_102d649, kLiteral_102e68d, {_proto: @protoFrameFormat}, kLiteral_102e905, {_proto: kROM_12288}])
+		end),
+	devRemoveScript: compile(
+		constants: {
+			kFunction_102edcd: func(a1) begin
+				(try begin
+						UnRegDataDef(a1)
+					end onexception |evt.ex| do begin
+						nil
+					end)
+			end,
+			kFunction_102ee41: func(a1, a2) begin
+				(if IsArray(a2) then (foreach l1 in a2 do begin
+							try begin
+									UnRegisterViewDef(l1, a1)
+								end onexception |evt.ex| do begin end
+						end))
+			end,
+			kFunction_102ed81: func(a1, a2) begin
+				call (kFunction_102edcd) with (a1);
+				call (kFunction_102ee41) with (a1, a2)
+			end
+		},
+		func(a1) begin
+			call (kFunction_102ed81) with ('|Serial:NIE|, [Array: 'setupName, 'linkLayer, 'configuration, 'userName, 'hangupDelay, 'localAddress, 'gatewayAddress, 'DNSServers, 'defaultDomain, 'loginScript, 'serialSettings, 'logoutScript, 'protoFrameFormat, 'protoRoutingFormat, 'IOAllInfo])
+		end)
+});
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+description_value := same("part[0].devInstallScript.literals[1].description");
+
+phonenumber_value := same("part[0].devInstallScript.literals[1].blankEntry.phonenumber");
+
+gatewayAddress_value := same("part[0].devInstallScript.literals[1].blankEntry.gatewayAddress");
+
+newEntryViews_value := same("part[0].devInstallScript.literals[1].newEntryViews[0]");
+
+MakePopup_code := same("part[0].devInstallScript.literals[4].MakePopup.instructions");
+
+GetProtoCols_code := same("part[0].devInstallScript.literals[4].GetProtoCols.instructions");
+
+MakePopup_code_2 := same("part[0].devInstallScript.literals[5].stepChildren[0].MakePopup.instructions");
+
+name_value := same("part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[0].name");
+
+name_value_2 := same("part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[1].name");
+
+label_value := same("part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[3].label");
+
+helpText_value := same("part[0].devInstallScript.literals[1].newEntryViews[1].helpText");
+
+helpTopic_value := same("part[0].devInstallScript.literals[1].newEntryViews[1].helpTopic");
+
+_proto_value := same("part[0].devInstallScript.literals[4]._proto");
+
+formatFunc_code := same("part[0].devInstallScript.literals[5].infoFrame.formatFunc.instructions");
+
+_proto_value_2 := same("part[0].devInstallScript.literals[8]._proto");
+
+formatFunc_code_2 := same("part[0].devInstallScript.literals[12].infoFrame.formatFunc.instructions");
+
+formatFunc_literal1 := same("part[0].devInstallScript.literals[12].infoFrame.formatFunc.literals[1]");
+
+formatFunc_literal4 := same("part[0].devInstallScript.literals[12].infoFrame.formatFunc.literals[4]");
+
+PrintFunc_code := same("part[0].devInstallScript.literals[12].infoFrame.PrintFunc.instructions");
+
+PrintFunc_literal8 := same("part[0].devInstallScript.literals[12].infoFrame.PrintFunc.literals[8]");
+
+text_value := same("part[0].devInstallScript.literals[12].stepChildren[0].text");
+
+_proto_value_3 := same("part[0].devInstallScript.literals[12].stepChildren[1]._proto");
+
+helpTopic_value_2 := same("part[0].devInstallScript.literals[12].helpTopic");
+
+formatFunc_literal1_2 := same("part[0].devInstallScript.literals[13].infoFrame.formatFunc.literals[1]");
+
+formatFunc_literal4_2 := same("part[0].devInstallScript.literals[13].infoFrame.formatFunc.literals[4]");
+
+formatFunc_literal6 := same("part[0].devInstallScript.literals[13].infoFrame.formatFunc.literals[6]");
+
+name_value_3 := same("part[0].devInstallScript.literals[13].name");
+
+formatFunc_literal1_3 := same("part[0].devInstallScript.literals[14].infoFrame.formatFunc.literals[1]");
+
+formatFunc_literal4_3 := same("part[0].devInstallScript.literals[14].infoFrame.formatFunc.literals[4]");
+
+text_value_2 := same("part[0].devInstallScript.literals[14].stepChildren[0].text");
+
+devInstallScript_code := same("part[0].devInstallScript.literals[20].literals[1].instructions");

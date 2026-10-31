@@ -1,0 +1,3 @@
+// protoInstanceOfRepeatingMeeting, and what only it reaches
+
+protoInstanceOfRepeatingMeeting := {viewStationery: 'RepeatingMeeting, class: 'meeting, mtgStartDate: nil, repeatTemplate: nil};

@@ -1,5 +1,0 @@
-@@ 0x50c2e5
-func() begin
-	(if theApp.prefsCache then (theApp.prefsCache.toDoInternalStore := viewValue) else (theApp:GetAppPreferences().toDoInternalStore := viewValue))
-end
-@@end

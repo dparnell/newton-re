@@ -36,11 +36,17 @@ import newtonpkg		# noqa: E402
 NEWTONSCRIPT = None
 TREE = os.path.join(ROOT, "romsrc", "rex", "inetstup")
 WORK = os.path.join(ROOT, "tmp", "romsrc-function-edit")
-SAME = 'obj_100f7a1 := same("%s");'
-NOW = "obj_10002d1[0].theForm.viewSetupFormScript.literals[6]"
-BEFORE = "obj_10002d1[0].theForm.editSlip.viewSetupFormScript.literals[3]"
-ALIAS = "alias\tobj_10002d1[0].theForm.editSlip.viewSetupFormScript.literals[%d]\tobj_100f7a1"
-SLIP = "obj_10002d1_0_.theForm.editSlip.viewSetupFormScript.ns"
+SHARED = "viewSetupFormScript_literal6"		# (the walk-through bounds function the five share)
+SAME = SHARED + ' := same("%s");'
+NOW = "part[0].theForm.viewSetupFormScript.literals[6]"
+BEFORE = "part[0].theForm.editSlip.viewSetupFormScript.literals[3]"
+ALIAS = "alias\tpart[0].theForm.editSlip.viewSetupFormScript.literals[%d]\t" + SHARED
+OBJECTS = os.path.join("part0", "objects", "part.ns")
+# the edit slip's viewSetupFormScript: the function a constant of its own,
+# then the main function calling it
+SLIP = re.compile(r"viewSetupFormScript: compile\(\n\t+constants: \{\n\t+kFunction_100f7a1: func\(\) begin\n.*?\n\t+\},\n"
+				  r"\t+func\(\) begin\n((?:\t+// [^\n]*\n)*)(\t+)self\.viewBounds := call \(kFunction_100f7a1\) with \(\);"
+				  r"(\n\t+inherited:\?viewSetupFormScript\(\)\n\t+end)\)", re.S)
 
 
 def edit(path, old, new):
@@ -69,23 +75,22 @@ class FunctionEdit(unittest.TestCase):
 
 	def test_paths_from_before_the_edit(self):
 		tree = self.copy("before")
-		edit(os.path.join(tree, "part0", "objects", "obj_10002d1.ns"), SAME % NOW, SAME % BEFORE)
+		edit(os.path.join(tree, OBJECTS), SAME % NOW, SAME % BEFORE)
 		edit(os.path.join(tree, "part0", "layout.tsv"), ALIAS % 1, ALIAS % 3)
 		self.assertEqual(newtonpkg.pack(tree, trees=self.trees), self.committed)
 
 	def test_function_no_longer_used_there(self):
 		tree = self.copy("unused")
-		edit(os.path.join(tree, "part0", "objects", "obj_10002d1.ns"), SAME % NOW, SAME % BEFORE)
+		edit(os.path.join(tree, OBJECTS), SAME % NOW, SAME % BEFORE)
 		edit(os.path.join(tree, "part0", "layout.tsv"), ALIAS % 1, ALIAS % 3)
-		edit(os.path.join(tree, "part0", "functions", SLIP), "\tself.viewBounds := call (kFunction_100f7a1) with ();",
-			 "\tself.viewBounds := SetBounds(0, -200, 200, -8);")
-		with open(os.path.join(tree, "part0", "functions", SLIP), encoding="utf-8") as f:
-			slip = f.read()
 		# (the function's own copy of the constant goes too: nothing uses it)
-		slip = re.sub(r"@@const kFunction_100f7a1\n.*?(?=@@main)", "", slip, flags=re.S)
-		slip = slip.replace("@@main\n", "") if "@@const" not in slip else slip
-		with open(os.path.join(tree, "part0", "functions", SLIP), "w", encoding="utf-8", newline="\n") as f:
-			f.write(slip)
+		with open(os.path.join(tree, OBJECTS), encoding="utf-8") as f:
+			text = f.read()
+		text, n = SLIP.subn(lambda m: "viewSetupFormScript: func() begin\n%s%sself.viewBounds := SetBounds(0, -200, 200, -8);%s"
+							% (m.group(1), m.group(2), m.group(3)), text, count=1)
+		self.assertEqual(n, 1, "the edit slip's viewSetupFormScript was not found")
+		with open(os.path.join(tree, OBJECTS), "w", encoding="utf-8", newline="\n") as f:
+			f.write(text)
 		data = newtonpkg.pack(tree, trees=self.trees)
 		self.assertNotEqual(data, self.committed)
 		pkg, blobs = newtonpkg.read(data)
@@ -94,7 +99,7 @@ class FunctionEdit(unittest.TestCase):
 		# part one time, the four other functions holding the same object
 		b = romsrc.Builder(os.path.join(tree, "part0"), os.path.abspath(NEWTONSCRIPT), relayout=True)
 		b.build()
-		shared = b.defs["obj_100f7a1"]
+		shared = b.defs[SHARED]
 		code = shared.items[shared.tags.index("instructions")]
 		copies = [v for v in b.by_path.values() if v.kind == "frame" and "instructions" in v.tags
 				  and getattr(v.items[v.tags.index("instructions")], "data", None) == getattr(code, "data", code)]

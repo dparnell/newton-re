@@ -1,5 +1,0 @@
-@@ 0x759959
-func(a1) begin
-	(if (if layout then (not layout.(a1))) then protoContext:HideIfVisible(self))
-end
-@@end

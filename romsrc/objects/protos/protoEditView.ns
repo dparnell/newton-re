@@ -1,0 +1,3 @@
+// protoEditView, and what only it reaches
+
+protoEditView := {viewClass: clEditView, _proto: @protoView};

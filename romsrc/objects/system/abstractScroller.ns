@@ -1,0 +1,114 @@
+// abstractScroller, and what only it reaches
+
+abstractScroller := {
+	ArrowCount: nil,
+	DirMap: nil,
+	AdjustArrows: func() begin
+		local l1;
+		(if ScrollRect then begin
+				if DirMap.left then begin
+						l1 := (if (if DataRect then (xPos > DataRect.left)) then 'more else 'normal);
+						self:SetArrow('left, l1)
+					end;
+				if DirMap.right then begin
+						l1 := (if ((xPos + (ViewRect.right - ViewRect.left)) < DataRect.right) then 'more else 'normal);
+						self:SetArrow('right, l1)
+					end;
+				if DirMap.up then begin
+						l1 := (if (DataRect.bottom = 9999) then 'normal else (if (yPos > DataRect.top) then 'more else 'normal));
+						self:SetArrow('up, l1)
+					end;
+				(if DirMap.down then begin
+						l1 := (if (DataRect.bottom = 9999) then 'normal else (if ((yPos + (ViewRect.bottom - ViewRect.top)) < DataRect.bottom) then 'more else 'normal));
+						self:SetArrow('down, l1)
+					end)
+			end)
+	end,
+	viewFormat: vfFillWhite,
+	viewgesturescript: func(a1, a2) begin
+		(a2 = 13)
+	end,
+	StateMap: nil,
+	scrollYUnits: 1,
+	viewFlags: vVisible + vReadOnly,
+	ViewRect: nil,
+	viewBounds: nil,
+	scrollerState: nil,
+	Arrows: nil,
+	PageThreshold: 5,
+	viewJustify: nil,
+	GetArrow: func(a1) begin
+		l1 := scrollerState[DirMap.(a1)];
+		local l1;
+		(foreach l2, l3 in StateMap do begin
+				if (l3 = l1) then begin
+						break l2
+					end
+			end)
+	end,
+	yPos: 0,
+	scrollXUnits: 1,
+	ScrollAmounts: [|Array|: 1, 1, 1],
+	declareSelf: 'Scroller,
+	viewSetupFormScript: func() begin
+		scrollerState := Array(ArrowCount, 0);
+		if (not scrollView) then begin
+				scrollView := self
+			end;
+		self:AdjustArrows()
+	end,
+	ScrollRect: nil,
+	viewClass: clView,
+	scrollView: nil,
+	SetupExtras: func(a1, a2) begin
+		local l1, l2;
+		a2.axis := (if ((a1 = 'left) or (a1 = 'right)) then 'horizontal else 'vertical);
+		l1 := (if (a2.tap = 'double) then ScrollAmounts[2] else (if (a2.count >= PageThreshold) then ScrollAmounts[1] else ScrollAmounts[0]));
+		l2 := (if (a2.axis = 'horizontal) then scrollXUnits else scrollYUnits);
+		a2.amount := (if ((a1 = 'left) or (a1 = 'up)) then ((-l1) * l2) else (l1 * l2));
+		(if ScrollRect then (if (a2.axis = 'horizontal) then begin
+					if ((xPos + a2.amount) < 0) then begin
+							a2.amount := (-xPos)
+						end else begin
+							if ((xPos + a2.amount) >= (ScrollRect.right - (ViewRect.right - ViewRect.left))) then begin
+									a2.amount := ((ScrollRect.right - (ViewRect.right - ViewRect.left)) - xPos)
+								end
+						end;
+					(xPos := (xPos + a2.amount))
+				end else begin
+					if ((yPos + a2.amount) < 0) then begin
+							a2.amount := (-yPos)
+						end else begin
+							if ((yPos + a2.amount) > (ScrollRect.bottom - (ViewRect.bottom - ViewRect.top))) then begin
+									a2.amount := ((ScrollRect.bottom - (ViewRect.bottom - ViewRect.top)) - yPos)
+								end
+						end;
+					(yPos := (yPos + a2.amount))
+				end))
+	end,
+	DataRect: nil,
+	xPos: 0,
+	PlayStopSound: func() begin
+		playsound(@tockSound)
+	end,
+	SetArrow: func(a1, a2) begin
+		scrollerState[DirMap.(a1)] := StateMap.(a2);
+		(if (if (Scroller exists) then Visible(Scroller)) then Scroller:Dirty())
+	end,
+	DoScroll: func(a1) begin
+		local l1;
+		(foreach l2 in (l1 := self:ChildViewFrames()) do begin
+				local l4;
+				if (a1 = l2.arrowDirection) then begin
+						if (not l2:EndOfTheLine(a1)) then begin
+								l4 := Clone(l2.baseFrame);
+								self:SetupExtras(a1, l4);
+								scrollView:?viewScroll2DScript(a1, l4);
+								self:AdjustArrows();
+								l2:DoDrawing('viewDrawScript, [Array: ])
+							end;
+						break
+					end
+			end)
+	end
+};

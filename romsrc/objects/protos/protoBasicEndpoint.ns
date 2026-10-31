@@ -1,0 +1,26 @@
+// protoBasicEndpoint, and what only it reaches
+
+protoBasicEndpoint := {
+	flushPartial: {class: #132, funcPtr: 6989119, numArgs: 0},
+	Disconnect: {class: #132, funcPtr: 6989115, numArgs: 2},
+	disposeLeavingTEndpoint: {class: #132, funcPtr: 6989117, numArgs: 0},
+	Bind: {class: #132, funcPtr: 6989113, numArgs: 2},
+	Listen: {class: #132, funcPtr: 6990147, numArgs: 2},
+	output: {class: #132, funcPtr: 6990149, numArgs: 3},
+	input: {class: #132, funcPtr: 6990144, numArgs: 0},
+	disposeLeavingTool: {class: #132, funcPtr: 7011289, numArgs: 0},
+	instantiateFromTEndpoint: {class: #132, funcPtr: 6990146, numArgs: 3},
+	option: {class: #132, funcPtr: 6990148, numArgs: 2},
+	Partial: {class: #132, funcPtr: 6990150, numArgs: 0},
+	requestsPending: {class: #132, funcPtr: 6990155, numArgs: 1},
+	Connect: {class: #132, funcPtr: 6989114, numArgs: 2},
+	Dispose: {class: #132, funcPtr: 6989116, numArgs: 0},
+	Instantiate: {class: #132, funcPtr: 6990145, numArgs: 2},
+	flushInput: {class: #132, funcPtr: 6989118, numArgs: 0},
+	SetState: {class: #132, funcPtr: 6990153, numArgs: 1},
+	Cancel: {class: #132, funcPtr: 6989111, numArgs: 1},
+	SetInputSpec: {class: #132, funcPtr: 6990151, numArgs: 1},
+	Unbind: {class: #132, funcPtr: 6990154, numArgs: 1},
+	state: {class: #132, funcPtr: 6990152, numArgs: 0},
+	Accept: {class: #132, funcPtr: 6989112, numArgs: 2}
+};

@@ -1,0 +1,39 @@
+// protoNewShowBar, and what only it reaches
+
+protoNewShowBar := {
+	_proto: @protoShowBar,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 21},
+	leftBits: @tabLeftBitmap,
+	rightBits: @tabRightBitmap,
+	leftHiliteBits: @tabLeftHiliteBitmap,
+	rightHiliteBits: @tabRightHiliteBitmap,
+	RedoText: func() begin
+		inherited:RedoText();
+		showBarText.text := StrTruncate(showBarText.text, 137);
+		showBarText.width := (StrFontWidth(showBarText.text, showBarText.viewFont) + 16);
+		showBarText.viewBounds := SetBounds(((-showBarText.width) - 4), 3, -4, 17);
+		(showBarText.viewJustify := 8388646)
+	end,
+	titleClickScript: nil,
+	viewChildren: [viewChildren: showBarText, title],
+	title: nil,
+	allocateContext: [|Array|: 'showBarText, showBarText, 'title, title]
+};
+
+title := {
+	viewClass: clTextView,
+	viewFont: tsSystem + tsSize(9) + tsBold,
+	viewBounds: {left: 4, top: 1, right: -157, bottom: 13},
+	viewJustify: 8388656,
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewFormat: 0,
+	viewTransferMode: 3,
+	viewClickScript: func(a1) begin
+		if (if titleClickScript then self:TrackHilite(a1)) then begin
+				self:titleClickScript();
+				self:hilite(nil)
+			end;
+		true
+	end,
+	preallocatedContext: 'title
+};

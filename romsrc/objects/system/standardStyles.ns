@@ -1,0 +1,19 @@
+// standardStyles, and what only it reaches
+
+standardStyles := [|Array|:
+	@fontSystem9,
+	@fontSystem10,
+	@fontSystem12,
+	@fontSystem14,
+	@fontSystem18,
+	@fontSystem9Bold,
+	@fontSystem10Bold,
+	@fontSystem12Bold,
+	@fontSystem14Bold,
+	@fontSystem18Bold,
+	@fontSystem9UnderLine,
+	@fontSystem10UnderLine,
+	@fontSystem12UnderLine,
+	@fontSystem14UnderLine,
+	@fontSystem18UnderLine
+];

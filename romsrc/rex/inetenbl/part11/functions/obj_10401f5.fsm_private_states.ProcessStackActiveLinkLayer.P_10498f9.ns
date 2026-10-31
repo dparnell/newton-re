@@ -1,6 +1,0 @@
-@@ 0x10498f9
-func() begin
-	self:MUpdateProgressSlip('Update, nil, 80);
-	fLinkLayerServiceFSM:DoEvent('ProcessStackActive, [Array: self, 'MProcessStackActiveCallback])
-end
-@@end

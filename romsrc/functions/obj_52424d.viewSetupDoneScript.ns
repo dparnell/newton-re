@@ -1,6 +1,0 @@
-@@ 0x51ecbd
-func() begin
-	self.text := Stringer([Array: "p.", SPrintObject(page)]);
-	(copperfield.pageNumber := self)
-end
-@@end

@@ -1,0 +1,3 @@
+// starterPolygon, and what only it reaches
+
+starterPolygon := {viewStationery: 'poly, viewBounds: nil, points: nil};

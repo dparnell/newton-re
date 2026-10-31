@@ -1,0 +1,6 @@
+// kbdLeftBitmap, and what only it reaches
+
+kbdLeftBitmap := {
+	bits: bitmap('bits, "resources/bits/3d76e5.png", "00000000000400c700c700d400cd00df", 1),
+	bounds: {left: 0, top: 0, right: 11, bottom: 6}
+};

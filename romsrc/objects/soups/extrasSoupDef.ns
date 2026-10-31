@@ -1,0 +1,29 @@
+// extrasSoupDef, and what only it reaches
+
+extrasSoupDef := {
+	name: extrasSoupName,
+	userName: extras,
+	ownerApp: 'ExtrasDrawer,
+	ownerAppName: extras,
+	userDescr: private,
+	indexes: [|Array|:
+		{
+			structure: 'slot,
+			type: 'tags,
+			path: '_tagList,
+			tags: [|Array|:
+				'_icon,
+				'_package,
+				'_frozen,
+				'_noBackup,
+				'_buttonBar,
+				'_soups,
+				'_extensions,
+				'_setup,
+				'_help
+			]
+		},
+		{structure: 'slot, path: 'packageName, type: '|string|},
+		{structure: 'slot, path: 'sequence, type: 'int}
+	]
+};

@@ -1,5 +1,0 @@
-@@ 0x5a40e1
-func(a1) begin
-	(if a1 then eworld:ConnectionAbort())
-end
-@@end

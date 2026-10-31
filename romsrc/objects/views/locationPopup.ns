@@ -1,0 +1,49 @@
+// locationPopup, and what only it reaches
+
+locationPopup := {
+	viewBounds: {left: 0, top: 0, right: 140, bottom: 198},
+	viewFormat: vfFillWhite,
+	spots: @citySoupName,
+	countryAndName: true,
+	initialSpot: nil,
+	result: nil,
+	returnSlot: nil,
+	New: func(a1, a2, a3) begin
+		local l1;
+		(l1 := self:Init()).context := a3;
+		if a1.spots then begin
+				l1.spots := a1.spots
+			end;
+		l1.initialSpot := a1.default;
+		l1.returnSlot := a1.result;
+		if HasPath(a1, 'nameBased) then begin
+				l1.countryAndName := (not nameBased)
+			end else begin
+				l1.countryAndName := (l1.spots = @citySoupName)
+			end;
+		l1:popup(a2)
+	end,
+	Affirmative: func() begin
+		(if result then context:?pickActionScript((if returnSlot then result.(returnSlot) else result)) else context:?pickCancelledScript())
+	end,
+	viewChildren: [|Array|:
+		picker_2,
+		{
+			viewBounds: {left: -20, top: -20, right: -7, bottom: -7},
+			buttonClickScript: func() begin
+				cancelled := nil;
+				inherited:buttonClickScript()
+			end,
+			_proto: @protoCancelButton
+		}
+	],
+	picker: nil,
+	allocateContext: [|Array|: 'picker, picker_2],
+	_proto: @protoGeneralPopup
+};
+
+picker_2 := {preallocatedContext: 'picker, _proto: @locationPicker};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+Affirmative_code := same("locationPopup.Affirmative.instructions");

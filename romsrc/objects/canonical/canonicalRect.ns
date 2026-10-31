@@ -1,0 +1,3 @@
+// canonicalRect, and what only it reaches
+
+canonicalRect := {left: nil, top: nil, right: nil, bottom: nil};

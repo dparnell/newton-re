@@ -1,8 +1,0 @@
-@@ 0x42e359
-func() begin
-	self:CloseEdit(insert);
-	insert := nil;
-	split := 99999;
-	expando:RedoChildren()
-end
-@@end

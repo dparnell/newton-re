@@ -1,0 +1,64 @@
+// newtFalseEntryView, and what only it reaches
+
+newtFalseEntryView := {
+	FlushEntry: func(a1) begin
+		nil
+	end,
+	soupQuery: nil,
+	soupQuerySlot: 'soupQuery,
+	target: nil,
+	targetSlot: 'target,
+	entryViewDefs: nil,
+	DoRetarget: func() begin
+		entryViewDefs := [Array: GetEntryDataView((target := GetVariable(parentView, targetSlot)), viewDef)];
+		targetViewDef := (currentViewDef := nil);
+		targetDataDef := (currentDataDef := nil);
+		currentStatView := nil;
+		targetView:RedoChildren()
+	end,
+	dataSoup: nil,
+	dataSoupSlot: 'dataSoup,
+	_proto: @newtEntryView,
+	EndFlush: func() begin
+		nil
+	end,
+	EntryCool: func(a1) begin
+		true
+	end,
+	Retarget: func() begin
+		entryViewDefs := [Array: GetEntryDataView((target := GetVariable(parentView, targetSlot)), viewDef)];
+		targetViewDef := (currentViewDef := nil);
+		targetDataDef := (currentDataDef := nil);
+		currentStatView := nil;
+		(foreach l1 in self:ChildViewFrames() do begin
+				if HasPath(l1, 'Retarget) then begin
+						l1:Retarget()
+					end
+			end)
+	end,
+	StartFlush: func() begin
+		nil
+	end,
+	viewDef: 'default,
+	dataCursor: nil,
+	dataCursorSlot: 'dataCursor,
+	viewSetupFormScript: func() begin
+		local l1, l2;
+		target := GetVariable((parentView := self:Parent()), targetSlot);
+		targetView := self;
+		dataCursor := GetVariable(parentView, dataCursorSlot);
+		dataSoup := GetVariable(parentView, dataSoupSlot);
+		soupQuery := GetVariable(parentView, soupQuerySlot);
+		targetViewDef := (entryViewDefs := [Array: (l1 := GetEntryDataView(target, viewDef))]);
+		viewDef := l1.symbol;
+		(if (l2 := GetDataDefs(DataClassOf(target))) then l2:?SetupForm(target, self))
+	end,
+	parentView: nil,
+	FilingChangedX: func() begin
+		nil
+	end,
+	StartFlushWithChild: func(a1) begin
+		nil
+	end,
+	targetView: nil
+};

@@ -1,0 +1,54 @@
+// export80, and what only it reaches
+
+export80 := {
+	viewBounds: {left: 0, top: 60, right: 210, bottom: 170},
+	stepChildren: [stepChildren:
+		{
+			title: dock,
+			titleIcon: {bits: titleIconBits, bounds: {left: 0, top: 0, right: 19, bottom: 11}},
+			_proto: @protoTitle
+		},
+		{
+			text: nil,
+			viewBounds: {left: 0, top: 10, right: 195, bottom: 60},
+			viewJustify: vjParentCenterH + vjSiblingBottomV,
+			viewFont: @fontSystem10,
+			viewSetupFormScript: func() begin
+				(if (error <> 0) then begin
+						self.text := "The restore operation stopped before it was completed so some of your data was not restored.  Your Newton device needs to be restarted to use the restored information.";
+						self.viewBounds := Clone(viewBounds);
+						(viewBounds.bottom := (viewBounds.bottom + 20))
+					end else (self.text := "Your Newton device needs to be restarted to use the restored information."))
+			end,
+			_proto: @protoStaticText
+		},
+		restart
+	],
+	viewFlags: vApplication + vFloating + vClickable,
+	viewSetupFormScript: func() begin
+		(if (error <> 0) then begin
+				self.viewBounds := Clone(viewBounds);
+				(viewBounds.bottom := (viewBounds.bottom + 20))
+			end)
+	end,
+	viewSetupDoneScript: func() begin
+		inherited:?viewSetupDoneScript();
+		SetKeyView(self, 0)
+	end,
+	_nextKeyView: 'none,
+	textFlags: 33792,
+	_proto: @protoFloater,
+	_defaultButton: nil,
+	stepAllocateContext: [|Array|: '_defaultButton, restart]
+};
+
+restart := {
+	text: "Restart",
+	buttonClickScript: func() begin
+		ReBoot()
+	end,
+	viewBounds: {left: -54, top: -18, right: -7, bottom: -5},
+	viewJustify: 8388774,
+	_proto: @protoTextButton,
+	preAllocatedContext: '_defaultButton
+};

@@ -1,5 +1,0 @@
-@@ 0x10182e9
-func() begin
-	self:DoEvent('UnBind, nil)
-end
-@@end

@@ -1,0 +1,3 @@
+// txRangePrototype, and what only it reaches
+
+txRangePrototype := {first: nil, last: nil};

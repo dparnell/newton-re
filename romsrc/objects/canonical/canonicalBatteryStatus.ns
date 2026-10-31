@@ -1,0 +1,17 @@
+// canonicalBatteryStatus, and what only it reaches
+
+canonicalBatteryStatus := {
+	batteryType: nil,
+	batteryVoltage: nil,
+	batteryCapacity: nil,
+	batteryLow: nil,
+	batteryDead: nil,
+	batteryCurrent: nil,
+	acPower: nil,
+	acVoltage: nil,
+	chargeState: nil,
+	chargeRate: nil,
+	chargeCurrent: nil,
+	ambientTemp: nil,
+	batteryTemp: nil
+};

@@ -1,0 +1,9 @@
+// function_2, and what only it reaches
+
+function_2 := func(a1) begin
+	AddArraySlot(fLinkClients_GrabPending, a1)
+end;
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+function_2_code := same("function_2.instructions");

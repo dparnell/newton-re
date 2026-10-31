@@ -1,0 +1,3 @@
+// wordFilter, and what only it reaches
+
+wordFilter := {item: words, filters: [|Array|: abcdefghijklmnopqrstuvwxyz]};

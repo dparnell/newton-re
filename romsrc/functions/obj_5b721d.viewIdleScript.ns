@@ -1,6 +1,0 @@
-@@ 0x5b71fd
-func() begin
-	SetValue(self, 'text, self:CurTimeStr());
-	30000
-end
-@@end

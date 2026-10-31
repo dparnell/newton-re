@@ -1,0 +1,25 @@
+// protoPinWindowWithoutLogic, and what only it reaches
+
+protoPinWindowWithoutLogic := {
+	viewBounds: {left: 0, top: 0, right: 110, bottom: 153},
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	newPinKey: nil,
+	declareSelf: 'base,
+	BuildMeUp: func(a1) begin
+		local l1;
+		(l1 := BuildContext(self)).promptText := a1;
+		l1
+	end,
+	viewChildren: [viewChildren: {_proto: @protoClosebox}, pin],
+	pin: nil,
+	allocateContext: [|Array|: 'pin, pin],
+	_proto: @protoFloater
+};
+
+pin := {
+	viewBounds: {left: 0, top: 3, right: 100, bottom: 138},
+	viewJustify: vjParentCenterH,
+	viewFormat: vfFillWhite,
+	preallocatedContext: 'pin,
+	_proto: @protoPinWithoutLogic
+};

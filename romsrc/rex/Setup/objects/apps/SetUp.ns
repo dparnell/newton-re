@@ -1,0 +1,243 @@
+// SetUp, and what only it reaches
+
+SetUp := {
+	viewSetupDoneScript: func() begin
+		local l1, l2;
+		if (l1 := GetUserConfig('currentPersona)) then begin
+				fPersona := ResolveEntryAlias(l1)
+			end else begin
+				fPersona := {name: {first: Clone(""), last: Clone("")}, phones: [Array: ]}
+			end;
+		if (l2 := GetAppPrefs(appSymbol, '{})) then begin
+				fWorkSite := ResolveEntryAlias(l2.homeWorksite);
+				fWorkworksite := ResolveEntryAlias(l2.workWorksite)
+			end;
+		if (not fWorkSite) then begin
+				fWorkSite := {}
+			end;
+		if (not fWorkworksite) then begin
+				fWorkworksite := {}
+			end;
+		self:ShowPage(fFirstPage);
+		AddDeferredSend(self, 'MoveBehind, [Array: nil])
+	end,
+	fBizCard: nil,
+	viewFormat: nil,
+	fFirstName: nil,
+	fReadyToQuit: nil,
+	viewQuitScript: func() begin
+		l2 := GetAppPrefs(appSymbol, '{});
+		if (IsSoupEntry(fWorkSite) or IsSoupEntry(fWorkworksite)) then begin
+				l6 := true
+			end else begin
+				l6 := ((not (l5 := GetUserConfig('emporia))) or (Length(l5) = 0))
+			end;
+		if (fCompleted.name = true) then begin
+				if (l4 := self:SaveWorksiteInfo(fWorkSite, l6)) then begin
+						fWorkSite := l4;
+						l2.homeWorksite := MakeEntryAlias(fWorkSite)
+					end;
+				if IsSoupEntry(fPersona) then begin
+						EntryChange(fPersona);
+						UseCurrentPersona()
+					end else begin
+						fPersona := GetRoot().cardfile:AddCard('owner, fPersona)
+					end;
+				if fPersona then begin
+						AddPersona(fPersona)
+					end
+			end;
+		if (fCompleted.PhoneWork = true) then begin
+				if (l4 := self:SaveWorksiteInfo(fWorkworksite, l6)) then begin
+						fWorkworksite := l4;
+						l2.workWorksite := MakeEntryAlias(fWorkworksite)
+					end
+			end;
+		EntryChange(l2);
+		l8 := Time();
+		if GetRoot().worldClock.SetLocation then begin
+				if fPersona.city then begin
+						if ((l10 := Length((l11 := GetCityEntry(fPersona.city)))) > 0) then begin
+								if (l10 = 1) then begin
+										l1 := l11[0]
+									end else begin
+										if (l10 > 1) then begin
+												local l1;
+												local l2;
+												local l3;
+												local l4;
+												local l5;
+												local l6;
+												local l7;
+												local l8;
+												local l9;
+												local l10;
+												local l11;
+												(for l9 := 0 to (l10 - 1) do begin
+														if ((l11[l9].country = mapCountry) or (not mapCountry)) then begin
+																break (l1 := l11[l9])
+															end
+													end)
+											end
+									end
+							end
+					end;
+				if (not l1) then begin
+						if mapCountry then begin
+								if (if fWorkSite then StrFilled(fWorkSite.AreaCode)) then begin
+										if (NewCity := self:GetCityFromAreacode(fWorkSite.AreaCode, mapCountry)) then begin
+												l1 := NewCity
+											end
+									end;
+								if (if (if (not l1) then fWorkworksite) then StrFilled(fWorkworksite.AreaCode)) then begin
+										if (NewCity := self:GetCityFromAreacode(fWorkworksite.AreaCode, mapCountry)) then begin
+												l1 := NewCity
+											end
+									end;
+								if l1 then begin
+										if (if IsSoupEntry(fWorkSite) then StrEqual(l1.AreaCode, fWorkSite.AreaCode)) then begin
+												l7 := MakeEntryAlias(fWorkSite)
+											end else begin
+												if IsSoupEntry(fWorkworksite) then begin
+														l7 := MakeEntryAlias(fWorkworksite)
+													end
+											end;
+										if l7 then begin
+												SetUserConfig('currentEmporium, l7);
+												UseCurrentEmporium()
+											end
+									end
+							end
+					end else begin
+						GetRoot().worldClock:SetLocation(l1)
+					end
+			end;
+		SetTime(l8);
+		BusyBoxControl(1);
+		'postQuit
+	end,
+	CountryPicker: nil,
+	PhoneWork: nil,
+	viewFlags: vApplication + vClipping + vFloating,
+	SaveWorksiteInfo: func(a1, a2) begin
+		local l1, l2, l3;
+		if (if (not (l3 := IsSoupEntry(a1))) then (not a2)) then begin
+				return nil
+			end;
+		if (if mapCountry then (l2 := a1.AreaCode)) then begin
+				if (l1 := self:GetCityFromAreacode(l2, mapCountry)) then begin
+						a1.cityAlias := MakeEntryAlias(l1);
+						a1.country := GetCountryEntry(l1.country)[0].name;
+						a1.countrySymbol := l1.country
+					end
+			end;
+		if l3 then begin
+				EntryChange(a1)
+			end else begin
+				a1 := GetRoot().cardfile:AddCard('worksite, a1)
+			end;
+		a1
+	end,
+	NextPage: func() begin
+		self.fReadyToQuit := nil;
+		(if (if (if fCompleted.fully then (fCurrentPageIndex < (Length(fPages) - 1))) then fReviewDone) then return self:ShowPage((Length(fPages) - 1)) else return self:ShowPage((fCurrentPageIndex + 1)))
+	end,
+	viewBounds: {left: 0, top: 0, right: 240, bottom: 320},
+	datePicker: nil,
+	fCurrentPage: nil,
+	fWorkworksite: nil,
+	viewOverviewScript: func() begin
+		PlaySound(@funBeep);
+		(if fReadyToQuit then self:SetupClose() else (fReadyToQuit := true))
+	end,
+	fPersona: nil,
+	ShowPage: func(a1) begin
+		local l1;
+		if (a1 >= Length(fPages)) then begin
+				return nil
+			end;
+		self:LockScreen(true);
+		if fCurrentPage then begin
+				RemoveStepView(self, fCurrentPage);
+				stepChildren := [Array: ];
+				fCurrentPage := nil
+			end;
+		if ((l1 := fPages[a1]) <> nil) then begin
+				fCurrentPageIndex := a1;
+				if (fCurrentPage := AddStepView(self, l1)) then begin
+						fCurrentPage:Open()
+					end;
+				self:dirty()
+			end;
+		self:LockScreen(nil);
+		fCurrentPageIndex := a1;
+		return fCurrentPage
+	end,
+	appSymbol: 'SetUp,
+	viewJustify: 0,
+	name: nil,
+	viewPostQuitScript: func() begin
+		inherited:?viewPostQuitScript();
+		self:ClearCut()
+	end,
+	fFirstPage: 0,
+	stepAllocateContext: [|Array|:
+		'name,
+		@8345,
+		'CountryPicker,
+		@8342,
+		'PhoneWork,
+		@8347,
+		'datePicker,
+		@8343,
+		'TimePicker,
+		@8356
+	],
+	fPages: nil,
+	fformat: 'normal,
+	declareSelf: 'base,
+	viewSetupFormScript: func() begin
+		local l1, l2;
+		BusyBoxControl(0);
+		if ((savedBlessed := UserConfiguration.blessedApp) = 'SetUp) then begin
+				savedBlessed := 'paperroll
+			end;
+		if (not fPages) then begin
+				fPages := stepChildren
+			end;
+		stepChildren := [Array: ];
+		fCompleted := {};
+		fFirstTime := (GetUserConfig('blessedApp) = 'SetUp);
+		l1 := GetAppParams().appAreaWidth;
+		l2 := GetAppParams().appAreaHeight;
+		if (l1 > l2) then begin
+				fformat := 'wide
+			end;
+		(if (l1 <> 240) then (self.viewBounds := OffsetRect(displayParams.rootBounds, (-displayParams.appAreaGlobalLeft), (-displayParams.appAreaGlobalTop))))
+	end,
+	fCompleted: nil,
+	mapCountry: nil,
+	fFirstTime: nil,
+	GetCityFromAreacode: func(a1, a2) begin
+		local l1, l2;
+		(if StrFilled(a1) then begin
+				l2 := (l1 := GetLocationSoup(@citySoupName):Query({type: 'index, IndexPath: 'AreaCode, beginKey: a1, endKey: a1})):entry();
+				(while l2 do (if (l2.country = a2) then break l2 else (l2 := l1:Next())))
+			end)
+	end,
+	fScreenSize: nil,
+	viewClass: clView,
+	PreviousPage: func() begin
+		self.fReadyToQuit := nil;
+		(if (fCurrentPageIndex = 0) then return self:ShowPage(fCurrentPageIndex) else return self:ShowPage((fCurrentPageIndex - 1)))
+	end,
+	fCurrentPageIndex: 0,
+	stepChildren: [stepChildren: @8357, @8345, @8342, @8340, @8346, @8347, @8343, @8356, @8344, @8355, @8341],
+	fWorkSite: nil,
+	TimePicker: nil,
+	savedBlessed: nil,
+	fReviewDone: true,
+	SetupClose: func() begin
+		(if (UserConfiguration.blessedApp <> savedBlessed) then GetRoot():BlessApp(savedBlessed) else base:Close())
+	end
+};

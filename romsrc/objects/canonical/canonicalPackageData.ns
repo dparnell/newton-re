@@ -1,0 +1,3 @@
+// canonicalPackageData, and what only it reaches
+
+canonicalPackageData := {packageData: nil};

@@ -1,6 +1,0 @@
-@@ 0x1016d8d
-func(a1) begin
-	local l1;
-	(if (a1.dataDef = 'newEntry) then self:ChooseNewEntry() else self:BeginNewEntry((if (l1 := '{serial: |Serial:NIE|, Modem: |Modem:NIE|, MacIP: |LocalTalk:NIE|, ethernet: |Ethernet:NIE|}.(a1.dataDef)) then l1 else a1.dataDef), a1.symbol))
-end
-@@end

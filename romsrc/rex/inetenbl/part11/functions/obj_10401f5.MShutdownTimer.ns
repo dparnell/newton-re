@@ -1,5 +1,0 @@
-@@ 0x1043cf1
-func() begin
-	self:DoPeriodicEvent('ShutdownTimerExpired, nil, 'unique, 'fsm, 1, 10000)
-end
-@@end

@@ -1,0 +1,3 @@
+// protoDragngo, and what only it reaches
+
+protoDragngo := {_proto: @protoDragger, debug: 182001, viewChildren: [viewChildren: {_proto: @protoClosebox}]};

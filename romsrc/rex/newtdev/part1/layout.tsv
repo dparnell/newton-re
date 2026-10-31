@@ -1,45 +1,45 @@
 # the objects' area: 0x1000ae0, 0xaf8 bytes; the byte between objects; the objects' alignment
 area	1000ae0	af8	bf	4
-1000ae0	obj_1000ae1	41	gc=1
-1000af0	obj_1000ae1[0]	43	map=map_1000b0d
+1000ae0	part	41	gc=1
+1000af0	part[0]	43	map=map_1000b0d
 1000b0c	map_1000b0d	41
 1000b2c	'_ExportTable	40
 1000b4c	'installScript	40
 1000b6c	'devInstallScript	40
 1000b90	'devRemoveScript	40
-1000bb0	obj_1000ae1[0]._ExportTable	41
+1000bb0	part[0]._ExportTable	41
 1000bc0	'|Array|	40
-1000bd8	obj_1000ae1[0]._ExportTable[0]	43	map=map_1000bf5
+1000bd8	part[0]._ExportTable[0]	43	map=map_1000bf5
 1000bf4	map_1000bf5	41
 1000c14	'name	40
 1000c2c	'major	40
 1000c44	'minor	40
 1000c5c	'objects	40
 1000c74	'|NameServerInterface:NSG|	40
-1000c9c	obj_1000ae1[0]._ExportTable[0].objects	41
-1000cb4	obj_1000ae1[0]._ExportTable[0].objects[0]	43	map=map_1000cd1
+1000c9c	part[0]._ExportTable[0].objects	41
+1000cb4	part[0]._ExportTable[0].objects[0]	43	map=map_1000cd1
 1000cd0	map_1000cd1	41
 1000cf0	'class	40
 1000d08	'code	40
 1000d20	'numArgs	40
 1000d38	'offset	40
 1000d50	'BinCFunction	40
-1000d70	obj_1000d71	40
+1000d70	code	40
 1001408	'nativeModule	40
-1001428	obj_1000ae1[0]._ExportTable[0].objects[1]	43	map=map_1000cd1
-1001444	obj_1000ae1[0]._ExportTable[0].objects[2]	43	map=map_1000cd1
-1001460	obj_1000ae1[0].installScript	43	map=map_1001481
+1001428	part[0]._ExportTable[0].objects[1]	43	map=map_1000cd1
+1001444	part[0]._ExportTable[0].objects[2]	43	map=map_1000cd1
+1001460	part[0].installScript	43	map=map_1001481
 1001480	map_1001481	41
 10014a4	'instructions	40
 10014c4	'literals	40
 10014e0	'argFrame	40
-10014fc	obj_1000ae1[0].installScript.instructions	40
-1001518	obj_1000ae1[0].installScript.literals	41
-1001534	obj_1000ae1[0].installScript.literals[1]	41
+10014fc	part[0].installScript.instructions	40
+1001518	part[0].installScript.literals	41
+1001534	part[0].installScript.literals[1]	41
 1001548	'removeScript	40
 1001568	'EnsureInternal	40
-1001588	obj_1000ae1[0].devInstallScript	43	map=map_1001481
-10015a8	obj_10015a9	40
-10015b8	obj_1000ae1[0].devRemoveScript	43	map=map_1001481
-alias	obj_1000ae1[0].devInstallScript.instructions	obj_10015a9
-alias	obj_1000ae1[0].devRemoveScript.instructions	obj_10015a9
+1001588	part[0].devInstallScript	43	map=map_1001481
+10015a8	devInstallScript_code	40
+10015b8	part[0].devRemoveScript	43	map=map_1001481
+alias	part[0].devInstallScript.instructions	devInstallScript_code
+alias	part[0].devRemoveScript.instructions	devInstallScript_code

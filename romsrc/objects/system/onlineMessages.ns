@@ -1,0 +1,12 @@
+// onlineMessages, and what only it reaches
+
+onlineMessages := [|Array|:
+	uCardPositionAlertButton,
+	"Looking for modem",
+	"Connecting.",
+	"Connecting..",
+	"Connecting...",
+	"Connecting....",
+	"Receiving...",
+	"Disconnecting"
+];

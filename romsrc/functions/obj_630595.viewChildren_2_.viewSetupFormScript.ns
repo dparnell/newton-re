@@ -1,5 +1,0 @@
-@@ 0x5ac431
-func() begin
-	((viewBounds := Clone(viewBounds)).right := StrFontWidth(text, viewFont))
-end
-@@end

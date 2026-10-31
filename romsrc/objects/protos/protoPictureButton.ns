@@ -1,0 +1,20 @@
+// protoPictureButton, and what only it reaches
+
+protoPictureButton := {
+	viewClass: clPictureView,
+	viewBounds: nil,
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2) + vfRound(4),
+	viewJustify: vjCenterH + vjCenterV,
+	buttonClickScript: func() begin
+		nil
+	end,
+	viewClickScript: func(a1) begin
+		if self:TrackHilite(a1) then begin
+				self:buttonClickScript();
+				self:hilite(nil)
+			end;
+		true
+	end,
+	debug: 11538576
+};

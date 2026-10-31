@@ -1,0 +1,3 @@
+// checkBitmaps, and what only it reaches
+
+checkBitmaps := [|Array|: CheckOff, CheckOn];

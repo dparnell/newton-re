@@ -1,6 +1,0 @@
-@@ 0x4dfff9
-func() begin
-	target := cursor:Next();
-	self:RedoChildren()
-end
-@@end

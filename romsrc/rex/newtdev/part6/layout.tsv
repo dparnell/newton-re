@@ -1,23 +1,23 @@
 # the objects' area: 0x1006c48, 0x5d14 bytes; the byte between objects; the objects' alignment
 area	1006c48	5d14	bf	4
-1006c48	obj_1006c49	41	gc=1
-1006c58	obj_1006c49[0]	43	map=map_1006c75
+1006c48	part	41	gc=1
+1006c58	part[0]	43	map=map_1006c75
 1006c74	map_1006c75	41
 1006c94	'_ExportTable	40
 1006cb4	'installScript	40
 1006cd4	'devInstallScript	40
 1006cf8	'devRemoveScript	40
-1006d18	obj_1006c49[0]._ExportTable	41
+1006d18	part[0]._ExportTable	41
 1006d28	'|Array|	40
-1006d40	obj_1006c49[0]._ExportTable[0]	43	map=map_1006d5d
+1006d40	part[0]._ExportTable[0]	43	map=map_1006d5d
 1006d5c	map_1006d5d	41
 1006d7c	'name	40
 1006d94	'major	40
 1006dac	'minor	40
 1006dc4	'objects	40
 1006ddc	'|Lantern:NSG|	40
-1006df8	obj_1006c49[0]._ExportTable[0].objects	41
-1006e0c	obj_1006c49[0]._ExportTable[0].objects[0]	43	map=map_1006e6d
+1006df8	part[0]._ExportTable[0].objects	41
+1006e0c	part[0]._ExportTable[0].objects[0]	43	map=map_1006e6d
 1006e6c	map_1006e6d	41
 1006ed0	'ConfigBeforeUse	40
 1006ef0	'DeleteClient	40
@@ -40,143 +40,143 @@ area	1006c48	5d14	bf	4
 100711c	'StatusView	40
 1007138	'_Buffer	40
 1007150	'DeviceType	40
-100716c	obj_1006c49[0]._ExportTable[0].objects[0].DeleteClient	43	map=map_100718d
+100716c	part[0]._ExportTable[0].objects[0].DeleteClient	43	map=map_100718d
 100718c	map_100718d	41
 10071b0	'class	40
 10071c8	'instructions	40
 10071e8	'literals	40
 1007204	'argFrame	40
 1007220	'numArgs	40
-1007238	obj_1006c49[0]._ExportTable[0].objects[0].DeleteClient.instructions	40
-1007258	obj_1006c49[0]._ExportTable[0].objects[0].DeleteClient.literals	41
+1007238	part[0]._ExportTable[0].objects[0].DeleteClient.instructions	40
+1007258	part[0]._ExportTable[0].objects[0].DeleteClient.literals	41
 1007274	'|=|	40
 1007288	'LSearch	40
 10072a0	'ArrayRemoveCount	40
 10072c4	'ethernet	40
-10072e0	obj_10072e1	40
+10072e0	DeviceCISProductName	40
 10072f0	'|string|	40
-1007308	obj_1006c49[0]._ExportTable[0].objects[0].AddClient	43	map=map_100718d
-1007328	obj_1006c49[0]._ExportTable[0].objects[0].AddClient.instructions	40
-1007364	obj_1006c49[0]._ExportTable[0].objects[0].AddClient.literals	41
+1007308	part[0]._ExportTable[0].objects[0].AddClient	43	map=map_100718d
+1007328	part[0]._ExportTable[0].objects[0].AddClient.instructions	40
+1007364	part[0]._ExportTable[0].objects[0].AddClient.literals	41
 1007388	'|evt.ex|	40
 10073a0	'_Device	40
 10073b8	'CurrentException	40
 10073dc	'error	40
-10073f4	obj_1006c49[0]._ExportTable[0].objects[0].DeviceInserted	43	map=map_100718d
-1007414	obj_1007415	40
-1007424	obj_1006c49[0]._ExportTable[0].objects[0].ConfigChanged	43	map=map_100718d
-1007444	obj_1006c49[0]._ExportTable[0].objects[0].ConfigChanged.instructions	40
-1007458	obj_1006c49[0]._ExportTable[0].objects[0].ConfigChanged.literals	41
-1007468	obj_1006c49[0]._ExportTable[0].objects[0].DeviceRemoved	43	map=map_100718d
-1007488	obj_1006c49[0]._ExportTable[0].objects[0].MapErrorCode	43	map=map_100718d
-10074a8	obj_1006c49[0]._ExportTable[0].objects[0].MapErrorCode.instructions	40
-1007534	obj_1006c49[0]._ExportTable[0].objects[0].MapErrorCode.literals	41
+10073f4	part[0]._ExportTable[0].objects[0].DeviceInserted	43	map=map_100718d
+1007414	DeviceInserted_code	40
+1007424	part[0]._ExportTable[0].objects[0].ConfigChanged	43	map=map_100718d
+1007444	part[0]._ExportTable[0].objects[0].ConfigChanged.instructions	40
+1007458	part[0]._ExportTable[0].objects[0].ConfigChanged.literals	41
+1007468	part[0]._ExportTable[0].objects[0].DeviceRemoved	43	map=map_100718d
+1007488	part[0]._ExportTable[0].objects[0].MapErrorCode	43	map=map_100718d
+10074a8	part[0]._ExportTable[0].objects[0].MapErrorCode.instructions	40
+1007534	part[0]._ExportTable[0].objects[0].MapErrorCode.literals	41
 1007590	'IsInteger	40
 10075ac	'IsSymbol	40
 10075c8	'|evt.ex.type.ref|	40
-10075e8	obj_10075e9	41
+10075e8	MapErrorCode_literal4	41
 1007600	'data	40
 1007618	'Throw	40
-1007630	obj_1007631	41
-10076d8	obj_1007631[0]	43	map=map_10076f1
+1007630	MapErrorCode_literal6	41
+10076d8	MapErrorCode_literal6[0]	43	map=map_10076f1
 10076f0	map_10076f1	41
 100770c	'ErrorString	40
 1007728	'GenericErrorString	40
 100774c	'errorCode	40
-1007768	obj_1007631[0].ErrorString	40
-10077a8	obj_10077a9	40
-100789c	obj_1007631[1]	43	map=map_10076f1
-10078b4	obj_1007631[1].ErrorString	40
-10078e4	obj_10078e5	40
-10079d4	obj_1007631[2]	43	map=map_10076f1
-10079ec	obj_1007631[2].ErrorString	40
-1007a24	obj_1007631[3]	43	map=map_10076f1
-1007a3c	obj_1007631[3].ErrorString	40
-1007a74	obj_1007631[4]	43	map=map_10076f1
-1007a8c	obj_1007631[4].ErrorString	40
-1007ac8	obj_1007ac9	40
-1007bbc	obj_1007631[5]	43	map=map_10076f1
-1007bd4	obj_1007631[5].ErrorString	40
-1007c0c	obj_1007631[5].GenericErrorString	40
-1007ca0	obj_1007631[6]	43	map=map_10076f1
-1007cb8	obj_1007631[6].ErrorString	40
-1007cf8	obj_1007631[7]	43	map=map_10076f1
-1007d10	obj_1007631[7].ErrorString	40
-1007d4c	obj_1007d4d	40
-1007da4	obj_1007631[8]	43	map=map_10076f1
-1007dbc	obj_1007631[8].ErrorString	40
-1007df8	obj_1007631[9]	43	map=map_10076f1
-1007e10	obj_1007631[9].ErrorString	40
-1007e40	obj_1007631[9].GenericErrorString	40
-1007f48	obj_1007631[10]	43	map=map_10076f1
-1007f60	obj_1007631[10].ErrorString	40
-1007fac	obj_1007631[11]	43	map=map_10076f1
-1007fc4	obj_1007631[11].ErrorString	40
-1007ffc	obj_1007631[12]	43	map=map_10076f1
-1008014	obj_1007631[12].ErrorString	40
-10080a4	obj_1007631[13]	43	map=map_10076f1
-10080bc	obj_1007631[13].ErrorString	40
-10080f8	obj_1007631[14]	43	map=map_10076f1
-1008110	obj_1007631[14].ErrorString	40
-1008144	obj_1007631[15]	43	map=map_10076f1
-100815c	obj_1007631[15].ErrorString	40
-100818c	obj_1007631[16]	43	map=map_10076f1
-10081a4	obj_1007631[16].ErrorString	40
-10081e8	obj_1007631[17]	43	map=map_10076f1
-1008200	obj_1007631[17].ErrorString	40
-1008240	obj_1007631[18]	43	map=map_10076f1
-1008258	obj_1007631[18].ErrorString	40
-1008294	obj_1007631[19]	43	map=map_10076f1
-10082ac	obj_1007631[19].ErrorString	40
-10082f4	obj_1007631[20]	43	map=map_10076f1
-100830c	obj_1007631[20].ErrorString	40
-1008380	obj_1007631[21]	43	map=map_10076f1
-1008398	obj_1007631[21].ErrorString	40
-10083ec	obj_1007631[22]	43	map=map_10076f1
-1008404	obj_1007631[22].ErrorString	40
-1008448	obj_1007631[23]	43	map=map_10076f1
-1008460	obj_1007631[23].ErrorString	40
-10084b0	obj_1007631[24]	43	map=map_10076f1
-10084c8	obj_1007631[24].ErrorString	40
-1008538	obj_1007631[25]	43	map=map_10076f1
-1008550	obj_1007631[25].ErrorString	40
-10085c8	obj_1007631[26]	43	map=map_10076f1
-10085e0	obj_1007631[26].ErrorString	40
-1008668	obj_1007631[27]	43	map=map_10076f1
-1008680	obj_1007631[27].ErrorString	40
-1008718	obj_1007631[28]	43	map=map_10076f1
-1008730	obj_1007631[28].ErrorString	40
-10087c4	obj_1007631[29]	43	map=map_10076f1
-10087dc	obj_1007631[29].ErrorString	40
-1008868	obj_1007631[30]	43	map=map_10076f1
-1008880	obj_1007631[30].ErrorString	40
-100890c	obj_1007631[31]	43	map=map_10076f1
-1008924	obj_1007631[31].ErrorString	40
-10089b0	obj_1007631[32]	43	map=map_10076f1
-10089c8	obj_1007631[32].ErrorString	40
-1008a3c	obj_1007631[33]	43	map=map_10076f1
-1008a54	obj_1007631[33].ErrorString	40
-1008a9c	obj_1007631[34]	43	map=map_10076f1
-1008ab4	obj_1007631[34].ErrorString	40
-1008b14	obj_1007631[35]	43	map=map_10076f1
-1008b2c	obj_1007631[35].ErrorString	40
-1008bac	obj_1007631[36]	43	map=map_10076f1
-1008bc4	obj_1007631[36].ErrorString	40
-1008c74	obj_1007631[37]	43	map=map_10076f1
-1008c8c	obj_1007631[37].ErrorString	40
-1008d24	obj_1007631[38]	43	map=map_10076f1
-1008d3c	obj_1007631[38].ErrorString	40
+1007768	MapErrorCode_literal6[0].ErrorString	40
+10077a8	thereIsNotEnough	40
+100789c	MapErrorCode_literal6[1]	43	map=map_10076f1
+10078b4	MapErrorCode_literal6[1].ErrorString	40
+10078e4	anErrorOccurredTry	40
+10079d4	MapErrorCode_literal6[2]	43	map=map_10076f1
+10079ec	MapErrorCode_literal6[2].ErrorString	40
+1007a24	MapErrorCode_literal6[3]	43	map=map_10076f1
+1007a3c	MapErrorCode_literal6[3].ErrorString	40
+1007a74	MapErrorCode_literal6[4]	43	map=map_10076f1
+1007a8c	MapErrorCode_literal6[4].ErrorString	40
+1007ac8	anErrorOccurredClose	40
+1007bbc	MapErrorCode_literal6[5]	43	map=map_10076f1
+1007bd4	MapErrorCode_literal6[5].ErrorString	40
+1007c0c	MapErrorCode_literal6[5].GenericErrorString	40
+1007ca0	MapErrorCode_literal6[6]	43	map=map_10076f1
+1007cb8	MapErrorCode_literal6[6].ErrorString	40
+1007cf8	MapErrorCode_literal6[7]	43	map=map_10076f1
+1007d10	MapErrorCode_literal6[7].ErrorString	40
+1007d4c	aProblemOccurredWith	40
+1007da4	MapErrorCode_literal6[8]	43	map=map_10076f1
+1007dbc	MapErrorCode_literal6[8].ErrorString	40
+1007df8	MapErrorCode_literal6[9]	43	map=map_10076f1
+1007e10	MapErrorCode_literal6[9].ErrorString	40
+1007e40	MapErrorCode_literal6[9].GenericErrorString	40
+1007f48	MapErrorCode_literal6[10]	43	map=map_10076f1
+1007f60	MapErrorCode_literal6[10].ErrorString	40
+1007fac	MapErrorCode_literal6[11]	43	map=map_10076f1
+1007fc4	MapErrorCode_literal6[11].ErrorString	40
+1007ffc	MapErrorCode_literal6[12]	43	map=map_10076f1
+1008014	MapErrorCode_literal6[12].ErrorString	40
+10080a4	MapErrorCode_literal6[13]	43	map=map_10076f1
+10080bc	MapErrorCode_literal6[13].ErrorString	40
+10080f8	MapErrorCode_literal6[14]	43	map=map_10076f1
+1008110	MapErrorCode_literal6[14].ErrorString	40
+1008144	MapErrorCode_literal6[15]	43	map=map_10076f1
+100815c	MapErrorCode_literal6[15].ErrorString	40
+100818c	MapErrorCode_literal6[16]	43	map=map_10076f1
+10081a4	MapErrorCode_literal6[16].ErrorString	40
+10081e8	MapErrorCode_literal6[17]	43	map=map_10076f1
+1008200	MapErrorCode_literal6[17].ErrorString	40
+1008240	MapErrorCode_literal6[18]	43	map=map_10076f1
+1008258	MapErrorCode_literal6[18].ErrorString	40
+1008294	MapErrorCode_literal6[19]	43	map=map_10076f1
+10082ac	MapErrorCode_literal6[19].ErrorString	40
+10082f4	MapErrorCode_literal6[20]	43	map=map_10076f1
+100830c	MapErrorCode_literal6[20].ErrorString	40
+1008380	MapErrorCode_literal6[21]	43	map=map_10076f1
+1008398	MapErrorCode_literal6[21].ErrorString	40
+10083ec	MapErrorCode_literal6[22]	43	map=map_10076f1
+1008404	MapErrorCode_literal6[22].ErrorString	40
+1008448	MapErrorCode_literal6[23]	43	map=map_10076f1
+1008460	MapErrorCode_literal6[23].ErrorString	40
+10084b0	MapErrorCode_literal6[24]	43	map=map_10076f1
+10084c8	MapErrorCode_literal6[24].ErrorString	40
+1008538	MapErrorCode_literal6[25]	43	map=map_10076f1
+1008550	MapErrorCode_literal6[25].ErrorString	40
+10085c8	MapErrorCode_literal6[26]	43	map=map_10076f1
+10085e0	MapErrorCode_literal6[26].ErrorString	40
+1008668	MapErrorCode_literal6[27]	43	map=map_10076f1
+1008680	MapErrorCode_literal6[27].ErrorString	40
+1008718	MapErrorCode_literal6[28]	43	map=map_10076f1
+1008730	MapErrorCode_literal6[28].ErrorString	40
+10087c4	MapErrorCode_literal6[29]	43	map=map_10076f1
+10087dc	MapErrorCode_literal6[29].ErrorString	40
+1008868	MapErrorCode_literal6[30]	43	map=map_10076f1
+1008880	MapErrorCode_literal6[30].ErrorString	40
+100890c	MapErrorCode_literal6[31]	43	map=map_10076f1
+1008924	MapErrorCode_literal6[31].ErrorString	40
+10089b0	MapErrorCode_literal6[32]	43	map=map_10076f1
+10089c8	MapErrorCode_literal6[32].ErrorString	40
+1008a3c	MapErrorCode_literal6[33]	43	map=map_10076f1
+1008a54	MapErrorCode_literal6[33].ErrorString	40
+1008a9c	MapErrorCode_literal6[34]	43	map=map_10076f1
+1008ab4	MapErrorCode_literal6[34].ErrorString	40
+1008b14	MapErrorCode_literal6[35]	43	map=map_10076f1
+1008b2c	MapErrorCode_literal6[35].ErrorString	40
+1008bac	MapErrorCode_literal6[36]	43	map=map_10076f1
+1008bc4	MapErrorCode_literal6[36].ErrorString	40
+1008c74	MapErrorCode_literal6[37]	43	map=map_10076f1
+1008c8c	MapErrorCode_literal6[37].ErrorString	40
+1008d24	MapErrorCode_literal6[38]	43	map=map_10076f1
+1008d3c	MapErrorCode_literal6[38].ErrorString	40
 1008dd4	'SPrintObject	40
 1008df4	'StringToNumber	40
 1008e14	'floor	40
 1008e2c	'LFetch	40
-1008e44	obj_1008e45	40
-1008e54	obj_1008e55	40
+1008e44	MapErrorCode_literal15	40
+1008e54	MapErrorCode_literal16	40
 1008e64	'NumberStr	40
-1008e80	obj_1008e81	40
-1008e90	obj_1006c49[0]._ExportTable[0].objects[0].Config	43	map=map_100718d
-1008eb0	obj_1006c49[0]._ExportTable[0].objects[0].EventDefs	41
-1008ebc	obj_1008ebd	43	map=map_1008f31
+1008e80	MapErrorCode_literal18	40
+1008e90	part[0]._ExportTable[0].objects[0].Config	43	map=map_100718d
+1008eb0	part[0]._ExportTable[0].objects[0].EventDefs	41
+1008ebc	partItem	43	map=map_1008f31
 1008f30	map_1008f31	41
 1008fa8	'_EventRegisterCount	40
 1008fcc	'Attach	40
@@ -201,43 +201,43 @@ area	1006c48	5d14	bf	4
 1009220	'State	40
 1009238	'_CISProductName	40
 1009258	'AddEventHandler	40
-1009278	obj_1008ebd.Attach	43	map=map_100718d
-1009298	obj_1008ebd.Attach.instructions	40
-10092bc	obj_1008ebd.Attach.literals	41
+1009278	partItem.Attach	43	map=map_100718d
+1009298	partItem.Attach.instructions	40
+10092bc	partItem.Attach.literals	41
 10092dc	'APIReady	40
 10092f8	'APIAttached	40
-1009314	obj_1008ebd.RegisterForEvent	43	map=map_100718d
-1009334	obj_1008ebd.RegisterForEvent.instructions	40
-1009440	obj_1008ebd.RegisterForEvent.literals	41
+1009314	partItem.RegisterForEvent	43	map=map_100718d
+1009334	partItem.RegisterForEvent.instructions	40
+1009440	partItem.RegisterForEvent.literals	41
 10094b8	'|evt.ex.fr.type;type.ref.frame|	40
-10094e8	obj_1008ebd.RegisterForEvent.literals[6]	41
+10094e8	partItem.RegisterForEvent.literals[6]	41
 1009500	'receiver	40
 100951c	'message	40
 1009534	'LanternEventRegistry	40
 100955c	'GetGlobalVar	40
-100957c	obj_100957d	41
+100957c	devInstallScript_literal4	41
 100958c	'DefGlobalVar	40
 10095ac	'IsArray	40
 10095c4	'Intern	40
 10095dc	'HasSlot	40
-10095f4	obj_1008ebd.RegisterForEvent.literals[21]	41
+10095f4	partItem.RegisterForEvent.literals[21]	41
 1009610	'EventHandler	40
 1009630	'HandlerProcs	40
 1009650	'args	40
 1009668	'RemoveSlot	40
-1009684	obj_1008ebd.RegisterForEvent.literals[25]	41
+1009684	partItem.RegisterForEvent.literals[25]	41
 10096a0	'context	40
-10096b8	obj_1008ebd.PostRequest	43	map=map_100718d
-10096d8	obj_1008ebd.RemoveEventHandler	43	map=map_10096f5
+10096b8	partItem.PostRequest	43	map=map_100718d
+10096d8	partItem.RemoveEventHandler	43	map=map_10096f5
 10096f4	map_10096f5	41
 1009714	'code	40
 100972c	'offset	40
 1009744	'BinCFunction	40
-1009764	obj_1009765	40
+1009764	code	40
 100add0	'nativeModule	40
-100adf0	obj_1008ebd.PostDriverEvent	43	map=map_100718d
-100ae10	obj_1008ebd.PostDriverEvent.instructions	40
-100af7c	obj_1008ebd.PostDriverEvent.literals	41
+100adf0	partItem.PostDriverEvent	43	map=map_100718d
+100ae10	partItem.PostDriverEvent.instructions	40
+100af7c	partItem.PostDriverEvent.literals	41
 100b008	'|evt.ex.Cpostdriver|	40
 100b02c	'|evt.ex.lantern.evntArgs;type.ref.frame|	40
 100b064	'|evt.ex.lantern.sendArgs;type.ref.frame|	40
@@ -245,175 +245,175 @@ area	1006c48	5d14	bf	4
 100b0b8	'int	40
 100b0cc	'|evt.ex.lantern.argType;type.ref.frame|	40
 100b104	'|binary|	40
-100b11c	obj_1008ebd.Init	43	map=map_100718d
-100b13c	obj_1008ebd.Init.instructions	40
-100b178	obj_1008ebd.Init.literals	41
+100b11c	partItem.Init	43	map=map_100718d
+100b13c	partItem.Init.instructions	40
+100b178	partItem.Init.literals	41
 100b1ac	'ClientReady	40
 100b1c8	'LanternClientCount	40
-100b1ec	obj_1008ebd.NewLanternClientAPI	43	map=map_10096f5
-100b208	obj_1008ebd.DetachLanternClientAPI	43	map=map_10096f5
-100b224	obj_1008ebd.MapErrorCode	43	map=map_100718d
-100b244	obj_1008ebd.MapErrorCode.instructions	40
-100b300	obj_1008ebd.MapErrorCode.literals	41
-100b36c	obj_1008ebd.MapErrorCode.literals[22]	40
-100b398	obj_1008ebd.DeleteLanternClientAPI	43	map=map_10096f5
+100b1ec	partItem.NewLanternClientAPI	43	map=map_10096f5
+100b208	partItem.DetachLanternClientAPI	43	map=map_10096f5
+100b224	partItem.MapErrorCode	43	map=map_100718d
+100b244	partItem.MapErrorCode.instructions	40
+100b300	partItem.MapErrorCode.literals	41
+100b36c	partItem.MapErrorCode.literals[22]	40
+100b398	partItem.DeleteLanternClientAPI	43	map=map_10096f5
 100b3b4	'ClientNotReady	40
-100b3d4	obj_1008ebd.Detach	43	map=map_100718d
-100b3f4	obj_1008ebd.Detach.instructions	40
-100b438	obj_1008ebd.Detach.literals	41
-100b468	obj_1008ebd.Instantiate	43	map=map_100718d
-100b488	obj_1008ebd.Instantiate.instructions	40
-100b4d4	obj_1008ebd.Instantiate.literals	41
+100b3d4	partItem.Detach	43	map=map_100718d
+100b3f4	partItem.Detach.instructions	40
+100b438	partItem.Detach.literals	41
+100b468	partItem.Instantiate	43	map=map_100718d
+100b488	partItem.Instantiate.instructions	40
+100b4d4	partItem.Instantiate.literals	41
 100b514	'cisProductName	40
 100b534	'GetDeviceInfo	40
 100b554	'SetUnion	40
-100b570	obj_1008ebd.CPostDriverEvent	43	map=map_100b58d
+100b570	partItem.CPostDriverEvent	43	map=map_100b58d
 100b58c	map_100b58d	41
-100b5ac	obj_1008ebd.RemoveCallBack	43	map=map_100718d
-100b5cc	obj_1008ebd.RemoveCallBack.instructions	40
-100b644	obj_1008ebd.RemoveCallBack.literals	41
-100b680	obj_1008ebd.EventDefs	41
-100b6d4	obj_1008ebd.EventDefs[0]	41
+100b5ac	partItem.RemoveCallBack	43	map=map_100718d
+100b5cc	partItem.RemoveCallBack.instructions	40
+100b644	partItem.RemoveCallBack.literals	41
+100b680	partItem.EventDefs	41
+100b6d4	partItem.EventDefs[0]	41
 100b6f0	'evSendBuffer	40
-100b710	obj_1008ebd.EventDefs[0][1]	41
-100b724	obj_100b725	40
-100b73c	obj_1008ebd.EventDefs[0][1][1]	40
-100b754	obj_1008ebd.EventDefs[0][2]	41
-100b768	obj_1008ebd.EventDefs[0][3]	41
-100b774	obj_1008ebd.EventDefs[1]	41
+100b710	partItem.EventDefs[0][1]	41
+100b724	lant	40
+100b73c	partItem.EventDefs[0][1][1]	40
+100b754	partItem.EventDefs[0][2]	41
+100b768	partItem.EventDefs[0][3]	41
+100b774	partItem.EventDefs[1]	41
 100b790	'evGetDeviceAddress	40
-100b7b4	obj_1008ebd.EventDefs[1][1]	41
-100b7c8	obj_1008ebd.EventDefs[1][1][1]	40
-100b7e0	obj_1008ebd.EventDefs[1][2]	41
-100b7f4	obj_1008ebd.EventDefs[1][3]	41
-100b800	obj_1008ebd.EventDefs[2]	41
+100b7b4	partItem.EventDefs[1][1]	41
+100b7c8	partItem.EventDefs[1][1][1]	40
+100b7e0	partItem.EventDefs[1][2]	41
+100b7f4	partItem.EventDefs[1][3]	41
+100b800	partItem.EventDefs[2]	41
 100b81c	'evGetLinkIntegrity	40
-100b840	obj_1008ebd.EventDefs[2][1]	41
-100b854	obj_1008ebd.EventDefs[2][1][1]	40
-100b86c	obj_1008ebd.EventDefs[2][2]	41
-100b878	obj_1008ebd.EventDefs[2][3]	41
-100b888	obj_1008ebd.EventDefs[3]	41
+100b840	partItem.EventDefs[2][1]	41
+100b854	partItem.EventDefs[2][1][1]	40
+100b86c	partItem.EventDefs[2][2]	41
+100b878	partItem.EventDefs[2][3]	41
+100b888	partItem.EventDefs[3]	41
 100b8a4	'evAddMulticastAddress	40
-100b8cc	obj_1008ebd.EventDefs[3][1]	41
-100b8e0	obj_1008ebd.EventDefs[3][1][1]	40
-100b8f8	obj_1008ebd.EventDefs[3][2]	41
-100b908	obj_1008ebd.EventDefs[3][3]	41
-100b914	obj_1008ebd.EventDefs[4]	41
+100b8cc	partItem.EventDefs[3][1]	41
+100b8e0	partItem.EventDefs[3][1][1]	40
+100b8f8	partItem.EventDefs[3][2]	41
+100b908	partItem.EventDefs[3][3]	41
+100b914	partItem.EventDefs[4]	41
 100b930	'evDelMulticastAddress	40
-100b958	obj_1008ebd.EventDefs[4][1]	41
-100b96c	obj_1008ebd.EventDefs[4][1][1]	40
-100b984	obj_1008ebd.EventDefs[4][2]	41
-100b994	obj_1008ebd.EventDefs[4][3]	41
-100b9a0	obj_1008ebd.EventDefs[5]	41
+100b958	partItem.EventDefs[4][1]	41
+100b96c	partItem.EventDefs[4][1][1]	40
+100b984	partItem.EventDefs[4][2]	41
+100b994	partItem.EventDefs[4][3]	41
+100b9a0	partItem.EventDefs[5]	41
 100b9bc	'evSetPromiscuous	40
-100b9e0	obj_1008ebd.EventDefs[5][1]	41
-100b9f4	obj_1008ebd.EventDefs[5][1][1]	40
-100ba0c	obj_1008ebd.EventDefs[5][2]	41
-100ba1c	obj_1008ebd.EventDefs[5][3]	41
-100ba28	obj_1008ebd.EventDefs[6]	41
+100b9e0	partItem.EventDefs[5][1]	41
+100b9f4	partItem.EventDefs[5][1][1]	40
+100ba0c	partItem.EventDefs[5][2]	41
+100ba1c	partItem.EventDefs[5][3]	41
+100ba28	partItem.EventDefs[6]	41
 100ba44	'evGetThroughput	40
-100ba64	obj_1008ebd.EventDefs[6][1]	41
-100ba78	obj_1008ebd.EventDefs[6][1][1]	40
-100ba90	obj_1008ebd.EventDefs[6][2]	41
-100ba9c	obj_1008ebd.EventDefs[6][3]	41
-100bab4	obj_1008ebd.EventDefs[7]	41
+100ba64	partItem.EventDefs[6][1]	41
+100ba78	partItem.EventDefs[6][1][1]	40
+100ba90	partItem.EventDefs[6][2]	41
+100ba9c	partItem.EventDefs[6][3]	41
+100bab4	partItem.EventDefs[7]	41
 100bad0	'evDriverFailure	40
-100baf0	obj_1008ebd.EventDefs[7][1]	41
-100bb04	obj_1008ebd.EventDefs[7][1][1]	40
-100bb1c	obj_1008ebd.EventDefs[7][2]	41
-100bb2c	obj_1008ebd.EventDefs[7][3]	41
-100bb38	obj_1008ebd.EventDefs[8]	41
+100baf0	partItem.EventDefs[7][1]	41
+100bb04	partItem.EventDefs[7][1][1]	40
+100bb1c	partItem.EventDefs[7][2]	41
+100bb2c	partItem.EventDefs[7][3]	41
+100bb38	partItem.EventDefs[8]	41
 100bb54	'evLinkIntegrity	40
-100bb74	obj_1008ebd.EventDefs[8][1]	41
-100bb88	obj_1008ebd.EventDefs[8][1][1]	40
-100bba0	obj_1008ebd.EventDefs[8][2]	41
-100bbb0	obj_1008ebd.EventDefs[8][3]	41
-100bbbc	obj_1008ebd.EventDefs[9]	41
+100bb74	partItem.EventDefs[8][1]	41
+100bb88	partItem.EventDefs[8][1][1]	40
+100bba0	partItem.EventDefs[8][2]	41
+100bbb0	partItem.EventDefs[8][3]	41
+100bbbc	partItem.EventDefs[9]	41
 100bbd8	'evCardReady	40
-100bbf4	obj_1008ebd.EventDefs[9][1]	41
-100bc08	obj_1008ebd.EventDefs[9][1][1]	40
-100bc20	obj_1008ebd.EventDefs[9][2]	41
-100bc30	obj_1008ebd.EventDefs[9][3]	41
-100bc3c	obj_1008ebd.EventDefs[10]	41
+100bbf4	partItem.EventDefs[9][1]	41
+100bc08	partItem.EventDefs[9][1][1]	40
+100bc20	partItem.EventDefs[9][2]	41
+100bc30	partItem.EventDefs[9][3]	41
+100bc3c	partItem.EventDefs[10]	41
 100bc58	'evCardInserted	40
-100bc78	obj_1008ebd.EventDefs[10][1]	41
-100bc8c	obj_1008ebd.EventDefs[10][1][1]	40
-100bca4	obj_1008ebd.EventDefs[10][2]	41
-100bcb8	obj_1008ebd.EventDefs[10][3]	41
-100bcc4	obj_1008ebd.EventDefs[11]	41
+100bc78	partItem.EventDefs[10][1]	41
+100bc8c	partItem.EventDefs[10][1][1]	40
+100bca4	partItem.EventDefs[10][2]	41
+100bcb8	partItem.EventDefs[10][3]	41
+100bcc4	partItem.EventDefs[11]	41
 100bce0	'evNewPacketReady	40
-100bd04	obj_1008ebd.EventDefs[11][1]	41
-100bd18	obj_1008ebd.EventDefs[11][1][1]	40
-100bd30	obj_1008ebd.EventDefs[11][2]	41
-100bd44	obj_1008ebd.EventDefs[11][3]	41
-100bd50	obj_1008ebd.EventDefs[12]	41
+100bd04	partItem.EventDefs[11][1]	41
+100bd18	partItem.EventDefs[11][1][1]	40
+100bd30	partItem.EventDefs[11][2]	41
+100bd44	partItem.EventDefs[11][3]	41
+100bd50	partItem.EventDefs[12]	41
 100bd6c	'evReadBuffer	40
-100bd8c	obj_1008ebd.EventDefs[12][1]	41
-100bda0	obj_1008ebd.EventDefs[12][1][1]	40
-100bdb8	obj_1008ebd.EventDefs[12][2]	41
-100bdd0	obj_1008ebd.EventDefs[12][3]	41
-100bddc	obj_1008ebd.EventDefs[13]	41
+100bd8c	partItem.EventDefs[12][1]	41
+100bda0	partItem.EventDefs[12][1][1]	40
+100bdb8	partItem.EventDefs[12][2]	41
+100bdd0	partItem.EventDefs[12][3]	41
+100bddc	partItem.EventDefs[13]	41
 100bdf8	'evSetPacketValidTime	40
-100be20	obj_1008ebd.EventDefs[13][1]	41
-100be34	obj_1008ebd.EventDefs[13][1][1]	40
-100be4c	obj_1008ebd.EventDefs[13][2]	41
-100be5c	obj_1008ebd.EventDefs[13][3]	41
-100be68	obj_1008ebd.EventDefs[14]	41
+100be20	partItem.EventDefs[13][1]	41
+100be34	partItem.EventDefs[13][1][1]	40
+100be4c	partItem.EventDefs[13][2]	41
+100be5c	partItem.EventDefs[13][3]	41
+100be68	partItem.EventDefs[14]	41
 100be84	'evSetPacketBufferSize	40
-100beac	obj_1008ebd.EventDefs[14][1]	41
-100bec0	obj_1008ebd.EventDefs[14][1][1]	40
-100bed8	obj_1008ebd.EventDefs[14][2]	41
-100bee8	obj_1008ebd.EventDefs[14][3]	41
-100bef4	obj_1008ebd.EventDefs[15]	41
+100beac	partItem.EventDefs[14][1]	41
+100bec0	partItem.EventDefs[14][1][1]	40
+100bed8	partItem.EventDefs[14][2]	41
+100bee8	partItem.EventDefs[14][3]	41
+100bef4	partItem.EventDefs[15]	41
 100bf10	'evGetPacketBufferState	40
-100bf38	obj_1008ebd.EventDefs[15][1]	41
-100bf4c	obj_1008ebd.EventDefs[15][1][1]	40
-100bf64	obj_1008ebd.EventDefs[15][2]	41
-100bf70	obj_1008ebd.EventDefs[15][3]	41
-100bf8c	obj_1008ebd.EventDefs[16]	41
+100bf38	partItem.EventDefs[15][1]	41
+100bf4c	partItem.EventDefs[15][1][1]	40
+100bf64	partItem.EventDefs[15][2]	41
+100bf70	partItem.EventDefs[15][3]	41
+100bf8c	partItem.EventDefs[16]	41
 100bfa8	'evGetRxStats	40
-100bfc8	obj_1008ebd.EventDefs[16][1]	41
-100bfdc	obj_1008ebd.EventDefs[16][1][1]	40
-100bff4	obj_1008ebd.EventDefs[16][2]	41
-100c000	obj_1008ebd.EventDefs[16][3]	41
-100c020	obj_1008ebd.EventDefs[17]	41
+100bfc8	partItem.EventDefs[16][1]	41
+100bfdc	partItem.EventDefs[16][1][1]	40
+100bff4	partItem.EventDefs[16][2]	41
+100c000	partItem.EventDefs[16][3]	41
+100c020	partItem.EventDefs[17]	41
 100c03c	'evResetRxStats	40
-100c05c	obj_1008ebd.EventDefs[17][1]	41
-100c070	obj_1008ebd.EventDefs[17][1][1]	40
-100c088	obj_1008ebd.EventDefs[17][2]	41
-100c094	obj_1008ebd.EventDefs[17][3]	41
-100c0a0	obj_1008ebd.Delete	43	map=map_100718d
-100c0c0	obj_1008ebd.Delete.instructions	40
-100c16c	obj_1008ebd.Delete.literals	41
-100c1b8	obj_1008ebd.AttachLanternClientAPI	43	map=map_10096f5
-100c1d4	obj_1008ebd.UnRegisterForEvent	43	map=map_100718d
-100c1f4	obj_1008ebd.UnRegisterForEvent.instructions	40
-100c248	obj_1008ebd.UnRegisterForEvent.literals	41
-100c288	obj_1008ebd.State	43	map=map_100718d
-100c2a8	obj_1008ebd.State.instructions	40
-100c2b8	obj_1008ebd.State.literals	41
-100c2c8	obj_1008ebd.AddEventHandler	43	map=map_10096f5
-100c2e4	obj_1006c49[0].installScript	43	map=map_100718d
-100c304	obj_1006c49[0].installScript.instructions	40
-100c320	obj_1006c49[0].installScript.literals	41
-100c33c	obj_1006c49[0].installScript.literals[1]	41
+100c05c	partItem.EventDefs[17][1]	41
+100c070	partItem.EventDefs[17][1][1]	40
+100c088	partItem.EventDefs[17][2]	41
+100c094	partItem.EventDefs[17][3]	41
+100c0a0	partItem.Delete	43	map=map_100718d
+100c0c0	partItem.Delete.instructions	40
+100c16c	partItem.Delete.literals	41
+100c1b8	partItem.AttachLanternClientAPI	43	map=map_10096f5
+100c1d4	partItem.UnRegisterForEvent	43	map=map_100718d
+100c1f4	partItem.UnRegisterForEvent.instructions	40
+100c248	partItem.UnRegisterForEvent.literals	41
+100c288	partItem.State	43	map=map_100718d
+100c2a8	partItem.State.instructions	40
+100c2b8	partItem.State.literals	41
+100c2c8	partItem.AddEventHandler	43	map=map_10096f5
+100c2e4	part[0].installScript	43	map=map_100718d
+100c304	part[0].installScript.instructions	40
+100c320	part[0].installScript.literals	41
+100c33c	part[0].installScript.literals[1]	41
 100c350	'removeScript	40
 100c370	'EnsureInternal	40
-100c390	obj_1006c49[0].devInstallScript	43	map=map_100718d
-100c3b0	obj_1006c49[0].devInstallScript.instructions	40
-100c3d8	obj_1006c49[0].devInstallScript.literals	41
+100c390	part[0].devInstallScript	43	map=map_100718d
+100c3b0	part[0].devInstallScript.instructions	40
+100c3d8	part[0].devInstallScript.literals	41
 100c40c	'MapLanternError	40
-100c42c	obj_1006c49[0].devInstallScript.literals[1]	43	map=map_100718d
-100c44c	obj_1006c49[0].devInstallScript.literals[1].instructions	40
-100c460	obj_1006c49[0].devInstallScript.literals[1].literals	41
+100c42c	part[0].devInstallScript.literals[1]	43	map=map_100718d
+100c44c	part[0].devInstallScript.literals[1].instructions	40
+100c460	part[0].devInstallScript.literals[1].literals	41
 100c474	'DefGlobalFn	40
 100c490	'LanternNewtAPI	40
-100c4b0	obj_1006c49[0].devInstallScript.literals[8]	43	map=map_100718d
-100c4d0	obj_1006c49[0].devInstallScript.literals[8].instructions	40
-100c4e4	obj_1006c49[0].devInstallScript.literals[8].literals	41
-100c4f4	obj_1006c49[0].devInstallScript.literals[8].literals[0]	43	map=map_100718d
-100c514	obj_1006c49[0].devInstallScript.literals[8].literals[0].instructions	40
-100c670	obj_1006c49[0].devInstallScript.literals[8].literals[0].literals	41
+100c4b0	part[0].devInstallScript.literals[8]	43	map=map_100718d
+100c4d0	part[0].devInstallScript.literals[8].instructions	40
+100c4e4	part[0].devInstallScript.literals[8].literals	41
+100c4f4	part[0].devInstallScript.literals[8].literals[0]	43	map=map_100718d
+100c514	part[0].devInstallScript.literals[8].literals[0].instructions	40
+100c670	part[0].devInstallScript.literals[8].literals[0].literals	41
 100c6cc	'cardInserted	40
 100c6ec	'GetCardInfo	40
 100c708	'socketInfos	40
@@ -428,72 +428,72 @@ area	1006c48	5d14	bf	4
 100c830	'cardRemoved	40
 100c84c	'CloseWeirdCardSlip	40
 100c870	'RegWeirdCardEvent	40
-100c894	obj_1006c49[0].devRemoveScript	43	map=map_100718d
-100c8b4	obj_1006c49[0].devRemoveScript.instructions	40
-100c8d0	obj_1006c49[0].devRemoveScript.literals	41
+100c894	part[0].devRemoveScript	43	map=map_100718d
+100c8b4	part[0].devRemoveScript.instructions	40
+100c8d0	part[0].devRemoveScript.literals	41
 100c8f8	'UnDefGlobalFn	40
 100c918	'UnDefGlobalVar	40
 100c938	'UnRegWeirdCardEvent	40
-alias	obj_1006c49[0]._ExportTable[0].objects[0].DeviceInserted.instructions	obj_1007415
-alias	obj_1006c49[0]._ExportTable[0].objects[0].DeviceRemoved.instructions	obj_1007415
-alias	obj_1006c49[0]._ExportTable[0].objects[0].MapErrorCode.literals[4]	obj_10075e9
-alias	obj_1006c49[0]._ExportTable[0].objects[0].MapErrorCode.literals[6]	obj_1007631
-alias	obj_1006c49[0]._ExportTable[0].objects[0].MapErrorCode.literals[15]	obj_1008e45
-alias	obj_1006c49[0]._ExportTable[0].objects[0].MapErrorCode.literals[16]	obj_1008e55
-alias	obj_1006c49[0]._ExportTable[0].objects[0].MapErrorCode.literals[18]	obj_1008e81
-alias	obj_1006c49[0]._ExportTable[0].objects[0].Config.instructions	obj_1007415
-alias	obj_1006c49[0].devInstallScript.literals[1].literals[0]	obj_1008ebd
-alias	obj_1006c49[0].devInstallScript.literals[4]	obj_100957d
-alias	obj_1008ebd.RegisterForEvent.literals[3]	obj_10075e9
-alias	obj_1008ebd.RegisterForEvent.literals[7]	obj_10075e9
-alias	obj_1008ebd.RegisterForEvent.literals[10]	obj_100957d
-alias	obj_1008ebd.PostRequest.instructions	obj_1007415
-alias	obj_1008ebd.PostDriverEvent.literals[1]	obj_10075e9
-alias	obj_1008ebd.PostDriverEvent.literals[5]	obj_10075e9
-alias	obj_1008ebd.PostDriverEvent.literals[14]	obj_10075e9
-alias	obj_1008ebd.PostDriverEvent.literals[21]	obj_10075e9
-alias	obj_1008ebd.PostDriverEvent.literals[26]	obj_10075e9
-alias	obj_1008ebd.PostDriverEvent.literals[28]	obj_10075e9
-alias	obj_1008ebd.MapErrorCode.literals[4]	obj_10075e9
-alias	obj_1008ebd.MapErrorCode.literals[6]	obj_1007631
-alias	obj_1008ebd.MapErrorCode.literals[15]	obj_1008e45
-alias	obj_1008ebd.MapErrorCode.literals[16]	obj_1008e55
-alias	obj_1008ebd.MapErrorCode.literals[18]	obj_1008e81
-alias	obj_1008ebd.MapErrorCode.literals[23]	obj_1008e45
-alias	obj_1007631[0].GenericErrorString	obj_10077a9
-alias	obj_1007631[1].GenericErrorString	obj_10078e5
-alias	obj_1007631[2].GenericErrorString	obj_10078e5
-alias	obj_1007631[3].GenericErrorString	obj_10078e5
-alias	obj_1007631[4].GenericErrorString	obj_1007ac9
-alias	obj_1007631[6].GenericErrorString	obj_10078e5
-alias	obj_1007631[7].GenericErrorString	obj_1007d4d
-alias	obj_1007631[8].GenericErrorString	obj_1007d4d
-alias	obj_1007631[10].GenericErrorString	obj_10077a9
-alias	obj_1007631[11].GenericErrorString	obj_10078e5
-alias	obj_1007631[12].GenericErrorString	obj_10078e5
-alias	obj_1007631[13].GenericErrorString	obj_1007ac9
-alias	obj_1007631[14].GenericErrorString	obj_1007ac9
-alias	obj_1007631[15].GenericErrorString	obj_10077a9
-alias	obj_1007631[16].GenericErrorString	obj_10077a9
-alias	obj_1007631[17].GenericErrorString	obj_1007ac9
-alias	obj_1007631[18].GenericErrorString	obj_1007ac9
-alias	obj_1007631[19].GenericErrorString	obj_1007ac9
-alias	obj_1007631[20].GenericErrorString	obj_1007ac9
-alias	obj_1007631[21].GenericErrorString	obj_1007ac9
-alias	obj_1007631[22].GenericErrorString	obj_1007ac9
-alias	obj_1007631[23].GenericErrorString	obj_1007ac9
-alias	obj_1007631[24].GenericErrorString	obj_1007ac9
-alias	obj_1007631[25].GenericErrorString	obj_1007ac9
-alias	obj_1007631[26].GenericErrorString	obj_1007ac9
-alias	obj_1007631[27].GenericErrorString	obj_1007ac9
-alias	obj_1007631[28].GenericErrorString	obj_1007ac9
-alias	obj_1007631[29].GenericErrorString	obj_1007ac9
-alias	obj_1007631[30].GenericErrorString	obj_1007ac9
-alias	obj_1007631[31].GenericErrorString	obj_1007ac9
-alias	obj_1007631[32].GenericErrorString	obj_1007ac9
-alias	obj_1007631[33].GenericErrorString	obj_1007ac9
-alias	obj_1007631[34].GenericErrorString	obj_1007ac9
-alias	obj_1007631[35].GenericErrorString	obj_1007ac9
-alias	obj_1007631[36].GenericErrorString	obj_1007ac9
-alias	obj_1007631[37].GenericErrorString	obj_1007ac9
-alias	obj_1007631[38].GenericErrorString	obj_1007ac9
+alias	part[0]._ExportTable[0].objects[0].DeviceInserted.instructions	DeviceInserted_code
+alias	part[0]._ExportTable[0].objects[0].DeviceRemoved.instructions	DeviceInserted_code
+alias	part[0]._ExportTable[0].objects[0].MapErrorCode.literals[4]	MapErrorCode_literal4
+alias	part[0]._ExportTable[0].objects[0].MapErrorCode.literals[6]	MapErrorCode_literal6
+alias	part[0]._ExportTable[0].objects[0].MapErrorCode.literals[15]	MapErrorCode_literal15
+alias	part[0]._ExportTable[0].objects[0].MapErrorCode.literals[16]	MapErrorCode_literal16
+alias	part[0]._ExportTable[0].objects[0].MapErrorCode.literals[18]	MapErrorCode_literal18
+alias	part[0]._ExportTable[0].objects[0].Config.instructions	DeviceInserted_code
+alias	part[0].devInstallScript.literals[1].literals[0]	partItem
+alias	part[0].devInstallScript.literals[4]	devInstallScript_literal4
+alias	partItem.RegisterForEvent.literals[3]	MapErrorCode_literal4
+alias	partItem.RegisterForEvent.literals[7]	MapErrorCode_literal4
+alias	partItem.RegisterForEvent.literals[10]	devInstallScript_literal4
+alias	partItem.PostRequest.instructions	DeviceInserted_code
+alias	partItem.PostDriverEvent.literals[1]	MapErrorCode_literal4
+alias	partItem.PostDriverEvent.literals[5]	MapErrorCode_literal4
+alias	partItem.PostDriverEvent.literals[14]	MapErrorCode_literal4
+alias	partItem.PostDriverEvent.literals[21]	MapErrorCode_literal4
+alias	partItem.PostDriverEvent.literals[26]	MapErrorCode_literal4
+alias	partItem.PostDriverEvent.literals[28]	MapErrorCode_literal4
+alias	partItem.MapErrorCode.literals[4]	MapErrorCode_literal4
+alias	partItem.MapErrorCode.literals[6]	MapErrorCode_literal6
+alias	partItem.MapErrorCode.literals[15]	MapErrorCode_literal15
+alias	partItem.MapErrorCode.literals[16]	MapErrorCode_literal16
+alias	partItem.MapErrorCode.literals[18]	MapErrorCode_literal18
+alias	partItem.MapErrorCode.literals[23]	MapErrorCode_literal15
+alias	MapErrorCode_literal6[0].GenericErrorString	thereIsNotEnough
+alias	MapErrorCode_literal6[1].GenericErrorString	anErrorOccurredTry
+alias	MapErrorCode_literal6[2].GenericErrorString	anErrorOccurredTry
+alias	MapErrorCode_literal6[3].GenericErrorString	anErrorOccurredTry
+alias	MapErrorCode_literal6[4].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[6].GenericErrorString	anErrorOccurredTry
+alias	MapErrorCode_literal6[7].GenericErrorString	aProblemOccurredWith
+alias	MapErrorCode_literal6[8].GenericErrorString	aProblemOccurredWith
+alias	MapErrorCode_literal6[10].GenericErrorString	thereIsNotEnough
+alias	MapErrorCode_literal6[11].GenericErrorString	anErrorOccurredTry
+alias	MapErrorCode_literal6[12].GenericErrorString	anErrorOccurredTry
+alias	MapErrorCode_literal6[13].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[14].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[15].GenericErrorString	thereIsNotEnough
+alias	MapErrorCode_literal6[16].GenericErrorString	thereIsNotEnough
+alias	MapErrorCode_literal6[17].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[18].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[19].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[20].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[21].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[22].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[23].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[24].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[25].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[26].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[27].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[28].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[29].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[30].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[31].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[32].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[33].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[34].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[35].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[36].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[37].GenericErrorString	anErrorOccurredClose
+alias	MapErrorCode_literal6[38].GenericErrorString	anErrorOccurredClose

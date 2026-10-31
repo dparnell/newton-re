@@ -1,0 +1,143 @@
+// export30, and what only it reaches
+
+export30 := {
+	stepChildren: [stepChildren:
+		sortBy,
+		export30Item,
+		{
+			viewBounds: {left: 16, top: 0, right: 196, bottom: 15},
+			text: "Send notes data with names",
+			viewSetupFormScript: func() begin
+				(viewValue := theApp:GetAppPreferences().beamNotes)
+			end,
+			viewQuitScript: func() begin
+				(theApp:GetAppPreferences().beamNotes := viewValue)
+			end,
+			viewJustify: vjCenterV + vjParentBottomV + vjSiblingBottomV,
+			_proto: @protoCheckbox
+		}
+	],
+	theSoup: nil,
+	viewBounds: {left: 0, top: 10, right: 190, bottom: 156},
+	viewSetupChildrenScript: compile(
+		constants: {
+			kFunction_7228c5: func(a1, a2) begin
+				(a2._proto = @protoCheckbox)
+			end
+		},
+		func() begin
+			local l1;
+			inherited:?viewSetupChildrenScript();
+			(if (theApp.superSymbol = 'ownerNames) then begin
+					l1 := ArrayPos(viewChildren, nil, 0, kFunction_7228c5);
+					ArrayRemoveCount((viewChildren := Clone(viewChildren)), l1, 1);
+					(stepChildren := [Array: usePasswordCheckBox])
+				end)
+		end),
+	usePasswordCheckBox: {
+		_proto: @protoCheckbox,
+		viewJustify: vjParentBottomV,
+		viewBounds: {left: 10, top: -32, right: 190, bottom: -17},
+		text: "Use system password for Owner Info",
+		viewSetupFormScript: func() begin
+			(viewValue := theApp:GetAppPreferences().usePassword)
+		end,
+		viewQuitScript: func() begin
+			(theApp:GetAppPreferences().usePassword := viewValue)
+		end
+	},
+	viewSetupFormScript: func() begin
+		if (theApp.superSymbol = 'ownerNames) then begin
+				(viewBounds := Clone(viewBounds)).bottom := (viewBounds.bottom - 86)
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	ReorientToScreen: @defRotateFunc,
+	viewQuitScript: func() begin
+		'postQuit
+	end,
+	viewPostQuitScript: func() begin
+		local l1;
+		(if (theApp.superSymbol = 'ownerNames) then begin
+				EntryChange((l1 := theApp:GetAppPreferences()));
+				(if (if l1.usePassword then (not GetUserConfig('passwordKey))) then GetRoot():Notify(3, "Names", "There is currently no PIN.  To set a PIN, open the Prefs app from Extras and select Security."))
+			end)
+	end,
+	_proto: @newtPrefsView,
+	infoText: nil,
+	stepAllocateContext: [|Array|: 'infoText, sortBy, 'sortRadio, export30Item],
+	sortRadio: nil
+};
+
+sortBy := {
+	viewBounds: {left: 16, top: 20, right: 190, bottom: 40},
+	text: "Sort by",
+	_proto: @protoStaticText,
+	preAllocatedContext: 'infoText
+};
+
+export30Item := {
+	viewBounds: {left: 61, top: -2, right: 0, bottom: 80},
+	stepChildren: [stepChildren:
+		{
+			buttonValue: 'sorton,
+			text: "Default Order",
+			viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 16},
+			_proto: @protoRadioButton
+		},
+		{
+			buttonValue: 'first,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 16},
+			text: "First Name",
+			viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
+			_proto: @protoRadioButton
+		},
+		{
+			buttonValue: 'company,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 16},
+			text: company,
+			viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
+			_proto: @protoRadioButton
+		},
+		{
+			buttonValue: 'class,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 16},
+			text: "Card Category",
+			viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
+			_proto: @protoRadioButton
+		},
+		{
+			buttonValue: 'postal_code,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 16},
+			text: "Zip Code",
+			viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
+			_proto: @protoRadioButton
+		}
+	],
+	viewJustify: vjParentFullH + vjSiblingTopV,
+	viewSetupFormScript: func() begin
+		local l1;
+		clusterValue := (if IsArray((l1 := theApp:GetAppPreferences().sortBy)) then l1[(Length(l1) - 1)] else l1);
+		inherited:?viewSetupFormScript()
+	end,
+	viewQuitScript: func() begin
+		if (clusterValue = 'first) then begin
+				clusterValue := 'name.first
+			end;
+		(if (not theApp:SortPathMatches(clusterValue, theApp:GetAppPreferences().sortBy)) then DoProgress('vStatus, {statusText: "Changing sort order.", primary: nil, closeBox: nil}, func(a1) begin
+				theApp:SortByChange(clusterValue)
+			end))
+	end,
+	clusterValue: nil,
+	_proto: @protoRadioCluster,
+	preAllocatedContext: 'sortRadio
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code := same("export30.stepChildren[2].viewSetupFormScript.instructions");
+
+viewQuitScript_code := same("export30.stepChildren[2].viewQuitScript.instructions");
+
+viewQuitScript_code_2 := same("export30.viewQuitScript.instructions");

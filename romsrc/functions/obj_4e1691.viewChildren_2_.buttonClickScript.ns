@@ -1,5 +1,0 @@
-@@ 0x4e0ff1
-func() begin
-	self:SetForm(nil)
-end
-@@end

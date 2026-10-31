@@ -1,0 +1,223 @@
+// scheduleView, and what only it reaches
+
+scheduleView := {
+	debug: 165689,
+	viewClass: clView,
+	viewFlags: vClipping,
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewBounds: {left: 0, top: 74, right: 0, bottom: -18},
+	viewFormat: 0,
+	numDays: 0,
+	whoAmI: 'scheduleView,
+	appSymbol: 'calendar,
+	overViewForm: 'DatesOverviewForm,
+	GridBox: nil,
+	labelFont: tsSystem + tsSize(9) + tsBold,
+	HourFont: tsSystem + tsSize(9) + tsBold,
+	dayStrSpec: 2793,
+	ScrollTo: func(a1) begin
+		local l1, l2, l3;
+		(if (a1.viewStationery <> 'cribNote) then (if (if ((l2 := ((l1 := (a1.mtgStartDate mod 1440)) - startTime)) >= 0) then (l2 < (ViewDuration - 30))) then nil else begin
+					l1 := ((l1 div 60) * 60);
+					l1 := max(0, (l1 - 120));
+					l3 := ((ViewDuration div 60) * 60);
+					stopTime := ((startTime := min(l1, (1440 - l3))) + ViewDuration);
+					DayTable:calculateScrollRects();
+					upDownScroller:AdjustArrows();
+					DayTable:SetOrigin(0, ((startTime div 30) * 16));
+					DayTable:SyncView();
+					DayTable:Dirty()
+				end))
+	end,
+	viewScrollUpScript: func(a1) begin
+		DayTable:viewScrollUpScript(a1)
+	end,
+	viewScrollDownScript: func(a1) begin
+		DayTable:viewScrollDownScript(a1)
+	end,
+	calculateScrollRects: func() begin
+		DayTable:calculateScrollRects()
+	end,
+	AdjustDayTableScroller: func() begin
+		upDownScroller:AdjustArrows()
+	end,
+	viewChildren: [viewChildren: DayTable, HeaderLabels],
+	DayTable: nil,
+	allocateContext: [|Array|: 'DayTable, DayTable, 'HeaderLabels, HeaderLabels],
+	HeaderLabels: nil
+};
+
+DayTable := {
+	viewWidth: 0,
+	zapAMPM: func() begin
+		DayTable:DrawShape(MakeRect(0, lineHeight, 15, (2 * lineHeight)), whitePat)
+	end,
+	viewSetupDoneScript: func() begin
+		local l1;
+		(if (if (not Visible(MeetingNotes)) then (not Visible(ToDoSlip))) then begin
+				l1 := self:ChildViewFrames()[0];
+				l1:PositionCaret(10, (viewOriginY + l1.viewLineSpacing), nil)
+			end)
+	end,
+	viewFormat: 0,
+	viewDrawScript: func() begin
+		DrawMeetingGrid(lineHeight)
+	end,
+	viewHeight: 768,
+	viewFlags: vVisible + vClipping + vClickable + vGesturesAllowed,
+	calculateScrollRects: func() begin
+		l1 := 769;
+		l2 := -1;
+		local l1;
+		local l2;
+		(foreach l3 in self:ChildViewFrames() do begin
+				if (Length((l5 := l3:ChildViewFrames())) > 0) then begin
+						if (l1 > 0) then begin
+								local l5;
+								(foreach l6 in l5 do begin
+										if ((l8 := l6.viewBounds.top) < l1) then begin
+												l1 := l8
+											end;
+										if (l1 <= 0) then begin
+												break
+											end
+									end)
+							end;
+						if (l2 < 736) then begin
+								(foreach l6 in l5 do begin
+										local l8, l9, l10, l11, l12, l13;
+										if ((l9 := l6.viewBounds.top) > l2) then begin
+												l2 := l9
+											end;
+										if (l2 >= 736) then begin
+												break
+											end
+									end)
+							end
+					end;
+				l11 := (PositionToTime((l10 := self:ChildViewFrames()[0]), l1) div 60);
+				l12 := ((PositionToTime(l10, l2) div 60) + 1)
+			end);
+		if (l11 <= l12) then begin
+				upDownScroller.DataRect := SetBounds(0, l11, 0, l12)
+			end else begin
+				upDownScroller.DataRect := SetBounds(0, 9999, 0, 9999)
+			end;
+		l13 := (ViewDuration div 60);
+		upDownScroller.yPos := (startTime div 60);
+		upDownScroller.ViewRect := SetBounds(0, 0, 0, l13);
+		(upDownScroller.ScrollRect := SetBounds(0, 0, 0, 24))
+	end,
+	tabValueSlot: 'displaydate,
+	viewBounds: nil,
+	whitePat: {transferMode: 0, penPattern: 1, fillPattern: 1},
+	lineHeight: 16,
+	tabWidths: nil,
+	indentX: 15,
+	viewOriginY: 0,
+	viewScrollDownScript: func(a1) begin
+		local l1;
+		(if (stopTime < 1440) then begin
+				DayTable:SlideEffect((-(l1 := ((2 * lineHeight) * a1))), 0, nil, 'doscrollscript, [Array: l1, a1]);
+				self:Dirty()
+			end)
+	end,
+	viewJustify: vjParentFullH + vjParentFullV,
+	tabAcross: nil,
+	tabValues: nil,
+	viewScrollUpScript: func(a1) begin
+		local l1;
+		(if (startTime > 0) then begin
+				l1 := ((2 * lineHeight) * a1);
+				self:DoDrawing('zapAMPM, nil);
+				DayTable:SlideEffect((-l1), 0, nil, 'doscrollscript, [Array: l1, a1]);
+				self:Dirty()
+			end)
+	end,
+	tabDown: 1,
+	tabSetup: func(a1, a2, a3) begin
+		(a1.viewBounds.bottom := viewHeight)
+	end,
+	viewSetupFormScript: func() begin
+		self.viewOriginY := ((startTime div 30) * lineHeight);
+		(self.viewBounds := SetBounds(0, 12, 0, 0))
+	end,
+	tabHeights: 0,
+	viewClass: clView,
+	doscrollscript: func(a1, a2) begin
+		local l1;
+		upDownScroller:AdjustArrows();
+		self:SetOrigin(0, (viewOriginY + a1));
+		l1 := (a2 * 60);
+		startTime := (startTime + l1);
+		(stopTime := (stopTime + l1))
+	end,
+	tabProtos: @dayView,
+	debug: 8221,
+	viewSetupChildrenScript: func() begin
+		(if ((numDays := Length(selectedDates)) <= 7) then begin
+				viewWidth := ((l1 := self:GlobalBox()).right - l1.left);
+				tabAcross := numDays;
+				tabWidths := ((viewWidth - 15) div tabAcross);
+				tabValues := selectedDates;
+				self.viewChildren := self:LayoutTable(self, 0, 0);
+				self.SubKids := Array(numDays, nil);
+				if (if (numDays > 1) then ((tabValues[1] - tabValues[0]) > 1440)) then begin
+						l2 := true
+					end;
+				if l2 then begin
+						local l1;
+						local l2;
+						(for l3 := 0 to (numDays - 1) do begin
+								SubKids[l3] := GetAllMeetings(MeetingSoup, RepeatSoup, tabValues[l3], nil)
+							end)
+					end else begin
+						l6 := tabValues[0];
+						l7 := (tabValues[(numDays - 1)] + 1440);
+						if (l8 := GetAllMeetings(MeetingSoup, RepeatSoup, l6, l7)) then begin
+								l9 := 0;
+								l10 := 0;
+								(for l3 := 0 to (numDays - 1) do begin
+										local l6, l7, l8, l9, l10, l11, l12;
+										l12 := ((tabValues[l3] + 1440) - 1);
+										if ((l11 := BSearchRight(l8, l12, '|<|, 'mtgStartDate)) >= l9) then begin
+												SubKids[l3] := ArrayMunger([Array: ], 0, nil, l8, l9, ((l11 - l9) + 1));
+												l9 := (l11 + 1)
+											end
+									end)
+							end
+					end;
+				(if (if (if (numDays = 5) then ((selectedDates[1] - selectedDates[0]) = 1440)) then (Date(selectedDates[0]).dayOfWeek = 1)) then (scheduleView.whoAmI := 'WeekView) else (scheduleView.whoAmI := 'scheduleView))
+			end)
+	end,
+	preallocatedContext: 'DayTable
+};
+
+HeaderLabels := {
+	debug: 153023,
+	viewClass: clView,
+	viewBounds: {left: 15, top: 0, right: 0, bottom: 12},
+	viewJustify: vjParentFullH,
+	viewFlags: vVisible + vClickable + vGesturesAllowed,
+	viewFormat: 0,
+	viewDrawScript: func() begin
+		DrawDateLabels(self:GlobalBox(), selectedDates)
+	end,
+	viewgesturescript: func(a1, a2) begin
+		local l1, l2, l3, l4, l5, l6;
+		(if (a2 = 49) then (if ((l1 := Length(selectedDates)) > 1) then begin
+					l2 := self:GlobalBox();
+					l3 := (GetPoint(0, a1) - l2.left);
+					l4 := ((l2.right - l2.left) div l1);
+					l5 := (l3 div l4);
+					self:DrawShape(MakeRect((l6 := ((l5 := min(l1, l5)) * l4)), 0, (l6 + l4), (l2.bottom - l2.top)), '{fillPattern: 5, transferMode: 2});
+					selectedDates := [Array: selectedDates[l5]];
+					calendar:redisplayScript()
+				end))
+	end,
+	preallocatedContext: 'HeaderLabels
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewDrawScript_code_4 := same("DayTable.viewDrawScript.instructions");

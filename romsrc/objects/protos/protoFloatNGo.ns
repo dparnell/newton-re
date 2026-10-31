@@ -1,0 +1,3 @@
+// protoFloatNGo, and what only it reaches
+
+protoFloatNGo := {_proto: @protoFloater, viewChildren: [|Array|: {_proto: @protoClosebox}], debug: 363081};

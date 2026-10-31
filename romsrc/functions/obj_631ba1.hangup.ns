@@ -1,5 +1,0 @@
-@@ 0x4ecfe9
-func(a1) begin
-	(if activeTransport then activeTransport:CancelRequest(a1))
-end
-@@end

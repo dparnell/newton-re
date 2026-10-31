@@ -1,0 +1,27 @@
+// allinfo, and what only it reaches
+
+allinfo := {
+	boldTitle: nil_2,
+	layouts: nil,
+	showBullet: true,
+	showMultipleData: true,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	symbol: 'allinfo,
+	type: 'viewer,
+	viewSetupFormScript: func() begin
+		local l1, l2;
+		(if (if target then target.class) then begin
+				if (not layouts) then begin
+						layouts := {}
+					end;
+				if (not layouts.(target.class)) then begin
+						layouts.(target.class) := call GetRoot().cardfile.kViewsToDisplay with (target)
+					end;
+				(if (GetVariable(self, 'newtAppBase) <> GetRoot().cardfile) then (self.viewFlags := 1))
+			end)
+	end,
+	protection: 'public,
+	canScroll: true,
+	name: allInfo_2,
+	_proto: @8242
+};

@@ -1,0 +1,3 @@
+// protoCitiesTextPicker, and what only it reaches
+
+protoCitiesTextPicker := {params: {spots: @citySoupName, result: 'name}, _proto: @protoMapTextPicker};

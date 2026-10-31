@@ -1,0 +1,10 @@
+// todo2SoupDef, and what only it reaches
+
+todo2SoupDef := {
+	name: toDoList,
+	userName: "To Do tasks",
+	ownerApp: 'calendar,
+	ownerAppName: dates_2,
+	userDescr: "To Do tasks, both non-repeating and repeating",
+	indexes: [|Array|: {structure: 'slot, path: 'Date, type: 'int}]
+};

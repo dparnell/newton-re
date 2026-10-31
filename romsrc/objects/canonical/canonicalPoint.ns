@@ -1,0 +1,3 @@
+// canonicalPoint, and what only it reaches
+
+canonicalPoint := {x: nil, y: nil};

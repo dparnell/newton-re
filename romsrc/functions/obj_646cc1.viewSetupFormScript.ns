@@ -1,5 +1,0 @@
-@@ 0x4b7e55
-func() begin
-	self:SetIcon()
-end
-@@end

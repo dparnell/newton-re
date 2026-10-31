@@ -1,0 +1,80 @@
+// canonicalCompass, and what only it reaches
+
+canonicalCompass := {
+	viewClass: clPictureView,
+	viewBounds: {left: 1, top: -32, right: 31, bottom: -2},
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewFormat: 0,
+	viewJustify: vjParentBottomV,
+	viewTransferMode: 8,
+	icon: {
+		mask: bitmap('mask, "resources/mask/5224e9.png", "0000000000040174017400dd019200fb", 1),
+		bits: bitmap('bits, "resources/bits/52257d.png", "0000000000040174017400dd019200fb", 1),
+		bounds: {left: 0, top: 0, right: 30, bottom: 30}
+	},
+	viewSetupDoneScript: func() begin
+		(self:Parent().Scroller := self)
+	end,
+	viewClickScript: func(a1) begin
+		local l1, l2, l3;
+		InkOff(a1);
+		playsound(@click);
+		l3 := self:GlobalBox();
+		l1 := (GetPoint(0, a1) - l3.left);
+		l2 := (GetPoint(1, a1) - l3.top);
+		self:TrackCompass(l3, l1, l2);
+		(loop begin
+				if StrokeDone(a1) then begin
+						break
+					end;
+				l1 := (GetPoint(4, a1) - l3.left);
+				l2 := (GetPoint(5, a1) - l3.top);
+				self:TrackCompass(l3, l1, l2)
+			end);
+		true
+	end,
+	TrackCompass: func(a1, a2, a3) begin
+		local l1;
+		l1 := ((viewBounds.right - viewBounds.left) - a2);
+		if (a2 < a3) then begin
+				if (l1 < a3) then begin
+						self:ChangeScrolledOrigin(0, (-scrollDelta))
+					end else begin
+						self:ChangeScrolledOrigin(scrollDelta, 0)
+					end
+			end else begin
+				if (l1 < a3) then begin
+						self:ChangeScrolledOrigin((-scrollDelta), 0)
+					end else begin
+						self:ChangeScrolledOrigin(0, scrollDelta)
+					end
+			end;
+		true
+	end,
+	ChangeScrolledOrigin: func(a1, a2) begin
+		local l1, l2, l3, l4, l5, l6;
+		l1 := ((l3 := scrolledView.dataBounds).right - l3.left);
+		l2 := (l3.bottom - l3.top);
+		l5 := scrolledView.viewOriginX;
+		l6 := scrolledView.viewOriginY;
+		if (a1 <> 0) then begin
+				l4 := max(0, (l1 - (base.viewBounds.right - base.viewBounds.left)));
+				SetValue(scrolledView, 'viewOriginX, max((-l4), min(0, (scrolledView.viewOriginX + a1))))
+			end;
+		if (a2 <> 0) then begin
+				l4 := max(0, (l2 - (base.viewBounds.bottom - base.viewBounds.top)));
+				SetValue(scrolledView, 'viewOriginY, max((-l4), min(0, (scrolledView.viewOriginY + a2))))
+			end;
+		(if ((scrolledView.viewOriginX <> l5) or (scrolledView.viewOriginY <> l6)) then begin
+				(l3 := {}).left := scrolledView.viewOriginX;
+				l3.top := scrolledView.viewOriginY;
+				l3.right := (l3.left + l1);
+				l3.bottom := (l3.top + l2);
+				SetValue(scrolledView, 'viewBounds, SetBounds(0, 0, 10, 10));
+				SetValue(scrolledView, 'viewBounds, l3);
+				RefreshViews()
+			end)
+	end,
+	scrollDelta: 16,
+	debug: 133473
+};

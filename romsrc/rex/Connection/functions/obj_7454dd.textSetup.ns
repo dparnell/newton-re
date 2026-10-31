@@ -1,5 +1,0 @@
-@@ 0x746281
-func() begin
-	(if (if labelCommands then curLabelCommand) then labelCommands[curLabelCommand] else "")
-end
-@@end

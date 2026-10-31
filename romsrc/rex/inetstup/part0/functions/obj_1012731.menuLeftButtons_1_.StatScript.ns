@@ -1,6 +1,0 @@
-@@ 0x1013475
-func(a1) begin
-	newtAppBase:?HandleNewButtonAction(a1);
-	nil
-end
-@@end

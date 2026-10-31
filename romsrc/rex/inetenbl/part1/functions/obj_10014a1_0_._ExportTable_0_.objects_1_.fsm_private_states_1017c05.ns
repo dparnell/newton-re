@@ -1,6 +1,0 @@
-@@ 0x1017c05
-func() begin
-	self:?DoErrorCallback("Abort", -16005);
-	self:DoEvent('UnBind, nil)
-end
-@@end

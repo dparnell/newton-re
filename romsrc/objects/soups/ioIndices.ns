@@ -1,0 +1,18 @@
+// ioIndices, and what only it reaches
+
+ioIndices := [|Array|:
+	{
+		structure: 'multiSlot,
+		path: [|Array|: 'category, 'timestamp],
+		type: [|Array|: 'symbol, 'int],
+		order: [|Array|: 'ascending, 'ascending]
+	},
+	{
+		structure: 'multiSlot,
+		path: [|Array|: 'state, 'timestamp],
+		type: [|Array|: 'symbol, 'int],
+		order: [|Array|: 'ascending, 'ascending]
+	},
+	{structure: 'slot, path: 'xlabels, type: 'tags, tags: [|Array|: '_new]},
+	{structure: 'slot, path: 'timestamp, type: 'int, order: 'ascending}
+];

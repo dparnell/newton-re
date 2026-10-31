@@ -1,0 +1,10 @@
+// export98, and what only it reaches
+
+export98 := {
+	openOptions: func() begin
+		return [Array: {label: "irda", type: 'service, opCode: 512}, {label: "irci", type: 'option, opCode: 512, result: nil, form: 'template, data: {arglist: [Array: 0, 0, 14, 6, "NewtConnection", "Docker"], typeList: [Array: 10, 2, 2, 2, 2, [Array: 11, 13, 0], [Array: 11, 13, 0]]}}]
+	end,
+	connectOptions: func() begin
+		return [Array: ]
+	end
+};

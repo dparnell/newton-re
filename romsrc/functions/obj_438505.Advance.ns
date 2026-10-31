@@ -1,5 +1,0 @@
-@@ 0x4384c5
-func(a1) begin
-	inherited:Advance((-2 * value))
-end
-@@end

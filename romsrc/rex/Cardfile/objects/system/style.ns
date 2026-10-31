@@ -1,0 +1,104 @@
+// style, and what only it reaches
+
+style := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewFlags: vVisible,
+	viewFormat: nil,
+	name: "Card Style",
+	symbol: 'style,
+	type: 'styleEditor,
+	stepChildren: [stepChildren: {icon: nil, cardType: 1, _proto: @8237}],
+	viewSetupChildrenScript: func() begin
+		l1 := 20;
+		l2 := 15;
+		l4 := (l3 := self:LocalBox()).right;
+		l5 := l3.bottom;
+		self.stepChildren := Clone(stepChildren);
+		l8 := Length(stepChildren);
+		l7 := stepChildren[(l8 - 1)];
+		SetLength(stepChildren, (l8 - 1));
+		if (not (l10 := target.cardType)) then begin
+				l10 := 0
+			end;
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		local l5;
+		local l6;
+		local l7;
+		local l8;
+		local l9;
+		local l10;
+		(foreach l6 in GetViewDefs(target.class) do begin
+				if (l6.type = 'bizcard) then begin
+						if (l10 = l6.bizCardNum) then begin
+								l9 := stylesViewFormat
+							end else begin
+								l9 := 0
+							end;
+						BInsertRight(stepChildren, {_proto: l7, icon: l6.bizCardIcon, cardType: l6.bizCardNum, viewJustify: 0, viewFormat: l9}, '|<|, 'cardType, nil)
+					end
+			end);
+		(foreach l12 in stepChildren do begin
+				if ((l2 + 38) >= l4) then begin
+						l2 := 15;
+						l1 := ((l1 + 23) + 20)
+					end;
+				l12.viewBounds := RelBounds(l2, l1, 38, 23);
+				l2 := ((l2 + 38) + 15)
+			end)
+	end,
+	stylesViewFormat: 592,
+	noKeyboard: true,
+	SelectBizcard: func(a1) begin
+		SetValue(selectedCard, 'viewFormat, 0);
+		SetValue(a1, 'viewFormat, stylesViewFormat);
+		selectedCard := a1;
+		AddDeferredSend(self:parent(), 'dirty, '[Array: ])
+	end,
+	selectedCard: nil,
+	viewSetupDoneScript: func() begin
+		l3 := Length((l1 := self:ChildViewFrames()));
+		local l1;
+		local l2;
+		local l3;
+		(for l2 := 0 to (l3 - 1) do begin
+				if (l1[l2].viewFormat <> 0) then begin
+						break (selectedCard := l1[l2])
+					end
+			end)
+	end,
+	infoFrame: {
+		checkPrefix: [|Array|: true, nil],
+		checkPaths: [|Array|: 'cardType],
+		showEmptyData: true,
+		shapeFunc: func(a1, a2, a3, a4) begin
+			if (not (l2 := a1[0])) then begin
+					l2 := 0
+				end;
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			(foreach l6 in GetViewDefs('person) do begin
+					if (if (l6.type = 'bizcard) then (l6.bizCardNum = l2)) then begin
+							break (l1 := l6.bizCardIcon)
+						end
+				end);
+			(if l1 then begin
+					l4 := StrFontWidth((l3 := "Card Style: "), a4.font);
+					l5 := FontAscent(a4.font);
+					{shape: [Array: MakeText(l3, a2.left, a2.top, a2.right, (a2.top + l5)), OffsetShape(MakeShape(l1), (a2.left + l4), (a2.top + 3))]}
+				end)
+		end,
+		formatFunc: func(a1) begin
+			ParamStr("Card Style: ^0", [Array: (a1[0] + 1)])
+		end
+	},
+	protection: 'private,
+	nukeRecToggle: true,
+	viewClass: clView
+};

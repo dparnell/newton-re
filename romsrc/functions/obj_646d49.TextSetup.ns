@@ -1,5 +1,0 @@
-@@ 0x48cd9d
-func() begin
-	(if target.(path) then GetNames(target.(path)) else "")
-end
-@@end

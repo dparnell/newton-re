@@ -1,0 +1,15 @@
+// pageFooter, and what only it reaches
+
+pageFooter := {
+	viewBounds: {left: 0, top: -20, right: 0, bottom: 0},
+	viewJustify: vjCenterH + vjParentFullH + vjParentBottomV,
+	viewFont: tsFancy + tsSize(9),
+	TurnPage: func() begin
+		(self.text := Stringer([Array: "Page", " ", fields.pageNumber]))
+	end,
+	viewSetupFormScript: func() begin
+		_pageTurner := self;
+		self:TurnPage()
+	end,
+	_proto: @protoStaticText
+};

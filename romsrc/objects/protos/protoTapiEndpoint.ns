@@ -1,0 +1,268 @@
+// protoTapiEndpoint, and what only it reaches
+
+protoTapiEndpoint := {
+	currentDevice: nil,
+	UnHold: func(a1) begin
+		self:SendOption("unho", 'ignore, a1)
+	end,
+	passiveState: [|Array|:
+		{
+			label: ctso,
+			type: 'option,
+			opCode: 512,
+			data: {arglist: [|Array|: nil], typelist: [|Array|: 10, [|Array|: 11, 13, 4]]}
+		},
+		{
+			label: cpst,
+			type: 'option,
+			opCode: 512,
+			data: {arglist: [|Array|: true], typelist: [|Array|: 10, 5]}
+		}
+	],
+	serviceId: nil,
+	SetSpeaker: func(a1, a2) begin
+		self:SendOption("tasp", a1, a2)
+	end,
+	AnswerIncoming: func(a1) begin
+		self:SendOption("answ", 'ignore, a1)
+	end,
+	Open: func(a1) begin
+		if ((currentDevice := serviceId) = nil) then begin
+				return nil
+			end;
+		l1 := [Array: {label: currentDevice, type: 'service, opCode: 512}];
+		if configOptions then begin
+				l2 := configOptions;
+				if IsFunction(configOptions) then begin
+						l2 := Apply(configOptions, '[Array: ])
+					end;
+				if (if l2 then IsArray(l2)) then begin
+						local l1;
+						local l2;
+						(foreach l3, l4 in l2 do begin
+								AddArraySlot(l1, l4)
+							end)
+					end
+			end;
+		l6 := Length(l1);
+		(foreach l3, l4 in passiveClaim do begin
+				local l6, l7;
+				AddArraySlot(l1, DeepClone(l4))
+			end);
+		l1[l6].data.arglist := [Array: currentDevice];
+		if a1 then begin
+				l1[(l6 + 1)].data.arglist := [Array: nil]
+			end;
+		self:Instantiate(self, l1);
+		self:Bind(nil, {reqTimeout: openTimeout});
+		self:Connect(serviceOption, {reqTimeout: openTimeout});
+		(l7 := [Array: DeepClone(passiveState[0]), passiveState[1]])[0].data.arglist := [Array: currentDevice];
+		self:option(l7, nil)
+	end,
+	Close: func() begin
+		(if (currentDevice <> nil) then begin
+				try begin
+						self:Disconnect(true, nil)
+					end onexception |evt.ex| do begin end;
+				try begin
+						self:Unbind(nil)
+					end onexception |evt.ex| do begin end;
+				try begin
+						self:Dispose()
+					end onexception |evt.ex| do begin end;
+				(currentDevice := nil)
+			end)
+	end,
+	SendDigit: func(a1, a2) begin
+		self:SendOption("sdgt", a1, a2)
+	end,
+	SpeakerOptionDone: func(a1, a2, a3) begin
+		Sleep(10);
+		(if a3 then (if (a1 = "outg") then self:?MakeOutgoingDone(a2) else (if (a1 = "sdgt") then self:?SendDigitDone(a2))) else (if a2 then Throw('|evt.ex.comm|, a2)))
+	end,
+	serviceOption: {
+		label: "taps",
+		type: 'option,
+		opCode: 512,
+		data: {arglist: [|Array|: true, true, nil, nil], typelist: [|Array|: 10, 5, 5, 5, 5]}
+	},
+	ForwardClear: func(a1, a2) begin
+		self:SendOption("focr", a1, a2)
+	end,
+	Hold: func(a1) begin
+		self:SendOption("hold", 'ignore, a1)
+	end,
+	configOptions: nil,
+	passiveClaim: [|Array|:
+		{
+			label: ctso,
+			type: 'option,
+			opCode: 512,
+			data: {arglist: [|Array|: nil], typelist: [|Array|: 10, [|Array|: 11, 13, 4]]}
+		},
+		{
+			label: cpcm,
+			type: 'option,
+			opCode: 512,
+			data: {arglist: [|Array|: true], typelist: [|Array|: 10, 5]}
+		}
+	],
+	_proto: @protoBasicEndpoint,
+	Forward: func(a1, a2) begin
+		self:SendOption("forw", a1, a2)
+	end,
+	SpeakerOptionContinue: func(a1) begin
+		(if a1 then self:SpeakerOption(confirmStore.command, confirmStore.phone, confirmStore.idx, true) else self:SpeakerOptionDone(confirmStore.command, -16005, true))
+	end,
+	GetCallerId: func() begin
+		local l1, l2;
+		(if ((l2 := self:option((l1 := {label: "rout", type: 'address, opCode: 1024, data: {arglist: [Array: 3, 100, "Caller ID not available                                                                             "], typelist: [Array: 10, 1, 2, [Array: 11, 13, 0]]}}), nil)).result = nil) then return l2.data.arglist[2] else Throw('|evt.ex.comm|, l2.result))
+	end,
+	confirmStore: nil,
+	SendOption: compile(
+		constants: {
+			kFunction_52e295: func(a1, a2, a3) begin
+				a1:ReturnOption(a2, a3)
+			end
+		},
+		func(command, stringOrBool, a3) begin
+			local l1, l2, l3, l4, l5;
+			if (if (l1 := (if (stringOrBool <> 'ignore) then ((if (not IsImmediate(stringOrBool)) then StrFilled(stringOrBool)) or (ClassOf(stringOrBool) = 'char)))) then (ClassOf(stringOrBool) = 'char)) then begin
+					stringOrBool := Stringer([Array: "", stringOrBool])
+				end;
+			(if (currentDevice = nil) then (if l1 then (if (not a3) then self:SpeakerOption(command, stringOrBool, 0, nil) else AddDeferredCall(func() begin
+							self:SpeakerOption(command, stringOrBool, 0, true)
+						end, nil)) else self:SpeakerOptionDone(command, nil, a3)) else (if (currentDevice <> nil) then begin
+						l2 := {label: command, type: 'option, opCode: 512};
+						if (if (stringOrBool <> 'ignore) then IsImmediate(stringOrBool)) then begin
+								l2.data := {arglist: [Array: stringOrBool], typelist: [Array: 'struct, 'boolean]}
+							end;
+						l3 := nil;
+						if a3 then begin
+								l3 := {async: true, completionscript: kFunction_52e295}
+							end;
+						if l1 then begin
+								l2 := [Array: l2, MakePhoneOption(stringOrBool)]
+							end;
+						l4 := self:option(l2, l3);
+						(if (if (not a3) then ((l5 := self:CheckOptionResult(l4)) <> nil)) then Throw('|evt.ex.comm|, l5.result))
+					end))
+		end),
+	SpeakerOption: func(a1, a2, a3, a4) begin
+		l1 := nil;
+		l2 := nil;
+		try begin
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				(for l3 := a3 to (StrLen(a2) - 1) do begin
+						local l7;
+						l4 := a2[l3];
+						toneIndex := -1;
+						if (if (l4 >= $0) then (l4 <= $9)) then begin
+								toneIndex := (ORD(l4) - ORD($0))
+							end else begin
+								if (l4 = $*) then begin
+										toneIndex := 10
+									end else begin
+										if (l4 = $#) then begin
+												toneIndex := 11
+											end else begin
+												if ((l4 = $,) or (l4 = $p)) then begin
+														Sleep((userConfiguration.commaDelay * 60))
+													end else begin
+														if (l4 = $w) then begin
+																l2 := true;
+																confirmStore := {command: a1, phone: a2, idx: (l3 + 1)};
+																GetRoot():Confirm("", "Waiting for a second dial tone. Tap \u201C\uOK\u201D\u to continue dialing.", self, 'SpeakerOptionContinue);
+																break
+															end
+													end
+											end
+									end
+							end;
+						if (toneIndex >= 0) then begin
+								(l7 := ConvertToSoundFrame(@dialTones[toneIndex])).volume := 4;
+								PlaySoundSync(l7)
+							end
+					end)
+			end onexception |evt.ex| do begin
+				nextIndex := 0;
+				l1 := CurrentException().error
+			end;
+		(if (not l2) then self:SpeakerOptionDone(a1, l1, a4))
+	end,
+	openTimeout: 15000,
+	CheckOptionResult: func(a1) begin
+		l1 := nil;
+		l2 := nil;
+		if IsArray(a1) then begin
+				local l1;
+				(foreach l2 in a1 do begin
+						if (l2.result <> nil) then begin
+								l1 := l2;
+								break
+							end
+					end)
+			end else begin
+				if (a1.result <> nil) then begin
+						l1 := a1
+					end
+			end;
+		l1
+	end,
+	declareSelf: 'tapiEndpoint,
+	hangup: func(a1) begin
+		self:SendOption("disc", 'ignore, a1)
+	end,
+	eventHandler: func(a1) begin
+		(if (a1.eventCode = 7) then (if (a1.data = 1) then self:?EventIncoming() else (if (a1.data = 2) then self:?EventRinger() else (if (a1.data = 4) then self:?EventClearDisplay() else (if (a1.data = 5) then self:?EventOffHook() else (if (a1.data = 6) then self:?EventOnHook() else (if (a1.data = 8) then self:?EventConversation() else (if (a1.data = 9) then self:?EventDialTone() else (if (a1.data = 10) then self:?EventRingbackTone() else (if (a1.data = 11) then self:?EventBusyTone() else (if (a1.data = 12) then self:?EventReorder() else self:?EventUnknown(a1.eventCode, a1.data))))))))))) else self:?EventUnknown(a1.eventCode, a1.data))
+	end,
+	Transfer: func(a1, a2) begin
+		self:SendOption("tran", a1, a2)
+	end,
+	MakeOutgoing: func(a1, a2) begin
+		self:SendOption("outg", a1, a2)
+	end,
+	ReturnOption: func(a1, a2) begin
+		local l1, l2;
+		if IsArray(a1) then begin
+				l1 := a1[0].label
+			end else begin
+				l1 := a1.label
+			end;
+		if (not a2) then begin
+				if (l2 := self:CheckOptionResult(a1)) then begin
+						a2 := l2.result
+					end
+			end else nil;
+		(if StrEqual(l1, "outg") then self:?MakeOutgoingDone(a2) else (if StrEqual(l1, "sdgt") then self:?SendDigitDone(a2) else (if StrEqual(l1, "answ") then self:?AnswerIncomingDone(a2) else (if StrEqual(l1, "disc") then self:?HangUpDone(a2) else (if StrEqual(l1, "answ") then self:?AnswerIncomingDone(a2) else (if StrEqual(l1, "hold") then self:?HoldDone(a2) else (if StrEqual(l1, "unho") then self:?UnHoldDone(a2) else (if StrEqual(l1, "forw") then self:?ForwardDone(a2) else (if StrEqual(l1, "focr") then self:?ForwardClearDone(a2) else (if StrEqual(l1, "tran") then self:?TransferDone(a2) else (if StrEqual(l1, "tasp") then self:?SetSpeakerDone(a2) else self:?UnknownDone(a1, a2))))))))))))
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+Open_literal16 := same("protoTapiEndpoint.Open.literals[16]");
+
+SpeakerOptionDone_literal1 := same("protoTapiEndpoint.SpeakerOptionDone.literals[1]");
+
+SendDigit_literal0 := same("protoTapiEndpoint.SendDigit.literals[0]");
+
+AnswerIncoming_literal0 := same("protoTapiEndpoint.AnswerIncoming.literals[0]");
+
+UnHold_literal0 := same("protoTapiEndpoint.UnHold.literals[0]");
+
+Forward_literal0 := same("protoTapiEndpoint.Forward.literals[0]");
+
+ForwardClear_literal0 := same("protoTapiEndpoint.ForwardClear.literals[0]");
+
+Hold_literal0 := same("protoTapiEndpoint.Hold.literals[0]");
+
+Transfer_literal0 := same("protoTapiEndpoint.Transfer.literals[0]");
+
+SetSpeaker_literal0 := same("protoTapiEndpoint.SetSpeaker.literals[0]");
+
+UnHold_code := same("protoTapiEndpoint.UnHold.instructions");
+
+SetSpeaker_code := same("protoTapiEndpoint.SetSpeaker.instructions");

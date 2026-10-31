@@ -1,0 +1,3 @@
+// starterInk, and what only it reaches
+
+starterInk := {ink: nil, viewBounds: nil};

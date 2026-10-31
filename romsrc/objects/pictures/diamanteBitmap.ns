@@ -1,0 +1,6 @@
+// diamanteBitmap, and what only it reaches
+
+diamanteBitmap := {
+	bits: bitmap('bits, "resources/bits/3d9425.png", "0000000000040153015300a9015800ae", 1),
+	bounds: {left: 0, top: 0, right: 5, bottom: 5}
+};

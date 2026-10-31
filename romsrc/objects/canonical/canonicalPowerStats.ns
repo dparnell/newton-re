@@ -1,0 +1,3 @@
+// canonicalPowerStats, and what only it reaches
+
+canonicalPowerStats := {timeatcoldboot: nil, processorofftime: nil, screenontime: nil, serialontime: nil, soundontime: nil};

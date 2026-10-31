@@ -1,5 +1,0 @@
-@@ 0x101bf11
-func() begin
-	inherited:?viewQuitScript()
-end
-@@end

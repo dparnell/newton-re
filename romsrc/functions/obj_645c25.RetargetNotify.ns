@@ -1,5 +1,0 @@
-@@ 0x4ad8a9
-func() begin
-	self:Update()
-end
-@@end

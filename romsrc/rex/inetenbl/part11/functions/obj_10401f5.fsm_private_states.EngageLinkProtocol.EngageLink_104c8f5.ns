@@ -1,6 +1,0 @@
-@@ 0x104c8f5
-func(a1) begin
-	self:MDoCallbacks(fLinkClients_Grab, a1, 'Update);
-	(if a1.infoError then self:DoEvent('EngageLinkProtocolFailure, nil) else (if (a1.infoStatus = 'Engaged) then self:DoEvent('EngageLinkProtocolSuccess, nil)))
-end
-@@end

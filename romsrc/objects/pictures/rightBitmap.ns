@@ -1,0 +1,7 @@
+// rightBitmap, and what only it reaches
+
+rightBitmap := {
+	mask: bitmap('mask, "resources/mask/3d5f4d.png", "000000000004018d018d013c01990146", 1),
+	bits: bitmap('bits, "resources/bits/3d5f99.png", "000000000004001f001f00bb002b00c5", 1),
+	bounds: {left: 0, top: 0, right: 10, bottom: 12}
+};

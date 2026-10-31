@@ -1,0 +1,3 @@
+// dsExceptions, and what only it reaches
+
+dsExceptions := [|Array|: "may", "june", "april", "jan"];

@@ -1,0 +1,6 @@
+// phoneBitmap, and what only it reaches
+
+phoneBitmap := {
+	bits: bitmap('bits, "resources/bits/3d6265.png", "000000000004008b008b00bf009400cc", 1),
+	bounds: {left: 0, top: 0, right: 13, bottom: 9}
+};

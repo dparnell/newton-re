@@ -1,5 +1,0 @@
-@@ 0x47b0ed
-func() begin
-	(if (if info then info.logConfig) then ArrayPos(info.logActions, self:GetTransport():GetConfig(info.logConfig), 0, nil))
-end
-@@end

@@ -1,0 +1,3 @@
+// worldMapBitmap, and what only it reaches
+
+worldMapBitmap := picture('picture, "resources/picture/6430d9");

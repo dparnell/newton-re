@@ -1,0 +1,619 @@
+// protoTransport, and what only it reaches
+
+protoTransport := {
+	IsInItem: func(a1) begin
+		return (((a1.state = 'Received) or (a1.state = 'Read)) or (a1.state = 'InLog))
+	end,
+	PowerOffCheck: func(a1) begin
+		(if (a1 = 'idle) then nil else ModalConfirm(ParamStr("Are you sure you want to turn off the power while ^0 is active?", [Array: title]), 'okCancelDefaultCancel))
+	end,
+	HandleError: func(a1) begin
+		local l1;
+		lastError := a1;
+		(if (l1 := self:TranslateError(a1)) then self:Notify(3, title, l1))
+	end,
+	ItemRequest: func(a1) begin
+		local l1, l2, l3, l4;
+		l1 := nil;
+		(loop begin
+				l2 := nil;
+				if a1.item then begin
+						l1 := a1.item;
+						a1.item := nil
+					end else begin
+						if a1.cursor then begin
+								if (l1 := a1.cursor:entry()) then begin
+										a1.cursor:Next()
+									end
+							end
+					end;
+				if (if (if (not l1) then a1.requestQueue) then (Length(a1.requestQueue) > 0)) then begin
+						l3 := a1.requestQueue[0];
+						a1.cause := l3.cause;
+						if (if ((l1 := l3.item) = nil) then l3.cursor) then begin
+								a1.cursor := l3.cursor;
+								if (l1 := a1.cursor:entry()) then begin
+										a1.cursor:Next()
+									end
+							end;
+						SetRemove(a1.requestQueue, l3);
+						l2 := (Length(a1.requestQueue) > 0)
+					end;
+				if (if (if l1 then IsFrame(l1)) then l1.currentFormat) then begin
+						l2 := true;
+						if (if (l4 := GetCurrentFormat(l1)) then l4.ResolveItem) then begin
+								l1 := l4:ResolveItem(l1)
+							end else begin
+								if (if l1.needsResolve then l1.body) then begin
+										self:Notify(3, "Routing", "This item cannot be sent because the proper format cannot be found. Please make sure both the format and the original application are installed before sending.");
+										l1 := nil
+									end
+							end
+					end;
+				if IsFrame(l1) then begin
+						break
+					end else begin
+						if l1 then begin
+								l2 := true
+							end
+					end;
+				(if (not l2) then break)
+			end);
+		currentItem := l1;
+		l1
+	end,
+	errorIcon: {
+		mask: bitmap('mask, "resources/mask/47f9c1.png", "0000000000040086008602110092021e", 1),
+		bits: bitmap('bits, "resources/bits/47fa0d.png", "0000000000040086008602110092021e", 1),
+		bounds: {left: 0, top: 0, right: 13, bottom: 12}
+	},
+	itemchanged: func(a1) begin
+		GetRoot().(owner):itemchanged(a1, true)
+	end,
+	deleteItem: func(a1) begin
+		(if a1 then GetRoot().(owner):?ItemCompleted(a1, nil))
+	end,
+	GetItemInfo: func(a1, a2, a3) begin
+		local l1, l2, l3, l4;
+		l2 := self:GetItemTime(a1);
+		a2 := (a2 - StrFontWidth(Stringer([Array: " ", l2]), a3));
+		if self:IsInItem(a1) then begin
+				l1 := self:?GetFromText(a1)
+			end else begin
+				l1 := self:?GetToText(a1)
+			end;
+		if l1 then begin
+				l1 := StyledStrTruncate(Clone(l1), a2, a3)
+			end else begin
+				if (l3 := GetDataDefs(addressingClass)) then begin
+						l1 := l3:GetRoutingTitle((l4 := (if self:IsInItem(a1) then a1.fromRef else a1.toRef)), a2, a3)
+					end
+			end;
+		if (not l1) then begin
+				l1 := (if self:IsInItem(a1) then a1.fromName else a1.name)
+			end;
+		if (not l1) then begin
+				l1 := "Unaddressed"
+			end;
+		(if StrFilled(l1) then Stringer([Array: l1, " ", l2]) else l2)
+	end,
+	statusDialog: nil,
+	owner: 'iobox,
+	status: 'idle,
+	GetConfig: func(a1) begin
+		local l1;
+		if ((l1 := GetUserConfig(appSymbol)) = nil) then begin
+				l1 := SetUserConfig(appSymbol, EnsureInternal(Clone(defaultConfiguration)));
+				FlushUserConfig()
+			end;
+		l1.(a1)
+	end,
+	ItemCount: func(a1) begin
+		local l1;
+		l1 := 0;
+		if a1.item then begin
+				l1 := 1
+			end else begin
+				if a1.cursor then begin
+						if IsArray(a1.cursor) then begin
+								l1 := Length(a1.cursor)
+							end else begin
+								l1 := a1.cursor:CountEntries()
+							end
+					end
+			end;
+		return l1
+	end,
+	UpdateStatusSlots: func(a1, a2, a3) begin
+		if (status = nil) then begin
+				status := 'idle
+			end;
+		if (a1 = nil) then begin
+				a1 := status
+			end;
+		if (if (status = 'idle) then (a1 <> 'idle)) then begin
+				userClosedStatus := nil;
+				self:BeginIO()
+			end else begin
+				if (if (status <> 'idle) then (a1 = 'idle)) then begin
+						self:EndIO();
+						userClosedStatus := nil
+					end
+			end;
+		status := EnsureInternal(a1);
+		if (a3 <> nil) then begin
+				if IsFrame(a3) then begin
+						l1 := a3
+					end else begin
+						if IsString(a3) then begin
+								l1 := {statusText: a3}
+							end else begin
+								l1 := {}
+							end
+					end
+			end else begin
+				l1 := {}
+			end;
+		if (not HasSlot(l1, 'statusText)) then begin
+				l1.statusText := self:GetStatusString()
+			end;
+		if (a2 = nil) then begin
+				if ((statusSetup = nil) or (statusSetup.name = nil)) then begin
+						a2 := 'vStatus
+					end else begin
+						a2 := statusSetup.name
+					end
+			end;
+		l2 := {name: a2, appSymbol: appSymbol, values: l1};
+		if (statusSetup = nil) then begin
+				statusSetup := l2
+			end else begin
+				if (statusSetup.name <> a2) then begin
+						statusSetup.values := l1;
+						statusSetup.name := a2
+					end else begin
+						if l1 then begin
+								local l1;
+								local l2;
+								(foreach l3, l4 in l1 do begin
+										statusSetup.values.(l3) := l4
+									end)
+							end
+					end
+			end;
+		return l2
+	end,
+	dialogStatusMsgs: @defaultStatusMsgs,
+	QueueRequest: func(a1, a2) begin
+		if IsSymbol(a1) then begin
+				a2.function := a1;
+				a1 := GetRoot().(appSymbol)
+			end;
+		if a1 then begin
+				if a1.requestQueue then begin
+						AddArraySlot(a1.requestQueue, a2)
+					end else begin
+						a1.requestQueue := [Array: a2]
+					end
+			end;
+		a2
+	end,
+	requestQueue: nil,
+	actionTitle: send,
+	HandleThrow: func() begin
+		local l1, l2, l3;
+		l1 := CurrentException();
+		l2 := 0;
+		if HasSlot(l1, 'error) then begin
+				l2 := l1.error
+			end else begin
+				if HasSlot(l1.data, 'errorCode) then begin
+						l2 := l1.data.errorCode
+					end else begin
+						l2 := -1
+					end
+			end;
+		if (l3 := (not self:ignoreError(l2))) then begin
+				if self.currentItem then begin
+						self:ItemCompleted(currentItem, nil, l2)
+					end else begin
+						self:HandleError(l2)
+					end
+			end;
+		l3
+	end,
+	NewFromItem: func(a1) begin
+		l1 := self:NewItem(nil);
+		local l1;
+		(foreach l2, l3 in a1 do begin
+				if (not SetContains(fromItemSlotsToPunt, l2)) then begin
+						l1.(l2) := l3
+					end;
+				l1.labels := nil
+			end);
+		if a1.destAppSymbol then begin
+				l1.fromAppSymbol := a1.appSymbol;
+				l1.appSymbol := a1.destAppSymbol
+			end;
+		l1
+	end,
+	viewFlags: 0,
+	CloseStatusDialog: func(a1) begin
+		if statusDialog then begin
+				statusDialog:Close();
+				if (if (status <> 'idle) then (not manualStatus)) then begin
+						self:StatusNotify()
+					end
+			end;
+		statusDialog := nil;
+		lastError := nil;
+		(userClosedStatus := a1)
+	end,
+	GetItemTitle: func(a1) begin
+		local l1, l2, l3, l4, l5;
+		l1 := "Untitled";
+		if a1 then begin
+				l1 := nil;
+				if IsString(a1.title) then begin
+						l1 := a1.title
+					end else begin
+						if (l4 := GetDataDefs(DataClassOf((l3 := GetTargetFromEntry(a1))))) then begin
+								if (l5 := l4:?StringExtract(l3, 1)) then begin
+										l1 := l5
+									end
+							end;
+						if (if (if (not l1) then IsFrame(l3)) then StrFilled(l3.title)) then begin
+								l1 := Clone(l3.title)
+							end
+					end;
+				if (l1 = nil) then begin
+						if TargetIsCursor(a1.body) then begin
+								l1 := "Selected Items"
+							end else begin
+								l1 := ParamStr("Untitled ^0", [Array: self:GetItemType(a1)])
+							end
+					end
+			end;
+		l1
+	end,
+	CancelStatusNotify: func() begin
+		(if activeNotify then begin
+				GetRoot().notifyIcon:KillAction(activeNotify);
+				(activeNotify := nil)
+			end)
+	end,
+	itemStateMsgs: @defaultItemStateMsgs,
+	ItemPutAway: func(a1) begin
+		nil
+	end,
+	ConnectionDetect: func() begin
+		return self:GetConfig('noworlater)
+	end,
+	currentItem: nil,
+	IsLogItem: func(a1) begin
+		return ((a1.state = 'InLog) or (a1.state = 'OutLog))
+	end,
+	statusTemplate: @protoStatusTemplate,
+	GetDefaultOwnerStore: func() begin
+		local l1;
+		(if (l1 := GetRoot().(owner):GetDefaultAppStore()):IsReadOnly() then GetStores()[0] else l1)
+	end,
+	userClosedStatus: nil,
+	GetFolderName: func(a1) begin
+		local l1;
+		if ((l1 := self:GetConfig((if self:IsInItem(a1) then 'inboxFiling else 'outboxFiling))) = 'same) then begin
+				l1 := a1.labels
+			end;
+		return l1
+	end,
+	StatusNotify: compile(
+		constants: {
+			kFunction_47f521: func(a1) begin
+				GetRoot().(a1):ResurrectStatusDialog()
+			end
+		},
+		func() begin
+			(if (activeNotify = nil) then (activeNotify := GetRoot().notifyIcon:AddAction(title, kFunction_47f521, [Array: appSymbol])))
+		end),
+	GetTitleInfoShape: func(a1, a2) begin
+		local l1, l2, l3, l4, l5;
+		l1 := ((a2.right - a2.left) - 10);
+		l2 := self:GetItemTitle(a1);
+		l3 := self:GetItemInfo(a1, l1, 9216);
+		l5 := StrFontWidth((l4 := self:GetItemStateString(a1)), 1058816);
+		l2 := StyledStrTruncate(Clone(l2), (l1 - (l5 + 10)), 1058816);
+		(shapes := [Array: {font: 1058816}, MakeText(l2, a2.left, a2.top, (a2.right - l5), (a2.top + 11)), MakeText(l4, (a2.right - l5), a2.top, a2.right, (a2.top + 11)), {font: 9216}, MakeText(l3, (a2.left + 10), a2.top, a2.right, (a2.bottom - 4))])
+	end,
+	TranslateError: func(a1) begin
+		local l1;
+		l1 := nil;
+		if (not self:?ignoreError(a1)) then begin
+				if (l1 = nil) then begin
+						l1 := TableLookup(@errorTable, a1)
+					end;
+				if (l1 = nil) then begin
+						l1 := ParamStr("Error ^0 encountered", [Array: NumberStr(a1)])
+					end
+			end;
+		l1
+	end,
+	addressingClass: '|nameRef.email|,
+	ItemSubmit: func(a1) begin
+		GetRoot().(owner):submit(a1)
+	end,
+	InstallScript: func(a1) begin
+		nil
+	end,
+	category: nil,
+	appSymbol: nil,
+	SetConfig: func(a1, a2) begin
+		local l1;
+		if ((l1 := GetUserConfig(appSymbol)) = nil) then begin
+				l1 := EnsureInternal(Clone(defaultConfiguration))
+			end;
+		l1.(EnsureInternal(a1)) := EnsureInternal(a2);
+		SetUserConfig(appSymbol, l1)
+	end,
+	icon: @routeTransport,
+	title: transport,
+	BeginIO: func() begin
+		local appSym;
+		appSym := EnsureInternal(appSymbol);
+		powerOnCallback := func(a1) begin
+			(if (a1 = 'emergencyPowerOn) then GetRoot().(appSym):CancelRequest(a1))
+		end;
+		RegPowerOn(appSymbol, powerOnCallback);
+		powerOffCallback := func(a1, a2) begin
+			if (a1 = 'okToPowerOff) then begin
+					return GetRoot().(appSym):PowerOffCheck(a2)
+				end;
+			if (a1 = 'PowerOff) then begin
+					if (GetRoot().(appSym):CancelRequest(a1) = nil) then begin
+							return 'holdYourHorses
+						end
+				end;
+			return nil
+		end;
+		RegPowerOff(appSymbol, powerOffCallback);
+		if (not manualStatus) then begin
+				self:StatusNotify()
+			end;
+		GetRoot().(owner):?ActivateTransport(self);
+		nil
+	end,
+	CancelRequest: func(a1) begin
+		self:SetStatus('Canceling, nil);
+		nil
+	end,
+	CheckOutBox: func() begin
+		GetRoot().(owner):StartSend(self, 'user, nil, nil)
+	end,
+	dataTypes: [|Array|: 'frame],
+	ResurrectStatusDialog: func() begin
+		self:CancelStatusNotify();
+		userClosedStatus := nil;
+		(if (if (status <> 'idle) then statusSetup) then self:UpdateStatusDialog(statusSetup))
+	end,
+	DeleteRequest: func(a1) begin
+		GetRoot().(owner):ioDeleteScript(a1.target, a1.targetView)
+	end,
+	GetStatusString: func() begin
+		local l1;
+		if ((l1 := dialogStatusMsgs.(status)) = nil) then begin
+				l1 := ""
+			end;
+		l1
+	end,
+	defaultConfiguration: @defaultConfiguration,
+	DeleteRemoteItems: func() begin
+		GetRoot().(owner):?RemoveTempItems(appSymbol)
+	end,
+	ItemCommit: func(a1) begin
+		GetRoot().(owner):Commit(a1)
+	end,
+	MissingTarget: func(a1) begin
+		self:Notify(3, title, "Nothing to Send")
+	end,
+	GetItemType: func(a1) begin
+		local l1, l2;
+		l1 := "item";
+		if (if a1 then a1.appSymbol) then begin
+				if (if (l2 := GetRoot().(a1.appSymbol)) then (l2:appObject exists)) then begin
+						l1 := GetVariable(l2, 'appObject)[0]
+					end
+			end;
+		l1
+	end,
+	modalStatus: nil,
+	CheckOutBoxSilently: func() begin
+		GetRoot().(owner):StartSend(self, 'silent, nil, nil)
+	end,
+	ItemCompleted: func(a1, a2, a3) begin
+		local l1, l2;
+		(if a1 then begin
+				if a2 then begin
+						a1.state := a2
+					end;
+				if a3 then begin
+						a1.error := a3
+					end;
+				currentItem := nil;
+				l1 := 'save;
+				if (if a1._saveBodyAlias then (not self:IsInItem(a1))) then begin
+						a1.body := a1._saveBodyAlias;
+						RemoveSlot(a1, '_saveBodyAlias)
+					end;
+				if a1.completionscript then begin
+						if (if a1.appSymbol then (app := GetRoot().(a1.appSymbol))) then begin
+								try begin
+										l2 := app:?ItemCompletionScript(a1)
+									end onexception |evt.ex| do begin
+										self:Notify(3, title, "Error in completionScript")
+									end;
+								if l2 then begin
+										l1 := nil
+									end
+							end else begin
+								a1.completionscript := nil
+							end
+					end;
+				if (not a1.completionscript) then begin
+						if (not self:ignoreError(a1.error)) then begin
+								self:HandleError(a1.error)
+							end;
+						if (a1.state = 'Sent) then begin
+								l1 := (if (not a1.covert) then self:GetConfig('outboxLogging))
+							end else begin
+								if (if (a1.state = 'ready) then a1.Connect) then begin
+										l1 := nil;
+										a1.error := nil;
+										a1._reopened := true;
+										OpenRoutingSlip(a1, nil);
+										a1._reopened := nil
+									end
+							end
+					end;
+				if (if (a1.state = 'Sent) then (not a1.sentTimeStamp)) then begin
+						a1.sentTimeStamp := Time()
+					end;
+				GetRoot().(owner):ItemCompleted(a1, l1)
+			end)
+	end,
+	activeNotify: nil,
+	GetItemStateString: func(a1) begin
+		local l1, l2;
+		if (not self:ignoreError(a1.error)) then begin
+				return itemStateMsgs.error
+			end;
+		l2 := a1.state;
+		if a1.Remote then begin
+				l2 := 'Remote
+			end;
+		if l2 then begin
+				l1 := itemStateMsgs.(l2)
+			end;
+		if (l1 = nil) then begin
+				l1 := ""
+			end;
+		l1
+	end,
+	fromItemSlotsToPunt: [|Array|:
+		'category,
+		'Connect,
+		'completionscript,
+		'_saveBodyAlias,
+		'sentTimeStamp,
+		'Remote,
+		'_newFolder
+	],
+	manualStatus: nil,
+	itemLabel: 'transport,
+	EndIO: func() begin
+		local l1;
+		GetRoot().(owner):?DeactivateTransport(self);
+		self:CancelStatusNotify();
+		UnRegPowerOn(appSymbol);
+		UnRegPowerOff(appSymbol);
+		(if (if requestQueue then (Length(requestQueue) > 0)) then begin
+				l1 := requestQueue[0];
+				SetRemove(requestQueue, l1);
+				AddDeferredSend(self, l1.function, [Array: l1])
+			end)
+	end,
+	viewClass: 64,
+	RefreshOwner: func() begin
+		GetRoot().(owner):?Refresh()
+	end,
+	UpdateStatusDialog: func(a1) begin
+		lastError := nil;
+		if (if statusDialog then statusDialog.viewCObject) then begin
+				statusDialog:viewSet(a1)
+			end else begin
+				if (statusDialog = nil) then begin
+						if (not HasSlot(GetRoot(), 'stepChildren)) then begin
+								GetRoot().stepChildren := Clone(GetRoot().stepChildren)
+							end;
+						statusDialog := BuildContext(statusTemplate);
+						statusDialog:viewSet(a1);
+						if modalStatus then begin
+								statusDialog:FilterDialog()
+							end else begin
+								statusDialog:Open()
+							end
+					end
+			end;
+		self:CancelStatusNotify()
+	end,
+	ignoreError: func(a1) begin
+		(((((((a1 = nil) or (a1 = 0)) or (a1 = -16005)) or (a1 = -16013)) or (a1 = -10039)) or (a1 = -38002)) or (a1 = -44004))
+	end,
+	lastError: nil,
+	debug: 723740,
+	MakeLogEntry: func(a1, a2) begin
+		a1.title := self:GetItemTitle(a2);
+		(if HasSlot(a2, 'sentTimeStamp) then (a1.sentTimeStamp := a2.sentTimeStamp))
+	end,
+	NewItem: func(a1) begin
+		local l1;
+		(l1 := GetRoot().(owner):GetDefaultItem()).category := GetVariable(self, 'appSymbol);
+		if a1 then begin
+				l1.appSymbol := GetVariable(a1, 'appSymbol)
+			end;
+		l1
+	end,
+	transportInfoForm: @protoTransportheader,
+	preferencesForm: @protoTransportPrefs,
+	GetNameText: func(a1, a2, a3) begin
+		local l1;
+		(if (l1 := GetDataDefs(addressingClass)) then (text := l1:GetRoutingTitle(a1, a2, a3)))
+	end,
+	statusSetup: nil,
+	normalizeAddress: func(a1) begin
+		local l1, l2, l3;
+		if (not IsString((l1 := GetDataDefs('|nameRef.email|):Get(a1, 'email, nil)))) then begin
+				return l1
+			end;
+		l2 := ClassOf(l1);
+		if (if IsArray(addressSymbols) then LSearch(addressSymbols, l2, 0, '|=|, nil)) then begin
+				return l1
+			end;
+		if (not (l3 := (if IsFrame(translate) then translate.(l2)))) then begin
+				l3 := EmailSystems.emailInternet.(l2)
+			end;
+		if l3 then begin
+				if IsFunction(l3) then begin
+						l1 := call l3 with (l1)
+					end else begin
+						if (not StrPos(l1, l3, 0)) then begin
+								l1 := Stringer([Array: l1, l3])
+							end
+					end
+			end;
+		l1
+	end,
+	GetItemTime: func(a1) begin
+		Stringer([Array: ShortDate(a1.timestamp), " ", HourMinute(a1.timestamp)])
+	end,
+	translate: nil,
+	SetStatusDialog: func(a1, a2, a3) begin
+		local l1, l2, l3, l4;
+		l1 := self:UpdateStatusSlots(a1, a2, a3);
+		l2 := (if statusDialog then statusDialog.viewCObject);
+		l3 := (if self:GetConfig('autoStatus) then (not manualStatus));
+		l4 := (status = 'idle);
+		(if (if (if (if l3 then (not l2)) then (not l4)) then (not userClosedStatus)) then self:UpdateStatusDialog(l1) else (if (if (if (not manualStatus) then l2) then l4) then self:CloseStatusDialog(nil) else (if (l2 or (if manualStatus then (not userClosedStatus))) then self:UpdateStatusDialog(l1))))
+	end,
+	routingSlip: @protoFullRouteSlip,
+	SetStatus: func(a1, a2) begin
+		self:SetStatusDialog(a1, nil, a2)
+	end,
+	UpdateItem: func(a1) begin
+		GetRoot().(owner):itemchanged(a1, true)
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+CheckOutBox_code := same("protoTransport.CheckOutBox.instructions");
+
+itemchanged_code := same("protoTransport.itemchanged.instructions");

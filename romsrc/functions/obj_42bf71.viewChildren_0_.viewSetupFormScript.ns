@@ -1,5 +1,0 @@
-@@ 0x42bb59
-func() begin
-	(self.viewValue := BatteryLevel(0))
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x7606b1
-func() begin
-	(if (not passwordVisible) then inherited:textChanged())
-end
-@@end

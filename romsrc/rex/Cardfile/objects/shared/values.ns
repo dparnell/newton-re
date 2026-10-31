@@ -1,0 +1,31 @@
+// objects several roots reach, none alone (naturalize.py)
+
+company := "Company";
+
+nil_2 := "nil";
+
+allInfo_2 := "All Info";
+
+label := "";
+
+first := "First";
+
+last := "Last";
+
+extension := "Extension";
+
+custom_2 := "Custom";
+
+card := "Card";
+
+format := "^?3^3: ||^?0^0 ||^?1^1 ||^?2^2||";
+
+title := "Title";
+
+areaCode := "Area Code";
+
+notes := "Notes";
+
+phone_2 := "Phone #";
+
+worksite := "Worksite";

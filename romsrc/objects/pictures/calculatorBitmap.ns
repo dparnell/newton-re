@@ -1,0 +1,29 @@
+// calculatorBitmap, and what only it reaches
+
+calculatorBitmap := {
+	unhilited: {
+		bounds: unhilitedBounds_15,
+		mask: bitmap('mask, "resources/mask/53f025.png", "000000000004000000000000001b0016", 1),
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/53f135.png", "00000000000c000000000000001b0016", 4),
+				bitdepth: 4
+			},
+			{cbits: colordataCbits_15, bitdepth: 1}
+		]
+	},
+	hilited: {
+		bounds: {left: 0, top: 0, right: 22, bottom: 27},
+		mask: bitmap('mask, "resources/mask/53ed45.png", "000000000004000000000000001b0016", 1),
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/53ee55.png", "00000000000c000000000000001b0016", 4),
+				bitdepth: 4
+			},
+			{
+				cbits: bitmap('bits, "resources/bits/53edcd.png", "000000000004000000000000001b0016", 1),
+				bitdepth: 1
+			}
+		]
+	}
+};

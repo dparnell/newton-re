@@ -1,5 +1,0 @@
-@@ 0x5b02c5
-func() begin
-	self:drawExampleScript()
-end
-@@end

@@ -1,0 +1,3 @@
+// asciiShift, and what only it reaches
+
+asciiShift := hexfile('table, "resources/table/63af59.txt");

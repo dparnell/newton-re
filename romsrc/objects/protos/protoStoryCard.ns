@@ -1,0 +1,31 @@
+// protoStoryCard, and what only it reaches
+
+protoStoryCard := {
+	viewFlags: vVisible + vReadOnly + vClickable + vGesturesAllowed,
+	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2) + vfInset(3) + vfRound(6),
+	viewJustify: 0,
+	viewEffect: 236577,
+	declareSelf: 'base,
+	viewClickScript: func(a1) begin
+		nil
+	end,
+	viewShowScript: func() begin
+		if Visible(pageDialog) then begin
+				pageDialog:Close()
+			end;
+		(if Visible(pageNumberDialog) then pageNumberDialog:Close())
+	end,
+	debug: 724748,
+	viewChildren: [viewChildren: theClose],
+	theClose: nil,
+	allocateContext: [|Array|: 'theClose, theClose],
+	_proto: @protoStaticText
+};
+
+theClose := {
+	buttonClickScript: func() begin
+		self:HideStoryCard()
+	end,
+	preallocatedContext: 'theClose,
+	_proto: @protoClosebox
+};

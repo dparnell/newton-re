@@ -1,0 +1,6 @@
+// paperCallBitmap, and what only it reaches
+
+paperCallBitmap := {
+	bits: bitmap('bits, "resources/bits/3daca9.png", "0000000000040066006601b8007501c7", 1),
+	bounds: {left: 0, top: 0, right: 15, bottom: 15}
+};

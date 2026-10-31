@@ -1,0 +1,6 @@
+// postMark, and what only it reaches
+
+postMark := {
+	bits: bitmap('bits, "resources/bits/477fcd.png", "00000000000c001200120033002b0088", 1),
+	bounds: {left: 0, top: 0, right: 85, bottom: 25}
+};

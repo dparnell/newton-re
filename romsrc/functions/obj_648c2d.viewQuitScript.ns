@@ -1,5 +1,0 @@
-@@ 0x43f4e9
-func() begin
-	(if cancelled then context:?pickCancelledScript() else self:?Affirmative())
-end
-@@end

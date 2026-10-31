@@ -1,0 +1,473 @@
+// part, and what only it reaches
+
+part := array(nil, {
+	installScript: compile(
+		constants: {
+			kFunction_1035b89: func(clientSymbol, clientFrame) begin
+				local clientPkgRef, clientRemoveFrame;
+				clientPkgRef := ObjectPkgRef(clientSymbol);
+				(clientRemoveFrame := Clone(clientFrame)).fUnitsInstalled := nil;
+				clientRemoveFrame.WaitForUnitsRemoveScript := clientRemoveFrame.removeScript;
+				clientRemoveFrame.removeScript := func(a1) begin
+					(try begin
+							UnRegSoupChange("Packages", clientSymbol);
+							if fUnitsInstalled then begin
+									self:?UnitsRemovedScript(clientRemoveFrame)
+								end;
+							self:?WaitForUnitsRemoveScript(clientRemoveFrame);
+							nil
+						end onexception |evt.ex| do begin
+							nil
+						end)
+				end;
+				RegSoupChange("Packages", clientSymbol, func(a1, a2, a3, a4) begin
+					AddProcrastinatedCall(clientSymbol, func() begin
+						local l1;
+						(if (if (not clientRemoveFrame.fUnitsInstalled) then (not MissingImports(clientPkgRef))) then begin
+								clientRemoveFrame.fUnitsInstalled := true;
+								AddDeferredCall(GetGlobalFn('UnRegSoupChange), [Array: "Packages", clientSymbol]);
+								clientFrame:?UnitsInstalledScript(clientRemoveFrame)
+							end)
+					end, nil, 1000)
+				end);
+				clientRemoveFrame
+			end
+		},
+		func(a1) begin
+			call (kFunction_1035b89) with ('|Domain Manager:NIE|, self)
+		end),
+	removeScript: func(a1) begin
+		nil
+	end,
+	UnitsInstalledScript: compile(
+		constants: {
+			kFunction_10393f1: func(a1, a2) begin
+				local l1;
+				if (not (l1 := GetGlobalVar('|InetServices:NIE|))) then begin
+						l1 := DefGlobalVar('|InetServices:NIE|, EnsureInternal({}))
+					end;
+				l1.(EnsureInternal(a1)) := a2;
+				AddProcrastinatedCall(EnsureInternal('|InetServices:NIE|), GetGlobalFn('SetUserConfig), EnsureInternal([Array: '|InetServices:NIE|, '|InetServices:NIE|]), 3333)
+			end,
+			kFunction_10365dd: func(a1, a2) begin
+				(if (if (if IsFrame(a1) then IsSymbol(a2)) then GetVariable(a1, a2)) then {fFrame: a1, fSymbol: a2} else Throw('|evt.ex.msg|, "DomainManagerFSM:MBuildCallback --> callbackFrame.(callbackSymbol) is undefined via direct ref or _proto or _parent inheritance."))
+			end,
+			kFunction_1036835: func(a1, a2) begin
+				(if InetIsValidIPAddressStr(a2) then self:MSkipQuery(a1, 64, InetIPStringToAddress(a2), a2) else self:MAddQuery(a1, 64, nil, a2))
+			end,
+			kFunction_10368ed: func(a1, a2) begin
+				(if InetIsValidIPAddressStr(a2) then self:MSkipQuery(a1, 1, InetIPStringToAddress(a2), a2) else self:MAddQuery(a1, 1, nil, a2))
+			end,
+			kFunction_1036951: func(a1, a2) begin
+				if (not InetIsValidIPAddress(a2)) then begin
+						return self:MDoClientCallback(a1, [Array: nil, -10006])
+					end;
+				l1 := [Array: ];
+				local l1;
+				(foreach l2 in a2 do begin
+						ArrayInsert(l1, l2, 0)
+					end);
+				self:MAddQuery(a1, 12, a2, Stringer([Array: InetIPAddressToString(l1), ".", "in-addr.arpa."]))
+			end,
+			kFunction_1036ba1: func(a1, a2, a3, a4) begin
+				(if (fState = 'Connected) then self:MDoClientCallback(a1, [Array: [Array: {type: self:MBuildQueryResultType(a2), queryType: a2, queryDomainName: a4, queryDefaultDomainName: fLinkEntry.defaultDomain, expirationTime: 0, targetIPAddress: a3, resultIPAddress: a3, targetDomainName: a4, resultDomainName: a4}], nil]) else self:MDoClientCallback(a1, [Array: nil, -60752]))
+			end,
+			kFunction_1036dc5: func(a1, a2, a3, a4) begin
+				(if (fState = 'Connected) then self:DoEvent('AddQuery, [Array: {fClientCallback: a1, fQueryID: (fQueryCounter := (fQueryCounter + 1)), fQueryType: a2, fQueryIPAddress: a3, fQueryDomainName: a4, fQueryDefaultDomainName: fLinkEntry.defaultDomain}]) else self:MDoClientCallback(a1, [Array: nil, -60752]))
+			end,
+			kFunction_1036f79: func(a1, a2, a3, a4, a5) begin
+				if fOwnerCallbackFrame then begin
+						try begin
+								Perform(fOwnerCallbackFrame, fOwnerCallbackSymbol, [Array: InetBuildStatusFrame((if fLinkEntry then fLinkEntry.linkID), a1, a2, a3, a4, a5)])
+							end onexception |evt.ex| do begin end
+					end;
+				fOwnerCallbackFrame := nil;
+				(fOwnerCallbackSymbol := nil)
+			end,
+			kFunction_1037061: func(a1) begin
+				self:DoEvent('Cancel, nil);
+				self:MDoClientCallback(a1, nil)
+			end,
+			kFunction_10370c9: func(a1, a2) begin
+				(if InetIsValidIPAddressStr(a2) then self:MSkipQuery(a1, 15, InetIPStringToAddress(a2), a2) else self:MAddQuery(a1, 15, nil, a2))
+			end,
+			kFunction_10373c5: func() begin
+				local l1, l2, l3;
+				l1 := ObjectPkgRef('|Domain Manager:NIE|);
+				// DEVIATION (the NIE built in, romsrc/rex/inetenbl/README.md): 'id, not GetPkgRefInfo(l1).id
+				if (not (l2 := GetGlobalVar((l3 := Intern(Stringer([Array: "PkgVars_", 'id])))))) then begin
+						MarkPackageBusy(l1, "Newton Internet Enabler", "If you delete this icon now you may damage your Newton device! To safely continue, tap Cancel then tap the icon for more instructions.");
+						l2 := DefGlobalVar(l3, EnsureInternal({fBusyRefCount: 0}))
+					end;
+				(l2.fBusyRefCount := (l2.fBusyRefCount + 1))
+			end,
+			kFunction_10372c9: func() begin
+				call (kFunction_10373c5) with ();
+				fsm.fProcessPortID := nil;
+				fsm.fAbort := nil;
+				fsm.fCCE := nil;
+				fsm.fLinkEntry := nil;
+				fsm.fEndpoint := {_proto: @protoBasicEndpoint, _parent: fsm, fIsActive: nil};
+				fsm.fOwnerCallbackFrame := nil;
+				fsm.fOwnerCallbackSymbol := nil;
+				fsm.fQuery := nil;
+				fsm.fQueryCache := nil;
+				fsm.fQueryCounter := 0;
+				fsm.fQueryQueue := QueueTemplate:Instantiate();
+				if (not GetUserConfig('NIE_DNSCacheOff)) then begin
+						fsm.fQueryCache := GetUnionSoupAlways("Internet DNS Cache")
+					end;
+				(fsm.fState := 'Disconnected)
+			end,
+			kFunction_1037929: func(a1) begin
+				(fCCE := a1)
+			end,
+			kFunction_103797d: func(a1) begin
+				(fLinkEntry := a1)
+			end,
+			kFunction_1037a0d: func(a1, a2) begin
+				fOwnerCallbackFrame := a1;
+				fOwnerCallbackSymbol := a2;
+				l2 := [Array: {label: "sid ", type: 'service, opCode: 512, result: nil, form: 'template, data: {arglist: [Array: "dnst", 0], typeList: [Array: 'struct, [Array: 'Array, 'char, 4], 'ulong]}}, {label: "ilid", type: 'option, opCode: 512, result: nil, form: 'template, data: {arglist: [Array: fLinkEntry.linkID], typeList: [Array: 'struct, 'ulong]}}, {label: "ddom", type: 'option, opCode: 512, result: nil, form: 'template, data: {arglist: [Array: (if StrFilled(fLinkEntry.defaultDomain) then fLinkEntry.defaultDomain else ".")], typeList: [Array: 'struct, [Array: 'Array, 'char, 0]]}}];
+				if IsArray(fLinkEntry.DNSServers) then begin
+						local l1;
+						local l2;
+						(foreach l3 in fLinkEntry.DNSServers do begin
+								if InetIsValidIPAddress(l3) then begin
+										AddArraySlot(l2, {label: "dnic", type: 'option, opCode: 512, result: nil, form: 'template, data: {arglist: [Array: l3], typeList: [Array: 'struct, 'ulong]}})
+									end
+							end)
+					end;
+				try begin
+						l2 := fEndpoint:Instantiate(fEndpoint, l2)
+					end onexception |evt.ex| do begin
+						self:MDoOwnerCallback('error, InetGetExceptionError(CurrentException()), nil, nil, nil);
+						return self:DoEvent('Disconnect, [Array: nil, nil])
+					end;
+				fEndpoint.fIsActive := true;
+				fState := 'Connected;
+				if (if IsArray(l2) then (l1 := InetGetOptionFromOptionArray(l2, "sid "))) then begin
+						fProcessPortID := l1.data.arglist[1]
+					end;
+				self:MPurgeExpiredCacheEntries();
+				self:MDoOwnerCallback('Activated, nil, nil, nil, nil);
+				(if (not fQueryQueue:IsEmpty()) then self:DoEvent('ProcessNextQuery, nil))
+			end,
+			kFunction_1038005: func() begin
+				local l1, l2;
+				(try begin
+						(if fQueryCache then (if (l1 := fQueryCache:Query({type: 'index, IndexPath: 'expirationTime, beginKey: 0, endKey: Time()})) then (while (l2 := l1:entry()) do begin
+										EntryRemoveFromSoup(l2);
+										l1:Next()
+									end)))
+					end onexception |evt.ex| do begin
+						nil
+					end)
+			end,
+			kFunction_10381e5: func(a1, a2) begin
+				fOwnerCallbackFrame := a1;
+				fOwnerCallbackSymbol := a2;
+				fState := 'Disconnected;
+				self:MDoOwnerCallback('Deactivated, nil, nil, nil, nil);
+				self:DoEvent('CleanUp, nil)
+			end,
+			kFunction_1038369: func() begin
+				if (not (fQuery := fQueryQueue:DeQueue())) then begin
+						return self:DoEvent('ProcessQuerySkipped, nil)
+					end;
+				if (l1 := self:MFindCacheEntries()) then begin
+						self:MDoClientCallback(fQuery.fClientCallback, [Array: l1, nil]);
+						fQuery := nil;
+						return self:DoEvent('ProcessQuerySkipped, nil)
+					end;
+				l2 := [Array: {label: "dnsq", type: 'option, opCode: 1024, result: nil, form: 'template, data: {arglist: [Array: "dnst", 0, fQuery.fQueryID, (if fQuery.fQueryIPAddress then fQuery.fQueryIPAddress else [Array: 0, 0, 0, 0]), fQuery.fQueryType, (if StrFilled(fQuery.fQueryDomainName) then StrLen(fQuery.fQueryDomainName) else 0), (if StrFilled(fQuery.fQueryDomainName) then fQuery.fQueryDomainName else "")], typeList: [Array: 'struct, [Array: 'Array, 'char, 4], 'ulong, 'ulong, 'ulong, 'ulong, 'ulong, [Array: 'Array, 'char, 0]]}}];
+				local l1;
+				local l2;
+				(for l3 := 1 to 4 do begin
+						AddArraySlot(l2, {label: "rrcd", type: 'option, opCode: 1024, result: nil, form: 'template, data: {arglist: [Array: 0, 0, [Array: 0, 0, 0, 0], [Array: 0, 0, 0, 0], 0, 0, "", ""], typeList: [Array: 'struct, 'short, 'short, [Array: 'Array, 'byte, 4], [Array: 'Array, 'byte, 4], 'ulong, 'ulong, [Array: 'Array, 'char, 0], [Array: 'Array, 'char, 0]]}})
+					end);
+				(try begin
+						fEndpoint:option(l2, self:MBuildCompletionSpec_Option())
+					end onexception |evt.ex| do begin
+						self:DoEvent('ProcessQueryFailure, [Array: InetGetExceptionError(CurrentException())])
+					end)
+			end,
+			kFunction_103874d: func(a1, a2, a3) begin
+				if a3 then begin
+						return self:DoEvent('ProcessQueryFailure, [Array: a3])
+					end;
+				if (a3 := InetGetOptionFromOptionArray(a2, "dnsq").data.arglist[1]) then begin
+						if (a3 <> 0) then begin
+								return self:DoEvent('ProcessQueryFailure, [Array: a3])
+							end
+					end;
+				self:DoEvent('ProcessQuerySuccess, [Array: a2])
+			end,
+			kFunction_103880d: func() begin
+				{_proto: fCompletionSpec_Option, _parent: self}
+			end,
+			kFunction_103886d: func() begin
+				local l1, l2, l3;
+				l3 := [Array: ];
+				try begin
+						if fQueryCache then begin
+								if (l1 := fQueryCache:Query({type: 'multiSlot, IndexPath: [Array: 'queryType, 'queryDomainName, 'queryDefaultDomainName], beginKey: [Array: fQuery.fQueryType, fQuery.fQueryDomainName, fQuery.fQueryDefaultDomainName], endKey: [Array: fQuery.fQueryType, fQuery.fQueryDomainName, fQuery.fQueryDefaultDomainName]})) then begin
+										(while (l2 := l1:entry()) do begin
+												if (l2.expirationTime >= Time()) then begin
+														AddArraySlot(l3, l2)
+													end else begin
+														EntryRemoveFromSoup(l2)
+													end;
+												l1:Next()
+											end)
+									end
+							end
+					end onexception |evt.ex| do begin end;
+				(if (Length(l3) = 0) then nil else l3)
+			end,
+			kFunction_10389c9: func(a1) begin
+				fQueryQueue:EnQueue(a1);
+				self:DoEvent('ProcessNextQuery, nil)
+			end,
+			kFunction_1038a49: func(a1, a2) begin
+				fOwnerCallbackFrame := a1;
+				fOwnerCallbackSymbol := a2;
+				try begin
+						if fEndpoint.fIsActive then begin
+								fEndpoint:Dispose()
+							end
+					end onexception |evt.ex| do begin end;
+				fEndpoint.fIsActive := nil;
+				fState := 'Disconnected;
+				self:MDoOwnerCallback('Deactivated, nil, nil, nil, nil);
+				self:DoEvent('CleanUp, nil)
+			end,
+			kFunction_1038b15: func() begin
+				local l1;
+				(while (l1 := fQueryQueue:DeQueue()) do self:MDoClientCallback(l1.fClientCallback, [Array: nil, -16005]));
+				(fAbort := nil)
+			end,
+			kFunction_1038c25: func(a1) begin
+				l1 := [Array: ];
+				try begin
+						local l1;
+						(for l2 := 1 to (Length(a1) - 1) do begin
+								if (not a1[l2].result) then begin
+										AddArraySlot(l1, self:MAddCacheEntry(a1[l2]))
+									end
+							end)
+					end onexception |evt.ex| do begin end;
+				self:MDoClientCallback(fQuery.fClientCallback, [Array: l1, nil]);
+				fQuery := nil;
+				self:DoEvent('ProcessNextQuery, nil)
+			end,
+			kFunction_1038cdd: func(a1) begin
+				local l1, l2;
+				l1 := (if (a1.data.arglist[1] = 0) then (Time() + 15) else (Time() + (86400 * a1.data.arglist[1])));
+				l2 := {queryType: fQuery.fQueryType, queryDomainName: fQuery.fQueryDomainName, queryDefaultDomainName: fQuery.fQueryDefaultDomainName, expirationTime: l1, type: self:MBuildQueryResultType(fQuery.fQueryType), targetIPAddress: SetClass(a1.data.arglist[2], 'Array), resultIPAddress: SetClass(a1.data.arglist[3], 'Array), targetDomainName: SetClass(a1.data.arglist[6], 'string), resultDomainName: SetClass(a1.data.arglist[7], 'string)};
+				try begin
+						if fQueryCache then begin
+								fQueryCache:AddToDefaultStore(l2)
+							end
+					end onexception |evt.ex| do begin end;
+				l2
+			end,
+			kFunction_1038ed9: func(a1) begin
+				self:MDoClientCallback(fQuery.fClientCallback, [Array: nil, a1]);
+				fQuery := nil;
+				self:DoEvent('ProcessNextQuery, nil)
+			end,
+			kFunction_1038f4d: func() begin
+				self:DoEvent('ProcessNextQuery, nil)
+			end,
+			kFunction_1038fa9: func() begin
+				(if fOwnerCallbackFrame then self:DoEvent('Disconnect, [Array: fOwnerCallbackFrame, fOwnerCallbackSymbol]) else (if fAbort then self:DoEvent('Cancel, nil) else (if (not fQueryQueue:IsEmpty()) then self:DoEvent('ProcessNextQuery, nil))))
+			end,
+			kFunction_103904d: func(a1) begin
+				fQueryQueue:EnQueue(a1)
+			end,
+			kFunction_10390b9: func(a1, a2) begin
+				fOwnerCallbackFrame := a1;
+				(fOwnerCallbackSymbol := a2)
+			end,
+			kFunction_1039111: func() begin
+				fAbort := true;
+				(try begin
+						fEndpoint:Cancel(nil)
+					end onexception |evt.ex.comm| do begin
+						nil
+					end)
+			end,
+			kFunction_1039251: func() begin
+				local l1, l2, l3;
+				l1 := ObjectPkgRef('|Domain Manager:NIE|);
+				// DEVIATION (the NIE built in, romsrc/rex/inetenbl/README.md): 'id, not GetPkgRefInfo(l1).id
+				(if (l2 := GetGlobalVar((l3 := Intern(Stringer([Array: "PkgVars_", 'id]))))) then (if ((l2.fBusyRefCount := (l2.fBusyRefCount - 1)) <= 0) then begin
+							MarkPackageNotBusy(l1);
+							UnDefGlobalVar(l3)
+						end))
+			end,
+			kFunction_10391c5: func() begin
+				fProcessPortID := nil;
+				fAbort := nil;
+				fCCE := nil;
+				fLinkEntry := nil;
+				fOwnerCallbackFrame := nil;
+				fOwnerCallbackSymbol := nil;
+				fQuery := nil;
+				fQueryCache := nil;
+				fQueryCounter := nil;
+				fQueryQueue := nil;
+				fState := nil;
+				call (kFunction_1039251) with ()
+			end,
+			kFunction_103933d: func(a1, a2) begin
+				(if a1 then (try begin
+							Perform(a1.fFrame, a1.fSymbol, a2)
+						end onexception |evt.ex| do begin
+							nil
+						end))
+			end,
+			kFunction_10393a9: func(a1) begin
+				(if ((a1 = 1) or (a1 = 64)) then 1 else 2)
+			end,
+			kLiteral_103616d: {fOwnerCallbackSymbol: nil, class: 'domainService, fQuery: nil, fState: nil, MBuildCallback: kFunction_10365dd, fQueryCache: nil, fLinkEntry: nil, fQueryCounter: nil, GetMailAddressFromName: kFunction_1036835, _proto: @8192, GetAddressFromName: kFunction_10368ed, GetNameFromAddress: kFunction_1036951, fQueryQueue: nil, name: "Domain Resolver", fAbort: nil, description: "Used to resolve internet domain names into internet addresses, and vice versa.", declareSelf: 'DomainManagerFSM, MSkipQuery: kFunction_1036ba1, fCCE: nil, MAddQuery: kFunction_1036dc5, MDoOwnerCallback: kFunction_1036f79, fProcessPortID: nil, CancelRequests: kFunction_1037061, GetMailServerNameFromDomainName: kFunction_10370c9, fsm_private_states: {Genesis: {terminal: true, Create: {action: kFunction_10372c9, nextState: 'ReadyToConnect, nextNoIdle: true}}, ReadyToConnect: {SetCCE: {action: kFunction_1037929, nextNoIdle: true}, SetLinkEntry: {action: kFunction_103797d, nextNoIdle: true}, connect: {action: kFunction_1037a0d, nextState: 'Connected, MPurgeExpiredCacheEntries: kFunction_1038005}, Disconnect: {action: kFunction_10381e5, nextState: 'CleanUp}}, Connected: {ProcessNextQuery: {action: kFunction_1038369, fCompletionSpec_Option: {async: true, reqTimeout: 0, completionScript: kFunction_103874d}, MBuildCompletionSpec_Option: kFunction_103880d, nextState: 'ProcessingQuery, MFindCacheEntries: kFunction_103886d}, AddQuery: {action: kFunction_10389c9}, Disconnect: {action: kFunction_1038a49, nextState: 'CleanUp}, Cancel: {action: kFunction_1038b15}}, ProcessingQuery: {ProcessQuerySuccess: {action: kFunction_1038c25, MAddCacheEntry: kFunction_1038cdd}, ProcessQueryFailure: {action: kFunction_1038ed9}, ProcessQuerySkipped: {action: kFunction_1038f4d}, ProcessNextQuery: {action: kFunction_1038fa9, nextState: 'Connected}, AddQuery: {action: kFunction_103904d}, Disconnect: {action: kFunction_10390b9}, Cancel: {action: kFunction_1039111}}, CleanUp: {CleanUp: {action: kFunction_10391c5, nextState: 'Genesis}}}, MDoClientCallback: kFunction_103933d, fOwnerCallbackFrame: nil, MBuildQueryResultType: kFunction_10393a9},
+			kFunction_1039881: func(a1, a2) begin
+				local l1;
+				if (l1 := InetStartUp():MGetDomainService()) then begin
+						return l1:CancelRequests(l1:MBuildCallback(a1, a2))
+					end;
+				(if a1 then PerformIfDefined(a1, a2, nil))
+			end,
+			kFunction_1039955: func(a1, a2, a3) begin
+				local l1;
+				if (l1 := InetStartUp():MGetDomainService()) then begin
+						return l1:GetAddressFromName(l1:MBuildCallback(a2, a3), a1)
+					end;
+				(if a2 then PerformIfDefined(a2, a3, [Array: nil, -60752]))
+			end,
+			kFunction_10399d1: func(a1, a2, a3) begin
+				local l1;
+				if (l1 := InetStartUp():MGetDomainService()) then begin
+						return l1:GetMailAddressFromName(l1:MBuildCallback(a2, a3), a1)
+					end;
+				(if a2 then PerformIfDefined(a2, a3, [Array: nil, -60752]))
+			end,
+			kFunction_1039a19: func(a1, a2, a3) begin
+				local l1;
+				if (l1 := InetStartUp():MGetDomainService()) then begin
+						return l1:GetMailServerNameFromDomainName(l1:MBuildCallback(a2, a3), a1)
+					end;
+				(if a2 then PerformIfDefined(a2, a3, [Array: nil, -60752]))
+			end,
+			kFunction_1039a61: func(a1, a2, a3) begin
+				local l1;
+				if (l1 := InetStartUp():MGetDomainService()) then begin
+						return l1:GetNameFromAddress(l1:MBuildCallback(a2, a3), a1)
+					end;
+				(if a2 then PerformIfDefined(a2, a3, [Array: nil, -60752]))
+			end,
+			kFunction_1039aa9: func() begin
+				local l1;
+				(if (l1 := InetStartUp():MGetDomainService()) then l1.fProcessPortID)
+			end,
+			kLiteral_103973d: {DNSCancelRequests: kFunction_1039881, DNSGetAddressFromName: kFunction_1039955, DNSGetMailAddressFromName: kFunction_10399d1, DNSGetMailServerNameFromDomainName: kFunction_1039a19, DNSGetNameFromAddress: kFunction_1039a61, DNSGetProcessPortID: kFunction_1039aa9}
+		},
+		func(a1) begin
+			call (kFunction_10393f1) with ('|Domain Manager:NIE|, kLiteral_103616d);
+			RegUnionSoup('|Domain Manager:NIE|, '{name: "Internet DNS Cache", userName: "Internet DNS Cache", userDescr: "This soup is used by the Newton Domain Manager to cache name-address mappings.", ownerApp: |Domain Manager:NIE|, indexes: [Array: {structure: multiSlot, path: [Array: queryType, queryDomainName, queryDefaultDomainName], type: [Array: int, string, string]}, {structure: slot, path: expirationTime, type: int}]});
+			(foreach l1, l2 in kLiteral_103973d do begin
+					functions.(l1) := l2
+				end)
+		end),
+	UnitsRemovedScript: compile(
+		constants: {
+			kFunction_1039881: func(a1, a2) begin
+				local l1;
+				if (l1 := InetStartUp():MGetDomainService()) then begin
+						return l1:CancelRequests(l1:MBuildCallback(a1, a2))
+					end;
+				(if a1 then PerformIfDefined(a1, a2, nil))
+			end,
+			kFunction_1039955: func(a1, a2, a3) begin
+				local l1;
+				if (l1 := InetStartUp():MGetDomainService()) then begin
+						return l1:GetAddressFromName(l1:MBuildCallback(a2, a3), a1)
+					end;
+				(if a2 then PerformIfDefined(a2, a3, [Array: nil, -60752]))
+			end,
+			kFunction_10399d1: func(a1, a2, a3) begin
+				local l1;
+				if (l1 := InetStartUp():MGetDomainService()) then begin
+						return l1:GetMailAddressFromName(l1:MBuildCallback(a2, a3), a1)
+					end;
+				(if a2 then PerformIfDefined(a2, a3, [Array: nil, -60752]))
+			end,
+			kFunction_1039a19: func(a1, a2, a3) begin
+				local l1;
+				if (l1 := InetStartUp():MGetDomainService()) then begin
+						return l1:GetMailServerNameFromDomainName(l1:MBuildCallback(a2, a3), a1)
+					end;
+				(if a2 then PerformIfDefined(a2, a3, [Array: nil, -60752]))
+			end,
+			kFunction_1039a61: func(a1, a2, a3) begin
+				local l1;
+				if (l1 := InetStartUp():MGetDomainService()) then begin
+						return l1:GetNameFromAddress(l1:MBuildCallback(a2, a3), a1)
+					end;
+				(if a2 then PerformIfDefined(a2, a3, [Array: nil, -60752]))
+			end,
+			kFunction_1039aa9: func() begin
+				local l1;
+				(if (l1 := InetStartUp():MGetDomainService()) then l1.fProcessPortID)
+			end,
+			kLiteral_103973d: {DNSCancelRequests: kFunction_1039881, DNSGetAddressFromName: kFunction_1039955, DNSGetMailAddressFromName: kFunction_10399d1, DNSGetMailServerNameFromDomainName: kFunction_1039a19, DNSGetNameFromAddress: kFunction_1039a61, DNSGetProcessPortID: kFunction_1039aa9},
+			kFunction_1039bd9: func(a1) begin
+				local l1;
+				if (l1 := GetGlobalVar('|InetServices:NIE|)) then begin
+						if (Length(RemoveSlot(l1, a1)) = 0) then begin
+								UnDefGlobalVar('|InetServices:NIE|)
+							end
+					end;
+				AddProcrastinatedCall(EnsureInternal('|InetServices:NIE|), GetGlobalFn('SetUserConfig), EnsureInternal([Array: '|InetServices:NIE|, '|InetServices:NIE|]), 3333)
+			end
+		},
+		func(a1) begin
+			(foreach l1, l2 in kLiteral_103973d do begin
+					RemoveSlot(functions, l1)
+				end);
+			UnRegUnionSoup("Internet DNS Cache", '|Domain Manager:NIE|);
+			call (kFunction_1039bd9) with ('|Domain Manager:NIE|)
+		end),
+	_ImportTable: [|Array|: {name: '|Inet Protos:NIE|, major: 1, minor: 0}]
+});
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+installScript_literal1 := same("part[0].installScript.literals[1].literals[8].literals[1]");
+
+GetNameFromAddress_literal6 := same("part[0].UnitsInstalledScript.literals[1].GetNameFromAddress.literals[6]");
+
+action_literal2 := same("part[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.literals[0].literals[2]");
+
+action_literal18 := same("part[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.literals[18]");
+
+action_code := same("part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.SetCCE.action.instructions");
+
+action_literal2_2 := same("part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[2]");
+
+action_literal5 := same("part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[5]");
+
+action_literal10 := same("part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[10]");
+
+action_literal11 := same("part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[11]");
+
+MPurgeExpiredCacheEntries_literal5 := same("part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.MPurgeExpiredCacheEntries.literals[5]");
+
+action_literal9 := same("part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals[9]");
+
+action_literal19 := same("part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals[19]");
+
+UnitsInstalledScript_literal5 := same("part[0].UnitsInstalledScript.literals[5]");
+
+DNSGetAddressFromName_code := same("UnitsInstalledScript_literal5.DNSGetAddressFromName.instructions");

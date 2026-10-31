@@ -1,0 +1,3 @@
+// kosErrorAlertButton1Bounds, and what only it reaches
+
+kosErrorAlertButton1Bounds := {left: 10, top: 55, right: 60, bottom: 70};

@@ -1,0 +1,3 @@
+// txGraphicsRunPrototype, and what only it reaches
+
+txGraphicsRunPrototype := {class: 'graphics, shape: nil};

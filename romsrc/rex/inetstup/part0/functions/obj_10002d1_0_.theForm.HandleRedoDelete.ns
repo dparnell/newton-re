@@ -1,8 +1,0 @@
-@@ 0x1011479
-func(a1) begin
-	RemoveSlot(self.target, a1[0]);
-	targetView:?StartFlush();
-	self:AddUndoAction('HandleUndoDelete, [Array: a1]);
-	self:RedoChildren()
-end
-@@end

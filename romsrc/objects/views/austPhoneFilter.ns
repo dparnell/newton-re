@@ -1,0 +1,24 @@
+// austPhoneFilter, and what only it reaches
+
+austPhoneFilter := {
+	item: "austPhoneFilter",
+	templateArray: [|Array|: @auststdPhoneFilter, @usDefaultPhoneFilter],
+	Init: func(a1) begin
+		self:SetTemplate(@auststdPhoneFilter)
+	end,
+	switch: func(a1, a2) begin
+		self:SetTemplate(templateArray[a1])
+	end,
+	SetupString: func(a1) begin
+		(if HasPath(curTemplate, 'SetupString) then curTemplate:SetupString(self, a1) else a1)
+	end,
+	CleanupString: func(a1) begin
+		(if HasPath(curTemplate, 'CleanupString) then curTemplate:CleanupString(a1) else a1)
+	end,
+	SetTemplate: func(a1) begin
+		self.format := a1.format;
+		self.string := a1.string;
+		self.filters := a1.filters;
+		(self.curTemplate := a1)
+	end
+};

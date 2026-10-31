@@ -1,0 +1,60 @@
+// protoOverview, and what only it reaches
+
+protoOverview := {
+	checkBoxHorzOffset: 0,
+	viewFlags: vVisible + vApplication + vClickable,
+	CheckOn: CheckOn,
+	viewBounds: nil,
+	maxLines: 0,
+	Scroller: func(a1) begin
+		nil
+	end,
+	lineHeight: 32,
+	viewStyle: nil,
+	nothingCheckable: nil,
+	checkScrollability: nil,
+	pieces: nil,
+	items: nil,
+	numLines: 0,
+	CheckOff: CheckOff,
+	hilitedIndex: nil,
+	dividerLine: nil,
+	viewClass: clView,
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	checkBoxVertOffset: 3,
+	scrollOrigin: 0,
+	autoDeselect: nil,
+	selectIndent: 18,
+	CheckState: CheckState,
+	GetTheRightShape: GetTheRightShape,
+	SetupAbstracts: SetupAbstracts,
+	viewScrollUpScript: viewScrollUpScript,
+	viewScrollDownScript: viewScrollDownScript,
+	viewDrawScript: func() begin
+		local l1, l2;
+		if (not viewStyle) then begin
+				viewStyle := {font: viewFont}
+			end;
+		if pieces then begin
+				self:DrawShape(pieces, viewStyle)
+			end;
+		if (if dividerLine then (not nothingCheckable)) then begin
+				self:DrawShape(MakeRect((selectIndent - dividerLine), 0, selectIndent, (maxLines * lineHeight)), '{penPattern: 0, fillPattern: 3})
+			end;
+		(if hilitedIndex then begin
+				(l1 := self:LocalBox()).bottom := lineHeight;
+				self:hiliter((l2 := self:GetHiliteShape(19, l1)), hilitedIndex, 'off)
+			end)
+	end,
+	GetIndexEntry: GetIndexEntry,
+	hiliter: hiliter,
+	viewClickScript: viewClickScript_3,
+	trackOverview: trackOverview,
+	HitItem: func(a1, a2, a3) begin
+		(if (if (a2 < selectIndent) then (not (if items then items[a1].category))) then begin
+				self:SelectItem(a1);
+				true
+			end)
+	end,
+	GetHiliteShape: GetHiliteShape
+};

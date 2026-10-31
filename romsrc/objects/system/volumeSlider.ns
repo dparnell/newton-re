@@ -1,0 +1,75 @@
+// volumeSlider, and what only it reaches
+
+volumeSlider := {
+	userConfigSlot: 'soundVolumeDb,
+	_sound: nil,
+	hwSavy: true,
+	hwMode: nil,
+	hwUpdateFreq: 333,
+	viewSetupFormScript: func() begin
+		local l1;
+		l1 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1]);
+		self.maxValue := (l1[5] + 1);
+		self.dbIncr := (l1[4] / (maxValue - 1));
+		(if (if hwSavy then l1[2]) then begin
+				self.viewFlags := ((viewFlags - 512) + 2);
+				self.viewValue := self:DbToViewValue(GetSystemVolume());
+				self:SetupIdle(hwUpdateFreq)
+			end else (self.viewValue := self:DbToViewValue(GetUserConfig(userConfigSlot))))
+	end,
+	viewIdleScript: func() begin
+		local l1;
+		if ((l1 := self:DbToViewValue(GetSystemVolume())) <> self.viewValue) then begin
+				SetValue(self, 'viewValue, l1)
+			end;
+		return hwUpdateFreq
+	end,
+	DbToViewValue: func(a1) begin
+		max(0, (maxValue - rinttol((a1 / dbIncr))))
+	end,
+	ViewValueToDb: func(a1) begin
+		(if (a1 = 0) then (-32768.0) else ((maxValue - a1) * dbIncr))
+	end,
+	viewSetupDoneScript: func() begin
+		(if (not hwMode) then begin
+				self.userConfigChangeSym := Intern(Stringer([Array: "VolumeSlider.", viewCObject]));
+				RegUserConfigChange(userConfigChangeSym, func(a1) begin
+					self:HandleConfigChange(a1)
+				end)
+			end)
+	end,
+	viewQuitScript: func() begin
+		(if (not hwMode) then UnRegUserConfigChange(userConfigChangeSym))
+	end,
+	HandleConfigChange: func(a1) begin
+		local l1, l2;
+		(if (a1 = 'outputDevice) then begin
+				l1 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1]);
+				SetValue(self, 'maxValue, (l1[5] + 1));
+				(self.dbIncr := (l1[4] / (maxValue - 1)))
+			end else (if (a1 = userConfigSlot) then begin
+					l2 := self:DbToViewValue(GetUserConfig(userConfigSlot));
+					(if (viewValue <> l2) then SetValue(self, 'viewValue, l2))
+				end))
+	end,
+	trackSlider: func() begin
+		local l1;
+		(if (not hwMode) then begin
+				l1 := self:ViewValueToDb(viewValue);
+				(if (userConfigSlot = 'soundVolumeDb) then begin
+						SetSystemVolume(l1);
+						PlaySoundIrregardless(@ratchetSound)
+					end else PlaySoundIrregardlessAtVolume(@ratchetSound, l1))
+			end)
+	end,
+	ChangedSlider: func() begin
+		local l1;
+		l1 := self:ViewValueToDb(viewValue);
+		SetUserConfig(userConfigSlot, l1);
+		self:VolumeChangeAction(l1)
+	end,
+	VolumeChangeAction: func(a1) begin
+		(if (userConfigSlot = 'soundVolumeDb) then self:SysBeep() else (if (userConfigSlot = 'alarmVolumeDb) then PlaySoundIrregardlessAtVolume(GetRegisteredSound(GetUserConfig('alarmSound)), a1)))
+	end,
+	_proto: @protoSlider
+};

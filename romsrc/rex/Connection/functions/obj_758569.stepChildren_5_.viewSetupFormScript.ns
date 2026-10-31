@@ -1,6 +1,0 @@
-@@ 0x7590d9
-func() begin
-	self:SetupViewBounds('Import);
-	self:SetupButton()
-end
-@@end

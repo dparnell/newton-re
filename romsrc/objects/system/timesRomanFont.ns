@@ -1,0 +1,16 @@
+// timesRomanFont, and what only it reaches
+
+timesRomanFont := {
+	name: "Times Roman",
+	encoding: 0,
+	macFontID: 20,
+	psSym: 'timesRomanFont,
+	normal: "Times-Roman",
+	bold: "Times-Bold",
+	italic: "Times-Italic",
+	bolditalic: "Times-BoldItalic",
+	plainData: sfnt('sfnt, "resources/sfnt/4142c9"),
+	boldData: sfnt('sfnt, "resources/sfnt/414af5"),
+	italicData: sfnt('sfnt, "resources/sfnt/415321"),
+	boldItalicData: sfnt('sfnt, "resources/sfnt/415b4d")
+};

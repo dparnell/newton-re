@@ -1,5 +1,0 @@
-@@ 0x51ef9d
-func() begin
-	cntrlPanel:ChangeState()
-end
-@@end

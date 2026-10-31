@@ -1,0 +1,6 @@
+// zero2NineBitmap, and what only it reaches
+
+zero2NineBitmap := {
+	bits: bitmap('bits, "resources/bits/3d6a15.png", "00000000001c015b015b006101640131", 1),
+	bounds: {left: 0, top: 0, right: 208, bottom: 9}
+};

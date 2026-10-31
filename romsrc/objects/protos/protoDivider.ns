@@ -1,0 +1,38 @@
+// protoDivider, and what only it reaches
+
+protoDivider := {
+	viewClass: clView,
+	viewFlags: vVisible + vReadOnly,
+	viewFormat: 0,
+	viewFont: @fontSystem9Bold,
+	viewJustify: vjParentFullH,
+	titleWidth: nil,
+	titleHeight: nil,
+	viewBounds: nil,
+	viewSetupChildrenScript: func() begin
+		if (not titleHeight) then begin
+				titleHeight := FontHeight(viewFont)
+			end;
+		titleWidth := (StrFontWidth(title, viewFont) + 6);
+		divider.viewBounds := SetBounds(0, ((titleHeight div 2) - 1), 0, ((titleHeight div 2) + 2));
+		dividerText.text := title;
+		(dividerText.viewBounds := RelBounds(16, 0, titleWidth, titleHeight))
+	end,
+	debug: 181408,
+	viewChildren: [viewChildren: divider, dividerText],
+	divider: nil,
+	allocateContext: [|Array|: 'divider, divider, 'dividerText, dividerText],
+	dividerText: nil
+};
+
+divider := {_proto: @protoBorder, viewJustify: vjParentFullH, viewBounds: nil, preallocatedContext: 'divider};
+
+dividerText := {
+	viewClass: clTextView,
+	viewFlags: vVisible + vReadOnly,
+	viewJustify: vjCenterH,
+	viewFormat: vfFillWhite,
+	viewBounds: nil,
+	text: nil,
+	preallocatedContext: 'dividerText
+};

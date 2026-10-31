@@ -1,0 +1,58 @@
+// protoKeyboardButton, and what only it reaches
+
+protoKeyboardButton := {
+	viewBounds: {left: 5, top: 0, right: 28, bottom: 13},
+	icon: @keyButtonBitmap,
+	defaultKeyboard: nil,
+	buttonClickScript: func() begin
+		if (not (if defaultKeyboard then GetVariable(self, defaultKeyboard))) then begin
+				defaultKeyboard := _popupKeyboards[0]
+			end;
+		if (if root.currentKeyboard then (root.currentKeyboard <> defaultKeyboard)) then begin
+				if HasPath(root, 'currentKeyboard.keyboardSymbol) then begin
+						defaultKeyboard := root.currentKeyboard.keyboardSymbol
+					end else begin
+						defaultKeyboard := root.currentKeyboard.preallocatedContext
+					end
+			end;
+		l1 := GetVariable(self, defaultKeyboard).userName;
+		local l1;
+		local l2;
+		l2 := (foreach l3 in _popupKeyboards collect begin
+			local l7;
+			GetVariable(self, l3).userName
+		end);
+		if (defaultPos := ArrayPos(l2, l1, 0, nil)) then begin
+				l2[defaultPos] := {item: l1, mark: $\uFC0B, pickable: true}
+			end;
+		(if root.currentKeyboard then self:PopupMenu(l2, nil) else (if (l7 := GetVariable(self, defaultKeyboard)) then l7:Open()))
+	end,
+	pickActionScript: func(a1) begin
+		local l1, l2, l3;
+		l1 := _popupKeyboards[a1];
+		(if (l2 := GetVariable(self, l1)).viewCObject then l2:MoveBehind(nil) else begin
+				if (l3 := GetVariable(self, defaultKeyboard)) then begin
+						l3:Close()
+					end;
+				defaultKeyboard := l1;
+				l2:Open()
+			end)
+	end,
+	SetDefaultKeyboard: func(a1) begin
+		(if ArrayPos(_popupKeyboards, a1, 0, nil) then (defaultKeyboard := a1))
+	end,
+	SetKeyboardList: func(a1, a2) begin
+		local l1;
+		l1 := Clone(GetVariable(self, '_popupKeyboards));
+		if (if (ClassOf(a2) = 'symbol) then (a2 = 'noGlobalKeyboards)) then begin
+				l1 := SetUnion([Array: ], a1, true)
+			end else begin
+				l1 := SetUnion((l1 := SetDifference(l1, a2)), a1, true)
+			end;
+		(self._popupKeyboards := l1)
+	end,
+	GetKeyboardList: func() begin
+		_popupKeyboards
+	end,
+	_proto: @protoPictureButton
+};

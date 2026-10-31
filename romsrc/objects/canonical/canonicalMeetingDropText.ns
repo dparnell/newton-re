@@ -1,0 +1,3 @@
+// canonicalMeetingDropText, and what only it reaches
+
+canonicalMeetingDropText := {text: nil, viewFont: nil, styles: nil, viewBounds: nil, originType: 'meeting};

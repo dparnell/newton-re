@@ -1,0 +1,6 @@
+// handScrollBitmap, and what only it reaches
+
+handScrollBitmap := {
+	bits: bitmap('bits, "resources/bits/3daaa1.png", "00000000000400080008000700180017", 1),
+	bounds: {left: 0, top: 0, right: 16, bottom: 16}
+};

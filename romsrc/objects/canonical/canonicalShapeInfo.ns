@@ -1,0 +1,3 @@
+// canonicalShapeInfo, and what only it reaches
+
+canonicalShapeInfo := {bounds: nil};

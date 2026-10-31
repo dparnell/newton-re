@@ -1,0 +1,13 @@
+// newtShowBar, and what only it reaches
+
+newtShowBar := {
+	_proto: @protoNewShowBar,
+	viewSetupFormScript: func() begin
+		newtAppBase.filterBar := self;
+		inherited:?viewSetupFormScript()
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_10 := same("newtShowBar.viewSetupFormScript.instructions");

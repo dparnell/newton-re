@@ -1,0 +1,3 @@
+// getSerialNumber, and what only it reaches
+
+getSerialNumber := {class: #132, funcPtr: 7048294, numArgs: 0};

@@ -1,6 +1,0 @@
-@@ 0x452e8d
-func() begin
-	self:SetupColumns();
-	inherited:?viewSetupChildrenScript()
-end
-@@end

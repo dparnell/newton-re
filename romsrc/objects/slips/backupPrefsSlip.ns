@@ -1,0 +1,71 @@
+// backupPrefsSlip, and what only it reaches
+
+backupPrefsSlip := {
+	_proto: @prefsSlipProto,
+	whoAmI: 'openBackupPrefsSlip,
+	prefsSlot: 'soupType,
+	prefsArray: 'partialSoups,
+	viewSetupFormScript: func() begin
+		self.soupNameList := GetApplicationNames(godParent:getSrcStore(), true);
+		inherited:?viewSetupFormScript()
+	end,
+	viewChildren: [viewChildren:
+		information,
+		scrollList,
+		prefsSlipProtoItem,
+		{_proto: @protoCancelButton},
+		_defaultButton_8,
+		{
+			viewJustify: vjParentFullH,
+			viewBounds: {left: 23, top: 109, right: -18, bottom: 119},
+			viewFont: @fontSystem10,
+			text: "Backup all packages",
+			viewSetupFormScript: func() begin
+				(self.viewValue := (prefsCache.packageType = 'all))
+			end,
+			viewSetupDoneScript: func() begin
+				local l1, l2;
+				inherited:?viewSetupDoneScript();
+				if (l2 := GetBackupAllPackagesCursor(godParent:getSrcStore())) then begin
+						l1 := l2:entry()
+					end;
+				(if ((not l2) or (not l1)) then self:Hide())
+			end,
+			valueChanged: func() begin
+				prefsCache.packageType := (if viewValue then 'all else 'none);
+				EntryChangeXmit(prefsCache, 'backup)
+			end,
+			_proto: @protoCheckbox
+		}
+	],
+	_defaultButton: nil,
+	allocateContext: [|Array|: 'scrollList, scrollList, '_defaultButton, _defaultButton_8]
+};
+
+_defaultButton_8 := {
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV,
+	viewBounds: {left: -49, top: 0, right: -7, bottom: 0},
+	text: backup,
+	ConfirmCallback: func(a1) begin
+		(if (if a1 then Visible(self:Parent())) then begin
+				if (prefsCache.(prefsSlot) = 'Partial) then begin
+						scrollList:stashItems(soupNameList)
+					end;
+				AddDeferredCall(func() begin
+					self:hilite(nil);
+					base:Close();
+					godParent:doBackup()
+				end, '[Array: ])
+			end else self:hilite(nil))
+	end,
+	buttonClickScript: func() begin
+		self:ConfirmCallback(true)
+	end,
+	preallocatedContext: '_defaultButton,
+	_proto: @protoTextButton
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+buttonClickScript_code_15 := same("_defaultButton_8.buttonClickScript.instructions");

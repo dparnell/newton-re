@@ -1,0 +1,7 @@
+// checkOffBitmap, and what only it reaches
+
+checkOffBitmap := {
+	mask: checkOnBitmapMask,
+	bits: bitmap('bits, "resources/bits/3c893d.png", "000000000004019c019c009e01a700aa", 1),
+	bounds: {left: 0, top: 0, right: 12, bottom: 11}
+};

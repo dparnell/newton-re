@@ -1,0 +1,3 @@
+// protocolInstancePrototype, and what only it reaches
+
+protocolInstancePrototype := {_parent: classinfoEnabler, _instance: nil};

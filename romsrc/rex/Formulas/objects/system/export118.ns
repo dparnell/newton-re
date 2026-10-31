@@ -1,0 +1,101 @@
+// export118, and what only it reaches
+
+export118 := {
+	stepChildren: [stepChildren:
+		clear,
+		export111Item,
+		{
+			title: dateCalculator,
+			viewBounds: {left: 14, top: 0, right: 102, bottom: 16},
+			_proto: @protoTitle
+		},
+		export118Item,
+		export118Item_2,
+		export118Item_3
+	],
+	viewBounds: {left: 0, top: 0, right: 224, bottom: 158},
+	viewSetupDoneScript: func() begin
+		AddArraySlot((FSViews := [Array: ]), StartDateField);
+		AddArraySlot(FSViews, NumberOfDaysField);
+		AddArraySlot(FSViews, EndDateField);
+		inherited:?viewSetupDoneScript()
+	end,
+	formulaSymbol: 'DateCalculator,
+	overview: dateCalculator,
+	DateOutOfRange: func(a1) begin
+		return ((a1 < 0) or (a1 > 103088159))
+	end,
+	_proto: @8303,
+	StartDateField: nil,
+	stepAllocateContext: [|Array|:
+		'StartDateField,
+		export118Item,
+		'NumberOfDaysField,
+		export118Item_2,
+		'EndDateField,
+		export118Item_3
+	],
+	NumberOfDaysField: nil,
+	EndDateField: nil
+};
+
+dateCalculator := "Date Calculator";
+
+export118Item := {
+	calcLineLabel: "ﰁStart Date",
+	ComputeValue: func(a1) begin
+		local l1, l2, l3;
+		l1 := nil;
+		l2 := a1[1];
+		if self:DateOutOfRange((l1 := ((l3 := a1[2]) - (l2 * 1440)))) then begin
+				l1 := nil;
+				self:Notify(3, "Date Calculator", "The calculated date is out of range.")
+			end;
+		return l1
+	end,
+	lineNumber: 0,
+	indent: 93,
+	_proto: @8302,
+	preAllocatedContext: 'StartDateField
+};
+
+export118Item_2 := {
+	calcLineLabel: "# of Days",
+	ComputeValue: func(a1) begin
+		local l1, l2, l3;
+		l1 := a1[0];
+		l2 := nil;
+		return (((l3 := a1[2]) - l1) div 1440)
+	end,
+	integerField: true,
+	indent: 93,
+	lineNumber: 1,
+	viewSetupDoneScript: func() begin
+		inherited:?viewSetupDoneScript();
+		SetKeyView(self.value.value, 9999)
+	end,
+	_proto: @8296,
+	preAllocatedContext: 'NumberOfDaysField
+};
+
+export118Item_3 := {
+	calcLineLabel: "ﰁEnd Date",
+	ComputeValue: func(a1) begin
+		local l1, l2, l3;
+		l1 := a1[0];
+		l2 := a1[1];
+		if self:DateOutOfRange((l3 := (l1 + (l2 * 1440)))) then begin
+				l3 := nil;
+				self:Notify(3, "Date Calculator", "The calculated date is out of range.")
+			end;
+		return l3
+	end,
+	lineNumber: 2,
+	indent: 93,
+	_proto: @8302,
+	preAllocatedContext: 'EndDateField
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+ComputeValue_literal2 := same("export118Item.ComputeValue.literals[2]");

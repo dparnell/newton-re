@@ -1,0 +1,15 @@
+// protoClosebox, and what only it reaches
+
+protoClosebox := {
+	_proto: @protoCancelButton,
+	viewJustify: vjParentRightH + vjParentBottomV,
+	viewBounds: {left: -14, top: -15, right: -1, bottom: -2},
+	viewFormat: 0,
+	icon: @closeboxBitmap,
+	_defaultButtonBounds: {left: 0, top: 0, right: 13, bottom: 13},
+	viewSetupFormScript: func() begin
+		inherited:?viewSetupFormScript();
+		(self.viewFormat := 0)
+	end,
+	debug: 362838
+};

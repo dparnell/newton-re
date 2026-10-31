@@ -1,0 +1,140 @@
+// export117, and what only it reaches
+
+export117 := {
+	stepChildren: [stepChildren:
+		clear,
+		export111Item,
+		{
+			title: currencyExchange,
+			viewBounds: {left: 14, top: 0, right: 102, bottom: 16},
+			_proto: @protoTitle
+		},
+		export117Item,
+		export117Item_2,
+		export117Item_3
+	],
+	viewBounds: {left: 0, top: 0, right: 224, bottom: 193},
+	viewSetupDoneScript: func() begin
+		AddArraySlot((FSViews := [Array: ]), Country1Field);
+		AddArraySlot(FSViews, ExchangeRateField);
+		AddArraySlot(FSViews, Country2Field);
+		inherited:?viewSetupDoneScript();
+		self:ComputeExchangeRate()
+	end,
+	ComputeExchangeRate: compile(
+		constants: {
+			kLiteral_771cbd: "Currency Exchange"
+		},
+		func() begin
+			local l1;
+			l1 := GetExchangeRate(Country1Field.country, Country2Field.country);
+			if (Country1Field.country = Country2Field.country) then begin
+					l1 := 1;
+					self:Notify(3, kLiteral_771cbd, "Choose two different countries to calculate exchange rates.")
+				end;
+			if (l1 = nil) then begin
+					self:ClearAllFields();
+					self:Notify(3, kLiteral_771cbd, ParamStr("The exchange rate between ^0 and ^1 is unknown.", [Array: GetCountryEntry(Country1Field.country)[0].name, GetCountryEntry(Country2Field.country)[0].name]))
+				end;
+			ExchangeRateField:SetNumericValue(l1)
+		end),
+	formulaSymbol: 'CurrencyExchange,
+	viewQuitScript: func() begin
+		local l1;
+		(l1 := self:GetFormulaValues()).(formulaSymbol).country1 := Country1Field.country;
+		l1.(formulaSymbol).country2 := Country2Field.country;
+		inherited:?viewQuitScript()
+	end,
+	viewSetupFormScript: func() begin
+		local l1, l2, l3;
+		inherited:?viewSetupFormScript();
+		if ((l1 := self:GetFormulaValues()).(formulaSymbol).country1 = nil) then begin
+				l2 := 'USA
+			end else begin
+				l2 := l1.(formulaSymbol).country1
+			end;
+		SetValue(Country1Field, 'country, l2);
+		if (l1.(formulaSymbol).country2 = nil) then begin
+				l3 := 'Japan
+			end else begin
+				l3 := l1.(formulaSymbol).country2
+			end;
+		SetValue(Country2Field, 'country, l3);
+		(if (l1.(formulaSymbol) <> nil) then begin
+				l1.(formulaSymbol).values[1] := GetExchangeRate(l2, l3);
+				EntryChange(l1)
+			end)
+	end,
+	overview: currencyExchange,
+	SolveFormula: func(a1) begin
+		inherited:SolveFormula(a1);
+		(if (a1 = 1) then SetExchangeRate(Country1Field.country, Country2Field.country, ExchangeRateField:GetNumericValue()))
+	end,
+	ClearAllFields: func() begin
+		solvingFormula := true;
+		Country1Field:SetNumericValue(nil);
+		Country2Field:SetNumericValue(nil);
+		solvingFormula := nil;
+		(solvedFor := nil)
+	end,
+	_proto: @8303,
+	Country1Field: nil,
+	stepAllocateContext: [|Array|:
+		'Country1Field,
+		export117Item,
+		'ExchangeRateField,
+		export117Item_2,
+		'Country2Field,
+		export117Item_3
+	],
+	ExchangeRateField: nil,
+	Country2Field: nil
+};
+
+currencyExchange := "Currency Exchange";
+
+export117Item := {
+	ComputeValue: func(a1) begin
+		local l1, l2, l3;
+		l1 := a1[0];
+		l2 := a1[1];
+		return ((l3 := a1[2]) / l2)
+	end,
+	country: 'USA,
+	lineNumber: 0,
+	viewSetupDoneScript: func() begin
+		inherited:?viewSetupDoneScript();
+		SetKeyView(self.value.value, 9999)
+	end,
+	_proto: @8301,
+	preAllocatedContext: 'Country1Field
+};
+
+export117Item_2 := {
+	calcLineLabel: "Exchange Rate",
+	ComputeValue: func(a1) begin
+		local l1, l2, l3;
+		l1 := a1[0];
+		l2 := a1[1];
+		return ((l3 := a1[2]) / l1)
+	end,
+	integerField: nil,
+	lineNumber: 1,
+	decimalPlaces: 4,
+	_proto: @8296,
+	preAllocatedContext: 'ExchangeRateField
+};
+
+export117Item_3 := {
+	ComputeValue: func(a1) begin
+		local l1, l2, l3;
+		l1 := a1[0];
+		l2 := a1[1];
+		l3 := a1[2];
+		return (l1 * l2)
+	end,
+	country: 'Japan,
+	lineNumber: 2,
+	_proto: @8301,
+	preAllocatedContext: 'Country2Field
+};

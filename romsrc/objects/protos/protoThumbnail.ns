@@ -1,0 +1,127 @@
+// protoThumbnail, and what only it reaches
+
+protoThumbnail := {
+	viewSetupDoneScript: func() begin
+		self:setup((if tempImage then tempImage else image));
+		(tempImage := nil)
+	end,
+	theShape: nil,
+	viewFormat: vfFrameBlack + vfPen(1),
+	viewgesturescript: func(a1, a2) begin
+		if (a2 = 50) then begin end;
+		true
+	end,
+	viewDrawScript: func() begin
+		self:DrawShape(theShape, '{transferMode: 0})
+	end,
+	greyBox: nil,
+	viewFlags: vVisible + vClipping + vClickable,
+	viewBounds: {left: -2, top: -2, right: -2, bottom: -2},
+	RelocateGreyBox: func(a1) begin
+		local l1;
+		ScaleShape(greyBox, nil, a1.viewBox);
+		OffsetShape(greyBox, a1.offsetX, a1.offsetY);
+		ScaleShape(greyBox, a1.extent, thumbnailBounds);
+		l1 := self:LocalBox();
+		if ((greyBounds := ShapeBounds(greyBox)).left < l1.left) then begin
+				greyBounds.left := l1.left
+			end;
+		if (greyBounds.top < l1.top) then begin
+				greyBounds.top := l1.top
+			end;
+		if (greyBounds.right > l1.right) then begin
+				greyBounds.right := l1.right
+			end;
+		if (greyBounds.bottom > l1.bottom) then begin
+				greyBounds.bottom := l1.bottom
+			end;
+		ScaleShape(greyBox, nil, greyBounds)
+	end,
+	thumbnailBounds: nil,
+	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjParentFullV,
+	Update: func() begin
+		if (self:GetScalingInfo exists) then begin
+				self:RelocateGreyBox(self:GetScalingInfo())
+			end;
+		self:DoDrawing('viewDrawScript, [Array: ]);
+		(needToUpdate := nil)
+	end,
+	thumbnail: nil,
+	viewClickScript: func(a1) begin
+		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
+		if (not (self:ScrollTo exists)) then begin
+				return true
+			end;
+		InkOff(a1);
+		BusyBoxControl(2);
+		self:?PrepareToScroll();
+		l1 := self:GlobalBox();
+		l2 := (GetPoint(0, a1) - l1.left);
+		l3 := (GetPoint(1, a1) - l1.top);
+		l4 := 0;
+		l5 := 0;
+		l7 := ((l6 := self:GetScalingInfo()).extent.right - l6.viewBox.right);
+		l8 := (l6.extent.bottom - l6.viewBox.bottom);
+		l10 := max(min(floor(round(((l9 := max((l6.extent.right / (l1.right - l1.left)), (l6.extent.bottom / (l1.bottom - l1.top)))) * (l2 - ((greyBounds.right - greyBounds.left) div 2))))), l7), 0);
+		l11 := max(min(floor(round((l9 * (l3 - ((greyBounds.bottom - greyBounds.top) div 2))))), l8), 0);
+		(while (not StrokeDone(a1)) do begin
+				l4 := ((GetPoint(4, a1) - l1.left) - l2);
+				l5 := ((GetPoint(5, a1) - l1.top) - l3);
+				l6.offsetX := max(min((l10 + ceiling((l9 * l4))), l7), 0);
+				l6.offsetY := max(min((l11 + ceiling((l9 * l5))), l8), 0);
+				needToUpdate := true;
+				self:LockScreen(true);
+				if trackWhileScrolling then begin
+						self:ScrollTo(l6.offsetX, l6.offsetY);
+						RefreshViews()
+					end;
+				if needToUpdate then begin
+						self:RelocateGreyBox(l6);
+						self:DoDrawing('DrawShape, [Array: theShape, '{transferMode: 0}])
+					end;
+				self:LockScreen(nil)
+			end);
+		needToUpdate := true;
+		l4 := ((GetPoint(4, a1) - l1.left) - l2);
+		l5 := ((GetPoint(5, a1) - l1.top) - l3);
+		self:ScrollTo((l10 + ceiling((l9 * l4))), (l11 + ceiling((l9 * l5))));
+		if needToUpdate then begin
+				self:Update()
+			end;
+		self:?DoneScrolling();
+		true
+	end,
+	viewClass: clView,
+	setup: func(a1) begin
+		local l1, l2, l3;
+		l1 := self:LocalBox();
+		thumbnailBox := MakeShape((thumbnailBounds := FitToBox((l2 := ShapeBounds(a1)), l1, viewJustify)));
+		thumbnail := MakeBitmap((l1.right - l1.left), (l1.bottom - l1.top), nil);
+		DrawIntoBitmap(a1, {transform: [Array: l2, thumbnailBounds]}, thumbnail);
+		ClearVBOCache(thumbnail);
+		(if (self:GetScalingInfo exists) then begin
+				greyBox := MakeShape(RelBounds(0, 0, 1, 1));
+				theShape := [Array: thumbnail, '{pensize: 0, fillPattern: 3, transferMode: 3}, MakeShape(self:LocalBox()), {transferMode: 0, clipping: greyBox}, thumbnail, '{pensize: 2, penPattern: 3, transferMode: 0}, greyBox];
+				(if (l3 := self:GetScalingInfo()) then self:RelocateGreyBox(self:GetScalingInfo()))
+			end else (theShape := thumbnail))
+	end,
+	trackWhileScrolling: true,
+	greyBounds: nil,
+	ToggleThumbnail: func(a1) begin
+		(if ((not a1) or viewCObject) then self:Close() else self:OpenThumbnail(a1))
+	end,
+	OpenThumbnail: func(a1) begin
+		if Visible(self) then begin
+				self:setup(a1);
+				return nil
+			end;
+		tempImage := a1;
+		self:Open()
+	end,
+	tempImage: nil,
+	needToUpdate: nil
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewDrawScript_literal1 := same("protoThumbnail.viewDrawScript.literals[1]");

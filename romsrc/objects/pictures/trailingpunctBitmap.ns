@@ -1,0 +1,3 @@
+// trailingpunctBitmap, and what only it reaches
+
+trailingpunctBitmap := {bits: trailingpunctBitmapBits, bounds: trailingpunctBitmapBounds};

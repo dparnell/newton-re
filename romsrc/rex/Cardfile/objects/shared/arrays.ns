@@ -1,0 +1,5 @@
+// objects several roots reach, none alone (naturalize.py)
+
+newDictionaries := [|Array|: 48, 31];
+
+newDictionaries_2 := [|Array|: 7, 31, 0];

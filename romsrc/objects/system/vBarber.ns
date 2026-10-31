@@ -1,0 +1,12 @@
+// vBarber, and what only it reaches
+
+vBarber := {
+	height: 105,
+	name: 'vBarber,
+	kids: [|Array|:
+		@protoStatusText,
+		@protoStatusBarber,
+		{_proto: @protoTitleText, viewBounds: {left: 10, top: 8, right: 180, bottom: 33}},
+		@protoDefaultStatusButton
+	]
+};

@@ -1,0 +1,119 @@
+// timeIntervalPopup, and what only it reaches
+
+timeIntervalPopup := {
+	stoplabel: "Stop time",
+	Affirmative: func() begin
+		context:?pickActionScript(startTime, stopTime)
+	end,
+	TimeChanged: func() begin
+		startTime := max(basedate, start.Time);
+		Time := min((basedate + (if midnite then 1440 else 1439)), Time);
+		if spread then begin
+				stopTime := (stop.Time := min((basedate + 1440), (startTime + spread)));
+				stop:Refresh()
+			end else begin
+				if ((stopTime := stop.Time) < startTime) then begin
+						stop.Time := (stopTime := startTime);
+						stop:Refresh()
+					end;
+				spread := (stopTime - startTime)
+			end;
+		base:Dirty();
+		context:?NewTime(startTime, stopTime)
+	end,
+	viewDrawScript: func() begin
+		local l1, l2, l3, l4, l5;
+		l1 := self:GetDuration((stopTime - startTime));
+		l2 := 96;
+		l3 := 108;
+		l4 := 0;
+		if (not StrFilled(l1[0])) then begin
+				l3 := (l3 - 6)
+			end else begin
+				l4 := StrFontWidth(l1[0], 10240)
+			end;
+		if (not StrFilled(l1[1])) then begin
+				l2 := (l2 + 6)
+			end else begin
+				l4 := max(l4, StrFontWidth(l1[1], 10240))
+			end;
+		l4 := (((119 - l4) div 2) - 12);
+		self:DrawShape((l5 := [Array: MakeText(startlabel, 0, 0, 123, 16), MakeText(stoplabel, 0, 48, 123, 64), '{font: 10240, justification: center}, MakeText(l1[0], 0, l2, 123, (l2 + 16)), MakeText(l1[1], 0, l3, 123, (l3 + 16)), '{font: 1057792}, MakeText("\uFC01\u", l4, 101, (l4 + 20), 117)]), '{font: 1058816, justification: center})
+	end,
+	startTime: nil,
+	spread: nil,
+	viewBounds: {left: 0, top: 0, right: 123, bottom: 130},
+	_proto: @protoGeneralPopup,
+	increment: 5,
+	stop: nil,
+	startlabel: "Start time",
+	New: func(a1, a2, a3, a4) begin
+		local l1, l2;
+		l1 := self:Init();
+		l2 := (a1[0] + (a2 div 2));
+		l1.startTime := (l2 - (l2 mod a2));
+		l2 := (a1[1] + (a2 div 2));
+		l1.stopTime := (l2 - (l2 mod a2));
+		l1.increment := a2;
+		l1.spread := (l1.stopTime - l1.startTime);
+		l1.context := a4;
+		l1:popup(a3)
+	end,
+	basedate: nil,
+	stepallocatecontext: [|Array|: 'start, start, 'stop, stop_2],
+	pop: [|Array|:
+		{item: minutes, skip: 30},
+		{item: "45 minutes", skip: 45},
+		{item: hour, skip: 60},
+		{item: "1 1/2 hours", skip: 90},
+		{item: "2 hours", skip: 120}
+	],
+	viewSetupFormScript: func() begin
+		start.Time := startTime;
+		stop.Time := stopTime;
+		start.increment := increment;
+		stop.increment := increment;
+		(basedate := (startTime - (startTime mod 1440)))
+	end,
+	stopTime: nil,
+	viewClickScript: func(a1) begin
+		(if (if ((GetPoint(1, a1) - self:GlobalBox().top) > 96) then ((GetPoint(0, a1) - self:GlobalBox().left) < 99)) then DoPopup(pop, 4, 96, self))
+	end,
+	pickActionScript: func(a1) begin
+		spread := pop[a1].skip;
+		stopTime := (stop.Time := (startTime + spread));
+		base:Dirty();
+		stop:Refresh();
+		context:?NewTime(startTime, stopTime)
+	end,
+	stepChildren: [stepChildren: start, stop_2],
+	GetDuration: func(a1) begin
+		DurationStr(a1)
+	end,
+	start: nil
+};
+
+start := {
+	viewBounds: {left: 2, top: 22, right: 121, bottom: 50},
+	viewFormat: 0,
+	wrapping: nil,
+	preallocatedContext: 'start,
+	_proto: @protoDigitalClock
+};
+
+stop_2 := {
+	_proto: @protoDigitalClock,
+	viewBounds: {left: 2, top: 70, right: 121, bottom: 98},
+	viewFormat: 0,
+	midnite: true,
+	wrapping: nil,
+	Advance: func() begin
+		spread := nil;
+		inherited:Advance()
+	end,
+	preallocatedContext: 'stop
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+Advance_code_2 := same("stop_2.Advance.instructions");

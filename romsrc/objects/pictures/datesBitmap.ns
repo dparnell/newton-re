@@ -1,0 +1,29 @@
+// datesBitmap, and what only it reaches
+
+datesBitmap := {
+	unhilited: {
+		bounds: unhilitedBounds_24,
+		mask: bitmap('mask, "resources/mask/542e49.png", "0000000000040000000000000018001d", 1),
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/542f41.png", "0000000000100000000000000018001d", 4),
+				bitdepth: 4
+			},
+			{cbits: colordataCbits_24, bitdepth: 1}
+		]
+	},
+	hilited: {
+		bounds: {left: 0, top: 0, right: 29, bottom: 24},
+		mask: bitmap('mask, "resources/mask/542b45.png", "0000000000040000000000000018001d", 1),
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/542c3d.png", "0000000000100000000000000018001d", 4),
+				bitdepth: 4
+			},
+			{
+				cbits: bitmap('bits, "resources/bits/542bc1.png", "0000000000040000000000000018001d", 1),
+				bitdepth: 1
+			}
+		]
+	}
+};

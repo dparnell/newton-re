@@ -1,5 +1,0 @@
-@@ 0x56933d
-func(a1, a2) begin
-	a1.(a2)
-end
-@@end

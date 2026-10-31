@@ -1,0 +1,53 @@
+// bizCardSquiggle, and what only it reaches
+
+bizCardSquiggle := {
+	bizCardIcon: {
+		bits: bitmap('bits, "resources/bits/7277f5.png", "00000000000800cc00cc004d00e30073", 1),
+		bounds: {left: 0, top: 0, right: 38, bottom: 23}
+	},
+	bizCardNum: 0,
+	name: "bizCardSquiggle",
+	symbol: 'bizCardSquiggle,
+	type: 'bizcard,
+	stepChildren: [stepChildren:
+		{
+			viewBounds: {left: 10, top: 4, right: 0, bottom: 28},
+			viewJustify: vjBottomV + vjParentFullH + vjSiblingBottomV,
+			viewFont: tsFancy + tsSize(18),
+			layouts: layouts_2,
+			reduceFont: true,
+			_proto: @8242
+		},
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 10},
+			viewJustify: vjParentFullH + vjSiblingFullH + vjSiblingBottomV,
+			viewFlags: vVisible,
+			icon: picture('picture, "resources/picture/727a01"),
+			viewFormat: nil,
+			viewClass: clPictureView
+		},
+		{
+			viewJustify: vjCenterV + vjParentFullH + vjSiblingFullH + vjSiblingBottomV,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 16},
+			viewFont: tsFancy + tsSize(12),
+			layouts: layouts,
+			_proto: @8242
+		},
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 51},
+			viewFont: tsFancy + tsSize(10),
+			viewJustify: vjCenterV + vjParentFullH + vjSiblingFullH + vjSiblingBottomV,
+			layouts: layouts_3,
+			_proto: @8242
+		},
+		{
+			viewBounds: {top: -55, left: 0, right: 0, bottom: -3},
+			viewFont: tsFancy + tsSize(10),
+			viewJustify: vjCenterV + vjParentFullH + vjParentBottomV + vjSiblingFullH,
+			layouts: layouts_4,
+			showMultipleData: true,
+			_proto: @8242
+		}
+	],
+	_proto: @8236
+};

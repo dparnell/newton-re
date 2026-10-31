@@ -1,0 +1,3 @@
+// paragraphCodebook2, and what only it reaches
+
+paragraphCodebook2 := texttable('Comp, "resources/Comp/63dedd.txt");

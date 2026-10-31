@@ -1,0 +1,65 @@
+// country, and what only it reaches
+
+country := {
+	description: "Tap the index tabs and arrows to find the country you are in. Then tap the country to choose it.",
+	titleTExt: "Specify \u000dyour Country",
+	TearDown: func() begin
+		(if IsSoupEntry(fPersona) then EntryChangeXmit(fPersona, '|Setup:Newton|))
+	end,
+	stepChildren: [stepChildren: nameItem, countryItem],
+	declareSelf: 'pickBase,
+	viewSetupDoneScript: func() begin
+		pickBase:Refresh();
+		SetKeyView(self, 0)
+	end,
+	Refresh: func() begin
+		nil
+	end,
+	debug: "country",
+	_proto: @8353,
+	vPicker: nil,
+	stepAllocateContext: [|Array|:
+		'_defaultButton,
+		nameItem_2,
+		'vGoBackButton,
+		nameItem_3,
+		'vCloser,
+		nameItem_4,
+		'vFeedback,
+		nameItem_5,
+		'vPicker,
+		countryItem
+	],
+	preAllocatedContext: 'CountryPicker
+};
+
+countryItem := {
+	viewFlags: vVisible + vClipping + vClickable,
+	viewBounds: {left: 0, top: 105, right: 160, bottom: 283},
+	viewJustify: vjParentCenterH,
+	PickWorld: func(a1) begin
+		mapCountry := a1.symbol;
+		fPersona.country := a1.name;
+		fWorkSite.countrySymbol := a1.symbol;
+		fWorkSite.country := a1.name;
+		fWorkworksite.countrySymbol := a1.symbol;
+		fWorkworksite.country := a1.name;
+		SetLocale(a1.symbol);
+		pickBase:Refresh()
+	end,
+	autoClose: nil,
+	shortCircuit: true,
+	viewSetupFormScript: func() begin
+		local l1;
+		if StrFilled(fPersona.country) then begin
+				initialSpot := fPersona.country
+			end else begin
+				if (if (l1 := GetCountryEntry(GetUserConfig('countrySlot))) then (Length(l1) > 0)) then begin
+						initialSpot := l1[0].name
+					end
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	_proto: @countryLocPicker,
+	preAllocatedContext: 'vPicker
+};

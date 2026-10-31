@@ -1,0 +1,6 @@
+// routeReply, and what only it reaches
+
+routeReply := {
+	bits: bitmap('bits, "resources/bits/4639dd.png", "000000000004009f009f004c00ae0061", 1),
+	bounds: {left: 0, top: 0, right: 21, bottom: 15}
+};

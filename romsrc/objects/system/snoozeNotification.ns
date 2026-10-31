@@ -1,0 +1,30 @@
+// snoozeNotification, and what only it reaches
+
+snoozeNotification := {
+	_proto: @messageNotification,
+	viewChildren: [viewChildren:
+		snoozeNotificationItem,
+		timeStampField,
+		snoozeNotificationItem_2,
+		{
+			viewJustify: 8388742,
+			text: "  Snooze",
+			viewBounds: {left: 3, top: -18, right: 48, bottom: -5},
+			viewSetupFormScript: func() begin
+				(base._defaultButton := self)
+			end,
+			viewQuitScript: func() begin
+				RemoveSlot(base, '_defaultButton)
+			end,
+			buttonClickScript: func() begin
+				popup := (foreach l1 in snoozeARoos collect (if (l1 = 60) then "1 hour" else (if (l1 = 1440) then "1 day" else (if (l1 < 60) then ParamStr("^0 minutes", [Array: l1]) else (if (l1 < 1440) then ParamStr("^0 hours", ([Array: l1] div 60)) else ParamStr("^0 days", ([Array: l1] div 1440)))))));
+				inherited:buttonClickScript()
+			end,
+			pickActionScript: func(a1) begin
+				notification:YouSnoozeYouLose(snoozeARoos[a1]);
+				inherited:?pickActionScript(a1)
+			end,
+			_proto: @protoPopupButton
+		}
+	]
+};

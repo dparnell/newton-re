@@ -1,0 +1,7 @@
+// vGauge, and what only it reaches
+
+vGauge := {
+	height: 105,
+	name: 'vGauge,
+	kids: [|Array|: @protoStatusText, @protoStatusGauge, @protoTitleText, @protoDefaultStatusButton]
+};

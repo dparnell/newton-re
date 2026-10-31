@@ -1,0 +1,45 @@
+// objects several roots reach, none alone (naturalize.py)
+
+touchtonePadProtoItem := [|Array|: 8, 8, @dtmf1, $1, 288360456, @dtmf2, $2, 288360456, @dtmf3, $3, 288360456];
+
+touchtonePadProtoItem_2 := [|Array|: 8, 8, @dtmf4, $4, 288360456, @dtmf5, $5, 288360456, @dtmf6, $6, 288360456];
+
+touchtonePadProtoItem_3 := [|Array|: 8, 8, @dtmf7, $7, 288360456, @dtmf8, $8, 288360456, @dtmf9, $9, 288360456];
+
+touchtonePadProtoItem_4 := [|Array|: 8, 8, @dtmfStar, $*, 288360456, @dtmf0, $0, 288360456, @dtmfpound, $#, 288360456];
+
+phonePadItem := [|Array|: 8, 8, $x, $x, 288360456, del, $\u0008, 288360456];
+
+phonePadItem_2 := [|Array|: 8, 8, @keyLeftParenBitmap, $(, 288360456, @keyRightParenBitmap, $), 288360456];
+
+phonePadItem_3 := [|Array|: 8, 8, @keyslashBitmap, $/, 288360456, @keyBulletBitmap, $\u2022, 288360456];
+
+phonePadItem_4 := [|Array|: 8, 8, @keyCommaBitmap, $,, 288360456, @keyPeriodBitmap, $., 288360456];
+
+phonePadItem_5 := [|Array|: 8, 8, @keyMinusBitmap, $-, 288360456, @keyPlusBitmap, $+, 288360456];
+
+page2GutsViewChildren := [|Array|:
+	{
+		viewClass: clView,
+		viewBounds: nil,
+		viewFlags: vVisible + vReadOnly,
+		viewFormat: 0,
+		viewJustify: vjParentCenterH + vjReflow,
+		viewSetupFormScript: func() begin
+			(self.viewBounds := self:Parent():LocalBox())
+		end,
+		viewSetupChildrenScript: func() begin
+			local l1;
+			if (if (not kids) then data) then begin
+					(l1 := self:LocalBox()).bottom := (l1.bottom - 60);
+					kids := ReFlow(data, '{reflowFont: 12289, unistyle: nil, graphicsGutter: 16, textGutter: -16, viewLineSpacing: 28}, fields.targetBox, l1)
+				end;
+			(if kids then (self.stepChildren := ArrayMunger([Array: ], 0, 0, kids, reflowStart, nil)))
+		end,
+		viewSetupDoneScript: func() begin
+			(if self.stepChildren then (reflowStart := (reflowStart + Length(self.stepChildren))))
+		end
+	}
+];
+
+_tagList := [|Array|: '_icon, '_noBackup];

@@ -1,5 +1,0 @@
-@@ 0x42afa1
-func() begin
-	(self.viewValue := vars.(valuePath))
-end
-@@end

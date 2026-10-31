@@ -1,7 +1,0 @@
-@@ 0x1046ac9
-func() begin
-	local l1;
-	(while InetStartUp():MGetLinkEntryByLinkID((l1 := Ticks())) do Sleep(1));
-	l1
-end
-@@end

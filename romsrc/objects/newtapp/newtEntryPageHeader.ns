@@ -1,0 +1,25 @@
+// newtEntryPageHeader, and what only it reaches
+
+newtEntryPageHeader := {
+	viewClass: clView,
+	viewFlags: vVisible + vClickable,
+	viewBounds: newtEntryPageHeaderViewBounds,
+	viewJustify: vjParentFullH,
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	pieces: nil,
+	hasFiling: nil,
+	resizable: nil,
+	headerIcon: @infoBitmap,
+	headerText: nil,
+	infoBox: @newtInfoBox,
+	info: nil,
+	viewSetupFormScript: viewSetupFormScript_2,
+	GetTitle: GetTitle,
+	viewDrawScript: viewDrawScript_3,
+	InfoChanged: InfoChanged,
+	InfoClosed: InfoClosed,
+	viewQuitScript: viewQuitScript_2,
+	Popit: Popit,
+	viewClickScript: viewClickScript_4,
+	viewChildren: nil
+};

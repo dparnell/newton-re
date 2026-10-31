@@ -1,6 +1,0 @@
-@@ 0x4b8e8d
-func(a1) begin
-	dataCursor:Goto(ResolveEntryAlias(a1.id));
-	self:DoRetarget()
-end
-@@end

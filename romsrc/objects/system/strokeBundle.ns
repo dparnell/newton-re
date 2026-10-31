@@ -1,0 +1,3 @@
+// strokeBundle, and what only it reaches
+
+strokeBundle := {class: 'strokeBundle, bounds: nil, strokes: nil};

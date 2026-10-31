@@ -1,0 +1,3 @@
+// callSlip, and what only it reaches
+
+callSlip := {};

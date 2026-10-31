@@ -1,0 +1,24 @@
+// datetimeStrSpecs, and what only it reaches
+
+datetimeStrSpecs := {
+	longDateStrSpec: 11582026,
+	abbrDateStrSpec: 11614802,
+	yearMonthDayStrSpec: 180969,
+	yearMonthStrSpec: 2827,
+	dayStrSpec: 80466,
+	monthDayStrSpec: 745,
+	numericDateStrSpec: 183017,
+	numericMDStrSpec: 2793,
+	numericYearStrSpec: 44,
+	longMonthStrSpec: 11,
+	abbrMonthStrSpec: 19,
+	numericDayStrSpec: 41,
+	longDayOfWeekStrSpec: 10,
+	abbrDayOfWeekStrSpec: 18,
+	longTimeStrSpec: 10922700,
+	shortTimeStrSpec: 170636,
+	shortestTimeStrSpec: 2666,
+	hourStrSpec: 41,
+	minuteStrSpec: 42,
+	secondStrSpec: 43
+};

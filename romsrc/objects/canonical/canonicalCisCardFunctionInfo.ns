@@ -1,0 +1,3 @@
+// canonicalCisCardFunctionInfo, and what only it reaches
+
+canonicalCisCardFunctionInfo := {cisFunctionId: -1, cisFunctionExts: [|Array|: ]};

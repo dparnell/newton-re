@@ -1,0 +1,18 @@
+// newtCheckAllButton, and what only it reaches
+
+newtCheckAllButton := {
+	viewBounds: {left: -36, top: 0, right: -1, bottom: 14},
+	keyButton: nil,
+	text: "ﰋAll",
+	buttonClickScript: func() begin
+		(if (newtAppBase.currentLayout = 'overview) then begin
+				if layout.checkAllPrimed then begin
+						layout:UnCheckAll()
+					end else begin
+						layout:checkAll()
+					end;
+				(layout.checkAllPrimed := (not layout.checkAllPrimed))
+			end)
+	end,
+	_proto: @protoTextButton
+};

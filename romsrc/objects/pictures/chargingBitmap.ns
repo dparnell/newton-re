@@ -1,0 +1,7 @@
+// chargingBitmap, and what only it reaches
+
+chargingBitmap := {
+	mask: bitmap('mask, "resources/mask/3c92d5.png", "00000000000801b701b700b801c000dc", 1),
+	bits: bitmap('bits, "resources/bits/3c9339.png", "00000000000801b701b700b801c000dc", 1),
+	bounds: {left: 0, top: 0, right: 36, bottom: 9}
+};

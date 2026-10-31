@@ -1,0 +1,34 @@
+// crumpleBitmaps, and what only it reaches
+
+crumpleBitmaps := [|Array|:
+	{
+		mask: bitmap('mask, "resources/mask/3d6d65.png", "0000000000040049004901a1006501be", 1),
+		bits: bitmap('bits, "resources/bits/3d6df1.png", "0000000000040049004901a1006501be", 1),
+		bounds: {left: 0, top: 0, right: 29, bottom: 28}
+	},
+	{
+		mask: bitmap('mask, "resources/mask/3d6eb1.png", "000000000004006f006f01a1008b01be", 1),
+		bits: bitmap('bits, "resources/bits/3d6f3d.png", "000000000004006f006f01a1008b01be", 1),
+		bounds: {left: 0, top: 0, right: 29, bottom: 28}
+	},
+	{
+		mask: bitmap('mask, "resources/mask/3d6ffd.png", "0000000000040096009601a100b201be", 1),
+		bits: bitmap('bits, "resources/bits/3d7089.png", "0000000000040096009601a100b201be", 1),
+		bounds: {left: 0, top: 0, right: 29, bottom: 28}
+	},
+	{
+		mask: bitmap('mask, "resources/mask/3d7149.png", "00000000000400bb00bb01a100d701be", 1),
+		bits: bitmap('bits, "resources/bits/3d71d5.png", "00000000000400bb00bb01a100d701be", 1),
+		bounds: {left: 0, top: 0, right: 29, bottom: 28}
+	},
+	{
+		mask: bitmap('mask, "resources/mask/3d7295.png", "00000000000400df00df01a100fb01be", 1),
+		bits: bitmap('bits, "resources/bits/3d7321.png", "00000000000400df00df01a100fb01be", 1),
+		bounds: {left: 0, top: 0, right: 29, bottom: 28}
+	},
+	{
+		mask: bitmap('mask, "resources/mask/3d73e1.png", "0000000000040105010501a1012101be", 1),
+		bits: bitmap('bits, "resources/bits/3d746d.png", "0000000000040105010501a1012101be", 1),
+		bounds: {left: 0, top: 0, right: 29, bottom: 28}
+	}
+];

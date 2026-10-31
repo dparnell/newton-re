@@ -1,0 +1,3 @@
+// protoPolygonView, and what only it reaches
+
+protoPolygonView := {viewClass: clPolygonView, _proto: @protoView};

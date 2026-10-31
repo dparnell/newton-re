@@ -1,0 +1,7 @@
+// noMarkupBitmap, and what only it reaches
+
+noMarkupBitmap := {
+	mask: onWithMask,
+	bits: bitmap('bits, "resources/bits/3d6675.png", "0000000000040058005800a2006900b3", 1),
+	bounds: {left: 0, top: 0, right: 17, bottom: 17}
+};

@@ -1,0 +1,7 @@
+// dockerBitmap, and what only it reaches
+
+dockerBitmap := {
+	mask: bitmap('mask, "resources/mask/3d645d.png", "000000000004001100110078002e0093", 1),
+	bits: bitmap('bits, "resources/bits/3d64ed.png", "000000000004001100110078002e0093", 1),
+	bounds: {left: 0, top: 0, right: 27, bottom: 29}
+};

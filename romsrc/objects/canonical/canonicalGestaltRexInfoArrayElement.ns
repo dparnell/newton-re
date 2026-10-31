@@ -1,0 +1,14 @@
+// canonicalGestaltRexInfoArrayElement, and what only it reaches
+
+canonicalGestaltRexInfoArrayElement := {
+	signatureA: nil,
+	signatureB: nil,
+	checksum: nil,
+	headerVersion: nil,
+	manufacturer: nil,
+	version: nil,
+	length: nil,
+	id: nil,
+	start: nil,
+	count: nil
+};

@@ -1,5 +1,0 @@
-@@ 0x758269
-func(a1) begin
-	(selectedTranslator := a1)
-end
-@@end

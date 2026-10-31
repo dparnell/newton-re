@@ -1,0 +1,6 @@
+// kbdOptionBitmap, and what only it reaches
+
+kbdOptionBitmap := {
+	bits: bitmap('bits, "resources/bits/3d7911.png", "000000000004005f005f009f006500ae", 1),
+	bounds: {left: 0, top: 0, right: 15, bottom: 6}
+};

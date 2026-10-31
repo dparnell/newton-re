@@ -1,0 +1,29 @@
+// undoBitmap, and what only it reaches
+
+undoBitmap := {
+	unhilited: {
+		bounds: unhilitedBounds_26,
+		mask: bitmap('mask, "resources/mask/543ad5.png", "00000000000400000000000000180015", 1),
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/543bcd.png", "00000000000c00000000000000180015", 4),
+				bitdepth: 4
+			},
+			{cbits: colordataCbits_26, bitdepth: 1}
+		]
+	},
+	hilited: {
+		bounds: {left: 0, top: 0, right: 21, bottom: 24},
+		mask: bitmap('mask, "resources/mask/543831.png", "00000000000400000000000000180015", 1),
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/543929.png", "00000000000c00000000000000180015", 4),
+				bitdepth: 4
+			},
+			{
+				cbits: bitmap('bits, "resources/bits/5438ad.png", "00000000000400000000000000180015", 1),
+				bitdepth: 1
+			}
+		]
+	}
+};

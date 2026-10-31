@@ -1,0 +1,131 @@
+// default_3, and what only it reaches
+
+default_3 := {
+	viewFlags: vVisible,
+	viewFormat: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	stepChildren: [stepChildren:
+		{
+			path: 'group,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+			viewLineSpacing: 32,
+			label: "Group Name",
+			flavor: flavor,
+			newRecFlags: 8428033,
+			_proto: @newtLabelInputLine
+		},
+		{
+			viewSetupFormScript: func() begin
+				l1 := [Array: ];
+				labelCommands := [Array: ];
+				local l1;
+				(foreach l2, l3 deeply in _dataDefs do begin
+						if (if (l3.superSymbol = 'groupTransport) then (not SetContains(l1, l2))) then begin
+								AddArraySlot(labelCommands, {item: l3.name, symbol: l2});
+								SetAdd(l1, l2, nil)
+							end
+					end);
+				inherited:?viewSetupFormScript()
+			end,
+			textSetup: func() begin
+				if ((l1 := ClassOf(target.members)) = 'Array) then begin
+						l1 := peoplePicker.dataClass
+					end;
+				local l1;
+				(foreach l2 in labelCommands do begin
+						if (l2.symbol = l1) then begin
+								return l2.item
+							end
+					end)
+			end,
+			labelActionScript: func(a1) begin
+				local l1;
+				(if (peoplePicker.dataClass <> (l1 := labelCommands[a1].symbol)) then peoplePicker:ChangeDataClass(l1))
+			end,
+			viewJustify: 8396976,
+			viewBounds: {left: 0, top: 6, right: 0, bottom: 30},
+			text: "Group Type",
+			_proto: @protoLabelPicker
+		},
+		default_3Item,
+		selectedOnly
+	],
+	viewJustify: vjParentFullH + vjParentFullV,
+	name: "Group Info",
+	symbol: 'default,
+	type: 'editor,
+	noKeyboard: true,
+	infoFrame: {
+		checkPrefix: [|Array|: true, nil],
+		checkPaths: [|Array|: 'group, 'members],
+		showEmptyData: true,
+		formatFunc: func(a1) begin
+			local l1;
+			if (not StrFilled((l1 := ParamStr("^?0^0||", a1)))) then begin
+					l1 := "Untitled Group"
+				end;
+			l1
+		end
+	},
+	protection: 'private,
+	viewClass: clView,
+	peoplePicker: nil,
+	stepAllocateContext: [|Array|: 'peoplePicker, default_3Item, 'selectedOnly, selectedOnly],
+	selectedOnly: nil
+};
+
+default_3Item := {
+	viewBounds: {top: 72, left: 0, right: 0, bottom: -24},
+	viewSetupFormScript: func() begin
+		local l1;
+		self.selected := target.members;
+		if (ClassOf(target.members) = 'Array) then begin
+				SetClass(target.members, dataClass)
+			end;
+		self.dataClass := ClassOf(target.members);
+		if (self.reviewSelections := (target.groupInfo.nowShowing = 'selected)) then begin
+				selectedOnly.viewValue := true
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjParentFullV,
+	selected: nil,
+	querySpec: {
+		type: 'index,
+		IndexPath: 'sorton,
+		validTest: func(a1) begin
+			local l1;
+			((((not (l1 := a1.class)) or IsSubclass(l1, 'person)) or IsSubclass(l1, 'company)) or IsSubclass(l1, 'owner))
+		end
+	},
+	suppressNew: true,
+	viewQuitScript: func() begin
+		inherited:?viewQuitScript();
+		target.members := (if selected then selected else [Array: ]);
+		SetClass(target.members, dataClass);
+		if (Length(target.members) > 0) then begin
+				target.groupInfo.nowShowing := nowShowing
+			end;
+		self:StartFlush()
+	end,
+	dataClass: '|nameRef.fax|,
+	suppressCloseBox: true,
+	viewFlags: vVisible + vClickable,
+	suppressSelOnlyCheckbox: true,
+	suppressOutline: true,
+	suppressCounter: true,
+	suppressFind: true,
+	_proto: @protoPeoplePicker,
+	preAllocatedContext: 'peoplePicker
+};
+
+selectedOnly := {
+	viewBounds: {left: 0, top: -20, right: 100, bottom: -5},
+	text: "Selected Only",
+	viewJustify: vjParentCenterH + vjParentBottomV,
+	valueChanged: func() begin
+		peoplePicker:SetNowShowing((if viewValue then 'selected else 'all))
+	end,
+	_proto: @protoCheckbox,
+	preAllocatedContext: 'selectedOnly
+};

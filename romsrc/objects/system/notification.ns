@@ -1,0 +1,142 @@
+// notification, and what only it reaches
+
+notification := {
+	maxNotifications: 8,
+	ShowItem: func(a1, a2) begin
+		local l1;
+		l1 := self:AddItem(a1, a2);
+		if ((a1.nfType = 5) or (a1.nfType = 6)) then begin
+				self:ModalDialog()
+			end else begin
+				if modalstate() then begin
+						self:FilterDialog()
+					end else begin
+						self:Open()
+					end
+			end;
+		l1
+	end,
+	AddItem: func(a1, a2) begin
+		local l1, l2;
+		if (not IsValid((l1 := a1.sound))) then begin
+				l1 := 'simpleBeep
+			end;
+		if (if l1 then (l1 <> '_stfu)) then begin
+				if (ClassOf(l1) = 'symbol) then begin
+						l1 := GetRegisteredSound(l1)
+					end;
+				PlaySoundIrregardlessAtVolume(l1, a1.volume)
+			end;
+		if (not (l2 := LFetch(Notifications, a1, 0, func(a1, a2) begin
+			(if (not a2.seenByUser) then self:IsSimilarItem(a1, a2))
+		end, nil))) then begin
+				ArrayInsert(Notifications, a1, 0);
+				if a2 then begin
+						self:MarkItemSeen(0, nil)
+					end;
+				if (Length(Notifications) > maxNotifications) then begin
+						SetLength(Notifications, maxNotifications)
+					end;
+				l2 := a1
+			end;
+		if viewCObject then begin
+				self:SyncView();
+				roll.index := 0;
+				roll:RedoChildren();
+				self:MoveBehind('skip);
+				if gyreOn then begin
+						self:GyreStart()
+					end
+			end;
+		l2
+	end,
+	IsSimilarItem: func(a1, a2) begin
+		((a1 = a2) or (if (if (a1.nfType = a2.nfType) then StrEqual(a1.overview, a2.overview)) then StrEqual(a1.nfText, a2.nfText)))
+	end,
+	MarkItemSeen: func(a1, a2) begin
+		local l1;
+		if (not (l1 := Notifications[a1]).seenByUser) then begin
+				l1.seenByUser := true
+			end;
+		(if (if (if (if a2 then viewCObject) then (roll.index = a1)) then (not roll.allCollapsed)) then AddDeferredSend(self, 'Close, nil))
+	end,
+	viewQuitScript: func() begin
+		self:MarkItemSeen(roll.index, nil);
+		(foreach l1 in Notifications do begin
+				if (not l1.seenByUser) then begin
+						SetRemove(Notifications, l1);
+						AddDeferredSend(self, 'ShowItem, [Array: l1, nil]);
+						break
+					end
+			end);
+		inherited:?viewQuitScript()
+	end,
+	snoozeARoos: [|Array|: 5, 9, 15, 30, 60, 1440],
+	YouSnoozeYouLose: func(a1) begin
+		local l1, l2, l3;
+		l1 := Time();
+		l2 := roll.index;
+		l3 := Notifications[l2];
+		self:MarkItemSeen(l2, nil);
+		AddAlarm(Stringer([Array: l1, ":snooze"]), (l1 + a1), [Array: l3.overview, l3.nfText], nil, nil);
+		AddDeferredSend(self, 'Close, nil)
+	end,
+	debug: 78008,
+	preallocatedContext: 'notification,
+	viewChildren: [viewChildren:
+		roll,
+		{
+			viewFormat: vfFillWhite,
+			viewBounds: {left: -25, top: -25, right: -12, bottom: -12},
+			_proto: @protoClosebox
+		}
+	],
+	roll: nil,
+	allocateContext: [|Array|: 'roll, roll],
+	_proto: @protoNotifyForm,
+	_cacheContext: {
+		_parent: nil,
+		_proto: nil,
+		viewCObject: nil,
+		roll: nil,
+		viewclipper: nil,
+		base: nil,
+		gyreCount: nil,
+		viewFlags: vApplication + vFloating
+	}
+};
+
+roll := {
+	viewFlags: vVisible + vApplication + vClipping,
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewFormat: 0,
+	viewBounds: {left: 15, top: 15, right: -15, bottom: -25},
+	viewSetupFormScript: func() begin
+		(self.items := Notifications)
+	end,
+	viewScrollUpScript: func() begin
+		if (not allCollapsed) then begin
+				self:MarkItemSeen(index, nil)
+			end;
+		inherited:?viewScrollUpScript()
+	end,
+	viewScrollDownScript: func() begin
+		if (not allCollapsed) then begin
+				self:MarkItemSeen(index, nil)
+			end;
+		inherited:?viewScrollDownScript()
+	end,
+	viewOverviewScript: func() begin
+		if (not allCollapsed) then begin
+				self:MarkItemSeen(index, nil)
+			end;
+		inherited:?viewOverviewScript()
+	end,
+	debug: 2542296,
+	preallocatedContext: 'roll,
+	_proto: @protoRoll
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewScrollUpScript_code_2 := same("roll.viewScrollUpScript.instructions");

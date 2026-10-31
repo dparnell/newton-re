@@ -1,0 +1,3 @@
+// canTimeFilter, and what only it reaches
+
+canTimeFilter := {_proto: @usTimeFilter, format: format};

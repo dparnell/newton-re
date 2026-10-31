@@ -1,5 +1,0 @@
-@@ 0x104d449
-func(a1) begin
-	(InetIPStringToAddress(a1) <> nil)
-end
-@@end

@@ -1,6 +1,0 @@
-@@ 0x521cf5
-func() begin
-	self.text := NumberStr(fields.body.nPages);
-	(fields.toPage := fields.body.nPages)
-end
-@@end

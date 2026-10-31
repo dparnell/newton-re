@@ -1,5 +1,0 @@
-@@ 0x100dc29
-func() begin
-	self:FindService(curDevice)
-end
-@@end

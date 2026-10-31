@@ -1,6 +1,0 @@
-@@ 0x101773d
-func(a1) begin
-	self:?DoErrorCallback("Endpoint Instantiate", a1);
-	self:DoEvent('CleanUp, nil)
-end
-@@end

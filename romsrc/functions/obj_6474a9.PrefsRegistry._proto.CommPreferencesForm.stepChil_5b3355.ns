@@ -1,5 +1,0 @@
-@@ 0x5b3355
-func() begin
-	(clusterValue := GetUserConfig('dialing))
-end
-@@end

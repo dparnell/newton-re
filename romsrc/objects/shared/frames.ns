@@ -1,0 +1,1662 @@
+// objects several roots reach, none alone (naturalize.py)
+
+CheckOn := {
+	mask: CheckOnMask,
+	bits: bitmap('bits, "resources/bits/3c8a6d.png", "00000000000400340034001300410020", 1),
+	bounds: {left: 0, top: 0, right: 13, bottom: 13}
+};
+
+CheckOff := {
+	mask: CheckOnMask,
+	bits: bitmap('bits, "resources/bits/3c8af1.png", "00000000000400190019001300260020", 1),
+	bounds: {left: 0, top: 0, right: 13, bottom: 13}
+};
+
+caretpunctBitmapBounds := {left: 0, top: 0, right: 43, bottom: 163};
+
+leadingpunctBitmapBounds := {left: 0, top: 0, right: 63, bottom: 25};
+
+midpunctBitmapBounds := {left: 0, top: 0, right: 43, bottom: 47};
+
+trailingpunctBitmapBounds := {left: 0, top: 0, right: 63, bottom: 69};
+
+entryLine := {
+	_proto: @protoInputLine,
+	viewJustify: 8388800,
+	viewFont: tsHWFont + tsSize(12),
+	viewFormat: vfLinesGray,
+	viewChangedScript: func(a1, a2) begin
+		(if (a1 = 'text) then self:textChanged())
+	end,
+	preallocatedContext: 'entryLine
+};
+
+labelLine := {
+	_proto: @protoStaticText,
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewFormat: vfRound(3),
+	viewJustify: 8388608,
+	viewClickScript: func(a1) begin
+		(if (if (not self:labelClick(a1)) then labelCommands) then begin
+				if self:TrackHilite(a1) then begin
+						self:Popit()
+					end;
+				true
+			end)
+	end,
+	preallocatedContext: 'labelLine
+};
+
+SoundProgressSlider := {
+	viewJustify: vjSiblingBottomV,
+	viewBounds: {left: 7, top: 3, right: 127, bottom: 14},
+	_sound: nil,
+	minValue: 0,
+	maxValue: 60,
+	viewValue: 0,
+	startSeconds: nil,
+	playTime: nil,
+	elapsedTime: 0,
+	viewSetupFormScript: func() begin
+		(startSeconds := TimeInSeconds())
+	end,
+	ResetSlider: func() begin
+		elapsedTime := 0;
+		self:SetRecordStart()
+	end,
+	SlideToRight: func() begin
+		self:SetAndUpdate(maxValue)
+	end,
+	SetRecordStart: func() begin
+		playTime := nil;
+		startSeconds := (TimeInSeconds() - elapsedTime);
+		self:SetCurrentTime()
+	end,
+	PauseSlider: func() begin
+		(elapsedTime := (TimeInSeconds() - startSeconds))
+	end,
+	SetPlayStart: func(a1) begin
+		if ((playTime := a1) < 1) then begin
+				playTime := 1
+			end;
+		startSeconds := (TimeInSeconds() - elapsedTime);
+		self:SetCurrentTime()
+	end,
+	SetCurrentTime: func() begin
+		local l1, l2, l3;
+		l1 := (TimeInSeconds() - startSeconds);
+		l2 := (maxValue - minValue);
+		self:SetAndUpdate((l3 := (if playTime then ceiling(((l1 * l2) / playTime)) else (l1 mod l2))))
+	end,
+	getElapsedTime: func() begin
+		(if (elapsedTime > 0) then elapsedTime else (TimeInSeconds() - startSeconds))
+	end,
+	SetAndUpdate: func(a1) begin
+		viewValue := a1;
+		self:Dirty();
+		RefreshViews();
+		(elapsedTime := 0)
+	end,
+	preallocatedContext: 'SoundProgressSlider,
+	_proto: @protoGauge
+};
+
+timeField := {
+	_proto: @protoGlance,
+	viewSetupFormScript: func() begin
+		self.text := ParamStr(" ^0        Battery", [Array: DateNTime(Time())]);
+		(self.viewBounds := RelBounds(25, 2, (StrFontWidth(self.text, viewFont) + 50), 13))
+	end,
+	viewChildren: [viewChildren:
+		{
+			_proto: @protoGauge,
+			viewBounds: {left: -45, top: 1, right: -4, bottom: -1},
+			viewJustify: vjParentRightH + vjParentFullV,
+			viewSetupFormScript: func() begin
+				(self.viewValue := BatteryLevel(0))
+			end
+		}
+	],
+	preallocatedContext: 'timeField
+};
+
+protoDraggerViewBounds := {left: 10, top: 10, right: 200, bottom: 100};
+
+protoAppItem := {_proto: @protoTitle};
+
+protoLatitudePickerItem := {
+	viewBounds: {left: -23, top: 0, right: 0, bottom: 28},
+	icon: @digitflaploWord,
+	totalFrames: 2,
+	Advance: func(a1) begin
+		inherited:Advance((-2 * value))
+	end,
+	increment: 0,
+	GetIndex: func(a1) begin
+		(if (a1 >= 0) then 0 else 1)
+	end,
+	viewSetupFormScript: func() begin
+		(digits := compass)
+	end,
+	_proto: @protoDigit
+};
+
+protoLatitudePickerItem_2 := {
+	viewBounds: {left: -29, top: 0, right: -6, bottom: 28},
+	icon: @digitflaploWord,
+	Advance: func(a1) begin
+		inherited:Advance((if (value < 0) then (-a1) else a1))
+	end,
+	increment: 1,
+	GetIndex: func(a1) begin
+		(abs(a1) mod 10)
+	end,
+	nextDigit: 'minutes10,
+	_proto: @protoDigit
+};
+
+minutes10 := {
+	viewBounds: {left: -22, top: 0, right: 0, bottom: 28},
+	icon: @digitflap,
+	Advance: func(a1) begin
+		inherited:Advance((if (value < 0) then (-a1) else a1))
+	end,
+	increment: 10,
+	GetIndex: func(a1) begin
+		((abs(a1) mod 60) div 10)
+	end,
+	nextDigit: 'hours1,
+	preallocatedContext: 'minutes10,
+	_proto: @protoDigit
+};
+
+hours1 := {
+	viewBounds: {left: -29, top: 0, right: -6, bottom: 28},
+	icon: @digitflaploWord,
+	Advance: func(a1) begin
+		inherited:Advance((if (value < 0) then (-a1) else a1))
+	end,
+	increment: 60,
+	GetIndex: func(a1) begin
+		((abs(a1) div 60) mod 10)
+	end,
+	nextDigit: 'hours10,
+	preallocatedContext: 'hours1,
+	_proto: @protoDigit
+};
+
+hours10 := {
+	viewBounds: {left: -22, top: 0, right: 0, bottom: 28},
+	icon: @digitflap,
+	Advance: func(a1) begin
+		inherited:Advance((if (value < 0) then (-a1) else a1))
+	end,
+	increment: 600,
+	GetIndex: func(a1) begin
+		((abs(a1) div 600) mod 10)
+	end,
+	preallocatedContext: 'hours10,
+	_proto: @protoDigit
+};
+
+gauge := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 9},
+	viewJustify: vjParentFullH,
+	viewSetupFormScript: func() begin
+		nil
+	end,
+	preallocatedContext: 'gauge,
+	_proto: @protoGauge
+};
+
+scrollers := {
+	viewJustify: vjParentRightH + vjParentCenterV + vjParentClip,
+	viewFlags: vReadOnly,
+	ScrollRect: nil,
+	DataRect: nil,
+	ViewRect: nil,
+	viewScroll2DScript: func(a1, a2) begin
+		local l1, l2;
+		l1 := self:Parent();
+		if (self:GetArrow(a1) = 'more) then begin
+				l2 := Ticks();
+				l1:Scroll(a1);
+				RefreshViews();
+				if ((l2 := (Ticks() - l2)) < scrollingSleepTime) then begin
+						Sleep((scrollingSleepTime - l2))
+					end
+			end;
+		l1:SetScrollers()
+	end,
+	preallocatedContext: 'scrollers,
+	_proto: @protoUpDownScroller
+};
+
+snoozeNotificationItem := {
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewJustify: 8388656,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 14},
+	viewFont: @fontSystem10Bold,
+	viewSetupFormScript: func() begin
+		(self.text := Stringer([Array: $\uFC05, overview]))
+	end,
+	viewClickScript: func(a1) begin
+		timeStampField:Open();
+		true
+	end,
+	_proto: @protoStaticText
+};
+
+timeStampField := {
+	viewJustify: vjCenterV,
+	viewSetupFormScript: func() begin
+		self.text := Stringer([Array: $ , DateNTime(timestamp)]);
+		(self.viewBounds := RelBounds(15, 0, StrFontWidth(text, viewFont), 12))
+	end,
+	preallocatedContext: 'timeStampField,
+	_proto: @protoGlance
+};
+
+snoozeNotificationItem_2 := {
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewSetupFormScript: func() begin
+		self.text := nfText;
+		(self.viewBounds := SetBounds(0, 14, 0, 0))
+	end,
+	_proto: @protoStaticText
+};
+
+zoneChooserProto := {
+	_proto: @protoFloater,
+	viewFlags: vApplication + vFloating + vClickable,
+	currentSelection: nil,
+	selectedIndex: nil,
+	selectedZoneIndex: nil,
+	appleTalkOpen: nil,
+	chooserNBPTable: nil,
+	formOpen: nil,
+	PowerOffScript: func(a1) begin
+		(if (a1 = 'okToPowerOff) then true else (if (a1 = 'PowerOff) then self:CloseAndNotify(nil)))
+	end,
+	viewSetupFormScript: func() begin
+		formOpen := true;
+		AddPowerOffHandler(self)
+	end,
+	deferredSetupScript: func() begin
+		local l1, l2;
+		l1 := 0;
+		if formOpen then begin
+				if (not appleTalkOpen) then begin
+						l1 := OpenAppleTalk()
+					end;
+				if (l1 <> 0) then begin
+						if (l1 = -12014) then begin
+								l2 := "The chooser can not be opened because AppleTalk is already in use."
+							end else begin
+								l2 := ParamStr("There is a problem opening the chooser. (^0)", [Array: self:TranslateError(l1)])
+							end;
+						self:CloseAndNotify(l2)
+					end else begin
+						appleTalkOpen := true
+					end
+			end;
+		return (if formOpen then appleTalkOpen)
+	end,
+	viewQuitScript: func() begin
+		RemovePowerOffHandler(self);
+		notifyOnClose := nil;
+		chooserNBPTable := nil;
+		startSelection := nil;
+		currentSelection := nil;
+		currentZone := nil;
+		headerText := nil;
+		lookForText := nil;
+		(nbpLookupName := nil)
+	end,
+	selectCellInTable: func() begin
+		local l1;
+		(if (selectedIndex <> nil) then (if (if ((l1 := theTable:ChildViewFrames()) <> nil) then (selectedIndex < Length(l1))) then theTable:selectThisCell(l1[selectedIndex])))
+	end,
+	CloseAndNotify: func(a1) begin
+		formOpen := nil;
+		if chooserNBPTable then begin
+				chooserNBPTable:stopScript()
+			end;
+		if appleTalkOpen then begin
+				CloseAppleTalk();
+				appleTalkOpen := nil
+			end;
+		if (a1 <> nil) then begin
+				self:Notify(3, "Chooser", a1)
+			end;
+		base:Close()
+	end,
+	showError: func(a1) begin
+		self:CloseAndNotify(ParamStr("The chooser found a problem...(^0).", [Array: NumberStr(a1)]))
+	end,
+	timesUpScript: func() begin
+		(if (BatteryStatus(0).acPower = 'yes) then return true else begin
+				self:CloseAndNotify("The chooser has been closed to conserve battery power.");
+				return nil
+			end)
+	end
+};
+
+startupMsg_2Proto := {
+	_proto: @protoStaticText,
+	viewJustify: 8393222,
+	viewBounds: {left: 0, top: 0, right: 115, bottom: 13},
+	text: uCardPositionAlertButton,
+	viewSetupFormScript: func() begin
+		local l1;
+		(if (lookForText exists) then begin
+				self.text := ParamStr("Looking for ^0...", [Array: lookForText]);
+				l1 := StrFontWidth(self.text, viewFont);
+				(self.viewBounds := RelBounds(0, 0, l1, 13))
+			end)
+	end
+};
+
+zoneChooserProto_2 := {
+	_proto: @protoStaticText,
+	text: uCardPositionAlertButton,
+	viewSetupFormScript: func() begin
+		local l1, l2;
+		(if (headerText exists) then begin
+				text := ParamStr("Select a ^0", [Array: headerText]);
+				l2 := self.viewBounds;
+				l1 := StrFontWidth(self.text, viewFont);
+				(self.viewBounds := RelBounds(l2.left, l2.top, l1, ((l2.bottom - l2.top) + 1)))
+			end)
+	end
+};
+
+theTable_2Proto := {
+	_proto: @protoTable,
+	viewJustify: vjParentBottomV,
+	viewBounds: {left: 10, top: -135, right: 180, bottom: -43},
+	visibleItems: 7,
+	def: @protoTableDef,
+	entryProto: {
+		_proto: @protoTableEntry,
+		viewClickScript: func(a1) begin
+			timeoutCounter := 300000;
+			inherited:viewClickScript(a1);
+			(selectedIndex := (self.vIndex - vOrg))
+		end
+	},
+	currentNames: 0,
+	currentChecks: 0,
+	nbpCookie: nil,
+	idleFrequency: 200,
+	getIdleFrequency: func(a1) begin
+		if (a1 = 0) then begin
+				idleFrequency := 200
+			end else begin
+				if (a1 = 1) then begin
+						idleFrequency := 1000
+					end else begin
+						idleFrequency := 3000
+					end
+			end;
+		return idleFrequency
+	end,
+	CopyNBPNamesToTable: func() begin
+		local l1, l2;
+		def.tabValues := NBPGetNames(nbpCookie);
+		Sort(def.tabValues, '|str<|, nil);
+		def.tabDown := (if (def.tabValues <> nil) then Length(def.tabValues) else 0);
+		if (def.tabDown > 7) then begin
+				nbpScroller.ScrollRect := (nbpScroller.DataRect := SetBounds(0, 0, 0, def.tabDown));
+				l1 := true
+			end else begin
+				nbpScroller:Hide()
+			end;
+		if (currentSelection <> nil) then begin
+				if ((l2 := FindStringInArray(def.tabValues, currentSelection)) <> nil) then begin
+						if (l2 >= visibleItems) then begin
+								vOrg := min(l2, (def.tabDown - visibleItems))
+							end else begin
+								vOrg := 0
+							end;
+						selectedIndex := (l2 - vOrg);
+						nbpScroller.yPos := vOrg;
+						l1 := true
+					end
+			end;
+		if l1 then begin
+				nbpScroller:AdjustArrows();
+				nbpScroller:Show()
+			end;
+		theTable:RedoChildren();
+		self:selectCellInTable()
+	end,
+	viewIdleScript: func() begin
+		local l1, l2;
+		l2 := 0;
+		l1 := 0;
+		if formOpen then begin
+				currentChecks := (currentChecks + 1);
+				if nbpCookie then begin
+						l1 := NBPGetCount(nbpCookie)
+					end;
+				if (l1 > currentNames) then begin
+						if Visible(startupMsg) then begin
+								startupMsg:Hide()
+							end;
+						currentNames := l1;
+						self:CopyNBPNamesToTable()
+					end;
+				if (currentChecks > 20) then begin
+						l2 := self:getIdleFrequency(2)
+					end else begin
+						if (currentChecks > 4) then begin
+								l2 := self:getIdleFrequency(1)
+							end else begin
+								l2 := self:getIdleFrequency(0)
+							end
+					end
+			end;
+		return l2
+	end,
+	viewSetupFormScript: func() begin
+		currentNames := 0;
+		currentChecks := 0;
+		chooserNBPTable := self;
+		(def := Clone(def)).tabProtos := entryProto;
+		def.tabWidths := 170;
+		if def.indentX then begin
+				def.tabWidths := (def.tabWidths - def.indentX)
+			end;
+		self.viewBounds := Clone(viewBounds);
+		self.viewBounds.bottom := (viewBounds.top + (((7 * FontHeight(viewFont)) - 7) + 1));
+		(if (startSelection <> nil) then (currentSelection := GetNames(startSelection)))
+	end,
+	startScript: func() begin
+		local l1, l2;
+		def.tabValues := nil;
+		selectedIndex := nil;
+		selectedCells := [Array: ];
+		vOrg := 0;
+		nbpScroller.yPos := 0;
+		nbpScroller:AdjustArrows();
+		if (currentZone = nil) then begin
+				l1 := "*"
+			end else begin
+				l1 := currentZone
+			end;
+		l2 := 0;
+		if (not nbpCookie) then begin
+				nbpCookie := NBPStart(Stringer([Array: nbpLookupName, l1]))
+			end else begin
+				l2 := -12310
+			end;
+		if (not nbpCookie) then begin
+				l2 := -12000
+			end;
+		if (l2 <> 0) then begin
+				self:showError(l2)
+			end else begin
+				if formOpen then begin
+						currentChecks := 0;
+						currentNames := 0;
+						theTable:SetupIdle(self:getIdleFrequency(0));
+						self:CopyNBPNamesToTable()
+					end
+			end;
+		return l2
+	end,
+	stopScript: func() begin
+		local l1;
+		l1 := 0;
+		if nbpCookie then begin
+				theTable:SetupIdle(0);
+				l1 := NBPStop(nbpCookie);
+				nbpCookie := nil
+			end;
+		if (l1 <> 0) then begin
+				self:showError(l1)
+			end;
+		return l1
+	end,
+	viewScroll2DScript: func(a1, a2) begin
+		timeoutCounter := 300000;
+		inherited:viewScroll2DScript(a1, a2);
+		RefreshViews()
+	end
+};
+
+nbpScroller_2Proto := {
+	_proto: @protoUpDownScroller,
+	viewJustify: vjParentBottomV,
+	viewBounds: {left: 185, top: -108, right: 203, bottom: -75},
+	ViewRect: {left: 0, top: 0, right: 0, bottom: 7},
+	viewSetupDoneScript: func() begin
+		scrollView := theTable;
+		inherited:?viewSetupDoneScript()
+	end
+};
+
+showBarText := {
+	_proto: {
+		_proto: @protoTextButton,
+		viewFormat: vfFillWhite,
+		viewBounds: nil,
+		viewJustify: 8388626,
+		viewFont: tsSystem + tsSize(10) + tsBold,
+		text: nil,
+		width: nil,
+		folderList: nil,
+		unfiled: "Unfiled ^0",
+		viewSetupFormScript: func() begin
+			self:RedoText()
+		end,
+		viewDrawScript: func() begin
+			self:CopyBits(leftBits, 0, 0, nil);
+			self:CopyBits(rightBits, (width - rightBits.bounds.right), 0, nil)
+		end,
+		viewHiliteScript: func(a1) begin
+			local l1, l2;
+			l1 := self:LocalBox();
+			l2 := leftHiliteBits.bounds.right;
+			self:DrawShape([Array: OffsetShape(MakeShape(leftHiliteBits), l1.left, 1), MakeRect((l1.left + l2), 0, (l1.right - l2), l1.bottom), OffsetShape(MakeShape(rightHiliteBits), (l1.right - l2), 1)], '{transferMode: 2, penPattern: 0, fillPattern: 5});
+			true
+		end,
+		buttonClickScript: func() begin
+			l3 := GetVariable((l2 := (l1 := self:GetTargetInfo('Filing)).targetView), 'labelsFilter);
+			l4 := GetVariable(l2, 'localFoldersOnly);
+			l5 := GetVariable(l2, 'systemFoldersToo);
+			folderList := GetAppFolderSyms(GetVariable(l2, 'appSymbol), l4, l5);
+			(l6 := Array((4 + Length(folderList)), nil))[0] := {item: (if (l2:AppObjectUnfiled exists) then GetVariable(l2, 'AppObjectUnfiled) else ParamStr(unfiled, [Array: GetVariable(l2, 'appObject)[1]])), mark: (if (not l3) then $\uFC0B else $ )};
+			l6[1] := 'pickseparator;
+			l7 := 2;
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			local l6;
+			local l7;
+			(foreach l8 in folderList do begin
+					if (l3 = l8) then begin
+							l6[l7] := {item: GetFolderStr(l8), mark: $\uFC0B}
+						end else begin
+							l6[l7] := GetFolderStr(l8)
+						end;
+					l7 := (l7 + 1)
+				end);
+			l6[(Length(l6) - 2)] := 'pickseparator;
+			l6[(Length(l6) - 1)] := {item: GetVariable(l2, 'AppAll), mark: (if (l3 = '_all) then $\uFC0B else $\n)};
+			l10 := GetStores();
+			if (if (l2:storesFilter exists) then (Length(l10) > 1)) then begin
+					l11 := GetVariable(l2, 'storesFilter);
+					l12 := (Length(l6) + 1);
+					SetLength(l6, ((l12 + Length(l10)) + 2));
+					l6[(l12 - 1)] := 'picksolidseparator;
+					local l10;
+					local l11;
+					local l12;
+					(foreach l7, l13 in l10 do begin
+							local l15;
+							if (not StrFilled((l15 := l13:GetName()))) then begin
+									l15 := "Unnamed Card"
+								end;
+							if (l11 = l13) then begin
+									l6[(l12 + l7)] := {item: l15, mark: $\uFC0B}
+								end else begin
+									l6[(l12 + l7)] := l15
+								end
+						end);
+					l6[(Length(l6) - 2)] := 'pickseparator;
+					l6[(Length(l6) - 1)] := {item: "All Stores", mark: (if (not l11) then $\uFC0B else $\n)}
+				end;
+			DoPopup(l6, 0, 2, self)
+		end,
+		viewClickScript: func(a1) begin
+			(if self:TrackHilite(a1) then self:buttonClickScript())
+		end,
+		SetNewFilter: func(a1, a2, a3) begin
+			AddUndoAction('SetNewFilter, [Array: a1, a2, GetVariable(a1, a2)]);
+			SetVariable(a1, a2, a3);
+			self:hilite(nil);
+			self:SyncView();
+			(if (a1:NewFilingFilter exists) then a1:NewFilingFilter(a2) else a1:?FilterChanged())
+		end,
+		pickActionScript: func(a1) begin
+			local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
+			l2 := (l1 := self:GetTargetInfo('Filing)).targetView;
+			l3 := GetStores();
+			l7 := (((l6 := ((l5 := (((l4 := 2) + Length(folderList)) - 1)) + 4)) + Length(l3)) - 1);
+			l8 := GetVariable(l2, 'labelsFilter);
+			l9 := GetVariable(l2, 'storesFilter);
+			l10 := l8;
+			l11 := l9;
+			if (a1 = 0) then begin
+					l10 := nil
+				end else begin
+					if (a1 <= l5) then begin
+							l10 := folderList[(a1 - l4)]
+						end else begin
+							if (a1 = (l5 + 2)) then begin
+									l10 := '_all
+								end else begin
+									if (a1 <= l7) then begin
+											l11 := l3[(a1 - l6)]
+										end else begin
+											if (a1 = (l7 + 2)) then begin
+													l11 := nil
+												end
+										end
+								end
+						end
+				end;
+			if (l10 <> l8) then begin
+					self:SetNewFilter(l2, 'labelsFilter, l10)
+				end;
+			if (l11 <> l9) then begin
+					self:SetNewFilter(l2, 'storesFilter, l11)
+				end;
+			self:pickCancelledScript()
+		end,
+		pickCancelledScript: func() begin
+			folderList := nil;
+			self:hilite(nil)
+		end
+	},
+	preallocatedContext: 'showBarText
+};
+
+information := {
+	viewJustify: vjParentFullH,
+	viewBounds: {left: 7, top: 5, right: -7, bottom: 18},
+	viewFont: @fontSystem10Bold,
+	text: "Information",
+	_proto: @protoStaticText
+};
+
+scrollList := {
+	viewFlags: vVisible + vClipping + vClickable,
+	viewFormat: vfFrameBlack + vfPen(2),
+	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjSiblingBottomV,
+	viewBounds: {left: 18, top: 5, right: -18, bottom: 67},
+	useMultipleSelections: true,
+	useScrollers: true,
+	checkAll: nil,
+	HiliteLine: func(a1) begin
+		if (prefsCache.(prefsSlot) = 'all) then begin
+				prefsCache.(prefsSlot) := 'Partial
+			end;
+		inherited:HiliteLine(a1);
+		(if (Length(selectedItems) = Length(ListItems)) then (checkAll := true) else (checkAll := nil))
+	end,
+	viewQuitScript: func() begin
+		if (prefsCache.(prefsSlot) = 'Partial) then begin
+				self:stashItems(soupNameList)
+			end;
+		EntryChangeXmit(prefsCache, 'backup)
+	end,
+	stashItems: stashItems,
+	viewSetupFormScript: func() begin
+		inherited:?viewSetupFormScript();
+		if (l1 := soupNameList) then begin
+				l3 := LSearch(l1, 'otherFrame, 0, '|=|, 'class)
+			end;
+		if l3 then begin
+				l2 := l1[l3];
+				RemoveSlot(l1, l3);
+				local l1;
+				local l2;
+				local l3;
+				(foreach l4 in l2.soups do begin
+						BInsert(l1, {name: l4, soups: [Array: l4]}, '|str<|, '[pathExpr: name], nil)
+					end)
+			end;
+		self.ListItems := [Array: ];
+		self.selectedItems := [Array: ];
+		self.checkAll := (prefsCache.(prefsSlot) = 'all);
+		self:figureAllItems(ListItems, selectedItems);
+		self:SetupList()
+	end,
+	preallocatedContext: 'scrollList,
+	_proto: @protoTextList
+};
+
+prefsSlipProtoItem := {
+	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingBottomV,
+	viewBounds: {left: 0, top: 7, right: 36, bottom: 20},
+	text: all,
+	buttonClickScript: func() begin
+		local l1;
+		if (not (l1 := scrollList).checkAll) then begin
+				prefsCache.(prefsSlot) := 'all
+			end else begin
+				prefsCache.(prefsSlot) := 'Partial;
+				prefsCache.(prefsArray) := [Array: ]
+			end;
+		l1.checkAll := (not l1.checkAll);
+		EntryChangeXmit(prefsCache, 'backup);
+		l1:figureAllItems(l1.ListItems, l1.selectedItems);
+		l1:RedoChildren()
+	end,
+	_proto: @protoTextButton
+};
+
+touchtonePadProto := {
+	keySound: nil,
+	typewriter: @typewriter,
+	newt_feature: true,
+	keyPressScript: func(a1) begin
+		local l1;
+		if (a1 = $*) then begin
+				l1 := 10
+			end else begin
+				if (a1 = $#) then begin
+						l1 := 11
+					end else begin
+						if (if ((l1 := ORD(a1)) >= 48) then (l1 <= 57)) then begin
+								l1 := (l1 - 48)
+							end else begin
+								l1 := nil
+							end
+					end
+			end;
+		if (if l1 then (not GetLocale().speakerless)) then begin
+				if (GetVolume() > 0) then begin
+						PlaySoundAtVolume(@dialTones[l1], 4)
+					end
+			end else begin
+				playsound(typewriter)
+			end;
+		nil
+	end,
+	viewBounds: {left: 0, top: 0, right: 129, bottom: 121},
+	keyResultsAreKeycodes: nil,
+	keyDefinitions: [|Array|:
+		touchtonePadProtoItem,
+		touchtonePadProtoItem_2,
+		touchtonePadProtoItem_3,
+		touchtonePadProtoItem_4,
+		[|Array|: 2, 2, nil, nil, -536868862],
+		[|Array|:
+			6,
+			6,
+			@kbdTabBitmap,
+			$\u0009,
+			288359942,
+			$\u0020,
+			$\u0020,
+			288361478,
+			@kbdLeftBitmap,
+			$\u001c,
+			288359942,
+			@kbdRightBitmap,
+			$\u001d,
+			288359942
+		]
+	],
+	debug: 22045,
+	_proto: @protoKeypad
+};
+
+soupQuery := {type: 'index, indexPath: 'timestamp};
+
+newtEntryPageHeaderViewBounds := {left: 0, top: 0, right: 0, bottom: 15};
+
+menuRightButtonsDefProto := {
+	viewBounds: {left: -24, top: 0, right: -7, bottom: 13},
+	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingTopV,
+	debug: 303504,
+	_proto: @newtRoutingButton
+};
+
+menuRightButtonsDefProto_2 := {
+	viewBounds: {left: -24, top: 0, right: -7, bottom: 13},
+	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingTopV,
+	_proto: @newtFilingButton
+};
+
+lockedIcon := {
+	bits: bitmap('bits, "resources/bits/4b7dc5.png", "0000000000040022002200300030003b", 1),
+	bounds: {left: 0, top: 0, right: 11, bottom: 14}
+};
+
+_previewButtonProto := {
+	text: preview,
+	viewBounds: {left: 11, top: 0, right: 59, bottom: 13},
+	viewJustify: 8388614,
+	viewSetupFormScript: func() begin
+		(viewBounds := DeepClone(viewBounds)).top := (((envelopeHeight + bottomIndent) - 19) - 2);
+		(viewBounds.bottom := (viewBounds.top + 13))
+	end,
+	preview: func(a1) begin
+		local l1, l2;
+		(if (transport:SetupFormat(a1) <> nil) then self:Notify(3, "Print", "The print format for this item is missing") else begin
+				GetCurrentFormat(a1):LastChanceToSetup(a1);
+				(l2 := BuildContext(@pagePreviewForm)).fields := a1;
+				l2:Open()
+			end)
+	end,
+	buttonClickScript: func() begin
+		self:preview(fields)
+	end,
+	_proto: @protoTextButton
+};
+
+fineprintIcon := {
+	bits: bitmap('bits, "resources/bits/4cc2d9.png", "00000000000c00c800c8005c00e100bb", 1),
+	bounds: {left: 0, top: 0, right: 95, bottom: 25}
+};
+
+smallIcon_3 := {bits: todoBits, bounds: {left: 0, top: 0, right: 14, bottom: 11}};
+
+paperroll := {
+	_proto: @newtStationery,
+	symbol: 'paperroll,
+	name: note,
+	superSymbol: 'notes,
+	description: note,
+	icon: @paperLinedBitmap,
+	version: 1,
+	metadata: nil,
+	MakeNewEntry: func() begin
+		local l1;
+		(l1 := Clone(@protoNote)).timestamp := Time();
+		l1
+	end,
+	StringExtract: func(a1, a2) begin
+		local l1;
+		if StrEqual((l1 := (if (if a1.data then (Length(a1.data) > 0)) then ExtractData(a1.data, "...", 50) else "-empty-")), "") then begin
+				l1 := "-empty-"
+			end;
+		(if a1.title then Stringer([Array: a1.title, " ", l1]) else l1)
+	end,
+	TextScript: func(a1, a2) begin
+		notesText(a2.data)
+	end
+};
+
+viewonly := {
+	_proto: @notePaper,
+	type: 'editor,
+	symbol: 'viewonly,
+	protection: 'public,
+	viewSetupFormScript: func() begin
+		local l1, l2, l3;
+		if (l1 := self:MinimalBounds(target)) then begin
+				l2 := self:Parent():LocalBox();
+				if ((l3 := (l1.right - l2.right)) > 0) then begin
+						viewBounds := SetBounds(0, 0, l3, 0)
+					end
+			end;
+		inherited:?viewSetupFormScript()
+	end
+};
+
+addresseeSlipProto := {
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: -16},
+	targetSlot: 'fields,
+	_proto: @newtFalseEntryView
+};
+
+prFrameFormat := {title: default_3, symbol: 'prFrameFormat, _proto: @targetFrameFormat};
+
+protoPensizeMenuProto := {
+	viewJustify: vjCenterH + vjCenterV + vjParentCenterV + vjSiblingRightH,
+	viewBounds: nil,
+	text: nil,
+	pop: nil,
+	slot: nil,
+	pickActionScript: func(a1) begin
+		base.(slot) := popup[a1].(slot);
+		self:fontChanged(true);
+		inherited:pickActionScript(a1)
+	end,
+	buttonClickScript: func() begin
+		if (if (if (l1 := GetKeyView()) then l1.textFlags) then (BAnd(l1.textFlags, 24) <> 0)) then begin
+				self:Notify(3, "Styles", "The style cannot be changed here.");
+				self:hilite(nil);
+				return nil
+			end;
+		popup := Clone(pop);
+		if (l2 := self:setup()) then begin
+				local l1;
+				local l2;
+				(foreach l3, l4 in popup do begin
+						if (l4.(slot) = l2) then begin
+								popup[l3] := Clone(l4);
+								popup[l3].mark := $\uFC0B;
+								break
+							end
+					end)
+			end;
+		inherited:buttonClickScript()
+	end,
+	_proto: @protoPopupButton
+};
+
+calllog := {
+	_proto: @newtStationery,
+	symbol: 'calllog,
+	name: calls,
+	superSymbol: 'callapp,
+	description: phoneMessage,
+	icon: @paperCallBitmap,
+	version: 1,
+	metadata: nil,
+	taskSlip: '|PhoneHome:Newton|,
+	MakeNewEntry: func() begin
+		local l1;
+		(l1 := GetRoot().(taskSlip):NewItem(nil)).fromCallApp := true;
+		l1
+	end,
+	StringExtract: func(a1, a2) begin
+		local l1, l2;
+		l1 := ShortDate(a1.timestamp);
+		l2 := (if a1.hangupreason then '{lineBusy: "Line Busy", noAnswer: "No Answer", leftMessage: "Left Message", followup: "Followup Needed", completed: "Call Completed"}.(a1.hangupreason));
+		(if (a2 = 1) then (if StrFilled(a1.title) then a1.title else Stringer([Array: a1.name, " ", (if l2 then l2 else Stringer([Array: a1.phoneNumber, " ", l1]))])) else Stringer([Array: a1.title, " ", a1.name, " ", a1.phoneNumber, " ", l2, " ", l1]))
+	end,
+	TextScript: func(a1, a2) begin
+		Stringer([Array: ParamStr("Phone Message: ^0 ^1 on ^2", [Array: a2.name, a2.phoneNumber, DateNTime(a2.timestamp)]), "\n\n", notesText(a2.notes)])
+	end
+};
+
+default_2Proto := {
+	viewBounds: {left: 5, top: 0, right: -5, bottom: 36},
+	viewJustify: vjParentFullH,
+	viewLineSpacing: 28,
+	indent: 45,
+	label: name,
+	path: 'name,
+	memory: 'caller,
+	flavor: {
+		PathToText: func() begin
+			(if IsInstance(target.(path), '|string.noData|) then begin
+					target.(path) := "";
+					""
+				end else Clone(target.(path)))
+		end,
+		picker: func() begin
+			@protoPeoplePopup:New('|nameRef.phone|, nil, self, nil)
+		end,
+		pickActionScript: func(a1) begin
+			target.toRef := a1;
+			inherited:pickActionScript(a1)
+		end,
+		_proto: @newtSmartNameFilter
+	},
+	viewIdleScript: func() begin
+		local l1, l2;
+		if (if target.toRef then (Length(target.toRef) > 0)) then begin
+				if ((not (l2 := GetDataDefs('|nameRef.phone|):Get((l1 := target.toRef[0]), 'name, 'text))) or (not (if StrFilled(target.name) then StrEqual(l2, target.name)))) then begin
+						target.toRef := nil
+					end
+			end;
+		inherited:viewIdleScript()
+	end,
+	_proto: @newtSmartNameView
+};
+
+default_2Proto_2 := {
+	viewBounds: {left: 5, top: 0, right: -5, bottom: 36},
+	viewLineSpacing: 28,
+	indent: 45,
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	label: phone,
+	path: 'phoneNumber,
+	kind: 'workPhone,
+	flavor: {
+		EntryToPath: func(a1) begin
+			target.(path) := nil;
+			country := nil;
+			l1 := nil;
+			if (if a1 then a1.phones) then begin
+					l2 := 0;
+					l3 := (if (if target.toRef then (Length(target.toRef) > 0)) then target.toRef[0]);
+					local l1;
+					local l2;
+					local l3;
+					(foreach l4, l5 in a1.phones do begin
+							local l7, l8;
+							if StrFilled(l5) then begin
+									l7 := ClassOf(l5);
+									l8 := {item: ParamStr("^0 ^?1(^1)||", [Array: MakeDisplayPhone(l5), PhoneTypes.phoneText.(l7)]), value: l5, class: l7, country: a1.country};
+									if (if l3 then l3.phone) then begin
+											if StrEqual(l3.phone, l5) then begin
+													baseLine.lastPicked := (l2 := l4);
+													l8.mark := $\uFC0B
+												end
+										end else begin
+											if (l7 = kind) then begin
+													baseLine.lastPicked := (l2 := l4);
+													l8.mark := $\uFC0B
+												end
+										end;
+									if (not l1) then begin
+											l1 := [Array: ]
+										end;
+									AddArraySlot(l1, l8)
+								end
+						end);
+					if (Length(a1.phones) > l2) then begin
+							target.(path) := a1.phones[l2];
+							currPhoneType := ClassOf(a1.phones[l2]);
+							country := a1.country
+						end
+				end;
+			if (if l1 then (Length(l1) = 1)) then begin
+					l1 := nil
+				end;
+			self:SetLabelCommands(l1)
+		end,
+		_proto: @newtPhoneFilter
+	},
+	pickActionScript: func(a1) begin
+		local l1;
+		if HasPath(labelCommands[a1], 'id) then begin
+				filter:ResolveItem(labelCommands[a1]);
+				self:hilite(nil)
+			end else begin
+				if (if filter.picker then (a1 = (Length(labelCommands) - 1))) then begin
+						filter:picker()
+					end else begin
+						if (not filter:?ChooseItem(a1)) then begin
+								if lastPicked then begin
+										labelCommands[lastPicked].mark := nil
+									end;
+								if IsFrame((l1 := labelCommands[a1])) then begin
+										l1.mark := $\uFC0B;
+										l1 := (if l1.value then l1.value else l1.item)
+									end;
+								lastPicked := a1;
+								self:UpdateText(Clone(l1));
+								self:hilite(nil)
+							end
+					end
+			end;
+		(if (currPhoneType := labelCommands[a1].class) then begin
+				if target.(path) then begin
+						SetClass(target.(path), currPhoneType)
+					end;
+				self:StartFlush()
+			end else SetClass(target.(path), 'phone))
+	end,
+	_proto: @newtAreacodePhoneLine
+};
+
+when := {
+	flavor: {_proto: @newtDateNTimeFilter, increment: 1, longFormat: 80466},
+	access: 'pickOnly,
+	entryFont: tsHWFont + tsSize(10),
+	viewBounds: {left: 5, top: 10, right: -5, bottom: 30},
+	viewLineSpacing: 15,
+	indent: 45,
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	label: "When",
+	path: 'callDate,
+	jamFromEntry: func(a1) begin
+		if (not target.toRef) then begin
+				target.toRef := [Array: ]
+			end;
+		(if (Length(target.toRef) < 1) then AddArraySlot(target.toRef, GetDataDefs('|nameRef.phone|):MakeNameRef(a1, '|nameRef.phone|)))
+	end,
+	_proto: @newtLabelInputLine
+};
+
+notesfieldProto := {
+	viewBounds: {left: 5, top: 110, right: -5, bottom: 0},
+	viewJustify: vjParentFullH + vjParentFullV,
+	doCaret: nil,
+	path: 'notes,
+	_proto: @newtEditView
+};
+
+default := {
+	viewClass: clView,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewFlags: vVisible,
+	viewJustify: vjParentFullH + vjParentFullV,
+	realData: nil,
+	version: 1,
+	type: 'editor,
+	symbol: 'default,
+	name: phoneMessage,
+	viewDefHeight: 140,
+	MinimalBounds: func(a1) begin
+		if a1.notes then begin
+				local l1;
+				(foreach l2 in a1.notes do begin
+						l1 := UnionRect(l1, l2.viewBounds)
+					end)
+			end;
+		l1
+	end
+};
+
+notesfield := {_proto: notesfieldProto, preallocatedContext: 'notesfield};
+
+default_2 := {
+	_proto: default,
+	protection: 'private,
+	viewChildren: [viewChildren:
+		{
+			_proto: default_2Proto,
+			viewSetupDoneScript: func() begin
+				SetKeyView(entryLine, 9999);
+				inherited:?viewSetupDoneScript()
+			end
+		},
+		{_proto: default_2Proto_2},
+		{_proto: when},
+		notesfield
+	],
+	notesfield: nil,
+	allocateContext: [|Array|: 'notesfield, notesfield]
+};
+
+notesfield_2 := {_proto: notesfieldProto, preallocatedContext: 'notesfield};
+
+viewonly_2 := {
+	_proto: default,
+	type: 'viewer,
+	symbol: 'viewonly,
+	protection: 'public,
+	rollScrolling: true,
+	viewSetupFormScript: func() begin
+		local l1, l2, l3;
+		if (l1 := self:MinimalBounds(target)) then begin
+				l2 := self:Parent():LocalBox();
+				if ((l3 := (l1.right - l2.right)) > 0) then begin
+						viewBounds := SetBounds(0, 0, l3, 0)
+					end
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	viewChildren: [viewChildren:
+		{_proto: default_2Proto, access: 'readOnly},
+		{_proto: default_2Proto_2, access: 'readOnly},
+		{_proto: when, access: 'readOnly},
+		notesfield_2
+	],
+	notesfield: nil,
+	allocateContext: [|Array|: 'notesfield, notesfield_2]
+};
+
+cLogFormat := {
+	version: 1,
+	symbol: 'cLogFormat,
+	path: 'cLogFormat,
+	name: calls,
+	title: calls,
+	firstPage: 'top,
+	dataPath: 'notes,
+	headerKids: [|Array|:
+		{_proto: default_2Proto, access: 'readOnly},
+		{_proto: default_2Proto_2, access: 'readOnly},
+		{_proto: when, access: 'readOnly}
+	],
+	headerHeight: 110,
+	TextScript: func(a1, a2) begin
+		Stringer([Array: a2.name, " ", a2.phoneNumber, $\n, a2.notes])
+	end,
+	_proto: @protoLetterFormat
+};
+
+prFrameFormat_2 := {title: default_3, symbol: 'prFrameFormat, _proto: @targetFrameFormat};
+
+cribNoteProto := {
+	viewClass: clMeetingView,
+	viewFlags: vVisible,
+	recConfig: @rcInkorText,
+	iconShape: nil,
+	SliderWidth: 12,
+	transformStyle: {transform: [|Array|: 13, 1]},
+	viewSetupFormScript: func() begin
+		local l1;
+		(iconShape := (l1 := GetMeetingTypeInfo(realData)).shape)
+	end,
+	viewDrawScript: func() begin
+		(if iconShape then self:DrawShape(iconShape, transformStyle))
+	end,
+	viewClickScript: func(a1) begin
+		local l1, l2, l3, l4;
+		l1 := GetPoint(0, a1);
+		l2 := GetPoint(1, a1);
+		l4 := ((l3 := self:GlobalBox()).left + SliderWidth);
+		(if (if (if (if (l1 >= l4) then (l1 <= (l4 + ShapeBounds(iconShape).right))) then (l2 >= l3.top)) then (l2 <= (l3.top + 16))) then begin
+				calendar.selectedMeeting := realData;
+				isNewMeeting := nil;
+				self:OpenMeetingSlip(selectedMeeting, nil, nil);
+				true
+			end)
+	end
+};
+
+protoContentAreaProto := {
+	CurrentKiosk: {class: #132, funcPtr: 6962673, numArgs: 0},
+	bookShowScript: func() begin
+		true
+	end,
+	pageTurnToScript: func() begin
+		true
+	end,
+	BookData: BookData,
+	BookOKClose: func() begin
+		true
+	end,
+	viewDrawScript: func() begin
+		true
+	end,
+	CurrentPage: {class: #132, funcPtr: 6962674, numArgs: 0},
+	InsertForm: InsertForm,
+	TurnToPage: {class: #132, funcPtr: 6984865, numArgs: 1},
+	viewSetupDone: nil,
+	viewFlags: vVisible,
+	CountPages: {class: #132, funcPtr: 6961630, numArgs: 0},
+	WhereIsBook: {class: #132, funcPtr: 6985922, numArgs: 1},
+	pageTurnAwayScript: func() begin
+		true
+	end,
+	FindContentBySlot: {class: #132, funcPtr: 6966900, numArgs: 2},
+	HiliteBlock: {class: #132, funcPtr: 6972175, numArgs: 3},
+	AddToContentArea: {class: #132, funcPtr: 6956349, numArgs: 1},
+	viewClass: clView,
+	CurrentBook: {class: #132, funcPtr: 6962672, numArgs: 0},
+	debug: 2909404,
+	AuthorData: {class: #132, funcPtr: 6957397, numArgs: 0},
+	bookHideScript: func() begin
+		true
+	end,
+	FindContentByValue: {class: #132, funcPtr: 6966902, numArgs: 3}
+};
+
+turnToPage := {
+	viewBounds: {left: 0, top: 0, right: 138, bottom: 50},
+	viewJustify: 0,
+	entryFlags: 10753,
+	entryTextFlags: 2,
+	viewLineSpacing: 38,
+	label: "Turn to page",
+	text: nil,
+	viewSetupChildrenScript: func() begin
+		inherited:viewSetupChildrenScript();
+		(entryLine.viewJustify := BOr(BAnd(entryLine.viewJustify, bnot(0)), 2))
+	end,
+	viewIdleScript: func() begin
+		SetValue(entryLine, 'text, "");
+		return 0
+	end,
+	viewSetupDoneScript: func() begin
+		SetKeyView(entryLine, 999)
+	end,
+	BadText: func() begin
+		self:SysBeep();
+		self:SetupIdle(1800)
+	end,
+	textChanged: func() begin
+		local l1, l2;
+		(if (not StrEqual(text, "")) then begin
+				l1 := 0;
+				if (l2 := StringToNumber(text)) then begin
+						l1 := floor(l2)
+					end;
+				(if (if (l1 > 0) then (l1 <= maxValue)) then self:NumberEntered(l1) else self:Parent():BadText())
+			end)
+	end,
+	debug: 6040,
+	_proto: @protoLabelInputLine
+};
+
+finding_taskPrimary_actIsa := {value: "action"};
+
+finding_taskPrimary_act := {
+	isa: finding_taskPrimary_actIsa,
+	Lexicon: [|Array|: [|Array|: "find", "locate", "search for", "look for"]]
+};
+
+faxing_taskPrimary_act := {isa: finding_taskPrimary_actIsa, Lexicon: [|Array|: [|Array|: "fax"]]};
+
+printing_taskPrimary_act := {isa: finding_taskPrimary_actIsa, Lexicon: [|Array|: [|Array|: "print"]]};
+
+about_taskPrimary_act := {isa: finding_taskPrimary_actIsa, Lexicon: [|Array|: [|Array|: "about newton"]]};
+
+remembering_taskPrimary_act := {
+	isa: finding_taskPrimary_actIsa,
+	meta_level: true,
+	Lexicon: [|Array|:
+		[|Array|:
+			"remember",
+			"remind",
+			"remind me",
+			"to do",
+			@todoName,
+			"don't forget to",
+			"don't let me forget to"
+		]
+	]
+};
+
+mailing_taskPrimary_act := {isa: finding_taskPrimary_actIsa, Lexicon: [|Array|: [|Array|: mail, "send", "email", mail]]};
+
+birthdayIsaIsa := {isa: finding_taskPrimary_actIsa, removeIt: nil, Lexicon: [|Array|: [|Array|: "schedule"]]};
+
+calling_taskPrimary_act := {isa: finding_taskPrimary_actIsa, Lexicon: [|Array|: [|Array|: "call", "phone", "ring", "dial"]]};
+
+proto1_2ExformentryProto := {
+	iconEntry: {
+		class: 'FormEntry,
+		text: uCardPositionAlertButton,
+		icon: 2,
+		sequence: nil,
+		labels: nil,
+		_tagList: [|Array|: '_icon],
+		packageName: nil,
+		app: nil
+	},
+	New: func() begin
+		Clone(iconEntry)
+	end,
+	name: func() begin
+		ParamStr("\u201C\u^0\u201D\u", [Array: fentry.text])
+	end,
+	where: func() begin
+		local l1;
+		(if (l1 := self:store()) then l1:GetName() else "")
+	end,
+	size: func() begin
+		Stringer([Array: (EntrySize(self:LookupSoupPackage()) div 1024), "K"])
+	end,
+	copyprotected: func() begin
+		GetPkgRefInfo(self:LookupSoupPackage().pkgRef).copyprotection
+	end,
+	store: func() begin
+		(if IsSoupEntry(fentry) then EntryStore(fentry))
+	end,
+	LookupSoupPackage: func() begin
+		local l1, l2;
+		l1 := self:store();
+		l2 := fentry.packageName;
+		(if (if l1 then l2) then GetPackageEntry(l2, l1))
+	end,
+	LookupSoupPackageAndActivate: func() begin
+		local l1;
+		(if (not (l1 := self:LookupSoupPackage())) then 'noSoupPackage else (if SetContains(ActivePackageList, l1.pkgRef) then 'alreadyActive else (if SafeActivatePackage(l1.pkgRef, l1.packageName, EntryStore(l1)) then 'justActivated)))
+	end,
+	Preflight: compile(
+		constants: {
+			kLiteral_536a15: "locked",
+			kLiteral_536afd: "copy protected"
+		},
+		func(a1, a2) begin
+			local l1;
+			(if (a1 = 'Backdrop) then (if (Length(a2) = 1) then begin
+						if (l1 := GetRoot().(fentry.app)).noBackdrop then begin
+								return "the wrong kind"
+							end;
+						if (if (displayParams.appAreaHeight < 320) then (not l1.ReOrientToScreen)) then begin
+								return "not designed for this orientation"
+							end;
+						(if (EntryStore(fentry) = GetStores()[0]) then 'OK else "not stored internally")
+					end) else (if (((a1 = 'Filing) or (a1 = 'delete)) or (a1 = 'freeze)) then (if (not EntryStore(fentry):IsReadOnly()) then 'OK else kLiteral_536a15) else (if (a1 = 'move) then (if self:copyprotected() then kLiteral_536afd else (if EntryStore(fentry):IsReadOnly() then kLiteral_536a15 else 'OK)) else (if (a1 = 'send) then (if self:copyprotected() then kLiteral_536afd else 'OK) else 'OK))))
+		end),
+	delete: func() begin
+		local l1;
+		(if (l1 := self:LookupSoupPackage()) then SafeRemovePackageQT(l1))
+	end,
+	move: func(a1) begin
+		SafeMovePackageQT(self:LookupSoupPackage(), a1)
+	end,
+	file: file_2,
+	TapAction: func() begin
+		(if self:LookupSoupPackageAndActivate() then (if fentry:?TapAction() then (if fentry.closeControl then (fentry.closeControl = 'alwaysClose) else GetUserConfig('ExtraAlwaysClose)) else self:_Open(GetRoot().(fentry.app))))
+	end,
+	_Open: func(a1) begin
+		local l1;
+		(if a1 then begin
+				if (l1 := (if (not (if a1.viewCObject then Visible(a1))) then (if fentry.closeControl then (fentry.closeControl = 'alwaysClose) else GetUserConfig('ExtraAlwaysClose)))) then begin
+						AddDeferredSend(a1, 'ButtonToggle, nil)
+					end else begin
+						a1:ButtonToggle()
+					end;
+				l1
+			end)
+	end
+};
+
+unhilitedBounds_14 := {left: 0, top: 0, right: 32, bottom: 25};
+
+unhilitedBounds_15 := {left: 0, top: 0, right: 22, bottom: 27};
+
+unhilitedBounds_16 := {left: 0, top: 0, right: 27, bottom: 29};
+
+unhilitedBounds_17 := {left: 0, top: 0, right: 28, bottom: 29};
+
+unhilitedBounds_18 := {left: 0, top: 0, right: 19, bottom: 26};
+
+unhilitedBounds_19 := {left: 0, top: 0, right: 21, bottom: 27};
+
+unhilitedBounds_20 := {left: 0, top: 0, right: 32, bottom: 26};
+
+unhilitedBounds_21 := {left: 0, top: 0, right: 21, bottom: 24};
+
+unhilitedBounds_22 := {left: 0, top: 0, right: 30, bottom: 20};
+
+unhilitedBounds_23 := {left: 0, top: 0, right: 34, bottom: 25};
+
+unhilitedBounds_24 := {left: 0, top: 0, right: 29, bottom: 24};
+
+unhilitedBounds_25 := {left: 0, top: 0, right: 32, bottom: 22};
+
+unhilitedBounds_26 := {left: 0, top: 0, right: 21, bottom: 24};
+
+unhilitedBounds_27 := {left: 0, top: 0, right: 23, bottom: 25};
+
+unhilitedBounds_28 := {left: 0, top: 0, right: 25, bottom: 27};
+
+ovButton := {
+	iconPro: @overviewBitmap,
+	viewBounds: {left: -11, top: 0, right: 6, bottom: 16},
+	buttonClickScript: func() begin
+		PostCommand('viewfrontmost, 51)
+	end,
+	debug: 574352,
+	_proto: @protoExtrasControlButton
+};
+
+upButton := {
+	iconPro: @upArrowBitmap,
+	viewBounds: {left: 9, top: -10, right: 27, bottom: 7},
+	buttonPressedScript: func() begin
+		PostCommand('viewfrontmost, 45);
+		RefreshViews()
+	end,
+	debug: 714576,
+	_proto: @protoExtrasControlButton
+};
+
+downButton := {
+	iconPro: @downArrowBitmap,
+	viewBounds: {left: 9, top: 11, right: 27, bottom: 28},
+	buttonPressedScript: func() begin
+		PostCommand('viewfrontmost, 46);
+		RefreshViews()
+	end,
+	debug: 2862800,
+	_proto: @protoExtrasControlButton
+};
+
+styleWriterIII := {
+	name: "StyleWriter (I & II)",
+	driverName: tSWGroupDriver,
+	imagingName: tDotPrinter,
+	type: 'serialSym,
+	printerPageBounds: {eightByEleven: {bottom: 752, right: 576}, a4: {bottom: 796, right: 556}},
+	printableOrigin: {top: 14, left: 18}
+};
+
+label := {
+	viewJustify: 8396800,
+	viewBounds: {left: 14, top: 0, right: 224, bottom: 13},
+	text: "My handwriting style is",
+	preallocatedContext: 'label,
+	_proto: @protoStaticText
+};
+
+LetterSetCluster := {
+	viewBounds: {left: 30, top: 2, right: 0, bottom: 28},
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	viewSetupFormScript: func() begin
+		// (an addition: the host's handwriting engines, recognition/WordEngines.h
+		//  - one chosen shows as its button, and the cluster is a row taller for
+		//  each; the ROM's letter set as before otherwise)
+		local engines := if GlobalFnExists('HostWordEngines) then HostWordEngines() else [];
+		if Length(engines) > 0 then begin
+			local below := viewChildren[1];
+			local row := below.viewBounds.bottom - below.viewBounds.top;
+			self.viewBounds := {left: viewBounds.left, top: viewBounds.top, right: viewBounds.right,
+								bottom: viewBounds.bottom + row * Length(engines)};
+		end;
+		local chosen := userConfiguration.hostWordEngine;
+		if IsInteger(chosen) then
+			foreach e in engines do
+				if e.value = chosen then
+					return clusterValue := chosen;
+		(if (((ClassOf((clusterValue := userConfiguration.letterSetSelection)) <> 'int) or (clusterValue < 0)) or (clusterValue > 4)) then begin
+				clusterValue := 2;
+				self:ClusterChanged()
+			end)
+	end,
+	viewSetupChildrenScript: func() begin
+		// (an addition: a button for each of the host's handwriting engines,
+		//  recognition/WordEngines.h, under "Printing" and "Cursive" - each
+		//  made from the "Cursive" button, the one drawn under another)
+		local engines := if GlobalFnExists('HostWordEngines) then HostWordEngines() else [];
+		if Length(engines) > 0 then begin
+			local below := viewChildren[1];
+			local buttons := Clone(viewChildren);
+			foreach e in engines do
+				AddArraySlot(buttons, {_proto: below, text: e.text, buttonValue: e.value});
+			self.viewChildren := buttons;
+		end;
+	end,
+	ClusterChanged: func() begin
+		if (clusterValue = nil) then begin
+				clusterValue := 2;
+				self:SetClusterValue(2);
+				self:SysBeep()
+			end;
+		// (an addition: one of the host's handwriting engines chosen - its
+		//  number kept in hostWordEngine, the letter set left at printing,
+		//  which ParaGraph's code needs to be one of its own; any other button
+		//  is the ROM's letter set, and the engine is forgotten)
+		if clusterValue >= 8 then begin
+				userConfiguration.hostWordEngine := clusterValue;
+				userConfiguration.letterSetSelection := 2
+			end else begin
+				RemoveSlot(userConfiguration, 'hostWordEngine);
+				userConfiguration.letterSetSelection := clusterValue
+			end;
+		wordExample:Dirty();
+		ReadCursiveOptions()
+	end,
+	preallocatedContext: 'LetterSetCluster,
+	viewChildren: [viewChildren:
+		{
+			viewJustify: vjParentFullH,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 13},
+			viewFont: @fontSystem9Bold,
+			text: "Printing (separate letters)",
+			buttonValue: 2,
+			debug: 17209715,
+			_proto: @protoRadioButton
+		},
+		{
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 13},
+			viewFont: @fontSystem9Bold,
+			text: "Cursive (connected letters)",
+			buttonValue: 0,
+			debug: 37368179,
+			_proto: @protoRadioButton
+		}
+	],
+	_proto: @protoRadioCluster
+};
+
+wordExample := {
+	viewClass: clView,
+	viewFlags: vVisible,
+	viewJustify: vjParentCenterH + vjSiblingBottomV,
+	viewBounds: {left: 0, top: 2, right: 210, bottom: 37},
+	cursiveCharSpace: [|Array|: 9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
+	cursiveWordSpace: [|Array|: 27, 24, 21, 18, 15, 12, 9, 6, 3, 0],
+	printedCharSpace: [|Array|: 7, 7, 6, 6, 5, 4, 3, 2, 1, 0],
+	printedWordSpace: [|Array|: 20, 18, 16, 14, 12, 11, 10, 9, 8, 7],
+	charSpace: [|Array|: 9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
+	wordSpace: [|Array|: 27, 24, 21, 18, 15, 12, 9, 6, 3, 0],
+	wordBits: @handwritingStyleImages,
+	textHeight: 23,
+	lineStyle: {penPattern: 3, fillPattern: 0, transferMode: 1},
+	viewDrawScript: func() begin
+		self:drawExampleScript()
+	end,
+	SelectSpacingOption: func() begin
+		local l1;
+		(if ((l1 := userConfiguration.letterSetSelection) = 2) then begin
+				charSpace := printedCharSpace;
+				(wordSpace := printedWordSpace)
+			end else begin
+				charSpace := cursiveCharSpace;
+				(wordSpace := cursiveWordSpace)
+			end)
+	end,
+	drawExampleScript: func() begin
+		l1 := 0;
+		l2 := 0;
+		self:DrawShape((l3 := MakeLine(l1, (l2 + textHeight), viewBounds.right, (l2 + textHeight))), lineStyle);
+		self:SelectSpacingOption();
+		l4 := charSpace[userConfiguration.letterSpaceCursiveOption];
+		l5 := wordSpace[userConfiguration.letterSpaceCursiveOption];
+		l6 := userConfiguration.letterSetSelection;
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		local l5;
+		local l6;
+		local l7;
+		// (an addition: while one of the host's handwriting engines is chosen,
+		//  its own example - recognition/WordEngines.h: words of letters, each a
+		//  stroke drawn with a dot where the pen goes down - in place of the
+		//  letter set's)
+		local engine := nil;
+		if IsInteger(userConfiguration.hostWordEngine) and GlobalFnExists('HostWordEngines) then
+			foreach e in HostWordEngines() do
+				if e.value = userConfiguration.hostWordEngine and e.example then engine := e;
+		if engine then begin
+			foreach word in engine.example do begin
+				foreach letter in word do begin
+					local pts := Clone(letter.points);
+					for i := 0 to Length(pts) - 2 by 2 do pts[i] := pts[i] + l1;
+					self:DrawShape(MakePolygon(pts), {penSize: 2, penPattern: 5, fillPattern: 0, transferMode: 1});
+					self:DrawShape(MakeOval(pts[0] - 2, pts[1] - 2, pts[0] + 3, pts[1] + 3),
+								   {penPattern: 5, fillPattern: 5, transferMode: 1});
+					l1 := ((l1 + letter.width) + l4)
+				end;
+				l1 := ((l1 - l4) + l5)
+			end;
+			return nil;
+		end;
+		(foreach l8 in (l7 := wordBits[l6]) do begin
+				(foreach l10 in l8 do begin
+						local l12;
+						l12 := ShapeBounds((l3 := MakeShape(l10))).right;
+						OffsetShape(l3, l1, l2);
+						self:DrawShape(l3, '{transferMode: 1});
+						l1 := ((l1 + l12) + l4)
+					end);
+				l1 := ((l1 - l4) + l5)
+			end)
+	end,
+	preallocatedContext: 'wordExample
+};

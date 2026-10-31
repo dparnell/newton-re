@@ -1,0 +1,42 @@
+// proto1_2Exformentry, and what only it reaches
+
+proto1_2Exformentry := {
+	_proto: proto1_2ExformentryProto,
+	iconEntry: {class: '|1.XFormEntry|, text: uCardPositionAlertButton, icon: 2, packageId: nil, app: nil},
+	New: func() begin
+		Clone(iconEntry)
+	end,
+	size: compile(
+		constants: {
+			kFunction_537665: func(a1, a2) begin
+				(a1 = a2.id)
+			end
+		},
+		func() begin
+			local l1, l2;
+			(if (if (l2 := ArrayPos((l1 := GetPackages()), fentry.packageId, 0, kFunction_537665)) then l1[l2].size) then Stringer([Array: (l1[l2].size div 1024), "K"]) else "")
+		end),
+	copyprotected: func() begin
+		nil
+	end,
+	store: compile(
+		constants: {
+			kFunction_5376a5: func(a1, a2) begin
+				(a1 = a2.id)
+			end
+		},
+		func() begin
+			local l1, l2;
+			(if (l2 := ArrayPos((l1 := GetPackages()), fentry.packageId, 0, kFunction_5376a5)) then l1[l2].store)
+		end),
+	Preflight: func(a1, a2) begin
+		"locked"
+	end,
+	delete: delete_3,
+	move: move,
+	file: move
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+size_code := same("proto1_2Exformentry.size.literals[3].instructions");

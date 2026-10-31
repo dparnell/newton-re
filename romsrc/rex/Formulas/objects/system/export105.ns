@@ -1,0 +1,50 @@
+// export105, and what only it reaches
+
+export105 := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 36},
+	viewFlags: vVisible,
+	viewFormat: 0,
+	stepChildren: [stepChildren:
+		export105Item,
+		{
+			buttonClickScript: func() begin
+				self:Div12()
+			end,
+			text: "÷12",
+			viewBounds: {left: -26, top: 15, right: -3, bottom: 26},
+			viewJustify: 8389638,
+			_proto: @protoTextButton
+		}
+	],
+	GetNumericValue: func() begin
+		return CalcLine:GetNumericValue()
+	end,
+	SetNumericValue: func(a1) begin
+		CalcLine:SetNumericValue(a1)
+	end,
+	viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV,
+	Div12: func() begin
+		local l1;
+		(if ((l1 := self:GetNumericValue()) <> nil) then begin
+				AddUndoAction('UndoDiv12, [Array: l1]);
+				self:SetNumericValue((l1 / 12));
+				self:SolveFormula(lineNumber)
+			end)
+	end,
+	UndoDiv12: func(a1) begin
+		AddUndoAction('UndoDiv12, [Array: self:GetNumericValue()]);
+		self:SetNumericValue(a1);
+		self:SolveFormula(lineNumber)
+	end,
+	viewClass: clView,
+	CalcLine: nil,
+	stepAllocateContext: [|Array|: 'CalcLine, export105Item]
+};
+
+export105Item := {rightmargin: 35, decimalPlaces: 4, _proto: @8296, preAllocatedContext: 'CalcLine};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+buttonClickScript_code := same("export105.stepChildren[1].buttonClickScript.instructions");
+
+UndoDiv12_code := same("export105.UndoDiv12.instructions");

@@ -1,0 +1,380 @@
+// notesOverview, and what only it reaches
+
+notesOverview := {
+	prefsView: {
+		viewQuitScript: func() begin
+			inherited:?viewQuitScript();
+			(if (if theApp then theApp.prefsCache) then AddDeferredCall(functions.EntryChangeXmit, [Array: theApp.prefsCache, 'paperroll]))
+		end,
+		_proto: @newtPrefsView
+	},
+	allViewDefs: {
+		paperroll: {
+			viewonly: viewonly,
+			default: @notePaper,
+			prFrameFormat: prFrameFormat,
+			prPlainFormat: @prPlainFormat,
+			prLetterFormat: @prLetterFormat,
+			prMemoFormat: @prMemoFormat
+		}
+	},
+	superSymbol: 'notes,
+	viewFormat: 0,
+	status: nil,
+	_cacheContext: {
+		lastFormats: nil,
+		previousLayout: 'default,
+		status: nil,
+		filterBar: nil,
+		viewChildren: nil,
+		targetApp: nil,
+		saveWhatView: nil,
+		preferredViewDef: 'default,
+		_kiddos: nil,
+		viewclipper: nil,
+		_proto: nil,
+		viewCObject: nil,
+		layout: nil,
+		_recogSettings: nil,
+		labelsFilter: nil,
+		prefsCache: nil,
+		currentLayout: 'default,
+		newtAppBase: nil,
+		saveWhat: nil,
+		dontStartWithFolder: nil,
+		_parent: nil,
+		targetView: nil,
+		base: nil,
+		autoPutawayEnabled: true,
+		retargetChain: nil
+	},
+	preallocatedContext: 'paperroll,
+	AppAll: "All Notes",
+	MakeTextNote: func(a1, a2) begin
+		self:MakeTextNoteFont(a1, a2, GetUserConfig('userFont))
+	end,
+	NewNote: func(a1, a2, a3) begin
+		local l1;
+		(if layout then layout:NewEntry(a1, a2, a3) else begin
+				if IsReadOnly(allSoups) then begin
+						allSoups := Clone(allSoups)
+					end;
+				if IsReadOnly(allSoups.notes) then begin
+						allSoups.notes := Clone(allSoups.notes)
+					end;
+				l1 := allSoups.notes;
+				l1:MakeSoup(appSymbol);
+				l1:AddEntry(a1, a3);
+				l1:DoneWithSoup(appSymbol)
+			end)
+	end,
+	viewFlags: vApplication,
+	weekText: func(a1, a2) begin
+		local l1, l2, l3;
+		dateStop := ((dateStart := ((dateStart := (l1 := paperroll:SetupPrintingCursor(a1)):entry().timestamp) - (dateStart mod 1440))) + 10080);
+		text := "";
+		(loop begin
+				if (not (l2 := l1:prev())) then begin
+						break
+					end;
+				(if (l2.timestamp < dateStart) then break)
+			end);
+		(loop begin
+				if (not (l2 := l1:Next())) then begin
+						break
+					end;
+				if (l2.timestamp > dateStop) then begin
+						break
+					end;
+				l3 := LongDateStr(l2.timestamp, @datetimeStrSpecs.longDateStrSpec);
+				(text := Stringer([Array: text, l3, "\n", notesText(l2.data), "\n"]))
+			end);
+		text
+	end,
+	IsValidEntry: func(a1) begin
+		if (not IsFrame(a1)) then begin
+				return 1
+			end;
+		if (not (if (if HasSlot(a1, 'viewStationery) then HasSlot(a1, 'class)) then HasSlot(a1, 'height))) then begin
+				return 2
+			end;
+		if (a1.height < 0) then begin
+				return 3
+			end;
+		a1
+	end,
+	AppMaxSizeExceeded: func(a1) begin
+		local l1, l2, l3, l4;
+		l1 := "...";
+		l2 := a1.title;
+		l3 := GetEntryDataDef(a1);
+		if (if (not l2) then l3) then begin
+				l2 := l3:StringExtract(a1, 1)
+			end;
+		if (not l2) then begin
+				l2 := "-empty-"
+			end;
+		if (StrLen(l2) >= 30) then begin
+				l2 := Stringer([Array: Substr(l2, 0, 30), l1])
+			end;
+		l4 := ParamStr("The note \"^0\" is too large. Work with another note or create a new one.", [Array: l2]);
+		self:Notify(3, title, l4)
+	end,
+	ReOrientToScreen: @defRotateFunc,
+	conversion: {
+		convertSoup: func(a1, a2, a3) begin
+			(if (not a1:HasTags()) then a1:AddIndex('{structure: slot, path: labels, type: tags}))
+		end,
+		Convert: func(a1, a2, a3, a4) begin
+			local l1, l2;
+			l1 := self:GetCurrentVersion(a1);
+			(if SetContains((l2 := [Array: 'oneO, 'twoO]), a3) then (if (if (l1 <> 'twoO) then (a3 = 'twoO)) then self:ConvertEntryto20(a1, true, a4) else (if (if (l1 <> 'oneO) then (a3 = 'oneO)) then self:ConvertEntryto10(a1, true) else a1)))
+		end,
+		ConvertEntryto20: ConvertEntryto20,
+		ConvertEntryto10: ConvertEntryto10,
+		GetCurrentVersion: GetCurrentVersion
+	},
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	appObject: [|Array|: note, @paperrollSoupName],
+	dateFindSlot: 'timestamp,
+	_proto: @newtApplication,
+	MakeTextNoteFont: func(a1, a2, a3) begin
+		local l1, l2, l3, l4, l5;
+		l1 := (GetAppParams().appAreaWidth - 8);
+		l2 := {text: a1, viewBounds: SetBounds(8, 0, l1, 0)};
+		if IsArray(a3) then begin
+				l2.styles := a3
+			end else begin
+				l2.viewFont := a3
+			end;
+		l4 := (l3 := TotalTextBounds(l2, @newtroEditView)).bottom;
+		l2._proto := @protoParagraph;
+		l2.viewStationery := 'para;
+		l2.viewBounds := SetBounds(8, 0, l1, l4);
+		(l5 := GetDataDefs('paperroll):MakeNewEntry()).height := (l4 + 15);
+		l5.data := [Array: l2];
+		(if a2 then self:NewNote(l5, true, nil) else l5)
+	end,
+	GetCurrentVersion: GetCurrentVersion,
+	labelsFilter: nil,
+	soupervisor: {type: 'all},
+	AddAuxButton: func(a1) begin
+		status:?RedoChildren()
+	end,
+	allSoups: {
+		notes: {
+			_proto: @newtSoup,
+			soupName: @paperrollSoupName,
+			soupIndices: @paperrollIndices,
+			soupQuery: {type: 'index, indexPath: 'timestamp},
+			defaultDataType: 'paperroll,
+			DuplicateEntry: func(a1, a2) begin
+				local l1;
+				(l1 := Clone(a1)).timestamp := Time();
+				inherited:DuplicateEntry(l1, a2)
+			end,
+			CreateBlankEntry: func() begin
+				local l1;
+				(l1 := Clone(@protoNote)).timestamp := Time();
+				l1
+			end
+		}
+	},
+	appSymbol: 'paperroll,
+	viewJustify: vjParentFullH + vjParentFullV,
+	title: notepad,
+	ConvertEntryto20: ConvertEntryto20,
+	allDataDefs: {paperroll: paperroll},
+	stepallocatecontext: [|Array|: 'status, status_2],
+	declareSelf: 'base,
+	plainText: func(a1, a2) begin
+		notesText(a2.data)
+	end,
+	RemoveAuxButton: func(a1) begin
+		status:?RedoChildren()
+	end,
+	allLayouts: {
+		default: {
+			_proto: @newTrollLayout,
+			viewBounds: {left: 0, top: 21, right: 0, bottom: -22},
+			viewJustify: vjParentFullH + vjParentFullV,
+			mastersoupSlot: 'notes,
+			protoChild: {
+				stepChildren: [stepChildren:
+					{
+						viewBounds: {left: 0, top: 15, right: 0, bottom: 0},
+						viewJustify: vjParentFullH + vjParentFullV,
+						_proto: @newtStationeryView
+					},
+					{_proto: @newtEntryRollHeader}
+				],
+				_proto: @newTrollEntryView
+			},
+			_cacheContext: {
+				_parent: nil,
+				_proto: nil,
+				viewCObject: nil,
+				viewDef: 'default,
+				masterSoup: nil,
+				dataSoup: nil,
+				dataCursor: nil,
+				entries: nil,
+				entryViewDefs: nil,
+				nextEntry: 0,
+				viewChildren: nil,
+				overlapscrollamount: nil,
+				lastItem: nil,
+				lastHeight: 0
+			}
+		},
+		overview: {
+			_proto: @newtRolloverLayout,
+			viewBounds: {left: 0, top: 21, right: 0, bottom: -22},
+			viewJustify: vjParentFullH + vjParentFullV,
+			mastersoupSlot: 'notes,
+			centerTarget: true,
+			showStoreName: true,
+			viewSetupFormScript: func() begin
+				status.menuRightButtons := '[Array: @newtRoutingButton, @newtFilingButton, @newtCheckAllButton];
+				inherited:?viewSetupFormScript()
+			end,
+			viewQuitScript: func() begin
+				RemoveSlot(status, 'menuRightButtons);
+				inherited:?viewQuitScript()
+			end
+		}
+	},
+	stepChildren: [stepChildren: {_proto: @newtClockShowBar}, status_2],
+	PutAwayScript: func(a1) begin
+		local l1, l2;
+		if (if ((l1 := self:GetCurrentVersion(a1.body)) <> 'twoO) then (l1 <> nil)) then begin
+				self:ConvertEntryto20(a1.body, nil, nil)
+			end;
+		(if IsInstance(a1.body, 'text) then begin
+				(l2 := DeepClone(a1)).body := self:MakeTextNote(l2.body.text, nil);
+				inherited:PutAwayScript(l2)
+			end else inherited:PutAwayScript(a1))
+	end,
+	autoPutawayEnabled: true,
+	maxEntrySizeBytes: 8192,
+	viewHelpTopic: notepad,
+	ConvertEntryto10: ConvertEntryto10
+};
+
+notepad := "Notepad";
+
+ConvertEntryto20 := func(a1, a2, a3) begin
+	local l1;
+	l1 := (if a2 then DeepClone(a1) else a1);
+	if (if a3 then l1.labels) then begin
+			l1.labels := |Ensure1.XFolderExists|(l1.labels, 'paperroll)
+		end;
+	if l1.data then begin
+			ConvertChildTemplates(l1.data, 'oneO, 'twoO)
+		end;
+	l1.class := 'paperroll;
+	l1._version := 2;
+	l1
+end;
+
+ConvertEntryto10 := func(a1, a2) begin
+	if (((l2 := (l1 := (if a2 then DeepClone(a1) else a1)).class) = 'paperroll) or (l2 = 'quadrule)) then begin
+			RemoveSlot(l1, 'class);
+			RemoveSlot(l1, '_version)
+		end else begin
+			if ((l2 = 'list) or (l2 = 'checkList)) then begin
+					if (not l1.topics) then begin
+							return nil
+						end;
+					try begin
+							l3 := {viewStationery: 'paperroll, height: l1.height, timestamp: l1.timestamp, data: [Array: {viewBounds: SetBounds(0, 0, l1.height, 240), viewStationery: 'para, text: GetDataDefs(l2):TextScript(nil, l1), _proto: @protoParagraph}]}
+						end onexception |evt.ex| do begin
+							return nil
+						end;
+					l1 := l3
+				end else begin
+					return nil
+				end
+		end;
+	if l1.data then begin
+			if (l4 := ConvertChildTemplates(l1.data, 'twoO, 'oneO)) then begin
+					ArrayMunger(l1.data, Length(l1.data), 0, l4, 0, nil)
+				end
+		end;
+	if l1.data then begin
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			(for l6 := (Length(l1.data) - 1) to 0 by -1 do begin
+					if (if (l5 := l1.data[l6].viewStationery) then (if (l5 <> 'para) then (l5 <> 'poly))) then begin
+							ArrayRemoveCount(l1.data, l6, 1)
+						end
+				end)
+		end;
+	l1
+end;
+
+GetCurrentVersion := func(a1) begin
+	local l1;
+	if IsFrame(a1) then begin
+			if a1._version then begin
+					if (a1._version = 2) then begin
+							l1 := 'twoO
+						end
+				end else begin
+					if a1.class then begin
+							l1 := 'twoO
+						end else begin
+							if (if a1.viewStationery then a1.height) then begin
+									l1 := 'oneO
+								end
+						end
+				end
+		end;
+	l1
+end;
+
+status_2 := {
+	firstRight: nil,
+	viewSetupChildrenScript: func() begin
+		if (Length((l1 := GetAuxButtons(appSymbol))) > 0) then begin
+				menuLeftButtons := Clone(OrigMenuLeftButtons);
+				local l1;
+				local l2;
+				l2 := (foreach l3 deeply in l1 collect l3.butt);
+				ArrayMunger(menuLeftButtons, Length(menuLeftButtons), nil, l2, 0, nil)
+			end else begin
+				menuLeftButtons := OrigMenuLeftButtons
+			end;
+		inherited:?viewSetupChildrenScript()
+	end,
+	OrigMenuLeftButtons: [|Array|:
+		{_proto: @newtInfoButton, DoInfoAbout: nil},
+		{
+			_proto: @recToggle,
+			pickActionScript: func(a1) begin
+				inherited:pickActionScript(a1);
+				(if (if newtAppBase.newtInfoBoxSlip then newtAppBase.newtInfoBoxSlip.viewCObject) then (newtAppBase.newtInfoBoxSlip._recogSettings := newtAppBase._recogSettings))
+			end
+		},
+		@protoKeyboardButton,
+		{
+			_proto: @newtStationerMenu,
+			sorter: compile(
+				constants: {
+					kLiteral_4d6ed5: "Note"
+				},
+				func(a1, a2) begin
+					(if StrEqual(a1, kLiteral_4d6ed5) then return -1 else (if StrEqual(a2, kLiteral_4d6ed5) then return 1 else return StrCompare(a1, a2)))
+				end)
+		}
+	],
+	preallocatedContext: 'status,
+	_proto: @newtStatusBar
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupChildrenScript_code := same("status_2.viewSetupChildrenScript.instructions");

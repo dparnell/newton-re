@@ -1,0 +1,60 @@
+// part, and what only it reaches
+
+part := array(nil, {
+	DoNotInstall: compile(
+		constants: {
+			kLiteral_1000ebd: "Newton Internet Enabler"
+		},
+		func() begin
+			try begin
+					if (not GetGlobalFn('MissingImports)) then begin
+							Throw('|evt.ex.msg|, "Sorry, ^0 requires operating system features not available on this unit.")
+						end;
+					local l1;
+					(foreach l2 in GetStores() do begin
+							if (l1 := GetPackageNames(l2)) then begin
+									if LSearch(l1, "Internet Enabler", 0, '|str=|, nil) then begin
+											Throw('|evt.ex.msg|, "You need to delete the earlier version of the Internet Enabler package before installing the ^0 package.")
+										end
+								end
+						end);
+					if (if (not GetUserConfig('NIE_OkayToInstallOnAnyStore)) then (GetPkgRefInfo(ObjectPkgRef('|NIE:NIE|)).store <> GetStores()[0])) then begin
+							Throw('|evt.ex.msg|, "^0 requires installation on the internal store.")
+						end
+				end onexception |evt.ex.msg| do begin
+					GetRoot():Notify(3, kLiteral_1000ebd, ParamStr(CurrentException().message, [Array: kLiteral_1000ebd]));
+					return true
+				end onexception |evt.ex| do begin
+					return true
+				end;
+			nil
+		end),
+	installScript: compile(
+		constants: {
+			kFunction_100128d: func(a1) begin
+				(if (a1 = 2) then (if GlobalFnExists('InetShutDown) then InetShutDown(a1)))
+			end,
+			kFunction_1001011: func() begin
+				AsyncConfirm(Stringer([Array: ParamStr("Version ^0^1", [Array: "2.0    ", ""]), "\n\n", ParamStr("This icon is currently active. To make it inactive and suspend all Newton Internet Enabler activity, tap the Suspend button.", [Array: "Newton Internet Enabler"])]), [Array: {text: "Cancel", value: 1}, {text: "Suspend", value: 2}], kFunction_100128d)
+			end,
+			kFunction_10013ad: func(a1) begin
+				UnDefGlobalVar('|NIE:NIE_TapActionFunc|)
+			end,
+			kLiteral_1001369: {removeScript: kFunction_10013ad}
+		},
+		func(a1) begin
+			DefGlobalVar('|NIE:NIE_TapActionFunc|, kFunction_1001011);
+			kLiteral_1001369
+		end),
+	text: newtonInternetEnabler,
+	TapAction: func() begin
+		AddDeferredCall(GetGlobalVar('|NIE:NIE_TapActionFunc|), nil);
+		nil
+	end
+});
+
+newtonInternetEnabler := "Newton Internet Enabler";
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+installScript_literal9 := same("part[0].installScript.literals[1].literals[9]");

@@ -1,0 +1,76 @@
+// newtNetChooser, and what only it reaches
+
+newtNetChooser := {
+	viewBounds: {left: 0, top: 4, right: 0, bottom: 20},
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	labelCommands: nil,
+	memory: 'connectionNetwork,
+	staticLabelCommands: [|Array|: {item: none, action: 'Clear}, {item: "Choose Other", action: 'choose}],
+	NBPLookupType: "Docker",
+	text: "Desktop Computer",
+	TextSetup: func() begin
+		(if target.(path) then GetNames(target.(path)) else "")
+	end,
+	pickerSetup: func() begin
+		labelCommands := [Array: ];
+		if (l4 := GetMemoryItems(memory)) then begin
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				local l5;
+				local l6;
+				(foreach l7 in l4 do begin
+						AddArraySlot(labelCommands, {item: GetNames(l7.item), realStr: l7.item})
+					end);
+				ArrayInsert(labelCommands, 'pickseparator, Length(labelCommands))
+			end;
+		l5 := Length(labelCommands);
+		ArrayMunger(labelCommands, l5, 0, staticLabelCommands, 0, nil);
+		if target.(path) then begin
+				l1 := GetNames(target.(path));
+				(for l6 := 0 to (l5 - 2) do begin
+						if StrEqual(labelCommands[l6].item, l1) then begin
+								labelCommands[l6].mark := $\uFC0B;
+								break (l2 := true)
+							end
+					end);
+				if (not l2) then begin
+						ArrayInsert(labelCommands, {item: GetNames(target.(path)), mark: $\uFC0B}, 0)
+					end
+			end else begin
+				l3 := (Length(labelCommands) - Length(staticLabelCommands));
+				labelCommands[l3] := Clone(labelCommands[l3]);
+				labelCommands[l3].mark := $\uFC0B
+			end;
+		true
+	end,
+	pickActionScript: func(a1) begin
+		local l1, l2;
+		base:hilite(nil);
+		(if (l1 := labelCommands[a1].action) then (if (l1 = 'Clear) then begin
+					target.(path) := nil;
+					self:UpdateText("");
+					self:StartFlush()
+				end else GetRoot().netChooser:openNetChooser((l2 := nil), Stringer([Array: "=:", NBPLookupType, "@"]), labelCommands[0].item, self, "Use Mac OS computer", "Mac OS computer", "Mac OS computers")) else begin
+				target.(path) := labelCommands[a1].realStr;
+				self:UpdateText(GetNames(target.(path)));
+				self:StartFlush()
+			end)
+	end,
+	networkChooserDone: func(a1, a2) begin
+		local l1, l2;
+		(if viewCObject then (if (l2 := GetNames(a1)) then begin
+					if (a2 = nil) then begin
+							l1 := "*"
+						end else begin
+							l1 := a2
+						end;
+					target.(path) := Stringer([Array: l2, ":", NBPLookupType, "@", l1]);
+					AddMemoryItem(memory, target.(path));
+					self:UpdateText(l2);
+					self:StartFlush()
+				end))
+	end,
+	_proto: @protoLabelPicker
+};

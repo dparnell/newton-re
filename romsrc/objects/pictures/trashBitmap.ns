@@ -1,0 +1,7 @@
+// trashBitmap, and what only it reaches
+
+trashBitmap := {
+	mask: bitmap('mask, "resources/mask/3cd221.png", "000000000004015b015b017e017d019a", 1),
+	bits: bitmap('bits, "resources/bits/3cd2c5.png", "000000000004015b015b017e017d019a", 1),
+	bounds: {left: 0, top: 0, right: 28, bottom: 34}
+};

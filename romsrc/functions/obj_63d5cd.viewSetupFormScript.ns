@@ -1,5 +1,0 @@
-@@ 0x4425d9
-func() begin
-	(if (value = 2920) then SetValue(self, 'viewFlags, 0))
-end
-@@end

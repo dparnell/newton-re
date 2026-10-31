@@ -1,0 +1,12 @@
+// export54, and what only it reaches
+
+export54 := {
+	viewSetupChildrenScript: func() begin
+		local l1;
+		inherited:viewSetupChildrenScript();
+		(l1 := Clone(viewBounds)).left := (l1.right - self:GetMaxTextWidth());
+		SetValue(self, 'viewBounds, l1)
+	end,
+	viewFormat: vfFillWhite + vfPen(1),
+	_proto: @8242
+};

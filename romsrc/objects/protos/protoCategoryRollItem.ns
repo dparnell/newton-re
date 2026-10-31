@@ -1,0 +1,16 @@
+// protoCategoryRollItem, and what only it reaches
+
+protoCategoryRollItem := {
+	_proto: @protoRollItem,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 14},
+	viewFormat: 0,
+	viewFlags: vVisible + vClickable,
+	height: 14,
+	viewClickScript: func(a1) begin
+		(if self:TrackHilite(a1) then begin
+				self:click();
+				self:hilite(nil);
+				true
+			end)
+	end
+};

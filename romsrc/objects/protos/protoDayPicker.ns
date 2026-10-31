@@ -1,0 +1,104 @@
+// protoDayPicker, and what only it reaches
+
+protoDayPicker := {
+	viewClass: clView,
+	viewBounds: nil,
+	viewFlags: vVisible + vClickable,
+	viewFormat: 0,
+	singleSelect: nil,
+	selected: 0,
+	dayBit: [|Array|: 2048, 1024, 512, 256, 128, 64, 32],
+	GetFirstDay: func() begin
+		local l1;
+		if (self:firstDayOfWeek exists) then begin
+				return firstDayOfWeek
+			end;
+		if (not (l1 := GetUserConfig('firstDayOfWeek))) then begin
+				l1 := GetLocale().firstDayOfWeek
+			end;
+		if (not l1) then begin
+				l1 := 0
+			end;
+		l1
+	end,
+	DayOfWeekToColumn: func(a1) begin
+		(((a1 - self:GetFirstDay()) + 7) mod 7)
+	end,
+	ColumnToDayOfWeek: func(a1) begin
+		((a1 + self:GetFirstDay()) mod 7)
+	end,
+	InitializeDayOfWeekButton: func(a1) begin
+		local l1;
+		l1 := [Array: "s", "m", "t", "w", "t", "f", "s"];
+		dayIndex := self:ColumnToDayOfWeek(a1);
+		dayOfWeek := (2048 >> dayIndex);
+		(text := l1[dayIndex])
+	end,
+	Initialize: func(a1, a2) begin
+		selected := a1;
+		singleSelect := a2;
+		l1 := self:ChildViewFrames();
+		local l1;
+		(for l2 := 0 to 6 do begin
+				SetValue(l1[l2], 'viewFlags, BAnd(l1[l2].viewFlags, bnot(33554432)))
+			end);
+		(for l2 := 0 to 6 do begin
+				local l5;
+				if (BAnd(dayBit[l2], selected) > 0) then begin
+						l5 := self:DayOfWeekToColumn(l2);
+						SetValue(l1[l5], 'viewFlags, BOr(l1[l5].viewFlags, 33554432))
+					end
+			end);
+		self:Dirty()
+	end,
+	GetSelected: func() begin
+		selected
+	end,
+	viewChildren: [viewChildren:
+		{
+			_proto: protoDayPickerProto,
+			viewJustify: 8388614,
+			dayNum: 0,
+			viewBounds: {left: 2, top: 2, right: 15, bottom: 15},
+			dayOfWeek: 2048,
+			dayIndex: 0,
+			text: nil
+		},
+		{_proto: protoDayPickerProto, dayNum: 1, dayOfWeek: 1024, dayIndex: 1, text: nil},
+		{_proto: protoDayPickerProto, dayNum: 2, dayOfWeek: 512, dayIndex: 2, text: nil},
+		{_proto: protoDayPickerProto, dayNum: 3, dayOfWeek: 256, dayIndex: 3, text: nil},
+		{_proto: protoDayPickerProto, dayNum: 4, dayOfWeek: 128, dayIndex: 4, text: nil},
+		{_proto: protoDayPickerProto, dayNum: 5, dayOfWeek: 64, dayIndex: 5, text: nil},
+		{_proto: protoDayPickerProto, dayNum: 6, dayOfWeek: 32, dayIndex: 6, text: nil}
+	]
+};
+
+protoDayPickerProto := {
+	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2) + vfRound(4),
+	viewJustify: 8389638,
+	viewBounds: {left: 2, top: 2, right: 15, bottom: 15},
+	hilite: nil,
+	viewSetupFormScript: func() begin
+		self:InitializeDayOfWeekButton(dayNum)
+	end,
+	viewClickScript: func(a1) begin
+		(if self:TrackHilite(a1) then begin
+				if singleSelect then begin
+						selected := self.dayOfWeek
+					end else begin
+						if (BAnd((selected := bxor(selected, self.dayOfWeek)), 4064) = 0) then begin
+								selected := self.dayOfWeek
+							end
+					end;
+				self:Parent():?HitItem(self.dayIndex);
+				self:Parent():Initialize(selected, singleSelect)
+			end)
+	end,
+	_proto: @protoTextButton
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+InitializeDayOfWeekButton_literal0 := same("protoDayPicker.InitializeDayOfWeekButton.literals[0]");
+
+InitializeDayOfWeekButton_literal2 := same("protoDayPicker.InitializeDayOfWeekButton.literals[2]");

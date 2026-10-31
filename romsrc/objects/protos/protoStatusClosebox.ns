@@ -1,0 +1,35 @@
+// protoStatusClosebox, and what only it reaches
+
+protoStatusClosebox := {
+	debug: 8790,
+	name: 'closeBox,
+	buttonClickScript: func() begin
+		base:Close()
+	end,
+	viewFlags: vVisible + vReadOnly + vClickable,
+	visibleAction: nil,
+	viewSetupFormScript: func() begin
+		local l1, l2;
+		inherited:?viewSetupFormScript();
+		l1 := self:path();
+		visibleAction := nil;
+		(if (if l1 then HasSlot(l1, name)) then begin
+				if (l2 := l1.(name)) then begin
+						buttonClickScript := l2
+					end;
+				(if l2 then (visibleAction := 'makeVisible) else (visibleAction := 'makeInvisible))
+			end)
+	end,
+	viewSetupDoneScript: func() begin
+		(if visibleAction then (if (visibleAction = 'makeVisible) then self:Show() else self:Hide()))
+	end,
+	viewUpdateFormScript: func() begin
+		self:viewSetupFormScript();
+		self:viewSetupDoneScript()
+	end,
+	_proto: @protoCancelButton
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupDoneScript_code_2 := same("protoStatusClosebox.viewSetupDoneScript.instructions");

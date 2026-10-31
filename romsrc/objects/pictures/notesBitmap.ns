@@ -1,0 +1,29 @@
+// notesBitmap, and what only it reaches
+
+notesBitmap := {
+	unhilited: {
+		bounds: unhilitedBounds_19,
+		mask: bitmap('mask, "resources/mask/540bf9.png", "000000000004000000000000001b0015", 1),
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/540d09.png", "00000000000c000000000000001b0015", 4),
+				bitdepth: 4
+			},
+			{cbits: colordataCbits_19, bitdepth: 1}
+		]
+	},
+	hilited: {
+		bounds: {left: 0, top: 0, right: 21, bottom: 27},
+		mask: bitmap('mask, "resources/mask/540919.png", "000000000004000000000000001b0015", 1),
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/540a29.png", "00000000000c000000000000001b0015", 4),
+				bitdepth: 4
+			},
+			{
+				cbits: bitmap('bits, "resources/bits/5409a1.png", "000000000004000000000000001b0015", 1),
+				bitdepth: 1
+			}
+		]
+	}
+};

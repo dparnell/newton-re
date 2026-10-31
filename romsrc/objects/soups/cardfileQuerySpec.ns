@@ -1,0 +1,3 @@
+// cardfileQuerySpec, and what only it reaches
+
+cardfileQuerySpec := {type: 'index, indexPath: '_uniqueID};

@@ -1,5 +1,0 @@
-@@ 0x51dcd1
-func(a1, a2) begin
-	(if (a1 = 'up) then self:viewScrollUpScript() else self:viewScrollDownScript())
-end
-@@end

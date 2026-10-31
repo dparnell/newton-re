@@ -1,0 +1,3 @@
+// dateQuerySpec, and what only it reaches
+
+dateQuerySpec := {type: 'index, indexPath: 'mtgStartDate, beginKey: 0, endExclKey: nil};

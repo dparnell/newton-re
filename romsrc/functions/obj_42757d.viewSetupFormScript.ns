@@ -1,5 +1,0 @@
-@@ 0x42745d
-func() begin
-	(startSeconds := TimeInSeconds())
-end
-@@end

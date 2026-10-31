@@ -1,0 +1,239 @@
+// export27, and what only it reaches
+
+export27 := {
+	stepChildren: [stepChildren: editFields],
+	viewFlags: vVisible + vApplication + vClickable,
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewBounds: {top: 7, left: 7, right: -7, bottom: -7},
+	noScroll: "This window does not support scrolling.",
+	noOverview: "This window does not support Overview.",
+	pickActionScript: func(a1) begin
+		target.sorton := SPrintObject(a1);
+		EntryChange(target);
+		AddDeferredSend(closeBox, 'buttonClickScript, '[Array: ])
+	end,
+	MakeDataPaths: func(a1, a2, a3) begin
+		newtAppBase:MakeDataPaths(a1, a2, a3)
+	end,
+	GetCustomInfo: func() begin
+		newtAppBase:GetCustomInfo()
+	end,
+	SetCustomInfo: func(a1) begin
+		newtAppBase:SetCustomInfo(a1)
+	end,
+	EditCustomLabels: func() begin
+		newtAppBase:EditCustomLabels()
+	end,
+	retargetChain: nil,
+	ReorientToScreen: @defRotateFunc,
+	_proto: @protoFloater,
+	viewFormat: vfFillWhite + vfFrameDragShadow + vfPen(7) + vfRound(5),
+	header: nil,
+	stepAllocateContext: [|Array|:
+		'header,
+		export27Item,
+		'closeBox,
+		doneBtn,
+		'keyboardButton,
+		keyButton,
+		'editNewtLayout,
+		editFields
+	],
+	closeBox: nil,
+	keyboardButton: nil,
+	editNewtLayout: nil
+};
+
+editFields := {
+	masterSoupSlot: 'names,
+	name: "Edit Fields",
+	viewBounds: {left: 1, top: 0, right: 0, bottom: 0},
+	stepChildren: [stepChildren:
+		{
+			stepChildren: [stepChildren:
+				export27Item,
+				{
+					viewBounds: {left: 0, top: 15, right: 0, bottom: 0},
+					viewJustify: vjParentFullH + vjParentFullV,
+					viewDef: 'default,
+					stepChildren: [stepChildren: editFieldsItem, {_proto: @8212}, doneBtn],
+					declareSelf: 'editView,
+					viewSetupChildrenScript: func() begin
+						local l1, l2;
+						l1 := viewChildren[0];
+						stepChildren := Clone(stepChildren);
+						if l1.nukeRecToggle then begin
+								ArrayMunger(stepChildren, 1, 1, nil, 0, nil)
+							end;
+						if l1.usePhoneKeys then begin
+								stepChildren[0] := {_proto: @phonePad, viewJustify: 144, viewBounds: SetBounds(0, (-126 - extraChildrenHeight), 124, (-extraChildrenHeight))}
+							end else begin
+								if l1.useNumericKeys then begin
+										stepChildren[0] := {_proto: @numericKeys, viewJustify: 144, viewBounds: SetBounds(0, (-101 - extraChildrenHeight), 105, (-extraChildrenHeight)), viewFont: keypadFont}
+									end else begin
+										if l1.noKeyboard then begin
+												ArrayMunger(stepChildren, 0, 1, nil, 0, nil)
+											end else nil
+									end
+							end;
+						if (not l1.noKeyboard) then begin
+								l2 := stepChildren[0].viewBounds;
+								extraChildrenHeight := ((extraChildrenHeight + l2.bottom) - l2.top)
+							end;
+						inherited:?viewSetupChildrenScript()
+					end,
+					viewSetupFormScript: func() begin
+						if (if (if selectedLayout then target) then GetViewDefs(target.class).(selectedLayout)) then begin
+								self.viewDef := selectedLayout
+							end else begin
+								self.viewDef := 'default
+							end;
+						inherited:?viewSetupFormScript()
+					end,
+					viewSetupDoneScript: func() begin
+						local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+						l8 := GetAppParams().appAreaHeight;
+						l9 := self:LocalBox();
+						l1 := Length((l2 := self:ChildViewFrames()[0]:ChildViewFrames()));
+						l3 := Clone(base.viewBounds);
+						l4 := (l2[(l1 - 1)]:GlobalBox().bottom + extraChildrenHeight);
+						if (if (not viewChildren[0].noKeyboard) then (l4 > l8)) then begin
+								l7 := self:ChildViewFrames()[1];
+								RemoveStepView(self, l7);
+								l4 := ((l4 - extraChildrenHeight) + 18)
+							end;
+						l3.top := max(7, ((l8 - l4) - 3));
+						SetValue(base, 'viewBounds, l3);
+						if (viewDef <> 'editNotes) then begin
+								if (l5 := NextKeyView(l2[0], 0, 0)) then begin
+										SetKeyView(l5, 999)
+									end
+							end;
+						inherited:?viewSetupDoneScript()
+					end,
+					extraChildrenHeight: 8,
+					keypadFont: tsSystem + tsSize(10) + tsBold,
+					_proto: @newtStationeryView,
+					keyButton: keyButton,
+					alphaKeys: nil,
+					stepAllocateContext: [|Array|: 'alphaKeys, editFieldsItem]
+				}
+			],
+			SetSorton: func(a1) begin
+				if IsRichString(a1) then begin
+						inkDialog := true;
+						target.sorton := nil
+					end else begin
+						target.sorton := a1
+					end;
+				header:Retarget()
+			end,
+			declareSelf: 'editEntryView,
+			viewJustify: vjParentFullH + vjParentFullV,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+			HasData: func(a1, a2) begin
+				l3 := nil;
+				if (IsFrame(a2) or IsArray(a2)) then begin
+						local l1;
+						local l2;
+						local l3;
+						(foreach l1, l2 in a2 do begin
+								if self:HasData(l1, l2) then begin
+										break (l3 := l1)
+									end
+							end)
+					end else begin
+						if ((not IsInstance(a1, 'symbol)) or (not appBase.kDatalessSlots.(a1))) then begin
+								if IsInstance(a2, 'string) then begin
+										l3 := StrFilled(a2)
+									end else begin
+										if a2 then begin
+												l3 := a1
+											end
+									end
+							end
+					end;
+				l3
+			end,
+			inkDialog: nil,
+			viewPostQuitScript: func() begin
+				local l1, l2, l3, l4;
+				self:EndFlush();
+				if (not EntryValid(target)) then begin
+						return nil
+					end;
+				if (not self:HasData(nil, target)) then begin
+						l4 := target;
+						if saveEntry then begin
+								appBase.layout.dataCursor:Goto(saveEntry)
+							end;
+						appBase.layout:KillEntry(l4)
+					end else begin
+						if (target.class = 'owner) then begin
+								UseCurrentPersona()
+							end else begin
+								if (target.class = 'worksite) then begin
+										UseCurrentEmporium()
+									end
+							end;
+						if makingNewCard then begin
+								appBase:AddUndoAction('UndoNewCard, [Array: target, saveEntry])
+							end else begin
+								appBase:AddUndoAction('UndoAddData, [Array: target, startTarget])
+							end;
+						appBase.layout.dataCursor:Goto(target);
+						appBase.layout:Retarget(true)
+					end;
+				(appBase._recogSettings := _recogSettings)
+			end,
+			viewQuitScript: func() begin
+				'postQuit
+			end,
+			viewSetupFormScript: func() begin
+				self.startTarget := TotalClone(target);
+				inherited:?viewSetupFormScript()
+			end,
+			_proto: @newtEntryView
+		}
+	],
+	forceNewEntry: nil,
+	viewJustify: vjParentFullH + vjParentFullV,
+	_proto: @newtLayout,
+	preAllocatedContext: 'editNewtLayout
+};
+
+export27Item := {_proto: @8241, preAllocatedContext: 'header};
+
+editFieldsItem := {
+	viewBounds: {top: -91, left: 0, right: 225, bottom: -10},
+	viewJustify: vjParentCenterH + vjParentBottomV,
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	_proto: @alphaKeys,
+	preAllocatedContext: 'alphaKeys
+};
+
+doneBtn := {
+	debug: "Done btn",
+	buttonClickScript: func() begin
+		(if (if targetView.inkDialog then (not StrFilled(target.sorton))) then @rubricPopup:new("What letter should this entry be sorted under?", $A, self:GlobalBox(), base) else begin
+				if (appBase.editSlipLayout = base) then begin
+						appBase.editSlipLayout := nil
+					end;
+				AddDeferredSend(appBase, 'RememberedClose, [Array: base])
+			end)
+	end,
+	_proto: @protoCancelButton,
+	preAllocatedContext: 'closeBox
+};
+
+keyButton := {
+	viewBounds: {left: 26, top: -18, right: 54, bottom: -5},
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV,
+	_proto: @protoKeyboardButton,
+	preAllocatedContext: 'keyboardButton
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+GetCustomInfo_code := same("export27.GetCustomInfo.instructions");

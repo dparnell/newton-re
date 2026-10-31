@@ -1,6 +1,0 @@
-@@ 0x104a8e9
-func(a1) begin
-	self:MDoCallbacks(fLinkClients_Release, a1, 'Update);
-	(if a1.infoError then self:DoEvent('DeactivateDomainManagerFailure, nil) else (if (a1.infoStatus = 'Deactivated) then self:DoEvent('DeactivateDomainManagerSuccess, nil)))
-end
-@@end

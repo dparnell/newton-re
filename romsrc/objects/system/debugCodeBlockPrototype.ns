@@ -1,0 +1,10 @@
+// debugCodeBlockPrototype, and what only it reaches
+
+debugCodeBlockPrototype := {
+	class: 'CodeBlock,
+	instructions: nil,
+	literals: nil,
+	argFrame: nil,
+	numArgs: nil,
+	DebuggerInfo: nil
+};

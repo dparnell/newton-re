@@ -1,6 +1,0 @@
-@@ 0x50ccbd
-func(a1) begin
-	unitsIndex := a1;
-	inherited:pickActionScript(a1)
-end
-@@end

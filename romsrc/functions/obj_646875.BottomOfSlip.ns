@@ -1,5 +1,0 @@
-@@ 0x478f89
-func() begin
-	((envelopeHeight + bottomIndent) - 2)
-end
-@@end

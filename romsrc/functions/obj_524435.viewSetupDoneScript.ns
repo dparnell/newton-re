@@ -1,5 +1,0 @@
-@@ 0x520115
-func() begin
-	SetKeyView(entryLine, 999)
-end
-@@end

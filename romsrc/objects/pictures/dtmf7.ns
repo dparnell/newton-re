@@ -1,0 +1,6 @@
+// dtmf7, and what only it reaches
+
+dtmf7 := {
+	bits: bitmap('bits, "resources/bits/3d7d45.png", "00000000000400f700f7011d010b0131", 1),
+	bounds: {left: 0, top: 0, right: 20, bottom: 20}
+};

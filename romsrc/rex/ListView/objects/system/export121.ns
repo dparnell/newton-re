@@ -1,0 +1,1417 @@
+// export121, and what only it reaches
+
+export121 := {
+	IsEmpty: compile(
+		options: "names",
+		func(anIndex) begin
+			if (StrLen(topics[anIndex].text) = 0) then begin
+					return true
+				end;
+			nil
+		end),
+	GetTopicCount: compile(
+		options: "names",
+		func() begin
+			nTopics
+		end),
+	viewDropRemoveScript: compile(
+		options: "names",
+		func(aDragRef) begin
+			local undoDragTo;
+			(if (if IsFrame(aDragRef) then HasPath(aDragRef, 'viewCObject)) then nil else begin
+					undoDragTo := {index: (aDragRef.index[0] - 1), level: topics[aDragRef.index[0]].level};
+					self:RemoveTopicDragDrop(aDragRef, nil);
+					self:RedoTopics();
+					self.dragTo := nil;
+					aDragRef.dragTo := undoDragTo;
+					AddUndoAction('UndoDropRemove, [Array: aDragRef]);
+					true
+				end)
+		end),
+	AddKidsToList: compile(
+		options: "names",
+		func(aList, anIndex, aLevel) begin
+			if (aLevel = nil) then begin
+					aLevel := 1
+				end;
+			(for ti := (anIndex + 1) to (nTopics - 1) do begin
+					if ((topics[ti].level = nil) or (topics[ti].level <= aLevel)) then begin
+							break
+						end;
+					SetAdd(aList, ti, true)
+				end)
+		end),
+	viewSetupDoneScript: compile(
+		options: "names",
+		func() begin
+			rightMargin := (self:LocalBox().right + rightIndent);
+			(self.uniqueSymbol := Intern(Stringer([Array: "ListView", viewCObject])))
+		end),
+	OlderSister: compile(
+		options: "names",
+		func(anIndex) begin
+			if (anIndex = 0) then begin
+					return nil
+				end;
+			if ((level := topics[anIndex].level) = nil) then begin
+					level := 1
+				end;
+			local ti;
+			local level;
+			local topicLevel;
+			(for ti := (anIndex - 1) to 0 by -1 do begin
+					if ((topicLevel := topics[ti].level) = nil) then begin
+							topicLevel := 1
+						end;
+					if (topicLevel = level) then begin
+							return ti
+						end else begin
+							if (topicLevel < level) then begin
+									return nil
+								end
+						end
+				end);
+			nil
+		end),
+	UndoDropRemove: compile(
+		options: "names",
+		func(aDragRef) begin
+			self:AddTopicDragDrop(aDragRef, true, nil);
+			self:RedoChildren();
+			self.offset := nil;
+			indexList := Array(Length(aDragRef.topics), nil);
+			local indexList;
+			(for i := 0 to (Length(indexList) - 1) do begin
+					indexList[i] := ((aDragRef.dragTo.index + 1) + i)
+				end);
+			AddUndoAction('UndoDropTopic, [Array: indexList])
+		end),
+	DeletingTopic: compile(
+		options: "names",
+		func(anIndex) begin
+			nil
+		end),
+	ActiveTopic: compile(
+		options: "names",
+		func(anIndex) begin
+			curTopic := anIndex;
+			(if (anIndex <> nil) then SetKeyView(self:TopicIndexToView(anIndex), 99999))
+		end),
+	_keyCheckItemScript: compile(
+		options: "names",
+		func(keyView) begin
+			local theIndex, theTopic;
+			(if (BAnd(listViewFlags, 2) <> 0) then (if curTopic then begin
+						theIndex := curTopic;
+						theTopic := topics[curTopic];
+						self:HandleCheck(theIndex, theTopic)
+					end))
+		end),
+	Mother: compile(
+		options: "names",
+		func(anIndex) begin
+			if (anIndex >= nTopics) then begin
+					return nil
+				end;
+			if (((level := topics[anIndex].level) = nil) or (level <= 1)) then begin
+					return nil
+				end;
+			local level;
+			(for ti := (anIndex - 1) to 0 by -1 do begin
+					if ((topics[ti].level = nil) or (topics[ti].level < level)) then begin
+							return ti
+						end
+				end);
+			nil
+		end),
+	ReflowTopics: compile(
+		options: "names",
+		func(anOptions) begin
+			kids := Array(nTopics, nil);
+			ki := 0;
+			top := 0;
+			image := self:LocalBox();
+			lastTopic := reflowStart;
+			topics := DeepClone(topics);
+			self:LockScreen(true);
+			local kids;
+			local ti;
+			local ki;
+			local top;
+			local height;
+			local template;
+			local topic;
+			local view;
+			local image;
+			(for ti := reflowStart to (nTopics - 1) do begin
+					topic := topics[ti];
+					if (((anOptions = nil) or (topic.hideCount = 0)) or (topic.hideCount = nil)) then begin
+							template := (kids[ki] := self:ChildTemplateFromTopic(topic));
+							height := (topic.viewBounds.bottom - topic.viewBounds.top);
+							template.viewBounds.top := top;
+							template.viewBounds.bottom := (top + height);
+							template.viewBounds.right := image.right;
+							template.viewFlags := 9;
+							template.styles := self:MungeStyles(template.styles, 12289);
+							if (view := AddStepView(self, template)) then begin
+									height := view:LocalBox().bottom;
+									RemoveStepView(self, view);
+									self:SetTopAndLevel(topic, top, 0)
+								end;
+							if (if ((top := (top + height)) > image.bottom) then (ki <> 0)) then begin
+									break
+								end;
+							lastTopic := ti;
+							ki := (ki + 1)
+						end
+				end);
+			self:LockScreen(nil);
+			setlength(kids, ki);
+			self.stepChildren := nil;
+			kids
+		end),
+	curTopicChanged: nil,
+	RedoTopics: compile(
+		options: "names",
+		func() begin
+			(if Visible(self) then self:RedoChildren())
+		end),
+	HandleScrub: compile(
+		options: "names",
+		func(aBounds, aUnit) begin
+			deleteList := [Array: ];
+			oldCurTopic := curTopic;
+			local topic;
+			local ti;
+			local MarkerBounds;
+			local deleteList;
+			local deletedTopics;
+			local nToDelete;
+			local i;
+			local oldCurTopic;
+			(for ti := firstTopic to (nTopics - 1) do begin
+					if (((topic := topics[ti]).hideCount = nil) or (topic.hideCount = 0)) then begin
+							if ((MarkerBounds := InsetRect(self:MarkerBounds(topic), 2, 6)).top > aBounds.bottom) then begin
+									break
+								end;
+							if (BAnd(listViewFlags, 2) <> 0) then begin
+									MarkerBounds.left := ((MarkerBounds.left - 13) - 2)
+								end;
+							if RectsOverlap(aBounds, MarkerBounds) then begin
+									if ((not HasPath(topic, 'hideCount)) or (topic.hideCount = 0)) then begin
+											SetAdd(deleteList, ti, true);
+											self:AddKidsToList(deleteList, ti, topic.level)
+										end
+								end
+						end
+				end);
+			if ((nToDelete := Length(deleteList)) > 0) then begin
+					InkOff(aUnit);
+					curTopic := nil;
+					deletedTopics := Array(nToDelete, nil);
+					(for i := 0 to (nToDelete - 1) do begin
+							local result;
+							if ((if HasPath((topic := topics[deleteList[i]]), 'source) then (topic.source = nil)) or (ClassOf(topic.source) = 'symbol)) then begin
+									self:Notify(3, title, "Can\u2019\ut delete a 1.x formatted To Do item");
+									return 'noPoof
+								end;
+							deletedTopics[i] := topic
+						end);
+					if ((result := self:DeleteTopics(deleteList)) = nil) then begin
+							return 'noPoof
+						end;
+					if (nTopics = 0) then begin
+							curTopic := nil
+						end;
+					AddUndoAction('UndoScrub, [Array: deleteList, deletedTopics, oldCurTopic]);
+					return true
+				end;
+			nil
+		end),
+	viewGetDropDataScript: compile(
+		options: "names",
+		func(aDragType, aDragRef) begin
+			(if ((aDragType = 'topic) or (aDragType = 'task)) then aDragRef else (if (if (aDragType = 'text) then (not (if IsFrame(aDragRef) then HasPath(aDragRef, 'viewCObject)))) then begin
+						local theText;
+						local notFirst;
+						(foreach topic in aDragRef.topics do begin
+								if notFirst then begin
+										theText := Stringer([Array: theText, "\n"]);
+										if topic.level then begin
+												(for t := 1 to (topic.level - aDragRef.level) do begin
+														theText := Stringer([Array: theText, "\t"])
+													end)
+											end;
+										theText := Stringer([Array: theText, "\u2022\u", " ", MakeRichString(topic.text, topic.styles)])
+									end else begin
+										theText := Stringer([Array: "\u2022\u", " ", MakeRichString(topic.text, topic.styles)]);
+										notFirst := true
+									end
+							end);
+						{text: theText, viewBounds: RelBounds(0, 0, rightMargin, aDragRef.height)}
+					end))
+		end),
+	viewGetDropTypesScript: compile(
+		options: "names",
+		func(aDropPoint) begin
+			box := self:GlobalBox();
+			x := (aDropPoint.x - box.left);
+			if ((y := (aDropPoint.y - box.top)) <= self:ListBottom()) then begin
+					local x;
+					local y;
+					local box;
+					local topic;
+					local topicBounds;
+					(foreach topic in topics do begin
+							(topicBounds := Clone(topic.viewBounds)).left := (topicBounds.left - ((20 + leftMarkGap) + rightMarkGap));
+							if (if ((topic.hideCount = 0) or (topic.hideCount = nil)) then IsPtInRect(x, y, topicBounds)) then begin
+									return allDropTypes
+								end
+						end);
+					return markerDropTypes
+				end;
+			allDropTypes
+		end),
+	TopicHeight: compile(
+		options: "names",
+		func(aTopic) begin
+			(self:TopicBottom(aTopic) - aTopic.viewBounds.top)
+		end),
+	UndoDropTopic: compile(
+		options: "names",
+		func(aList) begin
+			oldCurTopic := curTopic;
+			deletedTopics := Array((nToDelete := Length(aList)), nil);
+			local oldCurTopic;
+			local deletedTopics;
+			local nToDelete;
+			local topic;
+			(for i := 0 to (nToDelete - 1) do begin
+					topic := topics[aList[i]];
+					deletedTopics[i] := topic
+				end);
+			self:DeleteTopics(aList);
+			AddUndoAction('UndoScrub, [Array: aList, deletedTopics, oldCurTopic])
+		end),
+	UndoScrub: compile(
+		options: "names",
+		func(aList, aDeletedTopics, anOldCurTopic) begin
+			if ((nItems := Length(aList)) > 1) then begin
+					Sort(aList, '|<|, nil)
+				end;
+			local nItems;
+			local i;
+			local top;
+			local newIndex;
+			local theTopic;
+			local height;
+			(for i := 0 to (nItems - 1) do begin
+					newIndex := aList[i];
+					height := self:TopicHeight((theTopic := aDeletedTopics[i]));
+					if (newIndex < nTopics) then begin
+							top := topics[newIndex].viewBounds.top
+						end else begin
+							top := self:ListBottom()
+						end;
+					self:AppendTopic(theTopic, newIndex, top, 0);
+					self:SetDone(newIndex, topics[newIndex], topics[newIndex].mtgDone, true, nil)
+				end);
+			self:UpdateMultipleStores(true);
+			self:RedoChildren();
+			(if (curTopic := anOldCurTopic) then SetKeyView(self:TopicIndexToView(curTopic), 99999))
+		end),
+	NewTopic: compile(
+		options: "names",
+		func(aLevel, aText) begin
+			local level, theIndex, height, newTopicFont, theTopic, oldCurTopic, curTopicLevel;
+			oldCurTopic := curTopic;
+			if curTopic then begin
+					curTopicLevel := 1;
+					if topics[curTopic].level then begin
+							curTopicLevel := topics[curTopic].level
+						end;
+					if (if self:IsCollapsed(curTopic) then (aLevel > curTopicLevel)) then begin
+							self:ExpandTopic(curTopic, true)
+						end;
+					theIndex := (curTopic + 1);
+					level := aLevel;
+					(while (if (if (theIndex < nTopics) then (topics[theIndex].level <> nil)) then (topics[theIndex].level > level)) do (theIndex := (theIndex + 1)))
+				end else begin
+					theIndex := nTopics;
+					level := 1
+				end;
+			if self.topicFont then begin
+					newTopicFont := topicFont
+				end else begin
+					newTopicFont := GetInsertionStyle()
+				end;
+			if (if ((height := FontHeight(newTopicFont)) < viewLineSpacing) then ((height + 6) >= viewLineSpacing)) then begin
+					height := viewLineSpacing
+				end;
+			(theTopic := self:AddEmptyTopic(theIndex, level)).text := Clone(aText);
+			theTopic.styles := [Array: StrLen(aText), Clone(newTopicFont)];
+			theTopic.viewBounds := RelBounds((((leftMarkGap + ((level - 1) * 20)) + 20) + rightMarkGap), 0, rightMargin, height);
+			self:UpdateMultipleStores(true);
+			self:RedoTopics();
+			AddProcrastinatedSend(uniqueSymbol, self, 'EnsureVisibleTopic, [Array: theIndex], 0);
+			self:ActiveTopic(theIndex);
+			AddUndoAction('UndoAddTopic, [Array: theIndex, oldCurTopic])
+		end),
+	CalcLevel: compile(
+		options: "names",
+		func(anX) begin
+			local theLevel, topicLevel;
+			if (nTopics = 0) then begin
+					return 1
+				end;
+			theLevel := Max(1, ((((((anX - 20) - leftMarkGap) - rightMarkGap) + 20) - 1) div 20));
+			if (nTopics > 0) then begin
+					if ((topicLevel := topics[(nTopics - 1)].level) = nil) then begin
+							topicLevel := 1
+						end;
+					theLevel := Min(theLevel, (topicLevel + 1))
+				end;
+			return theLevel
+		end),
+	viewChangedScript: compile(
+		options: "names",
+		func(aSlot, aView) begin
+			local theList, topic;
+			if reflow then begin
+					return nil
+				end;
+			if (index = -1) then begin
+					return nil
+				end;
+			(if Visible((theList := list)) then (if ((aSlot = 'text) or (aSlot = 'styles)) then begin
+						theList.curTopic := aView.index;
+						(topic := theList.topics[aView.index]).text := text;
+						topic.styles := styles;
+						theList:StartFlush()
+					end else (if (aSlot = 'viewBounds) then (if doingScrub then AddDeferredSend(theList, 'ChildChanged, [Array: aView]) else theList:ChildChanged(aView)))))
+		end),
+	SetReadOnly: compile(
+		options: "names",
+		func(anIndex, aStatus) begin
+			(if aStatus then (topics[anIndex].source := nil) else RemoveSlot(topics[anIndex], 'source))
+		end),
+	_keyAuntScript: compile(
+		options: "names",
+		func(keyView) begin
+			(if (maxLevel > 1) then self:NewRelative('aunt))
+		end),
+	ShoveBelow: compile(
+		options: "names",
+		func(anIndex, aDelta) begin
+			local topic, kid;
+			topic := topics[anIndex];
+			(while (if (topic.hideCount <> nil) then (topic.hideCount > 0)) do begin
+					if ((anIndex := (anIndex + 1)) >= nTopics) then begin
+							return nil
+						end;
+					(topic := topics[anIndex])
+				end);
+			if ((kid := self:TopicIndexToView(anIndex)) = nil) then begin
+					return nil
+				end;
+			kid.realData.viewBounds := OffsetRect(kid.viewBounds, 0, aDelta);
+			SetValue(kid, 'viewBounds, kid.realData.viewBounds)
+		end),
+	GetTopicData: compile(
+		options: "names",
+		func(anIndex) begin
+			local topic;
+			(if (((anIndex = nil) or (anIndex >= nTopics)) or (anIndex < 0)) then nil else {text: (topic := topics[anIndex]).text, styles: topic.styles})
+		end),
+	ResolveClick: compile(
+		options: "names",
+		func(anX, y) begin
+			if ((y > self:ListBottom()) or (nTopics = 0)) then begin
+					return {topicIndex: nil}
+				end;
+			local bounds;
+			(for ti := firstTopic to (nTopics - 1) do begin
+					bounds := self:ClickBounds(ti);
+					if (if (y >= bounds.top) then (y <= bounds.bottom)) then begin
+							if (anX > bounds.right) then begin
+									return {topicIndex: ti, where: 'topic}
+								end;
+							return {topicIndex: ti, where: 'marker}
+						end
+				end);
+			(for ti := 0 to (nTopics - 1) do begin
+					if (y < (self:MarkerBounds(topics[ti]).top + 4)) then begin
+							return {topicIndex: ti, where: nil}
+						end
+				end);
+			{topicIndex: (nTopics - 1), where: nil}
+		end),
+	AdjustKids: compile(
+		options: "names",
+		func() begin
+			if (not Visible(self)) then begin
+					return nil
+				end;
+			if ((lastKid := (Length((kids := self:ChildViewFrames())) - 1)) = -1) then begin
+					adjusting := nil;
+					curTopicChanged := nil;
+					topicChanged := 999999;
+					return nil
+				end;
+			adjusting := true;
+			self:Dirty();
+			(try begin
+					if ((vi := self:VisibleTopicIndex(topicChanged)) > 0) then begin
+							lastView := kids[(vi - 1)]
+						end else begin
+							lastView := nil
+						end;
+					local adjustView;
+					local lastView;
+					local kids;
+					local lastKid;
+					local vi;
+					local topic;
+					(for vi := vi to lastKid do begin
+							adjustView := kids[vi];
+							topic := topics[adjustView.index];
+							self:AdjustParagraph(lastView, adjustView, nil, nil);
+							topic.viewBounds := adjustView.viewBounds;
+							lastView := adjustView
+						end);
+					if (if curTopicChanged then curTopic) then begin
+							self:EnsureVisibleTopic(curTopic)
+						end;
+					adjusting := nil;
+					curTopicChanged := nil;
+					(topicChanged := 999999)
+				end onexception |evt.ex| do begin
+					adjusting := nil;
+					curTopicChanged := nil;
+					topicChanged := 999999;
+					Rethrow()
+				end)
+		end),
+	UndoAddWriting: compile(
+		options: "names",
+		func(anIndex) begin
+			self:DeleteTopics([Array: anIndex])
+		end),
+	ShowFoundItem: compile(
+		options: "names",
+		func(anEntry, aFinder) begin
+			local found, ti;
+			(if (aFinder.findType = 'text) then (if (found := FindStringInFrame(anEntry.topics, aFinder.findWords, 'first)) then begin
+						self:ShowFoundTopic((ti := found[1][0]), found[2], aFinder);
+						self:EnsureVisibleTopic(ti)
+					end))
+		end),
+	viewDropScript: compile(
+		options: "names",
+		func(aDropType, aDropData, aDropPt) begin
+			(if ((aDropType = 'topic) or (aDropType = 'task)) then begin
+					indexList := Array(Length(aDropData.topics), nil);
+					local indexList;
+					(for i := 0 to (Length(indexList) - 1) do begin
+							indexList[i] := ((dragTo.index + 1) + i)
+						end);
+					self:AddTopicDragDrop(aDropData, nil, true);
+					self:RedoTopics();
+					AddUndoAction('UndoDropTopic, [Array: indexList]);
+					true
+				end)
+		end),
+	_keySisterScript: compile(
+		options: "names",
+		func(keyView) begin
+			(if (maxLevel > 1) then self:NewRelative('sister))
+		end),
+	UndoAddTopic: compile(
+		options: "names",
+		func(anIndex, anOldCurTopic) begin
+			local topic;
+			topic := topics[anIndex];
+			self:DeleteTopics([Array: anIndex]);
+			if (curTopic := anOldCurTopic) then begin
+					SetKeyView(self:TopicIndexToView(curTopic), 99999)
+				end;
+			AddUndoAction('NewTopic, [Array: topic.level, topic.text])
+		end),
+	AddEmptyTopic: compile(
+		options: "names",
+		func(anIndex, aLevel) begin
+			local topicFrame, sis;
+			topicFrame := self:MakeTopicFrame(aLevel);
+			ArrayInsert(topics, topicFrame, anIndex);
+			nTopics := (nTopics + 1);
+			if (if (aLevel <> 1) then (BAnd(listViewFlags, 2) <> 0)) then begin
+					self:SetDone(anIndex, topicFrame, nil, true, true)
+				end;
+			if (BAnd(listViewFlags, 12) <> 0) then begin
+					if (anIndex <> 0) then begin
+							if (sis := self:OlderSister(anIndex)) then begin
+									topicFrame.mtgPriority := topics[sis].mtgPriority
+								end
+						end
+				end;
+			self:StartFlush();
+			topicFrame
+		end),
+	topicChanged: 999999,
+	SetDone: compile(
+		options: "names",
+		func(anIndex, aTopic, aDone, aPropagateUp, aPropagateDown) begin
+			if ((level := aTopic.level) = nil) then begin
+					level := 1
+				end;
+			aTopic.mtgDone := aDone;
+			if aPropagateDown then begin
+					local ti;
+					local mom;
+					local level;
+					local theTopic;
+					local momDone;
+					(for ti := (anIndex + 1) to (nTopics - 1) do begin
+							if (((theTopic := topics[ti]).level = nil) or (theTopic.level <= level)) then begin
+									break
+								end;
+							if (theTopic.mtgDone <> aDone) then begin
+									theTopic.mtgDone := aDone
+								end
+						end)
+				end;
+			if (if (level <> 1) then aPropagateUp) then begin
+					mom := self:Mother(anIndex);
+					if (topics[mom].mtgDone <> aDone) then begin
+							momDone := true;
+							(for ti := (mom + 1) to (nTopics - 1) do begin
+									if (((theTopic := topics[ti]).level = nil) or (theTopic.level < level)) then begin
+											break
+										end;
+									if (theTopic.level = level) then begin
+											momDone := (if momDone then theTopic.mtgDone)
+										end
+								end);
+							if (momDone <> topics[mom].mtgDone) then begin
+									self:SetDone(mom, topics[mom], momDone, true, nil)
+								end
+						end
+				end;
+			(if (BAnd(listViewFlags, 2) <> 0) then self:Dirty())
+		end),
+	measureTopics: nil,
+	UpdateMultipleStores: compile(
+		options: "names",
+		func(aStart) begin
+			(if (aStart <> nil) then self:StartFlush())
+		end),
+	OldestSister: compile(
+		options: "names",
+		func(anIndex) begin
+			if ((level := topics[anIndex].level) = nil) then begin
+					level := 1
+				end;
+			olderSis := anIndex;
+			local olderSis;
+			local ti;
+			local level;
+			local topicLevel;
+			(for ti := (anIndex - 1) to 0 by -1 do begin
+					if ((topicLevel := topics[ti].level) = nil) then begin
+							topicLevel := 1
+						end;
+					if (topicLevel = level) then begin
+							olderSis := ti
+						end else begin
+							if (topicLevel < level) then begin
+									break
+								end
+						end
+				end);
+			olderSis
+		end),
+	SetPriority: compile(
+		options: "names",
+		func(anIndex, aPriority, anUndo) begin
+			level := (theTopic := topics[anIndex]).level;
+			newPlace := nil;
+			needsPrioritySort := true;
+			if ((if HasPath(theTopic, 'source) then (theTopic.source = nil)) or (ClassOf(theTopic.source) = 'symbol)) then begin
+					self:Notify(3, title, "Can\u2019\ut modify a 1.x formatted To Do item");
+					return nil
+				end;
+			if (level = nil) then begin
+					level := 1
+				end;
+			movingUp := (aPriority < theTopic.mtgPriority);
+			theTopic.mtgPriority := aPriority;
+			if anUndo then begin
+					return anIndex
+				end;
+			if movingUp then begin
+					if (((ti := self:OlderSister(anIndex)) = nil) or (topics[ti].mtgPriority <= aPriority)) then begin
+							needsPrioritySort := nil
+						end
+				end else begin
+					if (((ti := self:YoungerSister(anIndex)) = nil) or (topics[ti].mtgPriority >= aPriority)) then begin
+							needsPrioritySort := nil
+						end
+				end;
+			if needsPrioritySort then begin
+					oldestSis := self:OldestSister(anIndex);
+					youngestSis := anIndex;
+					local theTopic;
+					local oldestSis;
+					local level;
+					local youngestSis;
+					local ti;
+					local newPlace;
+					local dragRef;
+					local movingUp;
+					local topicLevel;
+					local needsPrioritySort;
+					(for ti := (oldestSis + 1) to (nTopics - 1) do begin
+							if ((topicLevel := topics[ti].level) = nil) then begin
+									topicLevel := 1
+								end;
+							if (topicLevel = level) then begin
+									youngestSis := ti
+								end else begin
+									if (topicLevel < level) then begin
+											break
+										end
+								end
+						end);
+					if (oldestSis <> youngestSis) then begin
+							StableSort(topics, '|<|, func(t) begin
+								(t.mtgPriority + (if t.mtgDone then 10 else 0))
+							end);
+							AddProcrastinatedSend(uniqueSymbol, self, 'RedoTopics, nil, 0)
+						end
+				end;
+			if newPlace then begin
+					AddUndoAction('viewDropMoveScript, [Array: self:MakeUndoDragRef(dragRef, {index: (newPlace - 1), level: level}), nil, nil, nil])
+				end;
+			self:StartFlush();
+			self:Dirty();
+			(if newPlace then newPlace else anIndex)
+		end),
+	AppendTopic: compile(
+		options: "names",
+		func(aTopic, aNewIndex, aTop, aLevelDelta) begin
+			ArrayInsert(topics, aTopic, aNewIndex);
+			self:SetTopAndLevel(aTopic, aTop, aLevelDelta);
+			(nTopics := (nTopics + 1))
+		end),
+	GetTarget: compile(
+		options: "names",
+		func(anOldTarget) begin
+			self.topics := target.topics;
+			(nTopics := Length(topics))
+		end),
+	AddTopicDragDrop: compile(
+		options: "names",
+		func(aDragRef, aDropOnSelf, aDoPrioritize) begin
+			moveList := aDragRef.topics;
+			dragTo := self.dragTo;
+			if (self.dragTo = nil) then begin
+					dragTo := aDragRef.dragTo
+				end;
+			if (dragTo.index = -2) then begin
+					return nil
+				end;
+			if (if ((newIndex := (dragTo.index + 1)) <= aDragRef.index[0]) then aDropOnSelf) then begin
+					self.moveInSelf := {offset: Length(aDragRef.index)};
+					if (mom := self:Mother(aDragRef.index[0])) then begin
+							if (newIndex = aDragRef.index[0]) then begin
+									moveInSelf.Mother := mom
+								end else begin
+									moveInSelf.Mother := (mom + moveInSelf.offset)
+								end
+						end
+				end;
+			nItems := Length(moveList);
+			if (newIndex >= nTopics) then begin
+					top := self:ListBottom()
+				end else begin
+					top := topics[newIndex].viewBounds.top
+				end;
+			if (dragTo.level = nil) then begin
+					dragTo.level := 1
+				end;
+			if (moveList[0].level = nil) then begin
+					dLevel := (dragTo.level - 1)
+				end else begin
+					dLevel := (dragTo.level - moveList[0].level)
+				end;
+			if (dragTo.level > 1) then begin
+					local moveList;
+					local dragTo;
+					local newIndex;
+					local mom;
+					local nItems;
+					local top;
+					local dLevel;
+					local topic;
+					local i;
+					(for ti := dragTo.index to 0 by -1 do begin
+							if ((topics[ti].level = nil) or (topics[ti].level < dragTo.level)) then begin
+									self:ExpandTopic(ti, nil);
+									break
+								end
+						end)
+				end;
+			(for i := 0 to (nItems - 1) do begin
+					local setSomething;
+					topic := moveList[i];
+					if (not aDropOnSelf) then begin
+							RemoveSlot(topic, 'repeatInfo);
+							RemoveSlot(topic, 'repeatDone)
+						end;
+					self:AppendTopic((topic := Clone(topic)), (newIndex + i), top, dLevel);
+					top := self:TopicBottom(topic)
+				end);
+			self.dragTo := nil;
+			self:SetDone(newIndex, topics[newIndex], topics[newIndex].mtgDone, true, nil);
+			if aDoPrioritize then begin
+					if (nTopics > 1) then begin
+							topic := moveList[0];
+							if ((i := self:OlderSister(newIndex)) = nil) then begin
+									i := self:YoungerSister(newIndex)
+								end;
+							if (if i then topics[i].mtgPriority) then begin
+									setSomething := true;
+									self:SetPriority(newIndex, topics[i].mtgPriority, true)
+								end;
+							if (if (not setSomething) then topics[newIndex].mtgPriority) then begin
+									self:SetPriority(newIndex, topics[newIndex].mtgPriority, true)
+								end
+						end
+				end;
+			if (mom := self:Mother(newIndex)) then begin
+					self:RevealTopic(mom);
+					self:ExpandTopic(mom, nil)
+				end;
+			self:UpdateMultipleStores(true)
+		end),
+	MakeUndoDragRef: compile(
+		options: "names",
+		func(aDragRef, anOldDragTo) begin
+			newDragTo := {};
+			toIndex := (indices := aDragRef.index)[0];
+			from := anOldDragTo.index;
+			topicsMoved := Length(indices);
+			dragRef := DeepClone(aDragRef);
+			if (toIndex > (from + 1)) then begin
+					newDragTo.index := ((toIndex - 1) + topicsMoved)
+				end else begin
+					newDragTo.index := (toIndex - 1)
+				end;
+			newDragTo.level := aDragRef.level;
+			dragRef.dragTo := newDragTo;
+			newIndices := Array(topicsMoved, nil);
+			local dragRef;
+			local newDragTo;
+			local indices;
+			local toIndex;
+			local from;
+			local topicsMoved;
+			local i;
+			local theIndex;
+			local newIndices;
+			(for i := 0 to (topicsMoved - 1) do begin
+					theIndex := indices[i];
+					if (toIndex < from) then begin
+							newIndices[i] := (((from + 1) - topicsMoved) + i)
+						end else begin
+							newIndices[i] := ((from + 1) + i)
+						end
+				end);
+			dragRef.index := newIndices;
+			dragRef.level := anOldDragTo.level;
+			dragRef
+		end),
+	viewDropMoveScript: compile(
+		options: "names",
+		func(aDragRef, anOffset, aLastDragPt, aCopy) begin
+			doPriority := true;
+			if (if IsFrame(aDragRef) then HasPath(aDragRef, 'viewCObject)) then begin
+					return nil
+				end;
+			if (not HasPath(aDragRef, 'topics)) then begin
+					return nil
+				end;
+			if (if (dragTo <> nil) then (dragTo.index = -2)) then begin
+					return true
+				end;
+			if (dragTo = nil) then begin
+					saveDragTo := {index: aDragRef.dragTo.index, level: aDragRef.dragTo.level};
+					doPriority := nil
+				end else begin
+					saveDragTo := dragTo
+				end;
+			local saveDragTo;
+			local doPriority;
+			local topic;
+			local undoDragRef;
+			local undoDoneList;
+			undoDoneList := (foreach topic in topics collect topic.mtgDone);
+			self:AddTopicDragDrop(aDragRef, true, true);
+			self:RemoveTopicDragDrop(aDragRef, true);
+			if aDragRef.doneList then begin
+					self:UndoCheck(aDragRef.doneList)
+				end;
+			measureTopics := true;
+			self:RedoTopics();
+			(undoDragRef := self:MakeUndoDragRef(aDragRef, saveDragTo)).doneList := undoDoneList;
+			AddUndoAction('viewDropMoveScript, [Array: undoDragRef, nil, nil, nil]);
+			(curTopic := nil)
+		end),
+	YoungerSister: compile(
+		options: "names",
+		func(anIndex) begin
+			if (anIndex >= (nTopics - 1)) then begin
+					return nil
+				end;
+			if ((level := topics[anIndex].level) = nil) then begin
+					level := 1
+				end;
+			local ti;
+			local level;
+			local topicLevel;
+			(for ti := (anIndex + 1) to (nTopics - 1) do begin
+					if ((topicLevel := topics[ti].level) = nil) then begin
+							topicLevel := 1
+						end;
+					if (topicLevel = level) then begin
+							return ti
+						end else begin
+							if (topicLevel < level) then begin
+									return nil
+								end
+						end
+				end);
+			nil
+		end),
+	viewSetupFormScript: compile(
+		options: "names",
+		func() begin
+			curTopic := nil;
+			self.viewFlags := BOr(viewFlags, self:CheckFlags());
+			if (not self:EntryCool(nil)) then begin
+					self.viewFlags := BOr(self.viewFlags, 128);
+					menuButtons.viewFlags := BAnd(menuButtons.viewFlags, bnot(1))
+				end;
+			leftMarkGap := baseLeftGap;
+			(if (BAnd(listViewFlags, 2) <> 0) then (leftMarkGap := ((leftMarkGap + 13) + 2)))
+		end),
+	DirtyBelow: compile(
+		options: "names",
+		func(anIndex) begin
+			local bounds;
+			(bounds := self:GlobalBox()).top := (bounds.top + topics[anIndex].viewBounds.top);
+			self:DirtyBox(bounds)
+		end),
+	HasKids: compile(
+		options: "names",
+		func(anIndex) begin
+			if (anIndex < (nTopics - 1)) then begin
+					if (topics[(anIndex + 1)].level > topics[anIndex].level) then begin
+							return true
+						end
+				end;
+			nil
+		end),
+	viewAddChildScript: compile(
+		options: "names",
+		func(aNewOne) begin
+			local newView, theIndex, level, prevLevel, flags, prevIndex, prevTopic, prevView, fontSpec;
+			theIndex := nTopics;
+			if (if (nTopics > 0) then ((aNewOne.viewBounds.top - self:ListBottom()) < viewLineSpacing)) then begin
+					level := Max(1, ((((aNewOne.viewBounds.left - 20) - leftMarkGap) - rightMarkGap) div 20));
+					if HasPath((prevTopic := topics[(theIndex - 1)]), 'level) then begin
+							prevLevel := prevTopic.level
+						end else begin
+							prevLevel := 1
+						end;
+					if (level > prevLevel) then begin
+							level := (prevLevel + 1)
+						end;
+					if (if (if (level > 1) then (prevTopic.hideCount <> nil)) then (prevTopic.hideCount > 0)) then begin
+							self:RevealTopic((theIndex - 1))
+						end;
+					prevView := self:TopicIndexToView((theIndex - 1))
+				end else begin
+					if (nTopics = 0) then begin
+							level := 1;
+							prevView := nil
+						end else begin
+							level := 1;
+							prevIndex := (nTopics - 1);
+							(while (if topics[prevIndex].hideCount then (topics[prevIndex].hideCount > 0)) do (prevIndex := (prevIndex - 1)));
+							prevView := self:TopicIndexToView(prevIndex);
+							prevIndex := (nTopics - 1);
+							(while (if (if (topics[prevIndex].level <> 1) then (topics[prevIndex].level <> nil)) then (prevIndex > 0)) do (prevIndex := (prevIndex - 1)))
+						end
+				end;
+			level := Min(level, maxLevel);
+			if topicFont then begin
+					flags := (if HasPath(aNewOne, 'textFlags) then aNewOne.textFlags else 0);
+					aNewOne.textFlags := BOr(flags, 25);
+					aNewOne.viewFont := topicFont
+				end;
+			self:AddEmptyTopic(theIndex, level);
+			topics[theIndex].text := aNewOne.text;
+			if HasPath(aNewOne, 'styles) then begin
+					topics[theIndex].styles := aNewOne.styles
+				end else begin
+					if ((fontSpec := aNewOne.viewFont) = nil) then begin
+							fontSpec := GetInsertionStyle()
+						end;
+					topics[theIndex].styles := [Array: StrLen(aNewOne.text), fontSpec]
+				end;
+			topics[theIndex].viewBounds := aNewOne.viewBounds;
+			if aNewOne.mtgDone then begin
+					topics[theIndex].mtgDone := aNewOne.mtgDone
+				end;
+			if aNewOne.mtgPriority then begin
+					topics[theIndex].mtgPriority := aNewOne.mtgPriority
+				end;
+			ReplaceObject(aNewOne, Clone(canonicalParaTopic));
+			aNewOne.text := topics[theIndex].text;
+			aNewOne.styles := topics[theIndex].styles;
+			aNewOne.viewBounds := topics[theIndex].viewBounds;
+			aNewOne.index := theIndex;
+			self:UpdateMultipleStores('now);
+			try begin
+					reflow := true;
+					newView := AddView(self, aNewOne);
+					reflow := nil
+				end onexception |evt.ex| do begin
+					reflow := nil;
+					Rethrow()
+				end;
+			self:AdjustParagraph(prevView, newView, (((((level - 1) * 20) + 20) + leftMarkGap) + rightMarkGap), rightMargin);
+			topics[theIndex].viewBounds := newView.viewBounds;
+			curTopic := theIndex;
+			AddUndoAction('UndoAddWriting, [Array: theIndex]);
+			self:DirtyBelow(theIndex);
+			return true
+		end),
+	EnsureVisibleTopic: compile(
+		options: "names",
+		func(anIndex) begin
+			local ourBox, layoutBox, starts, ends, amt;
+			if (not Visible(self)) then begin
+					return nil
+				end;
+			ourBox := self:GlobalBox();
+			layoutBox := targetView:parent():GlobalBox();
+			starts := (topics[anIndex].viewBounds.top + ourBox.top);
+			ends := (self:TopicBottom(topics[anIndex]) + ourBox.top);
+			if (starts < layoutBox.top) then begin
+					amt := (starts - layoutBox.top)
+				end else begin
+					if (ends > ((layoutBox.bottom - 20) - 8)) then begin
+							amt := (((ends - layoutBox.bottom) + 20) + 8)
+						end
+				end;
+			if (if amt then (Abs(amt) > 4)) then begin
+					AddDeferredSend(layout, 'PixelScrollBy, [Array: 0, amt])
+				end;
+			ourBox.bottom := self:ListBottom();
+			self:StartFlushWithChild({viewBounds: ourBox})
+		end),
+	MakeTopicFrame: compile(
+		options: "names",
+		func(aLevel) begin
+			aLevel := Max(1, aLevel);
+			(if (BAnd(listViewFlags, 12) <> 0) then (if (BAnd(listViewFlags, 2) <> 0) then {level: aLevel, hideCount: 0, mtgPriority: 3, mtgDone: nil, text: nil, styles: nil, viewBounds: nil} else {level: aLevel, hideCount: 0, mtgPriority: 3, text: nil, styles: nil, viewBounds: nil}) else (if (BAnd(listViewFlags, 2) <> 0) then {level: aLevel, hideCount: 0, mtgDone: nil, text: nil, styles: nil, viewBounds: nil} else {level: aLevel, hideCount: 0, text: nil, styles: nil, viewBounds: nil}))
+		end),
+	PickActionScript: compile(
+		options: "names",
+		func(anAction) begin
+			local theTopic, oldPriority;
+			(if ((not HasPath((theTopic := topics[curTopic]), 'mtgPriority)) or (theTopic.mtgPriority <> anAction)) then begin
+					oldPriority := theTopic.mtgPriority;
+					curTopic := self:SetPriority(curTopic, anAction, nil);
+					AddUndoAction('SetPriority, [Array: curTopic, oldPriority, true])
+				end)
+		end),
+	ToggleTopic: compile(
+		options: "names",
+		func(anIndex) begin
+			curTopic := anIndex;
+			if self:HasKids(anIndex) then begin
+					if self:IsCollapsed(anIndex) then begin
+							self:ExpandTopic(anIndex, true);
+							self:EnsureVisibleTopic(anIndex)
+						end else begin
+							self:CollapseTopic(anIndex, true)
+						end;
+					self:StartFlush()
+				end;
+			self:ActiveTopic(anIndex)
+		end),
+	SetTopAndLevel: compile(
+		options: "names",
+		func(aTopic, aNewTop, aDLevel) begin
+			local oldTop, delta, dH, bounds, newBounds;
+			bounds := self:LocalBox();
+			oldTop := aTopic.viewBounds.top;
+			delta := (aNewTop - oldTop);
+			dH := (aDLevel * 20);
+			(newBounds := OffsetRect(aTopic.viewBounds, dH, delta)).right := bounds.right;
+			aTopic.viewBounds := newBounds;
+			(if (aDLevel <> 0) then (if (aTopic.level = nil) then (aTopic.level := (1 + aDLevel)) else (aTopic.level := (aTopic.level + aDLevel))))
+		end),
+	topMargin: 7,
+	HandleCheck: compile(
+		options: "names",
+		func(anIndex, aTopic) begin
+			if ((if HasPath(aTopic, 'source) then (aTopic.source = nil)) or (ClassOf(aTopic.source) = 'symbol)) then begin
+					self:Dirty();
+					self:Notify(3, title, "Can\u2019\ut modify a 1.x formatted To Do item");
+					return nil
+				end;
+			curTopic := anIndex;
+			local topic;
+			local undoList;
+			local newCheck;
+			undoList := (foreach topic in topics collect topic.mtgDone);
+			if (if HasPath(aTopic, 'mtgDone) then aTopic.mtgDone) then begin
+					newCheck := nil
+				end else begin
+					newCheck := true
+				end;
+			self:SetDone(anIndex, aTopic, newCheck, true, true);
+			self:StartFlush();
+			AddUndoAction('UndoCheck, [Array: undoList])
+		end),
+	DeleteTopics: compile(
+		options: "names",
+		func(aList) begin
+			if (ClassOf(aList) = 'int) then begin
+					i := aList;
+					topic := topics[i];
+					aList := [Array: i];
+					if topic.level then begin
+							self:AddKidsToList(aList, i, topic.level)
+						end else begin
+							self:AddKidsToList(aList, i, 1)
+						end
+				end;
+			if ((nItems := Length(aList)) > 1) then begin
+					Sort(aList, '|>|, nil)
+				end;
+			local i;
+			local nItems;
+			local topic;
+			local theIndex;
+			local j;
+			local mom;
+			local level;
+			local hasFamily;
+			local familyDone;
+			local theTopic;
+			(foreach topic in aList do begin
+					if ((if HasPath((theTopic := topics[topic]), 'source) then (theTopic.source = nil)) or (ClassOf(theTopic.source) = 'symbol)) then begin
+							self:Notify(3, title, "Can\u2019\ut delete a 1.x formatted To Do item");
+							return nil
+						end
+				end);
+			(for i := 0 to (nItems - 1) do begin
+					theIndex := aList[i];
+					self:DeletingTopic((topic := topics[theIndex]));
+					if (((topic.level = 1) or (topic.level = nil)) or topic.mtgDone) then begin
+							mom := nil
+						end else begin
+							(for j := (theIndex - 1) to 0 by -1 do begin
+									if (topics[j].level < topic.level) then begin
+											mom := j;
+											break
+										end
+								end)
+						end;
+					ArrayRemoveCount(topics, theIndex, 1);
+					nTopics := (nTopics - 1);
+					if mom then begin
+							if ((topic := topics[mom]).mtgDone = nil) then begin
+									level := topic.level;
+									familyDone := true;
+									hasFamily := nil;
+									(for j := (mom + 1) to (nTopics - 1) do begin
+											if ((topics[j].level = nil) or (topics[j].level <= level)) then begin
+													break
+												end;
+											hasFamily := true;
+											if (topics[j].mtgDone = nil) then begin
+													familyDone := nil;
+													break
+												end
+										end);
+									if (if hasFamily then familyDone) then begin
+											self:SetDone(mom, topics[mom], true, true, nil)
+										end
+								end
+						end
+				end);
+			self:UpdateMultipleStores(true);
+			if viewCObject then begin
+					self:RedoChildren()
+				end;
+			curTopic := nil;
+			true
+		end),
+	SetTopicData: compile(
+		options: "names",
+		func(anIndex, aText, aStyles) begin
+			local topic;
+			if (((anIndex = nil) or (anIndex >= nTopics)) or (anIndex < 0)) then begin
+					return nil
+				end;
+			if ((aText = nil) or (aStyles = nil)) then begin
+					return nil
+				end;
+			(topic := topics[anIndex]).text := aText;
+			topic.styles := aStyles;
+			self:StartFlush();
+			self:RedoChildren();
+			true
+		end),
+	ChildChanged: compile(
+		options: "names",
+		func(aView) begin
+			local theIndex, topic;
+			theIndex := aView.index;
+			(topic := topics[theIndex]).styles := aView.styles;
+			topic.viewBounds := aView.viewBounds;
+			if (adjusting or (if (duringScroll exists) then duringScroll)) then begin
+					return nil
+				end;
+			topicChanged := Min(topicChanged, theIndex);
+			if (theIndex = curTopic) then begin
+					curTopicChanged := true
+				end;
+			AddProcrastinatedSend(uniqueSymbol, self, 'AdjustKids, nil, 0)
+		end),
+	adjusting: nil,
+	CheckFlags: compile(
+		options: "names",
+		func() begin
+			(if (GetUserConfig('lettersCursiveOption) <> nil) then 16384 else 0)
+		end),
+	UndoCheck: compile(
+		options: "names",
+		func(aList) begin
+			(for ti := 0 to (nTopics - 1) do begin
+					topics[ti].mtgDone := aList[ti]
+				end);
+			self:StartFlush();
+			self:Dirty()
+		end),
+	NewRelative: compile(
+		options: "names",
+		func(aRelation) begin
+			local level, theIndex;
+			if curTopic then begin
+					theIndex := (curTopic + 1);
+					level := topics[curTopic].level;
+					if (aRelation = 'aunt) then begin
+							level := Max(1, (level - 1))
+						end else begin
+							if (aRelation = 'daughter) then begin
+									level := Min(maxLevel, (level + 1))
+								end
+						end
+				end else begin
+					theIndex := nTopics;
+					if (nTopics = 0) then begin
+							level := 1
+						end else begin
+							level := topics[(theIndex - 1)].level;
+							if (aRelation = 'aunt) then begin
+									level := Max(1, (level - 1))
+								end else begin
+									if (aRelation = 'daughter) then begin
+											level := Min(maxLevel, (level + 1))
+										end
+								end
+						end
+				end;
+			self:NewTopic(level, "")
+		end),
+	viewSetupChildrenScript: compile(
+		options: "names",
+		func() begin
+			self:GetTarget(target);
+			(if reflow then (if (not printAddExtra) then (self.viewChildren := self:ReflowTopics(reflowOptions))) else (self.viewChildren := self:SetupVisibleChildren(firstTopic, nil, nil)))
+		end),
+	_keyDaughterScript: compile(
+		options: "names",
+		func(keyView) begin
+			(if (maxLevel > 1) then self:NewRelative('daughter))
+		end),
+	ClickBounds: compile(
+		options: "names",
+		func(anIndex) begin
+			local bounds;
+			RelBounds((((bounds := self:MarkerBounds(topics[anIndex])).left + 2) - 1), ((bounds.top + 4) - 1), 14, self:TopicHeight(topics[anIndex]))
+		end),
+	IsReadOnly: compile(
+		options: "names",
+		func(anIndex) begin
+			local topic;
+			((if HasPath((topic := topics[anIndex]), 'source) then (topic.source = nil)) or (ClassOf(topic.source) = 'symbol))
+		end),
+	ShowFoundTopic: compile(
+		options: "names",
+		func(anIndex, anOffset, aFinder) begin
+			local topic, view;
+			curTopic := anIndex;
+			if (if ((topic := topics[anIndex]).hideCount <> 0) then (topic.hideCount <> nil)) then begin
+					self:RevealTopic(anIndex);
+					self:StartFlush()
+				end;
+			(if anOffset then begin
+					if (view := HiliteOwner()) then begin
+							view:hilite(nil)
+						end;
+					view := self:TopicIndexToView(anIndex);
+					view:SetHilite(anOffset, (anOffset + StrLen(aFinder.findWords[0])), true)
+				end else self:ActiveTopic(anIndex))
+		end),
+	RevealTopic: compile(
+		options: "names",
+		func(anIndex) begin
+			local mom;
+			(if (if (topics[anIndex].hideCount <> 0) then (topics[anIndex].hideCount <> nil)) then begin
+					self:RevealTopic((mom := self:Mother(anIndex)));
+					self:ExpandTopic(mom, true)
+				end)
+		end),
+	RemoveTopicDragDrop: compile(
+		options: "names",
+		func(aDragRef, aRemoveFromSelf) begin
+			height := aDragRef.height;
+			indices := aDragRef.index;
+			hasFamily := nil;
+			self.dragTo := nil;
+			if (indices = nil) then begin
+					return true
+				end;
+			theIndex := indices[0];
+			if (if aRemoveFromSelf then self.moveInSelf) then begin
+					offset := moveInSelf.offset
+				end else begin
+					offset := 0
+				end;
+			nItems := Length(indices);
+			local height;
+			local indices;
+			local theIndex;
+			local nItems;
+			local topic;
+			local i;
+			local ri;
+			local offset;
+			local mom;
+			local j;
+			local familyDone;
+			local level;
+			local hasFamily;
+			(for i := 0 to (nItems - 1) do begin
+					ri := (indices[i] + offset);
+					if (curTopic = ri) then begin
+							curTopic := nil
+						end else begin
+							if (if (curTopic <> nil) then (curTopic > ri)) then begin
+									curTopic := (curTopic - 1)
+								end
+						end;
+					if ((((topic := topics[ri]).level = 1) or (topic.level = nil)) or topic.mtgDone) then begin
+							mom := nil
+						end else begin
+							if (i = 0) then begin
+									mom := self:Mother((ri - offset))
+								end
+						end
+				end);
+			theIndex := (theIndex + offset);
+			ArrayRemoveCount(topics, theIndex, nItems);
+			nTopics := (nTopics - nItems);
+			if (if self.moveInSelf then HasPath(moveInSelf, 'Mother)) then begin
+					mom := moveInSelf.Mother
+				end;
+			if mom then begin
+					if ((topic := topics[mom]).mtgDone = nil) then begin
+							if ((level := topic.level) = nil) then begin
+									level := 1
+								end;
+							familyDone := true;
+							(for j := (mom + 1) to (nTopics - 1) do begin
+									if ((topics[j].level = nil) or (topics[j].level <= level)) then begin
+											break
+										end;
+									if (topics[j].mtgDone = nil) then begin
+											familyDone := nil;
+											break
+										end;
+									hasFamily := true
+								end);
+							if (if familyDone then hasFamily) then begin
+									self:SetDone(mom, topics[mom], true, true, nil)
+								end
+						end
+				end;
+			if (nTopics = 0) then begin
+					curTopic := nil
+				end;
+			self.moveInSelf := nil;
+			self:UpdateMultipleStores(true);
+			true
+		end),
+	_keyCommands: [|Array|:
+		{
+			char: $\u000d,
+			modifiers: 33554432,
+			keymessage: '_keyCheckItemScript,
+			name: "Check",
+			category: nil
+		},
+		{char: $[, modifiers: 33554432, keymessage: '_keyAuntScript, name: "New Left", category: nil},
+		{char: $], modifiers: 33554432, keymessage: '_keyDaughterScript, name: "New Right", category: nil},
+		{char: $=, modifiers: 33554432, keymessage: '_keySisterScript, name: "New Topic", category: nil}
+	],
+	_proto: @protoListView
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+MakeUndoDragRef_literal0 := same("export121.MakeUndoDragRef.literals[0]");
+
+HandleScrub_literal20 := same("export121.HandleScrub.literals[20]");
+
+SetPriority_literal5 := same("export121.SetPriority.literals[5]");
+
+viewGetDropDataScript_literal9 := same("export121.viewGetDropDataScript.literals[9]");
+
+viewGetDropDataScript_literal10 := same("export121.viewGetDropDataScript.literals[10]");
+
+NewRelative_literal9 := same("export121.NewRelative.literals[9]");
+
+ResolveClick_literal9 := same("export121.ResolveClick.literals[9]");
+
+viewDropRemoveScript_literal5 := same("export121.viewDropRemoveScript.literals[5]");
+
+_keyAuntScript_code := same("export121._keyAuntScript.instructions");
+
+viewGetDropDataScript_literal11 := same("export121.viewGetDropDataScript.literals[11]");
+
+GetTopicCount_code := same("export121.GetTopicCount.instructions");
+
+SetPriority_code := same("export121.SetPriority.literals[13].instructions");
+
+viewGetDropDataScript_literal6 := same("export121.viewGetDropDataScript.literals[6]");
+
+DeletingTopic_code := same("export121.DeletingTopic.instructions");

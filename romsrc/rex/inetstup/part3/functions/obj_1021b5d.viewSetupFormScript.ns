@@ -1,7 +1,0 @@
-@@ 0x10220dd
-func() begin
-	labelCommands := [Array: ];
-	self:MakePopup();
-	inherited:?viewSetupFormScript()
-end
-@@end

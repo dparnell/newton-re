@@ -1,6 +1,0 @@
-@@ 0x10458b9
-func() begin
-	local l1;
-	(if IsInteger((l1 := GetUserConfig('InetDefaultLink))) then self:MGetLinkEntryByLinkID(l1) else (if IsEntryAlias(l1) then ResolveEntryAlias(l1) else SetUserConfig('InetDefaultLink, nil)))
-end
-@@end

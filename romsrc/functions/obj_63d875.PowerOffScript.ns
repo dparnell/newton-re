@@ -1,5 +1,0 @@
-@@ 0x5a54dd
-func(a1) begin
-	(if (a1 = 'okToPowerOff) then true else (if (a1 = 'PowerOff) then base:AllDone(nil)))
-end
-@@end

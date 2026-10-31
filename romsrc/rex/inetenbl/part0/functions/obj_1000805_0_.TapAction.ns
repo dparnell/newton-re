@@ -1,6 +1,0 @@
-@@ 0x1001411
-func() begin
-	AddDeferredCall(GetGlobalVar('|NIE:NIE_TapActionFunc|), nil);
-	nil
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x102108d
-func(a1) begin
-	(if StrEqual(a1, "*") then "<Current AppleTalk Zone>" else a1)
-end
-@@end

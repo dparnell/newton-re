@@ -1,0 +1,3 @@
+// packageQuery, and what only it reaches
+
+packageQuery := same("builtinFunctions.|Convert1.XPackages|.literals[3]");

@@ -1,0 +1,6 @@
+// optionKeyIcon, and what only it reaches
+
+optionKeyIcon := {
+	bits: bitmap('bits, "resources/bits/3c8c45.png", "0000000000040000000000000007000a", 1),
+	bounds: {left: 0, top: 0, right: 10, bottom: 7}
+};

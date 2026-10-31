@@ -1,0 +1,6 @@
+// routeCallBitmap, and what only it reaches
+
+routeCallBitmap := {
+	bits: bitmap('bits, "resources/bits/3db13d.png", "000000000004006f006f00e2007e00f4", 1),
+	bounds: {left: 0, top: 0, right: 18, bottom: 15}
+};

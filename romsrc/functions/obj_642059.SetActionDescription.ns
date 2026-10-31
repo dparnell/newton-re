@@ -1,5 +1,0 @@
-@@ 0x462e05
-func(a1) begin
-	(vars.actionDescription := a1)
-end
-@@end

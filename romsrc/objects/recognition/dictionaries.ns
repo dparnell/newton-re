@@ -1,0 +1,3 @@
+// dictionaries, and what only it reaches
+
+dictionaries := [|Array|: ];

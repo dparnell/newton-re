@@ -1,0 +1,44 @@
+// export106, and what only it reaches
+
+export106 := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 36},
+	viewFlags: vVisible,
+	viewFormat: 0,
+	stepChildren: [stepChildren:
+		export106Item,
+		{
+			buttonClickScript: func() begin
+				self:Times12()
+			end,
+			text: "x12",
+			viewBounds: {left: -26, top: 15, right: -3, bottom: 26},
+			viewJustify: 8389638,
+			_proto: @protoTextButton
+		}
+	],
+	GetNumericValue: func() begin
+		return CalcLine:GetNumericValue()
+	end,
+	SetNumericValue: func(a1) begin
+		CalcLine:SetNumericValue(a1)
+	end,
+	viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV,
+	Times12: func() begin
+		local l1;
+		(if ((l1 := self:GetNumericValue()) <> nil) then begin
+				AddUndoAction('UndoTimes12, [Array: l1]);
+				self:SetNumericValue((l1 * 12));
+				self:SolveFormula(lineNumber)
+			end)
+	end,
+	UndoTimes12: func(a1) begin
+		AddUndoAction('UndoTimes12, [Array: self:GetNumericValue()]);
+		self:SetNumericValue(a1);
+		self:SolveFormula(lineNumber)
+	end,
+	viewClass: clView,
+	CalcLine: nil,
+	stepAllocateContext: [|Array|: 'CalcLine, export106Item]
+};
+
+export106Item := {rightmargin: 35, _proto: @8296, preAllocatedContext: 'CalcLine};

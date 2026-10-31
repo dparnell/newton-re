@@ -1,0 +1,94 @@
+// printerSerialPicker, and what only it reaches
+
+printerSerialPicker := {
+	viewFlags: vApplication + vFloating + vClickable,
+	viewBounds: {left: 0, top: 80, right: 180, bottom: 240},
+	declareSelf: 'base,
+	currentSelection: uCardPositionAlertButton,
+	notifyOnClose: nil,
+	debug: 23994396,
+	viewSetupDoneScript: func() begin
+		SetKeyView(self, 0);
+		inherited:?viewSetupDoneScript()
+	end,
+	viewQuitScript: func() begin
+		notifyOnClose := nil;
+		(currentSelection := nil)
+	end,
+	preallocatedContext: 'printerSerialPicker,
+	viewChildren: [viewChildren:
+		_defaultButton_4,
+		{
+			viewJustify: 8388608,
+			viewBounds: {left: 10, top: 5, right: 185, bottom: 18},
+			text: "Select a Printer",
+			_proto: @protoStaticText
+		},
+		serialPrinterList
+	],
+	_defaultButton: nil,
+	allocateContext: [|Array|: '_defaultButton, _defaultButton_4, 'serialPrinterList, serialPrinterList],
+	serialPrinterList: nil,
+	_proto: @protoFloater,
+	ReOrientToScreen: @defRotateFunc,
+	_cacheContext: {
+		_parent: nil,
+		_proto: nil,
+		viewCObject: nil,
+		notifyOnClose: nil,
+		currentSelection: uCardPositionAlertButton,
+		serialPrinterList: nil,
+		viewclipper: nil,
+		base: nil,
+		viewFlags: vApplication + vFloating + vClickable,
+		_defaultButton: nil
+	}
+};
+
+_defaultButton_4 := {
+	buttonClickScript: func() begin
+		if (notifyOnClose exists) then begin
+				notifyOnClose:ChooserDone(currentSelection, currentSelection, 'serialSym)
+			end;
+		base:Close()
+	end,
+	preallocatedContext: '_defaultButton,
+	_proto: @protoCancelButton
+};
+
+serialPrinterList := {
+	viewJustify: vjCenterH,
+	viewBounds: {left: 10, top: 25, right: 170, bottom: 25},
+	useScrollers: true,
+	viewLines: 7,
+	ListItems: nil,
+	PowerOffScript: func(a1) begin
+		(if (a1 = 'okToPowerOff) then true else (if (a1 = 'PowerOff) then base:Close()))
+	end,
+	viewSetupFormScript: func() begin
+		AddPowerOffHandler(self);
+		ListItems := [Array: ];
+		(foreach l1 in AvailablePrinters do begin
+				if (l1.type = 'serialSym) then begin
+						AddArraySlot(ListItems, l1.name)
+					end
+			end);
+		self:SetupList();
+		(if (if (currentSelection <> nil) then (not StrEqual(currentSelection, ""))) then begin
+				Selection := (temp := FindStringInArray(ListItems, currentSelection));
+				self:HiliteLine(temp)
+			end)
+	end,
+	buttonClickScript: func(a1) begin
+		(currentSelection := ListItems[a1])
+	end,
+	viewQuitScript: func() begin
+		RemovePowerOffHandler(self)
+	end,
+	preallocatedContext: 'serialPrinterList,
+	_proto: @protoTextList
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupDoneScript_code := same("printerSerialPicker.viewSetupDoneScript.instructions");

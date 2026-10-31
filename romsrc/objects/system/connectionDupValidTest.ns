@@ -1,0 +1,9 @@
+// connectionDupValidTest, and what only it reaches
+
+connectionDupValidTest := func(a1) begin
+	ConnEntriesEqual(a1)
+end;
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+connectionDupValidTest_code := same("connectionDupValidTest.instructions");

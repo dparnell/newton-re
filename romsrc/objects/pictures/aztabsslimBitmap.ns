@@ -1,0 +1,6 @@
+// aztabsslimBitmap, and what only it reaches
+
+aztabsslimBitmap := {
+	bits: bitmap('bits, "resources/bits/43d3a1.png", "00000000002000090009001e001b0100", 1),
+	bounds: {left: 0, top: 0, right: 226, bottom: 18}
+};

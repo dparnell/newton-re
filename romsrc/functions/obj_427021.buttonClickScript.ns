@@ -1,5 +1,0 @@
-@@ 0x427001
-func() begin
-	RecordEngine:stop()
-end
-@@end

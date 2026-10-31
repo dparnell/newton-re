@@ -1,5 +1,0 @@
-@@ 0x4b9e51
-func() begin
-	@436:New({default: GetCountryEntry(GetUserConfig('currentCountry))[0], spots: @295, result: 'name}, self:GlobalLabelBounds(), self)
-end
-@@end

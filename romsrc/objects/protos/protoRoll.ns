@@ -1,0 +1,83 @@
+// protoRoll, and what only it reaches
+
+protoRoll := {
+	viewClass: clView,
+	viewBounds: {left: 0, top: 16, right: 640, bottom: 480},
+	viewFlags: vApplication + vClipping,
+	declareSelf: 'roll,
+	index: 0,
+	overViewItemProto: {
+		viewClass: clParagraphView,
+		viewFlags: vVisible + vReadOnly + vClickable,
+		viewJustify: 8396852,
+		viewFormat: 0,
+		viewBounds: {left: 3, top: 0, right: -3, bottom: 16},
+		viewFont: @fontSystem10Bold,
+		viewTransferMode: 1,
+		collapsed: true,
+		height: 16,
+		viewSetupFormScript: func() begin
+			(self.text := Stringer([Array: $\u2022, " ", items[itemIndex].overview]))
+		end,
+		viewClickScript: func(a1) begin
+			if (if (StrLen(text) > 0) then self:TrackHilite(a1)) then begin
+					self:Parent():ShowItem(itemIndex)
+				end;
+			true
+		end
+	},
+	allCollapsed: nil,
+	collapsedHeight: nil,
+	viewSetupChildrenScript: func() begin
+		l1 := Length(items);
+		l2 := self:LocalBox().bottom;
+		if allCollapsed then begin
+				self.collapsedHeight := overViewItemProto.height;
+				self._maxIndex := max(0, (l1 - (l2 div collapsedHeight)));
+				self._curItems := Array(l1, nil);
+				local l1;
+				local l2;
+				(for l3 := 0 to (l1 - 1) do begin
+						_curItems[l3] := {itemIndex: l3, _proto: overViewItemProto}
+					end)
+			end else begin
+				self._maxIndex := (l1 - 1);
+				self._curItems := items;
+				if (l1 > 1) then begin
+						self._maxIndex := (l1 - 1);
+						l6 := items[(l1 - 1)].height;
+						(for l3 := (l1 - 2) to 0 by -1 do begin
+								local l6;
+								if ((l6 := (l6 + items[l3].height)) <= l2) then begin
+										self._maxIndex := l3
+									end else begin
+										break
+									end
+							end)
+					end
+			end;
+		index := min(_maxIndex, index);
+		(self.viewChildren := self:LayoutColumn(_curItems, index))
+	end,
+	viewQuitScript: func() begin
+		(self._curItems := nil)
+	end,
+	viewScrollUpScript: func() begin
+		roll:SyncScroll(_curItems, index, -1)
+	end,
+	viewScrollDownScript: func() begin
+		(if (index < _maxIndex) then roll:SyncScroll(_curItems, index, 1))
+	end,
+	viewOverviewScript: func() begin
+		allCollapsed := (not allCollapsed);
+		roll:RedoChildren()
+	end,
+	ShowItem: func(a1) begin
+		(if (a1 < Length(items)) then begin
+				allCollapsed := nil;
+				index := a1;
+				roll:RedoChildren()
+			end)
+	end,
+	debug: 22568
+};

@@ -1,0 +1,168 @@
+// default, and what only it reaches
+
+default := {
+	viewFlags: vVisible,
+	viewFormat: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewJustify: vjParentFullH + vjParentFullV,
+	stepChildren: [|Array|:
+		{
+			path: [pathExpr: 'name, 'first],
+			label: first,
+			newDictionaries: newDictionaries,
+			_proto: addressItem_5Proto
+		},
+		{
+			path: [pathExpr: 'name, 'last],
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+			viewLineSpacing: 32,
+			label: last,
+			flavor: flavor,
+			newDictionaries: newDictionaries_2,
+			memory: 'lastName,
+			_proto: @newtLabelInputLine
+		},
+		{
+			path: [pathExpr: 'name, 'honorific],
+			label: nil,
+			flavor: flavor,
+			labelCommands: nil,
+			viewSetupFormScript: func() begin
+				local l1;
+				newDictionaries := (l1 := GetLocale()).recogHonorificDictionaries;
+				labelCommands := l1.commonHonorifics;
+				label := l1.honorificLabel;
+				inherited:?viewSetupFormScript()
+			end,
+			newDictionaries: nil,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+			viewLineSpacing: 32,
+			_proto: @newtLabelInputLine
+		},
+		defaultItem,
+		{
+			path: [pathExpr: 'phones, 1],
+			viewSetupFormScript: func() begin
+				if (not target.(path)) then begin
+						target.(path) := Clone("");
+						SetClass(target.(path), 'workPhone)
+					end;
+				inherited:?viewSetupFormScript()
+			end,
+			viewQuitScript: func() begin
+				l1 := target.phones;
+				l2 := 0;
+				inherited:?viewQuitScript();
+				l3 := Length(l1);
+				local l1;
+				local l2;
+				local l3;
+				(for l4 := 0 to (l3 - 1) do begin
+						if (not StrFilled(l1[l4])) then begin
+								l1[l4] := nil
+							end else begin
+								l2 := l4
+							end
+					end);
+				if ((l2 + 1) < l3) then begin
+						SetLength(l1, (l2 + 1))
+					end;
+				self:StartFlush()
+			end,
+			_proto: defaultProto
+		}
+	],
+	name: "Person Info",
+	symbol: 'default,
+	type: 'editor,
+	viewSetupFormScript: func() begin
+		(if (Length(target.phones) < 2) then SetLength(target.phones, 2))
+	end,
+	infoFrame: {
+		checkPrefix: [|Array|: [pathExpr: 'name], nil],
+		checkPaths: [|Array|: 'honorific, 'first, 'last, 'title],
+		formatFunc: func(a1) begin
+			ParamStr("^?0^0 ||^?1^1 ||^?2^2||", a1)
+		end
+	},
+	protection: 'private,
+	fieldOrder: [|Array|: 0, 1, 2, 3, 4],
+	viewPostQuitScript: func() begin
+		target.phones[0] := savePhoneNum;
+		targetView:StartFlush()
+	end,
+	viewQuitScript: func() begin
+		local l1, l2, l3, l4;
+		(if (if self.extension.viewCObject then (l2 := target.phones[0])) then begin
+				l4 := ClassOf(l2);
+				l1 := ParsePhone(l2).areacode;
+				l2 := ParsePhone(l2).phone;
+				l3 := TrimString(extension.entryLine:GetRichString());
+				savePhoneNum := MakePhone({areacode: l1, phone: l2, extension: l3});
+				if (if l4 then StrFilled(savePhoneNum)) then begin
+						SetClass(savePhoneNum, l4)
+					end else begin
+						savePhoneNum := nil
+					end;
+				target.phones[0] := savePhoneNum;
+				targetView:StartFlush()
+			end)
+	end,
+	savePhoneNum: nil,
+	viewClass: clView,
+	HOME: nil,
+	stepAllocateContext: [|Array|:
+		'HOME,
+		defaultItem,
+		'reading,
+		{
+			path: [pathExpr: 'name, 'nameReading],
+			label: label,
+			newDictionaries: newDictionaries,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 65},
+			viewLineSpacing: 30,
+			_proto: addressItem_5Proto,
+			preAllocatedContext: 'reading
+		},
+		'extension,
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+			viewLineSpacing: 32,
+			label: extension,
+			viewJustify: 8396848,
+			entryFlags: 264705,
+			textChanged: func() begin
+				(changed := true)
+			end,
+			_proto: @protoRichLabelInputLine,
+			preAllocatedContext: 'extension
+		}
+	],
+	reading: nil,
+	extension: nil
+};
+
+defaultItem := {
+	path: [pathExpr: 'phones, 0],
+	viewSetupFormScript: func() begin
+		if (not target.(path)) then begin
+				target.(path) := Clone("");
+				SetClass(target.(path), 'homePhone)
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	_proto: defaultProto,
+	preAllocatedContext: 'HOME
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_4 := same("default.stepChildren[2].viewSetupFormScript.instructions");
+
+viewSetupFormScript_code_5 := same("default.stepChildren[4].viewSetupFormScript.instructions");
+
+formatFunc_code := same("default.infoFrame.formatFunc.instructions");
+
+viewQuitScript_literal10 := same("default.viewQuitScript.literals[10]");
+
+textChanged_code := same("default.stepAllocateContext[5].textChanged.instructions");

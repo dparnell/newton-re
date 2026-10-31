@@ -1,0 +1,3 @@
+// usDefaultPhoneFilter, and what only it reaches
+
+usDefaultPhoneFilter := {item: anyFormat, filters: [|Array|: "0123456789*#x()+-,."]};

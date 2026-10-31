@@ -87,7 +87,7 @@ next start) and is kept; one never touched stays as newton was started.
   came too late and it opened empty - and each checkbox reads its value as
   it opens (`viewSetupFormScript`).  A checkbox's `valueChanged` (the
   ROM's protoCheckbox calls it from `toggleCheck` and `SetCheck`,
-  `romsrc/functions/obj_63fcdd.*`) calls `Change`.
+  `protoCheckboxIcon` in `romsrc/objects/protos/protoCheckboxIcon.ns`) calls `Change`.
 - **A change** goes to the host by `HostSetSetting(setting, value)` (==>
   whether it was taken) and is kept where the ROM keeps an application's
   settings: `GetAppPrefs('|HostSettings:host|)`'s `settings` frame, an entry

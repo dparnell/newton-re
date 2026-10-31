@@ -1,0 +1,68 @@
+// protoYearPicker, and what only it reaches
+
+protoYearPicker := {
+	viewClass: clPictureView,
+	viewFlags: vVisible,
+	viewFormat: nil,
+	viewJustify: 0,
+	viewBounds: {left: 20, top: 51, right: 104, bottom: 79},
+	declareSelf: 'digitBase,
+	maxValue: 2922,
+	minValue: 1904,
+	icon: nil,
+	viewSetupFormScript: func() begin
+		(if (value = 2920) then SetValue(self, 'viewFlags, 0))
+	end,
+	SetYear: func(a1) begin
+		(if (value <> a1) then begin
+				value := a1;
+				years:Update();
+				decades:Update();
+				centuries:Update()
+			end)
+	end,
+	viewChildren: [viewChildren: years, decades, centuries],
+	years: nil,
+	allocateContext: [|Array|: 'years, years, 'decades, decades, 'centuries, centuries],
+	decades: nil,
+	centuries: nil
+};
+
+years := {
+	viewBounds: {left: -23, top: 0, right: 0, bottom: 28},
+	icon: @digitflaploWord,
+	nextDigit: 'decades,
+	debug: 1451,
+	preallocatedContext: 'years,
+	_proto: @protoDigit
+};
+
+decades := {
+	viewBounds: {left: -22, top: 0, right: 0, bottom: 28},
+	icon: @digitflap,
+	increment: 10,
+	GetIndex: func(a1) begin
+		((a1 mod 100) div 10)
+	end,
+	nextDigit: 'centuries,
+	debug: 4529,
+	preallocatedContext: 'decades,
+	_proto: @protoDigit
+};
+
+centuries := {
+	viewBounds: {left: -36, top: 0, right: 1, bottom: 28},
+	icon: @digitWideflap,
+	increment: 100,
+	GetIndex: func(a1) begin
+		((a1 mod 10000) div 100)
+	end,
+	viewDrawScript: func() begin
+		local l1;
+		DrawXBitmap((l1 := OffsetRect((l1 := Clone(digitFrame)), (1 - l1.left), 0)), digits, (currentIndex div 10), copyMode);
+		DrawXBitmap((l1 := OffsetRect(l1, (l1.right - 1), 0)), digits, (currentIndex mod 10), copyMode)
+	end,
+	debug: 16733,
+	preallocatedContext: 'centuries,
+	_proto: @protoDigit
+};

@@ -1,0 +1,7 @@
+// smallFlagBitmap, and what only it reaches
+
+smallFlagBitmap := {
+	mask: bitmap('mask, "resources/mask/3d8da1.png", "000000000004004d004d015400560160", 1),
+	bits: bitmap('bits, "resources/bits/3d8de1.png", "000000000004004d004d015400560160", 1),
+	bounds: {left: 0, top: 0, right: 12, bottom: 9}
+};

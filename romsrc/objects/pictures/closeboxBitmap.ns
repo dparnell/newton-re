@@ -1,0 +1,7 @@
+// closeboxBitmap, and what only it reaches
+
+closeboxBitmap := {
+	mask: bitmap('mask, "resources/mask/3d60dd.png", "0000000000040041004101ec004e01f9", 1),
+	bits: bitmap('bits, "resources/bits/3d612d.png", "0000000000040041004101d7004e01e4", 1),
+	bounds: {left: 0, top: 0, right: 13, bottom: 13}
+};

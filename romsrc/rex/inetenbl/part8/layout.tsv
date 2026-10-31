@@ -1,7 +1,7 @@
 # the objects' area: 0x1035960, 0x4398 bytes; the byte between objects; the objects' alignment
 area	1035960	4398	bf	4
-1035960	obj_1035961	41	gc=1
-1035970	obj_1035961[0]	43	map=map_1035991
+1035960	part	41	gc=1
+1035970	part[0]	43	map=map_1035991
 1035990	map_1035991	41
 10359a4	map_10359a5	41
 10359c4	'installScript	40
@@ -9,19 +9,19 @@ area	1035960	4398	bf	4
 1035a04	'UnitsInstalledScript	40
 1035a2c	'UnitsRemovedScript	40
 1035a50	'_ImportTable	40
-1035a70	obj_1035961[0].installScript	43	map=map_1035a91
+1035a70	part[0].installScript	43	map=map_1035a91
 1035a90	map_1035a91	41
 1035ab4	'class	40
 1035acc	'instructions	40
 1035aec	'literals	40
 1035b08	'argFrame	40
 1035b24	'numArgs	40
-1035b3c	obj_1035961[0].installScript.instructions	40
-1035b50	obj_1035961[0].installScript.literals	41
+1035b3c	part[0].installScript.instructions	40
+1035b50	part[0].installScript.literals	41
 1035b64	'|Domain Manager:NIE|	40
-1035b88	obj_1035961[0].installScript.literals[1]	43	map=map_1035a91
-1035ba8	obj_1035961[0].installScript.literals[1].instructions	40
-1035be8	obj_1035961[0].installScript.literals[1].literals	41
+1035b88	part[0].installScript.literals[1]	43	map=map_1035a91
+1035ba8	part[0].installScript.literals[1].instructions	40
+1035be8	part[0].installScript.literals[1].literals	41
 1035c24	'clientSymbol	40
 1035c44	'clientFrame	40
 1035c60	'ObjectPkgRef	40
@@ -29,40 +29,40 @@ area	1035960	4398	bf	4
 1035ca0	'clientRemoveFrame	40
 1035cc4	'fUnitsInstalled	40
 1035ce4	'WaitForUnitsRemoveScript	40
-1035d10	obj_1035961[0].installScript.literals[1].literals[8]	43	map=map_1035a91
-1035d30	obj_1035961[0].installScript.literals[1].literals[8].instructions	40
-1035d64	obj_1035961[0].installScript.literals[1].literals[8].literals	41
+1035d10	part[0].installScript.literals[1].literals[8]	43	map=map_1035a91
+1035d30	part[0].installScript.literals[1].literals[8].instructions	40
+1035d64	part[0].installScript.literals[1].literals[8].literals	41
 1035d90	'|evt.ex|	40
-1035da8	obj_1035da9	40
+1035da8	installScript_literal1	40
 1035dc8	'|string|	40
 1035de0	'UnRegSoupChange	40
-1035e00	obj_1035961[0].installScript.literals[1].literals[8].argFrame	43	map=map_1035e19
+1035e00	part[0].installScript.literals[1].literals[8].argFrame	43	map=map_1035e19
 1035e18	map_1035e19	41
 1035e34	'_nextArgFrame	40
 1035e54	'_parent	40
 1035e6c	'_implementor	40
-1035e8c	obj_1035961[0].installScript.literals[1].literals[10]	43	map=map_1035a91
-1035eac	obj_1035961[0].installScript.literals[1].literals[10].instructions	40
-1035ec4	obj_1035961[0].installScript.literals[1].literals[10].literals	41
-1035edc	obj_1035961[0].installScript.literals[1].literals[10].literals[1]	43	map=map_1035a91
-1035efc	obj_1035961[0].installScript.literals[1].literals[10].literals[1].instructions	40
-1035f40	obj_1035961[0].installScript.literals[1].literals[10].literals[1].literals	41
+1035e8c	part[0].installScript.literals[1].literals[10]	43	map=map_1035a91
+1035eac	part[0].installScript.literals[1].literals[10].instructions	40
+1035ec4	part[0].installScript.literals[1].literals[10].literals	41
+1035edc	part[0].installScript.literals[1].literals[10].literals[1]	43	map=map_1035a91
+1035efc	part[0].installScript.literals[1].literals[10].literals[1].instructions	40
+1035f40	part[0].installScript.literals[1].literals[10].literals[1].literals	41
 1035f7c	'MissingImports	40
 1035f9c	'GetGlobalFn	40
 1035fb8	'|Array|	40
 1035fd0	'AddDeferredCall	40
-1035ff0	obj_1035961[0].installScript.literals[1].literals[10].literals[1].argFrame	43	map=map_1035e19
+1035ff0	part[0].installScript.literals[1].literals[10].literals[1].argFrame	43	map=map_1035e19
 1036008	'AddProcrastinatedCall	40
-1036030	obj_1035961[0].installScript.literals[1].literals[10].argFrame	43	map=map_1035e19
+1036030	part[0].installScript.literals[1].literals[10].argFrame	43	map=map_1035e19
 1036048	'RegSoupChange	40
-1036068	obj_1035961[0].installScript.literals[1].argFrame	43	map=map_1036091
+1036068	part[0].installScript.literals[1].argFrame	43	map=map_1036091
 1036090	map_1036091	41
-10360bc	obj_1035961[0].removeScript	43	map=map_1035a91
-10360dc	obj_1035961[0].removeScript.instructions	40
-10360ec	obj_1035961[0].UnitsInstalledScript	43	map=map_1035a91
-103610c	obj_1035961[0].UnitsInstalledScript.instructions	40
-1036144	obj_1035961[0].UnitsInstalledScript.literals	41
-103616c	obj_1035961[0].UnitsInstalledScript.literals[1]	43	map=map_10361e9
+10360bc	part[0].removeScript	43	map=map_1035a91
+10360dc	part[0].removeScript.instructions	40
+10360ec	part[0].UnitsInstalledScript	43	map=map_1035a91
+103610c	part[0].UnitsInstalledScript.instructions	40
+1036144	part[0].UnitsInstalledScript.literals	41
+103616c	part[0].UnitsInstalledScript.literals[1]	43	map=map_10361e9
 10361e8	map_10361e9	41
 1036268	'fOwnerCallbackSymbol	40
 1036290	'fQuery	40
@@ -92,43 +92,43 @@ area	1035960	4398	bf	4
 1036570	'fOwnerCallbackFrame	40
 1036594	'MBuildQueryResultType	40
 10365bc	'domainService	40
-10365dc	obj_1035961[0].UnitsInstalledScript.literals[1].MBuildCallback	43	map=map_1035a91
-10365fc	obj_1035961[0].UnitsInstalledScript.literals[1].MBuildCallback.instructions	40
-1036630	obj_1035961[0].UnitsInstalledScript.literals[1].MBuildCallback.literals	41
+10365dc	part[0].UnitsInstalledScript.literals[1].MBuildCallback	43	map=map_1035a91
+10365fc	part[0].UnitsInstalledScript.literals[1].MBuildCallback.instructions	40
+1036630	part[0].UnitsInstalledScript.literals[1].MBuildCallback.literals	41
 1036658	'IsFrame	40
 1036670	'IsSymbol	40
 103668c	'GetVariable	40
-10366a8	obj_1035961[0].UnitsInstalledScript.literals[1].MBuildCallback.literals[3]	41
+10366a8	part[0].UnitsInstalledScript.literals[1].MBuildCallback.literals[3]	41
 10366c0	'fFrame	40
 10366d8	'fSymbol	40
 10366f0	'|evt.ex.msg|	40
-103670c	obj_1035961[0].UnitsInstalledScript.literals[1].MBuildCallback.literals[5]	40
+103670c	part[0].UnitsInstalledScript.literals[1].MBuildCallback.literals[5]	40
 103681c	'Throw	40
-1036834	obj_1035961[0].UnitsInstalledScript.literals[1].GetMailAddressFromName	43	map=map_1035a91
-1036854	obj_1035961[0].UnitsInstalledScript.literals[1].GetMailAddressFromName.instructions	40
-1036880	obj_1035961[0].UnitsInstalledScript.literals[1].GetMailAddressFromName.literals	41
+1036834	part[0].UnitsInstalledScript.literals[1].GetMailAddressFromName	43	map=map_1035a91
+1036854	part[0].UnitsInstalledScript.literals[1].GetMailAddressFromName.instructions	40
+1036880	part[0].UnitsInstalledScript.literals[1].GetMailAddressFromName.literals	41
 103689c	'InetIsValidIPAddressStr	40
 10368c4	'InetIPStringToAddress	40
-10368ec	obj_1035961[0].UnitsInstalledScript.literals[1].GetAddressFromName	43	map=map_1035a91
-103690c	obj_1035961[0].UnitsInstalledScript.literals[1].GetAddressFromName.instructions	40
-1036934	obj_1035961[0].UnitsInstalledScript.literals[1].GetAddressFromName.literals	41
-1036950	obj_1035961[0].UnitsInstalledScript.literals[1].GetNameFromAddress	43	map=map_1035a91
-1036970	obj_1035961[0].UnitsInstalledScript.literals[1].GetNameFromAddress.instructions	40
-10369d0	obj_1035961[0].UnitsInstalledScript.literals[1].GetNameFromAddress.literals	41
+10368ec	part[0].UnitsInstalledScript.literals[1].GetAddressFromName	43	map=map_1035a91
+103690c	part[0].UnitsInstalledScript.literals[1].GetAddressFromName.instructions	40
+1036934	part[0].UnitsInstalledScript.literals[1].GetAddressFromName.literals	41
+1036950	part[0].UnitsInstalledScript.literals[1].GetNameFromAddress	43	map=map_1035a91
+1036970	part[0].UnitsInstalledScript.literals[1].GetNameFromAddress.instructions	40
+10369d0	part[0].UnitsInstalledScript.literals[1].GetNameFromAddress.literals	41
 1036a00	'InetIsValidIPAddress	40
 1036a28	'ArrayInsert	40
 1036a44	'InetIPAddressToString	40
-1036a6c	obj_1036a6d	40
-1036a7c	obj_1035961[0].UnitsInstalledScript.literals[1].GetNameFromAddress.literals[7]	40
-1036aa4	obj_1035961[0].UnitsInstalledScript.literals[1].name	40
-1036ad0	obj_1035961[0].UnitsInstalledScript.literals[1].description	40
+1036a6c	GetNameFromAddress_literal6	40
+1036a7c	part[0].UnitsInstalledScript.literals[1].GetNameFromAddress.literals[7]	40
+1036aa4	part[0].UnitsInstalledScript.literals[1].name	40
+1036ad0	part[0].UnitsInstalledScript.literals[1].description	40
 1036b7c	'DomainManagerFSM	40
-1036ba0	obj_1035961[0].UnitsInstalledScript.literals[1].MSkipQuery	43	map=map_1035a91
-1036bc0	obj_1035961[0].UnitsInstalledScript.literals[1].MSkipQuery.instructions	40
-1036c00	obj_1035961[0].UnitsInstalledScript.literals[1].MSkipQuery.literals	41
+1036ba0	part[0].UnitsInstalledScript.literals[1].MSkipQuery	43	map=map_1035a91
+1036bc0	part[0].UnitsInstalledScript.literals[1].MSkipQuery.instructions	40
+1036c00	part[0].UnitsInstalledScript.literals[1].MSkipQuery.literals	41
 1036c30	'Connected	40
 1036c4c	'defaultDomain	40
-1036c6c	obj_1035961[0].UnitsInstalledScript.literals[1].MSkipQuery.literals[5]	41
+1036c6c	part[0].UnitsInstalledScript.literals[1].MSkipQuery.literals[5]	41
 1036ca0	'type	40
 1036cb8	'queryType	40
 1036cd4	'queryDomainName	40
@@ -138,11 +138,11 @@ area	1035960	4398	bf	4
 1036d5c	'resultIPAddress	40
 1036d7c	'targetDomainName	40
 1036da0	'resultDomainName	40
-1036dc4	obj_1035961[0].UnitsInstalledScript.literals[1].MAddQuery	43	map=map_1035a91
-1036de4	obj_1035961[0].UnitsInstalledScript.literals[1].MAddQuery.instructions	40
-1036e20	obj_1035961[0].UnitsInstalledScript.literals[1].MAddQuery.literals	41
+1036dc4	part[0].UnitsInstalledScript.literals[1].MAddQuery	43	map=map_1035a91
+1036de4	part[0].UnitsInstalledScript.literals[1].MAddQuery.instructions	40
+1036e20	part[0].UnitsInstalledScript.literals[1].MAddQuery.literals	41
 1036e58	'AddQuery	40
-1036e74	obj_1035961[0].UnitsInstalledScript.literals[1].MAddQuery.literals[6]	41
+1036e74	part[0].UnitsInstalledScript.literals[1].MAddQuery.literals[6]	41
 1036e9c	'fClientCallback	40
 1036ebc	'fQueryID	40
 1036ed8	'fQueryType	40
@@ -150,121 +150,121 @@ area	1035960	4398	bf	4
 1036f14	'fQueryDomainName	40
 1036f38	'fQueryDefaultDomainName	40
 1036f60	'DoEvent	40
-1036f78	obj_1035961[0].UnitsInstalledScript.literals[1].MDoOwnerCallback	43	map=map_1035a91
-1036f98	obj_1035961[0].UnitsInstalledScript.literals[1].MDoOwnerCallback.instructions	40
-1036fdc	obj_1035961[0].UnitsInstalledScript.literals[1].MDoOwnerCallback.literals	41
+1036f78	part[0].UnitsInstalledScript.literals[1].MDoOwnerCallback	43	map=map_1035a91
+1036f98	part[0].UnitsInstalledScript.literals[1].MDoOwnerCallback.instructions	40
+1036fdc	part[0].UnitsInstalledScript.literals[1].MDoOwnerCallback.literals	41
 1037008	'linkID	40
 1037020	'InetBuildStatusFrame	40
 1037048	'Perform	40
-1037060	obj_1035961[0].UnitsInstalledScript.literals[1].CancelRequests	43	map=map_1035a91
-1037080	obj_1035961[0].UnitsInstalledScript.literals[1].CancelRequests.instructions	40
-1037098	obj_1035961[0].UnitsInstalledScript.literals[1].CancelRequests.literals	41
+1037060	part[0].UnitsInstalledScript.literals[1].CancelRequests	43	map=map_1035a91
+1037080	part[0].UnitsInstalledScript.literals[1].CancelRequests.instructions	40
+1037098	part[0].UnitsInstalledScript.literals[1].CancelRequests.literals	41
 10370b0	'Cancel	40
-10370c8	obj_1035961[0].UnitsInstalledScript.literals[1].GetMailServerNameFromDomainName	43	map=map_1035a91
-10370e8	obj_1035961[0].UnitsInstalledScript.literals[1].GetMailServerNameFromDomainName.instructions	40
-1037114	obj_1035961[0].UnitsInstalledScript.literals[1].GetMailServerNameFromDomainName.literals	41
-1037130	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states	43	map=map_1037151
+10370c8	part[0].UnitsInstalledScript.literals[1].GetMailServerNameFromDomainName	43	map=map_1035a91
+10370e8	part[0].UnitsInstalledScript.literals[1].GetMailServerNameFromDomainName.instructions	40
+1037114	part[0].UnitsInstalledScript.literals[1].GetMailServerNameFromDomainName.literals	41
+1037130	part[0].UnitsInstalledScript.literals[1].fsm_private_states	43	map=map_1037151
 1037150	map_1037151	41
 1037174	'Genesis	40
 103718c	'ReadyToConnect	40
 10371ac	'ProcessingQuery	40
 10371cc	'CleanUp	40
-10371e4	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis	43	map=map_10371f9
+10371e4	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis	43	map=map_10371f9
 10371f8	map_10371f9	41
 1037210	'terminal	40
 103722c	'Create	40
-1037244	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create	43	map=map_103725d
+1037244	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create	43	map=map_103725d
 103725c	map_103725d	41
 1037278	'action	40
 1037290	'nextState	40
 10372ac	'nextNoIdle	40
-10372c8	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action	43	map=map_1035a91
-10372e8	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.instructions	40
-1037360	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.literals	41
-10373c4	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.literals[0]	43	map=map_1035a91
-10373e4	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.literals[0].instructions	40
-1037438	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.literals[0].literals	41
-1037480	obj_1037481	40
+10372c8	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action	43	map=map_1035a91
+10372e8	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.instructions	40
+1037360	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.literals	41
+10373c4	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.literals[0]	43	map=map_1035a91
+10373e4	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.literals[0].instructions	40
+1037438	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.literals[0].literals	41
+1037480	action_literal2	40
 10374a0	'GetPkgRefInfo	40
 10374c0	'id	40
 10374d4	'Intern	40
 10374ec	'GetGlobalVar	40
-103750c	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.literals[0].literals[8]	40
-1037548	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.literals[0].literals[9]	40
+103750c	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.literals[0].literals[8]	40
+1037548	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.literals[0].literals[9]	40
 1037664	'MarkPackageBusy	40
-1037684	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.literals[0].literals[11]	41
+1037684	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.literals[0].literals[11]	41
 1037698	'fBusyRefCount	40
 10376b8	'EnsureInternal	40
 10376d8	'DefGlobalVar	40
 10376f8	'fsm	40
 103770c	'fEndpoint	40
-1037728	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.literals[7]	41
+1037728	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.literals[7]	41
 1037744	'fIsActive	40
 1037760	'QueueTemplate	40
 1037780	'Instantiate	40
 103779c	'NIE_DNSCacheOff	40
 10377bc	'GetUserConfig	40
-10377dc	obj_10377dd	40
+10377dc	action_literal18	40
 1037810	'GetUnionSoupAlways	40
 1037834	'Disconnected	40
-1037854	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect	43	map=map_1037871
+1037854	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect	43	map=map_1037871
 1037870	map_1037871	41
 1037890	'SetCCE	40
 10378a8	'SetLinkEntry	40
 10378c8	'connect	40
 10378e0	'Disconnect	40
-10378fc	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.SetCCE	43	map=map_1037911
+10378fc	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.SetCCE	43	map=map_1037911
 1037910	map_1037911	41
-1037928	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.SetCCE.action	43	map=map_1035a91
-1037948	obj_1037949	40
-1037958	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.SetCCE.action.literals	41
-1037968	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.SetLinkEntry	43	map=map_1037911
-103797c	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.SetLinkEntry.action	43	map=map_1035a91
-103799c	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.SetLinkEntry.action.literals	41
-10379ac	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect	43	map=map_10379c5
+1037928	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.SetCCE.action	43	map=map_1035a91
+1037948	action_code	40
+1037958	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.SetCCE.action.literals	41
+1037968	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.SetLinkEntry	43	map=map_1037911
+103797c	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.SetLinkEntry.action	43	map=map_1035a91
+103799c	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.SetLinkEntry.action.literals	41
+10379ac	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect	43	map=map_10379c5
 10379c4	map_10379c5	41
 10379e0	'MPurgeExpiredCacheEntries	40
-1037a0c	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action	43	map=map_1035a91
-1037a2c	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.instructions	40
-1037bc8	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals	41
-1037ca0	obj_1037ca1	40
+1037a0c	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action	43	map=map_1035a91
+1037a2c	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.instructions	40
+1037bc8	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals	41
+1037ca0	action_literal2_2	40
 1037cb8	'service	40
 1037cd0	'template	40
-1037cec	obj_1037ced	40
+1037cec	action_literal5	40
 1037d04	'struct	40
 1037d1c	'char	40
 1037d34	'ulong	40
-1037d4c	obj_1037d4d	41
+1037d4c	action_literal10	41
 1037d64	'arglist	40
 1037d7c	'typeList	40
-1037d98	obj_1037d99	41
+1037d98	action_literal11	41
 1037dc0	'label	40
 1037dd8	'opCode	40
 1037df0	'result	40
 1037e08	'form	40
 1037e20	'data	40
-1037e38	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[12]	40
+1037e38	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[12]	40
 1037e50	'option	40
-1037e68	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[18]	40
+1037e68	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[18]	40
 1037e80	'StrFilled	40
 1037e9c	'DNSServers	40
 1037eb8	'IsArray	40
-1037ed0	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[27]	40
+1037ed0	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[27]	40
 1037ee8	'error	40
 1037f00	'CurrentException	40
 1037f24	'InetGetExceptionError	40
 1037f4c	'InetGetOptionFromOptionArray	40
-1037f7c	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[44]	41
+1037f7c	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[44]	41
 1037f90	'pathExpr	40
 1037fac	'Activated	40
 1037fc8	'IsEmpty	40
 1037fe0	'ProcessNextQuery	40
-1038004	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.MPurgeExpiredCacheEntries	43	map=map_1035a91
-1038024	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.MPurgeExpiredCacheEntries.instructions	40
-1038078	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.MPurgeExpiredCacheEntries.literals	41
+1038004	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.MPurgeExpiredCacheEntries	43	map=map_1035a91
+1038024	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.MPurgeExpiredCacheEntries.instructions	40
+1038078	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.MPurgeExpiredCacheEntries.literals	41
 10380ac	'index	40
 10380c4	'Time	40
-10380dc	obj_10380dd	41
+10380dc	MPurgeExpiredCacheEntries_literal5	41
 10380fc	'IndexPath	40
 1038118	'beginKey	40
 1038134	'endKey	40
@@ -272,150 +272,150 @@ area	1035960	4398	bf	4
 1038164	'EntryRemoveFromSoup	40
 1038188	'Next	40
 10381a0	'entry	40
-10381b8	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.Disconnect	43	map=map_10381cd
+10381b8	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.Disconnect	43	map=map_10381cd
 10381cc	map_10381cd	41
-10381e4	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.Disconnect.action	43	map=map_1035a91
-1038204	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.Disconnect.action.instructions	40
-1038228	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.Disconnect.action.literals	41
+10381e4	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.Disconnect.action	43	map=map_1035a91
+1038204	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.Disconnect.action.instructions	40
+1038228	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.Disconnect.action.literals	41
 1038254	'Deactivated	40
-1038270	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected	43	map=map_103828d
+1038270	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected	43	map=map_103828d
 103828c	map_103828d	41
-10382ac	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery	43	map=map_10382cd
+10382ac	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery	43	map=map_10382cd
 10382cc	map_10382cd	41
 10382f0	'fCompletionSpec_Option	40
 1038318	'MBuildCompletionSpec_Option	40
 1038344	'MFindCacheEntries	40
-1038368	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action	43	map=map_1035a91
-1038388	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.instructions	40
-1038534	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals	41
+1038368	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action	43	map=map_1035a91
+1038388	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.instructions	40
+1038534	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals	41
 10385d8	'DeQueue	40
 10385f0	'ProcessQuerySkipped	40
-1038614	obj_1038615	40
+1038614	action_literal9	40
 103862c	'StrLen	40
-1038644	obj_1038645	40
-1038654	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals[25]	40
+1038644	action_literal19	40
+1038654	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals[25]	40
 103866c	'short	40
 1038684	'byte	40
 103869c	'ProcessQueryFailure	40
-10386c0	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.fCompletionSpec_Option	43	map=map_10386d9
+10386c0	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.fCompletionSpec_Option	43	map=map_10386d9
 10386d8	map_10386d9	41
 10386f4	'async	40
 103870c	'reqTimeout	40
 1038728	'completionScript	40
-103874c	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.fCompletionSpec_Option.completionScript	43	map=map_1035a91
-103876c	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.fCompletionSpec_Option.completionScript.instructions	40
-10387ac	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.fCompletionSpec_Option.completionScript.literals	41
-10387d4	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.fCompletionSpec_Option.completionScript.literals[5]	41
+103874c	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.fCompletionSpec_Option.completionScript	43	map=map_1035a91
+103876c	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.fCompletionSpec_Option.completionScript.instructions	40
+10387ac	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.fCompletionSpec_Option.completionScript.literals	41
+10387d4	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.fCompletionSpec_Option.completionScript.literals[5]	41
 10387e8	'ProcessQuerySuccess	40
-103880c	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.MBuildCompletionSpec_Option	43	map=map_1035a91
-103882c	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.MBuildCompletionSpec_Option.instructions	40
-1038840	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.MBuildCompletionSpec_Option.literals	41
-1038854	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.MBuildCompletionSpec_Option.literals[1]	41
-103886c	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.MFindCacheEntries	43	map=map_1035a91
-103888c	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.MFindCacheEntries.instructions	40
-1038934	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.MFindCacheEntries.literals	41
+103880c	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.MBuildCompletionSpec_Option	43	map=map_1035a91
+103882c	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.MBuildCompletionSpec_Option.instructions	40
+1038840	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.MBuildCompletionSpec_Option.literals	41
+1038854	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.MBuildCompletionSpec_Option.literals[1]	41
+103886c	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.MFindCacheEntries	43	map=map_1035a91
+103888c	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.MFindCacheEntries.instructions	40
+1038934	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.MFindCacheEntries.literals	41
 1038988	'multiSlot	40
-10389a4	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.AddQuery	43	map=map_10389b5
+10389a4	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.AddQuery	43	map=map_10389b5
 10389b4	map_10389b5	41
-10389c8	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.AddQuery.action	43	map=map_1035a91
-10389e8	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.AddQuery.action.instructions	40
-1038a00	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.AddQuery.action.literals	41
+10389c8	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.AddQuery.action	43	map=map_1035a91
+10389e8	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.AddQuery.action.instructions	40
+1038a00	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.AddQuery.action.literals	41
 1038a1c	'EnQueue	40
-1038a34	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.Disconnect	43	map=map_10381cd
-1038a48	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.Disconnect.action	43	map=map_1035a91
-1038a68	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.Disconnect.action.instructions	40
-1038ab0	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.Disconnect.action.literals	41
+1038a34	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.Disconnect	43	map=map_10381cd
+1038a48	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.Disconnect.action	43	map=map_1035a91
+1038a68	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.Disconnect.action.instructions	40
+1038ab0	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.Disconnect.action.literals	41
 1038aec	'Dispose	40
-1038b04	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.Cancel	43	map=map_10389b5
-1038b14	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.Cancel.action	43	map=map_1035a91
-1038b34	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.Cancel.action.instructions	40
-1038b5c	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.Cancel.action.literals	41
-1038b84	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery	43	map=map_1038bad
+1038b04	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.Cancel	43	map=map_10389b5
+1038b14	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.Cancel.action	43	map=map_1035a91
+1038b34	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.Cancel.action.instructions	40
+1038b5c	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.Cancel.action.literals	41
+1038b84	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery	43	map=map_1038bad
 1038bac	map_1038bad	41
-1038bd8	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess	43	map=map_1038bed
+1038bd8	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess	43	map=map_1038bed
 1038bec	map_1038bed	41
 1038c04	'MAddCacheEntry	40
-1038c24	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.action	43	map=map_1035a91
-1038c44	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.action.instructions	40
-1038cac	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.action.literals	41
-1038cdc	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.MAddCacheEntry	43	map=map_1035a91
-1038cfc	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.MAddCacheEntry.instructions	40
-1038da0	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.MAddCacheEntry.literals	41
-1038df8	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.MAddCacheEntry.literals[0]	41
-1038e0c	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.MAddCacheEntry.literals[3]	41
-1038e20	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.MAddCacheEntry.literals[9]	41
-1038e34	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.MAddCacheEntry.literals[11]	41
-1038e48	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.MAddCacheEntry.literals[12]	41
-1038e5c	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.MAddCacheEntry.literals[14]	41
-1038e70	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.MAddCacheEntry.literals[15]	41
+1038c24	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.action	43	map=map_1035a91
+1038c44	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.action.instructions	40
+1038cac	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.action.literals	41
+1038cdc	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.MAddCacheEntry	43	map=map_1035a91
+1038cfc	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.MAddCacheEntry.instructions	40
+1038da0	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.MAddCacheEntry.literals	41
+1038df8	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.MAddCacheEntry.literals[0]	41
+1038e0c	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.MAddCacheEntry.literals[3]	41
+1038e20	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.MAddCacheEntry.literals[9]	41
+1038e34	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.MAddCacheEntry.literals[11]	41
+1038e48	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.MAddCacheEntry.literals[12]	41
+1038e5c	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.MAddCacheEntry.literals[14]	41
+1038e70	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySuccess.MAddCacheEntry.literals[15]	41
 1038ea4	'AddToDefaultStore	40
-1038ec8	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQueryFailure	43	map=map_10389b5
-1038ed8	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQueryFailure.action	43	map=map_1035a91
-1038ef8	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQueryFailure.action.instructions	40
-1038f18	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQueryFailure.action.literals	41
-1038f3c	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySkipped	43	map=map_10389b5
-1038f4c	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySkipped.action	43	map=map_1035a91
-1038f6c	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySkipped.action.instructions	40
-1038f80	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySkipped.action.literals	41
-1038f94	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessNextQuery	43	map=map_10381cd
-1038fa8	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessNextQuery.action	43	map=map_1035a91
-1038fc8	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessNextQuery.action.instructions	40
-1039008	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessNextQuery.action.literals	41
-103903c	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.AddQuery	43	map=map_10389b5
-103904c	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.AddQuery.action	43	map=map_1035a91
-103906c	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.AddQuery.action.instructions	40
-1039080	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.AddQuery.action.literals	41
-1039094	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.Disconnect	43	map=map_10390a5
+1038ec8	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQueryFailure	43	map=map_10389b5
+1038ed8	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQueryFailure.action	43	map=map_1035a91
+1038ef8	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQueryFailure.action.instructions	40
+1038f18	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQueryFailure.action.literals	41
+1038f3c	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySkipped	43	map=map_10389b5
+1038f4c	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySkipped.action	43	map=map_1035a91
+1038f6c	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySkipped.action.instructions	40
+1038f80	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessQuerySkipped.action.literals	41
+1038f94	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessNextQuery	43	map=map_10381cd
+1038fa8	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessNextQuery.action	43	map=map_1035a91
+1038fc8	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessNextQuery.action.instructions	40
+1039008	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.ProcessNextQuery.action.literals	41
+103903c	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.AddQuery	43	map=map_10389b5
+103904c	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.AddQuery.action	43	map=map_1035a91
+103906c	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.AddQuery.action.instructions	40
+1039080	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.AddQuery.action.literals	41
+1039094	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.Disconnect	43	map=map_10390a5
 10390a4	map_10390a5	41
-10390b8	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.Disconnect.action	43	map=map_1035a91
-10390d8	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.Disconnect.action.instructions	40
-10390ec	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.Disconnect.action.literals	41
-1039100	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.Cancel	43	map=map_10389b5
-1039110	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.Cancel.action	43	map=map_1035a91
-1039130	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.Cancel.action.instructions	40
-1039154	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.Cancel.action.literals	41
+10390b8	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.Disconnect.action	43	map=map_1035a91
+10390d8	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.Disconnect.action.instructions	40
+10390ec	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.Disconnect.action.literals	41
+1039100	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.Cancel	43	map=map_10389b5
+1039110	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.Cancel.action	43	map=map_1035a91
+1039130	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.Cancel.action.instructions	40
+1039154	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ProcessingQuery.Cancel.action.literals	41
 1039170	'|evt.ex.comm|	40
-103918c	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.CleanUp	43	map=map_103919d
+103918c	part[0].UnitsInstalledScript.literals[1].fsm_private_states.CleanUp	43	map=map_103919d
 103919c	map_103919d	41
-10391b0	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.CleanUp.CleanUp	43	map=map_10381cd
-10391c4	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.CleanUp.CleanUp.action	43	map=map_1035a91
-10391e4	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.CleanUp.CleanUp.action.instructions	40
-1039214	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.CleanUp.CleanUp.action.literals	41
-1039250	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.CleanUp.CleanUp.action.literals[11]	43	map=map_1035a91
-1039270	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.CleanUp.CleanUp.action.literals[11].instructions	40
-10392c0	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.CleanUp.CleanUp.action.literals[11].literals	41
+10391b0	part[0].UnitsInstalledScript.literals[1].fsm_private_states.CleanUp.CleanUp	43	map=map_10381cd
+10391c4	part[0].UnitsInstalledScript.literals[1].fsm_private_states.CleanUp.CleanUp.action	43	map=map_1035a91
+10391e4	part[0].UnitsInstalledScript.literals[1].fsm_private_states.CleanUp.CleanUp.action.instructions	40
+1039214	part[0].UnitsInstalledScript.literals[1].fsm_private_states.CleanUp.CleanUp.action.literals	41
+1039250	part[0].UnitsInstalledScript.literals[1].fsm_private_states.CleanUp.CleanUp.action.literals[11]	43	map=map_1035a91
+1039270	part[0].UnitsInstalledScript.literals[1].fsm_private_states.CleanUp.CleanUp.action.literals[11].instructions	40
+10392c0	part[0].UnitsInstalledScript.literals[1].fsm_private_states.CleanUp.CleanUp.action.literals[11].literals	41
 10392f8	'MarkPackageNotBusy	40
 103931c	'UnDefGlobalVar	40
-103933c	obj_1035961[0].UnitsInstalledScript.literals[1].MDoClientCallback	43	map=map_1035a91
-103935c	obj_1035961[0].UnitsInstalledScript.literals[1].MDoClientCallback.instructions	40
-103938c	obj_1035961[0].UnitsInstalledScript.literals[1].MDoClientCallback.literals	41
-10393a8	obj_1035961[0].UnitsInstalledScript.literals[1].MBuildQueryResultType	43	map=map_1035a91
-10393c8	obj_1035961[0].UnitsInstalledScript.literals[1].MBuildQueryResultType.instructions	40
-10393f0	obj_1035961[0].UnitsInstalledScript.literals[2]	43	map=map_1035a91
-1039410	obj_1035961[0].UnitsInstalledScript.literals[2].instructions	40
-103944c	obj_1035961[0].UnitsInstalledScript.literals[2].literals	41
+103933c	part[0].UnitsInstalledScript.literals[1].MDoClientCallback	43	map=map_1035a91
+103935c	part[0].UnitsInstalledScript.literals[1].MDoClientCallback.instructions	40
+103938c	part[0].UnitsInstalledScript.literals[1].MDoClientCallback.literals	41
+10393a8	part[0].UnitsInstalledScript.literals[1].MBuildQueryResultType	43	map=map_1035a91
+10393c8	part[0].UnitsInstalledScript.literals[1].MBuildQueryResultType.instructions	40
+10393f0	part[0].UnitsInstalledScript.literals[2]	43	map=map_1035a91
+1039410	part[0].UnitsInstalledScript.literals[2].instructions	40
+103944c	part[0].UnitsInstalledScript.literals[2].literals	41
 103947c	'|InetServices:NIE|	40
-10394a0	obj_1035961[0].UnitsInstalledScript.literals[2].literals[2]	41
+10394a0	part[0].UnitsInstalledScript.literals[2].literals[2]	41
 10394b0	'SetUserConfig	40
-10394d0	obj_1035961[0].UnitsInstalledScript.literals[3]	43	map=map_10394f1
+10394d0	part[0].UnitsInstalledScript.literals[3]	43	map=map_10394f1
 10394f0	map_10394f1	41
 1039514	'userName	40
 1039530	'userDescr	40
 103954c	'ownerApp	40
 1039568	'indexes	40
-1039580	obj_1035961[0].UnitsInstalledScript.literals[3].userDescr	40
-103962c	obj_1035961[0].UnitsInstalledScript.literals[3].indexes	41
-1039640	obj_1035961[0].UnitsInstalledScript.literals[3].indexes[0]	43	map=map_1039659
+1039580	part[0].UnitsInstalledScript.literals[3].userDescr	40
+103962c	part[0].UnitsInstalledScript.literals[3].indexes	41
+1039640	part[0].UnitsInstalledScript.literals[3].indexes[0]	43	map=map_1039659
 1039658	map_1039659	41
 1039674	'structure	40
 1039690	'path	40
-10396a8	obj_1035961[0].UnitsInstalledScript.literals[3].indexes[0].path	41
-10396c0	obj_1035961[0].UnitsInstalledScript.literals[3].indexes[0].type	41
+10396a8	part[0].UnitsInstalledScript.literals[3].indexes[0].path	41
+10396c0	part[0].UnitsInstalledScript.literals[3].indexes[0].type	41
 10396d8	'int	40
-10396ec	obj_1035961[0].UnitsInstalledScript.literals[3].indexes[1]	43	map=map_1039659
+10396ec	part[0].UnitsInstalledScript.literals[3].indexes[1]	43	map=map_1039659
 1039704	'slot	40
 103971c	'RegUnionSoup	40
-103973c	obj_103973d	43	map=map_1039761
+103973c	UnitsInstalledScript_literal5	43	map=map_1039761
 1039760	map_1039761	41
 1039788	'DNSCancelRequests	40
 10397ac	'DNSGetAddressFromName	40
@@ -423,78 +423,78 @@ area	1035960	4398	bf	4
 1039800	'DNSGetMailServerNameFromDomainName	40
 1039834	'DNSGetNameFromAddress	40
 103985c	'DNSGetProcessPortID	40
-1039880	obj_103973d.DNSCancelRequests	43	map=map_1035a91
-10398a0	obj_103973d.DNSCancelRequests.instructions	40
-10398d0	obj_103973d.DNSCancelRequests.literals	41
+1039880	UnitsInstalledScript_literal5.DNSCancelRequests	43	map=map_1035a91
+10398a0	UnitsInstalledScript_literal5.DNSCancelRequests.instructions	40
+10398d0	UnitsInstalledScript_literal5.DNSCancelRequests.literals	41
 10398f0	'InetStartUp	40
 103990c	'MGetDomainService	40
 1039930	'PerformIfDefined	40
-1039954	obj_103973d.DNSGetAddressFromName	43	map=map_1035a91
-1039974	obj_1039975	40
-10399a8	obj_103973d.DNSGetAddressFromName.literals	41
-10399d0	obj_103973d.DNSGetMailAddressFromName	43	map=map_1035a91
-10399f0	obj_103973d.DNSGetMailAddressFromName.literals	41
-1039a18	obj_103973d.DNSGetMailServerNameFromDomainName	43	map=map_1035a91
-1039a38	obj_103973d.DNSGetMailServerNameFromDomainName.literals	41
-1039a60	obj_103973d.DNSGetNameFromAddress	43	map=map_1035a91
-1039a80	obj_103973d.DNSGetNameFromAddress.literals	41
-1039aa8	obj_103973d.DNSGetProcessPortID	43	map=map_1035a91
-1039ac8	obj_103973d.DNSGetProcessPortID.instructions	40
-1039ae8	obj_103973d.DNSGetProcessPortID.literals	41
+1039954	UnitsInstalledScript_literal5.DNSGetAddressFromName	43	map=map_1035a91
+1039974	DNSGetAddressFromName_code	40
+10399a8	UnitsInstalledScript_literal5.DNSGetAddressFromName.literals	41
+10399d0	UnitsInstalledScript_literal5.DNSGetMailAddressFromName	43	map=map_1035a91
+10399f0	UnitsInstalledScript_literal5.DNSGetMailAddressFromName.literals	41
+1039a18	UnitsInstalledScript_literal5.DNSGetMailServerNameFromDomainName	43	map=map_1035a91
+1039a38	UnitsInstalledScript_literal5.DNSGetMailServerNameFromDomainName.literals	41
+1039a60	UnitsInstalledScript_literal5.DNSGetNameFromAddress	43	map=map_1035a91
+1039a80	UnitsInstalledScript_literal5.DNSGetNameFromAddress.literals	41
+1039aa8	UnitsInstalledScript_literal5.DNSGetProcessPortID	43	map=map_1035a91
+1039ac8	UnitsInstalledScript_literal5.DNSGetProcessPortID.instructions	40
+1039ae8	UnitsInstalledScript_literal5.DNSGetProcessPortID.literals	41
 1039b00	'functions	40
-1039b1c	obj_1035961[0].UnitsRemovedScript	43	map=map_1035a91
-1039b3c	obj_1035961[0].UnitsRemovedScript.instructions	40
-1039b74	obj_1035961[0].UnitsRemovedScript.literals	41
+1039b1c	part[0].UnitsRemovedScript	43	map=map_1035a91
+1039b3c	part[0].UnitsRemovedScript.instructions	40
+1039b74	part[0].UnitsRemovedScript.literals	41
 1039b9c	'RemoveSlot	40
 1039bb8	'UnRegUnionSoup	40
-1039bd8	obj_1035961[0].UnitsRemovedScript.literals[6]	43	map=map_1035a91
-1039bf8	obj_1035961[0].UnitsRemovedScript.literals[6].instructions	40
-1039c34	obj_1035961[0].UnitsRemovedScript.literals[6].literals	41
-1039c64	obj_1035961[0]._ImportTable	41
-1039c74	obj_1035961[0]._ImportTable[0]	43	map=map_1039c8d
+1039bd8	part[0].UnitsRemovedScript.literals[6]	43	map=map_1035a91
+1039bf8	part[0].UnitsRemovedScript.literals[6].instructions	40
+1039c34	part[0].UnitsRemovedScript.literals[6].literals	41
+1039c64	part[0]._ImportTable	41
+1039c74	part[0]._ImportTable[0]	43	map=map_1039c8d
 1039c8c	map_1039c8d	41
 1039ca8	'major	40
 1039cc0	'minor	40
 1039cd8	'|Inet Protos:NIE|	40
-alias	obj_1035961[0].installScript.literals[1].literals[8].literals[1]	obj_1035da9
-alias	obj_1035961[0].installScript.literals[1].literals[9]	obj_1035da9
-alias	obj_1035961[0].installScript.literals[1].literals[10].literals[1].literals[6]	obj_1035da9
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].GetNameFromAddress.literals[6]	obj_1036a6d
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.literals[0].literals[2]	obj_1037481
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.literals[18]	obj_10377dd
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.SetCCE.action.instructions	obj_1037949
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.SetLinkEntry.action.instructions	obj_1037949
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[2]	obj_1037ca1
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[5]	obj_1037ced
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[10]	obj_1037d4d
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[11]	obj_1037d99
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[16]	obj_1037d4d
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[17]	obj_1037d99
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[21]	obj_1036a6d
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[22]	obj_1037d4d
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[23]	obj_1037d99
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[28]	obj_1037d4d
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[29]	obj_1037d99
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[42]	obj_1037ca1
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.MPurgeExpiredCacheEntries.literals[5]	obj_10380dd
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals[9]	obj_1038615
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals[12]	obj_1037ced
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals[19]	obj_1038645
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals[23]	obj_1037d4d
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals[24]	obj_1037d99
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals[26]	obj_1038645
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals[27]	obj_1038645
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals[30]	obj_1037d4d
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals[31]	obj_1037d99
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.fCompletionSpec_Option.completionScript.literals[3]	obj_1038615
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.MFindCacheEntries.literals[11]	obj_10380dd
-alias	obj_1035961[0].UnitsInstalledScript.literals[1].fsm_private_states.CleanUp.CleanUp.action.literals[11].literals[2]	obj_1037481
-alias	obj_1035961[0].UnitsInstalledScript.literals[3].name	obj_10377dd
-alias	obj_1035961[0].UnitsInstalledScript.literals[3].userName	obj_10377dd
-alias	obj_1035961[0].UnitsInstalledScript.literals[5]	obj_103973d
-alias	obj_1035961[0].UnitsRemovedScript.literals[0]	obj_103973d
-alias	obj_1035961[0].UnitsRemovedScript.literals[3]	obj_10377dd
-alias	obj_103973d.DNSGetAddressFromName.instructions	obj_1039975
-alias	obj_103973d.DNSGetMailAddressFromName.instructions	obj_1039975
-alias	obj_103973d.DNSGetMailServerNameFromDomainName.instructions	obj_1039975
-alias	obj_103973d.DNSGetNameFromAddress.instructions	obj_1039975
+alias	part[0].installScript.literals[1].literals[8].literals[1]	installScript_literal1
+alias	part[0].installScript.literals[1].literals[9]	installScript_literal1
+alias	part[0].installScript.literals[1].literals[10].literals[1].literals[6]	installScript_literal1
+alias	part[0].UnitsInstalledScript.literals[1].GetNameFromAddress.literals[6]	GetNameFromAddress_literal6
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.literals[0].literals[2]	action_literal2
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Genesis.Create.action.literals[18]	action_literal18
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.SetCCE.action.instructions	action_code
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.SetLinkEntry.action.instructions	action_code
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[2]	action_literal2_2
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[5]	action_literal5
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[10]	action_literal10
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[11]	action_literal11
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[16]	action_literal10
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[17]	action_literal11
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[21]	GetNameFromAddress_literal6
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[22]	action_literal10
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[23]	action_literal11
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[28]	action_literal10
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[29]	action_literal11
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.action.literals[42]	action_literal2_2
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.ReadyToConnect.connect.MPurgeExpiredCacheEntries.literals[5]	MPurgeExpiredCacheEntries_literal5
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals[9]	action_literal9
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals[12]	action_literal5
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals[19]	action_literal19
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals[23]	action_literal10
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals[24]	action_literal11
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals[26]	action_literal19
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals[27]	action_literal19
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals[30]	action_literal10
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.action.literals[31]	action_literal11
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.fCompletionSpec_Option.completionScript.literals[3]	action_literal9
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.Connected.ProcessNextQuery.MFindCacheEntries.literals[11]	MPurgeExpiredCacheEntries_literal5
+alias	part[0].UnitsInstalledScript.literals[1].fsm_private_states.CleanUp.CleanUp.action.literals[11].literals[2]	action_literal2
+alias	part[0].UnitsInstalledScript.literals[3].name	action_literal18
+alias	part[0].UnitsInstalledScript.literals[3].userName	action_literal18
+alias	part[0].UnitsInstalledScript.literals[5]	UnitsInstalledScript_literal5
+alias	part[0].UnitsRemovedScript.literals[0]	UnitsInstalledScript_literal5
+alias	part[0].UnitsRemovedScript.literals[3]	action_literal18
+alias	UnitsInstalledScript_literal5.DNSGetAddressFromName.instructions	DNSGetAddressFromName_code
+alias	UnitsInstalledScript_literal5.DNSGetMailAddressFromName.instructions	DNSGetAddressFromName_code
+alias	UnitsInstalledScript_literal5.DNSGetMailServerNameFromDomainName.instructions	DNSGetAddressFromName_code
+alias	UnitsInstalledScript_literal5.DNSGetNameFromAddress.instructions	DNSGetAddressFromName_code

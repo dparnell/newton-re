@@ -1,0 +1,10 @@
+// newtStateFilter, and what only it reaches
+
+newtStateFilter := {
+	_proto: @newtTextFilter,
+	recFlags: 25168385,
+	dictionaries: [|Array|: 43, 44, 31],
+	picker: func() begin
+		@locationPopup:New({spots: @usStateSoupName, zoomer: 'northAmerica, result: 'name}, self:GlobalLabelBounds(), self)
+	end
+};

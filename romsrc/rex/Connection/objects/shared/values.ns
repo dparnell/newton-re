@@ -1,0 +1,13 @@
+// objects several roots reach, none alone (naturalize.py)
+
+export85Item_3Text := "";
+
+dock := "Dock";
+
+information := "Information";
+
+all := "ﰋ All";
+
+fileInfo := "File Info";
+
+connect := "Connect";

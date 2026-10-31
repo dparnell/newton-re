@@ -1,5 +1,0 @@
-@@ 0x4fd8a1
-func() begin
-	DrawDateLabels(self:GlobalBox(), selectedDates)
-end
-@@end

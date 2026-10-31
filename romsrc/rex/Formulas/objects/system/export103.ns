@@ -1,0 +1,164 @@
+// export103, and what only it reaches
+
+export103 := {
+	viewBounds: {left: 115, top: 0, right: 223, bottom: 36},
+	viewFlags: vVisible,
+	viewFormat: vfFrameBlack,
+	stepChildren: [stepChildren: export103Item],
+	viewSetupFormScript: func() begin
+		self.viewBounds := Clone(viewBounds);
+		self.viewBounds.left := indent;
+		self.viewBounds.right := (self.viewBounds.right - rightmargin);
+		(self.calcLineValue := nil)
+	end,
+	calcLineValue: nil,
+	SetNumericValue: func(a1) begin
+		if (a1 = nil) then begin
+				calcLineValue := nil
+			end else begin
+				if IsFinite(a1) then begin
+						calcLineValue := a1
+					end else begin
+						calcLineValue := nil;
+						self:Notify(3, "Formulas", "The result is out of range.")
+					end
+			end;
+		self:SetNumericValueString(self:FormulasNumberToString(calcLineValue))
+	end,
+	SetNumericValueString: func(a1) begin
+		changeInProgress := true;
+		SetValue(value, 'text, Clone(a1));
+		(changeInProgress := nil)
+	end,
+	GetNumericValue: func() begin
+		return calcLineValue
+	end,
+	changeInProgress: nil,
+	FormulasNumberToString: func(a1) begin
+		local l1;
+		(if (a1 = nil) then return Clone("") else begin
+				if integerField then begin
+						l1 := FormattedNumberStr(a1, "%.0f")
+					end else begin
+						if (abs(a1) < 0.01) then begin
+								if StrEqual(Substr((l1 := FormattedNumberStr(a1, "%.8f")), (StrLen(l1) - 9), 9), Stringer([Array: GetLocale().numberFormat.decimalPoint, "00000000"])) then begin
+										l1 := Substr(l1, 0, (StrLen(l1) - 9))
+									end
+							end else begin
+								if (decimalPlaces = 4) then begin
+										if StrEqual(Substr((l1 := FormattedNumberStr(a1, "%.4f")), (StrLen(l1) - 5), 5), Stringer([Array: GetLocale().numberFormat.decimalPoint, "0000"])) then begin
+												l1 := Substr(l1, 0, (StrLen(l1) - 5))
+											end
+									end else begin
+										if StrEqual(Substr((l1 := FormattedNumberStr(a1, "%.2f")), (StrLen(l1) - 3), 3), Stringer([Array: GetLocale().numberFormat.decimalPoint, "00"])) then begin
+												l1 := Substr(l1, 0, (StrLen(l1) - 3))
+											end
+									end
+							end
+					end;
+				return l1
+			end)
+	end,
+	viewClass: clView,
+	value: nil,
+	stepAllocateContext: [|Array|: 'value, export103Item]
+};
+
+export103Item := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewChangedScript: func(a1, a2) begin
+		local l1, l2;
+		if changeInProgress then begin
+				return nil
+			end;
+		(if (StrLen(a2.text) > 0) then begin
+				if ((((StrEqual(a2.text, "+") or StrEqual(a2.text, "-")) or StrEqual(a2.text, ".")) or StrEqual(a2.text, "-.")) or StrEqual(a2.text, "+.")) then begin
+						return nil
+					end;
+				if ((calcLineValue := self:FormulasStringToNumber(a2.text)) = nil) then begin
+						l1 := self:FormulasStripBadChars(a2.text);
+						AddDeferredSend(self, SetNumericValueString, [Array: l1]);
+						self:Notify(3, "Formulas", "Only numbers are allowed in this field.");
+						return nil
+					end;
+				if integerField then begin
+						calcLineValue := floor(calcLineValue)
+					end;
+				self:SolveFormula(lineNumber);
+				(if (not StrEqual((l2 := StringFilter(a2.text, " ", 'rejectAll)), a2.text)) then AddDeferredSend(self, 'SetNumericValueString, [Array: l2]))
+			end else begin
+				calcLineValue := nil;
+				self:ClearFormula()
+			end)
+	end,
+	viewFlags: vVisible + vClickable + vGesturesAllowed + vCustomDictionaries,
+	viewLineSpacing: 28,
+	viewFormat: vfPen(1) + vfLinesGray,
+	FormulasStringToNumber: func(a1) begin
+		local l1, l2, l3, l4, l5;
+		l3 := StrEqual((l2 := Substr((l1 := StringFilter(a1, " ", 'rejectAll)), 0, 1)), "-");
+		if (StrEqual(l2, "+") or l3) then begin
+				l1 := Substr(l1, 1, (StrLen(l1) - 1))
+			end else begin
+				l2 := nil
+			end;
+		if ((l5 := StringToNumber((l4 := StringFilter(l1, GetLocale().numberFormat.groupSepStr, 'rejectAll)))) = nil) then begin
+				return l5
+			end;
+		if l3 then begin
+				l5 := (-l5)
+			end;
+		return l5
+	end,
+	FormulasStripBadChars: compile(
+		constants: {
+			kLiteral_76ba2d: "0123456789"
+		},
+		func(a1) begin
+			local l1, l2, l3, l4, l5, l6;
+			if (StrEqual((l1 := Substr(a1, 0, 1)), "+") or StrEqual(l1, "-")) then begin
+					a1 := Substr(a1, 1, (StrLen(a1) - 1))
+				end else begin
+					l1 := nil
+				end;
+			l2 := GetLocale().numberFormat;
+			l3 := Stringer([Array: kLiteral_76ba2d, l2.groupSepStr, l2.decimalPoint]);
+			l4 := StringFilter(a1, l3, 'passAll);
+			if (if StrFilled((l5 := StringFilter(a1, l2.decimalPoint, 'passAll))) then (StrLen(l5) > 1)) then begin
+					l6 := StrPos(a1, l2.decimalPoint, 0);
+					l4 := Stringer([Array: Substr(l4, 0, (l6 + 1)), StringFilter(Substr(l4, (l6 + 1), nil), Stringer([Array: kLiteral_76ba2d, l2.groupSepStr]), 'passAll)])
+				end;
+			(if l1 then return Stringer([Array: l1, l4]) else return l4)
+		end),
+	viewJustify: 8388848,
+	dictionaries: [|Array|: 117],
+	ViewRawInkScript: func(a1) begin
+		AddProcrastinatedSend('OnlyNumbersAllowed, self, 'OnlyNumbersAllowed, nil, 500);
+		return true
+	end,
+	OnlyNumbersAllowed: func() begin
+		self:Notify(3, "Formulas", "Only numbers are allowed in this field.")
+	end,
+	viewSetupFormScript: func() begin
+		self._keyboard := GetRoot().numericKeyboard;
+		inherited:?viewSetupFormScript()
+	end,
+	_proto: @protoInputLine,
+	preAllocatedContext: 'value
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewChangedScript_literal3 := same("export103Item.viewChangedScript.literals[3]");
+
+viewChangedScript_literal5 := same("export103Item.viewChangedScript.literals[5]");
+
+viewChangedScript_literal16 := same("export103Item.viewChangedScript.literals[16]");
+
+viewChangedScript_literal22 := same("export103Item.viewChangedScript.literals[22]");
+
+GetNumericValue_code := same("export103.GetNumericValue.instructions");
+
+FormulasNumberToString_literal5 := same("export103.FormulasNumberToString.literals[5]");
+
+FormulasNumberToString_literal18 := same("export103.FormulasNumberToString.literals[18]");

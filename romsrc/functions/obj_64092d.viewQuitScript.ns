@@ -1,5 +1,0 @@
-@@ 0x485c1d
-func() begin
-	UnRegFolderChanged(folderChangeSym)
-end
-@@end

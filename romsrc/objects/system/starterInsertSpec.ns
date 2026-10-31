@@ -1,0 +1,11 @@
+// starterInsertSpec, and what only it reaches
+
+starterInsertSpec := {
+	insertItems: nil,
+	addspace: true,
+	undoable: true,
+	insertOffset: nil,
+	replaceChars: nil,
+	moveCaret: true,
+	defaultFontSpec: nil
+};

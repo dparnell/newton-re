@@ -1,0 +1,3 @@
+// txCanonicalRuler, and what only it reaches
+
+txCanonicalRuler := {justification: nil, indent: nil, leftMargin: nil, rightMargin: nil, lineSpacing: nil, tabs: nil};

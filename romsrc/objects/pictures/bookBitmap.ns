@@ -1,0 +1,7 @@
+// bookBitmap, and what only it reaches
+
+bookBitmap := {
+	mask: bitmap('mask, "resources/mask/3d6b49.png", "0000000000040127012700d9013d00f6", 1),
+	bits: bitmap('bits, "resources/bits/3d6bbd.png", "0000000000040127012700d9013d00f6", 1),
+	bounds: {left: 0, top: 0, right: 29, bottom: 22}
+};

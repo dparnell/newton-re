@@ -2400,7 +2400,7 @@ handset's mouthpiece. Nothing in the ROM can ring the Newton, and the
 it has had (`docs/host-tdeck-pro-phone.md`).
 
 That is also why a bug in it never showed. The keypad's Hang Up runs
-`CancelRequest` → `ItemCompleted` (`obj_6471d9.ItemCompleted`), which
+`CancelRequest` → `ItemCompleted` (`basicCallTransport.ItemCompleted`), which
 hangs the endpoint up only if the status is one of a call's. It reads
 the status *after* `SetStatusDialog` has set it to `'HangingUp`, so the
 endpoint is never told. With "Speaker" there is no endpoint and the call
@@ -2419,7 +2419,7 @@ as `format:TextScript(item, reserved)`: "reserved: Ignore this
 parameter". A transport that handles text, such as a mail transport,
 calls it to get the item's text. But the ROM's own formats read the data
 from that parameter, not from the item: `protoFrameFormat`'s `TextScript`
-(`obj_6417cd`) asks `GetDataDefs(DataClassOf(a2))`. Passed nil, as the
+(`protoRoutingFormat`) asks `GetDataDefs(DataClassOf(a2))`. Passed nil, as the
 documentation invites, every Note answers "No Text available for this
 item". The host's text message transport (`comms/host/HostText.ns`) passes
 the item's body, resolved.
@@ -2605,7 +2605,7 @@ vtable in the ROM points at it, so no such comparer was ever made.
 ## A Prefs panel that is too tall is never opened
 
 The Preferences roll opens every panel through `OpenPrefsTo` (romsrc
-`functions/Rbuiltinfunctions.OpenPrefsTo.ns`): it builds a slip from a
+`builtinFunctions.OpenPrefsTo` in `objects/system/builtinFunctions.ns`): it builds a slip from a
 template (@809, a protoFloatNGo) whose `viewBounds` is `nil`, sets the
 bounds on the new context, and opens it.  The floater's base proto (@132)
 has a `viewSetupFormScript` that keeps a dragged floater on the screen:
@@ -2616,3 +2616,20 @@ template's `nil` is what is left, and the view constructor throws -8505
 MessagePad's 320x480 screen no ROM panel comes close; the host's Host
 page did, on the T-Deck Pro's 320-pixel-high screen, and was split so
 that it never meets it (`docs/host-settings.md`, "Two pages").
+
+## Eleven names cut in the wrong places
+
+The ROM keeps a short array of symbols (`_knownglobalsymbols`, the
+R-constant `R_knownglobalsymbols`; romsrc
+`objects/system/_knownglobalsymbols.ns`) that are the names of NewtApp
+and other protos - spelt as if a program had put back the capitals of
+lower-case names by finding English words in them, and found the wrong
+ones: `ProToadDressPicker` (protoAddressPicker), `ProToyEarPicker`
+(protoYearPicker), `NewTabOutView` (newtAboutView), `NewTinFoBox`
+(newtInfoBox), `NewTrollEntryView` (newtRollEntryView), `NewTenTryView`
+(newtEntryView), `ProtoValidAteSlip` (protoValidateSlip).  A symbol is
+the same whatever its case, so nothing minds.  Nothing in the C code
+reads the array.  We met them putting back the capitals of the R-constants'
+lower-case names ourselves (`tools/newton-rom/analysis/naturalize.py`'s
+`Speller`), which took the ROM's own spelling of a name wherever it had
+one - until `protoAddressPicker` came out as `ProToadDressPicker`.

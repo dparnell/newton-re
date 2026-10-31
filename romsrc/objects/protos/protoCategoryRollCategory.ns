@@ -1,0 +1,43 @@
+// protoCategoryRollCategory, and what only it reaches
+
+protoCategoryRollCategory := {
+	_proto: @protoRollItem,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 14},
+	viewFormat: 0,
+	viewFlags: vVisible + vClickable,
+	viewJustify: 8396852,
+	height: 14,
+	title: nil,
+	count: 0,
+	skip: 0,
+	text: nil,
+	viewFont: @fontSystem10Bold,
+	viewSetupFormScript: func() begin
+		title := StrTruncate(Clone(title), 132);
+		if (count = 1) then begin
+				text := ParamStr("^0, 1 item", [Array: title])
+			end else begin
+				text := ParamStr("^0, ^1 items", [Array: title, NumberStr(count)])
+			end;
+		(if (skip <> 0) then (text := Stringer([Array: text, $\u2026])))
+	end,
+	viewClickScript: func(a1) begin
+		(if self:TrackHilite(a1) then begin
+				if (category.collapsed := (not category.collapsed)) then begin
+						roll.scrollOrigin := (((roll.scrollOrigin - skip) div roll.scrollAmount) * roll.scrollAmount)
+					end;
+				roll:recalc();
+				self:hilite(nil);
+				true
+			end)
+	end,
+	viewChildren: [|Array|:
+		{
+			viewClass: clParagraphView,
+			viewFlags: vVisible + vReadOnly,
+			viewBounds: {left: 5, top: 0, right: -5, bottom: 0},
+			viewFont: @fontSystem10Bold,
+			viewJustify: vjParentFullH + vjParentFullV
+		}
+	]
+};

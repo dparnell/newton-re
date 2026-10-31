@@ -1,0 +1,74 @@
+// prLetterFormat, and what only it reaches
+
+prLetterFormat := {
+	symbol: 'prLetterFormat,
+	title: "Letter",
+	addAddressee: true,
+	addSender: true,
+	auxForm: @addresseeSlip,
+	margins: {left: 60, top: 0, right: 60, bottom: 0},
+	data: nil,
+	kids: nil,
+	reflowStart: 0,
+	page1guts: {
+		viewClass: clView,
+		viewBounds: nil,
+		viewFlags: vVisible + vReadOnly,
+		viewFormat: 0,
+		viewJustify: vjParentCenterH + vjParentCenterV + vjChildrenLasso + vjReflow,
+		viewSetupFormScript: func() begin
+			(self.viewBounds := RelBounds(0, 20, pageWidth, ((pageHeight - 120) - 60)))
+		end,
+		viewSetupChildrenScript: func() begin
+			local l1, l2, l3;
+			if (if (not kids) then data) then begin
+					if (Length((l1 := ReflowPreflight(data)).family) = 1) then begin
+							self.viewFont := {family: l1.family[0], face: 0, size: 12}
+						end;
+					kids := (if fields.fromSignature then [Array: @stdAddressee, @stdClosing] else [Array: @stdAddressee]);
+					(l2 := self:LocalBox()).top := (l2.top + 100);
+					l2.bottom := (l2.bottom - 60);
+					(l3 := InsetRect(fields.printerPageBounds, 60, 0)).bottom := (l3.bottom - 60);
+					ArrayMunger(kids, 1, 0, ReFlow(data, {reflowFont: 12289, unistyle: 'font, graphicsGutter: 16, textGutter: -16, viewLineSpacing: 28, pageBounds: l3}, fields.targetBox, l2), 0, nil)
+				end;
+			(if kids then (self.stepChildren := ArrayMunger([Array: ], 0, 0, kids, reflowStart, nil)))
+		end,
+		viewSetupDoneScript: func() begin
+			(if self.stepChildren then (reflowStart := (reflowStart + Length(self.stepChildren))))
+		end
+	},
+	page2Guts: {
+		viewClass: clView,
+		viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+		viewFlags: vVisible + vReadOnly,
+		viewJustify: vjParentFullH + vjParentFullV,
+		viewFormat: 0,
+		viewSetupFormScript: func() begin
+			local l1;
+			l1 := self:GlobalBox();
+			(viewBounds := SetBounds(max((60 - l1.left), 0), max((60 - l1.top), 0), 0, 0))
+		end,
+		viewChildren: page2GutsViewChildren
+	},
+	viewSetupFormScript: func() begin
+		inherited:viewSetupFormScript();
+		self.data := target.data;
+		(self.reflowStart := 0)
+	end,
+	viewSetupChildrenScript: func() begin
+		if (self.reflowStart = 0) then begin
+				self.stepChildren := [Array: GetUserConfig('letterheadForm), page1guts]
+			end else begin
+				self.stepChildren := [Array: page2Guts]
+			end;
+		inherited:viewSetupChildrenScript()
+	end,
+	printNextPageScript: func() begin
+		(if (if kids then (reflowStart < Length(kids))) then self:RedoChildren())
+	end,
+	_proto: @coverPageFormat
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_16 := same("prLetterFormat.viewSetupFormScript.instructions");

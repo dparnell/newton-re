@@ -1,8 +1,0 @@
-@@ 0x1022131
-func(a1) begin
-	(if (a1 = (Length(labelCommands) - 1)) then self:DoChooser() else begin
-			target.(path) := Clone(self:ConvertDefaultToStar(labelCommands[a1]));
-			newtAppbase.targetView:?StartFlush()
-		end)
-end
-@@end

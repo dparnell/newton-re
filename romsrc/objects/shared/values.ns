@@ -1,0 +1,431 @@
+// objects several roots reach, none alone (naturalize.py)
+
+decimalpoint := ".";
+
+tDTMFCodec := "TDTMFCodec";
+
+correctorleadBitsItem := "(";
+
+andFaster := "28.8 and faster";
+
+editing := "Editing";
+
+viewing := "Viewing";
+
+creating := "Creating";
+
+general := "General";
+
+stop := "Stop";
+
+readyToRecord := "Ready to record.";
+
+tIMACodec := "TIMACodec";
+
+soundRecorder_2 := "Sound Recorder";
+
+overview := "Overview";
+
+phone := "Phone";
+
+mCI := "MCI";
+
+masterCard := "MasterCard";
+
+areacode := "095";
+
+sanFrancisco := "San Francisco";
+
+dateKeyboardItem := "1";
+
+outgoing := "00";
+
+belgium := "Belgium";
+
+finland := "Finland";
+
+germany := "Germany";
+
+hongKong := "Hong Kong";
+
+ireland := "Ireland";
+
+italy := "Italy";
+
+japan := "Japan";
+
+norway := "Norway";
+
+singapore := "Singapore";
+
+sweden := "Sweden";
+
+russia := "Russia";
+
+assist := "Assist";
+
+help := "Help";
+
+correctortrailBitsItem := "!";
+
+correctortrailBitsItem_2 := "?";
+
+correctorleadBitsItem_2 := "'";
+
+usStdDateFilterItem := "01";
+
+abcdefghijklmnopqrstuvwxyz := "abcdefghijklmnopqrstuvwxyz";
+
+words := "Words";
+
+time := "Time";
+
+format := "10_30_4_";
+
+anyFormat := "Any format";
+
+string_2 := "   -    ";
+
+format_2 := "000_0000";
+
+allItems := "All Items";
+
+first := "First";
+
+none := "None";
+
+password := "Password";
+
+hour := "1 hour";
+
+routing := "Routing";
+
+delete := "Delete";
+
+correctorleadBitsItem_3 := "\"";
+
+currentZone := "*";
+
+sending := "Sending…";
+
+receiving := "Receiving…";
+
+ready := "Ready";
+
+sent := "Sent";
+
+read := "Read";
+
+logged := "Logged";
+
+pending := "Pending";
+
+later := "Later";
+
+send := "Send";
+
+item := "item";
+
+groupSepStr := " ";
+
+digits := "0123456789";
+
+sprintNet := "SprintNet";
+
+filing := "Filing";
+
+file := "File";
+
+erase := "Erase";
+
+restart := "Restart";
+
+restore := "Restore";
+
+backup := "Backup";
+
+timeSepStr1 := ":";
+
+closestCity := "ﰁClosest City";
+
+all := "ﰋ All";
+
+correctortrailBitsItem_3 := ")";
+
+outgoing_4 := "0";
+
+del := "del";
+
+bankrollText := "$";
+
+correctorMidBitsItem := "/";
+
+groupSepStr_2 := ",";
+
+uS := "U.S.";
+
+areaCode_2 := "Area Code";
+
+minusPrefix := "-";
+
+canada := "Canada";
+
+unitedKingdom := "United Kingdom";
+
+australia := "Australia";
+
+folder := "Folder";
+
+title_2 := "Title";
+
+show := "Show";
+
+inBox := "In Box";
+
+show_2 := "  Show";
+
+status := "Status";
+
+g := "%.10g";
+
+inOutBox := "InOut Box";
+
+outBox := "Out Box";
+
+cpst := "cpst";
+
+prefs := "Prefs";
+
+transport := "Transport";
+
+preview := "Preview";
+
+next := "Next";
+
+items := "items";
+
+name := "Name";
+
+titleLabel := "TitleLabel";
+
+uSA := "USA";
+
+fax := "Fax";
+
+none_2 := "(none)";
+
+creditCard := "Credit Card";
+
+schedule_2 := "Schedule";
+
+date := "ﰁDate";
+
+otherNames := "Other Names";
+
+thisMeetingOccursOn := "This meeting occurs on:";
+
+dates := "ﰁDates";
+
+toDoTask := "To Do Task";
+
+note := "Note";
+
+to_2 := "To";
+
+plain := "Plain";
+
+city := "City";
+
+outgoing_5 := "001";
+
+dateKeyboardItem_4 := "9";
+
+styles := "Styles";
+
+time_2 := "time";
+
+or_2 := "or";
+
+first_2 := "first";
+
+call_2 := "Call";
+
+phoneMessage := "Phone Message";
+
+donTRepeat := "Don't repeat";
+
+everyWeek := "Every week";
+
+everyDay := "Every day";
+
+everyOtherWeek := "Every other week";
+
+everyMonth := "Every month";
+
+everyYear := "Every year";
+
+second := "second";
+
+third := "third";
+
+fourth := "fourth";
+
+last := "last";
+
+to_3 := "to";
+
+date_2 := "Date";
+
+new_2 := "New";
+
+new_3 := "  New";
+
+dates_2 := "Dates";
+
+meeting_3 := "Meeting";
+
+time_3 := "ﰁTime";
+
+invitees_2 := "Invitees";
+
+location_2 := "Location";
+
+minutes := "30 minutes";
+
+toDoList := "To Do List";
+
+contentArea := "contentArea";
+
+book := "Book";
+
+choose := "Choose";
+
+do_2 := "Do";
+
+mail := "mail";
+
+dear := "dear";
+
+print := "Print";
+
+salutationSuffixItem := ";";
+
+at := "at";
+
+are := "are";
+
+hey := "hey";
+
+in_2 := "in";
+
+popItem := "3";
+
+cpcm := "cpcm";
+
+ctso := "ctso";
+
+default_3 := "Default";
+
+mods := "mods";
+
+fileIn := "File ^0 in";
+
+logEntries := "log entries";
+
+log := "Log";
+
+hangUp := "Hang Up";
+
+extras := "Extras";
+
+calls := "Calls";
+
+inBox_3 := "InBox";
+
+outBox_2 := "OutBox";
+
+undo := "Undo";
+
+find := "Find";
+
+systemAlarmSoup := "SystemAlarmSoup";
+
+learn := "Learn";
+
+item_2 := "Item";
+
+items_2 := "Items";
+
+update := "Update";
+
+where_2 := "Where";
+
+tDotPrinter := "TDotPrinter";
+
+tSWGroupDriver := "TSWGroupDriver";
+
+work := "Work";
+
+car := "Car";
+
+aTT := "AT&T";
+
+sprint_2 := "Sprint";
+
+newton := "Newton";
+
+popItem_2 := "2";
+
+popItem_3 := "4";
+
+autoDock := "Auto Dock";
+
+americaOnline := "America Online";
+
+letterText := "Letter Text";
+
+mail_2 := "Mail";
+
+enabled := "Enabled";
+
+options := "  Options";
+
+canceling := "Canceling…";
+
+denmark := "Denmark";
+
+france := "France";
+
+israel := "Israel";
+
+netherlands := "Netherlands";
+
+newZealand := "New Zealand";
+
+southAfrica := "South Africa";
+
+switzerland := "Switzerland";
+
+last_2 := "Last";
+
+address := "Address";
+
+country := "Country";
+
+discover := "Discover";
+
+private := "private";
+
+remove := "Remove";
+
+add := "Add";
+
+numbers := "Numbers";
+
+alarm_2 := "Alarm";
+
+preferences := "Preferences";
+
+ent := "ent";
+
+home := "Home";

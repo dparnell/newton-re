@@ -1,5 +1,0 @@
-@@ 0x78d905 names
-func() begin
-	editor:NewRelative('sister)
-end
-@@end

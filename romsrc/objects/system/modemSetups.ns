@@ -1,0 +1,272 @@
+// modemSetups, and what only it reaches
+
+modemSetups := [|Array|:
+	{
+		modemName: alternate,
+		version: 2,
+		organization: appleComputerInc,
+		modemprefs: {
+			idModem: nil,
+			useHardwareCD: true,
+			useConfigString: true,
+			useDialOptions: true,
+			hangUpAtDisconnect: true
+		},
+		ModemProfile: {
+			supportsCellular: nil,
+			supportsEC: true,
+			supportsLCS: nil,
+			directConnectOnly: nil,
+			connectSpeeds: [|Array|: 300, 1200, 2400, 4800, 7200, 9600, 12000, 14400],
+			configSpeed: 19200,
+			commandTimeout: 2000,
+			maxCharsPerLine: 40,
+			interCmdDelay: 50,
+			ModemIDStr: nil,
+			ConfigStrNoEC: aTE0C1S12Q3N0,
+			ConfigStrECOnly: aTE0C1S12Q3N4,
+			ConfigStrECAndFallback: aTE0C1S12Q3N3,
+			ConfigStrCellular: nil,
+			ConfigStrDirectConnect: aTE0C1S12Q0N1
+		},
+		VoiceConnectSetupScript: nil,
+		FaxConnectSetupScript: nil,
+		DataConnectSetupScript: nil
+	},
+	{
+		modemName: alternate_2,
+		version: 2,
+		organization: appleComputerInc,
+		modemprefs: {
+			idModem: nil,
+			useHardwareCD: nil,
+			useConfigString: true,
+			useDialOptions: true,
+			hangUpAtDisconnect: true
+		},
+		ModemProfile: {
+			supportsCellular: nil,
+			supportsEC: true,
+			supportsLCS: nil,
+			directConnectOnly: nil,
+			connectSpeeds: [|Array|: 300, 1200, 2400, 4800, 7200, 9600, 12000, 14400],
+			configSpeed: 19200,
+			commandTimeout: 2000,
+			maxCharsPerLine: 40,
+			interCmdDelay: 25,
+			ModemIDStr: nil,
+			ConfigStrNoEC: aTE0S12,
+			ConfigStrECOnly: aTE0S12,
+			ConfigStrECAndFallback: aTE0S12,
+			ConfigStrCellular: nil,
+			ConfigStrDirectConnect: aTE0S12
+		},
+		VoiceConnectSetupScript: nil,
+		FaxConnectSetupScript: nil,
+		DataConnectSetupScript: nil
+	},
+	{
+		modemName: normal,
+		version: 2,
+		organization: appleComputerInc,
+		modemprefs: {
+			idModem: nil,
+			useHardwareCD: true,
+			useConfigString: true,
+			useDialOptions: true,
+			hangUpAtDisconnect: true
+		},
+		ModemProfile: {
+			supportsCellular: nil,
+			supportsEC: true,
+			supportsLCS: nil,
+			directConnectOnly: nil,
+			connectSpeeds: [|Array|: 300, 1200, 2400, 4800, 7200, 9600, 12000, 14400],
+			configSpeed: 19200,
+			commandTimeout: 2000,
+			maxCharsPerLine: 40,
+			interCmdDelay: 50,
+			ModemIDStr: nil,
+			ConfigStrNoEC: aTE0C1S12W2K3,
+			ConfigStrECOnly: aTE0C1S12W2K3_2,
+			ConfigStrECAndFallback: aTE0C1S12W2K3_3,
+			ConfigStrCellular: nil,
+			ConfigStrDirectConnect: aTE0C1S12W2K0
+		},
+		VoiceConnectSetupScript: nil,
+		FaxConnectSetupScript: nil,
+		DataConnectSetupScript: nil
+	},
+	{
+		modemName: andFaster,
+		version: 2,
+		organization: appleComputerInc,
+		modemprefs: {
+			idModem: nil,
+			useHardwareCD: true,
+			useConfigString: true,
+			useDialOptions: true,
+			hangUpAtDisconnect: true
+		},
+		ModemProfile: {
+			supportsCellular: true,
+			supportsEC: true,
+			supportsLCS: nil,
+			directConnectOnly: nil,
+			connectSpeeds: [|Array|:
+				300,
+				1200,
+				2400,
+				4800,
+				7200,
+				9600,
+				12000,
+				14400,
+				16800,
+				19200,
+				21600,
+				24000,
+				26400,
+				28800
+			],
+			configSpeed: 57600,
+			commandTimeout: 2000,
+			maxCharsPerLine: 256,
+			interCmdDelay: 25,
+			ModemIDStr: nil,
+			ConfigStrNoEC: aTE0C1S12W2K3,
+			ConfigStrECOnly: aTE0C1S12W2K3_2,
+			ConfigStrECAndFallback: aTE0C1S12W2K3_3,
+			ConfigStrCellular: "ATE0&C1S12=12W2%E1)M1\u000d",
+			ConfigStrDirectConnect: aTE0C1S12W2K0
+		},
+		VoiceConnectSetupScript: nil,
+		FaxConnectSetupScript: nil,
+		DataConnectSetupScript: nil
+	},
+	{
+		modemName: "Megahertz Cruise 28.8",
+		version: 2,
+		organization: appleComputerInc,
+		modemprefs: {
+			idModem: nil,
+			useHardwareCD: true,
+			useConfigString: true,
+			useDialOptions: true,
+			hangUpAtDisconnect: true
+		},
+		ModemProfile: {
+			supportsEC: true,
+			supportsLCS: nil,
+			directConnectOnly: nil,
+			connectSpeeds: [|Array|:
+				300,
+				1200,
+				2400,
+				4800,
+				7200,
+				9600,
+				12000,
+				14400,
+				16800,
+				19200,
+				21600,
+				24000,
+				26400,
+				28800
+			],
+			configSpeed: 57600,
+			commandTimeout: 2000,
+			maxCharsPerLine: 40,
+			interCmdDelay: 55,
+			ModemIDStr: nil,
+			ConfigStrNoEC: aTE0C1S12Q3N0,
+			ConfigStrECOnly: aTE0C1S12Q3N4,
+			ConfigStrECAndFallback: aTE0C1S12Q3N3,
+			ConfigStrDirectConnect: aTE0C1S12Q0N1
+		},
+		FaxProfile: {
+			serviceClass: 15,
+			transmitDataMod: 510,
+			receiveDataMod: 510,
+			transmitHDLCDataMod: 1,
+			receiveHDLCDataMod: 1
+		}
+	},
+	{modemName: @newtonModemName, version: 2, organization: appleComputerInc},
+	{
+		modemName: "TDK DF2814",
+		version: 2,
+		organization: appleComputerInc,
+		modemprefs: {
+			idModem: nil,
+			useHardwareCD: true,
+			useConfigString: true,
+			useDialOptions: true,
+			hangUpAtDisconnect: true
+		},
+		ModemProfile: {
+			supportsEC: true,
+			supportsLCS: nil,
+			directConnectOnly: nil,
+			connectSpeeds: [|Array|:
+				300,
+				1200,
+				2400,
+				4800,
+				7200,
+				9600,
+				12000,
+				14400,
+				16800,
+				19200,
+				21600,
+				24000,
+				26400,
+				28800
+			],
+			configSpeed: 57600,
+			commandTimeout: 2000,
+			maxCharsPerLine: 40,
+			interCmdDelay: 25,
+			ModemIDStr: nil,
+			ConfigStrNoEC: "ATE0&C1S12=12W2\\X0\\Q3\\N0\u000d",
+			ConfigStrECOnly: "ATE0&C1S12=12Q0\\X0\\Q3\\N4\u000d",
+			ConfigStrECAndFallback: "ATE0&C1S12=12Q0\\X0\\Q3\\N3\u000d",
+			ConfigStrDirectConnect: "ATE0&C1S12=12W2\\X0\\Q0\\N1\u000d"
+		},
+		FaxProfile: {
+			serviceClass: 15,
+			transmitDataMod: 8190,
+			receiveDataMod: 8190,
+			transmitHDLCDataMod: 1,
+			receiveHDLCDataMod: 1
+		}
+	}
+];
+
+normal := "14.4 Normal";
+
+alternate := "14.4 Alternate 1";
+
+alternate_2 := "14.4 Alternate 2";
+
+appleComputerInc := "Apple Computer, Inc.";
+
+aTE0S12 := "ATE0S12=12\u000d";
+
+aTE0C1S12W2K3 := "ATE0&C1S12=12W2&K3&Q6\u000d";
+
+aTE0C1S12W2K0 := "ATE0&C1S12=12W2&K0&Q0\u000d";
+
+aTE0C1S12W2K3_2 := "ATE0&C1S12=12W2&K3&Q5S36=4\u000d";
+
+aTE0C1S12W2K3_3 := "ATE0&C1S12=12W2&K3&Q5S36=7\u000d";
+
+aTE0C1S12Q3N0 := "ATE0&C1S12=12\\Q3\\N0\\V0\u000d";
+
+aTE0C1S12Q3N4 := "ATE0&C1S12=12\\Q3\\N4\\V0\u000d";
+
+aTE0C1S12Q3N3 := "ATE0&C1S12=12\\Q3\\N3\\V0\u000d";
+
+aTE0C1S12Q0N1 := "ATE0&C1S12=12\\Q0\\N1\\V0\u000d";

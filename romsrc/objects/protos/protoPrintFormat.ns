@@ -1,0 +1,167 @@
+// protoPrintFormat, and what only it reaches
+
+protoPrintFormat := {
+	type: 'printFormat,
+	storeCursors: true,
+	SetupItem: compile(
+		constants: {
+			kFunction_4c6865: func(a1, a2) begin
+				local l1, l2;
+				l2 := (l1 := Clone(a1)).bottom;
+				l1.bottom := l1.right;
+				l1.right := l2;
+				l2 := l1.left;
+				l1.left := l1.top;
+				l1.top := l2;
+				l1.orientation := a2;
+				l1
+			end
+		},
+		func(a1, a2) begin
+			local l1;
+			inherited:SetupItem(a1, a2);
+			if (not a1.printerPageBounds) then begin
+					GetItemTransport(a1):?SetPageBounds(a1)
+				end;
+			if (not (l1 := a1.printerPageBounds.orientation)) then begin
+					l1 := 'portrait
+				end;
+			if (orientation <> l1) then begin
+					a1.printerPageBounds := call (kFunction_4c6865) with (a1.printerPageBounds, orientation)
+				end;
+			a1
+		end),
+	routingType: 'view,
+	SetMarginBounds: func(a1) begin
+		local l1;
+		l1 := viewBounds;
+		RemoveSlot(self, 'viewBounds);
+		(viewBounds := Clone(viewBounds)).left := (viewBounds.left + margins.left);
+		viewBounds.right := (viewBounds.right - margins.right);
+		viewBounds.top := (viewBounds.top + margins.top);
+		viewBounds.bottom := (viewBounds.bottom - margins.bottom);
+		if fields.faxResolution then begin
+				viewBounds.top := (viewBounds.top + 20)
+			end;
+		if (if useFullPage then fields.printableMargin) then begin
+				viewBounds.left := max((viewBounds.left - fields.printableMargin.left), 0);
+				viewBounds.right := min((viewBounds.right + fields.printableMargin.right), 0);
+				viewBounds.top := max((viewBounds.top - fields.printableMargin.top), 0);
+				viewBounds.bottom := min((viewBounds.bottom + fields.printableMargin.bottom), 0)
+			end;
+		(if (if a1 then ((((viewBounds.left <> l1.left) or (viewBounds.right <> l1.right)) or (viewBounds.top <> l1.top)) or (viewBounds.bottom <> l1.bottom))) then SetValue(self, 'viewBounds, viewBounds))
+	end,
+	viewFlags: vVisible + vReadOnly,
+	LastChanceToSetup: compile(
+		constants: {
+			kFunction_4c6865: func(a1, a2) begin
+				local l1, l2;
+				l2 := (l1 := Clone(a1)).bottom;
+				l1.bottom := l1.right;
+				l1.right := l2;
+				l2 := l1.left;
+				l1.left := l1.top;
+				l1.top := l2;
+				l1.orientation := a2;
+				l1
+			end
+		},
+		func(a1) begin
+			local l1, l2, l3, l4;
+			(if useFullPage then begin
+					if (not (l2 := a1.printer)) then begin
+							l2 := GetUserConfig('currentPrinter)
+						end;
+					(if (if l2.printerPageBounds then (l1 := l2.printerPageBounds.(a1.printerPageBounds.id))) then begin
+							a1.printerPageBounds := Clone(a1.printerPageBounds);
+							a1.printerPageBounds.bottom := l1.bottom;
+							a1.printerPageBounds.right := l1.right;
+							l3 := GetRealPaperSize(a1.printerPageBounds.id);
+							(l4 := (a1.printableMargin := Clone(l2.printableOrigin))).right := ((l3.width - l1.right) - l4.left);
+							l4.bottom := ((l3.height - l1.bottom) - l4.top);
+							(if (orientation <> 'portrait) then begin
+									a1.printerPageBounds := call (kFunction_4c6865) with (a1.printerPageBounds, orientation);
+									(a1.printableMargin := call (kFunction_4c6865) with (a1.printableMargin, orientation))
+								end)
+						end)
+				end)
+		end),
+	GetCursorFormat: func(a1) begin
+		self:FindCursorFormat(a1)
+	end,
+	CountPages: func(a1, a2) begin
+		local l1;
+		(l1 := BuildContext(@pageCounterForm)).fields := a1;
+		l1:Open();
+		l1:Close();
+		a1.pageCount
+	end,
+	useFullPage: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	_proto: @targetFrameFormat,
+	NextItem: func() begin
+		local l1;
+		l1 := nil;
+		if targetCursor then begin
+				if ((l1 := targetCursor:entry()) = 'deleted) then begin
+						self:Notify(3, title, "Cannot print: The data has been removed or deleted");
+						return nil
+					end;
+				targetCursor:Next()
+			end;
+		return l1
+	end,
+	pageWidth: nil,
+	symbol: nil,
+	usesCursors: nil,
+	viewJustify: vjParentFullH + vjParentFullV,
+	dataTypes: [|Array|: 'view],
+	orientation: 'portrait,
+	pageHeight: nil,
+	viewSetupFormScript: func() begin
+		if (coverForm = nil) then begin
+				coverForm := self;
+				if (noDefaults or (symbol = nil)) then begin
+						margins := SetBounds(60, 0, 60, 0)
+					end;
+				self:SetMarginBounds(nil)
+			end;
+		printForm := self;
+		if TargetIsCursor(target) then begin
+				targetCursor := GetTargetCursor(target, nil)
+			end;
+		(if (if (not usesCursors) then TargetIsCursor(target)) then (if (target := targetCursor:entry()) then (mainFormat := coverForm:FindCursorFormat(target))))
+	end,
+	viewClass: clView,
+	viewFont: tsFancy + tsSize(12),
+	printNextPageScriptX: func() begin
+		(if fields then begin
+				result := nil;
+				if (if (printForm exists) then printForm.printNextPageScript) then begin
+						result := printForm:printNextPageScript()
+					end;
+				if (if (if (result = nil) then targetCursor) then (not usesCursors)) then begin
+						if (target := targetCursor:Next()) then begin
+								mainFormat := coverForm:FindCursorFormat(target);
+								self:RedoChildren();
+								result := true
+							end
+					end;
+				result
+			end)
+	end,
+	viewSetupChildrenScript: func() begin
+		local l1;
+		if useFullPage then begin
+				self:SetMarginBounds(true)
+			end;
+		pageWidth := (l1 := self:LocalBox()).right;
+		pageHeight := l1.bottom;
+		(if self.mainFormat then (self.stepChildren := [Array: mainFormat]))
+	end,
+	margins: {left: 0, top: 0, right: 0, bottom: 0}
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+SetupItem_literal7 := same("protoPrintFormat.SetupItem.literals[7]");

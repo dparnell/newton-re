@@ -1,5 +1,0 @@
-@@ 0x7504e5
-func() begin
-	self:UpdateDirectoryText()
-end
-@@end

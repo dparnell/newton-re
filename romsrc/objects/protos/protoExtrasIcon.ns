@@ -1,0 +1,279 @@
+// protoExtrasIcon, and what only it reaches
+
+protoExtrasIcon := {
+	viewClass: clView,
+	viewBounds: nil,
+	viewFlags: vVisible + vClickable + vGesturesAllowed,
+	viewJustify: vjCenterH,
+	viewHelpTopic: learn,
+	target: nil,
+	iconStyle: {font: tsSystem + tsSize(10) + tsBold, justification: 'center, transferMode: 8},
+	shape: nil,
+	iconBottom: 29,
+	GetAdjustedProto: func() begin
+		local l1, l2;
+		(if (if (l1 := GetUserConfig('extraFont)) then (iconStyle.font <> l1)) then begin
+				(l2 := Clone(iconStyle)).font := l1;
+				{_proto: self, iconStyle: l2}
+			end else self)
+	end,
+	GetIconShapeText: func() begin
+		l1 := iconStyle.font;
+		local l1;
+		local l2;
+		(foreach l3 in (l2 := MakeTextLines(target.fentry.text, SetBounds(0, iconBottom, hSpacing, (iconBottom + 20)), (FontAscent(l1) - 1), l1)) do begin
+				SetClass(l3.data, 'string)
+			end);
+		l2
+	end,
+	GetIconShapeTextHilited: func() begin
+		if shape then begin
+				l1 := shape[(Length(shape) - 1)]
+			end else begin
+				l1 := self:GetIconShapeText()
+			end;
+		l2 := iconStyle.font;
+		l3 := 0;
+		local l1;
+		local l2;
+		local l3;
+		(foreach l4 in l1 do begin
+				local l6;
+				l3 := max(l3, StrFontWidth(l4.data, l2))
+			end);
+		l6 := RelBounds(((hSpacing - l3) div 2), iconBottom, (l3 + 1), (3 + (Length(l1) * (FontAscent(l2) - 1))));
+		[Array: l1, '{transferMode: 2, penPattern: 0, fillPattern: 5}, MakeShape(l6)]
+	end,
+	CenterIconShape: func(a1) begin
+		(foreach l1 in a1 do begin
+				local l3;
+				if IsPrimShape(l1) then begin
+						l3 := ShapeBounds(l1);
+						OffsetShape(l1, (((hSpacing - l3.right) - l3.left) div 2), (iconBottom - l3.bottom))
+					end else begin
+						if IsArray(l1) then begin
+								self:CenterIconShape(l1)
+							end
+					end
+			end);
+		a1
+	end,
+	GetIconShape: func() begin
+		local l1, l2, l3;
+		if IsInteger((l1 := target.fentry).iconPro) then begin
+				l1 := @extrasRomIcons[l1.iconPro]
+			end else begin
+				if IsInteger(l1.icon) then begin
+						l1 := @extrasRomIcons[l1.icon]
+					end
+			end;
+		if l1.iconPro then begin
+				l2 := MakeShape(l1.iconPro.unhilited)
+			end else begin
+				l2 := [Array: '{transferMode: 1}, MakeShape(l1.icon)]
+			end;
+		l3 := [Array: l2];
+		if target.notActive then begin
+				AddArraySlot(l3, MakeShape(@extrasRomIcons[10].icon))
+			end;
+		self:CenterIconShape(l3);
+		AddArraySlot(l3, self:GetIconShapeText());
+		if IsSoupEntry(target.fentry) then begin
+				EntryUndoChanges(target.fentry)
+			end;
+		l3
+	end,
+	GetIconShapeHilited: compile(
+		constants: {
+			kLiteral_3c5eed: '{transferMode: 2, penPattern: 0, fillPattern: 5}
+		},
+		func() begin
+			local l1, l2, l3, l4, l5, l6, l7;
+			if IsInteger((l1 := target.fentry).iconPro) then begin
+					l1 := @extrasRomIcons[l1.iconPro]
+				end else begin
+					if IsInteger(l1.icon) then begin
+							l1 := @extrasRomIcons[l1.icon]
+						end
+				end;
+			if l1.iconPro then begin
+					if (l4 := l1.iconPro).hilited then begin
+							l2 := MakeShape(l4.hilited)
+						end else begin
+							l3 := MakeShape(l4.unhilited)
+						end
+				end else begin
+					if (if (l5 := l1.icon).mask then (not hasBackground)) then begin
+							(l6 := Clone(l5)).bits := l5.mask;
+							l2 := [Array: MakeShape(l5), kLiteral_3c5eed, MakeShape(l6)]
+						end else begin
+							l3 := MakeShape(l5)
+						end
+				end;
+			if (not l2) then begin
+					if hasBackground then begin
+							l2 := [Array: '{transferMode: 1}, l3]
+						end else begin
+							l2 := [Array: l3, kLiteral_3c5eed, MakeShape(ShapeBounds(l3))]
+						end
+				end;
+			l7 := [Array: l2];
+			if target.notActive then begin
+					AddArraySlot(l7, MakeShape(@extrasRomIcons[10].icon))
+				end;
+			self:CenterIconShape(l7);
+			AddArraySlot(l7, self:GetIconShapeTextHilited());
+			if IsSoupEntry(target.fentry) then begin
+					EntryUndoChanges(target.fentry)
+				end;
+			l7
+		end),
+	viewDrawScript: func() begin
+		local l1;
+		(if (l1 := (BAnd(GetViewFlags(self), 33554432) <> 0)) then begin
+				if (not self.hilitedShape) then begin
+						self.hilitedShape := self:GetIconShapeHilited()
+					end;
+				self:DrawShape(self.hilitedShape, iconStyle)
+			end else begin
+				if (not self.shape) then begin
+						self.shape := self:GetIconShape()
+					end;
+				self:DrawShape(self.shape, iconStyle)
+			end)
+	end,
+	viewHiliteScript: func(a1) begin
+		if a1 then begin
+				if self.justHilited then begin
+						RemoveSlot(self, 'justHilited)
+					end else begin
+						self.hilitedShape := self:GetIconShapeHilited();
+						self.justHilited := true;
+						self:Dirty()
+					end
+			end else begin
+				RemoveSlot(self, 'hilitedShape);
+				self:Dirty()
+			end;
+		true
+	end,
+	viewdrawdragdatascript: func(a1) begin
+		self:DrawShape(self.hilitedShape, iconStyle);
+		true
+	end,
+	viewClickScript: func(a1) begin
+		local v4_xxxxxxxxxxxxxxxxxxwwww, v5_zzzzzzzyyyyyyyyyyyyyyyyyyyyy, v6_qqpppp, v7_xxxxxwwwwwww, v8_zzzzzzy, v9_vvvvvvuuuuuuuu, v10_rrrrrrrrq, v11_wwwwwwwwwwwwwwv, v12_zzyyyyyyyyyyyyyyyyyyy, v13_vvvvvvuuuuuuuuuuu, v16_wwwwwwwwwwwwwwwvvvvvvvvvv, v17_jj, v18_yyyyyyyyyyyyyyyyyyyyyyyyxx, v19_jjji, v20_xwwwwwwwww, v21_zzzzzzzzzzzzzzyy, v22_uuuuuuuuuutt, v23_yxxxxxxxxxxxxxxxxx, v24_zzzzzzzzyyyyy, v25_wwwwwwwwwwwwvvvvvvvv;
+		ShowBusyBox(nil);
+		v11_wwwwwwwwwwwwwwv := (Ticks() + 45);
+		v18_yyyyyyyyyyyyyyyyyyyyyyyyxx := (v23_yxxxxxxxxxxxxxxxxx := self:GlobalBox()).left;
+		v5_zzzzzzzyyyyyyyyyyyyyyyyyyyyy := v23_yxxxxxxxxxxxxxxxxx.top;
+		v9_vvvvvvuuuuuuuu := (v7_xxxxxwwwwwww := GetPoint(6, a1)).x;
+		v25_wwwwwwwwwwwwvvvvvvvv := v7_xxxxxwwwwwww.y;
+		(if (if shape then HitShape(shape, (v9_vvvvvvuuuuuuuu - v18_yyyyyyyyyyyyyyyyyyyyyyyyxx), (v25_wwwwwwwwwwwwvvvvvvvv - v5_zzzzzzzyyyyyyyyyyyyyyyyyyyyy))) then begin
+				InkOffUnHobbled(a1);
+				clicker();
+				if (BAnd(GetViewFlags(self), 33554432) = 0) then begin
+						self:hilite(true);
+						RefreshViews()
+					end;
+				self:?HandleChildClick();
+				v16_wwwwwwwwwwwwwwwvvvvvvvvvv := true;
+				v6_qqpppp := v9_vvvvvvuuuuuuuu;
+				v22_uuuuuuuuuutt := v25_wwwwwwwwwwwwvvvvvvvv;
+				if (((not (v12_zzyyyyyyyyyyyyyyyyyyy := (v13_vvvvvvuuuuuuuuuuu := self.target.fentry).sequence)) or (v12_zzyyyyyyyyyyyyyyyyyyy < 0)) or (if IsSoupEntry(v13_vvvvvvuuuuuuuuuuu) then EntryStore(v13_vvvvvvuuuuuuuuuuu):IsReadOnly())) then begin
+						(while (not StrokeDone(a1)) do begin
+								v4_xxxxxxxxxxxxxxxxxxwwww := (v24_zzzzzzzzyyyyy := GetPoint(8, a1)).x;
+								v17_jj := v24_zzzzzzzzyyyyy.y;
+								(if ((v4_xxxxxxxxxxxxxxxxxxwwww <> v6_qqpppp) or (v17_jj <> v22_uuuuuuuuuutt)) then begin
+										v19_jjji := (HitShape(shape, (v4_xxxxxxxxxxxxxxxxxxwwww - v18_yyyyyyyyyyyyyyyyyyyyyyyyxx), (v17_jj - v5_zzzzzzzyyyyyyyyyyyyyyyyyyyyy)) <> nil);
+										if (v16_wwwwwwwwwwwwwwwvvvvvvvvvv <> v19_jjji) then begin
+												self:hilite(v19_jjji);
+												RefreshViews();
+												v16_wwwwwwwwwwwwwwwvvvvvvvvvv := v19_jjji
+											end;
+										v6_qqpppp := v4_xxxxxxxxxxxxxxxxxxwwww;
+										(v22_uuuuuuuuuutt := v17_jj)
+									end)
+							end)
+					end else begin
+						(while (not StrokeDone(a1)) do begin
+								v4_xxxxxxxxxxxxxxxxxxwwww := (v24_zzzzzzzzyyyyy := GetPoint(8, a1)).x;
+								v17_jj := v24_zzzzzzzzyyyyy.y;
+								if ((v4_xxxxxxxxxxxxxxxxxxwwww <> v6_qqpppp) or (v17_jj <> v22_uuuuuuuuuutt)) then begin
+										if ((abs((v4_xxxxxxxxxxxxxxxxxxwwww - v9_vvvvvvuuuuuuuu)) + abs((v17_jj - v25_wwwwwwwwwwwwvvvvvvvv))) > 32) then begin
+												v16_wwwwwwwwwwwwwwwvvvvvvvvvv := 'Drag;
+												break
+											end;
+										v6_qqpppp := v4_xxxxxxxxxxxxxxxxxxwwww;
+										v22_uuuuuuuuuutt := v17_jj
+									end;
+								(if (Ticks() > v11_wwwwwwwwwwwwwwv) then begin
+										v16_wwwwwwwwwwwwwwwvvvvvvvvvv := 'select;
+										break
+									end)
+							end)
+					end;
+				if (v16_wwwwwwwwwwwwwwwvvvvvvvvvv = 'select) then begin
+						self:hiliter(a1)
+					end else begin
+						if (v16_wwwwwwwwwwwwwwwvvvvvvvvvv = 'Drag) then begin
+								v20_xwwwwwwwww := [Array: ];
+								(foreach v15_yyyyyyyyyyyyyyxxxx in iconSpace:GetChildIconViews() do begin
+										if (BAnd(GetViewFlags(v15_yyyyyyyyyyyyyyxxxx), 33554432) <> 0) then begin
+												v13_vvvvvvuuuuuuuuuuu := v15_yyyyyyyyyyyyyyxxxx.target.fentry;
+												if (if (if (v15_yyyyyyyyyyyyyyxxxx.target:Preflight('Filing, [Array: ]) = 'OK) then IsSoupEntry(v13_vvvvvvuuuuuuuuuuu)) then (not EntryStore(v13_vvvvvvuuuuuuuuuuu):IsReadOnly())) then begin
+														AddArraySlot(v20_xwwwwwwwww, v13_vvvvvvuuuuuuuuuuu)
+													end else begin
+														v15_yyyyyyyyyyyyyyxxxx:hilite(nil);
+														v10_rrrrrrrrq := true
+													end;
+												if v10_rrrrrrrrq then begin
+														RefreshViews()
+													end
+											end
+									end);
+								if (Length(v20_xwwwwwwwww) > 0) then begin
+										v8_zzzzzzy := {droppedEntries: v20_xwwwwwwwww, externalDrop: nil};
+										if ((v21_zzzzzzzzzzzzzzyy := self:DragAndDropLtd(a1, v23_yxxxxxxxxxxxxxxxxx, '{limitBounds: none, pinBounds: none}, nil, [Array: {types: '[Array: icon], dragRef: v8_zzzzzzy}])) = 2) then begin
+												self:RedoIconsAfterDrop(v8_zzzzzzy.externalDrop)
+											end else begin
+												if (v21_zzzzzzzzzzzzzzyy = 1) then begin
+														self:Notify(3, title, "Cannot drag icons there.")
+													end
+											end
+									end
+							end else begin
+								if v16_wwwwwwwwwwwwwwwvvvvvvvvvv then begin
+										self:Launch()
+									end
+							end
+					end;
+				true
+			end)
+	end,
+	Launch: func() begin
+		try begin
+				if (if self.target:TapAction() then closeable) then begin
+						base:Close()
+					end
+			end onexception |evt.ex.msg| do begin
+				self:Notify(3, title, CurrentException().message)
+			end;
+		(if (if iconSpace then iconSpace.viewCObject) then iconSpace:SelectNone())
+	end,
+	viewgesturescript: func(a1, a2) begin
+		(if (a2 = 13) then begin
+				SetValue(self, 'viewFlags, BOr(GetViewFlags(self), 33554432));
+				if self:SetupFakeTarget() then begin
+						InkOff(a1);
+						self:DeleteActionScript(nil, self)
+					end;
+				true
+			end)
+	end,
+	_cacheContext: {_parent: nil, _proto: nil, viewCObject: nil, shape: nil}
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+GetIconShape_literal7 := same("protoExtrasIcon.GetIconShape.literals[7]");

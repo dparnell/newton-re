@@ -1,5 +1,0 @@
-@@ 0x7b3345
-func() begin
-	sigCapture:Erase()
-end
-@@end

@@ -1,0 +1,9 @@
+// correctorMidBits, and what only it reaches
+
+correctorMidBits := {
+	bits: midpunctBitmapBits,
+	bounds: midpunctBitmapBounds,
+	width: 2,
+	height: 2,
+	words: [|Array|: minusPrefix, correctorMidBitsItem, decimalpoint, correctorleadBitsItem_2]
+};

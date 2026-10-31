@@ -1,0 +1,47 @@
+// protoRecorderButton, and what only it reaches
+
+protoRecorderButton := {
+	viewClass: clView,
+	viewFlags: vVisible + vReadOnly,
+	viewFormat: 0,
+	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingTopV,
+	viewBounds: {left: 0, top: 0, right: 47, bottom: 36},
+	icon: nil,
+	text: nil,
+	buttonClickScript: func() begin
+		nil
+	end,
+	debug: 23122896,
+	viewChildren: [viewChildren: recButIcon, recButText],
+	recButIcon: nil,
+	allocateContext: [|Array|: 'recButIcon, recButIcon, 'recButText, recButText],
+	recButText: nil
+};
+
+recButIcon := {
+	viewFormat: vfFillWhite,
+	viewJustify: vjCenterH + vjCenterV + vjParentCenterH,
+	viewBounds: {left: 0, top: 0, right: 27, bottom: 23},
+	_sound: nil,
+	buttonClickScript: func() begin
+		self:Parent():buttonClickScript()
+	end,
+	preallocatedContext: 'recButIcon,
+	_proto: @protoPictureButton
+};
+
+recButText := {
+	viewJustify: vjCenterH + vjCenterV + vjParentCenterH + vjSiblingBottomV,
+	viewBounds: {left: 0, top: 0, right: 47, bottom: 13},
+	viewSetupDoneScript: func() begin
+		(self.text := self:Parent().text)
+	end,
+	preallocatedContext: 'recButText,
+	_proto: @protoStaticText
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+buttonClickScript_code_11 := same("recButIcon.buttonClickScript.instructions");
+
+buttonClickScript_code_4 := same("protoRecorderButton.buttonClickScript.instructions");

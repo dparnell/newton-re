@@ -1,0 +1,192 @@
+// address, and what only it reaches
+
+address := {
+	type: 'editor,
+	symbol: 'address,
+	stepChildren: [stepChildren: addressItem, addressItem_2, addressItem_3, addressItem_4, addressItem_5, country],
+	UpdateCountryInfo: func() begin
+		local l1, l2, l3;
+		l1 := GetLocale();
+		l3 := true;
+		if target.(country.path) then begin
+				if (Length((l2 := GetCountryEntry(target.(country.path)))) > 0) then begin
+						l3 := (l2[0].symbol = 'USA)
+					end
+			end;
+		(if l3 then SetValue(State.entryLine, 'dictionaries, l1.recogStateDictionaries) else SetValue(State.entryLine, 'viewFlags, 12618241))
+	end,
+	viewSetupDoneScript: func() begin
+		self:UpdateCountryInfo();
+		inherited:?viewSetupDoneScript()
+	end,
+	name: "Address",
+	declareSelf: 'addressView,
+	infoFrame: {
+		checkPrefix: [|Array|: true, [pathExpr: 'addresses]],
+		checkPaths: [|Array|: 'address, 'address2, 'city, 'region, 'postal_code, 'country],
+		formatFunc: func(a1) begin
+			(if (if StrFilled(a1[2]) then StrFilled(a1[3])) then ParamStr("^?0^0\n||^?1^1\n||^?2^2, ||^?3^3 ||^?4^4||^?5\n^5||", a1) else ParamStr("^?0^0\n||^?1^1\n||^?2^2 ||^?3^3 ||^?4^4||^?5\n^5||", a1))
+		end
+	},
+	protection: 'private,
+	viewQuitScript: func() begin
+		local l1, l2;
+		inherited:?viewQuitScript();
+		(if (l2 := target.(country.path)) then SetCountryClass(l2))
+	end,
+	fieldOrder: nil,
+	_proto: @8240,
+	address1: nil,
+	stepAllocateContext: [|Array|:
+		'address1,
+		addressItem,
+		'address2,
+		addressItem_2,
+		'city,
+		addressItem_3,
+		'State,
+		addressItem_4,
+		'zipcode,
+		addressItem_5,
+		'country,
+		country
+	],
+	address2: nil,
+	city: nil,
+	State: nil,
+	zipcode: nil,
+	country: nil
+};
+
+addressItem := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 33},
+	viewLineSpacing: 26,
+	flavor: @newtCustomFilter,
+	newRecFlags: 10533377,
+	addPath: 'address,
+	label: nil,
+	viewSetupDoneScript: func() begin
+		AddDeferredCall(functions.KeyIn, [Array: 56, nil]);
+		inherited:?viewSetupDoneScript()
+	end,
+	viewSetupFormScript: func() begin
+		local l1;
+		label := (l1 := GetLocale()).streetLabel;
+		inherited:?viewSetupFormScript()
+	end,
+	_proto: @newtLabelInputLine,
+	preAllocatedContext: 'address1
+};
+
+addressItem_2 := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 32},
+	viewLineSpacing: 25,
+	flavor: @newtCustomFilter,
+	label: nil,
+	newRecFlags: 10533377,
+	addPath: 'address2,
+	_proto: @newtLabelInputLine,
+	preAllocatedContext: 'address2
+};
+
+addressItem_3 := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 33},
+	viewLineSpacing: 26,
+	flavor: @newtCustomFilter,
+	label: nil,
+	newDictionaries: nil,
+	viewSetupFormScript: func() begin
+		local l1;
+		label := (l1 := GetLocale()).cityLabel;
+		newDictionaries := l1.recogCityDictionaries;
+		inherited:?viewSetupFormScript()
+	end,
+	memory: 'cityName,
+	addPath: 'city,
+	_proto: @newtLabelInputLine,
+	preAllocatedContext: 'city
+};
+
+addressItem_4 := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 33},
+	viewLineSpacing: 26,
+	flavor: @newtCustomFilter,
+	label: nil,
+	memory: 'regionName,
+	viewSetupFormScript: func() begin
+		label := GetLocale().regionLabel;
+		inherited:?viewSetupFormScript()
+	end,
+	newRecFlags: nil,
+	addPath: 'region,
+	_proto: @newtLabelInputLine,
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	preAllocatedContext: 'State
+};
+
+addressItem_5 := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 33},
+	viewLineSpacing: 26,
+	viewSetupFormScript: func() begin
+		label := GetLocale().postalCodeLabel;
+		if (selectedPath <> true) then begin
+				RemoveSlot(self, 'viewChangedScript)
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	flavor: @newtCustomFilter,
+	label: nil,
+	newRecFlags: 16779777,
+	addPath: 'postal_code,
+	newDictionaries: 116,
+	newRecTextFlags: 520,
+	_proto: addressItem_5Proto,
+	preAllocatedContext: 'zipcode
+};
+
+country := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 32},
+	viewLineSpacing: 25,
+	flavor: {
+		_proto: @newtCountryFilter,
+		Picker: func() begin
+			if (if (if (not (l1 := (if StrFilled(target.country) then target.country))) then (l2 := target.addresses)) then ((l3 := Length(l2)) > 0)) then begin
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					(for l5 := 0 to (l3 - 1) do begin
+							if (if l2[l5] then StrFilled(l2[l5].country)) then begin
+									break (l1 := l2[l5].country)
+								end
+						end)
+				end;
+			if (not l1) then begin
+					l1 := UserConfiguration.currentCountry
+				end;
+			@locationPopup:new({default: (if (Length((l4 := GetCountryEntry(l1))) > 0) then l4[0]), spots: @countrySoupName, result: 'name}, self:GlobalLabelBounds(), self)
+		end
+	},
+	label: "Country",
+	addPath: 'country,
+	Retarget: func() begin
+		inherited:?Retarget();
+		addressView:UpdateCountryInfo()
+	end,
+	_proto: @newtLabelInputLine,
+	preAllocatedContext: 'country
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupDoneScript_code := same("addressItem.viewSetupDoneScript.instructions");
+
+viewSetupFormScript_code_2 := same("addressItem.viewSetupFormScript.instructions");
+
+viewSetupFormScript_code_3 := same("addressItem_4.viewSetupFormScript.instructions");

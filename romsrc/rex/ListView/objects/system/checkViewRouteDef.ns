@@ -1,0 +1,3 @@
+// checkViewRouteDef, and what only it reaches
+
+checkViewRouteDef := {_proto: @targetFrameFormat, symbol: 'checkViewRouteDef};

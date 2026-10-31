@@ -1,0 +1,6 @@
+// routeLog, and what only it reaches
+
+routeLog := {
+	bits: bitmap('bits, "resources/bits/463c85.png", "00000000000400f900f900d1010900de", 1),
+	bounds: {left: 0, top: 0, right: 13, bottom: 16}
+};

@@ -1,5 +1,0 @@
-@@ 0x486be9
-func() begin
-	(title.viewJustify := 8388608)
-end
-@@end

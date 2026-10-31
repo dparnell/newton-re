@@ -1,0 +1,6 @@
+// routeForward, and what only it reaches
+
+routeForward := {
+	bits: bitmap('bits, "resources/bits/463a51.png", "0000000000040031003100ab004000c1", 1),
+	bounds: {left: 0, top: 0, right: 22, bottom: 15}
+};

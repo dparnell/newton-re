@@ -1,0 +1,14 @@
+// protoBottomTitle, and what only it reaches
+
+protoBottomTitle := {
+	_proto: @protoTitle,
+	viewJustify: vjCenterV + vjParentFullH + vjParentBottomV,
+	viewSetupFormScript: func() begin
+		if (not titleHeight) then begin
+				titleHeight := FontHeight(viewFont)
+			end;
+		titleWidth := StrFontWidth(title, viewFont);
+		(self.viewBounds := SetBounds(0, ((-titleHeight) + 2), 0, 2))
+	end,
+	debug: 2904837
+};

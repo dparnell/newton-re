@@ -1,0 +1,26 @@
+// protoWordInfo, and what only it reaches
+
+protoWordInfo := {
+	_proto: {
+		SetWords: {class: #132, funcPtr: 7018708, numArgs: 1},
+		GetWords: {class: #132, funcPtr: 7018688, numArgs: 0},
+		AutoAdd: {class: #132, funcPtr: 7017647, numArgs: 0},
+		AutoRemove: {class: #132, funcPtr: 7017648, numArgs: 0},
+		Learn: {class: #132, funcPtr: 7017656, numArgs: 1},
+		TestFlags: {class: #132, funcPtr: 6997537, numArgs: 1},
+		SetFlags: {class: #132, funcPtr: 7018707, numArgs: 1},
+		ClearFlags: {class: #132, funcPtr: 7017654, numArgs: 1},
+		AddCapitalized: {class: #132, funcPtr: 7017644, numArgs: 0},
+		RemoveAddedEntries: {class: #132, funcPtr: 7018704, numArgs: 1},
+		MoveFirst: {class: #132, funcPtr: 7018695, numArgs: 1}
+	},
+	id: -1,
+	start: 0,
+	stop: 0,
+	flags: 0,
+	unitID: nil,
+	words: nil,
+	strokes: nil,
+	ink: nil,
+	unitData: nil
+};

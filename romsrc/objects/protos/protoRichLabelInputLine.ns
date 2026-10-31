@@ -1,0 +1,47 @@
+// protoRichLabelInputLine, and what only it reaches
+
+protoRichLabelInputLine := {
+	_proto: @protoLabelInputLine,
+	entryFlags: 14849,
+	entryRecConfig: @rcInkorText,
+	viewSetupChildrenScript: func() begin
+		entryLine.recConfig := self.entryRecConfig;
+		inherited:viewSetupChildrenScript()
+	end,
+	viewQuitScript: func() begin
+		AddMemoryItem(memory, entryLine:GetRichString())
+	end,
+	UpdateText: func(a1) begin
+		AddUndoAction('UpdateText, [Array: Clone(entryLine:GetRichString())]);
+		SetValue(entryLine, 'text, a1);
+		entryLine:SetHilite(9999, 9999, true)
+	end,
+	GetRichString: func() begin
+		MakeRichString(entryLine.text, entryLine.styles)
+	end,
+	viewChildren: [|Array|: entryLine_2, labelLine],
+	debug: 369296797,
+	entryLine: nil,
+	allocateContext: [|Array|:
+		'entryLine,
+		entryLine,
+		'labelLine,
+		labelLine,
+		'entryLine,
+		entryLine_2,
+		'labelLine,
+		labelLine
+	],
+	labelLine: nil
+};
+
+entryLine_2 := {
+	_proto: @protoRichInputLine,
+	viewJustify: 8388800,
+	viewFont: tsHWFont + tsSize(12),
+	viewFormat: vfLinesGray,
+	viewChangedScript: func(a1, a2) begin
+		(if (a1 = 'text) then self:textChanged())
+	end,
+	preallocatedContext: 'entryLine
+};

@@ -1,5 +1,0 @@
-@@ 0x10165ed
-func(a1) begin
-	{_proto: fCompletionSpec_Bind, _parent: self}
-end
-@@end

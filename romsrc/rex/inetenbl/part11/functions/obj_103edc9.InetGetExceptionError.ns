@@ -1,5 +1,0 @@
-@@ 0x103fc09
-func(a1) begin
-	InetStartUp():MGetExceptionError(a1)
-end
-@@end

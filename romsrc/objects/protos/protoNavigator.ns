@@ -1,0 +1,6 @@
+// protoNavigator, and what only it reaches
+
+protoNavigator := {
+	startCCL: {class: #132, funcPtr: 6959506, numArgs: 0},
+	stopCCL: {class: #132, funcPtr: 6959508, numArgs: 0}
+};

@@ -1,5 +1,0 @@
-@@ 0x538425
-func() begin
-	(if (if fentry.TapAction then self:LookupSoupPackageAndActivate()) then fentry:TapAction())
-end
-@@end

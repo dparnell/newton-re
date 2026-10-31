@@ -1,5 +1,0 @@
-@@ 0x500629
-func(a1) begin
-	(a1.repeatTemplate <> nil)
-end
-@@end

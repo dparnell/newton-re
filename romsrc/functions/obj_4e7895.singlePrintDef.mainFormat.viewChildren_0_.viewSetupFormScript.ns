@@ -1,8 +1,0 @@
-@@ 0x518bf9
-func() begin
-	if (meeting.viewStationery = 'cribNote) then begin
-			labelText := "Event"
-		end;
-	inherited:?viewSetupFormScript()
-end
-@@end

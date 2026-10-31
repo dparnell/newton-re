@@ -1,0 +1,14 @@
+// export45, and what only it reaches
+
+export45 := {
+	viewBounds: {left: 0, top: 0, right: 38, bottom: 23},
+	buttonClickScript: func() begin
+		target.cardType := cardType;
+		appBase.allSoups.names.defaultCardType := cardType;
+		self:StartFlush();
+		self:SelectBizcard(self)
+	end,
+	viewJustify: vjCenterH + vjCenterV,
+	viewFormat: vfFillWhite + vfFrameBlack,
+	_proto: @protoPictureButton
+};

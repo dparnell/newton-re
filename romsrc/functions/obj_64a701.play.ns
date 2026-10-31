@@ -1,5 +1,0 @@
-@@ 0x427d2d
-func() begin
-	playButton:buttonClickScript()
-end
-@@end

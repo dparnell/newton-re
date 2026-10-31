@@ -1,9 +1,0 @@
-@@ 0x760be9
-func() begin
-	(if (if endpoint then endpoint.connected) then return endpoint:IdleConnection(true) else begin
-			self.needToAbort := true;
-			AddDeferredSend(self, 'Close, nil);
-			return 0
-		end)
-end
-@@end

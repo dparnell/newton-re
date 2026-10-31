@@ -1,0 +1,9 @@
+// objects several roots reach, none alone (naturalize.py)
+
+formulas := "Formulas";
+
+staticText := "Static Text";
+
+changeMe := "Change Me";
+
+interestRate := "Interest Rate (%)";

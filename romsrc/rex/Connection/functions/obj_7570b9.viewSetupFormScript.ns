@@ -1,5 +1,0 @@
-@@ 0x757149
-func() begin
-	(viewValue := protoContext:ConnectionPrefsRead('alwaysSyncall))
-end
-@@end

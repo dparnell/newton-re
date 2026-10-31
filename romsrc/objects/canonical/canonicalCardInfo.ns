@@ -1,0 +1,3 @@
+// canonicalCardInfo, and what only it reaches
+
+canonicalCardInfo := {cardInfoVersion: 0, totalSockets: 0, totalCards: 0, socketInfos: [|Array|: ]};

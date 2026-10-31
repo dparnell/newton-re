@@ -1,5 +1,0 @@
-@@ 0x101ba25
-func() begin
-	self:GetSelectedText()
-end
-@@end

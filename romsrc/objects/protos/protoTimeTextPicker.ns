@@ -1,0 +1,22 @@
+// protoTimeTextPicker, and what only it reaches
+
+protoTimeTextPicker := {
+	viewBounds: nil,
+	label: time_3,
+	Time: nil,
+	format: 'shortTimeStrSpec,
+	increment: 12,
+	Popit: func(a1) begin
+		local l1;
+		(l1 := self:GlobalBox()).right := (l1.left + a1);
+		@digitalTimePopup:New(Time, increment, l1, self)
+	end,
+	TextSetup: func() begin
+		TimeStr(Time, @datetimeStrSpecs.(format))
+	end,
+	pickActionScript: func(a1) begin
+		Time := a1;
+		inherited:pickActionScript(a1)
+	end,
+	_proto: @protoTextPicker
+};

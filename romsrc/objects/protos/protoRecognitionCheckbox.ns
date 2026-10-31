@@ -1,0 +1,20 @@
+// protoRecognitionCheckbox, and what only it reaches
+
+protoRecognitionCheckbox := {
+	_proto: @protoCheckbox,
+	config: nil,
+	viewSetupFormScript: func() begin
+		(viewValue := userConfiguration.(config))
+	end,
+	valueChanged: func() begin
+		userConfiguration.(config) := viewValue;
+		self:RecalcRecognition()
+	end,
+	viewResetValue: func() begin
+		(viewValue := userConfiguration.(config))
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_2 := same("protoRecognitionCheckbox.viewSetupFormScript.instructions");

@@ -1,0 +1,3 @@
+// array_2, and what only it reaches
+
+array_2 := [|Array|: ];

@@ -1,0 +1,3 @@
+// canonicalCorrector, and what only it reaches
+
+canonicalCorrector := {_proto: @protoCorrector, bounds: nil, pickItems: nil, refCon: nil, wordInfo: nil};

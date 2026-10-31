@@ -1,6 +1,0 @@
-@@ 0x5b4e9d
-func() begin
-	EntryChangeXmit(userConfiguration, 'preferenceRoll);
-	saveLetterWeights()
-end
-@@end

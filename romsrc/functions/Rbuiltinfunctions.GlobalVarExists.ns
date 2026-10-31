@@ -1,5 +1,0 @@
-@@ 0x62e7b9
-func(a1) begin
-	HasSlot(vars, a1)
-end
-@@end

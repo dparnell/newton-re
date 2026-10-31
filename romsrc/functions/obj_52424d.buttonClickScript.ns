@@ -1,5 +1,0 @@
-@@ 0x51ec5d
-func() begin
-	pageNumberDialog:Toggle()
-end
-@@end

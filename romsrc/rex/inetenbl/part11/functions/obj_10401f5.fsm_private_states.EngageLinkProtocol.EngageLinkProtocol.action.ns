@@ -1,6 +1,0 @@
-@@ 0x104c88d
-func() begin
-	self:MUpdateProgressSlip('Update, nil, 50);
-	fLinkLayerServiceFSM:DoEvent('EngageLinkProtocol, [Array: self, 'MEngageLinkCallback])
-end
-@@end

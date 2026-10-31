@@ -1,0 +1,121 @@
+// storePrototype, and what only it reaches
+
+storePrototype := {
+	_parent: {
+		GetName: {class: #132, funcPtr: 7281915, numArgs: 0},
+		HasSoup: {class: #132, funcPtr: 7281919, numArgs: 1},
+		GetKind: {class: #132, funcPtr: 7281914, numArgs: 0},
+		WriteWholeObject: {class: #132, funcPtr: 873508, numArgs: 4},
+		DeleteObject: {class: #132, funcPtr: 873619, numArgs: 1},
+		UsedSize: {class: #132, funcPtr: 7282953, numArgs: 0},
+		SoupsInUse: func() begin
+			self.soups
+		end,
+		CheckUnion: {class: #132, funcPtr: 6897123, numArgs: 0},
+		NewCompressedVBO: {class: #132, funcPtr: 6886573, numArgs: 4},
+		SetInfoQT: {class: #132, funcPtr: 6915105, numArgs: 2},
+		CheckWriteProtect: {class: #132, funcPtr: 869124, numArgs: 0},
+		SetInfo: func(a1, a2) begin
+			local l1;
+			l1 := self:SetInfoQT(a1, a2);
+			CallFrameBasedRegistryFns(StoreChangeRegistry, [Array: self, 'storeInfoChanged, a1]);
+			l1
+		end,
+		BusyAction: func(a1, a2, a3) begin
+			local l1;
+			try begin
+					self:MarkBusy(a1, a2);
+					l1 := call a3 with ();
+					self:MarkNotBusy(a1)
+				end onexception |evt.ex| do begin
+					self:MarkNotBusy(a1);
+					Rethrow()
+				end;
+			l1
+		end,
+		CardSlot: {class: #132, funcPtr: 6907703, numArgs: 0},
+		cardType: {class: #132, funcPtr: 6907704, numArgs: 0},
+		Unlock: {class: #132, funcPtr: 7282952, numArgs: 0},
+		SetSignature: {class: #132, funcPtr: 6915106, numArgs: 1},
+		SetAllInfoQT: {class: #132, funcPtr: 6915104, numArgs: 1},
+		MarkNotBusy: func(a1) begin
+			local l1;
+			(if (l1 := self:CardSlot()) then MarkSlotNotBusy(a1, l1))
+		end,
+		SetPassword: {class: #132, funcPtr: 6895034, numArgs: 2},
+		SetAllInfo: func(a1) begin
+			local l1;
+			l1 := self:SetAllInfoQT(a1);
+			CallFrameBasedRegistryFns(StoreChangeRegistry, [Array: self, 'storeInfoChanged, nil]);
+			l1
+		end,
+		Abort: {class: #132, funcPtr: 873793, numArgs: 0},
+		NewVBO: {class: #132, funcPtr: 262285, numArgs: 2},
+		SuckPackageFromEndPoint: {class: #132, funcPtr: 6898183, numArgs: 2},
+		EraseQT: {class: #132, funcPtr: 6895030, numArgs: 0},
+		MarkBusy: func(a1, a2) begin
+			local l1;
+			(if (l1 := self:CardSlot()) then MarkSlotBusy(a1, l1, a2))
+		end,
+		ConvertSoupSortTables: {class: #132, funcPtr: 6897124, numArgs: 1},
+		Erase: func() begin
+			local l1, l2;
+			l1 := self:GetName();
+			l2 := self:EraseQT();
+			CallFrameBasedRegistryFns(StoreChangeRegistry, [Array: self, 'storeErased, l1]);
+			l2
+		end,
+		GetObjectSize: {class: #132, funcPtr: 873666, numArgs: 1},
+		WriteObject: {class: #132, funcPtr: 873547, numArgs: 4},
+		SetNameQT: {class: #132, funcPtr: 7282950, numArgs: 1},
+		GetSoupNames: {class: #132, funcPtr: 7281918, numArgs: 0},
+		SetName: func(a1) begin
+			local l1, l2;
+			l1 := self:GetName();
+			l2 := self:SetNameQT(a1);
+			CallFrameBasedRegistryFns(StoreChangeRegistry, [Array: self, 'storeReNamed, l1]);
+			l2
+		end,
+		HasPassword: {class: #132, funcPtr: 870901, numArgs: 0},
+		TotalSize: {class: #132, funcPtr: 7282951, numArgs: 0},
+		GetSoup: {class: #132, funcPtr: 7281917, numArgs: 1},
+		Lock: {class: #132, funcPtr: 7282945, numArgs: 0},
+		CreateSoup: {class: #132, funcPtr: 7281911, numArgs: 2},
+		CreateSoupXmit: func(a1, a2, a3) begin
+			local l1;
+			l1 := self:CreateSoup(a1, a2);
+			if a3 then begin
+					XmitSoupChange(a1, a3, 'soupCreated, l1)
+				end;
+			l1
+		end,
+		RestoreSegmentedPackage: {class: #132, funcPtr: 7051485, numArgs: 2},
+		AtomicAction: func(a1) begin
+			local l1;
+			try begin
+					self:Lock();
+					l1 := call a1 with ();
+					self:Unlock()
+				end onexception |evt.ex| do begin
+					self:Abort();
+					Rethrow()
+				end;
+			l1
+		end,
+		|1.XPackageToVBO|: {class: #132, funcPtr: 6898204, numArgs: 1},
+		RestorePackage: {class: #132, funcPtr: 6982777, numArgs: 1},
+		ReadObject: {class: #132, funcPtr: 873437, numArgs: 3},
+		GetInfo: {class: #132, funcPtr: 6914078, numArgs: 1},
+		IsValid: {class: #132, funcPtr: 6898205, numArgs: 0},
+		SetObjectSize: {class: #132, funcPtr: 873638, numArgs: 2},
+		GetSignature: {class: #132, funcPtr: 7281916, numArgs: 0},
+		NewObject: {class: #132, funcPtr: 873597, numArgs: 1},
+		IsReadOnly: {class: #132, funcPtr: 7282944, numArgs: 0},
+		GetAllInfo: {class: #132, funcPtr: 6914077, numArgs: 0},
+		SuckPackageFromBinary: {class: #132, funcPtr: 7039835, numArgs: 2}
+	},
+	_proto: nil,
+	store: nil,
+	soups: nil,
+	version: nil
+};

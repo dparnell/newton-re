@@ -1,0 +1,29 @@
+// namesBitmap, and what only it reaches
+
+namesBitmap := {
+	unhilited: {
+		bounds: unhilitedBounds_23,
+		mask: bitmap('mask, "resources/mask/542601.png", "00000000000800000000000000190022", 1),
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/5427c9.png", "00000000001400000000000000190022", 4),
+				bitdepth: 4
+			},
+			{cbits: colordataCbits_23, bitdepth: 1}
+		]
+	},
+	hilited: {
+		bounds: {left: 0, top: 0, right: 34, bottom: 25},
+		mask: bitmap('mask, "resources/mask/5421b9.png", "00000000000800000000000000190022", 1),
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/542381.png", "00000000001400000000000000190022", 4),
+				bitdepth: 4
+			},
+			{
+				cbits: bitmap('bits, "resources/bits/54229d.png", "00000000000800000000000000190022", 1),
+				bitdepth: 1
+			}
+		]
+	}
+};

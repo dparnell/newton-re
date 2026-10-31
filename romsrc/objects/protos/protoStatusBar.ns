@@ -1,0 +1,18 @@
+// protoStatusBar, and what only it reaches
+
+protoStatusBar := {
+	viewClass: clView,
+	viewFlags: vVisible,
+	viewFormat: 0,
+	viewJustify: vjParentFullH + vjParentBottomV,
+	viewBounds: {left: 0, top: -18, right: 0, bottom: 0},
+	viewDrawScript: func() begin
+		local l1;
+		l1 := self:LocalBox();
+		self:DrawShape(MakeRect(2, 4, (l1.right - 2), 6), nil)
+	end,
+	debug: 724016,
+	timeField: nil,
+	allocateContext: [|Array|: 'timeField, timeField],
+	viewChildren: [viewChildren: @analogClock, timeField]
+};

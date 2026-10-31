@@ -1,0 +1,203 @@
+// solopokerTemplate, and what only it reaches
+
+solopokerTemplate := {
+	viewSetupDoneScript: compile(
+		constants: {
+			kROM_828: @protoDeckOfCards
+		},
+		func() begin
+			deck := kROM_828:New();
+			self:Deal()
+		end),
+	EvalCol: func(a1) begin
+		l1 := 0;
+		local l1;
+		local l2;
+		l2 := (foreach l3 in '[Array: 0, 5, 10, 15, 20] collect table[(l3 + a1)]);
+		deck:Eval5(l2)
+	end,
+	dButton: nil,
+	EvalRow: func(a1) begin
+		local l1, l2;
+		l1 := 0;
+		deck:Eval5((l2 := ArrayMunger([Array: ], 0, nil, table, (5 * a1), 5)))
+	end,
+	bankLimit: 5000,
+	money: 1000,
+	ReOrientToScreen: @defRotateFunc,
+	bet: 200,
+	viewBounds: {left: 0, top: 0, right: 192, bottom: 285},
+	handValue: nil,
+	_proto: @protoDragngo,
+	EvalTable: func() begin
+		l1 := 0;
+		local l1;
+		(for l2 := 0 to 4 do begin
+				l1 := (l1 + deck.SoloPayOffs.(self:EvalRow(l2)))
+			end);
+		(for l5 := 0 to 4 do begin
+				l1 := (l1 + deck.SoloPayOffs.(self:EvalCol(l5)))
+			end);
+		SetValue(handValue, 'text, Stringer([Array: "", l1]));
+		l1
+	end,
+	deck: nil,
+	table: nil,
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	stepallocatecontext: [|Array|: 'bankroll, bankroll_2, 'dButton, dButton_2, 'handValue, handValue_2],
+	Swap: func(a1, a2) begin
+		local l1;
+		l1 := table[a1.cardIndex];
+		table[a1.cardIndex] := table[a2.cardIndex];
+		table[a2.cardIndex] := l1;
+		a1:Dirty();
+		a2:Dirty();
+		base:EvalTable();
+		base:AddUndoAction('Swap, [Array: a1, a2])
+	end,
+	viewSetupFormScript: func() begin
+		(self.rowViews := [Array: ])
+	end,
+	Deal: func() begin
+		deck:Shuffle();
+		table := deck:Deal(25);
+		self:EvalTable();
+		money := (money - bet);
+		SetValue(bankroll, 'text, Stringer([Array: $$, money]));
+		self:Dirty()
+	end,
+	stepChildren: [stepChildren:
+		{
+			_proto: solopokerTemplateProto,
+			cardIndex: 0,
+			viewBounds: {left: 7, top: 7, right: 37, bottom: 52},
+			viewJustify: 0
+		},
+		{_proto: solopokerTemplateProto, cardIndex: 1},
+		{_proto: solopokerTemplateProto, cardIndex: 2},
+		{_proto: solopokerTemplateProto, cardIndex: 3},
+		{_proto: solopokerTemplateProto, cardIndex: 4},
+		{
+			_proto: solopokerTemplateProto,
+			cardIndex: 5,
+			viewBounds: {left: 7, top: 59, right: 37, bottom: 104},
+			viewJustify: 0
+		},
+		{_proto: solopokerTemplateProto, cardIndex: 6},
+		{_proto: solopokerTemplateProto, cardIndex: 7},
+		{_proto: solopokerTemplateProto, cardIndex: 8},
+		{_proto: solopokerTemplateProto, cardIndex: 9},
+		{
+			_proto: solopokerTemplateProto,
+			cardIndex: 10,
+			viewBounds: {left: 7, top: 111, right: 37, bottom: 156},
+			viewJustify: 0
+		},
+		{_proto: solopokerTemplateProto, cardIndex: 11},
+		{_proto: solopokerTemplateProto, cardIndex: 12},
+		{_proto: solopokerTemplateProto, cardIndex: 13},
+		{_proto: solopokerTemplateProto, cardIndex: 14},
+		{
+			_proto: solopokerTemplateProto,
+			cardIndex: 15,
+			viewBounds: {left: 7, top: 163, right: 37, bottom: 208},
+			viewJustify: 0
+		},
+		{_proto: solopokerTemplateProto, cardIndex: 16},
+		{_proto: solopokerTemplateProto, cardIndex: 17},
+		{_proto: solopokerTemplateProto, cardIndex: 18},
+		{_proto: solopokerTemplateProto, cardIndex: 19},
+		{
+			_proto: solopokerTemplateProto,
+			cardIndex: 20,
+			viewBounds: {left: 7, top: 215, right: 37, bottom: 260},
+			viewJustify: 0
+		},
+		{_proto: solopokerTemplateProto, cardIndex: 21},
+		{_proto: solopokerTemplateProto, cardIndex: 22},
+		{_proto: solopokerTemplateProto, cardIndex: 23},
+		{_proto: solopokerTemplateProto, cardIndex: 24},
+		bankroll_2,
+		dButton_2,
+		handValue_2
+	],
+	bankroll: nil
+};
+
+solopokerTemplateProto := {
+	_proto: @protoCard,
+	dragee: nil,
+	GetCard: func() begin
+		table[cardIndex]
+	end,
+	viewClickScript: func(a1) begin
+		self:DragAndDropLtd(a1, self:GlobalOuterBox(), base:GlobalBox(), nil, [Array: {types: '[Array: card], dragRef: cardIndex, dragView: self}]);
+		true
+	end,
+	viewDropApproveScript: func(a1) begin
+		(if a1 then (a1:Parent() = self:Parent()))
+	end,
+	viewGetDropTypesScript: func(a1) begin
+		'[Array: card]
+	end,
+	viewdragfeedbackscript: func(a1, a2, a3) begin
+		local l1;
+		l1 := a1[0].dragView;
+		if (if (self <> l1) then (self:Parent() = l1:Parent())) then begin
+				self:hilite(a3)
+			end;
+		true
+	end,
+	viewGetDropDataScript: func(a1, a2) begin
+		{dragee: self}
+	end,
+	viewDropScript: func(a1, a2, a3) begin
+		base:Swap(self, a2.dragee);
+		true
+	end
+};
+
+bankroll_2 := {
+	viewJustify: vjCenterV + vjSiblingBottomV,
+	viewBounds: {left: 7, top: 7, right: 47, bottom: 20},
+	text: bankrollText,
+	preallocatedContext: 'bankroll,
+	_proto: @protoStaticText
+};
+
+dButton_2 := {
+	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingFullV,
+	viewBounds: {left: 5, top: 0, right: 70, bottom: 0},
+	text: "New Deal",
+	buttonClickScript: func() begin
+		if ((money := (money + base:EvalTable())) < bet) then begin
+				GetRoot():Notify(3, "Poker Solitaire", "Your line of credit has been terminated.");
+				AddDeferredSend(base, 'Close, nil)
+			end else begin
+				if (money > bankLimit) then begin
+						GetRoot():Notify(3, "Poker Solitaire", "Congratulations! You broke the bank.");
+						AddDeferredSend(base, 'Close, nil)
+					end
+			end;
+		base:Deal()
+	end,
+	preallocatedContext: 'dButton,
+	_proto: @protoTextButton
+};
+
+handValue_2 := {
+	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingFullV,
+	viewBounds: {left: 5, top: 0, right: 60, bottom: 0},
+	viewFont: @fontSystem9,
+	text: uCardPositionAlertButton,
+	preallocatedContext: 'handValue,
+	_proto: @protoStaticText
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+buttonClickScript_literal12 := same("dButton_2.buttonClickScript.literals[12]");
+
+buttonClickScript_literal5_3 := same("dButton_2.buttonClickScript.literals[5]");
+
+buttonClickScript_literal4 := same("dButton_2.buttonClickScript.literals[4]");

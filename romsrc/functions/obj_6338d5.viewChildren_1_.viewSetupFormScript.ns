@@ -1,6 +1,0 @@
-@@ 0x5b4e3d
-func() begin
-	cursor := @505:New('{}, GetPrefs());
-	AddPowerOffHandler(self)
-end
-@@end

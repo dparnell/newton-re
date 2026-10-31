@@ -1,5 +1,0 @@
-@@ 0x472495
-func() begin
-	(if userConfiguration.currentPrinter.printerName then GetNames(userConfiguration.currentPrinter.printerName) else GetNames(userConfiguration.currentPrinter.name))
-end
-@@end

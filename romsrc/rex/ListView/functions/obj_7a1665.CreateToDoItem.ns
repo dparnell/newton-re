@@ -1,5 +1,0 @@
-@@ 0x7975ed names
-func(aDate, aRichString, aReminder, aFrequency) begin
-	self:CreateToDoItemAll(aDate, aRichString, aReminder, aFrequency, 3, nil)
-end
-@@end

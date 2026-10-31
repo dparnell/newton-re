@@ -1,0 +1,3 @@
+// canonicalTextAndStyles, and what only it reaches
+
+canonicalTextAndStyles := {text: nil, styles: nil};

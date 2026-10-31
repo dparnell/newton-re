@@ -1,0 +1,6 @@
+// digitSlides, and what only it reaches
+
+digitSlides := {
+	bits: bitmap('bits, "resources/bits/3da125.png", "00000000001801540154016a016c0214", 1),
+	bounds: {left: 0, top: 0, right: 170, bottom: 24}
+};

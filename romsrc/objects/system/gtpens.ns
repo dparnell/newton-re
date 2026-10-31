@@ -1,0 +1,34 @@
+// gtpens, and what only it reaches
+
+gtpens := [|Array|:
+	{
+		mask: bitmap('mask, "resources/mask/5623cd.png", "00000000000400090009017a00280194", 1),
+		bits: bitmap('bits, "resources/bits/562465.png", "00000000000400080008015c00270176", 1),
+		bounds: {left: 0, top: 0, right: 26, bottom: 31}
+	},
+	{
+		mask: bitmap('mask, "resources/mask/562531.png", "000000000004000b000b01a9002501c8", 1),
+		bits: bitmap('bits, "resources/bits/5625b5.png", "000000000004000a000a01d8002401f7", 1),
+		bounds: {left: 0, top: 0, right: 31, bottom: 26}
+	},
+	{
+		mask: bitmap('mask, "resources/mask/56266d.png", "000000000004000b000b01e400250203", 1),
+		bits: bitmap('bits, "resources/bits/5626f1.png", "000000000004000b000b01e400250203", 1),
+		bounds: {left: 0, top: 0, right: 31, bottom: 26}
+	},
+	{
+		mask: bitmap('mask, "resources/mask/5627a9.png", "00000000000400090009021d002b022b", 1),
+		bits: bitmap('bits, "resources/bits/56284d.png", "00000000000400090009021d002b022b", 1),
+		bounds: {left: 0, top: 0, right: 14, bottom: 34}
+	},
+	{
+		mask: bitmap('mask, "resources/mask/562925.png", "000000000004001e001e024f003d0269", 1),
+		bits: bitmap('bits, "resources/bits/5629bd.png", "000000000004001e001e024f003d0269", 1),
+		bounds: {left: 0, top: 0, right: 26, bottom: 31}
+	},
+	{
+		mask: bitmap('mask, "resources/mask/562a89.png", "00000000000400410041023700630245", 1),
+		bits: bitmap('bits, "resources/bits/562b2d.png", "00000000000400410041023700630245", 1),
+		bounds: {left: 0, top: 0, right: 14, bottom: 34}
+	}
+];

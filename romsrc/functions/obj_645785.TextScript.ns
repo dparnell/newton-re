@@ -1,5 +1,0 @@
-@@ 0x4bcef1
-func() begin
-	notesText(target.(path))
-end
-@@end

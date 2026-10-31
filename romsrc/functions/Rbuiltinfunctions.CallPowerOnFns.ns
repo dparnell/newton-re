@@ -1,5 +1,0 @@
-@@ 0x562d6d
-func(a1) begin
-	CallFrameBasedRegistryFns(PowerOnRegistry, [Array: a1])
-end
-@@end

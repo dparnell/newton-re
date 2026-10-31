@@ -1,0 +1,121 @@
+// name, and what only it reaches
+
+name := {
+	stepChildren: [stepChildren:
+		nameItem,
+		{
+			viewBounds: {left: 66, top: 77, right: 131, bottom: 145},
+			viewFlags: vVisible,
+			viewFormat: nil,
+			viewTransferMode: 0,
+			viewJustify: vjRightH + vjParentCenterH,
+			viewClass: clPictureView,
+			icon: picture('picture, "resources/picture/7aae45")
+		},
+		first,
+		last,
+		company,
+		nameItem_6
+	],
+	viewSetupDoneScript: func() begin
+		local l1;
+		self:LockScreen(true);
+		fCompleted.name := true;
+		vFirstName:SetText(fPersona.name.first);
+		vLastName:SetText(fPersona.name.last);
+		vCompanyName:SetText(fPersona.company);
+		SetKeyView(vFirstName.vInputLine, 0);
+		self:LockScreen(nil)
+	end,
+	TearDown: func() begin
+		local l1;
+		fReviewDone := true;
+		fFirstName := (fPersona.name.first := vFirstName:GetText());
+		l1 := (fPersona.name.last := vLastName:GetText());
+		fPersona.company := vCompanyName:GetText();
+		if (fFirstName <> nil) then begin
+				self:AddWordsToDict(fFirstName, 48)
+			end;
+		(if (l1 <> nil) then self:AddWordsToDict(l1, 7))
+	end,
+	titleTExt: "Enter \u000dyour Name",
+	description: "Tap on a line, then use\u000dyour Newton pen to type \u000dyour name on the \u000dkeyboard.  To go to\u000dthe next line, just tap it.\u000d\u000d\u000d",
+	AddWordsToDict: func(a1, a2) begin
+		local l1;
+		(foreach l2 in (l1 := SplitString(StringFilter(a1, ",./:;!@#$%^&*()_+=", 'rejectAll))) do begin
+				local l4;
+				if (if l2 then (StrLen(l2) > 1)) then begin
+						if (l4 := LookupWord(l2)) then begin
+								GetRoot().ReviewDict:AddWord(l4)
+							end
+					end
+			end)
+	end,
+	declareSelf: 'PageBase,
+	debug: "name",
+	_proto: @8353,
+	vFirstName: nil,
+	stepAllocateContext: [|Array|:
+		'_defaultButton,
+		nameItem_2,
+		'vGoBackButton,
+		nameItem_3,
+		'vCloser,
+		nameItem_4,
+		'vFeedback,
+		nameItem_5,
+		'vFirstName,
+		first,
+		'vLastName,
+		last,
+		'vCompanyName,
+		company,
+		'vAlphaKeyboard,
+		nameItem_6
+	],
+	vLastName: nil,
+	vCompanyName: nil,
+	vAlphaKeyboard: nil,
+	preAllocatedContext: 'name
+};
+
+first := {
+	viewBounds: {top: -5, left: 0, right: 236, bottom: 16},
+	label: "First",
+	viewSetupFormScript: func() begin
+		(self.vInputLine.viewFlags := (self.vInputLine.viewFlags + 8388608))
+	end,
+	_proto: @8350,
+	preAllocatedContext: 'vFirstName
+};
+
+last := {
+	viewBounds: {left: 0, top: 2, right: 236, bottom: 23},
+	label: "Last",
+	viewSetupFormScript: func() begin
+		(self.vInputLine.viewFlags := (self.vInputLine.viewFlags + 8388608))
+	end,
+	_proto: @8350,
+	preAllocatedContext: 'vLastName
+};
+
+company := {
+	viewBounds: {left: 0, top: 2, right: 236, bottom: 23},
+	label: "Company",
+	viewSetupFormScript: func() begin
+		(self.vInputLine.viewFlags := (self.vInputLine.viewFlags + 8388608))
+	end,
+	_proto: @8350,
+	preAllocatedContext: 'vCompanyName
+};
+
+nameItem_6 := {
+	viewBounds: {top: 214, left: 0, right: 225, bottom: 295},
+	viewJustify: vjParentCenterH,
+	_proto: @8348,
+	preAllocatedContext: 'vAlphaKeyboard
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code := same("first.viewSetupFormScript.instructions");

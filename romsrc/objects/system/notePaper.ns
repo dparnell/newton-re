@@ -1,0 +1,30 @@
+// notePaper, and what only it reaches
+
+notePaper := {
+	viewFont: tsHWFont + tsSize(18),
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewJustify: vjParentFullH + vjParentFullV,
+	realData: nil,
+	version: 1,
+	type: 'editor,
+	symbol: 'default,
+	name: note,
+	protection: 'private,
+	path: 'data,
+	MinimalBounds: func(a1) begin
+		if a1.data then begin
+				local l1;
+				(foreach l2 in a1.data do begin
+						l1 := UnionRect(l1, l2.viewBounds)
+					end)
+			end;
+		l1
+	end,
+	viewSetupDoneScript: func() begin
+		if (if (if KeyboardConnected() then (BAnd(self.viewFlags, 130) = 0)) then (if target then (not target.data))) then begin
+				self:PositionCaret(10, (viewOriginY + viewLineSpacing), nil)
+			end;
+		inherited:?viewSetupDoneScript()
+	end,
+	_proto: @newtEditView
+};

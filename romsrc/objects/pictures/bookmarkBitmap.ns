@@ -1,0 +1,6 @@
+// bookmarkBitmap, and what only it reaches
+
+bookmarkBitmap := {
+	bits: bitmap('bits, "resources/bits/3d6709.png", "000000000004003c003c01f3004d0206", 1),
+	bounds: {left: 0, top: 0, right: 19, bottom: 17}
+};

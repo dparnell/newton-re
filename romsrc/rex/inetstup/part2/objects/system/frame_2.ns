@@ -1,0 +1,43 @@
+// frame_2, and what only it reaches
+
+frame_2 := {
+	labelCommands: nil,
+	text: card,
+	viewBounds: {left: 4, top: 10, right: -4, bottom: 26},
+	alwaysCallPickActionScript: true,
+	viewJustify: 8396848,
+	BuildLabelCommands: func() begin
+		(if GlobalFnExists('GetDeviceList) then GetDeviceList('ethernet) else [Array: ])
+	end,
+	viewSetupFormScript: func() begin
+		labelCommands := self:BuildLabelCommands();
+		inherited:?viewSetupFormScript()
+	end,
+	textSetup: func() begin
+		local l1, l2;
+		(if StrFilled((l2 := target.(path))) then (if (l1 := self:GetIndex(l2)) then labelCommands[l1].item else "<Unrecognized Card>") else "None Selected")
+	end,
+	GetIndex: compile(
+		constants: {
+			kFunction_101de65: func(a1, a2) begin
+				if a1 then begin
+						(for l1 := 0 to (Length(a2) - 1) do begin
+								if (if a2[l1].CISName then StrEqual(a2[l1].CISName, a1)) then begin
+										return l1
+									end
+							end)
+					end;
+				nil
+			end
+		},
+		func(a1) begin
+			call (kFunction_101de65) with (a1, labelCommands)
+		end),
+	labelActionScript: func(a1) begin
+		target.(path) := labelCommands[a1].CISName;
+		newtAppbase.targetView:?StartFlush()
+	end,
+	_proto: @protoLabelPicker
+};
+
+card := "Card";

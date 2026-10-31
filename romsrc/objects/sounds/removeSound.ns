@@ -1,0 +1,37 @@
+// removeSound, and what only it reaches
+
+removeSound := {
+	sndFrameType: 'codec,
+	codecName: tDTMFCodec,
+	dataType: 16,
+	bufferSize: 6400,
+	bufferCount: 4,
+	compressionType: 6,
+	samplingRate: 21600,
+	samples: tonescore('samples, {version: 1, algorithm: 1, reserved: 0, repeats: 6}, [tones:
+		{
+			frequency: 900,
+			fraction: 0,
+			peak: 21100,
+			delay: 0,
+			attack: 0,
+			decay: 0,
+			hold: 1,
+			release: 19,
+			sustain: 0,
+			tail: 0
+		},
+		{
+			frequency: 40,
+			fraction: 0,
+			peak: 300,
+			delay: 0,
+			attack: 0,
+			decay: 0,
+			hold: 20,
+			release: 0,
+			sustain: 0,
+			tail: 0
+		}
+	])
+};

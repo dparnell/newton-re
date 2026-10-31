@@ -1,0 +1,37 @@
+// protoTitle, and what only it reaches
+
+protoTitle := {
+	viewClass: clTextView,
+	viewFlags: vVisible + vReadOnly,
+	viewFormat: vfFillWhite,
+	viewTransferMode: 2,
+	viewJustify: vjRightH + vjCenterV + vjParentCenterH,
+	viewFont: @fontSystem10Bold,
+	titleWidth: nil,
+	titleHeight: nil,
+	viewBounds: nil,
+	titleicon: nil,
+	viewSetupFormScript: func() begin
+		local l1, l2;
+		if (not titleHeight) then begin
+				titleHeight := FontHeight(viewFont)
+			end;
+		l1 := (self:Parent():LocalBox().right - 20);
+		titleWidth := (StrFontWidth(title, viewFont) + 1);
+		l2 := (if titleicon then ((titleicon.bounds.right - titleicon.bounds.left) + 3) else 0);
+		if ((titleWidth + l2) > l1) then begin
+				titleWidth := (l1 - l2);
+				self.text := StyledStrTruncate(Clone(title), titleWidth, viewFont)
+			end else begin
+				self.text := title
+			end;
+		titleWidth := (titleWidth + l2);
+		(self.viewBounds := SetBounds(0, -3, titleWidth, (titleHeight + 2)))
+	end,
+	viewDrawScript: func() begin
+		local l1;
+		l1 := self:LocalBox();
+		self:DrawShape([Array: MakeRect(0, (l1.bottom - 3), l1.right, (l1.bottom - 1)), MakeLine(1, (l1.bottom - 1), (l1.right - 2), (l1.bottom - 1)), (if titleicon then OffsetShape(MakeShape(titleicon), 1, ((l1.bottom - (titleicon.bounds.bottom - titleicon.bounds.top)) div 2)))], nil)
+	end,
+	debug: 45061
+};

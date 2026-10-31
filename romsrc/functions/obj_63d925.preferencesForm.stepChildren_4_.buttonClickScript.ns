@@ -1,6 +1,0 @@
-@@ 0x59d805
-func() begin
-	fontPicker:choose(userConfiguration, 'mailFont);
-	(fontPickerUp := fontPicker)
-end
-@@end

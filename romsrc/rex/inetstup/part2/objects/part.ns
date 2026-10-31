@@ -1,0 +1,292 @@
+// part, and what only it reaches
+
+part := array(nil, {
+	_ImportTable: [|Array|:
+		{name: '|SetupProtos:NIE|, major: 1, minor: 0},
+		{name: '|InternetSetup:NIE|, major: 1, minor: 0}
+	],
+	installScript: func(a1) begin
+		local l1;
+		l1 := EnsureInternal({removeScript: a1.devRemoveScript});
+		a1:devInstallScript(a1, l1);
+		l1
+	end,
+	devInstallScript: compile(
+		constants: {
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			kFunction_1020541: func(a1, a2) begin
+				(try begin
+						RegDataDef(a1, a2)
+					end onexception |evt.ex| do begin
+						nil
+					end)
+			end,
+			kFunction_10205c9: func(a1, a2) begin
+				(if IsArray(a2) then (foreach l1 in a2 do begin
+							try begin
+									RegisterViewDef(l1, a1)
+								end onexception |evt.ex| do begin end
+						end))
+			end,
+			kFunction_10204f5: func(a1, a2, a3) begin
+				call (kFunction_1020541) with (a1, a2);
+				call (kFunction_10205c9) with (a1, a3)
+			end,
+			kFunction_101d641: func(a1) begin
+				local l1;
+				inherited:?labelActionScript(a1);
+				if IsReadOnly((l1 := GetDataDefs('|Ethernet:NIE|)).newEntryViews) then begin
+						l1.newEntryViews := Clone(l1.newEntryViews)
+					end;
+				if (labelCommands[a1].symbol = 'manual) then begin
+						l1.newEntryViews := l1._proto.newEntryViews
+					end else begin
+						l1.newEntryViews := l1.AlternateNewViews
+					end;
+				SetValue(newtAppbase.editSlipLayout, 'viewBounds, newtAppbase.editSlipLayout._proto.viewBounds);
+				newtAppbase.editSlipLayout:SyncView();
+				newtAppbase.editSlipLayout:RedoChildren()
+			end,
+			kFunction_101d919: func() begin
+				'[Array: {item: "Manual", symbol: manual}, {item: "DHCP Server", symbol: usingServer}]
+			end,
+			kFunction_101dc11: func() begin
+				(if GlobalFnExists('GetDeviceList) then GetDeviceList('ethernet) else [Array: ])
+			end,
+			kFunction_101dcc5: func() begin
+				labelCommands := self:BuildLabelCommands();
+				inherited:?viewSetupFormScript()
+			end,
+			kFunction_101dd11: func() begin
+				local l1, l2;
+				(if StrFilled((l2 := target.(path))) then (if (l1 := self:GetIndex(l2)) then labelCommands[l1].item else "<Unrecognized Card>") else "None Selected")
+			end,
+			kFunction_101de65: func(a1, a2) begin
+				if a1 then begin
+						(for l1 := 0 to (Length(a2) - 1) do begin
+								if (if a2[l1].CISName then StrEqual(a2[l1].CISName, a1)) then begin
+										return l1
+									end
+							end)
+					end;
+				nil
+			end,
+			kFunction_101de1d: func(a1) begin
+				call (kFunction_101de65) with (a1, labelCommands)
+			end,
+			kFunction_101df19: func(a1) begin
+				target.(path) := labelCommands[a1].CISName;
+				newtAppbase.targetView:?StartFlush()
+			end,
+			kFunction_101dfb5: func() begin
+				(if (if target.cardData.device then (not StrFilled(target.cardData.device))) then "You have not selected a card to use. Please select one from the picker before continuing.")
+			end,
+			kFunction_101e2a5: func() begin
+				l1 := [Array: ];
+				if (not StrFilled(target.defaultDomain)) then begin
+						AddArraySlot(l1, "Domain Name")
+					end;
+				if (Length(l1) > 0) then begin
+						l2 := "";
+						local l1;
+						local l2;
+						(foreach l3, l4 in l1 do begin
+								l2 := Stringer([Array: l2, l4]);
+								if (l3 < (Length(l1) - 1)) then begin
+										l2 := Stringer([Array: l2, ", "])
+									end
+							end);
+						return ParamStr("You forgot the following fields: ^0", l2)
+					end;
+				nil
+			end,
+			kFunction_101e6c5: func(a1, a2) begin
+				(if (if (Length(SetDifference(a2[0], '[Array: 0, 0, 0, 0])) = 0) then (a1.configuration = 'manual)) then true)
+			end,
+			kFunction_101e751: func(a1) begin
+				l1 := inherited:FillNewEntry(a1);
+				local l1;
+				(foreach l2, l3 in blankEntry do begin
+						a1.(l2) := DeepClone(l3)
+					end);
+				l1
+			end,
+			kFunction_101e905: func(a1) begin
+				l1 := [Array: ];
+				if vars.deviceRegistry then begin
+						local l1;
+						(foreach l2 in vars.deviceRegistry do begin
+								if ((not a1) or (l2.DeviceClass = a1)) then begin
+										if IsArray(l2.DeviceCISProductName) then begin
+												(foreach l4, l5 in l2.DeviceCISProductName do begin
+														BInsert(l1, {item: l2.DeviceDisplayName[l4], CISName: l2.DeviceCISProductName[l4]}, '|str<|, '[pathExpr: item], nil)
+													end)
+											end else begin
+												BInsert(l1, {item: l2.DeviceDisplayName, CISName: l2.DeviceCISProductName}, '|str<|, '[pathExpr: item], nil)
+											end
+									end
+							end)
+					end;
+				l1
+			end,
+			kFunction_101e7e5: func(a1) begin
+				local l1, l2;
+				(if (if a1.cardData.device then StrFilled(a1.cardData.device)) then (if (Length((l1 := (if functions.GetDeviceList then GetDeviceList('ethernet) else call (kFunction_101e905) with ('ethernet)))) > 0) then (if (l2 := call (kFunction_101de65) with (a1.cardData.device, l1)) then ParamStr("^0", [Array: l1[l2].item]) else return "<Unrecognized Card>") else return "<Unknown Card Type>") else "")
+			end,
+			kLiteral_101e575: '[Array: 0, 0, 0, 0],
+			kFunction_101ee45: func() begin
+				l1 := [Array: ];
+				if (Length(SetDifference(target.localAddress, kLiteral_101e575)) = 0) then begin
+						AddArraySlot(l1, "Local IP Address")
+					end;
+				if (Length(SetDifference(target.gatewayaddress, kLiteral_101e575)) = 0) then begin
+						AddArraySlot(l1, "Gateway/Router Address")
+					end;
+				if (Length(SetDifference(target.dnsServers[0], kLiteral_101e575)) = 0) then begin
+						AddArraySlot(l1, "DNS Server")
+					end;
+				if (not StrFilled(target.defaultDomain)) then begin
+						AddArraySlot(l1, "Domain Name")
+					end;
+				if (Length(l1) > 0) then begin
+						l2 := "";
+						local l1;
+						local l2;
+						(foreach l3, l4 in l1 do begin
+								l2 := Stringer([Array: l2, l4]);
+								if (l3 < (Length(l1) - 1)) then begin
+										l2 := Stringer([Array: l2, ", "])
+									end
+							end);
+						return ParamStr("You forgot the following fields: ^0", l2)
+					end;
+				nil
+			end,
+			kFunction_101f051: func(a1) begin
+				if IsReadOnly(newEntryViews) then begin
+						newEntryViews := Clone(newEntryViews)
+					end;
+				(if (a1.configuration = 'manual) then (newEntryViews := _proto.newEntryViews) else (newEntryViews := AlternateNewViews))
+			end,
+			kFunction_101f0c1: func() begin
+				(if inherited:?DependenciesLoaded() then (if functions.GetDeviceList then (if (Length(GetDeviceList('ethernet)) > 0) then return true else return nil)))
+			end,
+			kLiteral_101cec9: {description: "Ethernet", helpText: "Use this if you are connecting to an Ethernet network using an Ethernet card.", name: "Ethernet", symbol: '|Ethernet:NIE|, OverviewIcon: {bits: call kBinaryFromHex with ("000000000004017a017a007f0186008f00000000000000000000000008080000180c00003366000033660000180c000008080000000000000000000000000000", 'bits), bounds: '{left: 0, top: 0, right: 16, bottom: 12}}, icon: {bits: call kBinaryFromHex with ("0000000000040178017801760187018b00000000000000000000000000000000060600000e0700001c0380003b6dc0003b6dc0001c0380000e07000006060000000000000000000000000000", 'bits), bounds: '{left: 0, top: 0, right: 21, bottom: 15}}, AlternateNewViews: [Array: {viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewJustify: 240, stepChildren: [stepChildren: '{_proto: @8205}, {labelActionScript: kFunction_101d641, labelCommands: '[Array: {item: "Manual", symbol: manual}, {item: "DHCP Server", symbol: usingServer}], MakePopup: kFunction_101d919, _proto: '{text: "Configuration", labelText: "Configuration", path: configuration, _proto: @8200}}, {path: 'cardData.device, _proto: {labelCommands: nil, text: "Card", viewBounds: '{left: 4, top: 10, right: -4, bottom: 26}, alwaysCallPickActionScript: true, viewJustify: 8396848, BuildLabelCommands: kFunction_101dc11, viewSetupFormScript: kFunction_101dcc5, textSetup: kFunction_101dd11, GetIndex: kFunction_101de1d, labelActionScript: kFunction_101df19, _proto: @protoLabelPicker}}], verifyFunc: kFunction_101dfb5, helpText: "Tap ? if you need help.", helpTopic: "ethernet1", viewClass: 74}, {viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewJustify: 240, stepChildren: '[stepChildren: {path: defaultDomain, label: "Domain Name", viewBounds: {left: 0, top: 0, right: -4, bottom: 32}, _proto: @newtLabelInputLine}], verifyFunc: kFunction_101e2a5, helpText: nil, helpTopic: "ethernet2", viewClass: 74}], blankEntry: '{linkLayer: |DHCP:NIE|, configuration: usingServer, cardData: {device: "", slot: nil}, subnetMask: [Array: 0, 0, 0, 0], gatewayaddress: [Array: 0, 0, 0, 0], localAddress: [Array: 0, 0, 0, 0], defaultDomain: "", dnsServers: [Array: [Array: 0, 0, 0, 0]]}, DontCloseSlots: {setupName: '{value: "", name: "setup name"}, dnsServers: {value: '[Array: 0, 0, 0, 0], name: "DNS address", checkData: kFunction_101e6c5}}, FillNewEntry: kFunction_101e751, MakeNextLine: kFunction_101e7e5, NeededSlots: '{configuration: usingServer}, newEntryViews: [Array: {viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewJustify: 240, stepChildren: [stepChildren: '{_proto: @8205}, {labelActionScript: kFunction_101d641, labelCommands: '[Array: {item: "Manual", symbol: manual}, {item: "DHCP Server", symbol: usingServer}], MakePopup: kFunction_101d919, _proto: '{text: "Configuration", labelText: "Configuration", path: configuration, _proto: @8200}}, {path: 'cardData.device, _proto: {labelCommands: nil, text: "Card", viewBounds: '{left: 4, top: 10, right: -4, bottom: 26}, alwaysCallPickActionScript: true, viewJustify: 8396848, BuildLabelCommands: kFunction_101dc11, viewSetupFormScript: kFunction_101dcc5, textSetup: kFunction_101dd11, GetIndex: kFunction_101de1d, labelActionScript: kFunction_101df19, _proto: @protoLabelPicker}}], verifyFunc: kFunction_101dfb5, helpText: "Tap ? if you need help.", helpTopic: "ethernet1", viewClass: 74}, {viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewJustify: 240, stepChildren: '[stepChildren: {viewBounds: {left: 4, top: 10, right: -4, bottom: 60}, viewJustify: 8396848, path: localAddress, name: "Local IP Address", _proto: @8192}, {viewBounds: {left: 4, top: 10, right: -4, bottom: 60}, viewJustify: 8396848, path: subnetMask, name: "Subnet Mask", _proto: @8192}, {viewBounds: {left: 4, top: 10, right: -4, bottom: 60}, viewJustify: 8396848, path: gatewayaddress, name: "Gateway/Router Address", _proto: @8192}, {viewBounds: {left: 4, top: 10, right: -4, bottom: 60}, viewJustify: 8396848, path: [pathExpr: dnsServers, 0], _proto: @8192}, {path: defaultDomain, label: "Domain Name", viewBounds: {left: 0, top: 0, right: -4, bottom: 32}, _proto: @newtLabelInputLine}], verifyFunc: kFunction_101ee45, helpText: "You will be able to add multiple DNS servers after you've completed this setup.", helpTopic: "ethernet2", viewClass: 74}], SetupViews: kFunction_101f051, DependenciesLoaded: kFunction_101f0c1, viewsToDisplay: '[Array: setupName, configuration, cardData, subnetMask, localAddress, gatewayaddress, dnsServers, defaultDomain, hangupDelay], _proto: '{_proto: @8193}},
+			kROM_8203: @8203,
+			kFunction_101f3a1: func(a1) begin
+				ParamStr("Configuration: ^0", [Array: call kROM_8203 with ('[Array: {item: "Manual", symbol: manual}, {item: "DHCP Server", symbol: usingServer}], a1[0])])
+			end,
+			kFunction_101f485: func(a1) begin
+				inherited:?labelActionScript(a1)
+			end,
+			kFunction_101f4c5: func() begin
+				'[Array: {item: "Manual", symbol: manual}, {item: "DHCP Server", symbol: usingServer}]
+			end,
+			kLiteral_101f1e1: {viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewJustify: 240, infoFrame: {checkPrefix: '[Array: true, nil], checkPaths: '[Array: configuration], formatFunc: kFunction_101f3a1}, noKeyboard: true, path: 'configuration, protection: 'private, symbol: 'configuration, type: 'editor, stepChildren: [stepChildren: {labelActionScript: kFunction_101f485, labelCommands: '[Array: {item: "Manual", symbol: manual}, {item: "DHCP Server", symbol: usingServer}], MakePopup: kFunction_101f4c5, _proto: '{text: "Configuration", labelText: "Configuration", path: configuration, _proto: @8200}}], name: "Configuration", helpTopic: "configuration", viewClass: 74},
+			kFunction_101f5f9: func(a1) begin
+				local l1, l2;
+				(if (if a1 then StrFilled(a1[0].device)) then (if (Length((l1 := (if functions.GetDeviceList then GetDeviceList('ethernet) else call (kFunction_101e905) with ('ethernet)))) > 0) then (if (l2 := call (kFunction_101de65) with (a1[0].device, l1)) then return ParamStr("Card: ^0", [Array: l1[l2].item]) else return "Card: <Unrecognized Card>") else "Card: <Unknown Card>") else "Card")
+			end,
+			kLiteral_101f51d: {viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewJustify: 240, infoFrame: {checkPrefix: '[Array: true, nil], checkPaths: '[Array: cardData], formatFunc: kFunction_101f5f9}, noKeyboard: true, path: 'cardData, protection: 'private, symbol: 'cardData, type: 'editor, stepChildren: [stepChildren: {path: 'cardData.device, _proto: {labelCommands: nil, text: "Card", viewBounds: '{left: 4, top: 10, right: -4, bottom: 26}, alwaysCallPickActionScript: true, viewJustify: 8396848, BuildLabelCommands: kFunction_101dc11, viewSetupFormScript: kFunction_101dcc5, textSetup: kFunction_101dd11, GetIndex: kFunction_101de1d, labelActionScript: kFunction_101df19, _proto: @protoLabelPicker}}], name: "Card", viewClass: 74},
+			kFunction_101f8e1: func(a1) begin
+				(if (Length(a1[0]) = 4) then ParamStr("Subnet Mask: ^0.^1.^2.^3", [Array: a1[0][0], a1[0][1], a1[0][2], a1[0][3]]) else "Subnet Mask: <Unknown>")
+			end,
+			kLiteral_101f79d: {viewBounds: '{left: 0, top: 0, right: 0, bottom: 0}, viewFlags: 1, viewFormat: 0, viewJustify: 240, infoFrame: {checkPrefix: '[Array: true, nil], checkPaths: '[Array: subnetMask], formatFunc: kFunction_101f8e1, HideIfTrue: '[Array: configuration, usingServer]}, path: 'subnetMask, protection: 'private, symbol: 'subnetMask, type: 'editor, useNumericKeys: true, stepChildren: '[stepChildren: {viewBounds: {left: 4, top: 10, right: -4, bottom: 60}, viewJustify: 8396848, path: subnetMask, name: "Subnet Mask", _proto: @8192}], name: "Subnet Mask", helpTopic: "ethernet2", viewClass: 74},
+			kFunction_101fe21: func(a1) begin
+				(if (Length(a1[0]) = 4) then (if (whichOne = 0) then ParamStr("Primary DNS/Name Server Address: ^0.^1.^2.^3", [Array: a1[0][0], a1[0][1], a1[0][2], a1[0][3]]) else ParamStr("Alternate DNS/Name Server Address: ^0.^1.^2.^3", [Array: a1[0][0], a1[0][1], a1[0][2], a1[0][3]])) else "DNS/Name Server Address: <Unknown>")
+			end,
+			kLiteral_101fd11: {infoFrame: {checkPrefix: '[Array: nil, [pathExpr: dnsServers]], checkPaths: '[Array: ], whichOne: nil, arrayData: '[Array: 0, 0, 0, 0], HideIfTrue: '[Array: configuration, usingServer], formatFunc: kFunction_101fe21}, _proto: '{viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 8388848, name: "DNS/Name Server Address", helpTopic: "dns", _proto: @8194}},
+			kROM_8206: @8206,
+			kFunction_1020111: func(a1) begin
+				ParamStr("When closing, disconnect: ^0", [Array: call kROM_8203 with (kROM_8206, a1[0])])
+			end,
+			kFunction_10201d9: func() begin
+				kROM_8206
+			end,
+			kLiteral_1020025: {infoFrame: {checkPrefix: '[Array: true, nil], checkPaths: '[Array: hangupDelay], formatFunc: kFunction_1020111}, labelText: "When closing, disconnect", MakePopup: kFunction_10201d9, noKeyboard: true, path: 'hangupDelay, symbol: 'hangupDelay, typeFrame: @8206, name: "Disconnect Delay", deleteButton: 'hangupDelay, helpTopic: "discodelay", _proto: '{viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 8388848, _proto: @8197}},
+			kFunction_1020311: func() begin
+				nil
+			end,
+			kFunction_102044d: func() begin
+				local l1;
+				(text := GetEntryDataDef(target):?TextScript((l1 := {}), target))
+			end,
+			kLiteral_1020291: {printNextPageScript: kFunction_1020311, title: "Ethernet Setup", symbol: 'protoRoutingFormat, stepChildren: [stepChildren: {viewBounds: '{top: 30, left: 30, right: -30, bottom: -30}, viewFlags: 1, viewFont: 12289, text: "", viewJustify: 240, viewSetupFormScript: kFunction_102044d, viewClass: 81}], _proto: @protoPrintFormat},
+			kROM_12288: @12288
+		},
+		func(a1, a2) begin
+			call (kFunction_10204f5) with ('|Ethernet:NIE|, {_proto: kLiteral_101cec9}, [Array: '{viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 8388848, _proto: @8196}, kLiteral_101f1e1, kLiteral_101f51d, kLiteral_101f79d, '{infoFrame: {_proto: @8204, labelText: "Local IP Address: ^0.^1.^2.^3", checkPaths: [Array: localAddress], HideIfTrue: [Array: configuration, usingServer]}, path: localAddress, symbol: localAddress, viewBounds: {left: 0, top: 0, right: -4, bottom: 0}, name: "Local IP Address", helpTopic: "ipaddress", _proto: {viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 8388848, name: "DNS/Name Server Address", helpTopic: "dns", _proto: @8194}}, '{infoFrame: {_proto: @8204, labelText: "Gateway/Router Address: ^0.^1.^2.^3", checkPaths: [Array: gatewayaddress], HideIfTrue: [Array: configuration, usingServer]}, path: gatewayaddress, symbol: gatewayaddress, viewBounds: {left: 0, top: 0, right: -4, bottom: 0}, name: "Gateway/Router Address", helpTopic: "gateway", _proto: {viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 8388848, name: "DNS/Name Server Address", helpTopic: "dns", _proto: @8194}}, kLiteral_101fd11, '{viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, viewJustify: 8388848, _proto: @8199}, kLiteral_1020025, {_proto: @protoFrameFormat}, kLiteral_1020291, {_proto: kROM_12288}])
+		end),
+	devRemoveScript: compile(
+		constants: {
+			kFunction_1020789: func(a1) begin
+				(try begin
+						UnRegDataDef(a1)
+					end onexception |evt.ex| do begin
+						nil
+					end)
+			end,
+			kFunction_10207fd: func(a1, a2) begin
+				(if IsArray(a2) then (foreach l1 in a2 do begin
+							try begin
+									UnRegisterViewDef(l1, a1)
+								end onexception |evt.ex| do begin end
+						end))
+			end,
+			kFunction_102073d: func(a1, a2) begin
+				call (kFunction_1020789) with (a1);
+				call (kFunction_10207fd) with (a1, a2)
+			end
+		},
+		func(a1) begin
+			call (kFunction_102073d) with ('|Ethernet:NIE|, [Array: 'setupName, 'configuration, 'cardData, 'subnetMask, 'localAddress, 'gatewayaddress, 'dnsServers, 'defaultDomain, 'hangupDelay, 'protoFrameFormat, 'protoRoutingFormat, 'IOAllInfo])
+		end)
+});
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+description_value := same("part[0].devInstallScript.literals[1].description");
+
+AlternateNewViews_value := same("part[0].devInstallScript.literals[1].AlternateNewViews[0]");
+
+MakePopup_code := same("part[0].devInstallScript.literals[4].stepChildren[0].MakePopup.instructions");
+
+MakeNextLine_literal13 := same("part[0].devInstallScript.literals[1].MakeNextLine.literals[13]");
+
+MakeNextLine_literal8 := same("part[0].devInstallScript.literals[1].MakeNextLine.literals[8]");
+
+label_value := same("part[0].devInstallScript.literals[1].AlternateNewViews[1].stepChildren[0].label");
+
+verifyFunc_literal5 := same("part[0].devInstallScript.literals[1].AlternateNewViews[1].verifyFunc.literals[5]");
+
+verifyFunc_literal6 := same("part[0].devInstallScript.literals[1].AlternateNewViews[1].verifyFunc.literals[6]");
+
+verifyFunc_literal7 := same("part[0].devInstallScript.literals[1].AlternateNewViews[1].verifyFunc.literals[7]");
+
+helpTopic_value := same("part[0].devInstallScript.literals[1].AlternateNewViews[1].helpTopic");
+
+subnetMask_value := same("part[0].devInstallScript.literals[1].blankEntry.subnetMask");
+
+MakeNextLine_literal6 := same("part[0].devInstallScript.literals[1].MakeNextLine.literals[6]");
+
+MakeNextLine_literal6_literal7 := same("MakeNextLine_literal6.literals[7]");
+
+name_value := same("part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[0].name");
+
+name_value_2 := same("part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[1].name");
+
+name_value_3 := same("part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[2].name");
+
+formatFunc_code := same("part[0].devInstallScript.literals[4].infoFrame.formatFunc.instructions");
+
+_proto_value := same("part[0].devInstallScript.literals[7]._proto");
+
+devInstallScript_code := same("part[0].devInstallScript.literals[17].literals[1].instructions");

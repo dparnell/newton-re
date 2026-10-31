@@ -1,0 +1,37 @@
+// prPlainFormat, and what only it reaches
+
+prPlainFormat := {
+	viewJustify: vjParentFullH + vjParentFullV + vjReflow,
+	symbol: 'prPlainFormat,
+	title: plain,
+	TextScript: 'plainText,
+	data: nil,
+	kids: nil,
+	reflowStart: 0,
+	viewSetupFormScript: func() begin
+		inherited:viewSetupFormScript();
+		if fields.coverPage then begin
+				viewBounds := SetBounds(60, 20, -60, 0)
+			end else begin
+				viewBounds := SetBounds(60, 40, -60, -40)
+			end;
+		self.data := target.data;
+		(self.reflowStart := 0)
+	end,
+	viewSetupChildrenScript: func() begin
+		if (if (not kids) then data) then begin
+				kids := ReFlow(data, '{reflowFont: 12289, unistyle: nil, graphicsGutter: 16, textGutter: -16, viewLineSpacing: 28}, fields.targetBox, self:LocalBox())
+			end;
+		if kids then begin
+				self.stepChildren := ArrayMunger([Array: ], 0, 0, kids, reflowStart, nil)
+			end;
+		inherited:?viewSetupChildrenScript()
+	end,
+	printNextPageScript: func() begin
+		if self.stepChildren then begin
+				reflowStart := (reflowStart + Length(self.stepChildren))
+			end;
+		(if (if kids then (reflowStart < Length(kids))) then self:RedoChildren())
+	end,
+	_proto: @coverPageFormat
+};

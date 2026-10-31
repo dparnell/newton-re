@@ -1,9 +1,0 @@
-@@ 0x4396e5
-func() begin
-	if (viewLines = 0) then begin
-			self.viewLines := (self:LocalBox().bottom div lineHeight)
-		end;
-	spillHeight := ((numItems - viewLines) * lineHeight);
-	return (viewHeight := (lineHeight * viewLines))
-end
-@@end

@@ -1,0 +1,5 @@
+// objects several roots reach, none alone (naturalize.py)
+
+nameItem_2Text := "";
+
+tapOnALine := "Tap on a line, then tap your phone number on the keypad.\u000d\u000d\u000d";

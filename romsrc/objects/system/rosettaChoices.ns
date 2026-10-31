@@ -1,0 +1,6 @@
+// rosettaChoices, and what only it reaches
+
+rosettaChoices := [|Array|:
+	{item: words, symbol: 'wordsCursiveOption},
+	{item: numbers, symbol: 'numbersCursiveOption}
+];

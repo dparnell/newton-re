@@ -1,0 +1,25 @@
+// protoMapTextPicker, and what only it reaches
+
+protoMapTextPicker := {
+	viewBounds: nil,
+	label: uCardPositionAlertButton,
+	place: nil,
+	params: {spots: @countrySoupName, result: 'name},
+	Popit: func(a1) begin
+		local l1;
+		(l1 := self:GlobalBox()).right := (l1.left + a1);
+		@locationPopup:New(params, l1, self)
+	end,
+	TextSetup: func() begin
+		(if place then place else "")
+	end,
+	pickActionScript: func(a1) begin
+		place := a1;
+		inherited:pickActionScript(nil)
+	end,
+	_proto: @protoTextPicker
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+TextSetup_code := same("protoMapTextPicker.TextSetup.instructions");

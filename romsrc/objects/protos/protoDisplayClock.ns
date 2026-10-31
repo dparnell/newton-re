@@ -1,0 +1,41 @@
+// protoDisplayClock, and what only it reaches
+
+protoDisplayClock := {
+	iconMoon: picture('picture, "resources/picture/432fe5"),
+	iconSun: picture('picture, "resources/picture/433479"),
+	icon: nil,
+	tickTock: nil,
+	viewIdleFrequency: 30000,
+	lastClock: nil,
+	viewSetupFormScript: func() begin
+		local l1;
+		icon := (if (((l1 := (Time mod 1440)) >= 1080) or (l1 < 360)) then iconMoon else iconSun);
+		lastClock := Time();
+		self:SetupIdle(viewIdleFrequency);
+		inherited:viewSetupFormScript()
+	end,
+	viewClickScript: func(a1) begin
+		nil
+	end,
+	viewIdleScript: func() begin
+		local l1;
+		if ((l1 := (Time() - lastClock)) <> 0) then begin
+				lastClock := Time();
+				hours := (((Time := (Time + l1)) div 60) mod 24);
+				minutes := (Time mod 60);
+				playsound((tickTock := (if (tickTock = @tockSound) then @tickSound else @tockSound)));
+				self:?TimeChanged();
+				self:Dirty()
+			end;
+		viewIdleFrequency
+	end,
+	viewDrawScript: func() begin
+		local l1, l2;
+		if ((l2 := (if (((l1 := (Time mod 1440)) >= 1080) or (l1 < 360)) then iconMoon else iconSun)) <> icon) then begin
+				icon := l2;
+				pix := nil
+			end;
+		inherited:viewDrawScript()
+	end,
+	_proto: @protoNewSetClock
+};

@@ -1,0 +1,3 @@
+// newtSmartNameView, and what only it reaches
+
+newtSmartNameView := {_proto: @newtProtoLine, flavor: @newtSmartNameFilter, access: 'Query, memory: 'name};

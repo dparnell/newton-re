@@ -1,0 +1,23 @@
+// protoRollBrowser, and what only it reaches
+
+protoRollBrowser := {
+	_proto: @protoApp,
+	rollItems: nil,
+	rollIndex: 0,
+	rollCollapsed: true,
+	viewChildren: [|Array|:
+		{
+			_proto: @protoRoll,
+			viewFlags: vVisible + vApplication + vClipping,
+			viewJustify: vjParentFullH + vjParentFullV,
+			viewBounds: {left: 0, top: 18, right: 0, bottom: -14},
+			viewSetupFormScript: func() begin
+				self.items := rollItems;
+				self.index := rollIndex;
+				(self.allCollapsed := rollCollapsed)
+			end
+		},
+		protoAppItem,
+		@protoStatus
+	]
+};

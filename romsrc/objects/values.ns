@@ -1,0 +1,133 @@
+// the plain values the magic pointers and the C code name
+
+uErasePersistentDataAlertText := "Do you want to erase data completely?";
+
+uErasePersistentConfirmAlertText := "All your data will be lost. Do you want to continue?";
+
+uErasePersistentStatusAlertText := "Erasing data.  This operation will take a couple of minutes.  The system will reboot when done.";
+
+ucardreInsertAlertText := "Newton still needs the card you removed.  Please insert it now, or information on the card may be damaged.";
+
+upackneedsCardAlertText := "The package \"^0\" still needs the card you removed.  Please insert it now, or information on the card may be damaged.";
+
+uCardPositionAlertText := "The PCMCIA card is not installed correctly. Please adjust it to continue.";
+
+ucardwpAlertText := "Newton is still writing to the PCMCIA card.  You must un-write-protect it to continue.";
+
+uCardRepairAlertText := "The PCMCIA card needs minor repair to be used.  You must un-write-protect it to continue.";
+
+uDefaultReasonForBusyCard := "Please reinsert the storage card so the changes can be saved.";
+
+inkName := " -sketch- ";
+
+mathName := "math";
+
+drawingName := "drawing";
+
+uErasePersistentConfirmButton1Str := "OK";
+
+uErasePersistentConfirmButton0Str := "Cancel";
+
+lineSpacingFmtStr := "^0 li";
+
+calibration := "Calibration";
+
+errNotANumber := "Not a number";
+
+errNumberOutofRange := "Number out of range";
+
+errNumberTooLarge := "Number too large";
+
+errNumberTooSmall := "Number too small";
+
+otherCategoryName := "Other";
+
+printDone := "completed";
+
+printDoneError := "error";
+
+zapNoMsg := "not used";
+
+uErasePersistentDataButton0Str := "No";
+
+uErasePersistentDataButton1Str := "Yes";
+
+extrasSoupName := "Packages";
+
+uCardPositionAlertButton := "";
+
+ucLetters := "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+calendarNotesName := "Calendar Notes";
+
+calendarSoupName := "Calendar";
+
+cardfileSoupName := "Names";
+
+connectMessage := "Connecting…";
+
+containerName := "container";
+
+dataName := "data";
+
+disconnectMessage := "Disconnecting…";
+
+inboxSoupName := "Inbox";
+
+letters := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+meetingName := "meeting";
+
+metaSoupName := "Directory";
+
+outboxSoupName := "Outbox";
+
+paperrollSoupName := "Notes";
+
+preparingMessage := "Preparing…";
+
+printPageMessage := "Printing page ";
+
+protoHiliteButton := "©1993-1995 Apple Computer, Inc.";
+
+blackListGenericapology := "Contact the software publisher for further information.";
+
+blackListNowBuiltin := "This functionality is already built into the current system.";
+
+newtonModemName := "Newton Fax Modem";
+
+repeatMeetingName := "Repeat Meetings";
+
+repeatNotesName := "Repeat Notes";
+
+citySoupName := "Cities";
+
+searchPrefix := "Searching in ";
+
+searchSuffix := "…";
+
+shapeName := " -shape- ";
+
+systemSoupName := "System";
+
+todoName := "todo";
+
+todoSoupName := "To do";
+
+countrySoupName := "Countries";
+
+usStateSoupName := "USStates";
+
+canadianProvinceName := "CanadianProvinces";
+
+australianStateName := "AustralianStates";
+
+ukCountyName := "UKCounties";
+
+freshCardName := "Card";
+
+dstSoupName := "DaylightSavings";
+
+frenchdepartmentName := "FrenchDepartments";
+
+japanPrefectuRename := "JapanesePrefectures";

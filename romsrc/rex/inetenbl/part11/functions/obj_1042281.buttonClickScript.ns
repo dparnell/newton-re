@@ -1,7 +1,0 @@
-@@ 0x1042419
-func() begin
-	GetRoot().callOptionsSlip.inNumber := curNumber;
-	GetRoot().callOptionsSlip.inCountry := (if target.country then target.country else GetUserConfig('currentCountry));
-	inherited:?buttonClickScript()
-end
-@@end

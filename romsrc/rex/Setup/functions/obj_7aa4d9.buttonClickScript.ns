@@ -1,7 +1,0 @@
-@@ 0x7aa51d
-func() begin
-	self:?TearDown();
-	base:SetupClose();
-	true
-end
-@@end

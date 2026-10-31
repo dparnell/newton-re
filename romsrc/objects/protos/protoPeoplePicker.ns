@@ -1,0 +1,35 @@
+// protoPeoplePicker, and what only it reaches
+
+protoPeoplePicker := {
+	_proto: @protoListpicker,
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewFlags: vVisible + vApplication + vClickable,
+	appObject: [|Array|: name, @cardfileSoupName],
+	AppAll: "All Names",
+	entryType: 'person,
+	pickerDef: nil,
+	fColumns: nil,
+	soupToQuery: @cardfileSoupName,
+	viewSetupFormScript: func() begin
+		if (not self.appSymbol) then begin
+				self.appSymbol := GetRoot().cardfile.appSymbol
+			end;
+		(if IsFrame(dataClass) then begin
+				self.pickerDef := dataClass;
+				(dataClass := ClassOf(pickerDef))
+			end else (self.pickerDef := GetDataDefs(dataClass)))
+	end,
+	ChangeDataClass: func(a1) begin
+		local l1;
+		dataClass := a1;
+		if (not (l1 := GetDataDefs(a1))) then begin
+				Throw('|evt.ex.msg,invalid.dataClass|, "Invalid dataClass symbol")
+			end;
+		self:ChangePickerDef(l1)
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_3 := same("protoPeoplePicker.viewSetupFormScript.instructions");

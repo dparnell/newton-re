@@ -1,0 +1,9 @@
+// protoDefaultStatusButton, and what only it reaches
+
+protoDefaultStatusButton := {
+	_proto: @protoStatusButton,
+	viewSetupFormScript: func() begin
+		base._defaultButton := self;
+		inherited:?viewSetupFormScript()
+	end
+};

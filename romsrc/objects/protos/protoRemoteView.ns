@@ -1,0 +1,3 @@
+// protoRemoteView, and what only it reaches
+
+protoRemoteView := {viewClass: clRemoteView, _proto: @protoView};

@@ -1,0 +1,81 @@
+// compatibleFinder, and what only it reaches
+
+compatibleFinder := {
+	currentItem: 0,
+	selected: nil,
+	count: func() begin
+		Length(items)
+	end,
+	ReSync: func() begin
+		(currentItem := 0)
+	end,
+	ShowFakeEntry: func(a1) begin
+		local l1, l2;
+		currentItem := a1;
+		l2 := self:ConvertToSoupEntry((l1 := items[a1]));
+		if l1.EntryHit then begin
+				self.EntryHit := l1.EntryHit
+			end;
+		(if owner.OpenTo then owner:OpenTo(l2, self) else begin
+				if (owner.viewCObject = nil) then begin
+						owner:?viewPreOpenScript(items[a1]);
+						owner:Open()
+					end;
+				(if owner.viewCObject then (if (GetFunctionArgCount(owner.ShowFoundItem) = 2) then owner:ShowFoundItem(l2, self) else owner:ShowFoundItem(l2)))
+			end)
+	end,
+	ConvertToSoupEntry: func(a1) begin
+		a1
+	end,
+	ShowFoundItem: func(a1) begin
+		self:ShowFakeEntry(a1.itemIndex)
+	end,
+	ShowOrdinalItem: func(a1) begin
+		if (a1 = 'first) then begin
+				a1 := 0
+			end else begin
+				if (a1 = 'prev) then begin
+						a1 := max((currentItem - 1), 0)
+					end else begin
+						if (a1 = 'Next) then begin
+								a1 := min((currentItem + 1), (Length(items) - 1))
+							end
+					end
+			end;
+		self:ShowFakeEntry(a1)
+	end,
+	MakeFoundItem: func(a1, a2) begin
+		l1 := {_proto: @protoFindItem, finder: self, itemIndex: nil};
+		local l1;
+		(foreach l2, l3 in a1 do begin
+				l1.(l2) := l3
+			end);
+		l1
+	end,
+	AddFoundItems: func(a1, a2, a3) begin
+		l1 := a2;
+		local l1;
+		(foreach l2, l3 in items do begin
+				local l5;
+				if (l1 > 0) then begin
+						l1 := (l1 - 1)
+					end else begin
+						if ((l2 - a2) >= a3) then begin
+								break
+							end;
+						(l5 := self:MakeFoundItem(l3, nil)).selected := self:isSelected({_uniqueID: l5.entryID, _storeID: l5.storeID});
+						l5.itemIndex := l2;
+						AddArraySlot(a1, l5)
+					end
+			end);
+		(l2 - a2)
+	end,
+	FileAs: FileAs,
+	MoveTo: MoveTo,
+	delete: delete_5,
+	isSelected: isSelected_2,
+	SelectItem: SelectItem_2,
+	ForEachSelected: ForEachSelected_2,
+	GetTarget: GetTarget,
+	FileAndMove: FileAndMove
+};

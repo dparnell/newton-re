@@ -1,6 +1,0 @@
-@@ 0x75d8e5
-func() begin
-	inherited:?JamIt();
-	desktopConnection:CurrentPersonaChanged()
-end
-@@end

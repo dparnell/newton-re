@@ -1,0 +1,38 @@
+// alarmWakeup, and what only it reaches
+
+alarmWakeup := {
+	sndFrameType: 'codec,
+	codecName: tDTMFCodec,
+	dataType: 16,
+	bufferSize: 6400,
+	bufferCount: 4,
+	compressionType: 6,
+	samplingRate: 21600,
+	samples: tonescore('samples, {version: 1, algorithm: 1, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 750,
+			fraction: 0,
+			peak: 20000,
+			delay: 0,
+			attack: 10,
+			decay: 10,
+			hold: 100,
+			release: 500,
+			sustain: 32768,
+			tail: 0
+		},
+		{
+			frequency: 750,
+			fraction: 0,
+			peak: 40,
+			delay: 0,
+			attack: 0,
+			decay: 0,
+			hold: 1000,
+			release: 0,
+			sustain: 0,
+			tail: 0
+		}
+	]),
+	userName: "Bell"
+};

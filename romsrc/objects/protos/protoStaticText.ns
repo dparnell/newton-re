@@ -1,0 +1,15 @@
+// protoStaticText, and what only it reaches
+
+protoStaticText := {
+	viewClass: clParagraphView,
+	viewBounds: nil,
+	viewFlags: vVisible + vReadOnly,
+	viewFormat: 0,
+	viewJustify: 8388608,
+	viewFont: @fontSystem9Bold,
+	viewTransferMode: 1,
+	styles: nil,
+	tabs: nil,
+	text: uCardPositionAlertButton,
+	debug: 1448480
+};

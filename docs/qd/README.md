@@ -1123,8 +1123,8 @@ root, the button bar, the Extras drawer and every application that asks
 MessagePad's 320 x 480 - a button bar 46 pixels thick at the bottom in
 portrait, at the right in landscape - unless the global
 `AllRawDisplayParams` exists: the hook a machine with another screen was
-to fill in.  How it was established: `romsrc/functions/
-Rbuiltinfunctions.GetAllRawDisplayParams.ns` and `CreateDisplayParams.ns`.
+to fill in.  How it was established: `builtinFunctions.GetAllRawDisplayParams` and
+`CreateDisplayParams` in `romsrc/objects/system/builtinFunctions.ns`.
 
 The host fills it in for any other size (DEVIATION, `newt/Notebook.cpp`'s
 `DefineHostDisplayParams`, run straight after `InitScriptGlobals`): the

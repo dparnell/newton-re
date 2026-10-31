@@ -1,0 +1,9 @@
+// rcDefaultConfig, and what only it reaches
+
+rcDefaultConfig := {
+	punctuationcursiveoption: nil,
+	dictionaries: nil,
+	rcSingleLetters: nil,
+	rcBaseInfo: nil,
+	inputmask: 0
+};

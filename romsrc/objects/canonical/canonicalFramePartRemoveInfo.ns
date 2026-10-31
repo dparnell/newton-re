@@ -1,0 +1,3 @@
+// canonicalFramePartRemoveInfo, and what only it reaches
+
+canonicalFramePartRemoveInfo := {partType: nil, partFrame: nil, packageId: nil, partIndex: nil, packageStyle: nil};

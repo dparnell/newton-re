@@ -1,0 +1,26 @@
+// calendarStrings, and what only it reaches
+
+calendarStrings := [|Array|:
+	everyDay,
+	first_2,
+	second,
+	third,
+	fourth,
+	last,
+	"Every other ^0",
+	every,
+	"Every ^0 and ^1",
+	"Every ^0, ^1, and ^2",
+	"Every ^0, ^1, ^2, and ^3",
+	"Every ^0, ^1, ^2, ^3, and ^4",
+	"Every ^0, ^1, ^2, ^3, ^4, and ^5",
+	"The ^0 ^1 of every month",
+	"The ^0 and ^1 ^2 of every month",
+	"The ^0, ^1 and ^2 ^3 of every month",
+	"The ^0, ^1, ^2 and ^3 ^4 of every month",
+	"The ^0 of every month",
+	every,
+	"The ^0 ^1 of every ^2"
+];
+
+every := "Every ^0";

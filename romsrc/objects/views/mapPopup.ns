@@ -1,0 +1,30 @@
+// mapPopup, and what only it reaches
+
+mapPopup := {
+	viewBounds: {left: 0, top: 0, right: 200, bottom: 100},
+	viewJustify: 0,
+	result: 'name,
+	params: nil,
+	New: func(a1, a2, a3) begin
+		local l1;
+		(l1 := self:Init()).params := a1;
+		l1.context := a3;
+		l1:popup(a2)
+	end,
+	stepChildren: [stepChildren:
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+			viewJustify: vjParentFullH + vjParentFullV,
+			viewSetupFormScript: func() begin
+				(if params then (foreach l1, l2 in params do begin
+							self.(l1) := l2
+						end))
+			end,
+			PickWorld: func(a1) begin
+				context:?pickActionScript((if result then a1.(result) else a1))
+			end,
+			_proto: @worldPicker
+		}
+	],
+	_proto: @protoGeneralPopup
+};

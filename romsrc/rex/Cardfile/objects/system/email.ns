@@ -1,0 +1,84 @@
+// email, and what only it reaches
+
+email := {
+	name: "E-Mail",
+	symbol: 'email,
+	type: 'editor,
+	stepChildren: emailStepChildren,
+	infoFrame: {
+		checkPrefix: [|Array|: true, [pathExpr: 'emailAddrs]],
+		checkPaths: [|Array|: 'email, 'emailPassword],
+		formatFunc: func(a1) begin
+			(if StrFilled(a1[0]) then ParamStr("^?0^0: ||^1", [Array: GetGlobals().EmailSystems.emailText.(ClassOf(a1[0])), a1[0]]) else "")
+		end
+	},
+	protection: 'private,
+	viewSetupChildrenScript: func() begin
+		if (target.class = 'owner) then begin
+				stepChildren := saveChildren
+			end else begin
+				stepChildren := [Array: saveChildren[0]]
+			end;
+		inherited:viewSetupChildrenScript()
+	end,
+	fieldOrder: nil,
+	_proto: @8240,
+	saveChildren: emailStepChildren,
+	account: nil,
+	stepAllocateContext: [|Array|: 'account, emailItem, 'mailpassword, setEMailPassword],
+	mailpassword: nil
+};
+
+emailStepChildren := [stepChildren:
+	emailItem,
+	setEMailPassword,
+	{
+		viewBounds: {left: 0, top: 0, right: 0, bottom: 8},
+		viewJustify: 8396848,
+		viewFlags: vVisible,
+		viewFormat: nil,
+		viewClass: clView
+	}
+];
+
+emailItem := {
+	path: nil,
+	flavor: @newtCustomFilter,
+	newRecFlags: 64001,
+	addPath: 'email,
+	GetSymArray: func() begin
+		GetGlobals().EmailSystems.emailClasses
+	end,
+	GetTextArray: func() begin
+		GetGlobals().EmailSystems.emailText
+	end,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 74},
+	viewLineSpacing: 30,
+	viewQuitScript: func() begin
+		inherited:viewQuitScript();
+		(if (if (not StrFilled(target.(path))) then (target.class = 'owner)) then (target.(mailpassword.path) := nil))
+	end,
+	newRecTextFlags: 10,
+	_proto: @8245,
+	preAllocatedContext: 'account
+};
+
+setEMailPassword := {
+	viewBounds: {left: 0, top: 2, right: 107, bottom: 14},
+	buttonClickScript: func() begin
+		local l1;
+		(l1 := BuildContext(setpasswordslip)).target := target;
+		l1.path := path;
+		appBase:RememberedOpen(l1)
+	end,
+	text: "Set E-Mail Password",
+	viewJustify: 8396822,
+	addPath: 'emailPassword,
+	setpasswordslip: @8229,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'mailpassword
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+GetSymArray_code := same("emailItem.GetSymArray.instructions");

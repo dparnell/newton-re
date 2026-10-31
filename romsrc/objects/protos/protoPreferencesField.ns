@@ -1,0 +1,16 @@
+// protoPreferencesField, and what only it reaches
+
+protoPreferencesField := {
+	viewJustify: vjSiblingBottomV,
+	viewBounds: {left: 0, top: 0, right: 230, bottom: 30},
+	entryFlags: 8403457,
+	viewLineSpacing: 24,
+	indent: 65,
+	TextSetup: func() begin
+		GetUserConfig(configPath)
+	end,
+	textChanged: func() begin
+		SetUserConfig(configPath, text)
+	end,
+	_proto: @protoLabelInputLine
+};

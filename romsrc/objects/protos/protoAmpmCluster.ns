@@ -1,0 +1,41 @@
+// protoAmpmCluster, and what only it reaches
+
+protoAmpmCluster := {
+	viewBounds: nil,
+	clusterValue: nil,
+	viewSetupFormScript: func() begin
+		local l1;
+		(if (BAnd((l1 := (Time div 720)), 1) = 0) then (clusterValue := 'morningStr) else (clusterValue := 'eveningStr))
+	end,
+	ClusterChanged: func() begin
+		local l1;
+		if (if (clusterValue = 'morningStr) then (setter.hours > 11)) then begin
+				l1 := -12
+			end;
+		if (if (clusterValue = 'eveningStr) then (setter.hours < 12)) then begin
+				l1 := 12
+			end;
+		(if l1 then begin
+				setter.hours := (setter.hours + l1);
+				Time := ((((Time div 1440) * 1440) + (setter.hours * 60)) + setter.minutes);
+				setter:TimeChanged()
+			end)
+	end,
+	viewChildren: [viewChildren:
+		{_proto: protoAmpmClusterProto, buttonValue: 'morningStr},
+		{_proto: protoAmpmClusterProto, buttonValue: 'eveningStr}
+	],
+	_proto: @protoRadioCluster
+};
+
+protoAmpmClusterProto := {
+	viewBounds: {left: 0, top: 0, right: 35, bottom: 0},
+	viewJustify: vjCenterV + vjParentFullV + vjSiblingRightH,
+	viewValue: nil,
+	text: nil,
+	viewSetupFormScript: func() begin
+		(text := StringFilter(GetLocale().timeformat.(buttonValue), " ", 'rejectAll))
+	end,
+	buttonValue: nil,
+	_proto: @protoRadioButton
+};

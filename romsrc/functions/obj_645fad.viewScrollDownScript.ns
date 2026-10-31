@@ -1,5 +1,0 @@
-@@ 0x451671
-func() begin
-	listBase:viewScrollDownScript()
-end
-@@end

@@ -1,0 +1,6 @@
+// plusminusBitmap, and what only it reaches
+
+plusminusBitmap := {
+	bits: bitmap('bits, "resources/bits/3da86d.png", "000000000008014501450181016101a3", 1),
+	bounds: {left: 0, top: 0, right: 34, bottom: 28}
+};

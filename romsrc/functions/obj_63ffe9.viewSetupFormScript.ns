@@ -1,5 +1,0 @@
-@@ 0x42e339
-func() begin
-	(if firstLine then self:ExpandLine(firstLine) else (if currentKeyboard then self:ExpandLine(0)))
-end
-@@end

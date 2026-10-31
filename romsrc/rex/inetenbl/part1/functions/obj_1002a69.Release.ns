@@ -1,7 +1,0 @@
-@@ 0x1015a71
-func() begin
-	fsm_private_context.Release := true;
-	fsm_private_context.fsm:DoEvent('|fsm_private_event:Release|, nil);
-	nil
-end
-@@end

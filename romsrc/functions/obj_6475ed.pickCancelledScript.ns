@@ -1,6 +1,0 @@
-@@ 0x50abdd
-func() begin
-	pickChild:hilite(nil);
-	otherPicker:hilite(nil)
-end
-@@end

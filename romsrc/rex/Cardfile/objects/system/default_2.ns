@@ -1,0 +1,94 @@
+// default_2, and what only it reaches
+
+default_2 := {
+	viewFlags: vVisible,
+	viewFormat: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewJustify: vjParentFullH + vjParentFullV,
+	stepChildren: [|Array|:
+		{
+			path: 'company,
+			label: company,
+			newDictionaries: nil,
+			newRecFlags: 29403649,
+			viewSetupFormScript: func() begin
+				local l1;
+				newDictionaries := (l1 := GetLocale()).recogCompanyDictionaries;
+				inherited:?viewSetupFormScript()
+			end,
+			memory: 'companyName,
+			_proto: addressItem_5Proto
+		},
+		{path: [pathExpr: 'phones, 0], _proto: defaultProto},
+		{
+			path: [pathExpr: 'name, 'first],
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+			viewLineSpacing: 32,
+			flavor: @newtCustomFilter,
+			label: first,
+			newDictionaries: newDictionaries,
+			_proto: @newtLabelInputLine
+		},
+		{
+			path: [pathExpr: 'name, 'last],
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+			viewLineSpacing: 32,
+			flavor: @newtCustomFilter,
+			label: last,
+			newDictionaries: newDictionaries_2,
+			memory: 'lastName,
+			_proto: @newtLabelInputLine
+		},
+		{
+			path: [pathExpr: 'name, 'honorific],
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+			viewLineSpacing: 32,
+			flavor: @newtCustomFilter,
+			label: nil_2,
+			labelCommands: nil,
+			newDictionaries: nil,
+			viewSetupFormScript: func() begin
+				local l1;
+				newDictionaries := (l1 := GetLocale()).recogHonorificDictionaries;
+				labelCommands := l1.commonHonorifics;
+				label := l1.honorificLabel;
+				inherited:?viewSetupFormScript()
+			end,
+			_proto: @newtLabelInputLine
+		}
+	],
+	name: "Company Info",
+	symbol: 'default,
+	type: 'editor,
+	protection: 'private,
+	viewSetupFormScript: func() begin
+		(if (Length(target.phones) < 1) then SetLength(target.phones, 1))
+	end,
+	infoFrame: {
+		checkPrefix: [|Array|: true, nil],
+		checkPaths: [|Array|: 'company, 'title],
+		formatFunc: func(a1) begin
+			ParamStr("^0", a1)
+		end
+	},
+	fieldOrder: [|Array|: 0, 1, 2, 3, 4],
+	viewClass: clView,
+	reading: nil,
+	stepAllocateContext: [|Array|:
+		'reading,
+		{
+			path: 'companyReading,
+			label: label,
+			newDictionaries: nil,
+			newRecFlags: 29403649,
+			viewSetupFormScript: func() begin
+				local l1;
+				newDictionaries := (l1 := GetLocale()).recogCompanyDictionaries;
+				inherited:?viewSetupFormScript()
+			end,
+			memory: 'companyReading,
+			_proto: addressItem_5Proto,
+			preAllocatedContext: 'reading
+		}
+	]
+};

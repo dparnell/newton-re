@@ -1,0 +1,6 @@
+// transportScripts, and what only it reaches
+
+transportScripts := {
+	bits: bitmap('bits, "resources/bits/463cfd.png", "00000000000401390139027a01420288", 1),
+	bounds: {left: 0, top: 0, right: 14, bottom: 9}
+};

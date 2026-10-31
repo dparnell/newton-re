@@ -1,0 +1,21 @@
+// protoStatusIcon, and what only it reaches
+
+protoStatusIcon := {
+	debug: 628,
+	viewClass: clPictureView,
+	viewFlags: vVisible,
+	viewFormat: nil,
+	viewBounds: {left: 3, top: 0, right: 35, bottom: 32},
+	icon: nil,
+	name: 'icon,
+	viewSetupFormScript: func() begin
+		local l1, l2;
+		(if (if (l1 := self:path()) then HasSlot(l1, name)) then (icon := l1.(name)) else begin
+				l2 := GetRoot();
+				(if (if appSymbol then HasSlot(l2, appSymbol)) then (icon := l2.(appSymbol).icon))
+			end)
+	end,
+	viewUpdateFormScript: func() begin
+		SetValue(self, 'icon, self:path().(name))
+	end
+};

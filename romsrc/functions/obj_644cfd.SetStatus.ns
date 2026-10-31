@@ -1,5 +1,0 @@
-@@ 0x47ffa5
-func(a1, a2) begin
-	self:SetStatusDialog(a1, nil, a2)
-end
-@@end

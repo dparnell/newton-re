@@ -1,0 +1,6 @@
+// repeatIndices, and what only it reaches
+
+repeatIndices := [|Array|:
+	{structure: 'slot, path: 'mtgStopDate, type: 'int},
+	{structure: 'slot, path: 'mtgAlarm, type: 'int}
+];

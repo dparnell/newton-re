@@ -1,0 +1,67 @@
+// bankAccount, and what only it reaches
+
+bankAccount := {
+	type: 'editor,
+	symbol: 'bankAccount,
+	stepChildren: [|Array|: bank, acct, bankAccountItem],
+	name: "Bank Account",
+	infoFrame: {
+		_proto: infoFrameProto_2,
+		checkPrefix: [|Array|: nil, [pathExpr: 'owner, 'bankAccounts]],
+		checkPaths: [|Array|: 'bankContactNum, 'bankAcctNum, 'bankName],
+		formatFunc: func(a1) begin
+			ParamStr("^?0Bank: ^0\n||^?1Bank Acct: ^1||", [Array: a1[2], a1[1]])
+		end
+	},
+	protection: 'private,
+	fieldOrder: [|Array|: 0, 1, 2],
+	_proto: @8240,
+	bankName: nil,
+	stepAllocateContext: [|Array|:
+		'bankName,
+		bank,
+		'bankAcctNum,
+		acct,
+		'bankContactNum,
+		bankAccountItem,
+		'BLZ,
+		{
+			path: nil,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+			viewLineSpacing: 32,
+			flavor: @newtCustomFilter,
+			label: "Routing #",
+			newRecFlags: 10753,
+			addPath: 'BLZ,
+			_proto: @newtLabelInputLine,
+			preAllocatedContext: 'BLZ
+		}
+	],
+	bankAcctNum: nil,
+	bankContactNum: nil,
+	BLZ: nil
+};
+
+bank := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+	viewLineSpacing: 32,
+	label: "Bank",
+	addPath: 'bankName,
+	_proto: @newtLabelInputLine,
+	preAllocatedContext: 'bankName
+};
+
+acct := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+	viewLineSpacing: 32,
+	flavor: @newtCustomFilter,
+	label: "Acct #",
+	newRecFlags: 10753,
+	addPath: 'bankAcctNum,
+	_proto: @newtLabelInputLine,
+	preAllocatedContext: 'bankAcctNum
+};
+
+bankAccountItem := {path: nil, addPath: 'bankContactNum, _proto: defaultProto, preAllocatedContext: 'bankContactNum};

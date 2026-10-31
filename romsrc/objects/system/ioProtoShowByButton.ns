@@ -1,0 +1,29 @@
+// ioProtoShowByButton, and what only it reaches
+
+ioProtoShowByButton := {
+	width: nil,
+	viewBounds: {left: -57, top: 14, right: -7, bottom: 30},
+	viewJustify: vjCenterH + vjParentRightH,
+	text: show_2,
+	popup: [|Array|:
+		{item: date_2, val: 'Date},
+		{item: "Service", val: 'transport},
+		{item: status, val: 'status}
+	],
+	viewSetupFormScript: func() begin
+		width := (StrFontWidth(text, viewFont) + 6);
+		(viewBounds := Clone(viewBounds)).left := (viewBounds.right - width);
+		if (not sortPicker) then begin
+				self.viewFlags := BAnd(self.viewFlags, bnot(1))
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	pickActionScript: func(a1) begin
+		inherited:pickActionScript(a1);
+		(if (self:GetAppPreferences().sortby <> popup[a1].val) then begin
+				self:GetAppPreferences().sortby := popup[a1].val;
+				self:FilterChanged()
+			end)
+	end,
+	_proto: @protoPopupButton
+};

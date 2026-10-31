@@ -1,5 +1,0 @@
-@@ 0x1016d79
-func(a1) begin
-	(fState := a1)
-end
-@@end

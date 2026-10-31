@@ -1,0 +1,3 @@
+// starterProperties, and what only it reaches
+
+starterProperties := {styles: [|Array|: nil, nil]};

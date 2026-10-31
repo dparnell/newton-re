@@ -1,5 +1,0 @@
-@@ 0x104d48d
-func(a1) begin
-	(if (if (if (if InetIsValidIPAddress(a1) then (a1[0] = 0)) then (a1[1] = 0)) then (a1[2] = 0)) then (a1[3] = 0))
-end
-@@end

@@ -1,0 +1,166 @@
+// export68, and what only it reaches
+
+export68 := {
+	viewBounds: {left: 0, top: 40, right: 220, bottom: 150},
+	stepChildren: [stepChildren:
+		export68Item,
+		export68Item_2,
+		export68Item_3,
+		export68Item_4,
+		export68Item_5,
+		export68Item_6
+	],
+	viewSetupFormScript: func() begin
+		self.protoContext := GetRoot().Connection;
+		protoContext:AddOpenWindow(self);
+		self.clickHandled := nil;
+		if config then begin
+				message.text := config.message;
+				if config.title then begin
+						title.text := config.text
+					end;
+				if config.button1 then begin
+						button1.text := config.button1
+					end;
+				if config.button2 then begin
+						button2.text := config.button2
+					end;
+				if config.button3 then begin
+						button3.text := config.button3
+					end
+			end;
+		endpoint:StartIdle(self, 2000)
+	end,
+	SetTextBounds: func(a1) begin
+		local l1;
+		(l1 := Clone(a1.viewBounds)).left := (l1.right - min(90, max(15, (StrWidth(a1.text) + 7))));
+		(a1.viewBounds := l1)
+	end,
+	HandleClick: func(a1) begin
+		(if (not clickHandled) then begin
+				clickHandled := true;
+				call DesktopInputDone with (a1);
+				(if (a1 <> 0) then base:Close())
+			end)
+	end,
+	viewIdleScript: func() begin
+		return endpoint:IdleConnection(true)
+	end,
+	viewQuitScript: func() begin
+		protoContext:RemoveOpenWindow(self);
+		self:HandleClick(0);
+		endpoint:StopIdle(self)
+	end,
+	viewFlags: vApplication + vFloating + vClickable,
+	clickHandled: nil,
+	_proto: @protoFloater,
+	title: nil,
+	stepAllocateContext: [|Array|:
+		'title,
+		export68Item,
+		'message,
+		export68Item_2,
+		'xButton,
+		export68Item_3,
+		'button1,
+		export68Item_4,
+		'button2,
+		export68Item_5,
+		'button3,
+		export68Item_6
+	],
+	message: nil,
+	xButton: nil,
+	button1: nil,
+	button2: nil,
+	button3: nil
+};
+
+export68Item := {
+	text: export85Item_3Text,
+	viewBounds: {left: 0, top: 10, right: 172, bottom: 22},
+	viewJustify: 8388626,
+	viewSetupDoneScript: func() begin
+		(if (not config.title) then self:Hide())
+	end,
+	viewFont: @fontSystem10Bold,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'title
+};
+
+export68Item_2 := {
+	text: export85Item_3Text,
+	viewBounds: {left: 0, top: 5, right: 162, bottom: 70},
+	viewJustify: vjParentCenterH + vjSiblingBottomV,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'message
+};
+
+export68Item_3 := {
+	viewSetupDoneScript: func() begin
+		(if (not config.xButton) then self:Hide())
+	end,
+	buttonClickScript: func() begin
+		self:HandleClick(0);
+		inherited:?buttonClickScript()
+	end,
+	_proto: @protoCancelButton,
+	preAllocatedContext: 'xButton
+};
+
+export68Item_4 := {
+	buttonClickScript: func() begin
+		self:HandleClick(1)
+	end,
+	text: export85Item_3Text,
+	viewBounds: {top: -18, left: -60, right: -7, bottom: -5},
+	viewJustify: 8390790,
+	viewSetupFormScript: func() begin
+		self:SetTextBounds(self)
+	end,
+	viewSetupDoneScript: func() begin
+		(if (not config.button1) then self:Hide())
+	end,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'button1
+};
+
+export68Item_5 := {
+	buttonClickScript: func() begin
+		self:HandleClick(2)
+	end,
+	text: export85Item_3Text,
+	viewBounds: {top: -18, left: -60, right: -7, bottom: -5},
+	viewJustify: 8390790,
+	viewSetupFormScript: func() begin
+		self:SetTextBounds(self)
+	end,
+	viewSetupDoneScript: func() begin
+		(if (not config.button2) then self:Hide())
+	end,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'button2
+};
+
+export68Item_6 := {
+	buttonClickScript: func() begin
+		self:HandleClick(3)
+	end,
+	text: export85Item_3Text,
+	viewBounds: {top: -18, left: -60, right: -7, bottom: -5},
+	viewJustify: 8390790,
+	viewSetupFormScript: func() begin
+		self:SetTextBounds(self)
+	end,
+	viewSetupDoneScript: func() begin
+		(if (not config.button3) then self:Hide())
+	end,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'button3
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupDoneScript_code := same("export68Item.viewSetupDoneScript.instructions");
+
+viewSetupFormScript_code_2 := same("export68Item_4.viewSetupFormScript.instructions");

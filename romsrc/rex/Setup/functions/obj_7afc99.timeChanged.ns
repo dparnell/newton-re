@@ -1,5 +1,0 @@
-@@ 0x7afd1d
-func() begin
-	self:Refresh()
-end
-@@end

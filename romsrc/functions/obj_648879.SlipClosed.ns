@@ -1,5 +1,0 @@
-@@ 0x4793a9
-func() begin
-	(if (Editing or (fields.state = 'pending)) then self:PrepareToSend('readdress) else base:Close())
-end
-@@end

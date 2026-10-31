@@ -1,0 +1,126 @@
+// export116, and what only it reaches
+
+export116 := {
+	viewBounds: {left: 0, top: 0, right: 224, bottom: 225},
+	stepChildren: [stepChildren:
+		clear,
+		export111Item,
+		{
+			title: netPresentValue,
+			viewBounds: {left: 2, top: 2, right: 138, bottom: 26},
+			_proto: @protoTitle
+		},
+		export116Item,
+		export116Item_2,
+		export116Item_3,
+		export116Item_4,
+		export116Item_5
+	],
+	changeInProgress: nil,
+	solvedFor: nil,
+	viewSetupDoneScript: func() begin
+		AddArraySlot((FSViews := [Array: ]), Periods);
+		AddArraySlot(FSViews, InterestRate);
+		AddArraySlot(FSViews, PresentValue);
+		AddArraySlot(FSViews, FutureValue);
+		AddArraySlot(FSViews, Payment);
+		inherited:?viewSetupDoneScript()
+	end,
+	formulaSymbol: 'NetPresentValue,
+	overview: netPresentValue,
+	_proto: @8304,
+	Periods: nil,
+	stepAllocateContext: [|Array|:
+		'Periods,
+		export116Item,
+		'InterestRate,
+		export116Item_2,
+		'PresentValue,
+		export116Item_3,
+		'FutureValue,
+		export116Item_4,
+		'Payment,
+		export116Item_5
+	],
+	InterestRate: nil,
+	PresentValue: nil,
+	FutureValue: nil,
+	Payment: nil
+};
+
+netPresentValue := "Net Present Value";
+
+export116Item := {
+	calcLineLabel: "Periods",
+	ComputeValue: func(a1) begin
+		local l1;
+		if (((l1 := self:SolveForPeriod(a1[1], a1[2], a1[3], a1[4])) = nil) or (l1 < 0)) then begin
+				l1 := nil;
+				self:Notify(3, "Net Present Value", "No solution.")
+			end;
+		return l1
+	end,
+	lineNumber: 0,
+	viewSetupDoneScript: func() begin
+		inherited:?viewSetupDoneScript();
+		SetKeyView(self.CalcLine.value.value, 9999)
+	end,
+	_proto: @8298,
+	preAllocatedContext: 'Periods
+};
+
+export116Item_2 := {
+	calcLineLabel: interestRate,
+	ComputeValue: func(a1) begin
+		local l1;
+		if ((l1 := self:SolveForInterestRate(a1[0], a1[2], a1[3], a1[4])) = nil) then begin
+				self:Notify(3, "Net Present Value", "Interest rate out of range.")
+			end;
+		return l1
+	end,
+	lineNumber: 1,
+	_proto: @8297,
+	preAllocatedContext: 'InterestRate
+};
+
+export116Item_3 := {
+	calcLineLabel: "Present Value",
+	ComputeValue: func(a1) begin
+		local l1;
+		if ((l1 := self:SolveForPresentValue(a1[0], a1[1], a1[3], a1[4])) = nil) then begin
+				self:Notify(3, "Net Present Value", "Interest rate out of range.")
+			end;
+		return l1
+	end,
+	lineNumber: 2,
+	_proto: @8296,
+	preAllocatedContext: 'PresentValue
+};
+
+export116Item_4 := {
+	calcLineLabel: "Future Value",
+	ComputeValue: func(a1) begin
+		local l1;
+		if ((l1 := self:SolveForFutureValue(a1[0], a1[1], a1[2], a1[4])) = nil) then begin
+				self:Notify(3, "Net Present Value", "Interest rate out of range.")
+			end;
+		return l1
+	end,
+	lineNumber: 3,
+	_proto: @8296,
+	preAllocatedContext: 'FutureValue
+};
+
+export116Item_5 := {
+	calcLineLabel: "Payment",
+	ComputeValue: func(a1) begin
+		local l1;
+		if ((l1 := self:SolveForPayment(a1[0], a1[1], a1[2], a1[3])) = nil) then begin
+				self:Notify(3, "Net Present Value", "No solution.")
+			end;
+		return l1
+	end,
+	lineNumber: 4,
+	_proto: @8296,
+	preAllocatedContext: 'Payment
+};

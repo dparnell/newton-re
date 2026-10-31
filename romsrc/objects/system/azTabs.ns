@@ -1,0 +1,76 @@
+// azTabs, and what only it reaches
+
+azTabs := {
+	_proto: @protoPictIndexer,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 18},
+	viewJustify: vjCenterH + vjBottomV + vjParentFullH,
+	icon: @aztabsBitmap,
+	hiliteIcon: @aztabsmaskcz,
+	hiliteIconA: @aztabsMaskA,
+	iconBBox: {left: 0, top: 0, right: 237, bottom: 18},
+	indent: 1,
+	numIndices: 13,
+	lettersPerTab: 2,
+	pickedSameTab: nil,
+	curIndex: -1,
+	phase: 0,
+	phaseIndex: 0,
+	letters: " CEGIKMOQSUWYBDFHJLNPRTVXZ",
+	debug: 2323,
+	viewSetupFormScript: func() begin
+		local l1;
+		if (((l1 := self:LocalBox()).right - l1.left) < (iconBBox.right - iconBBox.left)) then begin
+				iconBBox := ShapeBounds(MakeShape((icon := @aztabsslimBitmap)));
+				hiliteIcon := @aztabsslimmaskcz;
+				hiliteIconA := @aztabsslimmaska;
+				indent := 2
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	hiliter: func(a1) begin
+		local l1, l2;
+		(if (if viewCObject then (a1 >= 0)) then begin
+				l1 := (startLeft + ((a1 * (iconBBox.right - 4)) div numIndices));
+				if (a1 = 0) then begin
+						l1 := (l1 + 2);
+						l2 := hiliteIconA
+					end else begin
+						l1 := (l1 + indent);
+						l2 := hiliteIcon
+					end;
+				self:DoDrawing('CopyBits, [Array: l2, l1, ((viewBBox.bottom - (hiliteIcon.bounds.bottom - hiliteIcon.bounds.top)) - 2), 2])
+			end)
+	end,
+	IndexClickScript: func(a1) begin
+		pickedSameTab := (phaseIndex = a1);
+		if (phaseIndex = a1) then begin
+				if ((phase := (phase + 1)) = lettersPerTab) then begin
+						phase := 0
+					end
+			end else begin
+				phase := 0;
+				phaseIndex := a1
+			end;
+		self:?PickLetterScript(Substr(letters, ((phase * numIndices) + a1), 1))
+	end,
+	setLetter: func(a1, a2) begin
+		l1 := (l1 := StripDiacriticals(Stringer([Array: (l1 := Upcase(a1)), ""])))[0];
+		local l1;
+		(for l2 := (numIndices - 1) to 0 by -1 do begin
+				if (letters[l2] <= l1) then begin
+						phaseIndex := l2;
+						phase := (for l5 := (lettersPerTab - 1) to 0 by -1 do begin
+								if (letters[(l2 + (l5 * numIndices))] <= l1) then begin
+										break l5
+									end
+							end);
+						if viewCObject then begin
+								self:DoDrawing('SetHilite, [Array: phaseIndex])
+							end else begin
+								self:SetHilite(phaseIndex)
+							end;
+						break
+					end
+			end)
+	end
+};

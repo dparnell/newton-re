@@ -1,0 +1,3 @@
+// packageDirectory, and what only it reaches
+
+packageDirectory := {tag: extrasSoupName, pssids: [|Array|: ]};

@@ -1,0 +1,6 @@
+// routeDuplicateIcon, and what only it reaches
+
+routeDuplicateIcon := {
+	bits: bitmap('bits, "resources/bits/3d5ce5.png", "00000000000400fd00fd008d010b00a1", 1),
+	bounds: {left: 0, top: 0, right: 20, bottom: 14}
+};

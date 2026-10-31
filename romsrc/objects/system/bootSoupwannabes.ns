@@ -1,0 +1,334 @@
+// bootSoupwannabes, and what only it reaches
+
+bootSoupwannabes := [|Array|:
+	{initialEntries: nil, soupDef: soupDef},
+	{initialEntries: nil, soupDef: @inboxSoupDef},
+	{initialEntries: nil, soupDef: @outboxSoupDef},
+	{
+		initialEntries: [|Array|:
+			{
+				class: 'ROMFormEntry,
+				text: @paperrollSoupName,
+				icon: 11,
+				sequence: 2,
+				labels: nil,
+				_tagList: _tagList,
+				app: 'paperroll,
+				iconPro: 11
+			},
+			{
+				class: 'ROMFormEntry,
+				text: calls,
+				icon: 12,
+				sequence: 3,
+				labels: nil,
+				_tagList: _tagList,
+				app: 'callapp,
+				iconPro: 12,
+				autoClose: 'noAutoClose
+			},
+			{
+				class: 'ROMScriptEntry,
+				text: @freshCardName,
+				icon: 13,
+				sequence: 5,
+				labels: nil,
+				_tagList: [|Array|: '_icon, '_noBackup],
+				TapAction: func() begin
+					OpenForCardIcon();
+					GetUserConfig('ExtraAlwaysClose)
+				end,
+				iconPro: 13,
+				app: 'card
+			},
+			{
+				class: 'ROMFormEntry,
+				text: "Calculator",
+				icon: 14,
+				sequence: 7,
+				labels: nil,
+				_tagList: _tagList,
+				app: 'calculator,
+				iconPro: 14,
+				autoClose: 'noAutoClose
+			},
+			{
+				class: 'ROMFormEntry,
+				text: "Time\u000dZones",
+				icon: 15,
+				sequence: 9,
+				labels: nil,
+				_tagList: _tagList,
+				app: 'worldClock,
+				iconPro: 15,
+				autoClose: 'noAutoClose
+			},
+			{
+				class: 'ROMFormEntry,
+				text: clock_3,
+				icon: 16,
+				sequence: 10,
+				labels: nil,
+				_tagList: _tagList,
+				app: 'alarm,
+				iconPro: 16,
+				autoClose: 'noAutoClose
+			},
+			{
+				class: 'ROMFormEntry,
+				text: styles,
+				icon: 17,
+				sequence: 11,
+				labels: nil,
+				_tagList: _tagList,
+				app: 'stylePalette,
+				iconPro: 17,
+				autoClose: 'noAutoClose
+			},
+			{
+				class: 'ROMFormEntry,
+				text: prefs,
+				icon: 18,
+				sequence: 20,
+				labels: nil,
+				_tagList: _tagList,
+				app: 'preferenceRoll,
+				iconPro: 18
+			},
+			{
+				class: 'ROMScriptEntry,
+				text: "Owner\u000dInfo",
+				icon: 19,
+				sequence: 21,
+				labels: nil,
+				_tagList: [|Array|: '_icon, '_noBackup],
+				TapAction: func() begin
+					AddDeferredSend(GetRoot().cardfile, 'OpenAsOwner, '[Array: true]);
+					GetUserConfig('ExtraAlwaysClose)
+				end,
+				iconPro: 19,
+				app: 'OwnerInfo
+			},
+			{
+				class: 'ROMFormEntry,
+				text: "Writing\u000dPractice",
+				icon: 20,
+				sequence: 23,
+				labels: '_setup,
+				_tagList: [|Array|: '_icon, '_noBackup, '_setup],
+				app: 'handwritingpractice,
+				iconPro: 20,
+				autoClose: 'noAutoClose
+			},
+			{
+				class: 'ROMSoupEntry,
+				text: calls,
+				icon: 4,
+				sequence: 25,
+				labels: '_soups,
+				_tagList: [|Array|: '_icon, '_soups, '_noBackup],
+				soupNames: [|Array|: "calls"],
+				closeControl: 'leaveOpen,
+				ownerApp: 'callapp,
+				emptyInternal: true
+			},
+			{
+				class: 'ROMSoupEntry,
+				text: dates_2,
+				icon: 4,
+				sequence: 26,
+				labels: '_soups,
+				_tagList: [|Array|: '_icon, '_soups, '_noBackup],
+				soupNames: [|Array|: @calendarSoupName, @repeatMeetingName, @calendarNotesName, @repeatNotesName],
+				closeControl: 'leaveOpen,
+				ownerApp: 'calendar,
+				emptyInternal: true
+			},
+			{
+				class: 'ROMSoupEntry,
+				text: "In/Out\u000dItems",
+				icon: 4,
+				sequence: 27,
+				labels: '_soups,
+				_tagList: [|Array|: '_icon, '_soups, '_noBackup],
+				soupNames: [|Array|: inBox_3, outBox_2],
+				closeControl: 'leaveOpen,
+				ownerApp: 'iobox,
+				emptyInternal: true
+			},
+			{
+				class: 'ROMSoupEntry,
+				text: @cardfileSoupName,
+				icon: 4,
+				sequence: 28,
+				labels: '_soups,
+				_tagList: [|Array|: '_icon, '_soups, '_noBackup],
+				soupNames: [|Array|: "names"],
+				closeControl: 'leaveOpen,
+				ownerApp: 'cardfile,
+				emptyInternal: true
+			},
+			{
+				class: 'ROMSoupEntry,
+				text: @paperrollSoupName,
+				icon: 4,
+				sequence: 29,
+				labels: '_soups,
+				_tagList: [|Array|: '_icon, '_soups, '_noBackup],
+				soupNames: [|Array|: @paperrollSoupName],
+				closeControl: 'leaveOpen,
+				ownerApp: 'paperroll,
+				emptyInternal: true
+			},
+			{
+				class: 'ROMSoupEntry,
+				text: "To do\u000dTasks",
+				icon: 4,
+				sequence: 30,
+				labels: '_soups,
+				_tagList: [|Array|: '_icon, '_soups, '_noBackup],
+				soupNames: [|Array|: @todoSoupName, toDoList],
+				closeControl: 'leaveOpen,
+				ownerApp: 'calendar,
+				emptyInternal: true
+			},
+			{
+				class: 'ROMFormEntry,
+				text: "InOut",
+				icon: 21,
+				sequence: 30,
+				labels: '_buttonBar,
+				_tagList: [|Array|: '_icon, '_noBackup, '_buttonBar],
+				app: 'iobox,
+				iconPro: 21
+			},
+			{
+				class: 'ROMFormEntry,
+				text: @cardfileSoupName,
+				icon: 22,
+				sequence: 31,
+				labels: '_buttonBar,
+				_tagList: [|Array|: '_icon, '_noBackup, '_buttonBar],
+				app: 'cardfile,
+				iconPro: 22
+			},
+			{
+				class: 'ROMFormEntry,
+				text: dates_2,
+				icon: 23,
+				sequence: 32,
+				labels: '_buttonBar,
+				_tagList: [|Array|: '_icon, '_noBackup, '_buttonBar],
+				app: 'calendar,
+				iconPro: 23
+			},
+			{
+				class: 'ROMFormEntry,
+				text: extras,
+				icon: 24,
+				sequence: -1,
+				labels: '_buttonBar,
+				_tagList: [|Array|: '_icon, '_noBackup, '_buttonBar],
+				app: 'ExtrasDrawer,
+				iconPro: 24
+			},
+			{
+				class: 'ROMScriptEntry,
+				text: undo,
+				icon: 25,
+				sequence: 34,
+				labels: '_buttonBar,
+				_tagList: [|Array|: '_icon, '_noBackup, '_buttonBar],
+				TapAction: func() begin
+					PostCommand('application, 114);
+					GetUserConfig('ExtraAlwaysClose)
+				end,
+				iconPro: 25,
+				app: 'undo
+			},
+			{
+				class: 'ROMScriptEntry,
+				text: find,
+				icon: 26,
+				sequence: 35,
+				labels: '_buttonBar,
+				_tagList: [|Array|: '_icon, '_noBackup, '_buttonBar],
+				TapAction: func() begin
+					GetRoot().findDrawer:PrimeAndOpen();
+					GetUserConfig('ExtraAlwaysClose)
+				end,
+				iconPro: 26,
+				app: 'findDrawer
+			},
+			{
+				class: 'ROMScriptEntry,
+				text: assist,
+				icon: 27,
+				sequence: 36,
+				labels: '_buttonBar,
+				_tagList: [|Array|: '_icon, '_noBackup, '_buttonBar],
+				TapAction: func() begin
+					GetRoot().assistant:PrimeAndOpen();
+					GetUserConfig('ExtraAlwaysClose)
+				end,
+				iconPro: 27,
+				app: 'assistant
+			}
+		],
+		soupDef: @extrasSoupDef
+	},
+	{
+		initialEntries: func() begin
+			[Array: ]
+		end,
+		soupDef: @paperrollSoupDef
+	},
+	{initialEntries: nil, soupDef: @calendarSoupDef},
+	{initialEntries: nil, soupDef: @repeatMeetingSoupDef},
+	{initialEntries: nil, soupDef: @calendarNotesSoupDef},
+	{initialEntries: nil, soupDef: @repeatNotesSoupDef},
+	{initialEntries: nil, soupDef: @todoSoupDef},
+	{initialEntries: nil, soupDef: @todo2SoupDef},
+	{
+		initialEntries: [|Array|:
+			{soup: uCardPositionAlertButton, app: 'calendar, builtInMetaData: true},
+			{soup: uCardPositionAlertButton, app: 'cardfile, builtInMetaData: true},
+			{soup: uCardPositionAlertButton, app: 'paperroll, builtInMetaData: true},
+			{soup: uCardPositionAlertButton, app: 'iobox, builtInMetaData: true},
+			{soup: uCardPositionAlertButton, app: 'ExtrasDrawer, builtInMetaData: true},
+			{soup: uCardPositionAlertButton, app: 'system, builtInMetaData: true},
+			{soup: uCardPositionAlertButton, app: 'systemDirectory, builtInMetaData: true}
+		],
+		soupDef: {
+			name: @metaSoupName,
+			userName: @metaSoupName,
+			ownerApp: 'systemDirectory,
+			userDescr: private,
+			indexes: [|Array|:
+				{structure: 'slot, path: 'soup, type: '|string|},
+				{structure: 'slot, path: 'app, type: 'symbol}
+			]
+		}
+	}
+];
+
+alarms := "Alarms";
+
+soupDef := {
+	name: systemAlarmSoup,
+	userName: alarms,
+	ownerApp: 'alarms,
+	ownerAppName: alarms,
+	userDescr: "alarm data",
+	indexes: [|Array|:
+		{structure: 'slot, type: 'int, path: 'TimeInSeconds},
+		{structure: 'slot, type: 'int, path: 'Time},
+		{structure: 'slot, type: '|string|, path: 'key}
+	]
+};
+
+clock_3 := "Clock";
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+TapAction_code := same("bootSoupwannabes[3].initialEntries[21].TapAction.instructions");

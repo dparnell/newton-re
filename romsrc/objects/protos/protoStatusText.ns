@@ -1,0 +1,25 @@
+// protoStatusText, and what only it reaches
+
+protoStatusText := {
+	debug: 46240,
+	viewBounds: {left: 42, top: 4, right: 180, bottom: 29},
+	viewJustify: 0,
+	viewFlags: vVisible + vReadOnly + vClipping,
+	text: nil,
+	name: 'statusText,
+	GetText: func() begin
+		self:path().(name)
+	end,
+	GetJustify: func() begin
+		(if (if StrFilled(text) then (StrWidth(text) < (viewBounds.right - viewBounds.left))) then BOr(self.viewJustify, 4) else BAnd(self.viewJustify, bnot(4)))
+	end,
+	viewSetupFormScript: func() begin
+		text := self:GetText();
+		(self.viewJustify := self:GetJustify())
+	end,
+	viewUpdateFormScript: func() begin
+		SetValue(self, 'text, self:GetText());
+		SetValue(self, 'viewJustify, self:GetJustify())
+	end,
+	_proto: @protoStaticText
+};

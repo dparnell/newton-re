@@ -1,0 +1,10 @@
+// defaultOutboxPrefInfo, and what only it reaches
+
+defaultOutboxPrefInfo := {
+	_proto: @protoPrefInfo,
+	logText: "After sending",
+	logConfig: 'outboxLogging,
+	fileConfig: 'outboxFiling,
+	testMethod: 'SendRequest,
+	sibling: 'siblingCheck
+};

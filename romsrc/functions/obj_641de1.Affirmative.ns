@@ -1,5 +1,0 @@
-@@ 0x432499
-func() begin
-	context:?pickActionScript(startTime, stopTime)
-end
-@@end

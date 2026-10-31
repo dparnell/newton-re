@@ -1,0 +1,7 @@
+// filledStarBitmap, and what only it reaches
+
+filledStarBitmap := {
+	mask: filledStarBitmapMask,
+	bits: bitmap('bits, "resources/bits/3d8aa9.png", "000000000004003d003d0196004b01a5", 1),
+	bounds: {left: 0, top: 0, right: 15, bottom: 14}
+};

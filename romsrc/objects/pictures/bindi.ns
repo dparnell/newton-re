@@ -1,0 +1,7 @@
+// bindi, and what only it reaches
+
+bindi := {
+	mask: bitmap('mask, "resources/mask/3d62c1.png", "00000000000400b000b001de00b501eb", 1),
+	bits: bitmap('bits, "resources/bits/3d62f1.png", "00000000000400b000b001cf00b501dc", 1),
+	bounds: {left: 0, top: 0, right: 13, bottom: 5}
+};

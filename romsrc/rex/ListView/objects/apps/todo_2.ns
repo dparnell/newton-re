@@ -1,0 +1,900 @@
+// todo_2, and what only it reaches
+
+todo_2 := {
+	noOverview: "This window has no Overview",
+	dirtyFlag: nil,
+	cardReserved: nil,
+	GetTargetInfo: compile(
+		options: "names",
+		func(targetType) begin
+			local beamTarget;
+			(beamTarget := Clone(task)).mtgDone := savedDone;
+			beamTarget.mtgPriority := savedPriorityIndex;
+			beamTarget.class := 'todo;
+			beamTarget.date := newMtgDate;
+			{target: beamTarget, targetView: targetView, targetStore: (if ((not HasPath(task, 'source)) or (task.source = nil)) then nil else (if (ClassOf(task.source) = 'symbol) then GetStores()[SetContains('[Array: RO0, RO1, RO2, RO3, RO4], task.source)] else EntryStore(target)))}
+		end),
+	hideDateField: true,
+	viewSetupDoneScript: compile(
+		options: "names",
+		func() begin
+			SetKeyView(Header.MeetingTitle.entryLine, 9999)
+		end),
+	UpdateDateRange: compile(
+		options: "names",
+		func() begin
+			(if HasPath(task, 'repeatInfo) then begin
+					task.repeatInfo.mtgStartDate := newFirstDate;
+					task.repeatInfo.mtgStopDate := newStopDate;
+					RemoveSlot(task.repeatInfo, 'exceptions);
+					RemoveSlot(task.repeatInfo, 'instanceNotesData);
+					RemoveSlot(task.repeatInfo, 'viewStationery)
+				end)
+		end),
+	hideMtgMsgHeader: true,
+	originalMtgDate: nil,
+	UpdateReminderSpec: compile(
+		options: "names",
+		func() begin
+			local newSpec;
+			(if (savedReminderIndex = 0) then begin
+					if HasPath(task, 'remindForDate) then begin
+							RemoveSlot(task, 'remindForDate)
+						end;
+					(if (if HasPath(task, 'repeatInfo) then task.repeatInfo.reminderInterval) then RemoveSlot(task.repeatInfo, 'reminderInterval))
+				end else (if (newSpec := repeatingView:GetRepeatSpec()) then (if HasPath(task, 'remindForDate) then RemoveSlot(task, 'remindForDate)) else (if (if HasPath(task, 'remindForDate) then ((newMtgDate - (1440 * savedReminderIndex)) <= ((Time() div 1440) * 1440))) then begin
+							RemoveSlot(task, 'remindForDate);
+							savedReminderIndex := 0;
+							originalMtgDate := nominalDate;
+							(nominalDate := nil)
+						end else begin
+							task.remindForDate := newMtgDate;
+							(newMtgDate := (newMtgDate - (1440 * savedReminderIndex)))
+						end)))
+		end),
+	killRepeating: nil,
+	savedFrequencyIndex: nil,
+	_filingKeyScript: compile(
+		options: "names",
+		func(keyView) begin
+			PressButton(filingButton)
+		end),
+	paraView: nil,
+	viewQuitScript: compile(
+		options: "names",
+		func() begin
+			local when, displayDate;
+			if (if (if isNewToDo then (not dirtyFlag)) then (StrLen(newTitle) = 0)) then begin
+					if HasPath(task, 'repeatInfo) then begin
+							list:DeleteTask(0, task, true)
+						end else begin
+							list:DeleteTask(originalMtgDate, task, true)
+						end;
+					isNewToDo := nil
+				end else begin
+					if (if isNewToDo then dirtyFlag) then begin
+							when := newMtgDate;
+							if HasPath(task, 'repeatInfo) then begin
+									when := 0
+								end;
+							list:AddUndoAction('UndoNewTask, [Array: when, task]);
+							isNewToDo := nil
+						end;
+					if (if Visible(list) then dirtyFlag) then begin
+							self:ApplyAllChanges();
+							list:StartFlush();
+							if HasPath(task, 'repeatInfo) then begin
+									if ((displayDate := NextMeeting(selectedDates[0], task.repeatInfo)) = 0) then begin
+											displayDate := task.repeatInfo.mtgStartDate
+										end;
+									if task.repeatInfo.reminderInterval then begin
+											displayDate := (displayDate - task.repeatInfo.reminderInterval)
+										end
+								end else begin
+									if (newMtgDate <> selectedDates[0]) then begin
+											displayDate := newMtgDate
+										end
+								end;
+							if (if displayDate then (displayDate <> selectedDates[0])) then begin
+									selectedDates[0] := displayDate;
+									self:RedisplayScript();
+									if (mainDisplay <> agendaView) then begin
+											GetRoot().calendar:GetToDo():ScrollToTask(newMtgDate, task)
+										end else begin
+											agendaView:ScrollToTask(newMtgDate, task)
+										end
+								end else begin
+									if Visible(DatesOverviewForm) then begin
+											DatesOverviewForm:Retarget()
+										end else begin
+											if needsMeasure then begin
+													list.measureTopics := true
+												end;
+											list:RedoChildren();
+											if (mainDisplay <> agendaView) then begin
+													list:ScrollToTask(newMtgDate, task)
+												end else begin
+													agendaView:ScrollToTask(newMtgDate, task)
+												end
+										end
+								end
+						end
+				end;
+			calendar.lastMailFormat := mainViewLastMailFormat;
+			RemoveSlot(self, 'newStopDate);
+			RemoveSlot(self, 'newFirstDate);
+			task := nil;
+			paraView := nil;
+			savedPriorityIndex := nil;
+			savedReminderIndex := nil;
+			savedFrequencyIndex := nil;
+			killRepeating := nil;
+			nominalDate := nil;
+			(list := nil)
+		end),
+	appAll: "All Tasks",
+	UpdateFrequency: compile(
+		options: "names",
+		func() begin
+			local oldSpec, newSpec;
+			oldSpec := task.repeatInfo;
+			newSpec := repeatingView:GetRepeatSpec();
+			if (if (oldSpec = nil) then (newSpec = nil)) then begin
+					return nil
+				end;
+			(if (if (if (if oldSpec then newSpec) then (oldSpec.repeatType = newSpec.repeatType)) then (oldSpec.mtgInfo = newSpec.mtgInfo)) then (if (savedReminderIndex <> 0) then (task.repeatInfo.reminderInterval := (1440 * savedReminderIndex))) else (if (if newSpec then (not oldSpec)) then begin
+						Print(newSpec);
+						task.repeatInfo := newSpec;
+						task.repeatDone := [Array: ];
+						if (savedReminderIndex <> 0) then begin
+								task.repeatInfo.reminderInterval := (1440 * savedReminderIndex)
+							end;
+						task.repeatInfo.mtgStartDate := newFirstDate;
+						task.repeatInfo.mtgStopDate := newStopDate;
+						ClearUndoStacks();
+						list:MoveTaskToDate(task, target, originalMtgDate, 0)
+					end else (if (if (killRepeating or (not newSpec)) then oldSpec) then begin
+							RemoveSlot(task, 'repeatInfo);
+							RemoveSlot(task, 'repeatDone);
+							ClearUndoStacks();
+							list:MoveTaskToDate(task, target, 0, newMtgDate)
+						end else begin
+							task.repeatInfo.repeatType := newSpec.repeatType;
+							task.repeatInfo.mtgInfo := newSpec.mtgInfo;
+							(if (savedReminderIndex <> 0) then (task.repeatInfo.reminderInterval := (1440 * savedReminderIndex)))
+						end)))
+		end),
+	newTitle: nil,
+	noScroll: "This window does not scroll",
+	target: nil,
+	UpdatePriorityDone: compile(
+		options: "names",
+		func() begin
+			if ((task.mtgPriority <> savedPriorityIndex) or (task.mtgDone <> savedDone)) then begin
+					target.needsSort := true
+				end;
+			task.mtgPriority := savedPriorityIndex;
+			(task.mtgDone := savedDone)
+		end),
+	_actionKeyScript: compile(
+		options: "names",
+		func(keyView) begin
+			PressButton(actionButton)
+		end),
+	FolderChanged: compile(
+		options: "names",
+		func() begin
+			call GetRoot().paperroll.FolderChanged with (soupName, oldFolder, newFolder)
+		end),
+	storesFilter: nil,
+	LayoutSlip: compile(
+		options: "names",
+		func(aShowRepeatingFields) begin
+			local isRepeating, isConvertToRepeating;
+			hideMtgMsgHeader := true;
+			hideDateField := true;
+			hideSeriesMsgHeader := true;
+			hideDateRangeFields := true;
+			hideFrequencyField := true;
+			isConvertToRepeating := (if (not (isRepeating := HasPath(task, 'repeatInfo))) then aShowRepeatingFields);
+			if (if (killRepeating or (not isRepeating)) then (not isConvertToRepeating)) then begin
+					hideDateField := nil
+				end;
+			if (if (isRepeating or isConvertToRepeating) then aShowRepeatingFields) then begin
+					hideDateRangeFields := nil;
+					hideSeriesMsgHeader := nil
+				end;
+			(hideFrequencyField := nil)
+		end),
+	ApplyAllChanges: compile(
+		options: "names",
+		func() begin
+			(if (if (not readOnly) then dirtyFlag) then begin
+					self:UpdateText();
+					self:UpdatePriorityDone();
+					self:UpdateReminderSpec();
+					self:UpdateTime();
+					if (not task.mtgDone) then begin
+							self:UpdateFrequency();
+							self:UpdateDateRange()
+						end;
+					(dirtyFlag := nil)
+				end)
+		end),
+	savedReminderIndex: nil,
+	viewFlags: vApplication + vClipping + vFloating + vClickable,
+	doCardRouting: 'onlyCardRouting,
+	DeleteToDoScript: compile(
+		options: "names",
+		func(meeting, whatView) begin
+			local textPart1, result;
+			viewEffect := nil;
+			(if HasPath(task, 'repeatInfo) then (if (result := ModalConfirm(Stringer([Array: (textPart1 := SubStr(MakeRichString(task.text, task.styles), 0, 24)), "\u2026\u", " ", "is a recurring task. Delete all occurrences?"]), 'yesNo)) then self:Delete('DeleteTask, [Array: 0, task, true]) else return nil) else (if task.remindForDate then base:Delete('DeleteTask, [Array: nominalDate, task, true]) else base:Delete('DeleteTask, [Array: newMtgDate, task, true])))
+		end),
+	list: nil,
+	appObject: [|Array|: task_2, "Tasks"],
+	needsMeasure: nil,
+	slipHeight: nil,
+	FilingChanged: compile(
+		options: "names",
+		func() begin
+			local filter;
+			if (if (filter := calendar.labelsFilter) then (target.labels <> filter)) then begin
+					EntryChange(target)
+				end;
+			filingButton:Update()
+		end),
+	hideSeriesMsgHeader: true,
+	mainViewLastMailFormat: nil,
+	MoveTarget: compile(
+		options: "names",
+		func(aTarget, aDestStore) begin
+			local moveResult;
+			(if (moveResult := list:MoveTask(task, aTarget, aDestStore)) then (target := moveResult))
+		end),
+	FilterChanged: compile(
+		options: "names",
+		func() begin
+			nil
+		end),
+	labelsFilter: nil,
+	savedPriorityIndex: nil,
+	appObjectFileThisIn: "File this task in…",
+	readOnly: nil,
+	appSymbol: 'todo,
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	selectedMeeting: nil,
+	RelayoutSlip: compile(
+		options: "names",
+		func(aShowRepeatingFields) begin
+			relayoutInProgress := true;
+			try begin
+					self:LayoutSlip(aShowRepeatingFields);
+					self:RedoChildren()
+				end onexception |evt.ex| do begin
+					relayoutInProgress := nil;
+					Rethrow()
+				end;
+			(relayoutInProgress := nil)
+		end),
+	DeleteTask: compile(
+		options: "names",
+		func(aDate, aTask, aRedraw) begin
+			list:DeleteTask(aDate, aTask, aRedraw);
+			base:Close()
+		end),
+	UpdateText: compile(
+		options: "names",
+		func() begin
+			local wealth;
+			wealth := DecodeRichString(newTitle, 12291);
+			task.text := wealth.text;
+			(task.styles := wealth.styles)
+		end),
+	newFirstDate: nil,
+	DuplicateToDoScript: compile(
+		options: "names",
+		func(meeting, whatView) begin
+			local taskDate, dupTask, index;
+			self:LockScreen(true);
+			if (if task.remindForDate then nominalDate) then begin
+					taskDate := nominalDate
+				end else begin
+					taskDate := newMtgDate
+				end;
+			dupTask := list:DuplicateTask(taskDate, task);
+			list:GetTarget(list.target);
+			self:LockScreen(nil);
+			(if (index := SetContains(list.topics, dupTask.topic)) then begin
+					dirtyFlag := true;
+					list:ToggleTopic(index)
+				end else begin
+					self:CloseSlip();
+					selectedDates[0] := taskDate;
+					self:RedisplayScript()
+				end)
+		end),
+	viewSetupFormScript: compile(
+		options: "names",
+		func() begin
+			local dp, repeatTemplate;
+			if relayoutInProgress then begin
+					return nil
+				end;
+			newTitle := MakeRichString(task.text, task.styles);
+			newMtgDate := originalMtgDate;
+			newFirstDate := originalMtgDate;
+			if task.repeatInfo then begin
+					newStopDate := task.repeatInfo.mtgStopDate
+				end;
+			if (not newStopDate) then begin
+					newStopDate := 536870911
+				end;
+			if HasPath(task, 'repeatInfo) then begin
+					newFirstDate := GetNextMeetingTime(task.repeatInfo, 0)
+				end;
+			dp := displayParams;
+			self.slipHeight := Min(280, (dp.appAreaHeight - 16));
+			self.viewBounds := RelBounds(0, 0, Min(264, (dp.appAreaWidth - 16)), slipHeight);
+			self.targetView := self;
+			selectedMeeting := {mtgStartDate: newMtgDate, mtgStopDate: newStopDate};
+			if (repeatTemplate := task.repeatInfo) then begin
+					selectedMeeting.repeatType := repeatTemplate.repeatType;
+					selectedMeeting.mtgInfo := repeatTemplate.mtgInfo
+				end;
+			mainViewLastMailFormat := calendar.lastMailFormat;
+			calendar.lastMailFormat := nil;
+			self:LayoutSlip(HasPath(task, 'repeatInfo));
+			(dirtyFlag := nil)
+		end),
+	task: nil,
+	hideFrequencyField: true,
+	routeScripts: [|Array|:
+		{title: "Duplicate", icon: @routeDuplicateIcon, routeScript: 'DuplicateToDoScript},
+		{title: "Delete", icon: @routetrashBitmap, routeScript: 'DeleteToDoScript}
+	],
+	newMtgDate: nil,
+	NotifyCompleted: compile(
+		options: "names",
+		func() begin
+			self:Notify(3, "To Do", "This task is already completed. Reminder and Repeat can\u2019\ut be changed")
+		end),
+	relayoutInProgress: nil,
+	SetupRoutingSlip: compile(
+		options: "names",
+		func(aRoutingSlip) begin
+			aRoutingSlip.title := "To Do";
+			(aRoutingSlip.mtgDate := newMtgDate)
+		end),
+	nominalDate: nil,
+	newStopDate: nil,
+	debug: 10554,
+	targetView: nil,
+	hideDateRangeFields: true,
+	CloseSlip: compile(
+		options: "names",
+		func() begin
+			base:Close()
+		end),
+	savedDone: nil,
+	UpdateTime: compile(
+		options: "names",
+		func() begin
+			local date, today;
+			today := ((Time() div 1440) * 1440);
+			if (if ((newMtgDate := (newMtgDate - (newMtgDate mod 1440))) < today) then (not savedDone)) then begin
+					newMtgDate := today
+				end;
+			if nominalDate then begin
+					date := nominalDate
+				end else begin
+					date := originalMtgDate
+				end;
+			(if (if (if (not killRepeating) then (not repeatingView:GetRepeatSpec())) then (not task.repeatInfo)) then (if (newMtgDate <> date) then begin
+						Print(Stringer([Array: "UpdateTime changed to", " ", LongDateStr(newMtgDate, 80492)]));
+						ClearUndoStacks();
+						list:MoveTaskToDate(task, target, date, newMtgDate)
+					end))
+		end),
+	protoRepeat: {
+		mtgInfo: 0,
+		mtgStartDate: nil,
+		mtgStopDate: 536870911,
+		repeatType: 5,
+		GetRepeatSpec: compile(
+			options: "names",
+			func() begin
+				(if (repeatType = 5) then nil else {repeatType: repeatType, mtgInfo: mtgInfo, mtgStartDate: originalMtgDate, mtgStopDate: mtgStopDate})
+			end)
+	},
+	stepChildren: [stepChildren:
+		Header,
+		repeatingView,
+		actionButton,
+		filingButton,
+		{
+			buttonClickScript: compile(
+				options: "names",
+				func() begin
+					base:Close()
+				end),
+			debug: 72912,
+			_proto: @protoCancelButton
+		}
+	],
+	Header: nil,
+	stepallocatecontext: [|Array|:
+		'Header,
+		Header,
+		'repeatingView,
+		repeatingView,
+		'actionButton,
+		actionButton,
+		'filingButton,
+		filingButton
+	],
+	repeatingView: nil,
+	_keyCommands: [|Array|:
+		{char: $r, modifiers: 33554432, keymessage: '_actionKeyScript, name: routing, category: routing},
+		{char: $f, modifiers: 100663296, keymessage: '_filingKeyScript, name: "File", category: "Filing"}
+	],
+	actionButton: nil,
+	filingButton: nil,
+	_proto: @protoFloater
+};
+
+dateValue := {
+	debug: 16503,
+	viewBounds: {left: 0, top: 2, right: 2, bottom: 20},
+	label: "ﰁDate",
+	labelFont: tsSystem + tsSize(9) + tsBold,
+	entryFont: tsHWFont + tsSize(10),
+	viewSetupFormScript: compile(
+		options: "names",
+		func() begin
+			date := newMtgDate;
+			inherited:?viewSetupFormScript()
+		end),
+	PickActionScript: compile(
+		options: "names",
+		func(aNewValue) begin
+			dirtyFlag := true;
+			inherited:PickActionScript(aNewValue);
+			(if (date <> newMtgDate) then begin
+					newMtgDate := date;
+					newFirstDate := date;
+					reminderPicker:SetupRange()
+				end)
+		end),
+	ShouldHide: compile(
+		options: "names",
+		func(hide) begin
+			(if hide then (viewFlags := BAnd(viewFlags, bnot(1))))
+		end),
+	preallocatedContext: 'dateValue,
+	_proto: @protoDateTextPicker
+};
+
+none := "None";
+
+reminderPicker := {
+	debug: 671900,
+	viewFont: tsSystem + tsSize(9) + tsBold,
+	viewJustify: 8396848,
+	viewBounds: {left: 0, top: 3, right: 2, bottom: 21},
+	text: "Reminder",
+	reminderLabels: [|Array|:
+		none,
+		"1 day notice",
+		"2 days notice",
+		"3 days notice",
+		"4 days notice",
+		"5 days notice",
+		"6 days notice",
+		"7 days notice"
+	],
+	viewLineSpacing: 12,
+	viewClickScript: compile(
+		options: "names",
+		func(unit) begin
+			(if savedDone then self:NotifyCompleted() else inherited:viewClickScript(unit))
+		end),
+	viewSetupFormScript: compile(
+		options: "names",
+		func() begin
+			self:SetupRange();
+			inherited:?viewSetupFormScript()
+		end),
+	SetupRange: compile(
+		options: "names",
+		func() begin
+			local remindRange;
+			self.labelCommands := reminderLabels;
+			(if (not HasPath(task, 'remindForDate)) then (if ((remindRange := ((remindRange := (newMtgDate - ((Time() div 1440) * 1440))) div 1440)) < 8) then begin
+						if (remindRange < 0) then begin
+								remindRange := 0
+							end;
+						if (if savedFrequencyIndex then (savedFrequencyIndex > 0)) then begin
+								remindRange := 7
+							end;
+						self.labelCommands := Clone(reminderLabels);
+						setlength(labelCommands, (remindRange + 1));
+						index := 0;
+						savedReminderIndex := 0;
+						SetValue(entryLine, 'text, labelCommands[0])
+					end))
+		end),
+	TextSetup: compile(
+		options: "names",
+		func() begin
+			local index, date;
+			if relayoutInProgress then begin
+					return labelCommands[savedReminderIndex]
+				end;
+			if (if HasPath(task, 'repeatInfo) then task.repeatInfo.reminderInterval) then begin
+					index := Min(7, (task.repeatInfo.reminderInterval div 1440))
+				end else begin
+					if (not HasPath(task, 'remindForDate)) then begin
+							index := 0
+						end else begin
+							if (newMtgDate <> originalMtgDate) then begin
+									date := newMtgDate
+								end else begin
+									if nominalDate then begin
+											date := nominalDate
+										end else begin
+											date := originalMtgDate
+										end
+								end;
+							index := Min(7, Max(0, ((task.remindForDate - date) div 1440)))
+						end
+				end;
+			savedReminderIndex := index;
+			labelCommands[index]
+		end),
+	LabelActionScript: compile(
+		options: "names",
+		func(index) begin
+			dirtyFlag := true;
+			(savedReminderIndex := index)
+		end),
+	preallocatedContext: 'reminderPicker,
+	_proto: @protoLabelPicker
+};
+
+frequencyPicker := {
+	debug: 1264988,
+	viewJustify: 8396848,
+	viewBounds: {left: 0, top: 3, right: 2, bottom: 21},
+	viewLineSpacing: 12,
+	viewClickScript: compile(
+		options: "names",
+		func(unit) begin
+			(if savedDone then self:NotifyCompleted() else inherited:viewClickScript(unit))
+		end),
+	ShouldHide: compile(
+		options: "names",
+		func(hide) begin
+			(if hide then (viewFlags := BAnd(viewFlags, bnot(1))))
+		end),
+	TextSetup: compile(
+		options: "names",
+		func() begin
+			local initialString;
+			(if relayoutInProgress then return labelCommands[savedFrequencyIndex] else begin
+					initialString := inherited:TextSetup();
+					savedFrequencyIndex := currentLabelIndex;
+					initialString
+				end)
+		end),
+	LabelActionScript: compile(
+		options: "names",
+		func(index) begin
+			local repeatingPicked;
+			dirtyFlag := true;
+			inherited:LabelActionScript(index);
+			if (index = 0) then begin
+					newStopDate := 536870911
+				end;
+			savedFrequencyIndex := currentLabelIndex;
+			repeatingPicked := (repeatingView.repeatType <> 5);
+			(if (if hideDateRangeFields then repeatingPicked) then begin
+					killRepeating := nil;
+					todoSlip:RelayoutSlip(true)
+				end else (if (if (not hideDateRangeFields) then (not repeatingPicked)) then begin
+						killRepeating := true;
+						todoSlip:RelayoutSlip(nil)
+					end))
+		end),
+	preallocatedContext: 'frequencyPicker,
+	_proto: @protoRepeatPicker
+};
+
+seriesMsgHeader := {
+	debug: 1392176,
+	viewJustify: 8396808,
+	viewBounds: {left: 2, top: 3, right: 202, bottom: 13},
+	viewFont: tsSystem + tsSize(9) + tsBold,
+	text: "This recurring task occurs between",
+	ShouldHide: compile(
+		options: "names",
+		func(hide) begin
+			(if hide then (viewFlags := BAnd(viewFlags, bnot(1))))
+		end),
+	preallocatedContext: 'seriesMsgHeader,
+	_proto: @protoStaticText
+};
+
+Header := {
+	debug: 673776,
+	viewClass: clView,
+	viewFlags: vVisible,
+	viewBounds: {left: 2, top: 0, right: -2, bottom: -20},
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewSetupChildrenScript: compile(
+		options: "names",
+		func() begin
+			dateValue:ShouldHide(hideDateField);
+			frequencyPicker:ShouldHide(hideFrequencyField);
+			seriesMsgHeader:ShouldHide(hideSeriesMsgHeader);
+			recurInterval:ShouldHide(hideDateRangeFields)
+		end),
+	preallocatedContext: 'Header,
+	stepChildren: [stepChildren:
+		{
+			titleIcon: {
+				bits: bitmap('bits, "resources/bits/79f2d5.png", "000000000004016201620129016d0137", 1),
+				bounds: {left: 0, top: 0, right: 14, bottom: 11}
+			},
+			title: "To Do Task",
+			_proto: @protoTitle
+		},
+		{
+			viewClass: clPictureView,
+			viewFlags: vVisible,
+			viewJustify: vjParentRightH,
+			viewBounds: {left: -12, top: 0, right: 0, bottom: 12},
+			viewFormat: vfFillWhite,
+			icon: nil,
+			lockedIcon: {
+				bits: bitmap('bits, "resources/bits/79f5b5.png", "0000000000040022002200300030003b", 1),
+				bounds: {left: 0, top: 0, right: 11, bottom: 14}
+			},
+			viewSetupFormScript: compile(
+				options: "names",
+				func() begin
+					(if readOnly then (icon := lockedIcon) else (icon := nil))
+				end)
+		},
+		MeetingTitle,
+		{
+			text: completed,
+			viewFont: tsSystem + tsSize(9),
+			viewJustify: vjCenterV + vjSiblingBottomV,
+			viewBounds: {left: 2, top: 4, right: 77, bottom: 20},
+			viewSetupFormScript: compile(
+				options: "names",
+				func() begin
+					viewValue := task.mtgDone;
+					savedDone := task.mtgDone;
+					inherited:?viewSetupFormScript()
+				end),
+			ValueChanged: compile(
+				options: "names",
+				func() begin
+					savedDone := viewValue;
+					task.mtgDone := viewValue;
+					(dirtyFlag := true)
+				end),
+			debug: 1138460,
+			_proto: @protoCheckbox
+		},
+		dateValue,
+		{
+			debug: 751580,
+			viewFont: tsSystem + tsSize(9) + tsBold,
+			viewBounds: {left: 0, top: 3, right: 2, bottom: 21},
+			viewJustify: 8396848,
+			text: priority,
+			iconBounds: {left: 0, top: 0, right: 16, bottom: 16},
+			labelCommands: nil,
+			priorityItems: @priorityItems,
+			viewLineSpacing: 12,
+			viewSetupFormScript: compile(
+				options: "names",
+				func() begin
+					labelCommands := [Array: {item: "High", icon: priorityItems[0], indent: 18}, {item: "Medium", icon: priorityItems[1]}, {item: "Low", icon: priorityItems[2]}, {item: "None", icon: priorityItems[3]}];
+					inherited:?viewSetupFormScript()
+				end),
+			IconSetup: compile(
+				options: "names",
+				func() begin
+					labelCommands[savedPriorityIndex].icon
+				end),
+			LabelActionScript: compile(
+				options: "names",
+				func(index) begin
+					dirtyFlag := true;
+					(savedPriorityIndex := index)
+				end),
+			TextSetup: compile(
+				options: "names",
+				func() begin
+					if relayoutInProgress then begin
+							return labelCommands[savedPriorityIndex].item
+						end;
+					savedPriorityIndex := task.mtgPriority;
+					labelCommands[savedPriorityIndex].item
+				end),
+			_proto: @protoLabelPicker
+		},
+		reminderPicker,
+		frequencyPicker,
+		seriesMsgHeader,
+		recurInterval
+	],
+	MeetingTitle: nil,
+	stepallocatecontext: [|Array|:
+		'MeetingTitle,
+		MeetingTitle,
+		'dateValue,
+		dateValue,
+		'reminderPicker,
+		reminderPicker,
+		'frequencyPicker,
+		frequencyPicker,
+		'seriesMsgHeader,
+		seriesMsgHeader,
+		'recurInterval,
+		recurInterval
+	],
+	dateValue: nil,
+	reminderPicker: nil,
+	frequencyPicker: nil,
+	seriesMsgHeader: nil,
+	recurInterval: nil
+};
+
+recurInterval := {
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	viewBounds: {left: 0, top: 2, right: 2, bottom: 20},
+	label: "ﰁDates",
+	labelFont: tsSystem + tsSize(9) + tsBold,
+	longFormat: nil,
+	shortFormat: 'numericDateStrSpec,
+	viewClickScript: compile(
+		options: "names",
+		func(unit) begin
+			(if savedDone then self:NotifyCompleted() else inherited:viewClickScript(unit))
+		end),
+	viewSetupFormScript: compile(
+		options: "names",
+		func() begin
+			startTime := newFirstDate;
+			stopTime := newStopDate;
+			inherited:?viewSetupFormScript()
+		end),
+	popit: compile(
+		options: "names",
+		func(x) begin
+			repeatType := repeatingView.repeatType;
+			mtgInfo := repeatingView.mtgInfo;
+			inherited:popit(x)
+		end),
+	PickActionScript: compile(
+		options: "names",
+		func(aStart, aStop) begin
+			dirtyFlag := true;
+			newFirstDate := aStart;
+			newStopDate := aStop;
+			inherited:PickActionScript(aStart, aStop)
+		end),
+	ShouldHide: compile(
+		options: "names",
+		func(hide) begin
+			(if hide then (viewFlags := BAnd(viewFlags, bnot(1))))
+		end),
+	debug: 342326,
+	preallocatedContext: 'recurInterval,
+	_proto: @protoRepeatDateDurationTextPicker
+};
+
+routing := "Routing";
+
+filingButton := {
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH,
+	viewBounds: {left: -23, top: -18, right: -6, bottom: -5},
+	preallocatedContext: 'filingButton,
+	_proto: @protoFilingButton
+};
+
+MeetingTitle := {
+	debug: 156805,
+	viewFont: tsHWFont + tsSize(12),
+	viewBounds: nil,
+	viewFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed,
+	viewJustify: vjParentFullH,
+	label: "Title",
+	memory: 'todoTitle,
+	textFlags: 24,
+	viewLineSpacing: 30,
+	text: nil,
+	viewSetupDoneScript: compile(
+		options: "names",
+		func() begin
+			SetValue(entryLine, 'viewJustify, BAnd(entryLine.viewJustify, bnot(8388608)))
+		end),
+	viewSetupFormScript: compile(
+		options: "names",
+		func() begin
+			text := newTitle;
+			(viewBounds := RelBounds(0, 16, -8, (if (slipHeight = 280) then 96 else 64)))
+		end),
+	textChanged: compile(
+		options: "names",
+		func() begin
+			dirtyFlag := true;
+			needsMeasure := true;
+			(newTitle := MakeRichString(text, styles))
+		end),
+	preallocatedContext: 'MeetingTitle,
+	_proto: @protoRichLabelInputLine
+};
+
+repeatingView := {
+	debug: 346713,
+	viewSetupFormScript: compile(
+		options: "names",
+		func() begin
+			local delta;
+			inherited:viewSetupFormScript();
+			self.viewBounds := Clone(self.viewBounds);
+			delta := (45 - viewBounds.top);
+			viewBounds.top := (viewBounds.top + delta);
+			(viewBounds.bottom := (viewBounds.bottom + delta))
+		end),
+	viewQuitScript: compile(
+		options: "names",
+		func() begin
+			(if (repeatType = 5) then begin
+					todoSlip.savedFrequencyIndex := 0;
+					todoSlip:RelayoutSlip(nil)
+				end)
+		end),
+	preallocatedContext: 'repeatingView,
+	_proto: @protoRepeatView
+};
+
+actionButton := {
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV,
+	viewBounds: {left: -42, top: -18, right: -25, bottom: -5},
+	buttonClickScript: compile(
+		options: "names",
+		func() begin
+			local cachedNewMtgDate;
+			cachedNewMtgDate := newMtgDate;
+			todoSlip:ApplyAllChanges();
+			newMtgDate := cachedNewMtgDate;
+			inherited:buttonClickScript()
+		end),
+	preallocatedContext: 'actionButton,
+	_proto: @protoRoutingSlip
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+DeleteToDoScript_literal7 := same("todo_2.DeleteToDoScript.literals[7]");
+
+DeleteToDoScript_literal9 := same("todo_2.DeleteToDoScript.literals[9]");
+
+_filingKeyScript_code := same("todo_2._filingKeyScript.instructions");
+
+CloseSlip_code := same("todo_2.CloseSlip.instructions");
+
+viewSetupFormScript_literal4 := same("Header.stepChildren[5].viewSetupFormScript.literals[4]");
+
+LabelActionScript_code := same("reminderPicker.LabelActionScript.instructions");
+
+viewClickScript_code := same("reminderPicker.viewClickScript.instructions");
+
+ShouldHide_code := same("dateValue.ShouldHide.instructions");

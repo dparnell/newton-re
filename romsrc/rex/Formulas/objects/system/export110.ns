@@ -1,0 +1,51 @@
+// export110, and what only it reaches
+
+export110 := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 36},
+	viewFlags: vVisible,
+	viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV,
+	viewSetupFormScript: func() begin
+		SetValue(LabelField, 'label, calcLineLabel);
+		(calcLineValue := nil)
+	end,
+	calcLineValue: nil,
+	calcLineLabel: changeMe,
+	stepChildren: [stepChildren: label],
+	SetNumericValue: func(a1) begin
+		calcLineValue := a1;
+		self:RedoChildren()
+	end,
+	GetNumericValue: func() begin
+		return calcLineValue
+	end,
+	indent: 115,
+	viewClass: clView,
+	LabelField: nil,
+	stepAllocateContext: [|Array|: 'LabelField, label]
+};
+
+label := {
+	viewBounds: {left: 3, top: 10, right: 0, bottom: 30},
+	label: "Label",
+	Date: nil,
+	viewJustify: vjParentFullH + vjSiblingTopV,
+	PickActionScript: func(a1) begin
+		calcLineValue := ((a1[0] div 1440) * 1440);
+		inherited:?PickActionScript(a1);
+		self:SolveFormula(lineNumber)
+	end,
+	viewSetupFormScript: func() begin
+		self.Date := nil;
+		(self.indent := self:parent().indent)
+	end,
+	textSetup: func() begin
+		(if (calcLineValue = nil) then return Clone("") else begin
+				self.Date := calcLineValue;
+				return LongDateStr(Date, 80468)
+			end)
+	end,
+	labelFont: tsSystem + tsSize(10) + tsBold,
+	entryFont: tsHWFont + tsSize(12),
+	_proto: @protoDateTextPicker,
+	preAllocatedContext: 'LabelField
+};

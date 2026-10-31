@@ -1,5 +1,0 @@
-@@ 0x44b669
-func(a1) begin
-	DismissPopup()
-end
-@@end

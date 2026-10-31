@@ -1,0 +1,36 @@
+// newtDateFilter, and what only it reaches
+
+newtDateFilter := {
+	_proto: @newtTextFilter,
+	recFlags: 526849,
+	validDate: true,
+	longFormat: 180969,
+	shortFormat: nil,
+	PathToText: func() begin
+		(if IsString(target.(path)) then Clone(target.(path)) else (if longFormat then LongDateStr(target.(path), longFormat) else ShortDateStr(target.(path), shortFormat)))
+	end,
+	TextToPath: func(a1) begin
+		local l1, l2;
+		(if ((not StrFilled(a1)) or IsRichString(a1)) then a1 else begin
+				validDate := IsValidDate(a1);
+				l1 := target.(path);
+				(if (l2 := StringToDate(a1)) then (if (if l1 then IsImmediate(l1)) then ((l2 - (l2 mod 1440)) + (l1 mod 1440)) else (l2 - (l2 mod 1440))))
+			end)
+	end,
+	QuitFilter: func() begin
+		(if (if (not validDate) then target.(path)) then begin
+				target.(path) := nil;
+				GetRoot():Notify(3, "Date Entry", "The date you entered is invalid and has been erased.")
+			end)
+	end,
+	picker: func() begin
+		@datePopup:New((if (if target.(path) then (not IsRichString(target.(path)))) then [Array: target.(path)]), self:GlobalLabelBounds(), self)
+	end,
+	pickActionScript: func(a1) begin
+		if target then begin
+				target.(path) := a1[0];
+				baseLine:Retarget()
+			end;
+		baseLine:hilite(nil)
+	end
+};

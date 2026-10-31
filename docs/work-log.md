@@ -9,6 +9,54 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-31: romsrc/ in its natural form
+
+The owner asked for the NewtonScript source the default boot is built
+from to read more naturally, to help with customising it later; they
+chose all four of: functions in their frames, real names, constants by
+name, and a directory per kind of thing, and let the tree stop building
+the ROM's bytes (the tag `romsrc-rom` keeps the proof).  It did not need
+to: `tools/newton-rom/analysis/naturalize.py` rewrote the tree once and
+the result builds the same object file byte for byte.
+
+- **Functions in their frames.**  The 5,482 files of `functions/` (and
+  the part trees') are gone: each is written where it is used,
+  `slot: func(...) begin ... end`, or `compile(constants: {...}, options:
+  "...", source)` for the records with constants of their own, compiler
+  options or a value rather than a func.  The Reader takes NewtonScript
+  to the end of its expression (`code_extent`); comments are kept.  Five
+  function files no definition used (functions `same()` takes from the
+  ones that share them) went with the directory.
+- **Names.**  857 of the 873 magic pointers are named by the ROM's
+  R-constants that are magic pointers (`ROMConstants.cpp`), spelt as the
+  ROM spells them - only 110 are - or cut into the words of the ROM's
+  and the DDK headers' camel-case names (`protoperiodicalarmeditor` ->
+  `protoPeriodicAlarmEditor`; the ROM itself spells one
+  `ProToadDressPicker`, so a spelling that starts with a capital where
+  the name does not is not taken).  The R-constants name 170 more; the
+  rest take a name from what they say of themselves (`preallocatedContext`,
+  `symbol`, a string's words) or what holds them, an export with neither
+  its index in the export table (`export27`).  `@name` works in the
+  objects and in functions (`magic.tsv`'s object, or its other names).
+  `renames.tsv` keeps every old name; `romsrc.py rename` renames one,
+  layout, magic table and `@`s included (a definition's name is how the
+  layout knows it).
+- **Constants.**  1,552 integers of `viewFlags`, `viewJustify`,
+  `viewFormat`, `viewClass` and font slots are sums of `constants.tsv`'s
+  (from `views/ViewFlags.h`, and `tsSystem + tsSize(9) + tsBold` for the
+  packed font specs), where the number is exactly such a sum.
+- **Files.**  A file per root object and what only it reaches (a
+  dominator tree over the definitions), in `objects/apps|protos|newtapp|
+  canonical|slips|views|pictures|sounds|soups|recognition|system/`;
+  `values.ns`, and `shared/` for what several roots reach.
+- **The builder** reads both forms; two changes made the proof
+  possible: the objects new to the layout are ordered by their
+  definition's address in the layout rather than their path's text, and
+  the maps it makes are numbered in that order - both had followed the
+  names.  Ctest `tools.ROMSourceNotation`; `newtonstore.py`, edit-test,
+  the font and table tests read `objects/`'s subdirectories and a
+  definition written a slot to a line.
+
 ## 2026-10-25: the Host page opened on the T-Deck Pro again (a Screen page)
 
 The owner's report: on the T-Deck the Prefs Host page did not work.  A tap

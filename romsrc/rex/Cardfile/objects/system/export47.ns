@@ -1,0 +1,33 @@
+// export47, and what only it reaches
+
+export47 := {
+	viewBounds: nil,
+	path: nil,
+	textChanged: func() begin
+		(if StrFilled(entryLine.text) then begin
+				if (not target) then begin
+						target := {}
+					end;
+				if (not target.(path)) then begin
+						target.(path) := {}
+					end;
+				target.(path).label := entryLine:GetRichString();
+				(lastChanged := path)
+			end)
+	end,
+	textSetup: func() begin
+		entryLine.viewFormat := framer;
+		AddDeferredCall(functions.SetKeyView, [Array: self.entryLine, 99999]);
+		(if (if target then target.(path)) then target.(path).label else "")
+	end,
+	Setup1: func(a1) begin
+		label
+	end,
+	Setup2: func(a1) begin
+		(if (if a1 then a1.(path)) then a1.(path).label else "")
+	end,
+	label: "•",
+	viewFormat: vfFillWhite + vfInset(3),
+	framer: 143664,
+	_proto: @protoRichLabelInputLine
+};

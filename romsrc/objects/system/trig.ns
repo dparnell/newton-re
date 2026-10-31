@@ -1,0 +1,3 @@
+// trig, and what only it reaches
+
+trig := texttable('Trigrams, "resources/Trigrams/5ba4b1.txt");

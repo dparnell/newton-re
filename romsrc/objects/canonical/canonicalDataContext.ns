@@ -1,0 +1,3 @@
+// canonicalDataContext, and what only it reaches
+
+canonicalDataContext := {_proto: nil, _parent: nil, viewCObject: nil, realData: nil};

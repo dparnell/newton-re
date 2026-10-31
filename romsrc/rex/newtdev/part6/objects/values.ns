@@ -1,0 +1,9 @@
+// the plain values the magic pointers and the C code name
+
+thereIsNotEnough := "There is not enough memory or system resources available. Try closing applications or resetting your Newton device.";
+
+anErrorOccurredTry := "An error occurred. Try reloading the device driver. If the problem persists, contact the device driver developer.";
+
+anErrorOccurredClose := "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.";
+
+aProblemOccurredWith := "A problem occurred with your device.";

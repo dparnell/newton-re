@@ -1,0 +1,29 @@
+// assistBitmap, and what only it reaches
+
+assistBitmap := {
+	unhilited: {
+		bounds: unhilitedBounds_28,
+		mask: bitmap('mask, "resources/mask/5446e1.png", "000000000004000000000000001b0019", 1),
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/5447f1.png", "000000000010000000000000001b0019", 4),
+				bitdepth: 4
+			},
+			{cbits: colordataCbits_28, bitdepth: 1}
+		]
+	},
+	hilited: {
+		bounds: {left: 0, top: 0, right: 25, bottom: 27},
+		mask: bitmap('mask, "resources/mask/544395.png", "000000000004000000000000001b0019", 1),
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/5444a5.png", "000000000010000000000000001b0019", 4),
+				bitdepth: 4
+			},
+			{
+				cbits: bitmap('bits, "resources/bits/54441d.png", "000000000004000000000000001b0019", 1),
+				bitdepth: 1
+			}
+		]
+	}
+};

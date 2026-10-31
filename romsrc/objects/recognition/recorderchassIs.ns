@@ -1,0 +1,79 @@
+// recorderchassIs, and what only it reaches
+
+recorderchassIs := {
+	_proto: @recorderEngine,
+	userConfigChangeSym: nil,
+	Init: func() begin
+		inherited:?Init();
+		self.userConfigChangeSym := Intern(Stringer([Array: "RecorderChassis.", viewCObject]));
+		RegUserConfigChange(userConfigChangeSym, func(a1) begin
+			self:HandleConfigChange(a1)
+		end)
+	end,
+	Done: func() begin
+		inherited:?Done();
+		UnRegUserConfigChange(userConfigChangeSym)
+	end,
+	HandleConfigChange: func(a1) begin
+		(if (a1 = 'inputDevice) then self:SetState(fSoundState))
+	end,
+	SetState: func(a1) begin
+		local l1, l2;
+		l1 := fSoundState;
+		l2 := self:HasSoundFrames();
+		inherited:SetState(a1);
+		if (recordButton exists) then begin
+				recordButton:SetState(l1, a1, l2)
+			end;
+		if (playButton exists) then begin
+				playButton:SetState(l1, a1, l2)
+			end;
+		(if (statusText exists) then statusText:SetState(l1, a1, l2))
+	end,
+	PlayCompletion: func(a1, a2) begin
+		inherited:PlayCompletion(a1, a2);
+		(if self:TestState(1) then begin
+				self:FastForward();
+				RefreshViews();
+				self:Rewind()
+			end)
+	end,
+	record: func() begin
+		if (if (not self:TestState(16)) then SoundProgressSlider) then begin
+				SoundProgressSlider:ResetSlider()
+			end;
+		(if (if inherited:record() then SoundProgressSlider) then begin
+				SoundProgressSlider:SetRecordStart();
+				AddDelayedSend(base, 'UpdateSlider, [Array: ], 1000);
+				AddDelayedSend(base, 'FlushVBO, [Array: ], 200)
+			end)
+	end,
+	RecordCompletion: func(a1, a2) begin
+		inherited:RecordCompletion(a1, a2);
+		(if self:TestState(1) then self:Rewind())
+	end,
+	play: func() begin
+		if (if (not self:TestState(8)) then SoundProgressSlider) then begin
+				SoundProgressSlider:ResetSlider()
+			end;
+		(if (if inherited:play() then SoundProgressSlider) then begin
+				SoundProgressSlider:SetPlayStart(self:GetPlayingTime());
+				AddDelayedSend(base, 'UpdateSlider, [Array: ], 1000)
+			end)
+	end,
+	pause: func() begin
+		(if (if inherited:pause() then SoundProgressSlider) then SoundProgressSlider:PauseSlider())
+	end,
+	Rewind: func() begin
+		inherited:Rewind();
+		(if SoundProgressSlider then SoundProgressSlider:ResetSlider())
+	end,
+	FastForward: func() begin
+		inherited:FastForward();
+		(if SoundProgressSlider then SoundProgressSlider:SlideToRight())
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+Rewind_code := same("recorderchassIs.Rewind.instructions");

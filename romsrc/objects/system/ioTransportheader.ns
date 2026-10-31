@@ -1,0 +1,82 @@
+// ioTransportheader, and what only it reaches
+
+ioTransportheader := {
+	viewClass: clView,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 32},
+	viewJustify: vjCenterV + vjParentFullH,
+	viewFlags: vVisible + vClipping + vClickable,
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	viewFormat: 0,
+	infoSlip: nil,
+	routeSlip: nil,
+	debug: "TransportTitle",
+	viewQuitScript: func() begin
+		if (infoSlip <> nil) then begin
+				infoSlip:Close();
+				infoSlip := nil
+			end;
+		(if (routeSlip <> nil) then begin
+				routeSlip:Close();
+				(routeSlip := nil)
+			end)
+	end,
+	InfoChanged: func(a1) begin
+		if a1 then begin
+				layout:FlushData();
+				title:viewUpdateFormScript()
+			end;
+		(infoSlip := nil)
+	end,
+	preallocatedContext: 'transportheader,
+	viewChildren: [viewChildren:
+		{
+			viewBounds: {left: 0, top: 0, right: 32, bottom: 20},
+			viewFormat: 0,
+			icon: nil,
+			viewSetupFormScript: func() begin
+				icon := transport.icon;
+				(_titleKeyButton := self)
+			end,
+			buttonClickScript: func() begin
+				(if infoSlip then begin
+						infoSlip:Close();
+						(infoSlip := nil)
+					end else (if (if transport then transport.transportInfoForm) then begin
+							layout:FlushData();
+							(infoSlip := transport.transportInfoForm:New(target, transport, self:GlobalBox(), self))
+						end else self:Notify(3, "InOut Box", "No Information Available")))
+			end,
+			viewQuitScript: func() begin
+				(_titleKeyButton := nil)
+			end,
+			debug: 381876,
+			_proto: @protoPictureButton
+		},
+		title_3
+	],
+	title: nil,
+	allocateContext: [|Array|: 'title, title_3]
+};
+
+title_3 := {
+	viewClass: clView,
+	viewBounds: {left: 37, top: 0, right: 0, bottom: 0},
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	viewFlags: vVisible + vClipping,
+	bits: nil,
+	viewSetupFormScript: func() begin
+		(if target then (bits := transport:GetTitleInfoShape(target, self:LocalBox())))
+	end,
+	viewUpdateFormScript: func() begin
+		(if target then SetValue(self, 'bits, transport:GetTitleInfoShape(target, self:LocalBox())))
+	end,
+	viewDrawScript: func() begin
+		(if bits then self:DrawShape(bits, '{transferMode: 0, penPattern: 0, fillPattern: 1}))
+	end,
+	preallocatedContext: 'title
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewDrawScript_literal1_2 := same("title_3.viewDrawScript.literals[1]");

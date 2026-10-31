@@ -1,0 +1,184 @@
+// restorePrefsSlip, and what only it reaches
+
+restorePrefsSlip := {
+	_proto: @prefsSlipProto,
+	viewBounds: {left: 0, top: 0, right: 220, bottom: 220},
+	whoAmI: 'openRestorePrefsSlip,
+	titleText: "Restore:",
+	prefsSlot: 'restoreType,
+	prefsArray: 'restoreSoups,
+	pkgNames: nil,
+	viewSetupFormScript: func() begin
+		local l1, l2, l3;
+		if (l1 := godParent.backupCursor) then begin
+				(l1 := l1:clone()):Reset();
+				self.soupNameList := godParent:getRestoreApplicationNames(l1)
+			end else begin
+				self.soupNameList := '[Array: ]
+			end;
+		self:getPkgNamesFromBackup();
+		l2 := Length(pkgNames);
+		l3 := GetAppParams().appAreaHeight;
+		if ((l2 = 0) or (l3 > 240)) then begin
+				scrollList.viewBounds := SetBounds(18, 5, -18, 97);
+				if (l2 = 0) then begin
+						self.viewBounds := SetBounds(0, 0, 220, 150)
+					end else begin
+						self.viewBounds := SetBounds(0, 0, 220, 250)
+					end
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	getPkgNamesFromBackup: func() begin
+		local tempPkgNames;
+		local l1, l2;
+		tempPkgNames := [Array: ];
+		if (l2 := godParent:getDestStore():GetSoup("BACKUP_Packages")) then begin
+				tempPkgNames := GetBackedUpPackageNames(l2)
+			end;
+		if (l1 := godParent.backupCursor:clone()) then begin
+				l1:Reset();
+				MapCursor(l1, func(a1) begin
+					(if (if (a1.package or a1.segmentedPackage) then (not a1.patches)) then AddArraySlot(tempPkgNames, a1.name))
+				end)
+			end;
+		(self.pkgNames := tempPkgNames)
+	end,
+	viewChildren: [viewChildren:
+		information,
+		scrollList,
+		prefsSlipProtoItem,
+		{
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			viewBounds: {left: 7, top: 7, right: 7, bottom: 20},
+			viewFont: @fontSystem10Bold,
+			text: extrasSoupName,
+			viewSetupDoneScript: func() begin
+				(if (Length(pkgNames) = 0) then self:Hide())
+			end,
+			_proto: @protoStaticText
+		},
+		packageList,
+		{
+			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingBottomV,
+			viewBounds: {left: 0, top: 7, right: 36, bottom: 20},
+			text: all,
+			buttonClickScript: func() begin
+				local l1;
+				if (not (l1 := packageList).checkAll) then begin
+						prefsCache.restorePackages := 'all
+					end else begin
+						prefsCache.restorePackages := 'Partial;
+						prefsCache.restorePackNames := [Array: ]
+					end;
+				l1.checkAll := (not l1.checkAll);
+				EntryChangeXmit(prefsCache, 'backup);
+				l1:figureAllItems();
+				l1:RedoChildren()
+			end,
+			_proto: @protoTextButton
+		},
+		{_proto: @protoCancelButton},
+		_defaultButton_9
+	],
+	packageList: nil,
+	allocateContext: [|Array|: 'scrollList, scrollList, 'packageList, packageList, '_defaultButton, _defaultButton_9],
+	_defaultButton: nil
+};
+
+packageList := {
+	viewFlags: vVisible + vClipping + vClickable,
+	viewFormat: vfFrameBlack + vfPen(2),
+	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjSiblingBottomV,
+	viewBounds: {left: 18, top: 5, right: -18, bottom: 67},
+	useMultipleSelections: true,
+	useScrollers: true,
+	checkAll: nil,
+	prefsArray: 'restorePackNames,
+	viewSetupFormScript: func() begin
+		inherited:?viewSetupFormScript();
+		if (Length(pkgNames) > 0) then begin
+				self:figureAllItems()
+			end else begin
+				self.ListItems := '[Array: ];
+				self.selectedItems := '[Array: ]
+			end;
+		self.checkAll := (prefsCache.restorePackages = 'all);
+		self:SetupList()
+	end,
+	viewSetupDoneScript: func() begin
+		(if (Length(pkgNames) = 0) then self:Hide())
+	end,
+	HiliteLine: func(a1) begin
+		if (prefsCache.restorePackages = 'all) then begin
+				prefsCache.restorePackages := 'Partial
+			end;
+		inherited:HiliteLine(a1);
+		(if (Length(selectedItems) = Length(ListItems)) then (checkAll := true) else (checkAll := nil))
+	end,
+	viewQuitScript: func() begin
+		if (Length(pkgNames) > 0) then begin
+				self:stashItems(pkgNames)
+			end else begin
+				prefsCache.restorePackages := 'Partial;
+				prefsCache.restorePackNames := [Array: ]
+			end;
+		EntryChangeXmit(prefsCache, 'backup)
+	end,
+	figureAllItems: func() begin
+		l5 := (self.ListItems := pkgNames);
+		(if (prefsCache.restorePackages = 'all) then begin
+				l2 := Length(l5);
+				l6 := (self.selectedItems := Array(l2, nil));
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				local l5;
+				local l6;
+				(if (l2 > 0) then (for l1 := 0 to (l2 - 1) do begin
+							l6[l1] := l1
+						end))
+			end else begin
+				l6 := (self.selectedItems := [Array: ]);
+				(foreach l3 in prefsCache.restorePackNames do begin
+						if (l4 := LSearch(l5, l3, 0, '|str=|, nil)) then begin
+								AddArraySlot(l6, l4)
+							end
+					end)
+			end)
+	end,
+	stashItems: stashItems,
+	preallocatedContext: 'packageList,
+	_proto: @protoTextList
+};
+
+_defaultButton_9 := {
+	text: restore,
+	viewBounds: {left: -53, top: 0, right: -6, bottom: 0},
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV,
+	buttonClickScript: func() begin
+		result := ModalConfirm("Restore will replace the information on your Newton device with the information in the backup and then will restart. Are you sure you want to do this?", '[Array: {value: some, text: "Restore"}, {value: Cancel, text: "Cancel", keyValue: default}]);
+		(if (if Visible(self:Parent()) then (result <> 'Cancel)) then begin
+				if (prefsCache.(prefsSlot) = 'Partial) then begin
+						scrollList:stashItems(soupNameList)
+					end;
+				if prefsCache.restorePackages then begin
+						packageList:stashItems(pkgNames)
+					end;
+				AddDeferredCall(func() begin
+					godParent:doRestore(result);
+					self:hilite(nil)
+				end, '[Array: ])
+			end else self:hilite(nil))
+	end,
+	preallocatedContext: '_defaultButton,
+	_proto: @protoTextButton
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+getPkgNamesFromBackup_literal2 := same("restorePrefsSlip.getPkgNamesFromBackup.literals[2]");
+
+viewSetupDoneScript_code_14 := same("packageList.viewSetupDoneScript.instructions");

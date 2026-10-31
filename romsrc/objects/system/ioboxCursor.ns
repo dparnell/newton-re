@@ -1,0 +1,3 @@
+// ioboxCursor, and what only it reaches
+
+ioboxCursor := {};

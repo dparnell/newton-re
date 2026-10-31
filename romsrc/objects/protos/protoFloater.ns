@@ -1,0 +1,9 @@
+// protoFloater, and what only it reaches
+
+protoFloater := {
+	_proto: @protoDragger,
+	viewFlags: vFloating + vClickable,
+	viewJustify: vjParentCenterH,
+	viewEffect: 236577,
+	debug: 181520
+};

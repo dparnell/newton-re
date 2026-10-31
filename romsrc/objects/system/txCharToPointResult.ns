@@ -1,0 +1,3 @@
+// txCharToPointResult, and what only it reaches
+
+txCharToPointResult := {x: nil, y: nil, lineHeight: nil};

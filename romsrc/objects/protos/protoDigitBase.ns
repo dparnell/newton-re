@@ -1,0 +1,27 @@
+// protoDigitBase, and what only it reaches
+
+protoDigitBase := {
+	viewClass: clPictureView,
+	viewFlags: vVisible,
+	viewFormat: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewJustify: vjParentFullH + vjParentFullV,
+	declareSelf: 'digitBase,
+	icon: nil,
+	JamIt: func(a1) begin
+		(if (value <> a1) then begin
+				if (a1 < minValue) then begin
+						value := minValue
+					end else begin
+						if (a1 > maxValue) then begin
+								value := maxValue
+							end else begin
+								value := a1
+							end
+					end;
+				(foreach l1 in self:ChildViewFrames() do begin
+						l1:?Update()
+					end)
+			end)
+	end
+};

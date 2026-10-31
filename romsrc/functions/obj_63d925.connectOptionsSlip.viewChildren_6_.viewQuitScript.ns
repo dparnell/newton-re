@@ -1,9 +1,0 @@
-@@ 0x59ff7d
-func() begin
-	if ValidateSlip then begin
-			ValidateSlip:Close()
-		end;
-	inherited:?viewQuitScript();
-	(spasticUser := nil)
-end
-@@end

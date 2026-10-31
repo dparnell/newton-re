@@ -1,0 +1,3 @@
+// canonicalCharGrid, and what only it reaches
+
+canonicalCharGrid := {boxLeft: nil, boxRight: nil, xSpace: nil, boxTop: nil, boxBottom: nil, ySpace: nil};

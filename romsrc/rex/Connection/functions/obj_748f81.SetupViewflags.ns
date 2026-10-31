@@ -1,5 +1,0 @@
-@@ 0x749031
-func() begin
-	(if (Length(restoreOptions.packages) = 0) then (self.viewFlags := (viewFlags - 1)))
-end
-@@end

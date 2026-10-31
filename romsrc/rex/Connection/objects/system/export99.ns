@@ -1,0 +1,14 @@
+// export99, and what only it reaches
+
+export99 := {
+	_proto: @8256,
+	speedOption: 9600,
+	useEOP: nil,
+	openOptions: func() begin
+		inherited:openOptions()
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+openOptions_code := same("export99.openOptions.instructions");

@@ -1,5 +1,0 @@
-@@ 0x52ebf5
-func(a1) begin
-	self:SendOption("disc", 'ignore, a1)
-end
-@@end

@@ -1,0 +1,119 @@
+// protoExpandoShell, and what only it reaches
+
+protoExpandoShell := {
+	editWidth: 220,
+	lineIndent: 12,
+	indent: 100,
+	viewQuitScript: func() begin
+		if insert then begin
+				self:CloseEdit(insert)
+			end;
+		(if keys then begin
+				keys:Close();
+				(keys := nil)
+			end)
+	end,
+	ExpandKeys: func(a1) begin
+		SetKeyView(a1, 99999);
+		(if keys then keys:Open())
+	end,
+	viewDrawScript: {class: #132, funcPtr: 7035584, numArgs: 0},
+	target: nil,
+	firstLine: 0,
+	lines: nil,
+	viewFlags: vVisible + vClickable + vGesturesAllowed,
+	viewhandleaddscript: func(a1) begin
+		self:SetLine(0);
+		RefreshViews();
+		SetValue(self:ChildViewFrames()[0].entryLine, 'text, a1.text);
+		nil
+	end,
+	keys: nil,
+	viewBounds: nil,
+	viewKeyDownScript: func(a1, a2) begin
+		local l1;
+		if (a1 = $\t) then begin
+				if (BAnd(a2, 67108864) <> 0) then begin
+						if ((l1 := (split - 1)) < 0) then begin
+								l1 := (numLines - 1)
+							end
+					end else begin
+						if ((l1 := (split + 1)) >= numLines) then begin
+								l1 := 0
+							end
+					end
+			end;
+		if l1 then begin
+				AddDeferredAction(SetLine, [Array: l1])
+			end;
+		l1
+	end,
+	labelStyle: @fontSystem9Bold,
+	lineHeight: 16,
+	empty: empty,
+	writeProtected: nil,
+	dirtyLine: nil,
+	textStyle: 12291,
+	declareSelf: 'expando,
+	viewSetupFormScript: func() begin
+		(if firstLine then self:ExpandLine(firstLine) else (if currentKeyboard then self:ExpandLine(0)))
+	end,
+	split: 99999,
+	ExpandNone: func() begin
+		self:CloseEdit(insert);
+		insert := nil;
+		split := 99999;
+		expando:RedoChildren()
+	end,
+	SetLine: func(a1) begin
+		expando:ExpandLine(a1);
+		expando:RedoChildren()
+	end,
+	viewClickScript: func(a1) begin
+		local l1, l2;
+		(if ((l1 := ((l2 := (GetPoint(1, a1) - expando:GlobalBox().top)) div lineHeight)) >= split) then begin
+				l1 := ((l2 := (l2 - insertHeight)) div lineHeight);
+				(if (if (l2 >= 0) then (l1 >= split)) then begin
+						self:ExpandLine((l1 + 1));
+						expando:RedoChildren();
+						true
+					end)
+			end else begin
+				self:ExpandLine(l1);
+				expando:RedoChildren();
+				true
+			end)
+	end,
+	ExpandLine: func(a1) begin
+		(if (not writeProtected) then (if (a1 < numLines) then begin
+					if insert then begin
+							self:CloseEdit(insert)
+						end;
+					split := a1;
+					if keys then begin
+							keys:Close();
+							keys := nil
+						end;
+					self.insertHeight := (editHeight + 6);
+					(self.insert := {_proto: lines[split], viewBounds: RelBounds(0, (3 + (a1 * lineHeight)), editWidth, editHeight), indent: indent, viewLineSpacing: viewLineSpacing})
+				end))
+	end,
+	viewClass: clView,
+	CloseEdit: func(a1) begin
+		nil
+	end,
+	insert: nil,
+	viewSetupChildrenScript: func() begin
+		if dirtyLine then begin
+				self:FlushEdits()
+			end;
+		dirtyLine := nil;
+		if writeProtected then begin
+				insert := nil;
+				split := 99999
+			end;
+		(if insert then (self.viewChildren := [Array: insert]) else (self.viewChildren := nil))
+	end
+};
+
+empty := "--";

@@ -1,0 +1,236 @@
+// protoRecorderView, and what only it reaches
+
+protoRecorderView := {
+	viewClass: clView,
+	viewFlags: vVisible + vReadOnly,
+	viewFormat: vfFillWhite,
+	viewJustify: 0,
+	viewBounds: {left: 0, top: 0, right: 191, bottom: 23},
+	viewEffect: 165920,
+	notifyTitle: soundRecorder_2,
+	RecordEngine: nil,
+	sounds: nil,
+	elapsedTime: 0,
+	declareSelf: 'base,
+	outsideFrame: shorts('roundrectangle, 0, 0, 23, 191, 6, 6),
+	outsideStyle: {pensize: 2},
+	viewSetupDoneScript: func() begin
+		(if (not sounds) then (RecordEngine := @recorderchassIs:New({_parent: self})) else (RecordEngine := @recorderchassIs:New({_parent: self, fSoundArray: sounds, fDirection: 'play})))
+	end,
+	viewQuitScript: func() begin
+		(if RecordEngine then RecordEngine:Done())
+	end,
+	viewDrawScript: func() begin
+		self:DrawShape(self.outsideFrame, self.outsideStyle)
+	end,
+	viewChangedScript: func(a1, a2) begin
+		(if (a1 = 'sounds) then begin
+				RecordEngine.fSoundArray := self.sounds;
+				RecordEngine:SetState(RecordEngine.fSoundState)
+			end)
+	end,
+	UpdateSlider: func() begin
+		self:EventPause(true);
+		(if RecordEngine:TestState(6) then (if SoundProgressSlider then begin
+					SoundProgressSlider:SetCurrentTime();
+					SetValue(self, 'elapsedTime, SoundProgressSlider:getElapsedTime());
+					AddDelayedSend(base, 'UpdateSlider, [Array: ], 1000)
+				end))
+	end,
+	FlushVBO: func() begin
+		local l1, l2;
+		(if RecordEngine:TestState(6) then begin
+				if ((l1 := (Length(RecordEngine.fSoundArray) - 2)) >= 0) then begin
+						ClearVBOCache((l2 := RecordEngine.fSoundArray[l1]).samples)
+					end;
+				AddDelayedSend(base, 'FlushVBO, [Array: ], 200)
+			end)
+	end,
+	GetSounds: func() begin
+		local l1;
+		(foreach l2 in (l1 := RecordEngine.fSoundArray) do begin
+				l2.callback := nil
+			end);
+		l1
+	end,
+	stop: func() begin
+		stopButton:buttonClickScript()
+	end,
+	play: func() begin
+		playButton:buttonClickScript()
+	end,
+	isActive: func() begin
+		(not RecordEngine:TestState(1))
+	end,
+	viewChildren: [viewChildren: recordButton_2, stopButton_2, playButton_2, SoundProgressSlider_2],
+	recordButton: nil,
+	allocateContext: [|Array|:
+		'recordButton,
+		recordButton_2,
+		'stopButton,
+		stopButton_2,
+		'playButton,
+		playButton_2,
+		'SoundProgressSlider,
+		SoundProgressSlider_2
+	],
+	stopButton: nil,
+	playButton: nil,
+	SoundProgressSlider: nil
+};
+
+playButton_2Icon := {
+	bits: bitmap('bits, "resources/bits/423ee5.png", "000000000004004d004d016a005a0171", 1),
+	bounds: {left: 0, top: 0, right: 7, bottom: 13}
+};
+
+recordButton_2Icon := {
+	bits: bitmap('bits, "resources/bits/424055.png", "000000000004003b003b00420046004d", 1),
+	bounds: {left: 0, top: 0, right: 11, bottom: 11}
+};
+
+recordButton_2Proto := {
+	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2) + vfRound(3),
+	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingCenterV,
+	viewBounds: {left: 2, top: 0, right: 21, bottom: 19},
+	_sound: nil,
+	SetState: func(a1, a2, a3) begin
+		nil
+	end,
+	_proto: @protoPictureButton
+};
+
+recordButton_2 := {
+	_proto: recordButton_2Proto,
+	viewJustify: vjCenterH + vjCenterV,
+	viewBounds: {left: 2, top: 2, right: 21, bottom: 21},
+	icon: recordButton_2Icon,
+	GetIcon: compile(
+		constants: {
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			kLiteral_42409d: {bits: call kBinaryFromHex with ("000000000004003b003b00420046004d0e0000003f8000007fc000007fc00000ffe00000ffe00000ffe000007fc000007fc000003f8000000e000000", 'bits), bounds: '{left: 0, top: 0, right: 11, bottom: 11}},
+			kLiteral_424115: {bits: call kBinaryFromHex with ("0000000000040067006700430072004e150000002a80000055400000aaa0000055400000aaa0000055400000aaa00000554000002a80000015000000", 'bits), bounds: '{left: 0, top: 0, right: 11, bottom: 11}}
+		},
+		func() begin
+			(if (GetUserConfig('inputDevice) <> nil) then kLiteral_42409d else kLiteral_424115)
+		end),
+	viewSetupFormScript: func() begin
+		icon := self:GetIcon();
+		inherited:?viewSetupFormScript()
+	end,
+	buttonClickScript: compile(
+		constants: {
+			kFunction_427f75: func(a1) begin
+				(if a1 then OpenPrefsTo("Recording"))
+			end
+		},
+		func() begin
+			local l1;
+			if (GetUserConfig('inputDevice) = nil) then begin
+					AsyncConfirm("To record, you must pick a recording source from the \u201C\uRecording\u201D\u preference.  Would you like to open the \u201C\uRecording\u201D\u preference now?", 'yesNoDefaultYes, kFunction_427f75);
+					return nil
+				end;
+			if RecordEngine:TestState(1) then begin
+					RecordEngine:SetState(64);
+					RecordEngine:SetState(1)
+				end;
+			if (not RecordEngine:TestState(16)) then begin
+					if ((l1 := RecordEngine:TestStore()) = 3) then begin
+							self:Notify(3, notifyTitle, "Sorry, you must unlock the card before recording.");
+							return nil
+						end;
+					if (l1 = 1) then begin
+							self:Notify(3, notifyTitle, "Sorry, there is not enough memory available for a new recording. The internal memory or storage card is almost full.");
+							return nil
+						end
+				end;
+			(if RecordEngine:TestState(17) then RecordEngine:record() else (if RecordEngine:TestState(2) then RecordEngine:pause() else playsound(@262)))
+		end),
+	SetState: compile(
+		constants: {
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			kLiteral_423fad: {bits: call kBinaryFromHex with ("000000000004004e004e01950059019ee3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000", 'bits), bounds: '{left: 0, top: 0, right: 9, bottom: 11}}
+		},
+		func(a1, a2, a3) begin
+			(if (a2 = 2) then (if (self.icon <> kLiteral_423fad) then SetValue(self, 'icon, kLiteral_423fad)) else (if (self.icon <> self:GetIcon()) then SetValue(self, 'icon, self:GetIcon())))
+		end),
+	preallocatedContext: 'recordButton
+};
+
+stopButton_2 := {
+	_proto: recordButton_2Proto,
+	icon: {
+		bits: bitmap('bits, "resources/bits/423fdd.png", "000000000004004e004e017c00590187", 1),
+		bounds: {left: 0, top: 0, right: 11, bottom: 11}
+	},
+	buttonClickScript: func() begin
+		RecordEngine:stop()
+	end,
+	preallocatedContext: 'stopButton
+};
+
+playButton_2 := {
+	_proto: recordButton_2Proto,
+	icon: playButton_2Icon,
+	buttonClickScript: func() begin
+		(if RecordEngine:TestState(9) then RecordEngine:play() else (if RecordEngine:TestState(4) then RecordEngine:pause() else (if RecordEngine:TestState(2) then begin
+						RecordEngine:stop();
+						RecordEngine:Rewind();
+						RecordEngine:play()
+					end else playsound(@262))))
+	end,
+	SetState: compile(
+		constants: {
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			kLiteral_423fad: {bits: call kBinaryFromHex with ("000000000004004e004e01950059019ee3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000", 'bits), bounds: '{left: 0, top: 0, right: 9, bottom: 11}},
+			kLiteral_423f35: {bits: call kBinaryFromHex with ("000000000004004d004d016a005a0171c0000000e0000000f0000000f8000000fc000000fe000000fe000000fe000000fc000000f8000000f0000000e0000000c0000000", 'bits), bounds: '{left: 0, top: 0, right: 7, bottom: 13}}
+		},
+		func(a1, a2, a3) begin
+			if (a2 = 4) then begin
+					if (self.icon <> kLiteral_423fad) then begin
+							SetValue(self, 'icon, kLiteral_423fad)
+						end
+				end else begin
+					if (self.icon <> kLiteral_423f35) then begin
+							SetValue(self, 'icon, kLiteral_423f35)
+						end
+				end;
+			(if (a2 = 32) then (if (RecordEngine.fEngineError <> 0) then (if (RecordEngine.fEngineError = 1) then self:Notify(3, notifyTitle, "Sorry, the recording was stopped because the internal memory or storage card is almost full.") else self:Notify(3, notifyTitle, "Sorry, the recording was stopped due to an internal error."))))
+		end),
+	preallocatedContext: 'playButton
+};
+
+SoundProgressSlider_2 := {
+	_proto: SoundProgressSlider,
+	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingCenterV,
+	viewBounds: {left: 4, top: 0, right: 124, bottom: 11},
+	preallocatedContext: 'SoundProgressSlider
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+SetState_literal1 := same("recordButton_2.SetState.literals[1]");

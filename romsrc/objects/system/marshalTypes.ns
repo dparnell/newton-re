@@ -1,0 +1,23 @@
+// marshalTypes, and what only it reaches
+
+marshalTypes := {
+	long: 1,
+	uLong: 2,
+	short: 3,
+	byte: 4,
+	boolean: 5,
+	highint: 6,
+	hexlong: 7,
+	splitlong: 8,
+	splitbytelong: 9,
+	struct: 10,
+	|Array|: 11,
+	ref: 12,
+	char: 13,
+	cstring: 14,
+	unicodechar: 15,
+	unicode: 0,
+	asciiencoding: 2,
+	|binary|: 17,
+	|Real|: 18
+};

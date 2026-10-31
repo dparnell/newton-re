@@ -1,0 +1,9 @@
+// protoPrefFrame, and what only it reaches
+
+protoPrefFrame := {
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	viewBounds: nil,
+	stepChildren: nil,
+	viewSetupDoneScript: viewSetupDoneScript,
+	_proto: @protoFloatNGo
+};

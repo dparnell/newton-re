@@ -1,0 +1,91 @@
+// unionSoupPrototype, and what only it reaches
+
+unionSoupPrototype := {
+	_parent: {
+		GetName: {class: #132, funcPtr: 866232, numArgs: 0},
+		GetSize: {class: #132, funcPtr: 6898207, numArgs: 0},
+		collect: {class: #132, funcPtr: 6895020, numArgs: 1},
+		Add: func(a1) begin
+			BadWickedNaughtyNoot(Stringer([Array: "usoup:Add(\"", self:GetName(), "\")"]), 'discontinued);
+			self:AddToStore(a1, GetStores()[0])
+		end,
+		HasTags: func() begin
+			local l1, l2, l3;
+			if ((l1 := Length(self.soupList)) <> 0) then begin
+					(repeat l1 := (l1 - 1); if (not self.soupList[l1]:HasTags()) then begin
+								return nil
+							end until (l1 = 0));
+					return true
+				end;
+			if (l2 := GetSoupDef(self:GetName())) then begin
+					if (l3 := l2.indexes) then begin
+							l1 := Length(l3);
+							(while (l1 > 0) do begin
+									l1 := (l1 - 1);
+									(if (l3[l1].type = 'tags) then return true)
+								end)
+						end
+				end;
+			nil
+		end,
+		AddToStore: func(a1, a2) begin
+			self:GetMember(a2):Add(a1)
+		end,
+		AddToStoreXmit: func(a1, a2, a3) begin
+			local l1;
+			l1 := self:AddToStore(a1, a2);
+			if a3 then begin
+					XmitSoupChange(self:GetName(), a3, 'entryAdded, a1)
+				end;
+			l1
+		end,
+		GetMember: func(a1) begin
+			local l1, l2;
+			if (not (l2 := a1:GetSoup((l1 := self:GetName())))) then begin
+					l2 := CreateUSoupMember(l1, a1)
+				end;
+			l2
+		end,
+		AddFlushedXmit: func(a1, a2) begin
+			self:AddToStoreFlushedXmit(a1, GetDefaultStore(), a2)
+		end,
+		AddTags: {class: #132, funcPtr: 6898206, numArgs: 1},
+		AddTagsXmit: AddTagsXmit,
+		AddToStoreFlushedXmit: func(a1, a2, a3) begin
+			self:GetMember(a2):AddFlushedXmit(a1, a3)
+		end,
+		AddIndex: {class: #132, funcPtr: 6915108, numArgs: 1},
+		AddIndexXmit: AddIndexXmit,
+		GetTags: {class: #132, funcPtr: 6897121, numArgs: 0},
+		ModifyTag: {class: #132, funcPtr: 6899232, numArgs: 2},
+		RemoveTags: {class: #132, funcPtr: 6899233, numArgs: 1},
+		ModifyTagXmit: ModifyTagXmit,
+		RemoveTagsXmit: RemoveTagsXmit,
+		GetSoupList: func() begin
+			Clone(self.soupList)
+		end,
+		AddToDefaultStore: func(a1) begin
+			self:AddToStore(a1, GetDefaultStore())
+		end,
+		AddToDefaultStoreXmit: func(a1, a2) begin
+			local l1;
+			l1 := self:AddToDefaultStore(a1);
+			if a2 then begin
+					XmitSoupChange(self:GetName(), a2, 'entryAdded, a1)
+				end;
+			l1
+		end,
+		RemoveIndex: {class: #132, funcPtr: 6915110, numArgs: 1},
+		RemoveIndexXmit: RemoveIndexXmit,
+		Query: {class: #132, funcPtr: 6895019, numArgs: 1},
+		NaughtyFlush: {class: #132, funcPtr: 6915109, numArgs: 0},
+		flush: func() begin
+			BadWickedNaughtyNoot(Stringer([Array: "usoup:Flush(\"", self:GetName(), "\")"]), 'discontinued);
+			self:NaughtyFlush()
+		end
+	},
+	class: 'UnionSoup,
+	soupList: nil,
+	theName: nil,
+	cursors: nil
+};

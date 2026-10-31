@@ -1,0 +1,22 @@
+// protoTimeDeltaTextPicker, and what only it reaches
+
+protoTimeDeltaTextPicker := {
+	viewBounds: nil,
+	label: "ﰁOffset",
+	Time: nil,
+	increment: 1,
+	minValue: nil,
+	Popit: func(a1) begin
+		local l1;
+		(l1 := self:GlobalBox()).right := (l1.left + a1);
+		@timeDeltaPopup:New(Time, {increment: increment, minValue: minValue}, l1, self)
+	end,
+	TextSetup: func() begin
+		Stringer([Array: (if (Time < 0) then $-), TimerToString(abs(Time))])
+	end,
+	pickActionScript: func(a1) begin
+		Time := a1;
+		inherited:pickActionScript(a1)
+	end,
+	_proto: @protoTextPicker
+};

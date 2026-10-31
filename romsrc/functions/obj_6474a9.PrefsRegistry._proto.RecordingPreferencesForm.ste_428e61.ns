@@ -1,5 +1,0 @@
-@@ 0x428e61
-func() begin
-	SetUserConfig('inputGain, viewValue)
-end
-@@end

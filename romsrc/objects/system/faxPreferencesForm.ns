@@ -1,0 +1,8 @@
+// faxPreferencesForm, and what only it reaches
+
+faxPreferencesForm := {
+	icon: {
+		bits: bitmap('bits, "resources/bits/5b4655.png", "00000000000400a200a2006c00ac007d", 1),
+		bounds: {left: 0, top: 0, right: 17, bottom: 10}
+	}
+};

@@ -1,8 +1,0 @@
-@@ 0x1014629
-func() begin
-	RemoveSlot(self, 'viewFlags);
-	originalATLink := nil;
-	originalATDevice := nil;
-	inherited:?viewQuitScript()
-end
-@@end

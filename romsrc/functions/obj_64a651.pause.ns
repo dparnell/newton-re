@@ -1,5 +1,0 @@
-@@ 0x4264e9
-func() begin
-	(if (if inherited:pause() then SoundProgressSlider) then SoundProgressSlider:PauseSlider())
-end
-@@end

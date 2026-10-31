@@ -1,0 +1,72 @@
+// export158, and what only it reaches
+
+export158 := {
+	viewBounds: {left: 0, top: 5, right: 240, bottom: 20},
+	viewFormat: vfPen(1),
+	stepChildren: [stepChildren:
+		{
+			viewBounds: {left: 0, top: 3, right: 70, bottom: 17},
+			viewSetupFormScript: func() begin
+				if (label exists) then begin
+						self.text := label
+					end;
+				(if (labelFont exists) then (self.viewFont := labelFont))
+			end,
+			viewJustify: 8388608,
+			viewFormat: vfPen(1),
+			viewFont: viewFont,
+			_proto: @protoStaticText
+		},
+		export158Item
+	],
+	viewJustify: vjParentCenterH + vjParentBottomV + vjSiblingBottomV,
+	TextLength: func() begin
+		(if vInputLine.text then StrLen(vInputLine.text) else 0)
+	end,
+	SetText: func(a1) begin
+		SetValue(vInputLine, 'text, a1)
+	end,
+	declareSelf: 'inputBase,
+	GetText: func() begin
+		vInputLine.text
+	end,
+	viewFlags: vVisible + vClickable,
+	viewClass: clView,
+	vInputLine: nil,
+	stepAllocateContext: [|Array|: 'vInputLine, export158Item]
+};
+
+export158Item := {
+	viewBounds: {left: 5, top: 1, right: 160, bottom: 17},
+	viewFormat: vfPen(1) + vfLinesGray + vfInset(3),
+	viewJustify: 8389664,
+	viewSetupFormScript: func() begin
+		self.text := text;
+		self.viewLineSpacing := fontHeight(viewFont);
+		inherited:?viewSetupFormScript()
+	end,
+	TextLength: func() begin
+		(if self.text then StrLen(self.text) else 0)
+	end,
+	viewChangedScript: func(a1, a2) begin
+		self:?textChanged()
+	end,
+	viewFont: tsFancy + tsSize(12),
+	viewFlags: vVisible + vClickable + vGesturesAllowed,
+	_proto: @protoInputLine,
+	preAllocatedContext: 'vInputLine
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_2 := same("export158.stepChildren[0].viewSetupFormScript.instructions");
+
+viewSetupFormScript_code_3 := same("export158Item.viewSetupFormScript.instructions");
+
+TextLength_code := same("export158Item.TextLength.instructions");
+
+viewChangedScript_code := same("export158Item.viewChangedScript.instructions");
+
+SetText_code := same("export158.SetText.instructions");
+
+GetText_code := same("export158.GetText.instructions");

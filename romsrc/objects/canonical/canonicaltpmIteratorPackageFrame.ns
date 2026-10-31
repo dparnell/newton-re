@@ -1,0 +1,12 @@
+// canonicaltpmIteratorPackageFrame, and what only it reaches
+
+canonicaltpmIteratorPackageFrame := {
+	id: nil,
+	size: nil,
+	store: nil,
+	pssid: nil,
+	title: nil,
+	version: nil,
+	timestamp: nil,
+	copyprotection: nil
+};

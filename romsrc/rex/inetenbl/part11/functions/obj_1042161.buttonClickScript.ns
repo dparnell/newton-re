@@ -1,7 +1,0 @@
-@@ 0x10421d1
-func() begin
-	slip.how := 'connect;
-	slip:animateSend();
-	slip:Close()
-end
-@@end

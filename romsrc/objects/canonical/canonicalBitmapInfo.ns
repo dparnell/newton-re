@@ -1,0 +1,14 @@
+// canonicalBitmapInfo, and what only it reaches
+
+canonicalBitmapInfo := {
+	bits: nil,
+	bitsBounds: nil,
+	bounds: nil,
+	depth: nil,
+	resolution: nil,
+	rowbytes: nil,
+	scanOffset: nil,
+	store: nil,
+	compandername: nil,
+	companderdata: nil
+};

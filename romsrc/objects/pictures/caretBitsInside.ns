@@ -1,0 +1,3 @@
+// caretBitsInside, and what only it reaches
+
+caretBitsInside := bitmap('bits, "resources/bits/46e275.png", "00000000000401740174028f017e0298", 1);

@@ -1,0 +1,9 @@
+// click, and what only it reaches
+
+click := {
+	sndFrameType: 'simpleSound,
+	samplingRate: samplingRate_3,
+	dataType: 8,
+	compressionType: 0,
+	samples: samples
+};

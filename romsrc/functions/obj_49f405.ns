@@ -1,5 +1,0 @@
-@@ 0x49f405
-func() begin
-	{class: 'ioItem, timestamp: Time()}
-end
-@@end

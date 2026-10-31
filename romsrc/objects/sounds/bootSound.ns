@@ -1,0 +1,110 @@
+// bootSound, and what only it reaches
+
+bootSound := {
+	sndFrameType: 'codec,
+	codecName: tDTMFCodec,
+	dataType: 16,
+	bufferSize: 6400,
+	bufferCount: 4,
+	compressionType: 6,
+	samplingRate: 21600,
+	samples: tonescore('samples, {version: 1, algorithm: 1, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 261,
+			fraction: 41026,
+			peak: 7000,
+			delay: 0,
+			attack: 1,
+			decay: 20,
+			hold: 1500,
+			release: 1300,
+			sustain: 8000,
+			tail: 0
+		},
+		{
+			frequency: 261,
+			fraction: 41026,
+			peak: 150,
+			delay: 0,
+			attack: 1,
+			decay: 20,
+			hold: 1000,
+			release: 1300,
+			sustain: 300,
+			tail: 0
+		},
+		{
+			frequency: 329,
+			fraction: 41157,
+			peak: 7000,
+			delay: 50,
+			attack: 1,
+			decay: 20,
+			hold: 1500,
+			release: 1200,
+			sustain: 8000,
+			tail: 0
+		},
+		{
+			frequency: 329,
+			fraction: 41157,
+			peak: 150,
+			delay: 50,
+			attack: 1,
+			decay: 20,
+			hold: 1000,
+			release: 1200,
+			sustain: 300,
+			tail: 0
+		},
+		{
+			frequency: 391,
+			fraction: 65208,
+			peak: 7000,
+			delay: 100,
+			attack: 1,
+			decay: 20,
+			hold: 1500,
+			release: 1100,
+			sustain: 8000,
+			tail: 0
+		},
+		{
+			frequency: 391,
+			fraction: 65208,
+			peak: 150,
+			delay: 100,
+			attack: 1,
+			decay: 20,
+			hold: 1000,
+			release: 1100,
+			sustain: 300,
+			tail: 0
+		},
+		{
+			frequency: 523,
+			fraction: 16450,
+			peak: 7000,
+			delay: 150,
+			attack: 1,
+			decay: 20,
+			hold: 1500,
+			release: 1000,
+			sustain: 8000,
+			tail: 0
+		},
+		{
+			frequency: 523,
+			fraction: 16450,
+			peak: 150,
+			delay: 150,
+			attack: 1,
+			decay: 20,
+			hold: 1000,
+			release: 1000,
+			sustain: 300,
+			tail: 0
+		}
+	]),
+	userName: "Chord"
+};

@@ -1,0 +1,262 @@
+// export114, and what only it reaches
+
+export114 := {
+	GetConversionFactor: func() begin
+		local l1;
+		if (curMeasurement = 0) then begin
+				l1 := lengthTable
+			end else begin
+				if (curMeasurement = 1) then begin
+						l1 := areaTable
+					end else begin
+						if (curMeasurement = 2) then begin
+								l1 := weightTable
+							end else begin
+								if (curMeasurement = 3) then begin
+										l1 := USLiquidTable
+									end else begin
+										if (curMeasurement = 4) then begin
+												l1 := BritishLiquidTable
+											end
+									end
+							end
+					end
+			end;
+		return l1[Metric:GetPickerItemNumber()][US:GetPickerItemNumber()]
+	end,
+	viewSetupDoneScript: func() begin
+		AddArraySlot((FSViews := [Array: ]), US);
+		AddArraySlot(FSViews, Metric);
+		self:InitFieldBasedOnMeasurement();
+		inherited:?viewSetupDoneScript()
+	end,
+	USLiquidTable: [|Array|:
+		[|Array|:
+			real('|Real|, 29.573),
+			real('|Real|, 473.176),
+			real('|Real|, 946.35),
+			real('|Real|, 3785.4)
+		],
+		[|Array|:
+			real('|Real|, 0.029573),
+			real('|Real|, 0.473176),
+			real('|Real|, 0.94635),
+			real('|Real|, 3.7854)
+		]
+	],
+	areaTable: [|Array|:
+		[|Array|:
+			real('|Real|, 6.4516),
+			real('|Real|, 929.03),
+			real('|Real|, 8361.27),
+			real('|Real|, 40468564.21)
+		],
+		[|Array|:
+			real('|Real|, 0.00064516),
+			real('|Real|, 0.092903),
+			real('|Real|, 0.836127),
+			real('|Real|, 4046.856421)
+		],
+		[|Array|:
+			real('|Real|, 6.4516e-08),
+			real('|Real|, 9.2903e-06),
+			real('|Real|, 8.36127e-05),
+			real('|Real|, 0.4046856421)
+		]
+	],
+	viewQuitScript: func() begin
+		local l1;
+		(l1 := self:GetFormulaValues()).(formulaSymbol).measurement := curMeasurement;
+		l1.(formulaSymbol).USItem := US:GetPickerItemNumber();
+		l1.(formulaSymbol).MetricItem := Metric:GetPickerItemNumber();
+		inherited:?viewQuitScript()
+	end,
+	MetricDefaults: [|Array|: 1, 2, 1, 1, 1, 0],
+	MetricLabels: [|Array|:
+		[|Array|: "Centimeters", "Meters", "Kilometers"],
+		[|Array|: "Square Cms", "Square Meters", "Hectares"],
+		[|Array|: "Grams", "Kilograms"],
+		[|Array|: milliliters, liters],
+		[|Array|: milliliters, liters],
+		[|Array|: "Celsius"]
+	],
+	InitFieldBasedOnMeasurement: func() begin
+		US:SetIntegerField(nil);
+		Metric:SetIntegerField(nil)
+	end,
+	weightTable: [|Array|:
+		[|Array|:
+			real('|Real|, 28.3495),
+			real('|Real|, 453.59237),
+			real('|Real|, 907184.74),
+			real('|Real|, 1016046.909)
+		],
+		[|Array|:
+			real('|Real|, 0.0283495),
+			real('|Real|, 0.45359237),
+			real('|Real|, 907.18474),
+			real('|Real|, 1016.046909)
+		]
+	],
+	Metric: nil,
+	viewBounds: {left: 0, top: 0, right: 224, bottom: 157},
+	_proto: @8303,
+	formulaSymbol: 'MetricConversion,
+	category: nil,
+	curMeasurement: nil,
+	lengthTable: [|Array|:
+		[|Array|:
+			real('|Real|, 2.54),
+			real('|Real|, 30.48),
+			real('|Real|, 91.44),
+			real('|Real|, 160934.4)
+		],
+		[|Array|:
+			real('|Real|, 0.0254),
+			real('|Real|, 0.3048),
+			real('|Real|, 0.9144),
+			real('|Real|, 1609.344)
+		],
+		[|Array|:
+			real('|Real|, 2.54e-05),
+			real('|Real|, 0.0003048),
+			real('|Real|, 0.0009144),
+			real('|Real|, 1.609344)
+		]
+	],
+	USDefaults: [|Array|: 1, 3, 1, 3, 3, 0],
+	USLabels: [|Array|:
+		[|Array|: "Inches", "Feet", "Yards", "Miles"],
+		[|Array|: "Square Inches", "Square Feet", "Square Yards", "Acres"],
+		[|Array|: "Ounces", "Pounds", "Tons", "Long Tons"],
+		[|Array|: fluidOunces, pints, quarts, gallons],
+		[|Array|: fluidOunces, pints, quarts, gallons],
+		[|Array|: "Fahrenheit"]
+	],
+	stepAllocateContext: [|Array|: 'category, measurement, 'US, export114Item, 'Metric, export114Item_2],
+	solvedFor: nil,
+	viewSetupFormScript: func() begin
+		local l1;
+		if ((l1 := self:GetFormulaValues()).(formulaSymbol).measurement = nil) then begin
+				curMeasurement := 0
+			end else begin
+				curMeasurement := l1.(formulaSymbol).measurement
+			end;
+		if (l1.(formulaSymbol).USItem = nil) then begin
+				SetValue(US, 'defaultItem, USDefaults[curMeasurement])
+			end else begin
+				SetValue(US, 'defaultItem, l1.(formulaSymbol).USItem)
+			end;
+		if (l1.(formulaSymbol).MetricItem = nil) then begin
+				SetValue(Metric, 'defaultItem, MetricDefaults[curMeasurement])
+			end else begin
+				SetValue(Metric, 'defaultItem, l1.(formulaSymbol).MetricItem)
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	BritishLiquidTable: [|Array|:
+		[|Array|: real('|Real|, 28.413), real('|Real|, 568.26), real('|Real|, 1136.5), 4546],
+		[|Array|:
+			real('|Real|, 0.028413),
+			real('|Real|, 0.56826),
+			real('|Real|, 1.1365),
+			real('|Real|, 4.546)
+		]
+	],
+	US: nil,
+	stepChildren: [stepChildren:
+		clear,
+		export111Item,
+		{
+			title: metricConversion,
+			viewBounds: {left: 2, top: 2, right: 138, bottom: 26},
+			_proto: @protoTitle
+		},
+		measurement,
+		export114Item,
+		export114Item_2
+	],
+	changeInProgress: nil,
+	overview: metricConversion
+};
+
+milliliters := "Milliliters";
+
+liters := "Liters";
+
+fluidOunces := "Fluid ounces";
+
+pints := "Pints";
+
+quarts := "Quarts";
+
+gallons := "Gallons";
+
+measurement := {
+	labelCommands: [|Array|: "Length", "Area", "Weight", "U.S. Liquid", "British Liquid", "Temperature"],
+	viewBounds: {left: 5, top: 15, right: 220, bottom: 35},
+	viewJustify: 8396928,
+	text: "Measurement",
+	indent: 110,
+	viewFont: @fontSystem10Bold,
+	labelActionScript: func(a1) begin
+		curMeasurement := a1;
+		self:ClearAllFields();
+		SetValue(US, 'labelItems, USLabels[a1]);
+		SetValue(US, 'defaultItem, USDefaults[a1]);
+		US:ResetPicker();
+		SetValue(Metric, 'labelItems, MetricLabels[a1]);
+		SetValue(Metric, 'defaultItem, MetricDefaults[a1]);
+		Metric:ResetPicker();
+		self:InitFieldBasedOnMeasurement()
+	end,
+	textSetup: func() begin
+		return labelCommands[curMeasurement]
+	end,
+	_proto: @protoLabelPicker,
+	preAllocatedContext: 'category
+};
+
+export114Item := {
+	ComputeValue: func(a1) begin
+		(if (curMeasurement = 5) then return ((a1[1] * 1.8) + 32) else return (a1[1] / self:GetConversionFactor()))
+	end,
+	labelItems: nil,
+	viewSetupFormScript: func() begin
+		(self.labelItems := USLabels[curMeasurement])
+	end,
+	defaultItem: nil,
+	lineNumber: 0,
+	viewSetupDoneScript: func() begin
+		inherited:?viewSetupDoneScript();
+		SetKeyView(self.value.value, 9999)
+	end,
+	_proto: @8300,
+	preAllocatedContext: 'US
+};
+
+export114Item_2 := {
+	ComputeValue: func(a1) begin
+		(if (curMeasurement = 5) then return ((a1[0] - 32) / 1.8) else return (a1[0] * self:GetConversionFactor()))
+	end,
+	labelItems: nil,
+	viewSetupFormScript: func() begin
+		(self.labelItems := MetricLabels[curMeasurement])
+	end,
+	defaultItem: nil,
+	lineNumber: 1,
+	_proto: @8300,
+	preAllocatedContext: 'Metric
+};
+
+metricConversion := "Metric Conversion";
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+InitFieldBasedOnMeasurement_code := same("export114.InitFieldBasedOnMeasurement.instructions");
+
+ComputeValue_literal1 := same("export114Item.ComputeValue.literals[1]");
+
+viewSetupFormScript_code_2 := same("export114Item.viewSetupFormScript.instructions");
+
+viewSetupDoneScript_code := same("export114Item.viewSetupDoneScript.instructions");

@@ -1,0 +1,25 @@
+// protodiamondButton, and what only it reaches
+
+protodiamondButton := {
+	_proto: @protoTextButton,
+	PadText: func(a1) begin
+		(if BeginsWith(a1, "  ") then a1 else (if BeginsWith(a1, " ") then Stringer([Array: " ", a1]) else Stringer([Array: "  ", a1])))
+	end,
+	viewSetupFormScript: func() begin
+		local l1;
+		l1 := self:PadText(text);
+		(if (text <> l1) then (text := l1))
+	end,
+	SetText: func(a1) begin
+		SetValue(self, 'text, self:PadText(a1))
+	end,
+	viewDrawScript: compile(
+		constants: {
+			kROM_594: @diamanteBitmap
+		},
+		func() begin
+			local l1;
+			l1 := self:LocalBox();
+			self:DrawShape(OffsetShape(MakeShape(kROM_594), 1, ((l1.bottom - 5) >> 1)), '{transferMode: 1})
+		end)
+};

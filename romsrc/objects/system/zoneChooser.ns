@@ -1,0 +1,204 @@
+// zoneChooser, and what only it reaches
+
+zoneChooser := {
+	debug: 97212,
+	_proto: zoneChooserProto,
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	viewBounds: {left: 0, top: 0, right: 220, bottom: 224},
+	startSelection: nil,
+	timeoutCounter: 300000,
+	idleFrequency: 3000,
+	currentZone: nil,
+	zoneTableWidth: 170,
+	viewIdleScript: func() begin
+		local l1, l2;
+		l2 := 0;
+		if formOpen then begin
+				if ((timeoutCounter := (timeoutCounter - idleFrequency)) < 0) then begin
+						l1 := self:timesUpScript()
+					end else begin
+						l1 := true
+					end;
+				if l1 then begin
+						if (if formOpen then (not HaveZones())) then begin
+								self:CloseAndNotify("The network connection was lost, check your cables.")
+							end;
+						return idleFrequency
+					end
+			end;
+		return l2
+	end,
+	viewSetupDoneScript: func() begin
+		SetKeyView(self, 0);
+		nbpScroller:Hide();
+		zoneScroller:Hide();
+		AddDeferredSend(self, 'deferredSetupScript, [Array: ])
+	end,
+	deferredSetupScript: func() begin
+		local l1;
+		if (l1 := inherited:deferredSetupScript()) then begin
+				timeoutCounter := 300000;
+				chooserNBPTable:startScript();
+				if formOpen then begin
+						self:SetupIdle(idleFrequency);
+						theZoneTable:updateZoneList()
+					end
+			end;
+		return l1
+	end,
+	selectCurrentZone: func() begin
+		local l1;
+		(if (selectedZoneIndex <> nil) then (if (if ((l1 := theZoneTable:ChildViewFrames()) <> nil) then (selectedZoneIndex < Length(l1))) then theZoneTable:selectThisCell(l1[selectedZoneIndex])))
+	end,
+	preallocatedContext: 'zoneChooser,
+	viewChildren: [viewChildren:
+		_defaultButton_3,
+		{
+			_proto: zoneChooserProto_2,
+			viewBounds: {left: 10, top: 5, right: 185, bottom: 25},
+			text: "Select an AppleTalk Zone:",
+			viewSetupFormScript: func() begin
+				true
+			end
+		},
+		{
+			_proto: zoneChooserProto_2,
+			viewJustify: 8388736,
+			viewBounds: {left: 10, top: -153, right: 185, bottom: -140}
+		},
+		theTable_2,
+		startupMsg_2,
+		nbpScroller_2,
+		theZoneTable,
+		zoneScroller
+	],
+	_defaultButton: nil,
+	allocateContext: [|Array|:
+		'_defaultButton,
+		_defaultButton_3,
+		'theTable,
+		theTable_2,
+		'startupMsg,
+		startupMsg_2,
+		'nbpScroller,
+		nbpScroller_2,
+		'theZoneTable,
+		theZoneTable,
+		'zoneScroller,
+		zoneScroller
+	],
+	theTable: nil,
+	startupMsg: nil,
+	nbpScroller: nil,
+	theZoneTable: nil,
+	zoneScroller: nil,
+	ReOrientToScreen: @defRotateFunc,
+	_cacheContext: {
+		startSelection: nil,
+		currentSelection: nil,
+		chooserNBPTable: nil,
+		appleTalkOpen: nil,
+		selectedZoneIndex: nil,
+		viewFlags: vApplication + vFloating + vClickable,
+		currentZone: nil,
+		viewclipper: nil,
+		_proto: nil,
+		viewCObject: nil,
+		_defaultButton: nil,
+		formOpen: nil,
+		notifyOnClose: nil,
+		headerText: nil,
+		theTable: nil,
+		lookForText: nil,
+		startupMsg: nil,
+		timeoutCounter: 300000,
+		zoneScroller: nil,
+		_parent: nil,
+		theZoneTable: nil,
+		base: nil,
+		nbpScroller: nil,
+		selectedIndex: nil,
+		nbpLookupName: nil
+	}
+};
+
+_defaultButton_3 := {_proto: @protoClosebox, buttonClickScript: buttonClickScript, preallocatedContext: '_defaultButton};
+
+theTable_2 := {_proto: theTable_2Proto, preallocatedContext: 'theTable};
+
+startupMsg_2 := {_proto: startupMsg_2Proto, preallocatedContext: 'startupMsg};
+
+nbpScroller_2 := {_proto: nbpScroller_2Proto, preallocatedContext: 'nbpScroller};
+
+theZoneTable := {
+	_proto: @protoTable,
+	viewBounds: {left: 10, top: 25, right: 180, bottom: 91},
+	def: @protoTableDef,
+	entryProto: {
+		_proto: @protoTableEntry,
+		viewClickScript: func(a1) begin
+			timeoutCounter := 300000;
+			currentZone := text;
+			(if (chooserNBPTable:stopScript() = 0) then (if (chooserNBPTable:startScript() = 0) then begin
+						self:selectThisCell(self);
+						(selectedZoneIndex := (self.vIndex - vOrg))
+					end))
+		end
+	},
+	numZones: 0,
+	vOrg: 0,
+	scrollAmount: 4,
+	viewSetupFormScript: func() begin
+		(def := Clone(def)).tabWidths := zoneTableWidth;
+		def.tabProtos := entryProto;
+		def.tabValues := nil;
+		if def.indentX then begin
+				def.tabWidths := (def.tabWidths - def.indentX)
+			end;
+		self.viewBounds := Clone(viewBounds);
+		self.viewBounds.bottom := (viewBounds.top + (((5 * FontHeight(viewFont)) - 5) + 1));
+		(numZones := 0)
+	end,
+	updateZoneList: func() begin
+		def.tabValues := (if formOpen then GetZoneList());
+		(if formOpen then (if (def.tabValues = nil) then self:CloseAndNotify("No zones were found. The network connection must have been lost.") else begin
+					numZones := Length(def.tabValues);
+					if ((temp := FindStringInArray(def.tabValues, currentZone)) <> nil) then begin
+							if (temp >= 5) then begin
+									vOrg := min(temp, (numZones - 5))
+								end else begin
+									vOrg := 0
+								end;
+							selectedZoneIndex := (temp - vOrg)
+						end;
+					def.tabDown := numZones;
+					if (numZones > 5) then begin
+							zoneScroller.ScrollRect := (zoneScroller.DataRect := SetBounds(0, 0, 0, numZones));
+							zoneScroller.yPos := vOrg;
+							zoneScroller:AdjustArrows();
+							zoneScroller:Show()
+						end;
+					self:RedoChildren();
+					self:selectCurrentZone()
+				end))
+	end,
+	viewScroll2DScript: func(a1, a2) begin
+		timeoutCounter := 300000;
+		inherited:viewScroll2DScript(a1, a2);
+		RefreshViews()
+	end,
+	preallocatedContext: 'theZoneTable
+};
+
+zoneScroller := {
+	viewJustify: 0,
+	viewBounds: {left: 185, top: 39, right: 203, bottom: 72},
+	ViewRect: {left: 0, top: 0, right: 0, bottom: 4},
+	ScrollAmounts: [|Array|: 4, 4, 4],
+	viewSetupDoneScript: func() begin
+		scrollView := theZoneTable;
+		inherited:?viewSetupDoneScript()
+	end,
+	preallocatedContext: 'zoneScroller,
+	_proto: @protoUpDownScroller
+};

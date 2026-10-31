@@ -1,0 +1,6 @@
+// keypadBitmap, and what only it reaches
+
+keypadBitmap := {
+	bits: bitmap('bits, "resources/bits/3dabd1.png", "00000000000400260026011a00310122", 1),
+	bounds: {left: 0, top: 0, right: 8, bottom: 11}
+};

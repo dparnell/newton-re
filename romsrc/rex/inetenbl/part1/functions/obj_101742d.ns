@@ -1,5 +1,0 @@
-@@ 0x101742d
-func() begin
-	self:SetAbort(true)
-end
-@@end

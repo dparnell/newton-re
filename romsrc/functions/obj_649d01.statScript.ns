@@ -1,6 +1,0 @@
-@@ 0x4ae99d
-func(a1) begin
-	targetView.viewDef := a1.symbol;
-	targetView:RedoChildren()
-end
-@@end

@@ -1,0 +1,100 @@
+// protoLetterFormat, and what only it reaches
+
+protoLetterFormat := {
+	type: 'printFormat,
+	path: nil,
+	page1guts: [|Array|:
+		{
+			viewClass: clView,
+			viewBounds: nil,
+			viewFlags: vVisible + vReadOnly,
+			viewFormat: 0,
+			viewJustify: vjParentCenterH + vjParentCenterV + vjChildrenLasso + vjReflow,
+			viewSetupFormScript: func() begin
+				if (firstPage = 'top) then begin
+						viewJustify := 98320
+					end else begin
+						if (firstPage = 'center) then begin
+								viewJustify := 98384
+							end else begin
+								viewJustify := 98448
+							end
+					end;
+				(self.viewBounds := RelBounds(0, 0, pageWidth, (pageHeight - bottomMargin)))
+			end,
+			viewSetupChildrenScript: func() begin
+				local l1, l2, l3;
+				if (not kids) then begin
+						kids := Clone(headerKids);
+						(l1 := self:LocalBox()).top := (l1.top + headerHeight);
+						l1.bottom := (l1.bottom - bottomMargin);
+						(l2 := InsetRect(fields.printerPageBounds, 60, 0)).top := (l2.top + bottomMargin);
+						l2.bottom := (l2.bottom - bottomMargin);
+						if (not (l3 := Clone(reflowParams)).pageBounds) then begin
+								l3.pageBounds := l2
+							end;
+						ArrayMunger(kids, Length(headerKids), 0, ReFlow(data, l3, fields.targetBox, l1), 0, nil)
+					end;
+				(if kids then (self.stepChildren := ArrayMunger([Array: ], 0, 0, kids, reflowStart, nil)))
+			end,
+			viewSetupDoneScript: func() begin
+				(if self.stepChildren then (reflowStart := (reflowStart + Length(self.stepChildren))))
+			end
+		}
+	],
+	reflowStart: 0,
+	routingType: 'Print,
+	headerHeight: 0,
+	data: nil,
+	dataPath: 'data,
+	_proto: @coverPageFormat,
+	firstPage: 'center,
+	headerKids: [|Array|: ],
+	symbol: nil,
+	bottomMargin: 60,
+	reflowParams: {
+		reflowFont: tsFancy + tsSize(12),
+		unistyle: 'font,
+		graphicsGutter: 16,
+		textGutter: -16,
+		viewLineSpacing: 28
+	},
+	printNextPageScript: func() begin
+		(if (if kids then (reflowStart < Length(kids))) then self:RedoChildren())
+	end,
+	title: nil,
+	name: nil,
+	page2Guts: [|Array|:
+		{
+			viewClass: clView,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+			viewFlags: vVisible + vReadOnly,
+			viewJustify: vjParentFullH + vjParentFullV,
+			viewFormat: 0,
+			viewSetupFormScript: func() begin
+				local l1;
+				l1 := self:GlobalBox();
+				(viewBounds := SetBounds(max((60 - l1.left), 0), max((60 - l1.top), 0), 0, 0))
+			end,
+			viewChildren: page2GutsViewChildren
+		}
+	],
+	viewSetupFormScript: func() begin
+		inherited:viewSetupFormScript();
+		self.data := target.(dataPath);
+		(self.reflowStart := 0)
+	end,
+	kids: nil,
+	version: 1,
+	viewSetupChildrenScript: func() begin
+		self.stepChildren := (if (self.reflowStart = 0) then page1guts else page2Guts);
+		inherited:viewSetupChildrenScript()
+	end,
+	margins: {left: 60, top: 0, right: 60, bottom: 0}
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+printNextPageScript_code := same("protoLetterFormat.printNextPageScript.instructions");
+
+viewSetupFormScript_code_15 := same("protoLetterFormat.page2Guts[0].viewSetupFormScript.instructions");

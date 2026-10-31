@@ -1,6 +1,0 @@
-@@ 0x104d501
-func(a1) begin
-	local l1;
-	(if (if a1 then (l1 := GetGlobalVar('|InetServices:NIE|))) then l1.(a1))
-end
-@@end

@@ -1,0 +1,6 @@
+// eastwestBitmap, and what only it reaches
+
+eastwestBitmap := {
+	bits: bitmap('bits, "resources/bits/3daa05.png", "00000000000400de00de016f00f0018d", 1),
+	bounds: {left: 0, top: 0, right: 30, bottom: 18}
+};

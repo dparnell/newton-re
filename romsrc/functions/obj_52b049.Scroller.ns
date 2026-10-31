@@ -1,7 +1,0 @@
-@@ 0x52b015
-func(a1) begin
-	cursor:move(a1);
-	self:RedoChildren();
-	self:Dirty()
-end
-@@end

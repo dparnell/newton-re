@@ -1,0 +1,51 @@
+// export76, and what only it reaches
+
+export76 := {
+	viewBounds: {left: 0, top: 40, right: 200, bottom: 144},
+	stepChildren: [stepChildren:
+		{
+			title: "Dock Import Results",
+			titleIcon: {bits: titleIconBits, bounds: {left: 0, top: 0, right: 19, bottom: 11}},
+			_proto: @protoTitle
+		},
+		{
+			text: nil,
+			viewBounds: {left: 15, top: 10, right: 200, bottom: 65},
+			viewJustify: vjSiblingBottomV,
+			viewSetupFormScript: func() begin
+				(self.text := resultsText)
+			end,
+			_proto: @protoStaticText
+		},
+		{_proto: @protoCancelButton}
+	],
+	viewIdleScript: func() begin
+		local l1;
+		if (if ((l1 := endpoint:IdleConnection(true)) = 0) then (not endpoint.closingDown)) then begin
+				protoContext:ImportFileClose(endpoint);
+				if callWhenDone then begin
+						call callWhenDone with ()
+					end
+			end;
+		return l1
+	end,
+	viewSetupFormScript: func() begin
+		self.protoContext := GetRoot().Connection;
+		protoContext:AddOpenWindow(self);
+		endpoint:StartIdle(self, 2000)
+	end,
+	viewQuitScript: func() begin
+		protoContext:RemoveOpenWindow(self);
+		protoContext:ImportFileClose(endpoint);
+		if callWhenDone then begin
+				call callWhenDone with ()
+			end;
+		endpoint:StopIdle(self)
+	end,
+	viewFlags: vApplication + vFloating + vClickable,
+	_proto: @protoFloater
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewIdleScript_code_4 := same("export76.viewIdleScript.instructions");

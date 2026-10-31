@@ -1,5 +1,0 @@
-@@ 0x42dad5
-func() begin
-	base:Dirty()
-end
-@@end

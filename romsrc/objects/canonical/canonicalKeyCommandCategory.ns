@@ -1,0 +1,3 @@
+// canonicalKeyCommandCategory, and what only it reaches
+
+canonicalKeyCommandCategory := {category: nil, keyCommands: nil};

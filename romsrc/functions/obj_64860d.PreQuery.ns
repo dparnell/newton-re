@@ -1,5 +1,0 @@
-@@ 0x4b9129
-func(a1) begin
-	self:TextToPath(a1)
-end
-@@end

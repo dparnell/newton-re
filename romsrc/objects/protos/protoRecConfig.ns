@@ -1,0 +1,3 @@
+// protoRecConfig, and what only it reaches
+
+protoRecConfig := {_proto: nil, _parent: nil};

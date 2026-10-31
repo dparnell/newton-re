@@ -1,0 +1,79 @@
+// pager, and what only it reaches
+
+pager := {
+	name: "Pager",
+	symbol: 'pager,
+	type: 'editor,
+	stepChildren: [stepChildren: pagerItem, pagerPIN],
+	infoFrame: {
+		_proto: infoFrameProto,
+		checkPrefix: [|Array|: nil, [pathExpr: 'pagers]],
+		checkPaths: [|Array|: 'pagerNum, 'pagerPin],
+		formatFunc: func(a1) begin
+			local l1, l2, l3, l4;
+			l4 := ClassOf((l2 := a1[0]));
+			if StrFilled(a1[1]) then begin
+					if StrFilled(l2) then begin
+							l1 := ParsePhone(l2)
+						end else begin
+							l1 := {}
+						end;
+					l1.extension := ParamStr("^?0^0^?1 ^1|||^?1^1|", [Array: l1.extension, a1[1]]);
+					l2 := l1
+				end;
+			l2 := MakeDisplayPhone(l2);
+			(l2 := ParamStr("^0 ^1", [Array: l2, GetGlobals().pagerTypes.pagerText.(l4)]))
+		end,
+		shapeFunc: func(a1, a2, a3, a4) begin
+			local l1;
+			inherited:shapeFunc([Array: (l1 := self:formatFunc(a1))], a2, a3, a4)
+		end,
+		actionFunc: func(a1, a2, a3, a4, a5, a6, a7) begin
+			local l1, l2, l3;
+			l2 := a5.(a6).pagerNum;
+			if StrFilled((l3 := a5.(a6).pagerPin)) then begin
+					if StrFilled(l2) then begin
+							l1 := ParsePhone(l2)
+						end else begin
+							l1 := {}
+						end;
+					l1.extension := ParamStr("^?0^0^?1 ^1|||^?1^1|", [Array: l1.extension, l3]);
+					l2 := MakePhone(l1)
+				end;
+			a7.phoneNum := l2;
+			inherited:actionFunc(a1, a2, a3, a4, a5, a6, a7)
+		end
+	},
+	usePhoneKeys: true,
+	protection: 'private,
+	fieldOrder: nil,
+	_proto: @8240,
+	pagerNum: nil,
+	stepAllocateContext: [|Array|: 'pagerNum, pagerItem, 'pagerPin, pagerPIN],
+	pagerPin: nil
+};
+
+pagerItem := {
+	path: nil,
+	addPath: 'pagerNum,
+	GetSymArray: func() begin
+		GetGlobals().pagerTypes.pagerClasses
+	end,
+	GetTextArray: func() begin
+		GetGlobals().pagerTypes.pagerText
+	end,
+	_proto: defaultProto,
+	preAllocatedContext: 'pagerNum
+};
+
+pagerPIN := {
+	path: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+	viewLineSpacing: 32,
+	flavor: @newtCustomFilter,
+	label: "Pager PIN",
+	newRecFlags: 264705,
+	addPath: 'pagerPin,
+	_proto: @newtLabelInputLine,
+	preAllocatedContext: 'pagerPin
+};

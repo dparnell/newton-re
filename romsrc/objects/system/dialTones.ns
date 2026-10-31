@@ -1,0 +1,420 @@
+// dialTones, and what only it reaches
+
+dialTones := [|Array|:
+	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 1336,
+			fraction: 0,
+			peak: 13107,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		},
+		{
+			frequency: 941,
+			fraction: 0,
+			peak: 9830,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		}
+	]),
+	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 1209,
+			fraction: 0,
+			peak: 13107,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		},
+		{
+			frequency: 697,
+			fraction: 0,
+			peak: 9830,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		}
+	]),
+	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 1336,
+			fraction: 0,
+			peak: 13107,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		},
+		{
+			frequency: 697,
+			fraction: 0,
+			peak: 9830,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		}
+	]),
+	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 1477,
+			fraction: 0,
+			peak: 13107,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		},
+		{
+			frequency: 697,
+			fraction: 0,
+			peak: 9830,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		}
+	]),
+	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 1209,
+			fraction: 0,
+			peak: 13107,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		},
+		{
+			frequency: 770,
+			fraction: 0,
+			peak: 9830,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		}
+	]),
+	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 1336,
+			fraction: 0,
+			peak: 13107,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		},
+		{
+			frequency: 770,
+			fraction: 0,
+			peak: 9830,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		}
+	]),
+	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 1477,
+			fraction: 0,
+			peak: 13107,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		},
+		{
+			frequency: 770,
+			fraction: 0,
+			peak: 9830,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		}
+	]),
+	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 1209,
+			fraction: 0,
+			peak: 13107,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		},
+		{
+			frequency: 852,
+			fraction: 0,
+			peak: 9830,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		}
+	]),
+	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 1336,
+			fraction: 0,
+			peak: 13107,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		},
+		{
+			frequency: 852,
+			fraction: 0,
+			peak: 9830,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		}
+	]),
+	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 1477,
+			fraction: 0,
+			peak: 13107,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		},
+		{
+			frequency: 852,
+			fraction: 0,
+			peak: 9830,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		}
+	]),
+	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 1209,
+			fraction: 0,
+			peak: 13107,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		},
+		{
+			frequency: 941,
+			fraction: 0,
+			peak: 9830,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		}
+	]),
+	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 1477,
+			fraction: 0,
+			peak: 13107,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		},
+		{
+			frequency: 941,
+			fraction: 0,
+			peak: 9830,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		}
+	]),
+	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 1633,
+			fraction: 0,
+			peak: 13107,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		},
+		{
+			frequency: 697,
+			fraction: 0,
+			peak: 9830,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		}
+	]),
+	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 1633,
+			fraction: 0,
+			peak: 13107,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		},
+		{
+			frequency: 770,
+			fraction: 0,
+			peak: 9830,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		}
+	]),
+	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 1633,
+			fraction: 0,
+			peak: 13107,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		},
+		{
+			frequency: 852,
+			fraction: 0,
+			peak: 9830,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		}
+	]),
+	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 1633,
+			fraction: 0,
+			peak: 13107,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		},
+		{
+			frequency: 941,
+			fraction: 0,
+			peak: 9830,
+			delay: 0,
+			attack: 10,
+			decay: 0,
+			hold: 200,
+			release: 10,
+			sustain: 0,
+			tail: 100
+		}
+	])
+];

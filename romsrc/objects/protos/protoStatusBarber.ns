@@ -1,0 +1,25 @@
+// protoStatusBarber, and what only it reaches
+
+protoStatusBarber := {
+	debug: 2288,
+	indicator: true,
+	viewClass: clView,
+	viewBounds: {left: 0, top: 8, right: 166, bottom: 18},
+	viewFlags: vVisible + vReadOnly,
+	viewJustify: vjParentCenterH + vjSiblingBottomV,
+	name: 'barber,
+	index: 0,
+	pattern: [|Array|: "茇ผ㡰", "㡰茇ผ", "ผ㡰茇", "茇ผ㡰"],
+	viewSetupDoneScript: func() begin
+		(self.box := MakeShape(self:LocalBox()))
+	end,
+	viewUpdateFormScript: func() begin
+		if ((index := (index + 1)) > 3) then begin
+				index := 0
+			end;
+		self:Dirty()
+	end,
+	viewDrawScript: func() begin
+		self:DrawShape(box, {penPattern: 3, fillPattern: pattern[index]})
+	end
+};

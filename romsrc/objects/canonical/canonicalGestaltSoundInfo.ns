@@ -1,0 +1,10 @@
+// canonicalGestaltSoundInfo, and what only it reaches
+
+canonicalGestaltSoundInfo := {
+	samplingRate: stack,
+	sampleSize: 0,
+	compressionType: 0,
+	numChannels: 0,
+	hasInput: nil,
+	hasOutput: true
+};

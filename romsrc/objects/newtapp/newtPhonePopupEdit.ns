@@ -1,0 +1,15 @@
+// newtPhonePopupEdit, and what only it reaches
+
+newtPhonePopupEdit := {
+	flavor: @newtCustomFilter,
+	newRecFlags: 264705,
+	suppressAreaCode: true,
+	viewSetupFormScript: func() begin
+		inherited:viewSetupFormScript();
+		phone.viewFlags := filter.recFlags;
+		phone.textFlags := filter.recTextFlags;
+		phone.dictionaries := filter.dictionaries;
+		(phone.recConfig := filter.recConfig)
+	end,
+	_proto: @newtAreacodePhoneLine
+};

@@ -1,0 +1,57 @@
+// bizCardBulletHoles, and what only it reaches
+
+bizCardBulletHoles := {
+	bizCardIcon: {
+		bits: bitmap('bits, "resources/bits/72e20d.png", "00000000000800f100f1004d01080073", 1),
+		bounds: {left: 0, top: 0, right: 38, bottom: 23}
+	},
+	bizCardNum: 4,
+	name: "bizCardBulletHoles",
+	symbol: 'bizCardBulletHoles,
+	type: 'bizcard,
+	stepChildren: [stepChildren:
+		{
+			viewBounds: {left: 0, top: 15, right: 235, bottom: 156},
+			viewJustify: 0,
+			viewFlags: vVisible,
+			icon: {
+				bits: bitmap('bits, "resources/bits/72e3a5.png", "00000000002000d100d10049015d0134", 1),
+				bounds: {left: 0, top: 0, right: 235, bottom: 140}
+			},
+			viewFormat: nil,
+			viewClass: clPictureView
+		},
+		{
+			viewBounds: {top: 4, left: -300, right: -10, bottom: 28},
+			viewJustify: vjParentRightH,
+			viewFont: tsFancy + tsSize(18),
+			layouts: layouts_2,
+			reduceFont: true,
+			_proto: @8246
+		},
+		{
+			viewJustify: vjParentRightH + vjSiblingBottomV,
+			viewBounds: {top: 0, left: -300, right: -10, bottom: 16},
+			viewFont: tsFancy + tsSize(12),
+			layouts: layouts,
+			_proto: @8246
+		},
+		{
+			viewBounds: {top: 5, left: 10, right: 300, bottom: 61},
+			viewFont: tsFancy + tsSize(10),
+			viewJustify: vjSiblingBottomV,
+			layouts: layouts_3,
+			_proto: @8243
+		},
+		{
+			viewBounds: {top: -55, left: 10, right: 300, bottom: -3},
+			viewFont: tsFancy + tsSize(10),
+			viewJustify: vjParentBottomV,
+			layouts: layouts_4,
+			showMultipleData: true,
+			indent: 16,
+			_proto: @8243
+		}
+	],
+	_proto: @8236
+};

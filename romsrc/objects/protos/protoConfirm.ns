@@ -1,0 +1,93 @@
+// protoConfirm, and what only it reaches
+
+protoConfirm := {
+	messageHIndent: nil,
+	confirmedValue: nil,
+	buttonTemplate: {
+		_proto: @protoTextButton,
+		viewJustify: 8390886,
+		viewSetupFormScript: func() begin
+			local l1;
+			l1 := StdButtonWidth(text);
+			(self.viewBounds := SetBounds((-(l1 + 6)), 0, -7, 0))
+		end,
+		buttonClickScript: func() begin
+			confirmedValue := buttonValue;
+			base:Close()
+		end
+	},
+	buttonTemplateDefault: {
+		_proto: @protoTextButton,
+		viewJustify: 8390886,
+		viewSetupFormScript: func() begin
+			local l1;
+			l1 := StdButtonWidth(text);
+			self.viewBounds := SetBounds((-(l1 + 6)), 0, -7, 0);
+			(base._defaultButton := self)
+		end,
+		buttonClickScript: func() begin
+			confirmedValue := buttonValue;
+			base:Close()
+		end
+	},
+	buttonTemplateClose: {
+		_proto: @protoTextButton,
+		viewJustify: 8390886,
+		viewSetupFormScript: func() begin
+			local l1;
+			l1 := StdButtonWidth(text);
+			self.viewBounds := SetBounds((-(l1 + 6)), 0, -7, 0);
+			(base._closeBox := self)
+		end,
+		buttonClickScript: func() begin
+			confirmedValue := buttonValue;
+			base:Close()
+		end
+	},
+	viewChildren: [viewChildren:
+		{
+			viewFlags: vVisible + vReadOnly + vClipping,
+			viewJustify: vjParentFullH + vjParentFullV,
+			viewBounds: {left: 15, top: 15, right: -15, bottom: -15},
+			viewSetupFormScript: func() begin
+				local l1;
+				self.text := message;
+				(if messageHIndent then begin
+						(l1 := Clone(self.viewBounds)).left := (l1.left + messageHIndent);
+						(self.viewBounds := l1)
+					end)
+			end,
+			_proto: @protoStaticText
+		},
+		{
+			viewClass: clView,
+			viewFlags: vVisible,
+			viewJustify: vjParentFullH + vjParentBottomV,
+			viewBounds: {left: 15, top: -28, right: -8, bottom: -15},
+			viewSetupChildrenScript: func() begin
+				(self.viewChildren := (foreach l1, l2 in buttonList collect begin
+					local l6;
+					{_proto: (if IsFrame(l2) then begin
+							if (l2.keyValue = 'default) then begin
+									l6 := buttonTemplateDefault
+								end;
+							if (l2.keyValue = 'Close) then begin
+									l6 := buttonTemplateClose
+								end;
+							if (not l2.keyValue) then begin
+									l6 := buttonTemplate
+								end;
+							l6
+						end else buttonTemplate), buttonValue: (if IsFrame(l2) then l2.value else l1), text: (if IsFrame(l2) then l2.text else l2)}
+				end))
+			end
+		}
+	],
+	_proto: @protoNotifyForm
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_6 := same("protoConfirm.buttonTemplateDefault.viewSetupFormScript.instructions");
+
+buttonClickScript_code_3 := same("protoConfirm.buttonTemplate.buttonClickScript.instructions");

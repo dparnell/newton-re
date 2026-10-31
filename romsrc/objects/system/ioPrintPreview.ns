@@ -1,0 +1,30 @@
+// ioPrintPreview, and what only it reaches
+
+ioPrintPreview := {
+	viewFlags: vVisible + vReadOnly,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewJustify: vjParentFullH + vjParentFullV,
+	version: 1,
+	type: 'viewer,
+	symbol: 'printPreview,
+	name: preview,
+	printView: nil,
+	declareSelf: 'pagebase,
+	debug: 186553,
+	viewChildren: [viewChildren: {margin: 5, _proto: @previewRemoteView}, _defaultButton_13],
+	_defaultButton: nil,
+	allocateContext: [|Array|: '_defaultButton, _defaultButton_13],
+	_proto: @protoContainerView
+};
+
+_defaultButton_13 := {
+	viewBounds: {left: -35, top: -17, right: -4, bottom: -4},
+	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingBottomV,
+	text: next,
+	buttonClickScript: func() begin
+		local l1;
+		(if (l1 := (not printView:printNextPageScript())) then pagebase:RedoChildren() else pagebase:Dirty())
+	end,
+	preallocatedContext: '_defaultButton,
+	_proto: @protoTextButton
+};

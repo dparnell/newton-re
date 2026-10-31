@@ -1,5 +1,0 @@
-@@ 0x535629
-func(a1) begin
-	self:GetConfig('phoneCompletedFiling)
-end
-@@end

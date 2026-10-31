@@ -1,0 +1,50 @@
+// longLatPicker, and what only it reaches
+
+longLatPicker := {
+	viewBounds: {left: 0, top: 0, right: 170, bottom: 68},
+	longitude: nil,
+	latitude: nil,
+	worldClock: nil,
+	New: func(a1, a2, a3, a4, a5) begin
+		local l1;
+		l1 := self:Init();
+		if a3 then begin
+				l1.longitude := @protoLongitudePicker:ConvertFromWC(a1);
+				l1.latitude := @protoLongitudePicker:ConvertFromWC(a2)
+			end else begin
+				l1.longitude := a1;
+				l1.latitude := a2
+			end;
+		l1.worldClock := a3;
+		l1.context := a5;
+		l1:popup(a4)
+	end,
+	viewSetupFormScript: func() begin
+		lat.value := latitude;
+		(long.value := longitude)
+	end,
+	Affirmative: func() begin
+		(if worldClock then context:?pickActionScript(@protoLongitudePicker:ConvertToWC(long.value), @protoLongitudePicker:ConvertToWC(lat.value)) else context:?pickActionScript(long.value, lat.value))
+	end,
+	stepChildren: [stepChildren: lat, long],
+	lat: nil,
+	stepallocatecontext: [|Array|: 'lat, lat, 'long, long],
+	long: nil,
+	_proto: @protoGeneralPopup
+};
+
+lat := {
+	_proto: @protoLatitudePicker,
+	viewBounds: {left: 2, top: 5, right: 152, bottom: 35},
+	viewJustify: 0,
+	value: nil,
+	preallocatedContext: 'lat
+};
+
+long := {
+	_proto: @protoLongitudePicker,
+	viewBounds: {left: 2, top: 35, right: 152, bottom: 65},
+	viewJustify: 0,
+	value: nil,
+	preallocatedContext: 'long
+};

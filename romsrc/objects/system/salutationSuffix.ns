@@ -1,0 +1,3 @@
+// salutationSuffix, and what only it reaches
+
+salutationSuffix := [|Array|: groupSepStr_2, decimalpoint, minusPrefix, timeSepStr1, salutationSuffixItem, groupSepStr];

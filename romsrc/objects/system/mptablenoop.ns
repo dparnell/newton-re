@@ -1,0 +1,3 @@
+// mptablenoop, and what only it reaches
+
+mptablenoop := [|Array|: ];

@@ -1,0 +1,57 @@
+// bizCardOwner, and what only it reaches
+
+bizCardOwner := {
+	bizCardIcon: {bits: bizCardIconBits, bounds: {left: 0, top: 0, right: 38, bottom: 23}},
+	bizCardNum: 1,
+	name: "bizCardOwner",
+	symbol: 'bizCardOwner,
+	type: 'bizcard,
+	stepChildren: [stepChildren:
+		{
+			viewBounds: {left: 9, top: 9, right: -30, bottom: 33},
+			viewJustify: vjParentFullH,
+			layouts: {owner: [|Array|: 'default]},
+			viewFont: {family: 'newyork, size: 14, face: 0},
+			_proto: @8242
+		},
+		{
+			icon: {
+				bits: bitmap('bits, "resources/bits/731145.png", "00000000000400db00db003d00f1004d", 1),
+				bounds: {left: 0, top: 0, right: 16, bottom: 22}
+			},
+			viewBounds: {left: -24, top: 5, right: 0, bottom: 28},
+			viewFlags: vVisible,
+			viewFormat: 0,
+			viewJustify: vjParentRightH,
+			viewClass: clPictureView
+		},
+		{
+			viewBounds: {left: 9, top: 1, right: -7, bottom: 3},
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			_proto: @protoBorder
+		},
+		{
+			viewBounds: {left: 9, top: 0, right: 0, bottom: 16},
+			viewFont: tsFancy + tsSize(12),
+			layouts: {owner: [|Array|: 'company]},
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			_proto: @8242
+		},
+		{
+			viewBounds: {left: 9, top: 0, right: 0, bottom: 54},
+			layouts: {owner: [|Array|: 'address, 'email]},
+			viewFont: tsFancy + tsSize(10),
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			_proto: @8242
+		},
+		{
+			layouts: {owner: [|Array|: 'phone]},
+			viewBounds: {top: -55, left: 5, right: -9, bottom: -3},
+			showMultipleData: true,
+			viewFont: tsFancy + tsSize(10),
+			viewJustify: vjCenterV + vjParentFullH + vjParentBottomV,
+			_proto: @8242
+		}
+	],
+	_proto: @8236
+};

@@ -1,5 +1,0 @@
-@@ 0x523c01
-func(a1) begin
-	GetRoot().TinyTim:OpenHelpBook(a1)
-end
-@@end

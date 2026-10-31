@@ -1,0 +1,6 @@
+// settingsShapeBitmap, and what only it reaches
+
+settingsShapeBitmap := {
+	bits: bitmap('bits, "resources/bits/3dae95.png", "0000000000040075007500ec008200fa", 1),
+	bounds: {left: 0, top: 0, right: 14, bottom: 13}
+};

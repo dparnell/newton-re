@@ -1,0 +1,80 @@
+// protoPhoneExpando, and what only it reaches
+
+protoPhoneExpando := {
+	_proto: @protoLabelInputLine,
+	viewFormat: vfFillWhite + vfInset(3),
+	entryFlags: 264705,
+	labelCommands: nil,
+	labelSymbols: nil,
+	phoneIndex: 0,
+	framer: 143664,
+	TextSetup: func() begin
+		keys := nil;
+		if self.Keyboard then begin
+				keys := GetVariable(self, self.Keyboard)
+			end;
+		AddDeferredAction(ExpandKeys, [Array: self.entryLine]);
+		labelCommands := (foreach l1 in (labelSymbols := PhoneTypes.phoneClasses) collect PhoneTypes.phoneText.(l1));
+		labelLine.viewBounds := RelBounds(0, 0, indent, height);
+		entryLine.viewBounds.top := (entryLine.viewBounds.top + height);
+		entryLine.viewBounds.left := 4;
+		entryLine.viewFormat := framer;
+		dirtyLine := true;
+		self:SetLabelText(self:setup1(target));
+		(if (phoneIndex < Length(target.(path))) then target.(path)[phoneIndex])
+	end,
+	textChanged: func() begin
+		(if (phoneIndex < Length(target.(path))) then (target.(path)[phoneIndex] := SetClass(entryLine.text, ClassOf(target.(path)[phoneIndex]))) else begin
+				(for l1 := (Length(target.(path)) + 1) to phoneIndex do begin
+						AddArraySlot(target.(path), SetClass(Clone(""), 'phone))
+					end);
+				AddArraySlot(target.(path), SetClass(entryLine.text, 'phone))
+			end)
+	end,
+	setup1: func(a1) begin
+		(if (if a1 then (phoneIndex < Length(a1.(path)))) then begin
+				l1 := ClassOf(a1.(path)[phoneIndex]);
+				l2 := labelCommands[0];
+				local l1;
+				local l2;
+				(foreach l3, l4 in labelSymbols do begin
+						if (l4 = l1) then begin
+								l2 := labelCommands[l3];
+								break
+							end
+					end);
+				l2
+			end else labelCommands[0])
+	end,
+	setup2: func(a1) begin
+		(if (if a1 then (phoneIndex < Length(a1.(path)))) then a1.(path)[phoneIndex])
+	end,
+	LabelActionScript: func(a1) begin
+		self:SetLabelText(labelCommands[a1]);
+		labelLine:Dirty();
+		if (phoneIndex < Length(target.(path))) then begin
+				SetClass(target.(path)[phoneIndex], labelSymbols[a1])
+			end else begin
+				(for l1 := (Length(target.(path)) + 1) to phoneIndex do begin
+						AddArraySlot(target.(path), SetClass(Clone(""), 'phone))
+					end);
+				AddArraySlot(target.(path), SetClass(Clone(""), labelSymbols[a1]))
+			end;
+		true
+	end,
+	viewChildren: [viewChildren:
+		entryLine,
+		labelLine,
+		{
+			_proto: @protoClosebox,
+			viewBounds: {left: -12, top: -12, right: 1, bottom: 1},
+			buttonClickScript: func() begin
+				AddDeferredAction(ExpandNone, [Array: ])
+			end
+		}
+	]
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+buttonClickScript_code_2 := same("protoPhoneExpando.viewChildren[2].buttonClickScript.instructions");

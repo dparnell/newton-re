@@ -1,0 +1,9 @@
+// protoFindCategory, and what only it reaches
+
+protoFindCategory := {
+	_proto: @protoRollItem,
+	viewSetupFormScript: func() begin
+		text := (title := StrTruncate(Clone(title), 132));
+		(if (skip <> 0) then (text := Stringer([Array: text, $\u2026])))
+	end
+};

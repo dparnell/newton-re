@@ -1,6 +1,0 @@
-@@ 0x59eb69
-func() begin
-	self:SetStatus('idle, nil);
-	(if (self.mode = 'interactive) then GetRoot().iobox:RemoveTempItems(appSymbol))
-end
-@@end

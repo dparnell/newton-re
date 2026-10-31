@@ -1,0 +1,65 @@
+// protoDragger, and what only it reaches
+
+protoDragger := {
+	_proto: @protoContainerView,
+	viewFlags: vClickable,
+	viewBounds: protoDraggerViewBounds,
+	viewFormat: vfFillWhite + vfFrameDragShadow + vfPen(7) + vfInset(1) + vfRound(5),
+	declareSelf: 'base,
+	DragWindow: func(a1) begin
+		local l1, l2;
+		InkOff(a1);
+		clicker();
+		l2 := (if ((l1 := self:Parent()) = GetRoot()) then RelBounds(displayParams.appAreaGlobalLeft, displayParams.appAreaGlobalTop, displayParams.appAreaWidth, displayParams.appAreaHeight) else l1:GlobalBox());
+		if (if (if (not ViewContainsCaretView(self)) then CommandKeyboardConnected()) then (not RestoreKeyView(self))) then begin
+				if self.defaultKeyViewName then begin
+						SetKeyView(self.(defaultKeyViewName), 0)
+					end else begin
+						if (if self.textFlags then (BAnd(self.textFlags, 16384) <> 0)) then begin
+								SetKeyView(self, 0)
+							end
+					end
+			end;
+		self:MoveBehind(nil);
+		self:Drag(a1, l2);
+		self:Dirty()
+	end,
+	viewClickScript: func(a1) begin
+		local l1, l2, l3;
+		(if (if (self = base) then (BAnd(viewFormat, 240) = 208)) then begin
+				l1 := GetPoint(0, a1);
+				l2 := GetPoint(1, a1);
+				l3 := self:GlobalBox();
+				(if (if ((l2 - l3.top) < 10) then (abs((l1 - ((l3.left + l3.right) >> 1))) < 10)) then begin
+						base:DragWindow(a1);
+						true
+					end)
+			end)
+	end,
+	noScroll: "This application does not support scrolling",
+	noOverview: "This application does not support Overview",
+	beenThereDoneThat: nil,
+	viewSetupFormScript: func() begin
+		local l1, l2;
+		(if (l1 := self:?GlobalBox()) then (if ((((((l2 := displayParams).appAreaGlobalLeft + l2.appAreaWidth) < l1.right) or ((l2.appAreaGlobalTop + l2.appAreaHeight) < l1.bottom)) or (l2.appAreaGlobalLeft > l1.left)) or (l2.appAreaGlobalTop > l1.top)) then RemoveSlot(self, 'viewBounds)))
+	end,
+	viewScrollUpScript: func() begin
+		(if (not beenThereDoneThat) then begin
+				beenThereDoneThat := true;
+				self:Notify(3, "Up Arrow", noScroll)
+			end)
+	end,
+	viewScrollDownScript: func() begin
+		(if (not beenThereDoneThat) then begin
+				beenThereDoneThat := true;
+				self:Notify(3, "Down Arrow", noScroll)
+			end)
+	end,
+	viewOverviewScript: func() begin
+		self:Notify(3, "Overview", noOverview)
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewScrollUpScript_code := same("protoDragger.viewScrollUpScript.instructions");

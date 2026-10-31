@@ -1,0 +1,14 @@
+// canonicalFramePartInstallInfo, and what only it reaches
+
+canonicalFramePartInstallInfo := {
+	partType: nil,
+	partFrame: nil,
+	packageId: nil,
+	packageName: nil,
+	partIndex: nil,
+	size: nil,
+	packageType: nil,
+	packageStyle: nil,
+	deviceKind: nil,
+	deviceNumber: nil
+};

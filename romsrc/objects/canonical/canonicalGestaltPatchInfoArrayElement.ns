@@ -1,0 +1,3 @@
+// canonicalGestaltPatchInfoArrayElement, and what only it reaches
+
+canonicalGestaltPatchInfoArrayElement := {fPatchCheckSum: nil, fPatchVersion: nil, fPatchPageCount: nil, fPatchFirstPageIndex: nil};

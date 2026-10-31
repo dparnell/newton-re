@@ -1,0 +1,8 @@
+// cardfile, and what only it reaches
+
+cardfile := {
+	viewFlags: vApplication + vClipping + vFloating + vClickable,
+	appSymbol: 'cardfile,
+	preallocatedContext: 'cardfile,
+	_proto: @protoFloater
+};

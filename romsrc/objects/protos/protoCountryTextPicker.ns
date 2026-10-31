@@ -1,0 +1,3 @@
+// protoCountryTextPicker, and what only it reaches
+
+protoCountryTextPicker := {_proto: @protoMapTextPicker};

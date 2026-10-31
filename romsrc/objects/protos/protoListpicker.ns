@@ -1,0 +1,1130 @@
+// protoListpicker, and what only it reaches
+
+protoListpicker := {
+	anyFakes: nil,
+	viewFormat: vfFillWhite + vfRound(2),
+	dontPurge: nil,
+	AppAll: allItems,
+	fTapinfo: nil,
+	suppressFolderTabs: nil,
+	suppressFind: true,
+	validIfFake: nil,
+	suppressNew: nil,
+	viewFlags: vVisible + vApplication + vClickable,
+	suppressBorder: nil,
+	myQuerySpec: nil,
+	reviewSelections: nil,
+	fCurrentKey: nil,
+	totalSelected: 0,
+	viewBounds: {left: 2, top: 20, right: -2, bottom: 260},
+	fSoup: nil,
+	validIfSelected: nil,
+	appObject: [|Array|: item_2, items_2],
+	soupChangeSymbol: 'listpicker,
+	nowShowing: 'all,
+	suppressScrollers: nil,
+	cursor: nil,
+	labelsFilter: '_all,
+	origListBounds: nil,
+	soupCursor: nil,
+	readOnly: nil,
+	multiCursor: nil,
+	viewJustify: vjParentFullH,
+	fakeID: nil,
+	fOpenEditor: nil,
+	suppressAZTabs: nil,
+	querySpec: nil,
+	declareSelf: 'pickBase,
+	ersatzCursor: {
+		_proto: @arrayErsatzCursor,
+		New: func(a1, a2) begin
+			local l1;
+			(l1 := inherited:New(a1, a2))._proto := l1._parent;
+			l1._parent := a1.context;
+			l1
+		end,
+		GotoKey: compile(
+			constants: {
+				kFunction_4503ad: func(a1, a2) begin
+					(if BeginsWith(a2, a1) then 0 else StrCompare(a1, a2))
+				end
+			},
+			func(a1) begin
+				local l1;
+				inherited:GotoKey((l1 := (if IsInstance(a1, 'string) then BSearchLeft(things, a1, kFunction_4503ad, func(a1) begin
+						pickerDef:Get(a1, pickerDef._sortPath, 'sortText)
+					end) else a1)))
+			end)
+	},
+	soupToQuery: nil,
+	canScrollDown: nil,
+	suppressCloseBox: nil,
+	viewClass: clView,
+	suppressCounter: nil,
+	suppressSelOnlyCheckbox: nil,
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	fBorder: nil,
+	canScrollUp: nil,
+	folderDefault: '_all,
+	GetTargetInfo: func(a1) begin
+		(if (a1 = 'Filing) then {target: nil, targetType: nil, targetView: self, targetStore: GetDefaultStore()} else self:Parent():?GetTargetInfo(a1))
+	end,
+	viewSetupDoneScript: func() begin
+		local l1;
+		l1 := func(a1, a2, a3, a4) begin
+			ProtoPerformIfDefined(self, a3, [Array: a1, a4])
+		end;
+		if (if fSoup then soupChangeSymbol) then begin
+				RegSoupChange(fSoup:GetName(), soupChangeSymbol, l1)
+			end;
+		self:Refresh()
+	end,
+	GetUniqueFakeID: func() begin
+		anyFakes := true;
+		(if (not fakeID) then (fakeID := 0) else (fakeID := (fakeID + 1)))
+	end,
+	closeBox: nil,
+	UpdateCursor: func() begin
+		(if (nowShowing = 'selected) then begin
+				ersatzCursor.validTest := validIfSelected;
+				(cursor := ersatzCursor)
+			end else (if soupCursor then (if anyFakes then begin
+						ersatzCursor.validTest := validIfFake;
+						(cursor := multiCursor)
+					end else (cursor := soupCursor)) else begin
+					ersatzCursor.validTest := validAlways;
+					(cursor := ersatzCursor)
+				end))
+	end,
+	viewQuitScript: func() begin
+		local l1, l2;
+		if (if IsFrame(fOpenEditor) then (l1 := GetView(fOpenEditor))) then begin
+				l1:Close()
+			end;
+		fTapinfo := nil;
+		l2 := (not (pickerDef.dontPurge or dontPurge));
+		listBase:CleanupSelected(selected, l2);
+		(if (if fSoup then soupChangeSymbol) then UnRegSoupChange(fSoup:GetName(), soupChangeSymbol))
+	end,
+	viewDrawScript: func() begin
+		inherited:?viewDrawScript();
+		(if fBorder then self:DrawShape(fBorder, {pensize: 2}))
+	end,
+	listBase: nil,
+	viewChildren: [viewChildren:
+		folderTabs,
+		AZTabs_2,
+		listBase,
+		closeBox,
+		selCountText,
+		selectedCheckBox,
+		dividerLine,
+		upDownScroller,
+		findNnewContainer,
+		tapMasker
+	],
+	MaskTaps: func(a1) begin
+		(if a1 then tapMasker:Open() else tapMasker:Close())
+	end,
+	SetNowShowing: func(a1) begin
+		nowShowing := a1;
+		listBase:RedoCursor()
+	end,
+	SetupCursor: compile(
+		constants: {
+			kFunction_450079: func(a1) begin
+				local l1;
+				if (not a1) then begin
+						return nil
+					end;
+				(if IsInstance(a1, 'alias) then ResolveEntryAlias(a1) else (if (if IsFrame(a1) then a1._alias) then (if (l1 := ResolveEntryAlias(a1._alias)) then l1 else a1) else a1))
+			end
+		},
+		func(a1) begin
+			local l1, l2, l3, l4;
+			l1 := self;
+			if (not (l2 := soupToQuery)) then begin
+					if pickerDef.soupToQuery then begin
+							l2 := pickerDef.soupToQuery;
+							l1 := pickerDef
+						end
+				end;
+			self.fSoup := (if l2 then (if IsInstance(l2, 'string) then GetUnionSoup(l2) else l1:soupToQuery()));
+			self.myQuerySpec := (if querySpec then querySpec else (if pickerDef.querySpec then pickerDef.querySpec else '{type: index, indexPath: sorton}));
+			self.clientFilter := myQuerySpec.validTest;
+			if fSoup then begin
+					self.myQuerySpec := self:SetupFiltering(myQuerySpec);
+					self.soupCursor := fSoup:Query(myQuerySpec)
+				end;
+			if (not selected) then begin
+					selected := [Array: ]
+				end;
+			ersatzCursor := ersatzCursor:New({context: self}, selected);
+			self.validAlways := func(a1) begin
+				((a1.labels = labelsFilter) or (labelsFilter = '_all))
+			end;
+			self.validIfSelected := func(a1) begin
+				(if (not a1._Unselected) then ((a1.labels = labelsFilter) or (labelsFilter = '_all)))
+			end;
+			self.validIfFake := func(a1) begin
+				(if a1._fakeID then ((a1.labels = labelsFilter) or (labelsFilter = '_all)))
+			end;
+			if fSoup then begin
+					l3 := func(a1, a2, a3) begin
+						local l1, l2, l3, l4, l5;
+						(if (a3 = '|=|) then (if IsNameRef(a1) then ((if a1._fakeID then (a1._fakeID = a2._fakeID)) or (if (if a1._alias then a2._alias) then IsSameEntry(a1._alias, a2._alias))) else begin
+									l1 := EntryFromObj(a1);
+									l2 := EntryFromObj(a2);
+									(if (if l1 then l2) then IsSameEntry(l1, l2))
+								end) else begin
+								l3 := (if IsNameRef(a1) then pickerDef:Get(a1, pickerDef._sortPath, 'sortText) else a1.sorton);
+								l4 := (if IsNameRef(a2) then pickerDef:Get(a2, pickerDef._sortPath, 'sortText) else a2.sorton);
+								((if ((l5 := StrCompare(l3, l4)) < 0) then (a3 = '|<|)) or (if (l5 > 0) then (a3 = '|>|)))
+							end)
+					end;
+					self.multiCursor := @protoMultiCursor:New([Array: soupCursor, ersatzCursor], l3)
+				end;
+			self:UpdateCursor();
+			(if (if a1 then pickerDef.singleSelect) then cursor:GotoKey((fCurrentKey := self:IndexStr((l4 := call (kFunction_450079) with (a1))))) else begin
+					cursor:Reset();
+					(fCurrentKey := nil)
+				end)
+		end),
+	tapMasker: nil,
+	IndexStr: func(a1) begin
+		local l1, l2;
+		(if a1 then (if StrFilled((l1 := pickerDef:Get(a1, pickerDef._sortPath, 'sortText))) then (if (l2 := StrPos(l1, ",", 0)) then Substr(l1, 0, l2) else l1) else " "))
+	end,
+	upDownScroller: nil,
+	SetCursor: func(a1) begin
+		(self.cursor := a1)
+	end,
+	allocateContext: [|Array|:
+		'folderTabs,
+		folderTabs,
+		'AZTabs,
+		AZTabs_2,
+		'listBase,
+		listBase,
+		'closeBox,
+		closeBox,
+		'selCountText,
+		selCountText,
+		'selectedCheckBox,
+		selectedCheckBox,
+		'dividerLine,
+		dividerLine,
+		'upDownScroller,
+		upDownScroller,
+		'findNnewContainer,
+		findNnewContainer,
+		'tapMasker,
+		tapMasker
+	],
+	ChangePickerDef: func(a1) begin
+		self:SetupPickerDef(a1);
+		listBase:SetupColumns();
+		if folderTabs.viewCObject then begin
+				SetValue(folderTabs.title, 'text, pickerDef.name)
+			end;
+		l1 := ClassOf(a1);
+		l2 := 0;
+		local l1;
+		local l2;
+		(for l3 := 0 to (Length(selected) - 1) do begin
+				local l6, l7;
+				if (not IsSubclass((l6 := selected[l3])._entryClass, l1)) then begin
+						(l7 := (selected[l3] := pickerDef:MakeNameRef(l6, l1)))._Unselected := (l6._Unselected or (Length(pickerDef:Validate(l7, listBase.fRequiredPaths)) > 0));
+						l7._fakeID := l6._fakeID;
+						l6 := l7
+					end;
+				if (not l6._Unselected) then begin
+						listBase.freshest := {nameRef: l6};
+						l2 := (l2 + 1)
+					end
+			end);
+		totalSelected := l2;
+		listBase:SetupAbstracts(cursor:clone());
+		self:Dirty()
+	end,
+	SetupPickerDef: func(a1) begin
+		local l1;
+		l1 := a1.primaryPath;
+		(if IsReadOnly(a1) then (pickerDef := {_proto: a1, class: a1.class, _sortPath: (if l1 then l1 else a1.columns[0].fieldPath)}) else ((pickerDef := a1)._sortPath := (if l1 then l1 else pickerDef.columns[0].fieldPath)))
+	end,
+	FilterChanged: func() begin
+		if fSoup then begin
+				pickBase.myQuerySpec := self:SetupFiltering(myQuerySpec);
+				soupCursor := fSoup:Query(myQuerySpec);
+				if multiCursor then begin
+						multiCursor:ReplaceCursor(0, soupCursor)
+					end
+			end;
+		self:UpdateCursor();
+		if fCurrentKey then begin
+				cursor:GotoKey(fCurrentKey)
+			end else begin
+				cursor:Reset()
+			end;
+		self:LockScreen(true);
+		AZTabs:Update();
+		listBase:Update();
+		self:LockScreen(nil)
+	end,
+	SoupEnters: func(a1, a2) begin
+		if selected then begin
+				(foreach l1 in selected do begin
+						if (if (if l1._fakeID then l1._alias) then ResolveEntryAlias(l1._alias)) then begin
+								l1._fakeID := nil
+							end
+					end)
+			end;
+		self:RedoCursor()
+	end,
+	AddToSelected: func(a1) begin
+		local l1;
+		if selected then begin
+				l1 := ersatzCursor:entry();
+				BInsert(selected, a1, '|str<|, func(a1) begin
+					pickerDef:Get(a1, pickerDef._sortPath, 'sortText)
+				end, nil);
+				ersatzCursor:Goto(l1)
+			end else begin
+				selected := [Array: a1]
+			end;
+		pickBase:UpdateCursor();
+		selected
+	end,
+	viewScrollDownScript: func() begin
+		listBase:viewScrollDownScript()
+	end,
+	folderTabs: nil,
+	RedoCursor: func() begin
+		self:UpdateCursor();
+		if fCurrentKey then begin
+				cursor:GotoKey(fCurrentKey)
+			end else begin
+				cursor:Reset()
+			end;
+		self:LockScreen(true);
+		AZTabs:Update();
+		listBase:Update();
+		self:LockScreen(nil)
+	end,
+	findNnewContainer: nil,
+	SetupFiltering: func(a1) begin
+		local l1;
+		l1 := Clone(a1);
+		if (if fSoup then fSoup:HasTags()) then begin
+				l1.tagspec := (if (labelsFilter <> '_all) then {equal: (if labelsFilter then labelsFilter else [Array: ])});
+				l1.validTest := clientFilter
+			end else begin
+				l1.validTest := (if clientFilter then func(a1) begin
+						(if call clientFilter with (a1) then ((a1.labels = labelsFilter) or (labelsFilter = '_all)))
+					end else func(a1) begin
+						((a1.labels = labelsFilter) or (labelsFilter = '_all))
+					end)
+			end;
+		l1
+	end,
+	AddFake: func(a1, a2) begin
+		local l1;
+		l1 := a1;
+		if (not IsNameRef(a1)) then begin
+				(l1 := pickerDef:MakeNameRef(a1, nil))._fakeID := self:GetUniqueFakeID()
+			end;
+		l1._Unselected := (not a2);
+		self:AddToSelected(l1);
+		listBase:Update()
+	end,
+	selCountText: nil,
+	viewScrollUpScript: func() begin
+		listBase:viewScrollUpScript()
+	end,
+	dividerLine: nil,
+	Refresh: func() begin
+		if (not viewCObject) then begin
+				return nil
+			end;
+		selCountText:Update(totalSelected);
+		pickBase:Dirty()
+	end,
+	Update: func() begin
+		(if viewCObject then begin
+				listBase:SetupAbstracts(cursor:clone());
+				upDownScroller:Update();
+				self:Refresh()
+			end)
+	end,
+	validAlways: nil,
+	GetCursor: func() begin
+		cursor
+	end,
+	selectedCheckBox: nil,
+	viewSetupChildrenScript: func() begin
+		self:SetupPickerDef(pickerDef);
+		if (not origListBounds) then begin
+				origListBounds := listBase.viewBounds
+			end;
+		listBase.viewFont := viewFont;
+		l1 := (listBase.viewBounds := Clone(origListBounds));
+		if readOnly then begin
+				suppressSelOnlyCheckbox := true;
+				suppressNew := true;
+				reviewSelections := true
+			end;
+		if suppressFolderTabs then begin
+				self.labelsFilter := '_all;
+				self.storesFilter := nil;
+				folderTabs.viewFlags := 0;
+				l1.top := (l1.top - 13)
+			end else begin
+				if (storesFilter exists) then begin
+						self.storesFilter := storesFilter
+					end
+			end;
+		if suppressAZTabs then begin
+				AZTabs.viewFlags := 0;
+				l1.top := (l1.top - 18)
+			end;
+		if suppressScrollers then begin
+				upDownScroller.viewFlags := 0
+			end;
+		if suppressSelOnlyCheckbox then begin
+				selectedCheckBox.viewFlags := 0
+			end;
+		if suppressCloseBox then begin
+				closeBox.viewFlags := 0
+			end;
+		if (if suppressNew then suppressFind) then begin
+				findNnewContainer.viewFlags := 0
+			end;
+		if (pickerDef.singleSelect or suppressCounter) then begin
+				selCountText.viewFlags := 0
+			end;
+		if (if (if (if (if suppressSelOnlyCheckbox then suppressCloseBox) then suppressNew) then suppressFind) then (pickerDef.singleSelect or suppressCounter)) then begin
+				l1.bottom := (l1.bottom + 25);
+				dividerLine.viewFlags := 0
+			end;
+		if (not suppressBorder) then begin
+				l2 := self:LocalBox();
+				fBorder := MakeRect(0, 0, l2.right, l2.bottom)
+			end;
+		if selected then begin
+				StableSort(selected, '|str<|, func(a1) begin
+					pickerDef:Get(a1, pickerDef._sortPath, 'sortText)
+				end)
+			end else begin
+				selected := [Array: ]
+			end;
+		l3 := 0;
+		l4 := nil;
+		if selected then begin
+				l5 := ClassOf(pickerDef);
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				local l5;
+				(for l6 := 0 to (Length(selected) - 1) do begin
+						local l9;
+						if (not (l9 := selected[l6])._Unselected) then begin
+								l4 := l9;
+								listBase.freshest := {nameRef: l9};
+								l3 := (l3 + 1)
+							end;
+						if (not IsInstance(l9, l5)) then begin
+								l9 := (selected[l6] := pickerDef:MakeNameRef(l9, nil))
+							end;
+						if ((not l9._alias) or (not ResolveEntryAlias(l9._alias))) then begin
+								l9._fakeID := self:GetUniqueFakeID()
+							end else begin
+								l9._fakeID := nil
+							end
+					end)
+			end;
+		totalSelected := l3;
+		if (reviewSelections := (if (if reviewSelections then l4) then (not pickerDef.singleSelect))) then begin
+				nowShowing := 'selected
+			end;
+		self:SetupCursor(l4);
+		AddDeferredSend(AZTabs, 'Update, [Array: ])
+	end,
+	MarkCursorPosition: func() begin
+		(fCurrentKey := self:IndexStr(cursor:entry()))
+	end,
+	AZTabs: nil,
+	SoupLeaves: func(a1, a2) begin
+		(foreach l1 in selected do begin
+				if (if l1._alias then (not ResolveEntryAlias(l1._alias))) then begin
+						l1._fakeID := self:GetUniqueFakeID()
+					end
+			end);
+		self:RedoCursor()
+	end,
+	GetSelected: func(a1) begin
+		local l1;
+		listBase:CleanupSelected((l1 := Clone(selected)), a1);
+		l1
+	end
+};
+
+folderTabs := {
+	viewJustify: vjCenterV + vjParentFullH,
+	viewBounds: {left: 1, top: 0, right: -1, bottom: 20},
+	title: uCardPositionAlertButton,
+	viewClickScript: func(a1) begin
+		nil
+	end,
+	viewSetupDoneScript: func() begin
+		SetValue(title, 'text, pickerDef.name)
+	end,
+	preallocatedContext: 'folderTabs,
+	_proto: @protoNewShowBar
+};
+
+AZTabs_2 := {
+	fBars: nil,
+	viewJustify: vjCenterH + vjParentFullH + vjSiblingBottomV,
+	viewDrawScript: func() begin
+		local l1;
+		if (not suppressBorder) then begin
+				if (not fBars) then begin
+						l1 := self:LocalBox();
+						fBars := [Array: MakeLine(0, 0, 0, l1.bottom), MakeLine((l1.right - 2), 0, (l1.right - 2), l1.bottom)]
+					end
+			end;
+		self:hiliter(curIndex);
+		(if (not suppressBorder) then self:DrawShape(fBars, {pensize: 2}))
+	end,
+	viewClickScript: func(a1) begin
+		inherited:viewClickScript(a1)
+	end,
+	PickLetterScript: func(a1) begin
+		if StrEqual(a1, " ") then begin
+				cursor:Reset()
+			end else begin
+				cursor:GotoKey(a1)
+			end;
+		self:Update();
+		listBase:Update();
+		listBase:MarkCursorPosition()
+	end,
+	Update: func() begin
+		local l1, l2;
+		(if (if Visible(self) then (l1 := cursor:entry())) then self:setLetter((l2 := (if StrFilled((l2 := pickBase:IndexStr(cursor:entry()))) then l2[0] else $ )), true))
+	end,
+	preallocatedContext: 'AZTabs,
+	_proto: @azTabs
+};
+
+listBase := {
+	DoSelectObj: func(a1, a2) begin
+		local l1, l2;
+		l2 := (Length(pickerDef:Validate((l1 := (if IsNameRef(a1) then a1 else self:FetchNameRef(a1))), fTapinfo._reqPaths)) = 0);
+		if (if pickerDef.singleSelect then l2) then begin
+				self:DeselectFreshest()
+			end;
+		if l2 then begin
+				if l1._Unselected then begin
+						if (l1._Unselected = 'totally) then begin
+								self:AddToSelected(l1)
+							end;
+						l1._Unselected := nil;
+						freshest := {nameRef: l1, index: a2};
+						totalSelected := (totalSelected + 1)
+					end
+			end;
+		(not l1._Unselected)
+	end,
+	fColumns: nil,
+	viewFormat: vfFillWhite,
+	checkBoxHorzOffset: 1,
+	preallocatedContext: 'listBase,
+	DoToggleSelectObj: func(a1, a2) begin
+		if a1._Unselected then begin
+				if (Length(pickerDef:Validate(a1, fTapinfo._reqPaths)) = 0) then begin
+						if pickerDef.singleSelect then begin
+								self:DeselectFreshest()
+							end;
+						if (a1._Unselected = 'totally) then begin
+								self:AddToSelected(a1)
+							end;
+						a1._Unselected := nil;
+						freshest := {nameRef: a1, index: a2};
+						totalSelected := (totalSelected + 1)
+					end
+			end else begin
+				a1._Unselected := true;
+				freshest := nil;
+				totalSelected := (totalSelected - 1)
+			end;
+		(not a1._Unselected)
+	end,
+	freshest: nil,
+	viewFlags: vVisible + vApplication + vClickable,
+	fEditPaths: nil,
+	HitNewbutton: func() begin
+		local l1;
+		(l1 := pickerDef:MakeNameRef(nil, nil))._Unselected := 'totally;
+		l1.labels := (if (labelsFilter <> '_all) then labelsFilter);
+		self:SetTapInfo(l1, nil, nil, 'New);
+		(fOpenEditor := pickerDef:New(fTapinfo, self))
+	end,
+	Abstract: func(a1, a2) begin
+		if (not (l1 := self:FindNameRefInSelected(a1))) then begin
+				l1 := a1
+			end;
+		if (l1 = freshest) then begin
+				local l1;
+				freshest.index := (for l2 := (Length(pieces) - 1) to 0 by -1 do begin
+						if (pieces[l2] <> nil) then begin
+								break l2
+							end
+					end)
+			end;
+		if fColumns then begin
+				(l7 := Clone(a2)).right := firstColumnTextIndent;
+				l8 := 'text;
+				local l5;
+				local l6;
+				local l7;
+				local l8;
+				l5 := (foreach l6 in fColumns collect begin
+					local l12;
+					l7.left := l7.right;
+					l7.right := l6.right;
+					l12 := pickerDef:Get(l1, l6.fieldPath, l8);
+					l8 := 'text;
+					if (if (not l6.noPopup) then pickerDef:?MakePopup(l1, l6.fieldPath)) then begin
+							l12 := Stringer([Array: $\uFC01, l12])
+						end;
+					(if IsInstance(l12, 'string) then MakeText((l12 := StrTruncate(Clone(l12), (l7.right - l7.left))), l7.left, (l7.top - 2), l7.right, (l7.bottom - 2)) else OffsetShape(l12, l7.left, l7.top))
+				end)
+			end;
+		l5
+	end,
+	viewBounds: {left: 2, top: 38, right: -2, bottom: -25},
+	FindNameRefPos: compile(
+		constants: {
+			kFunction_453bd5: func(a1, a2) begin
+				(if a2 then IsSameEntry(a1, a2))
+			end,
+			kFunction_453bf5: func(a1, a2) begin
+				(a1 = a2)
+			end
+		},
+		func(a1) begin
+			local l1;
+			(if (if selected then (Length(selected) > 0)) then (if (l1 := AliasFromObj(a1)) then LSearch(selected, l1, 0, kFunction_453bd5, '_alias) else (if IsNameRef(a1) then LSearch(selected, a1._fakeID, 0, kFunction_453bf5, '_fakeID))))
+		end),
+	_proto: @protoSoupOverview,
+	leftMargin: 0,
+	SetupAbstracts: func(a1) begin
+		if freshest then begin
+				freshest.index := nil
+			end;
+		inherited:SetupAbstracts(a1)
+	end,
+	viewScrollDownScript: func() begin
+		if (not canScrollDown) then begin
+				return true
+			end;
+		self:LockScreen(true);
+		inherited:?viewScrollDownScript();
+		AZTabs:Update();
+		upDownScroller:Update();
+		self:LockScreen(nil);
+		listBase:MarkCursorPosition();
+		true
+	end,
+	viewJustify: vjParentFullH + vjParentFullV,
+	checkScrollability: true,
+	pickCancelledScript: func() begin
+		pickerDef:?pickCancelledScript(fTapinfo, self)
+	end,
+	GetTheRightShape: func(a1, a2) begin
+		local l1;
+		(l1 := Clone(a2)).left := (l1.left + 18);
+		(if (not readOnly) then (if self:isSelected(a1) then [Array: OffsetShape(MakeShape(CheckOn), ((l1.left - 18) + checkBoxHorzOffset), (l1.top + checkBoxVertOffset)), self:Abstract(a1, l1)] else [Array: OffsetShape(MakeShape(CheckOff), ((l1.left - 18) + checkBoxHorzOffset), (l1.top + checkBoxVertOffset)), self:Abstract(a1, l1)]) else self:Abstract(a1, a2))
+	end,
+	Tapped: compile(
+		constants: {
+			kFunction_450079: func(a1) begin
+				local l1;
+				if (not a1) then begin
+						return nil
+					end;
+				(if IsInstance(a1, 'alias) then ResolveEntryAlias(a1) else (if (if IsFrame(a1) then a1._alias) then (if (l1 := ResolveEntryAlias(a1._alias)) then l1 else a1) else a1))
+			end
+		},
+		func(a1) begin
+			local l1, l2;
+			l1 := fTapinfo.nameRef;
+			l2 := fTapinfo.tapIndex;
+			self:LockScreen(true);
+			if (a1 = 'select) then begin
+					self:DoSelectObj(l1, l2)
+				end else begin
+					if (a1 = 'Toggle) then begin
+							self:DoToggleSelectObj(l1, l2)
+						end
+				end;
+			if (if fTapinfo.tapIndex then viewCObject) then begin
+					self:UpdatePiece(fTapinfo.tapIndex, l1)
+				end;
+			if (not StrEqual(fTapinfo._sortValue, pickerDef:Get(l1, pickerDef._sortPath, 'sortText))) then begin
+					cursor:Goto(call (kFunction_450079) with (l1));
+					AZTabs:Update();
+					listBase:Update();
+					listBase:MarkCursorPosition()
+				end else begin
+					if (nowShowing = 'selected) then begin
+							AZTabs:Update();
+							listBase:Update()
+						end else begin
+							self:Refresh()
+						end
+				end;
+			self:LockScreen(nil);
+			pickBase:MaskTaps(nil);
+			fTapinfo := nil;
+			(fOpenEditor := nil)
+		end),
+	SetupColumns: func() begin
+		l1 := self:LocalBox();
+		(if (fColumns := pickerDef.columns) then begin
+				if IsReadOnly(fColumns) then begin
+						fColumns := Clone(fColumns)
+					end;
+				fEditPaths := Array((l3 := Length(fColumns)), nil);
+				fRequiredPaths := Array(l3, nil);
+				l4 := 0;
+				l6 := selectIndent;
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				local l5;
+				local l6;
+				(foreach l5, l2 in fColumns do begin
+						local l8;
+						if IsReadOnly(l2) then begin
+								fColumns[l5] := (l2 := Clone(l2))
+							end;
+						fEditPaths[l5] := l2.fieldPath;
+						if (not l2.optional) then begin
+								fRequiredPaths[l4] := l2.fieldPath;
+								l4 := (l4 + 1)
+							end;
+						l8 := l6;
+						l6 := (l6 + l2.tapWidth);
+						if (l2.tapWidth <= 0) then begin
+								l6 := (l1.right + l2.tapWidth)
+							end;
+						l2.left := l8;
+						l2.right := l6;
+						if l2.doRowHilite then begin
+								l2.hiLeft := 0;
+								l2.hiRight := l1.right
+							end else begin
+								l2.hiLeft := l2.left;
+								l2.hiRight := l2.right
+							end
+					end);
+				(if (l4 < l3) then ArrayRemoveCount(fRequiredPaths, l4, (l3 - l4)))
+			end)
+	end,
+	viewScrollUpScript: func() begin
+		if (not canScrollUp) then begin
+				return true
+			end;
+		self:LockScreen(true);
+		inherited:?viewScrollUpScript();
+		AZTabs:Update();
+		upDownScroller:Update();
+		self:LockScreen(nil);
+		listBase:MarkCursorPosition();
+		true
+	end,
+	FindNameRefInSelected: func(a1) begin
+		local l1;
+		(if (l1 := self:FindNameRefPos(a1)) then selected[l1])
+	end,
+	viewSetupFormScript: func() begin
+		self.lineHeight := GetVariable(self:Parent(), 'lineHeight);
+		if ((not lineHeight) or (lineHeight < 13)) then begin
+				lineHeight := max(FontHeight(viewFont), 13)
+			end;
+		checkBoxVertOffset := (lineHeight - 13);
+		(if readOnly then (firstColumnTextIndent := 2))
+	end,
+	GetHiliteShape: func(a1, a2) begin
+		fColumn := nil;
+		fTapBox := Clone(a2);
+		l1 := nil;
+		if fColumns then begin
+				l2 := nil;
+				local l1;
+				local l2;
+				(foreach l3 in fColumns do begin
+						if (l3.right > a1) then begin
+								l2 := true;
+								break
+							end
+					end);
+				if l2 then begin
+						fColumn := l3;
+						fTapBox.left := l3.hiLeft;
+						fTapBox.right := l3.hiRight
+					end
+			end;
+		[Array: '{transferMode: 2, penPattern: 0, fillPattern: 5}, MakeRect(fTapBox.left, 0, fTapBox.right, lineHeight)]
+	end,
+	firstColumnTextIndent: 18,
+	DeselectFreshest: func() begin
+		local l1, l2;
+		(if freshest then begin
+				(l1 := freshest.nameRef)._Unselected := true;
+				totalSelected := (totalSelected - 1);
+				if (if (l2 := (if freshest.index then freshest.index else self:GetVisibleIndex(l1))) then viewCObject) then begin
+						self:UpdatePiece(l2, l1)
+					end;
+				(freshest := nil)
+			end)
+	end,
+	fColumn: nil,
+	fTapBox: nil,
+	HitItem: func(a1, a2, a3) begin
+		local l1, l2;
+		if fColumn then begin
+				hilitedIndex := nil;
+				self:SetTapInfo((l2 := self:FetchNameRef((l1 := cursor:clone():move(a1)))), a1, fTapBox, fColumn.fieldPath);
+				fOpenEditor := pickerDef:HitItem(fTapinfo, self)
+			end;
+		true
+	end,
+	viewClickScript: func(a1) begin
+		InkOff(a1);
+		(if readOnly then true else inherited:viewClickScript(a1))
+	end,
+	SetTapInfo: func(a1, a2, a3, a4) begin
+		if (l3 := pickerDef.primaryPath) then begin
+				l1 := Clone(fEditPaths);
+				l2 := Clone(fRequiredPaths);
+				if (not (l4 := pickerDef:GetPrimaryPath(a1))) then begin
+						l4 := l3
+					end;
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				(foreach l5, l6 in l1 do begin
+						if (l6 = pickerDef.primaryPath) then begin
+								l1[l5] := l4
+							end
+					end);
+				(foreach l5, l6 in l2 do begin
+						local l8;
+						if (l6 = pickerDef.primaryPath) then begin
+								l2[l5] := l4
+							end
+					end)
+			end else begin
+				l1 := fEditPaths;
+				l2 := fRequiredPaths
+			end;
+		pickBase:MaskTaps(true);
+		l8 := self:GlobalBox();
+		(fTapinfo := {nameRef: a1, tapIndex: a2, bbox: (if a3 then OffsetRect(a3, 0, ((a2 * lineHeight) + l8.top))), fieldPath: a4, editPaths: l1, _reqPaths: l2, _sortValue: Clone(pickerDef:Get(a1, pickerDef._sortPath, 'sortText)), popup: nil})
+	end,
+	pickActionScript: func(a1) begin
+		(fOpenEditor := pickerDef:?pickActionScript(a1, fTapinfo, self))
+	end,
+	insert: compile(
+		constants: {
+			kFunction_450079: func(a1) begin
+				local l1;
+				if (not a1) then begin
+						return nil
+					end;
+				(if IsInstance(a1, 'alias) then ResolveEntryAlias(a1) else (if (if IsFrame(a1) then a1._alias) then (if (l1 := ResolveEntryAlias(a1._alias)) then l1 else a1) else a1))
+			end
+		},
+		func(a1, a2) begin
+			if (a2 = 'select) then begin
+					self:DoSelectObj(a1, nil)
+				end else begin
+					if ((not a1._alias) or (not ResolveEntryAlias(a1._entryAlias))) then begin
+							a1._fakeID := self:GetUniqueFakeID();
+							a1._Unselected := true;
+							self:AddToSelected(a1)
+						end
+				end;
+			cursor:GotoKey((fCurrentKey := self:IndexStr(call (kFunction_450079) with (a1))));
+			AZTabs:Update();
+			listBase:Update();
+			listBase:MarkCursorPosition();
+			pickBase:MaskTaps(nil);
+			fTapinfo := nil;
+			(fOpenEditor := nil)
+		end),
+	GetStoreSoup: func() begin
+		fSoup
+	end,
+	GetVisibleIndex: func(a1) begin
+		local l1, l2, l3, l4;
+		l1 := AliasFromObj(a1);
+		l3 := (l2 := cursor:clone()):entry();
+		l4 := 0;
+		(while (if (l4 < maxLines) then l3) do begin
+				if (if l1 then IsSoupEntry(l3)) then begin
+						if IsSameEntry(l1, l3) then begin
+								break l4
+							end
+					end else begin
+						if (a1._fakeID = l3._fakeID) then begin
+								break l4
+							end
+					end;
+				l3 := l2:Next();
+				(l4 := (l4 + 1))
+			end)
+	end,
+	viewSetupChildrenScript: func() begin
+		self:SetupColumns();
+		inherited:?viewSetupChildrenScript()
+	end,
+	FetchNameRef: func(a1) begin
+		local l1;
+		if (not (l1 := self:FindNameRefInSelected(a1))) then begin
+				(l1 := (if IsNameRef(a1) then a1 else pickerDef:MakeNameRef(a1, nil)))._Unselected := 'totally
+			end;
+		l1
+	end,
+	CleanupSelected: func(a1, a2) begin
+		(if a1 then (for l1 := (Length(a1) - 1) to 0 by -1 do begin
+					local l4;
+					if (if (l4 := a1[l1])._Unselected then a2) then begin
+							ArrayRemoveCount(a1, l1, 1)
+						end else begin
+							if (if l4._alias then l4._fakeID) then begin
+									l4._fakeID := nil
+								end
+						end
+				end))
+	end,
+	isSelected: compile(
+		constants: {
+			kFunction_4541b5: func(a1, a2) begin
+				(if (if (not a2._Unselected) then a2._alias) then IsSameEntry(a1, a2._alias))
+			end
+		},
+		func(a1) begin
+			(if IsNameRef(a1) then (not a1._Unselected) else (if selected then LSearch(selected, AliasFromObj(a1), 0, kFunction_4541b5, nil)))
+		end),
+	fRequiredPaths: nil,
+	UpdatePiece: compile(
+		constants: {
+			kFunction_450079: func(a1) begin
+				local l1;
+				if (not a1) then begin
+						return nil
+					end;
+				(if IsInstance(a1, 'alias) then ResolveEntryAlias(a1) else (if (if IsFrame(a1) then a1._alias) then (if (l1 := ResolveEntryAlias(a1._alias)) then l1 else a1) else a1))
+			end
+		},
+		func(a1, a2) begin
+			local l1, l2, l3;
+			(l1 := self:LocalBox()).bottom := ((l1.top := (a1 * lineHeight)) + lineHeight);
+			self:LockScreen(true);
+			l2 := (pieces[a1] := self:GetTheRightShape(call (kFunction_450079) with (a2), l1));
+			l3 := MakeShape(l1);
+			self:DoDrawing('DrawShape, [Array: [Array: l3, viewStyle, l2], '{fillPattern: 5, penPattern: 5, transferMode: 3}]);
+			if (hilitedIndex = a1) then begin
+					hilitedIndex := nil
+				end;
+			self:LockScreen(nil)
+		end),
+	autoDeselect: nil,
+	selectIndent: 0
+};
+
+closeBox := {
+	viewBounds: {left: -19, top: -19, right: -6, bottom: -6},
+	preallocatedContext: 'closeBox,
+	_proto: @protoCancelButton
+};
+
+selCountText := {
+	viewJustify: vjRightH + vjCenterV + vjParentRightH + vjParentBottomV + vjSiblingLeftH,
+	viewBounds: {left: -110, top: -22, right: -8, bottom: -2},
+	viewFont: tsSystem + tsSize(9),
+	text: uCardPositionAlertButton,
+	Update: func(a1) begin
+		if (not Visible(self)) then begin
+				return nil
+			end;
+		SetValue(self, 'text, (if (a1 > 0) then ParamStr("^0 Selected", [Array: NumberStr(a1)]) else ""))
+	end,
+	preallocatedContext: 'selCountText,
+	_proto: @protoStaticText
+};
+
+selectedCheckBox := {
+	viewJustify: vjCenterV + vjParentBottomV,
+	viewBounds: {left: 5, top: -21, right: 90, bottom: -2},
+	text: "Selected Only",
+	viewSetupFormScript: func() begin
+		self.viewValue := (nowShowing = 'selected);
+		inherited:?viewSetupFormScript()
+	end,
+	valueChanged: func() begin
+		if (nowShowing = 'selected) then begin
+				nowShowing := 'all
+			end else begin
+				nowShowing := 'selected
+			end;
+		listBase:RedoCursor()
+	end,
+	preallocatedContext: 'selectedCheckBox,
+	_proto: @protoCheckbox
+};
+
+dividerLine := {
+	viewJustify: vjParentFullH + vjParentBottomV,
+	viewBounds: {left: 5, top: -25, right: -5, bottom: -24},
+	preallocatedContext: 'dividerLine,
+	_proto: @protoBorder
+};
+
+upDownScroller := {
+	viewJustify: vjParentRightH + vjParentCenterV + vjParentClip,
+	viewBounds: {left: -20, top: 0, right: -3, bottom: 33},
+	viewFlags: vVisible + vFloating,
+	preallocatedContext: 'upDownScroller,
+	viewSetupDoneScript: func() begin
+		inherited:?viewSetupDoneScript();
+		self:SetArrow('up, (if canScrollUp then 'more else 'normal));
+		self:SetArrow('down, (if canScrollDown then 'more else 'normal))
+	end,
+	viewScroll2DScript: func(a1, a2) begin
+		if (a1 = 'up) then begin
+				listBase:viewScrollUpScript()
+			end else begin
+				if (a1 = 'down) then begin
+						listBase:viewScrollDownScript()
+					end
+			end;
+		RefreshViews()
+	end,
+	Update: func() begin
+		self:SetArrow('up, (if canScrollUp then 'more else 'normal));
+		self:SetArrow('down, (if canScrollDown then 'more else 'normal));
+		Scroller:Dirty()
+	end,
+	_proto: @protoUpDownScroller
+};
+
+newButton := {
+	viewJustify: 8389846,
+	viewBounds: {left: 6, top: 0, right: 36, bottom: 0},
+	text: new_2,
+	buttonClickScript: func() begin
+		listBase:HitNewbutton()
+	end,
+	preallocatedContext: 'newButton,
+	_proto: @protoTextButton
+};
+
+findButton := {
+	viewJustify: 8388806,
+	viewBounds: {left: 0, top: 0, right: 30, bottom: 0},
+	text: find,
+	buttonClickScript: func() begin
+		local l1, l2, l3, l4;
+		l1 := BuildContext(pseudoFinder);
+		if (Length((l2 := pickBase:FindSelections())) = 1) then begin
+				if (Length((l4 := l2[0]).items) = 1) then begin
+						pickBase:ShowItem(@compatibleFinder, l4.items[0]);
+						l3 := true
+					end
+			end;
+		(if (not l3) then (fOpenEditor := l1:OpenFind(l2, pickerDef.findTitle, pickBase)))
+	end,
+	preallocatedContext: 'findButton,
+	_proto: @protoTextButton
+};
+
+findNnewContainer := {
+	viewClass: clView,
+	viewFlags: vVisible,
+	viewFormat: vfFillWhite,
+	viewJustify: vjCenterH + vjCenterV + vjParentCenterH + vjParentBottomV,
+	viewBounds: {left: 0, top: -19, right: 66, bottom: -6},
+	viewSetupFormScript: func() begin
+		(if (suppressNew or suppressFind) then begin
+				self.viewBounds := SetBounds(0, -19, 30, -6);
+				if suppressNew then begin
+						newButton.viewFlags := 0
+					end;
+				(if suppressFind then (findButton.viewFlags := 0))
+			end)
+	end,
+	Update: func(a1) begin
+		if (not Visible(self)) then begin
+				return nil
+			end;
+		(if (a1 = 0) then begin
+				if (not suppressFind) then begin
+						findButton:Close()
+					end;
+				newButton:Close();
+				newButton:Open()
+			end else (if (a1 = 1) then begin
+					if (not suppressFind) then begin
+							findButton:Open()
+						end;
+					newButton:Close();
+					newButton:Open()
+				end))
+	end,
+	preallocatedContext: 'findNnewContainer,
+	viewChildren: [viewChildren: newButton, findButton],
+	newButton: nil,
+	allocateContext: [|Array|: 'newButton, newButton, 'findButton, findButton],
+	findButton: nil
+};
+
+tapMasker := {
+	viewClass: clView,
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewFlags: vFloating + vClickable,
+	viewFormat: 0,
+	viewClickScript: func(a1) begin
+		(if (if fOpenEditor then Visible(fOpenEditor)) then true else begin
+				AddDeferredSend(self, 'Close, [Array: ]);
+				nil
+			end)
+	end,
+	preallocatedContext: 'tapMasker
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+Tapped_literal16 := same("listBase.Tapped.literals[16]");
+
+ChangePickerDef_literal19 := same("protoListpicker.ChangePickerDef.literals[19]");
+
+GotoKey_code := same("protoListpicker.ersatzCursor.GotoKey.literals[4].instructions");
+
+SetupCursor_code := same("protoListpicker.SetupCursor.literals[20].instructions");
+
+viewScrollDownScript_code_2 := same("listBase.viewScrollDownScript.instructions");
+
+FindNameRefPos_code := same("listBase.FindNameRefPos.literals[7].instructions");
+
+DoSelectObj_literal11 := same("listBase.DoSelectObj.literals[11]");
+
+GetStoreSoup_code := same("listBase.GetStoreSoup.instructions");

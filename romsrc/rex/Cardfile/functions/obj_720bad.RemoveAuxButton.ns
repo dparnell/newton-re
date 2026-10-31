@@ -1,5 +1,0 @@
-@@ 0x73fbd1
-func(a1) begin
-	statusBar:?RedoChildren()
-end
-@@end

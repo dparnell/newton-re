@@ -1,0 +1,9 @@
+// ratchetSound, and what only it reaches
+
+ratchetSound := {
+	sndFrameType: 'simpleSound,
+	samplingRate: samplingRate_3,
+	dataType: 8,
+	compressionType: 0,
+	samples: sound('samples, "resources/samples/3d4935.wav")
+};

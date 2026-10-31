@@ -1,0 +1,5 @@
+// frame, and what only it reaches
+
+frame := {text: configuration, labelText: configuration, path: 'configuration, _proto: @8200};
+
+configuration := "Configuration";

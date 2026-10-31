@@ -1,5 +1,0 @@
-@@ 0x54ef0d
-func() begin
-	SetKeyView(iconSpace, 0)
-end
-@@end

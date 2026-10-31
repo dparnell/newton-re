@@ -1,6 +1,0 @@
-@@ 0x101bdcd
-func(a1) begin
-	SetClass(target.(path), labelCommands[a1].symbol);
-	newtAppBase.targetView:?StartFlush()
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x1048d89
-func() begin
-	(if fWhyLinkDropped then self:DoEvent('ReleaseTimerExpired, nil))
-end
-@@end

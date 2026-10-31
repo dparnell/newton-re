@@ -1,0 +1,6 @@
+// sortTables, and what only it reaches
+
+sortTables := [|Array|:
+	texttable('Sort, "resources/Sort/62cbb9.txt"),
+	texttable('Sort, "resources/Sort/62d1f1.txt")
+];

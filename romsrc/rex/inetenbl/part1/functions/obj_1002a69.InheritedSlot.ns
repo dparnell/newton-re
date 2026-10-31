@@ -1,8 +1,0 @@
-@@ 0x1015acd
-func(a1) begin
-	local l1;
-	l1 := self;
-	(while (if l1 then (not HasSlot(l1, a1))) do (l1 := l1._proto));
-	(if (if l1 then l1._proto) then l1._proto.(a1))
-end
-@@end

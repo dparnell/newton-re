@@ -1,0 +1,267 @@
+// protoDatepicker, and what only it reaches
+
+protoDatepicker := {
+	viewClass: clView,
+	viewFlags: vVisible,
+	viewFormat: nil,
+	viewBounds: {left: 0, top: 35, right: 120, bottom: 135},
+	declareSelf: 'pickerBase,
+	singleDay: true,
+	noTodayShow: nil,
+	datesFont: @fontSystem9,
+	labelFont: @fontSystem9Bold,
+	titleHeight: nil,
+	monthSpec: 11,
+	monthYearSpec: 716,
+	viewSetupChildrenScript: func() begin
+		monthView.datesFont := datesFont;
+		monthView.labelFont := labelFont;
+		if (not selectedDates) then begin
+				selectedDates := [Array: Time()]
+			end;
+		if (Date(selectedDates[0]).year = 2920) then begin
+				noTodayShow := true
+			end;
+		(monthYearLabel.text := self:JamIt())
+	end,
+	JamIt: func() begin
+		local l1, l2, l3, l4;
+		l1 := Date(selectedDates[0]);
+		if ((l2 := Length(selectedDates)) > 1) then begin
+				if (if ((endDate := Date(selectedDates[(l2 - 1)])).month <> l1.month) then monthView.month) then begin
+						l1.month := monthView.month;
+						l1.year := monthView.year;
+						l1.Date := 1
+					end
+			end;
+		if (l1.year = 2920) then begin
+				l3 := monthSpec
+			end else begin
+				l3 := monthYearSpec
+			end;
+		LongDateStr((l4 := TotalMinutes(l1)), l3)
+	end,
+	monthChangedScript: func() begin
+		self:Dirty();
+		self:SetTitle();
+		self:?DateChanged(selectedDates)
+	end,
+	SetTitle: func() begin
+		SetValue(monthYearLabel, 'text, self:JamIt());
+		monthYearLabel:Dirty()
+	end,
+	Refresh: func() begin
+		monthView:Dirty();
+		self:SetTitle()
+	end,
+	viewChildren: [viewChildren: titleBar, monthView],
+	titleBar: nil,
+	allocateContext: [|Array|: 'titleBar, titleBar, 'monthYearLabel, monthYearLabel, 'monthView, monthView],
+	monthYearLabel: nil,
+	monthView: nil
+};
+
+titleBarProto := {
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewBounds: nil,
+	viewJustify: 0,
+	viewFormat: vfFillWhite,
+	lastPressTime: nil,
+	icon: nil,
+	viewClickScript: func(a1) begin
+		lastPressTime := 0;
+		inherited:viewClickScript(a1)
+	end,
+	ReadyToFire: func() begin
+		if (not lastPressTime) then begin
+				lastPressTime := Ticks()
+			end else begin
+				if (Ticks() < (lastPressTime + 30)) then begin
+						return nil
+					end else begin
+						lastPressTime := Ticks()
+					end
+			end;
+		true
+	end,
+	buttonPressedScript: func() begin
+		self:?MonthPicked();
+		monthView:Dirty();
+		self:SetTitle();
+		self:?DateChanged(selectedDates);
+		RefreshViews()
+	end,
+	_proto: @protoPictureButton
+};
+
+titleBar := {
+	viewClass: clView,
+	viewFlags: vVisible,
+	viewFormat: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 12},
+	viewJustify: 8388662,
+	CarefullIncrementMonth: func(a1, a2) begin
+		local l1;
+		if (((l1 := Date(a1)).month <> monthView.month) or (l1.year <> monthView.year)) then begin
+				l1.month := monthView.month;
+				l1.year := monthView.year;
+				l1.Date := 1
+			end;
+		if (if (l1.year = 2920) then ((l1.month + a2) > 12)) then begin
+				a2 := (a2 - 12)
+			end;
+		if (if (l1.year = 2920) then ((l1.month + a2) < 1)) then begin
+				a2 := (a2 + 12)
+			end;
+		IncrementMonth(TotalMinutes(l1), a2)
+	end,
+	viewSetupFormScript: func() begin
+		local l1;
+		self.viewBounds := Clone(self.viewBounds);
+		(if titleHeight then (self.viewBounds.bottom := titleHeight) else begin
+				l1 := viewFont;
+				if (titleFont exists) then begin
+						l1 := titleFont
+					end;
+				(self.viewBounds.bottom := max(FontHeight(l1), 12))
+			end)
+	end,
+	debug: 2574,
+	preallocatedContext: 'titleBar,
+	viewChildren: [viewChildren:
+		{
+			_proto: titleBarProto,
+			viewBounds: {left: 0, top: 0, right: 10, bottom: 0},
+			viewJustify: vjCenterV + vjParentFullV,
+			icon: @leftBitmap,
+			buttonPressedScript: func() begin
+				(if self:ReadyToFire() then begin
+						selectedDates := [Array: self:CarefullIncrementMonth(selectedDates[0], -1)];
+						inherited:buttonPressedScript()
+					end)
+			end
+		},
+		{
+			_proto: titleBarProto,
+			viewJustify: vjCenterV + vjParentRightH + vjParentFullV,
+			viewBounds: {left: -10, top: 0, right: 0, bottom: 0},
+			icon: @rightBitmap,
+			buttonPressedScript: func() begin
+				(if self:ReadyToFire() then begin
+						selectedDates := [Array: self:CarefullIncrementMonth(selectedDates[0], 1)];
+						inherited:buttonPressedScript()
+					end)
+			end
+		},
+		monthYearLabel
+	]
+};
+
+monthYearLabel := {
+	viewClass: clParagraphView,
+	viewJustify: 8388854,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewFormat: 0,
+	viewFont: @fontSystem9Bold,
+	viewTransferMode: 1,
+	text: uCardPositionAlertButton,
+	todayItem: nil,
+	popup: nil,
+	viewSetupFormScript: func() begin
+		if (titleFont exists) then begin
+				viewFont := titleFont
+			end;
+		(viewBounds := Clone(viewBounds)).left := 12;
+		(viewBounds.right := -12)
+	end,
+	viewHiliteScript: func(a1) begin
+		local l1, l2, l3, l4;
+		l2 := (l1 := self:LocalBox()).bottom;
+		l3 := (StrFontWidth(text, viewFont) + 4);
+		self:DrawShape(MakeRoundRect((l4 := ((l1.right - l3) div 2)), 0, (l4 + l3), l2, 8), '{transferMode: 2, penPattern: 0, fillPattern: 5});
+		true
+	end,
+	viewClickScript: compile(
+		constants: {
+			kFunction_443495: func(a1, a2, a3) begin
+				(if (((a1 = 0) or (a1 = 1)) or (a3 = 0)) then LongDateStr(a2, 12) else "")
+			end
+		},
+		func(a1) begin
+			local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+			self:hilite(true);
+			clicker();
+			(l1 := Date(selectedDates[0])).month := monthView.month;
+			l1.year := monthView.year;
+			l1.Date := 1;
+			l2 := l1.month;
+			l3 := Array(15, nil);
+			l4 := (if (selectedDates[0] <= 129600) then l2 else 3);
+			l5 := (l2 - l4);
+			l6 := 0;
+			l7 := 0;
+			(while (l7 < 12) do begin
+					l1.month := l5;
+					l9 := Date((l8 := TotalMinutes(l1))).month;
+					l10 := ParamStr("^0^?1 ^1||", [Array: LongDateStr(l8, monthSpec), (if (l1.year <> 2920) then call (kFunction_443495) with (l9, l8, l7))]);
+					if (if (l9 = 1) then (l6 > 0)) then begin
+							l3[l6] := 'pickseparator;
+							l6 := (l6 + 1)
+						end;
+					l3[l6] := {item: l10, inc: (l5 - l2)};
+					if (l5 = l2) then begin
+							l3[l6].mark := $\uFC0B
+						end;
+					l5 := (l5 + 1);
+					l6 := (l6 + 1);
+					(l7 := (l7 + 1))
+				end);
+			if noTodayShow then begin
+					l6 := (l6 - 1)
+				end else begin
+					l3[l6] := 'pickseparator;
+					l6 := (l6 + 1);
+					l3[l6] := "Today";
+					todayItem := l6
+				end;
+			SetLength(l3, (l6 + 1));
+			DoPopup((popup := l3), 4, 0, self);
+			return true
+		end),
+	pickActionScript: func(a1) begin
+		local l1, l2, l3;
+		if (a1 = todayItem) then begin
+				selectedDates := [Array: ((l3 := Time()) - (l3 mod 1440))]
+			end else begin
+				self:?MonthPicked();
+				selectedDates := [Array: self:CarefullIncrementMonth(selectedDates[0], popup[a1].inc)]
+			end;
+		pickerBase:Dirty();
+		self:hilite(nil);
+		self:SetTitle();
+		self:?DateChanged(selectedDates);
+		(popup := nil)
+	end,
+	pickCancelledScript: func() begin
+		popup := nil;
+		self:hilite(nil)
+	end,
+	preallocatedContext: 'monthYearLabel
+};
+
+monthView := {
+	viewClass: clMonthView,
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewFormat: nil,
+	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjParentFullV,
+	viewBounds: {left: 0, top: 14, right: 0, bottom: 0},
+	viewSetupFormScript: func() begin
+		((viewBounds := Clone(viewBounds)).top := titleBar.viewBounds.bottom)
+	end,
+	preallocatedContext: 'monthView
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+pickCancelledScript_code_2 := same("monthYearLabel.pickCancelledScript.instructions");

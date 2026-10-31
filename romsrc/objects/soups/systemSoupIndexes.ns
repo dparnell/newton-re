@@ -1,0 +1,6 @@
+// systemSoupIndexes, and what only it reaches
+
+systemSoupIndexes := [|Array|:
+	{structure: 'slot, type: '|string|, path: 'tag},
+	{structure: 'slot, type: '|string|, path: 'modemName}
+];

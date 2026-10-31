@@ -1,5 +1,0 @@
-@@ 0x4856c5
-func() begin
-	(icon := self:PickIcon())
-end
-@@end

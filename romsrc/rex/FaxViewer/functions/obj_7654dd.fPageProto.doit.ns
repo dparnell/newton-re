@@ -1,5 +1,0 @@
-@@ 0x765bcd
-func() begin
-	imageContainer:GotoPage(page)
-end
-@@end

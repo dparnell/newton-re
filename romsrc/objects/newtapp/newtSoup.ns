@@ -1,0 +1,184 @@
+// newtSoup, and what only it reaches
+
+newtSoup := {
+	soupName: nil,
+	soupIndices: nil,
+	soupQuery: nil,
+	soupFilter: nil,
+	storesFilter: nil,
+	soupDescr: nil,
+	theSoup: nil,
+	theCursor: nil,
+	appSymbol: nil,
+	querySoup: nil,
+	defaultDataType: nil,
+	CreateBlankEntry: func() begin
+		{}
+	end,
+	UseNilLabelsAsUnfiled: nil,
+	MakeSoup: func(a1) begin
+		l1 := nil;
+		local l1;
+		local l2;
+		(foreach l3 in (l2 := GetStores()) do begin
+				l1 := (l1 or l3:HasSoup(soupName))
+			end);
+		self.appSymbol := a1;
+		theSoup := RegUnionSoup(a1, {name: soupName, userName: soupName, ownerApp: a1, userDescr: soupDescr, indexes: soupIndices});
+		(if (not l1) then self:FillNewSoup())
+	end,
+	FillNewSoup: func() begin
+		nil
+	end,
+	SetupCursor: func() begin
+		local l1;
+		querySoup := (if (if storesFilter then storesFilter:IsValid()) then theSoup:GetMember(storesFilter) else begin
+				storesFilter := nil;
+				theSoup
+			end);
+		l1 := soupQuery;
+		if (not soupFilter) then begin
+				l1 := Clone(l1);
+				if theSoup:HasTags() then begin
+						l1.tagspec := {none: GetFolderList(appSymbol, nil)}
+					end else begin
+						RemoveSlot(l1, 'tagspec);
+						l1.validTest := FilterNone
+					end
+			end else begin
+				if (soupFilter <> '_all) then begin
+						l1 := Clone(l1);
+						if theSoup:HasTags() then begin
+								l1.tagspec := {all: soupFilter}
+							end else begin
+								RemoveSlot(l1, 'tagspec);
+								l1.validTest := func(a1) begin
+									call FilterSome with (a1, soupFilter)
+								end
+							end
+					end else begin
+						if (if l1.tagspec then (not theSoup:HasTags())) then begin
+								RemoveSlot((l1 := Clone(l1)), 'tagspec)
+							end
+					end
+			end;
+		(theCursor := querySoup:Query(l1))
+	end,
+	GetCursor: func() begin
+		theCursor
+	end,
+	AddEntry: func(a1, a2) begin
+		local l1;
+		if ((a2 = nil) or (not a2:IsValid())) then begin
+				l1 := theSoup:AddToDefaultStore(a1)
+			end else begin
+				l1 := theSoup:AddToStore(a1, a2)
+			end;
+		XmitSoupChange(soupName, appSymbol, 'entryAdded, a1);
+		l1
+	end,
+	DeleteEntry: func(a1) begin
+		local l1, l2;
+		l1 := EntrySoup(a1);
+		l2 := EntryRemoveFromSoup(a1);
+		XmitSoupChange(soupName, appSymbol, 'entryRemoved, {oldSoup: l1, entry: a1});
+		l2
+	end,
+	DoneWithSoup: func(a1) begin
+		UnRegSoupChange(soupName, a1);
+		UnRegUnionSoup(soupName, a1)
+	end,
+	DuplicateEntry: func(a1, a2) begin
+		EntryUndoChanges((New := self:AddEntry(Clone(a1), a2)));
+		New
+	end,
+	AdoptEntry: func(a1, a2) begin
+		l1 := a2;
+		if (if a1 then a1.class) then begin
+				l1 := a1.class
+			end;
+		if (not l1) then begin
+				l1 := defaultDataType
+			end;
+		l2 := self:CreateBlankEntry();
+		if l1 then begin
+				l2.class := l1
+			end;
+		if (l3 := GetDataDefs(l1)) then begin
+				if HasPath(l3, 'FillNewEntry) then begin
+						l2 := l3:FillNewEntry(l2)
+					end else begin
+						if (l4 := l3:?MakeNewEntry()) then begin
+								local l1;
+								local l2;
+								local l3;
+								local l4;
+								(foreach l5, l6 in l4 do begin
+										l2.(l5) := l6
+									end)
+							end
+					end
+			end;
+		if (if UseNilLabelsAsUnfiled then (not l2.labels)) then begin
+				l2.labels := nil
+			end else begin
+				if (if (if (not l2.labels) then soupFilter) then (soupFilter <> '_all)) then begin
+						l2.labels := soupFilter
+					end
+			end;
+		if a1 then begin
+				(foreach l5, l6 in a1 do begin
+						l2.(l5) := l6
+					end)
+			end;
+		if l3 then begin
+				l3:?CheckNewEntry(l2)
+			end;
+		l2
+	end,
+	FilterNone: func(a1) begin
+		(not a1.labels)
+	end,
+	FilterSome: func(a1, a2) begin
+		(a1.labels = a2)
+	end,
+	GetAlias: func(a1) begin
+		(if a1 then MakeEntryAlias(a1))
+	end,
+	GetCursorPosition: func() begin
+		local l1;
+		(if IsSoupEntry((l1 := theCursor:entry())) then self:GetAlias(l1))
+	end,
+	GotoAlias: func(a1) begin
+		local l1;
+		(if a1 then begin
+				if (not theCursor) then begin
+						self:SetupCursor()
+					end;
+				(if (l1 := ResolveEntryAlias(a1)) then theCursor:Goto(l1))
+			end)
+	end,
+	GetCursorKey: func() begin
+		local l1;
+		if (if IsString((l1 := theCursor:EntryKey())) then (StrLen(l1) > 6)) then begin
+				l1 := Substr(l1, 0, 6)
+			end;
+		l1
+	end,
+	GotoCursorKey: func(a1) begin
+		local l1;
+		if (not theCursor) then begin
+				self:SetupCursor()
+			end;
+		if (not (l1 := theCursor:GotoKey(a1))) then begin
+				if (not (l1 := theCursor:prev())) then begin
+						l1 := theCursor:Reset()
+					end
+			end;
+		l1
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+CreateBlankEntry_code := same("newtSoup.CreateBlankEntry.instructions");

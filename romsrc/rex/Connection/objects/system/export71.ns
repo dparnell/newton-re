@@ -1,0 +1,128 @@
+// export71, and what only it reaches
+
+export71 := {
+	viewBounds: {left: 0, top: 69, right: 200, bottom: 207},
+	stepChildren: [stepChildren:
+		{title: fileInfo, _proto: @protoTitle},
+		export71Item,
+		{
+			text: nil,
+			viewBounds: {left: 5, top: 0, right: 140, bottom: 12},
+			viewFont: tsSimple + tsSize(9),
+			viewSetupFormScript: func() begin
+				(text := Clone(fileName))
+			end,
+			viewJustify: 8393728,
+			_proto: @protoStaticText
+		},
+		{
+			text: "Kind",
+			viewBounds: {left: 10, top: 74, right: 57, bottom: 86},
+			viewJustify: 8388609,
+			_proto: @protoStaticText
+		},
+		{
+			text: nil,
+			viewBounds: {left: 5, top: 0, right: 140, bottom: 12},
+			viewFont: tsSimple + tsSize(9),
+			viewJustify: 8406016,
+			viewSetupFormScript: func() begin
+				(if fileInfo.kind then (text := fileInfo.kind) else (text := "Unknown"))
+			end,
+			_proto: @protoStaticText
+		},
+		{
+			text: "Size",
+			viewBounds: {left: 10, top: 1, right: 57, bottom: 13},
+			viewJustify: 8396801,
+			_proto: @protoStaticText
+		},
+		{
+			text: nil,
+			viewBounds: {left: 5, top: 0, right: 140, bottom: 12},
+			viewFont: tsSimple + tsSize(9),
+			viewJustify: 8406016,
+			viewSetupFormScript: func() begin
+				(if fileInfo.size then (text := NumberStr(fileInfo.size)) else (text := "Unknown"))
+			end,
+			_proto: @protoStaticText
+		},
+		{
+			text: "Modified",
+			viewBounds: {left: 10, top: 1, right: 57, bottom: 13},
+			viewJustify: 8396801,
+			_proto: @protoStaticText
+		},
+		{
+			text: nil,
+			viewBounds: {left: 5, top: 0, right: 140, bottom: 12},
+			viewFont: tsSimple + tsSize(9),
+			viewJustify: 8406016,
+			viewSetupFormScript: func() begin
+				(if fileInfo.modified then (text := DateNTime(fileInfo.modified)) else (text := "Unknown"))
+			end,
+			_proto: @protoStaticText
+		},
+		{_proto: @protoCancelButton}
+	],
+	viewSetupFormScript: func() begin
+		local l1;
+		self.protoContext := GetRoot().Connection;
+		protoContext:AddOpenWindow(self);
+		(try begin
+				if (not IsFrame((l1 := protoContext:CallReadCommand(endpoint, "finf")).data)) then begin
+						Throw('|evt.ex.error|, -28012)
+					end;
+				(fileInfo := l1.data)
+			end onexception |evt.ex| do begin
+				protoContext:HandleErrorDuringStartup(endpoint, self, CurrentException().error);
+				(fileInfo := {})
+			end)
+	end,
+	fileInfo: nil,
+	killMyself: nil,
+	viewQuitScript: func() begin
+		protoContext:RemoveOpenWindow(self)
+	end,
+	viewFlags: vApplication + vFloating + vClickable,
+	viewSetupChildrenScript: func() begin
+		filesIcon:SetupViewflags()
+	end,
+	_proto: @protoFloater,
+	filesIcon: nil,
+	stepAllocateContext: [|Array|: 'filesIcon, export71Item]
+};
+
+export71Item := {
+	viewFlags: vVisible,
+	icon: nil,
+	viewFormat: nil,
+	viewBounds: {left: 25, top: 25, right: 57, bottom: 57},
+	viewSetupFormScript: func() begin
+		newIcon := MakeBitmap(32, 32, nil);
+		if (if fileInfo.icon then (Length(fileInfo.icon) = 128)) then begin
+				l1 := GetBitmapInfo(newIcon);
+				local l1;
+				(for l2 := 0 to 63 do begin
+						StuffWord(l1.bits, ((l2 * 2) + l1.scanOffset), ExtractWord(fileInfo.icon, (l2 * 2)))
+					end)
+			end;
+		(self.icon := newIcon)
+	end,
+	viewDrawScript: func() begin
+		self:DrawShape(icon, nil)
+	end,
+	SetupViewflags: func() begin
+		nil
+	end,
+	viewClass: clPictureView,
+	preAllocatedContext: 'filesIcon
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_literal3 := same("export71.stepChildren[4].viewSetupFormScript.literals[3]");
+
+viewSetupFormScript_code_5 := same("export71.stepChildren[6].viewSetupFormScript.instructions");
+
+viewQuitScript_code_2 := same("export71.viewQuitScript.instructions");

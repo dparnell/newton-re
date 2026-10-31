@@ -1,8 +1,0 @@
-@@ 0x7728f1
-func() begin
-	AddArraySlot((FSViews := [Array: ]), StartDateField);
-	AddArraySlot(FSViews, NumberOfDaysField);
-	AddArraySlot(FSViews, EndDateField);
-	inherited:?viewSetupDoneScript()
-end
-@@end

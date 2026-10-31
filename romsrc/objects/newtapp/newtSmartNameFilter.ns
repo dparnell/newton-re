@@ -1,0 +1,39 @@
+// newtSmartNameFilter, and what only it reaches
+
+newtSmartNameFilter := {
+	_proto: @newtTextFilter,
+	recFlags: 25201153,
+	dictionaries: [|Array|: 48, 7, 31, 0],
+	PathQuery: func(a1) begin
+		Query(GetUnionSoup(@cardfileSoupName), {type: 'words, words: a1})
+	end,
+	QueryItem: func(a1, a2) begin
+		(if FindStringInFrame(a1, a2, nil) then {item: GetRoot():PrimaryName(a1), id: MakeEntryAlias(a1)})
+	end,
+	ResolveItem: func(a1) begin
+		targetView:jamFromEntry(ResolveEntryAlias(a1.id))
+	end,
+	EntryToPath: func(a1) begin
+		(target.(path) := GetRoot():PrimaryName(a1))
+	end,
+	picker: func() begin
+		@protoPeoplePopup:New('|nameRef.people|, nil, self, nil)
+	end,
+	pickActionScript: func(a1) begin
+		local l1;
+		if (l1 := (if (if a1 then (Length(a1) > 0)) then (if a1[0]._alias then ResolveEntryAlias(a1[0]._alias) else a1[0]))) then begin
+				targetView:jamFromEntry(l1)
+			end;
+		baseLine:hilite(nil)
+	end,
+	ChooseItem: func(a1) begin
+		local l1, l2, l3;
+		if (if (l3 := (l2 := self:PathQuery((l1 := self:PreQuery(labelCommands[a1].item)))):entry()) then StrEqual(labelCommands[a1].item, GetRoot():PrimaryName(l3))) then begin
+				targetView:jamFromEntry(l3)
+			end;
+		if l3 then begin
+				baseLine:hilite(nil)
+			end;
+		l3
+	end
+};

@@ -1,0 +1,7 @@
+// the plain values the magic pointers and the C code name
+
+high := "High";
+
+low := "Low";
+
+medium := "Medium";

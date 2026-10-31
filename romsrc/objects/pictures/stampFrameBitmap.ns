@@ -1,0 +1,6 @@
+// stampFrameBitmap, and what only it reaches
+
+stampFrameBitmap := {
+	bits: bitmap('bits, "resources/bits/3daf01.png", "000000000004017c017c020501970224", 1),
+	bounds: {left: 0, top: 0, right: 31, bottom: 27}
+};

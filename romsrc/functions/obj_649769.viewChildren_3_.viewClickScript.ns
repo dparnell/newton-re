@@ -1,5 +1,0 @@
-@@ 0x4b4eb1
-func(a1) begin
-	(if showit then inherited:viewClickScript(a1))
-end
-@@end

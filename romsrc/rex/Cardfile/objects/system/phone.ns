@@ -1,0 +1,61 @@
+// phone, and what only it reaches
+
+phone := {
+	name: "Phone",
+	symbol: 'phone,
+	stepChildren: [|Array|: phoneItem, phoneItem_2, phoneItem_3],
+	infoFrame: {
+		_proto: infoFrameProto,
+		checkPrefix: [|Array|: nil, [pathExpr: 'phones]],
+		checkPaths: [|Array|: ],
+		stringData: true
+	},
+	viewSetupFormScript: func() begin
+		self.path := selectedPath;
+		inherited:viewSetupFormScript()
+	end,
+	fieldOrder: [|Array|: 0, 1, 2],
+	_proto: @8244,
+	areacode: nil,
+	stepAllocateContext: [|Array|: 'areacode, phoneItem, 'phoneNum, phoneItem_2, 'extension, phoneItem_3],
+	phoneNum: nil,
+	extension: nil
+};
+
+phoneItem := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+	viewLineSpacing: 32,
+	label: areaCode,
+	viewJustify: 8396848,
+	entryFlags: 16779777,
+	viewSetupDoneScript: func() begin
+		inherited:?viewSetupDoneScript();
+		if hiliteAreaCode then begin
+				AddDeferredSend(entryLine, 'SetHilite, [Array: 0, 999, true])
+			end;
+		entryLine._keyboard := GetRoot().phonekeyboard;
+		(entryLine.dictionaries := dictionaries)
+	end,
+	textChanged: func() begin
+		(changed := true)
+	end,
+	changed: nil,
+	dictionaries: 117,
+	_proto: @protoRichLabelInputLine,
+	preAllocatedContext: 'areacode
+};
+
+phoneItem_2 := {_proto: @newtPhonePopupEdit, preAllocatedContext: 'phoneNum};
+
+phoneItem_3 := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+	viewLineSpacing: 32,
+	label: extension,
+	viewJustify: 8396848,
+	entryFlags: 264705,
+	textChanged: func() begin
+		(changed := true)
+	end,
+	_proto: @protoRichLabelInputLine,
+	preAllocatedContext: 'extension
+};

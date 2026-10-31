@@ -1,5 +1,0 @@
-@@ 0x50d2d9
-func() begin
-	return nil
-end
-@@end

@@ -1,0 +1,3 @@
+// midpunctBitmap, and what only it reaches
+
+midpunctBitmap := {bits: midpunctBitmapBits, bounds: midpunctBitmapBounds};

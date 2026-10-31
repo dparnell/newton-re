@@ -1,0 +1,40 @@
+// protoHorizontal2Dscroller, and what only it reaches
+
+protoHorizontal2Dscroller := {
+	viewBounds: {left: 0, top: -17, right: 64, bottom: 0},
+	viewJustify: vjParentCenterH + vjParentBottomV,
+	Arrows: {
+		bits: bitmap('bits, "resources/bits/4410ad.png", "000000000018016b016b0012017c00d2", 1),
+		bounds: {left: 0, top: 0, right: 192, bottom: 17}
+	},
+	DirMap: {left: 0, right: 1, up: 2, down: 3},
+	StateMap: {normal: 0, more: 4, hilite: 8},
+	ArrowCount: 4,
+	viewChildren: [viewChildren:
+		{
+			viewBounds: {left: 0, top: 0, right: 16, bottom: 17},
+			arrowIndex: 0,
+			arrowDirection: 'left,
+			_proto: @abstractArrow
+		},
+		{
+			viewBounds: {left: 16, top: 0, right: 32, bottom: 17},
+			arrowIndex: 1,
+			arrowDirection: 'right,
+			_proto: @abstractArrow
+		},
+		{
+			viewBounds: {left: 32, top: 0, right: 48, bottom: 17},
+			arrowIndex: 2,
+			arrowDirection: 'up,
+			_proto: @abstractArrow
+		},
+		{
+			viewBounds: {left: 48, top: 0, right: 64, bottom: 17},
+			arrowIndex: 3,
+			arrowDirection: 'down,
+			_proto: @abstractArrow
+		}
+	],
+	_proto: @abstractScroller
+};

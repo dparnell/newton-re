@@ -1,0 +1,3 @@
+// canonicalParaCaretInfo, and what only it reaches
+
+canonicalParaCaretInfo := {class: 'paraCaret, offset: nil, length: nil};

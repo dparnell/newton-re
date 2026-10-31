@@ -1,39 +1,39 @@
 # the objects' area: 0x101cac8, 0x3d90 bytes; the byte between objects; the objects' alignment
 area	101cac8	3d90	bf	4
-101cac8	obj_101cac9	41	gc=1
-101cad8	obj_101cac9[0]	43	map=map_101caf5
+101cac8	part	41	gc=1
+101cad8	part[0]	43	map=map_101caf5
 101caf4	map_101caf5	41
 101cb14	'_ImportTable	40
 101cb34	'installScript	40
 101cb54	'devInstallScript	40
 101cb78	'devRemoveScript	40
-101cb98	obj_101cac9[0]._ImportTable	41
+101cb98	part[0]._ImportTable	41
 101cbac	'|Array|	40
-101cbc4	obj_101cac9[0]._ImportTable[0]	43	map=map_101cbdd
+101cbc4	part[0]._ImportTable[0]	43	map=map_101cbdd
 101cbdc	map_101cbdd	41
 101cbf8	'name	40
 101cc10	'major	40
 101cc28	'minor	40
 101cc40	'|SetupProtos:NIE|	40
-101cc60	obj_101cac9[0]._ImportTable[1]	43	map=map_101cbdd
+101cc60	part[0]._ImportTable[1]	43	map=map_101cbdd
 101cc78	'|InternetSetup:NIE|	40
-101cc9c	obj_101cac9[0].installScript	43	map=map_101ccbd
+101cc9c	part[0].installScript	43	map=map_101ccbd
 101ccbc	map_101ccbd	41
 101cce0	'class	40
 101ccf8	'instructions	40
 101cd18	'literals	40
 101cd34	'argFrame	40
 101cd50	'numArgs	40
-101cd68	obj_101cac9[0].installScript.instructions	40
-101cd84	obj_101cac9[0].installScript.literals	41
-101cda0	obj_101cac9[0].installScript.literals[1]	41
+101cd68	part[0].installScript.instructions	40
+101cd84	part[0].installScript.literals	41
+101cda0	part[0].installScript.literals[1]	41
 101cdb4	'removeScript	40
 101cdd4	'EnsureInternal	40
-101cdf4	obj_101cac9[0].devInstallScript	43	map=map_101ccbd
-101ce14	obj_101cac9[0].devInstallScript.instructions	40
-101ce54	obj_101cac9[0].devInstallScript.literals	41
+101cdf4	part[0].devInstallScript	43	map=map_101ccbd
+101ce14	part[0].devInstallScript.instructions	40
+101ce54	part[0].devInstallScript.literals	41
 101cea8	'|Ethernet:NIE|	40
-101cec8	obj_101cac9[0].devInstallScript.literals[1]	43	map=map_101cf19
+101cec8	part[0].devInstallScript.literals[1]	43	map=map_101cf19
 101cf18	map_101cf19	41
 101cf6c	'description	40
 101cf88	'helpText	40
@@ -51,25 +51,25 @@ area	101cac8	3d90	bf	4
 101d0ec	'DependenciesLoaded	40
 101d110	'viewsToDisplay	40
 101d130	'_proto	40
-101d148	obj_101d149	40
+101d148	description_value	40
 101d168	'|string|	40
-101d180	obj_101cac9[0].devInstallScript.literals[1].helpText	40
-101d228	obj_101cac9[0].devInstallScript.literals[1].OverviewIcon	43	map=map_101d23d
+101d180	part[0].devInstallScript.literals[1].helpText	40
+101d228	part[0].devInstallScript.literals[1].OverviewIcon	43	map=map_101d23d
 101d23c	map_101d23d	41
 101d254	'bits	40
 101d26c	'bounds	40
-101d284	obj_101cac9[0].devInstallScript.literals[1].OverviewIcon.bits	40
-101d2d0	obj_101cac9[0].devInstallScript.literals[1].OverviewIcon.bounds	43	map=map_101d2ed
+101d284	part[0].devInstallScript.literals[1].OverviewIcon.bits	40
+101d2d0	part[0].devInstallScript.literals[1].OverviewIcon.bounds	43	map=map_101d2ed
 101d2ec	map_101d2ed	41
 101d30c	'left	40
 101d324	'top	40
 101d338	'right	40
 101d350	'bottom	40
-101d368	obj_101cac9[0].devInstallScript.literals[1].icon	43	map=map_101d23d
-101d37c	obj_101cac9[0].devInstallScript.literals[1].icon.bits	40
-101d3d4	obj_101cac9[0].devInstallScript.literals[1].icon.bounds	43	map=map_101d2ed
-101d3f0	obj_101cac9[0].devInstallScript.literals[1].AlternateNewViews	41
-101d404	obj_101d405	43	map=map_101d435
+101d368	part[0].devInstallScript.literals[1].icon	43	map=map_101d23d
+101d37c	part[0].devInstallScript.literals[1].icon.bits	40
+101d3d4	part[0].devInstallScript.literals[1].icon.bounds	43	map=map_101d2ed
+101d3f0	part[0].devInstallScript.literals[1].AlternateNewViews	41
+101d404	AlternateNewViews_value	43	map=map_101d435
 101d434	map_101d435	41
 101d468	'viewBounds	40
 101d484	'viewFlags	40
@@ -79,118 +79,118 @@ area	101cac8	3d90	bf	4
 101d4f8	'verifyFunc	40
 101d514	'helpTopic	40
 101d530	'viewClass	40
-101d54c	obj_101d405.viewBounds	43	map=map_101d2ed
-101d568	obj_101d405.stepChildren	41
-101d580	obj_101d405.stepChildren[0]	43	map=map_101d591
+101d54c	AlternateNewViews_value.viewBounds	43	map=map_101d2ed
+101d568	AlternateNewViews_value.stepChildren	41
+101d580	AlternateNewViews_value.stepChildren[0]	43	map=map_101d591
 101d590	map_101d591	41
-101d5a4	obj_101d405.stepChildren[1]	43	map=map_101d5c1
+101d5a4	AlternateNewViews_value.stepChildren[1]	43	map=map_101d5c1
 101d5c0	map_101d5c1	41
 101d5e0	'labelActionScript	40
 101d604	'labelCommands	40
 101d624	'MakePopup	40
-101d640	obj_101d405.stepChildren[1].labelActionScript	43	map=map_101ccbd
-101d660	obj_101d405.stepChildren[1].labelActionScript.instructions	40
-101d6d4	obj_101d405.stepChildren[1].labelActionScript.literals	41
+101d640	AlternateNewViews_value.stepChildren[1].labelActionScript	43	map=map_101ccbd
+101d660	AlternateNewViews_value.stepChildren[1].labelActionScript.instructions	40
+101d6d4	AlternateNewViews_value.stepChildren[1].labelActionScript.literals	41
 101d724	'GetDataDefs	40
 101d740	'IsReadOnly	40
 101d75c	'manual	40
-101d774	obj_101d405.stepChildren[1].labelActionScript.literals[8]	41
+101d774	AlternateNewViews_value.stepChildren[1].labelActionScript.literals[8]	41
 101d788	'pathExpr	40
 101d7a4	'newtAppbase	40
 101d7c0	'editSlipLayout	40
-101d7e0	obj_101d405.stepChildren[1].labelActionScript.literals[13]	41
+101d7e0	AlternateNewViews_value.stepChildren[1].labelActionScript.literals[13]	41
 101d7f8	'SetValue	40
 101d814	'SyncView	40
 101d830	'RedoChildren	40
-101d850	obj_101d851	41
-101d864	obj_101d851[0]	43	map=map_101d879
+101d850	array	41
+101d864	array[0]	43	map=map_101d879
 101d878	map_101d879	41
 101d890	'item	40
-101d8a8	obj_101d851[0].item	40
-101d8c4	obj_101d851[1]	43	map=map_101d879
-101d8d8	obj_101d851[1].item	40
+101d8a8	array[0].item	40
+101d8c4	array[1]	43	map=map_101d879
+101d8d8	array[1].item	40
 101d8fc	'usingServer	40
-101d918	obj_101d405.stepChildren[1].MakePopup	43	map=map_101ccbd
-101d938	obj_101d939	40
-101d948	obj_101d405.stepChildren[1].MakePopup.literals	41
-101d958	obj_101d959	43	map=map_101d975
+101d918	AlternateNewViews_value.stepChildren[1].MakePopup	43	map=map_101ccbd
+101d938	MakePopup_code	40
+101d948	AlternateNewViews_value.stepChildren[1].MakePopup.literals	41
+101d958	frame	43	map=map_101d975
 101d974	map_101d975	41
 101d994	'text	40
 101d9ac	'labelText	40
 101d9c8	'path	40
-101d9e0	obj_101d9e1	40
+101d9e0	configuration	40
 101da08	'configuration	40
-101da28	obj_101d405.stepChildren[2]	43	map=map_101da3d
+101da28	AlternateNewViews_value.stepChildren[2]	43	map=map_101da3d
 101da3c	map_101da3d	41
-101da54	obj_101d405.stepChildren[2].path	41
+101da54	AlternateNewViews_value.stepChildren[2].path	41
 101da68	'cardData	40
 101da84	'device	40
-101da9c	obj_101da9d	43	map=map_101dad5
+101da9c	frame_2	43	map=map_101dad5
 101dad4	map_101dad5	41
 101db10	'alwaysCallPickActionScript	40
 101db3c	'BuildLabelCommands	40
 101db60	'viewSetupFormScript	40
 101db84	'textSetup	40
 101dba0	'GetIndex	40
-101dbbc	obj_101dbbd	40
-101dbd4	obj_101da9d.viewBounds	43	map=map_101dbf1
+101dbbc	card	40
+101dbd4	frame_2.viewBounds	43	map=map_101dbf1
 101dbf0	map_101dbf1	41
-101dc10	obj_101da9d.BuildLabelCommands	43	map=map_101ccbd
-101dc30	obj_101da9d.BuildLabelCommands.instructions	40
-101dc4c	obj_101da9d.BuildLabelCommands.literals	41
+101dc10	frame_2.BuildLabelCommands	43	map=map_101ccbd
+101dc30	frame_2.BuildLabelCommands.instructions	40
+101dc4c	frame_2.BuildLabelCommands.literals	41
 101dc68	'GetDeviceList	40
 101dc88	'GlobalFnExists	40
 101dca8	'ethernet	40
-101dcc4	obj_101da9d.viewSetupFormScript	43	map=map_101ccbd
-101dce4	obj_101da9d.viewSetupFormScript.instructions	40
-101dcf8	obj_101da9d.viewSetupFormScript.literals	41
-101dd10	obj_101da9d.textSetup	43	map=map_101ccbd
-101dd30	obj_101da9d.textSetup.instructions	40
-101dd60	obj_101da9d.textSetup.literals	41
+101dcc4	frame_2.viewSetupFormScript	43	map=map_101ccbd
+101dce4	frame_2.viewSetupFormScript.instructions	40
+101dcf8	frame_2.viewSetupFormScript.literals	41
+101dd10	frame_2.textSetup	43	map=map_101ccbd
+101dd30	frame_2.textSetup.instructions	40
+101dd60	frame_2.textSetup.literals	41
 101dd8c	'target	40
 101dda4	'StrFilled	40
-101ddc0	obj_101ddc1	40
-101ddf4	obj_101da9d.textSetup.literals[7]	40
-101de1c	obj_101da9d.GetIndex	43	map=map_101ccbd
-101de3c	obj_101da9d.GetIndex.instructions	40
-101de50	obj_101da9d.GetIndex.literals	41
-101de64	obj_101de65	43	map=map_101ccbd
-101de84	obj_101de65.instructions	40
-101ded0	obj_101de65.literals	41
+101ddc0	MakeNextLine_literal13	40
+101ddf4	frame_2.textSetup.literals[7]	40
+101de1c	frame_2.GetIndex	43	map=map_101ccbd
+101de3c	frame_2.GetIndex.instructions	40
+101de50	frame_2.GetIndex.literals	41
+101de64	MakeNextLine_literal8	43	map=map_101ccbd
+101de84	MakeNextLine_literal8.instructions	40
+101ded0	MakeNextLine_literal8.literals	41
 101dee4	'CISName	40
 101defc	'StrEqual	40
-101df18	obj_101da9d.labelActionScript	43	map=map_101ccbd
-101df38	obj_101da9d.labelActionScript.instructions	40
-101df54	obj_101da9d.labelActionScript.literals	41
+101df18	frame_2.labelActionScript	43	map=map_101ccbd
+101df38	frame_2.labelActionScript.instructions	40
+101df54	frame_2.labelActionScript.literals	41
 101df7c	'targetView	40
 101df98	'StartFlush	40
-101dfb4	obj_101d405.verifyFunc	43	map=map_101ccbd
-101dfd4	obj_101d405.verifyFunc.instructions	40
-101dffc	obj_101d405.verifyFunc.literals	41
-101e01c	obj_101d405.verifyFunc.literals[1]	41
-101e030	obj_101d405.verifyFunc.literals[2]	41
-101e044	obj_101d405.verifyFunc.literals[4]	40
-101e104	obj_101d405.helpText	40
-101e140	obj_101d405.helpTopic	40
-101e160	obj_101cac9[0].devInstallScript.literals[1].AlternateNewViews[1]	43	map=map_101e191
+101dfb4	AlternateNewViews_value.verifyFunc	43	map=map_101ccbd
+101dfd4	AlternateNewViews_value.verifyFunc.instructions	40
+101dffc	AlternateNewViews_value.verifyFunc.literals	41
+101e01c	AlternateNewViews_value.verifyFunc.literals[1]	41
+101e030	AlternateNewViews_value.verifyFunc.literals[2]	41
+101e044	AlternateNewViews_value.verifyFunc.literals[4]	40
+101e104	AlternateNewViews_value.helpText	40
+101e140	AlternateNewViews_value.helpTopic	40
+101e160	part[0].devInstallScript.literals[1].AlternateNewViews[1]	43	map=map_101e191
 101e190	map_101e191	41
-101e1c4	obj_101cac9[0].devInstallScript.literals[1].AlternateNewViews[1].viewBounds	43	map=map_101d2ed
-101e1e0	obj_101cac9[0].devInstallScript.literals[1].AlternateNewViews[1].stepChildren	41
-101e1f0	obj_101cac9[0].devInstallScript.literals[1].AlternateNewViews[1].stepChildren[0]	43	map=map_101e20d
+101e1c4	part[0].devInstallScript.literals[1].AlternateNewViews[1].viewBounds	43	map=map_101d2ed
+101e1e0	part[0].devInstallScript.literals[1].AlternateNewViews[1].stepChildren	41
+101e1f0	part[0].devInstallScript.literals[1].AlternateNewViews[1].stepChildren[0]	43	map=map_101e20d
 101e20c	map_101e20d	41
 101e22c	'label	40
 101e244	'defaultDomain	40
-101e264	obj_101e265	40
-101e288	obj_101cac9[0].devInstallScript.literals[1].AlternateNewViews[1].stepChildren[0].viewBounds	43	map=map_101dbf1
-101e2a4	obj_101cac9[0].devInstallScript.literals[1].AlternateNewViews[1].verifyFunc	43	map=map_101ccbd
-101e2c4	obj_101cac9[0].devInstallScript.literals[1].AlternateNewViews[1].verifyFunc.instructions	40
-101e340	obj_101cac9[0].devInstallScript.literals[1].AlternateNewViews[1].verifyFunc.literals	41
-101e370	obj_101e371	40
-101e380	obj_101e381	40
-101e394	obj_101e395	40
+101e264	label_value	40
+101e288	part[0].devInstallScript.literals[1].AlternateNewViews[1].stepChildren[0].viewBounds	43	map=map_101dbf1
+101e2a4	part[0].devInstallScript.literals[1].AlternateNewViews[1].verifyFunc	43	map=map_101ccbd
+101e2c4	part[0].devInstallScript.literals[1].AlternateNewViews[1].verifyFunc.instructions	40
+101e340	part[0].devInstallScript.literals[1].AlternateNewViews[1].verifyFunc.literals	41
+101e370	verifyFunc_literal5	40
+101e380	verifyFunc_literal6	40
+101e394	verifyFunc_literal7	40
 101e3e8	'ParamStr	40
-101e404	obj_101e405	40
-101e424	obj_101cac9[0].devInstallScript.literals[1].blankEntry	43	map=map_101e451
+101e404	helpTopic_value	40
+101e424	part[0].devInstallScript.literals[1].blankEntry	43	map=map_101e451
 101e450	map_101e451	41
 101e480	'linkLayer	40
 101e49c	'subnetMask	40
@@ -198,326 +198,326 @@ area	101cac8	3d90	bf	4
 101e4d8	'localAddress	40
 101e4f8	'dnsServers	40
 101e514	'|DHCP:NIE|	40
-101e530	obj_101cac9[0].devInstallScript.literals[1].blankEntry.cardData	43	map=map_101e545
+101e530	part[0].devInstallScript.literals[1].blankEntry.cardData	43	map=map_101e545
 101e544	map_101e545	41
 101e55c	'slot	40
-101e574	obj_101e575	41
-101e590	obj_101cac9[0].devInstallScript.literals[1].blankEntry.dnsServers	41
-101e5a0	obj_101cac9[0].devInstallScript.literals[1].DontCloseSlots	43	map=map_101e5b5
+101e574	subnetMask_value	41
+101e590	part[0].devInstallScript.literals[1].blankEntry.dnsServers	41
+101e5a0	part[0].devInstallScript.literals[1].DontCloseSlots	43	map=map_101e5b5
 101e5b4	map_101e5b5	41
 101e5cc	'setupName	40
-101e5e8	obj_101cac9[0].devInstallScript.literals[1].DontCloseSlots.setupName	43	map=map_101e5fd
+101e5e8	part[0].devInstallScript.literals[1].DontCloseSlots.setupName	43	map=map_101e5fd
 101e5fc	map_101e5fd	41
 101e614	'value	40
-101e62c	obj_101cac9[0].devInstallScript.literals[1].DontCloseSlots.setupName.name	40
-101e650	obj_101cac9[0].devInstallScript.literals[1].DontCloseSlots.dnsServers	43	map=map_101e669
+101e62c	part[0].devInstallScript.literals[1].DontCloseSlots.setupName.name	40
+101e650	part[0].devInstallScript.literals[1].DontCloseSlots.dnsServers	43	map=map_101e669
 101e668	map_101e669	41
 101e684	'checkData	40
-101e6a0	obj_101cac9[0].devInstallScript.literals[1].DontCloseSlots.dnsServers.name	40
-101e6c4	obj_101cac9[0].devInstallScript.literals[1].DontCloseSlots.dnsServers.checkData	43	map=map_101ccbd
-101e6e4	obj_101cac9[0].devInstallScript.literals[1].DontCloseSlots.dnsServers.checkData.instructions	40
-101e714	obj_101cac9[0].devInstallScript.literals[1].DontCloseSlots.dnsServers.checkData.literals	41
+101e6a0	part[0].devInstallScript.literals[1].DontCloseSlots.dnsServers.name	40
+101e6c4	part[0].devInstallScript.literals[1].DontCloseSlots.dnsServers.checkData	43	map=map_101ccbd
+101e6e4	part[0].devInstallScript.literals[1].DontCloseSlots.dnsServers.checkData.instructions	40
+101e714	part[0].devInstallScript.literals[1].DontCloseSlots.dnsServers.checkData.literals	41
 101e730	'SetDifference	40
-101e750	obj_101cac9[0].devInstallScript.literals[1].FillNewEntry	43	map=map_101ccbd
-101e770	obj_101cac9[0].devInstallScript.literals[1].FillNewEntry.instructions	40
-101e7b0	obj_101cac9[0].devInstallScript.literals[1].FillNewEntry.literals	41
+101e750	part[0].devInstallScript.literals[1].FillNewEntry	43	map=map_101ccbd
+101e770	part[0].devInstallScript.literals[1].FillNewEntry.instructions	40
+101e7b0	part[0].devInstallScript.literals[1].FillNewEntry.literals	41
 101e7c8	'DeepClone	40
-101e7e4	obj_101cac9[0].devInstallScript.literals[1].MakeNextLine	43	map=map_101ccbd
-101e804	obj_101cac9[0].devInstallScript.literals[1].MakeNextLine.instructions	40
-101e874	obj_101cac9[0].devInstallScript.literals[1].MakeNextLine.literals	41
-101e8c0	obj_101cac9[0].devInstallScript.literals[1].MakeNextLine.literals[0]	41
-101e8d4	obj_101cac9[0].devInstallScript.literals[1].MakeNextLine.literals[1]	41
+101e7e4	part[0].devInstallScript.literals[1].MakeNextLine	43	map=map_101ccbd
+101e804	part[0].devInstallScript.literals[1].MakeNextLine.instructions	40
+101e874	part[0].devInstallScript.literals[1].MakeNextLine.literals	41
+101e8c0	part[0].devInstallScript.literals[1].MakeNextLine.literals[0]	41
+101e8d4	part[0].devInstallScript.literals[1].MakeNextLine.literals[1]	41
 101e8e8	'functions	40
-101e904	obj_101e905	43	map=map_101ccbd
-101e924	obj_101e905.instructions	40
-101e9d8	obj_101e905.literals	41
+101e904	MakeNextLine_literal6	43	map=map_101ccbd
+101e924	MakeNextLine_literal6.instructions	40
+101e9d8	MakeNextLine_literal6.literals	41
 101ea18	'vars	40
 101ea30	'deviceRegistry	40
 101ea50	'DeviceClass	40
 101ea6c	'DeviceCISProductName	40
 101ea94	'IsArray	40
 101eaac	'DeviceDisplayName	40
-101ead0	obj_101ead1	41
+101ead0	MakeNextLine_literal6_literal7	41
 101eae8	'|str<|	40
-101eb00	obj_101e905.literals[9]	41
+101eb00	MakeNextLine_literal6.literals[9]	41
 101eb10	'BInsert	40
-101eb28	obj_101e905.literals[12]	41
-101eb38	obj_101cac9[0].devInstallScript.literals[1].MakeNextLine.literals[7]	41
-101eb4c	obj_101cac9[0].devInstallScript.literals[1].MakeNextLine.literals[9]	40
-101eb60	obj_101cac9[0].devInstallScript.literals[1].MakeNextLine.literals[14]	40
-101eb94	obj_101cac9[0].devInstallScript.literals[1].NeededSlots	43	map=map_101eba5
+101eb28	MakeNextLine_literal6.literals[12]	41
+101eb38	part[0].devInstallScript.literals[1].MakeNextLine.literals[7]	41
+101eb4c	part[0].devInstallScript.literals[1].MakeNextLine.literals[9]	40
+101eb60	part[0].devInstallScript.literals[1].MakeNextLine.literals[14]	40
+101eb94	part[0].devInstallScript.literals[1].NeededSlots	43	map=map_101eba5
 101eba4	map_101eba5	41
-101ebb8	obj_101cac9[0].devInstallScript.literals[1].newEntryViews	41
-101ebcc	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1]	43	map=map_101e191
-101ebfc	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].viewBounds	43	map=map_101d2ed
-101ec18	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].stepChildren	41
-101ec38	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[0]	43	map=map_101ec59
+101ebb8	part[0].devInstallScript.literals[1].newEntryViews	41
+101ebcc	part[0].devInstallScript.literals[1].newEntryViews[1]	43	map=map_101e191
+101ebfc	part[0].devInstallScript.literals[1].newEntryViews[1].viewBounds	43	map=map_101d2ed
+101ec18	part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren	41
+101ec38	part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[0]	43	map=map_101ec59
 101ec58	map_101ec59	41
-101ec7c	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[0].viewBounds	43	map=map_101dbf1
-101ec98	obj_101ec99	40
-101ecc8	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[1]	43	map=map_101ec59
-101ece8	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[1].viewBounds	43	map=map_101dbf1
-101ed04	obj_101ed05	40
-101ed28	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[2]	43	map=map_101ec59
-101ed48	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[2].viewBounds	43	map=map_101dbf1
-101ed64	obj_101ed65	40
-101eda0	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[3]	43	map=map_101edbd
+101ec7c	part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[0].viewBounds	43	map=map_101dbf1
+101ec98	name_value	40
+101ecc8	part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[1]	43	map=map_101ec59
+101ece8	part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[1].viewBounds	43	map=map_101dbf1
+101ed04	name_value_2	40
+101ed28	part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[2]	43	map=map_101ec59
+101ed48	part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[2].viewBounds	43	map=map_101dbf1
+101ed64	name_value_3	40
+101eda0	part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[3]	43	map=map_101edbd
 101edbc	map_101edbd	41
-101eddc	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[3].viewBounds	43	map=map_101dbf1
-101edf8	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[3].path	41
-101ee0c	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[4]	43	map=map_101e20d
-101ee28	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[4].viewBounds	43	map=map_101dbf1
-101ee44	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].verifyFunc	43	map=map_101ccbd
-101ee64	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].verifyFunc.instructions	40
-101ef30	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].verifyFunc.literals	41
-101ef80	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].verifyFunc.literals[9]	40
-101efa4	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].helpText	40
-101f050	obj_101cac9[0].devInstallScript.literals[1].SetupViews	43	map=map_101ccbd
-101f070	obj_101cac9[0].devInstallScript.literals[1].SetupViews.instructions	40
-101f09c	obj_101cac9[0].devInstallScript.literals[1].SetupViews.literals	41
-101f0c0	obj_101cac9[0].devInstallScript.literals[1].DependenciesLoaded	43	map=map_101ccbd
-101f0e0	obj_101cac9[0].devInstallScript.literals[1].DependenciesLoaded.instructions	40
-101f118	obj_101cac9[0].devInstallScript.literals[1].DependenciesLoaded.literals	41
-101f134	obj_101cac9[0].devInstallScript.literals[1].viewsToDisplay	41
+101eddc	part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[3].viewBounds	43	map=map_101dbf1
+101edf8	part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[3].path	41
+101ee0c	part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[4]	43	map=map_101e20d
+101ee28	part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[4].viewBounds	43	map=map_101dbf1
+101ee44	part[0].devInstallScript.literals[1].newEntryViews[1].verifyFunc	43	map=map_101ccbd
+101ee64	part[0].devInstallScript.literals[1].newEntryViews[1].verifyFunc.instructions	40
+101ef30	part[0].devInstallScript.literals[1].newEntryViews[1].verifyFunc.literals	41
+101ef80	part[0].devInstallScript.literals[1].newEntryViews[1].verifyFunc.literals[9]	40
+101efa4	part[0].devInstallScript.literals[1].newEntryViews[1].helpText	40
+101f050	part[0].devInstallScript.literals[1].SetupViews	43	map=map_101ccbd
+101f070	part[0].devInstallScript.literals[1].SetupViews.instructions	40
+101f09c	part[0].devInstallScript.literals[1].SetupViews.literals	41
+101f0c0	part[0].devInstallScript.literals[1].DependenciesLoaded	43	map=map_101ccbd
+101f0e0	part[0].devInstallScript.literals[1].DependenciesLoaded.instructions	40
+101f118	part[0].devInstallScript.literals[1].DependenciesLoaded.literals	41
+101f134	part[0].devInstallScript.literals[1].viewsToDisplay	41
 101f164	'hangupDelay	40
-101f180	obj_101cac9[0].devInstallScript.literals[1]._proto	43	map=map_101d591
-101f190	obj_101cac9[0].devInstallScript.literals[3]	43	map=map_101f1a9
+101f180	part[0].devInstallScript.literals[1]._proto	43	map=map_101d591
+101f190	part[0].devInstallScript.literals[3]	43	map=map_101f1a9
 101f1a8	map_101f1a9	41
-101f1c4	obj_101cac9[0].devInstallScript.literals[3].viewBounds	43	map=map_101d2ed
-101f1e0	obj_101cac9[0].devInstallScript.literals[4]	43	map=map_101f225
+101f1c4	part[0].devInstallScript.literals[3].viewBounds	43	map=map_101d2ed
+101f1e0	part[0].devInstallScript.literals[4]	43	map=map_101f225
 101f224	map_101f225	41
 101f26c	'infoFrame	40
 101f288	'noKeyboard	40
 101f2a4	'protection	40
 101f2c0	'type	40
-101f2d8	obj_101cac9[0].devInstallScript.literals[4].viewBounds	43	map=map_101d2ed
-101f2f4	obj_101cac9[0].devInstallScript.literals[4].infoFrame	43	map=map_101f30d
+101f2d8	part[0].devInstallScript.literals[4].viewBounds	43	map=map_101d2ed
+101f2f4	part[0].devInstallScript.literals[4].infoFrame	43	map=map_101f30d
 101f30c	map_101f30d	41
 101f328	'checkPrefix	40
 101f344	'checkPaths	40
 101f360	'formatFunc	40
-101f37c	obj_101cac9[0].devInstallScript.literals[4].infoFrame.checkPrefix	41
-101f390	obj_101cac9[0].devInstallScript.literals[4].infoFrame.checkPaths	41
-101f3a0	obj_101cac9[0].devInstallScript.literals[4].infoFrame.formatFunc	43	map=map_101ccbd
-101f3c0	obj_101f3c1	40
-101f3d8	obj_101cac9[0].devInstallScript.literals[4].infoFrame.formatFunc.literals	41
-101f3f8	obj_101cac9[0].devInstallScript.literals[4].infoFrame.formatFunc.literals[0]	40
+101f37c	part[0].devInstallScript.literals[4].infoFrame.checkPrefix	41
+101f390	part[0].devInstallScript.literals[4].infoFrame.checkPaths	41
+101f3a0	part[0].devInstallScript.literals[4].infoFrame.formatFunc	43	map=map_101ccbd
+101f3c0	formatFunc_code	40
+101f3d8	part[0].devInstallScript.literals[4].infoFrame.formatFunc.literals	41
+101f3f8	part[0].devInstallScript.literals[4].infoFrame.formatFunc.literals[0]	40
 101f428	'private	40
 101f440	'editor	40
-101f458	obj_101cac9[0].devInstallScript.literals[4].stepChildren	41
-101f468	obj_101cac9[0].devInstallScript.literals[4].stepChildren[0]	43	map=map_101d5c1
-101f484	obj_101cac9[0].devInstallScript.literals[4].stepChildren[0].labelActionScript	43	map=map_101ccbd
-101f4a4	obj_101cac9[0].devInstallScript.literals[4].stepChildren[0].labelActionScript.instructions	40
-101f4b4	obj_101cac9[0].devInstallScript.literals[4].stepChildren[0].labelActionScript.literals	41
-101f4c4	obj_101cac9[0].devInstallScript.literals[4].stepChildren[0].MakePopup	43	map=map_101ccbd
-101f4e4	obj_101cac9[0].devInstallScript.literals[4].stepChildren[0].MakePopup.literals	41
-101f4f4	obj_101cac9[0].devInstallScript.literals[4].helpTopic	40
-101f51c	obj_101cac9[0].devInstallScript.literals[5]	43	map=map_101f55d
+101f458	part[0].devInstallScript.literals[4].stepChildren	41
+101f468	part[0].devInstallScript.literals[4].stepChildren[0]	43	map=map_101d5c1
+101f484	part[0].devInstallScript.literals[4].stepChildren[0].labelActionScript	43	map=map_101ccbd
+101f4a4	part[0].devInstallScript.literals[4].stepChildren[0].labelActionScript.instructions	40
+101f4b4	part[0].devInstallScript.literals[4].stepChildren[0].labelActionScript.literals	41
+101f4c4	part[0].devInstallScript.literals[4].stepChildren[0].MakePopup	43	map=map_101ccbd
+101f4e4	part[0].devInstallScript.literals[4].stepChildren[0].MakePopup.literals	41
+101f4f4	part[0].devInstallScript.literals[4].helpTopic	40
+101f51c	part[0].devInstallScript.literals[5]	43	map=map_101f55d
 101f55c	map_101f55d	41
-101f5a0	obj_101cac9[0].devInstallScript.literals[5].viewBounds	43	map=map_101d2ed
-101f5bc	obj_101cac9[0].devInstallScript.literals[5].infoFrame	43	map=map_101f30d
-101f5d4	obj_101cac9[0].devInstallScript.literals[5].infoFrame.checkPrefix	41
-101f5e8	obj_101cac9[0].devInstallScript.literals[5].infoFrame.checkPaths	41
-101f5f8	obj_101cac9[0].devInstallScript.literals[5].infoFrame.formatFunc	43	map=map_101ccbd
-101f618	obj_101cac9[0].devInstallScript.literals[5].infoFrame.formatFunc.instructions	40
-101f688	obj_101cac9[0].devInstallScript.literals[5].infoFrame.formatFunc.literals	41
-101f6cc	obj_101cac9[0].devInstallScript.literals[5].infoFrame.formatFunc.literals[7]	40
-101f6ec	obj_101cac9[0].devInstallScript.literals[5].infoFrame.formatFunc.literals[11]	40
-101f72c	obj_101cac9[0].devInstallScript.literals[5].infoFrame.formatFunc.literals[12]	40
-101f764	obj_101cac9[0].devInstallScript.literals[5].stepChildren	41
-101f774	obj_101cac9[0].devInstallScript.literals[5].stepChildren[0]	43	map=map_101da3d
-101f788	obj_101cac9[0].devInstallScript.literals[5].stepChildren[0].path	41
-101f79c	obj_101cac9[0].devInstallScript.literals[6]	43	map=map_101f7e1
+101f5a0	part[0].devInstallScript.literals[5].viewBounds	43	map=map_101d2ed
+101f5bc	part[0].devInstallScript.literals[5].infoFrame	43	map=map_101f30d
+101f5d4	part[0].devInstallScript.literals[5].infoFrame.checkPrefix	41
+101f5e8	part[0].devInstallScript.literals[5].infoFrame.checkPaths	41
+101f5f8	part[0].devInstallScript.literals[5].infoFrame.formatFunc	43	map=map_101ccbd
+101f618	part[0].devInstallScript.literals[5].infoFrame.formatFunc.instructions	40
+101f688	part[0].devInstallScript.literals[5].infoFrame.formatFunc.literals	41
+101f6cc	part[0].devInstallScript.literals[5].infoFrame.formatFunc.literals[7]	40
+101f6ec	part[0].devInstallScript.literals[5].infoFrame.formatFunc.literals[11]	40
+101f72c	part[0].devInstallScript.literals[5].infoFrame.formatFunc.literals[12]	40
+101f764	part[0].devInstallScript.literals[5].stepChildren	41
+101f774	part[0].devInstallScript.literals[5].stepChildren[0]	43	map=map_101da3d
+101f788	part[0].devInstallScript.literals[5].stepChildren[0].path	41
+101f79c	part[0].devInstallScript.literals[6]	43	map=map_101f7e1
 101f7e0	map_101f7e1	41
 101f828	'useNumericKeys	40
-101f848	obj_101cac9[0].devInstallScript.literals[6].viewBounds	43	map=map_101d2ed
-101f864	obj_101cac9[0].devInstallScript.literals[6].infoFrame	43	map=map_101f881
+101f848	part[0].devInstallScript.literals[6].viewBounds	43	map=map_101d2ed
+101f864	part[0].devInstallScript.literals[6].infoFrame	43	map=map_101f881
 101f880	map_101f881	41
 101f8a0	'HideIfTrue	40
-101f8bc	obj_101cac9[0].devInstallScript.literals[6].infoFrame.checkPrefix	41
-101f8d0	obj_101cac9[0].devInstallScript.literals[6].infoFrame.checkPaths	41
-101f8e0	obj_101cac9[0].devInstallScript.literals[6].infoFrame.formatFunc	43	map=map_101ccbd
-101f900	obj_101cac9[0].devInstallScript.literals[6].infoFrame.formatFunc.instructions	40
-101f93c	obj_101cac9[0].devInstallScript.literals[6].infoFrame.formatFunc.literals	41
-101f958	obj_101cac9[0].devInstallScript.literals[6].infoFrame.formatFunc.literals[0]	40
-101f998	obj_101cac9[0].devInstallScript.literals[6].infoFrame.formatFunc.literals[3]	40
-101f9d4	obj_101cac9[0].devInstallScript.literals[6].infoFrame.HideIfTrue	41
-101f9e8	obj_101cac9[0].devInstallScript.literals[6].stepChildren	41
-101f9f8	obj_101cac9[0].devInstallScript.literals[6].stepChildren[0]	43	map=map_101ec59
-101fa18	obj_101cac9[0].devInstallScript.literals[6].stepChildren[0].viewBounds	43	map=map_101dbf1
-101fa34	obj_101cac9[0].devInstallScript.literals[7]	43	map=map_101fa5d
+101f8bc	part[0].devInstallScript.literals[6].infoFrame.checkPrefix	41
+101f8d0	part[0].devInstallScript.literals[6].infoFrame.checkPaths	41
+101f8e0	part[0].devInstallScript.literals[6].infoFrame.formatFunc	43	map=map_101ccbd
+101f900	part[0].devInstallScript.literals[6].infoFrame.formatFunc.instructions	40
+101f93c	part[0].devInstallScript.literals[6].infoFrame.formatFunc.literals	41
+101f958	part[0].devInstallScript.literals[6].infoFrame.formatFunc.literals[0]	40
+101f998	part[0].devInstallScript.literals[6].infoFrame.formatFunc.literals[3]	40
+101f9d4	part[0].devInstallScript.literals[6].infoFrame.HideIfTrue	41
+101f9e8	part[0].devInstallScript.literals[6].stepChildren	41
+101f9f8	part[0].devInstallScript.literals[6].stepChildren[0]	43	map=map_101ec59
+101fa18	part[0].devInstallScript.literals[6].stepChildren[0].viewBounds	43	map=map_101dbf1
+101fa34	part[0].devInstallScript.literals[7]	43	map=map_101fa5d
 101fa5c	map_101fa5d	41
-101fa88	obj_101cac9[0].devInstallScript.literals[7].infoFrame	43	map=map_101faa5
+101fa88	part[0].devInstallScript.literals[7].infoFrame	43	map=map_101faa5
 101faa4	map_101faa5	41
-101fac4	obj_101cac9[0].devInstallScript.literals[7].infoFrame.labelText	40
-101fb0c	obj_101cac9[0].devInstallScript.literals[7].infoFrame.checkPaths	41
-101fb1c	obj_101cac9[0].devInstallScript.literals[7].infoFrame.HideIfTrue	41
-101fb30	obj_101cac9[0].devInstallScript.literals[7].viewBounds	43	map=map_101dbf1
-101fb4c	obj_101cac9[0].devInstallScript.literals[7].helpTopic	40
-101fb6c	obj_101fb6d	43	map=map_101fb8d
+101fac4	part[0].devInstallScript.literals[7].infoFrame.labelText	40
+101fb0c	part[0].devInstallScript.literals[7].infoFrame.checkPaths	41
+101fb1c	part[0].devInstallScript.literals[7].infoFrame.HideIfTrue	41
+101fb30	part[0].devInstallScript.literals[7].viewBounds	43	map=map_101dbf1
+101fb4c	part[0].devInstallScript.literals[7].helpTopic	40
+101fb6c	_proto_value	43	map=map_101fb8d
 101fb8c	map_101fb8d	41
-101fbb0	obj_101fb6d.viewBounds	43	map=map_101d2ed
-101fbcc	obj_101fb6d.name	40
-101fc08	obj_101fb6d.helpTopic	40
-101fc1c	obj_101cac9[0].devInstallScript.literals[8]	43	map=map_101fa5d
-101fc44	obj_101cac9[0].devInstallScript.literals[8].infoFrame	43	map=map_101faa5
-101fc60	obj_101cac9[0].devInstallScript.literals[8].infoFrame.labelText	40
-101fcb4	obj_101cac9[0].devInstallScript.literals[8].infoFrame.checkPaths	41
-101fcc4	obj_101cac9[0].devInstallScript.literals[8].infoFrame.HideIfTrue	41
-101fcd8	obj_101cac9[0].devInstallScript.literals[8].viewBounds	43	map=map_101dbf1
-101fcf4	obj_101cac9[0].devInstallScript.literals[8].helpTopic	40
-101fd10	obj_101cac9[0].devInstallScript.literals[9]	43	map=map_101fd25
+101fbb0	_proto_value.viewBounds	43	map=map_101d2ed
+101fbcc	_proto_value.name	40
+101fc08	_proto_value.helpTopic	40
+101fc1c	part[0].devInstallScript.literals[8]	43	map=map_101fa5d
+101fc44	part[0].devInstallScript.literals[8].infoFrame	43	map=map_101faa5
+101fc60	part[0].devInstallScript.literals[8].infoFrame.labelText	40
+101fcb4	part[0].devInstallScript.literals[8].infoFrame.checkPaths	41
+101fcc4	part[0].devInstallScript.literals[8].infoFrame.HideIfTrue	41
+101fcd8	part[0].devInstallScript.literals[8].viewBounds	43	map=map_101dbf1
+101fcf4	part[0].devInstallScript.literals[8].helpTopic	40
+101fd10	part[0].devInstallScript.literals[9]	43	map=map_101fd25
 101fd24	map_101fd25	41
-101fd3c	obj_101cac9[0].devInstallScript.literals[9].infoFrame	43	map=map_101fd61
+101fd3c	part[0].devInstallScript.literals[9].infoFrame	43	map=map_101fd61
 101fd60	map_101fd61	41
 101fd88	'whichOne	40
 101fda4	'arrayData	40
-101fdc0	obj_101cac9[0].devInstallScript.literals[9].infoFrame.checkPrefix	41
-101fdd4	obj_101cac9[0].devInstallScript.literals[9].infoFrame.checkPrefix[1]	41
-101fde4	obj_101cac9[0].devInstallScript.literals[9].infoFrame.checkPaths	41
-101fdf0	obj_101cac9[0].devInstallScript.literals[9].infoFrame.arrayData	41
-101fe0c	obj_101cac9[0].devInstallScript.literals[9].infoFrame.HideIfTrue	41
-101fe20	obj_101cac9[0].devInstallScript.literals[9].infoFrame.formatFunc	43	map=map_101ccbd
-101fe40	obj_101cac9[0].devInstallScript.literals[9].infoFrame.formatFunc.instructions	40
-101fea4	obj_101cac9[0].devInstallScript.literals[9].infoFrame.formatFunc.literals	41
-101fec8	obj_101cac9[0].devInstallScript.literals[9].infoFrame.formatFunc.literals[1]	40
-101ff30	obj_101cac9[0].devInstallScript.literals[9].infoFrame.formatFunc.literals[4]	40
-101ff9c	obj_101cac9[0].devInstallScript.literals[9].infoFrame.formatFunc.literals[5]	40
-101fff0	obj_101cac9[0].devInstallScript.literals[10]	43	map=map_101f1a9
-1020008	obj_101cac9[0].devInstallScript.literals[10].viewBounds	43	map=map_101d2ed
-1020024	obj_101cac9[0].devInstallScript.literals[11]	43	map=map_102005d
+101fdc0	part[0].devInstallScript.literals[9].infoFrame.checkPrefix	41
+101fdd4	part[0].devInstallScript.literals[9].infoFrame.checkPrefix[1]	41
+101fde4	part[0].devInstallScript.literals[9].infoFrame.checkPaths	41
+101fdf0	part[0].devInstallScript.literals[9].infoFrame.arrayData	41
+101fe0c	part[0].devInstallScript.literals[9].infoFrame.HideIfTrue	41
+101fe20	part[0].devInstallScript.literals[9].infoFrame.formatFunc	43	map=map_101ccbd
+101fe40	part[0].devInstallScript.literals[9].infoFrame.formatFunc.instructions	40
+101fea4	part[0].devInstallScript.literals[9].infoFrame.formatFunc.literals	41
+101fec8	part[0].devInstallScript.literals[9].infoFrame.formatFunc.literals[1]	40
+101ff30	part[0].devInstallScript.literals[9].infoFrame.formatFunc.literals[4]	40
+101ff9c	part[0].devInstallScript.literals[9].infoFrame.formatFunc.literals[5]	40
+101fff0	part[0].devInstallScript.literals[10]	43	map=map_101f1a9
+1020008	part[0].devInstallScript.literals[10].viewBounds	43	map=map_101d2ed
+1020024	part[0].devInstallScript.literals[11]	43	map=map_102005d
 102005c	map_102005d	41
 1020098	'typeFrame	40
 10200b4	'deleteButton	40
-10200d4	obj_101cac9[0].devInstallScript.literals[11].infoFrame	43	map=map_101f30d
-10200ec	obj_101cac9[0].devInstallScript.literals[11].infoFrame.checkPrefix	41
-1020100	obj_101cac9[0].devInstallScript.literals[11].infoFrame.checkPaths	41
-1020110	obj_101cac9[0].devInstallScript.literals[11].infoFrame.formatFunc	43	map=map_101ccbd
-1020130	obj_101cac9[0].devInstallScript.literals[11].infoFrame.formatFunc.literals	41
-1020150	obj_101cac9[0].devInstallScript.literals[11].infoFrame.formatFunc.literals[0]	40
-1020198	obj_101cac9[0].devInstallScript.literals[11].labelText	40
-10201d8	obj_101cac9[0].devInstallScript.literals[11].MakePopup	43	map=map_101ccbd
-10201f8	obj_101cac9[0].devInstallScript.literals[11].MakePopup.literals	41
-1020208	obj_101cac9[0].devInstallScript.literals[11].name	40
-1020238	obj_101cac9[0].devInstallScript.literals[11].helpTopic	40
-102025c	obj_101cac9[0].devInstallScript.literals[11]._proto	43	map=map_101f1a9
-1020274	obj_101cac9[0].devInstallScript.literals[11]._proto.viewBounds	43	map=map_101d2ed
-1020290	obj_101cac9[0].devInstallScript.literals[13]	43	map=map_10202b1
+10200d4	part[0].devInstallScript.literals[11].infoFrame	43	map=map_101f30d
+10200ec	part[0].devInstallScript.literals[11].infoFrame.checkPrefix	41
+1020100	part[0].devInstallScript.literals[11].infoFrame.checkPaths	41
+1020110	part[0].devInstallScript.literals[11].infoFrame.formatFunc	43	map=map_101ccbd
+1020130	part[0].devInstallScript.literals[11].infoFrame.formatFunc.literals	41
+1020150	part[0].devInstallScript.literals[11].infoFrame.formatFunc.literals[0]	40
+1020198	part[0].devInstallScript.literals[11].labelText	40
+10201d8	part[0].devInstallScript.literals[11].MakePopup	43	map=map_101ccbd
+10201f8	part[0].devInstallScript.literals[11].MakePopup.literals	41
+1020208	part[0].devInstallScript.literals[11].name	40
+1020238	part[0].devInstallScript.literals[11].helpTopic	40
+102025c	part[0].devInstallScript.literals[11]._proto	43	map=map_101f1a9
+1020274	part[0].devInstallScript.literals[11]._proto.viewBounds	43	map=map_101d2ed
+1020290	part[0].devInstallScript.literals[13]	43	map=map_10202b1
 10202b0	map_10202b1	41
 10202d4	'printNextPageScript	40
 10202f8	'title	40
-1020310	obj_101cac9[0].devInstallScript.literals[13].printNextPageScript	43	map=map_101ccbd
-1020330	obj_101cac9[0].devInstallScript.literals[13].printNextPageScript.instructions	40
-1020340	obj_101cac9[0].devInstallScript.literals[13].title	40
+1020310	part[0].devInstallScript.literals[13].printNextPageScript	43	map=map_101ccbd
+1020330	part[0].devInstallScript.literals[13].printNextPageScript.instructions	40
+1020340	part[0].devInstallScript.literals[13].title	40
 102036c	'protoRoutingFormat	40
-1020390	obj_101cac9[0].devInstallScript.literals[13].stepChildren	41
-10203a0	obj_101cac9[0].devInstallScript.literals[13].stepChildren[0]	43	map=map_10203c9
+1020390	part[0].devInstallScript.literals[13].stepChildren	41
+10203a0	part[0].devInstallScript.literals[13].stepChildren[0]	43	map=map_10203c9
 10203c8	map_10203c9	41
 10203f4	'viewFont	40
-1020410	obj_101cac9[0].devInstallScript.literals[13].stepChildren[0].viewBounds	43	map=map_102042d
+1020410	part[0].devInstallScript.literals[13].stepChildren[0].viewBounds	43	map=map_102042d
 102042c	map_102042d	41
-102044c	obj_101cac9[0].devInstallScript.literals[13].stepChildren[0].viewSetupFormScript	43	map=map_101ccbd
-102046c	obj_101cac9[0].devInstallScript.literals[13].stepChildren[0].viewSetupFormScript.instructions	40
-1020488	obj_101cac9[0].devInstallScript.literals[13].stepChildren[0].viewSetupFormScript.literals	41
-10204a8	obj_101cac9[0].devInstallScript.literals[13].stepChildren[0].viewSetupFormScript.literals[0]	41
+102044c	part[0].devInstallScript.literals[13].stepChildren[0].viewSetupFormScript	43	map=map_101ccbd
+102046c	part[0].devInstallScript.literals[13].stepChildren[0].viewSetupFormScript.instructions	40
+1020488	part[0].devInstallScript.literals[13].stepChildren[0].viewSetupFormScript.literals	41
+10204a8	part[0].devInstallScript.literals[13].stepChildren[0].viewSetupFormScript.literals[0]	41
 10204b8	'GetEntryDataDef	40
 10204d8	'TextScript	40
-10204f4	obj_101cac9[0].devInstallScript.literals[17]	43	map=map_101ccbd
-1020514	obj_101cac9[0].devInstallScript.literals[17].instructions	40
-102052c	obj_101cac9[0].devInstallScript.literals[17].literals	41
-1020540	obj_101cac9[0].devInstallScript.literals[17].literals[0]	43	map=map_101ccbd
-1020560	obj_101cac9[0].devInstallScript.literals[17].literals[0].instructions	40
-1020580	obj_101cac9[0].devInstallScript.literals[17].literals[0].literals	41
+10204f4	part[0].devInstallScript.literals[17]	43	map=map_101ccbd
+1020514	part[0].devInstallScript.literals[17].instructions	40
+102052c	part[0].devInstallScript.literals[17].literals	41
+1020540	part[0].devInstallScript.literals[17].literals[0]	43	map=map_101ccbd
+1020560	part[0].devInstallScript.literals[17].literals[0].instructions	40
+1020580	part[0].devInstallScript.literals[17].literals[0].literals	41
 1020594	'|evt.ex|	40
 10205ac	'RegDataDef	40
-10205c8	obj_101cac9[0].devInstallScript.literals[17].literals[1]	43	map=map_101ccbd
-10205e8	obj_10205e9	40
-102062c	obj_101cac9[0].devInstallScript.literals[17].literals[1].literals	41
+10205c8	part[0].devInstallScript.literals[17].literals[1]	43	map=map_101ccbd
+10205e8	devInstallScript_code	40
+102062c	part[0].devInstallScript.literals[17].literals[1].literals	41
 1020644	'RegisterViewDef	40
-1020664	obj_101cac9[0].devRemoveScript	43	map=map_101ccbd
-1020684	obj_101cac9[0].devRemoveScript.instructions	40
-10206b4	obj_101cac9[0].devRemoveScript.literals	41
+1020664	part[0].devRemoveScript	43	map=map_101ccbd
+1020684	part[0].devRemoveScript.instructions	40
+10206b4	part[0].devRemoveScript.literals	41
 10206fc	'protoFrameFormat	40
 1020720	'IOAllInfo	40
-102073c	obj_101cac9[0].devRemoveScript.literals[14]	43	map=map_101ccbd
-102075c	obj_101cac9[0].devRemoveScript.literals[14].instructions	40
-1020774	obj_101cac9[0].devRemoveScript.literals[14].literals	41
-1020788	obj_101cac9[0].devRemoveScript.literals[14].literals[0]	43	map=map_101ccbd
-10207a8	obj_101cac9[0].devRemoveScript.literals[14].literals[0].instructions	40
-10207c8	obj_101cac9[0].devRemoveScript.literals[14].literals[0].literals	41
+102073c	part[0].devRemoveScript.literals[14]	43	map=map_101ccbd
+102075c	part[0].devRemoveScript.literals[14].instructions	40
+1020774	part[0].devRemoveScript.literals[14].literals	41
+1020788	part[0].devRemoveScript.literals[14].literals[0]	43	map=map_101ccbd
+10207a8	part[0].devRemoveScript.literals[14].literals[0].instructions	40
+10207c8	part[0].devRemoveScript.literals[14].literals[0].literals	41
 10207dc	'UnRegDataDef	40
-10207fc	obj_101cac9[0].devRemoveScript.literals[14].literals[1]	43	map=map_101ccbd
-102081c	obj_101cac9[0].devRemoveScript.literals[14].literals[1].literals	41
+10207fc	part[0].devRemoveScript.literals[14].literals[1]	43	map=map_101ccbd
+102081c	part[0].devRemoveScript.literals[14].literals[1].literals	41
 1020834	'UnRegisterViewDef	40
-alias	obj_101cac9[0].devInstallScript.literals[1].description	obj_101d149
-alias	obj_101cac9[0].devInstallScript.literals[1].name	obj_101d149
-alias	obj_101cac9[0].devInstallScript.literals[1].AlternateNewViews[0]	obj_101d405
-alias	obj_101cac9[0].devInstallScript.literals[1].AlternateNewViews[1].stepChildren[0].label	obj_101e265
-alias	obj_101cac9[0].devInstallScript.literals[1].AlternateNewViews[1].verifyFunc.literals[4]	obj_101e265
-alias	obj_101cac9[0].devInstallScript.literals[1].AlternateNewViews[1].verifyFunc.literals[5]	obj_101e371
-alias	obj_101cac9[0].devInstallScript.literals[1].AlternateNewViews[1].verifyFunc.literals[6]	obj_101e381
-alias	obj_101cac9[0].devInstallScript.literals[1].AlternateNewViews[1].verifyFunc.literals[7]	obj_101e395
-alias	obj_101cac9[0].devInstallScript.literals[1].AlternateNewViews[1].helpTopic	obj_101e405
-alias	obj_101cac9[0].devInstallScript.literals[1].blankEntry.cardData.device	obj_101e371
-alias	obj_101cac9[0].devInstallScript.literals[1].blankEntry.subnetMask	obj_101e575
-alias	obj_101cac9[0].devInstallScript.literals[1].blankEntry.gatewayaddress	obj_101e575
-alias	obj_101cac9[0].devInstallScript.literals[1].blankEntry.localAddress	obj_101e575
-alias	obj_101cac9[0].devInstallScript.literals[1].blankEntry.defaultDomain	obj_101e371
-alias	obj_101cac9[0].devInstallScript.literals[1].blankEntry.dnsServers[0]	obj_101e575
-alias	obj_101cac9[0].devInstallScript.literals[1].DontCloseSlots.setupName.value	obj_101e371
-alias	obj_101cac9[0].devInstallScript.literals[1].DontCloseSlots.dnsServers.value	obj_101e575
-alias	obj_101cac9[0].devInstallScript.literals[1].DontCloseSlots.dnsServers.checkData.literals[0]	obj_101e575
-alias	obj_101cac9[0].devInstallScript.literals[1].MakeNextLine.literals[6]	obj_101e905
-alias	obj_101cac9[0].devInstallScript.literals[1].MakeNextLine.literals[8]	obj_101de65
-alias	obj_101cac9[0].devInstallScript.literals[1].MakeNextLine.literals[13]	obj_101ddc1
-alias	obj_101cac9[0].devInstallScript.literals[1].MakeNextLine.literals[15]	obj_101e371
-alias	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[0]	obj_101d405
-alias	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[0].name	obj_101ec99
-alias	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[1].name	obj_101ed05
-alias	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[2].name	obj_101ed65
-alias	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[4].label	obj_101e265
-alias	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].verifyFunc.literals[3]	obj_101e575
-alias	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].verifyFunc.literals[5]	obj_101ec99
-alias	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].verifyFunc.literals[7]	obj_101ed65
-alias	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].verifyFunc.literals[12]	obj_101e265
-alias	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].verifyFunc.literals[13]	obj_101e371
-alias	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].verifyFunc.literals[14]	obj_101e381
-alias	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].verifyFunc.literals[15]	obj_101e395
-alias	obj_101cac9[0].devInstallScript.literals[1].newEntryViews[1].helpTopic	obj_101e405
-alias	obj_101cac9[0].devInstallScript.literals[2]	map_101d591
-alias	obj_101cac9[0].devInstallScript.literals[4].infoFrame.formatFunc.instructions	obj_101f3c1
-alias	obj_101cac9[0].devInstallScript.literals[4].infoFrame.formatFunc.literals[1]	obj_101d851
-alias	obj_101cac9[0].devInstallScript.literals[4].stepChildren[0].labelCommands	obj_101d851
-alias	obj_101cac9[0].devInstallScript.literals[4].stepChildren[0].MakePopup.instructions	obj_101d939
-alias	obj_101cac9[0].devInstallScript.literals[4].stepChildren[0].MakePopup.literals[0]	obj_101d851
-alias	obj_101cac9[0].devInstallScript.literals[4].stepChildren[0]._proto	obj_101d959
-alias	obj_101cac9[0].devInstallScript.literals[4].name	obj_101d9e1
-alias	obj_101cac9[0].devInstallScript.literals[5].infoFrame.formatFunc.literals[5]	obj_101e905
-alias	obj_101cac9[0].devInstallScript.literals[5].infoFrame.formatFunc.literals[6]	obj_101de65
-alias	obj_101cac9[0].devInstallScript.literals[5].infoFrame.formatFunc.literals[13]	obj_101dbbd
-alias	obj_101cac9[0].devInstallScript.literals[5].stepChildren[0]._proto	obj_101da9d
-alias	obj_101cac9[0].devInstallScript.literals[5].name	obj_101dbbd
-alias	obj_101cac9[0].devInstallScript.literals[6].stepChildren[0].name	obj_101ed05
-alias	obj_101cac9[0].devInstallScript.literals[6].name	obj_101ed05
-alias	obj_101cac9[0].devInstallScript.literals[6].helpTopic	obj_101e405
-alias	obj_101cac9[0].devInstallScript.literals[7].name	obj_101ec99
-alias	obj_101cac9[0].devInstallScript.literals[7]._proto	obj_101fb6d
-alias	obj_101cac9[0].devInstallScript.literals[8].name	obj_101ed65
-alias	obj_101cac9[0].devInstallScript.literals[8]._proto	obj_101fb6d
-alias	obj_101cac9[0].devInstallScript.literals[9]._proto	obj_101fb6d
-alias	obj_101cac9[0].devInstallScript.literals[11].infoFrame.formatFunc.instructions	obj_101f3c1
-alias	obj_101cac9[0].devInstallScript.literals[11].MakePopup.instructions	obj_101d939
-alias	obj_101cac9[0].devInstallScript.literals[12]	map_101d591
-alias	obj_101cac9[0].devInstallScript.literals[13].stepChildren[0].text	obj_101e371
-alias	obj_101cac9[0].devInstallScript.literals[15]	map_101d591
-alias	obj_101cac9[0].devInstallScript.literals[17].literals[1].instructions	obj_10205e9
-alias	obj_101cac9[0].devRemoveScript.literals[14].literals[1].instructions	obj_10205e9
-alias	obj_101d405.stepChildren[1].MakePopup.instructions	obj_101d939
-alias	obj_101d405.stepChildren[1].MakePopup.literals[0]	obj_101d851
-alias	obj_101da9d.textSetup.literals[6]	obj_101ddc1
-alias	obj_101da9d.GetIndex.literals[1]	obj_101de65
-alias	obj_101e905.literals[7]	obj_101ead1
-alias	obj_101e905.literals[11]	obj_101ead1
-alias	obj_101d405.stepChildren[1].labelCommands	obj_101d851
-alias	obj_101d405.stepChildren[1]._proto	obj_101d959
-alias	obj_101d405.stepChildren[2]._proto	obj_101da9d
+alias	part[0].devInstallScript.literals[1].description	description_value
+alias	part[0].devInstallScript.literals[1].name	description_value
+alias	part[0].devInstallScript.literals[1].AlternateNewViews[0]	AlternateNewViews_value
+alias	part[0].devInstallScript.literals[1].AlternateNewViews[1].stepChildren[0].label	label_value
+alias	part[0].devInstallScript.literals[1].AlternateNewViews[1].verifyFunc.literals[4]	label_value
+alias	part[0].devInstallScript.literals[1].AlternateNewViews[1].verifyFunc.literals[5]	verifyFunc_literal5
+alias	part[0].devInstallScript.literals[1].AlternateNewViews[1].verifyFunc.literals[6]	verifyFunc_literal6
+alias	part[0].devInstallScript.literals[1].AlternateNewViews[1].verifyFunc.literals[7]	verifyFunc_literal7
+alias	part[0].devInstallScript.literals[1].AlternateNewViews[1].helpTopic	helpTopic_value
+alias	part[0].devInstallScript.literals[1].blankEntry.cardData.device	verifyFunc_literal5
+alias	part[0].devInstallScript.literals[1].blankEntry.subnetMask	subnetMask_value
+alias	part[0].devInstallScript.literals[1].blankEntry.gatewayaddress	subnetMask_value
+alias	part[0].devInstallScript.literals[1].blankEntry.localAddress	subnetMask_value
+alias	part[0].devInstallScript.literals[1].blankEntry.defaultDomain	verifyFunc_literal5
+alias	part[0].devInstallScript.literals[1].blankEntry.dnsServers[0]	subnetMask_value
+alias	part[0].devInstallScript.literals[1].DontCloseSlots.setupName.value	verifyFunc_literal5
+alias	part[0].devInstallScript.literals[1].DontCloseSlots.dnsServers.value	subnetMask_value
+alias	part[0].devInstallScript.literals[1].DontCloseSlots.dnsServers.checkData.literals[0]	subnetMask_value
+alias	part[0].devInstallScript.literals[1].MakeNextLine.literals[6]	MakeNextLine_literal6
+alias	part[0].devInstallScript.literals[1].MakeNextLine.literals[8]	MakeNextLine_literal8
+alias	part[0].devInstallScript.literals[1].MakeNextLine.literals[13]	MakeNextLine_literal13
+alias	part[0].devInstallScript.literals[1].MakeNextLine.literals[15]	verifyFunc_literal5
+alias	part[0].devInstallScript.literals[1].newEntryViews[0]	AlternateNewViews_value
+alias	part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[0].name	name_value
+alias	part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[1].name	name_value_2
+alias	part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[2].name	name_value_3
+alias	part[0].devInstallScript.literals[1].newEntryViews[1].stepChildren[4].label	label_value
+alias	part[0].devInstallScript.literals[1].newEntryViews[1].verifyFunc.literals[3]	subnetMask_value
+alias	part[0].devInstallScript.literals[1].newEntryViews[1].verifyFunc.literals[5]	name_value
+alias	part[0].devInstallScript.literals[1].newEntryViews[1].verifyFunc.literals[7]	name_value_3
+alias	part[0].devInstallScript.literals[1].newEntryViews[1].verifyFunc.literals[12]	label_value
+alias	part[0].devInstallScript.literals[1].newEntryViews[1].verifyFunc.literals[13]	verifyFunc_literal5
+alias	part[0].devInstallScript.literals[1].newEntryViews[1].verifyFunc.literals[14]	verifyFunc_literal6
+alias	part[0].devInstallScript.literals[1].newEntryViews[1].verifyFunc.literals[15]	verifyFunc_literal7
+alias	part[0].devInstallScript.literals[1].newEntryViews[1].helpTopic	helpTopic_value
+alias	part[0].devInstallScript.literals[2]	map_101d591
+alias	part[0].devInstallScript.literals[4].infoFrame.formatFunc.instructions	formatFunc_code
+alias	part[0].devInstallScript.literals[4].infoFrame.formatFunc.literals[1]	array
+alias	part[0].devInstallScript.literals[4].stepChildren[0].labelCommands	array
+alias	part[0].devInstallScript.literals[4].stepChildren[0].MakePopup.instructions	MakePopup_code
+alias	part[0].devInstallScript.literals[4].stepChildren[0].MakePopup.literals[0]	array
+alias	part[0].devInstallScript.literals[4].stepChildren[0]._proto	frame
+alias	part[0].devInstallScript.literals[4].name	configuration
+alias	part[0].devInstallScript.literals[5].infoFrame.formatFunc.literals[5]	MakeNextLine_literal6
+alias	part[0].devInstallScript.literals[5].infoFrame.formatFunc.literals[6]	MakeNextLine_literal8
+alias	part[0].devInstallScript.literals[5].infoFrame.formatFunc.literals[13]	card
+alias	part[0].devInstallScript.literals[5].stepChildren[0]._proto	frame_2
+alias	part[0].devInstallScript.literals[5].name	card
+alias	part[0].devInstallScript.literals[6].stepChildren[0].name	name_value_2
+alias	part[0].devInstallScript.literals[6].name	name_value_2
+alias	part[0].devInstallScript.literals[6].helpTopic	helpTopic_value
+alias	part[0].devInstallScript.literals[7].name	name_value
+alias	part[0].devInstallScript.literals[7]._proto	_proto_value
+alias	part[0].devInstallScript.literals[8].name	name_value_3
+alias	part[0].devInstallScript.literals[8]._proto	_proto_value
+alias	part[0].devInstallScript.literals[9]._proto	_proto_value
+alias	part[0].devInstallScript.literals[11].infoFrame.formatFunc.instructions	formatFunc_code
+alias	part[0].devInstallScript.literals[11].MakePopup.instructions	MakePopup_code
+alias	part[0].devInstallScript.literals[12]	map_101d591
+alias	part[0].devInstallScript.literals[13].stepChildren[0].text	verifyFunc_literal5
+alias	part[0].devInstallScript.literals[15]	map_101d591
+alias	part[0].devInstallScript.literals[17].literals[1].instructions	devInstallScript_code
+alias	part[0].devRemoveScript.literals[14].literals[1].instructions	devInstallScript_code
+alias	AlternateNewViews_value.stepChildren[1].MakePopup.instructions	MakePopup_code
+alias	AlternateNewViews_value.stepChildren[1].MakePopup.literals[0]	array
+alias	frame_2.textSetup.literals[6]	MakeNextLine_literal13
+alias	frame_2.GetIndex.literals[1]	MakeNextLine_literal8
+alias	MakeNextLine_literal6.literals[7]	MakeNextLine_literal6_literal7
+alias	MakeNextLine_literal6.literals[11]	MakeNextLine_literal6_literal7
+alias	AlternateNewViews_value.stepChildren[1].labelCommands	array
+alias	AlternateNewViews_value.stepChildren[1]._proto	frame
+alias	AlternateNewViews_value.stepChildren[2]._proto	frame_2

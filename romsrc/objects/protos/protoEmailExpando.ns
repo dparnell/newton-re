@@ -1,0 +1,41 @@
+// protoEmailExpando, and what only it reaches
+
+protoEmailExpando := {
+	_proto: @protoTextExpando,
+	labelCommands: nil,
+	labelSymbols: nil,
+	TextSetup: func() begin
+		self:SetLabelText(self:setup1(target));
+		inherited:TextSetup()
+	end,
+	setup1: func(a1) begin
+		l1 := EmailSystems.emailText.|string.email|;
+		if a1 then begin
+				l2 := ClassOf(a1.(path));
+				labelCommands := [Array: ];
+				local l1;
+				local l2;
+				(foreach l3, l4 in (labelSymbols := EmailSystems.emailClasses) do begin
+						AddArraySlot(labelCommands, EmailSystems.emailText.(l4));
+						if (l4 = l2) then begin
+								l1 := labelCommands[l3]
+							end
+					end)
+			end;
+		l1
+	end,
+	textChanged: func() begin
+		local l1;
+		l1 := (if (not target.(path)) then labelSymbols[0] else ClassOf(target.(path)));
+		(target.(path) := SetClass(entryLine.text, l1))
+	end,
+	LabelActionScript: func(a1) begin
+		self:SetLabelText(labelCommands[a1]);
+		labelLine:Dirty();
+		if (not target.(path)) then begin
+				target.(path) := Clone("")
+			end;
+		SetClass(target.(path), labelSymbols[a1]);
+		true
+	end
+};

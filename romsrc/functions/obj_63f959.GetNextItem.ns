@@ -1,6 +1,0 @@
-@@ 0x4eb0cd
-func() begin
-	isReset := nil;
-	cursor:Next()
-end
-@@end

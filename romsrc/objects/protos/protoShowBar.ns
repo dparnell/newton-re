@@ -1,0 +1,65 @@
+// protoShowBar, and what only it reaches
+
+protoShowBar := {
+	viewClass: clView,
+	viewFlags: vVisible,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 13},
+	viewJustify: vjParentFullH,
+	folderChangeSym: nil,
+	viewSetupFormScript: func() begin
+		RegFolderChanged((folderChangeSym := Intern(Stringer([Array: "showBar.", viewCObject]))), func(a1, a2) begin
+			(if (if a1 then (labelsFilter = a1)) then showBarText:SetNewFilter(targetView, 'labelsFilter, a2))
+		end)
+	end,
+	viewQuitScript: func() begin
+		UnRegFolderChanged(folderChangeSym)
+	end,
+	UpdateFilter: func(a1, a2) begin
+		local l1;
+		(if (GetVariable((l1 := self:GetTargetInfo('Filing)).targetView, 'labelsFilter) <> a1) then showBarText:SyncView())
+	end,
+	viewDrawScript: func() begin
+		local l1;
+		l1 := self:LocalBox();
+		self:DrawShape(MakeRect(0, 0, l1.right, (l1.bottom - 6)), '{fillPattern: 5})
+	end,
+	RedoText: func() begin
+		local l1, l2, l3;
+		if (not (l3 := GetVariable((l2 := (l1 := self:GetTargetInfo('Filing)).targetView), 'labelsFilter))) then begin
+				if (l2:AppObjectUnfiled exists) then begin
+						text := Stringer([Array: $\uFC01, GetVariable(l2, 'AppObjectUnfiled)])
+					end else begin
+						text := Stringer([Array: $\uFC01, ParamStr(unfiled, [Array: GetVariable(l2, 'appObject)[1]])])
+					end
+			end else begin
+				if (l3 = '_all) then begin
+						text := Stringer([Array: $\uFC01, GetVariable(l2, 'AppAll)])
+					end else begin
+						text := Stringer([Array: $\uFC01, GetFolderStr(l3)])
+					end
+			end;
+		showBarText.text := StrTruncate(text, 137);
+		showBarText.width := (StrFontWidth(text, viewFont) + 16);
+		showBarText.viewBounds := SetBounds(0, 1, showBarText.width, 13);
+		self:Dirty()
+	end,
+	leftBits: {
+		bits: bitmap('bits, "resources/bits/3d7569.png", "000000000004009900990153009f015b", 1),
+		bounds: {left: 0, top: 0, right: 8, bottom: 6}
+	},
+	rightBits: {
+		bits: bitmap('bits, "resources/bits/3d75cd.png", "0000000000040099009901b3009f01bb", 1),
+		bounds: {left: 0, top: 0, right: 8, bottom: 6}
+	},
+	leftHiliteBits: {
+		bits: bitmap('bits, "resources/bits/485cb9.png", "000000000004018b018b00f5019500fd", 1),
+		bounds: {left: 0, top: 0, right: 8, bottom: 10}
+	},
+	rightHiliteBits: {
+		bits: bitmap('bits, "resources/bits/485d2d.png", "000000000004018b018b00f5019500fd", 1),
+		bounds: {left: 0, top: 0, right: 8, bottom: 10}
+	},
+	viewChildren: [viewChildren: showBarText],
+	showBarText: nil,
+	allocateContext: [|Array|: 'showBarText, showBarText]
+};

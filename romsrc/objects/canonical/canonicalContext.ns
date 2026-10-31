@@ -1,0 +1,3 @@
+// canonicalContext, and what only it reaches
+
+canonicalContext := {_parent: nil, _proto: nil, viewCObject: nil};

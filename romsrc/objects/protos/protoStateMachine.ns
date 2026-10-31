@@ -1,0 +1,171 @@
+// protoStateMachine, and what only it reaches
+
+protoStateMachine := {
+	InputSpec: {_proto: @protoStateMachineInputSpec},
+	CallbackSpec: {_proto: @protoStateMachineInputSpec},
+	fRunning: nil,
+	fState: nil,
+	cPollAfter: 30,
+	DoError: func(a1) begin
+		local l1;
+		if tracing then begin
+				self:Trace("DoError(...)", a1)
+			end;
+		if (not fException) then begin
+				fException := a1
+			end;
+		(if (occupancy <= 1) then begin
+				if (not (l1 := (if fState then self.(fState).OnError))) then begin
+						if tracing then begin
+								self:Trace(Stringer([Array: "DoError(\u2026\u): No error state specified for state", " ", fState, "!  Can't throw: state machine dies."]), nil)
+							end;
+						if autoNotify then begin
+								GetRoot():Notify(4, "Data Exchange", EnsureInternal(ParamStr("An error occurred but \u201C\u^0\u201D\u has no error state.", [Array: fState])))
+							end;
+						l1 := 'exit
+					end;
+				occupancy := 1;
+				l1
+			end else begin
+				occupancy := (occupancy - 1);
+				nil
+			end)
+	end,
+	tracing: nil,
+	GetState: func() begin
+		fState
+	end,
+	Run: func(a1) begin
+		local l1, l2, l3;
+		if fRunning then begin
+				if tracing then begin
+						self:Trace(Stringer([Array: "Machine is already running; run(", a1, ") ignored."]), nil)
+					end;
+				Throw('|evt.ex.proto|, -8607);
+				return nil
+			end;
+		fRunning := true;
+		if a1 then begin
+				l1 := a1
+			end else begin
+				l1 := fState
+			end;
+		(while l1 do begin
+				fState := l1;
+				(try begin
+						(while l1 do begin
+								if tracing then begin
+										self:Trace(Stringer([Array: "Run(", l1, ")"]), nil)
+									end;
+								if (not (l2 := self.(l1))) then begin
+										Throw('|evt.ex.proto|, -8601)
+									end;
+								if (IsReadOnly(l2) or (not HasSlot(l2, '_parent))) then begin
+										l3 := l2._parent;
+										l2 := {_proto: l2, _parent: self};
+										if l3 then begin
+												l2._parent := l3
+											end
+									end;
+								if (not (fTimeout := l2.timeOut)) then begin
+										fTimeout := 200000
+									end;
+								CallbackSpec.reqTimeout := fTimeout;
+								l1 := l2:action();
+								self.cancelBlocked := self.(l1).cancelBlocked;
+								(if ((l1 = 'waitAsync) or (l1 = 'exit)) then begin
+										if (l1 = 'exit) then begin
+												occupancy := 0;
+												fState := nil
+											end;
+										(l1 := nil)
+									end else begin
+										if (ClassOf(l1) <> 'symbol) then begin
+												l1 := nil
+											end;
+										if (l1 = nil) then begin
+												Throw('|evt.ex.proto|, -8601)
+											end;
+										(fState := l1)
+									end)
+							end)
+					end onexception |evt.ex| do begin
+						if tracing then begin
+								self:Trace(Stringer([Array: "Run(", fState, ") - Exception occurred:"]), CurrentException())
+							end;
+						(l1 := self:DoError(CurrentException()))
+					end)
+			end);
+		fRunning := nil;
+		(if tracing then (if fState then self:Trace("AsyncWait", nil) else self:Trace("Run() complete.", nil)))
+	end,
+	AsyncWaitComplete: func(a1) begin
+		local l1, l2;
+		(if a1 then (if (l1 := self:DoError(a1)) then self:Run(l1)) else (if (occupancy <= 1) then (if (l2 := self.(fState).WaitComplete) then self:Run(l2) else Throw('|evt.ex.proto|, -8603)) else (occupancy := (occupancy - 1))))
+	end,
+	traceArray: nil,
+	GetTraces: func() begin
+		traceArray
+	end,
+	New: func() begin
+		{_proto: self, _parent: self._parent}
+	end,
+	GetStateFrame: func() begin
+		self.(fState)
+	end,
+	autoNotify: nil,
+	Advance: func(a1) begin
+		local l1, l2, l3, l4;
+		l1 := fState;
+		if a1 then begin
+				l1 := self.(fState).(a1)
+			end;
+		l2 := nil;
+		if l1 then begin
+				if (l3 := self.(l1)) then begin
+						if (IsReadOnly(l3) or (not HasSlot(l3, '_parent))) then begin
+								l4 := l3._parent;
+								l3 := {_proto: l3, _parent: self};
+								if l4 then begin
+										l3._parent := l4
+									end;
+								self.(l1) := l3
+							end;
+						fState := l1;
+						l2 := l3:?action()
+					end else begin
+						Throw('|evt.ex.proto|, -8601)
+					end
+			end;
+		l2
+	end,
+	SetState: func(a1) begin
+		(fState := a1)
+	end,
+	Trace: func(a1, a2) begin
+		if (not traceArray) then begin
+				return nil
+			end;
+		AddArraySlot(traceArray, {state: fState, exception: fException, text: a1, data: a2, Ticks: Ticks(), Time: Time()})
+	end,
+	cancelBlocked: nil,
+	fException: nil,
+	SetTraces: func(a1) begin
+		(traceArray := a1)
+	end,
+	start: func(a1) begin
+		CallbackSpec := {_proto: CallbackSpec, reqTimeout: 200000};
+		fException := nil;
+		occupancy := 1;
+		self:Run(a1)
+	end,
+	ResetTrace: func() begin
+		(traceArray := [Array: ])
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+DoError_literal12 := same("protoStateMachine.DoError.literals[12]");
+
+Run_literal11 := same("protoStateMachine.Run.literals[11]");

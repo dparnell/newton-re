@@ -1,0 +1,159 @@
+// protoTwoLinePicker, and what only it reaches
+
+protoTwoLinePicker := {
+	viewClass: clView,
+	viewFlags: vVisible + vClipping,
+	viewFormat: vfFillWhite,
+	viewJustify: vjParentFullH,
+	viewBounds: {left: 0, top: 20, right: 0, bottom: 60},
+	otherSelection: 0,
+	label: uCardPositionAlertButton,
+	choices: [|Array|: ],
+	otherChoices: [|Array|: ],
+	pickActionScript: func(a1) begin
+		pickChild:hilite(nil);
+		SetValue(textDisplay, 'text, choices[a1]);
+		(if (a1 = (Length(choices) - 1)) then begin
+				otherPicker:Show();
+				otherInput:Show();
+				-1
+			end else begin
+				otherPicker:Hide();
+				otherInput:Hide();
+				a1
+			end)
+	end,
+	chooseOtherScript: func(a1) begin
+		otherPicker:hilite(nil);
+		otherSelection := a1;
+		(if (Length(otherChoices) > 1) then SetValue(otherPicker, 'text, Stringer([Array: "\uFC01\u", " ", otherChoices[a1]])) else SetValue(otherPicker, 'text, otherChoices[a1]))
+	end,
+	currentChoice: compile(
+		constants: {
+			kFunction_50ab09: func(a1, a2) begin
+				StrEqual(a1, a2)
+			end
+		},
+		func() begin
+			ArrayPos(choices, textDisplay.text, 0, kFunction_50ab09)
+		end),
+	viewSetupDoneScript: func() begin
+		otherPicker:Hide();
+		otherInput:Hide()
+	end,
+	pickCancelledScript: func() begin
+		pickChild:hilite(nil);
+		otherPicker:hilite(nil)
+	end,
+	viewChildren: [viewChildren: pickChild, textDisplay, otherPicker, otherInput],
+	pickChild: nil,
+	allocateContext: [|Array|:
+		'pickChild,
+		pickChild,
+		'textDisplay,
+		textDisplay,
+		'otherPicker,
+		otherPicker,
+		'otherInput,
+		otherInput
+	],
+	textDisplay: nil,
+	otherPicker: nil,
+	otherInput: nil
+};
+
+pickChild := {
+	viewJustify: vjCenterV + vjParentFullH,
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewFormat: vfRound(4),
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 15},
+	viewSetupFormScript: func() begin
+		(if (Length(choices) > 1) then (self.text := Stringer([Array: "\uFC01\u", " ", label])) else begin
+				self.text := label;
+				(self.viewFlags := (viewFlags - 512))
+			end)
+	end,
+	viewClickScript: func(a1) begin
+		local l1, l2;
+		(if self:TrackHilite(a1) then begin
+				if (l1 := self:currentChoice()) then begin
+						(l2 := Clone(choices))[l1] := {item: l2[l1], mark: $\uFC0B}
+					end else begin
+						l2 := choices
+					end;
+				DoPopup(l2, 15, 0, self:Parent())
+			end)
+	end,
+	preallocatedContext: 'pickChild,
+	_proto: @protoStaticText
+};
+
+textDisplay := {
+	viewFont: tsHWFont + tsSize(10),
+	viewJustify: vjCenterV + vjParentFullH + vjParentFullV,
+	viewBounds: {left: 14, top: 15, right: 0, bottom: 0},
+	text: uCardPositionAlertButton,
+	preallocatedContext: 'textDisplay,
+	_proto: @protoStaticText
+};
+
+otherPicker := {
+	viewJustify: vjCenterV + vjParentRightH + vjSiblingFullV,
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewFormat: vfRound(4),
+	viewBounds: {left: -100, top: 0, right: 0, bottom: 0},
+	viewSetupFormScript: func() begin
+		(if (Length(otherChoices) > 1) then (self.text := Stringer([Array: "\uFC01\u", " ", otherChoices[0]])) else begin
+				self.text := otherChoices[0];
+				(self.viewFlags := (viewFlags - 512))
+			end)
+	end,
+	viewClickScript: func(a1) begin
+		local l1;
+		(if self:TrackHilite(a1) then begin
+				(l1 := Clone(otherChoices))[otherSelection] := {item: l1[otherSelection], mark: $\uFC0B};
+				DoPopup(l1, 15, 0, self)
+			end)
+	end,
+	pickActionScript: func(a1) begin
+		self:Parent():chooseOtherScript(a1)
+	end,
+	preallocatedContext: 'otherPicker,
+	_proto: @protoTextButton
+};
+
+otherInput := {
+	viewJustify: vjCenterH + vjSiblingLeftH + vjSiblingFullV,
+	viewFlags: vVisible + vSingleUnit + vClickable + vGesturesAllowed + vNumbersAllowed,
+	textFlags: 10,
+	viewBounds: {left: -40, top: 0, right: -10, bottom: 0},
+	oldValue: uCardPositionAlertButton,
+	viewChangedScript: func(a1, a2) begin
+		local l1, l2, l3;
+		l1 := nil;
+		(if (a1 = 'text) then (if (not StrEqual(a2.text, "")) then begin
+					if ((not (l3 := StringToNumber(a2.text))) or (trunc(l3) <> l3)) then begin
+							l1 := true;
+							l2 := "The value for the advance notice must be a whole number."
+						end else begin
+							if (not LimitInt(l3, 0, 999)) then begin
+									l1 := true;
+									l2 := "The value for the advance notice must be between 0 and 999."
+								end
+						end;
+					(if (not l1) then (oldValue := Clone(a2.text)) else begin
+							self:Notify(3, "Alarm", l2);
+							text := Clone(oldValue);
+							self:Dirty()
+						end)
+				end))
+	end,
+	preallocatedContext: 'otherInput,
+	_proto: @protoInputLine
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewChangedScript_literal7 := same("otherInput.viewChangedScript.literals[7]");
+
+viewChangedScript_literal5 := same("otherInput.viewChangedScript.literals[5]");

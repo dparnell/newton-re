@@ -1,0 +1,1419 @@
+// part, and what only it reaches
+
+part := array(nil, {
+	book: {
+		version: 2,
+		isbn: "GECKO!HDI?",
+		title: "Help",
+		author: "Laura Elliott",
+		publicationDate: 48804480,
+		help: true,
+		contents: [|Array|:
+			basics,
+			listItem,
+			blocksItem,
+			blocksItem_2,
+			blocksItem_3,
+			listItem_2,
+			blocksItem_4,
+			listItem_3,
+			blocksItem_5,
+			listItem_4,
+			blocksItem_6,
+			listItem_5,
+			blocksItem_7,
+			listItem_6,
+			blocksItem_8,
+			listItem_7,
+			blocksItem_9,
+			listItem_8,
+			blocksItem_10,
+			write,
+			listItem_9,
+			blocksItem_11,
+			blocksItem_12,
+			blocksItem_13,
+			listItem_10,
+			blocksItem_14,
+			blocksItem_15,
+			blocksItem_16,
+			listItem_11,
+			blocksItem_17,
+			blocksItem_18,
+			blocksItem_19,
+			listItem_12,
+			blocksItem_20,
+			listItem_13,
+			blocksItem_21,
+			blocksItem_22,
+			blocksItem_23,
+			listItem_14,
+			blocksItem_24,
+			blocksItem_25,
+			blocksItem_26,
+			listItem_15,
+			blocksItem_27,
+			listItem_16,
+			blocksItem_28,
+			listItem_17,
+			blocksItem_29,
+			unistrokeHelpTitle,
+			unistrokeHelpIntro,
+			unistrokeHelpLetters,
+			unistrokeHelpTitle2,
+			unistrokeHelpOthers,
+			unistrokeHelpStrokes,
+			listItem_18,
+			blocksItem_30,
+			listItem_19,
+			blocksItem_31,
+			listItem_20,
+			blocksItem_32,
+			notepad,
+			listItem_21,
+			blocksItem_33,
+			listItem_22,
+			blocksItem_34,
+			listItem_23,
+			blocksItem_35,
+			listItem_24,
+			blocksItem_36,
+			listItem_25,
+			blocksItem_37,
+			names,
+			listItem_26,
+			blocksItem_38,
+			listItem_27,
+			blocksItem_39,
+			listItem_28,
+			blocksItem_40,
+			listItem_29,
+			blocksItem_41,
+			listItem_30,
+			blocksItem_42,
+			listItem_31,
+			blocksItem_43,
+			owners,
+			listItem_32,
+			blocksItem_44,
+			listItem_33,
+			blocksItem_45,
+			listItem_34,
+			blocksItem_46,
+			listItem_35,
+			blocksItem_47,
+			listItem_36,
+			blocksItem_48,
+			listItem_37,
+			blocksItem_49,
+			dates,
+			listItem_38,
+			blocksItem_50,
+			listItem_39,
+			blocksItem_51,
+			listItem_40,
+			blocksItem_52,
+			listItem_41,
+			blocksItem_53,
+			todo,
+			listItem_42,
+			blocksItem_54,
+			listItem_43,
+			blocksItem_55,
+			listItem_44,
+			blocksItem_56,
+			features,
+			listItem_45,
+			blocksItem_57,
+			listItem_46,
+			blocksItem_58,
+			listItem_47,
+			blocksItem_59,
+			listItem_48,
+			blocksItem_60,
+			listItem_49,
+			blocksItem_61,
+			blocksItem_62,
+			blocksItem_63,
+			applics,
+			listItem_50,
+			blocksItem_64,
+			listItem_51,
+			blocksItem_65,
+			connect,
+			listItem_52,
+			blocksItem_66,
+			listItem_53,
+			blocksItem_67,
+			send,
+			listItem_54,
+			blocksItem_68,
+			listItem_55,
+			blocksItem_69,
+			listItem_56,
+			blocksItem_70,
+			listItem_57,
+			blocksItem_71,
+			listItem_58,
+			blocksItem_72,
+			listItem_59,
+			blocksItem_73,
+			find,
+			listItem_60,
+			blocksItem_74,
+			listItem_61,
+			blocksItem_75,
+			listItem_62,
+			blocksItem_76,
+			listItem_63,
+			blocksItem_77,
+			listItem_64,
+			blocksItem_78,
+			card,
+			listItem_65,
+			blocksItem_79,
+			listItem_66,
+			blocksItem_80,
+			listItem_67,
+			blocksItem_81,
+			listItem_68,
+			blocksItem_82,
+			assist,
+			listItem_69,
+			blocksItem_83,
+			listItem_70,
+			blocksItem_84
+		],
+		styles: [|Array|: {family: 'geneva, face: 0, size: 9}, viewFont_2, viewFont],
+		browsers: [|Array|:
+			{
+				name: "Contents",
+				list: [|Array|:
+					{item: basics},
+					{level: 2, item: listItem},
+					{level: 2, item: listItem_2},
+					{level: 2, item: listItem_3},
+					{level: 2, item: listItem_4},
+					{level: 2, item: listItem_5},
+					{level: 2, item: listItem_6},
+					{level: 2, item: listItem_7},
+					{level: 2, item: listItem_8},
+					{item: write},
+					{level: 2, item: listItem_9},
+					{level: 2, item: listItem_10},
+					{level: 2, item: listItem_11},
+					{level: 2, item: listItem_12},
+					{level: 2, item: listItem_13},
+					{level: 2, item: listItem_14},
+					{level: 2, item: listItem_15},
+					{level: 2, item: listItem_16},
+					{level: 2, item: listItem_17},
+					{level: 2, item: unistrokeHelpTitle},
+					{level: 2, item: unistrokeHelpTitle2},
+					{level: 2, item: listItem_18},
+					{level: 2, item: listItem_19},
+					{level: 2, item: listItem_20},
+					{item: notepad},
+					{level: 2, item: listItem_21},
+					{level: 2, item: listItem_22},
+					{level: 2, item: listItem_23},
+					{level: 2, item: listItem_24},
+					{level: 2, item: listItem_25},
+					{item: names},
+					{level: 2, item: listItem_26},
+					{level: 2, item: listItem_27},
+					{level: 2, item: listItem_28},
+					{level: 2, item: listItem_29},
+					{level: 2, item: listItem_30},
+					{level: 2, item: listItem_31},
+					{item: owners},
+					{level: 2, item: listItem_32},
+					{level: 2, item: listItem_33},
+					{level: 2, item: listItem_34},
+					{level: 2, item: listItem_35},
+					{level: 2, item: listItem_36},
+					{level: 2, item: listItem_37},
+					{item: dates},
+					{level: 2, item: listItem_38},
+					{level: 2, item: listItem_39},
+					{level: 2, item: listItem_40},
+					{level: 2, item: listItem_41},
+					{level: 2, item: todo},
+					{level: 3, item: listItem_42},
+					{level: 3, item: listItem_43},
+					{level: 3, item: listItem_44},
+					{item: features},
+					{level: 2, item: listItem_45},
+					{level: 2, item: listItem_46},
+					{level: 2, item: listItem_47},
+					{level: 2, item: listItem_48},
+					{level: 2, item: listItem_49},
+					{item: applics},
+					{level: 2, item: listItem_50},
+					{level: 2, item: listItem_51},
+					{level: 2, item: connect},
+					{level: 3, item: listItem_52},
+					{level: 3, item: listItem_53},
+					{item: send},
+					{level: 2, item: listItem_54},
+					{level: 2, item: listItem_55},
+					{level: 2, item: listItem_56},
+					{level: 2, item: listItem_57},
+					{level: 2, item: listItem_58},
+					{level: 2, item: listItem_59},
+					{item: find},
+					{level: 2, item: listItem_60},
+					{level: 2, item: listItem_61},
+					{level: 2, item: listItem_62},
+					{level: 2, item: listItem_63},
+					{level: 2, item: listItem_64},
+					{item: card},
+					{level: 2, item: listItem_65},
+					{level: 2, item: listItem_66},
+					{level: 2, item: listItem_67},
+					{level: 2, item: listItem_68},
+					{item: assist},
+					{level: 2, item: listItem_69},
+					{level: 2, item: listItem_70}
+				]
+			}
+		],
+		templates: [|Array|: template],
+		rendering: [|Array|:
+			{
+				pageSize: {left: 0, top: 0, right: 206, bottom: 214},
+				pages: [|Array|:
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem},
+							{bounds: blocksBounds_2, item: blocksItem},
+							{bounds: [|Array|: 0, 42, 81, 75], item: blocksItem_2},
+							{bounds: [|Array|: 0, 75, 206, 214], item: blocksItem_3}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_2},
+							{bounds: blocksBounds_3, item: blocksItem_4}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds_4, item: listItem_3},
+							{bounds: blocksBounds_5, item: blocksItem_5}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds_4, item: listItem_4},
+							{bounds: blocksBounds_5, item: blocksItem_6}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_5},
+							{bounds: blocksBounds_3, item: blocksItem_7}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_6},
+							{bounds: blocksBounds_3, item: blocksItem_8}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_7},
+							{bounds: blocksBounds_3, item: blocksItem_9}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_8},
+							{bounds: blocksBounds_3, item: blocksItem_10}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_9},
+							{bounds: blocksBounds_2, item: blocksItem_11},
+							{bounds: [|Array|: 0, 42, 12, 55], item: blocksItem_12},
+							{bounds: [|Array|: 0, 55, 206, 214], item: blocksItem_13}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_10},
+							{bounds: [|Array|: 0, 14, 206, 98], item: blocksItem_14},
+							{bounds: [|Array|: 0, 98, 25, 118], item: blocksItem_15},
+							{bounds: [|Array|: 0, 118, 206, 214], item: blocksItem_16}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds_4, item: listItem_11},
+							{bounds: [|Array|: 0, 28, 206, 126], item: blocksItem_17},
+							{bounds: blocksBounds_6, item: blocksItem_18},
+							{bounds: blocksBounds_7, item: blocksItem_19}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_12},
+							{bounds: blocksBounds_3, item: blocksItem_20}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_13},
+							{bounds: blocksBounds_8, item: blocksItem_21},
+							{bounds: blocksBounds_6, item: blocksItem_22},
+							{bounds: blocksBounds_7, item: blocksItem_23}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_14},
+							{bounds: blocksBounds_8, item: blocksItem_24},
+							{bounds: blocksBounds_6, item: blocksItem_25},
+							{bounds: blocksBounds_7, item: blocksItem_26}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_15},
+							{bounds: blocksBounds_3, item: blocksItem_27}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_16},
+							{bounds: blocksBounds_3, item: blocksItem_28}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_17},
+							{bounds: blocksBounds_3, item: blocksItem_29}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: [|Array|: 0, 0, 206, 14], item: unistrokeHelpTitle},
+							{bounds: [|Array|: 0, 14, 206, 88], item: unistrokeHelpIntro},
+							{bounds: [|Array|: 0, 88, 203, 200], item: unistrokeHelpLetters}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: [|Array|: 0, 0, 206, 14], item: unistrokeHelpTitle2},
+							{bounds: [|Array|: 0, 14, 203, 70], item: unistrokeHelpOthers},
+							{bounds: [|Array|: 0, 74, 206, 214], item: unistrokeHelpStrokes}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_18},
+							{bounds: blocksBounds_3, item: blocksItem_30}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_19},
+							{bounds: blocksBounds_3, item: blocksItem_31}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_20},
+							{bounds: blocksBounds_3, item: blocksItem_32}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_21},
+							{bounds: blocksBounds_3, item: blocksItem_33}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_22},
+							{bounds: blocksBounds_3, item: blocksItem_34}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_23},
+							{bounds: blocksBounds_3, item: blocksItem_35}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_24},
+							{bounds: blocksBounds_3, item: blocksItem_36}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds_4, item: listItem_25},
+							{bounds: blocksBounds_5, item: blocksItem_37}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_26},
+							{bounds: blocksBounds_3, item: blocksItem_38}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_27},
+							{bounds: blocksBounds_3, item: blocksItem_39}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_28},
+							{bounds: blocksBounds_3, item: blocksItem_40}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_29},
+							{bounds: blocksBounds_3, item: blocksItem_41}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_30},
+							{bounds: blocksBounds_3, item: blocksItem_42}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_31},
+							{bounds: blocksBounds_3, item: blocksItem_43}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_32},
+							{bounds: blocksBounds_3, item: blocksItem_44}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_33},
+							{bounds: blocksBounds_3, item: blocksItem_45}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_34},
+							{bounds: blocksBounds_3, item: blocksItem_46}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_35},
+							{bounds: blocksBounds_3, item: blocksItem_47}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_36},
+							{bounds: blocksBounds_3, item: blocksItem_48}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_37},
+							{bounds: blocksBounds_3, item: blocksItem_49}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_38},
+							{bounds: blocksBounds_3, item: blocksItem_50}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_39},
+							{bounds: blocksBounds_3, item: blocksItem_51}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds_4, item: listItem_40},
+							{bounds: blocksBounds_5, item: blocksItem_52}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_41},
+							{bounds: blocksBounds_3, item: blocksItem_53}
+						]
+					},
+					{template: template, blocks: [|Array|: {bounds: blocksBounds_9, item: todo}]},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_42},
+							{bounds: blocksBounds_3, item: blocksItem_54}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_43},
+							{bounds: blocksBounds_3, item: blocksItem_55}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_44},
+							{bounds: blocksBounds_3, item: blocksItem_56}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_45},
+							{bounds: blocksBounds_3, item: blocksItem_57}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_46},
+							{bounds: blocksBounds_3, item: blocksItem_58}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_47},
+							{bounds: blocksBounds_3, item: blocksItem_59}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_48},
+							{bounds: blocksBounds_3, item: blocksItem_60}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_49},
+							{bounds: blocksBounds_2, item: blocksItem_61},
+							{bounds: [|Array|: 0, 42, 20, 62], item: blocksItem_62},
+							{bounds: [|Array|: 0, 62, 206, 214], item: blocksItem_63}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_50},
+							{bounds: blocksBounds_3, item: blocksItem_64}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_51},
+							{bounds: blocksBounds_3, item: blocksItem_65}
+						]
+					},
+					{template: template, blocks: [|Array|: {bounds: blocksBounds_9, item: connect}]},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_52},
+							{bounds: blocksBounds_3, item: blocksItem_66}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_53},
+							{bounds: blocksBounds_3, item: blocksItem_67}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_54},
+							{bounds: blocksBounds_3, item: blocksItem_68}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_55},
+							{bounds: blocksBounds_3, item: blocksItem_69}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_56},
+							{bounds: blocksBounds_3, item: blocksItem_70}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_57},
+							{bounds: blocksBounds_3, item: blocksItem_71}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_58},
+							{bounds: blocksBounds_3, item: blocksItem_72}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_59},
+							{bounds: blocksBounds_3, item: blocksItem_73}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_60},
+							{bounds: blocksBounds_3, item: blocksItem_74}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_61},
+							{bounds: blocksBounds_3, item: blocksItem_75}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_62},
+							{bounds: blocksBounds_3, item: blocksItem_76}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_63},
+							{bounds: blocksBounds_3, item: blocksItem_77}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_64},
+							{bounds: blocksBounds_3, item: blocksItem_78}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_65},
+							{bounds: blocksBounds_3, item: blocksItem_79}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_66},
+							{bounds: blocksBounds_3, item: blocksItem_80}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds_4, item: listItem_67},
+							{bounds: blocksBounds_5, item: blocksItem_81}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_68},
+							{bounds: blocksBounds_3, item: blocksItem_82}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_69},
+							{bounds: blocksBounds_3, item: blocksItem_83}
+						]
+					},
+					{
+						template: template,
+						blocks: [|Array|:
+							{bounds: blocksBounds, item: listItem_70},
+							{bounds: [|Array|: 0, 14, 206, 196], item: blocksItem_84}
+						]
+					}
+				]
+			}
+		]
+	},
+	help: true
+});
+
+basics := {data: "Learn the Basics", layout: 2080, name: "basics"};
+
+listItem := {data: "Erase text, writing, or drawings", viewFont: viewFont, layout: 32};
+
+viewFont := {family: 'espy, face: 1, size: 10};
+
+blocksItem := {
+	data: "You can erase text, writing, or drawings by “scrubbing” with a zigzag line. ",
+	viewFont: viewFont_2
+};
+
+viewFont_2 := {family: 'espy, face: 0, size: 10};
+
+blocksItem_2 := {data: picture('picture, "resources/picture/7748e1")};
+
+blocksItem_3 := {
+	data: "• The zigzag must go back and forth at least four times.\u000d• The segments must extend above and below what you want to erase.  \u000d• The zigzag can be horizontal or vertical.\u000d• Make the angles sharp and not round.\u000d• Don’t lift the pen.",
+	viewFont: viewFont_2
+};
+
+listItem_2 := {data: "Select and deselect", viewFont: viewFont, layout: 32};
+
+blocksItem_4 := {
+	data: "• To select text or objects:\u000d1. Hold the pen on or near the item until a large dot appears. \u000d2. Without raising the pen, draw the highlighting mark over the text or objects you want to select.\u000dThe selected item now has a darkened box around it. Once you select something, you can move it, copy it, or delete it.\u000d\u000d• To deselect an item, tap anywhere on the screen.",
+	viewFont: viewFont_2
+};
+
+listItem_3 := {data: "Move information within applications", viewFont: viewFont, layout: 32};
+
+blocksItem_5 := {
+	data: "You can move selected information from place to place in an item. For example, you can highlight a sentence within a note and move it down ten lines.\u000d1. Select the information you want to move (see “Select and Deselect”).\u000d2. Tap and hold the pen on the selection box. \u000d3. Without raising the pen, move or drag the box where you want the information.",
+	viewFont: viewFont_2
+};
+
+listItem_4 := {data: "Move information between applications", viewFont: viewFont, layout: 32};
+
+blocksItem_6 := {
+	data: "1. Select the information you want to move (see “Select and Deselect”).\u000d2. Tap and hold the pen on the selection box. Without raising the pen, drag the box to any side of the screen, except the one with the button bar. This moves the information to the Clipboard.\u000d3. Open the second application and go to where you want the selected information. \u000d4. Press and hold the pen on the box and drag it where you want.",
+	viewFont: viewFont_2
+};
+
+listItem_5 := {data: "Copy information", viewFont: viewFont, layout: 32};
+
+blocksItem_7 := {
+	data: "You can copy selected information if you don’t want to enter it again.\u000d1. Select the information you want to move (see “Select and Deselect”).\u000d2. Double-tap the selection box, holding the pen down on the screen on the second tap.\u000d3. Drag the pen away from the selection box to copy the information.\u000d4. You can now press and hold the pen on the “copy” and drag it where you want.",
+	viewFont: viewFont_2
+};
+
+listItem_6 := {data: "Delete or duplicate an item", viewFont: viewFont, layout: 32};
+
+blocksItem_8 := {
+	data: "1. Go to the item you want to delete or duplicate (such as a note in the Notepad or a meeting in the Date Book). \u000d2. Tap the Routing button.\u000d3. In the list that appears, tap Delete or Duplicate.",
+	viewFont: viewFont_2
+};
+
+listItem_7 := {data: "Use the button bar", viewFont: viewFont, layout: 32};
+
+blocksItem_9 := {
+	data: "The button bar is typically at the bottom of the screen. It contains buttons and icons for applications and features of your Newton device. Tap these buttons or icons to go to different areas, open applications, or perform specific functions. \u000d\u000dTo change the items that appear in the button bar, see the documentation that came with your Newton device.",
+	viewFont: viewFont_2
+};
+
+listItem_8 := {data: "Set system preferences", viewFont: viewFont, layout: 32};
+
+blocksItem_10 := {
+	data: "You can set preferences for various things using the Prefs application, including settings for a password, keyboard, sounds, alarms, sleep time, handwriting recognition, recording, and a modem. \u000d\u000d1. Tap Extras, tap the folder tab, then tap Unfiled Icons.\u000d2. Tap Prefs.\u000d3. Tap a topic. A slip appears.\u000d4. Enter the appropriate information.\u000d5. When you are finished, tap X to close the slip.",
+	viewFont: viewFont_2
+};
+
+write := {data: "Write and Draw", layout: 2080, name: "write"};
+
+listItem_9 := {data: "Insert information", viewFont: viewFont, layout: 32};
+
+blocksItem_11 := {
+	data: "Information is usually placed at the caret, which is turned on by default.",
+	viewFont: viewFont_2
+};
+
+blocksItem_12 := {data: picture('picture, "resources/picture/776521")};
+
+blocksItem_13 := {
+	data: "If the caret is turned off, information goes where you write or draw it.\u000d\u000dTo turn the caret off and on: \u000d1. Tap the Recognition button, then tap Preferences. \u000d2. Tap Options and in the list, tap Text Editing Settings. \u000d3. Tap the checkbox next to “Insert new words at caret.”\u000d4. Tap X to close the slip.",
+	viewFont: viewFont_2
+};
+
+listItem_10 := {data: "Have my handwriting recognized ", viewFont: viewFont, layout: 32};
+
+blocksItem_14 := {
+	data: "In some areas, you can have your writing recognized as text.\u000d1. Tap the Recognition button.\u000d2. From the list that appears, tap \u000dText. The Recognition button changes to a capital A.",
+	viewFont: viewFont_2
+};
+
+blocksItem_15 := {data: picture('picture, "resources/picture/776a51")};
+
+blocksItem_16 := {
+	data: "3. Begin writing. \u000dYour writing may not be recognized if your Newton device is low on memory. Try deleting files, applications, or sounds.  ",
+	viewFont: viewFont_2
+};
+
+listItem_11 := {data: "Take notes quickly/defer recognition", viewFont: viewFont, layout: 32};
+
+blocksItem_17 := {
+	data: "If you don’t have time to let your Newton device recognize your handwriting:\u000d1. Tap the Recognition button.\u000d2. From the list that appears, tap Ink Text. The Recognition button changes to a  lowercase a.",
+	viewFont: viewFont_2
+};
+
+blocksItem_18 := {data: picture('picture, "resources/picture/776ea1")};
+
+blocksItem_19 := {data: "3. Begin writing.", viewFont: viewFont_2};
+
+listItem_12 := {data: "Convert ink text to text", viewFont: viewFont, layout: 32};
+
+blocksItem_20 := {
+	data: "You can convert ink text, or handwriting, to text, at any time.\u000d1. Open the item that contains the ink text you want to convert.\u000d2. Select the ink text (see “Select and Deselect” in the topic “Learn the Basics”).\u000d3. Double-tap inside the selection box.\u000dArrows appear over words as they are converted to text.",
+	viewFont: viewFont_2
+};
+
+listItem_13 := {data: "Have my drawings recognized", viewFont: viewFont, layout: 32};
+
+blocksItem_21 := {
+	data: "In some areas of your Newton device, you can choose a setting to have your drawing “cleaned up.”\u000d1. Tap the Recognition button.\u000d2. From the list that appears, tap Shapes.\u000dThe Recognition button changes to what you see below.",
+	viewFont: viewFont_2
+};
+
+blocksItem_22 := {data: picture('picture, "resources/picture/7774f9")};
+
+blocksItem_23 := {
+	data: "3. Begin drawing. Your Newton device automatically straightens lines and smooth curves.",
+	viewFont: viewFont_2
+};
+
+listItem_14 := {data: "Create quick sketches", viewFont: viewFont, layout: 32};
+
+blocksItem_24 := {
+	data: "If you don’t have time to let your Newton device “clean up,” or recognize, your drawings:\u000d1. Tap the Recognition button.\u000d2. From the list that appears, tap Sketches.\u000dThe Recognition button changes to what you see below.",
+	viewFont: viewFont_2
+};
+
+blocksItem_25 := {data: picture('picture, "resources/picture/7778e1")};
+
+blocksItem_26 := {
+	data: "3. Begin drawing. \u000dYour drawings remain as they are. You cannot have them recognized later.",
+	viewFont: viewFont_2
+};
+
+listItem_15 := {data: "Set handwriting preferences ", viewFont: viewFont, layout: 32};
+
+blocksItem_27 := {
+	data: "1. Tap the Recognition button.\u000d2. In the list that appears, tap Preferences. A slip appears.\u000d• Tap your writing style and set the slider for your word spacing.\u000d• Tap Align Pen to realign the pen with the screen.\u000d• Tap “Configure for guest user” if someone else will be using your Newton device. (Your settings won’t be lost.)\u000d• Tap Options to refine recognition further. (See “Set Writing Options.”)",
+	viewFont: viewFont_2
+};
+
+listItem_16 := {data: "Set writing options", viewFont: viewFont, layout: 32};
+
+blocksItem_28 := {
+	data: "Tap the Recognition button, tap Preferences. then tap Options.  \u000d• Text Editing Settings:  Scale ink text, use the caret, and add new words to your personal word list.\u000d• Handwriting Settings: Have the Newton device learn your writing and recognize text letter-by-letter.\u000d• Letter Shapes: Choose how you write letters and other characters.\u000d• Fine Tuning:  Set the time spent before converting your writing to text.",
+	viewFont: viewFont_2
+};
+
+listItem_17 := {data: "Write to get the best recognition", viewFont: viewFont, layout: 32};
+
+blocksItem_29 := {
+	data: "Your Newton device will recognize your handwriting most easily if you:\u000d• write at an even pace\u000d• write clearly, simply, and neatly\u000d• exaggerate the space between words, but not between letters\u000d• write capital letters and tall letters so they are about twice as tall as small letters\u000d• finish writing a word before you attempt to correct it\u000d• choose a handwriting style and write that way",
+	viewFont: viewFont_2
+};
+
+listItem_18 := {data: "Correct text", viewFont: viewFont, layout: 32};
+
+blocksItem_30 := {
+	data: "To change a misinterpreted word:\u000d• Double-tap the word. Then, in the list that appears, tap the correct word, the Corrector button, or the Keyboard button.\u000d• Scrub the word out by drawing a zigzag line over it. Then write the word again. Double-tap the screen to use the on-screen keyboard.",
+	viewFont: viewFont_2
+};
+
+listItem_19 := {data: "Set the text and line styles", viewFont: viewFont, layout: 32};
+
+blocksItem_31 := {
+	data: "You can change the font, style, and size of text. You can also change the thickness of the pen.\u000d1. To convert existing text, lines, or shapes, select them (see “Select and Deselect” in the topic “Learn the Basics”).\u000d2. Tap Extras, then tap the folder tab; now tap Unfiled Icons.\u000d3. Tap Styles.\u000d4. In the slip that appears, tap the button of the characteristic you want to change.\u000d5. In the slip, tap your choices.",
+	viewFont: viewFont_2
+};
+
+listItem_20 := {data: "Align the pen", viewFont: viewFont, layout: 32};
+
+blocksItem_32 := {
+	data: "1. Tap the Recognition button.\u000d2. In the list that appears, tap Preferences.\u000d3. Tap Align Pen and follow the instructions on the screen.",
+	viewFont: viewFont_2
+};
+
+notepad := {data: "Use the Notepad", layout: 2080, name: "notepad"};
+
+listItem_21 := {data: "Create a new item", viewFont: viewFont, layout: 32};
+
+blocksItem_33 := {
+	data: "1. Go to the Notepad.\u000d2. Tap New. \u000d3. In the list that appears, tap your choice—Note, Checklist, Outline, or Recording. \u000d\u000d(Note:  If you have other software installed, you may have additional choices.)",
+	viewFont: viewFont_2
+};
+
+listItem_22 := {data: "List all items", viewFont: viewFont, layout: 32};
+
+blocksItem_34 := {
+	data: "1. Go to the Notepad.\u000d2. Tap the Overview button in the button bar.\u000d3. To go to a specific item, tap it.",
+	viewFont: viewFont_2
+};
+
+listItem_23 := {data: "View a long item", viewFont: viewFont, layout: 32};
+
+blocksItem_35 := {
+	data: "To view items that are longer than one screen:\u000d1. Go to the Notepad.\u000d2. Go to the item you want to view.\u000d3. Tap the up or down arrows in the button bar.",
+	viewFont: viewFont_2
+};
+
+listItem_24 := {data: "Move from one item to another", viewFont: viewFont, layout: 32};
+
+blocksItem_36 := {
+	data: "Do one of the following:\u000d• Tap the up and down arrows in the button bar. Tap the up arrow to go to the previous item; tap the down arrow to go to the next item. (If an item is longer than one screen, you’ll have to tap several times to get to the next item.)\u000d• Tap the Overview button, then tap an item.",
+	viewFont: viewFont_2
+};
+
+listItem_25 := {data: "Get information on and title an item", viewFont: viewFont, layout: 32};
+
+blocksItem_37 := {
+	data: "1. Go to the item.\u000d2. Tap the Picture button next to the date in the upper-left corner.\u000dA title slip appears showing you the title, when the item was created, the amount of memory it takes up, and where it is stored.\u000d3. To change the title, scrub it and write a new title.",
+	viewFont: viewFont_2
+};
+
+names := {data: "Use the Name File", layout: 2080, name: "names"};
+
+listItem_26 := {data: "Create a new card", viewFont: viewFont, layout: 32};
+
+blocksItem_38 := {
+	data: "1. Tap New. \u000d2. In the list that appears, tap your choice.\u000d3. Do one of the following:\u000d• To create a card for a person or company, enter the appropriate information in the slip that appears. \u000d• To create a group address, write a name for the group address, in the Group Name.\u000dTap Group Type and in the list that appears, tap your choice.  In the list, tap the checkbox to the left of a name to include that person in the group address. ",
+	viewFont: viewFont_2
+};
+
+listItem_27 := {data: "Add information to a card", viewFont: viewFont, layout: 32};
+
+blocksItem_39 := {
+	data: "1. Tap Names.\u000d2. Go to the card.\u000d3. Tap Add.\u000d4. In the list that appears, tap the field you want to add. \u000d• If you want to create a new label for a field, tap Custom. In the slip that appears, write the name of the label and then tap X.)\u000d5. In the slip that appears, enter the appropriate information.",
+	viewFont: viewFont_2
+};
+
+listItem_28 := {data: "See different views of a card", viewFont: viewFont, layout: 32};
+
+blocksItem_40 := {
+	data: "1. Tap Names.\u000d2. Go to the desired card.\u000d3. Tap Show.\u000d4. In the list that appears, tap one:\u000d• Card view:  shows name, address, telephone numbers, and e-mail address\u000d• All Info view:  shows all the information on a card",
+	viewFont: viewFont_2
+};
+
+listItem_29 := {data: "Move from one card to another", viewFont: viewFont, layout: 32};
+
+blocksItem_41 := {
+	data: "• Tap the up and down arrows in the button bar to move back and forth between cards.\u000d• Tap a lettered tab to go to a specific part of your Name File.\u000d\u000dNote: Tapping once takes you to the first letter on the tab; tap again to go to the 2nd letter on the tab. ",
+	viewFont: viewFont_2
+};
+
+listItem_30 := {data: "See a list of all my cards", viewFont: viewFont, layout: 32};
+
+blocksItem_42 := {
+	data: "1. Tap Names.\u000d2. Tap the Overview button.\u000dTo go to a specific card, tap the name.",
+	viewFont: viewFont_2
+};
+
+listItem_31 := {data: "Sort cards", viewFont: viewFont, layout: 32};
+
+blocksItem_43 := {
+	data: "1. Tap Names.\u000d2. Tap the Information button.\u000d3. Tap Prefs. \u000dThe Names Preferences slip appears.\u000d4. Tap a preference for how you want to sort cards.\u000d5. Tap X to close the slip.\u000dThe cards appear in the new order.",
+	viewFont: viewFont_2
+};
+
+owners := {data: "Set Owners and Worksites", layout: 2080, name: "owners"};
+
+listItem_32 := {data: "Understand about owners", viewFont: viewFont, layout: 32};
+
+blocksItem_44 := {
+	data: "An owner can be a person who manages, owns, or uses the Newton device. You store information about an owner in an owner card. This card has information such as name, telephone number, and company.\u000d\u000dYou can have multiple owners, for example, if you share the device at work. You may also want to create two “personas”—one owner for work and a second owner for home, or for another business.",
+	viewFont: viewFont_2
+};
+
+listItem_33 := {data: "Create an owner", viewFont: viewFont, layout: 32};
+
+blocksItem_45 := {
+	data: "When you go through Setup, you are prompted to enter information that gets stored in an owner card. If you want to change that information or add a new owner, follow the steps below.\u000d1. Tap Extras.\u000d2. Tap the folder tab, then tap Unfiled Icons.\u000d3. Tap Owner Info.\u000d4. Tap New.\u000d5. In the list that appears, tap Owner.\u000d6. In the slip that appears, enter or change the appropriate information.",
+	viewFont: viewFont_2
+};
+
+listItem_34 := {data: "Understand about worksites", viewFont: viewFont, layout: 32};
+
+blocksItem_46 := {
+	data: "A worksite is a place where an owner establishes his or her address and affiliated information. \u000d\u000dYou can have multiple worksites, for example, if you work at an office and also have a home office.",
+	viewFont: viewFont_2
+};
+
+listItem_35 := {data: "Create a worksite", viewFont: viewFont, layout: 32};
+
+blocksItem_47 := {
+	data: "When you go through Setup, you are prompted to enter information that gets stored in a worksite card. If you want to add a new worksite, follow the steps below.\u000d1. Tap Extras.\u000d2. Tap the folder tab, then tap Unfiled Icons.\u000d3. Tap Owner Info.\u000d4. Tap New, then tap Worksite.\u000d5. In the slip that appears, enter the appropriate information.",
+	viewFont: viewFont_2
+};
+
+listItem_36 := {data: "Add or change information", viewFont: viewFont, layout: 32};
+
+blocksItem_48 := {
+	data: "1. Tap Extras.\u000d2. Tap the folder tab, then tap Unfiled Icons.\u000d3. Tap Owner Info.\u000d4. Tap a specific owner or worksite.\u000d• To add information:\u000dTap Add and in the list that appears, tap your choice. Another slip appears. Now enter the appropriate information.\u000d• To change information:\u000dTap the item you want to change. In the slip that appears, scrub the information you want to erase. Then enter the correct information.",
+	viewFont: viewFont_2
+};
+
+listItem_37 := {data: "Choose owner and worksite", viewFont: viewFont, layout: 32};
+
+blocksItem_49 := {
+	data: "If you create more than one owner or worksite, you can change the current owner or worksite.\u000d1. Go to the Notepad.\u000d2. Tap the Routing button.\u000d3. Tap Fax or Print.\u000d4. Tap the diamond in the upper-left corner.\u000d5. Tap an owner or worksite.\u000d• To change the city for a worksite, tap “Other City” and choose the city (this changes your home city in Time Zones).\u000d6. Tap X to close the slip and cancel routing.",
+	viewFont: viewFont_2
+};
+
+dates := {data: "Use the Date Book", layout: 2080, name: "dates"};
+
+listItem_38 := {data: "Schedule a meeting or event", viewFont: viewFont, layout: 32};
+
+blocksItem_50 := {
+	data: "1. Tap Dates, then tap New.\u000d2. From the list that appears, tap your choice—Meeting, Weekly Meeting, Event, Multi-Day Event, Annual Event, or To Do Task.\u000d",
+	viewFont: viewFont_2
+};
+
+listItem_39 := {data: "Delete a meeting or event", viewFont: viewFont, layout: 32};
+
+blocksItem_51 := {
+	data: "1. Tap Dates, then go to the date of the meeting or event you want to delete.\u000d2. Do one of the following:\u000d• Scrub the Picture button for the meeting or event.\u000d• Tap the meeting’s Picture button and in the slip that appears, tap the Routing button, then tap Delete.",
+	viewFont: viewFont_2
+};
+
+listItem_40 := {data: "Set an alarm for a meeting or event", viewFont: viewFont, layout: 32};
+
+blocksItem_52 := {
+	data: "1. Tap Dates.\u000d2. Tap the Picture button next to the meeting. The meeting slip appears.\u000d3. Tap Alarm.\u000d4. In the list that appears, tap the amount of time before the meeting that you want the alarm to sound.",
+	viewFont: viewFont_2
+};
+
+listItem_41 := {data: "Show different views ", viewFont: viewFont, layout: 32};
+
+blocksItem_53 := {
+	data: "1. Tap Dates, then tap Show.\u000d2. In the list that appears, tap one of the following:\u000d•Day, Week, Month, or Year:  to see the schedule for that time frame\u000d•To Do List:  to see the list of your  To Do tasks\u000d•Day’s Agenda:  to view a list of meetings, events, and To Do tasks for a particular day\u000d•Today:  to view your schedule for the current day",
+	viewFont: viewFont_2
+};
+
+todo := {data: "Use the To Do List", viewFont: viewFont, layout: 32, name: "todo"};
+
+listItem_42 := {data: "Create and complete a To Do task", viewFont: viewFont, layout: 32};
+
+blocksItem_54 := {
+	data: "To create a task:\u000d1. Tap Dates.\u000d2. Tap New, then tap To Do Task.\u000d3. Enter the information in the slip that appears.\u000dTo complete a task:\u000d1. Tap Dates.\u000d2. Tap Show, then tap To Do List.\u000d3. Tap the checkbox next to completed tasks.\u000dNote: Uncompleted items are automatically advanced to the next day.",
+	viewFont: viewFont_2
+};
+
+listItem_43 := {data: "Delete a To Do task", viewFont: viewFont, layout: 32};
+
+blocksItem_55 := {
+	data: "1. Tap Dates, tap Show, then tap To Do List.\u000d2. Do one of the following:\u000d• Scrub the task you want to delete by drawing a zigzag line over the Picture button for the task. Start the zigzag directly under the Picture button.\u000d• Tap the Picture button next to the checkbox of the item you want to delete, then tap the Routing button. Tap Delete.",
+	viewFont: viewFont_2
+};
+
+listItem_44 := {data: "View the To Do List", viewFont: viewFont, layout: 32};
+
+blocksItem_56 := {
+	data: "1. Tap Dates.\u000d2. Tap Show.\u000d3. Tap To Do List.\u000d4. To see a specific task, tap the Picture button next to the checkbox.",
+	viewFont: viewFont_2
+};
+
+features := {data: "Use Advanced Features", layout: 2080, name: "features"};
+
+listItem_45 := {data: "Rotate the screen", viewFont: viewFont, layout: 32};
+
+blocksItem_57 := {
+	data: "You can change the orientation of the screen between portrait and landscape, or rotate it in ninety-degree increments to the left or right.\u000d1. Tap Extras.\u000d2. Tap Rotate.\u000d3. In the list that appears, tap how you want the screen rotated.\u000dA message appears telling you the display is being rebuilt.\u000dThe screen now appears in the orientation you selected.",
+	viewFont: viewFont_2
+};
+
+listItem_46 := {data: "Change the backdrop", viewFont: viewFont, layout: 32};
+
+blocksItem_58 := {
+	data: "1. Tap Extras.\u000d2. Do one of the following:\u000d• To make Extras the backdrop, tap the Information button and in the list that appears, tap Memory Info. Then tap “Make Extras the backdrop.” Tap X, then tap OK.\u000d• Select the application you want to make the backdrop (see “Select and Deselect” in the topic “Learning the Basics”). Tap the Routing button and in the list that appears, tap Make Backdrop. Tap OK. ",
+	viewFont: viewFont_2
+};
+
+listItem_47 := {data: "View items by location ", viewFont: viewFont, layout: 32};
+
+blocksItem_59 := {
+	data: "1. Tap Extras.\u000d2. Tap the folder tab.\u000d3. In the list that appears:\u000d• Tap Internal to view only items that are stored internally.\u000d• Tap a card name to view only items stored on the storage card.\u000d• Tap All Stores to view both.\u000d4. To see items stored in a particular folder, tap the folder tab, then tap the name of the folder.",
+	viewFont: viewFont_2
+};
+
+listItem_48 := {data: "Delete software", viewFont: viewFont, layout: 32};
+
+blocksItem_60 := {
+	data: "1. Tap Extras.\u000d2. Tap the folder tab, then tap the folder name where the software is stored.\u000d3. Select the software’s icon (see “Select and Deselect” in the topic “Learn the Basics”).\u000d4. Tap the Routing button, then tap Delete.\u000dA message appears asking if you want to delete the package. \u000d5. Tap OK.",
+	viewFont: viewFont_2
+};
+
+listItem_49 := {data: "Use the blinking star", viewFont: viewFont, layout: 32};
+
+blocksItem_61 := {
+	data: "At certain times, a blinking star may appear at the top of the screen. ",
+	viewFont: viewFont_2
+};
+
+blocksItem_62 := {data: picture('picture, "resources/picture/77db89")};
+
+blocksItem_63 := {
+	data: "You’ll see it when:\u000d• you are sending an item and the status slip, or window, is hidden (if you’ve opened another application)\u000d• you receive new items in your In Box while it isn’t open\u000d• you write a word not in your word list\u000d1. Tap the star. A list appears.\u000d2. Tap an item in the list to go to it and see the item or status slip.",
+	viewFont: viewFont_2
+};
+
+applics := {data: "Use Advanced Applications", layout: 2080, name: "applics"};
+
+listItem_50 := {data: "Use Calls", viewFont: viewFont, layout: 32};
+
+blocksItem_64 := {
+	data: "1. Tap Extras, tap the folder tab, then tap Unfiled Icons.\u000d2. Tap Calls. \u000d3. Tap New.\u000d4. Enter the appropriate information.\u000d5. If you want to make the call using your Newton device, tap Place Call. A slip appears.\u000d6. Verify the information, then tap Call.\u000d7. After the call is placed, tap Hang Up and in the list that appears, tap your choice.",
+	viewFont: viewFont_2
+};
+
+listItem_51 := {data: "Set time zones", viewFont: viewFont, layout: 32};
+
+blocksItem_65 := {
+	data: "1. Tap Extras, tap the folder tab, then tap Unfiled Icons. Tap Time Zones. The local zone is listed at the top. A second, alternate zone is listed near the bottom.\u000d3. To change a time zone, tap it. \u000d4. Do one of the following:\u000d• To change the local zone, tap the worksite you want to use, or tap Other. \u000d• To change the country of the secondary zone, tap the country, then tap your choice. To change the city, tap a city.",
+	viewFont: viewFont_2
+};
+
+connect := {data: "Connect/dock to other devices", viewFont: viewFont, layout: 32, name: "connect"};
+
+listItem_52 := {data: "Set connection preferences", viewFont: viewFont, layout: 32};
+
+blocksItem_66 := {
+	data: "1. Tap Extras.\u000d2. Tap the folder tab, then tap Unfiled Icons.\u000d3. Tap Dock.\u000d4. Tap the Information button in the Dock slip.\u000d5. In the list that appears, tap Prefs.\u000d6. Tap the appropriate checkboxes.\u000d7. Tap X to close the slip.",
+	viewFont: viewFont_2
+};
+
+listItem_53 := {data: "Set the type of connection", viewFont: viewFont, layout: 32};
+
+blocksItem_67 := {
+	data: "1. Tap Extras.\u000d2. Tap Unfiled Icons.\u000d3. Tap Dock.\u000d4. Tap “Connect via” and from the list that appears, tap a choice.\u000d5. Depending on the choice, other slips may appear. Enter the appropriate information, then tap X when you are done.\u000d6. When you are ready, tap Connect.",
+	viewFont: viewFont_2
+};
+
+send := {data: "Send and Receive Information", layout: 2080, name: "send"};
+
+listItem_54 := {data: "Routing multiple items ", viewFont: viewFont, layout: 32};
+
+blocksItem_68 := {
+	data: "1. Go to the application that includes the information you want to route, or send.\u000d2. Tap the Overview button.\u000dA list of all the items in that application appears, with a checkbox next to each.\u000d3. Tap the checkbox next to the items you want to send. \u000d4. Tap the Routing button, and in the list that appears, tap your choice.\u000d5. Enter the appropriate information in the routing slip, then tap the button to print, fax, beam, delete, or duplicate.",
+	viewFont: viewFont_2
+};
+
+listItem_55 := {data: "Set my modem preferences", viewFont: viewFont, layout: 32};
+
+blocksItem_69 := {
+	data: "Follow the instructions that came with your modem to connect it to your Newton device. To set your modem preferences, do one of the following:\u000d• Tap Extras, tap the folder tab, then tap Unfiled Icons. Tap Prefs, then tap Modem. In the slip that appears, enter the appropriate information.\u000d• Tap Extras, tap In Box, then tap the Information button. Tap Modem Prefs. In the slip that appears, enter the appropriate information.",
+	viewFont: viewFont_2
+};
+
+listItem_56 := {data: "View items in the InOut Box", viewFont: viewFont, layout: 32};
+
+blocksItem_70 := {
+	data: "1. Tap Extras.\u000d2. Tap the folder tab, then tap Unfiled Icons.\u000d3. Tap InOut.\u000d4. Tap In Box or Out Box. A list of items appears, if there are any in the box.\u000d5. To view a specific item, tap the Picture button next to the checkbox. \u000dA slip appears.\u000d6. When you are finished, tap X to close the slip.",
+	viewFont: viewFont_2
+};
+
+listItem_57 := {data: "Print or Fax", viewFont: viewFont, layout: 32};
+
+blocksItem_71 := {
+	data: "1. If you’re faxing, connect a modem to your Newton device. If you’re printing, connect a printer to your Newton device.\u000d2. Go to the item you want to print or fax.\u000d3. Tap the Routing button.\u000d4. In the list that appears, tap Print or Fax.\u000dA slip appears.\u000d5. Enter the appropriate information.\u000d6. Tap Print or Fax. ",
+	viewFont: viewFont_2
+};
+
+listItem_58 := {data: "Receive a fax", viewFont: viewFont, layout: 32};
+
+blocksItem_72 := {
+	data: "1. Connect a fax modem to your Newton device.\u000d2. Tap Extras, tap the folder tab, then tap Unfiled Icons.\u000d3. Tap InOut, then tap In Box.\u000d4. Tap Receive, and in the list tap Fax.\u000d• If you tap “Wait for Call,” your Newton device prepares the fax modem and waits for the fax telephone call.\u000d• If you tap “Manually Connect,” a slip appears with instructions. Follow these, then tap Fax.\u000dA slip appears showing  you the status of the fax.",
+	viewFont: viewFont_2
+};
+
+listItem_59 := {data: "Send and receive beams", viewFont: viewFont, layout: 32};
+
+blocksItem_73 := {
+	data: "To send a beam:\u000dGo to the item you want to beam. Tap the Routing button, then tap Beam.\u000d\u000dTo receive a beam manually:\u000dTap Extras, tap the folder tab, then tap Unfiled Icons. Tap InOut. Tap the In Box to select it, then tap Receive. In the list that appears, tap Beam.\u000d\u000d• The maximum distance for beaming is approximately 3 feet (1 meter).\u000d• Beaming  does not work well in bright sunlight.",
+	viewFont: viewFont_2
+};
+
+find := {data: "Organize and Find Information", layout: 2080, name: "find"};
+
+listItem_60 := {data: "Create, rename, or delete a folder", viewFont: viewFont_2, layout: 32};
+
+blocksItem_74 := {
+	data: "1. Go to any item, then tap the Folder button.\u000d2. Do one of the following:\u000d• To create a new folder, tap New.\u000dWrite the name of the new folder and tap X to close the slip. You can create up to 12 global and 12 local folders.\u000d• To rename a folder, tap Edit Folder.\u000dScrub the name of the folder and write the new name. Tap X to close the slip. Tap OK.\u000d• To delete a folder, choose the folder, tap Edit Folder, then tap Delete. Tap OK.",
+	viewFont: viewFont_2
+};
+
+listItem_61 := {data: "Put items into folders", viewFont: viewFont, layout: 32};
+
+blocksItem_75 := {
+	data: "1. Go to the item you want to file.\u000d2. Tap the Folder button.\u000d3. Choose the folder you want the item to be stored in.\u000d4. Tap File.",
+	viewFont: viewFont_2
+};
+
+listItem_62 := {data: "View items by folder", viewFont: viewFont, layout: 32};
+
+blocksItem_76 := {
+	data: "1. Tap the folder tab.\u000dA list appears.\u000d2. Tap the folder you want to view.\u000dItems stored in that folder appear.",
+	viewFont: viewFont_2
+};
+
+listItem_63 := {data: "Search for text", viewFont: viewFont, layout: 32};
+
+blocksItem_77 := {
+	data: "1. Tap Find.\u000d2. Tap “Look for” and from the list that appears, tap “text.”\u000d3. Write the words or characters you want to find on the dotted line.\u000d4. Do one of the following:\u000d• Tap Everywhere.\u000d• Tap Selected. In the list that appears, tap the checkboxes for the areas you want to search.\u000d• Tap the current application name listed.\u000d5. Tap Find.",
+	viewFont: viewFont_2
+};
+
+listItem_64 := {data: "Search for items by date", viewFont: viewFont, layout: 32};
+
+blocksItem_78 := {
+	data: "1. Tap Find.\u000d2. Tap “Look for,” and in the list that appears tap “dates before,” “dates on,” or “dates after.”\u000d3. Tap your choice or the date (if one is listed).\u000d4. Select the date. To move to another month, tap the arrows. To change the year, tap the upper half of a number to increase it, and the lower half to decrease it. Tap a day to select it.\u000d5. Tap X to close the slip.\u000d6. Tap Find. A list of items found appears.",
+	viewFont: viewFont_2
+};
+
+card := {data: "Use PC Cards to Store and Backup", layout: 2080, name: "card"};
+
+listItem_65 := {data: "Store new items on a PC card", viewFont: viewFont, layout: 32};
+
+blocksItem_79 := {
+	data: "1. Insert a PC card (also known as a storage card) into one of the card slots. \u000dA slip appears for the card.\u000d2. Tap the checkbox to store new items and packages on that card.\u000d3. If the card isn’t titled already, enter a title or name, for it.\u000d4. When you are finished, tap X to close the card slip.\u000dEverything you create from this point on will be stored on that card.",
+	viewFont: viewFont_2
+};
+
+listItem_66 := {data: "Create a backup on a PC card", viewFont: viewFont, layout: 32};
+
+blocksItem_80 := {
+	data: "1. Insert a PC card (also known as a storage card) into one of the card slots. \u000d2. Tap Extras, tap the folder tab, then tap Unfiled Icons.\u000d3. Tap Card. A slip appears.\u000d4. Tap Backup. \u000d5. Tap the checkbox next to the applications you want to backup.\u000d6. Tap Backup. \u000dThe information you selected is now backed up to the PC card.",
+	viewFont: viewFont_2
+};
+
+listItem_67 := {data: "Restore information from a PC card", viewFont: viewFont, layout: 32};
+
+blocksItem_81 := {
+	data: "1. Insert the PC card (also known as a storage card) that contains the information into one of the card slots. \u000d2. Tap Extras, tap the folder tab, then tap Unfiled Icons.\u000d3. Tap Card. A slip appears.\u000d4. Tap Restore. A slip appears.\u000d5. Tap the checkbox next to the information you want to restore. \u000d6. Tap Restore. A message appears.\u000d7. Tap your choice.\u000d8. Information is restored. Tap Restart.",
+	viewFont: viewFont_2
+};
+
+listItem_68 := {data: "Erase information on a PC card", viewFont: viewFont, layout: 32};
+
+blocksItem_82 := {
+	data: "1. Insert the PC card (also known as a storage card) that contains the information into one of the card slots. \u000d2. Tap Extras, tap the folder tab, then tap Unfiled Icons.\u000d3. Tap Card. A slip appears.\u000d4. Tap Erase. \u000d5. A slip appears asking you what you want to erase. Tap your choice.\u000d6. Tap Erase. A warning slip appears asking if you really want to erase. \u000d7. Tap OK.",
+	viewFont: viewFont_2
+};
+
+assist := {data: "Use Assist", layout: 2080, name: "assist"};
+
+listItem_69 := {data: "Perform Assist tasks", viewFont: viewFont_2, layout: 32};
+
+blocksItem_83 := {
+	data: "Do one of the following:\u000d• Write your request, then tap Assist.\u000d• Select text, then tap Assist.\u000d• Tap Assist.\u000d(For a list of words you can use for requests, see “Make Requests.”)\u000d1. Tap Please or the diamond next to it.\u000dA list appears.\u000d2. Tap your choice from the list, then write the rest of your request. Make sure the text is recognized accurately.\u000d3. Tap Do.",
+	viewFont: viewFont_2
+};
+
+listItem_70 := {data: "Make Assist requests", viewFont: viewFont, layout: 32};
+
+blocksItem_84 := {
+	data: "To make requests, use these words:\u000dCall:  call, phone, ring, dial\u000dFax:  fax\u000dFind:  find, locate, search for, look for\u000dMail:  mail, email\u000dPrint:  print\u000dRemember:  remember, remember to, remind me to\u000dSchedule:  schedule, meet, meet me,\u000dtalk to, breakfast, lunch, dinner, holiday, birthday, b-day, bday, anniversary\u000dTime:  time, time in, what time, what is the time in",
+	viewFont: viewFont_2
+};
+
+template := {nColumns: 1, column: [|Array|: {width: 12, type: 0}]};
+
+blocksBounds := [|Array|: 0, 0, 206, 14];
+
+blocksBounds_2 := [|Array|: 0, 14, 206, 42];
+
+blocksBounds_3 := [|Array|: 0, 14, 206, 214];
+
+blocksBounds_4 := [|Array|: 0, 0, 206, 28];
+
+blocksBounds_5 := [|Array|: 0, 28, 206, 214];
+
+blocksBounds_6 := [|Array|: 0, 126, 25, 146];
+
+blocksBounds_7 := [|Array|: 0, 146, 206, 214];
+
+blocksBounds_8 := [|Array|: 0, 14, 206, 126];
+
+blocksBounds_9 := [|Array|: 0, 0, 206, 214];
+
+unistrokeHelpTitle := {data: "Write with unistrokes", viewFont: viewFont, layout: 32};
+
+unistrokeHelpIntro := {
+	data: "Write each letter with one stroke, starting at the dot. It is typed at the caret as you lift the pen.\u000dTo turn it on, choose Unistroke in Handwriting Preferences.",
+	viewFont: viewFont_2
+};
+
+unistrokeHelpTitle2 := {data: "Write numbers and commands", viewFont: viewFont, layout: 32};
+
+unistrokeHelpLetters := {data: picture('picture, "resources/picture/unistroke-letters")};
+
+unistrokeHelpOthers := {data: picture('picture, "resources/picture/unistroke-others")};
+
+unistrokeHelpStrokes := {
+	data: "• Space: a line from left to right.\u000d• Delete: a line from right to left.\u000d• New line: a line down to the left.\u000d• Capital: a line up before the letter. Two lock capitals; a third unlocks.\u000d• 0, 1 and 5 are read as O, I and S, except in fields for numbers.\u000d• Choose Printing or Cursive to write normally again.",
+	viewFont: viewFont_2
+};

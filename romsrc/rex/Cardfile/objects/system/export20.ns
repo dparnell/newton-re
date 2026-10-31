@@ -1,0 +1,8 @@
+// export20, and what only it reaches
+
+export20 := {
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV,
+	viewBounds: {top: -18, left: 2, right: 20, bottom: -5},
+	_recogPopup: [|Array|: 'recogText, 'recogInkText, 'pickseparator, 'recToggleSettings],
+	_proto: @recToggle
+};

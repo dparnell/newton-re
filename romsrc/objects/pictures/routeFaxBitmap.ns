@@ -1,0 +1,6 @@
+// routeFaxBitmap, and what only it reaches
+
+routeFaxBitmap := {
+	bits: bitmap('bits, "resources/bits/3d5b75.png", "000000000004009f009f00cc00ae00e1", 1),
+	bounds: {left: 0, top: 0, right: 21, bottom: 15}
+};

@@ -1,0 +1,15 @@
+// export162, and what only it reaches
+
+export162 := {
+	viewBounds: {left: 0, top: 23, right: 0, bottom: 58},
+	viewFont: @fontSystem12Bold,
+	viewJustify: vjCenterH + vjParentCenterH,
+	viewSetupFormScript: func() begin
+		local l1;
+		l1 := self:parent():LocalBox().right;
+		self.text := titleTExt;
+		(self.viewBounds := TextBounds(text, {font: viewFont}, RelBounds(0, viewBounds.top, l1, 0)))
+	end,
+	viewFlags: vVisible + vReadOnly,
+	_proto: @protoStaticText
+};

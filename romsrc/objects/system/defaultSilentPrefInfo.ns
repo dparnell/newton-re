@@ -1,0 +1,3 @@
+// defaultSilentPrefInfo, and what only it reaches
+
+defaultSilentPrefInfo := {text: "Show status dialogs", configuration: 'autoStatus};

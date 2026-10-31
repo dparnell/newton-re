@@ -1,5 +1,0 @@
-@@ 0x1018881
-func(a1) begin
-	{_proto: fCompletionSpec_Disconnect, _parent: self}
-end
-@@end

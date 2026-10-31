@@ -1,5 +1,0 @@
-@@ 0x54f67d
-func() begin
-	UnRegUserConfigChange(userConfigChangeSym)
-end
-@@end

@@ -1,0 +1,21 @@
+// export113, and what only it reaches
+
+export113 := {
+	text: changeMe,
+	viewBounds: {top: 0, left: 10, right: -10, bottom: 16},
+	viewJustify: 8396976,
+	viewFont: @fontSystem10Bold,
+	viewSetupFormScript: func() begin
+		(self.text := Stringer([Array: "\u2022\u", " ", text]))
+	end,
+	viewClickScript: func(a1) begin
+		self:LaunchFormula();
+		return true
+	end,
+	viewFlags: vVisible + vReadOnly + vClickable,
+	_proto: @protoStaticText
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_literal1 := same("export113.viewSetupFormScript.literals[1]");

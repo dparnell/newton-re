@@ -1,0 +1,8 @@
+// rcPrefsConfig, and what only it reaches
+
+rcPrefsConfig := {
+	allowTextRecognition: true,
+	allowShapeRecognition: true,
+	allowInkWordRecognition: true,
+	allowRawInkRecognition: true
+};

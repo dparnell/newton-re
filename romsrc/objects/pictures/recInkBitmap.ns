@@ -1,0 +1,6 @@
+// recInkBitmap, and what only it reaches
+
+recInkBitmap := {
+	bits: bitmap('bits, "resources/bits/3dade1.png", "0000000000040042004200ed004b00f9", 1),
+	bounds: {left: 0, top: 0, right: 12, bottom: 9}
+};

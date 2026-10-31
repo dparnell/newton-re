@@ -1,8 +1,0 @@
-@@ 0x462ae5
-func() begin
-	SetValue(self, 'icon, blinkList[0]);
-	blinkCount := 1;
-	blinkDelay := minDelay;
-	self:SetupIdle(blinkRate)
-end
-@@end

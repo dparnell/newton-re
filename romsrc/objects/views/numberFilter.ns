@@ -1,0 +1,3 @@
+// numberFilter, and what only it reaches
+
+numberFilter := {item: numbers, filters: [|Array|: digits]};

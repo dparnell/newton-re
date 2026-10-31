@@ -1,0 +1,10 @@
+// rcreRecognizeConfig, and what only it reaches
+
+rcreRecognizeConfig := {
+	allowTextRecognition: true,
+	doTextRecognition: true,
+	speedCursiveOption: 2,
+	letterSpaceCursiveOption: nil,
+	baseInputMask: 0,
+	BuildInputMask: true
+};

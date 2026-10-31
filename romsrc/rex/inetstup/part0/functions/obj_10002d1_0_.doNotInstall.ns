@@ -1,9 +1,0 @@
-@@ 0x1002255
-func() begin
-	if (if LFetch(GetPackages(), "InternetSetup", 0, '|str=|, 'title) then GetRoot().|InternetSetup:Newton|) then begin
-			GetRoot():Notify(3, "Internet Setup", "Please remove the Internet Setup package before installing a new version.");
-			return true
-		end;
-	nil
-end
-@@end

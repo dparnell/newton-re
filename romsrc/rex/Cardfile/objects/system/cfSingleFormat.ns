@@ -1,0 +1,20 @@
+// cfSingleFormat, and what only it reaches
+
+cfSingleFormat := {
+	routingType: 'Print,
+	type: 'printFormat,
+	name: singleCard,
+	title: singleCard,
+	symbol: 'cfSingleFormat,
+	viewSetupChildrenScript: func() begin
+		self.stepChildren := [Array: GetRoot().cardfile:GetBCLayout(target).layout];
+		inherited:viewSetupChildrenScript()
+	end,
+	SetupItem: func(a1, a2) begin
+		a1.title := nil;
+		inherited:SetupItem(a1, a2)
+	end,
+	_proto: @protoPrintFormat
+};
+
+singleCard := "Single Card";

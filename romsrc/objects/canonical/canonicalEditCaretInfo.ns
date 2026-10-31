@@ -1,0 +1,3 @@
+// canonicalEditCaretInfo, and what only it reaches
+
+canonicalEditCaretInfo := {class: 'editCaret, x: nil, y: nil};

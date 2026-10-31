@@ -1,5 +1,0 @@
-@@ 0x767fc9
-func(a1) begin
-	(if ((not a1) or Visible(self)) then self:Close() else self:OpenNavigator(a1))
-end
-@@end

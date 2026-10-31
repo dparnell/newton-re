@@ -1,0 +1,3 @@
+// canonicalTable, and what only it reaches
+
+canonicalTable := {_proto: nil, viewBounds: nil};

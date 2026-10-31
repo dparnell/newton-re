@@ -1,0 +1,9 @@
+// newtSmartPhoneView, and what only it reaches
+
+newtSmartPhoneView := {
+	_proto: @newtAreacodePhoneLine,
+	flavor: @newtSmartPhoneFilter,
+	access: 'Query,
+	memory: 'phone,
+	label: uCardPositionAlertButton
+};

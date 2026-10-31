@@ -1,0 +1,6 @@
+// dtmfStar, and what only it reaches
+
+dtmfStar := {
+	bits: bitmap('bits, "resources/bits/3d814d.png", "000000000004010f010f011d01230131", 1),
+	bounds: {left: 0, top: 0, right: 20, bottom: 20}
+};

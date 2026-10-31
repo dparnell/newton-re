@@ -1,0 +1,6 @@
+// alarmIconTinyBitmap, and what only it reaches
+
+alarmIconTinyBitmap := {
+	bits: bitmap('bits, "resources/bits/3d93c5.png", "000000000004018501850011018f0022", 1),
+	bounds: {left: 0, top: 0, right: 17, bottom: 10}
+};

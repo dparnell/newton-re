@@ -1,0 +1,6 @@
+// paperLinedBitmap, and what only it reaches
+
+paperLinedBitmap := {
+	bits: bitmap('bits, "resources/bits/3dac35.png", "000000000004002d002d01b8003c01c7", 1),
+	bounds: {left: 0, top: 0, right: 15, bottom: 15}
+};

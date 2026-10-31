@@ -1,6 +1,0 @@
-@@ 0x101396d
-func() begin
-	inherited:?viewSetupDoneScript();
-	(if (not statusViewOptions) then self:SetupIdle(2000) else (if statusViewOptions.delayUntilStatusVisible then self:SetupIdle((if (statusViewOptions.delayUntilStatusVisible <= 0) then 1 else statusViewOptions.delayUntilStatusVisible))))
-end
-@@end

@@ -1,0 +1,9 @@
+// protoPolygon, and what only it reaches
+
+protoPolygon := {
+	viewClass: 65618,
+	viewFlags: vVisible + vCalculateBounds + vNoScripts,
+	viewFormat: vfPen(2),
+	points: shorts('polygonshape, 14, 0),
+	debug: 5572
+};

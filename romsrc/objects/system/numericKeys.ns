@@ -1,0 +1,125 @@
+// numericKeys, and what only it reaches
+
+numericKeys := {
+	viewBounds: {left: 0, top: 0, right: 148, bottom: 121},
+	keyResultsAreKeycodes: nil,
+	keyDefinitions: keyDefinitions,
+	viewSetupFormScript: func() begin
+		local l1;
+		inherited:viewSetupFormScript();
+		(if ((l1 := international.currentlocalebundle.numberformat.decimalpoint)[0] <> $.) then begin
+				self.keyDefinitions := Clone(keyDefinitionsOrig);
+				self.keyDefinitions[3] := Clone(self.keyDefinitions[3]);
+				self.keyDefinitions[3][5] := l1[0];
+				(self.keyDefinitions[3][6] := l1[0])
+			end)
+	end,
+	debug: 71773,
+	keyDefinitionsOrig: keyDefinitions,
+	_proto: @protoKeypad
+};
+
+keyDefinitions := [|Array|:
+	[|Array|:
+		8,
+		8,
+		$7,
+		$7,
+		288360456,
+		$8,
+		$8,
+		288360456,
+		$9,
+		$9,
+		288360456,
+		nil,
+		nil,
+		-536870392,
+		@keyslashBitmap,
+		$/,
+		288360456,
+		del,
+		$\u0008,
+		288360456
+	],
+	[|Array|:
+		8,
+		8,
+		$4,
+		$4,
+		288360456,
+		$5,
+		$5,
+		288360456,
+		$6,
+		$6,
+		288360456,
+		nil,
+		nil,
+		-536870392,
+		@keyTimesBitmap,
+		$*,
+		288360456,
+		@keyEqualsBitmap,
+		$=,
+		288360456
+	],
+	[|Array|:
+		8,
+		8,
+		$1,
+		$1,
+		288360456,
+		$2,
+		$2,
+		288360456,
+		$3,
+		$3,
+		288360456,
+		nil,
+		nil,
+		-536870392,
+		@keyMinusBitmap,
+		$-,
+		288360456,
+		@keyLeftParenBitmap,
+		$(,
+		288360456
+	],
+	[|Array|:
+		8,
+		8,
+		$0,
+		$0,
+		288362504,
+		@keyPeriodBitmap,
+		$.,
+		288360456,
+		nil,
+		nil,
+		-536870392,
+		@keyPlusBitmap,
+		$+,
+		288360456,
+		@keyRightParenBitmap,
+		$),
+		288360456
+	],
+	[|Array|: 2, 2, nil, nil, -536868862],
+	[|Array|:
+		6,
+		6,
+		@kbdTabBitmap,
+		$\u0009,
+		288360454,
+		$\u0020,
+		$\u0020,
+		288360966,
+		@kbdLeftBitmap,
+		$\u001c,
+		288360454,
+		@kbdRightBitmap,
+		$\u001d,
+		288360454
+	]
+];

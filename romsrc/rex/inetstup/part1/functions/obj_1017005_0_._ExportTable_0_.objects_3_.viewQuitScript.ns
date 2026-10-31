@@ -1,9 +1,0 @@
-@@ 0x101b1d5
-func() begin
-	if passwordSlip then begin
-			passwordSlip:Close()
-		end;
-	passwordSlip := nil;
-	inherited:?viewQuitScript()
-end
-@@end

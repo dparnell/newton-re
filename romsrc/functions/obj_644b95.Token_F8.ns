@@ -1,5 +1,0 @@
-@@ 0x595615
-func(a1, a2, a3) begin
-	self:FIle_DownloadPart(a1, a2, a3)
-end
-@@end

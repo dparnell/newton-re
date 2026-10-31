@@ -1,0 +1,6 @@
+// keyslashBitmap, and what only it reaches
+
+keyslashBitmap := {
+	bits: bitmap('bits, "resources/bits/3d92a5.png", "000000000004005b005b02840068028c", 1),
+	bounds: {left: 0, top: 0, right: 8, bottom: 13}
+};

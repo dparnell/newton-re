@@ -1,5 +1,0 @@
-@@ 0x4c7121
-func(a1) begin
-	self:FindCursorFormat(a1)
-end
-@@end

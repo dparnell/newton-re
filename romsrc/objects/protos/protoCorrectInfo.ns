@@ -1,0 +1,3 @@
+// protoCorrectInfo, and what only it reaches
+
+protoCorrectInfo := {_proto: baseCorrectInfo, info: nil, max: nil};

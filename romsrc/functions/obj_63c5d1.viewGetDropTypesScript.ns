@@ -1,5 +1,0 @@
-@@ 0x4fc225
-func(a1) begin
-	return '[Array: meeting, text]
-end
-@@end

@@ -1,0 +1,238 @@
+// protoNameRefDataDef, and what only it reaches
+
+protoNameRefDataDef := {
+	name: "List",
+	class: 'nameRef,
+	singleSelect: nil,
+	entryType: nil,
+	columns: [|Array|: {fieldPath: 'name, tapWidth: 0, noPopup: true}],
+	dontPurge: nil,
+	validationFrame: nil,
+	preferredRouting: nil,
+	_subclass: nil,
+	_context: nil,
+	_tapinfo: nil,
+	_dirtyPaths: nil,
+	_dirtyValues: nil,
+	_edited: nil,
+	_selectOnly: nil,
+	editTitle: "New Item",
+	PopVal: func(a1) begin
+		a1.value
+	end,
+	NewEntry: func(a1, a2) begin
+		local l1, l2;
+		(if (l1 := a2:GetStoreSoup()) then begin
+				l2 := self:PrepareToAdd(a1);
+				if IsInstance(l1, 'UnionSoup) then begin
+						l1:AddToDefaultStoreXmit(l2, 'entryAdded)
+					end else begin
+						l1:AddXmit(l2, 'entryAdded)
+					end;
+				(if IsSoupEntry(l2) then self:FixupPostAdd(a1, l2))
+			end)
+	end,
+	GetPrimaryPath: func(a1) begin
+		nil
+	end,
+	Validate: func(a1, a2) begin
+		(if validationFrame then ValidityCheck(a1, validationFrame, a2, nil, nil) else begin
+				l1 := [Array: ];
+				local l1;
+				(foreach l2 in a2 do begin
+						if (not a1.(l2)) then begin
+								AddArraySlot(l1, l2)
+							end
+					end);
+				l1
+			end)
+	end,
+	ModifyEntry: func(a1, a2) begin
+		if (l1 := EntryFromObj(a1)) then begin
+				local l1;
+				(foreach l2 in a2 do begin
+						l1.(l2) := a1.(l2)
+					end);
+				EntryChangeXmit(l1, 'entryChanged)
+			end;
+		l1
+	end,
+	GetSuffix: func(a1) begin
+		return nil
+	end,
+	Equivalent: func(a1, a2, a3) begin
+		l1 := [Array: ];
+		local l1;
+		(foreach l2 in a3 do begin
+				if ((not (if (if IsInstance(a1.(l2), 'string) then IsInstance(a2.(l2), 'string)) then StrEqual(a1.(l2), a2.(l2)))) or (a1.(l2) <> a2.(l2))) then begin
+						AddArraySlot(l1, l2)
+					end
+			end);
+		l1
+	end,
+	Get: compile(
+		constants: {
+			kLiteral_450465: SetClass(Clone("--"), '|string.noData|)
+		},
+		func(a1, a2, a3) begin
+			local l1;
+			if (if (not a1) then ((a3 = 'text) or (a3 = 'sortText))) then begin
+					return ""
+				end else begin
+					if (not a1) then begin
+							return nil
+						end
+				end;
+			l1 := self:GetObjSlot(a1, a2);
+			(if ((a3 = 'text) or (a3 = 'sortText)) then (if l1 then (if IsInstance(l1, 'string) then return l1 else return SPrintObject(l1)) else return kLiteral_450465) else l1)
+		end),
+	MakeCanonicalNameRef: func(a1, a2) begin
+		local l1, l2, l3, l4;
+		l1 := (if a2 then a2 else ClassOf(self));
+		l2 := EntryFromObj(a1);
+		l3 := (if IsFrame(a1) then a1 else '{});
+		if (not (l4 := {class: l1, _alias: AliasFromObj(a1), _entryClass: ObjEntryClass(a1), _Unselected: l3._Unselected, _fakeID: l3._fakeID, labels: l3.labels})._entryClass) then begin
+				l4._entryClass := entryType
+			end;
+		l4
+	end,
+	MakePopup: func(a1, a2) begin
+		nil
+	end,
+	FixupPostAdd: func(a1, a2) begin
+		a1._alias := MakeEntryAlias(a2);
+		(a1._entryClass := ClassOf(a2))
+	end,
+	New: func(a1, a2) begin
+		_tapinfo := a1;
+		_context := a2;
+		(if self.OpenEditor then self:OpenEditor(a1, a2, 'New) else self:DefaultOpenEditor(a1, a2, 'New))
+	end,
+	pickCancelledScript: func(a1, a2) begin
+		a2:Tapped(nil)
+	end,
+	PrepareToAdd: func(a1) begin
+		local l1, l2;
+		l1 := ObjEntryClass(a1);
+		(l2 := Clone(a1)).class := (if l1 then l1 else entryType);
+		RemoveSlot(l2, '_alias);
+		RemoveSlot(l2, '_entryClass);
+		RemoveSlot(l2, '_Unselected);
+		RemoveSlot(l2, '_fakeID);
+		l2
+	end,
+	HitItem: func(a1, a2) begin
+		local l1, l2, l3;
+		self._context := a2;
+		self._tapinfo := a1;
+		self._selectOnly := nil;
+		(if (l1 := self:MakePopup(a1.nameRef, a1.fieldPath)) then begin
+				a1.popup := l1;
+				l2 := a2:GlobalBox();
+				l3 := SetBounds((a1.bbox.left + 13), (a1.bbox.bottom - l2.top), (a1.bbox.left + 13), (a1.bbox.bottom - l2.top));
+				a2:PopupMenu(l1, {bounds: l3})
+			end else (if self.OpenEditor then self:OpenEditor(a1, a2, 'edit) else (if (if validationFrame then a1.nameRef._Unselected) then self:DefaultOpenEditor(a1, a2, 'edit) else a2:Tapped('Toggle))))
+	end,
+	GetObjSlot: func(a1, a2) begin
+		local l1;
+		if (not a1) then begin
+				return nil
+			end;
+		if IsNameRef(a1) then begin
+				l1 := EntryFromObj(a1)
+			end;
+		if ((not l1) or (not HasSlot(l1, a2))) then begin
+				l1 := a1;
+				if IsEntryAlias(a1) then begin
+						l1 := ResolveEntryAlias(a1)
+					end;
+				if (not l1) then begin
+						l1 := a1
+					end
+			end;
+		l1.(a2)
+	end,
+	pickActionScript: func(a1, a2, a3) begin
+		local l1, l2, l3, l4;
+		l1 := a2.popup;
+		l2 := a2.nameRef;
+		l3 := a2.fieldPath;
+		(if (if ((l4 := self:PopVal(l1[a1])) = 'OpenEditor) then (self.OpenEditor or validationFrame)) then begin
+				a2.cryoNameRefData := DeepClone(l2.(l3));
+				l2.(l3) := nil;
+				a2.editPaths := [Array: l3];
+				_selectOnly := true;
+				(if self.OpenEditor then self:OpenEditor(a2, a3, 'edit) else self:DefaultOpenEditor(a2, a3, 'edit))
+			end else begin
+				l2.(l3) := l4;
+				a3:Tapped('select);
+				_tapinfo := nil;
+				_dirtyPaths := nil;
+				(_dirtyValues := nil)
+			end)
+	end,
+	defaultNewDone: func(a1) begin
+		local l1, l2;
+		if (l2 := (Length(self:Validate((l1 := _tapinfo.nameRef), _tapinfo.editPaths)) <> Length(_tapinfo.editPaths))) then begin
+				self:NewEntry(l1, _context);
+				_context:insert(l1, (if l2 then 'select))
+			end else begin
+				_context:Tapped(nil)
+			end;
+		_tapinfo := nil;
+		_dirtyPaths := nil;
+		(_dirtyValues := nil)
+	end,
+	DefaultOpenEditor: func(a1, a2, a3) begin
+		l1 := {titleText: editTitle, context: self, receiver: self, message: '{edit: defaultEditDone, New: defaultNewDone}.(a3)};
+		l2 := a1.nameRef;
+		self._subclass := (if preferredRouting then preferredRouting[0]);
+		self._dirtyPaths := self:Validate(l2, a1.editPaths);
+		_edited := (Length(_dirtyPaths) > 0);
+		l3 := ValidateConfigGuts(l2, validationFrame, a1.editPaths, l1);
+		if _edited then begin
+				self._dirtyValues := {};
+				local l1;
+				local l2;
+				local l3;
+				(foreach l4 in _dirtyPaths do begin
+						self._dirtyValues.(l4) := DeepClone(l2.(l4))
+					end)
+			end;
+		l3.slip
+	end,
+	defaultEditDone: func(a1) begin
+		local l1, l2, l3, l4;
+		l1 := _tapinfo.nameRef;
+		l2 := _tapinfo.fieldPath;
+		l3 := nil;
+		if _edited then begin
+				if (if _tapinfo.cryoNameRefData then (not l1.(l2))) then begin
+						l1.(l2) := _tapinfo.cryoNameRefData;
+						l3 := true
+					end else begin
+						if (Length((l4 := self:Equivalent(l1, _dirtyValues, _dirtyPaths))) > 0) then begin
+								self:ModifyEntry(l1, l4)
+							end else begin
+								l3 := true
+							end
+					end
+			end;
+		_context:Tapped((if (not l3) then (if _selectOnly then 'select else 'Toggle)));
+		_tapinfo := nil;
+		_dirtyPaths := nil;
+		(_dirtyValues := nil)
+	end,
+	MakeNameRef: func(a1, a2) begin
+		l1 := self:MakeCanonicalNameRef(a1, a2);
+		if IsFrame(a1) then begin
+				local l1;
+				(foreach l2 in columns do begin
+						local l4;
+						l4 := l2.fieldPath;
+						l1.(l4) := a1.(l4)
+					end)
+			end;
+		l1
+	end
+};

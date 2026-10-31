@@ -1,0 +1,22 @@
+// protoDateTextPicker, and what only it reaches
+
+protoDateTextPicker := {
+	viewBounds: nil,
+	label: uCardPositionAlertButton,
+	Date: nil,
+	shortFormat: nil,
+	longFormat: 'yearMonthDayStrSpec,
+	Popit: func(a1) begin
+		local l1;
+		(l1 := self:GlobalBox()).right := (l1.left + a1);
+		@datePopup:New((if Date then [Array: Date]), l1, self)
+	end,
+	TextSetup: func() begin
+		(if longFormat then LongDateStr(Date, @datetimeStrSpecs.(longFormat)) else ShortDateStr(Date, @datetimeStrSpecs.(shortFormat)))
+	end,
+	pickActionScript: func(a1) begin
+		Date := a1[0];
+		inherited:pickActionScript(a1[0])
+	end,
+	_proto: @protoTextPicker
+};

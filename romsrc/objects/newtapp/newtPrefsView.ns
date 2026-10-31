@@ -1,0 +1,41 @@
+// newtPrefsView, and what only it reaches
+
+newtPrefsView := {
+	viewBounds: {left: 0, top: 0, right: 200, bottom: 60},
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	theApp: nil,
+	viewSetupFormScript: func() begin
+		SetKeyView(self, 0)
+	end,
+	viewChildren: [viewChildren:
+		{
+			title: nil,
+			viewSetupFormScript: func() begin
+				title := ParamStr("^0 Preferences", [Array: theApp.title]);
+				inherited:viewSetupFormScript()
+			end,
+			_proto: @protoTitle
+		},
+		{
+			viewJustify: vjParentBottomV,
+			viewBounds: {left: 16, top: -32, right: 196, bottom: -17},
+			text: nil,
+			viewSetupFormScript: func() begin
+				viewValue := theApp:GetAppPreferences().internalStore;
+				(text := ParamStr("Always store new ^0 internally", [Array: Downcase(Clone(theApp.appObject[1]))]))
+			end,
+			viewQuitScript: func() begin
+				(if theApp.prefsCache then (theApp.prefsCache.internalStore := viewValue))
+			end,
+			_proto: @protoCheckbox
+		},
+		{
+			buttonClickScript: func() begin
+				AddDeferredSend(theApp, 'RememberedClose, [Array: base])
+			end,
+			_proto: @protoClosebox
+		}
+	],
+	_proto: @protoDragger,
+	ReOrientToScreen: @defRotateFunc
+};

@@ -1,0 +1,186 @@
+// export79, and what only it reaches
+
+export79 := {
+	viewBounds: {left: 0, top: 50, right: 220, bottom: 270},
+	stepChildren: [stepChildren:
+		{title: "Dock Preferences", _proto: @protoTitle},
+		savePassword,
+		removeExactDuplicatesWhen,
+		stopConnectionIfNo,
+		alwaysBackupAllInformation,
+		autoDock,
+		export79Item
+	],
+	viewSetupFormScript: func() begin
+		local l1;
+		self.protoContext := GetRoot().Connection;
+		protoContext:AddOpenWindow(self);
+		(if (if (l1 := protoContext:ConnectionPrefsRead('autodock)) then (not GetGlobals().ConnectionLikesWorksites)) then begin
+				self.viewBounds := SetBounds(0, 50, 220, 270);
+				(connectValues.viewFlags := BOr(connectValues.viewFlags, 1))
+			end else begin
+				self.viewBounds := SetBounds(0, 50, 220, 175);
+				(connectValues.viewFlags := BAnd(connectValues.viewFlags, -2))
+			end)
+	end,
+	viewQuitScript: func() begin
+		self:SavePrefs();
+		protoContext:RemoveOpenWindow(self)
+	end,
+	viewFlags: vApplication + vFloating + vClickable,
+	SavePrefs: func() begin
+		protoContext:ConnectionPrefsWrite('savePassword, passwordPref.viewValue);
+		protoContext:ConnectionPrefsWrite('removedups, removeDupsPref.viewValue);
+		protoContext:ConnectionPrefsWrite('timeoutConnection, timeoutPref.viewValue);
+		protoContext:ConnectionPrefsWrite('alwaysSyncall, alwaysSyncAllPref.viewValue);
+		(if (not protoContext:ConnectionPrefsRead('savePassword)) then protoContext:PasswordSave(nil))
+	end,
+	_proto: @protoFloatNGo,
+	passwordPref: nil,
+	stepAllocateContext: [|Array|:
+		'passwordPref,
+		savePassword,
+		'removeDupsPref,
+		removeExactDuplicatesWhen,
+		'timeoutPref,
+		stopConnectionIfNo,
+		'alwaysSyncAllPref,
+		alwaysBackupAllInformation,
+		'autodock,
+		autoDock,
+		'connectValues,
+		export79Item
+	],
+	removeDupsPref: nil,
+	timeoutPref: nil,
+	alwaysSyncAllPref: nil,
+	autodock: nil,
+	connectValues: nil
+};
+
+savePassword := {
+	text: "Save password",
+	viewBounds: {left: 10, top: 11, right: -10, bottom: 26},
+	viewFont: @fontSystem9,
+	viewSetupFormScript: func() begin
+		(viewValue := protoContext:ConnectionPrefsRead('savePassword))
+	end,
+	viewValue: nil,
+	viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
+	_proto: @protoCheckbox,
+	preAllocatedContext: 'passwordPref
+};
+
+removeExactDuplicatesWhen := {
+	text: "Remove exact duplicates when importing",
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 15},
+	viewFont: @fontSystem9,
+	viewSetupFormScript: func() begin
+		(viewValue := protoContext:ConnectionPrefsRead('removedups))
+	end,
+	viewValue: nil,
+	viewJustify: vjCenterV + vjSiblingFullH + vjSiblingBottomV,
+	_proto: @protoCheckbox,
+	preAllocatedContext: 'removeDupsPref
+};
+
+stopConnectionIfNo := {
+	text: "Stop connection if no activity",
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 15},
+	viewFont: @fontSystem9,
+	viewSetupFormScript: func() begin
+		(viewValue := protoContext:ConnectionPrefsRead('timeoutConnection))
+	end,
+	viewValue: nil,
+	viewJustify: vjCenterV + vjSiblingFullH + vjSiblingBottomV,
+	_proto: @protoCheckbox,
+	preAllocatedContext: 'timeoutPref
+};
+
+alwaysBackupAllInformation := {
+	text: "Always backup all information",
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 15},
+	viewFont: @fontSystem9,
+	viewSetupFormScript: func() begin
+		(viewValue := protoContext:ConnectionPrefsRead('alwaysSyncall))
+	end,
+	viewValue: nil,
+	viewJustify: vjCenterV + vjSiblingFullH + vjSiblingBottomV,
+	_proto: @protoCheckbox,
+	preAllocatedContext: 'alwaysSyncAllPref
+};
+
+autoDock := {
+	text: "AutoDock",
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 15},
+	viewFont: @fontSystem9,
+	viewJustify: vjCenterV + vjSiblingFullH + vjSiblingBottomV,
+	viewSetupFormScript: func() begin
+		(viewValue := protoContext:ConnectionPrefsRead('autodock))
+	end,
+	viewValue: nil,
+	valueChanged: compile(
+		constants: {
+			kFunction_757359: func(a1) begin
+				(if (a1 = 'connect) then GetRoot().Connection:autodock())
+			end
+		},
+		func() begin
+			if viewValue then begin
+					connectValues.viewFlags := BOr(connectValues.viewFlags, 1);
+					RegAutoDock('Connection, kFunction_757359)
+				end else begin
+					connectValues.viewFlags := BAnd(connectValues.viewFlags, -2);
+					UnRegAutoDock('Connection)
+				end;
+			protoContext:ConnectionPrefsWrite('autodock, autodock.viewValue);
+			self:SavePrefs();
+			(if (not GetGlobals().ConnectionLikesWorksites) then begin
+					self:parent():SyncView();
+					self:parent():RedoChildren()
+				end)
+		end),
+	_proto: @protoCheckbox,
+	preAllocatedContext: 'autodock
+};
+
+export79Item := {
+	viewJustify: vjParentCenterH + vjSiblingBottomV,
+	viewBounds: {left: 0, top: 10, right: 210, bottom: 100},
+	viewFlags: 0,
+	viewSetupFormScript: func() begin
+		self.prefsFrame := GetRoot().Connection:ConnectionPrefsRead('autoDockAddr);
+		if (not prefsFrame) then begin
+				self.prefsFrame := {type: 'serial}
+			end;
+		inherited:viewSetupFormScript();
+		self.protoContext := self;
+		self.HideIfVisible := GetRoot().Connection.HideIfVisible;
+		(self.ShowIfNotVisible := GetRoot().Connection.ShowIfNotVisible)
+	end,
+	prefsFrame: nil,
+	viewQuitScript: func() begin
+		GetRoot().Connection:ConnectionPrefsWrite('autoDockAddr, prefsFrame)
+	end,
+	ConnectionPrefsRead: func(a1) begin
+		(if (a1 = nil) then prefsFrame else prefsFrame.(a1))
+	end,
+	ConnectionPrefsWrite: func(a1, a2) begin
+		(prefsFrame.(a1) := a2)
+	end,
+	SetConnectionType: func(a1, a2, a3) begin
+		nil
+	end,
+	HideIfVisible: func() begin
+		nil
+	end,
+	ShowIfNotVisible: func() begin
+		nil
+	end,
+	_proto: @8254,
+	preAllocatedContext: 'connectValues
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_6 := same("savePassword.viewSetupFormScript.instructions");

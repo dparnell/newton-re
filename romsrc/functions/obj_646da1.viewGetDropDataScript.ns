@@ -1,5 +1,0 @@
-@@ 0x5469a5
-func(a1, a2) begin
-	{fromFinder: iconSpace, dragRef: a2}
-end
-@@end

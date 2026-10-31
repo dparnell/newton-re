@@ -1,5 +1,0 @@
-@@ 0x4d66e5
-func() begin
-	remindSlip:Close()
-end
-@@end

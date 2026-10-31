@@ -1,0 +1,19 @@
+// protoClockShowBar, and what only it reaches
+
+protoClockShowBar := {
+	_proto: @protoNewShowBar,
+	lastSeed: nil,
+	TimeString: TimeString,
+	TimeBox: TimeBox,
+	viewSetupFormScript: func() begin
+		title.text := self:TimeString();
+		self:SetupIdle(30000);
+		inherited:viewSetupFormScript()
+	end,
+	viewSetupChildrenScript: func() begin
+		(title.viewJustify := 8388608)
+	end,
+	viewIdleScript: viewIdleScript,
+	viewDrawScript: viewDrawScript,
+	titleClickScript: buttonClickScript_3
+};

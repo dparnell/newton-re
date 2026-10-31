@@ -1,0 +1,9 @@
+// fontStyleItems, and what only it reaches
+
+fontStyleItems := [|Array|:
+	{item: plain, face: 0},
+	{item: "Bold", face: 1},
+	{item: "Italic", face: 2},
+	{item: "Underline", face: 4},
+	{item: "Outline", face: 8}
+];

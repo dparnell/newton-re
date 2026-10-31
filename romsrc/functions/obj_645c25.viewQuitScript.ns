@@ -1,9 +1,0 @@
-@@ 0x4ad8e9
-func() begin
-	self:ChainOut('retargetChain);
-	if keyButton then begin
-			RemoveSlot(newtAppBase, keyButton)
-		end;
-	inherited:?viewQuitScript()
-end
-@@end

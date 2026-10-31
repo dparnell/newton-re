@@ -1,0 +1,3 @@
+// stylePreflight, and what only it reaches
+
+stylePreflight := {family: [|Array|: ], size: [|Array|: ], face: [|Array|: ], styles: [|Array|: ]};

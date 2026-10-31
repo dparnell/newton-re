@@ -1,0 +1,41 @@
+// frame, and what only it reaches
+
+frame := {
+	class: #232,
+	code: code,
+	numArgs: 1,
+	closure: {
+		_nextArgFrame: _nextArgFrame,
+		_parent: _nextArgFrame,
+		_implementor: _nextArgFrame,
+		_literals: _literals_8
+	},
+	offset: 33060,
+	bcFunc: compile(
+		options: "argframe=0,0",
+		func(a1) begin
+			if ((not IsFrame(a1)) or IsFunction(a1)) then begin
+					Throw('|evt.ex.msg|, "ProtoClone only works with frames.")
+				end;
+			l1 := {_proto: a1};
+			local l1;
+			(foreach l2, l3 in a1 do begin
+					if (if IsFrame(l3) then (not IsFunction(l3))) then begin
+							l1.(l2) := call f with (l3)
+						end
+				end);
+			l1
+		end)
+};
+
+_nextArgFrame := {};
+
+_literals_8 := [literals:
+	'IsFrame,
+	'IsFunction,
+	'|evt.ex.msg|,
+	"ProtoClone only works with frames.",
+	'Throw,
+	array(6, nil, '_proto),
+	'f
+];

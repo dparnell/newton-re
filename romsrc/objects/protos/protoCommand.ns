@@ -1,0 +1,3 @@
+// protoCommand, and what only it reaches
+
+protoCommand := {id: nil, result: 0, parameter: nil, receiver: nil, frameparameter: nil, params: nil, undo: nil};

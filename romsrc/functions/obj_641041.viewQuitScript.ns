@@ -1,9 +1,0 @@
-@@ 0x4d66b1
-func() begin
-	(if (not rotationInProgress) then begin
-			totMin := nil;
-			title := nil;
-			RemoveSlot(self, 'priority)
-		end)
-end
-@@end

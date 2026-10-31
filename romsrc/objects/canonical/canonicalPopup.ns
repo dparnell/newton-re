@@ -1,0 +1,3 @@
+// canonicalPopup, and what only it reaches
+
+canonicalPopup := {bounds: nil, pickItems: nil, callbackcontext: nil, _proto: @protoPicker};

@@ -1,0 +1,9 @@
+// frame_2, and what only it reaches
+
+frame_2 := {
+	viewBounds: {left: 6, top: -18, right: 34, bottom: -5},
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV,
+	_proto: @protoKeyboardButton,
+	preAllocatedContext: 'keyButton
+};

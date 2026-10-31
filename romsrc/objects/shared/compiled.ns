@@ -1,0 +1,109 @@
+// objects several roots reach, none alone (naturalize.py)
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+trackOverview_literal13 := same("trackOverview.literals[13]");
+
+jamFromEntry_code := same("jamFromEntry.instructions");
+
+viewClickScript_code_6 := same("viewClickScript.instructions");
+
+viewChangedScript_code := same("entryLine.viewChangedScript.instructions");
+
+Advance_code_3 := same("protoLatitudePickerItem.Advance.instructions");
+
+GetIndex_code_3 := same("protoLatitudePickerItem_2.GetIndex.instructions");
+
+GetIndex_code_4 := same("minutes10.GetIndex.instructions");
+
+Advance_code := same("protoLatitudePickerItem_2.Advance.instructions");
+
+SlideToRight_code := same("SoundProgressSlider.SlideToRight.instructions");
+
+GetIndex_code := same("hours1.GetIndex.instructions");
+
+GetIndex_code_2 := same("protoLatitudePickerItem.GetIndex.instructions");
+
+SelectItem_code := same("SelectItem.literals[5].instructions");
+
+selectCellInTable_code := same("zoneChooserProto.selectCellInTable.instructions");
+
+viewScroll2DScript_code := same("theTable_2Proto.viewScroll2DScript.instructions");
+
+CloseAndNotify_literal5 := same("zoneChooserProto.CloseAndNotify.literals[5]");
+
+viewSetupDoneScript_code_13 := same("nbpScroller_2Proto.viewSetupDoneScript.instructions");
+
+viewQuitScript_code_6 := same("viewQuitScript.instructions");
+
+viewSetupFormScript_literal11_2 := same("scrollList.viewSetupFormScript.literals[11]");
+
+buttonClickScript_literal17 := same("showBarText._proto.buttonClickScript.literals[17]");
+
+viewSetupFormScript_literal9_2 := same("scrollList.viewSetupFormScript.literals[9]");
+
+FillNewSoup_code := same("FillNewSoup.instructions");
+
+SetupCursor_literal2 := same("SetupCursor.literals[2]");
+
+EntryToPath_literal6 := same("default_2Proto_2.flavor.EntryToPath.literals[6]");
+
+preview_literal3 := same("_previewButtonProto.preview.literals[3]");
+
+viewSetupFormScript_code_12 := same("protoLatitudePickerItem.viewSetupFormScript.instructions");
+
+MakeNewEntry_code := same("paperroll.MakeNewEntry.instructions");
+
+StringExtract_literal1 := same("paperroll.StringExtract.literals[1]");
+
+StringExtract_literal3 := same("paperroll.StringExtract.literals[3]");
+
+MinimalBounds_code := same("default.MinimalBounds.instructions");
+
+viewSetupDoneScript_code_7 := same("page2GutsViewChildren[0].viewSetupDoneScript.instructions");
+
+TextScript_code := same("paperroll.TextScript.instructions");
+
+isSelected_code := same("isSelected.instructions");
+
+picker_code_3 := same("default_2Proto.flavor.picker.instructions");
+
+viewSetupFormScript_code_17 := same("viewonly.viewSetupFormScript.instructions");
+
+GetNameOfPerson_code := same("GetNameOfPerson.instructions");
+
+viewDrawScript_code_2 := same("cribNoteProto.viewDrawScript.instructions");
+
+buttonClickScript_3_code := same("buttonClickScript_3.instructions");
+
+Preflight_literal18 := same("proto1_2ExformentryProto.Preflight.literals[18]");
+
+Preflight_literal5 := same("proto1_2ExformentryProto.Preflight.literals[5]");
+
+Preflight_literal9 := same("proto1_2ExformentryProto.Preflight.literals[9]");
+
+Preflight_literal21 := same("proto1_2ExformentryProto.Preflight.literals[21]");
+
+file_2_code := same("file_2.instructions");
+
+SelectItem_2_literal2 := same("SelectItem_2.literals[2]");
+
+FileAndMove_literal13 := same("FileAndMove.literals[13]");
+
+FileAndMove_literal6 := same("FileAndMove.literals[6]");
+
+SelectItem_2_code := same("SelectItem_2.literals[4].instructions");
+
+InfoClosed_code := same("InfoClosed.instructions");
+
+TextScript_literal7 := same("calllog.TextScript.literals[7]");
+
+viewSetupFormScript_code_25 := same("page2GutsViewChildren[0].viewSetupFormScript.instructions");
+
+viewSetupFormScript_code_28 := same("SoundProgressSlider.viewSetupFormScript.instructions");
+
+AddIndexXmit_literal4 := same("AddIndexXmit.literals[4]");
+
+ModifyTagXmit_code := same("ModifyTagXmit.instructions");
+
+AddTagsXmit_code := same("AddTagsXmit.instructions");

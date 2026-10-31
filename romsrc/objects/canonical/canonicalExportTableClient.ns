@@ -1,0 +1,3 @@
+// canonicalExportTableClient, and what only it reaches
+
+canonicalExportTableClient := {name: nil, major: nil, minor: nil, client: nil};

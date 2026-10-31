@@ -1,0 +1,6 @@
+// recsketchBitmap, and what only it reaches
+
+recsketchBitmap := {
+	bits: bitmap('bits, "resources/bits/3dae3d.png", "0000000000040065006500eb006d00fa", 1),
+	bounds: {left: 0, top: 0, right: 15, bottom: 8}
+};

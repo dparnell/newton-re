@@ -1,5 +1,0 @@
-@@ 0x4e4f2d
-func(a1, a2) begin
-	GetRoot().calendar:GetTextOfRoutedMeeting(a1.body)
-end
-@@end

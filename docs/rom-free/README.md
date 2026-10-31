@@ -895,3 +895,25 @@ builder writes them in the layout map's order), and nested functions the
 NTK shared, written as their own source - Cardfile's
 `obj_73d459` among them, the one function of the ROM's own packages that
 was still bytecode.  No function in the tree is bytecode now.
+
+## The natural form (2026-10-31)
+
+The extraction above names what it has no name for after its address and
+keeps each function in a file of its own: faithful, but a person editing
+`romsrc/` read `obj_4f901d.DateChanged.ns` and `_proto: @387`.  The tree
+was rewritten once into the form `romsrc/README.md` ("Reading it")
+describes - each function in its frame, names from the ROM's R-constants
+and from what the objects are, `@protoFloatNGo`, `vVisible + vClickable`,
+a file per root object in a directory per kind - by
+`tools/newton-rom/analysis/naturalize.py`, whose documentation says how
+each part is decided.  The sections above describe the extractor's form,
+which `romsrc.py extract` still writes and the builder still reads
+(`host.ROMSourceRoundTrip`, and the tag `romsrc-rom` for
+`host.ROMSourceCommitted`); `renames.tsv` turns their names into today's.
+
+How it was established that nothing changed: the tree before and after
+build to the same object file, byte for byte, with the same builder
+(`romsrc.py build <tree> --relayout -o <file>`, both).  For that the
+builder had to stop ordering what it adds by path text: the objects new
+to the layout, and the maps it makes, now follow their definitions'
+addresses in the layout, which a new name does not change.

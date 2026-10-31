@@ -1,0 +1,121 @@
+// part, and what only it reaches
+
+part := array(nil, {
+	_ImportTable: [|Array|: {name: 'ConnectionInternal, major: 1, minor: 1}, {name: 'Connection, major: 1, minor: 0}],
+	_ExportTable: [|Array|:
+		{name: 'Connection, major: 1, minor: 0, objects: [|Array|: @8254]},
+		{
+			name: 'ConnectionInternal,
+			major: 1,
+			minor: 1,
+			objects: [|Array|:
+				@8255,
+				@8256,
+				@8257,
+				@8258,
+				@8259,
+				@8260,
+				@8261,
+				@8262,
+				@8263,
+				@8264,
+				@8265,
+				@8266,
+				@8267,
+				@8268,
+				@8269,
+				@8270,
+				@8271,
+				@8272,
+				@8273,
+				@8274,
+				@8275,
+				@8276,
+				@8277,
+				@8278,
+				@8279,
+				@8280,
+				@8281,
+				@8282,
+				@8283,
+				@8284,
+				@8285,
+				@8286,
+				@8287,
+				@8288,
+				@8289,
+				@8290,
+				@8291,
+				@8292,
+				@8293
+			]
+		}
+	],
+	sequence: 4,
+	iconPro: {
+		unhilited: {
+			bounds: {left: 0, top: 0, right: 40, bottom: 25},
+			mask: bitmap('mask, "resources/mask/762d11.png", "00000000000800000000000000190028", 1),
+			colorData: [|Array|:
+				{
+					cbits: bitmap('cbits, "resources/cbits/762e69.png", "00000000001400000000000000190028", 4),
+					bitDepth: 4
+				},
+				{
+					cbits: bitmap('bits, "resources/bits/76308d.png", "00000000000800000000000000190028", 1),
+					bitDepth: 1
+				}
+			]
+		},
+		hilited: {
+			bounds: {left: 0, top: 0, right: 40, bottom: 25},
+			mask: bitmap('mask, "resources/mask/7631a5.png", "00000000000800000000000000190028", 1),
+			colorData: [|Array|:
+				{
+					cbits: bitmap('cbits, "resources/cbits/7632b1.png", "00000000001400000000000000190028", 4),
+					bitDepth: 4
+				},
+				{
+					cbits: bitmap('bits, "resources/bits/7634d5.png", "00000000000800000000000000190028", 1),
+					bitDepth: 1
+				}
+			]
+		}
+	},
+	app: 'Connection,
+	text: dock,
+	icon: {
+		mask: bitmap('mask, "resources/mask/7635ed.png", "000000000008006d006d01f70086021f", 1),
+		bits: bitmap('bits, "resources/bits/7636d1.png", "00000000000800000000000000190028", 1),
+		bounds: {left: 0, top: 0, right: 40, bottom: 25}
+	},
+	theForm: @8275,
+	devInstallScript: compile(
+		constants: {
+			kFunction_7638d9: func(a1, a2) begin
+				GetRoot().Connection:GetApplicationNames(a1, a2)
+			end,
+			kFunction_757359: func(a1) begin
+				(if (a1 = 'connect) then GetRoot().Connection:autodock())
+			end
+		},
+		func(a1) begin
+			local l1;
+			functions.ConnOpenFileBrowser := a1.theForm.FileBrowserOpen;
+			functions.ConnOpenUserPsswdSlip := a1.theForm.OpenUsernameSlip;
+			functions.ConnImportFile := a1.theForm.ImportFile;
+			functions.GetApplicationNames := kFunction_7638d9;
+			(if (l1 := GetAppPrefs('Connection, '{type: serial})).autodock then RegAutoDock('Connection, kFunction_757359))
+		end),
+	installScript: func(a1) begin
+		a1:?devInstallScript(a1);
+		if HasSlot(a1, 'devInstallScript) then begin
+				RemoveSlot(a1, 'devInstallScript)
+			end;
+		(a1.installScript := nil)
+	end
+});
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+devInstallScript_literal13 := same("part[0].devInstallScript.literals[13]");

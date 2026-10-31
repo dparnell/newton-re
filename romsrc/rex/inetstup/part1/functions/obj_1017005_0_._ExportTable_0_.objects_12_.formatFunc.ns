@@ -1,5 +1,0 @@
-@@ 0x101c3b1
-func(a1) begin
-	(if (Length(a1[0]) = 4) then ParamStr(labelText, [Array: a1[0][0], a1[0][1], a1[0][2], a1[0][3]]) else "")
-end
-@@end

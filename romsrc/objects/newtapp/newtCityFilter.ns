@@ -1,0 +1,3 @@
+// newtCityFilter, and what only it reaches
+
+newtCityFilter := {_proto: @newtTextFilter, recFlags: 8391169};

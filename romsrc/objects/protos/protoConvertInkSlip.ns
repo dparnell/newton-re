@@ -1,0 +1,92 @@
+// protoConvertInkSlip, and what only it reaches
+
+protoConvertInkSlip := {
+	viewBounds: {left: 0, top: 0, right: 225, bottom: 124},
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	extraHeight: 20,
+	viewSetupChildrenScript: func() begin
+		local l1, l2, l3, l4;
+		l3 := 'symbol;
+		infoText.text := userText;
+		headerText.title := userTitle;
+		l2 := StrFontWidth(headerText.title, headerText.viewFont);
+		headerText.viewBounds := SetBounds(0, 5, l2, 15);
+		if (kbdType = 'alpha) then begin
+				l4 := '{_proto: @alphaKeys, viewBounds: {left: 1, top: -101, right: 226, bottom: -20}, viewJustify: 144}
+			end else begin
+				if (kbdType = 'phone) then begin
+						l4 := '{_proto: @phonePad, viewBounds: {left: 0, top: -146, right: 124, bottom: -20}, viewJustify: 144};
+						entryLine.viewFlags := 264705
+					end
+			end;
+		if recFlags then begin
+				entryLine.viewFlags := BOr(2561, recFlags)
+			end;
+		if l4 then begin
+				self.stepChildren := [Array: l4];
+				extraHeight := (((extraHeight + 10) + l4.viewBounds.bottom) - l4.viewBounds.top)
+			end;
+		inherited:?viewSetupChildrenScript()
+	end,
+	viewSetupDoneScript: func() begin
+		local l1, l2, l3, l4;
+		l2 := self:ChildViewFrames();
+		l1 := Clone(self.viewBounds);
+		l4 := (Length(l2) - (if kbdType then 2 else 1));
+		l1.bottom := ((l2[l4]:GlobalBox().bottom - self:GlobalBox().top) + extraHeight);
+		SetValue(self, 'viewBounds, l1);
+		inherited:?viewSetupDoneScript();
+		SetKeyView(entryLine, 0)
+	end,
+	Recognize: func() begin
+		SetValue(entryLine, 'text, richText)
+	end,
+	ReOrientToScreen: @defRotateFunc,
+	viewChildren: [viewChildren:
+		{
+			buttonClickScript: func() begin
+				local l1;
+				l1 := Clone(entryLine:GetRichString());
+				if phoneCvt then begin
+						StrReplace(l1, "(", "(", 1);
+						StrReplace(l1, ")", ")", 1)
+					end;
+				if compMsg then begin
+						Perform(compView, compMsg, [Array: (not IsRichString(l1)), l1, userData])
+					end;
+				base:Close()
+			end,
+			_proto: @protoCancelButton
+		},
+		headerText,
+		infoText,
+		entryLine_3
+	],
+	headerText: nil,
+	allocateContext: [|Array|: 'headerText, headerText, 'infoText, infoText, 'entryLine, entryLine_3],
+	infoText: nil,
+	entryLine: nil,
+	_proto: @protoFloater
+};
+
+headerText := {
+	viewBounds: {left: 0, top: 8, right: 150, bottom: 15},
+	viewJustify: vjParentCenterH,
+	preallocatedContext: 'headerText,
+	_proto: @protoTitle
+};
+
+infoText := {
+	viewBounds: {left: 10, top: 5, right: -10, bottom: 30},
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	preallocatedContext: 'infoText,
+	_proto: @protoStaticText
+};
+
+entryLine_3 := {
+	viewBounds: {left: 10, top: 5, right: -10, bottom: 30},
+	viewJustify: 8396848,
+	viewFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed,
+	preallocatedContext: 'entryLine,
+	_proto: @protoInputLine
+};

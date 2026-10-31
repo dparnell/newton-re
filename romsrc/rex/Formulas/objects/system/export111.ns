@@ -1,0 +1,118 @@
+// export111, and what only it reaches
+
+export111 := {
+	viewBounds: {left: 0, top: 22, right: 224, bottom: 150},
+	viewFlags: vClickable,
+	solvedFor: nil,
+	stepChildren: [stepChildren: clear, export111Item],
+	viewQuitScript: func() begin
+		l1 := self:GetFormulaValues();
+		local l1;
+		(foreach l2, l3 in FSViews do begin
+				l1.(formulaSymbol).values[l2] := l3:GetNumericValue()
+			end);
+		l1.(formulaSymbol).solvedFor := solvedFor;
+		EntryChange(l1)
+	end,
+	ClearAllFields: func() begin
+		solvingFormula := true;
+		(foreach l1 in FSViews do begin
+				l1:SetNumericValue(nil)
+			end);
+		solvingFormula := nil;
+		(solvedFor := nil)
+	end,
+	FSViews: nil,
+	SolveFormula: func(a1) begin
+		if solvingFormula then begin
+				return nil
+			end;
+		l1 := 0;
+		l2 := Array(Length(FSViews), nil);
+		local l1;
+		local l2;
+		(foreach l3, l4 in FSViews do begin
+				l2[l3] := l4:GetNumericValue();
+				if (l2[l3] = nil) then begin
+						l1 := (l1 + 1)
+					end
+			end);
+		if (l1 = 1) then begin
+				(foreach l3, l6 in l2 do begin
+						if (l6 = nil) then begin
+								solvedFor := l3
+							end
+					end)
+			end;
+		if (if (l1 = 0) then (solvedFor = a1)) then begin
+				AddDeferredSend(self, 'FillInTheSolution, [Array: solvedFor, nil]);
+				self:Notify(3, "Formulas", "You cannot change the field that was being solved. Tap clear then enter the new values.");
+				return nil
+			end;
+		(if (l1 <= 1) then begin
+				l2[solvedFor] := FSViews[solvedFor]:ComputeValue(l2);
+				AddDeferredSend(self, 'FillInTheSolution, [Array: solvedFor, l2[solvedFor]])
+			end)
+	end,
+	ClearFormula: func() begin
+		nil
+	end,
+	GetFormulaValues: compile(
+		constants: {
+			kLiteral_76e9d9: "Formulas:Apple"
+		},
+		func() begin
+			local l1, l2;
+			if ((l2 := Query((l1 := GetStores()[0]:GetSoup(@systemSoupName)), {type: 'index, IndexPath: 'tag, beginKey: kLiteral_76e9d9, endKey: kLiteral_76e9d9}):entry()) = nil) then begin
+					l2 := l1:Add({tag: kLiteral_76e9d9, LoanPayment: nil, NetPresentValue: nil, CurrencyExchange: nil, DateCalculator: nil, DateConversion: nil})
+				end;
+			return l2
+		end),
+	viewSetupDoneScript: func() begin
+		(if ((l1 := self:GetFormulaValues()).(formulaSymbol) = nil) then begin
+				l1.(formulaSymbol) := {values: Array(Length(FSViews), nil), solvedFor: nil};
+				EntryChange(l1)
+			end else begin
+				solvedFor := l1.(formulaSymbol).solvedFor;
+				solvingFormula := true;
+				local l1;
+				(foreach l2, l3 in FSViews do begin
+						if ((solvedFor = nil) or (l2 <> solvedFor)) then begin
+								l3:SetNumericValue(l1.(formulaSymbol).values[l2])
+							end
+					end);
+				solvingFormula := nil;
+				self:SolveFormula(nil)
+			end)
+	end,
+	solvingFormula: nil,
+	UndoClear: func(a1) begin
+		solvedFor := a1.solvedFor;
+		solvingFormula := true;
+		(foreach l1, l2 in FSViews do begin
+				if ((solvedFor = nil) or (l1 <> solvedFor)) then begin
+						l2:SetNumericValue(a1.values[l1])
+					end
+			end);
+		solvingFormula := nil;
+		self:SolveFormula(nil)
+	end,
+	FillInTheSolution: func(a1, a2) begin
+		solvingFormula := true;
+		FSViews[a1]:SetNumericValue(a2);
+		(solvingFormula := nil)
+	end,
+	viewSetupFormScript: func() begin
+		local l1;
+		SetKeyView(self, 0);
+		l1 := GetAppParams();
+		(self.viewBounds := OffsetRect(self.viewBounds, (-l1.appAreaGlobalLeft), (-l1.appAreaGlobalTop)))
+	end,
+	viewJustify: 0,
+	ReOrientToScreen: @defRotateFunc,
+	_proto: @protoFloater
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+GetFormulaValues_literal5 := same("export111.GetFormulaValues.literals[5]");

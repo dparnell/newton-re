@@ -1,0 +1,49 @@
+// signature, and what only it reaches
+
+signature := {
+	viewFlags: vVisible,
+	viewFormat: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewJustify: vjParentFullH + vjParentFullV,
+	stepChildren: [stepChildren:
+		signatureItem,
+		{
+			viewBounds: {left: 0, top: 0, right: 10, bottom: 0},
+			viewJustify: 8402948,
+			text: "X",
+			viewFont: tsSimple + tsSize(12) + tsBold,
+			_proto: @protoStaticText
+		}
+	],
+	name: "Signature",
+	symbol: 'signature,
+	type: 'editor,
+	noKeyboard: true,
+	infoFrame: {
+		checkPrefix: [|Array|: [pathExpr: 'owner], nil],
+		checkPaths: [|Array|: 'signature],
+		hasDataFunc: func(a1, a2) begin
+			local l1;
+			(if (l1 := a1.(a2[0])) then (Length(l1) > 0))
+		end,
+		formatFunc: func(a1) begin
+			(if (if a1[0] then (Length(a1[0]) > 0)) then "[signature]" else "")
+		end
+	},
+	protection: 'private,
+	nukeRecToggle: true,
+	viewClass: clView,
+	sigCapture: nil,
+	stepAllocateContext: [|Array|: 'sigCapture, signatureItem]
+};
+
+signatureItem := {
+	viewFlags: vVisible + vClipping + vClickable + vStrokesAllowed + vGesturesAllowed,
+	viewBounds: {top: 0, left: 2, right: -2, bottom: 60},
+	viewJustify: vjParentFullH,
+	viewLineSpacing: 40,
+	path: [pathExpr: 'owner, 'signature],
+	viewFormat: vfFrameGray + vfPen(1),
+	_proto: @newtEditView,
+	preAllocatedContext: 'sigCapture
+};

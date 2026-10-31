@@ -1,5 +1,0 @@
-@@ 0x523bb5
-func(a1) begin
-	GetRoot().TinyTim:OpenHelpTo(a1)
-end
-@@end

@@ -1,0 +1,480 @@
+// protoImageView, and what only it reaches
+
+protoImageView := {
+	horMult: 1,
+	cacheScaledImage: nil,
+	imageSize: nil,
+	viewFormat: vfFillLtGray,
+	usefulSizes: nil,
+	GrabbyHand: @handScrollBitmap,
+	myUnscaledImage: nil,
+	viewFlags: vVisible + vClipping + vClickable,
+	quiet: nil,
+	viewBounds: {left: 0, top: 88, right: 0, bottom: -24},
+	tempScales: nil,
+	bitmapStore: nil,
+	vertMult: 1,
+	fAnnotateMode: 'Show,
+	fMaxY: 0,
+	fullSize: nil,
+	fYOffset: 0,
+	zoomUpSize: nil,
+	fZoomedTo: 'fitInWindow,
+	viewJustify: vjParentFullH + vjParentFullV,
+	zoomStops: nil,
+	tempOpen: nil,
+	declareSelf: 'imagebase,
+	fAnnoShape: nil,
+	currentSize: {left: 0, top: 0, right: 1, bottom: 1},
+	fMaxX: 0,
+	viewClass: clView,
+	imageFormat: nil,
+	fXOffset: 0,
+	tempAnnotes: nil,
+	drawGrayScaled: true,
+	dragAcceleration: nil,
+	handShape: nil,
+	tempImage: nil,
+	dragCorridor: 14,
+	myImage: nil,
+	vAnnotations: nil,
+	SetAcceleration: func(a1) begin
+		local l1, l2;
+		dragAcceleration := a1;
+		l1 := self:LocalBox();
+		horMult := (((currentSize.right + 10) / l1.right) - 1);
+		vertMult := (((currentSize.bottom + 10) / l1.bottom) - 1);
+		l2 := (if IsInstance(a1, 'int) then (if (a1 > 0) then (a1 / 100) else 0) else (if IsInstance(a1, 'Real) then a1 else 0));
+		(vertMult := ((((horMult := (((horMult - 1) * l2) + 1)) - 1) * l2) + 1))
+	end,
+	viewSetupDoneScript: func() begin
+		local l1;
+		l1 := ShapeBounds((handShape := MakeShape(GrabbyHand)));
+		OffsetShape(handShape, ((-l1.right) div 2), ((-l1.bottom) div 2));
+		(if tempOpen then self:setup(tempImage, tempAnnotes, tempScales) else self:setup(image, annotations, scalingInfo))
+	end,
+	GetAnnotationMode: func() begin
+		fAnnotateMode
+	end,
+	pendown: func(a1) begin
+		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12, l13;
+		InkOff(a1);
+		BusyBoxControl(2);
+		quiet := true;
+		self:?PrepareToScroll();
+		l1 := fXOffset;
+		l2 := fYOffset;
+		l3 := nil;
+		l4 := self:GlobalBox();
+		l5 := (GetPoint(0, a1) - l4.left);
+		l6 := (GetPoint(1, a1) - l4.top);
+		l7 := l5;
+		l8 := l6;
+		l9 := [Array: l5, l6];
+		l10 := [Array: handShape, {transferMode: 1, transform: l9}];
+		self:DoDrawing('DrawShape, l10);
+		(repeat l13 := StrokeDone(a1); pointX := (GetPoint(4, a1) - l4.left); pointY := (GetPoint(5, a1) - l4.top); if (pointX < l5) then begin
+					pointX := min(l5, (pointX + dragCorridor))
+				end else begin
+					pointX := max(l5, (pointX - dragCorridor))
+				end; if (pointY < l6) then begin
+					pointY := min(l6, (pointY + dragCorridor))
+				end else begin
+					pointY := max(l6, (pointY - dragCorridor))
+				end; l11 := (l7 - pointX); l12 := (l8 - pointY); if ((abs(l11) >= 2) or (abs(l12) >= 2)) then begin
+					self:LockScreen(true);
+					if self:ScrollBy(ceiling((l11 * horMult)), ceiling((l12 * vertMult))) then begin
+							l3 := true;
+							self:?ScalingInfoChanged('dragging)
+						end else begin
+							self:Dirty()
+						end;
+					RefreshViews();
+					l9[0] := pointX;
+					l9[1] := pointY;
+					self:DoDrawing('DrawShape, l10);
+					self:LockScreen(nil);
+					l7 := pointX;
+					l8 := pointY
+				end until l13);
+		self:Dirty();
+		self:?ScalingInfoChanged('dragDone);
+		self:?DoneScrolling();
+		if l3 then begin
+				AddUndoAction('DoUndo, [Array: fZoomedTo, l1, l2])
+			end;
+		quiet := nil;
+		true
+	end,
+	viewChildren: [viewChildren: vImageContainer, vAnnotations],
+	GetAnnotations: func() begin
+		vAnnotations.viewChildren
+	end,
+	allocateContext: [|Array|: 'vImageContainer, vImageContainer, 'vAnnotations, vAnnotations],
+	CalculateUsefulSizes: func() begin
+		local l1, l2, l3, l4;
+		l1 := FullResolutionBounds(myImage);
+		fullSize := ShapeBounds(myImage);
+		if drawGrayScaled then begin
+				if (l2 := GetShapeInfo(myImage)).resolution then begin
+						l3 := ceiling((l2.resolution[0] / 72));
+						fullSize.right := floor((l1.right / l3));
+						fullSize.bottom := floor((l1.bottom / l3))
+					end
+			end;
+		l4 := self:LocalBox();
+		if (BAnd(viewJustify, 2) <> 0) then begin
+				l4.right := (l4.right - 2)
+			end;
+		if (BAnd(viewJustify, 4) <> 0) then begin
+				l4.bottom := (l4.bottom - 2)
+			end;
+		(usefulSizes := {fitInWindow: FitToBox(fullSize, l4, 0), fullSize: fullSize, fullResolution: l1, twiceFullResolution: RelBounds(0, 0, (2 * l1.right), (2 * l1.bottom))})
+	end,
+	DoUndo: func(a1, a2, a3) begin
+		self:ZoomTo(a1);
+		self:ScrollTo(a2, a3)
+	end,
+	CanZoomBy: func(a1) begin
+		(fZoomedTo <> zoomStops[self:ZoomByDest(a1)])
+	end,
+	SetupZoomStops: compile(
+		constants: {
+			kLiteral_439289: 1.25,
+			kLiteral_43929d: 0.75
+		},
+		func() begin
+			local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+			zoomStops := [Array: ];
+			l1 := usefulSizes.fullSize.right;
+			l2 := usefulSizes.fullSize.bottom;
+			l3 := (usefulSizes.fitInWindow.right - usefulSizes.fitInWindow.left);
+			l4 := (usefulSizes.fitInWindow.bottom - usefulSizes.fitInWindow.top);
+			l5 := 0.5;
+			(while (((l1 * l5) > (kLiteral_439289 * l3)) or ((l2 * l5) > (kLiteral_439289 * l4))) do begin
+					ArrayInsert(zoomStops, l5, 0);
+					(l5 := (l5 / 2))
+				end);
+			if ((l1 > l3) or (l2 > l4)) then begin
+					ArrayInsert(zoomStops, 'fitInWindow, 0)
+				end;
+			AddArraySlot(zoomStops, 'fullSize);
+			l6 := usefulSizes.fullResolution.right;
+			l7 := usefulSizes.fullResolution.bottom;
+			l5 := 2;
+			if drawGrayScaled then begin
+					l8 := FullResolutionBounds(myImage);
+					if (l9 := GetShapeInfo(myImage)).resolution then begin
+							l10 := floor((l9.resolution[0] / 72));
+							l1 := floor((l8.right / l10));
+							l2 := floor((l8.bottom / l10));
+							if ((l1 < (l6 * kLiteral_43929d)) or (l2 < (l7 * kLiteral_43929d))) then begin
+									AddArraySlot(zoomStops, 1);
+									(zoomUpSize := Clone(usefulSizes.fullSize)).right := l1;
+									zoomUpSize.bottom := l2
+								end
+						end
+				end;
+			(while (((l1 * l5) < (l6 * kLiteral_43929d)) or ((l2 * l5) < (l7 * kLiteral_43929d))) do begin
+					AddArraySlot(zoomStops, l5);
+					(l5 := (l5 * 2))
+				end);
+			if ((l1 <> l6) or (l2 <> l7)) then begin
+					AddArraySlot(zoomStops, 'fullResolution)
+				end;
+			AddArraySlot(zoomStops, 'twiceFullResolution)
+		end),
+	SetAnnotationMode: func(a1) begin
+		local l1;
+		(if (a1 = 'Hide) then begin
+				if Visible(vAnnotations) then begin
+						vAnnotations:Hide()
+					end;
+				fAnnoShape := nil;
+				(fAnnotateMode := a1)
+			end else (if (a1 = 'Show) then begin
+					vAnnotations:Open();
+					fAnnoShape := true;
+					l1 := ShapeBounds((fAnnoShape := MakeShape(vAnnotations)));
+					OffsetShape(fAnnoShape, (-l1.left), (-l1.top));
+					vAnnotations:Hide();
+					(fAnnotateMode := a1)
+				end else (if (if (if (a1 = 'edit) then (fZoomedTo = 'fullSize)) then (BAnd(viewFlags, 128) = 0)) then begin
+						vAnnotations:Open();
+						fAnnoShape := nil;
+						(fAnnotateMode := a1)
+					end)))
+	end,
+	ToggleImage: func(a1, a2, a3) begin
+		(if ((not image) or viewCObject) then self:Close() else self:OpenImage(a1, a2, a3))
+	end,
+	OpenImage: func(a1, a2, a3) begin
+		if Visible(self) then begin
+				self:setup(a1, a2, a3);
+				return nil
+			end;
+		tempImage := a1;
+		tempAnnotes := a2;
+		tempScales := a3;
+		tempOpen := true;
+		self:Open();
+		(tempImage := (tempAnnotes := (tempScales := (tempOpen := nil))))
+	end,
+	ZoomByDest: func(a1) begin
+		l2 := (Length(zoomStops) - 1);
+		l3 := (if (ClassOf(fZoomedTo) <> 'symbol) then fZoomedTo else ((currentSize.right - currentSize.left) / (fullSize.right - fullSize.left)));
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		l1 := (for l5 := 0 to l2 do begin
+				local l8;
+				if (ClassOf(zoomStops[l5]) = 'symbol) then begin
+						l4 := (((l8 := usefulSizes.(zoomStops[l5])).right - l8.left) - (currentSize.right - currentSize.left))
+					end else begin
+						l4 := (zoomStops[l5] - l3)
+					end;
+				if (l4 >= 0) then begin
+						break (if ((l4 = 0) or (a1 < 0)) then l5 else (l5 - 1))
+					end
+			end);
+		if (not l1) then begin
+				l1 := (l2 + 1)
+			end;
+		max(0, min((l1 + a1), l2))
+	end,
+	ZoomTo: func(a1) begin
+		local l1, l2, l3, l4, l5, l6;
+		l1 := self:LocalBox();
+		l2 := {top: (fYOffset <= 5), left: (fXOffset <= 5), bottom: (max(0, fYOffset) >= (fMaxY - 5)), right: (max(0, fXOffset) >= (fMaxX - 5))};
+		l3 := (fXOffset + (l1.right div 2));
+		l4 := (fYOffset + (l1.bottom div 2));
+		l5 := Clone(currentSize);
+		if (ClassOf(a1) = 'symbol) then begin
+				if (not (currentSize := usefulSizes.(a1))) then begin
+						Throw('|evt.ex.msg,invalid.zoom.size|, "Invalid Zoom Symbol")
+					end
+			end else begin
+				if drawGrayScaled then begin
+						if (a1 >= 1) then begin
+								(currentSize := Clone(usefulSizes.fullSize)).right := floor((zoomUpSize.right * a1));
+								currentSize.bottom := floor((zoomUpSize.bottom * a1))
+							end else begin
+								(currentSize := Clone(usefulSizes.fullSize)).right := floor(round((currentSize.right * a1)));
+								currentSize.bottom := floor(round((currentSize.bottom * a1)))
+							end
+					end else begin
+						(currentSize := Clone(usefulSizes.fullSize)).right := floor(round((currentSize.right * a1)));
+						currentSize.bottom := floor(round((currentSize.bottom * a1)))
+					end
+			end;
+		(if ((((l5.right <> currentSize.right) or (l5.bottom <> currentSize.bottom)) or (l5.left <> currentSize.left)) or (l5.top <> currentSize.top)) then begin
+				if (if (fAnnotateMode = 'edit) then (a1 <> 'fullSize)) then begin
+						currentSize := l5;
+						Throw('|evt.ex.msg;cant.zoom.while.editing|, "Can't zoom while editing")
+					end;
+				if (not quiet) then begin
+						AddUndoAction('DoUndo, [Array: fZoomedTo, fXOffset, fYOffset])
+					end;
+				fZoomedTo := (if (if (if (if (currentSize.right = fullSize.right) then (currentSize.bottom = fullSize.bottom)) then (currentSize.left = fullSize.left)) then (currentSize.top = fullSize.top)) then 'fullSize else a1);
+				self:SetupSizes();
+				l6 := ShapeBounds(ScaleShape(MakeShape(RelBounds(l3, l4, 1, 1)), l5, currentSize));
+				fXOffset := max(0, min(fMaxX, (if (if l2.left then l2.right) then ((currentSize.right - l1.right) div 2) else (if l2.left then 0 else (if l2.right then fMaxX else (l6.left - (l1.right div 2)))))));
+				fYOffset := max(0, min(fMaxY, (if (if l2.top then l2.bottom) then ((currentSize.bottom - l1.bottom) div 2) else (if l2.top then 0 else (if l2.bottom then fMaxY else (l6.top - (l1.bottom div 2)))))));
+				if (currentSize.right < l1.right) then begin
+						if (BAnd(viewJustify, 2) <> 0) then begin
+								fXOffset := (fXOffset - ((l1.right - currentSize.right) div 2))
+							end else begin
+								if (BAnd(viewJustify, 1) <> 0) then begin
+										fXOffset := ((fXOffset - l1.right) - currentSize.right)
+									end
+							end
+					end;
+				if (currentSize.bottom < l1.bottom) then begin
+						if (BAnd(viewJustify, 4) <> 0) then begin
+								fYOffset := (fYOffset - ((l1.bottom - currentSize.bottom) div 2))
+							end else begin
+								if (BAnd(viewJustify, 8) <> 0) then begin
+										fYOffset := ((fYOffset - l1.bottom) - currentSize.bottom)
+									end
+							end
+					end;
+				self:SetOrigin(fXOffset, fYOffset);
+				if (not quiet) then begin
+						self:?ScalingInfoChanged('zoom)
+					end;
+				true
+			end)
+	end,
+	ZoomBy: func(a1) begin
+		self:ZoomTo(zoomStops[self:ZoomByDest(a1)])
+	end,
+	vImageContainer: nil,
+	SetupSizes: func() begin
+		local l1;
+		l1 := self:LocalBox();
+		self:SetAcceleration(dragAcceleration);
+		fMaxX := max(0, (currentSize.right - l1.right));
+		fMaxY := max(0, (currentSize.bottom - l1.bottom));
+		if (if cacheScaledImage then (currentSize.right < usefulSizes.fullResolution.right)) then begin
+				try begin
+						myImage := nil;
+						myImage := MakeBitmap(currentSize.right, currentSize.bottom, {store: bitmapStore});
+						DrawIntoBitmap(myUnscaledImage, {transform: [Array: fullSize, currentSize]}, myImage);
+						ClearVBOCache(myImage);
+						imageSize := currentSize
+					end onexception |evt.ex.fr.store| do begin
+						ClearVBOCache(myImage);
+						myImage := myUnscaledImage;
+						imageSize := fullSize
+					end
+			end else begin
+				myImage := myUnscaledImage;
+				imageSize := fullSize
+			end;
+		SetValue(vImageContainer, 'viewBounds, currentSize)
+	end,
+	HasAnnotations: func() begin
+		(Length(vAnnotations.viewChildren) > 0)
+	end,
+	setup: func(a1, a2, a3) begin
+		if (a1 = nil) then begin
+				return nil
+			end;
+		if (not bitmapStore) then begin
+				bitmapStore := GetDefaultStore()
+			end;
+		myImage := (myUnscaledImage := a1);
+		self:CalculateUsefulSizes();
+		self:SetupZoomStops();
+		vAnnotations:Close();
+		SetValue(vAnnotations, 'viewBounds, fullSize);
+		if (a2 <> nil) then begin
+				vAnnotations.viewChildren := a2
+			end else begin
+				vAnnotations.viewChildren := [Array: ]
+			end;
+		quiet := true;
+		currentSize := RelBounds(0, 0, 1, 1);
+		if a3 then begin
+				self:ZoomTo(a3.zoomedTo);
+				self:ScrollTo(a3.offsetX, a3.offsetY)
+			end else begin
+				self:ZoomTo(fZoomedTo)
+			end;
+		quiet := nil;
+		if (not self:SetAnnotationMode(fAnnotateMode)) then begin
+				self:SetAnnotationMode('Show)
+			end;
+		ClearUndoStacks()
+	end,
+	ScrollTo: func(a1, a2) begin
+		local l1;
+		a1 := max(0, min(a1, fMaxX));
+		a2 := max(0, min(a2, fMaxY));
+		l1 := self:LocalBox();
+		if (currentSize.right < l1.right) then begin
+				if (BAnd(viewJustify, 2) <> 0) then begin
+						a1 := (a1 - ((l1.right - currentSize.right) div 2))
+					end else begin
+						if (BAnd(viewJustify, 1) <> 0) then begin
+								a1 := ((a1 - l1.right) - currentSize.right)
+							end
+					end
+			end;
+		if (currentSize.bottom < l1.bottom) then begin
+				if (BAnd(viewJustify, 4) <> 0) then begin
+						a2 := (a2 - ((l1.bottom - currentSize.bottom) div 2))
+					end else begin
+						if (BAnd(viewJustify, 8) <> 0) then begin
+								a2 := ((a2 - l1.bottom) - currentSize.bottom)
+							end
+					end
+			end;
+		(if ((a1 <> fXOffset) or (a2 <> fYOffset)) then begin
+				if (not quiet) then begin
+						AddUndoAction('DoUndo, [Array: fZoomedTo, fXOffset, fYOffset])
+					end;
+				fXOffset := a1;
+				fYOffset := a2;
+				self:SetOrigin(fXOffset, fYOffset);
+				if (not quiet) then begin
+						self:?ScalingInfoChanged('Scroll)
+					end;
+				true
+			end)
+	end,
+	GetScalingInfo: func() begin
+		(if viewCObject then {offsetX: max(0, fXOffset), offsetY: max(0, fYOffset), zoomedTo: fZoomedTo, extent: currentSize, viewBox: self:LocalBox()})
+	end,
+	CanScroll: func() begin
+		local l1;
+		(if ((((l1 := {left: (fXOffset > 0), right: (fXOffset < fMaxX), up: (fYOffset > 0), down: (fYOffset < fMaxY)}).left or l1.right) or l1.up) or l1.down) then l1)
+	end,
+	ScrollBy: func(a1, a2) begin
+		self:ScrollTo((fXOffset + a1), (fYOffset + a2))
+	end
+};
+
+vImageContainer := {
+	viewClass: clView,
+	viewFlags: vVisible + vClickable,
+	viewBounds: {left: 0, top: 0, right: 133, bottom: 132},
+	viewFormat: vfFrameBlack + vfPen(1),
+	preallocatedContext: 'vImageContainer,
+	viewSetupFormScript: func() begin
+		if imageFormat then begin
+				self.viewFormat := imageFormat
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	viewDrawScript: func() begin
+		local l1;
+		if myImage then begin
+				if drawGrayScaled then begin
+						l1 := {transferMode: 0, transform: [Array: fullSize, currentSize], grayLevels: [Array: 100, 200, 250]};
+						self:GrayShrink(myUnscaledImage, l1)
+					end else begin
+						self:DrawShape(myImage, {transferMode: 0, transform: [Array: imageSize, currentSize]})
+					end
+			end;
+		(if fAnnoShape then self:DrawShape(fAnnoShape, {transform: [Array: usefulSizes.fullSize, currentSize]}))
+	end,
+	viewClickScript: func(a1) begin
+		imagebase:pendown(a1)
+	end
+};
+
+vAnnotations := {
+	theFill: nil,
+	viewClass: clEditView,
+	viewFlags: vAnythingAllowed + vVisible,
+	viewFormat: 0,
+	viewBounds: {left: 4, top: 14, right: 121, bottom: 87},
+	viewSetupDoneScript: func() begin
+		(theFill := MakeShape(self:LocalBox()))
+	end,
+	viewDrawScript: func() begin
+		(if (not fAnnoShape) then self:DrawShape(theFill, '{pensize: 0, fillPattern: 3, transferMode: 3}))
+	end,
+	viewChangedScript: func(a1, a2) begin
+		vAnnotations:SetupIdle(500)
+	end,
+	viewAddChildScript: func(a1) begin
+		vAnnotations:SetupIdle(500);
+		nil
+	end,
+	viewIdleScript: func() begin
+		imagebase:?TargetChanged();
+		nil
+	end,
+	preallocatedContext: 'vAnnotations
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewDrawScript_literal9 := same("vImageContainer.viewDrawScript.literals[9]");
+
+viewDrawScript_literal2 := same("vAnnotations.viewDrawScript.literals[2]");
+
+viewClickScript_code_3 := same("vImageContainer.viewClickScript.instructions");

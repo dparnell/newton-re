@@ -1,0 +1,190 @@
+// assistant, and what only it reaches
+
+assistant := {
+	viewBounds: {left: 8, top: -98, right: -8, bottom: -8},
+	viewJustify: vjParentFullH + vjParentBottomV,
+	Duh: func(a1) begin
+		if a1 then begin
+				SetValue(assistLine.entryLine, 'text, a1)
+			end;
+		SetValue(assistMsg, 'text, "The Assistant cannot interpret this.");
+		RefreshViews()
+	end,
+	Thinking: func() begin
+		SetValue(assistMsg, 'text, "Interpreting...");
+		RefreshViews()
+	end,
+	NoMsg: func() begin
+		SetValue(assistMsg, 'text, "");
+		RefreshViews()
+	end,
+	PickOne: func() begin
+		SetValue(assistMsg, 'text, "Tap \u2018\uPlease\u2019\u for more options.");
+		RefreshViews()
+	end,
+	DoParse: func() begin
+		(if (if (not ParseUtter(assistLine.entryLine.text)) then self.viewCObject) then self:Duh(nil))
+	end,
+	DeferredRec: func() begin
+		SetValue(assistMsg, 'text, "Please check ink translation, then tap Do");
+		RefreshViews()
+	end,
+	debug: 319180,
+	preallocatedContext: 'assistant,
+	TryIt: func(a1) begin
+		local l1;
+		(if (ClassOf(a1) = 'string) then (if (Length(a1) <= 2) then assistant:ButtonToggle() else begin
+					assistant:Open();
+					(if (if (not ParseUtter((l1 := CleanString(Clone(a1))))) then assistant.viewCObject) then assistant:Duh(l1) else true)
+				end) else assistant:ButtonToggle())
+	end,
+	PrimeAndOpen: func() begin
+		local l1, l2;
+		if (l2 := GleanIntendedText()) then begin
+				l1 := self:TryIt(l2)
+			end else begin
+				l1 := assistant:ButtonToggle()
+			end;
+		l1
+	end,
+	viewChildren: [viewChildren:
+		assistLine,
+		assistMsg,
+		{debug: 40867024, _proto: @protoCancelButton},
+		_defaultButton_21,
+		{
+			viewBounds: {left: 5, top: -18, right: 61, bottom: -5},
+			viewJustify: 8388742,
+			text: "How Do I?",
+			buttonClickScript: func() begin
+				local l1, l2, l3;
+				GetRoot().assistant:Close();
+				if (l2 := GetView('viewfrontmost)) then begin
+						l1 := l2.viewHelpTopic;
+						if l2.HelpIndex then begin
+								l1 := l2.HelpIndex
+							end;
+						if l2.HelpManual then begin
+								l3 := GetRoot().TinyTim;
+								if l1 then begin
+										l3:OpenManualTo(l2.HelpManual, l1)
+									end else begin
+										l3:OpenManual(l2.HelpManual)
+									end
+							end
+					end;
+				(if l1 then OpenHelpTo(l1) else ShowManual())
+			end,
+			_proto: @protoTextButton
+		}
+	],
+	assistLine: nil,
+	allocateContext: [|Array|: 'assistLine, assistLine, 'assistMsg, assistMsg, '_defaultButton, _defaultButton_21],
+	assistMsg: nil,
+	_defaultButton: nil,
+	_proto: @protoFloater,
+	ReOrientToScreen: @defRotateFunc,
+	_cacheContext: {
+		_parent: nil,
+		_proto: nil,
+		viewCObject: nil,
+		assistLine: nil,
+		assistMsg: nil,
+		viewclipper: nil,
+		base: nil,
+		viewFlags: vFloating + vClickable,
+		matchstring: nil,
+		_defaultButton: nil
+	}
+};
+
+assistLine := {
+	entryFlags: nil,
+	LabelActionScript: func(a1) begin
+		local l1;
+		if IsFrame((l1 := labelCommands[a1])) then begin
+				l1 := Clone(l1.item)
+			end else begin
+				if StrFilled(entryLine.text) then begin
+						l1 := Stringer([Array: l1, " ", entryLine.text])
+					end
+			end;
+		self:UpdateText(l1);
+		defaultChoices := nil;
+		self:SetLabelCommands(Sort(Clone((defaultFullCommands := GenFullCommands())), '|str<|, nil))
+	end,
+	viewSetupDoneScript: func() begin
+		entryLine:SetHiliteNoUpdate(9999, 9999, true)
+	end,
+	indent: 58,
+	viewLineSpacing: 40,
+	preallocatedContext: 'assistLine,
+	memory: 'assistant,
+	viewBounds: {left: 8, top: 6, right: -8, bottom: 84},
+	defaultFullCommands: nil,
+	_proto: @protoLabelInputLine,
+	SetLabelCommands: func(a1) begin
+		local l1;
+		inherited:SetLabelCommands(a1);
+		(if (l1 := GetMemoryItems(memory)) then begin
+				AddArraySlot(labelCommands, 'pickseparator);
+				(labelCommands := ArrayMunger(Clone(l1), 0, 0, labelCommands, 0, nil))
+			end)
+	end,
+	dictionaries: nil,
+	viewJustify: vjParentFullH,
+	label: "Please",
+	assistFlags: 18627073,
+	TextSetup: func() begin
+		defaultFullCommands := GenFullCommands();
+		if defaultChoices then begin
+				self:SetLabelCommands(Sort(Clone(defaultChoices), '|str<|, nil))
+			end else begin
+				self:SetLabelCommands(Sort(Clone(defaultFullCommands), '|str<|, nil))
+			end;
+		self:FindCustomDicts();
+		""
+	end,
+	textChanged: func() begin
+		SetValue(assistMsg, 'text, "")
+	end,
+	defaultChoices: nil,
+	viewSetupFormScript: func() begin
+		(entryFlags := BOr(assistFlags, self:CheckFlags()))
+	end,
+	debug: 17422,
+	CheckFlags: func() begin
+		(if (userConfiguration.lettersInFieldsOption <> nil) then 16384 else 0)
+	end,
+	FindCustomDicts: func() begin
+		assistLine.dictionaries := [Array: ];
+		(foreach l1 in vars.dictionaries do begin
+				if (if HasPath(l1, 'custom) then (l1.custom = 'roger)) then begin
+						Append(assistLine.dictionaries, l1.dictID)
+					end
+			end)
+	end
+};
+
+assistMsg := {
+	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjSiblingTopV,
+	viewBounds: {left: 0, top: -4, right: 0, bottom: 9},
+	preallocatedContext: 'assistMsg,
+	_proto: @protoStaticText
+};
+
+_defaultButton_21 := {
+	viewBounds: {left: -27, top: -18, right: -7, bottom: -5},
+	viewJustify: 8390790,
+	text: do_2,
+	buttonClickScript: func() begin
+		AddDeferredSend(assistant, DoParse, nil)
+	end,
+	debug: 10222800,
+	preallocatedContext: '_defaultButton,
+	_proto: @protoTextButton
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+Thinking_code := same("assistant.Thinking.instructions");

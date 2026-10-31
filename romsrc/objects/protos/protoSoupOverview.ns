@@ -1,0 +1,21 @@
+// protoSoupOverview, and what only it reaches
+
+protoSoupOverview := {
+	_proto: @protoOverview,
+	Abstract: func(a1, a2) begin
+		nil
+	end,
+	viewSetupChildrenScript: func() begin
+		self:SetupAbstracts(cursor:clone())
+	end,
+	SelectItem: SelectItem,
+	HitItem: func(a1, a2, a3) begin
+		(if (not inherited:HitItem(a1, a2, a3)) then begin
+				self:Dirty();
+				true
+			end)
+	end,
+	isSelected: isSelected,
+	Scroller: Scroller,
+	ForEachSelected: ForEachSelected
+};

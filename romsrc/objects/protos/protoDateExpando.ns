@@ -1,0 +1,18 @@
+// protoDateExpando, and what only it reaches
+
+protoDateExpando := {
+	_proto: @protoTextExpando,
+	entryFlags: 526849,
+	Date: 183017,
+	TextSetup: func() begin
+		inherited:TextSetup();
+		(if target.(path) then ShortDateStr(target.(path), Date))
+	end,
+	textChanged: func() begin
+		inherited:textChanged();
+		(if (StrLen(entryLine.text) = 0) then (target.(path) := nil) else (target.(path) := StringToDate(entryLine.text)))
+	end,
+	setup2: func(a1) begin
+		(if (if a1 then a1.(path)) then ShortDateStr(a1.(path), Date))
+	end
+};

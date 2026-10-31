@@ -1,7 +1,0 @@
-@@ 0x102d581
-func() begin
-	local l1;
-	inherited:?viewSetupFormScript();
-	(if target.(superPath) then (if (if (l1 := GetDataDefs(target.(superPath).interpreterSymbol)) then l1.scriptEditor) then (self.viewChildren := [Array: l1.scriptEditor])))
-end
-@@end

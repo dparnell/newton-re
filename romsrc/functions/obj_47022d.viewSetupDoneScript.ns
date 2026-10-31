@@ -1,6 +1,0 @@
-@@ 0x47020d
-func() begin
-	scrollView := theTable;
-	inherited:?viewSetupDoneScript()
-end
-@@end

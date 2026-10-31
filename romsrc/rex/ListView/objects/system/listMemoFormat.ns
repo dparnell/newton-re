@@ -1,0 +1,3 @@
+// listMemoFormat, and what only it reaches
+
+listMemoFormat := {_proto: @8322, symbol: 'listMemoFormat, title: memo, auxForm: @toSubjectSlip, debug: 2557148};

@@ -1,0 +1,3 @@
+// txClipboardPrototype, and what only it reaches
+
+txClipboardPrototype := {text: nil, styles: nil, rulers: nil, viewBounds: nil};

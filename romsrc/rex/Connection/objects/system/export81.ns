@@ -1,0 +1,104 @@
+// export81, and what only it reaches
+
+export81 := {
+	viewBounds: {left: 0, top: 40, right: 200, bottom: 206},
+	stepChildren: [stepChildren:
+		{
+			title: dock,
+			titleIcon: {bits: titleIconBits, bounds: {left: 0, top: 0, right: 19, bottom: 11}},
+			_proto: @protoTitle
+		},
+		{
+			text: "Select a translator for",
+			viewBounds: {left: 10, top: 6, right: 200, bottom: 18},
+			viewJustify: 8396800,
+			viewFont: @fontSystem10Bold,
+			_proto: @protoStaticText
+		},
+		export81Item,
+		export81Item_2,
+		{
+			buttonClickScript: func() begin
+				closing := true;
+				inherited:?buttonClickScript();
+				context:Close();
+				protoContext:SendCancelToDesktop(endpoint);
+				protoContext:ImportFileClose(endpoint);
+				(if callWhenDone then call callWhenDone with ())
+			end,
+			_proto: @protoCancelButton
+		},
+		{
+			text: import,
+			buttonClickScript: func() begin
+				context:Import(selectedTranslator);
+				closing := true;
+				base:Close()
+			end,
+			viewBounds: {top: -18, left: -47, right: -9, bottom: -5},
+			viewJustify: 8390790,
+			_proto: @protoTextButton
+		}
+	],
+	translators: nil,
+	viewSetupFormScript: func() begin
+		self.protoContext := GetRoot().Connection;
+		protoContext:AddOpenWindow(self);
+		self.closing := nil;
+		translateFileName.text := translateWhich;
+		endpoint:StartIdle(self, 2000)
+	end,
+	selectedTranslator: nil,
+	viewQuitScript: func() begin
+		protoContext:RemoveOpenWindow(self);
+		endpoint:StopIdle(self);
+		(if (not closing) then endpoint:ConnectionDone(0))
+	end,
+	viewIdleScript: func() begin
+		local l1;
+		if (if ((l1 := endpoint:IdleConnection(true)) = 0) then (not endpoint.closingDown)) then begin
+				protoContext:ImportFileClose(endpoint);
+				if callWhenDone then begin
+						call callWhenDone with ()
+					end
+			end;
+		return l1
+	end,
+	viewFlags: vApplication + vFloating + vClickable,
+	closing: nil,
+	_proto: @protoFloater,
+	translateFileName: nil,
+	stepAllocateContext: [|Array|: 'translateFileName, export81Item, 'translatorList, export81Item_2],
+	translatorList: nil
+};
+
+export81Item := {
+	text: nil,
+	viewBounds: {left: 20, top: 3, right: 200, bottom: 16},
+	viewJustify: 8396800,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'translateFileName
+};
+
+export81Item_2 := {
+	viewBounds: {left: 10, top: 6, right: 190, bottom: 78},
+	viewSetupFormScript: func() begin
+		self.listItems := translators;
+		self:SetupList();
+		(selectedTranslator := 0)
+	end,
+	viewFont: @fontSystem9,
+	buttonClickScript: func(a1) begin
+		(selectedTranslator := a1)
+	end,
+	useScrollers: true,
+	viewJustify: vjSiblingBottomV,
+	_proto: @protoTextList,
+	preAllocatedContext: 'translatorList
+};
+
+import := "Import";
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+buttonClickScript_code_6 := same("export81Item_2.buttonClickScript.instructions");

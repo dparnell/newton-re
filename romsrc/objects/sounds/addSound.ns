@@ -1,0 +1,49 @@
+// addSound, and what only it reaches
+
+addSound := {
+	sndFrameType: 'codec,
+	codecName: tDTMFCodec,
+	dataType: 16,
+	bufferSize: 6400,
+	bufferCount: 4,
+	compressionType: 6,
+	samplingRate: 21600,
+	samples: tonescore('samples, {version: 1, algorithm: 3, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 1000,
+			fraction: 0,
+			peak: 4000,
+			delay: 0,
+			attack: 40,
+			decay: 80,
+			hold: 20,
+			release: 20,
+			sustain: 25000,
+			tail: 0
+		},
+		{
+			frequency: 20,
+			fraction: 0,
+			peak: 400,
+			delay: 0,
+			attack: 0,
+			decay: 0,
+			hold: 60,
+			release: 60,
+			sustain: 300,
+			tail: 0
+		},
+		{
+			frequency: 13,
+			fraction: 0,
+			peak: 2000,
+			delay: 0,
+			attack: 100,
+			decay: 0,
+			hold: 1,
+			release: 19,
+			sustain: 4000,
+			tail: 0
+		}
+	])
+};

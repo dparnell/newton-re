@@ -1,5 +1,0 @@
-@@ 0x7ad31d
-func(a1) begin
-	SetValue(vInputCityCode, 'text, a1)
-end
-@@end

@@ -1,0 +1,120 @@
+// arrayErsatzCursor, and what only it reaches
+
+arrayErsatzCursor := {
+	things: nil,
+	index: nil,
+	validTest: nil,
+	New: func(a1, a2) begin
+		local l1;
+		l1 := {_parent: self, things: a2, index: 0, validTest: nil};
+		if a1 then begin
+				l1.validTest := a1.validTest
+			end;
+		l1:GotoKey(0);
+		l1
+	end,
+	move: func(a1) begin
+		local l1, l2;
+		if ((index := (index + a1)) < -1) then begin
+				index := -1
+			end else begin
+				if (index > Length(things)) then begin
+						index := Length(things)
+					end
+			end;
+		l1 := self:entry();
+		l2 := (if (a1 < 0) then -1 else 1);
+		(loop begin
+				if (not (l1 = 'deleted)) then begin
+						if ((not l1) or (not validTest)) then begin
+								break l1
+							end;
+						if call validTest with (l1) then begin
+								break l1
+							end
+					end;
+				(l1 := self:move(l2))
+			end)
+	end,
+	Goto: func(a1) begin
+		if (not (index := ArrayPos(things, a1, 0, nil))) then begin
+				index := -1
+			end;
+		self:entry()
+	end,
+	GotoKey: func(a1) begin
+		local l1;
+		if (ClassOf(a1) = 'int) then begin
+				index := a1
+			end else begin
+				index := -1
+			end;
+		l1 := self:entry();
+		(loop begin
+				if (not (l1 = 'deleted)) then begin
+						if ((not l1) or (not validTest)) then begin
+								break l1
+							end;
+						if call validTest with (l1) then begin
+								break l1
+							end
+					end;
+				(l1 := self:move(1))
+			end)
+	end,
+	Next: func() begin
+		local l1;
+		(loop (if (not ((l1 := self:move(1)) = 'deleted)) then begin
+					if ((not l1) or (not validTest)) then begin
+							break l1
+						end;
+					(if call validTest with (l1) then break l1)
+				end))
+	end,
+	prev: func() begin
+		local l1;
+		(loop (if (not ((l1 := self:move(-1)) = 'deleted)) then begin
+					if ((not l1) or (not validTest)) then begin
+							break l1
+						end;
+					(if call validTest with (l1) then break l1)
+				end))
+	end,
+	Reset: func() begin
+		self:GotoKey(0)
+	end,
+	ResetToEnd: func() begin
+		local l1;
+		index := (Length(things) - 1);
+		l1 := things[index];
+		(loop begin
+				if (not (l1 = 'deleted)) then begin
+						if ((not l1) or (not validTest)) then begin
+								break l1
+							end;
+						if call validTest with (l1) then begin
+								break l1
+							end
+					end;
+				(l1 := self:move(-1))
+			end)
+	end,
+	entry: func() begin
+		(if (if (index >= 0) then (index < Length(things))) then things[index])
+	end,
+	clone: func() begin
+		Clone(self)
+	end,
+	CountEntries: func() begin
+		(if (not validTest) then Length(things) else begin
+				l1 := 0;
+				local l1;
+				(foreach l2 in things do begin
+						if call validTest with (l2) then begin
+								l1 := (l1 + 1)
+							end
+					end);
+				l1
+			end)
+	end
+};

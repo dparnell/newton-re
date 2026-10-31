@@ -1,0 +1,52 @@
+// usDateFilter, and what only it reaches
+
+usDateFilter := {
+	item: "usDateFilter",
+	templateArray: [|Array|: @usStdDateFilter, @usDefaultDateFilter],
+	Init: func(a1) begin
+		local l1;
+		self:SetTemplate((l1 := self:Parse(a1)))
+	end,
+	Parse: func(a1) begin
+		local l1;
+		l1 := @usDefaultDateFilter;
+		if @usStdDateFilter:IsValid(a1) then begin
+				l1 := @usStdDateFilter
+			end;
+		return l1
+	end,
+	switch: func(a1, a2) begin
+		local l1;
+		if (if ((l1 := templateArray[a1]) = @usStdDateFilter) then (self:Parse(a2) <> @usStdDateFilter)) then begin
+				self:Notify(3, "Corrector", "Sorry, unable to switch to the requested format");
+				return nil
+			end;
+		self:SetTemplate(templateArray[a1])
+	end,
+	SetupString: func(a1) begin
+		(if HasPath(curTemplate, 'SetupString) then curTemplate:SetupString(a1) else a1)
+	end,
+	CleanupString: func(a1) begin
+		(if HasPath(curTemplate, 'CleanupString) then curTemplate:CleanupString(a1) else a1)
+	end,
+	SetTemplate: func(a1) begin
+		self.format := a1.format;
+		self.string := a1.string;
+		self.filters := a1.filters;
+		self.bias := a1.bias;
+		self.offsets := a1.offsets;
+		(self.curTemplate := a1)
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+switch_literal2 := same("usDateFilter.switch.literals[2]");
+
+switch_literal3 := same("usDateFilter.switch.literals[3]");
+
+SetupString_code := same("usDateFilter.SetupString.instructions");
+
+Init_code := same("usDateFilter.Init.instructions");
+
+SetTemplate_code := same("usDateFilter.SetTemplate.instructions");

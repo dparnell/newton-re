@@ -1,0 +1,10 @@
+// listLetterFormat_2, and what only it reaches
+
+listLetterFormat_2 := {
+	_proto: @8327,
+	routingType: 'Print,
+	symbol: 'listLetterFormat,
+	title: letter,
+	auxForm: @addresseeSlip,
+	debug: 18576860
+};

@@ -1,0 +1,31 @@
+// ownerBitmap, and what only it reaches
+
+ownerBitmap := {
+	unhilited: {
+		bounds: unhilitedBounds_22,
+		mask: unhilitedMask_5,
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/541f69.png", "0000000000100000000000000014001e", 4),
+				bitdepth: 4
+			},
+			{cbits: colordataCbits_22, bitdepth: 1}
+		]
+	},
+	hilited: {
+		bounds: {left: 0, top: 0, right: 30, bottom: 20},
+		mask: unhilitedMask_5,
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/541cc5.png", "0000000000100000000000000014001e", 4),
+				bitdepth: 4
+			},
+			{
+				cbits: bitmap('bits, "resources/bits/541c59.png", "0000000000040000000000000014001e", 1),
+				bitdepth: 1
+			}
+		]
+	}
+};
+
+unhilitedMask_5 := bitmap('mask, "resources/mask/541e91.png", "0000000000040000000000000014001e", 1);

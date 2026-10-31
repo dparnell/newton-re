@@ -1,0 +1,105 @@
+// export72, and what only it reaches
+
+export72 := {
+	viewBounds: {left: 0, top: 60, right: 180, bottom: 145},
+	viewSetupFormScript: compile(
+		constants: {
+			kROM_8261: @8261,
+			kROM_8262: @8262
+		},
+		func() begin
+			if (not inited) then begin
+					inited := true;
+					self.protoContext := GetRoot().Connection;
+					protoContext:AddOpenWindow(self);
+					self.initialSetup := DeepClone(initialSetup);
+					initialSetup.values.statusText := labels[0];
+					self.currentStatusSetup := DeepClone(initialSetup);
+					self.stopping := nil;
+					self.closing := nil;
+					AddDeferredCall(func() begin
+						local l1, l2;
+						(try begin
+								if (whichFiles = 1) then begin
+										l1 := protoContext:CallReadCommand(endpoint, "gist");
+										endpoint:WriteCommand("isto", protoContext:BuildStoreFrame(GetStores()[0], nil, nil), true)
+									end;
+								l1 := protoContext:CallReadCommand(endpoint, "dres");
+								if (endpoint:DesktopType() = 0) then begin
+										self.theFileBrowser := BuildContext(kROM_8261)
+									end else begin
+										self.theFileBrowser := BuildContext(kROM_8262)
+									end;
+								theFileBrowser.whichFiles := whichFiles;
+								theFileBrowser.labels := labels;
+								theFileBrowser.callWhenDone := callWhenDone;
+								theFileBrowser.callWhenSetup := func() begin
+									closing := true;
+									self:Close()
+								end;
+								theFileBrowser.endpoint := endpoint;
+								theFileBrowser:FilterDialog()
+							end onexception |evt.ex| do begin
+								if ((l2 := CurrentException().error) <> -16005) then begin
+										endpoint:ConnectionDone(l2)
+									end;
+								closing := true;
+								self:Close()
+							end)
+					end, nil);
+					endpoint:StartIdle(self, 500)
+				end;
+			inherited:?viewSetupFormScript()
+		end),
+	viewQuitScript: func() begin
+		endpoint:StopIdle(self);
+		protoContext:RemoveOpenWindow(self);
+		if (if (not closing) then (not stopping)) then begin
+				endpoint:ConnectionDone(0)
+			end;
+		(inited := nil)
+	end,
+	viewFlags: vApplication + vFloating + vClickable,
+	CancelRequest: func(a1) begin
+		(if (not stopping) then begin
+				stopping := true;
+				currentStatusSetup.values.titleText := "Stopping...";
+				self:viewSet(currentStatusSetup);
+				if self.theFileBrowser then begin
+						theFileBrowser:StopOpen(0)
+					end;
+				protoContext:StopOperation(endpoint)
+			end)
+	end,
+	inited: nil,
+	initialSetup: {
+		name: 'vBarber,
+		values: {
+			statusText: nil,
+			titleText: "Getting file list...",
+			barber: true,
+			icon: valuesIcon,
+			closeBox: nil
+		},
+		appSymbol: 'Connection
+	},
+	viewIdleScript: func() begin
+		self:updateIndicator(currentStatusSetup);
+		return 500
+	end,
+	theFileBrowser: nil,
+	currentStatusSetup: nil,
+	stopping: nil,
+	closing: nil,
+	_proto: @protoStatusTemplate
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_literal10 := same("export72.viewSetupFormScript.literals[12].literals[10]");
+
+viewQuitScript_code_3 := same("export72.viewQuitScript.instructions");
+
+CancelRequest_literal3 := same("export72.CancelRequest.literals[3]");
+
+viewIdleScript_code_3 := same("export72.viewIdleScript.instructions");

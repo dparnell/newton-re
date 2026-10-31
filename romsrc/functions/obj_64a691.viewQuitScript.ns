@@ -1,5 +1,0 @@
-@@ 0x426739
-func() begin
-	(if RecordEngine then RecordEngine:Done())
-end
-@@end

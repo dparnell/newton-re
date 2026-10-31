@@ -1,0 +1,16 @@
+// protoGauge, and what only it reaches
+
+protoGauge := {
+	viewClass: clGaugeView,
+	viewFlags: vVisible + vReadOnly,
+	viewBounds: nil,
+	viewFormat: 0,
+	gaugeDrawLimits: true,
+	minValue: 0,
+	maxValue: 100,
+	viewValue: nil,
+	viewSetupFormScript: func() begin
+		(self.viewValue := vars.(valuePath))
+	end,
+	debug: 45415
+};

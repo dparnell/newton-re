@@ -1,0 +1,40 @@
+// clicks, and what only it reaches
+
+clicks := [|Array|:
+	@click,
+	{
+		sndFrameType: 'simpleSound,
+		samplingRate: real('|Real|, 29401.2),
+		dataType: 8,
+		compressionType: 0,
+		samples: samples
+	},
+	{
+		sndFrameType: 'simpleSound,
+		samplingRate: real('|Real|, 26193.7),
+		dataType: 8,
+		compressionType: 0,
+		samples: samples
+	},
+	{
+		sndFrameType: 'simpleSound,
+		samplingRate: real('|Real|, 23336.08),
+		dataType: 8,
+		compressionType: 0,
+		samples: samples
+	},
+	{
+		sndFrameType: 'simpleSound,
+		samplingRate: real('|Real|, 19623.4),
+		dataType: 8,
+		compressionType: 0,
+		samples: samples
+	},
+	{
+		sndFrameType: 'simpleSound,
+		samplingRate: real('|Real|, 17482.5),
+		dataType: 8,
+		compressionType: 0,
+		samples: samples
+	}
+];

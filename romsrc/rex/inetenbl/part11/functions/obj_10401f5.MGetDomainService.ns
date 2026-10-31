@@ -1,5 +1,0 @@
-@@ 0x1046a99
-func() begin
-	fDomainServiceFSM
-end
-@@end

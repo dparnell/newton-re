@@ -1,0 +1,27 @@
+// digitalTimePopup, and what only it reaches
+
+digitalTimePopup := {
+	viewBounds: {left: 0, top: 0, right: 135, bottom: 32},
+	New: New,
+	TimeChanged: func() begin
+		context:?NewTime(Time)
+	end,
+	Affirmative: func() begin
+		context:?pickActionScript(Time)
+	end,
+	stepChildren: [stepChildren:
+		{
+			viewBounds: {left: 2, top: 2, right: 121, bottom: 30},
+			viewFormat: 0,
+			viewSetupFormScript: func() begin
+				(increment := self:Parent().increment)
+			end,
+			_proto: @protoDigitalClock
+		}
+	],
+	_proto: @protoGeneralPopup
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+TimeChanged_code := same("digitalTimePopup.TimeChanged.instructions");

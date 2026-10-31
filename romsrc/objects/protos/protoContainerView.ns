@@ -1,0 +1,8 @@
+// protoContainerView, and what only it reaches
+
+protoContainerView := {
+	_proto: @protoView,
+	textFlags: 50176,
+	_DoDefaultButton: _DoDefaultButton,
+	viewKeyDownScript: viewKeyDownScript
+};

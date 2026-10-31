@@ -1,0 +1,3 @@
+// leadingpunctBitmap, and what only it reaches
+
+leadingpunctBitmap := {bits: leadingpunctBitmapBits, bounds: leadingpunctBitmapBounds};

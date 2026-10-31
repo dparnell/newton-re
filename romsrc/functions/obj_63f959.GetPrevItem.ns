@@ -1,6 +1,0 @@
-@@ 0x4eb119
-func() begin
-	isReset := nil;
-	cursor:prev()
-end
-@@end

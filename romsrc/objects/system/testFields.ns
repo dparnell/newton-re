@@ -1,0 +1,18 @@
+// testFields, and what only it reaches
+
+testFields := [|Array|:
+	{inputmask: 25200640, dictionaries: [|Array|: 45]},
+	{inputmask: 25200640, dictionaries: [|Array|: 48]},
+	{inputmask: 25200640, dictionaries: [|Array|: 0]},
+	{inputmask: 25200640, dictionaries: [|Array|: 45]},
+	{inputmask: 25204736, dictionaries: [|Array|: 0]},
+	{inputmask: 10532864, dictionaries: nil},
+	{inputmask: 25200640, dictionaries: [|Array|: 24]},
+	{inputmask: 25200640, dictionaries: [|Array|: 26]},
+	{inputmask: 16779264, dictionaries: [|Array|: 116]},
+	{inputmask: 25200640, dictionaries: [|Array|: 8]},
+	{inputmask: 63488, dictionaries: nil},
+	{inputmask: 264192, dictionaries: nil},
+	{inputmask: 526336, dictionaries: nil},
+	{inputmask: 1050624, dictionaries: nil}
+];

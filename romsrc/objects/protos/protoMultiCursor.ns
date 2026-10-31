@@ -1,0 +1,159 @@
+// protoMultiCursor, and what only it reaches
+
+protoMultiCursor := {
+	curses: nil,
+	finalCurse: 0,
+	metaCursor: nil,
+	comparator: func(a1, a2, a3) begin
+		local l1;
+		(if (a3 = '|=|) then IsSameEntry(a1, a2) else ((if ((l1 := StrCompare(a1.sorton, a2.sorton)) < 0) then (a3 = '|<|)) or (if (l1 > 0) then (a3 = '|>|))))
+	end,
+	New: func(a1, a2) begin
+		l1 := {_proto: self, curses: [Array: ]};
+		if a2 then begin
+				l1.comparator := a2
+			end;
+		if a1 then begin
+				local l1;
+				(foreach l2 in a1 do begin
+						l1:addCursor(l2, nil)
+					end)
+			end;
+		l1:Reset();
+		l1
+	end,
+	addCursor: func(a1, a2) begin
+		local l1;
+		l1 := {cursor: a1, id: (if a2 then a2 else finalCurse), state: 'passed};
+		ArrayInsert(curses, l1, finalCurse);
+		(finalCurse := (finalCurse + 1))
+	end,
+	ReplaceCursor: func(a1, a2) begin
+		(for l1 := 0 to (finalCurse - 1) do begin
+				if (curses[l1].id = a1) then begin
+						curses[l1].cursor := a2;
+						return true
+					end
+			end);
+		nil
+	end,
+	mover: func(a1) begin
+		local l1;
+		(for l2 := 0 to (Length(curses) - 1) do begin
+				local l5, l6, l7;
+				l5 := curses[l2];
+				l6 := '{passed: {prev: prev, Next: entry}, resident: {prev: prev, Next: Next}, prior: {prev: entry, Next: Next}}.(l5.state).(a1);
+				l7 := Perform(l5.cursor, l6, [Array: ]);
+				(while (l7 = 'deleted) do (l7 := Perform(l5.cursor, l6, [Array: ])));
+				if (l6 = a1) then begin
+						l5.state := '{Next: passed, prev: prior}.(a1)
+					end;
+				if l7 then begin
+						if ((not l1) or call comparator with (l1, l7, '{Next: |>|, prev: |<|}.(a1))) then begin
+								metaCursor := l5;
+								l1 := l7
+							end
+					end
+			end);
+		if metaCursor then begin
+				metaCursor.state := 'resident
+			end;
+		l1
+	end,
+	Next: func() begin
+		self:mover('Next)
+	end,
+	prev: func() begin
+		self:mover('prev)
+	end,
+	entry: func() begin
+		metaCursor.cursor:entry()
+	end,
+	Reset: func() begin
+		(foreach l1 in curses do begin
+				l1.cursor:Reset();
+				l1.state := 'passed
+			end);
+		self:Next()
+	end,
+	ResetToEnd: func() begin
+		(foreach l1 in curses do begin
+				l1.cursor:ResetToEnd();
+				l1.state := 'prior
+			end);
+		self:prev()
+	end,
+	Goto: func(a1) begin
+		local l1;
+		(foreach l2 in curses do begin
+				local l4;
+				l4 := l2.cursor:Goto(a1);
+				l2.state := 'passed;
+				if l4 then begin
+						if ((not l1) or call comparator with (l1, l4, '|>|)) then begin
+								metaCursor := l2;
+								l1 := l4
+							end
+					end
+			end);
+		if metaCursor then begin
+				metaCursor.state := 'resident
+			end;
+		l1
+	end,
+	GotoKey: func(a1) begin
+		local l1;
+		(foreach l2 in curses do begin
+				local l4;
+				l4 := l2.cursor:GotoKey(a1);
+				(while (l4 = 'deleted) do (l4 := l2.cursor:Next()));
+				l2.state := 'passed;
+				if l4 then begin
+						if ((not l1) or call comparator with (l1, l4, '|>|)) then begin
+								metaCursor := l2;
+								l1 := l4
+							end
+					end
+			end);
+		if metaCursor then begin
+				metaCursor.state := 'resident
+			end;
+		l1
+	end,
+	clone: func() begin
+		(l1 := Clone(self)).metaCursor := Clone(metaCursor);
+		l1.curses := Clone(l1.curses);
+		local l1;
+		(for l2 := 0 to (finalCurse - 1) do begin
+				l1.curses[l2] := Clone(curses[l2]);
+				l1.curses[l2].cursor := l1.curses[l2].cursor:clone()
+			end);
+		l1
+	end,
+	CountEntries: func() begin
+		l1 := 0;
+		local l1;
+		(for l2 := 0 to (finalCurse - 1) do begin
+				l1 := (l1 + curses[l2].cursor:CountEntries())
+			end);
+		l1
+	end,
+	move: func(a1) begin
+		if (a1 > 0) then begin
+				(while (a1 > 0) do begin
+						a1 := (a1 - 1);
+						self:Next()
+					end)
+			end else begin
+				(while (a1 < 0) do begin
+						a1 := (a1 + 1);
+						self:prev()
+					end)
+			end;
+		self:entry()
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+Reset_code := same("protoMultiCursor.Reset.instructions");

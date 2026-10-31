@@ -1,0 +1,390 @@
+// newtOverLayout, and what only it reaches
+
+newtOverLayout := {
+	ForEachSelected: ForEachSelected,
+	GetTargetInfo: func(a1) begin
+		l4 := {target: nil, targetView: self};
+		if (a1 = 'Filing) then begin
+				l4.targetView := targetApp
+			end;
+		if (if selected then (Length(selected) > 0)) then begin
+				if (Length(selected) = 1) then begin
+						l4.target := ResolveEntryAlias(selected[0])
+					end else begin
+						if (l5 = nil) then begin
+								l5 := GetVariable(self, 'overviewTargetClass)
+							end;
+						if (l5 = nil) then begin
+								l5 := 'newtOverview
+							end;
+						l4.target := CreateTargetCursor(l5, selected);
+						if (a1 = 'Filing) then begin
+								l4.target.labels := '__XXTempLabel
+							end
+					end;
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				local l5;
+				(foreach l6 in selected do begin
+						if (if IsSoupEntry((l1 := ResolveEntryAlias(l6))) then (l2 := EntryStore(l1))) then begin
+								if (not l3) then begin
+										l3 := l2
+									end else begin
+										if (l2 <> l3) then begin
+												break (l3 := nil)
+											end
+									end
+							end
+					end);
+				l4.targetStore := l3
+			end;
+		l4
+	end,
+	ChooseCurrItem: func(a1) begin
+		clicker();
+		newtAppBase:ShowLayout(nil)
+	end,
+	NewEntry: func(a1, a2, a3) begin
+		masterSoup:AddEntry(a1, a3);
+		AddUndoSend(layout, 'KillEntry, [Array: a1]);
+		(if a2 then begin
+				dataCursor:Goto(a1);
+				hiliteEntry := nil;
+				currentLayout := previousLayout;
+				newtAppBase:RedoChildren()
+			end)
+	end,
+	viewSetupDoneScript: func() begin
+		RegStationeryChange(Intern(Stringer([Array: viewCObject, ":Overview:", GetVariable(self, 'appSymbol)])), func(a1, a2, a3, a4) begin
+			self:HandleStationeryChange(a1, a2, a3, a4)
+		end);
+		inherited:?viewSetupDoneScript()
+	end,
+	HandleStationeryChange: func(a1, a2, a3, a4) begin
+		(if (if self.viewCObject then (a2 = 'dataDef)) then self:DoRetarget())
+	end,
+	SelectItem: SelectItem,
+	checkBoxHorzOffset: 0,
+	hiliteCount: nil,
+	viewQuitScript: func() begin
+		if hiliteEntry then begin
+				if IsSoupEntry(hiliteEntry) then begin
+						masterSoup:GetCursor():Goto(hiliteEntry)
+					end
+			end;
+		dontStartWithFolder := nil;
+		hiliteEntry := nil;
+		UnRegStationeryChange(Intern(Stringer([Array: viewCObject, ":Overview:", GetVariable(self, 'appSymbol)])));
+		inherited:?viewQuitScript()
+	end,
+	UnCheckAll: func() begin
+		hilitedIndex := nil;
+		selected := nil;
+		layout:DoRetarget()
+	end,
+	viewDrawScript: func() begin
+		local l1, l2;
+		(if (if (not forceNewEntry) then (not dataCursor:entry())) then self:DrawShape(self:AppEmpty(), '{}) else begin
+				if (not viewStyle) then begin
+						viewStyle := {font: viewFont}
+					end;
+				if pieces then begin
+						self:DrawShape(pieces, viewStyle)
+					end;
+				if (if dividerLine then (not nothingCheckable)) then begin
+						self:DrawShape(MakeRect((selectIndent - dividerLine), 0, selectIndent, (maxLines * lineHeight)), '{penPattern: 0, fillPattern: 3})
+					end;
+				(if hilitedIndex then begin
+						(l1 := self:LocalBox()).bottom := lineHeight;
+						self:hiliter((l2 := self:GetHiliteShape(19, l1)), hilitedIndex, 'off)
+					end)
+			end)
+	end,
+	SetupCursor: func() begin
+		inherited:SetupCursor();
+		(if cursor then (self.cursor := dataCursor:clone()))
+	end,
+	CheckState: CheckState,
+	GetIndexEntry: GetIndexEntry,
+	CheckOn: CheckOn,
+	Abstract: compile(
+		constants: {
+			kLiteral_49cdf1: '{font: 9216, justification: right}
+		},
+		func(a1, a2) begin
+			local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+			if (a1 = hiliteEntry) then begin
+					hilitedIndex := hiliteCount
+				end;
+			hiliteCount := (hiliteCount + 1);
+			l1 := (if (labelsFilter = '_all) then a1.labels);
+			(if (l2 := GetEntryDataDef(a1)) then begin
+					l3 := l2.icon;
+					l4 := ((a2.left + 16) + 2);
+					l5 := l2:StringExtract(a1, 2);
+					l6 := (a2.right - l4);
+					if l1 then begin
+							if (l7 := userConfiguration.userFolders.(a1.labels)) then begin
+									l6 := (l6 - StrFontWidth(l7, 9216))
+								end
+						end;
+					l8 := [Array: OffsetShape(MakeShape(l3), a2.left, (a2.top + 2)), MakeText(StrTruncate(l5, l6), l4, a2.top, a2.right, (a2.top + 11))];
+					if l1 then begin
+							if l7 then begin
+									AddArraySlot(l8, kLiteral_49cdf1);
+									AddArraySlot(l8, MakeText(l7, l4, a2.top, (a2.right - 2), (a2.top + 11)))
+								end
+						end;
+					if (if showStoreName then (Length(GetStores()) > 1)) then begin
+							l9 := EntryStore(a1);
+							AddArraySlot(l8, kLiteral_49cdf1);
+							AddArraySlot(l8, MakeText(l9:GetName(), l4, a2.top, (a2.right - 2), (a2.top + 25)))
+						end;
+					l8
+				end else (if (not (l8 := self:?OverviewAbstract(a1, a2))) then [Array: OffsetShape(MakeShape(@infoBitmap), a2.left, (a2.top + 2))] else l8))
+		end),
+	showStoreName: nil,
+	maxLines: 0,
+	_proto: @newtLayout,
+	cursor: nil,
+	FilterChanged: func() begin
+		inherited:FilterChanged();
+		l1 := [Array: ];
+		l2 := dataCursor:clone();
+		if selected then begin
+				local l1;
+				local l2;
+				(foreach l3 in selected do begin
+						local l5;
+						if (if (l5 := ResolveEntryAlias(l3)) then l2:Goto(l5)) then begin
+								AddArraySlot(l1, l3)
+							end
+					end);
+				selected := l1
+			end;
+		(hilitedIndex := nil)
+	end,
+	checkAll: compile(
+		constants: {
+			kFunction_49dabd: func(a1) begin
+				MakeEntryAlias(a1)
+			end
+		},
+		func() begin
+			hilitedIndex := nil;
+			(curse := cursor:clone()):Reset();
+			try begin
+					selected := MapCursor(curse, kFunction_49dabd)
+				end onexception |evt.ex| do begin
+					self:Notify(3, title, "There was not enough memory to select all items. Some items may still be unselected.")
+				end;
+			AddUndoSend(layout, 'UnCheckAll, [Array: ]);
+			layout:DoRetarget()
+		end),
+	EndFlush: func() begin
+		nil
+	end,
+	SelectCurrItem: func(a1) begin
+		(if (if hilitedIndex then hiliteEntry) then begin
+				clicker();
+				self:SelectItem(hilitedIndex);
+				hilitedIndex := nil;
+				checkAllPrimed := nil;
+				RefreshViews()
+			end)
+	end,
+	textFlags: 5120,
+	Scroller: Scroller,
+	SetupAbstracts: SetupAbstracts,
+	lineHeight: 32,
+	ShowFoundItem: func(a1, a2) begin
+		hiliteEntry := nil;
+		newtAppBase:ShowLayout(nil);
+		inherited:ShowFoundItem(a1, a2)
+	end,
+	trackOverview: trackOverview,
+	viewStyle: nil,
+	viewScrollDownScript: viewScrollDownScript,
+	nothingCheckable: nil,
+	checkScrollability: nil,
+	selected: nil,
+	pieces: nil,
+	items: nil,
+	numLines: 0,
+	GetTheRightShape: GetTheRightShape,
+	CheckOff: CheckOff,
+	viewScrollUpScript: viewScrollUpScript,
+	hilitedIndex: nil,
+	dividerLine: 1,
+	centerTarget: nil,
+	hiliteEntry: nil,
+	viewSetupFormScript: func() begin
+		local l1;
+		inherited:viewSetupFormScript();
+		if (l1 := dataCursor:entry()) then begin
+				hiliteEntry := l1
+			end;
+		dontStartWithFolder := true;
+		SetKeyView(self, 0)
+	end,
+	GetHiliteShape: GetHiliteShape,
+	downOneItem: func(a1) begin
+		local l1, l2;
+		clicker();
+		if (if hiliteEntry then IsSoupEntry(hiliteEntry)) then begin
+				l1 := cursor:clone();
+				l1:Goto(hiliteEntry);
+				if (l2 := l1:Next()) then begin
+						hiliteEntry := l2;
+						if ((not hilitedIndex) or (hilitedIndex >= (maxLines - 1))) then begin
+								hilitedIndex := 0;
+								cursor:Goto(l2);
+								self:RedoChildren()
+							end else begin
+								hilitedIndex := (hilitedIndex + 1);
+								self:Dirty()
+							end
+					end
+			end;
+		RefreshViews()
+	end,
+	FilingChangedX: func() begin
+		selected := nil;
+		inherited:?FilingChangedX()
+	end,
+	HitItem: func(a1, a2, a3) begin
+		(if (a2 < selectIndent) then begin
+				self:SelectItem(a1);
+				checkAllPrimed := nil;
+				hilitedIndex := nil;
+				true
+			end else begin
+				hiliteEntry := nil;
+				cursor:move(a1);
+				dataCursor:Goto(cursor:entry());
+				newtAppBase:ShowLayout(nil)
+			end)
+	end,
+	viewClickScript: viewClickScript_3,
+	FileThis: func(a1, a2, a3, a4, a5) begin
+		if a4 then begin
+				if (not (l3 := a5:GetSoup((l2 := allSoups.(mastersoupSlot).soupName)))) then begin
+						l3 := CreateUSoupMember(l2, a5)
+					end
+			end;
+		local l1;
+		local l2;
+		local l3;
+		(foreach l4, l5 in selected do begin
+				local l7;
+				if (l1 := ResolveEntryAlias(l5)) then begin
+						l7 := nil;
+						if a2 then begin
+								if (not a3) then begin
+										if l1.labels then begin
+												RemoveSlot(l1, 'labels);
+												l7 := true
+											end
+									end else begin
+										if (a3 <> l1.labels) then begin
+												l1.labels := a3;
+												l7 := true
+											end
+									end
+							end;
+						if (if a4 then (EntryStore(l1) <> a5)) then begin
+								self:SetActionDescription(-8101);
+								if EntryStore(l1):IsReadOnly() then begin
+										EntryCopy(l1, l3)
+									end else begin
+										EntryMove(l1, l3)
+									end
+							end else begin
+								if l7 then begin
+										EntryChange(l1)
+									end
+							end
+					end
+			end);
+		(if (a4 or l7) then XmitSoupChange(masterSoup.soupName, appSymbol, 'whatThe, nil))
+	end,
+	_keyCommands: [|Array|:
+		{
+			char: $a,
+			modifiers: 33554432,
+			keyMessage: '_checkAllKeyScript,
+			name: "Check All",
+			category: viewing
+		},
+		{char: $\u001e, modifiers: 0, keyMessage: 'upOneItem, name: "Up", category: viewing},
+		{char: $\u001f, modifiers: 0, keyMessage: 'downOneItem, name: "Down", category: viewing},
+		{char: $\u0003, modifiers: 0, keyMessage: 'ChooseCurrItem, name: choose, category: viewing},
+		{char: $\u000d, modifiers: 0, keyMessage: 'ChooseCurrItem, name: choose, category: viewing},
+		{
+			char: $\u000d,
+			modifiers: 33554432,
+			keyMessage: 'SelectCurrItem,
+			name: "Check",
+			category: viewing
+		}
+	],
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	checkBoxVertOffset: 3,
+	GetActiveViewX: func() begin
+		self
+	end,
+	upOneItem: func(a1) begin
+		local l1, l2;
+		clicker();
+		if (if hiliteEntry then IsSoupEntry(hiliteEntry)) then begin
+				l1 := cursor:clone();
+				l1:Goto(hiliteEntry);
+				if (l2 := l1:prev()) then begin
+						hiliteEntry := l2;
+						if ((not hilitedIndex) or (hilitedIndex <= 0)) then begin
+								hilitedIndex := 0;
+								cursor:Goto(l2);
+								self:RedoChildren()
+							end else begin
+								hilitedIndex := (hilitedIndex - 1);
+								self:Dirty()
+							end
+					end
+			end;
+		RefreshViews()
+	end,
+	viewSetupChildrenScript: func() begin
+		local l1;
+		l1 := dataCursor;
+		hiliteCount := 0;
+		hilitedIndex := nil;
+		if (not cursor) then begin
+				hilitedIndex := nil;
+				hiliteEntry := l1:entry();
+				if centerTarget then begin
+						if (not l1:move((-((maxLines := (self:LocalBox().bottom div lineHeight)) div 2)))) then begin
+								l1:Next()
+							end
+					end
+			end;
+		inherited:viewSetupChildrenScript();
+		self:SetupAbstracts(l1:clone());
+		(self.cursor := l1)
+	end,
+	hiliter: hiliter,
+	isSelected: isSelected,
+	scrollOrigin: 0,
+	autoDeselect: nil,
+	selectIndent: 15,
+	_checkAllKeyScript: func(a1) begin
+		clicker();
+		self:checkAll();
+		(checkAllPrimed := true)
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupDoneScript_literal1_2 := same("newtOverLayout.viewSetupDoneScript.literals[1]");

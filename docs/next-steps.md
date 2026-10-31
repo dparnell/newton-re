@@ -204,6 +204,14 @@ Where the binaries-to-text work left off (`docs/rom-free/README.md`,
   the same way (`romsrc.py package unpack`); only the NIE's three are.
 - The ARM sources of the protocol parts are not run: the host has its own
   screen driver, and armcpu runs no protocol part (below, Comms).
+- **Left of the natural form** (2026-10-31, `romsrc/README.md`, "Reading
+  it"): the functions' arguments and locals are still the decompiler's
+  `a1`, `l1` - the ROM keeps no names, and the builder compiles with
+  `dbgNoVarNames`, so naming them in the source changes nothing built; a
+  number in a function's source is still a number (`BAnd(a1.viewFlags,
+  -65)`: only slots of the objects are written with `constants.tsv`); a
+  few made-up names read oddly (`japanPrefectuRename`, `viewSetupFormScript_literal6`):
+  `romsrc.py rename` fixes one, the build unchanged.
 
 ### Left by decision or out of reach
 

@@ -1,6 +1,0 @@
-@@ 0x49e88d
-func() begin
-	entryChanged := true;
-	self:EndFlush()
-end
-@@end

@@ -1,0 +1,3 @@
+// canonicalInkShape, and what only it reaches
+
+canonicalInkShape := {class: 'ink, bounds: nil, data: nil};

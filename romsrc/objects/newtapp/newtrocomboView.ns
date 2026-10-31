@@ -1,0 +1,74 @@
+// newtrocomboView, and what only it reaches
+
+newtrocomboView := {
+	viewClass: clView,
+	viewFlags: vVisible,
+	viewChildren: nil,
+	viewBounds: nil,
+	viewJustify: vjParentCenterH + vjSiblingBottomV,
+	paths: [|Array|: ],
+	format: uCardPositionAlertButton,
+	shape: nil,
+	jamSlot: nil,
+	autoSize: nil,
+	viewSetupFormScript: func() begin
+		(if target then begin
+				local l1;
+				local l2;
+				l2 := (foreach l3 in paths collect begin
+					local l7, l8, l9, l10;
+					(if StrFilled(target.(l3)) then begin
+							l1 := true;
+							target.(l3)
+						end else "")
+				end);
+				shape := [Array: ];
+				if l1 then begin
+						l7 := 0;
+						(loop begin
+								l9 := (if (l8 := StrPos(format, "\n", l7)) then (l8 - l7));
+								if StrFilled((l10 := ParamStr(Substr(format, l7, l9), l2))) then begin
+										AddArraySlot(shape, l10)
+									end;
+								if (not l8) then begin
+										break
+									end;
+								(l7 := (l8 + 1))
+							end)
+					end;
+				(if autoSize then ((viewBounds := Clone(viewBounds)).bottom := (viewBounds.top + (Length(shape) * FontHeight(viewFont)))))
+			end else (shape := [Array: ]))
+	end,
+	jamFromEntry: jamFromEntry,
+	viewSetupChildrenScript: func() begin
+		l1 := self:LocalBox();
+		l2 := FontHeight(viewFont);
+		l3 := FontAscent(viewFont);
+		local l1;
+		local l2;
+		local l3;
+		(foreach l4, l5 in shape do begin
+				shape[l4] := MakeText(l5, 0, (l3 + ((l4 - 1) * l2)), l1.right, (l3 + (l4 * l2)))
+			end)
+	end,
+	viewDrawScript: func() begin
+		local l1, l2;
+		l1 := BAnd(viewJustify, 3);
+		l2 := 'left;
+		if (l1 = 1) then begin
+				l2 := 'right
+			end else begin
+				if (l1 = 2) then begin
+						l2 := 'center
+					end else begin
+						if (l1 = 3) then begin
+								l2 := 'full
+							end
+					end
+			end;
+		(if shape then self:DrawShape(shape, {font: viewFont, penPattern: BAnd(viewFormat, 15), justification: l2}))
+	end,
+	TextScript: func() begin
+		""
+	end
+};

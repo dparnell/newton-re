@@ -1,0 +1,15 @@
+// printForm, and what only it reaches
+
+printForm := {
+	_proto: @protoPrintForm,
+	viewClass: clPrintView,
+	viewFlags: vReadOnly,
+	fields: nil,
+	printView: nil,
+	_setupChildrenNow: nil,
+	Render: func() begin
+		_setupChildrenNow := true;
+		self:?viewSetupChildrenScript();
+		PostCommand(self, 56)
+	end
+};

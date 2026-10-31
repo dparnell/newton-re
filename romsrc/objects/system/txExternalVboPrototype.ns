@@ -1,0 +1,3 @@
+// txExternalVboPrototype, and what only it reaches
+
+txExternalVboPrototype := {txText: nil, styles: nil, rulers: nil, txData: nil};

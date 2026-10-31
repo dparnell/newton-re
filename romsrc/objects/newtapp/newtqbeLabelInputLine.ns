@@ -1,0 +1,3 @@
+// newtqbeLabelInputLine, and what only it reaches
+
+newtqbeLabelInputLine := {_proto: @newtProtoLine, flavor: @newtTextFilter, access: 'queryOnly, usePopup: nil};

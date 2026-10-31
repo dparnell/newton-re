@@ -1,0 +1,88 @@
+// export109, and what only it reaches
+
+export109 := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 56},
+	viewFlags: vVisible,
+	viewFormat: vfPen(1),
+	stepChildren: [stepChildren: export109Item, export109Item_2, export109Item_3],
+	viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV,
+	viewSetupFormScript: func() begin
+		SetValue(label, 'text, Stringer([Array: $\uFC01, GetCountryEntry(country)[0].name]));
+		SetValue(Currency, 'text, GetCountryEntry(country)[0].Currency);
+		label:RestyleString()
+	end,
+	integerField: nil,
+	CalcLineLabelClickScript: func(a1) begin
+		local l1;
+		(l1 := label:GlobalBox()).right := (l1.left + StrFontWidth(label.text, label.viewFont));
+		@locationPopup:new({spots: @countrySoupName}, l1, {_parent: self, PickActionScript: func(a1) begin
+			self:ChangeCountry(a1)
+		end})
+	end,
+	ChangeCountry: func(a1) begin
+		country := a1.symbol;
+		SetValue(label, 'text, Stringer([Array: $\uFC01, GetCountryEntry(country)[0].name]));
+		SetValue(Currency, 'text, GetCountryEntry(country)[0].Currency);
+		self:ComputeExchangeRate();
+		label:RestyleString();
+		Currency:RestyleString()
+	end,
+	SetNumericValue: func(a1) begin
+		value:SetNumericValue(a1)
+	end,
+	GetNumericValue: func() begin
+		return value:GetNumericValue()
+	end,
+	rightmargin: 0,
+	decimalPlaces: 2,
+	indent: 115,
+	viewClass: clView,
+	label: nil,
+	stepAllocateContext: [|Array|: 'label, export109Item, 'Currency, export109Item_2, 'value, export109Item_3],
+	Currency: nil,
+	value: nil
+};
+
+export109Item := {
+	text: staticText,
+	viewBounds: {left: 5, top: 15, right: 110, bottom: 28},
+	viewFont: @fontSystem10Bold,
+	viewClickScript: func(a1) begin
+		(if self:TrackHilite(a1) then begin
+				self:CalcLineLabelClickScript(a1);
+				self:hilite(nil)
+			end)
+	end,
+	viewFlags: vVisible + vReadOnly + vClickable,
+	RestyleString: func() begin
+		local l1, l2;
+		l2 := ((l1 := Clone(viewBounds)).right - l1.left);
+		(text := StyledStrTruncate(text, l2, viewFont))
+	end,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'label
+};
+
+export109Item_2 := {
+	text: staticText,
+	viewBounds: {left: 22, top: 0, right: 110, bottom: 20},
+	viewFont: @fontSystem10Bold,
+	viewJustify: 8396928,
+	RestyleString: func() begin
+		local l1, l2;
+		l2 := ((l1 := Clone(viewBounds)).right - l1.left);
+		(text := StyledStrTruncate(text, l2, viewFont))
+	end,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'Currency
+};
+
+export109Item_3 := {
+	viewBounds: {left: 115, top: 10, right: 223, bottom: 45},
+	_proto: @8295,
+	preAllocatedContext: 'value
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+RestyleString_code := same("export109Item.RestyleString.instructions");

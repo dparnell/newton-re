@@ -1,0 +1,38 @@
+// plinkBeep, and what only it reaches
+
+plinkBeep := {
+	sndFrameType: 'codec,
+	codecName: tDTMFCodec,
+	dataType: 16,
+	bufferSize: 6400,
+	bufferCount: 4,
+	compressionType: 6,
+	samplingRate: 21600,
+	samples: tonescore('samples, {version: 1, algorithm: 1, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 1000,
+			fraction: 0,
+			peak: 10000,
+			delay: 0,
+			attack: 1,
+			decay: 10,
+			hold: 300,
+			release: 400,
+			sustain: 32000,
+			tail: 0
+		},
+		{
+			frequency: 1233,
+			fraction: 0,
+			peak: 10,
+			delay: 0,
+			attack: 0,
+			decay: 0,
+			hold: 10,
+			release: 0,
+			sustain: 0,
+			tail: 0
+		}
+	]),
+	userName: "Xylo"
+};

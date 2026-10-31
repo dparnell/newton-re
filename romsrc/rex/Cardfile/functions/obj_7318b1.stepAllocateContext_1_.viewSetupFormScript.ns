@@ -1,7 +1,0 @@
-@@ 0x731ddd
-func() begin
-	local l1;
-	newDictionaries := (l1 := GetLocale()).recogCompanyDictionaries;
-	inherited:?viewSetupFormScript()
-end
-@@end

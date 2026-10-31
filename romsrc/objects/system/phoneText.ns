@@ -1,0 +1,12 @@
+// phoneText, and what only it reaches
+
+phoneText := {
+	phone: phone,
+	homePhone: home,
+	workPhone: work,
+	faxPhone: fax,
+	carPhone: car,
+	beeperPhone: "Beeper",
+	mobilePhone: "Mobile",
+	otherPhone: otherCategoryName
+};

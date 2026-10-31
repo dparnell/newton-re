@@ -1,0 +1,233 @@
+// protoIoStateMachine, and what only it reaches
+
+protoIoStateMachine := {
+	DoListen: {
+		action: func() begin
+			fEndpoint:Listen(fOptionsOut, CallbackSpec);
+			'waitAsync
+		end,
+		WaitComplete: 'DoAccept,
+		OnError: 'DoDisconnect
+	},
+	DoOutput: {
+		action: func() begin
+			local l1;
+			fEndpoint:output((l1 := {dataArray: Clone(fOutgoingData)}), fOptionsOut, CallbackSpec);
+			fOutgoingData := [Array: ];
+			'waitAsync
+		end,
+		WaitComplete: 'DoAfterOutput,
+		OnError: 'DoDisconnect
+	},
+	legalModes: {InputFrame: true, OutputFrame: true, AutoInAndOut: true},
+	StdExceptionHandler: func(a1) begin
+		local l1;
+		(if (l1 := stateMachine:DoError(a1)) then stateMachine:Run(l1))
+	end,
+	GetOptions: func() begin
+		return fOptionsIn
+	end,
+	SetCallback: func(a1) begin
+		(self.fCallBack := a1)
+	end,
+	fOptionsOut: nil,
+	fStage: 0,
+	fOptionsIn: nil,
+	SetEndpoint: func(a1, a2) begin
+		(if (fEndpoint := {_proto: a1, configOptions: a2, ExceptionHandler: StdExceptionHandler, stateMachine: self})._parent then (fEndpoint._parent := fEndpoint._parent))
+	end,
+	fMode: nil,
+	_proto: @protoStateMachine,
+	occupancy: 0,
+	DoConnect: {
+		action: func() begin
+			fEndpoint:Connect(fOptionsOut, CallbackSpec);
+			'waitAsync
+		end,
+		WaitComplete: 'DoPostConnect,
+		OnError: 'DoUnbind
+	},
+	SetOptions: func(a1) begin
+		(fOptionsOut := a1)
+	end,
+	DoDispose: {
+		cancelBlocked: true,
+		action: func() begin
+			fEndpoint:Dispose();
+			'DoCompletion
+		end,
+		OnError: 'DoCompletion
+	},
+	fCallBack: func(a1, a2) begin
+		nil
+	end,
+	DoInstantiate: {
+		action: func() begin
+			fEndpoint:Instantiate(fEndpoint, fEndpoint.configOptions);
+			'DoBind
+		end,
+		OnError: 'DoCompletion
+	},
+	fEndpoint: nil,
+	AddSendData: func(a1) begin
+		if IsReadOnly(fOutgoingData) then begin
+				fOutgoingData := Clone(fOutgoingData)
+			end;
+		(if a1 then AddArraySlot(fOutgoingData, a1))
+	end,
+	DoAfterOutput: {
+		action: func() begin
+			fStage := (fStage + 1);
+			(if (if (fMode = 'AutoInAndOut) then (fStage < 2)) then 'DoInputSpec else 'DoDisconnect)
+		end,
+		OnError: 'DoDisconnect
+	},
+	fOutgoingData: [|Array|: ],
+	DoUnbind: {
+		cancelBlocked: true,
+		action: func() begin
+			fEndpoint:Unbind(CallbackSpec);
+			'waitAsync
+		end,
+		WaitComplete: 'DoDispose,
+		OnError: 'DoDispose
+	},
+	DoAfterInput: {
+		action: func() begin
+			fStage := (fStage + 1);
+			(if (if (fMode = 'AutoInAndOut) then (fStage < 2)) then 'DoOutput else 'DoDisconnect)
+		end,
+		OnError: 'DoDisconnect
+	},
+	DoExchangePostConnect: {
+		action: func() begin
+			(if (BAnd(fOptionsIn[0].data.arglist[0], 2) = 0) then 'DoInputSpec else 'DoOutput)
+		end,
+		OnError: 'DoDisconnect
+	},
+	DoCompletion: {
+		cancelBlocked: true,
+		action: compile(
+			constants: {
+				kLiteral_4974a9: "Data Exchange"
+			},
+			func() begin
+				if autoNotify then begin
+						if fException then begin
+								GetRoot():Notify(4, kLiteral_4974a9, EnsureInternal(Stringer([Array: "Data Exchange (", fException.data, ")"])))
+							end else begin
+								GetRoot():Notify(4, kLiteral_4974a9, "Data Exchange completed successfully")
+							end
+					end;
+				if fException then begin
+						call fCallBack with ('error, fException)
+					end else begin
+						call fCallBack with ('complete, nil)
+					end;
+				'exit
+			end),
+		OnError: 'exit
+	},
+	fTimeout: 200000,
+	Cancel: compile(
+		constants: {
+			kFunction_4977bd: func(a1, a2, a3) begin
+				local l1;
+				if (l1 := a1.stateMachine).tracing then begin
+						l1:Trace("Cancel completion", {result: a3, occupancy: l1.occupancy})
+					end;
+				l1.fOptionsIn := a2;
+				(if (l1.occupancy <= 1) then l1:AsyncWaitComplete((if a3 then a3 else -16005)) else (l1.occupancy := (l1.occupancy - 1)))
+			end,
+			kLiteral_4977dd: {_proto: @protoStateMachineInputSpec, completionscript: kFunction_4977bd}
+		},
+		func() begin
+			if tracing then begin
+					self:Trace(Stringer([Array: "Cancel() called.", " ", (if cancelBlocked then "(blocked!)" else "")]), {occupancy: occupancy})
+				end;
+			(if (if (occupancy > 0) then (not cancelBlocked)) then begin
+					occupancy := (occupancy + 1);
+					(try begin
+							fEndpoint:Cancel(kLiteral_4977dd)
+						end onexception |evt.ex| do begin
+							occupancy := (occupancy - 1);
+							(if (CurrentException().error <> -36003) then Rethrow())
+						end)
+				end)
+		end),
+	DoModeSelect: {
+		action: func() begin
+			fStage := 0;
+			(if (fMode = 'InputFrame) then 'DoListen else (if ((fMode = 'OutputFrame) or (fMode = 'AutoInAndOut)) then 'DoConnect))
+		end,
+		OnError: 'DoDisconnect
+	},
+	DoAccept: {
+		action: func() begin
+			fEndpoint:Accept(fOptionsOut, CallbackSpec);
+			'waitAsync
+		end,
+		WaitComplete: 'DoInputSpec,
+		OnError: 'DoDisconnect
+	},
+	DoInputSpec: {
+		action: func() begin
+			CallbackSpec.rcvOptions := fOptionsOut;
+			fEndpoint:SetInputSpec(InputSpec);
+			'waitAsync
+		end,
+		WaitComplete: 'DoPutAway,
+		OnError: 'DoDisconnect
+	},
+	DoPutAway: {
+		action: func() begin
+			fEndpoint:SetInputSpec(nil);
+			l1 := fCallBack;
+			local l1;
+			(foreach l2 in fIncomingData.dataArray do begin
+					call l1 with ('data, l2)
+				end);
+			'DoAfterInput
+		end,
+		OnError: 'DoDisconnect
+	},
+	fIncomingData: nil,
+	DoDisconnect: {
+		cancelBlocked: true,
+		action: func() begin
+			fEndpoint:Disconnect(true, CallbackSpec);
+			'waitAsync
+		end,
+		WaitComplete: 'DoUnbind,
+		OnError: 'DoUnbind
+	},
+	SetMode: func(a1) begin
+		(if legalModes.(a1) then (fMode := a1) else Throw('|evt.ex.proto|, -8608))
+	end,
+	DoPostConnect: {
+		action: func() begin
+			(if (fMode = 'AutoInAndOut) then begin
+					fEndpoint:option([Array: Clone('{label: "irco", type: option, opCode: 1024, form: template, data: {arglist: [Array: 0], typelist: [Array: 10, 1]}})], CallbackSpec);
+					'waitAsync
+				end else 'DoOutput)
+		end,
+		WaitComplete: 'DoExchangePostConnect,
+		OnError: 'DoDisconnect
+	},
+	DoBind: {
+		action: func() begin
+			fEndpoint:Bind(fOptionsOut, CallbackSpec);
+			'waitAsync
+		end,
+		WaitComplete: 'DoModeSelect,
+		OnError: 'DoDispose
+	}
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+label_value := same("protoIoStateMachine.DoPostConnect.action.literals[2].label");
+
+action_code := same("protoIoStateMachine.DoListen.action.instructions");
+
+action_code_2 := same("protoIoStateMachine.DoAfterOutput.action.instructions");

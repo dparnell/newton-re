@@ -1,0 +1,98 @@
+// protoPicker, and what only it reaches
+
+protoPicker := {
+	pickRightMargin: 5,
+	viewSetupDoneScript: func() begin
+		if Visible(scrollers) then begin
+				scrollingSleepTime := GetUserConfig('_ScrollingPopupSleepTime);
+				self:SetScrollers()
+			end;
+		self:SetPopup()
+	end,
+	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2) + vfRound(4),
+	itemChosen: nil,
+	pickTopMargin: 2,
+	Scroll: {class: #132, funcPtr: 7050430, numArgs: 1},
+	pickItemsMarkable: nil,
+	viewFlags: vReadOnly + vFloating + vClickable,
+	viewKeyDownScript: func(a1, a2) begin
+		PickViewKeyDown(a1, a2)
+	end,
+	pickMarkWidth: 10,
+	textFlags: 1024,
+	topItem: 0,
+	GetItemMark: func(a1) begin
+		local l1, l2;
+		l1 := nil;
+		l2 := nil;
+		if (ClassOf(self.pickItems[a1]) = 'frame) then begin
+				if HasSlot(self.pickItems[a1], 'item) then begin
+						l1 := true
+					end
+			end;
+		if (l1 = true) then begin
+				if HasSlot(self.pickItems[a1], 'mark) then begin
+						if ((l2 := self.pickItems[a1].mark) = $ ) then begin
+								l2 := nil
+							end
+					end
+			end;
+		l2
+	end,
+	viewOriginY: 0,
+	viewJustify: vjCenterH + vjCenterV,
+	scrollingSleepTime: 3,
+	SetScrollers: func() begin
+		local l1;
+		if ((l1 := self:GetScrollerValues())[0] < 0) then begin
+				scrollers:SetArrow('up, 'more)
+			end else begin
+				scrollers:SetArrow('up, 'normal)
+			end;
+		(if (l1[1] > 0) then scrollers:SetArrow('down, 'more) else scrollers:SetArrow('down, 'normal))
+	end,
+	GetScrollerValues: {class: #132, funcPtr: 7050428, numArgs: 0},
+	pickLeftMargin: 4,
+	pickMaxWidth: 180,
+	viewEffect: 393216,
+	pickActionScript: func(a1) begin
+		nil
+	end,
+	pickBottomMargin: 2,
+	viewClass: clPickView,
+	allowKeysThrough: nil,
+	debug: 90204,
+	viewFont: @fontSystem10Bold,
+	pickAutoClose: true,
+	SetItemMark: func(a1, a2) begin
+		local l1, l2;
+		if (a2 = nil) then begin
+				l2 := $ 
+			end else begin
+				l2 := a2
+			end;
+		if (ClassOf(self.pickItems[a1]) = 'frame) then begin
+				if HasSlot(self.pickItems[a1], 'item) then begin
+						l1 := nil
+					end else begin
+						l1 := true
+					end
+			end else begin
+				l1 := true
+			end;
+		if (l1 = true) then begin
+				actualItem := self.pickItems[a1];
+				self.pickItems[a1] := {item: actualItem, pickable: true, mark: l2}
+			end else begin
+				self.pickItems[a1].mark := l2
+			end;
+		self:SyncView();
+		self:Dirty();
+		RefreshViews();
+		nil
+	end,
+	pickTextItemHeight: 13,
+	viewChildren: [viewChildren: scrollers],
+	scrollers: nil,
+	allocateContext: [|Array|: 'scrollers, scrollers]
+};

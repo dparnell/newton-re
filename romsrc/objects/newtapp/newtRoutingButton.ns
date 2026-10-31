@@ -1,0 +1,19 @@
+// newtRoutingButton, and what only it reaches
+
+newtRoutingButton := {
+	_proto: @protoRoutingSlip,
+	viewBounds: {left: -8, top: 0, right: 9, bottom: 14},
+	keyButton: '_actionKeyButton,
+	viewSetupDoneScript: func() begin
+		if keyButton then begin
+				newtAppBase.(keyButton) := self
+			end;
+		inherited:?viewSetupDoneScript()
+	end,
+	viewQuitScript: func() begin
+		if keyButton then begin
+				RemoveSlot(newtAppBase, keyButton)
+			end;
+		inherited:?viewQuitScript()
+	end
+};

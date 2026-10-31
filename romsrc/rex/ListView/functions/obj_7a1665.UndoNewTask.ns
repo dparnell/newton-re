@@ -1,5 +1,0 @@
-@@ 0x797d05 names
-func(aDate, aTask) begin
-	(if Visible(self) then self:DeleteTask(aDate, aTask, true) else self:DeleteTask(aDate, aTask, nil))
-end
-@@end

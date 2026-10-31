@@ -1,5 +1,0 @@
-@@ 0x486a89
-func() begin
-	GetRoot().alarm:Toggle()
-end
-@@end

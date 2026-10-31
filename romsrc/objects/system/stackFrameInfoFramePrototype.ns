@@ -1,0 +1,3 @@
+// stackFrameInfoFramePrototype, and what only it reaches
+
+stackFrameInfoFramePrototype := {class: 'StackFrameInfoFrame, CodeBlock: nil, programCounter: nil, receiver: nil, contextFrame: nil};

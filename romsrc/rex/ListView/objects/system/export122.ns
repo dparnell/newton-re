@@ -1,0 +1,20 @@
+// export122, and what only it reaches
+
+export122 := {
+	viewBounds: {left: 0, top: 0, right: 26, bottom: 13},
+	icon: {
+		bits: bitmap('bits, "resources/bits/78d7c5.png", "00000000000401a901a9017a01b40190", 1),
+		bounds: {left: 0, top: 0, right: 22, bottom: 11}
+	},
+	buttonClickScript: compile(
+		options: "names",
+		func() begin
+			editor:NewRelative('aunt)
+		end),
+	debug: 1456336,
+	_proto: @protoPictureButton
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+buttonClickScript_code := same("export122.buttonClickScript.instructions");

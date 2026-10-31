@@ -1,0 +1,23 @@
+// protoInputLine, and what only it reaches
+
+protoInputLine := {
+	viewClass: clParagraphView,
+	viewBounds: nil,
+	viewFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed,
+	viewFormat: vfLinesGray,
+	viewLineSpacing: 20,
+	textFlags: 8,
+	viewJustify: 8388608,
+	viewFont: tsHWFont + tsSize(12),
+	viewTransferMode: 1,
+	styles: nil,
+	tabs: nil,
+	text: nil,
+	viewSetupFormScript: func() begin
+		(if HasPath(self:Parent(), 'viewLineSpacing) then (self.viewLineSpacing := self:Parent().viewLineSpacing))
+	end,
+	viewSetupDoneScript: func() begin
+		(if (text = nil) then (text := ""))
+	end,
+	debug: 728989
+};

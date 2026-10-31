@@ -1,5 +1,0 @@
-@@ 0x51421d
-func(a1, a2) begin
-	self:GetToDo():DuplicateTask(a1, a2)
-end
-@@end

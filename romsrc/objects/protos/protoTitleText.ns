@@ -1,0 +1,10 @@
+// protoTitleText, and what only it reaches
+
+protoTitleText := {
+	debug: 21728,
+	viewBounds: {left: 10, top: 6, right: 180, bottom: 31},
+	viewJustify: vjSiblingBottomV,
+	viewFont: tsSystem + tsSize(9),
+	name: 'titleText,
+	_proto: @protoStatusText
+};

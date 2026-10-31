@@ -1,0 +1,139 @@
+// custom, and what only it reaches
+
+custom := {
+	name: custom_2,
+	symbol: 'custom,
+	type: 'custom,
+	stepChildren: [stepChildren:
+		text,
+		editCustomLabels,
+		{
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 7},
+			viewJustify: 8396848,
+			viewFlags: vVisible,
+			viewFormat: nil,
+			viewClass: clView
+		}
+	],
+	infoFrame: {
+		checkPrefix: [|Array|: true, nil],
+		checkPaths: [|Array|:
+			'custom1,
+			'custom2,
+			'custom3,
+			'custom4,
+			'custom5,
+			'custom6,
+			'custom7,
+			'custom8,
+			'custom9,
+			'custom10
+		],
+		formatFunc: func(a1) begin
+			l3 := "";
+			if (l1 := GetRoot().cardfile:GetCustomInfo()) then begin
+					local l1;
+					local l2;
+					local l3;
+					(foreach l4, l5 in a1 do begin
+							if (if (if StrFilled(l5) then (l2 := l1.(checkPaths[l4]))) then StrFilled(l2.label)) then begin
+									if StrFilled(l3) then begin
+											l3 := Stringer([Array: l3, "\n"])
+										end;
+									l3 := Stringer([Array: l3, ParamStr("^0: ^1", [Array: l1.(checkPaths[l4]).label, l5])])
+								end
+						end)
+				end;
+			l3
+		end,
+		shapeFunc: func(a1, a2, a3, a4) begin
+			l4 := [Array: ];
+			l5 := [Array: ];
+			l6 := FontAscent(a4.font);
+			l7 := fontHeight(a4.font);
+			l8 := a2.left;
+			l9 := a2.right;
+			if (l1 := GetRoot().cardfile:GetCustomInfo()) then begin
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					local l5;
+					local l6;
+					local l7;
+					local l8;
+					local l9;
+					(foreach l10, l11 in a1 do begin
+							if (if (if StrFilled(l11) then (l2 := l1.(checkPaths[l10]))) then StrFilled(l2.label)) then begin
+									l3 := ParamStr("^0: ^1", [Array: l1.(checkPaths[l10]).label, l11]);
+									a2.bottom := (a2.top + l6);
+									AddArraySlot(l5, MakeText(l3, l8, a2.top, l9, a2.bottom));
+									AddArraySlot(l4, checkPaths[l10]);
+									a2.top := (a2.top + l7)
+								end
+						end)
+				end;
+			(if (Length(l5) > 0) then {shape: l5, misc: l4})
+		end,
+		actionFunc: func(a1, a2, a3, a4, a5, a6, a7) begin
+			local l1, l2, l3, l4;
+			l3 := fontHeight(a3.viewFont);
+			l1 := (a2 div l3);
+			a4.top := (a4.top + (l1 * l3));
+			a4.bottom := (a4.top + l3);
+			a3:DoDrawing('Hiliter, [Array: MakeShape(a4)]);
+			GetRoot().cardfile:ShowEditSlip('custom, a7[l1], nil, nil, nil);
+			true
+		end
+	},
+	protection: 'private,
+	fieldOrder: nil,
+	_proto: @8240,
+	customData: nil,
+	stepAllocateContext: [|Array|: 'customData, text, 'gotoCustomEditor, editCustomLabels],
+	gotoCustomEditor: nil
+};
+
+text := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+	viewLineSpacing: 32,
+	path: nil,
+	label: "text",
+	addPaths: nil,
+	viewSetupFormScript: func() begin
+		local l1, l2;
+		if (if (l1 := self:GetCustomInfo()) then l1.(path)) then begin
+				l2 := self:parent():LocalBox();
+				StyledStrTruncate((label := Clone(l1.(path).label)), (((l2.right - l2.left) - 25) div 2), viewFont);
+				self.memory := (if IsSymbol(path) then path else path[0])
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	viewQuitScript: func() begin
+		if target.(path) then begin
+				SetClass(target.(path), '|string.custom|);
+				self:StartFlush()
+			end;
+		inherited:?viewQuitScript()
+	end,
+	_proto: @newtLabelInputLine,
+	preAllocatedContext: 'customData
+};
+
+editCustomLabels := {
+	buttonClickScript: func() begin
+		AddDeferredSend(base, Close, '[Array: ]);
+		self:EditCustomLabels()
+	end,
+	text: "Edit Custom Labels",
+	viewBounds: {left: 0, top: 7, right: 99, bottom: 20},
+	viewJustify: 8396822,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'gotoCustomEditor
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+formatFunc_literal9 := same("custom.infoFrame.formatFunc.literals[9]");
+
+shapeFunc_literal17 := same("custom.infoFrame.shapeFunc.literals[17]");

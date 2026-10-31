@@ -1,0 +1,3 @@
+// protoParagraphView, and what only it reaches
+
+protoParagraphView := {viewClass: clParagraphView, _proto: @protoView};

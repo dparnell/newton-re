@@ -1,0 +1,5 @@
+// objects several roots reach, none alone (naturalize.py)
+
+bizCardIconBits := bitmap('bits, "resources/bits/72cec1.png", "00000000000800cc00cc00bb00e300e1", 1);
+
+groupBits := bitmap('bits, "resources/bits/732c3d.png", "000000000004017f017f00ad018f00c3", 1);

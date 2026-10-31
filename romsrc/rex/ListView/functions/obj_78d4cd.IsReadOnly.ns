@@ -1,6 +1,0 @@
-@@ 0x78d34d names
-func(anIndex) begin
-	local topic;
-	((if HasPath((topic := topics[anIndex]), 'source) then (topic.source = nil)) or (ClassOf(topic.source) = 'symbol))
-end
-@@end

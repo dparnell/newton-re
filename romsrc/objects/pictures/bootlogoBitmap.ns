@@ -1,0 +1,3 @@
+// bootlogoBitmap, and what only it reaches
+
+bootlogoBitmap := picture('picture, "resources/picture/642ae5");

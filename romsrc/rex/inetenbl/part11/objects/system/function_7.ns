@@ -1,0 +1,6 @@
+// function_7, and what only it reaches
+
+function_7 := func() begin
+	self:MDoCallbacks(fLinkClients_Grab, self:MBuildStatusFrameFromError(-16005), 'Update);
+	self:DoEvent('DisconnectLink, nil)
+end;

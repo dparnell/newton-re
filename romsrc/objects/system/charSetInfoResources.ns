@@ -1,0 +1,9 @@
+// charSetInfoResources, and what only it reaches
+
+charSetInfoResources := {
+	letterimages: letterimages,
+	DTEHeader: DTEHeader,
+	DTEMain: DTEMain,
+	PPDMain: PPDMain,
+	DTETrigrams: DTETrigrams
+};

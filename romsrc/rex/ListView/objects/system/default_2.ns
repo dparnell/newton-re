@@ -1,0 +1,51 @@
+// default_2, and what only it reaches
+
+default_2 := {
+	viewClass: clView,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewFlags: vVisible + vClickable + vStrokesAllowed + vGesturesAllowed,
+	viewJustify: vjParentFullH + vjParentFullV,
+	version: 1,
+	type: 'editor,
+	symbol: 'default,
+	name: checklist,
+	path: 'topics,
+	realData: nil,
+	viewDefHeight: 36,
+	rollScrolling: true,
+	MinimalBounds: compile(
+		options: "names",
+		func(anEntry) begin
+			local top, n, theTopic, ti;
+			if ((n := Length(anEntry.topics)) > 0) then begin
+					ti := (n - 1);
+					theTopic := anEntry.topics[ti];
+					(while (if (if (ti >= 0) then (theTopic.hideCount <> nil)) then (theTopic.hideCount > 0)) do begin
+							ti := (ti - 1);
+							(theTopic := anEntry.topics[ti])
+						end);
+					top := Max(theTopic.viewBounds.bottom, (theTopic.viewBounds.top + 16))
+				end else begin
+					top := 16
+				end;
+			SetBounds(0, 0, 240, top)
+		end),
+	ShowFoundItem: compile(
+		options: "names",
+		func(anEntry, aFinder) begin
+			editor:ShowFoundItem(anEntry, aFinder)
+		end),
+	debug: 143604,
+	stepChildren: [stepChildren: editor_2, menuButtons_2],
+	editor: nil,
+	stepallocatecontext: [|Array|: 'editor, editor_2, 'menuButtons, menuButtons_2],
+	menuButtons: nil
+};
+
+editor_2 := {_proto: @8338, listViewFlags: 2, debug: 35920, preallocatedContext: 'editor};
+
+menuButtons_2 := {
+	menuButtons: [|Array|: @8315, @8316, @8314],
+	preallocatedContext: 'menuButtons,
+	_proto: @newtFloatingBar
+};

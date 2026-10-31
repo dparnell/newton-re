@@ -1,0 +1,27 @@
+// newtFilingButton, and what only it reaches
+
+newtFilingButton := {
+	_proto: @protoFilingButton,
+	keyButton: '_filingKeyButton,
+	viewBounds: {left: -18, top: 0, right: -1, bottom: 14},
+	PickIcon: func() begin
+		(if (currentLayout = 'overview) then iconInt else inherited:PickIcon())
+	end,
+	RetargetNotify: func() begin
+		self:Update()
+	end,
+	viewSetupDoneScript: func() begin
+		self:ChainIn('retargetChain);
+		if keyButton then begin
+				newtAppBase.(keyButton) := self
+			end;
+		inherited:?viewSetupDoneScript()
+	end,
+	viewQuitScript: func() begin
+		self:ChainOut('retargetChain);
+		if keyButton then begin
+				RemoveSlot(newtAppBase, keyButton)
+			end;
+		inherited:?viewQuitScript()
+	end
+};

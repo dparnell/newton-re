@@ -1,6 +1,0 @@
-@@ 0x54a355
-func(a1) begin
-	EntryRemoveFromSoupXmit(a1, 'ExtrasDrawer);
-	self:InvalIcons()
-end
-@@end

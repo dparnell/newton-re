@@ -1,5 +1,0 @@
-@@ 0x4c07bd
-func() begin
-	self:SetBox(clusterValue)
-end
-@@end

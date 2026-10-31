@@ -1,0 +1,208 @@
+// export149, and what only it reaches
+
+export149 := {
+	viewFlags: 0,
+	viewFormat: nil,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	stepChildren: [stepChildren: export149Item],
+	viewSetupDoneScript: func() begin
+		if (not HasPath(fCompleted, 'congrats)) then begin
+				fCompleted.congrats := true;
+				fCompleted.fully := true
+			end;
+		SetKeyView(self, 0)
+	end,
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewSetupFormScript: func() begin
+		nil
+	end,
+	_proto: @protoContainerView,
+	_defaultButton: nil,
+	stepAllocateContext: [|Array|: '_defaultButton, done, 'vVisibleCover, export149Item],
+	vVisibleCover: nil
+};
+
+export149Item := {
+	viewFlags: vVisible,
+	viewFormat: vfFillWhite + vfPen(1),
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewSetupFormScript: func() begin
+		nil
+	end,
+	stepChildren: [stepChildren:
+		{
+			viewFlags: vVisible,
+			viewFormat: nil,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+			stepChildren: [stepChildren:
+				{_proto: nameItemProto},
+				{_proto: nameItemProto_2},
+				{
+					viewFlags: vVisible + vReadOnly,
+					viewFormat: vfPen(1),
+					viewLineSpacing: 20,
+					viewFont: @fontSystem12Bold,
+					viewBounds: {left: 0, top: 23, right: 240, bottom: 58},
+					text: "Congratulations",
+					viewSetupFormScript: func() begin
+						local l1;
+						l1 := $\n;
+						(self.text := Stringer([Array: self.text, " ", (if (StrLen(fFirstName) > 9) then l1 else Stringer([Array: "", fFirstName, ""]))]))
+					end,
+					viewJustify: vjCenterH + vjParentCenterH,
+					viewClass: clParagraphView
+				},
+				{
+					viewFlags: vVisible + vReadOnly,
+					viewFormat: vfFillWhite + vfPen(1),
+					viewLineSpacing: 14,
+					viewFont: @fontSystem10Bold,
+					viewBounds: {left: 0, top: 58, right: 240, bottom: 116},
+					text: "You’ve personalized your Newton device.  To change an item listed below, tap it, then follow the instructions on the screen.",
+					viewJustify: vjParentCenterH,
+					viewClass: clParagraphView
+				},
+				{
+					stepChildren: [stepChildren:
+						{
+							text: "Date and Time",
+							viewBounds: {left: 55, top: 0, right: 230, bottom: 0},
+							viewJustify: 8388804,
+							viewFont: @fontSystem10Bold,
+							_proto: @protoStaticText
+						}
+					],
+					gotoName: "DatePicker",
+					_proto: @8349,
+					icon: picture('picture, "resources/picture/7b3d91")
+				},
+				{
+					stepChildren: [stepChildren:
+						{
+							text: "Your Name",
+							viewBounds: {left: 55, top: 0, right: 230, bottom: 0},
+							viewJustify: 8388804,
+							viewFont: @fontSystem10Bold,
+							_proto: @protoStaticText
+						}
+					],
+					gotoName: "Name",
+					_proto: @8349,
+					icon: picture('picture, "resources/picture/7b3efd")
+				},
+				{
+					stepChildren: [stepChildren:
+						{
+							text: "Your Phone Numbers",
+							viewBounds: {left: 55, top: 0, right: 230, bottom: 0},
+							viewJustify: 8388804,
+							viewFont: @fontSystem10Bold,
+							_proto: @protoStaticText
+						}
+					],
+					gotoName: "Phone",
+					_proto: @8349,
+					icon: picture('picture, "resources/picture/7b409d")
+				},
+				{
+					stepChildren: [stepChildren:
+						{
+							text: "Your Address",
+							viewBounds: {left: 55, top: 0, right: 230, bottom: 0},
+							viewJustify: 8388804,
+							viewFont: @fontSystem10Bold,
+							_proto: @protoStaticText
+						}
+					],
+					gotoName: "Country",
+					_proto: @8349,
+					icon: picture('picture, "resources/picture/7b41ed")
+				},
+				{
+					stepChildren: [stepChildren:
+						{
+							text: "Your Handwriting",
+							viewBounds: {left: 55, top: 0, right: 230, bottom: 0},
+							viewJustify: 8388804,
+							viewFont: @fontSystem10Bold,
+							_proto: @protoStaticText
+						}
+					],
+					gotoName: "Handwriting",
+					_proto: @8349,
+					icon: picture('picture, "resources/picture/7b4365")
+				},
+				{
+					text: "Now you’re ready to explore and use your Newton device!",
+					viewBounds: {left: 0, top: 0, right: 240, bottom: 30},
+					viewJustify: vjCenterV + vjParentCenterH + vjParentBottomV + vjSiblingBottomV,
+					viewFont: @fontSystem10Bold,
+					_proto: @protoStaticText
+				},
+				done,
+				tour,
+				{_proto: nameItemProto_3}
+			],
+			viewJustify: vjParentFullH + vjParentFullV,
+			viewSetupFormScript: func() begin
+				nil
+			end,
+			viewClass: clView,
+			GoToTour: nil,
+			stepAllocateContext: [|Array|: 'GoToTour, tour]
+		}
+	],
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewClass: clView,
+	preAllocatedContext: 'vVisibleCover
+};
+
+done := {
+	buttonClickScript: func() begin
+		base:SetupClose();
+		true
+	end,
+	viewBounds: {top: -22, left: 0, right: -2, bottom: -6},
+	viewFont: @fontSystem9Bold,
+	viewSetupFormScript: func() begin
+		(viewBounds := Clone(viewBounds)).left := ((viewBounds.right - StrFontWidth(text, viewFont)) - 6);
+		(viewBounds.top := (viewBounds.bottom - fontHeight(viewFont)))
+	end,
+	text: "Done",
+	viewJustify: 8388774,
+	_proto: @protoTextButton,
+	preAllocatedContext: '_defaultButton
+};
+
+tour := {
+	buttonClickScript: func() begin
+		base:SetupClose();
+		GetRoot().|NewtonTour:Newton|:Open();
+		true
+	end,
+	viewBounds: {top: -22, left: 0, right: -8, bottom: -6},
+	viewFont: @fontSystem9Bold,
+	viewSetupFormScript: func() begin
+		(viewBounds := Clone(viewBounds)).left := ((viewBounds.right - StrFontWidth(text, viewFont)) - 6);
+		(viewBounds.top := (viewBounds.bottom - fontHeight(viewFont)))
+	end,
+	text: "Tour",
+	viewJustify: 8390790,
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewSetupDoneScript: func() begin
+		l1 := nil;
+		local l1;
+		(foreach l2 in GetPackages() do begin
+				if StrEqual(l2.title, "NewtonTour:Newton") then begin
+						l1 := true
+					end
+			end);
+		(if (not l1) then self:Hide())
+	end,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'GoToTour
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_6 := same("done.viewSetupFormScript.instructions");

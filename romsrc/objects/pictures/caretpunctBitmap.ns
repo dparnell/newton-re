@@ -1,0 +1,3 @@
+// caretpunctBitmap, and what only it reaches
+
+caretpunctBitmap := {bits: caretpunctBitmapBits, bounds: caretpunctBitmapBounds};

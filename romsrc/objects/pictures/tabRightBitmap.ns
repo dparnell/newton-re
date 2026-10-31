@@ -1,0 +1,6 @@
+// tabRightBitmap, and what only it reaches
+
+tabRightBitmap := {
+	bits: bitmap('bits, "resources/bits/3db009.png", "00000000000400610061006f006c0078", 1),
+	bounds: {left: 0, top: 0, right: 9, bottom: 11}
+};

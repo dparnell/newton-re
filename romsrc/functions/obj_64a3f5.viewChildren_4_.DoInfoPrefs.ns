@@ -1,5 +1,0 @@
-@@ 0x570acd
-func() begin
-	OpenPrefsTo("Auto Dock")
-end
-@@end

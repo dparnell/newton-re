@@ -1,0 +1,3 @@
+// rcInkorText, and what only it reaches
+
+rcInkorText := {allowTextRecognition: true, doInkWordRecognition: true, doRawInkRecognition: nil};

@@ -1,0 +1,6 @@
+// paperrollIndices, and what only it reaches
+
+paperrollIndices := [|Array|:
+	{structure: 'slot, path: 'timestamp, type: 'int},
+	{structure: 'slot, path: 'labels, type: 'tags}
+];

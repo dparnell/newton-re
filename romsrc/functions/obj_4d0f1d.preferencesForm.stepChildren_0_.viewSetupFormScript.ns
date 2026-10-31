@@ -1,5 +1,0 @@
-@@ 0x4cd7a1
-func() begin
-	(viewValue := wasAutoReceive)
-end
-@@end

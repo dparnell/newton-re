@@ -1,0 +1,26 @@
+// protoPopupButton, and what only it reaches
+
+protoPopupButton := {
+	_proto: @protodiamondButton,
+	viewBounds: nil,
+	viewJustify: 8389638,
+	text: nil,
+	popup: [|Array|: uCardPositionAlertButton],
+	buttonClickScript: func() begin
+		self:PopupMenu(popup, nil)
+	end,
+	viewClickScript: func(a1) begin
+		if self:TrackHilite(a1) then begin
+				self:buttonClickScript()
+			end else begin
+				self:hilite(nil)
+			end;
+		true
+	end,
+	pickActionScript: func(a1) begin
+		self:hilite(nil)
+	end,
+	pickCancelledScript: func() begin
+		self:hilite(nil)
+	end
+};

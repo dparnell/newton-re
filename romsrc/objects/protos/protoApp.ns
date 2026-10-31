@@ -1,0 +1,12 @@
+// protoApp, and what only it reaches
+
+protoApp := {
+	_proto: @protoContainerView,
+	viewBounds: nil,
+	viewFormat: vfFillWhite + vfFrameBlack + vfPen(1) + vfInset(1) + vfRound(5),
+	viewFlags: vApplication,
+	viewJustify: vjParentCenterH,
+	declareSelf: 'base,
+	viewChildren: [|Array|: protoAppItem, @protoStatus],
+	debug: 11340
+};

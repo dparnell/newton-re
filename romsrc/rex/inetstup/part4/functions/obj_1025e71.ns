@@ -1,8 +1,0 @@
-@@ 0x1025e71
-func(a1) begin
-	(if ((not a1.phonenumber) or (not StrFilled(a1.phonenumber))) then (if (if a1.altAccessNumbers then (Length(a1.altAccessNumbers) > 0)) then begin
-				a1.phonenumber := a1.altAccessNumbers[0];
-				ArrayMunger(a1.altAccessNumbers, 0, 1, nil, 0, nil)
-			end))
-end
-@@end

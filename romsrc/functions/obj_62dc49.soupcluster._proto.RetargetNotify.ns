@@ -1,5 +1,0 @@
-@@ 0x4c079d
-func() begin
-	(if (clusterValue <> currentSoupSymbol) then self:InitClusterValue(currentSoupSymbol))
-end
-@@end

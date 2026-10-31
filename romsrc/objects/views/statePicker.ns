@@ -1,0 +1,3 @@
+// statePicker, and what only it reaches
+
+statePicker := {_proto: @worldPicker, spots: @usStateSoupName, radius: 500, listLimit: 8, zoomer: 'northAmerica};

@@ -1,0 +1,18 @@
+// editor, and what only it reaches
+
+editor := {
+	_proto: @8313,
+	viewBounds: {left: 0, top: 8, right: 0, bottom: -20},
+	viewSetupDoneScript: compile(
+		options: "names",
+		func() begin
+			inherited:viewSetupDoneScript();
+			(if HasPath(target, 'makeNewTopic) then begin
+					if (Length(topics) < 1) then begin
+							AddDeferredSend(self, 'NewTopic, [Array: 1, ""])
+						end;
+					RemoveSlot(target, 'makeNewTopic)
+				end)
+		end),
+	preallocatedContext: 'editor
+};

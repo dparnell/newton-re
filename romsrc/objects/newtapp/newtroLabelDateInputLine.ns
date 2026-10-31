@@ -1,0 +1,3 @@
+// newtroLabelDateInputLine, and what only it reaches
+
+newtroLabelDateInputLine := {_proto: @newtProtoLine, flavor: @newtDateFilter, access: 'readOnly};

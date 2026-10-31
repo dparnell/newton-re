@@ -1,5 +1,0 @@
-@@ 0x5a2c05
-func(a1) begin
-	SetUserConfig('mailAlarms, a1)
-end
-@@end

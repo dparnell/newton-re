@@ -1,0 +1,5 @@
+// function_4, and what only it reaches
+
+function_4 := func() begin
+	(fAbort := true)
+end;

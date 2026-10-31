@@ -1,0 +1,23 @@
+// newtCountrySymbolFilter, and what only it reaches
+
+newtCountrySymbolFilter := {
+	_proto: @newtTextFilter,
+	recFlags: 513,
+	picker: func() begin
+		@locationPopup:New({default: GetCountryEntry(GetUserConfig('currentCountry))[0], spots: @countrySoupName, result: 'symbol}, self:GlobalLabelBounds(), self)
+	end,
+	PathToText: func() begin
+		local l1;
+		(l1 := GetCountryEntry(target.(path)))[0].name
+	end,
+	TextToPath: func(a1) begin
+		local l1;
+		(if (not StrFilled(a1)) then a1 else (l1 := GetCountryEntry(a1))[0].symbol)
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+picker_code := same("newtCountrySymbolFilter.picker.instructions");
+
+picker_literal4 := same("newtCountrySymbolFilter.picker.literals[4]");

@@ -1,0 +1,6 @@
+// controlKeyIcon, and what only it reaches
+
+controlKeyIcon := {
+	bits: bitmap('bits, "resources/bits/3c8cad.png", "00000000000400000000000000070005", 1),
+	bounds: {left: 0, top: 0, right: 5, bottom: 7}
+};

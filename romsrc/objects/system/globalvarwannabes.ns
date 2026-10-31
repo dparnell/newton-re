@@ -1,0 +1,112 @@
+// globalvarwannabes, and what only it reaches
+
+globalvarwannabes := {
+	UnionSoupRegistry: func() begin
+		Sort(Clone('[Array: {soupDef: {name: "SystemAlarmSoup", userName: "Alarms", ownerApp: alarms, ownerAppName: "Alarms", userDescr: "alarm data", indexes: [Array: {structure: slot, type: int, path: TimeInSeconds}, {structure: slot, type: int, path: Time}, {structure: slot, type: string, path: key}]}, apps: [Array: alarms]}, {soupDef: @inboxSoupDef, apps: [Array: iobox]}, {soupDef: @outboxSoupDef, apps: [Array: iobox]}, {soupDef: @extrasSoupDef, apps: [Array: ExtrasDrawer]}, {soupDef: @calendarSoupDef, apps: [Array: calendar]}, {soupDef: @repeatMeetingSoupDef, apps: [Array: calendar]}, {soupDef: @calendarNotesSoupDef, apps: [Array: calendar]}, {soupDef: @repeatNotesSoupDef, apps: [Array: calendar]}, {soupDef: @todoSoupDef, apps: [Array: calendar]}, {soupDef: @todo2SoupDef, apps: [Array: calendar]}, {soupDef: @paperrollSoupDef, apps: [Array: paperroll]}, {soupDef: @cardfileSoupDef, apps: [Array: cardfile]}]), '|str<|, 'soupDef.name)
+	end,
+	SoupChangeRegistry: compile(
+		constants: {
+			kFunction_54ac09: func(a1, a2, a3, a4) begin
+				GetRoot().ExtrasDrawer:HandleSoupChange(a1, a2, a3, a4)
+			end,
+			kLiteral_54ac3d: [Array: {soupName: "Packages", callBacks: {ExtrasDrawer: kFunction_54ac09}}]
+		},
+		func() begin
+			Sort(Clone(kLiteral_54ac3d), '|str<|, 'soupName)
+		end),
+	displayParams: displayParams,
+	CurrentRouteSlip: nil,
+	entryForms: nil,
+	StoreSlipRegistry: func() begin
+		{miscSlips: [Array: ], storeSlips: [Array: ]}
+	end,
+	ioBusy: nil,
+	ModemLocations: [|Array|:
+		{title: default_3, id: nil},
+		{},
+		{title: [|Array|: topPCCard, rightPCCard, bottomPCCard, leftPCCard], id: "slt1"},
+		{title: [|Array|: bottomPCCard, leftPCCard, topPCCard, rightPCCard], id: "slt2"},
+		{title: "Any PC Card", id: "slot"},
+		{title: "Serial Port", id: "extr"},
+		{title: "Internal Modem", id: "mdem"}
+	],
+	extras: [|Array|:
+		{
+			app: 'unsupported,
+			text: "Unsupported",
+			icon: {
+				bits: bitmap('bits, "resources/bits/5392a5.png", "000000000004009b009b00f000bb0110", 1),
+				bounds: {left: 0, top: 0, right: 32, bottom: 32}
+			},
+			viewBounds: {top: 0, left: 0, bottom: 32, right: 32},
+			buttonClickScript: func() begin
+				GetRoot():Notify(3, "Newton", "This package uses information that is no longer supported. Contact the software publisher for further information.")
+			end,
+			autoClose: nil
+		}
+	],
+	PoweringOff: nil,
+	BusySlots: func() begin
+		l1 := [Array: ];
+		local l1;
+		(for l2 := 1 to getCardInfo().totalSockets do begin
+				AddArraySlot(l1, [Array: ])
+			end);
+		l1
+	end,
+	CardSlotIcons: [|Array|:
+		{
+			bounds: {left: 0, top: 0, right: 144, bottom: 36},
+			colordata: {
+				cbits: bitmap('cbits, "resources/cbits/56cafd.png", "00000000004800000000000000240090", 4),
+				bitdepth: 4
+			}
+		},
+		{
+			bounds: {left: 0, top: 0, right: 144, bottom: 36},
+			colordata: {
+				cbits: bitmap('cbits, "resources/cbits/56d57d.png", "00000000004800000000000000240090", 4),
+				bitdepth: 4
+			}
+		}
+	],
+	cardSlotLocations: [|Array|:
+		[|Array|: topPCCard, rightPCCard, bottomPCCard, leftPCCard],
+		[|Array|: bottomPCCard, leftPCCard, topPCCard, rightPCCard]
+	]
+};
+
+displayParams := {
+	pixelDepth: 4,
+	orientation: 1,
+	scrTop: 0,
+	scrLeft: 0,
+	scrWidth: 480,
+	scrHeight: 320,
+	appAreaGlobalTop: 0,
+	appAreaGlobalLeft: 0,
+	appAreaTop: 0,
+	appAreaLeft: 0,
+	appAreaWidth: 434,
+	appAreaHeight: 320,
+	rootBounds: {left: 0, top: 0, right: 480, bottom: 320},
+	buttonBarBounds: {left: 434, top: 0, right: 480, bottom: 320},
+	buttonBarPosition: 'right,
+	buttonBarControlsPosition: 'bottom,
+	bellyButtonPosition: 'inside,
+	buttonBarVThickness: 46,
+	buttonBarHThickness: 46,
+	appAreaBounds: {left: 0, top: 0, right: 434, bottom: 320}
+};
+
+bottomPCCard := "Bottom PC Card";
+
+leftPCCard := "Left PC Card";
+
+topPCCard := "Top PC Card";
+
+rightPCCard := "Right PC Card";
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+UnionSoupRegistry_code := same("globalvarwannabes.UnionSoupRegistry.instructions");

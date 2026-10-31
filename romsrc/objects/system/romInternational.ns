@@ -1,0 +1,483 @@
+// romInternational, and what only it reaches
+
+romInternational := {
+	scripts: [|Array|: 'Roman],
+	systemScript: 0,
+	currentScript: 0,
+	locales: [|Array|: canadaFrenchProtoProto, canadaFrenchProto, canadaFrench, UK, Australia_2, Sweden_2],
+	localeTable: {
+		USA: canadaFrenchProtoProto,
+		Canada: canadaFrenchProto,
+		CanadaFr: canadaFrench,
+		UK: UK,
+		Australia: Australia_2,
+		Sweden: Sweden_2
+	},
+	systemLocaleBundle: canadaFrenchProtoProto,
+	currentlocalebundle: canadaFrenchProtoProto,
+	keyboards: [|Array|:
+		Keyboard,
+		{title: "British", mapping: hexfile('kchr, "resources/kchr/3c7ca1.txt")},
+		{title: "Swedish", mapping: keycodeMapping_2}
+	],
+	Keyboard: Keyboard
+};
+
+keycodeMapping := hexfile('kchr, "resources/kchr/3c7705.txt");
+
+keycodeMapping_2 := hexfile('kchr, "resources/kchr/3c823d.txt");
+
+dateDictionary := lexicon('AirusA, "resources/AirusA/4a1d1d.lex");
+
+numberformatProto := {
+	versionNumber: 1,
+	decimalpoint: decimalpoint,
+	groupSepStr: groupSepStr_2,
+	groupWidth: 3,
+	minusPrefix: minusPrefix,
+	minusSuffix: uCardPositionAlertButton,
+	currencyPrefix: bankrollText,
+	currencySuffix: uCardPositionAlertButton,
+	decimalLeadingZ: 0
+};
+
+pm_2 := " pm";
+
+timeformatProto := {
+	versionNumber: 1,
+	timeSepStr1: timeSepStr1,
+	timeSepStr2: timeSepStr1,
+	morningStr: am_3,
+	eveningStr: pm_2,
+	suffixStr: uCardPositionAlertButton,
+	hourLeadingZ: 1,
+	minuteLeadingZ: 0,
+	secondLeadingZ: 0,
+	timeCycle: 1,
+	midNightForm: 1,
+	noonForm: 1
+};
+
+shortDateFormatProto := {
+	versionNumber: 1,
+	shortDateOrder: 182891,
+	shortDateDelim: [|Array|:
+		uCardPositionAlertButton,
+		correctorMidBitsItem,
+		correctorMidBitsItem,
+		uCardPositionAlertButton
+	],
+	dayLeadingZ: 1,
+	monthLeadingZ: 1,
+	yearLeading: 1
+};
+
+s := "S";
+
+m := "M";
+
+t := "T";
+
+may := "May";
+
+longDateFormatProto := {
+	versionNumber: 1,
+	longDofWeek: [|Array|: "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+	abbrDofWeek: [|Array|: "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+	terseDofWeek: [|Array|: "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
+	shortDofWeek: [|Array|: s, m, t, "W", t, "F", s],
+	longMonth: [|Array|:
+		"January",
+		"February",
+		"March",
+		"April",
+		may,
+		"June",
+		"July",
+		"August",
+		"September",
+		"October",
+		"November",
+		"December"
+	],
+	abbrMonth: [|Array|: "Jan", "Feb", "Mar", "Apr", may, "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+	longDateOrder: 11702986,
+	dayLeadingZ: 1,
+	longDateDelim: [|Array|:
+		uCardPositionAlertButton,
+		longDateFormatProtoItem,
+		groupSepStr,
+		longDateFormatProtoItem,
+		uCardPositionAlertButton
+	]
+};
+
+miles := "miles";
+
+state := "State";
+
+canadaFrenchProtoProto := {
+	recogAddressDictionary: 89,
+	wordsDictionary: nil,
+	lineBreakTable: texttable('Intl, "resources/Intl/4a4209.txt"),
+	postalCodeLabel: "Zip Code",
+	longDateFormat: longDateFormatProto,
+	recogFirstNamesDictionary: 83,
+	phoneDictionary: lexicon('AirusA, "resources/AirusA/4a2b41.lex"),
+	recogRevCommonsDictionary: 81,
+	areacodeLabel: areaCode_2,
+	recogHonorificsDictionary: 85,
+	recogLastNamesDictionary: 84,
+	recogTimeDictionary: 16,
+	longOrdinals: [|Array|:
+		"Zeroth",
+		first,
+		"Second",
+		"Third",
+		"Fourth",
+		"Fifth",
+		"Sixth",
+		"Seventh",
+		"Eighth",
+		"Ninth",
+		"Tenth",
+		"Eleventh",
+		"Twelfth",
+		"Thirteenth",
+		"Fourteenth",
+		"Fifteenth",
+		"Sixteenth",
+		"Seventeenth",
+		"Eighteenth",
+		"Nineteenth",
+		"Twentieth",
+		"Twenty-first",
+		"Twenty-second",
+		"Twenty-third",
+		"Twenty-fourth",
+		"Twenty-fifth",
+		"Twenty-sixth",
+		"Twenty-seventh",
+		"Twenty-eighth",
+		"Twenty-ninth",
+		"Thirtieth",
+		"Thirty-first"
+	],
+	recogMoneyOnlyDictionary: 115,
+	phoneFilter: @usPhoneFilter,
+	dateDictionary: lexicon('AirusA, "resources/AirusA/4a0d81.lex"),
+	daylightSavingsLabel: "Daylight Saving",
+	recogCommercialDictionary: 86,
+	useWeekNumber: nil,
+	distanceLabel: miles,
+	distanceMeasure: 'miles,
+	dateFilter: @usDateFilter,
+	recogNumberDictionary: 13,
+	versionNumber: 1,
+	commonDialingPrefixes: [|Array|: none_2, "9,", "8,", "1,", "0,", "*70, (No Call Waiting)"],
+	recogCitiesDictionary: 90,
+	recogCityDictionaries: [|Array|: 24, 31],
+	shortDateFormat: shortDateFormatProto,
+	wordBreakTable: texttable('Intl, "resources/Intl/4a3fbd.txt"),
+	recogAbbrevsDictionary: 82,
+	speakerless: nil,
+	honorificLabel: "Ms./Mr.",
+	shortOrdinals: [|Array|:
+		"0th",
+		"1st",
+		"2nd",
+		"3rd",
+		"4th",
+		"5th",
+		"6th",
+		"7th",
+		"8th",
+		"9th",
+		"10th",
+		"11th",
+		"12th",
+		"13th",
+		"14th",
+		"15th",
+		"16th",
+		"17th",
+		"18th",
+		"19th",
+		"20th",
+		"21st",
+		"22nd",
+		"23rd",
+		"24th",
+		"25th",
+		"26th",
+		"27th",
+		"28th",
+		"29th",
+		"30th",
+		"31st"
+	],
+	recogPhoneDictionary: 15,
+	recogCountriesDictionary: 92,
+	distanceLabelShort: miles,
+	recogRegionsDictionary: 93,
+	title: uS,
+	defaultPaperSize: 'eightByEleven,
+	recogCompaniesDictionary: 88,
+	recogCompanyDictionaries: [|Array|: 1, 24, 26, 48, 31, 0],
+	streetLabel: "Street",
+	recogCommonsDictionary: 80,
+	recogNumbersOnlyDictionary: 116,
+	recogDateDictionary: 7,
+	recogWorldCitiesDictionary: 91,
+	commonHonorifics: [|Array|: "Ms.", "Mrs.", "Mr.", "Dr."],
+	recogSymbolsDictionary: 1,
+	postalCodeNumeric: true,
+	timeformat: timeformatProto,
+	timeDictionary: lexicon('AirusA, "resources/AirusA/4a0a81.lex"),
+	keycodeMapping: keycodeMapping,
+	rosMapDicts: nil,
+	recogRegionAbbrevsDictionary: 94,
+	recogWorldRegionsDictionary: 95,
+	timeFilter: @usTimeFilter,
+	localeSym: 'USA,
+	numberformat: numberformatProto,
+	recogHonorificDictionaries: [|Array|: 45, 31],
+	regionLabel: state,
+	recogStateDictionaries: [|Array|: 26],
+	numberDictionary: lexicon('AirusA, "resources/AirusA/4a2c55.lex"),
+	keyboardLayout: 'USA,
+	rosIgnoreDicts: [|Array|: 31, 33, 40, 0, 6, 3, 32, 16, 15, 21, 18, 2, 104],
+	recogPropersDictionary: 81,
+	firstDayOfWeek: 0,
+	cityLabel: city
+};
+
+shortDateFormat := {_proto: shortDateFormatProto, shortDateOrder: 183017};
+
+aM_2 := " AM";
+
+pM_3 := " PM";
+
+kilometers := "kilometers";
+
+postalCode := "Postal Code";
+
+canadaFrenchProto := {
+	recogAddressDictionary: 57,
+	postalCodeLabel: postalCode,
+	longDateFormat: {
+		_proto: longDateFormatProto,
+		longDateDelim: [|Array|:
+			uCardPositionAlertButton,
+			longDateFormatProtoItem,
+			groupSepStr,
+			groupSepStr,
+			uCardPositionAlertButton
+		]
+	},
+	recogFirstNamesDictionary: 51,
+	recogRevCommonsDictionary: 49,
+	recogHonorificsDictionary: 53,
+	recogLastNamesDictionary: 52,
+	recogCommercialDictionary: 54,
+	distanceLabel: kilometers,
+	distanceMeasure: 'kilometers,
+	versionNumber: 1,
+	_proto: canadaFrenchProtoProto,
+	recogCitiesDictionary: 58,
+	recogAbbrevsDictionary: 50,
+	recogCountriesDictionary: 60,
+	distanceLabelShort: km,
+	recogRegionsDictionary: 61,
+	title: canada,
+	defaultPaperSize: 'eightByEleven,
+	recogCompaniesDictionary: 56,
+	recogCommonsDictionary: 48,
+	recogWorldCitiesDictionary: 59,
+	postalCodeNumeric: nil,
+	timeformat: {_proto: timeformatProto, morningStr: aM_2, eveningStr: pM_3},
+	recogRegionAbbrevsDictionary: 62,
+	recogWorldRegionsDictionary: 63,
+	timeFilter: @canTimeFilter,
+	localeSym: 'Canada,
+	regionLabel: province,
+	recogPropersDictionary: 102,
+	cityLabel: city
+};
+
+province := "Province";
+
+canadaFrench := {
+	_proto: canadaFrenchProto,
+	title: "Canada (French)",
+	localeSym: 'CanadaFr,
+	versionNumber: 1,
+	numberformat: {
+		_proto: numberformatProto,
+		decimalpoint: groupSepStr_2,
+		groupSepStr: groupSepStr,
+		currencyPrefix: uCardPositionAlertButton,
+		currencySuffix: " $"
+	},
+	timeformat: {
+		_proto: timeformatProto,
+		morningStr: uCardPositionAlertButton,
+		eveningStr: uCardPositionAlertButton,
+		timeCycle: 0,
+		midNightForm: 0,
+		noonForm: 1
+	},
+	shortDateFormat: {
+		_proto: shortDateFormatProto,
+		shortDateOrder: 183017,
+		shortDateDelim: [|Array|: uCardPositionAlertButton, minusPrefix, minusPrefix, uCardPositionAlertButton]
+	},
+	longDateFormat: {
+		_proto: longDateFormatProto,
+		longDateOrder: 11582026,
+		longDateDelim: [|Array|:
+			uCardPositionAlertButton,
+			groupSepStr,
+			groupSepStr,
+			groupSepStr,
+			uCardPositionAlertButton
+		]
+	},
+	dateDictionary: dateDictionary,
+	numberDictionary: lexicon('AirusA, "resources/AirusA/4a2ea9.lex"),
+	recogDateDictionary: 8,
+	recogNumberDictionary: 12,
+	recogNumbersOnlyDictionary: 121,
+	recogMoneyOnlyDictionary: 120,
+	timeFilter: @frcanTimeFilter,
+	dateFilter: @ukDateFilter,
+	cityLabel: city,
+	regionLabel: province,
+	postalCodeLabel: postalCode,
+	postalCodeNumeric: nil
+};
+
+am_3 := " am";
+
+cityCode := "City Code";
+
+postCode := "Post Code";
+
+UK := {
+	recogAddressDictionary: 73,
+	postalCodeLabel: postCode,
+	recogFirstNamesDictionary: 67,
+	recogRevCommonsDictionary: 65,
+	areacodeLabel: cityCode,
+	recogHonorificsDictionary: 69,
+	recogLastNamesDictionary: 68,
+	phoneFilter: @ukPhoneFilter,
+	dateDictionary: lexicon('AirusA, "resources/AirusA/4a2501.lex"),
+	daylightSavingsLabel: summerTime,
+	recogCommercialDictionary: 70,
+	distanceLabel: kilometers,
+	distanceMeasure: 'kilometers,
+	dateFilter: @ukDateFilter,
+	versionNumber: 1,
+	_proto: canadaFrenchProtoProto,
+	recogCitiesDictionary: 74,
+	shortDateFormat: shortDateFormat,
+	recogAbbrevsDictionary: 66,
+	recogCountriesDictionary: 76,
+	distanceLabelShort: km,
+	recogRegionsDictionary: 77,
+	title: unitedKingdom,
+	defaultPaperSize: 'a4,
+	recogCompaniesDictionary: 72,
+	recogCommonsDictionary: 64,
+	recogDateDictionary: 8,
+	recogWorldCitiesDictionary: 75,
+	postalCodeNumeric: nil,
+	timeformat: {_proto: timeformatProto, morningStr: am_3, eveningStr: pm_2},
+	recogRegionAbbrevsDictionary: 78,
+	recogWorldRegionsDictionary: 79,
+	localeSym: 'UK,
+	numberformat: {_proto: numberformatProto, currencyPrefix: "£ "},
+	regionLabel: "County",
+	recogPropersDictionary: 103,
+	firstDayOfWeek: 1,
+	cityLabel: "Town"
+};
+
+summerTime := "Summer Time";
+
+Australia_2 := {
+	recogAddressDictionary: 41,
+	postalCodeLabel: postCode,
+	longDateFormat: {
+		_proto: longDateFormatProto,
+		longDateOrder: 11582026,
+		longDateDelim: [|Array|:
+			uCardPositionAlertButton,
+			longDateFormatProtoItem,
+			groupSepStr,
+			groupSepStr,
+			uCardPositionAlertButton
+		]
+	},
+	recogFirstNamesDictionary: 35,
+	recogRevCommonsDictionary: 33,
+	areacodeLabel: cityCode,
+	recogHonorificsDictionary: 37,
+	recogLastNamesDictionary: 36,
+	phoneFilter: @austPhoneFilter,
+	dateDictionary: dateDictionary,
+	daylightSavingsLabel: summerTime,
+	recogCommercialDictionary: 38,
+	dateFilter: @ukDateFilter,
+	_proto: canadaFrenchProtoProto,
+	recogCitiesDictionary: 42,
+	shortDateFormat: shortDateFormat,
+	recogAbbrevsDictionary: 34,
+	speakerless: true,
+	recogCountriesDictionary: 44,
+	recogRegionsDictionary: 45,
+	title: australia,
+	defaultPaperSize: 'a4,
+	recogCompaniesDictionary: 40,
+	recogCommonsDictionary: 32,
+	recogDateDictionary: 8,
+	recogWorldCitiesDictionary: 43,
+	postalCodeNumeric: true,
+	timeformat: {_proto: timeformatProto, morningStr: aM_2, eveningStr: pM_3},
+	recogRegionAbbrevsDictionary: 46,
+	recogWorldRegionsDictionary: 47,
+	timeFilter: @canTimeFilter,
+	localeSym: 'Australia,
+	regionLabel: state,
+	recogPropersDictionary: 101,
+	cityLabel: city
+};
+
+km := "km";
+
+Sweden_2 := {
+	_proto: canadaFrenchProtoProto,
+	title: sweden,
+	localeSym: 'Sweden,
+	versionNumber: 1,
+	recogNumberDictionary: 12,
+	recogNumbersOnlyDictionary: 121,
+	recogMoneyOnlyDictionary: 120,
+	enabledlanguage: 'Swedish,
+	sortID: 7,
+	firstDayOfWeek: 1,
+	useWeekNumber: true,
+	weekNumberType: 1,
+	keyboardLayout: 'ISO,
+	keycodeMapping: keycodeMapping_2,
+	recogSymbolsDictionary: 126,
+	distanceMeasure: 'kilometers,
+	distanceLabelShort: km,
+	distanceLabel: kilometers,
+	defaultPaperSize: 'a4
+};
+
+Keyboard := {title: uS, mapping: keycodeMapping};
+
+longDateFormatProtoItem := ", ";

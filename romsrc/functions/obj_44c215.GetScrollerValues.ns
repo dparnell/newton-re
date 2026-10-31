@@ -1,5 +1,0 @@
-@@ 0x44c0c9
-func() begin
-	[Array: viewOriginY, ((slipHeight + viewOriginY) - self:LocalBox().bottom)]
-end
-@@end

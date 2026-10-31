@@ -1,0 +1,75 @@
+// cfPhoneListFormat, and what only it reaches
+
+cfPhoneListFormat := {
+	routingType: 'Print,
+	type: 'printFormat,
+	name: phoneBook,
+	title: phoneBook,
+	symbol: 'cfPhoneListFormat,
+	usesCursors: true,
+	AddHeader: func() begin
+		local l1, l2;
+		l2 := 0;
+		l1 := target;
+		if (not currentLetter) then begin
+				if (IsRichString(l1.sorton) or (not StrFilled(l1.sorton))) then begin
+						l2 := self:StartNewLetter('none)
+					end else begin
+						l2 := self:StartNewLetter(l1.sorton[0])
+					end
+			end else begin
+				if ((currentLetter = 'none) or (StrCompare(SPrintObject(l1.sorton[0]), SPrintObject(currentLetter)) > 0)) then begin
+						l2 := self:StartNewLetter(l1.sorton[0])
+					end
+			end;
+		l2
+	end,
+	AddPrintChild: func(a1, a2, a3, a4) begin
+		local l1, l2, l3;
+		if (currentLetter = 'none) then begin
+				if (if (not IsRichString(a2.sorton)) then StrFilled(a2.sorton)) then begin
+						return nil
+					end
+			end else begin
+				if (StrCompare(SPrintObject(a2.sorton[0]), SPrintObject(currentLetter)) > 0) then begin
+						return nil
+					end
+			end;
+		l1 := {_proto: infoDisplay, target: a2, viewSetupFormScript: func() begin
+			local l1, l2;
+			(if (if target then target.class) then begin
+					if (not layouts) then begin
+							layouts := {}
+						end;
+					if (not layouts.(target.class)) then begin
+							layouts.(target.class) := call GetRoot().cardfile.kViewsToDisplay with (target)
+						end;
+					SetRemove(layouts.(target.class), 'phone);
+					SetRemove(layouts.(target.class), 'pager);
+					(if (GetVariable(self, 'newtAppBase) <> GetRoot().cardfile) then (self.viewFlags := 1))
+				end)
+		end, viewBounds: RelBounds(a3, a4, 150, 2000), viewJustify: 0, showMultipleData: true, boldTitle: true};
+		l3 := (l2 := AddStepView(self, l1)):GetBottom();
+		RemoveStepView(self, l2);
+		self.stepChildren := Clone(self.stepChildren);
+		l1.viewBounds := RelBounds(a3, a4, 150, l3);
+		AddArraySlot(stepChildren, l1);
+		AddArraySlot(stepChildren, {_proto: infoDisplay, target: a2, viewBounds: RelBounds(((a3 + 150) + 20), a4, 150, l3), viewJustify: 0, layouts: {person: '[Array: phone, pager], owner: '[Array: phone], company: '[Array: phone]}, showMultipleData: true});
+		{bottom: l3, right: 320}
+	end,
+	currentLetter: nil,
+	infoDisplay: @8242,
+	StartNewLetter: func(a1) begin
+		local l1, l2;
+		l1 := (if (a1 = 'none) then "Untitled" else SPrintObject(a1));
+		l2 := {family: 'newyork, size: 14, face: 1};
+		AddStepView(self, {_proto: @protoBorder, viewJustify: 48, viewBounds: SetBounds(0, 15, 0, 18), viewFormat: 3});
+		AddStepView(self, {_proto: @protoStaticText, viewBounds: RelBounds(5, 10, (StrFontWidth(l1, l2) + 2), fontHeight(l2)), viewFont: l2, viewFormat: 1, text: l1});
+		currentLetter := a1;
+		25
+	end,
+	protection: 'private,
+	_proto: @8238
+};
+
+phoneBook := "Phone Book";

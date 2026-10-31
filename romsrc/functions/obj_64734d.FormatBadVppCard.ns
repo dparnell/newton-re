@@ -1,5 +1,0 @@
-@@ 0x56b205
-func(a1) begin
-	ModalCardAlert('FormatBadVppCard, a1, nil)
-end
-@@end

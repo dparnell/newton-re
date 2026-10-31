@@ -1,0 +1,6 @@
+// checkBitmap, and what only it reaches
+
+checkBitmap := {
+	bits: bitmap('bits, "resources/bits/3c89b9.png", "000000000004012a012a01eb013501f4", 1),
+	bounds: {left: 0, top: 0, right: 9, bottom: 11}
+};

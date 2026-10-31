@@ -1,0 +1,25 @@
+// newtEntryRollHeader, and what only it reaches
+
+newtEntryRollHeader := {
+	viewClass: clView,
+	viewFlags: vVisible + vClickable,
+	viewBounds: newtEntryPageHeaderViewBounds,
+	viewJustify: vjParentFullH,
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	pieces: nil,
+	hasFiling: true,
+	resizable: true,
+	headerIcon: @infoBitmap,
+	headerText: nil,
+	infoBox: @newtInfoBox,
+	info: nil,
+	viewSetupFormScript: viewSetupFormScript_2,
+	GetTitle: GetTitle,
+	viewDrawScript: viewDrawScript_3,
+	InfoChanged: InfoChanged,
+	InfoClosed: InfoClosed,
+	viewQuitScript: viewQuitScript_2,
+	Popit: Popit,
+	viewClickScript: viewClickScript_4,
+	viewChildren: [viewChildren: @newtEntryViewRouting, @newtEntryViewFiling]
+};

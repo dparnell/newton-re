@@ -1,0 +1,18 @@
+// systemSymbolFont, and what only it reaches
+
+systemSymbolFont := {
+	name: symbol,
+	encoding: 0,
+	macFontID: 23,
+	psSym: 'symbolFont,
+	normal: symbol,
+	bold: symbol,
+	italic: symbol,
+	bolditalic: symbol,
+	plainData: nil,
+	boldData: nil,
+	italicData: nil,
+	boldItalicData: nil
+};
+
+symbol := "Symbol";

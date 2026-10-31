@@ -1,0 +1,3 @@
+// vStatus, and what only it reaches
+
+vStatus := {height: 56, name: 'vStatus, kids: [|Array|: @protoStatusText, @protoDefaultStatusButton]};

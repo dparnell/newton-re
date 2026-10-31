@@ -1,5 +1,0 @@
-@@ 0x7591e5
-func() begin
-	self:MyHide('sync)
-end
-@@end

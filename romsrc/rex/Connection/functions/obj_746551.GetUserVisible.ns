@@ -1,5 +1,0 @@
-@@ 0x746e5d
-func(a1) begin
-	(if ((not a1) or IsRichString(a1)) then return a1 else return GetNames(a1))
-end
-@@end

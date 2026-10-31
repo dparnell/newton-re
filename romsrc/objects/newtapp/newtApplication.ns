@@ -1,0 +1,742 @@
+// newtApplication, and what only it reaches
+
+newtApplication := {
+	prefsView: @newtPrefsView,
+	putAwayXMit: func() begin
+		(foreach l1 in allSoups do begin
+				XmitSoupChange(l1.soupName, '_routing, 'whatThe, nil)
+			end)
+	end,
+	allViewDefs: nil,
+	additionalButtons: nil,
+	NewtInstallScript: func(a1) begin
+		l2 := {appSymbol: (l1 := a1.appSymbol), NewtRemoveScript: GetVariable(a1, 'NewtRemoveScript), allDataDefs: [Array: ], allViewDefs: '{}};
+		RegFindApps(l1);
+		if a1.allDataDefs then begin
+				local l1;
+				local l2;
+				(foreach l3 in a1.allDataDefs do begin
+						RegisterDataDef(l3);
+						AddArraySlot(l2.allDataDefs, l3.symbol)
+					end)
+			end;
+		RegAppClasses(l1, l2.allDataDefs);
+		if a1.allViewDefs then begin
+				l2.allViewDefs := Clone(a1.allViewDefs);
+				(foreach l5, l6 in a1.allViewDefs do begin
+						l2.allViewDefs.(l5) := (foreach l8 in l6 collect begin
+							RegisterViewDef(l8, l5);
+							l8.symbol
+						end)
+					end)
+			end;
+		EnsureInternal(l2)
+	end,
+	RememberedOpen: func(a1) begin
+		(if a1.viewCObject then self:RememberedClose(a1) else begin
+				a1:Open();
+				if (not newtAppBase._kiddos) then begin
+						newtAppBase._kiddos := [Array: ]
+					end;
+				SetAdd(newtAppBase._kiddos, GetView(a1), true)
+			end)
+	end,
+	GetAppPreferences: func() begin
+		if (not prefsCache) then begin
+				prefsCache := GetAppPrefs(appSymbol, self:GetDefaultState())
+			end;
+		prefsCache
+	end,
+	GetTargetInfo: func(a1) begin
+		local l1;
+		l1 := {};
+		if (currentLayout = 'overview) then begin
+				l1 := layout:GetTargetInfo(a1)
+			end else begin
+				if (a1 = 'Filing) then begin
+						l1.targetView := targetApp
+					end;
+				if (not l1.targetView) then begin
+						l1.targetView := targetView
+					end;
+				l1.target := target;
+				l1.targetStore := (if (if target then IsSoupEntry(target)) then EntryStore(target))
+			end;
+		l1
+	end,
+	AdoptSoupEntryFromStationery: func(a1, a2, a3, a4) begin
+		local l1, l2, l3;
+		l1 := nil;
+		if (a2 = nil) then begin
+				a2 := a1.class
+			end;
+		if a2 then begin
+				l2 := self:GetAppPreferences().internalStore;
+				if (not a3) then begin
+						if l2 then begin
+								a3 := GetStores()[0]
+							end else begin
+								a3 := GetDefaultStore()
+							end
+					end;
+				if ((not a3) or a3:IsReadOnly()) then begin
+						self:Notify(3, title, "New entries cannot be added to a read-only store.")
+					end else begin
+						if (a4 = nil) then begin
+								if layout then begin
+										a4 := layout.masterSoup
+									end else begin
+										a4 := allLayouts.(currentLayout).mastersoupSlot
+									end
+							end;
+						if (ClassOf(a4) = 'symbol) then begin
+								if (l3 := allSoups.(a4)) then begin
+										if (l3.theSoup = nil) then begin
+												l3 := Clone(l3);
+												l3:MakeSoup(appSymbol)
+											end;
+										a4 := l3
+									end else begin
+										a4 := nil
+									end
+							end;
+						if (a4 = nil) then begin
+								Throw('|evt.ex.msg|, "Soup not found")
+							end;
+						l1 := a4:AdoptEntry(a1, a2);
+						if (if layout then (a4 = layout.masterSoup)) then begin
+								self:AddEntryDirect(l1, a3)
+							end else begin
+								a4:AddEntry(l1, a3)
+							end
+					end
+			end else begin
+				self:Notify(3, title, "Couldn't find stationery.")
+			end;
+		l1
+	end,
+	superSymbol: 'notes,
+	viewSetupDoneScript: func() begin
+		(if allSoups then (foreach l1 in allSoups do begin
+					if l1.soupName then begin
+							RegSoupChange(l1.soupName, appSymbol, func(a1, a2, a3, a4) begin
+								self:NewtSoupChangedNotify(a1, a2, a3, a4)
+							end)
+						end
+				end))
+	end,
+	RememberedClose: func(a1) begin
+		if newtAppBase._kiddos then begin
+				SetRemove(newtAppBase._kiddos, a1)
+			end;
+		a1:Close()
+	end,
+	scrollingEndBehavior: 'beepAndWrap,
+	previousLayout: 'default,
+	_filingKeyScript: func(a1) begin
+		newtAppBase:CommonKeyScript('_filingKeyButton)
+	end,
+	_titleKeyScript: func(a1) begin
+		local l1;
+		(if (l1 := newtAppBase._titleKeyButton) then (if (not l1.info) then begin
+					clicker();
+					l1:Popit(true)
+				end))
+	end,
+	viewQuitScript: func() begin
+		self:RememberedCloseAll();
+		self:SaveAppState();
+		ClearUndoStacks();
+		prefsCache := nil;
+		layout := nil;
+		filterBar := nil;
+		viewChildren := nil;
+		saveWhatView := nil;
+		saveWhat := nil;
+		if allKeyCommands then begin
+				(foreach l1 in allKeyCommands do begin
+						RemoveSlot(newtAppBase, l1[0].keyMessage)
+					end)
+			end;
+		RemoveSlot(self, '_keyCommands);
+		UnRegFolderChanged(appSymbol);
+		if allSoups then begin
+				(foreach l3 in allSoups do begin
+						l3:DoneWithSoup(appSymbol)
+					end);
+				RemoveSlot(self, 'allSoups)
+			end;
+		'postQuit
+	end,
+	AppAll: allItems,
+	RememberedCloseAll: func() begin
+		if newtAppBase._kiddos then begin
+				(foreach l1 in newtAppBase._kiddos do begin
+						if l1 then begin
+								l1:Close()
+							end
+					end)
+			end;
+		(newtAppBase._kiddos := nil)
+	end,
+	_newKeyScript: func(a1) begin
+		newtAppBase:CommonKeyScript('_newKeyButton)
+	end,
+	scrollingUpBehavior: 'bottom,
+	target: nil,
+	_actionKeyScript: func(a1) begin
+		newtAppBase:CommonKeyScript('_actionKeyButton)
+	end,
+	allKeyCommands: [|Array|: ],
+	filterBar: nil,
+	viewChildren: nil,
+	newtDeleteScript: func(a1, a2) begin
+		saveWhat := a1;
+		saveWhatView := a2;
+		(if (not a1) then self:Notify(3, title, "There is nothing to delete.") else (if (currentLayout = 'overview) then self:Confirm(title, "Delete all selected items? (Can\u2019\ut Undo)", self, 'newtDeleteActionConfirmCB) else self:newtDeleteActionHelper()))
+	end,
+	FolderChanged: func(a1, a2, a3) begin
+		local l1;
+		if ((if (labelsFilter = a2) then a2) or (if (not a3) then (not labelsFilter))) then begin
+				labelsFilter := a3;
+				l1 := true
+			end;
+		self:FolderChangedX(a1, a2, a3);
+		(if l1 then begin
+				if filterBar then begin
+						filterBar:UpdateFilter(a2, a3)
+					end;
+				self:FilterChanged()
+			end)
+	end,
+	targetApp: nil,
+	viewFlags: vApplication + vClickable,
+	SaveAppState: func() begin
+		l1 := self:GetAppPreferences();
+		local l1;
+		(foreach l2, l3 in allSoups do begin
+				self:SaveFolderPosition(l2, l3, labelsFilter)
+			end);
+		if (storesFilter exists) then begin
+				l1.storesFilter := (if storesFilter then storesFilter:GetSignature())
+			end;
+		l1.autoPutawayEnabled := autoPutawayEnabled;
+		l1.labelsFilter := labelsFilter;
+		l1.currentLayout := currentLayout;
+		l1.previousLayout := previousLayout;
+		l1._recogSettings := _recogSettings;
+		l1.preferredViewDef := preferredViewDef;
+		EntryChange(l1)
+	end,
+	_showKeyButton: nil,
+	doCardRouting: true,
+	saveWhatView: nil,
+	CommonKeyScript: func(a1) begin
+		local l1;
+		(if (l1 := newtAppBase.(a1)) then PressButton(l1))
+	end,
+	newtDeleteActionConfirmCB: func(a1) begin
+		(if a1 then begin
+				self:newtDeleteActionHelper();
+				ClearUndoStacks()
+			end)
+	end,
+	preferredViewDef: 'default,
+	GetTargetView: func() begin
+		targetView
+	end,
+	DateFind: func(a1, a2, a3, a4, a5) begin
+		if (not dateFindSlot) then begin
+				return nil
+			end;
+		a5:SetStatus(Stringer([Array: "Searching in", " ", title, $\u2026]));
+		if layout then begin
+				layout:FlushData()
+			end;
+		l3 := 0;
+		l4 := 536870911;
+		if (a2 = 'dateBefore) then begin
+				l4 := a1
+			end else begin
+				if (a2 = 'dateOn) then begin
+						l3 := a1;
+						l4 := (a1 + 1440)
+					end else begin
+						l3 := (a1 + 1)
+					end
+			end;
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		(foreach l5 in allSoups do begin
+				local l7, l8;
+				if (l7 := GetUnionSoup(l5.soupName)) then begin
+						if (l2 := l7:Query({type: 'index, indexPath: dateFindSlot, beginKey: l3, endKey: l4})):entry() then begin
+								l8 := {_proto: GetVariable(self, 'soupFinder), owner: self, findType: a2, findWords: a1, isReset: true, zeroOneOrMoreResult: nil, cursor: l2};
+								if l5.userName then begin
+										l8.title := l5.userName
+									end;
+								AddArraySlot(a3, l8)
+							end
+					end
+			end)
+	end,
+	appObject: [|Array|: item_2, items_2],
+	dateFindSlot: nil,
+	filingChanged: func() begin
+		(if layout then layout:FilingChangedX())
+	end,
+	_proto: @protoDragger,
+	SaveFolderPosition: func(a1, a2, a3) begin
+		local l1, l2, l3;
+		if (not (l2 := (l1 := self:GetAppPreferences()).folderPositions)) then begin
+				l2 := (l1.folderPositions := {})
+			end;
+		if (not HasSlot(l2, a1)) then begin
+				l2.(a1) := {}
+			end;
+		if (not HasSlot(l2, 'environs)) then begin
+				l2.environs := {}
+			end;
+		if (not HasSlot(l2.environs, a1)) then begin
+				l2.environs.(a1) := {}
+			end;
+		l3 := (if a3 then a3 else 'unfiled);
+		l2.(a1).(l3) := a2:GetCursorPosition();
+		l2.environs.(a1).(l3) := a2:GetCursorKey();
+		AddProcrastinatedCall('_EntryChange, functions.EntryChange, [Array: l1], 0)
+	end,
+	layout: nil,
+	_recogSettings: nil,
+	FilterChanged: func() begin
+		(foreach l1, l2 in allSoups do begin
+				self:SaveFolderPosition(l1, l2, l2.soupFilter);
+				l2.soupFilter := labelsFilter;
+				if (storesFilter exists) then begin
+						if (if storesFilter then (not storesFilter:IsValid())) then begin
+								storesFilter := nil
+							end;
+						l2.storesFilter := storesFilter
+					end;
+				l2:SetupCursor();
+				self:RestoreFolderPosition(l1, l2, labelsFilter)
+			end);
+		layout:FilterChanged()
+	end,
+	targetDataDef: nil,
+	labelsFilter: nil,
+	GetAppState: func() begin
+		if HasPath((l1 := self:GetAppPreferences()), 'storesFilter) then begin
+				newtAppBase.storesFilter := nil;
+				local l1;
+				(foreach l2 in GetStores() do begin
+						if (l2:GetSignature() = l1.storesFilter) then begin
+								newtAppBase.storesFilter := l2;
+								break
+							end
+					end)
+			end;
+		labelsFilter := l1.labelsFilter;
+		autoPutawayEnabled := l1.autoPutawayEnabled;
+		currentLayout := l1.currentLayout;
+		previousLayout := l1.previousLayout;
+		_recogSettings := l1._recogSettings;
+		if l1.preferredViewDef then begin
+				preferredViewDef := l1.preferredViewDef
+			end;
+		l1
+	end,
+	_filingKeyButton: nil,
+	AutoPutaway: func(a1) begin
+		(if autoPutawayEnabled then self:PutAwayScript(a1))
+	end,
+	prefsCache: nil,
+	_titleKeyButton: nil,
+	AddEntryDirect: func(a1, a2) begin
+		local l1;
+		(if (currentLayout = 'overview) then newtAppBase else layout):Effect(178391040, nil, @flip, '_HackAddEntryDirect, [Array: a1, a2]);
+		(if (if (l1 := GetUserConfig('blessedapp)) then (GetRoot().(l1) = newtAppBase)) then AddProcrastinatedSend('SaveAppState, self, 'SaveAppState, [Array: ], 10000))
+	end,
+	currentLayout: 'default,
+	newtAppBase: nil,
+	ShowFoundItem: func(a1, a2) begin
+		if (a1.labels <> labelsFilter) then begin
+				l1 := labelsFilter;
+				labelsFilter := '_all;
+				local l1;
+				(foreach l2, l3 in allSoups do begin
+						l3.soupFilter := '_all;
+						if (storesFilter exists) then begin
+								l3.storesFilter := nil
+							end;
+						l3:SetupCursor()
+					end);
+				layout:FilterChanged();
+				if filterBar then begin
+						filterBar:UpdateFilter(l1, '_all)
+					end
+			end;
+		layout:ShowFoundItem(a1, a2)
+	end,
+	allSoups: nil,
+	viewScrollDownScript: func() begin
+		local l1;
+		layout:viewScrollDownScript();
+		(if (if (l1 := GetUserConfig('blessedapp)) then (GetRoot().(l1) = newtAppBase)) then AddProcrastinatedSend('SaveAppState, self, 'SaveAppState, [Array: ], 10000))
+	end,
+	viewOverviewScript: func() begin
+		self:ShowLayout((if (currentLayout = 'overview) then nil else 'overview))
+	end,
+	_newKeyButton: nil,
+	GetActiveView: func() begin
+		layout:?GetActiveViewX()
+	end,
+	appSymbol: nil,
+	appEmptyStr: nil,
+	title: uCardPositionAlertButton,
+	_HackAddEntryDirect: func(a1, a2) begin
+		layout:NewEntry(a1, true, a2)
+	end,
+	find: func(a1, a2, a3, a4) begin
+		(foreach l1 in allSoups do begin
+				local l3;
+				l3 := Length(a2);
+				self:StandardFind(a1, l1.soupName, a2, a4, l1.soupQuery.indexPath);
+				if (if l1.userName then (l3 < Length(a2))) then begin
+						a2[l3].title := l1.userName
+					end
+			end)
+	end,
+	saveWhat: nil,
+	newtDuplicateScript: func(a1, a2) begin
+		(if a1 then layout:Effect(178324480, nil, @copier, 'DuplicateEntry, [Array: a1]) else self:Notify(3, title, "There is nothing to duplicate."))
+	end,
+	allDataDefs: nil,
+	FolderChangedX: func(a1, oldFolder, a3) begin
+		if (not GetStores()[0]:HasSoup(a1)) then begin
+				return nil
+			end;
+		(if (l5 := GetUnionSoup(a1)) then begin
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				local l5;
+				(foreach l6 in l5:GetSoupList() do begin
+						local l8;
+						if (l8 := l6:GetStore()):IsReadOnly() then begin
+								self:Notify(3, title, ParamStr("Items from the card \u201C\u^0\u201D\u cannot be moved because it is locked.", [Array: l8:GetName()]))
+							end else begin
+								try begin
+										if l6:HasTags() then begin
+												if a3 then begin
+														if oldFolder then begin
+																l6:ModifyTag(oldFolder, a3)
+															end else begin
+																l6:AddTags(a3)
+															end
+													end else begin
+														if oldFolder then begin
+																l6:RemoveTags([Array: oldFolder])
+															end
+													end
+											end else begin
+												l3 := (l1 := l6:Query({type: 'index, validTest: func(a1) begin
+													(a1.labels = oldFolder)
+												end})):entry();
+												(while l3 do begin
+														l3.labels := a3;
+														l4 := l1:Next();
+														EntryChange(l3);
+														(l3 := l4)
+													end)
+											end
+									end onexception |evt.ex| do begin
+										l2 := true
+									end
+							end
+					end);
+				(if l2 then self:Notify(3, title, "Some items could not be moved to the new folder."))
+			end)
+	end,
+	viewPostQuitScript: func() begin
+		(self.target := (self.targetView := nil))
+	end,
+	aboutInfo: {
+		tagline: uCardPositionAlertButton,
+		version: "NewtApp 1.0v1",
+		Date: uCardPositionAlertButton,
+		copyright: "©1993-1994 Apple Computer.  All rights reserved.",
+		trademarks: uCardPositionAlertButton,
+		credits: nil,
+		extraInfo: func(a1) begin
+			nil
+		end
+	},
+	GetTarget: func() begin
+		target
+	end,
+	AppEmpty: func() begin
+		local l1;
+		l1 := self:LocalBox();
+		(appEmptyStr := [Array: '{font: 1058816, justification: center}, MakeText(ParamStr("There are no ^0 in this folder.", [Array: appObject[1]]), l1.left, l1.top, l1.right, (l1.top + 40))])
+	end,
+	dontStartWithFolder: nil,
+	viewScrollUpScript: func() begin
+		local l1;
+		layout:viewScrollUpScript();
+		(if (if (l1 := GetUserConfig('blessedapp)) then (GetRoot().(l1) = newtAppBase)) then AddProcrastinatedSend('SaveAppState, self, 'SaveAppState, [Array: ], 10000))
+	end,
+	AddEntry: func(a1) begin
+		self:AdoptEntryFromStationery(a1, nil, nil)
+	end,
+	ChainOut: func(a1) begin
+		SetRemove(newtAppBase.(a1), self)
+	end,
+	viewSetupFormScript: func() begin
+		if self.viewBounds then begin
+				l1 := self:GlobalBox();
+				l2 := GetAppParams().appAreaBounds;
+				if (if (if (if (if (l1.left = l2.left) then (l1.top = l2.top)) then (l1.right = l2.right)) then (l1.bottom = l2.bottom)) then self.viewFormat) then begin
+						self.viewFormat := BAnd(self.viewFormat, bnot(786672))
+					end
+			end;
+		newtAppBase := (targetApp := self);
+		l3 := self:GetAppState();
+		if (if (if (storesFilter exists) then storesFilter) then (not storesFilter:IsValid())) then begin
+				storesFilter := nil
+			end;
+		if allSoups then begin
+				local l1;
+				local l2;
+				local l3;
+				(foreach l4, l5 in (allSoups := Clone(allSoups)) do begin
+						l7 := (allSoups.(l4) := Clone(l5));
+						l7:MakeSoup(appSymbol);
+						l7.soupFilter := labelsFilter;
+						if (storesFilter exists) then begin
+								l7.storesFilter := storesFilter
+							end;
+						l7:SetupCursor();
+						self:RestoreFolderPosition(l4, l7, labelsFilter)
+					end)
+			end;
+		RegFolderChanged(appSymbol, func(a1, a2) begin
+			(foreach l1 in allSoups do begin
+					self:FolderChanged(l1.soupName, a1, a2)
+				end)
+		end);
+		if allKeyCommands then begin
+				local l7;
+				(foreach l8 in allKeyCommands do begin
+						newtAppBase.(l8[0].keyMessage) := l8[1];
+						newtAppBase:AddKeyCommand(l8[0])
+					end)
+			end;
+		SetKeyView(self, 0)
+	end,
+	ChainIn: func(a1) begin
+		if (not newtAppBase.(a1)) then begin
+				newtAppBase.(a1) := [Array: ]
+			end;
+		SetAdd(newtAppBase.(a1), self, true)
+	end,
+	routeScripts: [|Array|:
+		{
+			GetTitle: func(a1) begin
+				(if a1 then "Duplicate")
+			end,
+			icon: @routeDuplicateIcon,
+			routeScript: 'newtDuplicateScript
+		},
+		{
+			GetTitle: func(a1) begin
+				(if a1 then "Delete")
+			end,
+			icon: @routetrashBitmap,
+			routeScript: 'newtDeleteScript
+		}
+	],
+	statusBarSlot: nil,
+	ChildVisibleWithinApp: func(a1) begin
+		local l1, l2;
+		l1 := newtAppBase:GlobalBox();
+		l2 := a1:GlobalBox();
+		(if (if (if (if a1.viewCObject then (l1.left <= l2.left)) then (l1.right >= l2.right)) then (l1.top <= l2.top)) then (l1.bottom >= l2.bottom))
+	end,
+	NewtSoupChangedNotify: func(a1, a2, a3, a4) begin
+		if (if (a3 = 'soupCreated) then (a4:GetStore() = GetStores()[0])) then begin
+				return nil
+			end;
+		(if ((a3 = 'SoupLeaves) or (a3 = 'SoupEnters)) then begin
+				(foreach l1, l2 in allSoups do begin
+						self:RestoreFolderPosition(l1, l2, labelsFilter)
+					end);
+				self:FilterChanged()
+			end else (if (if layout then (a2 <> appSymbol)) then AddProcrastinatedSend(Intern(Stringer([Array: appSymbol, "NewtSoupChangeForApp"])), self, 'FilterChanged, '[Array: ], 0)))
+	end,
+	AddEntryFromStationery: func(a1) begin
+		self:AdoptEntryFromStationery(nil, a1, nil)
+	end,
+	ShowLayout: func(a1) begin
+		local l1;
+		if (not a1) then begin
+				a1 := previousLayout
+			end;
+		if (currentLayout <> 'overview) then begin
+				previousLayout := currentLayout
+			end;
+		currentLayout := a1;
+		AddDeferredSend(self, 'RedoChildren, nil);
+		(if (if (l1 := GetUserConfig('blessedapp)) then (GetRoot().(l1) = newtAppBase)) then AddProcrastinatedSend('SaveAppState, self, 'SaveAppState, [Array: ], 10000))
+	end,
+	SetupPrintingCursor: func(fields) begin
+		local l1, l2;
+		l1 := layout.dataCursor:clone();
+		if (l2 := layout.masterSoup.theSoup:Query({type: 'index, indexPath: '_uniqueID, startKey: fields.pageID, validTest: func(a1) begin
+			(if (fields.pageID = a1._uniqueID) then (fields.storeID = EntryStore(a1):GetSignature()))
+		end}):entry()) then begin
+				l1:Goto(l2)
+			end;
+		l1
+	end,
+	viewEffect: 236577,
+	targetViewDef: nil,
+	FileThis: func(a1, a2, a3, a4, a5) begin
+		if IsSoupEntry(a1) then begin
+				if a2 then begin
+						a1.labels := a3;
+						EntryChange(a1);
+						l1 := true
+					end;
+				if a4 then begin
+						if EntryStore(a1):IsReadOnly() then begin
+								if (if layout then layout.viewCObject) then begin
+										layout:Effect(178324480, nil, @copier, 'DuplicateEntryGuts, [Array: a1, a5])
+									end else begin
+										if allSoups then begin
+												local l1;
+												(foreach l2 in allSoups do begin
+														local l4, l5, l6;
+														l4 := Clone(l2);
+														l5 := EntrySoup(a1);
+														l4:MakeSoup(appSymbol);
+														if LSearch((l6 := l4.theSoup:GetSoupList()), l5, 0, '|=|, nil) then begin
+																l4:DuplicateEntry(a1, a5);
+																l4:DoneWithSoup(appSymbol);
+																break
+															end;
+														l4:DoneWithSoup(appSymbol)
+													end)
+											end
+									end
+							end else begin
+								self:MoveTarget(a1, a5)
+							end
+					end
+			end else begin
+				if (if layout then layout.FileThis) then begin
+						layout:FileThis(a1, a2, a3, a4, a5);
+						l1 := true
+					end else begin
+						self:Notify(3, title, "There is nothing to file.")
+					end
+			end;
+		(if l1 then self:filingChanged())
+	end,
+	_keyCommands: [|Array|:
+		{char: $e, modifiers: 33554432, keyMessage: '_titleKeyScript, name: title_2, category: creating},
+		{char: $t, modifiers: 100663296, keyMessage: '_folderKeyScript, name: folder, category: filing},
+		{char: $r, modifiers: 33554432, keyMessage: '_actionKeyScript, name: routing, category: routing},
+		{char: $f, modifiers: 100663296, keyMessage: '_filingKeyScript, name: file, category: filing},
+		{char: $s, modifiers: 33554432, keyMessage: '_showKeyScript, name: show, category: viewing},
+		{char: $n, modifiers: 33554432, keyMessage: '_newKeyScript, name: new_2, category: creating}
+	],
+	allLayouts: {},
+	RestoreFolderPosition: func(a1, a2, a3) begin
+		local l1, l2, l3, l4;
+		if ((not (l2 := (l1 := self:GetAppPreferences()).folderPositions)) or (not HasSlot(l2, a1))) then begin
+				return nil
+			end;
+		l3 := (if a3 then a3 else 'unfiled);
+		(if (l4 := l2.(a1).(l3)) then (if (if (not a2:GotoAlias(l4)) then l2.environs) then (if (l4 := l2.environs.(a1).(l3)) then a2:GotoCursorKey(l4))))
+	end,
+	appCompatibleFinder: {
+		ShowFakeEntry: func(a1) begin
+			if (owner.viewCObject = nil) then begin
+					owner:?viewPreOpenScript(items[a1]);
+					owner:Open()
+				end;
+			currentItem := a1;
+			owner:ShowFoundItem(items[a1].entry, owner)
+		end,
+		_proto: @compatibleFinder
+	},
+	PutAwayScript: func(a1) begin
+		local l1, l2;
+		try begin
+				(l1 := a1.body).labels := nil;
+				l1 := self:AddEntry(l1);
+				AddProcrastinatedSend(Intern(Stringer([Array: "_putaway_", appSymbol])), self, 'putAwayXMit, [Array: ], 0)
+			end onexception |evt.ex| do begin
+				return nil
+			end;
+		l1
+	end,
+	targetView: nil,
+	newtDeleteActionHelper: func() begin
+		local l1, l2;
+		l1 := saveWhat;
+		l2 := saveWhatView;
+		saveWhat := nil;
+		saveWhatView := nil;
+		(if l1 then begin
+				l2:EndFlush();
+				l2:delete('KillEntry, [Array: l1])
+			end)
+	end,
+	GetDefaultState: func() begin
+		{tag: SPrintObject(appSymbol), labelsFilter: nil, position: nil, currentLayout: currentLayout, previousLayout: previousLayout, _recogSettings: nil, preferredViewDef: preferredViewDef, autoPutawayEnabled: autoPutawayEnabled}
+	end,
+	autoPutawayEnabled: nil,
+	aboutView: @newtAboutView,
+	viewSetupChildrenScript: func() begin
+		(viewChildren := [Array: allLayouts.(currentLayout)])
+	end,
+	NewtRemoveScript: func(a1) begin
+		l1 := a1.appSymbol;
+		local l1;
+		(foreach l2 in a1.allDataDefs do begin
+				UnregisterDataDef(l2)
+			end);
+		(foreach l4, l5 in a1.allViewDefs do begin
+				(foreach l7 in l5 do begin
+						UnregisterViewDef(l7, l4)
+					end)
+			end);
+		UnRegAppClasses(l1);
+		UnRegFindApps(l1)
+	end,
+	retargetChain: nil,
+	SoupChanged: func(a1) begin
+		(if layout then layout:FilterChanged())
+	end,
+	AdoptEntryFromStationery: func(a1, a2, a3) begin
+		self:AdoptSoupEntryFromStationery(a1, a2, a3, nil)
+	end,
+	_showKeyScript: func(a1) begin
+		newtAppBase:CommonKeyScript('_showKeyButton)
+	end,
+	_folderKeyScript: func(a1) begin
+		(if newtAppBase.filterBar then PressButton(newtAppBase.filterBar.showBarText))
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewScrollDownScript_code := same("newtApplication.viewScrollDownScript.instructions");
+
+_filingKeyScript_code := same("newtApplication._filingKeyScript.instructions");
+
+viewSetupDoneScript_code_5 := same("newtApplication.viewSetupDoneScript.literals[3].instructions");

@@ -1,0 +1,3 @@
+// protoBorder, and what only it reaches
+
+protoBorder := {viewClass: clView, viewFlags: vVisible, viewBounds: nil, viewFormat: vfFillBlack, debug: 90824};

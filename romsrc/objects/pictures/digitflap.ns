@@ -1,0 +1,6 @@
+// digitflap, and what only it reaches
+
+digitflap := {
+	bits: bitmap('bits, "resources/bits/3da6ad.png", "00000000000400de00de005100fa0067", 1),
+	bounds: {left: 0, top: 0, right: 22, bottom: 28}
+};

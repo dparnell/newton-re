@@ -1,5 +1,0 @@
-@@ 0x429361
-func() begin
-	base:hilite(nil)
-end
-@@end

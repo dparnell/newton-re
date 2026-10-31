@@ -1,0 +1,3 @@
+// kCardAlertBounds, and what only it reaches
+
+kCardAlertBounds := {left: 0, top: 0, right: 192, bottom: 80};

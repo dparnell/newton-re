@@ -1,0 +1,9 @@
+// export64, and what only it reaches
+
+export64 := {
+	speedOption: 38400,
+	openOptions: func() begin
+		return [Array: {label: "mnps", type: 'service, opCode: 512}, {label: "siop", type: 'option, opCode: 256, data: {arglist: [Array: 0, 0, 8, speedOption], typeList: [Array: 10, 1, 2, 1, 1]}}, {label: "mnpn", type: 'option, opCode: 256, data: {arglist: [Array: 57600], typeList: [Array: 10, 1]}}, {label: "mnpc", type: 'option, opCode: 512, data: {arglist: [Array: 11], typeList: [Array: 10, 1]}}, {label: "mnpa", type: 'option, opCode: 512, data: {arglist: [Array: true], typeList: [Array: 10, 5]}}, {label: "eter", type: 'option, opCode: 256, data: {arglist: [Array: speedOption], typeList: [Array: 10, 1]}}]
+	end,
+	useEOP: nil
+};

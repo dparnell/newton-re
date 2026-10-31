@@ -1,0 +1,52 @@
+// protoTextExpando, and what only it reaches
+
+protoTextExpando := {
+	_proto: @protoLabelInputLine,
+	viewFormat: vfFillWhite + vfInset(3),
+	framer: 143664,
+	TextSetup: func() begin
+		if (entryFont exists) then begin
+				entryLine.viewFont := entryFont
+			end;
+		keys := nil;
+		if self.Keyboard then begin
+				keys := GetVariable(self, self.Keyboard)
+			end;
+		AddDeferredAction(ExpandKeys, [Array: self.entryLine]);
+		labelLine.viewFlags := (if labelCommands then 515 else 3);
+		labelLine.viewBounds := RelBounds(0, 0, indent, height);
+		entryLine.viewBounds.top := (entryLine.viewBounds.top + height);
+		entryLine.viewBounds.left := 4;
+		entryLine.viewFormat := framer;
+		target.(path)
+	end,
+	textChanged: func() begin
+		dirtyLine := true;
+		if (ClassOf(path) = 'pathExpr) then begin
+				if (Length(path) > 1) then begin
+						if (not HasPath(target, path[0])) then begin
+								target.(path[0]) := {}
+							end
+					end
+			end;
+		target.(path) := entryLine.text;
+		(if (specialClass exists) then SetClass(entryLine.text, specialClass))
+	end,
+	setup1: func(a1) begin
+		label
+	end,
+	setup2: func(a1) begin
+		(if a1 then a1.(path))
+	end,
+	viewChildren: [viewChildren:
+		entryLine,
+		labelLine,
+		{
+			_proto: @protoClosebox,
+			viewBounds: {left: -12, top: -12, right: 1, bottom: 1},
+			buttonClickScript: func() begin
+				AddDeferredAction(ExpandNone, [Array: ])
+			end
+		}
+	]
+};

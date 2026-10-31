@@ -1,5 +1,0 @@
-@@ 0x41e241
-func() begin
-	AddMemoryItem(memory, entryLine:GetRichString())
-end
-@@end

@@ -1,0 +1,3 @@
+// canonicalBaseInfo, and what only it reaches
+
+canonicalBaseInfo := {base: nil, smallHeight: nil, bigHeight: nil, descent: nil};

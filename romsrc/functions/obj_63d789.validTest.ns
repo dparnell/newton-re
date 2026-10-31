@@ -1,5 +1,0 @@
-@@ 0x6282f9
-func(a1) begin
-	StrEqual(a1.tag, "LetterWeights2.0")
-end
-@@end

@@ -1,0 +1,3 @@
+// array, and what only it reaches
+
+array := [|Array|: {item: "Manual", symbol: 'manual}, {item: "DHCP Server", symbol: 'usingServer}];

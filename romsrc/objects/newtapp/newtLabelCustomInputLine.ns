@@ -1,0 +1,3 @@
+// newtLabelCustomInputLine, and what only it reaches
+
+newtLabelCustomInputLine := {_proto: @newtProtoLine, flavor: @newtCustomFilter};

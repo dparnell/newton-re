@@ -1,0 +1,490 @@
+// scheduleSlip, and what only it reaches
+
+scheduleSlip := {
+	viewSetupDoneScript: func() begin
+		local l1;
+		SetKeyView((l1 := ScheduleTitle.entryLine), 9999)
+	end,
+	Invitees: nil,
+	nameEntries: nil,
+	newHeaderText: nil,
+	_cacheContext: {
+		Invitees: nil,
+		nameEntries: nil,
+		newHeaderText: nil,
+		newTitle: nil,
+		DateValue: nil,
+		newMtgStartTime: nil,
+		viewFlags: vClipping + vFloating + vClickable,
+		selectedLocations: nil,
+		dpSlip: nil,
+		alternativeLocations: nil,
+		viewclipper: nil,
+		_proto: nil,
+		viewCObject: nil,
+		_defaultButton: nil,
+		location: nil,
+		selectedNames: nil,
+		alternativeNames: nil,
+		repeatIt: nil,
+		event: nil,
+		totMin: nil,
+		ScheduleTitle: nil,
+		action: nil,
+		newFirstDate: nil,
+		newMtgStopTime: nil,
+		newMtgDate: nil,
+		_parent: nil,
+		newHeaderIcon: nil,
+		newStopDate: 536870911,
+		base: nil,
+		locationEntries: nil
+	},
+	viewQuitScript: func() begin
+		if (not rotationInProgress) then begin
+				nameEntries := nil;
+				locationEntries := nil;
+				selectedNames := nil;
+				alternativeNames := nil;
+				selectedLocations := nil;
+				alternativeLocations := nil;
+				newHeaderText := nil;
+				newTitle := nil;
+				dpSlip := nil;
+				newMtgStartTime := nil;
+				newMtgStopTime := nil;
+				newMtgDate := nil;
+				totMin := nil
+			end;
+		(if HasSlot(self, 'viewBounds) then RemoveSlot(self, 'viewBounds))
+	end,
+	preallocatedContext: 'scheduleSlip,
+	newTitle: nil,
+	DateValue: nil,
+	viewChildren: [viewChildren:
+		{
+			debug: 21204266,
+			buttonClickScript: func() begin
+				scheduleSlip:Close()
+			end,
+			_proto: @protoCancelButton
+		},
+		_defaultButton_14,
+		{
+			titleicon: nil,
+			title: nil,
+			viewSetupFormScript: func() begin
+				title := newHeaderText;
+				titleicon := newHeaderIcon;
+				inherited:viewSetupFormScript()
+			end,
+			_proto: @protoTitle
+		},
+		ScheduleTitle,
+		DateValue,
+		{
+			label: time_3,
+			labelFont: tsSystem + tsSize(9) + tsBold,
+			entryFont: tsHWFont + tsSize(10),
+			viewJustify: 0,
+			increment: 5,
+			viewSetupFormScript: func() begin
+				if event then begin
+						viewFlags := BAnd(viewFlags, bnot(1))
+					end;
+				viewBounds := RelBounds(0, dpSlip.timeFieldTop, 220, 18);
+				startTime := newMtgStartTime;
+				(stopTime := newMtgStopTime)
+			end,
+			pickActionScript: func(a1, a2) begin
+				local l1, l2;
+				newMtgStartTime := (a1 mod 1440);
+				l1 := (a1 - newMtgStartTime);
+				newMtgStopTime := min((a2 - l1), 1440);
+				a2 := (l1 + newMtgStopTime);
+				l2 := 1410;
+				if (newMtgStartTime > l2) then begin
+						newMtgStartTime := l2;
+						a1 := (l1 + newMtgStartTime)
+					end;
+				if (newMtgStopTime < newMtgStartTime) then begin
+						newMtgStopTime := min(1440, (newMtgStartTime + 60));
+						a2 := (l1 + newMtgStopTime)
+					end;
+				inherited:pickActionScript(a1, a2)
+			end,
+			debug: 741783,
+			_proto: @protoDurationTextPicker
+		},
+		Invitees,
+		location,
+		{
+			debug: 143920,
+			viewJustify: 8388616,
+			viewBounds: nil,
+			viewFont: tsSystem + tsSize(9) + tsBold,
+			text: thisMeetingOccursOn,
+			viewSetupFormScript: func() begin
+				if (event = nil) then begin
+						viewFlags := BAnd(viewFlags, bnot(1))
+					end;
+				(viewBounds := RelBounds(0, dpSlip.mtgMsgHeaderTop, 200, 10))
+			end,
+			_proto: @protoStaticText
+		},
+		{
+			debug: 1392176,
+			viewJustify: 8388616,
+			viewBounds: nil,
+			viewFont: tsSystem + tsSize(9) + tsBold,
+			text: "This recurring event occurs between:",
+			viewSetupFormScript: func() begin
+				if (event = nil) then begin
+						viewFlags := BAnd(viewFlags, bnot(1))
+					end;
+				(viewBounds := RelBounds(4, dpSlip.seriesMsgHeaderTop, 200, 10))
+			end,
+			_proto: @protoStaticText
+		},
+		{
+			label: dates,
+			labelFont: tsSystem + tsSize(9) + tsBold,
+			entryFont: tsHWFont + tsSize(10),
+			viewJustify: 0,
+			longFormat: nil,
+			shortFormat: 'numericDateStrSpec,
+			viewSetupFormScript: func() begin
+				viewBounds := RelBounds(0, dpSlip.dateRangeTop, 220, 18);
+				if (event = nil) then begin
+						viewFlags := BAnd(viewFlags, bnot(1))
+					end;
+				startTime := newFirstDate;
+				(stopTime := newStopDate)
+			end,
+			pickActionScript: func(a1, a2) begin
+				newFirstDate := a1;
+				newStopDate := a2;
+				if (newFirstDate > newMtgDate) then begin
+						DateValue.Date := newFirstDate;
+						DateValue:viewSetupChildrenScript()
+					end;
+				inherited:pickActionScript(a1, a2)
+			end,
+			debug: 9104503,
+			_proto: @protoDateDurationTextPicker
+		}
+	],
+	newMtgStartTime: nil,
+	LayoutSlip: func() begin
+		local l1, l2, l3;
+		self.dpSlip := {};
+		(l1 := dpSlip).slipTitleHt := 13;
+		l1.titleFieldHt := 70;
+		l1.dateFieldHt := 24;
+		l1.timeFieldHt := 24;
+		l1.peopleFieldHt := 22;
+		l1.locFieldHt := 22;
+		l1.repeatFieldHt := 22;
+		l1.mtgMsgHeaderTop := 0;
+		l1.dateFieldTop := 0;
+		l1.timeFieldTop := 0;
+		l1.peopleFieldTop := 0;
+		l1.locFieldTop := 0;
+		l1.repeatFieldTop := 0;
+		l1.seriesMsgHeaderTop := 0;
+		l1.dateRangeTop := 0;
+		l2 := 12;
+		l3 := l1.slipTitleHt;
+		l1.titleFieldTop := l3;
+		l3 := ((l3 + l1.titleFieldHt) + 2);
+		(if event then begin
+				l1.peopleFieldTop := l3;
+				l3 := ((l3 + l1.peopleFieldHt) + 2);
+				l1.mtgMsgHeaderTop := l3;
+				l3 := ((l3 + l2) + 2);
+				l1.dateFieldTop := l3;
+				l3 := ((l3 + l1.dateFieldHt) + 2);
+				l1.seriesMsgHeaderTop := l3;
+				l3 := ((l3 + l2) + 2);
+				l1.dateRangeTop := l3;
+				(l3 := ((l3 + l1.dateFieldHt) + 2))
+			end else begin
+				l1.dateFieldTop := l3;
+				l3 := ((l3 + l1.dateFieldHt) + 2);
+				l1.timeFieldTop := l3;
+				l3 := ((l3 + l1.timeFieldHt) + 2);
+				l1.peopleFieldTop := l3;
+				l3 := ((l3 + l1.peopleFieldHt) + 2);
+				l1.locFieldTop := l3;
+				(l3 := ((l3 + l1.locFieldHt) + 2))
+			end)
+	end,
+	viewFlags: vClipping + vFloating + vClickable,
+	selectedLocations: nil,
+	dpSlip: nil,
+	alternativeLocations: nil,
+	ReOrientToScreen: func() begin
+		rotationInProgress := true;
+		self:Close();
+		self:Open()
+	end,
+	viewBounds: {left: 0, top: 0, right: 220, bottom: 268},
+	allocateContext: [|Array|:
+		'_defaultButton,
+		_defaultButton_14,
+		'ScheduleTitle,
+		ScheduleTitle,
+		'DateValue,
+		DateValue,
+		'Invitees,
+		Invitees,
+		'location,
+		location
+	],
+	PopOne: func(a1, a2) begin
+		local l1;
+		ArrayMunger((l1 := Array((a2 - 1), nil)), 0, (a2 - 1), a1, 1, nil)
+	end,
+	_proto: @protoFloater,
+	_defaultButton: nil,
+	location: nil,
+	selectedNames: nil,
+	alternativeNames: nil,
+	viewJustify: vjParentCenterH + vjParentCenterV,
+	event: nil,
+	totMin: nil,
+	ScheduleTitle: nil,
+	newFirstDate: nil,
+	declareSelf: 'base,
+	rotationInProgress: nil,
+	viewSetupFormScript: compile(
+		constants: {
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			kLiteral_4d4505: {bits: call kBinaryFromHex with ("00000000000400a400a400d500af00e37ff80000fffc0000cccc0000fffc0000cccc0000fffc0000fccc0000fffc0000cccc0000fffc00007ff80000", 'bits), bounds: '{left: 0, top: 0, right: 14, bottom: 11}},
+			kLiteral_4d457d: {bits: call kBinaryFromHex with ("0000000000040059005900d7006400e67ffc0000fffe0000cfe60000c7c60000d3960000c1060000e7ce0000dff60000c7c60000fffe00007ffc0000", 'bits), bounds: '{left: 0, top: 0, right: 15, bottom: 11}}
+		},
+		func() begin
+			local l1, l2;
+			(try begin
+					if (not rotationInProgress) then begin
+							newMtgStartTime := (totMin mod 1440);
+							newMtgDate := (totMin - newMtgStartTime);
+							if (newMtgStartTime > 1410) then begin
+									newMtgStartTime := 1410;
+									newMtgStopTime := 1440
+								end else begin
+									newMtgStopTime := (newMtgStartTime + 60)
+								end;
+							if (if (l2 := nameEntries) then (Length(l2) > 0)) then begin
+									selectedNames := [Array: l2[0]];
+									if ((l1 := Length(l2)) > 1) then begin
+											alternativeNames := self:PopOne(l2, l1)
+										end
+								end;
+							if event then begin
+									newFirstDate := newMtgDate;
+									newStopDate := 536870911;
+									newHeaderText := "Annual Event";
+									newHeaderIcon := kLiteral_4d4505
+								end else begin
+									newHeaderText := "Meeting";
+									newHeaderIcon := kLiteral_4d457d;
+									if (if (l2 := locationEntries) then (Length(l2) > 0)) then begin
+											selectedLocations := [Array: l2[0]];
+											if ((l1 := Length(l2)) > 1) then begin
+													alternativeLocations := self:PopOne(l2, l1)
+												end
+										end
+								end
+						end else begin
+							rotationInProgress := nil
+						end;
+					if (displayParams.appAreaHeight < 320) then begin
+							self.viewBounds := Clone(viewBounds);
+							self.viewBounds.top := 8;
+							self.viewBounds.bottom := (viewBounds.top + 210);
+							self.viewJustify := 80
+						end;
+					self:LayoutSlip()
+				end onexception |evt.ex.outofmem| do begin
+					self:Notify(3, "Assist", "There is not enough memory to open the slip");
+					return nil
+				end)
+		end),
+	newMtgStopTime: nil,
+	newMtgDate: nil,
+	newHeaderIcon: nil,
+	newStopDate: 536870911,
+	debug: 165658,
+	locationEntries: nil
+};
+
+_defaultButton_14 := {
+	debug: 119418192,
+	viewBounds: {left: -57, top: 0, right: -7, bottom: 13},
+	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingTopV,
+	text: schedule_2,
+	buttonClickScript: func() begin
+		local l1, l2, l3, l4, l5, l6;
+		l1 := GetRoot();
+		if (newMtgStartTime >= newMtgStopTime) then begin
+				l1:Notify(3, "Assist", "Please specify a meeting/event time");
+				return nil
+			end;
+		if selectedNames then begin
+				Invitees:AddMemoryItem()
+			end;
+		if selectedLocations then begin
+				location:AddMemoryItem()
+			end;
+		l2 := l1.calendar;
+		ClearUndoStacks();
+		if (not whoIsUp('calendar)) then begin
+				l2:Open()
+			end;
+		if newMtgDate then begin
+				l3 := newTitle;
+				if event then begin
+						if (if selectedNames then (Length(selectedNames) > 0)) then begin
+								l5 := selectedNames[0];
+								if HasSlot(action, 'GetTitle) then begin
+										l3 := action:GetTitle(l5)
+									end
+							end;
+						l4 := l2:AddEvent(l3, newMtgDate, 'yearly, nil)
+					end else begin
+						l4 := l2:AddAppointment(l3, (newMtgDate + newMtgStartTime), (newMtgStopTime - newMtgStartTime), nil, nil)
+					end;
+				if l4 then begin
+						if event then begin
+								l4.mtgIconType := 'annualEvent;
+								if (l6 := EntryFromObj(l5)) then begin
+										action:?AddToCardfile(l6, newMtgDate, l4)
+									end
+							end else begin
+								if (if (selectedLocations <> nil) then (Length(selectedLocations) > 0)) then begin
+										l4.mtgLocation := selectedLocations[0]
+									end
+							end;
+						l4.mtgInvitees := selectedNames;
+						EntryChangeXmit(l4, 'calendarAPI);
+						l2:ScrollToMeeting(l4)
+					end
+			end;
+		l2:redisplayScript();
+		scheduleSlip:Close()
+	end,
+	preallocatedContext: '_defaultButton,
+	_proto: @protoTextButton
+};
+
+ScheduleTitle := {
+	debug: 5301797,
+	entryFlags: 326145,
+	viewFont: tsHWFont + tsSize(12),
+	viewBounds: {left: 0, top: 2, right: -14, bottom: 72},
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	label: title_2,
+	labelFont: tsSystem + tsSize(9) + tsBold,
+	memory: 'scheduleMtgTitle,
+	textFlags: 24,
+	viewLineSpacing: 30,
+	text: nil,
+	viewSetupFormScript: func() begin
+		(text := Clone(newTitle))
+	end,
+	textChanged: func() begin
+		(newTitle := MakeRichString(text, styles))
+	end,
+	preallocatedContext: 'ScheduleTitle,
+	_proto: @protoRichLabelInputLine
+};
+
+DateValue := {
+	label: date,
+	labelFont: tsSystem + tsSize(9) + tsBold,
+	entryFont: tsHWFont + tsSize(10),
+	viewJustify: 0,
+	longFormat: 'abbrDateStrSpec,
+	viewSetupFormScript: func() begin
+		viewBounds := RelBounds(0, dpSlip.dateFieldTop, 220, 18);
+		(Date := newMtgDate)
+	end,
+	pickActionScript: func(a1) begin
+		local l1;
+		newMtgDate := ((l1 := a1[0]) - (l1 mod 1440));
+		inherited:pickActionScript(a1)
+	end,
+	debug: 16503,
+	preallocatedContext: 'DateValue,
+	_proto: @protoDateTextPicker
+};
+
+Invitees := {
+	debug: 9693,
+	viewBounds: nil,
+	text: invitees_2,
+	otherText: otherNames,
+	class: '|nameRef.people|,
+	textSlot: 'name,
+	memory: 'schedInvitees,
+	selected: nil,
+	alternatives: nil,
+	viewSetupFormScript: func() begin
+		if event then begin
+				singleSelect := true
+			end;
+		self.viewBounds := RelBounds(0, dpSlip.peopleFieldTop, 0, 18);
+		selected := selectedNames;
+		alternatives := alternativeNames;
+		inherited:?viewSetupFormScript()
+	end,
+	pickActionScript: func(a1) begin
+		inherited:pickActionScript(a1);
+		(selectedNames := selected)
+	end,
+	preallocatedContext: 'Invitees,
+	_proto: @protoSchedulePicker
+};
+
+location := {
+	_picker: @protoMeetingPlacePopup,
+	debug: 9476,
+	viewBounds: nil,
+	text: location_2,
+	otherText: "Other Locations",
+	class: '|nameRef.meetingPlace|,
+	textSlot: 'company,
+	memory: 'schedLocation,
+	selected: nil,
+	alternatives: nil,
+	viewSetupFormScript: func() begin
+		if event then begin
+				viewFlags := BAnd(viewFlags, bnot(1))
+			end;
+		self.viewBounds := RelBounds(0, dpSlip.locFieldTop, 0, 18);
+		selected := selectedLocations;
+		alternatives := alternativeLocations;
+		inherited:?viewSetupFormScript()
+	end,
+	pickActionScript: func(a1) begin
+		inherited:pickActionScript(a1);
+		(selectedLocations := selected)
+	end,
+	preallocatedContext: 'location,
+	_proto: @protoSchedulePicker
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+pickActionScript_code_2 := same("Invitees.pickActionScript.instructions");
+
+textChanged_code := same("ScheduleTitle.textChanged.instructions");

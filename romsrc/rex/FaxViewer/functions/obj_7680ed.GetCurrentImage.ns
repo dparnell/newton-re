@@ -1,5 +1,0 @@
-@@ 0x7696a9
-func() begin
-	return fPage.image
-end
-@@end

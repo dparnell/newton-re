@@ -1,0 +1,3 @@
+// protoCorrectContext, and what only it reaches
+
+protoCorrectContext := {form: nil, wordOffset: nil, wordLength: nil};

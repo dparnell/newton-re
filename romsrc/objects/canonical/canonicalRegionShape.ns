@@ -1,0 +1,3 @@
+// canonicalRegionShape, and what only it reaches
+
+canonicalRegionShape := {class: 'region, data: nil};

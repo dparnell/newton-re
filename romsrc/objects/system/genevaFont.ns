@@ -1,0 +1,18 @@
+// genevaFont, and what only it reaches
+
+genevaFont := {
+	name: "Simple",
+	encoding: 0,
+	macFontID: 3,
+	screenSym: 'genevaFont,
+	psName: 'helvetica,
+	psScale: 72089,
+	badFontMap: 1,
+	plainData: sfnt('sfnt, "resources/sfnt/3f5e81"),
+	boldData: nil,
+	italicData: nil,
+	boldItalicData: nil,
+	userSizes: [|Array|: 9, 10, 12, 18],
+	usable: true,
+	tsID: 2
+};

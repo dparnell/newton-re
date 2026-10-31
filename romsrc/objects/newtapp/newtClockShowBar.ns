@@ -1,0 +1,9 @@
+// newtClockShowBar, and what only it reaches
+
+newtClockShowBar := {
+	_proto: @protoClockShowBar,
+	viewSetupFormScript: func() begin
+		newtAppBase.filterBar := self;
+		inherited:?viewSetupFormScript()
+	end
+};

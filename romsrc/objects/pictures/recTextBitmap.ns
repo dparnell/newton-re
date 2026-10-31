@@ -1,0 +1,6 @@
+// recTextBitmap, and what only it reaches
+
+recTextBitmap := {
+	bits: bitmap('bits, "resources/bits/3dad1d.png", "00000000000400b200b2005c00bc0069", 1),
+	bounds: {left: 0, top: 0, right: 13, bottom: 10}
+};

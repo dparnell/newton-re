@@ -1,0 +1,7 @@
+// cancelBitmap, and what only it reaches
+
+cancelBitmap := {
+	mask: bitmap('mask, "resources/mask/3cd3b5.png", "00000000000401c501c5025e01ce0267", 1),
+	bits: bitmap('bits, "resources/bits/3cd3f5.png", "00000000000401c501c5025e01ce0267", 1),
+	bounds: {left: 0, top: 0, right: 9, bottom: 9}
+};

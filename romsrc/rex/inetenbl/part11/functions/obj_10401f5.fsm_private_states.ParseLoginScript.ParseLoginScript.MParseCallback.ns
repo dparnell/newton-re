@@ -1,6 +1,0 @@
-@@ 0x104877d
-func(a1) begin
-	self:MDoCallbacks(fLinkClients_Grab, a1, 'Update);
-	(if a1.infoError then self:DoEvent('ParseLoginScriptFailure, nil) else (if (a1.infoStatus = 'Parsed) then self:DoEvent('ParseLoginScriptSuccess, nil)))
-end
-@@end

@@ -1,0 +1,6 @@
+// dtmfRight, and what only it reaches
+
+dtmfRight := {
+	bits: bitmap('bits, "resources/bits/3d7f79.png", "0000000000040034003400890048009e", 1),
+	bounds: {left: 0, top: 0, right: 21, bottom: 20}
+};

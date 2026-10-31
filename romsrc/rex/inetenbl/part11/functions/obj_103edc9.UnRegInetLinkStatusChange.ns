@@ -1,8 +1,0 @@
-@@ 0x104cb69
-func(a1) begin
-	local l1;
-	RemoveSlot((l1 := InetStartUp()).fLinkClients, a1);
-	l1:MShutdownTimer();
-	nil
-end
-@@end

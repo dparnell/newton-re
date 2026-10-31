@@ -1,0 +1,3 @@
+// canonicalCaretInfo, and what only it reaches
+
+canonicalCaretInfo := {view: nil, info: nil};

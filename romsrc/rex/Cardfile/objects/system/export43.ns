@@ -1,0 +1,62 @@
+// export43, and what only it reaches
+
+export43 := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 18},
+	viewJustify: vjCenterH + vjCenterV + vjParentFullH,
+	RetargetNotify: func() begin
+		local l1, l2, l3, l4;
+		(if (l1 := layout.dataCursor:entry()) then begin
+				if (ClassOf((l4 := layout.dataCursor:IndexPath())) = 'Array) then begin
+						l4 := l4[0]
+					end;
+				if IsInstance((l2 := l1.(l4)), 'string) then begin
+						l3 := (if (StrLen(l2) > 0) then l2[0])
+					end else begin
+						l3 := (if (StrLen(l1.sorton) > 0) then l1.sorton[0])
+					end;
+				(if l3 then AddProcrastinatedSend('cardfileAZTabs, self, 'SetLetter, [Array: l3, true], 0))
+			end)
+	end,
+	PickLetterScript: func(a1) begin
+		local l1, l2, l3, l4, l5, l6, l7;
+		l1 := nil;
+		l2 := (l3 := layout.dataCursor):IndexPath();
+		l4 := l3:entry();
+		if (ClassOf(l2) = 'Array) then begin
+				l2 := l2[0]
+			end;
+		if ((l2 = 'class) or (l2 = 'zipcode)) then begin
+				l1 := l3;
+				layout.dataCursor := layout.dataSoup:Query('{type: index, IndexPath: sorton, tagSpec: {none: _ownerNames}})
+			end;
+		if (l5 := layout.dataCursor:GotoKey(a1)) then begin
+				if pickedSameTab then begin
+						if ((BeginsWith((l7 := (if l1 then l5.sorton else l5.(l2))), a1) or (a1[0] < $A)) or (a1[0] = $Z)) then begin
+								l6 := true
+							end
+					end else begin
+						l6 := true
+					end
+			end else begin
+				l6 := true
+			end;
+		if ((not l6) or (not l5)) then begin
+				if (if (l5 := l4) then (not l1)) then begin
+						layout.dataCursor:Goto(l5)
+					end
+			end;
+		if l1 then begin
+				layout.dataCursor := l1;
+				if l5 then begin
+						l1:Goto(l5)
+					end
+			end;
+		(if l6 then {newEntry: l5, currEntry: l4})
+	end,
+	indexClickScript: func(a1) begin
+		local l1;
+		l1 := inherited:indexClickScript(a1);
+		(if (currentLayout <> 'overview) then newtAppBase:ShowLayout('overview) else (if l1 then (if (l1.newEntry <> l1.currEntry) then layout:Effect(133120, nil, @flip, 'Retarget, [Array: true]) else self:RetargetNotify())))
+	end,
+	_proto: @newtaztabs
+};

@@ -1,0 +1,3 @@
+// objects several roots reach, none alone (naturalize.py)
+
+code := native('code, "resources/code/1002f89.s");

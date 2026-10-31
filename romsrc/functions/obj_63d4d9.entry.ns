@@ -1,5 +1,0 @@
-@@ 0x44fac9
-func() begin
-	metaCursor.cursor:entry()
-end
-@@end

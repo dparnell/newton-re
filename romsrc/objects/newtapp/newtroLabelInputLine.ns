@@ -1,0 +1,3 @@
+// newtroLabelInputLine, and what only it reaches
+
+newtroLabelInputLine := {_proto: @newtProtoLine, flavor: @newtTextFilter, access: 'readOnly};

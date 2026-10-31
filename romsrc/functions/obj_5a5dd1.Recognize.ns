@@ -1,5 +1,0 @@
-@@ 0x5a5db1
-func() begin
-	SetValue(entryLine, 'text, info.(configPath))
-end
-@@end

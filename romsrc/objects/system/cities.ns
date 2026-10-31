@@ -1,0 +1,98 @@
+// cities, and what only it reaches
+
+cities := [|Array|:
+	{
+		name: "Atlanta",
+		latitude: 50331648,
+		longitude: 411029364,
+		gmt: -18000,
+		country: 'USA,
+		areacode: 404
+	},
+	{
+		name: "Bangkok",
+		latitude: 20480631,
+		longitude: 149876462,
+		gmt: 25200,
+		country: 'Thailand,
+		areacode: 2
+	},
+	{
+		name: "Boston",
+		latitude: 63132042,
+		longitude: 430863762,
+		gmt: -18000,
+		country: 'USA,
+		areacode: 617
+	},
+	{
+		name: "Chicago",
+		latitude: 62386388,
+		longitude: 406008627,
+		gmt: -21600,
+		country: 'USA,
+		areacode: 312
+	},
+	{
+		name: "Denver",
+		latitude: 59254641,
+		longitude: 380308417,
+		gmt: -25200,
+		country: 'USA,
+		areacode: 303
+	},
+	{name: hongKong, latitude: 33181605, longitude: 170257673, gmt: 28800, country: 'HongKong},
+	{name: "London", latitude: 76802366, longitude: 536622375, gmt: 0, country: 'UK, areacode: 71},
+	{
+		name: "Los Angeles",
+		latitude: 50803895,
+		longitude: 360523730,
+		gmt: -28800,
+		country: 'USA,
+		areacode: 213
+	},
+	{
+		name: "Montréal",
+		latitude: 67854518,
+		longitude: 427110636,
+		gmt: -18000,
+		country: 'Canada,
+		areacode: 514
+	},
+	{
+		name: "Moscow",
+		latitude: 83140426,
+		longitude: 56048329,
+		gmt: 10800,
+		country: 'Russia,
+		areacode: areacode
+	},
+	{
+		name: "New York",
+		latitude: 60721094,
+		longitude: 426489258,
+		gmt: -18000,
+		country: 'USA,
+		areacode: 212
+	},
+	{name: "Paris", latitude: 72875235, longitude: 3479711, gmt: 3600, country: 'France, areacode: 1},
+	{
+		name: sanFrancisco,
+		latitude: 56371445,
+		longitude: 354334801,
+		gmt: -28800,
+		country: 'USA,
+		areacode: 415
+	},
+	{
+		name: "Sydney",
+		latitude: 486365278,
+		longitude: 225510638,
+		gmt: 36000,
+		country: 'Australia,
+		areacode: 2
+	},
+	{name: tokyo, latitude: 53239698, longitude: 208435160, gmt: 32400, country: 'Japan, areacode: 3}
+];
+
+tokyo := "Tokyo";

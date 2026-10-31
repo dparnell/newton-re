@@ -1,0 +1,228 @@
+// export75, and what only it reaches
+
+export75 := {
+	Dates: nil,
+	fSetup: nil,
+	viewQuitScript: func() begin
+		protoContext:RemoveOpenWindow(self);
+		endpoint:StopIdle(self);
+		(if (not closing) then call ImportParametersDoneScript with (nil))
+	end,
+	viewFlags: vApplication + vFloating + vClickable,
+	viewIdleScript: func() begin
+		return endpoint:IdleConnection(true)
+	end,
+	appList: nil,
+	viewBounds: {left: 0, top: 40, right: 195, bottom: 308},
+	SlipTitle: nil,
+	_proto: @protoFloater,
+	Conflicts: nil,
+	viewJustify: vjParentCenterH,
+	Import: nil,
+	fResults: nil,
+	fileName: nil,
+	DatesTitle: nil,
+	stepAllocateContext: [|Array|:
+		'SlipTitle,
+		export75Item,
+		'fileName,
+		export75Item_2,
+		'AppListTitle,
+		export75Item_3,
+		'appList,
+		export75Item_4,
+		'DatesTitle,
+		export75Item_5,
+		'Dates,
+		export75Item_6,
+		'Conflicts,
+		export75Item_7,
+		'Import,
+		export75Item_8,
+		'CloseThisSlip,
+		export75Item_9
+	],
+	closing: nil,
+	viewSetupFormScript: func() begin
+		local l1;
+		self.protoContext := GetRoot().Connection;
+		protoContext:AddOpenWindow(self);
+		self.fResults := {};
+		self.closing := nil;
+		SlipTitle.text := fSetup.SlipTitle;
+		fileName.text := fSetup.fileName;
+		l1 := (SlipTitle.viewBounds.bottom + fileName.viewBounds.bottom);
+		if HasSlot(fSetup, 'AppListInfo) then begin
+				AppListTitle.text := fSetup.AppListInfo.title;
+				appList.listItems := fSetup.AppListInfo.listItems;
+				l1 := ((l1 + AppListTitle.viewBounds.bottom) + appList.viewBounds.bottom)
+			end else begin
+				AppListTitle.viewFlags := BAnd(AppListTitle.viewFlags, -2);
+				appList.viewFlags := BAnd(appList.viewFlags, -2)
+			end;
+		if HasSlot(fSetup, 'ConflictsInfo) then begin
+				Conflicts.text := fSetup.ConflictsInfo.text;
+				Conflicts.labelCommands := fSetup.ConflictsInfo.labelCommands;
+				l1 := (l1 + Conflicts.viewBounds.bottom)
+			end else begin
+				Conflicts.viewFlags := BAnd(viewFlags, -2)
+			end;
+		if HasSlot(fSetup, 'DatesInfo) then begin
+				DatesTitle.text := fSetup.DatesInfo.title;
+				l1 := ((l1 + DatesTitle.viewBounds.bottom) + Dates.viewBounds.bottom);
+				Dates.label := Stringer([Array: $\uFC01, fSetup.DatesInfo.text]);
+				Dates.startTime := fSetup.DatesInfo.startTime;
+				Dates.stopTime := fSetup.DatesInfo.stopTime
+			end else begin
+				DatesTitle.viewFlags := BAnd(DatesTitle.viewFlags, -2);
+				Dates.viewFlags := BAnd(Dates.viewFlags, -2)
+			end;
+		Import.text := fSetup.ImportInfo.title;
+		self.viewBounds := SetBounds(self.viewBounds.left, self.viewBounds.top, self.viewBounds.right, (l1 + 65));
+		endpoint:StartIdle(self, 2000)
+	end,
+	CloseThisSlip: nil,
+	stepChildren: [stepChildren:
+		{
+			title: dock,
+			titleIcon: {bits: titleIconBits, bounds: {left: 0, top: 0, right: 19, bottom: 11}},
+			_proto: @protoTitle
+		},
+		export75Item,
+		export75Item_2,
+		export75Item_3,
+		export75Item_4,
+		export75Item_5,
+		export75Item_6,
+		export75Item_7,
+		export75Item_8,
+		export75Item_9
+	],
+	AppListTitle: nil
+};
+
+export75Item := {
+	text: nil,
+	viewBounds: {left: 5, top: 25, right: 200, bottom: 37},
+	viewJustify: 8388608,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'SlipTitle
+};
+
+export75Item_2 := {
+	text: nil,
+	viewBounds: {left: 10, top: 3, right: 168, bottom: 15},
+	viewJustify: 8398848,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'fileName
+};
+
+export75Item_3 := {
+	text: nil,
+	viewBounds: {left: 5, top: 5, right: 185, bottom: 17},
+	viewJustify: 8396800,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'AppListTitle
+};
+
+export75Item_4 := {
+	viewBounds: {left: 15, top: 7, right: 180, bottom: 67},
+	buttonClickScript: func(a1) begin
+		fResults.appList := Array(Length(self.selectedItems), nil);
+		(foreach l1, l2 in self.selectedItems do begin
+				fResults.appList[l1] := self.listItems[l2]
+			end)
+	end,
+	viewJustify: vjSiblingBottomV,
+	viewSetupFormScript: func() begin
+		if fSetup.SingleSelectOnly then begin
+				self.useMultipleSelections := nil
+			end;
+		if fSetup.AppListInfo.selected then begin
+				self.selectedItems := Clone(fSetup.AppListInfo.selected)
+			end;
+		self:SetupList();
+		fResults.appList := Array(Length(self.selectedItems), nil);
+		(foreach l1, l2 in self.selectedItems do begin
+				fResults.appList[l1] := self.listItems[l2]
+			end)
+	end,
+	useMultipleSelections: true,
+	useScrollers: true,
+	_proto: @protoTextList,
+	preAllocatedContext: 'appList
+};
+
+export75Item_5 := {
+	text: nil,
+	viewBounds: {left: 5, top: 10, right: 185, bottom: 26},
+	viewJustify: 8396800,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'DatesTitle
+};
+
+export75Item_6 := {
+	viewBounds: {left: 10, top: 2, right: 185, bottom: 18},
+	shortFormat: 'numericDateStrSpec,
+	viewSetupFormScript: func() begin
+		if ((not self.startTime) or (startTime = 0)) then begin
+				self.startTime := (Time() - 10080)
+			end;
+		if ((not self.stopTime) or (stopTime = 0)) then begin
+				self.stopTime := Time()
+			end;
+		(fResults.Dates := [Array: self.startTime, self.stopTime])
+	end,
+	viewJustify: vjSiblingBottomV,
+	labelFont: @fontSystem9Bold,
+	longFormat: nil,
+	pickActionScript: func(a1, a2) begin
+		self.startTime := a1;
+		self.stopTime := a2;
+		fResults.Dates := [Array: a1, a2];
+		inherited:?pickActionScript(a1, a2)
+	end,
+	label: export85Item_3Text,
+	startTime: 0,
+	stopTime: 0,
+	_proto: @protoDateDurationTextPicker,
+	preAllocatedContext: 'Dates
+};
+
+export75Item_7 := {
+	viewBounds: {left: 10, top: 7, right: 185, bottom: 23},
+	pickItems: nil,
+	labelCommands: nil,
+	viewJustify: 8396800,
+	textChanged: func() begin
+		(fResults.Conflicts := self.entryLine.text)
+	end,
+	viewSetupFormScript: func() begin
+		fResults.Conflicts := self.labelCommands[0];
+		inherited:?viewSetupFormScript()
+	end,
+	_proto: @protoLabelPicker,
+	preAllocatedContext: 'Conflicts
+};
+
+export75Item_8 := {
+	buttonClickScript: func() begin
+		closing := true;
+		call ImportParametersDoneScript with (fResults);
+		base:Close()
+	end,
+	text: nil,
+	viewBounds: {top: -18, left: -74, right: -26, bottom: -5},
+	viewJustify: 8388774,
+	viewSetupFormScript: func() begin
+		local l1;
+		l1 := (StrFontWidth(self.text, self.viewFont) + kMatteSize);
+		(self.viewBounds := SetBounds((kMinimumDistance - l1), self.viewBounds.top, kMinimumDistance, self.viewBounds.bottom))
+	end,
+	kMinimumDistance: -26,
+	kMatteSize: 12,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'Import
+};
+
+export75Item_9 := {_proto: @protoCancelButton, preAllocatedContext: 'CloseThisSlip};

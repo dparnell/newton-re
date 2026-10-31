@@ -1,0 +1,9 @@
+// protoTxViewFinder, and what only it reaches
+
+protoTxViewFinder := {
+	txCharsObj: nil,
+	frame: nil,
+	FindString: {class: #132, funcPtr: 7240667, numArgs: 4},
+	GetRangeText: {class: #132, funcPtr: 7240668, numArgs: 1},
+	GetCountCharacters: {class: #132, funcPtr: 7240669, numArgs: 0}
+};

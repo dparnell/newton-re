@@ -1,0 +1,105 @@
+// cribNote, and what only it reaches
+
+cribNote := {
+	debug: 9281,
+	_proto: cribNoteProto,
+	viewBounds: nil,
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	viewFormat: 0,
+	target: nil,
+	targetView: nil,
+	SliderWidth: 0,
+	transformStyle: {transform: [|Array|: 1, 1]},
+	viewSetupFormScript: func() begin
+		local l1;
+		if (l1 := realData).repeatTemplate then begin
+				l1 := l1.repeatTemplate
+			end;
+		if (l1.version <> 2) then begin
+				if (not EntryStore(l1):IsReadOnly()) then begin
+						self:Convert10to20(l1, nil);
+						EntryChangeXmit(l1, 'calendar);
+						if realData.repeatTemplate then begin
+								realData := self:MakeInstanceOfRepeatingMeeting(l1, realData.mtgStartDate)
+							end
+					end
+			end;
+		target := self.realData;
+		targetView := self;
+		viewBounds := SetBounds(2, 0, 0, cribLineSpacing);
+		inherited:viewSetupFormScript()
+	end,
+	viewFindTargetScript: func(a1) begin
+		(foreach l1 in a1 do begin
+				if SetContains(l1.types, 'meeting) then begin
+						return cribView
+					end
+			end);
+		self
+	end,
+	viewDropScript: func(a1, a2, a3) begin
+		nil
+	end,
+	viewChildren: [viewChildren:
+		{
+			debug: "Slider",
+			viewClass: clSliderView,
+			viewFlags: vVisible + vClickable,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 12},
+			viewJustify: 0,
+			viewFormat: 0
+		},
+		textView_2
+	],
+	textView: nil,
+	allocateContext: [|Array|: 'textView, textView_2],
+	_cacheContext: {
+		_parent: nil,
+		_proto: nil,
+		viewCObject: nil,
+		realData: nil,
+		viewBounds: nil,
+		target: nil,
+		targetView: nil,
+		iconShape: nil,
+		textView: nil
+	}
+};
+
+textView_2ViewBounds := {left: 26, top: 0, right: 0, bottom: 0};
+
+textView_2 := {
+	debug: 9392,
+	viewClass: clParagraphView,
+	viewBounds: textView_2ViewBounds,
+	viewFlags: vVisible,
+	viewJustify: 8388848,
+	textFlags: 24,
+	text: nil,
+	viewSetupFormScript: func() begin
+		text := self:GetMeetingText(realData);
+		self.viewFont := cribFont;
+		(self.viewLineSpacing := cribLineSpacing)
+	end,
+	viewChangedScript: func(a1, a2) begin
+		local l1;
+		(if (a1 = 'text) then begin
+				l1 := MakeRichString(a2.text, a2.styles);
+				AddProcrastinatedSend('calendar, cribView, 'changeNote, [Array: realData, 'mtgText, l1], 500)
+			end)
+	end,
+	preallocatedContext: 'textView,
+	_cacheContext: {
+		_parent: nil,
+		_proto: nil,
+		viewCObject: nil,
+		text: nil,
+		viewFont: nil,
+		viewLineSpacing: nil,
+		viewBounds: textView_2ViewBounds
+	}
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewFindTargetScript_code := same("cribNote.viewFindTargetScript.instructions");

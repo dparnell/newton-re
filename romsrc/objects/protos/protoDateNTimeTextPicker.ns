@@ -1,0 +1,24 @@
+// protoDateNTimeTextPicker, and what only it reaches
+
+protoDateNTimeTextPicker := {
+	viewBounds: nil,
+	label: uCardPositionAlertButton,
+	Date: nil,
+	shortFormat: 'numericDateStrSpec,
+	longFormat: nil,
+	format: 'shortTimeStrSpec,
+	increment: 15,
+	Popit: func(a1) begin
+		local l1;
+		(l1 := self:GlobalBox()).right := (l1.left + a1);
+		@dateNTimePopup:New(Date, increment, l1, self)
+	end,
+	TextSetup: func() begin
+		Stringer([Array: (if longFormat then LongDateStr(Date, @datetimeStrSpecs.(longFormat)) else ShortDateStr(Date, @datetimeStrSpecs.(shortFormat))), " ", TimeStr(Date, @datetimeStrSpecs.(format))])
+	end,
+	pickActionScript: func(a1) begin
+		Date := a1;
+		inherited:pickActionScript(a1)
+	end,
+	_proto: @protoTextPicker
+};

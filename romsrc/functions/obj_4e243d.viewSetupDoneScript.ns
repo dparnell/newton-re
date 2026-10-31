@@ -1,5 +1,0 @@
-@@ 0x4e23fd
-func() begin
-	(if rotated then SetValue(self, 'viewJustify, 1))
-end
-@@end

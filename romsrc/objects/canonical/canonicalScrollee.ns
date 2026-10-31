@@ -1,0 +1,15 @@
+// canonicalScrollee, and what only it reaches
+
+canonicalScrollee := {
+	viewClass: clPictureView,
+	viewFlags: vVisible + vClickable,
+	viewJustify: 0,
+	viewOriginX: 0,
+	viewOriginY: 0,
+	dataBounds: nil,
+	viewSetupDoneScript: func() begin
+		self:Parent().scrolledView := self;
+		(self.viewBounds := Clone(viewBounds))
+	end,
+	debug: 269199
+};

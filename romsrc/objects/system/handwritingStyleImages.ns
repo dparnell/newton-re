@@ -1,0 +1,82 @@
+// handwritingStyleImages, and what only it reaches
+
+handwritingStyleImages := [|Array|:
+	[|Array|:
+		[|Array|:
+			{
+				bits: bitmap('bits, "resources/bits/5c2235.png", "000000000008011f011f012e01370157", 1),
+				bounds: {left: 0, top: 0, right: 41, bottom: 24}
+			}
+		],
+		[|Array|:
+			{
+				bits: bitmap('bits, "resources/bits/5c2351.png", "000000000004011f011f01600137016b", 1),
+				bounds: {left: 0, top: 0, right: 11, bottom: 24}
+			},
+			{
+				bits: bitmap('bits, "resources/bits/5c23fd.png", "000000000004011f011f016c0137018c", 1),
+				bounds: {left: 0, top: 0, right: 32, bottom: 24}
+			}
+		],
+		[|Array|:
+			{
+				bits: bitmap('bits, "resources/bits/5c24bd.png", "000000000004011f011f0198013701a6", 1),
+				bounds: {left: 0, top: 0, right: 14, bottom: 24}
+			},
+			{
+				bits: bitmap('bits, "resources/bits/5c2569.png", "000000000004011f011f01a9013701ba", 1),
+				bounds: {left: 0, top: 0, right: 17, bottom: 24}
+			},
+			{
+				bits: bitmap('bits, "resources/bits/5c2615.png", "000000000004011f011f01c0013701cd", 1),
+				bounds: {left: 0, top: 0, right: 13, bottom: 24}
+			}
+		]
+	],
+	[|Array|: [|Array|: ], [|Array|: ], [|Array|: ]],
+	[|Array|:
+		[|Array|:
+			{
+				bits: bitmap('bits, "resources/bits/5c272d.png", "000000000004005a005a012c00720139", 1),
+				bounds: {left: 0, top: 0, right: 13, bottom: 24}
+			},
+			{
+				bits: bitmap('bits, "resources/bits/5c27d9.png", "000000000004005a005a013b0072014b", 1),
+				bounds: {left: 0, top: 0, right: 16, bottom: 24}
+			},
+			{
+				bits: bitmap('bits, "resources/bits/5c2885.png", "000000000004005a005a014d0072015a", 1),
+				bounds: {left: 0, top: 0, right: 13, bottom: 24}
+			}
+		],
+		[|Array|:
+			{
+				bits: bitmap('bits, "resources/bits/5c2949.png", "000000000004005a005a015c00720168", 1),
+				bounds: {left: 0, top: 0, right: 12, bottom: 24}
+			},
+			{
+				bits: bitmap('bits, "resources/bits/5c29f5.png", "000000000004005a005a016a0072017b", 1),
+				bounds: {left: 0, top: 0, right: 17, bottom: 24}
+			},
+			{
+				bits: bitmap('bits, "resources/bits/5c2aa1.png", "000000000004005a005a017e00720188", 1),
+				bounds: {left: 0, top: 0, right: 10, bottom: 24}
+			}
+		],
+		[|Array|:
+			{
+				bits: bitmap('bits, "resources/bits/5c2b65.png", "000000000004001200120198002b019b", 1),
+				bounds: {left: 0, top: 0, right: 3, bottom: 25}
+			},
+			{
+				bits: bitmap('bits, "resources/bits/5c2c15.png", "00000000000400120012019c002b01ab", 1),
+				bounds: {left: 0, top: 0, right: 15, bottom: 25}
+			},
+			{
+				bits: bitmap('bits, "resources/bits/5c2cc5.png", "0000000000040012001201ab002b01b6", 1),
+				bounds: {left: 0, top: 0, right: 11, bottom: 25}
+			}
+		]
+	],
+	[|Array|: [|Array|: ], [|Array|: ], [|Array|: ]]
+];

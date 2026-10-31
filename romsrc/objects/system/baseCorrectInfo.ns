@@ -1,0 +1,16 @@
+// baseCorrectInfo, and what only it reaches
+
+baseCorrectInfo := {
+	offset: {class: #132, funcPtr: 7018698, numArgs: 4},
+	RemoveView: {class: #132, funcPtr: 7018703, numArgs: 1},
+	find: {class: #132, funcPtr: 7017660, numArgs: 2},
+	AddUnit: {class: #132, funcPtr: 7017645, numArgs: 4},
+	AddWord: {class: #132, funcPtr: 7017646, numArgs: 1},
+	FindNew: {class: #132, funcPtr: 7017659, numArgs: 3},
+	Clear: {class: #132, funcPtr: 7017653, numArgs: 3},
+	Extract: {class: #132, funcPtr: 7017657, numArgs: 3},
+	insert: {class: #132, funcPtr: 7018692, numArgs: 2},
+	MergeEntries: {class: #132, funcPtr: 7018694, numArgs: 2},
+	info: nil,
+	max: nil
+};

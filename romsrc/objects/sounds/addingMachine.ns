@@ -1,0 +1,13 @@
+// addingMachine, and what only it reaches
+
+addingMachine := {
+	sndFrameType: 'codec,
+	samplingRate: samplingRate_2,
+	codecName: tIMACodec,
+	dataType: 16,
+	bufferSize: 10240,
+	bufferCount: 4,
+	compressionType: 6,
+	compressionRatio: compressionRatio,
+	samples: imasound('samples, "resources/samples/3d1bf9.wav")
+};

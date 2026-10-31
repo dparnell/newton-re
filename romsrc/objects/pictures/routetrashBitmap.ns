@@ -1,0 +1,6 @@
+// routetrashBitmap, and what only it reaches
+
+routetrashBitmap := {
+	bits: bitmap('bits, "resources/bits/3d5d55.png", "00000000000401dd01dd00a001ec00ae", 1),
+	bounds: {left: 0, top: 0, right: 14, bottom: 15}
+};

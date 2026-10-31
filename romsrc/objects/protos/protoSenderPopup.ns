@@ -1,0 +1,125 @@
+// protoSenderPopup, and what only it reaches
+
+protoSenderPopup := {
+	_proto: @protoPopInPlace,
+	viewBounds: {left: 8, top: 10, right: 208, bottom: 36},
+	viewFormat: 0,
+	viewJustify: vjCenterV,
+	viewSetupFormScript: func() begin
+		text := self:SetupText();
+		if (not GetRoot().senderList) then begin
+				GetRoot().senderList := [Array: ]
+			end;
+		SetAdd(senderList, self, true)
+	end,
+	viewQuitScript: viewQuitScript,
+	viewHiliteScript: func(a1) begin
+		local l1;
+		l1 := self:LocalBox();
+		self:DrawShape(MakeRoundRect(0, 0, l1.right, l1.bottom, 8), '{transferMode: 2, penPattern: 0, fillPattern: 5});
+		true
+	end,
+	SetupText: func() begin
+		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+		l1 := (self:Parent():LocalBox().right div 2);
+		l3 := 0;
+		l4 := 0;
+		if (if (if self:Parent() then self:Parent().fields) then IsEntryAlias(self:Parent().fields.fromRef)) then begin
+				l5 := self:Parent().fields.fromRef
+			end else begin
+				l5 := GetUserConfig('currentPersona)
+			end;
+		if l5 then begin
+				l6 := ResolveEntryAlias(l5);
+				l3 := StrFontWidth((l2 := StrTruncate(Stringer([Array: $\uFC02, self:PrimaryName(l6)]), l1)), viewFont);
+				l4 := (l4 + 1)
+			end;
+		l7 := GetUserConfig('currentEmporium);
+		l8 := StrTruncate((l8 := Stringer([Array: $\uFC02, (if l7 then ResolveEntryAlias(l7).place else GetUserConfig('location).name)])), l1);
+		l2 := Stringer([Array: (if l2 then Stringer([Array: l2, $\n])), l8]);
+		l3 := max(l3, StrFontWidth(l8, viewFont));
+		l4 := (l4 + 1);
+		l9 := self:GlobalBox();
+		if (l3 <> (l9.right - l9.left)) then begin
+				(l10 := (viewBounds := Clone(viewBounds))).right := (l10.left + l3)
+			end;
+		if ((l4 := (l4 * FontHeight(viewFont))) <> (l9.bottom - l9.top)) then begin
+				(l10 := (viewBounds := Clone(viewBounds))).bottom := (l10.top + l4)
+			end;
+		l2
+	end,
+	viewDrawScript: func() begin
+		self:DrawShape(MakeText("\uFC01\u", 0, 0, 16, ((self:LocalBox().bottom div 2) + 4)), {font: viewFont})
+	end,
+	buttonClickScript: compile(
+		constants: {
+			kLiteral_3c5f65: "Other City"
+		},
+		func() begin
+			if (if (l4 := GetUserConfig('personae)) then (Length(l4) > 1)) then begin
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					l1 := (foreach l5 in l4 collect self:PrimaryName(ResolveEntryAlias(l5)))
+				end;
+			if (l9 := GetUserConfig('emporia)) then begin
+					l2 := [Array: ];
+					(foreach l5 in l9 do begin
+							local l9, l10;
+							if StrFilled((l10 := ResolveEntryAlias(l5)).place) then begin
+									AddArraySlot(l2, {item: l10.place, value: l5})
+								end
+						end);
+					if (Length(l2) = 0) then begin
+							AddArraySlot(l2, {item: GetUserConfig('location).name, value: nil})
+						end;
+					Sort(l2, '|str<|, 'item);
+					if (not GetVariable(self, 'hideOtherCity)) then begin
+							if (Length(l2) > 0) then begin
+									AddArraySlot(l2, 'pickseparator)
+								end;
+							AddArraySlot(l2, kLiteral_3c5f65)
+						end
+				end else begin
+					if (not GetVariable(self, 'hideOtherCity)) then begin
+							l2 := [Array: kLiteral_3c5f65]
+						end
+				end;
+			if l1 then begin
+					l3 := ArrayMunger(ArrayInsert(l2, 'pickseparator, 0), 0, 0, l1, 0, nil)
+				end else begin
+					l3 := l2
+				end;
+			(if l3 then begin
+					popup := l3;
+					inherited:buttonClickScript()
+				end else self:hilite(nil))
+		end),
+	PickOther: PickOther,
+	|map|: {pickActionScript: pickActionScript},
+	pickActionScript: func(a1) begin
+		local l1, l2, l3, l4;
+		l2 := (if (if (l1 := GetUserConfig('personae)) then (Length(l1) > 1)) then Length(l1) else -1);
+		l3 := (Length(popup) - (if (not GetVariable(self, 'hideOtherCity)) then 1 else 0));
+		if (a1 < l2) then begin
+				SetUserConfig('currentPersona, l1[a1]);
+				UseCurrentPersona()
+			end else begin
+				if (a1 < l3) then begin
+						if (l4 := popup[a1].value) then begin
+								SetUserConfig('currentEmporium, l4);
+								UseCurrentEmporium()
+							end
+					end else begin
+						self:PickOther()
+					end
+			end;
+		self:hilite(nil)
+	end,
+	JamIt: JamIt
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+buttonClickScript_literal18 := same("protoSenderPopup.buttonClickScript.literals[18]");

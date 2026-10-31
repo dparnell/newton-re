@@ -1,9 +1,0 @@
-@@ 0x1013a0d
-func() begin
-	if statusView then begin
-			statusView:Close()
-		end;
-	fsmContext.waitAborted := aborted;
-	(fsmContext.waitView := nil)
-end
-@@end

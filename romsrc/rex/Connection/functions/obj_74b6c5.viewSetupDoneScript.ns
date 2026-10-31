@@ -1,5 +1,0 @@
-@@ 0x74b7e9
-func() begin
-	inherited:?viewSetupDoneScript()
-end
-@@end

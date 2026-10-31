@@ -1,5 +1,0 @@
-@@ 0x759a01
-func() begin
-	endpoint:StartIdle(self, 2000)
-end
-@@end

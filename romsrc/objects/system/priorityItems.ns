@@ -1,0 +1,20 @@
+// priorityItems, and what only it reaches
+
+priorityItems := [|Array|:
+	{
+		bits: bitmap('bits, "resources/bits/3c9011.png", "00000000000400cf00cf013300dd0142", 1),
+		bounds: {left: 0, top: 0, right: 15, bottom: 14}
+	},
+	{
+		bits: bitmap('bits, "resources/bits/3c9095.png", "00000000000400df00df013300ed0142", 1),
+		bounds: {left: 0, top: 0, right: 15, bottom: 14}
+	},
+	{
+		bits: bitmap('bits, "resources/bits/3c9119.png", "00000000000400ef00ef013300fd0142", 1),
+		bounds: {left: 0, top: 0, right: 15, bottom: 14}
+	},
+	{
+		bits: bitmap('bits, "resources/bits/3c919d.png", "00000000000400ff00ff0133010d0142", 1),
+		bounds: {left: 0, top: 0, right: 15, bottom: 14}
+	}
+];

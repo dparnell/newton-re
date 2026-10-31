@@ -1,0 +1,66 @@
+// prMemoFormat, and what only it reaches
+
+prMemoFormat := {
+	symbol: 'prMemoFormat,
+	title: "Memo",
+	auxForm: @toSubjectSlip,
+	margins: {left: 60, top: 0, right: 60, bottom: 0},
+	data: nil,
+	kids: nil,
+	reflowStart: 0,
+	stepChildren: [|Array|:
+		{
+			_proto: @banner,
+			viewBounds: {left: 0, top: 0, right: 200, bottom: 30},
+			viewJustify: vjParentCenterH,
+			text: "•Memo•"
+		},
+		{
+			viewClass: clTextView,
+			viewBounds: {left: 20, top: 40, right: -20, bottom: 80},
+			viewFlags: vVisible + vReadOnly,
+			viewFormat: 0,
+			viewJustify: vjParentFullH,
+			viewFont: tsFancy + tsSize(12),
+			viewSetupFormScript: func() begin
+				self.text := "";
+				if StrFilled(fields.toName) then begin
+						self.text := Stringer([Array: self.text, "To:", " ", fields.toName, $\n])
+					end;
+				(if StrFilled(fields.title) then (self.text := Stringer([Array: self.text, "Subject:", " ", fields.title])))
+			end
+		},
+		{
+			viewClass: clTextView,
+			viewBounds: {left: 20, top: 40, right: -20, bottom: 80},
+			viewFlags: vVisible + vReadOnly,
+			viewFormat: 0,
+			viewJustify: vjRightH + vjParentFullH,
+			viewFont: tsFancy + tsSize(12),
+			viewSetupFormScript: func() begin
+				self.text := "";
+				if StrFilled(fields.fromName) then begin
+						self.text := Stringer([Array: "From:", " ", fields.fromName, $\n])
+					end;
+				(self.text := Stringer([Array: self.text, "", LongDateStr(fields.timestamp, @datetimeStrSpecs.yearMonthDayStrSpec)]))
+			end
+		},
+		{
+			viewClass: clView,
+			viewBounds: {left: 0, top: 100, right: 0, bottom: 0},
+			viewFlags: vVisible + vReadOnly,
+			viewJustify: vjParentFullH + vjParentFullV,
+			viewFormat: 0,
+			viewChildren: page2GutsViewChildren
+		}
+	],
+	viewSetupFormScript: func() begin
+		inherited:viewSetupFormScript();
+		self.data := target.data;
+		(self.reflowStart := 0)
+	end,
+	printNextPageScript: func() begin
+		(if (if kids then (reflowStart < Length(kids))) then self:RedoChildren())
+	end,
+	_proto: @coverPageFormat
+};

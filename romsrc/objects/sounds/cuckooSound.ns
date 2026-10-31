@@ -1,0 +1,61 @@
+// cuckooSound, and what only it reaches
+
+cuckooSound := {
+	sndFrameType: 'codec,
+	codecName: tDTMFCodec,
+	dataType: 16,
+	bufferSize: 6400,
+	bufferCount: 4,
+	compressionType: 6,
+	samplingRate: 21600,
+	samples: tonescore('samples, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 400,
+			fraction: 0,
+			peak: 15000,
+			delay: 0,
+			attack: 0,
+			decay: 0,
+			hold: 90,
+			release: 100,
+			sustain: 32000,
+			tail: 0
+		},
+		{
+			frequency: 800,
+			fraction: 0,
+			peak: 15000,
+			delay: 100,
+			attack: 0,
+			decay: 0,
+			hold: 90,
+			release: 100,
+			sustain: 32000,
+			tail: 0
+		},
+		{
+			frequency: 1200,
+			fraction: 0,
+			peak: 15000,
+			delay: 200,
+			attack: 0,
+			decay: 0,
+			hold: 90,
+			release: 100,
+			sustain: 32000,
+			tail: 0
+		},
+		{
+			frequency: 1600,
+			fraction: 0,
+			peak: 15000,
+			delay: 300,
+			attack: 0,
+			decay: 0,
+			hold: 90,
+			release: 160,
+			sustain: 32000,
+			tail: 0
+		}
+	])
+};

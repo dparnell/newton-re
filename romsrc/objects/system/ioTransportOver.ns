@@ -1,0 +1,554 @@
+// ioTransportOver, and what only it reaches
+
+ioTransportOver := {
+	GetTargetInfo: func(a1) begin
+		local l1;
+		if (if selected then (Length(selected) > 0)) then begin
+				if (Length(selected) = 1) then begin
+						if (l1 := {target: ResolveEntryAlias(selected[0]), targetView: self}).target then begin
+								l1.appSymbol := l1.target.appSymbol
+							end
+					end else begin
+						l1 := {target: CreateTargetCursor('newtOverview, selected), targetView: self};
+						if (a1 = 'Filing) then begin
+								l1.target.labels := '__XXTempLabel
+							end
+					end
+			end else begin
+				l1 := {target: nil, targetView: nil}
+			end;
+		layout.target := l1.target;
+		if (a1 = 'Filing) then begin
+				l1.targetView := newtAppBase
+			end;
+		l1
+	end,
+	overviewMode: nil,
+	NewEntry: func(a1, a2, a3) begin
+		masterSoup:AddEntry(a1, a3);
+		if a2 then begin
+				dataCursor:Goto(a1)
+			end;
+		AddProcrastinatedSend(appSymbol, layout, 'Retarget, '[Array: true], 0)
+	end,
+	ToggleOverview: func() begin
+		overviewMode := (not overviewMode);
+		pieces := nil;
+		scrollOrigin := -1;
+		self:Dirty()
+	end,
+	SelectItem: compile(
+		constants: {
+			kFunction_4c44f5: func(a1, a2) begin
+				IsSameEntry(a1, a2)
+			end
+		},
+		func(a1) begin
+			local l1, l2, l3, l4;
+			if (l2 := self:GetIndexEntry((l1 := (a1 + scrollOrigin)))) then begin
+					l3 := MakeEntryAlias(l2);
+					if self.selected then begin
+							if (l1 := ArrayPos(self.selected, l3, 0, kFunction_4c44f5)) then begin
+									RemoveSlot(self.selected, l1)
+								end else begin
+									AddArraySlot(self.selected, l3)
+								end
+						end else begin
+							self.selected := [Array: l3]
+						end;
+					(l4 := self:LocalBox()).bottom := ((l4.top := (a1 * lineHeight)) + lineHeight);
+					if (if selected then (Length(selected) > 0)) then begin
+							newtAppBase.target := ResolveEntryAlias(selected[0])
+						end;
+					pieces[a1] := self:GetTheRightShape((a1 + scrollOrigin), l4)
+				end else begin
+					pieces := nil
+				end;
+			self:Dirty()
+		end),
+	viewDrawScript: func() begin
+		if (not pieces) then begin
+				self:SetupAbstracts()
+			end;
+		if ((pieces = nil) or (Length(pieces) = 0)) then begin
+				self:DrawShape(self:AppEmpty(), '{})
+			end;
+		inherited:viewDrawScript()
+	end,
+	CheckState: compile(
+		constants: {
+			kFunction_4c4619: func(a1, a2) begin
+				IsSameEntry(a1, a2)
+			end
+		},
+		func(a1) begin
+			l1 := nil;
+			local l1;
+			(foreach l2 in headings do begin
+					if (l2.index = a1) then begin
+							l1 := 'NotCheckable
+						end
+				end);
+			if (not l1) then begin
+					l1 := (if self.selected then ArrayPos(self.selected, self:GetIndexEntry(a1), 0, kFunction_4c4619))
+				end;
+			l1
+		end),
+	selectIndex: 0,
+	viewFlags: vVisible + vClipping + vClickable,
+	GetIndexEntry: func(a1) begin
+		local l1;
+		l1 := (Length(headings) - 1);
+		(while (headings[l1].index > a1) do (l1 := (l1 - 1)));
+		currentHeadingIndex := l1;
+		if (a1 = headings[l1].index) then begin
+				if overviewMode then begin
+						headings[l1].collapsed := nil
+					end else begin
+						headings[l1].collapsed := (not headings[l1].collapsed)
+					end;
+				self:SaveHeadingState(headings[l1]);
+				if (not overviewMode) then begin
+						return nil
+					end else begin
+						a1 := (a1 + 1)
+					end
+			end;
+		if headings[l1].curs then begin
+				headings[l1].curs:Reset()
+			end else begin
+				headings[l1].curs := self:MakeCursor(currentSoupSymbol, headings[l1].spec)
+			end;
+		headings[l1].curs:move(((a1 - headings[l1].index) - 1))
+	end,
+	stateStrings: {
+		pending: pending,
+		ready: ready,
+		Sent: sent,
+		OutLog: logged,
+		Received: new_2,
+		Read: read,
+		InLog: logged
+	},
+	Abstract: func(a1, a2) begin
+		local l1, l2, l3, l4, l5, l6, l7, l8;
+		if (a1 >= numItems) then begin
+				return nil
+			end;
+		l4 := (Length(headings) - 1);
+		(while (headings[l4].index > a1) do (l4 := (l4 - 1)));
+		if (a1 = headings[l4].index) then begin
+				l3 := [Array: (l5 := (if (headings[l4].collapsed or overviewMode) then '{fillPattern: 5} else '{pensize: 2})), MakeOval(((a2.left - selectIndent) + 3), (a2.bottom - 17), ((a2.left - selectIndent) + 11), (a2.bottom - 9)), '{pensize: 1, fillPattern: 0, font: 1058816}, MakeText(headings[l4].title, (a2.left + 1), a2.top, a2.right, (a2.bottom - 8))];
+				l2 := StrWidth((l1 := ParamStr("^0 ^1", [Array: headings[l4].count, (if (headings[l4].count = 1) then "Item" else "Items")])));
+				AddArraySlot(l3, MakeText(l1, ((a2.right - l2) - 5), a2.top, a2.right, (a2.bottom - 8)));
+				AddArraySlot(l3, MakeLine((a2.left + 1), (a2.bottom - 4), a2.right, (a2.bottom - 4)))
+			end else begin
+				if headings[l4].curs then begin
+						headings[l4].curs:Reset()
+					end else begin
+						headings[l4].curs := self:MakeCursor(currentSoupSymbol, headings[l4].spec)
+					end;
+				l7 := GetItemTransport((l6 := headings[l4].curs:move(((a1 - headings[l4].index) - 1))));
+				(l8 := Clone(a2)).left := (a2.left + 30);
+				l8.right := a2.right;
+				try begin
+						l3 := [Array: OffsetShape(MakeShape(l7.icon), a2.left, (a2.top + 2)), l7:GetTitleInfoShape(l6, l8)]
+					end onexception |evt.ex| do begin
+						l3 := [Array: ]
+					end
+			end;
+		l3
+	end,
+	viewBounds: {left: 0, top: 38, right: 0, bottom: -22},
+	dataSoup: nil,
+	masterSoup: nil,
+	SetupItems: func() begin
+		local sortby, theTagSpec, lastItem, dayEnd;
+		pieces := nil;
+		sortby := self:GetAppPreferences().sortby;
+		SetClass((headings := [Array: ]), sortby);
+		theTagSpec := {none: hideFilter};
+		if (storesFilter exists) then begin
+				theTagSpec.storesFilter := storesFilter
+			end;
+		if (not labelsFilter) then begin
+				theTagSpec.all := '_unfiled
+			end else begin
+				if (labelsFilter <> '_all) then begin
+						theTagSpec.all := labelsFilter
+					end
+			end;
+		local l1;
+		(if (sortby = 'Date) then begin
+				lastItem := -1;
+				dayEnd := (dayStart := 0);
+				(l1 := self:GetSpec(sortby, theTagSpec, nil)).IndexValidTest := func(a1) begin
+					local l1, l2;
+					if ((a1 >= dayEnd) or (a1 < dayStart)) then begin
+							dayEnd := ((dayStart := ((l2 := (a1 div 1440)) * 1440)) + 1440);
+							(l1 := Clone('{title: nil, collapsed: nil, count: 1, spec: nil})).sortTag := dayStart;
+							l1.title := LongDateStr(dayStart, 0);
+							l1.spec := self:GetSpec(sortby, theTagSpec, a1);
+							AddArraySlot(headings, l1);
+							lastItem := (lastItem + 1)
+						end else begin
+							(l1 := headings[lastItem]).count := (l1.count + 1);
+							if sortUp then begin
+									l1.spec.endKey := a1
+								end else begin
+									l1.spec.beginKey := a1
+								end
+						end;
+					return nil
+				end;
+				self:MakeCursor(currentSoupSymbol, l1)
+			end else (if (sortby = 'transport) then (foreach l2 in transports do begin
+						local l4, l5, l6, l7;
+						if (if (if (l4 := GetRoot().(l2)) then l4.(checkSlot)) then (l4.owner = appSymbol)) then begin
+								(l5 := Clone('{title: nil, collapsed: nil, count: 1, spec: nil})).title := l4.title;
+								l6 := (l5.spec := self:GetSpec(sortby, theTagSpec, l2));
+								l7 := self:MakeCursor(currentSoupSymbol, l6);
+								l5.count := l7:CountEntries();
+								l5.sortTag := l2;
+								l5.collapsed := l4:GetConfig(collapsedSym);
+								AddArraySlot(headings, l5)
+							end
+					end) else (if (sortby = 'status) then (if (currentSoupSymbol = 'outbox) then begin
+							self:AddStateHeading('pending, theTagSpec);
+							self:AddStateHeading('ready, theTagSpec);
+							self:AddStateHeading('Sent, theTagSpec);
+							(if (not SetContains(hideFilter, 'log)) then self:AddStateHeading('OutLog, theTagSpec))
+						end else begin
+							self:AddStateHeading('Received, theTagSpec);
+							self:AddStateHeading('Read, theTagSpec);
+							(if (not SetContains(hideFilter, 'log)) then self:AddStateHeading('InLog, theTagSpec))
+						end))))
+	end,
+	_proto: @protoOverview,
+	mastersoupSlot: nil,
+	FilterChanged: func() begin
+		if (currentSoupSymbol = 'outbox) then begin
+				self.checkSlot := 'SendRequest
+			end else begin
+				self.checkSlot := 'ReceiveRequest
+			end;
+		l1 := masterSoup.theCursor:entry();
+		masterSoup:SetupCursor();
+		dataCursor := masterSoup:GetCursor();
+		if IsSoupEntry(l1) then begin
+				dataCursor:Goto(l1)
+			end;
+		l2 := [Array: ];
+		l3 := dataCursor:clone();
+		if selected then begin
+				local l1;
+				local l2;
+				local l3;
+				(foreach l4 in selected do begin
+						local l6;
+						if (if IsSoupEntry((l6 := ResolveEntryAlias(l4))) then l3:Goto(l6)) then begin
+								AddArraySlot(l2, l4)
+							end
+					end);
+				selected := l2
+			end;
+		self:Retarget(true)
+	end,
+	EndFlush: func() begin
+		nil
+	end,
+	Scroller: func(a1) begin
+		if (a1 < 0) then begin
+				scrollOrigin := max(0, (scrollOrigin + a1))
+			end else begin
+				scrollOrigin := min(max(0, (numItems - maxLines)), (scrollOrigin + a1))
+			end;
+		pieces := nil;
+		self:Dirty()
+	end,
+	SetupAbstracts: func() begin
+		self:Retarget(nil);
+		l1 := dataCursor:entry();
+		l2 := self:LocalBox();
+		self.maxLines := (l2.bottom div lineHeight);
+		l2.bottom := lineHeight;
+		hilitedIndex := nil;
+		self.numItems := 0;
+		l3 := (scrollOrigin = -1);
+		l4 := nil;
+		l5 := self:GetAppPreferences().sortby;
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		local l5;
+		(foreach l6 in headings do begin
+				l6.index := numItems;
+				if (if l3 then l1) then begin
+						if (l5 = 'Date) then begin
+								l4 := (if (l1.timestamp >= l6.sortTag) then (l1.timestamp < (l6.sortTag + 1440)))
+							end else begin
+								if (l5 = 'transport) then begin
+										l4 := (l1.category = l6.sortTag)
+									end else begin
+										if (l5 = 'status) then begin
+												l4 := (l1.state = l6.sortTag)
+											end
+									end
+							end;
+						if l4 then begin
+								if (overviewMode or l6.collapsed) then begin
+										scrollOrigin := l6.index
+									end else begin
+										l8 := 0;
+										if (not (l9 := l6.curs)) then begin
+												l9 := self:MakeCursor(currentSoupSymbol, l6.spec)
+											end;
+										l9:Goto(l1);
+										(while l9:prev() do (l8 := (l8 + 1)));
+										scrollOrigin := (numItems + l8)
+									end
+							end
+					end;
+				if (if (not overviewMode) then (not l6.collapsed)) then begin
+						numItems := ((numItems + l6.count) + 1)
+					end else begin
+						numItems := (numItems + 1)
+					end;
+				if (if (if (not l3) then (scrollOrigin >= l6.index)) then (scrollOrigin < numItems)) then begin
+						if l6.curs then begin
+								l6.curs:Reset()
+							end else begin
+								l6.curs := self:MakeCursor(currentSoupSymbol, l6.spec)
+							end;
+						if (scrollOrigin > l6.index) then begin
+								l6.curs:move(((scrollOrigin - l6.index) - 1))
+							end;
+						if (l1 := l6.curs:entry()) then begin
+								dataCursor:Goto(l1)
+							end
+					end
+			end);
+		if (scrollOrigin = -1) then begin
+				scrollOrigin := 0
+			end else begin
+				if ((numItems - scrollOrigin) < maxLines) then begin
+						scrollOrigin := max(0, (numItems - maxLines))
+					end
+			end;
+		checkBoxVertOffset := 2;
+		self.pieces := Array(min(maxLines, max((numItems - scrollOrigin), 0)), nil);
+		local l8;
+		local l9;
+		local l10;
+		(for l11 := 0 to (Length(pieces) - 1) do begin
+				pieces[l11] := self:GetTheRightShape((l11 + scrollOrigin), l2);
+				l2.bottom := ((l2.top := l2.bottom) + lineHeight)
+			end);
+		self.numLines := Length(pieces);
+		nil
+	end,
+	SyncItems: func() begin
+		l1 := self:GetAppPreferences().sortby;
+		local l1;
+		(foreach l2 in headings do begin
+				local l4;
+				l4 := self:MakeCursor(currentSoupSymbol, l2.spec);
+				l2.count := l4:CountEntries();
+				if (if (l2.count = 0) then (l1 = 'Date)) then begin
+						SetRemove(headings, l2)
+					end
+			end)
+	end,
+	lineHeight: 28,
+	viewScrollDownScript: func() begin
+		(if (if (numItems > maxLines) then (scrollOrigin < (numItems - maxLines))) then begin
+				atEnd := nil;
+				self:Scroller((maxLines - 1))
+			end else (if (not atEnd) then begin
+					atEnd := true;
+					playsound(@tockSound)
+				end))
+	end,
+	Retarget: func(a1) begin
+		if (((l1 := dataCursor:entry()) = 'deleted) or (l1 = nil)) then begin
+				dataCursor:Next();
+				if (dataCursor:entry() = nil) then begin
+						dataCursor:prev()
+					end
+			end;
+		if a1 then begin
+				scrollOrigin := -1;
+				if (a1 = 'sync) then begin
+						self:SyncItems()
+					end else begin
+						self:SetupItems()
+					end;
+				pieces := nil;
+				self:Dirty()
+			end;
+		local l1;
+		(if retargetChain then (foreach l2 in retargetChain do begin
+					l2:RetargetNotify()
+				end))
+	end,
+	viewJustify: vjParentFullH + vjParentFullV,
+	selected: nil,
+	viewScrollUpScript: func() begin
+		(if (if (numItems > maxLines) then (scrollOrigin > 0)) then begin
+				atEnd := nil;
+				self:Scroller((-(maxLines - 1)))
+			end else (if (not atEnd) then begin
+					atEnd := true;
+					playsound(@tockSound)
+				end))
+	end,
+	DuplicateEntry: func(a1) begin
+		self:ioDuplicateEntry(a1)
+	end,
+	dataCursor: nil,
+	AddStateHeading: func(a1, a2) begin
+		local l1;
+		(l1 := Clone('{title: nil, collapsed: nil, count: 1, spec: nil})).sortTag := a1;
+		l1.title := stateStrings.(a1);
+		l1.spec := self:GetSpec('status, a2, a1);
+		curs := self:MakeCursor(currentSoupSymbol, l1.spec);
+		l1.count := curs:CountEntries();
+		l1.collapsed := statesCollapsed.(a1);
+		AddArraySlot(headings, l1)
+	end,
+	viewSetupFormScript: func() begin
+		local l1;
+		mastersoupSlot := currentSoupSymbol;
+		masterSoup := allSoups.(mastersoupSlot);
+		(if (if (l1 := GetUserConfig('blessedapp)) then (GetRoot().(l1) = newtAppBase)) then newtAppBase:FileUsedItems())
+	end,
+	SaveHeadingState: func(a1) begin
+		local l1, l2;
+		(if ((l1 := ClassOf(headings)) = 'transport) then (if (l2 := GetRoot().(a1.sortTag)) then l2:SetConfig(collapsedSym, a1.collapsed)) else (if (l1 = 'status) then (statesCollapsed.(a1.sortTag) := a1.collapsed)))
+	end,
+	FilingChangedX: func() begin
+		(if IsSoupEntry(target) then begin
+				self:Fileit(target);
+				EntryChange(target);
+				selected := nil;
+				layout:Retarget(true)
+			end)
+	end,
+	HitItem: func(a1, a2, a3) begin
+		local l1;
+		(if ((a1 + scrollOrigin) < numItems) then begin
+				if (if (a2 < selectIndent) then (not overviewMode)) then begin
+						self:SelectItem(a1)
+					end else begin
+						if (l1 := self:GetIndexEntry((a1 + scrollOrigin))) then begin
+								if (self:GetAppPreferences().sortby <> 'Date) then begin
+										masterSoup.soupQuery := headings[currentHeadingIndex].spec;
+										masterSoup:SetupCursor();
+										dataCursor := masterSoup:GetCursor()
+									end;
+								dataCursor:Goto(l1);
+								if overviewMode then begin
+										overviewMode := nil;
+										pieces := nil;
+										scrollOrigin := -1;
+										self:Dirty()
+									end else begin
+										newtAppBase:ShowLayout('itemLayout)
+									end
+							end else begin
+								pieces := nil;
+								self:Dirty()
+							end
+					end;
+				true
+			end)
+	end,
+	FileThis: func(a1, a2, a3, a4, a5) begin
+		local l1, l2;
+		l2 := (l1 := GetTargetCursor(a1, nil)):entry();
+		(while l2 do begin
+				if a2 then begin
+						if (not a3) then begin
+								if l2.labels then begin
+										RemoveSlot(l2, 'labels);
+										self:Fileit(l2);
+										EntryChange(l2)
+									end
+							end else begin
+								if (a3 <> l2.labels) then begin
+										l2.labels := a3;
+										self:Fileit(l2);
+										EntryChange(l2)
+									end
+							end
+					end;
+				if a4 then begin
+						self:MoveTarget(l2, a5)
+					end;
+				(l2 := l1:Next())
+			end);
+		selected := nil;
+		layout:Retarget(true)
+	end,
+	NewTarget: func() begin
+		self:Retarget(true)
+	end,
+	headings: nil,
+	FlushData: func() begin
+		nil
+	end,
+	KillEntry: func(a1) begin
+		self:ioKillEntry(a1)
+	end,
+	viewSetupChildrenScript: func() begin
+		local l1;
+		inherited:?viewSetupChildrenScript();
+		mastersoupSlot := currentSoupSymbol;
+		dataSoup := (masterSoup := allSoups.(mastersoupSlot)).theSoup;
+		l1 := masterSoup:GetCursor():entry();
+		masterSoup.soupQuery := {type: 'index, indexPath: 'timestamp};
+		masterSoup:SetupCursor();
+		dataCursor := masterSoup:GetCursor();
+		if IsSoupEntry(l1) then begin
+				dataCursor:Goto(l1)
+			end;
+		newtAppBase.layout := self;
+		newtAppBase.targetView := self;
+		newtAppBase.target := nil;
+		if (currentSoupSymbol = 'outbox) then begin
+				self.checkSlot := 'SendRequest;
+				self.collapsedSym := 'outHeaderCollapsed
+			end else begin
+				self.checkSlot := 'ReceiveRequest;
+				self.collapsedSym := 'inHeaderCollapsed
+			end;
+		scrollOrigin := -1;
+		self:SetupItems()
+	end,
+	hiliter: compile(
+		constants: {
+			kLiteral_3c5eed: '{transferMode: 2, penPattern: 0, fillPattern: 5}
+		},
+		func(a1, a2, a3) begin
+			local l1, l2, l3, l4;
+			l1 := ShapeBounds(a1);
+			(if a2 then (if (l1.left < selectIndent) then begin
+						l2 := self:CheckState((a2 + scrollOrigin));
+						(l3 := Clone(kLiteral_3c5eed)).fillPattern := 5;
+						(if (l2 = 'NotCheckable) then self:DrawShape(OffsetShape((l4 := [Array: l3, MakeOval((l1.left + 5), (l1.bottom - 15), (l1.left + 9), (l1.bottom - 11))]), l1.left, (l1.top + (a2 * lineHeight))), kLiteral_3c5eed) else begin
+								if (a3 = 'on) then begin
+										l2 := (not l2)
+									end;
+								self:DrawShape(OffsetShape((l4 := (if l2 then MakeShape(CheckOn) else MakeShape(CheckOff))), (l1.left + checkBoxHorzOffset), ((l1.top + checkBoxVertOffset) + (a2 * lineHeight))), '{transferMode: 0, penPattern: 0, fillPattern: 1})
+							end)
+					end else self:DrawShape(a1, {transform: [Array: 0, (a2 * lineHeight)]})))
+		end),
+	atEnd: nil,
+	currentHeadingIndex: nil,
+	autoDeselect: nil
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+SetupItems_literal2 := same("ioTransportOver.SetupItems.literals[20].literals[2]");

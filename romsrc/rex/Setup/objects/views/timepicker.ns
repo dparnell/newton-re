@@ -1,0 +1,66 @@
+// timepicker, and what only it reaches
+
+timepicker := {
+	stepChildren: [stepChildren:
+		nameItem,
+		{
+			viewBounds: {left: 0, top: 145, right: 236, bottom: 235},
+			viewFlags: vVisible,
+			viewFormat: nil,
+			viewTransferMode: 0,
+			viewJustify: vjRightH + vjParentCenterH,
+			viewClass: clPictureView,
+			icon: picture('picture, "resources/picture/7af191")
+		},
+		timepickerItem
+	],
+	Time: nil,
+	viewSetupChildrenScript: func() begin
+		(Time := Time())
+	end,
+	TearDown: func() begin
+		fReviewDone := true;
+		SetTime(Time)
+	end,
+	description: "To set the digital clock, tap the upper half of a number to increase it and the bottom half to decrease it.  \u000d\u000dBe sure to set AM or PM, if applicable.",
+	titleTExt: "Set \u000dthe Time",
+	Refresh: func() begin
+		self:SetFeedback(Stringer([Array: "The current time is\n", HourMinute(Time)]))
+	end,
+	debug: "timepicker",
+	viewSetupDoneScript: func() begin
+		SetKeyView(self, 0)
+	end,
+	_proto: @8353,
+	DigitalClock: nil,
+	stepAllocateContext: [|Array|:
+		'_defaultButton,
+		nameItem_2,
+		'vGoBackButton,
+		nameItem_3,
+		'vCloser,
+		nameItem_4,
+		'vFeedback,
+		nameItem_5,
+		'DigitalClock,
+		timepickerItem
+	],
+	preAllocatedContext: 'TimePicker
+};
+
+timepickerItem := {
+	viewBounds: {left: 74, top: 48, right: 199, bottom: 78},
+	viewJustify: vjSiblingLeftH + vjSiblingTopV,
+	timeChanged: func() begin
+		self:Refresh()
+	end,
+	viewTransferMode: 0,
+	_proto: @protoDigitalClock,
+	preAllocatedContext: 'DigitalClock
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+timeChanged_code := same("timepickerItem.timeChanged.instructions");
+
+viewSetupDoneScript_code_3 := same("timepicker.viewSetupDoneScript.instructions");

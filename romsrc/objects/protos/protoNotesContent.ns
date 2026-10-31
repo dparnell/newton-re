@@ -1,0 +1,84 @@
+// protoNotesContent, and what only it reaches
+
+protoNotesContent := {
+	debug: 156619,
+	viewFlags: vVisible + vClipping + vClickable,
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	title: nil,
+	SetupForm: func() begin
+		nil
+	end,
+	teardownForm: func() begin
+		nil
+	end,
+	viewChildren: [viewChildren:
+		{
+			debug: titleLabel,
+			viewJustify: 8388662,
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 30},
+			text: nil,
+			viewSetupFormScript: func() begin
+				(text := title)
+			end,
+			_proto: @protoStaticText
+		},
+		notesArea,
+		{
+			viewJustify: vjCenterH + vjCenterV + vjParentBottomV,
+			viewBounds: {left: 5, top: -18, right: 23, bottom: -5},
+			viewSetupFormScript: func() begin
+				if (recTogOptions exists) then begin
+						_recogPopup := recTogOptions
+					end;
+				inherited:?viewSetupFormScript()
+			end,
+			_proto: @recToggle
+		},
+		{_proto: @protoCancelButton}
+	],
+	notesArea: nil,
+	allocateContext: [|Array|: 'notesArea, notesArea],
+	_proto: @newtFalseEntryView
+};
+
+notesArea := {
+	debug: 19835,
+	viewFlags: vAnythingAllowed + vVisible + vClipping,
+	viewFormat: vfLinesLtGray,
+	viewBounds: {left: 4, top: 25, right: -4, bottom: -20},
+	viewJustify: vjParentFullH + vjParentFullV,
+	target: nil,
+	optionFlags: 1,
+	path: 'data,
+	viewLineSpacing: 28,
+	notesDirty: nil,
+	viewSetupFormScript: func() begin
+		self:SetupForm();
+		inherited:?viewSetupFormScript();
+		notesDirty := nil;
+		self:?setupOther()
+	end,
+	viewQuitScript: func() begin
+		self:teardownForm()
+	end,
+	viewChangedScript: func(a1, a2) begin
+		(notesDirty := true)
+	end,
+	viewAddChildScript: func(a1) begin
+		notesDirty := true;
+		nil
+	end,
+	viewDropChildScript: func(a1) begin
+		notesDirty := true;
+		nil
+	end,
+	preallocatedContext: 'notesArea,
+	_proto: @newtEditView
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewChangedScript_code_4 := same("notesArea.viewChangedScript.instructions");
+
+viewAddChildScript_code := same("notesArea.viewAddChildScript.instructions");

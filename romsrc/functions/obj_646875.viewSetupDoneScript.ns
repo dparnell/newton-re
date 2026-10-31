@@ -1,8 +1,0 @@
-@@ 0x478aa1
-func() begin
-	if OnlyOneRoutingSlip() then begin
-			vars.CurrentRouteSlip := self
-		end;
-	nil
-end
-@@end

@@ -1,0 +1,178 @@
+// export85, and what only it reaches
+
+export85 := {
+	viewBounds: {left: 0, top: 50, right: 210, bottom: 170},
+	stepChildren: [stepChildren:
+		{
+			title: dock,
+			viewBounds: {left: 10, top: 0, right: 106, bottom: 16},
+			titleIcon: {bits: titleIconBits, bounds: {left: 0, top: 0, right: 19, bottom: 11}},
+			_proto: @protoTitle
+		},
+		export85Item,
+		{
+			buttonClickScript: func() begin
+				GetRoot().Connection.theEndpoint:ConnectionDone(0);
+				inherited:?buttonClickScript()
+			end,
+			_proto: @protoCancelButton
+		},
+		{
+			text: connect,
+			buttonClickScript: func() begin
+				local myCallback;
+				local l1;
+				AddDeferredAction(func() begin
+					base:Close()
+				end, nil);
+				(if (prefsFrame.type = 'modem) then begin
+						l1 := modemStuff:GetPhone();
+						if (if (if IsFrame(options) then l1) then (StrLen(l1) > 0)) then begin
+								(options := DeepClone(options)).phonenumber := l1;
+								options := {connectOptions: options, password: password}
+							end else begin
+								options := nil
+							end;
+						AddDeferredCall(callback, [Array: options])
+					end else begin
+						myCallback := func() begin
+							if IsFrame(options) then begin
+									options := {connectOptions: options, password: password}
+								end else begin
+									options := nil
+								end;
+							call callback with (options)
+						end;
+						(if options.callBeforeConnect then options:callBeforeConnect((options := DeepClone(options)), func(a1) begin
+								options := a1;
+								AddDeferredCall(myCallback, nil)
+							end) else AddDeferredCall(myCallback, nil))
+					end)
+			end,
+			viewBounds: {left: -54, top: -18, right: -7, bottom: -5},
+			viewJustify: 8390790,
+			_proto: @protoTextButton
+		},
+		export85Item_2,
+		export85Item_3
+	],
+	options: nil,
+	prefsFrame: nil,
+	callback: nil,
+	password: nil,
+	OpenOn: func(a1, a2, a3, a4) begin
+		local l1;
+		(l1 := BuildContext(self)).options := a1;
+		l1.prefsFrame := a2;
+		l1.password := a3;
+		l1.callback := a4;
+		l1:Open()
+	end,
+	viewSetupFormScript: func() begin
+		if options.button then begin
+				dialAssist.viewFlags := BAnd(dialAssist.viewFlags, -2);
+				modemStuff.viewFlags := BAnd(modemStuff.viewFlags, -2)
+			end else begin
+				special.viewFlags := BAnd(special.viewFlags, -2)
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	_proto: @protoFloater,
+	modemStuff: nil,
+	stepAllocateContext: [|Array|: 'modemStuff, export85Item, 'dialAssist, export85Item_2, 'special, export85Item_3],
+	dialAssist: nil,
+	special: nil
+};
+
+willDial := "Will dial: ";
+
+export85Item := {
+	viewBounds: {left: 7, top: 20, right: -7, bottom: 84},
+	viewFlags: vVisible,
+	viewFormat: 0,
+	stepChildren: [stepChildren:
+		{
+			viewBounds: {left: 0, top: 0, right: 200, bottom: 26},
+			viewJustify: vjCenterV,
+			JamIt: func() begin
+				inherited:?JamIt();
+				modemStuff.phonenumber := nil;
+				self:SetNewWillDial(self:GetPhone())
+			end,
+			_proto: @protoSenderPopup
+		},
+		export85ItemItem
+	],
+	viewJustify: vjParentFullH,
+	SetNewWillDial: func(a1) begin
+		phonenumber := a1;
+		SetValue(willDial, 'text, Stringer([Array: "Will dial: ", " ", self:GetPhone()]))
+	end,
+	phonenumber: nil,
+	GetPhone: func() begin
+		local l1, l2;
+		(if phonenumber then phonenumber else begin
+				l1 := GetRoot().Connection;
+				(if (if (l2 := l1:GetWorksite(prefsFrame.phoneCurrentChoice)) then l2.connectionPhone) then self:MungePhone(MakePhone({areacode: l2.areacode, phone: l2.connectionPhone}), l1:WorksiteToCountry(l2)) else "")
+			end)
+	end,
+	viewClass: clView,
+	willDial: nil,
+	stepAllocateContext: [|Array|: 'willDial, export85ItemItem],
+	preAllocatedContext: 'modemStuff
+};
+
+export85ItemItem := {
+	text: willDial,
+	viewBounds: {left: 0, top: -32, right: 0, bottom: 0},
+	viewJustify: 8388790,
+	viewFont: tsSimple + tsSize(9),
+	viewSetupFormScript: func() begin
+		(self.text := Stringer([Array: "Will dial: ", " ", self:GetPhone()]))
+	end,
+	_proto: @protoStaticText,
+	preAllocatedContext: 'willDial
+};
+
+export85Item_2 := {
+	buttonClickScript: func() begin
+		local l1, l2;
+		l1 := GetRoot().Connection;
+		if (if (l2 := l1:GetWorksite(prefsFrame.phoneCurrentChoice)) then l2.connectionPhone) then begin
+				callOptionsSlip.inNumber := MakePhone({areacode: l2.areacode, phone: l2.connectionPhone})
+			end else begin
+				callOptionsSlip.inNumber := ""
+			end;
+		callOptionsSlip.inCountry := l1:WorksiteToCountry(l2);
+		callOptionsSlip.invoker := self;
+		callOptionsSlip:Toggle()
+	end,
+	UpdatePhone: func() begin
+		(if callOptionsSlip.outNumber then modemStuff:SetNewWillDial(callOptionsSlip.outNumber.text))
+	end,
+	_proto: @protoCallassistButton,
+	preAllocatedContext: 'dialAssist
+};
+
+export85Item_3 := {
+	text: export85Item_3Text,
+	buttonClickScript: func() begin
+		(if options.buttonClickScript then call options.buttonClickScript with (options))
+	end,
+	viewBounds: {left: -133, top: -18, right: -79, bottom: -5},
+	viewJustify: 8388774,
+	viewSetupFormScript: func() begin
+		local l1;
+		(if options.button then begin
+				self.text := options.button.buttonTitle;
+				(l1 := Clone(viewBounds)).left := ((viewBounds.right - StrWidth(text)) - 7);
+				(self.viewBounds := l1)
+			end)
+	end,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'special
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+SetNewWillDial_literal4 := same("export85Item.SetNewWillDial.literals[4]");

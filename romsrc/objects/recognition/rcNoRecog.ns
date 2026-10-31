@@ -1,0 +1,16 @@
+// rcNoRecog, and what only it reaches
+
+rcNoRecog := {
+	doTextRecognition: nil,
+	doShapeRecognition: nil,
+	doFormulaRecognition: nil,
+	doInkWordRecognition: nil,
+	useWordReplayDomain: nil,
+	learningEnabledOption: true,
+	bigLearningEnabled: nil,
+	wordsCursiveOption: nil,
+	numbersCursiveOption: nil,
+	punctuationcursiveoption: nil,
+	lettersCursiveOption: nil,
+	lettersInFieldsOption: nil
+};

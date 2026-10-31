@@ -1,0 +1,186 @@
+// cardAlertTemplate, and what only it reaches
+
+cardAlertTemplate := {
+	messageHIndent: 36,
+	cardMessage: nil,
+	viewSetupFormScript: func() begin
+		AddArraySlot(OpenCardViews, self);
+		self.message := cardMessage.message;
+		self.buttonList := cardMessage.buttonList;
+		inherited:?viewSetupFormScript()
+	end,
+	viewSetupDoneScript: func() begin
+		inherited:?viewSetupDoneScript();
+		(if cardMessage.keepSlotPowered then self:SetupIdle(1))
+	end,
+	viewQuitScript: func() begin
+		SetRemove(OpenCardViews, self);
+		inherited:?viewQuitScript()
+	end,
+	viewIdleScript: func() begin
+		local l1, l2;
+		l1 := inherited:?viewIdleScript();
+		if cardMessage.keepSlotPowered then begin
+				if (l2 := GetCardSlotStores(CardSlot)) then begin
+						l2[0]:IsReadOnly()
+					end;
+				if (not l1) then begin
+						l1 := 5000
+					end
+			end;
+		l1
+	end,
+	BuildCardAlertFromCardMessage: func(a1, a2, a3) begin
+		local l1;
+		if IsFunction(a1.message) then begin
+				a1 := {_proto: a1, message: a1:message(a3)}
+			end;
+		(l1 := BuildContext(self)).CardSlot := a2;
+		l1.cardMessage := a1;
+		l1
+	end,
+	BuildCardAlert: func(a1, a2, a3) begin
+		self:BuildCardAlertFromCardMessage(cardMessageList.(a1), a2, a3)
+	end,
+	cardMessageList: {
+		SRAMCardReplaceBattery: {
+			message: "The battery on this card must be replaced. Your information may be lost.",
+			buttonList: buttonList_3,
+			keepSlotPowered: true
+		},
+		LockedDefaultStore: {
+			message: func(a1) begin
+				ParamStr("Card \u201C\u^0\u201D\u is locked. New information cannot be saved on it. Remove the card, unlock it, then reinsert the card.", [Array: a1])
+			end,
+			buttonList: buttonList_3
+		},
+		CardReInserted: {
+			message: "You may now safely remove this card.",
+			buttonList: [|Array|: {value: true, text: "Remount"}]
+		},
+		|Convert1.XCard?|: {
+			message: "This card was formatted with an older version of the system software.",
+			buttonList: buttonList
+		},
+		MiscCardError: {
+			message: func(a1) begin
+				ParamStr("There is a problem with this card. (^0)", [Array: GetRoot():TranslateError(a1)])
+			end,
+			buttonList: buttonList_3
+		},
+		CommCardInserted: {message: "A communications card has been inserted.", buttonList: buttonList_3},
+		|ConvertIncompatibleSoups?|: {
+			message: func(a1) begin
+				ParamStr("Card \u201C\u^0\u201D\u is formatted for a different language. Do you want to update it?", [Array: a1])
+			end,
+			buttonList: [|Array|: {value: true, text: update}, cardAlertTemplateItem]
+		},
+		|Format?|: {
+			message: "This card appears to be new. Do you want to erase and format this card?",
+			buttonList: buttonList_2
+		},
+		|FormatWithExtremePrejudice?|: {
+			message: "Do you want to completely erase this card?\u000d(Inserting a card with “Prefs” open allows erasing damaged cards without reading them.)",
+			buttonList: [|Array|: buttonList_2Item, cardAlertTemplateItem_2]
+		},
+		FlashCardBadVpp: {
+			message: "Writing to this type of card is unsupported. This card will be mounted read-only.",
+			buttonList: buttonList_3
+		},
+		|MakeDefaultStore?|: {
+			message: func(a1) begin
+				ParamStr("Save new information and packages on card \u201C\u^0\u201D\u?", [Array: a1])
+			end,
+			buttonList: [|Array|: {value: true, text: uErasePersistentDataButton1Str}, cardAlertTemplateItem_2]
+		},
+		incompatibleSoups: {
+			message: func(a1) begin
+				ParamStr("Card \u201C\u^0\u201D\u is locked and formatted for a different language. To update it remove the card, unlock it, then reinsert the card.", [Array: a1])
+			end,
+			buttonList: buttonList_3
+		},
+		|Convert1.XCardReally?|: {
+			message: "Converting this card will make it unusable on older systems. Are you sure you want to do this?",
+			buttonList: buttonList
+		},
+		UnrecognizedCardInserted: {message: "An unrecognized type of card has been inserted.", buttonList: buttonList_3},
+		|FormatAfterMountError?|: {
+			message: func(a1) begin
+				ParamStr("This card cannot be read due to an error (^0). To use this card you must first erase it.", [Array: GetRoot():TranslateError(a1)])
+			end,
+			buttonList: buttonList_2
+		},
+		|FormatReallyNoCancel?|: {message: thisWillDeleteAll, buttonList: buttonList_2},
+		SRAMCardLowBattery: {
+			message: "The battery on this card needs to be replaced. Do it now and then tap OK.",
+			buttonList: buttonList_3,
+			keepSlotPowered: true
+		},
+		RepairLockedCardError: {
+			message: "This card needs repair. To repair the card, remove it, unlock it, then reinsert the card.",
+			buttonList: buttonList_3
+		},
+		FormatBadVppCard: {
+			message: "Writing to this type of card is unsupported. This unformatted card cannot be used.",
+			buttonList: buttonList_3
+		},
+		|ActivatePackages?|: {
+			message: func(a1) begin
+				ParamStr("Activate packages on card \u201C\u^0\u201D\u?", [Array: a1])
+			end,
+			buttonList: [|Array|: {value: true, text: activate}, cardAlertTemplateItem_2]
+		},
+		|FormatReally?|: {message: thisWillDeleteAll, buttonList: [|Array|: buttonList_2Item, cardAlertTemplateItem]},
+		BadStorePassword: {
+			message: "An incorrect password was entered. You will not be able to read this card.",
+			buttonList: buttonList_3
+		},
+		ProtectedStore: {message: "This card is protected. You will not be able to read it.", buttonList: buttonList_3},
+		SmileAfterMountError: {
+			message: func(a1) begin
+				ParamStr("This card cannot be read. (^0) To erase the card remove it, unlock it, then reinsert the card with \u201C\uPrefs\u201D\u open.", [Array: GetRoot():TranslateError(a1)])
+			end,
+			buttonList: buttonList_3
+		},
+		FormatLockedCard: {
+			message: "This unformatted card is write protected. To format the card remove it, unlock it, then reinsert the card.",
+			buttonList: buttonList_3
+		}
+	},
+	stepChildren: [stepChildren:
+		{
+			viewClass: clView,
+			viewFlags: vVisible,
+			viewJustify: 0,
+			viewBounds: {left: 10, top: 15, right: 46, bottom: 51},
+			viewDrawScript: func() begin
+				self:DrawCardSlotIcon(CardSlot, RelBounds(0, 0, 36, 36), 0)
+			end
+		}
+	],
+	_proto: @protoConfirm
+};
+
+cardAlertTemplateItem := {value: nil, text: uErasePersistentConfirmButton0Str, keyValue: 'default};
+
+convert := "Convert";
+
+buttonList_2Item := {value: true, text: erase};
+
+cardAlertTemplateItem_2 := {value: nil, text: uErasePersistentDataButton0Str, keyValue: 'default};
+
+buttonList := [|Array|: {value: true, text: convert}, {value: nil, text: "Mount read-only", keyValue: 'default}];
+
+buttonList_2 := [|Array|: buttonList_2Item];
+
+buttonList_3 := [|Array|: {value: true, text: uErasePersistentConfirmButton1Str, keyValue: 'default}];
+
+activate := "Activate";
+
+thisWillDeleteAll := "This will delete all information on this card. Are you sure you want to erase it?";
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+message_code := same("cardAlertTemplate.cardMessageList.LockedDefaultStore.message.instructions");
+
+message_code_2 := same("cardAlertTemplate.cardMessageList.MiscCardError.message.instructions");

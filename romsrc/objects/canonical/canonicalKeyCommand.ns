@@ -1,0 +1,3 @@
+// canonicalKeyCommand, and what only it reaches
+
+canonicalKeyCommand := {char: nil, modifiers: nil, keyMessage: nil, name: nil, category: nil};

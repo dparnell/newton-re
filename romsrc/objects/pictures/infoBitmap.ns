@@ -1,0 +1,7 @@
+// infoBitmap, and what only it reaches
+
+infoBitmap := {
+	mask: bitmap('mask, "resources/mask/3c9221.png", "000000000004005a005a00e3006600ef", 1),
+	bits: bitmap('bits, "resources/bits/3c926d.png", "000000000004005a005a00e3006600ef", 1),
+	bounds: {left: 0, top: 0, right: 12, bottom: 12}
+};

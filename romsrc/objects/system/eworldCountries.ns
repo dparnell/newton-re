@@ -1,0 +1,25 @@
+// eworldCountries, and what only it reaches
+
+eworldCountries := [|Array|:
+	australia,
+	belgium,
+	canada,
+	denmark,
+	finland,
+	france,
+	germany,
+	hongKong,
+	ireland,
+	israel,
+	italy,
+	japan,
+	netherlands,
+	newZealand,
+	norway,
+	singapore,
+	southAfrica,
+	sweden,
+	switzerland,
+	unitedKingdom,
+	uSA
+];

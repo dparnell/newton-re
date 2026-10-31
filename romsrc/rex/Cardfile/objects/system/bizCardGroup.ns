@@ -1,0 +1,52 @@
+// bizCardGroup, and what only it reaches
+
+bizCardGroup := {
+	bizCardIcon: {bits: bizCardIconBits, bounds: {left: 0, top: 0, right: 38, bottom: 23}},
+	bizCardNum: 1,
+	name: "bizCardGroup",
+	symbol: 'bizCardGroup,
+	type: 'bizcard,
+	stepChildren: [stepChildren:
+		{
+			icon: {bits: groupBits, bounds: {left: 0, top: 0, right: 22, bottom: 16}},
+			viewBounds: {left: 5, top: 7, right: 29, bottom: 22},
+			viewFlags: vVisible,
+			viewFormat: 0,
+			viewClass: clPictureView
+		},
+		{
+			viewBounds: {left: 0, top: 4, right: 0, bottom: 28},
+			viewJustify: vjParentFullH,
+			layouts: {group: [|Array|: 'default]},
+			viewFont: tsFancy + tsSize(18),
+			AddAllInfoItem: func(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) begin
+				a8.left := (a8.left + 30);
+				inherited:?AddAllInfoItem(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
+			end,
+			reduceFont: true,
+			_proto: @8242
+		},
+		{
+			viewBounds: {left: 5, top: 0, right: 0, bottom: 15},
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			layouts: {group: [|Array|: 'groupHeader]},
+			viewFont: tsFancy + tsSize(10),
+			_proto: @8242
+		},
+		{
+			viewBounds: {left: 20, top: 5, right: 0, bottom: 140},
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			layouts: {group: [|Array|: 'group]},
+			viewFont: tsFancy + tsSize(10),
+			viewSetupChildrenScript: func() begin
+				local l1, l2, l3;
+				inherited:viewSetupChildrenScript();
+				l1 := ShapeBounds(shapeArray);
+				(l2 := Clone(viewBounds)).bottom := ((l2.top + l1.bottom) - l1.top);
+				SetValue(self, 'viewBounds, l2)
+			end,
+			_proto: @8242
+		}
+	],
+	_proto: @8236
+};

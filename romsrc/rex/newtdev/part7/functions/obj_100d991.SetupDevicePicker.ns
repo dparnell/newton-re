@@ -1,5 +1,0 @@
-@@ 0x100dcf1
-func(a1) begin
-	(self.labelCommands := self:MakeLabelCommands())
-end
-@@end

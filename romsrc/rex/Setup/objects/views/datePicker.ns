@@ -1,0 +1,61 @@
+// datePicker, and what only it reaches
+
+datePicker := {
+	stepChildren: [stepChildren:
+		nameItem,
+		{
+			viewBounds: {left: 0, top: 100, right: 240, bottom: 200},
+			viewFlags: vVisible,
+			viewFormat: nil,
+			viewJustify: vjRightH + vjParentCenterH,
+			viewTransferMode: 0,
+			viewClass: clPictureView,
+			icon: picture('picture, "resources/picture/7ae0c5")
+		},
+		{
+			viewBounds: {left: 0, top: 110, right: 141, bottom: 250},
+			viewJustify: vjCenterH + vjParentCenterH,
+			viewTransferMode: 0,
+			selectedDates: nil,
+			noTodayShow: 'removesToday,
+			NewTime: func(a1) begin
+				(dateValue := a1[0])
+			end,
+			_proto: @protoDateNYearPicker
+		},
+		{
+			viewFlags: vVisible + vReadOnly,
+			viewFormat: vfFillWhite + vfPen(1),
+			viewLineSpacing: 14,
+			viewFont: @fontSystem10Bold,
+			viewBounds: {left: 0, top: -55, right: 236, bottom: -25},
+			text: "To change the month, tap the arrows.  Then tap today’s date.",
+			viewJustify: vjParentCenterH + vjParentBottomV,
+			viewClass: clParagraphView
+		}
+	],
+	titleTExt: "Set Today’s Date\u000d\u000d",
+	description: "To set the year, tap the upper half of a number to increase it and the bottom half to decrease it.",
+	TearDown: func() begin
+		local l1;
+		(if dateValue then SetTime((l1 := (((l1 := dateValue) - (l1 mod 1440)) + (Time() mod 1440)))))
+	end,
+	fullDateSpec: 45833,
+	viewSetupFormScript: func() begin
+		inherited:?viewSetupFormScript();
+		self.value := Date(Time()).year;
+		(selectedDates := [Array: Time()])
+	end,
+	viewSetupDoneScript: func() begin
+		SetKeyView(self, 0);
+		self:Refresh()
+	end,
+	Refresh: func() begin
+		nil
+	end,
+	declareSelf: 'cover,
+	dateValue: nil,
+	debug: "datePicker",
+	_proto: @8353,
+	preAllocatedContext: 'datePicker
+};

@@ -1,6 +1,0 @@
-@@ 0x3c6325
-func(a1) begin
-	RemoveSlot(CommConfigChangeRegistry, a1);
-	nil
-end
-@@end

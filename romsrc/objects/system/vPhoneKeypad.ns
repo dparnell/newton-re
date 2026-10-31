@@ -1,0 +1,174 @@
+// vPhoneKeypad, and what only it reaches
+
+vPhoneKeypad := {
+	height: 200,
+	name: 'vPhoneKeypad,
+	kids: [|Array|:
+		@protoStatusText,
+		{
+			viewClass: clView,
+			viewFlags: vVisible,
+			viewFormat: vfFrameBlack + vfPen(2),
+			viewBounds: {top: 10, left: 10, right: -10, bottom: 33},
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			name: 'LCD_Screen,
+			debug: 35824,
+			viewChildren: [viewChildren:
+				{
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+					viewJustify: 8388852,
+					viewFont: tsSystem + tsSize(14) + tsBold,
+					firstTime: true,
+					viewSetupFormScript: func() begin
+						base.keyedDigits := self;
+						(text := self:path().(name))
+					end,
+					viewQuitScript: func() begin
+						(base.keyedDigits := nil)
+					end,
+					AddKey: func(a1, a2) begin
+						local l1, l2;
+						l1 := "";
+						if (firstTime or a2) then begin
+								l1 := a1;
+								firstTime := a2
+							end else begin
+								l2 := self:Parent():LocalBox().right;
+								l1 := Stringer([Array: keyedDigits.text, a1]);
+								(while (StrWidth(l1) > l2) do (l1 := Substr(l1, 1, (StrLen(l1) - 1))))
+							end;
+						SetValue(keyedDigits, 'text, l1)
+					end,
+					name: 'keyedDigits,
+					debug: 81047,
+					_proto: @protoStatusText
+				}
+			]
+		},
+		{
+			viewBounds: {left: 50, top: 13, right: -50, bottom: 110},
+			viewJustify: vjParentFullH + vjParentFullV + vjSiblingBottomV,
+			keyPressScript: func(a1) begin
+				keyedDigits:AddKey(Stringer([Array: "", a1]), nil);
+				GetRoot().(appSymbol).callEndpoint:SendDigit(a1, true);
+				true
+			end,
+			name: 'phonePad,
+			debug: 11086,
+			_proto: @touchtonePad
+		},
+		{
+			viewBounds: {left: 5, top: -18, right: 75, bottom: -5},
+			viewJustify: vjCenterH + vjCenterV + vjParentBottomV,
+			popup: nil,
+			text: "  Quick Entry",
+			viewSetupFormScript: func() begin
+				popup := [Array: ];
+				if (l1 := ResolveEntryAlias(GetUserConfig('currentPersona))) then begin
+						if (if IsArray((l2 := GetRoot().cardfile:bcPhoneNumber(l1, 'phone))) then (Length(l2) > 0)) then begin
+								local l1;
+								local l2;
+								(foreach l3 in l2 do begin
+										self:addCmds(ParamStr("^0 ^1", [Array: PhoneTypes.phoneText.(ClassOf(l3)), "Phone"]), MakeDisplayPhone(l3), nil)
+									end)
+							end;
+						l5 := true;
+						if (if IsArray((l6 := GetRoot().cardfile:bcCreditCards(l1, '|string.card|))) then (Length(l6) > 0)) then begin
+								local l5;
+								local l6;
+								(foreach l7 in l6 do begin
+										l5 := self:addCmds(l7.creditCardName, l7.creditCardNum, l5)
+									end)
+							end
+					end;
+				l5 := true;
+				l9 := GetRoot().(appSymbol).currentItem;
+				l10 := nil;
+				l11 := nil;
+				if (if (if (if (if l9 then (l10 := l9.toRef)) then (Length(l10) > 0)) then l10[0]) then (l11 := EntryFromObj(l10[0]))) then begin
+						local l9;
+						local l10;
+						local l11;
+						local l12;
+						(foreach l13 in (l12 := GetRoot().cardfile:bcCustomFields(l11, nil)) do begin
+								l5 := self:addCmds(l13.label, l13.value, l5)
+							end)
+					end;
+				inherited:?viewSetupFormScript()
+			end,
+			addCmds: func(a1, a2, a3) begin
+				if (if (if (if a2 then (not IsImmediate(a2))) then StrFilled(a2)) then (Length(popup) < 25)) then begin
+						if a3 then begin
+								AddArraySlot(popup, 'pickseparator)
+							end;
+						AddArraySlot(popup, {item: a1, value: a2});
+						a3 := nil
+					end;
+				a3
+			end,
+			viewSetupDoneScript: func() begin
+				(if (if popup then (Length(popup) > 0)) then inherited:?viewSetupDoneScript() else self:Hide())
+			end,
+			pickActionScript: func(a1) begin
+				local l1;
+				inherited:pickActionScript(a1);
+				(if StrFilled((l1 := popup[a1].value)) then begin
+						keyedDigits:AddKey((l1 := strtophone(l1)), true);
+						GetRoot().(appSymbol).callEndpoint:MakeOutgoing(l1, true)
+					end)
+			end,
+			name: 'QuickDial,
+			debug: 22842,
+			_proto: @protoPopupButton
+		},
+		{
+			viewBounds: {left: 7, top: -18, right: 23, bottom: -5},
+			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingRightH,
+			viewFlags: vVisible + vReadOnly + vClickable,
+			path: func() begin
+				valueData.values
+			end,
+			SpeakerIsOn: true,
+			icon: kidsIcon,
+			speakerOnIcon: kidsIcon,
+			speakerOffIcon: {
+				bits: bitmap('bits, "resources/bits/53380d.png", "00000000000400ac00ac003d00b70044", 1),
+				bounds: {left: 0, top: 0, right: 7, bottom: 11}
+			},
+			viewAction: nil,
+			buttonClickScript: func() begin
+				(if SpeakerIsOn then begin
+						GetRoot().(appSymbol):SetSpeaker(nil);
+						SetValue(self, 'icon, speakerOffIcon);
+						(SpeakerIsOn := nil)
+					end else begin
+						GetRoot().(appSymbol):SetSpeaker(true);
+						SetValue(self, 'icon, speakerOnIcon);
+						(SpeakerIsOn := true)
+					end)
+			end,
+			viewSetupDoneScript: func() begin
+				local l1;
+				(if (l1 := self:path()).(name) then self:Show() else self:Hide())
+			end,
+			name: 'SpeakerToggle,
+			debug: 371049,
+			_proto: @protoPictureButton
+		},
+		{
+			viewBounds: {left: -72, top: -18, right: -25, bottom: -5},
+			constViewBounds: {left: -72, top: -18, right: -25, bottom: -5},
+			text: hangUp,
+			buttonClickScript: func() begin
+				GetRoot().(appSymbol):CancelRequest(0)
+			end,
+			debug: 2406,
+			_proto: @protoDefaultStatusButton
+		}
+	]
+};
+
+kidsIcon := {
+	bits: bitmap('bits, "resources/bits/533795.png", "00000000000400240024003e002f004a", 1),
+	bounds: {left: 0, top: 0, right: 12, bottom: 11}
+};

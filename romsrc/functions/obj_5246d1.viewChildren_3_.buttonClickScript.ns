@@ -1,5 +1,0 @@
-@@ 0x523509
-func(a1) begin
-	(index := a1)
-end
-@@end

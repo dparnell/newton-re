@@ -1,5 +1,0 @@
-@@ 0x48aafd
-func() begin
-	@436:New({spots: @251, result: nil}, self:GlobalBox(), self.map)
-end
-@@end

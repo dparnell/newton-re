@@ -1,0 +1,1321 @@
+// Connection, and what only it reaches
+
+Connection := {
+	initialized: nil,
+	PasswordRead: func() begin
+		local l1;
+		if ((l1 := self:ConnectionPrefsRead('password)) = nil) then begin
+				l1 := ""
+			end;
+		return l1
+	end,
+	GetDesktopString: func(a1) begin
+		local l1;
+		if (((l1 := a1:DesktopType()) = nil) or (l1 = 2)) then begin
+				which := "desktop computer"
+			end else begin
+				if (l1 = 0) then begin
+						which := "Mac OS computer"
+					end else begin
+						which := "PC"
+					end
+			end;
+		return which
+	end,
+	GetWorksite: @8279,
+	special: nil,
+	AddOpenWindow: func(a1) begin
+		if (openWindows = nil) then begin
+				return nil
+			end;
+		local l1;
+		(for l2 := 0 to (Length(openWindows) - 1) do begin
+				if (openWindows[l2] = nil) then begin
+						openWindows[l2] := a1;
+						l1 := true;
+						break
+					end
+			end);
+		(if (not l1) then AddArraySlot(openWindows, a1))
+	end,
+	autodock: compile(
+		constants: {
+			kROM_8269: @8269
+		},
+		func() begin
+			(if (not self:TransportsIdle()) then self:Notify(3, "Dock", "You can\u2019\ut start a connection when other communications are in progress.") else begin
+					if (not theEndpoint) then begin
+							self:SetupEndpoint()
+						end;
+					if (self:ConnectionPrefsRead('timeoutConnection) = nil) then begin
+							theEndpoint.maxIdleTime := nil
+						end;
+					(if (not startingConnection) then self:BuildAutoDockParams(func(a1) begin
+							(if (not startingConnection) then (if a1 then begin
+										startingConnection := true;
+										kROM_8269:OpenForSync(a1.password, a1.connectOptions, theEndpoint, true)
+									end else begin
+										self:Notify(3, "Dock", "The necessary connection options weren\u2019\ut filled in.");
+										theEndpoint:ConnectionDone(0)
+									end))
+						end))
+				end)
+		end),
+	keyPassthroughOn: nil,
+	applications: nil,
+	connectionPrefs: nil,
+	WrapUpAutoDock: func(endpoint) begin
+		local l1;
+		l1 := 0;
+		try begin
+				endpoint.disconnecting := true;
+				endpoint:WriteCommand("disc", nil, nil)
+			end onexception |evt.ex| do begin
+				l1 := CurrentException().error
+			end;
+		if (l1 = 0) then begin
+				AddDelayedCall(func() begin
+					endpoint:ConnectionDone(0)
+				end, nil, 1000)
+			end else begin
+				endpoint:ConnectionDone(l1)
+			end;
+		(closeBoxTapped := nil)
+	end,
+	AddDefaultApps: func(a1, a2) begin
+		local l1, l2;
+		if (l1 := BFind(a1, "Other information", '|str<|, '[pathExpr: name])) then begin
+				l2 := a1[l1];
+				ArrayRemoveCount(a1, l1, 1);
+				AddArraySlot(a1, l2)
+			end;
+		(if self:AnyPackages(a2) then ArrayInsert(a1, '{name: "Packages", packages: true, soups: [Array: "Packages"], class: packageFrame}, 0))
+	end,
+	HandleException: func(a1, a2) begin
+		(if (a1 = -16005) then self:OpenWhichConnection(a2) else a2:ConnectionDone(a1))
+	end,
+	ReopenBlessed: func() begin
+		local l1;
+		l1 := (if self.whichConnection then whichConnection.whichConnectionOpen);
+		self:LockScreen(true);
+		try begin
+				if l1 then begin
+						whichConnection.closing := true;
+						whichConnection:Close()
+					end;
+				self:|ResurrectRootChildren!|(savedChildren);
+				self.savedChildren := nil;
+				if l1 then begin
+						self:OpenWhichConnection(theEndpoint)
+					end
+			end onexception |evt.ex| do begin
+				self:LockScreen(nil);
+				Rethrow()
+			end;
+		self:LockScreen(nil)
+	end,
+	SoupNameToAppName: compile(
+		constants: {
+			kFunction_75ad31: func() begin
+				nil
+			end,
+			kLiteral_748ff5: "Packages"
+		},
+		func(a1) begin
+			self:BuildApplicationList(kFunction_75ad31);
+			(foreach l1 in applications do begin
+					if (if l1.soups then BFind(l1.soups, a1, '|str<|, nil)) then begin
+							return l1.name
+						end
+				end);
+			if StrEqual(a1, kLiteral_748ff5) then begin
+					return kLiteral_748ff5
+				end;
+			if (BeginsWith(a1, "Backup_") or StrEqual(a1, "BackupInfo")) then begin
+					return "Card backup"
+				end;
+			return ""
+		end),
+	StartAutoBackup: compile(
+		constants: {
+			kROM_8269: @8269
+		},
+		func(a1) begin
+			a1:SetState(2);
+			kROM_8269:OpenOnEndpoint('all, a1, true)
+		end),
+	GetAutoDockOptions: func(a1, a2) begin
+		local l1, l2, l3, l4, l5, l6;
+		l1 := a1.type;
+		if (l2 := LSearch('[Array: serial, modem, AppleTalk, IrDA, |2400Serial|, |4800Serial|, |9600Serial|], l1, 0, '|=|, nil)) then begin
+				l3 := '[Array: @8256, @8255, @8257, @8290, @8293, @8292, @8291][l2];
+				if (l1 = 'AppleTalk) then begin
+						l4 := 'AppleTalkAddress;
+						l5 := self:VerifyNetworkAddress(a1.networkCurrentChoice, a2)
+					end;
+				if l4 then begin
+						if l5 then begin
+								(l3 := Clone(l3)).(l4) := l5
+							end else begin
+								l3 := nil
+							end
+					end
+			end else begin
+				if (if (l6 := GetDesktopConnTransports()) then l6.transports) then begin
+						l3 := l6.transports.(l1)
+					end
+			end;
+		return l3
+	end,
+	openWindows: nil,
+	GetApplicationNames: func(a1, a2) begin
+		(if a1 then self:GetAppsForStore([Array: a1], a2) else self:GetAppsForStore(GetStores(), a2))
+	end,
+	BuildStoreFrame: func(a1, a2, a3) begin
+		l1 := ConnBuildStoreFrame(a1, a3);
+		if a2 then begin
+				l2 := [Array: ];
+				l3 := [Array: ];
+				local l1;
+				local l2;
+				local l3;
+				(foreach l4 in a1:GetSoupNames() do begin
+						AddArraySlot(l2, l4);
+						AddArraySlot(l3, a1:GetSoup(l4):GetSignature())
+					end);
+				l1.soups := l2;
+				l1.signatures := l3
+			end;
+		return l1
+	end,
+	closeBox: nil,
+	buttonToggleScript: func(a1) begin
+		local l1;
+		l1 := nil;
+		if overrideApp then begin
+				l1 := true;
+				overrideApp:ButtonToggle()
+			end else begin
+				if self.theEndpoint then begin
+						if theEndpoint.disconnecting then begin
+								l1 := true;
+								AddDelayedSend(GetRoot().Connection, 'ButtonToggle, nil, 1000)
+							end else begin
+								l1 := true;
+								if keyPassthroughOn then begin
+										self:ToggleKeyboardPassthrough(nil)
+									end else begin
+										self:OpenWhichConnection(theEndpoint)
+									end
+							end
+					end
+			end;
+		return l1
+	end,
+	viewQuitScript: func() begin
+		self:RemoveOpenWindow(self);
+		(if (if (not startingConnection) then theEndpoint) then theEndpoint:ConnectionDone(0) else (if closeBoxTapped then self:TossStuff()))
+	end,
+	OpenWhichConnection: compile(
+		constants: {
+			kROM_8274: @8274
+		},
+		func(a1) begin
+			local l1;
+			self.keyPassthroughOn := nil;
+			(if (a1.appSymbol = 'Connection) then (if (not (if self.whichConnection then whichConnection.whichConnectionOpen)) then begin
+						(l1 := BuildContext(kROM_8274)).endpoint := a1;
+						self.whichConnection := l1;
+						l1:FilterDialog()
+					end else (if whichConnection.whichConnectionOpen then whichConnection:StartIdle())))
+		end),
+	TransportsIdle: func() begin
+		if transports then begin
+				(foreach l1 in transports do begin
+						local l3;
+						if (if (l3 := GetRoot().(l1)) then (l3.Status <> 'idle)) then begin
+								return nil
+							end
+					end)
+			end;
+		return true
+	end,
+	ConnectionPrefsWrite: func(a1, a2) begin
+		if (connectionPrefs = nil) then begin
+				self:ConnectionPrefsInit()
+			end;
+		connectionPrefs.(a1) := a2;
+		(try begin
+				EntryChange(connectionPrefs)
+			end onexception |evt.ex| do begin
+				nil
+			end)
+	end,
+	SetupEndpoint: func() begin
+		local where;
+		local l1, l2;
+		(l1 := Clone((where := GetRoot().Connection).dtEndpoint)).callWhenDone := func(a1) begin
+			where:MyCleanup(a1)
+		end;
+		l1:Instantiate('Connection, "Dock");
+		where.theEndpoint := l1;
+		l2 := func(a1) begin
+			a1:FlushCommandData();
+			a1:WriteCommand("kybd", nil, nil);
+			a1:SetState(9);
+			AddDeferredSend(where, 'ToggleKeyboardPassthrough, [Array: true]);
+			return nil
+		end;
+		(try begin
+				l1:InstallAnyProtocolExtension("kybd", l2)
+			end onexception |evt.ex| do begin
+				nil
+			end)
+	end,
+	SendCancelToDesktop: func(a1) begin
+		local l1, l2, l3;
+		(try begin
+				a1:WriteCommand("opca", nil, nil);
+				(repeat l2 := a1:ReadCommandHeader(true); if StrEqual("ocaa", l2.command) then begin
+							l1 := true
+						end else begin
+							a1:FlushCommandData()
+						end until l1)
+			end onexception |evt.ex| do begin
+				l3 := CurrentException().error;
+				AddDeferredSend(a1, 'ConnectionDone, [Array: l3])
+			end)
+	end,
+	OverrideOverrideBuiltinApp: func(a1) begin
+		if ((not a1) or (a1 = GetRoot().Connection)) then begin
+				overrideApp := nil
+			end else begin
+				overrideApp := a1
+			end;
+		nil
+	end,
+	GetProtocolVersion: func() begin
+		nil
+	end,
+	viewFlags: vApplication + vFloating + vClickable,
+	desktopConnection: nil,
+	CloseOpenWindows: func(a1) begin
+		l1 := (if (if (if a1 then self.whichConnection) then whichConnection.whichConnectionOpen) then whichConnection);
+		if openWindows then begin
+				local l1;
+				(foreach l2 in Clone(openWindows) do begin
+						if (if l2 then (l2 <> l1)) then begin
+								l2:Close()
+							end
+					end)
+			end;
+		(openWindows := (if l1 then [Array: l1] else [Array: ]))
+	end,
+	RetryPasswordScript: compile(
+		constants: {
+			kROM_8276: @8276
+		},
+		func(a1) begin
+			local l1, l2, l3, l4, l5;
+			if (not a1) then begin
+					return nil
+				end;
+			l1 := 0;
+			l3 := (l2 := GetRoot().Connection).theEndpoint;
+			(if (not a1.userCancel) then begin
+					l4 := a1.password;
+					try begin
+							l2:PasswordSave(l4);
+							l3:RetryPassword(l4)
+						end onexception |evt.ex| do begin
+							l1 := CurrentException().error
+						end;
+					(if (l1 = 0) then l2:OpenWhichConnection(l3) else (if (l1 = -28023) then begin
+								l5 := {memory: nil, |guest?|: nil, |name?|: nil, title: nil, buttonTitle: "Cancel", Keyboard: true, |password?|: {guest: nil, users: 'hidden}};
+								kROM_8276:OpenOn(l3, l2.RetryPasswordScript, l5);
+								AddDeferredSend(GetRoot(), 'Notify, [Array: 5, "Dock", "The password wasn\u2019\ut accepted by the desktop computer.\nEnter a different password and try again."]);
+								return nil
+							end else l3:ConnectionDone(l1)))
+				end else l3:ConnectionDone(l1))
+		end),
+	thecallback: nil,
+	StopOperation: func(a1) begin
+		(try begin
+				a1:Stop()
+			end onexception |evt.ex| do begin
+				if ((error := CurrentException().error) = -28009) then begin
+						error := 0
+					end;
+				a1:ConnectionDone(error)
+			end)
+	end,
+	dtEndpoint: {_proto: @protoDesktopEndpoint},
+	GetWorksites: @8280,
+	GetNewFiles: compile(
+		constants: {
+			kLiteral_75bd2d: "gfil",
+			kLiteral_7511b9: "file"
+		},
+		func(a1, a2, a3, a4) begin
+			l1 := [Array: ];
+			try begin
+					if a3 then begin
+							if IsInstance(a2, 'string) then begin
+									l2 := a2
+								end else begin
+									l2 := [Array: ];
+									local l1;
+									local l2;
+									(foreach l3 in a2 do begin
+											local l5, l6;
+											if HasPath(l3, 'whichVol) then begin
+													AddArraySlot(l2, {name: l3.name, whichVol: l3.whichVol})
+												end else begin
+													AddArraySlot(l2, l3.name)
+												end
+										end)
+								end;
+							a1:WriteCommand(a3, l2, true)
+						end else begin
+							a1:WriteCommand(kLiteral_75bd2d, nil, nil)
+						end;
+					l5 := self:CallReadCommand(a1, nil);
+					if StrEqual(kLiteral_7511b9, l5.command) then begin
+							l1 := l5.data
+						end else begin
+							if StrEqual("path", l5.command) then begin
+									if a4 then begin
+											call a4 with (l5.data)
+										end;
+									a1:WriteCommand(kLiteral_75bd2d, nil, nil);
+									l1 := (l5 := self:CallReadCommand(a1, kLiteral_7511b9)).data
+								end else begin
+									if StrEqual("dres", l5.command) then begin
+											if (l5.data = -28031) then begin
+													self:Notify(3, "Dock", "You don\u2019\ut have enough access privileges.");
+													l1 := [Array: ]
+												end else begin
+													Throw('|evt.ex.error|, l5.data)
+												end
+										end else begin
+											Throw('|evt.ex.error|, -28012)
+										end
+								end
+						end
+				end onexception |evt.ex| do begin
+					l1 := nil;
+					l6 := CurrentException().error;
+					AddDeferredSend(GetRoot().Connection, 'HandleException, [Array: l6, a1])
+				end;
+			return l1
+		end),
+	reopenMainSlip: nil,
+	BuildDefaultSyncOpts: func(a1) begin
+		l1 := [Array: ];
+		l2 := (a1 = 'allWithSoups);
+		l3 := self:GetBackupStoreVersion();
+		l4 := (not self:ConnectionPrefsRead('neverSyncPackages));
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		(foreach l5 in GetStores() do begin
+				if (l5.version > l3) then begin
+						AddArraySlot(l1, self:BuildStoreFrame(l5, l2, true))
+					end
+			end);
+		return {packages: l4, syncall: true, stores: l1}
+	end,
+	connPhoneAssist: nil,
+	viewBounds: {left: 0, top: 50, right: 220, bottom: 215},
+	RemoveOpenWindow: func(a1) begin
+		if (openWindows = nil) then begin
+				return nil
+			end;
+		(for l1 := 0 to (Length(openWindows) - 1) do begin
+				if (openWindows[l1] = a1) then begin
+						openWindows[l1] := nil;
+						break
+					end
+			end)
+	end,
+	FileBrowserDone: compile(
+		constants: {
+			kROM_8265: @8265,
+			kROM_8269: @8269
+		},
+		func(endpoint, a2, a3, a4, a5) begin
+			local context;
+			local l1, l2, l3, l4, l5;
+			context := GetRoot().Connection;
+			(if a2 then context:OpenWhichConnection(endpoint) else begin
+					l1 := 0;
+					(if (a3 = 1) then (try begin
+								ConnImportFile(endpoint, a4, a5, func() begin
+									context:OpenWhichConnection(endpoint)
+								end)
+							end onexception |evt.ex| do begin
+								endpoint:ConnectionDone((l1 := CurrentException().error))
+							end) else begin
+							try begin
+									if IsInstance(a4, 'string) then begin
+											l2 := a4
+										end else begin
+											l2 := a4.name
+										end;
+									if (a3 = 2) then begin
+											l3 := "rsfl"
+										end else begin
+											l3 := "lpfl"
+										end;
+									endpoint:WriteCommand(l3, a4, true);
+									if (a3 = 2) then begin
+											l4 := endpoint:ReadCommandHeader(true);
+											endpoint:ProcessBuiltinCommand()
+										end
+								end onexception |evt.ex| do begin
+									endpoint:ConnectionDone((l1 := CurrentException().error))
+								end;
+							(if (l1 = 0) then (if (a3 = 2) then begin
+										(l5 := BuildContext(kROM_8265)).endpoint := endpoint;
+										l5:FilterDialog()
+									end else kROM_8269:OpenOnEndpoint(nil, endpoint, nil)))
+						end)
+				end)
+		end),
+	VerifyNetworkAddress: func(a1, a2) begin
+		local l1, l2;
+		if a1 then begin
+				l1 := self:GetWorksite(a1)
+			end;
+		if l1 then begin
+				if (not self:CallValidate(l1, a2)) then begin
+						return nil
+					end else begin
+						l2 := l1.connectionNetwork
+					end
+			end else begin
+				l2 := a1
+			end;
+		if (not l2) then begin
+				GetRoot():Notify(3, "Dock", "You must choose a computer or worksite before connecting.");
+				theEndpoint:ConnectionDone(0)
+			end;
+		return l2
+	end,
+	_proto: @protoFloater,
+	DoAutoDockFinish: func() begin
+		local l1;
+		l1 := 0;
+		try begin
+				theEndpoint.disconnecting := true;
+				theEndpoint:WriteCommand("disc", nil, nil)
+			end onexception |evt.ex| do begin
+				l1 := CurrentException().error
+			end;
+		(if (l1 = 0) then AddDelayedCall(func() begin
+				theEndpoint:ConnectionDone(0)
+			end, nil, 1000) else theEndpoint:ConnectionDone(l1))
+	end,
+	GetAppNames: func(a1, a2) begin
+		local l1, l2;
+		if (BAnd(a2, 1) = 0) then begin
+				l1 := nil
+			end else begin
+				if (not (l1 := a1:GetCurrentStore())) then begin
+						return '[Array: ]
+					end
+			end;
+		self:AddDefaultApps((l2 := self:GetApplicationNames(l1, (BAnd(a2, 2) = 0))), l1);
+		return l2
+	end,
+	GetBackupStoreVersion: func() begin
+		return 0
+	end,
+	HandleErrorDuringStartup: func(endpoint, a2, a3) begin
+		killMyself := func(a1, a2) begin
+			local l1;
+			if Visible(a1) then begin
+					a1:Close()
+				end;
+			a1:LockScreen(nil);
+			l1 := GetRoot().Connection;
+			l1:RemoveOpenWindow(a1);
+			(if (if (a2 <> 0) then (a2 <> -16005)) then endpoint:ConnectionDone(a2))
+		end;
+		a2:LockScreen(true);
+		AddDeferredCall(killMyself, [Array: a2, a3])
+	end,
+	_defaultButton: nil,
+	DisplayImportSlip: compile(
+		constants: {
+			kROM_8267: @8267
+		},
+		func(a1, a2) begin
+			local result;
+			local l1, l2;
+			l1 := GetRoot().Connection;
+			(l2 := BuildContext(kROM_8267)).fSetup := a2;
+			l2.endpoint := a1;
+			l2.ImportParametersDoneScript := func(a1) begin
+				(result := a1)
+			end;
+			l2:ModalDialog();
+			return result
+		end),
+	theEndpoint: nil,
+	ConnectionPrefsInit: func() begin
+		local l1, l2, l3, l4;
+		if (l1 := GetUserConfig('docker)) then begin
+				l2 := old.names;
+				l3 := old.type;
+				SetUserConfig('docker, nil);
+				FlushUserConfig()
+			end;
+		l4 := {tag: "Connection", savePassword: true, timeoutConnection: true, autodock: nil};
+		if l2 then begin
+				l4.names := l2
+			end;
+		if l3 then begin
+				l4.type := l3
+			end;
+		(connectionPrefs := GetAppPrefs('Connection, l4))
+	end,
+	GetAppsForStoreWithCallback: compile(
+		constants: {
+			kROM_8278: @8278
+		},
+		func(a1, soupsToo, a3) begin
+			local appList, soupName;
+			local v9_mmll, v12_tttttttt, v13_zzzzzzyyy, v14_vvvvvvvuuuu, v17_zzzzzzzzzzzzyyy, v18_xxxwwwwwwwwwwwwww, v19_xxxxxxxxwwwwwwwwwwww, v22_yyyyyyyxxxxxxxxxxxxxxxx;
+			appList := [Array: ];
+			v12_tttttttt := func(a1) begin
+				local l1;
+				l1 := BInsert(appList, {name: a1}, '|str<|, '[pathExpr: name], 'returnElt);
+				if soupsToo then begin
+						if (not l1.soups) then begin
+								l1.soups := [Array: soupName]
+							end else begin
+								BInsert(l1.soups, soupName, '|str<|, nil, true)
+							end
+					end;
+				l1
+			end;
+			v17_zzzzzzzzzzzzyyy := a1[0]:GetSoupNames();
+			(for v21_tttttttttss := 1 to (Length(a1) - 1) do begin
+					(foreach v10_zzzzzzzzzzzzzzzyyyyyyyyyyyy in a1[v21_tttttttttss]:GetSoupNames() do begin
+							call a3 with ();
+							BInsert(v17_zzzzzzzzzzzzyyy, v10_zzzzzzzzzzzzzzzyyyyyyyyyyyy, '|str<|, nil, true)
+						end)
+				end);
+			(foreach soupName in v17_zzzzzzzzzzzzyyy do begin
+					call a3 with ();
+					if (not StrEqual(soupName, "Packages")) then begin
+							if BFind(kROM_8278, soupName, '|str<|, nil) then begin
+									v13_zzzzzzyyy := call v12_tttttttt with ("System information");
+									if (not v9_mmll) then begin
+											v9_mmll := SetClass(v13_zzzzzzyyy, 'systemFrame)
+										end
+								end else begin
+									if (BeginsWith(soupName, "Backup_") or StrEqual(soupName, "BackupInfo")) then begin
+											v13_zzzzzzyyy := call v12_tttttttt with ("Card backup");
+											if (not v14_vvvvvvvuuuu) then begin
+													v14_vvvvvvvuuuu := SetClass(v13_zzzzzzyyy, 'cardBackupFrame)
+												end
+										end else begin
+											if (v18_xxxwwwwwwwwwwwwww := GetSoupDef(soupName)) then begin
+													if (v18_xxxwwwwwwwwwwwwww.ownerApp <> 'SystemScratch) then begin
+															if (not (v19_xxxxxxxxwwwwwwwwwwww := v18_xxxwwwwwwwwwwwwww.ownerAppName)) then begin
+																	if IsSymbol(v18_xxxwwwwwwwwwwwwww.ownerApp) then begin
+																			v19_xxxxxxxxwwwwwwwwwwww := GetAppName(v18_xxxwwwwwwwwwwwwww.ownerApp)
+																		end else begin
+																			v19_xxxxxxxxwwwwwwwwwwww := soupName
+																		end
+																end
+														end;
+													call v12_tttttttt with (v19_xxxxxxxxwwwwwwwwwwww)
+												end else begin
+													(foreach v16_wwwwwwwwvvvvvv in a1 do begin
+															if (v10_zzzzzzzzzzzzzzzyyyyyyyyyyyy := v16_wwwwwwwwvvvvvv:GetSoup(soupName)) then begin
+																	break
+																end
+														end);
+													if (if IsArray((v18_xxxwwwwwwwwwwwwww := v10_zzzzzzzzzzzzzzzyyyyyyyyyyyy:GetInfo('applications))) then (Length(v18_xxxwwwwwwwwwwwwww) > 0)) then begin
+															(foreach v7_vvvvvvvvvvvvvvvvvvu in v18_xxxwwwwwwwwwwwwww do begin
+																	if IsSymbol(v7_vvvvvvvvvvvvvvvvvvu) then begin
+																			v19_xxxxxxxxwwwwwwwwwwww := GetAppName(v7_vvvvvvvvvvvvvvvvvvu)
+																		end else begin
+																			v19_xxxxxxxxwwwwwwwwwwww := soupName
+																		end;
+																	call v12_tttttttt with (v19_xxxxxxxxwwwwwwwwwwww)
+																end)
+														end else begin
+															v13_zzzzzzyyy := call v12_tttttttt with ("Other information");
+															if (not v22_yyyyyyyxxxxxxxxxxxxxxxx) then begin
+																	v22_yyyyyyyxxxxxxxxxxxxxxxx := SetClass(v13_zzzzzzyyy, 'otherFrame)
+																end
+														end
+												end
+										end
+								end
+						end
+				end);
+			appList
+		end),
+	TurnKeyPassthruOff: func() begin
+		if keyPassthroughOn then begin
+				if keyboardCookie then begin
+						GetRoot().NotifyIcon:KillAction(keyboardCookie);
+						keyboardCookie := nil
+					end;
+				ConnectPassthruKeyboard(nil)
+			end;
+		(keyPassthroughOn := nil)
+	end,
+	BuildApplicationList: func(a1) begin
+		(if (not self.applications) then begin
+				l1 := self:GetBackupStoreVersion();
+				l2 := [Array: ];
+				local l1;
+				local l2;
+				(foreach l3 in GetStores() do begin
+						if (l3.version > l1) then begin
+								AddArraySlot(l2, l3)
+							end
+					end);
+				self.applications := self:GetAppsForStoreWithCallback(l2, true, a1);
+				self:AddDefaultApps(applications, nil)
+			end)
+	end,
+	appSymbol: 'Connection,
+	ImportFile: compile(
+		constants: {
+			kROM_8266: @8266
+		},
+		func(a1, a2, a3, a4) begin
+			local context;
+			local l1, l2;
+			if ((context := GetRoot().Connection).openWindows = nil) then begin
+					context.openWindows := [Array: ];
+					a1.secretDoneCallback := func(a1) begin
+						context:ImportFileClose(a1);
+						(context.openWindows := nil)
+					end
+				end;
+			if IsInstance(a2, 'string) then begin
+					l1 := a2
+				end else begin
+					l1 := a2.name
+				end;
+			a1:WriteCommand("impt", a2, true);
+			(l2 := BuildContext(kROM_8266)).file := l1;
+			l2.dtPath := a3;
+			l2.callWhenDone := a4;
+			l2.endpoint := a1;
+			l2:FilterDialog()
+		end),
+	InvalidateApplicationList: func() begin
+		(self.applications := nil)
+	end,
+	TossStuff: func() begin
+		applications := nil;
+		openWindows := nil;
+		(connectionPrefs := nil)
+	end,
+	ConnectionPrefsRead: func(a1) begin
+		if (connectionPrefs = nil) then begin
+				self:ConnectionPrefsInit()
+			end;
+		(if (a1 = nil) then return connectionPrefs else return connectionPrefs.(a1))
+	end,
+	PasswordWrite: func(a1) begin
+		if a1 then begin
+				if IsInstance(a1, 'string) then begin
+						a1 := DESCreatePasswordKey(a1)
+					end
+			end;
+		self:ConnectionPrefsWrite('password, a1)
+	end,
+	ToggleKeyboardPassthrough: compile(
+		constants: {
+			kROM_8270: @8270,
+			kLiteral_745f61: "Dock"
+		},
+		func(a1) begin
+			local oldPassthruMode;
+			local l1, l2, l3;
+			l1 := func() begin
+				keyboardCookie := nil;
+				AddDeferredSend(self, 'ToggleKeyboardPassthrough, [Array: nil])
+			end;
+			(if keyPassthroughOn then (if (a1 or ModalConfirm("Do you want to stop using the keyboard on your desktop computer?", 'yesNo)) then begin
+						oldPassthruMode := keyPassthroughOn;
+						self:TurnKeyPassthruOff();
+						(if (not a1) then begin
+								if whichConnection then begin
+										theEndpoint:StopIdle(whichConnection)
+									end;
+								self:StopOperation(theEndpoint);
+								(l2 := BuildContext(kROM_8270)).doneCallback := func() begin
+									(if (oldPassthruMode = 'newton) then self:OpenWhichConnection(theEndpoint))
+								end;
+								l2:FilterDialog()
+							end)
+					end else (if (not keyboardCookie) then (keyboardCookie := GetRoot().NotifyIcon:AddAction(kLiteral_745f61, l1, nil)))) else (if (a1 or ModalConfirm("Use the keyboard on your desktop computer to enter data into your Newton device. When you're done, tap the Dock icon in the Extras Drawer", 'okCancel)) then begin
+						keyboardCookie := GetRoot().NotifyIcon:AddAction(kLiteral_745f61, l1, nil);
+						if whichConnection then begin
+								theEndpoint:StopIdle(whichConnection);
+								whichConnection.closing := true
+							end;
+						self:CloseOpenWindows(nil);
+						ConnectPassthruKeyboard(true);
+						keyPassthroughOn := (if a1 then 'Desktop else 'newton);
+						l3 := 0;
+						try begin
+								theEndpoint:SetState(9);
+								if (not a1) then begin
+										result := theEndpoint:DoKeyboardPassthrough()
+									end
+							end onexception |evt.ex| do begin
+								l3 := CurrentException().error;
+								if theEndpoint then begin
+										theEndpoint:ConnectionDone(l3)
+									end
+							end;
+						(if (if (l3 = 0) then (not a1)) then begin
+								self:TurnKeyPassthruOff();
+								self:OpenWhichConnection(theEndpoint)
+							end)
+					end))
+		end),
+	keyboardCookie: nil,
+	AppName: dock,
+	stepAllocateContext: [|Array|:
+		'connSenderPopup,
+		ConnectionItem,
+		'desktopConnection,
+		ConnectionItem_2,
+		'closeBox,
+		ConnectionItem_3,
+		'_defaultButton,
+		ConnectionItem_4,
+		'connPhoneAssist,
+		ConnectionItem_5,
+		'special,
+		ConnectionItem_6
+	],
+	CallValidate: @8281,
+	ImportFileClose: func(a1) begin
+		local l1;
+		l1 := GetRoot().Connection;
+		l1:CloseOpenWindows(true);
+		(a1.secretDoneCallback := nil)
+	end,
+	OpenUsernameSlip: compile(
+		constants: {
+			kROM_8276: @8276
+		},
+		func(a1, a2, a3) begin
+			kROM_8276:OpenOn(a1, a2, a3)
+		end),
+	viewSetupFormScript: func() begin
+		self.startingConnection := nil;
+		self.applications := nil;
+		self.reopenMainSlip := nil;
+		self.closeBoxTapped := nil;
+		self.keyPassthroughOn := nil;
+		self.openWindows := [Array: ];
+		self:AddOpenWindow(self);
+		if (GetUserConfig('blessedApp) = 'Connection) then begin
+				closeBox.viewFlags := BAnd(closeBox.viewFlags, -2)
+			end;
+		SetKeyView(self, 0);
+		inherited:?viewSetupFormScript()
+	end,
+	CloseAllButMe: func(a1) begin
+		local l1;
+		l1 := (if (if self.whichConnection then whichConnection.whichConnectionOpen) then [Array: a1, whichConnection] else [Array: a1]);
+		if GetRoot().Connection.viewCObject then begin
+				AddArraySlot(l1, GetRoot().Connection)
+			end;
+		(self.savedChildren := self:|KillRootChildren!|(l1))
+	end,
+	HideIfVisible: func(a1) begin
+		(if (if Visible(a1) then a1.viewCObject) then a1:Hide())
+	end,
+	AnyPackages: func(a1) begin
+		if a1 then begin
+				l1 := [Array: a1]
+			end else begin
+				l1 := GetStores()
+			end;
+		local l1;
+		local l2;
+		(foreach l3 in l1 do begin
+				local l5;
+				if (l5 := GetBackupAllPackagesCursor(l3)) then begin
+						l2 := (l5:entry() <> nil)
+					end;
+				if l2 then begin
+						break
+					end
+			end);
+		l2
+	end,
+	WhichConnectionDone: func() begin
+		(self.whichConnection := nil)
+	end,
+	connectionErrorTable: [|Array|:
+		-28022,
+		"The password you entered wasn’t accepted by the desktop computer.",
+		-10021,
+		theConnectionWasStopped,
+		-20006,
+		theConnectionWasStopped,
+		-16011,
+		theConnectionWasStopped,
+		-28011,
+		yourModelOfNewton,
+		-48006,
+		yourModelOfNewton,
+		-16010,
+		yourModelOfNewton,
+		-12314,
+		"The selected Mac OS computer cannot be found on the network.",
+		-10402,
+		thePackageAlreadyExists,
+		-10409,
+		thePackageAlreadyExists,
+		-10410,
+		thePackageAlreadyExists,
+		-20003,
+		theConnectionWasStopped_2,
+		-16009,
+		theConnectionWasStopped_2,
+		-36019,
+		theConnectionWasStopped_2,
+		-28030,
+		theConnectionWasStopped_2,
+		-28024,
+		"The connection was closed to conserve battery power.",
+		-28025,
+		"The connection was closed because the battery was dead.",
+		-10078,
+		"The serial port is already in use.",
+		-48016,
+		soupIsInvalidProbably,
+		-48017,
+		soupIsInvalidProbably,
+		-28014,
+		"The specified PCMCIA card was not found.",
+		-28029,
+		"The connection attempt was unsuccessful. Please check your cable.",
+		-28016,
+		"The connection stopped because the Newton received bad data from your ^0.",
+		-1,
+		"An error of an unknown type has occurred.",
+		-38502,
+		theConnectionWasStopped,
+		0,
+		nil
+	],
+	PasswordSave: func(a1) begin
+		local l1;
+		if self:ConnectionPrefsRead('savePassword) then begin
+				if IsInstance(a1, 'string) then begin
+						l1 := a1
+					end else begin
+						return nil
+					end
+			end;
+		self:PasswordWrite(l1)
+	end,
+	closeBoxTapped: nil,
+	FileBrowserOpen: compile(
+		constants: {
+			kROM_8264: @8264
+		},
+		func(a1, a2, a3, a4, a5) begin
+			local context;
+			local l1;
+			if ((context := GetRoot().Connection).openWindows = nil) then begin
+					context.openWindows := [Array: ];
+					a1.secretDoneCallback := func(a1) begin
+						context:FileBrowserClose(a1);
+						(context.openWindows := nil)
+					end
+				end;
+			a1:WriteCommand("rtbr", a4, true);
+			(l1 := BuildContext(kROM_8264)).whichFiles := a2;
+			l1.labels := a3;
+			l1.callWhenDone := a5;
+			l1.endpoint := a1;
+			l1:FilterDialog()
+		end),
+	ShowIfNotVisible: func(a1) begin
+		(if (if (not Visible(a1)) then a1.viewCObject) then a1:Show())
+	end,
+	FileBrowserClose: func(a1) begin
+		self:CloseOpenWindows(true);
+		(a1.secretDoneCallback := nil)
+	end,
+	overrideApp: nil,
+	connSenderPopup: nil,
+	savedChildren: nil,
+	BuildAutoDockParams: compile(
+		constants: {
+			kROM_8277: @8277
+		},
+		func(callback) begin
+			local prefsFrame, password, options, done, myCallback;
+			local l1;
+			if GetGlobals().ConnectionLikesWorksites then begin
+					if (l1 := GetUserConfig('currentEmporium)) then begin
+							l1 := ResolveEntryAlias(l1)
+						end;
+					if l1 then begin
+							prefsFrame := l1.autoDockAddr
+						end
+				end else begin
+					prefsFrame := self:ConnectionPrefsRead('autoDockAddr)
+				end;
+			if (not prefsFrame) then begin
+					call callback with (nil);
+					return nil
+				end;
+			password := self:PasswordRead();
+			myCallback := func(a1) begin
+				(if (not done) then begin
+						if (if (not options) then a1) then begin
+								options := self:GetAutoDockOptions(prefsFrame, nil)
+							end;
+						if IsFrame(options) then begin
+								options := {connectOptions: options, password: password}
+							end else begin
+								options := nil
+							end;
+						done := true;
+						call callback with (options)
+					end)
+			end;
+			(if (not IsFrame((options := self:GetAutoDockOptions(prefsFrame, myCallback)))) then return nil else (if ((prefsFrame.type = 'modem) or options.button) then kROM_8277:OpenOn(options, prefsFrame, password, callback) else (if options.callBeforeConnect then options:callBeforeConnect((options := DeepClone(options)), func(a1) begin
+							options := a1;
+							AddDeferredCall(myCallback, [Array: true])
+						end) else (if (not done) then AddDeferredCall(myCallback, [Array: true])))))
+		end),
+	stepChildren: [stepChildren:
+		{
+			title: dock,
+			titleIcon: {bits: titleIconBits, bounds: {left: 0, top: 0, right: 19, bottom: 11}},
+			_proto: @protoTitle
+		},
+		ConnectionItem,
+		ConnectionItem_2,
+		{
+			viewFlags: vVisible + vReadOnly + vClickable,
+			viewBounds: {top: -18, left: 5, right: 18, bottom: -5},
+			viewJustify: vjCenterH + vjCenterV + vjParentBottomV,
+			DoInfoHelp: func() begin
+				local l1;
+				(if (if (l1 := GetRoot().TinyTim) then l1.viewCObject) then l1:Close() else OpenHelpTo("Connect"))
+			end,
+			DoInfoPrefs: compile(
+				constants: {
+					kROM_8271: @8271
+				},
+				func() begin
+					local l1;
+					(l1 := BuildContext(kROM_8271)):Open()
+				end),
+			_proto: @protoInfoButton
+		},
+		ConnectionItem_3,
+		ConnectionItem_4,
+		ConnectionItem_5,
+		ConnectionItem_6
+	],
+	DisplaySlip: compile(
+		constants: {
+			kROM_8260: @8260
+		},
+		func(a1, a2) begin
+			local result;
+			local l1, l2;
+			result := 0;
+			l1 := GetRoot().Connection;
+			(l2 := BuildContext(kROM_8260)).config := a2;
+			l2.endpoint := a1;
+			l2.DesktopInputDone := func(a1) begin
+				(result := a1)
+			end;
+			l2:ModalDialog();
+			return result
+		end),
+	CallReadCommand: func(a1, a2) begin
+		local l1, l2;
+		l1 := true;
+		(while (l1 = true) do (if ((l2 := a1:ReadCommandHeader(true)) = nil) then Throw('|evt.ex.error|, -28009) else (if StrEqual("opca", l2.command) then begin
+						done := a1:ProcessBuiltinCommand();
+						Throw('|evt.ex.error|, -16005)
+					end else (if a2 then (if StrEqual(a2, l2.command) then begin
+								l2.data := a1:ReadCommandData();
+								(l1 := nil)
+							end else (if (done := a1:ProcessBuiltinCommand()) then Throw('|evt.ex.error|, -28030))) else begin
+							l1 := nil;
+							l2.data := a1:ReadCommandData();
+							(if StrEqual("ress", l2.command) then begin
+									a1.desktopresult := l2.data;
+									l2.command := "dres";
+									(l2.data := -28028)
+								end)
+						end))));
+		return l2
+	end,
+	ValidateDone: @8282,
+	ShowError: func(a1, a2, a3) begin
+		self:ShowAppError("Dock", a1, a2, a3)
+	end,
+	WorksiteToCountry: @8283,
+	GetAppsForStore: compile(
+		constants: {
+			kFunction_75f621: func() begin
+				nil
+			end
+		},
+		func(a1, a2) begin
+			self:GetAppsForStoreWithCallback(a1, a2, kFunction_75f621)
+		end),
+	startingConnection: nil,
+	viewHelpTopic: connect,
+	GetPassword: func(a1, a2) begin
+		local result;
+		local l1;
+		l1 := {memory: nil, |guest?|: nil, |name?|: nil, title: a2, buttonTitle: "Cancel", Keyboard: true, modal: true, |password?|: {guest: nil, users: 'hidden}};
+		result := nil;
+		ConnOpenUserPsswdSlip(a1, func(a1) begin
+			(result := a1.password)
+		end, l1);
+		result
+	end,
+	ShowAppError: compile(
+		constants: {
+			kLiteral_75f8dd: "^0 (^1)"
+		},
+		func(a1, a2, a3, a4) begin
+			local l1, l2;
+			if (not a3) then begin
+					a3 := -1
+				end;
+			(if (not SetContains('[Array: -16013, -16005, -10039, -28013], a3)) then begin
+					l1 := self:GetDesktopString(a2);
+					if (if (a3 = -28028) then a2.desktopresult) then begin
+							text := ParamStr(kLiteral_75f8dd, [Array: a2.desktopresult.errorString, Stringer([Array: "", a2.desktopresult.desktopError])])
+						end else begin
+							if (text := TableLookup(connectionErrorTable, a3)) then begin
+									text := ParamStr(text, [Array: l1])
+								end else begin
+									text := ParamStr(kLiteral_75f8dd, [Array: "A connection error has occurred.   ", self:TranslateError(a3)])
+								end
+						end;
+					l2 := 3;
+					if a4 then begin
+							l2 := 5
+						end;
+					AddDeferredSend(self, 'Notify, [Array: l2, a1, text])
+				end)
+		end),
+	OpenGetInfoDialog: compile(
+		constants: {
+			kROM_8263: @8263
+		},
+		func(a1, a2, a3, a4) begin
+			local l1, l2;
+			l1 := 0;
+			try begin
+					a1:WriteCommand("gfin", a2, true)
+				end onexception |evt.ex| do begin
+					a1:ConnectionDone((l1 := CurrentException().error))
+				end;
+			(if (l1 = 0) then begin
+					(l2 := BuildContext(kROM_8263)).fileName := a3;
+					l2.path := a4;
+					l2.endpoint := a1;
+					l2:FilterDialog()
+				end)
+		end),
+	MyCleanup: func(a1) begin
+		local l1;
+		self:TurnKeyPassthruOff();
+		self:CloseOpenWindows(nil);
+		l1 := theEndpoint;
+		theEndpoint := nil;
+		startingConnection := nil;
+		if reopenMainSlip then begin
+				AddDeferredSend(self, 'Open, nil)
+			end else begin
+				if ((not Visible(self)) or closeBoxTapped) then begin
+						self:TossStuff()
+					end
+			end;
+		(if (if (a1 <> 0) then l1) then self:ShowError(l1, a1, nil))
+	end,
+	ReopenOnError: func() begin
+		(self.reopenMainSlip := true)
+	end,
+	WorksiteNetworkSlot: 'connectionNetwork
+};
+
+ConnectionItem := {
+	viewBounds: {left: 0, top: 21, right: 150, bottom: 34},
+	viewJustify: vjCenterV,
+	JamIt: func() begin
+		inherited:?JamIt();
+		desktopConnection:CurrentPersonaChanged()
+	end,
+	_proto: @protoSenderPopup,
+	preAllocatedContext: 'connSenderPopup
+};
+
+ConnectionItem_2 := {
+	SetConnectionType: func(a1, a2, a3) begin
+		self:HideIfVisible(connPhoneAssist);
+		self:HideIfVisible(special);
+		self:HideIfVisible(connSenderPopup);
+		connPhoneAssist.hidden := true;
+		special.hidden := true;
+		(if (a2 = 'modem) then begin
+				self:ShowIfNotVisible(connPhoneAssist);
+				self:ShowIfNotVisible(connSenderPopup);
+				(connPhoneAssist.hidden := nil)
+			end else special:setup(a3))
+	end,
+	_proto: @8254,
+	preAllocatedContext: 'desktopConnection
+};
+
+ConnectionItem_3 := {
+	buttonClickScript: func() begin
+		self:RemoveOpenWindow(base);
+		self:CloseOpenWindows(nil);
+		closeBoxTapped := true;
+		inherited:?buttonClickScript()
+	end,
+	_proto: @protoCancelButton,
+	preAllocatedContext: 'closeBox
+};
+
+ConnectionItem_4 := {
+	text: connect,
+	buttonClickScript: func() begin
+		(if (not self:TransportsIdle()) then self:Notify(3, "Dock", "You can\u2019\ut start a connection when other communications are in progress.") else begin
+				if (not theEndpoint) then begin
+						self:SetupEndpoint()
+					end;
+				if (self:ConnectionPrefsRead('timeoutConnection) = nil) then begin
+						theEndpoint.maxIdleTime := nil
+					end;
+				(if (not startingConnection) then desktopConnection:GetConnectionParams(func(a1) begin
+						self:StartConnection(a1)
+					end))
+			end)
+	end,
+	viewBounds: {top: 0, left: -54, right: -7, bottom: 0},
+	viewJustify: 8403142,
+	StartConnection: compile(
+		constants: {
+			kROM_8269: @8269
+		},
+		func(a1) begin
+			(if (not startingConnection) then (if a1 then begin
+						startingConnection := true;
+						base:Close();
+						kROM_8269:OpenForSync(a1.password, a1.connectOptions, theEndpoint, nil)
+					end else self:Notify(3, "Dock", "The necessary connection options weren\u2019\ut filled in.")))
+		end),
+	viewSetupFormScript: func() begin
+		local l1;
+		l1 := (StrFontWidth(text, viewFont) + 6);
+		(if (GetUserConfig('blessedApp) = 'Connection) then begin
+				self.viewJustify := 12326;
+				(self.viewBounds := SetBounds(((-l1) - 5), 0, -5, 0))
+			end else (self.viewBounds := SetBounds(((-l1) - 7), 0, -7, 0)))
+	end,
+	_proto: @protoTextButton,
+	preAllocatedContext: '_defaultButton
+};
+
+ConnectionItem_5 := {
+	buttonClickScript: func() begin
+		desktopConnection:OpenCallOptionsSlip()
+	end,
+	hidden: true,
+	viewSetupDoneScript: func() begin
+		if self.hidden then begin
+				self:Hide()
+			end;
+		inherited:?viewSetupDoneScript()
+	end,
+	_proto: @protoCallassistButton,
+	preAllocatedContext: 'connPhoneAssist
+};
+
+ConnectionItem_6 := {
+	text: nil,
+	buttonClickScript: func() begin
+		(if options.buttonClickScript then call options.buttonClickScript with (options))
+	end,
+	viewBounds: {left: -133, top: -18, right: -79, bottom: -5},
+	viewJustify: 8388774,
+	setup: func(a1) begin
+		local l1, l2;
+		if a1 then begin
+				l1 := a1.button
+			end;
+		(if l1 then begin
+				self:ShowIfNotVisible(self);
+				self.hidden := nil;
+				self.options := a1;
+				self.text := l1.buttonTitle;
+				(l2 := Clone(viewBounds)).left := ((viewBounds.right - StrWidth(text)) - 7);
+				SetValue(self, 'viewBounds, l2)
+			end)
+	end,
+	hidden: true,
+	viewSetupDoneScript: func() begin
+		(if self.hidden then self:Hide())
+	end,
+	_proto: @protoTextButton,
+	preAllocatedContext: 'special
+};
+
+theConnectionWasStopped := "The connection was stopped because there was no response.";
+
+yourModelOfNewton := "Your model of Newton cannot connect with this version of the desktop application.";
+
+thePackageAlreadyExists := "The package already exists. Remove the package and try again.";
+
+theConnectionWasStopped_2 := "The connection was stopped because your ^0 disconnected.";
+
+soupIsInvalidProbably := "Soup is invalid (probably from a removed store).";
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+autodock_literal2 := same("Connection.autodock.literals[2]");
+
+autodock_literal7 := same("Connection.autodock.literals[10].literals[7]");
+
+AddDefaultApps_literal0 := same("Connection.AddDefaultApps.literals[0]");
+
+SoupNameToAppName_literal9 := same("Connection.SoupNameToAppName.literals[9]");
+
+SoupNameToAppName_literal11 := same("Connection.SoupNameToAppName.literals[11]");
+
+SoupNameToAppName_literal12 := same("Connection.SoupNameToAppName.literals[12]");
+
+SetupEndpoint_literal1 := same("Connection.SetupEndpoint.literals[9].literals[1]");
+
+ImportFile_code := same("Connection.ImportFile.literals[6].instructions");
+
+InvalidateApplicationList_code := same("Connection.InvalidateApplicationList.instructions");
+
+buttonClickScript_code_8 := same("ConnectionItem_6.buttonClickScript.instructions");

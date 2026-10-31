@@ -1,5 +1,0 @@
-@@ 0x56e64d
-func() begin
-	self:DrawCardSlotIcon(CardSlot, RelBounds(0, 0, 36, 36), 0)
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x44fa5d
-func() begin
-	self:mover('Next)
-end
-@@end

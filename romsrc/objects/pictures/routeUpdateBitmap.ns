@@ -1,0 +1,6 @@
+// routeUpdateBitmap, and what only it reaches
+
+routeUpdateBitmap := {
+	bits: bitmap('bits, "resources/bits/3db1b1.png", "00000000000400d200d200db00e000f0", 1),
+	bounds: {left: 0, top: 0, right: 21, bottom: 14}
+};

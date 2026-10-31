@@ -1,0 +1,3 @@
+// canonicalGestaltPatchInfo, and what only it reaches
+
+canonicalGestaltPatchInfo := {fTotalPatchPageCount: 0, fPatch: nil};

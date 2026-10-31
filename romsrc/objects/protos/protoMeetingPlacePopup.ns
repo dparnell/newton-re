@@ -1,0 +1,49 @@
+// protoMeetingPlacePopup, and what only it reaches
+
+protoMeetingPlacePopup := {
+	viewJustify: vjParentCenterH + vjParentBottomV,
+	viewBounds: {left: 0, top: -235, right: 238, bottom: 0},
+	viewFlags: vApplication + vFloating,
+	viewFormat: vfFillWhite + vfRound(2),
+	viewEffect: 133120,
+	selected: nil,
+	dataClass: nil,
+	context: nil,
+	ReOrientToScreen: @defRotateFunc,
+	Init: func() begin
+		BuildContext({_proto: self})
+	end,
+	New: func(a1, a2, a3, a4) begin
+		local l1;
+		(l1 := self:Init()).dataClass := a1;
+		l1.context := a3;
+		l1.selected := a2;
+		l1.options := a4;
+		l1:Open();
+		l1
+	end,
+	stepChildren: [stepChildren: placeList],
+	placeList: nil,
+	stepallocatecontext: [|Array|: 'placeList, placeList],
+	_proto: @protoFloatNGo
+};
+
+placeList := {
+	_proto: @protoMeetingPlacePicker,
+	viewSetupFormScript: func() begin
+		if options then begin
+				(foreach l1, l2 in options do begin
+						self.(l1) := l2
+					end)
+			end;
+		inherited:?viewSetupFormScript()
+	end,
+	viewQuitScript: func() begin
+		inherited:?viewQuitScript();
+		(if (if context then context.pickActionScript) then 'postQuit)
+	end,
+	viewPostQuitScript: func() begin
+		context:pickActionScript(selected)
+	end,
+	preallocatedContext: 'placeList
+};

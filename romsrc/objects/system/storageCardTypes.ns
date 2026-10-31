@@ -1,0 +1,3 @@
+// storageCardTypes, and what only it reaches
+
+storageCardTypes := {sram: "SRAM Card", flsh: "Flash Card", pgts: "ATA Card", |rom |: "ROM Card"};

@@ -1,5 +1,0 @@
-@@ 0x101dc11
-func() begin
-	(if GlobalFnExists('GetDeviceList) then GetDeviceList('ethernet) else [Array: ])
-end
-@@end

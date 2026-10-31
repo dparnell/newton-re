@@ -1,0 +1,17 @@
+// protoTableDef, and what only it reaches
+
+protoTableDef := {
+	tabWidths: 50,
+	tabHeights: 0,
+	tabProtos: @protoTableEntry,
+	tabValueSlot: 'text,
+	tabAcross: 1,
+	tabValues: nil,
+	tabDown: 0,
+	tabSetup: func(a1, a2, a3) begin
+		a1.hIndex := (a2 - 1);
+		(a1.vIndex := (a3 - 1))
+	end,
+	tabUniqueSelection: true,
+	indentX: 2
+};

@@ -1,0 +1,10 @@
+// faxDriver, and what only it reaches
+
+faxDriver := {
+	name: fax,
+	driverName: "TFaxDriver",
+	imagingName: tDotPrinter,
+	type: 'serialSym,
+	printerPageBounds: {eightByEleven: {bottom: 841, right: 594}, a4: {bottom: 841, right: 594}},
+	printableOrigin: {top: 0, left: 0}
+};

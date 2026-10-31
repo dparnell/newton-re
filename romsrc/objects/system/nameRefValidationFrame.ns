@@ -1,0 +1,134 @@
+// nameRefValidationFrame, and what only it reaches
+
+nameRefValidationFrame := {
+	name: {
+		inputProto: {
+			viewClass: clView,
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			viewBounds: {left: 0, top: 4, right: 0, bottom: 84},
+			viewFlags: vVisible,
+			viewFormat: vfFillWhite,
+			viewSetupFormScript: func() begin
+				(if (not target.name) then (target.name := Clone({})))
+			end,
+			viewChildren: [viewChildren:
+				firstName,
+				{
+					viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+					viewLineSpacing: 32,
+					path: [pathExpr: 'name, 'last],
+					flavor: flavor,
+					label: last_2,
+					memory: 'lastName,
+					newDictionaries: [|Array|: 7, 31, 0],
+					_proto: @newtLabelInputLine
+				}
+			],
+			firstName: nil,
+			allocateContext: [|Array|: 'firstName, firstName]
+		},
+		HasData: func(a1) begin
+			(if a1.name then (a1.name.first or a1.name.last))
+		end,
+		type: 'text
+	},
+	company: {
+		inputProto: {
+			_proto: @newtLabelInputLine,
+			flavor: flavor,
+			newDictionaries: nil,
+			newRecFlags: 29403649,
+			memory: 'companyName,
+			viewSetupFormScript: func() begin
+				local l1;
+				newDictionaries := (l1 := GetLocale()).recogCompanyDictionaries;
+				inherited:?viewSetupFormScript()
+			end
+		},
+		theText: "Company:",
+		type: 'text
+	},
+	place: {inputProto: {_proto: @newtLabelInputLine, flavor: flavor}, theText: "Worksite:", type: 'text},
+	group: {
+		inputProto: {_proto: @newtLabelInputLine, flavor: flavor, newRecFlags: 8428033},
+		theText: "Group:",
+		type: 'text
+	},
+	phone: {
+		inputProto: {
+			_proto: @newtAreacodePhoneLine,
+			viewSetupFormScript: func() begin
+				if (not target.(path)) then begin
+						target.(path) := Clone("")
+					end;
+				if IsString(target.(path)) then begin
+						SetClass(target.(path), context._subclass)
+					end;
+				inherited:?viewSetupFormScript()
+			end
+		},
+		HasData: func(a1) begin
+			local l1;
+			if (not (l1 := StrFilled(a1.phone))) then begin
+					a1.phone := nil
+				end;
+			l1
+		end,
+		type: 'number
+	},
+	email: {
+		inputProto: {
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 74},
+			viewJustify: vjParentFullH + vjSiblingBottomV,
+			viewLineSpacing: 30,
+			label: address,
+			path: 'email,
+			targetView: nil,
+			selectedPath: nil,
+			newRecFlags: 64001,
+			GetSymArray: func() begin
+				GetGlobals().EmailSystems.emailClasses
+			end,
+			GetTextArray: func() begin
+				GetGlobals().EmailSystems.emailText
+			end,
+			viewSetupFormScript: func() begin
+				if (not target.(path)) then begin
+						target.(path) := Clone("")
+					end;
+				if IsString(target.(path)) then begin
+						SetClass(target.(path), context._subclass)
+					end;
+				inherited:?viewSetupFormScript()
+			end,
+			_proto: @newtPopupEdit
+		},
+		HasData: func(a1) begin
+			local l1;
+			if (not (l1 := StrFilled(a1.email))) then begin
+					a1.email := nil
+				end;
+			l1
+		end,
+		type: 'text
+	}
+};
+
+flavor := {_proto: @newtCustomFilter, recFlags: 25201153};
+
+firstName := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+	viewLineSpacing: 32,
+	flavor: flavor,
+	path: [pathExpr: 'name, 'first],
+	label: first,
+	newDictionaries: [|Array|: 48, 31],
+	preallocatedContext: 'firstName,
+	_proto: @newtLabelInputLine
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_5 := same("nameRefValidationFrame.phone.inputProto.viewSetupFormScript.instructions");
+
+HasData_code := same("nameRefValidationFrame.phone.HasData.instructions");

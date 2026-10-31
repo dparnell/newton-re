@@ -1,0 +1,27 @@
+// newtSmartCompanyFilter, and what only it reaches
+
+newtSmartCompanyFilter := {
+	_proto: @newtTextFilter,
+	recFlags: 29395457,
+	dictionaries: [|Array|: 42, 31, 0],
+	PathQuery: func(a1) begin
+		Query(GetUnionSoup(@cardfileSoupName), {type: 'words, words: a1})
+	end,
+	QueryItem: func(a1, a2) begin
+		(if (if a1.company then FindStringInFrame(a1.company, a2, nil)) then {item: Stringer([Array: a1.company, " ", $(, a1.address, $)]), id: MakeEntryAlias(a1)})
+	end,
+	ResolveItem: func(a1) begin
+		targetView:jamFromEntry(ResolveEntryAlias(a1.id))
+	end,
+	EntryToPath: func(a1) begin
+		(target.(path) := a1.company)
+	end,
+	InitFilter: func() begin
+		ArrayMunger((dictionaries := Clone(dictionaries)), Length(dictionaries), 0, GetLocale().recogCompanyDictionaries, 0, nil);
+		inherited:?InitFilter()
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+EntryToPath_code := same("newtSmartCompanyFilter.EntryToPath.instructions");

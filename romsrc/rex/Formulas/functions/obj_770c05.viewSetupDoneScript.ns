@@ -1,9 +1,0 @@
-@@ 0x771341
-func() begin
-	AddArraySlot((FSViews := [Array: ]), NumberOfYears);
-	AddArraySlot(FSViews, InterestRate);
-	AddArraySlot(FSViews, LoanAmount);
-	AddArraySlot(FSViews, MonthlyPayment);
-	inherited:?viewSetupDoneScript()
-end
-@@end

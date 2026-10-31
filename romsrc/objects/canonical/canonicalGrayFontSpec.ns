@@ -1,0 +1,3 @@
+// canonicalGrayFontSpec, and what only it reaches
+
+canonicalGrayFontSpec := {size: nil, face: nil, family: nil, color: nil};

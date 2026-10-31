@@ -1,0 +1,13 @@
+// classinfoEnabler, and what only it reaches
+
+classinfoEnabler := {
+	InterfaceName: {class: #132, funcPtr: 7252307, numArgs: 0},
+	ImplementationName: {class: #132, funcPtr: 7252306, numArgs: 0},
+	signature: {class: #132, funcPtr: 7252308, numArgs: 0},
+	version: {class: #132, funcPtr: 7252309, numArgs: 0},
+	New: {class: #132, funcPtr: 7252304, numArgs: 0},
+	Destroy: {class: #132, funcPtr: 7252299, numArgs: 0},
+	GetCapability: {class: #132, funcPtr: 7252301, numArgs: 1},
+	HasCapability: {class: #132, funcPtr: 7252302, numArgs: 1},
+	Dispatch: {class: #132, funcPtr: 7252300, numArgs: 4}
+};

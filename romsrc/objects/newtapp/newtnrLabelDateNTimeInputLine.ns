@@ -1,0 +1,3 @@
+// newtnrLabelDateNTimeInputLine, and what only it reaches
+
+newtnrLabelDateNTimeInputLine := {_proto: @newtProtoLine, flavor: @newtDateNTimeFilter, access: 'pickOnly};

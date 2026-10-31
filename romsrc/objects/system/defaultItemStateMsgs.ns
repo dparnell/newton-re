@@ -1,0 +1,13 @@
+// defaultItemStateMsgs, and what only it reaches
+
+defaultItemStateMsgs := {
+	ready: ready,
+	Sent: sent,
+	Received: new_2,
+	Read: read,
+	InLog: logged,
+	OutLog: logged,
+	pending: pending,
+	Remote: "Remote",
+	error: "Error"
+};

@@ -1,0 +1,5 @@
+// function_6, and what only it reaches
+
+function_6 := func(a1) begin
+	AddArraySlot(fLinkClients_ReleasePending, a1)
+end;

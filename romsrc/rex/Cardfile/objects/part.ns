@@ -1,0 +1,116 @@
+// part, and what only it reaches
+
+part := array(nil, {
+	installScript: compile(
+		constants: {
+			kFunction_720809: func(a1, a2, a3, a4) begin
+				GetRoot().cardfile:NewtSoupChangedNotify(a1, a2, a3, a4)
+			end
+		},
+		func(a1) begin
+			local namesSoup;
+			local l1, l2, l3, l4;
+			l1 := a1.partData.theForm;
+			(l4 := {}).(EnsureInternal('theStuff)) := l1:NewtInstallScript(l1);
+			l4.(EnsureInternal('appSymbol)) := l1.appSymbol;
+			l2 := BuildContext(l1);
+			OverrideBuiltinApp('cardfile, l2);
+			namesSoup := l1.allSoups.names;
+			l4.(EnsureInternal('soupName)) := namesSoup.soupName;
+			if (not GetStores()[0]:HasSoup(namesSoup.soupName)) then begin
+					l3 := Clone(namesSoup);
+					l3:MakeSoup(l1.appSymbol);
+					l3:AddWalletEntries()
+				end;
+			RegSoupChange(namesSoup.soupName, l1.appSymbol, kFunction_720809);
+			RegSoupRestore(l1.appSymbol, func(a1) begin
+				local l1, l2;
+				(if BFetch(a1, namesSoup.soupName, '|str<|, nil) then begin
+						if (l2 := (l1 := GetRoot().cardfile).allSoups.names).theSoup then begin
+								l2.theSoup := nil
+							end;
+						l1:CheckAllBdays()
+					end)
+			end);
+			l4
+		end),
+	removeScript: func(a1) begin
+		UnRegSoupChange(a1.soupName, a1.appSymbol);
+		UnRegUnionSoup(a1.soupName, a1.appSymbol);
+		call a1.theStuff.NewtRemoveScript with (a1.theStuff);
+		nil
+	end,
+	partData: {theForm: @8192},
+	_ImportTable: [|Array|: {name: 'cardfile, major: 1, minor: 0}],
+	_ExportTable: [|Array|:
+		{
+			name: 'cardfile,
+			major: 1,
+			minor: 0,
+			objects: [|Array|:
+				@8192,
+				@8193,
+				@8194,
+				@8195,
+				@8196,
+				@8197,
+				@8198,
+				@8199,
+				@8200,
+				@8201,
+				@8202,
+				@8203,
+				@8204,
+				@8205,
+				@8206,
+				@8207,
+				@8208,
+				@8209,
+				@8210,
+				@8211,
+				@8212,
+				@8213,
+				@8214,
+				@8215,
+				@8216,
+				@8217,
+				@8218,
+				@8219,
+				@8220,
+				@8221,
+				@8222,
+				@8223,
+				@8224,
+				@8225,
+				@8226,
+				@8227,
+				@8228,
+				@8229,
+				@8230,
+				@8231,
+				@8232,
+				@8233,
+				@8234,
+				@8235,
+				@8236,
+				@8237,
+				@8238,
+				@8239,
+				@8240,
+				@8241,
+				@8242,
+				@8243,
+				@8244,
+				@8245,
+				@8246,
+				@8247,
+				@8248,
+				@8249,
+				@8250,
+				@8251,
+				@8252,
+				@8253
+			]
+		}
+	]
+});

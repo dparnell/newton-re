@@ -1,0 +1,286 @@
+// dictionaryList, and what only it reaches
+
+dictionaryList := [|Array|:
+	{
+		_proto: @protoDictionary,
+		name: "User (forward)",
+		dictID: 31,
+		dictType: 0,
+		domainType: 4198400,
+		order: 0,
+		status: 1,
+		count: 0,
+		limit: 1000,
+		addDuplicates: true
+	},
+	{
+		_proto: @protoDictionary,
+		name: "DarkStar (forward)",
+		dictID: 32,
+		ROMDictID: 2,
+		dictType: 0,
+		domainType: 4096,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "letters",
+		dictID: 33,
+		ROMDictID: 0,
+		dictType: 0,
+		domainType: 4096,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "symbols",
+		dictID: 40,
+		localDictSlot: 'recogSymbolsDictionary,
+		dictType: 0,
+		domainType: 4096,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "address abbreviations",
+		dictID: 121,
+		ROMDictID: 28,
+		dictType: 0,
+		domainType: 2097152,
+		order: 0,
+		status: 1
+	},
+	{
+		_proto: @protoDictionary,
+		name: "ParaGraph prefixes",
+		dictID: 122,
+		ROMDictID: 124,
+		dictType: 0,
+		domainType: 4097,
+		order: 0,
+		status: 1
+	},
+	{
+		_proto: @protoDictionary,
+		name: "ParaGraph suffixes",
+		dictID: 123,
+		ROMDictID: 125,
+		dictType: 0,
+		domainType: 4097,
+		order: 0,
+		status: 1
+	},
+	{
+		_proto: @protoDictionary,
+		name: "commons (attributed) (forward)",
+		dictID: 0,
+		linkedDictID: 15,
+		ROMDictID: 19,
+		reverseDictID: 15,
+		dictType: 0,
+		domainType: 6295552,
+		order: 0,
+		status: 1
+	},
+	{
+		_proto: @protoDictionary,
+		name: "commons (attributed) (reverse)",
+		dictID: 15,
+		linkedDictID: 6,
+		ROMDictID: 20,
+		dictType: 1,
+		domainType: 6295552,
+		order: 0,
+		status: 1
+	},
+	{
+		_proto: @protoDictionary,
+		name: "shared commons",
+		dictID: 6,
+		linkedDictID: 3,
+		ROMDictID: 17,
+		dictType: 0,
+		domainType: 6295552,
+		order: 0,
+		status: 1
+	},
+	{
+		_proto: @protoDictionary,
+		name: "local commons",
+		dictID: 3,
+		linkedDictID: 0,
+		localDictSlot: 'recogCommonsDictionary,
+		dictType: 0,
+		domainType: 6295552,
+		order: 0,
+		status: 1
+	},
+	{
+		_proto: @protoDictionary,
+		name: "days & months",
+		dictID: 34,
+		ROMDictID: 3,
+		dictType: 0,
+		domainType: 524288,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "shared first names",
+		dictID: 48,
+		ROMDictID: 22,
+		dictType: 0,
+		domainType: 4198400,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "shared honorifics",
+		dictID: 45,
+		ROMDictID: 24,
+		dictType: 0,
+		domainType: 4198400,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "shared world cities",
+		dictID: 24,
+		ROMDictID: 29,
+		dictType: 0,
+		domainType: 4096,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "shared countries",
+		dictID: 8,
+		ROMDictID: 30,
+		dictType: 0,
+		domainType: 4096,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "shared world regions",
+		dictID: 26,
+		ROMDictID: 31,
+		dictType: 0,
+		domainType: 4198400,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "local time",
+		dictID: 111,
+		localDictSlot: 'recogTimeDictionary,
+		dictType: 4,
+		domainType: 1048576,
+		order: 0,
+		status: 1
+	},
+	{
+		_proto: @protoDictionary,
+		name: "local date",
+		dictID: 110,
+		localDictSlot: 'recogDateDictionary,
+		dictType: 4,
+		domainType: 524288,
+		order: 0,
+		status: 1
+	},
+	{
+		_proto: @protoDictionary,
+		name: "local phone",
+		dictID: 112,
+		localDictSlot: 'recogPhoneDictionary,
+		dictType: 4,
+		domainType: 262144,
+		order: 0,
+		status: 1
+	},
+	{
+		_proto: @protoDictionary,
+		name: "postal codes",
+		dictID: 116,
+		ROMDictID: 107,
+		dictType: 4,
+		domainType: 8192,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "calcsheet",
+		dictID: 124,
+		ROMDictID: 109,
+		dictType: 4,
+		domainType: 0,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "local numbers&money",
+		dictID: 113,
+		linkedDictID: 118,
+		localDictSlot: 'recogNumbersOnlyDictionary,
+		dictType: 4,
+		domainType: 8192,
+		order: 0,
+		status: 1
+	},
+	{
+		_proto: @protoDictionary,
+		name: "local numbers only",
+		dictID: 117,
+		localDictSlot: 'recogNumbersOnlyDictionary,
+		dictType: 4,
+		domainType: 0,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "local money only",
+		dictID: 118,
+		localDictSlot: 'recogMoneyOnlyDictionary,
+		dictType: 4,
+		domainType: 0,
+		order: 0,
+		status: 0
+	},
+	{
+		_proto: @protoDictionary,
+		name: "Expand (forward)",
+		dictID: 35,
+		dictType: 0,
+		domainType: 0,
+		order: 0,
+		status: 0,
+		list: nil,
+		count: 0,
+		limit: 256
+	},
+	{
+		_proto: @protoDictionary,
+		name: "Auto Add (forward)",
+		dictID: 36,
+		dictType: 0,
+		domainType: 0,
+		order: 0,
+		status: 0,
+		list: nil,
+		count: 0,
+		limit: 100
+	}
+];

@@ -1,49 +1,49 @@
 # the objects' area: 0x10005a0, 0x540 bytes; the byte between objects; the objects' alignment
 area	10005a0	540	bf	4
-10005a0	obj_10005a1	41	gc=1
-10005b0	obj_10005a1[0]	43	map=map_10005d1
+10005a0	part	41	gc=1
+10005b0	part[0]	43	map=map_10005d1
 10005d0	map_10005d1	41
 10005f4	'text	40
 100060c	'TapAction	40
 1000628	'installScript	40
 1000648	'devInstallScript	40
 100066c	'devRemoveScript	40
-100068c	obj_100068d	40
+100068c	newtonDevices	40
 10006b8	'|string|	40
-10006d0	obj_10005a1[0].TapAction	43	map=map_10006f1
+10006d0	part[0].TapAction	43	map=map_10006f1
 10006f0	map_10006f1	41
 1000714	'class	40
 100072c	'instructions	40
 100074c	'literals	40
 1000768	'argFrame	40
 1000784	'numArgs	40
-100079c	obj_10005a1[0].TapAction.instructions	40
-10007b4	obj_10005a1[0].TapAction.literals	41
+100079c	part[0].TapAction.instructions	40
+10007b4	part[0].TapAction.literals	41
 10007cc	'|Newton Devices:NIE_TapActionFunc|	40
 1000800	'GetGlobalVar	40
 1000820	'AddDeferredCall	40
-1000840	obj_10005a1[0].installScript	43	map=map_10006f1
-1000860	obj_10005a1[0].installScript.instructions	40
-100087c	obj_10005a1[0].installScript.literals	41
-1000898	obj_10005a1[0].installScript.literals[1]	41
+1000840	part[0].installScript	43	map=map_10006f1
+1000860	part[0].installScript.instructions	40
+100087c	part[0].installScript.literals	41
+1000898	part[0].installScript.literals[1]	41
 10008ac	'removeScript	40
 10008cc	'EnsureInternal	40
-10008ec	obj_10005a1[0].devInstallScript	43	map=map_10006f1
-100090c	obj_10005a1[0].devInstallScript.instructions	40
-1000920	obj_10005a1[0].devInstallScript.literals	41
-1000938	obj_10005a1[0].devInstallScript.literals[1]	43	map=map_10006f1
-1000958	obj_10005a1[0].devInstallScript.literals[1].instructions	40
-1000978	obj_10005a1[0].devInstallScript.literals[1].literals	41
-10009a4	obj_10005a1[0].devInstallScript.literals[1].literals[1]	40
-10009cc	obj_10005a1[0].devInstallScript.literals[1].literals[2]	40
-10009e8	obj_10005a1[0].devInstallScript.literals[1].literals[3]	40
+10008ec	part[0].devInstallScript	43	map=map_10006f1
+100090c	part[0].devInstallScript.instructions	40
+1000920	part[0].devInstallScript.literals	41
+1000938	part[0].devInstallScript.literals[1]	43	map=map_10006f1
+1000958	part[0].devInstallScript.literals[1].instructions	40
+1000978	part[0].devInstallScript.literals[1].literals	41
+10009a4	part[0].devInstallScript.literals[1].literals[1]	40
+10009cc	part[0].devInstallScript.literals[1].literals[2]	40
+10009e8	part[0].devInstallScript.literals[1].literals[3]	40
 10009f8	'|Array|	40
 1000a10	'ParamStr	40
 1000a2c	'GetRoot	40
 1000a44	'Notify	40
 1000a5c	'DefGlobalVar	40
-1000a7c	obj_10005a1[0].devRemoveScript	43	map=map_10006f1
-1000a9c	obj_10005a1[0].devRemoveScript.instructions	40
-1000aac	obj_10005a1[0].devRemoveScript.literals	41
+1000a7c	part[0].devRemoveScript	43	map=map_10006f1
+1000a9c	part[0].devRemoveScript.instructions	40
+1000aac	part[0].devRemoveScript.literals	41
 1000ac0	'UnDefGlobalVar	40
-alias	obj_10005a1[0].devInstallScript.literals[1].literals[0]	obj_100068d
+alias	part[0].devInstallScript.literals[1].literals[0]	newtonDevices

@@ -1,0 +1,3 @@
+// codeBlockPrototype, and what only it reaches
+
+codeBlockPrototype := {class: 'CodeBlock, instructions: nil, literals: nil, argFrame: nil, numArgs: nil};

@@ -1,0 +1,67 @@
+// protoContentArea, and what only it reaches
+
+protoContentArea := {
+	_proto: protoContentAreaProto,
+	viewFlags: vVisible + vReadOnly + vClipping + vGesturesAllowed,
+	viewSetupFormScript: func() begin
+		self.bookScripts := Clone(protoBookScripts);
+		if (l3 := (l1 := self:CurrentBook()).scripts) then begin
+				local l1;
+				local l2;
+				local l3;
+				(for l2 := 0 to (Length(l3) - 1) by 2 do begin
+						local l6;
+						self.bookScripts.(l3[l2]) := l3[(l2 + 1)]
+					end)
+			end;
+		self._proto := bookScripts;
+		l6 := self:PageSize(nil);
+		self.viewBounds := RelBounds(0, 0, l6.width, l6.height);
+		(if (pagesShowing = 2) then (viewBounds.right := ((l6.width * 2) + 15)))
+	end,
+	protoBookScripts: {
+		_proto: protoContentAreaProto,
+		mungeContentScript: nil,
+		HideMarkup: func() begin
+			local l1;
+			local l2;
+			(foreach l1 in (l2 := self:ChildViewFrames()) do begin
+					if l1.Scroller then begin
+							l1:ShowScroller()
+						end
+				end)
+		end,
+		ShowMarkup: func() begin
+			local l1;
+			local l2;
+			(foreach l1 in (l2 := self:ChildViewFrames()) do begin
+					if l1.Scroller then begin
+							l1:HideScroller()
+						end
+				end)
+		end,
+		edgeWidth: 1,
+		viewQuitScript: func() begin
+			true
+		end,
+		viewShowScript: func() begin
+			true
+		end,
+		buttonClickScript: func() begin
+			nil
+		end,
+		viewClickScript: func(a1) begin
+			self:buttonClickScript();
+			true
+		end,
+		debug: 71595
+	},
+	debug: contentArea,
+	preallocatedContext: 'contentArea
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+HideMarkup_code_2 := same("protoContentArea.protoBookScripts.HideMarkup.instructions");
+
+viewClickScript_code_4 := same("protoContentArea.protoBookScripts.viewClickScript.instructions");

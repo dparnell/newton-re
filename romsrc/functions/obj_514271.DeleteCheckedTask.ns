@@ -1,5 +1,0 @@
-@@ 0x514251
-func(a1, a2) begin
-	self:GetToDo():DeleteCheckedTask(a1, a2)
-end
-@@end

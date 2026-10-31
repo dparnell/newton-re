@@ -1,0 +1,10 @@
+// protoSubContentArea, and what only it reaches
+
+protoSubContentArea := {
+	viewClass: clView,
+	viewFlags: vVisible + vReadOnly + vClipping + vGesturesAllowed,
+	CurrentPage: func() begin
+		pageNumber
+	end,
+	debug: 45916
+};

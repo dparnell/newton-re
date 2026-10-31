@@ -1,0 +1,3 @@
+// canonicalPictDragData, and what only it reaches
+
+canonicalPictDragData := {icon: nil, viewBounds: nil};

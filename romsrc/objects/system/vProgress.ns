@@ -1,0 +1,7 @@
+// vProgress, and what only it reaches
+
+vProgress := {
+	height: 132,
+	name: 'vProgress,
+	kids: [|Array|: @protoStatusText, @protoStatusProgress, @protoTitleText, @protoDefaultStatusButton]
+};

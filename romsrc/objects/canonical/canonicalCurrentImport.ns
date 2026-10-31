@@ -1,0 +1,3 @@
+// canonicalCurrentImport, and what only it reaches
+
+canonicalCurrentImport := {ImportTable: nil, client: nil};

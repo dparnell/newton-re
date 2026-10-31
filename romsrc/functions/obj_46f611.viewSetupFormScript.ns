@@ -1,6 +1,0 @@
-@@ 0x46f531
-func() begin
-	formOpen := true;
-	AddPowerOffHandler(self)
-end
-@@end

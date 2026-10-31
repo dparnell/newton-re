@@ -1,0 +1,3 @@
+// protoPictureView, and what only it reaches
+
+protoPictureView := {viewClass: clPictureView, _proto: @protoView};

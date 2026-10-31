@@ -1,6 +1,0 @@
-@@ 0x7a9041
-func(a1) begin
-	self:viewOverviewScript();
-	true
-end
-@@end

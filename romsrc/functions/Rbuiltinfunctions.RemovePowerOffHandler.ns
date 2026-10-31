@@ -1,5 +1,0 @@
-@@ 0x562e15
-func(a1) begin
-	SetRemove(OldPowerOffHandlers, a1)
-end
-@@end

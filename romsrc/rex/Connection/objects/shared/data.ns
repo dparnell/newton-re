@@ -1,0 +1,3 @@
+// objects several roots reach, none alone (naturalize.py)
+
+titleIconBits := bitmap('bits, "resources/bits/752479.png", "000000000004010701070091011200a4", 1);

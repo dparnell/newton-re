@@ -1,0 +1,159 @@
+// protoSetClock, and what only it reaches
+
+protoSetClock := {
+	viewClass: clPictureView,
+	viewFlags: vVisible + vClickable + vStrokesAllowed,
+	icon: {
+		bits: bitmap('bits, "resources/bits/3d8809.png", "0000000000080037003700e200770122", 1),
+		bounds: {left: 0, top: 0, right: 64, bottom: 64}
+	},
+	atanTable: [|Array|:
+		524,
+		1584,
+		2679,
+		3839,
+		5095,
+		6494,
+		8098,
+		10000,
+		12349,
+		15399,
+		19626,
+		26051,
+		37321,
+		63138,
+		190811
+	],
+	sinTable: [|Array|:
+		10000,
+		9945,
+		9781,
+		9511,
+		9135,
+		8660,
+		8090,
+		7431,
+		6691,
+		5878,
+		5000,
+		4067,
+		3090,
+		2079,
+		1045,
+		0
+	],
+	FastEnoughAtan: func(a1, a2) begin
+		local l1, l2, l3;
+		l1 := nil;
+		if (a1 = 0) then begin
+				l1 := 15
+			end else begin
+				if (a2 = 0) then begin
+						l1 := 0
+					end else begin
+						l2 := ((a2 * 10000) div a1);
+						l3 := 0;
+						(loop begin
+								if (l2 < atanTable[l3]) then begin
+										break
+									end;
+								(if ((l3 := (l3 + 1)) > 14) then begin
+										l3 := 15;
+										break
+									end)
+							end);
+						l1 := l3
+					end
+			end;
+		return l1
+	end,
+	GetHandShape: func(a1, a2, a3) begin
+		local l1, l2, l3, l4;
+		l1 := (a1 div 15);
+		l2 := (a1 - (l1 * 15));
+		l4 := sinTable[l2];
+		if ((l1 = 0) or (l1 = 3)) then begin
+				l4 := (-l4)
+			end;
+		l3 := sinTable[(15 - l2)];
+		if (l1 > 1) then begin
+				l3 := (-l3)
+			end;
+		if ((l1 = 1) or (l1 = 3)) then begin
+				l2 := l3;
+				l3 := l4;
+				l4 := l2
+			end;
+		MakeLine(a2, a2, (a2 + ((l3 * a2) div a3)), (a2 + ((l4 * a2) div a3)))
+	end,
+	viewDrawScript: func() begin
+		local l1, l2;
+		l2 := ((l1 := (viewBounds.right - viewBounds.left)) div 2);
+		l1 := ((hours * 5) mod 60);
+		if (minutes > 30) then begin
+				l1 := (l1 + 2)
+			end;
+		self:DrawShape([Array: MakeOval((l2 - 2), (l2 - 2), (l2 + 2), (l2 + 2)), self:GetHandShape(minutes, l2, 11000), self:GetHandShape(l1, l2, 18000)], nil)
+	end,
+	diff: func(a1, a2) begin
+		(if (a1 > a2) then return (a1 - a2) else return (a2 - a1))
+	end,
+	distance: func(a1, a2) begin
+		(if (a1 > a2) then return (a1 + (a2 div 2)) else return (a2 + (a1 div 2)))
+	end,
+	viewStrokeScript: func(a1) begin
+		local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+		l1 := ((viewBounds.right - viewBounds.left) div 2);
+		l2 := self:GlobalBox().left;
+		l4 := (GetPoint(4, a1) - l2);
+		l6 := (GetPoint(0, a1) - l2);
+		l3 := self:GlobalBox().top;
+		l5 := (GetPoint(5, a1) - l3);
+		l7 := (GetPoint(1, a1) - l3);
+		if (self:distance(self:diff(l1, l4), self:diff(l1, l5)) < self:distance(self:diff(l1, l6), self:diff(l1, l7))) then begin
+				l4 := (l6 - l1);
+				l5 := (l1 - l7)
+			end else begin
+				l4 := (l4 - l1);
+				l5 := (l1 - l5)
+			end;
+		if (l4 < 0) then begin
+				l2 := (-l4)
+			end else begin
+				l2 := l4
+			end;
+		if (l5 < 0) then begin
+				l3 := (-l5)
+			end else begin
+				l3 := l5
+			end;
+		l8 := (15 - self:FastEnoughAtan(l2, l3));
+		if ((l4 * l5) < 0) then begin
+				l8 := (30 - l8)
+			end;
+		if ((l4 < 0) or (if (l4 <= 0) then (l5 < 0))) then begin
+				l8 := (l8 + 30)
+			end;
+		if (l8 = 60) then begin
+				l8 := 0
+			end;
+		if (l2 > l3) then begin
+				l9 := (l2 + (l3 div 2))
+			end else begin
+				l9 := (l3 + (l2 div 2))
+			end;
+		if (l9 > ((viewBounds.right - viewBounds.left) div 3)) then begin
+				minutes := l8
+			end else begin
+				hours := ((l8 + 2) div 5)
+			end;
+		self:TimeChanged();
+		return true
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+diff_code := same("protoSetClock.diff.instructions");
+
+distance_code := same("protoSetClock.distance.instructions");

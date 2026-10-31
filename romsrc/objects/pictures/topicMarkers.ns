@@ -1,0 +1,6 @@
+// topicMarkers, and what only it reaches
+
+topicMarkers := {
+	bits: bitmap('bits, "resources/bits/3db2a9.png", "00000000000800f400f4010801000132", 1),
+	bounds: {left: 0, top: 0, right: 42, bottom: 12}
+};

@@ -1,5 +1,0 @@
-@@ 0x4bab9d
-func() begin
-	filter:?QuitFilter()
-end
-@@end

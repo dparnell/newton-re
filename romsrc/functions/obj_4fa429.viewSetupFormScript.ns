@@ -1,5 +1,0 @@
-@@ 0x4fa409
-func() begin
-	(self.text := self:CreateDateString())
-end
-@@end

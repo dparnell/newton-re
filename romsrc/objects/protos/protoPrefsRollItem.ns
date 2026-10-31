@@ -1,0 +1,23 @@
+// protoPrefsRollItem, and what only it reaches
+
+protoPrefsRollItem := {
+	_proto: @protoContainerView,
+	viewFlags: vVisible,
+	viewJustify: vjParentFullH,
+	viewFormat: 0,
+	viewSetupFormScript: func() begin
+		SetKeyView(self, 0)
+	end,
+	pix: nil,
+	viewChildren: [viewChildren:
+		{
+			title: nil,
+			viewSetupFormScript: func() begin
+				title := overview;
+				titleicon := icon;
+				inherited:viewSetupFormScript()
+			end,
+			_proto: @protoTitle
+		}
+	]
+};

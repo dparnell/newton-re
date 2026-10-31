@@ -1,5 +1,0 @@
-@@ 0x1012ddd
-func(a1) begin
-	(fsm_private_context.turtle := a1)
-end
-@@end

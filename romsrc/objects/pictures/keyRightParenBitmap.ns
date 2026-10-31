@@ -1,0 +1,6 @@
+// keyRightParenBitmap, and what only it reaches
+
+keyRightParenBitmap := {
+	bits: bitmap('bits, "resources/bits/3d9231.png", "00000000000400360036027a0045027e", 1),
+	bounds: {left: 0, top: 0, right: 4, bottom: 15}
+};

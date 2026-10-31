@@ -1,5 +1,0 @@
-@@ 0x4e0e41
-func() begin
-	(pix := nil)
-end
-@@end

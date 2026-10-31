@@ -1,0 +1,50 @@
+// protoTapiPicker, and what only it reaches
+
+protoTapiPicker := {
+	text: "Using",
+	labelCommands: [|Array|: ],
+	onlyIncoming: nil,
+	SetProvider: func(a1) begin
+		nil
+	end,
+	DefaultProvider: func() begin
+		nil
+	end,
+	viewSetupFormScript: func() begin
+		l1 := GetLocale().speakerless;
+		l2 := GetCommConfig(nil, "TAPI", nil);
+		labelCommands := [Array: ];
+		local l1;
+		local l2;
+		(foreach l3 in l2 do begin
+				local l5;
+				if (if (if (if (if (if (l5 := CommConfigRegistry.(l3)) then l5.config) then l5.config.supportsMakeOutgoing) then l5.config.supportsSendDigit) then ((not onlyIncoming) or (if onlyIncoming then l5.config.supportsEventIncoming))) then ((not l1) or (if l1 then l5.serviceId))) then begin
+						AddArraySlot(labelCommands, {item: Clone(l5.name), slot: l3})
+					end
+			end);
+		if (Length(labelCommands) >= 1) then begin
+				AddArraySlot((labelCommands := Sort(labelCommands, '|str<|, 'item)), 'pickseparator)
+			end;
+		AddArraySlot(labelCommands, {item: "Telephone", slot: nil});
+		inherited:?viewSetupFormScript()
+	end,
+	TextSetup: func() begin
+		l1 := (Length(labelCommands) - 1);
+		l2 := self:DefaultProvider();
+		local l1;
+		local l2;
+		(foreach l3, l4 in labelCommands do begin
+				if (if (l4 <> 'pickseparator) then (l2 = l4.slot)) then begin
+						l1 := l3;
+						break
+					end
+			end);
+		self:SetProvider(labelCommands[l1].slot);
+		labelCommands[l1].item
+	end,
+	LabelActionScript: func(a1) begin
+		self:SetProvider(labelCommands[a1].slot)
+	end,
+	debug: 136028,
+	_proto: @protoLabelPicker
+};

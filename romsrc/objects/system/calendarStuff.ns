@@ -1,0 +1,8 @@
+// calendarStuff, and what only it reaches
+
+calendarStuff := {
+	ChangeMeeting: ChangeMeeting,
+	ConvertAnnotatedMeetingsAfterStopDate: ConvertAnnotatedMeetingsAfterStopDate,
+	ConvertAnnotatedMeetingsBeforeStartDate: ConvertAnnotatedMeetingsBeforeStartDate,
+	ConvertAnnotatedMeetingsToExceptions: ConvertAnnotatedMeetingsToExceptions
+};

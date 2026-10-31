@@ -1,5 +1,0 @@
-@@ 0x42817d
-func() begin
-	RecordEngine:stop()
-end
-@@end

@@ -1,0 +1,9 @@
+// protoStreamIngEndpoint, and what only it reaches
+
+protoStreamIngEndpoint := {
+	Instantiate: {class: #132, funcPtr: 6990156, numArgs: 2},
+	instantiateFromTEndpoint: {class: #132, funcPtr: 6990157, numArgs: 3},
+	streamOut: {class: #132, funcPtr: 6990159, numArgs: 2},
+	streamIn: {class: #132, funcPtr: 6990158, numArgs: 1},
+	_proto: @protoBasicEndpoint
+};

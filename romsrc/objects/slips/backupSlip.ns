@@ -1,0 +1,1668 @@
+// backupSlip, and what only it reaches
+
+backupSlip := {
+	restoreManySoups: func(a1) begin
+		l6 := self:getDestStore();
+		l3 := self:getSrcStore();
+		l7 := progressSlip;
+		local l1;
+		local l2;
+		local l3;
+		local l4;
+		local l5;
+		local l6;
+		local l7;
+		(foreach l8 in a1 do begin
+				if IsFrame(l8) then begin
+						l2 := l8.name;
+						l5 := l8.soups
+					end else begin
+						l2 := l8;
+						l5 := [Array: l8]
+					end;
+				if self:|soupWillFit?|(l6, l3, l8, nil) then begin
+						(foreach l10 in l5 do begin
+								if (not LSearch('[Array: "Packages"], l10, 0, '|str=|, nil)) then begin
+										l7:SetStatus('vBarber, {titleText: ParamStr("Restoring \u201C\u^0\u201D\u\u2026\u", [Array: l2]), barber: true});
+										self:restore1Soup(l2, l10)
+									end
+							end)
+					end else begin
+						GetRoot():Notify(3, "Restore", ParamStr("There is not enough space to restore \u201C\u^0\u201D\u. Some items may not have been restored.", [Array: l2]));
+						Throw('|evt.ex.nofit|, -123)
+					end
+			end)
+	end,
+	restore1Soup: compile(
+		constants: {
+			kLiteral_48e235: "BACKUP_",
+			kLiteral_488675: "Restore",
+			kLiteral_47e2b9: "There was an error while restoring \u201C\u^0\u201D\u. Some items may not have been restored."
+		},
+		func(a1, a2) begin
+			local l1, l2, l3, l4, l5, l6, l7;
+			(if (not LSearch('[Array: @systemSoupName, @metaSoupName], a2, 0, '|str=|, nil)) then self:restoreOrdSoup(a1, a2) else begin
+					l1 := self:getSrcStore():GetSoup(a2);
+					l2 := self:getDestStore():GetSoup(Stringer([Array: kLiteral_48e235, a2]));
+					backupCursor:GotoKey(a2);
+					if (not (l3 := backupCursor:entry()).version) then begin
+							AddArraySlot(restoredSoups, a2);
+							if StrEqual(a2, @metaSoupName) then begin
+									RemAllButBuiltinFromDir();
+									l4 := '[Array: systemDirectory]
+								end else begin
+									self:getSrcStore():GetSoup(a2):RemoveFromStore();
+									call @loadGlobals with ();
+									l4 := '[Array: system]
+								end;
+							try begin
+									self:convertSoup(l4, a1, a2)
+								end onexception |evt.ex| do begin
+									if StrEqual(a2, @systemSoupName) then begin
+											self:fixUserConfig()
+										end;
+									Rethrow()
+								end
+						end else begin
+							try begin
+									self:moveSoup(self:getDestStore(), self:getSrcStore(), Stringer([Array: kLiteral_48e235, a2]), a2);
+									AddArraySlot(restoredSoups, a2)
+								end onexception |evt.ex.cancel| do begin
+									if StrEqual(a2, @systemSoupName) then begin
+											self:fixUserConfig()
+										end;
+									Rethrow()
+								end onexception |evt.ex.fr.store| do begin
+									if (if HasSlot((l5 := CurrentException()), 'error) then (l5.error = -10617)) then begin
+											GetRoot():Notify(3, kLiteral_488675, ParamStr("There is not enough space to restore \u201C\u^0\u201D\u. Some items may not have been restored.", [Array: a2]))
+										end else begin
+											GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e2b9, [Array: a2]))
+										end;
+									if StrEqual(a2, @systemSoupName) then begin
+											self:fixUserConfig()
+										end;
+									Rethrow()
+								end onexception |evt.ex| do begin
+									GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e2b9, [Array: a2]));
+									if StrEqual(a2, @systemSoupName) then begin
+											self:fixUserConfig()
+										end;
+									Rethrow()
+								end;
+							if StrEqual(a2, @systemSoupName) then begin
+									ConvertLetterWeights();
+									l7 := (l6 := self:getSrcStore():GetSoup(@systemSoupName):Query({indexPath: 'tag, beginKey: "UserDictionary", endKey: "UserDictionary"})):entry();
+									(while (if l7 then (not l7.data)) do (l7 := l6:Next()));
+									if (if l7 then l7.data) then begin
+											ConvertDictionaryData(l7.data);
+											EntryChange(l7)
+										end;
+									l7 := (l6 := self:getSrcStore():GetSoup(@systemSoupName):Query({indexPath: 'tag, beginKey: "Calibration", endKey: "Calibration"})):entry();
+									(while (if l7 then (not l7.data)) do (l7 := l6:Next()));
+									if l7 then begin
+											EntryRemoveFromSoup(l7)
+										end
+								end
+						end;
+					(if StrEqual(a2, @systemSoupName) then self:fixUserConfig())
+				end)
+		end),
+	backupManySoups: func(a1, a2, a3) begin
+		l1 := progressSlip;
+		local l1;
+		(foreach l2 in a3 do begin
+				if IsFrame(l2) then begin
+						l4 := l2.name;
+						l5 := l2.soups
+					end else begin
+						l4 := l2;
+						l5 := [Array: l2]
+					end;
+				if self:|soupWillFit?|(a1, a2, l2, true) then begin
+						local l4;
+						local l5;
+						(foreach l6 in l5 do begin
+								if (not LSearch('[Array: "Packages"], l6, 0, '|str=|, nil)) then begin
+										l1:SetStatus('vBarber, {titleText: ParamStr("Backing up \u201C\u^0\u201D\u\u2026\u", [Array: l4]), barber: true});
+										self:backup1Soup(a1, a2, l6, l4)
+									end
+							end)
+					end else begin
+						GetRoot():Notify(3, "Backup", ParamStr("There was not enough space to backup \u201C\u^0\u201D\u. Some items may not have been backed up.", [Array: l4]));
+						Throw('|evt.ex.nofit|, -123)
+					end
+			end)
+	end,
+	convertProblems: nil,
+	backupPackages: compile(
+		constants: {
+			kLiteral_4889e9: "Checking size of \u201C\u^0\u201D\u\u2026\u",
+			kLiteral_4888e9: "packages"
+		},
+		func(a1, a2) begin
+			local newXSoup;
+			(if (if (l2 := GetBackupAllPackagesCursor(a1)) then l2:entry()) then begin
+					l6 := progressSlip;
+					l7 := true;
+					l8 := ((a2:TotalSize() - a2:UsedSize()) - theFudgeFactor);
+					l9 := 0;
+					l10 := l2:entry();
+					(while l10 do begin
+							l6:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: kLiteral_4888e9]), barber: true});
+							l9 := (l9 + EntrySize(l10));
+							(l10 := l2:Next())
+						end);
+					l2:Reset();
+					l6:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: kLiteral_4888e9]), barber: true});
+					newXSoup := a2:GetSoup("BACKUP_Packages");
+					if (l8 < l9) then begin
+							l11 := 0;
+							l6:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: kLiteral_4888e9]), barber: true});
+							if newXSoup then begin
+									l11 := newXSoup:GetSize()
+								end;
+							if ((l8 + l11) < l9) then begin
+									if backupCursor then begin
+											l6:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: kLiteral_4888e9]), barber: true});
+											backupCursor:Reset();
+											l12 := backupSoup:Query(nil);
+											l6:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: kLiteral_4888e9]), barber: true});
+											l1 := backupCursor:entry();
+											(while l1 do begin
+													l6:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: kLiteral_4888e9]), barber: true});
+													if (l1.package or l1.segmentedPackage) then begin
+															l11 := (l11 + EntrySize(l1));
+															if l1.segmentedPackage then begin
+																	local l1;
+																	local l2;
+																	local l3;
+																	local l4;
+																	local l5;
+																	local l6;
+																	local l7;
+																	local l8;
+																	local l9;
+																	local l10;
+																	local l11;
+																	local l12;
+																	(foreach l13 in l1.segmentedPackage do begin
+																			local l15;
+																			l6:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: kLiteral_4888e9]), barber: true});
+																			if (l15 := l12:GotoKey(l13)) then begin
+																					l11 := (l11 + EntrySize(l15))
+																				end
+																		end)
+																end
+														end;
+													(l1 := backupCursor:Next())
+												end);
+											if ((l8 + l11) < l9) then begin
+													l7 := nil
+												end
+										end else begin
+											l7 := nil
+										end
+								end
+						end;
+					(if l7 then begin
+							if backupCursor then begin
+									backupCursor:Reset();
+									l1 := backupCursor:entry();
+									(while l1 do begin
+											if ((l1.package or l1.segmentedPackage) or l1.patches) then begin
+													EntryRemoveFromSoupXmit(l1, 'backup)
+												end;
+											(l1 := backupCursor:Next())
+										end)
+								end;
+							l6:SetStatus('vBarber, {titleText: "Backing up packages\u2026\u", barber: true});
+							l5 := (l3 := EntrySoup(l2:entry())):GetName();
+							if newXSoup then begin
+									newXSoup:RemoveAllEntries()
+								end else begin
+									l4 := l3:GetIndexes();
+									newXSoup := a2:CreateSoup("BACKUP_Packages", l4)
+								end;
+							MapCursor(l2, func(a1) begin
+								EntryCopy(a1, newXSoup);
+								nil
+							end)
+						end else begin
+							GetRoot():Notify(3, "Backup", ParamStr("There was not enough space to backup \u201C\u^0\u201D\u. Some items may not have been backed up.", [Array: kLiteral_4888e9]));
+							Throw('|evt.ex.nofit|, -123)
+						end)
+				end)
+		end),
+	viewSetupDoneScript: compile(
+		constants: {
+			kLiteral_48e271: "BackupInfo",
+			kFunction_48e335: func(a1) begin
+				(not StrEqual(a1, "Patch2.0"))
+			end,
+			kLiteral_48e355: {type: 'index, indexPath: 'name, IndexValidTest: kFunction_48e335},
+			kROM_601: @closedPadLockBitmap,
+			kROM_600: @openPadLockBitmap
+		},
+		func() begin
+			local l1;
+			RegSoupChange("BackupInfo", whoAmI, func(a1, a2, a3, a4) begin
+				(if StrEqual(a1, kLiteral_48e271) then (if (if ((a3 = 'SoupLeaves) or (a3 = 'soupDeleted)) then (not self:getDestStore():GetSoup(kLiteral_48e271))) then begin
+							backupCursor := nil;
+							backupSoup := nil;
+							backupInfo := nil;
+							restoreButton:Hide();
+							self:displayinfo()
+						end else (if (a3 = 'soupCreated) then begin
+								backupSoup := a4;
+								backupCursor := backupSoup:Query(kLiteral_48e355);
+								self:getBackupInfo();
+								restoreButton:Show();
+								self:displayinfo()
+							end)))
+			end);
+			RegSoupChange(@systemSoupName, whoAmI, func(a1, a2, a3, a4) begin
+				(if StrEqual(a1, @systemSoupName) then (if (if (if IsFrame(a4) then a4.tag) then StrEqual(a4.tag, "Backup")) then self:displayinfo()))
+			end);
+			RegUserConfigChange(whoAmI, func(a1) begin
+				local l1, l2;
+				(if (a1 = 'defaultStoreSig) then begin
+						l1 := GetDefaultStore();
+						l2 := defaultStoreCheckBox.viewValue;
+						(if (if (l1 = _openedForStore) then (not l2)) then defaultStoreCheckBox:toggleCheck() else (if (if (l1 <> _openedForStore) then l2) then defaultStoreCheckBox:toggleCheck()))
+					end)
+			end);
+			infoShapes := Array(3, nil);
+			lockShape := OffsetShape(MakeShape(kROM_601), 15, 62);
+			unlockShape := OffsetShape(MakeShape(kROM_600), 15, 62);
+			screenOrientation := GetUserConfig('screenOrientation);
+			l1 := self:getDestStore();
+			cardSlotIcon := CardSlotIcons[l1:CardSlot()];
+			cardSlotIconBounds := {left: 5, top: 6, right: (5 + (cardSlotIcon.bounds.right div 4)), bottom: (6 + cardSlotIcon.bounds.bottom)};
+			self:displayinfo();
+			if l1:IsReadOnly() then begin
+					backupButton:Hide();
+					eraseButton:Hide();
+					SetKeyView(self, 0)
+				end else begin
+					SetKeyView(nameInput, 9999)
+				end;
+			lastROValue := self:getDestStore():IsReadOnly();
+			self:SetupIdle(1)
+		end),
+	backup1Soup: compile(
+		constants: {
+			kLiteral_488691: "Backup",
+			kLiteral_47dd29: "There was not enough space to backup \u201C\u^0\u201D\u. Some items may not have been backed up.",
+			kLiteral_47e431: "There was an error while backing up \u201C\u^0\u201D\u. Some items may not have been backed up.",
+			kFunction_48e3a1: func(a1, a2) begin
+				a1:Query({type: 'index, indexPath: 'name, beginKey: a2, endKey: a2})
+			end
+		},
+		func(a1, a2, a3, a4) begin
+			local l1, l2, l3, l4, l5;
+			l1 := Stringer([Array: "BACKUP_", a3]);
+			try begin
+					self:moveSoup(a1, a2, a3, l1)
+				end onexception |evt.ex.cancel| do begin
+					Rethrow()
+				end onexception |evt.ex.fr.store| do begin
+					if (if HasSlot((l4 := CurrentException()), 'error) then (l4.error = -10617)) then begin
+							GetRoot():Notify(3, kLiteral_488691, ParamStr(kLiteral_47dd29, [Array: a4]))
+						end else begin
+							GetRoot():Notify(3, kLiteral_488691, ParamStr(kLiteral_47e431, [Array: a4]))
+						end;
+					Rethrow()
+				end onexception |evt.ex| do begin
+					GetRoot():Notify(3, kLiteral_488691, ParamStr(kLiteral_47e431, [Array: a4]));
+					Rethrow()
+				end;
+			if StrEqual(a3, @systemSoupName) then begin
+					backupMachine := Gestalt(16777219).machineType
+				end;
+			(if (l3 := (l2 := call (kFunction_48e3a1) with (backupSoup, a3)):entry()) then begin
+					l3.backupDate := Time();
+					if HasSlot(l3, 'indexes) then begin
+							RemoveSlot(l3, 'indexes)
+						end;
+					if HasSlot(l3, 'allInfo) then begin
+							RemoveSlot(l3, 'allInfo)
+						end;
+					l3.version := 'twoO;
+					(try begin
+							EntryChangeXmit(l3, 'backup)
+						end onexception |evt.ex.fr.store| do begin
+							nil
+						end)
+				end else begin
+					l3 := {name: a3, backupDate: Time(), version: 'twoO};
+					(try begin
+							backupSoup:AddXmit(l3, 'backup)
+						end onexception |evt.ex| do begin
+							if (if HasSlot((l4 := CurrentException()), 'error) then (l4.error = -10617)) then begin
+									GetRoot():Notify(3, kLiteral_488691, ParamStr(kLiteral_47dd29, [Array: a4]))
+								end else begin
+									GetRoot():Notify(3, kLiteral_488691, ParamStr(kLiteral_47e431, [Array: a4]))
+								end;
+							l5 := a2:GetSoup(l1);
+							try begin
+									if l5 then begin
+											l5:RemoveFromStore()
+										end
+								end onexception |evt.ex| do begin end;
+							Rethrow()
+						end)
+				end)
+		end),
+	setDestStore: func(a1) begin
+		(self._openedForStore := a1)
+	end,
+	restoredSoups: nil,
+	backupInfo: nil,
+	backupCursor: nil,
+	|soupWillFit?|: compile(
+		constants: {
+			kLiteral_4889e9: "Checking size of \u201C\u^0\u201D\u\u2026\u",
+			kLiteral_48e235: "BACKUP_"
+		},
+		func(a1, a2, a3, a4) begin
+			l5 := progressSlip;
+			l1 := 0;
+			l2 := 0;
+			if IsFrame(a3) then begin
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					local l5;
+					(foreach l6 in a3.soups do begin
+							l5:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: a3.name]), barber: true});
+							if (l3 := a1:GetSoup((if a4 then l6 else Stringer([Array: kLiteral_48e235, l6])))) then begin
+									l2 := (l2 + l3:GetSize())
+								end;
+							l5:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: a3.name]), barber: true});
+							if (l4 := a2:GetSoup((if a4 then Stringer([Array: kLiteral_48e235, l6]) else l6))) then begin
+									l1 := (l1 + l4:GetSize())
+								end
+						end)
+				end else begin
+					l5:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: a3]), barber: true});
+					if (l3 := a1:GetSoup((if a4 then l6 else Stringer([Array: kLiteral_48e235, l6])))) then begin
+							l2 := (l2 + l3:GetSize())
+						end;
+					l5:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: a3]), barber: true});
+					if (l4 := a2:GetSoup((if a4 then Stringer([Array: kLiteral_48e235, l6]) else l6))) then begin
+							l1 := (l1 + l4:GetSize())
+						end
+				end;
+			l1 := (l1 + ((a2:TotalSize() - a2:UsedSize()) - theFudgeFactor));
+			(l2 < l1)
+		end),
+	viewQuitScript: func() begin
+		local l1;
+		UnRegSoupChange("BackupInfo", whoAmI);
+		UnRegSoupChange(@systemSoupName, whoAmI);
+		UnRegUserConfigChange(whoAmI);
+		if (l1 := LSearch(StoreSlipRegistry.storeSlips, self, 0, '|=|, nil)) then begin
+				RemoveSlot(StoreSlipRegistry.storeSlips, l1)
+			end;
+		if openEraseSlip then begin
+				openEraseSlip:Close()
+			end;
+		if openBackupPrefsSlip then begin
+				openBackupPrefsSlip:Close()
+			end;
+		if openRestorePrefsSlip then begin
+				openRestorePrefsSlip:Close()
+			end;
+		infoShapes := nil;
+		lockShape := nil;
+		unlockShape := nil;
+		cardSlotIcon := nil;
+		cardSlotIconBounds := nil;
+		screenOrientation := nil;
+		restoredSoups := nil;
+		backupMachine := nil;
+		(progressSlip := nil)
+	end,
+	getSrcStore: func() begin
+		GetStores()[0]
+	end,
+	viewDrawScript: func() begin
+		local l1;
+		l1 := self:getDestStore();
+		self:DrawShape(infoShapes, {font: viewFont});
+		self:DrawShape([Array: (if lastROValue then lockShape else unlockShape)], nil);
+		DrawXBitmap(cardSlotIconBounds, cardSlotIcon, screenOrientation, 0)
+	end,
+	defaultStoreCheckBox: nil,
+	viewChildren: [viewChildren:
+		{_proto: @protoCancelButton},
+		backupButton,
+		restoreButton,
+		eraseButton,
+		defaultStoreCheckBox,
+		nameInput
+	],
+	viewFlags: vClickable,
+	viewIdleScript: func() begin
+		local l1, l2, l3;
+		if (l1 := self:getDestStore()):IsValid() then begin
+				l3 := l1:IsReadOnly();
+				self:makeMemoryInfoShape(l1);
+				l2 := Visible(backupButton);
+				if (l3 <> lastROValue) then begin
+						if l3 then begin
+								SetValue(nameInput, 'viewFlags, BAnd(nameInput.viewFlags, bnot(14848)));
+								SetValue(nameInput, 'viewFormat, BAnd(nameInput.viewFormat, bnot(143616)));
+								if (GetKeyView() = nameInput) then begin
+										SetKeyView(self, 0)
+									end;
+								backupButton:Hide();
+								eraseButton:Hide()
+							end else begin
+								SetValue(nameInput, 'viewFlags, BOr(nameInput.viewFlags, 14848));
+								SetValue(nameInput, 'viewFormat, BOr(nameInput.viewFormat, 143616));
+								backupButton:Show();
+								eraseButton:Show()
+							end;
+						lastROValue := l3
+					end;
+				self:Dirty()
+			end;
+		5000
+	end,
+	moveSoup: compile(
+		constants: {
+			kFunction_48e3a1: func(a1, a2) begin
+				a1:Query({type: 'index, indexPath: 'name, beginKey: a2, endKey: a2})
+			end
+		},
+		func(a1, a2, a3, a4) begin
+			local newSoup, status;
+			local l1, l2, l3, l4, l5, l6, l7;
+			(if (l1 := a1:GetSoup(a3)) then begin
+					if (l2 := a2:GetSoup(a4)) then begin
+							l2:RemoveFromStore()
+						end;
+					l4 := (l3 := call (kFunction_48e3a1) with (backupSoup, a4)):entry();
+					(while (if l4 then (not (l4.version or l4.indexes))) do (l4 := l3:Next()));
+					l5 := nil;
+					if (if l4 then l4.indexes) then begin
+							if (not (l5 := GetSoupDef(a4))) then begin
+									newSoup := a2:CreateSoup(a4, l4.indexes)
+								end else begin
+									newSoup := a2:CreateSoup(a4, GetSoupIndexesFromSoupDef(a4))
+								end
+						end else begin
+							newSoup := a2:CreateSoup(a4, l1:GetIndexes())
+						end;
+					(if newSoup then begin
+							newSoup:SetSignature(l1:GetSignature());
+							if (if (if StrEqual(a3, Stringer([Array: "BACKUP_", @systemSoupName])) then StrEqual(a4, @systemSoupName)) then (backupInfo.machineType <> Gestalt(16777219).machineType)) then begin
+									MapCursor((l7 := l1:Query(nil)), func(a1) begin
+										local l1;
+										if (l1 := |Restore2.0SystemEntry|(a1)) then begin
+												newSoup:Add(l1)
+											end;
+										nil
+									end)
+								end else begin
+									try begin
+											status := progressSlip;
+											l1:CopyEntriesWithCallback(newSoup, func() begin
+												status:SetStatus('vBarber, {barber: true})
+											end, 1000)
+										end onexception |evt.ex.cancel| do begin
+											newSoup:RemoveFromStore();
+											Rethrow()
+										end
+								end;
+							if (if (if (not l5) then l4) then l4.allInfo) then begin
+									l6 := l4.allInfo
+								end else begin
+									l6 := l1:GetAllInfo()
+								end;
+							if l6 then begin
+									newSoup:SetAllInfo(l6)
+								end;
+							(if l5 then newSoup:SetInfo('soupDef, l5))
+						end)
+				end)
+		end),
+	restoreOrdSoup: compile(
+		constants: {
+			kLiteral_488675: "Restore",
+			kLiteral_47e2b9: "There was an error while restoring \u201C\u^0\u201D\u. Some items may not have been restored."
+		},
+		func(a1, a2) begin
+			local l1, l2, l3;
+			try begin
+					self:moveSoup(self:getDestStore(), self:getSrcStore(), Stringer([Array: "BACKUP_", a2]), a2);
+					AddArraySlot(restoredSoups, a2)
+				end onexception |evt.ex.cancel| do begin
+					Rethrow()
+				end onexception |evt.ex.fr.store| do begin
+					if (if HasSlot((l3 := CurrentException()), 'error) then (l3.error = -10617)) then begin
+							GetRoot():Notify(3, kLiteral_488675, ParamStr("There is not enough space to restore \u201C\u^0\u201D\u. Some items may not have been restored.", [Array: a1]))
+						end else begin
+							GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e2b9, [Array: a1]))
+						end;
+					Rethrow()
+				end onexception |evt.ex| do begin
+					GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e2b9, [Array: a1]));
+					Rethrow()
+				end;
+			(if backupCursor then begin
+					if ((if (not (l2 := backupCursor:GotoKey(a2)).version) then StrEqual(l2.name, "inbox")) or StrEqual(l2.name, "outbox")) then begin
+							l2.allInfo := {applications: [Array: 'iobox]}
+						end;
+					(if (if (if StrEqual(l2.name, a2) then (not l2.version)) then HasPath(l2, 'allInfo.applications)) then self:convertSoup((l1 := l2.allInfo.applications), a1, a2))
+				end)
+		end),
+	ReOrientToScreen: @defRotateFunc,
+	lastROValue: nil,
+	backupMachine: nil,
+	unlockShape: nil,
+	viewBounds: {left: 0, top: 50, right: 200, bottom: 220},
+	allocateContext: [|Array|:
+		'backupButton,
+		backupButton,
+		'restoreButton,
+		restoreButton,
+		'eraseButton,
+		eraseButton,
+		'defaultStoreCheckBox,
+		defaultStoreCheckBox,
+		'nameInput,
+		nameInput
+	],
+	openEraseSlip: nil,
+	wipeInfo: compile(
+		constants: {
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			kLiteral_48e1c9: {statusText: "Erase Information", titleText: "Erasing information\u2026\u", icon: {mask: call kBinaryFromHex with ("000000000004010901090174011e018100000000000000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe0000000000000000000000000000000000000", 'mask), bits: call kBinaryFromHex with ("000000000004010901090174011e01817ff00000fff80000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000dfd80000cf980000c7180000c2180000c0180000fff800007ff000000000000000000000", 'bits), bounds: '{left: 0, top: 0, right: 13, bottom: 21}}, barber: true, closeBox: nil},
+			kLiteral_488a25: "Erasing info for \u201C\u^0\u201D\u\u2026\u",
+			kLiteral_4887dd: "Erase Information"
+		},
+		func(store) begin
+			local error, soup, soupNames;
+			local l1, l2, l3;
+			(if store:IsValid() then begin
+					store:MarkBusy(whoAmI, nil);
+					try begin
+							try begin
+									soupNames := GetApplicationNames(store, true)
+								end onexception |evt.ex| do begin
+									error := true
+								end;
+							if (not error) then begin
+									if (l3 := LSearch(soupNames, 'cardBackupFrame, 0, '|=|, 'class)) then begin
+											ArrayRemoveCount(soupNames, l3, 1)
+										end
+								end;
+							if (if (Length(soupNames) > 0) then (not error)) then begin
+									try begin
+											if (DoProgress('vBarber, kLiteral_48e1c9, func(a1) begin
+												a1:SetStatus('vBarber, {titleText: "Getting card information\u2026\u", barber: true});
+												(foreach l1 in soupNames do begin
+														if IsFrame(l1) then begin
+																l3 := l1.soups;
+																l4 := l1.name
+															end else begin
+																l3 := [Array: l1];
+																l4 := l1
+															end;
+														local l3;
+														local l4;
+														(foreach l5 in l3 do begin
+																a1:SetStatus('vBarber, {titleText: ParamStr(kLiteral_488a25, [Array: l4]), barber: true});
+																soup := store:GetSoup(l5);
+																a1:SetStatus('vBarber, {titleText: ParamStr(kLiteral_488a25, [Array: l4]), barber: true});
+																try begin
+																		soup:RemoveFromStoreXmit('backup)
+																	end onexception |evt.ex| do begin
+																		error := true
+																	end
+															end)
+													end)
+											end) = 'Cancel) then begin
+													GetRoot():Notify(3, kLiteral_4887dd, "Warning! Part of your information has been erased.")
+												end
+										end onexception |evt.ex| do begin
+											error := true
+										end;
+									if error then begin
+											GetRoot():Notify(3, kLiteral_4887dd, "There was an error while erasing the information.")
+										end
+								end else begin
+									if (not error) then begin
+											GetRoot():Notify(3, kLiteral_4887dd, "There is no information on this card to erase.")
+										end else begin
+											GetRoot():Notify(3, kLiteral_4887dd, "There was an error before erasing the information.  Your information was left untouched.")
+										end
+								end
+						end onexception |evt.ex| do begin end;
+					store:MarkNotBusy(whoAmI)
+				end)
+		end),
+	_proto: @protoFloater,
+	restoreSomePackages: compile(
+		constants: {
+			kFunction_48e3a1: func(a1, a2) begin
+				a1:Query({type: 'index, indexPath: 'name, beginKey: a2, endKey: a2})
+			end,
+			kLiteral_48880d: "Restoring \u201C\u^0\u201D\u\u2026\u",
+			kLiteral_488675: "Restore",
+			kLiteral_47e085: "There is not enough space to restore the package \u201C\u^0\u201D\u. Some packages may not have been restored."
+		},
+		func(a1) begin
+			(if (Length(a1) > 0) then (try begin
+						l1 := progressSlip;
+						l2 := self:getSrcStore();
+						l3 := self:getDestStore():GetSoup("BACKUP_Packages");
+						l4 := (l2:TotalSize() - theFudgeFactor);
+						local l1;
+						local l2;
+						local l3;
+						local l4;
+						(foreach l5 in a1 do begin
+								local l7, l8, l9, l10, l11, l12, l13, l14, l15, l16, l17;
+								l9 := (if (l8 := LFetch((l7 := GetPackages()), l5, 0, '|str=|, 'title)) then (l8.store = l2));
+								if (l10 := (not l3)) then begin
+										l12 := (l11 := call (kFunction_48e3a1) with (backupSoup, l5)):entry();
+										(while l12 do begin
+												if (if (l12.package or l12.segmentedPackage) then (not l12.patches)) then begin
+														break
+													end;
+												(l12 := l11:Next())
+											end);
+										l1:SetStatus('vBarber, {titleText: ParamStr(kLiteral_48880d, [Array: l12.name]), barber: true});
+										if l9 then begin
+												RemovePackage(l8)
+											end;
+										restoredPkgs := true;
+										l1:SetStatus('vBarber, {barber: true});
+										if (if l12.package then (not l12.patches)) then begin
+												l2:SuckPackageFromBinary(l12.package, '{|don'tactivate|: true})
+											end;
+										if (if l12.segmentedPackage then (not l12.patches)) then begin
+												l2:RestoreSegmentedPackage(backupSoup, l12.segmentedPackage)
+											end
+									end else begin
+										if l3 then begin
+												l13 := 0;
+												l1:SetStatus('vBarber, {titleText: ParamStr("Checking size of \u201C\u^0\u201D\u\u2026\u", [Array: l5]), barber: true});
+												l12 := (l14 := l3:Query({indexPath: 'packageName, beginKey: l5, endKey: l5})):entry();
+												(while l12 do begin
+														l1:SetStatus('vBarber, {barber: true});
+														l13 := (l13 + EntrySize(l12));
+														(l12 := l14:Next())
+													end);
+												l15 := ((l4 - l2:UsedSize()) - theFudgeFactor);
+												l16 := (if l8 then l8.size else 0);
+												if ((l15 + l16) < l13) then begin
+														Throw('|evt.ex.nofit|, -123)
+													end;
+												if l9 then begin
+														RemovePackage(l8)
+													end;
+												restoredPkgs := true;
+												l1:SetStatus('vBarber, {titleText: ParamStr(kLiteral_48880d, [Array: l5]), barber: true});
+												RestoreAPackageFromBackup(l5, l3, l2)
+											end
+									end
+							end)
+					end onexception |evt.ex.cancel| do begin
+						Rethrow()
+					end onexception |evt.ex.nofit| do begin
+						GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e085, [Array: l5]));
+						Rethrow()
+					end onexception |evt.ex| do begin
+						if (if HasSlot((l17 := CurrentException()), 'error) then (l17.error = -10617)) then begin
+								GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e085, [Array: l5]))
+							end else begin
+								GetRoot():Notify(3, kLiteral_488675, ParamStr("There was an error while restoring the package \u201C\u^0\u201D\u. Some packages may not have been restored.", [Array: l5]))
+							end;
+						Rethrow()
+					end))
+		end),
+	displayinfo: func() begin
+		local l1, l2, l3, l4, l5, l6;
+		l3 := StrTruncate((storeKind := (l1 := self:getDestStore()):GetKind()), 170);
+		infoShapes[0] := MakeText(l3, 31, 60, 185, 73);
+		self:makeMemoryInfoShape(l1);
+		self:makeLastBackupShape(l1);
+		base:Dirty()
+	end,
+	notEnoughRoom: nil,
+	prefsCache: nil,
+	screenOrientation: nil,
+	cardSlotIconBounds: nil,
+	doRestore: compile(
+		constants: {
+			kLiteral_488675: "Restore",
+			kROM_573: @rebootSlip
+		},
+		func(a1) begin
+			local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+			if (not GetRoot().Connection:TransportsIdle()) then begin
+					GetRoot():Notify(3, "Erase Card", "Can't restore while communications are busy.");
+					return nil
+				end;
+			(if self:getDestStore():IsValid() then begin
+					l1 := (l3 := prefsCache).restoreSoups;
+					if (l3.restoreType = 'all) then begin
+							(l2 := backupCursor:clone()):Reset();
+							if (if openRestorePrefsSlip then openRestorePrefsSlip.soupNameList) then begin
+									l1 := openRestorePrefsSlip.soupNameList
+								end else begin
+									l1 := self:getRestoreApplicationNames(l2)
+								end
+						end;
+					if (l5 := LFetch(l1, 'systemFrame, 0, '|=|, 'class)) then begin
+							l6 := LSearch(l5.soups, @metaSoupName, 0, '|str=|, nil);
+							l7 := SetClass({name: "System information", soups: [Array: ]}, 'systemFrame);
+							if l6 then begin
+									ArrayRemoveCount(l5.soups, l6, 1);
+									AddArraySlot(l7.soups, @metaSoupName)
+								end;
+							if (l8 := LSearch(l5.soups, @systemSoupName, 0, '|str=|, nil)) then begin
+									ArrayRemoveCount(l5.soups, l8, 1);
+									AddArraySlot(l7.soups, @systemSoupName)
+								end;
+							if (Length(l7.soups) > 0) then begin
+									AddArraySlot(l1, l7)
+								end
+						end;
+					(if (((Length(l1) > 0) or (l3.restorePackages = 'all)) or (Length(l3.restorePackNames) > 0)) then begin
+							try begin
+									l9 := GetRoot():|KillRootChildren!|([Array: self])
+								end onexception |evt.ex| do begin
+									if (not l9) then begin
+											RemoveSlot(GetRoot().buttons, 'viewFlags);
+											GetRoot():RedoChildren();
+											self:Open()
+										end else begin
+											self:|ResurrectRootChildren!|(l9)
+										end;
+									GetRoot():Notify(3, kLiteral_488675, "The restore encountered an error while trying to close all open applications. Nothing was restored.");
+									self:MoveBehind(nil);
+									return nil
+								end;
+							l4 := Clone(l3.restorePackNames);
+							self:getDestStore():MarkBusy(whoAmI, nil);
+							self:restoreSoupsAndPackages(a1, l3, l1, l4);
+							self:getDestStore():MarkNotBusy(whoAmI);
+							(if (restoredPkgs or (Length(restoredSoups) > 0)) then begin
+									kROM_573:New(kLiteral_488675, "Your Newton device needs to be restarted to use the restored information.");
+									AddDeferredSend(base, 'Close, nil)
+								end else begin
+									if (not l9) then begin
+											RemoveSlot(GetRoot().buttons, 'viewFlags);
+											GetRoot():RedoChildren();
+											self:Open()
+										end else begin
+											self:|ResurrectRootChildren!|(l9)
+										end;
+									GetRoot():Notify(3, kLiteral_488675, "Nothing was restored. All items were left untouched.");
+									self:MoveBehind(nil);
+									return nil
+								end)
+						end else GetRoot():Notify(3, kLiteral_488675, "There is nothing to restore."))
+				end)
+		end),
+	vTopOffset: 50,
+	getBackupInfo: compile(
+		constants: {
+			kFunction_48e42d: func(a1) begin
+				local l1;
+				(not (if (l1 := a1:GetAllInfo()) then l1.version))
+			end,
+			kROM_556: @freshCardName
+		},
+		func() begin
+			local l1, l2;
+			(if (l1 := call (kFunction_48e42d) with (backupSoup)) then begin
+					(l2 := backupCursor:clone()):Reset();
+					(if (backupInfo := l2:entry()) then begin
+							(while (if backupInfo then (not backupInfo.backupDate)) do (backupInfo := l2:Next()));
+							(if (not backupInfo) then begin
+									GetRoot():Notify(3, kROM_556, "Some items in the backup info seem to be incorrect. Restore at your own risk!");
+									(if (not backupInfo) then begin
+											l2:Reset();
+											((backupInfo := l2:entry()).backupDate := 13584276)
+										end)
+								end)
+						end else (backupInfo := nil))
+				end else (if (if (if (backupInfo := backupSoup:GetAllInfo()) then (not backupInfo.backupDate)) then backupInfo.soupType) then begin
+						GetRoot():Notify(3, kROM_556, "The backup info seems to be incorrect. Restore at your own risk!");
+						(backupInfo.backupDate := 13584276)
+					end))
+		end),
+	doBackup: compile(
+		constants: {
+			kLiteral_488691: "Backup",
+			kFunction_48e335: func(a1) begin
+				(not StrEqual(a1, "Patch2.0"))
+			end,
+			kLiteral_48e355: {type: 'index, indexPath: 'name, IndexValidTest: kFunction_48e335}
+		},
+		func() begin
+			local l1, l2, l3, l4, l5, l6, l7;
+			if (not GetRoot().Connection:TransportsIdle()) then begin
+					GetRoot():Notify(3, "Erase Card", "Can't backup while communications are busy.");
+					return nil
+				end;
+			(if (l1 := self:getDestStore()):IsValid() then begin
+					l6 := self:getSrcStore();
+					l4 := prefsCache;
+					l3 := GetBackupAllPackagesCursor(l6);
+					(if (((l4.soupType = 'all) or (Length(l4.partialSoups) > 0)) or (if (l4.packageType = 'all) then l3:entry())) then begin
+							if (l4.soupType = 'all) then begin
+									try begin
+											l5 := GetApplicationNames(l6, true)
+										end onexception |evt.ex| do begin
+											GetRoot():Notify(3, kLiteral_488691, "There was an error before the backup started. Nothing was backed up.");
+											return nil
+										end
+								end else begin
+									l5 := Clone(l4.partialSoups)
+								end;
+							try begin
+									l7 := GetRoot():|KillRootChildren!|([Array: self])
+								end onexception |evt.ex| do begin
+									if (not l7) then begin
+											RemoveSlot(GetRoot().buttons, 'viewFlags);
+											GetRoot():RedoChildren();
+											self:Open()
+										end else begin
+											self:|ResurrectRootChildren!|(l7)
+										end;
+									GetRoot():Notify(3, kLiteral_488691, "The backup encountered an error while trying to close all open applications. Nothing was backed up.");
+									self:MoveBehind(nil);
+									return nil
+								end;
+							l1:MarkBusy(whoAmI, nil);
+							self:backupSoupsAndPackages(l4, l5, l4.packageType);
+							l1:MarkNotBusy(whoAmI);
+							if (l2 := l1:GetSoup("BackupInfo")) then begin
+									if (if (not (newBackupQuery := l2:Query(kLiteral_48e355)):entry()) then (not l1:HasSoup("BACKUP_Packages"))) then begin
+											l2:RemoveFromStoreXmit('backup)
+										end
+								end;
+							self:LockScreen(true);
+							if (not l7) then begin
+									RemoveSlot(GetRoot().buttons, 'viewFlags);
+									GetRoot():RedoChildren();
+									self:Open()
+								end else begin
+									self:|ResurrectRootChildren!|(l7)
+								end;
+							self:MoveBehind(nil);
+							self:LockScreen(nil)
+						end else GetRoot():Notify(3, kLiteral_488691, "You must select something in order to backup."))
+				end)
+		end),
+	makeMemoryInfoShape: func(a1) begin
+		local l1, l2, l3, l4, l5;
+		l1 := a1:UsedSize();
+		l2 := max(1, (l1 div 1024));
+		l3 := ((a1:TotalSize() - l1) div 1024);
+		l4 := max(1, l3);
+		l5 := Stringer([Array: NumberStr(l2), "K in use, ", " ", NumberStr(l4), "K free\n"]);
+		(infoShapes[1] := MakeText(StrTruncate(l5, 170), 15, 73, 185, 86))
+	end,
+	progressSlip: nil,
+	lockShape: nil,
+	fixUserConfig: func() begin
+		call @loadGlobals with ();
+		RemoveSlot(userConfiguration, 'usepassword);
+		RemoveSlot(userConfiguration, 'passwordkey);
+		EntryChange(userConfiguration)
+	end,
+	eraseButton: nil,
+	_openedForStore: nil,
+	theFudgeFactor: 5120,
+	wipeBackup: compile(
+		constants: {
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			kFunction_48e335: func(a1) begin
+				(not StrEqual(a1, "Patch2.0"))
+			end,
+			kLiteral_48e355: {type: 'index, indexPath: 'name, IndexValidTest: kFunction_48e335},
+			kLiteral_48e1a9: {statusText: "Erase Backup", titleText: "Erasing backup\u2026\u", icon: {mask: call kBinaryFromHex with ("000000000004010901090174011e018100000000000000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe0000000000000000000000000000000000000", 'mask), bits: call kBinaryFromHex with ("000000000004010901090174011e01817ff00000fff80000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000dfd80000cf980000c7180000c2180000c0180000fff800007ff000000000000000000000", 'bits), bounds: '{left: 0, top: 0, right: 13, bottom: 21}}, barber: true, closeBox: nil},
+			kLiteral_488bf1: "Erasing backup\u2026\u",
+			kLiteral_4887b5: "Erase Backup"
+		},
+		func(store) begin
+			local soup, cursor, name, removeSoup, error;
+			(if store:IsValid() then begin
+					store:MarkBusy(whoAmI, nil);
+					try begin
+							if (soup := store:GetSoup("BackupInfo")) then begin
+									cursor := soup:Query(kLiteral_48e355)
+								end;
+							error := nil;
+							try begin
+									if (DoProgress('vBarber, kLiteral_48e1a9, func(status) begin
+										MapCursor(cursor, func(a1) begin
+											name := a1.name;
+											status:SetStatus('vBarber, {titleText: kLiteral_488bf1, barber: true});
+											if (if (not a1.package) then (not a1.segmentedPackage)) then begin
+													removeSoup := store:GetSoup(Stringer([Array: "BACKUP_", name]));
+													status:SetStatus('vBarber, {titleText: kLiteral_488bf1, barber: true});
+													try begin
+															if removeSoup then begin
+																	removeSoup:RemoveFromStore()
+																end
+														end onexception |evt.ex| do begin
+															error := true
+														end
+												end else begin
+													status:SetStatus('vBarber, {titleText: kLiteral_488bf1, barber: true})
+												end;
+											try begin
+													EntryRemoveFromSoup(a1)
+												end onexception |evt.ex| do begin
+													error := true
+												end;
+											status:SetStatus('vBarber, {titleText: kLiteral_488bf1, barber: true})
+										end);
+										if store:HasSoup("BACKUP_Packages") then begin
+												status:SetStatus('vBarber, {titleText: "Erasing backup\u2026\u", barber: true});
+												try begin
+														store:GetSoup("BACKUP_Packages"):RemoveFromStore()
+													end onexception |evt.ex| do begin
+														error := true
+													end
+											end;
+										(try begin
+												soup:RemoveFromStoreXmit(whoAmI)
+											end onexception |evt.ex| do begin
+												(error := true)
+											end)
+									end) = 'Cancel) then begin
+											GetRoot():Notify(3, kLiteral_4887b5, "Warning! Part of the backup has been removed.")
+										end
+								end onexception |evt.ex| do begin
+									error := true
+								end;
+							if error then begin
+									GetRoot():Notify(3, kLiteral_4887b5, "There was an error while erasing the backup. Part of the backup may have been removed.")
+								end
+						end onexception |evt.ex| do begin end;
+					store:MarkNotBusy(whoAmI)
+				end)
+		end),
+	pickVOffset: func(a1, a2) begin
+		(foreach l1 in StoreSlipRegistry.storeSlips do begin
+				if (if (if (l1 <> self) then l1.viewCObject) then (l1:GlobalBox().top = (a1 + a2))) then begin
+						return self:pickVOffset(a1, (a2 + vOffsetIncrement))
+					end
+			end);
+		a2
+	end,
+	getDestStore: func() begin
+		_openedForStore
+	end,
+	restoredPkgs: nil,
+	viewSetupFormScript: compile(
+		constants: {
+			kFunction_48e335: func(a1) begin
+				(not StrEqual(a1, "Patch2.0"))
+			end,
+			kLiteral_48e355: {type: 'index, indexPath: 'name, IndexValidTest: kFunction_48e335},
+			kLiteral_47ece5: '{soupType: all, packageType: all, partialSoups: [Array: ], restoreType: all, restoreSoups: [Array: ], restorePackages: all, restorePackNames: [Array: ]}
+		},
+		func() begin
+			local l1, l2;
+			AddArraySlot(StoreSlipRegistry.storeSlips, self);
+			l1 := self:pickVOffset(viewBounds.top, 0);
+			self.viewBounds := SetBounds(viewBounds.left, (viewBounds.top + l1), viewBounds.right, (viewBounds.bottom + l1));
+			l2 := self:getDestStore();
+			if (not self.whoAmI) then begin
+					self.whoAmI := Intern(Stringer([Array: "Store", l2:GetSignature()]))
+				end;
+			self.backupSoup := l2:GetSoup("BackupInfo");
+			if backupSoup then begin
+					self.backupCursor := backupSoup:Query(kLiteral_48e355);
+					self:getBackupInfo()
+				end else begin
+					backupCursor := nil;
+					backupInfo := nil
+				end;
+			(try begin
+					(prefsCache := GetAppPrefs('backup, kLiteral_47ece5))
+				end onexception |evt.ex| do begin
+					(prefsCache := kLiteral_47ece5)
+				end)
+		end),
+	infoShapes: nil,
+	vOffsetIncrement: 25,
+	backupSoup: nil,
+	eraseStore: compile(
+		constants: {
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			kLiteral_4886c9: "Erase Card",
+			kLiteral_48e211: {statusText: "Erase Card", titleText: "Preparing to erase card\u2026\u", primary: nil, icon: {mask: call kBinaryFromHex with ("000000000004010901090174011e018100000000000000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe0000000000000000000000000000000000000", 'mask), bits: call kBinaryFromHex with ("000000000004010901090174011e01817ff00000fff80000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000dfd80000cf980000c7180000c2180000c0180000fff800007ff000000000000000000000", 'bits), bounds: '{left: 0, top: 0, right: 13, bottom: 21}}, barber: true, closeBox: nil},
+			kROM_556: @freshCardName
+		},
+		func(store) begin
+			local default, name;
+			if (not GetRoot().Connection:TransportsIdle()) then begin
+					GetRoot():Notify(3, kLiteral_4886c9, "Can't erase while communications are busy.");
+					return nil
+				end;
+			(if (if (if store then store:IsValid()) then (not store:IsReadOnly())) then begin
+					store:MarkBusy(whoAmI, nil);
+					try begin
+							DoProgress('vBarber, kLiteral_48e211, func(a1) begin
+								a1:SetStatus('vBarber, {titleText: "Closing applications\u2026\u", barber: true});
+								DeActivateStorePackages(store);
+								a1:SetStatus('vBarber, {titleText: "Getting card information\u2026\u", barber: true});
+								default := (store = GetDefaultStore());
+								name := Clone(store:GetName());
+								a1:SetStatus('vBarber, {titleText: "Erasing the card\u2026\u", barber: true});
+								XmitStoreSoupsLeaving(store);
+								self:setDestStore((store := store:Erase()));
+								a1:SetStatus('vBarber, {titleText: "Setting card information\u2026\u", barber: true});
+								if default then begin
+										SetDefaultStore(store)
+									end;
+								if StrEqual(name, "Untitled") then begin
+										name := Clone(kROM_556)
+									end;
+								backupSoup := nil;
+								backupCursor := nil;
+								backupInfo := nil;
+								store:SetName(name);
+								SetValue(nameInput, 'text, Clone(name))
+							end)
+						end onexception |evt.ex| do begin
+							GetRoot():Notify(3, kLiteral_4886c9, "There was an error while erasing the card.")
+						end;
+					store:MarkNotBusy(whoAmI);
+					GetRoot().ExtrasDrawer:RedoIcons()
+				end)
+		end),
+	getRestoreApplicationNames: func(a1) begin
+		local soupNameList, soupName;
+		soupNameList := [Array: ];
+		l1 := func(a1) begin
+			local l1;
+			if (not (l1 := BInsert(soupNameList, {name: a1}, '|str<|, '[pathExpr: name], 'returnElt)).soups) then begin
+					l1.soups := [Array: soupName]
+				end else begin
+					BInsert(l1.soups, soupName, '|str<|, nil, true)
+				end;
+			l1
+		end;
+		l2 := a1:entry();
+		(while l2 do begin
+				if (if (if (if (not l2.package) then (not l2.segmentedPackage)) then (not l2.patches)) then (not l2.patch20)) then begin
+						soupName := l2.name;
+						try begin
+								if BFind('[Array: @metaSoupName, "Library", @systemSoupName, "SystemAlarmSoup"], l2.name, '|str<|, nil) then begin
+										l5 := call l1 with ("System information");
+										if (not l3) then begin
+												l3 := SetClass(l5, 'systemFrame)
+											end
+									end else begin
+										l6 := nil;
+										if (not (l7 := self:getSrcStore():GetSoup(l2.name))) then begin
+												l7 := self:getDestStore():GetSoup(Stringer([Array: "BACKUP_", l2.name]))
+											end;
+										if l7 then begin
+												l6 := l7:GetInfo('soupDef)
+											end;
+										if (not l6) then begin
+												l6 := l2.allInfo.applications
+											end;
+										if (if l6 then (not IsArray(l6))) then begin
+												if (l6.ownerApp <> 'SystemScratch) then begin
+														if (not (l8 := l6.ownerAppName)) then begin
+																l8 := GetAppName(l6.ownerApp)
+															end;
+														call l1 with (l8)
+													end
+											end else begin
+												if (if IsArray(l6) then (Length(l6) > 0)) then begin
+														local l1;
+														local l2;
+														local l3;
+														local l4;
+														local l5;
+														local l6;
+														local l7;
+														local l8;
+														(foreach l9 in l6 do begin
+																call l1 with (GetAppName(l9))
+															end)
+													end else begin
+														l5 := call l1 with ("Other information");
+														if (not l4) then begin
+																l4 := SetClass(l5, 'otherFrame)
+															end
+													end
+											end
+									end
+							end onexception |evt.ex| do begin
+								call l1 with (soupName)
+							end
+					end;
+				(l2 := a1:Next())
+			end);
+		soupNameList
+	end,
+	nameInput: nil,
+	cardSlotIcon: nil,
+	restoreSoupsAndPackages: compile(
+		constants: {
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			kLiteral_48e169: {statusText: "Restore", titleText: "Restoring\u2026\u", icon: {mask: call kBinaryFromHex with ("000000000004010901090174011e018100000000000000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe0000000000000000000000000000000000000", 'mask), bits: call kBinaryFromHex with ("000000000004010901090174011e01817ff00000fff80000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000dfd80000cf980000c7180000c2180000c0180000fff800007ff000000000000000000000", 'bits), bounds: '{left: 0, top: 0, right: 13, bottom: 21}}, barber: true, closeBox: nil},
+			kLiteral_488675: "Restore"
+		},
+		func(type, prefs, soupsToRestore, packagesToRestore) begin
+			try begin
+					if (DoProgress('vBarber, kLiteral_48e169, func(a1) begin
+						try begin
+								l1 := nil;
+								convertProblems := [Array: ];
+								progressSlip := a1;
+								l2 := (restoredSoups := [Array: ]);
+								a1:SetStatus('vBarber, {titleText: "Preparing to restore\u2026\u", barber: true});
+								l3 := self:getSrcStore();
+								if (type = 'all) then begin
+										l4 := [Array: ];
+										local l1;
+										local l2;
+										local l3;
+										local l4;
+										(foreach l5 in soupsToRestore do begin
+												a1:SetStatus('vBarber, {barber: true});
+												if IsFrame(l5) then begin
+														(foreach l7 in l5.soups do begin
+																BInsert(l4, l7, '|str<|, nil, nil)
+															end)
+													end else begin
+														BInsert(l4, l5, '|str<|, nil, nil)
+													end
+											end);
+										(foreach l7 in l3:GetSoupNames() do begin
+												local l9;
+												a1:SetStatus('vBarber, {barber: true});
+												if (not BFind(l4, l7, '|str<|, nil)) then begin
+														if StrEqual(l7, @systemSoupName) then begin
+																l3:GetSoup(l7):RemoveFromStore();
+																call @loadGlobals with ()
+															end else begin
+																if (not StrEqual(l7, "Packages")) then begin
+																		l3:GetSoup(l7):RemoveFromStore()
+																	end
+															end
+													end;
+												AddArraySlot(l2, l7)
+											end)
+									end;
+								try begin
+										self:restoreManySoups(soupsToRestore)
+									end onexception |evt.ex.cancel| do begin
+										Rethrow()
+									end onexception |evt.ex| do begin
+										l1 := true
+									end;
+								if (not l1) then begin
+										a1:SetStatus('vBarber, {titleText: "Restoring\u2026\u", barber: true});
+										if (type = 'all) then begin
+												ZapPackagesForFullRestore(l3)
+											end;
+										self:restoreSomePackages(packagesToRestore);
+										if (if (if backupInfo.storeInfo then (prefs.restoreType = 'all)) then (prefs.restorePackages = 'all)) then begin
+												l3:SetAllInfo(backupInfo.storeInfo)
+											end
+									end;
+								a1:SetStatus('vBarber, {titleText: "Cleaning up\u2026\u", barber: true})
+							end onexception |evt.ex| do begin
+								l9 := CurrentException()
+							end;
+						Sort(restoredSoups, '|str<|, nil);
+						CallFrameBasedRegistryFns(SoupRestoreRegistry, [Array: restoredSoups]);
+						(if l9 then Throw(l9.name, l9.error))
+					end) = 'Cancel) then begin
+							if (restoredPkgs or (Length(restoredSoups) > 0)) then begin
+									GetRoot():Notify(3, kLiteral_488675, "Restore was cancelled. Some items may not have been restored.")
+								end
+						end
+				end onexception |evt.ex| do begin end;
+			(if (if convertProblems then ((l3 := Length(convertProblems)) > 0)) then begin
+					l4 := "";
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					(foreach l5, l6 in convertProblems do begin
+							if (l5 = (l3 - 1)) then begin
+									l4 := Stringer([Array: l4, l6])
+								end else begin
+									l4 := Stringer([Array: l4, l6, ", "])
+								end
+						end);
+					GetRoot():Notify(3, kLiteral_488675, ParamStr("Errors occurred converting data for applications: ^0", [Array: l4]))
+				end)
+		end),
+	makeLastBackupShape: compile(
+		constants: {
+			kLiteral_488735: "No backup on \u201C\u^0\u201D\u"
+		},
+		func(a1) begin
+			local l1, l2, l3, l4;
+			l1 := a1:GetKind();
+			l2 := a1:GetName();
+			if (l3 := backupInfo) then begin
+					if ((not l3.version) or (if (l3.soupType = 'all) then (l3.packageType = 'all))) then begin
+							l4 := "Full"
+						end else begin
+							l4 := "Partial"
+						end;
+					l4 := StrTruncate((l4 := Stringer([Array: l4, " ", "backup:", " ", DateNTime(l3.backupDate)])), 170)
+				end else begin
+					if (StrLen(l2) > 0) then begin
+							l4 := StrTruncate(ParamStr(kLiteral_488735, [Array: l2]), 170)
+						end else begin
+							l4 := StrTruncate(ParamStr(kLiteral_488735, [Array: l1]), 170)
+						end
+				end;
+			(infoShapes[2] := MakeText(l4, 15, 86, 185, 99))
+		end),
+	restoreButton: nil,
+	backupSoupsAndPackages: compile(
+		constants: {
+			kBinaryFromHex: func(hex, cls) begin
+				local b := MakeBinary(StrLen(hex) div 2, cls);
+				for i := 0 to Length(b) - 1 do begin
+					local h := Ord(hex[2 * i]);
+					local l := Ord(hex[2 * i + 1]);
+					StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+				end;
+				b
+			end,
+			kLiteral_48e189: {statusText: "Backup", titleText: "Backing up\u2026\u", icon: {mask: call kBinaryFromHex with ("000000000004010901090174011e018100000000000000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe0000000000000000000000000000000000000", 'mask), bits: call kBinaryFromHex with ("000000000004010901090174011e01817ff00000fff80000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000dfd80000cf980000c7180000c2180000c0180000fff800007ff000000000000000000000", 'bits), bounds: '{left: 0, top: 0, right: 13, bottom: 21}}, barber: true, closeBox: nil},
+			kLiteral_488691: "Backup",
+			kFunction_48e335: func(a1) begin
+				(not StrEqual(a1, "Patch2.0"))
+			end,
+			kLiteral_48e355: {type: 'index, indexPath: 'name, IndexValidTest: kFunction_48e335},
+			kLiteral_4888e9: "packages"
+		},
+		func(prefs, soupsToBackup, packages) begin
+			local error, srcStore, destStore;
+			error := nil;
+			srcStore := self:getSrcStore();
+			destStore := self:getDestStore();
+			(try begin
+					(if (DoProgress('vBarber, kLiteral_48e189, func(a1) begin
+						progressSlip := a1;
+						if (not backupInfo) then begin
+								try begin
+										backupSoup := destStore:CreateSoupXmit("BackupInfo", '[Array: {structure: slot, path: name, type: string}], 'backup)
+									end onexception |evt.ex| do begin
+										if (if HasSlot((l1 := CurrentException()), 'error) then (l1.error = -10617)) then begin
+												GetRoot():Notify(3, kLiteral_488691, "The storage card is full and the backup cannot be created. Nothing was backed up.")
+											end else begin
+												GetRoot():Notify(3, kLiteral_488691, "Something has happened and the backup was unable to be created. Nothing was backed up.")
+											end;
+										error := true
+									end;
+								if (not error) then begin
+										backupCursor := backupSoup:Query(kLiteral_48e355)
+									end
+							end;
+						if (not error) then begin
+								self:setBackupInfo('Partial, nil);
+								self:Dirty();
+								if (Length(soupsToBackup) > 0) then begin
+										l2 := [Array: ];
+										local l1;
+										local l2;
+										(foreach l3 in soupsToBackup do begin
+												local l5;
+												ArrayMunger(l2, 0, 0, l3.soups, 0, nil)
+											end);
+										Sort(l2, '|str<|, nil);
+										CallFrameBasedRegistryFns(SoupBackupRegistry, [Array: l2]);
+										self:backupManySoups(srcStore, destStore, soupsToBackup)
+									end;
+								a1:SetStatus('vBarber, {titleText: "Backing up\u2026\u", barber: true});
+								try begin
+										if (packages = 'all) then begin
+												self:backupPackages(srcStore, destStore)
+											end
+									end onexception |evt.ex.cancel| do begin
+										Rethrow()
+									end onexception |evt.ex.nofit| do begin
+										Rethrow()
+									end onexception |evt.ex| do begin
+										if (if HasSlot((l1 := CurrentException()), 'error) then (l1.error = -10617)) then begin
+												GetRoot():Notify(3, kLiteral_488691, ParamStr("There was not enough space to backup \u201C\u^0\u201D\u. Some items may not have been backed up.", [Array: kLiteral_4888e9]))
+											end else begin
+												GetRoot():Notify(3, kLiteral_488691, ParamStr("There was an error while backing up \u201C\u^0\u201D\u. Some items may not have been backed up.", [Array: kLiteral_4888e9]))
+											end;
+										Rethrow()
+									end;
+								l5 := prefs.packageType;
+								if (not GetBackupAllPackagesCursor(self:getSrcStore()):entry()) then begin
+										l5 := 'all
+									end;
+								self:setBackupInfo(prefs.soupType, l5)
+							end;
+						self:displayinfo()
+					end) = 'Cancel) then GetRoot():Notify(3, "Backup", "The backup was cancelled. Some information was not saved."))
+				end onexception |evt.ex| do begin
+					nil
+				end)
+		end),
+	backupButton: nil,
+	viewFont: @fontSystem9Bold,
+	convertSoup: compile(
+		constants: {
+			kLiteral_488675: "Restore",
+			kLiteral_47e209: "There was an error while converting \u201C\u^0\u201D\u. Some items may not have been restored."
+		},
+		func(a1, a2, a3) begin
+			status := progressSlip;
+			(foreach l1 in a1 do begin
+					local l3, l4, l5, l6, l7, l8, l9, l10;
+					try begin
+							l3 := GetConversionFrame(l1)
+						end onexception |evt.ex| do begin end;
+					if l3 then begin
+							break
+						end
+				end);
+			(if l3 then begin
+					l4 := (StrEqual(a3, @systemSoupName) or StrEqual(a3, @metaSoupName));
+					l5 := self:getSrcStore():GetSoup(a3);
+					if l4 then begin
+							l6 := self:getDestStore():GetSoup(Stringer([Array: "BACKUP_", a3])):Query(nil)
+						end else begin
+							l6 := l5:Query(nil)
+						end;
+					status:SetStatus('vBarber, {titleText: ParamStr("Converting \u201C\u^0\u201D\u\u2026\u", [Array: a2]), barber: true});
+					l7 := l6:entry();
+					(while l7 do begin
+							try begin
+									status:SetStatus('vBarber, {barber: true});
+									try begin
+											l8 := ConvertFrame(l1, l3, 'oneO, 'twoO, l7, true)
+										end onexception |evt.ex| do begin
+											l8 := nil;
+											l9 := ParamStr("\u201C\u^0\u201D\u", [Array: a2]);
+											if (not LSearch(convertProblems, l9, 0, '|str=|, nil)) then begin
+													AddArraySlot(convertProblems, l9)
+												end
+										end;
+									status:SetStatus('vBarber, {barber: true});
+									if l8 then begin
+											try begin
+													if l4 then begin
+															l5:Add(l8)
+														end else begin
+															EntryReplace(l7, l8)
+														end
+												end onexception |evt.ex| do begin
+													l8 := nil;
+													l9 := ParamStr("\u201C\u^0\u201D\u", [Array: a2]);
+													if (not LSearch(convertProblems, l9, 0, '|str=|, nil)) then begin
+															AddArraySlot(convertProblems, l9)
+														end
+												end
+										end;
+									if (if (not l8) then (not l4)) then begin
+											EntryRemoveFromSoup(l7)
+										end
+								end onexception |evt.ex.cancel| do begin
+									Rethrow()
+								end onexception |evt.ex.fr.store| do begin
+									if (if HasSlot((l10 := CurrentException()), 'error) then (l10.error = -10617)) then begin
+											GetRoot():Notify(3, kLiteral_488675, ParamStr("There was not enough space to convert \u201C\u^0\u201D\u. Some items may not have been restored.", [Array: a3]))
+										end else begin
+											GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e209, [Array: a3]))
+										end;
+									Rethrow()
+								end onexception |evt.ex| do begin
+									GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e209, [Array: a3]));
+									Rethrow()
+								end;
+							(l7 := l6:Next())
+						end)
+				end)
+		end),
+	openRestorePrefsSlip: nil,
+	setBackupInfo: func(a1, a2) begin
+		local l1, l2, l3, l4;
+		if (if (a1 = a2) then (a1 = 'all)) then begin
+				l1 := self:getSrcStore():GetAllInfo()
+			end else begin
+				l1 := backupSoup:GetInfo('storeInfo)
+			end;
+		if backupMachine then begin
+				l3 := backupMachine
+			end else begin
+				if backupInfo then begin
+						l3 := backupInfo.machineType
+					end
+			end;
+		if (not a2) then begin
+				if (if backupInfo then backupInfo.packageType) then begin
+						l4 := backupInfo.packageType
+					end else begin
+						l4 := 'none
+					end
+			end else begin
+				l4 := a2
+			end;
+		l2 := {backupDate: Time(), soupType: a1, packageType: l4, storeInfo: l1, version: 'twoO, machineType: l3};
+		backupMachine := nil;
+		backupSoup:SetAllInfo(l2);
+		self:getBackupInfo()
+	end,
+	openBackupPrefsSlip: nil,
+	whoAmI: nil
+};
+
+backupButton := {
+	text: backup,
+	viewBounds: {left: -48, top: 0, right: -6, bottom: 0},
+	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV,
+	buttonClickScript: compile(
+		constants: {
+			kROM_576: @backupPrefsSlip
+		},
+		func() begin
+			(if (not openBackupPrefsSlip) then kROM_576:New(self:Parent()) else openBackupPrefsSlip:Close())
+		end),
+	preallocatedContext: 'backupButton,
+	_proto: @protoTextButton
+};
+
+restoreButton := {
+	text: restore,
+	viewBounds: {left: -53, top: 0, right: -6, bottom: 0},
+	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV,
+	buttonClickScript: compile(
+		constants: {
+			kROM_577: @restorePrefsSlip
+		},
+		func() begin
+			(if (not openRestorePrefsSlip) then kROM_577:New(self:Parent()) else openRestorePrefsSlip:Close())
+		end),
+	viewSetupDoneScript: func() begin
+		(if (not backupInfo) then self:Hide())
+	end,
+	preallocatedContext: 'restoreButton,
+	_proto: @protoTextButton
+};
+
+eraseButton := {
+	text: erase,
+	viewBounds: {left: 5, top: 0, right: 39, bottom: 0},
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2) + vfRound(4),
+	viewJustify: vjCenterH + vjCenterV + vjSiblingFullV,
+	ConfirmCallback: func(a1) begin
+		(if a1 then AddDeferredCall(func() begin
+				self:doEraseCard();
+				self:hilite(nil)
+			end, '[Array: ]) else self:hilite(nil))
+	end,
+	doEraseCard: func() begin
+		(try begin
+				base:eraseStore(self:getDestStore())
+			end onexception |evt.ex| do begin
+				base:Close();
+				Rethrow()
+			end)
+	end,
+	viewClickScript: compile(
+		constants: {
+			kROM_574: @eraseSlip
+		},
+		func(a1) begin
+			(if self:TrackHilite(a1) then (if (if backupInfo then (not openEraseSlip)) then begin
+						kROM_574:New(base, self:getDestStore());
+						self:hilite(nil)
+					end else self:checkToErase()) else self:hilite(nil))
+		end),
+	checkToErase: func() begin
+		local l1;
+		if (StrLen((l1 := self:getDestStore():GetName())) = 0) then begin
+				l1 := self:getDestStore():GetKind()
+			end;
+		GetRoot():Confirm("Erase Card", ParamStr("Warning! Erase will remove all the information and packages on \u201C\u^0\u201D\u. Are you sure you want to do this?", [Array: l1]), self, 'ConfirmCallback)
+	end,
+	preallocatedContext: 'eraseButton,
+	_proto: @protoStaticText
+};
+
+defaultStoreCheckBox := {
+	viewBounds: {left: 8, top: -20, right: -8, bottom: -8},
+	viewJustify: vjParentFullH + vjSiblingTopV,
+	text: "Save new info and packages on this card",
+	viewSetupFormScript: func() begin
+		(viewValue := (self:getDestStore() = GetDefaultStore()))
+	end,
+	viewClickScript: compile(
+		constants: {
+			kROM_556: @freshCardName
+		},
+		func(a1) begin
+			(if (if (not viewValue) then self:getDestStore():IsReadOnly()) then GetRoot():Notify(3, kROM_556, "This card is locked, you cannot store new items on it.") else inherited:viewClickScript(a1))
+		end),
+	valueChanged: func() begin
+		local l1;
+		l1 := self:getDestStore();
+		(if viewValue then SetDefaultStore(l1) else (if (l1 = GetDefaultStore()) then SetDefaultStore(GetStores()[0])))
+	end,
+	preallocatedContext: 'defaultStoreCheckBox,
+	_proto: @protoCheckbox
+};
+
+nameInput := {
+	viewBounds: {left: 46, top: 10, right: -5, bottom: 50},
+	viewFormat: vfPen(1) + vfLinesGray + vfInset(2),
+	viewFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed,
+	viewJustify: 8388656,
+	viewLineSpacing: 35,
+	viewSetupFormScript: func() begin
+		local l1;
+		inherited:?viewSetupFormScript();
+		l1 := self:getDestStore();
+		self.text := Clone(l1:GetName());
+		(if l1:IsReadOnly() then begin
+				self.viewFlags := BAnd(self.viewFlags, bnot(14848));
+				(self.viewFormat := BAnd(self.viewFormat, bnot(143616)))
+			end)
+	end,
+	viewChangedScript: func(a1, a2) begin
+		local l1;
+		(if (if (a1 = 'text) then (a2 = self)) then (if (if (l1 := self:getDestStore()):IsValid() then (not l1:IsReadOnly())) then begin
+					l1:SetName(Clone(text));
+					if (not backupInfo) then begin
+							self:Parent():makeLastBackupShape(l1)
+						end;
+					base:Dirty()
+				end))
+	end,
+	preallocatedContext: 'nameInput,
+	_proto: @protoInputLine
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+backupManySoups_literal16 := same("backupSlip.backupManySoups.literals[16]");
+
+restoreManySoups_literal18 := same("backupSlip.restoreManySoups.literals[18]");
+
+restore1Soup_literal35 := same("backupSlip.restore1Soup.literals[35]");
+
+backup1Soup_literal16 := same("backupSlip.backup1Soup.literals[16]");
+
+doRestore_literal25 := same("backupSlip.doRestore.literals[25]");
+
+checkToErase_literal4 := same("eraseButton.checkToErase.literals[4]");
+
+statusText_value := same("backupSlip.wipeBackup.literals[13].statusText");
+
+statusText_value_2 := same("backupSlip.wipeInfo.literals[14].statusText");
+
+restoreManySoups_literal12 := same("backupSlip.restoreManySoups.literals[12]");
+
+backupPackages_literal8 := same("backupSlip.backupPackages.literals[8]");
+
+titleText_value := same("backupSlip.restoreSoupsAndPackages.literals[6].titleText");
+
+titleText_value_2 := same("backupSlip.backupSoupsAndPackages.literals[10].titleText");
+
+backupPackages_literal7 := same("backupSlip.backupPackages.literals[7]");
+
+wipeInfo_literal1 := same("backupSlip.wipeInfo.literals[15].literals[1]");
+
+titleText_value_3 := same("backupSlip.wipeBackup.literals[13].titleText");
+
+viewSetupDoneScript_literal13 := same("backupSlip.viewSetupDoneScript.literals[2].literals[13]");
+
+backup1Soup_literal23 := same("backupSlip.backup1Soup.literals[23]");
+
+buttonClickScript_code_16 := same("backupButton.buttonClickScript.instructions");

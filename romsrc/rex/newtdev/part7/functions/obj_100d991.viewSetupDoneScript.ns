@@ -1,5 +1,0 @@
-@@ 0x100dfed
-func() begin
-	self:SetDisplay()
-end
-@@end

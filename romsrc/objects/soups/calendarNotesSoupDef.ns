@@ -1,0 +1,10 @@
+// calendarNotesSoupDef, and what only it reaches
+
+calendarNotesSoupDef := {
+	name: @calendarNotesName,
+	userName: "calendar events",
+	ownerApp: 'calendar,
+	ownerAppName: dates_2,
+	userDescr: "non-repeating events in the calendar",
+	indexes: @dateIndices
+};

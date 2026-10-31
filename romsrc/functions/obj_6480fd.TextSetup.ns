@@ -1,5 +1,0 @@
-@@ 0x5ad225
-func() begin
-	labelCommands[self:LabelIndex(vars.(configPath))]
-end
-@@end

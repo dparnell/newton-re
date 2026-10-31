@@ -1,8 +1,0 @@
-@@ 0x1013df9
-func(a1, a2) begin
-	self.waitView := a1;
-	self.delayUntilAbortVisible := (if a2 then a2.delayUntilAbortVisible else 8000);
-	self.abortButtonText := (if (if a2 then a2.abortButtonText) then a2.abortButtonText else "Abort");
-	(self.initialSetup := {name: 'vBarber, values: {icon: @761, statusText: (if a2 then a2.statusText else "Please wait..."), titleText: (if a2 then a2.titleText), barber: true, primary: nil, closeBox: nil}})
-end
-@@end

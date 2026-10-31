@@ -1,0 +1,3 @@
+// protoStrokesItem, and what only it reaches
+
+protoStrokesItem := {bounds: nil, strokelist: nil, pickable: nil};

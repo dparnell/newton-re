@@ -1,5 +1,0 @@
-@@ 0x4b4a35
-func() begin
-	(if GetRoot().iobox.viewCObject then AddDeferredSend(GetRoot().iobox, 'RememberedClose, [Array: base]) else base:Close())
-end
-@@end

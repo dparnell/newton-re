@@ -1,0 +1,3 @@
+// spellFrame, and what only it reaches
+
+spellFrame := {speller: nil, saveUserDict: nil, dialogInhibit: nil, countskippedasmisspelled: nil};

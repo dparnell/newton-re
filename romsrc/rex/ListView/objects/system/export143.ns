@@ -1,0 +1,61 @@
+// export143, and what only it reaches
+
+export143 := {
+	_proto: export145Proto,
+	viewFormat: vfFillWhite,
+	viewJustify: 0,
+	viewLineSpacing: 24,
+	viewFont: tsHWFont + tsSize(12),
+	viewFlags: vVisible + vReadOnly + vClickable,
+	topicDragInfo: nil,
+	baseLeftGap: 3,
+	canonicalParaTopic: {
+		viewBounds: nil,
+		viewFlags: vVisible + vReadOnly + vCalculateBounds + vClickable,
+		viewStationery: 'para,
+		viewFont: tsHWFont + tsSize(12),
+		textFlags: 265,
+		styles: [|Array|: ],
+		text: nil
+	},
+	viewSetupFormScript: compile(
+		options: "names",
+		func() begin
+			inherited:viewSetupFormScript();
+			self.viewBounds := self.newBounds;
+			cachedToDoAgendaView := self;
+			SetKeyView(self:parent(), 0)
+		end),
+	CalculateScrollRects: compile(
+		options: "names",
+		func() begin
+			local agendaView;
+			(if ((agendaView := self:parent()).viewOriginY <= agendaView.calendarBottom) then agendaView:CalculateScrollRects() else inherited:CalculateScrollRects())
+		end),
+	GetTargetInfo: compile(
+		options: "names",
+		func(aType) begin
+			(if (if selected then (Length(selected) > 0)) then {target: {_cursor: selected}, targetView: self} else {target: nil, targetView: nil})
+		end),
+	HitItem: compile(
+		options: "names",
+		func(aHitFrame, anX, aY) begin
+			self:ToggleTopic(aHitFrame.index)
+		end),
+	HitTest: compile(
+		options: "names",
+		func(aY, aHitFrame) begin
+			local r;
+			r := self:ResolveClick(100, aY);
+			aHitFrame.index := r.topicIndex;
+			if r.topicIndex then begin
+					aHitFrame.top := topics[r.topicIndex].viewBounds.top
+				end;
+			(aHitFrame.ht := viewLineSpacing)
+		end),
+	debug: 42665
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+GetTargetInfo_literal2 := same("export143.GetTargetInfo.literals[2]");

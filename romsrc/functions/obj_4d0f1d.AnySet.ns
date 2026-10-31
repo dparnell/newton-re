@@ -1,5 +1,0 @@
-@@ 0x4d0559
-func(a1) begin
-	return (BAnd(faxFlags, a1) <> 0)
-end
-@@end

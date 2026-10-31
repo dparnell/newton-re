@@ -1,0 +1,6 @@
+// aztabsMaskA, and what only it reaches
+
+aztabsMaskA := {
+	bits: bitmap('bits, "resources/bits/43d32d.png", "000000000004002b002b0039003a004a", 1),
+	bounds: {left: 0, top: 0, right: 17, bottom: 15}
+};

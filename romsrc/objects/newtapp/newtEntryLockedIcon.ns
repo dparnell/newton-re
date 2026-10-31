@@ -1,0 +1,25 @@
+// newtEntryLockedIcon, and what only it reaches
+
+newtEntryLockedIcon := {
+	viewClass: clPictureView,
+	viewFlags: vVisible,
+	viewBounds: {left: 0, top: 0, right: 12, bottom: 12},
+	viewFormat: vfFillWhite,
+	icon: nil,
+	lockedIcon: lockedIcon,
+	viewSetupFormScript: func() begin
+		self:SetIcon()
+	end,
+	Retarget: func() begin
+		self:SetIcon();
+		self:Dirty()
+	end,
+	SetIcon: func() begin
+		(if target then (try begin
+					EntryStore(target):CheckWriteProtect();
+					(icon := nil)
+				end onexception |evt.ex.fr.store| do begin
+					(icon := lockedIcon)
+				end))
+	end
+};

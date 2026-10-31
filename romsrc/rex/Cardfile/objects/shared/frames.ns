@@ -1,0 +1,114 @@
+// objects several roots reach, none alone (naturalize.py)
+
+layouts := {person: [|Array|: 'company], company: [|Array|: 'name]};
+
+layouts_2 := {person: [|Array|: 'default], company: [|Array|: 'default]};
+
+layouts_3 := {person: [|Array|: 'address, 'email], company: [|Array|: 'address, 'email]};
+
+layouts_4 := {person: [|Array|: 'phone, 'pager], company: [|Array|: 'phone]};
+
+addressItem_5Proto := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+	viewLineSpacing: 32,
+	flavor: flavor,
+	viewChangedScript: func(a1, a2) begin
+		inherited:viewChangedScript(a1, a2);
+		(if (not target.(path)) then begin
+				target.(path) := Clone("");
+				self:StartFlush()
+			end)
+	end,
+	_proto: @newtLabelInputLine
+};
+
+flavor := {
+	_proto: @newtCustomFilter,
+	recFlags: 25201153,
+	TextToPath: func(a1) begin
+		local l1;
+		l1 := inherited:TextToPath(a1);
+		target.(path) := l1;
+		if ((target.class = 'person) or (target.class = 'owner)) then begin
+				if StrFilled(target.name.last) then begin
+						self:SetSorton(ParamStr("^0 ^1", [Array: target.name.last, target.name.first]))
+					end else begin
+						if StrFilled(target.name.first) then begin
+								self:SetSorton(target.name.first)
+							end else begin
+								self:SetSorton(Clone(""))
+							end
+					end
+			end else begin
+				self:SetSorton(target.(path))
+			end;
+		GetRoot().cardfile:SetIAClass(target);
+		l1
+	end
+};
+
+defaultProto := {
+	viewSetupFormScript: func() begin
+		inherited:viewSetupFormScript();
+		(if (if (not suppressAreaCode) then (not StrFilled(currAreaCode))) then (currAreaCode := Clone(GetUserConfig('currentAreaCode))))
+	end,
+	_proto: @newtAreacodePhoneLine
+};
+
+infoFrameProto := {
+	shapeFunc: func(a1, a2, a3, a4) begin
+		local l1, l2, l3, l4, l5, l6;
+		l5 := FontAscent(a4.font);
+		(if StrFilled(a1[0]) then begin
+				l1 := StrFontWidth((l3 := ParamStr("^0 ^1", [Array: MakeDisplayPhone(a1[0]), phoneTypes.phoneLabels.(ClassOf(a1[0]))])), a4.font);
+				l2 := (a2.right - a2.left);
+				if a4.leftInfo then begin
+						l4 := a4.leftInfo
+					end else begin
+						if (a4.justification = 'right) then begin
+								l4 := ((l2 - l1) - 16)
+							end else begin
+								if (a4.justification = 'center) then begin
+										l4 := ceiling((((l2 - l1) - 16) / 2))
+									end else begin
+										l4 := a2.left
+									end
+							end
+					end;
+				l6 := {shape: [Array: {font: a4.font, justification: 'left}, OffsetShape(MakeShape(@phoneBitmap), l4, (a2.top + 2)), MakeText(l3, (l4 + 16), a2.top, a2.right, (a2.top + l5)), a4], misc: {bbox: RelBounds(l4, (a2.top - a3), 16, 16)}};
+				a2.top := (a2.top + fontHeight(a4.font));
+				l6
+			end)
+	end,
+	actionFunc: func(a1, a2, a3, a4, a5, a6, a7) begin
+		(if (if (if (if (a1 >= a7.bbox.left) then (a1 <= a7.bbox.right)) then (a2 >= a7.bbox.top)) then (a2 <= a7.bbox.bottom)) then begin
+				a4 := SetBounds((a4.left + a7.bbox.left), (a4.top + a7.bbox.top), ((a4.left + a7.bbox.right) - 3), ((a4.top + a7.bbox.bottom) - 3));
+				a3:DoDrawing('Hiliter, [Array: MakeShape(a4)]);
+				call GetRoot().cardfile.kDoCallSlip with (a3, a5, (if a7.phoneNum then a7.phoneNum else a5.(a6)));
+				true
+			end)
+	end,
+	formatFunc: func(a1) begin
+		ParamStr("^0 ^1", [Array: MakeDisplayPhone(a1[0]), phoneTypes.phoneLabels.(ClassOf(a1[0]))])
+	end
+};
+
+infoFrameProto_2 := {
+	_proto: infoFrameProto,
+	shapeFunc: func(a1, a2, a3, a4) begin
+		local l1, l2, l3, l4;
+		l2 := nil;
+		if StrFilled((l4 := self:formatFunc(a1))) then begin
+				l1 := fontHeight(a4.font);
+				l2 := MakeTextLines(l4, a2, l1, a4.font);
+				a2.top := (a2.top + (l1 * Length(l2)))
+			end;
+		(if (l3 := inherited:shapeFunc(a1, a2, a3, a4)) then begin
+				if l2 then begin
+						ArrayMunger(l3.shape, Length(l3.shape), 0, l2, 0, nil)
+					end;
+				l3.misc.phoneNum := a1[0];
+				l3
+			end else {shape: l2, misc: {bbox: SetBounds(0, 0, 0, 0), phoneNum: a1[0]}})
+	end
+};

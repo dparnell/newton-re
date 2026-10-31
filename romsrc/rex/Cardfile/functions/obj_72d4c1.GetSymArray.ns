@@ -1,5 +1,0 @@
-@@ 0x72d50d
-func() begin
-	GetGlobals().pagerTypes.pagerClasses
-end
-@@end

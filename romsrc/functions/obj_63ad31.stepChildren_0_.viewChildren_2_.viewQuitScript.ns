@@ -1,5 +1,0 @@
-@@ 0x4d930d
-func() begin
-	(if added then SetUserConfig('signLetter, target.fromSignature))
-end
-@@end

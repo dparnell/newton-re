@@ -1,5 +1,0 @@
-@@ 0x4ebf95
-func(a1) begin
-	self:CommonKeyScript('_hangupKeyButton)
-end
-@@end

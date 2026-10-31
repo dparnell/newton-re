@@ -1,5 +1,0 @@
-@@ 0x55b3b1
-func(a1) begin
-	SetValue(findInput.entryLine, 'text, a1)
-end
-@@end

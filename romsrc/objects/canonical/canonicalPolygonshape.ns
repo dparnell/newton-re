@@ -1,0 +1,3 @@
+// canonicalPolygonshape, and what only it reaches
+
+canonicalPolygonshape := {class: 'polygon, data: nil};

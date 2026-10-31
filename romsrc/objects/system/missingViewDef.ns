@@ -1,0 +1,14 @@
+// missingViewDef, and what only it reaches
+
+missingViewDef := {
+	viewFont: tsSystem + tsSize(10) + tsBold,
+	viewBounds: {left: 10, top: 10, right: -10, bottom: 0},
+	viewJustify: vjCenterH + vjParentFullH + vjParentFullV,
+	text: nil,
+	missingStationery: true,
+	symbol: 'default,
+	version: 1,
+	type: 'editor,
+	name: "Missing Stationery",
+	_proto: @protoStaticText
+};

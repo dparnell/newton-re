@@ -1,0 +1,169 @@
+// protoRoutingSlip, and what only it reaches
+
+protoRoutingSlip := {
+	_proto: @protoPictureButton,
+	icon: @routingBitmap,
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH,
+	viewBounds: {left: -42, top: 2, right: -25, bottom: 15},
+	popupForm: nil,
+	actionList: nil,
+	targetInfo: nil,
+	alwaysCallPickActionScript: true,
+	viewClickScript: func(a1) begin
+		if self:TrackHilite(a1) then begin
+				self:buttonClickScript()
+			end;
+		true
+	end,
+	buttonClickScript: func() begin
+		if ((actionList := self:GetActionTransports((targetInfo := self:GetTargetInfo('Routing)))) = nil) then begin
+				actionList := [Array: ]
+			end;
+		l1 := (Length(actionList) > 0);
+		l2 := self:GetActionScripts(targetInfo);
+		l3 := nil;
+		if l2 then begin
+				local l1;
+				local l2;
+				local l3;
+				(foreach l4, l5 in l2 do begin
+						if ((l5 = nil) or (l5 = 'pickseparator)) then begin
+								AddArraySlot(actionList, nil)
+							end else begin
+								if (ClassOf(l5) = 'symbol) then begin
+										l5 := GetVariable(self, l5)
+									end;
+								if (if ((l7 := (if l5 then l5.title)) = nil) then l5.GetTitle) then begin
+										if (l7 := l5:GetTitle(targetInfo.target)) then begin
+												(l5 := Clone(l5)).title := l7
+											end
+									end;
+								if (if l5 then l7) then begin
+										if (if (not l3) then (Length(actionList) > 0)) then begin
+												AddArraySlot(actionList, nil)
+											end;
+										AddArraySlot(actionList, l5);
+										l3 := true
+									end
+							end
+					end)
+			end;
+		l8 := [Array: ];
+		local l7;
+		local l8;
+		(foreach l9 in actionList do begin
+				local l11, l12, l13, l14, l15, l16, l17;
+				if l9 then begin
+						l11 := StrEqual((l7 := (if (if l9.group then l9.groupTitle) then l9.groupTitle else l9.title)), "Print");
+						if (if (if l1 then (Length(l8) = 0)) then GetVariable(self, 'appObject)) then begin
+								l12 := targetInfo.target;
+								l13 := 0;
+								if TargetIsCursor(l12) then begin
+										l13 := 1
+									end;
+								l7 := Stringer([Array: l7, " ", GetVariable(self, 'appObject)[l13]])
+							end;
+						l14 := (if (if l9.group then l9.groupIcon) then l9.groupIcon else l9.icon);
+						l15 := {item: l7, icon: l14, indent: 24, fixedHeight: 18};
+						if l11 then begin
+								l15.keyMessage := '_keyButtonPrintScript
+							end;
+						AddArraySlot(l8, l15)
+					end else begin
+						AddArraySlot(l8, 'pickseparator)
+					end
+			end);
+		if (Length(l8) = 0) then begin
+				if ((l16 := GetVariable(self, 'title)) = nil) then begin
+						l16 := "Routing"
+					end;
+				l17 := "There are no actions available for the selected items";
+				if (targetInfo.target = nil) then begin
+						l17 := "Nothing is selected."
+					end;
+				self:Notify(3, l16, l17);
+				self:hilite(nil);
+				return nil
+			end;
+		(if (popupForm := DoPopup(l8, nil, nil, self)) then OpenedEntryForm(popupForm, nil) else self:hilite(nil))
+	end,
+	pickActionScript: func(a1) begin
+		local l1, l2, l3;
+		if popupForm then begin
+				ClosedEntryForm(popupForm)
+			end;
+		try begin
+				if HasPath(actionList[a1], 'routeScript) then begin
+						if (ClassOf((l1 := actionList[a1].routeScript)) = 'symbol) then begin
+								if (l2 := actionList[a1].appSymbol) then begin
+										l2 := GetRoot().(l2)
+									end;
+								if (l2 = nil) then begin
+										l2 := self
+									end;
+								Perform(l2, l1, [Array: targetInfo.target, targetInfo.targetView])
+							end else begin
+								call l1 with (targetInfo.target, targetInfo.targetView)
+							end
+					end else begin
+						if (OpenRoutingSlip((l3 := actionList[a1]:NewItem(self)), targetInfo) = nil) then begin
+								GetItemTransport(l3):?MissingTarget(nil)
+							end
+					end
+			end onexception |evt.ex| do begin
+				self:hilite(nil);
+				Rethrow()
+			end;
+		actionList := nil;
+		popupForm := nil;
+		targetInfo := nil;
+		self:hilite(nil)
+	end,
+	pickCancelledScript: func() begin
+		self:hilite(nil);
+		(if popupForm then ClosedEntryForm(popupForm))
+	end,
+	GetActionTransports: func(a1) begin
+		local l1;
+		if ((l1 := GetAppFormats(GetVariable(self, 'appSymbol))) = nil) then begin
+				l1 := GetRouteFormats(a1.target)
+			end;
+		return GetFormatTransports(l1, a1.target)
+	end,
+	GetActionScripts: func(a1) begin
+		l1 := [Array: ];
+		if ((l1 := Clone(self:GetRouteScripts(a1))) = nil) then begin
+				l1 := [Array: ]
+			end;
+		if (l2 := GetVariable(self, 'currentViewDef)) then begin
+				if (l3 := GetVariable(l2, 'routeScripts)) then begin
+						ArrayMunger(l1, Length(l1), 0, l3, 0, nil)
+					end
+			end;
+		if (Length(l1) = 0) then begin
+				if (if (l4 := GetVariable(self, 'appSymbol)) then Routing.(l4)) then begin
+						local l1;
+						local l2;
+						local l3;
+						local l4;
+						(foreach l5 in Routing.(l4) do begin
+								if (if l5 then l5.routeScript) then begin
+										(l5 := Clone(l5)).appSymbol := l4;
+										if (if (l5.title <> nil) then (l5.icon = nil)) then begin
+												if StrEqual(l5.title, "Delete") then begin
+														l5.icon := @routetrashBitmap
+													end else begin
+														if StrEqual(l5.title, "Duplicate") then begin
+																l5.icon := @routeDuplicateIcon
+															end
+													end
+											end;
+										AddArraySlot(l1, l5)
+									end
+							end)
+					end
+			end;
+		return l1
+	end,
+	debug: 2888314
+};

@@ -1,0 +1,12 @@
+// countryLocPicker, and what only it reaches
+
+countryLocPicker := {
+	_proto: @locationPicker,
+	spots: @countrySoupName,
+	countryAndName: nil,
+	result: nil,
+	initialSpot: nil,
+	SetResult: func(a1) begin
+		self:?PickWorld(a1)
+	end
+};

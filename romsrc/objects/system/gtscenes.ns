@@ -1,0 +1,3 @@
+// gtscenes, and what only it reaches
+
+gtscenes := [|Array|: nil];

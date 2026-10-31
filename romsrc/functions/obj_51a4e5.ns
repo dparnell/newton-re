@@ -1,5 +1,0 @@
-@@ 0x51a4e5
-func() begin
-	(if self:CurrentBook() then self:CurrentBook().data)
-end
-@@end

@@ -1,6 +1,0 @@
-@@ 0x101b9bd
-func(a1) begin
-	target.(path) := Clone(labelCommands[a1].symbol);
-	newtAppBase.targetView:?StartFlush()
-end
-@@end

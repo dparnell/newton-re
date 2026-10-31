@@ -1,6 +1,0 @@
-@@ 0x104b189
-func() begin
-	self:MUpdateProgressSlip('Update, nil, 70);
-	fPhysicalLayerServiceFSM:DoEvent('ProcessStackActive, [Array: self, 'MProcessStackActiveCallback])
-end
-@@end

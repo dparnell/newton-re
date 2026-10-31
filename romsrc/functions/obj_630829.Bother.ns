@@ -1,9 +1,0 @@
-@@ 0x463769
-func(a1) begin
-	msgText := a1;
-	(if viewCObject then begin
-			SetValue(message, 'text, a1);
-			RefreshViews()
-		end else (if modalstate() then self:FilterDialog() else self:Open()))
-end
-@@end

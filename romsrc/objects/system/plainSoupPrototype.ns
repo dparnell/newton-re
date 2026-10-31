@@ -1,0 +1,133 @@
+// plainSoupPrototype, and what only it reaches
+
+plainSoupPrototype := {
+	_parent: {
+		GetFlags: {class: #132, funcPtr: 6893979, numArgs: 0},
+		GetName: {class: #132, funcPtr: 866232, numArgs: 0},
+		GetSize: {class: #132, funcPtr: 6895010, numArgs: 0},
+		collect: {class: #132, funcPtr: 6895020, numArgs: 1},
+		RemoveAllEntries: {class: #132, funcPtr: 6893983, numArgs: 0},
+		RemoveAllEntriesXmit: func(a1) begin
+			local l1;
+			l1 := self:RemoveAllEntries();
+			if a1 then begin
+					XmitSoupChange(self:GetName(), a1, 'whatThe, nil)
+				end;
+			l1
+		end,
+		CopyEntries: {class: #132, funcPtr: 6914065, numArgs: 1},
+		CopyEntriesXmit: func(a1, a2) begin
+			local l1;
+			l1 := self:CopyEntries(a1);
+			if a2 then begin
+					XmitSoupChange(a1:GetName(), a2, 'whatThe, nil)
+				end;
+			l1
+		end,
+		Add: {class: #132, funcPtr: 6914063, numArgs: 1},
+		AddXmit: func(a1, a2) begin
+			local l1;
+			l1 := self:Add(a1);
+			if a2 then begin
+					XmitSoupChange(self:GetName(), a2, 'entryAdded, a1)
+				end;
+			l1
+		end,
+		HasTags: {class: #132, funcPtr: 6898195, numArgs: 0},
+		RemoveFromStore: {class: #132, funcPtr: 6895008, numArgs: 0},
+		RemoveFromStoreXmit: func(a1) begin
+			local l1, l2;
+			l1 := self:GetStore();
+			l2 := self:RemoveFromStore();
+			if a1 then begin
+					XmitSoupChange(self:GetName(), a1, 'soupDeleted, l1)
+				end;
+			l2
+		end,
+		SetInfo: {class: #132, funcPtr: 6893978, numArgs: 2},
+		GetNextUID: {class: #132, funcPtr: 6914070, numArgs: 0},
+		SetInfoXmit: func(a1, a2, a3) begin
+			local l1;
+			l1 := self:SetInfo(a1, a2);
+			if a3 then begin
+					XmitSoupChange(self:GetName(), a3, 'soupInfoChanged, self)
+				end;
+			l1
+		end,
+		SetSignature: {class: #132, funcPtr: 6914076, numArgs: 1},
+		IndexSizes: {class: #132, funcPtr: 6914073, numArgs: 0},
+		SetAllInfo: {class: #132, funcPtr: 6914074, numArgs: 1},
+		SetAllInfoXmit: func(a1, a2) begin
+			local l1;
+			l1 := self:SetAllInfo(a1);
+			if a2 then begin
+					XmitSoupChange(self:GetName(), a2, 'soupInfoChanged, self)
+				end;
+			l1
+		end,
+		SetFlags: {class: #132, funcPtr: 6893980, numArgs: 1},
+		AddFlushed: {class: #132, funcPtr: 861062, numArgs: 1},
+		AddFlushedXmit: func(a1, a2) begin
+			local l1;
+			l1 := self:AddFlushed(a1);
+			if a2 then begin
+					XmitSoupChange(self:GetName(), a2, 'entryAdded, a1)
+				end;
+			l1
+		end,
+		GetIndexesModTime: {class: #132, funcPtr: 6907707, numArgs: 0},
+		SetName: {class: #132, funcPtr: 6914075, numArgs: 1},
+		AddTags: {class: #132, funcPtr: 6893972, numArgs: 1},
+		AddTagsXmit: AddTagsXmit,
+		GetInfoModTime: {class: #132, funcPtr: 6907708, numArgs: 0},
+		AddIndex: {class: #132, funcPtr: 6893968, numArgs: 1},
+		AddIndexXmit: AddIndexXmit,
+		GetTags: {class: #132, funcPtr: 6893976, numArgs: 0},
+		CopyEntriesWithCallback: {class: #132, funcPtr: 6895017, numArgs: 3},
+		MakeKey: {class: #132, funcPtr: 6895027, numArgs: 2},
+		AddWithUniqueID: {class: #132, funcPtr: 6914064, numArgs: 1},
+		GetIndexes: {class: #132, funcPtr: 6914069, numArgs: 0},
+		AddWithUniqueIDXmit: func(a1, a2) begin
+			local l1;
+			l1 := self:AddWithUniqueID(a1);
+			if a2 then begin
+					XmitSoupChange(self:GetName(), a2, 'entryAdded, a1)
+				end;
+			l1
+		end,
+		ModifyTag: {class: #132, funcPtr: 6893974, numArgs: 2},
+		RemoveTags: {class: #132, funcPtr: 6893973, numArgs: 1},
+		ModifyTagXmit: ModifyTagXmit,
+		GetStore: {class: #132, funcPtr: 6914072, numArgs: 0},
+		RemoveTagsXmit: RemoveTagsXmit,
+		GetInfo: {class: #132, funcPtr: 6893977, numArgs: 1},
+		IsValid: {class: #132, funcPtr: 6898203, numArgs: 0},
+		GetSignature: {class: #132, funcPtr: 6914071, numArgs: 0},
+		RemoveIndex: {class: #132, funcPtr: 6893970, numArgs: 1},
+		RemoveIndexXmit: RemoveIndexXmit,
+		Query: {class: #132, funcPtr: 6895019, numArgs: 1},
+		GetAllInfo: {class: #132, funcPtr: 6914068, numArgs: 0},
+		NaughtyFlush: {class: #132, funcPtr: 6914067, numArgs: 0},
+		flush: func() begin
+			BadWickedNaughtyNoot(Stringer([Array: "soup:Flush(\"", self:GetName(), "\")"]), 'discontinued);
+			self:NaughtyFlush()
+		end
+	},
+	_proto: nil,
+	class: 'PlainSoup,
+	tStore: nil,
+	storeObj: nil,
+	theName: nil,
+	cache: nil,
+	indexObjects: nil,
+	indexnextuid: nil,
+	cursors: nil
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+flush_literal2 := same("plainSoupPrototype._parent.flush.literals[2]");
+
+flush_code := same("plainSoupPrototype._parent.flush.instructions");
+
+AddXmit_code := same("plainSoupPrototype._parent.AddXmit.instructions");

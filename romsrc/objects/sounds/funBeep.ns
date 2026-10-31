@@ -1,0 +1,50 @@
+// funBeep, and what only it reaches
+
+funBeep := {
+	sndFrameType: 'codec,
+	codecName: tDTMFCodec,
+	dataType: 16,
+	bufferSize: 6400,
+	bufferCount: 4,
+	compressionType: 6,
+	samplingRate: 21600,
+	samples: tonescore('samples, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
+		{
+			frequency: 1320,
+			fraction: 0,
+			peak: 10000,
+			delay: 0,
+			attack: 0,
+			decay: 0,
+			hold: 90,
+			release: 290,
+			sustain: 10000,
+			tail: 0
+		},
+		{
+			frequency: 1650,
+			fraction: 0,
+			peak: 10000,
+			delay: 0,
+			attack: 0,
+			decay: 45,
+			hold: 90,
+			release: 145,
+			sustain: 10000,
+			tail: 0
+		},
+		{
+			frequency: 2200,
+			fraction: 0,
+			peak: 12000,
+			delay: 0,
+			attack: 0,
+			decay: 90,
+			hold: 90,
+			release: 100,
+			sustain: 10000,
+			tail: 0
+		}
+	]),
+	userName: "Trill"
+};

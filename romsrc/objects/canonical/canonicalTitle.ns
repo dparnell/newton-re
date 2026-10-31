@@ -1,0 +1,9 @@
+// canonicalTitle, and what only it reaches
+
+canonicalTitle := {
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 16},
+	viewFont: tsSimple + tsSize(9) + tsBold,
+	viewJustify: vjCenterH + vjParentFullH,
+	debug: 534565,
+	_proto: @protoStaticText
+};

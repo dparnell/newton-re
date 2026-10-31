@@ -1,0 +1,41 @@
+// newtIntegerFilter, and what only it reaches
+
+newtIntegerFilter := {
+	_proto: @newtTextFilter,
+	recFlags: 10753,
+	recTextFlags: 10,
+	integerOnly: true,
+	format: g,
+	PathToText: func() begin
+		(if IsString(target.(path)) then Clone(target.(path)) else FormattedNumberStr(target.(path), format))
+	end,
+	PreQuery: func(a1) begin
+		self:TextToPath(a1)
+	end,
+	PathQuery: func(a1) begin
+		local l1;
+		(if (if (dataCursor.indexPath = path) then (dataCursor.indexType = 'int)) then begin
+				l1 := dataCursor:clone();
+				l1:GotoKey(a1);
+				l1
+			end)
+	end,
+	QueryItem: func(a1, a2) begin
+		(if (a1.(path) = a2) then {item: self:PathToText(), id: MakeEntryAlias(a1)})
+	end,
+	TextToPath: func(a1) begin
+		local l1;
+		(if ((not StrFilled(a1)) or IsRichString(a1)) then a1 else begin
+				if (not (l1 := StringToNumber(StringFilter(a1, " ", 'rejectAll)))) then begin
+						if (not (l1 := StringToNumber(StringFilter(a1, "0123456789.,-", 'passAll)))) then begin
+								l1 := 0
+							end
+					end;
+				(if integerOnly then floor((l1 + 0.5)) else l1)
+			end)
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+PathToText_code := same("newtIntegerFilter.PathToText.instructions");

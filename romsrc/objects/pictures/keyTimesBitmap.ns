@@ -1,0 +1,6 @@
+// keyTimesBitmap, and what only it reaches
+
+keyTimesBitmap := {
+	bits: bitmap('bits, "resources/bits/3d9311.png", "000000000004007600760283007f028c", 1),
+	bounds: {left: 0, top: 0, right: 9, bottom: 9}
+};

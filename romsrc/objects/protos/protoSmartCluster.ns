@@ -1,0 +1,75 @@
+// protoSmartCluster, and what only it reaches
+
+protoSmartCluster := {
+	viewFormat: vfFillWhite,
+	viewFlags: vVisible + vReadOnly + vClipping,
+	itemTitles: [|Array|: "knuckleHead"],
+	childrenType: 'radioButton,
+	clusterValue: nil,
+	itemViewBounds: {left: 3, right: 0, top: 2, bottom: 12},
+	getLayout: func() begin
+		local l1, l2;
+		l1 := (self:LocalBox().bottom div (itemViewBounds.bottom + itemViewBounds.top));
+		l2 := ceiling((Length(itemTitles) / l1));
+		{numRows: l1, numColumns: l2}
+	end,
+	GetTopColumnViewBounds: func(a1, a2) begin
+		local l1, l2;
+		if (if itemViewBounds then (itemViewBounds.right <> 0)) then begin
+				l1 := itemViewBounds.right
+			end else begin
+				l1 := (self:LocalBox().right div a1.numColumns)
+			end;
+		RelBounds((l2 := (itemViewBounds.left + ((a2 div a1.numRows) * l1))), itemViewBounds.top, l1, itemViewBounds.bottom)
+	end,
+	viewSetupChildrenScript: func() begin
+		if (if (childrenType <> 'radioButton) then (childrenType <> 'checkBox)) then begin
+				childrenType := 'radioButton
+			end;
+		l1 := self:getLayout();
+		l2 := {_proto: nil, viewBounds: RelBounds(0, itemViewBounds.top, 0, itemViewBounds.bottom), viewJustify: 9728};
+		l3 := {_proto: nil, viewJustify: 0};
+		if (childrenType = 'radioButton) then begin
+				l2._proto := @protoRadioButton;
+				l3._proto := @protoRadioButton
+			end else begin
+				if (childrenType = 'checkBox) then begin
+						l2._proto := @protoCheckbox;
+						l3._proto := @protoCheckbox
+					end
+			end;
+		local l1;
+		local l2;
+		local l3;
+		(self.viewChildren := (foreach l4, l5 in itemTitles collect (if ((l4 mod l1.numRows) = 0) then {_proto: l3, viewBounds: self:GetTopColumnViewBounds(l1, l4), text: l5, buttonValue: l4} else {_proto: l2, text: l5, buttonValue: l4})))
+	end,
+	SetItemText: func(a1, a2) begin
+		SetValue(self:ChildViewFrames()[itemText], 'text, Clone(a2))
+	end,
+	GetItemText: func(a1) begin
+		self:ChildViewFrames()[a1].text
+	end,
+	GetItemState: func(a1) begin
+		self:ChildViewFrames()[a1].viewValue
+	end,
+	SetItemState: func(a1, a2) begin
+		(if (childrenType = 'radioButton) then self:SetClusterValue(a1) else self:ChildViewFrames()[a1]:SetCheck(a2))
+	end,
+	GetAllStates: func() begin
+		(foreach l1 in self:ChildViewFrames() collect l1.viewValue)
+	end,
+	SetAllStates: func(a1) begin
+		(if (childrenType = 'checkBox) then begin
+				l1 := self:ChildViewFrames();
+				local l1;
+				(foreach l2, l3 in a1 do begin
+						l1[l2]:SetCheck(l3)
+					end)
+			end)
+	end,
+	_proto: @protoRadioCluster
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+GetItemText_code := same("protoSmartCluster.GetItemText.instructions");

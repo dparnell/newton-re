@@ -1,0 +1,10 @@
+// cardfileSoupDef, and what only it reaches
+
+cardfileSoupDef := {
+	name: @cardfileSoupName,
+	userName: @cardfileSoupName,
+	ownerApp: 'cardfile,
+	ownerAppName: @cardfileSoupName,
+	userDescr: "Soup with Names and Addresses",
+	indexes: @cardfileIndices
+};

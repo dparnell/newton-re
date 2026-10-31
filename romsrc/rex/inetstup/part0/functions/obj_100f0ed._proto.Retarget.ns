@@ -1,5 +1,0 @@
-@@ 0x100f1c1
-func() begin
-	(if self.viewCObject then self:SyncView())
-end
-@@end

@@ -1,0 +1,3 @@
+// canonicalFakeContext, and what only it reaches
+
+canonicalFakeContext := {_nextArgFrame: nil, _parent: nil, _implementor: nil};

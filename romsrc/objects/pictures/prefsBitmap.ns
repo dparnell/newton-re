@@ -1,0 +1,29 @@
+// prefsBitmap, and what only it reaches
+
+prefsBitmap := {
+	unhilited: {
+		bounds: unhilitedBounds_21,
+		mask: bitmap('mask, "resources/mask/541921.png", "00000000000400000000000000180015", 1),
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/541a19.png", "00000000000c00000000000000180015", 4),
+				bitdepth: 4
+			},
+			{cbits: colordataCbits_21, bitdepth: 1}
+		]
+	},
+	hilited: {
+		bounds: {left: 0, top: 0, right: 21, bottom: 24},
+		mask: bitmap('mask, "resources/mask/54167d.png", "00000000000400000000000000180015", 1),
+		colordata: [|Array|:
+			{
+				cbits: bitmap('cbits, "resources/cbits/541775.png", "00000000000c00000000000000180015", 4),
+				bitdepth: 4
+			},
+			{
+				cbits: bitmap('bits, "resources/bits/5416f9.png", "00000000000400000000000000180015", 1),
+				bitdepth: 1
+			}
+		]
+	}
+};

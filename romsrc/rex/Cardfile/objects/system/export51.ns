@@ -1,0 +1,13 @@
+// export51, and what only it reaches
+
+export51 := {
+	viewSetupChildrenScript: func() begin
+		local l1;
+		inherited:viewSetupChildrenScript();
+		(l1 := Clone(viewBounds)).right := ((indent + l1.left) + self:GetMaxTextWidth());
+		SetValue(self, 'viewBounds, l1)
+	end,
+	viewFormat: vfFillWhite + vfPen(1),
+	indent: 0,
+	_proto: @8242
+};

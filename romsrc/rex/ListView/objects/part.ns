@@ -1,0 +1,114 @@
+// part, and what only it reaches
+
+part := array(nil, {
+	app: 'toDoApp,
+	text: toDo,
+	theForm: @8321,
+	InstallScript: compile(
+		options: "names",
+		func(aPart) begin
+			RegDataDef('list, aPart.theForm.listDataDef);
+			RegDataView('list, aPart.theForm.listViewDef);
+			RegDataView('list, aPart.theForm.listPrintDef);
+			RegDataView('list, aPart.theForm.listPrintVisDef);
+			RegDataView('list, aPart.theForm.listLetterPrintDef);
+			RegDataView('list, aPart.theForm.listMemoPrintDef);
+			RegDataView('list, aPart.theForm.listViewRouteDef);
+			RegDataDef('checkList, aPart.theForm.checkDataDef);
+			RegDataView('checkList, aPart.theForm.checkViewDef);
+			RegDataView('checkList, aPart.theForm.checkPrintDef);
+			RegDataView('checkList, aPart.theForm.checkPrintVisDef);
+			RegDataView('checkList, aPart.theForm.checkLetterPrintDef);
+			RegDataView('checkList, aPart.theForm.checkMemoPrintDef);
+			RegDataView('checkList, aPart.theForm.checkViewRouteDef);
+			RegDataView('todo, aPart.theForm.singleTaskPrintDef);
+			RegDataView('todo, aPart.theForm.singleTaskFrameDef);
+			RegDataView('todo, aPart.theForm.todoViewDef);
+			RegDataDef('convertTodo, aPart.theForm.convertTodo);
+			RegAppClasses('calendar, '[Array: todo]);
+			local firstAlarm;
+			local c;
+			(foreach i, kid in (c := GetRoot().calendar).allocateContext do begin
+					if (kid = 'toDoListView) then begin
+							c.(EnsureInternal('allocateContext)) := Clone(c.allocateContext);
+							c.allocateContext[(i + 1)] := aPart.theForm;
+							break
+						end
+				end);
+			(foreach i, kid in c.allocateContext do begin
+					if (kid = 'todoSlip) then begin
+							c.allocateContext[(i + 1)] := aPart.theForm.protoToDoSlip;
+							break
+						end
+				end);
+			c.(EnsureInternal('protoToDoAgendaView)) := aPart.theForm.protoToDoAgendaView;
+			c.(EnsureInternal('RollOverAlarm)) := aPart.theForm.RollOverAlarm;
+			firstAlarm := (((firstAlarm := (Time() + 1440)) - (firstAlarm mod 1440)) + 180);
+			(try begin
+					AddAlarm("To Do", firstAlarm, nil, func() begin
+						GetRoot().calendar:RollOverAlarm()
+					end, [Array: ]);
+					RegSetTime('todo, func(aNewTime) begin
+						local last, newTime;
+						last := GetUserConfig('lastRollover);
+						newTime := ((aNewTime div 1440) * 1440);
+						SetUserConfig(EnsureInternal('lastRollover), Min(last, newTime));
+						FlushUserConfig()
+					end)
+				end onexception |evt.ex| do begin
+					GetRoot():Notify(3, "To Do", "There is not enough space in the internal memory to automatically roll-over To Do tasks. Deleting some data and resetting may help.");
+					return nil
+				end)
+		end),
+	RemoveScript: compile(
+		options: "names",
+		func(aPart) begin
+			UnregisterDataDef('list);
+			UnregisterViewDef('default, 'list);
+			UnregisterViewDef('listFormat, 'list);
+			UnregisterViewDef('listFormat2, 'list);
+			UnregisterDataDef('checkList);
+			UnregisterViewDef('default, 'checkList);
+			UnregisterViewDef('listFormat, 'checkList);
+			UnregisterViewDef('listFormat2, 'checkList);
+			UnregisterDataDef('convertTodo);
+			nil
+		end),
+	_ExportTable: [|Array|:
+		{
+			name: 'listView,
+			major: 1,
+			minor: 0,
+			objects: [|Array|: @8313, @8314, @8315, @8316, @8317, @8318, @8319, @8320]
+		},
+		{
+			name: '|ListView private|,
+			major: 1,
+			minor: 0,
+			objects: [|Array|:
+				@8321,
+				@8322,
+				@8323,
+				@8324,
+				@8325,
+				@8326,
+				@8327,
+				@8328,
+				@8329,
+				@8330,
+				@8331,
+				@8332,
+				@8333,
+				@8334,
+				@8335,
+				@8336,
+				@8337,
+				@8338
+			]
+		}
+	]
+});
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+InstallScript_literal42 := same("part[0].InstallScript.literals[42]");

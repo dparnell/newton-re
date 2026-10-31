@@ -1,0 +1,7 @@
+// protoSmallKeyboardButton, and what only it reaches
+
+protoSmallKeyboardButton := {
+	icon: @keySmallButtonBitmap,
+	viewBounds: {left: 5, top: 0, right: 23, bottom: 13},
+	_proto: @protoKeyboardButton
+};

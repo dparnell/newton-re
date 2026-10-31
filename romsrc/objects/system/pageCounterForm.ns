@@ -1,0 +1,15 @@
+// pageCounterForm, and what only it reaches
+
+pageCounterForm := {
+	_proto: @protoPrintForm,
+	viewClass: clPrintView,
+	fields: nil,
+	printView: nil,
+	_counterForm: true,
+	viewSetupDoneScript: func() begin
+		local l1;
+		l1 := 1;
+		(while self:printNextPageScript() do (l1 := (l1 + 1)));
+		(fields.pageCount := l1)
+	end
+};

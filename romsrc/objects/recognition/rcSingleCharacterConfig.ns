@@ -1,0 +1,10 @@
+// rcSingleCharacterConfig, and what only it reaches
+
+rcSingleCharacterConfig := {
+	_proto: @rcDefaultConfig,
+	letterSpaceCursiveOption: nil,
+	rcSingleLetters: 1,
+	inputmask: 16777216,
+	dictionaries: 40,
+	inhibitSymbolsDictionary: 1
+};

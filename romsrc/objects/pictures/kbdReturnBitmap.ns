@@ -1,0 +1,6 @@
+// kbdReturnBitmap, and what only it reaches
+
+kbdReturnBitmap := {
+	bits: bitmap('bits, "resources/bits/3d7631.png", "000000000004008c008c00eb009500f5", 1),
+	bounds: {left: 0, top: 0, right: 10, bottom: 9}
+};

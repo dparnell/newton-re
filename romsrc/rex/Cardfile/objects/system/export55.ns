@@ -1,0 +1,60 @@
+// export55, and what only it reaches
+
+export55 := {
+	viewBounds: {top: 21, left: 0, right: 0, bottom: -18},
+	masterSoupSlot: 'names,
+	forceNewEntry: nil,
+	viewJustify: vjParentFullH + vjParentFullV,
+	Retarget: func(a1) begin
+		local l1;
+		if (((l1 := dataCursor:entry()) = 'deleted) or (not l1)) then begin
+				if (not (l1 := dataCursor:Next())) then begin
+						l1 := dataCursor:Prev()
+					end;
+				if (not l1) then begin
+						self:SetupCursor();
+						l1 := dataCursor:entry()
+					end
+			end;
+		if (if l1 then (not l1.class)) then begin
+				if (ClassOf(l1.sorton) = 'name) then begin
+						l1.class := 'person
+					end else begin
+						l1.class := 'company
+					end
+			end;
+		target := dataCursor:entry();
+		inherited:Retarget(nil);
+		if a1 then begin
+				entryView:?viewQuitScript();
+				self:viewSetupChildrenScript();
+				entryView:?viewSetupFormScript();
+				entryView:RedoChildren();
+				entryView:?viewSetupDoneScript()
+			end;
+		SetKeyView(self, 0)
+	end,
+	viewScrollDownScript: func() begin
+		entryView:Effect(77725696, true, @flip, 'Scroller, [Array: 1])
+	end,
+	viewScrollUpScript: func() begin
+		entryView:Effect(77725696, nil, @flip, 'Scroller, [Array: -1])
+	end,
+	viewSetupFormScript: func() begin
+		inherited:?viewSetupFormScript();
+		self:Retarget(nil)
+	end,
+	viewSetupDoneScript: func() begin
+		(if (superSymbol = 'ownerNames) then AddDeferredCall(func() begin
+				(if retargetChain then (foreach l1 in retargetChain do begin
+							l1:RetargetNotify()
+						end))
+			end, '[Array: ]))
+	end,
+	useTypeScrolling: true,
+	TypeScrollScript: func(a1) begin
+		local l1;
+		(if (l1 := azTabs:PickLetterScript(a1)) then (if (l1.newEntry <> l1.currEntry) then self:Effect(133120, nil, @flip, 'Retarget, [Array: true]) else azTabs:RetargetNotify()))
+	end,
+	_proto: @newtLayout
+};

@@ -1,5 +1,0 @@
-@@ 0x448c65
-func() begin
-	(if ((not self.viewCObject) or (not Visible(self))) then self:Open() else self:Close())
-end
-@@end

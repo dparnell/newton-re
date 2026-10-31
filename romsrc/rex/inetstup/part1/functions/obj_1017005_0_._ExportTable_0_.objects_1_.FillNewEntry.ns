@@ -1,7 +1,0 @@
-@@ 0x1019f29
-func(a1) begin
-	a1.setupName := ParamStr("Untitled ^0 Setup", [Array: Clone(name)]);
-	a1.physicalLayer := Clone(symbol);
-	a1
-end
-@@end

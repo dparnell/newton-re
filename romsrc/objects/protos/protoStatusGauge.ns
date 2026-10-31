@@ -1,0 +1,29 @@
+// protoStatusGauge, and what only it reaches
+
+protoStatusGauge := {
+	debug: 1031,
+	indicator: true,
+	viewValue: 0,
+	viewBounds: {left: 0, top: 6, right: 166, bottom: 20},
+	viewFlags: vVisible + vReadOnly,
+	viewJustify: vjParentCenterH + vjSiblingBottomV,
+	minValue: 0,
+	maxValue: 100,
+	name: 'gauge,
+	viewSetupFormScript: func() begin
+		(if ((data := self:path().(name)) = nil) then (viewValue := maxValue) else (if (ClassOf(data) = 'Array) then begin
+					viewValue := data[0];
+					minValue := data[1];
+					(maxValue := data[2])
+				end else (viewValue := data)))
+	end,
+	viewUpdateFormScript: func() begin
+		self:viewSetupFormScript();
+		self:Dirty()
+	end,
+	_proto: @protoGauge
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+viewSetupFormScript_code_7 := same("protoStatusGauge.viewSetupFormScript.instructions");

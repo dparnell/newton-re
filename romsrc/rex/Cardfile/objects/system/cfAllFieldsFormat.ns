@@ -1,0 +1,25 @@
+// cfAllFieldsFormat, and what only it reaches
+
+cfAllFieldsFormat := {
+	routingType: 'Print,
+	type: 'printFormat,
+	name: summary,
+	title: summary,
+	symbol: 'cfAllFieldsFormat,
+	usesCursors: true,
+	AddPrintChild: func(a1, a2, a3, a4) begin
+		local l1, l2, l3;
+		l1 := {_proto: allInfoLayout, target: a2, viewBounds: RelBounds(a3, a4, 150, 2000), viewJustify: 0, showBullet: nil};
+		l3 := (l2 := AddStepView(self, l1)):GetBottom();
+		RemoveStepView(self, l2);
+		self.stepChildren := Clone(self.stepChildren);
+		l1.viewBounds := RelBounds(a3, a4, 150, l3);
+		AddArraySlot(stepChildren, l1);
+		{bottom: l3, right: 150}
+	end,
+	allInfoLayout: @8195,
+	protection: 'private,
+	_proto: @8238
+};
+
+summary := "Summary";

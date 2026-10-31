@@ -1,0 +1,3 @@
+// protoGaugeView, and what only it reaches
+
+protoGaugeView := {viewClass: clGaugeView, _proto: @protoView};

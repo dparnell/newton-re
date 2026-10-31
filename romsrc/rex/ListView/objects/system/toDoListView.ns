@@ -1,0 +1,39 @@
+// toDoListView, and what only it reaches
+
+toDoListView := {
+	_proto: export145Proto,
+	viewFlags: vClipping + vClickable + vStrokesAllowed + vGesturesAllowed + vCharsAllowed + vNumbersAllowed + vPunctuationAllowed + vPhoneField + vDateField + vTimeField,
+	viewScroll2DScript: compile(
+		options: "names",
+		func(aDir, anExtras) begin
+			if (aDir = 'up) then begin
+					self:viewScrollUpScript()
+				end else begin
+					if (aDir = 'down) then begin
+							self:viewScrollDownScript()
+						end
+				end;
+			RefreshViews()
+		end),
+	protoToDoAgendaView: @8335,
+	protoToDoSlip: @8336,
+	singleTaskFrameDef: @8333,
+	singleTaskPrintDef: @8332,
+	listPrintVisDef: @8323,
+	checkPrintVisDef: @8328,
+	preallocatedContext: 'toDoListView,
+	todoViewDef: @8334,
+	listMemoPrintDef: @8325,
+	checkMemoPrintDef: @8330,
+	listLetterPrintDef: @8324,
+	checkLetterPrintDef: @8329,
+	convertTodo: @8337,
+	listViewRouteDef: @8326,
+	listDataDef: @8317,
+	checkViewRouteDef: @8331,
+	checkDataDef: @8320,
+	listPrintDef: @8322,
+	checkPrintDef: @8327,
+	listViewDef: @8318,
+	checkViewDef: @8319
+};

@@ -1,5 +1,0 @@
-@@ 0x103f6e9
-func(a1) begin
-	InetStartUp():MCancelCurrentRequest(a1)
-end
-@@end

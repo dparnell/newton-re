@@ -1,5 +1,0 @@
-@@ 0x7acfbd
-func() begin
-	(if self.text then StrLen(self.text) else 0)
-end
-@@end

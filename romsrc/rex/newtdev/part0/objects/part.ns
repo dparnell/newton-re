@@ -1,0 +1,29 @@
+// part, and what only it reaches
+
+part := array(nil, {
+	text: newtonDevices,
+	TapAction: func() begin
+		AddDeferredCall(GetGlobalVar('|Newton Devices:NIE_TapActionFunc|), nil);
+		nil
+	end,
+	installScript: func(a1) begin
+		local l1;
+		l1 := EnsureInternal({removeScript: a1.devRemoveScript});
+		a1:devInstallScript(a1, l1);
+		l1
+	end,
+	devInstallScript: compile(
+		constants: {
+			kFunction_1000939: func() begin
+				GetRoot():Notify(4, "Newton Devices", ParamStr("Version ^0^1", [Array: "1.0    ", ""]))
+			end
+		},
+		func(a1, a2) begin
+			DefGlobalVar('|Newton Devices:NIE_TapActionFunc|, kFunction_1000939)
+		end),
+	devRemoveScript: func(a1) begin
+		UnDefGlobalVar('|Newton Devices:NIE_TapActionFunc|)
+	end
+});
+
+newtonDevices := "Newton Devices";

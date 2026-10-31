@@ -1,0 +1,9 @@
+// protoRollItem, and what only it reaches
+
+protoRollItem := {
+	viewClass: clView,
+	viewFlags: vVisible,
+	viewFormat: vfFillWhite + vfFrameBlack + vfPen(1),
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	debug: 360639
+};

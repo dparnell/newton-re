@@ -1,6 +1,0 @@
-@@ 0x72bbdd
-func() begin
-	newDictionaries := GetLocale().recogHonorificDictionaries;
-	inherited:?viewSetupFormScript()
-end
-@@end

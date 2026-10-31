@@ -1,6 +1,0 @@
-@@ 0x101b05d
-func() begin
-	self:AdjustBounds();
-	self:SyncView()
-end
-@@end

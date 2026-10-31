@@ -1,0 +1,6 @@
+// aztabsmaskcz, and what only it reaches
+
+aztabsmaskcz := {
+	bits: bitmap('bits, "resources/bits/43d2b9.png", "00000000000400360036009c004500af", 1),
+	bounds: {left: 0, top: 0, right: 19, bottom: 15}
+};

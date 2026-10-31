@@ -1,0 +1,16 @@
+// export124, and what only it reaches
+
+export124 := {
+	viewBounds: {left: 0, top: 0, right: 26, bottom: 13},
+	icon: {
+		bits: bitmap('bits, "resources/bits/78d9b5.png", "00000000000401a901a901bc01b401d2", 1),
+		bounds: {left: 0, top: 0, right: 22, bottom: 11}
+	},
+	buttonClickScript: compile(
+		options: "names",
+		func() begin
+			editor:NewRelative('daughter)
+		end),
+	debug: 23259088,
+	_proto: @protoPictureButton
+};

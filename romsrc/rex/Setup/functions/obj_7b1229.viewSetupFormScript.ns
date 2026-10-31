@@ -1,5 +1,0 @@
-@@ 0x7b1285
-func() begin
-	(label := GetLocale().postalCodeLabel)
-end
-@@end

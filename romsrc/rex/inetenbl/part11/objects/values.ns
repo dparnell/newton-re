@@ -1,0 +1,7 @@
+// the plain values the magic pointers and the C code name
+
+newtonInternetEnabler := "Newton Internet Enabler";
+
+initializing := "Initializing";
+
+value := "2.0    ";

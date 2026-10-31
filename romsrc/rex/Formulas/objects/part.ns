@@ -1,0 +1,81 @@
+// part, and what only it reaches
+
+part := array(nil, {
+	sequence: 8,
+	iconPro: {
+		unhilited: {
+			bounds: {left: 0, top: 0, right: 27, bottom: 25},
+			mask: bitmap('mask, "resources/mask/769b81.png", "0000000000040000000000000019001b", 1),
+			colorData: [|Array|:
+				{
+					cbits: bitmap('cbits, "resources/cbits/769c8d.png", "0000000000100000000000000019001b", 4),
+					bitDepth: 4
+				},
+				{
+					cbits: bitmap('bits, "resources/bits/769e4d.png", "0000000000040000000000000019001b", 1),
+					bitDepth: 1
+				}
+			]
+		},
+		hilited: {
+			bounds: {left: 0, top: 0, right: 27, bottom: 25},
+			mask: bitmap('mask, "resources/mask/769f19.png", "0000000000040000000000000019001b", 1),
+			colorData: [|Array|:
+				{
+					cbits: bitmap('cbits, "resources/cbits/769fc1.png", "0000000000100000000000000019001b", 4),
+					bitDepth: 4
+				},
+				{
+					cbits: bitmap('bits, "resources/bits/76a181.png", "0000000000040000000000000019001b", 1),
+					bitDepth: 1
+				}
+			]
+		}
+	},
+	_ExportTable: [|Array|:
+		{
+			name: 'FormulasInternal,
+			major: 1,
+			minor: 0,
+			objects: [|Array|:
+				@8294,
+				@8295,
+				@8296,
+				@8297,
+				@8298,
+				@8299,
+				@8300,
+				@8301,
+				@8302,
+				@8303,
+				@8304,
+				@8305,
+				@8306,
+				@8307,
+				@8308,
+				@8309,
+				@8310,
+				@8311,
+				@8312
+			]
+		}
+	],
+	app: 'Formulas,
+	text: formulas,
+	icon: {
+		mask: bitmap('mask, "resources/mask/773d85.png", "00000000000400b900b901e000d201fb", 1),
+		bits: bitmap('bits, "resources/bits/773e05.png", "0000000000040000000000000019001b", 1),
+		bounds: {left: 0, top: 0, right: 27, bottom: 25}
+	},
+	theForm: @8312,
+	devInstallScript: func(a1) begin
+		a1.theForm:InitFormulas()
+	end,
+	installScript: func(a1) begin
+		a1:?devInstallScript(a1);
+		if HasSlot(a1, 'devInstallScript) then begin
+				RemoveSlot(a1, 'devInstallScript)
+			end;
+		(a1.installScript := nil)
+	end
+});

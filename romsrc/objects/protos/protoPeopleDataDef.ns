@@ -1,0 +1,258 @@
+// protoPeopleDataDef, and what only it reaches
+
+protoPeopleDataDef := {
+	_proto: @protoNameRefDataDef,
+	name: @cardfileSoupName,
+	class: '|nameRef.people|,
+	entryType: 'person,
+	primaryPath: 'name,
+	primaryPathMapper: {person: 'name, owner: 'name, company: 'company, group: 'group, worksite: 'place},
+	preferredRouting: nil,
+	routePath: nil,
+	validationFrame: @nameRefValidationFrame,
+	defaultEditTitle: "New Person",
+	querySpec: {
+		type: 'index,
+		indexPath: 'sorton,
+		validTest: func(a1) begin
+			local l1;
+			((((IsSubclass((l1 := ClassOf(a1)), 'person) or IsSubclass(l1, 'company)) or IsSubclass(l1, 'owner)) or IsSubclass(l1, 'group)) or (l1 = 'frame))
+		end
+	},
+	MakeNameRef: func(a1, a2) begin
+		local l1, l2, l3, l4;
+		l1 := self:MakeCanonicalNameRef(a1, a2);
+		l3 := self:GetPrimaryPath(a1);
+		if IsFrame((l4 := (if IsEntryAlias(a1) then ResolveEntryAlias(a1) else a1))) then begin
+				if (if (not (l2 := l4.(l3))) then IsNameRef(l4)) then begin
+						if (l4 := EntryFromObj(l4)) then begin
+								l2 := l4.(l3)
+							end
+					end
+			end else begin
+				l2 := l4
+			end;
+		if (if IsInstance(l2, 'string) then (l3 = 'name)) then begin
+				l2 := {last: l2}
+			end;
+		l1.(l3) := l2;
+		l1
+	end,
+	GetPrimaryPath: func(a1) begin
+		local l1, l2;
+		if (l1 := ObjEntryClass(a1)) then begin
+				l2 := primaryPathMapper.(l1)
+			end;
+		(if l2 then l2 else primaryPath)
+	end,
+	GetPrimaryValue: compile(
+		constants: {
+			kLiteral_4559fd: {person: SetClass(Clone("Untitled Person"), '|string.noData|), owner: SetClass(Clone("Untitled Owner"), '|string.noData|), company: SetClass(Clone("Untitled Company"), '|string.noData|), group: SetClass(Clone("Untitled Group"), '|string.noData|), worksite: SetClass(Clone("Untitled Worksite"), '|string.noData|)},
+			kLiteral_450465: SetClass(Clone("--"), '|string.noData|)
+		},
+		func(a1, a2) begin
+			local l1, l2, l3, l4;
+			if IsEntryAlias(a1) then begin
+					l2 := ResolveEntryAlias(a1)
+				end else begin
+					l2 := a1
+				end;
+			if IsFrame(l2) then begin
+					if IsNameRef(l2) then begin
+							if (l3 := EntryFromObj(l2)) then begin
+									l2 := l3
+								end
+						end;
+					if l2 then begin
+							l1 := l2.(self:GetPrimaryPath(a1))
+						end
+				end else begin
+					l1 := l2
+				end;
+			if ((a2 = 'sortText) or (a2 = 'text)) then begin
+					if IsFrame(l1) then begin
+							if (a2 = 'sortText) then begin
+									l1 := ParamStr("^?0^?1^0, ^1|^0||^1|", [Array: l1.last, l1.first])
+								end else begin
+									l1 := ParamStr("^?0^?1^0 ^1|^0||^1|", [Array: l1.first, l1.last])
+								end;
+							if (if (if (a2 = 'sortText) then IsFrame(l2)) then l2.sorton) then begin
+									l1 := l2.sorton
+								end
+						end;
+					if ((not IsString(l1)) or (not StrFilled(l1))) then begin
+							if (not (l4 := ObjEntryClass(a1))) then begin
+									l4 := entryType
+								end;
+							if (not (l1 := Clone(kLiteral_4559fd.(l4)))) then begin
+									l1 := Clone(kLiteral_450465)
+								end
+						end
+				end;
+			l1
+		end),
+	Get: func(a1, a2, a3) begin
+		local l1, l2;
+		if (if (not (a2 = primaryPath)) then (not (ObjEntryClass(a1) = 'group))) then begin
+				return inherited:Get(a1, a2, a3)
+			end;
+		if (a2 = primaryPath) then begin
+				return self:GetPrimaryValue(a1, a3)
+			end;
+		if IsArray((l1 := self:GetObjSlot(a1, a2))) then begin
+				l2 := Length(l1)
+			end else begin
+				if a1.members then begin
+						l2 := Length(a1.members)
+					end else begin
+						l2 := 0
+					end
+			end;
+		(if (a3 = 'text) then return ParamStr("(^0 members)", [Array: l2]) else return l1)
+	end,
+	HitItem: func(a1, a2) begin
+		local l1;
+		(if (ObjEntryClass(a1.nameRef) = 'group) then begin
+				a2:Tapped('Toggle);
+				_tapinfo := nil;
+				_dirtyPaths := nil;
+				(_dirtyValues := nil)
+			end else inherited:HitItem(a1, a2))
+	end,
+	ModifyEntryPath: compile(
+		constants: {
+			kLiteral_4559fd: {person: SetClass(Clone("Untitled Person"), '|string.noData|), owner: SetClass(Clone("Untitled Owner"), '|string.noData|), company: SetClass(Clone("Untitled Company"), '|string.noData|), group: SetClass(Clone("Untitled Group"), '|string.noData|), worksite: SetClass(Clone("Untitled Worksite"), '|string.noData|)}
+		},
+		func(a1, a2, a3) begin
+			local l1, l2;
+			l1 := ObjEntryClass(a1);
+			(if (a3 = primaryPathMapper.(l1)) then begin
+					l2 := (a2.(a3) := a1.(a3));
+					a2.sorton := (if l2 then (if ((l1 = 'person) or (l1 = 'owner)) then (if l2.last then ParamStr("^1 ^0", [Array: l2.first, l2.last]) else (if l2.first then l2.first)) else l2) else Clone(kLiteral_4559fd.(l1)));
+					GetRoot().cardfile:SetIAClass(a2)
+				end else (a2.(a3) := a1.(a3)))
+		end),
+	ModifyEntry: func(a1, a2) begin
+		if (l1 := EntryFromObj(a1)) then begin
+				local l1;
+				(foreach l2 in a2 do begin
+						self:ModifyEntryPath(a1, l1, l2)
+					end);
+				EntryChangeXmit(l1, 'entryChanged)
+			end;
+		l1
+	end,
+	NewEntry: func(a1, a2) begin
+		local l1;
+		(l1 := GetRoot().cardfile:addcard((l1 := self:PrepareToAdd(a1)).class, l1)).labels := a1.labels;
+		self:FixupPostAdd(a1, l1);
+		EntryChangeXmit(l1, 'entryAdded);
+		l1
+	end,
+	Equivalent: func(a1, a2, a3) begin
+		l1 := [Array: ];
+		local l1;
+		(foreach l2 in a3 do begin
+				if (l2 = 'name) then begin
+						if (a1.name <> a2.name) then begin
+								if (((not (if a1.name then a2.name)) or (if (a1.name.last <> a2.name.last) then (not (if (if a1.name.last then a2.name.last) then StrEqual(a1.name.last, a2.name.last))))) or (if (a1.name.first <> a2.name.first) then (not (if (if a1.name.first then a2.name.first) then StrEqual(a1.name.first, a2.name.first))))) then begin
+										AddArraySlot(l1, l2)
+									end
+							end
+					end else begin
+						if (if (a1.(l2) <> a2.(l2)) then (not (if (if IsInstance(a1.(l2), 'string) then IsInstance(a2.(l2), 'string)) then StrEqual(a1.(l2), a2.(l2))))) then begin
+								AddArraySlot(l1, l2)
+							end
+					end
+			end);
+		l1
+	end,
+	Validate: func(a1, a2) begin
+		l1 := self:GetPrimaryPath(a1);
+		l2 := Clone(a2);
+		if (ObjEntryClass(a1) = 'group) then begin
+				return [Array: ]
+			end;
+		local l1;
+		local l2;
+		(foreach l3, l4 in l2 do begin
+				if (l4 = primaryPath) then begin
+						l2[l3] := l1
+					end
+			end);
+		ValidityCheck(a1, validationFrame, l2, nil, nil)
+	end,
+	GetItemRoutingFrame: func(a1) begin
+		{name: self:Get(a1, primaryPath, 'text)}
+	end,
+	RealGetRoutingInfo: func(a1, a2) begin
+		(if (a2 = nil) then return nil else (if IsArray(a2) then (foreach l1 in a2 do begin
+						self:RealGetRoutingInfo(a1, l1)
+					end) else (if (ObjEntryClass(a2) = 'group) then (foreach l1 in self:Get(a2, routePath, nil) do begin
+							self:RealGetRoutingInfo(a1, l1)
+						end) else AddArraySlot(a1, self:GetItemRoutingFrame(a2)))))
+	end,
+	GetRoutingInfo: func(a1) begin
+		local l1;
+		if (a1 = nil) then begin
+				return [Array: ]
+			end;
+		self:RealGetRoutingInfo((l1 := [Array: ]), a1);
+		l1
+	end,
+	GetRoutingTitle: func(a1, a2, a3) begin
+		if (if a1 then (IsArray(a1) = nil)) then begin
+				l1 := self:Get(a1, primaryPath, 'text)
+			end else begin
+				if (if a1 then (Length(a1) > 0)) then begin
+						local l1;
+						(foreach l2 in a1 do begin
+								local l4;
+								l4 := self:Get(l2, primaryPath, 'text);
+								if (if l1 then StrFilled(l1)) then begin
+										l1 := ParamStr("^0, ^1", [Array: l1, l4])
+									end else begin
+										l1 := l4
+									end;
+								if (if a3 then a2) then begin
+										if (StrFontWidth(l1, a3) > a2) then begin
+												break
+											end
+									end
+							end);
+						if (if (if (if l1 then StrFilled(l1)) then a3) then a2) then begin
+								l1 := StyledStrTruncate(Clone(l1), a2, a3)
+							end
+					end else begin
+						l1 := "None"
+					end
+			end;
+		l1
+	end,
+	TextFromEntry: func(a1) begin
+		local l1;
+		if (not (if (l1 := self:Get(a1, primaryPath, 'text)) then StrFilled(l1))) then begin
+				l1 := "Anonymous"
+			end;
+		l1
+	end,
+	PrepareForRouting: func(a1) begin
+		if IsNameRef(a1) then begin
+				a1._alias := nil
+			end else begin
+				if ObjEntryClass(a1) then begin
+						if (if (l1 := self:Get(a1, routePath, nil)) then (Length(l1) > 0)) then begin
+								local l1;
+								(foreach l2 in l1 do begin
+										self:PrepareForRouting(a1)
+									end)
+							end
+					end
+			end;
+		a1
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+GetPrimaryValue_literal19 := same("protoPeopleDataDef.GetPrimaryValue.literals[19]");

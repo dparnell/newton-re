@@ -1,0 +1,6 @@
+// routeBeamIcon, and what only it reaches
+
+routeBeamIcon := {
+	bits: bitmap('bits, "resources/bits/3d5be9.png", "00000000000400ab00ab007e00ba0093", 1),
+	bounds: {left: 0, top: 0, right: 21, bottom: 15}
+};

@@ -1,5 +1,0 @@
-@@ 0x757059
-func() begin
-	(viewValue := protoContext:ConnectionPrefsRead('timeoutConnection))
-end
-@@end

@@ -1,6 +1,0 @@
-@@ 0x455355
-func() begin
-	inherited:?viewQuitScript();
-	(if (if context then (context:pickActionScript exists)) then 'postQuit)
-end
-@@end

@@ -1,0 +1,3 @@
+// canonicalGestaltVersion, and what only it reaches
+
+canonicalGestaltVersion := {version: nil};

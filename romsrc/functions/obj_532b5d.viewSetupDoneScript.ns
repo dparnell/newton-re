@@ -1,5 +1,0 @@
-@@ 0x532a51
-func() begin
-	(text := self:GetPhoneText())
-end
-@@end

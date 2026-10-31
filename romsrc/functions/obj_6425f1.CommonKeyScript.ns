@@ -1,5 +1,0 @@
-@@ 0x4db0b5
-func(a1) begin
-	(if (not currentForm) then PressButton(a1))
-end
-@@end

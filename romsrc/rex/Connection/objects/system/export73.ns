@@ -1,0 +1,83 @@
+// export73, and what only it reaches
+
+export73 := {
+	viewBounds: {left: 0, top: 60, right: 180, bottom: 145},
+	viewSetupFormScript: compile(
+		constants: {
+			kROM_8258: @8258
+		},
+		func() begin
+			if (not inited) then begin
+					inited := true;
+					self.protoContext := GetRoot().Connection;
+					protoContext:AddOpenWindow(self);
+					self.currentStatusSetup := DeepClone(initialSetup);
+					self.stopping := nil;
+					self.closing := nil;
+					AddDeferredCall((temp := func() begin
+						local l1, l2, l3;
+						try begin
+								endpoint:WriteCommand("grop", nil, nil);
+								if (not IsFrame((l2 := protoContext:CallReadCommand(endpoint, "ropt")).data)) then begin
+										Throw('|evt.ex.error|, -28012)
+									end;
+								l1 := l2.data
+							end onexception |evt.ex| do begin
+								protoContext:HandleException(CurrentException().error, endpoint);
+								closing := true;
+								self:Close()
+							end;
+						(if (if (not closing) then (not stopping)) then begin
+								(l3 := BuildContext(kROM_8258)).endpoint := endpoint;
+								l3.restoreOptions := l1;
+								l3:FilterDialog();
+								closing := true;
+								AddDeferredSend(self, 'Close, [Array: ])
+							end)
+					end), nil);
+					endpoint:StartIdle(self, 500)
+				end;
+			inherited:?viewSetupFormScript()
+		end),
+	viewQuitScript: func() begin
+		endpoint:StopIdle(self);
+		protoContext:RemoveOpenWindow(self);
+		if (if (not closing) then (not stopping)) then begin
+				endpoint:ConnectionDone(0)
+			end;
+		(inited := nil)
+	end,
+	viewFlags: vApplication + vFloating + vClickable,
+	CancelRequest: func(a1) begin
+		(if (not stopping) then begin
+				stopping := true;
+				currentStatusSetup.values.titleText := "Stopping...";
+				self:viewSet(currentStatusSetup);
+				protoContext:StopOperation(endpoint)
+			end)
+	end,
+	inited: nil,
+	initialSetup: {
+		name: 'vBarber,
+		values: {
+			statusText: dock,
+			titleText: "Getting restore information...",
+			barber: true,
+			icon: valuesIcon,
+			closeBox: nil
+		},
+		appSymbol: 'Connection
+	},
+	viewIdleScript: func() begin
+		self:updateIndicator(currentStatusSetup);
+		return 1000
+	end,
+	currentStatusSetup: nil,
+	stopping: nil,
+	closing: nil,
+	_proto: @protoStatusTemplate
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+CancelRequest_code := same("export73.CancelRequest.instructions");

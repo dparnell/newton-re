@@ -1,0 +1,57 @@
+// default_3, and what only it reaches
+
+default_3 := {
+	_proto: export145Proto,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	viewJustify: vjParentFullH + vjParentFullV,
+	viewFlags: vVisible + vReadOnly,
+	version: 1,
+	type: 'viewer,
+	symbol: 'default,
+	name: toDo,
+	todoSlip: nil,
+	selectedDates: nil,
+	viewSetupFormScript: compile(
+		options: "names",
+		func() begin
+			selectedDates := [Array: fields.body.date];
+			inherited:viewSetupFormScript()
+		end),
+	CalculateScrollRects: compile(
+		options: "names",
+		func() begin
+			nil
+		end),
+	GetTarget: compile(
+		options: "names",
+		func(oldTarget) begin
+			topics := [Array: fields.body];
+			nTopics := 1;
+			(target := fields.body)
+		end),
+	StartFlush: compile(
+		options: "names",
+		func() begin
+			nil
+		end),
+	EndFlush: compile(
+		options: "names",
+		func() begin
+			nil
+		end),
+	_keyDaughterScript: compile(
+		options: "names",
+		func(keyView) begin
+			nil
+		end),
+	_keySisterScript: compile(
+		options: "names",
+		func(keyView) begin
+			nil
+		end),
+	_keyAuntScript: compile(
+		options: "names",
+		func(keyView) begin
+			nil
+		end)
+};

@@ -1,0 +1,3 @@
+// canonicalShapeDragData, and what only it reaches
+
+canonicalShapeDragData := {shape: nil, viewBounds: nil};

@@ -1,0 +1,14 @@
+// ioIoboxSoup, and what only it reaches
+
+ioIoboxSoup := {
+	soupIndices: @ioIndices,
+	soupQuery: soupQuery,
+	defaultDataType: 'paperroll,
+	CreateBlankEntry: CreateBlankEntry,
+	UseNilLabelsAsUnfiled: true,
+	FillNewSoup: FillNewSoup,
+	AddTagSlot: AddTagSlot,
+	FolderTag: FolderTag,
+	SetupCursor: SetupCursor,
+	AddEntry: AddEntry
+};

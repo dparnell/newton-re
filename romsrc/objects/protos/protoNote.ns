@@ -1,0 +1,3 @@
+// protoNote, and what only it reaches
+
+protoNote := {viewStationery: 'paperroll, class: 'paperroll, height: 200, data: nil, timestamp: 0, _version: 2};

@@ -1,0 +1,6 @@
+// dtmfdash, and what only it reaches
+
+dtmfdash := {
+	bits: bitmap('bits, "resources/bits/3d8015.png", "000000000004004b004b0089005f009e", 1),
+	bounds: {left: 0, top: 0, right: 21, bottom: 20}
+};

@@ -1,0 +1,6 @@
+// autodockIcon, and what only it reaches
+
+autodockIcon := {
+	bits: bitmap('bits, "resources/bits/5708c9.png", "000000000004010701070091011200a4", 1),
+	bounds: {left: 0, top: 0, right: 19, bottom: 11}
+};

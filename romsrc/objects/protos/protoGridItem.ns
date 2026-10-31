@@ -1,0 +1,3 @@
+// protoGridItem, and what only it reaches
+
+protoGridItem := {index: nil, x: nil, y: nil};

@@ -1,0 +1,133 @@
+// protoRepeatPicker, and what only it reaches
+
+protoRepeatPicker := {
+	viewFont: tsSystem + tsSize(9) + tsBold,
+	viewBounds: nil,
+	text: "Repeat",
+	labelCommands: [|Array|:
+		donTRepeat,
+		everyDay,
+		everyWeek,
+		everyOtherWeek,
+		everyMonth,
+		"Same week each month",
+		everyYear,
+		"Same week each year",
+		otherCategoryName
+	],
+	currentLabelIndex: nil,
+	meetingInstance: nil,
+	viewSetupFormScript: func() begin
+		local l1, l2;
+		if selectedMeeting.repeatType then begin
+				l1 := GetRoot().calendar;
+				if (l2 := l1:FindException(originalMtgDate, selectedMeeting)) then begin
+						meetingInstance := l2
+					end else begin
+						meetingInstance := l1:MakeInstanceOfRepeatingMeeting(selectedMeeting, originalMtgDate)
+					end
+			end else begin
+				meetingInstance := selectedMeeting
+			end;
+		RepeatingView.meetingInstance := meetingInstance;
+		RepeatingView.originalMtgDate := meetingInstance.mtgStartDate;
+		inherited:viewSetupFormScript()
+	end,
+	TextSetup: func() begin
+		local l1, l2, l3;
+		if (l1 := meetingInstance.repeatTemplate) then begin
+				RepeatingView.repeatType := l1.repeatType;
+				RepeatingView.mtgInfo := l1.mtgInfo
+			end;
+		l3 := Date(meetingInstance.mtgStartDate);
+		if (l1 = nil) then begin
+				l2 := 0
+			end else begin
+				if (if (l1.repeatType = 0) then (l1.mtgInfo = BOr(4064, 31))) then begin
+						l2 := 1
+					end else begin
+						if (if (l1.repeatType = 0) then (l1.mtgInfo = BOr((2048 >> l3.dayOfWeek), 31))) then begin
+								l2 := 2
+							end else begin
+								if (l1.repeatType = 4) then begin
+										l2 := 3
+									end else begin
+										if (l1.repeatType = 2) then begin
+												l2 := 4
+											end else begin
+												if (if (l1.repeatType = 1) then (l1.mtgInfo = BOr((16 >> ((l3.Date - 1) div 7)), (2048 >> l3.dayOfWeek)))) then begin
+														l2 := 5
+													end else begin
+														if (l1.repeatType = 3) then begin
+																l2 := 6
+															end else begin
+																if (l1.repeatType = 7) then begin
+																		l2 := 7
+																	end else begin
+																		l2 := 8
+																	end
+															end
+													end
+											end
+									end
+							end
+					end
+			end;
+		currentLabelIndex := l2;
+		labelCommands[l2]
+	end,
+	pickerSetup: func() begin
+		(if GetRoot().calendar:IsExceptionMeeting(meetingInstance) then begin
+				self:Notify(3, (if appSymbol then GetAppName(appSymbol) else ""), (if (meetingInstance.viewStationery = 'cribNote) then "You cannot change the repeat frequency of an exception event." else "You cannot change the repeat frequency of an exception meeting."));
+				self:hilite(nil);
+				nil
+			end else true)
+	end,
+	LabelActionScript: func(a1) begin
+		local l1;
+		l1 := Date(newMtgDate);
+		if (a1 = 0) then begin
+				RepeatingView.repeatType := 5;
+				RepeatingView.mtgInfo := 0
+			end else begin
+				if (a1 = 1) then begin
+						RepeatingView.repeatType := 0;
+						RepeatingView.mtgInfo := BOr(4064, 31)
+					end else begin
+						if (a1 = 2) then begin
+								RepeatingView.repeatType := 0;
+								RepeatingView.mtgInfo := BOr((2048 >> l1.dayOfWeek), 31)
+							end else begin
+								if (a1 = 3) then begin
+										RepeatingView.repeatType := 4;
+										RepeatingView.mtgInfo := (((newMtgDate div 1440) << 8) + 14)
+									end else begin
+										if (a1 = 4) then begin
+												RepeatingView.repeatType := 2;
+												RepeatingView.mtgInfo := l1.Date
+											end else begin
+												if (a1 = 5) then begin
+														RepeatingView.repeatType := 1;
+														RepeatingView.mtgInfo := BOr((16 >> ((l1.Date - 1) div 7)), (2048 >> l1.dayOfWeek))
+													end else begin
+														if (a1 = 6) then begin
+																RepeatingView.repeatType := 3;
+																RepeatingView.mtgInfo := ((l1.month << 8) + l1.Date)
+															end else begin
+																if (a1 = 7) then begin
+																		RepeatingView.repeatType := 7;
+																		RepeatingView.mtgInfo := (((l1.month << 12) + (2048 >> l1.dayOfWeek)) + (16 >> ((l1.Date - 1) div 7)))
+																	end else begin
+																		RepeatingView:Open()
+																	end
+															end
+													end
+											end
+									end
+							end
+					end
+			end;
+		(currentLabelIndex := a1)
+	end,
+	_proto: @protoLabelPicker
+};

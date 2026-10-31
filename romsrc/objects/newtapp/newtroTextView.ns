@@ -1,0 +1,28 @@
+// newtroTextView, and what only it reaches
+
+newtroTextView := {
+	viewClass: clParagraphView,
+	viewBounds: {left: 0, top: 0, right: 0, bottom: 20},
+	viewJustify: vjParentFullH + vjSiblingBottomV,
+	viewFlags: vVisible + vReadOnly,
+	viewFont: tsHWFont + tsSize(12),
+	styles: nil,
+	tabs: nil,
+	jamSlot: nil,
+	hack: nil,
+	viewSetupFormScript: func() begin
+		(self.text := self:TargetData())
+	end,
+	Retarget: func() begin
+		hack := true;
+		SetValue(self, 'text, self:TargetData());
+		(hack := nil)
+	end,
+	jamFromEntry: jamFromEntry,
+	TargetData: func() begin
+		(if (if target then path) then Clone(target.(path)) else "")
+	end,
+	TextScript: func() begin
+		self:?TargetData()
+	end
+};

@@ -1,0 +1,987 @@
+// canonicalCharCorrector, and what only it reaches
+
+canonicalCharCorrector := {
+	refCon: nil,
+	viewSetupDoneScript: func() begin
+		local l1, l2, l3, l4, l5, l6;
+		TieViews(cText, cInk, 'TieChangedScript);
+		(if refConChanged then begin
+				l2 := (l1 := refCon).form;
+				l3 := l1.wordOffset;
+				l4 := 0;
+				if l2.text then begin
+						l5 := GetDynamicValue(l2, 'text, 'string);
+						if (if (l3 > 0) then (not IsWhiteSpace(l5[(l3 - 1)]))) then begin
+								l3 := (l3 - 1)
+							end;
+						l3 := ScanWordStart(l5, l3, 0);
+						l4 := ((l6 := ScanWordEnd(l5, l3, StrLen(l5))) - l3)
+					end;
+				l1.form := nil;
+				self:ViewCaretChangedScript(l2, l3, l4);
+				(refConChanged := nil)
+			end)
+	end,
+	cInk: nil,
+	SetHilite: func() begin
+		local l1;
+		(if (l1 := refCon).form.text then l1.form:SetHiliteNoUpdate(l1.wordOffset, (l1.wordOffset + l1.wordLength), true))
+	end,
+	viewFormat: vfFillWhite + vfFrameDragShadow + vfPen(2) + vfInset(1) + vfRound(5),
+	_cacheContext: {
+		_parent: nil,
+		_proto: nil,
+		viewCObject: nil,
+		refCon: nil,
+		pickItems: nil,
+		wordInfo: nil,
+		templatePicker: nil,
+		saveBounds: saveBounds,
+		firstTime: true,
+		viewclipper: nil,
+		base: nil,
+		alternates: nil,
+		cText: nil,
+		cInk: nil,
+		recognizeButton: nil
+	},
+	viewQuitScript: func() begin
+		if (l1 := refCon).form then begin
+				cText:DoPendingUpdate()
+			end;
+		if (not self.gotoKeyboard) then begin
+				if (if l1.form then l1.form.text) then begin
+						hiliteBusy := true;
+						self:SetCaret(StrLen((l2 := GetDynamicValue(l1.form, 'text, 'string))));
+						self:SetHilite();
+						hiliteBusy := nil
+					end
+			end;
+		self:UnregisterOpenKeyboard();
+		inherited:viewQuitScript();
+		local l1;
+		local l2;
+		(foreach l3 in [Array: 'alternates, 'cText, 'cInk, 'recognizeButton, 'Keyboard, 'viewBounds, 'viewFlags, 'hiliteBusy, 'savedPickItems, 'hiliteParms] do begin
+				RemoveSlot(self, l3)
+			end);
+		self.refCon := nil;
+		self.pickItems := nil;
+		self.wordInfo := nil;
+		ClearTryString()
+	end,
+	preallocatedContext: 'correct,
+	savedPickItems: nil,
+	doViewCaretChanged: func() begin
+		local l1, l2, l3, l4, l5, l6, l7;
+		view := hiliteParms[0];
+		off := hiliteParms[1];
+		len := hiliteParms[2];
+		hiliteParms := nil;
+		if view.text then begin
+				l2 := StrLen((l1 := GetDynamicValue(view, 'text, 'string)))
+			end;
+		if (if l1 then (off > l2)) then begin
+				off := min(1, l2)
+			end;
+		l3 := off;
+		l4 := len;
+		if (if l1 then (len = 0)) then begin
+				if (if (l3 > 0) then (not IsWhiteSpace(l1[(l3 - 1)]))) then begin
+						l3 := (l3 - 1);
+						l3 := ScanWordStart(l1, l3, 0)
+					end;
+				l4 := (ScanWordEnd(l1, l3, l2) - l3)
+			end;
+		l5 := refCon;
+		if (((l6 := (view <> l5.form)) or (off <> l5.wordOffset)) or (len <> l5.wordLength)) then begin
+				l5.form := view;
+				l5.wordOffset := l3;
+				if (l7 := cText:TemplateChanged()) then begin
+						l5.wordLength := l4;
+						cText:SetNewWord(self:GetExternalWord(), 'external);
+						cText:SetNewTemplate(l7);
+						cText:SyncView();
+						l4 := l5.wordLength;
+						hiliteBusy := nil;
+						return nil
+					end;
+				if ((l5.wordLength <> 0) or (l4 <> 0)) then begin
+						l5.wordLength := l4;
+						self:UseExternalWord()
+					end else begin
+						if l6 then begin
+								cText.wordSource := 'none;
+								cText:DisplayExternal(nil)
+							end
+					end
+			end;
+		hiliteBusy := nil;
+		0
+	end,
+	ViewCaretChangedScript: func(a1, a2, a3) begin
+		hiliteParms := [Array: a1, a2, a3];
+		if (not a1) then begin
+				cText.updatePending := nil;
+				refCon.form := nil;
+				self:Close();
+				return nil
+			end;
+		(if (if (not hiliteBusy) then (not cText.updatePending)) then begin
+				hiliteBusy := true;
+				self:doViewCaretChanged()
+			end)
+	end,
+	recognizeButton: nil,
+	viewChildren: [viewChildren:
+		templatePicker,
+		alternates,
+		cText,
+		{
+			viewFlags: vVisible + vClickable,
+			viewBounds: {left: 2, top: 20, right: 12, bottom: 32},
+			viewJustify: vjSiblingTopV,
+			viewFormat: 0,
+			icon: @leftBitmap,
+			buttonPressedScript: func() begin
+				local l1;
+				l1 := Ticks();
+				cText:Scroll(-1);
+				(if ((l1 := (Ticks() - l1)) < 20) then Sleep((20 - l1)))
+			end,
+			_proto: @protoPictureButton
+		},
+		{
+			viewFlags: vVisible + vClickable,
+			viewBounds: {left: -12, top: 0, right: -2, bottom: 12},
+			viewJustify: vjParentRightH + vjSiblingTopV,
+			viewFormat: 0,
+			icon: @rightBitmap,
+			buttonPressedScript: func() begin
+				local l1;
+				l1 := Ticks();
+				cText:Scroll(1);
+				(if ((l1 := (Ticks() - l1)) < 20) then Sleep((20 - l1)))
+			end,
+			_proto: @protoPictureButton
+		},
+		cInk,
+		recognizeButton,
+		{viewBounds: {left: -16, top: -16, right: -3, bottom: -3}, _proto: @protoCancelButton},
+		{
+			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingTopV,
+			viewBounds: {left: -30, top: 0, right: -7, bottom: 13},
+			icon: @keyButtonBitmap,
+			buttonClickScript: func() begin
+				correct.gotoKeyboard := true;
+				OpenKeypadFor(refCon.form)
+			end,
+			_proto: @protoPictureButton
+		}
+	],
+	viewStrokeScript: func(a1) begin
+		nil
+	end,
+	viewFlags: vFloating + vClickable + vStrokesAllowed,
+	cText: nil,
+	GetCaretRefCon: func() begin
+		local l1, l2, l3, l4;
+		if (l2 := GetCaretBox()) then begin
+				l1 := {form: (l3 := l2.view), wordOffset: 0, wordLength: 0};
+				if (if HasPath(l3, 'text) then (l2.offset >= 0)) then begin
+						l1.wordOffset := l2.offset
+					end
+			end;
+		if (not l1) then begin
+				if (l4 := GetHiliteOffsets()) then begin
+						l1 := {form: (l4 := l4[0])[0], wordOffset: l4[1], wordLength: (l4[2] - l4[1])}
+					end
+			end;
+		l1
+	end,
+	RestoreAlternates: func(a1) begin
+		(pickItems := a1)
+	end,
+	SetStartStop: func(a1, a2) begin
+		local l1;
+		(l1 := refCon).wordOffset := a1;
+		(l1.wordLength := (a2 - a1))
+	end,
+	ReOrientToScreen: func() begin
+		self:Close()
+	end,
+	UsePickItems: func() begin
+		local l1, l2;
+		AddUndoAction('RestoreAlternates, [Array: savedPickItems]);
+		l2 := StrLen((l1 := cText:GetWordForDisplay()));
+		if cText:IsInkWord() then begin
+				pickItems := nil
+			end;
+		alternates:SyncView();
+		(savedPickItems := nil)
+	end,
+	SetExternalPickItems: func() begin
+		local l1, l2;
+		l2 := correctInfo:FindNew((l1 := refCon).form, l1.wordOffset, l1.wordLength);
+		pickItems := nil;
+		(if l2 then (pickItems := l2:GetWords()))
+	end,
+	GetExternalWord: func() begin
+		local l1, l2;
+		if HasPath((l2 := refCon), 'form.text) then begin
+				SetClass((l1 := Substr((l1 := GetDynamicValue(l2.form, 'text, 'string)), l2.wordOffset, l2.wordLength)), 'string)
+			end else begin
+				l1 := SPrintObject("")
+			end;
+		l1
+	end,
+	allocateContext: [|Array|:
+		'templatePicker,
+		templatePicker,
+		'alternates,
+		alternates,
+		'cText,
+		cText,
+		'cInk,
+		cInk,
+		'recognizeButton,
+		recognizeButton
+	],
+	UseExternalWord: func() begin
+		if refCon.form.text then begin
+				cText:SetupAll(self:GetExternalWord(), 'external, cText.template, nil)
+			end else begin
+				cText:SetupAll(SPrintObject(""), 'none, nil, nil)
+			end;
+		cInk:Dirty()
+	end,
+	_proto: @protoKeyboard,
+	CheckMergeInk: func() begin
+		local l1, l2, l3, l4, l5, l6, l7;
+		l3 := GetDynamicValue((l2 := (l1 := refCon).form), 'text, 'string);
+		l4 := l1.wordOffset;
+		(if (if IsInk(l3[l4]) then IsInk(l3[(l4 + 1)])) then begin
+				l5 := GetInkAt(l2, l4);
+				l6 := GetInkAt(l2, (l4 + 1));
+				l7 := MergeInk(l5, l6);
+				InsertStyledText(l2, l4, 2, "\uF701\u", [styles: 1, l7.ink]);
+				(l1.wordLength := (l1.wordLength - 1))
+			end)
+	end,
+	hiliteParms: nil,
+	viewJustify: vjParentCenterH,
+	savedRemote: nil,
+	alternates: nil,
+	SetInternalPickItems: func() begin
+		l1 := cText.lastChar;
+		l2 := cText.template;
+		if (if (not cText:FixedWord()) then l1) then begin
+				l4 := cText.altChars[l1];
+				l5 := (l1 - cText.wordLeft);
+				if l4 then begin
+						l6 := cText:CurrentWord();
+						l3 := Array(((l7 := (StrLen(l4) - 1)) + 1), nil);
+						local l1;
+						local l2;
+						local l3;
+						local l4;
+						local l5;
+						local l6;
+						local l7;
+						(for l8 := 0 to l7 do begin
+								local l11;
+								l6[l5] := l4[l8];
+								l3[l8] := Clone(l6)
+							end)
+					end
+			end;
+		if (not l3) then begin
+				if ((StrLen((l11 := cText:GetWordForDisplay())) = 0) or (not IsInk(l11[0]))) then begin
+						l3 := [Array: l11]
+					end else begin
+						l3 := [Array: ]
+					end
+			end;
+		pickItems := nil;
+		(if (Length(l3) > 0) then (pickItems := l3))
+	end,
+	SetStartLen: func(a1, a2) begin
+		local l1;
+		(l1 := refCon).wordOffset := a1;
+		(l1.wordLength := a2)
+	end,
+	SetCaret: func(a1) begin
+		local l1;
+		(l1 := refCon).wordOffset := a1;
+		(l1.wordLength := 0)
+	end,
+	ShowHide: func() begin
+		(if IsInk(cText.text[cText.wordLeft]) then begin
+				cInk:ShowView(true);
+				cInk:Dirty();
+				recognizeButton:ShowView(true);
+				cText:ShowView(nil)
+			end else begin
+				cText:ShowView(true);
+				cInk:ShowView(nil);
+				recognizeButton:ShowView(nil)
+			end)
+	end,
+	bounds: nil,
+	wordInfo: nil,
+	viewSetupFormScript: func() begin
+		local l1, l2, l3, l4, l5;
+		l1 := self:Parent().viewBounds;
+		l2 := Clone(saveBounds);
+		l3 := 10;
+		if ((l4 := (28 + (10 * cText.cellWidth))) > (l1.right - l1.left)) then begin
+				l3 := 8;
+				l4 := (28 + (8 * cText.cellWidth))
+			end;
+		l2.left := 0;
+		l2.right := l4;
+		if (l2.bottom > l1.bottom) then begin
+				l2.bottom := (l1.bottom - 29);
+				l2.top := (l2.bottom - 64)
+			end;
+		self.saveBounds := l2;
+		inherited:viewSetupFormScript();
+		self:RegisterOpenKeyboard(6);
+		cText.maxChars := l3;
+		if wordInfo then begin
+				cText:SetNewWord(pickItems[0], 'external);
+				wordInfo := nil
+			end else begin
+				if (if pickItems then (Length(pickItems) > 0)) then begin
+						cText:SetNewWord(pickItems[0], 'pickItems)
+					end else begin
+						cText:SetNewWord(SPrintObject(""), 'none)
+					end
+			end;
+		if (not self.refCon) then begin
+				self.refCon := self:GetCaretRefCon();
+				refConChanged := true
+			end;
+		cText:SetNewTemplate((l5 := cText:GetViewTemplate()))
+	end,
+	SetPickItems: func() begin
+		local l1;
+		l1 := cText.wordSource;
+		savedPickItems := Clone(pickItems);
+		(if (l1 = 'single) then self:SetSinglePickItems() else (if (l1 = 'external) then self:SetExternalPickItems() else (if (l1 = 'Editing) then self:SetInternalPickItems() else (if (l1 = 'pickItems) then (pickItems := pickItems) else (if (l1 = 'none) then (pickItems := nil))))))
+	end,
+	viewClickScript: func(a1) begin
+		local l1, l2, l3;
+		l1 := GetPoint(0, a1);
+		l2 := GetPoint(1, a1);
+		l3 := self:GlobalBox();
+		(if (if (if ((l2 - l3.top) < 6) then (abs((l1 - ((l3.left + l3.right) >> 1))) < 7)) then inherited:viewClickScript(a1)) then begin
+				cText:viewSetupDoneScript();
+				true
+			end)
+	end,
+	viewEffect: nil,
+	SetSinglePickItems: func() begin
+		local l1;
+		(pickItems := [Array: (l1 := cText:GetWordForDisplay())])
+	end,
+	CorrectWord: func(a1, a2) begin
+		local l1, l2, l3, l4;
+		l1 := refCon;
+		l2 := a1;
+		if a2 then begin
+				l2 := Clone(@protoWordInfo);
+				l2:SetWords(pickItems)
+			end;
+		l3 := l1.form:GetStyleAtOffset(l1.wordOffset);
+		l1.form:HandleInsertItems((l4 := {insertItems: l2, insertOffset: l1.wordOffset, replaceChars: l1.wordLength, defaultFontSpec: l3, addspace: nil, moveCaret: nil}))
+	end,
+	refConChanged: nil,
+	pickItems: nil,
+	hiliteBusy: nil,
+	templatePicker: nil,
+	saveBounds: saveBounds,
+	ReplaceSelection: func(a1, a2, a3) begin
+		local l1, l2, l3;
+		if (not ViewWorksWithCombCorrector((l1 := a2).form)) then begin
+				return nil
+			end;
+		l2 := StrLen(a1);
+		if (not l1.form.text) then begin
+				PostKeyString(GetKeyView(), a1);
+				l1.form := GetKeyView();
+				if (if (if (if (if (l3 := (if (if (l3 := GetCaretInfo()) then (l3.view = l1.form)) then l3.info)) then (ClassOf(l3) = 'paraCaret)) then l3.offset) then (l3.offset > 0)) then (l3.length = 0)) then begin
+						self:SetStartLen((l3.offset - l2), l2)
+					end else begin
+						self:SetStartLen(0, l2)
+					end
+			end;
+		self:CorrectWord(a1, a3);
+		l1.wordLength := l2;
+		self:SetHilite()
+	end
+};
+
+saveBounds := {left: 0, top: 387, right: 224, bottom: 451};
+
+templatePicker := {
+	viewFlags: vVisible + vClickable,
+	viewJustify: 8388736,
+	viewFormat: vfInset(1),
+	viewBounds: {left: 8, top: -10, right: 68, bottom: 0},
+	text: "Format ",
+	labelCommands: nil,
+	checkCurrentItem: nil,
+	preallocatedContext: 'templatePicker,
+	viewSetupFormScript: func() begin
+		self:ShowView((labelCommands := cText.template.templateArray));
+		inherited:viewSetupFormScript()
+	end,
+	LabelActionScript: func(a1) begin
+		local l1, l2;
+		l1 := cText.template;
+		l2 := cText:GetWordForDisplay();
+		l1:switch(a1, l2);
+		cText:SetupAll(l2, 'single, l1, true);
+		cText:InvalDrawCache('all)
+	end,
+	_proto: @protoLabelPicker
+};
+
+alternates := {
+	viewFlags: vVisible,
+	viewBounds: {left: 4, top: 0, right: 4, bottom: 16},
+	viewJustify: 8388656,
+	title: uCardPositionAlertButton,
+	defaultTitle: uCardPositionAlertButton,
+	text: nil,
+	separator: separator,
+	altItems: nil,
+	numChoices: nil,
+	firstTime: true,
+	preallocatedContext: 'alternates,
+	viewSetupFormScript: func() begin
+		if (not firstTime) then begin
+				SetValue(self, 'text, self:Build())
+			end;
+		(firstTime := nil)
+	end,
+	GetTitle: func() begin
+		local l1, l2, l3;
+		if (if (l3 := (l2 := refCon.form)._parent.label) then IsString(l3)) then begin
+				l1 := Clone(l3)
+			end else begin
+				if (not (l3 := l2.labelLine)) then begin
+						l3 := l2._parent.labelLine
+					end;
+				if (if (if l3 then l3.text) then IsString(l3.text)) then begin
+						l1 := Clone(l3.text)
+					end
+			end;
+		if l1 then begin
+				StrReplace(l1, "\uFC01\u", "", 1);
+				StrReplace(l1, "\uFC02\u", "", 1)
+			end else begin
+				l1 := defaultTitle
+			end;
+		return l1
+	end,
+	Build: func() begin
+		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+		l1 := pickItems;
+		(l4 := (title := self:GetTitle()))
+	end,
+	viewClickScript: func(a1) begin
+		InkOff(a1);
+		playsound(@click);
+		l1 := StrWidth(separator);
+		if ((l2 := StrWidth(title)) > 0) then begin
+				l2 := l2
+			end;
+		(loop begin
+				l3 := GetPoint(4, a1);
+				l4 := GetPoint(5, a1);
+				(l5 := self:GlobalBox()).left := (l5.left + l2);
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				local l5;
+				local l6;
+				local l7;
+				local l8;
+				l8 := (foreach l9, l10 in altItems do begin
+						local l12;
+						if (l9 < numChoices) then begin
+								l5.right := (l5.left + StrWidth(altItems[l9]));
+								if (if (l3 >= l5.left) then (l3 < l5.right)) then begin
+										break l9
+									end;
+								if ((l4 < l5.top) or (l4 > l5.bottom)) then begin
+										break
+									end;
+								l5.left := (l5.right + l1)
+							end
+					end);
+				if (l8 <> l7) then begin
+						if l7 then begin
+								GetRoot():q_vairegerpg(l6.left, l6.top, l6.right, l6.bottom)
+							end;
+						if l8 then begin
+								GetRoot():q_vairegerpg((l6 := Clone(l5)).left, l6.top, l6.right, l6.bottom)
+							end;
+						l7 := l8
+					end;
+				(if StrokeDone(a1) then break)
+			end);
+		(if l7 then begin
+				l12 := Clone(altItems[l7]);
+				ArrayMunger(pickItems, l7, 1, nil, 0, 0);
+				ArrayInsert(pickItems, l12, 0);
+				correct.cText:SetupAll(l12, 'pickItems, nil, true);
+				self:Dirty()
+			end)
+	end,
+	_proto: @protoStaticText
+};
+
+cText := {
+	viewSetupDoneScript: func() begin
+		self.setupDone := true;
+		inherited:viewSetupDoneScript()
+	end,
+	DoPendingUpdate: func() begin
+		(if updatePending then begin
+				if GetRoot().correct.viewCObject then begin
+						AddUndoAction('RestoreUndoState, [Array: updatePending]);
+						self:RealDisplayExternal(true)
+					end;
+				(updatePending := nil)
+			end)
+	end,
+	RealDisplayExternal: func(a1) begin
+		local l1, l2;
+		l1 := hiliteBusy;
+		hiliteBusy := true;
+		correct:SetPickItems();
+		self:ShowHide();
+		self:SetHilite();
+		if a1 then begin
+				if ((StrLen((l2 := self:GetWordForDisplay())) = 0) or (not IsInk(l2[0]))) then begin
+						self:ReplaceExternal(l2, true)
+					end
+			end;
+		if undoInProgress then begin
+				l2 := self:GetWordForDisplay();
+				refCon.wordLength := StrLen(l2);
+				self:SetHilite()
+			end;
+		self:UsePickItems();
+		if (if templatePicker then templatePicker.viewCObject) then begin
+				templatePicker:SyncView()
+			end;
+		(hiliteBusy := l1)
+	end,
+	TemplateChanged: func() begin
+		local l1;
+		l1 := self:GetViewTemplate();
+		if ((template._proto <> l1) or HasPath(l1, 'templateArray)) then begin
+				return l1
+			end;
+		return nil
+	end,
+	AddNewWord: func(a1) begin
+		local l1, l2;
+		self:DoPendingUpdate();
+		self:SaveUndoState(nil);
+		l1 := refCon.wordOffset;
+		if (a1 > 0) then begin
+				l1 := (l1 + refCon.wordLength)
+			end;
+		self:SetCaret(l1);
+		if (a1 <= 0) then begin
+				a1 := 0
+			end else begin
+				a1 := 1
+			end;
+		wordSource := 'none;
+		self:ReplaceExternal(" ", nil);
+		self:SetCaret((l1 + a1));
+		self:SetHilite();
+		self:UseExternalWord()
+	end,
+	ProcrastinatedDisplayExternal: func(a1) begin
+		if (not updatePending) then begin
+				updatePending := a1
+			end;
+		AddProcrastinatedSend('Corrector, self, 'DoPendingUpdate, '[Array: ], 0)
+	end,
+	Scroll: func(a1) begin
+		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+		l2 := (l1 := refCon).wordOffset;
+		l3 := l1.wordLength;
+		if (not l1.form.text) then begin
+				return nil
+			end;
+		l5 := StrLen((l4 := GetDynamicValue(l1.form, 'text, 'string)));
+		if (a1 > 0) then begin
+				if ((l2 + l3) < l5) then begin
+						l6 := ScanWordEnd(l4, l2, l5);
+						if (l6 := ScanNextWord(l4, l6, l5)) then begin
+								l7 := ScanWordEnd(l4, l6, l5)
+							end
+					end
+			end else begin
+				if (a1 < 0) then begin
+						if (l2 > 0) then begin
+								if (l7 := ScanPrevWordEnd(l4, (l2 - 1), 0)) then begin
+										l7 := ScanWordEnd(l4, (l7 - 1), l5);
+										l6 := ScanWordStart(l4, (l7 - 1), 0)
+									end
+							end
+					end
+			end;
+		if ((l8 := (if (if (if (if l6 then l7) then (a1 > 0)) then (l6 > l2)) then (l7 <= (l2 + l3)))) or (not inherited:Scroll(a1))) then begin
+				if (if l6 then l7) then begin
+						self:SetStartStop(l6, l7);
+						self:UseExternalWord()
+					end else begin
+						l9 := (if (a1 > 0) then 1 else -1);
+						if (l10 := NextKeyView(l1.form, l9, 1)) then begin
+								hiliteBusy := true;
+								l1.form:SetHilite(0, 0, true);
+								hiliteBusy := nil;
+								offset := (if (a1 > 0) then 0 else 99999);
+								SetKeyView(l10, offset)
+							end
+					end
+			end;
+		RefreshViews();
+		0
+	end,
+	preallocatedContext: 'cText,
+	top: 0,
+	maxChars: 8,
+	RestoreUndoState: func(a1) begin
+		hiliteBusy := true;
+		undoInProgress := true;
+		self:SaveUndoState(nil);
+		self:SetStartLen(a1.parm.offset, a1.parm.length);
+		inherited:RestoreUndoState(a1);
+		undoInProgress := nil;
+		(hiliteBusy := nil)
+	end,
+	updatePending: nil,
+	UseNewTemplate: func(a1) begin
+		local l1;
+		if (not HasPath(template, '_MultiWord)) then begin
+				self:SetNewWord((l1 := GetDynamicValue(refCon.form, 'text, 'string)), 'single);
+				self:SetStartLen(0, StrLen(l1))
+			end;
+		inherited:UseNewTemplate(a1)
+	end,
+	IsInkWord: func() begin
+		(if (wordRight > wordLeft) then IsInk(text[wordLeft]))
+	end,
+	_proto: @protoCharEdit,
+	GetViewTemplate: func() begin
+		local l1, l2, l3, l4, l5;
+		if (l1 := refCon.form) then begin
+				if ((l2 := BAnd(l1.viewFlags, 33550336)) <> 33550336) then begin
+						if (not (l3 := l1:?viewGetCorrectorTemplate())) then begin
+								l4 := GetLocale();
+								if (l2 = 262144) then begin
+										l3 := l4.phoneFilter
+									end else begin
+										if (l2 = 1048576) then begin
+												l3 := l4.timeFilter
+											end else begin
+												if (l2 = 524288) then begin
+														l3 := l4.dateFilter
+													end else begin
+														if (l2 = 8192) then begin
+																l3 := @numberFilter
+															end else begin
+																if (l2 = 16777216) then begin
+																		if (if IsArray((l5 := l1.dictionaries)) then (Length(l5) = 1)) then begin
+																				l5 := l5[0]
+																			end;
+																		if (l5 = 117) then begin
+																				l3 := @numberFilter
+																			end
+																	end
+															end
+													end
+											end
+									end
+							end;
+						if (not l3) then begin
+								l3 := @noFilter
+							end
+					end
+			end;
+		return l3
+	end,
+	setupDone: nil,
+	viewJustify: vjParentCenterH,
+	cellHeight: 55,
+	ReplaceExternal: func(a1, a2) begin
+		local l1;
+		l1 := hiliteBusy;
+		hiliteBusy := true;
+		self:ReplaceSelection(a1, refCon, a2);
+		(hiliteBusy := l1)
+	end,
+	DisplayExternal: func(a1) begin
+		(if (wordSource = 'Editing) then begin
+				self:ProcrastinatedDisplayExternal(savedUndoState);
+				(savedUndoState := nil)
+			end else begin
+				self:DoPendingUpdate();
+				self:RealDisplayExternal(a1)
+			end)
+	end,
+	undoInProgress: nil,
+	SetNewTemplate: func(a1) begin
+		local l1;
+		if (not a1) then begin
+				a1 := @noFilter
+			end;
+		if (not HasPath(a1, '_MultiWord)) then begin
+				self:SetNewWord((l1 := GetDynamicValue(refCon.form, 'text, 'string)), 'single);
+				self:SetStartLen(0, StrLen(l1))
+			end;
+		if HasPath(a1, 'templateArray) then begin
+				if (template <> a1) then begin
+						if (not HasPath(a1, '_RAMBased)) then begin
+								a1 := {_parent: self, _proto: a1, _RAMBased: true}
+							end;
+						a1:Init(self:CurrentWord())
+					end
+			end;
+		inherited:SetNewTemplate(a1);
+		template
+	end,
+	left: 0,
+	SaveUndoState: func(a1) begin
+		local l1, l2;
+		l1 := wordSource;
+		if a1 then begin
+				wordSource := a1
+			end;
+		l2 := inherited:SaveUndoState((l2 := {offset: refCon.wordOffset, length: refCon.wordLength}));
+		wordSource := l1;
+		(self.savedUndoState := l2)
+	end,
+	DeleteSpace: func(a1, a2) begin
+		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
+		l5 := StrLen((l4 := GetDynamicValue((l3 := refCon).form, 'text, 'string)));
+		l6 := l3.wordOffset;
+		l7 := l3.wordLength;
+		l8 := (l6 + l7);
+		l11 := IsInk(l4[l6]);
+		if (if (if (a2 = 0) then (l6 > 0)) then IsWhiteSpace(l4[(l6 - 1)])) then begin
+				if (l10 := ScanPrevWordEnd(l4, (l6 - 1), 0)) then begin
+						l9 := (if (IsInk(l4[(l10 - 1)]) <> l11) then l10 else ScanWordStart(l4, (l10 - 1), 0));
+						a1 := l10;
+						a2 := l6;
+						l2 := l9
+					end
+			end else begin
+				if (if (if (a1 = l7) then (l8 < l5)) then IsWhiteSpace(l4[l8])) then begin
+						if (l9 := ScanNextWord(l4, l8, l5)) then begin
+								l10 := (if (IsInk(l4[l9]) <> l11) then l9 else ScanWordEnd(l4, l9, l5));
+								a1 := l8;
+								a2 := l9;
+								l2 := l6
+							end
+					end
+			end;
+		if l9 then begin
+				self:LockScreen(true);
+				hiliteBusy := true;
+				self:SetStartStop(a1, a2);
+				self:ReplaceSelection("", l3, nil);
+				self:SetStartLen(l2, ((l10 - l9) + l7));
+				self:CheckMergeInk();
+				hiliteBusy := nil;
+				self:UseExternalWord();
+				self:LockScreen(nil);
+				l1 := true
+			end;
+		return l1
+	end,
+	savedUndoState: nil,
+	text: nil,
+	SetupAll: func(a1, a2, a3, a4) begin
+		self:SetNewWord(a1, a2);
+		self:SetNewTemplate(a3);
+		self:UseNewTemplate(a4)
+	end
+};
+
+cInk := {
+	viewClass: clView,
+	viewFlags: vVisible + vClickable + vStrokesAllowed + vGesturesAllowed + vCharsAllowed,
+	viewBounds: nil,
+	viewJustify: vjParentCenterH,
+	popChars: nil,
+	unit: nil,
+	itemBox: nil,
+	preallocatedContext: 'cInk,
+	viewSetupFormScript: func() begin
+		local l1;
+		(l1 := Clone(cText.viewBounds)).bottom := (l1.top + 45);
+		(self.viewBounds := l1)
+	end,
+	viewClickScript: func(a1) begin
+		nil
+	end,
+	GetInkStrokes: func() begin
+		local l1, l2;
+		if (l1 := GetInkAt(refCon.form, refCon.wordOffset)) then begin
+				CalcBundleBounds((l2 := ExpandInk(l1, 0)))
+			end;
+		return l2
+	end,
+	viewDrawScript: func() begin
+		local l1, l2;
+		(if (l1 := self:GetInkStrokes()) then begin
+				l2 := InsetRect(self:GlobalBox(), 10, 8);
+				(itemBox := DrawOriginal(l1, l2))
+			end)
+	end,
+	TieChangedScript: func(a1, a2) begin
+		(if (a2 = 'viewBounds) then (self.viewBounds := a1.viewBounds))
+	end,
+	viewStrokeScript: func(a1) begin
+		nil
+	end,
+	viewWordScript: func(a1) begin
+		true
+	end,
+	viewgesturescript: func(a1, a2) begin
+		local l1;
+		l1 := nil;
+		if (a2 = 49) then begin
+				l1 := self:HandleTap(a1)
+			end else begin
+				if (a2 = 13) then begin
+						l1 := self:HandleScrub(a1)
+					end else begin
+						if (a2 = 15) then begin
+								l1 := self:HandleCaret(a1)
+							end
+					end
+			end;
+		return l1
+	end,
+	HandleCaret: func(a1) begin
+		local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+		l1 := nil;
+		CalcInkBounds((l3 := GetInkAt((l2 := refCon).form, l2.wordOffset)));
+		l5 := ScaleX((l4 := GesturePoint(1, a1)).x, itemBox, l3.viewBounds);
+		if (l6 := SplitInkAt(l3, l5, 10)) then begin
+				(l7 := SPrintObject("   "))[0] := $\uF701;
+				l7[2] := $\uF701;
+				l8 := [styles: 2, l6[0].ink, 1, l6[1].ink];
+				l9 := l2.wordOffset;
+				InsertStyledText(l2.form, l9, l2.wordLength, l7, l8);
+				SetKeyView(l2.form, l9);
+				l1 := true
+			end;
+		return l1
+	end,
+	HandleScrub: func(a1) begin
+		local l1;
+		l1 := nil;
+		if cText:DeleteText(cText.wordLeft, cText.wordRight) then begin
+				if a1 then begin
+						DoScrubEffect(a1)
+					end;
+				correct:Dirty();
+				cText:Scroll(1);
+				l1 := true
+			end;
+		return l1
+	end,
+	HandleTap: func(a1) begin
+		local l1, l2, l3, l4, l5, l6;
+		l1 := StrokeBounds(a1);
+		l2 := self:GlobalBox();
+		AddArraySlot((popChars := [Array: ]), {item: "Recognize", code: 0});
+		AddArraySlot(popChars, {item: "Delete", code: 1, unit: a1});
+		if (l3 := GetDynamicValue((rc := correct.refCon).form, 'text, 'string)) then begin
+				if ((l4 := rc.wordOffset) > 0) then begin
+						if (if (if (l5 := ScanPrevWordEnd(l3, (l4 - 1), 0)) then (l5 > 0)) then IsInk(l3[(l5 - 1)])) then begin
+								l6 := (l4 - l5);
+								AddArraySlot(popChars, {item: "Join Left", code: 3, left: (cText.wordLeft - l6), right: cText.wordLeft})
+							end
+					end;
+				l4 := (rc.wordOffset + rc.wordLength);
+				if (if (l5 := ScanNextWord(l3, l4, StrLen(l3))) then IsInk(l3[l5])) then begin
+						l6 := (l5 - l4);
+						AddArraySlot(popChars, {item: "Join Right", code: 2, left: cText.wordRight, right: (cText.wordRight + l6)})
+					end
+			end;
+		DoPopup(popChars, (l1.right - l2.left), (l1.top - l2.top), self);
+		true
+	end,
+	pickActionScript: func(a1) begin
+		local l1;
+		if popChars then begin
+				if ((l1 := popChars[a1]).code = 0) then begin
+						recognizeButton:Recognize()
+					end else begin
+						if (l1.code = 1) then begin
+								self:HandleScrub(nil)
+							end else begin
+								if ((l1.code = 2) or (l1.code = 3)) then begin
+										self:HandleJoin(l1)
+									end
+							end
+					end
+			end;
+		(popChars := nil)
+	end,
+	HandleJoin: func(a1) begin
+		cText:DeleteText(a1.left, a1.right)
+	end
+};
+
+recognize := "Recognize";
+
+recognizeButton := {
+	viewBounds: {left: 0, top: -16, right: 55, bottom: -3},
+	viewFlags: vVisible + vReadOnly + vClickable,
+	viewJustify: 8389254,
+	text: recognize,
+	buttonClickScript: func() begin
+		self:Recognize()
+	end,
+	preallocatedContext: 'recognizeButton,
+	Recognize: func() begin
+		local l1, l2, l3;
+		cText:SaveUndoState('external);
+		l1 := correct.hiliteBusy;
+		correct.hiliteBusy := true;
+		correctInfo:offset((l2 := correct.refCon).form, l2.wordOffset, l2.wordLength, 0);
+		l3 := RecognizePara(l2.form, l2.wordOffset, (l2.wordOffset + l2.wordLength), 1, nil);
+		l2.wordLength := (l3 - l2.wordOffset);
+		correct.hiliteBusy := l1;
+		self:SetHilite();
+		self:UseExternalWord()
+	end,
+	_proto: @protoTextButton
+};
+
+separator := " • ";
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+SetNewTemplate_literal13 := same("cText.SetNewTemplate.literals[13]");
+
+HandleTap_literal21 := same("cInk.HandleTap.literals[21]");
+
+viewWordScript_code := same("cInk.viewWordScript.instructions");
+
+GetTitle_literal10 := same("alternates.GetTitle.literals[10]");

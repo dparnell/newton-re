@@ -1,0 +1,145 @@
+// bootScriptwannabes, and what only it reaches
+
+bootScriptwannabes := {
+	PreSetupUserConfig: compile(
+		constants: {
+			kFunction_48ba25: func() begin
+				local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12, l13, l14, l15, l16, l17;
+				l16 := {};
+				l17 := userConfiguration;
+				l1 := GetStores()[0]:GetSoup(@cardfileSoupName);
+				(l2 := Clone(@cardfileQuerySpec)).tagspec := {equal: '_ownerNames};
+				l3 := l1:Query(l2);
+				l14 := l17.currentPersona;
+				l16.currentPersona := nil;
+				l16.personae := [Array: ];
+				l15 := l17.currentEmporium;
+				l16.currentEmporium := nil;
+				l16.emporia := [Array: ];
+				l4 := l3:entry();
+				(while l4 do begin
+						if (l4.class = 'owner) then begin
+								AddArraySlot(l16.personae, MakeEntryAlias(l4))
+							end else begin
+								AddArraySlot(l16.emporia, MakeEntryAlias(l4))
+							end;
+						(l4 := l3:Next())
+					end);
+				SetUserConfigEnMasse('personae, l16);
+				if (if (Length(l16.personae) = 0) then StrFilled(Stringer([Array: l17.phone, l17.faxPhone, l17.homePhone, l17.country, l17.mailAccount, l17.name, l17.address, l17.cityZip, l17.company, l17.mailPassword]))) then begin
+						l8 := [Array: ];
+						if l17.phone then begin
+								AddArraySlot(l8, SetClass(Clone(l17.phone), 'workPhone))
+							end;
+						if l17.faxPhone then begin
+								AddArraySlot(l8, SetClass(Clone(l17.faxPhone), 'faxPhone))
+							end;
+						if l17.homePhone then begin
+								AddArraySlot(l8, SetClass(Clone(l17.homePhone), 'homePhone))
+							end;
+						l12 := (if l17.country then SetCountryClass(Clone(l17.country)));
+						l13 := (if (if StrFilled(l17.mailAccount) then (not IsInstance(l17.mailAccount, '|string.email|))) then SetClass(Clone(l17.mailAccount), '|string.email|));
+						l5 := GetRoot().cardfile.conversion:Convert({name: {first: Clone(l17.name)}, address: Clone(l17.address), city: Clone(l17.cityZip), company: Clone(l17.company), country: l12, email: l13, emailPassword: Clone(l17.mailPassword), phones: l8}, 'oneO, 'twoO, nil);
+						GetRoot().cardfile:addcard('owner, l5)
+					end;
+				if (if (Length(l16.emporia) = 0) then (l17.mailNetwork or StrFilled(Stringer([Array: l17.currentAreaCode, l17.country, l17.dialingPrefix, l17.mailPhone])))) then begin
+						l6 := GetRoot().cardfile:addcard('worksite, {place: Clone("Home"), areacode: Clone(l17.currentAreaCode), countrySymbol: l17.currentCountry, country: (if l17.currentCountry then GetCountryEntry(l17.currentCountry)[0].name), dialingPrefix: Clone(l17.dialingPrefix), printer: Clone(l17.currentPrinter), mailAccess: [Array: {mailPhone: Clone(l17.mailPhone), mailNetwork: l17.mailNetwork}]})
+					end;
+				if l6 then begin
+						(l7 := GetAppPrefs('setup, {})).homeWorksite := MakeEntryAlias(l6);
+						EntryChange(l7)
+					end;
+				if (if (if l14 then l16.personae) then (Length(l16.personae) > 0)) then begin
+						if (if (l4 := ResolveEntryAlias(l14)) then IsSubclass(l4.class, 'owner)) then begin
+								SetUserConfig('currentPersona, l14)
+							end else begin
+								SetUserConfig('currentPersona, l16.personae[0])
+							end;
+						UseCurrentPersona()
+					end;
+				(if (if (if l15 then l16.emporia) then (Length(l16.emporia) > 0)) then begin
+						if (if (l4 := ResolveEntryAlias(l15)) then IsSubclass(l4.class, 'worksite)) then begin
+								SetUserConfig('currentEmporium, l15)
+							end else begin
+								SetUserConfig('currentEmporium, l16.emporia[0])
+							end;
+						UseCurrentEmporium()
+					end)
+			end
+		},
+		func() begin
+			AddDeferredCall(kFunction_48ba25, '[Array: ])
+		end),
+	StartAutoFaxReceive: func() begin
+		local appSym;
+		appSym := '|FaxReceive:Newton|;
+		(if (if userConfiguration.(appSym) then userConfiguration.(appSym).faxAutoReceive) then AddDeferredCall(func() begin
+				GetRoot().(appSym):start()
+			end, nil))
+	end,
+	StartSniffing: func() begin
+		(if userConfiguration.zapAutoReceive then AddDeferredCall(functions.StartIRSniffing, nil))
+	end,
+	StartAutoCallReceive: func() begin
+		local appSym;
+		appSym := '|PhoneHome:Newton|;
+		(if (if (if userConfiguration.(appSym) then userConfiguration.(appSym).phoneAutoReceive) then userConfiguration.(appSym).enableAutoUI) then AddDeferredCall(func() begin
+				GetRoot().(appSym):StartAutoReceive()
+			end, nil))
+	end,
+	SetBatteryTypes: func() begin
+		local l1;
+		(if (l1 := GetUserConfig('batteryTypes)) then (foreach l2 in l1 do begin
+					SetBatteryType(l2.whichBattery, l2.batteryType)
+				end))
+	end,
+	CheckSerialNumber: func() begin
+		local msg;
+		local l1, l2;
+		l1 := call @getSerialNumber with ();
+		l2 := GetStores()[0]:GetSignature();
+		if l1 then begin
+				if ((l1 := ExtractLong(l1, 4)) <> l2) then begin
+						if (l2 = 0) then begin
+								msg := "The internal store's signature is invalid. A hard reset may correct the problem."
+							end else begin
+								msg := "The internal store's signature has been altered. A hard reset may correct the problem."
+							end
+					end
+			end else begin
+				msg := "This unit's serial number cannot be read."
+			end;
+		(if msg then AddDeferredCall(func() begin
+				GetRoot():Notify(3, "Newton", msg)
+			end, nil))
+	end,
+	ReadPreferences: compile(
+		constants: {
+			kFunction_5aced1: func() begin
+				local l1, l2, l3;
+				if (l2 := GetUserConfig('Keyboard)) then begin
+						if (l1 := LookupTitle(international.keyboards, l2)) then begin
+								international.Keyboard := l1
+							end
+					end;
+				if ((l3 := GetUserConfig('sortID)) <> GetSortID(nil)) then begin
+						SetSortID(l3)
+					end;
+				SetLocale(GetUserConfig('locale));
+				SetInkerPenSize(GetUserConfig('userPenSize));
+				LoadUserDictionary();
+				LoadExpandDictionary();
+				LoadAutoAddDictionary();
+				loadLetterWeights();
+				LoadHardwareEntry()
+			end,
+			kClosureMaker_5acf1d: func(script, parameters) func() begin
+					Apply(script, parameters)
+				end
+		},
+		call kClosureMaker_5acf1d with (kFunction_5aced1, '[Array: ]))
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+ReadPreferences_code := same("bootScriptwannabes.ReadPreferences.instructions");

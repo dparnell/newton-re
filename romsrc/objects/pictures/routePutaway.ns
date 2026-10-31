@@ -1,0 +1,6 @@
+// routePutaway, and what only it reaches
+
+routePutaway := {
+	bits: bitmap('bits, "resources/bits/463b99.png", "000000000004006a006a0093007a00a3", 1),
+	bounds: {left: 0, top: 0, right: 16, bottom: 16}
+};

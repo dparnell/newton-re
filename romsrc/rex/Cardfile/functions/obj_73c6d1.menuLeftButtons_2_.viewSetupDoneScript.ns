@@ -1,6 +1,0 @@
-@@ 0x73cd5d
-func() begin
-	inherited:?viewSetupDoneScript();
-	(newtAppBase.(keyButton) := self)
-end
-@@end

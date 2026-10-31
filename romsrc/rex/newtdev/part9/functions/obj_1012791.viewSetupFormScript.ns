@@ -1,5 +1,0 @@
-@@ 0x1013c89
-func() begin
-	(if (not device.configView) then (viewFlags := 0))
-end
-@@end

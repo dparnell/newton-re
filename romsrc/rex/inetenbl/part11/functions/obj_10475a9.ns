@@ -1,5 +1,0 @@
-@@ 0x10475a9
-func() begin
-	(fAbort := true)
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x5ad6f1
-func() begin
-	self:UpdateText()
-end
-@@end

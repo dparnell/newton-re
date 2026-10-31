@@ -1,0 +1,73 @@
+// customEdit, and what only it reaches
+
+customEdit := {
+	viewBounds: {left: 0, top: 10, right: 200, bottom: 240},
+	viewFlags: vApplication + vFloating,
+	name: custom_2,
+	symbol: 'customEdit,
+	type: 'custom,
+	stepChildren: [stepChildren:
+		{
+			text: "Custom Field Labels",
+			viewBounds: {left: 0, top: 0, right: 0, bottom: 20},
+			viewJustify: 8388658,
+			_proto: @protoStaticText
+		},
+		{
+			viewBounds: {left: 0, top: 20, right: 0, bottom: 0},
+			viewLineSpacing: 32,
+			editHeight: 50,
+			editWidth: 180,
+			lines: [|Array|:
+				{_proto: @8239, path: 'custom1},
+				{_proto: @8239, path: 'custom2},
+				{_proto: @8239, path: 'custom3},
+				{_proto: @8239, path: 'custom4},
+				{_proto: @8239, path: 'custom5},
+				{_proto: @8239, path: 'custom6},
+				{_proto: @8239, path: 'custom7},
+				{_proto: @8239, path: 'custom8},
+				{_proto: @8239, path: 'custom9},
+				{_proto: @8239, path: 'custom10}
+			],
+			numLines: 10,
+			viewJustify: vjParentFullH + vjParentFullV,
+			viewQuitScript: func() begin
+				appBase:AddUndoAction('UndoCustomChange, [Array: customInfo]);
+				appBase:SetCustomInfo(target);
+				(if lastChanged then (if (if (if target then target.(lastChanged)) then StrFilled(target.(lastChanged).label)) then AddDeferredSend(appBase, func(a1, a2) begin
+							(if self.viewCObject then self:ShowEditSlip(a1, a2, nil, true, nil))
+						end, [Array: 'custom, [pathExpr: lastChanged]])))
+			end,
+			indent: 15,
+			viewSetupFormScript: func() begin
+				if (target := customInfo) then begin
+						firstLine := nil;
+						local l1;
+						local l2;
+						local l3;
+						(foreach l1, l2 in lines do begin
+								l3 := l2.path;
+								if ((not target.(l3)) or (not StrFilled(target.(l3).label))) then begin
+										firstLine := l1;
+										break
+									end
+							end)
+					end else begin
+						firstLine := 0
+					end;
+				inherited:?viewSetupFormScript()
+			end,
+			target: nil,
+			lastChanged: nil,
+			_proto: @protoExpandoShell
+		},
+		{_proto: @protoCancelButton}
+	],
+	ReorientToScreen: @defRotateFunc,
+	viewQuitScript: func() begin
+		inherited:?viewQuitScript();
+		newtAppBase.layout:Retarget(true)
+	end,
+	_proto: @protoFloater
+};

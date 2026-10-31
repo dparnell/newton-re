@@ -1,0 +1,8 @@
+// defaultInboxPrefInfo, and what only it reaches
+
+defaultInboxPrefInfo := {
+	_proto: @protoPrefInfo,
+	logText: "File read items in",
+	fileConfig: 'inboxFiling,
+	testMethod: 'ReceiveRequest
+};

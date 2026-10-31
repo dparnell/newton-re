@@ -1,0 +1,3 @@
+// canonicalStyles, and what only it reaches
+
+canonicalStyles := {styles: nil, tabs: nil, correctInfo: nil};

@@ -1,0 +1,102 @@
+// protoMeetingSoupFinder, and what only it reaches
+
+protoMeetingSoupFinder := {
+	debug: 186293128,
+	cacheCount: nil,
+	selected: nil,
+	ShowEntry: func(a1) begin
+		if ((a1 = 'deleted) or (a1 = nil)) then begin
+				self.isReset := nil;
+				a1 := nil
+			end else begin
+				self.isReset := nil
+			end;
+		(if (a1 <> nil) then begin
+				if (owner.viewCObject = nil) then begin
+						owner:Open()
+					end;
+				(if owner.viewCObject then owner:ShowFoundItem(a1, a1.mtgStartDate, self))
+			end)
+	end,
+	ShowFoundItem: func(a1) begin
+		local l1, l2;
+		(if (l2 := (l1 := Query(a1.soup, {type: 'index, indexPath: '_uniqueID, beginKey: a1.entryID})):entry()) then begin
+				cursor:Goto(l2);
+				self:ShowEntry(l2)
+			end)
+	end,
+	delete: func() begin
+		inherited:delete();
+		masterFinder.zeroOneOrMoreResult := nil;
+		(masterFinder.cacheCount := nil)
+	end,
+	CheckState: func(a1) begin
+		local l1;
+		(if (if (l1 := Query(a1.soup, {type: 'index, indexPath: '_uniqueID, beginKey: a1.entryID}):entry()) then LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], l1.viewStationery, 0, '|=|, nil)) then self:isSelected(a1) else 'NotCheckable)
+	end,
+	SelectItem: func(a1) begin
+		local l1;
+		(if (if (l1 := Query(a1.soup, {type: 'index, indexPath: '_uniqueID, beginKey: a1.entryID}):entry()) then LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], l1.viewStationery, 0, '|=|, nil)) then inherited:SelectItem(a1))
+	end,
+	GetCurrentItem: func() begin
+		cursor:entry()
+	end,
+	ShowCurrentItem: func() begin
+		self:ShowEntry(cursor:entry())
+	end,
+	GetNextItem: func() begin
+		isReset := nil;
+		cursor:Next()
+	end,
+	GetPrevItem: func() begin
+		isReset := nil;
+		cursor:prev()
+	end,
+	FindNextAfterItem: func(a1, a2) begin
+		local l1, l2;
+		l1 := ((l1 := a2) - (l1 mod 1440));
+		if (meetingType = 'meeting) then begin
+				if (a1 = 'cribNote) then begin
+						l2 := l1
+					end else begin
+						l2 := (a2 + 1)
+					end
+			end else begin
+				l2 := (l1 + 1440)
+			end;
+		cursor:GotoKey(l2)
+	end,
+	GoToLastMeeting: func() begin
+		cursor:ResetToEnd()
+	end,
+	AddTargetItems: func(a1, a2) begin
+		if selected then begin
+				l1 := Query(cursor:soup(), '{type: index});
+				l2 := masterFinder.owner;
+				local l1;
+				local l2;
+				(foreach l3 in selected do begin
+						local l5, l6;
+						l5 := l1:GotoKey(l3._uniqueID);
+						(loop begin
+								if (l5._uniqueID <> l3._uniqueID) then begin
+										break (l5 := nil)
+									end;
+								(if (EntryStore(l5):GetSignature() <> l3._storeID) then (l5 := l1:Next()) else break)
+							end);
+						if l5 then begin
+								(l6 := Clone(l2.canonicalOverviewSelectedItem)).index := a2;
+								l6.instanceTime := l5.mtgStartDate;
+								l6.entryAlias := MakeEntryAlias(l5);
+								AddArraySlot(a1, l6);
+								a2 := (a2 + 1)
+							end
+					end)
+			end;
+		a2
+	end
+};
+
+// what the functions above hold and share with other objects (same(): romsrc/README.md)
+
+GetNextItem_code := same("protoMeetingSoupFinder.GetNextItem.instructions");

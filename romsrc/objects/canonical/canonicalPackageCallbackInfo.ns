@@ -1,0 +1,3 @@
+// canonicalPackageCallbackInfo, and what only it reaches
+
+canonicalPackageCallbackInfo := {packageName: nil, packageSize: 0, numberOfParts: 0, currentPartNumber: 0, amountRead: 0};

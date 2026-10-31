@@ -1,0 +1,3 @@
+// zapReceiveConfirm, and what only it reaches
+
+zapReceiveConfirm := [|Array|: ];

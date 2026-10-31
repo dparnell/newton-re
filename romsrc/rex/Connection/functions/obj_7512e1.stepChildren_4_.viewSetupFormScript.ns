@@ -1,5 +1,0 @@
-@@ 0x751851
-func() begin
-	(if fileInfo.kind then (text := fileInfo.kind) else (text := "Unknown"))
-end
-@@end

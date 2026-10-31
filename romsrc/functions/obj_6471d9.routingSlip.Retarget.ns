@@ -1,6 +1,0 @@
-@@ 0x531a75
-func() begin
-	fields.toRef := callPhoneLine.selected;
-	willDial:SetWillDial()
-end
-@@end

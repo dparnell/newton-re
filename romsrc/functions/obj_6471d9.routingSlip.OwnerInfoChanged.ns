@@ -1,5 +1,0 @@
-@@ 0x531a55
-func() begin
-	self:UpdatePhone()
-end
-@@end

@@ -1,0 +1,101 @@
+// recognizerUserChoices, and what only it reaches
+
+recognizerUserChoices := {
+	recognizers: {
+		text: {
+			name: 'text,
+			symbol: 'doTextRecognition,
+			default: [|Array|: 'numbersCursiveOption, 'wordsCursiveOption],
+			all: [|Array|: 'wordsCursiveOption, 'numbersCursiveOption]
+		},
+		shapes: {name: 'shapes, symbol: 'doShapeRecognition, default: [|Array|: ], all: [|Array|: ]},
+		ink: {name: 'ink, symbol: 'doInkWordRecognition, default: [|Array|: ], all: [|Array|: ]}
+	},
+	recogText: {
+		icon: @recTextBitmap,
+		item: "Text",
+		indent: 20,
+		symbol: 'recogText,
+		commands: {
+			text: {recState: true, recSettings: 'default},
+			shapes: {recState: nil, recSettings: 'default},
+			ink: {recState: true, recSettings: 'default}
+		}
+	},
+	recogNumbers: {
+		icon: {
+			bits: bitmap('bits, "resources/bits/49b3f1.png", "00000000000400da00da002000e4002e", 1),
+			bounds: {left: 0, top: 0, right: 14, bottom: 10}
+		},
+		item: numbers,
+		indent: 20,
+		symbol: 'recogNumbers,
+		commands: {
+			text: {recState: true, recSettings: 'numbersCursiveOption},
+			shapes: {recState: nil, recSettings: 'default},
+			ink: {recState: true, recSettings: 'default}
+		}
+	},
+	recogChars: {
+		icon: {
+			bits: bitmap('bits, "resources/bits/49b37d.png", "0000000000040185018500c3018f00d2", 1),
+			bounds: {left: 0, top: 0, right: 15, bottom: 10}
+		},
+		item: "Letter-by-letter",
+		indent: 20,
+		symbol: 'recogChars,
+		commands: {
+			text: {recState: true, recSettings: 'lettersCursiveOption},
+			shapes: {recState: nil, recSettings: 'default},
+			ink: {recState: true, recSettings: 'default}
+		}
+	},
+	recogInkText: {
+		icon: @recInkBitmap,
+		item: "Ink Text",
+		indent: 20,
+		symbol: 'recogInkText,
+		commands: {
+			text: {recState: nil, recSettings: 'default},
+			shapes: {recState: nil, recSettings: 'default},
+			ink: {recState: true, recSettings: 'default}
+		}
+	},
+	recogTextShapes: {
+		icon: {
+			bits: bitmap('bits, "resources/bits/49b305.png", "00000000000401c901c900c301d400d2", 1),
+			bounds: {left: 0, top: 0, right: 15, bottom: 11}
+		},
+		item: "Text & Shapes",
+		indent: 20,
+		symbol: 'recogTextShapes,
+		commands: {
+			text: {recState: true, recSettings: 'default},
+			shapes: {recState: true, recSettings: 'default},
+			ink: {recState: true, recSettings: 'default}
+		}
+	},
+	recogShapes: {
+		icon: @recShapeBitmap,
+		item: "Shapes",
+		indent: 20,
+		symbol: 'recogShapes,
+		commands: {
+			text: {recState: nil, recSettings: 'default},
+			shapes: {recState: true, recSettings: 'default},
+			ink: {recState: nil, recSettings: 'default}
+		}
+	},
+	recogSketches: {
+		icon: @recsketchBitmap,
+		item: "Sketches",
+		indent: 20,
+		symbol: 'recogSketches,
+		commands: {
+			text: {recState: nil, recSettings: 'default},
+			shapes: {recState: nil, recSettings: 'default},
+			ink: {recState: nil, recSettings: 'default}
+		}
+	},
+	recToggleSettings: {icon: @settingsShapeBitmap, item: preferences, indent: 20, symbol: 'recToggleSettings}
+};

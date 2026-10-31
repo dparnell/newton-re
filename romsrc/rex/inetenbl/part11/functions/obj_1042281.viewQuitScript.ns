@@ -1,6 +1,0 @@
-@@ 0x10423b1
-func() begin
-	RemoveSlot(self, 'viewFlags);
-	inherited:?viewQuitScript()
-end
-@@end

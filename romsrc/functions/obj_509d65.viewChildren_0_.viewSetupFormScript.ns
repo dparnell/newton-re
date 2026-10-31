@@ -1,5 +1,0 @@
-@@ 0x509cf1
-func() begin
-	(if (selectedMeeting.viewStationery = 'cribNote) then (text := "Only this event") else (text := "Only this meeting"))
-end
-@@end

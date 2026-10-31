@@ -1,0 +1,25 @@
+// objects several roots reach, none alone (naturalize.py)
+
+clear := {
+	buttonClickScript: func() begin
+		l1 := {solvedFor: solvedFor, values: [Array: ]};
+		local l1;
+		(foreach l2 in FSViews do begin
+				AddArraySlot(l1.values, l2:GetNumericValue())
+			end);
+		AddUndoAction('UndoClear, [Array: l1]);
+		self:ClearAllFields()
+	end,
+	text: "Clear",
+	viewBounds: {top: -16, left: 0, right: 60, bottom: -5},
+	viewJustify: 8388758,
+	viewSetupFormScript: func() begin
+		(viewBounds := Clone(viewBounds)).bottom := -5;
+		viewBounds.top := (viewBounds.bottom - 13);
+		viewBounds.left := 0;
+		(viewBounds.right := StdButtonWidth(text))
+	end,
+	_proto: @protoTextButton
+};
+
+export111Item := {_proto: @protoCancelButton};

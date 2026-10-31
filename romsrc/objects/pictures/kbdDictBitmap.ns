@@ -1,0 +1,7 @@
+// kbdDictBitmap, and what only it reaches
+
+kbdDictBitmap := {
+	mask: bitmap('mask, "resources/mask/3d7785.png", "000000000004024f024f010d025e0120", 1),
+	bits: bitmap('bits, "resources/bits/3d77dd.png", "000000000004024f024f010d025e0120", 1),
+	bounds: {left: 0, top: 0, right: 19, bottom: 15}
+};

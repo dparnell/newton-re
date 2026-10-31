@@ -1,6 +1,0 @@
-@@ 0x104b731
-func() begin
-	self:MCleanUp();
-	self:DoEvent('DisconnectLink, nil)
-end
-@@end

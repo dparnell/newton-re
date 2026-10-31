@@ -1,0 +1,3 @@
+// newtLabelInputLine, and what only it reaches
+
+newtLabelInputLine := {_proto: @newtProtoLine, flavor: @newtTextFilter};

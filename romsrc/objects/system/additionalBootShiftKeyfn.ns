@@ -1,0 +1,6 @@
+// additionalBootShiftKeyfn, and what only it reaches
+
+additionalBootShiftKeyfn := func() begin
+	userConfiguration.blessedapp := 'paperroll;
+	EntryChange(userConfiguration)
+end;

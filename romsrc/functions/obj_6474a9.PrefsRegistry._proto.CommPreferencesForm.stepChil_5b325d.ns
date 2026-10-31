@@ -1,6 +1,0 @@
-@@ 0x5b325d
-func() begin
-	viewValue := (not GetUserConfig('blinddialing));
-	inherited:viewSetupFormScript()
-end
-@@end

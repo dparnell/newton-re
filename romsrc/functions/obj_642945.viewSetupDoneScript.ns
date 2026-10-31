@@ -1,8 +1,0 @@
-@@ 0x470f75
-func() begin
-	SetKeyView(self, 0);
-	nbpScroller:Hide();
-	zoneScroller:Hide();
-	AddDeferredSend(self, 'deferredSetupScript, [Array: ])
-end
-@@end

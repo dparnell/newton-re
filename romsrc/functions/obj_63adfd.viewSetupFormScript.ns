@@ -1,5 +1,0 @@
-@@ 0x42be45
-func() begin
-	self:SetupIdle(self:calcTime())
-end
-@@end

@@ -1,5 +1,0 @@
-@@ 0x104d341
-func(a1) begin
-	(if (if (if (if (if (if (if (if (if (if (if (if (if IsArray(a1) then (Length(a1) = 4)) then IsInteger(a1[0])) then (a1[0] >= 0)) then (a1[0] <= 255)) then IsInteger(a1[1])) then (a1[1] >= 0)) then (a1[1] <= 255)) then IsInteger(a1[2])) then (a1[2] >= 0)) then (a1[2] <= 255)) then IsInteger(a1[3])) then (a1[3] >= 0)) then (a1[3] <= 255))
-end
-@@end

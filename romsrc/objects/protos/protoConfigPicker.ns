@@ -1,0 +1,67 @@
+// protoConfigPicker, and what only it reaches
+
+protoConfigPicker := {
+	_proto: @protoLabelPicker,
+	labelCommands: nil,
+	items: nil,
+	server: nil,
+	configService: mods,
+	configType: defHWLoc,
+	viewSetupFormScript: func() begin
+		l1 := GetUserConfig('screenOrientation);
+		local l1;
+		labelCommands := (foreach l2 in items collect (if l2.title then (if IsArray(l2.title) then l2.title[l1] else l2.title) else 'pickseparator));
+		inherited:?viewSetupFormScript()
+	end,
+	ensureServerSetup: func() begin
+		(if (server = nil) then begin
+				server := {_proto: @protoConfigServer};
+				server:Instantiate(configService, configType)
+			end)
+	end,
+	viewQuitScript: func() begin
+		l1 := GetUserConfig(configSlot);
+		self:ensureServerSetup();
+		server:setdefaultConfig(l1);
+		if server then begin
+				server:Dispose();
+				server := nil
+			end;
+		local l1;
+		(foreach l2, l3 deeply in CommConfigChangeRegistry do begin
+				if (l3 = CommConfigChangeRegistry.(l2)) then begin
+						try begin
+								call l3 with (configService, l1)
+							end onexception |evt.ex| do begin end
+					end
+			end)
+	end,
+	TextSetup: func() begin
+		(if (not vars.(configSlot)) then begin
+				self:ensureServerSetup();
+				labelCommands[self:LabelIndex(server:getdefaultConfig())]
+			end else labelCommands[self:LabelIndex(GetUserConfig(configSlot))])
+	end,
+	LabelActionScript: func(a1) begin
+		AddUndoAction('setLabelScript, [Array: GetUserConfig(configSlot)]);
+		SetUserConfig(configSlot, items[a1].id);
+		self:?PickItem(items[a1].id)
+	end,
+	LabelIndex: func(a1) begin
+		l1 := 0;
+		local l1;
+		(for l2 := 0 to (Length(items) - 1) do begin
+				if (if (if a1 then items[l2].id) then StrEqual(a1, items[l2].id)) then begin
+						l1 := l2;
+						break
+					end
+			end);
+		l1
+	end,
+	setLabelScript: func(a1) begin
+		self:LabelActionScript(self:LabelIndex(a1))
+	end,
+	debug: 5802460
+};
+
+defHWLoc := "DefHWLoc";

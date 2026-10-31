@@ -1,0 +1,9 @@
+// newtroTextTimeView, and what only it reaches
+
+newtroTextTimeView := {
+	_proto: @newtroTextView,
+	format: 170636,
+	TargetData: func() begin
+		(if (if (if target then path) then target.(path)) then TimeStr(target.(path), format) else "")
+	end
+};

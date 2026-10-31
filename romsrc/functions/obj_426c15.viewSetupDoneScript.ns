@@ -1,5 +1,0 @@
-@@ 0x426be1
-func() begin
-	(self.text := self:Parent().text)
-end
-@@end

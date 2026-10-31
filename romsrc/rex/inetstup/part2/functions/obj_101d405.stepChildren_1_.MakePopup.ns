@@ -1,5 +1,0 @@
-@@ 0x101d919
-func() begin
-	'[Array: {item: "Manual", symbol: manual}, {item: "DHCP Server", symbol: usingServer}]
-end
-@@end

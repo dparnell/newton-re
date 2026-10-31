@@ -1,0 +1,38 @@
+// protoPrintPage, and what only it reaches
+
+protoPrintPage := {
+	_proto: protoContentAreaProto,
+	viewJustify: 0,
+	viewFlags: vVisible + vReadOnly + vClipping,
+	viewFormat: vfFrameGray + vfPen(1) + vfInset(3),
+	viewLineSpacing: 0,
+	viewSetupDoneScript: func() begin
+		local l1, l2;
+		contentArea := self;
+		CuPage := self;
+		self:TurnToPage(pageNum);
+		(if showMarks then (if (l2 := (if (l1 := fields.body.printMarks) then LSearch(l1, pageNum, 0, '|=|, nil))) then begin
+					printMarks.viewChildren := l1[(l2 + 1)];
+					printMarks:Open()
+				end))
+	end,
+	contentArea: nil,
+	CuPage: nil,
+	printing: true,
+	showMarks: nil,
+	edgeWidth: 1,
+	pagesShowing: 1,
+	viewChildren: [viewChildren: printMarks],
+	printMarks: nil,
+	allocateContext: [|Array|: 'printMarks, printMarks]
+};
+
+printMarks := {
+	viewClass: clEditView,
+	viewFlags: 0,
+	viewFormat: 0,
+	viewSetupFormScript: func() begin
+		(self.viewBounds := RelBounds(0, 0, cuPageSize.width, cuPageSize.height))
+	end,
+	preallocatedContext: 'printMarks
+};

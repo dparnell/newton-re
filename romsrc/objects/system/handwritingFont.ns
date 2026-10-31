@@ -1,0 +1,18 @@
+// handwritingFont, and what only it reaches
+
+handwritingFont := {
+	name: "Casual",
+	encoding: 0,
+	macFontID: 5,
+	screenSym: 'handwritingFont,
+	psName: 'timesroman,
+	psScale: 75366,
+	badFontMap: 1,
+	plainData: sfnt('sfnt, "resources/sfnt/408ee5"),
+	boldData: nil,
+	italicData: nil,
+	boldItalicData: nil,
+	userSizes: [|Array|: 10, 12, 18],
+	usable: true,
+	tsID: 3
+};

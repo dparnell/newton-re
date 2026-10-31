@@ -1,0 +1,149 @@
+// protoPalette, and what only it reaches
+
+protoPalette := {
+	maxTiles: nil,
+	viewFormat: nil,
+	viewDrawScript: func() begin
+		local l1, l2;
+		if (not viewStyle) then begin
+				viewStyle := {font: viewFont}
+			end;
+		if pieces then begin
+				self:DrawShape(pieces, viewStyle)
+			end;
+		(if hilitedIndex then begin
+				(l1 := self:LocalBox()).(direction) := tileSize;
+				self:hiliter((l2 := self:GetHiliteShape(0, 0, l1)), hilitedIndex)
+			end)
+	end,
+	viewFlags: vVisible + vClickable,
+	numTiles: nil,
+	tileSize: nil,
+	totalItems: nil,
+	viewBounds: {left: 5, top: 273, right: 226, bottom: 315},
+	SetupPieces: func() begin
+		(l1 := self:LocalBox()).(direction) := tileSize;
+		self.pieces := Array(maxTiles, nil);
+		local l1;
+		local l2;
+		local l3;
+		l3 := (for l4 := 0 to (maxTiles - 1) do begin
+				local l7;
+				if (not (l7 := self:Abstract((l4 + firstVisibleItem), l1))) then begin
+						break l4
+					end;
+				pieces[l4] := l7;
+				l1.(direction) := ((l1.('{right: left, bottom: top}.(direction)) := l1.(direction)) + tileSize)
+			end);
+		if l3 then begin
+				SetLength(pieces, l3)
+			end;
+		(self.numTiles := Length(pieces))
+	end,
+	scrollAmount: 1,
+	viewStyle: nil,
+	pieces: nil,
+	firstVisibleItem: 1,
+	orientation: 'horizontal,
+	hilitedIndex: nil,
+	maxFirstItem: nil,
+	Update: func() begin
+		hilitedIndex := (if (if (if selectedItem then (selectedItem >= firstVisibleItem)) then (selectedItem < (firstVisibleItem + numTiles))) then (selectedItem - firstVisibleItem));
+		self:Dirty()
+	end,
+	GetHiliteShape: func(a1, a2, a3) begin
+		[Array: '{transferMode: 2, penPattern: 0, fillPattern: 5}, MakeShape(a3)]
+	end,
+	HitItem: func(a1, a2, a3) begin
+		selectedItem := a1;
+		self:SelectItem(a1);
+		true
+	end,
+	viewClickScript: func(a1) begin
+		local l1;
+		if (l1 := self:DoDrawing('TrackScrolling, [Array: a1])) then begin
+				self:HitItem(l1[0], l1[1], l1[2])
+			end;
+		true
+	end,
+	selectedItem: nil,
+	CalculateTileSizes: func() begin
+		local l1;
+		self.direction := '{horizontal: right, vertical: bottom}.(orientation);
+		l1 := self:LocalBox();
+		if (not tileSize) then begin
+				self.tileSize := l1.('{right: bottom, bottom: right}.(direction))
+			end;
+		(self.maxTiles := (l1.(direction) div tileSize))
+	end,
+	viewClass: clView,
+	TrackScrolling: func(a1) begin
+		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+		InkOff(a1);
+		BusyBoxControl(2);
+		playsound(@click);
+		l4 := self:GlobalBox();
+		(repeat l6 := GetPoint(4, a1); l7 := GetPoint(5, a1); l2 := (l6 - l4.left); l3 := (l7 - l4.top); if (direction = 'right) then begin
+					l2 := (l2 mod tileSize)
+				end else begin
+					l3 := (l3 mod tileSize)
+				end; if (not l5) then begin
+					(l8 := self:LocalBox()).(direction) := tileSize;
+					l9 := ShapeBounds((l5 := self:GetHiliteShape(l2, l3, l8)));
+					l9 := RelBounds(l4.left, l4.top, (l9.right - l9.left), (l9.bottom - l9.top))
+				end; if ((if (direction = 'right) then ((l7 < l9.top) or (l7 > l9.bottom))) or (if (direction = 'bottom) then ((l6 < l9.left) or (l6 > l9.right)))) then begin
+					l1 := nil
+				end else begin
+					l1 := ((l10 := (if (direction = 'right) then (l6 - l4.left) else (l7 - l4.top))) div tileSize);
+					if (l10 < 0) then begin
+							self:hiliter(l5, hilitedIndex);
+							self:ScrollBy(scrollAmount);
+							hilitedIndex := (l1 := nil)
+						end else begin
+							if (l1 >= numTiles) then begin
+									self:hiliter(l5, hilitedIndex);
+									if (l1 >= maxTiles) then begin
+											self:ScrollBy((-scrollAmount))
+										end;
+									hilitedIndex := (l1 := nil)
+								end
+						end
+				end; if (l1 <> hilitedIndex) then begin
+					self:hiliter(l5, hilitedIndex);
+					self:hiliter(l5, (hilitedIndex := l1))
+				end until StrokeDone(a1));
+		(if l1 then begin
+				if autoDeselect then begin
+						self:hiliter(l5, hilitedIndex);
+						hilitedIndex := nil
+					end;
+				[Array: (l1 + firstVisibleItem), l2, l3]
+			end)
+	end,
+	viewSetupChildrenScript: func() begin
+		self:CalculateTileSizes();
+		maxFirstItem := max(1, ((self:GetItemcount() - maxTiles) + 1));
+		self:SetupPieces();
+		if (scrollAmount = 'page) then begin
+				scrollAmount := numTiles
+			end;
+		(hilitedIndex := (if (if (if selectedItem then (selectedItem >= firstVisibleItem)) then (selectedItem < (firstVisibleItem + numTiles))) then (selectedItem - firstVisibleItem)))
+	end,
+	direction: nil,
+	hiliter: func(a1, a2) begin
+		(if a2 then self:DrawShape(a1, {transform: (if (direction = 'right) then [Array: (a2 * tileSize), 0] else [Array: 0, (a2 * tileSize)])}))
+	end,
+	ScrollBy: func(a1) begin
+		local l1;
+		l1 := firstVisibleItem;
+		(if ((firstVisibleItem := max(1, min((firstVisibleItem + a1), maxFirstItem))) <> l1) then begin
+				self:LockScreen(true);
+				self:SetupPieces();
+				self:Update();
+				self:?Scrolled();
+				RefreshViews();
+				self:LockScreen(nil)
+			end)
+	end,
+	autoDeselect: nil
+};
