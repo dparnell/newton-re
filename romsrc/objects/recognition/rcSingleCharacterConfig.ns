@@ -1,10 +1,12 @@
-// rcSingleCharacterConfig, and what only it reaches
+// rcSingleCharacterConfig: ROM_rcSingleCharacterConfig, for views that
+// take a single character (a crossword cell, protoCharEdit): single letters
+// from the symbols dictionary only.
 
 rcSingleCharacterConfig := {
 	_proto: @rcDefaultConfig,
 	letterSpaceCursiveOption: nil,
 	rcSingleLetters: 1,
-	inputmask: 16777216,
-	dictionaries: 40,
-	inhibitSymbolsDictionary: 1
+	inputmask: vCustomDictionaries, // only the dictionaries below
+	dictionaries: 40, // the symbols dictionary (kSymbolsDictionary in the NPR)
+	inhibitSymbolsDictionary: 1 // do not add the symbols dictionary again
 };

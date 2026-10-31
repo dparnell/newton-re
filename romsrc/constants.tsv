@@ -683,3 +683,14 @@ vfInset	<<16
 vfShadow	<<18
 vfRound	<<24
 tsSize	<<10
+# apps, recognition, views: the Newton Programmer's Reference 2.0 (Table 8-4/8-5 dictionary IDs; Notify's levels, kNotifyAlert as the ROM passes it; Gestalt's kGestalt_SystemInfo, also src/ddk/NewtonGestalt.h)
+kUserDictionary	31
+kLocalDateDictionary	110
+kLocalTimeDictionary	111
+kLocalPhoneDictionary	112
+kLocalNumberDictionary	113
+kPostalCodeDictionary	116
+kNumbersOnlyDictionary	117
+kMoneyOnlyDictionary	118
+kNotifyAlert	3
+kGestalt_SystemInfo	0x1000003

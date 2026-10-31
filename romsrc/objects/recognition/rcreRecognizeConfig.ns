@@ -1,9 +1,12 @@
-// rcreRecognizeConfig, and what only it reaches
+// rcreRecognizeConfig: ROM_rcRerecognizeConfig, for views that do their own
+// deferred recognition: builds its input mask from the user preferences and
+// the view's recToggle (BuildInputMask), recognises text at speed 2, with no
+// letter spacing (the strokes are one word).
 
 rcreRecognizeConfig := {
 	allowTextRecognition: true,
 	doTextRecognition: true,
-	speedCursiveOption: 2,
+	speedCursiveOption: 2, // how long the cursive recogniser may take (NPR: protoRecConfig)
 	letterSpaceCursiveOption: nil,
 	baseInputMask: 0,
 	BuildInputMask: true

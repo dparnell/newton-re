@@ -1,4 +1,10 @@
-// recognizerUserChoices, and what only it reaches
+// recognizerUserChoices: what the recognition toggle (recToggle) offers.
+// recognizers describes the three recognisers (the settings slot that turns
+// each on, and its option slots: the defaults and all of them); each other
+// frame is one popup item (its icon, text and symbol) with commands: for
+// each recogniser, on or off (recState) and which options (recSettings:
+// 'default, or the one option slot to set). The root holds its copy as
+// _recognizerUserChoices, so that an application can add choices.
 
 recognizerUserChoices := {
 	recognizers: {
@@ -11,6 +17,7 @@ recognizerUserChoices := {
 		shapes: {name: 'shapes, symbol: 'doShapeRecognition, default: [|Array|: ], all: [|Array|: ]},
 		ink: {name: 'ink, symbol: 'doInkWordRecognition, default: [|Array|: ], all: [|Array|: ]}
 	},
+	// the popup items
 	recogText: {
 		icon: @recTextBitmap,
 		item: "Text",
@@ -97,5 +104,6 @@ recognizerUserChoices := {
 			ink: {recState: nil, recSettings: 'default}
 		}
 	},
+	// the last item opens the handwriting recognition preferences instead
 	recToggleSettings: {icon: @settingsShapeBitmap, item: preferences, indent: 20, symbol: 'recToggleSettings}
 };

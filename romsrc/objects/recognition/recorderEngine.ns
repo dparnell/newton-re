@@ -1,4 +1,15 @@
-// recorderEngine, and what only it reaches
+// recorderEngine: the sound recording and playback engine behind the
+// built-in recorder views (protoRecorderView, the Notes and Dates voice
+// annotations). It drives a protoSoundChannel: records into a growing array
+// of input-block sound frames on the default (or fStore's) store, plays them
+// back, pauses, and trims the end of a recording. recorderchassIs is the
+// view-side subclass. A user makes one with recorderEngine:New({...}).
+//
+// fSoundState is a bit set tested by TestState: 1 idle (stopped),
+// 2 recording, 4 playing, 8 playback paused, 16 recording paused,
+// 32 stopping (set briefly while a stop completes).
+// fEngineError: 0 none, 2 recording failed or the sound buffers ran out,
+// otherwise TestStore's answer (1 store nearly full, 3 store read-only).
 
 recorderEngine := {
 	fSoundChannel: nil,
@@ -9,14 +20,20 @@ recorderEngine := {
 	fEngineError: 0,
 	fPauseResult: nil,
 	fSetLengthInProgress: nil,
+	// the frame of sound-frame slots copied into each recorded block; built by
+	// SetRecordingQuality from fQualitySettings
 	fSoundFrameSlots: nil,
 	fRecordQuality: nil,
 	fInputGain: nil,
 	fInputDevice: nil,
 	fOutputDevice: nil,
+	// seconds cut off the end of a recording when it is stopped (the pen tap
+	// that stopped it)
 	fTrimAmount: nil,
 	fDirection: 'record,
 	fStore: nil,
+	// recording formats by the symbol of the user's 'recordingQuality setting;
+	// 'defaults is merged first, then the chosen entry over it
 	fQualitySettings: {
 		defaults: {sndFrameType: 'simpleSound, samplingRate: 10800, compressionType: 1, dataType: 8},
 		GSM8K16Codec: {
@@ -50,24 +67,33 @@ recorderEngine := {
 			dataType: 16
 		}
 	},
+	// FastForward and Rewind do nothing here: recorderchassIs overrides them to
+	// move its progress slider.
 	FastForward: func() begin
 		nil
 	end,
+	// Pauses recording or playback, or resumes a paused one (the channel's
+	// pause toggles); records the new state. Returns what the channel's pause
+	// returned, which stop uses as the recorded sound when stopped while paused.
 	pause: func() begin
 		local l1;
 		fPauseResult := nil;
 		try begin
 				if (not self:TestState(1)) then begin
 						if self:TestState(2) then begin
+								// recording -> recording paused
 								l1 := 16
 							end else begin
 								if self:TestState(4) then begin
+										// playing -> playback paused
 										l1 := 8
 									end else begin
 										if self:TestState(16) then begin
+												// recording paused -> recording
 												l1 := 2
 											end else begin
 												if self:TestState(8) then begin
+														// playback paused -> playing
 														l1 := 4
 													end
 											end
@@ -83,13 +109,16 @@ recorderEngine := {
 			end;
 		return fPauseResult
 	end,
+	// Makes fSoundFrameSlots: the default sound-frame slots, overlaid with the
+	// format chosen by fRecordQuality, else the user's 'recordingQuality
+	// config, else GSM on a StrongARM machine and IMA ADPCM otherwise.
 	SetRecordingQuality: func() begin
 		fSoundFrameSlots := Clone(fQualitySettings.defaults);
 		if (not (fRecordQuality2 := fRecordQuality)) then begin
 				fRecordQuality2 := GetUserConfig('recordingQuality)
 			end;
 		if (not fRecordQuality2) then begin
-				fRecordQuality2 := (if (Gestalt(16777219).cputype = 'strongarm) then 'GSM8K16Codec else 'IMA8K16Codec)
+				fRecordQuality2 := (if (Gestalt(kGestalt_SystemInfo).cputype = 'strongarm) then 'GSM8K16Codec else 'IMA8K16Codec)
 			end;
 		local fRecordQuality2;
 		local l2;
@@ -97,6 +126,10 @@ recorderEngine := {
 					fSoundFrameSlots.(key) := value
 				end))
 	end,
+	// Starts recording, or resumes a paused recording. A fresh recording reopens
+	// the channel for recording and schedules its first input block and, when
+	// the store has room, a second one. Returns true when recording started;
+	// otherwise the engine goes back to idle.
 	DoRecord: func() begin
 		local l1;
 		fEngineError := 0;
@@ -115,6 +148,7 @@ recorderEngine := {
 						fSoundChannel.outputDevice := fOutputDevice;
 						fSoundChannel.inputGain := fInputGain;
 						fSoundChannel:Open();
+						// TestStore 0: the store has room for another block
 						if (if (self:TestStore() = 0) then self:ScheduleInputBlock()) then begin
 								fSoundChannel:start(true);
 								if (self:TestStore() = 0) then begin
@@ -132,6 +166,8 @@ recorderEngine := {
 			end;
 		l1
 	end,
+	// Whether the recording store can take another input block: 0 yes, 1 less
+	// than 2.5 blocks' room is left, 3 the store is read-only.
 	TestStore: func() begin
 		local store, l2, l3;
 		if (if (store := self:GetStore()) then store:IsReadOnly()) then begin
@@ -140,9 +176,13 @@ recorderEngine := {
 		l2 := (store:TotalSize() - store:UsedSize());
 		(if ((l3 := (fSoundChannel.inputBlockSize * 2.5)) < l2) then 0 else 1)
 	end,
+	// The completion callback of each recorded input block (from
+	// ScheduleInputBlock). A failed block (any error but a cancel) sets engine
+	// error 2; once every scheduled block has completed while still recording,
+	// recording stops (out of room); otherwise another block is scheduled.
 	RecordCompletion: func(sounds, a2) begin
-		if (if (a2 <> 0) then (a2 <> -30011)) then begin
-				fEngineError := 2;
+		if (if (a2 <> 0) then (a2 <> kSndErrCancelled)) then begin
+				fEngineError := 2; // engine error 2: a block failed
 				return nil
 			end;
 		(if self:TestState(2) then (if ((fCompletionCount := (fCompletionCount + 1)) >= Length(fSoundArray)) then begin
@@ -156,14 +196,23 @@ recorderEngine := {
 					self:SetState(1)
 				end else (if (self:TestStore() = 0) then self:ScheduleInputBlock() else (fEngineError := self:TestStore()))))
 	end,
+	// record, play: start recording or playing, or, while a stop is still
+	// setting the recording's length, remember to do so when it is done
+	// (SetLengthDone).
 	record: func() begin
 		(if (if fSetLengthInProgress then (fSetLengthInProgress <> 'doItNow)) then (fSetLengthInProgress := 'record) else self:DoRecord())
 	end,
+	// Stops at once, setting the recording's length synchronously; used by Done
+	// and at power-off.
 	StopNow: func() begin
 		fSetLengthInProgress := 'doItNow;
 		self:stop();
 		(fSetLengthInProgress := nil)
 	end,
+	// Sets the engine up (called by New): makes a recording channel, or a play
+	// channel when the machine has no input device or fDirection is 'play,
+	// then whose fSoundArray (a sound frame or an array of them) is copied into
+	// protoSoundFrame-based frames. Registers for power-off.
 	Init: func() begin
 		if (if (fDirection = 'record) then (GetUserConfig('inputDevice) = nil)) then begin
 				fDirection := 'play;
@@ -195,6 +244,9 @@ recorderEngine := {
 		self:SetState(1);
 		AddPowerOffHandler(self)
 	end,
+	// Plays every frame of fSoundArray in turn (or resumes a paused playback),
+	// each at its own volume or the user's 'soundVolumeDb. Returns true if
+	// playing started.
 	DoPlay: func() begin
 		local engine;
 		fEngineError := 0;
@@ -235,10 +287,15 @@ recorderEngine := {
 	Rewind: func() begin
 		nil
 	end,
+	// Stops recording or playback. For a recording, trims fTrimAmount seconds
+	// off the end of the last sound, sets its length (asynchronously, ending in
+	// SetLengthDone, unless StopNow asked for it now) and drops any blocks after
+	// it. Returns what the channel's stop returned.
 	stop: func() begin
 		local engine;
 		local stop, testState, testState2, sound, index, floor2, fn, l8;
 		if (not self:TestState(1)) then begin
+				// testState: recording or recording paused; testState2: paused
 				testState := self:TestState(18);
 				testState2 := self:TestState(24);
 				self:SetState(32);
@@ -276,6 +333,7 @@ recorderEngine := {
 			end;
 		return stop
 	end,
+	// The total playing time of all the recorded or loaded sounds.
 	GetPlayingTime: func() begin
 		l1 := 0;
 		local l1;
@@ -284,6 +342,7 @@ recorderEngine := {
 			end);
 		return l1
 	end,
+	// True when there are sounds and none of them is empty.
 	HasSoundFrames: func() begin
 		(if (if fSoundArray then (Length(fSoundArray) > 0)) then (not (foreach item in fSoundArray do begin
 					if (item:GetSampleCount() = 0) then begin
@@ -291,9 +350,12 @@ recorderEngine := {
 						end
 				end)))
 	end,
+	// The completion callback of each sound played by DoPlay: back to idle
+	// after the last one.
 	PlayCompletion: func(a1, a2) begin
 		(if ((fCompletionCount := (fCompletionCount + 1)) >= Length(fSoundArray)) then self:SetState(1))
 	end,
+	// After an exception from the sound channel: reopen it and go idle.
 	CleanUpAfterError: func() begin
 		try begin
 				fSoundChannel:Close()
@@ -303,9 +365,14 @@ recorderEngine := {
 			end onexception |evt.ex| do begin end;
 		self:SetState(1)
 	end,
+	// The power-off handler (AddPowerOffHandler): never refuses, and stops at
+	// once when the machine is about to go off.
 	PowerOffScript: func(a1) begin
 		(if (a1 = 'okToPowerOff) then true else (if (a1 = 'PowerOff) then self:StopNow()))
 	end,
+	// Schedules one more input block on the recording channel, on the store
+	// GetStore names, with fSoundFrameSlots' format; its completion goes to
+	// RecordCompletion. Returns the block, or nil if the channel refused it.
 	ScheduleInputBlock: func() begin
 		local engine;
 		try begin
@@ -330,6 +397,9 @@ recorderEngine := {
 	play: func() begin
 		(if (if fSetLengthInProgress then (fSetLengthInProgress <> 'doItNow)) then (fSetLengthInProgress := 'play) else self:DoPlay())
 	end,
+	// Makes a new engine: a clone of this one with the slots of a1 (a frame of
+	// options such as fDirection, fSoundArray, fStore, fCallBack) set in it, and
+	// initialised.
 	New: func(a1) begin
 		copy := Clone(self);
 		if a1 then begin
@@ -341,6 +411,8 @@ recorderEngine := {
 		copy:Init();
 		return copy
 	end,
+	// Called when an asynchronous SetRecordingLength finishes: starts the play
+	// or record that was asked for meanwhile.
 	SetLengthDone: func() begin
 		if (fSetLengthInProgress = 'play) then begin
 				self:DoPlay()
@@ -350,6 +422,8 @@ recorderEngine := {
 			end;
 		(fSetLengthInProgress := nil)
 	end,
+	// Tears the engine down: stops, closes the channel and hands the sounds to
+	// fCallBack (with their callbacks cleared). Returns true.
 	Done: func() begin
 		self:StopNow();
 		if (if fSoundChannel then fSoundChannel:IsOpen()) then begin
@@ -368,12 +442,15 @@ recorderEngine := {
 		RemovePowerOffHandler(self);
 		return true
 	end,
+	// Whether any of the state bits a1 is set (see fSoundState above).
 	TestState: func(a1) begin
 		return (BAnd(fSoundState, a1) <> 0)
 	end,
+	// The store new recordings go to: fStore, or the default store.
 	GetStore: func() begin
 		(if fStore then fStore else GetDefaultStore())
 	end,
+	// Records the new state; recorderchassIs overrides it to update its buttons.
 	SetState: func(fSoundState2) begin
 		(fSoundState := fSoundState2)
 	end

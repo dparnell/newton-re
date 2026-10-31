@@ -1,4 +1,7 @@
-// rcDefaultConfig, and what only it reaches
+// rcDefaultConfig: ROM_rcDefaultConfig, the recConfig frame other
+// configurations proto from (Newton Programmer's Reference, "Recognition
+// System Data Structures"): no dictionaries, no single letters, no base-line
+// info, an empty input mask.
 
 rcDefaultConfig := {
 	punctuationcursiveoption: nil,
