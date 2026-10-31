@@ -1,7 +1,13 @@
-// phone, and what only it reaches
+// phone: Setup's "Enter your Home Phone Numbers" page - home voice and fax numbers (an
+// area-code field and a local-number field each, export159) stored in the owner card's
+// phones as 'homePhone and 'homefaxPhone; the area code also goes to the home worksite.
+// The file holds the page and what only it reaches.
 
 phone := {
 	description: tapOnALine,
+	// TearDown: when the page is left, makes the two numbers (MakePhone, classed 'homePhone
+	// and 'homefaxPhone) and replaces the owner's phones of those classes with them, or adds
+	// them when there were none (an empty number is not added).
 	TearDown: func() begin
 		count := Length((phones := fPersona.phones));
 		l3 := nil;
@@ -61,6 +67,7 @@ phone := {
 		{_proto: @8352}
 	],
 	declareSelf: 'PageBase,
+	// viewSetupDoneScript: the caret in the voice number's area code.
 	viewSetupDoneScript: func() begin
 		SetKeyView(vVoice.vInputCityCode, 0);
 		inherited:?viewSetupDoneScript()
@@ -86,8 +93,10 @@ phone := {
 };
 
 homeVoice := {
-	entryFlags: 513,
+	entryFlags: vVisible + vClickable,
 	viewBounds: {left: 0, top: 2, right: 236, bottom: 23},
+	// viewSetupFormScript: fills the fields from the owner's 'homePhone (ParsePhone splits it
+	// into area code and local number).
 	viewSetupFormScript: func() begin
 		local phones;
 		local count;
@@ -111,11 +120,13 @@ homeVoice := {
 
 homeFax := {
 	label: "Home Fax",
+	// textChanged: nothing to do on a change.
 	textChanged: func() begin
 		nil
 	end,
-	entryFlags: 513,
+	entryFlags: vVisible + vClickable,
 	viewBounds: {left: 0, top: 2, right: 236, bottom: 23},
+	// viewSetupFormScript: fills the fields from the owner's 'homefaxPhone.
 	viewSetupFormScript: func() begin
 		local phones;
 		local count;

@@ -4,7 +4,7 @@ frame_2 := {
 	text: zone,
 	viewBounds: {left: 3, top: 10, right: -3, bottom: 36},
 	alwaysCallPickActionScript: true,
-	viewJustify: 8396848,
+	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 	MakePopup: func() begin
 		if StrFilled(target.(path)) then begin
 				BInsert(labelCommands, self:ConvertToDefaultText(target.(path)), '|str<|, nil, true)

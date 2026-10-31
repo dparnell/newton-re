@@ -1,7 +1,12 @@
-// phonework, and what only it reaches
+// phonework: Setup's "Enter your Work Phone Numbers" page - work voice and fax numbers,
+// stored in the owner card's phones as 'workPhone and 'faxPhone; the area code also goes
+// to the work worksite (whose city SetUp's viewQuitScript finds by it). The file holds
+// the page and what only it reaches.
 
 phonework := {
 	description: tapOnALine,
+	// TearDown: when the page is left, replaces the owner's 'workPhone and 'faxPhone with the
+	// two numbers, or adds them when there were none (an empty number is not added).
 	TearDown: func() begin
 		count := Length((phones := fPersona.phones));
 		l3 := nil;
@@ -63,6 +68,8 @@ phonework := {
 		{_proto: @8352}
 	],
 	declareSelf: 'PageBase,
+	// viewSetupDoneScript: marks the work-phone step done (SetUp then saves the work worksite);
+	// the caret in the voice number's area code.
 	viewSetupDoneScript: func() begin
 		fCompleted.PhoneWork := true;
 		SetKeyView(vVoice.vInputCityCode, 0);
@@ -90,8 +97,9 @@ phonework := {
 };
 
 workVoice := {
-	entryFlags: 513,
+	entryFlags: vVisible + vClickable,
 	viewBounds: {left: 0, top: 2, right: 236, bottom: 23},
+	// viewSetupFormScript: fills the fields from the owner's 'workPhone.
 	viewSetupFormScript: func() begin
 		local phones;
 		local count;
@@ -115,11 +123,13 @@ workVoice := {
 
 workFax := {
 	label: "Work Fax",
+	// textChanged: nothing to do on a change.
 	textChanged: func() begin
 		nil
 	end,
-	entryFlags: 513,
+	entryFlags: vVisible + vClickable,
 	viewBounds: {left: 0, top: 2, right: 236, bottom: 23},
+	// viewSetupFormScript: fills the fields from the owner's 'faxPhone.
 	viewSetupFormScript: func() begin
 		local phones;
 		local count;

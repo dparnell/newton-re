@@ -1,3 +1,11 @@
+// WorldData: the location data of the ROM extension's WorldData store - the cities and
+// countries the World Clock, the location pickers and Setup's country
+// page show and look up (GetCityEntry, GetCountryEntry, an area code's city), with the
+// daylight-saving rules and the states, provinces, counties, departments and prefectures
+// of the countries that have pickers for them. In an entry: gmt is the offset from GMT
+// in seconds; latitude and longitude are in units of 360/2^29 of a degree (latitude north
+// positive; longitude eastwards from Greenwich, 0 up to 360 degrees).
+//
 // The store's history, as tools/stores/newtonstore.py unpacks it: soup("X")
 // creates soup X (the first time) and makes it the one the entries after it
 // are added to, one entry to a line, in the order they were added - the

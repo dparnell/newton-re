@@ -1,4 +1,6 @@
-// frame, and what only it reaches
+// frame: the closure ProtoClone calls (protoFSM, part.ns): a copy of a frame made by
+// protoing to it, nested frames copied likewise. NTK native code (class #232); bcFunc is its
+// byte code. The file holds it and what only it reaches.
 
 frame := {
 	class: #232,

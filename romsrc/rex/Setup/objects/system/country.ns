@@ -1,17 +1,23 @@
-// country, and what only it reaches
+// country: Setup's "Specify your Country" page - a country picker (protoCountryLocPicker)
+// whose choice sets the locale and the owner's and both worksites' country. The file
+// holds the page and what only it reaches.
 
 country := {
 	description: "Tap the index tabs and arrows to find the country you are in. Then tap the country to choose it.",
 	titleTExt: "Specify \u000dyour Country",
+	// TearDown: when the page is left, saves the owner card if it is already a soup entry
+	// (the change is broadcast as from '|Setup:Newton|).
 	TearDown: func() begin
 		(if IsSoupEntry(fPersona) then EntryChangeXmit(fPersona, '|Setup:Newton|))
 	end,
 	stepChildren: [stepChildren: nameItem, countryItem],
 	declareSelf: 'pickBase,
+	// viewSetupDoneScript: refreshes the page and takes the keyboard focus.
 	viewSetupDoneScript: func() begin
 		pickBase:Refresh();
 		SetKeyView(self, 0)
 	end,
+	// Refresh: nothing to update on this page.
 	Refresh: func() begin
 		nil
 	end,
@@ -37,6 +43,9 @@ countryItem := {
 	viewFlags: vVisible + vClipping + vClickable,
 	viewBounds: {left: 0, top: 105, right: 160, bottom: 283},
 	viewJustify: vjParentCenterH,
+	// PickWorld(place): the picker's choice (a country entry of the location soup): remembers
+	// its symbol (mapCountry, used to find cities by area code), stores the country in the
+	// owner and worksite cards and makes it the locale.
 	PickWorld: func(place) begin
 		mapCountry := place.symbol;
 		fPersona.country := place.name;
@@ -49,6 +58,8 @@ countryItem := {
 	end,
 	autoClose: nil,
 	shortCircuit: true,
+	// viewSetupFormScript: starts the picker at the owner's country, else at the current
+	// locale's country (user configuration 'countrySlot).
 	viewSetupFormScript: func() begin
 		local countrySlot;
 		if StrFilled(fPersona.country) then begin

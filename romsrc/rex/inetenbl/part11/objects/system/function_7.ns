@@ -1,4 +1,5 @@
-// function_7, and what only it reaches
+// function_7: the link manager's Abort action while connecting: tells the grabbing clients
+// the request was cancelled and disconnects. The file holds it and what only it reaches.
 
 function_7 := func() begin
 	self:MDoCallbacks(fLinkClients_Grab, self:MBuildStatusFrameFromError(kCommErrRequestCanceled), 'Update);

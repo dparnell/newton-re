@@ -1,4 +1,5 @@
-// function_6, and what only it reaches
+// function_6: the link manager's RemoveLinkClient action while connecting: kept until
+// connected. The file holds it and what only it reaches.
 
 function_6 := func(a1) begin
 	AddArraySlot(fLinkClients_ReleasePending, a1)

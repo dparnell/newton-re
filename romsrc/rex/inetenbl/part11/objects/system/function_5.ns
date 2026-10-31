@@ -1,4 +1,6 @@
-// function_5, and what only it reaches
+// function_5: the link manager's AddLinkClient action while connecting (shared by several
+// states): counted in; -60506 for another link, -60501 without one. The file holds it and
+// what only it reaches.
 
 function_5 := func(a1) begin
 	(if a1.fLinkID then (if (a1.fLinkID = fLinkEntry.linkID) then begin

@@ -1,4 +1,7 @@
-// function_3, and what only it reaches
+// function_3: the link manager's RemoveLinkClient action while going down (shared by
+// several states): counted and kept to be told when the link is down; -60506 (the maximum
+// number of links) for another link, -60501 (no link setup) without one. The file holds
+// it and what only it reaches.
 
 function_3 := func(a1) begin
 	(if a1.fLinkID then (if (a1.fLinkID = fLinkEntry.linkID) then begin

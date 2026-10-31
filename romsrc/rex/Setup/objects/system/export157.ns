@@ -1,13 +1,17 @@
-// export157, and what only it reaches
+// export157: a button of the "Congratulations" page that goes back to one step (the page
+// whose debug name is gotoName). The file holds it and what only it reaches.
 
 export157 := {
 	viewBounds: {left: 0, top: 0, right: 195, bottom: 30},
 	buttonClickScript: compile(
 		constants: {
+			// kFunction_7b3d21(name, page): the ArrayPos test - is page's debug name this name?
 			kFunction_7b3d21: func(a1, a2) begin
 				(if a2.debug then StrEqual(a1, a2.debug))
 			end
 		},
+		// buttonClickScript: finds the page named gotoName among the pages and shows it (the
+		// review is then no longer done, so Continue walks on from there).
 		func() begin
 			local pos;
 			self:hilite(true);
@@ -18,7 +22,7 @@ export157 := {
 				end)
 		end),
 	viewFormat: vfFillWhite + vfFrameBlack + vfRound(4),
-	viewJustify: 8396948,
+	viewJustify: vjCenterV + vjParentCenterH + vjParentBottomV + vjSiblingBottomV + oneLineOnly,
 	gotoName: nil,
 	_proto: @protoPictureButton
 };

@@ -1,10 +1,14 @@
-// export149, and what only it reaches
+// export149: Setup's last page, "Congratulations" - a list of the steps (date and time,
+// name, phone numbers, address, handwriting), each tappable to go back to it, and the Done
+// and Tour buttons. The file holds the page and what only it reaches.
 
 export149 := {
 	viewFlags: 0,
 	viewFormat: nil,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
 	stepChildren: [stepChildren: export149Item],
+	// viewSetupDoneScript: the first time the page is reached, records that Setup was gone
+	// through completely (fCompleted.fully makes NextPage jump here from then on).
 	viewSetupDoneScript: func() begin
 		if (not HasPath(fCompleted, 'congrats)) then begin
 				fCompleted.congrats := true;
@@ -44,6 +48,8 @@ export149Item := {
 					viewFont: @fontSystem12Bold,
 					viewBounds: {left: 0, top: 23, right: 240, bottom: 58},
 					text: "Congratulations",
+					// viewSetupFormScript: appends the owner's first name to "Congratulations", or a line
+					// break instead when the name is longer than 9 characters.
 					viewSetupFormScript: func() begin
 						local l1;
 						l1 := $\n;
@@ -67,7 +73,7 @@ export149Item := {
 						{
 							text: "Date and Time",
 							viewBounds: {left: 55, top: 0, right: 230, bottom: 0},
-							viewJustify: 8388804,
+							viewJustify: vjCenterV + vjParentFullV + oneLineOnly,
 							viewFont: @fontSystem10Bold,
 							_proto: @protoStaticText
 						}
@@ -81,7 +87,7 @@ export149Item := {
 						{
 							text: "Your Name",
 							viewBounds: {left: 55, top: 0, right: 230, bottom: 0},
-							viewJustify: 8388804,
+							viewJustify: vjCenterV + vjParentFullV + oneLineOnly,
 							viewFont: @fontSystem10Bold,
 							_proto: @protoStaticText
 						}
@@ -95,7 +101,7 @@ export149Item := {
 						{
 							text: "Your Phone Numbers",
 							viewBounds: {left: 55, top: 0, right: 230, bottom: 0},
-							viewJustify: 8388804,
+							viewJustify: vjCenterV + vjParentFullV + oneLineOnly,
 							viewFont: @fontSystem10Bold,
 							_proto: @protoStaticText
 						}
@@ -109,7 +115,7 @@ export149Item := {
 						{
 							text: "Your Address",
 							viewBounds: {left: 55, top: 0, right: 230, bottom: 0},
-							viewJustify: 8388804,
+							viewJustify: vjCenterV + vjParentFullV + oneLineOnly,
 							viewFont: @fontSystem10Bold,
 							_proto: @protoStaticText
 						}
@@ -123,7 +129,7 @@ export149Item := {
 						{
 							text: "Your Handwriting",
 							viewBounds: {left: 55, top: 0, right: 230, bottom: 0},
-							viewJustify: 8388804,
+							viewJustify: vjCenterV + vjParentFullV + oneLineOnly,
 							viewFont: @fontSystem10Bold,
 							_proto: @protoStaticText
 						}
@@ -158,23 +164,26 @@ export149Item := {
 };
 
 done := {
+	// buttonClickScript: Done - closes Setup.
 	buttonClickScript: func() begin
 		base:SetupClose();
 		true
 	end,
 	viewBounds: {top: -22, left: 0, right: -2, bottom: -6},
 	viewFont: @fontSystem9Bold,
+	// viewSetupFormScript: sizes the button to its text, from its right edge.
 	viewSetupFormScript: func() begin
 		(viewBounds := Clone(viewBounds)).left := ((viewBounds.right - StrFontWidth(text, viewFont)) - 6);
 		(viewBounds.top := (viewBounds.bottom - fontHeight(viewFont)))
 	end,
 	text: "Done",
-	viewJustify: 8388774,
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV + oneLineOnly,
 	_proto: @protoTextButton,
 	preAllocatedContext: '_defaultButton
 };
 
 tour := {
+	// buttonClickScript: Tour - closes Setup and opens the Newton Tour application.
 	buttonClickScript: func() begin
 		base:SetupClose();
 		GetRoot().|NewtonTour:Newton|:Open();
@@ -182,13 +191,15 @@ tour := {
 	end,
 	viewBounds: {top: -22, left: 0, right: -8, bottom: -6},
 	viewFont: @fontSystem9Bold,
+	// viewSetupFormScript: sizes the button to its text, from its right edge.
 	viewSetupFormScript: func() begin
 		(viewBounds := Clone(viewBounds)).left := ((viewBounds.right - StrFontWidth(text, viewFont)) - 6);
 		(viewBounds.top := (viewBounds.bottom - fontHeight(viewFont)))
 	end,
 	text: "Tour",
-	viewJustify: 8390790,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 	viewFlags: vVisible + vReadOnly + vClickable,
+	// viewSetupDoneScript: hides the Tour button unless the NewtonTour package is installed.
 	viewSetupDoneScript: func() begin
 		l1 := nil;
 		local l1;

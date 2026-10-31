@@ -1,4 +1,6 @@
-// function_2, and what only it reaches
+// function_2: the link manager's AddLinkClient action while going down (shared by several
+// states): the client is kept to be served after the clean-up. The file holds it and what
+// only it reaches.
 
 function_2 := func(a1) begin
 	AddArraySlot(fLinkClients_GrabPending, a1)

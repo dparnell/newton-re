@@ -1,4 +1,5 @@
-// handwriting, and what only it reaches
+// handwriting: Setup's "Describe your Handwriting" page - the system's recognition
+// settings cluster (protoRecognitionCluster). The file holds the page and what only it reaches.
 
 handwriting := {
 	titleTExt: "Describe your \u000dHandwriting",
@@ -11,6 +12,7 @@ handwriting := {
 			viewFlags: vVisible + vReadOnly,
 			viewBounds: {left: 0, top: 15, right: 200, bottom: 140},
 			viewJustify: vjParentCenterH + vjSiblingBottomV,
+			// viewSetupFormScript: no label over the cluster.
 			viewSetupFormScript: func() begin
 				(self.label.text := "")
 			end,

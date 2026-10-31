@@ -5,7 +5,7 @@ frame_2 := {
 	text: card,
 	viewBounds: {left: 4, top: 10, right: -4, bottom: 26},
 	alwaysCallPickActionScript: true,
-	viewJustify: 8396848,
+	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 	BuildLabelCommands: func() begin
 		(if GlobalFnExists('GetDeviceList) then GetDeviceList('ethernet) else [Array: ])
 	end,

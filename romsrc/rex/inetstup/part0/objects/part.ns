@@ -973,7 +973,7 @@ part := array(nil, {
 				kFunction_1012125: func() begin
 					inherited:?viewQuitScript()
 				end,
-				kLiteral_1011549: {viewBounds: '{left: 0, top: -328, right: 320, bottom: -8}, stepChildren: [stepChildren: '{title: "New Internet Setup", _proto: @protoTitle}, '{text: "Select a connection method for this new Internet setup.", viewBounds: {left: 5, top: 10, right: -5, bottom: 46}, viewFont: {family: espy, face: 1, size: 10}, viewJustify: vjParentFullH + vjSiblingBottomV, _proto: @protoStaticText}, {text: "Connect using", viewBounds: '{left: 5, top: 5, right: -5, bottom: 21}, viewJustify: 8396848, viewSetupFormScript: kFunction_1011921, textSetup: kFunction_101198d, labelActionScript: kFunction_1011a11, Popit: kFunction_1011a7d, _proto: @protoLabelPicker, preAllocatedContext: 'picker}, '{text: "", viewBounds: {left: 5, top: 10, right: -5, bottom: 74}, viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV, viewFont: @fontSystem10, viewFlags: vVisible, viewFormat: vfFrameBlack + vfPen(1) + vfInset(3), _proto: @protoStaticText, preAllocatedContext: help}, '{text: "Tap ? if you need help.", viewBounds: {left: 5, top: 20, right: -5, bottom: 36}, viewFont: {family: espy, face: 1, size: 10}, viewJustify: 8396976, _proto: @protoStaticText}, {buttonClickScript: kFunction_1011c05, _proto: @protoCancelButton}, {buttonClickScript: kFunction_1011ca5, text: "Continue", viewBounds: '{left: -59, top: 0, right: -7, bottom: 0}, viewJustify: 8402950, viewSetupFormScript: kFunction_1011dd5, _proto: @protoTextButton, preAllocatedContext: '_defaultButton}, {_proto: {viewFlags: vVisible + vReadOnly + vClickable, viewJustify: vjCenterH + vjCenterV + vjParentBottomV, viewBounds: '{left: 5, top: -18, right: 18, bottom: -5}, buttonClickScript: kFunction_100faad, icon: {bounds: '{left: 0, top: 0, right: 11, bottom: 11}, bits: call kBinaryFromHex with ("000000000004000000000000000b000b000000001f0000003f8000003180000003800000070000000e0000000e000000000000000e0000000e000000", 'bits), colorData: {cbits: call kBinaryFromHex with ("000000000004000000000000000b000b000000001f0000003f8000003180000003800000070000000e0000000e000000000000000e0000000e000000", 'bits), bitDepth: 1}}, _proto: @protoPictureButton}}], viewJustify: vjParentCenterH + vjParentBottomV, appBase: nil, newDef: nil, BuildLabelCommands: kFunction_1011e39, FindItem: kFunction_1011fc5, AdjustHelpText: kFunction_1012031, declareSelf: 'base, viewSetupDoneScript: kFunction_101207d, viewSetupFormScript: kFunction_10120c1, helpTopic: "determine", viewQuitScript: kFunction_1012125, _proto: @protoFloater, picker: nil, stepAllocateContext: [Array: 'picker, {text: "Connect using", viewBounds: '{left: 5, top: 5, right: -5, bottom: 21}, viewJustify: 8396848, viewSetupFormScript: kFunction_1011921, textSetup: kFunction_101198d, labelActionScript: kFunction_1011a11, Popit: kFunction_1011a7d, _proto: @protoLabelPicker, preAllocatedContext: 'picker}, 'help, '{text: "", viewBounds: {left: 5, top: 10, right: -5, bottom: 74}, viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV, viewFont: @fontSystem10, viewFlags: vVisible, viewFormat: vfFrameBlack + vfPen(1) + vfInset(3), _proto: @protoStaticText, preAllocatedContext: help}, '_defaultButton, {buttonClickScript: kFunction_1011ca5, text: "Continue", viewBounds: '{left: -59, top: 0, right: -7, bottom: 0}, viewJustify: 8402950, viewSetupFormScript: kFunction_1011dd5, _proto: @protoTextButton, preAllocatedContext: '_defaultButton}], help: nil, _defaultButton: nil}
+				kLiteral_1011549: {viewBounds: '{left: 0, top: -328, right: 320, bottom: -8}, stepChildren: [stepChildren: '{title: "New Internet Setup", _proto: @protoTitle}, '{text: "Select a connection method for this new Internet setup.", viewBounds: {left: 5, top: 10, right: -5, bottom: 46}, viewFont: {family: espy, face: 1, size: 10}, viewJustify: vjParentFullH + vjSiblingBottomV, _proto: @protoStaticText}, {text: "Connect using", viewBounds: '{left: 5, top: 5, right: -5, bottom: 21}, viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly, viewSetupFormScript: kFunction_1011921, textSetup: kFunction_101198d, labelActionScript: kFunction_1011a11, Popit: kFunction_1011a7d, _proto: @protoLabelPicker, preAllocatedContext: 'picker}, '{text: "", viewBounds: {left: 5, top: 10, right: -5, bottom: 74}, viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV, viewFont: @fontSystem10, viewFlags: vVisible, viewFormat: vfFrameBlack + vfPen(1) + vfInset(3), _proto: @protoStaticText, preAllocatedContext: help}, '{text: "Tap ? if you need help.", viewBounds: {left: 5, top: 20, right: -5, bottom: 36}, viewFont: {family: espy, face: 1, size: 10}, viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV + oneLineOnly, _proto: @protoStaticText}, {buttonClickScript: kFunction_1011c05, _proto: @protoCancelButton}, {buttonClickScript: kFunction_1011ca5, text: "Continue", viewBounds: '{left: -59, top: 0, right: -7, bottom: 0}, viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV + oneLineOnly, viewSetupFormScript: kFunction_1011dd5, _proto: @protoTextButton, preAllocatedContext: '_defaultButton}, {_proto: {viewFlags: vVisible + vReadOnly + vClickable, viewJustify: vjCenterH + vjCenterV + vjParentBottomV, viewBounds: '{left: 5, top: -18, right: 18, bottom: -5}, buttonClickScript: kFunction_100faad, icon: {bounds: '{left: 0, top: 0, right: 11, bottom: 11}, bits: call kBinaryFromHex with ("000000000004000000000000000b000b000000001f0000003f8000003180000003800000070000000e0000000e000000000000000e0000000e000000", 'bits), colorData: {cbits: call kBinaryFromHex with ("000000000004000000000000000b000b000000001f0000003f8000003180000003800000070000000e0000000e000000000000000e0000000e000000", 'bits), bitDepth: 1}}, _proto: @protoPictureButton}}], viewJustify: vjParentCenterH + vjParentBottomV, appBase: nil, newDef: nil, BuildLabelCommands: kFunction_1011e39, FindItem: kFunction_1011fc5, AdjustHelpText: kFunction_1012031, declareSelf: 'base, viewSetupDoneScript: kFunction_101207d, viewSetupFormScript: kFunction_10120c1, helpTopic: "determine", viewQuitScript: kFunction_1012125, _proto: @protoFloater, picker: nil, stepAllocateContext: [Array: 'picker, {text: "Connect using", viewBounds: '{left: 5, top: 5, right: -5, bottom: 21}, viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly, viewSetupFormScript: kFunction_1011921, textSetup: kFunction_101198d, labelActionScript: kFunction_1011a11, Popit: kFunction_1011a7d, _proto: @protoLabelPicker, preAllocatedContext: 'picker}, 'help, '{text: "", viewBounds: {left: 5, top: 10, right: -5, bottom: 74}, viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV, viewFont: @fontSystem10, viewFlags: vVisible, viewFormat: vfFrameBlack + vfPen(1) + vfInset(3), _proto: @protoStaticText, preAllocatedContext: help}, '_defaultButton, {buttonClickScript: kFunction_1011ca5, text: "Continue", viewBounds: '{left: -59, top: 0, right: -7, bottom: 0}, viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV + oneLineOnly, viewSetupFormScript: kFunction_1011dd5, _proto: @protoTextButton, preAllocatedContext: '_defaultButton}], help: nil, _defaultButton: nil}
 			},
 			func() begin
 				local context;
@@ -1347,21 +1347,21 @@ part := array(nil, {
 				{
 					text: "Newton Internet Setup",
 					viewBounds: {left: 8, top: 5, right: -8, bottom: 17},
-					viewJustify: 8396848,
+					viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 					viewFont: {family: 'espy, face: 1, size: 10},
 					_proto: @protoStaticText
 				},
 				{
 					text: "Version 2.0    ",
 					viewBounds: {left: 8, top: 2, right: -8, bottom: 14},
-					viewJustify: 8396848,
+					viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 					viewFont: {family: 'espy, face: 0, size: 10},
 					_proto: @protoStaticText
 				},
 				{
 					text: "Newton Internet Enabler",
 					viewBounds: {left: 8, top: 10, right: -8, bottom: 22},
-					viewJustify: 8396848,
+					viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 					viewFont: {family: 'espy, face: 1, size: 10},
 					viewSetupFormScript: func() begin
 						if inetMgr then begin
@@ -1374,7 +1374,7 @@ part := array(nil, {
 				{
 					text: "Is not installed.",
 					viewBounds: {left: 8, top: 2, right: -8, bottom: 14},
-					viewJustify: 8396848,
+					viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 					viewFont: {family: 'espy, face: 0, size: 10},
 					viewSetupFormScript: func() begin
 						if inetMgr then begin
@@ -1391,7 +1391,7 @@ part := array(nil, {
 				{
 					text: "Installed Components",
 					viewBounds: {left: 8, top: 15, right: -8, bottom: 27},
-					viewJustify: 8396848,
+					viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 					viewFont: {family: 'espy, face: 0, size: 10},
 					_proto: @protoStaticText
 				},
@@ -1423,7 +1423,7 @@ part := array(nil, {
 				{
 					text: "\u000d©1997 Apple Computer, Inc.",
 					viewBounds: {left: 8, top: -28, right: -8, bottom: -16},
-					viewJustify: 8388786,
+					viewJustify: vjCenterH + vjParentFullH + vjParentBottomV + oneLineOnly,
 					_proto: @protoStaticText
 				},
 				{
@@ -1447,7 +1447,7 @@ part := array(nil, {
 						inherited:?viewSetupFormScript()
 					end,
 					viewFont: {family: 'espy, face: 0, size: 10},
-					viewJustify: 8405042,
+					viewJustify: vjCenterH + vjParentFullH + vjSiblingTopV + oneLineOnly,
 					_proto: @protoStaticText
 				}
 			],
@@ -2239,7 +2239,7 @@ done := {
 	end,
 	text: "Done",
 	viewBounds: {left: -37, top: -18, right: -5, bottom: -5},
-	viewJustify: 8388774,
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV + oneLineOnly,
 	_proto: @protoTextButton,
 	preAllocatedContext: 'doneBtn
 };
@@ -2273,7 +2273,7 @@ partItem_3 := {
 		end),
 	text: continue,
 	viewBounds: {left: -59, top: -18, right: -7, bottom: -5},
-	viewJustify: 8390790,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 	_proto: @protoTextButton,
 	preAllocatedContext: 'ContinueBtn
 };
@@ -2290,7 +2290,7 @@ goBack := {
 	end,
 	text: "Go Back",
 	viewBounds: {left: -53, top: -18, right: -7, bottom: -5},
-	viewJustify: 8390790,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 	_proto: @protoTextButton,
 	preAllocatedContext: 'goBackBtn
 };
@@ -2352,7 +2352,7 @@ delete_2 := {
 	end,
 	text: "Delete",
 	viewBounds: {left: -66, top: -18, right: -25, bottom: -5},
-	viewJustify: 8388774,
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV + oneLineOnly,
 	_proto: @protoTextButton,
 	preAllocatedContext: 'deleteButton
 };
@@ -2637,7 +2637,7 @@ partItem_5 := {
 					kFunction_1013331: func(a1) begin
 						DrawXBitmap(a1, CardSlotIcons[Random(0, (Length(CardSlotIcons) - 1))], Random(0, 3), 0)
 					end,
-					kLiteral_1012939: {viewBounds: '{left: 0, top: 50, right: 200, bottom: 220}, stepChildren: [stepChildren: '{_proto: @protoCancelButton}, {viewBounds: '{left: 5, top: 6, right: 41, bottom: 42}, viewFlags: vVisible, viewFormat: 0, viewDrawScript: kFunction_1012a75, viewSetupDoneScript: kFunction_1012ae1, viewIdleScript: kFunction_1012b41, viewClass: clView}, {viewJustify: 8401144, viewFont: '{family: tsHWFont, face: 0, size: 12}, viewBounds: '{left: 41, top: 0, right: -5, bottom: 0}, credits: '[Array: "The NIE 2.0 Team", "We do support cards!"], index: nil, viewIdleScript: kFunction_1012ccd, viewSetupDoneScript: kFunction_1012d39, viewSetupFormScript: kFunction_1012d81, _proto: @protoStaticText}, {viewBounds: '{left: 15, top: 10, right: 195, bottom: 106}, viewJustify: vjSiblingBottomV, viewSetupFormScript: kFunction_1012e4d, credits: '[Array: "The Engineering Team:\n\t\nRob Sirota, Jim Schram, Tim Wiegman, Avi Weiss, Jason Rukman, Lieh-Wuu Wang, Charles Leu, Dan Chernikoff, Guy McIlroy", "Support:\n\t\nBruce Thompson, Ryan Robertson, Bob Ebert, Greg Christie, Joe Hayashi, Art Cabral, David Fedor, Eric Welch, and all of Partner Engineering", "SQA: \n\t\nYun Shia Lauw, Jeff Brickman, Ping Li, Larry Bolton, Alex Hamdy, Sylvia Cruz-Loebach, Ping Zhou, Flash Sheridan", "Documentation:\n\t\nGary Hillerson, Laura Elliott, Gerry Kane"], index: nil, viewSetupDoneScript: kFunction_1013285, viewIdleScript: kFunction_10132c9, _proto: @protoStaticText}], declareSelf: 'base, DrawMovingIcon: kFunction_1013331, _proto: @protoFloater}
+					kLiteral_1012939: {viewBounds: '{left: 0, top: 50, right: 200, bottom: 220}, stepChildren: [stepChildren: '{_proto: @protoCancelButton}, {viewBounds: '{left: 5, top: 6, right: 41, bottom: 42}, viewFlags: vVisible, viewFormat: 0, viewDrawScript: kFunction_1012a75, viewSetupDoneScript: kFunction_1012ae1, viewIdleScript: kFunction_1012b41, viewClass: clView}, {viewJustify: vjBottomV + vjParentFullH + vjParentFullV + vjSiblingFullV + oneLineOnly, viewFont: '{family: tsHWFont, face: 0, size: 12}, viewBounds: '{left: 41, top: 0, right: -5, bottom: 0}, credits: '[Array: "The NIE 2.0 Team", "We do support cards!"], index: nil, viewIdleScript: kFunction_1012ccd, viewSetupDoneScript: kFunction_1012d39, viewSetupFormScript: kFunction_1012d81, _proto: @protoStaticText}, {viewBounds: '{left: 15, top: 10, right: 195, bottom: 106}, viewJustify: vjSiblingBottomV, viewSetupFormScript: kFunction_1012e4d, credits: '[Array: "The Engineering Team:\n\t\nRob Sirota, Jim Schram, Tim Wiegman, Avi Weiss, Jason Rukman, Lieh-Wuu Wang, Charles Leu, Dan Chernikoff, Guy McIlroy", "Support:\n\t\nBruce Thompson, Ryan Robertson, Bob Ebert, Greg Christie, Joe Hayashi, Art Cabral, David Fedor, Eric Welch, and all of Partner Engineering", "SQA: \n\t\nYun Shia Lauw, Jeff Brickman, Ping Li, Larry Bolton, Alex Hamdy, Sylvia Cruz-Loebach, Ping Zhou, Flash Sheridan", "Documentation:\n\t\nGary Hillerson, Laura Elliott, Gerry Kane"], index: nil, viewSetupDoneScript: kFunction_1013285, viewIdleScript: kFunction_10132c9, _proto: @protoStaticText}], declareSelf: 'base, DrawMovingIcon: kFunction_1013331, _proto: @protoFloater}
 				},
 				func() begin
 					(if (if newtAppBase.target then StrEqual(newtAppBase.target.setupName, "WDSC")) then (if (if boutView then boutView.viewCObject) then begin

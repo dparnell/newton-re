@@ -1,4 +1,7 @@
-// name, and what only it reaches
+// name: Setup's "Enter your Name" page - first name, last name and company lines with
+// a keyboard below; it fills the owner card's name and company (fPersona) and adds the
+// names to the review dictionary so they are recognised. The file holds the page and
+// what only it reaches.
 
 name := {
 	stepChildren: [stepChildren:
@@ -17,6 +20,8 @@ name := {
 		company,
 		nameItem_6
 	],
+	// viewSetupDoneScript: marks the name step done and fills the lines from the owner card,
+	// the caret in the first-name line.
 	viewSetupDoneScript: func() begin
 		local l1;
 		self:LockScreen(true);
@@ -27,6 +32,8 @@ name := {
 		SetKeyView(vFirstName.vInputLine, 0);
 		self:LockScreen(nil)
 	end,
+	// TearDown: (sent by the page base when the page is left) copies the three lines back into
+	// the owner card and teaches the recognizer the first and last names.
 	TearDown: func() begin
 		local l1;
 		fReviewDone := true;
@@ -34,12 +41,15 @@ name := {
 		l1 := (fPersona.name.last := vLastName:GetText());
 		fPersona.company := vCompanyName:GetText();
 		if (fFirstName <> nil) then begin
+				// the second argument (48 here, 7 below) is not used by AddWordsToDict
 				self:AddWordsToDict(fFirstName, 48)
 			end;
 		(if (l1 <> nil) then self:AddWordsToDict(l1, 7))
 	end,
 	titleTExt: "Enter \u000dyour Name",
 	description: "Tap on a line, then use\u000dyour Newton pen to type \u000dyour name on the \u000dkeyboard.  To go to\u000dthe next line, just tap it.\u000d\u000d\u000d",
+	// AddWordsToDict(text, unused): adds each word of text longer than one letter, punctuation
+	// removed, to the review dictionary (ReviewDict) when LookupWord finds it.
 	AddWordsToDict: func(fFirstName, a2) begin
 		local rejectAll;
 		(foreach item in (rejectAll := SplitString(StringFilter(fFirstName, ",./:;!@#$%^&*()_+=", 'rejectAll))) do begin
@@ -55,6 +65,7 @@ name := {
 	debug: "name",
 	_proto: @8353,
 	vFirstName: nil,
+	// the page's child views to declare by name (symbol, then template)
 	stepAllocateContext: [|Array|:
 		'_defaultButton,
 		nameItem_2,
@@ -82,8 +93,9 @@ name := {
 first := {
 	viewBounds: {top: -5, left: 0, right: 236, bottom: 16},
 	label: "First",
+	// viewSetupFormScript: the input line starts each word with a capital (vCapsRequired).
 	viewSetupFormScript: func() begin
-		(self.vInputLine.viewFlags := (self.vInputLine.viewFlags + 8388608))
+		(self.vInputLine.viewFlags := (self.vInputLine.viewFlags + vCapsRequired))
 	end,
 	_proto: @8350,
 	preAllocatedContext: 'vFirstName
@@ -92,8 +104,9 @@ first := {
 last := {
 	viewBounds: {left: 0, top: 2, right: 236, bottom: 23},
 	label: "Last",
+	// viewSetupFormScript: capitalised input, as for the first name.
 	viewSetupFormScript: func() begin
-		(self.vInputLine.viewFlags := (self.vInputLine.viewFlags + 8388608))
+		(self.vInputLine.viewFlags := (self.vInputLine.viewFlags + vCapsRequired))
 	end,
 	_proto: @8350,
 	preAllocatedContext: 'vLastName
@@ -102,8 +115,9 @@ last := {
 company := {
 	viewBounds: {left: 0, top: 2, right: 236, bottom: 23},
 	label: "Company",
+	// viewSetupFormScript: capitalised input, as for the first name.
 	viewSetupFormScript: func() begin
-		(self.vInputLine.viewFlags := (self.vInputLine.viewFlags + 8388608))
+		(self.vInputLine.viewFlags := (self.vInputLine.viewFlags + vCapsRequired))
 	end,
 	_proto: @8350,
 	preAllocatedContext: 'vCompanyName

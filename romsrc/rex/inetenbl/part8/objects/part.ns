@@ -1,8 +1,17 @@
-// part, and what only it reaches
+// part: the NIE's Domain Manager part (unit |Domain Manager:NIE| users import through
+// the DNS* global functions) - a protoFSM-style state machine, DomainManagerFSM (class
+// 'domainService), that resolves names over the NIE's DNS service: a query (address from
+// name, name from address, mail address, mail server) is queued, answered from the
+// "Internet DNS Cache" soup when it can be, else sent to the TCP/IP stack as an endpoint
+// option, and the answer cached. The install script waits for the unit it imports
+// (|Inet Protos:NIE|) before it installs. The file holds the part and what only it reaches.
 
 part := array(nil, {
 	installScript: compile(
 		constants: {
+			// the NIE's "wait for my imports" helper: returns a remove frame for clientFrame and,
+			// watching the Packages soup, calls clientFrame:UnitsInstalledScript once the imports of
+			// clientSymbol's package are all there (removeScript then calls UnitsRemovedScript).
 			kFunction_1035b89: func(clientSymbol, clientFrame) begin
 				local clientPkgRef, clientRemoveFrame;
 				clientPkgRef := ObjectPkgRef(clientSymbol);
@@ -33,14 +42,20 @@ part := array(nil, {
 				clientRemoveFrame
 			end
 		},
+		// installScript(partFrame): installs through the helper above.
 		func(partFrame) begin
 			call (kFunction_1035b89) with ('|Domain Manager:NIE|, self)
 		end),
+	// removeScript: nothing (the helper's remove frame undoes the install).
 	removeScript: func(partFrame) begin
 		nil
 	end,
+	// UnitsInstalledScript(clientRemoveFrame): registers the domain manager as an Inet
+	// service, the DNS cache soup, and the DNS* global functions.
 	UnitsInstalledScript: compile(
 		constants: {
+			// registers a service in the global |InetServices:NIE| frame (service symbol -> template)
+			// and saves that frame in the user configuration soon after (procrastinated, 3333 ms)
 			kFunction_10393f1: func(a1, a2) begin
 				local value;
 				if (not (value := GetGlobalVar('|InetServices:NIE|))) then begin
@@ -49,15 +64,21 @@ part := array(nil, {
 				value.(EnsureInternal(a1)) := a2;
 				AddProcrastinatedCall(EnsureInternal('|InetServices:NIE|), GetGlobalFn('SetUserConfig), EnsureInternal([Array: '|InetServices:NIE|, '|InetServices:NIE|]), 3333)
 			end,
+			// MBuildCallback(frame, symbol): a callback {fFrame, fSymbol}, which frame must answer.
 			kFunction_10365dd: func(a1, a2) begin
 				(if (if (if IsFrame(a1) then IsSymbol(a2)) then GetVariable(a1, a2)) then {fFrame: a1, fSymbol: a2} else Throw('|evt.ex.msg|, "DomainManagerFSM:MBuildCallback --> callbackFrame.(callbackSymbol) is undefined via direct ref or _proto or _parent inheritance."))
 			end,
+			// GetMailAddressFromName(callback, name): query type 64 (the NIE's mail address lookup);
+			// a name that is already a dotted address skips the lookup.
 			kFunction_1036835: func(a1, a2) begin
 				(if InetIsValidIPAddressStr(a2) then self:MSkipQuery(a1, 64, InetIPStringToAddress(a2), a2) else self:MAddQuery(a1, 64, nil, a2))
 			end,
+			// GetAddressFromName(callback, name): query type 1 (the DNS A record).
 			kFunction_10368ed: func(a1, a2) begin
 				(if InetIsValidIPAddressStr(a2) then self:MSkipQuery(a1, 1, InetIPStringToAddress(a2), a2) else self:MAddQuery(a1, 1, nil, a2))
 			end,
+			// GetNameFromAddress(callback, address): query type 12 (PTR) for the address's reversed
+			// bytes under in-addr.arpa.; -10006: not a valid IP address.
 			kFunction_1036951: func(a1, a2) begin
 				if (not InetIsValidIPAddress(a2)) then begin
 						return self:MDoClientCallback(a1, [Array: nil, -10006])
@@ -69,12 +90,17 @@ part := array(nil, {
 					end);
 				self:MAddQuery(a1, 12, a2, Stringer([Array: InetIPAddressToString(list), ".", "in-addr.arpa."]))
 			end,
+			// MSkipQuery(callback, type, address, name): answers at once, without a lookup.
 			kFunction_1036ba1: func(a1, a2, a3, a4) begin
 				(if (fState = 'Connected) then self:MDoClientCallback(a1, [Array: [Array: {type: self:MBuildQueryResultType(a2), queryType: a2, queryDomainName: a4, queryDefaultDomainName: fLinkEntry.defaultDomain, expirationTime: 0, targetIPAddress: a3, resultIPAddress: a3, targetDomainName: a4, resultDomainName: a4}], nil]) else self:MDoClientCallback(a1, [Array: nil, -60752]))
 			end,
+			// MAddQuery(callback, type, address, name): queues a query ('AddQuery event) while
+			// connected; else answers with an error.
 			kFunction_1036dc5: func(a1, a2, a3, a4) begin
 				(if (fState = 'Connected) then self:DoEvent('AddQuery, [Array: {fClientCallback: a1, fQueryID: (fQueryCounter := (fQueryCounter + 1)), fQueryType: a2, fQueryIPAddress: a3, fQueryDomainName: a4, fQueryDefaultDomainName: fLinkEntry.defaultDomain}]) else self:MDoClientCallback(a1, [Array: nil, -60752]))
 			end,
+			// MDoOwnerCallback(status...): tells the owner (fOwnerCallbackFrame) a status frame for the
+			// link, once.
 			kFunction_1036f79: func(a1, a2, a3, a4, a5) begin
 				if fOwnerCallbackFrame then begin
 						try begin
@@ -84,13 +110,17 @@ part := array(nil, {
 				fOwnerCallbackFrame := nil;
 				(fOwnerCallbackSymbol := nil)
 			end,
+			// CancelRequests(callback): cancels the queries ('Cancel event) and answers the callback.
 			kFunction_1037061: func(a1) begin
 				self:DoEvent('Cancel, nil);
 				self:MDoClientCallback(a1, nil)
 			end,
+			// GetMailServerNameFromDomainName(callback, domain): query type 15 (the DNS MX record).
 			kFunction_10370c9: func(a1, a2) begin
 				(if InetIsValidIPAddressStr(a2) then self:MSkipQuery(a1, 15, InetIPStringToAddress(a2), a2) else self:MAddQuery(a1, 15, nil, a2))
 			end,
+			// acquires the NIE's package-wide state (the global PkgVars_id), marking the package busy
+			// while any user holds it
 			kFunction_10373c5: func() begin
 				local objectPkgRef2, value, sym;
 				objectPkgRef2 := ObjectPkgRef('|Domain Manager:NIE|);
@@ -101,6 +131,8 @@ part := array(nil, {
 					end;
 				(value.fBusyRefCount := (value.fBusyRefCount + 1))
 			end,
+			// the FSM's states: Genesis.Create - the instance's variables, its endpoint and query
+			// queue, the DNS cache soup unless user configuration 'NIE_DNSCacheOff.
 			kFunction_10372c9: func() begin
 				call (kFunction_10373c5) with ();
 				fsm.fProcessPortID := nil;
@@ -119,22 +151,28 @@ part := array(nil, {
 					end;
 				(fsm.fState := 'Disconnected)
 			end,
+			// ReadyToConnect.SetCCE(cce): remembers the connection's entry.
 			kFunction_1037929: func(a1) begin
 				(fCCE := a1)
 			end,
+			// ReadyToConnect.SetLinkEntry(linkEntry): remembers the link (its DNS servers, default domain).
 			kFunction_103797d: func(a1) begin
 				(fLinkEntry := a1)
 			end,
+			// ReadyToConnect.connect(frame, symbol): instantiates the endpoint on the DNS service
+			// ("dnst") with the link's DNS servers; then 'Connected, the owner told 'Activated and
+			// the queue started. On failure the owner gets the error and the FSM disconnects.
 			kFunction_1037a0d: func(a1, a2) begin
 				fOwnerCallbackFrame := a1;
 				fOwnerCallbackSymbol := a2;
-				list := [Array: {label: "sid ", type: 'service, opCode: 512, result: nil, form: 'template, data: {arglist: [Array: "dnst", 0], typeList: [Array: 'struct, [Array: 'Array, 'char, 4], 'ulong]}}, {label: "ilid", type: 'option, opCode: 512, result: nil, form: 'template, data: {arglist: [Array: fLinkEntry.linkID], typeList: [Array: 'struct, 'ulong]}}, {label: "ddom", type: 'option, opCode: 512, result: nil, form: 'template, data: {arglist: [Array: (if StrFilled(fLinkEntry.defaultDomain) then fLinkEntry.defaultDomain else ".")], typeList: [Array: 'struct, [Array: 'Array, 'char, 0]]}}];
+				// options: "sid " the service id ("dnst"), "ilid" the link id, "dnic" a DNS server address
+				list := [Array: {label: "sid ", type: 'service, opCode: opSetRequired, result: nil, form: 'template, data: {arglist: [Array: "dnst", 0], typeList: [Array: 'struct, [Array: 'Array, 'char, 4], 'ulong]}}, {label: "ilid", type: 'option, opCode: opSetRequired, result: nil, form: 'template, data: {arglist: [Array: fLinkEntry.linkID], typeList: [Array: 'struct, 'ulong]}}, {label: "ddom", type: 'option, opCode: opSetRequired, result: nil, form: 'template, data: {arglist: [Array: (if StrFilled(fLinkEntry.defaultDomain) then fLinkEntry.defaultDomain else ".")], typeList: [Array: 'struct, [Array: 'Array, 'char, 0]]}}];
 				if IsArray(fLinkEntry.DNSServers) then begin
 						local inetGetOptionFromOptionArray2;
 						local list;
 						(foreach item in fLinkEntry.DNSServers do begin
 								if InetIsValidIPAddress(item) then begin
-										AddArraySlot(list, {label: "dnic", type: 'option, opCode: 512, result: nil, form: 'template, data: {arglist: [Array: item], typeList: [Array: 'struct, 'ulong]}})
+										AddArraySlot(list, {label: "dnic", type: 'option, opCode: opSetRequired, result: nil, form: 'template, data: {arglist: [Array: item], typeList: [Array: 'struct, 'ulong]}})
 									end
 							end)
 					end;
@@ -146,6 +184,7 @@ part := array(nil, {
 					end;
 				fEndpoint.fIsActive := true;
 				fState := 'Connected;
+				// the "sid " option's answer: the service's process port id (DNSGetProcessPortID)
 				if (if IsArray(list) then (inetGetOptionFromOptionArray2 := InetGetOptionFromOptionArray(list, "sid "))) then begin
 						fProcessPortID := inetGetOptionFromOptionArray2.data.arglist[1]
 					end;
@@ -153,6 +192,7 @@ part := array(nil, {
 				self:MDoOwnerCallback('Activated, nil, nil, nil, nil);
 				(if (not fQueryQueue:IsEmpty()) then self:DoEvent('ProcessNextQuery, nil))
 			end,
+			// MPurgeExpiredCacheEntries(): removes the cache entries that have expired.
 			kFunction_1038005: func() begin
 				local cursor, entry;
 				(try begin
@@ -164,6 +204,7 @@ part := array(nil, {
 						nil
 					end)
 			end,
+			// ReadyToConnect.Disconnect(frame, symbol): tells the owner 'Deactivated and cleans up.
 			kFunction_10381e5: func(a1, a2) begin
 				fOwnerCallbackFrame := a1;
 				fOwnerCallbackSymbol := a2;
@@ -171,6 +212,8 @@ part := array(nil, {
 				self:MDoOwnerCallback('Deactivated, nil, nil, nil, nil);
 				self:DoEvent('CleanUp, nil)
 			end,
+			// Connected.ProcessNextQuery: takes the next query; answers it from the cache if it can,
+			// else sends it as a "dnsq" option (opGetCurrent) with four "rrcd" slots for the records.
 			kFunction_1038369: func() begin
 				if (not (fQuery := fQueryQueue:DeQueue())) then begin
 						return self:DoEvent('ProcessQuerySkipped, nil)
@@ -180,11 +223,11 @@ part := array(nil, {
 						fQuery := nil;
 						return self:DoEvent('ProcessQuerySkipped, nil)
 					end;
-				list := [Array: {label: "dnsq", type: 'option, opCode: 1024, result: nil, form: 'template, data: {arglist: [Array: "dnst", 0, fQuery.fQueryID, (if fQuery.fQueryIPAddress then fQuery.fQueryIPAddress else [Array: 0, 0, 0, 0]), fQuery.fQueryType, (if StrFilled(fQuery.fQueryDomainName) then StrLen(fQuery.fQueryDomainName) else 0), (if StrFilled(fQuery.fQueryDomainName) then fQuery.fQueryDomainName else "")], typeList: [Array: 'struct, [Array: 'Array, 'char, 4], 'ulong, 'ulong, 'ulong, 'ulong, 'ulong, [Array: 'Array, 'char, 0]]}}];
+				list := [Array: {label: "dnsq", type: 'option, opCode: opGetCurrent, result: nil, form: 'template, data: {arglist: [Array: "dnst", 0, fQuery.fQueryID, (if fQuery.fQueryIPAddress then fQuery.fQueryIPAddress else [Array: 0, 0, 0, 0]), fQuery.fQueryType, (if StrFilled(fQuery.fQueryDomainName) then StrLen(fQuery.fQueryDomainName) else 0), (if StrFilled(fQuery.fQueryDomainName) then fQuery.fQueryDomainName else "")], typeList: [Array: 'struct, [Array: 'Array, 'char, 4], 'ulong, 'ulong, 'ulong, 'ulong, 'ulong, [Array: 'Array, 'char, 0]]}}];
 				local mFindCacheEntries;
 				local list;
 				(for i := 1 to 4 do begin
-						AddArraySlot(list, {label: "rrcd", type: 'option, opCode: 1024, result: nil, form: 'template, data: {arglist: [Array: 0, 0, [Array: 0, 0, 0, 0], [Array: 0, 0, 0, 0], 0, 0, "", ""], typeList: [Array: 'struct, 'short, 'short, [Array: 'Array, 'byte, 4], [Array: 'Array, 'byte, 4], 'ulong, 'ulong, [Array: 'Array, 'char, 0], [Array: 'Array, 'char, 0]]}})
+						AddArraySlot(list, {label: "rrcd", type: 'option, opCode: opGetCurrent, result: nil, form: 'template, data: {arglist: [Array: 0, 0, [Array: 0, 0, 0, 0], [Array: 0, 0, 0, 0], 0, 0, "", ""], typeList: [Array: 'struct, 'short, 'short, [Array: 'Array, 'byte, 4], [Array: 'Array, 'byte, 4], 'ulong, 'ulong, [Array: 'Array, 'char, 0], [Array: 'Array, 'char, 0]]}})
 					end);
 				(try begin
 						fEndpoint:option(list, self:MBuildCompletionSpec_Option())
@@ -192,6 +235,8 @@ part := array(nil, {
 						self:DoEvent('ProcessQueryFailure, [Array: InetGetExceptionError(CurrentException())])
 					end)
 			end,
+			// completionScript(endpoint, options, error): the query option's answer - success, or
+			// the error (or the "dnsq" option's own result code).
 			kFunction_103874d: func(a1, a2, a3) begin
 				if a3 then begin
 						return self:DoEvent('ProcessQueryFailure, [Array: a3])
@@ -203,9 +248,12 @@ part := array(nil, {
 					end;
 				self:DoEvent('ProcessQuerySuccess, [Array: a2])
 			end,
+			// MBuildCompletionSpec_Option(): the completion spec for the option call.
 			kFunction_103880d: func() begin
 				{_proto: fCompletionSpec_Option, _parent: self}
 			end,
+			// MFindCacheEntries(): the unexpired cache entries matching the query (type, name,
+			// default domain); expired ones are removed. nil when there are none.
 			kFunction_103886d: func() begin
 				local cursor, entry, list;
 				list := [Array: ];
@@ -225,10 +273,13 @@ part := array(nil, {
 					end onexception |evt.ex| do begin end;
 				(if (Length(list) = 0) then nil else list)
 			end,
+			// Connected.AddQuery(query): queues it and processes the next.
 			kFunction_10389c9: func(a1) begin
 				fQueryQueue:EnQueue(a1);
 				self:DoEvent('ProcessNextQuery, nil)
 			end,
+			// Connected.Disconnect(frame, symbol): disposes of the endpoint, tells the owner
+			// 'Deactivated and cleans up.
 			kFunction_1038a49: func(a1, a2) begin
 				fOwnerCallbackFrame := a1;
 				fOwnerCallbackSymbol := a2;
@@ -242,11 +293,14 @@ part := array(nil, {
 				self:MDoOwnerCallback('Deactivated, nil, nil, nil, nil);
 				self:DoEvent('CleanUp, nil)
 			end,
+			// Connected.Cancel(): answers every queued query with kCommErrRequestCanceled.
 			kFunction_1038b15: func() begin
 				local deQueue;
-				(while (deQueue := fQueryQueue:DeQueue()) do self:MDoClientCallback(deQueue.fClientCallback, [Array: nil, -16005]));
+				(while (deQueue := fQueryQueue:DeQueue()) do self:MDoClientCallback(deQueue.fClientCallback, [Array: nil, kCommErrRequestCanceled]));
 				(fAbort := nil)
 			end,
+			// ProcessingQuery.ProcessQuerySuccess(options): caches each answered record (the "rrcd"
+			// options after the first) and gives the client the list.
 			kFunction_1038c25: func(a1) begin
 				list := [Array: ];
 				try begin
@@ -261,6 +315,8 @@ part := array(nil, {
 				fQuery := nil;
 				self:DoEvent('ProcessNextQuery, nil)
 			end,
+			// MAddCacheEntry(record): a cache entry for an answered record. When arglist[1] is 0 it
+			// expires in 15 minutes (Time() counts minutes), else after 86400 times arglist[1].
 			kFunction_1038cdd: func(a1) begin
 				local l1, frame2;
 				l1 := (if (a1.data.arglist[1] = 0) then (Time() + 15) else (Time() + (86400 * a1.data.arglist[1])));
@@ -272,24 +328,31 @@ part := array(nil, {
 					end onexception |evt.ex| do begin end;
 				frame2
 			end,
+			// ProcessingQuery.ProcessQueryFailure(error): gives the client the error; next query.
 			kFunction_1038ed9: func(a1) begin
 				self:MDoClientCallback(fQuery.fClientCallback, [Array: nil, a1]);
 				fQuery := nil;
 				self:DoEvent('ProcessNextQuery, nil)
 			end,
+			// ProcessingQuery.ProcessQuerySkipped: the next query.
 			kFunction_1038f4d: func() begin
 				self:DoEvent('ProcessNextQuery, nil)
 			end,
+			// ProcessingQuery.ProcessNextQuery: back in 'Connected, does what waited while the
+			// query ran - a disconnect, a cancel, or the next query.
 			kFunction_1038fa9: func() begin
 				(if fOwnerCallbackFrame then self:DoEvent('Disconnect, [Array: fOwnerCallbackFrame, fOwnerCallbackSymbol]) else (if fAbort then self:DoEvent('Cancel, nil) else (if (not fQueryQueue:IsEmpty()) then self:DoEvent('ProcessNextQuery, nil))))
 			end,
+			// ProcessingQuery.AddQuery(query): queued for later.
 			kFunction_103904d: func(a1) begin
 				fQueryQueue:EnQueue(a1)
 			end,
+			// ProcessingQuery.Disconnect(frame, symbol): remembered, done when the query is over.
 			kFunction_10390b9: func(a1, a2) begin
 				fOwnerCallbackFrame := a1;
 				(fOwnerCallbackSymbol := a2)
 			end,
+			// ProcessingQuery.Cancel(): cancels the endpoint's request (fAbort marks the cancel).
 			kFunction_1039111: func() begin
 				fAbort := true;
 				(try begin
@@ -298,6 +361,7 @@ part := array(nil, {
 						nil
 					end)
 			end,
+			// releases the package-wide state (the counterpart of the acquire above)
 			kFunction_1039251: func() begin
 				local objectPkgRef2, value, sym;
 				objectPkgRef2 := ObjectPkgRef('|Domain Manager:NIE|);
@@ -307,6 +371,7 @@ part := array(nil, {
 							UnDefGlobalVar(sym)
 						end))
 			end,
+			// CleanUp.CleanUp: forgets everything and releases the package state; back to Genesis.
 			kFunction_10391c5: func() begin
 				fProcessPortID := nil;
 				fAbort := nil;
@@ -321,6 +386,7 @@ part := array(nil, {
 				fState := nil;
 				call (kFunction_1039251) with ()
 			end,
+			// MDoClientCallback(callback, args): calls callback.fFrame:(fSymbol)(args...), ignoring errors.
 			kFunction_103933d: func(a1, a2) begin
 				(if a1 then (try begin
 							Perform(a1.fFrame, a1.fSymbol, a2)
@@ -328,10 +394,15 @@ part := array(nil, {
 							nil
 						end))
 			end,
+			// MBuildQueryResultType(queryType): 1 for the address lookups (1, 64), 2 for the others.
 			kFunction_10393a9: func(a1) begin
 				(if ((a1 = 1) or (a1 = 64)) then 1 else 2)
 			end,
+			// DomainManagerFSM, the domain manager's state machine template (registered as a service)
 			kLiteral_103616d: {fOwnerCallbackSymbol: nil, class: 'domainService, fQuery: nil, fState: nil, MBuildCallback: kFunction_10365dd, fQueryCache: nil, fLinkEntry: nil, fQueryCounter: nil, GetMailAddressFromName: kFunction_1036835, _proto: @8192, GetAddressFromName: kFunction_10368ed, GetNameFromAddress: kFunction_1036951, fQueryQueue: nil, name: "Domain Resolver", fAbort: nil, description: "Used to resolve internet domain names into internet addresses, and vice versa.", declareSelf: 'DomainManagerFSM, MSkipQuery: kFunction_1036ba1, fCCE: nil, MAddQuery: kFunction_1036dc5, MDoOwnerCallback: kFunction_1036f79, fProcessPortID: nil, CancelRequests: kFunction_1037061, GetMailServerNameFromDomainName: kFunction_10370c9, fsm_private_states: {Genesis: {terminal: true, Create: {action: kFunction_10372c9, nextState: 'ReadyToConnect, nextNoIdle: true}}, ReadyToConnect: {SetCCE: {action: kFunction_1037929, nextNoIdle: true}, SetLinkEntry: {action: kFunction_103797d, nextNoIdle: true}, connect: {action: kFunction_1037a0d, nextState: 'Connected, MPurgeExpiredCacheEntries: kFunction_1038005}, Disconnect: {action: kFunction_10381e5, nextState: 'CleanUp}}, Connected: {ProcessNextQuery: {action: kFunction_1038369, fCompletionSpec_Option: {async: true, reqTimeout: 0, completionScript: kFunction_103874d}, MBuildCompletionSpec_Option: kFunction_103880d, nextState: 'ProcessingQuery, MFindCacheEntries: kFunction_103886d}, AddQuery: {action: kFunction_10389c9}, Disconnect: {action: kFunction_1038a49, nextState: 'CleanUp}, Cancel: {action: kFunction_1038b15}}, ProcessingQuery: {ProcessQuerySuccess: {action: kFunction_1038c25, MAddCacheEntry: kFunction_1038cdd}, ProcessQueryFailure: {action: kFunction_1038ed9}, ProcessQuerySkipped: {action: kFunction_1038f4d}, ProcessNextQuery: {action: kFunction_1038fa9, nextState: 'Connected}, AddQuery: {action: kFunction_103904d}, Disconnect: {action: kFunction_10390b9}, Cancel: {action: kFunction_1039111}}, CleanUp: {CleanUp: {action: kFunction_10391c5, nextState: 'Genesis}}}, MDoClientCallback: kFunction_103933d, fOwnerCallbackFrame: nil, MBuildQueryResultType: kFunction_10393a9},
+			// the DNS* global functions: each gets the domain service from InetStartUp() and passes
+			// the request on, or answers the callback with -60752 (no domain service).
+			// DNSCancelRequests(frame, symbol)
 			kFunction_1039881: func(a1, a2) begin
 				local mGetDomainService;
 				if (mGetDomainService := InetStartUp():MGetDomainService()) then begin
@@ -339,6 +410,7 @@ part := array(nil, {
 					end;
 				(if a1 then PerformIfDefined(a1, a2, nil))
 			end,
+			// DNSGetAddressFromName(name, frame, symbol)
 			kFunction_1039955: func(a1, a2, a3) begin
 				local mGetDomainService;
 				if (mGetDomainService := InetStartUp():MGetDomainService()) then begin
@@ -346,6 +418,7 @@ part := array(nil, {
 					end;
 				(if a2 then PerformIfDefined(a2, a3, [Array: nil, -60752]))
 			end,
+			// DNSGetMailAddressFromName(name, frame, symbol)
 			kFunction_10399d1: func(a1, a2, a3) begin
 				local mGetDomainService;
 				if (mGetDomainService := InetStartUp():MGetDomainService()) then begin
@@ -353,6 +426,7 @@ part := array(nil, {
 					end;
 				(if a2 then PerformIfDefined(a2, a3, [Array: nil, -60752]))
 			end,
+			// DNSGetMailServerNameFromDomainName(domain, frame, symbol)
 			kFunction_1039a19: func(a1, a2, a3) begin
 				local mGetDomainService;
 				if (mGetDomainService := InetStartUp():MGetDomainService()) then begin
@@ -360,6 +434,7 @@ part := array(nil, {
 					end;
 				(if a2 then PerformIfDefined(a2, a3, [Array: nil, -60752]))
 			end,
+			// DNSGetNameFromAddress(address, frame, symbol)
 			kFunction_1039a61: func(a1, a2, a3) begin
 				local mGetDomainService;
 				if (mGetDomainService := InetStartUp():MGetDomainService()) then begin
@@ -367,10 +442,12 @@ part := array(nil, {
 					end;
 				(if a2 then PerformIfDefined(a2, a3, [Array: nil, -60752]))
 			end,
+			// DNSGetProcessPortID(): the DNS service's process port id
 			kFunction_1039aa9: func() begin
 				local mGetDomainService;
 				(if (mGetDomainService := InetStartUp():MGetDomainService()) then mGetDomainService.fProcessPortID)
 			end,
+			// the DNS* functions by name, put into (and taken out of) the global functions
 			kLiteral_103973d: {DNSCancelRequests: kFunction_1039881, DNSGetAddressFromName: kFunction_1039955, DNSGetMailAddressFromName: kFunction_10399d1, DNSGetMailServerNameFromDomainName: kFunction_1039a19, DNSGetNameFromAddress: kFunction_1039a61, DNSGetProcessPortID: kFunction_1039aa9}
 		},
 		func(clientRemoveFrame) begin
@@ -380,8 +457,11 @@ part := array(nil, {
 					functions.(key) := value
 				end)
 		end),
+	// UnitsRemovedScript(clientRemoveFrame): removes the DNS* functions, the cache soup's
+	// registration and the service.
 	UnitsRemovedScript: compile(
 		constants: {
+			// the DNS* functions, as above (only their names are used here)
 			kFunction_1039881: func(a1, a2) begin
 				local mGetDomainService;
 				if (mGetDomainService := InetStartUp():MGetDomainService()) then begin
@@ -422,6 +502,7 @@ part := array(nil, {
 				(if (mGetDomainService := InetStartUp():MGetDomainService()) then mGetDomainService.fProcessPortID)
 			end,
 			kLiteral_103973d: {DNSCancelRequests: kFunction_1039881, DNSGetAddressFromName: kFunction_1039955, DNSGetMailAddressFromName: kFunction_10399d1, DNSGetMailServerNameFromDomainName: kFunction_1039a19, DNSGetNameFromAddress: kFunction_1039a61, DNSGetProcessPortID: kFunction_1039aa9},
+			// unregisters a service from |InetServices:NIE| (the global goes when it is empty)
 			kFunction_1039bd9: func(a1) begin
 				local value;
 				if (value := GetGlobalVar('|InetServices:NIE|)) then begin

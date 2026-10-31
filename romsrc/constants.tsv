@@ -683,3 +683,10 @@ vfInset	<<16
 vfShadow	<<18
 vfRound	<<24
 tsSize	<<10
+# rex packages (Setup, newtdev, inetenbl, inetstup, ListView): the NTK/NPG viewJustify text limit oneLineOnly (src/views/TextView.h, as TTextView::RealDraw tests it)
+oneLineOnly	0x800000
+# rex inetenbl/inetstup: the comm option opcodes, Newton Programmer's Reference (Endpoint option opCode)
+opSetNegotiate	256
+opSetRequired	512
+opGetDefault	768
+opGetCurrent	1024

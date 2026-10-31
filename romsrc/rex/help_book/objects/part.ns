@@ -1,4 +1,8 @@
-// part, and what only it reaches
+// part: the built-in Help book (a Newton book, the 'book part of the ROM extension's
+// help_book package) - the "Learn the Basics" and other topics of the Newton's own help;
+// book holds the book's metadata, contents (its items:
+// headings, text blocks, pictures) and rendering. The unistrokeHelp* items were added
+// by this project (romsrc/README.md). The file holds the part and what only it reaches.
 
 part := array(nil, {
 	book: {
