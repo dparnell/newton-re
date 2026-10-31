@@ -1,21 +1,29 @@
-// newtroEditView, and what only it reaches
+// newtroEditView, and what only it reaches: NewtApp's read-only edit view slot
+// view (NPR "newtROEditView"; newtEditView is made from it): a fixed-size
+// clEditView whose children are the paragraphs and drawings kept in the target
+// entry's slot (target.(path)), optionally with its own scrollers - an up/down
+// scroller, or a 2D one when the contents are wider than the view.
 
 newtroEditView := {
 	viewWidth: nil,
 	scrollOverlap: nil,
+	// sets the scroller's arrows once the view is open
 	viewSetupDoneScript: func() begin
 		(if scrollerView then scrollerView:AdjustArrows())
 	end,
 	viewFormat: vfLinesLtGray,
+	// NPR: defaults to 28
 	viewLineSpacing: 28,
 	scrollerView: nil,
 	viewChildren: nil,
 	viewHeight: nil,
 	emptyRect: {left: 0, top: 0, right: 0, bottom: 0},
 	viewFlags: vAnythingAllowed + vVisible + vClipping,
+	// [width, height] of the scrollable area, if the application gives one
 	notesize: nil,
 	viewBounds: nil,
 	scrollYAmount: nil,
+	// the scroller's DataRect becomes the union of the children's bounds
 	UpdateBounds: func() begin
 		if (childViewFrames := editor:ChildViewFrames()) then begin
 				local childViewFrames;
@@ -29,6 +37,9 @@ newtroEditView := {
 	jamSlot: nil,
 	viewOriginY: 0,
 	initialDataRect: {left: 0, top: 0, right: 0, bottom: 0},
+	// a scroller arrow (arrowDirection 'left, 'right, 'up or 'down): scrolls the
+	// contents by scrollXAmount or scrollYAmount, kept inside ScrollRect and the
+	// origin, and updates the scroller's rectangles
 	viewScroll2DScript: func(arrowDirection, a2) begin
 		local scrollXAmount2, scrollYAmount2, viewOriginX2, viewOriginY2;
 		scrollXAmount2 := 0;
@@ -76,15 +87,22 @@ newtroEditView := {
 		self:UpdateBounds();
 		RefreshViews()
 	end,
+	// NPR: true (the default) sets the caret automatically
 	doCaret: true,
+	// the scrollers and children reach the view as `editor`
 	declareSelf: 'editor,
+	// the view's contents as text (Notes' notesText of the slot)
 	TextScript: func() begin
 		notesText(target.(path))
 	end,
 	scrollXAmount: nil,
 	viewClass: clEditView,
 	viewOriginX: 0,
-	optionFlags: 0,
+	// NPR: kNoOptions, no scrollers; kHasScrollersOption shows them
+	optionFlags: kNoOptions,
+	// the scrollers' viewSetupFormScript: the view's, data and scroll rectangles
+	// (ScrollRect from notesize, else as wide as the view or data and 2000 pixels
+	// tall) and the scroll steps; the scroller becomes scrollerView
 	CommonScrollerSetupFormScript: func() begin
 		self.ViewRect := editor:LocalBox();
 		self.DataRect := editor.initialDataRect;
@@ -99,6 +117,7 @@ newtroEditView := {
 		self.scrollYUnits := editor.scrollYAmount;
 		(scrollerView := self)
 	end,
+	// the scroller for contents wider than the view, at the bottom centre
 	TwoDscroller: {
 		_proto: @protoHorizontal2Dscroller,
 		viewFlags: vVisible + vReadOnly + vFloating,
@@ -108,6 +127,7 @@ newtroEditView := {
 			self:CommonScrollerSetupFormScript()
 		end
 	},
+	// the up/down scroller at the right
 	OneDscroller: {
 		_proto: @protoUpDownScroller,
 		viewFlags: vVisible + vReadOnly + vFloating,
@@ -117,6 +137,9 @@ newtroEditView := {
 			self:CommonScrollerSetupFormScript()
 		end
 	},
+	// the children are the slot's views; the scroll steps are the view's size less
+	// scrollOverlap (a third of its height unless given); a scroller is added as a
+	// step child when optionFlags asks for one
 	viewSetupChildrenScript: func() begin
 		viewWidth := (box := editor:LocalBox()).right;
 		viewHeight := box.bottom;
@@ -135,12 +158,17 @@ newtroEditView := {
 						self.initialDataRect := unionRect2
 					end
 			end;
-		(self.stepChildren := (if (if optionFlags then (optionFlags = 1)) then (if (initialDataRect.right <= viewWidth) then [Array: OneDscroller] else [Array: TwoDscroller])))
+		(self.stepChildren := (if (if optionFlags then (optionFlags = kHasScrollersOption)) then (if (initialDataRect.right <= viewWidth) then [Array: OneDscroller] else [Array: TwoDscroller])))
 	end,
+	// the target entry changed: rebuild the children
 	Retarget: func() begin
 		self:RedoChildren()
 	end,
 	jamFromEntry: jamFromEntry,
+	// NPR ScrollToWord(words, hilite): finds the first child holding one of the
+	// words (a string or an array of them), scrolls it to the middle of the view,
+	// estimating the word's line from its offset in the text, and highlights it if
+	// hilite
 	ScrollToWord: func(a1, a2) begin
 		l4 := (if IsArray(a1) then a1 else SplitString(a1));
 		local l1;
@@ -153,6 +181,8 @@ newtroEditView := {
 						if (l2 := FindStringInFrame(l5, [Array: l7], true)) then begin
 								l1 := l5;
 								l3 := l7;
+								// matchedTextSlot is not declared local: it is set as a slot reached from the
+								// view (self), not a variable of this function
 								break (matchedTextSlot := (if l5.text then l5.text))
 							end
 					end);

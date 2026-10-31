@@ -1,19 +1,31 @@
-// newTrollEntryView, and what only it reaches
+// newTrollEntryView, and what only it reaches: NewtApp's entry view for roll
+// layouts (NPR "newtRollEntryView", made for Notes): a newtEntryView as tall as
+// its entry's height slot, which grows as the user writes below its bottom and
+// which a horizontal line drawn across it cuts in two - the part below becomes
+// a new entry.
 
 newTrollEntryView := {
 	_proto: @newtEntryView,
 	viewJustify: vjParentFullH + vjSiblingBottomV,
 	viewChildren: nil,
+	// NPR: the height of the last entry's view in a roll (kEntryViewHeight)
 	bottomlessHeight: 10000,
 	target: nil,
+	// the routing and other services reach it as targetView
 	declareSelf: 'targetView,
 	targetDataDef: nil,
 	targetViewDef: nil,
+	// the line that cuts the entry: at least cutoffMinWidth wide (default: the
+	// application area's width less 40), less than cutoffMaxHeight tall, and its
+	// ends less than cutoffMaxDY apart vertically
 	cutoffMinWidth: nil,
 	cutoffMaxHeight: 30,
 	cutoffMaxDY: 20,
 	cutoffMaxDT: 67,
+	// the least height of an entry view (plus the viewDef's viewDefHeight)
 	minimumHeight: 23,
+	// takes the entry's height; the last entry's view reaches down to the bottom
+	// of the layout (lastHeight)
 	viewSetupFormScript: func() begin
 		local height, params;
 		inherited:viewSetupFormScript();
@@ -27,6 +39,9 @@ newTrollEntryView := {
 		self.viewBounds := SetBounds(0, 0, 0, height);
 		(if (not cutoffMinWidth) then (cutoffMinWidth := ((params := GetAppParams()).appAreaWidth - 40)))
 	end,
+	// a child changed: if it reaches past the entry's bottom (or the last entry is
+	// emptied) the entry grows to fit it and the layout's views are resynced; then
+	// the flush timer starts.  The caret is checked half a second later.
 	StartFlushWithChild: func(a1) begin
 		if (if (caretInfo := GetCaretInfo()) then (caretInfo.view = a1)) then begin
 				AddProcrastinatedSend('checkCaret, targetView, 'checkCaret, nil, 500)
@@ -52,6 +67,8 @@ newTrollEntryView := {
 		self:StartFlush()
 	end,
 	checkCaret: checkCaret,
+	// sets the entry's height (most), with undo, writes the entry and redoes the
+	// layout
 	SetAndSaveNoteHeight: func(target, most) begin
 		AddUndoAction('SetAndSaveNoteHeight, [Array: target, target.height]);
 		target.height := most;
@@ -60,11 +77,15 @@ newTrollEntryView := {
 		settingHeight := nil;
 		layout:Retarget(true)
 	end,
+	// a horizontal line across the entry: the entry is cut at the line's height
+	// (unless it is on a read-only store) and a new entry of the same class made
+	// below it, in the folder shown, on the internal or default store as the
+	// "internalStore" preference says; returns true when it took the gesture
 	viewgesturescript: func(unit, gesture) begin
 		local l1, strokeBounds2, pt, pt2, height, l6, minimumHeight2, minimalBounds, adoptEntry, l10, store, internalStore;
-		if (gesture = 16) then begin
+		if (gesture = aeLine) then begin
 				strokeBounds2 := StrokeBounds(unit);
-				pt := GetPoint(5, unit);
+				pt := GetPoint(5, unit); // pt and pt2: the y of the stroke's last and first points (by their use below)
 				pt2 := GetPoint(1, unit);
 				if (if (if ((strokeBounds2.right - strokeBounds2.left) > cutoffMinWidth) then ((strokeBounds2.bottom - strokeBounds2.top) < cutoffMaxHeight)) then (abs((pt - pt2)) < cutoffMaxDY)) then begin
 						height := target.height;
@@ -81,8 +102,12 @@ newTrollEntryView := {
 								adoptEntry.labels := labelsFilter
 							end;
 						if (target = lastItem) then begin
+								// the cut entry is the last one: NewEntry moves to the new entry (_context)
+								// only if its timestamp is earlier than the last entry's
 								l10 := (adoptEntry.timestamp < lastItem.timestamp)
 							end else begin
+								// cut inside the roll: the new entry takes the old one's timestamp and the
+								// height the old one gave up
 								adoptEntry.timestamp := target.timestamp;
 								adoptEntry.height := max((height - target.height), minimumHeight);
 								l10 := nil
