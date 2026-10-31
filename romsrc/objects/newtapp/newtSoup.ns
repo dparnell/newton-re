@@ -1,21 +1,37 @@
-// newtSoup, and what only it reaches
+// newtSoup, and what only it reaches: NewtApp's soup object (NPR "newtSoup").
+// Each entry of a newtApplication's allSoups is made from it (cloned per open
+// application); it registers the union soup with its indexes, keeps the query
+// for the folder (soupFilter) and store (storesFilter) shown and its cursor,
+// makes new entries from the stationery (AdoptEntry) and adds, deletes and
+// duplicates entries, telling the soup's watchers (XmitSoupChange).
 
 newtSoup := {
+	// the union soup's name; soupIndices its indexes, soupQuery the query spec the
+	// cursor is made from, soupDescr the user's description of the soup
 	soupName: nil,
 	soupIndices: nil,
 	soupQuery: nil,
+	// the folder shown: a folder symbol, '_all, or nil for the unfiled entries
 	soupFilter: nil,
+	// the store shown, or nil for all of them
 	storesFilter: nil,
 	soupDescr: nil,
 	theSoup: nil,
 	theCursor: nil,
 	appSymbol: nil,
+	// the soup the cursor queries: the union soup, or its member on storesFilter
 	querySoup: nil,
+	// the class of a new entry given none (AdoptEntry)
 	defaultDataType: nil,
+	// NPR CreateBlankEntry: the frame a new entry starts from; an application
+	// overrides it to give its entries their slots
 	CreateBlankEntry: func() begin
 		{}
 	end,
+	// true: new entries are unfiled even when a folder is shown
 	UseNilLabelsAsUnfiled: nil,
+	// NPR MakeSoup(appSymbol): registers the union soup for the application;
+	// FillNewSoup is sent if the soup was on no store before
 	MakeSoup: func(appSymbol) begin
 		l1 := nil;
 		local l1;
@@ -27,9 +43,13 @@ newtSoup := {
 		theSoup := RegUnionSoup(appSymbol, {name: soupName, userName: soupName, ownerApp: appSymbol, userDescr: soupDescr, indexes: soupIndices});
 		(if (not l1) then self:FillNewSoup())
 	end,
+	// NPR FillNewSoup: an application's hook to fill a soup it has just made
 	FillNewSoup: func() begin
 		nil
 	end,
+	// makes the cursor for the folder and store shown: the unfiled entries are
+	// those with no tag (or no labels slot), a folder its tag (or labels); '_all
+	// drops the tag spec.  Returns the cursor.
 	SetupCursor: func() begin
 		local soupQuery2;
 		querySoup := (if (if storesFilter then storesFilter:IsValid()) then theSoup:GetMember(storesFilter) else begin
@@ -64,9 +84,12 @@ newtSoup := {
 			end;
 		(theCursor := querySoup:Query(soupQuery2))
 	end,
+	// NPR GetCursor: the cursor SetupCursor made
 	GetCursor: func() begin
 		theCursor
 	end,
+	// adds the entry to the store (nil or no longer valid: the default store) and
+	// broadcasts 'entryAdded
 	AddEntry: func(adoptEntry, store) begin
 		local addToDefaultStore;
 		if ((store = nil) or (not store:IsValid())) then begin
@@ -77,6 +100,8 @@ newtSoup := {
 		XmitSoupChange(soupName, appSymbol, 'entryAdded, adoptEntry);
 		addToDefaultStore
 	end,
+	// NPR DeleteEntry(entry): removes the entry from its soup and broadcasts
+	// 'entryRemoved with the soup it was in
 	DeleteEntry: func(next) begin
 		local soup, entryRemoveFromSoup2;
 		soup := EntrySoup(next);
@@ -84,14 +109,23 @@ newtSoup := {
 		XmitSoupChange(soupName, appSymbol, 'entryRemoved, {oldSoup: soup, entry: next});
 		entryRemoveFromSoup2
 	end,
+	// NPR DoneWithSoup(appSymbol): unregisters the soup change callback and the
+	// union soup
 	DoneWithSoup: func(appSymbol) begin
 		UnRegSoupChange(soupName, appSymbol);
 		UnRegUnionSoup(soupName, appSymbol)
 	end,
+	// NPR DuplicateEntry(entry, store): adds a clone of the entry and returns it
 	DuplicateEntry: func(a1, store) begin
+		// looks like a ROM bug: New is not declared local, so this assigns a variable
+		// found by lookup (or makes one) rather than a local
 		EntryUndoChanges((New := self:AddEntry(Clone(a1), store)));
 		New
 	end,
+	// NPR AdoptEntry(entry, type): a new entry of the class (the entry's own, else
+	// type, else defaultDataType) from CreateBlankEntry and the dataDef's
+	// FillNewEntry or MakeNewEntry, filed in the folder shown, then with every slot
+	// of entry copied in; the dataDef's CheckNewEntry has the last word
 	AdoptEntry: func(a1, class3) begin
 		class2 := class3;
 		if (if a1 then a1.class) then begin
@@ -136,19 +170,24 @@ newtSoup := {
 			end;
 		blankEntry
 	end,
+	// the unfiled entries' validTest (a soup without tags)
 	FilterNone: func(a1) begin
 		(not a1.labels)
 	end,
+	// the folder's entries' validTest (a soup without tags)
 	FilterSome: func(a1, a2) begin
 		(a1.labels = a2)
 	end,
+	// NPR GetAlias(entry): an entry alias for it
 	GetAlias: func(entry) begin
 		(if entry then MakeEntryAlias(entry))
 	end,
+	// NPR GetCursorPosition: an alias of the cursor's entry, to come back to it
 	GetCursorPosition: func() begin
 		local entry;
 		(if IsSoupEntry((entry := theCursor:entry())) then self:GetAlias(entry))
 	end,
+	// NPR GotoAlias(alias): moves the cursor to the aliased entry, if it resolves
 	GotoAlias: func(a1) begin
 		local resolveEntryAlias2;
 		(if a1 then begin
@@ -158,6 +197,7 @@ newtSoup := {
 				(if (resolveEntryAlias2 := ResolveEntryAlias(a1)) then theCursor:Goto(resolveEntryAlias2))
 			end)
 	end,
+	// the cursor's index key, a string cut to 6 characters (for GotoCursorKey)
 	GetCursorKey: func() begin
 		local entryKey;
 		if (if IsString((entryKey := theCursor:EntryKey())) then (StrLen(entryKey) > 6)) then begin
@@ -165,6 +205,8 @@ newtSoup := {
 			end;
 		entryKey
 	end,
+	// moves the cursor to a key from GetCursorKey, else to the entry before, else
+	// to the start; returns the entry
 	GotoCursorKey: func(cursorKey) begin
 		local gotoKey;
 		if (not theCursor) then begin

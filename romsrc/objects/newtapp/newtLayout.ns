@@ -130,7 +130,7 @@ newtLayout := {
 			end)
 	end,
 	// type-to-scroll (if useTypeScrolling): characters typed without the command
-	// key, and not the private-use $-$ keys, add to keyString (started
+	// key, and not the private-use $\uF721-$\uF72F keys, add to keyString (started
 	// afresh after 100 ticks, 1.7 s) and go to the entry they begin
 	viewKeyDownScript: func(char2, flags) begin
 		local l1, ticks2;

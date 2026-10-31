@@ -1,21 +1,34 @@
-// newtEntryView, and what only it reaches
+// newtEntryView, and what only it reaches: NewtApp's entry view (NPR
+// "newtEntryView"), the layout's child that shows one soup entry (target) with
+// the slot views or stationery (viewDef) inside it.  It keeps the entry's edits
+// in memory and writes them to the soup (EntryChange) a few seconds after the
+// last change or when it closes - the "flush" - and tells the layout's
+// BroadcastChange of it.
 
 newtEntryView := {
 	viewClass: clView,
 	viewFlags: vVisible,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
 	viewJustify: vjParentFullH + vjParentFullV,
+	// NPR: set by the stationery view inside: the viewDef, dataDef and view showing
+	// the entry
 	currentViewDef: nil,
 	currentDataDef: nil,
 	currentStatView: nil,
 	targetViewDef: nil,
 	targetDataDef: nil,
 	targetStatView: nil,
+	// the entry has edits not yet written (a flush is pending)
 	entryChanged: nil,
+	// the entry was written since the view opened: closing broadcasts the change
 	entryDirtied: nil,
+	// true while a roll entry's height is being saved (no size check then)
 	settingHeight: nil,
 	viewDef: 'default,
+	// set to this view when it is set up
 	_entryViewForFiling: nil,
+	// takes the layout's next entry (nextEntry) as its target, with its viewDef;
+	// the entry's dataDef may set the view up further (SetupForm)
 	viewSetupFormScript: func() begin
 		local nextEntry2, l2, entryDataDef;
 		_entryViewForFiling := self;
@@ -29,13 +42,17 @@ newtEntryView := {
 				(nextEntry := (nextEntry2 + 1))
 			end)
 	end,
+	// a found item: the stationery view shows it, if its viewDef can
 	ShowFoundItem: func(a1, a2) begin
 		(if (if targetViewDef then HasPath(targetViewDef, 'ShowFoundItem)) then currentStatView:ShowFoundItem(a1, a2))
 	end,
+	// the flush timer fired (StartFlush): write the entry; nil stops the timer
 	viewIdleScript: func() begin
 		self:EndFlush();
 		nil
 	end,
+	// NPR Retarget: forgets the stationery found so far and has the children show
+	// the (new) target
 	Retarget: func() begin
 		targetViewDef := (currentViewDef := nil);
 		targetDataDef := (currentDataDef := nil);
@@ -46,6 +63,8 @@ newtEntryView := {
 					end
 			end)
 	end,
+	// NPR JamFromEntry(otherEntry): the children copy what they show from the other
+	// entry; then retarget and flush
 	jamFromEntry: func(resolveEntryAlias) begin
 		(foreach item in self:ChildViewFrames() do begin
 				if HasPath(item, 'jamFromEntry) then begin
@@ -57,6 +76,7 @@ newtEntryView := {
 			end);
 		self:StartFlush()
 	end,
+	// closing: write any pending change, then broadcast if the entry was written
 	viewQuitScript: func() begin
 		self:EndFlush();
 		(if entryDirtied then begin
@@ -64,15 +84,19 @@ newtEntryView := {
 				self:BroadcastChange('quit, target)
 			end)
 	end,
+	// NPR StartFlush: marks the entry changed and (re)starts the 5-second timer that
+	// writes it
 	StartFlush: func() begin
 		if (if targetView then targetView.viewCObject) then begin
 				targetView:SetupIdle(5000)
 			end;
 		(entryChanged := true)
 	end,
+	// a child changed (newtRollEntryView grows to fit it first)
 	StartFlushWithChild: func(a1) begin
 		self:StartFlush()
 	end,
+	// NPR EndFlush: writes a changed entry now and tells the layout ('flush)
 	EndFlush: func() begin
 		(if entryChanged then begin
 				self:FlushEntry(target);
@@ -81,6 +105,11 @@ newtEntryView := {
 				self:BroadcastChange('flush, target)
 			end)
 	end,
+	// writes the entry a1 to its store; a write-protected or full store is
+	// reported and the edits undone (other store errors are rethrown); an entry
+	// that this write made bigger and past maxEntrySizeBytes is sent (deferred) to
+	// AppMaxSizeExceeded, if the application has it.  An entry no longer valid
+	// whose store is gone gets the "card was ejected" alert.
 	FlushEntry: func(a1) begin
 		local entrySizeWithoutVBOs2, error, name, text, entrySizeWithoutVBOs3;
 		(if EntryValid(a1) then begin
@@ -94,15 +123,15 @@ newtEntryView := {
 					end onexception |evt.ex.fr.store| do begin
 						error := CurrentException().error;
 						name := EntryStore(a1):GetName();
-						if (error = -10605) then begin
+						if (error = kSError_WriteProtected) then begin
 								text := "^0 changes could not be saved (\u201C\u^1\u201D\u is write-protected)"
 							end else begin
-								if (error = -10617) then begin
+								if (error = kSError_StoreFull) then begin
 										text := "^0 changes could not be saved (\u201C\u^1\u201D\u is full)"
 									end
 							end;
 						if text then begin
-								self:Notify(3, title, ParamStr(text, [Array: title, name]))
+								self:Notify(kNotifyAlert, title, ParamStr(text, [Array: title, name]))
 							end else begin
 								Rethrow()
 							end;
@@ -116,19 +145,23 @@ newtEntryView := {
 							nil
 						end))
 			end else (try begin
+					// throws if the entry's store has been removed
 					a1._uniqueID
 				end onexception |evt.ex| do begin
-					self:Notify(3, title, "The storage card was ejected so the last few changes have been lost.")
+					self:Notify(kNotifyAlert, title, "The storage card was ejected so the last few changes have been lost.")
 				end))
 	end,
+	// NPR EntryCool(report): whether the target can be changed (it is not on a
+	// read-only store); report shows an alert when it cannot
 	EntryCool: func(a1) begin
 		(if ((not target) or EntryStore(target):IsReadOnly()) then begin
 				if a1 then begin
-						self:Notify(3, title, "This is on a write protected card and cannot be changed")
+						self:Notify(kNotifyAlert, title, "This is on a write protected card and cannot be changed")
 					end;
 				nil
 			end else true)
 	end,
+	// filing changed the entry: write it at once
 	FilingChangedX: func() begin
 		entryChanged := true;
 		self:EndFlush()
