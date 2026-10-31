@@ -712,3 +712,25 @@ kShiftModifier	0x4000000
 kCapsLockModifier	0x8000000
 kOptionsModifier	0x10000000
 kControlModifier	0x20000000
+# Dates repeat types and day/week masks (repeatType, mtgInfo): the Newton Programmer's Guide 2.0, chapter 19 Summary
+kSunday	0x800
+kMonday	0x400
+kTuesday	0x200
+kWednesday	0x100
+kThursday	0x80
+kFriday	0x40
+kSaturday	0x20
+kEveryday	0xfe0
+kDayOfWeek	0
+kWeekInMonth	1
+kDateInMonth	2
+kDateInYear	3
+kPeriod	4
+kNever	5
+kWeekInYear	7
+kFirstWeek	0x10
+kSecondWeek	0x8
+kThirdWeek	0x4
+kFourthWeek	0x2
+kLastWeek	0x1
+kEveryWeek	0x1f

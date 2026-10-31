@@ -1,11 +1,28 @@
-// calendar, and what only it reaches
+// calendar: the Dates application (appSymbol 'calendar). It shows the
+// meetings and events of the selected dates in one of several main
+// displays (mainDisplay): the day's schedule (scheduleView), a week, the
+// month overview, the year, the agenda, or the To Do list, with a month
+// calendar (monthController) and a strip of the day's events (cribView)
+// above it. Meetings and events are kept in four soups: single meetings
+// (calendarSoupName), single events or notes (calendarNotesName),
+// repeating meetings (repeatMeetingName) and repeating events
+// (repeatNotesName); a repeating one has repeatType/mtgInfo and its
+// exceptions. Times are minutes since 1904 (1440 a day). The application
+// also implements the Dates programming interface of the Newton
+// Programmer's Guide (AddAppointment, FindAppointment, DisplayDate, ...),
+// alarms, To Do tasks, Find and the conversion of 1.x soups. Its many
+// views are defined after it.
 
 calendar := {
 	RemoveOldMeetingsForm: nil,
+	// The text a meeting or event a1 is routed as (beamed, mailed): title,
+	// date, times, invitees, location and notes; for a repeating one, its next
+	// occurrence (with that occurrence's exception, if any).
 	GetTextOfRoutedMeeting: func(a1) begin
 		local mtgStartDate, mtgDuration, l3, mtgInvitees, mtgLocation, notesText2, exception, instanceOfRepeatingMeeting;
 		mtgStartDate := a1.mtgStartDate;
 		mtgDuration := self:GetMeetingSlot(a1, 'mtgDuration);
+		// minutes since midnight (1440 minutes in a day)
 		l3 := (mtgStartDate mod 1440);
 		mtgInvitees := self:GetMeetingSlot(a1, 'mtgInvitees);
 		mtgLocation := self:GetMeetingSlot(a1, 'mtgLocation);
@@ -21,10 +38,15 @@ calendar := {
 			end;
 		(if (a1.viewStationery <> 'cribNote) then ParamStr("Meeting:  ^0\nDate:  ^1\nTime:  ^2 to ^3\nWho:  ^4\nWhere:  ^5\nNotes:  ^6", [Array: self:GetMeetingText(a1), ShortDateStr(mtgStartDate, 0), TimeStr(l3, @datetimeStrSpecs.shortTimeStrSpec), TimeStr((l3 + mtgDuration), @datetimeStrSpecs.shortTimeStrSpec), self:GetNamesOfInvitees(mtgInvitees, nil), self:getNameOfLocation(mtgLocation), notesText2]) else ParamStr("Event:  ^0\nDate:  ^1\nNotes:  ^2", [Array: self:GetMeetingText(a1), ShortDateStr(mtgStartDate, 0), notesText2]))
 	end,
+	// the preferences slip: default alarm times for meetings and events, the
+	// first day of the week, and whether new meetings and tasks are stored
+	// internally
 	prefsView: {
 		viewBounds: {left: 0, top: 0, right: 200, bottom: 200},
 		viewJustify: vjParentCenterH + vjParentCenterV,
 		theApp: nil,
+		// An easter egg: a tap in the top left, bottom left or top right corner
+		// shows one of the authors' names (who).
 		viewClickScript: func(unit) begin
 			local pt, pt2, box, l4, l5, l6, l7, l8, l9, l10;
 			pt := GetPoint(0, unit);
@@ -63,6 +85,8 @@ calendar := {
 				end,
 				_proto: @protoTitle
 			},
+			// the default meeting alarm: none, at the time, 5, 15, 30 minutes, an hour,
+			// a day before, or an "other" number of minutes, hours or days
 			{
 				debug: 10055132,
 				_proto: @protoTwoLinePicker,
@@ -71,6 +95,8 @@ calendar := {
 				otherChoices: [|Array|: minutesNotice, hoursNotice, daysNotice],
 				labelWarningTimes: [|Array|: -1, 0, 5, 15, 30, 60, 1440],
 				otherWarningTimes: [|Array|: 1, 60, 1440],
+				// Shows the current setting: one of the fixed times, else the other
+				// amount in days, hours or minutes, whichever divides it.
 				viewSetupDoneScript: func() begin
 					local meetingAlarms, pos;
 					inherited:?viewSetupDoneScript();
@@ -100,6 +126,8 @@ calendar := {
 								SetValue(textDisplay, 'text, choices[(Length(choices) - 1)])
 							end) else SetValue(textDisplay, 'text, choices[0]))
 				end,
+				// One of the fixed times was picked: stored in the preferences (index 0,
+				// none, as nil).
 				pickActionScript: func(index) begin
 					local labelWarningTime;
 					(if index then (if (inherited:?pickActionScript(index) <> -1) then begin
@@ -111,6 +139,7 @@ calendar := {
 								(if (not theApp.prefsCache) then (theApp:GetAppPreferences().meetingAlarms := labelWarningTime) else (theApp.prefsCache.meetingAlarms := labelWarningTime))
 							end))
 				end,
+				// An "other" amount typed: stored in minutes.
 				viewQuitScript: func() begin
 					local number;
 					(if (if Visible(otherPicker) then otherInput.text) then begin
@@ -125,6 +154,8 @@ calendar := {
 						end)
 				end
 			},
+			// the default event alarm: none, 9am on the day, or 1, 2, 3 (or another
+			// number of) days before
 			{
 				debug: 2618844,
 				_proto: @protoTwoLinePicker,
@@ -180,6 +211,7 @@ calendar := {
 				text: "First day of the week",
 				_proto: @protoStaticText
 			},
+			// the first day of the week (the user configuration's, else the locale's)
 			{
 				debug: 1377180,
 				selected: nil,
@@ -201,6 +233,8 @@ calendar := {
 					inherited:?viewSetupDoneScript();
 					self:Initialize(selected, singleSelect)
 				end,
+				// A day picked: stored as the user's first day of the week (nil if the
+				// locale's), and the calendars redrawn.
 				HitItem: func(a1) begin
 					local calendar;
 					if (a1 = GetLocale().firstDayOfWeek) then begin
@@ -218,6 +252,7 @@ calendar := {
 				end,
 				_proto: @protoDayPicker
 			},
+			// "Always store new meetings internally"
 			{
 				viewJustify: vjSiblingBottomV,
 				viewBounds: {left: 16, top: 11, right: 180, bottom: 26},
@@ -231,6 +266,7 @@ calendar := {
 				end,
 				_proto: @protoCheckbox
 			},
+			// "Always store new tasks internally"
 			{
 				viewJustify: vjParentBottomV,
 				viewBounds: {left: 16, top: -32, right: 196, bottom: -17},
@@ -256,12 +292,14 @@ calendar := {
 		_proto: @protoFloater
 	},
 	MonthOverView: nil,
+	// Schedules the next Dates alarm: removes the app's alarms and finds the
+	// next alarm due among the four soups (alarmQuerySpec on mtgAlarm).
 	nextCalendarAlarm: func(a1) begin
 		local copy, getNextSingleAlarm, meetingSoup2;
 		getNextSingleAlarm := 0;
 		RemoveAppAlarms(":calendar");
 		(copy := Clone(@alarmQuerySpec)).beginKey := (Time() + 1);
-		alarmTime := 536870911;
+		alarmTime := kForever;
 		if (not (meetingSoup2 := MeetingSoup)) then begin
 				meetingSoup2 := GetUnionSoupAlways(@calendarSoupName)
 			end;
@@ -278,11 +316,15 @@ calendar := {
 		if (not (meetingSoup2 := RepeatNotes)) then begin
 				meetingSoup2 := GetUnionSoupAlways(@repeatNotesName)
 			end;
+		// a repeating event's alarm may come before its day (9 hours before
+		// midnight at most, the "9am" setting less a day)
 		copy.beginKey := -540;
 		getNextSingleAlarm := self:getNextRepeatingAlarm(Query(meetingSoup2, copy), getNextSingleAlarm);
 		nil
 	end,
 	isNewMeeting: nil,
+	// The To Do view to work with: the agenda's, the To Do list's, or a
+	// temporary one.
 	GetToDo: func() begin
 		local toDoAgendaView;
 		if Visible(AgendaView) then begin
@@ -296,6 +338,9 @@ calendar := {
 			end;
 		toDoAgendaView
 	end,
+	// Adds to list the entries of soup that are meetings or events with the
+	// title (if given), containing findWords (if given), starting in dateRange
+	// ([start, stop], normalised by NormalizeDateRange), at most a6 of them.
 	FindInSoup: func(title, findWords, dateRange, soup, a5, a6, list) begin
 		local tempSearchTarget, startDate, stopDate;
 		local fn, cursor, next, l4;
@@ -340,12 +385,15 @@ calendar := {
 				(next := cursor:Next())
 			end)
 	end,
+	// The dates shown.
 	GetSelectedDates: func() begin
 		selectedDates
 	end,
+	// The up-arrow key: scroll the display up.
 	_localScrollUpKeyScript: func(a1) begin
 		self:_localCommonScrollScript('up, {amount: -1})
 	end,
+	// Opens view context, remembering it so that it is closed with the app.
 	RememberedOpen: func(context) begin
 		if (not openNonchildViews) then begin
 				openNonchildViews := [Array: ]
@@ -354,9 +402,12 @@ calendar := {
 		context:Open();
 		nil
 	end,
+	// The application's preferences entry (GetAppPrefs), with its defaults.
 	GetAppPreferences: func() begin
 		GetAppPrefs('calendar, '{eventAlarms: nil, meetingAlarms: nil, internalStore: nil, toDoInternalStore: nil, viewBounds: nil, calendarMainDisplay: scheduleView})
 	end,
+	// The target for routing: the overview's selection, else the meeting shown;
+	// a target is given the selected date as its startDate.
 	GetTargetInfo: func(a1) begin
 		local l1;
 		if (l1 := (if Visible(DatesOverviewForm) then DatesOverviewForm:GetTargetInfo(a1) else {target: target, targetView: targetView, targetStore: nil})).target then begin
@@ -366,6 +417,7 @@ calendar := {
 		l1
 	end,
 	protoToDoAgendaView: protoToDoAgendaView,
+	// the template of a new repeating event (mtgStopDate kForever: no end)
 	protoCribNoteRepeatTemplate: {
 		viewStationery: 'cribNote,
 		class: 'meeting,
@@ -379,10 +431,13 @@ calendar := {
 		version: 2,
 		repeatType: nil,
 		mtgInfo: nil,
-		mtgStopDate: 536870911,
+		mtgStopDate: kForever,
 		exceptions: nil,
 		InstanceNotesData: nil
 	},
+	// The appointments text names: the frame itself (checked to be a meeting
+	// or event), else those FindAppointment finds by title text and date
+	// mtgStartDate (exactly one when a4). Throws on bad arguments or none.
 	IdentifyAppointments: func(text, mtgStartDate, a3, a4) begin
 		local l1, appointment;
 		(if IsFrame(text) then begin
@@ -403,6 +458,9 @@ calendar := {
 				appointment
 			end)
 	end,
+	// Registers for changes to the four soups (a change made by another app is
+	// passed on to FilterChanged, procrastinated), and sets the scroll arrows of
+	// the main display.
 	viewSetupDoneScript: compile(
 		constants: {
 			kFunction_4f44e1: func(a1, a2, a3, a4) begin
@@ -438,6 +496,7 @@ calendar := {
 					upDownScroller:AdjustArrows()
 				end)
 		end),
+	// Closes view a1 opened by RememberedOpen.
 	RememberedClose: func(a1) begin
 		local pos;
 		pos := nil;
@@ -450,10 +509,12 @@ calendar := {
 		a1:Close();
 		nil
 	end,
+	// Duplicates meeting a1, or the overview's selected meetings (a1 with a
+	// cursor), opening the copy of a single one.
 	DuplicateMeetingScript: func(a1, a2) begin
 		local duplicateMeeting;
 		if (not a1) then begin
-				self:Notify(3, title, "There is nothing to duplicate.");
+				self:Notify(kNotifyAlert, title, "There is nothing to duplicate.");
 				return nil
 			end;
 		(if a1._cursor then begin
@@ -468,6 +529,11 @@ calendar := {
 	end,
 	Convert10to20: Convert10to20,
 	Convert20to10: Convert20to10,
+	// FindAppointment (Dates interface): the meetings and events with title
+	// text, containing words a2, in date range mtgStartDate (a time or
+	// [start, stop]), of kinds a4 ('meeting, 'event, 'RepeatingMeeting,
+	// 'RepeatingEvent or an array of them), at most a5 (50). Returns an array
+	// or nil. Throws on bad arguments.
 	FindAppointment: func(text, a2, mtgStartDate, a4, a5) begin
 		local list;
 		if (not ((text = nil) or IsInstance(text, 'string))) then begin
@@ -510,9 +576,11 @@ calendar := {
 	end,
 	previousMainDataDisplay: nil,
 	MeetingSoup: nil,
+	// Whether a1 is an instance of a repeating meeting.
 	IsRepeatingMeeting: func(a1) begin
 		(a1.repeatTemplate <> nil)
 	end,
+	// Redraws the date, the event strip and the main display.
 	minimalRedisplay: func() begin
 		BusyBoxControl(1);
 		SetValue(DateView, 'text, self:CreateDateString());
@@ -524,6 +592,8 @@ calendar := {
 		upDownScroller:AdjustArrows()
 	end,
 	ConvertAnnotatedMeetingsAfterStopDate: ConvertAnnotatedMeetingsAfterStopDate,
+	// The start of the first meeting or event at or after selectedDate in any
+	// of the four soups, kForever if none.
 	FindFirstAppointmentDate: compile(
 		constants: {
 			kFunction_50eb55: func(a1, a2) begin
@@ -552,15 +622,21 @@ calendar := {
 			l4 := call l1 with (notes, selectedDate);
 			l5 := call l2 with (RepeatSoup, selectedDate);
 			l6 := call l2 with (RepeatNotes, selectedDate);
-			least := 536870911;
+			least := kForever;
 			(least := min((least := min((least := min(l3, l4)), l5)), l6))
 		end),
 	mainDisplay: nil,
+	// Whether findWhat is in meeting a1's title, invitees or location.
 	FindStringInTitleInviteesLocation: func(a1, findWhat, a3) begin
 		local list;
 		FindStringInFrame((list := [Array: self:GetMeetingText(a1), self:GetMeetingSlot(a1, 'mtgInvitees), self:GetMeetingSlot(a1, 'mtgLocation)]), findWhat, a3)
 	end,
 	viewFormat: vfFillWhite + vfFrameBlack,
+	// After an instance of a repeating meeting moved to mtgStartDate (or its
+	// notes changed): updates the instance notes kept in the template
+	// (InstanceNotesData, sorted by time, each [time, alias to the notes
+	// entry]); with a3 nil the instance's notes are removed (kept in undoNotes
+	// for an undo). Returns true if the instance had notes.
 	UpdateInstanceNotesDataTime: func(repeatTemplate, mtgStartDate, a3) begin
 		local instanceNotesData, found, resolveEntryAlias2;
 		if (instanceNotesData := repeatTemplate.InstanceNotesData) then begin
@@ -584,6 +660,7 @@ calendar := {
 					true
 				end))
 	end,
+	// the slots of the preallocated context (the application's own slots)
 	_cacheContext: {
 		RemoveOldMeetingsForm: nil,
 		MonthOverView: nil,
@@ -594,6 +671,8 @@ calendar := {
 		MeetingSoup: nil,
 		mainDisplay: nil,
 		viewFormat: vfFillWhite + vfFrameBlack,
+		// the schedule shows 540 minutes (9 hours), from startTime 540 (9am) to
+		// stopTime 1080 (6pm), when opened
 		ViewDuration: 540,
 		monthController: nil,
 		YearView: nil,
@@ -636,6 +715,8 @@ calendar := {
 		notes: nil,
 		base: nil
 	},
+	// The text of the meetings of a4 days from day a3 (each day's heading
+	// then each meeting by meetingText with options a5), for routing.
 	meetingsText: func(a1, a2, a3, a4, a5) begin
 		l8 := ((a3 + (a4 * 1440)) - 1);
 		l2 := " ";
@@ -665,12 +746,16 @@ calendar := {
 	end,
 	ViewDuration: 540,
 	monthController: nil,
+	// The print and fax format offered for mainDisplay: the To Do list, the
+	// agenda, a week, or a day.
 	SetupDefaultPrintFormat: func(mainDisplay) begin
 		local l1;
 		l1 := (if (mainDisplay = ToDoListView) then 'ToDoListPrintFormat else (if (mainDisplay = AgendaView) then 'AgendaListPrintFormat else (if (Length(selectedDates) > 1) then 'WeekViewPrintFormat else 'DayViewPrintFormat)));
 		lastFormats.|print:newton| := l1;
 		(lastFormats.|faxsend:newton| := l1)
 	end,
+	// Turns a copy of the app made for a button (with its own setup scripts)
+	// back into one protoed from calendar.
 	buttonToggleScript: func(childViewFrame) begin
 		(foreach item in '[Array: viewSetupFormScript, viewSetupChildrenScript, viewSetupDoneScript, viewQuitScript, viewHideScript, viewShowScript] do begin
 				RemoveSlot(self, item)
@@ -678,6 +763,9 @@ calendar := {
 		self._proto := @calendar;
 		nil
 	end,
+	// Find: adds to a1 a finder (repeating or single meetings) for cursor a2
+	// of the results, if it holds any meeting (aliases of repeating meetings
+	// are resolved).
 	AddFinder: func(a1, a2, a3, a4, what) begin
 		local entry, frame2, protoRepeatingMeetingSoupFinder2, l4;
 		entry := a2:entry();
@@ -696,6 +784,8 @@ calendar := {
 			end)
 	end,
 	ValidateMeeting: ValidateMeeting,
+	// Closes: unregisters the soups, remembers the main display and closes
+	// the views opened apart (RememberedOpen).
 	viewQuitScript: func() begin
 		UnRegSoupChange(@calendarSoupName, 'calendar);
 		UnRegSoupChange(@repeatMeetingName, 'calendar);
@@ -715,11 +805,12 @@ calendar := {
 			end;
 		'postQuit
 	end,
+	// [start, stop] for a date (a whole day if a2), or all time for nil.
 	NormalizeDateRange: func(dateRange, a2) begin
 		local dateRange2, dateRange3, l3;
 		if (dateRange = nil) then begin
 				dateRange2 := 0;
-				dateRange3 := 536870911
+				dateRange3 := kForever
 			end else begin
 				if a2 then begin
 						dateRange2 := (l3 := (dateRange - (dateRange mod 1440)));
@@ -735,6 +826,8 @@ calendar := {
 	AppAll: "All dates",
 	hideSound: @drawerClose,
 	YearView: nil,
+	// Throws unless copy is a string and selectedDate a positive integer (a
+	// time).
 	ValidateTitleAndDatetimeArgs: func(copy, selectedDate) begin
 		if (not IsInstance(copy, 'string)) then begin
 				ThrowBadTypeWithFrameData(kNSErrNotAString, copy)
@@ -742,27 +835,34 @@ calendar := {
 		(if ((not IsInteger(selectedDate)) or (selectedDate <= 0)) then ThrowBadTypeWithFrameData(kNSErrUnexpectedImmediate, selectedDate))
 	end,
 	ROMlastFormats: {|print:newton|: 'DayViewPrintFormat, |faxsend:newton|: 'DayViewPrintFormat},
+	// the soups and the index their entries are found by
 	soupIndexArray: [|Array|:
 		[|Array|: @calendarSoupName, 'mtgStartDate],
 		[|Array|: @calendarNotesName, 'mtgStartDate],
 		[|Array|: @repeatMeetingName, 'mtgStopDate],
 		[|Array|: @repeatNotesName, 'mtgStopDate]
 	],
+	// The command key for New.
 	_newKeyScript: func(a1) begin
 		PressButton(statusbar.newButton)
 	end,
 	cribMoreIndicator: nil,
+	// After a store exception: tells the user the store is write-protected or
+	// full.
 	NotifyStoreError: func() begin
 		local error, text;
-		if ((error := CurrentException().error) = -10605) then begin
+		if ((error := CurrentException().error) = kSError_WriteProtected) then begin
 				text := "^0 changes could not be saved because the card is write-protected."
 			end else begin
-				if (error = -10617) then begin
+				if (error = kSError_StoreFull) then begin
 						text := "^0 changes could not be saved because the memory is full."
 					end
 			end;
-		(if text then self:Notify(3, title, ParamStr(text, [Array: title])))
+		(if text then self:Notify(kNotifyAlert, title, ParamStr(text, [Array: title])))
 	end,
+	// The start of the last meeting or event before a1 (kForever: the last
+	// of all) in any of the four soups; a repeating one that never ends makes
+	// it kForever.
 	FindLastAppointmentDate: compile(
 		constants: {
 			kFunction_50ed8d: func(a1, a2) begin
@@ -803,6 +903,8 @@ calendar := {
 			most := 0;
 			(most := max((most := max((most := max(l3, l4)), l5)), l6))
 		end),
+	// Removes realData from its soup; a store error is reported and the
+	// display redone.
 	CarefulRemove: func(realData, a2) begin
 		(try begin
 				EntryRemoveFromSoupXmit(realData, a2)
@@ -813,6 +915,9 @@ calendar := {
 	end,
 	FindException: FindException,
 	target: {class: 'calendar},
+	// RegMeetingType (Dates interface): registers a new meeting type a1, with
+	// a2 giving its item (name), icon and newMeeting method; it is added to
+	// the New button's choices.
 	RegMeetingType: func(a1, a2) begin
 		local frame2;
 		if (((not a2.item) or (not a2.icon)) or (not a2.newMeeting)) then begin
@@ -827,14 +932,17 @@ calendar := {
 		meetingTypeRegistry.(EnsureInternal(a1)) := frame2;
 		nil
 	end,
+	// Refreshes the month calendar and redraws.
 	redisplayScript: func() begin
 		monthController:Refresh();
 		self:minimalRedisplay()
 	end,
+	// The command key for the routing button.
 	_actionKeyScript: func(a1) begin
 		PressButton(statusbar.actionButton)
 	end,
 	meetingTypeRegistry: meetingTypeRegistry,
+	// Adds meeting a1 to the meetings soup, undoably.
 	AddMeeting: func(a1) begin
 		local mtgStartDate, l2, l3;
 		l2 := ((mtgStartDate := a1.mtgStartDate) + a1.mtgDuration);
@@ -844,6 +952,9 @@ calendar := {
 		calendar:redisplayScript();
 		AddUndoAction('RemoveMeeting, [Array: a1])
 	end,
+	// Duplicates meeting or event exception (an instance of a repeating one
+	// becomes a single one) as "copy of ...", added to its soup. Returns the
+	// copy.
 	DuplicateMeeting: func(exception) begin
 		local convertToNonrepeating, l2;
 		if exception.repeatTemplate then begin
@@ -864,6 +975,9 @@ calendar := {
 		self:CarefulAdd((if l2 then notes else MeetingSoup), convertToNonrepeating, true);
 		convertToNonrepeating
 	end,
+	// Makes a1 the main display: closes the slips, hides or shows the scroll
+	// arrows, event strip and month calendar's single-day mode as the display
+	// needs, and redraws when nothing changed.
 	changeViewTo: func(a1) begin
 		local l1;
 		l1 := nil;
@@ -937,6 +1051,8 @@ calendar := {
 		self:SetupDefaultPrintFormat(a1);
 		(if l1 then self:redisplayScript())
 	end,
+	// the views: the month calendar, event strip, scroll arrows, date, week
+	// number, a grey rule, the status bar, and the displays and slips
 	viewChildren: [viewChildren:
 		monthController,
 		cribView,
@@ -964,16 +1080,20 @@ calendar := {
 		AgendaView,
 		RemoveOldMeetingsForm
 	],
+	// The mask of the days of the week in array a1 (0 Sunday): kSunday shifted
+	// right by each day.
 	ExtractDayNames: func(a1) begin
 		bOr2 := 0;
 		local bOr2;
 		(foreach item in a1 do begin
-				bOr2 := BOr(bOr2, (2048 >> item))
+				bOr2 := BOr(bOr2, (kSunday >> item))
 			end);
 		bOr2
 	end,
 	GetNameOfPerson: GetNameOfPerson,
 	startTime: 540,
+	// the built-in meeting types: their names, icons and shapes, and the slot
+	// of the memory of titles used for each
 	|MeetingTypesROM-51|: {
 		meeting: {
 			label: meeting_3,
@@ -1037,6 +1157,9 @@ calendar := {
 			memory: 'datesMtgTitle
 		}
 	},
+	// SetRepeatingEntryStopDate (Dates interface): ends the repeating meeting
+	// or event a1 (at a2) at a3 (nil: never; an event's at the end of a3's
+	// day).
 	SetRepeatingEntryStopDate: func(a1, a2, a3) begin
 		local exactlyOneAppointment, l2, repeatTemplate;
 		self:ValidateTitleAndDatetimeArgs(a1, a2);
@@ -1045,7 +1168,7 @@ calendar := {
 			end;
 		exactlyOneAppointment := self:FindExactlyOneAppointment(a1, nil, a2, '[Array: RepeatingMeeting, RepeatingEvent]);
 		if (a3 = nil) then begin
-				a3 := 536870911
+				a3 := kForever
 			end else begin
 				if (exactlyOneAppointment.viewStationery = 'cribNote) then begin
 						a3 := (((l2 := (a3 - (a3 mod 1440))) + 1440) - 1)
@@ -1055,6 +1178,7 @@ calendar := {
 		self:CarefulChange(EntrySoup((repeatTemplate := exactlyOneAppointment.repeatTemplate)), repeatTemplate, nil);
 		nil
 	end,
+	// Removes a2 from soup, undoably, redrawing later if a3.
 	RemoveItemFromSoup: func(soup, a2, a3) begin
 		EntryRemoveFromSoupXmit(a2, 'calendar);
 		if a3 then begin
@@ -1063,6 +1187,9 @@ calendar := {
 		AddUndoAction('AddItemToSoup, [Array: soup, a2])
 	end,
 	lastOpenedMainDisplay: nil,
+	// Checks the core slots of a meeting or event frame itemItem (for
+	// AddAppointment): 1 not a frame, 2 not a meeting stationery, nil invalid
+	// slots, 0 valid. An event's start is moved to midnight.
 	HasValidCoreMeetingSlots: compile(
 		constants: {
 			kFunction_500ee1: func(a1) begin
@@ -1116,6 +1243,8 @@ calendar := {
 			return 0
 		end),
 	viewFlags: vApplication + vClipping + vClickable,
+	// FindAppointment's search, which must find exactly one appointment
+	// (it asks for at most 2); throws otherwise. Returns it.
 	FindExactlyOneAppointment: func(a1, a2, a3, a4) begin
 		local appointment;
 		if ((appointment := self:FindAppointment(a1, a2, a3, a4, 2)) = nil) then begin
@@ -1127,6 +1256,10 @@ calendar := {
 			end;
 		appointment[0]
 	end,
+	// Makes meeting or event copy repeat: repeatType, mtgInfo (its days or
+	// dates) and mtgStopDate; its notes become the first instance's, and an
+	// alarm becomes an offset before the start (a repeating meeting keeps its
+	// alarm as minutes before each instance).
 	ConvertToRepeating: func(copy, repeatType, a3, mtgStopDate, a5) begin
 		local copy2, l2, mtgAlarm;
 		if ((copy2 := copy).viewStationery <> 'cribNote) then begin
@@ -1144,17 +1277,21 @@ calendar := {
 			end;
 		(if (not l2) then (if (mtgAlarm := self:GetMeetingSlot(copy2, 'mtgAlarm)) then (copy2.mtgAlarm := (copy2.mtgStartDate - mtgAlarm))))
 	end,
+	// The mask of the weeks of the month in a1 (1 the first): kFirstWeek
+	// shifted right by each week less one.
 	ExtractWeekNumbers: func(a1) begin
 		bOr2 := 0;
 		local bOr2;
 		(foreach item in a1 do begin
-				bOr2 := BOr(bOr2, (16 >> (item - 1)))
+				bOr2 := BOr(bOr2, (kFirstWeek >> (item - 1)))
 			end);
 		bOr2
 	end,
+	// The symbol of the main display ('scheduleView, 'WeekView, ...).
 	GetCurrentMainView: func() begin
 		(if HasPath(mainDisplay, 'whoAmI) then mainDisplay.whoAmI else 'scheduleView)
 	end,
+	// the template of a new single event
 	protoCribNote: {
 		viewStationery: 'cribNote,
 		class: 'meeting,
@@ -1167,6 +1304,8 @@ calendar := {
 		viewBounds: nil,
 		version: 2
 	},
+	// the template of a changed instance of a repeating meeting: originDate is
+	// the instance's original start
 	protoException: {
 		viewStationery: 'exceptionMeeting,
 		class: 'meeting,
@@ -1179,12 +1318,17 @@ calendar := {
 	},
 	upDownScroller: nil,
 	showSound: @drawerOpen,
+	// Shows the To Do list for day a1.
 	ShowToDoList: func(a1) begin
 		selectedDates := [Array: (a1 - (a1 mod 1440))];
 		self:changeViewTo(ToDoListView);
 		ToDoListView:calculateScrollRects()
 	end,
 	canonicalOverviewSelectedItem: {class: 'meeting, index: nil, instanceTime: nil, entryAlias: nil, topic: nil, topicID: nil},
+	// Moves the start of repeating meeting repeatTemplate to mtgStartDate:
+	// drops the instance notes and exceptions before it (removing the notes
+	// entries if a3), and if that start is itself an exception, uses the next
+	// (or, failing that, the previous) instance instead.
 	SetRepeatingMeetingStartDate: func(repeatTemplate, mtgStartDate, a3) begin
 		if (instanceNotesData := repeatTemplate.InstanceNotesData) then begin
 				local instanceNotesData;
@@ -1240,6 +1384,10 @@ calendar := {
 			end;
 		(repeatTemplate.mtgStartDate := mtgStartDate)
 	end,
+	// Sets an alarm (AddAlarm, keys "n:calendar") for each single meeting or
+	// event of cursor whose alarm is the earliest still to come (alarmTime);
+	// an earlier one clears those already set. Its callback schedules the next
+	// alarm. Returns the next alarm number.
 	getNextSingleAlarm: compile(
 		constants: {
 			kFunction_4f402d: func() begin
@@ -1265,6 +1413,8 @@ calendar := {
 				end);
 			getNextSingleAlarm
 		end),
+	// SetMeetingLocation (Dates interface): sets the location of meeting a1 at
+	// a2 to a3 (a name, made a nameRef.meetingPlace), or none.
 	SetMeetingLocation: func(a1, a2, a3) begin
 		local exactlyOneAppointment, nameRef, repeatTemplate, soup;
 		self:ValidateTitleAndDatetimeArgs(a1, a2);
@@ -1285,6 +1435,10 @@ calendar := {
 	doCardRouting: 'onlyCardRouting,
 	GetMeetingText: GetMeetingText,
 	saveWhatView: nil,
+	// Makes the exception of repeating meeting repeatTemplate for its instance
+	// at mtgStartDate, moved to a3 and lasting mtgDuration (not for an event),
+	// and records it in the template's exceptions ([original start, exception]).
+	// Returns the exception.
 	MakeNewExceptionFrame: func(repeatTemplate, mtgStartDate, a3, mtgDuration) begin
 		local l1, copy, searchExceptionList, exception;
 		if (l1 := (repeatTemplate.viewStationery = 'cribNote)) then begin
@@ -1309,17 +1463,24 @@ calendar := {
 			end;
 		copy
 	end,
+	// The date shown above the display: a range for several dates, else the
+	// long date.
 	CreateDateString: func() begin
 		local count, selectedDates2;
 		(if ((count := Length((selectedDates2 := selectedDates))) > 1) then ParamStr("^0 ^1 ^2", [Array: LongDateStr(selectedDates2[0], DateSpecShort), "-", LongDateStr(selectedDates2[(count - 1)], DateSpecShort)]) else LongDateStr(selectedDates2[0], DateSpecLong))
 	end,
+	// The alarm time of an event at mtgStartDate warning a2 days before: 9am
+	// (540 minutes) that day.
 	ComputeCribMtgAlarm: func(mtgStartDate, a2) begin
 		local l1;
 		(((l1 := (mtgStartDate - (mtgStartDate mod 1440))) - (a2 * 1440)) + 540)
 	end,
+	// CreateToDoItem (Dates interface), passed to the To Do view.
 	CreateToDoItem: func(selectedDate, text, a3, a4) begin
 		self:GetToDo():CreateToDoItem(selectedDate, text, a3, a4)
 	end,
+	// DeleteAppointment (Dates interface): deletes the meetings a1 names (at
+	// a2; exactly one when a3 is true).
 	DeleteAppointment: func(a1, a2, a3) begin
 		local identifyAppointments;
 		if (not ((a3 = true) or (a3 = nil))) then begin
@@ -1328,15 +1489,18 @@ calendar := {
 		self:RealDeleteAppointment((identifyAppointments := self:IdentifyAppointments(a1, a2, '[Array: meeting, RepeatingMeeting], a3)));
 		nil
 	end,
+	// The names of meeting a1's invitees.
 	GetArrayOfNamesOfInvitees: func(a1) begin
 		local mtgInvitees;
 		(if (mtgInvitees := self:GetMeetingSlot(a1, 'mtgInvitees)) then (foreach item in mtgInvitees collect self:GetNameOfPerson(item)))
 	end,
+	// GetMeetingNotes (Dates interface): the notes of meeting a1 at a2.
 	GetMeetingNotes: func(a1, a2) begin
 		local exactlyOneAppointment;
 		self:ValidateTitleAndDatetimeArgs(a1, a2);
 		self:GetNotesData((exactlyOneAppointment := self:FindExactlyOneAppointment(a1, nil, a2, nil)))[1]
 	end,
+	// Adds a2 to soup a1, undoably, redrawing later.
 	AddItemToSoup: func(a1, a2) begin
 		self:CarefulAdd(a1, a2, true);
 		AddProcrastinatedSend('calendar, calendar, 'redisplayScript, [Array: ], 100);
@@ -1345,11 +1509,15 @@ calendar := {
 	RollOverAlarm: RollOverAlarm,
 	ReOrientToScreen: @defRotateFunc,
 	lastChecked: 0,
+	// the main displays by calendarMainDisplay index (Show button order)
 	mainCalendarViews: [|Array|: 'scheduleView, 'WeekView, 'MonthOverView, 'YearView, nil, 'ToDoListView, 'AgendaView],
+	// The routing slip's Delete: opens the slip that removes old meetings.
 	DeleteActionScript: func(a1, a2) begin
 		RemoveOldMeetingsForm:Open()
 	end,
 	openNonchildViews: nil,
+	// converts entries between the 1.x and 2.0 formats (To Do items by the
+	// To Do data def)
 	conversion: {
 		Convert10to20: Convert10to20,
 		Convert20to10: Convert20to10,
@@ -1363,6 +1531,9 @@ calendar := {
 		end
 	},
 	viewBounds: nil,
+	// MoveOnlyOneAppointment (Dates interface): moves meeting a1 at a2 to start
+	// a3 and/or last a4 minutes; an instance of a repeating one becomes an
+	// exception.
 	MoveOnlyOneAppointment: func(a1, a2, a3, a4) begin
 		local exactlyOneAppointment, l2, l3, l4, repeatTemplate, soup;
 		self:ValidateTitleAndDatetimeArgs(a1, a2);
@@ -1402,6 +1573,8 @@ calendar := {
 			end;
 		nil
 	end,
+	// Deletes what the routing slip's Delete targets (saveWhat): the overview's
+	// selection, or one meeting, closing its view.
 	DeleteActionHelper: func() begin
 		local saveWhat2;
 		saveWhatView.viewEffect := nil;
@@ -1421,6 +1594,9 @@ calendar := {
 					(if self:GetMeetingSlot(saveWhat2, 'mtgAlarm) then self:initializeAlarms())
 				end))
 	end,
+	// Find by date: finders of the meetings, events and tasks before, after
+	// or on (a2: 'dateBefore, 'dateAfter, 'dateOn) the date what, added to a3
+	// as one calendar finder. a5 shows the progress.
 	DateFind: compile(
 		constants: {
 			kROM_255: @searchPrefix,
@@ -1483,6 +1659,7 @@ calendar := {
 			l12:?DateFind(what, a2, l5, l6, a5);
 			(if ((Length(l4) > 0) or (Length(l5) > 0)) then AddArraySlot(a3, l6))
 		end),
+	// The name of meeting a1's location, or nil.
 	GetNameOfLocationOrNil: func(a1) begin
 		local mtgLocation;
 		(if (mtgLocation := self:GetMeetingSlot(a1, 'mtgLocation)) then self:getNameOfLocation(mtgLocation))
@@ -1529,6 +1706,8 @@ calendar := {
 	DatesOverviewForm: nil,
 	MeetingTypesROM: meetingTypeRegistry,
 	_proto: @protoFloater,
+	// DeleteEvent (Dates interface): deletes the events a1 names (at a2;
+	// exactly one when a3 is true).
 	DeleteEvent: func(a1, a2, a3) begin
 		local identifyAppointments;
 		if (not ((a3 = true) or (a3 = nil))) then begin
@@ -1537,15 +1716,22 @@ calendar := {
 		self:RealDeleteAppointment((identifyAppointments := self:IdentifyAppointments(a1, a2, '[Array: event, RepeatingEvent], a3)));
 		nil
 	end,
+	// Moves the routing target to selectedStore.
 	MoveTarget: func(a1, selectedStore) begin
 		self:MoveTargetXmit(a1, selectedStore, true)
 	end,
+	// a finder of the repeating meetings found: each entry's matching instances
+	// (repeatingEntryFinders, one per entry), walked in time order
 	protoRepeatingMeetingSoupFinder: {
 		debug: 89299848,
 		cacheCount: nil,
 		selected: nil,
 		repeatingEntryFinders: nil,
 		currentRepeatingEntryFinder: nil,
+		// Adds a finder for repeating meeting reset if it matches: for text, its
+		// next (else previous) instance from now whose title, invitees or location
+		// match (or the exceptions that match); for a date, the instance before,
+		// after or on it. Returns how many instances were added.
 		AddFoundRepeatingMeetingInstances: func(reset, a2, a3, now, list2) begin
 			findType2 := findType;
 			owner2 := owner;
@@ -1602,6 +1788,7 @@ calendar := {
 				end;
 			count
 		end,
+		// Calls fn(entry, instanceTime) for each selected instance.
 		ForEachSelected: func(fn) begin
 			(if selected then begin
 					cursor2 := Query(cursor:soup(), '{type: index});
@@ -1621,6 +1808,7 @@ calendar := {
 						end)
 				end)
 		end,
+		// Selects or deselects found item a1.
 		SelectItem: compile(
 			constants: {
 				kFunction_4ee051: func(a1, a2) begin
@@ -1632,6 +1820,8 @@ calendar := {
 				frame2 := {_uniqueID: a1.entryID, _storeID: a1.storeID, instanceTime: a1.instanceTime};
 				(if selected then (if (pos := LSearch(selected, frame2, 0, kFunction_4ee051, nil)) then RemoveSlot(selected, pos) else AddArraySlot(selected, frame2)) else (selected := [Array: frame2]))
 			end),
+		// From instance nextMeeting2 of reset, the first (going forward if a3,
+		// else back) that is not an exception, or an exception that matches.
 		NextMeetingThatMatches: func(reset, nextMeeting2, a3) begin
 			local exceptions, owner2, lFetch2;
 			if (exceptions := reset.exceptions) then begin
@@ -1648,6 +1838,7 @@ calendar := {
 				end;
 			nextMeeting2
 		end,
+		// Back to each entry's first instance.
 		Reset: func() begin
 			(foreach item in repeatingEntryFinders do begin
 					item.currentInstance := 0
@@ -1657,6 +1848,8 @@ calendar := {
 		ReSync: func() begin
 			self:Initialize()
 		end,
+		// Points the finders at instance instanceTime of entry (the others at
+		// their instance after it).
 		SyncRepeatingEntryFinders: func(entry, instanceTime) begin
 			l1 := nil;
 			local l1;
@@ -1680,6 +1873,8 @@ calendar := {
 						end
 				end)
 		end,
+		// Opens the app (if needed) on the instance at instanceTime of entry
+		// resolveEntryAlias.
 		ShowInstance: func(resolveEntryAlias, instanceTime) begin
 			if ((resolveEntryAlias = 'deleted) or (resolveEntryAlias = nil)) then begin
 					resolveEntryAlias := nil
@@ -1691,6 +1886,7 @@ calendar := {
 					(if owner.viewCObject then owner:ShowFoundItem(resolveEntryAlias, instanceTime, self))
 				end)
 		end,
+		// Makes current the finder whose current instance is the latest.
 		ChooseLatestInstance: func() begin
 			instancesDate2 := 0;
 			item2 := nil;
@@ -1711,6 +1907,9 @@ calendar := {
 									l6 := true
 								end else begin
 									if (instancesDate = instancesDate2) then begin
+											// looks like a ROM bug: earliestFinder is no variable or slot here (the
+											// earliest-choosing twin compares with item2), so a tie between two
+											// entries' instances throws
 											l6 := (item.EntryUniqueID > earliestFinder.EntryUniqueID)
 										end
 								end
@@ -1722,6 +1921,7 @@ calendar := {
 				end);
 			(if item2 then (self.currentRepeatingEntryFinder := item2))
 		end,
+		// Files the selected entries in folder labels.
 		FileAs: func(labels) begin
 			(if selected then begin
 					if (Length(selected) = 1) then begin
@@ -1739,11 +1939,14 @@ calendar := {
 					(if (not (if owner.doCardRouting then waitToUnSelect)) then (selected := nil))
 				end)
 		end,
+		// Find's Show for found item a1: shows that instance and syncs the finders.
 		ShowFoundItem: func(a1) begin
 			local entry;
 			self:ShowInstance((entry := Query(a1.soup, {type: 'index, indexPath: '_uniqueID, beginKey: a1.entryID}):entry()), a1.instanceTime);
 			self:SyncRepeatingEntryFinders(entry, a1.instanceTime)
 		end,
+		// GetPrevItem, GetNextItem: step the finders back or on (all of them when
+		// the direction changes) and choose the latest or earliest instance.
 		GetPrevItem: func() begin
 			if (not masterFinder.scrollingForward) then begin
 					if ((item := currentRepeatingEntryFinder).currentInstance >= 0) then begin
@@ -1759,12 +1962,15 @@ calendar := {
 				end;
 			self:ChooseLatestInstance()
 		end,
+		// ZeroOneOrMore, count: the number of instances found.
 		ZeroOneOrMore: func() begin
 			if (not cacheCount) then begin
 					self:Initialize()
 				end;
 			cacheCount
 		end,
+		// Points the finders at the instances after one of type meetingType2 at
+		// instanceTime (the next day for an event after a single meeting).
 		FindNextAfterItem: func(meetingType2, instanceTime) begin
 			instanceTime2 := ((instanceTime2 := instanceTime) - (instanceTime2 mod 1440));
 			if (meetingType = 'RepeatingMeeting) then begin
@@ -1787,11 +1993,13 @@ calendar := {
 				end);
 			self:ChooseEarliestInstance()
 		end,
+		// Shows the current instance.
 		ShowCurrentItem: func() begin
 			local currentRepeatingEntryFinder2, l2;
 			l2 := (currentRepeatingEntryFinder2 := currentRepeatingEntryFinder).instancesDates[currentRepeatingEntryFinder2.currentInstance];
 			self:ShowInstance(ResolveEntryAlias(currentRepeatingEntryFinder2.entryAlias), l2)
 		end,
+		// The current instance: its exception, or an instance frame made for it.
 		GetCurrentItem: func() begin
 			local currentRepeatingEntryFinder2, instancesDate, resolveEntryAlias2, exception;
 			if ((not (currentRepeatingEntryFinder2 := currentRepeatingEntryFinder)) or (currentRepeatingEntryFinder2.instancesCount = 0)) then begin
@@ -1806,12 +2014,15 @@ calendar := {
 					(if (exception := owner:FindException(instancesDate, resolveEntryAlias2)) then exception else owner:MakeInstanceOfRepeatingMeeting(resolveEntryAlias2, instancesDate))
 				end)
 		end,
+		// Points every finder at its last instance.
 		GoToLastMeeting: func() begin
 			(foreach item in repeatingEntryFinders do begin
 					item.currentInstance := (item.instancesCount - 1)
 				end);
 			self:ChooseLatestInstance()
 		end,
+		// Deletes the selected instances (an instance of a repeating meeting
+		// becomes an exception or ends the series, by RealDeleteAppointment).
 		delete: func() begin
 			local calendar;
 			(if selected then begin
@@ -1856,8 +2067,10 @@ calendar := {
 				end;
 			cacheCount
 		end,
+		// Makes current the finder whose current instance is the earliest (ties
+		// go to the lower unique id).
 		ChooseEarliestInstance: func() begin
-			instancesDate2 := 536870911;
+			instancesDate2 := kForever;
 			item2 := nil;
 			local instancesDate2;
 			local item2;
@@ -1887,6 +2100,8 @@ calendar := {
 				end);
 			(if item2 then (self.currentRepeatingEntryFinder := item2))
 		end,
+		// For a found notes entry of an instance (repeatingMeetingAlias), adds
+		// that instance to its meeting's finder. Returns how many were added.
 		AddFoundMeetingsWithLocalNotes: func(reset) begin
 			local l1, resolveEntryAlias2, lFetch2, lFetch2Item, lFetch3;
 			l1 := 0;
@@ -1908,6 +2123,8 @@ calendar := {
 				end;
 			l1
 		end,
+		// Moves the selected entries to store toStore (keeping the finders'
+		// aliases).
 		MoveTo: func(toStore) begin
 			local name;
 			name := cursor:soup():GetName();
@@ -1932,6 +2149,7 @@ calendar := {
 					(waitToUnSelect := nil)
 				end)
 		end,
+		// Whether found item frame2 is selected.
 		isSelected: compile(
 			constants: {
 				kFunction_4ee0dd: func(a1, a2) begin
@@ -1941,6 +2159,8 @@ calendar := {
 			func(frame2) begin
 				(if selected then LSearch(selected, frame2, 0, kFunction_4ee0dd, nil))
 			end),
+		// Adds the selected instances to list as overview items numbered from
+		// addTargetItems. Returns the next number.
 		AddTargetItems: func(list, addTargetItems) begin
 			if selected then begin
 					cursor2 := Query(cursor:soup(), '{type: index});
@@ -1967,6 +2187,8 @@ calendar := {
 				end;
 			addTargetItems
 		end,
+		// Builds the finders from the cursor of found entries (meetings and their
+		// instance notes); for a date search the day [l3, l4) is searched.
 		Initialize: func() begin
 			local findType2, owner2, l3, l4, now, addFoundRepeatingMeetingInstances, l7, list, reset;
 			self.repeatingEntryFinders := [Array: ];
@@ -1992,6 +2214,11 @@ calendar := {
 			self:ChooseEarliestInstance()
 		end
 	},
+	// SetMeetingIconType (Dates interface): sets the icon type a3 of meeting a1
+	// at a2, if it suits it: 'meeting for a meeting, 'event for an event,
+	// 'WeeklyMeeting for a meeting repeating on one weekday, 'MultiDayEvent
+	// for an event repeating every day of every week, 'annualEvent for one
+	// repeating every year.
 	SetMeetingIconType: func(a1, a2, a3) begin
 		local exactlyOneAppointment, l2, mtgIconType, l4, repeatTemplate, soup;
 		self:ValidateTitleAndDatetimeArgs(a1, a2);
@@ -2012,17 +2239,17 @@ calendar := {
 							end
 					end else begin
 						if (a3 = 'WeeklyMeeting) then begin
-								if (if (if (if (exactlyOneAppointment.viewStationery <> 'cribNote) then l2) then (l2.repeatType = 0)) then SetContains('[Array: 2048, 1024, 512, 256, 128, 64, 32], BAnd(l2.mtgInfo, 4064))) then begin
+								if (if (if (if (exactlyOneAppointment.viewStationery <> 'cribNote) then l2) then (l2.repeatType = kDayOfWeek)) then SetContains('[Array: kSunday, kMonday, kTuesday, kWednesday, kThursday, kFriday, kSaturday], BAnd(l2.mtgInfo, kEveryday))) then begin
 										l4 := true
 									end
 							end else begin
 								if (a3 = 'MultiDayEvent) then begin
-										if (if (if (if (exactlyOneAppointment.viewStationery = 'cribNote) then l2) then (l2.repeatType = 0)) then (l2.mtgInfo = BOr(4064, 31))) then begin
+										if (if (if (if (exactlyOneAppointment.viewStationery = 'cribNote) then l2) then (l2.repeatType = kDayOfWeek)) then (l2.mtgInfo = BOr(kEveryday, kEveryWeek))) then begin
 												l4 := true
 											end
 									end else begin
 										if (a3 = 'annualEvent) then begin
-												if (if (if (exactlyOneAppointment.viewStationery = 'cribNote) then l2) then (l2.repeatType = 3)) then begin
+												if (if (if (exactlyOneAppointment.viewStationery = 'cribNote) then l2) then (l2.repeatType = kDateInYear)) then begin
 														l4 := true
 													end
 											end
@@ -2042,6 +2269,9 @@ calendar := {
 		nil
 	end,
 	ToDoSlip: nil,
+	// Moves (or copies, from a read-only store) entry a1 to store a2; a
+	// repeating meeting takes its instance notes entries with it (a3: tell
+	// other apps). If the store fills up, everything is moved back.
 	MoveTargetXmit: func(a1, a2, a3) begin
 		local allNotesData;
 		local v6_wwwwwwwwwwwwwvvvvvvvvvvvv, v7_llllk, v8_06z, v9_ssssssssrrrr, v11_wwwwwwwwwwwwwwwwww, v15_fee, v17_fffe, v19_zzyyyyyyyyyyyyyyyyy, v20_zzyyyyyy, v21_zzzzzzzzzyyyyyyyyyyyyyy, v22_dddd, v23_zzzzyyyyyyyy, v24_yyyyyxxxxx, v25_yyyyyyyyyyyyyxxxxxx, v26_yyxxxxxxxxxxxxxxx;
@@ -2092,7 +2322,7 @@ calendar := {
 													end onexception |evt.ex.fr.store| do begin
 														v9_ssssssssrrrr := v25_yyyyyyyyyyyyyxxxxxx:GetName();
 														v19_zzyyyyyyyyyyyyyyyyy := "^0 changes could not be saved (\u201C\u^1\u201D\u is full)";
-														GetRoot():Notify(3, title, ParamStr(v19_zzyyyyyyyyyyyyyyyyy, [Array: title, v9_ssssssssrrrr]));
+														GetRoot():Notify(kNotifyAlert, title, ParamStr(v19_zzyyyyyyyyyyyyyyyyy, [Array: title, v9_ssssssssrrrr]));
 														if (not v7_llllk) then begin
 																GetRoot():MoveTarget(v23_zzzzyyyyyyyy, v8_06z);
 																v26_yyxxxxxxxxxxxxxxx := MakeEntryAlias((v6_wwwwwwwwwwwwwvvvvvvvvvvvv := v23_zzzzyyyyyyyy));
@@ -2126,6 +2356,8 @@ calendar := {
 			end else GetRoot():MoveTarget(a1, a2))
 	end,
 	_recogSettings: nil,
+	// A soup changed (from another app; see viewSetupDoneScript): a1 the soup,
+	// a3 the kind of change. Redraws what shows it and resets the alarms.
 	FilterChanged: func(a1, a2, a3, a4) begin
 		local l1, l2, selectedMeeting2;
 		if (l1 := ((a3 = 'SoupLeaves) or (a3 = 'SoupEnters))) then begin
@@ -2176,11 +2408,14 @@ calendar := {
 			end;
 		self:initializeAlarms()
 	end,
+	// a LongDateStr spec of the long date
 	DateSpecLong: 42217,
 	protoInstanceOfRepeatingMeeting: protoInstanceOfRepeatingMeeting,
 	DateView: nil,
 	GetMeetingSlot: GetMeetingSlot,
 	alarmText: 0,
+	// The month calendar changed the date: leaves the month overview and the
+	// meeting slip, and redraws.
 	DateChangedScript: func() begin
 		if Visible(MonthOverView) then begin
 				if previousMainDataDisplay then begin
@@ -2195,9 +2430,11 @@ calendar := {
 			end;
 		self:minimalRedisplay()
 	end,
+	// An item put away automatically from the In Box.
 	AutoPutaway: func(entry) begin
 		self:PutAwayScript(entry)
 	end,
+	// The five weekdays (Monday to Friday) of the week of selectedDate.
 	FindWorkWeekContainingDate: func(selectedDate) begin
 		list := Array(5, nil);
 		(date2 := Date(selectedDate)).hour := (date2.minute := (date2.second := 0));
@@ -2210,9 +2447,11 @@ calendar := {
 			end);
 		list
 	end,
+	// The next instance of any repeating meeting after a1 and the longest
+	// duration of those starting then: [time, duration].
 	FindNextRepeatingMeeting: func(a1) begin
 		local nextDate2, newDuration2, l3, cursor, next, exception;
-		nextDate2 := 536870911;
+		nextDate2 := kForever;
 		newDuration2 := 0;
 		l3 := (a1 + 1);
 		next := (cursor := Query(GetUnionSoupAlways(@repeatMeetingName), {type: 'index, indexPath: 'mtgStopDate, beginKey: 0})):entry();
@@ -2234,8 +2473,9 @@ calendar := {
 					end;
 				(next := cursor:Next())
 			end);
-		(if (nextDate2 < 536870911) then [Array: nextDate2, newDuration2])
+		(if (nextDate2 < kForever) then [Array: nextDate2, newDuration2])
 	end,
+	// the template of a new repeating meeting (mtgStopDate kForever: no end)
 	protoMeetingRepeatTemplate: {
 		viewStationery: 'RepeatingMeeting,
 		class: 'meeting,
@@ -2251,10 +2491,14 @@ calendar := {
 		version: 2,
 		repeatType: nil,
 		mtgInfo: nil,
-		mtgStopDate: 536870911,
+		mtgStopDate: kForever,
 		exceptions: nil,
 		InstanceNotesData: nil
 	},
+	// Scrolls the display back (a1 true) or on: the year view by a year, the
+	// month overview by a month, a week by 7 days, consecutive days by their
+	// number, a day by a day (l4 starts as 1440, a day's minutes). Several
+	// dates that leave the month shown become just the first or last of them.
 	realScrollScript: func(a1) begin
 		ClearUndoStacks();
 		(if ((l1 := self:GetCurrentMainView()) = 'YearView) then (if a1 then mainDisplay:viewScrollUpScript() else mainDisplay:viewScrollDownScript()) else begin
@@ -2317,6 +2561,10 @@ calendar := {
 					end)
 			end)
 	end,
+	// Saves repeating meeting (or other entry) repeatTemplate after a change: a
+	// repeating one with no instance left is removed instead. a3 says whether
+	// the change came from the app ('calendar) or the programming interface
+	// ('calendarAPI). A full or locked store undoes the change and says so.
 	CarefulChange: func(soup, repeatTemplate, a3) begin
 		(if (if repeatTemplate.repeatType then (NextMeeting(0, repeatTemplate) = 0)) then begin
 				if a3 then begin
@@ -2345,9 +2593,14 @@ calendar := {
 				end))
 	end,
 	soupervisor: {type: 'moveOnly},
+	// Recomputes the scroll arrows' ranges of the schedule, To Do list or
+	// agenda.
 	calculateScrollingRects: func() begin
 		(if (mainDisplay = scheduleView) then scheduleView:?calculateScrollRects() else (if (mainDisplay = ToDoListView) then ToDoListView:?calculateScrollRects() else (if (mainDisplay = AgendaView) then AgendaView:?calculateScrollRects())))
 	end,
+	// Find's Show for entry a1 at time a2 (found by a3): goes to its day in the
+	// schedule (or agenda), opens its slip if the words were found in its
+	// invitees, location or notes, and highlights the words found.
 	ShowFoundItem: func(a1, a2, a3) begin
 		local v6_wwwwwwwwwwwwwvvvvvvvvvvvv, v7_llllk, v8_06z, v9_ssssssssrrrr, v12_wwwvvvvvvvvvvvvv, v13_xxxxwwwwwwwwwwwwwwwwwwwww, v16_tttttttttttt, v18_vvvvvvuuuuuuuuuuuuu, v19_zzzzzzzzzzyyyyyy, v20_zzzzzzzzzzzzzzzzzzyyyyyyy, v21_zzzzzzzzzyyyyyyyyyyyyyy, v22_dddd, v23_zzzzyyyyyyyy, v24_yyyyyxxxxx, v25_yyyyyyyyyyyyyxxxxxx, v26_yyxxxxxxxxxxxxxxx;
 		if (a1 = nil) then begin
@@ -2395,6 +2648,8 @@ calendar := {
 					end;
 				v22_dddd := mainDisplay;
 				selectedMeeting := nil;
+				// a To Do or other item found at its day (a2 is the day plus 1): the time
+				// comes from its position in the 768-pixel day
 				if (a2 = (v12_wwwvvvvvvvvvvvvv + 1)) then begin
 						a2 := ((a1.viewBounds.top * 1440) div 768)
 					end
@@ -2451,6 +2706,9 @@ calendar := {
 					end)
 			end)
 	end,
+	// A single meeting or event made from instance a1 of a repeating one (the
+	// template itself, or a copy if a2): the instance's times, invitees,
+	// location, bounds and notes; its alarm made a time again.
 	ConvertToNonrepeating: func(a1, a2) begin
 		local repeatTemplate;
 		repeatTemplate := a1.repeatTemplate;
@@ -2489,6 +2747,8 @@ calendar := {
 		repeatTemplate
 	end,
 	allSoups: nil,
+	// Deletes one instance of a repeating meeting: an exception is cleared,
+	// any other instance becomes a deleted exception ([start, nil]).
 	DeleteRepeatingMeetingInstance: func(selectedMeeting) begin
 		repeatTemplate := selectedMeeting.repeatTemplate;
 		if self:IsExceptionMeeting(selectedMeeting) then begin
@@ -2508,6 +2768,7 @@ calendar := {
 		self:UpdateInstanceNotesDataTime(repeatTemplate, selectedMeeting.mtgStartDate, nil);
 		self:CarefulChange(EntrySoup(repeatTemplate), repeatTemplate, true)
 	end,
+	// An instance frame of repeating meeting a1 at mtgStartDate.
 	MakeInstanceOfRepeatingMeeting: func(a1, mtgStartDate) begin
 		local copy;
 		copy := Clone(protoInstanceOfRepeatingMeeting);
@@ -2518,18 +2779,24 @@ calendar := {
 		copy.repeatTemplate := a1;
 		copy
 	end,
+	// The scroll arrow keys, except in the year and month overviews.
 	_localCommonScrollScript: func(a1, frame2) begin
 		(if (not ((mainDisplay = YearView) or (mainDisplay = MonthOverView))) then begin
 				clicker();
 				upDownScroller:viewScroll2DScript(a1, frame2)
 			end)
 	end,
+	// The scroll arrows: realScrollScript.
 	viewScrollDownScript: func() begin
 		self:realScrollScript(nil)
 	end,
+	// The overview button: the overview, or back from it.
 	viewOverviewScript: func() begin
 		(if Visible(DatesOverviewForm) then self:changeViewTo(mainDisplay) else self:changeViewTo(DatesOverviewForm))
 	end,
+	// A dragged instance of a repeating meeting a1 dropped on a2 ('dayView or
+	// 'cribView): kept an instance (its notes the template's instance notes)
+	// if it was dropped where its kind goes, else made a single meeting.
 	FixupDroppedRepeatingMeeting: func(a1, a2) begin
 		local convertToNonrepeating, l2, resolveEntryAlias2;
 		convertToNonrepeating := a1;
@@ -2550,23 +2817,31 @@ calendar := {
 			end;
 		convertToNonrepeating
 	end,
+	// GetMeetingInvitees (Dates interface): the invitees of meeting a1 at a2.
 	GetMeetingInvitees: func(a1, a2) begin
 		local exactlyOneAppointment;
 		self:ValidateTitleAndDatetimeArgs(a1, a2);
 		self:GetMeetingSlot((exactlyOneAppointment := self:FindExactlyOneAppointment(a1, nil, a2, nil)), 'mtgInvitees)
 	end,
 	GetNamesOfInvitees: GetNamesOfInvitees,
+	// The view the user works in: the meeting slip, the To Do slip, or the app.
 	GetActiveView: func() begin
 		(if Visible(MeetingNotes) then MeetingNotes else (if Visible(ToDoSlip) then ToDoSlip else self))
 	end,
+	// Removes meeting a1, undoably.
 	RemoveMeeting: func(a1) begin
 		EntryRemoveFromSoupXmit(a1, 'calendar);
 		calendar:redisplayScript();
 		AddUndoAction('AddMeeting, [Array: a1])
 	end,
+	// "Mon 3/12 10:00am" for alarm texts (without the time unless a2).
 	CreateShortDateString: func(a1, a2) begin
 		Stringer([Array: LongDateStr(a1, @datetimeStrSpecs.abbrDayOfWeekStrSpec), " ", ShortDateStr(a1, @datetimeStrSpecs.numericMDStrSpec), " ", (if a2 then TimeStr(a1, @datetimeStrSpecs.shortTimeStrSpec) else "")])
 	end,
+	// FindInSoup for a repeating soup a4: adds the instances (each its
+	// exception or an instance frame) in dateRange of the repeating meetings
+	// matching title and findWords (in the title or an instance's notes), at
+	// most a6 of them, to a7.
 	FindInRepeatSoup: func(title, findWords, dateRange, a4, a5, a6, a7) begin
 		local tempSearchTarget, startDate, stopDate;
 		local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
@@ -2650,10 +2925,13 @@ calendar := {
 	selectedMeeting: nil,
 	title: dates_2,
 	ToDoListView: nil,
+	// The Delete confirmation answered.
 	DeleteActionConfirm: func(a1) begin
 		(if a1 then self:DeleteActionHelper())
 	end,
 	getNameOfLocation: getNameOfLocation,
+	// The index in repeatTemplate's exceptions of the instance originally at
+	// originDate, -1 if none.
 	searchExceptionList: func(repeatTemplate, originDate) begin
 		local pos;
 		if repeatTemplate.exceptions then begin
@@ -2666,6 +2944,10 @@ calendar := {
 			end;
 		pos
 	end,
+	// Stores notesData as the notes of the instance at mtgStartDate of
+	// repeatTemplate, in an entry of its soup (or member store a4) pointed at
+	// by InstanceNotesData; nil notes remove that instance's (or, with no
+	// start, all the instances') notes.
 	StoreLocalNotes: func(repeatTemplate, mtgStartDate, notesData, a4) begin
 		if (repeatTemplate.InstanceNotesData = nil) then begin
 				repeatTemplate.InstanceNotesData := [Array: ]
@@ -2719,6 +3001,8 @@ calendar := {
 	end,
 	RepeatSoup: nil,
 	selectedDates: nil,
+	// Find by text: finders of the meetings, events and tasks containing the
+	// words a1, added to a2 as one calendar finder. a4 shows the progress.
 	find: compile(
 		constants: {
 			kROM_255: @searchPrefix,
@@ -2755,21 +3039,28 @@ calendar := {
 		end),
 	GetNotesData: GetNotesData,
 	notifyData: nil,
+	// UnRegInfoItem (Dates interface): removes an item an app added to the
+	// info button (RegInfoItem).
 	UnRegInfoItem: func(a1) begin
 		RemoveSlot(infoAuxRegistry, a1);
 		nil
 	end,
 	saveWhat: nil,
 	isNewToDo: nil,
+	// Shows task task of day newMtgDate in the To Do list (or agenda).
 	ScrollToTask: func(newMtgDate, task) begin
 		local l1;
 		l1 := (if (not self:IsDisplayingToDoItems()) then 'toDoList);
 		self:displaydate(newMtgDate, l1);
 		mainDisplay:ScrollToTask(newMtgDate, task)
 	end,
+	// item as a nameRef of data def a2 (it may be one already).
 	GetNameRef: func(item, a2) begin
 		(if IsNameRef(item) then item else GetDataDefs(a2):MakeNameRef(item, nil))
 	end,
+	// Removes the meeting of view a1 (or meeting a1) from day displaydate: an
+	// exception is cleared, an instance becomes a deleted exception, a single
+	// meeting leaves its soup; its view goes from the day. Undoable if a3.
 	RemoveMeetingFromDate: func(a1, displaydate, a3) begin
 		local l1, realData, originDate, viewStationery, repeatTemplate, searchExceptionList, exception, dayTable, childViewFrames, childViewFrame, pos;
 		if a1.realData then begin
@@ -2824,6 +3115,7 @@ calendar := {
 			end;
 		(if a3 then calendar:AddUndoAction('AddMeetingToDate, [Array: realData, realData.mtgStartDate, true]))
 	end,
+	// After closing: lets go of the soups and selection.
 	viewPostQuitScript: func() begin
 		MeetingSoup := nil;
 		RepeatSoup := nil;
@@ -2832,11 +3124,13 @@ calendar := {
 		selectedMeeting := nil;
 		(selectedDates := nil)
 	end,
+	// The scroll arrows: realScrollScript.
 	viewScrollUpScript: func() begin
 		self:realScrollScript(true)
 	end,
 	appName: dates_2,
 	cribView: nil,
+	// the template of a new single meeting
 	protoMeeting: {
 		viewStationery: 'meeting,
 		class: 'meeting,
@@ -2851,6 +3145,8 @@ calendar := {
 		viewBounds: nil,
 		version: 2
 	},
+	// MoveAppointment (Dates interface): moves meeting a1 at a2 (for a repeating
+	// one, the whole series) to start a3 and/or last a4 minutes.
 	MoveAppointment: func(a1, a2, a3, a4) begin
 		local exactlyOneAppointment, repeatTemplate, soup;
 		self:ValidateTitleAndDatetimeArgs(a1, a2);
@@ -2881,13 +3177,17 @@ calendar := {
 			end;
 		nil
 	end,
+	// The routing slip's Delete of a1 (from view a2): confirms first for the
+	// overview's selection.
 	DeleteMeetingScript: func(a1, a2) begin
-		(if (not a1) then self:Notify(3, title, "There is nothing to delete.") else begin
+		(if (not a1) then self:Notify(kNotifyAlert, title, "There is nothing to delete.") else begin
 				saveWhat := a1;
 				saveWhatView := a2;
 				(if a1._cursor then self:Confirm(title, "Delete all selected items? (Can\u2019\ut Undo)", self, 'DeleteActionConfirm) else self:DeleteActionHelper())
 			end)
 	end,
+	// The next single meeting after a1 and the longest duration of those
+	// starting then: [time, duration], or nil.
 	FindNextNonRepeatingMeeting: func(a1) begin
 		local cursor, next, mtgStartDate, mtgDuration;
 		(if (next := (cursor := Query(GetUnionSoupAlways(@calendarSoupName), {type: 'index, indexPath: 'mtgStartDate, beginExclKey: a1})):entry()) then begin
@@ -2902,6 +3202,9 @@ calendar := {
 				[Array: mtgStartDate, mtgDuration]
 			end)
 	end,
+	// AddAppointment (Dates interface): adds a meeting titled copy at
+	// selectedDate lasting a3 minutes, repeating as a4 and a5 say (see
+	// InitializeRepeatInfo). Returns the new meeting.
 	AddAppointment: func(copy, selectedDate, a3, a4, a5) begin
 		local meeting;
 		self:ValidateTitleAndDatetimeArgs(copy, selectedDate);
@@ -2919,6 +3222,8 @@ calendar := {
 			end;
 		meeting
 	end,
+	// The meeting (of stationery a2) a paragraph dropped at dropPt becomes, at
+	// selectedDate.
 	ConvertParagraphToMeeting: func(dropPt, a2, selectedDate) begin
 		local newMeetingFrame;
 		(newMeetingFrame := self:MakeNewMeetingFrame(a2, MakeRichString(dropPt.text, dropPt.styles), selectedDate, 0)).viewBounds := dropPt.viewBounds;
@@ -2927,6 +3232,10 @@ calendar := {
 	end,
 	scheduleView: nil,
 	protoMeetingSoupFinder: @protoMeetingSoupFinder,
+	// Puts meeting a1 (dragged or made) on the day of mtgStartDate2 in the
+	// schedule: an instance of a repeating meeting becomes an exception, an
+	// event becomes a 30-minute meeting (its alarm 10 minutes before), a moved
+	// meeting keeps its alarm's lead time. Undoable if a3. Returns the meeting.
 	AddMeetingToDate: func(a1, mtgStartDate2, a3) begin
 		local childViewFrames, l2, childViewFrame, viewStationery, mtgStartDate, repeatTemplate, addView2;
 		childViewFrames := scheduleView.DayTable:ChildViewFrames();
@@ -2980,6 +3289,9 @@ calendar := {
 	end,
 	infoAuxRegistry: nil,
 	declareSelf: 'base,
+	// A new meeting or event frame (a1 'cribNote for an event) titled
+	// richString at selectedDate lasting a4 minutes, with the default alarm
+	// from the preferences.
 	MakeNewMeetingFrame: func(a1, richString, selectedDate, a4) begin
 		local eventAlarms, meetingAlarms, copy;
 		eventAlarms := self:GetAppPreferences().eventAlarms;
@@ -3002,6 +3314,9 @@ calendar := {
 			end;
 		copy
 	end,
+	// Opens the app: the soups, today, the hours shown (from the hour before
+	// now, 32 pixels an hour, as many as fit, ending by midnight), and the main
+	// display it was left in (the Week view becomes the work week).
 	viewSetupFormScript: func() begin
 		local params, now, most;
 		params := GetAppParams();
@@ -3013,7 +3328,7 @@ calendar := {
 		self.targetView := self;
 		self.lastFormats := Clone(ROMlastFormats);
 		if GetLocale().useWeekNumber then begin
-				WeekNumber.viewFlags := BOr(WeekNumber.viewFlags, 1)
+				WeekNumber.viewFlags := BOr(WeekNumber.viewFlags, vVisible)
 			end;
 		most := ((now := Time()) mod 1440);
 		selectedDates := [Array: (now := (now - most))];
@@ -3034,11 +3349,13 @@ calendar := {
 			end else begin
 				mainDisplay := self.(mainDisplay)
 			end;
-		mainDisplay.viewFlags := BOr(mainDisplay.viewFlags, 1);
+		mainDisplay.viewFlags := BOr(mainDisplay.viewFlags, vVisible);
 		previousMainDataDisplay := scheduleView;
 		self:SetupDefaultPrintFormat(mainDisplay);
 		(if (((mainDisplay = ToDoListView) or (mainDisplay = AgendaView)) or (mainDisplay = YearView)) then (monthController.singleDay := true))
 	end,
+	// SetMeetingNotes (Dates interface): sets the notes of meeting a1 at a2 to
+	// a3 (an array of views, or a string made a paragraph).
 	SetMeetingNotes: func(a1, a2, a3) begin
 		local exactlyOneAppointment, notesDataItem, repeatTemplate, soup;
 		self:ValidateTitleAndDatetimeArgs(a1, a2);
@@ -3055,6 +3372,7 @@ calendar := {
 			end;
 		nil
 	end,
+	// The text of one day's meetings (the date shown) for routing.
 	oneDayText: func(a1, a2) begin
 		local selectedDates, l2;
 		l2 := (if IsArray((selectedDates := GetRoot().calendar.selectedDates)) then selectedDates[0] else a1.body.startDate);
@@ -3062,6 +3380,8 @@ calendar := {
 	end,
 	stopTime: 1080,
 	routeScripts: [|Array|: {title: delete, icon: @routetrashBitmap, routeScript: 'DeleteActionScript}],
+	// The next meeting (single or repeating) after a1 and its duration:
+	// [time, duration], the longer of two starting together.
 	FindNextMeeting: func(a1) begin
 		local nextNonRepeatingMeeting, nextRepeatingMeeting;
 		nextNonRepeatingMeeting := self:FindNextNonRepeatingMeeting(a1);
@@ -3070,8 +3390,10 @@ calendar := {
 	end,
 	Convert10BoundsTo20: Convert10BoundsTo20,
 	Convert20BoundsTo10: Convert20BoundsTo10,
+	// a LongDateStr spec of the short date
 	DateSpecShort: 1257,
 	statusbar: nil,
+	// one entry's instances in a repeating meeting finder
 	protoRepeatingEntryFinder: {
 		entryAlias: nil,
 		EntryUniqueID: nil,
@@ -3079,6 +3401,7 @@ calendar := {
 		currentInstance: nil,
 		instancesCount: nil
 	},
+	// Whether item is nil, a meeting kind symbol, or an array of them.
 	ValidateMeetingFindType: func(item) begin
 		(if (item = nil) then true else (if (if (not IsSymbol(item)) then (not IsArray(item))) then nil else begin
 					local l1;
@@ -3092,6 +3415,9 @@ calendar := {
 	end,
 	AgendaView: nil,
 	ConvertAnnotatedMeetingsBeforeStartDate: ConvertAnnotatedMeetingsBeforeStartDate,
+	// Deletes the appointments of list: a single one leaves its soup, an
+	// instance becomes a deleted exception ([start, nil]), an exception is
+	// cleared.
 	RealDeleteAppointment: func(list) begin
 		(foreach item in list do begin
 				local repeatTemplate, mtgStartDate, originDate, searchExceptionList, exception;
@@ -3128,11 +3454,14 @@ calendar := {
 			end);
 		nil
 	end,
+	// AddEvent (Dates interface): adds an event titled copy on the day of
+	// selectedDate (a date without a year gets this year), repeating as a3 and
+	// a4 say. Returns the new event.
 	AddEvent: func(copy, selectedDate, a3, a4) begin
 		local date2, l2, cribNote;
 		self:ValidateTitleAndDatetimeArgs(copy, selectedDate);
 		self:ValidatePeriod(selectedDate, a3, a4);
-		if ((date2 := Date(selectedDate)).year = 2920) then begin
+		if ((date2 := Date(selectedDate)).year = kYearMissing) then begin
 				date2.year := Date(Time()).year;
 				selectedDate := TotalMinutes(date2)
 			end;
@@ -3146,6 +3475,8 @@ calendar := {
 			end;
 		cribNote
 	end,
+	// DisplayDate (Dates interface): shows the day of mtgStartDate in view a2
+	// ('day, 'toDoList, 'Agenda, or the one shown).
 	displaydate: func(mtgStartDate, a2) begin
 		local l1;
 		selectedDates := [Array: (l1 := (mtgStartDate - (mtgStartDate mod 1440)))];
@@ -3164,31 +3495,35 @@ calendar := {
 		monthController:Refresh();
 		nil
 	end,
+	// Whether the display (or the one the overviews came from) shows tasks.
 	IsDisplayingToDoItems: func() begin
 		local mainDisplay2;
 		((((mainDisplay2 := mainDisplay) = ToDoListView) or (mainDisplay2 = AgendaView)) or (if ((mainDisplay2 = MonthOverView) or (mainDisplay2 = YearView)) then ((previousMainDataDisplay = ToDoListView) or (previousMainDataDisplay = AgendaView))))
 	end,
 	ChangeMeeting: ChangeMeeting,
 	viewEffect: 133120,
+	// the arrow keys with command-option scroll; command-R, -S, -N
 	_keyCommands: [|Array|:
 		{
 			char: $\u001f,
-			modifiers: 301989888,
+			modifiers: kCommandModifier + kOptionsModifier,
 			keyMessage: '_localScrollDownKeyScript,
 			name: later,
 			category: viewing
 		},
 		{
 			char: $\u001e,
-			modifiers: 301989888,
+			modifiers: kCommandModifier + kOptionsModifier,
 			keyMessage: '_localScrollUpKeyScript,
 			name: "Earlier",
 			category: viewing
 		},
-		{char: $r, modifiers: 33554432, keyMessage: '_actionKeyScript, name: routing, category: routing},
-		{char: $s, modifiers: 33554432, keyMessage: '_showKeyScript, name: show, category: viewing},
-		{char: $n, modifiers: 33554432, keyMessage: '_newKeyScript, name: new_2, category: creating}
+		{char: $r, modifiers: kCommandModifier, keyMessage: '_actionKeyScript, name: routing, category: routing},
+		{char: $s, modifiers: kCommandModifier, keyMessage: '_showKeyScript, name: show, category: viewing},
+		{char: $n, modifiers: kCommandModifier, keyMessage: '_newKeyScript, name: new_2, category: creating}
 	],
+	// Find's excerpt of a found meeting: its title (and notes), and its date
+	// (and time for a meeting).
 	FindSoupExcerpt: compile(
 		constants: {
 			kROM_256: @searchSuffix,
@@ -3206,6 +3541,10 @@ calendar := {
 			Stringer([Array: text, " ", l3])
 		end),
 	ConvertAnnotatedMeetingsToExceptions: ConvertAnnotatedMeetingsToExceptions,
+	// Deletes meeting a1: an instance of a repeating one asks (a2) whether to
+	// delete this one or all (DeleteRepeatingMeetingDialog) and returns nil;
+	// otherwise the instance or the single meeting is deleted. Returns true if
+	// done.
 	DeleteMeeting: func(a1, a2) begin
 		local l1;
 		l1 := true;
@@ -3223,6 +3562,9 @@ calendar := {
 	end,
 	externalTypeRegistry: nil,
 	labels: [|Array|: ],
+	// Checks a meeting or event frame a1 (as beamed or put away): 1 not a frame,
+	// 2 not a meeting stationery, 3 no title string, 4 no integer duration,
+	// another of HasValidCoreMeetingSlots' answers, nil invalid, else a1.
 	IsValidMeeting: func(a1) begin
 		if (not IsFrame(a1)) then begin
 				return 1
@@ -3265,6 +3607,8 @@ calendar := {
 								return nil
 							end
 					end;
+				// a repeating meeting's alarm is minutes before each instance, so it must be
+				// small; a single meeting's is a time (2880000 minutes is in 1909)
 				if (if mtgAlarm then (mtgAlarm > 2880000)) then begin
 						return nil
 					end
@@ -3280,6 +3624,8 @@ calendar := {
 	end,
 	alarmTime: 0,
 	WeekNumber: nil,
+	// One line for meeting a1 in routed text: its times (padded) and title, and
+	// its notes if a2.
 	meetingText: func(a1, a2) begin
 		local timeStr2, timeStr3, text, mtgDuration, meetingText;
 		mtgDuration := self:GetMeetingSlot(a1, 'mtgDuration);
@@ -3300,6 +3646,7 @@ calendar := {
 			end;
 		text
 	end,
+	// the template of a changed instance of a repeating event
 	protoExceptionCribNote: {
 		viewStationery: 'cribNote,
 		class: 'meeting,
@@ -3308,6 +3655,10 @@ calendar := {
 		originDate: nil,
 		repeatTemplate: nil
 	},
+	// Puts away an item a1 from the In Box: a meeting or event into its soup
+	// (an instance of a repeating one moved to start at that instance, a 1.x
+	// one converted), with its instance notes made entries; a task to the To
+	// Do list. Returns true unless it failed.
 	PutAwayScript: func(a1) begin
 		l3 := true;
 		body := a1.body;
@@ -3376,12 +3727,16 @@ calendar := {
 		l3
 	end,
 	ToDoListOverview: nil,
+	// GetMeetingLocation (Dates interface): the location of meeting a1 at a2.
 	GetMeetingLocation: func(a1, a2) begin
 		local exactlyOneAppointment;
 		self:ValidateTitleAndDatetimeArgs(a1, a2);
 		self:GetMeetingSlot((exactlyOneAppointment := self:FindExactlyOneAppointment(a1, nil, a2, nil)), 'mtgLocation)
 	end,
 	debug: 8256,
+	// Like getNextSingleAlarm for the repeating meetings or events of cursor:
+	// sets an alarm for each whose next instance's alarm is the earliest to
+	// come.
 	getNextRepeatingAlarm: compile(
 		constants: {
 			kFunction_4f402d: func() begin
@@ -3426,9 +3781,12 @@ calendar := {
 				end);
 			getNextSingleAlarm
 		end),
+	// Schedules nextCalendarAlarm in a second (once, procrastinated).
 	initializeAlarms: func() begin
 		AddProcrastinatedSend('calendarAlarm, calendar, 'nextCalendarAlarm, [Array: nil], 1000)
 	end,
+	// RegInfoItem (Dates interface): adds item a2 under symbol a1 to the info
+	// button's popup.
 	RegInfoItem: func(a1, a2) begin
 		if (not infoAuxRegistry) then begin
 				infoAuxRegistry := {}
@@ -3436,6 +3794,7 @@ calendar := {
 		infoAuxRegistry.(EnsureInternal(a1)) := a2;
 		nil
 	end,
+	// Whether a1 is an array of a2 instances (non-empty unless a3).
 	ValidateArrayType: func(a1, a2, a3) begin
 		(if (not IsArray(a1)) then nil else (if (if (not a3) then (Length(a1) = 0)) then nil else begin
 					(foreach item in a1 do begin
@@ -3447,6 +3806,8 @@ calendar := {
 				end))
 	end,
 	MeetingNotes: nil,
+	// Deletes or duplicates (a2) the overview's selected items saveWhat:
+	// meetings (an instance by its exception or an instance frame) and tasks.
 	ProcessMeetings: func(saveWhat, a2) begin
 		copy := Clone(protoInstanceOfRepeatingMeeting);
 		local copy;
@@ -3483,6 +3844,7 @@ calendar := {
 				AgendaView:SetOrigin(0, 0)
 			end)
 	end,
+	// Shows meeting yearly on its day.
 	ScrollToMeeting: func(yearly) begin
 		local l1;
 		l1 := (if (not self:IsDisplayingMeetings()) then 'day);
@@ -3491,6 +3853,8 @@ calendar := {
 	end,
 	targetView: nil,
 	notes: nil,
+	// SetEntryAlarm (Dates interface): sets the alarm of meeting or event a1 at
+	// a2 to a3 minutes before (an event's a3 days before, at 9am), or none.
 	SetEntryAlarm: func(a1, a2, a3) begin
 		local exactlyOneAppointment, l2, cribMtgAlarm, repeatTemplate, soup;
 		self:ValidateTitleAndDatetimeArgs(a1, a2);
@@ -3515,6 +3879,10 @@ calendar := {
 			end;
 		nil
 	end,
+	// Adds entry a2 to soup a1 (the store it came from if it says, the internal
+	// store if the preference says so, else the default store); a3 says the app
+	// made it ('calendar) rather than the interface ('calendarAPI). A store
+	// error is reported; an exception is rethrown after a redraw.
 	CarefulAdd: compile(
 		constants: {
 			kFunction_4f780d: func(a1, a2) begin
@@ -3559,11 +3927,15 @@ calendar := {
 					upDownScroller:AdjustArrows()
 				end)
 		end),
+	// The down-arrow key: scroll the display down.
 	_localScrollDownKeyScript: func(a1) begin
 		self:_localCommonScrollScript('down, {amount: 1})
 	end,
+	// the finder of a Find in Dates: merges the meeting finders (and To Do
+	// finders) found, walking all their items in time order
 	protoCalendarFinder: {
 		cacheCount: nil,
+		// Whether found item is selected.
 		IsThisItemSelected: func(item) begin
 			local frame2;
 			(if item.topicIndex then item.realFinder:IsThisItemSelected(item) else (if item.realFinder:isSelected((frame2 := {_uniqueID: item.entryID, _storeID: item.storeID, instanceTime: item.instanceTime})) then true))
@@ -3572,6 +3944,7 @@ calendar := {
 		SelectItem: func(a1) begin
 			a1.realFinder:SelectItem(a1)
 		end,
+		// Back to the first item.
 		Reset: func() begin
 			(foreach item in meetingSoupFinders do begin
 					item:Reset()
@@ -3583,9 +3956,12 @@ calendar := {
 			scrollingForward := true;
 			self:ChooseEarliestItem()
 		end,
+		// Makes current the meeting finder whose current item comes first: by
+		// time, then events before meetings and single before repeating, then by
+		// unique id. Returns that item.
 		ChooseEarliestItem: func() begin
 			currentItem2 := nil;
-			mtgStartDate2 := 536870911;
+			mtgStartDate2 := kForever;
 			item2 := nil;
 			local currentItem2;
 			local mtgStartDate2;
@@ -3648,6 +4024,7 @@ calendar := {
 				end;
 			currentItem2
 		end,
+		// Moves maxLines items on (or back).
 		move: func(maxLines) begin
 			(if (maxLines > 0) then (for i := 1 to maxLines do begin
 						self:GetNextItem()
@@ -3655,6 +4032,8 @@ calendar := {
 						self:GetPrevItem()
 					end))
 		end,
+		// Adds found tasks to list a1 for the overview, from item a2 (counted after
+		// the meetings), at most a3. Returns how many.
 		AddFoundToDoItems: func(a1, a2, a3) begin
 			l1 := 0;
 			cacheMeetingsCount2 := cacheMeetingsCount;
@@ -3688,6 +4067,7 @@ calendar := {
 				end);
 			l1
 		end,
+		// Shows found task number least (counted after the meetings).
 		ShowOrdinalToDoItem: func(least) begin
 			cacheMeetingsCount2 := cacheMeetingsCount;
 			local cacheMeetingsCount2;
@@ -3703,6 +4083,7 @@ calendar := {
 						end
 				end)
 		end,
+		// Rebuilds the finders and goes back to the first item.
 		ReSync: func() begin
 			(foreach item in meetingSoupFinders do begin
 					item:ReSync()
@@ -3714,6 +4095,8 @@ calendar := {
 			scrollingForward := true;
 			self:ChooseEarliestItem()
 		end,
+		// After showing found item a1: the other meeting finders go to their items
+		// after it.
 		SyncMeetingSoupFinders: func(a1) begin
 			realFinder := a1.realFinder;
 			if (not (instanceTime := a1.instanceTime)) then begin
@@ -3731,11 +4114,13 @@ calendar := {
 				end);
 			(scrollingForward := true)
 		end,
+		// Whether found item indexEntry is checked in the overview.
 		CheckState: func(indexEntry) begin
 			(if indexEntry.realFinder.CheckState then indexEntry.realFinder:CheckState(indexEntry) else indexEntry.realFinder:isSelected(indexEntry))
 		end,
 		cacheMeetingsCount: nil,
 		currentItem: 0,
+		// Files every finder's selected items in folder a1.
 		FileAs: func(a1) begin
 			(foreach item in meetingSoupFinders do begin
 					item.waitToUnSelect := waitToUnSelect;
@@ -3746,6 +4131,7 @@ calendar := {
 					item:FileAs(a1)
 				end)
 		end,
+		// Find's Show for found item a1.
 		ShowFoundItem: func(a1) begin
 			local topicIndex;
 			topicIndex := a1.topicIndex;
@@ -3754,6 +4140,8 @@ calendar := {
 			currentMeetingSoupFinder:ShowFoundItem(a1);
 			(if (not topicIndex) then self:SyncMeetingSoupFinders(a1))
 		end,
+		// Adds the selected tasks to a1 as overview items numbered from a2. Returns
+		// the next number.
 		AddTargetToDoItems: func(a1, a2) begin
 			l1 := owner.canonicalOverviewSelectedItem;
 			l2 := owner:GetToDo();
@@ -3783,6 +4171,7 @@ calendar := {
 				end);
 			a2
 		end,
+		// The previous found meeting.
 		GetPrevItem: func() begin
 			(if (currentItem = 0) then currentMeetingSoupFinder:GetCurrentItem() else begin
 					if (not scrollingForward) then begin
@@ -3796,6 +4185,9 @@ calendar := {
 					self:ChooseLatestItem()
 				end)
 		end,
+		// Adds found meetings to list a1 for the overview (protoFindItem frames
+		// with an excerpt of at most 50 characters), from item a2, at most a3.
+		// Returns how many.
 		AddFoundMeetingItems: func(a1, a2, a3) begin
 			local l1, currentItem, repeatTemplate, soupExcerpt, owner2, frame2;
 			self:Reset();
@@ -3823,6 +4215,7 @@ calendar := {
 					end));
 			l1
 		end,
+		// Find overview's AddFoundItems: the meetings, then the tasks.
 		AddFoundItems: func(a1, a2, a3) begin
 			local addFoundMeetingItems;
 			addFoundMeetingItems := 0;
@@ -3836,6 +4229,7 @@ calendar := {
 				end;
 			addFoundMeetingItems
 		end,
+		// Shows found meeting least ('first, 'last or an index).
 		ShowOrdinalMeetingItem: func(least) begin
 			(if (least = 'first) then begin
 					if (currentItem <> 0) then begin
@@ -3851,6 +4245,7 @@ calendar := {
 							currentMeetingSoupFinder:ShowCurrentItem()
 						end)))
 		end,
+		// The routing target: the selected items, as a 'CalendarOverview frame.
 		GetTarget: func() begin
 			list := [Array: ];
 			addTargetItems := 0;
@@ -3865,6 +4260,7 @@ calendar := {
 				end;
 			{class: 'CalendarOverview, _cursor: list}
 		end,
+		// Shows item a1 ('first, 'prev, 'Next or an index): a meeting or a task.
 		ShowOrdinalItem: func(a1) begin
 			local least;
 			if (a1 = 'first) then begin
@@ -3891,6 +4287,7 @@ calendar := {
 					self:ShowOrdinalMeetingItem(least)
 				end else self:ShowOrdinalToDoItem(least))
 		end,
+		// Like ChooseEarliestItem, the other way: the finder whose item comes last.
 		ChooseLatestItem: func() begin
 			currentItem2 := nil;
 			mtgStartDate2 := 0;
@@ -3956,6 +4353,7 @@ calendar := {
 				end;
 			currentItem2
 		end,
+		// 0, 1 or 2 (two or more) items found.
 		ZeroOneOrMore: func() begin
 			(if self.cacheCount then cacheCount else (if self.zeroOneOrMoreResult then zeroOneOrMoreResult else begin
 						l1 := 0;
@@ -3986,9 +4384,11 @@ calendar := {
 		end,
 		zeroOneOrMoreResult: nil,
 		scrollingForward: true,
+		// The current found meeting.
 		GetCurrentItem: func() begin
 			currentMeetingSoupFinder:GetCurrentItem()
 		end,
+		// Goes to the last found meeting.
 		GoToLastMeeting: func() begin
 			(foreach item in meetingSoupFinders do begin
 					item:GoToLastMeeting()
@@ -3997,6 +4397,7 @@ calendar := {
 			scrollingForward := nil;
 			(currentItem := (cacheMeetingsCount - 1))
 		end,
+		// Deletes every finder's selected items.
 		delete: func() begin
 			(foreach item in meetingSoupFinders do begin
 					item:delete()
@@ -4005,6 +4406,7 @@ calendar := {
 					item:delete()
 				end)
 		end,
+		// The next found meeting, or nil after the last.
 		GetNextItem: func() begin
 			(if (currentItem = self:count()) then return nil else begin
 					if scrollingForward then begin
@@ -4019,6 +4421,8 @@ calendar := {
 				end)
 		end,
 		debug: 23255048,
+		// The number of items found (meetings, counted in cacheMeetingsCount, then
+		// tasks).
 		count: func() begin
 			(if self.cacheCount then cacheCount else begin
 					l1 := 0;
@@ -4044,6 +4448,7 @@ calendar := {
 					(self.cacheCount := l1)
 				end)
 		end,
+		// Moves every finder's selected items to store a1.
 		MoveTo: func(a1) begin
 			(foreach item in meetingSoupFinders do begin
 					item:MoveTo(a1)
@@ -4052,6 +4457,7 @@ calendar := {
 					item:MoveTo(a1)
 				end)
 		end,
+		// Whether any finder has selected items.
 		IsAnythingSelected: func() begin
 			(foreach item in meetingSoupFinders do begin
 					if (if item.selected then (Length(item.selected) > 0)) then begin
@@ -4066,6 +4472,10 @@ calendar := {
 			nil
 		end
 	},
+	// Checks AddAppointment/AddEvent's repeat arguments: a2 a period symbol,
+	// a3 (only for 'Weekly, 'monthlyByWeek, 'yearlyByWeek) days of the week
+	// (0-6) or weeks of the month (1-5, 5 the last), one of which must be
+	// selectedDate's. Throws otherwise.
 	ValidatePeriod: func(selectedDate, a2, a3) begin
 		if (a2 = nil) then begin
 				if (a3 <> nil) then begin
@@ -4126,47 +4536,54 @@ calendar := {
 			end;
 		true
 	end,
+	// Makes a4 repeat by period a1 (see ValidatePeriod) from selectedDate,
+	// with the days or weeks a2: the repeatType and mtgInfo of each period.
 	InitializeRepeatInfo: func(a1, a2, selectedDate, a4) begin
 		local date2, l2, bOr2;
 		(if (a1 <> nil) then begin
 				date2 := Date(selectedDate);
 				if (a1 = 'Daily) then begin
-						l2 := 0;
-						bOr2 := BOr(4064, 31)
+						l2 := kDayOfWeek;
+						bOr2 := BOr(kEveryday, kEveryWeek)
 					end else begin
 						if (a1 = 'Weekly) then begin
-								l2 := 0;
+								l2 := kDayOfWeek;
 								if (a2 = nil) then begin
-										bOr2 := (2048 >> date2.dayOfWeek)
+										bOr2 := (kSunday >> date2.dayOfWeek)
 									end else begin
 										bOr2 := self:ExtractDayNames(a2)
 									end;
-								bOr2 := BOr(bOr2, 31)
+								bOr2 := BOr(bOr2, kEveryWeek)
 							end else begin
 								if (a1 = 'biweekly) then begin
-										l2 := 4;
+										l2 := kPeriod;
+										// every 14 days, counted from the start day (days since 1904 << 8)
 										bOr2 := (((selectedDate div 1440) << 8) + 14)
 									end else begin
 										if (a1 = 'monthlyByWeek) then begin
-												l2 := 1;
+												l2 := kWeekInMonth;
 												if (a2 = nil) then begin
-														bOr2 := (16 >> ((date2.Date - 1) div 7))
+														bOr2 := (kFirstWeek >> ((date2.Date - 1) div 7))
 													end else begin
 														bOr2 := self:ExtractWeekNumbers(a2)
 													end;
-												bOr2 := BOr(bOr2, (2048 >> date2.dayOfWeek))
+												bOr2 := BOr(bOr2, (kSunday >> date2.dayOfWeek))
 											end else begin
 												if (a1 = 'monthly) then begin
-														l2 := 2;
+														l2 := kDateInMonth;
 														bOr2 := date2.Date
 													end else begin
 														if (a1 = 'yearly) then begin
-																l2 := 3;
+																l2 := kDateInYear;
+																// month << 8 + date
 																bOr2 := ((date2.month << 8) + date2.Date)
 															end else begin
 																if (a1 = 'yearlyByWeek) then begin
-																		l2 := 7;
-																		bOr2 := (((date2.month << 12) + (2048 >> date2.dayOfWeek)) + (16 >> (((date2.dayOfWeek + date2.Date) - 1) div 7)))
+																		l2 := kWeekInYear;
+																		// month << 12 + the day of the week + the week of the month; looks like a
+																		// ROM bug: the week is ((dayOfWeek + Date) - 1) div 7, not (Date - 1) div 7
+																		// as monthlyByWeek has it, so a day late in its week counts as a later week
+																		bOr2 := (((date2.month << 12) + (kSunday >> date2.dayOfWeek)) + (kFirstWeek >> (((date2.dayOfWeek + date2.Date) - 1) div 7)))
 																	end
 															end
 													end
@@ -4174,9 +4591,10 @@ calendar := {
 									end
 							end
 					end;
-				self:ConvertToRepeating(a4, l2, bOr2, 536870911, nil)
+				self:ConvertToRepeating(a4, l2, bOr2, kForever, nil)
 			end)
 	end,
+	// The first word of findWhat found in the notes, as FindStringInFrame says.
 	FindStringInNotes: func(v13_xxxxwwwwwwwwwwwwwwwwwwwww, findWhat) begin
 		list := Array(1, nil);
 		local stringInFrame;
@@ -4188,16 +4606,23 @@ calendar := {
 					end
 			end)
 	end,
+	// SoupChanged (Dates interface): an app changed the soups; redraw.
 	SoupChanged: func(a1) begin
 		self:FilterChanged(a1, 'calendarAPI, 'whatThe, nil)
 	end,
+	// Whether selectedMeeting is an instance of a repeating meeting that is not
+	// an exception.
 	IsNonExceptionRepeatingMeeting: func(selectedMeeting) begin
 		((selectedMeeting.viewStationery = 'RepeatingMeeting) or (if (if (selectedMeeting.viewStationery = 'cribNote) then selectedMeeting.repeatTemplate) then (not self:FindException(selectedMeeting.mtgStartDate, selectedMeeting.repeatTemplate))))
 	end,
+	// Whether the display (or the one the overviews came from) shows meetings.
 	IsDisplayingMeetings: func() begin
 		local mainDisplay2;
 		((((mainDisplay2 := mainDisplay) = scheduleView) or (mainDisplay2 = AgendaView)) or (if ((mainDisplay2 = MonthOverView) or (mainDisplay2 = YearView)) then ((previousMainDataDisplay = scheduleView) or (previousMainDataDisplay = AgendaView))))
 	end,
+	// Opens the meeting slip on selectedMeeting2 (for a repeating one, its
+	// instance at a2) - unless its registered meeting type opens it itself
+	// (openMeeting), when a3 is nil.
 	OpenMeetingSlip: func(selectedMeeting2, a2, a3) begin
 		local exception, l2, meetingType, l4, openMeeting;
 		if selectedMeeting2.repeatType then begin
@@ -4225,6 +4650,8 @@ calendar := {
 			end;
 		nil
 	end,
+	// SetMeetingInvitees (Dates interface): sets the invitees of meeting a1 at
+	// a2 to a3 (names or nameRefs), or none.
 	SetMeetingInvitees: func(a1, a2, a3) begin
 		self:ValidateTitleAndDatetimeArgs(a1, a2);
 		exactlyOneAppointment := self:FindExactlyOneAppointment(a1, nil, a2, nil);
@@ -4247,15 +4674,19 @@ calendar := {
 		nil
 	end,
 	viewHelpTopic: dates_2,
+	// UnRegMeetingType (Dates interface).
 	UnRegMeetingType: func(a1) begin
 		RemoveSlot(externalTypeRegistry, a1);
 		RemoveSlot(meetingTypeRegistry, a1);
 		nil
 	end,
+	// The command key for Show.
 	_showKeyScript: func(a1) begin
 		PressButton(statusbar.ShowButton)
 	end,
 	shapeDomain: nil,
+	// DeleteRepeatingEntry (Dates interface): deletes the whole repeating
+	// meetings or events text names.
 	DeleteRepeatingEntry: func(text, mtgStartDate, a3) begin
 		if (not ((a3 = true) or (a3 = nil))) then begin
 				ThrowBadTypeWithFrameData(-48424, a3)
@@ -4273,10 +4704,13 @@ calendar := {
 			end);
 		nil
 	end,
+	// GetMeetingIconType (Dates interface): the icon type of the appointment
+	// a1 at a2.
 	GetMeetingIconType: func(a1, a2) begin
 		local identifyAppointments, l2, mtgIconType;
 		(if (mtgIconType := self:GetMeetingSlot((l2 := (identifyAppointments := self:IdentifyAppointments(a1, a2, nil, true))[0]), 'mtgIconType)) then mtgIconType else (if (l2.viewStationery = 'cribNote) then 'event else 'meeting))
 	end,
+	// Whether selectedMeeting is a changed instance of a repeating meeting.
 	IsExceptionMeeting: func(selectedMeeting) begin
 		((selectedMeeting.viewStationery = 'exceptionMeeting) or (if (if (selectedMeeting.viewStationery = 'cribNote) then selectedMeeting.repeatTemplate) then self:FindException(selectedMeeting.mtgStartDate, selectedMeeting.repeatTemplate)))
 	end
@@ -4294,6 +4728,8 @@ smallIcon_2 := {
 	bounds: {left: 0, top: 0, right: 15, bottom: 11}
 };
 
+// The alarm that rolls the To Do list over: rolls the unfinished tasks on
+// and sets itself again for 3am (180 minutes) tomorrow.
 RollOverAlarm := compile(
 	constants: {
 		kFunction_4f4119: func() begin
@@ -4308,6 +4744,10 @@ RollOverAlarm := compile(
 		AddAlarm("To Do", l1, nil, kFunction_4f4119, [Array: ])
 	end);
 
+// Converts 1.x meeting a1 (a copy if a2) to the 2.0 format: class,
+// version, bounds, notes; an event starts at midnight; exceptions lose what
+// they share with the template. For an instance a1, returns the converted
+// template's instance.
 Convert10to20 := func(a1, a2) begin
 	l2 := (if (l1 := (a1.repeatTemplate <> nil)) then a1.repeatTemplate else a1);
 	if a2 then begin
@@ -4404,6 +4844,9 @@ Convert10to20 := func(a1, a2) begin
 	l2
 end;
 
+// Converts 2.0 meeting a1 (a copy if a2) back to the 1.x format: no class,
+// icon, invitees or location; an event starts a minute after midnight;
+// exceptions take the template's title and duration.
 Convert20to10 := func(a1, a2) begin
 	l2 := (l1 := (if a2 then DeepClone(a1) else a1)).viewStationery;
 	if l1.viewBounds then begin
@@ -4455,6 +4898,7 @@ Convert20to10 := func(a1, a2) begin
 	l1
 end;
 
+// Removes the slots a single meeting must not have; an event lasts 0.
 ValidateMeeting := func(a1) begin
 	local viewStationery;
 	(if ((viewStationery := a1.viewStationery) = 'meeting) then begin
@@ -4474,6 +4918,9 @@ ValidateMeeting := func(a1) begin
 		end else (if (viewStationery = 'RepeatingMeeting) then nil else (if (viewStationery = 'exceptionMeeting) then nil else (if (viewStationery = 'cribNote) then (a1.mtgDuration := 0)))))
 end;
 
+// Converts 1.x bounds a1 (13 pixels a half hour) to 2.0 (16): a meeting is
+// put on 8-pixel steps and at least 16 high; another view keeps its height
+// and the item's time follows its new top (rounded to 15 minutes).
 Convert10BoundsTo20 := func(a1) begin
 	local viewBounds, l2, l3, viewStationery, l5, mtgStartDate;
 	if (a1.viewBounds = true) then begin
@@ -4499,6 +4946,7 @@ Convert10BoundsTo20 := func(a1) begin
 		end)
 end;
 
+// Converts 2.0 bounds back to 1.x.
 Convert20BoundsTo10 := func(a1) begin
 	local viewBounds, l2, l3, viewStationery, l5;
 	l2 := (((viewBounds := a1.viewBounds).top * 13) div 16);
@@ -4518,6 +4966,8 @@ Convert20BoundsTo10 := func(a1) begin
 		end)
 end;
 
+// the month calendar at the top right: picks the date (or several, a week
+// or a range) shown
 monthController := {
 	viewJustify: vjParentRightH,
 	viewBounds: {left: -115, top: 0, right: 0, bottom: 74},
@@ -4527,6 +4977,8 @@ monthController := {
 	singleDay: nil,
 	titleHeight: 12,
 	dateChangedBecauseMonthPicked: nil,
+	// The date picked changed: redraw (later, if a whole month was picked),
+	// leaving the month overview.
 	DateChanged: func(selectedDates) begin
 		if dateChangedBecauseMonthPicked then begin
 				AddProcrastinatedSend('calendar, calendar, 'redisplayScript, [Array: ], 500);
@@ -4539,6 +4991,7 @@ monthController := {
 			end;
 		ClearUndoStacks()
 	end,
+	// A month was picked: the redraw that follows is delayed.
 	MonthPicked: func() begin
 		(dateChangedBecauseMonthPicked := true)
 	end,
@@ -4546,7 +4999,11 @@ monthController := {
 	_proto: @protoDatepicker
 };
 
+// the strip of the selected days' events (cribNotes) above the display: an
+// edit view whose children are the events; a horizontal line written on an
+// empty part of it makes a new event
 cribView := {
+	// An event dragged out of the strip: delete it here.
 	viewDropRemoveScript: func(a1) begin
 		local l1, l2;
 		(if ((l2 := (l1 := (if a1.realData then a1.realData else a1)).viewStationery) = 'cribNote) then begin
@@ -4554,16 +5011,20 @@ cribView := {
 				true
 			end)
 	end,
+	// Setup is over.
 	viewSetupDoneScript: func() begin
 		(createInProgress := nil)
 	end,
+	// A word written in the strip: a new event of that text.
 	editAddWordScript: func(a1, a2) begin
 		self:MakeNewMeetingFrame('cribNote, MakeRichString(a1.text, a1.styles), selectedDates[0], 0)
 	end,
 	viewFormat: vfFrameBlack,
+	// A line gesture (aeLine) written mostly vertically away from the events:
+	// a new, empty event.
 	viewgesturescript: func(unit, gesture) begin
 		l1 := nil;
-		if (gesture = 16) then begin
+		if (gesture = aeLine) then begin
 				if ((l2 := (GetPoint(4, unit) - GetPoint(0, unit))) < 0) then begin
 						l2 := (-l2)
 					end;
@@ -4604,12 +5065,14 @@ cribView := {
 	cribFont: tsHWFont + tsSize(12),
 	calCribArea: 1,
 	viewChildren: nil,
+	// Accepts meetings and text dropped on it.
 	viewGetDropTypesScript: func(a1) begin
 		return '[Array: meeting, text]
 	end,
 	viewFlags: vVisible + vClipping + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed + vPunctuationAllowed,
 	viewBounds: {left: 0, top: 26, right: -115, bottom: 0},
 	topLoc: 0,
+	// Sets slot a2 of event a1 (or of its repeating template) to a3 and saves.
 	changeNote: func(a1, a2, a3) begin
 		local repeatTemplate;
 		(if HasPath(a1, 'repeatTemplate) then begin
@@ -4620,6 +5083,10 @@ cribView := {
 				self:CarefulChange(notes, a1, true)
 			end)
 	end,
+	// Deletes event a1 from the days shown: an instance of a repeating event
+	// becomes a deleted exception on each selected day (scrubbedDates remembers
+	// the days, so that an undo can put it back), a single one leaves its soup.
+	// Undoable if a2.
 	KillCrib: func(a1, a2) begin
 		if a1.repeatTemplate then begin
 				l1 := (if a1.originDate then a1.originDate else a1.mtgStartDate);
@@ -4679,6 +5146,8 @@ cribView := {
 	end,
 	recConfig: @rcInkorText,
 	cribLineSpacing: 16,
+	// Something dropped on the strip: text becomes an event, a meeting or event
+	// is moved to the selected day (keeping its alarm's lead time).
 	viewDropScript: func(dragInfo, dropPt, a3) begin
 		local cribNote, mtgStartDate, selectedDate;
 		mtgStartDate := dropPt.mtgStartDate;
@@ -4702,11 +5171,13 @@ cribView := {
 		true
 	end,
 	createInProgress: nil,
+	// A child dragged off to another view: delete it here.
 	viewDropChildScript: func(a1) begin
 		self:KillCrib(a1, nil);
 		true
 	end,
 	viewJustify: vjParentFullH + vjSiblingFullV,
+	// Only events may be moved within the strip.
 	viewDropMoveScript: func(a1, a2, a3, a4) begin
 		local l1, l2;
 		(if ((l2 := (l1 := (if a1.realData then a1.realData else a1)).viewStationery) = 'cribNote) then true)
@@ -4714,10 +5185,13 @@ cribView := {
 	viewSetupFormScript: func() begin
 		(self.createInProgress := true)
 	end,
+	// A child added by the edit view: add it as an event.
 	viewAddChildScript: func(aNewOne) begin
 		self:AddNewCrib(aNewOne, nil)
 	end,
 	displaydate: nil,
+	// A tap: passed to the first meeting view (clMeetingView, 95) that takes it
+	// as a click (11).
 	viewClickScript: func(unit) begin
 		(foreach item in self:ChildViewFrames() do begin
 				if (if (item.viewClass = 95) then item:HandleUnit(11, unit)) then begin
@@ -4726,6 +5200,10 @@ cribView := {
 			end)
 	end,
 	viewClass: clEditView,
+	// Adds event a1 to the days shown and shows it: an instance of a repeating
+	// event undoes a delete of those days or becomes an exception; a meeting
+	// becomes an event; with several days selected the event repeats over them
+	// (every day for consecutive days, else on that weekday). Undoable if a2.
 	AddNewCrib: func(a1, a2) begin
 		if (if ((l1 := a1.viewStationery) = 'cribNote) then a1.repeatTemplate) then begin
 				l2 := a1.repeatTemplate;
@@ -4766,9 +5244,9 @@ cribView := {
 						l2 := DeepClone(a1);
 						l12 := ((l10[(l11 - 1)] + 1440) - 1);
 						if ((l10[1] - l10[0]) = 1440) then begin
-								self:ConvertToRepeating(l2, 0, 4095, l12, nil)
+								self:ConvertToRepeating(l2, kDayOfWeek, kEveryday + kEveryWeek, l12, nil)
 							end else begin
-								l13 := ((2048 >> Date(l10[0]).dayOfWeek) + 31);
+								l13 := ((kSunday >> Date(l10[0]).dayOfWeek) + kEveryWeek);
 								self:ConvertToRepeating(l2, 0, l13, l12, nil)
 							end;
 						a1.repeatTemplate := l2;
@@ -4799,6 +5277,7 @@ cribView := {
 	end,
 	debug: 9385,
 	viewFont: tsHWFont + tsSize(12),
+	// The events of the selected days (each repeating event once).
 	viewSetupChildrenScript: func() begin
 		(if (if createInProgress then (mainDisplay <> scheduleView)) then (self.viewChildren := nil) else begin
 				count := Length(selectedDates);
@@ -4834,9 +5313,10 @@ cribView := {
 					end else begin
 						self.viewChildren := GetAllMeetingsUnique(notes, RepeatNotes, selectedDate, l3)
 					end;
-				(if createInProgress then (if (if viewChildren then ((Length(viewChildren) * viewLineSpacing) > 50)) then (cribMoreIndicator.viewFlags := BOr(cribMoreIndicator.viewFlags, 1))) else self:UpdateMoreIndicator(true))
+				(if createInProgress then (if (if viewChildren then ((Length(viewChildren) * viewLineSpacing) > 50)) then (cribMoreIndicator.viewFlags := BOr(cribMoreIndicator.viewFlags, vVisible))) else self:UpdateMoreIndicator(true))
 			end)
 	end,
+	// Shows "(more events)" when the events do not fit (more than 50 pixels).
 	UpdateMoreIndicator: func(a1) begin
 		local l1;
 		(if (not Visible(self)) then cribMoreIndicator:Close() else (if (if (l1 := (if a1 then self.viewChildren else self:ChildViewFrames())) then ((Length(l1) * viewLineSpacing) > 50)) then cribMoreIndicator:Open() else cribMoreIndicator:Close()))
@@ -4844,6 +5324,7 @@ cribView := {
 	preallocatedContext: 'cribView
 };
 
+// shown under the strip when it has more events than fit
 cribMoreIndicator := {
 	viewJustify: 8388662,
 	viewBounds: {left: 0, top: 58, right: -115, bottom: 74},
@@ -4857,6 +5338,7 @@ cribMoreIndicator := {
 	_proto: @protoStaticText
 };
 
+// the scroll arrows of the schedule (by hours), To Do list and agenda
 upDownScroller_2 := {
 	debug: 759704,
 	viewJustify: vjParentRightH + vjParentCenterV + vjParentClip,
@@ -4867,6 +5349,8 @@ upDownScroller_2 := {
 	yPos: nil,
 	PageThreshold: 2,
 	ScrollAmounts: [|Array|: 1, 2, 2],
+	// The schedule scrolls in hours over the 24 of a day; the agenda over 7
+	// days.
 	viewSetupDoneScript: func() begin
 		local l1, bounds;
 		if (mainDisplay = scheduleView) then begin
@@ -4887,6 +5371,7 @@ upDownScroller_2 := {
 			end;
 		inherited:?viewSetupDoneScript()
 	end,
+	// The arrows (a2.amount steps) scroll the main display.
 	viewScroll2DScript: func(arrowDirection, a2) begin
 		if (mainDisplay = ToDoListView) then begin
 				if (arrowDirection = 'up) then begin
@@ -4910,6 +5395,7 @@ upDownScroller_2 := {
 	_proto: @protoUpDownScroller
 };
 
+// the date (or dates) shown, at the top left
 DateView := {
 	debug: 8249,
 	viewClass: clTextView,
@@ -4923,6 +5409,7 @@ DateView := {
 	preallocatedContext: 'DateView
 };
 
+// the week number, shown beside the date when the locale uses week numbers
 WeekNumber := {
 	viewClass: clTextView,
 	viewFont: @fontSystem9,
@@ -4940,6 +5427,7 @@ WeekNumber := {
 			end;
 		self:DateChanged(nil, nil)
 	end,
+	// Shows the number of the selected date's week.
 	DateChanged: func(selectedDates2, a2) begin
 		local selectedDate, weekNumber2;
 		weekNumber2 := WeekNumber((selectedDate := selectedDates[0]), firstDayOfWeek);
@@ -4949,11 +5437,15 @@ WeekNumber := {
 	preallocatedContext: 'WeekNumber
 };
 
+// the New button: a popup of the meeting types (meeting, weekly meeting,
+// event, multi-day event, annual event, to do task) and any registered by
+// other applications
 newButton_2 := {
 	viewBounds: {left: 7, top: 2, right: 40, bottom: 15},
 	viewJustify: 8389638,
 	text: new_3,
 	builtinPopupElts: [|Array|: 'meeting, 'WeeklyMeeting, 'cribNote, 'MultiDayEvent, 'annualEvent, nil, 'todo],
+	// Makes the popup from the meeting type registry.
 	buttonClickScript: func() begin
 		local l1;
 		l1 := (foreach item in builtinPopupElts collect (if item then {item: (l6 := meetingTypeRegistry.(item)).label, icon: l6.icon, indent: 28} else 'pickseparator));
@@ -4965,6 +5457,10 @@ newButton_2 := {
 		popup := l1;
 		inherited:buttonClickScript()
 	end,
+	// Makes a new item of the type picked at the selected date (meetings at
+	// startTime, an hour long) and opens its slip; a multi-day event lasts a
+	// week (10080 minutes); a task is added to the To Do list; a registered
+	// type makes its own (newMeeting).
 	pickActionScript: func(index) begin
 		local copy, selectedDate, l3, toDoItem, newMeeting, mtgStartDate, repeatTemplate, soup;
 		if Visible(MeetingNotes) then begin
@@ -5049,6 +5545,8 @@ newButton_2 := {
 
 today := "Today";
 
+// the Show button: Day, Week, Month, Year, To Do, Agenda, Today; the
+// current display is marked
 ShowButton := {
 	viewBounds: {left: 7, top: 2, right: 45, bottom: 15},
 	viewJustify: 8389638,
@@ -5072,6 +5570,7 @@ ShowButton := {
 		((popup := Clone(popupChoices))[pos] := {item: popup[pos]}).mark := $\uFC0B;
 		inherited:buttonClickScript()
 	end,
+	// Shows the display picked (Week: the work week of the selected date).
 	pickActionScript: func(index) begin
 		local selectedDate;
 		selectedDate := selectedDates[0];
@@ -5107,6 +5606,7 @@ ShowButton := {
 			end;
 		inherited:pickActionScript(index)
 	end,
+	// Goes to today, leaving the month and year overviews.
 	GoToToday: func() begin
 		local now;
 		ClearUndoStacks();
@@ -5129,6 +5629,7 @@ ShowButton := {
 	_proto: @protoPopupButton
 };
 
+// the routing button
 actionButton := {
 	viewBounds: {left: -23, top: 0, right: -6, bottom: 0},
 	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV,
@@ -5136,6 +5637,8 @@ actionButton := {
 	_proto: @protoRoutingSlip
 };
 
+// the status bar: info, recognition toggle, keyboard, New, Show, close and
+// routing buttons
 statusbar := {
 	debug: 46632,
 	preallocatedContext: 'statusbar,
@@ -5148,10 +5651,12 @@ statusbar := {
 				inherited:viewSetupFormScript()
 			end,
 			DoInfoAbout: nil,
+			// Help: closes the help book if open, else opens it at Dates.
 			DoInfoHelp: func() begin
 				local tinyTim;
 				(if (if (tinyTim := GetRoot().TinyTim) then tinyTim.viewCObject) then tinyTim:Close() else OpenHelpTo("Dates"))
 			end,
+			// GenInfoAuxItems, DoInfoAux: the items other apps added (RegInfoItem).
 			GenInfoAuxItems: func() begin
 				(if infoAuxRegistry then (foreach item in infoAuxRegistry collect item) else [Array: ])
 			end,
@@ -5189,6 +5694,7 @@ statusbar := {
 
 scheduleView_2 := {_proto: @scheduleView, preallocatedContext: 'scheduleView};
 
+// the Month display: a month view of the meetings (clMonthView)
 MonthOverView := {
 	debug: 308009,
 	viewClass: clMonthView,
@@ -5205,18 +5711,21 @@ MonthOverView := {
 	month: nil,
 	year: nil,
 	holdDates: nil,
+	// Shows the month calendar's month.
 	viewSetupFormScript: func() begin
 		self.month := monthController.monthView.month;
 		self.year := monthController.monthView.year;
 		self.singleDay := monthController.singleDay;
 		(self.holdDates := Clone(selectedDates))
 	end,
+	// The scroll arrows go to the previous or next month.
 	viewScrollUpScript: func() begin
 		self:realScrollScript(true)
 	end,
 	viewScrollDownScript: func() begin
 		self:realScrollScript(nil)
 	end,
+	// A day was picked: back to the previous display.
 	monthChangedScript: func() begin
 		if previousMainDataDisplay then begin
 				self:changeViewTo(previousMainDataDisplay)
@@ -5228,6 +5737,8 @@ MonthOverView := {
 	preallocatedContext: 'MonthOverView
 };
 
+// ToDoListView, ToDoSlip and ToDoListOverview are stubs here (they create
+// nothing and find nothing); the agenda's To Do part is protoToDoAgendaView
 ToDoListView := {
 	debug: 10726,
 	viewClass: clView,
@@ -5283,12 +5794,20 @@ ToDoListOverview := {
 	preallocatedContext: 'ToDoListOverview
 };
 
+// the Dates overview (the overview button): a list of the meetings, events
+// and tasks from the selected date on, which can be checked and routed
 DatesOverviewForm := {
+	// The routing target: the checked items (a 'CalendarOverview frame), with
+	// their store when there is one.
 	GetTargetInfo: func(a1) begin
 		local l1, selectedItem, l3, resolveEntryAlias2;
 		(if ((l1 := (if selected then Length(selected) else 0)) > 0) then {target: {_cursor: selected, class: 'CalendarOverview}, targetView: self, targetStore: (if (l1 = 1) then (if (l3 := (selectedItem := selected[0]).entryAlias) then (if (resolveEntryAlias2 := ResolveEntryAlias(l3)) then EntryStore(resolveEntryAlias2)) else self:GetToDo():TaskStore(selectedItem.topic)))} else {target: nil, targetView: self, targetStore: nil})
 	end,
+	// a cursor over the overview's items: the meetings and events, with each
+	// day's tasks put in and a heading for each day
 	protoCursor: {
+		// Puts the tasks of the days from a2 to a3 into item list a1 (made if nil):
+		// each day's tasks with that day's heading unless meetings already gave one.
 		InsertToDoItems: func(a1, a2, a3) begin
 			l1 := (a2 - (a2 mod 1440));
 			l2 := nil;
@@ -5296,7 +5815,7 @@ DatesOverviewForm := {
 					a1 := [Array: ]
 				end;
 			if ((l1 := calendar.ToDoListView:nextToDoDate(l1)) = nil) then begin
-					l1 := 536870911
+					l1 := kForever
 				end;
 			(while (l1 < a3) do begin
 					l5 := Length((l4 := calendar.ToDoListView:GetToDoItemsForThisDate(l1)));
@@ -5334,9 +5853,12 @@ DatesOverviewForm := {
 				end);
 			(if (if l3 then (not l2)) then nil else a1)
 		end,
+		// A copy of the cursor.
 		clone: func() begin
 			Clone(self)
 		end,
+		// The item a1 items on, the cursor left where it was (unless it moved to
+		// another batch).
 		NthEntry: func(a1) begin
 			local index2, baseIndex2, move;
 			index2 := index;
@@ -5349,9 +5871,13 @@ DatesOverviewForm := {
 				end;
 			move
 		end,
+		// Next, prev: one item on or back.
 		Next: func() begin
 			self:move(1)
 		end,
+		// Moves maxLines items (at most a page) on or back, fetching the previous
+		// or next page of items when it leaves the one held (startItemsCache keeps
+		// each page's first item). Returns the item there, or nil at an end.
 		move: func(maxLines) begin
 			local pos, l2, prevPage, count, count2, l6, least, startItemsCacheItem, item, page, l11;
 			if (if (maxLines >= 0) then (not items)) then begin
@@ -5427,6 +5953,9 @@ DatesOverviewForm := {
 		end,
 		calendar: nil,
 		baseIndex: nil,
+		// The items from time least to a2: the meetings and events (when the
+		// display shows meetings) sorted by time with day headings, and the tasks
+		// (when it shows tasks).
 		FetchItems: func(least, a2) begin
 			local allMeetings, allMeetings2, arrayMunger2;
 			allMeetings := nil;
@@ -5456,6 +5985,7 @@ DatesOverviewForm := {
 		canonicalOverviewToDoItem: {mtgStartDate: nil, topic: nil, topicID: nil},
 		IsSameItem: IsSameItem,
 		index: nil,
+		// The current item.
 		entry: func() begin
 			local item, l2;
 			item := nil;
@@ -5466,6 +5996,7 @@ DatesOverviewForm := {
 				end;
 			item
 		end,
+		// Puts a heading (the date string) before the first item of each day.
 		InsertDateLabels: func(arrayMunger2) begin
 			count := Length(arrayMunger2);
 			list := Array(1, nil);
@@ -5489,17 +6020,21 @@ DatesOverviewForm := {
 		end,
 		atEndOfCursor: nil,
 		maxNumberPerPage: nil,
+		// Back to the first item of the page.
 		ResetToFirstVisibleItem: func() begin
 			(index := baseIndex)
 		end,
 		items: nil,
 		earliestPage: nil,
+		// A cursor for calendar a1, a2 items a page.
 		New: func(a1, a2) begin
 			{_proto: self, calendar: a1, maxNumberPerPage: a2}
 		end,
 		atBeginningOfCursor: nil,
 		startItemsCache: nil,
 		lastIndex: nil,
+		// The page of items before item a1 (or the last ones): fetched a week
+		// (10080 minutes) at a time going back, jumping over empty stretches.
 		FetchPrevPage: func(a1) begin
 			local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12, l13, l14, l15, l16;
 			atBeginningOfCursor := nil;
@@ -5507,10 +6042,10 @@ DatesOverviewForm := {
 					l1 := a1.mtgStartDate
 				end else begin
 					if calendar:IsDisplayingMeetings() then begin
-							l2 := calendar:FindLastAppointmentDate(536870911)
+							l2 := calendar:FindLastAppointmentDate(kForever)
 						end;
 					if calendar:IsDisplayingToDoItems() then begin
-							l3 := calendar.ToDoListView:lastToDoDate(536870911)
+							l3 := calendar.ToDoListView:lastToDoDate(kForever)
 						end;
 					l1 := (if (if l2 then (not l3)) then l2 else (if (if (not l2) then l3) then l3 else (if (if l2 then l3) then max(l2, l3))))
 				end;
@@ -5573,6 +6108,8 @@ DatesOverviewForm := {
 					l4
 				end)
 		end,
+		// The page of items from item (or time) item on (a2: including the item),
+		// fetched a week at a time, jumping over empty stretches.
 		FetchPage: func(item, a2) begin
 			local least2, item2, l3, list, l5, items, pos, firstAppointmentDate, nextToDoDate, least, count;
 			if IsInteger(item) then begin
@@ -5601,17 +6138,17 @@ DatesOverviewForm := {
 							end;
 						(l5 := ((least2 := l5) + 10080))
 					end else begin
-						firstAppointmentDate := 536870911;
-						nextToDoDate := 536870911;
+						firstAppointmentDate := kForever;
+						nextToDoDate := kForever;
 						if calendar:IsDisplayingMeetings() then begin
 								firstAppointmentDate := calendar:FindFirstAppointmentDate(l5)
 							end;
 						if calendar:IsDisplayingToDoItems() then begin
 								if ((nextToDoDate := calendar.ToDoListView:nextToDoDate(l5)) = nil) then begin
-										nextToDoDate := 536870911
+										nextToDoDate := kForever
 									end
 							end;
-						(if ((least := min(firstAppointmentDate, nextToDoDate)) <> 536870911) then (l5 := ((least2 := least) + 10080)) else begin
+						(if ((least := min(firstAppointmentDate, nextToDoDate)) <> kForever) then (l5 := ((least2 := least) + 10080)) else begin
 								atEndOfCursor := true;
 								break
 							end)
@@ -5630,6 +6167,8 @@ DatesOverviewForm := {
 		prev: func() begin
 			self:move(-1)
 		end,
+		// The index in a1 (from a2) of the heading of the first day after a3, else
+		// its length.
 		FindNextDay: func(a1, a2, a3) begin
 			l1 := (a3 + 1440);
 			count := Length(a1);
@@ -5644,6 +6183,7 @@ DatesOverviewForm := {
 				end);
 			count
 		end,
+		// Starts the cursor at item (or time) a1.
 		Initialize: func(a1) begin
 			if a1 then begin
 					items := self:FetchPage(a1, nil)
@@ -5657,11 +6197,14 @@ DatesOverviewForm := {
 			(startItemsCache := (if items then [Array: items[1]] else [Array: ]))
 		end
 	},
+	// Whether item a1 is the selected item a2 (a task by its topicID, a meeting
+	// by entry and instance).
 	IsSameItemAlias: func(a1, a2) begin
 		local l1;
 		(if (a1.topic or a2.topic) then (a1.topicID = a2.topicID) else (if IsSameEntry((l1 := (if a1.repeatTemplate then a1.repeatTemplate else a1)), a2.entryAlias) then (a1.mtgStartDate = a2.instanceTime)))
 	end,
 	viewFormat: vfFillWhite,
+	// Checks or unchecks line a1 of the page (headings cannot be).
 	SelectItem: func(a1) begin
 		local nthEntry, copy, l3, l4, pos, box;
 		if IsString((nthEntry := cursor:NthEntry(a1))) then begin
@@ -5694,6 +6237,7 @@ DatesOverviewForm := {
 		pieces[a1] := self:GetTheRightShape(nthEntry, box);
 		self:Dirty()
 	end,
+	// Closes: forgets the cursor and selection and the routing changes it made.
 	viewQuitScript: func() begin
 		cursor := nil;
 		selected := nil;
@@ -5707,14 +6251,18 @@ DatesOverviewForm := {
 		inherited:?viewQuitScript()
 	end,
 	preallocatedContext: 'DatesOverviewForm,
+	// An empty overview shows its message.
 	viewDrawScript: func() begin
 		(if (not cursor.items) then self:DrawShape(emptyOverviewText, {font: tsHWFont + tsSize(12), justification: 'center}) else inherited:viewDrawScript())
 	end,
+	// 'NotCheckable for headings and other items, else whether it is checked.
 	CheckState: func(indexEntry) begin
 		local cls;
 		(if ((cls := ClassOf(indexEntry)) = 'string) then 'NotCheckable else (if (((cls = 'meeting) or indexEntry.topic) or LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], indexEntry.viewStationery, 0, '|=|, nil)) then self:isSelected(indexEntry) else 'NotCheckable))
 	end,
 	viewFlags: vReadOnly + vApplication + vClipping + vClickable,
+	// A meeting's line: its time (not for an event), title and the start of its
+	// notes.
 	MeetingAbstract: compile(
 		constants: {
 			kROM_256: @searchSuffix
@@ -5738,6 +6286,9 @@ DatesOverviewForm := {
 				end;
 			copy
 		end),
+	// The shape of one line: a heading in bold, a meeting or task with its icon
+	// (a task's by its priority) and text truncated to fit, or another entry's
+	// text.
 	Abstract: compile(
 		constants: {
 			kLiteral_50e9f9: '{font: tsSystem + tsSize(12)},
@@ -5758,16 +6309,18 @@ DatesOverviewForm := {
 						l7 := ((16 - (bounds.bottom - bounds.top)) div 2);
 						l8 := ((copy.left + 24) + 2);
 						l9 := (copy.right - l8);
-						StyledStrTruncate(richString, l9, 12288);
+						StyledStrTruncate(richString, l9, tsSystem + tsSize(12));
 						[Array: kLiteral_50e9f9, OffsetShape(MakeShape(meetingIcon), (copy.left + l6), (copy.top + l7)), MakeText(richString, l8, copy.top, copy.right, (copy.bottom - 4))]
 					end else begin
-						StyledStrTruncate((extractData2 := ExtractData([Array: items2Item], kROM_256, 50)), (copy.right - copy.left), 12288);
+						StyledStrTruncate((extractData2 := ExtractData([Array: items2Item], kROM_256, 50)), (copy.right - copy.left), tsSystem + tsSize(12));
 						[Array: kLiteral_50e9f9, MakeText(extractData2, copy.left, copy.top, copy.right, (copy.bottom - 4))]
 					end))
 		end),
 	viewBounds: {left: 0, top: 0, right: 0, bottom: -18},
 	_proto: @protoSoupOverview,
 	mainViewLastMailFormat: nil,
+	// Moves selected item a1 to store selectedStore (a meeting by its instance
+	// or exception, a task by the To Do view).
 	MoveTarget: func(a1, selectedStore) begin
 		local resolveEntryAlias2, exception, taskStore;
 		(if a1.entryAlias then (if (resolveEntryAlias2 := ResolveEntryAlias(a1.entryAlias)) then begin
@@ -5788,12 +6341,14 @@ DatesOverviewForm := {
 	end,
 	filingButtonView: nil,
 	cursor: nil,
+	// The soups changed: forget the selection and redraw.
 	FilterChanged: func() begin
 		BusyBoxControl(1);
 		selected := nil;
 		self:RedoChildren()
 	end,
 	emptyOverviewText: nil,
+	// Makes the shapes of the page's lines from cursor copy.
 	SetupAbstracts: func(copy) begin
 		box := self:LocalBox();
 		self.maxLines := (box.bottom div lineHeight);
@@ -5823,6 +6378,7 @@ DatesOverviewForm := {
 		copy:ResetToFirstVisibleItem()
 	end,
 	lineHeight: 17,
+	// The scroll arrows: a page on or back (a click at either end).
 	viewScrollDownScript: func() begin
 		local baseIndex;
 		(if cursor.atEndOfCursor then begin
@@ -5838,6 +6394,7 @@ DatesOverviewForm := {
 					RefreshViews()
 				end))
 	end,
+	// Starts afresh (a new cursor).
 	Retarget: func() begin
 		cursor := nil;
 		selected := nil;
@@ -5866,6 +6423,8 @@ DatesOverviewForm := {
 	hilitedIndex: nil,
 	prevDate: nil,
 	dividerLine: 1,
+	// Opens: takes over the meeting slip's routing and adds a filing button to
+	// the status bar.
 	viewSetupFormScript: func() begin
 		mainViewLastMailFormat := calendar.lastMailFormat;
 		calendar.lastMailFormat := nil;
@@ -5885,6 +6444,8 @@ DatesOverviewForm := {
 		viewBounds: {left: -64, top: 2, right: -47, bottom: 15},
 		_proto: @protoFilingButton
 	},
+	// A tap on line a1: in the check box column checks it, else shows the
+	// meeting or task.
 	HitItem: func(a1, trackScrollingItem, trackScrollingItem2) begin
 		local nthEntry, l2, l3;
 		(if (trackScrollingItem < selectIndent) then self:SelectItem(a1) else begin
@@ -5901,27 +6462,29 @@ DatesOverviewForm := {
 	end,
 	debug: 2122537,
 	checkBoxVertOffset: 1,
+	// Makes the cursor (a page a screen high) from the selected date's first
+	// meeting or task, or the "No items" message.
 	viewSetupChildrenScript: func() begin
 		local box, firstAppointmentDate, nextToDoDate, least;
 		if (not cursor) then begin
 				box := self:LocalBox();
 				cursor := protoCursor:New(calendar, (box.bottom div lineHeight));
-				firstAppointmentDate := 536870911;
-				nextToDoDate := 536870911;
+				firstAppointmentDate := kForever;
+				nextToDoDate := kForever;
 				if calendar:IsDisplayingMeetings() then begin
 						firstAppointmentDate := self:FindFirstAppointmentDate(selectedDates[0])
 					end;
 				if calendar:IsDisplayingToDoItems() then begin
 						if ((nextToDoDate := calendar.ToDoListView:nextToDoDate(selectedDates[0])) = nil) then begin
-								nextToDoDate := 536870911
+								nextToDoDate := kForever
 							end
 					end;
-				if ((least := min(firstAppointmentDate, nextToDoDate)) <> 536870911) then begin
+				if ((least := min(firstAppointmentDate, nextToDoDate)) <> kForever) then begin
 						cursor:Initialize(least);
 						prevDate := nil
 					end else begin
 						cursor:Initialize(nil);
-						emptyOverviewText := MakeTextLines(ParamStr("No items on or after\n^0.", [Array: LongDateStr(selectedDates[0], DateSpecLong)]), {left: self:LocalBox().left, top: 80, right: self:LocalBox().right, bottom: (80 + (lineHeight * 2))}, lineHeight, 12291);
+						emptyOverviewText := MakeTextLines(ParamStr("No items on or after\n^0.", [Array: LongDateStr(selectedDates[0], DateSpecLong)]), {left: self:LocalBox().left, top: 80, right: self:LocalBox().right, bottom: (80 + (lineHeight * 2))}, lineHeight, tsHWFont + tsSize(12));
 						cursor.atEndOfCursor := true
 					end
 			end else begin
@@ -5929,10 +6492,12 @@ DatesOverviewForm := {
 			end;
 		(if (not cursor.items) then (self.numLines := 0) else self:SetupAbstracts(cursor))
 	end,
+	// Headings are not highlighted.
 	hiliter: func(hiliteShape, hilitedIndex, a3) begin
 		(if (if hilitedIndex then (not IsString(cursor.items[hilitedIndex]))) then inherited:hiliter(hiliteShape, hilitedIndex, a3))
 	end,
 	repeatingInstanceTemplate: nil,
+	// Whether frame2 is among the checked items.
 	isSelected: func(frame2) begin
 		(if selected then ArrayPos(selected, frame2, 0, IsSameItemAlias))
 	end,
@@ -5982,6 +6547,8 @@ todoBits_2 := bitmap('bits, "resources/bits/5053e1.png", "00000000000400a600a600
 
 shapeBounds_3 := shorts('boundsrect, 0, 0, 13, 17);
 
+// the meeting types' names, icons (big and small) and shapes, and the slot
+// of the memory of titles used for each
 meetingTypeRegistry := {
 	meeting: {
 		label: meeting_3,
@@ -6043,6 +6610,7 @@ meetingTypeRegistry := {
 	}
 };
 
+// the meeting slip's title line
 meetingTitle_2 := {
 	debug: "MeetingTitle",
 	viewFlags: vVisible + vClickable,
@@ -6055,6 +6623,7 @@ meetingTitle_2 := {
 	textFlags: 24,
 	viewLineSpacing: 30,
 	text: nil,
+	// Shows the new title; read-only on a read-only store (vWriteProtected).
 	viewSetupFormScript: func() begin
 		local repeatTemplate;
 		text := Clone(newTitle);
@@ -6065,10 +6634,13 @@ meetingTitle_2 := {
 				repeatTemplate := selectedMeeting
 			end;
 		if (if IsSoupEntry(repeatTemplate) then EntryStore(repeatTemplate):IsReadOnly()) then begin
-				self.viewFlags := BOr(viewFlags, 128)
+				self.viewFlags := BOr(viewFlags, vWriteProtected)
 			end;
+		// clears 0x800000 (8388608), oneLineOnly in the NPG's text limits, so the
+		// title may wrap
 		(entryLine.viewJustify := BAnd(entryLine.viewJustify, bnot(8388608)))
 	end,
+	// The title was edited.
 	textChanged: func() begin
 		dirtyFlag := true;
 		(newTitle := MakeRichString(text, styles))
@@ -6077,17 +6649,20 @@ meetingTitle_2 := {
 	_proto: @protoRichLabelInputLine
 };
 
+// the meeting slip's date line
 DateValue_2 := {
 	label: date,
 	viewJustify: 0,
 	longFormat: 'abbrDateStrSpec,
+	// Placed at the slip's date line, hidden when asked (vVisible cleared).
 	viewSetupFormScript: func() begin
 		viewBounds := RelBounds(0, dpSlip.dateFieldTop, 220, 18);
 		if hideDateField then begin
-				viewFlags := BAnd(viewFlags, bnot(1))
+				viewFlags := BAnd(viewFlags, bnot(vVisible))
 			end;
 		(Date := newMtgDate)
 	end,
+	// A date picked: the meeting keeps its time of day on the new date.
 	pickActionScript: func(index) begin
 		local indexItem, l2;
 		dirtyFlag := true;
@@ -6109,12 +6684,15 @@ days_2 := "2 days";
 
 event := "event";
 
+// the default meeting alarm choices of the preferences (labelWarningTimes)
 labelCommands := [|Array|: none, "At meeting", "5 minutes", "15 minutes", minutes, hour, day, otherCategoryName];
 
 day := "1 day";
 
+// the default event alarm choices of the preferences
 choices := [|Array|: none, "9am on day of event", day, days_2, "3 days", otherCategoryName];
 
+// the repeat slip of the meeting slip (protoRepeatView), at its bottom
 RepeatingView := {
 	viewJustify: vjParentCenterH + vjParentBottomV,
 	debug: 346713,
@@ -6124,6 +6702,8 @@ RepeatingView := {
 		viewBounds.top := ((-(viewBounds.bottom - viewBounds.top)) - 8);
 		(viewBounds.bottom := -8)
 	end,
+	// Saves the meeting slip if changed and lays it out again (back to "never"
+	// when the repeat type is kNever).
 	viewQuitScript: func() begin
 		(if Visible(MeetingNotes) then begin
 				if dirtyFlag then begin
@@ -6135,7 +6715,7 @@ RepeatingView := {
 								repeatingViewQuitting := nil
 							end
 					end;
-				(if (repeatType = 5) then begin
+				(if (repeatType = kNever) then begin
 						MeetingNotes.savedFrequencyIndex := 0;
 						MeetingNotes:RelayoutSlip(nil)
 					end else MeetingNotes:RelayoutSlip(true))
@@ -6145,6 +6725,7 @@ RepeatingView := {
 	_proto: @protoRepeatView
 };
 
+// the title of the notes slip: Event Notes or Meeting Notes
 labelLine_2 := {
 	debug: titleLabel,
 	title: nil,
@@ -6159,6 +6740,7 @@ labelLine_2 := {
 	_proto: @protoTitle
 };
 
+// the notes of a meeting or event (an edit view on its NotesData)
 MeetingNotesArea := {
 	debug: 2511739,
 	viewFlags: vAnythingAllowed + vVisible + vClipping,
@@ -6171,6 +6753,8 @@ MeetingNotesArea := {
 	viewLineSpacing: 28,
 	notesDirty: nil,
 	labelLine: labelLine_2,
+	// Shows the notes of the meeting (or its instance); read-only on a
+	// read-only store.
 	viewSetupFormScript: func() begin
 		local notesDataItem, repeatTemplate;
 		self.target := {data: nil};
@@ -6183,14 +6767,17 @@ MeetingNotesArea := {
 			end else begin
 				repeatTemplate := selectedMeeting
 			end;
-		(if (if IsSoupEntry(repeatTemplate) then EntryStore(repeatTemplate):IsReadOnly()) then (self.viewFlags := BOr(viewFlags, 128)))
+		(if (if IsSoupEntry(repeatTemplate) then EntryStore(repeatTemplate):IsReadOnly()) then (self.viewFlags := BOr(viewFlags, vWriteProtected)))
 	end,
+	// Puts the caret in the notes unless they are read-only or write-protected
+	// (130: vReadOnly + vWriteProtected).
 	viewSetupDoneScript: func() begin
-		if (BAnd(self.viewFlags, 130) = 0) then begin
+		if (BAnd(self.viewFlags, vReadOnly + vWriteProtected) = 0) then begin
 				AddPrecludedSend('PositionCaret, self, 'PositionCaret, [Array: 10, (viewOriginY + viewLineSpacing), nil], 0)
 			end;
 		inherited:?viewSetupDoneScript()
 	end,
+	// Saves the notes into the meeting if they changed (an empty list as nil).
 	viewQuitScript: func() begin
 		local notesDataItem, data, repeatTemplate;
 		(if notesDirty then begin
@@ -6210,9 +6797,12 @@ MeetingNotesArea := {
 					end)
 			end)
 	end,
+	// A change to the notes (unless read-only) marks them changed.
 	viewChangedScript: func(slot, view) begin
-		(if (notesDirty := (BAnd(MeetingNotesArea.viewFlags, 130) = 0)) then inherited:viewChangedScript(slot, view))
+		(if (notesDirty := (BAnd(MeetingNotesArea.viewFlags, vReadOnly + vWriteProtected) = 0)) then inherited:viewChangedScript(slot, view))
 	end,
+	// viewAddChildScript, viewDropChildScript: a view added or removed changes
+	// the notes.
 	viewAddChildScript: func(aNewOne) begin
 		notesDirty := true;
 		nil
@@ -6225,6 +6815,7 @@ MeetingNotesArea := {
 	_proto: @newtEditView
 };
 
+// the notes slip opened over the meeting slip by its Notes button
 MeetingNotesSlip := {
 	debug: 2511770,
 	viewFlags: vClipping + vFloating + vClickable,
@@ -6250,6 +6841,7 @@ MeetingNotesSlip := {
 	_proto: @newtFalseEntryView
 };
 
+// the meeting slip's "Add Notes"/"Edit Notes" button
 notesButton := {
 	debug: 79248,
 	viewJustify: 8388742,
@@ -6268,6 +6860,7 @@ notesButton := {
 	_proto: @protoTextButton
 };
 
+// the meeting slip's routing and filing buttons
 actionButton_2 := {
 	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV,
 	viewBounds: {left: -42, top: -18, right: -25, bottom: -5},
@@ -6282,6 +6875,10 @@ filingButton := {
 	_proto: @protoFilingButton
 };
 
+// DeleteRepeatingMeetingDialog's pieces: the "Only This" button sets
+// needToChangeThisOrFutureOccurrences ('ThisOneOnly) when the meeting slip
+// asks which instances a change applies to; RepeatCluster chooses only this
+// one or this and all future ones; _defaultButton_18 does the delete
 delete_2 := "Delete:";
 
 _defaultButton_17 := {
@@ -6336,6 +6933,8 @@ _defaultButton_18 := {
 	viewSetupFormScript: func() begin
 		(text := verbText)
 	end,
+	// Deletes this instance, or this and all future ones: the series ends the
+	// day before this instance (or is removed if this was its first).
 	buttonClickScript: func() begin
 		local repeatTemplate, prevMeeting2, l3;
 		repeatTemplate := selectedMeeting.repeatTemplate;
@@ -6367,6 +6966,7 @@ _defaultButton_18 := {
 	_proto: @protoTextButton
 };
 
+// the "This is a repeating meeting. Delete:" dialog
 DeleteRepeatingMeetingDialog := {
 	debug: 557905,
 	viewJustify: vjParentCenterH + vjParentCenterV,
@@ -6413,9 +7013,14 @@ DeleteRepeatingMeetingDialog := {
 	_proto: @protoFloater
 };
 
+// the meeting (or event) slip: title, date, times, invitees, location,
+// alarm, repeat, notes; edits are kept in new... slots and saved by
+// CarefulSave when the slip closes, asking for a repeating meeting
+// whether the change applies to this instance or all future ones
 MeetingNotes := {
 	noOverview: "This window has no Overview.",
 	dirtyFlag: nil,
+	// The routing target: the meeting (saved first if changed).
 	GetTargetInfo: func(a1) begin
 		local selectedMeeting2;
 		if dirtyFlag then begin
@@ -6425,14 +7030,18 @@ MeetingNotes := {
 	end,
 	hideDateField: true,
 	notesButton: nil,
+	// Puts the caret at the end of the title.
 	viewSetupDoneScript: func() begin
 		local l1, entryLine;
 		l1 := (if selectedMeeting.repeatTemplate then selectedMeeting.repeatTemplate else selectedMeeting);
 		SetKeyView((entryLine := Header.meetingTitle.entryLine), 9999)
 	end,
+	// Applies the new first and stop dates of a repeating meeting (a stop date
+	// at the end of its day, kForever for none), moving the instance shown into
+	// the new range.
 	UpdateDateRange: func() begin
 		local repeatTemplate, l2, l3, l4, mtgStartDate, l6, l7, l8, nextMeeting2;
-		(if (RepeatingView.repeatType <> 5) then begin
+		(if (RepeatingView.repeatType <> kNever) then begin
 				if ((repeatTemplate := selectedMeeting.repeatTemplate) = nil) then begin
 						return nil
 					end;
@@ -6447,8 +7056,8 @@ MeetingNotes := {
 								l3 := true
 							end
 					end;
-				if (newStopDate = 536870911) then begin
-						l8 := 536870911
+				if (newStopDate = kForever) then begin
+						l8 := kForever
 					end else begin
 						l8 := (((l2 := (newStopDate - (newStopDate mod 1440))) + 1440) - 1)
 					end;
@@ -6466,6 +7075,8 @@ MeetingNotes := {
 				(if ((if l3 then (repeatTemplate.mtgStartDate > selectedMeeting.mtgStartDate)) or (if l4 then (repeatTemplate.mtgStopDate < selectedMeeting.mtgStartDate))) then (if ((nextMeeting2 := NextMeeting(0, repeatTemplate)) <> 0) then (selectedMeeting.mtgStartDate := nextMeeting2)))
 			end)
 	end,
+	// Moves the instance notes of repeatTemplate from mtgStartDate on (or only
+	// that one, if a4) to the new template copy.
 	TransferLocalNotes: func(repeatTemplate, copy, mtgStartDate, a4) begin
 		(if (instanceNotesData := repeatTemplate.InstanceNotesData) then begin
 				if (not (l3 := (if ((bSearchRight2 := BSearchRight(instanceNotesData, mtgStartDate, '|<|, 0)) >= 0) then (instanceNotesData[bSearchRight2][0] = mtgStartDate)))) then begin
@@ -6507,6 +7118,8 @@ MeetingNotes := {
 	end,
 	hideMtgMsgHeader: true,
 	originalMtgDate: nil,
+	// Applies the alarm set in the slip (a repeating meeting's as minutes
+	// before). Returns 'initializeAlarms if it changed.
 	UpdateAlarmSpec: func() begin
 		local selectedMeeting2, getWarningTime, getWarningTime2;
 		selectedMeeting2 := selectedMeeting;
@@ -6526,6 +7139,7 @@ MeetingNotes := {
 	end,
 	savedFrequencyIndex: nil,
 	repeatingViewQuitting: nil,
+	// The command key for the filing button.
 	_filingKeyScript: func(a1) begin
 		PressButton(filingButton)
 	end,
@@ -6535,6 +7149,7 @@ MeetingNotes := {
 	newSplitRepeatTemplate: nil,
 	newtMtgStartTime: nil,
 	alreadyAsked: nil,
+	// Closes: closes the popups and saves if changed.
 	viewQuitScript: func() begin
 		local repeatTemplate;
 		ClosingFromQuitScript := true;
@@ -6558,6 +7173,7 @@ MeetingNotes := {
 		(originalInviteesAliases := nil)
 	end,
 	locationAlias: nil,
+	// Whether two lists of aliases are the same.
 	IsSameListOfAliases: compile(
 		constants: {
 			kLiteral_5025e1: '[Array: ]
@@ -6579,6 +7195,9 @@ MeetingNotes := {
 					end))
 		end),
 	preallocatedContext: 'MeetingNotes,
+	// Applies a change of the repeat settings: a single meeting becomes
+	// repeating (moved to the repeating soup), a repeating one single, or the
+	// series changes (split at this instance when only future ones change).
 	UpdateFrequency: func() begin
 		l1 := selectedMeeting.repeatTemplate;
 		(if ((l2 := RepeatingView:GetRepeatSpec()) = l1) then nil else begin
@@ -6642,11 +7261,13 @@ MeetingNotes := {
 	end,
 	newTitle: nil,
 	noScroll: "This window does not scroll.",
+	// The command key for the routing button.
 	_actionKeyScript: func(a1) begin
 		PressButton(actionButton)
 	end,
 	viewChildren: [viewChildren:
 		Header,
+		// the scroll arrows of a slip too tall for the screen (shown only then)
 		{
 			ViewRect: {left: 0, top: 0, right: 0, bottom: 182},
 			DataRect: {left: 0, top: 0, right: 0, bottom: 258},
@@ -6662,7 +7283,8 @@ MeetingNotes := {
 			end,
 			viewSetupFormScript: func() begin
 				if (not slipTooTall) then begin
-						self.viewFlags := BAnd(viewFlags, bnot(1))
+						// hidden (vVisible cleared) unless the slip is too tall
+						self.viewFlags := BAnd(viewFlags, bnot(vVisible))
 					end;
 				inherited:?viewSetupFormScript()
 			end,
@@ -6675,6 +7297,7 @@ MeetingNotes := {
 		filingButton,
 		{
 			debug: 72912,
+			// close box: save if changed, then close
 			buttonClickScript: func() begin
 				if (isNewMeeting or dirtyFlag) then begin
 						self:CarefulSave()
@@ -6687,6 +7310,11 @@ MeetingNotes := {
 	],
 	MinHourSpec: nil,
 	storesFilter: nil,
+	// Works out which lines the slip shows and where (dpSlip: each field's top
+	// and height): the title, the "repeating meeting" message, the date, times,
+	// invitees and location (not for an event), the alarm, the repeat line
+	// (unless the icon type fixes it) and, for a repeating one (a1), its date
+	// range. headerHt is the total.
 	LayoutSlip: func(a1) begin
 		local dpSlip2, selectedMeeting2, isNewMeeting2, l4, l5, isExceptionMeeting, l7, l8, l9, l10, slipTitleHt;
 		self.dpSlip := {};
@@ -6707,7 +7335,7 @@ MeetingNotes := {
 		dpSlip2.dateRangeTop := 0;
 		dpSlip2.freqFieldTop := 0;
 		if (if Header then Header.DateValue) then begin
-				Header.DateValue.viewFlags := BOr(Header.DateValue.viewFlags, 1)
+				Header.DateValue.viewFlags := BOr(Header.DateValue.viewFlags, vVisible)
 			end;
 		hideMtgMsgHeader := true;
 		hideDateField := true;
@@ -6773,6 +7401,8 @@ MeetingNotes := {
 			end;
 		(dpSlip2.headerHt := slipTitleHt)
 	end,
+	// Saves every change made in the slip, and resets the alarms if needed; a
+	// write-protected or full store is reported and the change undone.
 	ApplyAllChanges: func() begin
 		local updateAlarmSpec, repeatTemplate, repeatTemplate2, error, name, text;
 		(try begin
@@ -6803,15 +7433,15 @@ MeetingNotes := {
 					end;
 				error := CurrentException().error;
 				name := EntryStore(repeatTemplate2):GetName();
-				if (error = -10605) then begin
+				if (error = kSError_WriteProtected) then begin
 						text := "^0 changes could not be saved (\u201C\u^1\u201D\u is write-protected)"
 					end else begin
-						if (error = -10617) then begin
+						if (error = kSError_StoreFull) then begin
 								text := "^0 changes could not be saved (\u201C\u^1\u201D\u is full)"
 							end
 					end;
 				if text then begin
-						self:Notify(3, title, ParamStr(text, [Array: title, name]))
+						self:Notify(kNotifyAlert, title, ParamStr(text, [Array: title, name]))
 					end else begin
 						Rethrow()
 					end;
@@ -6821,6 +7451,8 @@ MeetingNotes := {
 	end,
 	savedAlarmIndex: nil,
 	viewFlags: vApplication + vClipping + vFloating + vClickable,
+	// the "Change only this or this and future?" dialog for a changed instance
+	// of a repeating meeting
 	AskThisOrAll: {
 		debug: 148080,
 		viewJustify: vjParentCenterH + vjParentCenterV,
@@ -6891,6 +7523,10 @@ MeetingNotes := {
 	savedAlarmUnitsValue: nil,
 	slipTooTall: nil,
 	labelsFilter: nil,
+	// Applies a change to a repeating meeting: to all future instances (moving
+	// the series if this is its first, else splitting it here into a new
+	// template that newSplitRepeatTemplate holds) or to this one only (an
+	// exception).
 	ChangeThisOrFutureOccurrences: func() begin
 		local repeatTemplate, mtgStartDate, l3, copy;
 		if newSplitRepeatTemplate then begin
@@ -6928,6 +7564,9 @@ MeetingNotes := {
 				self:CarefulChange(selectedRepeatSoup, repeatTemplate, true)
 			end)
 	end,
+	// Whether a change to an instance of a repeating meeting needs asking about
+	// (its time, duration, location or invitees changed on the same day; a
+	// change of day applies to this one only).
 	NeedConfirmForChangingRepeatingMeeting: func() begin
 		local newtMtgStartTime2, newtMtgStopTime2, mtgStartDate, l4, l5, l6, l7;
 		if self:IsNonExceptionRepeatingMeeting(selectedMeeting) then begin
@@ -6951,6 +7590,8 @@ MeetingNotes := {
 	newMtgDuration: nil,
 	DeleteRepeatingMeetingDialog: nil,
 	viewJustify: vjParentCenterH + vjParentBottomV,
+	// Lays the slip out again (a1: show the repeat range), keeping the alarm
+	// popup's units.
 	RelayoutSlip: func(a1) begin
 		relayoutInProgress := true;
 		try begin
@@ -6968,10 +7609,13 @@ MeetingNotes := {
 		savedAlarmUnitsValue := nil;
 		(savedAlarmUnitsIndex := nil)
 	end,
+	// Applies a new title.
 	UpdateText: func() begin
 		(if (not BinEqual(newTitle, self:GetMeetingText(selectedMeeting))) then self:ChangeMeeting(selectedMeeting, 'mtgText, newTitle))
 	end,
 	newHeaderMemory: nil,
+	// After an edit of a repeating meeting: asks (once) whether it applies to
+	// this instance or all future ones.
 	CarefulAskUser: func() begin
 		local context;
 		(if (if (if (not isNewMeeting) then selectedMeeting.repeatTemplate) then (not alreadyAsked)) then (if (alreadyAsked := self:NeedConfirmForChangingRepeatingMeeting()) then begin
@@ -6984,6 +7628,8 @@ MeetingNotes := {
 	peoplePopup: nil,
 	newtMtgStopTime: nil,
 	Header: nil,
+	// Applies new invitees and location; for an instance, the template keeps
+	// its original ones.
 	UpdateInviteesAndLocation: func() begin
 		local l1, l2;
 		l1 := (not self:IsSameListOfAliases(inviteesAliases, self:GetMeetingSlot(selectedMeeting, 'mtgInvitees)));
@@ -7018,6 +7664,9 @@ MeetingNotes := {
 	end,
 	needToChangeThisOrFutureOccurrences: nil,
 	MeetingNotesSlip: nil,
+	// Opens the slip: caches the meeting's slots, its first and stop dates
+	// (kForever: none), fits it to a short screen (under 280 high) and lays it
+	// out.
 	viewSetupFormScript: func() begin
 		local appAreaHeight;
 		if relayoutInProgress then begin
@@ -7025,7 +7674,7 @@ MeetingNotes := {
 			end;
 		self:InitCachedMeetingSlots();
 		if (not (newStopDate := self:GetMeetingSlot(selectedMeeting, 'mtgStopDate))) then begin
-				newStopDate := 536870911
+				newStopDate := kForever
 			end;
 		if selectedMeeting.repeatTemplate then begin
 				newFirstDate := GetNextMeetingTime(selectedMeeting.repeatTemplate, 0)
@@ -7061,6 +7710,9 @@ MeetingNotes := {
 	newMtgDate: nil,
 	selectedSingleSoup: nil,
 	relayoutInProgress: nil,
+	// Caches what the slip edits from the meeting: its soups, header text and
+	// icon (an exception's says "Exception"), title, date, times, alarm,
+	// invitees and location.
 	InitCachedMeetingSlots: func() begin
 		local selectedMeeting2, meetingTypeInfo, text, memory, viewStationery;
 		selectedMeeting2 := selectedMeeting;
@@ -7103,11 +7755,13 @@ MeetingNotes := {
 		(newSplitRepeatTemplate := nil)
 	end,
 	actionButton: nil,
+	// command-R routing, command-shift-F filing
 	_keyCommands: [|Array|:
-		{char: $r, modifiers: 33554432, keyMessage: '_actionKeyScript, name: routing, category: routing},
-		{char: $f, modifiers: 100663296, keyMessage: '_filingKeyScript, name: file, category: filing}
+		{char: $r, modifiers: kCommandModifier, keyMessage: '_actionKeyScript, name: routing, category: routing},
+		{char: $f, modifiers: kCommandModifier + kShiftModifier, keyMessage: '_filingKeyScript, name: file, category: filing}
 	],
 	newHeaderIcon: nil,
+	// Whether two locations are the same.
 	IsSameAlias: func(locationAlias, mtgLocation) begin
 		(locationAlias = mtgLocation)
 	end,
@@ -7116,10 +7770,16 @@ MeetingNotes := {
 	hideTimeFields: true,
 	debug: 78458,
 	targetView: nil,
+	// Moves the instance notes of repeatTemplate's instance from mtgStartDate
+	// to newMtgDate.
 	UpdateNotesData: func(repeatTemplate, mtgStartDate, newMtgDate) begin
 		local l1, pos;
 		(if (if (l1 := (if repeatTemplate then repeatTemplate.InstanceNotesData)) then (mtgStartDate <> newMtgDate)) then (if (pos := LSearch(l1, mtgStartDate, 0, '|=|, [pathExpr: 0])) then (l1[pos][0] := newMtgDate)))
 	end,
+	// Saves the slip: a new meeting left untouched is removed again; a new
+	// repeating one is moved to the first date chosen (a daily or weekly one
+	// keeps its pattern, a weekly one moved to the new weekday; a yearly one
+	// to the new date); then every change is applied.
 	CarefulSave: func() begin
 		local selectedMeeting2, l2, l3, l4, date2, date3, l7;
 		l2 := (selectedMeeting2 := selectedMeeting).repeatTemplate;
@@ -7139,12 +7799,12 @@ MeetingNotes := {
 						if (l2.mtgStartDate <> l4) then begin
 								date2 := Date(selectedMeeting2.mtgStartDate);
 								date3 := Date(l4);
-								if (l2.repeatType = 0) then begin
+								if (l2.repeatType = kDayOfWeek) then begin
 										l7 := nil;
-										if (l2.mtgInfo = BOr(4064, 31)) then begin
+										if (l2.mtgInfo = BOr(kEveryday, kEveryWeek)) then begin
 												l7 := 'Daily
 											end else begin
-												if (l2.mtgInfo = BOr((2048 >> date2.dayOfWeek), 31)) then begin
+												if (l2.mtgInfo = BOr((kSunday >> date2.dayOfWeek), kEveryWeek)) then begin
 														l7 := 'Weekly
 													end
 											end;
@@ -7152,13 +7812,13 @@ MeetingNotes := {
 												selectedMeeting2.mtgStartDate := l4;
 												l2.mtgStartDate := l4;
 												if (l7 = 'Weekly) then begin
-														l2.mtgInfo := BOr((2048 >> date3.dayOfWeek), 31);
+														l2.mtgInfo := BOr((kSunday >> date3.dayOfWeek), kEveryWeek);
 														RepeatingView.mtgInfo := l2.mtgInfo
 													end
 											end;
 										EntryChangeXmit(l2, 'calendar)
 									end else begin
-										if (l2.repeatType = 3) then begin
+										if (l2.repeatType = kDateInYear) then begin
 												selectedMeeting2.mtgStartDate := l4;
 												l2.mtgStartDate := l4;
 												l2.mtgInfo := ((date3.month << 8) + date3.Date);
@@ -7175,6 +7835,8 @@ MeetingNotes := {
 		(isNewMeeting := nil)
 	end,
 	hideDateRangeFields: true,
+	// Closes the slip back to the display, showing the meeting's day and putting
+	// the caret in its view.
 	CloseSlip: func() begin
 		isNewMeeting := nil;
 		if (mainDisplay = ToDoListView) then begin
@@ -7229,6 +7891,8 @@ MeetingNotes := {
 					end)
 			end)
 	end,
+	// Applies the new start and stop times (a meeting lasts at least 30
+	// minutes); for an instance of a repeating meeting, as the user chose.
 	UpdateTime: func() begin
 		local newtMtgStartTime2, newtMtgStopTime2, l3;
 		newtMtgStartTime2 := newtMtgStartTime;
@@ -7250,6 +7914,8 @@ MeetingNotes := {
 
 WarningViewText := "ﰁ";
 
+// the easter egg's glance (prefsView's corner taps): an author's name, with a
+// cuckoo
 who := {
 	viewJustify: vjCenterH + vjCenterV + vjParentCenterH,
 	viewFormat: vfFillWhite,
@@ -7265,6 +7931,8 @@ who := {
 	_proto: @protoGlance
 };
 
+// the meeting slip's fields, laid out by LayoutSlip; a field it hides
+// clears its vVisible flag
 Header := {
 	debug: 5019632,
 	viewClass: clView,
@@ -7291,6 +7959,7 @@ Header := {
 			viewFormat: vfFillWhite,
 			icon: nil,
 			lockedIcon: lockedIcon,
+			// a lock icon when the meeting is on a read-only store
 			viewSetupFormScript: func() begin
 				local repeatTemplate;
 				if selectedMeeting.repeatTemplate then begin
@@ -7302,6 +7971,7 @@ Header := {
 			end
 		},
 		meetingTitle_2,
+		// "This meeting occurs on:" above the date of a repeating meeting
 		{
 			debug: "MtgMsgHeader",
 			viewJustify: 8388616,
@@ -7310,7 +7980,7 @@ Header := {
 			text: thisMeetingOccursOn,
 			viewSetupFormScript: func() begin
 				if hideMtgMsgHeader then begin
-						viewFlags := BAnd(viewFlags, bnot(1))
+						viewFlags := BAnd(viewFlags, bnot(vVisible))
 					end else begin
 						if (selectedMeeting.viewStationery = 'cribNote) then begin
 								text := "This event occurs on:"
@@ -7321,17 +7991,20 @@ Header := {
 			_proto: @protoStaticText
 		},
 		DateValue_2,
+		// the start and stop times
 		{
 			label: time_3,
 			viewJustify: 0,
 			viewSetupFormScript: func() begin
 				viewBounds := RelBounds(0, dpSlip.timeFieldTop, 220, 18);
 				if hideTimeFields then begin
-						viewFlags := BAnd(viewFlags, bnot(1))
+						viewFlags := BAnd(viewFlags, bnot(vVisible))
 					end;
 				startTime := newMtgDate;
 				(stopTime := (newMtgDate + newMtgDuration))
 			end,
+			// New times picked: the start no later than 23:30 (1410), the stop no
+			// later than midnight and after the start (else an hour after it).
 			pickActionScript: func(index, a2) begin
 				local l1, l2;
 				dirtyFlag := true;
@@ -7356,6 +8029,7 @@ Header := {
 			debug: "StartStopValue",
 			_proto: @protoDurationTextPicker
 		},
+		// the first and last dates of a repeating meeting
 		{
 			label: dates,
 			repeatType: nil,
@@ -7363,7 +8037,7 @@ Header := {
 			viewSetupFormScript: func() begin
 				viewBounds := RelBounds(0, dpSlip.dateRangeTop, 220, 18);
 				if hideDateRangeFields then begin
-						viewFlags := BAnd(viewFlags, bnot(1))
+						viewFlags := BAnd(viewFlags, bnot(vVisible))
 					end;
 				startTime := newFirstDate;
 				stopTime := newStopDate;
@@ -7374,6 +8048,7 @@ Header := {
 				mtgInfo := RepeatingView.mtgInfo;
 				inherited:Popit(x)
 			end,
+			// New dates picked: the date shown moves to the first if it was earlier.
 			pickActionScript: func(index, a2) begin
 				dirtyFlag := true;
 				newFirstDate := index;
@@ -7389,6 +8064,7 @@ Header := {
 			debug: "FirstLastDateValue",
 			_proto: @protoRepeatDateDurationTextPicker
 		},
+		// the invitees (a protoPeoplePopup)
 		{
 			debug: invitees_2,
 			viewBounds: nil,
@@ -7397,14 +8073,16 @@ Header := {
 			viewSetupFormScript: func() begin
 				self.viewBounds := RelBounds(0, dpSlip.peopleFieldTop, 220, 18);
 				if hideInviteesField then begin
-						viewFlags := BAnd(viewFlags, bnot(1))
+						viewFlags := BAnd(viewFlags, bnot(vVisible))
 					end;
 				inherited:?viewSetupFormScript();
 				(entryLine.viewFont := tsHWFont + tsSize(10))
 			end,
+			// The names of the invitees, truncated to fit.
 			TextSetup: func() begin
 				(if (if inviteesAliases then (Length(inviteesAliases) > 0)) then self:GetNamesOfInvitees(inviteesAliases, (220 - self.indent)) else "")
 			end,
+			// Opens (or brings forward) the people popup.
 			pickerSetup: func() begin
 				local copy;
 				if (if peoplePopup then Visible(peoplePopup)) then begin
@@ -7417,6 +8095,7 @@ Header := {
 				self:hilite(nil);
 				nil
 			end,
+			// The invitees picked.
 			pickActionScript: func(index) begin
 				local pos;
 				if (not self:IsSameListOfAliases(inviteesAliases, index)) then begin
@@ -7436,6 +8115,8 @@ Header := {
 			end,
 			_proto: @protoLabelPicker
 		},
+		// the location (a protoMeetingPlacePopup, which also offers the invitees'
+		// places)
 		{
 			debug: location_2,
 			text: location_2,
@@ -7443,14 +8124,15 @@ Header := {
 			viewSetupFormScript: func() begin
 				self.viewBounds := RelBounds(0, dpSlip.locFieldTop, 220, 18);
 				if hideLocationField then begin
-						viewFlags := BAnd(viewFlags, bnot(1))
+						viewFlags := BAnd(viewFlags, bnot(vVisible))
 					end;
 				inherited:?viewSetupFormScript();
 				(entryLine.viewFont := tsHWFont + tsSize(10))
 			end,
 			TextSetup: func() begin
-				(if locationAlias then StyledStrTruncate(self:getNameOfLocation(locationAlias), (220 - self.indent), 10243) else "")
+				(if locationAlias then StyledStrTruncate(self:getNameOfLocation(locationAlias), (220 - self.indent), tsHWFont + tsSize(10)) else "")
 			end,
+			// Opens (or brings forward) the place popup.
 			pickerSetup: func() begin
 				if (if placePopup then Visible(placePopup)) then begin
 						placePopup:MoveBehind(nil)
@@ -7461,6 +8143,7 @@ Header := {
 				self:hilite(nil);
 				nil
 			end,
+			// The location picked.
 			pickActionScript: func(index) begin
 				local indexItem, pos;
 				indexItem := nil;
@@ -7473,7 +8156,7 @@ Header := {
 						if ClosingFromQuitScript then begin
 								MeetingNotes.needToChangeThisOrFutureOccurrences := 'ThisOneOnly
 							end else begin
-								self:UpdateText(StyledStrTruncate(self:getNameOfLocation(locationAlias), (220 - self.indent), 10243));
+								self:UpdateText(StyledStrTruncate(self:getNameOfLocation(locationAlias), (220 - self.indent), tsHWFont + tsSize(10)));
 								self:CarefulAskUser()
 							end
 					end;
@@ -7482,6 +8165,8 @@ Header := {
 					end;
 				(if pos then ArrayRemoveCount(openNonchildViews, pos, 1))
 			end,
+			// The places offered: each invitee person's ("Name's", unselected), and the
+			// current location.
 			GetInitialSelectionPlusInvitees: func() begin
 				l2 := (if inviteesAliases then Length(inviteesAliases) else 0);
 				l3 := 0;
@@ -7521,6 +8206,7 @@ Header := {
 			end,
 			_proto: @protoLabelPicker
 		},
+		// "This recurring meeting occurs between:" above the date range
 		{
 			debug: "SeriesMsgHeader",
 			viewJustify: 8388616,
@@ -7533,13 +8219,15 @@ Header := {
 				},
 				func() begin
 					if hideSeriesMsgHeader then begin
-							viewFlags := BAnd(viewFlags, bnot(1))
+							viewFlags := BAnd(viewFlags, bnot(vVisible))
 						end;
 					self.viewBounds := RelBounds(4, dpSlip.seriesMsgHeaderTop, 200, 10);
 					(self.text := ParamStr("This recurring ^0 occurs between:", [Array: (if (selectedMeeting.viewStationery = 'cribNote) then "event" else kROM_126)]))
 				end),
 			_proto: @protoStaticText
 		},
+		// the alarm: a popup of fixed warnings (labelWarningTimes in
+		// labelWarningUnits: 0 minutes, 2 days) and Other, which shows WarningView
 		{
 			debug: 71132,
 			viewBounds: nil,
@@ -7547,6 +8235,7 @@ Header := {
 			labelCommands: labelCommands,
 			labelWarningTimes: [|Array|: 0, 0, 5, 15, 30, 60, 1440],
 			labelWarningUnits: 0,
+			// An event's choices are none, 9am on the day, 1, 2, 3 days or other.
 			viewSetupFormScript: func() begin
 				self.viewBounds := RelBounds(0, dpSlip.alarmFieldTop, 200, 18);
 				if (selectedMeeting.viewStationery = 'cribNote) then begin
@@ -7557,6 +8246,9 @@ Header := {
 				inherited:?viewSetupFormScript();
 				(entryLine.viewFont := tsHWFont + tsSize(10))
 			end,
+			// The choice the meeting's alarm matches (and the units WarningView shows):
+			// for a meeting, at the time, 5, 15, 30 minutes, an hour, a day, or Other;
+			// for an event, the number of days.
 			TextSetup: func() begin
 				local mtgAlarm, l2, labelCommand, l4;
 				if relayoutInProgress then begin
@@ -7625,10 +8317,12 @@ Header := {
 					end;
 				savedAlarmIndex := l4;
 				if (not StrEqual((labelCommand := labelCommands[l4]), "Other")) then begin
-						WarningView.viewFlags := BAnd(WarningView.viewFlags, bnot(1))
+						WarningView.viewFlags := BAnd(WarningView.viewFlags, bnot(vVisible))
 					end;
 				labelCommand
 			end,
+			// A choice picked: sets WarningView's value and units (Other shows it for
+			// the user to fill in).
 			LabelActionScript: func(index) begin
 				local l1;
 				dirtyFlag := true;
@@ -7678,16 +8372,19 @@ Header := {
 			end,
 			_proto: @protoLabelPicker
 		},
+		// the repeat line (protoRepeatPicker); a repeat other than kNever shows the
+		// date range fields
 		{
 			debug: 1264988,
 			viewSetupFormScript: func() begin
 				self.viewBounds := RelBounds(0, dpSlip.freqFieldTop, 220, 18);
 				if hideFrequencyField then begin
-						viewFlags := BAnd(viewFlags, bnot(1))
+						viewFlags := BAnd(viewFlags, bnot(vVisible))
 					end;
 				inherited:?viewSetupFormScript();
 				(entryLine.viewFont := tsHWFont + tsSize(10))
 			end,
+			// The repeat text (while relaying out, the one saved).
 			TextSetup: func() begin
 				local l1;
 				(if relayoutInProgress then return labelCommands[savedFrequencyIndex] else begin
@@ -7696,12 +8393,14 @@ Header := {
 						l1
 					end)
 			end,
+			// A repeat picked: lays the slip out again if the date range must be shown
+			// or hidden.
 			LabelActionScript: func(index) begin
 				local l1;
 				dirtyFlag := true;
 				inherited:LabelActionScript(index);
 				savedFrequencyIndex := currentLabelIndex;
-				l1 := (RepeatingView.repeatType <> 5);
+				l1 := (RepeatingView.repeatType <> kNever);
 				(if (if hideDateRangeFields then l1) then MeetingNotes:RelayoutSlip(true) else (if (if (not hideDateRangeFields) then (not l1)) then MeetingNotes:RelayoutSlip(nil)))
 			end,
 			_proto: @protoRepeatPicker
@@ -7714,6 +8413,8 @@ Header := {
 	WarningView: nil
 };
 
+// the "Other" alarm: a number and its units (minutes, hours, days notice);
+// unitsValue -1 means none entered
 WarningView := {
 	debug: 84057,
 	viewClass: clView,
@@ -7723,6 +8424,7 @@ WarningView := {
 	alarmOn: nil,
 	unitsIndex: 0,
 	unitsValue: 10,
+	// Shows the meeting's alarm in the largest units that divide it.
 	viewSetupFormScript: func() begin
 		local mtgAlarm, mtgAlarm2, l3;
 		self.viewBounds := RelBounds(90, (dpSlip.alarmFieldTop - 7), 150, 26);
@@ -7760,6 +8462,8 @@ WarningView := {
 								end))))
 			end)
 	end,
+	// The alarm time set (nil for none): for an event at 9am that many days
+	// before.
 	getWarningTime: func() begin
 		local l1;
 		(if ((not alarmOn) or (unitsValue = -1)) then nil else (if (selectedMeeting.viewStationery = 'cribNote) then self:ComputeCribMtgAlarm(selectedMeeting.mtgStartDate, unitsValue) else begin
@@ -7769,6 +8473,7 @@ WarningView := {
 	end,
 	preallocatedContext: 'WarningView,
 	viewChildren: [viewChildren:
+		// the number (0-999), checked as it is written
 		{
 			debug: 84043,
 			viewFlags: vVisible + vSingleUnit + vClickable + vGesturesAllowed + vNumbersAllowed,
@@ -7780,6 +8485,8 @@ WarningView := {
 			viewSetupDoneScript: func() begin
 				(if (unitsValue = -1) then (text := "") else (text := NumberStr(unitsValue)))
 			end,
+			// A new number: a whole number from 0 to 999, else the user is told and the
+			// old one shown again.
 			viewChangedScript: func(slot, view) begin
 				local l1, text2, number;
 				l1 := nil;
@@ -7796,7 +8503,7 @@ WarningView := {
 											end
 									end;
 								(if (not l1) then (if (number <> -1) then (unitsValue := rinttol(number))) else begin
-										self:Notify(3, "Alarm", text2);
+										self:Notify(kNotifyAlert, "Alarm", text2);
 										if (unitsValue = -1) then begin
 												text := ""
 											end else begin
@@ -7809,11 +8516,13 @@ WarningView := {
 			end,
 			_proto: @protoInputLine
 		},
+		// the units popup; an event has only days, so its popup is a plain label
 		{
 			viewBounds: {left: 36, top: 9, right: 146, bottom: 23},
 			text: WarningViewText,
 			indent: 14,
 			labelCommands: [|Array|: minutesNotice, hoursNotice, daysNotice],
+			// With one choice the label loses its diamond, vClickable and vjCenterH.
 			viewSetupFormScript: func() begin
 				if (selectedMeeting.viewStationery = 'cribNote) then begin
 						labelCommands := [Array: labelCommands[2]]
@@ -7822,8 +8531,8 @@ WarningView := {
 				entryLine.viewFont := viewFont;
 				(if (Length(labelCommands) < 2) then begin
 						self.text := Substr(text, 2, (StrLen(text) - 2));
-						self.viewFlags := (self.viewFlags - 512);
-						self.viewJustify := (viewJustify - 2);
+						self.viewFlags := (self.viewFlags - vClickable);
+						self.viewJustify := (viewJustify - vjCenterH);
 						(self.indent := 0)
 					end)
 			end,
@@ -7845,6 +8554,7 @@ hoursNotice := "hours notice";
 
 daysNotice := "days notice";
 
+// a month's name in the Year display: a tap opens that month
 monthName := {
 	debug: 38757,
 	viewClass: clTextView,
@@ -7865,12 +8575,14 @@ monthName := {
 	preallocatedContext: 'monthName
 };
 
+// one month of the Year display: its name and a month view
 protoMonth := {
 	debug: 45552,
 	viewClass: clView,
 	viewFlags: vVisible + vClickable,
 	selectedDates: nil,
 	NoSelection: true,
+	// A day picked: shows it in the previous display.
 	monthChangedScript: func() begin
 		calendar.selectedDates := selectedDates;
 		if previousMainDataDisplay then begin
@@ -7899,6 +8611,8 @@ protoMonth := {
 	allocateContext: [|Array|: 'monthName, monthName]
 };
 
+// the Year display: twelve months, from the month before the selected date;
+// the scroll arrows move it by six months
 YearView := {
 	debug: 11369,
 	viewFlags: vClipping + vClickable,
@@ -7914,9 +8628,11 @@ YearView := {
 	viewClickScript: func(unit) begin
 		nil
 	end,
+	// Fills in the months.
 	viewSetupDoneScript: func() begin
 		self:setupChildMonths((startDate := IncrementMonth(calendar.selectedDates[0], -2)))
 	end,
+	// The scroll arrows: six months earlier or later, slid in.
 	viewScrollUpScript: func() begin
 		local ticks2;
 		ticks2 := Ticks();
@@ -7933,9 +8649,11 @@ YearView := {
 		YearView:Dirty();
 		nil
 	end,
+	// SlideEffect's completion: nothing to do.
 	bogus: func() begin
 		return nil
 	end,
+	// Gives the months, from the one after a1, their dates and names.
 	setupChildMonths: func(a1) begin
 		incrementMonth2 := a1;
 		local incrementMonth2;
@@ -7970,6 +8688,8 @@ YearView := {
 			end,
 			kLiteral_50cf51: {debug: 45552, viewClass: clView, viewFlags: vVisible + vClickable, selectedDates: nil, NoSelection: true, monthChangedScript: kFunction_50cddd, viewChildren: [viewChildren: {debug: 38757, viewClass: clTextView, viewBounds: '{left: 0, top: 0, right: 115, bottom: 11}, viewFont: tsSystem + tsSize(9) + tsBold, viewFlags: vVisible + vReadOnly + vClickable, viewJustify: 8388610, text: nil, viewClickScript: kFunction_50ced9, preallocatedContext: 'monthName}, {debug: 77100, viewClass: clMonthView, viewFlags: vVisible + vClickable, viewBounds: '{left: 0, top: 11, right: 115, bottom: 73}, labelFont: tsSystem + tsSize(9) + tsBold, datesFont: tsSystem + tsSize(9), singleDay: nil, viewSetupFormScript: kFunction_50d011}], monthName: nil, allocateContext: [Array: 'monthName, {debug: 38757, viewClass: clTextView, viewBounds: '{left: 0, top: 0, right: 115, bottom: 11}, viewFont: tsSystem + tsSize(9) + tsBold, viewFlags: vVisible + vReadOnly + vClickable, viewJustify: 8388610, text: nil, viewClickScript: kFunction_50ced9, preallocatedContext: 'monthName}]}
 		},
+		// Lays out as many 115 by 73 months as fit, spaced evenly (each a copy of
+		// protoMonth, built in at compile time as kLiteral_50cf51).
 		func() begin
 			l3 := ((l2 := ((l1 := self:Parent():LocalBox().right) div 115)) + 1);
 			l4 := ((l1 - (l2 * 115)) div l3);
@@ -7998,10 +8718,15 @@ YearView := {
 	preallocatedContext: 'YearView
 };
 
+// Whether overview items a1 and a2 are the same item (same start, and the
+// same meeting, repeating template or task).
 IsSameItem := func(a1, a2) begin
 	(if (if (not IsString(a2)) then (a1.mtgStartDate = a2.mtgStartDate)) then (((a1 = a2) or (if a1.repeatTemplate then (a1.repeatTemplate = a2.repeatTemplate))) or (if a1.topic then (a1.topicID = a2.topicID))))
 end;
 
+// the Agenda display: the selected day's events and meetings, one item
+// (several lines) each, followed by its To Do tasks (a protoToDoAgendaView
+// added below them); scrolled an item at a time
 AgendaView := {
 	numberOfItems: 0,
 	itemHeights: nil,
@@ -8025,9 +8750,12 @@ AgendaView := {
 	viewOriginX: 0,
 	whoAmI: 'AgendaView,
 	ToDoAgendaTemplate: nil,
+	// Sets the scroll arrows.
 	viewSetupDoneScript: func() begin
 		self:calculateScrollRects()
 	end,
+	// Truncates the text to width v12 in font a3, cutting back to the end of a
+	// word if it was cut. Returns the text.
 	TruncateAtWordBoundary: func(v20_zzzzzzzzzzzzzzzzzzzzzzz, v12_zzyyyyyyyyyyyyyyyyy, a3) begin
 		len := StrLen(v20_zzzzzzzzzzzzzzzzzzzzzzz);
 		StyledStrTruncate(v20_zzzzzzzzzzzzzzzzzzzzzzz, v12_zzyyyyyyyyyyyyyyyyy, a3);
@@ -8055,6 +8783,7 @@ AgendaView := {
 			end;
 		v20_zzzzzzzzzzzzzzzzzzzzzzz
 	end,
+	// Closes: unregisters the To Do soups and forgets its items.
 	viewQuitScript: func() begin
 		UnRegSoupChange(@todoSoupName, 'calendar);
 		UnRegSoupChange("To Do List", 'calendar);
@@ -8064,6 +8793,7 @@ AgendaView := {
 		(stepChildren := [Array: ])
 	end,
 	preallocatedContext: 'AgendaView,
+	// Draws the items from the first one shown, or the "nothing today" text.
 	viewDrawScript: func() begin
 		(if boringDay then self:DrawShape(boringDay, {font: tsHWFont + tsSize(12), justification: 'center}) else (if (pieces2 := pieces) then begin
 					bottom := self:LocalBox().bottom;
@@ -8080,6 +8810,8 @@ AgendaView := {
 						end)
 				end))
 	end,
+	// Sets the scroll arrows from what lies above and below (the items, then the
+	// tasks).
 	calculateScrollRects: func() begin
 		local upDownScroller2, toDoAgendaView, bottom, getToDoBottom;
 		upDownScroller2 := upDownScroller;
@@ -8123,6 +8855,7 @@ AgendaView := {
 				(upDownScroller2.ScrollRect := (upDownScroller2.DataRect := (upDownScroller2.ViewRect := nil)))
 			end)
 	end,
+	// Which item is at height a1 (in frame2: index, top and height).
 	HitTest: func(a1, frame2) begin
 		l1 := 0;
 		l2 := (numberOfItems - 1);
@@ -8141,6 +8874,9 @@ AgendaView := {
 				(frame2.index := l3)
 			end)
 	end,
+	// The shape of meeting a1 in box a2: its icon, its times (not for an
+	// event), its title (with the start of its notes) and its location, or the
+	// rest of the title on a second line. a2.bottom is set to its bottom.
 	Abstract: compile(
 		constants: {
 			kROM_256: @searchSuffix
@@ -8178,9 +8914,9 @@ AgendaView := {
 					v20_zzzzzzzzzzzzzzzzzzzzzzz := Clone(v17_xxxxxxxxxwwwwwwwwwwwww);
 					v11_wwwwwwwwwwwwwvvvvvv := StrLen(v17_xxxxxxxxxwwwwwwwwwwwww);
 					if v15_xxxxwwwwwwwwwwwwwwwww then begin
-							StyledStrTruncate(v20_zzzzzzzzzzzzzzzzzzzzzzz, v12_zzyyyyyyyyyyyyyyyyy, 12291)
+							StyledStrTruncate(v20_zzzzzzzzzzzzzzzzzzzzzzz, v12_zzyyyyyyyyyyyyyyyyy, tsHWFont + tsSize(12))
 						end else begin
-							self:TruncateAtWordBoundary(v20_zzzzzzzzzzzzzzzzzzzzzzz, v12_zzyyyyyyyyyyyyyyyyy, 12291);
+							self:TruncateAtWordBoundary(v20_zzzzzzzzzzzzzzzzzzzzzzz, v12_zzyyyyyyyyyyyyyyyyy, tsHWFont + tsSize(12));
 							v14_zzzzzyyyyyyyyyyyyyyy := StrLen(v20_zzzzzzzzzzzzzzzzzzzzzzz)
 						end;
 					v22_wwwwwwwwwwwwvvvvvvvvvvvvv[v13_wwwwwwwwwwwwwwwwwwwv] := MakeText(v20_zzzzzzzzzzzzzzzzzzzzzzz, v24_wwwwwwwwwwwwwwwwwwvvvvvvvv, v10_yyyyyyyyyyyyyyyyyx, v6_xxxxxxxwwwwwwwwwwwwwwwwwwwww, (v23_yyyyyyyyxxxxxxxxxxxxxxxxx - 4));
@@ -8188,12 +8924,12 @@ AgendaView := {
 					v23_yyyyyyyyxxxxxxxxxxxxxxxxx := (v23_yyyyyyyyxxxxxxxxxxxxxxxxx + lineHeight);
 					v13_wwwwwwwwwwwwwwwwwwwv := (v13_wwwwwwwwwwwwwwwwwwwv + 1);
 					if v15_xxxxwwwwwwwwwwwwwwwww then begin
-							StyledStrTruncate((v15_xxxxwwwwwwwwwwwwwwwww := ParamStr("@ ^0", [Array: self:getNameOfLocation(v15_xxxxwwwwwwwwwwwwwwwww)])), v12_zzyyyyyyyyyyyyyyyyy, 12291);
+							StyledStrTruncate((v15_xxxxwwwwwwwwwwwwwwwww := ParamStr("@ ^0", [Array: self:getNameOfLocation(v15_xxxxwwwwwwwwwwwwwwwww)])), v12_zzyyyyyyyyyyyyyyyyy, tsHWFont + tsSize(12));
 							v22_wwwwwwwwwwwwvvvvvvvvvvvvv[v13_wwwwwwwwwwwwwwwwwwwv] := MakeText(v15_xxxxwwwwwwwwwwwwwwwww, v24_wwwwwwwwwwwwwwwwwwvvvvvvvv, v10_yyyyyyyyyyyyyyyyyx, v6_xxxxxxxwwwwwwwwwwwwwwwwwwwww, (v23_yyyyyyyyxxxxxxxxxxxxxxxxx - 4));
 							v10_yyyyyyyyyyyyyyyyyx := v23_yyyyyyyyxxxxxxxxxxxxxxxxx
 						end else begin
 							if (v14_zzzzzyyyyyyyyyyyyyyy < v11_wwwwwwwwwwwwwvvvvvv) then begin
-									StyledStrTruncate(TrimString((v16_zzzzzzzzyyyyyyyyyyyyy := Substr(v17_xxxxxxxxxwwwwwwwwwwwww, v14_zzzzzyyyyyyyyyyyyyyy, (v11_wwwwwwwwwwwwwvvvvvv - v14_zzzzzyyyyyyyyyyyyyyy)))), v12_zzyyyyyyyyyyyyyyyyy, 12291);
+									StyledStrTruncate(TrimString((v16_zzzzzzzzyyyyyyyyyyyyy := Substr(v17_xxxxxxxxxwwwwwwwwwwwww, v14_zzzzzyyyyyyyyyyyyyyy, (v11_wwwwwwwwwwwwwvvvvvv - v14_zzzzzyyyyyyyyyyyyyyy)))), v12_zzyyyyyyyyyyyyyyyyy, tsHWFont + tsSize(12));
 									v22_wwwwwwwwwwwwvvvvvvvvvvvvv[v13_wwwwwwwwwwwwwwwwwwwv] := MakeText(v16_zzzzzzzzyyyyyyyyyyyyy, v24_wwwwwwwwwwwwwwwwwwvvvvvvvv, v10_yyyyyyyyyyyyyyyyyx, v6_xxxxxxxwwwwwwwwwwwwwwwwwwwww, (v23_yyyyyyyyxxxxxxxxxxxxxxxxx - 4));
 									v10_yyyyyyyyyyyyyyyyyx := v23_yyyyyyyyxxxxxxxxxxxxxxxxx
 								end
@@ -8202,9 +8938,12 @@ AgendaView := {
 			a2.bottom := v10_yyyyyyyyyyyyyyyyyx;
 			v22_wwwwwwwwwwwwvvvvvvvvvvvvv
 		end),
+	// GetIndexFirstVisibleItem, GetIndexLastVisibleItem: the index of the first
+	// or last item shown, counting the tasks after the meetings.
 	GetIndexFirstVisibleItem: func() begin
 		(if (indexFirstVisibleItem < numberOfItems) then indexFirstVisibleItem else (numberOfItems + self:GetToDoAgendaView().firstTopic))
 	end,
+	// Makes the items' shapes and heights; calendarBottom is their total.
 	SetupAbstracts: func() begin
 		l1 := 0;
 		l3 := (box := self:LocalBox()).bottom;
@@ -8230,6 +8969,8 @@ AgendaView := {
 			end);
 		(if l1 then (calendarBottom := l1) else (calendarBottom := 0))
 	end,
+	// A tap: highlights the item under the pen until it lifts, then sends
+	// HitItem for it.
 	trackOverview: func(a1) begin
 		local frame2, copy, box, l4, pt, pt2, box2, hiliteShape, copy2;
 		InkOff(a1);
@@ -8262,6 +9003,7 @@ AgendaView := {
 				self:hiliter(hiliteShape, copy)
 			end)
 	end,
+	// Scrolls an item down (or the tasks, once the items are scrolled off).
 	viewScrollDownScript: func(amount) begin
 		local toDoAgendaView, box;
 		toDoAgendaView := self:GetToDoAgendaView();
@@ -8284,9 +9026,11 @@ AgendaView := {
 	GetIndexLastVisibleItem: func() begin
 		(if (indexLastVisibleItem < numberOfItems) then indexLastVisibleItem else (numberOfItems + self:GetToDoAgendaView().lastTopic))
 	end,
+	// Deletes a checked task (by the To Do view).
 	DeleteCheckedTask: func(instanceTime, topic) begin
 		self:GetToDo():DeleteCheckedTask(instanceTime, topic)
 	end,
+	// How many meetings and events the day has.
 	GetnumberOfItemsToList: func() begin
 		local allMeetings, allMeetings2, count, allMeetings3;
 		allMeetings := GetAllMeetings(notes, RepeatNotes, displaydate, nil);
@@ -8309,6 +9053,7 @@ AgendaView := {
 			end;
 		count
 	end,
+	// Moves the To Do part to just below the last item (adding it if needed).
 	MoveToDoAgendaView: func() begin
 		local lastItemBottom, toDoAgendaView, toDoAgendaTemplate;
 		(if (lastItemBottom := self:LastItemBottom()) then (if (toDoAgendaView := self:GetToDoAgendaView()) then begin
@@ -8321,6 +9066,7 @@ AgendaView := {
 					self:GetToDoAgendaView():Dirty()
 				end))
 	end,
+	// Adds the To Do part's template below the items (at calendarBottom).
 	AddToDoAgendaView: func(calendarBottom) begin
 		if (not HasSlot(self, 'stepChildren)) then begin
 				self.stepChildren := Clone(self.stepChildren)
@@ -8331,6 +9077,7 @@ AgendaView := {
 		self.ToDoAgendaTemplate := self:MakeToDoAgendaTemplate(calendarBottom);
 		AddArraySlot(self.stepChildren, ToDoAgendaTemplate)
 	end,
+	// Scrolls so that task task of day newMtgDate shows.
 	ScrollToTask: func(newMtgDate, task) begin
 		calendarBottom2 := calendarBottom;
 		toDoAgendaView := self:GetToDoAgendaView();
@@ -8370,6 +9117,7 @@ AgendaView := {
 		self:calculateScrollRects();
 		self:Dirty()
 	end,
+	// Scrolls an item up (or the tasks, while they are at the top).
 	viewScrollUpScript: func(amount) begin
 		local toDoAgendaView, box;
 		toDoAgendaView := self:GetToDoAgendaView();
@@ -8387,6 +9135,8 @@ AgendaView := {
 			end;
 		self:calculateScrollRects()
 	end,
+	// Watches the To Do soups (redrawing when tasks come or go) and resets the
+	// scrolling.
 	viewSetupFormScript: compile(
 		constants: {
 			kFunction_5121c1: func(a1, a2, a3, a4) begin
@@ -8409,6 +9159,8 @@ AgendaView := {
 			RegSoupChange("To Do List", 'calendar, kFunction_5121c1);
 			SetKeyView(self, 0)
 		end),
+	// The template of the To Do part of the agenda, below the items from
+	// lastItemBottom, with the methods the agenda asks it about its tasks.
 	MakeToDoAgendaTemplate: func(lastItemBottom) begin
 		local box;
 		box := AgendaView:LocalBox();
@@ -8426,15 +9178,18 @@ AgendaView := {
 			AgendaView:calculateScrollRects()
 		end}
 	end,
+	// The highlight of an item: its box inverted.
 	GetHiliteShape: func(box) begin
 		[Array: '{transferMode: 2, penPattern: 0, fillPattern: 5}, MakeShape(box)]
 	end,
+	// A tap on item a1: opens its meeting slip.
 	HitItem: func(a1, trackScrollingItem, trackScrollingItem2) begin
 		local calendar2;
 		(calendar2 := calendar).selectedMeeting := items[a1.index];
 		calendar2.isNewMeeting := nil;
 		self:OpenMeetingSlip(calendar2.selectedMeeting, nil, nil)
 	end,
+	// A tap anywhere in the agenda: tracked by the agenda itself.
 	viewClickScript: func(unit) begin
 		local toDoAgendaView;
 		if ((toDoAgendaView := self) <> AgendaView) then begin
@@ -8443,6 +9198,7 @@ AgendaView := {
 		toDoAgendaView:DoDrawing('trackOverview, [Array: unit]);
 		true
 	end,
+	// The To Do part (cached).
 	GetToDoAgendaView: func() begin
 		local childViewFrames;
 		if (not cachedToDoAgendaView) then begin
@@ -8452,9 +9208,11 @@ AgendaView := {
 			end;
 		cachedToDoAgendaView
 	end,
+	// Scrolls a1 pixels.
 	doscrollscript: func(a1) begin
 		AgendaView:SetOrigin(0, (AgendaView.viewOriginY + a1))
 	end,
+	// Scrolls so that meeting a1 shows.
 	ScrollTo: func(a1) begin
 		if (not items) then begin
 				return nil
@@ -8506,6 +9264,9 @@ AgendaView := {
 				self:Dirty()
 			end)
 	end,
+	// The selected day's meetings and events (an agenda's day is reset when the
+	// date changes), their shapes, the To Do part if the day has tasks, or the
+	// "No agenda" text.
 	viewSetupChildrenScript: func() begin
 		if ((selectedDate := selectedDates[0]) <> displaydate) then begin
 				displaydate := selectedDates[0];
@@ -8557,6 +9318,7 @@ AgendaView := {
 				0
 			end)
 	end,
+	// Inverts item hilitedIndex (its top and height).
 	hiliter: func(hiliteShape, hilitedIndex) begin
 		local copy;
 		(if hilitedIndex.index then begin
@@ -8564,11 +9326,13 @@ AgendaView := {
 				self:DrawShape(copy, {transform: [Array: 0, hilitedIndex.top]})
 			end)
 	end,
+	// Duplicates a task (by the To Do view).
 	DuplicateTask: func(a1, a2) begin
 		self:GetToDo():DuplicateTask(a1, a2)
 	end
 };
 
+// the To Do part of the agenda: a stub here, like ToDoListView
 protoToDoAgendaView := {
 	debug: 42665,
 	viewClass: clView,
@@ -8586,6 +9350,9 @@ protoToDoAgendaView := {
 	end
 };
 
+// the "Delete all items before" slip (Remove Old Items, from the routing
+// button's Delete): the date, whether calendar items and to do items go, and
+// the Delete button
 DaysValue := {
 	debug: 16887,
 	viewBounds: {left: 12, top: 29, right: 182, bottom: 49},
@@ -8594,6 +9361,7 @@ DaysValue := {
 	entryFont: tsHWFont + tsSize(10),
 	viewJustify: 0,
 	longFormat: 'abbrDateStrSpec,
+	// Starts at today.
 	viewSetupFormScript: func() begin
 		local now;
 		now := ((now := Time()) - (now mod 1440));
@@ -8601,6 +9369,7 @@ DaysValue := {
 		self.initialDate := now;
 		(self.DeleteFrom := now)
 	end,
+	// A date picked.
 	pickActionScript: func(index) begin
 		DeleteFrom := index[0];
 		inherited:pickActionScript(index)
@@ -8625,6 +9394,7 @@ ToDoItems := {
 	_proto: @protoCheckbox
 };
 
+// the Delete button: confirms, then deletes with a progress gauge
 _defaultButton_19 := {
 	viewBounds: {left: -48, top: 0, right: -7, bottom: 0},
 	viewJustify: 8402982,
@@ -8635,12 +9405,15 @@ _defaultButton_19 := {
 	ItemCount: 0,
 	RunningCount: 0,
 	statusView: 0,
+	// Advances the gauge by a1 items.
 	UpdateProgressBar: func(a1) begin
 		local l1;
 		RunningCount := min((RunningCount := (RunningCount + a1)), ItemCount);
 		l1 := (if (ItemCount > 0) then ((RunningCount * 100) div ItemCount) else 50);
 		statusView:SetStatus('vGauge, {gauge: l1})
 	end,
+	// The confirmation answered: counts what may go (for the gauge), then
+	// deletes the old meetings and events, and the old tasks, and redraws.
 	RemoveItems: func(a1) begin
 		local deleteFromDate;
 		local copy;
@@ -8670,12 +9443,18 @@ _defaultButton_19 := {
 			end;
 		base:Close()
 	end,
+	// removeOldMeetings, removeOldCribs: the meetings or events (single and
+	// repeating) older than a1 days.
 	removeOldMeetings: func(a1) begin
 		self:removeOldSoupEntries(a1, MeetingSoup, RepeatSoup)
 	end,
 	removeOldCribs: func(a1) begin
 		self:removeOldSoupEntries(a1, notes, RepeatNotes)
 	end,
+	// Removes the single entries of a2 before the day a1 days ago, and of the
+	// repeating ones of a3 those that end before it; one that started before
+	// it starts that day instead, losing its earlier exceptions and instance
+	// notes. The gauge moves every 5 entries.
 	removeOldSoupEntries: func(a1, a2, a3) begin
 		local v6_yyyyyyyyyyyyyyyyyyyyyxxxxxxx, v7_vvvvvvvvvvvvvvvvvvu, v8_vu, v9_mmll, v10_qqppp, v11_zzzyyy, v15_zzzzzzzzzyyy, v17_zzzzzzzzzzzzyyy, v18_xxxwwwwwwwwwwwwww, v20_yxxxxxxxxxxxxxxxxxxx, v21_wwwwvvvvvvvvvvvvvvvvvv, v22_yyyyyyyxxxxxxxxxxxxxxxx, v23_wwwwwwwwwwwwwwwwvvvvvvvvv;
 		v10_qqppp := floor((v10_qqppp := ((v10_qqppp := ((v10_qqppp := Time()) - (v10_qqppp mod 1440))) - (a1 * 1440))));
@@ -8711,6 +9490,9 @@ _defaultButton_19 := {
 								v22_yyyyyyyxxxxxxxxxxxxxxxx := v8_vu.exceptions;
 								v12_tttttttt := 0;
 								if v22_yyyyyyyxxxxxxxxxxxxxxxx then begin
+										// looks like a ROM bug: removing an element of the array foreach is walking
+										// skips the one after it, so of two old exceptions in a row the second
+										// stays
 										(foreach v16_vvvvvvvvvvvvvvvvuuu in v22_yyyyyyyxxxxxxxxxxxxxxxx do begin
 												if (v16_vvvvvvvvvvvvvvvvuuu[0] < v10_qqppp) then begin
 														ArrayRemoveCount(v22_yyyyyyyxxxxxxxxxxxxxxxx, v12_tttttttt, 1)
@@ -8746,6 +9528,7 @@ _defaultButton_19 := {
 	_proto: @protoTextButton
 };
 
+// the floater holding it
 RemoveOldMeetingsForm := {
 	debug: 87352533,
 	viewBounds: {left: 0, top: 0, right: 180, bottom: 101},
