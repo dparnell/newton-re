@@ -327,7 +327,7 @@ zoneChooserProto := {
 				appleTalkOpen := nil
 			end;
 		if (text <> nil) then begin
-				self:Notify(3, "Chooser", text)
+				self:Notify(kNotifyAlert, "Chooser", text)
 			end;
 		base:Close()
 	end,
@@ -830,7 +830,7 @@ _previewButtonProto := {
 	end,
 	preview: func(fields) begin
 		local l1, context;
-		(if (transport:SetupFormat(fields) <> nil) then self:Notify(3, "Print", "The print format for this item is missing") else begin
+		(if (transport:SetupFormat(fields) <> nil) then self:Notify(kNotifyAlert, "Print", "The print format for this item is missing") else begin
 				GetCurrentFormat(fields):LastChanceToSetup(fields);
 				(context := BuildContext(@pagePreviewForm)).fields := fields;
 				context:Open()
@@ -914,7 +914,7 @@ protoPensizeMenuProto := {
 	end,
 	buttonClickScript: func() begin
 		if (if (if (keyView := GetKeyView()) then keyView.textFlags) then (BAnd(keyView.textFlags, 24) <> 0)) then begin
-				self:Notify(3, "Styles", "The style cannot be changed here.");
+				self:Notify(kNotifyAlert, "Styles", "The style cannot be changed here.");
 				self:hilite(nil);
 				return nil
 			end;

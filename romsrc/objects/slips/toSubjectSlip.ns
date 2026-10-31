@@ -1,15 +1,21 @@
-// toSubjectSlip, and what only it reaches
+// toSubjectSlip (magic pointer 45), and what only it reaches: the auxiliary
+// slip of the memo print format (prMemoFormat's auxForm), opened beside the
+// print or fax routing slip when that format is chosen.  It edits the memo's
+// header: the addressee's name (toName) and the subject (title) in the routing
+// slip's fields frame.
 
 toSubjectSlip := {
 	viewJustify: vjParentCenterH + vjParentBottomV,
 	viewBounds: {left: 0, top: -156, right: 220, bottom: -26},
 	viewEffect: 0,
+	// (does nothing: the proto's setup is not run)
 	viewSetupFormScript: func() begin
 		nil
 	end,
 	debug: 350698,
 	ReOrientToScreen: @defRotateFunc,
 	stepChildren: [stepChildren:
+		// the editing area: a newtFalseEntryView over the routing slip's fields
 		{
 			_proto: addresseeSlipProto,
 			viewJustify: vjParentFullH + vjParentFullV,
@@ -18,6 +24,7 @@ toSubjectSlip := {
 			viewChildren: [viewChildren:
 				explanation,
 				toSubject,
+				// "Subject": the memo's title (fields.title)
 				{
 					viewBounds: {left: 0, top: 50, right: -5, bottom: 115},
 					viewJustify: vjParentFullH,
@@ -25,6 +32,7 @@ toSubjectSlip := {
 					newRecFlags: 1636865,
 					label: "Subject",
 					indent: 55,
+					// nothing taken from an entry
 					jamFromEntry: func(resolveEntryAlias) begin
 						nil
 					end,
@@ -41,17 +49,21 @@ toSubjectSlip := {
 	_proto: @protoFloatNGo
 };
 
+// the slip's heading, "Memo Header"
 explanation := {
-	viewJustify: 8388658,
+	viewJustify: vjCenterH + vjParentFullH + vjOneLineOnly,
 	viewBounds: {left: 0, top: 1, right: 0, bottom: 14},
 	text: "Memo Header",
 	preallocatedContext: 'explanation,
 	_proto: @protoStaticText
 };
 
+// "Name": the addressee (fields.toName), a smart name line whose picker is
+// the People popup
 toSubject := {
 	flavor: {
 		_proto: @newtSmartNameFilter,
+		// the People popup, one name to pick
 		picker: func() begin
 			@protoPeoplePopup:New({_proto: GetDataDefs('|nameRef.people|), singleSelect: true}, nil, self, nil)
 		end
@@ -63,6 +75,7 @@ toSubject := {
 	viewLineSpacing: 30,
 	path: 'toName,
 	memory: 'memoAddresee,
+	// the caret into the name line, at its end
 	viewSetupDoneScript: func() begin
 		SetKeyView(self.entryLine, 9999)
 	end,
