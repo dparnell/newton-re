@@ -11,15 +11,19 @@ canonicalCompass := {
 	viewFlags: vVisible + vReadOnly + vClickable,
 	viewFormat: 0,
 	viewJustify: vjParentBottomV,
+	// 8: not one of the documented modes (modeCopy..modeBic are 0-3)
 	viewTransferMode: 8,
 	icon: {
 		mask: bitmap('mask, "resources/mask/5224e9.png", "0000000000040174017400dd019200fb", 1),
 		bits: bitmap('bits, "resources/bits/52257d.png", "0000000000040174017400dd019200fb", 1),
 		bounds: {left: 0, top: 0, right: 30, bottom: 30}
 	},
+	// register as the block's Scroller
 	viewSetupDoneScript: func() begin
 		(self:Parent().Scroller := self)
 	end,
+	// scroll once where the pen came down, then again each time it is read
+	// until it is lifted
 	viewClickScript: func(unit) begin
 		local l1, l2, box;
 		InkOff(unit);
@@ -38,6 +42,8 @@ canonicalCompass := {
 			end);
 		true
 	end,
+	// TrackCompass(box, x, y): the quarter of the arrow (x, y) is in, cut by
+	// its diagonals, scrolls scrollDelta pixels in that quarter's direction
 	TrackCompass: func(box, a2, a3) begin
 		local l1;
 		l1 := ((viewBounds.right - viewBounds.left) - a2);
@@ -56,6 +62,8 @@ canonicalCompass := {
 			end;
 		true
 	end,
+	// ChangeScrolledOrigin(dx, dy): move the scrolled picture's origin, kept
+	// within its data bounds, and give it new viewBounds when it moved
 	ChangeScrolledOrigin: func(scrollDelta, scrollDelta2) begin
 		local l1, l2, dataBounds, most, viewOriginX, viewOriginY;
 		l1 := ((dataBounds := scrolledView.dataBounds).right - dataBounds.left);
@@ -80,6 +88,7 @@ canonicalCompass := {
 				RefreshViews()
 			end)
 	end,
+	// pixels per step (a block's item may give its own)
 	scrollDelta: 16,
 	debug: 133473
 };

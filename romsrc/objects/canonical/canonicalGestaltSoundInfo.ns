@@ -5,6 +5,7 @@
 // is sound input and output.
 
 canonicalGestaltSoundInfo := {
+	// `stack` is the real 0.0 (shared/data.ns)
 	samplingRate: stack,
 	sampleSize: 0,
 	compressionType: 0,

@@ -11,7 +11,11 @@
 // cInk, recognizeButton - follow it.
 
 canonicalCharCorrector := {
+	// {form: the view, wordOffset, wordLength}: the word being corrected
 	refCon: nil,
+	// After setup: tie the ink view to the letters' view (cInk follows cText's
+	// bounds) and, when setup found the word at the caret (refConChanged),
+	// widen it to the whole word and show it as if the caret had moved there.
 	viewSetupDoneScript: func() begin
 		local refCon2, l2, wordOffset, l4, dynamicValue, scanWordEnd2;
 		TieViews(cText, cInk, 'TieChangedScript);
@@ -33,11 +37,14 @@ canonicalCharCorrector := {
 			end)
 	end,
 	cInk: nil,
+	// Select the word in its view (the corrected word stays hilited there).
 	SetHilite: func() begin
 		local refCon2;
 		(if (refCon2 := refCon).form.text then refCon2.form:SetHiliteNoUpdate(refCon2.wordOffset, (refCon2.wordOffset + refCon2.wordLength), true))
 	end,
 	viewFormat: vfFillWhite + vfFrameDragShadow + vfPen(2) + vfInset(1) + vfRound(5),
+	// the context frame kept ready for the view (preallocatedContext), its
+	// slots made in advance
 	_cacheContext: {
 		_parent: nil,
 		_proto: nil,
@@ -55,6 +62,9 @@ canonicalCharCorrector := {
 		cInk: nil,
 		recognizeButton: nil
 	},
+	// On closing: finish a pending update, put the caret after the word unless
+	// the keyboard button closed it, and take away what this use added (the
+	// children's slots, the bounds, the saved alternatives).
 	viewQuitScript: func() begin
 		if (refCon2 := refCon).form then begin
 				cText:DoPendingUpdate()
@@ -81,6 +91,10 @@ canonicalCharCorrector := {
 	end,
 	preallocatedContext: 'correct,
 	savedPickItems: nil,
+	// The caret or selection moved (hiliteParms: [view, offset, length]): a
+	// caret alone stands for the word around it; when that is another word,
+	// show it - with a new template when the view needs another.  Answers 0
+	// (nil when the template changed).
 	doViewCaretChanged: func() begin
 		local dynamicValue, len2, off2, len3, refCon2, l6, templateChanged;
 		view := hiliteParms[0];
@@ -128,6 +142,8 @@ canonicalCharCorrector := {
 		hiliteBusy := nil;
 		0
 	end,
+	// The system's viewCaretChangedScript: no view any more closes the picker;
+	// otherwise the move is handled now, unless an update is in progress.
 	ViewCaretChangedScript: func(view, offset, length) begin
 		hiliteParms := [Array: view, offset, length];
 		if (not view) then begin
@@ -142,6 +158,9 @@ canonicalCharCorrector := {
 			end)
 	end,
 	recognizeButton: nil,
+	// the format picker, the alternatives, the letters, the left and right
+	// arrows (previous and next word), the ink, the recognize button, the
+	// close box, and the keyboard button
 	viewChildren: [viewChildren:
 		templatePicker,
 		alternates,
@@ -152,6 +171,7 @@ canonicalCharCorrector := {
 			viewJustify: vjSiblingTopV,
 			viewFormat: 0,
 			icon: @leftBitmap,
+			// previous word; held down, at most one step every 20 ticks
 			buttonPressedScript: func() begin
 				local ticks2;
 				ticks2 := Ticks();
@@ -166,6 +186,7 @@ canonicalCharCorrector := {
 			viewJustify: vjParentRightH + vjSiblingTopV,
 			viewFormat: 0,
 			icon: @rightBitmap,
+			// next word
 			buttonPressedScript: func() begin
 				local ticks2;
 				ticks2 := Ticks();
@@ -181,6 +202,7 @@ canonicalCharCorrector := {
 			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingTopV,
 			viewBounds: {left: -30, top: 0, right: -7, bottom: 13},
 			icon: @keyButtonBitmap,
+			// the keyboard button: close and open a keyboard for the view instead
 			buttonClickScript: func() begin
 				correct.gotoKeyboard := true;
 				OpenKeypadFor(refCon.form)
@@ -188,11 +210,14 @@ canonicalCharCorrector := {
 			_proto: @protoPictureButton
 		}
 	],
+	// strokes written on the picker itself do nothing
 	viewStrokeScript: func(unit) begin
 		nil
 	end,
 	viewFlags: vFloating + vClickable + vStrokesAllowed,
 	cText: nil,
+	// GetCaretRefCon: the refCon for where the caret or the first selection
+	// is ({form, wordOffset, wordLength}), or nil.
 	GetCaretRefCon: func() begin
 		local frame2, caretBox, view, hiliteOffsets;
 		if (caretBox := GetCaretBox()) then begin
@@ -208,17 +233,22 @@ canonicalCharCorrector := {
 			end;
 		frame2
 	end,
+	// RestoreAlternates(pickItems): an undo of UsePickItems.
 	RestoreAlternates: func(a1) begin
 		(pickItems := a1)
 	end,
+	// SetStartStop(start, stop): the word is the text from start to stop.
 	SetStartStop: func(scanWordEnd, scanWordEnd2) begin
 		local refCon2;
 		(refCon2 := refCon).wordOffset := scanWordEnd;
 		(refCon2.wordLength := (scanWordEnd2 - scanWordEnd))
 	end,
+	// The screen rotated: just close.
 	ReOrientToScreen: func() begin
 		self:Close()
 	end,
+	// The alternatives changed (SetPickItems): undo can bring the old ones
+	// back; an ink word has none; the alternatives line is redrawn.
 	UsePickItems: func() begin
 		local wordForDisplay, len;
 		AddUndoAction('RestoreAlternates, [Array: savedPickItems]);
@@ -229,12 +259,16 @@ canonicalCharCorrector := {
 		alternates:SyncView();
 		(savedPickItems := nil)
 	end,
+	// The alternatives for a word in the view: the recogniser's, from the
+	// correction info kept for it.
 	SetExternalPickItems: func() begin
 		local refCon2, new;
 		new := correctInfo:FindNew((refCon2 := refCon).form, refCon2.wordOffset, refCon2.wordLength);
 		pickItems := nil;
 		(if new then (pickItems := new:GetWords()))
 	end,
+	// GetExternalWord: the word as it is in the view (a plain string), or an
+	// empty string for a view with no text.
 	GetExternalWord: func() begin
 		local part, refCon2;
 		if HasPath((refCon2 := refCon), 'form.text) then begin
@@ -244,6 +278,7 @@ canonicalCharCorrector := {
 			end;
 		part
 	end,
+	// the children's slot names and templates, made once for the view
 	allocateContext: [|Array|:
 		'templatePicker,
 		templatePicker,
@@ -256,6 +291,8 @@ canonicalCharCorrector := {
 		'recognizeButton,
 		recognizeButton
 	],
+	// Show the word that is in the view (an empty word for a view without
+	// text), then redraw the ink.
 	UseExternalWord: func() begin
 		if refCon.form.text then begin
 				cText:SetupAll(self:GetExternalWord(), 'external, cText.template, nil)
@@ -265,6 +302,8 @@ canonicalCharCorrector := {
 		cInk:Dirty()
 	end,
 	_proto: @protoKeyboard,
+	// CheckMergeInk: two ink words side by side at the word's start (a space
+	// between them deleted) merged into one ink word.
 	CheckMergeInk: func() begin
 		local refCon2, l2, dynamicValue, wordOffset, inkAt, inkAt2, mergeInk2;
 		dynamicValue := GetDynamicValue((l2 := (refCon2 := refCon).form), 'text, 'string);
@@ -273,14 +312,20 @@ canonicalCharCorrector := {
 				inkAt := GetInkAt(l2, wordOffset);
 				inkAt2 := GetInkAt(l2, (wordOffset + 1));
 				mergeInk2 := MergeInk(inkAt, inkAt2);
+				// \uF701 is the character that stands for an ink word in a rich string
 				InsertStyledText(l2, wordOffset, 2, "\uF701\u", [styles: 1, mergeInk2.ink]);
 				(refCon2.wordLength := (refCon2.wordLength - 1))
 			end)
 	end,
+	// [view, offset, length] of the last caret move, until it is handled;
+	// hiliteBusy: set while the picker itself moves the selection
 	hiliteParms: nil,
 	viewJustify: vjParentCenterH,
 	savedRemote: nil,
 	alternates: nil,
+	// The alternatives while a letter is being edited: the word with each of
+	// that letter's alternative characters (altChars) in its place; else the
+	// word itself, unless it is ink.
 	SetInternalPickItems: func() begin
 		lastChar := cText.lastChar;
 		template := cText.template;
@@ -314,6 +359,7 @@ canonicalCharCorrector := {
 		pickItems := nil;
 		(if (Length(list) > 0) then (pickItems := list))
 	end,
+	// SetStartLen(offset, length) and SetCaret(offset): set the word's range.
 	SetStartLen: func(offset, len) begin
 		local refCon2;
 		(refCon2 := refCon).wordOffset := offset;
@@ -324,6 +370,8 @@ canonicalCharCorrector := {
 		(refCon2 := refCon).wordOffset := wordOffset;
 		(refCon2.wordLength := 0)
 	end,
+	// ShowHide: an ink word shows the ink and the recognize button, a text word
+	// the letters.
 	ShowHide: func() begin
 		(if IsInk(cText.text[cText.wordLeft]) then begin
 				cInk:ShowView(true);
@@ -338,6 +386,10 @@ canonicalCharCorrector := {
 	end,
 	bounds: nil,
 	wordInfo: nil,
+	// Setup: a picker 10 letter cells wide (8 when that is wider than the
+	// screen), kept above the bottom of the screen; registered as an open
+	// keyboard; the first alternative (or nothing) as the word; the refCon
+	// found from the caret when it was opened without one.
 	viewSetupFormScript: func() begin
 		local viewBounds, copy, l3, l4, viewTemplate;
 		viewBounds := self:Parent().viewBounds;
@@ -373,12 +425,17 @@ canonicalCharCorrector := {
 			end;
 		cText:SetNewTemplate((viewTemplate := cText:GetViewTemplate()))
 	end,
+	// SetPickItems: the alternatives for where the word came from (cText's
+	// wordSource): one word as it is, the view's, the letter being edited, the
+	// recogniser's list, or none.
 	SetPickItems: func() begin
 		local wordSource;
 		wordSource := cText.wordSource;
 		savedPickItems := Clone(pickItems);
 		(if (wordSource = 'single) then self:SetSinglePickItems() else (if (wordSource = 'external) then self:SetExternalPickItems() else (if (wordSource = 'Editing) then self:SetInternalPickItems() else (if (wordSource = 'pickItems) then (pickItems := pickItems) else (if (wordSource = 'none) then (pickItems := nil))))))
 	end,
+	// A tap on the tab at the top centre is the keyboard's (it drags the
+	// picker); the letters are set up again after it.
 	viewClickScript: func(unit) begin
 		local pt, pt2, box;
 		pt := GetPoint(firstX, unit);
@@ -390,10 +447,14 @@ canonicalCharCorrector := {
 			end)
 	end,
 	viewEffect: nil,
+	// The word itself as the only alternative.
 	SetSinglePickItems: func() begin
 		local wordForDisplay;
 		(pickItems := [Array: (wordForDisplay := cText:GetWordForDisplay())])
 	end,
+	// CorrectWord(text, asWordInfo): put text in place of the word in the view
+	// (in the font there) - with asWordInfo a protoWordInfo of all the
+	// alternatives, so the view keeps them.
 	CorrectWord: func(text, a2) begin
 		local refCon2, copy, styleAtOffset, frame2;
 		refCon2 := refCon;
@@ -410,6 +471,10 @@ canonicalCharCorrector := {
 	hiliteBusy: nil,
 	templatePicker: nil,
 	saveBounds: saveBounds,
+	// ReplaceSelection(text, refCon, asWordInfo): replace the word with text
+	// and hilite it; a view without text (a comb view) gets the text typed
+	// into it as keys, and the word is found from the caret after.  Nothing
+	// for a view the comb corrector cannot work with.
 	ReplaceSelection: func(text, refCon, a3) begin
 		local refCon2, len, caretInfo;
 		if (not ViewWorksWithCombCorrector((refCon2 := refCon).form)) then begin
@@ -431,21 +496,27 @@ canonicalCharCorrector := {
 	end
 };
 
+// Where the picker opens: its bounds as protoKeyboard keeps them (its width
+// is set in viewSetupFormScript).
 saveBounds := {left: 0, top: 387, right: 224, bottom: 451};
 
+// The format picker ("Format "): shown only for a template with several
+// formats (templateArray); a choice switches the word to that format.
 templatePicker := {
 	viewFlags: vVisible + vClickable,
-	viewJustify: 8388736,
+	viewJustify: vjParentBottomV + oneLineOnly,
 	viewFormat: vfInset(1),
 	viewBounds: {left: 8, top: -10, right: 68, bottom: 0},
 	text: "Format ",
 	labelCommands: nil,
 	checkCurrentItem: nil,
 	preallocatedContext: 'templatePicker,
+	// shown only when the template has formats; they are its choices
 	viewSetupFormScript: func() begin
 		self:ShowView((labelCommands := cText.template.templateArray));
 		inherited:viewSetupFormScript()
 	end,
+	// LabelActionScript(index): the word put into that format
 	LabelActionScript: func(index) begin
 		local template, wordForDisplay;
 		template := cText.template;
@@ -457,10 +528,12 @@ templatePicker := {
 	_proto: @protoLabelPicker
 };
 
+// The line of alternative words, after the field's label (or none): a tap
+// on one makes it the word.
 alternates := {
 	viewFlags: vVisible,
 	viewBounds: {left: 4, top: 0, right: 4, bottom: 16},
-	viewJustify: 8388656,
+	viewJustify: vjParentFullH + oneLineOnly,
 	title: uCardPositionAlertButton,
 	defaultTitle: uCardPositionAlertButton,
 	text: nil,
@@ -469,12 +542,15 @@ alternates := {
 	numChoices: nil,
 	firstTime: true,
 	preallocatedContext: 'alternates,
+	// the text built anew each time but the first
 	viewSetupFormScript: func() begin
 		if (not firstTime) then begin
 				SetValue(self, 'text, self:Build())
 			end;
 		(firstTime := nil)
 	end,
+	// GetTitle: the view's label (its parent's label, or the labelLine's text)
+	// without the U+FC01/U+FC02 marker characters, else defaultTitle.
 	GetTitle: func() begin
 		local copy, form, labelLine;
 		if (if (labelLine := (form := refCon.form)._parent.label) then IsString(labelLine)) then begin
@@ -495,11 +571,16 @@ alternates := {
 			end;
 		return copy
 	end,
+	// Build: sets the title and answers it - nothing more, although it
+	// declares nine more locals that its code never uses.
 	Build: func() begin
 		local pickItems2, l2, l3, l4, l5, l6, l7, l8, l9, l10;
 		pickItems2 := pickItems;
 		(l4 := (title := self:GetTitle()))
 	end,
+	// Track the pen along the alternatives (separated by `separator`),
+	// inverting the one under it; the one it is lifted on moves to the front
+	// of pickItems and becomes the word.
 	viewClickScript: func(unit) begin
 		InkOff(unit);
 		playsound(@click);
@@ -554,11 +635,17 @@ alternates := {
 	_proto: @protoStaticText
 };
 
+// The letters of the word (a protoCharEdit): one cell for each character,
+// edited letter by letter; its wordSource says where the word shown came
+// from ('external: the view, 'pickItems, 'single, 'Editing, 'none).
 cText := {
+	// note that setup is done
 	viewSetupDoneScript: func() begin
 		self.setupDone := true;
 		inherited:viewSetupDoneScript()
 	end,
+	// DoPendingUpdate: carry out a postponed display of the edited word (see
+	// ProcrastinatedDisplayExternal), with an undo action for it.
 	DoPendingUpdate: func() begin
 		(if updatePending then begin
 				if GetRoot().correct.viewCObject then begin
@@ -568,6 +655,9 @@ cText := {
 				(updatePending := nil)
 			end)
 	end,
+	// RealDisplayExternal(replace): the word changed - alternatives, ink or
+	// letters, hilite; with replace, the edited word is put into the view (not
+	// an ink word).
 	RealDisplayExternal: func(a1) begin
 		local hiliteBusy2, wordForDisplay;
 		hiliteBusy2 := hiliteBusy;
@@ -591,6 +681,8 @@ cText := {
 			end;
 		(hiliteBusy := hiliteBusy2)
 	end,
+	// TemplateChanged: the template the view needs, when it is not the one in
+	// use (or has several formats); else nil.
 	TemplateChanged: func() begin
 		local viewTemplate;
 		viewTemplate := self:GetViewTemplate();
@@ -599,6 +691,8 @@ cText := {
 			end;
 		return nil
 	end,
+	// AddNewWord(where): a space put before (where <= 0) or after the word,
+	// and the empty word there made the one corrected.
 	AddNewWord: func(a1) begin
 		local wordOffset, l2;
 		self:DoPendingUpdate();
@@ -619,12 +713,16 @@ cText := {
 		self:SetHilite();
 		self:UseExternalWord()
 	end,
+	// While a letter is being edited the view is updated later, once (the
+	// undo state of the first change kept).
 	ProcrastinatedDisplayExternal: func(savedUndoState) begin
 		if (not updatePending) then begin
 				updatePending := savedUndoState
 			end;
 		AddProcrastinatedSend('Corrector, self, 'DoPendingUpdate, '[Array: ], 0)
 	end,
+	// Scroll(direction): the arrows - the next or previous word of the view's
+	// text, or, at its end, the next or previous key view.  Answers 0.
 	Scroll: func(arrowDirection) begin
 		local refCon2, l2, wordLength, dynamicValue, len, scanWordEnd2, scanWordEnd3, l8, l9, nextKeyView2;
 		l2 := (refCon2 := refCon).wordOffset;
@@ -660,6 +758,9 @@ cText := {
 								hiliteBusy := true;
 								refCon2.form:SetHilite(0, 0, true);
 								hiliteBusy := nil;
+								// the start of the next view's text, or past the end of the
+								// previous one's.  offset is no local: it is set in the context
+								// (a ROM quirk; harmless)
 								offset := (if (arrowDirection > 0) then 0 else 99999);
 								SetKeyView(nextKeyView2, offset)
 							end
@@ -671,6 +772,7 @@ cText := {
 	preallocatedContext: 'cText,
 	top: 0,
 	maxChars: 8,
+	// Undo: the word's range as it was, then the inherited undo.
 	RestoreUndoState: func(a1) begin
 		hiliteBusy := true;
 		undoInProgress := true;
@@ -681,6 +783,7 @@ cText := {
 		(hiliteBusy := nil)
 	end,
 	updatePending: nil,
+	// A template for one word only (not _MultiWord) takes the view's whole text.
 	UseNewTemplate: func(a1) begin
 		local dynamicValue;
 		if (not HasPath(template, '_MultiWord)) then begin
@@ -689,33 +792,39 @@ cText := {
 			end;
 		inherited:UseNewTemplate(a1)
 	end,
+	// IsInkWord: the word is ink.
 	IsInkWord: func() begin
 		(if (wordRight > wordLeft) then IsInk(text[wordLeft]))
 	end,
 	_proto: @protoCharEdit,
+	// GetViewTemplate: the template the view's text should follow - the view's
+	// own (viewGetCorrectorTemplate), else one for the kind of field its
+	// viewFlags say (the locale's phone, time and date filters, numbers),
+	// else noFilter.  Nil for a view that allows every kind of input.
 	GetViewTemplate: func() begin
 		local form, bAnd2, viewGetCorrectorTemplate, locale, dictionaries;
 		if (form := refCon.form) then begin
+				// 33550336: the input flags vCharsAllowed through vCustomDictionaries
 				if ((bAnd2 := BAnd(form.viewFlags, 33550336)) <> 33550336) then begin
 						if (not (viewGetCorrectorTemplate := form:?viewGetCorrectorTemplate())) then begin
 								locale := GetLocale();
-								if (bAnd2 = 262144) then begin
+								if (bAnd2 = vPhoneField) then begin
 										viewGetCorrectorTemplate := locale.phoneFilter
 									end else begin
-										if (bAnd2 = 1048576) then begin
+										if (bAnd2 = vTimeField) then begin
 												viewGetCorrectorTemplate := locale.timeFilter
 											end else begin
-												if (bAnd2 = 524288) then begin
+												if (bAnd2 = vDateField) then begin
 														viewGetCorrectorTemplate := locale.dateFilter
 													end else begin
-														if (bAnd2 = 8192) then begin
+														if (bAnd2 = vNumbersAllowed) then begin
 																viewGetCorrectorTemplate := @numberFilter
 															end else begin
-																if (bAnd2 = 16777216) then begin
+																if (bAnd2 = vCustomDictionaries) then begin
 																		if (if IsArray((dictionaries := form.dictionaries)) then (Length(dictionaries) = 1)) then begin
 																				dictionaries := dictionaries[0]
 																			end;
-																		if (dictionaries = 117) then begin
+																		if (dictionaries = kNumbersOnlyDictionary) then begin
 																				viewGetCorrectorTemplate := @numberFilter
 																			end
 																	end
@@ -734,6 +843,8 @@ cText := {
 	setupDone: nil,
 	viewJustify: vjParentCenterH,
 	cellHeight: 55,
+	// ReplaceExternal(text, asWordInfo): ReplaceSelection with the hilite left
+	// alone.
 	ReplaceExternal: func(a1, a2) begin
 		local hiliteBusy2;
 		hiliteBusy2 := hiliteBusy;
@@ -741,6 +852,8 @@ cText := {
 		self:ReplaceSelection(a1, refCon, a2);
 		(hiliteBusy := hiliteBusy2)
 	end,
+	// DisplayExternal(replace): show the edited word now, or later while a
+	// letter is being edited.
 	DisplayExternal: func(a1) begin
 		(if (wordSource = 'Editing) then begin
 				self:ProcrastinatedDisplayExternal(savedUndoState);
@@ -751,6 +864,9 @@ cText := {
 			end)
 	end,
 	undoInProgress: nil,
+	// SetNewTemplate(template): use it (noFilter for none) - a one-word
+	// template takes the whole text; a template with formats is wrapped in a
+	// RAM frame and initialised from the word.  Answers the template in use.
 	SetNewTemplate: func(template2) begin
 		local dynamicValue;
 		if (not template2) then begin
@@ -772,6 +888,8 @@ cText := {
 		template
 	end,
 	left: 0,
+	// SaveUndoState(wordSource): the inherited undo state, with the word's
+	// range as its parameter, kept in savedUndoState.
 	SaveUndoState: func(a1) begin
 		local wordSource2, frame2;
 		wordSource2 := wordSource;
@@ -782,6 +900,9 @@ cText := {
 		wordSource := wordSource2;
 		(self.savedUndoState := frame2)
 	end,
+	// DeleteSpace(start, stop): when the edit deletes the space before or
+	// after the word, the words on either side are joined (ink to ink merged).
+	// Answers true when it did.
 	DeleteSpace: func(a1, a2) begin
 		local l1, scanNextWord22, refCon2, dynamicValue, len, wordOffset, wordLength, l8, scanNextWord2, scanPrevWordEnd2, isInk2;
 		len := StrLen((dynamicValue := GetDynamicValue((refCon2 := refCon).form, 'text, 'string)));
@@ -822,6 +943,8 @@ cText := {
 	end,
 	savedUndoState: nil,
 	text: nil,
+	// SetupAll(word, wordSource, template, a4): the word, the template and its
+	// use, in one.
 	SetupAll: func(a1, a2, template, a4) begin
 		self:SetNewWord(a1, a2);
 		self:SetNewTemplate(template);
@@ -829,6 +952,9 @@ cText := {
 	end
 };
 
+// The word as ink, for an ink word: drawn as written; a tap pops up
+// Recognize, Delete and, next to other ink words, Join Left/Join Right; a
+// scrub deletes the word, a caret gesture splits it.
 cInk := {
 	viewClass: clView,
 	viewFlags: vVisible + vClickable + vStrokesAllowed + vGesturesAllowed + vCharsAllowed,
@@ -838,14 +964,17 @@ cInk := {
 	unit: nil,
 	itemBox: nil,
 	preallocatedContext: 'cInk,
+	// as wide as the letters, 45 pixels high
 	viewSetupFormScript: func() begin
 		local copy;
 		(copy := Clone(cText.viewBounds)).bottom := (copy.top + 45);
 		(self.viewBounds := copy)
 	end,
+	// clicks are not used: taps come as gestures
 	viewClickScript: func(unit) begin
 		nil
 	end,
+	// the word's ink as strokes, or nil
 	GetInkStrokes: func() begin
 		local inkAt, expandInk2;
 		if (inkAt := GetInkAt(refCon.form, refCon.wordOffset)) then begin
@@ -853,6 +982,7 @@ cInk := {
 			end;
 		return expandInk2
 	end,
+	// the ink drawn as written, inset in the view; itemBox is where it went
 	viewDrawScript: func() begin
 		local inkStrokes, insetRect2;
 		(if (inkStrokes := self:GetInkStrokes()) then begin
@@ -860,31 +990,36 @@ cInk := {
 				(itemBox := DrawOriginal(inkStrokes, insetRect2))
 			end)
 	end,
+	// cText's bounds changed: follow them
 	TieChangedScript: func(a1, a2) begin
 		(if (a2 = 'viewBounds) then (self.viewBounds := a1.viewBounds))
 	end,
 	viewStrokeScript: func(unit) begin
 		nil
 	end,
+	// words written on the ink are used up
 	viewWordScript: func(unit) begin
 		true
 	end,
+	// the gestures on the ink: tap, scrub and caret
 	viewgesturescript: func(unit, gesture) begin
 		local handleTap;
 		handleTap := nil;
-		if (gesture = 49) then begin
+		if (gesture = aeTap) then begin
 				handleTap := self:HandleTap(unit)
 			end else begin
-				if (gesture = 13) then begin
+				if (gesture = aeScrub) then begin
 						handleTap := self:HandleScrub(unit)
 					end else begin
-						if (gesture = 15) then begin
+						if (gesture = aeCaret) then begin
 								handleTap := self:HandleCaret(unit)
 							end
 					end
 			end;
 		return handleTap
 	end,
+	// HandleCaret: split the ink word where the caret gesture was, with a
+	// space between the two halves.
 	HandleCaret: func(unit) begin
 		local l1, refCon2, inkAt, gesturePoint2, scaleX2, splitInkAt2, sPrintObject2, list, wordOffset;
 		l1 := nil;
@@ -901,6 +1036,8 @@ cInk := {
 			end;
 		return l1
 	end,
+	// HandleScrub(unit): delete the word (with the scrub's effect) and go on
+	// to the next one.
 	HandleScrub: func(unit) begin
 		local l1;
 		l1 := nil;
@@ -914,12 +1051,14 @@ cInk := {
 			end;
 		return l1
 	end,
+	// HandleTap: the popup of what can be done with the ink word.
 	HandleTap: func(unit) begin
 		local strokeBounds2, box, dynamicValue, wordOffset, scanPrevWordEnd2, l6;
 		strokeBounds2 := StrokeBounds(unit);
 		box := self:GlobalBox();
 		AddArraySlot((popChars := [Array: ]), {item: "Recognize", code: 0});
 		AddArraySlot(popChars, {item: "Delete", code: 1, unit: unit});
+		// rc is no local either: it is set in the context
 		if (dynamicValue := GetDynamicValue((rc := correct.refCon).form, 'text, 'string)) then begin
 				if ((wordOffset := rc.wordOffset) > 0) then begin
 						if (if (if (scanPrevWordEnd2 := ScanPrevWordEnd(dynamicValue, (wordOffset - 1), 0)) then (scanPrevWordEnd2 > 0)) then IsInk(dynamicValue[(scanPrevWordEnd2 - 1)])) then begin
@@ -936,6 +1075,7 @@ cInk := {
 		DoPopup(popChars, (strokeBounds2.right - box.left), (strokeBounds2.top - box.top), self);
 		true
 	end,
+	// the popup's choice, by its code: 0 Recognize, 1 Delete, 2 and 3 join
 	pickActionScript: func(index) begin
 		local popChar;
 		if popChars then begin
@@ -953,6 +1093,7 @@ cInk := {
 			end;
 		(popChars := nil)
 	end,
+	// HandleJoin: delete what lies between this word and the next ink word.
 	HandleJoin: func(popChar) begin
 		cText:DeleteText(popChar.left, popChar.right)
 	end
@@ -960,15 +1101,19 @@ cInk := {
 
 recognize := "Recognize";
 
+// The Recognize button under an ink word: the word recognised as text in
+// its view, then shown.
 recognizeButton := {
 	viewBounds: {left: 0, top: -16, right: 55, bottom: -3},
 	viewFlags: vVisible + vReadOnly + vClickable,
-	viewJustify: 8389254,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingCenterH + oneLineOnly,
 	text: recognize,
 	buttonClickScript: func() begin
 		self:Recognize()
 	end,
 	preallocatedContext: 'recognizeButton,
+	// Recognize: the ink word read as text in its view (RecognizePara), the
+	// word's length set to what it became, the result hilited and shown
 	Recognize: func() begin
 		local hiliteBusy, refCon, recognizePara2;
 		cText:SaveUndoState('external);
