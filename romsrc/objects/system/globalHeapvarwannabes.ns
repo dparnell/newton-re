@@ -2663,7 +2663,8 @@ globalHeapvarwannabes := {
 								(self.viewChildren := [Array: {viewBounds: mailFont, _proto: @protoParagraph, viewStationery: 'para, text: fields2.text, viewFont: GetUserConfig('mailFont)}])
 							end else (self.viewChildren := [Array: ]))
 					end,
-					// an edited unread message's text goes back into the item
+					// the edited text goes back into the item, unless it is one in the
+					// 'Read or 'Received state
 					viewQuitScript: func() begin
 						local l1, notesText2;
 						(if (not (((l1 := (if inBody then fields.body else fields)).state = 'Read) or (l1.state = 'Received))) then begin
@@ -4578,8 +4579,8 @@ remoteWriting := {
 };
 
 // the text editing settings: ink text scaling, inserting at the caret
-// (remote writing, offered only where the Gestalt query says the machine
-// supports it) and adding new words to the personal word list
+// (remote writing, hidden where Gestalt selector 0x200000B answers true)
+// and adding new words to the personal word list
 globalHeapvarwannabesItem := {
 	height: 77,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 77},
