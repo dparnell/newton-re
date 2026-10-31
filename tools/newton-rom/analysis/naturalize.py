@@ -633,6 +633,67 @@ FONT_FAMILIES = ["tsSystem", "tsFancy", "tsSimple", "tsHWFont"]		# espy, New Yor
 SHIFTED = {"vfPen": 8, "vfInset": 16, "vfShadow": 18, "vfRound": 24, "tsSize": 10}
 
 
+ERROR_RANGE = (-71000, -7000)			# the error codes' bases (NewtErrors.h's ERRBASE_COMMON down to the frames')
+ERROR_TAG = re.compile(r"^err(or)?(code|num|number)?$|^lasterror$|^errorcode$", re.I)	# (a slot that holds an error code)
+DEFINE = re.compile(r"^\s*#\s*define\s+([A-Za-z_]\w*)\s+(.+?)\s*$", re.M)
+ENUM = re.compile(r"\benum\b[^{;]*\{(.*?)\}", re.S)
+
+
+def header_values(roots):
+	"""The integer constants of the C headers under roots: #define NAME
+	expr and enum members, each evaluated (an expression of numbers and
+	other such names, + - * | & << >> ~) - {name: value}, the first
+	definition of a name winning."""
+	exprs = collections.OrderedDict()
+	for root in roots:
+		for top, dirs, files in sorted(os.walk(root)):
+			dirs.sort()
+			for f in sorted(files):
+				if not f.endswith(".h"):
+					continue
+				with open(os.path.join(top, f), encoding="latin-1") as h:
+					text = h.read().replace("\r\n", "\n").replace("\r", "\n")
+				text = re.sub(r"/\*.*?\*/", " ", text, flags=re.S)
+				text = re.sub(r"//[^\n]*", "", text)
+				for name, expr in DEFINE.findall(text):
+					exprs.setdefault(name, expr)
+				for body in ENUM.findall(text):
+					previous = None
+					for item in body.split(","):
+						m = re.match(r"\s*([A-Za-z_]\w*)\s*(?:=\s*(.+?))?\s*$", item, re.S)
+						if not m:
+							previous = None
+							continue
+						expr = m.group(2) if m.group(2) is not None else ("(%s + 1)" % previous if previous else "0")
+						exprs.setdefault(m.group(1), expr)
+						previous = m.group(1)
+	values = {}
+
+	def value(name, depth=0):
+		if name in values or depth > 30 or name not in exprs:
+			return values.get(name)
+		expr = re.sub(r"\b(0x[0-9a-fA-F]+|\d+)[uUlL]+\b", r"\1", exprs[name])
+		if not re.fullmatch(r"[\w\s()+\-*|&<>~]*", expr):
+			return None
+		env = {}
+		for word in re.findall(r"\b[A-Za-z_]\w*", expr):
+			if not re.match(r"0x", word):
+				v = value(word, depth + 1)
+				if v is None:
+					return None
+				env[word] = v
+		try:
+			v = eval(expr, {"__builtins__": {}}, env)
+		except Exception:
+			return None
+		if isinstance(v, int):
+			values[name] = v
+		return values.get(name)
+	for name in exprs:
+		value(name)
+	return values
+
+
 class Constants:
 	"""The views' constants (src/views/ViewFlags.h's enums) and the packed
 	font specs' (qd/Fonts.h: the family in bits 0-9 - FamilyNumToSym's
@@ -651,6 +712,19 @@ class Constants:
 			self.values[family] = k
 		for name, bit in FONT_FACES:
 			self.values[name] = bit << 20
+		# the error codes: the DDK headers' (Apple's names first), then those
+		# the reconstruction names (src/frames/NSErrors.h: NewtonScript's own,
+		# which the DDK has no header for) - each value written by one name
+		self.error_name = {}
+		roots = [os.path.join(ROOT, "headers")] + \
+			[os.path.join(ROOT, "src", d) for d in sorted(os.listdir(os.path.join(ROOT, "src")))
+			 if os.path.isdir(os.path.join(ROOT, "src", d)) and d not in ("thirdparty", "ddk")]
+		for name, value in header_values(roots).items():
+			if ERROR_RANGE[0] < value <= ERROR_RANGE[1] and re.match(r"k[A-Z]|err[A-Z]", name) and name not in self.values:
+				self.values[name] = value
+				best = self.error_name.get(value)
+				if best is None or (re.search(r"Base$|MAX", best) and not re.search(r"Base$|MAX", name)):
+					self.error_name[value] = name
 
 	def write(self, path):
 		with open(path, "w", encoding="utf-8", newline="\n") as f:
@@ -659,7 +733,8 @@ class Constants:
 					"# tools/newton-rom/analysis/naturalize.py: the views' constants from\n"
 					"# src/views/ViewFlags.h, and the packed font specs' (qd/Fonts.h: tsSystem, tsFancy,\n"
 					"# tsSimple, tsHWFont the families espy, New York, Geneva, Handwriting; tsSize(n);\n"
-					"# the faces)\n")
+					"# the faces), then the error codes: the DDK headers' #defines and enums\n"
+					"# (headers/), then the reconstruction's (src/: NewtonScript's own, frames/NSErrors.h)\n")
 			for name, value in self.values.items():
 				f.write("%s\t%#x\n" % (name, value))
 			for name, shift in SHIFTED.items():
@@ -678,6 +753,8 @@ class Constants:
 			return next((k for k, v in self.values.items() if v == number and k.startswith("cl")), None)
 		if tag.endswith("font"):
 			return self.font(number)
+		if ERROR_TAG.search(tag):
+			return self.error_name.get(number)
 		return None
 
 	def view_flags(self, n):

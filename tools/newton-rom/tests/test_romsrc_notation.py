@@ -97,6 +97,22 @@ class Notation(unittest.TestCase):
 		self.assertEqual(romsrc.code_with_magic_numbers('func() "@protoThing" & @protoThing', {"protothing": 1}),
 						 'func() "@protoThing" & @1')
 
+	def test_constants_in_functions(self):
+		constants = {"vVisible": 1, "vClickable": 0x200, "kErr": -48406, "vfPen": lambda n: n << 8}
+		same = lambda source: romsrc.code_with_constants(source, constants)
+		# (a sum that is a whole operand is one number: what the ROM's source had)
+		self.assertEqual(same("func() {viewFlags: vVisible + vClickable, x: vfPen(2)}"), "func() {viewFlags: 513, x: 512}")
+		self.assertEqual(same("func() Throw('|evt.ex|, kErr)"), "func() Throw('|evt.ex|, -48406)")
+		self.assertEqual(same("func() x - kErr"), "func() x - -48406")
+		# (not a whole operand: each name its number)
+		self.assertEqual(same("func() x + vVisible + vClickable"), "func() x + 1 + 512")
+		self.assertEqual(same("func() vVisible + vClickable * 2"), "func() 1 + 512 * 2")
+		# (a slot, a symbol, a message, a tag are not constants)
+		self.assertEqual(same("func() {vVisible: a.vVisible, b: 'vVisible, c: x:vVisible()}"),
+						 "func() {vVisible: a.vVisible, b: 'vVisible, c: x:vVisible()}")
+		self.assertEqual(read("f := func() {viewFlags: vVisible + vClickable};")["f"].source[1],
+						 "func() {viewFlags: 513}\n@@end\n")
+
 	def test_old_form_still_read(self):
 		defs = read('a := {b: function("functions/a.b.ns"), c: @1};')
 		self.assertEqual(defs["a"].items[0].data, "functions/a.b.ns")

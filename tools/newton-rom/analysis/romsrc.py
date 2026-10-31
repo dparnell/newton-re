@@ -315,6 +315,7 @@ CODE_TOKEN = re.compile(r"""
 	|(?P<char>\$\\u[0-9a-fA-F]{4}|\$\\.|\$.)
 	|(?P<magic>@(?:\d+|[A-Za-z_][A-Za-z0-9_]*))
 	|(?P<word>[A-Za-z_][A-Za-z0-9_]*)
+	|(?P<number>\d+)
 	|(?P<other>.)
 	""", re.X | re.S)
 
@@ -362,6 +363,70 @@ def code_with_magic_numbers(text, magic_names, where="code"):
 				raise SyntaxError("%s: %s is no magic pointer's name (magic.tsv)" % (where, text[start:end]))
 			out.append(text[last:start] + "@%d" % index)
 			last = end
+	return "".join(out) + text[last:]
+
+
+ARITHMETIC = {"+", "-", "*", "/", "div", "mod"}
+
+
+def code_with_constants(text, constants, where="code"):
+	"""NewtonScript source with the tree's constants (constants.tsv) made
+	numbers, as the compiler reads it: a name, or name(n) for one that
+	shifts.  A sum of constants that is a whole operand - nothing that binds
+	as tightly before it, nothing that binds more tightly after it - is one
+	number, so that `viewFlags: vVisible + vClickable` compiles to what
+	`viewFlags: 513` does.  A name after `.`, `'` or a send's `:`, or before
+	a tag's `:`, is not a constant."""
+	toks = [(kind, start, end) for kind, start, end in code_tokens(text) if kind != "space"]
+	words = [text[s:e] for _, s, e in toks]
+
+	def term(i):
+		"""The constant term at token i: (its value, the token after it), or None."""
+		if toks[i][0] != "word" or words[i] not in constants:
+			return None
+		if i > 0 and (words[i - 1] in (".", "'") or (words[i - 1] == ":" and toks[i - 1][2] == toks[i][1])):
+			return None
+		if i + 1 < len(toks) and words[i + 1] == ":" and (i + 2 >= len(toks) or words[i + 2] != "="):
+			return None
+		value = constants[words[i]]
+		if not callable(value):
+			return value, i + 1
+		# name(n): a run of digits between the brackets
+		k = i + 2
+		digits = ""
+		while k < len(toks) and words[k].isdigit():
+			digits += words[k]
+			k += 1
+		if i + 1 >= len(toks) or words[i + 1] != "(" or not digits or k >= len(toks) or words[k] != ")":
+			raise SyntaxError("%s: %s takes a number, %s(n)" % (where, words[i], words[i]))
+		return value(int(digits)), k + 1
+	out, last, i = [], 0, 0
+	while i < len(toks):
+		found = term(i)
+		if found is None:
+			i += 1
+			continue
+		total, after = found
+		run_end = after
+		terms = 1
+		while run_end + 1 < len(toks) and words[run_end] == "+":
+			nxt = term(run_end + 1)
+			if nxt is None:
+				break
+			total += nxt[0]
+			run_end = nxt[1]
+			terms += 1
+		before = words[i - 1] if i > 0 else None
+		following = words[run_end] if run_end < len(toks) else None
+		if terms > 1 and (before in ARITHMETIC or following in ("*", "/", "div", "mod")):
+			# (not a whole operand: each name its number)
+			total, run_end = term(i)
+		number = "%d" % total
+		if total < 0 and text[toks[i][1] - 1:toks[i][1]] in ("-", "+"):
+			number = " " + number
+		out.append(text[last:toks[i][1]] + number)
+		last = toks[run_end - 1][2]
+		i = run_end
 	return "".join(out) + text[last:]
 
 
@@ -1989,6 +2054,10 @@ class Reader:
 		return o
 
 	def magic_numbers(self, code):
+		"""A function's source as the compiler reads it: its @names and
+		constants made numbers."""
+		if self.names and self.names.constants:
+			code = code_with_constants(code, self.names.constants, self.where)
 		if "@" not in code:
 			return code
 		return code_with_magic_numbers(code, self.names.magic if self.names else {}, self.where)

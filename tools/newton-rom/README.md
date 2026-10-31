@@ -88,6 +88,10 @@ tools/newton-rom/
                           root object); python tools/newton-rom/analysis/naturalize.py <tree> [-o <out>];
                           the two forms build the same object file.  romsrc.py rename <tree> OLD NEW renames a
                           definition afterwards (layout, magic table and @names too); ctest tools.ROMSourceNotation
+    naturalcode.py        then the functions of such a tree, in place: numbers by name where certain (a view's
+                          slot, an error code - constants.tsv with the headers' error codes) and arguments and
+                          locals named (a script's signature, a local's first value, an argument after its calls);
+                          python tools/newton-rom/analysis/naturalcode.py <tree> [--stats]; the build unchanged
     packages.py           the packages built into the ROM extension: --parts, --extract DIR (.pkg files;
                           --relocatable, --rename OLD=NEW for loadable copies), --doc docs/packages/rex-packages.md
     pkgdisasm.py          the ARM code of a package's protocol parts (capstone): --list, --part N [--start --end],
