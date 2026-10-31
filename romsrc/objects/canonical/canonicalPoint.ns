@@ -1,3 +1,6 @@
 // canonicalPoint, and what only it reaches
+//
+// A point {x, y}, as GetPoint(firstXY or finalXY, unit) and PenPos()
+// answer (src/recognition/UnitNatives.cpp).
 
 canonicalPoint := {x: nil, y: nil};

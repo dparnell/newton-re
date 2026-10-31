@@ -1,4 +1,9 @@
 // canonicalGestaltSystemInfo, and what only it reaches
+//
+// Gestalt's frame for the machine (src/system/SystemNatives.cpp,
+// kGestalt_SystemInfo): manufacturer, machine type, ROM stage and version,
+// RAM size, screen size, resolution and depth, patch version, tablet
+// resolution, and the processor's type and speed.
 
 canonicalGestaltSystemInfo := {
 	manufacturer: nil,

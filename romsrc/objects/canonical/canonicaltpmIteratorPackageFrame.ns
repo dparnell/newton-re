@@ -1,4 +1,8 @@
 // canonicaltpmIteratorPackageFrame, and what only it reaches
+//
+// One package as the package iterator describes it
+// (src/packages/ROMPackages.cpp): id, size, store, pssid, title, version,
+// timestamp and copy protection.
 
 canonicaltpmIteratorPackageFrame := {
 	id: nil,

@@ -1,3 +1,7 @@
 // canonicalDictRamFrame, and what only it reaches
+//
+// The frame for a dictionary made in RAM from a ROM one
+// (src/recognition/Dictionaries.cpp, InitDictionaries): its _proto, the
+// dictionary and the ROM dictionary's id.
 
 canonicalDictRamFrame := {_proto: nil, dict: nil, ROMDictID: nil};

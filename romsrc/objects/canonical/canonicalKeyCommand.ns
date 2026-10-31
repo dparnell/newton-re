@@ -1,3 +1,7 @@
 // canonicalKeyCommand, and what only it reaches
+//
+// A key command (src/views/Keyboard.cpp): the character and modifiers that
+// trigger it, the message it sends, and its name and category in the key
+// commands' help slip.
 
 canonicalKeyCommand := {char: nil, modifiers: nil, keyMessage: nil, name: nil, category: nil};

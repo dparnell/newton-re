@@ -1,3 +1,6 @@
 // canonicalGestaltRebootInfo, and what only it reaches
+//
+// Gestalt's frame for the last restart (src/system/SystemNatives.cpp): its
+// reason and how many restarts there have been.
 
 canonicalGestaltRebootInfo := {rebootreason: nil, rebootCount: nil};

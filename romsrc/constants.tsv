@@ -715,3 +715,13 @@ kHasScrollersOption	1
 fxUp	0x20800
 fxPopDownEffect	0x60000
 kUserDictionary	0x1f
+# shared/ and canonical/: GetPoint selectors (Newton Programmer's Reference "GetPoint"; values as FGetPoint, src/recognition/UnitNatives.cpp, takes them), transfer modes (NPR Table 2-5), the notification level (NPR "Notify"; 3 as BHNotify treats it), aeTap, aeScrub, aeCaret (NPR gesture table, src/views/Commands.h), oneLineOnly (Newton Programmer's Guide Table 3-1, src/views/TextView.h), keyVUnit (NPR Key Descriptor Constants), kNumbersOnlyDictionary (NPR Table 8-5)
+firstX	0
+firstY	1
+finalX	4
+finalY	5
+modeCopy	0
+aeTap	0x31
+keyVUnit	0x8
+aeScrub	0xd
+aeCaret	0xf

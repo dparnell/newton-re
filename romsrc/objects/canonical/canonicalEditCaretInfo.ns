@@ -1,3 +1,6 @@
 // canonicalEditCaretInfo, and what only it reaches
+//
+// An edit view's selection as caret info (src/views/EditView.cpp,
+// GetSelection): class 'editCaret, the caret at x, y.
 
 canonicalEditCaretInfo := {class: 'editCaret, x: nil, y: nil};

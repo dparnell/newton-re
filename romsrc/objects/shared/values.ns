@@ -1,9 +1,23 @@
 // objects several roots reach, none alone (naturalize.py)
+//
+// Strings that more than one root of the ROM's object world holds - the
+// compiler kept one copy of each - mostly the user-visible words of the US
+// ROM (button titles, labels, country names, status words), with a few
+// class names, format strings and characters.  Each is named after the slot
+// or variable it was first found in, so a name says where it is used, not
+// always what it says (`areacode` is "095", `uCardPositionAlertButton` in
+// objects/values.ns the empty string).  A string starting with U+FC01 is a
+// picker's label after the diamond that marks it as a popup (Apple's
+// kPopChar, it seems).
 
 decimalpoint := ".";
 
+// The class names of sound codecs (TDTMFCodec: touch-tone dialling; TIMACodec
+// below: IMA ADPCM compression, protoRouteSlip's and the recorder's).
 tDTMFCodec := "TDTMFCodec";
 
+// Punctuation of the corrector's leading, trailing and middle punctuation
+// pictures' word lists (pictures/correctorleadBits and the others).
 correctorleadBitsItem := "(";
 
 andFaster := "28.8 and faster";
@@ -32,6 +46,8 @@ mCI := "MCI";
 
 masterCard := "MasterCard";
 
+// Sample numbers and prefixes of the phone dialling options (an area code,
+// outgoing prefixes such as "00" and "001").
 areacode := "095";
 
 sanFrancisco := "San Francisco";
@@ -80,6 +96,8 @@ words := "Words";
 
 time := "Time";
 
+// The time and phone-number filters' formats (usTimeFilter; usStdPhoneFilter
+// and auststdPhoneFilter, whose string_2 is the empty field).
 format := "10_30_4_";
 
 anyFormat := "Any format";
@@ -186,12 +204,16 @@ show_2 := "  Show";
 
 status := "Status";
 
+// The number format of NewtApp's number views (newtroNumView,
+// newtIntegerFilter): up to ten significant digits.
 g := "%.10g";
 
 inOutBox := "InOut Box";
 
 outBox := "Out Box";
 
+// Labels of communications options (cpst, cpcm, ctso), as protoTapiEndpoint
+// and the root's comm settings give them.
 cpst := "cpst";
 
 prefs := "Prefs";
@@ -328,6 +350,7 @@ default_3 := "Default";
 
 mods := "mods";
 
+// "File ^0 in": ^0 is replaced by ParamStr.
 fileIn := "File ^0 in";
 
 logEntries := "log entries";
@@ -348,6 +371,7 @@ undo := "Undo";
 
 find := "Find";
 
+// The name of the soup the system's alarms are kept in.
 systemAlarmSoup := "SystemAlarmSoup";
 
 learn := "Learn";
@@ -360,6 +384,7 @@ update := "Update";
 
 where_2 := "Where";
 
+// The class names of the printer drivers (TDotPrinter, TSWGroupDriver).
 tDotPrinter := "TDotPrinter";
 
 tSWGroupDriver := "TSWGroupDriver";

@@ -1,3 +1,6 @@
 // canonicalPictDragData, and what only it reaches
+//
+// The data of a picture dragged out of a text view (src/text/TXView.cpp,
+// GetDropData): its icon and bounds.
 
 canonicalPictDragData := {icon: nil, viewBounds: nil};
