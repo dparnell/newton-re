@@ -1,8 +1,14 @@
-// analogClock, and what only it reaches
+// analogClock: the little clock face at the left of a status bar (magic pointer
+// @5, a child of protoStatusBar beside its timeField).  It draws the hour and
+// minute hands from a strip of 24 small bitmaps (smallClocks: 12 hour hands,
+// then 12 minute hands at five-minute steps) and redraws itself every five
+// minutes; tapping it toggles the timeField glance (the date, time and battery
+// level).
 
 analogClock := {
 	viewClass: clView,
 	viewFlags: vVisible + vClickable,
+	// the rounded frame round the clock (corner radius 6)
 	viewFormat: vfRound(6),
 	viewBounds: {left: 4, top: 0, right: 21, bottom: 17},
 	viewJustify: vjParentCenterV,
@@ -15,9 +21,13 @@ analogClock := {
 	hours: 0,
 	minutes: 0,
 	lastSeed: 0,
+	// sets hours and minutes (the minute hand's five-minute step, 0-11) from the
+	// clock, and returns the milliseconds to the next five-minute boundary for the
+	// idle script
 	calcTime: func() begin
 		local timeInSeconds2;
 		hours := ((minutes := ((timeInSeconds2 := TimeInSeconds()) div 60)) div 60);
+		// past 35 minutes the hour hand is drawn at the next hour
 		if ((minutes := ((minutes mod 60) div 5)) > 6) then begin
 				hours := (hours + 1)
 			end;
@@ -28,6 +38,7 @@ analogClock := {
 		self:SetupIdle(self:calcTime())
 	end,
 	viewDrawScript: func() begin
+		// setTimeSeed changes when the clock is set: recompute the time and the idle
 		if (lastSeed <> setTimeSeed) then begin
 				lastSeed := setTimeSeed;
 				self:SetupIdle(self:calcTime())

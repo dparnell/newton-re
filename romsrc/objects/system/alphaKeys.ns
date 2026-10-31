@@ -1,10 +1,26 @@
-// alphaKeys, and what only it reaches
+// alphaKeys: the typewriter keyboard (the Keyboard's alphanumeric layout), a
+// protoKeypad view whose keys are given as key code results.  It has two
+// layouts, the US one and the ISO one (an extra key beside the left shift,
+// a tall return key), and viewSetupFormScript picks the one the current locale
+// bundle's keyboardLayout names.
 
 alphaKeys := {
 	_proto: @protoKeypad,
 	viewJustify: vjParentBottomV,
 	viewBounds: {left: 0, top: -112, right: 283, bottom: -1},
 	keyDefinitions: nil,
+	// Each row (protoKeypad's keyDefinitions): its height and its tallest key's
+	// height in key units (8 is keyVUnit), then a legend, a result and a key
+	// descriptor per key.  The results are Macintosh virtual key codes (50 is `,
+	// 18 is 1, 12 is Q, 0 is A, 36 return, 51 delete, 123/124 the arrows; NPG
+	// Figure 8-14).  The descriptors pack the NPG's key descriptor constants and
+	// cannot be written as a sum: 288360456 (0x11300808) is keyAutoHilite +
+	// 2*keyFramed + 3*keyRoundingUnit + keyHUnit + keyVUnit, a framed one-unit key
+	// with rounded corners; 288359432 (0x408 at the bottom) a half-unit key,
+	// 288361480 (0xc08) one and a half units, 288362504 (0x1008) two;
+	// -536867832 (0x20000c08 in 30 bits) a keySpacer, a gap of one and a half
+	// units.  A legend nil shows the key's character, a string or bitmap is drawn
+	// instead.
 	keyDefinitionsUS: [|Array|:
 		[|Array|:
 			8,
@@ -401,6 +417,7 @@ alphaKeys := {
 		]
 	],
 	viewSetupFormScript: func() begin
+		// picks the layout the locale's keyboard has
 		inherited:viewSetupFormScript();
 		(keyDefinitions := (if (international.currentlocalebundle.keyboardLayout = 'ISO) then keyDefinitionsISO else keyDefinitionsUS))
 	end,

@@ -1,4 +1,8 @@
-// datetimeStrSpecs, and what only it reaches
+// datetimeStrSpecs: magic pointer @66, the values of the documented date and
+// time format constants (longDateStrSpec, shortTimeStrSpec, ...; NPG "Date and
+// Time String Specifications") for LongDateStr, ShortDateStr and TimeStr.  Each
+// packs format elements (the year, month, day, weekday, hour, minute, second)
+// and their formats into an integer, a few bits per element.
 
 datetimeStrSpecs := {
 	longDateStrSpec: 11582026,

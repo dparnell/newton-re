@@ -1,4 +1,8 @@
-// cities, and what only it reaches
+// cities: magic pointer @50, the Time Zones application's built-in cities.  A
+// city's latitude and longitude are fractions of a full circle scaled by 2^29
+// (degrees times 2^29/360: Atlanta's 50331648 is 33.75 degrees north; longitude
+// counts eastwards, so 411029364 is 275.6 degrees, 84.4 west); gmt is its
+// offset from GMT in seconds; areacode its telephone area or city code.
 
 cities := [|Array|:
 	{

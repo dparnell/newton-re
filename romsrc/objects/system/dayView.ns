@@ -1,6 +1,12 @@
-// dayView, and what only it reaches
+// dayView: magic pointer @67, the Date Book's day view - the clEditView that
+// holds a day's meetings and events (its children are the meeting entries
+// themselves, each a clMeetingView or cribNote) laid out by start time.  It
+// handles making a meeting from a line drawn down the day or from text
+// written or dropped on it, dragging meetings to other times, and laying out
+// meetings that overlap side by side.
 
 dayView := {
+	// a meeting dragged out of the day: removes it from this date
 	viewDropRemoveScript: func(a1) begin
 		local l1, l2;
 		(if ((((l2 := (l1 := (if a1.realData then a1.realData else a1)).viewStationery) = 'meeting) or (l2 = 'RepeatingMeeting)) or (l2 = 'exceptionMeeting)) then begin
@@ -8,6 +14,7 @@ dayView := {
 				true
 			end)
 	end,
+	// sorts the meetings by start time and lays them out again
 	ReArrangeMeetings: func() begin
 		if ((count := Length((childViewFrames := self:ChildViewFrames()))) = 0) then begin
 				return nil
@@ -31,6 +38,8 @@ dayView := {
 			end);
 		dayView:Dirty()
 	end,
+	// text written on the day becomes a new meeting at the time where it was
+	// written (rounded to the half hour, an hour long at least, ending by midnight)
 	editAddWordScript: func(a1, a2) begin
 		local meeting, viewBounds, positionToTime2, positionToTime3, frame2, most, richString;
 		meeting := a1;
@@ -47,6 +56,7 @@ dayView := {
 		if ((positionToTime3 - positionToTime2) < 60) then begin
 				positionToTime3 := (positionToTime2 + 60)
 			end;
+		// 1440: the minutes in a day (times here are minutes into the day)
 		if (positionToTime3 > 1440) then begin
 				positionToTime3 := 1440
 			end;
@@ -58,10 +68,13 @@ dayView := {
 		(meeting := self:MakeNewMeetingFrame('meeting, richString, (displaydate + positionToTime2), (positionToTime3 - positionToTime2))).viewBounds := frame2;
 		meeting
 	end,
+	// a vertical line drawn down the day (and not over a meeting's selected text)
+	// makes a new, empty meeting for the times it spans, rounded to half hours and
+	// at least 30 minutes long; returns true when it did
 	viewgesturescript: func(a1, a2) begin
 		local v5_xxxxxxxxxxxxxxxxxwwwww, v6_zzzzzzyyyyyyyyyyyyyyyyyyyyyy, v7_qppppp, v8_xxxxwwwwwwww, v9_zzzzzyy, v10_yyyyyyyyyyyyx, v11_rrrrrrrqq, v12_wwwwwwwwwwwwwvv, v13_zyyyyyyyyyyyyyyyyyyyy, v14_vvvvvuuuuuuuuuuuu, v15_xxxxxxxxxxxxxxxxwwwwwww, v18_ji, v19_yyyyyyyyyyyyyyyyyyyyyyyxxx, v20_lllk, v21_wwwwwwwwww, v22_zzzzzzzzzzzzzyyy, v23_uuuuuuuuuttt, v24_xxxxxxxxxxxxxxxxxx, v25_zzzzzzzyyyyyy, v26_wwwwwwwwwwwvvvvvvvvv;
 		v7_qppppp := nil;
-		if (a2 = 16) then begin
+		if (a2 = aeLine) then begin
 				v5_xxxxxxxxxxxxxxxxxwwwww := dayView:GlobalBox();
 				v13_zyyyyyyyyyyyyyyyyyyyy := GetPoint(1, a1);
 				v25_zzzzzzzyyyyyy := GetPoint(5, a1);
@@ -133,6 +146,7 @@ dayView := {
 		return '[Array: meeting, text]
 	end,
 	viewFlags: vVisible + vClipping + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed + vPunctuationAllowed,
+	// whether any of the meetings in pos (sorted by start) overlap in time
 	AnyOverlap: func(pos) begin
 		if ((l1 := (if pos then (Length(pos) - 1) else 0)) <= 0) then begin
 				return nil
@@ -156,11 +170,14 @@ dayView := {
 		l2
 	end,
 	viewBounds: nil,
+	// an edited meeting entry is saved back into its soup
 	viewChangedScript: func(slot, view) begin
 		local realData;
 		(if (if (if (if (realData := view.realData) then (ClassOf(realData) <> 'meeting)) then IsSoupEntry(realData)) then (not EntryStore(realData):IsReadOnly())) then self:CarefulChange(MeetingSoup, realData, true))
 	end,
 	recConfig: @rcInkorText,
+	// dropped text becomes an hour-long meeting at the drop's time; a dropped
+	// meeting is moved to that time
 	viewDropScript: func(dragInfo, dropPt, a3) begin
 		local meeting, positionToTime2;
 		positionToTime2 := PositionToTime(dayView, dropPt.viewBounds.top);
@@ -179,6 +196,8 @@ dayView := {
 		self:RemoveMeetingFromDate(a1, displaydate, nil);
 		true
 	end,
+	// a meeting's view bounds: its own when it has some, else from its time and
+	// duration, between left a2 and right
 	MeetingBounds: func(a1, a2, v15_zzzzzzzzzzzzzzzzzzzzyyyyyyy) begin
 		local l1, timeToPosition2, mtgDuration;
 		(if a1.viewBounds then LayoutMeeting(a1, viewHeight, tabWidths, nil) else begin
@@ -188,6 +207,7 @@ dayView := {
 				SetBounds(a2, timeToPosition2, v15_zzzzzzzzzzzzzzzzzzzzyyyyyyy, mtgDuration)
 			end)
 	end,
+	// gives the meetings a3 to a4 of the group the width (v15) in equal columns
 	DistributeBounds: func(v21_yyyyyxxxxxxxxxxxxxx, a2, v8_wwwwwwvvvvvvvvvvvvv, v26_uuttt, v15_zzzzzzzzzzzzzzzzzzzzyyyyyyy) begin
 		(if ((l1 := ((v26_uuttt - v8_wwwwwwvvvvvvvvvvvvv) + 1)) > 0) then begin
 				l3 := (v15_zzzzzzzzzzzzzzzzzzzzyyyyyyy div l1);
@@ -204,6 +224,9 @@ dayView := {
 					end)
 			end)
 	end,
+	// LayoutMeetings(meetings, bounds, from, to, width): fills in bounds for the
+	// meetings from..to, finding the runs that overlap in time and laying each run
+	// out side by side (LayoutGroup)
 	LayoutMeetings: compile(
 		constants: {
 			kLiteral_4f3f81: '[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote]
@@ -257,6 +280,9 @@ dayView := {
 				end)
 		end),
 	declareSelf: 'dayView,
+	// moving a meeting by a2 (a point): a meeting view moves; an entry with only a
+	// start date gets its time from the new top, rounded to a quarter hour
+	// (768 is the height in pixels of the whole day's 1440 minutes)
 	viewDropMoveScript: func(a1, a2, a3, a4) begin
 		local l1, l2, l3, viewBounds, offsetRect2, l6, mtgStartDate;
 		if ((((l2 := (l1 := (if a1.realData then a1.realData else a1)).viewStationery) = 'meeting) or (l2 = 'RepeatingMeeting)) or (l2 = 'exceptionMeeting)) then begin
@@ -276,6 +302,8 @@ dayView := {
 		upDownScroller:AdjustArrows();
 		l3
 	end,
+	// lays out an overlapping group of meetings, a3 to a4: those placed by hand
+	// (with viewBounds) keep their place; the rest share what width is left
 	LayoutGroup: func(a1, a2, a3, a4, a5) begin
 		local v8_wwwwwwvvvvvvvvvvvvv, v9_xxxxxxwwwwwwwwwwwwwwwwwwwwwww, v12_jiiii, v13_zzzzzzzzzyyyyy, v14_onnnnnn, v15_zzzzzzzzzzzzzzzzzzzzyyyyyyy, v16_vvvvvvvvvvvvvvvuuuuu, v17_zzzzzzzzzzzzzzzy, v18_lkkkkk, v19_yyyyyyyyyyyyyyyyyyyyyyy, v20_yyyyyyyyyyyy, v21_yyyyyxxxxxxxxxxxxxx, v22_wvvvvvvv, v24_xxxxxxxxxxxwwwwwwwwww, v25_wwwwwwwwwwwwv, v26_uuttt;
 		v21_yyyyyxxxxxxxxxxxxxx := Array(((v25_wwwwwwwwwwwwv := (a4 - a3)) + 1), nil);
@@ -335,9 +363,10 @@ dayView := {
 	viewAddChildScript: func(aNewOne) begin
 		self:AddMeetingToDate(aNewOne, aNewOne.mtgStartDate, nil)
 	end,
+	// a tap is offered to each meeting view child (clMeetingView) until one takes it
 	viewClickScript: func(unit) begin
 		(foreach item in self:ChildViewFrames() do begin
-				if (if (item.viewClass = 95) then item:HandleUnit(11, unit)) then begin
+				if (if (item.viewClass = clMeetingView) then item:HandleUnit(11, unit)) then begin
 						break true
 					end
 			end)
@@ -345,6 +374,8 @@ dayView := {
 	viewClass: clEditView,
 	debug: 4121,
 	viewFont: tsHWFont + tsSize(12),
+	// the day's meetings (SubKids for displaydate) become the view's children,
+	// 1.x entries converted to the 2.0 layout first and overlapping ones laid out
 	viewSetupChildrenScript: func() begin
 		if (pos := LSearch(selectedDates, displaydate, 0, '|=|, nil)) then begin
 				pos := SubKids[pos]

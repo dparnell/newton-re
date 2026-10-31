@@ -1,3 +1,5 @@
-// asciiShift, and what only it reaches
+// asciiShift: magic pointer @7, a byte per Mac Roman character giving its
+// upper-case form (a-z become A-Z) - asciiBreak's
+// companion table for case-insensitive text handling.
 
 asciiShift := hexfile('table, "resources/table/63af59.txt");

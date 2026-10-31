@@ -683,3 +683,19 @@ vfInset	<<16
 vfShadow	<<18
 vfRound	<<24
 tsSize	<<10
+# system a-g: the Newton Programmer's Reference 2.0 (vfNone and the text limit oneLineOnly from the viewFormat and viewJustify tables, the gesture codes aeTap...aeLine, the font frame faces kFaceNormal...kFaceSubScript)
+vfNone	0
+oneLineOnly	0x800000
+aeScrub	13
+aeCaret	15
+aeLine	16
+aeHilite	47
+aeTap	49
+aeDoubleTap	50
+kFaceNormal	0x0
+kFaceBold	0x1
+kFaceItalic	0x2
+kFaceUnderline	0x4
+kFaceOutline	0x8
+kFaceSuperScript	0x80
+kFaceSubScript	0x100

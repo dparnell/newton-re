@@ -1,9 +1,22 @@
-// bootScriptwannabes, and what only it reaches
+// bootScriptwannabes: the boot scripts.  bootRunInitScripts runs each function
+// of this frame in turn (in slot order) once the soups exist, as the last step
+// of starting the NewtonScript side: setting up the owner and worksite cards
+// from an old user configuration, starting automatic fax, beam and call
+// reception, the battery types, the serial number check and the user's
+// preferences (locale, dictionaries, pen size).
 
 bootScriptwannabes := {
+	// upgrades the owner information: a deferred call (below) that runs once the
+	// system is up
 	PreSetupUserConfig: compile(
 		constants: {
 			kFunction_48ba25: func() begin
+				// Makes userConfiguration.personae and .emporia from the owner ('owner) and
+				// worksite cards in the Names soup.  When there are none and the configuration
+				// still has 1.x-style owner fields (name, phone, address, ...), makes an owner
+				// card from them (converted by the Names application from 'oneO to 'twoO
+				// format), and likewise a "Home" worksite card from the location fields; then
+				// makes the remembered persona and emporium current again (or the first).
 				local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12, l13, l14, l15, l16, l17;
 				l16 := {};
 				l17 := userConfiguration;
@@ -70,6 +83,7 @@ bootScriptwannabes := {
 		func() begin
 			AddDeferredCall(kFunction_48ba25, '[Array: ])
 		end),
+	// starts the fax application's automatic receiving when the user set it on
 	StartAutoFaxReceive: func() begin
 		local appSym;
 		appSym := '|FaxReceive:Newton|;
@@ -77,9 +91,13 @@ bootScriptwannabes := {
 				GetRoot().(appSym):start()
 			end, nil))
 	end,
+	// starts watching the infrared port for beams when the user set Receive
+	// automatically on (zapAutoReceive)
 	StartSniffing: func() begin
 		(if userConfiguration.zapAutoReceive then AddDeferredCall(functions.StartIRSniffing, nil))
 	end,
+	// starts automatic call receiving in the PhoneHome (call) application when it
+	// is set on and enabled
 	StartAutoCallReceive: func() begin
 		local appSym;
 		appSym := '|PhoneHome:Newton|;
@@ -87,12 +105,16 @@ bootScriptwannabes := {
 				GetRoot().(appSym):StartAutoReceive()
 			end, nil))
 	end,
+	// tells the battery driver the battery types the user chose
 	SetBatteryTypes: func() begin
 		local batteryTypes;
 		(if (batteryTypes := GetUserConfig('batteryTypes)) then (foreach item in batteryTypes do begin
 					SetBatteryType(item.whichBattery, item.batteryType)
 				end))
 	end,
+	// compares the serial number chip's value (its second long, ExtractLong at
+	// offset 4) with the internal store's signature, and warns the user when it
+	// cannot be read or does not match - the store was made on another unit or damaged
 	CheckSerialNumber: func() begin
 		local msg;
 		local extractLong2, signature;
@@ -110,9 +132,13 @@ bootScriptwannabes := {
 				msg := "This unit's serial number cannot be read."
 			end;
 		(if msg then AddDeferredCall(func() begin
+				// 3: an alert, shown at once
 				GetRoot():Notify(3, "Newton", msg)
 			end, nil))
 	end,
+	// puts the user's settings into effect: the keyboard layout, sort order,
+	// locale, pen size and the user, expand and auto-add dictionaries, the letter
+	// weights for recognition and the hardware entry
 	ReadPreferences: compile(
 		constants: {
 			kFunction_5aced1: func() begin
@@ -133,6 +159,7 @@ bootScriptwannabes := {
 				loadLetterWeights();
 				LoadHardwareEntry()
 			end,
+			// returns a function that applies script to parameters
 			kClosureMaker_5acf1d: func(script, parameters) func() begin
 					Apply(script, parameters)
 				end

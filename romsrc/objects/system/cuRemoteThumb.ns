@@ -1,11 +1,15 @@
-// cuRemoteThumb, and what only it reaches
+// cuRemoteThumb: a reduced picture of a book page - a clRemoteView (a view
+// that shows another view's drawing scaled into its own bounds) round a copy of
+// the page's form, built with stub scripts so that nothing of the page runs but
+// its drawing.  The book reader uses it for page thumbnails
+// (src/books/Pages.cpp).
 
 cuRemoteThumb := {
 	viewClass: clRemoteView,
 	viewBounds: {left: 0, top: 0, right: 60, bottom: 80},
 	viewFlags: vVisible,
 	viewJustify: 0,
-	viewFormat: 0,
+	viewFormat: vfNone,
 	protoRemotee: {
 		viewClass: clView,
 		viewFlags: vVisible,
@@ -16,6 +20,7 @@ cuRemoteThumb := {
 	},
 	viewChildren: [|Array|: ],
 	contentArea: nil,
+	// the page's scripts that must not run in a thumbnail, made to do nothing
 	protoStubby: {
 		viewSetupFormScript: func() begin
 			true
@@ -38,6 +43,9 @@ cuRemoteThumb := {
 	bookmarking: true,
 	pagesShowing: 1,
 	isbn: nil,
+	// builds the page: the stub frame over the content area, then the scripts the
+	// book gives in scripts (pairs of slot name and function), with the page's
+	// form as its children, inside two remotee views the page's size
 	viewSetupChildrenScript: func() begin
 		(copy := Clone(protoStubby))._proto := contentArea;
 		frame2 := {_proto: copy, preallocatedContext: nil, isbn: isbn, viewChildren: form};

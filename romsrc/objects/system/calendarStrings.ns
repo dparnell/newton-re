@@ -1,4 +1,6 @@
-// calendarStrings, and what only it reaches
+// calendarStrings: magic pointer @24, the phrases the Date Book builds a
+// repeating meeting's or event's description from ("Every ^0", "The ^0 ^1 of
+// every month", ...), with ParamStr filling in the days, weeks and months.
 
 calendarStrings := [|Array|:
 	everyDay,

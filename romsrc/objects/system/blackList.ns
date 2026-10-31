@@ -1,4 +1,10 @@
-// blackList, and what only it reaches
+// blackList: third-party packages known not to work with this system, or whose
+// function is now built in (magic pointer).  IsSirNotAppearingInThisROM
+// (builtinFunctions.ns) looks a package's name up here (BFetch, so the array
+// is kept sorted by packageName) - after vars.SirNotAppearingInThisROM, a list
+// a patch may add - and refuses to install or activate a package whose
+// version is at most the entry's version, telling the user the entry's message.
+// A version of 536870911, the largest integer, catches every version.
 
 blackList := [|Array|:
 	{packageName: "ActionNames&Agenda:IAMBIC", version: 19, message: @blackListGenericapology},

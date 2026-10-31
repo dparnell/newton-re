@@ -1,15 +1,21 @@
-// cribNote, and what only it reaches
+// cribNote: magic pointer @61, the view of an event in the Date Book's day view
+// - a meeting entry whose viewStationery is 'cribNote, an untimed note for the
+// day shown above the meetings.  It is a line with the event's icon (the slider
+// child) and its editable text (textView); a change to the text is saved back
+// into the meeting after a short delay.
 
 cribNote := {
 	debug: 9281,
 	_proto: cribNoteProto,
 	viewBounds: nil,
 	viewJustify: vjParentFullH + vjSiblingBottomV,
-	viewFormat: 0,
+	viewFormat: vfNone,
 	target: nil,
 	targetView: nil,
 	SliderWidth: 0,
 	transformStyle: {transform: [|Array|: 1, 1]},
+	// brings a 1.x event (version not 2) up to date in its soup first, when the
+	// store can be written, and remakes the instance of a repeating one
 	viewSetupFormScript: func() begin
 		local realData2;
 		if (realData2 := realData).repeatTemplate then begin
@@ -29,6 +35,8 @@ cribNote := {
 		viewBounds := SetBounds(2, 0, 0, cribLineSpacing);
 		inherited:viewSetupFormScript()
 	end,
+	// drops onto the event of something that is a meeting go to the day view
+	// (cribView), anything else to the event itself
 	viewFindTargetScript: func(a1) begin
 		(foreach item in a1 do begin
 				if SetContains(item.types, 'meeting) then begin
@@ -47,7 +55,7 @@ cribNote := {
 			viewFlags: vVisible + vClickable,
 			viewBounds: {left: 0, top: 0, right: 0, bottom: 12},
 			viewJustify: 0,
-			viewFormat: 0
+			viewFormat: vfNone
 		},
 		textView_2
 	],
@@ -73,7 +81,7 @@ textView_2 := {
 	viewClass: clParagraphView,
 	viewBounds: textView_2ViewBounds,
 	viewFlags: vVisible,
-	viewJustify: 8388848,
+	viewJustify: vjParentFullH + vjParentFullV + oneLineOnly,
 	textFlags: 24,
 	text: nil,
 	viewSetupFormScript: func() begin
@@ -81,6 +89,8 @@ textView_2 := {
 		self.viewFont := cribFont;
 		(self.viewLineSpacing := cribLineSpacing)
 	end,
+	// the text was edited: the change goes to the calendar half a second after the
+	// last edit (a procrastinated send), as the meeting's mtgText
 	viewChangedScript: func(slot, view) begin
 		local richString;
 		(if (slot = 'text) then begin

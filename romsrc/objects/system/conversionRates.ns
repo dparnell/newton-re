@@ -1,4 +1,6 @@
-// conversionRates, and what only it reaches
+// conversionRates: magic pointer @767, the currency exchange rates the system
+// starts with, by country symbol: what one unit of the country's currency is
+// worth in US dollars, as they were when the ROM was made.
 
 conversionRates := {
 	USA: 1,

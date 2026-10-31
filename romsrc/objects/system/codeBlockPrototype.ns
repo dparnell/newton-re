@@ -1,3 +1,5 @@
-// codeBlockPrototype, and what only it reaches
+// codeBlockPrototype: the frame the compiler clones for each function it makes
+// (gCodeBlockPrototype in src/frames/Interpreter.cpp): a CodeBlock's
+// bytecode (instructions), literals, argument frame and argument count.
 
 codeBlockPrototype := {class: 'CodeBlock, instructions: nil, literals: nil, argFrame: nil, numArgs: nil};

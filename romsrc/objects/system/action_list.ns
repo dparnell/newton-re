@@ -1,4 +1,8 @@
-// action_list, and what only it reaches
+// action_list: the Assistant's built-in actions (R-constant Raction_list) - one
+// frame per action, each an isa 'action frame with the Lexicon of words that
+// name it ("find", "fax", "print", "remember", "mail", "schedule", "call",
+// "about newton").  The Assistant's parser matches an utterance's words
+// against these (shared/frames.ns has the frames).
 
 action_list := [|Array|:
 	finding_taskPrimary_act,

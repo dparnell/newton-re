@@ -1,4 +1,8 @@
-// _knownglobalsymbols, and what only it reaches
+// _knownglobalsymbols: a short array of symbols naming NewtApp and other protos,
+// spelt with oddly restored capitals (ProToadDressPicker is protoAddressPicker,
+// NewTabOutView newtAboutView, ...; docs/curiosities.md).  It is reachable as the
+// R-constant R_knownglobalsymbols, but nothing in the C code reads it.  Symbols
+// compare without regard to case, so the spelling is harmless.
 
 _knownglobalsymbols := [|Array|:
 	'ProtoNewsHowBar,

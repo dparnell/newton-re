@@ -1,7 +1,11 @@
-// directoryConversionFrame, and what only it reaches
+// directoryConversionFrame: DataConversionRegistry's converter for the
+// systemDirectory soup (globalHeapvarwannabes.ns), found by GetConversionFrame.
 
 directoryConversionFrame := {
 	Convert: func(body, a2, a3, a4) begin
+		// Convert(body, fromVersion, toVersion, ...): drops (returns nil) a directory
+		// entry belonging to one of the built-in applications or the system, which
+		// make their own; any other entry is kept as it is
 		(if (if body.app then LSearch('[Array: calendar, cardfile, paperroll, iobox, system, systemDirectory], body.app, 0, '|=|, nil)) then return nil else return body)
 	end
 };
