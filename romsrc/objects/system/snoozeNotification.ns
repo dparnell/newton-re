@@ -9,7 +9,7 @@ snoozeNotification := {
 		timeStampField,
 		snoozeNotificationItem_2,
 		{
-			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjOneLineOnly,
+			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + oneLineOnly,
 			text: "  Snooze",
 			viewBounds: {left: 3, top: -18, right: 48, bottom: -5},
 			// viewSetupFormScript / viewQuitScript: the button is the item's default

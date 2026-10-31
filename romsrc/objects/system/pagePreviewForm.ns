@@ -20,7 +20,7 @@ pagePreviewForm := {
 // the Next button: the slip's default button
 _defaultButton_12 := {
 	viewBounds: {left: -39, top: -18, right: -8, bottom: -5},
-	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + vjOneLineOnly,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 	text: next,
 	// buttonClickScript: shows the next page (the print form's printNextPageScript)
 	// or, after the last one, closes the slip.

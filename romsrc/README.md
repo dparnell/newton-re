@@ -95,6 +95,38 @@ extractor's (a definition named after its address, each function in a
 file of its own under `functions/`, magic pointers and flags as numbers);
 the two build to the same object file byte for byte.
 
+### Comments and constants
+
+Every file opens with a paragraph on what its object is and what uses
+it, every function has a comment on when it is called, what it takes and
+what it gives back, and the logic that is not plain from the code has a
+note. These were written by reading the code beside the Newton
+Programmer's Guide and Reference (`documentation/`) and the C++
+reconstruction of the natives it calls; where nothing said what
+something is for, the comment says so rather than guess. Code that looks
+wrong is marked `looks like a ROM bug:` and left as the ROM has it (as is
+everything here: the comments change nothing that is built).
+
+- **A comment is `//`**: in a function, and between the slots of a frame
+  or array, where the object notation reads `//` but not `/* */`. Keep
+  them ASCII: a character outside it belongs in a string or a `$\uXXXX`
+  escape, and an editor that turns such an escape into the character
+  itself leaves a function that does not compile.
+- **A number is named only where Apple names it** - the Guide's and the
+  Reference's tables, the DDK headers, `src/` for the error codes - and
+  only where it is certain that it means that there (`Notify(kNotifyAlert,
+  ...)`, `viewJustify: vjParentRightH + oneLineOnly`, `opCode:
+  opSetRequired`, `repeatType: kNever`). One with no Apple name keeps its
+  number and a comment (`1440 // minutes in a day`, the Internet
+  Enabler's -60xxx errors).
+- **A constant added to `constants.tsv`** goes under a `#` line naming its
+  source, with the documented value; its name must not be a word any code
+  in the tree uses as a variable, slot or function, which the builder
+  would make that number too. `git grep -w NAME -- romsrc` first.
+- After any of it the tree must still build the same object file:
+  `romsrc.py build romsrc --relayout -o tmp/check.bin --newtonscript <exe>`
+  and compare it with `build/host/romsrc-objects.bin` built before.
+
 ## Building it
 
 **The default build builds it**: `cmake --build <build>` writes

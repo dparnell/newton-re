@@ -221,7 +221,7 @@ willDial := {
 	// the open ink conversion slip, if any
 	InkConvert: nil,
 	viewBounds: {left: 10, top: 5, right: -10, bottom: 18},
-	viewJustify: vjCenterH + vjParentFullH + vjSiblingBottomV + vjOneLineOnly,
+	viewJustify: vjCenterH + vjParentFullH + vjSiblingBottomV + oneLineOnly,
 	viewFont: tsSimple + tsSize(9),
 	viewFlags: vVisible + vClickable,
 	// as the Call Options button
@@ -354,7 +354,7 @@ _previewButton_2 := {
 // "Notes" (the button's text is the notes soup's name): the cover page's notes,
 // in notesSlip; shown only when the chosen cover page has notes
 notes := {
-	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingTopV + vjOneLineOnly,
+	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingTopV + oneLineOnly,
 	viewBounds: {left: 7, top: 0, right: 43, bottom: 13},
 	text: @paperrollSoupName,
 	// hidden unless the chosen cover page has notes
@@ -376,7 +376,7 @@ notes := {
 // user change how it is dialled
 faxAssist := {
 	viewBounds: {left: 109, top: 0, right: 160, bottom: 13},
-	viewJustify: vjCenterH + vjCenterV + vjOneLineOnly,
+	viewJustify: vjCenterH + vjCenterV + oneLineOnly,
 	// on the bottom row, 21 pixels above the bottom of the area below the envelope
 	viewSetupFormScript: func() begin
 		(viewBounds := DeepClone(viewBounds)).top := (((envelopeHeight + bottomIndent) - 19) - 2);

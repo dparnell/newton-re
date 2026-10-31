@@ -350,7 +350,7 @@ fileArea_2 := {
 
 // "New": a new folder, in folderEdit
 newFolderButton := {
-	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjOneLineOnly,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + oneLineOnly,
 	viewBounds: {left: 5, top: -18, right: 33, bottom: -5},
 	text: new_2,
 	// folderEdit opened for a new folder of the application's
@@ -365,7 +365,7 @@ newFolderButton := {
 // refused for Unfiled and for a folder that belongs only to the system's
 // group ('_System)
 editFoldersButton := {
-	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingRightH + vjOneLineOnly,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingRightH + oneLineOnly,
 	viewBounds: {left: 7, top: -18, right: 67, bottom: -5},
 	text: editFolder,
 	// (see above)
@@ -386,7 +386,7 @@ filingSlipItem := {_proto: @protoCancelButton};
 // "File", the default button (or the application's appObjectFileAction text,
 // the button widened to fit it): files the target and closes the slip
 _defaultButton_5 := {
-	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + vjOneLineOnly,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 	viewBounds: {left: -30, top: -18, right: -7, bottom: -5},
 	text: file,
 	// the application's own text, if any, the button widened to fit it

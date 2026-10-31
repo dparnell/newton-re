@@ -37,7 +37,7 @@ trailingpunctBitmapBounds := {left: 0, top: 0, right: 63, bottom: 69};
 // like): one line of handwriting-font text on gray lines
 entryLine := {
 	_proto: @protoInputLine,
-	viewJustify: vjParentFullV + vjOneLineOnly,
+	viewJustify: vjParentFullV + oneLineOnly,
 	viewFont: tsHWFont + tsSize(12),
 	viewFormat: vfLinesGray,
 	// its text changed: the parent's textChanged sent
@@ -53,7 +53,7 @@ labelLine := {
 	_proto: @protoStaticText,
 	viewFlags: vVisible + vReadOnly + vClickable,
 	viewFormat: vfRound(3),
-	viewJustify: vjOneLineOnly,
+	viewJustify: oneLineOnly,
 	// a tap: labelClick's first; else, with label commands, the popup after
 	// the pen is tracked (true: the tap taken)
 	viewClickScript: func(unit) begin
@@ -306,7 +306,7 @@ scrollers := {
 // (timeStampField)
 snoozeNotificationItem := {
 	viewFlags: vVisible + vReadOnly + vClickable,
-	viewJustify: vjParentFullH + vjOneLineOnly,
+	viewJustify: vjParentFullH + oneLineOnly,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 14},
 	viewFont: @fontSystem10Bold,
 	// $\uFC05: a character of the system font's private range (the diamond)
@@ -443,7 +443,7 @@ zoneChooserProto := {
 // the chooser's "Looking for <lookForText>..." while no names have come
 startupMsg_2Proto := {
 	_proto: @protoStaticText,
-	viewJustify: vjCenterH + vjCenterV + vjSiblingCenterH + vjSiblingCenterV + vjOneLineOnly,
+	viewJustify: vjCenterH + vjCenterV + vjSiblingCenterH + vjSiblingCenterV + oneLineOnly,
 	viewBounds: {left: 0, top: 0, right: 115, bottom: 13},
 	text: uCardPositionAlertButton,
 	// the text, and the view as wide as it, when the chooser has lookForText
@@ -677,7 +677,7 @@ showBarText := {
 		_proto: @protoTextButton,
 		viewFormat: vfFillWhite,
 		viewBounds: nil,
-		viewJustify: vjCenterH + vjParentCenterH + vjOneLineOnly,
+		viewJustify: vjCenterH + vjParentCenterH + oneLineOnly,
 		viewFont: tsSystem + tsSize(10) + tsBold,
 		text: nil,
 		width: nil,
@@ -1008,7 +1008,7 @@ lockedIcon := {
 _previewButtonProto := {
 	text: preview,
 	viewBounds: {left: 11, top: 0, right: 59, bottom: 13},
-	viewJustify: vjCenterH + vjCenterV + vjOneLineOnly,
+	viewJustify: vjCenterH + vjCenterV + oneLineOnly,
 	// 21 pixels above the bottom of the area below the envelope
 	viewSetupFormScript: func() begin
 		(viewBounds := DeepClone(viewBounds)).top := (((envelopeHeight + bottomIndent) - 19) - 2);
@@ -1827,7 +1827,7 @@ styleWriterIII := {
 // the Recognition preferences' handwriting style: this heading, the letter
 // set (LetterSetCluster) and an example of the spacing chosen (wordExample)
 label := {
-	viewJustify: vjSiblingBottomV + vjOneLineOnly,
+	viewJustify: vjSiblingBottomV + oneLineOnly,
 	viewBounds: {left: 14, top: 0, right: 224, bottom: 13},
 	text: "My handwriting style is",
 	preallocatedContext: 'label,

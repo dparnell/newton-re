@@ -240,7 +240,7 @@ _defaultButton_2 := {
 zonesButton := {
 	_proto: @protoTextButton,
 	viewBounds: {left: 7, top: -18, right: 77, bottom: -5},
-	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjOneLineOnly,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + oneLineOnly,
 	text: "Change Zone",
 	aForm: nil,
 	// buttonClickScript: hands over to the zone chooser once the lookup stops (0).
@@ -275,7 +275,7 @@ startupMsg := {_proto: startupMsg_2Proto, preallocatedContext: 'startupMsg};
 // "Zone:" and the zone's name, above the buttons
 zoneLabel := {
 	_proto: @protoStaticText,
-	viewJustify: vjParentBottomV + vjOneLineOnly,
+	viewJustify: vjParentBottomV + oneLineOnly,
 	viewBounds: {left: 10, top: -39, right: 45, bottom: -26},
 	text: "Zone:",
 	preallocatedContext: 'zoneLabel
@@ -283,7 +283,7 @@ zoneLabel := {
 
 zoneName := {
 	_proto: @protoStaticText,
-	viewJustify: vjParentBottomV + vjSiblingRightH + vjOneLineOnly,
+	viewJustify: vjParentBottomV + vjSiblingRightH + oneLineOnly,
 	viewBounds: {left: 0, top: -39, right: 180, bottom: -26},
 	text: uCardPositionAlertButton,
 	preallocatedContext: 'zoneName

@@ -1796,7 +1796,7 @@ nameInput := {
 	viewBounds: {left: 46, top: 10, right: -5, bottom: 50},
 	viewFormat: vfPen(1) + vfLinesGray + vfInset(2),
 	viewFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed,
-	viewJustify: vjParentFullH + vjOneLineOnly,
+	viewJustify: vjParentFullH + oneLineOnly,
 	viewLineSpacing: 35,
 	// the card's name; read-only (no clicks, gestures or characters, no lines) on a locked card
 	viewSetupFormScript: func() begin

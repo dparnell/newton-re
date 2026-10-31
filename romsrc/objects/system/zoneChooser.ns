@@ -78,7 +78,7 @@ zoneChooser := {
 		},
 		{
 			_proto: zoneChooserProto_2,
-			viewJustify: vjParentBottomV + vjOneLineOnly,
+			viewJustify: vjParentBottomV + oneLineOnly,
 			viewBounds: {left: 10, top: -153, right: 185, bottom: -140}
 		},
 		theTable_2,

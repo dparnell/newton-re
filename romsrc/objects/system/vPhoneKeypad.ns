@@ -23,7 +23,7 @@ vPhoneKeypad := {
 			viewChildren: [viewChildren:
 				{
 					viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
-					viewJustify: vjCenterV + vjParentFullH + vjParentFullV + vjOneLineOnly,
+					viewJustify: vjCenterV + vjParentFullH + vjParentFullV + oneLineOnly,
 					viewFont: tsSystem + tsSize(14) + tsBold,
 					firstTime: true,
 					// Called as the view is set up: becomes base.keyedDigits, showing the

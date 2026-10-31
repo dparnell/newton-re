@@ -13,7 +13,7 @@ vConfirm := {
 		{
 			_proto: @protoDefaultStatusButton,
 			viewBounds: {left: 0, top: -18, right: 132, bottom: -5},
-			viewJustify: vjCenterH + vjCenterV + vjParentCenterH + vjParentBottomV + vjOneLineOnly,
+			viewJustify: vjCenterH + vjCenterV + vjParentCenterH + vjParentBottomV + oneLineOnly,
 			// no item to make room for: protoStatusButton would otherwise move the
 			// button beside a visible shiftItem
 			shiftItem: func() begin
@@ -24,7 +24,7 @@ vConfirm := {
 			debug: 20601,
 			_proto: @protoStatusButton,
 			viewBounds: {left: 0, top: -21, right: 132, bottom: -8},
-			viewJustify: vjCenterH + vjCenterV + vjParentCenterH + vjSiblingTopV + vjOneLineOnly,
+			viewJustify: vjCenterH + vjCenterV + vjParentCenterH + vjSiblingTopV + oneLineOnly,
 			name: 'secondary,
 			// as above
 			shiftItem: func() begin

@@ -276,7 +276,7 @@ playButton := {
 };
 
 statusText := {
-	viewJustify: vjCenterV + vjParentBottomV + vjOneLineOnly,
+	viewJustify: vjCenterV + vjParentBottomV + oneLineOnly,
 	viewBounds: {top: -13, left: 7, right: 200, bottom: 0},
 	text: readyToRecord,
 	preallocatedContext: 'statusText,

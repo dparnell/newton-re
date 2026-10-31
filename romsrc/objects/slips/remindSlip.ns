@@ -82,7 +82,7 @@ remindSlip := {
 		{
 			viewFont: tsSystem + tsSize(9) + tsBold,
 			viewBounds: {left: 0, top: 3, right: 2, bottom: 20},
-			viewJustify: vjParentFullH + vjSiblingBottomV + vjOneLineOnly,
+			viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 			text: "Priority",
 			iconBounds: {left: 0, top: 0, right: 16, bottom: 16},
 			labelCommands: nil,
@@ -161,7 +161,7 @@ meetingTitle := {
 	// (the entry line's view flags, 0x4fa01: visible, clickable, and what
 	// input it takes)
 	entryFlags: 326145,
-	viewJustify: vjParentFullH + vjOneLineOnly,
+	viewJustify: vjParentFullH + oneLineOnly,
 	label: title_2,
 	memory: 'todoTitle,
 	textFlags: vFixedTextStyle + vFixedInkTextStyle,

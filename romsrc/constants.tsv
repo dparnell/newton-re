@@ -5,6 +5,10 @@
 # tsSimple, tsHWFont the families espy, New York, Geneva, Handwriting; tsSize(n);
 # the faces), then the error codes: the DDK headers' #defines and enums
 # (headers/), then the reconstruction's (src/: NewtonScript's own, frames/NSErrors.h)
+# The sections after the error codes were added by hand while the tree was commented
+# (romsrc/README.md "Comments and constants"): each under a # line naming its
+# source - the Newton Programmer's Guide and Reference 2.0 (documentation/), the DDK
+# headers, src/ - and a name only where Apple documents it, with its documented value
 vVisible	0x1
 vReadOnly	0x2
 vApplication	0x4
@@ -801,7 +805,6 @@ kDockStateRestore	3
 kDockStateLoadPackage	4
 kDockStateKeyboard	9
 # romsrc/objects/system h-z: NPG Table 3-1 (oneLineOnly), the NPR (Notify levels, Keyboard Modifier Keys), headers NewtErrors.h/NewtMemory.h
-vjOneLineOnly	0x800000
 kNoMemory	-7000
 memFullErr	-108
 # apps, recognition, views: the Newton Programmer's Reference 2.0 (Table 8-4/8-5 dictionary IDs; Notify's levels, kNotifyAlert as the ROM passes it; Gestalt's kGestalt_SystemInfo, also src/ddk/NewtonGestalt.h)

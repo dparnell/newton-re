@@ -39,7 +39,7 @@ mailRegister := {
 		},
 		{
 			viewBounds: {left: -59, top: -18, right: -7, bottom: -5},
-			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + vjOneLineOnly,
+			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 			text: "Continue",
 			// Continue: on the last page asks first that the modem be ready
 			buttonClickScript: func() begin
@@ -335,7 +335,7 @@ mailRegister := {
 
 backBtn := {
 	viewBounds: {left: -53, top: -18, right: -7, bottom: -5},
-	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + vjOneLineOnly,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 	text: "Go Back",
 	// Go Back
 	buttonClickScript: func() begin
@@ -452,7 +452,7 @@ register1 := {
 	viewChildren: [viewChildren:
 		{
 			viewBounds: {left: 0, top: 1, right: 0, bottom: 16},
-			viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjOneLineOnly,
+			viewJustify: vjCenterH + vjCenterV + vjParentFullH + oneLineOnly,
 			viewFont: @fontSystem10,
 			text: "Enter your name and phone numbers",
 			_proto: @protoStaticText
@@ -525,7 +525,7 @@ register2 := {
 	viewChildren: [viewChildren:
 		{
 			viewBounds: {left: 0, top: 1, right: 0, bottom: 16},
-			viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjOneLineOnly,
+			viewJustify: vjCenterH + vjCenterV + vjParentFullH + oneLineOnly,
 			viewFont: @fontSystem10,
 			text: "Enter your billing address",
 			_proto: @protoStaticText
@@ -589,14 +589,14 @@ register3 := {
 	viewChildren: [viewChildren:
 		{
 			viewBounds: {left: 0, top: 1, right: 0, bottom: 16},
-			viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjOneLineOnly,
+			viewJustify: vjCenterH + vjCenterV + vjParentFullH + oneLineOnly,
 			viewFont: @fontSystem10,
 			text: "Enter your billing information",
 			_proto: @protoStaticText
 		},
 		{
 			viewBounds: {left: 0, top: 6, right: 614, bottom: 22},
-			viewJustify: vjSiblingBottomV + vjOneLineOnly,
+			viewJustify: vjSiblingBottomV + oneLineOnly,
 			text: creditCard,
 			items: [|Array|: vISA, "Master", "AMEX", "DISCVR"],
 			labelCommands: [|Array|: vISA, masterCard, "American Express", discover],
@@ -644,7 +644,7 @@ register4 := {
 	viewChildren: [viewChildren:
 		{
 			viewBounds: {left: 0, top: 1, right: 0, bottom: 16},
-			viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjOneLineOnly,
+			viewJustify: vjCenterH + vjCenterV + vjParentFullH + oneLineOnly,
 			viewFont: @fontSystem10,
 			text: "Enter your certificate information",
 			_proto: @protoStaticText
@@ -689,7 +689,7 @@ register5 := {
 	viewChildren: [viewChildren:
 		{
 			viewBounds: {left: 0, top: 1, right: 0, bottom: 16},
-			viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjOneLineOnly,
+			viewJustify: vjCenterH + vjCenterV + vjParentFullH + oneLineOnly,
 			viewFont: @fontSystem10,
 			text: "Enter your account information",
 			_proto: @protoStaticText

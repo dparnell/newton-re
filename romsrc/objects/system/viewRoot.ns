@@ -4759,7 +4759,7 @@ none_3 := "none";
 
 // Handwriting practice (handwritingpractice): the line naming the word to write.
 writeTheWord := {
-	viewJustify: vjSiblingBottomV + vjOneLineOnly,
+	viewJustify: vjSiblingBottomV + oneLineOnly,
 	viewBounds: {left: 7, top: 5, right: 217, bottom: 17},
 	// Fills in the text as the view opens.
 	viewSetupFormScript: func() begin
@@ -4829,7 +4829,7 @@ metrics := {
 	debug: 4641,
 	preallocatedContext: 'metrics,
 	wordMatchedHeading: {
-		viewJustify: vjRightH + vjSiblingBottomV + vjOneLineOnly,
+		viewJustify: vjRightH + vjSiblingBottomV + oneLineOnly,
 		viewBounds: {left: 7, top: 0, right: 90, bottom: 12},
 		text: wordMatched,
 		_proto: @protoStaticText
@@ -4844,7 +4844,7 @@ metrics := {
 // Handwriting practice: the picker of what to practise; a choice sets the input field's recognition
 // flags and the generator of the next word (randomProc, a method of handwritingpractice).
 practiceselection := {
-	viewJustify: vjSiblingBottomV + vjOneLineOnly,
+	viewJustify: vjSiblingBottomV + oneLineOnly,
 	viewBounds: {left: 7, top: 15, right: 227, bottom: 31},
 	// the input field's viewFlags, before a choice's recognition flags are added
 	baseFlags: vVisible + vClickable + vGesturesAllowed,
@@ -5271,7 +5271,7 @@ _defaultButton_20 := {
 	_proto: @protoTextButton,
 	viewBounds: {left: -49, top: -18, right: -11, bottom: -5},
 	viewFlags: vReadOnly + vClickable,
-	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + vjOneLineOnly,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 	text: "Topics",
 	// Shows the outline of topics and hides itself.
 	buttonClickScript: func() begin
@@ -5519,7 +5519,7 @@ findInput := {
 // The Find slip's date label: the date choice made; a tap opens the date picker.
 findDate := {
 	viewFlags: vVisible + vReadOnly + vClickable,
-	viewJustify: vjCenterV + vjSiblingTopV + vjOneLineOnly,
+	viewJustify: vjCenterV + vjSiblingTopV + oneLineOnly,
 	viewFont: tsSystem + tsSize(9) + tsBold,
 	viewFormat: vfRound(4),
 	viewBounds: {left: 8, top: 42, right: 88, bottom: 55},
@@ -5643,7 +5643,7 @@ radioCluster := {
 // The Find slip's Find button: finds in the scope chosen.
 _defaultButton_23 := {
 	viewBounds: {left: -33, top: 0, right: -7, bottom: 13},
-	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingTopV + vjOneLineOnly,
+	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingTopV + oneLineOnly,
 	text: find,
 	// Finds in the scope chosen (the slip's findButton).
 	buttonClickScript: func() begin
@@ -5656,7 +5656,7 @@ _defaultButton_23 := {
 
 // The Find slip's status line.
 findStatus := {
-	viewJustify: vjCenterH + vjParentFullH + vjParentBottomV + vjOneLineOnly,
+	viewJustify: vjCenterH + vjParentFullH + vjParentBottomV + oneLineOnly,
 	viewBounds: {left: 0, top: -95, right: 0, bottom: -82},
 	debug: 32865,
 	preallocatedContext: 'findStatus,
@@ -7516,7 +7516,7 @@ AutoAdd := {
 		{_proto: @protoCancelButton},
 		{
 			viewBounds: {left: -33, top: -18, right: -7, bottom: -5},
-			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + vjOneLineOnly,
+			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 			text: add,
 			// "Add": keeps the selected word in the word list; a capitalised word (not all
 			// caps) first asks whether it should always be capitalised - no keeps it in lower case.
@@ -7568,7 +7568,7 @@ AutoAdd := {
 		},
 		{
 			viewBounds: {left: -64, top: -18, right: -7, bottom: -5},
-			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + vjOneLineOnly,
+			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 			text: "Don't Add",
 			// "Don't Add": takes the selected word off the recent list and out of the
 			// user's word list; closes the slip when no word is left.
@@ -8624,7 +8624,7 @@ callapp := {
 		if (not message.notes) then begin
 				message.notes := [Array: ]
 			end;
-		(copy := Clone('{viewStationery: para, viewFont: tsFancy + tsSize(10) + tsBold, text: nil, viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjOneLineOnly, viewFormat: vfFillWhite + vfFrameBlack + vfPen(2), viewBounds: nil, copyprotection: 2, viewFlags: vVisible + vWriteProtected, viewLineSpacing: 14})).text := text;
+		(copy := Clone('{viewStationery: para, viewFont: tsFancy + tsSize(10) + tsBold, text: nil, viewJustify: vjCenterH + vjCenterV + vjParentFullH + oneLineOnly, viewFormat: vfFillWhite + vfFrameBlack + vfPen(2), viewBounds: nil, copyprotection: 2, viewFlags: vVisible + vWriteProtected, viewLineSpacing: 14})).text := text;
 		// below the notes: 16 pixels down for a call still to be placed ('ready), else 8
 		copy.viewBounds := RelBounds(0, (bottom + (if (message.state = 'ready) then 16 else 8)), 1, (FontHeight(tsFancy + tsSize(10) + tsBold) + 2));
 		AddArraySlot(message.notes, copy);
@@ -9355,7 +9355,7 @@ findDrawer := {
 		findDate,
 		{
 			viewBounds: {left: 15, top: -35, right: 59, bottom: -22},
-			viewJustify: vjParentBottomV + vjOneLineOnly,
+			viewJustify: vjParentBottomV + oneLineOnly,
 			text: where_2,
 			_proto: @protoStaticText
 		},
@@ -10485,7 +10485,7 @@ handwritingpractice := {
 		end,
 		viewChildren: [|Array|:
 			{
-				viewJustify: vjRightH + vjSiblingBottomV + vjOneLineOnly,
+				viewJustify: vjRightH + vjSiblingBottomV + oneLineOnly,
 				viewBounds: {left: 0, top: 0, right: 90, bottom: 10},
 				// The word, bold when it is the requested one.
 				viewSetupFormScript: func() begin
@@ -10500,7 +10500,7 @@ handwritingpractice := {
 				_proto: @protoStaticText
 			},
 			{
-				viewJustify: vjSiblingCenterV + vjOneLineOnly,
+				viewJustify: vjSiblingCenterV + oneLineOnly,
 				viewBounds: {left: 100, top: 0, right: 130, bottom: 10},
 				// The score as a percentage (the recognizer's value: lower is better, capped at 1000).
 				viewSetupFormScript: func() begin
@@ -10781,7 +10781,7 @@ manualDialingForm := {
 	viewChildren: [viewChildren:
 		{
 			debug: 43078,
-			viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjOneLineOnly,
+			viewJustify: vjCenterH + vjCenterV + vjParentFullH + oneLineOnly,
 			viewBounds: {left: 0, top: 0, right: 0, bottom: 16},
 			text: nil,
 			// The slip's title as its heading.
@@ -10803,7 +10803,7 @@ manualDialingForm := {
 		{_proto: @protoCancelButton},
 		{
 			viewBounds: {left: -30, top: -18, right: -7, bottom: -5},
-			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + vjOneLineOnly,
+			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 			text: fax,
 			// Fax: calls deferredFax with the request, then closes.
 			buttonClickScript: func() begin
@@ -11072,7 +11072,7 @@ printProblem := {
 		},
 		{
 			viewBounds: {left: -37, top: -18, right: -7, bottom: -5},
-			viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV + vjOneLineOnly,
+			viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV + oneLineOnly,
 			text: stop,
 			// Stop: the user gave up.
 			buttonClickScript: func() begin

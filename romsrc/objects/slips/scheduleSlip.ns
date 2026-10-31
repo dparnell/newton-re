@@ -143,7 +143,7 @@ scheduleSlip := {
 		// range below; hidden for a meeting
 		{
 			debug: 143920,
-			viewJustify: vjBottomV + vjOneLineOnly,
+			viewJustify: vjBottomV + oneLineOnly,
 			viewBounds: nil,
 			viewFont: tsSystem + tsSize(9) + tsBold,
 			text: thisMeetingOccursOn,
@@ -158,7 +158,7 @@ scheduleSlip := {
 		},
 		{
 			debug: 1392176,
-			viewJustify: vjBottomV + vjOneLineOnly,
+			viewJustify: vjBottomV + oneLineOnly,
 			viewBounds: nil,
 			viewFont: tsSystem + tsSize(9) + tsBold,
 			text: "This recurring event occurs between:",

@@ -36,7 +36,7 @@ printSlip := {
 // the "Printer" picker
 printChoose := {
 	viewBounds: {left: 40, top: 55, right: -10, bottom: 71},
-	viewJustify: vjParentFullH + vjOneLineOnly,
+	viewJustify: vjParentFullH + oneLineOnly,
 	preallocatedContext: 'printChoose,
 	_proto: @printerChooserButton
 };
