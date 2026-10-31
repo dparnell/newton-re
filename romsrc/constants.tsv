@@ -705,3 +705,10 @@ aeLine	16
 aeHilite	47
 aeTap	49
 aeDoubleTap	50
+# keyboard modifiers (_keyCommands, key scripts): the Newton Programmer's Guide 2.0, "Keyboard Modifier Keys"
+kIsSoftKeyboard	0x1000000
+kCommandModifier	0x2000000
+kShiftModifier	0x4000000
+kCapsLockModifier	0x8000000
+kOptionsModifier	0x10000000
+kControlModifier	0x20000000
