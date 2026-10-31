@@ -1,13 +1,20 @@
-// usPhoneFilter, and what only it reaches
+// usPhoneFilter: the US locale's phone template for the protoCharEdit
+// corrector (GetLocale().phoneFilter): the fixed "555-1212" comb
+// (usStdPhoneFilter) or any format (usDefaultPhoneFilter).
 
 usPhoneFilter := {
 	item: "usPhoneFilter",
 	templateArray: [|Array|: @usStdPhoneFilter, @usDefaultPhoneFilter],
 	digits: digits,
+	// Starts on the format the word is in.
 	Init: func(currentWord) begin
 		local parse;
 		self:SetTemplate((parse := self:Parse(currentWord)))
 	end,
+	// Splits currentWord into an area code, exchange and number (code, num1,
+	// num2, which usStdPhoneFilter's SetupString then uses); the fixed format
+	// fits if it is nothing but digits in at most three groups of at most 3, 3
+	// and 4 digits.
 	Parse: func(currentWord) begin
 		local l1, len, l3, scanNextWord2, scanWordEnd2, len2, len3, len4;
 		l1 := @usDefaultPhoneFilter;
@@ -41,6 +48,7 @@ usPhoneFilter := {
 					end
 			end;
 		if l3 then begin
+				// fewer than three groups: shift them right (done twice for one group)
 				if (not num2) then begin
 						num2 := num1;
 						num1 := code;
@@ -69,20 +77,23 @@ usPhoneFilter := {
 			end;
 		return l1
 	end,
+	// The user chose format index: the fixed one only if the word fits it.
 	switch: func(index, wordForDisplay) begin
 		local templateArrayItem;
 		if (if ((templateArrayItem := templateArray[index]) = @usStdPhoneFilter) then (self:Parse(wordForDisplay) <> @usStdPhoneFilter)) then begin
-				self:Notify(3, "Corrector", "Sorry, unable to switch to the requested format");
+				self:Notify(kNotifyAlert, "Corrector", "Sorry, unable to switch to the requested format");
 				return nil
 			end;
 		self:SetTemplate(templateArrayItem)
 	end,
+	// SetupString, CleanupString: the current format's, if it has them.
 	SetupString: func(currentWord) begin
 		(if HasPath(curTemplate, 'SetupString) then curTemplate:SetupString(self, currentWord) else currentWord)
 	end,
 	CleanupString: func(currentWord) begin
 		(if HasPath(curTemplate, 'CleanupString) then curTemplate:CleanupString(currentWord) else currentWord)
 	end,
+	// Makes a format current, copying its comb slots.
 	SetTemplate: func(templateArrayItem) begin
 		self.format := templateArrayItem.format;
 		self.string := templateArrayItem.string;

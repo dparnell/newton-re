@@ -1,3 +1,4 @@
-// ukPhoneFilter, and what only it reaches
+// ukPhoneFilter: the UK locale's phone template for the protoCharEdit
+// corrector: any format, as usDefaultPhoneFilter.
 
 ukPhoneFilter := {_proto: @usDefaultPhoneFilter};

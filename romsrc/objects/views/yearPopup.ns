@@ -1,4 +1,6 @@
-// yearPopup, and what only it reaches
+// yearPopup: protoYearPopup, a pop-up that sets a year (protoYearPicker).
+// Opened by :New(year, bbox, context) (this year by default); tells the
+// context newYear(year) as it changes and DoneYear(year) when closed.
 
 yearPopup := {
 	viewBounds: {left: 0, top: 0, right: 104, bottom: 32},
@@ -10,9 +12,11 @@ yearPopup := {
 		init.value := (if a1 then a1 else Date(Time()).year);
 		init:popup(a2)
 	end,
+	// ClickDone: the picker changed the year.
 	ClickDone: func() begin
 		context:?newYear(value)
 	end,
+	// The close box.
 	Affirmative: func() begin
 		context:?DoneYear(value)
 	end,

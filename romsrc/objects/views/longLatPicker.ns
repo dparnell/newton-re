@@ -1,4 +1,8 @@
-// longLatPicker, and what only it reaches
+// longLatPicker: a pop-up with a latitude and a longitude picker. Opened by
+// :New(longitude, latitude, worldClock, bbox, context): with worldClock set
+// the values are in the World Clock's units and are converted
+// (protoLongitudePicker ConvertFromWC/ConvertToWC). It calls
+// context:pickActionScript(longitude, latitude) when closed.
 
 longLatPicker := {
 	viewBounds: {left: 0, top: 0, right: 170, bottom: 68},
@@ -19,10 +23,13 @@ longLatPicker := {
 		init.context := a5;
 		init:popup(a4)
 	end,
+	// Gives the pickers their values.
 	viewSetupFormScript: func() begin
 		lat.value := latitude;
 		(long.value := longitude)
 	end,
+	// The close box: hands the values (converted back when worldClock) to the
+	// context.
 	Affirmative: func() begin
 		(if worldClock then context:?pickActionScript(@protoLongitudePicker:ConvertToWC(long.value), @protoLongitudePicker:ConvertToWC(lat.value)) else context:?pickActionScript(long.value, lat.value))
 	end,

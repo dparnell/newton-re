@@ -1,19 +1,24 @@
-// datePopup, and what only it reaches
+// datePopup: protoDatePopup, a pop-up that lets the user choose a date
+// (protoDateNYearPicker). Opened by :New(dates, bbox, context), dates an
+// array of times; it calls context:pickActionScript(selectedDates) when
+// closed. A date without a year (kYearMissing) gets no year picker.
 
 datePopup := {
 	viewBounds: {left: 0, top: 0, right: 135, bottom: 156},
 	viewJustify: 0,
 	selectedDates: nil,
 	dates: nil,
+	// Opens the popup; a date without a year makes it shorter.
 	New: func(a1, a2, a3) begin
 		local init, l2;
 		(init := self:Init()).context := a3;
 		init.dates := a1;
-		if (Date((l2 := (if a1 then a1 else [Array: Time()]))[0]).year = 2920) then begin
+		if (Date((l2 := (if a1 then a1 else [Array: Time()]))[0]).year = kYearMissing) then begin
 				init.viewBounds := RelBounds(0, 0, 135, 128)
 			end;
 		init:popup(a2)
 	end,
+	// The close box: hands the selected dates to the context.
 	Affirmative: func() begin
 		context:?pickActionScript(picker.selectedDates)
 	end,
@@ -26,10 +31,11 @@ datePopup := {
 picker := {
 	viewBounds: {left: 2, top: 2, right: -2, bottom: -18},
 	viewJustify: vjParentFullH + vjParentFullV,
+	// Shows the dates; with no year, the calendar takes the whole picker.
 	viewSetupFormScript: func() begin
 		selectedDates := dates;
 		inherited:viewSetupFormScript();
-		(if (Date(selectedDates[0]).year = 2920) then (calendar.viewBounds := SetBounds(0, 0, 0, -2)))
+		(if (Date(selectedDates[0]).year = kYearMissing) then (calendar.viewBounds := SetBounds(0, 0, 0, -2)))
 	end,
 	preallocatedContext: 'picker,
 	_proto: @protoDateNYearPicker

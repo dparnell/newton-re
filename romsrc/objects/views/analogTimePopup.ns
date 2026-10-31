@@ -1,10 +1,17 @@
-// analogTimePopup, and what only it reaches
+// analogTimePopup: protoAnalogTimePopup (Newton Programmer's Reference,
+// "Date, Time, and Location Pop-up Views"), a pop-up that sets a time on an
+// analog clock (protoNewSetClock) with AM/PM buttons. Opened by
+// :New(time, increment, bbox, context) (the New it shares with the other
+// time popups); it tells context NewTime(time) as the time changes and
+// pickActionScript(time) when the user closes it.
 
 analogTimePopup := {
 	viewBounds: {left: 0, top: 0, right: 116, bottom: 138},
 	Time: nil,
 	increment: 1,
 	New: New,
+	// The clock moved: keeps the AM/PM buttons in step with the hour and tells
+	// the context.
 	TimeChanged: func() begin
 		if (setter.hours >= 12) then begin
 				if (ampmButtons.clusterValue = 'morningStr) then begin
@@ -17,6 +24,7 @@ analogTimePopup := {
 			end;
 		context:?NewTime(Time)
 	end,
+	// The close box: hands the time to the context.
 	Affirmative: func() begin
 		context:?pickActionScript(Time)
 	end,
@@ -32,6 +40,7 @@ setter := {
 	viewJustify: vjFullH + vjFullV,
 	viewFormat: 0,
 	quantize: 5,
+	// The clock steps by the popup's increment (minutes).
 	viewSetupFormScript: func() begin
 		quantize := increment;
 		inherited:viewSetupFormScript()

@@ -1,3 +1,4 @@
-// usDefaultPhoneFilter, and what only it reaches
+// usDefaultPhoneFilter: the corrector's "any format" phone template: no comb,
+// accepting digits and the characters of phone numbers.
 
 usDefaultPhoneFilter := {item: anyFormat, filters: [|Array|: "0123456789*#x()+-,."]};

@@ -694,3 +694,7 @@ kNumbersOnlyDictionary	117
 kMoneyOnlyDictionary	118
 kNotifyAlert	3
 kGestalt_SystemInfo	0x1000003
+# Dates and time (calendar, the date and time popups): the Newton Programmer's Guide 2.0, chapter 19 "Built-in Applications and System Data", Summary
+kForever	0x1fffffff
+kMaxyear	2919
+kYearMissing	2920

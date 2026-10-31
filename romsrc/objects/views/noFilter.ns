@@ -1,3 +1,4 @@
-// noFilter, and what only it reaches
+// noFilter: the protoCharEdit corrector template that accepts anything, in
+// several words.
 
 noFilter := {item: "Any", _MultiWord: true};

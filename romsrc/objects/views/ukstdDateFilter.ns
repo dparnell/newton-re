@@ -1,3 +1,4 @@
-// ukstdDateFilter, and what only it reaches
+// ukstdDateFilter: the UK fixed date format "dd/mm/yy": usStdDateFilter with
+// the day and month swapped (offsets: where month, day and year go).
 
 ukstdDateFilter := {_proto: @usStdDateFilter, item: "dd/mm/yy", format: "20_10_00", offsets: [|Array|: 3, 0, 6]};

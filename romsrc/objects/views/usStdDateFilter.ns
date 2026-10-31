@@ -1,4 +1,6 @@
-// usStdDateFilter, and what only it reaches
+// usStdDateFilter: the US fixed date format "mm/dd/yy" for the protoCharEdit
+// corrector. format gives each cell's filter (an index into filters, "_"
+// for a fixed cell); offsets says where in the comb month, day and year go.
 
 usStdDateFilter := {
 	item: "mm/dd/yy",
@@ -6,6 +8,8 @@ usStdDateFilter := {
 	|string|: string,
 	filters: [|Array|: digits, usStdDateFilterItem, "0123"],
 	offsets: [|Array|: 0, 3, 6],
+	// Lays the date currentWord reads as into the comb (a year of kYearMissing,
+	// meaning none, is left blank).
 	SetupString: func(currentWord) begin
 		local copy, stringToDateFrame2;
 		copy := Clone("  /  /  ");
@@ -13,12 +17,14 @@ usStdDateFilter := {
 		if (if (if (stringToDateFrame2 := StringToDateFrame(currentWord)) then (stringToDateFrame2.status >= 0)) then ((stringToDateFrame2.month or stringToDateFrame2.Date) or stringToDateFrame2.year)) then begin
 				DateMunger(copy, stringToDateFrame2.month, offsets[0]);
 				DateMunger(copy, stringToDateFrame2.Date, offsets[1]);
-				if (stringToDateFrame2.year < 2920) then begin
+				if (stringToDateFrame2.year < kYearMissing) then begin
 						DateMunger(copy, stringToDateFrame2.year, offsets[2])
 					end
 			end;
 		return copy
 	end,
+	// Turns the comb's text back into a date string: leading zeros of the
+	// month and day go, as do empty parts and the padding.
 	CleanupString: func(currentWord) begin
 		if (currentWord[3] = $0) then begin
 				currentWord[3] := $ ;
@@ -36,6 +42,8 @@ usStdDateFilter := {
 		StrReplace(currentWord, "/  ", "", nil);
 		return (currentWord := StringFilter(currentWord, " ", 'rejectAll))
 	end,
+	// Whether _proto (the word) reads as a date with at least two of month, day
+	// and year.
 	IsValid: func(_proto) begin
 		local copy, stringToDateFrame2, l3;
 		StrReplace((copy := Clone(_proto)), " ", "", nil);

@@ -1,4 +1,8 @@
-// mapPopup, and what only it reaches
+// mapPopup: a pop-up holding a worldPicker (a map to tap on). Opened by
+// :New(params, bbox, context): params' slots are copied into the picker
+// (spots, zoomer, filter and so on). It calls
+// context:pickActionScript(place.(result)) - the place's name by default -
+// as soon as a place is picked.
 
 mapPopup := {
 	viewBounds: {left: 0, top: 0, right: 200, bottom: 100},
@@ -15,11 +19,13 @@ mapPopup := {
 		{
 			viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
 			viewJustify: vjParentFullH + vjParentFullV,
+			// Takes the caller's params as its own slots.
 			viewSetupFormScript: func() begin
 				(if params then (foreach key, value in params do begin
 							self.(key) := value
 						end))
 			end,
+			// A place was picked: hands it (or its result slot) to the context.
 			PickWorld: func(place) begin
 				context:?pickActionScript((if result then place.(result) else place))
 			end,

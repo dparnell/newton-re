@@ -1,4 +1,9 @@
-// locationPopup, and what only it reaches
+// locationPopup: protoLocationPopup, a pop-up holding a locationPicker.
+// Opened by :New(params, bbox, context): params.spots the location soup
+// (cities by default), .default the place to start at, .result the slot of
+// the picked entry to return, .nameBased to list by name only. It calls
+// context:pickActionScript(entry or its result slot), or
+// pickCancelledScript if nothing was picked.
 
 locationPopup := {
 	viewBounds: {left: 0, top: 0, right: 140, bottom: 198},
@@ -8,6 +13,7 @@ locationPopup := {
 	initialSpot: nil,
 	result: nil,
 	returnSlot: nil,
+	// Opens the popup with the params above.
 	New: func(a1, a2, a3) begin
 		local init;
 		(init := self:Init()).context := a3;
@@ -23,11 +29,13 @@ locationPopup := {
 			end;
 		init:popup(a2)
 	end,
+	// The close box: hands the pick to the context.
 	Affirmative: func() begin
 		(if result then context:?pickActionScript((if returnSlot then result.(returnSlot) else result)) else context:?pickCancelledScript())
 	end,
 	viewChildren: [|Array|:
 		picker_2,
+		// a close box that counts as closing, not cancelling
 		{
 			viewBounds: {left: -20, top: -20, right: -7, bottom: -7},
 			buttonClickScript: func() begin

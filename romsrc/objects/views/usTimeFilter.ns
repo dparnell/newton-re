@@ -1,10 +1,13 @@
-// usTimeFilter, and what only it reaches
+// usTimeFilter: the US time template for the protoCharEdit corrector
+// (GetLocale().timeFilter): an "HH:MM AM" comb.
 
 usTimeFilter := {
 	item: time,
 	|string|: "        ",
 	format: format,
 	filters: [|Array|: digits, usStdDateFilterItem, "012", "012345", "aApP"],
+	// The comb's text: the word's time (or now) as hours and minutes, with a
+	// leading zero.
 	SetupString: func(currentWord) begin
 		local stringToTime2;
 		if (not (stringToTime2 := StringToTime(currentWord))) then begin
@@ -15,6 +18,8 @@ usTimeFilter := {
 			end;
 		return currentWord
 	end,
+	// The comb's text read back as a time, in the system's format ("" if it
+	// is no time).
 	CleanupString: func(currentWord) begin
 		local stringToTime2;
 		(currentWord := (if (stringToTime2 := StringToTime(currentWord)) then HourMinute(stringToTime2) else ""))

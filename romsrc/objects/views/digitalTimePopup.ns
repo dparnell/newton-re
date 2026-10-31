@@ -1,11 +1,15 @@
-// digitalTimePopup, and what only it reaches
+// digitalTimePopup: protoTimePopup, a pop-up that sets a time on a digital
+// clock (protoDigitalClock). Opened by :New(time, increment, bbox, context);
+// it tells the context NewTime(time) and pickActionScript(time) when closed.
 
 digitalTimePopup := {
 	viewBounds: {left: 0, top: 0, right: 135, bottom: 32},
 	New: New,
+	// The clock changed: tell the context.
 	TimeChanged: func() begin
 		context:?NewTime(Time)
 	end,
+	// The close box: hands the time to the context.
 	Affirmative: func() begin
 		context:?pickActionScript(Time)
 	end,

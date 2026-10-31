@@ -1,12 +1,17 @@
-// rubricPopup, and what only it reaches
+// rubricPopup: a pop-up with a message and a QWERTY keypad on which the user
+// picks one key (a letter or digit), shown beside the message. Opened by
+// :New(message, key, bbox, context); calls context:pickActionScript(key)
+// when closed.
 
 rubricPopup := {
 	viewBounds: {left: 0, top: 0, right: 210, bottom: 128},
 	message: nil,
 	returnKey: nil,
+	// The close box: hands the key to the context.
 	Affirmative: func() begin
 		context:?pickActionScript(returnKey)
 	end,
+	// Opens the popup: a1 the message, a2 the key shown first.
 	New: func(a1, a2, a3, a4) begin
 		local init;
 		(init := self:Init()).context := a4;
@@ -14,11 +19,12 @@ rubricPopup := {
 		init.returnKey := a2;
 		init:popup(a3)
 	end,
+	// Draws the message and, in large handwriting, the key chosen.
 	viewDrawScript: func() begin
 		local box;
 		(box := self:LocalBox()).left := (box.left + 5);
 		box.right := (box.right - 30);
-		self:DrawShape([Array: MakeTextLines(message, box, nil, 1058816), '{font: tsHWFont + tsSize(18)}, MakeText(Stringer([Array: returnKey, $ ]), box.right, 5, (box.right + 20), 22)], '{font: tsSystem + tsSize(10) + tsBold})
+		self:DrawShape([Array: MakeTextLines(message, box, nil, tsSystem + tsSize(10) + tsBold), '{font: tsHWFont + tsSize(18)}, MakeText(Stringer([Array: returnKey, $ ]), box.right, 5, (box.right + 20), 22)], '{font: tsSystem + tsSize(10) + tsBold})
 	end,
 	stepChildren: [stepChildren:
 		{
@@ -27,6 +33,10 @@ rubricPopup := {
 			viewFormat: 0,
 			click: @typewriter,
 			keyResultsAreKeycodes: nil,
+			// keyDefinitions (NPG "The Key Definitions Array"): each row is its height
+			// and its tallest key's height, then per key its legend (nil: show the
+			// result), its result and its key descriptor; the keys with neither at the
+			// starts of the last two rows are blank spacers that indent them
 			keyDefinitions: [|Array|:
 				[|Array|:
 					8,
@@ -159,6 +169,7 @@ rubricPopup := {
 					279971848
 				]
 			],
+			// A key: becomes the chosen key.
 			keyPressScript: func(char2) begin
 				returnKey := char2;
 				base:Dirty();

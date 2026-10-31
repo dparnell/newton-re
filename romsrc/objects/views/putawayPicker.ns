@@ -1,4 +1,8 @@
-// putawayPicker, and what only it reaches
+// putawayPicker: the In Box's "Put Away" slip: it says which application the
+// item (or the selected items, when theItem is a cursor) will be put away to,
+// lets the user choose another of theApps when there are several, and offers
+// to delete it from the In Box. The Put Away button calls the In Box's
+// DoPutAway.
 
 putawayPicker := {
 	viewBounds: {left: 0, top: 0, right: 200, bottom: 85},
@@ -7,11 +11,13 @@ putawayPicker := {
 	theItem: nil,
 	theAppToRun: nil,
 	labels: nil,
+	// Takes the keys (for the default button).
 	viewSetupFormScript: func() begin
 		SetKeyView(self, 0);
 		inherited:?viewSetupFormScript()
 	end,
 	viewChildren: [viewChildren:
+		// close box: closed through the In Box when it is open (RememberedClose)
 		{
 			buttonClickScript: func() begin
 				(if GetRoot().iobox.viewCObject then AddDeferredSend(GetRoot().iobox, 'RememberedClose, [Array: base]) else base:Close())
@@ -19,6 +25,7 @@ putawayPicker := {
 			_proto: @protoCancelButton
 		},
 		_defaultButton_11,
+		// the label, as wide as its text
 		{
 			viewBounds: {left: 10, top: 22, right: 10, bottom: 38},
 			viewJustify: 8388608,
@@ -33,6 +40,7 @@ putawayPicker := {
 			end,
 			_proto: @protoStaticText
 		},
+		// the application to put away to; a popup of theApps when there are several
 		{
 			viewBounds: {left: 0, top: 21, right: 0, bottom: 37},
 			viewFormat: 0,
@@ -76,6 +84,7 @@ putawayPicker := {
 			end,
 			_proto: @protoPopInPlace
 		},
+		// "Delete from inbox", kept in the In Box's deleteAfterPutaway
 		{
 			viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
 			viewBounds: {left: 10, top: 6, right: 10, bottom: 22},
@@ -96,6 +105,8 @@ putawayPicker := {
 	_proto: @protoFloater
 };
 
+// the Put Away button: puts the item away to the chosen application and closes
+// the slip
 _defaultButton_11 := {
 	viewBounds: {left: -63, top: 0, right: -7, bottom: 13},
 	viewJustify: 8407046,

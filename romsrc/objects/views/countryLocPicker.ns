@@ -1,4 +1,5 @@
-// countryLocPicker, and what only it reaches
+// countryLocPicker: a locationPicker of countries, whose pick is passed on to
+// the view's PickWorld (as a worldPicker's is); stateLocPicker protos from it.
 
 countryLocPicker := {
 	_proto: @locationPicker,
@@ -6,6 +7,7 @@ countryLocPicker := {
 	countryAndName: nil,
 	result: nil,
 	initialSpot: nil,
+	// A country was picked: tell the view.
 	SetResult: func(entry) begin
 		self:?PickWorld(entry)
 	end

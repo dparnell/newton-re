@@ -1,3 +1,4 @@
-// statePicker, and what only it reaches
+// statePicker: a worldPicker of the US states, zoomed in on North America,
+// offering at most 8 within 500 (map units) of the tap.
 
 statePicker := {_proto: @worldPicker, spots: @usStateSoupName, radius: 500, listLimit: 8, zoomer: 'northAmerica};

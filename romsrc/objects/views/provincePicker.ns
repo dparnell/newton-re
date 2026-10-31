@@ -1,4 +1,5 @@
-// provincePicker, and what only it reaches
+// provincePicker: a worldPicker of the Canadian provinces, zoomed in on North
+// America, offering at most 8 within 500 (map units) of the tap.
 
 provincePicker := {
 	_proto: @worldPicker,

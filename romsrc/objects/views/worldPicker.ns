@@ -1,16 +1,25 @@
-// worldPicker, and what only it reaches
+// worldPicker: a map of the world (or of a continent, zoomer) that the user
+// taps to choose a place: it pops up the places of the location soup
+// (spots) closest to the tap and calls PickWorld(place) with the one picked.
+// countryPicker, statePicker, provincePicker and mapPopup are made from it.
 
 worldPicker := {
+	// the most places offered, and how far from the tap (in map units) they may
+	// be
 	listLimit: 10,
 	slot: nil,
 	srcRect: srcRect,
 	shape: nil,
 	mapPict: @worldMapBitmap,
 	shift: 0,
+	// a continent of continents (or 'srcRect for the srcRect given) to zoom the
+	// map to, nil for the whole world
 	zoomer: nil,
 	viewFlags: vVisible + vClipping + vClickable,
 	list: nil,
 	viewBounds: nil,
+	// shortCircuit: pick at once when only one place is near; autoClose: close
+	// the base view after a pick; PickWorld: the method a pick is sent to
 	shortCircuit: nil,
 	pictRect: srcRect,
 	filter: nil,
@@ -22,6 +31,9 @@ worldPicker := {
 	viewClass: clView,
 	dstRect: nil,
 	worldRect: srcRect,
+	// Makes the map shape: the source rectangle (the continent's longitudes and
+	// latitudes in map coordinates, wrapped round when it crosses the date line)
+	// widened to the view's proportions and scaled to the view.
 	viewSetupChildrenScript: func() begin
 		local l1, l2, l3, l4, l5, l6, l7, l8, l9, shape2;
 		dstRect := self:LocalBox();
@@ -58,6 +70,9 @@ worldPicker := {
 		shape2 := MakeShape(mapPict);
 		(shape := OffsetShape(ScaleShape((if l1 then [Array: shape2, OffsetShape(MakeShape(mapPict), worldRect.right, 0)] else shape2), srcRect, dstRect), 0, 0))
 	end,
+	// A tap: after the pen lifts, finds the places nearest the point in map
+	// coordinates (each with its region added) and pops them up (or picks the
+	// only one).
 	viewClickScript: func(unit) begin
 		InkOff(unit);
 		playsound(@click);
@@ -83,6 +98,7 @@ worldPicker := {
 							end
 					end)
 			end else begin
+				// nothing near: an item with no place, which picks nothing
 				AddArraySlot(list, {item: "Middle of Nowhere"})
 			end;
 		if (if shortCircuit then (count = 1)) then begin
@@ -92,9 +108,11 @@ worldPicker := {
 			end;
 		true
 	end,
+	// Draws the map.
 	viewDrawScript: func() begin
 		self:DrawShape(shape, '{font: tsSystem + tsSize(9) + tsBold, fillPattern: 5, transferMode: 0, penPattern: 0})
 	end,
+	// A place was picked from the popup: tell PickWorld.
 	pickActionScript: func(index) begin
 		if list[index].place then begin
 				self:?PickWorld(list[index].place)
@@ -104,6 +122,7 @@ worldPicker := {
 	end
 };
 
+// the map's coordinates: 360 by 179, a unit a degree
 srcRect := {left: 0, top: 0, right: 360, bottom: 179};
 
 // what the functions above hold and share with other objects (same(): romsrc/README.md)
