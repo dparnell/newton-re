@@ -104,7 +104,7 @@ export75 := {
 export75Item := {
 	text: nil,
 	viewBounds: {left: 5, top: 25, right: 200, bottom: 37},
-	viewJustify: 8388608,
+	viewJustify: oneLineOnly,
 	_proto: @protoStaticText,
 	preAllocatedContext: 'SlipTitle
 };
@@ -112,7 +112,7 @@ export75Item := {
 export75Item_2 := {
 	text: nil,
 	viewBounds: {left: 10, top: 3, right: 168, bottom: 15},
-	viewJustify: 8398848,
+	viewJustify: vjSiblingLeftH + vjSiblingBottomV + oneLineOnly,
 	_proto: @protoStaticText,
 	preAllocatedContext: 'fileName
 };
@@ -120,7 +120,7 @@ export75Item_2 := {
 export75Item_3 := {
 	text: nil,
 	viewBounds: {left: 5, top: 5, right: 185, bottom: 17},
-	viewJustify: 8396800,
+	viewJustify: vjSiblingBottomV + oneLineOnly,
 	_proto: @protoStaticText,
 	preAllocatedContext: 'AppListTitle
 };
@@ -156,7 +156,7 @@ export75Item_4 := {
 export75Item_5 := {
 	text: nil,
 	viewBounds: {left: 5, top: 10, right: 185, bottom: 26},
-	viewJustify: 8396800,
+	viewJustify: vjSiblingBottomV + oneLineOnly,
 	_proto: @protoStaticText,
 	preAllocatedContext: 'DatesTitle
 };
@@ -193,7 +193,7 @@ export75Item_7 := {
 	viewBounds: {left: 10, top: 7, right: 185, bottom: 23},
 	pickItems: nil,
 	labelCommands: nil,
-	viewJustify: 8396800,
+	viewJustify: vjSiblingBottomV + oneLineOnly,
 	textChanged: func() begin
 		(fResults.Conflicts := self.entryLine.text)
 	end,
@@ -213,7 +213,7 @@ export75Item_8 := {
 	end,
 	text: nil,
 	viewBounds: {top: -18, left: -74, right: -26, bottom: -5},
-	viewJustify: 8388774,
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV + oneLineOnly,
 	viewSetupFormScript: func() begin
 		local l1;
 		l1 := (StrFontWidth(self.text, self.viewFont) + kMatteSize);

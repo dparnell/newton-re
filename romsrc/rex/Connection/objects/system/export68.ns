@@ -79,7 +79,7 @@ export68 := {
 export68Item := {
 	text: export85Item_3Text,
 	viewBounds: {left: 0, top: 10, right: 172, bottom: 22},
-	viewJustify: 8388626,
+	viewJustify: vjCenterH + vjParentCenterH + oneLineOnly,
 	viewSetupDoneScript: func() begin
 		(if (not config.title) then self:Hide())
 	end,
@@ -114,7 +114,7 @@ export68Item_4 := {
 	end,
 	text: export85Item_3Text,
 	viewBounds: {top: -18, left: -60, right: -7, bottom: -5},
-	viewJustify: 8390790,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 	viewSetupFormScript: func() begin
 		self:SetTextBounds(self)
 	end,
@@ -131,7 +131,7 @@ export68Item_5 := {
 	end,
 	text: export85Item_3Text,
 	viewBounds: {top: -18, left: -60, right: -7, bottom: -5},
-	viewJustify: 8390790,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 	viewSetupFormScript: func() begin
 		self:SetTextBounds(self)
 	end,
@@ -148,7 +148,7 @@ export68Item_6 := {
 	end,
 	text: export85Item_3Text,
 	viewBounds: {top: -18, left: -60, right: -7, bottom: -5},
-	viewJustify: 8390790,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 	viewSetupFormScript: func() begin
 		self:SetTextBounds(self)
 	end,

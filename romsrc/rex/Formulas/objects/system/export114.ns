@@ -195,7 +195,7 @@ gallons := "Gallons";
 measurement := {
 	labelCommands: [|Array|: "Length", "Area", "Weight", "U.S. Liquid", "British Liquid", "Temperature"],
 	viewBounds: {left: 5, top: 15, right: 220, bottom: 35},
-	viewJustify: 8396928,
+	viewJustify: vjParentBottomV + vjSiblingBottomV + oneLineOnly,
 	text: "Measurement",
 	indent: 110,
 	viewFont: @fontSystem10Bold,

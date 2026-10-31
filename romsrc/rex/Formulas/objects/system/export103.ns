@@ -130,7 +130,7 @@ export103Item := {
 				end;
 			(if part then return Stringer([Array: part, passAll]) else return passAll)
 		end),
-	viewJustify: 8388848,
+	viewJustify: vjParentFullH + vjParentFullV + oneLineOnly,
 	dictionaries: [|Array|: 117],
 	ViewRawInkScript: func(a1) begin
 		AddProcrastinatedSend('OnlyNumbersAllowed, self, 'OnlyNumbersAllowed, nil, 500);

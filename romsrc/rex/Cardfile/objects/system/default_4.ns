@@ -44,7 +44,7 @@ default_4 := {
 				@locationPopup:new({default: city2}, box, self);
 				nil
 			end,
-			viewJustify: 8396976,
+			viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV + oneLineOnly,
 			textSetup: func() begin
 				local city;
 				(if (if target.cityAlias then (city := appBase:GetCity(target))) then city.name)

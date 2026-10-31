@@ -683,3 +683,5 @@ vfInset	<<16
 vfShadow	<<18
 vfRound	<<24
 tsSize	<<10
+# Cardfile, Connection, FaxViewer, Formulas: the Newton Programmer's Reference 2.0 (viewJustify, "Text limits")
+oneLineOnly	0x800000

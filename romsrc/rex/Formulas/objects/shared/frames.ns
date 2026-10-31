@@ -12,7 +12,7 @@ clear := {
 	end,
 	text: "Clear",
 	viewBounds: {top: -16, left: 0, right: 60, bottom: -5},
-	viewJustify: 8388758,
+	viewJustify: vjCenterH + vjCenterV + vjParentCenterH + vjParentBottomV + oneLineOnly,
 	viewSetupFormScript: func() begin
 		(viewBounds := Clone(viewBounds)).bottom := -5;
 		viewBounds.top := (viewBounds.bottom - 13);

@@ -1220,7 +1220,7 @@ ConnectionItem_4 := {
 			end)
 	end,
 	viewBounds: {top: 0, left: -54, right: -7, bottom: 0},
-	viewJustify: 8403142,
+	viewJustify: vjCenterH + vjCenterV + vjParentFullV + vjSiblingLeftH + vjSiblingFullV + oneLineOnly,
 	StartConnection: compile(
 		constants: {
 			kROM_8269: @8269
@@ -1265,7 +1265,7 @@ ConnectionItem_6 := {
 		(if options.buttonClickScript then call options.buttonClickScript with (options))
 	end,
 	viewBounds: {left: -133, top: -18, right: -79, bottom: -5},
-	viewJustify: 8388774,
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV + oneLineOnly,
 	setup: func(a1) begin
 		local button, copy;
 		if a1 then begin

@@ -7,7 +7,7 @@ export66 := {
 		{
 			text: information,
 			viewBounds: {left: 7, top: 6, right: 179, bottom: 18},
-			viewJustify: 8396800,
+			viewJustify: vjSiblingBottomV + oneLineOnly,
 			viewFont: @fontSystem10Bold,
 			_proto: @protoStaticText
 		},
@@ -23,7 +23,7 @@ export66 := {
 			end,
 			text: all,
 			viewBounds: {left: 0, top: 7, right: 36, bottom: 20},
-			viewJustify: 8398854,
+			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingBottomV + oneLineOnly,
 			_proto: @protoTextButton
 		},
 		export66Item_2,
@@ -53,7 +53,7 @@ export66 := {
 			end,
 			text: restore,
 			viewBounds: {left: -54, top: 0, right: -7, bottom: 13},
-			viewJustify: 8407046,
+			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingTopV + oneLineOnly,
 			_proto: @protoTextButton
 		}
 	],
@@ -174,7 +174,7 @@ export66Item := {
 		self:InitializeTextList(self, restoreOptions.applications);
 		inherited:?viewSetupFormScript()
 	end,
-	viewJustify: 8396816,
+	viewJustify: vjParentCenterH + vjSiblingBottomV + oneLineOnly,
 	useScrollers: true,
 	useMultipleSelections: true,
 	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2),
@@ -185,7 +185,7 @@ export66Item := {
 export66Item_2 := {
 	text: packages,
 	viewBounds: {left: 7, top: 8, right: 79, bottom: 20},
-	viewJustify: 8396800,
+	viewJustify: vjSiblingBottomV + oneLineOnly,
 	viewFont: @fontSystem10Bold,
 	SetupViewflags: func() begin
 		(if (Length(restoreOptions.packages) = 0) then (self.viewFlags := (viewFlags - 1)))
@@ -203,7 +203,7 @@ export66Item_3 := {
 		self:InitializeTextList(self, restoreOptions.packages);
 		inherited:?viewSetupFormScript()
 	end,
-	viewJustify: 8396816,
+	viewJustify: vjParentCenterH + vjSiblingBottomV + oneLineOnly,
 	useScrollers: true,
 	useMultipleSelections: true,
 	selectedItems: nil,
@@ -227,7 +227,7 @@ export66Item_4 := {
 	end,
 	text: all,
 	viewBounds: {left: 0, top: 7, right: 36, bottom: 20},
-	viewJustify: 8398854,
+	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingBottomV + oneLineOnly,
 	SetupViewflags: func() begin
 		(if (Length(restoreOptions.packages) = 0) then (self.viewFlags := (viewFlags - 1)))
 	end,
@@ -239,7 +239,7 @@ export66Item_5 := {
 	viewBounds: {left: 0, top: 5, right: 184, bottom: 21},
 	viewFlags: vVisible,
 	viewFormat: 0,
-	viewJustify: 8396816,
+	viewJustify: vjParentCenterH + vjSiblingBottomV + oneLineOnly,
 	stepChildren: [stepChildren: restoreTo, export66Item_5Item],
 	SetupViewflags: func() begin
 		(if (if (not (restoreOptions.storeType = 0)) then ((not restoreOptions.stores) or (Length(GetStores()) = 1))) then (self.viewFlags := BAnd(viewFlags, -2)))
@@ -302,7 +302,7 @@ export66Item_5 := {
 restoreTo := {
 	text: "ﰁ Restore to",
 	viewBounds: {left: 0, top: 0, right: 50, bottom: 0},
-	viewJustify: 8388806,
+	viewJustify: vjCenterH + vjCenterV + vjParentFullV + oneLineOnly,
 	viewSetupFormScript: func() begin
 		(self.viewBounds := SetBounds(0, 0, StdButtonWidth(text), 0))
 	end,
@@ -335,7 +335,7 @@ restoreTo := {
 export66Item_5Item := {
 	text: export85Item_3Text,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
-	viewJustify: 8388852,
+	viewJustify: vjCenterV + vjParentFullH + vjParentFullV + oneLineOnly,
 	viewSetupFormScript: func() begin
 		self.viewBounds := SetBounds(picker:LocalBox().right, 0, 0, 0);
 		(self.text := LFetch(popup, selectedStore, 0, '|=|, 'store).item)

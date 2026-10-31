@@ -3,7 +3,7 @@
 export113 := {
 	text: changeMe,
 	viewBounds: {top: 0, left: 10, right: -10, bottom: 16},
-	viewJustify: 8396976,
+	viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV + oneLineOnly,
 	viewFont: @fontSystem10Bold,
 	viewSetupFormScript: func() begin
 		(self.text := Stringer([Array: "\u2022\u", " ", text]))

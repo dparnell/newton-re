@@ -210,7 +210,7 @@ export70 := {
 		{
 			text: nil,
 			viewBounds: {left: 5, top: 9, right: 170, bottom: 21},
-			viewJustify: 8396800,
+			viewJustify: vjSiblingBottomV + oneLineOnly,
 			viewSetupFormScript: func() begin
 				(self.text := labels[1])
 			end,
@@ -220,7 +220,7 @@ export70 := {
 		{
 			text: "File Name:",
 			viewBounds: {left: 15, top: 7, right: 162, bottom: 19},
-			viewJustify: 8396800,
+			viewJustify: vjSiblingBottomV + oneLineOnly,
 			_proto: @protoStaticText
 		},
 		export70Item,
@@ -229,7 +229,7 @@ export70 := {
 		{
 			text: "Directories:",
 			viewBounds: {top: -13, left: 15, right: 162, bottom: 0},
-			viewJustify: 8404992,
+			viewJustify: vjSiblingTopV + oneLineOnly,
 			_proto: @protoStaticText
 		},
 		{
@@ -329,7 +329,7 @@ export70 := {
 						AddDeferredSend(GetRoot().Connection, 'HandleException, [Array: error, endpoint])
 					end)
 			end,
-			viewJustify: 8396800,
+			viewJustify: vjSiblingBottomV + oneLineOnly,
 			textChanged: func() begin
 				self:SetFontForEntryLine(entryLine)
 			end,
@@ -464,7 +464,7 @@ export70Item_2 := {
 export70Item_3 := {
 	text: nil,
 	viewBounds: {top: -15, left: 15, right: 162, bottom: -3},
-	viewJustify: 8404992,
+	viewJustify: vjSiblingTopV + oneLineOnly,
 	viewSetupFormScript: func() begin
 		self:UpdateDirectoryText()
 	end,
@@ -500,7 +500,7 @@ export70Item_4 := {
 				end))
 	end,
 	viewBounds: {top: -18, left: -47, right: -7, bottom: -5},
-	viewJustify: 8390790,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 	viewSetupFormScript: func() begin
 		self.text := labels[2];
 		(self.viewBounds := SetBounds(((viewBounds.right - StrWidth(text)) - 7), viewBounds.top, viewBounds.right, viewBounds.bottom))
@@ -526,7 +526,7 @@ export70Item_5 := {
 				end))
 	end,
 	viewBounds: {left: -53, top: -18, right: -7, bottom: -5},
-	viewJustify: 8390790,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 	viewSetupDoneScript: func() begin
 		self:Hide();
 		inherited:?viewSetupDoneScript()

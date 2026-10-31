@@ -196,7 +196,7 @@ export69 := {
 		{
 			text: nil,
 			viewBounds: {left: 5, top: 8, right: 200, bottom: 20},
-			viewJustify: 8396800,
+			viewJustify: vjSiblingBottomV + oneLineOnly,
 			viewSetupFormScript: func() begin
 				(self.text := labels[1])
 			end,
@@ -291,7 +291,7 @@ export69Item := {
 		(copy := Clone(entryLine.viewBounds)).right := self:LocalBox().right;
 		return copy
 	end,
-	viewJustify: 8396824,
+	viewJustify: vjBottomV + vjParentCenterH + vjSiblingBottomV + oneLineOnly,
 	checkCurrentItem: nil,
 	savedViewBounds: nil,
 	labelCommands: nil,
@@ -395,7 +395,7 @@ export69Item_3 := {
 				end))
 	end,
 	viewBounds: {top: -18, left: -47, right: -7, bottom: -5},
-	viewJustify: 8390790,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 	viewSetupFormScript: func() begin
 		self.text := labels[2];
 		(self.viewBounds := SetBounds(((viewBounds.right - StrWidth(text)) - 7), viewBounds.top, viewBounds.right, viewBounds.bottom))
@@ -426,7 +426,7 @@ export69Item_4 := {
 				end))
 	end,
 	viewBounds: {left: -51, top: -18, right: -7, bottom: -5},
-	viewJustify: 8390790,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 	viewSetupDoneScript: func() begin
 		self:Hide();
 		inherited:?viewSetupDoneScript()

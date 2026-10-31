@@ -50,7 +50,7 @@ export85 := {
 					end)
 			end,
 			viewBounds: {left: -54, top: -18, right: -7, bottom: -5},
-			viewJustify: 8390790,
+			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 			_proto: @protoTextButton
 		},
 		export85Item_2,
@@ -125,7 +125,7 @@ export85Item := {
 export85ItemItem := {
 	text: willDial,
 	viewBounds: {left: 0, top: -32, right: 0, bottom: 0},
-	viewJustify: 8388790,
+	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjParentBottomV + oneLineOnly,
 	viewFont: tsSimple + tsSize(9),
 	viewSetupFormScript: func() begin
 		(self.text := Stringer([Array: "Will dial: ", " ", self:GetPhone()]))
@@ -160,7 +160,7 @@ export85Item_3 := {
 		(if options.buttonClickScript then call options.buttonClickScript with (options))
 	end,
 	viewBounds: {left: -133, top: -18, right: -79, bottom: -5},
-	viewJustify: 8388774,
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV + oneLineOnly,
 	viewSetupFormScript: func() begin
 		local copy;
 		(if options.button then begin

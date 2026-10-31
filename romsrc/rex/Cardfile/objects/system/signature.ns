@@ -9,7 +9,7 @@ signature := {
 		signatureItem,
 		{
 			viewBounds: {left: 0, top: 0, right: 10, bottom: 0},
-			viewJustify: 8402948,
+			viewJustify: vjCenterV + vjSiblingLeftH + vjSiblingFullV + oneLineOnly,
 			text: "X",
 			viewFont: tsSimple + tsSize(12) + tsBold,
 			_proto: @protoStaticText

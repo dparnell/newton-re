@@ -42,7 +42,7 @@ default_3 := {
 				local symbol2;
 				(if (peoplePicker.dataClass <> (symbol2 := labelCommands[index].symbol)) then peoplePicker:ChangeDataClass(symbol2))
 			end,
-			viewJustify: 8396976,
+			viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV + oneLineOnly,
 			viewBounds: {left: 0, top: 6, right: 0, bottom: 30},
 			text: "Group Type",
 			_proto: @protoLabelPicker

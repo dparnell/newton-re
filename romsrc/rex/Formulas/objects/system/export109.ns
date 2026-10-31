@@ -67,7 +67,7 @@ export109Item_2 := {
 	text: staticText,
 	viewBounds: {left: 22, top: 0, right: 110, bottom: 20},
 	viewFont: @fontSystem10Bold,
-	viewJustify: 8396928,
+	viewJustify: vjParentBottomV + vjSiblingBottomV + oneLineOnly,
 	RestyleString: func() begin
 		local copy, l2;
 		l2 := ((copy := Clone(viewBounds)).right - copy.left);

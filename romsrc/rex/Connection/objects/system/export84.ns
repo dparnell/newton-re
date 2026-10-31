@@ -139,7 +139,7 @@ export84 := {
 
 name := {
 	viewBounds: {left: 3, top: 10, right: -3, bottom: 55},
-	viewJustify: 8396848,
+	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 	label: "Name",
 	memory: nil,
 	labelActionScript: func(index) begin
@@ -269,7 +269,7 @@ name := {
 
 password := {
 	viewBounds: {left: 3, top: 10, right: -3, bottom: 55},
-	viewJustify: 8396848,
+	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 	label: "Password",
 	viewLineSpacing: 32,
 	indent: nil,
@@ -299,7 +299,7 @@ export84Item_2 := {
 	end,
 	text: nil,
 	viewBounds: {left: -100, top: 0, right: -6, bottom: 0},
-	viewJustify: 8402950,
+	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV + oneLineOnly,
 	viewSetupFormScript: func() begin
 		self.text := configOptions.buttonTitle;
 		(self.viewBounds := {left: (((-StrWidth(text)) - 6) - 7), top: 0, right: -7, bottom: 0})

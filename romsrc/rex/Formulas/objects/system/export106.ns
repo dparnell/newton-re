@@ -12,7 +12,7 @@ export106 := {
 			end,
 			text: "x12",
 			viewBounds: {left: -26, top: 15, right: -3, bottom: 26},
-			viewJustify: 8389638,
+			viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + oneLineOnly,
 			_proto: @protoTextButton
 		}
 	],

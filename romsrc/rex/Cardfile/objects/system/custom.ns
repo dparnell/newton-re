@@ -9,7 +9,7 @@ custom := {
 		editCustomLabels,
 		{
 			viewBounds: {left: 0, top: 0, right: 0, bottom: 7},
-			viewJustify: 8396848,
+			viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 			viewFlags: vVisible,
 			viewFormat: nil,
 			viewClass: clView
@@ -127,7 +127,7 @@ editCustomLabels := {
 	end,
 	text: "Edit Custom Labels",
 	viewBounds: {left: 0, top: 7, right: 99, bottom: 20},
-	viewJustify: 8396822,
+	viewJustify: vjCenterH + vjCenterV + vjParentCenterH + vjSiblingBottomV + oneLineOnly,
 	_proto: @protoTextButton,
 	preAllocatedContext: 'gotoCustomEditor
 };

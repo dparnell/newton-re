@@ -11,7 +11,7 @@ export81 := {
 		{
 			text: "Select a translator for",
 			viewBounds: {left: 10, top: 6, right: 200, bottom: 18},
-			viewJustify: 8396800,
+			viewJustify: vjSiblingBottomV + oneLineOnly,
 			viewFont: @fontSystem10Bold,
 			_proto: @protoStaticText
 		},
@@ -36,7 +36,7 @@ export81 := {
 				base:Close()
 			end,
 			viewBounds: {top: -18, left: -47, right: -9, bottom: -5},
-			viewJustify: 8390790,
+			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 			_proto: @protoTextButton
 		}
 	],
@@ -75,7 +75,7 @@ export81 := {
 export81Item := {
 	text: nil,
 	viewBounds: {left: 20, top: 3, right: 200, bottom: 16},
-	viewJustify: 8396800,
+	viewJustify: vjSiblingBottomV + oneLineOnly,
 	_proto: @protoStaticText,
 	preAllocatedContext: 'translateFileName
 };

@@ -34,7 +34,7 @@ emailStepChildren := [stepChildren:
 	setEMailPassword,
 	{
 		viewBounds: {left: 0, top: 0, right: 0, bottom: 8},
-		viewJustify: 8396848,
+		viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 		viewFlags: vVisible,
 		viewFormat: nil,
 		viewClass: clView
@@ -72,7 +72,7 @@ setEMailPassword := {
 		appBase:RememberedOpen(context)
 	end,
 	text: "Set E-Mail Password",
-	viewJustify: 8396822,
+	viewJustify: vjCenterH + vjCenterV + vjParentCenterH + vjSiblingBottomV + oneLineOnly,
 	addPath: 'emailPassword,
 	setpasswordslip: @8229,
 	_proto: @protoTextButton,

@@ -48,7 +48,7 @@ restart := {
 		ReBoot()
 	end,
 	viewBounds: {left: -54, top: -18, right: -7, bottom: -5},
-	viewJustify: 8388774,
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV + oneLineOnly,
 	_proto: @protoTextButton,
 	preAllocatedContext: '_defaultButton
 };

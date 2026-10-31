@@ -97,7 +97,7 @@ network := {
 		labelCommands := GetDialinNetworkSlot('title);
 		inherited:?viewSetupFormScript()
 	end,
-	viewJustify: 8396848,
+	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 	addPath: 'mailNetwork,
 	path: nil,
 	_proto: @protoLabelPicker,
@@ -156,7 +156,7 @@ baudRate := {
 			end;
 		item2
 	end,
-	viewJustify: 8396848,
+	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 	viewSetupFormScript: func() begin
 		labelCommands := [Array: ];
 		(for i := 0 to (Length(BaudTypes.baudRates) - 1) do begin

@@ -10,7 +10,7 @@ customEdit := {
 		{
 			text: "Custom Field Labels",
 			viewBounds: {left: 0, top: 0, right: 0, bottom: 20},
-			viewJustify: 8388658,
+			viewJustify: vjCenterH + vjParentFullH + oneLineOnly,
 			_proto: @protoStaticText
 		},
 		{

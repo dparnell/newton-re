@@ -700,7 +700,7 @@ export62ItemItem_2 := {
 export62Item_2 := {
 	text: nil,
 	viewBounds: {left: 0, top: 9, right: 42, bottom: 22},
-	viewJustify: 8396800,
+	viewJustify: vjSiblingBottomV + oneLineOnly,
 	viewFont: tsSimple + tsSize(9),
 	_proto: @protoStaticText,
 	preAllocatedContext: 'connWillDialLabel

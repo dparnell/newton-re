@@ -152,7 +152,7 @@ partItem := {
 	viewBounds: {left: 0, top: 90, right: 250, bottom: 120},
 	viewFlags: vReadOnly,
 	viewFont: tsSystem + tsSize(24) + tsBold,
-	viewJustify: 8388630,
+	viewJustify: vjCenterH + vjCenterV + vjParentCenterH + oneLineOnly,
 	_proto: @protoStaticText,
 	preAllocatedContext: 'nodata
 };
@@ -189,7 +189,7 @@ partItem_3 := {
 	viewBounds: {left: 0, top: 90, right: 180, bottom: 120},
 	viewFlags: vReadOnly,
 	viewFont: tsSystem + tsSize(10) + tsBold,
-	viewJustify: 8388630,
+	viewJustify: vjCenterH + vjCenterV + vjParentCenterH + oneLineOnly,
 	_proto: @protoStaticText,
 	preAllocatedContext: 'nodata
 };
@@ -228,7 +228,7 @@ partItem_4 := {
 
 pageOf := {
 	viewBounds: {left: 0, top: 0, right: 74, bottom: 17},
-	viewJustify: 8388678,
+	viewJustify: vjCenterH + vjCenterV + vjParentCenterV + oneLineOnly,
 	Update: func(scalingInfo) begin
 		SetValue(self, 'text, ParamStr("^0 ^1 of ^2", [Array: "\uFC01\u", scalingInfo, Length(target.pages)]))
 	end,
@@ -421,7 +421,7 @@ tools := {
 			GetVariable(imageContainer, 'ImageTarget):SetAnnotationMode('Show)
 		end
 	},
-	viewJustify: 8388710,
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentCenterV + oneLineOnly,
 	popItem_Reduce: {
 		item: "Reduce Fax",
 		doit: func(imageContainer) begin

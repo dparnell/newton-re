@@ -129,7 +129,7 @@ default := {
 			viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
 			viewLineSpacing: 32,
 			label: extension,
-			viewJustify: 8396848,
+			viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 			entryFlags: 264705,
 			textChanged: func() begin
 				(changed := true)

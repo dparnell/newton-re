@@ -12,20 +12,20 @@ export71 := {
 			viewSetupFormScript: func() begin
 				(text := Clone(fileName))
 			end,
-			viewJustify: 8393728,
+			viewJustify: vjSiblingRightH + vjSiblingCenterV + oneLineOnly,
 			_proto: @protoStaticText
 		},
 		{
 			text: "Kind",
 			viewBounds: {left: 10, top: 74, right: 57, bottom: 86},
-			viewJustify: 8388609,
+			viewJustify: vjRightH + oneLineOnly,
 			_proto: @protoStaticText
 		},
 		{
 			text: nil,
 			viewBounds: {left: 5, top: 0, right: 140, bottom: 12},
 			viewFont: tsSimple + tsSize(9),
-			viewJustify: 8406016,
+			viewJustify: vjSiblingRightH + vjSiblingTopV + oneLineOnly,
 			viewSetupFormScript: func() begin
 				(if fileInfo.kind then (text := fileInfo.kind) else (text := "Unknown"))
 			end,
@@ -34,14 +34,14 @@ export71 := {
 		{
 			text: "Size",
 			viewBounds: {left: 10, top: 1, right: 57, bottom: 13},
-			viewJustify: 8396801,
+			viewJustify: vjRightH + vjSiblingBottomV + oneLineOnly,
 			_proto: @protoStaticText
 		},
 		{
 			text: nil,
 			viewBounds: {left: 5, top: 0, right: 140, bottom: 12},
 			viewFont: tsSimple + tsSize(9),
-			viewJustify: 8406016,
+			viewJustify: vjSiblingRightH + vjSiblingTopV + oneLineOnly,
 			viewSetupFormScript: func() begin
 				(if fileInfo.size then (text := NumberStr(fileInfo.size)) else (text := "Unknown"))
 			end,
@@ -50,14 +50,14 @@ export71 := {
 		{
 			text: "Modified",
 			viewBounds: {left: 10, top: 1, right: 57, bottom: 13},
-			viewJustify: 8396801,
+			viewJustify: vjRightH + vjSiblingBottomV + oneLineOnly,
 			_proto: @protoStaticText
 		},
 		{
 			text: nil,
 			viewBounds: {left: 5, top: 0, right: 140, bottom: 12},
 			viewFont: tsSimple + tsSize(9),
-			viewJustify: 8406016,
+			viewJustify: vjSiblingRightH + vjSiblingTopV + oneLineOnly,
 			viewSetupFormScript: func() begin
 				(if fileInfo.modified then (text := DateNTime(fileInfo.modified)) else (text := "Unknown"))
 			end,

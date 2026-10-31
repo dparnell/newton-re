@@ -1892,7 +1892,7 @@ cardfile := {
 						(if text then SetValue(self, 'text, Stringer([Array: text, " "])))
 					end)
 			end,
-			kLiteral_742cd5: {_proto: @protoStaticText, viewBounds: '{left: -54, top: 5, right: -3, bottom: 21}, viewJustify: 8388645, viewFont: tsSystem + tsSize(10) + tsBold, viewFormat: vfFillBlack, viewTransferMode: 3, viewSetupDoneScript: kFunction_742d55, viewQuitScript: kFunction_742db9, RetargetNotify: kFunction_742e0d}
+			kLiteral_742cd5: {_proto: @protoStaticText, viewBounds: '{left: -54, top: 5, right: -3, bottom: 21}, viewJustify: vjRightH + vjCenterV + vjParentRightH + oneLineOnly, viewFont: tsSystem + tsSize(10) + tsBold, viewFormat: vfFillBlack, viewTransferMode: 3, viewSetupDoneScript: kFunction_742d55, viewQuitScript: kFunction_742db9, RetargetNotify: kFunction_742e0d}
 		},
 		func() begin
 			stepChildren := theChildren;
@@ -1900,7 +1900,7 @@ cardfile := {
 					if IsReadOnly(stepChildren) then begin
 							stepChildren := Clone(stepChildren)
 						end;
-					ArrayMunger(stepChildren, 0, 1, [Array: '{_proto: @protoStaticText, text: " Owner Info", viewBounds: {left: 0, top: 5, right: 0, bottom: 21}, viewJustify: 8388660, viewFont: @fontSystem10Bold, viewFormat: vfFillBlack, viewTransferMode: 3}, kLiteral_742cd5], 0, nil)
+					ArrayMunger(stepChildren, 0, 1, [Array: '{_proto: @protoStaticText, text: " Owner Info", viewBounds: {left: 0, top: 5, right: 0, bottom: 21}, viewJustify: vjCenterV + vjParentFullH + oneLineOnly, viewFont: @fontSystem10Bold, viewFormat: vfFillBlack, viewTransferMode: 3}, kLiteral_742cd5], 0, nil)
 				end;
 			if (not allLayouts.(currentLayout)) then begin
 					currentLayout := (previousLayout := 'default)
