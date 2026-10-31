@@ -1,19 +1,32 @@
-// eraseSlip, and what only it reaches
+// eraseSlip (magic pointer 574), and what only it reaches: the slip the Backup
+// slip (backupSlip, its godParent) opens to erase a card, made by
+// eraseSlip:New(backupSlip, store).  It shows the card slot's icon and offers
+// three choices - the entire card, its backup only, or its information only -
+// confirms with ModalConfirm, and then calls the method of the same name
+// (eraseStore, wipeBackup, wipeInfo) after the click, which closes the slip and
+// asks godParent to do the erasing.
 
 eraseSlip := {
+	// the card slot of the store being erased (its icon in CardSlotIcons)
 	slot: nil,
 	viewQuitScript: func() begin
 		(godParent.openEraseSlip := nil)
 	end,
+	// the card slot's icon: the strip's image for the screen's orientation
 	viewDrawScript: func() begin
 		DrawXBitmap(iconBounds, icon, screenOrientation, 0)
 	end,
 	viewChildren: [viewChildren:
 		{_proto: @protoCancelButton},
+		// "Erase"
 		{
 			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV,
 			viewBounds: {left: -41, top: 0, right: -7, bottom: 0},
 			text: erase,
+			// value: the slip's method named by the chosen radio button; the store
+			// is named by its name, or its kind when it has none; nothing done
+			// unless the user confirms, and the method is called deferred with
+			// (the slip, godParent, the store)
 			buttonClickScript: func() begin
 				local value, name, l3;
 				value := GetVariable(self:Parent(), eraseTypeCluster.clusterValue);
@@ -42,6 +55,8 @@ eraseSlip := {
 	viewBounds: {left: 0, top: 0, right: 210, bottom: 100},
 	store: nil,
 	allocateContext: [|Array|: 'eraseTypeCluster, eraseTypeCluster],
+	// "Information only": (the slip, godParent, the store) - the slip closed,
+	// then godParent:wipeInfo(store)
 	wipeInfo: func(a1, a2, a3) begin
 		a1:Close();
 		a2:wipeInfo(a3)
@@ -50,21 +65,29 @@ eraseSlip := {
 	screenOrientation: nil,
 	viewJustify: vjParentCenterH + vjParentCenterV,
 	icon: nil,
+	// eraseSlip:New(godParent, store): the slip built and opened as a modal
+	// dialog (FilterDialog)
 	New: func(a1, a2) begin
 		local context;
 		(context := BuildContext(self)).godParent := a1;
 		context.store := a2;
 		context:FilterDialog()
 	end,
+	// what each choice erases, for the confirmation's text
 	eraseStrs: {
 		eraseStore: "all the information and packages",
 		wipeInfo: "all the information",
 		wipeBackup: "all the backup information"
 	},
+	// "Backup only": the slip closed, then godParent:wipeBackup(store)
 	wipeBackup: func(a1, a2, a3) begin
 		a1:Close();
 		a2:wipeBackup(a3)
 	end,
+	// registers the slip with godParent, finds the card slot's icon and where
+	// to draw it - a quarter of the bitmap's width: the icon is a strip of
+	// four images, of which DrawXBitmap draws the one for the screen's
+	// orientation - and takes the keys
 	viewSetupFormScript: func() begin
 		godParent.openEraseSlip := self;
 		self.slot := store:CardSlot();
@@ -74,6 +97,9 @@ eraseSlip := {
 		SetKeyView(self, 0)
 	end,
 	godParent: nil,
+	// "Entire card": the slip closed, then godParent:eraseStore(store); should
+	// that throw, godParent is closed too before the exception goes on (the
+	// argument named getDestStore is the slip itself)
 	eraseStore: func(getDestStore, a2, a3) begin
 		getDestStore:Close();
 		(try begin
@@ -86,6 +112,8 @@ eraseSlip := {
 	eraseTypeCluster: nil
 };
 
+// the three choices; each button's value is the name of the eraseSlip method
+// that does it
 eraseTypeCluster := {
 	viewJustify: vjParentFullH + vjSiblingBottomV,
 	viewBounds: {left: 47, top: 5, right: -8, bottom: 41},

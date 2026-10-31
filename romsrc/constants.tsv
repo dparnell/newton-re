@@ -683,3 +683,18 @@ vfInset	<<16
 vfShadow	<<18
 vfRound	<<24
 tsSize	<<10
+# slips (except mail, backup), shared/frames: src/views/TextView.h (vjOneLineOnly, the NTK's oneLineOnly); the Newton Programmer's Reference 2.0 (kCommandModifier, Keyboard Modifier Keys; vNoSpaces, vFixedTextStyle, vFixedInkTextStyle, Text Flags; modeOr, modeXor, Table 2-5; vfNone, Table 2-4; vfBlack, a shape style's pattern; Notify's kNotifyAlert, its value as docs/work-log.md records); the Newton Programmer's Guide 2.0 (kForever, chapter 19 Other Date Constants); src/views/Commands.h (aeScrollUp, aeScrollDown, aeOverview: PostCommand's events)
+vjOneLineOnly	0x800000
+kCommandModifier	0x2000000
+kNotifyAlert	3
+kForever	0x1fffffff
+vNoSpaces	0x2
+vFixedTextStyle	0x8
+vFixedInkTextStyle	0x10
+modeOr	0x1
+modeXor	0x2
+vfNone	0x0
+vfBlack	0x5
+aeScrollUp	0x2d
+aeScrollDown	0x2e
+aeOverview	0x33

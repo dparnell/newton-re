@@ -1,10 +1,20 @@
-// backupPrefsSlip, and what only it reaches
+// backupPrefsSlip (magic pointer 576), and what only it reaches: the Backup
+// slip's options slip (opened from backupSlip, its godParent), where the user
+// picks which applications' information to back up - all, or those checked in
+// a list - and whether to back up all packages; the choices are kept in the
+// backup preferences entry (prefsCache), and its Backup button starts the
+// backup through godParent:doBackup().
 
 backupPrefsSlip := {
 	_proto: @prefsSlipProto,
+	// the slot of godParent that holds this slip while it is open
 	whoAmI: 'openBackupPrefsSlip,
+	// prefsCache.soupType: 'all or 'Partial; prefsCache.partialSoups: the
+	// applications checked when it is 'Partial (scrollList's stashItems)
 	prefsSlot: 'soupType,
 	prefsArray: 'partialSoups,
+	// the list's items: the applications with information on the store being
+	// backed up
 	viewSetupFormScript: func() begin
 		self.soupNameList := GetApplicationNames(godParent:getSrcStore(), true);
 		inherited:?viewSetupFormScript()
@@ -15,6 +25,7 @@ backupPrefsSlip := {
 		prefsSlipProtoItem,
 		{_proto: @protoCancelButton},
 		_defaultButton_8,
+		// "Backup all packages": prefsCache.packageType 'all or 'none
 		{
 			viewJustify: vjParentFullH,
 			viewBounds: {left: 23, top: 109, right: -18, bottom: 119},
@@ -23,6 +34,7 @@ backupPrefsSlip := {
 			viewSetupFormScript: func() begin
 				(self.viewValue := (prefsCache.packageType = 'all))
 			end,
+			// hidden when the source store has no packages to back up
 			viewSetupDoneScript: func() begin
 				local entry, backupAllPackagesCursor;
 				inherited:?viewSetupDoneScript();
@@ -31,6 +43,7 @@ backupPrefsSlip := {
 					end;
 				(if ((not backupAllPackagesCursor) or (not entry)) then self:Hide())
 			end,
+			// the choice saved at once in the preferences entry
 			valueChanged: func() begin
 				prefsCache.packageType := (if viewValue then 'all else 'none);
 				EntryChangeXmit(prefsCache, 'backup)
@@ -42,11 +55,15 @@ backupPrefsSlip := {
 	allocateContext: [|Array|: 'scrollList, scrollList, '_defaultButton, _defaultButton_8]
 };
 
+// the slip's default button, "Backup": starts the backup
 _defaultButton_8 := {
 	viewFlags: vVisible + vReadOnly + vClickable,
 	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV,
 	viewBounds: {left: -49, top: 0, right: -7, bottom: 0},
 	text: backup,
+	// a1 true: go ahead (if the slip is still showing) - the checked
+	// applications saved when backing up only some, then, after this click is
+	// done, the slip closed and godParent:doBackup() called; else just unhilite
 	ConfirmCallback: func(a1) begin
 		(if (if a1 then Visible(self:Parent())) then begin
 				if (prefsCache.(prefsSlot) = 'Partial) then begin
@@ -59,6 +76,7 @@ _defaultButton_8 := {
 				end, '[Array: ])
 			end else self:hilite(nil))
 	end,
+	// no confirmation asked: straight to ConfirmCallback
 	buttonClickScript: func() begin
 		self:ConfirmCallback(true)
 	end,

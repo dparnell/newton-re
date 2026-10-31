@@ -1,13 +1,26 @@
-// filingSlip, and what only it reaches
+// filingSlip, and what only it reaches: the system's Filing slip, opened by
+// the filing button (protoFilingButton / newtFilingButton) of an application.
+// It files the target - an entry, or a cursor of selected entries - in one of
+// the application's folders (labels) and, with card routing, moves it to
+// another store; the application's own FileThis does the work when it has
+// one, else the slip sets target.labels and sends filingChanged / MoveTarget.
+// Its Edit Folder and New buttons open folderEdit.
 
 filingSlip := {
 	otherOtherTargetView: nil,
+	// filingSlip:OpenForUser(filing button, target info frame {target,
+	// targetView, targetStore, otherOtherTargetView}, doCardRouting
+	// (nil, true or 'onlyCardRouting), dontStartWithFolder): opens the slip,
+	// or closes it when it is already open for the same view; refuses with an
+	// alert when there is nothing to file, nowhere to move it, another
+	// application's slip is open, or the target's store is locked and the
+	// application cannot route to a card
 	OpenForUser: compile(
 		constants: {
 			kLiteral_4836e1: "Filing"
 		},
 		func(newLabels, a2, value, value2) begin
-			(if (not a2.target) then self:Notify(3, kLiteral_4836e1, "There is nothing to file.") else (if (if (value = 'onlyCardRouting) then (Length(GetStores()) = 1)) then self:Notify(3, kLiteral_4836e1, "This item is already filed internally.  If you would like to file it on a card, please insert one.") else (if self.viewCObject then (if (a2.targetView = self.targetView) then self:Close() else self:Notify(3, kLiteral_4836e1, "The filing form is already open.")) else begin
+			(if (not a2.target) then self:Notify(kNotifyAlert, kLiteral_4836e1, "There is nothing to file.") else (if (if (value = 'onlyCardRouting) then (Length(GetStores()) = 1)) then self:Notify(kNotifyAlert, kLiteral_4836e1, "This item is already filed internally.  If you would like to file it on a card, please insert one.") else (if self.viewCObject then (if (a2.targetView = self.targetView) then self:Close() else self:Notify(kNotifyAlert, kLiteral_4836e1, "The filing form is already open.")) else begin
 							self.target := a2.target;
 							self.targetView := a2.targetView;
 							self._nextKeyView := targetView;
@@ -16,17 +29,20 @@ filingSlip := {
 							self.filingButton := newLabels;
 							self.otherOtherTargetView := a2.otherOtherTargetView;
 							self.dontStartWithFolder := value2;
+							// a locked store: the target cannot be refiled there, only
+							// moved to another card
 							if (if targetStore then targetStore:IsReadOnly()) then begin
 									if value then begin
 											self.doCardRouting := 'onlyCardRouting
 										end else begin
-											self:Notify(3, kLiteral_4836e1, "This app does not support card routing and the card is locked");
+											self:Notify(kNotifyAlert, kLiteral_4836e1, "This app does not support card routing and the card is locked");
 											return nil
 										end
 								end;
 							self:Open()
 						end)))
 		end),
+	// the slots the slip's context is built with (the view system's context cache)
 	_cacheContext: {
 		otherOtherTargetView: nil,
 		target: nil,
@@ -52,6 +68,8 @@ filingSlip := {
 		targetView: nil,
 		base: nil
 	},
+	// the folder editor closed with the slip, the references to the target
+	// let go, and the store-change handler removed
 	viewQuitScript: func() begin
 		if folderEdit.viewCObject then begin
 				folderEdit:Close()
@@ -66,6 +84,7 @@ filingSlip := {
 		UnRegStoreChange('_filing)
 	end,
 	preallocatedContext: 'filingSlip,
+	// Command-N: New (folder)
 	_newKeyScript: func(a1) begin
 		PressButton(newFolderButton)
 	end,
@@ -73,10 +92,12 @@ filingSlip := {
 	newFolderButton: nil,
 	viewChildren: nil,
 	viewFlags: vFloating + vClickable,
+	// Command-E: Edit Folder
 	_editKeyScript: func(a1) begin
 		PressButton(editFoldersButton)
 	end,
 	doCardRouting: nil,
+	// a one-off rebuild of the slip (returns nil: no more idling)
 	viewIdleScript: func() begin
 		if Visible(self) then begin
 				filingSlip:SyncView();
@@ -101,8 +122,11 @@ filingSlip := {
 	_proto: @protoFloater,
 	folderClusterHeight: nil,
 	_defaultButton: nil,
+	// the folder chosen: a folder symbol, nil for Unfiled, or 42 for none
+	// chosen yet (the slip opened without starting at a folder)
 	newLabels: nil,
-	kidsWithoutRouting: [viewChildren: fileArea_2, newFolderButton, editFoldersButton, filingSlipItem, _defaultButton_5],
+	// the children for each case: folders only, folders and stores, stores only
+	kidsWithoutRouting:[viewChildren: fileArea_2, newFolderButton, editFoldersButton, filingSlipItem, _defaultButton_5],
 	kidsWithCardRouting: [viewChildren:
 		storeSelector,
 		fileArea_2,
@@ -120,6 +144,11 @@ filingSlip := {
 	folderList: nil,
 	kidsJustCardRouting: [viewChildren: storeSelector, filingSlipItem, _defaultButton_5],
 	declareSelf: 'base,
+	// the application's folders (local only / with the system's, as its view
+	// says), the folder to start at (42: none - see newLabels; also when the
+	// target's folder no longer exists), the two clusters' heights (two
+	// buttons, 14 pixels, a row), which children to show and the slip's size;
+	// and a handler that closes the slip when a store it could file to goes
 	viewSetupFormScript: func() begin
 		local value, value2;
 		value := GetVariable(targetView, 'localFoldersOnly);
@@ -147,6 +176,8 @@ filingSlip := {
 						self.viewBounds := RelBounds(0, 0, 220, (folderClusterHeight + 49))
 					end
 			end;
+		// (store, what, ...): with card routing any store leaving closes the
+		// slip, as the store list changes; else only the target's own store
 		RegStoreChange('_filing, func(a1, a2, a3) begin
 			(if (if (a2 = 'storeLeaves) then (doCardRouting or (a1 = targetStore))) then AddDeferredSend(self, 'Close, nil))
 		end);
@@ -155,10 +186,12 @@ filingSlip := {
 	filingButton: nil,
 	storeSelector: nil,
 	_keyCommands: [|Array|:
-		{char: $e, modifiers: 33554432, keyMessage: '_editKeyScript, name: editFolder, category: editing},
-		{char: $n, modifiers: 33554432, keyMessage: '_newKeyScript, name: new_2, category: creating}
+		{char: $e, modifiers: kCommandModifier, keyMessage: '_editKeyScript, name: editFolder, category: editing},
+		{char: $n, modifiers: kCommandModifier, keyMessage: '_newKeyScript, name: new_2, category: creating}
 	],
 	debug: 32890,
+	// sent after a folder is made or renamed (folderEdit): the slip rebuilt
+	// with the new folder list and newSymbol chosen in it
 	UpdateToFolder: func(newSymbol) begin
 		(if Visible(self) then begin
 				filingSlip:SyncView();
@@ -171,6 +204,9 @@ filingSlip := {
 
 editFolder := "Edit Folder";
 
+// the store section's heading: the application's own text (AppObjectFileThisOn),
+// else "File this <thing> on" / "File the selected <things> on" from its
+// appObject (singular, plural), else "File on"
 fileInText := {
 	viewBounds: {left: 9, top: 0, right: -5, bottom: 12},
 	viewJustify: vjParentFullH,
@@ -182,6 +218,8 @@ fileInText := {
 	_proto: @protoStaticText
 };
 
+// a radio button for each store (its name, or "Unnamed Card"), the target's
+// store chosen; the value is the store's index in GetStores()
 storeCluster := {
 	viewBounds: nil,
 	viewJustify: vjParentFullH + vjSiblingBottomV,
@@ -207,6 +245,7 @@ storeCluster := {
 	_proto: @protoSmartCluster
 };
 
+// the store section: a white box holding fileInText and storeCluster
 storeSelector := {
 	viewClass: clView,
 	viewBounds: nil,
@@ -216,6 +255,8 @@ storeSelector := {
 	viewSetupFormScript: func() begin
 		(self.viewBounds := SetBounds(5, 5, -5, (storeClusterHeight + 23)))
 	end,
+	// the store chosen: the internal store when the section is not shown,
+	// else the one picked (nil for none)
 	GetSelectedStore: func() begin
 		(if (not storeCluster) then GetStores()[0] else (if storeCluster.clusterValue then GetStores()[storeCluster.clusterValue]))
 	end,
@@ -226,6 +267,8 @@ storeSelector := {
 	storeCluster: nil
 };
 
+// the folder section's heading: "File this <thing> in" and so on as
+// fileInText, or "And file in" below the store section
 fileArea := {
 	viewBounds: {left: 9, top: 0, right: 219, bottom: 12},
 	viewJustify: 0,
@@ -245,6 +288,9 @@ fileArea := {
 	_proto: @protoStaticText
 };
 
+// a radio button for "None (Unfiled)" (value 0) and for each folder (value
+// its index in folderList + 1, the name cut to 76 pixels); the target's
+// folder chosen, else Unfiled unless the slip starts with no folder
 folderCluster := {
 	viewBounds: nil,
 	viewJustify: vjParentFullH + vjSiblingBottomV,
@@ -264,9 +310,11 @@ folderCluster := {
 			end;
 		(self.viewBounds := SetBounds(5, 4, -5, (folderClusterHeight + 4)))
 	end,
+	// newLabels follows the choice (nil: Unfiled)
 	ClusterChanged: func() begin
 		(if (clusterValue = 0) then (newLabels := nil) else (newLabels := folderList[(clusterValue - 1)]))
 	end,
+	// newSymbol's button chosen, Unfiled when it is not one of the folders
 	SetToFolder: func(newSymbol) begin
 		local setContains2;
 		(if (setContains2 := SetContains(folderList, newSymbol)) then self:SetClusterValue((setContains2 + 1)) else self:SetClusterValue(0))
@@ -275,6 +323,7 @@ folderCluster := {
 	_proto: @protoSmartCluster
 };
 
+// the folder section: a white box holding fileArea and folderCluster
 fileArea_2 := {
 	viewClass: clView,
 	viewBounds: nil,
@@ -291,8 +340,9 @@ fileArea_2 := {
 	folderCluster: nil
 };
 
+// "New": a new folder, in folderEdit
 newFolderButton := {
-	viewJustify: 8388742,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjOneLineOnly,
 	viewBounds: {left: 5, top: -18, right: 33, bottom: -5},
 	text: new_2,
 	buttonClickScript: func() begin
@@ -302,13 +352,16 @@ newFolderButton := {
 	_proto: @protoTextButton
 };
 
+// "Edit Folder": the chosen folder renamed or deleted, in folderEdit -
+// refused for Unfiled and for a folder that belongs only to the system's
+// group ('_System)
 editFoldersButton := {
-	viewJustify: 8389766,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingRightH + vjOneLineOnly,
 	viewBounds: {left: 7, top: -18, right: 67, bottom: -5},
 	text: editFolder,
 	buttonClickScript: func() begin
 		if ((fileArea.folderCluster.clusterValue = 0) or (Length(SetDifference(GetFolderGroups(newLabels), '[Array: _System])) = 0)) then begin
-				self:Notify(3, "Filing", "This folder name cannot be edited.");
+				self:Notify(kNotifyAlert, "Filing", "This folder name cannot be edited.");
 				return nil
 			end;
 		folderEdit:OpenForUser(newLabels, GetVariable(targetView, 'appSymbol), GetVariable(targetView, 'localFoldersOnly), GetVariable(targetView, 'globalFoldersOnly))
@@ -317,10 +370,13 @@ editFoldersButton := {
 	_proto: @protoTextButton
 };
 
+// the close box
 filingSlipItem := {_proto: @protoCancelButton};
 
+// "File", the default button (or the application's appObjectFileAction text,
+// the button widened to fit it): files the target and closes the slip
 _defaultButton_5 := {
-	viewJustify: 8390790,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + vjOneLineOnly,
 	viewBounds: {left: -30, top: -18, right: -7, bottom: -5},
 	text: file,
 	viewSetupFormScript: func() begin
@@ -330,13 +386,19 @@ _defaultButton_5 := {
 				(self.viewBounds.left := (-(StrWidth(self.text) + 12)))
 			end)
 	end,
+	// l2: the target moves to another store; l3: its folder changes (a new
+	// folder chosen, or a cursor - always refiled - and not just card routing,
+	// and a folder chosen at all: not 42).  The application's FileThis(target,
+	// labelsChanged, newLabels, storesChanged, newStore) does both when it has
+	// one (on otherOtherTargetView first); else target.labels is set and the
+	// view told (filingChanged), then the target moved (UpdateTargetStore)
 	buttonClickScript: func() begin
 		local selectedStore, l2, l3, l4;
 		if (not (fileArea.folderCluster.clusterValue or storeSelector.storeCluster.clusterValue)) then begin
-				self:Notify(3, "Filing", "A folder or store must be chosen to continue.");
+				self:Notify(kNotifyAlert, "Filing", "A folder or store must be chosen to continue.");
 				return nil
 			end;
-		l2 := (if (if (selectedStore := storeSelector:GetSelectedStore()) then doCardRouting) then (targetStore <> selectedStore));
+		l2 :=(if (if (selectedStore := storeSelector:GetSelectedStore()) then doCardRouting) then (targetStore <> selectedStore));
 		l3 := (if (if (doCardRouting <> 'onlyCardRouting) then ((target.labels <> newLabels) or TargetIsCursor(target))) then (newLabels <> 42));
 		if ((if otherOtherTargetView then (otherOtherTargetView:FileThis exists)) or (targetView:FileThis exists)) then begin
 				l4 := (if otherOtherTargetView then otherOtherTargetView else targetView);
@@ -352,6 +414,9 @@ _defaultButton_5 := {
 			end else begin
 				if l3 then begin
 						target.labels := newLabels;
+						// looks like a ROM bug: filingChanged is sent twice - l3 already
+						// implies doCardRouting is not 'onlyCardRouting, so this test
+						// always holds and the send after it repeats it
 						if ((not doCardRouting) or (doCardRouting <> 'onlyCardRouting)) then begin
 								targetView:?filingChanged()
 							end;
@@ -363,6 +428,9 @@ _defaultButton_5 := {
 			end;
 		base:Close()
 	end,
+	// the target moved to the store chosen by the application's MoveTarget -
+	// each entry of a cursor's selection (aliases resolved first) - and the
+	// filing button updated
 	UpdateTargetStore: func() begin
 		(if (if (selectedStore := storeSelector:GetSelectedStore()) then (targetStore <> selectedStore)) then begin
 				if target._cursor then begin

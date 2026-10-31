@@ -1,9 +1,15 @@
-// printSlip, and what only it reaches
+// printSlip, and what only it reaches: the print transport's routing slip
+// (|print:newton|'s routingSlip), a protoFullRouteSlip that adds a printer
+// chooser and a Preview button to the envelope; the item, the format and the
+// sender's information are in its fields frame.
 
 printSlip := {
 	hideOtherCity: true,
+	// the room below the envelope for the chooser and Preview button
 	bottomIndent: 29,
 	appSymbol: '|print:newton|,
+	// sent when the sender (owner card) changes: the sender's title and
+	// reference taken again and the printer chooser redrawn
 	OwnerInfoChanged: func() begin
 		local userConfiguration2;
 		userConfiguration2 := userConfiguration;
@@ -17,20 +23,23 @@ printSlip := {
 	printChoose: nil,
 	stepallocatecontext: [|Array|: 'printChoose, printChoose, '_previewButton, _previewButton],
 	_previewButton: nil,
+	// Command-I: as if Preview were tapped
 	_previewKeyScript: func(a1) begin
 		PressButton(_previewButton)
 	end,
 	_keyCommands: [|Array|:
-		{char: $i, modifiers: 33554432, keyMessage: '_previewKeyScript, name: preview, category: viewing}
+		{char: $i, modifiers: kCommandModifier, keyMessage: '_previewKeyScript, name: preview, category: viewing}
 	],
 	_proto: @protoFullRouteSlip
 };
 
+// the "Printer" picker
 printChoose := {
 	viewBounds: {left: 40, top: 55, right: -10, bottom: 71},
-	viewJustify: 8388656,
+	viewJustify: vjParentFullH + vjOneLineOnly,
 	preallocatedContext: 'printChoose,
 	_proto: @printerChooserButton
 };
 
+// "Preview" (shared/frames.ns: _previewButtonProto)
 _previewButton := {_proto: _previewButtonProto, preallocatedContext: '_previewButton};
