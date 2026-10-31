@@ -1,4 +1,5 @@
-// bizCardOwner, and what only it reaches
+// The owner card layout (@8204): the owner's name in New York 14 with an icon
+// at the right, a rule, the company, the addresses and email, and the phones.
 
 bizCardOwner := {
 	bizCardIcon: {bits: bizCardIconBits, bounds: {left: 0, top: 0, right: 38, bottom: 23}},

@@ -1,6 +1,8 @@
-// export51, and what only it reaches
+// A left-aligned version of the text-lines view @8242 (@8243): sized to its
+// widest line, from its left edge plus indent.
 
 export51 := {
+	// Once the lines are made, moves the right edge to the widest line's width.
 	viewSetupChildrenScript: func() begin
 		local copy;
 		inherited:viewSetupChildrenScript();

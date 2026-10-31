@@ -1,4 +1,7 @@
-// default, and what only it reaches
+// The Person Info edit view of a person or owner card (@8231, its 'default
+// view): first and last name, honorific, and the first two phone numbers
+// (home and work to start).  The reading and extension fields are allocated
+// but not among the children (for a localised ROM).
 
 default := {
 	viewFlags: vVisible,
@@ -27,6 +30,8 @@ default := {
 			label: nil,
 			flavor: flavor,
 			labelCommands: nil,
+			// The locale's honorific dictionaries, its common honorifics as the label's
+			// popup, and its label text.
 			viewSetupFormScript: func() begin
 				local locale;
 				newDictionaries := (locale := GetLocale()).recogHonorificDictionaries;
@@ -41,7 +46,9 @@ default := {
 		},
 		defaultItem,
 		{
+			// The second phone line, a work phone to start.
 			path: [pathExpr: 'phones, 1],
+			// Makes the card's second phone, of class workPhone, when it has none.
 			viewSetupFormScript: func() begin
 				if (not target.(path)) then begin
 						target.(path) := Clone("");
@@ -49,6 +56,7 @@ default := {
 					end;
 				inherited:?viewSetupFormScript()
 			end,
+			// Drops empty phones, and the empty ones at the end of the array.
 			viewQuitScript: func() begin
 				phones := target.phones;
 				i2 := 0;
@@ -75,22 +83,28 @@ default := {
 	name: "Person Info",
 	symbol: 'default,
 	type: 'editor,
+	// Makes sure the card has two phones to edit.
 	viewSetupFormScript: func() begin
 		(if (Length(target.phones) < 2) then SetLength(target.phones, 2))
 	end,
 	infoFrame: {
 		checkPrefix: [|Array|: [pathExpr: 'name], nil],
 		checkPaths: [|Array|: 'honorific, 'first, 'last, 'title],
+		// "Honorific First Last".
 		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
 			ParamStr("^?0^0 ||^?1^1 ||^?2^2||", v20_wwwwwwwwwwvvvvvv)
 		end
 	},
 	protection: 'private,
 	fieldOrder: [|Array|: 0, 1, 2, 3, 4],
+	// Puts the number made by viewQuitScript into the card (run only when that
+	// returns 'postQuit, which it does not here).
 	viewPostQuitScript: func() begin
 		target.phones[0] := savePhoneNum;
 		targetView:StartFlush()
 	end,
+	// With the extension field open (it is not, here), makes the first phone again
+	// with its extension.
 	viewQuitScript: func() begin
 		local areacode, phone, text, cls;
 		(if (if self.extension.viewCObject then (phone := target.phones[0])) then begin
@@ -129,8 +143,8 @@ default := {
 			viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
 			viewLineSpacing: 32,
 			label: extension,
-			viewJustify: 8396848,
-			entryFlags: 264705,
+			viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
+			entryFlags: vVisible + vClickable + vGesturesAllowed + vPhoneField,
 			textChanged: func() begin
 				(changed := true)
 			end,
@@ -142,8 +156,10 @@ default := {
 	extension: nil
 };
 
+// The first phone line, a home phone to start.
 defaultItem := {
 	path: [pathExpr: 'phones, 0],
+	// Makes the card's first phone, of class homePhone, when it has none.
 	viewSetupFormScript: func() begin
 		if (not target.(path)) then begin
 				target.(path) := Clone("");

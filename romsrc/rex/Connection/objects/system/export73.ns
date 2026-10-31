@@ -1,7 +1,12 @@
-// export73, and what only it reaches
+// The "Getting restore information..." status slip (@8265): asks the desktop
+// for the restore options ('grop', answered by 'ropt') and opens the restore
+// slip (@8258) with them.
 
 export73 := {
 	viewBounds: {left: 0, top: 60, right: 180, bottom: 145},
+	// Once: joins the open windows and, deferred, asks for the restore options; a
+	// frame that is not one is kDockErrDesktopError.  The connection idles every
+	// half second meanwhile.
 	viewSetupFormScript: compile(
 		constants: {
 			kROM_8258: @8258
@@ -39,6 +44,7 @@ export73 := {
 				end;
 			inherited:?viewSetupFormScript()
 		end),
+	// Ends the connection when the slip was closed some other way.
 	viewQuitScript: func() begin
 		endpoint:StopIdle(self);
 		protoContext:RemoveOpenWindow(self);
@@ -48,6 +54,7 @@ export73 := {
 		(inited := nil)
 	end,
 	viewFlags: vApplication + vFloating + vClickable,
+	// Stop: says "Stopping..." and stops the endpoint's operation.
 	CancelRequest: func(symbol2) begin
 		(if (not stopping) then begin
 				stopping := true;
@@ -68,6 +75,7 @@ export73 := {
 		},
 		appSymbol: 'Connection
 	},
+	// Turns the barber pole every second.
 	viewIdleScript: func() begin
 		self:updateIndicator(currentStatusSetup);
 		return 1000

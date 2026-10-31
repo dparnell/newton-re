@@ -1,4 +1,4 @@
-// notes_2, and what only it reaches
+// The Notes view of a card (@8225): its notes in an edit view of lined paper.
 
 notes_2 := {
 	viewBounds: {left: 0, top: 15, right: 0, bottom: 0},
@@ -11,6 +11,8 @@ notes_2 := {
 	protection: 'public,
 	symbol: 'notes,
 	type: 'viewer,
+	// Outside the Names application the notes cannot be edited: a click is taken
+	// and ignored.
 	viewSetupFormScript: compile(
 		constants: {
 			kFunction_72faa1: func(a1) begin
@@ -27,6 +29,8 @@ notes_2 := {
 				end;
 			inherited:?viewSetupFormScript()
 		end),
+	// Scrolls to the end of the notes when asked (scrollToBottom), and puts the
+	// caret in when the view can be written in.
 	viewSetupDoneScript: func() begin
 		local least;
 		if scrollToBottom then begin
@@ -36,7 +40,7 @@ notes_2 := {
 					end
 			end;
 		scrollerView:AdjustArrows();
-		if (BAnd(self.viewFlags, 130) = 0) then begin
+		if (BAnd(self.viewFlags, vReadOnly + vWriteProtected) = 0) then begin
 				self:PositionCaret(10, (viewOriginY + 10), nil)
 			end;
 		inherited:?viewSetupDoneScript()

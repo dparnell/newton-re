@@ -1,9 +1,12 @@
-// export98, and what only it reaches
+// The infrared (IrDA) connection's endpoint options (@8290): the 'irda' service
+// with a connection named "NewtConnection".
 
 export98 := {
+	// The options for opening: the IrDA service and its connection.
 	openOptions: func() begin
-		return [Array: {label: "irda", type: 'service, opCode: 512}, {label: "irci", type: 'option, opCode: 512, result: nil, form: 'template, data: {arglist: [Array: 0, 0, 14, 6, "NewtConnection", "Docker"], typeList: [Array: 10, 2, 2, 2, 2, [Array: 11, 13, 0], [Array: 11, 13, 0]]}}]
+		return [Array: {label: "irda", type: 'service, opCode: opSetRequired}, {label: "irci", type: 'option, opCode: opSetRequired, result: nil, form: 'template, data: {arglist: [Array: 0, 0, 14, 6, "NewtConnection", "Docker"], typeList: [Array: 10, 2, 2, 2, 2, [Array: 11, 13, 0], [Array: 11, 13, 0]]}}]
 	end,
+	// No connect options.
 	connectOptions: func() begin
 		return [Array: ]
 	end

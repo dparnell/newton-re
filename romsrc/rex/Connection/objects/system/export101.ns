@@ -1,9 +1,11 @@
-// export101, and what only it reaches
+// The 2400 bps serial connection's options (@8293): the serial options (@8256)
+// at 2400.
 
 export101 := {
 	_proto: @8256,
 	speedOption: 2400,
 	useEOP: nil,
+	// As the serial options.
 	openOptions: func() begin
 		inherited:openOptions()
 	end

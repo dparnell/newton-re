@@ -1,8 +1,10 @@
-// export18, and what only it reaches
+// The Names card layout (@8210, the 'default layout): the A-Z tabs (none for
+// owner cards) above the current card, shown in its business card layout.
 
 export18 := {
 	name: card,
 	stepChildren: [stepChildren: export18Item, export18Item_2],
+	// Owner cards have no A-Z tabs.
 	viewSetupFormScript: func() begin
 		if (superSymbol = 'ownerNames) then begin
 				if IsReadOnly(stepChildren) then begin
@@ -20,7 +22,9 @@ export18 := {
 
 export18Item := {_proto: @8235, preAllocatedContext: 'azTabs};
 
+// The entry view holding the card (@8208 inside).
 export18Item_2 := {
+	// A group whose members run off the card gets a "(more)" at the foot.
 	viewSetupDoneScript: func() begin
 		local l1, l2, childViewFrame;
 		(if (if target then (target.class = 'group)) then (if ((l1 := (childViewFrame := self:ChildViewFrames()[0]):GetMaxBottom()) > childViewFrame:GlobalBox().bottom) then begin
@@ -30,6 +34,7 @@ export18Item_2 := {
 				end))
 	end,
 	viewJustify: vjSiblingBottomV,
+	// The children come from viewChildren.
 	viewSetupChildrenScript: func() begin
 		(self.stepChildren := nil)
 	end,

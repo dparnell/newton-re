@@ -1,9 +1,11 @@
-// export110, and what only it reaches
+// A date line (@8302): a protoDateTextPicker whose value (calcLineValue) is a
+// date in minutes, as the date panels (Date Calculator, Date Conversion) use.
 
 export110 := {
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 36},
 	viewFlags: vVisible,
 	viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV,
+	// Shows the line's label and starts with no date.
 	viewSetupFormScript: func() begin
 		SetValue(LabelField, 'label, calcLineLabel);
 		(calcLineValue := nil)
@@ -11,10 +13,12 @@ export110 := {
 	calcLineValue: nil,
 	calcLineLabel: changeMe,
 	stepChildren: [stepChildren: label],
+	// Sets the date (minutes, or nil) and redraws the picker.
 	SetNumericValue: func(a1) begin
 		calcLineValue := a1;
 		self:RedoChildren()
 	end,
+	// The date, in minutes since 1904, or nil.
 	GetNumericValue: func() begin
 		return calcLineValue
 	end,
@@ -24,20 +28,25 @@ export110 := {
 	stepAllocateContext: [|Array|: 'LabelField, label]
 };
 
+// The date picker (LabelField).
 label := {
 	viewBounds: {left: 3, top: 10, right: 0, bottom: 30},
 	label: "Label",
 	Date: nil,
 	viewJustify: vjParentFullH + vjSiblingTopV,
+	// A date picked: kept as the start of its day (1440 minutes to a day), then the
+	// formula is solved.
 	PickActionScript: func(index) begin
 		calcLineValue := ((index[0] div 1440) * 1440);
 		inherited:?PickActionScript(index);
 		self:SolveFormula(lineNumber)
 	end,
+	// Takes the line's indent.
 	viewSetupFormScript: func() begin
 		self.Date := nil;
 		(self.indent := self:parent().indent)
 	end,
+	// The picker's text: the date in long form, or nothing.
 	textSetup: func() begin
 		(if (calcLineValue = nil) then return Clone("") else begin
 				self.Date := calcLineValue;

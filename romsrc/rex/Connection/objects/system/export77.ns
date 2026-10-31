@@ -1,10 +1,17 @@
-// export77, and what only it reaches
+// The Dock's progress slip (@8269): connects to the desktop (OpenForSync) or
+// takes a connection already made (OpenOnEndpoint), runs the session the
+// desktop or the user asked for - synchronize or back up, restore, install a
+// package - showing what is going on ("Backing up Names", "Installing ...",
+// "Restoring ...", or the desktop's own text, 'stxt'), and afterwards goes
+// back to the which-connection slip or, after a restore, asks for a restart.
 
 export77 := {
 	currentState: 0,
 	currentStatusSetup: nil,
 	inited: nil,
 	stopping: nil,
+	// Leaves: the 'stxt' extension removed, idling stopped, the busy box allowed
+	// again.
 	viewQuitScript: func() begin
 		try begin
 				if endpoint.connected then begin
@@ -16,6 +23,10 @@ export77 := {
 		inited := nil;
 		BusyBoxControl(1)
 	end,
+	// After a restore: disconnects ('disc') when it succeeded, removes the pen
+	// Calibration entry (one with data) the restored system soup holds, opens the
+	// restart slip (@8272) and reports an error, or the applications whose data
+	// could not be converted.
 	FinishRestore: compile(
 		constants: {
 			kROM_8272: @8272
@@ -64,6 +75,12 @@ export77 := {
 							end)
 					end))
 		end),
+	// Connects (with the options and password): checks that the desktop
+	// application is one the Newton works with (id 1 or 2, version 1, AutoDock if
+	// asked); then, by the session state the connection left, opens the
+	// which-connection slip, starts an automatic backup or sync ('auto'), or runs
+	// the session the desktop asked for.  A password the desktop rejects
+	// (kDockErrRetryPassword) opens the password slip again.
 	DeferredConnect: func() begin
 		local error, state, l3, l4, desktopApps, text, desktopApp, frame2;
 		error := 0;
@@ -76,7 +93,7 @@ export77 := {
 				try begin
 						l3 := (state := endpoint:GetState()).State
 					end onexception |evt.ex| do begin
-						l3 := 1
+						l3 := kDockStateNone
 					end;
 				l4 := true;
 				if (if (if (desktopApps := state.desktopApps) then IsArray(desktopApps)) then (Length(desktopApps) > 0)) then begin
@@ -96,12 +113,12 @@ export77 := {
 									end
 							end;
 						if (not l4) then begin
-								self:Notify(3, "Dock", ParamStr(text, [Array: desktopApp.name]));
+								self:Notify(kNotifyAlert, "Dock", ParamStr(text, [Array: desktopApp.name]));
 								endpoint:ConnectionDone(0)
 							end
 					end;
 				if l4 then begin
-						if ((l3 = 1) or (l3 = 9)) then begin
+						if ((l3 = kDockStateNone) or (l3 = kDockStateKeyboard)) then begin
 								if (not autodock) then begin
 										protoContext:OpenWhichConnection(endpoint)
 									end else begin
@@ -115,7 +132,7 @@ export77 := {
 											end
 									end
 							end else begin
-								if ((l3 = 3) or (l3 = 2)) then begin
+								if ((l3 = kDockStateRestore) or (l3 = kDockStateSync)) then begin
 										syncOptions := 'all
 									end else begin
 										syncOptions := nil
@@ -125,7 +142,7 @@ export77 := {
 							end
 					end
 			end else begin
-				if (error = -28023) then begin
+				if (error = kDockErrRetryPassword) then begin
 						frame2 := {memory: nil, |guest?|: nil, |name?|: nil, title: nil, buttonTitle: "Cancel", Keyboard: true, |password?|: {guest: nil, users: 'hidden}};
 						ConnOpenUserPsswdSlip(endpoint, protoContext.RetryPasswordScript, frame2)
 					end else begin
@@ -138,6 +155,8 @@ export77 := {
 		(if inited then self:Close())
 	end,
 	restoring: nil,
+	// Runs the session (deferred DoConnection) with the sync options - the
+	// defaults for a symbol ('all, 'allWithSoups).
 	StartConnected: func() begin
 		if (not IsFrame(syncOptions)) then begin
 				syncOptions := protoContext:BuildDefaultSyncOpts(syncOptions)
@@ -146,6 +165,10 @@ export77 := {
 		endpoint.percentDone := 0;
 		AddDeferredSend(self, 'DeferredConnected, nil)
 	end,
+	// While connected, every 2 seconds: shows what the session state says -
+	// sync (backing up, the other views hidden), package install (a gauge),
+	// restore - else "Testing communications..." (state 5) or "Waiting for a
+	// response...".
 	viewIdleScript: func() begin
 		local state, l2, same2, nameSet2;
 		if stopping then begin
@@ -155,7 +178,7 @@ export77 := {
 				try begin
 						l2 := (state := endpoint:GetState()).State
 					end onexception |evt.ex| do begin end;
-				if (l2 = 2) then begin
+				if (l2 = kDockStateSync) then begin
 						if (not restoreRoot) then begin
 								try begin
 										protoContext:CloseAllButMe(self)
@@ -169,7 +192,7 @@ export77 := {
 							end;
 						same2 := StrEqual(newText, currentStatusSetup.values.titleText)
 					end else begin
-						if (l2 = 4) then begin
+						if (l2 = kDockStateLoadPackage) then begin
 								if (endpoint.percentDone < currentStatusSetup.values.gauge) then begin
 										nameSet := nil
 									end;
@@ -187,7 +210,7 @@ export77 := {
 										currentStatusSetup.name := 'vGauge
 									end
 							end else begin
-								if (l2 = 3) then begin
+								if (l2 = kDockStateRestore) then begin
 										if (not restoreRoot) then begin
 												try begin
 														protoContext:CloseAllButMe(self)
@@ -233,6 +256,8 @@ export77 := {
 		appSymbol: 'Connection
 	},
 	syncOptions: nil,
+	// Stop: says "Stopping..." and stops the operation; a restore is let finish
+	// the System soup first (checked each second, at most ten times).
 	CancelRequest: func(symbol2) begin
 		local StopIt;
 		(if (not stopping) then begin
@@ -248,9 +273,13 @@ export77 := {
 					end), [Array: 0], 1000) else protoContext:StopOperation(endpoint))
 			end)
 	end,
+	// Connects, deferred.
 	StartConnect: func() begin
 		AddDeferredSend(self, 'DeferredConnect, nil)
 	end,
+	// Once: hides the busy box, joins the open windows, connects (or runs the
+	// session on a connection already made), takes the desktop's status text
+	// ('stxt', answered 'dres' 0) and idles every half second.
 	viewSetupFormScript: func() begin
 		if (not inited) then begin
 				BusyBoxControl(0);
@@ -280,6 +309,10 @@ export77 := {
 			end;
 		inherited:?viewSetupFormScript()
 	end,
+	// Runs the session (DoConnection) unless stopping (then the desktop is told);
+	// finishes a restore that got somewhere; otherwise ends the connection on an
+	// error or the session's end, or goes back to the which-connection slip (or
+	// finishes the automatic dock).  The views hidden come back.
 	DeferredConnected: func() begin
 		local error, connection, stopping2, inited, syncChanges;
 		error := 0;
@@ -306,7 +339,7 @@ export77 := {
 						syncChanges := endpoint:GetSyncChanges()
 					end onexception |evt.ex| do begin end
 			end;
-		(if (if (if (if (not stopping2) then restoring) then (error <> -28014)) then syncChanges) then self:FinishRestore(endpoint, error, syncChanges) else begin
+		(if (if (if (if (not stopping2) then restoring) then (error <> kDockErrNoStore)) then syncChanges) then self:FinishRestore(endpoint, error, syncChanges) else begin
 				if protoContext.keyPassthroughOn then begin
 						protoContext:ToggleKeyboardPassthrough(true)
 					end;
@@ -321,7 +354,7 @@ export77 := {
 					end;
 				(if inited then begin
 						self:Close();
-						(if (if restoreRoot then (((not restoring) or (error = -28014)) or (not syncChanges))) then protoContext:ReopenBlessed())
+						(if (if restoreRoot then (((not restoring) or (error = kDockErrNoStore)) or (not syncChanges))) then protoContext:ReopenBlessed())
 					end)
 			end)
 	end,
@@ -329,6 +362,7 @@ export77 := {
 	nameSet: nil,
 	restoreRoot: nil,
 	autodock: nil,
+	// OpenForSync(password, options, endpoint, autodock): connects and syncs.
 	OpenForSync: func(password, connectOptions, theEndpoint, a4) begin
 		local context;
 		(context := BuildContext(self)).password := password;
@@ -337,6 +371,8 @@ export77 := {
 		context.autodock := a4;
 		context:FilterDialog()
 	end,
+	// OpenOnEndpoint(syncOptions, endpoint, autodock): runs a session on the
+	// connection.
 	OpenOnEndpoint: func(syncOptions, endpoint, a3) begin
 		local context;
 		(context := BuildContext(self)).syncOptions := syncOptions;

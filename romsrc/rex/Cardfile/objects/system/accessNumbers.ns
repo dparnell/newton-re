@@ -1,4 +1,6 @@
-// accessNumbers, and what only it reaches
+// The Access Numbers edit view of a worksite card (@8223): a dial-in network
+// (from the system's DialinNetworkRegistry), one of its access numbers for the
+// worksite's city and the baud rate; elements of the card's mailAccess array.
 
 accessNumbers := {
 	symbol: 'accessNumbers,
@@ -7,6 +9,7 @@ accessNumbers := {
 	infoFrame: {
 		checkPrefix: [|Array|: nil, [pathExpr: 'mailAccess]],
 		checkPaths: [|Array|: 'mailPhone, 'baud, 'mailNetwork],
+		// "Access Number: number [baud]" and the network's name on a second line.
 		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
 			local text2, text;
 			if (ClassOf((text := v20_wwwwwwwwwwvvvvvv[1])) = 'int) then begin
@@ -23,6 +26,7 @@ accessNumbers := {
 	protection: 'private,
 	stepChildren: [stepChildren: network, accessNumbersItem, baudRate],
 	fieldOrder: nil,
+	// Starts on the card's network, or the first network there is.
 	viewSetupChildrenScript: func() begin
 		local l1;
 		inherited:?viewSetupChildrenScript();
@@ -33,6 +37,8 @@ accessNumbers := {
 		self:UpdateNetwork(l1)
 	end,
 	allNetworks: nil,
+	// Network a1 picked: offers its access numbers for the worksite's city and
+	// country, and takes the first number's baud rate.
 	UpdateNetwork: func(a1) begin
 		numbersArray := nil;
 		baudArray := nil;
@@ -71,10 +77,12 @@ accessNumbers := {
 
 accessNumber := "Access Number";
 
+// The network picker.
 network := {
 	labelCommands: nil,
 	text: "Network",
 	viewBounds: {left: 0, top: 15, right: 0, bottom: 37},
+	// A network picked: kept in the card and its numbers offered.
 	labelActionScript: func(index) begin
 		local id;
 		id := allNetworks[index].id;
@@ -82,6 +90,7 @@ network := {
 		self:StartFlush();
 		self:UpdateNetwork(id)
 	end,
+	// The card's network's name (the first network's when it has none).
 	textSetup: func() begin
 		title := (if labelCommands then labelCommands[0] else "");
 		local title;
@@ -92,20 +101,23 @@ network := {
 			end);
 		title
 	end,
+	// The dial-in networks' names.
 	viewSetupFormScript: func() begin
 		labelCommands := [Array: ];
 		labelCommands := GetDialinNetworkSlot('title);
 		inherited:?viewSetupFormScript()
 	end,
-	viewJustify: 8396848,
+	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 	addPath: 'mailNetwork,
 	path: nil,
 	_proto: @protoLabelPicker,
 	preAllocatedContext: 'networkChooser
 };
 
+// The access number line, with the network's numbers in its popup.
 accessNumbersItem := {
 	label: accessNumber,
+	// A number emptied takes the network and baud rate with it.
 	viewQuitScript: func() begin
 		inherited:?viewQuitScript();
 		(if (not StrFilled(target.(path))) then begin
@@ -116,6 +128,7 @@ accessNumbersItem := {
 	end,
 	addPath: 'mailPhone,
 	path: nil,
+	// A number picked brings its baud rate.
 	pickActionScript: func(index) begin
 		inherited:pickActionScript(index);
 		(if (if baudArray then (Length(baudArray) > 0)) then begin
@@ -124,6 +137,7 @@ accessNumbersItem := {
 				baudChooser:Retarget()
 			end)
 	end,
+	// Offers the network's numbers, the first one taken when the card has none.
 	viewSetupFormScript: func() begin
 		labelCommands := numbersArray;
 		if (if (if (not target.(path)) then labelCommands) then (Length(labelCommands) > 0)) then begin
@@ -135,14 +149,17 @@ accessNumbersItem := {
 	preAllocatedContext: 'numberChooser
 };
 
+// The baud rate picker (BaudTypes' rates).
 baudRate := {
 	labelCommands: nil,
 	text: "Baud Rate",
 	viewBounds: {left: 0, top: 6, right: 0, bottom: 28},
+	// A rate picked: kept in the card.
 	labelActionScript: func(index) begin
 		target.(path) := labelCommands[index].baudRate;
 		self:StartFlush()
 	end,
+	// The card's rate's name (the first rate when it has none, which is then kept).
 	textSetup: func() begin
 		item2 := (if labelCommands then labelCommands[0].item else "");
 		local item2;
@@ -156,7 +173,8 @@ baudRate := {
 			end;
 		item2
 	end,
-	viewJustify: 8396848,
+	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
+	// The rates and their names.
 	viewSetupFormScript: func() begin
 		labelCommands := [Array: ];
 		(for i := 0 to (Length(BaudTypes.baudRates) - 1) do begin

@@ -1,10 +1,12 @@
-// bankAccount, and what only it reaches
+// The Bank Account edit view of an owner card (@8197): bank name, account
+// number, contact number and routing number, elements of owner.bankAccounts.
 
 bankAccount := {
 	type: 'editor,
 	symbol: 'bankAccount,
 	stepChildren: [|Array|: bank, acct, bankAccountItem],
 	name: "Bank Account",
+	// Drawn as "Bank: ...\nBank Acct: ..." with the contact phone number below.
 	infoFrame: {
 		_proto: infoFrameProto_2,
 		checkPrefix: [|Array|: nil, [pathExpr: 'owner, 'bankAccounts]],
@@ -31,7 +33,7 @@ bankAccount := {
 			viewLineSpacing: 32,
 			flavor: @newtCustomFilter,
 			label: "Routing #",
-			newRecFlags: 10753,
+			newRecFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed,
 			addPath: 'BLZ,
 			_proto: @newtLabelInputLine,
 			preAllocatedContext: 'BLZ
@@ -58,7 +60,7 @@ acct := {
 	viewLineSpacing: 32,
 	flavor: @newtCustomFilter,
 	label: "Acct #",
-	newRecFlags: 10753,
+	newRecFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed,
 	addPath: 'bankAcctNum,
 	_proto: @newtLabelInputLine,
 	preAllocatedContext: 'bankAcctNum

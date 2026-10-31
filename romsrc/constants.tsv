@@ -789,3 +789,14 @@ kFaceUnderline	0x4
 kFaceOutline	0x8
 kFaceSuperScript	0x80
 kFaceSubScript	0x100
+# Cardfile, Connection, FaxViewer, Formulas: the Newton Programmer's Reference 2.0 (Table 8-5, lexical dictionaries)
+kNumbersOnlyDictionary	117
+kPostalCodeDictionary	116
+# Cardfile: src/recognition/Words.h (the Newton Programmer's Reference's name)
+kUserDictionary	31
+# Connection: the docking session's states (eDockingState), src/comms/Docker.h
+kDockStateNone	1
+kDockStateSync	2
+kDockStateRestore	3
+kDockStateLoadPackage	4
+kDockStateKeyboard	9

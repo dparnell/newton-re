@@ -1,4 +1,7 @@
-// export102, and what only it reaches
+// The Currency Exchange panel's built-in exchange rates (@8294, exported as
+// part of FormulasInternal): units of each country's currency to one US dollar,
+// as they stood when the ROM was built.  GetExchangeRate falls back on them when
+// the user has set no rate of their own.
 
 export102 := {
 	USA: USA,

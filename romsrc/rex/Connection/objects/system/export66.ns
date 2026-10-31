@@ -1,4 +1,7 @@
-// export66, and what only it reaches
+// The restore slip (@8258): what the desktop's backup holds (restoreOptions,
+// from 'ropt') - the applications' information, the packages, and the store to
+// restore to - to pick from; Restore sends the choice ('ropt') and shows the
+// progress slip.  Restoring replaces the Newton's information and restarts.
 
 export66 := {
 	viewBounds: {top: 10, left: 0, right: 220, bottom: 278},
@@ -7,12 +10,13 @@ export66 := {
 		{
 			text: information,
 			viewBounds: {left: 7, top: 6, right: 179, bottom: 18},
-			viewJustify: 8396800,
+			viewJustify: vjSiblingBottomV + oneLineOnly,
 			viewFont: @fontSystem10Bold,
 			_proto: @protoStaticText
 		},
 		export66Item,
 		{
+			// All: selects every application, or none when all are selected.
 			buttonClickScript: func() begin
 				if (Length(appsList.selectedItems) = Length(appsList.listItems)) then begin
 						appsList.selectedItems := [Array: ]
@@ -23,7 +27,7 @@ export66 := {
 			end,
 			text: all,
 			viewBounds: {left: 0, top: 7, right: 36, bottom: 20},
-			viewJustify: 8398854,
+			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingBottomV + oneLineOnly,
 			_proto: @protoTextButton
 		},
 		export66Item_2,
@@ -31,6 +35,7 @@ export66 := {
 		export66Item_4,
 		export66Item_5,
 		{
+			// Cancel: tells the desktop ('opca') and goes back to the which-connection slip.
 			buttonClickScript: func() begin
 				protoContext:SendCancelToDesktop(endpoint);
 				protoContext:OpenWhichConnection(endpoint);
@@ -39,6 +44,8 @@ export66 := {
 			_proto: @protoCancelButton
 		},
 		{
+			// Restore: after a confirmation, stops idling, builds the applications list
+			// and restores (deferred DoRestore).
 			buttonClickScript: func() begin
 				(if (not restoring) then begin
 						restoring := true;
@@ -53,10 +60,11 @@ export66 := {
 			end,
 			text: restore,
 			viewBounds: {left: -54, top: 0, right: -7, bottom: 13},
-			viewJustify: 8407046,
+			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingTopV + oneLineOnly,
 			_proto: @protoTextButton
 		}
 	],
+	// A backup with no packages: a shorter slip without the packages list.
 	viewSetupFormScript: func() begin
 		local copy;
 		self.protoContext := GetRoot().Connection;
@@ -68,10 +76,12 @@ export66 := {
 			end;
 		endpoint:StartIdle(self, 2000)
 	end,
+	// Stops idling and leaves the open windows.
 	viewQuitScript: func() begin
 		endpoint:StopIdle(self);
 		protoContext:RemoveOpenWindow(self)
 	end,
+	// Fills list a1 with a2, all selected.
 	InitializeTextList: func(a1, a2) begin
 		if (not a2) then begin
 				a2 := [Array: ]
@@ -80,6 +90,7 @@ export66 := {
 		a1.selectedItems := self:SelectAll(a1);
 		a1:SetupList()
 	end,
+	// Selects every item of list a1.
 	SelectAll: func(a1) begin
 		list := Array((count := Length(a1.listItems)), nil);
 		local count;
@@ -89,6 +100,7 @@ export66 := {
 			end);
 		(a1.selectedItems := list)
 	end,
+	// The applications and packages selected, into the options frame a1.
 	CollectOptions: func(a1) begin
 		local l1;
 		l1 := (foreach item in appsList.selectedItems collect appsList.listItems[item]);
@@ -100,6 +112,9 @@ export66 := {
 		a1.packages := l6;
 		(a1.merge := nil)
 	end,
+	// Sends the options picked ('ropt') and opens the progress slip; an alert when
+	// nothing is picked.  (The 'rall' branch, restoring everything, is never taken:
+	// l2 is always nil.)
 	DoRestore: compile(
 		constants: {
 			kROM_8269: @8269
@@ -137,9 +152,11 @@ export66 := {
 					(if (error = 0) then kROM_8269:OpenOnEndpoint(nil, endpoint, nil))
 				end)
 		end),
+	// Keeps the connection alive while the slip is up.
 	viewIdleScript: func() begin
 		return endpoint:IdleConnection(true)
 	end,
+	// Shows or hides the packages' views and the store picker.
 	viewSetupChildrenScript: func() begin
 		packageTitle:SetupViewflags();
 		packageList:SetupViewflags();
@@ -167,6 +184,7 @@ export66 := {
 	storePicker: nil
 };
 
+// The applications in the backup.
 export66Item := {
 	viewBounds: {left: 0, top: 5, right: 184, bottom: 100},
 	viewFont: @fontSystem10,
@@ -174,7 +192,7 @@ export66Item := {
 		self:InitializeTextList(self, restoreOptions.applications);
 		inherited:?viewSetupFormScript()
 	end,
-	viewJustify: 8396816,
+	viewJustify: vjParentCenterH + vjSiblingBottomV + oneLineOnly,
 	useScrollers: true,
 	useMultipleSelections: true,
 	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2),
@@ -182,11 +200,13 @@ export66Item := {
 	preAllocatedContext: 'appsList
 };
 
+// The packages' title.
 export66Item_2 := {
 	text: packages,
 	viewBounds: {left: 7, top: 8, right: 79, bottom: 20},
-	viewJustify: 8396800,
+	viewJustify: vjSiblingBottomV + oneLineOnly,
 	viewFont: @fontSystem10Bold,
+	// Hidden when the backup has no packages (viewFlags - 1 takes vVisible off).
 	SetupViewflags: func() begin
 		(if (Length(restoreOptions.packages) = 0) then (self.viewFlags := (viewFlags - 1)))
 	end,
@@ -196,6 +216,7 @@ export66Item_2 := {
 
 packages := "Packages";
 
+// The packages in the backup.
 export66Item_3 := {
 	viewBounds: {left: 0, top: 5, right: 184, bottom: 70},
 	viewFont: @fontSystem10,
@@ -203,11 +224,12 @@ export66Item_3 := {
 		self:InitializeTextList(self, restoreOptions.packages);
 		inherited:?viewSetupFormScript()
 	end,
-	viewJustify: 8396816,
+	viewJustify: vjParentCenterH + vjSiblingBottomV + oneLineOnly,
 	useScrollers: true,
 	useMultipleSelections: true,
 	selectedItems: nil,
 	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2),
+	// Hidden when the backup has no packages.
 	SetupViewflags: func() begin
 		local packages;
 		(if ((not (packages := restoreOptions.packages)) or (Length(packages) = 0)) then (self.viewFlags := (viewFlags - 1)))
@@ -216,6 +238,7 @@ export66Item_3 := {
 	preAllocatedContext: 'packageList
 };
 
+// All for the packages.
 export66Item_4 := {
 	buttonClickScript: func() begin
 		if (Length(packageList.selectedItems) = Length(packageList.listItems)) then begin
@@ -227,7 +250,8 @@ export66Item_4 := {
 	end,
 	text: all,
 	viewBounds: {left: 0, top: 7, right: 36, bottom: 20},
-	viewJustify: 8398854,
+	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingBottomV + oneLineOnly,
+	// Hidden when the backup has no packages.
 	SetupViewflags: func() begin
 		(if (Length(restoreOptions.packages) = 0) then (self.viewFlags := (viewFlags - 1)))
 	end,
@@ -235,15 +259,21 @@ export66Item_4 := {
 	preAllocatedContext: 'checkAllPackages
 };
 
+// The store to restore to: the internal store for an internal backup
+// (storeType 0), else a card's, picked from the writable cards.
 export66Item_5 := {
 	viewBounds: {left: 0, top: 5, right: 184, bottom: 21},
 	viewFlags: vVisible,
 	viewFormat: 0,
-	viewJustify: 8396816,
+	viewJustify: vjParentCenterH + vjSiblingBottomV + oneLineOnly,
 	stepChildren: [stepChildren: restoreTo, export66Item_5Item],
+	// Hidden for a card backup with no stores given, or with no card in (-2
+	// clears vVisible).
 	SetupViewflags: func() begin
 		(if (if (not (restoreOptions.storeType = 0)) then ((not restoreOptions.stores) or (Length(GetStores()) = 1))) then (self.viewFlags := BAnd(viewFlags, -2)))
 	end,
+	// Picks the card that matches the backup's store: by signature, else by name,
+	// else the first card.
 	FindCandidateStore: func(store) begin
 		name := store.name;
 		signature := store.signature;
@@ -267,6 +297,8 @@ export66Item_5 := {
 			end;
 		(restoreOptions.stores := [Array: {name: selectedStore:GetName(), signature: selectedStore:GetSignature()}])
 	end,
+	// Offers the internal store, or the cards (by name, a read-only card by its
+	// kind), the matching one checked (U+FC0B).
 	viewSetupFormScript: func() begin
 		l2 := (stores := GetStores())[0];
 		(if (restoreOptions.storeType = 0) then begin
@@ -299,13 +331,16 @@ export66Item_5 := {
 	preAllocatedContext: 'storePicker
 };
 
+// The "Restore to" popup.
 restoreTo := {
 	text: "ﰁ Restore to",
 	viewBounds: {left: 0, top: 0, right: 50, bottom: 0},
-	viewJustify: 8388806,
+	viewJustify: vjCenterH + vjCenterV + vjParentFullV + oneLineOnly,
+	// Sized to its text.
 	viewSetupFormScript: func() begin
 		(self.viewBounds := SetBounds(0, 0, StdButtonWidth(text), 0))
 	end,
+	// A store picked: becomes the one to restore to, checked and shown.
 	pickActionScript: func(index) begin
 		local store;
 		RemoveSlot((store := LFetch(popup, selectedStore, 0, '|=|, 'store)), 'mark);
@@ -317,6 +352,7 @@ restoreTo := {
 	end,
 	viewFormat: vfFillWhite + vfRound(4),
 	viewFlags: vVisible + vReadOnly + vClickable,
+	// Pops the stores up when tapped.
 	viewClickScript: func(unit) begin
 		if self:TrackHilite(unit) then begin
 				self:PopupMenu(popup, {bounds: self:LocalBox()})
@@ -325,6 +361,7 @@ restoreTo := {
 			end;
 		true
 	end,
+	// Unhilites when the popup is dismissed.
 	pickCancelledScript: func() begin
 		self:hilite(nil)
 	end,
@@ -332,10 +369,12 @@ restoreTo := {
 	preAllocatedContext: 'picker
 };
 
+// The store's name.
 export66Item_5Item := {
 	text: export85Item_3Text,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
-	viewJustify: 8388852,
+	viewJustify: vjCenterV + vjParentFullH + vjParentFullV + oneLineOnly,
+	// Shows the store picked, beside the popup.
 	viewSetupFormScript: func() begin
 		self.viewBounds := SetBounds(picker:LocalBox().right, 0, 0, 0);
 		(self.text := LFetch(popup, selectedStore, 0, '|=|, 'store).item)

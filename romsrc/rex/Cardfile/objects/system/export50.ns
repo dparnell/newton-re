@@ -1,7 +1,16 @@
-// export50, and what only it reaches
+// The text-lines view the Names layouts are made of (@8242): it draws, as one
+// shape, the data of the info views its layouts slot lists for the card's
+// class - each formatted by the view's info frame - and a tap on an item opens
+// the edit slip on it (or runs the info frame's actionFunc, such as calling a
+// phone number).  All Info, the business cards and the print formats use it.
 
 export50 := {
 	layouts: nil,
+	// Adds the shapes of one item - data paths a1 at path a2, info frame a5 of
+	// layout a6 - below height a7 in box a8 (a9: the bold title line, a10 its
+	// style); records where it ends in hitArray (a4) for taps.  An item with no
+	// data adds nothing (unless the info frame showEmptyData); reduceFont drops a
+	// name that will not fit one line to Fancy 12 bold.  Returns the new height.
 	AddAllInfoItem: func(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) begin
 		local v13_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v14_yyyyyyyyyyyyyyyyyyyyyyyyyyyxxxxxxxxxxxxxxxxx, v15_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyy, v16_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyy, v20_wwwwwwwwwwvvvvvv, v21_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v22_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyy, v23_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v25_xxxxxxxxxxxxxxxxxxxxwwwwwwwwwwwwww, v26_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyy, v27_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, v29_xwwwwwwwwwwwwwwww;
 		v26_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyy := a7;
@@ -85,12 +94,18 @@ export50 := {
 	hitArray: nil,
 	shapeArray: nil,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	// Draws the shapes.
 	viewDrawScript: func() begin
 		(if shapeArray then self:DrawShape(shapeArray, {font: viewFont, justification: viewJustSym}))
 	end,
 	viewFlags: vVisible + vClickable + vGesturesAllowed,
 	viewFont: tsFancy + tsSize(12),
 	viewJustify: vjParentFullH + vjParentFullV,
+	// Builds the shapes: for each info view of the layouts, the card's data at its
+	// single path and then (all, with showMultipleData, else the first when the
+	// single one was empty) the elements of its array, as far as the view has
+	// room unless it canScroll.  The text is justified as viewJustify's
+	// horizontal part (its low two bits) says.
 	viewSetupChildrenScript: func() begin
 		l12 := BAnd(viewJustify, 3);
 		l13 := true;
@@ -160,12 +175,14 @@ export50 := {
 	viewJustSym: nil,
 	viewOriginX: 0,
 	viewOriginY: 0,
+	// Scrolls the drawing (the All Info layout's arrows).
 	SetOrigin: func(viewOriginX2, a2) begin
 		OffsetShape(shapeArray, (viewOriginX - viewOriginX2), (viewOriginY - a2));
 		viewOriginX := viewOriginX2;
 		viewOriginY := a2;
 		self:dirty()
 	end,
+	// The bullet drawn before an item (showBullet).
 	tapIcon: {
 		bits: bitmap('bits, "resources/bits/724d25.png", "000000000004014e014e02610151026f", 1),
 		bounds: {left: 0, top: 0, right: 14, bottom: 3}
@@ -173,6 +190,9 @@ export50 := {
 	showBullet: nil,
 	showMultipleData: nil,
 	viewFormat: nil,
+	// A tap: finds the item under the pen (GetPoint 5 and 4 are its final y and
+	// x), clicks, and runs its info frame's actionFunc or else hilites it and opens
+	// the edit slip on it (the card's own class as its layout means 'default).
 	viewClickScript: func(unit) begin
 		l2 := (Length(hitArray) - 1);
 		InkOff(unit);
@@ -210,13 +230,16 @@ export50 := {
 			end);
 		nil
 	end,
+	// Inverts a shape (modeXor) to hilite it.
 	Hiliter: func(hiliteShape) begin
-		self:DrawShape(hiliteShape, {transferMode: 2, penPattern: 0, fillPattern: 5})
+		self:DrawShape(hiliteShape, {transferMode: modeXor, penPattern: 0, fillPattern: 5})
 	end,
+	// The height of the items drawn.
 	GetBottom: func() begin
 		local count;
 		(if ((count := Length(hitArray)) > 0) then hitArray[(count - 1)].vOffset else 0)
 	end,
+	// The width of the widest text line drawn.
 	GetMaxTextWidth: func() begin
 		most := 0;
 		viewFont2 := viewFont;

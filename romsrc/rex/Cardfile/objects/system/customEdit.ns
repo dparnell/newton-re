@@ -1,4 +1,6 @@
-// customEdit, and what only it reaches
+// The Custom Field Labels slip (@8217): ten lines, one per custom field, whose
+// text is the field's label; the labels are kept in the Names soup's info
+// (SetCustomInfo).
 
 customEdit := {
 	viewBounds: {left: 0, top: 10, right: 200, bottom: 240},
@@ -10,7 +12,7 @@ customEdit := {
 		{
 			text: "Custom Field Labels",
 			viewBounds: {left: 0, top: 0, right: 0, bottom: 20},
-			viewJustify: 8388658,
+			viewJustify: vjCenterH + vjParentFullH + oneLineOnly,
 			_proto: @protoStaticText
 		},
 		{
@@ -32,6 +34,8 @@ customEdit := {
 			],
 			numLines: 10,
 			viewJustify: vjParentFullH + vjParentFullV,
+			// On closing: keeps the labels (with an undo) and, when a label was just
+			// written, opens the edit slip on that custom field.
 			viewQuitScript: func() begin
 				appBase:AddUndoAction('UndoCustomChange, [Array: customInfo]);
 				appBase:SetCustomInfo(target);
@@ -40,6 +44,7 @@ customEdit := {
 						end, [Array: 'custom, [pathExpr: lastChanged]])))
 			end,
 			indent: 15,
+			// Starts on the first line with no label.
 			viewSetupFormScript: func() begin
 				if (target := customInfo) then begin
 						firstLine := nil;
@@ -65,6 +70,7 @@ customEdit := {
 		{_proto: @protoCancelButton}
 	],
 	ReorientToScreen: @defRotateFunc,
+	// Redraws the card for the new labels.
 	viewQuitScript: func() begin
 		inherited:?viewQuitScript();
 		newtAppBase.layout:Retarget(true)

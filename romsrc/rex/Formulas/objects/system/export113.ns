@@ -1,13 +1,16 @@
-// export113, and what only it reaches
+// An item of a panel's list (@8305): a bullet and its text; a tap launches the
+// formula (LaunchFormula).
 
 export113 := {
 	text: changeMe,
 	viewBounds: {top: 0, left: 10, right: -10, bottom: 16},
-	viewJustify: 8396976,
+	viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV + oneLineOnly,
 	viewFont: @fontSystem10Bold,
+	// Puts a bullet before the text.
 	viewSetupFormScript: func() begin
 		(self.text := Stringer([Array: "\u2022\u", " ", text]))
 	end,
+	// A tap launches the formula.
 	viewClickScript: func(unit) begin
 		self:LaunchFormula();
 		return true

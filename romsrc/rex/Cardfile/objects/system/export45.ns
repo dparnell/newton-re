@@ -1,7 +1,10 @@
-// export45, and what only it reaches
+// A button of the business-card picker (@8237): a picture of a card layout;
+// tapping it gives the card that layout.
 
 export45 := {
 	viewBounds: {left: 0, top: 0, right: 38, bottom: 23},
+	// Sets the card's cardType (and the default for new cards) to this button's,
+	// saves, and shows it as picked.
 	buttonClickScript: func() begin
 		target.cardType := cardType;
 		appBase.allSoups.names.defaultCardType := cardType;

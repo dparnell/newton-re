@@ -1,4 +1,5 @@
-// export76, and what only it reaches
+// The Dock Import Results slip (@8268): the text the import left (resultsText)
+// while the connection idles (IdleConnection every 2 seconds).
 
 export76 := {
 	viewBounds: {left: 0, top: 40, right: 200, bottom: 144},
@@ -12,6 +13,7 @@ export76 := {
 			text: nil,
 			viewBounds: {left: 15, top: 10, right: 200, bottom: 65},
 			viewJustify: vjSiblingBottomV,
+			// Shows the results.
 			viewSetupFormScript: func() begin
 				(self.text := resultsText)
 			end,
@@ -19,6 +21,8 @@ export76 := {
 		},
 		{_proto: @protoCancelButton}
 	],
+	// Keeps the connection alive; when the desktop has finished (and it is not
+	// closing down), ends the import and calls callWhenDone.
 	viewIdleScript: func() begin
 		local idleConnection;
 		if (if ((idleConnection := endpoint:IdleConnection(true)) = 0) then (not endpoint.closingDown)) then begin
@@ -29,11 +33,13 @@ export76 := {
 			end;
 		return idleConnection
 	end,
+	// Joins the open windows and idles the endpoint.
 	viewSetupFormScript: func() begin
 		self.protoContext := GetRoot().Connection;
 		protoContext:AddOpenWindow(self);
 		endpoint:StartIdle(self, 2000)
 	end,
+	// Ends the import and stops idling.
 	viewQuitScript: func() begin
 		protoContext:RemoveOpenWindow(self);
 		protoContext:ImportFileClose(endpoint);

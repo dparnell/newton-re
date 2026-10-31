@@ -1,5 +1,10 @@
-// objects several roots reach, none alone (naturalize.py)
+// Frames several of the Names layouts share (naturalize.py put them here): the
+// info views each part of a business card shows per class, the name line and
+// its input filter, the phone line, and the info-frame functions that draw,
+// format and act on a phone number.
 
+// Per card class, the info views whose data a part of a business card layout
+// shows (here the company or name line); below, other such lists.
 layouts := {person: [|Array|: 'company], company: [|Array|: 'name]};
 
 layouts_2 := {person: [|Array|: 'default], company: [|Array|: 'default]};
@@ -8,10 +13,13 @@ layouts_3 := {person: [|Array|: 'address, 'email], company: [|Array|: 'address, 
 
 layouts_4 := {person: [|Array|: 'phone, 'pager], company: [|Array|: 'phone]};
 
+// A labelled input line that, once written in, makes sure the card has its slot
+// (an empty string) and saves the card.
 addressItem_5Proto := {
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
 	viewLineSpacing: 32,
 	flavor: flavor,
+	// After a change: makes the card's slot when it has none and flushes the entry.
 	viewChangedScript: func(slot, view) begin
 		inherited:viewChangedScript(slot, view);
 		(if (not target.(path)) then begin
@@ -22,9 +30,12 @@ addressItem_5Proto := {
 	_proto: @newtLabelInputLine
 };
 
+// The name lines' input filter: keeps the card's sort string (sorton) in step
+// with the name ("Last First") or, for a company, the line's text.
 flavor := {
 	_proto: @newtCustomFilter,
-	recFlags: 25201153,
+	recFlags: vVisible + vClickable + vGesturesAllowed + vPunctuationAllowed + vCapsRequired + vCustomDictionaries,
+	// Puts the text into the card and sets the sort string from it.
 	TextToPath: func(a1) begin
 		local l1;
 		l1 := inherited:TextToPath(a1);
@@ -47,7 +58,9 @@ flavor := {
 	end
 };
 
+// A phone line that starts with the user's area code (when it may have one).
 defaultProto := {
+	// Fills in the current area code from the user configuration.
 	viewSetupFormScript: func() begin
 		inherited:viewSetupFormScript();
 		(if (if (not suppressAreaCode) then (not StrFilled(currAreaCode))) then (currAreaCode := Clone(GetUserConfig('currentAreaCode))))
@@ -55,7 +68,12 @@ defaultProto := {
 	_proto: @newtAreacodePhoneLine
 };
 
+// The info frame of a phone number in a layout: drawn with the phone icon and
+// its label, tappable to open the Call slip.
 infoFrameProto := {
+	// Draws the number (v20...[0]) as "number label" after a phone icon, placed by
+	// the format's leftInfo or justification in the box; returns {shape, misc} with
+	// the box the tap must fall in.
 	shapeFunc: func(v20_wwwwwwwwwwvvvvvv, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, a3, a4) begin
 		local strFontWidth2, l2, text, leftInfo, fontAscent2, frame2;
 		fontAscent2 := FontAscent(a4.font);
@@ -80,6 +98,7 @@ infoFrameProto := {
 				frame2
 			end)
 	end,
+	// A tap within the number's box: hilites it and opens the Call slip for it.
 	actionFunc: func(a1, a2, a3, box, target, path, misc) begin
 		(if (if (if (if (a1 >= misc.bbox.left) then (a1 <= misc.bbox.right)) then (a2 >= misc.bbox.top)) then (a2 <= misc.bbox.bottom)) then begin
 				box := SetBounds((box.left + misc.bbox.left), (box.top + misc.bbox.top), ((box.left + misc.bbox.right) - 3), ((box.top + misc.bbox.bottom) - 3));
@@ -88,13 +107,18 @@ infoFrameProto := {
 				true
 			end)
 	end,
+	// The number as text: "number label".
 	formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
 		ParamStr("^0 ^1", [Array: MakeDisplayPhone(v20_wwwwwwwwwwvvvvvv[0]), phoneTypes.phoneLabels.(ClassOf(v20_wwwwwwwwwwvvvvvv[0]))])
 	end
 };
 
+// As infoFrameProto, with the other lines formatFunc gives drawn above the
+// number.
 infoFrameProto_2 := {
 	_proto: infoFrameProto,
+	// The text lines and then the number, as one shape; an empty box when there
+	// is no number.
 	shapeFunc: func(v20_wwwwwwwwwwvvvvvv, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, a3, a4) begin
 		local fontHeight2, textLines, l3, formatFunc;
 		textLines := nil;

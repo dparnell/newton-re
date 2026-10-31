@@ -1,12 +1,19 @@
-// export67, and what only it reaches
+// The backup options slip (@8259): which applications' information to back up
+// (by default all), whether to back up all packages, and from which stores
+// (internal and cards); the choices are kept in the preferences, and Backup
+// sends the sync options to the progress slip.
 
 export67 := {
 	inited: nil,
 	backupPackages: nil,
+	// True when the packages checkbox is shown: packages are not excluded in the
+	// preferences and some store has packages (the list's first item).
 	ShowPackagesCheckbox: func() begin
 		local neverSyncPackages;
 		return (if (neverSyncPackages := protoContext:ConnectionPrefsRead('neverSyncPackages)) then nil else protoContext.applications[0].packages)
 	end,
+	// The stores to offer (newer than the backup version); the slip shorter when
+	// there is no packages checkbox.
 	AdjustForStores: func() begin
 		backupStoreVersion := protoContext:GetBackupStoreVersion();
 		self.StoreMap := [Array: ];
@@ -28,9 +35,13 @@ export67 := {
 			end;
 		SetValue(self, 'viewBounds, copy)
 	end,
+	// The kept options of a store, by name.
 	GetStoreFromWhichstores: func(a1) begin
 		return LFetch(whichStores, a1, 0, '|str<|, '[pathExpr: name])
 	end,
+	// Leaves: stops idling, unregisters, tells a newer desktop ('ntic', protocol
+	// version 11 or later) the Newton is no longer choosing, and ends the
+	// connection when the slip was closed some other way.
 	viewQuitScript: func() begin
 		endpoint:StopIdle(self);
 		UnRegStoreChange('Connection);
@@ -42,6 +53,7 @@ export67 := {
 	end,
 	fromText: nil,
 	viewFlags: vApplication + vFloating + vClickable,
+	// Keeps the connection alive while the slip is up.
 	viewIdleScript: func() begin
 		return endpoint:IdleConnection(true)
 	end,
@@ -50,6 +62,7 @@ export67 := {
 	viewBounds: {left: 0, top: 10, right: 220, bottom: 263},
 	_proto: @protoFloater,
 	StoreMap: nil,
+	// A card in or out: the applications and stores are listed again.
 	RegisterMyStoreChange: func() begin
 		local fn;
 		fn := func(a1, a2, a3) begin
@@ -76,6 +89,8 @@ export67 := {
 	],
 	closing: nil,
 	soupOptions: nil,
+	// Once: reads the kept options, builds the applications list, sizes the slip,
+	// watches for cards, and idles the connection every 2 seconds.
 	viewSetupFormScript: func() begin
 		if inited then begin
 				return nil
@@ -102,35 +117,38 @@ export67 := {
 		{
 			text: information,
 			viewBounds: {left: 7, top: 6, right: 179, bottom: 18},
-			viewJustify: 8396800,
+			viewJustify: vjSiblingBottomV + oneLineOnly,
 			viewFont: @fontSystem10Bold,
 			_proto: @protoStaticText
 		},
 		export67Item,
 		{
+			// All: selects every application, or none when all are selected.
 			buttonClickScript: func() begin
 				appList:|SelectAll?|();
 				appList:DrawHilite()
 			end,
 			text: all,
 			viewBounds: {left: 0, top: 7, right: 36, bottom: 20},
-			viewJustify: 8398854,
+			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingBottomV + oneLineOnly,
 			_proto: @protoTextButton
 		},
 		backupAllPackages,
 		from,
 		export67Item_2,
 		{
+			// All: selects every store, or none.
 			buttonClickScript: func() begin
 				storeList:|SelectAll?|();
 				storeList:DrawHilite()
 			end,
 			text: all,
 			viewBounds: {left: 0, top: 7, right: 36, bottom: 20},
-			viewJustify: 8398854,
+			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingBottomV + oneLineOnly,
 			_proto: @protoTextButton
 		},
 		{
+			// Cancel: keeps the options and goes back to the which-connection slip.
 			buttonClickScript: func() begin
 				closing := true;
 				self:SaveOptions();
@@ -146,6 +164,8 @@ export67 := {
 					kLiteral_745f61: "Dock",
 					kROM_8269: @8269
 				},
+				// Backup: keeps the options and, when a store and something to back up are
+				// picked, sends them on to the progress slip (alerts otherwise).
 				func() begin
 					local text, syncOptions;
 					self:SaveOptions();
@@ -163,10 +183,11 @@ export67 := {
 							end))
 				end),
 			viewBounds: {left: -49, top: 0, right: -7, bottom: 13},
-			viewJustify: 8407046,
+			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingTopV + oneLineOnly,
 			_proto: @protoTextButton
 		}
 	],
+	// Keeps the applications picked (nil for all), the stores and the whole list.
 	SaveOptions: func() begin
 		local l1;
 		soupOptions := appList:CollectOptions();
@@ -175,6 +196,7 @@ export67 := {
 		l1 := (if soupOptions then appList.listItems);
 		protoContext:ConnectionPrefsWrite('allApps, l1)
 	end,
+	// Selects every item of a list, or none when all are selected.
 	|SelectAll?|: func() begin
 		(if (Length(listItems) = Length(selectedItems)) then (selectedItems := [Array: ]) else begin
 				selectedItems := (foreach key, value in listItems collect key);
@@ -182,6 +204,8 @@ export67 := {
 			end)
 	end,
 	whichStores: nil,
+	// The sync options for the desktop: {packages, syncall, stores}, each store
+	// picked with the soups of the applications picked (syncall when all).
 	BuildSyncOptions: func() begin
 		l1 := {packages: nil, syncall: true, stores: [Array: ]};
 		protoContext:BuildApplicationList(func() begin
@@ -230,6 +254,8 @@ export67 := {
 	checkAdjust: nil
 };
 
+// The applications (without "Packages"): those picked last time, and any new
+// since, selected; all to start.
 export67Item := {
 	viewBounds: {left: 0, top: 5, right: 184, bottom: 89},
 	viewFont: @fontSystem10,
@@ -263,6 +289,7 @@ export67Item := {
 	viewJustify: vjParentCenterH + vjSiblingBottomV,
 	useMultipleSelections: true,
 	useScrollers: true,
+	// The applications picked, or nil when all are.
 	CollectOptions: func() begin
 		if (Length(appList.selectedItems) <> Length(appList.listItems)) then begin
 				local l1;
@@ -275,21 +302,25 @@ export67Item := {
 	preAllocatedContext: 'appList
 };
 
+// "Backup all packages", kept in the preferences.
 backupAllPackages := {
 	text: "Backup all packages",
 	viewBounds: {left: 4, top: 12, right: 175, bottom: 27},
 	viewFont: @fontSystem10,
+	// Shows the kept setting.
 	viewSetupFormScript: func() begin
 		(if packagesCheckboxVisible then (self.viewValue := protoContext:ConnectionPrefsRead('backupPackages)))
 	end,
 	viewValue: nil,
 	viewJustify: vjCenterV + vjSiblingLeftH + vjSiblingBottomV,
+	// Hidden when no packages can be backed up.
 	viewSetupDoneScript: func() begin
 		if (not packagesCheckboxVisible) then begin
 				protoContext:HideIfVisible(self)
 			end;
 		inherited:?viewSetupDoneScript()
 	end,
+	// Keeps the setting.
 	valueChanged: func() begin
 		protoContext:ConnectionPrefsWrite('backupPackages, self.viewValue)
 	end,
@@ -297,10 +328,12 @@ backupAllPackages := {
 	preAllocatedContext: 'backupPackages
 };
 
+// "From".
 from := {
 	text: "From",
 	viewBounds: {left: 7, top: 3, right: 200, bottom: 15},
-	viewJustify: 8396928,
+	viewJustify: vjParentBottomV + vjSiblingBottomV + oneLineOnly,
+	// Moves up when the packages checkbox is hidden.
 	viewSetupFormScript: func() begin
 		if (not inited) then begin
 				OriginalViewBounds := Clone(viewBounds)
@@ -314,6 +347,7 @@ from := {
 	end,
 	OriginalViewBounds: nil,
 	inited: nil,
+	// Nothing more to do.
 	viewSetupDoneScript: func() begin
 		inherited:?viewSetupDoneScript()
 	end,
@@ -322,6 +356,7 @@ from := {
 	preAllocatedContext: 'fromText
 };
 
+// The stores (by name, or kind), all selected.
 export67Item_2 := {
 	viewBounds: {left: 0, top: 5, right: 184, bottom: 55},
 	viewLines: 3,

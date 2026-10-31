@@ -1,4 +1,4 @@
-// export93, and what only it reaches
+// A picture of the Dock slips (@8285): a 50 x 50 bitmap.
 
 export93 := {
 	bits: bitmap('bits, "resources/bits/761ff1.png", "00000000000800000000000000320032", 1),

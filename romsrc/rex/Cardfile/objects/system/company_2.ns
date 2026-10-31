@@ -1,4 +1,6 @@
-// company_2, and what only it reaches
+// The Company edit view of a person card (@8213): company and title, or an
+// element of the card's companies array.  The reading and section fields are
+// allocated but not among the children (they serve a localised ROM).
 
 company_2 := {
 	stepChildren: [|Array|: company_2Item, company_2Item_2],
@@ -8,6 +10,7 @@ company_2 := {
 	infoFrame: {
 		checkPrefix: [|Array|: true, [pathExpr: 'companies]],
 		checkPaths: [|Array|: 'company, 'title],
+		// "Title, Company", or whichever of the two there is.
 		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
 			local strFilled2, strFilled3;
 			strFilled2 := StrFilled(v20_wwwwwwwwwwvvvvvv[0]);
@@ -30,9 +33,10 @@ company_2 := {
 			viewBounds: {left: 0, top: 0, right: 0, bottom: 65},
 			viewLineSpacing: 30,
 			flavor: @newtCustomFilter,
-			newRecFlags: 29403649,
+			newRecFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed + vPunctuationAllowed + vNameField + vCapsRequired + vCustomDictionaries,
 			addPath: 'companyReading,
 			label: label,
+			// Sends key code 56 into the field once it is open (deferred KeyIn).
 			viewSetupDoneScript: func() begin
 				AddDeferredCall(functions.KeyIn, [Array: 56, nil]);
 				inherited:?viewSetupDoneScript()
@@ -46,9 +50,10 @@ company_2 := {
 			viewBounds: {left: 0, top: 0, right: 0, bottom: 65},
 			viewLineSpacing: 30,
 			flavor: @newtCustomFilter,
-			newRecFlags: 29403649,
+			newRecFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed + vPunctuationAllowed + vNameField + vCapsRequired + vCustomDictionaries,
 			addPath: 'section,
 			label: label,
+			// Sends key code 56 into the field once it is open (deferred KeyIn).
 			viewSetupDoneScript: func() begin
 				AddDeferredCall(functions.KeyIn, [Array: 56, nil]);
 				inherited:?viewSetupDoneScript()
@@ -62,6 +67,7 @@ company_2 := {
 	section: nil
 };
 
+// The company line, with the locale's company dictionaries.
 company_2Item := {
 	path: nil,
 	viewBounds: {left: 0, top: 6, right: 0, bottom: 80},
@@ -69,7 +75,9 @@ company_2Item := {
 	label: company,
 	flavor: @newtCustomFilter,
 	newDictionaries: nil,
-	newRecFlags: 29403649,
+	newRecFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed + vPunctuationAllowed + vNameField + vCapsRequired + vCustomDictionaries,
+	// Takes the locale's company dictionaries; only the card's own company line
+	// (not an element of companies) creates its slot when written in.
 	viewSetupFormScript: func() begin
 		local locale;
 		newDictionaries := (locale := GetLocale()).recogCompanyDictionaries;
@@ -84,6 +92,7 @@ company_2Item := {
 	preAllocatedContext: 'company
 };
 
+// The title line (@8248), remembering titles written before.
 company_2Item_2 := {
 	addPath: 'title,
 	memory: 'companyTitle,

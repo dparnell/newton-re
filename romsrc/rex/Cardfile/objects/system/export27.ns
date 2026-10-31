@@ -1,4 +1,7 @@
-// export27, and what only it reaches
+// The Names edit slip (@8219, the application's editSlip): a floater over the
+// card being edited, with its title (@8241), the info view picked
+// (selectedLayout) and a keyboard - the alphabetic one, a phone pad or numeric
+// keys as the view asks, or none.  ShowEditSlip opens it.
 
 export27 := {
 	stepChildren: [stepChildren: editFields],
@@ -7,11 +10,14 @@ export27 := {
 	viewBounds: {top: 7, left: 7, right: -7, bottom: -7},
 	noScroll: "This window does not support scrolling.",
 	noOverview: "This window does not support Overview.",
+	// The letter picked in the "sorted under" popup (an ink name has no sort
+	// string): becomes the card's sort string, and the slip closes.
 	pickActionScript: func(index) begin
 		target.sorton := SPrintObject(index);
 		EntryChange(target);
 		AddDeferredSend(closeBox, 'buttonClickScript, '[Array: ])
 	end,
+	// The application's functions, for the views in the slip.
 	MakeDataPaths: func(checkPrefixItem, checkPaths, stringData) begin
 		newtAppBase:MakeDataPaths(checkPrefixItem, checkPaths, stringData)
 	end,
@@ -44,6 +50,7 @@ export27 := {
 	editNewtLayout: nil
 };
 
+// The slip's layout over the Names soup holding the card's entry view.
 editFields := {
 	masterSoupSlot: 'names,
 	name: "Edit Fields",
@@ -58,6 +65,9 @@ editFields := {
 					viewDef: 'default,
 					stepChildren: [stepChildren: editFieldsItem, {_proto: @8212}, doneBtn],
 					declareSelf: 'editView,
+					// Picks the keyboard the info view asks for (usePhoneKeys, useNumericKeys,
+					// noKeyboard; nukeRecToggle takes the recognition toggle away) and keeps room
+					// for it.
 					viewSetupChildrenScript: func() begin
 						local viewChildrenItem, viewBounds;
 						viewChildrenItem := viewChildren[0];
@@ -82,6 +92,7 @@ editFields := {
 							end;
 						inherited:?viewSetupChildrenScript()
 					end,
+					// Shows the info view picked, or the class's default one.
 					viewSetupFormScript: func() begin
 						if (if (if selectedLayout then target) then GetViewDefs(target.class).(selectedLayout)) then begin
 								self.viewDef := selectedLayout
@@ -90,6 +101,9 @@ editFields := {
 							end;
 						inherited:?viewSetupFormScript()
 					end,
+					// Places the slip at the foot of the application area, as tall as its fields
+					// and keyboard need - leaving the keyboard out when they do not fit - and puts
+					// the caret in the first field (but not in the notes).
 					viewSetupDoneScript: func() begin
 						local count, childViewFrames, copy, l4, nextKeyView2, l6, childViewFrame, appAreaHeight, box;
 						appAreaHeight := GetAppParams().appAreaHeight;
@@ -119,6 +133,8 @@ editFields := {
 					stepAllocateContext: [|Array|: 'alphaKeys, editFieldsItem]
 				}
 			],
+			// The sort string from a name line: an ink name leaves the card with none,
+			// so Done will ask which letter it goes under.
 			SetSorton: func(a1) begin
 				if IsRichString(a1) then begin
 						inkDialog := true;
@@ -131,6 +147,8 @@ editFields := {
 			declareSelf: 'editEntryView,
 			viewJustify: vjParentFullH + vjParentFullV,
 			viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+			// The first slot of the card (a2, key2 its slot) with data in it, not counting
+			// the bookkeeping slots (kDatalessSlots), or nil.
 			HasData: func(key2, a2) begin
 				strFilled2 := nil;
 				if (IsFrame(a2) or IsArray(a2)) then begin
@@ -156,6 +174,9 @@ editFields := {
 				strFilled2
 			end,
 			inkDialog: nil,
+			// After the slip has closed: a card left with no data is deleted (going back to
+			// saveEntry); otherwise the owner card or worksite is made the current one,
+			// an undo is added (of the new card or of the data added), and the card shown.
 			viewPostQuitScript: func() begin
 				local l1, l2, l3, target2;
 				self:EndFlush();
@@ -186,9 +207,11 @@ editFields := {
 					end;
 				(appBase._recogSettings := _recogSettings)
 			end,
+			// Saves after the slip has gone.
 			viewQuitScript: func() begin
 				'postQuit
 			end,
+			// Keeps a copy of the card as it was, for the undo.
 			viewSetupFormScript: func() begin
 				self.startTarget := TotalClone(target);
 				inherited:?viewSetupFormScript()
@@ -212,6 +235,8 @@ editFieldsItem := {
 	preAllocatedContext: 'alphaKeys
 };
 
+// Done: for an ink name with no sort string, asks which letter it goes under;
+// else closes the slip.
 doneBtn := {
 	debug: "Done btn",
 	buttonClickScript: func() begin
@@ -226,6 +251,7 @@ doneBtn := {
 	preAllocatedContext: 'closeBox
 };
 
+// The button that shows the keyboard.
 keyButton := {
 	viewBounds: {left: 26, top: -18, right: 54, bottom: -5},
 	viewFlags: vVisible + vReadOnly + vClickable,

@@ -1,4 +1,6 @@
-// default_2, and what only it reaches
+// The Company Info edit view of a company card (@8214, its 'default view): the
+// company name, its first phone, and a contact's first and last name and
+// honorific.
 
 default_2 := {
 	viewFlags: vVisible,
@@ -10,7 +12,8 @@ default_2 := {
 			path: 'company,
 			label: company,
 			newDictionaries: nil,
-			newRecFlags: 29403649,
+			newRecFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed + vPunctuationAllowed + vNameField + vCapsRequired + vCustomDictionaries,
+			// Takes the locale's company dictionaries.
 			viewSetupFormScript: func() begin
 				local locale;
 				newDictionaries := (locale := GetLocale()).recogCompanyDictionaries;
@@ -47,6 +50,8 @@ default_2 := {
 			label: nil_2,
 			labelCommands: nil,
 			newDictionaries: nil,
+			// The honorific line: the locale's dictionaries, its common honorifics as the
+			// label's popup and its label text.
 			viewSetupFormScript: func() begin
 				local locale;
 				newDictionaries := (locale := GetLocale()).recogHonorificDictionaries;
@@ -61,12 +66,14 @@ default_2 := {
 	symbol: 'default,
 	type: 'editor,
 	protection: 'private,
+	// Makes sure the card has a first phone to edit.
 	viewSetupFormScript: func() begin
 		(if (Length(target.phones) < 1) then SetLength(target.phones, 1))
 	end,
 	infoFrame: {
 		checkPrefix: [|Array|: true, nil],
 		checkPaths: [|Array|: 'company, 'title],
+		// The company name.
 		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
 			ParamStr("^0", v20_wwwwwwwwwwvvvvvv)
 		end
@@ -76,11 +83,13 @@ default_2 := {
 	reading: nil,
 	stepAllocateContext: [|Array|:
 		'reading,
+		// The company name's reading (allocated, not shown; for a localised ROM).
 		{
 			path: 'companyReading,
 			label: label,
 			newDictionaries: nil,
-			newRecFlags: 29403649,
+			newRecFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed + vPunctuationAllowed + vNameField + vCapsRequired + vCustomDictionaries,
+			// Takes the locale's company dictionaries.
 			viewSetupFormScript: func() begin
 				local locale;
 				newDictionaries := (locale := GetLocale()).recogCompanyDictionaries;

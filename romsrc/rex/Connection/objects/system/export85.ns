@@ -1,4 +1,7 @@
-// export85, and what only it reaches
+// The auto-dock slip (@8277), opened by BuildAutoDockParams before an
+// automatic dock over a modem (to confirm the number, with a sender popup and
+// call options) or a transport with a button of its own; Connect hands the
+// connection options and password to the callback.
 
 export85 := {
 	viewBounds: {left: 0, top: 50, right: 210, bottom: 170},
@@ -11,6 +14,7 @@ export85 := {
 		},
 		export85Item,
 		{
+			// Cancel: ends the connection.
 			buttonClickScript: func() begin
 				GetRoot().Connection.theEndpoint:ConnectionDone(0);
 				inherited:?buttonClickScript()
@@ -19,6 +23,9 @@ export85 := {
 		},
 		{
 			text: connect,
+			// Connect: for a modem, the number shown into the options (nil when there is
+			// none); for another transport, its callBeforeConnect is asked first when it
+			// has one.
 			buttonClickScript: func() begin
 				local myCallback;
 				local phone;
@@ -50,7 +57,7 @@ export85 := {
 					end)
 			end,
 			viewBounds: {left: -54, top: -18, right: -7, bottom: -5},
-			viewJustify: 8390790,
+			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 			_proto: @protoTextButton
 		},
 		export85Item_2,
@@ -60,6 +67,8 @@ export85 := {
 	prefsFrame: nil,
 	callback: nil,
 	password: nil,
+	// Opens the slip with the options, the auto-dock preferences (a2), the
+	// password (a3) and the callback.
 	OpenOn: func(options, a2, a3, callback) begin
 		local context;
 		(context := BuildContext(self)).options := options;
@@ -68,6 +77,8 @@ export85 := {
 		context.callback := callback;
 		context:Open()
 	end,
+	// A transport with a button: no modem lines; otherwise no button.  -2 clears
+	// vVisible.
 	viewSetupFormScript: func() begin
 		if options.button then begin
 				dialAssist.viewFlags := BAnd(dialAssist.viewFlags, -2);
@@ -86,6 +97,7 @@ export85 := {
 
 willDial := "Will dial: ";
 
+// The modem lines: the sender popup and "Will dial: number".
 export85Item := {
 	viewBounds: {left: 7, top: 20, right: -7, bottom: 84},
 	viewFlags: vVisible,
@@ -94,6 +106,7 @@ export85Item := {
 		{
 			viewBounds: {left: 0, top: 0, right: 200, bottom: 26},
 			viewJustify: vjCenterV,
+			// A new sender: the number is worked out again.
 			JamIt: func() begin
 				inherited:?JamIt();
 				modemStuff.phonenumber := nil;
@@ -104,11 +117,14 @@ export85Item := {
 		export85ItemItem
 	],
 	viewJustify: vjParentFullH,
+	// Shows the number to dial.
 	SetNewWillDial: func(a1) begin
 		phonenumber := a1;
 		SetValue(willDial, 'text, Stringer([Array: "Will dial: ", " ", self:GetPhone()]))
 	end,
 	phonenumber: nil,
+	// The number to dial: the one set, or the worksite's connection phone made
+	// dialable from the current location (MungePhone).
 	GetPhone: func() begin
 		local connection, worksite;
 		(if phonenumber then phonenumber else begin
@@ -122,10 +138,11 @@ export85Item := {
 	preAllocatedContext: 'modemStuff
 };
 
+// "Will dial: number".
 export85ItemItem := {
 	text: willDial,
 	viewBounds: {left: 0, top: -32, right: 0, bottom: 0},
-	viewJustify: 8388790,
+	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjParentBottomV + oneLineOnly,
 	viewFont: tsSimple + tsSize(9),
 	viewSetupFormScript: func() begin
 		(self.text := Stringer([Array: "Will dial: ", " ", self:GetPhone()]))
@@ -134,6 +151,8 @@ export85ItemItem := {
 	preAllocatedContext: 'willDial
 };
 
+// The call options button: opens the call options slip on the worksite's
+// number and country.
 export85Item_2 := {
 	buttonClickScript: func() begin
 		local connection, worksite;
@@ -147,6 +166,7 @@ export85Item_2 := {
 		callOptionsSlip.invoker := self;
 		callOptionsSlip:Toggle()
 	end,
+	// The call options slip's number becomes the one to dial.
 	UpdatePhone: func() begin
 		(if callOptionsSlip.outNumber then modemStuff:SetNewWillDial(callOptionsSlip.outNumber.text))
 	end,
@@ -154,13 +174,14 @@ export85Item_2 := {
 	preAllocatedContext: 'dialAssist
 };
 
+// The transport's own button, its title from the options.
 export85Item_3 := {
 	text: export85Item_3Text,
 	buttonClickScript: func() begin
 		(if options.buttonClickScript then call options.buttonClickScript with (options))
 	end,
 	viewBounds: {left: -133, top: -18, right: -79, bottom: -5},
-	viewJustify: 8388774,
+	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV + oneLineOnly,
 	viewSetupFormScript: func() begin
 		local copy;
 		(if options.button then begin

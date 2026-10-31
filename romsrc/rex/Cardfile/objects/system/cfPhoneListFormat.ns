@@ -1,4 +1,5 @@
-// cfPhoneListFormat, and what only it reaches
+// The "Phone Book" print format (@8232): the cards in sort order, each card's
+// data beside its phone and pager numbers, under a heading for each letter.
 
 cfPhoneListFormat := {
 	routingType: 'Print,
@@ -7,6 +8,8 @@ cfPhoneListFormat := {
 	title: phoneBook,
 	symbol: 'cfPhoneListFormat,
 	usesCursors: true,
+	// A heading for the next card's letter when it starts a new one (an
+	// "Untitled" heading for cards with no sort name); returns the height added.
 	AddHeader: func() begin
 		local target2, none;
 		none := 0;
@@ -24,6 +27,9 @@ cfPhoneListFormat := {
 			end;
 		none
 	end,
+	// Adds a card (target2) at a3, a4: its data but its phones in one column, the
+	// phones and pagers in another; nil when the card belongs under a new letter
+	// (so the page ends and the next one starts with its heading).
 	AddPrintChild: func(layout, target2, a3, a4) begin
 		local frame2, addStepView2, l3;
 		if (currentLetter = 'none) then begin
@@ -35,6 +41,7 @@ cfPhoneListFormat := {
 						return nil
 					end
 			end;
+		// The card's views, without its phones and pagers.
 		frame2 := {_proto: infoDisplay, target: target2, viewSetupFormScript: func() begin
 			local l1, l2;
 			(if (if target then target.class) then begin
@@ -59,6 +66,8 @@ cfPhoneListFormat := {
 	end,
 	currentLetter: nil,
 	infoDisplay: @8242,
+	// Draws a letter's heading: a grey rule and the letter in New York bold 14;
+	// returns its height, 25.
 	StartNewLetter: func(sortonItem) begin
 		local l1, frame2;
 		l1 := (if (sortonItem = 'none) then "Untitled" else SPrintObject(sortonItem));

@@ -1,4 +1,6 @@
-// email, and what only it reaches
+// The E-Mail edit view (@8220): an email address with its email system popup
+// and, on an owner card, a button to set the account's password.  Elements of
+// the card's emailAddrs array.
 
 email := {
 	name: "E-Mail",
@@ -8,11 +10,13 @@ email := {
 	infoFrame: {
 		checkPrefix: [|Array|: true, [pathExpr: 'emailAddrs]],
 		checkPaths: [|Array|: 'email, 'emailPassword],
+		// "System: address" (the system's name when it has one).
 		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
 			(if StrFilled(v20_wwwwwwwwwwvvvvvv[0]) then ParamStr("^?0^0: ||^1", [Array: GetGlobals().EmailSystems.emailText.(ClassOf(v20_wwwwwwwwwwvvvvvv[0])), v20_wwwwwwwwwwvvvvvv[0]]) else "")
 		end
 	},
 	protection: 'private,
+	// Only an owner card offers the password button.
 	viewSetupChildrenScript: func() begin
 		if (target.class = 'owner) then begin
 				stepChildren := saveChildren
@@ -34,26 +38,30 @@ emailStepChildren := [stepChildren:
 	setEMailPassword,
 	{
 		viewBounds: {left: 0, top: 0, right: 0, bottom: 8},
-		viewJustify: 8396848,
+		viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 		viewFlags: vVisible,
 		viewFormat: nil,
 		viewClass: clView
 	}
 ];
 
+// The address line, with the email systems' popup.
 emailItem := {
 	path: nil,
 	flavor: @newtCustomFilter,
-	newRecFlags: 64001,
+	newRecFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed + vLettersAllowed + vPunctuationAllowed,
 	addPath: 'email,
+	// The email systems the popup offers.
 	GetSymArray: func() begin
 		GetGlobals().EmailSystems.emailClasses
 	end,
+	// Their names.
 	GetTextArray: func() begin
 		GetGlobals().EmailSystems.emailText
 	end,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 74},
 	viewLineSpacing: 30,
+	// An owner's address emptied takes its password with it.
 	viewQuitScript: func() begin
 		inherited:viewQuitScript();
 		(if (if (not StrFilled(target.(path))) then (target.class = 'owner)) then (target.(mailpassword.path) := nil))
@@ -63,6 +71,8 @@ emailItem := {
 	preAllocatedContext: 'account
 };
 
+// "Set E-Mail Password": opens the password slip (@8229) on the address's
+// emailPassword.
 setEMailPassword := {
 	viewBounds: {left: 0, top: 2, right: 107, bottom: 14},
 	buttonClickScript: func() begin
@@ -72,7 +82,7 @@ setEMailPassword := {
 		appBase:RememberedOpen(context)
 	end,
 	text: "Set E-Mail Password",
-	viewJustify: 8396822,
+	viewJustify: vjCenterH + vjCenterV + vjParentCenterH + vjSiblingBottomV + oneLineOnly,
 	addPath: 'emailPassword,
 	setpasswordslip: @8229,
 	_proto: @protoTextButton,

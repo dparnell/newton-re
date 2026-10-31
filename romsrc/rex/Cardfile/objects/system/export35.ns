@@ -1,4 +1,6 @@
-// export35, and what only it reaches
+// The overview layout of the Names application (@8227): a list of the cards
+// (newtOverLayout), each with its class's icon, its name and its first phone
+// number, with the A-Z tabs above (not for owner cards).
 
 export35 := {
 	name: overview,
@@ -9,6 +11,8 @@ export35 := {
 			viewBounds: {left: 0, top: 20, right: 0, bottom: 0},
 			viewJustify: vjParentFullH + vjParentFullV,
 			forceNewEntry: nil,
+			// Draws a card's line: the icon, the first line of its text and its phone
+			// number at the right (phoneIndent).  Notes the line of the card to hilite.
 			Abstract: func(items2Item, copy) begin
 				local dataDefs, stringExtract, pos, part, text, left, right, top, l9;
 				text := "";
@@ -41,6 +45,8 @@ export35 := {
 						[Array: OffsetShape(MakeShape(dataDefs.overviewIcon), left, top), MakeText(part, (left + 20), top, phoneIndent, l9), MakeText(text, phoneIndent, top, right, l9)]
 					end else inherited:Abstract(items2Item, copy))
 			end,
+			// A tap on a phone number opens the Call slip for it (not for owner cards);
+			// elsewhere, as the overview does.
 			HitItem: func(a1, trackScrollingItem, trackScrollingItem2) begin
 				local l1, copy, move;
 				(if (if (trackScrollingItem > phoneIndent) then (newtAppBase.superSymbol <> 'ownerNames)) then begin
@@ -53,22 +59,27 @@ export35 := {
 					end else inherited:HitItem(a1, trackScrollingItem, trackScrollingItem2))
 			end,
 			lineHeight: 12,
+			// While a phone is being called, the target is that card.
 			GetTargetInfo: func(a1) begin
 				(if self.hilitItem then {target: hilitItem, targetView: self} else inherited:GetTargetInfo(a1))
 			end,
 			phoneIndent: nil,
+			// Follows the cursor's card.
 			Retarget: func(a1) begin
 				inherited:Retarget(a1);
 				(target := dataCursor:entry())
 			end,
 			checkBoxVertOffset: -1,
+			// Scrolls and follows the cursor.
 			Scroller: func(maxLines) begin
 				inherited:Scroller(maxLines);
 				self:Retarget(nil)
 			end,
+			// Drops the bookmark.
 			viewSetupDoneScript: func() begin
 				(bookmark := nil)
 			end,
+			// Adds entry a1 to store (going to it when _context), with an undo.
 			newEntry: func(a1, _context, store) begin
 				masterSoup:AddEntry(a1, store);
 				if _context then begin
@@ -77,6 +88,7 @@ export35 := {
 				AddUndoSend(layout, 'KillEntry, [Array: a1]);
 				(if _context then layout:NewTarget() else layout:Retarget(true))
 			end,
+			// Owner cards: no tabs above, so the list starts near the top.
 			viewSetupFormScript: func() begin
 				if (superSymbol = 'ownerNames) then begin
 						if IsReadOnly(viewBounds) then begin
@@ -96,6 +108,7 @@ export35 := {
 	viewFlags: vVisible,
 	viewFormat: nil,
 	viewJustify: vjParentFullH + vjParentFullV,
+	// Owner cards have no A-Z tabs.
 	viewSetupFormScript: func() begin
 		if (superSymbol = 'ownerNames) then begin
 				if IsReadOnly(stepChildren) then begin

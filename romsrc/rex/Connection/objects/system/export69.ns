@@ -1,6 +1,12 @@
-// export69, and what only it reaches
+// The Mac OS file browser (@8261): the desktop's folders and files to restore,
+// install or import from, with a popup of the folder path above the list (as a
+// Mac OS Open dialog has), and buttons to do it (labels[2]) or get a file's
+// info.  A folder or disk tapped is opened; the file picked goes to
+// callWhenDone(endpoint, cancelled, whichFiles, file, path).
 
 export69 := {
+	// Small icons by the desktop's item type: 0 desktop, 1 file, 2 folder, 3 disk
+	// and so on (shapes once the slip opens).
 	macIcons: [|Array|:
 		{bits: macIconsBits, bounds: {left: 0, top: 0, right: 18, bottom: 12}},
 		{bits: macIconsBits_2, bounds: {left: 0, top: 0, right: 12, bottom: 12}},
@@ -38,6 +44,10 @@ export69 := {
 		}
 	],
 	getinfoButton: nil,
+	// Asks the desktop for the current folder's files (callReadCommand true: with
+	// the path set, 'spth') and lists them, each with its type's icon (an alias in
+	// italics); nil when the desktop sent none.  Commands from the desktop are not
+	// handled meanwhile (checkCommandsInIdle).
 	RebuildFileList: func(a1, callReadCommand) begin
 		fileList.listItems := [Array: ];
 		if aborting then begin
@@ -81,12 +91,14 @@ export69 := {
 			end else return nil)
 	end,
 	doitButton: nil,
+	// Once open: when the start failed (aborting), tells the desktop and closes;
+	// otherwise idles the connection every 2 seconds.
 	viewSetupDoneScript: func() begin
 		if callWhenSetup then begin
 				call callWhenSetup with ()
 			end;
 		(if aborting then begin
-				if (if endpoint.connected then (aborting <> -16005)) then begin
+				if (if endpoint.connected then (aborting <> kCommErrRequestCanceled)) then begin
 						protoContext:SendCancelToDesktop(endpoint)
 					end;
 				protoContext:HandleErrorDuringStartup(endpoint, self, aborting);
@@ -96,12 +108,15 @@ export69 := {
 	currentSelection: nil,
 	currentPath: nil,
 	macFile: {bits: macIconsBits_2, bounds: {left: 0, top: 0, right: 12, bottom: 12}},
+	// Ends the connection when the slip was closed some other way.
 	viewQuitScript: func() begin
 		protoContext:RemoveOpenWindow(self);
 		(if (not aborting) then (if (not closing) then endpoint:ConnectionDone(0)))
 	end,
 	viewFlags: vApplication + vFloating + vClickable,
 	fileList: nil,
+	// Keeps the connection alive; when the desktop has finished, closes the
+	// browser and tells callWhenDone it was cancelled.
 	viewIdleScript: func() begin
 		local idleConnection;
 		if (if ((idleConnection := endpoint:IdleConnection(checkCommandsInIdle)) = 0) then (not endpoint.closingDown)) then begin
@@ -121,6 +136,8 @@ export69 := {
 	currentFolder: nil,
 	checkCommandsInIdle: true,
 	aborting: nil,
+	// An alias is checked with the desktop ('rali', answered 'alir' 1 when it
+	// resolves); an alert when it does not.
 	VerifyAlias: func(currentFile) begin
 		local l1, frame2;
 		l1 := true;
@@ -144,6 +161,7 @@ export69 := {
 			end;
 		return l1
 	end,
+	// Makes the slip close as it opens: error (-1 when none) is kept in aborting.
 	StopOpen: func(error) begin
 		if (not error) then begin
 				error := -1
@@ -168,6 +186,8 @@ export69 := {
 		bounds: {left: 0, top: 0, right: 18, bottom: 12}
 	},
 	closing: nil,
+	// Makes the icons shapes and asks the desktop for the current path ('dpth',
+	// answered 'path').
 	viewSetupFormScript: func() begin
 		self.protoContext := GetRoot().Connection;
 		protoContext:AddOpenWindow(self);
@@ -196,7 +216,8 @@ export69 := {
 		{
 			text: nil,
 			viewBounds: {left: 5, top: 8, right: 200, bottom: 20},
-			viewJustify: 8396800,
+			viewJustify: vjSiblingBottomV + oneLineOnly,
+			// The kind of file (labels[1]).
 			viewSetupFormScript: func() begin
 				(self.text := labels[1])
 			end,
@@ -206,6 +227,7 @@ export69 := {
 		export69Item,
 		export69Item_2,
 		{
+			// Cancel: tells the desktop ('opca') and closes the browser.
 			buttonClickScript: func() begin
 				closing := true;
 				endpoint:StopIdle(self:parent());
@@ -225,6 +247,7 @@ export69 := {
 		bits: bitmap('bits, "resources/bits/74f2a5.png", "000000000004000000000000000c0012", 1),
 		bounds: {left: 0, top: 0, right: 18, bottom: 12}
 	},
+	// The icon for a path item: desktop, open folder, disk or file.
 	GetIcon: func(currentPathItem) begin
 		local macDesktop2;
 		if (currentPathItem.type = 0) then begin
@@ -248,7 +271,9 @@ macIconsBits := bitmap('bits, "resources/bits/74d2b1.png", "00000000000400000000
 
 macIconsBits_2 := bitmap('bits, "resources/bits/74d32d.png", "000000000004000000000000000c000c", 1);
 
+// The path popup: the folders from the current one up.
 export69Item := {
+	// A folder picked: the path is cut back to it and the list made again.
 	labelActionScript: func(index) begin
 		count := Length(labelCommands);
 		local count;
@@ -262,9 +287,11 @@ export69Item := {
 	indent: 0,
 	preAllocatedContext: 'browseFolder,
 	iconBounds: {left: 0, top: 0, right: 16, bottom: 12},
+	// A popup item: name and icon.
 	MakeListItem: func(a1, icon) begin
 		return {item: a1, icon: icon, fixedHeight: 16}
 	end,
+	// Shows a name and icon, re-centred.
 	MyUpdate: func(a1, icon) begin
 		self:UpdateText(a1);
 		self:UpdateIcon(icon);
@@ -272,6 +299,7 @@ export69Item := {
 	end,
 	viewBounds: {left: 0, top: 9, right: 173, bottom: 22},
 	_proto: @protoLabelPicker,
+	// Makes the popup from the path (a1, the desktop's new path, when given).
 	SetNewPath: func(a1) begin
 		if (a1 <> nil) then begin
 				currentPath := a1
@@ -286,16 +314,18 @@ export69Item := {
 				browseFolder:MyUpdate(currentPath[l4].name, self:GetIcon(currentPath[l4]))
 			end)
 	end,
+	// The text line's bounds.
 	GetEntryLineBounds: func() begin
 		local copy;
 		(copy := Clone(entryLine.viewBounds)).right := self:LocalBox().right;
 		return copy
 	end,
-	viewJustify: 8396824,
+	viewJustify: vjBottomV + vjParentCenterH + vjSiblingBottomV + oneLineOnly,
 	checkCurrentItem: nil,
 	savedViewBounds: nil,
 	labelCommands: nil,
 	iconIndent: 2,
+	// Makes the popup the first time.
 	viewSetupFormScript: func() begin
 		if (not savedViewBounds) then begin
 				self:SetNewPath(nil);
@@ -304,6 +334,7 @@ export69Item := {
 		self.indent := (StrFontWidth(text, viewFont) + 3);
 		inherited:?viewSetupFormScript()
 	end,
+	// Sizes the popup to its text.
 	ReCenter: func() begin
 		local textBounds, entryLineBounds;
 		textBounds := self:GetTextBounds();
@@ -311,16 +342,19 @@ export69Item := {
 		entryLineBounds := self:GetEntryLineBounds();
 		SetValue(entryLine, 'viewBounds, entryLineBounds)
 	end,
+	// Picked: re-centred.
 	pickActionScript: func(index) begin
 		inherited:?pickActionScript(index);
 		self:ReCenter()
 	end,
 	text: "ﰁ",
+	// Sized to the text.
 	viewSetupChildrenScript: func() begin
 		inherited:?viewSetupChildrenScript();
 		SetValue(self, 'viewBounds, self:GetTextBounds());
 		(entryLine.viewBounds := self:GetEntryLineBounds())
 	end,
+	// As wide as its text, at most as wide as at first.
 	GetTextBounds: func() begin
 		local copy;
 		(copy := Clone(viewBounds)).right := min(savedViewBounds.right, (textIndent + StrFontWidth(entryLine.text, entryLine.viewFont)));
@@ -328,15 +362,19 @@ export69Item := {
 	end
 };
 
+// The list of files.
 export69Item_2 := {
 	viewBounds: {left: 10, top: 4, right: 200, bottom: 135},
+	// Lists the files; the slip closes when there are none to list.
 	viewSetupFormScript: func() begin
 		if (not self:RebuildFileList(nil, nil)) then begin
-				self:StopOpen(-16005)
+				self:StopOpen(kCommErrRequestCanceled)
 			end;
 		inherited:?viewSetupFormScript()
 	end,
 	viewFont: @fontSystem10,
+	// A folder or disk tapped is opened (after checking an alias) and the list made
+	// again; a file is selected and the buttons shown.
 	buttonClickScript: func(a1) begin
 		local currentFile, l2, name, icon, frame2;
 		if (a1 >= Length(currentFiles)) then begin
@@ -365,6 +403,7 @@ export69Item_2 := {
 	italicStyle: {font: tsSystem + tsSize(10) + tsItalic},
 	useScrollers: true,
 	isShapeList: true,
+	// Makes the list again for the new folder, the buttons hidden.
 	UpdateAndRebuildFileList: func() begin
 		selection := nil;
 		self:SetOrigin(0, 0);
@@ -379,6 +418,8 @@ export69Item_2 := {
 	preAllocatedContext: 'fileList
 };
 
+// The do-it button (labels[2]: Restore, Install or Import): hands the file
+// picked and the path to callWhenDone.
 export69Item_3 := {
 	text: nil,
 	buttonClickScript: func() begin
@@ -395,11 +436,13 @@ export69Item_3 := {
 				end))
 	end,
 	viewBounds: {top: -18, left: -47, right: -7, bottom: -5},
-	viewJustify: 8390790,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
+	// Its text, sized to it.
 	viewSetupFormScript: func() begin
 		self.text := labels[2];
 		(self.viewBounds := SetBounds(((viewBounds.right - StrWidth(text)) - 7), viewBounds.top, viewBounds.right, viewBounds.bottom))
 	end,
+	// Hidden until a file is picked.
 	viewSetupDoneScript: func() begin
 		self:Hide();
 		inherited:?viewSetupDoneScript()
@@ -408,6 +451,7 @@ export69Item_3 := {
 	preAllocatedContext: 'doitButton
 };
 
+// File Info: asks the desktop for the file's info and shows it.
 export69Item_4 := {
 	text: fileInfo,
 	buttonClickScript: func() begin
@@ -426,7 +470,8 @@ export69Item_4 := {
 				end))
 	end,
 	viewBounds: {left: -51, top: -18, right: -7, bottom: -5},
-	viewJustify: 8390790,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
+	// Hidden until a file is picked.
 	viewSetupDoneScript: func() begin
 		self:Hide();
 		inherited:?viewSetupDoneScript()

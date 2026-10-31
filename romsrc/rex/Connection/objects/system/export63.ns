@@ -1,14 +1,18 @@
-// export63, and what only it reaches
+// The modem connection's endpoint options (@8255): the modem service ('mods')
+// with error correction and compression, dialing the number picked
+// (phonenumber).
 
 export63 := {
 	connectTimeout: 255,
 	idletimeout: 30,
+	// The options for opening: the modem service and its error control options.
 	openOptions: func() begin
-		AddArraySlot((result := [Array: {label: "mods", type: 'service, opCode: 512}, {label: "mecp", type: 'option, opCode: 512, data: {arglist: [Array: 16], typeList: [Array: 10, 1]}}, {label: "mnpc", type: 'option, opCode: 512, data: {arglist: [Array: 11], typeList: [Array: 10, 1]}}, {label: "mnpa", type: 'option, opCode: 512, data: {arglist: [Array: nil], typeList: [Array: 10, 5]}}]), MakeModemOption());
+		AddArraySlot((result := [Array: {label: "mods", type: 'service, opCode: opSetRequired}, {label: "mecp", type: 'option, opCode: opSetRequired, data: {arglist: [Array: 16], typeList: [Array: 10, 1]}}, {label: "mnpc", type: 'option, opCode: opSetRequired, data: {arglist: [Array: 11], typeList: [Array: 10, 1]}}, {label: "mnpa", type: 'option, opCode: opSetRequired, data: {arglist: [Array: nil], typeList: [Array: 10, 5]}}]), MakeModemOption());
 		return result
 	end,
+	// The connect options: the phone number to dial ('rout' address).
 	connectOptions: func() begin
-		(result := [Array: {label: "rout", type: 'address, opCode: 512, data: {arglist: [Array: 3, 0, ""], typeList: [Array: 10, 1, 2, [Array: 11, 13, 0]]}}])[0].data.arglist[1] := StrLen(self.phonenumber);
+		(result := [Array: {label: "rout", type: 'address, opCode: opSetRequired, data: {arglist: [Array: 3, 0, ""], typeList: [Array: 10, 1, 2, [Array: 11, 13, 0]]}}])[0].data.arglist[1] := StrLen(self.phonenumber);
 		result[0].data.arglist[2] := self.phonenumber;
 		return result
 	end,

@@ -1,4 +1,6 @@
-// export72, and what only it reaches
+// The "Getting file list..." status slip (@8264) that ConnOpenFileBrowser
+// opens: waits for the desktop's answer to the browse request and opens the
+// file browser - the Mac OS one (@8261) or the PC one (@8262) - then closes.
 
 export72 := {
 	viewBounds: {left: 0, top: 60, right: 180, bottom: 145},
@@ -7,6 +9,10 @@ export72 := {
 			kROM_8261: @8261,
 			kROM_8262: @8262
 		},
+		// Once: joins the open windows and, deferred, reads the desktop's answer (for
+		// whichFiles 1, first its 'gist' request, answered with the internal store's
+		// frame 'isto'), then the 'dres' result, and opens the browser for the
+		// desktop's type.  A cancel just closes; other errors end the connection.
 		func() begin
 			if (not inited) then begin
 					inited := true;
@@ -40,7 +46,7 @@ export72 := {
 								theFileBrowser.endpoint := endpoint;
 								theFileBrowser:FilterDialog()
 							end onexception |evt.ex| do begin
-								if ((error := CurrentException().error) <> -16005) then begin
+								if ((error := CurrentException().error) <> kCommErrRequestCanceled) then begin
 										endpoint:ConnectionDone(error)
 									end;
 								closing := true;
@@ -51,6 +57,7 @@ export72 := {
 				end;
 			inherited:?viewSetupFormScript()
 		end),
+	// Ends the connection when the slip was closed some other way.
 	viewQuitScript: func() begin
 		endpoint:StopIdle(self);
 		protoContext:RemoveOpenWindow(self);
@@ -60,6 +67,7 @@ export72 := {
 		(inited := nil)
 	end,
 	viewFlags: vApplication + vFloating + vClickable,
+	// Stop: says "Stopping...", stops the browser and the endpoint's operation.
 	CancelRequest: func(symbol2) begin
 		(if (not stopping) then begin
 				stopping := true;
@@ -83,6 +91,7 @@ export72 := {
 		},
 		appSymbol: 'Connection
 	},
+	// Turns the barber pole every half second.
 	viewIdleScript: func() begin
 		self:updateIndicator(currentStatusSetup);
 		return 500

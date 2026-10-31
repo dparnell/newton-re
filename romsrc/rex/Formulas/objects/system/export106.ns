@@ -1,4 +1,5 @@
-// export106, and what only it reaches
+// A formula line (@8298) with an "x12" button after its field, which multiplies
+// the value by 12 (years made months) and solves the formula.
 
 export106 := {
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 36},
@@ -7,22 +8,26 @@ export106 := {
 	stepChildren: [stepChildren:
 		export106Item,
 		{
+			// The button multiplies the line's value by 12.
 			buttonClickScript: func() begin
 				self:Times12()
 			end,
 			text: "x12",
 			viewBounds: {left: -26, top: 15, right: -3, bottom: 26},
-			viewJustify: 8389638,
+			viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + oneLineOnly,
 			_proto: @protoTextButton
 		}
 	],
+	// The line's value (its inner line's).
 	GetNumericValue: func() begin
 		return CalcLine:GetNumericValue()
 	end,
+	// Sets the line's value.
 	SetNumericValue: func(a1) begin
 		CalcLine:SetNumericValue(a1)
 	end,
 	viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV,
+	// Multiplies the value by 12 and solves the formula, with an undo action.
 	Times12: func() begin
 		local numericValue;
 		(if ((numericValue := self:GetNumericValue()) <> nil) then begin
@@ -31,6 +36,7 @@ export106 := {
 				self:SolveFormula(lineNumber)
 			end)
 	end,
+	// Undoes Times12: puts back the old value a1 (and is itself undoable).
 	UndoTimes12: func(a1) begin
 		AddUndoAction('UndoTimes12, [Array: self:GetNumericValue()]);
 		self:SetNumericValue(a1);
@@ -41,4 +47,5 @@ export106 := {
 	stepAllocateContext: [|Array|: 'CalcLine, export106Item]
 };
 
+// The inner line, with room on the right for the button.
 export106Item := {rightmargin: 35, _proto: @8296, preAllocatedContext: 'CalcLine};

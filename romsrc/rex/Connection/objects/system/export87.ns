@@ -1,4 +1,4 @@
-// export87, and what only it reaches
+// GetWorksite (@8279): the worksite whose place is a1, or nil.
 
 export87 := func(a1) begin
 	if a1 then begin

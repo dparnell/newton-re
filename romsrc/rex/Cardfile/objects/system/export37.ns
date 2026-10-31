@@ -1,6 +1,8 @@
-// export37, and what only it reaches
+// The slip that sets a password kept in a card (@8229), such as an email
+// password: a passwordSlip that stores what is written into the card's path.
 
 export37 := {
+	// Keeps the password in the card.
 	SetPassword: func(realText) begin
 		(if target then begin
 				target.(path) := realText;
@@ -10,6 +12,7 @@ export37 := {
 	VerifyPassword: nil,
 	requirePassword: true,
 	viewJustify: vjParentCenterH + vjParentCenterV,
+	// Positions the slip at the top of its parent.
 	viewSetupFormScript: func() begin
 		local viewBounds;
 		inherited:viewSetupFormScript();

@@ -1,4 +1,7 @@
-// export115, and what only it reaches
+// The Loan Payment panel (@8307): number of years, yearly interest rate, loan
+// amount and monthly payment - any three give the fourth - with the total of
+// the payments and the interest paid shown below.  The solvers work in months:
+// years x 12, the rate / 12.
 
 export115 := {
 	viewBounds: {left: 0, top: 0, right: 224, bottom: 261},
@@ -15,6 +18,7 @@ export115 := {
 	],
 	changeInProgress: nil,
 	solvedFor: nil,
+	// The panel's lines, in the order the solvers' list has them.
 	viewSetupDoneScript: func() begin
 		AddArraySlot((FSViews := [Array: ]), NumberOfYears);
 		AddArraySlot(FSViews, InterestRate);
@@ -22,17 +26,20 @@ export115 := {
 		AddArraySlot(FSViews, MonthlyPayment);
 		inherited:?viewSetupDoneScript()
 	end,
+	// Clears the totals too.
 	ClearAllFields: func() begin
 		inherited:ClearAllFields();
 		TotalPayments:SetNumericValueString(nil);
 		TotalInterest:SetNumericValueString(nil)
 	end,
+	// A line emptied: the totals no longer hold.
 	ClearFormula: func() begin
 		TotalPayments:SetNumericValueString(nil);
 		TotalInterest:SetNumericValueString(nil)
 	end,
 	formulaSymbol: 'LoanPayment,
 	overview: loanPayment,
+	// After a value is computed: shows the totals once all four lines are filled.
 	FillInTheSolution: func(a1, a2) begin
 		local numericValue, numericValue2, numericValue3, numericValue4;
 		inherited:FillInTheSolution(a1, a2);
@@ -71,19 +78,22 @@ export115 := {
 
 loanPayment := "Loan Payment";
 
+// Number of years (line 0).
 export115Item := {
 	calcLineLabel: "Number of Years",
+	// The years for the rate, amount and payment; an alert when there are none.
 	ComputeValue: func(list) begin
 		local solveForPeriod;
 		if (((solveForPeriod := self:SolveForPeriod((list[1] / 12), list[2], 0, (-list[3]))) = nil) or (solveForPeriod < 0)) then begin
 				solveForPeriod := nil;
-				self:Notify(3, "Loan Payment", "No solution.")
+				self:Notify(kNotifyAlert, "Loan Payment", "No solution.")
 			end else begin
 				solveForPeriod := (solveForPeriod / 12)
 			end;
 		return solveForPeriod
 	end,
 	lineNumber: 0,
+	// Puts the caret at the end of the line's field.
 	viewSetupDoneScript: func() begin
 		inherited:?viewSetupDoneScript();
 		SetKeyView(self.value.value, 9999)
@@ -92,12 +102,14 @@ export115Item := {
 	preAllocatedContext: 'NumberOfYears
 };
 
+// The yearly interest rate, % (line 1), four places.
 export115Item_2 := {
 	calcLineLabel: interestRate,
+	// The rate for the years, amount and payment; an alert when out of range.
 	ComputeValue: func(list) begin
 		local solveForInterestRate;
 		if ((solveForInterestRate := self:SolveForInterestRate((list[0] * 12), list[2], 0, (-list[3]))) = nil) then begin
-				self:Notify(3, "Loan Payment", "Interest rate out of range.")
+				self:Notify(kNotifyAlert, "Loan Payment", "Interest rate out of range.")
 			end else begin
 				solveForInterestRate := (solveForInterestRate * 12)
 			end;
@@ -109,12 +121,14 @@ export115Item_2 := {
 	preAllocatedContext: 'InterestRate
 };
 
+// The loan amount (line 2).
 export115Item_3 := {
 	calcLineLabel: "Loan Amount",
+	// The amount the years, rate and payment pay off.
 	ComputeValue: func(list) begin
 		local solveForPresentValue;
 		if ((solveForPresentValue := self:SolveForPresentValue((list[0] * 12), (list[1] / 12), 0, (-list[3]))) = nil) then begin
-				self:Notify(3, "Loan Payment", "Interest rate out of range.")
+				self:Notify(kNotifyAlert, "Loan Payment", "Interest rate out of range.")
 			end else begin
 				solveForPresentValue := abs(solveForPresentValue)
 			end;
@@ -125,12 +139,14 @@ export115Item_3 := {
 	preAllocatedContext: 'LoanAmount
 };
 
+// The monthly payment (line 3).
 export115Item_4 := {
 	calcLineLabel: "Monthly Payment",
+	// The payment that pays off the amount in the years at the rate.
 	ComputeValue: func(list) begin
 		local solveForPayment;
 		if ((solveForPayment := self:SolveForPayment((list[0] * 12), (list[1] / 12), list[2], 0)) = nil) then begin
-				self:Notify(3, "Loan Payment", "No solution.")
+				self:Notify(kNotifyAlert, "Loan Payment", "No solution.")
 			end else begin
 				solveForPayment := abs(solveForPayment)
 			end;

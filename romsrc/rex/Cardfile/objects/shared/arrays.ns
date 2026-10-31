@@ -1,5 +1,9 @@
-// objects several roots reach, none alone (naturalize.py)
+// Recognition dictionary lists several of the Names layouts share
+// (naturalize.py put them here): newDictionaries for the first name fields,
+// newDictionaries_2 for the last name fields: dictionary IDs, the user's own
+// words among them.  (The other IDs are the ROM's; the Programmer's Reference's
+// table of them does not match this ROM.)
 
-newDictionaries := [|Array|: 48, 31];
+newDictionaries := [|Array|: 48, kUserDictionary];
 
-newDictionaries_2 := [|Array|: 7, 31, 0];
+newDictionaries_2 := [|Array|: 7, kUserDictionary, 0];

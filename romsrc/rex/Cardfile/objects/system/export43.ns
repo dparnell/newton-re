@@ -1,8 +1,11 @@
-// export43, and what only it reaches
+// The A-Z tabs of the Names card layout (@8235, newtAZTabs): tapping a letter
+// goes to the first card filed under it.
 
 export43 := {
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 18},
 	viewJustify: vjCenterH + vjCenterV + vjParentFullH,
+	// Shows the current card's letter: the first letter of the slot the cursor is
+	// sorted on (or of its sort name).
 	RetargetNotify: func() begin
 		local entry, l2, l3, indexPath;
 		(if (entry := layout.dataCursor:entry()) then begin
@@ -17,6 +20,10 @@ export43 := {
 				(if l3 then AddProcrastinatedSend('cardfileAZTabs, self, 'SetLetter, [Array: l3, true], 0))
 			end)
 	end,
+	// Goes to the first card from letter part.  A sort by class or postal code has
+	// no letters, so the sort-name order is used for the move.  Returns {newEntry,
+	// currEntry}, or nil to stay on the card (the same tab tapped again on a card
+	// already under it).
 	PickLetterScript: func(part) begin
 		local dataCursor2, l2, dataCursor, entry, gotoKey, l6, l7;
 		dataCursor2 := nil;
@@ -53,6 +60,8 @@ export43 := {
 			end;
 		(if l6 then {newEntry: gotoKey, currEntry: entry})
 	end,
+	// A tap on a letter: goes there; outside the overview the overview is shown,
+	// in it the layout flips to the card found.
 	indexClickScript: func(curIndex) begin
 		local l1;
 		l1 := inherited:indexClickScript(curIndex);

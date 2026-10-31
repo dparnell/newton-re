@@ -1,3 +1,4 @@
-// array_2, and what only it reaches
+// An empty array a compiled function holds as a literal (the sample cards' empty pagers);
+// the layout shares it (layout.tsv's alias lines).
 
 array_2 := [|Array|: ];

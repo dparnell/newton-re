@@ -1,4 +1,6 @@
-// bizCardCross, and what only it reaches
+// The "cross" business card layout (@8201, bizCardNum 3): a vertical and a
+// horizontal black bar, the name and company to the right of the vertical one,
+// the addresses and email, and the phones at the foot.
 
 bizCardCross := {
 	name: "bizCardCross",

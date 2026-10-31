@@ -1,4 +1,6 @@
-// default_3, and what only it reaches
+// The Group Info edit view of a group card (@8221, its 'default view): the
+// group's name, its type (the routing transports a group can be used with,
+// such as fax or email), and a people picker of its members.
 
 default_3 := {
 	viewFlags: vVisible,
@@ -11,10 +13,11 @@ default_3 := {
 			viewLineSpacing: 32,
 			label: "Group Name",
 			flavor: flavor,
-			newRecFlags: 8428033,
+			newRecFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vPunctuationAllowed + vCapsRequired,
 			_proto: @newtLabelInputLine
 		},
 		{
+			// The group types: every data definition whose superSymbol is 'groupTransport.
 			viewSetupFormScript: func() begin
 				list := [Array: ];
 				labelCommands := [Array: ];
@@ -27,6 +30,7 @@ default_3 := {
 					end);
 				inherited:?viewSetupFormScript()
 			end,
+			// The type the members array's class names (or the picker's).
 			textSetup: func() begin
 				if ((cls := ClassOf(target.members)) = 'Array) then begin
 						cls := peoplePicker.dataClass
@@ -38,11 +42,12 @@ default_3 := {
 							end
 					end)
 			end,
+			// Another type picked: the picker changes its class of name references.
 			labelActionScript: func(index) begin
 				local symbol2;
 				(if (peoplePicker.dataClass <> (symbol2 := labelCommands[index].symbol)) then peoplePicker:ChangeDataClass(symbol2))
 			end,
-			viewJustify: 8396976,
+			viewJustify: vjParentFullH + vjParentBottomV + vjSiblingBottomV + oneLineOnly,
 			viewBounds: {left: 0, top: 6, right: 0, bottom: 30},
 			text: "Group Type",
 			_proto: @protoLabelPicker
@@ -59,6 +64,7 @@ default_3 := {
 		checkPrefix: [|Array|: true, nil],
 		checkPaths: [|Array|: 'group, 'members],
 		showEmptyData: true,
+		// The group's name, or "Untitled Group".
 		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
 			local text;
 			if (not StrFilled((text := ParamStr("^?0^0||", v20_wwwwwwwwwwvvvvvv)))) then begin
@@ -74,8 +80,12 @@ default_3 := {
 	selectedOnly: nil
 };
 
+// The members picker (protoPeoplePicker): the card's members are its
+// selection, of the group's class (nameRef.fax to start).
 default_3Item := {
 	viewBounds: {top: 72, left: 0, right: 0, bottom: -24},
+	// Starts with the card's members selected and, when the group was last shown
+	// that way, only those.
 	viewSetupFormScript: func() begin
 		local l1;
 		self.selected := target.members;
@@ -93,12 +103,15 @@ default_3Item := {
 	querySpec: {
 		type: 'index,
 		IndexPath: 'sorton,
+		// Only people, companies and owners can be members.
 		validTest: func(a1) begin
 			local class2;
 			((((not (class2 := a1.class)) or IsSubclass(class2, 'person)) or IsSubclass(class2, 'company)) or IsSubclass(class2, 'owner))
 		end
 	},
 	suppressNew: true,
+	// Keeps the selection as the card's members, of the type picked, and whether
+	// only the selected ones were shown.
 	viewQuitScript: func() begin
 		inherited:?viewQuitScript();
 		target.members := (if selected then selected else [Array: ]);
@@ -123,6 +136,7 @@ selectedOnly := {
 	viewBounds: {left: 0, top: -20, right: 100, bottom: -5},
 	text: "Selected Only",
 	viewJustify: vjParentCenterH + vjParentBottomV,
+	// Shows all the names or only the members.
 	valueChanged: func() begin
 		peoplePicker:SetNowShowing((if viewValue then 'selected else 'all))
 	end,

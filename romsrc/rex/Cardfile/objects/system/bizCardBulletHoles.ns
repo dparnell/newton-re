@@ -1,4 +1,6 @@
-// bizCardBulletHoles, and what only it reaches
+// The "bullet holes" business card layout (@8199, bizCardNum 4): a background
+// picture, the name and company at the right (right-aligned, @8246), the
+// addresses and phones at the left (@8243).
 
 bizCardBulletHoles := {
 	bizCardIcon: {
