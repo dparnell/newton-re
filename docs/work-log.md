@@ -9,6 +9,49 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-31: romsrc/ commented, and its numbers named by hand
+
+The owner asked for the NewtonScript in romsrc/ to be commented and its
+magic numbers named while at it.  The tree builds the same object file,
+byte for byte, after every change (checked after each batch of edits and
+on the merged tree; the full ctest suite passes).
+
+- **Comments.**  21,400 comment lines in 1,221 files: every file opens
+  with what its object is and what uses it, every function (7,548; 74 are
+  covered only by a comment on their group, `romsrc_comments.py`) says
+  when it is called, what it takes and what it gives back, with notes on
+  the logic that is not plain.  They were written from the code, the
+  Newton Programmer's Guide and Reference (`documentation/`) and `src/`;
+  `romsrc/README.md` "Comments and constants" gives the rules.
+- **Numbers.**  About 1,900 more named, only where Apple names them and
+  only where the meaning there is certain: `Notify(kNotifyAlert, ...)`
+  (some 300), viewJustify sums with `oneLineOnly` (some 400), GetPoint's
+  selectors, the Dates repeat types and day bits, `kForever`, transfer
+  modes, view effects, the gesture codes, option opcodes, keyboard
+  modifiers, Gestalt selectors, dictionary ids, text flags and error
+  codes.  124 constants were added to `constants.tsv`, each section citing
+  its source.  A number with no Apple name keeps it and gets a comment.
+- **The constant that was wrong twice.**  `oneLineOnly` is 0x800000 and
+  `noLineLimits` 0 (the Guide's Table 3-1; the Reference's table is out of
+  line in its text, which pairs oneLineOnly with 0x1000000, `oneWordOnly`).
+  One helper took the Reference's; another caught it.  A wrong value for a
+  name still builds the same while it is used for the right number, so
+  only reading catches it.  `src/views/TextView.h` has `vjNoLineLimits =
+  0x01000000`, which is not the Guide's value (next-steps).
+- **A tool pitfall.**  An editor that writes `$ﰋ` as the character
+  itself leaves a function that does not compile; comments are kept ASCII
+  and an added line with a character outside it is suspect.
+- **79 places that look like ROM bugs** are marked `looks like a ROM bug:`
+  and left as they are, among them `protoRepeatView.daysInMonth` (February
+  has 29 days only in years divisible by 400), `protoRoutingFormat.ParseCursor`
+  (`if (error := -10617)` assigns), `GetDialinNetwork` reading the
+  misspelt `DialinNetworkRegsitry`, `MakeModemOption` sending a fixed
+  blind-dial delay, `printerChooserButton.nbpString` testing a misspelt
+  `npbType`, `viewRoot.Reopen` testing left where top was meant.  `git grep
+  -n "looks like a ROM bug" -- romsrc` lists them.
+- Curiosities: the World Clock's Area 51, a backup dated Black Tuesday,
+  `d_invertrect` in ROT13.
+
 ## 2026-10-31: romsrc/'s functions - numbers by name, arguments and locals named
 
 The owner asked next for the functions' numbers by name and their

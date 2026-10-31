@@ -44,7 +44,7 @@ ALIAS = "alias\tpart[0].theForm.editSlip.viewSetupFormScript.literals[%d]\t" + S
 OBJECTS = os.path.join("part0", "objects", "part.ns")
 # the edit slip's viewSetupFormScript: the function a constant of its own,
 # then the main function calling it
-SLIP = re.compile(r"viewSetupFormScript: compile\(\n\t+constants: \{\n\t+kFunction_100f7a1: func\(\) begin\n.*?\n\t+\},\n"
+SLIP = re.compile(r"viewSetupFormScript: compile\(\n\t+constants: \{\n(?:\t+// [^\n]*\n)*\t+kFunction_100f7a1: func\(\) begin\n.*?\n\t+\},\n"
 				  r"\t+func\(\) begin\n((?:\t+// [^\n]*\n)*)(\t+)self\.viewBounds := call \(kFunction_100f7a1\) with \(\);"
 				  r"(\n\t+inherited:\?viewSetupFormScript\(\)\n\t+end)\)", re.S)
 

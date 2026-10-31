@@ -216,6 +216,17 @@ Where the binaries-to-text work left off (`docs/rom-free/README.md`,
   them) and the rest are numbers; a few made-up names read oddly
   (`japanPrefectuRename`, `viewSetupFormScript_literal6`): `romsrc.py
   rename` fixes one.
+- **Left of the comments** (2026-10-31, `romsrc/README.md` "Comments and
+  constants"): every function is commented; the 79 places marked `looks
+  like a ROM bug:` are untried - each could be confirmed on the host and,
+  where real, fixed behind a switch like the C++ ones (`docs/rom-bugs.md`).
+  Numbers still bare: key descriptors (written as products such as
+  `2*keyFramed`, which a constant sum cannot say), `viewEffect` values
+  that are no table entry, `PostCommand` codes, `textFlags`, the NIE's
+  -60xxx codes, two Gestalt selectors no header names (0x200000B,
+  0x200000C).  `src/views/TextView.h`'s `vjNoLineLimits = 0x01000000`
+  disagrees with the Programmer's Guide (`noLineLimits` 0; 0x1000000 is
+  `oneWordOnly`): check it against the text view's drawing.
 
 ### Left by decision or out of reach
 

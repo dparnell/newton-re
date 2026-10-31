@@ -128,6 +128,8 @@ everything here: the comments change nothing that is built).
   and compare it with `build/host/romsrc-objects.bin` built before.
 - `tools/newton-rom/analysis/romsrc_comments.py` lists the functions with
   no comment above them.
+- `rex/WorldData/` is not commented: `tools/stores/newtonstore.py` writes
+  it, and its ctests compare the tree with what the tool writes.
 
 ## Building it
 

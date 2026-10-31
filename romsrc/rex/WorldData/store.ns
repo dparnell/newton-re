@@ -1,7 +1,3 @@
-// WorldData's store: the soups of location data (Cities, Countries, DaylightSavings and
-// the regions of a few countries) the World Clock, the location pickers and Setup look
-// cities and countries up in; the entries are in entries.ns.
-//
 // A package store (a 'soup part) as tools/stores/newtonstore.py unpacks it:
 // the store's persistent frame and each soup's, in the order the soups were
 // created.  indexobject() is where a frame holds an index's IndexInfo
