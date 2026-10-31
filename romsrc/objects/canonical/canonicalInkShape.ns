@@ -1,3 +1,6 @@
 // canonicalInkShape, and what only it reaches
+//
+// The 'ink shape MakeInk clones (src/views/ShapeVerbs.cpp): its bounds and
+// the ink.
 
 canonicalInkShape := {class: 'ink, bounds: nil, data: nil};

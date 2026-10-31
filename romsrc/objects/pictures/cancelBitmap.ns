@@ -1,4 +1,5 @@
-// cancelBitmap, and what only it reaches
+// The X of the cancel button (protoCancelButton). A 1-bit bitmap frame (bits, bounds) with
+// a mask, 9 x 9 pixels. Magic pointer @311. Used by protoCancelButton.
 
 cancelBitmap := {
 	mask: bitmap('mask, "resources/mask/3cd3b5.png", "00000000000401c501c5025e01ce0267", 1),

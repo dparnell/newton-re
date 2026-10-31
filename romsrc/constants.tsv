@@ -817,3 +817,16 @@ kYearMissing	2920
 # Gestalt selectors: the DDK's NewtonGestalt.h (src/ddk/NewtonGestalt.h)
 kGestalt_SoftContrast	0x2000003
 kGestalt_Ext_VolumeInfo	0x2000009
+# slips (mailSlip, backupSlip): kNotifyAlert/kNotifyQAlert the Newton Programmer's Reference 2.0 names (Notify), values as the ROM's BHNotify treats them (3 beeps, 4 does not); kGestalt_SystemInfo src/ddk/NewtonGestalt.h and the Reference; opGetCurrent src/ddk/OptionArray.h and the Reference; vjOneLineOnly src/views/TextView.h
+kNotifyQAlert	0x4
+# slips (except mail, backup), shared/frames: src/views/TextView.h (vjOneLineOnly, the NTK's oneLineOnly); the Newton Programmer's Reference 2.0 (kCommandModifier, Keyboard Modifier Keys; vNoSpaces, vFixedTextStyle, vFixedInkTextStyle, Text Flags; modeOr, modeXor, Table 2-5; vfNone, Table 2-4; vfBlack, a shape style's pattern; Notify's kNotifyAlert, its value as docs/work-log.md records); the Newton Programmer's Guide 2.0 (kForever, chapter 19 Other Date Constants); src/views/Commands.h (aeScrollUp, aeScrollDown, aeOverview: PostCommand's events)
+vFixedInkTextStyle	0x10
+vfBlack	0x5
+aeScrollUp	0x2d
+aeScrollDown	0x2e
+aeOverview	0x33
+# newtapp (NewtApp framework, larger files): the Newton Programmer's Reference 2.0 names and values (kCommandModifier, kShiftModifier: "Keyboard Modifier Keys"; fxZoomOpenEffect, fxVenetianBlindsEffect: viewEffect constants; modeXor: viewTransferMode constants; vfNone: viewFormat constants, a style frame's penPattern; aeLine: gesture constants; kNumbersOnlyDictionary: "System-supplied lexical dictionaries", the NPR's kNumbersOnlyDictionary1 without its footnote mark; oneLineOnly: viewJustify text limits, src/views/TextView.h vjOneLineOnly; kNoOptions, kHasScrollersOption: newtROEditView's optionFlags); kNotifyAlert: the NPR's Notify levels, 3 the one BHNotify (romsrc builtinFunctions.ns) shows at once with the beep
+kNoOptions	0
+kHasScrollersOption	1
+# shared/ and canonical/: GetPoint selectors (Newton Programmer's Reference "GetPoint"; values as FGetPoint, src/recognition/UnitNatives.cpp, takes them), transfer modes (NPR Table 2-5), the notification level (NPR "Notify"; 3 as BHNotify treats it), aeTap, aeScrub, aeCaret (NPR gesture table, src/views/Commands.h), oneLineOnly (Newton Programmer's Guide Table 3-1, src/views/TextView.h), keyVUnit (NPR Key Descriptor Constants), kNumbersOnlyDictionary (NPR Table 8-5)
+keyVUnit	0x8

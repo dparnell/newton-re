@@ -1,9 +1,19 @@
-// newtCountryFilter, and what only it reaches
+// newtCountryFilter: the NewtApp filter for a country name (NPR 2.0 Table 3-1).  Its label's
+// "Other" opens the location popup over the countries soup, starting at the user's own
+// country, and the country's name is what goes into the slot.
+//
+// This file holds newtCountryFilter and what only it reaches.
 
 newtCountryFilter := {
 	_proto: @newtTextFilter,
-	recFlags: 25168385,
-	dictionaries: [|Array|: 8, 31],
+	// recFlags: the entry line's view flags (newtTextFilter); vCustomDictionaries says
+	// the dictionaries slot below is used
+	recFlags: vVisible + vClickable + vGesturesAllowed + vCapsRequired + vCustomDictionaries,
+	// dictionary ids: a system dictionary (8; the NPR's Table 8-4 lists kCountriesDictionary
+	// but its text is too garbled to be sure of the value) and the user's own words
+	dictionaries: [|Array|: 8, kUserDictionary],
+	// the locationPopup over the countries soup; its choice comes back to pickActionScript
+	// (newtTextFilter) as the country's name
 	picker: func() begin
 		@locationPopup:New({default: GetCountryEntry(GetUserConfig('currentCountry))[0], spots: @countrySoupName, result: 'name}, self:GlobalLabelBounds(), self)
 	end

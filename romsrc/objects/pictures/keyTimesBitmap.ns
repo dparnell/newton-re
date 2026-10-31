@@ -1,4 +1,5 @@
-// keyTimesBitmap, and what only it reaches
+// The multiply key. A 1-bit bitmap frame (bits, bounds), 9 x 9 pixels. Magic pointer @746.
+// Used by calculator, numericKeys.
 
 keyTimesBitmap := {
 	bits: bitmap('bits, "resources/bits/3d9311.png", "000000000004007600760283007f028c", 1),

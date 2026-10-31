@@ -1,4 +1,5 @@
-// stampFrameBitmap, and what only it reaches
+// The stamp frame the routing slip shows. A 1-bit bitmap frame (bits, bounds), 31 x 27
+// pixels. Magic pointer @725. Used by protoRouteSlip.
 
 stampFrameBitmap := {
 	bits: bitmap('bits, "resources/bits/3daf01.png", "000000000004017c017c020501970224", 1),

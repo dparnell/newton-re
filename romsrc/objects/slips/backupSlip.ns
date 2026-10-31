@@ -1,6 +1,19 @@
-// backupSlip, and what only it reaches
+// backupSlip, and what only it reaches: the storage card slip. OpenStoreSlip
+// (builtinFunctions) builds one per card store (setDestStore) when a storage card's
+// icon is tapped in Extras; StoreSlipRegistry.storeSlips lists the open ones. It shows
+// the card's name (editable), kind, memory use and last backup, a lock icon for a
+// write-protected card, and buttons to back the internal store up to the card, restore
+// it from the card's backup, or erase the card or its backup.
+// Throughout, getSrcStore is the internal store and getDestStore the card, whichever
+// way the data goes. A backup of soup X is the soup "BACKUP_X" on the card; the card's
+// "BackupInfo" soup has an entry per backed-up soup or package ({name, backupDate,
+// version, indexes, allInfo, package, segmentedPackage, patches}) and its soup info
+// (setBackupInfo) the backup as a whole; packages go to the soup "BACKUP_Packages".
 
 backupSlip := {
+	// Restores the soups of each application in a1 (a list as GetApplicationNames gives:
+	// a {name, soups} frame or a bare soup name) from the card, inside restoreSoupsAndPackages'
+	// progress slip. Throws evt.ex.nofit when an application's soups will not fit.
 	restoreManySoups: func(a1) begin
 		l6 := self:getDestStore();
 		l3 := self:getSrcStore();
@@ -22,17 +35,24 @@ backupSlip := {
 					end;
 				if self:|soupWillFit?|(l6, l3, l8, nil) then begin
 						(foreach l10 in l5 do begin
+								// the package soup is restored by restoreSomePackages, not as a soup
 								if (not LSearch('[Array: "Packages"], l10, 0, '|str=|, nil)) then begin
 										l7:SetStatus('vBarber, {titleText: ParamStr("Restoring \u201C\u^0\u201D\u\u2026\u", [Array: l2]), barber: true});
 										self:restore1Soup(l2, l10)
 									end
 							end)
 					end else begin
-						GetRoot():Notify(3, "Restore", ParamStr("There is not enough space to restore \u201C\u^0\u201D\u. Some items may not have been restored.", [Array: l2]));
+						GetRoot():Notify(kNotifyAlert, "Restore", ParamStr("There is not enough space to restore \u201C\u^0\u201D\u. Some items may not have been restored.", [Array: l2]));
+						// -123: the error carried with evt.ex.nofit (it has no Apple name)
 						Throw('|evt.ex.nofit|, -123)
 					end
 			end)
 	end,
+	// Restores one soup a2 of the application named a1. Ordinary soups go to restoreOrdSoup;
+	// the System and Directory soups are special: a 1.x backup (its BackupInfo entry has no
+	// version) is converted with convertSoup, a 2.x one moved back whole; after restoring
+	// the System soup the user dictionary is converted and the calibration entry dropped
+	// (both machine specific), and fixUserConfig removes the password.
 	restore1Soup: compile(
 		constants: {
 			kLiteral_48e235: "BACKUP_",
@@ -45,13 +65,17 @@ backupSlip := {
 					soup := self:getSrcStore():GetSoup(a2);
 					soup2 := self:getDestStore():GetSoup(Stringer([Array: kLiteral_48e235, a2]));
 					backupCursor:GotoKey(a2);
+					// no version: the backup was made by a Newton 1.x
 					if (not (entry := backupCursor:entry()).version) then begin
 							AddArraySlot(restoredSoups, a2);
 							if StrEqual(a2, @metaSoupName) then begin
+									// the Directory soup keeps only its built-in entries; convertSoup adds the backed-up
+									// ones, converted by the systemDirectory's conversion frame
 									RemAllButBuiltinFromDir();
 									l4 := '[Array: systemDirectory]
 								end else begin
 									self:getSrcStore():GetSoup(a2):RemoveFromStore();
+									// the internal System soup is gone: loadGlobals makes a fresh userConfiguration
 									call @loadGlobals with ();
 									l4 := '[Array: system]
 								end;
@@ -74,22 +98,25 @@ backupSlip := {
 									Rethrow()
 								end onexception |evt.ex.fr.store| do begin
 									if (if HasSlot((ex := CurrentException()), 'error) then (ex.error = kSError_StoreFull)) then begin
-											GetRoot():Notify(3, kLiteral_488675, ParamStr("There is not enough space to restore \u201C\u^0\u201D\u. Some items may not have been restored.", [Array: a2]))
+											GetRoot():Notify(kNotifyAlert, kLiteral_488675, ParamStr("There is not enough space to restore \u201C\u^0\u201D\u. Some items may not have been restored.", [Array: a2]))
 										end else begin
-											GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e2b9, [Array: a2]))
+											GetRoot():Notify(kNotifyAlert, kLiteral_488675, ParamStr(kLiteral_47e2b9, [Array: a2]))
 										end;
 									if StrEqual(a2, @systemSoupName) then begin
 											self:fixUserConfig()
 										end;
 									Rethrow()
 								end onexception |evt.ex| do begin
-									GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e2b9, [Array: a2]));
+									GetRoot():Notify(kNotifyAlert, kLiteral_488675, ParamStr(kLiteral_47e2b9, [Array: a2]));
 									if StrEqual(a2, @systemSoupName) then begin
 											self:fixUserConfig()
 										end;
 									Rethrow()
 								end;
 							if StrEqual(a2, @systemSoupName) then begin
+									// the handwriting recogniser's letter weights and the user dictionary entry are
+									// converted for this machine; the "Calibration" entry (the pen calibration of the
+									// machine the backup came from) is removed
 									ConvertLetterWeights();
 									next := (cursor := self:getSrcStore():GetSoup(@systemSoupName):Query({indexPath: 'tag, beginKey: "UserDictionary", endKey: "UserDictionary"})):entry();
 									(while (if next then (not next.data)) do (next := cursor:Next()));
@@ -107,6 +134,9 @@ backupSlip := {
 					(if StrEqual(a2, @systemSoupName) then self:fixUserConfig())
 				end)
 		end),
+	// Backs up the soups of each application in soupsToBackup (as GetApplicationNames gives
+	// them) from srcStore to destStore, skipping the package soup (backupPackages does
+	// that). Throws evt.ex.nofit when an application's soups will not fit on the card.
 	backupManySoups: func(srcStore, destStore, soupsToBackup) begin
 		progressSlip2 := progressSlip;
 		local progressSlip2;
@@ -128,12 +158,18 @@ backupSlip := {
 									end
 							end)
 					end else begin
-						GetRoot():Notify(3, "Backup", ParamStr("There was not enough space to backup \u201C\u^0\u201D\u. Some items may not have been backed up.", [Array: name]));
+						GetRoot():Notify(kNotifyAlert, "Backup", ParamStr("There was not enough space to backup \u201C\u^0\u201D\u. Some items may not have been backed up.", [Array: name]));
 						Throw('|evt.ex.nofit|, -123)
 					end
 			end)
 	end,
+	// names of the applications whose data could not be converted during a restore
+	// (convertSoup), listed to the user at the end of restoreSoupsAndPackages
 	convertProblems: nil,
+	// Backs up all the packages on the internal store a1 that may be backed up
+	// (GetBackupAllPackagesCursor: the package soup's entries not tagged _noBackup) into the
+	// card a2's soup "BACKUP_Packages", replacing any older package backup. Throws
+	// evt.ex.nofit when they will not fit.
 	backupPackages: compile(
 		constants: {
 			kLiteral_4889e9: "Checking size of \u201C\u^0\u201D\u\u2026\u",
@@ -144,6 +180,7 @@ backupSlip := {
 			(if (if (l2 := GetBackupAllPackagesCursor(a1)) then l2:entry()) then begin
 					l6 := progressSlip;
 					l7 := true;
+					// l8: the card's free space; l9: the packages' total size
 					l8 := ((a2:TotalSize() - a2:UsedSize()) - theFudgeFactor);
 					l9 := 0;
 					l10 := l2:entry();
@@ -155,6 +192,8 @@ backupSlip := {
 					l2:Reset();
 					l6:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: kLiteral_4888e9]), barber: true});
 					newXSoup := a2:GetSoup("BACKUP_Packages");
+					// not enough room as it is: count in the space the old package backup (the soup
+					// BACKUP_Packages and the 1.x-style package entries in BackupInfo) would free
 					if (l8 < l9) then begin
 							l11 := 0;
 							l6:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: kLiteral_4888e9]), barber: true});
@@ -204,6 +243,7 @@ backupSlip := {
 										end
 								end
 						end;
+					// l7: the packages fit; the old package entries in BackupInfo go first
 					(if l7 then begin
 							if backupCursor then begin
 									backupCursor:Reset();
@@ -228,14 +268,18 @@ backupSlip := {
 								nil
 							end)
 						end else begin
-							GetRoot():Notify(3, "Backup", ParamStr("There was not enough space to backup \u201C\u^0\u201D\u. Some items may not have been backed up.", [Array: kLiteral_4888e9]));
+							GetRoot():Notify(kNotifyAlert, "Backup", ParamStr("There was not enough space to backup \u201C\u^0\u201D\u. Some items may not have been backed up.", [Array: kLiteral_4888e9]));
 							Throw('|evt.ex.nofit|, -123)
 						end)
 				end)
 		end),
+	// viewSetupDoneScript: watches the card's BackupInfo soup (a backup made or erased),
+	// the System soup's "Backup" entry and the default store setting, so the slip stays
+	// current; makes the lock icons and the card slot icon and starts the idle script.
 	viewSetupDoneScript: compile(
 		constants: {
 			kLiteral_48e271: "BackupInfo",
+			// the backup cursor's index test: the 1.x "Patch2.0" entry is not part of the backup
 			kFunction_48e335: func(a1) begin
 				(not StrEqual(a1, "Patch2.0"))
 			end,
@@ -245,6 +289,8 @@ backupSlip := {
 		},
 		func() begin
 			local getDestStore;
+			// the backup was erased (BackupInfo left or was deleted) or made (created): reset the
+			// cursor and info, and hide or show the Restore button
 			RegSoupChange("BackupInfo", whoAmI, func(a1, a2, a3, a4) begin
 				(if StrEqual(a1, kLiteral_48e271) then (if (if ((a3 = 'SoupLeaves) or (a3 = 'soupDeleted)) then (not self:getDestStore():GetSoup(kLiteral_48e271))) then begin
 							backupCursor := nil;
@@ -263,6 +309,7 @@ backupSlip := {
 			RegSoupChange(@systemSoupName, whoAmI, func(a1, a2, a3, a4) begin
 				(if StrEqual(a1, @systemSoupName) then (if (if (if IsFrame(a4) then a4.tag) then StrEqual(a4.tag, "Backup")) then self:displayinfo()))
 			end);
+			// keeps the "Save new info ... on this card" checkbox in step with the default store
 			RegUserConfigChange(whoAmI, func(a1) begin
 				local store, viewValue;
 				(if (a1 = 'defaultStoreSig) then begin
@@ -271,12 +318,15 @@ backupSlip := {
 						(if (if (store = _openedForStore) then (not viewValue)) then defaultStoreCheckBox:toggleCheck() else (if (if (store <> _openedForStore) then viewValue) then defaultStoreCheckBox:toggleCheck()))
 					end)
 			end);
+			// infoShapes: the card's kind, its memory use and its last backup (displayinfo)
 			infoShapes := Array(3, nil);
 			lockShape := OffsetShape(MakeShape(kROM_601), 15, 62);
 			unlockShape := OffsetShape(MakeShape(kROM_600), 15, 62);
 			screenOrientation := GetUserConfig('screenOrientation);
 			getDestStore := self:getDestStore();
 			cardSlotIcon := CardSlotIcons[getDestStore:CardSlot()];
+			// a quarter of the icon bitmap's width: DrawXBitmap (viewDrawScript) is given the
+			// screen orientation and draws one of the images it holds
 			cardSlotIconBounds := {left: 5, top: 6, right: (5 + (cardSlotIcon.bounds.right div 4)), bottom: (6 + cardSlotIcon.bounds.bottom)};
 			self:displayinfo();
 			if getDestStore:IsReadOnly() then begin
@@ -284,16 +334,21 @@ backupSlip := {
 					eraseButton:Hide();
 					SetKeyView(self, 0)
 				end else begin
+					// 9999: an offset past the end of any name, so the caret goes after the name's end
 					SetKeyView(nameInput, 9999)
 				end;
 			lastROValue := self:getDestStore():IsReadOnly();
 			self:SetupIdle(1)
 		end),
+	// Backs up one soup, item, of the application called name: moves it from srcStore to
+	// the soup "BACKUP_" & item on destStore and records it in BackupInfo (backupDate,
+	// version 'twoO). Reports any error and rethrows it.
 	backup1Soup: compile(
 		constants: {
 			kLiteral_488691: "Backup",
 			kLiteral_47dd29: "There was not enough space to backup \u201C\u^0\u201D\u. Some items may not have been backed up.",
 			kLiteral_47e431: "There was an error while backing up \u201C\u^0\u201D\u. Some items may not have been backed up.",
+			// a cursor over the BackupInfo entries named a2
 			kFunction_48e3a1: func(a1, a2) begin
 				a1:Query({type: 'index, indexPath: 'name, beginKey: a2, endKey: a2})
 			end
@@ -307,17 +362,19 @@ backupSlip := {
 					Rethrow()
 				end onexception |evt.ex.fr.store| do begin
 					if (if HasSlot((ex := CurrentException()), 'error) then (ex.error = kSError_StoreFull)) then begin
-							GetRoot():Notify(3, kLiteral_488691, ParamStr(kLiteral_47dd29, [Array: name]))
+							GetRoot():Notify(kNotifyAlert, kLiteral_488691, ParamStr(kLiteral_47dd29, [Array: name]))
 						end else begin
-							GetRoot():Notify(3, kLiteral_488691, ParamStr(kLiteral_47e431, [Array: name]))
+							GetRoot():Notify(kNotifyAlert, kLiteral_488691, ParamStr(kLiteral_47e431, [Array: name]))
 						end;
 					Rethrow()
 				end onexception |evt.ex| do begin
-					GetRoot():Notify(3, kLiteral_488691, ParamStr(kLiteral_47e431, [Array: name]));
+					GetRoot():Notify(kNotifyAlert, kLiteral_488691, ParamStr(kLiteral_47e431, [Array: name]));
 					Rethrow()
 				end;
+			// the machine type the System soup came from, so that a restore on another kind of
+			// Newton can convert its entries (moveSoup); setBackupInfo keeps it
 			if StrEqual(item, @systemSoupName) then begin
-					backupMachine := Gestalt(16777219).machineType
+					backupMachine := Gestalt(kGestalt_SystemInfo).machineType
 				end;
 			(if (frame2 := (l2 := call (kFunction_48e3a1) with (backupSoup, item)):entry()) then begin
 					frame2.backupDate := Time();
@@ -327,6 +384,7 @@ backupSlip := {
 					if HasSlot(frame2, 'allInfo) then begin
 							RemoveSlot(frame2, 'allInfo)
 						end;
+					// 'twoO marks a backup made by a 2.x Newton (1.x entries have no version)
 					frame2.version := 'twoO;
 					(try begin
 							EntryChangeXmit(frame2, 'backup)
@@ -339,10 +397,11 @@ backupSlip := {
 							backupSoup:AddXmit(frame2, 'backup)
 						end onexception |evt.ex| do begin
 							if (if HasSlot((ex := CurrentException()), 'error) then (ex.error = kSError_StoreFull)) then begin
-									GetRoot():Notify(3, kLiteral_488691, ParamStr(kLiteral_47dd29, [Array: name]))
+									GetRoot():Notify(kNotifyAlert, kLiteral_488691, ParamStr(kLiteral_47dd29, [Array: name]))
 								end else begin
-									GetRoot():Notify(3, kLiteral_488691, ParamStr(kLiteral_47e431, [Array: name]))
+									GetRoot():Notify(kNotifyAlert, kLiteral_488691, ParamStr(kLiteral_47e431, [Array: name]))
 								end;
+							// the entry could not be added: take the half-made backup soup away again
 							soup := destStore:GetSoup(text);
 							try begin
 									if soup then begin
@@ -353,12 +412,22 @@ backupSlip := {
 						end)
 				end)
 		end),
+	// Called by OpenStoreSlip with the card store this slip is for.
 	setDestStore: func(a1) begin
 		(self._openedForStore := a1)
 	end,
+	// names of the soups restored so far: a restart is asked for when there are any, and
+	// SoupRestoreRegistry's functions are given them
 	restoredSoups: nil,
+	// the card's backup as a whole: the BackupInfo soup's info (setBackupInfo) for a 2.x
+	// backup, the first dated entry for a 1.x one; nil when the card has no backup
 	backupInfo: nil,
+	// a cursor over BackupInfo by name, without the 1.x "Patch2.0" entry
 	backupCursor: nil,
+	// Answers whether the soups of a3 (an application frame {name, soups} or a soup name)
+	// on store a1 fit on store a2: a4 true when backing up (a1 the internal store, the
+	// copies "BACKUP_" soups on a2), nil when restoring (the other way round). The soups
+	// they would replace on a2 count as free.
 	|soupWillFit?|: compile(
 		constants: {
 			kLiteral_4889e9: "Checking size of \u201C\u^0\u201D\u\u2026\u",
@@ -366,6 +435,7 @@ backupSlip := {
 		},
 		func(a1, a2, a3, a4) begin
 			progressSlip2 := progressSlip;
+			// l1: the space free on a2, l2: the space a3's soups need
 			l1 := 0;
 			l2 := 0;
 			if IsFrame(a3) then begin
@@ -384,6 +454,8 @@ backupSlip := {
 									l1 := (l1 + soup2:GetSize())
 								end
 						end)
+				// looks like a ROM bug: for a bare soup name this branch passes the foreach variable
+				// item (nil here) to GetSoup instead of a3, so such a soup is never measured
 				end else begin
 					progressSlip2:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: a3]), barber: true});
 					if (soup := a1:GetSoup((if a4 then item else Stringer([Array: kLiteral_48e235, item])))) then begin
@@ -397,6 +469,8 @@ backupSlip := {
 			l1 := (l1 + ((a2:TotalSize() - a2:UsedSize()) - theFudgeFactor));
 			(l2 < l1)
 		end),
+	// viewQuitScript: unregisters what viewSetupDoneScript registered, leaves
+	// StoreSlipRegistry, closes the slips opened from this one and lets go of the shapes.
 	viewQuitScript: func() begin
 		local pos;
 		UnRegSoupChange("BackupInfo", whoAmI);
@@ -424,9 +498,12 @@ backupSlip := {
 		backupMachine := nil;
 		(progressSlip := nil)
 	end,
+	// The store backed up from and restored to: always the internal store.
 	getSrcStore: func() begin
 		GetStores()[0]
 	end,
+	// viewDrawScript: the info texts, the lock (card write-protected) or open lock icon,
+	// and the icon of the card's slot.
 	viewDrawScript: func() begin
 		local getDestStore;
 		getDestStore := self:getDestStore();
@@ -444,6 +521,9 @@ backupSlip := {
 		nameInput
 	],
 	viewFlags: vClickable,
+	// viewIdleScript, every 5 seconds: refreshes the memory figures and follows the card's
+	// write-protect switch, making the name line read-only and hiding Backup and Erase
+	// while the card is locked.
 	viewIdleScript: func() begin
 		local getDestStore, visible2, isReadOnly;
 		if (getDestStore := self:getDestStore()):IsValid() then begin
@@ -452,16 +532,16 @@ backupSlip := {
 				visible2 := Visible(backupButton);
 				if (isReadOnly <> lastROValue) then begin
 						if isReadOnly then begin
-								SetValue(nameInput, 'viewFlags, BAnd(nameInput.viewFlags, bnot(14848)));
-								SetValue(nameInput, 'viewFormat, BAnd(nameInput.viewFormat, bnot(143616)));
+								SetValue(nameInput, 'viewFlags, BAnd(nameInput.viewFlags, bnot(vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed)));
+								SetValue(nameInput, 'viewFormat, BAnd(nameInput.viewFormat, bnot(vfPen(1) + vfLinesGray + vfInset(2))));
 								if (GetKeyView() = nameInput) then begin
 										SetKeyView(self, 0)
 									end;
 								backupButton:Hide();
 								eraseButton:Hide()
 							end else begin
-								SetValue(nameInput, 'viewFlags, BOr(nameInput.viewFlags, 14848));
-								SetValue(nameInput, 'viewFormat, BOr(nameInput.viewFormat, 143616));
+								SetValue(nameInput, 'viewFlags, BOr(nameInput.viewFlags, vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed));
+								SetValue(nameInput, 'viewFormat, BOr(nameInput.viewFormat, vfPen(1) + vfLinesGray + vfInset(2)));
 								backupButton:Show();
 								eraseButton:Show()
 							end;
@@ -469,8 +549,14 @@ backupSlip := {
 					end;
 				self:Dirty()
 			end;
+		// milliseconds to the next idle call
 		5000
 	end,
+	// Copies the soup text on store getDestStore to a soup text2 on store getSrcStore,
+	// replacing any soup of that name there (the parameter names come from the restore
+	// direction; backup1Soup calls it the other way round). The new soup gets its indexes
+	// from the BackupInfo entry (or the registered soup definition), and the old soup's
+	// signature, info and soupDef.
 	moveSoup: compile(
 		constants: {
 			kFunction_48e3a1: func(a1, a2) begin
@@ -485,6 +571,7 @@ backupSlip := {
 							soup2:RemoveFromStore()
 						end;
 					next := (l3 := call (kFunction_48e3a1) with (backupSoup, text2)):entry();
+					// the BackupInfo entry for text2, if it records anything about the soup
 					(while (if next then (not (next.version or next.indexes))) do (next := l3:Next()));
 					soupDef := nil;
 					if (if next then next.indexes) then begin
@@ -498,7 +585,10 @@ backupSlip := {
 						end;
 					(if newSoup then begin
 							newSoup:SetSignature(soup:GetSignature());
-							if (if (if StrEqual(text, Stringer([Array: "BACKUP_", @systemSoupName])) then StrEqual(text2, @systemSoupName)) then (backupInfo.machineType <> Gestalt(16777219).machineType)) then begin
+							// the System soup restored on a different kind of Newton than it was backed up on:
+							// each entry goes through Restore2.0SystemEntry, which drops or adapts what is
+							// machine specific
+							if (if (if StrEqual(text, Stringer([Array: "BACKUP_", @systemSoupName])) then StrEqual(text2, @systemSoupName)) then (backupInfo.machineType <> Gestalt(kGestalt_SystemInfo).machineType)) then begin
 									MapCursor((cursor := soup:Query(nil)), func(a1) begin
 										local l1;
 										if (l1 := |Restore2.0SystemEntry|(a1)) then begin
@@ -509,6 +599,7 @@ backupSlip := {
 								end else begin
 									try begin
 											status := progressSlip;
+											// the callback keeps the progress slip's barber pole turning (at most once per 1000 ticks)
 											soup:CopyEntriesWithCallback(newSoup, func() begin
 												status:SetStatus('vBarber, {barber: true})
 											end, 1000)
@@ -529,6 +620,9 @@ backupSlip := {
 						end)
 				end)
 		end),
+	// Restores an ordinary soup a2 of the application named a1 by moving "BACKUP_" & a2
+	// back from the card; a soup backed up by a 1.x Newton is then converted (convertSoup)
+	// by the applications its soup info names.
 	restoreOrdSoup: compile(
 		constants: {
 			kLiteral_488675: "Restore",
@@ -543,16 +637,17 @@ backupSlip := {
 					Rethrow()
 				end onexception |evt.ex.fr.store| do begin
 					if (if HasSlot((ex := CurrentException()), 'error) then (ex.error = kSError_StoreFull)) then begin
-							GetRoot():Notify(3, kLiteral_488675, ParamStr("There is not enough space to restore \u201C\u^0\u201D\u. Some items may not have been restored.", [Array: a1]))
+							GetRoot():Notify(kNotifyAlert, kLiteral_488675, ParamStr("There is not enough space to restore \u201C\u^0\u201D\u. Some items may not have been restored.", [Array: a1]))
 						end else begin
-							GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e2b9, [Array: a1]))
+							GetRoot():Notify(kNotifyAlert, kLiteral_488675, ParamStr(kLiteral_47e2b9, [Array: a1]))
 						end;
 					Rethrow()
 				end onexception |evt.ex| do begin
-					GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e2b9, [Array: a1]));
+					GetRoot():Notify(kNotifyAlert, kLiteral_488675, ParamStr(kLiteral_47e2b9, [Array: a1]));
 					Rethrow()
 				end;
 			(if backupCursor then begin
+					// the 1.x In/Out Box soups name no application: they are the iobox's
 					if ((if (not (gotoKey := backupCursor:GotoKey(a2)).version) then StrEqual(gotoKey.name, "inbox")) or StrEqual(gotoKey.name, "outbox")) then begin
 							gotoKey.allInfo := {applications: [Array: 'iobox]}
 						end;
@@ -560,7 +655,9 @@ backupSlip := {
 				end)
 		end),
 	ReOrientToScreen: @defRotateFunc,
+	// whether the card was write-protected at the last idle check
 	lastROValue: nil,
+	// the machineType of the Newton the System soup is being backed up from (backup1Soup)
 	backupMachine: nil,
 	unlockShape: nil,
 	viewBounds: {left: 0, top: 50, right: 200, bottom: 220},
@@ -577,8 +674,12 @@ backupSlip := {
 		nameInput
 	],
 	openEraseSlip: nil,
+	// Erases every application's soups from the card store (the Erase Information choice of
+	// eraseSlip), except the backup ('cardBackupFrame), under a progress slip; tells the
+	// user what happened.
 	wipeInfo: compile(
 		constants: {
+			// build-time helper: a binary of class cls from hex text (the progress slip's icon)
 			kBinaryFromHex: func(hex, cls) begin
 				local b := MakeBinary(StrLen(hex) div 2, cls);
 				for i := 0 to Length(b) - 1 do begin
@@ -604,6 +705,7 @@ backupSlip := {
 									error := true
 								end;
 							if (not error) then begin
+									// the backup is not "information": it stays
 									if (pos := LSearch(soupNames, 'cardBackupFrame, 0, '|=|, 'class)) then begin
 											ArrayRemoveCount(soupNames, pos, 1)
 										end
@@ -634,19 +736,19 @@ backupSlip := {
 															end)
 													end)
 											end) = 'Cancel) then begin
-													GetRoot():Notify(3, kLiteral_4887dd, "Warning! Part of your information has been erased.")
+													GetRoot():Notify(kNotifyAlert, kLiteral_4887dd, "Warning! Part of your information has been erased.")
 												end
 										end onexception |evt.ex| do begin
 											error := true
 										end;
 									if error then begin
-											GetRoot():Notify(3, kLiteral_4887dd, "There was an error while erasing the information.")
+											GetRoot():Notify(kNotifyAlert, kLiteral_4887dd, "There was an error while erasing the information.")
 										end
 								end else begin
 									if (not error) then begin
-											GetRoot():Notify(3, kLiteral_4887dd, "There is no information on this card to erase.")
+											GetRoot():Notify(kNotifyAlert, kLiteral_4887dd, "There is no information on this card to erase.")
 										end else begin
-											GetRoot():Notify(3, kLiteral_4887dd, "There was an error before erasing the information.  Your information was left untouched.")
+											GetRoot():Notify(kNotifyAlert, kLiteral_4887dd, "There was an error before erasing the information.  Your information was left untouched.")
 										end
 								end
 						end onexception |evt.ex| do begin end;
@@ -654,6 +756,10 @@ backupSlip := {
 				end)
 		end),
 	_proto: @protoFloater,
+	// Restores the named packages a1 from the card's backup to the internal store, each
+	// replacing the installed package of that name. A 1.x backup holds them as BackupInfo
+	// entries (package or segmentedPackage), a 2.x one in the soup BACKUP_Packages.
+	// Throws evt.ex.nofit when one will not fit.
 	restoreSomePackages: compile(
 		constants: {
 			kFunction_48e3a1: func(a1, a2) begin
@@ -675,7 +781,9 @@ backupSlip := {
 						local l4;
 						(foreach l5 in a1 do begin
 								local l7, l8, l9, l10, l11, l12, l13, l14, l15, l16, l17;
+								// l9: the package is installed on the internal store and will be replaced
 								l9 := (if (l8 := LFetch((l7 := GetPackages()), l5, 0, '|str=|, 'title)) then (l8.store = l2));
+								// no BACKUP_Packages soup: a 1.x backup
 								if (l10 := (not l3)) then begin
 										l12 := (l11 := call (kFunction_48e3a1) with (backupSoup, l5)):entry();
 										(while l12 do begin
@@ -706,6 +814,7 @@ backupSlip := {
 														l13 := (l13 + EntrySize(l12));
 														(l12 := l14:Next())
 													end);
+												// looks like a ROM bug: l4 already had the fudge factor taken off, so it is taken twice
 												l15 := ((l4 - l2:UsedSize()) - theFudgeFactor);
 												l16 := (if l8 then l8.size else 0);
 												if ((l15 + l16) < l13) then begin
@@ -723,17 +832,18 @@ backupSlip := {
 					end onexception |evt.ex.cancel| do begin
 						Rethrow()
 					end onexception |evt.ex.nofit| do begin
-						GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e085, [Array: l5]));
+						GetRoot():Notify(kNotifyAlert, kLiteral_488675, ParamStr(kLiteral_47e085, [Array: l5]));
 						Rethrow()
 					end onexception |evt.ex| do begin
 						if (if HasSlot((l17 := CurrentException()), 'error) then (l17.error = kSError_StoreFull)) then begin
-								GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e085, [Array: l5]))
+								GetRoot():Notify(kNotifyAlert, kLiteral_488675, ParamStr(kLiteral_47e085, [Array: l5]))
 							end else begin
-								GetRoot():Notify(3, kLiteral_488675, ParamStr("There was an error while restoring the package \u201C\u^0\u201D\u. Some packages may not have been restored.", [Array: l5]))
+								GetRoot():Notify(kNotifyAlert, kLiteral_488675, ParamStr("There was an error while restoring the package \u201C\u^0\u201D\u. Some packages may not have been restored.", [Array: l5]))
 							end;
 						Rethrow()
 					end))
 		end),
+	// Remakes the three info texts (the card's kind, memory use, last backup) and redraws.
 	displayinfo: func() begin
 		local getDestStore, l2, strTruncate2, l4, l5, l6;
 		strTruncate2 := StrTruncate((storeKind := (getDestStore := self:getDestStore()):GetKind()), 170);
@@ -743,9 +853,15 @@ backupSlip := {
 		base:Dirty()
 	end,
 	notEnoughRoom: nil,
+	// the 'backup application preferences: what Backup and Restore are to do (the slips
+	// backupPrefsSlip and restorePrefsSlip set them); see viewSetupFormScript for the slots
 	prefsCache: nil,
 	screenOrientation: nil,
 	cardSlotIconBounds: nil,
+	// Restore (the restorePrefsSlip's button): restores what prefsCache asks for (all, or
+	// the chosen applications and packages), with every other application closed, then
+	// asks for a restart when anything was restored. result: the restore's type, passed
+	// to restoreSoupsAndPackages ('all for a full restore).
 	doRestore: compile(
 		constants: {
 			kLiteral_488675: "Restore",
@@ -754,7 +870,7 @@ backupSlip := {
 		func(result) begin
 			local soupNameList, copy, prefsCache2, copy2, lFetch2, pos, systemFrame, pos2, l9;
 			if (not GetRoot().Connection:TransportsIdle()) then begin
-					GetRoot():Notify(3, "Erase Card", "Can't restore while communications are busy.");
+					GetRoot():Notify(kNotifyAlert, "Erase Card", "Can't restore while communications are busy.");
 					return nil
 				end;
 			(if self:getDestStore():IsValid() then begin
@@ -767,6 +883,7 @@ backupSlip := {
 									soupNameList := self:getRestoreApplicationNames(copy)
 								end
 						end;
+					// the Directory and System soups are restored last, as an application of their own
 					if (lFetch2 := LFetch(soupNameList, 'systemFrame, 0, '|=|, 'class)) then begin
 							pos := LSearch(lFetch2.soups, @metaSoupName, 0, '|str=|, nil);
 							systemFrame := SetClass({name: "System information", soups: [Array: ]}, 'systemFrame);
@@ -784,6 +901,7 @@ backupSlip := {
 						end;
 					(if (((Length(soupNameList) > 0) or (prefsCache2.restorePackages = 'all)) or (Length(prefsCache2.restorePackNames) > 0)) then begin
 							try begin
+									// closes every open view but this slip; l9 is what |ResurrectRootChildren!| reopens
 									l9 := GetRoot():|KillRootChildren!|([Array: self])
 								end onexception |evt.ex| do begin
 									if (not l9) then begin
@@ -793,7 +911,7 @@ backupSlip := {
 										end else begin
 											self:|ResurrectRootChildren!|(l9)
 										end;
-									GetRoot():Notify(3, kLiteral_488675, "The restore encountered an error while trying to close all open applications. Nothing was restored.");
+									GetRoot():Notify(kNotifyAlert, kLiteral_488675, "The restore encountered an error while trying to close all open applications. Nothing was restored.");
 									self:MoveBehind(nil);
 									return nil
 								end;
@@ -812,16 +930,19 @@ backupSlip := {
 										end else begin
 											self:|ResurrectRootChildren!|(l9)
 										end;
-									GetRoot():Notify(3, kLiteral_488675, "Nothing was restored. All items were left untouched.");
+									GetRoot():Notify(kNotifyAlert, kLiteral_488675, "Nothing was restored. All items were left untouched.");
 									self:MoveBehind(nil);
 									return nil
 								end)
-						end else GetRoot():Notify(3, kLiteral_488675, "There is nothing to restore."))
+						end else GetRoot():Notify(kNotifyAlert, kLiteral_488675, "There is nothing to restore."))
 				end)
 		end),
 	vTopOffset: 50,
+	// Reads backupInfo from the card's backup: the BackupInfo soup's info for a 2.x backup,
+	// else (1.x) its first entry with a backupDate. Warns when the info looks damaged.
 	getBackupInfo: compile(
 		constants: {
+			// true for a 1.x backup: BackupInfo's soup info has no version
 			kFunction_48e42d: func(a1) begin
 				local allInfo;
 				(not (if (allInfo := a1:GetAllInfo()) then allInfo.version))
@@ -835,18 +956,22 @@ backupSlip := {
 					(if (backupInfo := copy:entry()) then begin
 							(while (if backupInfo then (not backupInfo.backupDate)) do (backupInfo := copy:Next()));
 							(if (not backupInfo) then begin
-									GetRoot():Notify(3, kROM_556, "Some items in the backup info seem to be incorrect. Restore at your own risk!");
+									GetRoot():Notify(kNotifyAlert, kROM_556, "Some items in the backup info seem to be incorrect. Restore at your own risk!");
 									(if (not backupInfo) then begin
 											copy:Reset();
+											// 13584276: 29 October 1929, 12:36 in minutes since 1904 - "Black Tuesday", the day of
+											// the Wall Street crash, given as the date of a backup whose date is lost
 											((backupInfo := copy:entry()).backupDate := 13584276)
 										end)
 								end)
 						end else (backupInfo := nil))
 				end else (if (if (if (backupInfo := backupSoup:GetAllInfo()) then (not backupInfo.backupDate)) then backupInfo.soupType) then begin
-						GetRoot():Notify(3, kROM_556, "The backup info seems to be incorrect. Restore at your own risk!");
+						GetRoot():Notify(kNotifyAlert, kROM_556, "The backup info seems to be incorrect. Restore at your own risk!");
 						(backupInfo.backupDate := 13584276)
 					end))
 		end),
+	// Backup (the backupPrefsSlip's button): backs up what prefsCache asks for, with every
+	// other application closed, then reopens them. A BackupInfo soup left empty is removed.
 	doBackup: compile(
 		constants: {
 			kLiteral_488691: "Backup",
@@ -858,19 +983,20 @@ backupSlip := {
 		func() begin
 			local getDestStore, soup, backupAllPackagesCursor, prefsCache2, applicationNames, getSrcStore, l7;
 			if (not GetRoot().Connection:TransportsIdle()) then begin
-					GetRoot():Notify(3, "Erase Card", "Can't backup while communications are busy.");
+					GetRoot():Notify(kNotifyAlert, "Erase Card", "Can't backup while communications are busy.");
 					return nil
 				end;
 			(if (getDestStore := self:getDestStore()):IsValid() then begin
 					getSrcStore := self:getSrcStore();
 					prefsCache2 := prefsCache;
 					backupAllPackagesCursor := GetBackupAllPackagesCursor(getSrcStore);
+					// anything to back up: all soups, some, or packages when there are any
 					(if (((prefsCache2.soupType = 'all) or (Length(prefsCache2.partialSoups) > 0)) or (if (prefsCache2.packageType = 'all) then backupAllPackagesCursor:entry())) then begin
 							if (prefsCache2.soupType = 'all) then begin
 									try begin
 											applicationNames := GetApplicationNames(getSrcStore, true)
 										end onexception |evt.ex| do begin
-											GetRoot():Notify(3, kLiteral_488691, "There was an error before the backup started. Nothing was backed up.");
+											GetRoot():Notify(kNotifyAlert, kLiteral_488691, "There was an error before the backup started. Nothing was backed up.");
 											return nil
 										end
 								end else begin
@@ -886,7 +1012,7 @@ backupSlip := {
 										end else begin
 											self:|ResurrectRootChildren!|(l7)
 										end;
-									GetRoot():Notify(3, kLiteral_488691, "The backup encountered an error while trying to close all open applications. Nothing was backed up.");
+									GetRoot():Notify(kNotifyAlert, kLiteral_488691, "The backup encountered an error while trying to close all open applications. Nothing was backed up.");
 									self:MoveBehind(nil);
 									return nil
 								end;
@@ -908,9 +1034,10 @@ backupSlip := {
 								end;
 							self:MoveBehind(nil);
 							self:LockScreen(nil)
-						end else GetRoot():Notify(3, kLiteral_488691, "You must select something in order to backup."))
+						end else GetRoot():Notify(kNotifyAlert, kLiteral_488691, "You must select something in order to backup."))
 				end)
 		end),
+	// Makes the text "nK in use, nK free" for the card (infoShapes[1]); 1K at least.
 	makeMemoryInfoShape: func(getDestStore) begin
 		local usedSize, most, l3, most2, text;
 		usedSize := getDestStore:UsedSize();
@@ -920,8 +1047,11 @@ backupSlip := {
 		text := Stringer([Array: NumberStr(most), "K in use, ", " ", NumberStr(most2), "K free\n"]);
 		(infoShapes[1] := MakeText(StrTruncate(text, 170), 15, 73, 185, 86))
 	end,
+	// the status view of the DoProgress slip a backup or restore runs in
 	progressSlip: nil,
 	lockShape: nil,
+	// After the System soup is restored: removes the password from the restored user
+	// configuration (its usepassword and passwordkey slots).
 	fixUserConfig: func() begin
 		call @loadGlobals with ();
 		RemoveSlot(userConfiguration, 'usepassword);
@@ -930,7 +1060,11 @@ backupSlip := {
 	end,
 	eraseButton: nil,
 	_openedForStore: nil,
+	// bytes (5K) kept free on a store beyond what a backup or restore needs
 	theFudgeFactor: 5120,
+	// Erases the backup on the card store (the Erase Backup choice of eraseSlip): every
+	// "BACKUP_" soup listed in BackupInfo, BACKUP_Packages and BackupInfo itself, under a
+	// progress slip.
 	wipeBackup: compile(
 		constants: {
 			kBinaryFromHex: func(hex, cls) begin
@@ -964,6 +1098,7 @@ backupSlip := {
 										MapCursor(cursor, func(a1) begin
 											name := a1.name;
 											status:SetStatus('vBarber, {titleText: kLiteral_488bf1, barber: true});
+											// a 1.x package entry is its own backup; the others name a "BACKUP_" soup
 											if (if (not a1.package) then (not a1.segmentedPackage)) then begin
 													removeSoup := store:GetSoup(Stringer([Array: "BACKUP_", name]));
 													status:SetStatus('vBarber, {titleText: kLiteral_488bf1, barber: true});
@@ -998,18 +1133,20 @@ backupSlip := {
 												(error := true)
 											end)
 									end) = 'Cancel) then begin
-											GetRoot():Notify(3, kLiteral_4887b5, "Warning! Part of the backup has been removed.")
+											GetRoot():Notify(kNotifyAlert, kLiteral_4887b5, "Warning! Part of the backup has been removed.")
 										end
 								end onexception |evt.ex| do begin
 									error := true
 								end;
 							if error then begin
-									GetRoot():Notify(3, kLiteral_4887b5, "There was an error while erasing the backup. Part of the backup may have been removed.")
+									GetRoot():Notify(kNotifyAlert, kLiteral_4887b5, "There was an error while erasing the backup. Part of the backup may have been removed.")
 								end
 						end onexception |evt.ex| do begin end;
 					store:MarkNotBusy(whoAmI)
 				end)
 		end),
+	// Returns a vertical offset (a2 or a multiple of vOffsetIncrement past it) at which
+	// this slip, with its top at top, does not sit exactly on another open card slip.
 	pickVOffset: func(top, a2) begin
 		(foreach item in StoreSlipRegistry.storeSlips do begin
 				if (if (if (item <> self) then item.viewCObject) then (item:GlobalBox().top = (top + a2))) then begin
@@ -1018,16 +1155,22 @@ backupSlip := {
 			end);
 		a2
 	end,
+	// The card store this slip is for.
 	getDestStore: func() begin
 		_openedForStore
 	end,
+	// true once a package has been restored
 	restoredPkgs: nil,
+	// viewSetupFormScript: joins StoreSlipRegistry, moves the slip down past other card
+	// slips, names it ('Store' & the card's signature: whoAmI, used to register for changes
+	// and mark the store busy), finds the backup and reads the 'backup preferences.
 	viewSetupFormScript: compile(
 		constants: {
 			kFunction_48e335: func(a1) begin
 				(not StrEqual(a1, "Patch2.0"))
 			end,
 			kLiteral_48e355: {type: 'index, indexPath: 'name, IndexValidTest: kFunction_48e335},
+			// the default 'backup preferences: back up and restore everything
 			kLiteral_47ece5: '{soupType: all, packageType: all, partialSoups: [Array: ], restoreType: all, restoreSoups: [Array: ], restorePackages: all, restorePackNames: [Array: ]}
 		},
 		func() begin
@@ -1056,6 +1199,9 @@ backupSlip := {
 	infoShapes: nil,
 	vOffsetIncrement: 25,
 	backupSoup: nil,
+	// Erases the whole card store (eraseButton, after confirming): deactivates its
+	// packages, erases it and gives it back its name (a card called "Untitled" gets the
+	// default name freshCardName), keeping it the default store if it was.
 	eraseStore: compile(
 		constants: {
 			kBinaryFromHex: func(hex, cls) begin
@@ -1074,7 +1220,7 @@ backupSlip := {
 		func(store) begin
 			local default, name;
 			if (not GetRoot().Connection:TransportsIdle()) then begin
-					GetRoot():Notify(3, kLiteral_4886c9, "Can't erase while communications are busy.");
+					GetRoot():Notify(kNotifyAlert, kLiteral_4886c9, "Can't erase while communications are busy.");
 					return nil
 				end;
 			(if (if (if store then store:IsValid()) then (not store:IsReadOnly())) then begin
@@ -1088,6 +1234,7 @@ backupSlip := {
 								name := Clone(store:GetName());
 								a1:SetStatus('vBarber, {titleText: "Erasing the card\u2026\u", barber: true});
 								XmitStoreSoupsLeaving(store);
+								// Erase gives a new store object
 								self:setDestStore((store := store:Erase()));
 								a1:SetStatus('vBarber, {titleText: "Setting card information\u2026\u", barber: true});
 								if default then begin
@@ -1103,15 +1250,20 @@ backupSlip := {
 								SetValue(nameInput, 'text, Clone(name))
 							end)
 						end onexception |evt.ex| do begin
-							GetRoot():Notify(3, kLiteral_4886c9, "There was an error while erasing the card.")
+							GetRoot():Notify(kNotifyAlert, kLiteral_4886c9, "There was an error while erasing the card.")
 						end;
 					store:MarkNotBusy(whoAmI);
 					GetRoot().ExtrasDrawer:RedoIcons()
 				end)
 		end),
+	// Returns the applications a backup holds, from the BackupInfo cursor a1: a sorted list
+	// of {name, soups} frames, the soups found from each soup's soupDef (or 1.x
+	// applications info). The built-in system soups make one "System information" entry
+	// (class 'systemFrame), soups no application owns "Other information" ('otherFrame).
 	getRestoreApplicationNames: func(a1) begin
 		local soupNameList, soupName;
 		soupNameList := [Array: ];
+		// fn: the list's entry for the application name a1 (made when new), soupName added
 		fn := func(a1) begin
 			local returnElt;
 			if (not (returnElt := BInsert(soupNameList, {name: a1}, '|str<|, '[pathExpr: name], 'returnElt)).soups) then begin
@@ -1180,6 +1332,10 @@ backupSlip := {
 	end,
 	nameInput: nil,
 	cardSlotIcon: nil,
+	// Runs a restore under a progress slip: type 'all first removes the internal store's
+	// soups the restore does not bring back (all but packages), restores soupsToRestore
+	// (restoreManySoups) and packagesToRestore (restoreSomePackages), then lets
+	// SoupRestoreRegistry's functions know the soups restored and reports conversion errors.
 	restoreSoupsAndPackages: compile(
 		constants: {
 			kBinaryFromHex: func(hex, cls) begin
@@ -1204,6 +1360,7 @@ backupSlip := {
 								l2 := (restoredSoups := [Array: ]);
 								a1:SetStatus('vBarber, {titleText: "Preparing to restore\u2026\u", barber: true});
 								l3 := self:getSrcStore();
+								// l4: the names of every soup to be restored, sorted
 								if (type = 'all) then begin
 										l4 := [Array: ];
 										local l1;
@@ -1249,6 +1406,7 @@ backupSlip := {
 												ZapPackagesForFullRestore(l3)
 											end;
 										self:restoreSomePackages(packagesToRestore);
+										// a full restore gives the internal store back the store info it was backed up with
 										if (if (if backupInfo.storeInfo then (prefs.restoreType = 'all)) then (prefs.restorePackages = 'all)) then begin
 												l3:SetAllInfo(backupInfo.storeInfo)
 											end
@@ -1259,10 +1417,11 @@ backupSlip := {
 							end;
 						Sort(restoredSoups, '|str<|, nil);
 						CallFrameBasedRegistryFns(SoupRestoreRegistry, [Array: restoredSoups]);
+						// an exception from inside is thrown again once the registry has been told
 						(if l9 then Throw(l9.name, l9.error))
 					end) = 'Cancel) then begin
 							if (restoredPkgs or (Length(restoredSoups) > 0)) then begin
-									GetRoot():Notify(3, kLiteral_488675, "Restore was cancelled. Some items may not have been restored.")
+									GetRoot():Notify(kNotifyAlert, kLiteral_488675, "Restore was cancelled. Some items may not have been restored.")
 								end
 						end
 				end onexception |evt.ex| do begin end;
@@ -1279,9 +1438,11 @@ backupSlip := {
 									text := Stringer([Array: text, value, ", "])
 								end
 						end);
-					GetRoot():Notify(3, kLiteral_488675, ParamStr("Errors occurred converting data for applications: ^0", [Array: text]))
+					GetRoot():Notify(kNotifyAlert, kLiteral_488675, ParamStr("Errors occurred converting data for applications: ^0", [Array: text]))
 				end)
 		end),
+	// Makes the text for infoShapes[2]: "Full backup: <date>" or "Partial backup: ...", or
+	// "No backup on <card name>". A 1.x backup counts as full.
 	makeLastBackupShape: compile(
 		constants: {
 			kLiteral_488735: "No backup on \u201C\u^0\u201D\u"
@@ -1307,6 +1468,10 @@ backupSlip := {
 			(infoShapes[2] := MakeText(text, 15, 86, 185, 99))
 		end),
 	restoreButton: nil,
+	// Runs a backup under a progress slip: creates BackupInfo when the card has none, marks
+	// the backup partial while it is made, lets SoupBackupRegistry's functions know which
+	// soups are backed up, backs up soupsToBackup and (packages 'all) the packages, then
+	// records the backup's kind in setBackupInfo.
 	backupSoupsAndPackages: compile(
 		constants: {
 			kBinaryFromHex: func(hex, cls) begin
@@ -1339,9 +1504,9 @@ backupSlip := {
 										backupSoup := destStore:CreateSoupXmit("BackupInfo", '[Array: {structure: slot, path: name, type: string}], 'backup)
 									end onexception |evt.ex| do begin
 										if (if HasSlot((ex := CurrentException()), 'error) then (ex.error = kSError_StoreFull)) then begin
-												GetRoot():Notify(3, kLiteral_488691, "The storage card is full and the backup cannot be created. Nothing was backed up.")
+												GetRoot():Notify(kNotifyAlert, kLiteral_488691, "The storage card is full and the backup cannot be created. Nothing was backed up.")
 											end else begin
-												GetRoot():Notify(3, kLiteral_488691, "Something has happened and the backup was unable to be created. Nothing was backed up.")
+												GetRoot():Notify(kNotifyAlert, kLiteral_488691, "Something has happened and the backup was unable to be created. Nothing was backed up.")
 											end;
 										error := true
 									end;
@@ -1375,26 +1540,32 @@ backupSlip := {
 										Rethrow()
 									end onexception |evt.ex| do begin
 										if (if HasSlot((ex := CurrentException()), 'error) then (ex.error = kSError_StoreFull)) then begin
-												GetRoot():Notify(3, kLiteral_488691, ParamStr("There was not enough space to backup \u201C\u^0\u201D\u. Some items may not have been backed up.", [Array: kLiteral_4888e9]))
+												GetRoot():Notify(kNotifyAlert, kLiteral_488691, ParamStr("There was not enough space to backup \u201C\u^0\u201D\u. Some items may not have been backed up.", [Array: kLiteral_4888e9]))
 											end else begin
-												GetRoot():Notify(3, kLiteral_488691, ParamStr("There was an error while backing up \u201C\u^0\u201D\u. Some items may not have been backed up.", [Array: kLiteral_4888e9]))
+												GetRoot():Notify(kNotifyAlert, kLiteral_488691, ParamStr("There was an error while backing up \u201C\u^0\u201D\u. Some items may not have been backed up.", [Array: kLiteral_4888e9]))
 											end;
 										Rethrow()
 									end;
 								packageType := prefs.packageType;
+								// no packages to back up: the backup counts as having all of them
 								if (not GetBackupAllPackagesCursor(self:getSrcStore()):entry()) then begin
 										packageType := 'all
 									end;
 								self:setBackupInfo(prefs.soupType, packageType)
 							end;
 						self:displayinfo()
-					end) = 'Cancel) then GetRoot():Notify(3, "Backup", "The backup was cancelled. Some information was not saved."))
+					end) = 'Cancel) then GetRoot():Notify(kNotifyAlert, "Backup", "The backup was cancelled. Some information was not saved."))
 				end onexception |evt.ex| do begin
 					nil
 				end)
 		end),
 	backupButton: nil,
 	viewFont: @fontSystem9Bold,
+	// Converts a 1.x soup a3 (of the application named a2) restored to the internal store,
+	// with the first of the applications a1 that has a conversion frame
+	// (GetConversionFrame): entry by entry with ConvertFrame from 'oneO to 'twoO. The
+	// System and Directory soups are converted from their backup copy on the card into the
+	// fresh internal soup; others in place, an entry that fails being removed.
 	convertSoup: compile(
 		constants: {
 			kLiteral_488675: "Restore",
@@ -1456,13 +1627,13 @@ backupSlip := {
 									Rethrow()
 								end onexception |evt.ex.fr.store| do begin
 									if (if HasSlot((ex := CurrentException()), 'error) then (ex.error = kSError_StoreFull)) then begin
-											GetRoot():Notify(3, kLiteral_488675, ParamStr("There was not enough space to convert \u201C\u^0\u201D\u. Some items may not have been restored.", [Array: a3]))
+											GetRoot():Notify(kNotifyAlert, kLiteral_488675, ParamStr("There was not enough space to convert \u201C\u^0\u201D\u. Some items may not have been restored.", [Array: a3]))
 										end else begin
-											GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e209, [Array: a3]))
+											GetRoot():Notify(kNotifyAlert, kLiteral_488675, ParamStr(kLiteral_47e209, [Array: a3]))
 										end;
 									Rethrow()
 								end onexception |evt.ex| do begin
-									GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e209, [Array: a3]));
+									GetRoot():Notify(kNotifyAlert, kLiteral_488675, ParamStr(kLiteral_47e209, [Array: a3]));
 									Rethrow()
 								end;
 							(entry := cursor:Next())
@@ -1470,6 +1641,9 @@ backupSlip := {
 				end)
 		end),
 	openRestorePrefsSlip: nil,
+	// Records the backup as a whole in the BackupInfo soup's info: when, which soups
+	// ('all or 'Partial) and packages ('all, or else 'none), the store info for a full
+	// backup, and the machine type; then rereads backupInfo.
 	setBackupInfo: func(soupType, packageType2) begin
 		local allInfo, frame2, backupMachine2, packageType;
 		if (if (soupType = packageType2) then (soupType = 'all)) then begin
@@ -1499,13 +1673,16 @@ backupSlip := {
 		self:getBackupInfo()
 	end,
 	openBackupPrefsSlip: nil,
+	// the slip's identity: 'Store<signature>, made in viewSetupFormScript
 	whoAmI: nil
 };
 
+// Backup: opens backupPrefsSlip (what to back up), or closes it when it is open.
 backupButton := {
 	text: backup,
 	viewBounds: {left: -48, top: 0, right: -6, bottom: 0},
 	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV,
+	// opens the backup preferences slip, or closes it when open
 	buttonClickScript: compile(
 		constants: {
 			kROM_576: @backupPrefsSlip
@@ -1517,10 +1694,12 @@ backupButton := {
 	_proto: @protoTextButton
 };
 
+// Restore: opens restorePrefsSlip, or closes it. Hidden while the card has no backup.
 restoreButton := {
 	text: restore,
 	viewBounds: {left: -53, top: 0, right: -6, bottom: 0},
 	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV,
+	// opens the restore preferences slip, or closes it when open
 	buttonClickScript: compile(
 		constants: {
 			kROM_577: @restorePrefsSlip
@@ -1528,6 +1707,7 @@ restoreButton := {
 		func() begin
 			(if (not openRestorePrefsSlip) then kROM_577:New(self:Parent()) else openRestorePrefsSlip:Close())
 		end),
+	// hidden while the card has no backup
 	viewSetupDoneScript: func() begin
 		(if (not backupInfo) then self:Hide())
 	end,
@@ -1535,18 +1715,22 @@ restoreButton := {
 	_proto: @protoTextButton
 };
 
+// Erase: when the card holds a backup, eraseSlip asks what to erase (the card, its
+// information or its backup); otherwise the whole card is erased after a confirmation.
 eraseButton := {
 	text: erase,
 	viewBounds: {left: 5, top: 0, right: 39, bottom: 0},
 	viewFlags: vVisible + vReadOnly + vClickable,
 	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2) + vfRound(4),
 	viewJustify: vjCenterH + vjCenterV + vjSiblingFullV,
+	// Called by Confirm with a1 true when the user agreed to erase the card.
 	ConfirmCallback: func(a1) begin
 		(if a1 then AddDeferredCall(func() begin
 				self:doEraseCard();
 				self:hilite(nil)
 			end, '[Array: ]) else self:hilite(nil))
 	end,
+	// Erases the card (base:eraseStore); on an error the slip is closed.
 	doEraseCard: func() begin
 		(try begin
 				base:eraseStore(self:getDestStore())
@@ -1555,6 +1739,7 @@ eraseButton := {
 				Rethrow()
 			end)
 	end,
+	// tapped: eraseSlip when there is a backup (and it is not open), else checkToErase
 	viewClickScript: compile(
 		constants: {
 			kROM_574: @eraseSlip
@@ -1565,6 +1750,7 @@ eraseButton := {
 						self:hilite(nil)
 					end else self:checkToErase()) else self:hilite(nil))
 		end),
+	// Asks the user to confirm erasing the whole card (ConfirmCallback gets the answer).
 	checkToErase: func() begin
 		local name;
 		if (StrLen((name := self:getDestStore():GetName())) = 0) then begin
@@ -1576,20 +1762,25 @@ eraseButton := {
 	_proto: @protoStaticText
 };
 
+// Makes the card the default store (where new entries and packages go), or the internal
+// store again when unchecked.
 defaultStoreCheckBox := {
 	viewBounds: {left: 8, top: -20, right: -8, bottom: -8},
 	viewJustify: vjParentFullH + vjSiblingTopV,
 	text: "Save new info and packages on this card",
+	// checked when the card is the default store
 	viewSetupFormScript: func() begin
 		(viewValue := (self:getDestStore() = GetDefaultStore()))
 	end,
+	// a write-protected card cannot become the default store
 	viewClickScript: compile(
 		constants: {
 			kROM_556: @freshCardName
 		},
 		func(unit) begin
-			(if (if (not viewValue) then self:getDestStore():IsReadOnly()) then GetRoot():Notify(3, kROM_556, "This card is locked, you cannot store new items on it.") else inherited:viewClickScript(unit))
+			(if (if (not viewValue) then self:getDestStore():IsReadOnly()) then GetRoot():Notify(kNotifyAlert, kROM_556, "This card is locked, you cannot store new items on it.") else inherited:viewClickScript(unit))
 		end),
+	// checked: the card becomes the default store; unchecked: the internal store again
 	valueChanged: func() begin
 		local getDestStore;
 		getDestStore := self:getDestStore();
@@ -1599,22 +1790,26 @@ defaultStoreCheckBox := {
 	_proto: @protoCheckbox
 };
 
+// The card's name, edited in place (viewChangedScript renames the store); read-only on
+// a write-protected card.
 nameInput := {
 	viewBounds: {left: 46, top: 10, right: -5, bottom: 50},
 	viewFormat: vfPen(1) + vfLinesGray + vfInset(2),
 	viewFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed,
-	viewJustify: 8388656,
+	viewJustify: vjParentFullH + vjOneLineOnly,
 	viewLineSpacing: 35,
+	// the card's name; read-only (no clicks, gestures or characters, no lines) on a locked card
 	viewSetupFormScript: func() begin
 		local getDestStore;
 		inherited:?viewSetupFormScript();
 		getDestStore := self:getDestStore();
 		self.text := Clone(getDestStore:GetName());
 		(if getDestStore:IsReadOnly() then begin
-				self.viewFlags := BAnd(self.viewFlags, bnot(14848));
-				(self.viewFormat := BAnd(self.viewFormat, bnot(143616)))
+				self.viewFlags := BAnd(self.viewFlags, bnot(vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed));
+				(self.viewFormat := BAnd(self.viewFormat, bnot(vfPen(1) + vfLinesGray + vfInset(2))))
 			end)
 	end,
+	// the name edited: renames the card (and its "No backup on" text)
 	viewChangedScript: func(slot, view) begin
 		local getDestStore;
 		(if (if (slot = 'text) then (view = self)) then (if (if (getDestStore := self:getDestStore()):IsValid() then (not getDestStore:IsReadOnly())) then begin

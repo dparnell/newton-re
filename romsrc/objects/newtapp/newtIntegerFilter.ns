@@ -1,17 +1,29 @@
-// newtIntegerFilter, and what only it reaches
+// newtIntegerFilter: the NewtApp filter for a whole number (NPR 2.0 Table 3-1), shown with
+// FormattedNumberStr and format.  When the application's cursor is ordered by this
+// slot (an integer index on path), the number written is looked up there and the
+// entry holding it offered in the label popup.
+//
+// This file holds newtIntegerFilter and what only it reaches.
 
 newtIntegerFilter := {
 	_proto: @newtTextFilter,
-	recFlags: 10753,
+	// recFlags: the entry line's view flags (newtTextFilter)
+	recFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed,
+	// the entry line's textFlags
 	recTextFlags: 10,
+	// round what is written to an integer (newtNumberFilter clears it)
 	integerOnly: true,
-	format: g,
+	format: g, // "%.10g"
+	// the text shown for the slot's value (a string in the slot is shown as it is)
 	PathToText: func() begin
 		(if IsString(target.(path)) then Clone(target.(path)) else FormattedNumberStr(target.(path), format))
 	end,
+	// what to look for: the number written
 	PreQuery: func(a1) begin
 		self:TextToPath(a1)
 	end,
+	// a copy of the application's cursor moved to that number, when the cursor is
+	// ordered by this slot (else nil: no lookup)
 	PathQuery: func(a1) begin
 		local copy;
 		(if (if (dataCursor.indexPath = path) then (dataCursor.indexType = 'int)) then begin
@@ -20,9 +32,12 @@ newtIntegerFilter := {
 				copy
 			end)
 	end,
+	// an entry holding exactly the number
 	QueryItem: func(entry, preQuery) begin
 		(if (entry.(path) = preQuery) then {item: self:PathToText(), id: MakeEntryAlias(entry)})
 	end,
+	// the number written: first with its spaces taken out, then with only digits, the
+	// decimal point, comma and minus kept, else 0
 	TextToPath: func(a1) begin
 		local number;
 		(if ((not StrFilled(a1)) or IsRichString(a1)) then a1 else begin

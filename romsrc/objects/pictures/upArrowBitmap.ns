@@ -1,4 +1,6 @@
-// upArrowBitmap, and what only it reaches
+// An up arrow button icon. A 2.x icon frame: an unhilited and a hilited image, each with
+// bounds, a mask and colordata (a 4-bit grey and a 1-bit version). Magic pointer @327. Used
+// by frames.
 
 upArrowBitmap := {
 	unhilited: {

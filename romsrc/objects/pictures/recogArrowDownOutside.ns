@@ -1,4 +1,5 @@
-// recogArrowDownOutside, and what only it reaches
+// A down arrow of the recognition setting's popup, drawn outside. A 1-bit bitmap frame
+// (bits, bounds), 25 x 16 pixels.
 
 recogArrowDownOutside := {
 	bits: bitmap('bits, "resources/bits/3d8c95.png", "0000000000040054005402ab006402c4", 1),

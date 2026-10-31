@@ -1,4 +1,5 @@
-// filingExtBitmap, and what only it reaches
+// The filing button's icon for an item on a storage card. A 1-bit bitmap frame (bits,
+// bounds), 15 x 11 pixels. Magic pointer @712. Used by protoFilingButton.
 
 filingExtBitmap := {
 	bits: bitmap('bits, "resources/bits/3c8fad.png", "000000000004002e002e016400390173", 1),

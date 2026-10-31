@@ -1,3 +1,9 @@
-// newtLabelInputLine, and what only it reaches
+// newtLabelInputLine: the NewtApp labelled input line for text (NPR 2.0): a one-line
+// field with a label at its left, editing target.(path) of the current entry.  With
+// labelCommands the label is a picker (a diamond at its left).  Like
+// protoLabelInputLine, but built on newtProtoLine.
+//
+// This file holds newtLabelInputLine and what only it reaches.
 
+// flavor: the NewtApp filter that makes and reads the text (newtFilter)
 newtLabelInputLine := {_proto: @newtProtoLine, flavor: @newtTextFilter};

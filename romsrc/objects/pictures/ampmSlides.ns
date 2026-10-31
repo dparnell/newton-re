@@ -1,4 +1,6 @@
-// ampmSlides, and what only it reaches
+// The "AM"/"PM" strip the digital clock picker shows its half of the day from. A 1-bit
+// bitmap frame (bits, bounds), 38 x 28 pixels. Magic pointer @604. Used by
+// protoDigitalClock.
 
 ampmSlides := {
 	bits: bitmap('bits, "resources/bits/3da00d.png", "00000000000800a200a200c500be00eb", 1),

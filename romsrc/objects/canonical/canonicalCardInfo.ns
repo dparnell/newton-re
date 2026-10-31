@@ -1,3 +1,6 @@
 // canonicalCardInfo, and what only it reaches
+//
+// The frame GetCardInfo() answers (src/pcmcia/CardInfo.cpp): the PC Card
+// sockets and cards, socketInfos one canonicalSocketInfo per card.
 
 canonicalCardInfo := {cardInfoVersion: 0, totalSockets: 0, totalCards: 0, socketInfos: [|Array|: ]};

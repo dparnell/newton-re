@@ -1,4 +1,5 @@
-// kbdTabBitmap, and what only it reaches
+// The tab key of the keyboards. A 1-bit bitmap frame (bits, bounds), 8 x 8 pixels. Magic
+// pointer @748. Used by alphaKeys, frames, numericKeys, phonePad, viewRoot.
 
 kbdTabBitmap := {
 	bits: bitmap('bits, "resources/bits/3d768d.png", "000000000004008e008e00ed009600f5", 1),

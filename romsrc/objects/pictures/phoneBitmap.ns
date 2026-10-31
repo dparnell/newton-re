@@ -1,4 +1,5 @@
-// phoneBitmap, and what only it reaches
+// A telephone (the call button). A 1-bit bitmap frame (bits, bounds), 13 x 9 pixels. Magic
+// pointer @322. Used by frames, protoCallassistButton.
 
 phoneBitmap := {
 	bits: bitmap('bits, "resources/bits/3d6265.png", "000000000004008b008b00bf009400cc", 1),

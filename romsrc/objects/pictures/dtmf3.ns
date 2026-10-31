@@ -1,4 +1,5 @@
-// dtmf3, and what only it reaches
+// The 3 key of the phone keypad. A 1-bit bitmap frame (bits, bounds), 17 x 18 pixels. Magic
+// pointer @696. Used by arrays.
 
 dtmf3 := {
 	bits: bitmap('bits, "resources/bits/3d7b35.png", "000000000004016b016b0071017d0082", 1),

@@ -1,3 +1,6 @@
 // canonicalTextAndStyles, and what only it reaches
+//
+// A text with its style runs, as RecognizeTextInStyles answers it
+// (src/recognition/Rerecognize.cpp).
 
 canonicalTextAndStyles := {text: nil, styles: nil};

@@ -1,21 +1,29 @@
-// newtEntryViewFiling, and what only it reaches
+// newtEntryViewFiling: the filing button inside an entry view (the NPR's
+// newtEntryViewFilingButton): files the entry of this entry view rather than the
+// application's current one.
+//
+// This file holds newtEntryViewFiling and what only it reaches.
 
 newtEntryViewFiling := {
 	viewBounds: {left: -18, top: 0, right: -1, bottom: 14},
 	viewFormat: 0,
 	keyButton: '_filingKeyButton,
+	// register as one of the application's key buttons: newtAppBase.(keyButton) is this view
+	// (the buttons the keyboard's and other commands can find)
 	viewSetupDoneScript: func() begin
 		if keyButton then begin
 				newtAppBase.(keyButton) := self
 			end;
 		inherited:?viewSetupDoneScript()
 	end,
+	// no longer a key button
 	viewQuitScript: func() begin
 		if keyButton then begin
 				RemoveSlot(newtAppBase, keyButton)
 			end;
 		inherited:?viewQuitScript()
 	end,
+	// file the entry view's own entry (its _entryViewForFiling)
 	buttonClickScript: func() begin
 		filedChild := _entryViewForFiling;
 		inherited:buttonClickScript()

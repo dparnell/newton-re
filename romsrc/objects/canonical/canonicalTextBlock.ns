@@ -1,22 +1,32 @@
 // canonicalTextBlock, and what only it reaches
+//
+// The view of a block of text on a book page (src/books/Pages.cpp,
+// MakeBlockView): a read-only protoStaticText with tab stops every 18
+// pixels; a tap on it sends buttonClickScript, which does nothing unless
+// the block's item gives one.
 
 canonicalTextBlock := {
 	viewFlags: vVisible + vReadOnly + vClickable + vGesturesAllowed,
 	viewFormat: 0,
 	viewJustify: 0,
 	textFlags: 256,
+	// a tab stop every 18 pixels
 	tabs: [|Array|: 18, 36, 54, 72, 90, 108, 126, 144, 162, 180, 198, 216, 234],
+	// a click is used up here, so a tap reaches viewGestureScript as a gesture
 	viewClickScript: func(unit) begin
 		nil
 	end,
+	// viewGestureScript(unit, gesture): a tap sends the block's
+	// buttonClickScript (when it has one) and answers what that does
 	viewgesturescript: func(unit, gesture) begin
 		local buttonClickScript;
 		buttonClickScript := nil;
-		if (gesture = 49) then begin
+		if (gesture = aeTap) then begin
 				buttonClickScript := self:?buttonClickScript()
 			end;
 		buttonClickScript
 	end,
+	// nothing to do: a block's item may give its own
 	buttonClickScript: func() begin
 		nil
 	end,

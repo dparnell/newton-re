@@ -1,4 +1,6 @@
-// cardfileSoupDef, and what only it reaches
+// The Names soup. A soup definition (the soupDef frame RegUnionSoup and RegSoupDef take:
+// name, userName, ownerApp, userDescr, indexes). Magic pointer @361. Used by
+// globalvarwannabes.
 
 cardfileSoupDef := {
 	name: @cardfileSoupName,

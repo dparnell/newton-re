@@ -1,9 +1,14 @@
-// newtInfoButton, and what only it reaches
+// newtInfoButton: the NewtApp "i" information button (NPR 2.0), a protoInfoButton
+// whose About, Help and Prefs items open the application's aboutView and prefsView
+// and its help book - and close them when they are open.
+//
+// This file holds newtInfoButton and what only it reaches.
 
 newtInfoButton := {
 	_proto: @protoInfoButton,
 	boutView: nil,
 	prefView: nil,
+	// open the About view (theApp: the application), or close the one open
 	DoInfoAbout: func() begin
 		(if (if boutView then boutView.viewCObject) then begin
 				newtAppBase:RememberedClose(boutView);
@@ -13,6 +18,7 @@ newtInfoButton := {
 				newtAppBase:RememberedOpen(boutView)
 			end)
 	end,
+	// open the Preferences view, or close the one open
 	DoInfoPrefs: func() begin
 		(if (if prefView then prefView.viewCObject) then begin
 				newtAppBase:RememberedClose(prefView);
@@ -22,6 +28,8 @@ newtInfoButton := {
 				newtAppBase:RememberedOpen(prefView)
 			end)
 	end,
+	// close the help book if it is open; else open it at the application's HelpManual
+	// and viewHelpTopic, when it has them
 	DoInfoHelp: func() begin
 		local tinyTim, viewHelpTopic, l3;
 		(if (if (tinyTim := GetRoot().TinyTim) then tinyTim.viewCObject) then tinyTim:Close() else begin

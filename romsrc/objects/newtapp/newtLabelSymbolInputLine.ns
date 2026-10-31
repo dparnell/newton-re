@@ -1,3 +1,8 @@
-// newtLabelSymbolInputLine, and what only it reaches
+// newtLabelSymbolInputLine: a NewtApp labelled input line for a slot that holds a
+// symbol, shown as text (newtSymbolFilter, and its textFrame when there is one).
+// Not in the NPR.
+//
+// This file holds newtLabelSymbolInputLine and what only it reaches.
 
+// flavor: the NewtApp filter that makes and reads the text (newtFilter)
 newtLabelSymbolInputLine := {_proto: @newtProtoLine, flavor: @newtSymbolFilter};

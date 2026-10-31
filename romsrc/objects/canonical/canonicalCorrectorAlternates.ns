@@ -1,3 +1,6 @@
 // canonicalCorrectorAlternates, and what only it reaches
+//
+// The frame paragraph:GetAlternatives answers (src/recognition/CorrectInfo.cpp):
+// what the corrector offers for a word - the alternative words and its ink.
 
 canonicalCorrectorAlternates := {words: nil, ink: nil};

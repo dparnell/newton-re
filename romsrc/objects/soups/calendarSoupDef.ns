@@ -1,4 +1,6 @@
-// calendarSoupDef, and what only it reaches
+// The soup of the calendar's non-repeating meetings. A soup definition (the soupDef frame
+// RegUnionSoup and RegSoupDef take: name, userName, ownerApp, userDescr, indexes). Magic
+// pointer @365. Used by bootSoupwannabes, globalvarwannabes.
 
 calendarSoupDef := {
 	name: @calendarSoupName,

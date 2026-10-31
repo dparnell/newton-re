@@ -1,4 +1,5 @@
-// keyCapsBitmap, and what only it reaches
+// The caps key image. A 1-bit bitmap frame (bits, bounds) with a mask, 31 x 15 pixels.
+// Magic pointer @331.
 
 keyCapsBitmap := {
 	mask: bitmap('mask, "resources/mask/3d6199.png", "000000000004012c012c0018013b0037", 1),

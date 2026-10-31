@@ -1,4 +1,5 @@
-// zero2NineBitmap, and what only it reaches
+// The digits 0 to 9 in a strip. A 1-bit bitmap frame (bits, bounds), 208 x 9 pixels. Magic
+// pointer @350. Used by globalHeapvarwannabes.
 
 zero2NineBitmap := {
 	bits: bitmap('bits, "resources/bits/3d6a15.png", "00000000001c015b015b006101640131", 1),

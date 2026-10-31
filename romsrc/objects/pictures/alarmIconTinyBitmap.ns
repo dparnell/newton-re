@@ -1,4 +1,5 @@
-// alarmIconTinyBitmap, and what only it reaches
+// A tiny alarm-clock symbol, shown beside an item that has an alarm set. A 1-bit bitmap
+// frame (bits, bounds), 17 x 10 pixels. Magic pointer @591. Used by globalHeapvarwannabes.
 
 alarmIconTinyBitmap := {
 	bits: bitmap('bits, "resources/bits/3d93c5.png", "000000000004018501850011018f0022", 1),

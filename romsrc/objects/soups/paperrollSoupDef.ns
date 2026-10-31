@@ -1,4 +1,6 @@
-// paperrollSoupDef, and what only it reaches
+// The Notes soup (the paper roll; userName "notepad"). A soup definition (the soupDef frame
+// RegUnionSoup and RegSoupDef take: name, userName, ownerApp, userDescr, indexes). Magic
+// pointer @364. Used by bootSoupwannabes, globalvarwannabes.
 
 paperrollSoupDef := {
 	name: @paperrollSoupName,

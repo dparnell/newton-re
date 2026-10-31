@@ -1,4 +1,5 @@
-// gotoArrowBitmap, and what only it reaches
+// An arrow pointing right, a "go to" symbol. A 1-bit bitmap frame (bits, bounds), 9 x 9
+// pixels.
 
 gotoArrowBitmap := {
 	bits: bitmap('bits, "resources/bits/3c8e5d.png", "00000000000400ad00ad01b300b601bc", 1),

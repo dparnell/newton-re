@@ -1,4 +1,6 @@
-// hiliteSound, and what only it reaches
+// The sound of hiliting. A 'codec sound frame whose samples are a tone score (tonescore:
+// frequencies and envelopes) that the tDTMFCodec synthesises when it is played. Magic
+// pointer @110.
 
 hiliteSound := {
 	sndFrameType: 'codec,

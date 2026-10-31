@@ -1,4 +1,5 @@
-// routeMailBitmap, and what only it reaches
+// The Action menu icon of Mail. A 1-bit bitmap frame (bits, bounds), 21 x 14 pixels. Magic
+// pointer @732. Used by globalHeapvarwannabes, mailRegister, mailSlip, protoRouteSlip.
 
 routeMailBitmap := {
 	bits: bitmap('bits, "resources/bits/3d5c5d.png", "000000000004008e008e00cb009c00e0", 1),

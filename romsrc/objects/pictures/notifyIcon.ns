@@ -1,12 +1,21 @@
-// notifyIcon, and what only it reaches
+// The notify icon: the small blinking star the root view shows in the status area while
+// notifications or deferred actions are waiting (a view template, not just an image; the
+// NPR's notifyIcon, whose AddAction and KillAction it documents). An alert put off with
+// Notify or an action added with AddAction goes into its messageList; tapping the star shows
+// a lone alert at once, or pops up a menu of the items' overviews to pick one. Magic pointer @136.
+// Used by viewRoot.
 
 notifyIcon := {
+	// KillAction(action): takes an action (a frame AddAction returned) off the list without
+	// running it; closes the icon when nothing is left.
 	KillAction: func(a1) begin
 		SetRemove(messageList, a1);
 		(if (Length(messageList) = 0) then AddDeferredSend(self, 'Close, nil))
 	end,
 	blinkDelay: nil,
 	viewFlags: vReadOnly + vFloating + vClickable,
+	// Blinks: shows the next image of blinkList every blinkRate ms for blinkReps rounds, then
+	// rests for blinkDelay ms (the value of the last assignment), which doubles after each burst up to maxDelay.
 	viewIdleScript: func() begin
 		local count;
 		count := Length(blinkList);
@@ -25,6 +34,8 @@ notifyIcon := {
 	poppedView: nil,
 	viewJustify: vjCenterH + vjCenterV + vjParentCenterH,
 	icon: @filledStarBitmap,
+	// ExecMessage(index): takes item index off the list and runs it: a 'NotifyAction is
+	// applied (fn with args); anything else is an alert the notification view shows.
 	ExecMessage: func(index) begin
 		local messageListItem;
 		messageListItem := messageList[index];
@@ -34,18 +45,23 @@ notifyIcon := {
 			end;
 		(if (ClassOf(messageListItem) = 'NotifyAction) then Apply(messageListItem.fn, messageListItem.args) else notification:ShowItem(messageListItem, nil))
 	end,
+	// Starts blinking from the first image, with the shortest rest (minDelay).
 	StartBlinking: func() begin
 		SetValue(self, 'icon, blinkList[0]);
 		blinkCount := 1;
 		blinkDelay := minDelay;
 		self:SetupIdle(blinkRate)
 	end,
+	// The pop-up menu of items was dismissed without a choice.
 	pickCancelledScript: func() begin
 		poppedView := nil;
 		self:hilite(nil)
 	end,
-	minDelay: 5000,
+	minDelay: 5000, // ms between bursts at first (maxDelay is 5 minutes)
 	blinkList: [|Array|: @filledStarBitmap, @hollowstarBitmap],
+	// AddMessage(item): puts an item (an alert frame or a 'NotifyAction) first in the list,
+	// closing a pop-up of the old list, and opens the icon and starts it blinking (deferred).
+	// Returns the item.
 	AddMessage: func(frame2) begin
 		if (if poppedView then (poppedView = GetPopup())) then begin
 				poppedView:Close();
@@ -61,6 +77,8 @@ notifyIcon := {
 		end, nil);
 		frame2
 	end,
+	// A tap: with nothing waiting the icon just closes; a single alert is shown at once;
+	// otherwise a pop-up menu of the items' overview texts is offered.
 	viewClickScript: func(unit) begin
 		(if self:TrackHilite(unit) then (if ((not messageList) or (Length(messageList) = 0)) then begin
 					self:hilite(nil);
@@ -75,6 +93,7 @@ notifyIcon := {
 						(poppedView := self:PopupMenu(l1, nil))
 					end)))
 	end,
+	// An item was picked from the pop-up menu: run it.
 	pickActionScript: func(index) begin
 		poppedView := nil;
 		self:hilite(nil);
@@ -82,7 +101,9 @@ notifyIcon := {
 	end,
 	messageList: nil,
 	viewClass: clPictureView,
-	blinkRate: 500,
+	blinkRate: 500, // ms each image of a burst shows
+	// AddAction(title, fn, args) (NPR "AddAction"): adds a deferred action the user can run
+	// from the icon's menu, shown as title. Returns the action frame (for KillAction).
 	AddAction: func(text, a2, list) begin
 		self:AddMessage({class: 'NotifyAction, fn: a2, args: list, overview: text})
 	end,

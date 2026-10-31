@@ -1,4 +1,5 @@
-// diamanteBitmap, and what only it reaches
+// The small diamond of protoDiamondButton. A 1-bit bitmap frame (bits, bounds), 5 x 5
+// pixels. Magic pointer @594. Used by protodiamondButton.
 
 diamanteBitmap := {
 	bits: bitmap('bits, "resources/bits/3d9425.png", "0000000000040153015300a9015800ae", 1),

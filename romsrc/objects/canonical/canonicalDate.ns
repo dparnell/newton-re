@@ -1,4 +1,8 @@
 // canonicalDate, and what only it reaches
+//
+// The date frame Date(), StringToDate and the other date natives answer
+// (src/intl/Dates.cpp): year, month, date, dayOfWeek, hour, minute, second
+// and the month's length.
 
 canonicalDate := {
 	year: nil,

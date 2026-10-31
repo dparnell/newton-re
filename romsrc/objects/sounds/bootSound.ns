@@ -1,4 +1,6 @@
-// bootSound, and what only it reaches
+// The sound the Newton makes when it starts. A 'codec sound frame whose samples are a tone
+// score (tonescore: frequencies and envelopes) that the tDTMFCodec synthesises when it is
+// played. Magic pointer @16. Used by soundOff.
 
 bootSound := {
 	sndFrameType: 'codec,

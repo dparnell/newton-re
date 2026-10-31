@@ -1,13 +1,26 @@
-// restorePrefsSlip, and what only it reaches
+// restorePrefsSlip (magic pointer 577), and what only it reaches: the Backup
+// slip's Restore slip (opened from backupSlip, its godParent), where the user
+// picks what to restore from a backup card - the applications' information
+// (all, or those checked) and the backed-up packages (all, or those checked)
+// - and starts the restore, which replaces the Newton's information and then
+// restarts it.  The choices are kept in the backup preferences entry
+// (prefsCache).
 
 restorePrefsSlip := {
 	_proto: @prefsSlipProto,
 	viewBounds: {left: 0, top: 0, right: 220, bottom: 220},
 	whoAmI: 'openRestorePrefsSlip,
 	titleText: "Restore:",
+	// prefsCache.restoreType: 'all or 'Partial; restoreSoups: the
+	// applications checked
 	prefsSlot: 'restoreType,
 	prefsArray: 'restoreSoups,
+	// the names of the packages in the backup
 	pkgNames: nil,
+	// the applications in the backup (from a copy of godParent's backup
+	// cursor) and its packages; with no packages, or on a screen more than
+	// 240 pixels high, the applications' list is made taller and the slip
+	// 150 pixels high (no packages) or 250
 	viewSetupFormScript: func() begin
 		local backupCursor, count, appAreaHeight;
 		if (backupCursor := godParent.backupCursor) then begin
@@ -29,6 +42,9 @@ restorePrefsSlip := {
 			end;
 		inherited:?viewSetupFormScript()
 	end,
+	// pkgNames: the packages backed up in the destination store's
+	// "BACKUP_Packages" soup, then each package entry in the backup (whole or
+	// segmented, and not a patch)
 	getPkgNamesFromBackup: func() begin
 		local tempPkgNames;
 		local copy, soup;
@@ -48,21 +64,26 @@ restorePrefsSlip := {
 		information,
 		scrollList,
 		prefsSlipProtoItem,
+		// the packages' heading (the Extras soup's name), hidden with no packages
 		{
 			viewJustify: vjParentFullH + vjSiblingBottomV,
 			viewBounds: {left: 7, top: 7, right: 7, bottom: 20},
 			viewFont: @fontSystem10Bold,
 			text: extrasSoupName,
+			// hidden when the backup has no packages
 			viewSetupDoneScript: func() begin
 				(if (Length(pkgNames) = 0) then self:Hide())
 			end,
 			_proto: @protoStaticText
 		},
 		packageList,
+		// "All" for the packages: checks them all, or, when all are checked,
+		// none (prefsCache.restorePackages 'all or 'Partial)
 		{
 			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingBottomV,
 			viewBounds: {left: 0, top: 7, right: 36, bottom: 20},
 			text: all,
+			// (see above)
 			buttonClickScript: func() begin
 				local packageList2;
 				if (not (packageList2 := packageList).checkAll) then begin
@@ -86,6 +107,9 @@ restorePrefsSlip := {
 	_defaultButton: nil
 };
 
+// the packages in the backup, a list of several choices (like the
+// applications' scrollList, shared/frames.ns); the checked ones kept in
+// prefsCache.restorePackNames
 packageList := {
 	viewFlags: vVisible + vClipping + vClickable,
 	viewFormat: vfFrameBlack + vfPen(2),
@@ -95,6 +119,7 @@ packageList := {
 	useScrollers: true,
 	checkAll: nil,
 	prefsArray: 'restorePackNames,
+	// the items and which are checked (none with no packages), and the list built
 	viewSetupFormScript: func() begin
 		inherited:?viewSetupFormScript();
 		if (Length(pkgNames) > 0) then begin
@@ -106,9 +131,11 @@ packageList := {
 		self.checkAll := (prefsCache.restorePackages = 'all);
 		self:SetupList()
 	end,
+	// hidden when the backup has no packages
 	viewSetupDoneScript: func() begin
 		(if (Length(pkgNames) = 0) then self:Hide())
 	end,
+	// a line tapped: no longer 'all; checkAll says whether every line is now checked
 	HiliteLine: func(temp) begin
 		if (prefsCache.restorePackages = 'all) then begin
 				prefsCache.restorePackages := 'Partial
@@ -116,6 +143,7 @@ packageList := {
 		inherited:HiliteLine(temp);
 		(if (Length(selectedItems) = Length(ListItems)) then (checkAll := true) else (checkAll := nil))
 	end,
+	// the checked packages saved in the preferences entry
 	viewQuitScript: func() begin
 		if (Length(pkgNames) > 0) then begin
 				self:stashItems(pkgNames)
@@ -125,6 +153,8 @@ packageList := {
 			end;
 		EntryChangeXmit(prefsCache, 'backup)
 	end,
+	// the list's items (the package names) and which are checked: all of them
+	// for 'all, else those named in restorePackNames
 	figureAllItems: func() begin
 		l5 := (self.ListItems := pkgNames);
 		(if (prefsCache.restorePackages = 'all) then begin
@@ -153,11 +183,16 @@ packageList := {
 	_proto: @protoTextList
 };
 
+// "Restore", the default button: asks the user to confirm (the answer, 'some
+// or 'Cancel, is a ModalConfirm button's value), saves the checked
+// applications and packages, and after the click calls godParent:doRestore
+// with the answer
 _defaultButton_9 := {
 	text: restore,
 	viewBounds: {left: -53, top: 0, right: -6, bottom: 0},
 	viewFlags: vVisible + vReadOnly + vClickable,
 	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV,
+	// (see above)
 	buttonClickScript: func() begin
 		result := ModalConfirm("Restore will replace the information on your Newton device with the information in the backup and then will restart. Are you sure you want to do this?", '[Array: {value: some, text: "Restore"}, {value: Cancel, text: "Cancel", keyValue: default}]);
 		(if (if Visible(self:Parent()) then (result <> 'Cancel)) then begin

@@ -1,4 +1,5 @@
-// keyBulletBitmap, and what only it reaches
+// A bullet key. A 1-bit bitmap frame (bits, bounds), 5 x 10 pixels. Magic pointer @734.
+// Used by arrays.
 
 keyBulletBitmap := {
 	bits: bitmap('bits, "resources/bits/3d8e55.png", "00000000000400bb00bb028400c50289", 1),

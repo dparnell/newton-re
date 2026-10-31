@@ -1,4 +1,5 @@
-// routeAddSender, and what only it reaches
+// The Action menu icon of "add sender" (to Names). A 1-bit bitmap frame (bits, bounds), 22
+// x 11 pixels. Magic pointer @772. Used by mailSlip, viewRoot.
 
 routeAddSender := {
 	bits: bitmap('bits, "resources/bits/463ac5.png", "00000000000401a101a100c901ac00df", 1),

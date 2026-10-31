@@ -1,4 +1,5 @@
-// plunk, and what only it reaches
+// The plunk sound. A 'codec sound frame whose samples the tIMACodec codec decompresses (IMA
+// ADPCM) when it is played. Magic pointer @313. Used by mailSlip.
 
 plunk := {
 	sndFrameType: 'codec,

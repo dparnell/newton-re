@@ -1,3 +1,4 @@
-// leadingpunctBitmap, and what only it reaches
+// The image of the leading-punctuation picker (the bits and bounds correctorleadBits
+// shares). A 1-bit bitmap frame (bits, bounds). Magic pointer @596.
 
 leadingpunctBitmap := {bits: leadingpunctBitmapBits, bounds: leadingpunctBitmapBounds};

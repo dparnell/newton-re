@@ -1,4 +1,9 @@
 // canonicalPackageFrame, and what only it reaches
+//
+// A package as the package natives describe it
+// (src/packages/StorePackageNatives.cpp): its id, size, store and pssid,
+// title, version, timestamp, creation date, copy protection, flags,
+// copyright, compression, and its parts and their types.
 
 canonicalPackageFrame := {
 	id: nil,

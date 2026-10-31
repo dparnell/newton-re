@@ -1,4 +1,5 @@
-// closeboxBitmap, and what only it reaches
+// The close box (the X button of protoClosebox). A 1-bit bitmap frame (bits, bounds) with a
+// mask, 13 x 13 pixels. Magic pointer @334. Used by protoClosebox, worldClock.
 
 closeboxBitmap := {
 	mask: bitmap('mask, "resources/mask/3d60dd.png", "0000000000040041004101ec004e01f9", 1),

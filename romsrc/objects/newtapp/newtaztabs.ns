@@ -1,22 +1,32 @@
-// newtaztabs, and what only it reaches
+// newtaztabs: the NewtApp A-Z tabs (the NPR's newtAZTabs), a protoAZTabs that follows
+// the current entry (in the retarget chain) and moves the application's cursor to
+// the letter tapped; the cursor must be ordered by the index the tabs' letters are
+// of (soupQuery's indexPath).
+//
+// This file holds newtaztabs and what only it reaches.
 
 newtaztabs := {
 	_proto: @azTabs,
 	viewBounds: {left: 0, top: -18, right: 0, bottom: 0},
+	// join the retarget chain and show the current entry's letter
 	viewSetupDoneScript: func() begin
 		self:ChainIn('retargetChain);
 		inherited:viewSetupDoneScript();
 		self:RetargetNotify()
 	end,
+	// leave the chain
 	viewQuitScript: func() begin
 		self:ChainOut('retargetChain)
 	end,
+	// the current entry changed: show the first letter of its index key
 	RetargetNotify: func() begin
 		local entry;
 		(if (entry := layout.dataCursor:entry()) then AddDeferredSend(self, 'setLetter, [Array: entry.(layout.dataCursor:indexPath())[0], true]))
 	end,
+	// a tab was tapped (NPR 2.0 PickLetterScript): go to the first entry at that
+	// letter and, if that is another entry, show it with an upward page flip
 	PickLetterScript: func(part) begin
 		local entry;
-		(if ((entry := layout.dataCursor:entry()) <> layout.dataCursor:GotoKey(part)) then layout:Effect(133120, nil, @flip, 'Retarget, [Array: true]))
+		(if ((entry := layout.dataCursor:entry()) <> layout.dataCursor:GotoKey(part)) then layout:Effect(fxUp, nil, @flip, 'Retarget, [Array: true]))
 	end
 };

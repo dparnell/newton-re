@@ -1,4 +1,6 @@
-// rightBitmap, and what only it reaches
+// A right arrow (a scroll-right button). A 1-bit bitmap frame (bits, bounds) with a mask,
+// 10 x 12 pixels. Magic pointer @326. Used by canonicalCharCorrector,
+// globalHeapvarwannabes, part, protoDatepicker.
 
 rightBitmap := {
 	mask: bitmap('mask, "resources/mask/3d5f4d.png", "000000000004018d018d013c01990146", 1),

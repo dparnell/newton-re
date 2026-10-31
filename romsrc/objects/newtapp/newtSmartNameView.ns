@@ -1,3 +1,10 @@
-// newtSmartNameView, and what only it reaches
+// newtSmartNameView: a labelled input line for a person's name taken from the Names
+// soup (NPR 2.0): as the user writes, the Names cards holding the words are offered
+// in the label popup, and the label's "Other" opens the people picker.
+//
+// This file holds newtSmartNameView and what only it reaches.
 
+// flavor: the NewtApp filter that makes and reads the text (newtFilter)
+// access 'Query: what is written is stored and also looked up (newtProtoLineBase's viewIdleScript);
+// memory 'name: the list of names last chosen, offered in the popup (GetMemoryItems)
 newtSmartNameView := {_proto: @newtProtoLine, flavor: @newtSmartNameFilter, access: 'Query, memory: 'name};

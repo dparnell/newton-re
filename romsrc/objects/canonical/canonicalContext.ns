@@ -1,3 +1,6 @@
 // canonicalContext, and what only it reaches
+//
+// The frame a view's context starts as (src/views/BuildView.cpp,
+// BuildContext): its _parent, _proto (the template) and viewCObject.
 
 canonicalContext := {_parent: nil, _proto: nil, viewCObject: nil};

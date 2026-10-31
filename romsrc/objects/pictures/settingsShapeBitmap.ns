@@ -1,4 +1,5 @@
-// settingsShapeBitmap, and what only it reaches
+// The settings icon of the shape recognition choice. A 1-bit bitmap frame (bits, bounds),
+// 14 x 13 pixels. Magic pointer @724. Used by recognizerUserChoices.
 
 settingsShapeBitmap := {
 	bits: bitmap('bits, "resources/bits/3dae95.png", "0000000000040075007500ec008200fa", 1),

@@ -1,15 +1,22 @@
-// newtFilingButton, and what only it reaches
+// newtFilingButton: the NewtApp filing button for the status bar (NPR 2.0), a
+// protoFilingButton that follows the current entry (it is in the retarget chain)
+// and shows the plain icon in the overview.
+//
+// This file holds newtFilingButton and what only it reaches.
 
 newtFilingButton := {
 	_proto: @protoFilingButton,
 	keyButton: '_filingKeyButton,
 	viewBounds: {left: -18, top: 0, right: -1, bottom: 14},
+	// in the overview the icon is not the entry's filed state
 	PickIcon: func() begin
 		(if (currentLayout = 'overview) then iconInt else inherited:PickIcon())
 	end,
+	// the current entry changed: update the icon
 	RetargetNotify: func() begin
 		self:Update()
 	end,
+	// join the retarget chain and register as a key button
 	viewSetupDoneScript: func() begin
 		self:ChainIn('retargetChain);
 		if keyButton then begin
@@ -17,6 +24,7 @@ newtFilingButton := {
 			end;
 		inherited:?viewSetupDoneScript()
 	end,
+	// leave the chain; no longer a key button
 	viewQuitScript: func() begin
 		self:ChainOut('retargetChain);
 		if keyButton then begin

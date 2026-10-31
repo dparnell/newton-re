@@ -1,4 +1,5 @@
-// largepentip, and what only it reaches
+// The large pen tip of the pen-size menu. A 1-bit bitmap frame (bits, bounds), 7 x 7
+// pixels. Magic pointer @710. Used by protoPensizeMenu.
 
 largepentip := {
 	bits: bitmap('bits, "resources/bits/3d6409.png", "000000000004002d002d02160034021d", 1),

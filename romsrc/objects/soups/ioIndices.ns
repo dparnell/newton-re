@@ -1,4 +1,6 @@
-// ioIndices, and what only it reaches
+// The indexes of the In Box and Out Box soups. An array of soup index specifications (the
+// indexes of a soup definition). Magic pointer @114. Used by inboxSoupDef, ioIoboxSoup,
+// outboxSoupDef, viewRoot.
 
 ioIndices := [|Array|:
 	{

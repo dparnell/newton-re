@@ -1,4 +1,5 @@
-// kbdRightBitmap, and what only it reaches
+// The right-arrow key of the keyboards. A 1-bit bitmap frame (bits, bounds), 11 x 6 pixels.
+// Magic pointer @750. Used by alphaKeys, frames, numericKeys, phonePad, viewRoot.
 
 kbdRightBitmap := {
 	bits: bitmap('bits, "resources/bits/3d7735.png", "00000000000400c700c700d400cd00df", 1),

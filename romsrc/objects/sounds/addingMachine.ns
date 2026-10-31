@@ -1,4 +1,6 @@
-// addingMachine, and what only it reaches
+// The adding-machine sound the Calculator plays. A 'codec sound frame whose samples the
+// tIMACodec codec decompresses (IMA ADPCM) when it is played. Magic pointer @372. Used by
+// calculator, globalHeapvarwannabes.
 
 addingMachine := {
 	sndFrameType: 'codec,

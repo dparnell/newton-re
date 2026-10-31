@@ -1,4 +1,5 @@
-// routePutaway, and what only it reaches
+// The Action menu icon of Put Away. A 1-bit bitmap frame (bits, bounds), 16 x 16 pixels.
+// Magic pointer @758. Used by viewRoot.
 
 routePutaway := {
 	bits: bitmap('bits, "resources/bits/463b99.png", "000000000004006a006a0093007a00a3", 1),

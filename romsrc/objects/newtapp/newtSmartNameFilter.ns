@@ -1,24 +1,39 @@
-// newtSmartNameFilter, and what only it reaches
+// newtSmartNameFilter: the NewtApp filter for a person's name from the Names soup
+// (NPR 2.0 Table 3-1), the flavor of newtSmartNameView.  As the user writes, the
+// Names cards holding the words are offered, each by its primary name; the label's
+// "Other" opens protoPeoplePopup.  Choosing a card hands it to the entry view's
+// jamFromEntry, so that other slot views can take their part of it too.
+//
+// This file holds newtSmartNameFilter and what only it reaches.
 
 newtSmartNameFilter := {
 	_proto: @newtTextFilter,
-	recFlags: 25201153,
-	dictionaries: [|Array|: 48, 7, 31, 0],
+	// recFlags: the entry line's view flags (newtTextFilter)
+	recFlags: vVisible + vClickable + vGesturesAllowed + vPunctuationAllowed + vCapsRequired + vCustomDictionaries,
+	// dictionary ids (48, 7 and 0 system dictionaries, 31 the user's words)
+	dictionaries: [|Array|: 48, 7, kUserDictionary, 0],
+	// the Names entries (the cardfile union soup) holding the words written
 	PathQuery: func(a1) begin
 		Query(GetUnionSoup(@cardfileSoupName), {type: 'words, words: a1})
 	end,
+	// a card holding the words, offered by its primary name
 	QueryItem: func(entry, preQuery) begin
 		(if FindStringInFrame(entry, preQuery, nil) then {item: GetRoot():PrimaryName(entry), id: MakeEntryAlias(entry)})
 	end,
+	// the user picked one of them: take what this field wants from that Names entry
+	// (targetView is the entry view, whose jamFromEntry passes it to every slot view)
 	ResolveItem: func(a1) begin
 		targetView:jamFromEntry(ResolveEntryAlias(a1.id))
 	end,
+	// the field's part of a Names entry: its primary name
 	EntryToPath: func(resolveEntryAlias) begin
 		(target.(path) := GetRoot():PrimaryName(resolveEntryAlias))
 	end,
+	// the people popup over the Names soup
 	picker: func() begin
 		@protoPeoplePopup:New('|nameRef.people|, nil, self, nil)
 	end,
+	// the people popup gives back the cards chosen (or aliases to them): take the first
 	pickActionScript: func(index) begin
 		local l1;
 		if (l1 := (if (if index then (Length(index) > 0)) then (if index[0]._alias then ResolveEntryAlias(index[0]._alias) else index[0]))) then begin
@@ -26,6 +41,8 @@ newtSmartNameFilter := {
 			end;
 		baseLine:hilite(nil)
 	end,
+	// an item of the popup that is only a name (one remembered in memory): if the first card
+	// the query finds for it has that very name, take the card; nil leaves the text to the line
 	ChooseItem: func(index) begin
 		local preQuery, pathQuery, l3;
 		if (if (l3 := (pathQuery := self:PathQuery((preQuery := self:PreQuery(labelCommands[index].item)))):entry()) then StrEqual(labelCommands[index].item, GetRoot():PrimaryName(l3))) then begin

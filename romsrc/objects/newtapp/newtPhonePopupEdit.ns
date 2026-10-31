@@ -1,9 +1,15 @@
-// newtPhonePopupEdit, and what only it reaches
+// newtPhonePopupEdit: a newtAreacodePhoneLine whose phone field recognises as the
+// line's newRecFlags say (through newtCustomFilter), without the separate area code
+// (suppressAreaCode).  The base of newtPopupEdit.  Not in the NPR.
+//
+// This file holds newtPhonePopupEdit and what only it reaches.
 
 newtPhonePopupEdit := {
 	flavor: @newtCustomFilter,
-	newRecFlags: 264705,
+	// the recFlags newtCustomFilter takes for the phone field
+	newRecFlags: vVisible + vClickable + vGesturesAllowed + vPhoneField,
 	suppressAreaCode: true,
+	// give the phone field (phone) the filter's recognition
 	viewSetupFormScript: func() begin
 		inherited:viewSetupFormScript();
 		phone.viewFlags := filter.recFlags;

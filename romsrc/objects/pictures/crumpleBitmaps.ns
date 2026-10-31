@@ -1,4 +1,5 @@
-// crumpleBitmaps, and what only it reaches
+// The frames of the crumpling-paper animation shown when an item is thrown away. An array
+// of images.
 
 crumpleBitmaps := [|Array|:
 	{

@@ -1,4 +1,4 @@
-// dtmfdash, and what only it reaches
+// The dash key of the phone keypad. A 1-bit bitmap frame (bits, bounds), 21 x 20 pixels.
 
 dtmfdash := {
 	bits: bitmap('bits, "resources/bits/3d8015.png", "000000000004004b004b0089005f009e", 1),

@@ -1,4 +1,6 @@
-// tockSound, and what only it reaches
+// The tock of a clock (also played by scrollers). A 'codec sound frame whose samples the
+// tIMACodec codec decompresses (IMA ADPCM) when it is played. Magic pointer @300. Used by
+// abstractScroller, ioTransportOver, protoDisplayClock, protoNewSetClock, viewRoot.
 
 tockSound := {
 	sndFrameType: 'codec,

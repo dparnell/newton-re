@@ -1,4 +1,6 @@
-// flip, and what only it reaches
+// The page-flip sound. A 'codec sound frame whose samples the tIMACodec codec decompresses
+// (IMA ADPCM) when it is played. Magic pointer @85. Used by cardfile, copperfield,
+// export43, export55, ioItemLayout, newTrollLayout and others.
 
 flip := {
 	sndFrameType: 'codec,

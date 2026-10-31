@@ -1,4 +1,5 @@
-// aztabsmaskcz, and what only it reaches
+// The mask of a tab of the A-Z index tabs (the shape of the other tabs). A 1-bit bitmap
+// frame (bits, bounds), 19 x 15 pixels. Magic pointer @397. Used by azTabs.
 
 aztabsmaskcz := {
 	bits: bitmap('bits, "resources/bits/43d2b9.png", "00000000000400360036009c004500af", 1),

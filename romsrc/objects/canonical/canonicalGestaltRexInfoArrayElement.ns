@@ -1,4 +1,8 @@
 // canonicalGestaltRexInfoArrayElement, and what only it reaches
+//
+// One ROM extension (REx) in Gestalt's REx info (src/system/SystemNatives.cpp):
+// its header's signatures, checksum, version, manufacturer, length, id and
+// the start and count of its configuration entries.
 
 canonicalGestaltRexInfoArrayElement := {
 	signatureA: nil,

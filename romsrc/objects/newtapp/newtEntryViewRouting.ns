@@ -1,15 +1,22 @@
-// newtEntryViewRouting, and what only it reaches
+// newtEntryViewRouting: the action (routing) button inside an entry view (the
+// NPR's newtEntryViewActionButton): routes the entry of this entry view rather than
+// the application's current one.
+//
+// This file holds newtEntryViewRouting and what only it reaches.
 
 newtEntryViewRouting := {
 	viewBounds: {left: -18, top: 0, right: -1, bottom: 14},
 	viewFormat: 0,
 	keyButton: '_actionKeyButton,
+	// register as one of the application's key buttons: newtAppBase.(keyButton) is this view
+	// (the buttons the keyboard's and other commands can find)
 	viewSetupDoneScript: func() begin
 		if keyButton then begin
 				newtAppBase.(keyButton) := self
 			end;
 		inherited:?viewSetupDoneScript()
 	end,
+	// no longer a key button
 	viewQuitScript: func() begin
 		if keyButton then begin
 				RemoveSlot(newtAppBase, keyButton)

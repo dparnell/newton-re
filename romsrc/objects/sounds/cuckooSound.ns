@@ -1,4 +1,6 @@
-// cuckooSound, and what only it reaches
+// The cuckoo sound. A 'codec sound frame whose samples are a tone score (tonescore:
+// frequencies and envelopes) that the tDTMFCodec synthesises when it is played. Magic
+// pointer @301. Used by calendar, protoNewSetClock, viewRoot.
 
 cuckooSound := {
 	sndFrameType: 'codec,

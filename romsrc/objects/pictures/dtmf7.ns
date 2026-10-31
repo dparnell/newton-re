@@ -1,4 +1,5 @@
-// dtmf7, and what only it reaches
+// The 7 key of the phone keypad. A 1-bit bitmap frame (bits, bounds), 20 x 20 pixels. Magic
+// pointer @700. Used by arrays.
 
 dtmf7 := {
 	bits: bitmap('bits, "resources/bits/3d7d45.png", "00000000000400f700f7011d010b0131", 1),

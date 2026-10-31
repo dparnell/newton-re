@@ -1,4 +1,4 @@
-// smallFlagBitmap, and what only it reaches
+// A small flag. A 1-bit bitmap frame (bits, bounds) with a mask, 12 x 9 pixels.
 
 smallFlagBitmap := {
 	mask: bitmap('mask, "resources/mask/3d8da1.png", "000000000004004d004d015400560160", 1),

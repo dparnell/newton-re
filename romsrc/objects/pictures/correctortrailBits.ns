@@ -1,4 +1,6 @@
-// correctortrailBits, and what only it reaches
+// The trailing-punctuation picker of the character editor (protoCharEdit). A picker image:
+// bits and bounds, a grid of width x height cells, and the text each cell enters (words).
+// Magic pointer @799. Used by protoCharEdit.
 
 correctortrailBits := {
 	bits: trailingpunctBitmapBits,

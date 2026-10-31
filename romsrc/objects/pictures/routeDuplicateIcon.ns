@@ -1,4 +1,6 @@
-// routeDuplicateIcon, and what only it reaches
+// The Action menu icon of Duplicate. A 1-bit bitmap frame (bits, bounds), 20 x 14 pixels.
+// Magic pointer @292. Used by calendar, newtApplication, protoRoutingSlip, todo_2,
+// viewRoot.
 
 routeDuplicateIcon := {
 	bits: bitmap('bits, "resources/bits/3d5ce5.png", "00000000000400fd00fd008d010b00a1", 1),

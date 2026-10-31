@@ -1,3 +1,6 @@
 // canonicalKeyCommandCategory, and what only it reaches
+//
+// One group of the key commands' help slip (src/views/Keyboard.cpp,
+// CategorizeKeyCommands): its category and its key commands.
 
 canonicalKeyCommandCategory := {category: nil, keyCommands: nil};

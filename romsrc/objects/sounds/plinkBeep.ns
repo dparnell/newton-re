@@ -1,4 +1,6 @@
-// plinkBeep, and what only it reaches
+// A plink beep. A 'codec sound frame whose samples are a tone score (tonescore: frequencies
+// and envelopes) that the tDTMFCodec synthesises when it is played. Magic pointer @150.
+// Used by soundOff.
 
 plinkBeep := {
 	sndFrameType: 'codec,

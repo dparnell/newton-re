@@ -1,9 +1,14 @@
 // canonicalScroller, and what only it reaches
+//
+// The view of a book page's picture block whose picture is larger than the
+// block (src/books/Pages.cpp, MakeBlockView): it clips the scrolled picture
+// (canonicalScrollee) and holds the compass that scrolls it.
 
 canonicalScroller := {
 	viewClass: clView,
 	viewFlags: vVisible + vClipping + vClickable,
 	declareSelf: 'base,
+	// ShowScroller and HideScroller show and hide its second child
 	ShowScroller: func() begin
 		local childViewFrames;
 		(childViewFrames := self:ChildViewFrames())[1]:Show()
@@ -12,6 +17,7 @@ canonicalScroller := {
 		local childViewFrames;
 		(childViewFrames := self:ChildViewFrames())[1]:Hide()
 	end,
+	// the canonicalScrollee, set by it at setup; Scroller: the compass
 	scrolledView: nil,
 	Scroller: nil,
 	debug: 269208

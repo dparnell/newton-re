@@ -1,3 +1,6 @@
 // canonicalBitmapShape, and what only it reaches
+//
+// The 'bitmap shape MakeBitmap and MakeShape clone (src/qd/Pictures.cpp,
+// src/views/DrawShape.cpp): its bounds, bits, colour data and mask.
 
 canonicalBitmapShape := {class: 'bitmap, bounds: nil, data: nil, colordata: nil, mask: nil};

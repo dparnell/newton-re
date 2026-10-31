@@ -1,4 +1,7 @@
 // canonicalTitle, and what only it reaches
+//
+// The title of a book page (src/books/Pages.cpp, PageTurnTo): a centred
+// protoStaticText the width of the page, in bold 9-point Geneva.
 
 canonicalTitle := {
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 16},

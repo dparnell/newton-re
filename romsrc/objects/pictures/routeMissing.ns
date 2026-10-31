@@ -1,4 +1,5 @@
-// routeMissing, and what only it reaches
+// The Action menu icon of a transport that is missing. A 1-bit bitmap frame (bits, bounds),
+// 21 x 12 pixels. Magic pointer @770. Used by viewRoot.
 
 routeMissing := {
 	bits: bitmap('bits, "resources/bits/463975.png", "0000000000040045004500770051008c", 1),

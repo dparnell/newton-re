@@ -1,13 +1,21 @@
-// newtAreacodePhoneLine, and what only it reaches
+// newtAreacodePhoneLine, and what only it reaches: NewtApp's phone number input
+// line (NPR "newtAreaCodePhoneLine"), a newtProtoLine with two input fields, the
+// area code in parentheses (areacode_3) and the number (phone_2).  Without a
+// label, the label is a picker of the phone types (GetGlobals().PhoneTypes),
+// and the type chosen becomes the class of the phone string stored in
+// target.(path).
 
 newtAreacodePhoneLine := {
+	// the phone types' names and class symbols (the label picker's items)
 	GetTextArray: func() begin
 		GetGlobals().PhoneTypes.phoneText
 	end,
 	GetSymArray: func() begin
 		GetGlobals().PhoneTypes.phoneClasses
 	end,
+	// NPR: newtPhoneFilter; do not change it
 	flavor: @newtPhoneFilter,
+	// suppressAreaCode hides the area code field
 	viewSetupDoneScript: func() begin
 		if suppressAreaCode then begin
 				areacode:Hide()
@@ -15,6 +23,7 @@ newtAreacodePhoneLine := {
 		inherited:?viewSetupDoneScript()
 	end,
 	viewLineSpacing: 32,
+	// draws the parentheses around the area code, then the label if there is one
 	viewDrawScript: func() begin
 		local l1;
 		if (not suppressAreaCode) then begin
@@ -26,15 +35,19 @@ newtAreacodePhoneLine := {
 			end;
 		(if label then inherited:viewDrawScript())
 	end,
+	// true: a number without an area code field
 	suppressAreaCode: nil,
 	viewChildren: [viewChildren: areacode_3, phone_2],
+	// the field texts while the fields are closed or being changed
 	currPhoneNum: nil,
+	// sets the area code field's text (or the value it will open with)
 	UpdateAreaCode: func(areacode2) begin
 		(if areacode then begin
 				areacode.changed := true;
 				(if areacode.viewCObject then SetValue(areacode, 'text, areacode2) else (currAreaCode := areacode2))
 			end)
 	end,
+	// sets the number field's text (or the value it will open with)
 	UpdatePhone: func(a1) begin
 		(if phone then begin
 				phone.changed := true;
@@ -43,6 +56,9 @@ newtAreacodePhoneLine := {
 	end,
 	shapes: nil,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
+	// a field changed: stores the area code and number, joined by MakePhone, in the
+	// slot through the filter, of the class of the phone type chosen, and starts
+	// the entry's flush; the area code alone counts only once it was changed
 	viewChangedScript: func(slot, view) begin
 		local l1, l2, phone;
 		inherited:viewChangedScript(slot, view);
@@ -58,13 +74,17 @@ newtAreacodePhoneLine := {
 			end;
 		self:StartFlush()
 	end,
+	// the two fields are made as the line's slots areacode and phone
 	allocateContext: [|Array|: 'areacode, areacode_3, 'phone, phone_2],
 	_proto: @newtProtoLineBase,
 	parenWidth: 0,
+	// the target entry changed: show its number
 	Retarget: func() begin
 		self:UpdateText((if (if (if target then path) then target.(path)) then filter:PathToText() else ""))
 	end,
 	areacode: nil,
+	// NPR UpdateText(newText): shows the number a1 (a string, parsed into area
+	// code and number, or an integer), with undo of the old text
 	UpdateText: func(a1) begin
 		local parsePhone2;
 		if (not a1) then begin
@@ -77,6 +97,8 @@ newtAreacodePhoneLine := {
 			end)
 	end,
 	phone: nil,
+	// splits the slot's number into area code and number for the fields and
+	// measures the parentheses
 	viewSetupFormScript: func() begin
 		local parsePhone2, pathToText;
 		inherited:viewSetupFormScript();
@@ -91,6 +113,8 @@ newtAreacodePhoneLine := {
 		parenWidth := (StrFontWidth("(", viewFont) + 2);
 		(if suppressAreaCode then (currAreaCode := nil))
 	end,
+	// a phone type chosen in the label picker: the label shows it and the slot's
+	// phone string takes its class; other items as newtProtoLine does
 	pickActionScript: func(index) begin
 		local pathToText;
 		pathToText := filter:PathToText();
@@ -108,8 +132,11 @@ newtAreacodePhoneLine := {
 			end else inherited:pickActionScript(index))
 	end,
 	currAreaCode: nil,
+	// the area code field's width in pixels
 	areaCodeWidth: 50,
 	currPhoneType: nil,
+	// with a label, the usual picker items; without, the phone types, the label
+	// the slot's type (its class, else the first type)
 	SetupCommands: func() begin
 		(if label then inherited:SetupCommands() else begin
 				symArray := self:GetSymArray();
@@ -132,12 +159,13 @@ newtAreacodePhoneLine := {
 	end
 };
 
+// the area code field, between the parentheses: digits only, the phone keyboard
 areacode_3 := {
 	viewBounds: {left: 0, top: 0, right: 50, bottom: 40},
-	viewJustify: 8388610,
+	viewJustify: vjCenterH + oneLineOnly,
 	viewLineSpacing: 32,
 	viewFlags: vVisible + vClickable + vGesturesAllowed + vCustomDictionaries,
-	dictionaries: 117,
+	dictionaries: kNumbersOnlyDictionary,
 	changed: nil,
 	viewSetupFormScript: func() begin
 		local l1;
@@ -157,8 +185,9 @@ areacode_3 := {
 	_proto: @protoRichInputLine
 };
 
+// the number field, right of the area code
 phone_2 := {
-	viewJustify: 8388848,
+	viewJustify: vjParentFullH + vjParentFullV + oneLineOnly,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
 	viewLineSpacing: 32,
 	viewFlags: vVisible + vClickable + vGesturesAllowed + vPhoneField,

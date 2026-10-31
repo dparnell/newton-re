@@ -1,4 +1,6 @@
-// colonSlides, and what only it reaches
+// The colon between hours and minutes of the digital clock pickers. A 1-bit bitmap frame
+// (bits, bounds), 6 x 15 pixels. Magic pointer @603. Used by protoDigitalClock,
+// protoTimeDeltaPicker.
 
 colonSlides := {
 	bits: bitmap('bits, "resources/bits/3d9f99.png", "000000000004015e015e003a016d0040", 1),

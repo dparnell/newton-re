@@ -1,4 +1,6 @@
-// caretpunctBits, and what only it reaches
+// The caret's punctuation picker, the grid of punctuation marks the caret pops up. A picker
+// image: bits and bounds, a grid of width x height cells, and the text each cell enters
+// (words). Magic pointer @802. Used by data, viewRoot.
 
 caretpunctBits := {
 	bits: caretpunctBitmapBits,

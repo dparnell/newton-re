@@ -1,8 +1,12 @@
-// newtroTextTimeView, and what only it reaches
+// newtroTextTimeView: the read-only NewtApp slot view for a time (the NPR's
+// newtROTextTimeView), shown with TimeStr and format.
+//
+// This file holds newtroTextTimeView and what only it reaches.
 
 newtroTextTimeView := {
 	_proto: @newtroTextView,
-	format: 170636,
+	format: 170636, // shortTimeStrSpec's value (@datetimeStrSpecs)
+	// the text for target.(path), "" when there is no entry, path or value
 	TargetData: func() begin
 		(if (if (if target then path) then target.(path)) then TimeStr(target.(path), format) else "")
 	end

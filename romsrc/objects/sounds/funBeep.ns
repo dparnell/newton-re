@@ -1,4 +1,6 @@
-// funBeep, and what only it reaches
+// A beep. A 'codec sound frame whose samples are a tone score (tonescore: frequencies and
+// envelopes) that the tDTMFCodec synthesises when it is played. Magic pointer @102. Used by
+// SetUp, basicCallTransport, soundOff.
 
 funBeep := {
 	sndFrameType: 'codec,

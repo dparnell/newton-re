@@ -1,4 +1,5 @@
-// ratchetSound, and what only it reaches
+// The ratchet sound of a slider. A 'simpleSound sound frame of uncompressed 8-bit samples,
+// as PlaySound takes it. Magic pointer @302. Used by protoSlider, viewRoot, volumeSlider.
 
 ratchetSound := {
 	sndFrameType: 'simpleSound,

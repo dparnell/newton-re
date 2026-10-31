@@ -1,4 +1,5 @@
-// postMark, and what only it reaches
+// The postmark the routing slip shows. A 1-bit bitmap frame (bits, bounds), 85 x 25 pixels.
+// Magic pointer @779. Used by protoRouteSlip.
 
 postMark := {
 	bits: bitmap('bits, "resources/bits/477fcd.png", "00000000000c001200120033002b0088", 1),

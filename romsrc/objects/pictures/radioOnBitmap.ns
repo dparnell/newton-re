@@ -1,4 +1,5 @@
-// radioOnBitmap, and what only it reaches
+// A radio button, on. A 1-bit bitmap frame (bits, bounds) with a mask, 11 x 10 pixels.
+// Magic pointer @257. Used by protoIconRadioButton, protoRadioButton.
 
 radioOnBitmap := {
 	mask: bitmap('mask, "resources/mask/3c8d15.png", "00000000000400780078003900820044", 1),

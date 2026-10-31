@@ -1,4 +1,8 @@
 // canonicalInkWordInfo, and what only it reaches
+//
+// The frame GetInkWordInfo(word) answers (src/ink/InkShapes.cpp): what an
+// ink word measured when written (orig...) and as it is drawn now (cur...) -
+// width, height, ascent, descent, x-height, font and pen size, and scale.
 
 canonicalInkWordInfo := {
 	origWidth: nil,

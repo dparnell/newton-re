@@ -1,4 +1,5 @@
-// keyPlusBitmap, and what only it reaches
+// The plus key. A 1-bit bitmap frame (bits, bounds), 10 x 10 pixels. Magic pointer @742.
+// Used by arrays, calculator, numericKeys.
 
 keyPlusBitmap := {
 	bits: bitmap('bits, "resources/bits/3d9175.png", "000000000004009a009a028000a4028a", 1),

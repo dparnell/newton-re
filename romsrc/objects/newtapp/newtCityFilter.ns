@@ -1,3 +1,7 @@
-// newtCityFilter, and what only it reaches
+// newtCityFilter: the NewtApp filter for a city name (NPR 2.0 Table 3-1), a newtTextFilter
+// that recognises a capitalised word.
+//
+// This file holds newtCityFilter and what only it reaches.
 
-newtCityFilter := {_proto: @newtTextFilter, recFlags: 8391169};
+// recFlags: the entry line's view flags (newtTextFilter)
+newtCityFilter := {_proto: @newtTextFilter, recFlags: vVisible + vClickable + vGesturesAllowed + vCapsRequired};

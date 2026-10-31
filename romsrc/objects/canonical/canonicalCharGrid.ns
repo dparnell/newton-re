@@ -1,3 +1,7 @@
 // canonicalCharGrid, and what only it reaches
+//
+// The frame a recogniser's letter grid is answered in (RecGridInfo,
+// src/recognition/Areas.cpp): the box's left, right, top and bottom and the
+// spacing of its cells.
 
 canonicalCharGrid := {boxLeft: nil, boxRight: nil, xSpace: nil, boxTop: nil, boxBottom: nil, ySpace: nil};

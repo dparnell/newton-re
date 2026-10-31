@@ -1,18 +1,27 @@
-// newtInfoBox, and what only it reaches
+// newtInfoBox: the NewtApp information slip (NPR 2.0), opened from the icon of an
+// entry header: the stationery's icon and description, the entry's date, size and
+// store, and a Title input line whose text, when changed, becomes the entry's title.
+//
+// This file holds newtInfoBox and what only it reaches.
 
 newtInfoBox := {
+	// the entry's title, or its day and date
 	GetTitle: func() begin
 		(if HasPath(target, 'title) then target.title else MakeRichString(Stringer([Array: LongDateStr(target.timestamp, @datetimeStrSpecs.abbrDayOfWeekStrSpec), " ", ShortDateStr(target.timestamp, @datetimeStrSpecs.numericMDStrSpec)]), nil))
 	end,
+	// a line of text in the slip, currentOffset lines below the first (42, 49: the text
+	// column and the first line's top)
 	addTextLine: func(text, currentOffset) begin
 		MakeText(text, 42, (49 + (currentOffset * lineHeight)), self:LocalBox().right, ((49 + (currentOffset * lineHeight)) + 10))
 	end,
 	theApp: nil,
+	// tell the header (context) whether the title changed, and that the slip closed
 	viewQuitScript: func() begin
 		context:?InfoChanged(changed);
 		context:?InfoClosed();
 		(if theApp then (GetRoot().(theApp).newtInfoBoxSlip := nil))
 	end,
+	// the icon and the lines, made once
 	viewDrawScript: func() begin
 		if (not pix) then begin
 				pix := self:buildPix()
@@ -24,6 +33,7 @@ newtInfoBox := {
 	context: nil,
 	ReOrientToScreen: @defRotateFunc,
 	allocateContext: [|Array|: '_defaultButton, _defaultButton_10],
+	// the shapes: icon, description, "Date:", "Size:" and "Where:" lines
 	buildPix: func() begin
 		local box;
 		box := self:LocalBox();
@@ -35,6 +45,9 @@ newtInfoBox := {
 	viewJustify: vjParentFullH,
 	height: 116,
 	icon: nil,
+	// open a slip for the entry a1 with the icon a2 and description a3, below the
+	// global box a4 (the header's), for the header a5; the application keeps it in
+	// its newtInfoBoxSlip slot
 	New: func(a1, a2, a3, a4, a5) begin
 		local context, value;
 		(context := BuildContext(self)).target := a1;
@@ -51,6 +64,7 @@ newtInfoBox := {
 		context:Open();
 		context
 	end,
+	// 9 pixels below bbox, moved up if needed to stay 9 pixels inside the application area
 	CalcBounds: func(bbox) begin
 		local most, l2, l3;
 		if ((l3 := ((l2 := ((most := max((most := (bbox.bottom + 9)), 9)) + height)) - ((displayParams.appAreaTop + displayParams.appAreaHeight) - 9))) > 0) then begin
@@ -60,14 +74,17 @@ newtInfoBox := {
 		return SetBounds(9, most, -9, l2)
 	end,
 	description: nil,
+	// the description, right of the icon
 	addIconLine: func(description, a2) begin
 		MakeText(description, (46 + icon.bounds.right), (49 + (a2 * lineHeight)), self:LocalBox().right, ((49 + (a2 * lineHeight)) + 10))
 	end,
+	// the icon, at the text column
 	addIcon: func(icon, a2) begin
 		OffsetShape(MakeShape(icon), 42, (47 + (a2 * lineHeight)))
 	end,
-	viewEffect: 393216,
+	viewEffect: fxPopDownEffect,
 	changed: nil,
+	// the Title line
 	stepChildren: [stepChildren:
 		{
 			viewBounds: {left: 1, top: 0, right: -4, bottom: 40},
@@ -76,15 +93,21 @@ newtInfoBox := {
 			viewLineSpacing: 32,
 			indent: 42,
 			entryFont: tsHWFont + tsSize(12),
-			entryFlags: 26798593,
+			// the view flags of its entry line
+			entryFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed + vLettersAllowed + vPunctuationAllowed + vDateField + vTimeField + vCapsRequired + vCustomDictionaries,
+			// the line's text: the entry's title (or its date)
 			TextSetup: func() begin
+				// the dictionaries newtSmartNameFilter uses (31: kUserDictionary, left a number in this
+				// quoted literal)
 				entryLine.dictionaries := '[Array: 48, 7, 31, 0];
 				self:GetTitle()
 			end,
+			// the title was edited: it is the entry's title
 			textChanged: func() begin
 				changed := true;
 				(target.title := entryLine:GetRichString())
 			end,
+			// select all of the title (0 to 9999)
 			viewSetupDoneScript: func() begin
 				AddDeferredSend(entryLine, 'SetHilite, [Array: 0, 9999, true])
 			end,

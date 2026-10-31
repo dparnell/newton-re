@@ -1,4 +1,4 @@
-// smallClockBitmaps, and what only it reaches
+// Small clock images in a strip. A 1-bit bitmap frame (bits, bounds), 264 x 11 pixels.
 
 smallClockBitmaps := {
 	bits: bitmap('bits, "resources/bits/3d8271.png", "000000000024000000000000000b0108", 1),
