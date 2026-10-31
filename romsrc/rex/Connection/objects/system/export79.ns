@@ -17,7 +17,7 @@ export79 := {
 		protoContext:AddOpenWindow(self);
 		(if (if (autodock := protoContext:ConnectionPrefsRead('autodock)) then (not GetGlobals().ConnectionLikesWorksites)) then begin
 				self.viewBounds := SetBounds(0, 50, 220, 270);
-				(connectValues.viewFlags := BOr(connectValues.viewFlags, 1))
+				(connectValues.viewFlags := BOr(connectValues.viewFlags, vVisible))
 			end else begin
 				self.viewBounds := SetBounds(0, 50, 220, 175);
 				(connectValues.viewFlags := BAnd(connectValues.viewFlags, -2))
@@ -127,7 +127,7 @@ autoDock := {
 		},
 		func() begin
 			if viewValue then begin
-					connectValues.viewFlags := BOr(connectValues.viewFlags, 1);
+					connectValues.viewFlags := BOr(connectValues.viewFlags, vVisible);
 					RegAutoDock('Connection, kFunction_757359)
 				end else begin
 					connectValues.viewFlags := BAnd(connectValues.viewFlags, -2);

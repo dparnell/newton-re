@@ -56,7 +56,7 @@ export116Item := {
 		local solveForPeriod;
 		if (((solveForPeriod := self:SolveForPeriod(list[1], list[2], list[3], list[4])) = nil) or (solveForPeriod < 0)) then begin
 				solveForPeriod := nil;
-				self:Notify(3, "Net Present Value", "No solution.")
+				self:Notify(kNotifyAlert, "Net Present Value", "No solution.")
 			end;
 		return solveForPeriod
 	end,
@@ -74,7 +74,7 @@ export116Item_2 := {
 	ComputeValue: func(list) begin
 		local solveForInterestRate;
 		if ((solveForInterestRate := self:SolveForInterestRate(list[0], list[2], list[3], list[4])) = nil) then begin
-				self:Notify(3, "Net Present Value", "Interest rate out of range.")
+				self:Notify(kNotifyAlert, "Net Present Value", "Interest rate out of range.")
 			end;
 		return solveForInterestRate
 	end,
@@ -88,7 +88,7 @@ export116Item_3 := {
 	ComputeValue: func(list) begin
 		local solveForPresentValue;
 		if ((solveForPresentValue := self:SolveForPresentValue(list[0], list[1], list[3], list[4])) = nil) then begin
-				self:Notify(3, "Net Present Value", "Interest rate out of range.")
+				self:Notify(kNotifyAlert, "Net Present Value", "Interest rate out of range.")
 			end;
 		return solveForPresentValue
 	end,
@@ -102,7 +102,7 @@ export116Item_4 := {
 	ComputeValue: func(list) begin
 		local solveForFutureValue;
 		if ((solveForFutureValue := self:SolveForFutureValue(list[0], list[1], list[2], list[4])) = nil) then begin
-				self:Notify(3, "Net Present Value", "Interest rate out of range.")
+				self:Notify(kNotifyAlert, "Net Present Value", "Interest rate out of range.")
 			end;
 		return solveForFutureValue
 	end,
@@ -116,7 +116,7 @@ export116Item_5 := {
 	ComputeValue: func(list) begin
 		local solveForPayment;
 		if ((solveForPayment := self:SolveForPayment(list[0], list[1], list[2], list[3])) = nil) then begin
-				self:Notify(3, "Net Present Value", "No solution.")
+				self:Notify(kNotifyAlert, "Net Present Value", "No solution.")
 			end;
 		return solveForPayment
 	end,

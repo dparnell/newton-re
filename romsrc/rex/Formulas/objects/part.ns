@@ -1,4 +1,7 @@
-// part, and what only it reaches
+// The Formulas package's frames part: the application's icon and part frame;
+// its install script has the application's InitFormulas define the global
+// functions RegFormulas, GetFormulas, GetExchangeRate and the rest.  The export
+// table hands the built-in panels and the exchange-rate table to the system.
 
 part := array(nil, {
 	sequence: 8,
@@ -68,9 +71,12 @@ part := array(nil, {
 		bounds: {left: 0, top: 0, right: 27, bottom: 25}
 	},
 	theForm: @8312,
+	// Run by installScript: InitFormulas defines the Formulas globals.
 	devInstallScript: func(partFrame) begin
 		partFrame.theForm:InitFormulas()
 	end,
+	// The part's installScript: runs devInstallScript once and takes it, and itself,
+	// out of the part frame so they are not kept.
 	installScript: func(partFrame) begin
 		partFrame:?devInstallScript(partFrame);
 		if HasSlot(partFrame, 'devInstallScript) then begin

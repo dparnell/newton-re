@@ -77,7 +77,7 @@ export115Item := {
 		local solveForPeriod;
 		if (((solveForPeriod := self:SolveForPeriod((list[1] / 12), list[2], 0, (-list[3]))) = nil) or (solveForPeriod < 0)) then begin
 				solveForPeriod := nil;
-				self:Notify(3, "Loan Payment", "No solution.")
+				self:Notify(kNotifyAlert, "Loan Payment", "No solution.")
 			end else begin
 				solveForPeriod := (solveForPeriod / 12)
 			end;
@@ -97,7 +97,7 @@ export115Item_2 := {
 	ComputeValue: func(list) begin
 		local solveForInterestRate;
 		if ((solveForInterestRate := self:SolveForInterestRate((list[0] * 12), list[2], 0, (-list[3]))) = nil) then begin
-				self:Notify(3, "Loan Payment", "Interest rate out of range.")
+				self:Notify(kNotifyAlert, "Loan Payment", "Interest rate out of range.")
 			end else begin
 				solveForInterestRate := (solveForInterestRate * 12)
 			end;
@@ -114,7 +114,7 @@ export115Item_3 := {
 	ComputeValue: func(list) begin
 		local solveForPresentValue;
 		if ((solveForPresentValue := self:SolveForPresentValue((list[0] * 12), (list[1] / 12), 0, (-list[3]))) = nil) then begin
-				self:Notify(3, "Loan Payment", "Interest rate out of range.")
+				self:Notify(kNotifyAlert, "Loan Payment", "Interest rate out of range.")
 			end else begin
 				solveForPresentValue := abs(solveForPresentValue)
 			end;
@@ -130,7 +130,7 @@ export115Item_4 := {
 	ComputeValue: func(list) begin
 		local solveForPayment;
 		if ((solveForPayment := self:SolveForPayment((list[0] * 12), (list[1] / 12), list[2], 0)) = nil) then begin
-				self:Notify(3, "Loan Payment", "No solution.")
+				self:Notify(kNotifyAlert, "Loan Payment", "No solution.")
 			end else begin
 				solveForPayment := abs(solveForPayment)
 			end;

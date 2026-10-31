@@ -1,25 +1,38 @@
-// part, and what only it reaches
+// The FaxViewer package's frames part: the viewer for received faxes (and other
+// 'ImageView entries - pages of bitmaps with ink annotations) that the In Box
+// and Out Box open, with its print format and its route format.  The part frame
+// registers the data definition 'ImageView and three data views for it; the
+// viewer itself (ImageViewerDef) is a full-page editor holding a protoImageView
+// per page, a floating bar (scrollers, Tools popup, "Page n of m" popup), a
+// thumbnail floater and a page-navigator palette of thumbnails.
 
 part := array(nil, {
+	// The package's installScript: makes the removeScript frame (an EnsureInternal
+	// copy, so it outlives the package's frames) and has devInstallScript register.
 	installScript: func(partFrame) begin
 		local ensureInternal2;
 		ensureInternal2 := EnsureInternal({removeScript: partFrame.devRemoveScript});
 		partFrame:devInstallScript(partFrame, ensureInternal2);
 		ensureInternal2
 	end,
+	// Registers the 'ImageView data definition and its viewer, print format and
+	// route format with the system (RegDataDef/RegDataView).
 	devInstallScript: func(partFrame, removeFrame) begin
 		RegDataDef('ImageView, partFrame.partData.ImageDataDef);
 		RegDataView('ImageView, partFrame.partData.ImageViewerDef);
 		RegDataView('ImageView, partFrame.partData.ImagePrintFormat);
 		RegDataView('ImageView, partFrame.partData.faxViewerRouteFormat)
 	end,
+	// Undoes devInstallScript: the data definition and its three views by symbol.
 	devRemoveScript: func(partFrame) begin
 		UnRegDataDef('ImageView);
 		UnRegDataView('ImageView, 'default);
 		UnRegDataView('ImageView, 'ImagePrintFormatSym);
 		UnRegDataView('ImageView, 'imageRouteFormat)
 	end,
+	// The data definitions and views the install script registers.
 	partData: {
+		// Lets the entry be routed as a frame (beamed, mailed): 'imageRouteFormat.
 		faxViewerRouteFormat: {
 			_proto: @targetFrameFormat,
 			symbol: 'imageRouteFormat,
@@ -35,14 +48,18 @@ part := array(nil, {
 			icon: nil,
 			version: 1,
 			metadata: nil,
+			// A data definition's SetupForm: nothing to set up.
 			SetupForm: func(entry, a2) begin
 				nil
 			end,
+			// The text the In Box and Find show for an entry: its title, or "Untitled fax".
 			StringExtract: func(entry, nLines) begin
 				(if (if entry.title then (Length(entry.title) > 0)) then entry.title else "Untitled fax")
 			end,
 			viewClass: clView
 		},
+		// The print format: prints the entry's pages one per printed page, fitted to the
+		// page; "Data unavailable" when there is no target.
 		ImagePrintFormat: {
 			viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
 			name: image,
@@ -50,6 +67,8 @@ part := array(nil, {
 			title: image,
 			version: 1,
 			stepChildren: [stepChildren: partItem, partItem_2],
+			// Called by the print loop for each page after the first: advances fPageIndex
+			// and lays the next page into ImageTarget; nil (no more pages) past the last.
 			printNextPageScript: func() begin
 				if (not target) then begin
 						return nil
@@ -58,14 +77,16 @@ part := array(nil, {
 			end,
 			fPageIndex: 0,
 			margins: {left: 0, top: 0, right: 0, bottom: 0},
+			// The number of pages the print job has: one per page of the entry.
 			CountPages: func(fields, target) begin
 				Length(target.pages)
 			end,
 			declareSelf: 'printBase,
+			// With no entry to print, shows the "Data unavailable" text and hides the image.
 			viewSetupFormScript: func() begin
 				inherited:?viewSetupFormScript();
 				(if (not target) then begin
-						nodata.viewFlags := BOr(nodata.viewFlags, 1);
+						nodata.viewFlags := BOr(nodata.viewFlags, vVisible);
 						(ImageTarget.viewFlags := 0)
 					end)
 			end,
@@ -77,6 +98,7 @@ part := array(nil, {
 			stepAllocateContext: [|Array|: 'nodata, partItem, 'ImageTarget, partItem_2],
 			ImageTarget: nil
 		},
+		// The viewer (the 'default data view of 'ImageView).
 		ImageViewerDef: {
 			type: 'editor,
 			fEntryStore: nil,
@@ -87,6 +109,9 @@ part := array(nil, {
 			viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
 			vPageNavigator: nil,
 			symbol: 'default,
+			// Find's hook: for a text find, goes to the first page whose annotations hold
+			// one of the found words, at full size, and scrolls that annotation to the
+			// middle of the view.
 			ShowFoundItem: func(a1, a2) begin
 				(if (a2.findType = 'text) then (for i := 0 to (Length(a1.pages) - 1) do begin
 							if (annotations := a1.pages[i].annotations) then begin
@@ -129,9 +154,10 @@ part := array(nil, {
 				'imageContainer,
 				partItem_9
 			],
+			// With no entry, shows "Data unavailable" and hides the bar and the image.
 			viewSetupFormScript: func() begin
 				(if (not target) then begin
-						nodata.viewFlags := BOr(nodata.viewFlags, 1);
+						nodata.viewFlags := BOr(nodata.viewFlags, vVisible);
 						floatingBar.viewFlags := 0;
 						(imageContainer.viewFlags := 0)
 					end)
@@ -147,6 +173,7 @@ part := array(nil, {
 
 image := "Image";
 
+// The "Data unavailable" text of the print format (nodata).
 partItem := {
 	text: dataUnavailable,
 	viewBounds: {left: 0, top: 90, right: 250, bottom: 120},
@@ -159,9 +186,12 @@ partItem := {
 
 dataUnavailable := "Data unavailable";
 
+// The print format's image: a protoImageView fitted to the page.
 partItem_2 := {
 	annotations: nil,
 	image: nil,
+	// Lays page a1 (0-based) of the entry into the view, fitted to the window;
+	// true if there is such a page, nil past the last.
 	PrepareToPrint: func(a1) begin
 		local page;
 		(if (a1 < target.info.pageCount) then begin
@@ -174,6 +204,7 @@ partItem_2 := {
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
 	viewFormat: vfFillWhite,
 	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjParentFullV,
+	// Lays the first page in once the view is set up.
 	viewSetupDoneScript: func() begin
 		self:PrepareToPrint((fPageIndex := 0))
 	end,
@@ -184,6 +215,7 @@ partItem_2 := {
 	preAllocatedContext: 'ImageTarget
 };
 
+// The viewer's "Data unavailable" text (nodata).
 partItem_3 := {
 	text: dataUnavailable,
 	viewBounds: {left: 0, top: 90, right: 180, bottom: 120},
@@ -194,11 +226,16 @@ partItem_3 := {
 	preAllocatedContext: 'nodata
 };
 
+// The viewer's 2D scroller (vScrollers), scrolling imageContainer.
 partItem_4 := {
+	// Scrolls imageContainer.
 	viewSetupFormScript: func() begin
 		inherited:?viewSetupFormScript();
 		(self.scrollView := imageContainer)
 	end,
+	// Called with ImageTarget's scaling info when it changes: hides the scrollers
+	// when the image is fitted to the window, otherwise sets their extent, the
+	// visible box and the offsets and redraws the arrows.
 	Update: func(scalingInfo) begin
 		(if (scalingInfo.zoomedTo = 'fitInWindow) then begin
 				hidden := true;
@@ -216,6 +253,7 @@ partItem_4 := {
 				self:AdjustArrows()
 			end)
 	end,
+	// After a scroll, follows ImageTarget's new scaling info.
 	ViewScrollDoneScript: func() begin
 		self:Update(ImageTarget:GetScalingInfo())
 	end,
@@ -226,15 +264,21 @@ partItem_4 := {
 	preAllocatedContext: 'vScrollers
 };
 
+// The "Page n of m" button on the floating bar (PageButton): a popup of the
+// first nine pages and, for more than one, "Show/Hide Page View".
 pageOf := {
 	viewBounds: {left: 0, top: 0, right: 74, bottom: 17},
 	viewJustify: vjCenterH + vjCenterV + vjParentCenterV + oneLineOnly,
+	// Called by imageContainer:Update with the current page number (the argument
+	// is the page, though named scalingInfo); its first piece, ﰁ, is the popup diamond.
 	Update: func(scalingInfo) begin
 		SetValue(self, 'text, ParamStr("^0 ^1 of ^2", [Array: "\uFC01\u", scalingInfo, Length(target.pages)]))
 	end,
 	popup: [|Array|: ],
 	viewFlags: vVisible + vReadOnly + vClickable,
 	viewFormat: vfFillWhite + vfRound(4),
+	// Builds the popup: an item for each of the first nine pages, then a separator
+	// and the page-view item.
 	viewSetupFormScript: func() begin
 		self.numVisiblePages := min(9, Length(target.pages));
 		l1 := (numVisiblePages + (if (numVisiblePages > 1) then 2 else 0));
@@ -250,6 +294,7 @@ pageOf := {
 				(popup[(numVisiblePages + 1)] := "Show Previewer")
 			end)
 	end,
+	// A page item goes to that page; the last item toggles the page navigator.
 	pickActionScript: func(index) begin
 		if ((index + 1) <= numVisiblePages) then begin
 				imageContainer:GotoPage((index + 1))
@@ -258,6 +303,8 @@ pageOf := {
 			end;
 		self:hilite(nil)
 	end,
+	// Shows the popup with the current page checked (ﰋ, the check mark) and
+	// the last item's text matching whether the page view is open.
 	buttonClickScript: func() begin
 		local currentPage;
 		if markedPage then begin
@@ -273,6 +320,7 @@ pageOf := {
 			end;
 		DoPopup(popup, self:LocalBox().right, 2, self)
 	end,
+	// Looks unused: a template for a page item, which buttonClickScript does not use.
 	fPageProto: {
 		item: "1",
 		mark: $\u0020,
@@ -284,12 +332,14 @@ pageOf := {
 	markedPage: nil,
 	numVisiblePages: nil,
 	text: "ﰁPage 9 of 9",
+	// Pops the menu up when the pen is lifted inside the button.
 	viewClickScript: func(unit) begin
 		if self:TrackHilite(unit) then begin
 				self:buttonClickScript()
 			end;
 		true
 	end,
+	// Unhilites the button when the popup is dismissed.
 	pickCancelledScript: func() begin
 		self:hilite(nil)
 	end,
@@ -297,6 +347,7 @@ pageOf := {
 	preAllocatedContext: 'PageButton
 };
 
+// The floating bar at the foot of the viewer: scrollers, Tools and the page button.
 partItem_5 := {
 	viewBounds: {left: 0, top: -20, right: 0, bottom: 0},
 	viewFlags: vVisible,
@@ -309,11 +360,14 @@ partItem_5 := {
 	preAllocatedContext: 'floatingBar
 };
 
+// The Tools popup button (FaxTools): zoom stops, enlarge/reduce, annotate or
+// drag, and the three rotations.  Each item's doit is sent with imageContainer.
 tools := {
 	popItem_FitInWindow: {
 		mark: $\u0020,
 		item: "Fit In Window",
 		zoomStop: 'fitInWindow,
+		// Fits the page to the window (unless it already is) and leaves annotation mode.
 		doit: func(imageContainer) begin
 			local value;
 			(if ((value := GetVariable(imageContainer, 'ImageTarget)):GetScalingInfo().zoomedTo <> 'fitInWindow) then begin
@@ -326,6 +380,7 @@ tools := {
 		mark: $\u0020,
 		item: "Full Resolution",
 		zoomStop: 'fullResolution,
+		// Shows the page at the device's full resolution and leaves annotation mode.
 		doit: func(imageContainer) begin
 			local value;
 			(if ((value := GetVariable(imageContainer, 'ImageTarget)):GetScalingInfo().zoomedTo <> 'fullResolution) then begin
@@ -338,6 +393,7 @@ tools := {
 		mark: $\u0020,
 		item: "Original Size",
 		zoomStop: 'fullSize,
+		// Shows the page at its original size and leaves annotation mode.
 		doit: func(imageContainer) begin
 			local value;
 			(if ((value := GetVariable(imageContainer, 'ImageTarget)):GetScalingInfo().zoomedTo <> 'fullSize) then begin
@@ -348,6 +404,10 @@ tools := {
 	},
 	preAllocatedContext: 'FaxTools,
 	viewFlags: vVisible + vReadOnly + vClickable,
+	// Builds the Tools popup afresh each time: the thumbnail item, the zoom stops
+	// ImageTarget offers (the current one checked), enlarge/reduce where possible,
+	// the annotation-mode pair when the entry may be changed (EntryCool), and the
+	// rotations when the entry's store is writable.
 	buttonClickScript: func() begin
 		popup := [Array: (frame2 := {_proto: popItem_ShowThumb, item: (if Visible(imageContainer.vThumbFloater) then "Hide Thumbnail" else "Show Thumbnail")}), 'pickSeparator];
 		zoomStops := ImageTarget.zoomStops;
@@ -403,6 +463,7 @@ tools := {
 	popItem_Rotate180: {
 		item: "Rotate 180°",
 		mark: $\u0020,
+		// Rotates the page half a turn (DoMunge asks first when it has annotations).
 		doit: func(imageContainer) begin
 			imageContainer:DoMunge('rotate180)
 		end
@@ -410,6 +471,7 @@ tools := {
 	_proto: @protoPopupButton,
 	popItem_ShowThumb: {
 		item: "",
+		// Shows or hides the thumbnail floater with the current page's thumbnail.
 		doit: func(imageContainer) begin
 			GetVariable(imageContainer, 'vThumbFloater):ToggleThumbnail(imageContainer:MakeAndStashThumbnail(imageContainer:GetCurrentPage()))
 		end
@@ -417,6 +479,7 @@ tools := {
 	popItem_Drag: {
 		item: "Drag with Stylus",
 		mark: $\u0020,
+		// Leaves annotation mode: a stroke drags (scrolls) the page.
 		doit: func(imageContainer) begin
 			GetVariable(imageContainer, 'ImageTarget):SetAnnotationMode('Show)
 		end
@@ -424,6 +487,7 @@ tools := {
 	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentCenterV + oneLineOnly,
 	popItem_Reduce: {
 		item: "Reduce Fax",
+		// Zooms out one step.
 		doit: func(imageContainer) begin
 			GetVariable(imageContainer, 'ImageTarget):SetAnnotationMode('Show);
 			GetVariable(imageContainer, 'ImageTarget):ZoomBy(-1)
@@ -432,6 +496,7 @@ tools := {
 	popItem_RotateLeft: {
 		item: "Rotate left",
 		mark: $\u0020,
+		// Rotates the page a quarter turn anticlockwise.
 		doit: func(imageContainer) begin
 			imageContainer:DoMunge('rotateLeft)
 		end
@@ -440,6 +505,7 @@ tools := {
 	popItem_Annotate: {
 		item: "Write with Stylus",
 		mark: $\u0020,
+		// Zooms to the original size and enters annotation mode: strokes become ink.
 		doit: func(imageContainer) begin
 			local value;
 			if ((value := GetVariable(imageContainer, 'ImageTarget)):GetScalingInfo().zoomedTo <> 'fullSize) then begin
@@ -448,6 +514,7 @@ tools := {
 			value:SetAnnotationMode('edit)
 		end
 	},
+	// Runs the chosen item's doit with imageContainer.
 	pickActionScript: func(index) begin
 		local popupItem;
 		if (if IsFrame((popupItem := popup[index])) then popupItem.doit) then begin
@@ -458,6 +525,7 @@ tools := {
 	text: "  Tools",
 	popItem_Enlarge: {
 		item: "Enlarge Fax",
+		// Zooms in one step.
 		doit: func(imageContainer) begin
 			GetVariable(imageContainer, 'ImageTarget):SetAnnotationMode('Show);
 			GetVariable(imageContainer, 'ImageTarget):ZoomBy(1)
@@ -466,6 +534,7 @@ tools := {
 	popItem_RotateRight: {
 		item: "Rotate right",
 		mark: $\u0020,
+		// Rotates the page a quarter turn clockwise.
 		doit: func(imageContainer) begin
 			imageContainer:DoMunge('rotateRight)
 		end
@@ -473,8 +542,11 @@ tools := {
 	popSizeItems: [|Array|: 'popItem_FitInWindow, 'popItem_FullSize, 'popItem_FullRes]
 };
 
+// The page itself (ImageTarget): a protoImageView inside imageContainer.
 partItem_6 := {
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	// protoImageView's notification that the zoom or scroll changed: updates the
+	// thumbnail's grey box and shows, updates or closes the scrollers.
 	ScalingInfoChanged: func(a1) begin
 		if Visible(vThumbFloater) then begin
 				vThumbFloater:Update()
@@ -495,8 +567,13 @@ partItem_6 := {
 	cacheScaledImage: true,
 	dragCorridor: 15,
 	dragAcceleration: 50,
+	// ZoomTo, with a "Changing magnification" status slip (the ROM's usual
+	// status-slip helper, kLiteral_766fc5) while it works - except while the
+	// viewer is still being set up (initializing).
 	ZoomTo: compile(
 		constants: {
+			// The status slip's OpenDlog(kind, status, title): kind nil a barber pole, a
+			// non-symbol a gauge, else the named template; 'default title means none.
 			kFunction_7670a5: func(a1, a2, a3) begin
 				local frame2;
 				warningName := (if (not a1) then 'vBarber else (if (ClassOf(a1) <> 'symbol) then 'vGauge else a1));
@@ -511,9 +588,11 @@ partItem_6 := {
 				self:Open();
 				(if (warningName = 'vBarber) then self:SetupIdle(300) else self:SetupIdle(0))
 			end,
+			// Moves the gauge (a1[0]) or spins the barber pole.
 			kFunction_7672d5: func(a1) begin
 				(if ((warningName = 'vGauge) or (warningName = 'vBarber)) then self:UpdateIndicator({name: warningName, values: {gauge: (if (warningName = 'vGauge) then a1[0]), barber: (warningName = 'vBarber)}}))
 			end,
+			// Keeps a barber pole turning: an idle every 300 ms.
 			kFunction_76738d: func() begin
 				self:Update(nil);
 				300
@@ -533,6 +612,7 @@ partItem_6 := {
 					(WarningDialog := nil)
 				end)
 		end),
+	// ZoomBy (a step in or out), with the same status slip.
 	ZoomBy: compile(
 		constants: {
 			kFunction_7670a5: func(a1, a2, a3) begin
@@ -569,10 +649,13 @@ partItem_6 := {
 					(WarningDialog := nil)
 				end)
 		end),
+	// Keeps the bitmap cache on the entry's store, or the default store when the
+	// entry's is read-only (or there is no entry).
 	viewSetupFormScript: func() begin
 		bitmapStore := (if ((not fEntryStore) or fEntryStore:IsReadOnly()) then GetDefaultStore() else fEntryStore);
 		inherited:?viewSetupFormScript()
 	end,
+	// Saves the page's annotations when the target changes.
 	TargetChanged: func() begin
 		self:StoreCurrentFaxPage()
 	end,
@@ -580,19 +663,24 @@ partItem_6 := {
 	preAllocatedContext: 'ImageTarget
 };
 
+// The page navigator's palette (pagePalette): a row of thumbnails, one per page.
 partItem_7 := {
 	viewBounds: {top: 8, left: 0, right: -14, bottom: 72},
 	viewFlags: vVisible + vClickable,
 	viewFormat: nil,
 	tileSize: 50,
 	viewJustify: vjParentFullH,
+	// Shows each scroll arrow only while there are pages beyond it.
 	Scrolled: func() begin
 		arrowContainer:ShowArrow('leftArrow, (firstVisibleItem > 1));
 		arrowContainer:ShowArrow('rightArrow, (firstVisibleItem < maxFirstItem))
 	end,
+	// The number of items the palette shows: the entry's pages.
 	GetItemCount: func() begin
 		Length(target.pages)
 	end,
+	// protoPalette's hook drawing item items2Item (1-based) into the box copy: its
+	// thumbnail fitted into a square, and "Page n" below it; nil past the last page.
 	Abstract: func(items2Item, copy) begin
 		local shape22, l2, bounds, shapeBounds2, shape, text, shape2;
 		(if (shape22 := (if (items2Item <= Length(target.pages)) then imageContainer:MakeAndStashThumbnail(items2Item))) then begin
@@ -606,13 +694,16 @@ partItem_7 := {
 				[Array: {justification: 'center, font: viewFont}, text, shape, {transform: [Array: shapeBounds2, bounds]}, shape22]
 			end)
 	end,
+	// Tapping a thumbnail goes to that page.
 	SelectItem: func(a1) begin
 		imageContainer:GotoPage(a1)
 	end,
+	// Starts with the current page selected.
 	viewSetupFormScript: func() begin
 		selectedItem := imageContainer:GetCurrentPage();
 		inherited:?viewSetupFormScript()
 	end,
+	// Selects page a1 (when the viewer changes page).
 	SetPage: func(a1) begin
 		selectedItem := a1;
 		self:Update()
@@ -621,17 +712,23 @@ partItem_7 := {
 	preAllocatedContext: 'pagePalette
 };
 
+// The page navigator (vPageNavigator): a floater at the foot of the viewer
+// holding the palette and its two arrows.
 partItem_8 := {
 	viewBounds: {top: -100, left: 8, right: -8, bottom: -26},
 	stepChildren: [stepChildren: partItem_7, partItem_8Item],
 	viewJustify: vjParentFullH + vjParentBottomV,
+	// Closes the navigator if it is open (or there is no page), else opens it.
 	ToggleNavigator: func(currentPage) begin
 		(if ((not currentPage) or Visible(self)) then self:Close() else self:OpenNavigator(currentPage))
 	end,
+	// Opens the navigator.  (It sets the palette's selectedPage; the palette's own
+	// code here uses selectedItem, which it takes from GetCurrentPage at setup.)
 	OpenNavigator: func(currentPage) begin
 		pagePalette.selectedPage := currentPage;
 		self:Open()
 	end,
+	// Shows or hides the arrows for where the palette starts.
 	viewSetupDoneScript: func() begin
 		pagePalette:Scrolled()
 	end,
@@ -642,12 +739,14 @@ partItem_8 := {
 	preAllocatedContext: 'vPageNavigator
 };
 
+// The navigator's two scroll arrows (arrowContainer).
 partItem_8Item := {
 	viewBounds: {top: 0, left: -11, right: -1, bottom: 28},
 	viewFlags: vVisible,
 	viewFormat: nil,
 	stepChildren: [stepChildren: partItem_8ItemItem, partItem_8ItemItem_2],
 	viewJustify: vjParentRightH + vjParentCenterV + vjSiblingCenterV,
+	// Shows the arrow named a1 when a2 is true, else unhilites and hides it.
 	ShowArrow: func(a1, a2) begin
 		(if a2 then self.(a1):Open() else begin
 				self.(a1):hilite(nil);
@@ -661,6 +760,7 @@ partItem_8Item := {
 	preAllocatedContext: 'arrowContainer
 };
 
+// The arrow that scrolls the palette back a page's thumbnail.
 partItem_8ItemItem := {
 	viewBounds: {top: 0, left: -11, right: -1, bottom: 12},
 	buttonPressedScript: func() begin
@@ -674,6 +774,7 @@ partItem_8ItemItem := {
 	preAllocatedContext: 'leftArrow
 };
 
+// The arrow that scrolls the palette on a thumbnail.
 partItem_8ItemItem_2 := {
 	viewBounds: {top: -12, left: 0, right: 0, bottom: 0},
 	buttonPressedScript: func() begin
@@ -686,7 +787,11 @@ partItem_8ItemItem_2 := {
 	preAllocatedContext: 'rightArrow
 };
 
+// imageContainer: the viewer's body, which knows the entry's pages, the
+// current page (fPage, number fPageNum) and the status slip (WarningDialog).
 partItem_9 := {
+	// Makes page a1 (1-based, clamped to the entry's pages) the current one,
+	// saving the annotations of the page being left first.
 	SelectPage: func(a1) begin
 		if (fPage <> nil) then begin
 				self:StoreCurrentFaxPage()
@@ -695,6 +800,9 @@ partItem_9 := {
 		(fPage := target.pages[(fPageNum - 1)])
 	end,
 	WarningDialog: nil,
+	// After the views are set up: positions the thumbnail's grey box, works out the
+	// page-scroll steps (nine tenths of the image's box), draws, and closes the
+	// status slip that viewSetupFormScript opened (deferred, so it is seen).
 	viewSetupDoneScript: func() begin
 		local l1, box;
 		WarningDialog:Update(nil);
@@ -714,6 +822,8 @@ partItem_9 := {
 	end,
 	fPageScrollHeight: 10,
 	viewFormat: nil,
+	// The thumbnail of page a1 (1-based): made once, fitted into 96x96, and kept
+	// in the page (and the entry flushed) so it is not made again.
 	MakeAndStashThumbnail: func(a1) begin
 		local page, shapeBounds2, fitToBox2, bitmap;
 		if (not (page := target.pages[(a1 - 1)]).thumbnail) then begin
@@ -724,6 +834,9 @@ partItem_9 := {
 			end;
 		page.thumbnail
 	end,
+	// Rotates the current page (mungeType: 'rotateLeft, 'rotateRight or
+	// 'rotate180), with a gauge; a1 is the Confirm slip's answer, nil to cancel.
+	// The page's thumbnail and annotations are dropped.
 	DoMungeREally: compile(
 		constants: {
 			kFunction_7670a5: func(a1, a2, a3) begin
@@ -774,6 +887,8 @@ partItem_9 := {
 					(WarningDialog := nil)
 				end)
 		end),
+	// Saves the current page's annotations and the thumbnail and scaling settings
+	// in the application's preferences (|dFaxViewer:Dondo|).
 	viewQuitScript: func() begin
 		local l1;
 		if (fPage <> nil) then begin
@@ -785,19 +900,25 @@ partItem_9 := {
 	end,
 	preAllocatedContext: 'imageContainer,
 	viewFlags: vVisible,
+	// Goes to the next page.
 	NextPage: func() begin
 		self:GotoPage((fPageNum + 1))
 	end,
+	// After a zoom (anything but a scroll) the scrollers are updated; the
+	// thumbnail's grey box follows either.
 	ScalingInfoChanged: func(a1) begin
 		if (a1 <> 'scroll) then begin
 				self:UpdateScrollers()
 			end;
 		vThumbFloater:Update()
 	end,
+	// Lays the current page out again.
 	RedoPage: func() begin
 		self:GotoPage(fPageNum)
 	end,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: -25},
+	// Keeps the page's ink: copies ImageTarget's annotations into the page and
+	// flushes the entry (only when the entry may be changed).
 	StoreCurrentFaxPage: func() begin
 		if (not self:?EntryCool(nil)) then begin
 				return nil
@@ -805,12 +926,14 @@ partItem_9 := {
 		fPage.annotations := ImageTarget:GetAnnotations();
 		self:StartFlush()
 	end,
+	// Keeps the scrollers in step after a scroll.
 	ViewScrollDoneScript: func() begin
 		self:UpdateScrollers()
 	end,
 	fPage: nil,
 	image: nil,
 	scalingInfo: nil,
+	// Opens and updates the scrollers when the image can scroll, else hides them.
 	UpdateScrollers: func() begin
 		(if ImageTarget:CanScroll() then begin
 				vScrollers:Open();
@@ -819,6 +942,8 @@ partItem_9 := {
 	end,
 	viewJustify: vjParentFullH + vjParentFullV,
 	initializing: nil,
+	// Goes to page a1 (unless already there) with a "Retrieving fax page" slip,
+	// and keeps the navigator's selection in step.
 	GotoPage: compile(
 		constants: {
 			kFunction_7670a5: func(a1, a2, a3) begin
@@ -863,6 +988,9 @@ partItem_9 := {
 					(WarningDialog := nil)
 				end)
 		end),
+	// The scroller's arrows: scrolls the image by a page step in the arrow's
+	// direction, marks the arrow done when it can go no further and the opposite
+	// one as having more.
 	ViewScroll2DScript: func(arrowDirection, a2) begin
 		local l1, l2;
 		l1 := (if (arrowDirection = 'left) then (-fPageScrollWidth) else (if (arrowDirection = 'right) then fPageScrollWidth else 0));
@@ -878,14 +1006,21 @@ partItem_9 := {
 		RefreshViews();
 		self:LockScreen(nil)
 	end,
+	// The current page number (1-based).
 	GetCurrentPage: func() begin
 		fPageNum
 	end,
 	stepAllocateContext: [|Array|: 'vThumbFloater, partItem_9Item],
+	// Asks a Confirm slip before rotating a page that has annotations (they would be
+	// lost); DoMungeREally does the work.
 	DoMunge: func(a1) begin
 		self.mungeType := a1;
 		(if (Length(ImageTarget:GetAnnotations()) > 0) then GetRoot():Confirm("Fax Rotation", "Your annotations for this page will be lost.  Do you want to continue?", self, 'DoMungeREally) else self:DoMungeREally(true))
 	end,
+	// Before the views open: shows a "Preparing to view fax" slip (closed in
+	// viewSetupDoneScript), finds the entry's store, makes the viewer's preference
+	// frame if there is none, and starts on page 1 with the saved scaling and the
+	// thumbnail open if it was.
 	viewSetupFormScript: compile(
 		constants: {
 			kFunction_7670a5: func(a1, a2, a3) begin
@@ -925,11 +1060,12 @@ partItem_9 := {
 			scalingInfo := appPreferences.scaling;
 			if appPreferences.ShowThumbnail then begin
 					vThumbFloater.image := self:MakeAndStashThumbnail(1);
-					vThumbFloater.viewFlags := BOr(vThumbFloater.viewFlags, 1)
+					vThumbFloater.viewFlags := BOr(vThumbFloater.viewFlags, vVisible)
 				end;
 			(self.initializing := true)
 		end),
 	fPageNum: nil,
+	// Redraws: the scrollers, the page button's "Page n of m" and the view.
 	Update: func() begin
 		self:UpdateScrollers();
 		PageButton:Update(fPageNum);
@@ -939,6 +1075,8 @@ partItem_9 := {
 	stepChildren: [stepChildren: partItem_6, partItem_9Item, partItem_8],
 	annotations: nil,
 	mungeType: nil,
+	// Lays the current page's image and ink into ImageTarget and refreshes the
+	// thumbnail floater.
 	UpdatePage: func() begin
 		local fPage2;
 		fPage2 := fPage;
@@ -950,19 +1088,25 @@ partItem_9 := {
 		self:Update()
 	end,
 	fPageScrollWidth: 10,
+	// Goes to the previous page.
 	PriorPage: func() begin
 		self:GotoPage((fPageNum - 1))
 	end,
+	// The current page's image.
 	GetCurrentImage: func() begin
 		return fPage.image
 	end,
 	vThumbFloater: nil
 };
 
+// The thumbnail floater (vThumbFloater): a protoThumbnailFloater whose grey box
+// moves the image.
 partItem_9Item := {
+	// The image's scaling info, or nil before ImageTarget is open.
 	GetScalingInfo: func() begin
 		(if ImageTarget.viewCObject then ImageTarget:GetScalingInfo())
 	end,
+	// Scrolls the image (dragging the grey box) and the scrollers with it.
 	ScrollTo: func(a1, offsetY) begin
 		ImageTarget:ScrollTo(a1, offsetY);
 		imageContainer:UpdateScrollers()

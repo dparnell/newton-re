@@ -43,7 +43,7 @@ Connection := {
 			kROM_8269: @8269
 		},
 		func() begin
-			(if (not self:TransportsIdle()) then self:Notify(3, "Dock", "You can\u2019\ut start a connection when other communications are in progress.") else begin
+			(if (not self:TransportsIdle()) then self:Notify(kNotifyAlert, "Dock", "You can\u2019\ut start a connection when other communications are in progress.") else begin
 					if (not theEndpoint) then begin
 							self:SetupEndpoint()
 						end;
@@ -55,7 +55,7 @@ Connection := {
 										startingConnection := true;
 										kROM_8269:OpenForSync(a1.password, a1.connectOptions, theEndpoint, true)
 									end else begin
-										self:Notify(3, "Dock", "The necessary connection options weren\u2019\ut filled in.");
+										self:Notify(kNotifyAlert, "Dock", "The necessary connection options weren\u2019\ut filled in.");
 										theEndpoint:ConnectionDone(0)
 									end))
 						end))
@@ -392,7 +392,7 @@ Connection := {
 								end else begin
 									if StrEqual("dres", callReadCommand.command) then begin
 											if (callReadCommand.data = -28031) then begin
-													self:Notify(3, "Dock", "You don\u2019\ut have enough access privileges.");
+													self:Notify(kNotifyAlert, "Dock", "You don\u2019\ut have enough access privileges.");
 													list := [Array: ]
 												end else begin
 													Throw('|evt.ex.error|, callReadCommand.data)
@@ -498,7 +498,7 @@ Connection := {
 				connectionNetwork := networkCurrentChoice
 			end;
 		if (not connectionNetwork) then begin
-				GetRoot():Notify(3, "Dock", "You must choose a computer or worksite before connecting.");
+				GetRoot():Notify(kNotifyAlert, "Dock", "You must choose a computer or worksite before connecting.");
 				theEndpoint:ConnectionDone(0)
 			end;
 		return connectionNetwork
@@ -1207,7 +1207,7 @@ ConnectionItem_3 := {
 ConnectionItem_4 := {
 	text: connect,
 	buttonClickScript: func() begin
-		(if (not self:TransportsIdle()) then self:Notify(3, "Dock", "You can\u2019\ut start a connection when other communications are in progress.") else begin
+		(if (not self:TransportsIdle()) then self:Notify(kNotifyAlert, "Dock", "You can\u2019\ut start a connection when other communications are in progress.") else begin
 				if (not theEndpoint) then begin
 						self:SetupEndpoint()
 					end;
@@ -1230,7 +1230,7 @@ ConnectionItem_4 := {
 						startingConnection := true;
 						base:Close();
 						kROM_8269:OpenForSync(a1.password, a1.connectOptions, theEndpoint, nil)
-					end else self:Notify(3, "Dock", "The necessary connection options weren\u2019\ut filled in.")))
+					end else self:Notify(kNotifyAlert, "Dock", "The necessary connection options weren\u2019\ut filled in.")))
 		end),
 	viewSetupFormScript: func() begin
 		local l1;

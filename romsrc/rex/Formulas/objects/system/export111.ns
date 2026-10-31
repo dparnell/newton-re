@@ -46,7 +46,7 @@ export111 := {
 			end;
 		if (if (l1 = 0) then (solvedFor = lineNumber)) then begin
 				AddDeferredSend(self, 'FillInTheSolution, [Array: solvedFor, nil]);
-				self:Notify(3, "Formulas", "You cannot change the field that was being solved. Tap clear then enter the new values.");
+				self:Notify(kNotifyAlert, "Formulas", "You cannot change the field that was being solved. Tap clear then enter the new values.");
 				return nil
 			end;
 		(if (l1 <= 1) then begin

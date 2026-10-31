@@ -96,7 +96,7 @@ export77 := {
 									end
 							end;
 						if (not l4) then begin
-								self:Notify(3, "Dock", ParamStr(text, [Array: desktopApp.name]));
+								self:Notify(kNotifyAlert, "Dock", ParamStr(text, [Array: desktopApp.name]));
 								endpoint:ConnectionDone(0)
 							end
 					end;

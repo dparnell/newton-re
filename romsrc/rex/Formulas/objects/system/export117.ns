@@ -30,11 +30,11 @@ export117 := {
 			exchangeRate := GetExchangeRate(Country1Field.country, Country2Field.country);
 			if (Country1Field.country = Country2Field.country) then begin
 					exchangeRate := 1;
-					self:Notify(3, kLiteral_771cbd, "Choose two different countries to calculate exchange rates.")
+					self:Notify(kNotifyAlert, kLiteral_771cbd, "Choose two different countries to calculate exchange rates.")
 				end;
 			if (exchangeRate = nil) then begin
 					self:ClearAllFields();
-					self:Notify(3, kLiteral_771cbd, ParamStr("The exchange rate between ^0 and ^1 is unknown.", [Array: GetCountryEntry(Country1Field.country)[0].name, GetCountryEntry(Country2Field.country)[0].name]))
+					self:Notify(kNotifyAlert, kLiteral_771cbd, ParamStr("The exchange rate between ^0 and ^1 is unknown.", [Array: GetCountryEntry(Country1Field.country)[0].name, GetCountryEntry(Country2Field.country)[0].name]))
 				end;
 			ExchangeRateField:SetNumericValue(exchangeRate)
 		end),

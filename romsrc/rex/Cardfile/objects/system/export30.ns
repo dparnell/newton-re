@@ -60,7 +60,7 @@ export30 := {
 		local appPreferences;
 		(if (theApp.superSymbol = 'ownerNames) then begin
 				EntryChange((appPreferences := theApp:GetAppPreferences()));
-				(if (if appPreferences.usePassword then (not GetUserConfig('passwordKey))) then GetRoot():Notify(3, "Names", "There is currently no PIN.  To set a PIN, open the Prefs app from Extras and select Security."))
+				(if (if appPreferences.usePassword then (not GetUserConfig('passwordKey))) then GetRoot():Notify(kNotifyAlert, "Names", "There is currently no PIN.  To set a PIN, open the Prefs app from Extras and select Security."))
 			end)
 	end,
 	_proto: @newtPrefsView,

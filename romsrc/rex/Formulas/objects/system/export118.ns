@@ -49,7 +49,7 @@ export118Item := {
 		listItem := list[1];
 		if self:DateOutOfRange((l1 := ((listItem2 := list[2]) - (listItem * 1440)))) then begin
 				l1 := nil;
-				self:Notify(3, "Date Calculator", "The calculated date is out of range.")
+				self:Notify(kNotifyAlert, "Date Calculator", "The calculated date is out of range.")
 			end;
 		return l1
 	end,
@@ -86,7 +86,7 @@ export118Item_3 := {
 		listItem2 := list[1];
 		if self:DateOutOfRange((l3 := (listItem + (listItem2 * 1440)))) then begin
 				l3 := nil;
-				self:Notify(3, "Date Calculator", "The calculated date is out of range.")
+				self:Notify(kNotifyAlert, "Date Calculator", "The calculated date is out of range.")
 			end;
 		return l3
 	end,

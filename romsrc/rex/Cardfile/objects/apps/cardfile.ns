@@ -634,9 +634,9 @@ cardfile := {
 						l4:AddIndex({structure: 'multiSlot, path: [Array: clusterValue, 'sorton], type: [Array: l1, 'string]})
 					end onexception |evt.ex.fr.store| do begin
 						if (CurrentException().error = kSError_WriteProtected) then begin
-								self:Notify(3, title, "You cannot change the sort order on a locked card.  Please unlock the card, reinsert it, and try again.")
+								self:Notify(kNotifyAlert, title, "You cannot change the sort order on a locked card.  Please unlock the card, reinsert it, and try again.")
 							end else begin
-								self:Notify(3, title, ParamStr("The sort order was not changed because an error occurred. \n(^0)", [Array: self:TranslateError(CurrentException().error)]))
+								self:Notify(kNotifyAlert, title, ParamStr("The sort order was not changed because an error occurred. \n(^0)", [Array: self:TranslateError(CurrentException().error)]))
 							end;
 						return nil
 					end
@@ -1431,7 +1431,7 @@ cardfile := {
 			if self.viewCObject then begin
 					l4 := (self.superSymbol = 'ownerNames);
 					if (if (self = GetRoot().(UserConfiguration.blessedApp)) then (not l4)) then begin
-							GetRoot():Notify(3, kLiteral_722c79, "To see Owner Info, you must select a different backdrop application.");
+							GetRoot():Notify(kNotifyAlert, kLiteral_722c79, "To see Owner Info, you must select a different backdrop application.");
 							return nil
 						end else begin
 							self:Close();
@@ -1444,7 +1444,7 @@ cardfile := {
 					(cardfile := GetRoot().cardfile).previousLayout := 'default;
 					cardfile.currentLayout := 'overview
 				end;
-			(if (if self:GetAppPreferences().usePassword then (passwordKey := GetUserConfig('passwordKey))) then (if ModalCheckPIN("Enter PIN", passwordKey) then self:DoOwnerOpen() else GetRoot():Notify(3, kLiteral_722c79, "The PIN you entered is incorrect.  Owner Info cannot be opened.")) else self:DoOwnerOpen())
+			(if (if self:GetAppPreferences().usePassword then (passwordKey := GetUserConfig('passwordKey))) then (if ModalCheckPIN("Enter PIN", passwordKey) then self:DoOwnerOpen() else GetRoot():Notify(kNotifyAlert, kLiteral_722c79, "The PIN you entered is incorrect.  Owner Info cannot be opened.")) else self:DoOwnerOpen())
 		end),
 	CheckAllBdays: func() begin
 		local bdayCursor;
@@ -1496,7 +1496,7 @@ cardfile := {
 									local l9;
 									(foreach item in (l9 := (soup := GetUnionSoupAlways(allSoups.names.soupName)):GetSoupList()) do begin
 											if (not self:CheckSortBy(item, l6)) then begin
-													self:Notify(3, title, "Your sorting prefs have been reset to the default sort order.");
+													self:Notify(kNotifyAlert, title, "Your sorting prefs have been reset to the default sort order.");
 													try begin
 															soup:RemoveIndex([Array: l6, 'sorton])
 														end onexception |evt.ex| do begin end;
@@ -1567,7 +1567,7 @@ cardfile := {
 		local sortBy;
 		if (if ((sortBy := self:GetAppPreferences().sortBy) <> 'sorton) then (a3 = 'soupEnters)) then begin
 				if (not self:CheckSortBy(a4, sortBy)) then begin
-						self:Notify(3, title, "Your sorting prefs have been reset to the default sort order.");
+						self:Notify(kNotifyAlert, title, "Your sorting prefs have been reset to the default sort order.");
 						self:SortByChange('sorton)
 					end
 			end;
@@ -1626,7 +1626,7 @@ cardfile := {
 	viewEffect: 133120,
 	FileThis: func(target, labelsChanged, a3, storeChanged, a5) begin
 		if (if (self:GetAppPreferences().sortBy <> 'sorton) then (not a5:GetSoup(@cardfileSoupName))) then begin
-				self:Notify(3, title, "Your sorting prefs have been reset to the default sort order.");
+				self:Notify(kNotifyAlert, title, "Your sorting prefs have been reset to the default sort order.");
 				self:SortByChange('sorton)
 			end;
 		inherited:FileThis(target, labelsChanged, a3, storeChanged, a5)
@@ -1806,7 +1806,7 @@ cardfile := {
 				if resolveEntryAlias2 then begin
 						GetRoot().cardfile:OpenTo(resolveEntryAlias2, nil)
 					end else begin
-						a3:Notify(3, GetVariable(a3, 'title), "The group member cannot be found.")
+						a3:Notify(kNotifyAlert, GetVariable(a3, 'title), "The group member cannot be found.")
 					end;
 				true
 			end
@@ -1991,7 +1991,7 @@ cardfile := {
 				(context := BuildContext(cardExchangeLayout)).theEntry := l2;
 				context.appBase := (context.newtAppBase := newtAppBase);
 				newtAppBase:RememberedOpen(context)
-			end else self:Notify(3, title, "There is no current owner card to send."))
+			end else self:Notify(kNotifyAlert, title, "There is no current owner card to send."))
 	end
 };
 

@@ -414,7 +414,7 @@ export62ItemItem := {
 				return text
 			end;
 		if (not (phoneCurrentChoice := self:GetWorksite(protoContext:ConnectionPrefsRead('phoneCurrentChoice)))) then begin
-				self:Notify(3, "Dock", "You must choose a worksite before connecting.")
+				self:Notify(kNotifyAlert, "Dock", "You must choose a worksite before connecting.")
 			end else begin
 				if self:CallValidate(phoneCurrentChoice, myCallback) then begin
 						return self:GetPhoneNumber()
@@ -565,7 +565,7 @@ export62ItemItem_2 := {
 					end
 			end;
 		if (not (networkAddress := self:GetNetworkAddress())) then begin
-				self:Notify(3, "Dock", "You must choose a computer or worksite before connecting.")
+				self:Notify(kNotifyAlert, "Dock", "You must choose a computer or worksite before connecting.")
 			end;
 		return networkAddress
 	end,

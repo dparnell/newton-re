@@ -36,7 +36,7 @@ notes_2 := {
 					end
 			end;
 		scrollerView:AdjustArrows();
-		if (BAnd(self.viewFlags, 130) = 0) then begin
+		if (BAnd(self.viewFlags, vReadOnly + vWriteProtected) = 0) then begin
 				self:PositionCaret(10, (viewOriginY + 10), nil)
 			end;
 		inherited:?viewSetupDoneScript()

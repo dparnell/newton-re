@@ -20,7 +20,7 @@ export103 := {
 						calcLineValue := a1
 					end else begin
 						calcLineValue := nil;
-						self:Notify(3, "Formulas", "The result is out of range.")
+						self:Notify(kNotifyAlert, "Formulas", "The result is out of range.")
 					end
 			end;
 		self:SetNumericValueString(self:FormulasNumberToString(calcLineValue))
@@ -78,7 +78,7 @@ export103Item := {
 				if ((calcLineValue := self:FormulasStringToNumber(view.text)) = nil) then begin
 						formulasStripBadChars := self:FormulasStripBadChars(view.text);
 						AddDeferredSend(self, SetNumericValueString, [Array: formulasStripBadChars]);
-						self:Notify(3, "Formulas", "Only numbers are allowed in this field.");
+						self:Notify(kNotifyAlert, "Formulas", "Only numbers are allowed in this field.");
 						return nil
 					end;
 				if integerField then begin
@@ -131,13 +131,13 @@ export103Item := {
 			(if part then return Stringer([Array: part, passAll]) else return passAll)
 		end),
 	viewJustify: vjParentFullH + vjParentFullV + oneLineOnly,
-	dictionaries: [|Array|: 117],
+	dictionaries: [|Array|: kNumbersOnlyDictionary],
 	ViewRawInkScript: func(a1) begin
 		AddProcrastinatedSend('OnlyNumbersAllowed, self, 'OnlyNumbersAllowed, nil, 500);
 		return true
 	end,
 	OnlyNumbersAllowed: func() begin
-		self:Notify(3, "Formulas", "Only numbers are allowed in this field.")
+		self:Notify(kNotifyAlert, "Formulas", "Only numbers are allowed in this field.")
 	end,
 	viewSetupFormScript: func() begin
 		self._keyboard := GetRoot().numericKeyboard;
