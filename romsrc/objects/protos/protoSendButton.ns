@@ -1,16 +1,26 @@
-// protoSendButton, and what only it reaches
+// protoSendButton: the Send button of a routing slip. When the transport
+// says how to send (ConnectionDetect's answer, when), a tap sends at once;
+// otherwise the button is a pop-up offering "Now" or "Later". Sending closes
+// the slip and submits the item (its fields) to the transport.
 
 protoSendButton := {
 	viewBounds: nil,
-	viewJustify: 8407046,
+	// placed to the left of its sibling, level with its top
+	viewJustify: oneLineOnly + vjSiblingTopV + vjSiblingLeftH + vjCenterH + vjCenterV,
 	popup: [|Array|: "Now", later],
 	text: send,
 	noClone: nil,
+	// 'Now, 'Later... when already decided; nil: the user chooses from the menu
 	when: nil,
+	// on opening: hidden (vVisible cleared) while the slip is being edited;
+	// else take the transport's action title (e.g. "Print") and its
+	// ConnectionDetect answer. Without one the text gets two leading spaces
+	// (room for the pop-up diamond). The button is sized to its text, l1
+	// wide, to the left of its sibling, and made the slip's default button
 	viewSetupFormScript: func() begin
 		local l1;
 		if GetVariable(self, 'Editing) then begin
-				self.viewFlags := BAnd(self.viewFlags, bnot(1))
+				self.viewFlags := BAnd(self.viewFlags, bnot(vVisible))
 			end else begin
 				if transport then begin
 						when := transport:?ConnectionDetect();
@@ -23,22 +33,31 @@ protoSendButton := {
 		viewBounds := RelBounds(((-(l1 := (StrFontWidth(text, viewFont) + 6))) - 7), 0, l1, FontHeight(viewFont));
 		(_defaultButton := self)
 	end,
+	// the text as given (no padding)
 	PadText: func(text) begin
 		text
 	end,
+	// only a pop-up (when unknown) draws its diamond
 	viewDrawScript: func() begin
 		(if (not when) then inherited:?viewDrawScript())
 	end,
+	// a tap: send as decided, or pop up the Now/Later menu
 	buttonClickScript: func() begin
 		(if when then self:PrepareForSubmission(when) else inherited:buttonClickScript())
 	end,
+	// the menu's choice: 0 is "Now", 1 "Later"
 	pickActionScript: func(index) begin
 		self:hilite(nil);
 		self:PrepareForSubmission((if (index = 0) then 'Now else 'Later))
 	end,
+	// a hook before sending (a transport's slip may check its fields first)
 	PrepareForSubmission: func(when) begin
 		self:SubmitIt(when)
 	end,
+	// sends: 'readdress hands the changed item back to the transport
+	// (itemchanged); else the format makes the item from the slip's fields
+	// (ParseCursor), Connect says whether to send now, a 'pending item becomes
+	// 'ready, and the slip is closed before the transport's ItemSubmit
 	SubmitIt: func(when) begin
 		local fields2;
 		fields2 := fields;

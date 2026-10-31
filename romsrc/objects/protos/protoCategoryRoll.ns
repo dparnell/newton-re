@@ -1,4 +1,11 @@
-// protoCategoryRoll, and what only it reaches
+// protoCategoryRoll: a scrolling list of items grouped under collapsible
+// category headings (protoCategoryRollCategory lines followed by their
+// protoCategoryRollItem lines, 14 pixels each); it declares itself as roll.
+//   categoryFrames   the categories, each made into a heading by
+//                    MakeCategoryItem and its items added by AddCategory
+//   scrollOrigin     how many lines are scrolled off the top
+//   maxItems         how many lines fit; scrollAmount, two fewer, is a page
+//   moreBelow        true when lines are left below the last one shown
 
 protoCategoryRoll := {
 	_proto: @protoRoll,
@@ -13,6 +20,12 @@ protoCategoryRoll := {
 	scrollAmount: 0,
 	moreBelow: nil,
 	collapsedHeight: 14,
+	// before the children are made: walks the categories, skipping the first
+	// scrollOrigin lines (scrollOrigin2 counts them down; when a category's
+	// items cover the rest it turns negative, the number to skip inside that
+	// category), and adds headings and items until the view is full
+	// (maxItems2 counts the room left).  The decompiler places the locals
+	// after their uses.
 	viewSetupChildrenScript: func() begin
 		scrollAmount := ((maxItems := (self:LocalBox().bottom div 14)) - 2);
 		self.items := nil;
@@ -27,6 +40,7 @@ protoCategoryRoll := {
 		(foreach item in categoryFrames do begin
 				local categoryItem, l7, count;
 				categoryItem := self:MakeCategoryItem(item);
+				// l7: the category is collapsed (or all are), showing no items
 				if (l7 := (allCollapsed or item.collapsed)) then begin
 						count := 0
 					end else begin
@@ -65,17 +79,22 @@ protoCategoryRoll := {
 		self.items := list;
 		(self.viewChildren := self:LayoutColumn(list, index))
 	end,
+	// the up scroll arrow: slides the contents down by up to a page (l1, the
+	// lines to move, is negative) and then scrolls by doscrollscript
 	viewScrollUpScript: func() begin
 		local l1;
 		(if (scrollOrigin > 0) then roll:SlideEffect(((-((l1 := (max((scrollOrigin - scrollAmount), 0) - scrollOrigin)) - 2)) * 14), 0, scrollUpSound, 'doscrollscript, [Array: l1]))
 	end,
+	// the down scroll arrow: scrolls a page down when there is more below
 	viewScrollDownScript: func() begin
 		(if moreBelow then roll:SlideEffect(((-(scrollAmount + 2)) * 14), 0, scrollDownSound, 'doscrollscript, [Array: scrollAmount]))
 	end,
+	// doscrollscript(lines): moves the scroll origin and rebuilds the roll
 	doscrollscript: func(a1) begin
 		scrollOrigin := (scrollOrigin + a1);
 		roll:recalc()
 	end,
+	// rebuilds the children (viewSetupChildrenScript runs again)
 	recalc: func() begin
 		self:RedoChildren()
 	end,

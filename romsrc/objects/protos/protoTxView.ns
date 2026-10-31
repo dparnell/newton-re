@@ -1,11 +1,16 @@
-// protoTxView, and what only it reaches
+// protoTxView: the view of the 2.x text engine (clTXView), with styled
+// text, rulers and pages, as the Notes word-processor stationery uses. All
+// its methods are natives (class #132 frames: a native function pointer and
+// its argument count); the method names say what each does.
 
 protoTxView := {
 	CharToPoint: {class: #132, funcPtr: 7240662, numArgs: 1},
+	// Externalize()/Internalize(data): the text as data to store, and back
 	Externalize: {class: #132, funcPtr: 599871, numArgs: 0},
 	PointToChar: {class: #132, funcPtr: 7240661, numArgs: 1},
 	IsModified: {class: #132, funcPtr: 599888, numArgs: 0},
 	SetGeometry: {class: #132, funcPtr: 7240666, numArgs: 4},
+	// called (when the application sets it) for the scrollers to be updated
 	ViewUpdateScrollersScript: nil,
 	ReplaceAll: {class: #132, funcPtr: 7240657, numArgs: 4},
 	ChangeRangeRuns: {class: #132, funcPtr: 7240652, numArgs: 4},
@@ -13,6 +18,7 @@ protoTxView := {
 	GetParagraphRange: {class: #132, funcPtr: 7240660, numArgs: 1},
 	ChangeRangeRulers: {class: #132, funcPtr: 7240653, numArgs: 3},
 	GetCountCharacters: {class: #132, funcPtr: 599775, numArgs: 0},
+	// SetStore(store): the store the text's data (VBOs) is kept on
 	SetStore: {class: #132, funcPtr: 600436, numArgs: 1},
 	GetHiliteRange: {class: #132, funcPtr: 7240655, numArgs: 0},
 	Internalize: {class: #132, funcPtr: 599877, numArgs: 1},

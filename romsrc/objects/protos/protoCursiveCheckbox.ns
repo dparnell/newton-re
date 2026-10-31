@@ -1,7 +1,10 @@
-// protoCursiveCheckbox, and what only it reaches
+// protoCursiveCheckbox: a protoRecognitionCheckbox for the cursive
+// handwriting recognizer's options.
 
 protoCursiveCheckbox := {
 	_proto: @protoRecognitionCheckbox,
+	// sent when the box changes: rereads the user's cursive recognizer
+	// settings so the change takes effect
 	RecalcRecognition: func() begin
 		ReadCursiveOptions()
 	end

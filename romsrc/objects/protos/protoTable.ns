@@ -1,14 +1,24 @@
-// protoTable, and what only it reaches
+// protoTable: a one-column table of selectable rows, laid out from the
+// protoTableDef in its def slot (each row a protoTableEntry by default); it
+// scrolls by whole rows (vOrg is the first row shown) and keeps the selected
+// rows' indexes in selectedCells.
 
 protoTable := {
 	viewClass: clView,
 	viewFlags: vVisible + vReadOnly,
 	viewFormat: vfFillWhite + vfFrameBlack + vfPen(1),
 	declareSelf: 'tabbase,
+	// the first column and row shown
 	hOrg: 0,
 	vOrg: 0,
+	// rows scrolled per scroll arrow tap
 	scrollAmount: 1,
+	// the selected rows' vIndex values; must be in RAM (cloned) to allow
+	// multiple selection, as this adds to it in place
 	selectedCells: [|Array|: ],
+	// SelectThisCell(cell): sent by a cell tapped; with tabUniqueSelection
+	// selects only it, otherwise toggles it in selectedCells and hilites or
+	// unhilites it
 	selectThisCell: func(childViewFrame) begin
 		local l1, count, l3;
 		count := Length(tabbase.selectedCells);
@@ -16,6 +26,8 @@ protoTable := {
 				tabbase.selectedCells := [Array: childViewFrame.vIndex];
 				childViewFrame:HiliteUnique(true)
 			end else begin
+				// l3: whether the row was selected; l1: its place in
+				// selectedCells
 				l3 := nil;
 				l1 := 0;
 				(loop begin
@@ -33,14 +45,18 @@ protoTable := {
 				(if l3 then RemoveSlot(tabbase.selectedCells, l1))
 			end)
 	end,
+	// updateSelection(): hilites the selected rows that are shown (after a
+	// scroll has remade them)
 	updateSelection: func() begin
 		childViewFrames := tabbase:ChildViewFrames();
+		// l1: the index of the first row shown
 		l1 := (vOrg * (hOrg + 1));
 		if childViewFrames then begin
 				count := Length(childViewFrames)
 			end else begin
 				count := 0
 			end;
+		// (the decompiler puts these declarations after the uses: only layout)
 		local l1;
 		local count;
 		local item;
@@ -51,12 +67,16 @@ protoTable := {
 					end
 			end)
 	end,
+	// viewSetupChildrenScript(): makes the rows (LayoutTable) from vOrg on;
+	// a row height of 0 becomes the view font's height
 	viewSetupChildrenScript: func() begin
 		if (def.tabHeights = 0) then begin
 				def.tabHeights := FontHeight(GetVariable(self, 'viewFont))
 			end;
 		(self.viewChildren := self:LayoutTable(def, hOrg, vOrg))
 	end,
+	// viewScrollDownScript(): scrolls down by scrollAmount rows, no further
+	// than the last rows fill the view, and remakes the rows
 	viewScrollDownScript: func() begin
 		local most;
 		most := max(0, ((def.tabDown - ((viewBounds.bottom - viewBounds.top) div def.tabHeights)) - 1));
@@ -68,6 +88,8 @@ protoTable := {
 				self:updateSelection()
 			end)
 	end,
+	// viewScrollUpScript(): scrolls up by scrollAmount rows, to the top at
+	// most
 	viewScrollUpScript: func() begin
 		(if (vOrg > 0) then begin
 				if ((vOrg := (vOrg - scrollAmount)) < 0) then begin
@@ -77,6 +99,8 @@ protoTable := {
 				self:updateSelection()
 			end)
 	end,
+	// viewScroll2DScript(direction, ...): the scroll arrows; 'up and 'down
+	// scroll, other directions are ignored
 	viewScroll2DScript: func(arrowDirection, a2) begin
 		(if (arrowDirection = 'up) then self:viewScrollUpScript() else (if (arrowDirection = 'down) then self:viewScrollDownScript()))
 	end,

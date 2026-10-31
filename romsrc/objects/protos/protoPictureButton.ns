@@ -1,4 +1,6 @@
-// protoPictureButton, and what only it reaches
+// protoPictureButton: a button showing a picture (its icon slot) in a white,
+// round-cornered frame; tapping it highlights it while the pen is on it and
+// sends buttonClickScript if the pen is lifted inside.
 
 protoPictureButton := {
 	viewClass: clPictureView,
@@ -6,9 +8,12 @@ protoPictureButton := {
 	viewFlags: vVisible + vReadOnly + vClickable,
 	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2) + vfRound(4),
 	viewJustify: vjCenterH + vjCenterV,
+	// the button's action: an instance overrides it
 	buttonClickScript: func() begin
 		nil
 	end,
+	// the pen went down on the button: track it (TrackHilite is true when the
+	// pen is lifted inside), act, and unhighlight; true says the tap is handled
 	viewClickScript: func(unit) begin
 		if self:TrackHilite(unit) then begin
 				self:buttonClickScript();

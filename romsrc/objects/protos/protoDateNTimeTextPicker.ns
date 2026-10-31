@@ -1,4 +1,10 @@
-// protoDateNTimeTextPicker, and what only it reaches
+// protoDateNTimeTextPicker: a label picker showing a date and a time; tapping
+// it pops up a date-and-time picker (dateNTimePopup) (Newton Programmer's
+// Reference "protoDateNTimeTextPicker").
+//   Date          the date and time shown, in minutes
+//   shortFormat / longFormat   the date's string spec (as protoDateTextPicker)
+//   format        the time's string spec in datetimeStrSpecs
+//   increment     the step, in minutes, of the time picker
 
 protoDateNTimeTextPicker := {
 	viewBounds: nil,
@@ -8,14 +14,17 @@ protoDateNTimeTextPicker := {
 	longFormat: nil,
 	format: 'shortTimeStrSpec,
 	increment: 15,
+	// sent on a tap to pop up the picker: x is the width of the text part
 	Popit: func(x) begin
 		local box;
 		(box := self:GlobalBox()).right := (box.left + x);
 		@dateNTimePopup:New(Date, increment, box, self)
 	end,
+	// answers the text shown: the date, a space and the time
 	TextSetup: func() begin
 		Stringer([Array: (if longFormat then LongDateStr(Date, @datetimeStrSpecs.(longFormat)) else ShortDateStr(Date, @datetimeStrSpecs.(shortFormat))), " ", TimeStr(Date, @datetimeStrSpecs.(format))])
 	end,
+	// sent by the popup with the picked time (minutes): it becomes Date
 	pickActionScript: func(index) begin
 		Date := index;
 		inherited:pickActionScript(index)

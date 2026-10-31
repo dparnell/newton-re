@@ -1,4 +1,6 @@
-// protoCard, and what only it reaches
+// protoCard: a playing card (30 by 45 pixels, framed with round corners)
+// placed to the right of its sibling, as the card games use (see
+// protoDeckOfCards).  It draws whichever card its GetCard method answers.
 
 protoCard := {
 	viewClass: clView,
@@ -6,6 +8,10 @@ protoCard := {
 	viewBounds: {left: 7, top: 0, right: 37, bottom: 45},
 	viewFlags: vVisible + vClickable,
 	viewFormat: vfFrameBlack + vfPen(2) + vfRound(5),
+	// draws the card: GetCard answers 0-51, div 13 the suit (picked from a
+	// strip of four suit symbols, drawn in the top left and bottom right
+	// corners) and mod 13 the rank ("2" ... "A"), centred in system 12 bold;
+	// the first and last suits' ranks are drawn with a textPattern
 	viewDrawScript: compile(
 		constants: {
 			kBinaryFromHex: func(hex, cls) begin

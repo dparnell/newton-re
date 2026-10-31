@@ -1,21 +1,29 @@
-// protoLabeledBatteryGauge, and what only it reaches
+// protoLabeledBatteryGauge: protoBatteryGauge with a "Battery" label under
+// the gauge. Double-tapping the label opens the root's batteryInfo view
+// when there is one.
 
 protoLabeledBatteryGauge := {
 	_proto: @protoBatteryGauge,
 	viewChildren: [viewChildren: gauge, batteryLabelForm],
 	batteryLabelForm: nil,
+	// the children kept in slots of the same names when the view is opened
 	allocateContext: [|Array|: 'gauge, gauge, 'batteryLabelForm, batteryLabelForm]
 };
 
 battery := "Battery";
 
+// the label under the gauge
 batteryLabelForm := {
 	viewBounds: {left: 0, top: -12, right: 0, bottom: 0},
 	viewJustify: vjCenterH + vjParentFullH + vjParentBottomV,
 	viewFont: @fontSystem9,
 	viewFlags: vVisible + vClickable,
+	// the Ticks() of the last tap, to recognise a double tap
 	lastClick: 0,
 	text: battery,
+	// A tap within 30 ticks (half a second) of the last one opens batteryInfo,
+	// if the root has it; otherwise the tap's time is remembered. Always
+	// returns true (the tap is handled).
 	viewClickScript: func(unit) begin
 		local ticks2;
 		if (if (((ticks2 := Ticks()) - lastClick) < 30) then HasSlot(GetRoot(), 'batteryInfo)) then begin

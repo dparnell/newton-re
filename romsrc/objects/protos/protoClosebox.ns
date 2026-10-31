@@ -1,4 +1,6 @@
-// protoClosebox, and what only it reaches
+// protoClosebox: the small close box in the bottom right corner of a view;
+// tapping it closes the view (protoCancelButton's behaviour, shown as a
+// picture without a frame).
 
 protoClosebox := {
 	_proto: @protoCancelButton,
@@ -6,7 +8,10 @@ protoClosebox := {
 	viewBounds: {left: -14, top: -15, right: -1, bottom: -2},
 	viewFormat: 0,
 	icon: @closeboxBitmap,
+	// the bounds used when it is drawn as a default (Return/Enter) button
 	_defaultButtonBounds: {left: 0, top: 0, right: 13, bottom: 13},
+	// at setup: sets up as a cancel button, then takes away any frame the
+	// inherited script gave it (viewFormat 0: no fill, no frame)
 	viewSetupFormScript: func() begin
 		inherited:?viewSetupFormScript();
 		(self.viewFormat := 0)

@@ -1,3 +1,4 @@
-// protoOutCategory, and what only it reaches
+// protoOutCategory: an empty frame in the ROM with no slots of its own; by its
+// name a base for an Out Box category (protoIoCategory is empty too).
 
 protoOutCategory := {};

@@ -1,11 +1,25 @@
-// protoStateMachine, and what only it reaches
+// protoStateMachine: a state machine for communications code (used by the
+// beaming and desktop-connection code). Each state is a slot holding a frame
+// whose action method does the work and returns the next state's symbol,
+// 'waitAsync to wait for an asynchronous completion (an endpoint's callback
+// calls AsyncWaitComplete, which continues at the state's WaitComplete), or
+// 'exit; an exception goes to the state's OnError state. State machine errors
+// (the NPR's): -8601 invalid state, -8603 no wait state, -8607 no reentrance.
 
 protoStateMachine := {
+	// the endpoint specs whose completion scripts resume the machine
 	InputSpec: {_proto: @protoStateMachineInputSpec},
 	CallbackSpec: {_proto: @protoStateMachineInputSpec},
+	// true while Run is running states
 	fRunning: nil,
+	// the current state's symbol
 	fState: nil,
 	cPollAfter: 30,
+	// DoError(exception): an exception (or error) in the current state;
+	// keeps the first exception in fException. Unless asynchronous requests
+	// are still outstanding (occupancy above 1, when it only counts one
+	// down and returns nil), returns the state to go to: the state's OnError,
+	// or 'exit (with an alert when autoNotify) if it has none
 	DoError: func(ex) begin
 		local l1;
 		if tracing then begin
@@ -19,6 +33,8 @@ protoStateMachine := {
 						if tracing then begin
 								self:Trace(Stringer([Array: "DoError(\u2026\u): No error state specified for state", " ", fState, "!  Can't throw: state machine dies."]), nil)
 							end;
+						// (Notify level 4: by NTK's usual values kNotifyQAlert,
+						// an alert without the beep - unconfirmed, so not named)
 						if autoNotify then begin
 								GetRoot():Notify(4, "Data Exchange", EnsureInternal(ParamStr("An error occurred but \u201C\u^0\u201D\u has no error state.", [Array: fState])))
 							end;
@@ -31,16 +47,25 @@ protoStateMachine := {
 				nil
 			end)
 	end,
+	// non-nil: record a trace of what the machine does (Trace)
 	tracing: nil,
+	// GetState(): the current state's symbol
 	GetState: func() begin
 		fState
 	end,
+	// Run(state): runs states from state (or the current one) until one
+	// waits ('waitAsync) or the machine exits; each state's frame is given
+	// the machine as its _parent (a copy, if it is read-only), its timeOut
+	// (default 200 seconds) set on CallbackSpec, and its action called.
+	// Exceptions go through DoError. Throws -8607 if already running (no
+	// reentrance)
 	Run: func(error) begin
 		local fState2, frame2, _parent;
 		if fRunning then begin
 				if tracing then begin
 						self:Trace(Stringer([Array: "Machine is already running; run(", error, ") ignored."]), nil)
 					end;
+				// -8607: no reentrance (the return after it is never reached)
 				Throw('|evt.ex.proto|, -8607);
 				return nil
 			end;
@@ -57,6 +82,7 @@ protoStateMachine := {
 								if tracing then begin
 										self:Trace(Stringer([Array: "Run(", fState2, ")"]), nil)
 									end;
+								// -8601: invalid state (no such slot)
 								if (not (frame2 := self.(fState2))) then begin
 										Throw('|evt.ex.proto|, -8601)
 									end;
@@ -67,11 +93,14 @@ protoStateMachine := {
 												frame2._parent := _parent
 											end
 									end;
+								// the state's time-out in milliseconds (200 seconds by
+								// default) for its asynchronous requests
 								if (not (fTimeout := frame2.timeOut)) then begin
 										fTimeout := 200000
 									end;
 								CallbackSpec.reqTimeout := fTimeout;
 								fState2 := frame2:action();
+								// whether the next state may not be cancelled
 								self.cancelBlocked := self.(fState2).cancelBlocked;
 								(if ((fState2 = 'waitAsync) or (fState2 = 'exit)) then begin
 										if (fState2 = 'exit) then begin
@@ -80,6 +109,7 @@ protoStateMachine := {
 											end;
 										(fState2 := nil)
 									end else begin
+										// an action that returned no symbol: -8601
 										if (ClassOf(fState2) <> 'symbol) then begin
 												fState2 := nil
 											end;
@@ -99,21 +129,35 @@ protoStateMachine := {
 		fRunning := nil;
 		(if tracing then (if fState then self:Trace("AsyncWait", nil) else self:Trace("Run() complete.", nil)))
 	end,
+	// AsyncWaitComplete(error): an asynchronous request finished (sent by
+	// the input specs' scripts). With an error, runs DoError's state; else,
+	// when it was the last outstanding one, runs the current state's
+	// WaitComplete state (throwing -8603, no wait state, if there is none);
+	// otherwise counts occupancy down
 	AsyncWaitComplete: func(a1) begin
 		local error, l2;
 		(if a1 then (if (error := self:DoError(a1)) then self:Run(error)) else (if (occupancy <= 1) then (if (l2 := self.(fState).WaitComplete) then self:Run(l2) else Throw('|evt.ex.proto|, -8603)) else (occupancy := (occupancy - 1))))
 	end,
+	// the trace: frames of state, exception, text, data and times (nil: not
+	// tracing)
 	traceArray: nil,
 	GetTraces: func() begin
 		traceArray
 	end,
+	// New(): a new machine with this one as its proto, in the same parent
 	New: func() begin
 		{_proto: self, _parent: self._parent}
 	end,
+	// GetStateFrame(): the current state's frame
 	GetStateFrame: func() begin
 		self.(fState)
 	end,
+	// non-nil: alert the user when an error has no error state
 	autoNotify: nil,
+	// Advance(transition): moves to the state the current state's slot
+	// named transition holds (or stays, with nil), making its frame writable
+	// with the machine as _parent, and returns what its action returns;
+	// throws -8601 for a state that does not exist
 	Advance: func(a1) begin
 		local fState2, action, frame2, _parent;
 		fState2 := fState;
@@ -139,26 +183,34 @@ protoStateMachine := {
 			end;
 		action
 	end,
+	// SetState(state): sets the current state without running it
 	SetState: func(fSoundState) begin
 		(fState := fSoundState)
 	end,
+	// Trace(text, data): adds an entry to traceArray, if there is one
 	Trace: func(text, frame2) begin
 		if (not traceArray) then begin
 				return nil
 			end;
 		AddArraySlot(traceArray, {state: fState, exception: fException, text: text, data: frame2, Ticks: Ticks(), Time: Time()})
 	end,
+	// non-nil while the current state may not be cancelled
 	cancelBlocked: nil,
+	// the first exception since the machine started
 	fException: nil,
+	// SetTraces(array): the array to trace into (nil: stop tracing)
 	SetTraces: func(a1) begin
 		(traceArray := a1)
 	end,
+	// Start(state): starts the machine at a state, with a fresh CallbackSpec
+	// (200-second time-out), no exception and one occupant
 	start: func(a1) begin
 		CallbackSpec := {_proto: CallbackSpec, reqTimeout: 200000};
 		fException := nil;
 		occupancy := 1;
 		self:Run(a1)
 	end,
+	// ResetTrace(): starts a new, empty trace
 	ResetTrace: func() begin
 		(traceArray := [Array: ])
 	end

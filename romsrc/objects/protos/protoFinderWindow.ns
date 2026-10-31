@@ -1,20 +1,37 @@
-// protoFinderWindow, and what only it reaches
+// protoFinderWindow: the window of icons (or list items, when overUp is set)
+// of the Extras Drawer and its folders - each child a protoExtrasIcon (or
+// protoExtrasListItem) for an item: a package's part, a soup, a 1.x part. It
+// makes the children for the visible part of the folder's items, keeps the
+// selection (the children's vSelected flag), handles the keyboard navigation
+// keys and type-selection, the highlight gesture, and drops of icons, which
+// reorder or refile them.
 
 protoFinderWindow := {
 	viewClass: clView,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
 	viewFlags: vVisible + vClickable + vGesturesAllowed,
 	viewJustify: vjParentFullH + vjParentFullV,
+	// text flags 0xc400, undocumented; 0x4000 marks a view that takes keys
+	// (GetFrontCommandKeyView in src/views/View.h), for the navigation below
 	textFlags: 50176,
+	// set when the window draws on a background picture (protoExtrasIcon then
+	// highlights icons differently)
 	hasBackground: nil,
 	declareSelf: 'iconSpace,
+	// soups never shown as soup icons (the "Storage" folder, '_soups): the system's
+	// own; the soups of packages are added to it when the list is made
 	skipStarter: [|Array|: backupInfo, @metaSoupName, library, extrasSoupName, @systemSoupName, systemAlarmSoup],
 	viewChildren: nil,
+	// HandleNavKey(char, flags, icons): a key of NavKeys (not a command key)
+	// performs its command (shiftCommand with shift) with the selection and the
+	// icon views - with several icons selected only when the key allows it, else
+	// selecting the first or last of them; with none only when NoSelection says
+	// so. Returns true for a navigation key.
 	HandleNavKey: func(char3, flags, childIconViews) begin
 		local char2, selectedIconsAndIndexes, count, l4;
 		(if (if (char3 <> $\00) then (not IsCommandKeystroke(char3, flags))) then (if (char2 := BFetch(NavKeys, char3, '|chr<|, 'char)) then begin
 					count := Length((selectedIconsAndIndexes := self:GetSelectedIconsAndIndexes(childIconViews)).icons);
-					l4 := (if (if (BAnd(flags, 67108864) <> 0) then char2.shiftCommand) then char2.shiftCommand else char2.command);
+					l4 := (if (if (BAnd(flags, kShiftModifier) <> 0) then char2.shiftCommand) then char2.shiftCommand else char2.command);
 					if (count = 1) then begin
 							Perform(self, l4, [Array: selectedIconsAndIndexes, childIconViews])
 						end else begin
@@ -39,8 +56,11 @@ protoFinderWindow := {
 					true
 				end))
 	end,
+	// viewGestureScript(unit, gesture): a highlight gesture selects the icons it
+	// covers (those that can be selected: no sequence or a non-negative one;
+	// list items are checked); a tap on the background deselects all
 	viewgesturescript: func(unit, gesture) begin
-		(if (gesture = 47) then begin
+		(if (gesture = aeHilite) then begin
 				self:HiliteViewChildren(unit);
 				self:LockScreen(true);
 				(foreach item in self:GetChildIconViews() do begin
@@ -57,18 +77,26 @@ protoFinderWindow := {
 							end
 					end);
 				self:LockScreen(nil)
-			end else (if (gesture = 49) then self:SelectNone()))
+			end else (if (gesture = aeTap) then self:SelectNone()))
 	end,
+	// viewGetDropDataScript(type, dragRef): what is dropped - this window and
+	// the drag's reference (the entries dragged)
 	viewGetDropDataScript: func(a1, a2) begin
 		{fromFinder: iconSpace, dragRef: a2}
 	end,
+	// viewGetDropTypesScript: only icons can be dropped here
 	viewGetDropTypesScript: func(a1) begin
 		'[Array: icon]
 	end,
+	// NavKey<x>(selection, icons): the navigation commands - selection is
+	// GetSelectedIconsAndIndexes's frame, icons the child icon views. Launch
+	// opens the first selected icon.
 	NavKeyLaunch: func(a1, a2) begin
 		clicker();
 		a1.icons[0]:Launch()
 	end,
+	// NavKeyLeft: selects the icon before the selection, scrolling up from the
+	// first one (unless at the top); with none selected, the last
 	NavKeyLeft: func(a1, a2) begin
 		local l1, l2;
 		(if (Length(a1.icons) > 0) then (if ((l1 := (a1.indexes[0] - 1)) < 0) then (if ((l2 := (if overUp then topIndexText else topIndexIcon)) <> 0) then begin
@@ -76,7 +104,10 @@ protoFinderWindow := {
 						self:ChangeSelection((a2 := self:GetChildIconViews())[(Length(a2) - 1)], nil)
 					end) else self:ChangeSelection(a2[l1], a1.icons)) else self:ChangeSelection(a2[(Length(a2) - 1)], nil))
 	end,
+	// ChangeTagListAndLabels(entry, folder) (shared): files an entry in a folder
 	ChangeTagListAndLabels: ChangeTagListAndLabels,
+	// NavKeyDown: selects the icon a row below, scrolling down past the last row
+	// (to the same column, or the last icon); with none selected, the first
 	NavKeyDown: func(a1, a2) begin
 		local l1, indexe, l3, l4, l5;
 		(if (Length(a1.icons) > 0) then begin
@@ -90,6 +121,8 @@ protoFinderWindow := {
 					end else self:ChangeSelection(a2[l3], a1.icons))
 			end else self:ChangeSelection(a2[0], nil))
 	end,
+	// viewKeyDownScript(char, flags): navigation keys, then typing the start of
+	// an icon's name, then the inherited script; returns true when handled
 	viewKeyDownScript: func(char2, flags) begin
 		local childIconViews, l2;
 		if (Length((childIconViews := self:GetChildIconViews())) > 0) then begin
@@ -100,9 +133,14 @@ protoFinderWindow := {
 			end;
 		l2
 	end,
+	// NavKeyDelete: asks to delete the selection (as a scrub does)
 	NavKeyDelete: func(a1, a2) begin
 		(if self:SetupFakeTarget() then self:DeleteActionScript(nil, self))
 	end,
+	// HandleTypeSelect(char, flags, icons): adds the key to the type-select
+	// string (NewTypeSelectKey) and selects the first icon whose name begins
+	// with it; returns true when the key took part. The `local` line after the
+	// use is the decompiler's layout.
 	HandleTypeSelect: func(char2, flags, childIconViews) begin
 		(if (typeSelectKey := self:NewTypeSelectKey(char2, flags)) then begin
 				local typeSelectKey;
@@ -128,9 +166,13 @@ protoFinderWindow := {
 				true
 			end)
 	end,
+	// SetupFakeTarget(): makes the selection the target of a delete or routing
+	// action - nil (nothing) here; the Extras Drawer overrides it
 	SetupFakeTarget: func() begin
 		nil
 	end,
+	// NavKeyUp: selects the icon a row above, scrolling up from the first row
+	// (to the same column of the last row); with none selected, the last
 	NavKeyUp: func(a1, a2) begin
 		local l1, indexe, l3, l4, count, most;
 		(if (Length(a1.icons) > 0) then begin
@@ -142,6 +184,15 @@ protoFinderWindow := {
 						end) else self:ChangeSelection(a2[l3], a1.icons))
 			end else self:ChangeSelection(a2[(Length(a2) - 1)], nil))
 	end,
+	// viewDropScript(type, dropFrame, point): icons dropped in the window. From
+	// another window (an external drop) they are filed in the folder shown (with
+	// a store filter, those on other stores are left and the user told so);
+	// in "All Icons" they are only filed - icons there are in name order, so a
+	// drop from this window is refused with a notice. Otherwise the drop point
+	// gives the place: the dropped entries get the sequence numbers after the
+	// icon left of the point, and the entries after them are renumbered (from a
+	// query for an external drop, else the icons shown after the place). Ends
+	// with a soup change notice for the Extras Drawer's soup "Packages".
 	viewDropScript: compile(
 		constants: {
 			kLiteral_5a74d1: "Packages"
@@ -153,6 +204,9 @@ protoFinderWindow := {
 			a2.dragRef.externalDrop := v22_zzzyyyyy;
 			if (if v22_zzzyyyyy then storesFilter) then begin
 					v28_tttttttttts := Length(v21_zzzzzzzzzzzzyyyyyyy);
+					// looks like a ROM bug: removing elements from the array being iterated
+					// over shifts the next one into the slot just visited, so of two entries
+					// in a row on another store the second is kept
 					(foreach v8_zyy, v16_ttttts in v21_zzzzzzzzzzzzyyyyyyy do begin
 							if (EntryStore(v16_ttttts) <> storesFilter) then begin
 									RemoveSlot(v21_zzzzzzzzzzzzyyyyyyy, v8_zyy)
@@ -168,7 +222,7 @@ protoFinderWindow := {
 											v25_xxxxxxxxxxxxxxxxxwwwwww := "The icon was not moved. Select \u201C\uAll Stores\u201D\u from the folder tab in the Extras Drawer and try again."
 										end
 								end;
-							self:Notify(3, title, v25_xxxxxxxxxxxxxxxxxwwwwww);
+							self:Notify(kNotifyAlert, title, v25_xxxxxxxxxxxxxxxxxwwwwww);
 							if (Length(v21_zzzzzzzzzzzzyyyyyyy) = 0) then begin
 									return nil
 								end
@@ -181,7 +235,7 @@ protoFinderWindow := {
 								EntryChange(v16_ttttts)
 							end);
 						XmitSoupChange(kLiteral_5a74d1, 'ExtrasDrawer, 'whatThe, nil)
-					end else self:Notify(3, title, "You may not reorder icons while viewing \u201C\uAll Icons.\u201D\u They are arranged alphabetically by name.")) else begin
+					end else self:Notify(kNotifyAlert, title, "You may not reorder icons while viewing \u201C\uAll Icons.\u201D\u They are arranged alphabetically by name.")) else begin
 					v30_zzzzzzzzzzzzzzzzzzzy := ((v9_yyyyxxxxxxxxxxxxx := Length((v26_wwwwwwwwwwwwwwwwwww := iconSpace:GetChildIconViews()))) - 1);
 					v13_yyyyyyyyyyyyyyxxxx := a3.x;
 					v31_zzyyy := a3.y;
@@ -252,19 +306,23 @@ protoFinderWindow := {
 					XmitSoupChange(kLiteral_5a74d1, 'ExtrasDrawer, 'whatThe, nil)
 				end)
 		end),
+	// GetSelectedIconsAndIndexes(icons): {icons, indexes} of the selected icon
+	// views (vSelected set) and where they are in icons
 	GetSelectedIconsAndIndexes: func(childIconViews) begin
 		list := [Array: ];
 		list2 := [Array: ];
 		local list;
 		local list2;
 		(foreach key, value in childIconViews do begin
-				if (BAnd(GetViewFlags(value), 33554432) <> 0) then begin
+				if (BAnd(GetViewFlags(value), vSelected) <> 0) then begin
 						AddArraySlot(list, value);
 						AddArraySlot(list2, key)
 					end
 			end);
 		{icons: list, indexes: list2}
 	end,
+	// NavKeyRight: selects the icon after the selection, scrolling down from the
+	// last one (to the first icon if it scrolled); with none selected, the first
 	NavKeyRight: func(a1, a2) begin
 		local l1, l2, l3;
 		(if (Length(a1.icons) > 0) then (if ((l1 := (a1.indexes[0] + 1)) > (Length(a2) - 1)) then begin
@@ -275,10 +333,11 @@ protoFinderWindow := {
 					(if (l3 <> l2) then self:ChangeSelection(a2[0], nil) else self:ChangeSelection(a2[(Length(a2) - 1)], nil))
 				end else self:ChangeSelection(a2[l1], a1.icons)) else self:ChangeSelection(a2[0], nil))
 	end,
+	// SelectNone(): deselects (unchecks, in the list view) every icon
 	SelectNone: func() begin
 		self:LockScreen(true);
 		(foreach item in self:GetChildIconViews() do begin
-				if (BAnd(GetViewFlags(item), 33554432) <> 0) then begin
+				if (BAnd(GetViewFlags(item), vSelected) <> 0) then begin
 						if overUp then begin
 								item:Checkit(nil)
 							end else begin
@@ -288,6 +347,11 @@ protoFinderWindow := {
 			end);
 		self:LockScreen(nil)
 	end,
+	// the navigation keys, sorted by character (HandleNavKey searches them):
+	// enter (3), backspace (8), tab (9, shift-tab going left), return (13) and
+	// the arrows left, right, up and down (0x1c-0x1f). noMultiSelect: with
+	// several selected, nil runs the command, 'first or 'last only selects that
+	// one; NoSelection: whether the command runs with nothing selected
 	NavKeys: [|Array|:
 		{char: $\u0003, command: 'NavKeyLaunch, noMultiSelect: 'first, NoSelection: nil},
 		{char: $\u0008, command: 'NavKeyDelete, noMultiSelect: nil, NoSelection: nil},
@@ -304,6 +368,9 @@ protoFinderWindow := {
 		{char: $\u001e, command: 'NavKeyUp, noMultiSelect: 'first, NoSelection: true},
 		{char: $\u001f, command: 'NavKeyDown, noMultiSelect: 'last, NoSelection: true}
 	],
+	// ChangeSelection(select, deselect): deselects the icon or icons of
+	// deselect and selects those of select (checking them in the list view),
+	// with the screen locked in between
 	ChangeSelection: func(a1, a2) begin
 		self:LockScreen(true);
 		if overUp then begin
@@ -347,19 +414,30 @@ protoFinderWindow := {
 			end;
 		self:LockScreen(nil)
 	end,
+	// GetSelectedIcons(): the selected icon views
 	GetSelectedIcons: func() begin
 		list := [Array: ];
 		local list;
 		(foreach item in self:GetChildIconViews() do begin
-				if (BAnd(GetViewFlags(item), 33554432) <> 0) then begin
+				if (BAnd(GetViewFlags(item), vSelected) <> 0) then begin
 						AddArraySlot(list, item)
 					end
 			end);
 		list
 	end,
+	// viewDropApproveScript(view): any view may take a drop from here
 	viewDropApproveScript: func(a1) begin
 		return a1
 	end,
+	// viewSetupChildrenScript: lays out the icons (or the list, when overUp) -
+	// spacing from the screen width or the user's settings; when needsRecalc
+	// is 'all, first remakes folderItems: an item for each entry of the
+	// "Packages" soups of the stores shown, in the folder shown, except the
+	// blessed (backdrop) application and the button bar's own (each marked not
+	// active when its package is frozen or missing), sorted by sequence; in the
+	// "Storage" folder an icon for each soup too; and the 1.x parts. Then makes
+	// a child for each item visible from the scroll position, and has the
+	// window resize to its rows when their number changed.
 	viewSetupChildrenScript: func() begin
 		local v5_xxxxxxxxxxxxxxxxxxxxxwww, v7_xxxwwwwwwwwwwwwwwwww, v8_zyy, v9_zzzzzzzzyyyyyyyy, v10_qqqqq, v11_wwwwwwwwwwwwwwwwwwwwwww, v13_yyyxxxxxxxxxxxxxxxxxxxxxx, v18_kkkjj, v22_wwwwwwwwww, v23_zzzzzzzzzzzzzzzzzzzzzy, v24_tttttt, v25_llll, v27_xxxxxxxxxxxxxxxxxxwwwwwwwwww, v29_ppppoo, v30_wwwwwwwwwwwwwwwwwwwvvvvv, v32_zzzzzzzzzzzzzzzzzzyyyyyyy, v33_vvvuuuuuu, v34_zzzzzzzzyyyyyyyyyyyyy, v35_qqppp, v36_yyyyyyyyyyyyyyyxx, v39_uuuuuuutttttttt, v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx, v41_ssssssssrrr, v42_xxxxxxxxxxxxxxxxxxwwwww, v43_nnnnnmm, v44_wwwwwwwwwwwwwwwwwww, v45_yy, v47_yxxxxxxxxxxxxxxx, v48_ttttttttsss, v50_wwwwwwwwwwwvvvvvvvvvvvvvv, v51_vvvvvvuu, v53_ttttttttsssss, v54_zzzzzyyyyyyyyyyyyyy, v55_wwwvvvvvvvvvvvvvvv, v56_yxxxxxxxxxxxxxxxxxx, v57_uuuuuuuuuttttt;
 		v55_wwwvvvvvvvvvvvvvvv := (if (v56_yxxxxxxxxxxxxxxxxxx := GetRoot().buttons.visibleItems) then (foreach v17_wwwwwwwwwvvvvvvvv in v56_yxxxxxxxxxxxxxxxxxx collect v17_wwwwwwwwwvvvvvvvv.fentry) else '[Array: ]);
@@ -389,6 +467,8 @@ protoFinderWindow := {
 				hSpacing := (v29_ppppoo div (v29_ppppoo div hSpacing));
 				v39_uuuuuuutttttttt := topIndexIcon
 			end;
+		// the rows that fit (13 and 50: the room taken by the folder tab and the
+		// buttons, presumably), and the columns
 		v36_yyyyyyyyyyyyyyyxx := ((v35_qqppp := ((displayParams.appAreaHeight - 13) - 50)) div vSpacing);
 		v53_ttttttttsssss := (v57_uuuuuuuuuttttt.right div hSpacing);
 		if (needsRecalc = 'all) then begin
@@ -521,6 +601,7 @@ protoFinderWindow := {
 			end;
 		(needsRecalc := nil)
 	end,
+	// GetChildIconViews(): the icon views (all the children here)
 	GetChildIconViews: func() begin
 		self:ChildViewFrames()
 	end

@@ -1,4 +1,11 @@
-// protoEmporiumPopup, and what only it reaches
+// protoEmporiumPopup: the pop-up for switching between the user's emporia (the
+// places they work or stay: home, office, ...), each with its own time zone,
+// area code and so on; "Other City" picks a city anywhere in the world. The
+// emporia are entry aliases in the user configuration ('emporia, the current
+// one 'currentEmporium). The methods named on the right are shared with
+// protoSenderPopup (shared/functions.ns): the setup registers the view in the
+// root's senderList, JamIt resets the text from SetupText, PickOther opens the
+// city picker.
 
 protoEmporiumPopup := {
 	_proto: @protoPopInPlace,
@@ -6,6 +13,10 @@ protoEmporiumPopup := {
 	viewFormat: 0,
 	viewJustify: vjCenterV,
 	viewSetupFormScript: viewSetupFormScript,
+	// SetupText() (documented): returns the text to show - the diamond glyph
+	// $\uFC01 and the current emporium's place, or the user's location when no
+	// emporium is current. (The Reference says the diamond shows only when there
+	// are several emporia; this method always adds it.)
 	SetupText: func() begin
 		local currentEmporium, resolveEntryAlias2;
 		(if (currentEmporium := GetUserConfig('currentEmporium)) then begin
@@ -15,12 +26,19 @@ protoEmporiumPopup := {
 	end,
 	JamIt: JamIt,
 	viewDrawScript: viewDrawScript_2,
+	// buttonClickScript(), on a tap: builds the pop-up from the emporia sorted
+	// by place, a separator and "Other City", and pops it up; with no emporia it
+	// just unhighlights. The `local` lines after the uses are the decompiler's
+	// layout.
 	buttonClickScript: func() begin
 		(if (emporia := GetUserConfig('emporia)) then begin
 				local place2;
 				local emporia;
 				local l3;
 				l3 := (foreach item in emporia collect {item: (if (place2 := ResolveEntryAlias(item).place) then place2 else "(unnamed location)"), value: item});
+				// looks like a ROM bug: for an empty 'emporia array this adds the
+				// location to `place` (not a variable of this function: whatever
+				// inheritance finds, or an undefined-variable error) instead of to l3
 				if (Length(l3) = 0) then begin
 						AddArraySlot(place, {item: GetUserConfig('location).name, value: nil})
 					end;
@@ -31,6 +49,9 @@ protoEmporiumPopup := {
 				inherited:buttonClickScript()
 			end else self:hilite(nil))
 	end,
+	// pickActionScript(index): the last item ("Other City") goes to PickOther;
+	// any other makes that emporium current (UseCurrentEmporium applies its
+	// settings)
 	pickActionScript: func(index) begin
 		if (index = (Length(popup) - 1)) then begin
 				self:PickOther()
@@ -42,5 +63,7 @@ protoEmporiumPopup := {
 	end,
 	viewQuitScript: viewQuitScript,
 	PickOther: PickOther,
+	// the frame PickOther gives the city picker (@locationPopup) for its result:
+	// its pickActionScript (shared/functions.ns) sets the World Clock's location
 	|map|: {pickActionScript: pickActionScript}
 };

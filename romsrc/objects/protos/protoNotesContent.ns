@@ -1,11 +1,17 @@
-// protoNotesContent, and what only it reaches
+// protoNotesContent: the content of a notes slip - a view (newtFalseEntryView)
+// with a title along the top, a lined edit area (notesArea, writing anything)
+// for the entry's data slot, a recognition toggle and a cancel button at the
+// bottom. SetupForm and teardownForm are hooks called as the edit area opens
+// and closes; notesDirty says whether the notes were changed.
 
 protoNotesContent := {
 	debug: 156619,
 	viewFlags: vVisible + vClipping + vClickable,
 	viewJustify: vjParentFullH + vjParentFullV,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	// the text of the title line
 	title: nil,
+	// hooks for the user of the proto, called by notesArea as it opens and closes
 	SetupForm: func() begin
 		nil
 	end,
@@ -15,9 +21,10 @@ protoNotesContent := {
 	viewChildren: [viewChildren:
 		{
 			debug: titleLabel,
-			viewJustify: 8388662,
+			viewJustify: oneLineOnly + vjParentFullH + vjCenterV + vjCenterH,
 			viewBounds: {left: 0, top: 0, right: 0, bottom: 30},
 			text: nil,
+			// Before opening: shows the parent's title.
 			viewSetupFormScript: func() begin
 				(text := title)
 			end,
@@ -27,6 +34,8 @@ protoNotesContent := {
 		{
 			viewJustify: vjCenterH + vjCenterV + vjParentBottomV,
 			viewBounds: {left: 5, top: -18, right: 23, bottom: -5},
+			// Before opening: the toggle's popup takes recTogOptions when some
+			// view up the chain has them.
 			viewSetupFormScript: func() begin
 				if (recTogOptions exists) then begin
 						_recogPopup := recTogOptions
@@ -42,6 +51,7 @@ protoNotesContent := {
 	_proto: @newtFalseEntryView
 };
 
+// the edit area, editing the target's data slot
 notesArea := {
 	debug: 19835,
 	viewFlags: vAnythingAllowed + vVisible + vClipping,
@@ -52,16 +62,22 @@ notesArea := {
 	optionFlags: 1,
 	path: 'data,
 	viewLineSpacing: 28,
+	// true once the notes were changed
 	notesDirty: nil,
+	// Before opening: the content's SetupForm hook, newtEditView's setup, then
+	// clean, then setupOther if anything defines it.
 	viewSetupFormScript: func() begin
 		self:SetupForm();
 		inherited:?viewSetupFormScript();
 		notesDirty := nil;
 		self:?setupOther()
 	end,
+	// On closing: the content's teardownForm hook.
 	viewQuitScript: func() begin
 		self:teardownForm()
 	end,
+	// Any change, a child added or a child removed marks the notes dirty; the
+	// add and drop scripts return nil, letting the change go ahead.
 	viewChangedScript: func(slot, view) begin
 		(notesDirty := true)
 	end,

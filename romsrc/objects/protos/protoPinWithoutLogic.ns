@@ -1,4 +1,8 @@
-// protoPinWithoutLogic, and what only it reaches
+// protoPinWithoutLogic: the PIN (password) entry pad: a prompt, a line that
+// shows a bullet for each digit typed, and a numeric keypad (digits, del,
+// ent). It only collects the digits; when it closes, the PIN is turned into
+// a password key (newPinKey) for whoever checks it. Typing on a keyboard
+// works too.
 
 protoPinWithoutLogic := {
 	viewClass: clView,
@@ -6,13 +10,17 @@ protoPinWithoutLogic := {
 	viewFlags: vVisible,
 	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2) + vfRound(2),
 	viewJustify: 0,
-	viewTransferMode: 2,
+	viewTransferMode: modeXor,
+	// how many digits are typed, and the digits themselves (a string)
 	numKeys: 0,
 	pin: nil,
+	// on opening: close the correction slip (the root's correct view) if it is open
 	viewSetupFormScript: func() begin
 		local correct;
 		(if (correct := GetRoot().correct).viewCObject then correct:Close())
 	end,
+	// on closing: make the PIN typed into a DES password key (newPinKey, found
+	// in the enclosing window); nothing when no digit was typed
 	viewQuitScript: func() begin
 		(if StrFilled(pin) then (newPinKey := DESCreatePasswordKey(pin)))
 	end,
@@ -23,11 +31,13 @@ protoPinWithoutLogic := {
 	PINKeyPad: nil
 };
 
+// the prompt above the digits: the promptText the window was built with
+// (protoPinWindowWithoutLogic:BuildMeUp)
 promptLine_2 := {
 	viewBounds: {left: 2, top: 0, right: -5, bottom: 14},
 	viewJustify: vjCenterH + vjParentFullH,
 	viewFont: tsSystem + tsSize(10) + tsBold,
-	viewTransferMode: 2,
+	viewTransferMode: modeXor,
 	viewSetupFormScript: func() begin
 		(text := promptText)
 	end,
@@ -35,15 +45,18 @@ promptLine_2 := {
 	_proto: @protoStaticText
 };
 
+// the line of bullets, one per digit typed; it is the key view, so that a
+// keyboard's keys reach it (its viewKeyDownScript)
 PINDisplay_2 := {
 	viewFlags: vVisible,
 	textFlags: 1024,
 	viewBounds: {left: 5, top: 18, right: -5, bottom: 32},
 	viewFormat: 0,
-	viewJustify: 8388662,
+	viewJustify: oneLineOnly + vjParentFullH + vjCenterH + vjCenterV,
 	viewFont: tsFancy + tsSize(18),
-	viewTransferMode: 2,
+	viewTransferMode: modeXor,
 	text: uCardPositionAlertButton,
+	// once open: take the keys, without showing a caret
 	viewSetupDoneScript: func() begin
 		SetKeyView(self, 0);
 		HideCaret()
@@ -51,8 +64,11 @@ PINDisplay_2 := {
 	viewQuitScript: func() begin
 		ShowCaret()
 	end,
+	// a key typed (char2 with its modifier flags): Command-W or Command-.
+	// closes the window; a digit is typed on the keypad; Return or Enter is
+	// the keypad's ent key; Backspace its del key. True: the key is taken
 	viewKeyDownScript: func(char2, flags) begin
-		if (if ((char2 = $w) or (char2 = $.)) then (BAnd(flags, 33554432) <> 0)) then begin
+		if (if ((char2 = $w) or (char2 = $.)) then (BAnd(flags, kCommandModifier) <> 0)) then begin
 				base:_DoCloseButton()
 			end;
 		if (if (char2 >= $0) then (char2 <= $9)) then begin
@@ -70,6 +86,10 @@ PINDisplay_2 := {
 	_proto: @protoStaticText
 };
 
+// the keypad: four rows of three keys. Each row is [row height, tallest
+// key's height (8, keyVUnit), then legend, result, descriptor for each key];
+// the descriptor 279971848 is keyAutoHilite + keyFramed + 3 * keyRoundingUnit
+// + keyHUnit + keyVUnit (NPR 7-9). del and ent give $< and $E
 PINKeyPad_2 := {
 	keyDefinitions: [|Array|:
 		[|Array|: 8, 8, $1, $1, 279971848, $2, $2, 279971848, $3, $3, 279971848],
@@ -79,6 +99,9 @@ PINKeyPad_2 := {
 	],
 	viewBounds: {left: 5, top: 40, right: -5, bottom: 130},
 	viewJustify: vjParentFullH,
+	// a key (char2) pressed, with a click: $< takes off the last digit (if
+	// any), $E closes the window once a digit is typed (later, by a deferred
+	// Close), any other key adds its digit and a bullet on the display
 	keyPressScript: func(char2) begin
 		playsound(@click);
 		if (if (char2 = $<) then (numKeys = 0)) then begin

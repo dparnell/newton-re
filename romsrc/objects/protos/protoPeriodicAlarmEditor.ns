@@ -1,16 +1,28 @@
-// protoPeriodicAlarmEditor, and what only it reaches
+// protoPeriodicAlarmEditor: a floating slip that edits an application's
+// periodic alarms - alarms that go off at a time of day on chosen days of
+// the week: a digital clock to set the time, a day picker for the days, and
+// the list of the alarms set (schedule) with Add and Remove buttons. Each
+// alarm is registered with AddAlarm under the key "<time days>:<ownerName>",
+// to call functions.PeriodicAlarmFunc.
 
 protoPeriodicAlarmEditor := {
 	viewBounds: {left: 0, top: 0, right: 140, bottom: 208},
 	viewJustify: vjParentCenterH + vjParentCenterV,
 	declareSelf: 'base,
+	// the application the alarms belong to: its name (in the alarm keys) and
+	// its symbol (the alarm's owner)
 	ownerName: nil,
 	ownerSymbol: nil,
+	// the time set on the clock, in minutes (the clock sets it)
 	Time: nil,
+	// the alarms' tolerance (how late they may go off), given to each alarm
 	tolerance: 10,
+	// on opening: start at the current time
 	viewSetupFormScript: func() begin
 		(Time := Time())
 	end,
+	// once open: show the first alarm's time and days, or every day when
+	// there are none
 	viewSetupDoneScript: func() begin
 		local appAlarmKeys, callBackParam;
 		inherited:?viewSetupDoneScript();
@@ -18,38 +30,42 @@ protoPeriodicAlarmEditor := {
 		(if (Length((appAlarmKeys := GetAppAlarmKeys(ownerName))) > 0) then begin
 				clock:ShowTime((callBackParam := GetAlarm(appAlarmKeys[0]).callBackParams[0]).hours, callBackParam.minutes);
 				days:Initialize(callBackParam.days, nil)
-			end else days:Initialize(4064, nil))
+			end else days:Initialize(kEveryday, nil))
 	end,
+	// the text for a set of days (the Dates day bits, kSunday ... kSaturday):
+	// "Everyday", "Weekdays", "Weekends", one day's abbreviation, "Never", or
+	// the days' initials in the locale's week order. (The locals declared
+	// after their first use are the decompiler's layout.)
 	GetDaysStr: func(days) begin
 		longDateFormat := GetLocale().longDateFormat;
-		if (days = 4064) then begin
+		if (days = kEveryday) then begin
 				return "Everyday"
 			end;
-		if (days = 1984) then begin
+		if (days = kMonday + kTuesday + kWednesday + kThursday + kFriday) then begin
 				return "Weekdays"
 			end;
-		if (days = 2080) then begin
+		if (days = kSunday + kSaturday) then begin
 				return "Weekends"
 			end;
-		if (days = 2048) then begin
+		if (days = kSunday) then begin
 				return longDateFormat.abbrDofWeek[0]
 			end;
-		if (days = 1024) then begin
+		if (days = kMonday) then begin
 				return longDateFormat.abbrDofWeek[1]
 			end;
-		if (days = 512) then begin
+		if (days = kTuesday) then begin
 				return longDateFormat.abbrDofWeek[2]
 			end;
-		if (days = 256) then begin
+		if (days = kWednesday) then begin
 				return longDateFormat.abbrDofWeek[3]
 			end;
-		if (days = 128) then begin
+		if (days = kThursday) then begin
 				return longDateFormat.abbrDofWeek[4]
 			end;
-		if (days = 64) then begin
+		if (days = kFriday) then begin
 				return longDateFormat.abbrDofWeek[5]
 			end;
-		if (days = 32) then begin
+		if (days = kSaturday) then begin
 				return longDateFormat.abbrDofWeek[6]
 			end;
 		if (days = 0) then begin
@@ -62,6 +78,9 @@ protoPeriodicAlarmEditor := {
 		local longDateFormat;
 		local copy;
 		local firstDayOfWeek;
+		// day i (0 Sunday) set: its initial goes in place l7 counted from
+		// the locale's first day of the week; the spaces left are dropped.
+		// (The array holds the day bits twice; only the first seven are read.)
 		(for i := 0 to 6 do begin
 				local l7;
 				if (BAnd(days, '[Array: 2048, 1024, 512, 256, 128, 64, 32, 2048, 1024, 512, 256, 128, 64, 32][i]) <> 0) then begin
@@ -82,10 +101,13 @@ protoPeriodicAlarmEditor := {
 			viewBounds: {left: 1, top: 6, right: 27, bottom: 19},
 			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingBottomV,
 			text: add,
+			// Add: an alarm at the clock's time of day (l1: Time's minutes
+			// past midnight, 1440 the minutes in a day) on the days chosen;
+			// an alert when no day is
 			buttonClickScript: func() begin
 				local l1, selected;
 				l1 := (Time mod 1440);
-				(if ((selected := days:GetSelected()) <> 0) then schedule:Add({hours: (l1 div 60), minutes: (l1 mod 60), days: selected}) else GetRoot():Notify(3, "", "Please choose days"))
+				(if ((selected := days:GetSelected()) <> 0) then schedule:Add({hours: (l1 div 60), minutes: (l1 mod 60), days: selected}) else GetRoot():Notify(kNotifyAlert, "", "Please choose days"))
 			end,
 			_proto: @protoTextButton
 		},
@@ -93,6 +115,7 @@ protoPeriodicAlarmEditor := {
 			viewBounds: {left: 7, top: 0, right: 53, bottom: 13},
 			viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingTopV,
 			text: remove,
+			// Remove: the alarm selected in the list
 			buttonClickScript: func() begin
 				schedule:remove()
 			end,
@@ -107,9 +130,11 @@ protoPeriodicAlarmEditor := {
 	_proto: @protoFloatNGo
 };
 
+// the clock: shows a time (hours on a 12-hour face) and is set by the user
 clock_2 := {
 	viewBounds: {left: 0, top: 20, right: 119, bottom: 48},
 	viewJustify: vjParentCenterH,
+	// shows hours a1 and minutes minutes2
 	ShowTime: func(a1, minutes2) begin
 		hours := (a1 mod 12);
 		minutes := minutes2;
@@ -119,6 +144,7 @@ clock_2 := {
 	_proto: @protoDigitalClock
 };
 
+// the days of the week the alarm goes off
 days := {
 	viewBounds: {left: 0, top: 4, right: 107, bottom: 21},
 	viewJustify: vjParentCenterH + vjSiblingBottomV,
@@ -126,6 +152,8 @@ days := {
 	_proto: @protoDayPicker
 };
 
+// the list of the application's alarms, each shown by its name (the alarm
+// key without ":<ownerName>")
 schedule := {
 	viewBounds: {left: 0, top: 12, right: 124, bottom: 96},
 	viewJustify: vjParentCenterH + vjSiblingBottomV,
@@ -134,6 +162,9 @@ schedule := {
 	Time: 0,
 	callback: nil,
 	useScrollers: true,
+	// on opening: list the application's alarms (l1: the length of
+	// ":<ownerName>" cut off each key), the first selected. (The local
+	// declared after its first use is the decompiler's layout.)
 	viewSetupFormScript: func() begin
 		self.ListItems := [Array: ];
 		l1 := (StrLen(ownerName) + 1);
@@ -148,11 +179,15 @@ schedule := {
 			end;
 		self:SetupList()
 	end,
+	// item a1 of the list was tapped: show its alarm's time and days
 	buttonClickScript: func(a1) begin
 		local callBackParam;
 		clock:ShowTime((callBackParam := GetAlarm(Stringer([Array: self.ListItems[a1], $:, ownerName])).callBackParams[0]).hours, callBackParam.minutes);
 		days:Initialize(callBackParam.days, nil)
 	end,
+	// adds alarm a1 ({hours:, minutes:, days:}): named by its time and days;
+	// a beep if one of that name is there already; else listed, selected
+	// and registered (UpdatePeriodicAlarmTime gives its next time)
 	Add: compile(
 		constants: {
 			kFunction_45bd5d: func(a1, a2) begin
@@ -174,6 +209,8 @@ schedule := {
 					AddAlarm(Stringer([Array: a1.name, $:, ownerName]), UpdatePeriodicAlarmTime(a1), nil, functions.PeriodicAlarmFunc, [Array: a1])
 				end)
 		end),
+	// removes the selected alarm (from the alarms and the list), selecting
+	// the one now in its place, or the last
 	remove: func() begin
 		(if (if self.Selection then (self.Selection >= 0)) then begin
 				RemoveAlarm(Stringer([Array: self.ListItems[self.Selection], $:, ownerName]));

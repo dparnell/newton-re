@@ -1,15 +1,29 @@
-// protoExtrasIcon, and what only it reaches
+// protoExtrasIcon: an icon in the Extras Drawer, standing for one item (an
+// application, a soup, a package...): the item's picture with its name below,
+// drawn as shapes made from the item's Extras soup entry. A tap opens the item,
+// holding selects it, dragging moves the selected icons, a scrub deletes.
 
 protoExtrasIcon := {
 	viewClass: clView,
 	viewBounds: nil,
 	viewFlags: vVisible + vClickable + vGesturesAllowed,
 	viewJustify: vjCenterH,
+	// the help topic (shared with other views)
 	viewHelpTopic: learn,
+	// the item the icon stands for: target.fentry is its Extras soup entry (text,
+	// icon or iconPro, an integer one indexing @extrasRomIcons), target:TapAction()
+	// opens it; target.notActive marks a frozen package
 	target: nil,
+	// the style the icon and its name are drawn in; the font is replaced by the
+	// user's chosen Extras font, if any (GetAdjustedProto). transferMode 8 is
+	// not one of the documented modes (0-3)
 	iconStyle: {font: tsSystem + tsSize(10) + tsBold, justification: 'center, transferMode: 8},
+	// the icon's shapes, made once (GetIconShape); iconBottom: the picture's
+	// bottom, where the name starts
 	shape: nil,
 	iconBottom: 29,
+	// GetAdjustedProto(): the template to make the icon from - self, or a frame
+	// inheriting from it with the user's Extras font ('extraFont) in iconStyle
 	GetAdjustedProto: func() begin
 		local extraFont, copy;
 		(if (if (extraFont := GetUserConfig('extraFont)) then (iconStyle.font <> extraFont)) then begin
@@ -17,6 +31,9 @@ protoExtrasIcon := {
 				{_proto: self, iconStyle: copy}
 			end else self)
 	end,
+	// GetIconShapeText(): the name's text shapes, wrapped in the icon's width
+	// below iconBottom (MakeTextLines), their data made plain strings. The
+	// `local` lines after the use are the decompiler's layout (as below).
 	GetIconShapeText: func() begin
 		font := iconStyle.font;
 		local font;
@@ -26,6 +43,8 @@ protoExtrasIcon := {
 			end);
 		textLines
 	end,
+	// GetIconShapeTextHilited(): the name's shapes with an inverting (modeXor)
+	// rectangle over the text's width
 	GetIconShapeTextHilited: func() begin
 		if shape then begin
 				shapeItem := shape[(Length(shape) - 1)]
@@ -42,8 +61,11 @@ protoExtrasIcon := {
 				most := max(most, StrFontWidth(item.data, font))
 			end);
 		bounds := RelBounds(((hSpacing - most) div 2), iconBottom, (most + 1), (3 + (Length(shapeItem) * (FontAscent(font) - 1))));
-		[Array: shapeItem, '{transferMode: 2, penPattern: 0, fillPattern: 5}, MakeShape(bounds)]
+		[Array: shapeItem, '{transferMode: modeXor, penPattern: 0, fillPattern: 5}, MakeShape(bounds)]
 	end,
+	// CenterIconShape(list): centres every primitive shape in list (and nested
+	// lists) horizontally in the icon's width with its bottom on iconBottom;
+	// returns list
 	CenterIconShape: func(list) begin
 		(foreach item in list do begin
 				local shapeBounds2;
@@ -58,6 +80,9 @@ protoExtrasIcon := {
 			end);
 		list
 	end,
+	// GetIconShape(): the icon drawn plain - the entry's (or ROM icon's) picture,
+	// centred, the "frozen" overlay (@extrasRomIcons[10]) when not active, and
+	// the name below
 	GetIconShape: func() begin
 		local fentry, shape, list;
 		if IsInteger((fentry := target.fentry).iconPro) then begin
@@ -70,7 +95,7 @@ protoExtrasIcon := {
 		if fentry.iconPro then begin
 				shape := MakeShape(fentry.iconPro.unhilited)
 			end else begin
-				shape := [Array: '{transferMode: 1}, MakeShape(fentry.icon)]
+				shape := [Array: '{transferMode: modeOr}, MakeShape(fentry.icon)]
 			end;
 		list := [Array: shape];
 		if target.notActive then begin
@@ -83,9 +108,12 @@ protoExtrasIcon := {
 			end;
 		list
 	end,
+	// GetIconShapeHilited(): the icon drawn selected - iconPro's hilited picture,
+	// or the icon with its mask inverted, or (on a background, or with no mask)
+	// the icon inverted in its bounds; plus the overlay and the inverted name
 	GetIconShapeHilited: compile(
 		constants: {
-			kLiteral_3c5eed: '{transferMode: 2, penPattern: 0, fillPattern: 5}
+			kLiteral_3c5eed: '{transferMode: modeXor, penPattern: 0, fillPattern: 5}
 		},
 		func() begin
 			local fentry, shape, shape2, iconPro, icon, copy, list;
@@ -112,7 +140,7 @@ protoExtrasIcon := {
 				end;
 			if (not shape) then begin
 					if hasBackground then begin
-							shape := [Array: '{transferMode: 1}, shape2]
+							shape := [Array: '{transferMode: modeOr}, shape2]
 						end else begin
 							shape := [Array: shape2, kLiteral_3c5eed, MakeShape(ShapeBounds(shape2))]
 						end
@@ -128,9 +156,11 @@ protoExtrasIcon := {
 				end;
 			list
 		end),
+	// viewDrawScript: draws the selected or plain shapes (vSelected in the view's
+	// flags says which), making them the first time
 	viewDrawScript: func() begin
 		local l1;
-		(if (l1 := (BAnd(GetViewFlags(self), 33554432) <> 0)) then begin
+		(if (l1 := (BAnd(GetViewFlags(self), vSelected) <> 0)) then begin
 				if (not self.hilitedShape) then begin
 						self.hilitedShape := self:GetIconShapeHilited()
 					end;
@@ -142,6 +172,9 @@ protoExtrasIcon := {
 				self:DrawShape(self.shape, iconStyle)
 			end)
 	end,
+	// viewHiliteScript(on): makes the selected shapes when highlighting (skipped
+	// once after justHilited is set) and redraws; returns true, so the system does
+	// not invert the view itself
 	viewHiliteScript: func(on) begin
 		if on then begin
 				if self.justHilited then begin
@@ -157,22 +190,30 @@ protoExtrasIcon := {
 			end;
 		true
 	end,
+	// viewDrawDragDataScript: what is dragged looks like the selected icon
 	viewdrawdragdatascript: func(a1) begin
 		self:DrawShape(self.hilitedShape, iconStyle);
 		true
 	end,
+	// viewClickScript(unit): a tap on the icon's shapes selects it and tracks the
+	// pen. An item that cannot move (no sequence number, or on a read-only store)
+	// just follows the pen in and out; otherwise holding still for 45 ticks
+	// selects (hiliter), moving more than 32 pixels drags the selected icons'
+	// entries (those that can be filed) to another place - DragAndDropLtd returns
+	// 2 for a drop somewhere that takes them, 1 for a refused one. Lifting the pen
+	// on the icon launches it. Returns true when the icon was hit.
 	viewClickScript: func(a1) begin
 		local v4_xxxxxxxxxxxxxxxxxxwwww, v5_zzzzzzzyyyyyyyyyyyyyyyyyyyyy, v6_qqpppp, v7_xxxxxwwwwwww, v8_zzzzzzy, v9_vvvvvvuuuuuuuu, v10_rrrrrrrrq, v11_wwwwwwwwwwwwwwv, v12_zzyyyyyyyyyyyyyyyyyyy, v13_vvvvvvuuuuuuuuuuu, v16_wwwwwwwwwwwwwwwvvvvvvvvvv, v17_jj, v18_yyyyyyyyyyyyyyyyyyyyyyyyxx, v19_jjji, v20_xwwwwwwwww, v21_zzzzzzzzzzzzzzyy, v22_uuuuuuuuuutt, v23_yxxxxxxxxxxxxxxxxx, v24_zzzzzzzzyyyyy, v25_wwwwwwwwwwwwvvvvvvvv;
 		ShowBusyBox(nil);
 		v11_wwwwwwwwwwwwwwv := (Ticks() + 45);
 		v18_yyyyyyyyyyyyyyyyyyyyyyyyxx := (v23_yxxxxxxxxxxxxxxxxx := self:GlobalBox()).left;
 		v5_zzzzzzzyyyyyyyyyyyyyyyyyyyyy := v23_yxxxxxxxxxxxxxxxxx.top;
-		v9_vvvvvvuuuuuuuu := (v7_xxxxxwwwwwww := GetPoint(6, a1)).x;
+		v9_vvvvvvuuuuuuuu := (v7_xxxxxwwwwwww := GetPoint(firstXY, a1)).x;
 		v25_wwwwwwwwwwwwvvvvvvvv := v7_xxxxxwwwwwww.y;
 		(if (if shape then HitShape(shape, (v9_vvvvvvuuuuuuuu - v18_yyyyyyyyyyyyyyyyyyyyyyyyxx), (v25_wwwwwwwwwwwwvvvvvvvv - v5_zzzzzzzyyyyyyyyyyyyyyyyyyyyy))) then begin
 				InkOffUnHobbled(a1);
 				clicker();
-				if (BAnd(GetViewFlags(self), 33554432) = 0) then begin
+				if (BAnd(GetViewFlags(self), vSelected) = 0) then begin
 						self:hilite(true);
 						RefreshViews()
 					end;
@@ -182,7 +223,7 @@ protoExtrasIcon := {
 				v22_uuuuuuuuuutt := v25_wwwwwwwwwwwwvvvvvvvv;
 				if (((not (v12_zzyyyyyyyyyyyyyyyyyyy := (v13_vvvvvvuuuuuuuuuuu := self.target.fentry).sequence)) or (v12_zzyyyyyyyyyyyyyyyyyyy < 0)) or (if IsSoupEntry(v13_vvvvvvuuuuuuuuuuu) then EntryStore(v13_vvvvvvuuuuuuuuuuu):IsReadOnly())) then begin
 						(while (not StrokeDone(a1)) do begin
-								v4_xxxxxxxxxxxxxxxxxxwwww := (v24_zzzzzzzzyyyyy := GetPoint(8, a1)).x;
+								v4_xxxxxxxxxxxxxxxxxxwwww := (v24_zzzzzzzzyyyyy := GetPoint(finalXY, a1)).x;
 								v17_jj := v24_zzzzzzzzyyyyy.y;
 								(if ((v4_xxxxxxxxxxxxxxxxxxwwww <> v6_qqpppp) or (v17_jj <> v22_uuuuuuuuuutt)) then begin
 										v19_jjji := (HitShape(shape, (v4_xxxxxxxxxxxxxxxxxxwwww - v18_yyyyyyyyyyyyyyyyyyyyyyyyxx), (v17_jj - v5_zzzzzzzyyyyyyyyyyyyyyyyyyyyy)) <> nil);
@@ -197,7 +238,7 @@ protoExtrasIcon := {
 							end)
 					end else begin
 						(while (not StrokeDone(a1)) do begin
-								v4_xxxxxxxxxxxxxxxxxxwwww := (v24_zzzzzzzzyyyyy := GetPoint(8, a1)).x;
+								v4_xxxxxxxxxxxxxxxxxxwwww := (v24_zzzzzzzzyyyyy := GetPoint(finalXY, a1)).x;
 								v17_jj := v24_zzzzzzzzyyyyy.y;
 								if ((v4_xxxxxxxxxxxxxxxxxxwwww <> v6_qqpppp) or (v17_jj <> v22_uuuuuuuuuutt)) then begin
 										if ((abs((v4_xxxxxxxxxxxxxxxxxxwwww - v9_vvvvvvuuuuuuuu)) + abs((v17_jj - v25_wwwwwwwwwwwwvvvvvvvv))) > 32) then begin
@@ -219,7 +260,7 @@ protoExtrasIcon := {
 						if (v16_wwwwwwwwwwwwwwwvvvvvvvvvv = 'Drag) then begin
 								v20_xwwwwwwwww := [Array: ];
 								(foreach v15_yyyyyyyyyyyyyyxxxx in iconSpace:GetChildIconViews() do begin
-										if (BAnd(GetViewFlags(v15_yyyyyyyyyyyyyyxxxx), 33554432) <> 0) then begin
+										if (BAnd(GetViewFlags(v15_yyyyyyyyyyyyyyxxxx), vSelected) <> 0) then begin
 												v13_vvvvvvuuuuuuuuuuu := v15_yyyyyyyyyyyyyyxxxx.target.fentry;
 												if (if (if (v15_yyyyyyyyyyyyyyxxxx.target:Preflight('Filing, [Array: ]) = 'OK) then IsSoupEntry(v13_vvvvvvuuuuuuuuuuu)) then (not EntryStore(v13_vvvvvvuuuuuuuuuuu):IsReadOnly())) then begin
 														AddArraySlot(v20_xwwwwwwwww, v13_vvvvvvuuuuuuuuuuu)
@@ -238,7 +279,7 @@ protoExtrasIcon := {
 												self:RedoIconsAfterDrop(v8_zzzzzzy.externalDrop)
 											end else begin
 												if (v21_zzzzzzzzzzzzzzyy = 1) then begin
-														self:Notify(3, title, "Cannot drag icons there.")
+														self:Notify(kNotifyAlert, title, "Cannot drag icons there.")
 													end
 											end
 									end
@@ -251,19 +292,24 @@ protoExtrasIcon := {
 				true
 			end)
 	end,
+	// Launch(): performs the item's tap action (opening it), closes the Extras
+	// Drawer when the action asks for that and the drawer can close, shows the
+	// message of an evt.ex.msg exception, and deselects all icons
 	Launch: func() begin
 		try begin
 				if (if self.target:TapAction() then closeable) then begin
 						base:Close()
 					end
 			end onexception |evt.ex.msg| do begin
-				self:Notify(3, title, CurrentException().message)
+				self:Notify(kNotifyAlert, title, CurrentException().message)
 			end;
 		(if (if iconSpace then iconSpace.viewCObject) then iconSpace:SelectNone())
 	end,
+	// viewGestureScript(unit, gesture): a scrub selects the icon and asks to
+	// delete it (DeleteActionScript); returns true for a scrub, nil otherwise
 	viewgesturescript: func(unit, gesture) begin
-		(if (gesture = 13) then begin
-				SetValue(self, 'viewFlags, BOr(GetViewFlags(self), 33554432));
+		(if (gesture = aeScrub) then begin
+				SetValue(self, 'viewFlags, BOr(GetViewFlags(self), vSelected));
 				if self:SetupFakeTarget() then begin
 						InkOff(unit);
 						self:DeleteActionScript(nil, self)
@@ -271,6 +317,7 @@ protoExtrasIcon := {
 				true
 			end)
 	end,
+	// the slots a view of this proto caches (made with nil values)
 	_cacheContext: {_parent: nil, _proto: nil, viewCObject: nil, shape: nil}
 };
 

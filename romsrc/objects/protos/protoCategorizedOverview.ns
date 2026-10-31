@@ -1,9 +1,23 @@
-// protoCategorizedOverview, and what only it reaches
+// protoCategorizedOverview: an overview list whose items are grouped under
+// collapsible category headings, each item with a checkbox when its finder
+// can select items - the Find slip's list of results (one category per
+// finder, i.e. per application searched).  It draws the whole list as one
+// array of shapes (pieces) rather than as child views.
+//   categoryArray   the categories (finders), each a heading and its items
+//   items           the lines shown: heading frames and item frames
+//   caller          the Find slip that opened it; doUpdates: tell it
+//   lineHeight      the height of a line (14)
 
 protoCategorizedOverview := {
+	// AddCategoryItem(list, heading, skip, room): adds the heading's
+	// category's found items to list, skipping skip, at most room; answers
+	// how many lines it used (the category's AddFoundItems does the work)
 	AddCategoryItem: func(a1, a2, a3, a4) begin
 		a2.category:AddFoundItems(a1, a3, a4)
 	end,
+	// IsThisItemSelected(item): whether item is selected - asked of its
+	// finder if it has the method, else looked up in the finder's selected
+	// array by soup entry (the same _uniqueID on the same store)
 	IsThisItemSelected: compile(
 		constants: {
 			kFunction_5610a1: func(a1, a2) begin
@@ -22,6 +36,8 @@ protoCategorizedOverview := {
 					nil
 				end)
 		end),
+	// GetThisCategoryItem(line): answers the heading of the category the
+	// line belongs to, searching back from the line (l1: found)
 	GetThisCategoryItem: func(a1) begin
 		local l1, l2;
 		l1 := nil;
@@ -29,6 +45,10 @@ protoCategorizedOverview := {
 		(while (not l1) do (if items[l2].category then (l1 := true) else (l2 := (l2 - 1))));
 		items[l2]
 	end,
+	// SelectItem(line): toggles the selection of the item on that line (a
+	// selectable item, not a heading) through its finder, then swaps the
+	// checkbox shape in pieces in place - the item's checkbox is the odd
+	// entry of its category's shapes - and redraws
 	SelectItem: func(a1) begin
 		local item, box, shape, thisCategoryItem;
 		(if (if (not (item := items[a1]).category) then GetVariable(item.finder, 'SelectItem)) then begin
@@ -42,16 +62,22 @@ protoCategorizedOverview := {
 			end else self:Dirty())
 	end,
 	checkBoxHorzOffset: 2,
+	// CheckState(entry): 'NotCheckable for a heading or an item whose finder
+	// cannot select, else whether it is checked (the finder's CheckState if
+	// it has one)
 	CheckState: func(indexEntry) begin
 		(if (indexEntry.category or (not GetVariable(indexEntry.finder, 'SelectItem))) then 'NotCheckable else (if GetVariable(indexEntry.finder, 'CheckState) then indexEntry.finder:CheckState(indexEntry) else self:IsThisItemSelected(indexEntry)))
 	end,
 	viewFlags: vVisible + vApplication + vClipping + vClickable,
+	// GetIndexEntry(line): the frame of that line, nil when out of range
 	GetIndexEntry: func(indexEntry) begin
 		(if (if (indexEntry >= 0) then (indexEntry < Length(items))) then items[indexEntry])
 	end,
 	CheckOn: CheckOn,
 	viewBounds: {left: 5, top: 18, right: -5, bottom: -21},
 	_proto: @protoOverview,
+	// Scroller(lines): scrolls by lines (negative: up, never past the top;
+	// down only when there is more below) and rebuilds the list
 	Scroller: func(maxLines) begin
 		if ((maxLines < 0) or moreBelow) then begin
 				scrollOrigin := max((scrollOrigin + maxLines), 0)
@@ -60,12 +86,16 @@ protoCategorizedOverview := {
 	end,
 	lineHeight: 14,
 	viewJustify: vjParentFullH + vjParentFullV,
+	// setAndBump(text, indent, box): answers a text shape for one line in box
+	// (indented by indent) and moves box down a line
 	setAndBump: func(title, a2, a3) begin
 		local text;
 		text := MakeText(title, (a3.left + a2), a3.top, a3.right, (a3.bottom - 2));
 		a3.bottom := ((a3.top := a3.bottom) + lineHeight);
 		text
 	end,
+	// MakeCategoryFrame(finder): answers the heading frame for a finder: its
+	// title up to the first comma (or its owner's title) and its item count
 	MakeCategoryFrame: func(a1) begin
 		cat := {_proto: @protoFindCategory, skip: 0, title: nil, count: 0, category: a1};
 		if a1.title then begin
@@ -77,6 +107,12 @@ protoCategorizedOverview := {
 		cat
 	end,
 	CheckOff: CheckOff,
+	// HitItem(line, x, y): sent on a tap a line; unless protoOverview handled
+	// it (a checkbox), a heading is collapsed or expanded, and an item is
+	// shown: the other applications hidden and the Find slip's frontmost-app
+	// button named after its application (with doUpdates), the scroll
+	// position kept for next time, the item shown by its finder and the
+	// overview closed afterwards
 	HitItem: func(a1, trackScrollingItem, trackScrollingItem2) begin
 		local item;
 		if (not inherited:HitItem(a1, trackScrollingItem, trackScrollingItem2)) then begin
@@ -100,6 +136,13 @@ protoCategorizedOverview := {
 	doUpdates: true,
 	viewFont: tsSystem + tsSize(10) + tsBold,
 	checkBoxVertOffset: 2,
+	// before the children are made: builds items and pieces for the lines
+	// that fit, as protoCategoryRoll does (l4 counts down the lines scrolled
+	// off; negative, the items to skip in a category; l3 the room left; l1
+	// the box of the next line; l5 the index in pieces of the current
+	// category's shapes).  Each expanded category adds a shape array of a
+	// checkbox and a title per item.  The decompiler places the locals after
+	// their uses.
 	viewSetupChildrenScript: func() begin
 		l1 := self:LocalBox();
 		self.maxLines := (l1.bottom div lineHeight);

@@ -1,4 +1,8 @@
-// protoDigitBase, and what only it reaches
+// protoDigitBase: the container of a row of protoDigit wheels - the base of
+// protoTimeDeltaPicker and protoLatitudePicker (protoNumberPicker and
+// protoYearPicker declare themselves 'digitBase the same way). It holds the
+// picker's value, clamped to minValue..maxValue, which its digits read; the
+// digits find it through the declared 'digitBase.
 
 protoDigitBase := {
 	viewClass: clPictureView,
@@ -8,6 +12,9 @@ protoDigitBase := {
 	viewJustify: vjParentFullH + vjParentFullV,
 	declareSelf: 'digitBase,
 	icon: nil,
+	// self:JamIt(newValue) sets value to newValue clamped to minValue..maxValue
+	// and has every child digit Update itself; nothing happens when newValue is
+	// already the value (the check is against the unclamped value).
 	JamIt: func(a1) begin
 		(if (value <> a1) then begin
 				if (a1 < minValue) then begin

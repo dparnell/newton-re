@@ -1,8 +1,15 @@
-// protoExtrasListItem, and what only it reaches
+// protoExtrasListItem: an item of the Extras Drawer shown as a row of a list
+// rather than as an icon (protoExtrasIcon) - a check box, the name, the size
+// and where the item is.
 
 protoExtrasListItem := {
 	_proto: @protoExtrasIcon,
+	// whether the item's check box (its left 20 pixels) is ticked
 	checked: nil,
+	// viewDrawScript: draws the row, its shapes made once - the item's name (plain
+	// for a frozen entry, italic when not active, bold otherwise), its size
+	// right-aligned, where it is (with its folder when all folders are shown)
+	// truncated to the last third, and the check box (the two bitmaps below)
 	viewDrawScript: compile(
 		constants: {
 			kBinaryFromHex: func(hex, cls) begin
@@ -24,7 +31,7 @@ protoExtrasListItem := {
 					size := target:size();
 					styledStrTruncate2 := (if (labelsFilter = '_all) then ParamStr("^0 ^?1(^1)||", [Array: where, (if target.fentry.labels then (if (l4 := userConfiguration.userFolders.(target.fentry.labels)) then StringFilter(l4, "_", 'rejectBeginning)) else "Unfiled")]) else where);
 					l5 := ((2 * hSpacing) div 3);
-					styledStrTruncate2 := StyledStrTruncate(styledStrTruncate2, (hSpacing - l5), 9216);
+					styledStrTruncate2 := StyledStrTruncate(styledStrTruncate2, (hSpacing - l5), tsSystem + tsSize(9));
 					SetClass((shape := [Array: (if (target.fentry.class = 'FrozenEntry) then '{font: tsSystem + tsSize(10)} else (if target.notActive then '{font: tsSystem + tsSize(10) + tsItalic} else '{font: tsSystem + tsSize(10) + tsBold})), MakeText(target.fentry.text, 20, 0, (hSpacing div 2), 11), '{font: tsSystem + tsSize(9), justification: right}, MakeText(size, (hSpacing div 2), 0, (l5 - 8), 11), '{font: tsSystem + tsSize(9), justification: left}, MakeText((if styledStrTruncate2 then styledStrTruncate2 else ""), l5, 0, hSpacing, 11), OffsetShape(MakeShape((if checked then kLiteral_3c8abd else kLiteral_3c8b41)), 5, 0)])[1].data, 'string);
 					if IsSoupEntry(target.fentry) then begin
 							EntryUndoChanges(target.fentry)
@@ -32,26 +39,33 @@ protoExtrasListItem := {
 				end;
 			(if shape then self:DrawShape(shape, nil))
 		end),
+	// viewHiliteScript(on): inverts the row right of the check box (modeXor);
+	// not while checked; returns true
 	viewHiliteScript: func(on) begin
 		if (not checked) then begin
-				self:DrawShape(MakeRect(20, 0, hSpacing, vSpacing), '{transferMode: 2, penPattern: 0, fillPattern: 5})
+				self:DrawShape(MakeRect(20, 0, hSpacing, vSpacing), '{transferMode: modeXor, penPattern: 0, fillPattern: 5})
 			end;
 		true
 	end,
+	// Checkit(checked): ticks or unticks the item - remakes the shapes and toggles
+	// vSelected in the view's flags, so that a checked item counts as selected
 	Checkit: func(a1) begin
 		(if (checked <> a1) then begin
 				checked := a1;
 				shape := nil;
-				SetValue(self, 'viewFlags, bxor(GetViewFlags(self), 33554432));
+				SetValue(self, 'viewFlags, bxor(GetViewFlags(self), vSelected));
 				self:Dirty()
 			end)
 	end,
+	// viewClickScript(unit): a tap in the check box toggles it; a tap elsewhere
+	// on the row unticks it and, if the pen is lifted on the row, launches the
+	// item; returns true when the row was hit
 	viewClickScript: func(unit) begin
 		local box, l2, l3;
 		InkOff(unit);
 		box := self:GlobalBox();
-		l2 := (GetPoint(4, unit) - box.left);
-		l3 := (GetPoint(5, unit) - box.top);
+		l2 := (GetPoint(finalX, unit) - box.left);
+		l3 := (GetPoint(finalY, unit) - box.top);
 		(if (if shape then HitShape(shape, l2, l3)) then begin
 				self:?HandleChildClick();
 				if (l2 < 20) then begin

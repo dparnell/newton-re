@@ -1,14 +1,23 @@
-// protoSoupOverview, and what only it reaches
+// protoSoupOverview: a protoOverview whose items are soup entries, read
+// through the cursor in its cursor slot (which the application must set):
+// one line per entry, its Abstract, with checkboxes for selecting entries.
 
 protoSoupOverview := {
 	_proto: @protoOverview,
+	// Abstract(entry, bbox): the shape (or text) to show for an entry in the
+	// overview; the application must supply it - this default gives nil
 	Abstract: func(items2Item, copy) begin
 		nil
 	end,
+	// viewSetupChildrenScript(): makes the overview's lines from a copy of
+	// the cursor (so the application's cursor is not moved)
 	viewSetupChildrenScript: func() begin
 		self:SetupAbstracts(cursor:clone())
 	end,
 	SelectItem: SelectItem,
+	// HitItem(index, x, y): a tap on an item; when the inherited method does
+	// not handle it (it was not in the selection column), redraws the
+	// overview and returns true
 	HitItem: func(a1, trackScrollingItem, trackScrollingItem2) begin
 		(if (not inherited:HitItem(a1, trackScrollingItem, trackScrollingItem2)) then begin
 				self:Dirty();

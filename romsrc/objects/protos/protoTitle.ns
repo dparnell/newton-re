@@ -1,21 +1,30 @@
-// protoTitle, and what only it reaches
+// protoTitle: the title of a view, centred at its top: the title string
+// (with an optional icon, titleIcon) above a thick rule, truncated to fit the
+// parent's width.
 
 protoTitle := {
 	viewClass: clTextView,
 	viewFlags: vVisible + vReadOnly,
 	viewFormat: vfFillWhite,
-	viewTransferMode: 2,
+	viewTransferMode: modeXor,
 	viewJustify: vjRightH + vjCenterV + vjParentCenterH,
 	viewFont: @fontSystem10Bold,
+	// the width and height of the title view; titleHeight defaults to the
+	// font's height
 	titleWidth: nil,
 	titleHeight: nil,
 	viewBounds: nil,
+	// an optional bitmap frame drawn at the left of the title
 	titleicon: nil,
+	// viewSetupFormScript(): fits the title to the parent's width less 20
+	// pixels (less the icon and 3 pixels after it), truncating the text with
+	// an ellipsis if it is too long, and sizes the view to it
 	viewSetupFormScript: func() begin
 		local l1, l2;
 		if (not titleHeight) then begin
 				titleHeight := FontHeight(viewFont)
 			end;
+		// l1: the widest the title may be; l2: the icon's width plus the gap
 		l1 := (self:Parent():LocalBox().right - 20);
 		titleWidth := (StrFontWidth(title, viewFont) + 1);
 		l2 := (if titleicon then ((titleicon.bounds.right - titleicon.bounds.left) + 3) else 0);
@@ -28,6 +37,8 @@ protoTitle := {
 		titleWidth := (titleWidth + l2);
 		(self.viewBounds := SetBounds(0, -3, titleWidth, (titleHeight + 2)))
 	end,
+	// viewDrawScript(): draws the 2-pixel rule along the bottom, a line
+	// below it, and the icon at the left, centred vertically
 	viewDrawScript: func() begin
 		local box;
 		box := self:LocalBox();

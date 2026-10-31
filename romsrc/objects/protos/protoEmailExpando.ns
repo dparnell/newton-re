@@ -1,13 +1,25 @@
-// protoEmailExpando, and what only it reaches
+// protoEmailExpando: an expando line (protoTextExpando) for an e-mail address,
+// whose label picker chooses the e-mail system. The address string in
+// target.(path) carries the system as its class (one of the registered
+// EmailSystems.emailClasses, e.g. |string.email|); the label shows that
+// system's name from EmailSystems.emailText.
 
 protoEmailExpando := {
 	_proto: @protoTextExpando,
+	// the label picker's names and, index for index, the classes they stand for
 	labelCommands: nil,
 	labelSymbols: nil,
+	// TextSetup(), from protoTextExpando: sets the label for the address's system
+	// before the inherited setup of the text
 	TextSetup: func() begin
 		self:SetLabelText(self:setup1(target));
 		inherited:TextSetup()
 	end,
+	// setup1(target): builds labelCommands and labelSymbols from the registered
+	// e-mail systems and returns the label for target.(path)'s class - the plain
+	// e-mail one when no system has that class (or there is no target, which
+	// leaves the lists unset). The `local` lines after the uses are just the
+	// decompiler's layout.
 	setup1: func(target) begin
 		labelCommand := EmailSystems.emailText.|string.email|;
 		if target then begin
@@ -24,11 +36,17 @@ protoEmailExpando := {
 			end;
 		labelCommand
 	end,
+	// textChanged(), when the user edited the address: stores the entry line's
+	// text in target.(path) keeping the old string's class (the first system's
+	// when there was none)
 	textChanged: func() begin
 		local l1;
 		l1 := (if (not target.(path)) then labelSymbols[0] else ClassOf(target.(path)));
 		(target.(path) := SetClass(entryLine.text, l1))
 	end,
+	// LabelActionScript(index), when a system was picked from the label: shows
+	// its name and gives the address (an empty one if none yet) its class;
+	// returns true
 	LabelActionScript: func(index) begin
 		self:SetLabelText(labelCommands[index]);
 		labelLine:Dirty();

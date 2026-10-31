@@ -1,24 +1,37 @@
-// protoPeopleDataDef, and what only it reaches
+// protoPeopleDataDef: the data definition (on protoNameRefDataDef) for
+// picking Names entries - people, owners, companies, groups and worksites -
+// in a protoListpicker, used for routing (e-mail, fax, beam ...): it shows
+// each entry's primary value (a person's name, a company ...), adds new
+// entries through the Names application (cardfile), and turns name
+// references into routing information (GetRoutingInfo, GetRoutingTitle).
 
 protoPeopleDataDef := {
 	_proto: @protoNameRefDataDef,
 	name: @cardfileSoupName,
 	class: '|nameRef.people|,
 	entryType: 'person,
+	// the slot shown in the first column, and the one each class of entry
+	// keeps it in
 	primaryPath: 'name,
 	primaryPathMapper: {person: 'name, owner: 'name, company: 'company, group: 'group, worksite: 'place},
 	preferredRouting: nil,
+	// the slot of the routing information (an address) a subclass routes to
 	routePath: nil,
 	validationFrame: @nameRefValidationFrame,
 	defaultEditTitle: "New Person",
+	// the Names soup in sorton order, keeping only the classes this lists
 	querySpec: {
 		type: 'index,
 		indexPath: 'sorton,
+		// people, companies, owners, groups, or plain frames
 		validTest: func(a1) begin
 			local cls;
 			((((IsSubclass((cls := ClassOf(a1)), 'person) or IsSubclass(cls, 'company)) or IsSubclass(cls, 'owner)) or IsSubclass(cls, 'group)) or (cls = 'frame))
 		end
 	},
+	// dataDef:MakeNameRef(object, class) - a canonical name reference holding the
+	// object's primary value in the primary path for its class; a plain string
+	// given for a name becomes {last: string}.
 	MakeNameRef: func(frame3, cls) begin
 		local canonicalNameRef, frame2, primaryPath, entryFromObj2;
 		canonicalNameRef := self:MakeCanonicalNameRef(frame3, cls);
@@ -38,6 +51,8 @@ protoPeopleDataDef := {
 		canonicalNameRef.(primaryPath) := frame2;
 		canonicalNameRef
 	end,
+	// The slot holding the object's primary value, by its entry class
+	// (primaryPathMapper), else primaryPath.
 	GetPrimaryPath: func(a1) begin
 		local objEntryClass2, l2;
 		if (objEntryClass2 := ObjEntryClass(a1)) then begin
@@ -45,6 +60,11 @@ protoPeopleDataDef := {
 			end;
 		(if l2 then l2 else primaryPath)
 	end,
+	// dataDef:GetPrimaryValue(object, format) - the primary value (from the
+	// entry behind an alias or name reference); as 'text a name frame is
+	// "first last", as 'sortText "last, first" or the entry's sorton; empty
+	// text becomes "Untitled Person" (or the like for the entry's class) or
+	// "--", as strings of class 'string.noData.
 	GetPrimaryValue: compile(
 		constants: {
 			kLiteral_4559fd: {person: SetClass(Clone("Untitled Person"), '|string.noData|), owner: SetClass(Clone("Untitled Owner"), '|string.noData|), company: SetClass(Clone("Untitled Company"), '|string.noData|), group: SetClass(Clone("Untitled Group"), '|string.noData|), worksite: SetClass(Clone("Untitled Worksite"), '|string.noData|)},
@@ -91,6 +111,9 @@ protoPeopleDataDef := {
 				end;
 			text
 		end),
+	// dataDef:Get(object, fieldPath, format) - the primary path through
+	// GetPrimaryValue; another column of a group is its number of members
+	// ("(n members)" as text); anything else as protoNameRefDataDef gets it.
 	Get: func(a1, a2, a3) begin
 		local objSlot, count;
 		if (if (not (a2 = primaryPath)) then (not (ObjEntryClass(a1) = 'group))) then begin
@@ -110,6 +133,8 @@ protoPeopleDataDef := {
 			end;
 		(if (a3 = 'text) then return ParamStr("(^0 members)", [Array: count]) else return objSlot)
 	end,
+	// A tap on a group only toggles its selection (a group is not edited here);
+	// others as protoNameRefDataDef handles them.
 	HitItem: func(a1, trackScrollingItem) begin
 		local l1;
 		(if (ObjEntryClass(a1.nameRef) = 'group) then begin
@@ -119,6 +144,10 @@ protoPeopleDataDef := {
 				(_dirtyValues := nil)
 			end else inherited:HitItem(a1, trackScrollingItem))
 	end,
+	// Copies slot item of nameRef into its entry; for the primary path the
+	// entry's sorton is remade too ("last first" for a person or owner,
+	// "Untitled ..." for none) and Names is told the entry's class
+	// (SetIAClass).
 	ModifyEntryPath: compile(
 		constants: {
 			kLiteral_4559fd: {person: SetClass(Clone("Untitled Person"), '|string.noData|), owner: SetClass(Clone("Untitled Owner"), '|string.noData|), company: SetClass(Clone("Untitled Company"), '|string.noData|), group: SetClass(Clone("Untitled Group"), '|string.noData|), worksite: SetClass(Clone("Untitled Worksite"), '|string.noData|)}
@@ -132,6 +161,8 @@ protoPeopleDataDef := {
 					GetRoot().cardfile:SetIAClass(entryFromObj)
 				end else (entryFromObj.(item) := nameRef.(item)))
 		end),
+	// dataDef:ModifyEntry(nameRef, paths) - as protoNameRefDataDef's, each path
+	// through ModifyEntryPath.
 	ModifyEntry: func(nameRef, equivalent) begin
 		if (entryFromObj2 := EntryFromObj(nameRef)) then begin
 				local entryFromObj2;
@@ -142,6 +173,9 @@ protoPeopleDataDef := {
 			end;
 		entryFromObj2
 	end,
+	// dataDef:NewEntry(nameRef, context) - adds the new card through the Names
+	// application (cardfile:addcard), in the name reference's folder (labels).
+	// Returns the entry.
 	NewEntry: func(a1, _context) begin
 		local addcard;
 		(addcard := GetRoot().cardfile:addcard((addcard := self:PrepareToAdd(a1)).class, addcard)).labels := a1.labels;
@@ -149,6 +183,9 @@ protoPeopleDataDef := {
 		EntryChangeXmit(addcard, 'entryAdded);
 		addcard
 	end,
+	// The edited paths whose values changed: a name when either part (first,
+	// last) differs as a string, another slot when it differs and is not an
+	// equal string.
 	Equivalent: func(nameRef, _dirtyValues, _dirtyPaths) begin
 		list := [Array: ];
 		local list;
@@ -167,6 +204,8 @@ protoPeopleDataDef := {
 			end);
 		list
 	end,
+	// The invalid paths (ValidityCheck), the primary path checked in the slot
+	// the entry's class keeps it in; a group is always valid.
 	Validate: func(nameRef, a2) begin
 		primaryPath2 := self:GetPrimaryPath(nameRef);
 		copy := Clone(a2);
@@ -182,9 +221,12 @@ protoPeopleDataDef := {
 			end);
 		ValidityCheck(nameRef, validationFrame, copy, nil, nil)
 	end,
+	// One recipient's routing frame: here just its name; subclasses add the address.
 	GetItemRoutingFrame: func(item) begin
 		{name: self:Get(item, primaryPath, 'text)}
 	end,
+	// Adds to array a1 the routing frames of item2: an array's items, a group's
+	// members (its routePath slot), or the item itself.
 	RealGetRoutingInfo: func(a1, item2) begin
 		(if (item2 = nil) then return nil else (if IsArray(item2) then (foreach item in item2 do begin
 						self:RealGetRoutingInfo(a1, item)
@@ -192,6 +234,8 @@ protoPeopleDataDef := {
 							self:RealGetRoutingInfo(a1, item)
 						end) else AddArraySlot(a1, self:GetItemRoutingFrame(item2)))))
 	end,
+	// dataDef:GetRoutingInfo(nameRefs) - the array of routing frames for a
+	// recipient or an array of them (groups expanded).
 	GetRoutingInfo: func(toRefItem) begin
 		local list;
 		if (toRefItem = nil) then begin
@@ -200,6 +244,9 @@ protoPeopleDataDef := {
 		self:RealGetRoutingInfo((list := [Array: ]), toRefItem);
 		list
 	end,
+	// dataDef:GetRoutingTitle(nameRefs, width, font) - the recipients' names
+	// joined by ", " (stopping once wider than width), truncated to width in
+	// font when both are given; "None" for an empty array.
 	GetRoutingTitle: func(fromRef, a2, a3) begin
 		if (if fromRef then (IsArray(fromRef) = nil)) then begin
 				text := self:Get(fromRef, primaryPath, 'text)
@@ -229,6 +276,7 @@ protoPeopleDataDef := {
 			end;
 		text
 	end,
+	// The entry's primary value as text, or "Anonymous".
 	TextFromEntry: func(a1) begin
 		local text;
 		if (not (if (text := self:Get(a1, primaryPath, 'text)) then StrFilled(text))) then begin
@@ -236,7 +284,13 @@ protoPeopleDataDef := {
 			end;
 		text
 	end,
+	// dataDef:PrepareForRouting(nameRef) - strips what should not travel with
+	// the item: a name reference's alias to the entry. Returns it.
 	PrepareForRouting: func(a1) begin
+		// looks like a ROM bug: for an entry whose routePath holds an array, the
+		// loop below calls PrepareForRouting on a1 again rather than on each item,
+		// which would recurse without end; it is reached only for a frame that is
+		// not a name reference but has an entry class.
 		if IsNameRef(a1) then begin
 				a1._alias := nil
 			end else begin

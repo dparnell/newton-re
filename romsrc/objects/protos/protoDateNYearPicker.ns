@@ -1,4 +1,10 @@
-// protoDateNYearPicker, and what only it reaches
+// protoDateNYearPicker: a calendar (protoDatepicker) with a year picker
+// below it, for choosing a date in any year.
+//   selectedDates   an array holding the chosen date (minutes); today if nil
+//   singleDay       true: only one day can be selected
+//   value           the year shown in the year picker
+// The object's NewTime(selectedDates) method, if it has one, is told of every
+// change.  calendar_2 and yearPicker are its two children.
 
 protoDateNYearPicker := {
 	viewClass: clView,
@@ -7,6 +13,7 @@ protoDateNYearPicker := {
 	selectedDates: nil,
 	singleDay: true,
 	value: nil,
+	// at setup: defaults the selection to now and the year to its year
 	viewSetupFormScript: func() begin
 		if (not selectedDates) then begin
 				selectedDates := [Array: Time()]
@@ -14,11 +21,15 @@ protoDateNYearPicker := {
 		value := Date(selectedDates[0]).year;
 		(calendar.singleDay := singleDay)
 	end,
+	// sent by the calendar when the user picks a date: passes it on and
+	// shows the calendar's year in the year picker
 	DateChanged: func(selectedDates) begin
 		self:?NewTime(selectedDates);
 		RefreshViews();
 		yearPicker:SetYear(monthView.year)
 	end,
+	// sent by the year picker when a year is chosen: moves the selected date
+	// into that year and redraws the calendar
 	ClickDone: func() begin
 		local date2;
 		(date2 := Date(selectedDates[0])).year := value;
@@ -33,6 +44,7 @@ protoDateNYearPicker := {
 	yearPicker: nil
 };
 
+// the calendar: all of the view but 30 pixels at the bottom
 calendar_2 := {
 	viewBounds: {left: 0, top: 0, right: 0, bottom: -30},
 	viewJustify: vjParentFullH + vjParentFullV,
@@ -43,6 +55,7 @@ calendar_2 := {
 	_proto: @protoDatepicker
 };
 
+// the year picker, centred along the bottom
 yearPicker := {
 	viewBounds: {left: 0, top: -28, right: 84, bottom: 0},
 	viewJustify: vjParentCenterH + vjParentBottomV,

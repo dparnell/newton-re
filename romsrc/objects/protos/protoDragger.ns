@@ -1,4 +1,8 @@
-// protoDragger, and what only it reaches
+// protoDragger: a view the user moves around within its parent by dragging
+// the small nub at the top centre of its rounded frame. It has no contents of
+// its own (the client adds children) and, unless the client sets vApplication
+// and its own scripts, answers the scroll arrows and Overview with a notice
+// that the application does not support them.
 
 protoDragger := {
 	_proto: @protoContainerView,
@@ -6,6 +10,11 @@ protoDragger := {
 	viewBounds: protoDraggerViewBounds,
 	viewFormat: vfFillWhite + vfFrameDragShadow + vfPen(7) + vfInset(1) + vfRound(5),
 	declareSelf: 'base,
+	// base:DragWindow(unit), from viewClickScript with the click's unit: clicks,
+	// makes this view the key view's home (the defaultKeyViewName child, or self
+	// when its textFlags take keys, 0x4000) if a keyboard is connected and the
+	// caret is elsewhere, brings it to the front and drags it within the
+	// parent's box (the application area when the parent is the root)
 	DragWindow: func(unit) begin
 		local parent, l2;
 		InkOff(unit);
@@ -24,11 +33,16 @@ protoDragger := {
 		self:Drag(unit, l2);
 		self:Dirty()
 	end,
+	// viewClickScript: a tap within 10 pixels of the nub (the top centre) of a
+	// dragger still framed as one (the frame bits, mask 240, are 208) drags it
+	// and returns true; anything else returns nil and goes to the children.
+	// (The Programmer's Reference calls frame 208 vfFrameDragger;
+	// src/views/ViewFlags.h, whose names constants.tsv has, vfFrameDragShadow.)
 	viewClickScript: func(unit) begin
 		local pt, pt2, box;
-		(if (if (self = base) then (BAnd(viewFormat, 240) = 208)) then begin
-				pt := GetPoint(0, unit);
-				pt2 := GetPoint(1, unit);
+		(if (if (self = base) then (BAnd(viewFormat, 240) = vfFrameDragShadow)) then begin
+				pt := GetPoint(firstX, unit);
+				pt2 := GetPoint(firstY, unit);
 				box := self:GlobalBox();
 				(if (if ((pt2 - box.top) < 10) then (abs((pt - ((box.left + box.right) >> 1))) < 10)) then begin
 						base:DragWindow(unit);
@@ -38,25 +52,32 @@ protoDragger := {
 	end,
 	noScroll: "This application does not support scrolling",
 	noOverview: "This application does not support Overview",
+	// set once the scroll notice has been shown, so it is shown once per view
 	beenThereDoneThat: nil,
+	// viewSetupFormScript: a dragger whose bounds put it partly outside the
+	// application area has its own viewBounds slot removed, so that the
+	// inherited bounds apply
 	viewSetupFormScript: func() begin
 		local box, displayParams2;
 		(if (box := self:?GlobalBox()) then (if ((((((displayParams2 := displayParams).appAreaGlobalLeft + displayParams2.appAreaWidth) < box.right) or ((displayParams2.appAreaGlobalTop + displayParams2.appAreaHeight) < box.bottom)) or (displayParams2.appAreaGlobalLeft > box.left)) or (displayParams2.appAreaGlobalTop > box.top)) then RemoveSlot(self, 'viewBounds)))
 	end,
+	// viewScrollUpScript, viewScrollDownScript: the first scroll arrow tap tells
+	// the user (a Notify alert) that the application does not scroll
 	viewScrollUpScript: func() begin
 		(if (not beenThereDoneThat) then begin
 				beenThereDoneThat := true;
-				self:Notify(3, "Up Arrow", noScroll)
+				self:Notify(kNotifyAlert, "Up Arrow", noScroll)
 			end)
 	end,
 	viewScrollDownScript: func() begin
 		(if (not beenThereDoneThat) then begin
 				beenThereDoneThat := true;
-				self:Notify(3, "Down Arrow", noScroll)
+				self:Notify(kNotifyAlert, "Down Arrow", noScroll)
 			end)
 	end,
+	// viewOverviewScript: tells the user, every time, that there is no overview
 	viewOverviewScript: func() begin
-		self:Notify(3, "Overview", noOverview)
+		self:Notify(kNotifyAlert, "Overview", noOverview)
 	end
 };
 

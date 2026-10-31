@@ -1,19 +1,30 @@
-// protoDigitalClock, and what only it reaches
+// protoDigitalClock: a digital clock (hours, minutes, am/pm in flip-card
+// bitmaps, 119x28 pixels) with which the user sets a time: tapping the upper
+// half of a digit advances it, the lower half takes it back; the am/pm flap
+// toggles. The time is the inherited slot `time` (minutes since 1904), which a
+// client must provide; the proto's own child view does the drawing and tracking
+// and calls the client's TimeChanged afterwards. Documented slots: increment,
+// wrapping (wrap at the day's ends), midnite (0 means the end of the day).
 
 protoDigitalClock := {
 	viewClass: clView,
 	viewFlags: vVisible + vClickable,
 	viewBounds: {left: 0, top: 0, right: 119, bottom: 28},
+	// ticks between steps while the pen is held, and before the first repeat
 	repeatingTapDelay: 15,
 	firstTapDelay: 30,
 	increment: 1,
 	midnite: nil,
 	wrapping: true,
+	// set by the click script: the start of the day being edited
 	basedate: nil,
 	useAmPm: true,
+	// clock:Refresh() redraws the clock, e.g. after the time was changed by
+	// something else (documented)
 	Refresh: func() begin
 		self:Dirty()
 	end,
+	// clock:Update() also just redraws it
 	Update: func() begin
 		self:Dirty()
 	end,
@@ -22,10 +33,15 @@ protoDigitalClock := {
 			viewClass: clView,
 			viewFlags: vVisible + vClickable,
 			viewBounds: nil,
+			// viewSetupFormScript: decides useAmPm from the locale (timeCycle 1 is the
+			// twelve-hour cycle) and narrows the view by the am/pm flap when there is none
 			viewSetupFormScript: func() begin
 				local timeformat, l2;
 				(if (useAmPm := ((timeformat := GetLocale().timeformat).timeCycle = 1)) then (viewBounds := SetBounds(-4, 0, 119, 28)) else (viewBounds := SetBounds((l2 := 10), 0, (119 - l2), 28)))
 			end,
+			// viewDrawScript: draws the hour flap, its one or two digits, the colon (only
+			// when the locale separates hours and minutes with ":"), the minutes flap and
+			// digits and the am/pm flap, from the bitmap strips of the magic pointers
 			viewDrawScript: compile(
 				constants: {
 					kROM_651: @flapSlides,
@@ -36,9 +52,13 @@ protoDigitalClock := {
 				func() begin
 					local timeformat, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
 					timeformat := GetLocale().timeformat;
+					// l2 is not used again
 					l2 := (if useAmPm then 4 else 9);
+					// l5, l6: which hour and minute flap picture (the minute one differs when
+					// single minutes are stepped); l7 the minutes into the day, l8 the hour
 					l5 := 0;
 					l6 := (if (increment < 5) then 1 else 0);
+					// 1440 minutes in a day
 					l8 := ((l7 := (Time mod 1440)) div 60);
 					if useAmPm then begin
 							l8 := (l8 mod 12)
@@ -48,6 +68,8 @@ protoDigitalClock := {
 						end;
 					l9 := (l7 mod 60);
 					l10 := (l8 div 10);
+					// l11: draw the tens of the hour - not when hourLeadingZ is 1 (no leading
+					// zero) and that digit is 0
 					l11 := ((timeformat.hourLeadingZ <> 1) or (if (timeformat.hourLeadingZ = 1) then (l10 <> 0)));
 					if useAmPm then begin
 							l3 := '{left: 9, top: 2, right: 26, bottom: 26};
@@ -68,13 +90,20 @@ protoDigitalClock := {
 					DrawXBitmap('{left: 52, top: 0, right: 97, bottom: 28}, kROM_651, l6, 0);
 					DrawXBitmap('{left: 55, top: 2, right: 72, bottom: 26}, kROM_622, (l9 div 10), 1);
 					DrawXBitmap('{left: 77, top: 2, right: 94, bottom: 26}, kROM_622, (l9 mod 10), 1);
+					// 720 minutes in half a day: 0 am, 1 pm
 					(if useAmPm then DrawXBitmap('{left: 100, top: 0, right: 119, bottom: 28}, kROM_604, (l7 div 720), 0))
 				end),
+			// viewClickScript: the pen's x picks what is stepped (am/pm flap past 100:
+			// 720 minutes; the hour up to 45: 60; the minute's tens up to 77: 10 when
+			// increment is under 5; else increment), its half the direction (the am/pm
+			// flap always toggles); repeats while the pen is down, after firstTapDelay
+			// then every repeatingTapDelay ticks, revealing the changed digits with a
+			// click; then sends the client TimeChanged and returns true (handled)
 			viewClickScript: func(unit) begin
 				local box, increment2, l3, l4, l5, l6, time2, least, most, copy;
 				InkOff(unit);
 				box := self:GlobalBox();
-				if ((l3 := (GetPoint(0, unit) - box.left)) > 100) then begin
+				if ((l3 := (GetPoint(firstX, unit) - box.left)) > 100) then begin
 						increment2 := 720
 					end else begin
 						if (l3 <= 45) then begin
@@ -95,16 +124,19 @@ protoDigitalClock := {
 								l4 := 28
 							end
 					end else begin
-						if (GetPoint(1, unit) > ((box.bottom + box.top) div 2)) then begin
+						if (GetPoint(firstY, unit) > ((box.bottom + box.top) div 2)) then begin
 								increment2 := (-increment2);
 								l4 := -28
 							end else begin
 								l4 := 28
 							end
 					end;
+				// l4: the reveal's direction and distance; basedate the start of the day (of
+				// the day before, for midnight when midnite is set)
 				l5 := (Time mod 1440);
 				basedate := ((Time - l5) + (if (if midnite then (l5 = 0)) then -1440 else 0));
 				l6 := (Ticks() + firstTapDelay);
+				// time2 is the time before the step; least..most the x range to reveal
 				(repeat time2 := Time; if (if (not wrapping) then (increment <> 1)) then begin
 							if midnite then begin
 									if (Time = (basedate + 1)) then begin

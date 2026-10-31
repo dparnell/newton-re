@@ -1,4 +1,5 @@
-// protoPictTextButton, and what only it reaches
+// protoPictTextButton: a text button that shows a picture (icon) to the left
+// of its text, the two centred together in the button.
 
 protoPictTextButton := {
 	_proto: @protoTextButton,
@@ -6,7 +7,10 @@ protoPictTextButton := {
 	viewBounds: nil,
 	text: uCardPositionAlertButton,
 	icon: nil,
+	// the shapes drawn, made on the first draw and kept
 	pix: nil,
+	// draws the icon and the text centred: l2 is their width together (2
+	// pixels between), l3 the left edge that centres them, l6 the text's top
 	viewDrawScript: func() begin
 		local box, l2, l3, fontAscent2, fontHeight2, l6;
 		if (not pix) then begin

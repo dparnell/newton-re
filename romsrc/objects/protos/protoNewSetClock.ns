@@ -1,7 +1,14 @@
-// protoNewSetClock, and what only it reaches
+// protoNewSetClock: an analog clock face the user sets by dragging its
+// hands - the minute hand when the pen starts far from the centre, the hour
+// hand when near it (a tap near the centre then moves the nearest hand to
+// where the pen is lifted). The time is kept in Time (minutes since 1904,
+// as Time() gives); crossing 12 o'clock with a hand changes the hour or
+// AM/PM, with a cuckoo. The user's TimeChanged is called on each change.
 
 protoNewSetClock := {
+	// set while the hour hand is dragged: it is drawn exactly on the hour
 	exactHour: nil,
+	// cos(6k degrees) * 10000 for k = 0..15: a minute's angle in a quarter turn
 	sinTable: [|Array|:
 		10000,
 		9945,
@@ -21,7 +28,12 @@ protoNewSetClock := {
 		0
 	],
 	viewFormat: nil,
+	// Draws the face and the hands. The first time, pix is made: the face
+	// picture (icon) scaled to the view and, unless suppressAnnotations exists,
+	// the four annotations (12, 3, 6, 9) placed inside its edge (inset).
+	// The hour hand moves on between the hours unless exactHour.
 	viewDrawScript: func() begin
+		// l3: the face's half width (its centre); l7: the hour hand's position in minutes of the dial
 		local box, right, l3, fontAscent2, annotation, strFontWidth2, l7;
 		if (not pix) then begin
 				pix := Array(5, nil);
@@ -58,10 +70,14 @@ protoNewSetClock := {
 		self:DrawHand(l7, l3, 22000)
 	end,
 	viewFlags: vVisible + vClickable,
+	// if set, the minutes snap to multiples of quantize
 	quantize: nil,
 	minutes: 30,
 	fIconAsShape: nil,
 	viewBounds: {left: 30, top: 30, right: 146, bottom: 146},
+	// Draws a hand from the centre (a2, the face's radius) towards position
+	// minutes (0-59 round the dial), its length a2 * 10000 / a3: the quarter
+	// (l1) picks the signs, sinTable the sine and cosine of the angle within it.
 	DrawHand: func(minutes, a2, a3) begin
 		local l1, sinTableItem22, sinTableItem2, sinTableItem, line;
 		l1 := (minutes div 15);
@@ -82,9 +98,13 @@ protoNewSetClock := {
 		self:DrawShape((line := MakeLine((a2 - 2), (a2 - 2), ((a2 + ((sinTableItem2 * a2) div a3)) - 2), ((a2 + ((sinTableItem * a2) div a3)) - 2))), '{pensize: 4})
 	end,
 	icon: picture('picture, "resources/picture/445b1d"),
+	// |a1 - a2|
 	diff: func(a1, a2) begin
 		(if (a1 > a2) then return (a1 - a2) else return (a2 - a1))
 	end,
+	// The angle of the point (left, top) (both >= 0) in the dial's minutes,
+	// 0 to 15 from the horizontal: the first entry of atanTable (tan of the
+	// half-minute angles * 10000) above top/left.
 	FastEnoughAtan: func(left, top) begin
 		local l1, l2;
 		if (left = 0) then begin
@@ -103,11 +123,14 @@ protoNewSetClock := {
 			end);
 		return l2
 	end,
+	// clock:Refresh() - shows Time again (after it was changed from outside).
 	Refresh: func() begin
 		hours := ((Time div 60) mod 24);
 		minutes := (Time mod 60);
 		self:Dirty()
 	end,
+	// Before opening: Time defaults to now; the hands, the annotations and the
+	// font are set up unless given.
 	viewSetupFormScript: func() begin
 		if (not (Time exists)) then begin
 				self.Time := Time()
@@ -119,14 +142,24 @@ protoNewSetClock := {
 			end;
 		(if (not (clockFont exists)) then (self.clockFont := @fontSystem12))
 	end,
+	// An approximate distance from the sides diff and diff2: the longer plus
+	// half the shorter (the click script inlines the same sum).
 	distance: func(diff, diff2) begin
 		(if (diff > diff2) then return (diff + (diff2 div 2)) else return (diff2 + (diff div 2)))
 	end,
+	// Follows the pen: each point's angle (l1, in the dial's minutes) and
+	// distance from the centre (l2) move the hand chosen at the start (l3:
+	// 'minutes beyond a quarter of the width from the centre, else 'hours),
+	// updating Time as it goes; passing 12 o'clock with the minute hand moves
+	// the hour, with the hour hand switches AM/PM. A tap that starts near the
+	// centre (l11) moves only the hand where the pen ends. Ticks and tocks.
 	viewClickScript: func(unit) begin
+		// l5, l6: the face's width and half width; l7, l8: the pen from the centre
+		// (y upwards); l9, l10: their sizes; minutes2: the hand's last position
 		local l1, l2, l3, box, l5, l6, l7, l8, l9, l10, l11, l12, l13, minutes2;
 		l6 := ((l5 := ((box := self:GlobalBox()).right - box.left)) div 2);
-		l7 := ((GetPoint(0, unit) - box.left) - l6);
-		l8 := (l6 - (GetPoint(1, unit) - box.top));
+		l7 := ((GetPoint(firstX, unit) - box.left) - l6);
+		l8 := (l6 - (GetPoint(firstY, unit) - box.top));
 		l9 := (if (l7 < 0) then (-l7) else l7);
 		l10 := (if (l8 < 0) then (-l8) else l8);
 		if (l9 > l10) then begin
@@ -139,7 +172,7 @@ protoNewSetClock := {
 		if (not l11) then begin
 				InkOff(unit)
 			end;
-		(repeat l7 := ((GetPoint(4, unit) - box.left) - l6); l8 := (l6 - (GetPoint(5, unit) - box.top)); l9 := (if (l7 < 0) then (-l7) else l7); l10 := (if (l8 < 0) then (-l8) else l8); l1 := (15 - self:FastEnoughAtan(l9, l10)); if ((l7 * l8) < 0) then begin
+		(repeat l7 := ((GetPoint(finalX, unit) - box.left) - l6); l8 := (l6 - (GetPoint(finalY, unit) - box.top)); l9 := (if (l7 < 0) then (-l7) else l7); l10 := (if (l8 < 0) then (-l8) else l8); l1 := (15 - self:FastEnoughAtan(l9, l10)); if ((l7 * l8) < 0) then begin
 					l1 := (30 - l1)
 				end; if ((l7 < 0) or (if (l7 = 0) then (l8 < 0))) then begin
 					l1 := (l1 + 30)
@@ -199,6 +232,7 @@ protoNewSetClock := {
 					self:Dirty();
 					RefreshViews()
 				end until StrokeDone(unit));
+		// Time keeps its day (1440 minutes in a day) and takes the new hour and minutes
 		if l11 then begin
 				if (l2 > (l5 div 4)) then begin
 						minutes := l1
@@ -222,7 +256,10 @@ protoNewSetClock := {
 	end,
 	viewClass: clView,
 	hours: 12,
+	// the face's shapes, made on the first draw
 	pix: nil,
+	// tan((k + 0.5) * 6 degrees) * 10000 for k = 0..14: the boundaries between
+	// the dial's minutes in a quarter turn (FastEnoughAtan)
 	atanTable: [|Array|:
 		524,
 		1584,

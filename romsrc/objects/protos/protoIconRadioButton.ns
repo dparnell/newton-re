@@ -1,16 +1,25 @@
-// protoIconRadioButton, and what only it reaches
+// protoIconRadioButton: a radio button whose label is a picture (labelIcon)
+// with text (labelText) below it, both centred to the right of the button; its
+// _proto, a protoCheckboxIcon with that label layout, is unnamed.
 
 protoIconRadioButton := {
+	// the radio button's pictures, off and on
 	icon: @radioOffBitmap,
 	onBitmap: @radioOnBitmap,
 	offBitmap: @radioOffBitmap,
+	// a radio button's click and radioClickScript, shared with protoRadioButton
 	viewClickScript: viewClickScript_2,
 	radioClickScript: radioClickScript,
+	// (this frame's debug number, and its _proto's below, are the ROM's own)
 	debug: 46622864,
 	_proto: {
+		// the gap between the picture and the text, and the label's text and picture
 		spacing: 4,
 		labelText: nil,
 		labelIcon: nil,
+		// viewSetupChildrenScript: centres the picture and the text below it in the
+		// view (right of the 16-pixel button), each centred on the wider of the two;
+		// copies of the two step children get those bounds
 		viewSetupChildrenScript: func() begin
 			local bounds, bounds2, copy, copy2, l5, l6, strFontWidth2, l8, most, box, l11;
 			bounds := SetBounds(0, 0, 0, 0);
@@ -40,6 +49,7 @@ protoIconRadioButton := {
 			{
 				viewClass: clPictureView,
 				viewFlags: vVisible + vReadOnly,
+				// shows labelIcon
 				viewSetupFormScript: func() begin
 					(self.icon := labelIcon)
 				end
@@ -47,7 +57,9 @@ protoIconRadioButton := {
 			{
 				viewClass: clTextView,
 				viewFlags: vVisible + vReadOnly,
+				// oneLineOnly (8388608)
 				viewJustify: 8388608,
+				// shows labelText
 				viewSetupFormScript: func() begin
 					(self.text := labelText)
 				end

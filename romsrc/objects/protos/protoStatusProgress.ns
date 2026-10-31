@@ -1,4 +1,7 @@
-// protoStatusProgress, and what only it reaches
+// protoStatusProgress: the "thumbnail" progress gauge of a status slip
+// (protoStatusTemplate) - a small page with a turned-down corner that fills
+// as the operation proceeds. Its value comes from the progress slot of the
+// values given to ViewSet/UpdateIndicator: an integer, or [value, min, max].
 
 protoStatusProgress := {
 	debug: 11649,
@@ -11,8 +14,12 @@ protoStatusProgress := {
 	viewFlags: vVisible + vReadOnly,
 	viewJustify: vjParentCenterH + vjSiblingBottomV,
 	viewFormat: 0,
+	// the size of the turned-down corner, in pixels
 	Dogear: 10,
+	// the slot of the values frame this component shows
 	name: 'progress,
+	// viewSetupFormScript(): reads the value: none shows the gauge full, an
+	// array is [value, min, max], anything else is the value
 	viewSetupFormScript: func() begin
 		(if ((data := self:path().(name)) = nil) then (viewValue := maxValue) else (if (ClassOf(data) = 'Array) then begin
 					viewValue := data[0];
@@ -20,24 +27,32 @@ protoStatusProgress := {
 					(maxValue := data[2])
 				end else (viewValue := data)))
 	end,
+	// viewUpdateFormScript(): sent by UpdateIndicator; reads the new value
+	// and redraws
 	viewUpdateFormScript: func() begin
 		self:viewSetupFormScript();
 		self:Dirty()
 	end,
+	// viewDrawScript(): draws the page (gray, or black when complete), the
+	// done part black from the top, then the dog-ear in the top right corner
 	viewDrawScript: func() begin
 		local box, l2, floor2;
 		box := self:LocalBox();
+		// l2: the page's fill pattern, 2 (light gray) or 5 (black) when done
 		l2 := 2;
 		if (viewValue >= maxValue) then begin
 				l2 := 5
 			end;
-		self:DrawShape(MakeRoundRect(box.left, box.top, box.right, box.bottom, 4), {transferMode: 0, fillPattern: l2, pensize: 2});
+		self:DrawShape(MakeRoundRect(box.left, box.top, box.right, box.bottom, 4), {transferMode: modeCopy, fillPattern: l2, pensize: 2});
 		if (if (viewValue > 0) then (viewValue < maxValue)) then begin
+				// looks like a ROM bug: the height is viewValue scaled by
+				// (max - min) without subtracting minValue, so a gauge whose
+				// minimum is not 0 fills too far
 				floor2 := floor((viewValue * (box.bottom / (maxValue - minValue))));
-				self:DrawShape(MakeRoundRect(box.left, box.top, box.right, floor2, 4), {transferMode: 0, fillPattern: 5})
+				self:DrawShape(MakeRoundRect(box.left, box.top, box.right, floor2, 4), {transferMode: modeCopy, fillPattern: 5})
 			end;
-		self:DrawShape(MakeRoundRect((box.right - Dogear), box.top, box.right, (box.top + Dogear), 4), {transferMode: 0, fillPattern: 1, penPattern: 0, pensize: 2});
-		self:DrawShape(MakePolygon([Array: ((box.right - Dogear) - 1), box.top, ((box.right - Dogear) - 1), (box.top + Dogear), (box.right - 2), (box.top + Dogear), ((box.right - Dogear) - 1), box.top]), {transferMode: 0, fillPattern: 1, penPattern: 5, pensize: 2})
+		self:DrawShape(MakeRoundRect((box.right - Dogear), box.top, box.right, (box.top + Dogear), 4), {transferMode: modeCopy, fillPattern: 1, penPattern: 0, pensize: 2});
+		self:DrawShape(MakePolygon([Array: ((box.right - Dogear) - 1), box.top, ((box.right - Dogear) - 1), (box.top + Dogear), (box.right - 2), (box.top + Dogear), ((box.right - Dogear) - 1), box.top]), {transferMode: modeCopy, fillPattern: 1, penPattern: 5, pensize: 2})
 	end
 };
 

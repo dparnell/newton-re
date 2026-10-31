@@ -1,8 +1,11 @@
-// protoRichInputLine, and what only it reaches
+// protoRichInputLine: a protoInputLine that takes ink as well as recognized
+// text ("rich strings": words left as ink sit in the text as ink words),
+// through the rcInkorText recognition configuration.
 
 protoRichInputLine := {
 	_proto: @protoInputLine,
 	viewFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed,
+	// recognize as text or keep as ink words, as the user's ink/text setting says
 	recConfig: @rcInkorText,
 	debug: 11541917
 };

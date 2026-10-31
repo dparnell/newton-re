@@ -1,18 +1,25 @@
-// protoPeoplePopup, and what only it reaches
+// protoPeoplePopup: a floating slip, sliding up from the bottom of the
+// screen, holding a protoPeoplePicker of one data class. Made and opened by
+// New; when the slip closes, the chosen items are passed to the caller's
+// pickActionScript.
 
 protoPeoplePopup := {
 	viewJustify: vjParentCenterH + vjParentBottomV,
 	viewBounds: {left: 0, top: -235, right: 238, bottom: 0},
 	viewFlags: vApplication + vFloating,
 	viewFormat: vfFillWhite + vfRound(2),
-	viewEffect: 133120,
+	viewEffect: fxDrawerEffect,
+	// the selection, the data class shown, and the view told of the choice
 	selected: nil,
 	dataClass: nil,
 	context: nil,
 	ReOrientToScreen: @defRotateFunc,
+	// makes a view of a frame built on this one (not opened)
 	Init: func() begin
 		BuildContext({_proto: self})
 	end,
+	// protoPeoplePopup:New(dataClass, selected, context, options): makes the
+	// slip, opens it and returns it; options are slots set on the picker
 	New: func(a1, a2, a3, a4) begin
 		(pop := self:Init()).dataClass := a1;
 		pop.context := a3;
@@ -27,8 +34,10 @@ protoPeoplePopup := {
 	_proto: @protoFloatNGo
 };
 
+// the picker in the slip
 list := {
 	_proto: @protoPeoplePicker,
+	// before the picker sets up: copy the slip's options into it
 	viewSetupFormScript: func() begin
 		if options then begin
 				(foreach key, value in options do begin
@@ -37,10 +46,13 @@ list := {
 			end;
 		inherited:?viewSetupFormScript()
 	end,
+	// on closing: if the caller has a pickActionScript, return 'postQuit, so
+	// that viewPostQuitScript is sent once the view is gone
 	viewQuitScript: func() begin
 		inherited:?viewQuitScript();
 		(if (if context then (context:pickActionScript exists)) then 'postQuit)
 	end,
+	// after closing: give the caller the selection
 	viewPostQuitScript: func() begin
 		context:pickActionScript(selected)
 	end,

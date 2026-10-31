@@ -1,4 +1,6 @@
-// protoStatus, and what only it reaches
+// protoStatus: a status bar (protoStatusBar) across the bottom of an
+// application with the clock, the time field and a close (cancel) button at
+// its right end.
 
 protoStatus := {
 	_proto: @protoStatusBar,

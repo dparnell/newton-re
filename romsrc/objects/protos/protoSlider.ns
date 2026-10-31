@@ -1,19 +1,32 @@
-// protoSlider, and what only it reaches
+// protoSlider: a gauge (protoGauge) the user can drag; it calls
+// TrackSlider while the knob moves and ChangedSlider when the pen is lifted
+// on a new value, and makes the change undoable.
 
 protoSlider := {
 	_proto: @protoGauge,
 	viewFlags: vVisible + vClickable,
 	declareSelf: 'baseGauge,
+	// the sound made as the knob moves
 	_sound: @ratchetSound,
+	// TrackSlider(): called each time viewValue changes while dragging; the
+	// application may override it (this default does nothing)
 	trackSlider: func() begin
 		nil
 	end,
+	// ChangedSlider(): called when the pen is lifted on a changed value; this
+	// default stores viewValue into vars.(valuePath) - slots the template is
+	// expected to provide (e.g. a preference's frame and slot)
 	ChangedSlider: func() begin
 		(vars.(valuePath) := viewValue)
 	end,
+	// viewChangedScript(slot, view): calls TrackSlider when viewValue changes
 	viewChangedScript: func(slot, view) begin
 		(if (slot = 'viewValue) then self:trackSlider())
 	end,
+	// ViewFinalChangeScript(valueBefore, valueAfter): the gauge's end of a
+	// drag; when the value really changed, registers an undo that calls this
+	// again with the values swapped, sets viewValue (when undoing) and calls
+	// ChangedSlider
 	viewFinalChangeScript: func(a1, a2) begin
 		(if (a2 <> a1) then begin
 				AddUndoAction('viewFinalChangeScript, [Array: a2, a1]);

@@ -1,19 +1,29 @@
-// protoPreferencesPopup, and what only it reaches
+// protoPreferencesPopup: a label picker in a preferences panel that sets one
+// setting (configPath, a slot of the vars frame the panel gives it) to one
+// of its items; the change can be undone.
 
 protoPreferencesPopup := {
 	indent: 75,
+	// the slot of vars this picker shows and sets
 	configPath: nil,
+	// the label's text at opening: the item matching the setting's value
 	TextSetup: func() begin
 		labelCommands[self:LabelIndex(vars.(configPath))]
 	end,
+	// the item at index was chosen: register an undo that puts the old value
+	// back (setLabelScript), then store the item
 	LabelActionScript: func(index) begin
 		AddUndoAction('setLabelScript, [Array: vars.(configPath)]);
 		(vars.(configPath) := items[index])
 	end,
+	// the undo action: shows and stores the item matching value a1 again
 	setLabelScript: func(a1) begin
 		self:UpdateText(labelCommands[self:LabelIndex(a1)]);
 		self:LabelActionScript(self:LabelIndex(a1))
 	end,
+	// the index of the item value a1 stands for (0 when none matches): a
+	// string matches an item's title, a frame by its title, else identity.
+	// (the local declared after its first use is the decompiler's layout)
 	LabelIndex: func(a1) begin
 		i2 := 0;
 		local i2;

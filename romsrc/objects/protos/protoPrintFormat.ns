@@ -1,8 +1,18 @@
-// protoPrintFormat, and what only it reaches
+// protoPrintFormat: the routing format an application gives for printing
+// and faxing a view of its data: the format is itself the view drawn on
+// each page (inside the page's margins), set up from the routing slip's
+// fields; with a cursor as target it prints one entry after another
+// (mainFormat, the format found for each entry), unless the format uses
+// the cursor itself (usesCursors).
 
 protoPrintFormat := {
 	type: 'printFormat,
 	storeCursors: true,
+	// the routing system sends it to fill in a new item's fields: the
+	// transport sets the printer's page bounds if there are none, and they
+	// are turned for the format's orientation. kFunction_4c6865 swaps a
+	// rectangle's width and height (left/top, right/bottom) and records the
+	// orientation in it
 	SetupItem: compile(
 		constants: {
 			kFunction_4c6865: func(a1, a2) begin
@@ -32,6 +42,11 @@ protoPrintFormat := {
 			fields
 		end),
 	routingType: 'view,
+	// insets the view by margins (and 20 more at the top of a fax, for the
+	// fax header); a full-page format (useFullPage) is pushed out by the
+	// printer's unprintable margins instead, to the page's edge at most
+	// (right and bottom are offsets from the parent's edges). With a1 true,
+	// changed bounds are set with SetValue so that the view moves
 	SetMarginBounds: func(a1) begin
 		local viewBounds2;
 		viewBounds2 := viewBounds;
@@ -52,6 +67,10 @@ protoPrintFormat := {
 		(if (if a1 then ((((viewBounds.left <> viewBounds2.left) or (viewBounds.right <> viewBounds2.right)) or (viewBounds.top <> viewBounds2.top)) or (viewBounds.bottom <> viewBounds2.bottom))) then SetValue(self, 'viewBounds, viewBounds))
 	end,
 	viewFlags: vVisible + vReadOnly,
+	// sent just before printing (a1 the item's fields): for a full-page
+	// format, take the printer's own page size for the paper (l1) and work
+	// out the margins it cannot print (printableMargin, from the paper's
+	// real size), both turned for a landscape format
 	LastChanceToSetup: compile(
 		constants: {
 			kFunction_4c6865: func(a1, a2) begin
@@ -86,9 +105,13 @@ protoPrintFormat := {
 						end)
 				end)
 		end),
+	// the format to print entry a1 of a cursor with
 	GetCursorFormat: func(a1) begin
 		self:FindCursorFormat(a1)
 	end,
+	// the number of pages the item will print to (a fax's cover page says
+	// it): lays the item out in a page-counting form (pageCounterForm),
+	// which leaves the count in fields.pageCount
 	CountPages: func(fields, target) begin
 		local context;
 		(context := BuildContext(@pageCounterForm)).fields := fields;
@@ -96,15 +119,18 @@ protoPrintFormat := {
 		context:Close();
 		fields.pageCount
 	end,
+	// true: print to the edges the printer can reach, not inside margins
 	useFullPage: nil,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
 	_proto: @targetFrameFormat,
+	// the cursor's current entry, the cursor moved on; nil (with an alert)
+	// when the entry has been deleted, or with no cursor
 	NextItem: func() begin
 		local entry;
 		entry := nil;
 		if targetCursor then begin
 				if ((entry := targetCursor:entry()) = 'deleted) then begin
-						self:Notify(3, title, "Cannot print: The data has been removed or deleted");
+						self:Notify(kNotifyAlert, title, "Cannot print: The data has been removed or deleted");
 						return nil
 					end;
 				targetCursor:Next()
@@ -118,6 +144,10 @@ protoPrintFormat := {
 	dataTypes: [|Array|: 'view],
 	orientation: 'portrait,
 	pageHeight: nil,
+	// on opening: the first format opened is the cover form (margins of 60
+	// at the sides when it has no symbol or noDefaults); this one is the
+	// print form; with a cursor target, take the cursor and, unless the
+	// format uses it itself, the format for its first entry
 	viewSetupFormScript: func() begin
 		if (coverForm = nil) then begin
 				coverForm := self;
@@ -134,6 +164,11 @@ protoPrintFormat := {
 	end,
 	viewClass: clView,
 	viewFont: tsFancy + tsSize(12),
+	// protoPrintForm asks it after each page whether there is another: the
+	// print form's printNextPageScript, else (printing a cursor's entries
+	// one by one) the next entry, its format and the children made again;
+	// true while there is more. (result is not declared local, so it is
+	// found or made as a slot of the frames in scope)
 	printNextPageScriptX: func() begin
 		(if fields then begin
 				result := nil;
@@ -150,6 +185,8 @@ protoPrintFormat := {
 				result
 			end)
 	end,
+	// before the children are made: fit to the printable area, note the page
+	// size (pageWidth, pageHeight) and make the entry's format the child
 	viewSetupChildrenScript: func() begin
 		local box;
 		if useFullPage then begin

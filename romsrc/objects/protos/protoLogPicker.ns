@@ -1,9 +1,18 @@
-// protoLogPicker, and what only it reaches
+// protoLogPicker: the routing slip's picker for what to do with a sent item's
+// log - a protoMultiLinePicker whose choices (info.logChoices) set the
+// transport's config info.logConfig to one of info.logActions; a choice that
+// also files (info.fileChoices) opens the filing slip to pick the folder the
+// log goes to (the transport's config info.fileConfig). Without logConfig, a
+// tap opens the filing slip directly.
 
 protoLogPicker := {
 	_proto: @protoMultiLinePicker,
-	viewJustify: 8388608,
+	viewJustify: oneLineOnly,
+	// the frame given to the filing slip as its target (its labels: the folder)
 	fileTarget: nil,
+	// Before opening: hide or move the picker as the transport needs
+	// (doTheShuffle), take the label and the choices from info, then set up as a
+	// protoMultiLinePicker.
 	viewSetupFormScript: func() begin
 		self:doTheShuffle();
 		if info then begin
@@ -12,9 +21,13 @@ protoLogPicker := {
 			end;
 		inherited:?viewSetupFormScript()
 	end,
+	// The index of the current choice: where the transport's logConfig value is
+	// in info.logActions (nil if absent or there is no logConfig).
 	GetIndex: func() begin
 		(if (if info then info.logConfig) then ArrayPos(info.logActions, self:GetTransport():GetConfig(info.logConfig), 0, nil))
 	end,
+	// A tap: with logConfig, the popup of choices; without, straight to the
+	// filing slip (then the tap is cancelled as a pick, and handled: true).
 	Popit: func(x) begin
 		(if (if info then info.logConfig) then inherited:Popit(x) else (if info then begin
 					self:BringUpFiling(info.logText);
@@ -22,6 +35,9 @@ protoLogPicker := {
 					true
 				end))
 	end,
+	// The text shown: the current choice, followed by "in <folder>" when the
+	// choice files (folder name cut to 120 pixels); with no choice, just the
+	// folder in quotes (cut to 150 pixels); "" without info.
 	TextSetup: func() begin
 		local index, text, strTruncate2;
 		index := self:GetIndex();
@@ -41,23 +57,33 @@ protoLogPicker := {
 			end;
 		return text
 	end,
+	// The name of the folder in the transport's fileConfig, or "Unfiled Items".
 	GetFolderString: func() begin
 		local config;
 		(if (((config := self:GetTransport():GetConfig(info.fileConfig)) = nil) or (GetFolderStr(config) = nil)) then "Unfiled Items" else GetFolderStr(config))
 	end,
+	// Opens the filing slip (title a1) on the folder in the transport's
+	// fileConfig, on behalf of the transport's application (frame2 stands in for
+	// its view); the folder chosen comes back through FileThis.
 	BringUpFiling: func(a1) begin
 		local frame2;
 		fileTarget := {labels: self:GetTransport():GetConfig(info.fileConfig)};
 		frame2 := {_parent: GetRoot().(self:GetTransport().owner), appObjectFileThisIn: a1, appObjectFileAction: "Set", caller: self, FileThis: func(target, labelsChanged, a3, storeChanged, a5) begin
+			// the filing slip's FileThis: pass on the new folder (a3) if the labels changed, else nil
 			caller:FileThis((if labelsChanged then a3))
 		end};
 		GetRoot().filingSlip:OpenForUser(self, {target: fileTarget, targetView: frame2}, nil, nil)
 	end,
+	// Called by protoLabelPicker when choice index is picked: sets the transport's
+	// logConfig to its action, shows it, and opens the filing slip if it files.
 	LabelActionScript: func(index) begin
 		self:GetTransport():SetConfig(info.logConfig, info.logActions[index]);
 		self:UpdateText(self:TextSetup());
 		(if info.fileChoices[index] then self:BringUpFiling(ParamStr(info.fileText, [Array: info.fileChoices[index]])))
 	end,
+	// Called back from the filing slip with the folder chosen: stores it in
+	// fileConfig and redraws. (BringUpFiling's stand-in passes nil when the
+	// labels did not change, which stores nil - Unfiled Items.)
 	FileThis: func(target) begin
 		self:GetTransport():SetConfig(info.fileConfig, target);
 		self:UpdateText(self:TextSetup())

@@ -1,16 +1,23 @@
-// protoPictRadioButton, and what only it reaches
+// protoPictRadioButton: a picture button that is one choice of a
+// protoPictRadioCluster: when on (viewValue non-nil) it is drawn with an
+// inverted square; tapping an off button asks the cluster to make it the
+// chosen one (buttonValue is the value it stands for).
 
 protoPictRadioButton := {
 	_proto: @protoPictureButton,
 	declareSelf: 'base,
 	viewValue: nil,
 	buttonValue: nil,
+	// draws the "on" mark (a 13-pixel square) over the picture when chosen
 	viewDrawScript: func() begin
 		(if viewValue then self:DrawShape(MakeRect(1, 1, 14, 14), nil))
 	end,
+	// the cluster sends it when viewValue has changed: redraw
 	UpdateBitmap: func() begin
 		base:Dirty()
 	end,
+	// a tap on a button not yet chosen makes it the cluster's choice (the
+	// cluster turns the others off); a chosen one ignores the tap
 	viewClickScript: func(unit) begin
 		if (viewValue = nil) then begin
 				cluster:SetCluster(base)

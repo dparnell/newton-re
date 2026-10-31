@@ -1,8 +1,18 @@
-// protoTextList, and what only it reaches
+// protoTextList: a scrolling list of text lines (or of shapes, with
+// isShapeList) from ListItems, one line per item, with a single selection
+// (Selection) or, with useMultipleSelections, several (selectedItems,
+// shown with check boxes), and optional up/down scroll arrows
+// (useScrollers). Tapping a line selects it and calls buttonClickScript.
+// The view's height is a whole number of lines (viewLines).
 
 protoTextList := {
+	// the list's width, set by SetupList
 	viewWidth: 0,
+	// the selected line's index (single selection)
 	Selection: 0,
+	// setViewHeight(): fixes the number of visible lines (if not set, as many
+	// as fit), the height of the part that is scrolled out of view (spillHeight)
+	// and returns the visible height (viewHeight)
 	setViewHeight: func() begin
 		if (viewLines = 0) then begin
 				self.viewLines := (self:LocalBox().bottom div lineHeight)
@@ -10,8 +20,12 @@ protoTextList := {
 		spillHeight := ((numItems - viewLines) * lineHeight);
 		return (viewHeight := (lineHeight * viewLines))
 	end,
+	// the selected lines' indexes (multiple selection)
 	selectedItems: nil,
 	viewFormat: vfFillWhite + vfFrameBlack + vfPen(1),
+	// SetupList(): measures the items - the line height from the first shape
+	// or the font - and sizes the view to whole lines (keeping the bottom when
+	// multiple selection, else the top)
 	SetupList: func() begin
 		local shapeBounds2, setViewHeight, copy, box;
 		if (if useMultipleSelections then (not selectedItems)) then begin
@@ -34,9 +48,13 @@ protoTextList := {
 		self.viewBounds := copy;
 		(viewWidth := box.right)
 	end,
+	// ShowScrollers(): whether the scroll arrows are wanted - useScrollers and
+	// more lines than fit
 	ShowScrollers: func() begin
 		return (if useScrollers then (self:GetTotalLines() > self:GetVisibleLines()))
 	end,
+	// HiliteLine(index): toggles a line in the multiple selection (and its
+	// check box), or moves the single selection to it
 	HiliteLine: func(temp) begin
 		local setContains2;
 		(if useMultipleSelections then (if (if (if temp then (temp < numItems)) then (temp >= 0)) then (if (setContains2 := SetContains(selectedItems, temp)) then begin
@@ -51,24 +69,36 @@ protoTextList := {
 				end))
 	end,
 	viewHeight: 0,
+	// non-nil: up/down scroll arrows at the right when the list is longer than
+	// the view
 	useScrollers: nil,
 	viewFlags: vVisible + vClipping + vClickable,
+	// ButtonClickScript(index): a line was tapped; the application supplies it
 	buttonClickScript: func(a1) begin
 		nil
 	end,
 	CheckOn: CheckOn,
+	// the height, in pixels, of the lines below the visible ones
 	spillHeight: 0,
+	// GetViewWidth(), GetTotalLines(), GetVisibleLines(), GetViewHeight(),
+	// GetLineHeight(): the list's measurements, for its parts
 	GetViewWidth: func() begin
 		return viewWidth
 	end,
 	GetTotalLines: func() begin
 		return numItems
 	end,
+	// the height of a line, from the font or the first shape
 	lineHeight: 0,
+	// how far the list is scrolled, in pixels (SetOrigin)
 	viewOriginY: 0,
+	// viewScrollDownScript(), viewScrollUpScript(): scroll a line
 	viewScrollDownScript: func() begin
 		self:doscrollscript(lineHeight)
 	end,
+	// InvertLine(index, on): draws a line's selection - with multiple selection
+	// its check box (CheckOn or CheckOff); otherwise inverts it (modeXor),
+	// clipped so as not to invert the scroll arrows. Only a visible line
 	InvertLine: compile(
 		constants: {
 			kLiteral_3c5eed: '{transferMode: 2, penPattern: 0, fillPattern: 5}
@@ -102,6 +132,10 @@ protoTextList := {
 		return viewLines
 	end,
 	isShapeList: nil,
+	// viewClickScript(unit): follows the pen, hiliting the line under it and
+	// scrolling a line when it goes above or below the list; on lifting over a
+	// line, selects it and calls ButtonClickScript. (x is not a local: it is
+	// set as a variable found by inheritance, or a global)
 	viewClickScript: func(unit) begin
 		local box, l2, l3;
 		InkOff(unit);
@@ -110,8 +144,8 @@ protoTextList := {
 		box := self:GlobalBox();
 		l3 := -1;
 		(loop begin
-				x := GetPoint(4, unit);
-				if ((l2 := (GetPoint(5, unit) - box.top)) > 0) then begin
+				x := GetPoint(finalX, unit);
+				if ((l2 := (GetPoint(finalY, unit) - box.top)) > 0) then begin
 						l2 := (l2 div lineHeight)
 					end;
 				if (((numItems = 0) or (x < box.left)) or (x > box.right)) then begin
@@ -148,6 +182,8 @@ protoTextList := {
 		(if (l2 >= 0) then self:buttonClickScript((Selection := (l2 + (viewOriginY div lineHeight)))))
 	end,
 	viewClass: clView,
+	// doScrollScript(delta): scrolls by delta pixels, within the list, and
+	// tells the scroll arrows
 	doscrollscript: func(a1) begin
 		local l1;
 		(if (if ((l1 := (viewOriginY + a1)) >= 0) then (l1 <= spillHeight)) then begin
@@ -156,18 +192,26 @@ protoTextList := {
 			end)
 	end,
 	debug: 361046,
+	// SetChild(view): the list's text or picture view (sent by it)
 	SetChild: func(a1) begin
 		(self.scrollableChild := a1)
 	end,
+	// the number of items
 	numItems: 0,
 	viewFont: @fontSystem10,
+	// drawHilite(): draws the selection - the visible lines' check boxes, or
+	// the selected line inverted (sent by the text or picture view's
+	// viewDrawScript)
 	drawHilite: func() begin
 		local l1;
 		(if useMultipleSelections then (for i := (l1 := (viewOriginY div lineHeight)) to ((l1 + viewLines) - 1) do begin
 					self:InvertLine(i, SetContains(selectedItems, i))
 				end) else self:InvertLine(Selection, true))
 	end,
+	// the number of lines shown (0: as many as fit)
 	viewLines: 0,
+	// viewSetupChildrenScript(): the text or picture view, and the scroll
+	// arrows if wanted (scrolling back if the list got shorter)
 	viewSetupChildrenScript: func() begin
 		local l1;
 		l1 := (if isShapeList then pictList else textList);
@@ -179,6 +223,7 @@ protoTextList := {
 	GetLineHeight: func() begin
 		return lineHeight
 	end,
+	// non-nil: several lines can be selected, each with a check box
 	useMultipleSelections: nil,
 	viewChildren: [viewChildren: textList, pictList, textListScrollers],
 	textList: nil,
@@ -187,12 +232,15 @@ protoTextList := {
 	textListScrollers: nil
 };
 
+// the list as text: the items, one per line
 textList := {
 	debug: 71574,
 	viewClass: clTextView,
 	viewFlags: vVisible,
 	viewJustify: 0,
+	// the left margin, 18 with check boxes
 	inset: 3,
+	// viewSetupFormScript(): the items joined into one text, a line each
 	viewSetupFormScript: func() begin
 		if useMultipleSelections then begin
 				self.inset := 18
@@ -211,13 +259,16 @@ textList := {
 	preallocatedContext: 'textList
 };
 
+// the list as shapes: each item moved down to its line
 pictList := {
 	debug: 1144630,
 	viewClass: clPictureView,
 	viewFlags: vVisible,
 	viewJustify: vjParentFullH,
 	icon: nil,
+	// the left margin, 18 with check boxes
 	inset: 3,
+	// viewSetupFormScript(): the shapes, each offset to its line
 	viewSetupFormScript: func() begin
 		if useMultipleSelections then begin
 				self.inset := 18
@@ -231,6 +282,7 @@ pictList := {
 		local lineHeight;
 		local fontAscent2;
 		local l4;
+		// (the decompiler puts the declarations above after the uses: only layout)
 		(foreach item in ListItems do begin
 				local copy;
 				OffsetShape((copy := Clone(item)), 0, l4);
@@ -246,11 +298,13 @@ pictList := {
 	preallocatedContext: 'pictList
 };
 
+// the scroll arrows, centred vertically at the list's right
 textListScrollers := {
 	debug: 5438275,
 	viewBounds: {left: -18, top: 0, right: -1, bottom: 33},
 	viewJustify: vjParentRightH,
-	anchoredViewJustify: 288,
+	// the justification it takes once placed
+	anchoredViewJustify: vjParentRightH + vjParentClip,
 	ScrollRect: nil,
 	DataRect: nil,
 	ViewRect: nil,
@@ -258,6 +312,8 @@ textListScrollers := {
 	inScrollArrow: nil,
 	scrollersHidden: nil,
 	scrollersSetup: nil,
+	// SetupScrollers(): sets the scroller's rectangles (in lines) from the
+	// list's length and its position from the list's scroll
 	SetupScrollers: func() begin
 		local totalLines, bounds;
 		self.scrollersSetup := true;
@@ -273,6 +329,8 @@ textListScrollers := {
 				(self.yPos := (self:Parent().viewOriginY div lineHeight))
 			end)
 	end,
+	// viewSetupFormScript(): the first time, centres the arrows vertically on
+	// the list's visible height and sets them up
 	viewSetupFormScript: func() begin
 		local l1, viewHeight, copy, visibleLines;
 		if (not scrollersSetup) then begin
@@ -296,6 +354,8 @@ textListScrollers := {
 		self:ShowHideScrollers();
 		inherited:?viewSetupDoneScript()
 	end,
+	// viewScroll2DScript(direction, info): scrolls the list info.amount lines
+	// up or down
 	viewScroll2DScript: func(arrowDirection, a2) begin
 		inScrollArrow := true;
 		(for i := 1 to abs(a2.amount) do begin
@@ -310,6 +370,9 @@ textListScrollers := {
 		RefreshViews();
 		(inScrollArrow := nil)
 	end,
+	// UpdateScrollers(lines): the list scrolled by some lines (0: it was
+	// redone, so set everything up again); not while the arrows themselves
+	// scroll it
 	UpdateScrollers: func(a1) begin
 		(if (if scrollersSetup then (not inScrollArrow)) then begin
 				if (a1 = 0) then begin
@@ -323,6 +386,8 @@ textListScrollers := {
 				self:AdjustArrows()
 			end)
 	end,
+	// ShowHideScrollers(): shows the arrows when the list is longer than its
+	// view, hides them otherwise
 	ShowHideScrollers: func() begin
 		(if TextBase:ShowScrollers() then (if scrollersHidden then begin
 					self.scrollersHidden := nil;
@@ -332,6 +397,7 @@ textListScrollers := {
 					self:Hide()
 				end))
 	end,
+	// viewQuitScript(): forgets the setup and restores the saved viewFlags
 	viewQuitScript: func() begin
 		self.scrollersSetup := nil;
 		viewFlags := savedViewFlags;

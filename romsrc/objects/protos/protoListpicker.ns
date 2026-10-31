@@ -1,48 +1,82 @@
-// protoListpicker, and what only it reaches
+// protoListpicker: the system's list picker - a scrolling, checkable list
+// of items from a soup (or an array), shown in columns, with folder tabs,
+// A-Z tabs, a "Selected Only" checkbox, a count of the items selected, New
+// and Find buttons and a close box (each can be suppressed). The data
+// definition in pickerDef (a protoNameRefDataDef) says how to show and edit
+// the items; the selection is the array selected, of name references.
+// Items not in the soup (made by New, or given in selected) are "fakes",
+// listed from an array cursor (ersatzCursor) merged with the soup's cursor
+// (protoMultiCursor). listBase is the list itself (a protoSoupOverview).
+// The other definitions in this file are the picker's children.
 
 protoListpicker := {
+	// whether any fake items exist (the multi-cursor is then needed)
 	anyFakes: nil,
 	viewFormat: vfFillWhite + vfRound(2),
+	// non-nil: unselected items are kept in selected when the picker closes
 	dontPurge: nil,
 	AppAll: allItems,
+	// the tap being handled: {nameRef, tapIndex, bbox, fieldPath, editPaths,
+	// _reqPaths, _sortValue, popup} (listBase's SetTapInfo)
 	fTapinfo: nil,
+	// options: parts of the picker to leave out
 	suppressFolderTabs: nil,
 	suppressFind: true,
+	// the valid tests the array cursor is given (SetupCursor makes them)
 	validIfFake: nil,
 	suppressNew: nil,
 	viewFlags: vVisible + vApplication + vClickable,
 	suppressBorder: nil,
+	// the query spec used, with the folder filtering added
 	myQuerySpec: nil,
+	// non-nil: open showing only the selected items
 	reviewSelections: nil,
+	// the index text (IndexStr) of the cursor's place, to go back to it
 	fCurrentKey: nil,
+	// how many items are selected
 	totalSelected: 0,
 	viewBounds: {left: 2, top: 20, right: -2, bottom: 260},
+	// the soup listed (from soupToQuery)
 	fSoup: nil,
 	validIfSelected: nil,
 	appObject: [|Array|: item_2, items_2],
+	// the callback id the picker registers for its soup's changes
 	soupChangeSymbol: 'listpicker,
+	// 'all or 'selected (the "Selected Only" checkbox)
 	nowShowing: 'all,
 	suppressScrollers: nil,
+	// the cursor the list shows: soupCursor, multiCursor or ersatzCursor
 	cursor: nil,
+	// the folder shown ('_all for all)
 	labelsFilter: '_all,
 	origListBounds: nil,
 	soupCursor: nil,
+	// non-nil: items can only be looked at
 	readOnly: nil,
 	multiCursor: nil,
 	viewJustify: vjParentFullH,
+	// the last fake id given out (GetUniqueFakeID)
 	fakeID: nil,
+	// the view the data definition opened for a tap (an editor, a popup), if any
 	fOpenEditor: nil,
 	suppressAZTabs: nil,
 	querySpec: nil,
 	declareSelf: 'pickBase,
+	// the cursor over the selected array (the fake items, or the selection when
+	// showing only it); its context is the picker, and it finds a string key by
+	// binary search on the items' sort text
 	ersatzCursor: {
 		_proto: @arrayErsatzCursor,
+		// A new cursor over array a2 whose parent is a1.context (the picker): the
+		// one arrayErsatzCursor makes takes its _parent as its proto.
 		New: func(a1, a2) begin
 			local l1;
 			(l1 := inherited:New(a1, a2))._proto := l1._parent;
 			l1._parent := a1.context;
 			l1
 		end,
+		// Goes to key a1: a string is looked up (BSearchLeft) among the items'
+		// sort text, an item whose text begins with it counting as equal.
 		GotoKey: compile(
 			constants: {
 				kFunction_4503ad: func(a1, a2) begin
@@ -66,9 +100,14 @@ protoListpicker := {
 	fBorder: nil,
 	canScrollUp: nil,
 	folderDefault: '_all,
+	// For the folder tabs ('Filing): the picker itself is the target, on the
+	// default store; any other request goes to the parent.
 	GetTargetInfo: func(a1) begin
 		(if (a1 = 'Filing) then {target: nil, targetType: nil, targetView: self, targetStore: GetDefaultStore()} else self:Parent():?GetTargetInfo(a1))
 	end,
+	// After opening: registers for the soup's changes (a change of kind a3 is
+	// sent to the picker as message a3, e.g. SoupEnters or SoupLeaves, with
+	// the soup's name and the change's data) and shows the count.
 	viewSetupDoneScript: func() begin
 		local fn;
 		fn := func(a1, a2, a3, a4) begin
@@ -79,11 +118,15 @@ protoListpicker := {
 			end;
 		self:Refresh()
 	end,
+	// A new id for a fake item (0, 1, ...); there are fakes from now on.
 	GetUniqueFakeID: func() begin
 		anyFakes := true;
 		(if (not fakeID) then (fakeID := 0) else (fakeID := (fakeID + 1)))
 	end,
 	closeBox: nil,
+	// Chooses the cursor to show: the selection only (array cursor, selected
+	// items), the soup merged with the fakes, the soup alone, or (no soup) the
+	// array of items given.
 	UpdateCursor: func() begin
 		(if (nowShowing = 'selected) then begin
 				ersatzCursor.validTest := validIfSelected;
@@ -96,6 +139,9 @@ protoListpicker := {
 					(cursor := ersatzCursor)
 				end))
 	end,
+	// On closing: closes any editor still open, drops the unselected items from
+	// selected (unless the picker or its data def says dontPurge) and stops
+	// listening to the soup.
 	viewQuitScript: func() begin
 		local view, l2;
 		if (if IsFrame(fOpenEditor) then (view := GetView(fOpenEditor))) then begin
@@ -106,6 +152,7 @@ protoListpicker := {
 		listBase:CleanupSelected(selected, l2);
 		(if (if fSoup then soupChangeSymbol) then UnRegSoupChange(fSoup:GetName(), soupChangeSymbol))
 	end,
+	// Draws the picker, then its 2-pixel border (unless suppressBorder).
 	viewDrawScript: func() begin
 		inherited:?viewDrawScript();
 		(if fBorder then self:DrawShape(fBorder, {pensize: 2}))
@@ -123,13 +170,23 @@ protoListpicker := {
 		findNnewContainer,
 		tapMasker
 	],
+	// While a tap is being handled (an editor or popup open), tapMasker covers
+	// the picker so that other taps go nowhere.
 	MaskTaps: func(a1) begin
 		(if a1 then tapMasker:Open() else tapMasker:Close())
 	end,
+	// picker:SetNowShowing('all or 'selected) - shows everything or the selection.
 	SetNowShowing: func(a1) begin
 		nowShowing := a1;
 		listBase:RedoCursor()
 	end,
+	// Sets up the cursors: the soup (soupToQuery, the picker's or its data
+	// def's: a union soup's name or a method returning a soup) queried with
+	// the query spec plus folder filtering; the array cursor over selected; the
+	// valid tests (by folder; the selected; the fakes); and a multi-cursor
+	// merging the soup and the array by sort text (or the same entry, for
+	// '|=|). Then the cursor goes to selectedItem (single selection) or the
+	// start. kFunction_450079 gives an item's entry when it has one.
 	SetupCursor: compile(
 		constants: {
 			kFunction_450079: func(a1) begin
@@ -191,11 +248,14 @@ protoListpicker := {
 				end)
 		end),
 	tapMasker: nil,
+	// The key of an item for the A-Z tabs and GotoKey: its sort text up to the
+	// first comma (a surname), " " if empty, nil for no item.
 	IndexStr: func(entry) begin
 		local sortText, pos;
 		(if entry then (if StrFilled((sortText := pickerDef:Get(entry, pickerDef._sortPath, 'sortText))) then (if (pos := StrPos(sortText, ",", 0)) then Substr(sortText, 0, pos) else sortText) else " "))
 	end,
 	upDownScroller: nil,
+	// picker:SetCursor(cursor) and picker:GetCursor() - the cursor shown.
 	SetCursor: func(a1) begin
 		(self.cursor := a1)
 	end,
@@ -221,6 +281,10 @@ protoListpicker := {
 		'tapMasker,
 		tapMasker
 	],
+	// picker:ChangePickerDef(dataDef) - switches to another data definition:
+	// columns and title redone, each selected item not of its class remade as
+	// one of its name references (unselected if not valid for it), the count
+	// and the list redone.
 	ChangePickerDef: func(dataDefs) begin
 		self:SetupPickerDef(dataDefs);
 		listBase:SetupColumns();
@@ -247,11 +311,15 @@ protoListpicker := {
 		listBase:SetupAbstracts(cursor:clone());
 		self:Dirty()
 	end,
+	// Makes pickerDef2 the data definition, with _sortPath (the primary path, or
+	// the first column's): a read-only one (in ROM) gets a writable frame on it.
 	SetupPickerDef: func(pickerDef2) begin
 		local primaryPath;
 		primaryPath := pickerDef2.primaryPath;
 		(if IsReadOnly(pickerDef2) then (pickerDef := {_proto: pickerDef2, class: pickerDef2.class, _sortPath: (if primaryPath then primaryPath else pickerDef2.columns[0].fieldPath)}) else ((pickerDef := pickerDef2)._sortPath := (if primaryPath then primaryPath else pickerDef.columns[0].fieldPath)))
 	end,
+	// Called by the folder tabs when another folder is chosen: the soup is
+	// queried again with the new filter and the list redone at the same key.
 	FilterChanged: func() begin
 		if fSoup then begin
 				pickBase.myQuerySpec := self:SetupFiltering(myQuerySpec);
@@ -271,6 +339,8 @@ protoListpicker := {
 		listBase:Update();
 		self:LockScreen(nil)
 	end,
+	// The soup gained a store (a card inserted): fakes whose entries can now be
+	// found are fakes no more; the list is redone.
 	SoupEnters: func(a1, a2) begin
 		if selected then begin
 				(foreach item in selected do begin
@@ -281,6 +351,8 @@ protoListpicker := {
 			end;
 		self:RedoCursor()
 	end,
+	// Inserts nameRef in selected in sort order (keeping the array cursor on
+	// its item). Returns selected.
 	AddToSelected: func(nameRef) begin
 		local entry;
 		if selected then begin
@@ -295,10 +367,13 @@ protoListpicker := {
 		pickBase:UpdateCursor();
 		selected
 	end,
+	// The scroll keys and arrows scroll the list.
 	viewScrollDownScript: func() begin
 		listBase:viewScrollDownScript()
 	end,
 	folderTabs: nil,
+	// Chooses the cursor again (UpdateCursor), goes back to the same key, and
+	// redraws the A-Z tabs and the list.
 	RedoCursor: func() begin
 		self:UpdateCursor();
 		if fCurrentKey then begin
@@ -312,6 +387,9 @@ protoListpicker := {
 		self:LockScreen(nil)
 	end,
 	findNnewContainer: nil,
+	// A copy of the query spec showing only the folder labelsFilter: by a tag
+	// spec when the soup has tags, else by a valid test (the client's own test
+	// kept in clientFilter and called first).
 	SetupFiltering: func(myQuerySpec) begin
 		local copy;
 		copy := Clone(myQuerySpec);
@@ -327,6 +405,8 @@ protoListpicker := {
 			end;
 		copy
 	end,
+	// picker:AddFake(item, selected) - adds an item that is not in the soup (made
+	// a name reference with a fake id), selected or not.
 	AddFake: func(a1, a2) begin
 		local nameRef;
 		nameRef := a1;
@@ -342,6 +422,7 @@ protoListpicker := {
 		listBase:viewScrollUpScript()
 	end,
 	dividerLine: nil,
+	// picker:Refresh() - shows the count and redraws (when open).
 	Refresh: func() begin
 		if (not viewCObject) then begin
 				return nil
@@ -349,6 +430,8 @@ protoListpicker := {
 		selCountText:Update(totalSelected);
 		pickBase:Dirty()
 	end,
+	// picker:Update() - remakes the list's lines from the cursor, the arrows
+	// and the count (when open).
 	Update: func() begin
 		(if viewCObject then begin
 				listBase:SetupAbstracts(cursor:clone());
@@ -361,6 +444,12 @@ protoListpicker := {
 		cursor
 	end,
 	selectedCheckBox: nil,
+	// Sets up the picker before its children open: the data definition; the
+	// list's bounds grown into the space of the parts suppressed (13 pixels for
+	// the folder tabs, 18 for the A-Z tabs, 25 at the bottom when nothing is
+	// left there), the parts hidden (viewFlags 0); the border; selected sorted,
+	// every item made a name reference of the data def's class, those without
+	// an entry given fake ids, the selected ones counted; then the cursors.
 	viewSetupChildrenScript: func() begin
 		self:SetupPickerDef(pickerDef);
 		if (not origListBounds) then begin
@@ -450,10 +539,13 @@ protoListpicker := {
 		self:SetupCursor(selectedItem2);
 		AddDeferredSend(AZTabs, 'Update, [Array: ])
 	end,
+	// Remembers the cursor's key, to come back to it.
 	MarkCursorPosition: func() begin
 		(fCurrentKey := self:IndexStr(cursor:entry()))
 	end,
 	AZTabs: nil,
+	// The soup lost a store (a card removed): selected items whose entries are
+	// gone become fakes; the list is redone.
 	SoupLeaves: func(a1, a2) begin
 		(foreach item in selected do begin
 				if (if item._alias then (not ResolveEntryAlias(item._alias))) then begin
@@ -462,6 +554,8 @@ protoListpicker := {
 			end);
 		self:RedoCursor()
 	end,
+	// picker:GetSelected(purge) - a copy of selected, without the unselected
+	// items if purge.
 	GetSelected: func(a1) begin
 		local copy;
 		listBase:CleanupSelected((copy := Clone(selected)), a1);
@@ -469,13 +563,16 @@ protoListpicker := {
 	end
 };
 
+// the bar at the top: the data definition's name, and folder tabs
 folderTabs := {
 	viewJustify: vjCenterV + vjParentFullH,
 	viewBounds: {left: 1, top: 0, right: -1, bottom: 20},
 	title: uCardPositionAlertButton,
+	// taps on the bar itself are not taken
 	viewClickScript: func(unit) begin
 		nil
 	end,
+	// shows the data definition's name as the title
 	viewSetupDoneScript: func() begin
 		SetValue(title, 'text, pickerDef.name)
 	end,
@@ -483,9 +580,12 @@ folderTabs := {
 	_proto: @protoNewShowBar
 };
 
+// the A-Z tabs under the bar (the picker's AZTabs): tapping a letter moves the list there
 AZTabs_2 := {
+	// the two vertical lines at its sides, continuing the picker's border
 	fBars: nil,
 	viewJustify: vjCenterH + vjParentFullH + vjSiblingBottomV,
+	// Draws the highlighted letter and, unless suppressBorder, the side lines.
 	viewDrawScript: func() begin
 		local box;
 		if (not suppressBorder) then begin
@@ -500,6 +600,8 @@ AZTabs_2 := {
 	viewClickScript: func(unit) begin
 		inherited:viewClickScript(unit)
 	end,
+	// Called by azTabs with the letter tapped: the cursor goes to the first item
+	// with that key (" ": to the start) and everything is redrawn.
 	PickLetterScript: func(part) begin
 		if StrEqual(part, " ") then begin
 				cursor:Reset()
@@ -510,6 +612,7 @@ AZTabs_2 := {
 		listBase:Update();
 		listBase:MarkCursorPosition()
 	end,
+	// Highlights the letter of the item at the cursor (when visible).
 	Update: func() begin
 		local entry, indexStr;
 		(if (if Visible(self) then (entry := cursor:entry())) then self:setLetter((indexStr := (if StrFilled((indexStr := pickBase:IndexStr(cursor:entry()))) then indexStr[0] else $ )), true))
@@ -518,7 +621,13 @@ AZTabs_2 := {
 	_proto: @azTabs
 };
 
+// the list itself (a protoSoupOverview): one line per item, a checkbox on the
+// left and the columns; a tap on a column goes to the data definition
 listBase := {
+	// Selects an item (an entry or name reference; tapIndex its line) if its
+	// required paths are valid - in single selection deselecting the last one
+	// first, adding an item not yet in selected ('totally unselected) to it.
+	// Returns whether it is selected.
 	DoSelectObj: func(nameRef, tapIndex) begin
 		local l1, l2;
 		l2 := (Length(pickerDef:Validate((l1 := (if IsNameRef(nameRef) then nameRef else self:FetchNameRef(nameRef))), fTapinfo._reqPaths)) = 0);
@@ -537,10 +646,14 @@ listBase := {
 			end;
 		(not l1._Unselected)
 	end,
+	// the data definition's columns, each with its left, right and highlight
+	// edges added (SetupColumns)
 	fColumns: nil,
 	viewFormat: vfFillWhite,
 	checkBoxHorzOffset: 1,
 	preallocatedContext: 'listBase,
+	// Toggles a name reference's selection: selecting as DoSelectObj does (only
+	// if valid), deselecting always. Returns whether it is now selected.
 	DoToggleSelectObj: func(nameRef, tapIndex) begin
 		if nameRef._Unselected then begin
 				if (Length(pickerDef:Validate(nameRef, fTapinfo._reqPaths)) = 0) then begin
@@ -561,9 +674,14 @@ listBase := {
 			end;
 		(not nameRef._Unselected)
 	end,
+	// the item selected last, {nameRef, index: its line}, which single
+	// selection deselects
 	freshest: nil,
 	viewFlags: vVisible + vApplication + vClickable,
+	// every column's path, and those of the columns not optional
 	fEditPaths: nil,
+	// The New button: a new, empty name reference (in the folder shown) goes to
+	// the data definition's New.
 	HitNewbutton: func() begin
 		local nameRef;
 		(nameRef := pickerDef:MakeNameRef(nil, nil))._Unselected := 'totally;
@@ -571,6 +689,10 @@ listBase := {
 		self:SetTapInfo(nameRef, nil, nil, 'New);
 		(fOpenEditor := pickerDef:New(fTapinfo, self))
 	end,
+	// The shapes of one line for an item (its name reference from selected if
+	// there is one) in box copy2: each column's text (Get) truncated to it,
+	// with a diamond before a column that has a popup. If the item is
+	// freshest, its index is set to the last line made so far.
 	Abstract: func(items2Item, copy2) begin
 		if (not (nameRefInSelected := self:FindNameRefInSelected(items2Item))) then begin
 				nameRefInSelected := items2Item
@@ -605,6 +727,8 @@ listBase := {
 		l5
 	end,
 	viewBounds: {left: 2, top: 38, right: -2, bottom: -25},
+	// The position in selected of an item: by its entry (alias) when it has one,
+	// else a name reference by its fake id; nil if not there.
 	FindNameRefPos: compile(
 		constants: {
 			kFunction_453bd5: func(a1, a2) begin
@@ -620,12 +744,15 @@ listBase := {
 		end),
 	_proto: @protoSoupOverview,
 	leftMargin: 0,
+	// Remakes the lines from cursor copy; freshest's line is found again.
 	SetupAbstracts: func(copy) begin
 		if freshest then begin
 				freshest.index := nil
 			end;
 		inherited:SetupAbstracts(copy)
 	end,
+	// Scrolls down (if it can), updating the A-Z tabs and arrows and
+	// remembering the place. Returns true (handled).
 	viewScrollDownScript: func() begin
 		if (not canScrollDown) then begin
 				return true
@@ -640,14 +767,20 @@ listBase := {
 	end,
 	viewJustify: vjParentFullH + vjParentFullV,
 	checkScrollability: true,
+	// A column's popup was cancelled: the data definition is told.
 	pickCancelledScript: func() begin
 		pickerDef:?pickCancelledScript(fTapinfo, self)
 	end,
+	// The shapes of a line: the checked or empty checkbox and the item's
+	// Abstract to its right; read-only, the Abstract alone.
 	GetTheRightShape: func(a1, box) begin
 		local copy;
 		(copy := Clone(box)).left := (copy.left + 18);
 		(if (not readOnly) then (if self:isSelected(a1) then [Array: OffsetShape(MakeShape(CheckOn), ((copy.left - 18) + checkBoxHorzOffset), (copy.top + checkBoxVertOffset)), self:Abstract(a1, copy)] else [Array: OffsetShape(MakeShape(CheckOff), ((copy.left - 18) + checkBoxHorzOffset), (copy.top + checkBoxVertOffset)), self:Abstract(a1, copy)]) else self:Abstract(a1, box))
 	end,
+	// context:Tapped(action) - the data definition says it has handled the tap:
+	// 'select or 'Toggle the item (nil: nothing). Its line is redrawn; if its
+	// sort text changed, the list moves to it; the taps are unmasked.
 	Tapped: compile(
 		constants: {
 			kFunction_450079: func(a1) begin
@@ -691,6 +824,10 @@ listBase := {
 			fTapinfo := nil;
 			(fOpenEditor := nil)
 		end),
+	// Makes fColumns (writable copies of the data definition's columns) and the
+	// edit and required paths. Columns are laid left to right from selectIndent
+	// by tapWidth; a tapWidth <= 0 ends that far from the right edge. A
+	// doRowHilite column highlights the whole row.
 	SetupColumns: func() begin
 		box := self:LocalBox();
 		(if (fColumns := pickerDef.columns) then begin
@@ -735,6 +872,7 @@ listBase := {
 				(if (l4 < count) then ArrayRemoveCount(fRequiredPaths, l4, (count - l4)))
 			end)
 	end,
+	// As viewScrollDownScript, upwards.
 	viewScrollUpScript: func() begin
 		if (not canScrollUp) then begin
 				return true
@@ -747,10 +885,14 @@ listBase := {
 		listBase:MarkCursorPosition();
 		true
 	end,
+	// The item's name reference in selected, or nil.
 	FindNameRefInSelected: func(items2Item) begin
 		local nameRefPos;
 		(if (nameRefPos := self:FindNameRefPos(items2Item)) then selected[nameRefPos])
 	end,
+	// Before opening: the line height (the picker's lineHeight, at least the
+	// font's height and 13, the checkbox's), the checkbox at the bottom of the
+	// line; read-only lines have no checkbox column.
 	viewSetupFormScript: func() begin
 		self.lineHeight := GetVariable(self:Parent(), 'lineHeight);
 		if ((not lineHeight) or (lineHeight < 13)) then begin
@@ -759,6 +901,9 @@ listBase := {
 		checkBoxVertOffset := (lineHeight - 13);
 		(if readOnly then (firstColumnTextIndent := 2))
 	end,
+	// Called while tracking a tap at horizontal position box in line box2: finds
+	// the column tapped (fColumn, and fTapBox its highlight) and returns the
+	// shape that highlights it (XOR).
 	GetHiliteShape: func(box, box2) begin
 		fColumn := nil;
 		fTapBox := Clone(box2);
@@ -779,9 +924,10 @@ listBase := {
 						fTapBox.right := item.hiRight
 					end
 			end;
-		[Array: '{transferMode: 2, penPattern: 0, fillPattern: 5}, MakeRect(fTapBox.left, 0, fTapBox.right, lineHeight)]
+		[Array: '{transferMode: modeXor, penPattern: 0, fillPattern: 5}, MakeRect(fTapBox.left, 0, fTapBox.right, lineHeight)]
 	end,
 	firstColumnTextIndent: 18,
+	// Deselects the item selected last (single selection) and redraws its line.
 	DeselectFreshest: func() begin
 		local nameRef, l2;
 		(if freshest then begin
@@ -793,8 +939,11 @@ listBase := {
 				(freshest := nil)
 			end)
 	end,
+	// the column of the tap being tracked, and its highlight box
 	fColumn: nil,
 	fTapBox: nil,
+	// A tap on line a1 in a column: the tap's info is made for the item there
+	// and passed to the data definition's HitItem (which may open a view).
 	HitItem: func(a1, trackScrollingItem, trackScrollingItem2) begin
 		local move, nameRef;
 		if fColumn then begin
@@ -804,10 +953,14 @@ listBase := {
 			end;
 		true
 	end,
+	// Read-only, taps are swallowed; else protoSoupOverview tracks them.
 	viewClickScript: func(unit) begin
 		InkOff(unit);
 		(if readOnly then true else inherited:viewClickScript(unit))
 	end,
+	// Makes fTapinfo for name reference a1 on line a2 (nil for New), cell box
+	// a3 (made global), column a4 - the edit and required paths with the
+	// primary path replaced by the one for the item's class - and masks taps.
 	SetTapInfo: func(a1, a2, a3, a4) begin
 		if (l3 := pickerDef.primaryPath) then begin
 				l1 := Clone(fEditPaths);
@@ -838,9 +991,16 @@ listBase := {
 		l8 := self:GlobalBox();
 		(fTapinfo := {nameRef: a1, tapIndex: a2, bbox: (if a3 then OffsetRect(a3, 0, ((a2 * lineHeight) + l8.top))), fieldPath: a4, editPaths: l1, _reqPaths: l2, _sortValue: Clone(pickerDef:Get(a1, pickerDef._sortPath, 'sortText)), popup: nil})
 	end,
+	// A column's popup choice goes to the data definition.
 	pickActionScript: func(index) begin
 		(fOpenEditor := pickerDef:?pickActionScript(index, fTapinfo, self))
 	end,
+	// context:insert(nameRef, how) - a new item from the data definition's New:
+	// 'select selects it; otherwise an item without an entry is added to
+	// selected as an unselected fake. The list moves to it and taps are
+	// unmasked. Looks like a ROM bug: the test resolves nameRef._entryAlias, a
+	// slot name references do not have (theirs is _alias), so it is always nil
+	// and any item not selected becomes a fake.
 	insert: compile(
 		constants: {
 			kFunction_450079: func(a1) begin
@@ -869,9 +1029,11 @@ listBase := {
 			fTapinfo := nil;
 			(fOpenEditor := nil)
 		end),
+	// The soup new entries go to (the data definition's NewEntry asks).
 	GetStoreSoup: func() begin
 		fSoup
 	end,
+	// The line showing nameRef (by entry, or fake id), or nil if not visible.
 	GetVisibleIndex: func(nameRef) begin
 		local aliasFromObj2, copy, next, l4;
 		aliasFromObj2 := AliasFromObj(nameRef);
@@ -891,10 +1053,13 @@ listBase := {
 				(l4 := (l4 + 1))
 			end)
 	end,
+	// The columns are set up before the overview makes its lines.
 	viewSetupChildrenScript: func() begin
 		self:SetupColumns();
 		inherited:?viewSetupChildrenScript()
 	end,
+	// The name reference for an item: the one in selected, or a new one marked
+	// 'totally unselected (not in selected).
 	FetchNameRef: func(nameRef) begin
 		local nameRefInSelected;
 		if (not (nameRefInSelected := self:FindNameRefInSelected(nameRef))) then begin
@@ -902,6 +1067,8 @@ listBase := {
 			end;
 		nameRefInSelected
 	end,
+	// Removes the unselected items from the array if a2; items with an entry
+	// lose their fake ids.
 	CleanupSelected: func(selected, a2) begin
 		(if selected then (for i := (Length(selected) - 1) to 0 by -1 do begin
 					local selectedItem;
@@ -914,6 +1081,7 @@ listBase := {
 						end
 				end))
 	end,
+	// Whether an item (a name reference, or an entry found in selected) is selected.
 	isSelected: compile(
 		constants: {
 			kFunction_4541b5: func(a1, a2) begin
@@ -924,6 +1092,8 @@ listBase := {
 			(if IsNameRef(frame2) then (not frame2._Unselected) else (if selected then LSearch(selected, AliasFromObj(frame2), 0, kFunction_4541b5, nil)))
 		end),
 	fRequiredPaths: nil,
+	// Remakes and redraws line tapIndex for nameRef (over the line's box, with
+	// the screen locked); its highlight is gone.
 	UpdatePiece: compile(
 		constants: {
 			kFunction_450079: func(a1) begin
@@ -940,7 +1110,7 @@ listBase := {
 			self:LockScreen(true);
 			l2 := (pieces[tapIndex] := self:GetTheRightShape(call (kFunction_450079) with (nameRef), box));
 			shape := MakeShape(box);
-			self:DoDrawing('DrawShape, [Array: [Array: shape, viewStyle, l2], '{fillPattern: 5, penPattern: 5, transferMode: 3}]);
+			self:DoDrawing('DrawShape, [Array: [Array: shape, viewStyle, l2], '{fillPattern: 5, penPattern: 5, transferMode: modeBic}]);
 			if (hilitedIndex = tapIndex) then begin
 					hilitedIndex := nil
 				end;
@@ -950,17 +1120,20 @@ listBase := {
 	selectIndent: 0
 };
 
+// the close box at the bottom right
 closeBox := {
 	viewBounds: {left: -19, top: -19, right: -6, bottom: -6},
 	preallocatedContext: 'closeBox,
 	_proto: @protoCancelButton
 };
 
+// the count of items selected, at the bottom right
 selCountText := {
 	viewJustify: vjRightH + vjCenterV + vjParentRightH + vjParentBottomV + vjSiblingLeftH,
 	viewBounds: {left: -110, top: -22, right: -8, bottom: -2},
 	viewFont: tsSystem + tsSize(9),
 	text: uCardPositionAlertButton,
+	// Shows "n Selected" for n > 0, else nothing (when visible).
 	Update: func(scalingInfo) begin
 		if (not Visible(self)) then begin
 				return nil
@@ -971,14 +1144,17 @@ selCountText := {
 	_proto: @protoStaticText
 };
 
+// "Selected Only": shows only the selected items, or all again
 selectedCheckBox := {
 	viewJustify: vjCenterV + vjParentBottomV,
 	viewBounds: {left: 5, top: -21, right: 90, bottom: -2},
 	text: "Selected Only",
+	// checked when the picker opens showing the selection
 	viewSetupFormScript: func() begin
 		self.viewValue := (nowShowing = 'selected);
 		inherited:?viewSetupFormScript()
 	end,
+	// switches between 'selected and 'all and redoes the list
 	valueChanged: func() begin
 		if (nowShowing = 'selected) then begin
 				nowShowing := 'all
@@ -991,6 +1167,7 @@ selectedCheckBox := {
 	_proto: @protoCheckbox
 };
 
+// the line above the bottom row of controls
 dividerLine := {
 	viewJustify: vjParentFullH + vjParentBottomV,
 	viewBounds: {left: 5, top: -25, right: -5, bottom: -24},
@@ -998,16 +1175,20 @@ dividerLine := {
 	_proto: @protoBorder
 };
 
+// the up and down arrows at the right
 upDownScroller := {
 	viewJustify: vjParentRightH + vjParentCenterV + vjParentClip,
 	viewBounds: {left: -20, top: 0, right: -3, bottom: 33},
 	viewFlags: vVisible + vFloating,
 	preallocatedContext: 'upDownScroller,
+	// After opening, and in Update: each arrow drawn 'more when the list can
+	// scroll that way, else 'normal.
 	viewSetupDoneScript: func() begin
 		inherited:?viewSetupDoneScript();
 		self:SetArrow('up, (if canScrollUp then 'more else 'normal));
 		self:SetArrow('down, (if canScrollDown then 'more else 'normal))
 	end,
+	// An arrow tapped: the list scrolls up or down.
 	viewScroll2DScript: func(arrowDirection, a2) begin
 		if (arrowDirection = 'up) then begin
 				listBase:viewScrollUpScript()
@@ -1026,10 +1207,12 @@ upDownScroller := {
 	_proto: @protoUpDownScroller
 };
 
+// the New button: a new item through the data definition
 newButton := {
-	viewJustify: 8389846,
+	viewJustify: oneLineOnly + vjSiblingRightH + vjParentCenterH + vjParentFullV + vjCenterV + vjCenterH,
 	viewBounds: {left: 6, top: 0, right: 36, bottom: 0},
 	text: new_2,
+	// tapped: listBase makes the new item
 	buttonClickScript: func() begin
 		listBase:HitNewbutton()
 	end,
@@ -1037,10 +1220,14 @@ newButton := {
 	_proto: @protoTextButton
 };
 
+// the Find button: finds in the picker's items (pickBase:FindSelections)
 findButton := {
-	viewJustify: 8388806,
+	viewJustify: oneLineOnly + vjParentFullV + vjCenterV + vjCenterH,
 	viewBounds: {left: 0, top: 0, right: 30, bottom: 0},
 	text: find,
+	// With a single choice holding a single item, that item is shown at once;
+	// otherwise the Find slip opens (pseudoFinder), titled by the data
+	// definition's findTitle.
 	buttonClickScript: func() begin
 		local context, selections, l3, selection;
 		context := BuildContext(pseudoFinder);
@@ -1056,12 +1243,15 @@ findButton := {
 	_proto: @protoTextButton
 };
 
+// the New and Find buttons, centred at the bottom
 findNnewContainer := {
 	viewClass: clView,
 	viewFlags: vVisible,
 	viewFormat: vfFillWhite,
 	viewJustify: vjCenterH + vjCenterV + vjParentCenterH + vjParentBottomV,
 	viewBounds: {left: 0, top: -19, right: 66, bottom: -6},
+	// Before opening: with either button suppressed, the container is one
+	// button wide and the suppressed one hidden.
 	viewSetupFormScript: func() begin
 		(if (suppressNew or suppressFind) then begin
 				self.viewBounds := SetBounds(0, -19, 30, -6);
@@ -1071,6 +1261,8 @@ findNnewContainer := {
 				(if suppressFind then (findButton.viewFlags := 0))
 			end)
 	end,
+	// Update(0) closes the Find button, Update(1) opens it (unless suppressed);
+	// the New button is reopened either way.
 	Update: func(scalingInfo) begin
 		if (not Visible(self)) then begin
 				return nil
@@ -1096,12 +1288,16 @@ findNnewContainer := {
 	findButton: nil
 };
 
+// an invisible view over the whole picker, open while the data definition
+// handles a tap (MaskTaps)
 tapMasker := {
 	viewClass: clView,
 	viewJustify: vjParentFullH + vjParentFullV,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
 	viewFlags: vFloating + vClickable,
 	viewFormat: 0,
+	// A tap is swallowed while the view opened for the tap is visible; if that
+	// view is gone, the masker closes itself (later) and lets the tap through.
 	viewClickScript: func(unit) begin
 		(if (if fOpenEditor then Visible(fOpenEditor)) then true else begin
 				AddDeferredSend(self, 'Close, [Array: ]);

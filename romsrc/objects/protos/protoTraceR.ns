@@ -1,6 +1,11 @@
-// protoTraceR, and what only it reaches
+// protoTracer: a client trace recorder - a debugging aid that records
+// labelled events (with a value) into a native trace buffer while active.
+// traceElements describes the events; the natives cfInstantiate and
+// cfRecord do the recording.
 
 protoTraceR := {
+	// Instantiate(): builds _traceMap, from each element's label to its
+	// index in traceElements, then makes the native trace
 	Instantiate: func() begin
 		self._traceMap := {};
 		(foreach key, value in traceElements do begin
@@ -11,13 +16,17 @@ protoTraceR := {
 			end);
 		self:cfinstantiate()
 	end,
+	// Dispose(): frees the native trace
 	Dispose: {class: #132, funcPtr: 6989100, numArgs: 0},
+	// Record(label, value): records an event by its label, if active
 	record: func(a1, a2) begin
 		(if active then self:cfrecord(_traceMap.(a1), a2))
 	end,
+	// IndexRecord(index, value): records an event by its index, if active
 	indexrecord: func(a1, a2) begin
 		(if active then self:cfrecord(a1, a2))
 	end,
+	// the events that can be recorded (frames with a label slot)
 	traceElements: nil,
 	name: "Client Trace",
 	active: true,

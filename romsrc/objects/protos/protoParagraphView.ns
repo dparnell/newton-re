@@ -1,3 +1,4 @@
-// protoParagraphView, and what only it reaches
+// protoParagraphView: the bare paragraph view class (clParagraphView) on
+// protoView, the native view that shows (and edits) a paragraph of text.
 
 protoParagraphView := {viewClass: clParagraphView, _proto: @protoView};

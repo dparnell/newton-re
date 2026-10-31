@@ -1,4 +1,6 @@
-// protoStatusGauge, and what only it reaches
+// protoStatusGauge: the horizontal gauge of a status slip
+// (protoStatusTemplate). Its value comes from the gauge slot of the values
+// given to ViewSet/UpdateIndicator: an integer, or [value, min, max].
 
 protoStatusGauge := {
 	debug: 1031,
@@ -9,7 +11,10 @@ protoStatusGauge := {
 	viewJustify: vjParentCenterH + vjSiblingBottomV,
 	minValue: 0,
 	maxValue: 100,
+	// the slot of the values frame this component shows
 	name: 'gauge,
+	// viewSetupFormScript(): reads the value: none shows the gauge full, an
+	// array is [value, min, max], anything else is the value
 	viewSetupFormScript: func() begin
 		(if ((data := self:path().(name)) = nil) then (viewValue := maxValue) else (if (ClassOf(data) = 'Array) then begin
 					viewValue := data[0];
@@ -17,6 +22,8 @@ protoStatusGauge := {
 					(maxValue := data[2])
 				end else (viewValue := data)))
 	end,
+	// viewUpdateFormScript(): sent by UpdateIndicator; reads the new value
+	// and redraws
 	viewUpdateFormScript: func() begin
 		self:viewSetupFormScript();
 		self:Dirty()

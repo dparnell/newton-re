@@ -1,4 +1,9 @@
-// protoDayPicker, and what only it reaches
+// protoDayPicker: a row of seven day-of-week buttons ("s m t w t f s"),
+// starting on the user's first day of the week, for choosing one day or
+// several (Newton Programmer's Reference "protoDayPicker").
+//   selected       the chosen days, a sum of kSunday ... kSaturday
+//   singleSelect   true: tapping a day chooses only it
+// HitItem(dayIndex), if defined, is told of each tap.
 
 protoDayPicker := {
 	viewClass: clView,
@@ -7,7 +12,10 @@ protoDayPicker := {
 	viewFormat: 0,
 	singleSelect: nil,
 	selected: 0,
-	dayBit: [|Array|: 2048, 1024, 512, 256, 128, 64, 32],
+	// each day's bit, Sunday (0) to Saturday (6)
+	dayBit: [|Array|: kSunday, kMonday, kTuesday, kWednesday, kThursday, kFriday, kSaturday],
+	// answers the first day of the week (0 Sunday): the view's own
+	// firstDayOfWeek slot, else the user's setting, else the locale's, else 0
 	GetFirstDay: func() begin
 		local firstDayOfWeek2;
 		if (self:firstDayOfWeek exists) then begin
@@ -21,72 +29,88 @@ protoDayPicker := {
 			end;
 		firstDayOfWeek2
 	end,
+	// the column (0-6) a day of the week (0 Sunday) is shown in
 	DayOfWeekToColumn: func(i) begin
 		(((i - self:GetFirstDay()) + 7) mod 7)
 	end,
+	// the day of the week shown in column dayNum
 	ColumnToDayOfWeek: func(dayNum) begin
 		((dayNum + self:GetFirstDay()) mod 7)
 	end,
+	// sent by each button at setup: gives the button in column dayNum its
+	// day, that day's bit and its one-letter label
 	InitializeDayOfWeekButton: func(dayNum) begin
 		local list;
 		list := [Array: "s", "m", "t", "w", "t", "f", "s"];
 		dayIndex := self:ColumnToDayOfWeek(dayNum);
-		dayOfWeek := (2048 >> dayIndex);
+		dayOfWeek := (kSunday >> dayIndex);
 		(text := list[dayIndex])
 	end,
+	// Initialize(selected, singleSelect): sets the chosen days and shows
+	// them - every button unselected, then the chosen days' buttons selected
 	Initialize: func(a1, singleSelect2) begin
 		selected := a1;
 		singleSelect := singleSelect2;
 		childViewFrames := self:ChildViewFrames();
 		local childViewFrames;
 		(for i := 0 to 6 do begin
-				SetValue(childViewFrames[i], 'viewFlags, BAnd(childViewFrames[i].viewFlags, bnot(33554432)))
+				SetValue(childViewFrames[i], 'viewFlags, BAnd(childViewFrames[i].viewFlags, bnot(vSelected)))
 			end);
 		(for i := 0 to 6 do begin
 				local dayOfWeekToColumn;
 				if (BAnd(dayBit[i], selected) > 0) then begin
 						dayOfWeekToColumn := self:DayOfWeekToColumn(i);
-						SetValue(childViewFrames[dayOfWeekToColumn], 'viewFlags, BOr(childViewFrames[dayOfWeekToColumn].viewFlags, 33554432))
+						SetValue(childViewFrames[dayOfWeekToColumn], 'viewFlags, BOr(childViewFrames[dayOfWeekToColumn].viewFlags, vSelected))
 					end
 			end);
 		self:Dirty()
 	end,
+	// answers the chosen days
 	GetSelected: func() begin
 		selected
 	end,
+	// the seven buttons, one per column; their days are set at setup
 	viewChildren: [viewChildren:
 		{
 			_proto: protoDayPickerProto,
+			// oneLineOnly (8388608) + vjCenterV + vjCenterH: the first button
+			// is not placed after a sibling
 			viewJustify: 8388614,
 			dayNum: 0,
 			viewBounds: {left: 2, top: 2, right: 15, bottom: 15},
-			dayOfWeek: 2048,
+			dayOfWeek: kSunday,
 			dayIndex: 0,
 			text: nil
 		},
-		{_proto: protoDayPickerProto, dayNum: 1, dayOfWeek: 1024, dayIndex: 1, text: nil},
-		{_proto: protoDayPickerProto, dayNum: 2, dayOfWeek: 512, dayIndex: 2, text: nil},
-		{_proto: protoDayPickerProto, dayNum: 3, dayOfWeek: 256, dayIndex: 3, text: nil},
-		{_proto: protoDayPickerProto, dayNum: 4, dayOfWeek: 128, dayIndex: 4, text: nil},
-		{_proto: protoDayPickerProto, dayNum: 5, dayOfWeek: 64, dayIndex: 5, text: nil},
-		{_proto: protoDayPickerProto, dayNum: 6, dayOfWeek: 32, dayIndex: 6, text: nil}
+		{_proto: protoDayPickerProto, dayNum: 1, dayOfWeek: kMonday, dayIndex: 1, text: nil},
+		{_proto: protoDayPickerProto, dayNum: 2, dayOfWeek: kTuesday, dayIndex: 2, text: nil},
+		{_proto: protoDayPickerProto, dayNum: 3, dayOfWeek: kWednesday, dayIndex: 3, text: nil},
+		{_proto: protoDayPickerProto, dayNum: 4, dayOfWeek: kThursday, dayIndex: 4, text: nil},
+		{_proto: protoDayPickerProto, dayNum: 5, dayOfWeek: kFriday, dayIndex: 5, text: nil},
+		{_proto: protoDayPickerProto, dayNum: 6, dayOfWeek: kSaturday, dayIndex: 6, text: nil}
 	]
 };
 
+// one day button: a small round-cornered text button
 protoDayPickerProto := {
 	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2) + vfRound(4),
+	// oneLineOnly (8388608) + vjSiblingRightH + vjCenterV + vjCenterH
 	viewJustify: 8389638,
 	viewBounds: {left: 2, top: 2, right: 15, bottom: 15},
 	hilite: nil,
+	// at setup: asks the picker for its day and label
 	viewSetupFormScript: func() begin
 		self:InitializeDayOfWeekButton(dayNum)
 	end,
+	// on a tap: with singleSelect the day becomes the only one chosen;
+	// otherwise it is toggled, and unchoosing the last day chooses it again
+	// (some day is always chosen); then the picker redraws the selection
 	viewClickScript: func(unit) begin
 		(if self:TrackHilite(unit) then begin
 				if singleSelect then begin
 						selected := self.dayOfWeek
 					end else begin
-						if (BAnd((selected := bxor(selected, self.dayOfWeek)), 4064) = 0) then begin
+						if (BAnd((selected := bxor(selected, self.dayOfWeek)), kEveryday) = 0) then begin
 								selected := self.dayOfWeek
 							end
 					end;

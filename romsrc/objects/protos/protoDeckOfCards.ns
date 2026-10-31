@@ -1,6 +1,10 @@
-// protoDeckOfCards, and what only it reaches
+// protoDeckOfCards: a deck of 52 playing cards for the card games (a poker
+// game uses Eval5 and the payoff tables).  A card is a number 0-51: div 13
+// is its suit, mod 13 its rank (0 the two ... 12 the ace).
+//   deck   the shuffled cards; top   how many are still undealt
 
 protoDeckOfCards := {
+	// answers a new, empty deck based on this proto
 	New: compile(
 		constants: {
 			kROM_828: @protoDeckOfCards
@@ -8,6 +12,9 @@ protoDeckOfCards := {
 		func() begin
 			{_proto: kROM_828, deck: nil, top: nil}
 		end),
+	// fills the deck with the 52 cards in order and mixes it: six passes over
+	// the first half, each card swapped with a random one half of the time.
+	// The decompiler places the local after its use.
 	Shuffle: func() begin
 		list := Array(52, nil);
 		local list;
@@ -28,9 +35,12 @@ protoDeckOfCards := {
 		self.deck := list;
 		(self.top := 52)
 	end,
+	// Deal(n): answers an array of the next n cards (taken from the end)
 	Deal: func(a1) begin
 		ArrayMunger([Array: ], 0, nil, deck, (top := (top - a1)), a1)
 	end,
+	// Draw(hand): replaces each nil (discarded) card of hand with the next
+	// card, and answers hand
 	Draw: func(hand) begin
 		(foreach key, value in hand do begin
 				if (not value) then begin
@@ -39,6 +49,13 @@ protoDeckOfCards := {
 			end);
 		hand
 	end,
+	// Eval5(hand): answers the poker value of five cards as a symbol, a slot
+	// of DrawPayOffs and SoloPayOffs ('|royal flush| ... 'pair for jacks or
+	// better, '|sm pair| for a lower pair, 'zilch).
+	//   l1   a flush: the sorted hand's first and last cards share a suit
+	//   l5   how many cards of each rank; l7 how many ranks occur 1-4 times
+	//   l10  a straight (five ranks in a row, or the ace-low A-2-3-4-5)
+	// The decompiler places the locals after their uses.
 	Eval5: func(a1) begin
 		Sort((a1 := Clone(a1)), '|<|, nil);
 		l1 := ((a1[0] div 13) = (a1[4] div 13));
@@ -60,6 +77,7 @@ protoDeckOfCards := {
 				Sort(a1, '|<|, nil);
 				l10 := (((l11 := (a1[4] - a1[0])) = 4) or (if (if (l11 = 12) then (a1[1] = 1)) then (a1[3] = 3)))
 			end;
+		// a pair of ranks 9-12 (jack to ace) is 'pair
 		(if (if l1 then l10) then (if (if (a1[0] = 8) then (a1[4] = 12)) then '|royal flush| else '|straight flush|) else (if (l7[4] = 1) then '|4 of a kind| else (if (if (l7[3] = 1) then (l7[2] = 1)) then '|full house| else (if l1 then 'flush else (if l10 then 'straight else (if (l7[3] = 1) then '|3 of a kind| else (if (l7[2] = 2) then '|two pair| else (if (l7[2] = 1) then begin
 											local l10;
 											local l11;
@@ -71,6 +89,7 @@ protoDeckOfCards := {
 											'|sm pair|
 										end else 'zilch))))))))
 	end,
+	// what each hand pays in draw poker, per unit bet
 	DrawPayOffs: {
 		|royal flush|: 100,
 		|straight flush|: 50,
@@ -84,6 +103,7 @@ protoDeckOfCards := {
 		|sm pair|: 0,
 		zilch: 0
 	},
+	// what each hand pays in the solo game
 	SoloPayOffs: {
 		|royal flush|: 100,
 		|straight flush|: 75,

@@ -1,4 +1,5 @@
-// protoPreferencesTitle, and what only it reaches
+// protoPreferencesTitle: the bold title text at the top of a preferences
+// panel (a read-only text view in the system font, 10 point bold).
 
 protoPreferencesTitle := {
 	viewClass: clTextView,
@@ -6,5 +7,6 @@ protoPreferencesTitle := {
 	viewBounds: {left: 4, top: 1, right: 204, bottom: 16},
 	viewFormat: 0,
 	viewFont: @fontSystem10Bold,
-	viewJustify: 8388608
+	// the text may wrap to as many lines as it needs
+	viewJustify: oneLineOnly
 };

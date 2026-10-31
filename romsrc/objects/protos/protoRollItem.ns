@@ -1,4 +1,6 @@
-// protoRollItem, and what only it reaches
+// protoRollItem: one item of a protoRoll - a white, black-framed view that
+// stretches across its parent and stacks below its previous sibling (the
+// roll lays the items out one under another).
 
 protoRollItem := {
 	viewClass: clView,

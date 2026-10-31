@@ -1,16 +1,22 @@
-// protoPeoplePicker, and what only it reaches
+// protoPeoplePicker: a full-screen protoListPicker of the Names soup - the
+// people (or companies, groups, owners...) of the data class it is given
+// (dataClass: a data definition's symbol, or a picker definition frame).
 
 protoPeoplePicker := {
 	_proto: @protoListpicker,
 	viewJustify: vjParentFullH + vjParentFullV,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
 	viewFlags: vVisible + vApplication + vClickable,
+	// the folder tab's text and the soup: "Name" items of the Names soup
 	appObject: [|Array|: name, @cardfileSoupName],
 	AppAll: "All Names",
 	entryType: 'person,
 	pickerDef: nil,
 	fColumns: nil,
 	soupToQuery: @cardfileSoupName,
+	// on opening: take the Names application's symbol (for its folders) and
+	// the picker definition: a frame given as dataClass is the definition
+	// itself, dataClass becoming its class; a symbol is looked up (GetDataDefs)
 	viewSetupFormScript: func() begin
 		if (not self.appSymbol) then begin
 				self.appSymbol := GetRoot().cardfile.appSymbol
@@ -20,6 +26,8 @@ protoPeoplePicker := {
 				(dataClass := ClassOf(pickerDef))
 			end else (self.pickerDef := GetDataDefs(dataClass)))
 	end,
+	// switches the open picker to another data class (symbol2): throws
+	// evt.ex.msg if no data definition is registered for it
 	ChangeDataClass: func(symbol2) begin
 		local dataDefs;
 		dataClass := symbol2;

@@ -1,11 +1,18 @@
-// proto1_2Exformentry, and what only it reaches
+// proto1_2Exformentry: the Extras Drawer's entry for a package in the old
+// (Newton 1.x) format - class '|1.XFormEntry|.  It answers the drawer's
+// questions about the item (its size, store, protection) from the package
+// list, and such packages cannot be moved between stores ("locked").
 
 proto1_2Exformentry := {
 	_proto: proto1_2ExformentryProto,
+	// the template of a new entry
 	iconEntry: {class: '|1.XFormEntry|, text: uCardPositionAlertButton, icon: 2, packageId: nil, app: nil},
+	// answers a new entry, a copy of iconEntry
 	New: func() begin
 		Clone(iconEntry)
 	end,
+	// answers the package's size as text in kilobytes ("12K"), or "" when the
+	// package of fentry.packageId is not found
 	size: compile(
 		constants: {
 			kFunction_537665: func(a1, a2) begin
@@ -16,9 +23,11 @@ proto1_2Exformentry := {
 			local packages, pos;
 			(if (if (pos := ArrayPos((packages := GetPackages()), fentry.packageId, 0, kFunction_537665)) then packages[pos].size) then Stringer([Array: (packages[pos].size div 1024), "K"]) else "")
 		end),
+	// such a package is never copy-protected
 	copyprotected: func() begin
 		nil
 	end,
+	// answers the store the package is on (nil if it is not found)
 	store: compile(
 		constants: {
 			kFunction_5376a5: func(a1, a2) begin
@@ -29,6 +38,8 @@ proto1_2Exformentry := {
 			local packages, pos;
 			(if (pos := ArrayPos((packages := GetPackages()), fentry.packageId, 0, kFunction_5376a5)) then packages[pos].store)
 		end),
+	// asked before an action on the entries: always "locked" - the action
+	// is refused
 	Preflight: func(a1, kids) begin
 		"locked"
 	end,

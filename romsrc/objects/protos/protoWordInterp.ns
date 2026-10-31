@@ -1,3 +1,8 @@
-// protoWordInterp, and what only it reaches
+// protoWordInterp: one interpretation of a written word, as kept in the
+// words array of a protoWordInfo (or protoCorrectInfo) frame.
 
+// word: the string; score: how well it matches the ink (lower is better);
+// label: for system use, -1 by default; index: its place in the
+// recognizer's original list (-1 until set, -2 for a word the system made up,
+// e.g. another capitalization)
 protoWordInterp := {word: nil, score: 0, label: -1, index: -1};

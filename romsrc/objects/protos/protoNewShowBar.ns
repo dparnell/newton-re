@@ -1,4 +1,7 @@
-// protoNewShowBar, and what only it reaches
+// protoNewShowBar: the NewtonOS 2.x look of protoShowBar (the bar across the
+// top of a filed item's view showing its title and the folder/date tab):
+// tab bitmaps for the left and right ends, the show bar's text kept to the
+// right, and a title on the left that can be tapped (titleClickScript).
 
 protoNewShowBar := {
 	_proto: @protoShowBar,
@@ -7,27 +10,34 @@ protoNewShowBar := {
 	rightBits: @tabRightBitmap,
 	leftHiliteBits: @tabLeftHiliteBitmap,
 	rightHiliteBits: @tabRightHiliteBitmap,
+	// Called by protoShowBar to update its text: after the inherited one, the text
+	// is truncated to 137 pixels and the text view sized to it (16 pixels of
+	// margin), right-aligned 4 pixels in from the bar's right edge.
 	RedoText: func() begin
 		inherited:RedoText();
 		showBarText.text := StrTruncate(showBarText.text, 137);
 		showBarText.width := (StrFontWidth(showBarText.text, showBarText.viewFont) + 16);
 		showBarText.viewBounds := SetBounds(((-showBarText.width) - 4), 3, -4, 17);
-		(showBarText.viewJustify := 8388646)
+		(showBarText.viewJustify := oneLineOnly + vjParentRightH + vjCenterV + vjCenterH)
 	end,
+	// optional: a method called when the title is tapped (and the pen released on it)
 	titleClickScript: nil,
 	viewChildren: [viewChildren: showBarText, title],
 	title: nil,
 	allocateContext: [|Array|: 'showBarText, showBarText, 'title, title]
 };
 
+// the title on the left of the bar
 title := {
 	viewClass: clTextView,
 	viewFont: tsSystem + tsSize(9) + tsBold,
 	viewBounds: {left: 4, top: 1, right: -157, bottom: 13},
-	viewJustify: 8388656,
+	viewJustify: oneLineOnly + vjParentFullH,
 	viewFlags: vVisible + vReadOnly + vClickable,
 	viewFormat: 0,
-	viewTransferMode: 3,
+	viewTransferMode: modeBic,
+	// A tap calls titleClickScript, if there is one, once TrackHilite says the pen
+	// came up inside the title; the tap is always taken (true).
 	viewClickScript: func(unit) begin
 		if (if titleClickScript then self:TrackHilite(unit)) then begin
 				self:titleClickScript();

@@ -1,6 +1,14 @@
-// protoIoStateMachine, and what only it reaches
+// protoIoStateMachine: a protoStateMachine that runs one data exchange over
+// an endpoint ("Data Exchange"): instantiate, bind, then listen and accept
+// (mode 'InputFrame), or connect (modes 'OutputFrame and 'AutoInAndOut);
+// receive frames (InputSpec, each passed to the callback as 'data) and/or
+// send the queued ones (AddSendData); then disconnect, unbind, dispose and
+// report 'complete or 'error to the callback. Each state is a frame: action
+// returns the next state's name, or 'waitAsync to wait for the endpoint's
+// completion, which goes to WaitComplete (OnError on an error).
 
 protoIoStateMachine := {
+	// wait for a connection
 	DoListen: {
 		action: func() begin
 			fEndpoint:Listen(fOptionsOut, CallbackSpec);
@@ -9,6 +17,7 @@ protoIoStateMachine := {
 		WaitComplete: 'DoAccept,
 		OnError: 'DoDisconnect
 	},
+	// send everything queued by AddSendData as one dataArray, and empty the queue
 	DoOutput: {
 		action: func() begin
 			local frame2;
@@ -19,25 +28,39 @@ protoIoStateMachine := {
 		WaitComplete: 'DoAfterOutput,
 		OnError: 'DoDisconnect
 	},
+	// the modes SetMode accepts: receive, send, or (IR) agree who sends first and do both
 	legalModes: {InputFrame: true, OutputFrame: true, AutoInAndOut: true},
+	// The endpoint's ExceptionHandler (installed by SetEndpoint; self is the
+	// endpoint): the state machine's DoError says which state to run, if any.
 	StdExceptionHandler: func(a1) begin
 		local error;
 		(if (error := stateMachine:DoError(a1)) then stateMachine:Run(error))
 	end,
+	// The options the endpoint returned last.
 	GetOptions: func() begin
 		return fOptionsIn
 	end,
+	// machine:SetCallback(fn) - fn(what, value) is called with ('data, frame)
+	// for each frame received, then ('complete, nil) or ('error, exception).
 	SetCallback: func(singleSelect) begin
 		(self.fCallBack := singleSelect)
 	end,
+	// the options passed to the endpoint's calls (SetOptions)
 	fOptionsOut: nil,
+	// how many transfers (input or output) have been done
 	fStage: 0,
 	fOptionsIn: nil,
+	// machine:SetEndpoint(endpoint, configOptions) - the endpoint to use: a
+	// frame on it carrying its config options, StdExceptionHandler and a link
+	// back to the machine; the endpoint's _parent, if any, is copied into the
+	// new frame's own slot.
 	SetEndpoint: func(frame2, list) begin
 		(if (fEndpoint := {_proto: frame2, configOptions: list, ExceptionHandler: StdExceptionHandler, stateMachine: self})._parent then (fEndpoint._parent := fEndpoint._parent))
 	end,
+	// 'InputFrame, 'OutputFrame or 'AutoInAndOut (SetMode)
 	fMode: nil,
 	_proto: @protoStateMachine,
+	// how many asynchronous endpoint calls are outstanding (see Cancel)
 	occupancy: 0,
 	DoConnect: {
 		action: func() begin
@@ -47,9 +70,11 @@ protoIoStateMachine := {
 		WaitComplete: 'DoPostConnect,
 		OnError: 'DoUnbind
 	},
+	// machine:SetOptions(options) - the options for the endpoint's calls.
 	SetOptions: func(a1) begin
 		(fOptionsOut := a1)
 	end,
+	// (cancelBlocked: Cancel does nothing while the machine is in this state)
 	DoDispose: {
 		cancelBlocked: true,
 		action: func() begin
@@ -58,9 +83,11 @@ protoIoStateMachine := {
 		end,
 		OnError: 'DoCompletion
 	},
+	// the default callback: ignores everything
 	fCallBack: func(a1, a2) begin
 		nil
 	end,
+	// the first state
 	DoInstantiate: {
 		action: func() begin
 			fEndpoint:Instantiate(fEndpoint, fEndpoint.configOptions);
@@ -69,12 +96,14 @@ protoIoStateMachine := {
 		OnError: 'DoCompletion
 	},
 	fEndpoint: nil,
+	// machine:AddSendData(frame) - queues a frame to send (nil adds nothing).
 	AddSendData: func(body) begin
 		if IsReadOnly(fOutgoingData) then begin
 				fOutgoingData := Clone(fOutgoingData)
 			end;
 		(if body then AddArraySlot(fOutgoingData, body))
 	end,
+	// after sending: in 'AutoInAndOut, receive if that was the first transfer; else done
 	DoAfterOutput: {
 		action: func() begin
 			fStage := (fStage + 1);
@@ -92,6 +121,7 @@ protoIoStateMachine := {
 		WaitComplete: 'DoDispose,
 		OnError: 'DoDispose
 	},
+	// after receiving: in 'AutoInAndOut, send if that was the first transfer; else done
 	DoAfterInput: {
 		action: func() begin
 			fStage := (fStage + 1);
@@ -99,12 +129,16 @@ protoIoStateMachine := {
 		end,
 		OnError: 'DoDisconnect
 	},
+	// after the "irco" option of DoPostConnect: the 2 bit of its result says
+	// whether this side sends first (set) or receives first (clear)
 	DoExchangePostConnect: {
 		action: func() begin
 			(if (BAnd(fOptionsIn[0].data.arglist[0], 2) = 0) then 'DoInputSpec else 'DoOutput)
 		end,
 		OnError: 'DoDisconnect
 	},
+	// the last state: notify the user if autoNotify (Notify level 4), then the
+	// callback with 'error or 'complete; 'exit stops the machine
 	DoCompletion: {
 		cancelBlocked: true,
 		action: compile(
@@ -129,15 +163,22 @@ protoIoStateMachine := {
 		OnError: 'exit
 	},
 	fTimeout: 200000,
+	// machine:Cancel() - cancels the endpoint's outstanding call, unless nothing
+	// is outstanding or the current state blocks cancelling. The cancel's
+	// completion (kFunction_4977bd: a1 the endpoint, a2 the options, a3 the
+	// result) completes the machine's wait with the result, or
+	// kCommErrRequestCanceled, once it is the last outstanding call. An
+	// exception other than kEndpointErrAborting from Cancel is passed on.
 	Cancel: compile(
 		constants: {
+			// the cancel's completion script
 			kFunction_4977bd: func(a1, a2, a3) begin
 				local stateMachine;
 				if (stateMachine := a1.stateMachine).tracing then begin
 						stateMachine:Trace("Cancel completion", {result: a3, occupancy: stateMachine.occupancy})
 					end;
 				stateMachine.fOptionsIn := a2;
-				(if (stateMachine.occupancy <= 1) then stateMachine:AsyncWaitComplete((if a3 then a3 else -16005)) else (stateMachine.occupancy := (stateMachine.occupancy - 1)))
+				(if (stateMachine.occupancy <= 1) then stateMachine:AsyncWaitComplete((if a3 then a3 else kCommErrRequestCanceled)) else (stateMachine.occupancy := (stateMachine.occupancy - 1)))
 			end,
 			kLiteral_4977dd: {_proto: @protoStateMachineInputSpec, completionscript: kFunction_4977bd}
 		},
@@ -155,6 +196,7 @@ protoIoStateMachine := {
 						end)
 				end)
 		end),
+	// after binding: listen to receive, connect to send (or both)
 	DoModeSelect: {
 		action: func() begin
 			fStage := 0;
@@ -170,6 +212,7 @@ protoIoStateMachine := {
 		WaitComplete: 'DoInputSpec,
 		OnError: 'DoDisconnect
 	},
+	// receive: the input spec (InputSpec) completes into DoPutAway
 	DoInputSpec: {
 		action: func() begin
 			CallbackSpec.rcvOptions := fOptionsOut;
@@ -179,6 +222,7 @@ protoIoStateMachine := {
 		WaitComplete: 'DoPutAway,
 		OnError: 'DoDisconnect
 	},
+	// the frames received (fIncomingData.dataArray) go to the callback as 'data, one by one
 	DoPutAway: {
 		action: func() begin
 			fEndpoint:SetInputSpec(nil);
@@ -201,13 +245,17 @@ protoIoStateMachine := {
 		WaitComplete: 'DoUnbind,
 		OnError: 'DoUnbind
 	},
+	// machine:SetMode(mode) - one of legalModes; anything else throws -8608
+	// (the state machine error "Invalid mode").
 	SetMode: func(a1) begin
 		(if legalModes.(a1) then (fMode := a1) else Throw('|evt.ex.proto|, -8608))
 	end,
+	// after connecting: in 'AutoInAndOut, ask the "irco" option (an IR option, by
+	// its name; its current value: opGetCurrent) which side sends first; else send
 	DoPostConnect: {
 		action: func() begin
 			(if (fMode = 'AutoInAndOut) then begin
-					fEndpoint:option([Array: Clone('{label: "irco", type: option, opCode: 1024, form: template, data: {arglist: [Array: 0], typelist: [Array: 10, 1]}})], CallbackSpec);
+					fEndpoint:option([Array: Clone('{label: "irco", type: option, opCode: opGetCurrent, form: template, data: {arglist: [Array: 0], typelist: [Array: 10, 1]}})], CallbackSpec);
 					'waitAsync
 				end else 'DoOutput)
 		end,

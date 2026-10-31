@@ -1,7 +1,10 @@
-// protoRadioButton, and what only it reaches
+// protoRadioButton: one button of a protoRadioCluster - a protoCheckbox drawn
+// with the radio-button bitmaps. Its scripts (shared) tell the cluster when
+// it is tapped, so that the cluster turns the others off.
 
 protoRadioButton := {
 	_proto: @protoCheckbox,
+	// the bitmap drawn now, and the two it switches between
 	icon: @radioOffBitmap,
 	onBitmap: @radioOnBitmap,
 	offBitmap: @radioOffBitmap,

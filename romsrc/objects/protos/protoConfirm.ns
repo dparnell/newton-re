@@ -1,21 +1,36 @@
-// protoConfirm, and what only it reaches
+// protoConfirm: the alert slip with a message and a row of buttons that
+// AsyncConfirm and ModalConfirm put up.  Tapping a button stores its value in
+// confirmedValue and closes the slip.
+//   message          the text shown
+//   messageHIndent   extra left indent for the message (e.g. room for an icon)
+//   buttonList       the buttons: a frame of value: text pairs, or of frames
+//                    {value, text, keyValue}; keyValue 'default makes the
+//                    button the one Return presses, 'Close the one the close
+//                    gesture or key presses
+// The three button templates differ only in which of base's slots they set.
 
 protoConfirm := {
 	messageHIndent: nil,
 	confirmedValue: nil,
+	// an ordinary button
 	buttonTemplate: {
 		_proto: @protoTextButton,
+		// oneLineOnly (8388608) + vjSiblingLeftH + vjParentFullV +
+		// vjParentRightH + vjCenterV + vjCenterH: right to left from the edge
 		viewJustify: 8390886,
+		// at setup: as wide as its text needs, 7 pixels left of its sibling
 		viewSetupFormScript: func() begin
 			local stdButtonWidth2;
 			stdButtonWidth2 := StdButtonWidth(text);
 			(self.viewBounds := SetBounds((-(stdButtonWidth2 + 6)), 0, -7, 0))
 		end,
+		// on a tap: records the answer and closes the slip
 		buttonClickScript: func() begin
 			confirmedValue := buttonValue;
 			base:Close()
 		end
 	},
+	// the default button: as buttonTemplate, and made base's _defaultButton
 	buttonTemplateDefault: {
 		_proto: @protoTextButton,
 		viewJustify: 8390886,
@@ -30,6 +45,7 @@ protoConfirm := {
 			base:Close()
 		end
 	},
+	// the closing button: as buttonTemplate, and made base's _closeBox
 	buttonTemplateClose: {
 		_proto: @protoTextButton,
 		viewJustify: 8390886,
@@ -49,6 +65,7 @@ protoConfirm := {
 			viewFlags: vVisible + vReadOnly + vClipping,
 			viewJustify: vjParentFullH + vjParentFullV,
 			viewBounds: {left: 15, top: 15, right: -15, bottom: -15},
+			// the message: its text, moved right by messageHIndent if given
 			viewSetupFormScript: func() begin
 				local copy;
 				self.text := message;
@@ -64,6 +81,9 @@ protoConfirm := {
 			viewFlags: vVisible,
 			viewJustify: vjParentFullH + vjParentBottomV,
 			viewBounds: {left: 15, top: -28, right: -8, bottom: -15},
+			// the button row: a button per buttonList entry, its template
+			// chosen by the entry's keyValue.  An entry frame whose keyValue is
+			// some other symbol leaves buttonTemplateDefault2 nil (no proto).
 			viewSetupChildrenScript: func() begin
 				(self.viewChildren := (foreach key, value in buttonList collect begin
 					local buttonTemplateDefault2;

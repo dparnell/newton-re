@@ -1,9 +1,18 @@
-// protoConvertInkSlip, and what only it reaches
+// protoConvertInkSlip: the floating slip for converting a word of ink (or
+// typing a value): a title, an explanation, an entry line and optionally an
+// on-screen keyboard (kbdType 'alpha or 'phone).  Closing it sends compMsg to
+// compView with the entered text.
+//   userTitle / userText   the slip's title and explanation
+//   recFlags    extra recognition flags for the entry line
+//   compView, compMsg, userData   who is told of the result, and how
 
 protoConvertInkSlip := {
 	viewBounds: {left: 0, top: 0, right: 225, bottom: 124},
 	viewJustify: vjParentCenterH + vjParentCenterV,
+	// space added below the last child (grows by a keyboard's height)
 	extraHeight: 20,
+	// before the children are made: fills in the title and text, picks the
+	// keyboard (l4) and the entry line's flags
 	viewSetupChildrenScript: func() begin
 		local l1, strFontWidth2, l3, l4;
 		l3 := 'symbol;
@@ -19,8 +28,10 @@ protoConvertInkSlip := {
 						entryLine.viewFlags := vVisible + vClickable + vGesturesAllowed + vPhoneField
 					end
 			end;
+		// the caller's recognition flags on top of a visible, tappable line
+		// taking gestures
 		if recFlags then begin
-				entryLine.viewFlags := BOr(2561, recFlags)
+				entryLine.viewFlags := BOr(vVisible + vClickable + vGesturesAllowed, recFlags)
 			end;
 		if l4 then begin
 				self.stepChildren := [Array: l4];
@@ -28,6 +39,9 @@ protoConvertInkSlip := {
 			end;
 		inherited:?viewSetupChildrenScript()
 	end,
+	// after setup: makes the slip just tall enough for its children (the
+	// last one before the keyboard, plus extraHeight) and puts the caret in
+	// the entry line
 	viewSetupDoneScript: func() begin
 		local copy, childViewFrames, l3, l4;
 		childViewFrames := self:ChildViewFrames();
@@ -38,12 +52,17 @@ protoConvertInkSlip := {
 		inherited:?viewSetupDoneScript();
 		SetKeyView(entryLine, 0)
 	end,
+	// puts the recognized text (richText) into the entry line
 	Recognize: func() begin
 		SetValue(entryLine, 'text, richText)
 	end,
 	ReOrientToScreen: @defRotateFunc,
 	viewChildren: [viewChildren:
 		{
+			// the close box: sends compMsg(isInk, text, userData) to compView
+			// with the entry line's text (isInk true when it holds ink), then
+			// closes the slip.  For a phone conversion the brackets are
+			// replaced by the same brackets - as the strings read here, a no-op.
 			buttonClickScript: func() begin
 				local copy;
 				copy := Clone(entryLine:GetRichString());
@@ -69,6 +88,7 @@ protoConvertInkSlip := {
 	_proto: @protoFloater
 };
 
+// the slip's title
 headerText := {
 	viewBounds: {left: 0, top: 8, right: 150, bottom: 15},
 	viewJustify: vjParentCenterH,
@@ -76,6 +96,7 @@ headerText := {
 	_proto: @protoTitle
 };
 
+// the explanation below the title
 infoText := {
 	viewBounds: {left: 10, top: 5, right: -10, bottom: 30},
 	viewJustify: vjParentFullH + vjSiblingBottomV,
@@ -83,8 +104,10 @@ infoText := {
 	_proto: @protoStaticText
 };
 
+// the entry line below the explanation
 entryLine_3 := {
 	viewBounds: {left: 10, top: 5, right: -10, bottom: 30},
+	// oneLineOnly (8388608) + vjSiblingBottomV + vjParentClip + vjParentFullH
 	viewJustify: 8396848,
 	viewFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed,
 	preallocatedContext: 'entryLine,

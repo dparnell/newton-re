@@ -1,4 +1,7 @@
-// protoStatusBar, and what only it reaches
+// protoStatusBar: the bar across the bottom of an application that holds
+// its clock and buttons (protoStatus adds a close box); it draws a thin
+// rule along its top. The time field is a part the bar allocates for each
+// instance.
 
 protoStatusBar := {
 	viewClass: clView,
@@ -6,6 +9,8 @@ protoStatusBar := {
 	viewFormat: 0,
 	viewJustify: vjParentFullH + vjParentBottomV,
 	viewBounds: {left: 0, top: -18, right: 0, bottom: 0},
+	// viewDrawScript(): draws a 2-pixel line inset 2 pixels from each side,
+	// below the bar's top edge
 	viewDrawScript: func() begin
 		local box;
 		box := self:LocalBox();
@@ -13,6 +18,7 @@ protoStatusBar := {
 	end,
 	debug: 724016,
 	timeField: nil,
+	// declares the child whose view is put in the timeField slot when made
 	allocateContext: [|Array|: 'timeField, timeField],
 	viewChildren: [viewChildren: @analogClock, timeField]
 };

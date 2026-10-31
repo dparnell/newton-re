@@ -1,9 +1,18 @@
-// protoStatusTemplate, and what only it reaches
+// protoStatusTemplate: the status slip that reports an operation's progress
+// (connecting, sending, ...): a floater with an icon and a close box whose
+// other parts come from a named configuration (vStatus, vGauge, vBarber,
+// vProgress, vConfirm, vStatusTitle, or the application's own: a frame with
+// kids and height). ViewSet chooses the configuration and its values;
+// UpdateIndicator updates the values; each part reads the slot of the values
+// named by its name slot (through path()).
 
 protoStatusTemplate := {
+	// path(): the values frame the parts read their values from
 	path: func() begin
 		(if valueData then valueData.values)
 	end,
+	// UpdateIndicator(setup): new values (setup is as for ViewSet); the
+	// indicator parts (icon, gauges, barber pole) update themselves
 	updateIndicator: func(a1) begin
 		self:EventPause(true);
 		valueData := a1;
@@ -18,11 +27,15 @@ protoStatusTemplate := {
 	end,
 	viewChildren: [viewChildren:
 		{_proto: @protoStatusIcon},
+		// the close box, known to the slip as cancelButton (the status
+		// button's ShiftItem)
 		{
 			viewSetupFormScript: func() begin
 				base.cancelButton := self;
 				inherited:?viewSetupFormScript()
 			end,
+			// ButtonClickScript(): the application's CloseStatusDialog(true)
+			// if it has one, else the close box's default (closing the slip)
 			buttonClickScript: func() begin
 				local l1;
 				if appSymbol then begin
@@ -38,12 +51,17 @@ protoStatusTemplate := {
 			_proto: @protoStatusClosebox
 		}
 	],
+	// the built-in configurations
 	vConfirm: @vConfirm,
 	vGauge: @vGauge,
 	viewFlags: vFloating + vClickable,
 	vStatus: @vStatus,
+	// the configuration shown
 	curView: nil,
+	// the slip's width
 	width: 185,
+	// ReOrientToScreen(): after the screen is rotated, reopens the slip at
+	// the new orientation's top position
 	ReOrientToScreen: func() begin
 		local box, screenOrientation;
 		box := self:GlobalBox();
@@ -54,10 +72,17 @@ protoStatusTemplate := {
 	end,
 	_proto: @protoFloater,
 	_defaultButton: nil,
+	// the setup frame to apply when the slip opens (as for ViewSet)
 	initialSetup: nil,
+	// MungeBounds(left, top, right, bottom): global bounds made to fit the
+	// application area (moved left and up so as to stay slop pixels inside
+	// it) and made relative to the parent; throws kViewErrCouldNotCreate if
+	// it cannot fit. With screenRelativeH it is moved to be centred on the
+	// whole screen rather than the application area
 	MungeBounds: func(left, topValue, right, a4) begin
 		local bounds, l2, l3, params, l5, l6, parent, box, l9;
 		bounds := SetBounds(left, topValue, right, a4);
+		// l2, l3: how far to move it; l5, l6: the right and bottom limits
 		l2 := 0;
 		l3 := 0;
 		l5 := (((params := GetAppParams()).appAreaLeft + params.appAreaWidth) - slop);
@@ -87,8 +112,15 @@ protoStatusTemplate := {
 			end;
 		bounds
 	end,
+	// the application the slip reports for (its CancelRequest,
+	// CloseStatusDialog and icon)
 	appSymbol: nil,
+	// the margin kept from the application area's edges
 	slop: 8,
+	// ViewSet(setup): shows a configuration - setup is {name: the
+	// configuration's slot, appSymbol:, values: {the parts' values}}. A new
+	// configuration rebuilds the parts (and resizes the open slip to its
+	// height); the same one updates the parts that have a value
 	viewSet: func(currentStatusSetup) begin
 		self:EventPause(true);
 		(if (valueData := currentStatusSetup) then begin
@@ -118,8 +150,12 @@ protoStatusTemplate := {
 			end)
 	end,
 	_nextKeyView: 'none,
+	// non-nil: centre the slip on the whole screen (a values slot)
 	screenRelativeH: nil,
 	declareSelf: 'base,
+	// viewSetupFormScript(): applies initialSetup, then, unless the slip
+	// already has bounds and a configuration, centres it horizontally at the
+	// orientation's top position
 	viewSetupFormScript: func() begin
 		local screenOrientation, params, l3, l4;
 		if (if initialSetup then (not valueData)) then begin
@@ -129,6 +165,7 @@ protoStatusTemplate := {
 		if ((not HasSlot(self, 'viewBounds)) or (curView = nil)) then begin
 				self.viewJustify := 0;
 				screenOrientation := GetUserConfig('screenOrientation);
+				// l3: the left edge that centres it; l4: its bottom
 				l3 := (((params := GetAppParams()).appAreaWidth - width) >> 1);
 				l4 := (if curView then (topValues[screenOrientation] + curView.height) else 0);
 				self.viewBounds := self:MungeBounds(l3, topValues[screenOrientation], (l3 + width), l4)
@@ -136,10 +173,13 @@ protoStatusTemplate := {
 		inherited:?viewSetupFormScript();
 		SetKeyView(self, 0)
 	end,
+	// the setup frame last given to ViewSet or UpdateIndicator
 	valueData: nil,
 	vStatusTitle: @vStatusTitle,
 	debug: 739977,
 	vProgress: @vProgress,
 	vBarber: @vBarber,
+	// the slip's top, by screen orientation (indexed by the user
+	// configuration's screenOrientation)
 	topValues: [|Array|: 75, 25, 75, 25]
 };

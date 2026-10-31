@@ -1,7 +1,12 @@
-// protoPicker, and what only it reaches
+// protoPicker: the pop-up list (a clPickView) of a picker: the items of
+// pickItems, each a string or an {item:, mark:, pickable:...} frame, shown in
+// a floating rounded box with scroll arrows when they do not fit; tapping
+// one sends the opener's pickActionScript. PopupMenu builds its menus on it.
 
 protoPicker := {
 	pickRightMargin: 5,
+	// once open: with the scroll arrows showing, take the user's scrolling
+	// speed and set the arrows; then lay out the list (SetPopup)
 	viewSetupDoneScript: func() begin
 		if Visible(scrollers) then begin
 				scrollingSleepTime := GetUserConfig('_ScrollingPopupSleepTime);
@@ -12,15 +17,21 @@ protoPicker := {
 	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2) + vfRound(4),
 	itemChosen: nil,
 	pickTopMargin: 2,
+	// a native method (class #132: a function of the ROM's C++, not NewtonScript)
 	Scroll: {class: #132, funcPtr: 7050430, numArgs: 1},
+	// true: leave room on the left for the items' marks
 	pickItemsMarkable: nil,
 	viewFlags: vReadOnly + vFloating + vClickable,
+	// a key typed while the list is up: the native picks or moves by it
 	viewKeyDownScript: func(char2, flags) begin
 		PickViewKeyDown(char2, flags)
 	end,
 	pickMarkWidth: 10,
 	textFlags: 1024,
+	// the first item shown
 	topItem: 0,
+	// the mark of item a1 (a character, e.g. a check mark), or nil: only a
+	// frame item ({item: ...}) has one, and a space mark counts as none
 	GetItemMark: func(a1) begin
 		local l1, mark;
 		l1 := nil;
@@ -41,7 +52,12 @@ protoPicker := {
 	end,
 	viewOriginY: 0,
 	viewJustify: vjCenterH + vjCenterV,
+	// the pause between steps when scrolling (the user's
+	// _ScrollingPopupSleepTime replaces it)
 	scrollingSleepTime: 3,
+	// shows each scroll arrow as 'more when there are items beyond that end
+	// (GetScrollerValues' [0] is negative with items hidden above, its [1]
+	// positive with items hidden below)
 	SetScrollers: func() begin
 		local scrollerValues;
 		if ((scrollerValues := self:GetScrollerValues())[0] < 0) then begin
@@ -51,10 +67,13 @@ protoPicker := {
 			end;
 		(if (scrollerValues[1] > 0) then scrollers:SetArrow('down, 'more) else scrollers:SetArrow('down, 'normal))
 	end,
+	// a native method, as Scroll
 	GetScrollerValues: {class: #132, funcPtr: 7050428, numArgs: 0},
 	pickLeftMargin: 4,
 	pickMaxWidth: 180,
-	viewEffect: 393216,
+	// the list slides down from its top as it opens
+	viewEffect: fxPopDownEffect,
+	// item index was chosen: the opener's own script replaces it
 	pickActionScript: func(index) begin
 		nil
 	end,
@@ -63,7 +82,12 @@ protoPicker := {
 	allowKeysThrough: nil,
 	debug: 90204,
 	viewFont: @fontSystem10Bold,
+	// true: the list closes when an item is picked
 	pickAutoClose: true,
+	// sets item a1's mark to character a2 (nil: a space, no mark), turning a
+	// plain item into a pickable {item:, mark:} frame first, and redraws.
+	// Looks like a ROM bug: actualItem is not declared local, so the
+	// assignment leaves an actualItem slot in the view's frame (harmless)
 	SetItemMark: func(a1, a2) begin
 		local l1, l2;
 		if (a2 = nil) then begin

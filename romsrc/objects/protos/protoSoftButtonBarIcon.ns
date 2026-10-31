@@ -1,9 +1,14 @@
-// protoSoftButtonBarIcon, and what only it reaches
+// protoSoftButtonBarIcon: an icon of the soft button bar (buttonBar), a
+// protoExtrasIcon whose label is the first line of its target's Extras entry
+// text, centred under the icon.
 
 protoSoftButtonBarIcon := {
 	_proto: @protoExtrasIcon,
+	// the icon the button stands for (its fentry is the Extras entry)
 	target: nil,
 	text: nil,
+	// GetIconShapeText(): a text shape of the label's first line, at most
+	// hSpacing wide, centred horizontally, 11 pixels above iconSpacingV
 	GetIconShapeText: func() begin
 		local text, pos, font, least, l5, l6;
 		if (pos := StrPos((text := target.fentry.text), "\n", 0)) then begin
@@ -15,6 +20,8 @@ protoSoftButtonBarIcon := {
 		l6 := (iconSpacingV - 11);
 		MakeText(text, l5, l6, (l5 + least), ((l6 + FontAscent(font)) - 1))
 	end,
+	// GetIconShapeTextHilited(): the label hilited - the text, then its box
+	// moved down a pixel and inverted (modeXor, black fill)
 	GetIconShapeTextHilited: func() begin
 		local iconShapeText, offsetRect2;
 		offsetRect2 := OffsetRect(ShapeBounds((iconShapeText := self:GetIconShapeText())), 0, 1);

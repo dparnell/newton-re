@@ -1,27 +1,39 @@
-// protoRichLabelInputLine, and what only it reaches
+// protoRichLabelInputLine: a protoLabelInputLine whose entry line is a
+// protoRichInputLine, so it keeps words left as ink beside recognized text
+// (a "rich string"); the text is set and read as a rich string, and what is
+// written is remembered in the label's memory list.
 
 protoRichLabelInputLine := {
 	_proto: @protoLabelInputLine,
-	entryFlags: 14849,
+	// the entry line's viewFlags: text and numbers
+	entryFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed,
+	// the recognition configuration given to the entry line (ink or text)
 	entryRecConfig: @rcInkorText,
+	// before the children are made: hand the entry line its recConfig
 	viewSetupChildrenScript: func() begin
 		entryLine.recConfig := self.entryRecConfig;
 		inherited:viewSetupChildrenScript()
 	end,
+	// on closing: add what was written to the memory (the picker's recent items)
 	viewQuitScript: func() begin
 		AddMemoryItem(memory, entryLine:GetRichString())
 	end,
+	// sets the entry's text to a1 (undoably: the old rich string is kept for
+	// the undo) and puts the caret at its end (9999: past any text)
 	UpdateText: func(a1) begin
 		AddUndoAction('UpdateText, [Array: Clone(entryLine:GetRichString())]);
 		SetValue(entryLine, 'text, a1);
 		entryLine:SetHilite(9999, 9999, true)
 	end,
+	// the entry's text with its ink words, as one rich string
 	GetRichString: func() begin
 		MakeRichString(entryLine.text, entryLine.styles)
 	end,
 	viewChildren: [|Array|: entryLine_2, labelLine],
 	debug: 369296797,
 	entryLine: nil,
+	// the pairs are listed twice, the second time with this proto's own entry
+	// line (entryLine_2), which is the one made
 	allocateContext: [|Array|:
 		'entryLine,
 		entryLine,
@@ -35,11 +47,13 @@ protoRichLabelInputLine := {
 	labelLine: nil
 };
 
+// the entry line: a rich input line in 12-point handwriting font on grey lines
 entryLine_2 := {
 	_proto: @protoRichInputLine,
-	viewJustify: 8388800,
+	viewJustify: oneLineOnly + vjParentFullV,
 	viewFont: tsHWFont + tsSize(12),
 	viewFormat: vfLinesGray,
+	// any change of the text is reported to the label line as textChanged
 	viewChangedScript: func(slot, view) begin
 		(if (slot = 'text) then self:textChanged())
 	end,

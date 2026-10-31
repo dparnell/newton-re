@@ -1,4 +1,16 @@
-// protoDesktopEndpoint, and what only it reaches
+// protoDesktopEndpoint: the endpoint of a Newton Connection (Dock)
+// session with a desktop computer: it reads and writes the dock protocol's
+// commands (four-letter codes with data) and keeps the session alive.
+// Most of it is native (class #132: a C function pointer and its argument
+// count); the NewtonScript part sets the session up, runs its idle check
+// (the "helo" keep-alive, the idle time-out) and tears it down.
+//   maxIdleTime        seconds without word from the desktop before the
+//                      session is ended on battery power (nil: never)
+//   lastcommunicationwithdesktop, lastHello   TimeInSeconds stamps
+//   idleUseCount, idlingViews   who asked for idle checks (StartIdle)
+//   callWhenDone       called with the error when the session ends
+// Errors met: -28009 (the connection is gone; ignored when ending),
+// -28024 (idle too long), kDockErrDesktopError (an unexpected command).
 
 protoDesktopEndpoint := {
 	ReadCommandHeader: {class: #132, funcPtr: 7012369, numArgs: 1},
@@ -9,6 +21,8 @@ protoDesktopEndpoint := {
 	InstallAnyProtocolExtension: {class: #132, funcPtr: 7012364, numArgs: 2},
 	maxIdleTime: 300,
 	ReadBytes: {class: #132, funcPtr: 7012366, numArgs: 2},
+	// StopIdle(view): undoes a StartIdle - for a view, takes it off
+	// idlingViews and stops its idle script
 	StopIdle: func(a1) begin
 		local pos;
 		(if (idleUseCount > 0) then (if (not a1) then (idleUseCount := (idleUseCount - 1)) else (if (pos := LSearch(idlingViews, a1, 0, '|=|, nil)) then begin
@@ -29,6 +43,10 @@ protoDesktopEndpoint := {
 	DoKeyboardPassthrough: {class: #132, funcPtr: 7012359, numArgs: 0},
 	GetState: {class: #132, funcPtr: 7012377, numArgs: 0},
 	RetryPassword: {class: #132, funcPtr: 7012371, numArgs: 1},
+	// ConnectionDone(error): ends the session once: aborts the connection
+	// (with error, -1 if none; an error the abort throws replaces a 0 unless
+	// it is -28009), calls callWhenDone and secretDoneCallback, and drops the
+	// power registrations and idle state
 	ConnectionDone: func(error2) begin
 		local error;
 		(if (not closingDown) then begin
@@ -62,6 +80,12 @@ protoDesktopEndpoint := {
 	GetSyncChanges: {class: #132, funcPtr: 7012363, numArgs: 0},
 	stop: {class: #132, funcPtr: 7012373, numArgs: 0},
 	DesktopType: {class: #132, funcPtr: 7012357, numArgs: 0},
+	// IdleConnection(checkCommands): the session's idle check, answering
+	// the milliseconds until the next (0: stop).  With checkCommands, a
+	// waiting command is answered: "opca" (operation cancelled) with "ocaa",
+	// "disc" ends the session, "helo" is fine, anything else is an error.
+	// On battery, maxIdleTime seconds of silence end the session (-28024).
+	// Every 5 seconds a "helo" is sent to keep the desktop's side alive.
 	IdleConnection: compile(
 		constants: {
 			kLiteral_472c5d: "helo"
@@ -105,6 +129,8 @@ protoDesktopEndpoint := {
 			if (lastHello < lastcommunicationwithdesktop) then begin
 					lastHello := lastcommunicationwithdesktop
 				end;
+			// l3: milliseconds since the last helo (negative: the clock was
+			// set back, so start counting again)
 			if ((l3 := ((TimeInSeconds() - lastHello) * 1000)) < 0) then begin
 					lastHello := TimeInSeconds()
 				end;
@@ -128,6 +154,13 @@ protoDesktopEndpoint := {
 	percentDone: 0,
 	FlushCommandData: {class: #132, funcPtr: 7012361, numArgs: 0},
 	RemoveProtocolExtension: {class: #132, funcPtr: 7012370, numArgs: 1},
+	// Instantiate(appSymbol, appName): sets the session up for the
+	// application: a progress callback for package loading (percentDone),
+	// the native endpoint, the "gapp" extension (the desktop asks for the
+	// applications' names; answered with "appn"), the extensions in
+	// vars.protocolExtensions ([command, function] pairs), and power
+	// callbacks - an emergency power-on ends the session, and the unit may
+	// not sleep while connected
 	Instantiate: func(a1, a2) begin
 		self.appSymbol := a1;
 		self.appName := a2;
@@ -172,6 +205,8 @@ protoDesktopEndpoint := {
 		end;
 		RegPowerOff('Connection, powerOffCallback)
 	end,
+	// StartIdle(view, ms): asks for the idle checks to run; a view is also
+	// given an idle script every ms (each view counted once)
 	StartIdle: func(a1, a2) begin
 		(if (not a1) then (idleUseCount := (idleUseCount + 1)) else begin
 				if (not idlingViews) then begin
@@ -187,6 +222,10 @@ protoDesktopEndpoint := {
 			end)
 	end,
 	WriteBytes: {class: #132, funcPtr: 7012374, numArgs: 1},
+	// InstallProtocolExtension(command, fn): adds a command for the desktop
+	// to send.  Commands all in lower case are reserved for Apple: such a
+	// command (l2 stays true) is refused with kDockErrBadExtension.  The
+	// decompiler places the locals after their uses.
 	InstallProtocolExtension: func(a1, a2) begin
 		text := Downcase(Clone(a1));
 		l2 := true;

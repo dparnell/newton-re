@@ -1,3 +1,4 @@
-// protoView, and what only it reaches
+// protoView: the most basic view proto - a plain clView with no behaviour
+// of its own, the starting point for a custom view template.
 
 protoView := {viewClass: clView};

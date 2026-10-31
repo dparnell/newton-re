@@ -1,26 +1,43 @@
-// protoLabelInputLine, and what only it reaches
+// protoLabelInputLine: a one-line input field with a label on its left
+// (labelLine) and the text to its right (entryLine). With labelCommands the
+// label is a picker (a diamond before it): tapping it, or Return with the
+// command key, pops up the choices, and picking one puts it in the field.
+// memory names a list of the user's past entries, offered in the popup too.
 
 protoLabelInputLine := {
-	entryFlags: 14849,
+	// the entry line's viewFlags
+	entryFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed,
+	// Called first when a label command is picked; return non-nil to have handled
+	// it (the text is then not replaced). Nothing here.
 	LabelActionScript: func(index) begin
 		nil
 	end,
+	// the entry line's left edge (default: just past the label)
 	indent: nil,
 	viewFormat: 0,
+	// On closing: the text is remembered in the memory list.
 	viewQuitScript: func() begin
 		AddMemoryItem(memory, entryLine.text)
 	end,
 	viewFlags: vVisible + vClickable,
+	// Sets the label to a1 behind a marker character: the picker's diamond when
+	// there are label commands, else the other marker.
 	SetLabelText: func(a1) begin
 		(labelLine.text := Stringer([Array: (if labelCommands then $\uFC01 else $\uFC02), a1]))
 	end,
+	// The key command in _keyCommands: shows the popup.
 	_popKeyScript: func(a1) begin
 		self:Popit()
 	end,
+	// the label's width and height (set up in viewSetupChildrenScript)
 	width: nil,
+	// the symbol of the memory list of past entries (AddMemoryItem), or nil
 	memory: nil,
 	viewBounds: nil,
 	oldLabelCommands: nil,
+	// field:SetLabelCommands(commands) - changes the popup's choices (the memory
+	// list's items if commands is nil and there are some) and redraws the label
+	// when they changed.
 	SetLabelCommands: func(sort) begin
 		local memoryItems;
 		if (if (memoryItems := GetMemoryItems(memory)) then (not sort)) then begin
@@ -35,22 +52,31 @@ protoLabelInputLine := {
 	end,
 	label: uCardPositionAlertButton,
 	height: nil,
+	// field:UpdateText(newText) - replaces the entry's text, undoably (the undo
+	// action calls UpdateText with the old text), and puts the caret at its end
+	// (9999: past any text).
 	UpdateText: func(a1) begin
 		AddUndoAction('UpdateText, [Array: Clone(entryLine.text)]);
 		SetValue(entryLine, 'text, a1);
 		entryLine:SetHilite(9999, 9999, true)
 	end,
+	// The popup closed with no choice: unhighlight.
 	pickCancelledScript: func() begin
 		self:hilite(nil)
 	end,
+	// the popup's choices: strings, or frames (item, or keyMessage naming a key command)
 	labelCommands: nil,
+	// The entry's text when it is set up: the text slot. Overridden by users.
 	TextSetup: func() begin
 		text
 	end,
+	// Called when the entry's text has been changed; nothing here.
 	textChanged: func() begin
 		nil
 	end,
 	alwaysCallPickActionScript: nil,
+	// Pops up labelCommands under the label, the current one (curLabelCommand,
+	// an index) check-marked in a copy, the menu indented by indent.
 	Popit: func() begin
 		local labelCommands2, l2;
 		(if labelCommands then begin
@@ -68,9 +94,12 @@ protoLabelInputLine := {
 			end)
 	end,
 	labelFont: @fontSystem9Bold,
+	// Called when the label is tapped; nothing here (non-nil would handle the tap).
 	labelClick: func(unit) begin
 		nil
 	end,
+	// Choice index was picked: unless LabelActionScript handles it, the entry's
+	// text becomes the choice (its item, or the name of its key command).
 	pickActionScript: func(index) begin
 		local labelCommand;
 		if (not self:LabelActionScript(index)) then begin
@@ -88,7 +117,12 @@ protoLabelInputLine := {
 	viewClass: clView,
 	text: uCardPositionAlertButton,
 	debug: 23283101,
+	// the entry line's textFlags
 	entryTextFlags: 8,
+	// Sets up the two lines: the memory list's latest item is added to the
+	// choices (after a separator), the label is sized in labelFont and the entry
+	// placed after it (at indent), on the same baseline, with the entry slots'
+	// flags and the text TextSetup gives.
 	viewSetupChildrenScript: func() begin
 		local memoryItems, box;
 		if (memoryItems := GetMemoryItems(memory)) then begin
@@ -124,7 +158,8 @@ protoLabelInputLine := {
 	entryLine: nil,
 	allocateContext: [|Array|: 'entryLine, entryLine, 'labelLine, labelLine],
 	labelLine: nil,
+	// Return with the command key pops up the choices
 	_keyCommands: [|Array|:
-		{char: $\u000d, modifiers: 33554432, keyMessage: '_popKeyScript, name: "Pick", category: nil}
+		{char: $\u000d, modifiers: kCommandModifier, keyMessage: '_popKeyScript, name: "Pick", category: nil}
 	]
 };

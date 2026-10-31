@@ -1,36 +1,53 @@
-// protoLabelPicker, and what only it reaches
+// protoLabelPicker: a label with a diamond (a protoStaticText) followed by
+// the current choice (entryLine, optionally after an icon); tapping it pops
+// up labelCommands with the current choice checked, and picking one shows it
+// and calls LabelActionScript. Choices are strings, or frames with item (or
+// keyMessage, naming a key command) and optionally icon.
 
 protoLabelPicker := {
+	// Called after a choice was picked and shown; for the user to override.
 	LabelActionScript: func(index) begin
 		nil
 	end,
+	// where the choice starts (default: past the label)
 	indent: nil,
 	viewFormat: vfInset(1) + vfRound(3),
+	// the bounds of the icon shown before the choice, or nil for no icon
 	iconBounds: nil,
 	viewFlags: vVisible + vReadOnly + vClickable,
+	// picker:UpdateIcon(icon) - shows another icon.
 	UpdateIcon: func(icon) begin
 		SetValue(entryLineIcon, 'icon, icon)
 	end,
 	viewBounds: nil,
+	// The icon shown at first: the first choice's, when there are icons.
 	iconSetup: func() begin
 		(if (if (if (if labelCommands then iconBounds) then (Length(labelCommands) > 0)) then IsFrame(labelCommands[0])) then labelCommands[0].icon)
 	end,
 	_proto: @protoStaticText,
+	// Called before the popup shows; returning nil stops it. For the user to
+	// override (to change labelCommands, say).
 	pickerSetup: func() begin
 		true
 	end,
-	viewJustify: 8388608,
+	viewJustify: oneLineOnly,
 	height: nil,
+	// picker:UpdateText(text) - shows another choice and calls textChanged.
 	UpdateText: func(a1) begin
 		SetValue(entryLine, 'text, a1);
 		self:textChanged()
 	end,
+	// The popup closed with no choice: unhighlight.
 	pickCancelledScript: func() begin
 		base:hilite(nil)
 	end,
+	// check-mark the current choice in the popup
 	checkCurrentItem: true,
 	labelCommands: nil,
+	// the gap after the icon (default 3)
 	iconIndent: nil,
+	// The choice shown at first: the first of labelCommands (its item or key
+	// command's name), or "".
 	TextSetup: func() begin
 		local text, l2;
 		text := "";
@@ -43,11 +60,16 @@ protoLabelPicker := {
 			end;
 		text
 	end,
+	// Called when the choice shown changes; for the user to override.
 	textChanged: func() begin
 		nil
 	end,
 	declareSelf: 'base,
+	// Before opening: puts the diamond before the label (unless there), works
+	// out where the icon and the choice go and gives entryLine the first choice
+	// (TextSetup); without an icon, entryLine is the only child.
 	viewSetupFormScript: func() begin
+		// l1: the icon's height (not used further); l2: its width
 		local l1, l2;
 		if (not (if text then BeginsWith(text, "\uFC01\u"))) then begin
 				text := Stringer([Array: $\uFC01, text])
@@ -82,6 +104,9 @@ protoLabelPicker := {
 		(height := FontHeight(viewFont))
 	end,
 	alwaysCallPickActionScript: nil,
+	// Shows the popup (if pickerSetup agrees) over the label's line, x its
+	// right: a copy of labelCommands with the item equal to the text shown
+	// check-marked. Returns true when shown.
 	Popit: func(x) begin
 		(if self:pickerSetup() then begin
 				copy := Clone(labelCommands);
@@ -110,18 +135,22 @@ protoLabelPicker := {
 				true
 			end)
 	end,
+	// A tap released on the label pops up the choices.
 	viewClickScript: func(unit) begin
 		if self:TrackHilite(unit) then begin
 				self:Popit((indent - 2))
 			end;
 		true
 	end,
+	// Highlighting (either way) inverts a rounded box round the label: drawing
+	// it in XOR toggles it. Returns true (done here).
 	viewHiliteScript: func(on) begin
 		local popupHiliteBox;
 		popupHiliteBox := self:PopupHiliteBox();
-		self:DrawShape(MakeRoundRect(-2, popupHiliteBox.top, indent, popupHiliteBox.bottom, 4), '{transferMode: 2, penPattern: 0, fillPattern: 5});
+		self:DrawShape(MakeRoundRect(-2, popupHiliteBox.top, indent, popupHiliteBox.bottom, 4), '{transferMode: modeXor, penPattern: 0, fillPattern: 5});
 		true
 	end,
+	// Choice index picked: shows it (and its icon) and calls LabelActionScript.
 	pickActionScript: func(index) begin
 		local labelCommand, icon, item;
 		if IsFrame((labelCommand := labelCommands[index])) then begin
@@ -140,6 +169,8 @@ protoLabelPicker := {
 		self:LabelActionScript(index);
 		base:hilite(nil)
 	end,
+	// When the caret (keyboard focus) comes to the picker (a1 true), the popup
+	// opens, so it can be used from a keyboard.
 	viewCaretActivateScript: func(a1) begin
 		local l1;
 		(if a1 then begin
@@ -154,6 +185,7 @@ protoLabelPicker := {
 	text: uCardPositionAlertButton,
 	debug: 2911004,
 	viewFont: @fontSystem9Bold,
+	// The picker's box, cut to the label's line when it has viewLineSpacing.
 	PopupHiliteBox: func() begin
 		local box;
 		box := self:LocalBox();
@@ -170,6 +202,7 @@ protoLabelPicker := {
 	entryLine: nil
 };
 
+// the icon before the choice
 entryLineIcon := {
 	viewFlags: vVisible,
 	icon: nil,
@@ -181,11 +214,13 @@ entryLineIcon := {
 	preallocatedContext: 'entryLineIcon
 };
 
+// the choice shown (the picker's entryLine)
 entryLine_4 := {
 	_proto: @protoStaticText,
 	viewFlags: vVisible + vReadOnly + vClickable,
-	viewJustify: 8388800,
+	viewJustify: oneLineOnly + vjParentFullV,
 	viewFont: tsHWFont + tsSize(10),
+	// a tap on the choice is not taken (nil): it goes on to the picker
 	viewClickScript: func(unit) begin
 		nil
 	end,

@@ -1,10 +1,13 @@
-// protoTitleText, and what only it reaches
+// protoTitleText: the title line of a status slip (protoStatusTemplate), a
+// protoStatusText in the 9-point system font named 'titleText so the status
+// template can set its text.
 
 protoTitleText := {
 	debug: 21728,
 	viewBounds: {left: 10, top: 6, right: 180, bottom: 31},
 	viewJustify: vjSiblingBottomV,
 	viewFont: tsSystem + tsSize(9),
+	// the name by which the status template finds this view among its parts
 	name: 'titleText,
 	_proto: @protoStatusText
 };

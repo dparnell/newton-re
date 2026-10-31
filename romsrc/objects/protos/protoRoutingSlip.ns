@@ -1,20 +1,36 @@
-// protoRoutingSlip, and what only it reaches
+// protoRoutingSlip: the Action button (the envelope icon in an
+// application's status bar): it pops up the ways the selected item can be
+// routed - the transports its formats can go by (Print, Fax, Beam,
+// Mail...) and the application's route scripts (Delete, Duplicate...) -
+// and starts the one chosen: a route script is run, a transport gets a new
+// item in a routing slip. (What the Newton Programmer's Reference documents
+// as protoActionButton, 18-7, appears to be this magic pointer, 209.)
 
 protoRoutingSlip := {
 	_proto: @protoPictureButton,
 	icon: @routingBitmap,
 	viewJustify: vjCenterH + vjCenterV + vjParentRightH,
 	viewBounds: {left: -42, top: 2, right: -25, bottom: 15},
+	// while the menu is up: the menu's view, its entries (transports and
+	// route scripts, nil for a separator) and what is routed (GetTargetInfo)
 	popupForm: nil,
 	actionList: nil,
 	targetInfo: nil,
 	alwaysCallPickActionScript: true,
+	// a tap: track the pen and act if it is lifted on the button
 	viewClickScript: func(unit) begin
 		if self:TrackHilite(unit) then begin
 				self:buttonClickScript()
 			end;
 		true
 	end,
+	// builds the menu: the transports (l1: there are some), then the route
+	// scripts (a symbol names a slot holding one; a GetTitle method titles it
+	// for the target) after a separator; each item {item:, icon:, indent:,
+	// fixedHeight:}, the first transport's title followed by what is sent
+	// (appObject's singular or, for a cursor, plural), a Print item answering
+	// the print key. With nothing to offer, an alert and no menu. (The
+	// locals declared after their first use are the decompiler's layout.)
 	buttonClickScript: func() begin
 		if ((actionList := self:GetActionTransports((targetInfo := self:GetTargetInfo('Routing)))) = nil) then begin
 				actionList := [Array: ]
@@ -81,12 +97,17 @@ protoRoutingSlip := {
 				if (targetInfo.target = nil) then begin
 						l17 := "Nothing is selected."
 					end;
-				self:Notify(3, l16, l17);
+				self:Notify(kNotifyAlert, l16, l17);
 				self:hilite(nil);
 				return nil
 			end;
 		(if (popupForm := DoPopup(l8, nil, nil, self)) then OpenedEntryForm(popupForm, nil) else self:hilite(nil))
 	end,
+	// entry index was chosen: a route script is called with the target and
+	// its view (a symbol is sent as a message to its application, else to
+	// this button); a transport gets a new item (NewItem) opened in its
+	// routing slip, the transport told (MissingTarget) if there is nothing
+	// to send. An exception unhighlights the button and is passed on
 	pickActionScript: func(index) begin
 		local routeScript, appSymbol, item;
 		if popupForm then begin
@@ -119,10 +140,14 @@ protoRoutingSlip := {
 		targetInfo := nil;
 		self:hilite(nil)
 	end,
+	// the menu was dismissed
 	pickCancelledScript: func() begin
 		self:hilite(nil);
 		(if popupForm then ClosedEntryForm(popupForm))
 	end,
+	// the transports that can send target info a1's target: those of the
+	// application's formats (appSymbol), else of the target's own formats.
+	// (appSymbol holds formats here: the decompiler's naming)
 	GetActionTransports: func(a1) begin
 		local appSymbol;
 		if ((appSymbol := GetAppFormats(GetVariable(self, 'appSymbol))) = nil) then begin
@@ -130,6 +155,11 @@ protoRoutingSlip := {
 			end;
 		return GetFormatTransports(appSymbol, a1.target)
 	end,
+	// the route scripts to offer: GetRouteScripts' (copied) and the current
+	// view definition's routeScripts; failing those, the application's
+	// entries in the global Routing frame (each copied, its appSymbol added,
+	// and Delete and Duplicate given their icons). (The locals declared
+	// after their first use are the decompiler's layout.)
 	GetActionScripts: func(targetInfo) begin
 		list := [Array: ];
 		if ((list := Clone(self:GetRouteScripts(targetInfo))) = nil) then begin

@@ -1,21 +1,35 @@
-// protoGeneralPopup, and what only it reaches
+// protoGeneralPopup: a floating pop-up view with a close box, to which the
+// client adds its own children: tapping outside cancels it (the callback
+// context gets PickCancelledScript), the close box accepts (the pop-up's
+// Affirmative). Its template's viewBounds give only the width and height.
 
 protoGeneralPopup := {
 	viewFlags: vClipping + vFloating + vClickable,
 	viewFormat: vfFrameBlack + vfPen(2) + vfRound(4),
 	viewBounds: nil,
 	viewJustify: 0,
-	viewEffect: 393216,
+	viewEffect: fxPopDownEffect,
+	// the callback context (New's second argument) and whether the pop-up was
+	// cancelled - both the proto's own, not to be changed
 	context: nil,
 	cancelled: true,
+	// Init(): makes the pop-up view from a frame inheriting from this template
 	Init: func() begin
 		BuildContext({_proto: self})
 	end,
+	// popup:New(bbox, callbackContext) (documented): makes the view and opens it
+	// beside bbox (in global coordinates)
 	New: func(a1, a2) begin
 		local init;
 		(init := self:Init()).context := a2;
 		init:popup(a1)
 	end,
+	// popup(bbox): places the view to the right of bbox inside the application
+	// area (inset by the frame's pen width and inset, read from viewFormat):
+	// level with bbox's top, popping down; or ending at its bottom, popping up;
+	// or, when neither fits, zooming open at the top or the bottom; moved left
+	// if it sticks out on the right. Opens it modally when a modal dialog is up
+	// (FilterDialog). Returns the view.
 	popup: func(a1) begin
 		local viewFormat, l2, bounds, sectRect2, l5, l6, l7, least, l9;
 		a1 := OffsetRect(a1, (-displayParams.appAreaGlobalLeft), (-displayParams.appAreaGlobalTop));
@@ -26,12 +40,12 @@ protoGeneralPopup := {
 			end else begin
 				if ((l5 := ((sectRect2.bottom - viewBounds.bottom) - bounds.top)) > 0) then begin
 						self.viewBounds := RelBounds(sectRect2.right, (sectRect2.bottom - viewBounds.bottom), viewBounds.right, viewBounds.bottom);
-						self.viewEffect := 395264
+						self.viewEffect := fxPopDownEffect + fxVStartPhase
 					end else begin
 						l7 := (if (l5 > l6) then ((displayParams.appAreaHeight - l2) - viewBounds.bottom) else l2);
 						least := min(viewBounds.bottom, (displayParams.appAreaHeight - l2));
 						self.viewBounds := RelBounds(sectRect2.right, l7, viewBounds.right, least);
-						self.viewEffect := 236577
+						self.viewEffect := fxZoomOpenEffect
 					end
 			end;
 		if ((l9 := (bounds.right - viewBounds.right)) < 0) then begin
@@ -44,14 +58,19 @@ protoGeneralPopup := {
 			end;
 		self
 	end,
+	// viewSetupDoneScript: closes the pop-up when the user taps outside it
+	// (SetPopup)
 	viewSetupDoneScript: func() begin
 		self:SetPopup()
 	end,
+	// viewQuitScript: the context's pickCancelledScript when cancelled, else the
+	// pop-up's Affirmative (documented: not to be overridden)
 	viewQuitScript: func() begin
 		(if cancelled then context:?pickCancelledScript() else self:?Affirmative())
 	end,
 	viewChildren: [viewChildren:
 		{
+			// the close box: closing with it accepts (not cancelled)
 			buttonClickScript: func() begin
 				cancelled := nil;
 				inherited:buttonClickScript()

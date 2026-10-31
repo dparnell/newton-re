@@ -1,10 +1,15 @@
-// protoPinWindowWithoutLogic, and what only it reaches
+// protoPinWindowWithoutLogic: the floating slip that asks for a PIN (a
+// protoFloater with a close box round a protoPinWithoutLogic keypad, the
+// pin below), with no checking of its own: what is done with the number is
+// left to whoever builds it.
 
 protoPinWindowWithoutLogic := {
 	viewBounds: {left: 0, top: 0, right: 110, bottom: 153},
 	viewJustify: vjParentCenterH + vjParentCenterV,
 	newPinKey: nil,
 	declareSelf: 'base,
+	// makes the slip's context (BuildContext) and gives it the prompt shown
+	// above the keypad; returns the view, not yet open
 	BuildMeUp: func(text) begin
 		local context;
 		(context := BuildContext(self)).promptText := text;
@@ -12,6 +17,7 @@ protoPinWindowWithoutLogic := {
 	end,
 	viewChildren: [viewChildren: {_proto: @protoClosebox}, pin],
 	pin: nil,
+	// the keypad child is made ahead and found in the 'pin slot
 	allocateContext: [|Array|: 'pin, pin],
 	_proto: @protoFloater
 };

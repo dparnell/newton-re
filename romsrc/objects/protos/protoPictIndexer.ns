@@ -1,4 +1,7 @@
-// protoPictIndexer, and what only it reaches
+// protoPictIndexer: an index strip drawn as one picture (icon, of size
+// iconBBox) divided into numIndices equal parts, across or (_vertical) down
+// the view; the pen highlights the part under it, and lifting it on one
+// sends IndexClickScript with that part's index.
 
 protoPictIndexer := {
 	viewClass: clPictureView,
@@ -6,11 +9,16 @@ protoPictIndexer := {
 	viewBounds: {left: 0, top: -16, right: 0, bottom: 0},
 	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjParentBottomV,
 	viewFormat: vfFillWhite,
+	// the view's local box, and the offset of the centred picture in it
 	viewBBox: nil,
 	startLeft: nil,
+	// the part highlighted (-1: none) and how many parts the picture has
 	curIndex: -1,
 	numIndices: 1,
+	// true: the parts run down the view, not across
 	_vertical: nil,
+	// once open: centre the picture in the view (startLeft its offset, never
+	// negative)
 	viewSetupDoneScript: func() begin
 		viewBBox := self:LocalBox();
 		if _vertical then begin
@@ -20,43 +28,55 @@ protoPictIndexer := {
 			end;
 		(if (startLeft < 0) then (startLeft := 0))
 	end,
+	// inverts part hiliteShape of the picture (nothing when the view is not
+	// open or the index is negative); called twice it puts the part back
 	hiliter: func(hiliteShape) begin
 		(if (if viewCObject then (hiliteShape >= 0)) then (if _vertical then self:InvertRect(0, (startLeft + ((hiliteShape * iconBBox.bottom) div numIndices)), viewBBox.right, (startLeft + (((hiliteShape + 1) * iconBBox.bottom) div numIndices))) else self:InvertRect((startLeft + ((hiliteShape * iconBBox.right) div numIndices)), 0, (startLeft + (((hiliteShape + 1) * iconBBox.right) div numIndices)), viewBBox.bottom)))
 	end,
+	// takes the highlight off
 	unhilite: func() begin
 		(if (curIndex >= 0) then begin
 				self:DoDrawing('hiliter, [Array: curIndex]);
 				(curIndex := -1)
 			end)
 	end,
+	// redraws the highlight over the picture
 	viewDrawScript: func() begin
 		self:hiliter(curIndex)
 	end,
+	// the pen went down: track it (drawing as it goes) and report the part
+	// it was lifted on
 	viewClickScript: func(unit) begin
 		if self:DoDrawing('trackPictHilite, [Array: unit]) then begin
 				self:IndexClickScript(curIndex)
 			end;
 		true
 	end,
+	// a part was tapped: an instance overrides it
 	IndexClickScript: func(curIndex) begin
 		nil
 	end,
+	// moves the highlight to part a1 (a negative index leaves it where it is)
 	SetHilite: func(a1) begin
 		(if (if (a1 <> curIndex) then (a1 >= 0)) then begin
 				self:hiliter(curIndex);
 				self:hiliter((curIndex := a1))
 			end)
 	end,
+	// follows the pen (a1, the click's unit) until the stroke ends, keeping
+	// the part under it (l2) highlighted; returns that part's index, or nil
 	trackPictHilite: func(a1) begin
 		local box, l2;
 		InkOff(a1);
 		box := self:GlobalBox();
 		(loop begin
 				if _vertical then begin
-						l2 := ((((GetPoint(5, a1) - startLeft) - box.top) * numIndices) div iconBBox.bottom)
+						l2 := ((((GetPoint(finalY, a1) - startLeft) - box.top) * numIndices) div iconBBox.bottom)
 					end else begin
-						l2 := ((((GetPoint(4, a1) - startLeft) - box.left) * numIndices) div iconBBox.right)
+						l2 := ((((GetPoint(finalX, a1) - startLeft) - box.left) * numIndices) div iconBBox.right)
 					end;
+				// past the picture's end: no part (SetHilite then keeps the
+				// last one highlighted)
 				if (l2 >= numIndices) then begin
 						l2 := -1
 					end;

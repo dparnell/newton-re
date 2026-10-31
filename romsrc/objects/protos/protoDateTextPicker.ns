@@ -1,4 +1,10 @@
-// protoDateTextPicker, and what only it reaches
+// protoDateTextPicker: a label picker showing a date; tapping it pops up a
+// calendar (datePopup) to pick another (Newton Programmer's Reference
+// "protoDateTextPicker").
+//   Date          the date shown, in minutes (nil: none)
+//   longFormat    a symbol naming a date-string spec in datetimeStrSpecs, used
+//                 with LongDateStr; when nil, shortFormat is used with
+//                 ShortDateStr instead
 
 protoDateTextPicker := {
 	viewBounds: nil,
@@ -6,14 +12,19 @@ protoDateTextPicker := {
 	Date: nil,
 	shortFormat: nil,
 	longFormat: 'yearMonthDayStrSpec,
+	// sent on a tap to pop up the picker: x is the width of the text part;
+	// the calendar pops up below that part of the line, set to Date
 	Popit: func(x) begin
 		local box;
 		(box := self:GlobalBox()).right := (box.left + x);
 		@datePopup:New((if Date then [Array: Date]), box, self)
 	end,
+	// answers the text shown after the label: Date in the chosen format
 	TextSetup: func() begin
 		(if longFormat then LongDateStr(Date, @datetimeStrSpecs.(longFormat)) else ShortDateStr(Date, @datetimeStrSpecs.(shortFormat)))
 	end,
+	// sent by the calendar with an array of the picked dates: the first
+	// becomes Date before protoTextPicker updates the text
 	pickActionScript: func(index) begin
 		Date := index[0];
 		inherited:pickActionScript(index[0])

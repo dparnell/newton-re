@@ -1,8 +1,14 @@
-// protoUpDownScroller, and what only it reaches
+// protoUpDownScroller: a pair of up and down scroll arrows, one above the
+// other, at the right of its parent and centred vertically (an
+// abstractScroller with two abstractArrow children). The application
+// supplies the scrolling methods abstractScroller calls.
 
 protoUpDownScroller := {
 	viewBounds: {left: -17, top: 0, right: 0, bottom: 33},
 	viewJustify: vjParentRightH + vjParentCenterV,
+	// the arrows' pictures in one strip of 17-pixel cells, which DirMap and
+	// StateMap index: the cell of a direction plus the offset of a state
+	// (normal, more to scroll, hilited)
 	Arrows: {
 		bits: bitmap('bits, "resources/bits/440c21.png", "00000000001001140114002001250086", 1),
 		bounds: {left: 0, top: 0, right: 102, bottom: 17}

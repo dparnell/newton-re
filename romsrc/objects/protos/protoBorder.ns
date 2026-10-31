@@ -1,3 +1,5 @@
-// protoBorder, and what only it reaches
+// protoBorder: a plain view filled black, used as a divider line - its
+// bounds give the line its length and thickness (Newton Programmer's
+// Reference "protoBorder").
 
 protoBorder := {viewClass: clView, viewFlags: vVisible, viewBounds: nil, viewFormat: vfFillBlack, debug: 90824};

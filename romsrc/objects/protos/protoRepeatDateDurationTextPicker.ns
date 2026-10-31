@@ -1,36 +1,54 @@
-// protoRepeatDateDurationTextPicker, and what only it reaches
+// protoRepeatDateDurationTextPicker: the "how long" picker of the repeat
+// editor: a protoDateDurationTextPicker (start and stop dates) whose pop-up
+// offers durations that suit the repeat pattern (repeatType, mtgInfo:
+// Newton Programmer's Reference 16-24) - days and weeks for a daily
+// meeting, numbers of times for a fortnightly one, months or years for a
+// monthly or yearly one - and whose duration text counts in those units.
 
 protoRepeatDateDurationTextPicker := {
 	viewJustify: 0,
 	longFormat: nil,
 	shortFormat: 'numericDateStrSpec,
+	// the repeat pattern the durations are for
 	repeatType: nil,
 	mtgInfo: nil,
+	// the duration choices offered (set by Popit)
 	durationPop: nil,
-	fakeTemplate: {mtgStartDate: nil, mtgStopDate: 536870911, repeatType: nil, mtgInfo: nil},
+	// a repeat template used to find a meeting's next occurrence (NextMeeting)
+	// when counting months or years; it repeats forever
+	fakeTemplate: {mtgStartDate: nil, mtgStopDate: kForever, repeatType: nil, mtgInfo: nil},
+	// on opening: give the view its own copy of the template, so that
+	// changing it does not change the proto's
 	viewSetupFormScript: func() begin
 		(if (not HasSlot(self, 'fakeTemplate)) then (fakeTemplate := Clone(fakeTemplate)))
 	end,
+	// pops the picker up (x as protoDateDurationTextPicker takes it) with
+	// the durations for the repeat pattern: the skipDay, skipMonth, skipYear
+	// of each item say how far past the start the stop date goes (plusDay,
+	// skipToMonthEnd how to land on the last occurrence). repeatType 6 (an
+	// internal type, Reserved in the Reference) is treated as every day
 	Popit: func(x) begin
-		if ((repeatType = 6) or (if (repeatType = 0) then (mtgInfo = BOr(4064, 31)))) then begin
+		if ((repeatType = 6) or (if (repeatType = kDayOfWeek) then (mtgInfo = BOr(kEveryday, kEveryWeek)))) then begin
 				durationPop := '[Array: {item: "2 days", skipDay: 2}, {item: "5 days", skipDay: 5}, {item: "1 week", skipDay: 7}, {item: "2 weeks", skipDay: 14}, {item: "1 month", skipMonth: 1}, {item: "6 months", skipMonth: 6}, {item: "Ongoing", Ongoing: true}]
 			end else begin
-				if (repeatType = 0) then begin
+				// weekly (on some days of the week)
+				if (repeatType = kDayOfWeek) then begin
 						durationPop := '[Array: {item: "2 weeks", skipDay: 8}, {item: "3 weeks", skipDay: 15}, {item: "4 weeks", skipDay: 22}, {item: "5 weeks", skipDay: 29}, {item: "6 months", skipDay: 176}, {item: "1 year", skipDay: 365}, {item: "Ongoing", Ongoing: true}]
 					end else begin
-						if (repeatType = 4) then begin
+						// every other week
+						if (repeatType = kPeriod) then begin
 								durationPop := '[Array: {item: "2 times", skipDay: 15}, {item: "3 times", skipDay: 29}, {item: "4 times", skipDay: 43}, {item: "5 times", skipDay: 57}, {item: "6 months", skipDay: 169}, {item: "1 year", skipDay: 365}, {item: "Ongoing", Ongoing: true}]
 							end else begin
-								if (repeatType = 2) then begin
+								if (repeatType = kDateInMonth) then begin
 										durationPop := '[Array: {item: "2 months", skipMonth: 1, plusDay: true}, {item: "3 months", skipMonth: 2, plusDay: true}, {item: "4 months", skipMonth: 3, plusDay: true}, {item: "6 months", skipMonth: 5, plusDay: true}, {item: "1 year", skipMonth: 11, plusDay: true}, {item: "2 years", skipMonth: 23, plusDay: true}, {item: "Ongoing", Ongoing: true}]
 									end else begin
-										if (repeatType = 1) then begin
+										if (repeatType = kWeekInMonth) then begin
 												durationPop := '[Array: {item: "2 months", skipMonth: 1, skipToMonthEnd: true}, {item: "3 months", skipMonth: 2, skipToMonthEnd: true}, {item: "4 months", skipMonth: 3, skipToMonthEnd: true}, {item: "6 months", skipMonth: 5, skipToMonthEnd: true}, {item: "1 year", skipMonth: 11, skipToMonthEnd: true}, {item: "2 years", skipMonth: 23, skipToMonthEnd: true}, {item: "Ongoing", Ongoing: true}]
 											end else begin
-												if (repeatType = 3) then begin
+												if (repeatType = kDateInYear) then begin
 														durationPop := '[Array: {item: "2 years", skipYear: 1, plusDay: true}, {item: "3 years", skipYear: 2, plusDay: true}, {item: "4 years", skipYear: 3, plusDay: true}, {item: "5 years", skipYear: 4, plusDay: true}, {item: "10 years", skipYear: 9, plusDay: true}, {item: "30 years", skipYear: 29, plusDay: true}, {item: "Ongoing", Ongoing: true}]
 													end else begin
-														if (repeatType = 7) then begin
+														if (repeatType = kWeekInYear) then begin
 																durationPop := '[Array: {item: "2 years", skipYear: 1, skipToMonthEnd: true}, {item: "3 years", skipYear: 2, skipToMonthEnd: true}, {item: "4 years", skipYear: 3, skipToMonthEnd: true}, {item: "5 years", skipYear: 4, skipToMonthEnd: true}, {item: "10 years", skipYear: 9, skipToMonthEnd: true}, {item: "30 years", skipYear: 29, skipToMonthEnd: true}, {item: "Ongoing", Ongoing: true}]
 															end else begin
 																durationPop := nil
@@ -43,34 +61,45 @@ protoRepeatDateDurationTextPicker := {
 			end;
 		inherited:Popit(x)
 	end,
+	// the duration text for a1 minutes from start to stop, as two strings
+	// (e.g. ["2 weeks", "3 days"]), counted in the pattern's units: weeks and
+	// days (daily), weeks (weekly), times (fortnightly), years and months
+	// (monthly, counting whether the stop date reaches the last month's
+	// occurrence), years (yearly); otherwise as protoDateDurationTextPicker
+	// does. l1 is the number of days, counting the first (1440: minutes in
+	// a day)
 	GetDuration: func(a1) begin
 		local l1, repeatType, mtgInfo, fakeTemplate, l5, l6, date2, date3, l9, totalMinutes2, nextMeeting2, l12;
 		l1 := ((a1 := (a1 + 1440)) div 1440);
 		repeatType := context.repeatType;
 		mtgInfo := context.mtgInfo;
 		fakeTemplate := context.fakeTemplate;
-		(if (a1 <= 0) then [Array: "", ""] else (if ((repeatType = 6) or (if (repeatType = 0) then (mtgInfo = BOr(4064, 31)))) then begin
+		(if (a1 <= 0) then [Array: "", ""] else (if ((repeatType = 6) or (if (repeatType = kDayOfWeek) then (mtgInfo = BOr(kEveryday, kEveryWeek)))) then begin
 					l5 := (l1 div 7);
 					l1 := (l1 mod 7);
 					[Array: (if (l5 > 1) then ParamStr("^0 weeks", [Array: l5]) else (if (l5 = 1) then "1 week" else "")), (if (l1 > 1) then ParamStr("^0 days", [Array: l1]) else (if (l1 = 1) then "1 day" else ""))]
-				end else (if (repeatType = 0) then [Array: (if ((l5 := ((l1 + 6) div 7)) > 1) then ParamStr("^0 weeks", [Array: l5]) else (if (l5 = 1) then "1 week" else "")), ""] else (if (repeatType = 4) then [Array: (if ((l6 := ((l1 + 13) div 14)) > 1) then ParamStr("^0 times", [Array: l6]) else (if (l6 = 1) then "1 time" else "")), ""] else begin
+				end else (if (repeatType = kDayOfWeek) then [Array: (if ((l5 := ((l1 + 6) div 7)) > 1) then ParamStr("^0 weeks", [Array: l5]) else (if (l5 = 1) then "1 week" else "")), ""] else (if (repeatType = kPeriod) then [Array: (if ((l6 := ((l1 + 13) div 14)) > 1) then ParamStr("^0 times", [Array: l6]) else (if (l6 = 1) then "1 time" else "")), ""] else begin
 							date2 := Date(startTime);
 							date3 := Date(stopTime);
-							(if ((repeatType = 2) or (repeatType = 1)) then begin
+							// monthly: l9 months, less one if the stop date is
+							// before the last month's occurrence
+							(if ((repeatType = kDateInMonth) or (repeatType = kWeekInMonth)) then begin
 									if (date3.year = date2.year) then begin
 											l9 := ((date3.month - date2.month) + 1)
 										end else begin
 											l9 := (((13 - date2.month) + date3.month) + (((date3.year - date2.year) - 1) * 12))
 										end;
-									if (repeatType = 2) then begin
+									if (repeatType = kDateInMonth) then begin
 											if (date3.Date < date2.Date) then begin
 													l9 := (l9 - 1)
 												end
 										end else begin
+											// the week-in-month occurrence in the stop
+											// date's month: the next meeting from its 1st
 											date3.Date := 1;
 											totalMinutes2 := TotalMinutes(date3);
 											fakeTemplate.mtgStartDate := (startTime - (startTime mod 1440));
-											fakeTemplate.repeatType := 1;
+											fakeTemplate.repeatType := kWeekInMonth;
 											fakeTemplate.mtgInfo := mtgInfo;
 											nextMeeting2 := NextMeeting(totalMinutes2, fakeTemplate);
 											if (stopTime < nextMeeting2) then begin
@@ -80,13 +109,13 @@ protoRepeatDateDurationTextPicker := {
 									l12 := (l9 div 12);
 									l9 := (l9 mod 12);
 									[Array: (if (l12 > 1) then ParamStr("^0 years", [Array: l12]) else (if (l12 = 1) then "1 year" else "")), (if (l9 > 1) then ParamStr("^0 months", [Array: l9]) else (if (l9 = 1) then "1 month" else ""))]
-								end else (if ((repeatType = 3) or (repeatType = 7)) then begin
+								end else (if ((repeatType = kDateInYear) or (repeatType = kWeekInYear)) then begin
 										l12 := ((date3.year - date2.year) + 1);
 										if (date3.month < date2.month) then begin
 												l12 := (l12 - 1)
 											end else begin
 												if (date3.month = date2.month) then begin
-														if (repeatType = 3) then begin
+														if (repeatType = kDateInYear) then begin
 																if (date3.Date < date2.Date) then begin
 																		l12 := (l12 - 1)
 																	end
@@ -94,7 +123,7 @@ protoRepeatDateDurationTextPicker := {
 																date3.Date := 1;
 																totalMinutes2 := TotalMinutes(date3);
 																fakeTemplate.mtgStartDate := (startTime - (startTime mod 1440));
-																fakeTemplate.repeatType := 7;
+																fakeTemplate.repeatType := kWeekInYear;
 																fakeTemplate.mtgInfo := mtgInfo;
 																nextMeeting2 := NextMeeting(totalMinutes2, fakeTemplate);
 																if (stopTime < nextMeeting2) then begin

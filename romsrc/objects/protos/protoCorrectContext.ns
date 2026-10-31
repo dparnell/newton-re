@@ -1,3 +1,4 @@
-// protoCorrectContext, and what only it reaches
+// protoCorrectContext: a template frame naming a word to be corrected - the
+// form it is in, the offset of its first character and its length.
 
 protoCorrectContext := {form: nil, wordOffset: nil, wordLength: nil};

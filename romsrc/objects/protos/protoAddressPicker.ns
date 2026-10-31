@@ -1,8 +1,21 @@
-// protoAddressPicker, and what only it reaches
+// protoAddressPicker: the routing slip's "To:" picker (Newton Programmer's
+// Reference "protoAddressPicker"): a label picker showing the chosen
+// recipients.  Tapping it pops up a short list - the current choice, the
+// alternatives and the recently used addresses (remembered under memory) -
+// with "Other Names" at the end, which opens the full people picker
+// (_picker, protoPeoplePopup).
+//   class          the nameRef class of the addresses (e.g. '|nameRef.email|)
+//   selected       the chosen addresses, an array of nameRefs
+//   alternatives   other addresses to offer in the short list
+//   useMemory      remember chosen addresses and offer them again
+//   inPeoplePicker true while the next pick comes from the full picker
 
 protoAddressPicker := {
+	// the nameRefs behind the short list's lines (nil: a separator)
 	labelNameRefs: nil,
 	class: nil,
+	// on closing: remembers the chosen addresses (once, compared by their
+	// text) and closes the full picker if it is still open
 	viewQuitScript: func() begin
 		if (if (if useMemory then selected) then (Length(selected) > 0)) then begin
 				AddMemoryItemUnique(memory, selected, func(a1, a2) begin
@@ -14,6 +27,7 @@ protoAddressPicker := {
 			end;
 		(pickerSlip := nil)
 	end,
+	// answers the text of the choice, cut to fit the entry line
 	EntryLineSetup: func() begin
 		local box;
 		box := self:LocalBox();
@@ -25,6 +39,15 @@ protoAddressPicker := {
 	_proto: @protoLabelPicker,
 	otherText: otherNames,
 	pickerSlip: nil,
+	// builds the short list (labelCommands) when it is stale (inPeoplePicker
+	// set), answering it, or nil when there is nothing to offer but the full
+	// picker.  Its order: the current choice and the alternatives - those
+	// also in memory first - then a separator and the remembered addresses
+	// not already listed, then a separator and otherText.
+	//   l1   the remembered items; l6 the listed ones found in memory, l7
+	//   the other remembered ones; l3/l4/l5 their counts; l8 whether the
+	//   selected line was among the remembered ones
+	// The decompiler places the locals after their uses.
 	pickerSetup: func() begin
 		if inPeoplePicker then begin
 				labelNameRefs := nil;
@@ -122,11 +145,14 @@ protoAddressPicker := {
 			end;
 		labelCommands
 	end,
+	// the text of a line of the short list: the address cut to 200 pixels
 	PopupSetup: func(labelNameRef) begin
 		StyledStrTruncate(Clone(self:TextFromRef(labelNameRef)), 200, @fontSystem10Bold)
 	end,
 	viewJustify: vjParentFullH,
 	selected: nil,
+	// opens the full people picker on a copy of the choice (unless it is
+	// already open); its pick comes back through pickActionScript
 	DoOpenPicker: func() begin
 		if (if pickerSlip then pickerSlip.viewCObject) then begin
 				return nil
@@ -135,6 +161,12 @@ protoAddressPicker := {
 		(pickerSlip := _picker:New(class, DeepClone(selected), self, nil))
 	end,
 	labelCommands: nil,
+	// answers the text shown.  With alternatives and remembered addresses,
+	// the most recently used address among the choice and the alternatives
+	// becomes the choice first, swapping places with the old one (copy is
+	// the choice followed by the alternatives, so pos - 1 indexes
+	// alternatives - which assumes the choice is a single address).  The
+	// decompiler places the locals after their uses.
 	TextSetup: func() begin
 		memoryItems := GetMemoryItems(memory);
 		if (if alternatives then memoryItems) then begin
@@ -160,12 +192,16 @@ protoAddressPicker := {
 			end;
 		return self:EntryLineSetup()
 	end,
+	// at setup: addresses are remembered under their class unless memory
+	// names another key
 	viewSetupFormScript: func() begin
 		if (memory = nil) then begin
 				memory := class
 			end;
 		inherited:?viewSetupFormScript()
 	end,
+	// sent on a tap: pops up the short list with a check mark on the current
+	// line, or opens the full picker when there is no short list
 	Popit: func(x) begin
 		if self:pickerSetup() then begin
 				pop := Clone(labelCommands);
@@ -178,6 +214,8 @@ protoAddressPicker := {
 			end;
 		true
 	end,
+	// whether two addresses are the same: both have text and it is equal
+	// (dataDefs is fetched but not used)
 	ToRefEquality: func(a1, a2) begin
 		local dataDefs, textFromRef, textFromRef2;
 		dataDefs := GetDataDefs(class);
@@ -185,6 +223,8 @@ protoAddressPicker := {
 		textFromRef2 := self:TextFromRef(a2);
 		(if (if StrFilled(textFromRef) then StrFilled(textFromRef2)) then StrEqual(textFromRef, textFromRef2))
 	end,
+	// TextFromRef(refs): the routing title of a nameRef or an array of them,
+	// with the class's suffix (e.g. the address itself) for a single one
 	TextFromRef: func(selected) begin
 		local dataDefs, routingTitle, suffix;
 		dataDefs := GetDataDefs(class);
@@ -203,6 +243,10 @@ protoAddressPicker := {
 		routingTitle
 	end,
 	useMemory: true,
+	// a pick: from the full picker, index is the chosen addresses; from the
+	// short list, the line number - an address line becomes the choice, the
+	// last line ("Other Names") drops the alternatives and opens the full
+	// picker
 	pickActionScript: func(index) begin
 		local count;
 		(if inPeoplePicker then begin

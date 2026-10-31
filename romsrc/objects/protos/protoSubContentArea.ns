@@ -1,8 +1,11 @@
-// protoSubContentArea, and what only it reaches
+// protoSubContentArea: a clipping view that holds part of a page's content
+// (used inside book/story views); it answers which page it shows.
 
 protoSubContentArea := {
 	viewClass: clView,
 	viewFlags: vVisible + vReadOnly + vClipping + vGesturesAllowed,
+	// CurrentPage(): the page number, found by inheritance (pageNumber is a
+	// slot of the view or a parent)
 	CurrentPage: func() begin
 		pageNumber
 	end,

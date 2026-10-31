@@ -1,13 +1,24 @@
-// protoPhoneExpando, and what only it reaches
+// protoPhoneExpando: the expanded editor of one phone number of an entry
+// (target.(path)[phoneIndex]) in the Names application: a label picker of
+// phone kinds (PhoneTypes: the label sets the number's class, e.g. 'homePhone)
+// over a phone-number input line, with a close box that collapses it.
 
 protoPhoneExpando := {
 	_proto: @protoLabelInputLine,
 	viewFormat: vfFillWhite + vfInset(3),
-	entryFlags: 264705,
+	// the entry line's viewFlags: a phone field
+	entryFlags: vVisible + vClickable + vGesturesAllowed + vPhoneField,
+	// the label picker's texts and the phone classes they stand for
 	labelCommands: nil,
 	labelSymbols: nil,
+	// which phone number of the entry's path array this edits
 	phoneIndex: 0,
-	framer: 143664,
+	// the entry line's viewFormat: a grey frame, grey lines, inset 2
+	framer: vfFrameGray + vfPen(1) + vfLinesGray + vfInset(2),
+	// protoLabelInputLine asks for the starting text: set the keyboard (keys,
+	// from the view's Keyboard slot), the label choices from PhoneTypes, lay
+	// the label above the entry, show the label for the number's class, and
+	// return the number (nil when the entry has fewer numbers)
 	TextSetup: func() begin
 		keys := nil;
 		if self.Keyboard then begin
@@ -23,6 +34,8 @@ protoPhoneExpando := {
 		self:SetLabelText(self:setup1(target));
 		(if (phoneIndex < Length(target.(path))) then target.(path)[phoneIndex])
 	end,
+	// the number was edited: store it, keeping its class; a new number is
+	// added at phoneIndex, with empty 'phone numbers to fill any gap before it
 	textChanged: func() begin
 		(if (phoneIndex < Length(target.(path))) then (target.(path)[phoneIndex] := SetClass(entryLine.text, ClassOf(target.(path)[phoneIndex]))) else begin
 				(for i := (Length(target.(path)) + 1) to phoneIndex do begin
@@ -31,6 +44,9 @@ protoPhoneExpando := {
 				AddArraySlot(target.(path), SetClass(entryLine.text, 'phone))
 			end)
 	end,
+	// the label text for the number's class (the first label when the class
+	// is not one of labelSymbols, or there is no number). (The locals
+	// declared after their first use are the decompiler's layout.)
 	setup1: func(target) begin
 		(if (if target then (phoneIndex < Length(target.(path)))) then begin
 				cls := ClassOf(target.(path)[phoneIndex]);
@@ -46,9 +62,12 @@ protoPhoneExpando := {
 				labelCommand
 			end else labelCommands[0])
 	end,
+	// the number of entry a1 this edits, or nil
 	setup2: func(a1) begin
 		(if (if a1 then (phoneIndex < Length(a1.(path)))) then a1.(path)[phoneIndex])
 	end,
+	// a phone kind was chosen: show it and set the number's class to it (a
+	// new, empty number of that class if there is none yet)
 	LabelActionScript: func(index) begin
 		self:SetLabelText(labelCommands[index]);
 		labelLine:Dirty();
@@ -68,6 +87,7 @@ protoPhoneExpando := {
 		{
 			_proto: @protoClosebox,
 			viewBounds: {left: -12, top: -12, right: 1, bottom: 1},
+			// closing collapses the expanded line (later, by ExpandNone)
 			buttonClickScript: func() begin
 				AddDeferredAction(ExpandNone, [Array: ])
 			end

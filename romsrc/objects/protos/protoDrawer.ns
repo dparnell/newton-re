@@ -1,8 +1,10 @@
-// protoDrawer, and what only it reaches
+// protoDrawer: a view that behaves like the Extras Drawer - it slides up from
+// the bottom of the screen with the drawer-opening sound and closes with the
+// drawer-closing one. It has no contents of its own.
 
 protoDrawer := {
 	_proto: @protoContainerView,
-	viewEffect: 133120,
+	viewEffect: fxDrawerEffect,
 	viewFlags: vApplication + vFloating,
 	viewFormat: vfFrameBlack + vfPen(3),
 	showSound: @drawerOpen,

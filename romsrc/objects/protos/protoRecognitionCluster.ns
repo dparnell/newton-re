@@ -1,4 +1,7 @@
-// protoRecognitionCluster, and what only it reaches
+// protoRecognitionCluster: the box of the handwriting recognition preferences
+// that holds a label, the cluster of letter-set choices (LetterSetCluster)
+// and an example word (wordExample); the three children are made ahead
+// (allocateContext) and filled in by the view built on it.
 
 protoRecognitionCluster := {
 	viewClass: clView,
@@ -16,6 +19,7 @@ protoRecognitionCluster := {
 									bottom: viewBounds.bottom + hostEngineRow * n};
 		end;
 	end,
+	// (an addition: the height of one host engine's row)
 	hostEngineRow: 13,
 	viewChildren: [viewChildren: label, LetterSetCluster, wordExample],
 	label: nil,

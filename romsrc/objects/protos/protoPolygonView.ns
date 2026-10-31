@@ -1,3 +1,5 @@
-// protoPolygonView, and what only it reaches
+// protoPolygonView: the bare clPolygonView view class, a view that draws the
+// polygon (or ink) held in its points slot, as an edit view's shapes are.
+// Nothing but the view class over protoView.
 
 protoPolygonView := {viewClass: clPolygonView, _proto: @protoView};

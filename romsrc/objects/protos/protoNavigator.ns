@@ -1,4 +1,7 @@
-// protoNavigator, and what only it reaches
+// protoNavigator: two native functions, startCCL and stopCCL, with no
+// arguments. A frame of class #132 with funcPtr and numArgs is how the ROM
+// describes a function implemented in native code; funcPtr is the native
+// entry, not a NewtonScript value.
 
 protoNavigator := {
 	startCCL: {class: #132, funcPtr: 6959506, numArgs: 0},

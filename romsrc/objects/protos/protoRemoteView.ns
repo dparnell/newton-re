@@ -1,3 +1,5 @@
-// protoRemoteView, and what only it reaches
+// protoRemoteView: the bare clRemoteView view class, a view that shows
+// another view's contents scaled to fit (its one child). Nothing but the
+// view class over protoView.
 
 protoRemoteView := {viewClass: clRemoteView, _proto: @protoView};

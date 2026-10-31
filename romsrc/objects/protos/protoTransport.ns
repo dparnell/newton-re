@@ -1,17 +1,35 @@
-// protoTransport, and what only it reaches
+// protoTransport: the base of a transport - a way of sending and receiving
+// In/Out Box items (beam, mail, print, fax, ...), registered with the In/Out
+// Box (its owner, 'iobox). It holds the defaults a transport overrides or
+// calls: its configuration (GetConfig/SetConfig, kept in the user
+// configuration under appSymbol), the status slip (SetStatusDialog,
+// protoStatusTemplate), the item queue (ItemRequest, QueueRequest),
+// completing items (ItemCompleted), error handling (HandleError,
+// TranslateError, ignoreError) and the item's title, info and state text.
 
 protoTransport := {
+	// IsInItem(item): whether the item is an In Box item (received, read or
+	// logged in)
 	IsInItem: func(target) begin
 		return (((target.state = 'Received) or (target.state = 'Read)) or (target.state = 'InLog))
 	end,
+	// PowerOffCheck(why): asked when the Newton is about to be turned off while
+	// the transport is busy; unless idle, asks the user to confirm
 	PowerOffCheck: func(a1) begin
 		(if (a1 = 'idle) then nil else ModalConfirm(ParamStr("Are you sure you want to turn off the power while ^0 is active?", [Array: title]), 'okCancelDefaultCancel))
 	end,
+	// HandleError(error): remembers the error and shows its message (from
+	// TranslateError) in an alert, unless it is one to ignore
 	HandleError: func(error) begin
 		local translateError;
 		lastError := error;
-		(if (translateError := self:TranslateError(error)) then self:Notify(3, title, translateError))
+		(if (translateError := self:TranslateError(error)) then self:Notify(kNotifyAlert, title, translateError))
 	end,
+	// ItemRequest(request): the next item to send for a request - its item,
+	// the next entry of its cursor, or, when those are used up, the next of its
+	// queued requests (requestQueue). An item with a format is resolved by the
+	// format's ResolveItem; one that needs resolving and cannot be is skipped
+	// with an alert. Returns the item (also left in currentItem), or nil
 	ItemRequest: func(request) begin
 		local item, l2, requestQueueItem, currentFormat;
 		item := nil;
@@ -45,7 +63,7 @@ protoTransport := {
 								item := currentFormat:ResolveItem(item)
 							end else begin
 								if (if item.needsResolve then item.body) then begin
-										self:Notify(3, "Routing", "This item cannot be sent because the proper format cannot be found. Please make sure both the format and the original application are installed before sending.");
+										self:Notify(kNotifyAlert, "Routing", "This item cannot be sent because the proper format cannot be found. Please make sure both the format and the original application are installed before sending.");
 										item := nil
 									end
 							end
@@ -62,17 +80,25 @@ protoTransport := {
 		currentItem := item;
 		item
 	end,
+	// the icon shown beside an item with an error
 	errorIcon: {
 		mask: bitmap('mask, "resources/mask/47f9c1.png", "0000000000040086008602110092021e", 1),
 		bits: bitmap('bits, "resources/bits/47fa0d.png", "0000000000040086008602110092021e", 1),
 		bounds: {left: 0, top: 0, right: 13, bottom: 12}
 	},
+	// ItemChanged(item): the item's fields changed; tells the In/Out Box
 	itemchanged: func(fields) begin
 		GetRoot().(owner):itemchanged(fields, true)
 	end,
+	// DeleteItem(item): completes the item with no new state, as the In/Out
+	// Box's ItemCompleted does
 	deleteItem: func(a1) begin
 		(if a1 then GetRoot().(owner):?ItemCompleted(a1, nil))
 	end,
+	// GetItemInfo(item, width, font): the item's second line in the In/Out Box:
+	// who it is from (an In Box item) or to (GetFromText/GetToText, the
+	// addressing class's routing title, or the item's name), truncated to fit
+	// before the item's time, or "Unaddressed"
 	GetItemInfo: func(target, a2, a3) begin
 		local fromText, itemTime, dataDefs, l4;
 		itemTime := self:GetItemTime(target);
@@ -97,9 +123,15 @@ protoTransport := {
 			end;
 		(if StrFilled(fromText) then Stringer([Array: fromText, " ", itemTime]) else itemTime)
 	end,
+	// the open status slip, if any
 	statusDialog: nil,
+	// the application that manages the items, the In/Out Box
 	owner: 'iobox,
+	// the transport's state ('idle when not busy); its message is
+	// dialogStatusMsgs.(status)
 	status: 'idle,
+	// GetConfig(slot): a setting of the transport's configuration, which is
+	// made from defaultConfiguration the first time
 	GetConfig: func(a1) begin
 		local userConfig;
 		if ((userConfig := GetUserConfig(appSymbol)) = nil) then begin
@@ -108,6 +140,8 @@ protoTransport := {
 			end;
 		userConfig.(a1)
 	end,
+	// ItemCount(request): how many items a request has (1, or its cursor's
+	// entries)
 	ItemCount: func(a1) begin
 		local count;
 		count := 0;
@@ -124,6 +158,11 @@ protoTransport := {
 			end;
 		return count
 	end,
+	// UpdateStatusSlots(status, configuration, values): sets the status
+	// (starting I/O with BeginIO when it leaves 'idle and ending it with EndIO
+	// when it comes back), and returns the setup frame for the status slip -
+	// {name: the configuration (default 'vStatus), appSymbol, values} with a
+	// statusText - merging the values into statusSetup
 	UpdateStatusSlots: func(status2, a2, frame4) begin
 		if (status = nil) then begin
 				status := 'idle
@@ -173,6 +212,7 @@ protoTransport := {
 						statusSetup.name := a2
 					end else begin
 						if frame2 then begin
+								// (the decompiler puts these declarations after the uses: only layout)
 								local frame2;
 								local frame3;
 								(foreach key, value in frame2 do begin
@@ -183,7 +223,10 @@ protoTransport := {
 			end;
 		return frame3
 	end,
+	// the status messages, by status symbol
 	dialogStatusMsgs: @defaultStatusMsgs,
+	// QueueRequest(transport, request): adds a request to a transport's queue
+	// (a symbol is a function name to call on this transport); returns it
 	QueueRequest: func(request, request2) begin
 		if IsSymbol(request) then begin
 				request2.function := request;
@@ -198,8 +241,13 @@ protoTransport := {
 			end;
 		request2
 	end,
+	// requests waiting for the transport to be idle (EndIO starts the next)
 	requestQueue: nil,
+	// the word for what the transport does, shown in the routing slip
 	actionTitle: send,
+	// HandleThrow(): in an onexception handler: takes the exception's error
+	// code (-1 if it has none) and, unless it is one to ignore, completes the
+	// current item with it or shows it; returns whether it was not ignored
 	HandleThrow: func() begin
 		local ex, error, l3;
 		ex := CurrentException();
@@ -222,8 +270,12 @@ protoTransport := {
 			end;
 		l3
 	end,
+	// NewFromItem(item): a new item copying another's slots, except
+	// fromItemSlotsToPunt and the folder; an item for another application is
+	// addressed to it
 	NewFromItem: func(a1) begin
 		item := self:NewItem(nil);
+		// (the decompiler puts this declaration after the use: only layout)
 		local item;
 		(foreach key, value in a1 do begin
 				if (not SetContains(fromItemSlotsToPunt, key)) then begin
@@ -237,7 +289,10 @@ protoTransport := {
 			end;
 		item
 	end,
+	// the transport is not a view, but has view slots for the routing slip
 	viewFlags: 0,
+	// CloseStatusDialog(userClosed): closes the status slip, leaving a notify
+	// icon action to reopen it while the transport is busy
 	CloseStatusDialog: func(a1) begin
 		if statusDialog then begin
 				statusDialog:Close();
@@ -249,6 +304,9 @@ protoTransport := {
 		lastError := nil;
 		(userClosedStatus := a1)
 	end,
+	// GetItemTitle(item): the item's title - its title slot, the data def's
+	// title of its target, the target's title, "Selected Items" for several,
+	// or "Untitled <type>"
 	GetItemTitle: func(a1) begin
 		local text, l2, targetFromEntry, dataDefs, stringExtract;
 		text := "Untitled";
@@ -276,29 +334,43 @@ protoTransport := {
 			end;
 		text
 	end,
+	// CancelStatusNotify(): removes the notify icon's action
 	CancelStatusNotify: func() begin
 		(if activeNotify then begin
 				GetRoot().notifyIcon:KillAction(activeNotify);
 				(activeNotify := nil)
 			end)
 	end,
+	// the items' state texts, by state
 	itemStateMsgs: @defaultItemStateMsgs,
+	// ItemPutAway(item): for a transport that puts away received items
+	// itself; this default does nothing
 	ItemPutAway: func(a1) begin
 		nil
 	end,
+	// ConnectionDetect(): whether to send now or later (the 'noworlater
+	// setting)
 	ConnectionDetect: func() begin
 		return self:GetConfig('noworlater)
 	end,
+	// the item being sent or received
 	currentItem: nil,
+	// IsLogItem(item): whether the item is a log entry
 	IsLogItem: func(fields) begin
 		return ((fields.state = 'InLog) or (fields.state = 'OutLog))
 	end,
+	// the status slip's template
 	statusTemplate: @protoStatusTemplate,
+	// GetDefaultOwnerStore(): the In/Out Box's default store, or the internal
+	// store if that is read-only
 	GetDefaultOwnerStore: func() begin
 		local l1;
 		(if (l1 := GetRoot().(owner):GetDefaultAppStore()):IsReadOnly() then GetStores()[0] else l1)
 	end,
+	// non-nil when the user closed the status slip (it is not reopened)
 	userClosedStatus: nil,
+	// GetFolderName(item): the folder an item is filed in, from the inbox or
+	// outbox filing setting ('same: the item's own labels)
 	GetFolderName: func(target) begin
 		local config;
 		if ((config := self:GetConfig((if self:IsInItem(target) then 'inboxFiling else 'outboxFiling))) = 'same) then begin
@@ -306,6 +378,8 @@ protoTransport := {
 			end;
 		return config
 	end,
+	// StatusNotify(): adds an action to the notify icon that reopens the status
+	// slip (ResurrectStatusDialog), once
 	StatusNotify: compile(
 		constants: {
 			kFunction_47f521: func(a1) begin
@@ -315,15 +389,20 @@ protoTransport := {
 		func() begin
 			(if (activeNotify = nil) then (activeNotify := GetRoot().notifyIcon:AddAction(title, kFunction_47f521, [Array: appSymbol])))
 		end),
+	// GetTitleInfoShape(item, box): the shapes of an item's line in the In/Out
+	// Box: the title and state in bold 10-point, the info below in 9-point
 	GetTitleInfoShape: func(target, box) begin
 		local l1, itemTitle, itemInfo, itemStateString, strFontWidth2;
 		l1 := ((box.right - box.left) - 10);
 		itemTitle := self:GetItemTitle(target);
-		itemInfo := self:GetItemInfo(target, l1, 9216);
-		strFontWidth2 := StrFontWidth((itemStateString := self:GetItemStateString(target)), 1058816);
-		itemTitle := StyledStrTruncate(Clone(itemTitle), (l1 - (strFontWidth2 + 10)), 1058816);
+		itemInfo := self:GetItemInfo(target, l1, tsSystem + tsSize(9));
+		strFontWidth2 := StrFontWidth((itemStateString := self:GetItemStateString(target)), tsSystem + tsSize(10) + tsBold);
+		itemTitle := StyledStrTruncate(Clone(itemTitle), (l1 - (strFontWidth2 + 10)), tsSystem + tsSize(10) + tsBold);
 		(shapes := [Array: {font: tsSystem + tsSize(10) + tsBold}, MakeText(itemTitle, box.left, box.top, (box.right - strFontWidth2), (box.top + 11)), MakeText(itemStateString, (box.right - strFontWidth2), box.top, box.right, (box.top + 11)), {font: tsSystem + tsSize(9)}, MakeText(itemInfo, (box.left + 10), box.top, box.right, (box.bottom - 4))])
 	end,
+	// TranslateError(error): the message for an error - from errorTable, or
+	// "Error <n> encountered"; nil for an error to ignore. (tableLookup2 is set
+	// nil just before it is tested for nil: the first test is always true)
 	TranslateError: func(error) begin
 		local tableLookup2;
 		tableLookup2 := nil;
@@ -337,15 +416,23 @@ protoTransport := {
 			end;
 		tableLookup2
 	end,
+	// the data class of the transport's addresses
 	addressingClass: '|nameRef.email|,
+	// ItemSubmit(item): hands a new item to the In/Out Box to send
 	ItemSubmit: func(fields) begin
 		GetRoot().(owner):submit(fields)
 	end,
+	// InstallScript(partFrame): called when the transport is installed;
+	// nothing by default
 	InstallScript: func(partFrame) begin
 		nil
 	end,
+	// the transport's group of items (an item's category is its transport)
 	category: nil,
+	// the transport's symbol, under which it is registered and configured
 	appSymbol: nil,
+	// SetConfig(slot, value): changes a setting of the transport's
+	// configuration
 	SetConfig: func(a1, a2) begin
 		local userConfig;
 		if ((userConfig := GetUserConfig(appSymbol)) = nil) then begin
@@ -354,8 +441,14 @@ protoTransport := {
 		userConfig.(EnsureInternal(a1)) := EnsureInternal(a2);
 		SetUserConfig(appSymbol, userConfig)
 	end,
+	// the transport's icon and title
 	icon: @routeTransport,
 	title: transport,
+	// BeginIO(): the transport becomes busy: registers to be told of power on
+	// (an emergency power-on cancels the request) and power off (asks
+	// PowerOffCheck, cancels the request at power off - 'holdYourHorses
+	// delays it while the cancel is under way), adds the notify action unless
+	// the status is managed by hand, and tells the In/Out Box
 	BeginIO: func() begin
 		local appSym;
 		appSym := EnsureInternal(appSymbol);
@@ -381,22 +474,30 @@ protoTransport := {
 		GetRoot().(owner):?ActivateTransport(self);
 		nil
 	end,
+	// CancelRequest(why): asks the transport to stop; this default shows the
+	// 'Canceling status
 	CancelRequest: func(symbol2) begin
 		self:SetStatus('Canceling, nil);
 		nil
 	end,
+	// CheckOutBox(): sends the queued Out Box items, for the user
 	CheckOutBox: func() begin
 		GetRoot().(owner):StartSend(self, 'user, nil, nil)
 	end,
+	// the types of data the transport can send
 	dataTypes: [|Array|: 'frame],
+	// ResurrectStatusDialog(): the notify icon's action: reopens the status
+	// slip if the transport is still busy
 	ResurrectStatusDialog: func() begin
 		self:CancelStatusNotify();
 		userClosedStatus := nil;
 		(if (if (status <> 'idle) then statusSetup) then self:UpdateStatusDialog(statusSetup))
 	end,
+	// DeleteRequest(request): deletes the request's item from the In/Out Box
 	DeleteRequest: func(a1) begin
 		GetRoot().(owner):ioDeleteScript(a1.target, a1.targetView)
 	end,
+	// GetStatusString(): the current status's message, or ""
 	GetStatusString: func() begin
 		local text;
 		if ((text := dialogStatusMsgs.(status)) = nil) then begin
@@ -404,16 +505,23 @@ protoTransport := {
 			end;
 		text
 	end,
+	// the configuration a new user gets
 	defaultConfiguration: @defaultConfiguration,
+	// DeleteRemoteItems(): removes the In/Out Box's temporary (remote) items
+	// of this transport
 	DeleteRemoteItems: func() begin
 		GetRoot().(owner):?RemoveTempItems(appSymbol)
 	end,
+	// ItemCommit(item): saves the item's changes in the In/Out Box
 	ItemCommit: func(a1) begin
 		GetRoot().(owner):Commit(a1)
 	end,
+	// MissingTarget(item): the routing slip has nothing to send; says so
 	MissingTarget: func(a1) begin
-		self:Notify(3, title, "Nothing to Send")
+		self:Notify(kNotifyAlert, title, "Nothing to Send")
 	end,
+	// GetItemType(item): what the item is called by its application
+	// (appObject's singular), or "item"
 	GetItemType: func(copy) begin
 		local text, l2;
 		text := "item";
@@ -424,10 +532,19 @@ protoTransport := {
 			end;
 		text
 	end,
+	// non-nil: the status slip is modal
 	modalStatus: nil,
+	// CheckOutBoxSilently(): sends the queued Out Box items without a status
+	// slip
 	CheckOutBoxSilently: func() begin
 		GetRoot().(owner):StartSend(self, 'silent, nil, nil)
 	end,
+	// ItemCompleted(item, state, error): the transport is done with an item:
+	// sets its state and error, restores a body saved aside, runs the item's
+	// application's ItemCompletionScript if it asked for one (which may keep
+	// the item from being saved), else reports the error and decides whether
+	// to log a sent item (outboxLogging) or reopen the routing slip for an item
+	// that must connect; time-stamps a sent item and tells the In/Out Box
 	ItemCompleted: func(a1, state, error) begin
 		local l1, itemCompletionScript;
 		(if a1 then begin
@@ -448,7 +565,7 @@ protoTransport := {
 								try begin
 										itemCompletionScript := app:?ItemCompletionScript(a1)
 									end onexception |evt.ex| do begin
-										self:Notify(3, title, "Error in completionScript")
+										self:Notify(kNotifyAlert, title, "Error in completionScript")
 									end;
 								if itemCompletionScript then begin
 										l1 := nil
@@ -479,7 +596,10 @@ protoTransport := {
 				GetRoot().(owner):ItemCompleted(a1, l1)
 			end)
 	end,
+	// the notify icon's action, while there is one
 	activeNotify: nil,
+	// GetItemStateString(item): the text of an item's state ("error" for an
+	// error to report, "Remote" for a remote item)
 	GetItemStateString: func(target) begin
 		local text, state;
 		if (not self:ignoreError(target.error)) then begin
@@ -497,6 +617,7 @@ protoTransport := {
 			end;
 		text
 	end,
+	// the slots NewFromItem does not copy
 	fromItemSlotsToPunt: [|Array|:
 		'category,
 		'Connect,
@@ -506,8 +627,11 @@ protoTransport := {
 		'Remote,
 		'_newFolder
 	],
+	// non-nil: the transport opens and closes the status slip itself
 	manualStatus: nil,
 	itemLabel: 'transport,
+	// EndIO(): the transport is idle again: tells the In/Out Box, removes the
+	// notify action and the power callbacks, and starts the next queued request
 	EndIO: func() begin
 		local requestQueueItem;
 		GetRoot().(owner):?DeactivateTransport(self);
@@ -520,10 +644,14 @@ protoTransport := {
 				AddDeferredSend(self, requestQueueItem.function, [Array: requestQueueItem])
 			end)
 	end,
+	// (viewClass 64 is none of the view classes in constants.tsv)
 	viewClass: 64,
+	// RefreshOwner(): redraws the In/Out Box
 	RefreshOwner: func() begin
 		GetRoot().(owner):?Refresh()
 	end,
+	// UpdateStatusDialog(setup): shows the status slip with this setup, making
+	// and opening it (modal with modalStatus) if it is not open
 	UpdateStatusDialog: func(updateStatusSlots) begin
 		lastError := nil;
 		if (if statusDialog then statusDialog.viewCObject) then begin
@@ -544,15 +672,23 @@ protoTransport := {
 			end;
 		self:CancelStatusNotify()
 	end,
+	// IgnoreError(error): whether an error is not worth reporting - none, or a
+	// cancellation (request canceled, connection aborted, call aborted, IR
+	// cancel, printing stopped)
 	ignoreError: func(error) begin
-		(((((((error = nil) or (error = 0)) or (error = -16005)) or (error = -16013)) or (error = -10039)) or (error = -38002)) or (error = -44004))
+		(((((((error = nil) or (error = 0)) or (error = kCommErrRequestCanceled)) or (error = kCommErrConnectionAborted)) or (error = kError_Call_Aborted)) or (error = kIRErrCancel)) or (error = kPR_ERR_UserCancel))
 	end,
+	// the last error reported
 	lastError: nil,
 	debug: 723740,
+	// MakeLogEntry(entry, item): fills in a log entry for an item: its title
+	// and sent time
 	MakeLogEntry: func(next, next2) begin
 		next.title := self:GetItemTitle(next2);
 		(if HasSlot(next2, 'sentTimeStamp) then (next.sentTimeStamp := next2.sentTimeStamp))
 	end,
+	// NewItem(context): a new item of this transport from the In/Out Box's
+	// default, for the application of the context view if one is given
 	NewItem: func(viewfrontmostapp) begin
 		local l1;
 		(l1 := GetRoot().(owner):GetDefaultItem()).category := GetVariable(self, 'appSymbol);
@@ -561,13 +697,21 @@ protoTransport := {
 			end;
 		l1
 	end,
+	// the routing information view and the preferences slip
 	transportInfoForm: @protoTransportheader,
 	preferencesForm: @protoTransportPrefs,
+	// GetNameText(address, width, font): an address's routing title, from the
+	// addressing class's data def
 	GetNameText: func(a1, a2, a3) begin
 		local dataDefs;
 		(if (dataDefs := GetDataDefs(addressingClass)) then (text := dataDefs:GetRoutingTitle(a1, a2, a3)))
 	end,
+	// the status slip's current setup
 	statusSetup: nil,
+	// NormalizeAddress(address): an e-mail address in the form this transport
+	// wants: kept if its class is one of addressSymbols, else completed by
+	// translate's (or the internet's) entry for its class - a function, or a
+	// suffix added if missing
 	normalizeAddress: func(value) begin
 		local email, cls, l3;
 		if (not IsString((email := GetDataDefs('|nameRef.email|):Get(value, 'email, nil)))) then begin
@@ -591,10 +735,15 @@ protoTransport := {
 			end;
 		email
 	end,
+	// GetItemTime(item): the item's date and time, for its line
 	GetItemTime: func(target) begin
 		Stringer([Array: ShortDate(target.timestamp), " ", HourMinute(target.timestamp)])
 	end,
+	// by address class, how NormalizeAddress makes an address this transport's
 	translate: nil,
+	// SetStatusDialog(status, configuration, values): sets the status and
+	// shows, updates or closes the status slip as autoStatus, manualStatus and
+	// the user's closing it say
 	SetStatusDialog: func(status2, a2, frame2) begin
 		local updateStatusSlots, l2, l3, l4;
 		updateStatusSlots := self:UpdateStatusSlots(status2, a2, frame2);
@@ -603,10 +752,13 @@ protoTransport := {
 		l4 := (status = 'idle);
 		(if (if (if (if l3 then (not l2)) then (not l4)) then (not userClosedStatus)) then self:UpdateStatusDialog(updateStatusSlots) else (if (if (if (not manualStatus) then l2) then l4) then self:CloseStatusDialog(nil) else (if (l2 or (if manualStatus then (not userClosedStatus))) then self:UpdateStatusDialog(updateStatusSlots))))
 	end,
+	// the routing slip's template
 	routingSlip: @protoFullRouteSlip,
+	// SetStatus(status, values): SetStatusDialog with the current configuration
 	SetStatus: func(text, frame2) begin
 		self:SetStatusDialog(text, nil, frame2)
 	end,
+	// UpdateItem(item): the item changed; tells the In/Out Box
 	UpdateItem: func(a1) begin
 		GetRoot().(owner):itemchanged(a1, true)
 	end

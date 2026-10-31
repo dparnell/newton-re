@@ -1,7 +1,15 @@
-// protoRouteSlip, and what only it reaches
+// protoRouteSlip: the routing slip, the envelope-shaped floating slip in
+// which an item is sent, printed or faxed: an envelope picture with a stamp
+// (the transport's icon) on it, and a strip below it (bottomIndent high)
+// that slides out when it opens (AnimateIndent) and back in when the item
+// is sent (AnimateSend). It can open an auxiliary slip (the format's
+// auxForm), and the notes and call options slips. Transports' slips are
+// built on it.
 
 protoRouteSlip := {
 	indentSound: @flip,
+	// a close button added to an auxiliary slip found by symbol (auxSetup):
+	// the slip it is in becomes that slip's base
 	closeGadgetForm: {
 		viewSetupFormScript: func() begin
 			local parent;
@@ -10,16 +18,22 @@ protoRouteSlip := {
 		end,
 		_proto: @protoCancelButton
 	},
+	// the auxiliary slip open, if any
 	auxUp: nil,
+	// once open: if only one routing slip may be open at a time, remember
+	// this one as it
 	viewSetupDoneScript: func() begin
 		if OnlyOneRoutingSlip() then begin
 				vars.CurrentRouteSlip := self
 			end;
 		nil
 	end,
+	// the envelope's height and width (envelopeWidth) without the strip
 	envelopeHeight: 115,
 	viewFormat: vfFrameWhite,
 	validateDialog: nil,
+	// on closing: forget the picture, be ready to set up afresh next time,
+	// close a validation dialog, and stop being the current routing slip
 	viewQuitScript: func() begin
 		pix := nil;
 		firstTime := true;
@@ -31,11 +45,18 @@ protoRouteSlip := {
 		ClosedEntryForm(self);
 		(if (if OnlyOneRoutingSlip() then (vars.CurrentRouteSlip = self)) then (vars.CurrentRouteSlip := nil))
 	end,
+	// draws the envelope picture (pix, made by SetupBounds)
 	viewDrawScript: func() begin
 		self:DrawShape(pix, nil)
 	end,
 	_proto: @protoFloater,
+	// the button Return presses (protoSendButton makes itself this)
 	_defaultButton: nil,
+	// sizes the slip for a strip bottomIndent2 high (kept centred: l1 is half
+	// the change from the full strip) and makes the envelope picture: a
+	// patterned border, the white envelope, the stamp frame at the top right
+	// (l5) with the transport's icon (or the mail icon) centred in it, the
+	// strip below, and with a2 a postmark beside the stamp (the item sent)
 	SetupBounds: compile(
 		constants: {
 			kROM_732: @routeMailBitmap,
@@ -55,9 +76,15 @@ protoRouteSlip := {
 			pix := [Array: '{penPattern: "\u8205\u\u0A14\u\u2850\u\uA041\u", pensize: 8}, MakeRect(0, 0, bounds.right, (bounds.bottom - bottomIndent2)), OffsetShape(MakeShape(kROM_725), l5, 10), OffsetShape(MakeShape(icon), (l5 + ((31 - bounds2.right) div 2)), (10 + ((27 - bounds2.bottom) div 2))), '{penPattern: 5, fillPattern: 0, pensize: 2}, MakeRect(0, 0, bounds.right, (bounds.bottom - bottomIndent2)), MakeRect(4, ((bounds.bottom - bottomIndent2) - 2), (bounds.right - 4), bounds.bottom), '{penPattern: 3, pensize: 4, transferMode: 1}, MakeLine(2, (bounds.bottom - bottomIndent2), ((bounds.right - 4) - 2), (bounds.bottom - bottomIndent2))];
 			(if a2 then ArrayInsert(pix, OffsetShape(MakeShape(@postMark), (l5 - 55), 10), 0))
 		end),
+	// true until the slip has set itself up (cleared on opening, set again
+	// on closing)
 	firstTime: true,
 	_nextKeyView: nil,
+	// the call options slip open, if any
 	optionsUp: nil,
+	// with names in fields.alternatives but no recipient (toRef) yet, make
+	// the first a name reference of data class a1 as the recipient and the
+	// rest name references in alternatives
 	ToRefCheck: func(a1) begin
 		local dataDefs, list, count, l4;
 		(if (if (if (if HasPath(fields, 'alternatives) then (not fields.toRef)) then IsArray(fields.alternatives)) then (Length(fields.alternatives) > 0)) then begin
@@ -72,9 +99,11 @@ protoRouteSlip := {
 				(fields.alternatives := list)
 			end)
 	end,
+	// a hook for a transport's slip to fill in the item's fields
 	SetFieldDefaults: func() begin
 		nil
 	end,
+	// the sound of the envelope going (AnimateSend): IMA-compressed samples
 	cancelSound: {
 		sndFrameType: 'codec,
 		samplingRate: fixed('fixed, 8000.0),
@@ -87,6 +116,9 @@ protoRouteSlip := {
 		samples: imasound('samples, "resources/samples/478b41.wav")
 	},
 	declareSelf: 'base,
+	// on the first opening: the envelope without its strip, nothing else
+	// open, the key view at the start, and the strip slid out just after
+	// (AnimateIndent, by a delayed call)
 	viewSetupFormScript: func() begin
 		(if firstTime then begin
 				self:SetupBounds(0, nil);
@@ -100,10 +132,13 @@ protoRouteSlip := {
 				end, nil, 0)
 			end)
 	end,
+	// the slip's bottom, in its own coordinates
 	BottomOfSlip: func() begin
 		((envelopeHeight + bottomIndent) - 2)
 	end,
+	// fxLeft + fxSteps(6) + fxStepTime(2): it slides away to the left
 	viewEffect: 77661184,
+	// on hiding: close the auxiliary, notes and call options slips
 	viewHideScript: func() begin
 		if auxUp then begin
 				auxUp:Close()
@@ -121,7 +156,11 @@ protoRouteSlip := {
 	envelopeWidth: 230,
 	notesUp: nil,
 	debug: 722074,
+	// protoSendButton hides itself while this is set
 	Editing: nil,
+	// opens the active format's auxiliary slip, if it has one: a symbol
+	// names a view of the root (given a close button, once), anything else
+	// is a template made into a view; it gets the item's fields and target
 	auxSetup: func() begin
 		local activeFormat2, context;
 		(if fields then (if (if (activeFormat2 := activeFormat) then activeFormat2.auxForm) then begin
@@ -144,6 +183,7 @@ protoRouteSlip := {
 					(auxUp := context)
 				end))
 	end,
+	// slides the strip out below the envelope, with a sound
 	AnimateIndent: func() begin
 		local box;
 		self:SetupBounds(bottomIndent, nil);
@@ -152,7 +192,10 @@ protoRouteSlip := {
 		self:RevealEffect((box.bottom - box.top), box, indentSound, nil, nil)
 	end,
 	pix: nil,
+	// the strip's height
 	bottomIndent: 29,
+	// the item is sent: slide the strip back in, postmark the envelope, play
+	// the sending sound, and have the slip close with the poof sound
 	AnimateSend: func() begin
 		local box, box2;
 		box := self:GlobalBox();

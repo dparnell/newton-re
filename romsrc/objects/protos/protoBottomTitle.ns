@@ -1,8 +1,11 @@
-// protoBottomTitle, and what only it reaches
+// protoBottomTitle: a protoTitle placed along the bottom of its parent
+// instead of the top.
 
 protoBottomTitle := {
 	_proto: @protoTitle,
 	viewJustify: vjCenterV + vjParentFullH + vjParentBottomV,
+	// at setup: measures the title (its height from the font unless given)
+	// and sets the bounds to a strip one title high at the parent's bottom
 	viewSetupFormScript: func() begin
 		if (not titleHeight) then begin
 				titleHeight := FontHeight(viewFont)

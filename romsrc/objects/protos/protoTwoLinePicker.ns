@@ -1,4 +1,8 @@
-// protoTwoLinePicker, and what only it reaches
+// protoTwoLinePicker: a two-line picker - a label that pops up a list of
+// choices, with the choice shown on the line below it. Picking the last
+// choice (an "other" choice) shows a number field and a second picker of
+// units beside it (as the Dates application's alarm "advance notice": a
+// number of minutes, hours or days).
 
 protoTwoLinePicker := {
 	viewClass: clView,
@@ -6,10 +10,15 @@ protoTwoLinePicker := {
 	viewFormat: vfFillWhite,
 	viewJustify: vjParentFullH,
 	viewBounds: {left: 0, top: 20, right: 0, bottom: 60},
+	// the index of the choice of the second picker
 	otherSelection: 0,
 	label: uCardPositionAlertButton,
+	// the first picker's choices (the last is "other") and the second's
 	choices: [|Array|: ],
 	otherChoices: [|Array|: ],
+	// pickActionScript(index): a choice from the first picker - shows it on
+	// the second line; the last choice shows the number field and second
+	// picker and returns -1, any other hides them and returns its index
 	pickActionScript: func(index) begin
 		pickChild:hilite(nil);
 		SetValue(textDisplay, 'text, choices[index]);
@@ -23,11 +32,16 @@ protoTwoLinePicker := {
 				index
 			end)
 	end,
+	// chooseOtherScript(index): sent by the second picker; records the
+	// choice and shows it (after the pop-up diamond when there is more than
+	// one to choose from)
 	chooseOtherScript: func(index) begin
 		otherPicker:hilite(nil);
 		otherSelection := index;
 		(if (Length(otherChoices) > 1) then SetValue(otherPicker, 'text, Stringer([Array: "\uFC01\u", " ", otherChoices[index]])) else SetValue(otherPicker, 'text, otherChoices[index]))
 	end,
+	// currentChoice(): the index of the choice shown (compared as strings,
+	// case-insensitively), or nil
 	currentChoice: compile(
 		constants: {
 			kFunction_50ab09: func(a1, a2) begin
@@ -37,10 +51,12 @@ protoTwoLinePicker := {
 		func() begin
 			ArrayPos(choices, textDisplay.text, 0, kFunction_50ab09)
 		end),
+	// viewSetupDoneScript(): the "other" parts start hidden
 	viewSetupDoneScript: func() begin
 		otherPicker:Hide();
 		otherInput:Hide()
 	end,
+	// pickCancelledScript(): a popup closed without a choice; unhilites
 	pickCancelledScript: func() begin
 		pickChild:hilite(nil);
 		otherPicker:hilite(nil)
@@ -62,17 +78,22 @@ protoTwoLinePicker := {
 	otherInput: nil
 };
 
+// the label, which pops up the choices
 pickChild := {
 	viewJustify: vjCenterV + vjParentFullH,
 	viewFlags: vVisible + vReadOnly + vClickable,
 	viewFormat: vfRound(4),
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 15},
+	// viewSetupFormScript(): the label after the pop-up diamond (U+FC01);
+	// with only one choice, plain and not clickable (vClickable taken out)
 	viewSetupFormScript: func() begin
 		(if (Length(choices) > 1) then (self.text := Stringer([Array: "\uFC01\u", " ", label])) else begin
 				self.text := label;
-				(self.viewFlags := (viewFlags - 512))
+				(self.viewFlags := (viewFlags - vClickable))
 			end)
 	end,
+	// viewClickScript(unit): pops up the choices, the current one with a
+	// check mark (U+FC0B), 15 pixels down
 	viewClickScript: func(unit) begin
 		local currentChoice, copy;
 		(if self:TrackHilite(unit) then begin
@@ -88,6 +109,7 @@ pickChild := {
 	_proto: @protoStaticText
 };
 
+// the second line: the choice, in the handwriting font
 textDisplay := {
 	viewFont: tsHWFont + tsSize(10),
 	viewJustify: vjCenterV + vjParentFullH + vjParentFullV,
@@ -97,17 +119,21 @@ textDisplay := {
 	_proto: @protoStaticText
 };
 
+// the second picker (the units), at the right of the second line
 otherPicker := {
 	viewJustify: vjCenterV + vjParentRightH + vjSiblingFullV,
 	viewFlags: vVisible + vReadOnly + vClickable,
 	viewFormat: vfRound(4),
 	viewBounds: {left: -100, top: 0, right: 0, bottom: 0},
+	// viewSetupFormScript(): shows the first of otherChoices, after the
+	// diamond; with only one, plain and not clickable
 	viewSetupFormScript: func() begin
 		(if (Length(otherChoices) > 1) then (self.text := Stringer([Array: "\uFC01\u", " ", otherChoices[0]])) else begin
 				self.text := otherChoices[0];
-				(self.viewFlags := (viewFlags - 512))
+				(self.viewFlags := (viewFlags - vClickable))
 			end)
 	end,
+	// viewClickScript(unit): pops up otherChoices, the current one checked
 	viewClickScript: func(unit) begin
 		local copy;
 		(if self:TrackHilite(unit) then begin
@@ -115,6 +141,7 @@ otherPicker := {
 				DoPopup(copy, 15, 0, self)
 			end)
 	end,
+	// pickActionScript(index): passes the choice to the picker
 	pickActionScript: func(index) begin
 		self:Parent():chooseOtherScript(index)
 	end,
@@ -122,12 +149,17 @@ otherPicker := {
 	_proto: @protoTextButton
 };
 
+// the number field, at the left of the second picker
 otherInput := {
 	viewJustify: vjCenterH + vjSiblingLeftH + vjSiblingFullV,
 	viewFlags: vVisible + vSingleUnit + vClickable + vGesturesAllowed + vNumbersAllowed,
 	textFlags: 10,
 	viewBounds: {left: -40, top: 0, right: -10, bottom: 0},
+	// the last valid text, put back when an entry is refused
 	oldValue: uCardPositionAlertButton,
+	// viewChangedScript(slot, view): checks a new text - it must be a whole
+	// number from 0 to 999; otherwise an alert says so and the old text is
+	// put back
 	viewChangedScript: func(slot, view) begin
 		local l1, text2, number;
 		l1 := nil;
@@ -142,7 +174,7 @@ otherInput := {
 								end
 						end;
 					(if (not l1) then (oldValue := Clone(view.text)) else begin
-							self:Notify(3, "Alarm", text2);
+							self:Notify(kNotifyAlert, "Alarm", text2);
 							text := Clone(oldValue);
 							self:Dirty()
 						end)

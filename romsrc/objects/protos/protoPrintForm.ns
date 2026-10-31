@@ -1,4 +1,7 @@
-// protoPrintForm, and what only it reaches
+// protoPrintForm: the top view of a printed or faxed document: it sets the
+// print up from the routing slip's fields (page bounds, target, sender, the
+// print format), puts a fax cover page and fax header before the format's
+// own view when there is one, and steps from page to page.
 
 protoPrintForm := {
 	viewClass: clView,
@@ -6,18 +9,25 @@ protoPrintForm := {
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
 	viewFormat: 0,
 	viewJustify: 0,
+	// the item printed and the frames used to print it
 	target: nil,
 	coverForm: nil,
 	printForm: nil,
 	usingCoverPage: nil,
 	targetCursor: nil,
 	targetIndex: 0,
+	// the sender's details (SetPersona fills them)
 	fromFrame: nil,
+	// set when the form only counts pages, not prints them
 	_counterForm: nil,
 	_pageTurner: nil,
 	_setupChildrenNow: true,
 	theFormat: nil,
 	viewChildren: nil,
+	// on opening: size to the printer's page, find the target and the sender
+	// (the slip's fromRef, else the current owner), and the print format; an
+	// alert if there is no format. Before faxing, the pages are counted (one
+	// more for a cover page); printing starts at page 1
 	viewSetupFormScript: func() begin
 		local resolveEntryAlias2;
 		printView := self;
@@ -32,7 +42,7 @@ protoPrintForm := {
 		if resolveEntryAlias2 then begin
 				SetPersona(resolveEntryAlias2, fromFrame)
 			end;
-		(if ((theFormat := GetCurrentFormat(fields)) = nil) then self:Notify(3, "Print", "The print format for this item is missing") else begin
+		(if ((theFormat := GetCurrentFormat(fields)) = nil) then self:Notify(kNotifyAlert, "Print", "The print format for this item is missing") else begin
 				theFormat := {_proto: theFormat};
 				theFormat:?formatInitScript(fields, target);
 				if (if fields.faxResolution then (not _counterForm)) then begin
@@ -44,10 +54,16 @@ protoPrintForm := {
 				(fields.pageNumber := 1)
 			end)
 	end,
+	// the page's views: the registered cover page (l1, CoverPageRegistry's
+	// entry) while on the cover, else the format; a fax gets the fax header
+	// above either
 	viewSetupChildrenScript: func() begin
 		local l1;
 		(if (if _setupChildrenNow then theFormat) then (if usingCoverPage then (if (l1 := CoverPageRegistry.(fields.coverPage)) then (self.viewChildren := [Array: @faxHeader, l1.form])) else (if fields.faxResolution then (self.viewChildren := [Array: @faxHeader, theFormat]) else (self.viewChildren := [Array: theFormat]))))
 	end,
+	// sent by the print loop after each page: count it, turn the page, and say
+	// whether there is another: after the cover page, the format's first
+	// page (true); otherwise as the cover form's printNextPageScriptX says
 	printNextPageScript: func() begin
 		if fields.pageNumber then begin
 				fields.pageNumber := (fields.pageNumber + 1)

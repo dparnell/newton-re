@@ -1,4 +1,8 @@
-// protoSetClock, and what only it reaches
+// protoSetClock: a clock face (a 64-pixel picture) whose hands show hours
+// and minutes and are set by drawing a stroke out from (or in to) the
+// centre: a long stroke sets the minute hand, a short one the hour hand,
+// and TimeChanged is sent. Its geometry is done in integer arithmetic with
+// two small tables, one entry per minute of a quarter turn (6 degrees).
 
 protoSetClock := {
 	viewClass: clPictureView,
@@ -7,6 +11,8 @@ protoSetClock := {
 		bits: bitmap('bits, "resources/bits/3d8809.png", "0000000000080037003700e200770122", 1),
 		bounds: {left: 0, top: 0, right: 64, bottom: 64}
 	},
+	// 10000 * tan of 3, 9, 15 ... 87 degrees: the slopes halfway between
+	// minute marks, so an angle's minute is the first entry above its slope
 	atanTable: [|Array|:
 		524,
 		1584,
@@ -24,6 +30,7 @@ protoSetClock := {
 		63138,
 		190811
 	],
+	// 10000 * cos of 0, 6, 12 ... 90 degrees (read backwards, the sines)
 	sinTable: [|Array|:
 		10000,
 		9945,
@@ -42,6 +49,8 @@ protoSetClock := {
 		1045,
 		0
 	],
+	// the angle of a point (left, top: both not negative) from the x axis,
+	// in minutes, 0 to 15 (a quarter turn), looked up in atanTable
 	FastEnoughAtan: func(left, top) begin
 		local l1, l2, l3;
 		l1 := nil;
@@ -67,6 +76,10 @@ protoSetClock := {
 			end;
 		return l1
 	end,
+	// the line of a hand pointing at minute minutes (0-59) from the centre
+	// (a2, a2), its length a2 * 10000 / a3: l1 is the quarter of the face,
+	// the table entries the hand's x and y, their signs and order set by the
+	// quarter
 	GetHandShape: func(minutes, a2, a3) begin
 		local l1, sinTableItem22, sinTableItem2, sinTableItem;
 		l1 := (minutes div 15);
@@ -86,6 +99,9 @@ protoSetClock := {
 			end;
 		MakeLine(a2, a2, (a2 + ((sinTableItem2 * a2) div a3)), (a2 + ((sinTableItem * a2) div a3)))
 	end,
+	// draws the centre dot and the two hands: the minute hand long (l2 *
+	// 10000 / 11000), the hour hand short (l2 * 10000 / 18000), pointing at
+	// hours * 5, moved on two minute marks after the half hour
 	viewDrawScript: func() begin
 		local l1, l2;
 		l2 := ((l1 := (viewBounds.right - viewBounds.left)) div 2);
@@ -95,21 +111,31 @@ protoSetClock := {
 			end;
 		self:DrawShape([Array: MakeOval((l2 - 2), (l2 - 2), (l2 + 2), (l2 + 2)), self:GetHandShape(minutes, l2, 11000), self:GetHandShape(l1, l2, 18000)], nil)
 	end,
+	// |a1 - a2|
 	diff: func(a1, a2) begin
 		(if (a1 > a2) then return (a1 - a2) else return (a2 - a1))
 	end,
+	// a quick estimate of the length of (diff, diff2): the larger plus half
+	// the smaller
 	distance: func(diff, diff2) begin
 		(if (diff > diff2) then return (diff + (diff2 div 2)) else return (diff2 + (diff div 2)))
 	end,
+	// a stroke on the clock: of its two ends (l4, l5 the last point, l6, l7
+	// the first, in the view), the one farther from the centre (l1, l1) gives
+	// the direction (l4 right, l5 up from the centre), which becomes a
+	// minute l8 (0-59, 0 at the top) through FastEnoughAtan and the quarter;
+	// a point farther out than a third of the width sets the minutes, else
+	// the hours (the nearest hour mark). Sends TimeChanged; true: the stroke
+	// is handled
 	viewStrokeScript: func(unit) begin
 		local l1, left, top, l4, l5, l6, l7, l8, l9;
 		l1 := ((viewBounds.right - viewBounds.left) div 2);
 		left := self:GlobalBox().left;
-		l4 := (GetPoint(4, unit) - left);
-		l6 := (GetPoint(0, unit) - left);
+		l4 := (GetPoint(finalX, unit) - left);
+		l6 := (GetPoint(firstX, unit) - left);
 		top := self:GlobalBox().top;
-		l5 := (GetPoint(5, unit) - top);
-		l7 := (GetPoint(1, unit) - top);
+		l5 := (GetPoint(finalY, unit) - top);
+		l7 := (GetPoint(firstY, unit) - top);
 		if (self:distance(self:diff(l1, l4), self:diff(l1, l5)) < self:distance(self:diff(l1, l6), self:diff(l1, l7))) then begin
 				l4 := (l6 - l1);
 				l5 := (l1 - l7)

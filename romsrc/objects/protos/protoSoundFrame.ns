@@ -1,26 +1,42 @@
-// protoSoundFrame, and what only it reaches
+// protoSoundFrame: a sound - its samples and how to play them (sample size,
+// compression, sampling rate, which part, how many loops, a callback) - with
+// methods that work out its length and playing time and that set the length
+// of a recording (protoSoundChannel's input blocks are made from it).
 
 protoSoundFrame := {
+	// 'simpleSound, or 'codec for compressed data whose samples are bytes
 	sndFrameType: 'simpleSound,
+	// the size of a sample in bits (8 or 16)
 	dataType: 8,
 	samples: nil,
+	// the number of samples, when not all of samples are used
 	length: nil,
+	// 0: no compression
 	compressionType: 0,
 	samplingRate: samplingRate,
+	// the first sample to play, how many, and how many times to repeat
 	start: nil,
 	count: nil,
 	loops: nil,
+	// Callback(state, result): called when the sound completes
 	callback: nil,
 	volume: nil,
+	// GetSampleCount(): the number of samples - length if set, otherwise
+	// what the samples object holds
 	GetSampleCount: func() begin
 		(if self.length then self.length else (if samples then (Length(samples) div self:GetSampleSize()) else 0))
 	end,
+	// GetSampleSize(): bytes per sample - 1 for a codec frame, 2 for 16-bit
+	// data (dataType 16, or 2), else 1
 	GetSampleSize: func() begin
 		(if (sndFrameType = 'codec) then 1 else (if ((dataType = 16) or (dataType = 2)) then 2 else 1))
 	end,
+	// GetSamplingRate(): the rate, by default the 22 kHz rate (22026.43172)
 	GetSamplingRate: func() begin
 		(if samplingRate then samplingRate else 22026.43172)
 	end,
+	// GetPlayingTime(): the sound's length in seconds (the sample count
+	// scaled by compressionRatio for compressed data)
 	GetPlayingTime: func() begin
 		local sampleCount;
 		sampleCount := self:GetSampleCount();
@@ -29,6 +45,10 @@ protoSoundFrame := {
 			end;
 		(sampleCount / self:GetSamplingRate())
 	end,
+	// SetRecordingLength(numSamples, callback): sets the number of samples
+	// of a recording and shrinks the samples object to it later (a deferred
+	// DeferredSetLength), then calls the callback; throws if the samples are
+	// read-only or the count is not an integer within them
 	SetRecordingLength: func(index, fn) begin
 		local sampleSize;
 		sampleSize := self:GetSampleSize();
@@ -38,6 +58,8 @@ protoSoundFrame := {
 		self.length := index;
 		AddDeferredSend(self, 'DeferredSetLength, [Array: fn])
 	end,
+	// SetRecordingLengthNow(numSamples): the same, at once and with no
+	// callback
 	SetRecordingLengthNow: func(index) begin
 		local sampleSize;
 		sampleSize := self:GetSampleSize();
@@ -47,12 +69,15 @@ protoSoundFrame := {
 		self.length := index;
 		self:DeferredSetLength(nil)
 	end,
+	// DeferredSetLength(callback): cuts samples to length samples and calls
+	// the callback, if any
 	DeferredSetLength: func(a1) begin
 		SetLength(samples, (length * self:GetSampleSize()));
 		(if a1 then call a1 with ())
 	end
 };
 
+// the default sampling rate, the NPR's kFloat22kRate (22 kHz)
 samplingRate := real('|Real|, 22026.43172);
 
 // what the functions above hold and share with other objects (same(): romsrc/README.md)

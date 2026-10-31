@@ -1,3 +1,4 @@
-// protoNote, and what only it reaches
+// protoNote: the default frame of a new Notes entry - a 'paperroll (plain
+// note) of height 200 with no data yet; _version is the entry format's version.
 
 protoNote := {viewStationery: 'paperroll, class: 'paperroll, height: 200, data: nil, timestamp: 0, _version: 2};

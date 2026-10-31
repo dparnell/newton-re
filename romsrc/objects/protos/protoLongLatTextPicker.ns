@@ -1,19 +1,27 @@
-// protoLongLatTextPicker, and what only it reaches
+// protoLongLatTextPicker: a protoTextPicker for a position on the earth - its
+// text is the latitude and longitude, and tapping it opens the longLatPicker
+// (latitude and longitude digit pickers, optionally with a World Clock).
 
 protoLongLatTextPicker := {
 	viewBounds: nil,
 	label: "ﰁWhere",
+	// the position, in minutes of arc (see protoLatitudePicker)
 	longitude: nil,
 	latitude: nil,
 	worldClock: nil,
+	// protoTextPicker calls this to open the picker; x is the width it should take.
 	Popit: func(x) begin
 		local box;
 		(box := self:GlobalBox()).right := (box.left + x);
 		@longLatPicker:New(longitude, latitude, worldClock, box, self)
 	end,
+	// The text shown: "latitude <char> longitude", each formatted by the system's
+	// LatitudeToString/LongitudeToString.
 	TextSetup: func() begin
 		Stringer([Array: LatitudeToString(latitude), " ", $ , " ", LongitudeToString(longitude)])
 	end,
+	// Called back by longLatPicker with the new longitude and latitude (despite
+	// the parameter's name, index is the longitude); stores them and redraws.
 	pickActionScript: func(index, a2) begin
 		longitude := index;
 		latitude := a2;

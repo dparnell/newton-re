@@ -1,3 +1,4 @@
-// protoGridItem, and what only it reaches
+// protoGridItem: an item of a grid - its index and its column and row (x, y);
+// no other object of romsrc/ refers to it.
 
 protoGridItem := {index: nil, x: nil, y: nil};

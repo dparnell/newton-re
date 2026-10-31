@@ -1,4 +1,7 @@
-// protoPrefFrame, and what only it reaches
+// protoPrefFrame: the floating, closable slip a preferences panel is shown in
+// (a protoFloatNGo centred on the screen); stepChildren hold the panel. Its
+// viewSetupDoneScript (shared, objects/shared/functions.ns) grows the slip to
+// the height of a child made from prefPanelProto.
 
 protoPrefFrame := {
 	viewJustify: vjParentCenterH + vjParentCenterV,

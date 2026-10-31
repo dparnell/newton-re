@@ -1,6 +1,12 @@
-// protoListView, and what only it reaches
+// protoListView: the native outline list view (clListView) - a lined list of
+// topics, each a paragraph (canonicalParaTopic) at an indent level up to
+// maxLevel, with markers (topicMarkers, checkBitmaps) on the left that can
+// be dragged and collapsed, as the To Do list and outlines use it. Most of
+// its methods are native functions (the class #132 frames: funcPtr and
+// numArgs describe a function implemented in native code).
 
 protoListView := {
+	// the list's topics (the data), and the last one
 	topics: nil,
 	lastTopic: nil,
 	leftMarkGap: 0,
@@ -18,11 +24,13 @@ protoListView := {
 	editChildren: true,
 	viewFlags: vVisible + vClipping + vClickable + vStrokesAllowed + vGesturesAllowed + vCharsAllowed + vNumbersAllowed + vPunctuationAllowed + vPhoneField + vDateField + vTimeField,
 	minimalChildren: nil,
+	// the index of the topic holding the caret (set by canonicalParaTopic)
 	curTopic: nil,
 	priorityItems: @priorityItems,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
 	ChildTemplateFromTopic: {class: #132, funcPtr: 7023968, numArgs: 1},
 	rightMarkGap: 0,
+	// what may be dropped on the list, and on its markers
 	allDropTypes: [|Array|: 'topic, 'task, 'text],
 	markerdropTypes: [|Array|: 'topic, 'task],
 	recConfig: @rcInkorText,
@@ -30,6 +38,7 @@ protoListView := {
 	textFlags: 192,
 	SetupVisibleChildren: {class: #132, funcPtr: 7023977, numArgs: 3},
 	TopicIndexToView: {class: #132, funcPtr: 7023979, numArgs: 1},
+	// the deepest indent level a topic may have
 	maxLevel: 8,
 	viewJustify: vjParentFullH + vjParentFullV,
 	topicsLabel: items,
@@ -38,6 +47,7 @@ protoListView := {
 	uniqueSymbol: 'listView,
 	ExpandTopic: {class: #132, funcPtr: 7023970, numArgs: 2},
 	checkBitmaps: @checkBitmaps,
+	// the template of the paragraph view made for a topic
 	canonicalParaTopic: {
 		viewBounds: nil,
 		viewFlags: vVisible + vCalculateBounds,
@@ -45,7 +55,10 @@ protoListView := {
 		styles: [|Array|: ],
 		text: nil,
 		textFlags: 257,
+		// the topic's index in the list
 		index: nil,
+		// Called when the caret comes into (a1 true) or leaves the paragraph: the
+		// list's current topic becomes this one when it comes in.
 		viewCaretActivateScript: func(a1) begin
 			(if a1 then (curTopic := index))
 		end
@@ -58,6 +71,7 @@ protoListView := {
 	topMargin: 0,
 	viewClass: clListView,
 	debug: 10185,
+	// how a topic is dragged: as a topic or as text
 	topicDragInfo: {types: [|Array|: 'topic, 'text], dragRef: nil, label: item},
 	viewFont: nil,
 	topicFont: nil,

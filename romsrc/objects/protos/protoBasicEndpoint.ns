@@ -1,26 +1,53 @@
-// protoBasicEndpoint, and what only it reaches
+// protoBasicEndpoint: the NewtonScript communications endpoint (Newton
+// Programmer's Reference "protoBasicEndpoint") - every method is native code
+// (class #132: a C function pointer and its argument count) working the
+// TEndpoint behind the frame.  The documented calling conventions: most
+// take an options array and a callback spec, and complete asynchronously
+// when given a callback.
 
 protoBasicEndpoint := {
+	// discards a partly received input
 	flushPartial: {class: #132, funcPtr: 6989119, numArgs: 0},
+	// Disconnect(cancelPendingIO, callbackSpec)
 	Disconnect: {class: #132, funcPtr: 6989115, numArgs: 2},
+	// disposes of the frame but keeps the native TEndpoint (handed elsewhere)
 	disposeLeavingTEndpoint: {class: #132, funcPtr: 6989117, numArgs: 0},
+	// Bind(options, callbackSpec)
 	Bind: {class: #132, funcPtr: 6989113, numArgs: 2},
+	// Listen(options, callbackSpec): waits for an incoming connection
 	Listen: {class: #132, funcPtr: 6990147, numArgs: 2},
+	// Output(data, options, outputSpec)
 	output: {class: #132, funcPtr: 6990149, numArgs: 3},
+	// Input(): answers the data received so far for the input spec
 	input: {class: #132, funcPtr: 6990144, numArgs: 0},
+	// disposes of the frame but keeps the comm tool running
 	disposeLeavingTool: {class: #132, funcPtr: 7011289, numArgs: 0},
+	// makes the frame's endpoint from an existing TEndpoint (three arguments)
 	instantiateFromTEndpoint: {class: #132, funcPtr: 6990146, numArgs: 3},
+	// Option(options, callbackSpec): sets or reads options on the connection
 	option: {class: #132, funcPtr: 6990148, numArgs: 2},
+	// Partial(): answers the data received but not yet terminated
 	Partial: {class: #132, funcPtr: 6990150, numArgs: 0},
+	// RequestsPending(which): whether input, output or both have requests
 	requestsPending: {class: #132, funcPtr: 6990155, numArgs: 1},
+	// Connect(options, callbackSpec)
 	Connect: {class: #132, funcPtr: 6989114, numArgs: 2},
+	// Dispose(): frees the endpoint and its comm tool
 	Dispose: {class: #132, funcPtr: 6989116, numArgs: 0},
+	// Instantiate(endpoint, options): makes the native endpoint and its tool
 	Instantiate: {class: #132, funcPtr: 6990145, numArgs: 2},
+	// discards all buffered input
 	flushInput: {class: #132, funcPtr: 6989118, numArgs: 0},
+	// SetState(state): sets the endpoint's state
 	SetState: {class: #132, funcPtr: 6990153, numArgs: 1},
+	// Cancel(callbackSpec): cancels the outstanding requests
 	Cancel: {class: #132, funcPtr: 6989111, numArgs: 1},
+	// SetInputSpec(inputSpec): how input is to be received and terminated
 	SetInputSpec: {class: #132, funcPtr: 6990151, numArgs: 1},
+	// UnBind(callbackSpec)
 	Unbind: {class: #132, funcPtr: 6990154, numArgs: 1},
+	// State(): answers the endpoint's state
 	state: {class: #132, funcPtr: 6990152, numArgs: 0},
+	// Accept(options, callbackSpec): accepts a connection Listen found
 	Accept: {class: #132, funcPtr: 6989112, numArgs: 2}
 };

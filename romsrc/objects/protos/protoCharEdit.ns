@@ -1,4 +1,20 @@
-// protoCharEdit, and what only it reaches
+// protoCharEdit: the comb-style character editor (Newton Programmer's
+// Reference "protoCharEdit"), as the corrector uses: a word shown one
+// character per cell, each cell written in separately (single-character
+// recognition), with gestures to delete (scrub), insert (caret) and pick
+// alternatives (tap: a popup of other characters and Delete / Insert / Add
+// Word).  A template can fix the word's format: format is a string with a
+// filter number per position ("_" a locked cell), filters the strings of
+// characters each position takes.
+//   text          the characters, padded with blanks around the word
+//   wordLeft, wordRight   where the word is in text (wordRight exclusive)
+//   trailers      how many blanks follow the word
+//   dispLeft      the first character shown; dispIndent the left indent
+//   maxChars      how many cells are shown; cellWidth, cellGap, cellHeight
+//   altChars      per position, a string of alternative characters
+//   lastChar      the position last written or tapped
+//   lines, chars, frames   the shapes drawn, cached until invalidated
+//   wordSource    where the word came from ('none, 'single, 'Editing ...)
 
 protoCharEdit := {
 	chars: nil,
@@ -29,6 +45,9 @@ protoCharEdit := {
 	viewClass: clView,
 	text: nil,
 	dispIndent: nil,
+	// GetFilter(pos): the template's string of characters allowed at pos -
+	// by the digit in format at that position, or filters[0] for a template
+	// without a format; nil when anything goes
 	GetFilter: func(lastChar) begin
 		local formatItem;
 		result := nil;
@@ -46,6 +65,9 @@ protoCharEdit := {
 			end;
 		return result
 	end,
+	// starts editing the text and template slots afresh: the template
+	// reinstalled and initialized with the word, maxChars recomputed from
+	// the bounds (or the proto's) and limited to the format's length
 	UseTextAndTemplate: func() begin
 		local template2, box, fixedWordLength;
 		self:SetNewWord(text, nil);
@@ -64,6 +86,11 @@ protoCharEdit := {
 		self:UseNewTemplate(true)
 	end,
 	uppers: ucLetters,
+	// HandleTap(unit): a tap on an unlocked cell pops up its alternatives,
+	// or for a free-form word a picture of what can be written before, in
+	// or after it, followed by Clear (fixed format) or Delete, Insert and
+	// Add Word (before or after the word, when the owner has AddNewWord).
+	// Answers true if it popped up (or a popup is already up).
 	HandleTap: func(unit) begin
 		local l1, strokeBounds2, l3, cell, hit, bounds, box, frame2, frame3;
 		l1 := nil;
@@ -122,6 +149,10 @@ protoCharEdit := {
 			end;
 		return l1
 	end,
+	// answers the alternatives at lastChar as an array of one-character
+	// strings mapped for display: the position's filter if it is short (10
+	// or fewer), else its altChars; nil if none.  The decompiler places the
+	// locals after their uses.
 	GetAlternates: func() begin
 		currentWord := self:CurrentWord();
 		l3 := (lastChar - wordLeft);
@@ -144,14 +175,18 @@ protoCharEdit := {
 			end;
 		(wordArray := Clone(wordArray))
 	end,
+	// after setup: prepares the single-character recognition: its input mask
+	// and the grid of cells (each cellWidth wide) and baseline it writes on
 	viewSetupDoneScript: func() begin
 		local box, l2;
-		(recConfig := PrepRecConfig(recConfig)).inputmask := 16779776;
+		(recConfig := PrepRecConfig(recConfig)).inputmask := vClickable + vGesturesAllowed + vCustomDictionaries;
 		l2 := ((box := self:GlobalBox()).left + dispIndent);
 		recConfig.rcBaseInfo := {base: (box.top + viewLineSpacing), smallHeight: 11};
 		recConfig.rcGridInfo := {boxLeft: l2, boxRight: (l2 + cellWidth), xSpace: cellWidth};
 		PurgeAreaCache()
 	end,
+	// for a free-form word: drops the leading blanks scrolled off the left
+	// (not into the word), shifting every position by the count
 	TrimLeft: func() begin
 		local text, dispLeft2, wordLeft2;
 		text := self.text;
@@ -172,19 +207,21 @@ protoCharEdit := {
 					end)
 			end)
 	end,
+	// the system's gesture script: tap and double tap pop up choices, a
+	// caret inserts a space, a scrub deletes; answers whether it was handled
 	viewgesturescript: func(unit, gesture) begin
 		local handleTap;
 		handleTap := nil;
-		if (gesture = 49) then begin
+		if (gesture = aeTap) then begin
 				handleTap := self:HandleTap(unit)
 			end else begin
-				if (gesture = 50) then begin
+				if (gesture = aeDoubleTap) then begin
 						handleTap := self:HandleTap(unit)
 					end else begin
-						if (gesture = 15) then begin
+						if (gesture = aeCaret) then begin
 								handleTap := self:HandleCaret(unit)
 							end else begin
-								if (gesture = 13) then begin
+								if (gesture = aeScrub) then begin
 										handleTap := self:HandleScrub(unit)
 									end
 							end
@@ -192,6 +229,9 @@ protoCharEdit := {
 			end;
 		return handleTap
 	end,
+	// Scroll(direction): forward, by a page when the word runs past the
+	// cells shown (keeping the last few - 3 for a free-form word - in view);
+	// back, to the start.  Answers whether it scrolled.
 	Scroll: func(arrowDirection) begin
 		local l1, dispLeft2, wordRight2, maxChars2;
 		l1 := nil;
@@ -228,6 +268,12 @@ protoCharEdit := {
 		return l1
 	end,
 	lowers: abcdefghijklmnopqrstuvwxyz,
+	// draws the cells, building the cached shapes as needed: a character
+	// (ink shown as a placeholder character) above each cell's base line;
+	// a locked cell's line is grey (the style frame in the array changes the
+	// style of what follows) and its sides a grey pattern instead of lines.
+	//   l3 the next cell's left, l4 the base line; l5/l6/l7 which caches are
+	//   being rebuilt; l8 the next cell edge; l9 the cell number
 	viewDrawScript: compile(
 		constants: {
 			kBinaryFromHex: func(hex, cls) begin
@@ -239,8 +285,8 @@ protoCharEdit := {
 				end;
 				b
 			end,
-			kLiteral_44f3ad: '{penPattern: 3, fillPattern: 0, transferMode: 1},
-			kLiteral_44be59: {penPattern: call kBinaryFromHex with ("aa55aa55aa55aa550000", 'pattern), fillPattern: 0, transferMode: 1}
+			kLiteral_44f3ad: '{penPattern: 3, fillPattern: 0, transferMode: modeOr},
+			kLiteral_44be59: {penPattern: call kBinaryFromHex with ("aa55aa55aa55aa550000", 'pattern), fillPattern: 0, transferMode: modeOr}
 		},
 		func() begin
 			local box, maxChars, l3, l4, l5, l6, l7, l8, l9, copy, copyItem;
@@ -290,23 +336,31 @@ protoCharEdit := {
 					l3 := (l3 + cellWidth);
 					(l9 := (l9 + 1))
 				end);
-			self:DrawShape(chars, '{font: tsHWFont + tsSize(18), justification: center, transferMode: 0});
+			self:DrawShape(chars, '{font: tsHWFont + tsSize(18), justification: center, transferMode: modeCopy});
 			self:DrawShape(lines, kLiteral_44f3ad);
 			if frames then begin
 					self:DrawShape(frames, kLiteral_44be59)
 				end;
 			0
 		end),
+	// the undo action: puts back the word, template and alternatives a
+	// SaveUndoState frame holds
 	RestoreUndoState: func(a1) begin
 		self:SetNewWord(a1.word, a1.wordSource);
 		self:SetNewTemplate(a1.template);
 		self:UseNewTemplate(nil);
 		(altChars := a1.alts)
 	end,
+	// CellLocked(pos): with a format, true for a position outside the word or
+	// marked "_"
 	CellLocked: func(lastChar) begin
 		local template2;
 		(if (if (template2 := template) then template2.format) then (if (((lastChar < wordLeft) or (lastChar >= wordRight)) or (template2.format[(lastChar - wordLeft)] = $_)) then true))
 	end,
+	// HandleScrub(unit): a scrub wider than a cell deletes the cells between
+	// the edges nearest its ends (the left edge moved in if the scrub starts
+	// more than a third into a cell); a narrow scrub with 7 or more points
+	// deletes the cell it is on.  Answers whether something was deleted.
 	HandleScrub: func(unit) begin
 		local l1, strokeBounds2, l3, countGesturePoints2, l5, cell, cell2, edge, edge2;
 		l1 := nil;
@@ -343,6 +397,10 @@ protoCharEdit := {
 			end;
 		return l1
 	end,
+	// SortMatches(guesses, unit, bias): for a one-stroke character, reorders
+	// the look-alikes among the recognizer's guesses (0/O/o, 1/I/l/i/|,
+	// 2/z/Z): a 'numbers bias moves the digits up, otherwise 1, | and 0 move
+	// down below their letters
 	SortMatches: compile(
 		constants: {
 			kLiteral_466b49: "0Oo",
@@ -365,9 +423,12 @@ protoCharEdit := {
 					self:BubbleDown(a1, $0, kLiteral_466b49)
 				end)
 		end),
+	// strokes are left to recognition (viewWordScript)
 	viewStrokeScript: func(unit) begin
 		nil
 	end,
+	// CharPos(string, char): the index of char in string, or nil.  The
+	// decompiler places the local after its use.
 	CharPos: func(delimiters, strItem) begin
 		l1 := (StrLen(delimiters) - 1);
 		local l1;
@@ -377,6 +438,8 @@ protoCharEdit := {
 					end
 			end)
 	end,
+	// HandleCaret(unit): a caret drawn at the base line (from 4 above to 8
+	// below it) inserts a space at the cell edge it points to
 	HandleCaret: func(unit) begin
 		local l1, gesturePoint2, box, l4, cell;
 		l1 := nil;
@@ -389,6 +452,9 @@ protoCharEdit := {
 			end;
 		return l1
 	end,
+	// BubbleDown(guesses, char, group): moves char later in the guesses
+	// string past the characters of group that follow it.  The decompiler
+	// places the locals after their uses.
 	BubbleDown: func(a1, a2, text) begin
 		sPrintObject2 := SPrintObject(a2);
 		(if (pos := StrPos(a1, sPrintObject2, 0)) then begin
@@ -407,12 +473,15 @@ protoCharEdit := {
 			end)
 	end,
 	digits: digits,
+	// answers the word without its padding
 	CurrentWord: func() begin
 		local wordLeft, wordRight;
 		wordLeft := self.wordLeft;
 		wordRight := self.wordRight;
 		(if (if wordLeft then wordRight) then return Substr(text, wordLeft, (wordRight - wordLeft)) else return text)
 	end,
+	// sent by SetValue: new text starts a new word with no template; a new
+	// template is installed
 	viewChangedScript: func(slot, view) begin
 		(if (slot = 'text) then begin
 				self:SetNewWord(text, 'single);
@@ -420,6 +489,9 @@ protoCharEdit := {
 				self:UseNewTemplate(true)
 			end else (if (slot = 'template) then self:SetNewTemplate(template)))
 	end,
+	// UseNewTemplate(external): reformats the word through the template's
+	// SetupString (if it has one), lays it out and redraws; external is
+	// passed on to DisplayExternal
 	UseNewTemplate: func(a1) begin
 		if HasPath(template, 'SetupString) then begin
 				self:SetNewWord(template:?SetupString(self:CurrentWord()), wordSource)
@@ -430,6 +502,9 @@ protoCharEdit := {
 		self:DisplayExternal(a1);
 		self:Dirty()
 	end,
+	// lays out a new word: blanks around a free-form word (one before it if
+	// there is room), centred in the view, and each letter's alternative its
+	// other case (ASCII letters: 32 apart)
 	UseNewWord: func() begin
 		local l1, box, len, textItem, cHR2;
 		if self:FixedWord() then begin
@@ -460,6 +535,8 @@ protoCharEdit := {
 					end)));
 		self:Dirty()
 	end,
+	// InvalDrawCache(what): forgets cached shapes - 'chars, 'lines (lines
+	// and cell sides) or 'all
 	InvalDrawCache: func(a1) begin
 		(if (a1 = 'all) then begin
 				lines := nil;
@@ -470,6 +547,7 @@ protoCharEdit := {
 						(frames := nil)
 					end)))
 	end,
+	// pads the text: wordLeft blanks before, and blanks after up to maxChars
 	AddEndCaps: func() begin
 		local text, len;
 		text := self.text;
@@ -479,6 +557,8 @@ protoCharEdit := {
 		len := StrLen(text);
 		(if ((trailers := (maxChars - len)) <= 0) then (trailers := 0) else StrMunger(text, len, 0, blankText, 0, trailers))
 	end,
+	// AddUpperCase(guesses): makes the other case of the first guess, if a
+	// letter, the second guess (unless already there)
 	AddUpperCase: func(a1) begin
 		local l1, sPrintObject2, pos;
 		(if (if a1 then (StrLen(a1) > 0)) then (if IsAlpha((l1 := a1[0])) then begin
@@ -486,11 +566,13 @@ protoCharEdit := {
 					(if (not (pos := StrPos(a1, sPrintObject2, 1))) then StrMunger(a1, 1, 0, sPrintObject2, 0, 1))
 				end))
 	end,
+	// BubbleUp(guesses, char, group): BubbleDown on the reversed string
 	BubbleUp: func(a1, a2, text) begin
 		StrReverse(a1);
 		self:BubbleDown(a1, a2, text);
 		StrReverse(a1)
 	end,
+	// answers the word as the template's CleanupString makes it
 	GetWordForDisplay: func() begin
 		local currentWord;
 		currentWord := self:CurrentWord();
@@ -499,6 +581,8 @@ protoCharEdit := {
 			end;
 		return currentWord
 	end,
+	// FindCell(x): answers {hit: the cell under global x (nil outside the
+	// cells), bounds: its box, edge: the nearest cell edge, edgeX: its x}
 	FindCell: func(a1) begin
 		local box, cellWidth2, l3, l4, l5, l6, l7;
 		cell := Clone('{hit: nil, bounds: nil, edge: nil, edgeX: nil});
@@ -527,12 +611,18 @@ protoCharEdit := {
 			end;
 		return cell
 	end,
+	// the popup closed without a pick
 	pickCancelledScript: func() begin
 		(popChars := nil)
 	end,
+	// the hook for showing the word elsewhere after a change; nothing here
 	DisplayExternal: func(a1) begin
 		return nil
 	end,
+	// DeleteText(from, to): deletes positions from up to to (undoably).  At
+	// the word's ends it is DeleteSpace's; in a fixed format the cells are
+	// blanked, otherwise the characters removed.  Answers whether anything
+	// changed.
 	DeleteText: func(a1, a2) begin
 		local l1, l2;
 		l1 := nil;
@@ -577,6 +667,10 @@ protoCharEdit := {
 			end;
 		return l1
 	end,
+	// ReplaceChar(pos, alternatives, char): writes char at pos (undoably),
+	// growing the word to include it - or, past the end of a multi-word
+	// template's word, starting a new word (AddNewWord) - and keeps the
+	// alternatives for the position
 	ReplaceChar: func(lastChar2, a2, a3) begin
 		local l1;
 		(if (if (not self:CellLocked(lastChar2)) then a3) then begin
@@ -612,6 +706,10 @@ protoCharEdit := {
 				self:Dirty()
 			end)
 	end,
+	// PickBestChar(guesses): the first guess not yet tried at this position
+	// (the "try string" remembers the characters written there before),
+	// moved to the front; when all were tried, the list starts again from
+	// the first.  The decompiler places the locals after their uses.
 	PickBestChar: func(a1) begin
 		AddTryString(text[lastChar]);
 		l3 := (StrLen(a1) - 1);
@@ -634,6 +732,9 @@ protoCharEdit := {
 			end;
 		return l2
 	end,
+	// at setup: the cell count from the bounds (or bounds from maxChars),
+	// limited by the format; blankText, maxChars blanks made from a
+	// 12-space string; then the word is laid out
 	viewSetupFormScript: compile(
 		constants: {
 			kLiteral_44c6a5: "            "
@@ -668,6 +769,7 @@ protoCharEdit := {
 			self:InvalDrawCache('all);
 			self:UseNewTemplate(nil)
 		end),
+	// for a free-form word: adds blanks so the cells shown are all filled
 	PadRight: func() begin
 		local text, len, l3;
 		text := self.text;
@@ -680,10 +782,13 @@ protoCharEdit := {
 				(trailers := (StrLen(text) - wordRight))
 			end)
 	end,
+	// the template's format if it has one: the word has a fixed layout
 	FixedWord: func() begin
 		local template2;
 		(if (template2 := template) then template2.format)
 	end,
+	// MakeWordArray(string): an array of its characters as strings.  The
+	// decompiler places the locals after their uses.
 	MakeWordArray: func(a1) begin
 		list := Array((len := StrLen(a1)), nil);
 		l3 := (len - 1);
@@ -695,6 +800,8 @@ protoCharEdit := {
 			end);
 		return list
 	end,
+	// SetNewTemplate(template): installs template (noFilter if nil), wrapped
+	// in a RAM frame whose _parent is this view so that it can keep state
 	SetNewTemplate: func(template2) begin
 		if (not template2) then begin
 				template2 := @noFilter
@@ -707,6 +814,8 @@ protoCharEdit := {
 			end;
 		(template := template2)
 	end,
+	// SetNewWord(word, source): the text becomes a copy of word, all of it
+	// the word
 	SetNewWord: func(a1, wordSource2) begin
 		text := Clone(a1);
 		wordLeft := 0;
@@ -715,18 +824,26 @@ protoCharEdit := {
 		self:InvalDrawCache('chars);
 		0
 	end,
+	// taps are left to the gesture script
 	viewClickScript: func(unit) begin
 		nil
 	end,
+	// registers an undo (RestoreUndoState) of the current state; answers
+	// the saved frame
 	SaveUndoState: func(a1) begin
 		local frame2;
 		frame2 := {alts: Clone(altChars), word: self:CurrentWord(), template: template, source: wordSource, parm: a1};
 		AddUndoAction('RestoreUndoState, [Array: frame2]);
 		return frame2
 	end,
+	// the hook for deleting at the word's ends; nothing here
 	DeleteSpace: func(a1, a2) begin
 		return nil
 	end,
+	// a pick from the tap popup: a frame index is a hit in a picture of
+	// characters (its cell, width * y + x, names the word); a frame item is
+	// a command; a character makes it the position's character with the
+	// rest of the characters before the separator as its alternatives
 	pickActionScript: func(index) begin
 		local copyItem, popChar, l3, word, copy, pos;
 		if popChars then begin
@@ -768,6 +885,8 @@ protoCharEdit := {
 			end;
 		(popChars := nil)
 	end,
+	// InsertSpace(pos): inserts a blank into a free-form word at pos (up to
+	// its end), undoably; answers whether it did
 	InsertSpace: func(lastChar) begin
 		local l1;
 		l1 := nil;
@@ -784,6 +903,12 @@ protoCharEdit := {
 			end;
 		return l1
 	end,
+	// the recognizer's result for a character written in a cell: the
+	// guesses, filtered by the position's filter (or reordered by
+	// SortMatches), give the best untried character, which is written with
+	// the rest as alternatives; writing in the last cell scrolls on.  A
+	// character that cannot be used is scrubbed away.  Always handled.
+	//   l6 the position; l2 the guesses; l5 whether one was used
 	viewWordScript: func(unit) begin
 		local text, l2, strokeBounds2, cell, l5, l6, filter, pickBestChar;
 		text := Stringer(GetEditArray(unit));
@@ -814,6 +939,7 @@ protoCharEdit := {
 			end;
 		true
 	end,
+	// the format's length, nil without one
 	FixedWordLength: func() begin
 		(if (if template then template.format) then StrLen(template.format))
 	end

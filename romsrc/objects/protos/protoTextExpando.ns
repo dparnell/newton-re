@@ -1,9 +1,17 @@
-// protoTextExpando, and what only it reaches
+// protoTextExpando: a label input line for an expando (a line that expands
+// in place for editing, as the Names card's fields do): the label above, the
+// entry field below it with a frame, and a close box; the edited text goes
+// to target.(path).
 
 protoTextExpando := {
 	_proto: @protoLabelInputLine,
 	viewFormat: vfFillWhite + vfInset(3),
-	framer: 143664,
+	// the entry field's viewFormat
+	framer: vfFrameGray + vfPen(1) + vfLinesGray + vfInset(2),
+	// TextSetup(): sets up the parts - the entry font, the keyboard (the
+	// variable named by Keyboard), the label line (clickable when it has
+	// labelCommands) above the entry line - and returns the field's text,
+	// target.(path)
 	TextSetup: func() begin
 		if (entryFont exists) then begin
 				entryLine.viewFont := entryFont
@@ -13,13 +21,16 @@ protoTextExpando := {
 				keys := GetVariable(self, self.Keyboard)
 			end;
 		AddDeferredAction(ExpandKeys, [Array: self.entryLine]);
-		labelLine.viewFlags := (if labelCommands then 515 else 3);
+		labelLine.viewFlags := (if labelCommands then vVisible + vReadOnly + vClickable else vVisible + vReadOnly);
 		labelLine.viewBounds := RelBounds(0, 0, indent, height);
 		entryLine.viewBounds.top := (entryLine.viewBounds.top + height);
 		entryLine.viewBounds.left := 4;
 		entryLine.viewFormat := framer;
 		target.(path)
 	end,
+	// textChanged(): the entry changed; stores the text at target.(path),
+	// making the first frame of a longer path if it is missing, and gives the
+	// string specialClass if there is one
 	textChanged: func() begin
 		dirtyLine := true;
 		if (ClassOf(path) = 'pathExpr) then begin
@@ -32,15 +43,18 @@ protoTextExpando := {
 		target.(path) := entryLine.text;
 		(if (specialClass exists) then SetClass(entryLine.text, specialClass))
 	end,
+	// setup1(target): the label
 	setup1: func(target) begin
 		label
 	end,
+	// setup2(target): the value at path in target (nil without one)
 	setup2: func(a1) begin
 		(if a1 then a1.(path))
 	end,
 	viewChildren: [viewChildren:
 		entryLine,
 		labelLine,
+		// the close box, which collapses the expando (ExpandNone)
 		{
 			_proto: @protoClosebox,
 			viewBounds: {left: -12, top: -12, right: 1, bottom: 1},

@@ -1,14 +1,24 @@
-// protoStateMachineInputSpec, and what only it reaches
+// protoStateMachineInputSpec: the endpoint input spec (and callback spec)
+// a protoStateMachine uses for its communications: when the input or the
+// request completes it records what arrived in the state machine and resumes
+// it with AsyncWaitComplete.
 
 protoStateMachineInputSpec := {
 	async: true,
+	// the request's time-out, in milliseconds (200 seconds)
 	reqTimeout: 200000,
+	// CompletionScript(endpoint, options, result): the request finished;
+	// keeps the options in fOptionsIn and resumes the machine with the
+	// result (an error, or nil)
 	completionscript: func(a1, a2, a3) begin
 		local stateMachine;
 		(stateMachine := a1.stateMachine).fOptionsIn := a2;
 		stateMachine:AsyncWaitComplete(a3)
 	end,
 	form: '|string|,
+	// InputScript(endpoint, data, terminator, options): input arrived; keeps
+	// the data, terminator and options in the machine and resumes it
+	// without an error
 	InputScript: func(a1, a2, a3, a4) begin
 		local stateMachine;
 		(stateMachine := a1.stateMachine).fIncomingData := a2;

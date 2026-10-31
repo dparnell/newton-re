@@ -1,19 +1,25 @@
-// protoRoll, and what only it reaches
+// protoRoll: a scrolling roll of items (items: view templates, each with a
+// height and an overview text) laid out one under another from index on.
+// The overview button collapses the roll to a list of the items' overviews
+// (a bullet and the text each); tapping one shows the roll from that item.
 
 protoRoll := {
 	viewClass: clView,
 	viewBounds: {left: 0, top: 16, right: 640, bottom: 480},
 	viewFlags: vApplication + vClipping,
 	declareSelf: 'roll,
+	// the item at the top of the roll
 	index: 0,
+	// the template of a collapsed item: a bold line "* overview" that, when
+	// tapped, shows the roll from its item (itemIndex)
 	overViewItemProto: {
 		viewClass: clParagraphView,
 		viewFlags: vVisible + vReadOnly + vClickable,
-		viewJustify: 8396852,
+		viewJustify: oneLineOnly + vjSiblingBottomV + vjParentFullH + vjCenterV,
 		viewFormat: 0,
 		viewBounds: {left: 3, top: 0, right: -3, bottom: 16},
 		viewFont: @fontSystem10Bold,
-		viewTransferMode: 1,
+		viewTransferMode: modeOr,
 		collapsed: true,
 		height: 16,
 		viewSetupFormScript: func() begin
@@ -26,8 +32,14 @@ protoRoll := {
 			true
 		end
 	},
+	// true: show the overview list
 	allCollapsed: nil,
 	collapsedHeight: nil,
+	// makes the children from index on: in the overview, one line per item;
+	// else the items themselves. _maxIndex is the highest index the roll
+	// scrolls to - the first of the last items that together fit in the
+	// view. (The locals declared after their first use are the decompiler's
+	// layout.)
 	viewSetupChildrenScript: func() begin
 		count := Length(items);
 		bottom := self:LocalBox().bottom;
@@ -62,16 +74,19 @@ protoRoll := {
 	viewQuitScript: func() begin
 		(self._curItems := nil)
 	end,
+	// the scroll arrows: one item up, or down while not at _maxIndex
 	viewScrollUpScript: func() begin
 		roll:SyncScroll(_curItems, index, -1)
 	end,
 	viewScrollDownScript: func() begin
 		(if (index < _maxIndex) then roll:SyncScroll(_curItems, index, 1))
 	end,
+	// the overview button: switch between the items and their overview list
 	viewOverviewScript: func() begin
 		allCollapsed := (not allCollapsed);
 		roll:RedoChildren()
 	end,
+	// shows the roll expanded from item a1
 	ShowItem: func(a1) begin
 		(if (a1 < Length(items)) then begin
 				allCollapsed := nil;

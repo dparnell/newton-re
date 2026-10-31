@@ -1,11 +1,22 @@
-// protoValidateSlip, and what only it reaches
+// protoValidateSlip: a floating slip that asks the user to fill in missing
+// information (as for an owner's or a worksite's card): a title (the
+// target's name), an explanation (userText), the application's fields, and an
+// on-screen keyboard (kbdType 'alpha or 'number). Closing it checks whether
+// the fields have data and tells compView (compMsg) the result; edits are
+// saved (EntryChange) a few seconds after they stop, and when it closes.
 
 protoValidateSlip := {
 	viewBounds: {left: 0, top: 0, right: 284, bottom: 270},
 	viewJustify: vjParentCenterH + vjParentCenterV,
+	// the space below the last field, in pixels (the keyboard's height is
+	// added to it)
 	extraHeight: 20,
 	targetView: nil,
+	// the slip's title (nil: from the target's data def, else its name)
 	titleText: nil,
+	// viewSetupChildrenScript(): sets the explanation and the title (hiding
+	// either when there is none) and adds the keyboard asked for, with a
+	// recognition toggle
 	viewSetupChildrenScript: func() begin
 		local dataDefs, l2, frame2, titleText2;
 		l2 := 'symbol;
@@ -41,6 +52,9 @@ protoValidateSlip := {
 		if frame2 then begin
 				AddArraySlot(stepChildren, frame2);
 				extraHeight := (((extraHeight + 10) + frame2.viewBounds.bottom) - frame2.viewBounds.top);
+				// the recognition toggle at the bottom left; 8388742 =
+				// vjCenterH + vjCenterV + vjParentBottomV + oneLineOnly
+				// (0x800000, the NPG's value)
 				AddArraySlot(stepChildren, '{_proto: @recToggle, viewBounds: {left: 2, top: -18, right: 20, bottom: -5}, viewJustify: 8388742, _recogPopup: [Array: recogText, recogInkText, pickseparator, recToggleSettings]})
 			end;
 		inherited:?viewSetupChildrenScript()
@@ -57,6 +71,10 @@ protoValidateSlip := {
 			end;
 		nil
 	end,
+	// viewSetupDoneScript(): makes the slip end extraHeight below its last
+	// field (l4; the last children are the keyboard and its toggle when there
+	// is one); a keyboard that would make the slip taller than the screen is
+	// removed. Then the caret goes to the first field
 	viewSetupDoneScript: func() begin
 		local copy, childViewFrames, nextKeyView2, l4, appAreaHeight, box;
 		appAreaHeight := GetAppParams().appAreaHeight;
@@ -71,19 +89,26 @@ protoValidateSlip := {
 		inherited:?viewSetupDoneScript();
 		(if (nextKeyView2 := NextKeyView(childViewFrames[0], 0, 0)) then SetKeyView(nextKeyView2, 0))
 	end,
+	// StartFlush(): sent when a field changes; saves the changes in 5
+	// seconds (the idle script) unless another change restarts the wait
 	StartFlush: func() begin
 		(if base.viewCObject then base:SetupIdle(5000))
 	end,
+	// viewIdleScript(): saves, and stops the idle calls (nil)
 	viewIdleScript: func() begin
 		self:EndFlush();
 		nil
 	end,
+	// viewQuitScript(): returns 'postQuit, asking for viewPostQuitScript
+	// after the slip's views are gone
 	viewQuitScript: func() begin
 		'postQuit
 	end,
 	viewPostQuitScript: func() begin
 		self:EndFlush()
 	end,
+	// EndFlush(): saves the target - a soup entry (and re-reads the current
+	// owner card or worksite from it), or the user configuration
 	EndFlush: func() begin
 		(if IsSoupEntry(target) then begin
 				EntryChange(target);
@@ -92,6 +117,9 @@ protoValidateSlip := {
 	end,
 	ReOrientToScreen: @defRotateFunc,
 	viewChildren: [viewChildren:
+		// the close box: closes the slip and reports to compView whether every
+		// field with a path has data (stopping at the first that does not; a
+		// field's HasData decides, else a non-empty string or any value)
 		{
 			buttonClickScript: func() begin
 				local l1;
@@ -122,8 +150,10 @@ protoValidateSlip := {
 	_proto: @protoFloater
 };
 
+// the slip's title
 headerText_2 := {preallocatedContext: 'headerText, _proto: @protoTitle};
 
+// the explanation below the title
 infoText_2 := {
 	viewBounds: {left: 10, top: 5, right: -10, bottom: 30},
 	viewJustify: vjParentFullH + vjSiblingBottomV,

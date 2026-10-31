@@ -1,4 +1,6 @@
-// protoStatusBarber, and what only it reaches
+// protoStatusBarber: the animated barber pole of a status slip
+// (protoStatusTemplate), shown for an operation whose length is not known;
+// each UpdateIndicator steps it to its next pattern.
 
 protoStatusBarber := {
 	debug: 2288,
@@ -7,18 +9,25 @@ protoStatusBarber := {
 	viewBounds: {left: 0, top: 8, right: 166, bottom: 18},
 	viewFlags: vVisible + vReadOnly,
 	viewJustify: vjParentCenterH + vjSiblingBottomV,
+	// the slot of the values frame this component goes with
 	name: 'barber,
+	// which of the four patterns is drawn
 	index: 0,
+	// four 8x8 diagonal-stripe patterns (each string holds the pattern's
+	// bytes), each shifted one step from the last
 	pattern: [|Array|: "茇ผ㡰", "㡰茇ผ", "ผ㡰茇", "茇ผ㡰"],
+	// viewSetupDoneScript(): keeps the rectangle shape it fills
 	viewSetupDoneScript: func() begin
 		(self.box := MakeShape(self:LocalBox()))
 	end,
+	// viewUpdateFormScript(): sent by UpdateIndicator; the next pattern
 	viewUpdateFormScript: func() begin
 		if ((index := (index + 1)) > 3) then begin
 				index := 0
 			end;
 		self:Dirty()
 	end,
+	// viewDrawScript(): fills the box with the current pattern
 	viewDrawScript: func() begin
 		self:DrawShape(box, {penPattern: 3, fillPattern: pattern[index]})
 	end

@@ -1,10 +1,13 @@
-// protoPrefsRollItem, and what only it reaches
+// protoPrefsRollItem: one section of a preferences roll: a full-width
+// container whose first child is a title showing the item's overview text
+// and icon.
 
 protoPrefsRollItem := {
 	_proto: @protoContainerView,
 	viewFlags: vVisible,
 	viewJustify: vjParentFullH,
 	viewFormat: 0,
+	// on opening: SetKeyView(self, 0), the key view at the start of this view
 	viewSetupFormScript: func() begin
 		SetKeyView(self, 0)
 	end,
@@ -12,6 +15,7 @@ protoPrefsRollItem := {
 	viewChildren: [viewChildren:
 		{
 			title: nil,
+			// the title shows the item's overview text and its icon
 			viewSetupFormScript: func() begin
 				title := overview;
 				titleicon := icon;

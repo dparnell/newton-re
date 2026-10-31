@@ -683,3 +683,100 @@ vfInset	<<16
 vfShadow	<<18
 vfRound	<<24
 tsSize	<<10
+# protos (group4): viewJustify text flags from the Newton Programmer's Guide (Table 3-1) and src/views/TextView.h (0x1000000, oneWordOnly, is vjOneWordOnly above)
+noLineLimits	0
+oneLineOnly	0x800000
+# protos (group3): viewTransferMode (Table 2-5) and keyboard registration constants (7-8) from the Newton Programmer's Reference
+modeCopy	0x0
+modeOr	0x1
+modeXor	0x2
+modeBic	0x3
+kKbdUsesKeyCodes	0x1
+kKbdTracksCaret	0x2
+kKbdforInput	0x4
+# protos (group1): NTK platform constant (Notify level; value as docs/work-log.md records kNotifyAlert compiling to)
+kNotifyAlert	3
+# protos (group3): viewEffect constants (Table 2-6) from the Newton Programmer's Reference
+fxPopDownEffect	393216
+fxDrawerEffect	133120
+fxZoomOpenEffect	236577
+fxZoomCloseEffect	199713
+fxZoomVerticalEffect	165920
+fxCheckerboardEffect	155879
+fxBarnDoorOpenEffect	627713
+fxBarnDoorCloseEffect	626689
+fxVenetianBlindsEffect	131296
+fxIrisOpenEffect	1023009
+fxIrisCloseEffect	986145
+# protos (group4): GetPoint selectors (Newton Programmer's Reference 8-79; values from NTK's platform constants, finalX/finalY as protoPictIndexer tracks the pen)
+firstX	0
+firstY	1
+finalX	4
+finalY	5
+firstXY	6
+finalXY	8
+# protos (group2): option opcode constants (Table 20-3) from the Newton Programmer's Reference
+opSetNegotiate	256
+opSetRequired	512
+opGetDefault	768
+opGetCurrent	1024
+# protos (group1): Newton Programmer's Reference Table 16-3, day-of-week constants
+kSunday	0x800
+kMonday	0x400
+kTuesday	0x200
+kWednesday	0x100
+kThursday	0x80
+kFriday	0x40
+kSaturday	0x20
+kEveryday	0xfe0
+# protos (group3): keyboard modifier keys (7-11) from the Newton Programmer's Reference
+kIsSoftKeyboard	0x1000000
+kCommandModifier	0x2000000
+kShiftModifier	0x4000000
+kCapsLockModifier	0x8000000
+kOptionsModifier	0x10000000
+kControlModifier	0x20000000
+# protos (group2): gesture codes (ViewGestureScript, Newton Programmer's Reference 8-70)
+aeScrub	13
+aeCaret	15
+aeLine	16
+aeHilite	47
+aeTap	49
+aeDoubleTap	50
+# protos (group4): Dates repeatType, weeks-in-month and kForever (Newton Programmer's Reference Tables 16-4, 16-5, 16-6)
+kDayOfWeek	0
+kWeekInMonth	1
+kDateInMonth	2
+kDateInYear	3
+kPeriod	4
+kNever	5
+kWeekInYear	7
+kFirstWeek	0x10
+kSecondWeek	0x8
+kThirdWeek	0x4
+kFourthWeek	0x2
+kLastWeek	0x1
+kEveryWeek	0x1f
+kForever	0x1fffffff
+# protos (group2): viewEffect flags (Table 2-6) from the Newton Programmer's Reference
+fxHStartPhase	1024
+fxVStartPhase	2048
+fxColAltHPhase	4096
+fxColAltVPhase	8192
+fxRowAltHPhase	16384
+fxRowAltVPhase	32768
+fxMoveH	65536
+fxMoveV	131072
+fxLeft	66560
+fxRight	65536
+fxUp	133120
+fxDown	131072
+fxRevealLine	262144
+fxWipe	524288
+fxFromEdge	1048576
+# protos (group2): text flags (7-2) from the Newton Programmer's Reference
+vWidthIsParentWidth	0x1
+vNoSpaces	0x2
+vWidthGrowsWithText	0x4
+vFixedTextStyle	0x8
+vExpectingNumbers	0x200

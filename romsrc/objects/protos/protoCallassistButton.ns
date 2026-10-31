@@ -1,4 +1,6 @@
-// protoCallassistButton, and what only it reaches
+// protoCallassistButton: the phone "Assist" button placed to the left of its
+// sibling; it toggles the call options slip (callOptionsSlip, found by
+// inheritance) for the number being dialled.
 
 protoCallassistButton := {
 	_proto: @protoPictTextButton,
@@ -6,8 +8,10 @@ protoCallassistButton := {
 	viewBounds: {left: -58, top: 0, right: -7, bottom: 13},
 	text: assist,
 	icon: @phoneBitmap,
+	// on a tap: with no phone number in the slip an alert says so; otherwise
+	// the slip is told who opened it and is opened or closed
 	buttonClickScript: func() begin
-		(if (not StrFilled(callOptionsSlip.inNumber)) then self:Notify(3, text, "No phone number is specified. Please choose or enter a phone number.") else begin
+		(if (not StrFilled(callOptionsSlip.inNumber)) then self:Notify(kNotifyAlert, text, "No phone number is specified. Please choose or enter a phone number.") else begin
 				callOptionsSlip.invoker := self;
 				callOptionsSlip:Toggle()
 			end)

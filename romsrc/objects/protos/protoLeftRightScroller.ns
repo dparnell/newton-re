@@ -1,12 +1,17 @@
-// protoLeftRightScroller, and what only it reaches
+// protoLeftRightScroller: the pair of left and right scroll arrows centred at
+// the bottom of their parent (abstractScroller with two abstractArrow
+// children). Tapping an arrow sends the scroller's scroll messages; the
+// arrows' pictures are cut out of the Arrows strip by direction and state.
 
 protoLeftRightScroller := {
 	viewBounds: {left: 0, top: -18, right: 33, bottom: 0},
 	viewJustify: vjParentCenterH + vjParentBottomV,
+	// one strip holding every arrow picture, 17 pixels per cell
 	Arrows: {
 		bits: bitmap('bits, "resources/bits/440e69.png", "00000000001001c501c500f101d60157", 1),
 		bounds: {left: 0, top: 0, right: 102, bottom: 17}
 	},
+	// an arrow's cell in the strip: its direction's index plus its state's offset
 	DirMap: {left: 0, right: 1},
 	StateMap: {normal: 0, more: 2, hilite: 4},
 	ArrowCount: 2,

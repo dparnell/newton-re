@@ -1,10 +1,16 @@
-// protoFormatPicker, and what only it reaches
+// protoFormatPicker: the "Format" label picker of a routing slip - lists the
+// slip's formats (their titles) and makes the one picked the active format:
+// the item's fields remember it (currentFormat), the format sets up the slip
+// and, for an application that keeps one, becomes the default format.
 
 protoFormatPicker := {
 	_proto: @protoLabelPicker,
 	text: "Format",
 	labelCommands: [|Array|: ],
+	// the slip (the 'base found from the picker's parent)
 	parentBase: nil,
+	// viewSetupFormScript: finds the slip; when the active format has an
+	// auxiliary form (auxForm), the slip sets it up afterwards (deferred)
 	viewSetupFormScript: func() begin
 		parentBase := GetVariable(self:Parent(), 'base);
 		inherited:?viewSetupFormScript();
@@ -12,6 +18,8 @@ protoFormatPicker := {
 				parentBase:auxSetup()
 			end, nil))
 	end,
+	// TextSetup(), from protoLabelPicker: fills the picker with the formats'
+	// titles and returns the active one's, or "Format Missing"
 	TextSetup: func() begin
 		if GetVariable(self, 'formats) then begin
 				labelCommands := (foreach item in formats collect item.title);
@@ -21,6 +29,10 @@ protoFormatPicker := {
 			end;
 		"Format Missing"
 	end,
+	// LabelActionScript(index): makes formats[index] active - a format without a
+	// symbol throws evt.ex.msg; lets it set up the slip (SetupSlip), sets up
+	// its auxiliary form, and has the application (fields.appSymbol, if
+	// any) record it as the default format for the item's category
 	LabelActionScript: func(index) begin
 		local l1;
 		activeFormat := formats[index];

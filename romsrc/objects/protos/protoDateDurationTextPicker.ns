@@ -1,4 +1,10 @@
-// protoDateDurationTextPicker, and what only it reaches
+// protoDateDurationTextPicker: a label picker showing a range of dates
+// ("start - stop"); tapping it pops up a picker for both ends
+// (dateIntervalPopup) (Newton Programmer's Reference
+// "protoDateDurationTextPicker").
+//   startTime / stopTime   the range, in minutes; a stopTime of 536870911
+//                          (the largest integer) means it has no end
+//   shortFormat / longFormat   the dates' string spec (as protoDateTextPicker)
 
 protoDateDurationTextPicker := {
 	viewBounds: nil,
@@ -11,14 +17,19 @@ protoDateDurationTextPicker := {
 	longFormat: 'yearMonthDayStrSpec,
 	viewFont: tsSystem + tsSize(10) + tsBold,
 	entryFont: tsHWFont + tsSize(10),
+	// sent on a tap to pop up the picker: x is the width of the text part
 	Popit: func(x) begin
 		local box;
 		(box := self:GlobalBox()).right := (box.left + x);
 		@dateIntervalPopup:New([Array: startTime, stopTime], box, self)
 	end,
+	// answers "start - stop", or "start - ongoing" for an open-ended range
+	// (ParamStr's ^?1 picks the text by whether stopTime is the largest
+	// integer)
 	TextSetup: func() begin
 		ParamStr("^0 - ^?1ongoing|^2|", [Array: (if longFormat then LongDateStr(startTime, @datetimeStrSpecs.(longFormat)) else ShortDateStr(startTime, @datetimeStrSpecs.(shortFormat))), (stopTime = 536870911), (if longFormat then LongDateStr(stopTime, @datetimeStrSpecs.(longFormat)) else ShortDateStr(stopTime, @datetimeStrSpecs.(shortFormat)))])
 	end,
+	// sent by the popup with the picked start (index) and stop (a2)
 	pickActionScript: func(index, a2) begin
 		startTime := index;
 		stopTime := a2;

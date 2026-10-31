@@ -1,8 +1,14 @@
-// protoHorizontal2Dscroller, and what only it reaches
+// protoHorizontal2DScroller: four scroll arrows (left, right, up, down) in a
+// row, centred at the bottom of the parent; abstractScroller does the work,
+// sending the scrollView the scroll messages in units of scrollable items
+// (scrollRect, dataRect, viewRect, xPos, yPos).
 
 protoHorizontal2Dscroller := {
 	viewBounds: {left: 0, top: -17, right: 64, bottom: 0},
 	viewJustify: vjParentCenterH + vjParentBottomV,
+	// the arrows' pictures in one bitmap: an arrow's picture is its direction's
+	// index (DirMap) plus its state's offset (StateMap: plain, "more to see",
+	// highlighted), each 16 pixels wide
 	Arrows: {
 		bits: bitmap('bits, "resources/bits/4410ad.png", "000000000018016b016b0012017c00d2", 1),
 		bounds: {left: 0, top: 0, right: 192, bottom: 17}

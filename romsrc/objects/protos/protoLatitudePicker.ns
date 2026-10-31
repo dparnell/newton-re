@@ -1,16 +1,27 @@
-// protoLatitudePicker, and what only it reaches
+// protoLatitudePicker: a flip-digit picker (protoDigitBase) for a latitude,
+// the value in minutes of arc between -90 and +90 degrees, shown with a
+// north/south compass. Its digits are the degree and minute children
+// below; ConvertToWC/ConvertFromWC translate to and from the World Clock's
+// own unit for a position. protoLongitudePicker builds on it.
 
 protoLatitudePicker := {
+	// +-90 degrees in minutes of arc (90 * 60)
 	maxValue: 5400,
 	minValue: -5400,
 	compass: @northSouthBitmap,
+	// Converts a value in minutes of arc to the World Clock's unit: negative
+	// values are first wrapped into 0..360 degrees (21600 minutes), then scaled
+	// by 24855, so that a full circle is about 2^29 (21600 * 24855 = 536868000).
 	ConvertToWC: func(value) begin
 		local value2;
 		if ((value2 := value) < 0) then begin
+				// 21600 = 360 degrees in minutes of arc
 				value2 := (21600 + value2)
 			end;
 		(24855 * value2)
 	end,
+	// The inverse of ConvertToWC: a World Clock value back to minutes of arc,
+	// anything past 180 degrees (10800) made negative again.
 	ConvertFromWC: func(a1) begin
 		local l1;
 		if ((l1 := (a1 div 24855)) > 10800) then begin
@@ -20,6 +31,7 @@ protoLatitudePicker := {
 	end,
 	viewChildren: [viewChildren: protoLatitudePickerItem, protoLatitudePickerItem_2, minutes10, hours1, hours10],
 	minutes10: nil,
+	// the digit children kept in slots of the same names when the picker is opened
 	allocateContext: [|Array|: 'minutes10, minutes10, 'hours1, hours1, 'hours10, hours10],
 	hours1: nil,
 	hours10: nil,

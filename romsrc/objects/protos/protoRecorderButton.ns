@@ -1,13 +1,19 @@
-// protoRecorderButton, and what only it reaches
+// protoRecorderButton: one button of the sound recorder's controls (record,
+// play, stop...): a picture button (recButIcon, showing icon) with a small
+// text label under it (recButText, showing text). A tap on the picture is
+// passed up as the button's own buttonClickScript.
 
 protoRecorderButton := {
 	viewClass: clView,
 	viewFlags: vVisible + vReadOnly,
 	viewFormat: 0,
+	// laid out in a row: each button to the right of the one before
 	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingTopV,
 	viewBounds: {left: 0, top: 0, right: 47, bottom: 36},
+	// the picture and the label the children show
 	icon: nil,
 	text: nil,
+	// the button's action: an instance overrides it
 	buttonClickScript: func() begin
 		nil
 	end,
@@ -18,11 +24,14 @@ protoRecorderButton := {
 	recButText: nil
 };
 
+// the picture part (protoPictureButton finds the parent's icon by
+// inheritance); silent, as the recorder plays its own sounds
 recButIcon := {
 	viewFormat: vfFillWhite,
 	viewJustify: vjCenterH + vjCenterV + vjParentCenterH,
 	viewBounds: {left: 0, top: 0, right: 27, bottom: 23},
 	_sound: nil,
+	// a tap on the picture is the recorder button's tap
 	buttonClickScript: func() begin
 		self:Parent():buttonClickScript()
 	end,
@@ -30,9 +39,11 @@ recButIcon := {
 	_proto: @protoPictureButton
 };
 
+// the label under the picture
 recButText := {
 	viewJustify: vjCenterH + vjCenterV + vjParentCenterH + vjSiblingBottomV,
 	viewBounds: {left: 0, top: 0, right: 47, bottom: 13},
+	// takes the recorder button's text once open
 	viewSetupDoneScript: func() begin
 		(self.text := self:Parent().text)
 	end,

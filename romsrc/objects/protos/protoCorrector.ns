@@ -1,6 +1,19 @@
-// protoCorrector, and what only it reaches
+// protoCorrector: the correction pop-up a double tap on a recognized word
+// opens: a picker listing the recognizer's other guesses for the word (and
+// spelling suggestions), the word's original ink, "Try letters" when
+// re-recognizing the ink letter by letter could help, and the two buttons
+// (keyboard and full corrector).  Choosing an entry replaces the word.
+//   refCon     a protoCorrectContext: the form, word offset and length
+//   wordInfo   the word's protoWordInfo (its guesses and strokes)
 
 protoCorrector := {
+	// at setup: builds pickItems.  For a word with a single guess, up to
+	// five spelling suggestions not already listed are added as guesses
+	// (index -2); every guess has its ambiguous characters mapped for
+	// display; then the ink, Try letters, the buttons and the frontmost
+	// view's own CorrectorItems.
+	//   v4 refCon; v19 wordInfo; v15 the items; v14 the suggestions
+	// (the locals' odd names are the ones the ROM's function carries)
 	viewSetupFormScript: func() begin
 		local v4_mmlll, v6_sssssssssssr, v7_zzzzzzzyy, v13_uuuttttttttt, v14_ssssrrrrrr, v15_vvvvvvvvvuuuuuuuuuu, v18_zzzyyyyyyyyyyyyyyyyyyyy, v19_yyx, v20_zzzzzzzyyyyy, v21_yyyyyyyyxx, v22_yyyyyyyyyyyyyyyyxxx, v23_yyyyyxxxxxxxxxxxx;
 		v4_mmlll := refCon;
@@ -53,6 +66,13 @@ protoCorrector := {
 			end;
 		(self.pickItems := v15_vvvvvvvvvuuuuuuuuuu)
 	end,
+	// a pick: index is a frame for the two buttons (x 0: open the keyboard
+	// on the form with the word selected; otherwise the full corrector,
+	// root's correct view, unless the form's ViewCorrectorScript handles
+	// it), else the number of the entry.  An entry with a context is passed
+	// to its CorrectorActionScript; a string replaces the word (and is
+	// learned), Try letters re-recognizes the ink, the ink entry puts the
+	// ink back as an ink word.  l1: a button was handled.
 	pickActionScript: func(index) begin
 		local l1, correct, l3, refCon2, pickItem, words;
 		l1 := nil;
@@ -103,6 +123,9 @@ protoCorrector := {
 					self:LockScreen(nil)
 				end))
 	end,
+	// FindNewGuess(newInfo): moves to the front of newInfo the first of its
+	// guesses that the old wordInfo did not offer.  The decompiler places
+	// the locals after their uses.
 	FindNewGuess: func(a1) begin
 		words := wordInfo:GetWords();
 		l3 := (Length((words2 := a1:GetWords())) - 1);
@@ -115,6 +138,11 @@ protoCorrector := {
 					end
 			end)
 	end,
+	// Try letters: re-recognizes the word's strokes with the letter-by-letter
+	// configuration under the busy dialog (placed above the picker, or below
+	// it near the top of the screen - copy2 is the dialog's bounds, l4 its
+	// height), and with a single result puts its best new guess in place of
+	// the word.  Answers the new word info, or nil.
 	HandleTryLetters: func() begin
 		local copy, busyDialog, copy2, l4, recognize2, infoItem;
 		copy := Clone(self.bounds);
@@ -137,6 +165,7 @@ protoCorrector := {
 			end;
 		infoItem
 	end,
+	// MoveToFirst(wordInfo, i): makes guess i the first of wordInfo's words
 	MoveToFirst: func(copy, i) begin
 		local words, l2;
 		(if (i > 0) then begin
@@ -145,6 +174,11 @@ protoCorrector := {
 				ArrayInsert(words, l2, 0)
 			end)
 	end,
+	// ReplaceWord(index, learn): replaces the word in the form with a copy of
+	// wordInfo whose guess index is first (the recognizer told to learn the
+	// choice if learn), in the style at the word; with the full corrector
+	// open, the caret moves too and refCon follows the corrector's.
+	// Answers the copy.
 	ReplaceWord: func(index, a2) begin
 		local correctInfo2, refCon2, wordInfo, copy, form, wordOffset, wordLength, correct, l9, styleAtOffset, frame2;
 		correctInfo2 := correctInfo;
@@ -172,6 +206,8 @@ protoCorrector := {
 			end;
 		return copy
 	end,
+	// CorrectInk(strokesItem): replaces the word with its ink as an ink word,
+	// when the form takes ink words; the word is then one character long
 	CorrectInk: func(pickItem) begin
 		local refCon2, frame2;
 		(if ViewAllowsInkWords((refCon2 := refCon).form) then begin

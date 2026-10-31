@@ -1,3 +1,7 @@
-// protoCorrectInfo, and what only it reaches
+// protoCorrectInfo: the proto of the correction-information frame that
+// GetCorrectInfo returns (Newton Programmer's Reference "protoCorrectInfo");
+// its methods live in baseCorrectInfo.
+//   info   an array of protoWordInfo frames, one per recently recognized word
+//   max    the most words the system keeps correction information for
 
 protoCorrectInfo := {_proto: baseCorrectInfo, info: nil, max: nil};

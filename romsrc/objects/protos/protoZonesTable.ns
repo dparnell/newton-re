@@ -1,3 +1,4 @@
-// protoZonesTable, and what only it reaches
+// protoZonesTable: an empty frame, magic pointer 230; nothing in the tree
+// refers to it, and it has no slots of its own (its use is not known).
 
 protoZonesTable := {};

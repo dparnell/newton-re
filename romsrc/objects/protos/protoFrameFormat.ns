@@ -1,3 +1,4 @@
-// protoFrameFormat, and what only it reaches
+// protoFrameFormat: the routing format that sends an item as a NewtonScript
+// frame (protoRoutingFormat; its symbol names it to the routing system).
 
 protoFrameFormat := {symbol: 'protoFrameFormat, _proto: @protoRoutingFormat};

@@ -1,7 +1,12 @@
-// protoFindCategory, and what only it reaches
+// protoFindCategory: the heading of one finder's results (an application's
+// found items) in the list of everything Find found (protoCategorizedOverview
+// makes them: title, count, the finder as category, and skip, how many of its
+// items scrolled off above).
 
 protoFindCategory := {
 	_proto: @protoRollItem,
+	// viewSetupFormScript: shows the title (cut to 132 characters); an ellipsis
+	// after it says the category's first items are scrolled off
 	viewSetupFormScript: func() begin
 		text := (title := StrTruncate(Clone(title), 132));
 		(if (skip <> 0) then (text := Stringer([Array: text, $\u2026])))

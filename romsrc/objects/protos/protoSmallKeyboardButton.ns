@@ -1,4 +1,6 @@
-// protoSmallKeyboardButton, and what only it reaches
+// protoSmallKeyboardButton: the small keyboard button (a protoKeyboardButton
+// with the small keyboard icon and a smaller size) that pops up the list of
+// keyboards for the field with the caret.
 
 protoSmallKeyboardButton := {
 	icon: @keySmallButtonBitmap,

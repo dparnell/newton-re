@@ -1,10 +1,18 @@
-// protoCategoryRollCategory, and what only it reaches
+// protoCategoryRollCategory: the heading line of a category in a
+// protoCategoryRoll - "Title, n items" in bold; tapping it collapses or
+// expands the category.
+//   title    the category's name
+//   count    how many items it holds
+//   skip     how many of them are scrolled off above (an ellipsis is added
+//            when some are)
 
 protoCategoryRollCategory := {
 	_proto: @protoRollItem,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 14},
 	viewFormat: 0,
 	viewFlags: vVisible + vClickable,
+	// oneLineOnly (8388608) + vjSiblingBottomV + vjParentClip +
+	// vjParentFullH + vjCenterV
 	viewJustify: 8396852,
 	height: 14,
 	title: nil,
@@ -12,6 +20,8 @@ protoCategoryRollCategory := {
 	skip: 0,
 	text: nil,
 	viewFont: @fontSystem10Bold,
+	// at setup: makes the text from the title (cut to 132 characters) and
+	// the item count, with an ellipsis if part of the category is skipped
 	viewSetupFormScript: func() begin
 		title := StrTruncate(Clone(title), 132);
 		if (count = 1) then begin
@@ -21,6 +31,9 @@ protoCategoryRollCategory := {
 			end;
 		(if (skip <> 0) then (text := Stringer([Array: text, $\u2026])))
 	end,
+	// on a tap: toggles category.collapsed; collapsing scrolls the roll back
+	// by the skipped items, rounded down to whole scroll steps; then the roll
+	// is recalculated and the tap answered as handled
 	viewClickScript: func(unit) begin
 		(if self:TrackHilite(unit) then begin
 				if (category.collapsed := (not category.collapsed)) then begin

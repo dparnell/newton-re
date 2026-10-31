@@ -1,3 +1,4 @@
-// protoOutlineView, and what only it reaches
+// protoOutlineView: the bare outline view class (clOutline) on protoView,
+// the native view that shows an expandable outline.
 
 protoOutlineView := {viewClass: clOutline, _proto: @protoView};

@@ -1,4 +1,9 @@
-// protoRecorderView, and what only it reaches
+// protoRecorderView: the sound recorder strip (record, stop and play
+// buttons and a progress slider in a rounded frame) that records or plays
+// a voice note. The work is done by a recorder engine
+// (@recorderchassIs:New), whose state the buttons follow: TestState(n)
+// tests its state bits - 1 idle, 2 recording, 4 playing (6 either); 9 and
+// 17 add bits 8 and 16, which look like the paused play and record.
 
 protoRecorderView := {
 	viewClass: clView,
@@ -6,29 +11,39 @@ protoRecorderView := {
 	viewFormat: vfFillWhite,
 	viewJustify: 0,
 	viewBounds: {left: 0, top: 0, right: 191, bottom: 23},
-	viewEffect: 165920,
+	viewEffect: fxZoomVerticalEffect,
+	// the alerts' title
 	notifyTitle: soundRecorder_2,
 	RecordEngine: nil,
+	// the sounds to play (nil: a new recording); the engine's fSoundArray
 	sounds: nil,
+	// the time played or recorded so far (the slider's)
 	elapsedTime: 0,
 	declareSelf: 'base,
 	outsideFrame: shorts('roundrectangle, 0, 0, 23, 191, 6, 6),
 	outsideStyle: {pensize: 2},
+	// once open: make the engine, to record, or to play the sounds given
 	viewSetupDoneScript: func() begin
 		(if (not sounds) then (RecordEngine := @recorderchassIs:New({_parent: self})) else (RecordEngine := @recorderchassIs:New({_parent: self, fSoundArray: sounds, fDirection: 'play})))
 	end,
+	// on closing: let the engine finish
 	viewQuitScript: func() begin
 		(if RecordEngine then RecordEngine:Done())
 	end,
+	// the rounded frame round the strip
 	viewDrawScript: func() begin
 		self:DrawShape(self.outsideFrame, self.outsideStyle)
 	end,
+	// sounds was set (SetValue): give them to the engine and have the
+	// buttons follow its state again
 	viewChangedScript: func(slot, view) begin
 		(if (slot = 'sounds) then begin
 				RecordEngine.fSoundArray := self.sounds;
 				RecordEngine:SetState(RecordEngine.fSoundState)
 			end)
 	end,
+	// while recording or playing: move the slider on and update
+	// elapsedTime, again every second (a delayed send of itself)
 	UpdateSlider: func() begin
 		self:EventPause(true);
 		(if RecordEngine:TestState(6) then (if SoundProgressSlider then begin
@@ -37,6 +52,8 @@ protoRecorderView := {
 					AddDelayedSend(base, 'UpdateSlider, [Array: ], 1000)
 				end))
 	end,
+	// while recording or playing, every 200 ms: drop the cached pages of the
+	// sound before the last one (a virtual binary object) from memory
 	FlushVBO: func() begin
 		local l1, fSoundArrayItem;
 		(if RecordEngine:TestState(6) then begin
@@ -46,6 +63,7 @@ protoRecorderView := {
 				AddDelayedSend(base, 'FlushVBO, [Array: ], 200)
 			end)
 	end,
+	// the sounds recorded, without their callbacks (to be stored)
 	GetSounds: func() begin
 		local fSoundArray;
 		(foreach item in (fSoundArray := RecordEngine.fSoundArray) do begin
@@ -53,12 +71,14 @@ protoRecorderView := {
 			end);
 		fSoundArray
 	end,
+	// stop and play from outside, as if the buttons were tapped
 	stop: func() begin
 		stopButton:buttonClickScript()
 	end,
 	play: func() begin
 		playButton:buttonClickScript()
 	end,
+	// whether the engine is recording or playing (not idle)
 	isActive: func() begin
 		(not RecordEngine:TestState(1))
 	end,
@@ -89,6 +109,9 @@ recordButton_2Icon := {
 	bounds: {left: 0, top: 0, right: 11, bottom: 11}
 };
 
+// the buttons' proto: a framed picture button, each to the right of the
+// one before. SetState is sent when the engine's state changes (the old
+// state, the new one, and whether there are sounds)
 recordButton_2Proto := {
 	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2) + vfRound(3),
 	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingCenterV,
@@ -105,6 +128,8 @@ recordButton_2 := {
 	viewJustify: vjCenterH + vjCenterV,
 	viewBounds: {left: 2, top: 2, right: 21, bottom: 21},
 	icon: recordButton_2Icon,
+	// the record dot: solid when a recording source (inputDevice) is
+	// chosen, grey when none is
 	GetIcon: compile(
 		constants: {
 			kBinaryFromHex: func(hex, cls) begin
@@ -126,6 +151,11 @@ recordButton_2 := {
 		icon := self:GetIcon();
 		inherited:?viewSetupFormScript()
 	end,
+	// Record: with no recording source, offer to open the Recording
+	// preferences; an idle engine is reset first (SetState 64, then 1);
+	// unless resuming, the store must be writable (TestStore 3: a locked
+	// card) and have room (1: almost full). Then record from idle or pause,
+	// pause a recording, or else beep
 	buttonClickScript: compile(
 		constants: {
 			kFunction_427f75: func(a1) begin
@@ -144,16 +174,18 @@ recordButton_2 := {
 				end;
 			if (not RecordEngine:TestState(16)) then begin
 					if ((testStore := RecordEngine:TestStore()) = 3) then begin
-							self:Notify(3, notifyTitle, "Sorry, you must unlock the card before recording.");
+							self:Notify(kNotifyAlert, notifyTitle, "Sorry, you must unlock the card before recording.");
 							return nil
 						end;
 					if (testStore = 1) then begin
-							self:Notify(3, notifyTitle, "Sorry, there is not enough memory available for a new recording. The internal memory or storage card is almost full.");
+							self:Notify(kNotifyAlert, notifyTitle, "Sorry, there is not enough memory available for a new recording. The internal memory or storage card is almost full.");
 							return nil
 						end
 				end;
 			(if RecordEngine:TestState(17) then RecordEngine:record() else (if RecordEngine:TestState(2) then RecordEngine:pause() else playsound(@262)))
 		end),
+	// while recording (new state 2) the button shows the pause bars
+	// (kLiteral_423fad), else the record dot
 	SetState: compile(
 		constants: {
 			kBinaryFromHex: func(hex, cls) begin
@@ -173,6 +205,7 @@ recordButton_2 := {
 	preallocatedContext: 'recordButton
 };
 
+// Stop
 stopButton_2 := {
 	_proto: recordButton_2Proto,
 	icon: {
@@ -185,6 +218,8 @@ stopButton_2 := {
 	preallocatedContext: 'stopButton
 };
 
+// Play: play from idle or pause, pause playing, or while recording stop,
+// rewind and play what was recorded; else beep
 playButton_2 := {
 	_proto: recordButton_2Proto,
 	icon: playButton_2Icon,
@@ -195,6 +230,9 @@ playButton_2 := {
 						RecordEngine:play()
 					end else playsound(@262))))
 	end,
+	// while playing (new state 4) the button shows the pause bars, else
+	// the play triangle; on new state 32 an engine error (fEngineError 1:
+	// storage almost full) is reported
 	SetState: compile(
 		constants: {
 			kBinaryFromHex: func(hex, cls) begin
@@ -219,11 +257,12 @@ playButton_2 := {
 							SetValue(self, 'icon, kLiteral_423f35)
 						end
 				end;
-			(if (fSoundState2 = 32) then (if (RecordEngine.fEngineError <> 0) then (if (RecordEngine.fEngineError = 1) then self:Notify(3, notifyTitle, "Sorry, the recording was stopped because the internal memory or storage card is almost full.") else self:Notify(3, notifyTitle, "Sorry, the recording was stopped due to an internal error."))))
+			(if (fSoundState2 = 32) then (if (RecordEngine.fEngineError <> 0) then (if (RecordEngine.fEngineError = 1) then self:Notify(kNotifyAlert, notifyTitle, "Sorry, the recording was stopped because the internal memory or storage card is almost full.") else self:Notify(kNotifyAlert, notifyTitle, "Sorry, the recording was stopped due to an internal error."))))
 		end),
 	preallocatedContext: 'playButton
 };
 
+// the progress slider, after the buttons
 SoundProgressSlider_2 := {
 	_proto: SoundProgressSlider,
 	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingCenterV,

@@ -1,8 +1,14 @@
-// protoConfigServer, and what only it reaches
+// protoConfigServer: a native-code protocol object - each slot is a C
+// function (class #132, a plain function pointer with its argument count)
+// rather than NewtonScript; it hands out and keeps a default configuration.
 
 protoConfigServer := {
+	// releases the server's native state
 	Dispose: {class: #132, funcPtr: 6990161, numArgs: 0},
+	// makes the native object behind this frame (two arguments)
 	Instantiate: {class: #132, funcPtr: 6990163, numArgs: 2},
+	// answers the default configuration
 	getdefaultConfig: {class: #132, funcPtr: 6990162, numArgs: 0},
+	// sets the default configuration to its argument
 	setdefaultConfig: {class: #132, funcPtr: 6990164, numArgs: 1}
 };

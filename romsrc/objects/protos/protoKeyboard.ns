@@ -1,12 +1,20 @@
-// protoKeyboard, and what only it reaches
+// protoKeyboard: a floating keyboard window (a protoFloater holding a
+// keyboard view). Only one is open at a time - the global currentKeyboard -
+// and when it first opens it moves itself up out of the way of the caret.
 
 protoKeyboard := {
 	_proto: @protoFloater,
 	textFlags: nil,
 	viewBounds: nil,
+	// the bounds the keyboard opens at the first time (copied into viewBounds)
 	saveBounds: nil,
+	// non-nil: never move the keyboard away from the caret
 	freeze: nil,
 	firstTime: true,
+	// On opening: the first time, start from saveBounds and, unless frozen, if the
+	// keyboard would cover the caret, move it up to 32 pixels above the caret -
+	// but only if that leaves its top more than 8 pixels down the screen. Then
+	// close any other open keyboard and make this one currentKeyboard.
 	viewSetupFormScript: func() begin
 		local caretBox, box, l3;
 		if firstTime then begin
@@ -15,6 +23,7 @@ protoKeyboard := {
 		box := self:GlobalBox();
 		caretBox := GetCaretBox();
 		if (if (if (if (if (not freeze) then firstTime) then caretBox) then (box.top < caretBox.bottom)) then (box.bottom > caretBox.top)) then begin
+				// l3: the (negative) distance to move up
 				l3 := ((caretBox.top - box.bottom) - 32);
 				if ((box.top + l3) > 8) then begin
 						viewBounds := OffsetRect(viewBounds, 0, l3)
@@ -26,6 +35,7 @@ protoKeyboard := {
 		currentKeyboard := self;
 		(firstTime := nil)
 	end,
+	// On closing: stop being currentKeyboard; the next opening is a first time again.
 	viewQuitScript: func() begin
 		if (currentKeyboard = self) then begin
 				currentKeyboard := nil

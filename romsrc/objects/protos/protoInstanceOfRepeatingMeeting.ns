@@ -1,3 +1,6 @@
-// protoInstanceOfRepeatingMeeting, and what only it reaches
+// protoInstanceOfRepeatingMeeting: the Dates application's template for one
+// occurrence of a repeating meeting - a 'meeting frame shown with the
+// 'RepeatingMeeting stationery, holding the occurrence's start date and the
+// repeating meeting entry (repeatTemplate) it is an instance of.
 
 protoInstanceOfRepeatingMeeting := {viewStationery: 'RepeatingMeeting, class: 'meeting, mtgStartDate: nil, repeatTemplate: nil};

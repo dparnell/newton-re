@@ -1,22 +1,33 @@
-// protoFilingButton, and what only it reaches
+// protoFilingButton: the filing button of an application's status or title bar
+// (a protoPictureButton): its icon shows whether the filing target is on the
+// internal store or a card, and a tap opens the Filing slip, which sends the
+// target view FileThis.
 
 protoFilingButton := {
 	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH,
 	icon: nil,
+	// the icon when the target is on the internal store, and on a card
 	iconInt: @filingBitmap,
 	iconExt: @filingExtBitmap,
+	// PickIcon(): the internal-store icon when the filing target (GetTargetInfo
+	// 'Filing) has no store or is on the internal one (GetStores()[0]), else the
+	// card's
 	PickIcon: func() begin
 		local filing;
 		(if (((not (filing := self:GetTargetInfo('Filing))) or (not filing.targetStore)) or (filing.targetStore = GetStores()[0])) then iconInt else iconExt)
 	end,
+	// viewSetupFormScript: shows the icon for where the target is
 	viewSetupFormScript: func() begin
 		(icon := self:PickIcon())
 	end,
+	// Update(): sent when the target may have moved - changes the icon if needed
 	Update: func() begin
 		local pickIcon;
 		pickIcon := self:PickIcon();
 		(if (icon <> pickIcon) then SetValue(self, 'icon, pickIcon))
 	end,
+	// buttonClickScript (shared/functions.ns): opens the Filing slip for the
+	// target; a client's own buttonClickScript must call this inherited one
 	buttonClickScript: buttonClickScript_2,
 	_proto: @protoPictureButton
 };

@@ -1,4 +1,7 @@
-// protoTransportPopup, and what only it reaches
+// protoTransportPopup: the transport name at the top of a routing slip; when
+// other transports of the same group can send the item's data types it shows
+// a pop-up diamond and lets the user switch transport (and the slip is made
+// anew for the chosen one, which is remembered as the group's choice).
 
 protoTransportPopup := {
 	_proto: @protoPopInPlace,
@@ -7,8 +10,14 @@ protoTransportPopup := {
 	viewJustify: vjCenterV,
 	text: nil,
 	viewFont: tsSystem + tsSize(10) + tsBold,
+	// whether there is another transport to switch to
 	showit: nil,
+	// the data types the item's formats can be sent as
 	routingTypes: nil,
+	// viewSetupFormScript(): collects the formats' data types; when not
+	// editing and the transport has a group, looks for another transport of
+	// that group that handles one of them; sets the text (with the diamond
+	// if so) and places the view centred on y = 23 near the envelope's right
 	viewSetupFormScript: func() begin
 		showit := nil;
 		routingTypes := [Array: ];
@@ -39,20 +48,26 @@ protoTransportPopup := {
 		if showit then begin
 				text := Stringer([Array: $\uFC01, text])
 			end;
+		// l8: the view's right edge; l9, l10: its width and height
 		l8 := ((envelopeWidth - 31) - 10);
 		l9 := (StrFontWidth(text, viewFont) + 8);
 		l10 := FontHeight(viewFont);
 		(viewBounds := RelBounds((l8 - l9), (23 - (l10 div 2)), l9, l10))
 	end,
+	// PadText(text): the text as it is (protoPopInPlace would pad it)
 	PadText: func(text) begin
 		text
 	end,
+	// viewDrawScript(): draws nothing more than the text
 	viewDrawScript: func() begin
 		nil
 	end,
+	// viewClickScript(unit): pops up only when there is a choice
 	viewClickScript: func(unit) begin
 		(if showit then inherited:viewClickScript(unit))
 	end,
+	// ButtonClickScript(): fills the popup with the group's transports that
+	// handle the item's data types, then pops it up
 	buttonClickScript: func() begin
 		popup := [Array: ];
 		local l1;
@@ -64,6 +79,10 @@ protoTransportPopup := {
 			end);
 		inherited:buttonClickScript()
 	end,
+	// pickActionScript(index): a transport chosen - unless the slip's
+	// TransportChanged refuses it, records it as the group's transport in the
+	// user configuration (transportGroups) and, if it is another transport,
+	// opens a routing slip for a new item of it and closes this one
 	pickActionScript: func(index) begin
 		local ensureInternal2, transportGroups, l3, item;
 		if self:?TransportChanged((ensureInternal2 := EnsureInternal(popup[index].transportSym))) then begin

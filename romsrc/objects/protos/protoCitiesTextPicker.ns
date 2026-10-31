@@ -1,3 +1,7 @@
-// protoCitiesTextPicker, and what only it reaches
+// protoCitiesTextPicker: a label picker showing a city's name; tapping it
+// pops up an alphabetical list of the world-clock cities.  All its behaviour
+// comes from protoMapTextPicker; it only says where the places come from
+// (params.spots, the city soup) and which slot of the chosen one is shown
+// (params.result).
 
 protoCitiesTextPicker := {params: {spots: @citySoupName, result: 'name}, _proto: @protoMapTextPicker};

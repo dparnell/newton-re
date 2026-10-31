@@ -1,4 +1,7 @@
-// protoDoubleClock, and what only it reaches
+// protoDoubleClock: an analog setting clock (protoNewSetClock) above a digital
+// one (protoDigitalClock), both setting the same inherited `time`; each tells
+// the other to Refresh when it changes the time and passes TimeChanged on to
+// the client. And its two children.
 
 protoDoubleClock := {
 	viewFlags: vVisible,
@@ -14,6 +17,8 @@ protoDoubleClock := {
 analogClock_2 := {
 	viewBounds: {left: 0, top: 0, right: 116, bottom: 116},
 	viewJustify: vjParentCenterH,
+	// TimeChanged: sent by protoNewSetClock after the user set the time - redraws
+	// the digital clock and tells the double clock's client
 	TimeChanged: func() begin
 		DigitalClock:Refresh();
 		self:Parent():?TimeChanged()
@@ -25,6 +30,8 @@ analogClock_2 := {
 DigitalClock := {
 	viewBounds: {left: 0, top: 123, right: 124, bottom: 151},
 	viewJustify: vjParentCenterH,
+	// TimeChanged: sent by protoDigitalClock after the user set the time - redraws
+	// the analog clock and tells the double clock's client
 	TimeChanged: func() begin
 		analogClock:Refresh();
 		self:Parent():?TimeChanged()

@@ -1,9 +1,16 @@
-// protoMeetingSoupFinder, and what only it reaches
+// protoMeetingSoupFinder: the finder the Dates application gives the Find
+// system for its soups - a soup finder over meetings and notes, whose found
+// items are shown by opening Dates (owner) on the meeting's date. Only
+// meetings, repeating meetings, exceptions and crib notes can be selected
+// (routed or deleted from the Find overview).
 
 protoMeetingSoupFinder := {
 	debug: 186293128,
 	cacheCount: nil,
+	// the entries chosen, for AddTargetItems
 	selected: nil,
+	// Shows entry a1 (nil or 'deleted: nothing to show) by opening the owner
+	// (Dates) if needed and asking it to show the item at its start date.
 	ShowEntry: func(a1) begin
 		if ((a1 = 'deleted) or (a1 = nil)) then begin
 				self.isReset := nil;
@@ -18,6 +25,8 @@ protoMeetingSoupFinder := {
 				(if owner.viewCObject then owner:ShowFoundItem(a1, a1.mtgStartDate, self))
 			end)
 	end,
+	// Called by Find to show found item a1 (its soup and entryID): looks the
+	// entry up by its unique id, moves the cursor to it and shows it.
 	ShowFoundItem: func(a1) begin
 		local cursor2, l2;
 		(if (l2 := (cursor2 := Query(a1.soup, {type: 'index, indexPath: '_uniqueID, beginKey: a1.entryID})):entry()) then begin
@@ -25,19 +34,25 @@ protoMeetingSoupFinder := {
 				self:ShowEntry(l2)
 			end)
 	end,
+	// Deleting found items: after the soup finder's own delete, the master
+	// finder's cached counts are out of date.
 	delete: func() begin
 		inherited:delete();
 		masterFinder.zeroOneOrMoreResult := nil;
 		(masterFinder.cacheCount := nil)
 	end,
+	// Called by the Find overview for each line: whether its entry is selected
+	// (isSelected) if it is a kind of meeting or a crib note, else 'NotCheckable.
 	CheckState: func(indexEntry) begin
 		local entry;
 		(if (if (entry := Query(indexEntry.soup, {type: 'index, indexPath: '_uniqueID, beginKey: indexEntry.entryID}):entry()) then LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], entry.viewStationery, 0, '|=|, nil)) then self:isSelected(indexEntry) else 'NotCheckable)
 	end,
+	// Selects found item a1 only if its entry is a kind of meeting or a crib note.
 	SelectItem: func(a1) begin
 		local entry;
 		(if (if (entry := Query(a1.soup, {type: 'index, indexPath: '_uniqueID, beginKey: a1.entryID}):entry()) then LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], entry.viewStationery, 0, '|=|, nil)) then inherited:SelectItem(a1))
 	end,
+	// The finder's cursor methods, used by Find to step through the results.
 	GetCurrentItem: func() begin
 		cursor:entry()
 	end,
@@ -52,8 +67,14 @@ protoMeetingSoupFinder := {
 		isReset := nil;
 		cursor:prev()
 	end,
+	// Moves the cursor to the first item after one of type meetingType2 at
+	// instanceTime (minutes): for meetings, the next minute (or the start of
+	// the day, after a crib note); otherwise the start of the next day. The
+	// meetingType compared first is not the argument but a variable found by
+	// inheritance (the finder's).
 	FindNextAfterItem: func(meetingType2, instanceTime) begin
 		local instanceTime2, instanceTime22;
+		// instanceTime2: the start of instanceTime's day (1440 minutes in a day)
 		instanceTime2 := ((instanceTime2 := instanceTime) - (instanceTime2 mod 1440));
 		if (meetingType = 'meeting) then begin
 				if (meetingType2 = 'cribNote) then begin
@@ -66,9 +87,14 @@ protoMeetingSoupFinder := {
 			end;
 		cursor:GotoKey(instanceTime22)
 	end,
+	// Moves the cursor past the last item.
 	GoToLastMeeting: func() begin
 		cursor:ResetToEnd()
 	end,
+	// Collects the selection (as for routing it): appends to list an overview
+	// item (owner's canonicalOverviewSelectedItem: its index, start time and an
+	// alias to the entry) for each selected entry still found on its store, the
+	// indexes counting on from addTargetItems; returns the next index.
 	AddTargetItems: func(list, addTargetItems) begin
 		if selected then begin
 				cursor2 := Query(cursor:soup(), '{type: index});
@@ -77,6 +103,8 @@ protoMeetingSoupFinder := {
 				local owner;
 				(foreach item in selected do begin
 						local gotoKey, copy;
+						// find the entry with item's unique id on item's store (the
+						// union soup can hold one with the same id on each store)
 						gotoKey := cursor2:GotoKey(item._uniqueID);
 						(loop begin
 								if (gotoKey._uniqueID <> item._uniqueID) then begin

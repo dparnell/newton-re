@@ -1,13 +1,27 @@
-// protoMultiCursor, and what only it reaches
+// protoMultiCursor: a cursor over several soup cursors at once, merging
+// their entries into one order (by comparator; by default the entries'
+// sorton strings). It answers the usual cursor messages (Next, prev, entry,
+// Reset, Goto, GotoKey, move, clone, CountEntries). Each cursor's record
+// ("curse") remembers where it stands relative to the merged position:
+// 'passed (its entry is behind), 'resident (its entry is the current one)
+// or 'prior (its entry is ahead).
 
 protoMultiCursor := {
+	// the cursors' records: {cursor, id, state}
 	curses: nil,
+	// how many cursors there are
 	finalCurse: 0,
+	// the record of the cursor whose entry is the current one
 	metaCursor: nil,
+	// The default order: comparator(e1, e2, op) is true when e1 op e2, op being
+	// '|=| (the same entry), '|<| or '|>| (by their sorton strings).
 	comparator: func(a1, a2, a3) begin
 		local strCompare2;
 		(if (a3 = '|=|) then IsSameEntry(a1, a2) else ((if ((strCompare2 := StrCompare(a1.sorton, a2.sorton)) < 0) then (a3 = '|<|)) or (if (strCompare2 > 0) then (a3 = '|>|))))
 	end,
+	// protoMultiCursor:New(cursors, comparator) - a multi-cursor over the array
+	// of cursors (ids 0, 1 ...), ordered by comparator if given, reset to its
+	// first entry.
 	New: func(a1, a2) begin
 		frame2 := {_proto: self, curses: [Array: ]};
 		if a2 then begin
@@ -22,12 +36,14 @@ protoMultiCursor := {
 		frame2:Reset();
 		frame2
 	end,
+	// Adds a cursor, known by id a2 (default: its number). Returns the new count.
 	addCursor: func(item, a2) begin
 		local frame2;
 		frame2 := {cursor: item, id: (if a2 then a2 else finalCurse), state: 'passed};
 		ArrayInsert(curses, frame2, finalCurse);
 		(finalCurse := (finalCurse + 1))
 	end,
+	// Replaces the cursor with id a1 by soupCursor; true if there was one.
 	ReplaceCursor: func(a1, soupCursor) begin
 		(for i := 0 to (finalCurse - 1) do begin
 				if (curses[i].id = a1) then begin
@@ -37,14 +53,22 @@ protoMultiCursor := {
 			end);
 		nil
 	end,
+	// Moves the merged position one entry in direction a1 ('Next or 'prev):
+	// each cursor is asked for its candidate - the message depends on its state
+	// (a cursor already past in that direction just gives its entry) - skipping
+	// 'deleted, and the nearest candidate in that direction (by comparator)
+	// becomes the current entry, its cursor 'resident. Returns the entry, or nil
+	// at the end.
 	mover: func(a1) begin
 		local perform22;
 		(for i := 0 to (Length(curses) - 1) do begin
 				local curse, l6, perform2;
 				curse := curses[i];
+				// l6: the message to send this cursor
 				l6 := '{passed: {prev: prev, Next: entry}, resident: {prev: prev, Next: Next}, prior: {prev: entry, Next: Next}}.(curse.state).(a1);
 				perform2 := Perform(curse.cursor, l6, [Array: ]);
 				(while (perform2 = 'deleted) do (perform2 := Perform(curse.cursor, l6, [Array: ])));
+				// a cursor that moved now stands behind the position ('passed) or ahead ('prior)
 				if (l6 = a1) then begin
 						curse.state := '{Next: passed, prev: prior}.(a1)
 					end;
@@ -55,11 +79,15 @@ protoMultiCursor := {
 							end
 					end
 			end);
+		// (metaCursor is not cleared first: when no cursor has an entry left it is
+		// still the previous one, made 'resident again)
 		if metaCursor then begin
 				metaCursor.state := 'resident
 			end;
 		perform22
 	end,
+	// The cursor messages: the next or previous entry in the merged order, and
+	// the current one.
 	Next: func() begin
 		self:mover('Next)
 	end,
@@ -69,6 +97,7 @@ protoMultiCursor := {
 	entry: func() begin
 		metaCursor.cursor:entry()
 	end,
+	// Resets every cursor to its start and moves to the first entry overall.
 	Reset: func() begin
 		(foreach item in curses do begin
 				item.cursor:Reset();
@@ -76,6 +105,7 @@ protoMultiCursor := {
 			end);
 		self:Next()
 	end,
+	// Resets every cursor to its end and moves to the last entry overall.
 	ResetToEnd: func() begin
 		(foreach item in curses do begin
 				item.cursor:ResetToEnd();
@@ -83,6 +113,8 @@ protoMultiCursor := {
 			end);
 		self:prev()
 	end,
+	// Moves every cursor to entry a1 and makes the earliest of their answers
+	// (by comparator) the current entry; returns it.
 	Goto: func(a1) begin
 		local goto2;
 		(foreach item in curses do begin
@@ -101,6 +133,8 @@ protoMultiCursor := {
 			end;
 		goto2
 	end,
+	// Likewise for the first entry at or after key a1 in each cursor (skipping
+	// 'deleted answers).
 	GotoKey: func(a1) begin
 		local gotoKey2;
 		(foreach item in curses do begin
@@ -120,6 +154,10 @@ protoMultiCursor := {
 			end;
 		gotoKey2
 	end,
+	// A copy standing at the same place, with copies of the cursors. Looks like
+	// a ROM bug: the copy's metaCursor is a shallow Clone of the original's
+	// record, not one of the copy's curses, so until the copy first moves its
+	// entry() reads the original's cursor.
 	clone: func() begin
 		(copy := Clone(self)).metaCursor := Clone(metaCursor);
 		copy.curses := Clone(copy.curses);
@@ -130,6 +168,7 @@ protoMultiCursor := {
 			end);
 		copy
 	end,
+	// The number of entries of all the cursors together.
 	CountEntries: func() begin
 		l1 := 0;
 		local l1;
@@ -138,6 +177,7 @@ protoMultiCursor := {
 			end);
 		l1
 	end,
+	// Moves maxLines entries forward (or back if negative); returns the entry.
 	move: func(maxLines) begin
 		if (maxLines > 0) then begin
 				(while (maxLines > 0) do begin

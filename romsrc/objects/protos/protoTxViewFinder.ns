@@ -1,9 +1,15 @@
-// protoTxViewFinder, and what only it reaches
+// protoTxViewFinder: a finder for the text of a clTXView (protoTxView):
+// searching its characters for a string and getting the text of a range, for
+// Find. Its methods are natives (class #132 frames).
 
 protoTxViewFinder := {
+	// the text's character object and the frame (view) the text belongs to
 	txCharsObj: nil,
 	frame: nil,
+	// FindString (4 arguments): searches the text for a string
 	FindString: {class: #132, funcPtr: 7240667, numArgs: 4},
+	// GetRangeText(range): the text of a found range
 	GetRangeText: {class: #132, funcPtr: 7240668, numArgs: 1},
+	// GetCountCharacters(): the length of the text
 	GetCountCharacters: {class: #132, funcPtr: 7240669, numArgs: 0}
 };

@@ -1,9 +1,16 @@
-// protoStreamIngEndpoint, and what only it reaches
+// protoStreamingEndpoint: a protoBasicEndpoint that can send and receive a
+// whole NewtonScript object as a stream (flattened) over the connection. Its
+// methods are natives (class #132 frames: a native function pointer and its
+// argument count).
 
 protoStreamIngEndpoint := {
+	// Instantiate(endpoint, options): makes the native endpoint object
 	Instantiate: {class: #132, funcPtr: 6990156, numArgs: 2},
+	// instantiateFromTEndpoint: wraps an existing C++ TEndpoint
 	instantiateFromTEndpoint: {class: #132, funcPtr: 6990157, numArgs: 3},
+	// StreamOut(data, spec): flattens and sends an object
 	streamOut: {class: #132, funcPtr: 6990159, numArgs: 2},
+	// StreamIn(spec): receives and unflattens an object
 	streamIn: {class: #132, funcPtr: 6990158, numArgs: 1},
 	_proto: @protoBasicEndpoint
 };

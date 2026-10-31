@@ -1,7 +1,11 @@
-// protoLongitudePicker, and what only it reaches
+// protoLongitudePicker: a flip-digit picker for a longitude, built on
+// protoLatitudePicker. The value is in minutes of arc, -180 to +180 degrees,
+// shown with an east/west compass; it adds a hundreds-of-degrees digit to the
+// latitude picker's children.
 
 protoLongitudePicker := {
 	_proto: @protoLatitudePicker,
+	// +-180 degrees in minutes of arc (180 * 60)
 	maxValue: 10800,
 	minValue: -10800,
 	icon: nil,
@@ -12,10 +16,12 @@ protoLongitudePicker := {
 		minutes10,
 		hours1,
 		hours10,
+		// the hundreds-of-degrees digit: 6000 minutes = 100 degrees
 		{
 			viewBounds: {left: -22, top: 0, right: 0, bottom: 28},
 			icon: @digitflap,
 			increment: 6000,
+			// protoDigit asks which digit (0-9) to show for value: its hundreds of degrees
 			GetIndex: func(value) begin
 				((abs(value) div 6000) mod 10)
 			end,

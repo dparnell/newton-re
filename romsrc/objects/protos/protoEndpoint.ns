@@ -1,7 +1,16 @@
-// protoEndpoint, and what only it reaches
+// protoEndpoint: the communications endpoint interface of Newton system
+// software 1.x, kept for old applications (2.0 replaced it with
+// protoBasicEndpoint and says it will not be supported in future). Most of
+// its methods are native: the frames of class #132 are C functions in the
+// ROM (numArgs their argument count; src/frames/ROMNatives.cpp lists them by
+// name, the CI* comm interface functions). The NewtonScript methods only glue
+// the 1.x Connect(address, options) and justConnect calls onto the native
+// ones, which take a single option array.
 
 protoEndpoint := {
 	xconnect: {class: #132, funcPtr: 6958459, numArgs: 2},
+	// OptionAttribute(x): how x goes into the joined option array - nil for none,
+	// 'standalone for a single option frame, or the count of an array's options
 	OptionAttribute: func(a1) begin
 		local count;
 		count := nil;
@@ -19,6 +28,10 @@ protoEndpoint := {
 	release: {class: #132, funcPtr: 6959503, numArgs: 0},
 	Disconnect: {class: #132, funcPtr: 6958460, numArgs: 0},
 	GetOptions: {class: #132, funcPtr: 6959491, numArgs: 1},
+	// SplitOption(options, attribute): the inverse of AddInOption - cuts the last
+	// option (standalone) or the last `attribute` options off the joined array
+	// and returns them (nil when attribute is nil). The `local` lines after the
+	// uses are just the decompiler's layout.
 	SplitOption: func(addInOption, optionAttribute) begin
 		list := nil;
 		if optionAttribute then begin
@@ -39,6 +52,8 @@ protoEndpoint := {
 		list
 	end,
 	disposeLeavingTEndpoint: {class: #132, funcPtr: 6958462, numArgs: 0},
+	// ep:justConnect(address, options): the native xjustConnect with the address
+	// and options joined into one array
 	justConnect: func(a1, a2) begin
 		self:AddrOptionGlue(a1, a2, func(a1, a2) begin
 			self:xjustConnect(a1, a2)
@@ -47,6 +62,11 @@ protoEndpoint := {
 	Listen: {class: #132, funcPtr: 6959496, numArgs: 1},
 	output: {class: #132, funcPtr: 6959497, numArgs: 2},
 	input: {class: #132, funcPtr: 6959492, numArgs: 0},
+	// AddrOptionGlue(address, options, fn): appends the address options then the
+	// other options to one array, calls fn(nil, thatArray) and returns its
+	// result. The split afterwards only assigns the arguments (local to this
+	// function), so whatever the native call did to the options is not passed
+	// back to the caller unless it changed the option frames themselves.
 	AddrOptionGlue: func(a1, a2, fn) begin
 		local optionAttribute, optionAttribute2, addInOption, l4;
 		optionAttribute := self:OptionAttribute(a1);
@@ -68,6 +88,8 @@ protoEndpoint := {
 	OutputFrame: {class: #132, funcPtr: 6959499, numArgs: 2},
 	justRelease: {class: #132, funcPtr: 6989109, numArgs: 0},
 	justOpen: {class: #132, funcPtr: 6989108, numArgs: 0},
+	// ep:Connect(address, options): the native xconnect with the address and
+	// options joined into one array
 	Connect: func(a1, a2) begin
 		self:AddrOptionGlue(a1, a2, func(a1, a2) begin
 			self:xconnect(a1, a2)
@@ -86,6 +108,8 @@ protoEndpoint := {
 	caller: {class: #132, funcPtr: 6958458, numArgs: 0},
 	SetInputSpec: {class: #132, funcPtr: 6959504, numArgs: 1},
 	outputDone: {class: #132, funcPtr: 6959498, numArgs: 0},
+	// AddInOption(array, attribute, x): appends x (a standalone option) or each
+	// of x's options to array, as OptionAttribute described x; returns array
 	AddInOption: func(a1, optionAttribute, a3) begin
 		if optionAttribute then begin
 				if (optionAttribute = 'standalone) then begin
