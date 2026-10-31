@@ -1,4 +1,5 @@
-// export88, and what only it reaches
+// GetWorksites (@8280): the user's worksites (the 'emporia user configuration),
+// or an empty array.
 
 export88 := func() begin
 	local emporia;

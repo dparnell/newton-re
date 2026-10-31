@@ -1,20 +1,32 @@
-// export62, and what only it reaches
+// The connection settings view (@8254, the export 'Connection): how to reach
+// the desktop - "Connect via" a transport (serial, modem, AppleTalk, IrDA, the
+// fixed-speed serials, and those desktop connection transports other packages
+// add) and, for a modem, the worksite to call or, for AppleTalk, the computer
+// to connect to, with a "Will dial:" or "Will connect to:" line.  The Dock
+// application and its preferences' AutoDock settings (@8271) are made with it;
+// GetConnectionParams gives the endpoint options for the choice.
 
 export62 := {
+	// Shows the views of the transport chosen.
 	viewSetupDoneScript: func() begin
 		deviceSpecificStuff:DisplayDeviceSpecificViews(conntype.currentChoice)
 	end,
+	// The built-in transports, and (below) their option templates and names.
 	builtInTransports: builtInTransports,
+	// The modem's call options slip.
 	OpenCallOptionsSlip: func() begin
 		deviceSpecificStuff:OpenCallOptionsSlip()
 	end,
 	_currentWidth: 0,
+	// A new sender: the number to dial follows.
 	CurrentPersonaChanged: func() begin
 		deviceSpecificStuff:CurrentPersonaChanged()
 	end,
+	// The transport chosen.
 	GetConnectionType: func() begin
 		return conntype.currentChoice
 	end,
+	// Closes the views this view opened (deferred).
 	CloseOpenViews: func() begin
 		local fn;
 		AddDeferredCall((fn := func() begin
@@ -25,13 +37,18 @@ export62 := {
 	end,
 	viewFlags: vVisible,
 	connWillDialLabel: nil,
+	// Forgets an open view.
 	RemoveOpenView: func(a1) begin
 		RemoveSlot(subViewsOpen, a1)
 	end,
 	viewBounds: {left: 0, top: 55, right: 210, bottom: 145},
+	// The AppleTalk (NBP) type of the computers to look for.
 	NBPLookupType: docker,
 	builtinTransportConfig: builtinTransportConfig,
 	viewJustify: vjParentCenterH,
+	// Gives callback {connectOptions, password} for the transport chosen, or nil
+	// when its options cannot be made; a transport's callBeforeConnect is asked
+	// first when it has one.
 	GetConnectionParams: func(callback) begin
 		local currentChoice, options, done, myCallback;
 		local fn;
@@ -71,6 +88,7 @@ export62 := {
 		export62Item_3
 	],
 	subViewsOpen: nil,
+	// Notes its width and starts with no views open.
 	viewSetupFormScript: func() begin
 		local box;
 		self.protoContext := GetRoot().Connection;
@@ -92,10 +110,12 @@ docker := "Docker";
 
 builtinTransportConfig := [|Array|: @8256, @8255, @8257, @8290, @8293, @8292, @8291];
 
+// The "Connect via" picker.
 connectVia := {
 	viewBounds: {left: 25, top: 0, right: 180, bottom: 15},
 	labelCommands: nil,
 	text: "Connect via",
+	// A transport picked: kept in the preferences and its views shown.
 	labelActionScript: func(index) begin
 		currentChoice := choices[index];
 		self:SaveConnectionType();
@@ -103,6 +123,7 @@ connectVia := {
 	end,
 	currentChoice: 'serial,
 	choices: nil,
+	// The name of the transport chosen (the first when it is not offered).
 	textSetup: func() begin
 		l2 := nil;
 		local labelCommand;
@@ -119,11 +140,17 @@ connectVia := {
 			end;
 		return labelCommand
 	end,
+	// Keeps the transport chosen in the preferences.
 	SaveConnectionType: func() begin
 		local type;
 		(if ((type := protoContext:ConnectionPrefsRead('type)) <> currentChoice) then protoContext:ConnectionPrefsWrite('type, currentChoice))
 	end,
+	// Old (1.x) user configuration names of the transports.  (useIR maps to 'IR,
+	// which is not one of the transports, 'IrDA.)
 	userconfigTypeTags: {useSerial: 'serial, useAppleTalk: 'AppleTalk, useBlackbird: 'serial, useModem: 'modem, useIR: 'IR},
+	// Offers the built-in transports and those GetDesktopConnTransports adds
+	// (limited to limitChoices when the template has them), starting on the one in
+	// the preferences.
 	viewSetupFormScript: func() begin
 		self.viewBounds := Clone(viewBounds);
 		self.viewBounds.right := (_currentWidth - 25);
@@ -176,15 +203,20 @@ connectVia := {
 	preAllocatedContext: 'conntype
 };
 
+// The transport's own views (deviceSpecificStuff): the worksite picker for a
+// modem, the computer picker for AppleTalk.
 export62Item := {
 	GetWorksite: @8279,
+	// Remembers the computer picked (AppleTalk); nothing for the modem.
 	UpdateMemory: func() begin
 		(if (currentlyShowing = 'AppleTalk) then AppleTalkPicker:UpdateMemory() else phonePicker:UpdateMemory())
 	end,
+	// The modem's call options slip.
 	OpenCallOptionsSlip: func() begin
 		phonePicker:OpenCallOptionsSlip()
 	end,
 	viewFormat: vfPen(1),
+	// A new sender: the modem's number is worked out again.
 	CurrentPersonaChanged: func() begin
 		(if (currentlyShowing = 'modem) then begin
 				phonePicker.fullNumber := nil;
@@ -196,12 +228,17 @@ export62Item := {
 	viewFlags: vVisible,
 	GetWorksites: @8280,
 	viewBounds: {left: 0, top: 12, right: 180, bottom: 27},
+	// Shows the views again for the number.
 	SetNewWillDialText: func() begin
 		self:DisplayDeviceSpecificViews(currentlyShowing)
 	end,
 	viewJustify: vjSiblingLeftH + vjSiblingBottomV,
 	currentlyShowing: nil,
 	stepAllocateContext: [|Array|: 'phonePicker, export62ItemItem, 'AppleTalkPicker, export62ItemItem_2],
+	// Shows the views of transport currentChoice - for a modem the worksite picker
+	// and "Will dial:", for AppleTalk the computer picker and "Will connect to:" -
+	// and centres that line; another transport may show its own button
+	// (SetConnectionType, where the parent has it).
 	DisplayDeviceSpecificViews: func(currentChoice) begin
 		local connectionOptions, l2, most, strFontWidth2, l5;
 		protoContext:HideIfVisible(AppleTalkPicker);
@@ -241,6 +278,9 @@ export62Item := {
 				SetValue(connWillDialText, 'viewBounds, SetBounds(0, connWillDialText.viewBounds.top, (_currentWidth - strFontWidth2), connWillDialText.viewBounds.bottom))
 			end)
 	end,
+	// Fills picker a1's popup: its remembered items (GetConfig), the worksites by
+	// place, then its default items (none, Other...); picks the one the
+	// preferences hold, keeping the first item there when they hold none.
 	SetLabelCommandsFromUserConfig: func(a1) begin
 		if (l3 := (if (l1 := a1:GetConfig()) then (Length(l1) > 0))) then begin
 				l4 := true;
@@ -312,6 +352,7 @@ export62Item := {
 			end);
 		(a1.labelCommands := l2)
 	end,
+	// As wide as the view, nothing shown yet.
 	viewSetupFormScript: func() begin
 		self.viewBounds := Clone(viewBounds);
 		self.viewBounds.right := (_currentWidth - 25);
@@ -319,6 +360,9 @@ export62Item := {
 	end,
 	AppleTalkPicker: nil,
 	viewClass: clView,
+	// The endpoint options for transport currentChoice: a built-in transport's
+	// template with the number to dial (modem) or the address (AppleTalk) - nil
+	// when it is missing - or another transport's options.
 	GetConnectionOptions: func(currentChoice, myCallback) begin
 		local l1;
 		local builtinTransportConfigItem;
@@ -361,7 +405,11 @@ export62Item := {
 	noDeviceSpecificStuff: true
 };
 
+// The modem's worksite picker ("Connect to"): the worksites, "(none)" and
+// "Other" to make one.
 export62ItemItem := {
+	// "Other": asks for a new worksite (place, phone, area code, country) and
+	// picks it.
 	CreateWorksite: func() begin
 		local target;
 		target := self:CreateConfig('location, '[Array: place, connectionPhone, areacode, country], "Where are you calling?", 'validateDialog, 'ValidateDone);
@@ -369,9 +417,11 @@ export62ItemItem := {
 			self:SetWorksite(target)
 		end)
 	end,
+	// Nothing to remember.
 	UpdateMemory: func() begin
 		nil
 	end,
+	// Opens the call options slip on the worksite's number and country.
 	OpenCallOptionsSlip: func() begin
 		local phoneCurrentChoice;
 		if (if (phoneCurrentChoice := self:GetWorksite(protoContext:ConnectionPrefsRead('phoneCurrentChoice))) then phoneCurrentChoice.connectionPhone) then begin
@@ -384,6 +434,7 @@ export62ItemItem := {
 		callOptionsSlip:Toggle();
 		self:?AddOpenWindow(callOptionsSlip)
 	end,
+	// No remembered items: the popup is the worksites.
 	GetConfig: func() begin
 		return nil
 	end,
@@ -391,6 +442,7 @@ export62ItemItem := {
 	fullNumber: nil,
 	defaultLabelCommands: [|Array|: none, 'pickseparator, "Other"],
 	thecallback: nil,
+	// The call options slip's number becomes the one to dial.
 	UpdatePhone: func() begin
 		self:?RemoveOpenWindow(callOptionsSlip);
 		(if callOptionsSlip.outNumber then begin
@@ -400,6 +452,7 @@ export62ItemItem := {
 	end,
 	viewBounds: {left: 0, top: 0, right: 180, bottom: 15},
 	_proto: @protoLabelPicker,
+	// Picks worksite target.
 	SetWorksite: func(target) begin
 		(if (if target then target.place) then begin
 				protoContext:ConnectionPrefsWrite(currentChoiceUserconfigTag, target.place);
@@ -408,6 +461,9 @@ export62ItemItem := {
 				self:SetNewWillDialText()
 			end)
 	end,
+	// The number to dial: the one shown when the user changed it, else the
+	// worksite's after validating it (asking for what is missing); an alert when
+	// there is no worksite.
 	VerifyPhone: func(myCallback) begin
 		local text, phoneCurrentChoice;
 		if (if (if (text := connWillDialText.text) then (StrLen(text) > 0)) then (not StrEqual(text, self:GetPhoneNumber()))) then begin
@@ -422,6 +478,8 @@ export62ItemItem := {
 			end;
 		return nil
 	end,
+	// The number to dial: the one set, or the worksite's connection phone made
+	// dialable from where the user is (MungePhone).
 	GetPhoneNumber: func() begin
 		local fullNumber2, phoneCurrentChoice;
 		if fullNumber then begin
@@ -437,6 +495,7 @@ export62ItemItem := {
 		return fullNumber2
 	end,
 	NotifyCallback: nil,
+	// Sets the text shown.
 	UpdateText: func(a1) begin
 		if IsInstance(a1, 'string) then begin
 				SetValue(entryLine, 'text, a1)
@@ -446,9 +505,12 @@ export62ItemItem := {
 		self:textChanged()
 	end,
 	labelCommands: nil,
+	// How an item is shown.
 	GetUserVisible: func(a1) begin
 		return Clone(a1)
 	end,
+	// Validates the worksite (its phone, area code and country), fn being called
+	// with the answer; the number is worked out again.
 	CallValidate: func(worksite, fn) begin
 		local validateConfig;
 		self.thecallback := fn;
@@ -456,9 +518,11 @@ export62ItemItem := {
 		fullNumber := nil;
 		return validateConfig
 	end,
+	// The item picked.
 	textSetup: func() begin
 		(if (if labelCommands then curLabelCommand) then labelCommands[curLabelCommand] else "")
 	end,
+	// As wide as the view, with its popup filled in.
 	viewSetupFormScript: func() begin
 		self.viewBounds := Clone(viewBounds);
 		self.viewBounds.right := (_currentWidth - 25);
@@ -467,6 +531,7 @@ export62ItemItem := {
 		inherited:?viewSetupFormScript()
 	end,
 	currentChoiceUserconfigTag: 'phoneCurrentChoice,
+	// A worksite picked: kept in the preferences, validated, and the line shown.
 	SaveNewChoice: func(index) begin
 		local labelCommand, worksite;
 		labelCommand := labelCommands[index];
@@ -475,6 +540,7 @@ export62ItemItem := {
 				self:SetNewWillDialText()
 			end) else self:SetNewWillDialText())
 	end,
+	// "Other" makes a worksite; picking the "(none)" placeholder does nothing.
 	pickActionScript: func(index) begin
 		fullNumber := nil;
 		if (index = (Length(labelCommands) - 1)) then begin
@@ -489,9 +555,11 @@ export62ItemItem := {
 		inherited:?pickActionScript(index)
 	end,
 	text: connectTo,
+	// The validation slip's answer, passed on to the callback.
 	ValidateDone: func(a1) begin
 		(if self.thecallback then call self.thecallback with (a1))
 	end,
+	// No default worksite.
 	GetDefaultCurrentChoice: func() begin
 		return nil
 	end,
@@ -502,7 +570,11 @@ none := "(none)";
 
 connectTo := "Connect to";
 
+// The AppleTalk computer picker ("Connect to"): computers remembered, the
+// worksites, "(none)", "Other computer" (the network chooser) and "Other
+// worksite".
 export62ItemItem_2 := {
+	// "Other worksite": asks for a new worksite with its computer, and picks it.
 	CreateWorksite: func() begin
 		local target;
 		target := self:CreateConfig('location, [Array: 'place, WorksiteNetworkSlot], "Choose a computer to connect with.", 'validateDialog, 'ValidateDone);
@@ -510,11 +582,13 @@ export62ItemItem_2 := {
 			self:SetWorksite(target)
 		end)
 	end,
+	// Remembers the computer picked when it is one of the computers.
 	UpdateMemory: func() begin
 		local connectionPrefsRead, config;
 		connectionPrefsRead := protoContext:ConnectionPrefsRead(currentChoiceUserconfigTag);
 		(if (if (if (config := self:GetConfig()) then connectionPrefsRead) then FindStringInArray(config, connectionPrefsRead)) then self:Remember(connectionPrefsRead))
 	end,
+	// The computers remembered (as NBP names, by the memory of the NBP type).
 	GetConfig: func() begin
 		if (not configCache) then begin
 				connAppleTalk := GetMemoryItems('connAppleTalk);
@@ -532,6 +606,8 @@ export62ItemItem_2 := {
 	end,
 	preAllocatedContext: 'AppleTalkPicker,
 	defaultLabelCommands: [|Array|: none, 'pickseparator, "Other computer", "Other worksite"],
+	// Remembers a computer under the NBP type's memory (connAppleTalk for
+	// "Docker").
 	Remember: func(connectionPrefsRead) begin
 		if (not StrEqual(NBPLookupType, "Docker")) then begin
 				AddMemoryItem(Intern(NBPLookupType), connectionPrefsRead)
@@ -540,6 +616,8 @@ export62ItemItem_2 := {
 			end;
 		(self.configCache := nil)
 	end,
+	// The network chooser's answer: the computer as "name:type@zone" ("*" for no
+	// zone).
 	NetworkChooserDone: func(currentSelection, currentZone) begin
 		local text, text2;
 		(if GetNames(currentSelection) then begin
@@ -554,6 +632,8 @@ export62ItemItem_2 := {
 	end,
 	thecallback: nil,
 	viewBounds: {left: 0, top: 0, right: 180, bottom: 15},
+	// The address to connect to, after validating the worksite chosen; an alert
+	// when there is none.
 	VerifyNetworkAddress: func(networkCurrentChoice) begin
 		local connectionPrefsRead, worksite, networkAddress;
 		if (connectionPrefsRead := protoContext:ConnectionPrefsRead(currentChoiceUserconfigTag)) then begin
@@ -570,6 +650,7 @@ export62ItemItem_2 := {
 		return networkAddress
 	end,
 	_proto: @protoLabelPicker,
+	// The computer's name, or "".
 	GetNetworkName: func() begin
 		local userVisible;
 		if (not (userVisible := self:GetUserVisible(self:GetNetworkAddress()))) then begin
@@ -577,6 +658,7 @@ export62ItemItem_2 := {
 			end;
 		return userVisible
 	end,
+	// Picks worksite target.
 	SetWorksite: func(target) begin
 		(if (if target then target.place) then begin
 				protoContext:ConnectionPrefsWrite(currentChoiceUserconfigTag, target.place);
@@ -585,6 +667,7 @@ export62ItemItem_2 := {
 				self:SetNewWillDialText()
 			end)
 	end,
+	// Sets the text shown.
 	UpdateText: func(a1) begin
 		if IsInstance(a1, 'string) then begin
 				SetValue(entryLine, 'text, a1)
@@ -594,13 +677,16 @@ export62ItemItem_2 := {
 		self:textChanged()
 	end,
 	labelCommands: nil,
+	// An NBP name shown as its name (GetNames).
 	GetUserVisible: func(a1) begin
 		(if ((not a1) or IsRichString(a1)) then return a1 else return GetNames(a1))
 	end,
 	CallValidate: @8281,
+	// The item picked.
 	textSetup: func() begin
 		(if (if labelCommands then curLabelCommand) then labelCommands[curLabelCommand] else "")
 	end,
+	// As wide as the view, with its popup filled in.
 	viewSetupFormScript: func() begin
 		self.viewBounds := Clone(viewBounds);
 		self.viewBounds.right := (_currentWidth - 25);
@@ -608,6 +694,7 @@ export62ItemItem_2 := {
 		self:SetLabelCommandsFromUserConfig(self);
 		inherited:?viewSetupFormScript()
 	end,
+	// A computer chosen: shown, picked, kept and remembered.
 	setNewItem: func(text) begin
 		local config;
 		(if (StrLen(text) > 0) then begin
@@ -620,6 +707,7 @@ export62ItemItem_2 := {
 			end)
 	end,
 	currentChoiceUserconfigTag: nil,
+	// A computer or worksite picked: kept in the preferences, a worksite validated.
 	SaveNewChoice: func(index) begin
 		local labelCommand, worksite, config;
 		if (if (config := self:GetConfig()) then (index < Length(config))) then begin
@@ -632,6 +720,8 @@ export62ItemItem_2 := {
 				self:SetNewWillDialText()
 			end) else self:SetNewWillDialText())
 	end,
+	// "Other computer" opens the network chooser on the computers of the NBP type;
+	// "Other worksite" makes one; "(none)" does nothing.
 	pickActionScript: func(index) begin
 		local count, config, names, l4, networkAddress;
 		count := Length(labelCommands);
@@ -658,6 +748,7 @@ export62ItemItem_2 := {
 	configCache: nil,
 	text: connectTo,
 	ValidateDone: @8282,
+	// The current worksite's place.
 	GetDefaultCurrentChoice: func() begin
 		local currentEmporium, resolveEntryAlias2;
 		if (currentEmporium := GetUserConfig('currentEmporium)) then begin
@@ -667,6 +758,8 @@ export62ItemItem_2 := {
 			end;
 		return nil
 	end,
+	// The NBP address of the computer chosen: the computer itself, or the computer
+	// of the worksite chosen (its connectionNetwork).
 	GetNetworkAddress: func() begin
 		self:SetLabelCommandsFromUserConfig(self);
 		connectionPrefsRead := protoContext:ConnectionPrefsRead(currentChoiceUserconfigTag);
@@ -697,6 +790,7 @@ export62ItemItem_2 := {
 	curLabelCommand: nil
 };
 
+// "Will dial:" or "Will connect to:".
 export62Item_2 := {
 	text: nil,
 	viewBounds: {left: 0, top: 9, right: 42, bottom: 22},
@@ -706,6 +800,7 @@ export62Item_2 := {
 	preAllocatedContext: 'connWillDialLabel
 };
 
+// The number or the computer's name.
 export62Item_3 := {
 	text: export85Item_3Text,
 	viewBounds: {left: 0, top: -1, right: 160, bottom: 38},

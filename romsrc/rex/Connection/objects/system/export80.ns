@@ -1,4 +1,6 @@
-// export80, and what only it reaches
+// The slip after a restore (@8272): the Newton must restart to use what was
+// restored (and a note that some data was not, when the restore stopped with
+// an error); its only button restarts.
 
 export80 := {
 	viewBounds: {left: 0, top: 60, right: 210, bottom: 170},
@@ -13,6 +15,7 @@ export80 := {
 			viewBounds: {left: 0, top: 10, right: 195, bottom: 60},
 			viewJustify: vjParentCenterH + vjSiblingBottomV,
 			viewFont: @fontSystem10,
+			// The message for a restore that completed or stopped (error).
 			viewSetupFormScript: func() begin
 				(if (error <> 0) then begin
 						self.text := "The restore operation stopped before it was completed so some of your data was not restored.  Your Newton device needs to be restarted to use the restored information.";
@@ -25,12 +28,14 @@ export80 := {
 		restart
 	],
 	viewFlags: vApplication + vFloating + vClickable,
+	// Taller for the longer message.
 	viewSetupFormScript: func() begin
 		(if (error <> 0) then begin
 				self.viewBounds := Clone(viewBounds);
 				(viewBounds.bottom := (viewBounds.bottom + 20))
 			end)
 	end,
+	// Puts the caret in the slip.
 	viewSetupDoneScript: func() begin
 		inherited:?viewSetupDoneScript();
 		SetKeyView(self, 0)
@@ -42,6 +47,7 @@ export80 := {
 	stepAllocateContext: [|Array|: '_defaultButton, restart]
 };
 
+// Restart: reboots the Newton.
 restart := {
 	text: "Restart",
 	buttonClickScript: func() begin

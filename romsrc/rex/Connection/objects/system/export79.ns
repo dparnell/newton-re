@@ -1,4 +1,7 @@
-// export79, and what only it reaches
+// The Dock Preferences slip (@8271): save the password, remove exact duplicates
+// when importing, stop the connection when idle, always back up everything,
+// and AutoDock - with, when AutoDock is on (and worksites do not hold it), the
+// connection settings to auto-dock with (@8254 on the auto-dock address).
 
 export79 := {
 	viewBounds: {left: 0, top: 50, right: 220, bottom: 270},
@@ -11,6 +14,8 @@ export79 := {
 		autoDock,
 		export79Item
 	],
+	// Shows the auto-dock settings (and the taller slip) only with AutoDock on.
+	// -2 clears vVisible.
 	viewSetupFormScript: func() begin
 		local autodock;
 		self.protoContext := GetRoot().Connection;
@@ -23,11 +28,14 @@ export79 := {
 				(connectValues.viewFlags := BAnd(connectValues.viewFlags, -2))
 			end)
 	end,
+	// Saves the settings.
 	viewQuitScript: func() begin
 		self:SavePrefs();
 		protoContext:RemoveOpenWindow(self)
 	end,
 	viewFlags: vApplication + vFloating + vClickable,
+	// Keeps the four checkboxes' settings; the password is forgotten when it is no
+	// longer to be saved.
 	SavePrefs: func() begin
 		protoContext:ConnectionPrefsWrite('savePassword, passwordPref.viewValue);
 		protoContext:ConnectionPrefsWrite('removedups, removeDupsPref.viewValue);
@@ -62,6 +70,7 @@ savePassword := {
 	text: "Save password",
 	viewBounds: {left: 10, top: 11, right: -10, bottom: 26},
 	viewFont: @fontSystem9,
+	// Shows the setting.
 	viewSetupFormScript: func() begin
 		(viewValue := protoContext:ConnectionPrefsRead('savePassword))
 	end,
@@ -75,6 +84,7 @@ removeExactDuplicatesWhen := {
 	text: "Remove exact duplicates when importing",
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 15},
 	viewFont: @fontSystem9,
+	// Shows the setting.
 	viewSetupFormScript: func() begin
 		(viewValue := protoContext:ConnectionPrefsRead('removedups))
 	end,
@@ -88,6 +98,7 @@ stopConnectionIfNo := {
 	text: "Stop connection if no activity",
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 15},
 	viewFont: @fontSystem9,
+	// Shows the setting.
 	viewSetupFormScript: func() begin
 		(viewValue := protoContext:ConnectionPrefsRead('timeoutConnection))
 	end,
@@ -101,6 +112,7 @@ alwaysBackupAllInformation := {
 	text: "Always backup all information",
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 15},
 	viewFont: @fontSystem9,
+	// Shows the setting.
 	viewSetupFormScript: func() begin
 		(viewValue := protoContext:ConnectionPrefsRead('alwaysSyncall))
 	end,
@@ -115,12 +127,16 @@ autoDock := {
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 15},
 	viewFont: @fontSystem9,
 	viewJustify: vjCenterV + vjSiblingFullH + vjSiblingBottomV,
+	// Shows the setting.
 	viewSetupFormScript: func() begin
 		(viewValue := protoContext:ConnectionPrefsRead('autodock))
 	end,
 	viewValue: nil,
+	// AutoDock on or off: registers (or unregisters) for automatic docking, shows
+	// or hides the settings and saves.
 	valueChanged: compile(
 		constants: {
+			// The auto-dock callback: on 'connect, starts docking.
 			kFunction_757359: func(a1) begin
 				(if (a1 = 'connect) then GetRoot().Connection:autodock())
 			end
@@ -144,10 +160,14 @@ autoDock := {
 	preAllocatedContext: 'autodock
 };
 
+// The auto-dock connection settings: the connection settings view (@8254)
+// working on the autoDockAddr preference instead of the current connection.
 export79Item := {
 	viewJustify: vjParentCenterH + vjSiblingBottomV,
 	viewBounds: {left: 0, top: 10, right: 210, bottom: 100},
 	viewFlags: 0,
+	// Edits a copy of the auto-dock address ({type: 'serial} to start), standing in
+	// for the application where the settings view expects it.
 	viewSetupFormScript: func() begin
 		self.prefsFrame := GetRoot().Connection:ConnectionPrefsRead('autoDockAddr);
 		if (not prefsFrame) then begin
@@ -159,15 +179,19 @@ export79Item := {
 		(self.ShowIfNotVisible := GetRoot().Connection.ShowIfNotVisible)
 	end,
 	prefsFrame: nil,
+	// Keeps the auto-dock address.
 	viewQuitScript: func() begin
 		GetRoot().Connection:ConnectionPrefsWrite('autoDockAddr, prefsFrame)
 	end,
+	// Reads a setting from the auto-dock address.
 	ConnectionPrefsRead: func(currentChoiceUserconfigTag) begin
 		(if (currentChoiceUserconfigTag = nil) then prefsFrame else prefsFrame.(currentChoiceUserconfigTag))
 	end,
+	// Sets one.
 	ConnectionPrefsWrite: func(currentChoiceUserconfigTag, a2) begin
 		(prefsFrame.(currentChoiceUserconfigTag) := a2)
 	end,
+	// No buttons to show or hide here.
 	SetConnectionType: func(currentlyShowing, currentChoice, connectionOptions) begin
 		nil
 	end,

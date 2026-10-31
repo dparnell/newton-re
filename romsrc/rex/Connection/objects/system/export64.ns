@@ -1,9 +1,13 @@
-// export64, and what only it reaches
+// The serial connection's endpoint options (@8256): MNP over the serial port at
+// speedOption bits per second (38400), with MNP's own speed, compression and
+// other options.  The 9600, 4800 and 2400 serial transports are made of it.
 
 export64 := {
 	speedOption: 38400,
+	// The options for opening: MNP service, the serial port's speed and framing, MNP's
+	// speed, compression and the rest.
 	openOptions: func() begin
-		return [Array: {label: "mnps", type: 'service, opCode: 512}, {label: "siop", type: 'option, opCode: 256, data: {arglist: [Array: 0, 0, 8, speedOption], typeList: [Array: 10, 1, 2, 1, 1]}}, {label: "mnpn", type: 'option, opCode: 256, data: {arglist: [Array: 57600], typeList: [Array: 10, 1]}}, {label: "mnpc", type: 'option, opCode: 512, data: {arglist: [Array: 11], typeList: [Array: 10, 1]}}, {label: "mnpa", type: 'option, opCode: 512, data: {arglist: [Array: true], typeList: [Array: 10, 5]}}, {label: "eter", type: 'option, opCode: 256, data: {arglist: [Array: speedOption], typeList: [Array: 10, 1]}}]
+		return [Array: {label: "mnps", type: 'service, opCode: opSetRequired}, {label: "siop", type: 'option, opCode: opSetNegotiate, data: {arglist: [Array: 0, 0, 8, speedOption], typeList: [Array: 10, 1, 2, 1, 1]}}, {label: "mnpn", type: 'option, opCode: opSetNegotiate, data: {arglist: [Array: 57600], typeList: [Array: 10, 1]}}, {label: "mnpc", type: 'option, opCode: opSetRequired, data: {arglist: [Array: 11], typeList: [Array: 10, 1]}}, {label: "mnpa", type: 'option, opCode: opSetRequired, data: {arglist: [Array: true], typeList: [Array: 10, 5]}}, {label: "eter", type: 'option, opCode: opSetNegotiate, data: {arglist: [Array: speedOption], typeList: [Array: 10, 1]}}]
 	end,
 	useEOP: nil
 };

@@ -1,7 +1,12 @@
-// export74, and what only it reaches
+// The import progress slip (@8266) that ConnImportFile opens: waits for the
+// desktop's answer to the import request - its translators ('trnl', then the
+// translator slip @8273), the data ('dimp') or an error ('dres') - then runs the
+// import session and shows what was added (@8268).
 
 export74 := {
 	viewBounds: {left: 0, top: 60, right: 200, bottom: 164},
+	// Once: joins the open windows and, deferred, reads the desktop's answer for
+	// file and dtPath.
 	viewSetupFormScript: compile(
 		constants: {
 			kROM_8273: @8273
@@ -33,6 +38,10 @@ export74 := {
 				end;
 			inherited:?viewSetupFormScript()
 		end),
+	// Imports: with the 'schg' protocol extension catching the desktop's soup
+	// changes (soupChangeInfo), hides the other views and runs the session
+	// (DoConnection, removing duplicates as the preferences say), then shows the
+	// results - or, with no changes, closes and puts the views back.
 	FinishImport: compile(
 		constants: {
 			kLiteral_753081: "schg"
@@ -81,15 +90,20 @@ export74 := {
 					protoContext:ReopenBlessed()
 				end else self:DisplayResult(syncChanges))
 		end),
+	// The translator slip's Import: deferred DoImport.
 	Import: func(selectedTranslator) begin
 		AddDeferredSend(self, 'DoImport, [Array: selectedTranslator])
 	end,
+	// Stops idling and leaves the open windows.
 	viewQuitScript: func() begin
 		endpoint:StopIdle(self);
 		protoContext:RemoveOpenWindow(self);
 		(inited := nil)
 	end,
 	soupChangeInfo: nil,
+	// Shows what was imported: for each application whose soups changed, how many
+	// items the desktop sent and how many were added ("n items added to Names.");
+	// "No information was imported." when none.
 	DisplayResult: compile(
 		constants: {
 			kLiteral_74aef5: '[pathExpr: name],
@@ -141,6 +155,7 @@ export74 := {
 			l11:FilterDialog()
 		end),
 	viewFlags: vApplication + vFloating + vClickable,
+	// Stop: says "Stopping..." and stops the endpoint's operation.
 	CancelRequest: func(symbol2) begin
 		(if (not stopping) then begin
 				stopping := true;
@@ -161,12 +176,15 @@ export74 := {
 		},
 		appSymbol: 'Connection
 	},
+	// Turns the barber pole every half second.
 	viewIdleScript: func() begin
 		self:updateIndicator(initialSetup);
 		return 500
 	end,
 	currentStatusSetup: nil,
 	stopping: nil,
+	// Sends the translator picked ('tran'), waits for the data ('dimp') and
+	// imports it.
 	DoImport: func(a1) begin
 		(try begin
 				endpoint:WriteCommand("tran", a1, true);

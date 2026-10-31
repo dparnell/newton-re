@@ -1,14 +1,19 @@
-// export75, and what only it reaches
+// The import parameters slip (@8267, DisplayImportSlip): what the desktop's
+// translator asks before an import - per its fSetup frame, the applications to
+// import into, a range of dates, how to handle conflicts - shown only for the
+// parts fSetup has.  The answers (fResults) go to ImportParametersDoneScript.
 
 export75 := {
 	Dates: nil,
 	fSetup: nil,
+	// Closed without Import: the answer is nil.
 	viewQuitScript: func() begin
 		protoContext:RemoveOpenWindow(self);
 		endpoint:StopIdle(self);
 		(if (not closing) then call ImportParametersDoneScript with (nil))
 	end,
 	viewFlags: vApplication + vFloating + vClickable,
+	// Keeps the connection alive while the slip is up.
 	viewIdleScript: func() begin
 		return endpoint:IdleConnection(true)
 	end,
@@ -43,6 +48,8 @@ export75 := {
 		export75Item_9
 	],
 	closing: nil,
+	// Fills in the parts fSetup has and hides the rest (-2 clears vVisible), then
+	// sizes the slip to what is shown.
 	viewSetupFormScript: func() begin
 		local l1;
 		self.protoContext := GetRoot().Connection;
@@ -65,6 +72,8 @@ export75 := {
 				Conflicts.labelCommands := fSetup.ConflictsInfo.labelCommands;
 				l1 := (l1 + Conflicts.viewBounds.bottom)
 			end else begin
+				// Looks like a ROM bug: the conflicts picker is given the slip's own flags
+				// (viewFlags, not Conflicts.viewFlags) less vVisible.
 				Conflicts.viewFlags := BAnd(viewFlags, -2)
 			end;
 		if HasSlot(fSetup, 'DatesInfo) then begin
@@ -101,6 +110,7 @@ export75 := {
 	AppListTitle: nil
 };
 
+// The slip's title.
 export75Item := {
 	text: nil,
 	viewBounds: {left: 5, top: 25, right: 200, bottom: 37},
@@ -109,6 +119,7 @@ export75Item := {
 	preAllocatedContext: 'SlipTitle
 };
 
+// The file's name.
 export75Item_2 := {
 	text: nil,
 	viewBounds: {left: 10, top: 3, right: 168, bottom: 15},
@@ -117,6 +128,7 @@ export75Item_2 := {
 	preAllocatedContext: 'fileName
 };
 
+// The applications list's title.
 export75Item_3 := {
 	text: nil,
 	viewBounds: {left: 5, top: 5, right: 185, bottom: 17},
@@ -125,8 +137,10 @@ export75Item_3 := {
 	preAllocatedContext: 'AppListTitle
 };
 
+// The applications to import into (several, unless SingleSelectOnly).
 export75Item_4 := {
 	viewBounds: {left: 15, top: 7, right: 180, bottom: 67},
+	// Keeps the applications selected.
 	buttonClickScript: func(a1) begin
 		fResults.appList := Array(Length(self.selectedItems), nil);
 		(foreach key, value in self.selectedItems do begin
@@ -134,6 +148,7 @@ export75Item_4 := {
 			end)
 	end,
 	viewJustify: vjSiblingBottomV,
+	// Selects the ones fSetup asks for and keeps them.
 	viewSetupFormScript: func() begin
 		if fSetup.SingleSelectOnly then begin
 				self.useMultipleSelections := nil
@@ -153,6 +168,7 @@ export75Item_4 := {
 	preAllocatedContext: 'appList
 };
 
+// The dates' title.
 export75Item_5 := {
 	text: nil,
 	viewBounds: {left: 5, top: 10, right: 185, bottom: 26},
@@ -161,9 +177,11 @@ export75Item_5 := {
 	preAllocatedContext: 'DatesTitle
 };
 
+// The range of dates, the last week to start (10080 minutes).
 export75Item_6 := {
 	viewBounds: {left: 10, top: 2, right: 185, bottom: 18},
 	shortFormat: 'numericDateStrSpec,
+	// A range not given is the week up to now.
 	viewSetupFormScript: func() begin
 		if ((not self.startTime) or (startTime = 0)) then begin
 				self.startTime := (Time() - 10080)
@@ -176,6 +194,7 @@ export75Item_6 := {
 	viewJustify: vjSiblingBottomV,
 	labelFont: @fontSystem9Bold,
 	longFormat: nil,
+	// A range picked.
 	pickActionScript: func(index, a2) begin
 		self.startTime := index;
 		self.stopTime := a2;
@@ -189,14 +208,17 @@ export75Item_6 := {
 	preAllocatedContext: 'Dates
 };
 
+// How to handle conflicts.
 export75Item_7 := {
 	viewBounds: {left: 10, top: 7, right: 185, bottom: 23},
 	pickItems: nil,
 	labelCommands: nil,
 	viewJustify: vjSiblingBottomV + oneLineOnly,
+	// Keeps the choice.
 	textChanged: func() begin
 		(fResults.Conflicts := self.entryLine.text)
 	end,
+	// The first choice to start.
 	viewSetupFormScript: func() begin
 		fResults.Conflicts := self.labelCommands[0];
 		inherited:?viewSetupFormScript()
@@ -205,6 +227,7 @@ export75Item_7 := {
 	preAllocatedContext: 'Conflicts
 };
 
+// Import: hands over the answers and closes.
 export75Item_8 := {
 	buttonClickScript: func() begin
 		closing := true;
@@ -214,6 +237,7 @@ export75Item_8 := {
 	text: nil,
 	viewBounds: {top: -18, left: -74, right: -26, bottom: -5},
 	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV + oneLineOnly,
+	// Sizes the button to its text, from the right.
 	viewSetupFormScript: func() begin
 		local l1;
 		l1 := (StrFontWidth(self.text, self.viewFont) + kMatteSize);

@@ -1,4 +1,6 @@
-// export68, and what only it reaches
+// The slip the desktop asks the Newton to show (@8260, DisplaySlip): a title, a
+// message and up to three buttons and a close box as the desktop's config frame
+// says; the button tapped (1-3, 0 for the close box) goes to DesktopInputDone.
 
 export68 := {
 	viewBounds: {left: 0, top: 40, right: 220, bottom: 150},
@@ -10,6 +12,8 @@ export68 := {
 		export68Item_5,
 		export68Item_6
 	],
+	// Takes the texts from config.  Looks like a ROM bug: with a title the title
+	// line is given config.text, not config.title.
 	viewSetupFormScript: func() begin
 		self.protoContext := GetRoot().Connection;
 		protoContext:AddOpenWindow(self);
@@ -31,11 +35,13 @@ export68 := {
 			end;
 		endpoint:StartIdle(self, 2000)
 	end,
+	// Sizes a button to its text, 15 to 90 pixels wide, from its right edge.
 	SetTextBounds: func(a1) begin
 		local copy;
 		(copy := Clone(a1.viewBounds)).left := (copy.right - min(90, max(15, (StrWidth(a1.text) + 7))));
 		(a1.viewBounds := copy)
 	end,
+	// Reports button a1 once; any button but the close box also closes the slip.
 	HandleClick: func(a1) begin
 		(if (not clickHandled) then begin
 				clickHandled := true;
@@ -43,9 +49,11 @@ export68 := {
 				(if (a1 <> 0) then base:Close())
 			end)
 	end,
+	// Keeps the connection alive while the slip is up.
 	viewIdleScript: func() begin
 		return endpoint:IdleConnection(true)
 	end,
+	// Closing counts as the close box.
 	viewQuitScript: func() begin
 		protoContext:RemoveOpenWindow(self);
 		self:HandleClick(0);
@@ -76,6 +84,7 @@ export68 := {
 	button3: nil
 };
 
+// The title, hidden when config has none.
 export68Item := {
 	text: export85Item_3Text,
 	viewBounds: {left: 0, top: 10, right: 172, bottom: 22},
@@ -96,6 +105,7 @@ export68Item_2 := {
 	preAllocatedContext: 'message
 };
 
+// The close box (button 0), hidden unless config asks for it.
 export68Item_3 := {
 	viewSetupDoneScript: func() begin
 		(if (not config.xButton) then self:Hide())
@@ -108,6 +118,7 @@ export68Item_3 := {
 	preAllocatedContext: 'xButton
 };
 
+// Button 1, hidden unless config names it.
 export68Item_4 := {
 	buttonClickScript: func() begin
 		self:HandleClick(1)
@@ -125,6 +136,7 @@ export68Item_4 := {
 	preAllocatedContext: 'button1
 };
 
+// Button 2.
 export68Item_5 := {
 	buttonClickScript: func() begin
 		self:HandleClick(2)
@@ -142,6 +154,7 @@ export68Item_5 := {
 	preAllocatedContext: 'button2
 };
 
+// Button 3.
 export68Item_6 := {
 	buttonClickScript: func() begin
 		self:HandleClick(3)

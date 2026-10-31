@@ -700,3 +700,8 @@ kDockStateSync	2
 kDockStateRestore	3
 kDockStateLoadPackage	4
 kDockStateKeyboard	9
+# Connection: an endpoint option frame's opCode, the Newton Programmer's Reference 2.0 (Endpoint option constants)
+opSetNegotiate	256
+opSetRequired	512
+opGetDefault	768
+opGetCurrent	1024

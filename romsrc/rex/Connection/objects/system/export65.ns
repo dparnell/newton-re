@@ -1,20 +1,23 @@
-// export65, and what only it reaches
+// The AppleTalk connection's endpoint options (@8257): ADSP ('atlk' service),
+// and the address to connect to, the computer picked (AppleTalkAddress).
 
 export65 := {
+	// The options for opening: the ADSP service.
 	openOptions: compile(
 		constants: {
 			kLiteral_748721: "atlk"
 		},
 		func() begin
-			return (result := [Array: {label: kLiteral_748721, type: 'service, opCode: 512}, {label: kLiteral_748721, type: 'option, opCode: 256, data: {arglist: [Array: "adsp"], typeList: [Array: 10, [Array: 11, 13, 4]]}}, {label: "endp", type: 'option, opCode: 512, data: {arglist: [Array: "TADSPEndpoint"], typeList: [Array: 10, [Array: 11, 13, 0]]}}])
+			return (result := [Array: {label: kLiteral_748721, type: 'service, opCode: opSetRequired}, {label: kLiteral_748721, type: 'option, opCode: opSetNegotiate, data: {arglist: [Array: "adsp"], typeList: [Array: 10, [Array: 11, 13, 4]]}}, {label: "endp", type: 'option, opCode: opSetRequired, data: {arglist: [Array: "TADSPEndpoint"], typeList: [Array: 10, [Array: 11, 13, 0]]}}])
 		end),
+	// The connect options: the AppleTalk address of the computer picked.
 	connectOptions: compile(
 		constants: {
 			kLiteral_7488d9: "bsiz"
 		},
 		func() begin
 			local copy;
-			(copy := DeepClone([Array: {label: "rout", type: 'address, opCode: 512, data: {arglist: [Array: 1, 1, "sltk", 0, ""], typeList: [Array: 10, 1, 1, [Array: 11, 13, 4], 2, [Array: 11, 15, 0]]}}, {label: kLiteral_7488d9, type: 'option, opCode: 512, data: {arglist: [Array: 1, 2048], typeList: [Array: 'struct, 'ulong, 'long]}}, {label: kLiteral_7488d9, type: 'option, opCode: 512, data: {arglist: [Array: 2, 2048], typeList: [Array: 'struct, 'ulong, 'long]}}]))[0].data.arglist[3] := StrLen(self.AppleTalkAddress);
+			(copy := DeepClone([Array: {label: "rout", type: 'address, opCode: opSetRequired, data: {arglist: [Array: 1, 1, "sltk", 0, ""], typeList: [Array: 10, 1, 1, [Array: 11, 13, 4], 2, [Array: 11, 15, 0]]}}, {label: kLiteral_7488d9, type: 'option, opCode: opSetRequired, data: {arglist: [Array: 1, 2048], typeList: [Array: 'struct, 'ulong, 'long]}}, {label: kLiteral_7488d9, type: 'option, opCode: opSetRequired, data: {arglist: [Array: 2, 2048], typeList: [Array: 'struct, 'ulong, 'long]}}]))[0].data.arglist[3] := StrLen(self.AppleTalkAddress);
 			copy[0].data.arglist[4] := self.AppleTalkAddress;
 			return copy
 		end),

@@ -1,10 +1,16 @@
-// export84, and what only it reaches
+// The user name and password slip (@8276, ConnOpenUserPsswdSlip): a name line
+// (remembered names, and "Guest" when allowed), a password line (hidden or
+// visible as asked), a cancel-like button and a keyboard - each only when the
+// configOptions frame asks for it.  The answer {userName, password,
+// userCancel} goes to the callback; the slip closes itself when the connection
+// drops.
 
 export84 := {
 	viewBounds: {left: 0, top: 30, right: 224, bottom: 280},
 	stepChildren: [stepChildren:
 		{
 			title: nil,
+			// The title configOptions gives, or "Dock".
 			viewSetupFormScript: func() begin
 				self.title := configOptions.title;
 				if (not title) then begin
@@ -21,6 +27,8 @@ export84 := {
 		export84Item_3
 	],
 	configOptions: nil,
+	// Hides what configOptions does not ask for (-2 clears vVisible) and shortens
+	// the slip by their heights; idles the connection while it is up.
 	viewSetupFormScript: func() begin
 		local configOptions2, l2, l3;
 		configOptions2 := configOptions;
@@ -50,6 +58,8 @@ export84 := {
 	end,
 	endpoint: nil,
 	callback: nil,
+	// Opens the slip on endpoint options, with callback a2 and configOptions a3,
+	// modally when a3.modal.
 	OpenOn: func(options, a2, a3) begin
 		local context;
 		(context := BuildContext(self)).endpoint := options;
@@ -57,6 +67,8 @@ export84 := {
 		context.configOptions := a3;
 		(if a3.modal then context:ModalDialog() else context:FilterDialog())
 	end,
+	// Keeps the connection alive; when it has dropped, closes the slip and gives
+	// the callback nil.
 	viewIdleScript: func() begin
 		(if (if endpoint then endpoint.connected) then return endpoint:IdleConnection(true) else begin
 				self.needToAbort := true;
@@ -64,6 +76,8 @@ export84 := {
 				return 0
 			end)
 	end,
+	// Gives the callback the answer: the name ('guest for Guest) and the password
+	// when one is asked for that kind of user.
 	viewQuitScript: func() begin
 		local frame2;
 		if needToAbort then begin
@@ -104,6 +118,7 @@ export84 := {
 		inherited:?viewQuitScript()
 	end,
 	userCancel: nil,
+	// Puts the caret in the name line (or the password line).
 	viewSetupDoneScript: func() begin
 		if Visible(nameInput) then begin
 				SetKeyView(nameInput.entryLine, 9999)
@@ -137,11 +152,13 @@ export84 := {
 	Keyboard: nil
 };
 
+// The name line: a label picker of remembered names, and "Guest".
 name := {
 	viewBounds: {left: 3, top: 10, right: -3, bottom: 55},
 	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 	label: "Name",
 	memory: nil,
+	// A name picked: the password line follows (shown or not for a guest).
 	labelActionScript: func(index) begin
 		local l1;
 		self:ShowHidePasswordInput((l1 := (if configOptions.|guest?| then (index = (Length(labelCommands) - 1)))));
@@ -151,12 +168,16 @@ name := {
 	end,
 	guestMode: nil,
 	viewLineSpacing: 32,
+	// Remembers the name, but not "Guest".
 	viewQuitScript: func() begin
 		(if (not guestMode) then inherited:?viewQuitScript())
 	end,
+	// The name to start with: the one picked.
 	textSetup: func() begin
 		(if (if IsArray(labelCommands) then (Length(labelCommands) > 0)) then (if IsFrame(labelCommands[curLabelCommand]) then Clone(labelCommands[curLabelCommand].item) else Clone(labelCommands[curLabelCommand])))
 	end,
+	// Lists the remembered names (configOptions.memory: a function returning them,
+	// or a memory symbol), the marked one picked, with "Guest" after a separator.
 	viewSetupChildrenScript: compile(
 		constants: {
 			kLiteral_76021d: "Guest"
@@ -200,6 +221,7 @@ name := {
 				end;
 			(labelLine.viewClickScript := labelLineFix)
 		end),
+	// Writing "Guest" in the line works as picking it.
 	textChanged: func() begin
 		local l1;
 		if (if configOptions.|guest?| then StrEqual(entryLine.text, labelCommands[(Length(labelCommands) - 1)])) then begin
@@ -212,6 +234,7 @@ name := {
 		self:ShowHidePasswordInput(l1);
 		(guestMode := l1)
 	end,
+	// A tap on the label: pops up the names with the current one checked.
 	labelLineFix: func(a1) begin
 		local labelCommands2, labelCommand, item;
 		(if (if (not self:labelClick(a1)) then labelCommands) then begin
@@ -241,6 +264,8 @@ name := {
 				true
 			end)
 	end,
+	// Shows or hides the password line for a guest or a user, empty, its text
+	// visible when configOptions says 'Visible.
 	ShowHidePasswordInput: func(guestMode) begin
 		local l1, l2;
 		l1 := true;
@@ -267,6 +292,7 @@ name := {
 	preAllocatedContext: 'nameInput
 };
 
+// The password line (a blindEntryLine), or plain text when visible.
 password := {
 	viewBounds: {left: 3, top: 10, right: -3, bottom: 55},
 	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
@@ -277,6 +303,7 @@ password := {
 	textChanged: func() begin
 		(if (not passwordVisible) then inherited:textChanged())
 	end,
+	// A visible password is set as text, with an undo.
 	UpdateText: func(a1) begin
 		(if (not passwordVisible) then inherited:UpdateText(a1) else begin
 				AddUndoAction('UpdateText, [Array: Clone(entryLine.text)]);
@@ -290,6 +317,7 @@ password := {
 
 export84Item := {_proto: @protoCancelButton, preAllocatedContext: '_defaultButton};
 
+// The button configOptions names (buttonTitle): closes the slip, a cancel.
 export84Item_2 := {
 	buttonClickScript: func() begin
 		base.userCancel := true;
@@ -300,6 +328,7 @@ export84Item_2 := {
 	text: nil,
 	viewBounds: {left: -100, top: 0, right: -6, bottom: 0},
 	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV + oneLineOnly,
+	// Sized to its title.
 	viewSetupFormScript: func() begin
 		self.text := configOptions.buttonTitle;
 		(self.viewBounds := {left: (((-StrWidth(text)) - 6) - 7), top: 0, right: -7, bottom: 0})
@@ -308,6 +337,7 @@ export84Item_2 := {
 	preAllocatedContext: 'cancelButton
 };
 
+// The keyboard.
 export84Item_3 := {
 	viewBounds: {top: -91, left: 0, right: 226, bottom: -10},
 	viewJustify: vjParentCenterH + vjSiblingTopV,

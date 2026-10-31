@@ -1,4 +1,6 @@
-// export89, and what only it reaches
+// CallValidate (@8281): checks that worksite a1 has a computer to connect with
+// (its connectionNetwork), asking for one in the validate slip; a2 is called
+// with the answer (ValidateDone).
 
 export89 := func(a1, a2) begin
 	self.thecallback := a2;
