@@ -1,9 +1,18 @@
-// globalvarwannabes, and what only it reaches
+// globalvarwannabes: global variables the system starts with.  At boot
+// bootInitNsGlobals sets each slot here as a global (in vars) unless it is
+// already set: a function's slot gets what calling the function returns (so
+// each boot gets fresh, writable data), any other value is used as it is.
+// globalHeapvarwannabes.ns holds the rest, which are cloned.
 
 globalvarwannabes := {
+	// the registry of the union soups the system has, sorted by name: each a
+	// soupDef (the alarms, In/Out, Extras, Notepad, Dates, To Do and directory
+	// soups)
 	UnionSoupRegistry: func() begin
 		Sort(Clone('[Array: {soupDef: {name: "SystemAlarmSoup", userName: "Alarms", ownerApp: alarms, ownerAppName: "Alarms", userDescr: "alarm data", indexes: [Array: {structure: slot, type: int, path: TimeInSeconds}, {structure: slot, type: int, path: Time}, {structure: slot, type: string, path: key}]}, apps: [Array: alarms]}, {soupDef: @inboxSoupDef, apps: [Array: iobox]}, {soupDef: @outboxSoupDef, apps: [Array: iobox]}, {soupDef: @extrasSoupDef, apps: [Array: ExtrasDrawer]}, {soupDef: @calendarSoupDef, apps: [Array: calendar]}, {soupDef: @repeatMeetingSoupDef, apps: [Array: calendar]}, {soupDef: @calendarNotesSoupDef, apps: [Array: calendar]}, {soupDef: @repeatNotesSoupDef, apps: [Array: calendar]}, {soupDef: @todoSoupDef, apps: [Array: calendar]}, {soupDef: @todo2SoupDef, apps: [Array: calendar]}, {soupDef: @paperrollSoupDef, apps: [Array: paperroll]}, {soupDef: @cardfileSoupDef, apps: [Array: cardfile]}]), '|str<|, 'soupDef.name)
 	end,
+	// the soup change registry, starting with the Extras Drawer watching the
+	// Packages soup
 	SoupChangeRegistry: compile(
 		constants: {
 			kFunction_54ac09: func(a1, a2, a3, a4) begin
@@ -14,13 +23,19 @@ globalvarwannabes := {
 		func() begin
 			Sort(Clone(kLiteral_54ac3d), '|str<|, 'soupName)
 		end),
+	// the screen layout (displayParams below): the size and orientation of the
+	// screen, the application area and where the button bar is
 	displayParams: displayParams,
 	CurrentRouteSlip: nil,
 	entryForms: nil,
+	// the storage card slips: per store and the others
 	StoreSlipRegistry: func() begin
 		{miscSlips: [Array: ], storeSlips: [Array: ]}
 	end,
 	ioBusy: nil,
+	// where a modem may be: the default, PC card slots (named by where the slot is
+	// for each screen orientation), the serial port, the internal modem, with the
+	// ids the comms code uses
 	ModemLocations: [|Array|:
 		{title: default_3, id: nil},
 		{},
@@ -30,6 +45,8 @@ globalvarwannabes := {
 		{title: "Serial Port", id: "extr"},
 		{title: "Internal Modem", id: "mdem"}
 	],
+	// the stand-in Extras icon for a 1.x package's extra that 2.0 no longer
+	// supports
 	extras: [|Array|:
 		{
 			app: 'unsupported,
@@ -46,6 +63,7 @@ globalvarwannabes := {
 		}
 	],
 	PoweringOff: nil,
+	// an empty array per card socket
 	BusySlots: func() begin
 		list := [Array: ];
 		local list;
@@ -54,6 +72,7 @@ globalvarwannabes := {
 			end);
 		list
 	end,
+	// the pictures of the card slots, one per orientation, for card alerts
 	CardSlotIcons: [|Array|:
 		{
 			bounds: {left: 0, top: 0, right: 144, bottom: 36},
@@ -70,12 +89,16 @@ globalvarwannabes := {
 			}
 		}
 	],
+	// the names of the two card slots for each orientation
 	cardSlotLocations: [|Array|:
 		[|Array|: topPCCard, rightPCCard, bottomPCCard, leftPCCard],
 		[|Array|: bottomPCCard, leftPCCard, topPCCard, rightPCCard]
 	]
 };
 
+// the screen as the system starts: 480 by 320 in landscape at 4 bits a pixel,
+// the button bar 46 pixels wide down the right; the display code updates this
+// when the screen is rotated
 displayParams := {
 	pixelDepth: 4,
 	orientation: 1,

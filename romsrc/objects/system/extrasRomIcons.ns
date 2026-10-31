@@ -1,6 +1,12 @@
-// extrasRomIcons, and what only it reaches
+// extrasRomIcons: the Extras Drawer's built-in icons, indexed by an extras
+// entry's icon (and iconPro) slot - the icons of the kinds of entries
+// (extraProtos.ns: books, soups, fonts, ...) and of the built-in
+// applications and button bar buttons (bootSoupwannabes.ns).  Each has an
+// icon (a plain bitmap with its mask) and an iconPro, the unhilited and
+// hilited forms in 4-bit grey (cbits) and 1-bit.
 
 extrasRomIcons := [|Array|:
+	// 0: a book (BookEntry)
 	{
 		iconPro: {
 			unhilited: {
@@ -35,6 +41,7 @@ extrasRomIcons := [|Array|:
 			mask: bitmap('mask, "resources/mask/539a3d.png", "000000000004000000000000001a001f", 1)
 		}
 	},
+	// 1: a help book
 	{
 		iconPro: {
 			unhilited: {
@@ -69,6 +76,7 @@ extrasRomIcons := [|Array|:
 			mask: bitmap('mask, "resources/mask/53a0d1.png", "00000000000400000000000000190020", 1)
 		}
 	},
+	// 2: a built-in application (ROMFormEntry)
 	{
 		iconPro: {
 			unhilited: {
@@ -103,6 +111,7 @@ extrasRomIcons := [|Array|:
 			mask: bitmap('mask, "resources/mask/53a769.png", "0000000000040000000000000017001e", 1)
 		}
 	},
+	// 3: an auto part (AutoEntry)
 	{
 		iconPro: {
 			unhilited: {
@@ -118,6 +127,7 @@ extrasRomIcons := [|Array|:
 		},
 		icon: {bits: colordataCbits_8, bounds: unhilitedBounds_4, mask: extrasRomIconsMask}
 	},
+	// 4: a soup (the Storage folder)
 	{
 		iconPro: {
 			unhilited: {
@@ -152,6 +162,7 @@ extrasRomIcons := [|Array|:
 			mask: bitmap('mask, "resources/mask/53b019.png", "000000000004000000000000001a0019", 1)
 		}
 	},
+	// 5: an action (ScriptEntry)
 	{
 		iconPro: {
 			unhilited: {
@@ -186,6 +197,7 @@ extrasRomIcons := [|Array|:
 			mask: bitmap('mask, "resources/mask/53b6e5.png", "0000000000040000000000000018001e", 1)
 		}
 	},
+	// 6: a package of unknown kind
 	{
 		iconPro: {
 			unhilited: {
@@ -201,6 +213,7 @@ extrasRomIcons := [|Array|:
 		},
 		icon: {bits: colordataCbits_8, bounds: unhilitedBounds_7, mask: extrasRomIconsMask}
 	},
+	// 7: a font
 	{
 		iconPro: {
 			unhilited: {
@@ -216,6 +229,7 @@ extrasRomIcons := [|Array|:
 		},
 		icon: {bits: colordataCbits_8, bounds: unhilitedBounds_8, mask: extrasRomIconsMask}
 	},
+	// 8: a dictionary
 	{
 		iconPro: {
 			unhilited: {
@@ -231,6 +245,7 @@ extrasRomIcons := [|Array|:
 		},
 		icon: {bits: colordataCbits_8, bounds: unhilitedBounds_9, mask: extrasRomIconsMask}
 	},
+	// 9: a frozen package
 	{
 		iconPro: {
 			unhilited: {
@@ -299,6 +314,7 @@ extrasRomIcons := [|Array|:
 			mask: bitmap('mask, "resources/mask/53d56d.png", "000000000008000000000000001d002f", 1)
 		}
 	},
+	// 11: the Notepad
 	{
 		iconPro: @notesBitmap,
 		icon: {
@@ -307,6 +323,7 @@ extrasRomIcons := [|Array|:
 			mask: bitmap('mask, "resources/mask/540ed9.png", "000000000004000000000000001b0015", 1)
 		}
 	},
+	// 12: Calls
 	{
 		iconPro: @onlineBitmap,
 		icon: {
@@ -315,6 +332,7 @@ extrasRomIcons := [|Array|:
 			mask: bitmap('mask, "resources/mask/54023d.png", "000000000004000000000000001d001c", 1)
 		}
 	},
+	// 13: the card (storage card slip)
 	{
 		iconPro: @cardBitmap,
 		icon: {
@@ -323,6 +341,7 @@ extrasRomIcons := [|Array|:
 			mask: bitmap('mask, "resources/mask/54087d.png", "000000000004000000000000001a0013", 1)
 		}
 	},
+	// 14: the Calculator
 	{
 		iconPro: @calculatorBitmap,
 		icon: {
@@ -331,6 +350,7 @@ extrasRomIcons := [|Array|:
 			mask: bitmap('mask, "resources/mask/53f305.png", "000000000004000000000000001b0016", 1)
 		}
 	},
+	// 15: Time Zones
 	{
 		iconPro: @globeBitmap,
 		icon: {
@@ -339,6 +359,7 @@ extrasRomIcons := [|Array|:
 			mask: bitmap('mask, "resources/mask/53ecad.png", "00000000000400000000000000190020", 1)
 		}
 	},
+	// 16: the Clock
 	{
 		iconPro: @alarmIconBitmap,
 		icon: {
@@ -347,6 +368,7 @@ extrasRomIcons := [|Array|:
 			mask: bitmap('mask, "resources/mask/5415e1.png", "000000000004000000000000001a0020", 1)
 		}
 	},
+	// 17: Styles
 	{
 		iconPro: @paletteBitmap,
 		icon: {
@@ -355,6 +377,7 @@ extrasRomIcons := [|Array|:
 			mask: bitmap('mask, "resources/mask/53fa9d.png", "000000000004000000000000001d001b", 1)
 		}
 	},
+	// 18: Prefs
 	{
 		iconPro: @prefsBitmap,
 		icon: {
@@ -363,6 +386,7 @@ extrasRomIcons := [|Array|:
 			mask: bitmap('mask, "resources/mask/541bc5.png", "00000000000400000000000000180015", 1)
 		}
 	},
+	// 19: Owner Info
 	{
 		iconPro: @ownerBitmap,
 		icon: {
@@ -371,6 +395,7 @@ extrasRomIcons := [|Array|:
 			mask: bitmap('mask, "resources/mask/542135.png", "0000000000040000000000000014001e", 1)
 		}
 	},
+	// 20: Writing Practice
 	{
 		iconPro: {
 			unhilited: {
@@ -405,6 +430,7 @@ extrasRomIcons := [|Array|:
 			mask: bitmap('mask, "resources/mask/53e3d9.png", "0000000000040000000000000017001a", 1)
 		}
 	},
+	// 21: the In/Out Box (button bar)
 	{
 		iconPro: {
 			unhilited: {
@@ -436,6 +462,7 @@ extrasRomIcons := [|Array|:
 			mask: bitmap('mask, "resources/mask/53dd31.png", "000000000004000000000000001d001e", 1)
 		}
 	},
+	// 22: Names (button bar)
 	{
 		iconPro: @namesBitmap,
 		icon: {
@@ -444,6 +471,7 @@ extrasRomIcons := [|Array|:
 			mask: bitmap('mask, "resources/mask/542a49.png", "00000000000800000000000000190022", 1)
 		}
 	},
+	// 23: Dates (button bar)
 	{
 		iconPro: @datesBitmap,
 		icon: {
@@ -452,6 +480,7 @@ extrasRomIcons := [|Array|:
 			mask: bitmap('mask, "resources/mask/543169.png", "0000000000040000000000000018001d", 1)
 		}
 	},
+	// 24: Extras (button bar)
 	{
 		iconPro: @extrasBitmap,
 		icon: {
@@ -460,6 +489,7 @@ extrasRomIcons := [|Array|:
 			mask: bitmap('mask, "resources/mask/5437a5.png", "00000000000400000000000000160020", 1)
 		}
 	},
+	// 25: Undo (button bar)
 	{
 		iconPro: @undoBitmap,
 		icon: {
@@ -468,6 +498,7 @@ extrasRomIcons := [|Array|:
 			mask: bitmap('mask, "resources/mask/543d79.png", "00000000000400000000000000180015", 1)
 		}
 	},
+	// 26: Find (button bar)
 	{
 		iconPro: @findBitmap,
 		icon: {
@@ -476,6 +507,7 @@ extrasRomIcons := [|Array|:
 			mask: bitmap('mask, "resources/mask/5442fd.png", "00000000000400000000000000190017", 1)
 		}
 	},
+	// 27: Assist (button bar)
 	{
 		iconPro: @assistBitmap,
 		icon: {

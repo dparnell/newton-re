@@ -1,4 +1,6 @@
-// defaultStatusMsgs, and what only it reaches
+// defaultStatusMsgs: protoTransport's default dialogStatusMsgs, the text of the
+// status slip for each state a transport reports (Connecting, Sending, ...);
+// idle shows nothing.
 
 defaultStatusMsgs := {
 	idle: uCardPositionAlertButton,

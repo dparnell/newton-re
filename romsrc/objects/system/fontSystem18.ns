@@ -1,3 +1,4 @@
-// fontSystem18, and what only it reaches
+// fontSystem18: a font frame for the 18-point System (Espy) font, plain - one of
+// the system's standard fonts, ready made for templates and code to use.
 
-fontSystem18 := {family: 'espy, face: 0, size: 18};
+fontSystem18 := {family: 'espy, face: kFaceNormal, size: 18};

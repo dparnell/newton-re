@@ -1,4 +1,6 @@
-// defaultSendPrefInfo, and what only it reaches
+// defaultSendPrefInfo: the proto of protoTransportPrefs' sendPrefs - the "When
+// Sending" choice of a transport's preferences: send now, later, or ask each
+// time (the noworlater configuration slot; routeActions the matching actions).
 
 defaultSendPrefInfo := {
 	routeText: "When Sending",

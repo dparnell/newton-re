@@ -1,3 +1,4 @@
-// fontSystem9UnderLine, and what only it reaches
+// fontSystem9UnderLine: a font frame for the 9-point System (Espy) font, underlined - one of
+// the system's standard fonts, ready made for templates and code to use.
 
-fontSystem9UnderLine := {family: 'espy, face: 4, size: 9};
+fontSystem9UnderLine := {family: 'espy, face: kFaceUnderline, size: 9};

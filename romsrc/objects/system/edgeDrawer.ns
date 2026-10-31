@@ -1,4 +1,8 @@
-// edgeDrawer, and what only it reaches
+// edgeDrawer: magic pointer @78, protoBook's edgeDrawer - the viewDrawScript a
+// book's content block uses to draw edges round itself (MakeBlockView,
+// src/books/Pages.cpp).  The block's look says which edges: 256 the top, 512
+// the left, 1024 the bottom, 2048 the right, each drawn edgeWidth outside the
+// view in the view's pen size and pattern (default pattern 5).
 
 edgeDrawer := func() begin
 	local l1, l2, list, list2, drawPenPat;

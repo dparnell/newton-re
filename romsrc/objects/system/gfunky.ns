@@ -1,3 +1,5 @@
-// gfunky, and what only it reaches
+// gfunky: the R-constant Rgfunky, an empty frame: at boot every slot of it is
+// copied into the global functions frame (src/frames/ScriptBoot.cpp), a place
+// for global functions defined in the ROM's object data - none in this ROM.
 
 gfunky := {};

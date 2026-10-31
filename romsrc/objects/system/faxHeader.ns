@@ -1,17 +1,22 @@
-// faxHeader, and what only it reaches
+// faxHeader: magic pointer @82, the line at the top of every faxed page:
+// the sender's name and fax and voice numbers (from the current owner card),
+// "Page n of m" and the date and time.  protoPrintForm puts it above the page's
+// format when the item goes by fax.
 
 faxHeader := {
 	viewClass: clView,
 	viewFlags: vVisible + vReadOnly,
 	viewJustify: vjParentFullH,
 	viewBounds: {left: 20, top: 0, right: -20, bottom: 20},
-	viewFormat: 0,
+	viewFormat: vfNone,
 	viewChildren: [|Array|:
 		{
 			viewBounds: {left: 0, top: 0, right: 0, bottom: 20},
 			viewFlags: vVisible + vReadOnly,
 			viewJustify: vjCenterH + vjParentFullH,
 			viewFont: tsFancy + tsSize(9),
+			// the sender: the routing frame's fromFrame name, then the owner's work fax
+			// and phone numbers, or failing those the home fax and phone numbers
 			viewSetupFormScript: func() begin
 				local currentPersona, faxPhone;
 				self.text := fromFrame.name;
@@ -39,6 +44,8 @@ faxHeader := {
 			viewBounds: {left: 0, top: 0, right: 0, bottom: 20},
 			viewJustify: vjRightH + vjParentFullH,
 			viewFont: tsFancy + tsSize(9),
+			// "Page n of m": the template is remembered as _pageTurner, so the printing
+			// code can send it TurnPage for each page
 			TurnPage: func() begin
 				(self.text := ParamStr("Page ^0 of ^1", [Array: fields.pageNumber, fields.pageCount]))
 			end,

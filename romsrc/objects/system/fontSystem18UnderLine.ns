@@ -1,3 +1,4 @@
-// fontSystem18UnderLine, and what only it reaches
+// fontSystem18UnderLine: a font frame for the 18-point System (Espy) font, underlined - one of
+// the system's standard fonts, ready made for templates and code to use.
 
-fontSystem18UnderLine := {family: 'espy, face: 4, size: 18};
+fontSystem18UnderLine := {family: 'espy, face: kFaceUnderline, size: 18};

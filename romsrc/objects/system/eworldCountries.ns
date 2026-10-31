@@ -1,4 +1,5 @@
-// eworldCountries, and what only it reaches
+// eworldCountries: magic pointer @825, the countries offered in the eWorld
+// (Apple's online service) registration slip's country picker (mailRegister.ns).
 
 eworldCountries := [|Array|:
 	australia,

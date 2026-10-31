@@ -1,4 +1,4 @@
-// faxPreferencesForm, and what only it reaches
+// faxPreferencesForm: the icon of the fax preferences.
 
 faxPreferencesForm := {
 	icon: {
