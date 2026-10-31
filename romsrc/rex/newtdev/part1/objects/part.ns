@@ -1,4 +1,7 @@
-// part, and what only it reaches
+// part: the Newton Devices package's NameServerInterface part - exports the unit
+// |NameServerInterface:NSG|, three native functions (BinCFunctions in the native module
+// below) the Internet Enabler's modules import to reach the device name server. The file
+// holds the part and what only it reaches.
 
 part := array(nil, {
 	_ExportTable: [|Array|:
@@ -6,6 +9,7 @@ part := array(nil, {
 			name: '|NameServerInterface:NSG|,
 			major: 1,
 			minor: 0,
+			// the functions, by their entry offset into the module and argument count
 			objects: [|Array|:
 				{class: 'BinCFunction, code: code, numArgs: 4, offset: 972},
 				{class: 'BinCFunction, code: code, numArgs: 3, offset: 892},
@@ -13,20 +17,25 @@ part := array(nil, {
 			]
 		}
 	],
+	// installScript(partFrame): runs devInstallScript; returns the remove frame whose
+	// removeScript (devRemoveScript) undoes it when the package goes.
 	installScript: func(partFrame) begin
 		local ensureInternal2;
 		ensureInternal2 := EnsureInternal({removeScript: partFrame.devRemoveScript});
 		partFrame:devInstallScript(partFrame, ensureInternal2);
 		ensureInternal2
 	end,
+	// devInstallScript: nothing to set up.
 	devInstallScript: func(partFrame, removeFrame) begin
 		nil
 	end,
+	// devRemoveScript: nothing to undo.
 	devRemoveScript: func(partFrame) begin
 		nil
 	end
 });
 
+// the native code (ARM source; NTK native module)
 code := native('nativeModule, "resources/nativeModule/1000d71.s");
 
 // what the functions above hold and share with other objects (same(): romsrc/README.md)

@@ -1,8 +1,23 @@
-// part, and what only it reaches
+// part: the NIE's Inet Manager part (|Inet Manager:NIE|) - the link manager. Its
+// UnitsInstalledScript installs the Inet* global functions (InetGrabLink, InetReleaseLink,
+// InetStartUp, InetGetLinkEntry, the IP address helpers, ...) and registers the link
+// manager, InetManagerFSM: a protoFSM that brings an Internet link up for its clients
+// (ConnectLink -> load the physical- and link-layer driver protocols -> connect -> login
+// script -> engage the link protocol -> activate the CCE endpoint -> stack active ->
+// domain manager -> connected) and down again (hang-up delay -> domain manager off ->
+// disengage -> logout script -> disconnect -> clean up), with its connection slip,
+// progress and status slips and the notify icon's item. Errors are the NIE's -60xxx codes
+// (no Apple names; MGetErrorString's table gives their text). UnitsRemovedScript holds
+// copies of the same functions (only their names are used, to remove them). The file
+// holds the part and what only it reaches.
 
 part := array(nil, {
+	// installScript(partFrame): installs through the "wait for my imports" helper below.
 	installScript: compile(
 		constants: {
+			// the NIE's "wait for my imports" helper: returns a remove frame for clientFrame and,
+			// watching the Packages soup, calls clientFrame:UnitsInstalledScript once the imports of
+			// clientSymbol's package are all there (removeScript then calls UnitsRemovedScript).
 			kFunction_103e7e5: func(clientSymbol, clientFrame) begin
 				local clientPkgRef, clientRemoveFrame;
 				clientPkgRef := ObjectPkgRef(clientSymbol);
@@ -36,11 +51,15 @@ part := array(nil, {
 		func(partFrame) begin
 			call (kFunction_103e7e5) with ('|Inet Manager:NIE|, self)
 		end),
+	// removeScript: nothing (the helper's remove frame undoes the install).
 	removeScript: func(partFrame) begin
 		nil
 	end,
+	// UnitsInstalledScript(clientRemoveFrame): puts the Inet* functions into the global
+	// functions, registers the link manager as a service and watches the user configuration.
 	UnitsInstalledScript: compile(
 		constants: {
+			// kBinaryFromHex(hex, class): a binary of that class made from a string of hex digits (this project's helper for binaries in compiled constants).
 			kBinaryFromHex: func(hex, cls) begin
 				local b := MakeBinary(StrLen(hex) div 2, cls);
 				for i := 0 to Length(b) - 1 do begin
@@ -50,69 +69,86 @@ part := array(nil, {
 				end;
 				b
 			end,
+			// InetAddNewLinkEntry(entry): has Internet Setup (if open) add a link entry (setup).
 			kFunction_103f5b9: func(a1) begin
 				local l1;
 				(if (l1 := GetRoot().|InternetSetup:NIE|) then l1:?API_AddEntry(a1, nil))
 			end,
+			// InetAddNewLinkEntryInternal(entry): the same, on the internal store.
 			kFunction_103f66d: func(a1) begin
 				local l1;
 				(if (l1 := GetRoot().|InternetSetup:NIE|) then l1:?API_AddEntry(a1, GetStores()[0]))
 			end,
+			// InetCancelCurrentRequest(linkID): cancels what the link manager is doing for that link.
 			kFunction_103f6e9: func(a1) begin
 				InetStartUp():MCancelCurrentRequest(a1)
 			end,
+			// InetCancelLink(linkID, frame, symbol): cancels the link's connection; the callback is told 'Canceled.
 			kFunction_103f759: func(a1, a2, a3) begin
 				local inetStartUp2, mBuildCallback;
 				inetStartUp2 := InetStartUp();
 				inetStartUp2:MCancelLink((mBuildCallback := inetStartUp2:MBuildCallback(a1, a2, a3)))
 			end,
+			// InetDisconnectLink(linkID, frame, symbol): releases the link now (fImmediate), without the hang-up delay.
 			kFunction_103f7ed: func(a1, a2, a3) begin
 				local inetStartUp2, mBuildCallback;
 				inetStartUp2 := InetStartUp();
 				(mBuildCallback := inetStartUp2:MBuildCallback(a1, a2, a3)).fImmediate := true;
 				inetStartUp2:DoEvent('RemoveLinkClient, [Array: mBuildCallback])
 			end,
+			// InetDisplayStatus(linkID, view, status): shows, updates or (status nil) closes a status slip for the link.
 			kFunction_103f8b5: func(a1, a2, a3) begin
 				InetStartUp():MDisplayStatus(a1, a2, a3)
 			end,
+			// InetGetAllLinksStatus(): {linkIds, statuses, names} of every link setup.
 			kFunction_103f91d: func() begin
 				InetStartUp():MGetLinkStatusAll()
 			end,
+			// InetGetDefaultLinkID(): the default link's id.
 			kFunction_103f989: func() begin
 				InetStartUp():MGetLinkDefaultID()
 			end,
+			// InetGetLinkEntry(linkID): the link setup entry with that id (or alias).
 			kFunction_103f9e1: func(a1) begin
 				InetStartUp():MGetLinkEntryByLinkID(a1)
 			end,
+			// InetGetLinkStatus(linkID): the link's status symbol ('idle unless it is the current link).
 			kFunction_103fa3d: func(a1) begin
 				InetStartUp():MGetLinkStatus(a1)
 			end,
+			// InetGrabLink(linkID, frame, symbol): asks for the link to be up (connecting it if needed); the callback gets [linkID, status frame, error] as it goes.
 			kFunction_103fa91: func(a1, a2, a3) begin
 				local inetStartUp2, mBuildCallback;
 				inetStartUp2 := InetStartUp();
 				mBuildCallback := inetStartUp2:MBuildCallback(a1, a2, a3);
 				inetStartUp2:DoEvent('AddLinkClient, [Array: mBuildCallback])
 			end,
+			// InetOpenConnectionSlip(linkID, frame, symbol): opens the connection slip (choose a setup, Connect), unless the link is already up.
 			kFunction_103fb15: func(a1, a2, a3) begin
 				local inetStartUp2, mBuildCallback;
 				inetStartUp2 := InetStartUp();
 				inetStartUp2:MOpenConnectionSlip((mBuildCallback := inetStartUp2:MBuildCallback(a1, a2, a3)))
 			end,
+			// InetReleaseLink(linkID, frame, symbol): gives the link up; it is disconnected after the setup's hang-up delay once nobody holds it.
 			kFunction_103fb71: func(a1, a2, a3) begin
 				local inetStartUp2, mBuildCallback;
 				inetStartUp2 := InetStartUp();
 				mBuildCallback := inetStartUp2:MBuildCallback(a1, a2, a3);
 				inetStartUp2:DoEvent('RemoveLinkClient, [Array: mBuildCallback])
 			end,
+			// InetSetDefaultLinkID(linkID): makes that link the default (user configuration 'InetDefaultLink).
 			kFunction_103fbb1: func(a1) begin
 				InetStartUp():MSetLinkDefaultID(a1)
 			end,
+			// InetGetExceptionError(ex): the error number of an exception (or number).
 			kFunction_103fc09: func(a1) begin
 				InetStartUp():MGetExceptionError(a1)
 			end,
+			// InetGetErrorString(error): the text for an error number.
 			kFunction_103fc61: func(a1) begin
 				InetStartUp():MGetErrorString(a1)
 			end,
+			// releases the NIE's package-wide state (the global PkgVars_id), marking the package not busy when nobody holds it
 			kFunction_103fd71: func() begin
 				local objectPkgRef2, value, sym;
 				objectPkgRef2 := ObjectPkgRef('|Inet Manager:NIE|);
@@ -122,6 +158,7 @@ part := array(nil, {
 							UnDefGlobalVar(sym)
 						end))
 			end,
+			// InetShutDown(why): shuts the link manager down (MShutdown) and releases the package state.
 			kFunction_103fcb5: func(a1) begin
 				local value;
 				(if (value := GetGlobalVar('|InetManagerFSM:NIE|)) then begin
@@ -129,6 +166,7 @@ part := array(nil, {
 						call (kFunction_103fd71) with ()
 					end)
 			end,
+			// acquires the package-wide state (the global PkgVars_id), marking the package busy while held
 			kFunction_103ff55: func() begin
 				local objectPkgRef2, value, sym;
 				objectPkgRef2 := ObjectPkgRef('|Inet Manager:NIE|);
@@ -139,17 +177,21 @@ part := array(nil, {
 					end;
 				(value.fBusyRefCount := (value.fBusyRefCount + 1))
 			end,
+			// MCancelLink(callback): cancels the current request and tells the callback 'Canceled.
 			kFunction_1040ab1: func(a1) begin
 				self:MCancelCurrentRequest(a1.fLinkID);
 				self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrame(a1.fLinkID, 'Canceled, nil, nil, nil, nil), nil])
 			end,
+			// MGetLinkCursor(): a cursor over the link setups.
 			kFunction_1040b55: func() begin
 				local mGetLinkSoup;
 				(if (mGetLinkSoup := self:MGetLinkSoup()) then mGetLinkSoup:Query(nil))
 			end,
+			// MGetExceptionError(ex): the error number in an exception frame (its error, data or data.errorCode), or ex itself if a number.
 			kFunction_1040bc1: func(a1) begin
 				(if IsNumber(a1) then a1 else (if IsFrame(a1) then (if HasSlot(a1, 'error) then a1.error else (if IsNumber(a1.data) then a1.data else (if (if IsFrame(a1.data) then HasSlot(a1.data, 'errorCode)) then a1.data.errorCode else -1))) else -1))
 			end,
+			// MCancelCurrentRequest(linkID): if that is the current link, cancels the link manager and its domain and script services.
 			kFunction_1040d49: func(a1) begin
 				local l1;
 				l1 := (if a1 then a1 else self:MGetLinkDefaultID());
@@ -161,9 +203,11 @@ part := array(nil, {
 						(if fScriptServiceFSM then fScriptServiceFSM:DoEvent('Cancel, nil))
 					end)
 			end,
+			// MBuildCallback(linkID, frame, symbol): a link client {fLinkID, fFrame, fSymbol, ...} (the default link when linkID is nil); throws when frame cannot answer symbol.
 			kFunction_1040e0d: func(a1, a2, a3) begin
 				(if (if (if IsFrame(a2) then IsSymbol(a3)) then GetVariable(a2, a3)) then {fLinkID: (if a1 then a1 else self:MGetLinkDefaultID()), fFrame: a2, fSymbol: a3, fImmediate: nil, fVerbose: nil} else Throw('|evt.ex.msg|, "Inet Manager:MBuildCallback --> callbackFrame.(callbackSymbol) is undefined via direct ref or _proto or _parent inheritance."))
 			end,
+			// TargetChanged(): shows the setup's own connect-slip display (its data def's or service's connectSlipDisplay) in the slip.
 			kFunction_1041759: func() begin
 				local list, dataDefs;
 				if (if (dataDefs := GetDataDefs(ClassOf(target))) then dataDefs.connectSlipDisplay) then begin
@@ -178,6 +222,7 @@ part := array(nil, {
 					end;
 				(slip.placeHolder.viewChildren := list)
 			end,
+			// viewQuitScript: saves (on Connect) or undoes the setup's changes, may make it the default link, and tells the link manager how the slip closed ('connect or 'Close).
 			kFunction_104185d: func() begin
 				pix := nil;
 				firstTime := true;
@@ -200,21 +245,26 @@ part := array(nil, {
 				InetStartUp():MOpenConnectionSlipCallback(how);
 				inherited:?viewQuitScript()
 			end,
+			// viewDrawScript: draws the envelope shape.
 			kFunction_1041a11: func() begin
 				self:DrawShape(pix, nil)
 			end,
+			// ReorientToScreen: nothing.
 			kFunction_1041a75: func() begin
 				nil
 			end,
+			// UpdatePhone(): passes the call options slip's number to the setup's display.
 			kFunction_1041a95: func() begin
 				(foreach item in placeHolder:ChildViewFrames()[0]:ChildViewFrames() do begin
 						item:?DisplayPhoneNumber(Clone(GetRoot().callOptionsSlip.outNumber.text), true)
 					end)
 			end,
+			// OwnerInfoChanged(): the sender changed - updates the target setup and redraws.
 			kFunction_1041bbd: func() begin
 				self:UpdateTarget();
 				slip:RedoChildren()
 			end,
+			// SetupBounds(indent, ...): the slip's bounds and the envelope picture (pix) for that indent.
 			kFunction_1041c29: func(a1, a2) begin
 				local l1, bounds;
 				l1 := ((a1 - bottomIndent) div 2);
@@ -223,40 +273,49 @@ part := array(nil, {
 				bounds := SetBounds(0, 0, envelopeWidth, (envelopeHeight + a1));
 				(pix := [Array: {penPattern: "\u8205\u\u0A14\u\u2850\u\uA041\u", penSize: 8}, MakeRect(0, 0, bounds.right, (bounds.bottom - a1)), {penPattern: 5, fillPattern: 0, penSize: 2}, MakeRect(0, 0, bounds.right, (bounds.bottom - a1)), MakeRect(4, ((bounds.bottom - a1) - 2), (bounds.right - 4), bounds.bottom), {penPattern: 3, penSize: 4, transferMode: 1}, MakeLine(2, (bounds.bottom - a1), ((bounds.right - 4) - 2), (bounds.bottom - a1))])
 			end,
+			// StartFlush(): marks the setup changed (saved when the slip closes).
 			kFunction_1041ee9: func() begin
 				(slip.Update := true)
 			end,
+			// JamIt(): the sender popup's choice - tells the slip the owner changed.
 			kFunction_1041fdd: func() begin
 				inherited:?JamIt();
 				slip:?OwnerInfoChanged()
 			end,
+			// the close box's viewSetupFormScript: its place at the envelope's bottom.
 			kFunction_104206d: func() begin
 				(viewBounds := DeepClone(viewBounds)).top := (((envelopeHeight + bottomIndent) - 19) - 2);
 				(viewBounds.bottom := (viewBounds.top + 13))
 			end,
+			// Connect's buttonClickScript: closes the slip with how = 'connect, animating it away.
 			kFunction_10421d1: func() begin
 				slip.how := 'connect;
 				slip:animateSend();
 				slip:Close()
 			end,
+			// the call assist button's viewSetupFormScript: its place; shown only for a modem setup ('|Modem:NIE|).
 			kFunction_10422d5: func() begin
 				(viewBounds := DeepClone(viewBounds)).top := (((envelopeHeight + bottomIndent) - 19) - 2);
 				viewBounds.bottom := (viewBounds.top + 13);
 				inherited:?viewSetupFormScript();
 				(if (ClassOf(target) = '|Modem:NIE|) then (viewFlags := Clone(viewFlags)) else (viewFlags := 0))
 			end,
+			// viewQuitScript: forgets the viewFlags it set.
 			kFunction_10423b1: func() begin
 				RemoveSlot(self, 'viewFlags);
 				inherited:?viewQuitScript()
 			end,
+			// buttonClickScript: gives the call options slip the number and country, then opens it.
 			kFunction_1042419: func() begin
 				GetRoot().callOptionsSlip.inNumber := curNumber;
 				GetRoot().callOptionsSlip.inCountry := (if target.country then target.country else GetUserConfig('currentCountry));
 				inherited:?buttonClickScript()
 			end,
+			// a picker item for an "Internet Setups" soup entry
 			kFunction_104283d: func(a1) begin
 				{item: a1.setupName, id: a1.linkID}
 			end,
+			// MakeLabelCommands(): the setups by name, and "Edit Setups" when Internet Setup is installed.
 			kFunction_10426a5: func() begin
 				local list, cursor, mapCursor2;
 				list := [Array: ];
@@ -267,10 +326,12 @@ part := array(nil, {
 					end;
 				list
 			end,
+			// the "Using" picker's viewSetupFormScript: its choices.
 			kFunction_1042951: func() begin
 				labelCommands := self:MakeLabelCommands();
 				inherited:?viewSetupFormScript()
 			end,
+			// labelActionScript(index): "Edit Setups" closes the slip and opens Internet Setup; a setup becomes the slip's target.
 			kFunction_10429bd: func(a1) begin
 				(if (labelCommands[a1].id = 'edit) then begin
 						self:updateText(self:FindAliasedSetup());
@@ -282,9 +343,11 @@ part := array(nil, {
 						slip:RedoChildren()
 					end)
 			end,
+			// textSetup(): the name of the target setup.
 			kFunction_1042ad9: func() begin
 				self:FindAliasedSetup()
 			end,
+			// FindAliasedSetup(): the picker item name of the target setup, or "".
 			kFunction_1042b19: func() begin
 				if target then begin
 						(foreach item in labelCommands do begin
@@ -297,6 +360,7 @@ part := array(nil, {
 					end;
 				return ""
 			end,
+			// the slip's viewSetupFormScript: the first time, its bounds, the indent animation and the target setup; no sender popup in simple mode (user configuration 'KSimpleMode).
 			kFunction_1043261: func() begin
 				if firstTime then begin
 						self:SetupBounds(0, nil);
@@ -313,6 +377,7 @@ part := array(nil, {
 					end;
 				(if GetUserConfig('KSimpleMode) then (senderPopup.viewFlags := 0))
 			end,
+			// AnimateIndent(): the envelope's indent reveal animation.
 			kFunction_10433ed: func() begin
 				local box;
 				self:SetupBounds(bottomIndent, nil);
@@ -320,6 +385,7 @@ part := array(nil, {
 				(box := self:LocalBox()).top := (box.bottom - bottomIndent);
 				self:RevealEffect((box.bottom - box.top), box, indentSound, nil, nil)
 			end,
+			// UpdateTarget(): the setup to show - the one asked for (fLinkID), else the default link, else the current worksite's.
 			kFunction_10434c5: func() begin
 				local currentEmporium, inetGetLinkEntry2;
 				if fLinkID then begin
@@ -340,6 +406,7 @@ part := array(nil, {
 						self:TargetChanged()
 					end)
 			end,
+			// animateSend(): the "send" animation as the slip closes.
 			kFunction_10435a9: func() begin
 				local box, box2;
 				box := self:GlobalBox();
@@ -351,7 +418,10 @@ part := array(nil, {
 				GetRoot():DirtyBox(box);
 				(base.hideSound := @poof)
 			end,
-			kLiteral_1041165: {indentSound: @flip, assistBtn: nil, TargetChanged: kFunction_1041759, curNumber: nil, auxUp: nil, envelopeHeight: 125, how: 'Close, viewFormat: vfFrameWhite, validateDialog: nil, viewQuitScript: kFunction_104185d, senderPopup: nil, viewDrawScript: kFunction_1041a11, target: nil, placeHolder: nil, ReorientToScreen: kFunction_1041a75, UpdatePhone: kFunction_1041a95, OwnerInfoChanged: kFunction_1041bbd, _proto: @protoFloater, _defaultButton: nil, setupPicker: nil, SetupBounds: kFunction_1041c29, firstTime: true, StartFlush: kFunction_1041ee9, _nextKeyView: nil, optionsUp: nil, stepAllocateContext: [Array: 'senderPopup, {JamIt: kFunction_1041fdd, _proto: @protoSenderPopup, preAllocatedContext: 'senderPopup}, '_closeBox, {viewSetupFormScript: kFunction_104206d, _proto: @protoCancelButton, viewBounds: '{left: -24, top: 0, right: -11, bottom: 13}, viewJustify: vjCenterH + vjCenterV + vjParentRightH, preAllocatedContext: '_closeBox}, '_defaultButton, {buttonClickScript: kFunction_10421d1, text: "Connect", viewBounds: '{left: -56, top: 0, right: -8, bottom: 0}, viewJustify: 8402950, _proto: @protoTextButton, preAllocatedContext: '_defaultButton}, 'assistBtn, {viewSetupFormScript: kFunction_10422d5, viewQuitScript: kFunction_10423b1, buttonClickScript: kFunction_1042419, _proto: @protoCallassistButton, viewBounds: '{left: 12, top: 0, right: 63, bottom: 13}, viewJustify: 8388614, preAllocatedContext: 'assistBtn}, 'setupPicker, {text: "Using", viewBounds: '{left: 35, top: 55, right: -20, bottom: 71}, alwaysCallPickActionScript: true, viewJustify: 8388656, MakeLabelCommands: kFunction_10426a5, viewSetupFormScript: kFunction_1042951, labelActionScript: kFunction_10429bd, textSetup: kFunction_1042ad9, FindAliasedSetup: kFunction_1042b19, _proto: @protoLabelPicker, preAllocatedContext: 'setupPicker}, 'placeHolder, '{viewBounds: {left: 0, top: 5, right: 0, bottom: 37}, viewFlags: vVisible, viewFormat: 0, viewJustify: vjSiblingFullH + vjSiblingBottomV, viewClass: clView, preAllocatedContext: placeHolder}], cancelSound: {sndFrameType: 'codec, samplingRate: 8000, dataType: 16, compressionType: 6, codecName: "TIMACodec", bufferSize: 10240, bufferCount: 4, compressionRatio: 1.8823529411764706, samples: call kBinaryFromHex with ("000070c7fffff07f17aaa1e1109800c80e400043118a930902bf98af000908901016d74e423308808080f90fa80c88081880261802431180a0add99aa0ab0ca835883798f54b23134b838ab89ebbc99a9bae86291580240230910cc8cbaabe889050925102513c4d138801bd08a9dc88bb08952a86300538020881fa89db0a989810123c277891004bce808801aca8bd08d82881384082650081010b92f81aad89b81ca43032015412326d4610acc18baed88bb81821146381241228a40ca8acd89a9c89003142144411030a4242c10ab2cd998f888808084202720813218b8199a09fbd888cc08158022321133741c488889c8db8acb8bb8548412232608082808dc89ca9ba2af0421823132233c2982cbb9dabc1fa8be920900032502600219821d9abdb999da88b1310471034012881083bbdd19ebab8899daa18246323412320a419cabdcaaa9b8c982171234322240009c92abe89bf989db8882911521235432208c9888baefb89880a12911404322432b3bf39143e0988ea9c0003219e009c2100110128163114910ad08b9baf888d810a4102530802b7822313a3fbbbaaba889d0b143480379032108c93cba09f8aa01a9889373b27880335438008a38fa8bb9bbc1902710431144803b888ef00aa03c18b1949192410f038fe38071012e818aa4ac909c929081430b134314304aba0af89fb18b901a8042541810aba011883a28dbdaacb0ba28a24401563023880b010bdb8bfa80a19801270105410093831289800ce09bc9bd909112027281508148818f90aa9a88cb08a7188420053100d38109000b89fd98b89981840a374000528889009aa9bceaa980a4310062250041112361aca909bbcd9aba09a3630240352231080f999abccaa9c9089623173022002080fb203ae9ada9aabcb8120610335211223a991cf98b98cdb880912213434430411280d2df8a9999bbbea8ab1334132273220802100cfa9db90bb2bb9782213271201a22b09ac8bfbc8bb09ab89055a0432241211a08ea9aaaa9faa022d83182004720318911a05a983bfa88bda09ba3031431652028083a921cfb08b9bc19b0b353324142502319c05a8909ffc29d868110c88b1038102f88c431914810cb31aa68ca88e010811b04002fe354413a038db90f92bc92a991a7228222a103438a8f98ac88ab0aa1c0916181688ff351383599189b88cabea899b9b87490320258232e109b8abbabf8888618022036305b30290a3ac898aaf98aa19a459a4328342022a80dc98ec08898820817b8271908103318088819ba8ae89b84080304101551880b23bd8b0009f8ab059903201016201120222b19c90a89fb80c0a498162000110000100809f80008800888080808000080808", 'samples)}, declareSelf: 'base, viewSetupFormScript: kFunction_1043261, Update: nil, viewEffect: 77661184, slip: nil, stepChildren: [stepChildren: {JamIt: kFunction_1041fdd, _proto: @protoSenderPopup, preAllocatedContext: 'senderPopup}, {viewSetupFormScript: kFunction_104206d, _proto: @protoCancelButton, viewBounds: '{left: -24, top: 0, right: -11, bottom: 13}, viewJustify: vjCenterH + vjCenterV + vjParentRightH, preAllocatedContext: '_closeBox}, {buttonClickScript: kFunction_10421d1, text: "Connect", viewBounds: '{left: -56, top: 0, right: -8, bottom: 0}, viewJustify: 8402950, _proto: @protoTextButton, preAllocatedContext: '_defaultButton}, {viewSetupFormScript: kFunction_10422d5, viewQuitScript: kFunction_10423b1, buttonClickScript: kFunction_1042419, _proto: @protoCallassistButton, viewBounds: '{left: 12, top: 0, right: 63, bottom: 13}, viewJustify: 8388614, preAllocatedContext: 'assistBtn}, {text: "Using", viewBounds: '{left: 35, top: 55, right: -20, bottom: 71}, alwaysCallPickActionScript: true, viewJustify: 8388656, MakeLabelCommands: kFunction_10426a5, viewSetupFormScript: kFunction_1042951, labelActionScript: kFunction_10429bd, textSetup: kFunction_1042ad9, FindAliasedSetup: kFunction_1042b19, _proto: @protoLabelPicker, preAllocatedContext: 'setupPicker}, '{viewBounds: {left: 0, top: 5, right: 0, bottom: 37}, viewFlags: vVisible, viewFormat: 0, viewJustify: vjSiblingFullH + vjSiblingBottomV, viewClass: clView, preAllocatedContext: placeHolder}], envelopeWidth: 230, _closeBox: nil, notesUp: nil, editing: nil, AnimateIndent: kFunction_10433ed, UpdateTarget: kFunction_10434c5, pix: nil, bottomIndent: 29, animateSend: kFunction_10435a9},
+			// the connection slip (an envelope-shaped floater): the setup to connect with ("Using"
+			// picker, sender popup), its own display, Connect and close buttons
+			kLiteral_1041165: {indentSound: @flip, assistBtn: nil, TargetChanged: kFunction_1041759, curNumber: nil, auxUp: nil, envelopeHeight: 125, how: 'Close, viewFormat: vfFrameWhite, validateDialog: nil, viewQuitScript: kFunction_104185d, senderPopup: nil, viewDrawScript: kFunction_1041a11, target: nil, placeHolder: nil, ReorientToScreen: kFunction_1041a75, UpdatePhone: kFunction_1041a95, OwnerInfoChanged: kFunction_1041bbd, _proto: @protoFloater, _defaultButton: nil, setupPicker: nil, SetupBounds: kFunction_1041c29, firstTime: true, StartFlush: kFunction_1041ee9, _nextKeyView: nil, optionsUp: nil, stepAllocateContext: [Array: 'senderPopup, {JamIt: kFunction_1041fdd, _proto: @protoSenderPopup, preAllocatedContext: 'senderPopup}, '_closeBox, {viewSetupFormScript: kFunction_104206d, _proto: @protoCancelButton, viewBounds: '{left: -24, top: 0, right: -11, bottom: 13}, viewJustify: vjCenterH + vjCenterV + vjParentRightH, preAllocatedContext: '_closeBox}, '_defaultButton, {buttonClickScript: kFunction_10421d1, text: "Connect", viewBounds: '{left: -56, top: 0, right: -8, bottom: 0}, viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV + oneLineOnly, _proto: @protoTextButton, preAllocatedContext: '_defaultButton}, 'assistBtn, {viewSetupFormScript: kFunction_10422d5, viewQuitScript: kFunction_10423b1, buttonClickScript: kFunction_1042419, _proto: @protoCallassistButton, viewBounds: '{left: 12, top: 0, right: 63, bottom: 13}, viewJustify: vjCenterH + vjCenterV + oneLineOnly, preAllocatedContext: 'assistBtn}, 'setupPicker, {text: "Using", viewBounds: '{left: 35, top: 55, right: -20, bottom: 71}, alwaysCallPickActionScript: true, viewJustify: vjParentFullH + oneLineOnly, MakeLabelCommands: kFunction_10426a5, viewSetupFormScript: kFunction_1042951, labelActionScript: kFunction_10429bd, textSetup: kFunction_1042ad9, FindAliasedSetup: kFunction_1042b19, _proto: @protoLabelPicker, preAllocatedContext: 'setupPicker}, 'placeHolder, '{viewBounds: {left: 0, top: 5, right: 0, bottom: 37}, viewFlags: vVisible, viewFormat: 0, viewJustify: vjSiblingFullH + vjSiblingBottomV, viewClass: clView, preAllocatedContext: placeHolder}], cancelSound: {sndFrameType: 'codec, samplingRate: 8000, dataType: 16, compressionType: 6, codecName: "TIMACodec", bufferSize: 10240, bufferCount: 4, compressionRatio: 1.8823529411764706, samples: call kBinaryFromHex with ("000070c7fffff07f17aaa1e1109800c80e400043118a930902bf98af000908901016d74e423308808080f90fa80c88081880261802431180a0add99aa0ab0ca835883798f54b23134b838ab89ebbc99a9bae86291580240230910cc8cbaabe889050925102513c4d138801bd08a9dc88bb08952a86300538020881fa89db0a989810123c277891004bce808801aca8bd08d82881384082650081010b92f81aad89b81ca43032015412326d4610acc18baed88bb81821146381241228a40ca8acd89a9c89003142144411030a4242c10ab2cd998f888808084202720813218b8199a09fbd888cc08158022321133741c488889c8db8acb8bb8548412232608082808dc89ca9ba2af0421823132233c2982cbb9dabc1fa8be920900032502600219821d9abdb999da88b1310471034012881083bbdd19ebab8899daa18246323412320a419cabdcaaa9b8c982171234322240009c92abe89bf989db8882911521235432208c9888baefb89880a12911404322432b3bf39143e0988ea9c0003219e009c2100110128163114910ad08b9baf888d810a4102530802b7822313a3fbbbaaba889d0b143480379032108c93cba09f8aa01a9889373b27880335438008a38fa8bb9bbc1902710431144803b888ef00aa03c18b1949192410f038fe38071012e818aa4ac909c929081430b134314304aba0af89fb18b901a8042541810aba011883a28dbdaacb0ba28a24401563023880b010bdb8bfa80a19801270105410093831289800ce09bc9bd909112027281508148818f90aa9a88cb08a7188420053100d38109000b89fd98b89981840a374000528889009aa9bceaa980a4310062250041112361aca909bbcd9aba09a3630240352231080f999abccaa9c9089623173022002080fb203ae9ada9aabcb8120610335211223a991cf98b98cdb880912213434430411280d2df8a9999bbbea8ab1334132273220802100cfa9db90bb2bb9782213271201a22b09ac8bfbc8bb09ab89055a0432241211a08ea9aaaa9faa022d83182004720318911a05a983bfa88bda09ba3031431652028083a921cfb08b9bc19b0b353324142502319c05a8909ffc29d868110c88b1038102f88c431914810cb31aa68ca88e010811b04002fe354413a038db90f92bc92a991a7228222a103438a8f98ac88ab0aa1c0916181688ff351383599189b88cabea899b9b87490320258232e109b8abbabf8888618022036305b30290a3ac898aaf98aa19a459a4328342022a80dc98ec08898820817b8271908103318088819ba8ae89b84080304101551880b23bd8b0009f8ab059903201016201120222b19c90a89fb80c0a498162000110000100809f80008800888080808000080808", 'samples)}, declareSelf: 'base, viewSetupFormScript: kFunction_1043261, Update: nil, viewEffect: 77661184, slip: nil, stepChildren: [stepChildren: {JamIt: kFunction_1041fdd, _proto: @protoSenderPopup, preAllocatedContext: 'senderPopup}, {viewSetupFormScript: kFunction_104206d, _proto: @protoCancelButton, viewBounds: '{left: -24, top: 0, right: -11, bottom: 13}, viewJustify: vjCenterH + vjCenterV + vjParentRightH, preAllocatedContext: '_closeBox}, {buttonClickScript: kFunction_10421d1, text: "Connect", viewBounds: '{left: -56, top: 0, right: -8, bottom: 0}, viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV + oneLineOnly, _proto: @protoTextButton, preAllocatedContext: '_defaultButton}, {viewSetupFormScript: kFunction_10422d5, viewQuitScript: kFunction_10423b1, buttonClickScript: kFunction_1042419, _proto: @protoCallassistButton, viewBounds: '{left: 12, top: 0, right: 63, bottom: 13}, viewJustify: vjCenterH + vjCenterV + oneLineOnly, preAllocatedContext: 'assistBtn}, {text: "Using", viewBounds: '{left: 35, top: 55, right: -20, bottom: 71}, alwaysCallPickActionScript: true, viewJustify: vjParentFullH + oneLineOnly, MakeLabelCommands: kFunction_10426a5, viewSetupFormScript: kFunction_1042951, labelActionScript: kFunction_10429bd, textSetup: kFunction_1042ad9, FindAliasedSetup: kFunction_1042b19, _proto: @protoLabelPicker, preAllocatedContext: 'setupPicker}, '{viewBounds: {left: 0, top: 5, right: 0, bottom: 37}, viewFlags: vVisible, viewFormat: 0, viewJustify: vjSiblingFullH + vjSiblingBottomV, viewClass: clView, preAllocatedContext: placeHolder}], envelopeWidth: 230, _closeBox: nil, notesUp: nil, editing: nil, AnimateIndent: kFunction_10433ed, UpdateTarget: kFunction_10434c5, pix: nil, bottomIndent: 29, animateSend: kFunction_10435a9},
+			// MOpenConnectionSlip(callback): opens the connection slip (the callback is told 'Close if one is open already, 'connect if the link is up).
 			kFunction_1041081: func(a1) begin
 				local l1, context;
 				l1 := (if a1.fLinkID then a1.fLinkID else self:MGetLinkDefaultID());
@@ -369,13 +439,16 @@ part := array(nil, {
 					end;
 				nil
 			end,
+			// MGetLinkDefaultID(): the default link's id, or nil.
 			kFunction_10436f9: func() begin
 				local mGetLinkDefaultEntry;
 				(if (mGetLinkDefaultEntry := self:MGetLinkDefaultEntry()) then mGetLinkDefaultEntry.linkID)
 			end,
+			// MBuildStatusFrameFromError(error): a status frame for the current link - 'error and the error, or the link's status.
 			kFunction_1043749: func(a1) begin
 				self:MBuildStatusFrame((if fLinkEntry then fLinkEntry.linkID), (if a1 then 'error else fLinkStatus), a1, nil, nil, nil)
 			end,
+			// MBuildStatusFrame(linkID, infoStatus, infoError, text1, text2, ...): {linkID, linkStatus, infoStatus, infoError, infoText1, ...}; text1 defaults to the status's text (fLinkStatusStrTable). nil for another link.
 			kFunction_10439dd: func(a1, a2, a3, a4, a5, a6) begin
 				local l1;
 				if (not a4) then begin
@@ -384,9 +457,11 @@ part := array(nil, {
 				l1 := (if a1 then a1 else self:MGetLinkDefaultID());
 				(if (if fLinkEntry then l1) then (if (l1 = fLinkEntry.linkID) then {linkID: l1, linkStatus: fLinkStatus, infoStatus: a2, infoError: a3, infoText1: a4, infoText2: a5, infoText3: a6} else {linkID: l1, linkStatus: fLinkStatus, infoStatus: 'error, infoError: -60506, infoText1: self:MGetErrorString(-8103), infoText2: self:MGetErrorString(-60506), infoText3: a6}) else {linkID: l1, linkStatus: fLinkStatus, infoStatus: 'error, infoError: -60501, infoText1: self:MGetErrorString(-8103), infoText2: self:MGetErrorString(-60501), infoText3: a6})
 			end,
+			// MNotifyIconOn(): adds "Internet Connection" to the notify icon's menu (tapping it offers to disconnect).
 			kFunction_1043ba5: func() begin
 				(fNotifyIconObj := GetRoot().notifyIcon:AddAction("Internet Connection", MNotifyIconCallback, [Array: fsm]))
 			end,
+			// MOpenConnectionSlipCallback(how): the connection slip closed - tells the waiting callback how and restarts the shutdown timer.
 			kFunction_1043c91: func(a1) begin
 				local fConnectionSlipCallback2;
 				fConnectionSlipCallback2 := fConnectionSlipCallback;
@@ -394,12 +469,16 @@ part := array(nil, {
 				self:MShutdownTimer();
 				self:MDoCallback(fConnectionSlipCallback2, [Array: a1])
 			end,
+			// MShutdownTimer(): (re)starts the periodic ShutdownTimerExpired event, every 10 seconds, once.
 			kFunction_1043cf1: func() begin
 				self:DoPeriodicEvent('ShutdownTimerExpired, nil, 'unique, 'fsm, 1, 10000)
 			end,
+			// MGetErrorString(error): the text for an error - the NIE's table, then Lantern's errors, the system error table, else "Internet Error: n".
 			kFunction_1043da9: func(a1) begin
 				local tableLookup2, mGetExceptionError;
 				mGetExceptionError := self:MGetExceptionError(a1);
+				// the NIE's error texts by number (-60001.. link and PPP, -605xx link manager, -607xx and
+				// -608xx DNS); -60063 is in it twice, the second never found
 				if (not (tableLookup2 := TableLookup('[Array: -60501, "No link setup is defined.", -60504, "Internet link disconnected.", -60505, "Internet connection failed.", -60506, "The maximum number of internet link connections for this device has been reached. Can't establish a link.", -60507, "No device driver for this link is available. Can't establish a link.", -60508, "No protocol driver for this link is available. Can't establish a link.", -60509, "Incorrect or badly formed IP address encountered.", -60510, "Power off requested.", -60511, "Timeout occurred while waiting for a script step to complete.", -60512, "There is a problem with a script command. The command is unknown, invalid, or badly formed.", -60752, "DNSTool Internal Error!", -60791, "The host name you requested wasn't located -- it could be invalid or may not exist. Check/adjust the host name and try again.", -60794, "You have not set up your DNS preferences properly. Enter a\tDNS server address in Internet Setup and try again.", -60795, "The host name you requested wasn't located -- it could be invalid or may not exist. Check/adjust the host name and try again.", -60796, "The host name you requested wasn't located -- it could be invalid or may not exist. Check/adjust the host name and try again.", -60797, "The host name you requested wasn't located -- it could be invalid or may not exist. Check/adjust the host name and try again.", -60798, "DNSTool Memory allocation failure! Try closing some applications or resetting.", -60800, "Couldn't connect to a DNS server. Check your connection and DNS server settings.", -60801, "Couldn't connect to a DNS server. Check your connection and DNS server settings.", -60802, "The DNS Server didn't like our request -- the host name could be invalid. Check/adjust the host name and try again.", -60803, "The DNS Server encountered an internal error. Contact the server administrator.", -60804, "The DNS Server does not support this kind of request. Contact the server administrator.", -60805, "The DNS Server refused to answer our query. The server may be unavailable. Contact the server administrator.", -60806, "The DNS server returned an unrecognized error code. The server may be unavailable. Contact the server administrator.", -60814, "No response from your current DNS server. The server may be unavailable. Check your connection and DNS server settings.", -60001, "Problem connecting. Check the currently selected connection settings and IP address configuration.", -60004, "Problem connecting. Can't establish a link.", -60005, "Problem connecting. Can't establish a link.", -60006, "Problem connecting. Can't establish a link.", -60008, "Problem reading/receiving data.", -60009, "Problem writing/sending data.", -60010, "Problem connecting. Check the currently selected connection settings and IP address configuration.", -60011, "Problem connecting. Can't establish a link.", -60012, "Problem connecting. Check the currently selected connection settings and IP address configuration.", -60014, "Problem closing connection.", -60015, "Problem connecting. Can't establish a link. PPP Negotiation failed.", -60016, "Problem connecting.", -60017, "Problem listening for incoming connection.", -60018, "A link isn't available. To proceed, shut-down and reconnect.", -60019, "Problem connecting. Internal Error!", -60020, "Connection failure. The connection to the network may have dropped. Try reconnecting to the network.", -60021, "Problem connecting.", -60022, "Problem connecting.", -60023, "Problem connecting. Memory allocation failure! Try closing some applications or resetting.", -60024, "Problem connecting.", -60025, "Problem connecting.", -60026, "Problem connecting.", -60027, "Problem connecting.", -60028, "Problem connecting.", -60029, "Problem connecting.", -60030, "Problem connecting.", -60031, "Problem connecting.", -60032, "Problem connecting.", -60033, "Problem connecting.", -60034, "Problem connecting.", -60035, "Problem connecting.", -60036, "Problem connecting.", -60037, "Connection failure. The connection to the network may have dropped. Try reconnecting to the network.", -60038, "Problem connecting.", -60039, "Problem connecting.", -60040, "Problem connecting.", -60041, "Problem connecting.", -60042, "Problem connecting.", -60043, "Problem connecting.", -60044, "Problem connecting.", -60045, "Problem connecting.", -60046, "Problem connecting.", -60047, "Problem connecting. Check the currently selected connection settings and IP address configuration.", -60048, "Problem connecting.", -60049, "Problem connecting.", -60050, "Problem connecting.", -60051, "Problem connecting.", -60052, "Problem connecting.", -60053, "Problem connecting.", -60054, "Problem connecting.", -60055, "Problem connecting.", -60056, "Problem connecting.", -60057, "Connection failure. The connection to the network may have dropped. Try reconnecting to the network.", -60059, "Problem connecting. PPP Negotiation failed. Check the currently selected PPP configuration and IP address settings.", -60060, "Problem connecting. PPP Negotiation failed. Check the currently selected PPP configuration and IP address settings.", -60061, "Problem connecting. PPP Negotiation failed. Check the currently selected PPP configuration and IP address settings.", -60062, "Problem connecting. PPP Negotiation failed. Check the currently selected PPP configuration and IP address settings.", -60063, "Problem connecting. PPP Negotiation failed. Check the currently selected PPP configuration and IP address settings.", -60063, "Problem connecting. PPP Negotiation failed. Check the currently selected PPP configuration and IP address settings.", -60064, "Problem connecting. PPP Negotiation failed. Check the currently selected PPP configuration and IP address settings.", -60065, "Problem connecting. PPP Negotiation failed. Check the currently selected PPP configuration and IP address settings.", -60066, "Problem connecting. PPP Negotiation failed. Check the currently selected PPP configuration and IP address settings.", -60067, "Problem connecting. PPP Negotiation failed. Check the currently selected PPP configuration and IP address settings.", -60068, "Problem connecting. PPP Negotiation failed. Check the currently selected PPP configuration and IP address settings.", -60069, "Problem connecting. PPP Negotiation failed. Check the currently selected PPP configuration and IP address settings.", -60070, "Problem connecting. PPP Negotiation failed. Check the currently selected PPP configuration and IP address settings.", -60071, "Problem connecting. PPP Negotiation failed. Check the currently selected connection authorization settings, user name, and password.", -60072, "Problem connecting. PPP Negotiation failed. Check the currently selected connection authorization settings, user name, and password.", -60073, "Problem connecting. PPP Negotiation failed. Check the currently selected connection authorization settings, user name, and password.", -60074, "Problem connecting. PPP Negotiation failed.", -60075, "Problem connecting. PPP Negotiation failed.", -60076, "Problem connecting. PPP Negotiation failed. Check the currently selected connection authorization settings, user name, and password.", -60077, "Problem connecting. PPP Negotiation failed. Check the currently selected connection authorization settings, user name, and password.", -60078, "Problem connecting. PPP Negotiation failed.", -60079, "Problem connecting. PPP Negotiation failed. Check the currently selected PPP configuration and IP address settings.", -60080, "Problem connecting. Check the currently selected connection settings and IP address configuration.", -60081, "Problem connecting. PPP Negotiation failed.", -60082, "Problem connecting. PPP Negotiation failed.", -60083, "Problem connecting. Check the currently selected connection settings and IP address configuration.", -60084, "Problem connecting. PPP Negotiation failed. Check the currently selected connection authorization settings, user name, and password.", -60085, "Problem connecting. PPP Negotiation failed. Check the currently selected connection authorization settings, user name, and password.", -60088, "Problem connecting. DHCP server unavailable or unable to configure this device.", 0, nil], mGetExceptionError))) then begin
 						if (not (tableLookup2 := (if GlobalFnExists('MapLanternError) then MapLanternError(mGetExceptionError)))) then begin
 								if (not (tableLookup2 := TableLookup(@errorTable, mGetExceptionError))) then begin
@@ -409,10 +488,12 @@ part := array(nil, {
 					end;
 				tableLookup2
 			end,
+			// MGetLinkDefaultEntry(): the default link's setup entry (user configuration 'InetDefaultLink: an id or an alias).
 			kFunction_10458b9: func() begin
 				local inetDefaultLink;
 				(if IsInteger((inetDefaultLink := GetUserConfig('InetDefaultLink))) then self:MGetLinkEntryByLinkID(inetDefaultLink) else (if IsEntryAlias(inetDefaultLink) then ResolveEntryAlias(inetDefaultLink) else SetUserConfig('InetDefaultLink, nil)))
 			end,
+			// MShutdown(why): closes the connection slip, cancels and disconnects the link, waits (a status slip) for the FSM to finish and disposes of it; reboots when the user aborts that wait.
 			kFunction_104598d: func(a1) begin
 				local value, waitForTerminal;
 				if (value := GetGlobalVar('|InetManagerFSM:NIE|)) then begin
@@ -424,12 +505,14 @@ part := array(nil, {
 							end;
 						value:DoEvent('Cancel, nil);
 						value:DoEvent('DisconnectLink, nil);
+						// WaitForTerminal returns true when the user aborted the wait; then the Newton is rebooted
 						waitForTerminal := value:WaitForTerminal({statusText: "Please wait...", titleText: "The Newton Internet Enabler is closing down.", delayUntilStatusVisible: 2000, delayUntilAbortVisible: 30000, abortButtonText: "Restart"});
 						value := value:Dispose()
 					end;
 				UnDefGlobalVar('|InetManagerFSM:NIE|);
 				(if (if waitForTerminal then GlobalFnExists('ReBoot)) then AddDeferredCall(GetGlobalFn('ReBoot), nil))
 			end,
+			// MDoCallback(callback, args): calls callback.fFrame:(fSymbol)(args...), ignoring errors.
 			kFunction_1045cd9: func(a1, a2) begin
 				(if a1 then (try begin
 							Perform(a1.fFrame, a1.fSymbol, a2)
@@ -437,6 +520,7 @@ part := array(nil, {
 							nil
 						end))
 			end,
+			// MGetLinkEntryByLinkID(linkID): the link setup entry for an id (or an alias), or nil.
 			kFunction_1045d5d: func(a1) begin
 				local mGetLinkSoup, cursor;
 				if IsEntryAlias(a1) then begin
@@ -444,6 +528,7 @@ part := array(nil, {
 					end;
 				(if IsInteger(a1) then (if (mGetLinkSoup := self:MGetLinkSoup()) then (if (cursor := mGetLinkSoup:Query({type: 'index, IndexPath: 'linkID, beginKey: a1, endKey: a1})) then cursor:entry())))
 			end,
+			// MNotifyIconCallback(inetMgr): the notify icon's item - asks whether to close the connection; yes releases the link, no puts the item back.
 			kFunction_1045e81: func(inetMgr) begin
 				local fn;
 				fn := func(a1) begin
@@ -451,21 +536,26 @@ part := array(nil, {
 				end;
 				AsyncConfirm("You are still connected to the Internet. Do you want to close the connection now?", 'yesNoDefaultNo, fn)
 			end,
+			// the status slip's Stop button: cancels the request ('userCancel).
 			kFunction_1046455: func() begin
 				self:CancelRequest('userCancel)
 			end,
+			// CancelRequest(why): cancels the link's current request and tells the application (appSymbol) through its CancelScript.
 			kFunction_10464b9: func(a1) begin
 				InetCancelCurrentRequest(linkID);
 				(if (if IsSymbol(appSymbol) then GetRoot().(appSymbol)) then GetRoot().(appSymbol):?CancelScript(a1))
 			end,
+			// ReorientToScreen: keeps the slip inside the app area.
 			kFunction_1046569: func() begin
 				local appAreaBounds, globalOuterBox;
 				appAreaBounds := GetAppParams().appAreaBounds;
 				globalOuterBox := self:GlobalOuterBox();
 				self:OffsetView(min(0, (appAreaBounds.right - globalOuterBox.right)), min(0, (appAreaBounds.bottom - globalOuterBox.bottom)))
 			end,
+			// the status slip (protoStatusTemplate) with a Stop button
 			kLiteral_1046265: {viewBounds: '{left: 0, top: 75, right: 185, bottom: 150}, initialSetup: {name: 'vStatusTitle, values: {icon: @8195, statusText: "Initializing", titleText: "Please wait...", primary: {text: "Stop", script: kFunction_1046455}, closeBox: nil}}, CancelRequest: kFunction_10464b9, ReorientToScreen: kFunction_1046569, _proto: @protoStatusTemplate},
 			kROM_8195: @8195,
+			// MDisplayStatus(linkID, view, status): shows or updates a status slip (protoStatusTemplate; status a ViewSet frame, or values for vStatusTitle); with view and no status, closes it. Returns the view.
 			kFunction_10460c1: func(a1, a2, a3) begin
 				local context, frame2, l3;
 				if a2 then begin
@@ -513,26 +603,32 @@ part := array(nil, {
 					end;
 				context
 			end,
+			// MSetLinkDefaultID(linkID): makes an existing link the default.
 			kFunction_10466d9: func(a1) begin
 				(if self:MGetLinkEntryByLinkID(a1) then SetUserConfig('InetDefaultLink, a1))
 			end,
+			// MGetLinkSoup(): the "Internet Setups" union soup.
 			kFunction_104672d: func() begin
 				GetUnionSoupAlways("Internet Setups")
 			end,
+			// MGetLinkStatus(linkID): the current link's status, or 'idle for another.
 			kFunction_1046771: func(a1) begin
 				local l1;
 				l1 := (if a1 then a1 else self:MGetLinkDefaultID());
 				(if (if fLinkEntry then (fLinkEntry.linkID = l1)) then fLinkStatus else 'idle)
 			end,
+			// MNotifyIconOff(): removes the notify icon's item.
 			kFunction_10467fd: func() begin
 				if fNotifyIconObj then begin
 						GetRoot().notifyIcon:KillAction(fNotifyIconObj)
 					end;
 				(fNotifyIconObj := nil)
 			end,
+			// MGetScriptService(): the login/logout script interpreter FSM in use.
 			kFunction_1046871: func() begin
 				fScriptServiceFSM
 			end,
+			// MUpdateProgressSlip(how, title, percent): opens ('Open), updates ('Update) or closes ('Close) the connecting/disconnecting progress slip (a gauge).
 			kFunction_10468b1: func(a1, a2, a3) begin
 				(try begin
 						(if fProgressSlipView then (if (a1 = 'Update) then begin
@@ -558,14 +654,17 @@ part := array(nil, {
 						nil
 					end)
 			end,
+			// MGetDomainService(): the domain manager FSM in use (DNS), or nil.
 			kFunction_1046a99: func() begin
 				fDomainServiceFSM
 			end,
+			// MGetLinkUniqueID(): a new link id - the Ticks() of a moment no link has as id.
 			kFunction_1046ac9: func() begin
 				local ticks2;
 				(while InetStartUp():MGetLinkEntryByLinkID((ticks2 := Ticks())) do Sleep(1));
 				ticks2
 			end,
+			// MGetLinkStatusAll(): {linkIds, statuses, names} of every link setup (incomplete: true if reading them failed).
 			kFunction_1046b55: func() begin
 				local frame2, mGetLinkCursor, next, count;
 				frame2 := {linkIds: [Array: ], statuses: [Array: ], names: [Array: ]};
@@ -586,27 +685,34 @@ part := array(nil, {
 					end;
 				frame2
 			end,
+			// DeactivateDomainManagerSuccess: disengages the link protocol.
 			kFunction_10473a1: func() begin
 				self:DoEvent('DisengageLinkProtocol, nil)
 			end,
+			// DeactivateDomainManagerFailure: disengages the link protocol anyway.
 			kFunction_10473fd: func() begin
 				self:DoEvent('DisengageLinkProtocol, nil)
 			end,
+			// DeactivateDomainManagerSkipped: disengages the link protocol.
 			kFunction_1047445: func() begin
 				self:DoEvent('DisengageLinkProtocol, nil)
 			end,
+			// AddLinkClient(client) while going down: kept to be served after the clean-up (fLinkClients_GrabPending).
 			kFunction_104749d: func(a1) begin
 				AddArraySlot(fLinkClients_GrabPending, a1)
 			end,
+			// RemoveLinkClient(client) while going down: counted and kept to be told when the link is down; -60506 for another link.
 			kFunction_10474f1: func(a1) begin
 				(if a1.fLinkID then (if (a1.fLinkID = fLinkEntry.linkID) then begin
 							fLinKRefCount := (fLinKRefCount - 1);
 							AddArraySlot(fLinkClients_Release, a1)
 						end else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60506), -60506])) else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60501), -60501]))
 			end,
+			// Cancel: marks the FSM aborted.
 			kFunction_10475a9: func() begin
 				(fAbort := true)
 			end,
+			// ConnectLinkFailureCleanUp.CleanUp: tells the clients 'disconnected; disposes of the domain, physical, link-layer and script services and the CCE endpoint; answers the waiting clients; grabs again for the pending ones; powers off if the link was dropped for a power-off; else restarts the shutdown timer.
 			kFunction_104764d: func() begin
 				self:MUpdateProgressSlip('Update, nil, 100);
 				fAbort := nil;
@@ -672,6 +778,7 @@ part := array(nil, {
 				self:MShutdownTimer();
 				UnRegPowerOff('|Inet Manager:NIE|)
 			end,
+			// ParseLogoutScript: runs the setup's logout script (its interpreter service), if it has one; else skipped.
 			kFunction_1047ab9: func() begin
 				self:MUpdateProgressSlip('Update, nil, 60);
 				if ((not IsFrame(fLinkEntry.logoutScript)) or (not (fScriptServiceFSM := InetGetService(fLinkEntry.logoutScript.interpreterSymbol)))) then begin
@@ -685,10 +792,12 @@ part := array(nil, {
 				fScriptServiceFSM:DoEvent('SetScript, [Array: fLinkEntry.logoutScript]);
 				fScriptServiceFSM:DoEvent('Parse, [Array: self, 'MParseCallback])
 			end,
+			// MParseCallback(status): the script service's progress, passed to the clients; 'Parsed or an error ends the step.
 			kFunction_1047d21: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Release, a1, 'Update);
 				(if a1.infoError then self:DoEvent('ParseLogoutScriptFailure, nil) else (if (a1.infoStatus = 'Parsed) then self:DoEvent('ParseLogoutScriptSuccess, nil)))
 			end,
+			// Genesis.Create: a fresh link manager - every variable reset, the CCE endpoint (whose event handler turns an "ictl" event 1 into a drop with its error, 2 and 3 into -60504, link disconnected), the shutdown timer started.
 			kFunction_1047ec1: func() begin
 				fsm.fProcessPortID := nil;
 				fsm.fAbort := nil;
@@ -717,11 +826,13 @@ part := array(nil, {
 				fsm.fVerboseDisconnect := nil;
 				fsm.fCCE := {_proto: @protoBasicEndpoint, _parent: fsm, fActive: nil, ExceptionHandler: func(ex) begin
 					local inetGetExceptionError2;
-					(if ((inetGetExceptionError2 := InetGetExceptionError(ex)) = -16005) then begin
+					(if ((inetGetExceptionError2 := InetGetExceptionError(ex)) = kCommErrRequestCanceled) then begin
 							fWhyLinkDropped := inetGetExceptionError2;
 							self:DoEvent('Cancel, nil)
 						end)
 				end, eventHandler: func(a1) begin
+					// serviceID "ictl" is the Inet control service; eventCode 1: the link dropped (data is
+					// the error), 2 and 3: disconnected (-60504)
 					if (if StrFilled(a1.serviceID) then (StrExactCompare(a1.serviceID, "ictl") = 0)) then begin
 							if (a1.eventCode = 1) then begin
 									fWhyLinkDropped := a1.data;
@@ -737,6 +848,7 @@ part := array(nil, {
 				end};
 				self:MShutdownTimer()
 			end,
+			// Genesis.AddLinkClient(client): the first client - takes a copy of its link setup and connects; -60501 (no link setup) if there is none.
 			kFunction_10482f9: func(a1) begin
 				if fAbort then begin
 						return self:DoEvent('Abort, nil)
@@ -758,12 +870,15 @@ part := array(nil, {
 				self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60501), -60501]);
 				self:DoEvent('Abort, nil)
 			end,
+			// Genesis.RemoveLinkClient(client): nothing to release - the client is just answered.
 			kFunction_10484a1: func(a1) begin
 				self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(nil), nil])
 			end,
+			// Genesis.ShutdownTimerExpired: idle with no slip open and no registered clients - shuts the NIE down ('auto).
 			kFunction_1048519: func() begin
 				(if (if (not fConnectionSlipView) then (Length(fLinkClients) = 0)) then InetShutDown('auto))
 			end,
+			// ParseLoginScript: runs the setup's login script (its interpreter service), if it has one; else skipped.
 			kFunction_10485f1: func() begin
 				self:MUpdateProgressSlip('Update, nil, 40);
 				if ((not IsFrame(fLinkEntry.loginScript)) or (not (fScriptServiceFSM := InetGetService(fLinkEntry.loginScript.interpreterSymbol)))) then begin
@@ -777,23 +892,28 @@ part := array(nil, {
 				fScriptServiceFSM:DoEvent('SetScript, [Array: fLinkEntry.loginScript]);
 				fScriptServiceFSM:DoEvent('Parse, [Array: self, 'MParseCallback])
 			end,
+			// MParseCallback(status): the login script's progress, passed to the clients.
 			kFunction_104877d: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Grab, a1, 'Update);
 				(if a1.infoError then self:DoEvent('ParseLoginScriptFailure, nil) else (if (a1.infoStatus = 'Parsed) then self:DoEvent('ParseLoginScriptSuccess, nil)))
 			end,
+			// AddLinkClient(client) while connecting: counted in (fLinkClients_Grab); -60506 (too many links) for another link.
 			kFunction_1048841: func(a1) begin
 				(if a1.fLinkID then (if (a1.fLinkID = fLinkEntry.linkID) then begin
 							fLinKRefCount := (fLinKRefCount + 1);
 							AddArraySlot(fLinkClients_Grab, a1)
 						end else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60506), -60506])) else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60501), -60501]))
 			end,
+			// RemoveLinkClient(client) while connecting: kept until connected (fLinkClients_ReleasePending).
 			kFunction_10488f9: func(a1) begin
 				AddArraySlot(fLinkClients_ReleasePending, a1)
 			end,
+			// Abort: tells the grabbing clients the request was cancelled and disconnects.
 			kFunction_1048955: func() begin
 				self:MDoCallbacks(fLinkClients_Grab, self:MBuildStatusFrameFromError(kCommErrRequestCanceled), 'Update);
 				self:DoEvent('DisconnectLink, nil)
 			end,
+			// ReleasingLink.ReleaseTimerExpired: the hang-up delay is over - 'disconnecting, the clients told, the notify item removed; deactivates the domain manager.
 			kFunction_1048a4d: func() begin
 				fLinkStatus := 'disconnecting;
 				(foreach item in fLinkClients do begin
@@ -805,13 +925,16 @@ part := array(nil, {
 					end;
 				self:DoEvent('DeactivateDomainManager, nil)
 			end,
+			// ReleaseTimerAddLinkClient(client): grabbed again before the hang-up - back to connected.
 			kFunction_1048b7d: func(a1) begin
 				self:MNotifyIconOff();
 				self:DoEvent('AddLinkClient, [Array: a1])
 			end,
+			// ReleasingLink.AddLinkClient(client): for this link it cancels the release; -60506 for another.
 			kFunction_1048be1: func(a1) begin
 				(if a1.fLinkID then (if (a1.fLinkID = fLinkEntry.linkID) then self:DoEvent('ReleaseTimerAddLinkClient, [Array: a1]) else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60506), -60506])) else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60501), -60501]))
 			end,
+			// ReleasingLink.RemoveLinkClient(client): counted; an immediate release disconnects now.
 			kFunction_1048c99: func(a1) begin
 				(if a1.fLinkID then (if (a1.fLinkID = fLinkEntry.linkID) then begin
 							fLinKRefCount := (fLinKRefCount - 1);
@@ -822,9 +945,11 @@ part := array(nil, {
 								end)
 						end else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60506), -60506])) else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60501), -60501]))
 			end,
+			// ReleasingLink.Cancel: when the link was dropped, disconnects now.
 			kFunction_1048d89: func() begin
 				(if fWhyLinkDropped then self:DoEvent('ReleaseTimerExpired, nil))
 			end,
+			// ConnectLink: 'initializing; registers the power-off handler, instantiates the CCE endpoint ("ictl" service; its process port id kept), finds and creates the setup's link-layer and physical-layer services (-60508/-60507 when missing), then loads the physical layer's driver.
 			kFunction_1048eb5: func() begin
 				local inetGetOptionFromOptionArray2, instantiate;
 				fLinkStatus := 'initializing;
@@ -833,7 +958,7 @@ part := array(nil, {
 					end;
 				RegPowerOff('|Inet Manager:NIE|, MPowerOffHandler);
 				if fAbort then begin
-						return self:DoEvent('DoFailure, [Array: -16005])
+						return self:DoEvent('DoFailure, [Array: kCommErrRequestCanceled])
 					end;
 				try begin
 						instantiate := fCCE:Instantiate(fCCE, self:MBuildConfigOptions_InstantiateCCE(fCCE))
@@ -854,9 +979,11 @@ part := array(nil, {
 				fPhysicalLayerServiceFSM := fPhysicalLayerServiceFSM:InstantiateAndPerform(nil, 'Create, nil);
 				self:DoEvent('LoadPhysicalLayerDriverProtocol, nil)
 			end,
+			// MBuildConfigOptions_InstantiateCCE(endpoint): the CCE's options: "sid " the "ictl" service, and the link's.
 			kFunction_10491dd: func(a1) begin
-				[Array: {label: "sid ", type: 'service, opCode: 512, result: nil, form: 'template, data: {arglist: [Array: "ictl", 0], typeList: [Array: 'struct, [Array: 'Array, 'char, 4], 'ulong]}}]
+				[Array: {label: "sid ", type: 'service, opCode: opSetRequired, result: nil, form: 'template, data: {arglist: [Array: "ictl", 0], typeList: [Array: 'struct, [Array: 'Array, 'char, 4], 'ulong]}}]
 			end,
+			// MPowerOffHandler(what, why): the power-off registry's handler - 'okToPowerOff: with a link up, asks the user (or releases the link) and refuses for now; 'PowerOff: holds the power-off ('holdYourHorses) until the link is down.
 			kFunction_1049399: func(a1, why) begin
 				local StartRelease;
 				local inetStartUp2;
@@ -896,17 +1023,21 @@ part := array(nil, {
 					end;
 				nil
 			end,
+			// ConnectLink.Abort: clears the abort mark.
 			kFunction_1049805: func() begin
 				(fAbort := nil)
 			end,
+			// ProcessStackActiveLinkLayer: tells the link-layer service the stack is active.
 			kFunction_10498f9: func() begin
 				self:MUpdateProgressSlip('Update, nil, 80);
 				fLinkLayerServiceFSM:DoEvent('ProcessStackActive, [Array: self, 'MProcessStackActiveCallback])
 			end,
+			// MProcessStackActiveCallback(status): the link layer's progress, passed to the clients.
 			kFunction_1049985: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Grab, a1, 'Update);
 				(if a1.infoError then self:DoEvent('ProcessingStackActiveLinkLayerFailure, nil) else (if (a1.infoStatus = 'Processed) then self:DoEvent('ProcessingStackActiveLinkLayerSuccess, nil)))
 			end,
+			// connected.connected: 'connected - the clients told, the progress slip closed, the grabs answered; the releases that came meanwhile are done now. fDumbLinkClientsExist when a client is not registered for status changes.
 			kFunction_1049b25: func() begin
 				self:MUpdateProgressSlip('Update, nil, 100);
 				(foreach item in fLinkClients_Grab do begin
@@ -921,11 +1052,14 @@ part := array(nil, {
 						self:MDoCallback(item, [Array: fLinkEntry.linkID, self:MBuildStatusFrame(fLinkEntry.linkID, fLinkStatus, nil, nil, nil, nil)])
 					end);
 				self:MDoCallbacks(fLinkClients_Grab, self:MBuildStatusFrameFromError(nil), 'Reset);
+				// looks like a bug: posts item itself as the event's parameters rather than [item], so
+				// the RemoveLinkClient action is performed with a frame where an argument array belongs
 				(foreach item in fLinkClients_ReleasePending do begin
 						self:DoEvent('RemoveLinkClient, item)
 					end);
 				SetLength(fLinkClients_ReleasePending, 0)
 			end,
+			// connected.AddLinkClient(client): another client of the link - counted and answered; -60506 for another link.
 			kFunction_1049cad: func(a1) begin
 				(if a1.fLinkID then (if (a1.fLinkID = fLinkEntry.linkID) then begin
 							fLinKRefCount := (fLinKRefCount + 1);
@@ -935,6 +1069,7 @@ part := array(nil, {
 							self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(nil), nil])
 						end else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60506), -60506])) else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60501), -60501]))
 			end,
+			// connected.RemoveLinkClient(client): counted down; the link is released when immediate, when nobody holds it, or when every registered client says 'okToDisconnect.
 			kFunction_1049d99: func(a1) begin
 				(if a1.fLinkID then (if (a1.fLinkID = fLinkEntry.linkID) then begin
 							fLinKRefCount := (fLinKRefCount - 1);
@@ -949,55 +1084,67 @@ part := array(nil, {
 								end)
 						end else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60506), -60506])) else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60501), -60501]))
 			end,
+			// ReleaseLink(immediate): disconnects now, or starts the hang-up delay (the setup's hangupDelay; 'never keeps the link up), the notify icon's item letting the user disconnect.
 			kFunction_1049f1d: func(a1) begin
 				(if a1 then self:DoEvent('ReleaseTimerExpired, nil) else (if (fLinkEntry.hangupDelay = 'never) then self:MNotifyIconOn() else (if (if IsNumber(fLinkEntry.hangupDelay) then (fLinkEntry.hangupDelay > 0)) then begin
 								self:MNotifyIconOn();
 								self:DoPeriodicEvent('ReleaseTimerExpired, nil, 'normal, 'State, 1, fLinkEntry.hangupDelay)
 							end else self:DoEvent('ReleaseTimerExpired, nil))))
 			end,
+			// DisconnectLink: as the hang-up delay's end.
 			kFunction_104a045: func() begin
 				self:DoEvent('ReleaseTimerExpired, nil)
 			end,
+			// connected.Cancel: when the link was dropped, disconnects.
 			kFunction_104a09d: func() begin
 				(if fWhyLinkDropped then self:DoEvent('DisconnectLink, nil))
 			end,
+			// LoadLinkLayerDriverProtocol: gives the link-layer service the CCE and setup and loads its driver protocol.
 			kFunction_104a179: func() begin
 				self:MUpdateProgressSlip('Update, nil, 20);
 				fLinkLayerServiceFSM:DoEvent('SetCCE, [Array: fCCE]);
 				fLinkLayerServiceFSM:DoEvent('SetLinkEntry, [Array: fLinkEntry]);
 				fLinkLayerServiceFSM:DoEvent('LoadDriverProtocol, [Array: self, 'MLoadDriverProtocolCallback])
 			end,
+			// MLoadDriverProtocolCallback(status): the link layer's progress; 'Loaded or an error ends the step.
 			kFunction_104a22d: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Grab, a1, 'Update);
 				(if a1.infoError then self:DoEvent('LoadLinkLayerDriverProtocolFailure, nil) else (if (a1.infoStatus = 'Loaded) then self:DoEvent('LoadLinkLayerDriverProtocolSuccess, nil)))
 			end,
+			// LoadLinkLayerDriverProtocol.Abort: tells the clients cancelled; the connect fails.
 			kFunction_104a331: func() begin
 				self:MDoCallbacks(fLinkClients_Grab, self:MBuildStatusFrameFromError(kCommErrRequestCanceled), 'Update);
 				self:DoEvent('ConnectLinkFailure, nil)
 			end,
+			// ActivateDomainManagerSuccess: connected (or aborts).
 			kFunction_104a49d: func() begin
 				if fAbort then begin
 						return self:DoEvent('Abort, nil)
 					end;
 				self:DoEvent('connected, nil)
 			end,
+			// ActivateDomainManagerFailure: disengages the link protocol.
 			kFunction_104a50d: func() begin
 				self:DoEvent('DisengageLinkProtocol, nil)
 			end,
+			// ActivateDomainManagerSkipped: connected anyway (or aborts).
 			kFunction_104a555: func() begin
 				if fAbort then begin
 						return self:DoEvent('Abort, nil)
 					end;
 				self:DoEvent('connected, nil)
 			end,
+			// DisengageLinkProtocol: has the link layer disengage.
 			kFunction_104a659: func() begin
 				self:MUpdateProgressSlip('Update, "Disconnecting your internet link...", 40);
 				fLinkLayerServiceFSM:DoEvent('DisengageLinkProtocol, [Array: self, 'MDisengageLinkCallback])
 			end,
+			// MDisengageLinkCallback(status): the link layer's progress, passed to the releasing clients.
 			kFunction_104a6c5: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Release, a1, 'Update);
 				(if a1.infoError then self:DoEvent('DisengageLinkProtocolFailure, nil) else (if (a1.infoStatus = 'Disengaged) then self:DoEvent('DisengageLinkProtocolSuccess, nil)))
 			end,
+			// DeactivateDomainManager: disconnects the domain manager, if there is one.
 			kFunction_104a865: func() begin
 				self:MUpdateProgressSlip('Update, nil, 20);
 				(if fDomainServiceFSM then begin
@@ -1005,32 +1152,39 @@ part := array(nil, {
 						fDomainServiceFSM:DoEvent('Disconnect, [Array: self, 'MDeactivateDomainManagerCallback])
 					end else self:DoEvent('DeactivateDomainManagerSkipped, nil))
 			end,
+			// MDeactivateDomainManagerCallback(status): the domain manager's progress, passed to the releasing clients.
 			kFunction_104a8e9: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Release, a1, 'Update);
 				(if a1.infoError then self:DoEvent('DeactivateDomainManagerFailure, nil) else (if (a1.infoStatus = 'Deactivated) then self:DoEvent('DeactivateDomainManagerSuccess, nil)))
 			end,
+			// ConnectLinkSuccess: runs the login script (or aborts).
 			kFunction_104aa01: func() begin
 				if fAbort then begin
 						return self:DoEvent('Abort, nil)
 					end;
 				self:DoEvent('ParseLoginScript, nil)
 			end,
+			// ConnectLinkFailure: cleans up.
 			kFunction_104aa51: func() begin
 				self:DoEvent('CleanUp, nil)
 			end,
+			// ConnectingLink.Cancel: marks the abort and cancels the physical layer.
 			kFunction_104aab5: func() begin
 				fAbort := true;
 				(if fPhysicalLayerServiceFSM then fPhysicalLayerServiceFSM:DoEvent('Cancel, nil))
 			end,
+			// ProcessingStackActiveLinkLayerSuccess: activates the domain manager (or aborts).
 			kFunction_104ab69: func() begin
 				if fAbort then begin
 						return self:DoEvent('Abort, nil)
 					end;
 				self:DoEvent('ActivateDomainManager, nil)
 			end,
+			// ProcessingStackActiveLinkLayerFailure: disengages the link protocol.
 			kFunction_104abb9: func() begin
 				self:DoEvent('DisengageLinkProtocol, nil)
 			end,
+			// LoadLinkLayerDriverProtocolSuccess: 'connecting - the clients told; has the physical layer connect.
 			kFunction_104acbd: func() begin
 				fLinkStatus := 'connecting;
 				self:MUpdateProgressSlip('Update, nil, 30);
@@ -1039,58 +1193,71 @@ part := array(nil, {
 					end);
 				fPhysicalLayerServiceFSM:DoEvent('connect, [Array: self, 'MConnectLinkCallback])
 			end,
+			// MConnectLinkCallback(status): the physical layer's progress; 'connected or an error ends the step.
 			kFunction_104ad81: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Grab, a1, 'Update);
 				(if a1.infoError then self:DoEvent('ConnectLinkFailure, nil) else (if (a1.infoStatus = 'connected) then self:DoEvent('ConnectLinkSuccess, nil)))
 			end,
+			// LoadLinkLayerDriverProtocolFailure: the connect fails.
 			kFunction_104ade5: func() begin
 				self:DoEvent('ConnectLinkFailure, nil)
 			end,
+			// ActivateCCESuccess: tells the physical layer the stack is active (or aborts).
 			kFunction_104aee9: func() begin
 				if fAbort then begin
 						return self:DoEvent('Abort, nil)
 					end;
 				self:DoEvent('ProcessStackActivePhysicalLayer, nil)
 			end,
+			// ActivateCCEFailure(error): tells the clients; disconnects.
 			kFunction_104af39: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Grab, self:MBuildStatusFrameFromError(a1), 'Update);
 				self:DoEvent('DisconnectLink, nil)
 			end,
+			// EngageLinkProtocolSuccess: activates the CCE (or aborts).
 			kFunction_104b079: func() begin
 				if fAbort then begin
 						return self:DoEvent('Abort, nil)
 					end;
 				self:DoEvent('ActivateCCE, nil)
 			end,
+			// EngageLinkProtocolFailure: disconnects.
 			kFunction_104b0c9: func() begin
 				self:DoEvent('DisconnectLink, nil)
 			end,
+			// ProcessStackActivePhysicalLayer: tells the physical-layer service the stack is active.
 			kFunction_104b189: func() begin
 				self:MUpdateProgressSlip('Update, nil, 70);
 				fPhysicalLayerServiceFSM:DoEvent('ProcessStackActive, [Array: self, 'MProcessStackActiveCallback])
 			end,
+			// MProcessStackActiveCallback(status): the physical layer's progress; 'Processed or an error ends the step.
 			kFunction_104b1f1: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Grab, a1, 'Update);
 				(if a1.infoError then self:DoEvent('ProcessingStackActivePhysicalLayerFailure, nil) else (if (a1.infoStatus = 'Processed) then self:DoEvent('ProcessingStackActivePhysicalLayerSuccess, nil)))
 			end,
+			// DoFailure(error): a failure before the drivers were loaded - the clients told; the connect fails.
 			kFunction_104b35d: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Grab, self:MBuildStatusFrameFromError(a1), 'Update);
 				self:DoEvent('ConnectLinkFailure, nil)
 			end,
+			// LoadPhysicalLayerDriverProtocol: gives the physical-layer service the CCE and setup and loads its driver protocol.
 			kFunction_104b3b9: func() begin
 				self:MUpdateProgressSlip('Update, nil, 10);
 				fPhysicalLayerServiceFSM:DoEvent('SetCCE, [Array: fCCE]);
 				fPhysicalLayerServiceFSM:DoEvent('SetLinkEntry, [Array: fLinkEntry]);
 				fPhysicalLayerServiceFSM:DoEvent('LoadDriverProtocol, [Array: self, 'MLoadDriverProtocolCallback])
 			end,
+			// MLoadDriverProtocolCallback(status): the physical layer's progress; 'Loaded or an error ends the step.
 			kFunction_104b449: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Grab, a1, 'Update);
 				(if a1.infoError then self:DoEvent('LoadPhysicalLayerDriverProtocolFailure, nil) else (if (a1.infoStatus = 'Loaded) then self:DoEvent('LoadPhysicalLayerDriverProtocolSuccess, nil)))
 			end,
+			// LoadPhysicalLayerDriverProtocol.Abort: tells the clients cancelled; the connect fails.
 			kFunction_104b53d: func() begin
 				self:MDoCallbacks(fLinkClients_Grab, self:MBuildStatusFrameFromError(kCommErrRequestCanceled), 'Update);
 				self:DoEvent('ConnectLinkFailure, nil)
 			end,
+			// MCleanUp(): disposes of the script service.
 			kFunction_104b605: func() begin
 				(if fScriptServiceFSM then begin
 						fScriptServiceFSM:DoEvent('Cancel, nil);
@@ -1098,18 +1265,22 @@ part := array(nil, {
 						(fScriptServiceFSM := fScriptServiceFSM:Release())
 					end)
 			end,
+			// ParseLogoutScriptSuccess: disconnects.
 			kFunction_104b681: func() begin
 				self:MCleanUp();
 				self:DoEvent('DisconnectLink, nil)
 			end,
+			// ParseLogoutScriptFailure: disconnects.
 			kFunction_104b6e5: func() begin
 				self:MCleanUp();
 				self:DoEvent('DisconnectLink, nil)
 			end,
+			// ParseLogoutScriptSkipped: disconnects.
 			kFunction_104b731: func() begin
 				self:MCleanUp();
 				self:DoEvent('DisconnectLink, nil)
 			end,
+			// MCleanUp(): disposes of the script service.
 			kFunction_104b7ed: func() begin
 				(if fScriptServiceFSM then begin
 						fScriptServiceFSM:DoEvent('Cancel, nil);
@@ -1117,6 +1288,7 @@ part := array(nil, {
 						(fScriptServiceFSM := fScriptServiceFSM:Release())
 					end)
 			end,
+			// ParseLoginScriptSuccess: engages the link protocol (or aborts).
 			kFunction_104b841: func() begin
 				self:MCleanUp();
 				if fAbort then begin
@@ -1124,10 +1296,12 @@ part := array(nil, {
 					end;
 				self:DoEvent('EngageLinkProtocol, nil)
 			end,
+			// ParseLoginScriptFailure: disconnects.
 			kFunction_104b8b9: func() begin
 				self:MCleanUp();
 				self:DoEvent('DisconnectLink, nil)
 			end,
+			// ParseLoginScriptSkipped: engages the link protocol (or aborts).
 			kFunction_104b905: func() begin
 				self:MCleanUp();
 				if fAbort then begin
@@ -1135,11 +1309,13 @@ part := array(nil, {
 					end;
 				self:DoEvent('EngageLinkProtocol, nil)
 			end,
+			// DisconnectLink: 'disconnecting; has the physical layer disconnect.
 			kFunction_104ba0d: func() begin
 				fLinkStatus := 'disconnecting;
 				self:MUpdateProgressSlip('Update, "Disconnecting your internet link...", 80);
 				fPhysicalLayerServiceFSM:DoEvent('Disconnect, [Array: self, 'MDisconnectLinkCallback])
 			end,
+			// MDisconnectLinkCallback(status): tells the releasing clients; 'disconnected or an error ends the step.
 			kFunction_104ba89: func(a1) begin
 				(foreach item in fLinkClients_Release do begin
 						self:MDoCallback(item, [Array: item.fLinkID, a1, a1.infoError])
@@ -1149,24 +1325,31 @@ part := array(nil, {
 						self:DoEvent('DisconnectLinkFailure, nil)
 					end else (if (a1.infoStatus = 'disconnected) then self:DoEvent('DisconnectLinkSuccess, nil)))
 			end,
+			// ProcessingStackActivePhysicalLayerSuccess: tells the link layer the stack is active (or aborts).
 			kFunction_104bc1d: func() begin
 				if fAbort then begin
 						return self:DoEvent('Abort, nil)
 					end;
 				self:DoEvent('ProcessStackActiveLinkLayer, nil)
 			end,
+			// ProcessingStackActivePhysicalLayerFailure: disengages the link protocol.
 			kFunction_104bc6d: func() begin
 				self:DoEvent('DisengageLinkProtocol, nil)
 			end,
+			// LoadPhysicalLayerDriverProtocolSuccess: loads the link layer's driver protocol.
 			kFunction_104bd29: func() begin
+				// looks like a bug: no return after posting Abort (the other Success actions return), so
+				// the next step is posted as well
 				if fAbort then begin
 						self:DoEvent('Abort, nil)
 					end;
 				self:DoEvent('LoadLinkLayerDriverProtocol, nil)
 			end,
+			// LoadPhysicalLayerDriverProtocolFailure: the connect fails.
 			kFunction_104bd95: func() begin
 				self:DoEvent('ConnectLinkFailure, nil)
 			end,
+			// ActivateDomainManager: creates the domain manager service (user configuration 'NIE_DefaultDomainManager, else the NIE's own) and connects it; skipped if there is none.
 			kFunction_104bea1: func() begin
 				self:MUpdateProgressSlip('Update, nil, 90);
 				if (not (fDomainServiceFSM := InetGetService(GetUserConfig('NIE_DefaultDomainManager)))) then begin
@@ -1179,25 +1362,29 @@ part := array(nil, {
 				fDomainServiceFSM:DoEvent('SetLinkEntry, [Array: fLinkEntry]);
 				fDomainServiceFSM:DoEvent('connect, [Array: self, 'MActivateDomainManagerCallback])
 			end,
+			// MActivateDomainManagerCallback(status): the domain manager's progress; 'Activated or an error ends the step.
 			kFunction_104bfd5: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Grab, a1, 'Update);
 				(if a1.infoError then self:DoEvent('ActivateDomainManagerFailure, nil) else (if (a1.infoStatus = 'Activated) then self:DoEvent('ActivateDomainManagerSuccess, nil)))
 			end,
+			// DisconnectLinkSuccess: cleans up.
 			kFunction_104c0dd: func() begin
 				self:DoEvent('CleanUp, nil)
 			end,
+			// DisconnectLinkFailure: cleans up anyway.
 			kFunction_104c125: func() begin
 				self:DoEvent('CleanUp, nil)
 			end,
+			// ActivateCCE: sets the CCE endpoint's final options - the physical layer's answer, the setup's special options, "iclc" (the link's configuration) - asynchronously.
 			kFunction_104c25d: func() begin
 				local inetGetOptionFromOptionArray2, list;
 				self:MUpdateProgressSlip('Update, "Connecting to the internet...", 60);
 				list := [Array: ];
 				if (if IsArray(fPhysicalLayerServiceFSM:?GetConfigOptionsAfter_Instantiate()) then (inetGetOptionFromOptionArray2 := InetGetOptionFromOptionArray(fPhysicalLayerServiceFSM:GetConfigOptionsAfter_Instantiate(), "sid "))) then begin
-						AddArraySlot(list, InetBuildOptionFromTemplate(inetGetOptionFromOptionArray2, {type: 'option, opCode: 512}))
+						AddArraySlot(list, InetBuildOptionFromTemplate(inetGetOptionFromOptionArray2, {type: 'option, opCode: opSetRequired}))
 					end;
 				InetAppendSpecialLinkEntryOptions(list, fLinkEntry, 'inetAlmostFinalOptions);
-				AddArraySlot(list, {label: "iclc", type: 'option, opCode: 512, result: nil, form: 'template, data: {arglist: [Array: nil, nil, fLinkEntry.linkID, 0, 4], typeList: [Array: 'struct, 'ulong, 'long, 'ulong, 'ulong, 'ulong]}});
+				AddArraySlot(list, {label: "iclc", type: 'option, opCode: opSetRequired, result: nil, form: 'template, data: {arglist: [Array: nil, nil, fLinkEntry.linkID, 0, 4], typeList: [Array: 'struct, 'ulong, 'long, 'ulong, 'ulong, 'ulong]}});
 				InetAppendSpecialLinkEntryOptions(list, fLinkEntry, 'inetFinalOptions);
 				if (Length(list) = 0) then begin
 						return self:DoEvent('ActivateCCESuccess, nil)
@@ -1208,6 +1395,7 @@ part := array(nil, {
 						self:DoEvent('ActivateCCEFailure, [Array: InetGetExceptionError(CurrentException())])
 					end)
 			end,
+			// completionScript(endpoint, options, error): the CCE options' answer - ActivateCCESuccess, or ActivateCCEFailure with the error (the "iclc" option's own result first).
 			kFunction_104c59d: func(a1, a2, a3) begin
 				local arglistItem;
 				if a3 then begin
@@ -1222,23 +1410,29 @@ part := array(nil, {
 					end;
 				self:DoEvent('ActivateCCESuccess, nil)
 			end,
+			// MBuildCompletionSpec_Option(): the completion spec for the option call.
 			kFunction_104c649: func() begin
 				{_proto: fCompletionSpec_Option, _parent: self}
 			end,
+			// DisengageLinkProtocolSuccess: runs the logout script.
 			kFunction_104c745: func() begin
 				self:DoEvent('ParseLogoutScript, nil)
 			end,
+			// DisengageLinkProtocolFailure: disconnects.
 			kFunction_104c78d: func() begin
 				self:DoEvent('DisconnectLink, nil)
 			end,
+			// EngageLinkProtocol: has the link layer engage its protocol (PPP, ...).
 			kFunction_104c88d: func() begin
 				self:MUpdateProgressSlip('Update, nil, 50);
 				fLinkLayerServiceFSM:DoEvent('EngageLinkProtocol, [Array: self, 'MEngageLinkCallback])
 			end,
+			// MEngageLinkCallback(status): the link layer's progress; 'Engaged or an error ends the step.
 			kFunction_104c8f5: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Grab, a1, 'Update);
 				(if a1.infoError then self:DoEvent('EngageLinkProtocolFailure, nil) else (if (a1.infoStatus = 'Engaged) then self:DoEvent('EngageLinkProtocolSuccess, nil)))
 			end,
+			// MDoCallbacks(clients, status, how): tells each client the status (and the progress slip its text), unless an error was told them already (the array's class 'error); 'Reset empties the array.
 			kFunction_104c9a1: func(a1, a2, a3) begin
 				if (ClassOf(a1) <> 'error) then begin
 						self:MUpdateProgressSlip('Update, a2.infoText2, nil);
@@ -1254,7 +1448,9 @@ part := array(nil, {
 						SetClass(a1, 'success)
 					end)
 			end,
+			// InetManagerFSM, the link manager's state machine template (class |Inet Manager:NIE|)
 			kLiteral_10401f5: {fLinkStatus: 'idle, MCancelLink: kFunction_1040ab1, MGetLinkCursor: kFunction_1040b55, fConnectionSlipCallback: nil, MGetExceptionError: kFunction_1040bc1, class: 'InetService, fScriptServiceFSM: nil, fLinkClients_GrabPending: nil, fLinkClients_Release: nil, MCancelCurrentRequest: kFunction_1040d49, fWhyLinkDropped: nil, MBuildCallback: kFunction_1040e0d, fDomainServiceFSM: nil, MOpenConnectionSlip: kFunction_1041081, MGetLinkDefaultID: kFunction_10436f9, fVerboseDisconnect: nil, fLinkEntry: nil, MBuildStatusFrameFromError: kFunction_1043749, fLinKRefCount: 0, _proto: @8192, fLinkStatusStrTable: '{idle: "Idle", initializing: "Initializing", connecting: "Connecting", login: "Login", connected: "Connected", disconnecting: "Disconnecting", logout: "Logout", disconnected: "Disconnected"}, fLinkClients: nil, fLinkLayerServiceFSM: nil, fNotifyIconObj: nil, MBuildStatusFrame: kFunction_10439dd, MNotifyIconOn: kFunction_1043ba5, fProgressSlipView: nil, fConnectionSlipView: nil, MOpenConnectionSlipCallback: kFunction_1043c91, MShutdownTimer: kFunction_1043cf1, name: "Newton Internet Enabler", MGetErrorString: kFunction_1043da9, fAbort: nil, MGetLinkDefaultEntry: kFunction_10458b9, MShutdown: kFunction_104598d, description: "Newton Internet Enabler Core Service", MDoCallback: kFunction_1045cd9, fLinkClients_Grab: nil, MGetLinkEntryByLinkID: kFunction_1045d5d, declareSelf: 'InetManagerFSM, MNotifyIconCallback: kFunction_1045e81, fCCE: nil, fPhysicalLayerServiceFSM: nil, MDisplayStatus: kFunction_10460c1, fLinkClients_ReleasePending: nil, MSetLinkDefaultID: kFunction_10466d9, fDumbLinkClientsExist: nil, MGetLinkSoup: kFunction_104672d, MGetLinkStatus: kFunction_1046771, versionStr: "2.0    ", MNotifyIconOff: kFunction_10467fd, MGetScriptService: kFunction_1046871, fProcessPortID: nil, fPowerOffSlipVisible: nil, MUpdateProgressSlip: kFunction_10468b1, MGetDomainService: kFunction_1046a99, fVerboseConnect: nil, MGetLinkUniqueID: kFunction_1046ac9, fPowerOffState: nil, MGetLinkStatusAll: kFunction_1046b55, fsm_private_states: {DeactivatingDomainManager: {DeactivateDomainManagerSuccess: {action: kFunction_10473a1, nextState: 'DisengageLinkProtocol}, DeactivateDomainManagerFailure: {action: kFunction_10473fd, nextState: 'DisengageLinkProtocol}, DeactivateDomainManagerSkipped: {action: kFunction_1047445, nextState: 'DisengageLinkProtocol}, AddLinkClient: {action: kFunction_104749d}, RemoveLinkClient: {action: kFunction_10474f1}, Cancel: {action: kFunction_10475a9}}, ConnectLinkFailureCleanUp: {CleanUp: {action: kFunction_104764d, nextState: 'Genesis}, AddLinkClient: {action: kFunction_104749d}, RemoveLinkClient: {action: kFunction_10474f1}}, ParseLogoutScript: {ParseLogoutScript: {action: kFunction_1047ab9, nextState: 'ParsingLogoutScript, MParseCallback: kFunction_1047d21}, Cancel: {action: kFunction_10475a9}, AddLinkClient: {action: kFunction_104749d}, RemoveLinkClient: {action: kFunction_10474f1}}, Genesis: {terminal: true, Create: {action: kFunction_1047ec1}, AddLinkClient: {action: kFunction_10482f9, nextNoIdle: true, nextState: 'ConnectLink}, RemoveLinkClient: {action: kFunction_10484a1}, Cancel: {action: kFunction_10475a9}, ShutdownTimerExpired: {action: kFunction_1048519}}, ParseLoginScript: {ParseLoginScript: {action: kFunction_10485f1, nextState: 'ParsingLoginScript, MParseCallback: kFunction_104877d}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Abort: {nextState: 'DisconnectLink, action: kFunction_1048955}, Cancel: {action: kFunction_10475a9}}, ReleasingLink: {ReleaseTimerExpired: {action: kFunction_1048a4d, nextState: 'DeactivateDomainManager}, ReleaseTimerAddLinkClient: {action: kFunction_1048b7d, nextState: 'connected}, AddLinkClient: {action: kFunction_1048be1}, RemoveLinkClient: {action: kFunction_1048c99}, Cancel: {action: kFunction_1048d89}}, ConnectLink: {ConnectLink: {nextState: 'LoadPhysicalLayerDriverProtocol, action: kFunction_1048eb5, MBuildConfigOptions_InstantiateCCE: kFunction_10491dd, MPowerOffHandler: kFunction_1049399}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Abort: {nextState: 'Genesis, action: kFunction_1049805}, Cancel: {action: kFunction_10475a9}}, ProcessStackActiveLinkLayer: {ProcessStackActiveLinkLayer: {action: kFunction_10498f9, nextState: 'ProcessingStackActiveLinkLayer, MProcessStackActiveCallback: kFunction_1049985}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Abort: {action: kFunction_1048955, nextState: 'DisconnectLink}, Cancel: {action: kFunction_10475a9}}, connected: {connected: {action: kFunction_1049b25}, AddLinkClient: {action: kFunction_1049cad}, RemoveLinkClient: {action: kFunction_1049d99}, ReleaseLink: {action: kFunction_1049f1d, nextState: 'ReleasingLink}, DisconnectLink: {action: kFunction_104a045, nextState: 'ReleasingLink}, Abort: {action: kFunction_1048955, nextState: 'DisconnectLink}, Cancel: {action: kFunction_104a09d}}, LoadLinkLayerDriverProtocol: {LoadLinkLayerDriverProtocol: {action: kFunction_104a179, nextState: 'LoadingLinkLayerDriverProtocol, MLoadDriverProtocolCallback: kFunction_104a22d}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Abort: {action: kFunction_104a331, nextState: 'ConnectingLink}, Cancel: {action: kFunction_10475a9}}, ActivatingDomainManager: {ActivateDomainManagerSuccess: {action: kFunction_104a49d, nextState: 'connected}, ActivateDomainManagerFailure: {action: kFunction_104a50d, nextState: 'DisengageLinkProtocol}, ActivateDomainManagerSkipped: {action: kFunction_104a555, nextState: 'connected}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Cancel: {action: kFunction_10475a9}}, DisengageLinkProtocol: {DisengageLinkProtocol: {action: kFunction_104a659, nextState: 'DisengagingLinkProtocol, MDisengageLinkCallback: kFunction_104a6c5}, AddLinkClient: {action: kFunction_104749d}, RemoveLinkClient: {action: kFunction_10474f1}, Cancel: {action: kFunction_10475a9}}, DeactivateDomainManager: {DeactivateDomainManager: {action: kFunction_104a865, nextState: 'DeactivatingDomainManager, MDeactivateDomainManagerCallback: kFunction_104a8e9}, AddLinkClient: {action: kFunction_104749d}, RemoveLinkClient: {action: kFunction_10474f1}, Cancel: {action: kFunction_10475a9}}, ConnectingLink: {ConnectLinkSuccess: {action: kFunction_104aa01, nextState: 'ParseLoginScript}, ConnectLinkFailure: {action: kFunction_104aa51, nextState: 'ConnectLinkFailureCleanUp}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Cancel: {action: kFunction_104aab5}}, ProcessingStackActiveLinkLayer: {ProcessingStackActiveLinkLayerSuccess: {action: kFunction_104ab69, nextState: 'ActivateDomainManager}, ProcessingStackActiveLinkLayerFailure: {action: kFunction_104abb9, nextState: 'DisengageLinkProtocol}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Cancel: {action: kFunction_10475a9}}, LoadingLinkLayerDriverProtocol: {LoadLinkLayerDriverProtocolSuccess: {action: kFunction_104acbd, nextState: 'ConnectingLink, MConnectLinkCallback: kFunction_104ad81}, LoadLinkLayerDriverProtocolFailure: {action: kFunction_104ade5, nextState: 'ConnectingLink}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Cancel: {action: kFunction_10475a9}}, ActivatingCCE: {ActivateCCESuccess: {action: kFunction_104aee9, nextState: 'ProcessStackActivePhysicalLayer}, ActivateCCEFailure: {action: kFunction_104af39, nextState: 'DisconnectLink}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Cancel: {action: kFunction_10475a9}}, EngagingLinkProtocol: {EngageLinkProtocolSuccess: {action: kFunction_104b079, nextState: 'ActivateCCE}, EngageLinkProtocolFailure: {action: kFunction_104b0c9, nextState: 'DisconnectLink}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Cancel: {action: kFunction_10475a9}}, ProcessStackActivePhysicalLayer: {ProcessStackActivePhysicalLayer: {action: kFunction_104b189, nextState: 'ProcessingStackActivePhysicalLayer, MProcessStackActiveCallback: kFunction_104b1f1}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Abort: {action: kFunction_1048955, nextState: 'DisconnectLink}, Cancel: {action: kFunction_10475a9}}, LoadPhysicalLayerDriverProtocol: {DoFailure: {action: kFunction_104b35d, nextState: 'ConnectingLink}, LoadPhysicalLayerDriverProtocol: {action: kFunction_104b3b9, nextState: 'LoadingPhysicalLayerDriverProtocol, MLoadDriverProtocolCallback: kFunction_104b449}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Abort: {action: kFunction_104b53d, nextState: 'ConnectingLink}, Cancel: {action: kFunction_10475a9}}, ParsingLogoutScript: {MCleanUp: kFunction_104b605, ParseLogoutScriptSuccess: {action: kFunction_104b681, nextState: 'DisconnectLink}, ParseLogoutScriptFailure: {action: kFunction_104b6e5, nextState: 'DisconnectLink}, ParseLogoutScriptSkipped: {action: kFunction_104b731, nextState: 'DisconnectLink}, Cancel: {action: kFunction_10475a9}, AddLinkClient: {action: kFunction_104749d}, RemoveLinkClient: {action: kFunction_10474f1}}, ParsingLoginScript: {MCleanUp: kFunction_104b7ed, ParseLoginScriptSuccess: {action: kFunction_104b841, nextState: 'EngageLinkProtocol}, ParseLoginScriptFailure: {action: kFunction_104b8b9, nextState: 'DisconnectLink}, ParseLoginScriptSkipped: {action: kFunction_104b905, nextState: 'EngageLinkProtocol}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Cancel: {action: kFunction_10475a9}}, DisconnectLink: {DisconnectLink: {nextState: 'DisconnectingLink, action: kFunction_104ba0d, MDisconnectLinkCallback: kFunction_104ba89}, Cancel: {action: kFunction_10475a9}, AddLinkClient: {action: kFunction_104749d}, RemoveLinkClient: {action: kFunction_10474f1}}, ProcessingStackActivePhysicalLayer: {ProcessingStackActivePhysicalLayerSuccess: {action: kFunction_104bc1d, nextState: 'ProcessStackActiveLinkLayer}, ProcessingStackActivePhysicalLayerFailure: {action: kFunction_104bc6d, nextState: 'DisengageLinkProtocol}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Cancel: {action: kFunction_10475a9}}, LoadingPhysicalLayerDriverProtocol: {LoadPhysicalLayerDriverProtocolSuccess: {action: kFunction_104bd29, nextState: 'LoadLinkLayerDriverProtocol}, LoadPhysicalLayerDriverProtocolFailure: {action: kFunction_104bd95, nextState: 'ConnectingLink}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Cancel: {action: kFunction_10475a9}}, ActivateDomainManager: {ActivateDomainManager: {action: kFunction_104bea1, nextState: 'ActivatingDomainManager, MActivateDomainManagerCallback: kFunction_104bfd5}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Abort: {action: kFunction_1048955, nextState: 'DisconnectLink}, Cancel: {action: kFunction_10475a9}}, DisconnectingLink: {DisconnectLinkSuccess: {action: kFunction_104c0dd, nextState: 'ConnectLinkFailureCleanUp}, DisconnectLinkFailure: {action: kFunction_104c125, nextState: 'ConnectLinkFailureCleanUp}, Cancel: {action: kFunction_10475a9}, AddLinkClient: {action: kFunction_104749d}, RemoveLinkClient: {action: kFunction_10474f1}}, ActivateCCE: {ActivateCCE: {action: kFunction_104c25d, nextState: 'ActivatingCCE, fCompletionSpec_Option: {async: true, reqTimeout: 66666, completionScript: kFunction_104c59d}, MBuildCompletionSpec_Option: kFunction_104c649}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Abort: {action: kFunction_1048955, nextState: 'DisconnectLink}, Cancel: {action: kFunction_10475a9}}, DisengagingLinkProtocol: {DisengageLinkProtocolSuccess: {action: kFunction_104c745, nextState: 'ParseLogoutScript}, DisengageLinkProtocolFailure: {action: kFunction_104c78d, nextState: 'DisconnectLink}, AddLinkClient: {action: kFunction_104749d}, RemoveLinkClient: {action: kFunction_10474f1}, Cancel: {action: kFunction_10475a9}}, EngageLinkProtocol: {EngageLinkProtocol: {action: kFunction_104c88d, nextState: 'EngagingLinkProtocol, MEngageLinkCallback: kFunction_104c8f5}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Abort: {nextState: 'DisconnectLink, action: kFunction_1048955}, Cancel: {action: kFunction_10475a9}}}, fProgressSlipStatus: nil, MDoCallbacks: kFunction_104c9a1},
+			// InetStartUp(): the link manager (the global |InetManagerFSM:NIE|), made and the package state acquired the first time.
 			kFunction_103fee9: func() begin
 				local value;
 				if (not (value := GetGlobalVar('|InetManagerFSM:NIE|))) then begin
@@ -1263,23 +1459,28 @@ part := array(nil, {
 					end;
 				value
 			end,
+			// InetBuildStatusFrame(linkID, infoStatus, infoError, text1, text2, ...): the link manager's MBuildStatusFrame.
 			kFunction_104ca71: func(a1, a2, a3, a4, a5, a6) begin
 				InetStartUp():MBuildStatusFrame(a1, a2, a3, a4, a5, a6)
 			end,
+			// InetObjectToString(obj): a printable string of an object (protoFSM's ObjectToString).
 			kFunction_104cac1: func(a1) begin
 				InetStartUp():ObjectToString(a1)
 			end,
+			// RegInetLinkStatusChange(sym, frame, symbol): registers frame:symbol to be told every link status change; returns sym.
 			kFunction_104cb15: func(a1, a2, a3) begin
 				local inetStartUp2;
 				(inetStartUp2 := InetStartUp()).fLinkClients.(a1) := inetStartUp2:MBuildCallback(a1, a2, a3);
 				a1
 			end,
+			// UnRegInetLinkStatusChange(sym): unregisters it.
 			kFunction_104cb69: func(a1) begin
 				local inetStartUp2;
 				RemoveSlot((inetStartUp2 := InetStartUp()).fLinkClients, a1);
 				inetStartUp2:MShutdownTimer();
 				nil
 			end,
+			// InetAppendSpecialLinkEntryOptions(options, linkEntry, slot): appends the setup's options in that slot (a frame, an array of them, or a function(linkEntry, options) called first).
 			kFunction_104cbc1: func(a1, a2, a3) begin
 				if (if IsFunction(a2.(a3)) then (GetFunctionArgCount(a2.(a3)) = 2)) then begin
 						try begin
@@ -1292,6 +1493,7 @@ part := array(nil, {
 										end
 								end))))
 			end,
+			// InetBuildOptionFromTemplate(option, overrides): a copy of an option frame with label, type, opCode, result, form and template data replaced from overrides.
 			kFunction_104ccd5: func(a1, a2) begin
 				local l1;
 				l1 := (if IsFrame(a1) then TotalClone(a1) else {});
@@ -1324,6 +1526,7 @@ part := array(nil, {
 					end;
 				TotalClone(l1)
 			end,
+			// InetCopyIPAddress(from, to): copies the four bytes; returns to, or nil if either is not an address.
 			kFunction_104ce79: func(a1, a2) begin
 				(if (if InetIsValidIPAddress(a1) then InetIsValidIPAddress(a2)) then begin
 						(for i := 0 to 3 do begin
@@ -1332,6 +1535,7 @@ part := array(nil, {
 						a2
 					end)
 			end,
+			// InetGetOptionFromOptionArray(options, label): the option with that label, or nil.
 			kFunction_104ceed: func(a1, a2) begin
 				(try begin
 						LFetch(a1, a2, 0, GetGlobalFn('StrExactCompare), 'label)
@@ -1339,6 +1543,7 @@ part := array(nil, {
 						nil
 					end)
 			end,
+			// InetGetResultFromOptionArray(options): the first option result that is not nil.
 			kFunction_104cf6d: func(a1) begin
 				(try begin
 						(foreach item in a1 do begin
@@ -1350,6 +1555,7 @@ part := array(nil, {
 						nil
 					end)
 			end,
+			// InetGetResultFromOptionArrayByLabel(options, label): the result of the option with that label.
 			kFunction_104cfe1: func(a1, a2) begin
 				(try begin
 						LFetch(a1, a2, 0, GetGlobalFn('StrExactCompare), 'label).result
@@ -1357,9 +1563,11 @@ part := array(nil, {
 						nil
 					end)
 			end,
+			// InetIPAddressToString(address): "a.b.c.d", or "" for an invalid address.
 			kFunction_104d04d: func(a1) begin
 				(if InetIsValidIPAddress(a1) then Stringer([Array: a1[0], ".", a1[1], ".", a1[2], ".", a1[3]]) else "")
 			end,
+			// InetIPStringToAddress(string): [a, b, c, d] from "a.b.c.d", or nil if it is not a valid address.
 			kFunction_104d0d5: func(a1) begin
 				list := [Array: -1, -1, -1, -1];
 				try begin
@@ -1379,25 +1587,32 @@ part := array(nil, {
 					end onexception |evt.ex| do begin end;
 				(if (if (if strTokenize2 then (not call strTokenize2 with ())) then InetIsValidIPAddress(list)) then list)
 			end,
+			// InetIsSameIPAddress(a, b): whether two valid addresses are equal.
 			kFunction_104d269: func(a1, a2) begin
 				(if (if (if (if (if InetIsValidIPAddress(a1) then InetIsValidIPAddress(a2)) then (a1[0] = a2[0])) then (a1[1] = a2[1])) then (a1[2] = a2[2])) then (a1[3] = a2[3]))
 			end,
+			// InetIsSameIPAddressStr(a, b): the same for strings.
 			kFunction_104d2f5: func(a1, a2) begin
 				InetIsSameIPAddress(InetIPStringToAddress(a1), InetIPStringToAddress(a2))
 			end,
+			// InetIsValidIPAddress(address): an array of four integers 0..255.
 			kFunction_104d341: func(a1) begin
 				(if (if (if (if (if (if (if (if (if (if (if (if (if IsArray(a1) then (Length(a1) = 4)) then IsInteger(a1[0])) then (a1[0] >= 0)) then (a1[0] <= 255)) then IsInteger(a1[1])) then (a1[1] >= 0)) then (a1[1] <= 255)) then IsInteger(a1[2])) then (a1[2] >= 0)) then (a1[2] <= 255)) then IsInteger(a1[3])) then (a1[3] >= 0)) then (a1[3] <= 255))
 			end,
+			// InetIsValidIPAddressStr(string): whether it parses as an address.
 			kFunction_104d449: func(a1) begin
 				(InetIPStringToAddress(a1) <> nil)
 			end,
+			// InetIsZeroIPAddress(address): 0.0.0.0.
 			kFunction_104d48d: func(a1) begin
 				(if (if (if (if InetIsValidIPAddress(a1) then (a1[0] = 0)) then (a1[1] = 0)) then (a1[2] = 0)) then (a1[3] = 0))
 			end,
+			// InetGetService(sym): the service registered under sym (|InetServices:NIE|), or nil.
 			kFunction_104d501: func(a1) begin
 				local value;
 				(if (if a1 then (value := GetGlobalVar('|InetServices:NIE|))) then value.(a1))
 			end,
+			// InetGetServiceList(class): the registered services of that class.
 			kFunction_104d57d: func(a1) begin
 				list := [Array: ];
 				if (if a1 then (value := GetGlobalVar('|InetServices:NIE|))) then begin
@@ -1411,32 +1626,40 @@ part := array(nil, {
 					end;
 				list
 			end,
+			// InetGetIPAddress(path): a copy of the current link setup's value at that path.
 			kFunction_104d609: func(a1) begin
 				local fLinkEntry;
 				(if (if IsPathExpr(a1) then (fLinkEntry := InetStartUp().fLinkEntry)) then TotalClone(fLinkEntry.(a1)))
 			end,
+			// InetGrabLinkVerbose(linkID, frame, symbol): InetGrabLink with a progress slip.
 			kFunction_104d68d: func(a1, a2, a3) begin
 				local inetStartUp2, mBuildCallback;
 				inetStartUp2 := InetStartUp();
 				(mBuildCallback := inetStartUp2:MBuildCallback(a1, a2, a3)).fVerbose := true;
 				inetStartUp2:DoEvent('AddLinkClient, [Array: mBuildCallback])
 			end,
+			// InetReleaseLinkVerbose(linkID, frame, symbol): InetReleaseLink with a progress slip.
 			kFunction_104d6d1: func(a1, a2, a3) begin
 				local inetStartUp2, mBuildCallback;
 				inetStartUp2 := InetStartUp();
 				(mBuildCallback := inetStartUp2:MBuildCallback(a1, a2, a3)).fVerbose := true;
 				inetStartUp2:DoEvent('RemoveLinkClient, [Array: mBuildCallback])
 			end,
+			// InetGetProcessPortID(): the CCE endpoint's process port id.
 			kFunction_104d715: func() begin
 				InetStartUp().fProcessPortID
 			end,
+			// InetGetLinkRefCount(): how many clients hold the link.
 			kFunction_104d75d: func() begin
 				InetStartUp().fLinKRefCount
 			end,
+			// InetGetOptions(): the NIE's version and its user configuration symbol.
 			kFunction_104d791: func() begin
 				EnsureInternal({version: "2.0    ", userConfigSymbol: '|InetServices:NIE|})
 			end,
+			// the Inet* functions by name, put into (and taken out of) the global functions
 			kLiteral_103edc9: {InetAddNewLinkEntry: kFunction_103f5b9, InetAddNewLinkEntryInternal: kFunction_103f66d, InetCancelCurrentRequest: kFunction_103f6e9, InetCancelLink: kFunction_103f759, InetDisconnectLink: kFunction_103f7ed, InetDisplayStatus: kFunction_103f8b5, InetGetAllLinksStatus: kFunction_103f91d, InetGetDefaultLinkID: kFunction_103f989, InetGetLinkEntry: kFunction_103f9e1, InetGetLinkStatus: kFunction_103fa3d, InetGrabLink: kFunction_103fa91, InetOpenConnectionSlip: kFunction_103fb15, InetReleaseLink: kFunction_103fb71, InetSetDefaultLinkID: kFunction_103fbb1, InetGetExceptionError: kFunction_103fc09, InetGetErrorString: kFunction_103fc61, InetShutDown: kFunction_103fcb5, InetStartUp: kFunction_103fee9, InetBuildStatusFrame: kFunction_104ca71, InetObjectToString: kFunction_104cac1, RegInetLinkStatusChange: kFunction_104cb15, UnRegInetLinkStatusChange: kFunction_104cb69, InetAppendSpecialLinkEntryOptions: kFunction_104cbc1, InetBuildOptionFromTemplate: kFunction_104ccd5, InetCopyIPAddress: kFunction_104ce79, InetGetOptionFromOptionArray: kFunction_104ceed, InetGetResultFromOptionArray: kFunction_104cf6d, InetGetResultFromOptionArrayByLabel: kFunction_104cfe1, InetIPAddressToString: kFunction_104d04d, InetIPStringToAddress: kFunction_104d0d5, InetIsSameIPAddress: kFunction_104d269, InetIsSameIPAddressStr: kFunction_104d2f5, InetIsValidIPAddress: kFunction_104d341, InetIsValidIPAddressStr: kFunction_104d449, InetIsZeroIPAddress: kFunction_104d48d, InetGetService: kFunction_104d501, InetGetServiceList: kFunction_104d57d, InetGetIPAddress: kFunction_104d609, InetGrabLinkVerbose: kFunction_104d68d, InetReleaseLinkVerbose: kFunction_104d6d1, InetGetProcessPortID: kFunction_104d715, InetGetLinkRefCount: kFunction_104d75d, InetGetOptions: kFunction_104d791},
+			// registers a service in the global |InetServices:NIE| (service symbol -> template) and saves that frame in the user configuration soon after (procrastinated, 3333 ms)
 			kFunction_104d851: func(a1, a2) begin
 				local value;
 				if (not (value := GetGlobalVar('|InetServices:NIE|))) then begin
@@ -1445,6 +1668,7 @@ part := array(nil, {
 				value.(EnsureInternal(a1)) := a2;
 				AddProcrastinatedCall(EnsureInternal('|InetServices:NIE|), GetGlobalFn('SetUserConfig), EnsureInternal([Array: '|InetServices:NIE|, '|InetServices:NIE|]), 3333)
 			end,
+			// the user configuration watcher: a new current worksite makes its Internet setup the default link
 			kFunction_104d8dd: func(a1) begin
 				local currentEmporium;
 				(if (a1 = 'currentEmporium) then (if (currentEmporium := ResolveEntryAlias(GetUserConfig('currentEmporium))) then (if (currentEmporium := InetGetLinkEntry(currentEmporium.InetDefaultLink)) then InetSetDefaultLinkID(currentEmporium.linkID))))
@@ -1457,8 +1681,12 @@ part := array(nil, {
 			call (kFunction_104d851) with ('|Inet Manager:NIE|, kLiteral_10401f5);
 			RegUserConfigChange('|Inet Manager:NIE|, kFunction_104d8dd)
 		end),
+	// UnitsRemovedScript(clientRemoveFrame): removes the Inet* functions and the service
+	// registration (the functions in its constants are copies of the ones above, kept only
+	// as the names to remove).
 	UnitsRemovedScript: compile(
 		constants: {
+			// kBinaryFromHex(hex, class): a binary of that class made from a string of hex digits (this project's helper for binaries in compiled constants).
 			kBinaryFromHex: func(hex, cls) begin
 				local b := MakeBinary(StrLen(hex) div 2, cls);
 				for i := 0 to Length(b) - 1 do begin
@@ -1468,6 +1696,7 @@ part := array(nil, {
 				end;
 				b
 			end,
+			// unregisters a service from |InetServices:NIE| (the global goes when it is empty)
 			kFunction_104da25: func(a1) begin
 				local value;
 				if (value := GetGlobalVar('|InetServices:NIE|)) then begin
@@ -1477,69 +1706,86 @@ part := array(nil, {
 					end;
 				AddProcrastinatedCall(EnsureInternal('|InetServices:NIE|), GetGlobalFn('SetUserConfig), EnsureInternal([Array: '|InetServices:NIE|, '|InetServices:NIE|]), 3333)
 			end,
+			// InetAddNewLinkEntry(entry): has Internet Setup (if open) add a link entry (setup).
 			kFunction_103f5b9: func(a1) begin
 				local l1;
 				(if (l1 := GetRoot().|InternetSetup:NIE|) then l1:?API_AddEntry(a1, nil))
 			end,
+			// InetAddNewLinkEntryInternal(entry): the same, on the internal store.
 			kFunction_103f66d: func(a1) begin
 				local l1;
 				(if (l1 := GetRoot().|InternetSetup:NIE|) then l1:?API_AddEntry(a1, GetStores()[0]))
 			end,
+			// InetCancelCurrentRequest(linkID): cancels what the link manager is doing for that link.
 			kFunction_103f6e9: func(a1) begin
 				InetStartUp():MCancelCurrentRequest(a1)
 			end,
+			// InetCancelLink(linkID, frame, symbol): cancels the link's connection; the callback is told 'Canceled.
 			kFunction_103f759: func(a1, a2, a3) begin
 				local inetStartUp2, mBuildCallback;
 				inetStartUp2 := InetStartUp();
 				inetStartUp2:MCancelLink((mBuildCallback := inetStartUp2:MBuildCallback(a1, a2, a3)))
 			end,
+			// InetDisconnectLink(linkID, frame, symbol): releases the link now (fImmediate), without the hang-up delay.
 			kFunction_103f7ed: func(a1, a2, a3) begin
 				local inetStartUp2, mBuildCallback;
 				inetStartUp2 := InetStartUp();
 				(mBuildCallback := inetStartUp2:MBuildCallback(a1, a2, a3)).fImmediate := true;
 				inetStartUp2:DoEvent('RemoveLinkClient, [Array: mBuildCallback])
 			end,
+			// InetDisplayStatus(linkID, view, status): shows, updates or (status nil) closes a status slip for the link.
 			kFunction_103f8b5: func(a1, a2, a3) begin
 				InetStartUp():MDisplayStatus(a1, a2, a3)
 			end,
+			// InetGetAllLinksStatus(): {linkIds, statuses, names} of every link setup.
 			kFunction_103f91d: func() begin
 				InetStartUp():MGetLinkStatusAll()
 			end,
+			// InetGetDefaultLinkID(): the default link's id.
 			kFunction_103f989: func() begin
 				InetStartUp():MGetLinkDefaultID()
 			end,
+			// InetGetLinkEntry(linkID): the link setup entry with that id (or alias).
 			kFunction_103f9e1: func(a1) begin
 				InetStartUp():MGetLinkEntryByLinkID(a1)
 			end,
+			// InetGetLinkStatus(linkID): the link's status symbol ('idle unless it is the current link).
 			kFunction_103fa3d: func(a1) begin
 				InetStartUp():MGetLinkStatus(a1)
 			end,
+			// InetGrabLink(linkID, frame, symbol): asks for the link to be up (connecting it if needed); the callback gets [linkID, status frame, error] as it goes.
 			kFunction_103fa91: func(a1, a2, a3) begin
 				local inetStartUp2, mBuildCallback;
 				inetStartUp2 := InetStartUp();
 				mBuildCallback := inetStartUp2:MBuildCallback(a1, a2, a3);
 				inetStartUp2:DoEvent('AddLinkClient, [Array: mBuildCallback])
 			end,
+			// InetOpenConnectionSlip(linkID, frame, symbol): opens the connection slip (choose a setup, Connect), unless the link is already up.
 			kFunction_103fb15: func(a1, a2, a3) begin
 				local inetStartUp2, mBuildCallback;
 				inetStartUp2 := InetStartUp();
 				inetStartUp2:MOpenConnectionSlip((mBuildCallback := inetStartUp2:MBuildCallback(a1, a2, a3)))
 			end,
+			// InetReleaseLink(linkID, frame, symbol): gives the link up; it is disconnected after the setup's hang-up delay once nobody holds it.
 			kFunction_103fb71: func(a1, a2, a3) begin
 				local inetStartUp2, mBuildCallback;
 				inetStartUp2 := InetStartUp();
 				mBuildCallback := inetStartUp2:MBuildCallback(a1, a2, a3);
 				inetStartUp2:DoEvent('RemoveLinkClient, [Array: mBuildCallback])
 			end,
+			// InetSetDefaultLinkID(linkID): makes that link the default (user configuration 'InetDefaultLink).
 			kFunction_103fbb1: func(a1) begin
 				InetStartUp():MSetLinkDefaultID(a1)
 			end,
+			// InetGetExceptionError(ex): the error number of an exception (or number).
 			kFunction_103fc09: func(a1) begin
 				InetStartUp():MGetExceptionError(a1)
 			end,
+			// InetGetErrorString(error): the text for an error number.
 			kFunction_103fc61: func(a1) begin
 				InetStartUp():MGetErrorString(a1)
 			end,
+			// releases the NIE's package-wide state (the global PkgVars_id), marking the package not busy when nobody holds it
 			kFunction_103fd71: func() begin
 				local objectPkgRef2, value, sym;
 				objectPkgRef2 := ObjectPkgRef('|Inet Manager:NIE|);
@@ -1549,6 +1795,7 @@ part := array(nil, {
 							UnDefGlobalVar(sym)
 						end))
 			end,
+			// InetShutDown(why): shuts the link manager down (MShutdown) and releases the package state.
 			kFunction_103fcb5: func(a1) begin
 				local value;
 				(if (value := GetGlobalVar('|InetManagerFSM:NIE|)) then begin
@@ -1556,6 +1803,7 @@ part := array(nil, {
 						call (kFunction_103fd71) with ()
 					end)
 			end,
+			// acquires the package-wide state (the global PkgVars_id), marking the package busy while held
 			kFunction_103ff55: func() begin
 				local objectPkgRef2, value, sym;
 				objectPkgRef2 := ObjectPkgRef('|Inet Manager:NIE|);
@@ -1566,17 +1814,21 @@ part := array(nil, {
 					end;
 				(value.fBusyRefCount := (value.fBusyRefCount + 1))
 			end,
+			// MCancelLink(callback): cancels the current request and tells the callback 'Canceled.
 			kFunction_1040ab1: func(a1) begin
 				self:MCancelCurrentRequest(a1.fLinkID);
 				self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrame(a1.fLinkID, 'Canceled, nil, nil, nil, nil), nil])
 			end,
+			// MGetLinkCursor(): a cursor over the link setups.
 			kFunction_1040b55: func() begin
 				local mGetLinkSoup;
 				(if (mGetLinkSoup := self:MGetLinkSoup()) then mGetLinkSoup:Query(nil))
 			end,
+			// MGetExceptionError(ex): the error number in an exception frame (its error, data or data.errorCode), or ex itself if a number.
 			kFunction_1040bc1: func(a1) begin
 				(if IsNumber(a1) then a1 else (if IsFrame(a1) then (if HasSlot(a1, 'error) then a1.error else (if IsNumber(a1.data) then a1.data else (if (if IsFrame(a1.data) then HasSlot(a1.data, 'errorCode)) then a1.data.errorCode else -1))) else -1))
 			end,
+			// MCancelCurrentRequest(linkID): if that is the current link, cancels the link manager and its domain and script services.
 			kFunction_1040d49: func(a1) begin
 				local l1;
 				l1 := (if a1 then a1 else self:MGetLinkDefaultID());
@@ -1588,9 +1840,11 @@ part := array(nil, {
 						(if fScriptServiceFSM then fScriptServiceFSM:DoEvent('Cancel, nil))
 					end)
 			end,
+			// MBuildCallback(linkID, frame, symbol): a link client {fLinkID, fFrame, fSymbol, ...} (the default link when linkID is nil); throws when frame cannot answer symbol.
 			kFunction_1040e0d: func(a1, a2, a3) begin
 				(if (if (if IsFrame(a2) then IsSymbol(a3)) then GetVariable(a2, a3)) then {fLinkID: (if a1 then a1 else self:MGetLinkDefaultID()), fFrame: a2, fSymbol: a3, fImmediate: nil, fVerbose: nil} else Throw('|evt.ex.msg|, "Inet Manager:MBuildCallback --> callbackFrame.(callbackSymbol) is undefined via direct ref or _proto or _parent inheritance."))
 			end,
+			// TargetChanged(): shows the setup's own connect-slip display (its data def's or service's connectSlipDisplay) in the slip.
 			kFunction_1041759: func() begin
 				local list, dataDefs;
 				if (if (dataDefs := GetDataDefs(ClassOf(target))) then dataDefs.connectSlipDisplay) then begin
@@ -1605,6 +1859,7 @@ part := array(nil, {
 					end;
 				(slip.placeHolder.viewChildren := list)
 			end,
+			// viewQuitScript: saves (on Connect) or undoes the setup's changes, may make it the default link, and tells the link manager how the slip closed ('connect or 'Close).
 			kFunction_104185d: func() begin
 				pix := nil;
 				firstTime := true;
@@ -1627,21 +1882,26 @@ part := array(nil, {
 				InetStartUp():MOpenConnectionSlipCallback(how);
 				inherited:?viewQuitScript()
 			end,
+			// viewDrawScript: draws the envelope shape.
 			kFunction_1041a11: func() begin
 				self:DrawShape(pix, nil)
 			end,
+			// ReorientToScreen: nothing.
 			kFunction_1041a75: func() begin
 				nil
 			end,
+			// UpdatePhone(): passes the call options slip's number to the setup's display.
 			kFunction_1041a95: func() begin
 				(foreach item in placeHolder:ChildViewFrames()[0]:ChildViewFrames() do begin
 						item:?DisplayPhoneNumber(Clone(GetRoot().callOptionsSlip.outNumber.text), true)
 					end)
 			end,
+			// OwnerInfoChanged(): the sender changed - updates the target setup and redraws.
 			kFunction_1041bbd: func() begin
 				self:UpdateTarget();
 				slip:RedoChildren()
 			end,
+			// SetupBounds(indent, ...): the slip's bounds and the envelope picture (pix) for that indent.
 			kFunction_1041c29: func(a1, a2) begin
 				local l1, bounds;
 				l1 := ((a1 - bottomIndent) div 2);
@@ -1650,40 +1910,49 @@ part := array(nil, {
 				bounds := SetBounds(0, 0, envelopeWidth, (envelopeHeight + a1));
 				(pix := [Array: {penPattern: "\u8205\u\u0A14\u\u2850\u\uA041\u", penSize: 8}, MakeRect(0, 0, bounds.right, (bounds.bottom - a1)), {penPattern: 5, fillPattern: 0, penSize: 2}, MakeRect(0, 0, bounds.right, (bounds.bottom - a1)), MakeRect(4, ((bounds.bottom - a1) - 2), (bounds.right - 4), bounds.bottom), {penPattern: 3, penSize: 4, transferMode: 1}, MakeLine(2, (bounds.bottom - a1), ((bounds.right - 4) - 2), (bounds.bottom - a1))])
 			end,
+			// StartFlush(): marks the setup changed (saved when the slip closes).
 			kFunction_1041ee9: func() begin
 				(slip.Update := true)
 			end,
+			// JamIt(): the sender popup's choice - tells the slip the owner changed.
 			kFunction_1041fdd: func() begin
 				inherited:?JamIt();
 				slip:?OwnerInfoChanged()
 			end,
+			// the close box's viewSetupFormScript: its place at the envelope's bottom.
 			kFunction_104206d: func() begin
 				(viewBounds := DeepClone(viewBounds)).top := (((envelopeHeight + bottomIndent) - 19) - 2);
 				(viewBounds.bottom := (viewBounds.top + 13))
 			end,
+			// Connect's buttonClickScript: closes the slip with how = 'connect, animating it away.
 			kFunction_10421d1: func() begin
 				slip.how := 'connect;
 				slip:animateSend();
 				slip:Close()
 			end,
+			// the call assist button's viewSetupFormScript: its place; shown only for a modem setup ('|Modem:NIE|).
 			kFunction_10422d5: func() begin
 				(viewBounds := DeepClone(viewBounds)).top := (((envelopeHeight + bottomIndent) - 19) - 2);
 				viewBounds.bottom := (viewBounds.top + 13);
 				inherited:?viewSetupFormScript();
 				(if (ClassOf(target) = '|Modem:NIE|) then (viewFlags := Clone(viewFlags)) else (viewFlags := 0))
 			end,
+			// viewQuitScript: forgets the viewFlags it set.
 			kFunction_10423b1: func() begin
 				RemoveSlot(self, 'viewFlags);
 				inherited:?viewQuitScript()
 			end,
+			// buttonClickScript: gives the call options slip the number and country, then opens it.
 			kFunction_1042419: func() begin
 				GetRoot().callOptionsSlip.inNumber := curNumber;
 				GetRoot().callOptionsSlip.inCountry := (if target.country then target.country else GetUserConfig('currentCountry));
 				inherited:?buttonClickScript()
 			end,
+			// a picker item for an "Internet Setups" soup entry
 			kFunction_104283d: func(a1) begin
 				{item: a1.setupName, id: a1.linkID}
 			end,
+			// MakeLabelCommands(): the setups by name, and "Edit Setups" when Internet Setup is installed.
 			kFunction_10426a5: func() begin
 				local list, cursor, mapCursor2;
 				list := [Array: ];
@@ -1694,10 +1963,12 @@ part := array(nil, {
 					end;
 				list
 			end,
+			// the "Using" picker's viewSetupFormScript: its choices.
 			kFunction_1042951: func() begin
 				labelCommands := self:MakeLabelCommands();
 				inherited:?viewSetupFormScript()
 			end,
+			// labelActionScript(index): "Edit Setups" closes the slip and opens Internet Setup; a setup becomes the slip's target.
 			kFunction_10429bd: func(a1) begin
 				(if (labelCommands[a1].id = 'edit) then begin
 						self:updateText(self:FindAliasedSetup());
@@ -1709,9 +1980,11 @@ part := array(nil, {
 						slip:RedoChildren()
 					end)
 			end,
+			// textSetup(): the name of the target setup.
 			kFunction_1042ad9: func() begin
 				self:FindAliasedSetup()
 			end,
+			// FindAliasedSetup(): the picker item name of the target setup, or "".
 			kFunction_1042b19: func() begin
 				if target then begin
 						(foreach item in labelCommands do begin
@@ -1724,6 +1997,7 @@ part := array(nil, {
 					end;
 				return ""
 			end,
+			// the slip's viewSetupFormScript: the first time, its bounds, the indent animation and the target setup; no sender popup in simple mode (user configuration 'KSimpleMode).
 			kFunction_1043261: func() begin
 				if firstTime then begin
 						self:SetupBounds(0, nil);
@@ -1740,6 +2014,7 @@ part := array(nil, {
 					end;
 				(if GetUserConfig('KSimpleMode) then (senderPopup.viewFlags := 0))
 			end,
+			// AnimateIndent(): the envelope's indent reveal animation.
 			kFunction_10433ed: func() begin
 				local box;
 				self:SetupBounds(bottomIndent, nil);
@@ -1747,6 +2022,7 @@ part := array(nil, {
 				(box := self:LocalBox()).top := (box.bottom - bottomIndent);
 				self:RevealEffect((box.bottom - box.top), box, indentSound, nil, nil)
 			end,
+			// UpdateTarget(): the setup to show - the one asked for (fLinkID), else the default link, else the current worksite's.
 			kFunction_10434c5: func() begin
 				local currentEmporium, inetGetLinkEntry2;
 				if fLinkID then begin
@@ -1767,6 +2043,7 @@ part := array(nil, {
 						self:TargetChanged()
 					end)
 			end,
+			// animateSend(): the "send" animation as the slip closes.
 			kFunction_10435a9: func() begin
 				local box, box2;
 				box := self:GlobalBox();
@@ -1778,7 +2055,8 @@ part := array(nil, {
 				GetRoot():DirtyBox(box);
 				(base.hideSound := @poof)
 			end,
-			kLiteral_1041165: {indentSound: @flip, assistBtn: nil, TargetChanged: kFunction_1041759, curNumber: nil, auxUp: nil, envelopeHeight: 125, how: 'Close, viewFormat: vfFrameWhite, validateDialog: nil, viewQuitScript: kFunction_104185d, senderPopup: nil, viewDrawScript: kFunction_1041a11, target: nil, placeHolder: nil, ReorientToScreen: kFunction_1041a75, UpdatePhone: kFunction_1041a95, OwnerInfoChanged: kFunction_1041bbd, _proto: @protoFloater, _defaultButton: nil, setupPicker: nil, SetupBounds: kFunction_1041c29, firstTime: true, StartFlush: kFunction_1041ee9, _nextKeyView: nil, optionsUp: nil, stepAllocateContext: [Array: 'senderPopup, {JamIt: kFunction_1041fdd, _proto: @protoSenderPopup, preAllocatedContext: 'senderPopup}, '_closeBox, {viewSetupFormScript: kFunction_104206d, _proto: @protoCancelButton, viewBounds: '{left: -24, top: 0, right: -11, bottom: 13}, viewJustify: vjCenterH + vjCenterV + vjParentRightH, preAllocatedContext: '_closeBox}, '_defaultButton, {buttonClickScript: kFunction_10421d1, text: "Connect", viewBounds: '{left: -56, top: 0, right: -8, bottom: 0}, viewJustify: 8402950, _proto: @protoTextButton, preAllocatedContext: '_defaultButton}, 'assistBtn, {viewSetupFormScript: kFunction_10422d5, viewQuitScript: kFunction_10423b1, buttonClickScript: kFunction_1042419, _proto: @protoCallassistButton, viewBounds: '{left: 12, top: 0, right: 63, bottom: 13}, viewJustify: 8388614, preAllocatedContext: 'assistBtn}, 'setupPicker, {text: "Using", viewBounds: '{left: 35, top: 55, right: -20, bottom: 71}, alwaysCallPickActionScript: true, viewJustify: 8388656, MakeLabelCommands: kFunction_10426a5, viewSetupFormScript: kFunction_1042951, labelActionScript: kFunction_10429bd, textSetup: kFunction_1042ad9, FindAliasedSetup: kFunction_1042b19, _proto: @protoLabelPicker, preAllocatedContext: 'setupPicker}, 'placeHolder, '{viewBounds: {left: 0, top: 5, right: 0, bottom: 37}, viewFlags: vVisible, viewFormat: 0, viewJustify: vjSiblingFullH + vjSiblingBottomV, viewClass: clView, preAllocatedContext: placeHolder}], cancelSound: {sndFrameType: 'codec, samplingRate: 8000, dataType: 16, compressionType: 6, codecName: "TIMACodec", bufferSize: 10240, bufferCount: 4, compressionRatio: 1.8823529411764706, samples: call kBinaryFromHex with ("000070c7fffff07f17aaa1e1109800c80e400043118a930902bf98af000908901016d74e423308808080f90fa80c88081880261802431180a0add99aa0ab0ca835883798f54b23134b838ab89ebbc99a9bae86291580240230910cc8cbaabe889050925102513c4d138801bd08a9dc88bb08952a86300538020881fa89db0a989810123c277891004bce808801aca8bd08d82881384082650081010b92f81aad89b81ca43032015412326d4610acc18baed88bb81821146381241228a40ca8acd89a9c89003142144411030a4242c10ab2cd998f888808084202720813218b8199a09fbd888cc08158022321133741c488889c8db8acb8bb8548412232608082808dc89ca9ba2af0421823132233c2982cbb9dabc1fa8be920900032502600219821d9abdb999da88b1310471034012881083bbdd19ebab8899daa18246323412320a419cabdcaaa9b8c982171234322240009c92abe89bf989db8882911521235432208c9888baefb89880a12911404322432b3bf39143e0988ea9c0003219e009c2100110128163114910ad08b9baf888d810a4102530802b7822313a3fbbbaaba889d0b143480379032108c93cba09f8aa01a9889373b27880335438008a38fa8bb9bbc1902710431144803b888ef00aa03c18b1949192410f038fe38071012e818aa4ac909c929081430b134314304aba0af89fb18b901a8042541810aba011883a28dbdaacb0ba28a24401563023880b010bdb8bfa80a19801270105410093831289800ce09bc9bd909112027281508148818f90aa9a88cb08a7188420053100d38109000b89fd98b89981840a374000528889009aa9bceaa980a4310062250041112361aca909bbcd9aba09a3630240352231080f999abccaa9c9089623173022002080fb203ae9ada9aabcb8120610335211223a991cf98b98cdb880912213434430411280d2df8a9999bbbea8ab1334132273220802100cfa9db90bb2bb9782213271201a22b09ac8bfbc8bb09ab89055a0432241211a08ea9aaaa9faa022d83182004720318911a05a983bfa88bda09ba3031431652028083a921cfb08b9bc19b0b353324142502319c05a8909ffc29d868110c88b1038102f88c431914810cb31aa68ca88e010811b04002fe354413a038db90f92bc92a991a7228222a103438a8f98ac88ab0aa1c0916181688ff351383599189b88cabea899b9b87490320258232e109b8abbabf8888618022036305b30290a3ac898aaf98aa19a459a4328342022a80dc98ec08898820817b8271908103318088819ba8ae89b84080304101551880b23bd8b0009f8ab059903201016201120222b19c90a89fb80c0a498162000110000100809f80008800888080808000080808", 'samples)}, declareSelf: 'base, viewSetupFormScript: kFunction_1043261, Update: nil, viewEffect: 77661184, slip: nil, stepChildren: [stepChildren: {JamIt: kFunction_1041fdd, _proto: @protoSenderPopup, preAllocatedContext: 'senderPopup}, {viewSetupFormScript: kFunction_104206d, _proto: @protoCancelButton, viewBounds: '{left: -24, top: 0, right: -11, bottom: 13}, viewJustify: vjCenterH + vjCenterV + vjParentRightH, preAllocatedContext: '_closeBox}, {buttonClickScript: kFunction_10421d1, text: "Connect", viewBounds: '{left: -56, top: 0, right: -8, bottom: 0}, viewJustify: 8402950, _proto: @protoTextButton, preAllocatedContext: '_defaultButton}, {viewSetupFormScript: kFunction_10422d5, viewQuitScript: kFunction_10423b1, buttonClickScript: kFunction_1042419, _proto: @protoCallassistButton, viewBounds: '{left: 12, top: 0, right: 63, bottom: 13}, viewJustify: 8388614, preAllocatedContext: 'assistBtn}, {text: "Using", viewBounds: '{left: 35, top: 55, right: -20, bottom: 71}, alwaysCallPickActionScript: true, viewJustify: 8388656, MakeLabelCommands: kFunction_10426a5, viewSetupFormScript: kFunction_1042951, labelActionScript: kFunction_10429bd, textSetup: kFunction_1042ad9, FindAliasedSetup: kFunction_1042b19, _proto: @protoLabelPicker, preAllocatedContext: 'setupPicker}, '{viewBounds: {left: 0, top: 5, right: 0, bottom: 37}, viewFlags: vVisible, viewFormat: 0, viewJustify: vjSiblingFullH + vjSiblingBottomV, viewClass: clView, preAllocatedContext: placeHolder}], envelopeWidth: 230, _closeBox: nil, notesUp: nil, editing: nil, AnimateIndent: kFunction_10433ed, UpdateTarget: kFunction_10434c5, pix: nil, bottomIndent: 29, animateSend: kFunction_10435a9},
+			kLiteral_1041165: {indentSound: @flip, assistBtn: nil, TargetChanged: kFunction_1041759, curNumber: nil, auxUp: nil, envelopeHeight: 125, how: 'Close, viewFormat: vfFrameWhite, validateDialog: nil, viewQuitScript: kFunction_104185d, senderPopup: nil, viewDrawScript: kFunction_1041a11, target: nil, placeHolder: nil, ReorientToScreen: kFunction_1041a75, UpdatePhone: kFunction_1041a95, OwnerInfoChanged: kFunction_1041bbd, _proto: @protoFloater, _defaultButton: nil, setupPicker: nil, SetupBounds: kFunction_1041c29, firstTime: true, StartFlush: kFunction_1041ee9, _nextKeyView: nil, optionsUp: nil, stepAllocateContext: [Array: 'senderPopup, {JamIt: kFunction_1041fdd, _proto: @protoSenderPopup, preAllocatedContext: 'senderPopup}, '_closeBox, {viewSetupFormScript: kFunction_104206d, _proto: @protoCancelButton, viewBounds: '{left: -24, top: 0, right: -11, bottom: 13}, viewJustify: vjCenterH + vjCenterV + vjParentRightH, preAllocatedContext: '_closeBox}, '_defaultButton, {buttonClickScript: kFunction_10421d1, text: "Connect", viewBounds: '{left: -56, top: 0, right: -8, bottom: 0}, viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV + oneLineOnly, _proto: @protoTextButton, preAllocatedContext: '_defaultButton}, 'assistBtn, {viewSetupFormScript: kFunction_10422d5, viewQuitScript: kFunction_10423b1, buttonClickScript: kFunction_1042419, _proto: @protoCallassistButton, viewBounds: '{left: 12, top: 0, right: 63, bottom: 13}, viewJustify: vjCenterH + vjCenterV + oneLineOnly, preAllocatedContext: 'assistBtn}, 'setupPicker, {text: "Using", viewBounds: '{left: 35, top: 55, right: -20, bottom: 71}, alwaysCallPickActionScript: true, viewJustify: vjParentFullH + oneLineOnly, MakeLabelCommands: kFunction_10426a5, viewSetupFormScript: kFunction_1042951, labelActionScript: kFunction_10429bd, textSetup: kFunction_1042ad9, FindAliasedSetup: kFunction_1042b19, _proto: @protoLabelPicker, preAllocatedContext: 'setupPicker}, 'placeHolder, '{viewBounds: {left: 0, top: 5, right: 0, bottom: 37}, viewFlags: vVisible, viewFormat: 0, viewJustify: vjSiblingFullH + vjSiblingBottomV, viewClass: clView, preAllocatedContext: placeHolder}], cancelSound: {sndFrameType: 'codec, samplingRate: 8000, dataType: 16, compressionType: 6, codecName: "TIMACodec", bufferSize: 10240, bufferCount: 4, compressionRatio: 1.8823529411764706, samples: call kBinaryFromHex with ("000070c7fffff07f17aaa1e1109800c80e400043118a930902bf98af000908901016d74e423308808080f90fa80c88081880261802431180a0add99aa0ab0ca835883798f54b23134b838ab89ebbc99a9bae86291580240230910cc8cbaabe889050925102513c4d138801bd08a9dc88bb08952a86300538020881fa89db0a989810123c277891004bce808801aca8bd08d82881384082650081010b92f81aad89b81ca43032015412326d4610acc18baed88bb81821146381241228a40ca8acd89a9c89003142144411030a4242c10ab2cd998f888808084202720813218b8199a09fbd888cc08158022321133741c488889c8db8acb8bb8548412232608082808dc89ca9ba2af0421823132233c2982cbb9dabc1fa8be920900032502600219821d9abdb999da88b1310471034012881083bbdd19ebab8899daa18246323412320a419cabdcaaa9b8c982171234322240009c92abe89bf989db8882911521235432208c9888baefb89880a12911404322432b3bf39143e0988ea9c0003219e009c2100110128163114910ad08b9baf888d810a4102530802b7822313a3fbbbaaba889d0b143480379032108c93cba09f8aa01a9889373b27880335438008a38fa8bb9bbc1902710431144803b888ef00aa03c18b1949192410f038fe38071012e818aa4ac909c929081430b134314304aba0af89fb18b901a8042541810aba011883a28dbdaacb0ba28a24401563023880b010bdb8bfa80a19801270105410093831289800ce09bc9bd909112027281508148818f90aa9a88cb08a7188420053100d38109000b89fd98b89981840a374000528889009aa9bceaa980a4310062250041112361aca909bbcd9aba09a3630240352231080f999abccaa9c9089623173022002080fb203ae9ada9aabcb8120610335211223a991cf98b98cdb880912213434430411280d2df8a9999bbbea8ab1334132273220802100cfa9db90bb2bb9782213271201a22b09ac8bfbc8bb09ab89055a0432241211a08ea9aaaa9faa022d83182004720318911a05a983bfa88bda09ba3031431652028083a921cfb08b9bc19b0b353324142502319c05a8909ffc29d868110c88b1038102f88c431914810cb31aa68ca88e010811b04002fe354413a038db90f92bc92a991a7228222a103438a8f98ac88ab0aa1c0916181688ff351383599189b88cabea899b9b87490320258232e109b8abbabf8888618022036305b30290a3ac898aaf98aa19a459a4328342022a80dc98ec08898820817b8271908103318088819ba8ae89b84080304101551880b23bd8b0009f8ab059903201016201120222b19c90a89fb80c0a498162000110000100809f80008800888080808000080808", 'samples)}, declareSelf: 'base, viewSetupFormScript: kFunction_1043261, Update: nil, viewEffect: 77661184, slip: nil, stepChildren: [stepChildren: {JamIt: kFunction_1041fdd, _proto: @protoSenderPopup, preAllocatedContext: 'senderPopup}, {viewSetupFormScript: kFunction_104206d, _proto: @protoCancelButton, viewBounds: '{left: -24, top: 0, right: -11, bottom: 13}, viewJustify: vjCenterH + vjCenterV + vjParentRightH, preAllocatedContext: '_closeBox}, {buttonClickScript: kFunction_10421d1, text: "Connect", viewBounds: '{left: -56, top: 0, right: -8, bottom: 0}, viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV + oneLineOnly, _proto: @protoTextButton, preAllocatedContext: '_defaultButton}, {viewSetupFormScript: kFunction_10422d5, viewQuitScript: kFunction_10423b1, buttonClickScript: kFunction_1042419, _proto: @protoCallassistButton, viewBounds: '{left: 12, top: 0, right: 63, bottom: 13}, viewJustify: vjCenterH + vjCenterV + oneLineOnly, preAllocatedContext: 'assistBtn}, {text: "Using", viewBounds: '{left: 35, top: 55, right: -20, bottom: 71}, alwaysCallPickActionScript: true, viewJustify: vjParentFullH + oneLineOnly, MakeLabelCommands: kFunction_10426a5, viewSetupFormScript: kFunction_1042951, labelActionScript: kFunction_10429bd, textSetup: kFunction_1042ad9, FindAliasedSetup: kFunction_1042b19, _proto: @protoLabelPicker, preAllocatedContext: 'setupPicker}, '{viewBounds: {left: 0, top: 5, right: 0, bottom: 37}, viewFlags: vVisible, viewFormat: 0, viewJustify: vjSiblingFullH + vjSiblingBottomV, viewClass: clView, preAllocatedContext: placeHolder}], envelopeWidth: 230, _closeBox: nil, notesUp: nil, editing: nil, AnimateIndent: kFunction_10433ed, UpdateTarget: kFunction_10434c5, pix: nil, bottomIndent: 29, animateSend: kFunction_10435a9},
+			// MOpenConnectionSlip(callback): opens the connection slip (the callback is told 'Close if one is open already, 'connect if the link is up).
 			kFunction_1041081: func(a1) begin
 				local l1, context;
 				l1 := (if a1.fLinkID then a1.fLinkID else self:MGetLinkDefaultID());
@@ -1796,13 +2074,16 @@ part := array(nil, {
 					end;
 				nil
 			end,
+			// MGetLinkDefaultID(): the default link's id, or nil.
 			kFunction_10436f9: func() begin
 				local mGetLinkDefaultEntry;
 				(if (mGetLinkDefaultEntry := self:MGetLinkDefaultEntry()) then mGetLinkDefaultEntry.linkID)
 			end,
+			// MBuildStatusFrameFromError(error): a status frame for the current link - 'error and the error, or the link's status.
 			kFunction_1043749: func(a1) begin
 				self:MBuildStatusFrame((if fLinkEntry then fLinkEntry.linkID), (if a1 then 'error else fLinkStatus), a1, nil, nil, nil)
 			end,
+			// MBuildStatusFrame(linkID, infoStatus, infoError, text1, text2, ...): {linkID, linkStatus, infoStatus, infoError, infoText1, ...}; text1 defaults to the status's text (fLinkStatusStrTable). nil for another link.
 			kFunction_10439dd: func(a1, a2, a3, a4, a5, a6) begin
 				local l1;
 				if (not a4) then begin
@@ -1811,9 +2092,11 @@ part := array(nil, {
 				l1 := (if a1 then a1 else self:MGetLinkDefaultID());
 				(if (if fLinkEntry then l1) then (if (l1 = fLinkEntry.linkID) then {linkID: l1, linkStatus: fLinkStatus, infoStatus: a2, infoError: a3, infoText1: a4, infoText2: a5, infoText3: a6} else {linkID: l1, linkStatus: fLinkStatus, infoStatus: 'error, infoError: -60506, infoText1: self:MGetErrorString(-8103), infoText2: self:MGetErrorString(-60506), infoText3: a6}) else {linkID: l1, linkStatus: fLinkStatus, infoStatus: 'error, infoError: -60501, infoText1: self:MGetErrorString(-8103), infoText2: self:MGetErrorString(-60501), infoText3: a6})
 			end,
+			// MNotifyIconOn(): adds "Internet Connection" to the notify icon's menu (tapping it offers to disconnect).
 			kFunction_1043ba5: func() begin
 				(fNotifyIconObj := GetRoot().notifyIcon:AddAction("Internet Connection", MNotifyIconCallback, [Array: fsm]))
 			end,
+			// MOpenConnectionSlipCallback(how): the connection slip closed - tells the waiting callback how and restarts the shutdown timer.
 			kFunction_1043c91: func(a1) begin
 				local fConnectionSlipCallback2;
 				fConnectionSlipCallback2 := fConnectionSlipCallback;
@@ -1821,9 +2104,11 @@ part := array(nil, {
 				self:MShutdownTimer();
 				self:MDoCallback(fConnectionSlipCallback2, [Array: a1])
 			end,
+			// MShutdownTimer(): (re)starts the periodic ShutdownTimerExpired event, every 10 seconds, once.
 			kFunction_1043cf1: func() begin
 				self:DoPeriodicEvent('ShutdownTimerExpired, nil, 'unique, 'fsm, 1, 10000)
 			end,
+			// MGetErrorString(error): the text for an error - the NIE's table, then Lantern's errors, the system error table, else "Internet Error: n".
 			kFunction_1043da9: func(a1) begin
 				local tableLookup2, mGetExceptionError;
 				mGetExceptionError := self:MGetExceptionError(a1);
@@ -1836,10 +2121,12 @@ part := array(nil, {
 					end;
 				tableLookup2
 			end,
+			// MGetLinkDefaultEntry(): the default link's setup entry (user configuration 'InetDefaultLink: an id or an alias).
 			kFunction_10458b9: func() begin
 				local inetDefaultLink;
 				(if IsInteger((inetDefaultLink := GetUserConfig('InetDefaultLink))) then self:MGetLinkEntryByLinkID(inetDefaultLink) else (if IsEntryAlias(inetDefaultLink) then ResolveEntryAlias(inetDefaultLink) else SetUserConfig('InetDefaultLink, nil)))
 			end,
+			// MShutdown(why): closes the connection slip, cancels and disconnects the link, waits (a status slip) for the FSM to finish and disposes of it; reboots when the user aborts that wait.
 			kFunction_104598d: func(a1) begin
 				local value, waitForTerminal;
 				if (value := GetGlobalVar('|InetManagerFSM:NIE|)) then begin
@@ -1857,6 +2144,7 @@ part := array(nil, {
 				UnDefGlobalVar('|InetManagerFSM:NIE|);
 				(if (if waitForTerminal then GlobalFnExists('ReBoot)) then AddDeferredCall(GetGlobalFn('ReBoot), nil))
 			end,
+			// MDoCallback(callback, args): calls callback.fFrame:(fSymbol)(args...), ignoring errors.
 			kFunction_1045cd9: func(a1, a2) begin
 				(if a1 then (try begin
 							Perform(a1.fFrame, a1.fSymbol, a2)
@@ -1864,6 +2152,7 @@ part := array(nil, {
 							nil
 						end))
 			end,
+			// MGetLinkEntryByLinkID(linkID): the link setup entry for an id (or an alias), or nil.
 			kFunction_1045d5d: func(a1) begin
 				local mGetLinkSoup, cursor;
 				if IsEntryAlias(a1) then begin
@@ -1871,6 +2160,7 @@ part := array(nil, {
 					end;
 				(if IsInteger(a1) then (if (mGetLinkSoup := self:MGetLinkSoup()) then (if (cursor := mGetLinkSoup:Query({type: 'index, IndexPath: 'linkID, beginKey: a1, endKey: a1})) then cursor:entry())))
 			end,
+			// MNotifyIconCallback(inetMgr): the notify icon's item - asks whether to close the connection; yes releases the link, no puts the item back.
 			kFunction_1045e81: func(inetMgr) begin
 				local fn;
 				fn := func(a1) begin
@@ -1878,13 +2168,16 @@ part := array(nil, {
 				end;
 				AsyncConfirm("You are still connected to the Internet. Do you want to close the connection now?", 'yesNoDefaultNo, fn)
 			end,
+			// the status slip's Stop button: cancels the request ('userCancel).
 			kFunction_1046455: func() begin
 				self:CancelRequest('userCancel)
 			end,
+			// CancelRequest(why): cancels the link's current request and tells the application (appSymbol) through its CancelScript.
 			kFunction_10464b9: func(a1) begin
 				InetCancelCurrentRequest(linkID);
 				(if (if IsSymbol(appSymbol) then GetRoot().(appSymbol)) then GetRoot().(appSymbol):?CancelScript(a1))
 			end,
+			// ReorientToScreen: keeps the slip inside the app area.
 			kFunction_1046569: func() begin
 				local appAreaBounds, globalOuterBox;
 				appAreaBounds := GetAppParams().appAreaBounds;
@@ -1893,6 +2186,7 @@ part := array(nil, {
 			end,
 			kLiteral_1046265: {viewBounds: '{left: 0, top: 75, right: 185, bottom: 150}, initialSetup: {name: 'vStatusTitle, values: {icon: @8195, statusText: "Initializing", titleText: "Please wait...", primary: {text: "Stop", script: kFunction_1046455}, closeBox: nil}}, CancelRequest: kFunction_10464b9, ReorientToScreen: kFunction_1046569, _proto: @protoStatusTemplate},
 			kROM_8195: @8195,
+			// MDisplayStatus(linkID, view, status): shows or updates a status slip (protoStatusTemplate; status a ViewSet frame, or values for vStatusTitle); with view and no status, closes it. Returns the view.
 			kFunction_10460c1: func(a1, a2, a3) begin
 				local context, frame2, l3;
 				if a2 then begin
@@ -1940,26 +2234,32 @@ part := array(nil, {
 					end;
 				context
 			end,
+			// MSetLinkDefaultID(linkID): makes an existing link the default.
 			kFunction_10466d9: func(a1) begin
 				(if self:MGetLinkEntryByLinkID(a1) then SetUserConfig('InetDefaultLink, a1))
 			end,
+			// MGetLinkSoup(): the "Internet Setups" union soup.
 			kFunction_104672d: func() begin
 				GetUnionSoupAlways("Internet Setups")
 			end,
+			// MGetLinkStatus(linkID): the current link's status, or 'idle for another.
 			kFunction_1046771: func(a1) begin
 				local l1;
 				l1 := (if a1 then a1 else self:MGetLinkDefaultID());
 				(if (if fLinkEntry then (fLinkEntry.linkID = l1)) then fLinkStatus else 'idle)
 			end,
+			// MNotifyIconOff(): removes the notify icon's item.
 			kFunction_10467fd: func() begin
 				if fNotifyIconObj then begin
 						GetRoot().notifyIcon:KillAction(fNotifyIconObj)
 					end;
 				(fNotifyIconObj := nil)
 			end,
+			// MGetScriptService(): the login/logout script interpreter FSM in use.
 			kFunction_1046871: func() begin
 				fScriptServiceFSM
 			end,
+			// MUpdateProgressSlip(how, title, percent): opens ('Open), updates ('Update) or closes ('Close) the connecting/disconnecting progress slip (a gauge).
 			kFunction_10468b1: func(a1, a2, a3) begin
 				(try begin
 						(if fProgressSlipView then (if (a1 = 'Update) then begin
@@ -1985,14 +2285,17 @@ part := array(nil, {
 						nil
 					end)
 			end,
+			// MGetDomainService(): the domain manager FSM in use (DNS), or nil.
 			kFunction_1046a99: func() begin
 				fDomainServiceFSM
 			end,
+			// MGetLinkUniqueID(): a new link id - the Ticks() of a moment no link has as id.
 			kFunction_1046ac9: func() begin
 				local ticks2;
 				(while InetStartUp():MGetLinkEntryByLinkID((ticks2 := Ticks())) do Sleep(1));
 				ticks2
 			end,
+			// MGetLinkStatusAll(): {linkIds, statuses, names} of every link setup (incomplete: true if reading them failed).
 			kFunction_1046b55: func() begin
 				local frame2, mGetLinkCursor, next, count;
 				frame2 := {linkIds: [Array: ], statuses: [Array: ], names: [Array: ]};
@@ -2013,27 +2316,34 @@ part := array(nil, {
 					end;
 				frame2
 			end,
+			// DeactivateDomainManagerSuccess: disengages the link protocol.
 			kFunction_10473a1: func() begin
 				self:DoEvent('DisengageLinkProtocol, nil)
 			end,
+			// DeactivateDomainManagerFailure: disengages the link protocol anyway.
 			kFunction_10473fd: func() begin
 				self:DoEvent('DisengageLinkProtocol, nil)
 			end,
+			// DeactivateDomainManagerSkipped: disengages the link protocol.
 			kFunction_1047445: func() begin
 				self:DoEvent('DisengageLinkProtocol, nil)
 			end,
+			// AddLinkClient(client) while going down: kept to be served after the clean-up (fLinkClients_GrabPending).
 			kFunction_104749d: func(a1) begin
 				AddArraySlot(fLinkClients_GrabPending, a1)
 			end,
+			// RemoveLinkClient(client) while going down: counted and kept to be told when the link is down; -60506 for another link.
 			kFunction_10474f1: func(a1) begin
 				(if a1.fLinkID then (if (a1.fLinkID = fLinkEntry.linkID) then begin
 							fLinKRefCount := (fLinKRefCount - 1);
 							AddArraySlot(fLinkClients_Release, a1)
 						end else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60506), -60506])) else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60501), -60501]))
 			end,
+			// Cancel: marks the FSM aborted.
 			kFunction_10475a9: func() begin
 				(fAbort := true)
 			end,
+			// ConnectLinkFailureCleanUp.CleanUp: tells the clients 'disconnected; disposes of the domain, physical, link-layer and script services and the CCE endpoint; answers the waiting clients; grabs again for the pending ones; powers off if the link was dropped for a power-off; else restarts the shutdown timer.
 			kFunction_104764d: func() begin
 				self:MUpdateProgressSlip('Update, nil, 100);
 				fAbort := nil;
@@ -2099,6 +2409,7 @@ part := array(nil, {
 				self:MShutdownTimer();
 				UnRegPowerOff('|Inet Manager:NIE|)
 			end,
+			// ParseLogoutScript: runs the setup's logout script (its interpreter service), if it has one; else skipped.
 			kFunction_1047ab9: func() begin
 				self:MUpdateProgressSlip('Update, nil, 60);
 				if ((not IsFrame(fLinkEntry.logoutScript)) or (not (fScriptServiceFSM := InetGetService(fLinkEntry.logoutScript.interpreterSymbol)))) then begin
@@ -2112,10 +2423,12 @@ part := array(nil, {
 				fScriptServiceFSM:DoEvent('SetScript, [Array: fLinkEntry.logoutScript]);
 				fScriptServiceFSM:DoEvent('Parse, [Array: self, 'MParseCallback])
 			end,
+			// MParseCallback(status): the script service's progress, passed to the clients; 'Parsed or an error ends the step.
 			kFunction_1047d21: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Release, a1, 'Update);
 				(if a1.infoError then self:DoEvent('ParseLogoutScriptFailure, nil) else (if (a1.infoStatus = 'Parsed) then self:DoEvent('ParseLogoutScriptSuccess, nil)))
 			end,
+			// Genesis.Create: a fresh link manager - every variable reset, the CCE endpoint (whose event handler turns an "ictl" event 1 into a drop with its error, 2 and 3 into -60504, link disconnected), the shutdown timer started.
 			kFunction_1047ec1: func() begin
 				fsm.fProcessPortID := nil;
 				fsm.fAbort := nil;
@@ -2144,11 +2457,13 @@ part := array(nil, {
 				fsm.fVerboseDisconnect := nil;
 				fsm.fCCE := {_proto: @protoBasicEndpoint, _parent: fsm, fActive: nil, ExceptionHandler: func(ex) begin
 					local inetGetExceptionError2;
-					(if ((inetGetExceptionError2 := InetGetExceptionError(ex)) = -16005) then begin
+					(if ((inetGetExceptionError2 := InetGetExceptionError(ex)) = kCommErrRequestCanceled) then begin
 							fWhyLinkDropped := inetGetExceptionError2;
 							self:DoEvent('Cancel, nil)
 						end)
 				end, eventHandler: func(a1) begin
+					// serviceID "ictl" is the Inet control service; eventCode 1: the link dropped (data is
+					// the error), 2 and 3: disconnected (-60504)
 					if (if StrFilled(a1.serviceID) then (StrExactCompare(a1.serviceID, "ictl") = 0)) then begin
 							if (a1.eventCode = 1) then begin
 									fWhyLinkDropped := a1.data;
@@ -2164,6 +2479,7 @@ part := array(nil, {
 				end};
 				self:MShutdownTimer()
 			end,
+			// Genesis.AddLinkClient(client): the first client - takes a copy of its link setup and connects; -60501 (no link setup) if there is none.
 			kFunction_10482f9: func(a1) begin
 				if fAbort then begin
 						return self:DoEvent('Abort, nil)
@@ -2185,12 +2501,15 @@ part := array(nil, {
 				self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60501), -60501]);
 				self:DoEvent('Abort, nil)
 			end,
+			// Genesis.RemoveLinkClient(client): nothing to release - the client is just answered.
 			kFunction_10484a1: func(a1) begin
 				self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(nil), nil])
 			end,
+			// Genesis.ShutdownTimerExpired: idle with no slip open and no registered clients - shuts the NIE down ('auto).
 			kFunction_1048519: func() begin
 				(if (if (not fConnectionSlipView) then (Length(fLinkClients) = 0)) then InetShutDown('auto))
 			end,
+			// ParseLoginScript: runs the setup's login script (its interpreter service), if it has one; else skipped.
 			kFunction_10485f1: func() begin
 				self:MUpdateProgressSlip('Update, nil, 40);
 				if ((not IsFrame(fLinkEntry.loginScript)) or (not (fScriptServiceFSM := InetGetService(fLinkEntry.loginScript.interpreterSymbol)))) then begin
@@ -2204,23 +2523,28 @@ part := array(nil, {
 				fScriptServiceFSM:DoEvent('SetScript, [Array: fLinkEntry.loginScript]);
 				fScriptServiceFSM:DoEvent('Parse, [Array: self, 'MParseCallback])
 			end,
+			// MParseCallback(status): the login script's progress, passed to the clients.
 			kFunction_104877d: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Grab, a1, 'Update);
 				(if a1.infoError then self:DoEvent('ParseLoginScriptFailure, nil) else (if (a1.infoStatus = 'Parsed) then self:DoEvent('ParseLoginScriptSuccess, nil)))
 			end,
+			// AddLinkClient(client) while connecting: counted in (fLinkClients_Grab); -60506 (too many links) for another link.
 			kFunction_1048841: func(a1) begin
 				(if a1.fLinkID then (if (a1.fLinkID = fLinkEntry.linkID) then begin
 							fLinKRefCount := (fLinKRefCount + 1);
 							AddArraySlot(fLinkClients_Grab, a1)
 						end else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60506), -60506])) else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60501), -60501]))
 			end,
+			// RemoveLinkClient(client) while connecting: kept until connected (fLinkClients_ReleasePending).
 			kFunction_10488f9: func(a1) begin
 				AddArraySlot(fLinkClients_ReleasePending, a1)
 			end,
+			// Abort: tells the grabbing clients the request was cancelled and disconnects.
 			kFunction_1048955: func() begin
 				self:MDoCallbacks(fLinkClients_Grab, self:MBuildStatusFrameFromError(kCommErrRequestCanceled), 'Update);
 				self:DoEvent('DisconnectLink, nil)
 			end,
+			// ReleasingLink.ReleaseTimerExpired: the hang-up delay is over - 'disconnecting, the clients told, the notify item removed; deactivates the domain manager.
 			kFunction_1048a4d: func() begin
 				fLinkStatus := 'disconnecting;
 				(foreach item in fLinkClients do begin
@@ -2232,13 +2556,16 @@ part := array(nil, {
 					end;
 				self:DoEvent('DeactivateDomainManager, nil)
 			end,
+			// ReleaseTimerAddLinkClient(client): grabbed again before the hang-up - back to connected.
 			kFunction_1048b7d: func(a1) begin
 				self:MNotifyIconOff();
 				self:DoEvent('AddLinkClient, [Array: a1])
 			end,
+			// ReleasingLink.AddLinkClient(client): for this link it cancels the release; -60506 for another.
 			kFunction_1048be1: func(a1) begin
 				(if a1.fLinkID then (if (a1.fLinkID = fLinkEntry.linkID) then self:DoEvent('ReleaseTimerAddLinkClient, [Array: a1]) else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60506), -60506])) else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60501), -60501]))
 			end,
+			// ReleasingLink.RemoveLinkClient(client): counted; an immediate release disconnects now.
 			kFunction_1048c99: func(a1) begin
 				(if a1.fLinkID then (if (a1.fLinkID = fLinkEntry.linkID) then begin
 							fLinKRefCount := (fLinKRefCount - 1);
@@ -2249,9 +2576,11 @@ part := array(nil, {
 								end)
 						end else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60506), -60506])) else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60501), -60501]))
 			end,
+			// ReleasingLink.Cancel: when the link was dropped, disconnects now.
 			kFunction_1048d89: func() begin
 				(if fWhyLinkDropped then self:DoEvent('ReleaseTimerExpired, nil))
 			end,
+			// ConnectLink: 'initializing; registers the power-off handler, instantiates the CCE endpoint ("ictl" service; its process port id kept), finds and creates the setup's link-layer and physical-layer services (-60508/-60507 when missing), then loads the physical layer's driver.
 			kFunction_1048eb5: func() begin
 				local inetGetOptionFromOptionArray2, instantiate;
 				fLinkStatus := 'initializing;
@@ -2260,7 +2589,7 @@ part := array(nil, {
 					end;
 				RegPowerOff('|Inet Manager:NIE|, MPowerOffHandler);
 				if fAbort then begin
-						return self:DoEvent('DoFailure, [Array: -16005])
+						return self:DoEvent('DoFailure, [Array: kCommErrRequestCanceled])
 					end;
 				try begin
 						instantiate := fCCE:Instantiate(fCCE, self:MBuildConfigOptions_InstantiateCCE(fCCE))
@@ -2281,9 +2610,11 @@ part := array(nil, {
 				fPhysicalLayerServiceFSM := fPhysicalLayerServiceFSM:InstantiateAndPerform(nil, 'Create, nil);
 				self:DoEvent('LoadPhysicalLayerDriverProtocol, nil)
 			end,
+			// MBuildConfigOptions_InstantiateCCE(endpoint): the CCE's options: "sid " the "ictl" service, and the link's.
 			kFunction_10491dd: func(a1) begin
-				[Array: {label: "sid ", type: 'service, opCode: 512, result: nil, form: 'template, data: {arglist: [Array: "ictl", 0], typeList: [Array: 'struct, [Array: 'Array, 'char, 4], 'ulong]}}]
+				[Array: {label: "sid ", type: 'service, opCode: opSetRequired, result: nil, form: 'template, data: {arglist: [Array: "ictl", 0], typeList: [Array: 'struct, [Array: 'Array, 'char, 4], 'ulong]}}]
 			end,
+			// MPowerOffHandler(what, why): the power-off registry's handler - 'okToPowerOff: with a link up, asks the user (or releases the link) and refuses for now; 'PowerOff: holds the power-off ('holdYourHorses) until the link is down.
 			kFunction_1049399: func(a1, why) begin
 				local StartRelease;
 				local inetStartUp2;
@@ -2323,17 +2654,21 @@ part := array(nil, {
 					end;
 				nil
 			end,
+			// ConnectLink.Abort: clears the abort mark.
 			kFunction_1049805: func() begin
 				(fAbort := nil)
 			end,
+			// ProcessStackActiveLinkLayer: tells the link-layer service the stack is active.
 			kFunction_10498f9: func() begin
 				self:MUpdateProgressSlip('Update, nil, 80);
 				fLinkLayerServiceFSM:DoEvent('ProcessStackActive, [Array: self, 'MProcessStackActiveCallback])
 			end,
+			// MProcessStackActiveCallback(status): the link layer's progress, passed to the clients.
 			kFunction_1049985: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Grab, a1, 'Update);
 				(if a1.infoError then self:DoEvent('ProcessingStackActiveLinkLayerFailure, nil) else (if (a1.infoStatus = 'Processed) then self:DoEvent('ProcessingStackActiveLinkLayerSuccess, nil)))
 			end,
+			// connected.connected: 'connected - the clients told, the progress slip closed, the grabs answered; the releases that came meanwhile are done now. fDumbLinkClientsExist when a client is not registered for status changes.
 			kFunction_1049b25: func() begin
 				self:MUpdateProgressSlip('Update, nil, 100);
 				(foreach item in fLinkClients_Grab do begin
@@ -2348,11 +2683,14 @@ part := array(nil, {
 						self:MDoCallback(item, [Array: fLinkEntry.linkID, self:MBuildStatusFrame(fLinkEntry.linkID, fLinkStatus, nil, nil, nil, nil)])
 					end);
 				self:MDoCallbacks(fLinkClients_Grab, self:MBuildStatusFrameFromError(nil), 'Reset);
+				// looks like a bug: posts item itself as the event's parameters rather than [item], so
+				// the RemoveLinkClient action is performed with a frame where an argument array belongs
 				(foreach item in fLinkClients_ReleasePending do begin
 						self:DoEvent('RemoveLinkClient, item)
 					end);
 				SetLength(fLinkClients_ReleasePending, 0)
 			end,
+			// connected.AddLinkClient(client): another client of the link - counted and answered; -60506 for another link.
 			kFunction_1049cad: func(a1) begin
 				(if a1.fLinkID then (if (a1.fLinkID = fLinkEntry.linkID) then begin
 							fLinKRefCount := (fLinKRefCount + 1);
@@ -2362,6 +2700,7 @@ part := array(nil, {
 							self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(nil), nil])
 						end else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60506), -60506])) else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60501), -60501]))
 			end,
+			// connected.RemoveLinkClient(client): counted down; the link is released when immediate, when nobody holds it, or when every registered client says 'okToDisconnect.
 			kFunction_1049d99: func(a1) begin
 				(if a1.fLinkID then (if (a1.fLinkID = fLinkEntry.linkID) then begin
 							fLinKRefCount := (fLinKRefCount - 1);
@@ -2376,55 +2715,67 @@ part := array(nil, {
 								end)
 						end else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60506), -60506])) else self:MDoCallback(a1, [Array: a1.fLinkID, self:MBuildStatusFrameFromError(-60501), -60501]))
 			end,
+			// ReleaseLink(immediate): disconnects now, or starts the hang-up delay (the setup's hangupDelay; 'never keeps the link up), the notify icon's item letting the user disconnect.
 			kFunction_1049f1d: func(a1) begin
 				(if a1 then self:DoEvent('ReleaseTimerExpired, nil) else (if (fLinkEntry.hangupDelay = 'never) then self:MNotifyIconOn() else (if (if IsNumber(fLinkEntry.hangupDelay) then (fLinkEntry.hangupDelay > 0)) then begin
 								self:MNotifyIconOn();
 								self:DoPeriodicEvent('ReleaseTimerExpired, nil, 'normal, 'State, 1, fLinkEntry.hangupDelay)
 							end else self:DoEvent('ReleaseTimerExpired, nil))))
 			end,
+			// DisconnectLink: as the hang-up delay's end.
 			kFunction_104a045: func() begin
 				self:DoEvent('ReleaseTimerExpired, nil)
 			end,
+			// connected.Cancel: when the link was dropped, disconnects.
 			kFunction_104a09d: func() begin
 				(if fWhyLinkDropped then self:DoEvent('DisconnectLink, nil))
 			end,
+			// LoadLinkLayerDriverProtocol: gives the link-layer service the CCE and setup and loads its driver protocol.
 			kFunction_104a179: func() begin
 				self:MUpdateProgressSlip('Update, nil, 20);
 				fLinkLayerServiceFSM:DoEvent('SetCCE, [Array: fCCE]);
 				fLinkLayerServiceFSM:DoEvent('SetLinkEntry, [Array: fLinkEntry]);
 				fLinkLayerServiceFSM:DoEvent('LoadDriverProtocol, [Array: self, 'MLoadDriverProtocolCallback])
 			end,
+			// MLoadDriverProtocolCallback(status): the link layer's progress; 'Loaded or an error ends the step.
 			kFunction_104a22d: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Grab, a1, 'Update);
 				(if a1.infoError then self:DoEvent('LoadLinkLayerDriverProtocolFailure, nil) else (if (a1.infoStatus = 'Loaded) then self:DoEvent('LoadLinkLayerDriverProtocolSuccess, nil)))
 			end,
+			// LoadLinkLayerDriverProtocol.Abort: tells the clients cancelled; the connect fails.
 			kFunction_104a331: func() begin
 				self:MDoCallbacks(fLinkClients_Grab, self:MBuildStatusFrameFromError(kCommErrRequestCanceled), 'Update);
 				self:DoEvent('ConnectLinkFailure, nil)
 			end,
+			// ActivateDomainManagerSuccess: connected (or aborts).
 			kFunction_104a49d: func() begin
 				if fAbort then begin
 						return self:DoEvent('Abort, nil)
 					end;
 				self:DoEvent('connected, nil)
 			end,
+			// ActivateDomainManagerFailure: disengages the link protocol.
 			kFunction_104a50d: func() begin
 				self:DoEvent('DisengageLinkProtocol, nil)
 			end,
+			// ActivateDomainManagerSkipped: connected anyway (or aborts).
 			kFunction_104a555: func() begin
 				if fAbort then begin
 						return self:DoEvent('Abort, nil)
 					end;
 				self:DoEvent('connected, nil)
 			end,
+			// DisengageLinkProtocol: has the link layer disengage.
 			kFunction_104a659: func() begin
 				self:MUpdateProgressSlip('Update, "Disconnecting your internet link...", 40);
 				fLinkLayerServiceFSM:DoEvent('DisengageLinkProtocol, [Array: self, 'MDisengageLinkCallback])
 			end,
+			// MDisengageLinkCallback(status): the link layer's progress, passed to the releasing clients.
 			kFunction_104a6c5: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Release, a1, 'Update);
 				(if a1.infoError then self:DoEvent('DisengageLinkProtocolFailure, nil) else (if (a1.infoStatus = 'Disengaged) then self:DoEvent('DisengageLinkProtocolSuccess, nil)))
 			end,
+			// DeactivateDomainManager: disconnects the domain manager, if there is one.
 			kFunction_104a865: func() begin
 				self:MUpdateProgressSlip('Update, nil, 20);
 				(if fDomainServiceFSM then begin
@@ -2432,32 +2783,39 @@ part := array(nil, {
 						fDomainServiceFSM:DoEvent('Disconnect, [Array: self, 'MDeactivateDomainManagerCallback])
 					end else self:DoEvent('DeactivateDomainManagerSkipped, nil))
 			end,
+			// MDeactivateDomainManagerCallback(status): the domain manager's progress, passed to the releasing clients.
 			kFunction_104a8e9: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Release, a1, 'Update);
 				(if a1.infoError then self:DoEvent('DeactivateDomainManagerFailure, nil) else (if (a1.infoStatus = 'Deactivated) then self:DoEvent('DeactivateDomainManagerSuccess, nil)))
 			end,
+			// ConnectLinkSuccess: runs the login script (or aborts).
 			kFunction_104aa01: func() begin
 				if fAbort then begin
 						return self:DoEvent('Abort, nil)
 					end;
 				self:DoEvent('ParseLoginScript, nil)
 			end,
+			// ConnectLinkFailure: cleans up.
 			kFunction_104aa51: func() begin
 				self:DoEvent('CleanUp, nil)
 			end,
+			// ConnectingLink.Cancel: marks the abort and cancels the physical layer.
 			kFunction_104aab5: func() begin
 				fAbort := true;
 				(if fPhysicalLayerServiceFSM then fPhysicalLayerServiceFSM:DoEvent('Cancel, nil))
 			end,
+			// ProcessingStackActiveLinkLayerSuccess: activates the domain manager (or aborts).
 			kFunction_104ab69: func() begin
 				if fAbort then begin
 						return self:DoEvent('Abort, nil)
 					end;
 				self:DoEvent('ActivateDomainManager, nil)
 			end,
+			// ProcessingStackActiveLinkLayerFailure: disengages the link protocol.
 			kFunction_104abb9: func() begin
 				self:DoEvent('DisengageLinkProtocol, nil)
 			end,
+			// LoadLinkLayerDriverProtocolSuccess: 'connecting - the clients told; has the physical layer connect.
 			kFunction_104acbd: func() begin
 				fLinkStatus := 'connecting;
 				self:MUpdateProgressSlip('Update, nil, 30);
@@ -2466,58 +2824,71 @@ part := array(nil, {
 					end);
 				fPhysicalLayerServiceFSM:DoEvent('connect, [Array: self, 'MConnectLinkCallback])
 			end,
+			// MConnectLinkCallback(status): the physical layer's progress; 'connected or an error ends the step.
 			kFunction_104ad81: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Grab, a1, 'Update);
 				(if a1.infoError then self:DoEvent('ConnectLinkFailure, nil) else (if (a1.infoStatus = 'connected) then self:DoEvent('ConnectLinkSuccess, nil)))
 			end,
+			// LoadLinkLayerDriverProtocolFailure: the connect fails.
 			kFunction_104ade5: func() begin
 				self:DoEvent('ConnectLinkFailure, nil)
 			end,
+			// ActivateCCESuccess: tells the physical layer the stack is active (or aborts).
 			kFunction_104aee9: func() begin
 				if fAbort then begin
 						return self:DoEvent('Abort, nil)
 					end;
 				self:DoEvent('ProcessStackActivePhysicalLayer, nil)
 			end,
+			// ActivateCCEFailure(error): tells the clients; disconnects.
 			kFunction_104af39: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Grab, self:MBuildStatusFrameFromError(a1), 'Update);
 				self:DoEvent('DisconnectLink, nil)
 			end,
+			// EngageLinkProtocolSuccess: activates the CCE (or aborts).
 			kFunction_104b079: func() begin
 				if fAbort then begin
 						return self:DoEvent('Abort, nil)
 					end;
 				self:DoEvent('ActivateCCE, nil)
 			end,
+			// EngageLinkProtocolFailure: disconnects.
 			kFunction_104b0c9: func() begin
 				self:DoEvent('DisconnectLink, nil)
 			end,
+			// ProcessStackActivePhysicalLayer: tells the physical-layer service the stack is active.
 			kFunction_104b189: func() begin
 				self:MUpdateProgressSlip('Update, nil, 70);
 				fPhysicalLayerServiceFSM:DoEvent('ProcessStackActive, [Array: self, 'MProcessStackActiveCallback])
 			end,
+			// MProcessStackActiveCallback(status): the physical layer's progress; 'Processed or an error ends the step.
 			kFunction_104b1f1: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Grab, a1, 'Update);
 				(if a1.infoError then self:DoEvent('ProcessingStackActivePhysicalLayerFailure, nil) else (if (a1.infoStatus = 'Processed) then self:DoEvent('ProcessingStackActivePhysicalLayerSuccess, nil)))
 			end,
+			// DoFailure(error): a failure before the drivers were loaded - the clients told; the connect fails.
 			kFunction_104b35d: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Grab, self:MBuildStatusFrameFromError(a1), 'Update);
 				self:DoEvent('ConnectLinkFailure, nil)
 			end,
+			// LoadPhysicalLayerDriverProtocol: gives the physical-layer service the CCE and setup and loads its driver protocol.
 			kFunction_104b3b9: func() begin
 				self:MUpdateProgressSlip('Update, nil, 10);
 				fPhysicalLayerServiceFSM:DoEvent('SetCCE, [Array: fCCE]);
 				fPhysicalLayerServiceFSM:DoEvent('SetLinkEntry, [Array: fLinkEntry]);
 				fPhysicalLayerServiceFSM:DoEvent('LoadDriverProtocol, [Array: self, 'MLoadDriverProtocolCallback])
 			end,
+			// MLoadDriverProtocolCallback(status): the physical layer's progress; 'Loaded or an error ends the step.
 			kFunction_104b449: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Grab, a1, 'Update);
 				(if a1.infoError then self:DoEvent('LoadPhysicalLayerDriverProtocolFailure, nil) else (if (a1.infoStatus = 'Loaded) then self:DoEvent('LoadPhysicalLayerDriverProtocolSuccess, nil)))
 			end,
+			// LoadPhysicalLayerDriverProtocol.Abort: tells the clients cancelled; the connect fails.
 			kFunction_104b53d: func() begin
 				self:MDoCallbacks(fLinkClients_Grab, self:MBuildStatusFrameFromError(kCommErrRequestCanceled), 'Update);
 				self:DoEvent('ConnectLinkFailure, nil)
 			end,
+			// MCleanUp(): disposes of the script service.
 			kFunction_104b605: func() begin
 				(if fScriptServiceFSM then begin
 						fScriptServiceFSM:DoEvent('Cancel, nil);
@@ -2525,18 +2896,22 @@ part := array(nil, {
 						(fScriptServiceFSM := fScriptServiceFSM:Release())
 					end)
 			end,
+			// ParseLogoutScriptSuccess: disconnects.
 			kFunction_104b681: func() begin
 				self:MCleanUp();
 				self:DoEvent('DisconnectLink, nil)
 			end,
+			// ParseLogoutScriptFailure: disconnects.
 			kFunction_104b6e5: func() begin
 				self:MCleanUp();
 				self:DoEvent('DisconnectLink, nil)
 			end,
+			// ParseLogoutScriptSkipped: disconnects.
 			kFunction_104b731: func() begin
 				self:MCleanUp();
 				self:DoEvent('DisconnectLink, nil)
 			end,
+			// MCleanUp(): disposes of the script service.
 			kFunction_104b7ed: func() begin
 				(if fScriptServiceFSM then begin
 						fScriptServiceFSM:DoEvent('Cancel, nil);
@@ -2544,6 +2919,7 @@ part := array(nil, {
 						(fScriptServiceFSM := fScriptServiceFSM:Release())
 					end)
 			end,
+			// ParseLoginScriptSuccess: engages the link protocol (or aborts).
 			kFunction_104b841: func() begin
 				self:MCleanUp();
 				if fAbort then begin
@@ -2551,10 +2927,12 @@ part := array(nil, {
 					end;
 				self:DoEvent('EngageLinkProtocol, nil)
 			end,
+			// ParseLoginScriptFailure: disconnects.
 			kFunction_104b8b9: func() begin
 				self:MCleanUp();
 				self:DoEvent('DisconnectLink, nil)
 			end,
+			// ParseLoginScriptSkipped: engages the link protocol (or aborts).
 			kFunction_104b905: func() begin
 				self:MCleanUp();
 				if fAbort then begin
@@ -2562,11 +2940,13 @@ part := array(nil, {
 					end;
 				self:DoEvent('EngageLinkProtocol, nil)
 			end,
+			// DisconnectLink: 'disconnecting; has the physical layer disconnect.
 			kFunction_104ba0d: func() begin
 				fLinkStatus := 'disconnecting;
 				self:MUpdateProgressSlip('Update, "Disconnecting your internet link...", 80);
 				fPhysicalLayerServiceFSM:DoEvent('Disconnect, [Array: self, 'MDisconnectLinkCallback])
 			end,
+			// MDisconnectLinkCallback(status): tells the releasing clients; 'disconnected or an error ends the step.
 			kFunction_104ba89: func(a1) begin
 				(foreach item in fLinkClients_Release do begin
 						self:MDoCallback(item, [Array: item.fLinkID, a1, a1.infoError])
@@ -2576,24 +2956,31 @@ part := array(nil, {
 						self:DoEvent('DisconnectLinkFailure, nil)
 					end else (if (a1.infoStatus = 'disconnected) then self:DoEvent('DisconnectLinkSuccess, nil)))
 			end,
+			// ProcessingStackActivePhysicalLayerSuccess: tells the link layer the stack is active (or aborts).
 			kFunction_104bc1d: func() begin
 				if fAbort then begin
 						return self:DoEvent('Abort, nil)
 					end;
 				self:DoEvent('ProcessStackActiveLinkLayer, nil)
 			end,
+			// ProcessingStackActivePhysicalLayerFailure: disengages the link protocol.
 			kFunction_104bc6d: func() begin
 				self:DoEvent('DisengageLinkProtocol, nil)
 			end,
+			// LoadPhysicalLayerDriverProtocolSuccess: loads the link layer's driver protocol.
 			kFunction_104bd29: func() begin
+				// looks like a bug: no return after posting Abort (the other Success actions return), so
+				// the next step is posted as well
 				if fAbort then begin
 						self:DoEvent('Abort, nil)
 					end;
 				self:DoEvent('LoadLinkLayerDriverProtocol, nil)
 			end,
+			// LoadPhysicalLayerDriverProtocolFailure: the connect fails.
 			kFunction_104bd95: func() begin
 				self:DoEvent('ConnectLinkFailure, nil)
 			end,
+			// ActivateDomainManager: creates the domain manager service (user configuration 'NIE_DefaultDomainManager, else the NIE's own) and connects it; skipped if there is none.
 			kFunction_104bea1: func() begin
 				self:MUpdateProgressSlip('Update, nil, 90);
 				if (not (fDomainServiceFSM := InetGetService(GetUserConfig('NIE_DefaultDomainManager)))) then begin
@@ -2606,25 +2993,29 @@ part := array(nil, {
 				fDomainServiceFSM:DoEvent('SetLinkEntry, [Array: fLinkEntry]);
 				fDomainServiceFSM:DoEvent('connect, [Array: self, 'MActivateDomainManagerCallback])
 			end,
+			// MActivateDomainManagerCallback(status): the domain manager's progress; 'Activated or an error ends the step.
 			kFunction_104bfd5: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Grab, a1, 'Update);
 				(if a1.infoError then self:DoEvent('ActivateDomainManagerFailure, nil) else (if (a1.infoStatus = 'Activated) then self:DoEvent('ActivateDomainManagerSuccess, nil)))
 			end,
+			// DisconnectLinkSuccess: cleans up.
 			kFunction_104c0dd: func() begin
 				self:DoEvent('CleanUp, nil)
 			end,
+			// DisconnectLinkFailure: cleans up anyway.
 			kFunction_104c125: func() begin
 				self:DoEvent('CleanUp, nil)
 			end,
+			// ActivateCCE: sets the CCE endpoint's final options - the physical layer's answer, the setup's special options, "iclc" (the link's configuration) - asynchronously.
 			kFunction_104c25d: func() begin
 				local inetGetOptionFromOptionArray2, list;
 				self:MUpdateProgressSlip('Update, "Connecting to the internet...", 60);
 				list := [Array: ];
 				if (if IsArray(fPhysicalLayerServiceFSM:?GetConfigOptionsAfter_Instantiate()) then (inetGetOptionFromOptionArray2 := InetGetOptionFromOptionArray(fPhysicalLayerServiceFSM:GetConfigOptionsAfter_Instantiate(), "sid "))) then begin
-						AddArraySlot(list, InetBuildOptionFromTemplate(inetGetOptionFromOptionArray2, {type: 'option, opCode: 512}))
+						AddArraySlot(list, InetBuildOptionFromTemplate(inetGetOptionFromOptionArray2, {type: 'option, opCode: opSetRequired}))
 					end;
 				InetAppendSpecialLinkEntryOptions(list, fLinkEntry, 'inetAlmostFinalOptions);
-				AddArraySlot(list, {label: "iclc", type: 'option, opCode: 512, result: nil, form: 'template, data: {arglist: [Array: nil, nil, fLinkEntry.linkID, 0, 4], typeList: [Array: 'struct, 'ulong, 'long, 'ulong, 'ulong, 'ulong]}});
+				AddArraySlot(list, {label: "iclc", type: 'option, opCode: opSetRequired, result: nil, form: 'template, data: {arglist: [Array: nil, nil, fLinkEntry.linkID, 0, 4], typeList: [Array: 'struct, 'ulong, 'long, 'ulong, 'ulong, 'ulong]}});
 				InetAppendSpecialLinkEntryOptions(list, fLinkEntry, 'inetFinalOptions);
 				if (Length(list) = 0) then begin
 						return self:DoEvent('ActivateCCESuccess, nil)
@@ -2635,6 +3026,7 @@ part := array(nil, {
 						self:DoEvent('ActivateCCEFailure, [Array: InetGetExceptionError(CurrentException())])
 					end)
 			end,
+			// completionScript(endpoint, options, error): the CCE options' answer - ActivateCCESuccess, or ActivateCCEFailure with the error (the "iclc" option's own result first).
 			kFunction_104c59d: func(a1, a2, a3) begin
 				local arglistItem;
 				if a3 then begin
@@ -2649,23 +3041,29 @@ part := array(nil, {
 					end;
 				self:DoEvent('ActivateCCESuccess, nil)
 			end,
+			// MBuildCompletionSpec_Option(): the completion spec for the option call.
 			kFunction_104c649: func() begin
 				{_proto: fCompletionSpec_Option, _parent: self}
 			end,
+			// DisengageLinkProtocolSuccess: runs the logout script.
 			kFunction_104c745: func() begin
 				self:DoEvent('ParseLogoutScript, nil)
 			end,
+			// DisengageLinkProtocolFailure: disconnects.
 			kFunction_104c78d: func() begin
 				self:DoEvent('DisconnectLink, nil)
 			end,
+			// EngageLinkProtocol: has the link layer engage its protocol (PPP, ...).
 			kFunction_104c88d: func() begin
 				self:MUpdateProgressSlip('Update, nil, 50);
 				fLinkLayerServiceFSM:DoEvent('EngageLinkProtocol, [Array: self, 'MEngageLinkCallback])
 			end,
+			// MEngageLinkCallback(status): the link layer's progress; 'Engaged or an error ends the step.
 			kFunction_104c8f5: func(a1) begin
 				self:MDoCallbacks(fLinkClients_Grab, a1, 'Update);
 				(if a1.infoError then self:DoEvent('EngageLinkProtocolFailure, nil) else (if (a1.infoStatus = 'Engaged) then self:DoEvent('EngageLinkProtocolSuccess, nil)))
 			end,
+			// MDoCallbacks(clients, status, how): tells each client the status (and the progress slip its text), unless an error was told them already (the array's class 'error); 'Reset empties the array.
 			kFunction_104c9a1: func(a1, a2, a3) begin
 				if (ClassOf(a1) <> 'error) then begin
 						self:MUpdateProgressSlip('Update, a2.infoText2, nil);
@@ -2682,6 +3080,7 @@ part := array(nil, {
 					end)
 			end,
 			kLiteral_10401f5: {fLinkStatus: 'idle, MCancelLink: kFunction_1040ab1, MGetLinkCursor: kFunction_1040b55, fConnectionSlipCallback: nil, MGetExceptionError: kFunction_1040bc1, class: 'InetService, fScriptServiceFSM: nil, fLinkClients_GrabPending: nil, fLinkClients_Release: nil, MCancelCurrentRequest: kFunction_1040d49, fWhyLinkDropped: nil, MBuildCallback: kFunction_1040e0d, fDomainServiceFSM: nil, MOpenConnectionSlip: kFunction_1041081, MGetLinkDefaultID: kFunction_10436f9, fVerboseDisconnect: nil, fLinkEntry: nil, MBuildStatusFrameFromError: kFunction_1043749, fLinKRefCount: 0, _proto: @8192, fLinkStatusStrTable: '{idle: "Idle", initializing: "Initializing", connecting: "Connecting", login: "Login", connected: "Connected", disconnecting: "Disconnecting", logout: "Logout", disconnected: "Disconnected"}, fLinkClients: nil, fLinkLayerServiceFSM: nil, fNotifyIconObj: nil, MBuildStatusFrame: kFunction_10439dd, MNotifyIconOn: kFunction_1043ba5, fProgressSlipView: nil, fConnectionSlipView: nil, MOpenConnectionSlipCallback: kFunction_1043c91, MShutdownTimer: kFunction_1043cf1, name: "Newton Internet Enabler", MGetErrorString: kFunction_1043da9, fAbort: nil, MGetLinkDefaultEntry: kFunction_10458b9, MShutdown: kFunction_104598d, description: "Newton Internet Enabler Core Service", MDoCallback: kFunction_1045cd9, fLinkClients_Grab: nil, MGetLinkEntryByLinkID: kFunction_1045d5d, declareSelf: 'InetManagerFSM, MNotifyIconCallback: kFunction_1045e81, fCCE: nil, fPhysicalLayerServiceFSM: nil, MDisplayStatus: kFunction_10460c1, fLinkClients_ReleasePending: nil, MSetLinkDefaultID: kFunction_10466d9, fDumbLinkClientsExist: nil, MGetLinkSoup: kFunction_104672d, MGetLinkStatus: kFunction_1046771, versionStr: "2.0    ", MNotifyIconOff: kFunction_10467fd, MGetScriptService: kFunction_1046871, fProcessPortID: nil, fPowerOffSlipVisible: nil, MUpdateProgressSlip: kFunction_10468b1, MGetDomainService: kFunction_1046a99, fVerboseConnect: nil, MGetLinkUniqueID: kFunction_1046ac9, fPowerOffState: nil, MGetLinkStatusAll: kFunction_1046b55, fsm_private_states: {DeactivatingDomainManager: {DeactivateDomainManagerSuccess: {action: kFunction_10473a1, nextState: 'DisengageLinkProtocol}, DeactivateDomainManagerFailure: {action: kFunction_10473fd, nextState: 'DisengageLinkProtocol}, DeactivateDomainManagerSkipped: {action: kFunction_1047445, nextState: 'DisengageLinkProtocol}, AddLinkClient: {action: kFunction_104749d}, RemoveLinkClient: {action: kFunction_10474f1}, Cancel: {action: kFunction_10475a9}}, ConnectLinkFailureCleanUp: {CleanUp: {action: kFunction_104764d, nextState: 'Genesis}, AddLinkClient: {action: kFunction_104749d}, RemoveLinkClient: {action: kFunction_10474f1}}, ParseLogoutScript: {ParseLogoutScript: {action: kFunction_1047ab9, nextState: 'ParsingLogoutScript, MParseCallback: kFunction_1047d21}, Cancel: {action: kFunction_10475a9}, AddLinkClient: {action: kFunction_104749d}, RemoveLinkClient: {action: kFunction_10474f1}}, Genesis: {terminal: true, Create: {action: kFunction_1047ec1}, AddLinkClient: {action: kFunction_10482f9, nextNoIdle: true, nextState: 'ConnectLink}, RemoveLinkClient: {action: kFunction_10484a1}, Cancel: {action: kFunction_10475a9}, ShutdownTimerExpired: {action: kFunction_1048519}}, ParseLoginScript: {ParseLoginScript: {action: kFunction_10485f1, nextState: 'ParsingLoginScript, MParseCallback: kFunction_104877d}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Abort: {nextState: 'DisconnectLink, action: kFunction_1048955}, Cancel: {action: kFunction_10475a9}}, ReleasingLink: {ReleaseTimerExpired: {action: kFunction_1048a4d, nextState: 'DeactivateDomainManager}, ReleaseTimerAddLinkClient: {action: kFunction_1048b7d, nextState: 'connected}, AddLinkClient: {action: kFunction_1048be1}, RemoveLinkClient: {action: kFunction_1048c99}, Cancel: {action: kFunction_1048d89}}, ConnectLink: {ConnectLink: {nextState: 'LoadPhysicalLayerDriverProtocol, action: kFunction_1048eb5, MBuildConfigOptions_InstantiateCCE: kFunction_10491dd, MPowerOffHandler: kFunction_1049399}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Abort: {nextState: 'Genesis, action: kFunction_1049805}, Cancel: {action: kFunction_10475a9}}, ProcessStackActiveLinkLayer: {ProcessStackActiveLinkLayer: {action: kFunction_10498f9, nextState: 'ProcessingStackActiveLinkLayer, MProcessStackActiveCallback: kFunction_1049985}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Abort: {action: kFunction_1048955, nextState: 'DisconnectLink}, Cancel: {action: kFunction_10475a9}}, connected: {connected: {action: kFunction_1049b25}, AddLinkClient: {action: kFunction_1049cad}, RemoveLinkClient: {action: kFunction_1049d99}, ReleaseLink: {action: kFunction_1049f1d, nextState: 'ReleasingLink}, DisconnectLink: {action: kFunction_104a045, nextState: 'ReleasingLink}, Abort: {action: kFunction_1048955, nextState: 'DisconnectLink}, Cancel: {action: kFunction_104a09d}}, LoadLinkLayerDriverProtocol: {LoadLinkLayerDriverProtocol: {action: kFunction_104a179, nextState: 'LoadingLinkLayerDriverProtocol, MLoadDriverProtocolCallback: kFunction_104a22d}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Abort: {action: kFunction_104a331, nextState: 'ConnectingLink}, Cancel: {action: kFunction_10475a9}}, ActivatingDomainManager: {ActivateDomainManagerSuccess: {action: kFunction_104a49d, nextState: 'connected}, ActivateDomainManagerFailure: {action: kFunction_104a50d, nextState: 'DisengageLinkProtocol}, ActivateDomainManagerSkipped: {action: kFunction_104a555, nextState: 'connected}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Cancel: {action: kFunction_10475a9}}, DisengageLinkProtocol: {DisengageLinkProtocol: {action: kFunction_104a659, nextState: 'DisengagingLinkProtocol, MDisengageLinkCallback: kFunction_104a6c5}, AddLinkClient: {action: kFunction_104749d}, RemoveLinkClient: {action: kFunction_10474f1}, Cancel: {action: kFunction_10475a9}}, DeactivateDomainManager: {DeactivateDomainManager: {action: kFunction_104a865, nextState: 'DeactivatingDomainManager, MDeactivateDomainManagerCallback: kFunction_104a8e9}, AddLinkClient: {action: kFunction_104749d}, RemoveLinkClient: {action: kFunction_10474f1}, Cancel: {action: kFunction_10475a9}}, ConnectingLink: {ConnectLinkSuccess: {action: kFunction_104aa01, nextState: 'ParseLoginScript}, ConnectLinkFailure: {action: kFunction_104aa51, nextState: 'ConnectLinkFailureCleanUp}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Cancel: {action: kFunction_104aab5}}, ProcessingStackActiveLinkLayer: {ProcessingStackActiveLinkLayerSuccess: {action: kFunction_104ab69, nextState: 'ActivateDomainManager}, ProcessingStackActiveLinkLayerFailure: {action: kFunction_104abb9, nextState: 'DisengageLinkProtocol}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Cancel: {action: kFunction_10475a9}}, LoadingLinkLayerDriverProtocol: {LoadLinkLayerDriverProtocolSuccess: {action: kFunction_104acbd, nextState: 'ConnectingLink, MConnectLinkCallback: kFunction_104ad81}, LoadLinkLayerDriverProtocolFailure: {action: kFunction_104ade5, nextState: 'ConnectingLink}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Cancel: {action: kFunction_10475a9}}, ActivatingCCE: {ActivateCCESuccess: {action: kFunction_104aee9, nextState: 'ProcessStackActivePhysicalLayer}, ActivateCCEFailure: {action: kFunction_104af39, nextState: 'DisconnectLink}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Cancel: {action: kFunction_10475a9}}, EngagingLinkProtocol: {EngageLinkProtocolSuccess: {action: kFunction_104b079, nextState: 'ActivateCCE}, EngageLinkProtocolFailure: {action: kFunction_104b0c9, nextState: 'DisconnectLink}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Cancel: {action: kFunction_10475a9}}, ProcessStackActivePhysicalLayer: {ProcessStackActivePhysicalLayer: {action: kFunction_104b189, nextState: 'ProcessingStackActivePhysicalLayer, MProcessStackActiveCallback: kFunction_104b1f1}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Abort: {action: kFunction_1048955, nextState: 'DisconnectLink}, Cancel: {action: kFunction_10475a9}}, LoadPhysicalLayerDriverProtocol: {DoFailure: {action: kFunction_104b35d, nextState: 'ConnectingLink}, LoadPhysicalLayerDriverProtocol: {action: kFunction_104b3b9, nextState: 'LoadingPhysicalLayerDriverProtocol, MLoadDriverProtocolCallback: kFunction_104b449}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Abort: {action: kFunction_104b53d, nextState: 'ConnectingLink}, Cancel: {action: kFunction_10475a9}}, ParsingLogoutScript: {MCleanUp: kFunction_104b605, ParseLogoutScriptSuccess: {action: kFunction_104b681, nextState: 'DisconnectLink}, ParseLogoutScriptFailure: {action: kFunction_104b6e5, nextState: 'DisconnectLink}, ParseLogoutScriptSkipped: {action: kFunction_104b731, nextState: 'DisconnectLink}, Cancel: {action: kFunction_10475a9}, AddLinkClient: {action: kFunction_104749d}, RemoveLinkClient: {action: kFunction_10474f1}}, ParsingLoginScript: {MCleanUp: kFunction_104b7ed, ParseLoginScriptSuccess: {action: kFunction_104b841, nextState: 'EngageLinkProtocol}, ParseLoginScriptFailure: {action: kFunction_104b8b9, nextState: 'DisconnectLink}, ParseLoginScriptSkipped: {action: kFunction_104b905, nextState: 'EngageLinkProtocol}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Cancel: {action: kFunction_10475a9}}, DisconnectLink: {DisconnectLink: {nextState: 'DisconnectingLink, action: kFunction_104ba0d, MDisconnectLinkCallback: kFunction_104ba89}, Cancel: {action: kFunction_10475a9}, AddLinkClient: {action: kFunction_104749d}, RemoveLinkClient: {action: kFunction_10474f1}}, ProcessingStackActivePhysicalLayer: {ProcessingStackActivePhysicalLayerSuccess: {action: kFunction_104bc1d, nextState: 'ProcessStackActiveLinkLayer}, ProcessingStackActivePhysicalLayerFailure: {action: kFunction_104bc6d, nextState: 'DisengageLinkProtocol}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Cancel: {action: kFunction_10475a9}}, LoadingPhysicalLayerDriverProtocol: {LoadPhysicalLayerDriverProtocolSuccess: {action: kFunction_104bd29, nextState: 'LoadLinkLayerDriverProtocol}, LoadPhysicalLayerDriverProtocolFailure: {action: kFunction_104bd95, nextState: 'ConnectingLink}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Cancel: {action: kFunction_10475a9}}, ActivateDomainManager: {ActivateDomainManager: {action: kFunction_104bea1, nextState: 'ActivatingDomainManager, MActivateDomainManagerCallback: kFunction_104bfd5}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Abort: {action: kFunction_1048955, nextState: 'DisconnectLink}, Cancel: {action: kFunction_10475a9}}, DisconnectingLink: {DisconnectLinkSuccess: {action: kFunction_104c0dd, nextState: 'ConnectLinkFailureCleanUp}, DisconnectLinkFailure: {action: kFunction_104c125, nextState: 'ConnectLinkFailureCleanUp}, Cancel: {action: kFunction_10475a9}, AddLinkClient: {action: kFunction_104749d}, RemoveLinkClient: {action: kFunction_10474f1}}, ActivateCCE: {ActivateCCE: {action: kFunction_104c25d, nextState: 'ActivatingCCE, fCompletionSpec_Option: {async: true, reqTimeout: 66666, completionScript: kFunction_104c59d}, MBuildCompletionSpec_Option: kFunction_104c649}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Abort: {action: kFunction_1048955, nextState: 'DisconnectLink}, Cancel: {action: kFunction_10475a9}}, DisengagingLinkProtocol: {DisengageLinkProtocolSuccess: {action: kFunction_104c745, nextState: 'ParseLogoutScript}, DisengageLinkProtocolFailure: {action: kFunction_104c78d, nextState: 'DisconnectLink}, AddLinkClient: {action: kFunction_104749d}, RemoveLinkClient: {action: kFunction_10474f1}, Cancel: {action: kFunction_10475a9}}, EngageLinkProtocol: {EngageLinkProtocol: {action: kFunction_104c88d, nextState: 'EngagingLinkProtocol, MEngageLinkCallback: kFunction_104c8f5}, AddLinkClient: {action: kFunction_1048841}, RemoveLinkClient: {action: kFunction_10488f9}, Abort: {nextState: 'DisconnectLink, action: kFunction_1048955}, Cancel: {action: kFunction_10475a9}}}, fProgressSlipStatus: nil, MDoCallbacks: kFunction_104c9a1},
+			// InetStartUp(): the link manager (the global |InetManagerFSM:NIE|), made and the package state acquired the first time.
 			kFunction_103fee9: func() begin
 				local value;
 				if (not (value := GetGlobalVar('|InetManagerFSM:NIE|))) then begin
@@ -2690,23 +3089,28 @@ part := array(nil, {
 					end;
 				value
 			end,
+			// InetBuildStatusFrame(linkID, infoStatus, infoError, text1, text2, ...): the link manager's MBuildStatusFrame.
 			kFunction_104ca71: func(a1, a2, a3, a4, a5, a6) begin
 				InetStartUp():MBuildStatusFrame(a1, a2, a3, a4, a5, a6)
 			end,
+			// InetObjectToString(obj): a printable string of an object (protoFSM's ObjectToString).
 			kFunction_104cac1: func(a1) begin
 				InetStartUp():ObjectToString(a1)
 			end,
+			// RegInetLinkStatusChange(sym, frame, symbol): registers frame:symbol to be told every link status change; returns sym.
 			kFunction_104cb15: func(a1, a2, a3) begin
 				local inetStartUp2;
 				(inetStartUp2 := InetStartUp()).fLinkClients.(a1) := inetStartUp2:MBuildCallback(a1, a2, a3);
 				a1
 			end,
+			// UnRegInetLinkStatusChange(sym): unregisters it.
 			kFunction_104cb69: func(a1) begin
 				local inetStartUp2;
 				RemoveSlot((inetStartUp2 := InetStartUp()).fLinkClients, a1);
 				inetStartUp2:MShutdownTimer();
 				nil
 			end,
+			// InetAppendSpecialLinkEntryOptions(options, linkEntry, slot): appends the setup's options in that slot (a frame, an array of them, or a function(linkEntry, options) called first).
 			kFunction_104cbc1: func(a1, a2, a3) begin
 				if (if IsFunction(a2.(a3)) then (GetFunctionArgCount(a2.(a3)) = 2)) then begin
 						try begin
@@ -2719,6 +3123,7 @@ part := array(nil, {
 										end
 								end))))
 			end,
+			// InetBuildOptionFromTemplate(option, overrides): a copy of an option frame with label, type, opCode, result, form and template data replaced from overrides.
 			kFunction_104ccd5: func(a1, a2) begin
 				local l1;
 				l1 := (if IsFrame(a1) then TotalClone(a1) else {});
@@ -2751,6 +3156,7 @@ part := array(nil, {
 					end;
 				TotalClone(l1)
 			end,
+			// InetCopyIPAddress(from, to): copies the four bytes; returns to, or nil if either is not an address.
 			kFunction_104ce79: func(a1, a2) begin
 				(if (if InetIsValidIPAddress(a1) then InetIsValidIPAddress(a2)) then begin
 						(for i := 0 to 3 do begin
@@ -2759,6 +3165,7 @@ part := array(nil, {
 						a2
 					end)
 			end,
+			// InetGetOptionFromOptionArray(options, label): the option with that label, or nil.
 			kFunction_104ceed: func(a1, a2) begin
 				(try begin
 						LFetch(a1, a2, 0, GetGlobalFn('StrExactCompare), 'label)
@@ -2766,6 +3173,7 @@ part := array(nil, {
 						nil
 					end)
 			end,
+			// InetGetResultFromOptionArray(options): the first option result that is not nil.
 			kFunction_104cf6d: func(a1) begin
 				(try begin
 						(foreach item in a1 do begin
@@ -2777,6 +3185,7 @@ part := array(nil, {
 						nil
 					end)
 			end,
+			// InetGetResultFromOptionArrayByLabel(options, label): the result of the option with that label.
 			kFunction_104cfe1: func(a1, a2) begin
 				(try begin
 						LFetch(a1, a2, 0, GetGlobalFn('StrExactCompare), 'label).result
@@ -2784,9 +3193,11 @@ part := array(nil, {
 						nil
 					end)
 			end,
+			// InetIPAddressToString(address): "a.b.c.d", or "" for an invalid address.
 			kFunction_104d04d: func(a1) begin
 				(if InetIsValidIPAddress(a1) then Stringer([Array: a1[0], ".", a1[1], ".", a1[2], ".", a1[3]]) else "")
 			end,
+			// InetIPStringToAddress(string): [a, b, c, d] from "a.b.c.d", or nil if it is not a valid address.
 			kFunction_104d0d5: func(a1) begin
 				list := [Array: -1, -1, -1, -1];
 				try begin
@@ -2806,25 +3217,32 @@ part := array(nil, {
 					end onexception |evt.ex| do begin end;
 				(if (if (if strTokenize2 then (not call strTokenize2 with ())) then InetIsValidIPAddress(list)) then list)
 			end,
+			// InetIsSameIPAddress(a, b): whether two valid addresses are equal.
 			kFunction_104d269: func(a1, a2) begin
 				(if (if (if (if (if InetIsValidIPAddress(a1) then InetIsValidIPAddress(a2)) then (a1[0] = a2[0])) then (a1[1] = a2[1])) then (a1[2] = a2[2])) then (a1[3] = a2[3]))
 			end,
+			// InetIsSameIPAddressStr(a, b): the same for strings.
 			kFunction_104d2f5: func(a1, a2) begin
 				InetIsSameIPAddress(InetIPStringToAddress(a1), InetIPStringToAddress(a2))
 			end,
+			// InetIsValidIPAddress(address): an array of four integers 0..255.
 			kFunction_104d341: func(a1) begin
 				(if (if (if (if (if (if (if (if (if (if (if (if (if IsArray(a1) then (Length(a1) = 4)) then IsInteger(a1[0])) then (a1[0] >= 0)) then (a1[0] <= 255)) then IsInteger(a1[1])) then (a1[1] >= 0)) then (a1[1] <= 255)) then IsInteger(a1[2])) then (a1[2] >= 0)) then (a1[2] <= 255)) then IsInteger(a1[3])) then (a1[3] >= 0)) then (a1[3] <= 255))
 			end,
+			// InetIsValidIPAddressStr(string): whether it parses as an address.
 			kFunction_104d449: func(a1) begin
 				(InetIPStringToAddress(a1) <> nil)
 			end,
+			// InetIsZeroIPAddress(address): 0.0.0.0.
 			kFunction_104d48d: func(a1) begin
 				(if (if (if (if InetIsValidIPAddress(a1) then (a1[0] = 0)) then (a1[1] = 0)) then (a1[2] = 0)) then (a1[3] = 0))
 			end,
+			// InetGetService(sym): the service registered under sym (|InetServices:NIE|), or nil.
 			kFunction_104d501: func(a1) begin
 				local value;
 				(if (if a1 then (value := GetGlobalVar('|InetServices:NIE|))) then value.(a1))
 			end,
+			// InetGetServiceList(class): the registered services of that class.
 			kFunction_104d57d: func(a1) begin
 				list := [Array: ];
 				if (if a1 then (value := GetGlobalVar('|InetServices:NIE|))) then begin
@@ -2838,28 +3256,34 @@ part := array(nil, {
 					end;
 				list
 			end,
+			// InetGetIPAddress(path): a copy of the current link setup's value at that path.
 			kFunction_104d609: func(a1) begin
 				local fLinkEntry;
 				(if (if IsPathExpr(a1) then (fLinkEntry := InetStartUp().fLinkEntry)) then TotalClone(fLinkEntry.(a1)))
 			end,
+			// InetGrabLinkVerbose(linkID, frame, symbol): InetGrabLink with a progress slip.
 			kFunction_104d68d: func(a1, a2, a3) begin
 				local inetStartUp2, mBuildCallback;
 				inetStartUp2 := InetStartUp();
 				(mBuildCallback := inetStartUp2:MBuildCallback(a1, a2, a3)).fVerbose := true;
 				inetStartUp2:DoEvent('AddLinkClient, [Array: mBuildCallback])
 			end,
+			// InetReleaseLinkVerbose(linkID, frame, symbol): InetReleaseLink with a progress slip.
 			kFunction_104d6d1: func(a1, a2, a3) begin
 				local inetStartUp2, mBuildCallback;
 				inetStartUp2 := InetStartUp();
 				(mBuildCallback := inetStartUp2:MBuildCallback(a1, a2, a3)).fVerbose := true;
 				inetStartUp2:DoEvent('RemoveLinkClient, [Array: mBuildCallback])
 			end,
+			// InetGetProcessPortID(): the CCE endpoint's process port id.
 			kFunction_104d715: func() begin
 				InetStartUp().fProcessPortID
 			end,
+			// InetGetLinkRefCount(): how many clients hold the link.
 			kFunction_104d75d: func() begin
 				InetStartUp().fLinKRefCount
 			end,
+			// InetGetOptions(): the NIE's version and its user configuration symbol.
 			kFunction_104d791: func() begin
 				EnsureInternal({version: "2.0    ", userConfigSymbol: '|InetServices:NIE|})
 			end,

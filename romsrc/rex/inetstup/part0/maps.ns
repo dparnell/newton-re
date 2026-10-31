@@ -1,3 +1,6 @@
+// Internet Setup's part0: the frame maps - the slot names of its frames, shared by frames with the same
+// slots (map(flags, supermap, slots...); romsrc/README.md)
+
 map_100031d := map(0, nil, '_ExportTable, 'labels, '_taglist, 'doNotInstall, 'app, 'text, 'iconPro, 'icon, 'theForm, 'devInstallScript, 'removeScript, 'installScript);
 map_10004ed := map(2, nil, 'name, 'major, 'minor, 'objects);
 map_10005e1 := map(4, nil, 'name, 'protection, 'symbol, 'type, 'viewSetupFormScript, 'boldTitle, 'CanScroll, 'layouts, 'showBullet, 'showMultipleData, 'viewBounds, 'viewClickScript, '_proto);

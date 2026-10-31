@@ -1,4 +1,10 @@
-// part, and what only it reaches
+// part: Newton Devices' Lantern part - exports the unit |Lantern:NSG|: a template device
+// registry entry for an Ethernet card (the first object) and the Lantern client proto
+// (partItem) through which the Internet Enabler's link layer talks to the Ethernet card
+// driver (Lantern: TLanternCardHandler, part 4): Instantiate, Init, Attach,
+// RegisterForEvent and PostDriverEvent, then Detach and Delete. The driver calls go to the
+// native module (LanternNewtAPI). Errors are the driver's -61xxx codes (no Apple names;
+// MapErrorCode's table says what each means). The file holds the part and what only it reaches.
 
 part := array(nil, {
 	_ExportTable: [|Array|:
@@ -7,8 +13,10 @@ part := array(nil, {
 			major: 1,
 			minor: 0,
 			objects: [|Array|:
+				// the device registry entry template (DeviceClass 'ethernet; the driver fills in the names)
 				{
 					ConfigBeforeUse: true,
+					// DeleteClient(client): removes a client from the device's clients.
 					DeleteClient: func(a1) begin
 						local arrayRemoveCount2;
 						arrayRemoveCount2 := nil;
@@ -20,6 +28,8 @@ part := array(nil, {
 					_Clients: nil,
 					ConfigView: nil,
 					AddPacketReadyEventHandler: nil,
+					// AddClient(client): adds a client (a Lantern client instance) and makes this device its
+					// _Device; returns the client, or the error code of an exception.
 					AddClient: func(a1) begin
 						local addArraySlot2;
 						(try begin
@@ -36,18 +46,26 @@ part := array(nil, {
 								return CurrentException().error
 							end)
 					end,
+					// DeviceInserted / DeviceRemoved: card-event hooks (nothing here).
 					DeviceInserted: func() begin
 						nil
 					end,
+					// ConfigChanged(prefs): reconfigures the device with new preferences.
 					ConfigChanged: func(a1) begin
 						self:Config(a1, true)
 					end,
 					_LostPacketCount: 0,
+					// DeviceRemoved: (as DeviceInserted) nothing.
 					DeviceRemoved: func() begin
 						nil
 					end,
+					// MapErrorCode(code): the text for a Lantern error code - the ErrorString (for a symbol,
+					// whose name is the number) or the user-facing GenericErrorString with the number; nil
+					// for a code not in the table.
 					MapErrorCode: compile(
 						constants: {
+							// the table of the driver's errors: -610xx driver, -612xx driver resources/hardware,
+							// -613xx client, -614xx client proto
 							kLiteral_1007631: '[Array: {ErrorString: "Driver Constructor Failed", GenericErrorString: "There is not enough memory or system resources available. Try closing applications or resetting your Newton device.", errorCode: -61000}, {ErrorString: "Driver Not Found", GenericErrorString: "An error occurred. Try reloading the device driver. If the problem persists, contact the device driver developer.", errorCode: -61001}, {ErrorString: "Driver Install Failed", GenericErrorString: "An error occurred. Try reloading the device driver. If the problem persists, contact the device driver developer.", errorCode: -61002}, {ErrorString: "Driver Remove Failed", GenericErrorString: "An error occurred. Try reloading the device driver. If the problem persists, contact the device driver developer.", errorCode: -61003}, {ErrorString: "Driver Unhandled Event", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61004}, {ErrorString: "Driver Packet Dropped", GenericErrorString: "A problem occurred with the network. Network packets were dropped.", errorCode: -61005}, {ErrorString: "Driver Value Range Error", GenericErrorString: "An error occurred. Try reloading the device driver. If the problem persists, contact the device driver developer.", errorCode: -61200}, {ErrorString: "Driver Hardware Failure", GenericErrorString: "A problem occurred with your device.", errorCode: -61201}, {ErrorString: "Driver Resource Failure", GenericErrorString: "A problem occurred with your device.", errorCode: -61202}, {ErrorString: "Driver Exception", GenericErrorString: "There is a problem communicating with the PC card. The card may be unusable, or you may have removed it during a connection.", errorCode: -61006}, {ErrorString: "Driver NewAsync Message Failed", GenericErrorString: "There is not enough memory or system resources available. Try closing applications or resetting your Newton device.", errorCode: -61007}, {ErrorString: "Driver replied twice", GenericErrorString: "An error occurred. Try reloading the device driver. If the problem persists, contact the device driver developer.", errorCode: -61009}, {ErrorString: "Driver did not reply to an SendRPC from the device Event Handler", GenericErrorString: "An error occurred. Try reloading the device driver. If the problem persists, contact the device driver developer.", errorCode: -61010}, {ErrorString: "Client Already Attached", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61301}, {ErrorString: "Client Not Attached", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61302}, {ErrorString: "Client No Memory", GenericErrorString: "There is not enough memory or system resources available. Try closing applications or resetting your Newton device.", errorCode: -61303}, {ErrorString: "Client New AsyncMsg Failed", GenericErrorString: "There is not enough memory or system resources available. Try closing applications or resetting your Newton device.", errorCode: -61304}, {ErrorString: "Client Invalid Task Type", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61305}, {ErrorString: "Client Dispatch Failed", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61300}, {ErrorString: "ClientProto Instantiate Error", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61406}, {ErrorString: "ClientProto Incorrect State for Requested Operation", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61426}, {ErrorString: "ClientProto Client Not Initialized", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61427}, {ErrorString: "ClientProto Deletion Error", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61409}, {ErrorString: "ClientProto Cannot create client", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61404}, {ErrorString: "ClientProto PostDriverEvent EventDefs not defined", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61410}, {ErrorString: "ClientProto PostDriverEvent SendArgs not in an array", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61411}, {ErrorString: "ClientProto PostDriverEvent SendArgs definition not an array", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61412}, {ErrorString: "ClientProto PostDriverEvent SendArgs count does not match definition", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61413}, {ErrorString: "ClientProto PostDriverEvent SendArgs type does not match definition", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61414}, {ErrorString: "ClientProto RegisterForEvent Event Definition Error (no event?)", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61416}, {ErrorString: "ClientProto RegisterForEvent CallBack Specification Incomplete", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61419}, {ErrorString: "ClientProto UnRegisterForEvent Client Not Registered for event", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61420}, {ErrorString: "ClientProto UnRegisterForEvent Event not registered", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61421}, {ErrorString: "ClientProto PostRequest Error", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61415}, {ErrorString: "ClientProto Can't Allocate Event Handler", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61422}, {ErrorString: "ClientProto Can't initialize EventHandler, Out Of Memory", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61423}, {ErrorString: "ClientProto RegisterForEvent Argument Type Specified in event definition Invalid", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61424}, {ErrorString: "ClientProto Not A Symbol (you were probably looking for an eventdef)", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61405}, {ErrorString: "ClientProto AEHandlerProc Cannot allocate object for binary parameter", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61425}]
 						},
 						func(a1) begin
@@ -72,6 +90,7 @@ part := array(nil, {
 						end),
 					DeviceDisplayName: DeviceCISProductName,
 					DeviceProtocolClassName: DeviceCISProductName,
+					// Config(prefs, now): configures the device (nothing here).
 					Config: func(a1, a2) begin
 						nil
 					end,
@@ -84,14 +103,19 @@ part := array(nil, {
 			]
 		}
 	],
+	// installScript(partFrame): runs devInstallScript; returns the remove frame whose
+	// removeScript (devRemoveScript) undoes it when the package goes.
 	installScript: func(partFrame) begin
 		local ensureInternal2;
 		ensureInternal2 := EnsureInternal({removeScript: partFrame.devRemoveScript});
 		partFrame:devInstallScript(partFrame, ensureInternal2);
 		ensureInternal2
 	end,
+	// devInstallScript(partFrame, removeFrame): defines MapLanternError, the event registry and the client count, and the card event handler (the body at its end).
 	devInstallScript: compile(
 		constants: {
+			// the client proto's methods as the install script built them (the same as partItem's
+			// below, which are commented there): Attach
 			kFunction_1009279: func(a1) begin
 				local attachLanternClientAPI;
 				if (_State <> 'APIReady) then begin
@@ -102,6 +126,7 @@ part := array(nil, {
 					end;
 				return attachLanternClientAPI
 			end,
+			// RegisterForEvent
 			kFunction_1009315: func(a1, a2, a3) begin
 				local lanternEventRegistry, lFetch2, l3;
 				if (not IsSymbol(a1)) then begin
@@ -133,9 +158,11 @@ part := array(nil, {
 				_EventRegisterCount := (_EventRegisterCount + 1);
 				return lanternEventRegistry
 			end,
+			// PostRequest
 			kFunction_10096b9: func() begin
 				nil
 			end,
+			// PostDriverEvent
 			kFunction_100adf1: func(a1, a2) begin
 				(try begin
 						cPostDriverEvent := nil;
@@ -185,6 +212,7 @@ part := array(nil, {
 						return frame2
 					end)
 			end,
+			// Init
 			kFunction_100b11d: func(a1) begin
 				local lanternClientAPI;
 				if (_State <> 'ClientReady) then begin
@@ -200,7 +228,9 @@ part := array(nil, {
 					end;
 				return lanternClientAPI
 			end,
+			// the error table (as in MapErrorCode above)
 			kLiteral_1007631: '[Array: {ErrorString: "Driver Constructor Failed", GenericErrorString: "There is not enough memory or system resources available. Try closing applications or resetting your Newton device.", errorCode: -61000}, {ErrorString: "Driver Not Found", GenericErrorString: "An error occurred. Try reloading the device driver. If the problem persists, contact the device driver developer.", errorCode: -61001}, {ErrorString: "Driver Install Failed", GenericErrorString: "An error occurred. Try reloading the device driver. If the problem persists, contact the device driver developer.", errorCode: -61002}, {ErrorString: "Driver Remove Failed", GenericErrorString: "An error occurred. Try reloading the device driver. If the problem persists, contact the device driver developer.", errorCode: -61003}, {ErrorString: "Driver Unhandled Event", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61004}, {ErrorString: "Driver Packet Dropped", GenericErrorString: "A problem occurred with the network. Network packets were dropped.", errorCode: -61005}, {ErrorString: "Driver Value Range Error", GenericErrorString: "An error occurred. Try reloading the device driver. If the problem persists, contact the device driver developer.", errorCode: -61200}, {ErrorString: "Driver Hardware Failure", GenericErrorString: "A problem occurred with your device.", errorCode: -61201}, {ErrorString: "Driver Resource Failure", GenericErrorString: "A problem occurred with your device.", errorCode: -61202}, {ErrorString: "Driver Exception", GenericErrorString: "There is a problem communicating with the PC card. The card may be unusable, or you may have removed it during a connection.", errorCode: -61006}, {ErrorString: "Driver NewAsync Message Failed", GenericErrorString: "There is not enough memory or system resources available. Try closing applications or resetting your Newton device.", errorCode: -61007}, {ErrorString: "Driver replied twice", GenericErrorString: "An error occurred. Try reloading the device driver. If the problem persists, contact the device driver developer.", errorCode: -61009}, {ErrorString: "Driver did not reply to an SendRPC from the device Event Handler", GenericErrorString: "An error occurred. Try reloading the device driver. If the problem persists, contact the device driver developer.", errorCode: -61010}, {ErrorString: "Client Already Attached", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61301}, {ErrorString: "Client Not Attached", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61302}, {ErrorString: "Client No Memory", GenericErrorString: "There is not enough memory or system resources available. Try closing applications or resetting your Newton device.", errorCode: -61303}, {ErrorString: "Client New AsyncMsg Failed", GenericErrorString: "There is not enough memory or system resources available. Try closing applications or resetting your Newton device.", errorCode: -61304}, {ErrorString: "Client Invalid Task Type", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61305}, {ErrorString: "Client Dispatch Failed", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61300}, {ErrorString: "ClientProto Instantiate Error", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61406}, {ErrorString: "ClientProto Incorrect State for Requested Operation", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61426}, {ErrorString: "ClientProto Client Not Initialized", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61427}, {ErrorString: "ClientProto Deletion Error", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61409}, {ErrorString: "ClientProto Cannot create client", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61404}, {ErrorString: "ClientProto PostDriverEvent EventDefs not defined", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61410}, {ErrorString: "ClientProto PostDriverEvent SendArgs not in an array", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61411}, {ErrorString: "ClientProto PostDriverEvent SendArgs definition not an array", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61412}, {ErrorString: "ClientProto PostDriverEvent SendArgs count does not match definition", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61413}, {ErrorString: "ClientProto PostDriverEvent SendArgs type does not match definition", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61414}, {ErrorString: "ClientProto RegisterForEvent Event Definition Error (no event?)", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61416}, {ErrorString: "ClientProto RegisterForEvent CallBack Specification Incomplete", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61419}, {ErrorString: "ClientProto UnRegisterForEvent Client Not Registered for event", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61420}, {ErrorString: "ClientProto UnRegisterForEvent Event not registered", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61421}, {ErrorString: "ClientProto PostRequest Error", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61415}, {ErrorString: "ClientProto Can't Allocate Event Handler", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61422}, {ErrorString: "ClientProto Can't initialize EventHandler, Out Of Memory", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61423}, {ErrorString: "ClientProto RegisterForEvent Argument Type Specified in event definition Invalid", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61424}, {ErrorString: "ClientProto Not A Symbol (you were probably looking for an eventdef)", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61405}, {ErrorString: "ClientProto AEHandlerProc Cannot allocate object for binary parameter", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61425}],
+			// MapErrorCode, which also asks the device and falls back to "Unknown Error: n"
 			kFunction_100b225: func(a1) begin
 				local errorString, errorCode;
 				if (if (not IsInteger(a1)) then (not IsSymbol(a1))) then begin
@@ -226,6 +256,7 @@ part := array(nil, {
 					end;
 				return errorString
 			end,
+			// Detach
 			kFunction_100b3d5: func() begin
 				local detachLanternClientAPI;
 				if (_State <> 'APIAttached) then begin
@@ -240,6 +271,7 @@ part := array(nil, {
 							return CurrentException().error
 						end))
 			end,
+			// Instantiate
 			kFunction_100b469: func(a1) begin
 				local l1, l2, addClient;
 				l1 := nil;
@@ -254,6 +286,7 @@ part := array(nil, {
 				_EventDefs := SetUnion(EventDefs, _Device.EventDefs, true);
 				return l1
 			end,
+			// RemoveCallBack
 			kFunction_100b5ad: func(a1) begin
 				local l1, l2, pos;
 				l1 := nil;
@@ -270,6 +303,7 @@ part := array(nil, {
 					end;
 				return l1
 			end,
+			// Delete
 			kFunction_100c0a1: func() begin
 				if (_State = 'ClientNotReady) then begin
 						return -61426
@@ -302,6 +336,7 @@ part := array(nil, {
 				_State := 'ClientNotReady;
 				return detach2
 			end,
+			// UnRegisterForEvent
 			kFunction_100c1d5: func(a1) begin
 				local removeCallBack, lFetch2;
 				removeCallBack := nil;
@@ -319,13 +354,20 @@ part := array(nil, {
 					end;
 				return removeCallBack
 			end,
+			// State
 			kFunction_100c289: func() begin
 				return _State
 			end,
+			// the Lantern client proto as the install script holds it (the same as partItem)
 			kLiteral_1008ebd: {_EventRegisterCount: 0, Attach: kFunction_1009279, RegisterForEvent: kFunction_1009315, PostRequest: kFunction_10096b9, RemoveEventHandler: {class: 'BinCFunction, code: '|romsrc:object:1009765|, numArgs: 1, offset: 4880}, PostDriverEvent: kFunction_100adf1, Init: kFunction_100b11d, NewLanternClientAPI: {class: 'BinCFunction, code: '|romsrc:object:1009765|, numArgs: 1, offset: 2472}, DetachLanternClientAPI: {class: 'BinCFunction, code: '|romsrc:object:1009765|, numArgs: 0, offset: 2824}, _EventDefs: nil, MapErrorCode: kFunction_100b225, DeleteLanternClientAPI: {class: 'BinCFunction, code: '|romsrc:object:1009765|, numArgs: 0, offset: 2880}, _State: 'ClientNotReady, Detach: kFunction_100b3d5, Instantiate: kFunction_100b469, _Device: nil, _ClientAPI: nil, CPostDriverEvent: {class: 'BinCFunction, code: '|romsrc:object:1009765|, numArgs: 2, offset: 2952}, RemoveCallBack: kFunction_100b5ad, EventDefs: '[Array: [Array: evSendBuffer, [Array: "lant", "sndB"], [Array: 17, 2], [Array: ]], [Array: evGetDeviceAddress, [Array: "lant", "gdva"], [Array: 17, 2], [Array: ]], [Array: evGetLinkIntegrity, [Array: "lant", "glit"], [Array: ], [Array: 2]], [Array: evAddMulticastAddress, [Array: "lant", "amca"], [Array: 17], [Array: ]], [Array: evDelMulticastAddress, [Array: "lant", "dmca"], [Array: 17], [Array: ]], [Array: evSetPromiscuous, [Array: "lant", "prom"], [Array: 2], [Array: ]], [Array: evGetThroughput, [Array: "lant", "getT"], [Array: ], [Array: 2, 2, 2]], [Array: evDriverFailure, [Array: "lant", "fail"], [Array: 2], [Array: ]], [Array: evLinkIntegrity, [Array: "lant", "link"], [Array: 2], [Array: ]], [Array: evCardReady, [Array: "lant", "card"], [Array: 2], [Array: ]], [Array: evCardInserted, [Array: "lant", "inst"], [Array: 17, 2], [Array: ]], [Array: evNewPacketReady, [Array: "lant", "pkt "], [Array: 2, 2], [Array: ]], [Array: evReadBuffer, [Array: "lant", "recB"], [Array: 2, 17, 2], [Array: ]], [Array: evSetPacketValidTime, [Array: "lant", "spvt"], [Array: 2], [Array: ]], [Array: evSetPacketBufferSize, [Array: "lant", "spbs"], [Array: 2], [Array: ]], [Array: evGetPacketBufferState, [Array: "lant", "gpbs"], [Array: ], [Array: 2, 2, 2, 2]], [Array: evGetRxStats, [Array: "lant", "gdrs"], [Array: ], [Array: 2, 2, 2, 2, 2]], [Array: evResetRxStats, [Array: "lant", "rdrs"], [Array: ], [Array: ]]], Delete: kFunction_100c0a1, AttachLanternClientAPI: {class: 'BinCFunction, code: '|romsrc:object:1009765|, numArgs: 0, offset: 2760}, UnRegisterForEvent: kFunction_100c1d5, State: kFunction_100c289, _CISProductName: nil, AddEventHandler: {class: 'BinCFunction, code: '|romsrc:object:1009765|, numArgs: 4, offset: 4424}},
+			// MapLanternError(code): the global function - the text for a Lantern error code.
 			kFunction_100c42d: func(a1) begin
 				kLiteral_1008ebd:MapErrorCode(a1)
 			end,
+			// the card event handler (RegWeirdCardEvent): on 'cardInserted, the registry's device whose
+			// CIS product name is the inserted card's is told, configured from its saved preferences
+			// (unless _DontConfigOnInsertion) and its slip opened; 'slipOpenRequest opens the slip of
+			// the device in that socket; 'cardRemoved closes the slip and tells the device.
 			kFunction_100c4f5: func(a1, a2) begin
 				l1 := nil;
 				(if (a2 = 'cardInserted) then begin
@@ -364,16 +406,20 @@ part := array(nil, {
 									end)
 							end)))
 			end,
+			// calls the handler above (the function registered)
 			kFunction_100c4b1: func(a1, a2) begin
 				call (kFunction_100c4f5) with (a1, a2)
 			end
 		},
+		// devInstallScript(partFrame, removeFrame): defines MapLanternError, the global event
+		// registry and client count, and registers the card event handler.
 		func(partFrame, removeFrame) begin
 			DefGlobalFn('MapLanternError, kFunction_100c42d);
 			DefGlobalVar('LanternEventRegistry, {});
 			DefGlobalVar('LanternClientCount, 0);
 			RegWeirdCardEvent('LanternNewtAPI, kFunction_100c4b1)
 		end),
+	// devRemoveScript(partFrame): undoes the install.
 	devRemoveScript: func(partFrame) begin
 		UnDefGlobalFn('MapLanternError);
 		UnDefGlobalVar('LanternEventRegistry);
@@ -384,8 +430,12 @@ part := array(nil, {
 
 DeviceCISProductName := "";
 
+// the Lantern client proto: an instance goes 'ClientNotReady -> (Instantiate) 'ClientReady
+// -> (Init) 'APIReady -> (Attach) 'APIAttached and back by Detach and Delete. A method
+// returns nil on success or a -61xxx error code (-61426: the wrong state for it).
 partItem := {
 	_EventRegisterCount: 0,
+	// Attach(): attaches the client to the driver (native AttachLanternClientAPI).
 	Attach: func(a1) begin
 		local attachLanternClientAPI;
 		if (_State <> 'APIReady) then begin
@@ -396,6 +446,10 @@ partItem := {
 			end;
 		return attachLanternClientAPI
 	end,
+	// RegisterForEvent(event, receiver, message): registers receiver:message for a driver event
+	// (an EventDefs name). The first registration of an event installs its native event
+	// handler; the global LanternEventRegistry keeps, per event, the handler and the
+	// {context, receiver, message} of every client registered for it.
 	RegisterForEvent: func(a1, a2, a3) begin
 		local lanternEventRegistry, lFetch2, l3;
 		if (not IsSymbol(a1)) then begin
@@ -414,6 +468,8 @@ partItem := {
 		if (not IsArray((lFetch2 := LFetch(_EventDefs, a1, 0, '|=|, 0)))) then begin
 				return -61416
 			end;
+		// the event's key: its four-character code (the second element of the definition's
+		// [class, code] pair) as a symbol
 		a1 := Intern(lFetch2[1][1]);
 		if (not HasSlot(GetGlobalVar('LanternEventRegistry), a1)) then begin
 				GetGlobalVar('LanternEventRegistry).(a1) := {EventHandler: nil, HandlerProcs: [Array: ], args: Array(Length(lFetch2[2]), nil)};
@@ -427,10 +483,14 @@ partItem := {
 		_EventRegisterCount := (_EventRegisterCount + 1);
 		return lanternEventRegistry
 	end,
+	// PostRequest(): not implemented.
 	PostRequest: func() begin
 		nil
 	end,
+	// RemoveEventHandler(handler): native - removes a driver event handler.
 	RemoveEventHandler: {class: 'BinCFunction, code: code, numArgs: 1, offset: 4880},
+	// PostDriverEvent(event, args): sends a driver event (an EventDefs name) with its arguments
+	// (checked against the definition: 2 an integer, 17 a binary); returns {error, data}.
 	PostDriverEvent: func(a1, a2) begin
 		(try begin
 				cPostDriverEvent := nil;
@@ -459,6 +519,8 @@ partItem := {
 				local cPostDriverEvent;
 				local frame2;
 				local lFetch2;
+				// looks like a bug: walks _EventDefs[2] (the third event's whole definition) rather than
+				// this event's argument types (lFetch2[2]), so the type checks never match anything
 				(foreach key, value in _EventDefs[2] do begin
 						if (value = 2) then begin
 								if (PrimClassOf(a2[key]) <> 'int) then begin
@@ -480,6 +542,8 @@ partItem := {
 				return frame2
 			end)
 	end,
+	// Init(): makes the native client for the card (NewLanternClientAPI) and counts it in the
+	// global LanternClientCount.
 	Init: func(currentWord) begin
 		local lanternClientAPI;
 		if (_State <> 'ClientReady) then begin
@@ -491,13 +555,17 @@ partItem := {
 						DefGlobalVar('LanternClientCount, (GetGlobalVar('LanternClientCount) + 1))
 					end
 			end else begin
+				// -61407: no card product name (Instantiate was not given one)
 				lanternClientAPI := -61407
 			end;
 		return lanternClientAPI
 	end,
+	// NewLanternClientAPI(cisProductName) / DetachLanternClientAPI(): native
 	NewLanternClientAPI: {class: 'BinCFunction, code: code, numArgs: 1, offset: 2472},
 	DetachLanternClientAPI: {class: 'BinCFunction, code: code, numArgs: 0, offset: 2824},
 	_EventDefs: nil,
+	// MapErrorCode(code): the text for a Lantern error code (the table, then the device's own
+	// MapErrorCode, else "Unknown Error: n").
 	MapErrorCode: compile(
 		constants: {
 			kLiteral_1007631: '[Array: {ErrorString: "Driver Constructor Failed", GenericErrorString: "There is not enough memory or system resources available. Try closing applications or resetting your Newton device.", errorCode: -61000}, {ErrorString: "Driver Not Found", GenericErrorString: "An error occurred. Try reloading the device driver. If the problem persists, contact the device driver developer.", errorCode: -61001}, {ErrorString: "Driver Install Failed", GenericErrorString: "An error occurred. Try reloading the device driver. If the problem persists, contact the device driver developer.", errorCode: -61002}, {ErrorString: "Driver Remove Failed", GenericErrorString: "An error occurred. Try reloading the device driver. If the problem persists, contact the device driver developer.", errorCode: -61003}, {ErrorString: "Driver Unhandled Event", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61004}, {ErrorString: "Driver Packet Dropped", GenericErrorString: "A problem occurred with the network. Network packets were dropped.", errorCode: -61005}, {ErrorString: "Driver Value Range Error", GenericErrorString: "An error occurred. Try reloading the device driver. If the problem persists, contact the device driver developer.", errorCode: -61200}, {ErrorString: "Driver Hardware Failure", GenericErrorString: "A problem occurred with your device.", errorCode: -61201}, {ErrorString: "Driver Resource Failure", GenericErrorString: "A problem occurred with your device.", errorCode: -61202}, {ErrorString: "Driver Exception", GenericErrorString: "There is a problem communicating with the PC card. The card may be unusable, or you may have removed it during a connection.", errorCode: -61006}, {ErrorString: "Driver NewAsync Message Failed", GenericErrorString: "There is not enough memory or system resources available. Try closing applications or resetting your Newton device.", errorCode: -61007}, {ErrorString: "Driver replied twice", GenericErrorString: "An error occurred. Try reloading the device driver. If the problem persists, contact the device driver developer.", errorCode: -61009}, {ErrorString: "Driver did not reply to an SendRPC from the device Event Handler", GenericErrorString: "An error occurred. Try reloading the device driver. If the problem persists, contact the device driver developer.", errorCode: -61010}, {ErrorString: "Client Already Attached", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61301}, {ErrorString: "Client Not Attached", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61302}, {ErrorString: "Client No Memory", GenericErrorString: "There is not enough memory or system resources available. Try closing applications or resetting your Newton device.", errorCode: -61303}, {ErrorString: "Client New AsyncMsg Failed", GenericErrorString: "There is not enough memory or system resources available. Try closing applications or resetting your Newton device.", errorCode: -61304}, {ErrorString: "Client Invalid Task Type", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61305}, {ErrorString: "Client Dispatch Failed", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61300}, {ErrorString: "ClientProto Instantiate Error", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61406}, {ErrorString: "ClientProto Incorrect State for Requested Operation", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61426}, {ErrorString: "ClientProto Client Not Initialized", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61427}, {ErrorString: "ClientProto Deletion Error", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61409}, {ErrorString: "ClientProto Cannot create client", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61404}, {ErrorString: "ClientProto PostDriverEvent EventDefs not defined", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61410}, {ErrorString: "ClientProto PostDriverEvent SendArgs not in an array", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61411}, {ErrorString: "ClientProto PostDriverEvent SendArgs definition not an array", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61412}, {ErrorString: "ClientProto PostDriverEvent SendArgs count does not match definition", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61413}, {ErrorString: "ClientProto PostDriverEvent SendArgs type does not match definition", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61414}, {ErrorString: "ClientProto RegisterForEvent Event Definition Error (no event?)", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61416}, {ErrorString: "ClientProto RegisterForEvent CallBack Specification Incomplete", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61419}, {ErrorString: "ClientProto UnRegisterForEvent Client Not Registered for event", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61420}, {ErrorString: "ClientProto UnRegisterForEvent Event not registered", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61421}, {ErrorString: "ClientProto PostRequest Error", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61415}, {ErrorString: "ClientProto Can't Allocate Event Handler", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61422}, {ErrorString: "ClientProto Can't initialize EventHandler, Out Of Memory", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61423}, {ErrorString: "ClientProto RegisterForEvent Argument Type Specified in event definition Invalid", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61424}, {ErrorString: "ClientProto Not A Symbol (you were probably looking for an eventdef)", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61405}, {ErrorString: "ClientProto AEHandlerProc Cannot allocate object for binary parameter", GenericErrorString: "An error occurred. Close the connection and try again. If the problem persists, contact the application developer.", errorCode: -61425}]
@@ -527,8 +595,10 @@ partItem := {
 				end;
 			return errorString
 		end),
+	// DeleteLanternClientAPI(): native - deletes the native client.
 	DeleteLanternClientAPI: {class: 'BinCFunction, code: code, numArgs: 0, offset: 2880},
 	_State: 'ClientNotReady,
+	// Detach(): detaches the client from the driver.
 	Detach: func() begin
 		local detachLanternClientAPI;
 		if (_State <> 'APIAttached) then begin
@@ -543,6 +613,8 @@ partItem := {
 					return CurrentException().error
 				end))
 	end,
+	// Instantiate(info): binds the client to the device of the card info's cisProductName (the
+	// device's AddClient) and takes the device's event definitions too.
 	Instantiate: func(a1) begin
 		local l1, l2, addClient;
 		l1 := nil;
@@ -559,7 +631,10 @@ partItem := {
 	end,
 	_Device: nil,
 	_ClientAPI: nil,
+	// CPostDriverEvent(eventDef, args): native - posts the event to the driver.
 	CPostDriverEvent: {class: 'BinCFunction, code: code, numArgs: 2, offset: 2952},
+	// RemoveCallBack(key): unregisters this client from an event, removing the native event
+	// handler when no client is left on it. -61420: this client was not registered for it.
 	RemoveCallBack: func(key) begin
 		local l1, l2, pos;
 		l1 := nil;
@@ -576,6 +651,8 @@ partItem := {
 			end;
 		return l1
 	end,
+	// the driver events: [name, [class, four-character code], argument types sent, types
+	// returned] - 2 an integer, 17 a binary
 	EventDefs: [|Array|:
 		[|Array|: 'evSendBuffer, [|Array|: lant, "sndB"], [|Array|: 17, 2], [|Array|: ]],
 		[|Array|: 'evGetDeviceAddress, [|Array|: lant, "gdva"], [|Array|: 17, 2], [|Array|: ]],
@@ -596,6 +673,8 @@ partItem := {
 		[|Array|: 'evGetRxStats, [|Array|: lant, "gdrs"], [|Array|: ], [|Array|: 2, 2, 2, 2, 2]],
 		[|Array|: 'evResetRxStats, [|Array|: lant, "rdrs"], [|Array|: ], [|Array|: ]]
 	],
+	// Delete(): unregisters every event, detaches, deletes the native client and leaves the
+	// device; returns the first error met, or nil.
 	Delete: func() begin
 		if (_State = 'ClientNotReady) then begin
 				return -61426
@@ -628,10 +707,14 @@ partItem := {
 		_State := 'ClientNotReady;
 		return detach2
 	end,
+	// AttachLanternClientAPI(): native
 	AttachLanternClientAPI: {class: 'BinCFunction, code: code, numArgs: 0, offset: 2760},
+	// UnRegisterForEvent(event): unregisters this client from a driver event. -61421: no client
+	// is registered for it.
 	UnRegisterForEvent: func(a1) begin
 		local removeCallBack, lFetch2;
 		removeCallBack := nil;
+		// -61405 for a non-symbol is set but then overwritten: the lookup below still runs
 		if (not IsSymbol(a1)) then begin
 				removeCallBack := -61405
 			end;
@@ -646,13 +729,17 @@ partItem := {
 			end;
 		return removeCallBack
 	end,
+	// State(): the client's state symbol.
 	State: func() begin
 		return _State
 	end,
 	_CISProductName: nil,
+	// AddEventHandler(eventDef, receiver, message, registryEntry): native - installs a driver
+	// event handler.
 	AddEventHandler: {class: 'BinCFunction, code: code, numArgs: 4, offset: 4424}
 };
 
+// the native module (LanternNewtAPI, ARM source)
 code := native('nativeModule, "resources/nativeModule/1009765.s");
 
 lant := "lant";

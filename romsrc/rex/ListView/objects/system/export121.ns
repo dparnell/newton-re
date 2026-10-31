@@ -1,6 +1,14 @@
-// export121, and what only it reaches
+// export121: ListView's outline list proto (on protoListView) - a list of topics (items)
+// with levels (indented by 20 pixels a level), optional checkboxes and priorities, that the
+// To Do List and the checklist/outline stationery build on. topics is the array of topic
+// frames ({level, text, styles, viewBounds, mtgDone, mtgPriority, hideCount, source});
+// nTopics, firstTopic, lastTopic and curTopic index it. listViewFlags' bit 2 shows the
+// checkboxes, bits 4 and 8 the priorities (by how the code tests them). Sisters share a level
+// under one mother; drag and drop, scrub, undo and the keyboard commands work on them. The
+// file holds it and what only it reaches.
 
 export121 := {
+	// IsEmpty(index): whether the topic has no text.
 	IsEmpty: compile(
 		options: "names",
 		func(anIndex) begin
@@ -9,11 +17,13 @@ export121 := {
 				end;
 			nil
 		end),
+	// GetTopicCount(): the number of topics.
 	GetTopicCount: compile(
 		options: "names",
 		func() begin
 			nTopics
 		end),
+	// viewDropRemoveScript(dragRef): topics dragged out to another view are removed here (undoable).
 	viewDropRemoveScript: compile(
 		options: "names",
 		func(aDragRef) begin
@@ -28,6 +38,7 @@ export121 := {
 					true
 				end)
 		end),
+	// AddKidsToList(list, index, level): adds the topic's descendants' indexes to list.
 	AddKidsToList: compile(
 		options: "names",
 		func(aList, anIndex, aLevel) begin
@@ -41,12 +52,14 @@ export121 := {
 					SetAdd(aList, ti, true)
 				end)
 		end),
+	// viewSetupDoneScript: the right margin, and a symbol unique to this view for procrastinated sends.
 	viewSetupDoneScript: compile(
 		options: "names",
 		func() begin
 			rightMargin := (self:LocalBox().right + rightIndent);
 			(self.uniqueSymbol := Intern(Stringer([Array: "ListView", viewCObject])))
 		end),
+	// OlderSister(index): the previous topic at the same level under the same mother, or nil.
 	OlderSister: compile(
 		options: "names",
 		func(anIndex) begin
@@ -73,6 +86,7 @@ export121 := {
 				end);
 			nil
 		end),
+	// UndoDropRemove(dragRef): puts topics dragged away back (undo).
 	UndoDropRemove: compile(
 		options: "names",
 		func(aDragRef) begin
@@ -86,17 +100,20 @@ export121 := {
 				end);
 			AddUndoAction('UndoDropTopic, [Array: indexList])
 		end),
+	// DeletingTopic(topic): a hook before a topic is deleted (nothing).
 	DeletingTopic: compile(
 		options: "names",
 		func(anIndex) begin
 			nil
 		end),
+	// ActiveTopic(index): makes the topic current, the caret at its end.
 	ActiveTopic: compile(
 		options: "names",
 		func(anIndex) begin
 			curTopic := anIndex;
 			(if (anIndex <> nil) then SetKeyView(self:TopicIndexToView(anIndex), 99999))
 		end),
+	// _keyCheckItemScript(keyView): Command-Return - ticks the current topic (with checkboxes).
 	_keyCheckItemScript: compile(
 		options: "names",
 		func(keyView) begin
@@ -107,6 +124,7 @@ export121 := {
 						self:HandleCheck(theIndex, theTopic)
 					end))
 		end),
+	// Mother(index): the topic's parent (the nearest earlier topic of a lower level), or nil.
 	Mother: compile(
 		options: "names",
 		func(anIndex) begin
@@ -124,6 +142,8 @@ export121 := {
 				end);
 			nil
 		end),
+	// ReflowTopics(options): the views for the topics from reflowStart that fit the view, each
+	// measured as a paragraph (for printing); hidden topics left out when options are given.
 	ReflowTopics: compile(
 		options: "names",
 		func(anOptions) begin
@@ -171,11 +191,14 @@ export121 := {
 			kids
 		end),
 	curTopicChanged: nil,
+	// RedoTopics(): rebuilds the views, if visible.
 	RedoTopics: compile(
 		options: "names",
 		func() begin
 			(if Visible(self) then self:RedoChildren())
 		end),
+	// HandleScrub(bounds, unit): a scrub over topics' markers deletes them and their descendants
+	// (undoable); 'noPoof when nothing may be deleted.
 	HandleScrub: compile(
 		options: "names",
 		func(aBounds, aUnit) begin
@@ -228,6 +251,7 @@ export121 := {
 				end;
 			nil
 		end),
+	// viewGetDropDataScript(type, dragRef): dragged topics - as themselves, or as text (bullets, tabs for levels).
 	viewGetDropDataScript: compile(
 		options: "names",
 		func(aDragType, aDragRef) begin
@@ -251,6 +275,8 @@ export121 := {
 						{text: theText, viewBounds: RelBounds(0, 0, rightMargin, aDragRef.height)}
 					end))
 		end),
+	// viewGetDropTypesScript(point): what can be dropped there - over a topic, everything; in the
+	// marker column, tasks only.
 	viewGetDropTypesScript: compile(
 		options: "names",
 		func(aDropPoint) begin
@@ -272,11 +298,13 @@ export121 := {
 				end;
 			allDropTypes
 		end),
+	// TopicHeight(topic): its height.
 	TopicHeight: compile(
 		options: "names",
 		func(aTopic) begin
 			(self:TopicBottom(aTopic) - aTopic.viewBounds.top)
 		end),
+	// UndoDropTopic(indexes): removes dropped topics (undo), redoable.
 	UndoDropTopic: compile(
 		options: "names",
 		func(aList) begin
@@ -293,6 +321,7 @@ export121 := {
 			self:DeleteTopics(aList);
 			AddUndoAction('UndoScrub, [Array: aList, deletedTopics, oldCurTopic])
 		end),
+	// UndoScrub(indexes, topics, oldCurTopic): puts scrubbed topics back (undo).
 	UndoScrub: compile(
 		options: "names",
 		func(aList, aDeletedTopics, anOldCurTopic) begin
@@ -320,6 +349,8 @@ export121 := {
 			self:RedoChildren();
 			(if (curTopic := anOldCurTopic) then SetKeyView(self:TopicIndexToView(curTopic), 99999))
 		end),
+	// NewTopic(level, text): a new topic after the current one (and its children) at that level,
+	// or at the end; made current and visible (undoable).
 	NewTopic: compile(
 		options: "names",
 		func(aLevel, aText) begin
@@ -357,6 +388,7 @@ export121 := {
 			self:ActiveTopic(theIndex);
 			AddUndoAction('UndoAddTopic, [Array: theIndex, oldCurTopic])
 		end),
+	// CalcLevel(x): the level a point's x indents to (at most one deeper than the last topic).
 	CalcLevel: compile(
 		options: "names",
 		func(anX) begin
@@ -373,6 +405,8 @@ export121 := {
 				end;
 			return theLevel
 		end),
+	// the paragraph's viewChangedScript(slot, view): text and style edits go into the topic; a
+	// new size makes the list adjust the topics below.
 	viewChangedScript: compile(
 		options: "names",
 		func(aSlot, aView) begin
@@ -390,16 +424,19 @@ export121 := {
 						theList:StartFlush()
 					end else (if (aSlot = 'viewBounds) then (if doingScrub then AddDeferredSend(theList, 'ChildChanged, [Array: aView]) else theList:ChildChanged(aView)))))
 		end),
+	// SetReadOnly(index, status): marks a topic as read-only (no source) or not.
 	SetReadOnly: compile(
 		options: "names",
 		func(anIndex, aStatus) begin
 			(if aStatus then (topics[anIndex].source := nil) else RemoveSlot(topics[anIndex], 'source))
 		end),
+	// _keyAuntScript(keyView): Command-[ - a new topic one level out.
 	_keyAuntScript: compile(
 		options: "names",
 		func(keyView) begin
 			(if (maxLevel > 1) then self:NewRelative('aunt))
 		end),
+	// ShoveBelow(index, delta): moves the first visible topic from index down by delta.
 	ShoveBelow: compile(
 		options: "names",
 		func(anIndex, aDelta) begin
@@ -417,12 +454,14 @@ export121 := {
 			kid.realData.viewBounds := OffsetRect(kid.viewBounds, 0, aDelta);
 			SetValue(kid, 'viewBounds, kid.realData.viewBounds)
 		end),
+	// GetTopicData(index): the topic's text, styles and level, or nil.
 	GetTopicData: compile(
 		options: "names",
 		func(anIndex) begin
 			local topic;
 			(if (((anIndex = nil) or (anIndex >= nTopics)) or (anIndex < 0)) then nil else {text: (topic := topics[anIndex]).text, styles: topic.styles})
 		end),
+	// ResolveClick(x, y): {topicIndex, where: 'marker or 'topic} for a tap, where nil when between topics.
 	ResolveClick: compile(
 		options: "names",
 		func(anX, y) begin
@@ -446,6 +485,8 @@ export121 := {
 				end);
 			{topicIndex: (nTopics - 1), where: nil}
 		end),
+	// AdjustKids(): lays the topic views out again from the first changed one (topicChanged);
+	// keeps the current topic in view.
 	AdjustKids: compile(
 		options: "names",
 		func() begin
@@ -492,11 +533,13 @@ export121 := {
 					Rethrow()
 				end)
 		end),
+	// UndoAddWriting(index): removes a topic just written (undo).
 	UndoAddWriting: compile(
 		options: "names",
 		func(anIndex) begin
 			self:DeleteTopics([Array: anIndex])
 		end),
+	// ShowFoundItem(entry, finder): shows the topic Find found.
 	ShowFoundItem: compile(
 		options: "names",
 		func(anEntry, aFinder) begin
@@ -506,6 +549,7 @@ export121 := {
 						self:EnsureVisibleTopic(ti)
 					end))
 		end),
+	// viewDropScript(type, data, point): topics dropped in from elsewhere are inserted where they fall (undoable).
 	viewDropScript: compile(
 		options: "names",
 		func(aDropType, aDropData, aDropPt) begin
@@ -521,11 +565,13 @@ export121 := {
 					true
 				end)
 		end),
+	// _keySisterScript(keyView): Command-= - a new topic at the same level.
 	_keySisterScript: compile(
 		options: "names",
 		func(keyView) begin
 			(if (maxLevel > 1) then self:NewRelative('sister))
 		end),
+	// UndoAddTopic(index, oldCurTopic): removes a topic just added (undo), redoable by NewTopic.
 	UndoAddTopic: compile(
 		options: "names",
 		func(anIndex, anOldCurTopic) begin
@@ -537,6 +583,8 @@ export121 := {
 				end;
 			AddUndoAction('NewTopic, [Array: topic.level, topic.text])
 		end),
+	// AddEmptyTopic(index, level): inserts an empty topic; a subtopic starts unticked, and takes
+	// its older sister's priority.
 	AddEmptyTopic: compile(
 		options: "names",
 		func(anIndex, aLevel) begin
@@ -557,7 +605,10 @@ export121 := {
 			self:StartFlush();
 			topicFrame
 		end),
+	// 999999: no topic changed (topicChanged is the first changed index)
 	topicChanged: 999999,
+	// SetDone(index, topic, done, up, down): ticks or unticks a topic; down: its descendants
+	// too; up: its mother is ticked when all her children are.
 	SetDone: compile(
 		options: "names",
 		func(anIndex, aTopic, aDone, aPropagateUp, aPropagateDown) begin
@@ -600,11 +651,13 @@ export121 := {
 			(if (BAnd(listViewFlags, 2) <> 0) then self:Dirty())
 		end),
 	measureTopics: nil,
+	// UpdateMultipleStores(start): starts the flush (a hook for lists over several stores).
 	UpdateMultipleStores: compile(
 		options: "names",
 		func(aStart) begin
 			(if (aStart <> nil) then self:StartFlush())
 		end),
+	// OldestSister(index): the first topic at the same level under the same mother.
 	OldestSister: compile(
 		options: "names",
 		func(anIndex) begin
@@ -630,6 +683,8 @@ export121 := {
 				end);
 			olderSis
 		end),
+	// SetPriority(index, priority, undo): sets a topic's priority and re-sorts its sisters by
+	// priority (done ones last) when it is out of order; 1.x To Do items cannot be changed.
 	SetPriority: compile(
 		options: "names",
 		func(anIndex, aPriority, anUndo) begin
@@ -689,6 +744,7 @@ export121 := {
 							AddProcrastinatedSend(uniqueSymbol, self, 'RedoTopics, nil, 0)
 						end
 				end;
+			// newPlace is never set above, so this branch is never taken
 			if newPlace then begin
 					AddUndoAction('viewDropMoveScript, [Array: self:MakeUndoDragRef(dragRef, {index: (newPlace - 1), level: level}), nil, nil, nil])
 				end;
@@ -696,6 +752,7 @@ export121 := {
 			self:Dirty();
 			(if newPlace then newPlace else anIndex)
 		end),
+	// AppendTopic(topic, index, top, levelDelta): inserts a topic at a place and level.
 	AppendTopic: compile(
 		options: "names",
 		func(aTopic, aNewIndex, aTop, aLevelDelta) begin
@@ -703,12 +760,16 @@ export121 := {
 			self:SetTopAndLevel(aTopic, aTop, aLevelDelta);
 			(nTopics := (nTopics + 1))
 		end),
+	// GetTarget(oldTarget): the topics are the target's.
 	GetTarget: compile(
 		options: "names",
 		func(anOldTarget) begin
 			self.topics := target.topics;
 			(nTopics := Length(topics))
 		end),
+	// AddTopicDragDrop(dragRef, onSelf, prioritize): inserts dragged topics where they were
+	// dropped (dragTo), at the level dropped; repeat information is dropped when they come from
+	// elsewhere; the mother is expanded.
 	AddTopicDragDrop: compile(
 		options: "names",
 		func(aDragRef, aDropOnSelf, aDoPrioritize) begin
@@ -717,6 +778,7 @@ export121 := {
 			if (self.dragTo = nil) then begin
 					dragTo := aDragRef.dragTo
 				end;
+			// index -2: dropped where nothing happens
 			if (dragTo.index = -2) then begin
 					return nil
 				end;
@@ -794,6 +856,7 @@ export121 := {
 				end;
 			self:UpdateMultipleStores(true)
 		end),
+	// MakeUndoDragRef(dragRef, oldDragTo): the drag that moves topics back (for undo).
 	MakeUndoDragRef: compile(
 		options: "names",
 		func(aDragRef, anOldDragTo) begin
@@ -831,6 +894,8 @@ export121 := {
 			dragRef.level := anOldDragTo.level;
 			dragRef
 		end),
+	// viewDropMoveScript(dragRef, offset, point, copy): topics dragged within the list - moved
+	// (undoable, with their ticks).
 	viewDropMoveScript: compile(
 		options: "names",
 		func(aDragRef, anOffset, aLastDragPt, aCopy) begin
@@ -867,6 +932,7 @@ export121 := {
 			AddUndoAction('viewDropMoveScript, [Array: undoDragRef, nil, nil, nil]);
 			(curTopic := nil)
 		end),
+	// YoungerSister(index): the next topic at the same level under the same mother, or nil.
 	YoungerSister: compile(
 		options: "names",
 		func(anIndex) begin
@@ -893,18 +959,21 @@ export121 := {
 				end);
 			nil
 		end),
+	// viewSetupFormScript: the recognition flags; read-only (no menu buttons) when the target is
+	// not writable; room for the checkboxes when shown.
 	viewSetupFormScript: compile(
 		options: "names",
 		func() begin
 			curTopic := nil;
 			self.viewFlags := BOr(viewFlags, self:CheckFlags());
 			if (not self:EntryCool(nil)) then begin
-					self.viewFlags := BOr(self.viewFlags, 128);
-					menuButtons.viewFlags := BAnd(menuButtons.viewFlags, bnot(1))
+					self.viewFlags := BOr(self.viewFlags, vWriteProtected);
+					menuButtons.viewFlags := BAnd(menuButtons.viewFlags, bnot(vVisible))
 				end;
 			leftMarkGap := baseLeftGap;
 			(if (BAnd(listViewFlags, 2) <> 0) then (leftMarkGap := ((leftMarkGap + 13) + 2)))
 		end),
+	// DirtyBelow(index): redraws from the topic down.
 	DirtyBelow: compile(
 		options: "names",
 		func(anIndex) begin
@@ -912,6 +981,7 @@ export121 := {
 			(bounds := self:GlobalBox()).top := (bounds.top + topics[anIndex].viewBounds.top);
 			self:DirtyBox(bounds)
 		end),
+	// HasKids(index): whether the next topic is deeper.
 	HasKids: compile(
 		options: "names",
 		func(anIndex) begin
@@ -922,6 +992,9 @@ export121 := {
 				end;
 			nil
 		end),
+	// viewAddChildScript(paragraph): writing in the list makes a topic - its level from where it
+	// was written (at most one deeper than the one above), its text, font and place; the view is
+	// replaced by a canonical paragraph (undoable).
 	viewAddChildScript: compile(
 		options: "names",
 		func(aNewOne) begin
@@ -998,6 +1071,7 @@ export121 := {
 			self:DirtyBelow(theIndex);
 			return true
 		end),
+	// EnsureVisibleTopic(index): scrolls the layout so the topic is in view, then saves.
 	EnsureVisibleTopic: compile(
 		options: "names",
 		func(anIndex) begin
@@ -1022,12 +1096,14 @@ export121 := {
 			ourBox.bottom := self:ListBottom();
 			self:StartFlushWithChild({viewBounds: ourBox})
 		end),
+	// MakeTopicFrame(level): a new topic frame, with mtgDone/mtgPriority when listViewFlags has them.
 	MakeTopicFrame: compile(
 		options: "names",
 		func(aLevel) begin
 			aLevel := Max(1, aLevel);
 			(if (BAnd(listViewFlags, 12) <> 0) then (if (BAnd(listViewFlags, 2) <> 0) then {level: aLevel, hideCount: 0, mtgPriority: 3, mtgDone: nil, text: nil, styles: nil, viewBounds: nil} else {level: aLevel, hideCount: 0, mtgPriority: 3, text: nil, styles: nil, viewBounds: nil}) else (if (BAnd(listViewFlags, 2) <> 0) then {level: aLevel, hideCount: 0, mtgDone: nil, text: nil, styles: nil, viewBounds: nil} else {level: aLevel, hideCount: 0, text: nil, styles: nil, viewBounds: nil}))
 		end),
+	// PickActionScript(priority): the priority menu - sets the current topic's priority (undoable).
 	PickActionScript: compile(
 		options: "names",
 		func(anAction) begin
@@ -1038,6 +1114,7 @@ export121 := {
 					AddUndoAction('SetPriority, [Array: curTopic, oldPriority, true])
 				end)
 		end),
+	// ToggleTopic(index): a tap on a topic's marker - collapses or expands its children.
 	ToggleTopic: compile(
 		options: "names",
 		func(anIndex) begin
@@ -1053,6 +1130,7 @@ export121 := {
 				end;
 			self:ActiveTopic(anIndex)
 		end),
+	// SetTopAndLevel(topic, top, levelDelta): moves a topic to a top and indents it by levels.
 	SetTopAndLevel: compile(
 		options: "names",
 		func(aTopic, aNewTop, aDLevel) begin
@@ -1066,6 +1144,7 @@ export121 := {
 			(if (aDLevel <> 0) then (if (aTopic.level = nil) then (aTopic.level := (1 + aDLevel)) else (aTopic.level := (aTopic.level + aDLevel))))
 		end),
 	topMargin: 7,
+	// HandleCheck(index, topic): a tap on a checkbox - ticks or unticks it and its family (undoable).
 	HandleCheck: compile(
 		options: "names",
 		func(anIndex, aTopic) begin
@@ -1088,6 +1167,8 @@ export121 := {
 			self:StartFlush();
 			AddUndoAction('UndoCheck, [Array: undoList])
 		end),
+	// DeleteTopics(list): deletes topics (an index: it and its children); a mother all of whose
+	// remaining children are done is ticked. 1.x To Do items cannot be deleted.
 	DeleteTopics: compile(
 		options: "names",
 		func(aList) begin
@@ -1163,6 +1244,7 @@ export121 := {
 			curTopic := nil;
 			true
 		end),
+	// SetTopicData(index, text, styles): replaces a topic's text.
 	SetTopicData: compile(
 		options: "names",
 		func(anIndex, aText, aStyles) begin
@@ -1179,6 +1261,7 @@ export121 := {
 			self:RedoChildren();
 			true
 		end),
+	// ChildChanged(view): a topic's paragraph changed - its bounds kept, the topics below adjusted later.
 	ChildChanged: compile(
 		options: "names",
 		func(aView) begin
@@ -1196,11 +1279,13 @@ export121 := {
 			AddProcrastinatedSend(uniqueSymbol, self, 'AdjustKids, nil, 0)
 		end),
 	adjusting: nil,
+	// CheckFlags(): vLettersAllowed when the letter-by-letter cursive option is on.
 	CheckFlags: compile(
 		options: "names",
 		func() begin
-			(if (GetUserConfig('lettersCursiveOption) <> nil) then 16384 else 0)
+			(if (GetUserConfig('lettersCursiveOption) <> nil) then vLettersAllowed else 0)
 		end),
+	// UndoCheck(doneList): puts the ticks back as they were (undo).
 	UndoCheck: compile(
 		options: "names",
 		func(aList) begin
@@ -1210,6 +1295,7 @@ export121 := {
 			self:StartFlush();
 			self:Dirty()
 		end),
+	// NewRelative(relation): a new 'sister, 'aunt (one level out) or 'daughter (one level in) of the current topic.
 	NewRelative: compile(
 		options: "names",
 		func(aRelation) begin
@@ -1241,29 +1327,34 @@ export121 := {
 				end;
 			self:NewTopic(level, "")
 		end),
+	// viewSetupChildrenScript: the topics of the target (reflowed when printing).
 	viewSetupChildrenScript: compile(
 		options: "names",
 		func() begin
 			self:GetTarget(target);
 			(if reflow then (if (not printAddExtra) then (self.viewChildren := self:ReflowTopics(reflowOptions))) else (self.viewChildren := self:SetupVisibleChildren(firstTopic, nil, nil)))
 		end),
+	// _keyDaughterScript(keyView): Command-] - a new topic one level in.
 	_keyDaughterScript: compile(
 		options: "names",
 		func(keyView) begin
 			(if (maxLevel > 1) then self:NewRelative('daughter))
 		end),
+	// ClickBounds(index): the marker's tap area.
 	ClickBounds: compile(
 		options: "names",
 		func(anIndex) begin
 			local bounds;
 			RelBounds((((bounds := self:MarkerBounds(topics[anIndex])).left + 2) - 1), ((bounds.top + 4) - 1), 14, self:TopicHeight(topics[anIndex]))
 		end),
+	// IsReadOnly(index): whether a topic is read-only (a 1.x To Do item: no source or a symbol).
 	IsReadOnly: compile(
 		options: "names",
 		func(anIndex) begin
 			local topic;
 			((if HasPath((topic := topics[anIndex]), 'source) then (topic.source = nil)) or (ClassOf(topic.source) = 'symbol))
 		end),
+	// ShowFoundTopic(index, offset, finder): shows a found topic, the found words hilited.
 	ShowFoundTopic: compile(
 		options: "names",
 		func(anIndex, anOffset, aFinder) begin
@@ -1281,6 +1372,7 @@ export121 := {
 					view:SetHilite(anOffset, (anOffset + StrLen(aFinder.findWords[0])), true)
 				end else self:ActiveTopic(anIndex))
 		end),
+	// RevealTopic(index): makes a hidden topic visible (its mother expanded).
 	RevealTopic: compile(
 		options: "names",
 		func(anIndex) begin
@@ -1290,6 +1382,8 @@ export121 := {
 					self:ExpandTopic(mom, true)
 				end)
 		end),
+	// RemoveTopicDragDrop(dragRef, fromSelf): removes dragged topics; a mother all of whose
+	// remaining children are done is ticked.
 	RemoveTopicDragDrop: compile(
 		options: "names",
 		func(aDragRef, aRemoveFromSelf) begin
@@ -1371,17 +1465,18 @@ export121 := {
 			self:UpdateMultipleStores(true);
 			true
 		end),
+	// the keyboard commands: Command-Return check, Command-[ new left, Command-] new right, Command-= new topic
 	_keyCommands: [|Array|:
 		{
 			char: $\u000d,
-			modifiers: 33554432,
+			modifiers: kCommandModifier,
 			keymessage: '_keyCheckItemScript,
 			name: "Check",
 			category: nil
 		},
-		{char: $[, modifiers: 33554432, keymessage: '_keyAuntScript, name: "New Left", category: nil},
-		{char: $], modifiers: 33554432, keymessage: '_keyDaughterScript, name: "New Right", category: nil},
-		{char: $=, modifiers: 33554432, keymessage: '_keySisterScript, name: "New Topic", category: nil}
+		{char: $[, modifiers: kCommandModifier, keymessage: '_keyAuntScript, name: "New Left", category: nil},
+		{char: $], modifiers: kCommandModifier, keymessage: '_keyDaughterScript, name: "New Right", category: nil},
+		{char: $=, modifiers: kCommandModifier, keymessage: '_keySisterScript, name: "New Topic", category: nil}
 	],
 	_proto: @protoListView
 };

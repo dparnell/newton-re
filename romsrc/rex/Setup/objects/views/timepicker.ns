@@ -1,4 +1,6 @@
-// timepicker, and what only it reaches
+// timepicker: Setup's "Set the Time" page - a digital clock (protoDigitalClock) whose
+// time is set as the clock's when the page is left; the feedback line shows the time.
+// The file holds the page and what only it reaches.
 
 timepicker := {
 	stepChildren: [stepChildren:
@@ -14,20 +16,25 @@ timepicker := {
 		},
 		timepickerItem
 	],
+	// the time being set (the digital clock's value; minutes since 1904)
 	Time: nil,
+	// viewSetupChildrenScript: starts from the current time (Time() is the global function).
 	viewSetupChildrenScript: func() begin
 		(Time := Time())
 	end,
+	// TearDown: sets the clock to the chosen time.
 	TearDown: func() begin
 		fReviewDone := true;
 		SetTime(Time)
 	end,
 	description: "To set the digital clock, tap the upper half of a number to increase it and the bottom half to decrease it.  \u000d\u000dBe sure to set AM or PM, if applicable.",
 	titleTExt: "Set \u000dthe Time",
+	// Refresh(): shows the time chosen in the feedback line.
 	Refresh: func() begin
 		self:SetFeedback(Stringer([Array: "The current time is\n", HourMinute(Time)]))
 	end,
 	debug: "timepicker",
+	// viewSetupDoneScript: takes the keyboard focus.
 	viewSetupDoneScript: func() begin
 		SetKeyView(self, 0)
 	end,
@@ -51,6 +58,7 @@ timepicker := {
 timepickerItem := {
 	viewBounds: {left: 74, top: 48, right: 199, bottom: 78},
 	viewJustify: vjSiblingLeftH + vjSiblingTopV,
+	// timeChanged: the clock's change notification - shows the new time.
 	timeChanged: func() begin
 		self:Refresh()
 	end,

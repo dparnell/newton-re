@@ -1,4 +1,5 @@
-// frame_2, and what only it reaches
+// frame_2: the keyboard button of the device setup slip, shown instead of its keyboard
+// when that does not fit (part.ns). The file holds it and what only it reaches.
 
 frame_2 := {
 	viewBounds: {left: 6, top: -18, right: 34, bottom: -5},

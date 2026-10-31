@@ -1,4 +1,5 @@
-// default_2, and what only it reaches
+// default_2: the Checklist stationery's editor view def - the list with checkboxes
+// (listViewFlags 2) and the new-topic buttons. The file holds it and what only it reaches.
 
 default_2 := {
 	viewClass: clView,
@@ -13,6 +14,7 @@ default_2 := {
 	realData: nil,
 	viewDefHeight: 36,
 	rollScrolling: true,
+	// MinimalBounds(entry): the note's height - down to the last visible topic (16 at least).
 	MinimalBounds: compile(
 		options: "names",
 		func(anEntry) begin
@@ -30,6 +32,7 @@ default_2 := {
 				end;
 			SetBounds(0, 0, 240, top)
 		end),
+	// ShowFoundItem(entry, finder): shows what Find found.
 	ShowFoundItem: compile(
 		options: "names",
 		func(anEntry, aFinder) begin
@@ -42,6 +45,7 @@ default_2 := {
 	menuButtons: nil
 };
 
+// the list, with checkboxes (listViewFlags 2)
 editor_2 := {_proto: @8338, listViewFlags: 2, debug: 35920, preallocatedContext: 'editor};
 
 menuButtons_2 := {

@@ -1,4 +1,5 @@
-// list, and what only it reaches
+// list: the Outline stationery's data def (an outline note: {class 'list, topics, height,
+// timestamp}; routed as text with "* " bullets). The file holds it and what only it reaches.
 
 list := {
 	symbol: 'list,
@@ -14,16 +15,19 @@ list := {
 	superSymbol: 'notes,
 	mailBulletDone: mailBulletDone,
 	mailBulletNotDone: mailBulletDone,
+	// MakeNewEntry(): a new outline note, one empty topic to come (makeNewTopic).
 	MakeNewEntry: compile(
 		options: "names",
 		func() begin
 			{class: 'list, height: 200, topics: [Array: ], timestamp: Time(), makeNewTopic: true}
 		end),
+	// SheetBounds(entry): the note's sheet, 240x312.
 	SheetBounds: compile(
 		options: "names",
 		func(anEntry) begin
 			RelBounds(0, 0, 240, 312)
 		end),
+	// StringExtract(entry, nLines): the overview text - the title and the first 50 characters, or "-empty-".
 	StringExtract: compile(
 		constants: {
 			kLiteral_785c65: "-empty-"
@@ -36,6 +40,7 @@ list := {
 				end;
 			(if anEntry.title then Stringer([Array: anEntry.title, " ", guts]) else guts)
 		end),
+	// TextScript(fields, target): the note as text - a bullet per topic, tabs for its level.
 	TextScript: compile(
 		options: "names",
 		func(fields, target) begin

@@ -1,9 +1,14 @@
-// todo_2, and what only it reaches
+// todo_2: the To Do task slip (todoSlip) - the floater a task opens in from the To Do List:
+// its title, done checkbox, date, priority, reminder (days of notice), frequency and repeat
+// dates, with routing (Duplicate, Delete) and filing buttons. It edits copies (newTitle,
+// newMtgDate, saved*Index) and applies them to the task when it closes (ApplyAllChanges).
+// The file holds the slip and what only it reaches.
 
 todo_2 := {
 	noOverview: "This window has no Overview",
 	dirtyFlag: nil,
 	cardReserved: nil,
+	// GetTargetInfo(type): the task to route - a copy with the slip's done, priority and date.
 	GetTargetInfo: compile(
 		options: "names",
 		func(targetType) begin
@@ -15,11 +20,13 @@ todo_2 := {
 			{target: beamTarget, targetView: targetView, targetStore: (if ((not HasPath(task, 'source)) or (task.source = nil)) then nil else (if (ClassOf(task.source) = 'symbol) then GetStores()[SetContains('[Array: RO0, RO1, RO2, RO3, RO4], task.source)] else EntryStore(target)))}
 		end),
 	hideDateField: true,
+	// viewSetupDoneScript: the caret in the title.
 	viewSetupDoneScript: compile(
 		options: "names",
 		func() begin
 			SetKeyView(Header.MeetingTitle.entryLine, 9999)
 		end),
+	// UpdateDateRange(): a repeating task's first and stop dates from the slip.
 	UpdateDateRange: compile(
 		options: "names",
 		func() begin
@@ -33,6 +40,8 @@ todo_2 := {
 		end),
 	hideMtgMsgHeader: true,
 	originalMtgDate: nil,
+	// UpdateReminderSpec(): the reminder - none removes it; a repeating task keeps it as a
+	// reminderInterval, another becomes due reminder days early (remindForDate keeps its date).
 	UpdateReminderSpec: compile(
 		options: "names",
 		func() begin
@@ -54,12 +63,15 @@ todo_2 := {
 		end),
 	killRepeating: nil,
 	savedFrequencyIndex: nil,
+	// _filingKeyScript(keyView): Command-Shift-F - the filing button.
 	_filingKeyScript: compile(
 		options: "names",
 		func(keyView) begin
 			PressButton(filingButton)
 		end),
 	paraView: nil,
+	// viewQuitScript: a new task left empty is deleted; otherwise the changes are applied,
+	// saved and the Calendar moved to the task's (new) day.
 	viewQuitScript: compile(
 		options: "names",
 		func() begin
@@ -133,6 +145,8 @@ todo_2 := {
 			(list := nil)
 		end),
 	appAll: "All Tasks",
+	// UpdateFrequency(): turns the task into a repeating one, changes its repeat, or makes it a
+	// single task again (moving it between the repeating entry and its day).
 	UpdateFrequency: compile(
 		options: "names",
 		func() begin
@@ -143,6 +157,7 @@ todo_2 := {
 					return nil
 				end;
 			(if (if (if (if oldSpec then newSpec) then (oldSpec.repeatType = newSpec.repeatType)) then (oldSpec.mtgInfo = newSpec.mtgInfo)) then (if (savedReminderIndex <> 0) then (task.repeatInfo.reminderInterval := (1440 * savedReminderIndex))) else (if (if newSpec then (not oldSpec)) then begin
+						// debugging output left in (Print)
 						Print(newSpec);
 						task.repeatInfo := newSpec;
 						task.repeatDone := [Array: ];
@@ -167,6 +182,7 @@ todo_2 := {
 	newTitle: nil,
 	noScroll: "This window does not scroll",
 	target: nil,
+	// UpdatePriorityDone(): applies the priority and done state (the day needs sorting when they change).
 	UpdatePriorityDone: compile(
 		options: "names",
 		func() begin
@@ -176,17 +192,21 @@ todo_2 := {
 			task.mtgPriority := savedPriorityIndex;
 			(task.mtgDone := savedDone)
 		end),
+	// _actionKeyScript(keyView): Command-R - the routing button.
 	_actionKeyScript: compile(
 		options: "names",
 		func(keyView) begin
 			PressButton(actionButton)
 		end),
+	// FolderChanged(soup, old, new): as the Notepad's (paperroll's).
 	FolderChanged: compile(
 		options: "names",
 		func() begin
 			call GetRoot().paperroll.FolderChanged with (soupName, oldFolder, newFolder)
 		end),
 	storesFilter: nil,
+	// LayoutSlip(showRepeating): which fields show - the date for a single task, the frequency
+	// always, the repeat dates and the series header for a repeating one.
 	LayoutSlip: compile(
 		options: "names",
 		func(aShowRepeatingFields) begin
@@ -206,6 +226,7 @@ todo_2 := {
 				end;
 			(hideFrequencyField := nil)
 		end),
+	// ApplyAllChanges(): applies every change made in the slip to the task (not when read-only).
 	ApplyAllChanges: compile(
 		options: "names",
 		func() begin
@@ -224,6 +245,7 @@ todo_2 := {
 	savedReminderIndex: nil,
 	viewFlags: vApplication + vClipping + vFloating + vClickable,
 	doCardRouting: 'onlyCardRouting,
+	// DeleteToDoScript(item, view): Delete in the routing menu - deletes the task (a repeating one after a confirmation).
 	DeleteToDoScript: compile(
 		options: "names",
 		func(meeting, whatView) begin
@@ -235,6 +257,7 @@ todo_2 := {
 	appObject: [|Array|: task_2, "Tasks"],
 	needsMeasure: nil,
 	slipHeight: nil,
+	// FilingChanged(): the task filed - saved when it no longer passes the labels filter.
 	FilingChanged: compile(
 		options: "names",
 		func() begin
@@ -246,12 +269,14 @@ todo_2 := {
 		end),
 	hideSeriesMsgHeader: true,
 	mainViewLastMailFormat: nil,
+	// MoveTarget(target, store): moves the task to another store.
 	MoveTarget: compile(
 		options: "names",
 		func(aTarget, aDestStore) begin
 			local moveResult;
 			(if (moveResult := list:MoveTask(task, aTarget, aDestStore)) then (target := moveResult))
 		end),
+	// FilterChanged(): nothing.
 	FilterChanged: compile(
 		options: "names",
 		func() begin
@@ -264,6 +289,7 @@ todo_2 := {
 	appSymbol: 'todo,
 	viewJustify: vjParentCenterH + vjParentCenterV,
 	selectedMeeting: nil,
+	// RelayoutSlip(showRepeating): lays the fields out again.
 	RelayoutSlip: compile(
 		options: "names",
 		func(aShowRepeatingFields) begin
@@ -277,21 +303,24 @@ todo_2 := {
 				end;
 			(relayoutInProgress := nil)
 		end),
+	// DeleteTask(date, task, redraw): deletes the task and closes the slip.
 	DeleteTask: compile(
 		options: "names",
 		func(aDate, aTask, aRedraw) begin
 			list:DeleteTask(aDate, aTask, aRedraw);
 			base:Close()
 		end),
+	// UpdateText(): the task's text and styles from the title (in the handwriting font).
 	UpdateText: compile(
 		options: "names",
 		func() begin
 			local wealth;
-			wealth := DecodeRichString(newTitle, 12291);
+			wealth := DecodeRichString(newTitle, tsHWFont + tsSize(12));
 			task.text := wealth.text;
 			(task.styles := wealth.styles)
 		end),
 	newFirstDate: nil,
+	// DuplicateToDoScript(item, view): Duplicate in the routing menu - a copy of the task, opened in the slip.
 	DuplicateToDoScript: compile(
 		options: "names",
 		func(meeting, whatView) begin
@@ -314,6 +343,7 @@ todo_2 := {
 					self:RedisplayScript()
 				end)
 		end),
+	// viewSetupFormScript: the slip's copies of the task's values, its size (up to 264x280) and layout.
 	viewSetupFormScript: compile(
 		options: "names",
 		func() begin
@@ -328,6 +358,7 @@ todo_2 := {
 					newStopDate := task.repeatInfo.mtgStopDate
 				end;
 			if (not newStopDate) then begin
+					// 536870911: no stop date
 					newStopDate := 536870911
 				end;
 			if HasPath(task, 'repeatInfo) then begin
@@ -354,12 +385,14 @@ todo_2 := {
 		{title: "Delete", icon: @routetrashBitmap, routeScript: 'DeleteToDoScript}
 	],
 	newMtgDate: nil,
+	// NotifyCompleted(): a done task's reminder and repeat cannot be changed (alert).
 	NotifyCompleted: compile(
 		options: "names",
 		func() begin
 			self:Notify(3, "To Do", "This task is already completed. Reminder and Repeat can\u2019\ut be changed")
 		end),
 	relayoutInProgress: nil,
+	// SetupRoutingSlip(slip): the routing slip's title and date.
 	SetupRoutingSlip: compile(
 		options: "names",
 		func(aRoutingSlip) begin
@@ -371,12 +404,14 @@ todo_2 := {
 	debug: 10554,
 	targetView: nil,
 	hideDateRangeFields: true,
+	// CloseSlip(): closes the slip.
 	CloseSlip: compile(
 		options: "names",
 		func() begin
 			base:Close()
 		end),
 	savedDone: nil,
+	// UpdateTime(): moves a single task to its new day (a past day becomes today unless it is done).
 	UpdateTime: compile(
 		options: "names",
 		func() begin
@@ -391,20 +426,23 @@ todo_2 := {
 					date := originalMtgDate
 				end;
 			(if (if (if (not killRepeating) then (not repeatingView:GetRepeatSpec())) then (not task.repeatInfo)) then (if (newMtgDate <> date) then begin
+						// debugging output left in (Print)
 						Print(Stringer([Array: "UpdateTime changed to", " ", LongDateStr(newMtgDate, 80492)]));
 						ClearUndoStacks();
 						list:MoveTaskToDate(task, target, date, newMtgDate)
 					end))
 		end),
+	// the repeat spec when the task does not repeat
 	protoRepeat: {
 		mtgInfo: 0,
 		mtgStartDate: nil,
 		mtgStopDate: 536870911,
-		repeatType: 5,
+		repeatType: kNever,
+		// GetRepeatSpec(): nil for kNever, else the repeat frame.
 		GetRepeatSpec: compile(
 			options: "names",
 			func() begin
-				(if (repeatType = 5) then nil else {repeatType: repeatType, mtgInfo: mtgInfo, mtgStartDate: originalMtgDate, mtgStopDate: mtgStopDate})
+				(if (repeatType = kNever) then nil else {repeatType: repeatType, mtgInfo: mtgInfo, mtgStartDate: originalMtgDate, mtgStopDate: mtgStopDate})
 			end)
 	},
 	stepChildren: [stepChildren:
@@ -413,6 +451,7 @@ todo_2 := {
 		actionButton,
 		filingButton,
 		{
+			// the close box's buttonClickScript: closes the slip.
 			buttonClickScript: compile(
 				options: "names",
 				func() begin
@@ -434,9 +473,10 @@ todo_2 := {
 		filingButton
 	],
 	repeatingView: nil,
+	// the keyboard commands: Command-R routing, Command-Shift-F filing
 	_keyCommands: [|Array|:
-		{char: $r, modifiers: 33554432, keymessage: '_actionKeyScript, name: routing, category: routing},
-		{char: $f, modifiers: 100663296, keymessage: '_filingKeyScript, name: "File", category: "Filing"}
+		{char: $r, modifiers: kCommandModifier, keymessage: '_actionKeyScript, name: routing, category: routing},
+		{char: $f, modifiers: kCommandModifier + kShiftModifier, keymessage: '_filingKeyScript, name: "File", category: "Filing"}
 	],
 	actionButton: nil,
 	filingButton: nil,
@@ -449,12 +489,14 @@ dateValue := {
 	label: "ﰁDate",
 	labelFont: tsSystem + tsSize(9) + tsBold,
 	entryFont: tsHWFont + tsSize(10),
+	// viewSetupFormScript: the slip's date.
 	viewSetupFormScript: compile(
 		options: "names",
 		func() begin
 			date := newMtgDate;
 			inherited:?viewSetupFormScript()
 		end),
+	// PickActionScript(value): a new date - the reminder's choices follow.
 	PickActionScript: compile(
 		options: "names",
 		func(aNewValue) begin
@@ -466,10 +508,11 @@ dateValue := {
 					reminderPicker:SetupRange()
 				end)
 		end),
+	// ShouldHide(hide): hidden when hide.
 	ShouldHide: compile(
 		options: "names",
 		func(hide) begin
-			(if hide then (viewFlags := BAnd(viewFlags, bnot(1))))
+			(if hide then (viewFlags := BAnd(viewFlags, bnot(vVisible))))
 		end),
 	preallocatedContext: 'dateValue,
 	_proto: @protoDateTextPicker
@@ -480,7 +523,7 @@ none := "None";
 reminderPicker := {
 	debug: 671900,
 	viewFont: tsSystem + tsSize(9) + tsBold,
-	viewJustify: 8396848,
+	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 	viewBounds: {left: 0, top: 3, right: 2, bottom: 21},
 	text: "Reminder",
 	reminderLabels: [|Array|:
@@ -494,17 +537,21 @@ reminderPicker := {
 		"7 days notice"
 	],
 	viewLineSpacing: 12,
+	// viewClickScript(unit): a done task's reminder cannot be changed.
 	viewClickScript: compile(
 		options: "names",
 		func(unit) begin
 			(if savedDone then self:NotifyCompleted() else inherited:viewClickScript(unit))
 		end),
+	// viewSetupFormScript: the choices.
 	viewSetupFormScript: compile(
 		options: "names",
 		func() begin
 			self:SetupRange();
 			inherited:?viewSetupFormScript()
 		end),
+	// SetupRange(): a single task's reminder can be no more days ahead than there are until its
+	// day (a repeating one up to 7).
 	SetupRange: compile(
 		options: "names",
 		func() begin
@@ -524,6 +571,7 @@ reminderPicker := {
 						SetValue(entryLine, 'text, labelCommands[0])
 					end))
 		end),
+	// TextSetup(): the reminder's days of notice (at most 7).
 	TextSetup: compile(
 		options: "names",
 		func() begin
@@ -552,6 +600,7 @@ reminderPicker := {
 			savedReminderIndex := index;
 			labelCommands[index]
 		end),
+	// LabelActionScript(index): the notice chosen.
 	LabelActionScript: compile(
 		options: "names",
 		func(index) begin
@@ -564,19 +613,22 @@ reminderPicker := {
 
 frequencyPicker := {
 	debug: 1264988,
-	viewJustify: 8396848,
+	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 	viewBounds: {left: 0, top: 3, right: 2, bottom: 21},
 	viewLineSpacing: 12,
+	// viewClickScript(unit): a done task's frequency cannot be changed.
 	viewClickScript: compile(
 		options: "names",
 		func(unit) begin
 			(if savedDone then self:NotifyCompleted() else inherited:viewClickScript(unit))
 		end),
+	// ShouldHide(hide): hidden when hide.
 	ShouldHide: compile(
 		options: "names",
 		func(hide) begin
-			(if hide then (viewFlags := BAnd(viewFlags, bnot(1))))
+			(if hide then (viewFlags := BAnd(viewFlags, bnot(vVisible))))
 		end),
+	// TextSetup(): the frequency.
 	TextSetup: compile(
 		options: "names",
 		func() begin
@@ -587,6 +639,8 @@ frequencyPicker := {
 					initialString
 				end)
 		end),
+	// LabelActionScript(index): the frequency chosen - the slip shows or hides the repeat dates
+	// as it becomes repeating or not.
 	LabelActionScript: compile(
 		options: "names",
 		func(index) begin
@@ -597,7 +651,7 @@ frequencyPicker := {
 					newStopDate := 536870911
 				end;
 			savedFrequencyIndex := currentLabelIndex;
-			repeatingPicked := (repeatingView.repeatType <> 5);
+			repeatingPicked := (repeatingView.repeatType <> kNever);
 			(if (if hideDateRangeFields then repeatingPicked) then begin
 					killRepeating := nil;
 					todoSlip:RelayoutSlip(true)
@@ -612,14 +666,15 @@ frequencyPicker := {
 
 seriesMsgHeader := {
 	debug: 1392176,
-	viewJustify: 8396808,
+	viewJustify: vjBottomV + vjSiblingBottomV + oneLineOnly,
 	viewBounds: {left: 2, top: 3, right: 202, bottom: 13},
 	viewFont: tsSystem + tsSize(9) + tsBold,
 	text: "This recurring task occurs between",
+	// ShouldHide(hide): hidden when hide.
 	ShouldHide: compile(
 		options: "names",
 		func(hide) begin
-			(if hide then (viewFlags := BAnd(viewFlags, bnot(1))))
+			(if hide then (viewFlags := BAnd(viewFlags, bnot(vVisible))))
 		end),
 	preallocatedContext: 'seriesMsgHeader,
 	_proto: @protoStaticText
@@ -631,6 +686,7 @@ Header := {
 	viewFlags: vVisible,
 	viewBounds: {left: 2, top: 0, right: -2, bottom: -20},
 	viewJustify: vjParentFullH + vjParentFullV,
+	// viewSetupChildrenScript: shows the fields LayoutSlip chose.
 	viewSetupChildrenScript: compile(
 		options: "names",
 		func() begin
@@ -660,6 +716,7 @@ Header := {
 				bits: bitmap('bits, "resources/bits/79f5b5.png", "0000000000040022002200300030003b", 1),
 				bounds: {left: 0, top: 0, right: 11, bottom: 14}
 			},
+			// the lock icon's viewSetupFormScript: shown when the task is read-only.
 			viewSetupFormScript: compile(
 				options: "names",
 				func() begin
@@ -672,6 +729,7 @@ Header := {
 			viewFont: tsSystem + tsSize(9),
 			viewJustify: vjCenterV + vjSiblingBottomV,
 			viewBounds: {left: 2, top: 4, right: 77, bottom: 20},
+			// the Completed checkbox's viewSetupFormScript: the task's done state.
 			viewSetupFormScript: compile(
 				options: "names",
 				func() begin
@@ -679,6 +737,7 @@ Header := {
 					savedDone := task.mtgDone;
 					inherited:?viewSetupFormScript()
 				end),
+			// ValueChanged: done or not.
 			ValueChanged: compile(
 				options: "names",
 				func() begin
@@ -694,29 +753,33 @@ Header := {
 			debug: 751580,
 			viewFont: tsSystem + tsSize(9) + tsBold,
 			viewBounds: {left: 0, top: 3, right: 2, bottom: 21},
-			viewJustify: 8396848,
+			viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 			text: priority,
 			iconBounds: {left: 0, top: 0, right: 16, bottom: 16},
 			labelCommands: nil,
 			priorityItems: @priorityItems,
 			viewLineSpacing: 12,
+			// the priority picker's viewSetupFormScript: High, Medium, Low with their icons.
 			viewSetupFormScript: compile(
 				options: "names",
 				func() begin
 					labelCommands := [Array: {item: "High", icon: priorityItems[0], indent: 18}, {item: "Medium", icon: priorityItems[1]}, {item: "Low", icon: priorityItems[2]}, {item: "None", icon: priorityItems[3]}];
 					inherited:?viewSetupFormScript()
 				end),
+			// IconSetup(): the priority's icon.
 			IconSetup: compile(
 				options: "names",
 				func() begin
 					labelCommands[savedPriorityIndex].icon
 				end),
+			// LabelActionScript(index): the priority chosen.
 			LabelActionScript: compile(
 				options: "names",
 				func(index) begin
 					dirtyFlag := true;
 					(savedPriorityIndex := index)
 				end),
+			// TextSetup(): the priority.
 			TextSetup: compile(
 				options: "names",
 				func() begin
@@ -762,11 +825,13 @@ recurInterval := {
 	labelFont: tsSystem + tsSize(9) + tsBold,
 	longFormat: nil,
 	shortFormat: 'numericDateStrSpec,
+	// viewClickScript(unit): a done task's dates cannot be changed.
 	viewClickScript: compile(
 		options: "names",
 		func(unit) begin
 			(if savedDone then self:NotifyCompleted() else inherited:viewClickScript(unit))
 		end),
+	// viewSetupFormScript: the repeat's first and stop dates.
 	viewSetupFormScript: compile(
 		options: "names",
 		func() begin
@@ -774,6 +839,7 @@ recurInterval := {
 			stopTime := newStopDate;
 			inherited:?viewSetupFormScript()
 		end),
+	// popit(x): the picker, with the repeat as chosen.
 	popit: compile(
 		options: "names",
 		func(x) begin
@@ -781,6 +847,7 @@ recurInterval := {
 			mtgInfo := repeatingView.mtgInfo;
 			inherited:popit(x)
 		end),
+	// PickActionScript(start, stop): the dates chosen.
 	PickActionScript: compile(
 		options: "names",
 		func(aStart, aStop) begin
@@ -789,10 +856,11 @@ recurInterval := {
 			newStopDate := aStop;
 			inherited:PickActionScript(aStart, aStop)
 		end),
+	// ShouldHide(hide): hidden when hide.
 	ShouldHide: compile(
 		options: "names",
 		func(hide) begin
-			(if hide then (viewFlags := BAnd(viewFlags, bnot(1))))
+			(if hide then (viewFlags := BAnd(viewFlags, bnot(vVisible))))
 		end),
 	debug: 342326,
 	preallocatedContext: 'recurInterval,
@@ -819,17 +887,20 @@ MeetingTitle := {
 	textFlags: 24,
 	viewLineSpacing: 30,
 	text: nil,
+	// viewSetupDoneScript: the title may wrap (oneLineOnly cleared from its entry line).
 	viewSetupDoneScript: compile(
 		options: "names",
 		func() begin
-			SetValue(entryLine, 'viewJustify, BAnd(entryLine.viewJustify, bnot(8388608)))
+			SetValue(entryLine, 'viewJustify, BAnd(entryLine.viewJustify, bnot(oneLineOnly)))
 		end),
+	// viewSetupFormScript: the title, taller in a full-height slip.
 	viewSetupFormScript: compile(
 		options: "names",
 		func() begin
 			text := newTitle;
 			(viewBounds := RelBounds(0, 16, -8, (if (slipHeight = 280) then 96 else 64)))
 		end),
+	// textChanged: the title edited.
 	textChanged: compile(
 		options: "names",
 		func() begin
@@ -843,6 +914,7 @@ MeetingTitle := {
 
 repeatingView := {
 	debug: 346713,
+	// viewSetupFormScript: placed under the header.
 	viewSetupFormScript: compile(
 		options: "names",
 		func() begin
@@ -853,10 +925,11 @@ repeatingView := {
 			viewBounds.top := (viewBounds.top + delta);
 			(viewBounds.bottom := (viewBounds.bottom + delta))
 		end),
+	// viewQuitScript: a repeat set to never makes the task single again.
 	viewQuitScript: compile(
 		options: "names",
 		func() begin
-			(if (repeatType = 5) then begin
+			(if (repeatType = kNever) then begin
 					todoSlip.savedFrequencyIndex := 0;
 					todoSlip:RelayoutSlip(nil)
 				end)
@@ -868,6 +941,7 @@ repeatingView := {
 actionButton := {
 	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV,
 	viewBounds: {left: -42, top: -18, right: -25, bottom: -5},
+	// buttonClickScript: applies the changes first (keeping the date), then opens the routing menu.
 	buttonClickScript: compile(
 		options: "names",
 		func() begin

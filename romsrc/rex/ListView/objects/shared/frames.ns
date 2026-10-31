@@ -1,6 +1,14 @@
-// objects several roots reach, none alone (naturalize.py)
+// ListView's shared frames: objects several roots reach, none alone (naturalize.py) -
+// export145Proto, the To Do List view of the Calendar (its toDoListView; a list/outline view
+// proto @8313): the tasks of the selected day, kept in the "To Do List" soup as one entry per
+// day and store ({class 'todo, date, topics: the tasks}; date 0 holds the repeating tasks),
+// with rollover of unfinished tasks to today, repeating tasks, conversion of the 1.x "To Do"
+// soup, Find and date find (protoToDoFinder), and the shapes the Calendar draws tasks with.
+// Dates are in minutes (a day is 1440); a task's source is the index of the entry (store) it came from.
 
 export145Proto := {
+	// PutAway(item): a beamed task (a To Do item, or a 1.x meeting-style item) added to the list -
+	// on its date, or today when it is past and not done.
 	PutAway: compile(
 		options: "names",
 		func(anItem) begin
@@ -32,6 +40,8 @@ export145Proto := {
 			measureTopics := true;
 			self:RedoTopics()
 		end),
+	// FlushEntry(entry): saves an entry, with an alert when its store is write-protected or full
+	// (other errors are rethrown); the changes are undone.
 	FlushEntry: compile(
 		options: "names",
 		func(Entry) begin
@@ -56,6 +66,7 @@ export145Proto := {
 						EntryUndoChanges(Entry)
 					end))
 		end),
+	// UndoMoveTaskToDate(task, target, date, wasDate): moves it back (undo), if that date is shown.
 	UndoMoveTaskToDate: compile(
 		options: "names",
 		func(aTask, aTarget, aDate, aWasDate) begin
@@ -66,11 +77,13 @@ export145Proto := {
 			selectedDates[0] := aWasDate;
 			self:RedisplayScript()
 		end),
+	// FirstVisibleTopic(): the first task in view.
 	FirstVisibleTopic: compile(
 		options: "names",
 		func() begin
 			firstTopic
 		end),
+	// TaskStore(task): the store of the entry the task came from, or nil.
 	TaskStore: compile(
 		options: "names",
 		func(aTask) begin
@@ -80,6 +93,7 @@ export145Proto := {
 		bits: bitmap('bits, "resources/bits/7973a5.png", "0000000000080087008700d0009200fa", 1),
 		bounds: {left: 0, top: 0, right: 42, bottom: 11}
 	},
+	// GetToDoSoup(): the "To Do List" union soup (dataSoup, made the first time) and the 1.x "To Do" soup, if any.
 	GetToDoSoup: compile(
 		options: "names",
 		func() begin
@@ -91,11 +105,13 @@ export145Proto := {
 			(if (oldTodoSoup = nil) then (oldTodoSoup := GetUnionSoup("To Do")))
 		end),
 	viewLineSpacing: 24,
+	// LastVisibleTopic(): the last task in view.
 	LastVisibleTopic: compile(
 		options: "names",
 		func() begin
 			lastTopic
 		end),
+	// MoveConvertedEntry(entry): an already converted 1.x entry, as it is.
 	MoveConvertedEntry: compile(
 		options: "names",
 		func(anEntry) begin
@@ -103,6 +119,7 @@ export145Proto := {
 			theStore := EntryStore(anEntry);
 			anEntry
 		end),
+	// viewQuitScript: applies the task slip's changes, saves, stops watching the soups and drops the cached entries.
 	viewQuitScript: compile(
 		options: "names",
 		func() begin
@@ -122,6 +139,7 @@ export145Proto := {
 			self.repeatTargets := nil;
 			(self.topics := nil)
 		end),
+	// UndoDeleteTask(date, task): puts a deleted task back (undo of DeleteTask).
 	UndoDeleteTask: compile(
 		options: "names",
 		func(aDate, aTask) begin
@@ -133,6 +151,8 @@ export145Proto := {
 			self:RedoTopics();
 			self:CalculateScrollRects()
 		end),
+	// AddOldSoupTasks(list, date): adds the 1.x "To Do" soup's tasks for a day (converted ones
+	// as they are, others converted); today shows the past undone ones too. Returns whether any were added.
 	AddOldSoupTasks: compile(
 		options: "names",
 		func(aTopicList, aStart) begin
@@ -186,6 +206,8 @@ export145Proto := {
 				end;
 			return result
 		end),
+	// RollEntryOver(entry, today): rolls a past day's undone tasks over to today - the whole entry
+	// when nothing in it is done, else just those tasks. nil when the entry's store is read-only.
 	RollEntryOver: compile(
 		options: "names",
 		func(anEntry, aNewDate) begin
@@ -242,6 +264,8 @@ export145Proto := {
 			true
 		end),
 	target: nil,
+	// RollRepeatOver(entry, today, lastDate): for each repeating task, a past occurrence ticked done
+	// is kept as a done task on its day, an undone one is put on today; remembers the rollover date.
 	RollRepeatOver: compile(
 		options: "names",
 		func(anEntry, aNewDate, aPrevDate) begin
@@ -295,6 +319,7 @@ export145Proto := {
 			true
 		end),
 	entryChanged: nil,
+	// CalculateScrollRects(): the scroll arrows' state (more above, more below).
 	CalculateScrollRects: compile(
 		options: "names",
 		func() begin
@@ -320,17 +345,21 @@ export145Proto := {
 				end;
 			scroller:Dirty()
 		end),
+	// SetTaskDone(date, task): nothing.
 	SetTaskDone: compile(
 		options: "names",
 		func(aDate, aTask) begin
 			nil
 		end),
+	// viewIdleScript: saves the changes (StartFlush asks for it 5 seconds later).
 	viewIdleScript: compile(
 		options: "names",
 		func() begin
 			self:EndFlush();
 			nil
 		end),
+	// RollItemsOver(fromAlarm): once a day, rolls the days since the last rollover over to today
+	// (and the repeating tasks); an alert when memory ran out or a store was write-protected.
 	RollItemsOver: compile(
 		constants: {
 			kLiteral_791bbd: "To Do"
@@ -386,12 +415,14 @@ export145Proto := {
 			(if protectError then self:Notify(3, kLiteral_791bbd, "Couldn\u2019\ut roll some tasks over because they were write-protected"))
 		end),
 	minimalChildren: true,
+	// CreateToDoItem(date, text, reminder, frequency): CreateToDoItemAll with normal priority (3).
 	CreateToDoItem: compile(
 		options: "names",
 		func(aDate, aRichString, aReminder, aFrequency) begin
 			self:CreateToDoItemAll(aDate, aRichString, aReminder, aFrequency, 3, nil)
 		end),
 	flushDate: nil,
+	// RollOverAlarm(): the daily alarm - rolls the tasks over and sets itself again for 3 minutes past the next midnight.
 	RollOverAlarm: compile(
 		options: "names",
 		func() begin
@@ -402,6 +433,8 @@ export145Proto := {
 				GetRoot().calendar:RollOverAlarm()
 			end, [Array: ])
 		end),
+	// GetToDoEntryDefaultStore(date, store): the day's entry on the store (default: the app
+	// prefs' store, the internal one when read-only), made if missing; returns {Entry, storeIndex}.
 	GetToDoEntryDefaultStore: compile(
 		constants: {
 			kLiteral_785d9d: "To Do List"
@@ -439,6 +472,7 @@ export145Proto := {
 				end;
 			return {Entry: Entry, storeIndex: storeIndex}
 		end),
+	// SetTaskPriority(date, task): nothing.
 	SetTaskPriority: compile(
 		options: "names",
 		func(aDate, aTask) begin
@@ -448,11 +482,13 @@ export145Proto := {
 	dataSoup: nil,
 	allDropTypes: [|Array|: 'task, 'text, 'topic],
 	markerDropTypes: [|Array|: 'task],
+	// the "To Do List" soup (newtSoup): one entry per day and store, indexed by date
 	masterSoup: {
 		soupName: toDoList,
 		soupIndices: [|Array|: {structure: 'slot, path: 'date, type: 'int}],
 		soupQuery: {type: 'index, indexPath: 'date},
 		defaultDataType: 'todo,
+		// CreateBlankEntry(): an empty day entry for today.
 		CreateBlankEntry: compile(
 			options: "names",
 			func() begin
@@ -461,6 +497,9 @@ export145Proto := {
 		_proto: @newtSoup
 	},
 	scrollCausedRedo: nil,
+	// CreateToDoItemAll(date, text, reminder, frequency, priority, done): a new task -
+	// repeating when frequency is given (in the date-0 entry), with a
+	// reminder days ahead; scrolls to it when that day is shown. Returns its index.
 	CreateToDoItemAll: compile(
 		options: "names",
 		func(aDate, aRichString, aReminder, aFrequency, aPriority, aComplete) begin
@@ -521,6 +560,8 @@ export145Proto := {
 				end;
 			ti
 		end),
+	// EndFlush(): writes the tasks in view back to their entries (by source), repeating tasks'
+	// done state into repeatDone, and saves the entries; an alert if a card was ejected.
 	EndFlush: compile(
 		options: "names",
 		func() begin
@@ -574,6 +615,7 @@ export145Proto := {
 					(entryChanged := nil)
 				end)
 		end),
+	// MoveTaskToDate(task, target, oldDate, date): moves a task to another day (undoable); 1.x tasks cannot be moved.
 	MoveTaskToDate: compile(
 		options: "names",
 		func(aTask, aTarget, anOldDate, aDate) begin
@@ -589,12 +631,15 @@ export145Proto := {
 			self:GetTarget(nil);
 			(if Visible(self) then self:AddUndoAction('UndoMoveTaskToDate, [Array: aTask, aTarget, aDate, anOldDate]))
 		end),
+	// textFlags 200: the paragraph flags of the tasks
 	textFlags: 200,
+	// EntryCool(...): always true.
 	EntryCool: compile(
 		options: "names",
 		func(bother) begin
 			true
 		end),
+	// GetToDoEntry(date, make): the day's entries (one per store); with make, one is made if there is none.
 	GetToDoEntry: compile(
 		options: "names",
 		func(aDate, aMakeNewEntry) begin
@@ -620,14 +665,17 @@ export145Proto := {
 			(if Entry then MapCursor(dataCursor, nil))
 		end),
 	soupervisor: {type: 'moveOnly},
+	// ShowChanges(): redraws the tasks.
 	ShowChanges: compile(
 		options: "names",
 		func() begin
 			self:RedoTopics()
 		end),
+	// NextToDoDate(date): the next day on or after date with tasks (repeating ones included), or nil.
 	NextToDoDate: compile(
 		options: "names",
 		func(aDate) begin
+			// 536870911 (2^29 - 1): "no date found" - the largest integer
 			earliestDate := 536870911;
 			self:GetToDoSoup();
 			aDate := ((aDate div 1440) * 1440);
@@ -672,6 +720,8 @@ export145Proto := {
 			(if (earliestDate = 536870911) then nil else earliestDate)
 		end),
 	targets: [|Array|: ],
+	// RemoveOldTodoItems(before, which, progress): removes tasks dated before (the done ones, or
+	// all) and repeating tasks' done marks before then.
 	RemoveOldTodoItems: compile(
 		options: "names",
 		func(aBeforeDate, aRemoveWhich, progressContext) begin
@@ -743,6 +793,7 @@ export145Proto := {
 					cursor:Next()
 				end)
 		end),
+	// ShowFoundItem(entry, time, finder): shows a task Find found.
 	ShowFoundItem: compile(
 		options: "names",
 		func(anEntry, itemTime, aFinder) begin
@@ -756,6 +807,7 @@ export145Proto := {
 			self:ShowFoundTopic(ti, hit.offset, aFinder)
 		end),
 	oldTodoSoup: nil,
+	// viewScrollDownScript: half a page down.
 	viewScrollDownScript: compile(
 		options: "names",
 		func() begin
@@ -769,6 +821,7 @@ export145Proto := {
 					ClearUndoStacks()
 				end)
 		end),
+	// ConvertToDoSoup(): moves the 1.x "To Do" soup's items into the "To Do List" soup (unless on a locked card).
 	ConvertToDoSoup: compile(
 		constants: {
 			kLiteral_785d9d: "To Do List"
@@ -833,6 +886,7 @@ export145Proto := {
 				end;
 			converted
 		end),
+	// AddEmptyTopic(index, level): a new empty task in the default store's entry.
 	AddEmptyTopic: compile(
 		options: "names",
 		func(anIndex, aLevel) begin
@@ -845,6 +899,7 @@ export145Proto := {
 			topicFrame
 		end),
 	maxLevel: 1,
+	// StartFlush(): changes made - saved by the idle script 5 seconds later.
 	StartFlush: compile(
 		options: "names",
 		func() begin
@@ -852,6 +907,7 @@ export145Proto := {
 			flushDate := selectedDates[0];
 			(entryChanged := true)
 		end),
+	// StringToTopic(text, top): a task frame for a rich string, one or two lines high.
 	StringToTopic: compile(
 		options: "names",
 		func(aRichString, aTop) begin
@@ -874,6 +930,8 @@ export145Proto := {
 		end),
 	viewJustify: vjParentFullH + vjParentFullV,
 	topicsLabel: tasks,
+	// NewSoupChanged(...): the "To Do List" soup changed - closes the task slip if its entry is
+	// gone; a store coming in forces a rollover check; redisplays the Calendar.
 	NewSoupChanged: compile(
 		options: "names",
 		func(aSoupName, aAppSymbol, aChangeType, aChangeData) begin
@@ -892,12 +950,14 @@ export145Proto := {
 				end)
 		end),
 	listViewFlags: 30,
+	// DeleteCheckedTask(date, task): deletes a task; a repeating one only after a confirmation.
 	DeleteCheckedTask: compile(
 		options: "names",
 		func(aDate, aTask) begin
 			local textPart1, result;
 			(if HasPath(aTask, 'repeatInfo) then (if (result := ModalConfirm(Stringer([Array: (textPart1 := SubStr(MakeRichString(aTask.text, aTask.styles), 0, 24)), "\u2026\u", " ", "is a recurring task. Delete all occurrences?"]), 'yesNo)) then self:DeleteTask(0, aTask, nil) else return nil) else self:DeleteTask(aDate, aTask, nil))
 		end),
+	// UpdateMultipleStores(start): saves now ('now), or (with tasks from several stores) starts or ends the flush.
 	UpdateMultipleStores: compile(
 		options: "names",
 		func(aStart) begin
@@ -917,6 +977,7 @@ export145Proto := {
 					self:EndFlush()
 				end)
 		end),
+	// DeleteTask(date, task, redraw): removes a task from its entry (undoable unless 'noUndoOrDraw); 1.x tasks cannot be deleted.
 	DeleteTask: compile(
 		options: "names",
 		func(aDate, aTask, aRedraw) begin
@@ -960,6 +1021,7 @@ export145Proto := {
 						end
 				end)
 		end),
+	// ScrollToTask(date, task): scrolls the task into view and activates it.
 	ScrollToTask: compile(
 		options: "names",
 		func(aDate, aTask) begin
@@ -978,6 +1040,7 @@ export145Proto := {
 					self:ActiveTopic(index)
 				end)
 		end),
+	// AppendTopic(topic, index, top, delta): adds a task, its source the default store's entry when it has none (or a read-only one).
 	AppendTopic: compile(
 		options: "names",
 		func(aTopic, aNewIndex, aTop, aLevelDelta) begin
@@ -993,6 +1056,8 @@ export145Proto := {
 				end;
 			inherited:AppendTopic(aTopic, aNewIndex, aTop, aLevelDelta)
 		end),
+	// GetTarget(oldTarget): the selected day's tasks - from every store's entry, the 1.x soup and
+	// the repeating ones, sorted by priority (done ones last) when mixed.
 	GetTarget: compile(
 		options: "names",
 		func(anOldTarget) begin
@@ -1053,6 +1118,7 @@ export145Proto := {
 				end;
 			(nTopics := Length(topics))
 		end),
+	// the template of a task's paragraph
 	canonicalParaTopic: {
 		viewBounds: nil,
 		viewFlags: vVisible + vCalculateBounds,
@@ -1061,12 +1127,14 @@ export145Proto := {
 		textFlags: 265,
 		styles: [|Array|: ],
 		text: nil,
+		// viewCaretActivateScript(state): the caret in it makes it the current task.
 		viewCaretActivateScript: compile(
 			options: "names",
 			func(state) begin
 				(if state then (curTopic := index))
 			end)
 	},
+	// viewScrollUpScript: half a page up.
 	viewScrollUpScript: compile(
 		options: "names",
 		func() begin
@@ -1080,6 +1148,7 @@ export145Proto := {
 					ClearUndoStacks()
 				end)
 		end),
+	// LastToDoDate(date): the last day before date with tasks, or nil.
 	LastToDoDate: compile(
 		options: "names",
 		func(aDate) begin
@@ -1101,6 +1170,8 @@ export145Proto := {
 			if (earliestDate = yesterday) then begin
 					return earliestDate
 				end;
+			// looks like a bug: the 1.x soup's entries have no topics slot, so this loop never breaks
+			// and Entry is nil after it - the 1.x tasks are never considered
 			if oldTodoSoup then begin
 					(cursor := oldTodoSoup:Query({type: 'index, indexPath: 'mtgStartDate, beginKey: 1, endKey: yesterday})):ResetToEnd();
 					Entry := cursor:Entry();
@@ -1143,6 +1214,7 @@ export145Proto := {
 				end);
 			(if (earliestDate = 536870911) then nil else earliestDate)
 		end),
+	// viewSetupFormScript: rolls the tasks over, watches the soups, converts a 1.x soup.
 	viewSetupFormScript: compile(
 		options: "names",
 		func() begin
@@ -1158,11 +1230,13 @@ export145Proto := {
 			inherited:viewSetupFormScript();
 			SetCaretInfo(self, {x: 43, y: 20})
 		end),
+	// GrowNote(): nothing.
 	GrowNote: compile(
 		options: "names",
 		func() begin
 			nil
 		end),
+	// OldSoupChanged(...): the 1.x "To Do" soup changed - converts it and redisplays.
 	OldSoupChanged: compile(
 		options: "names",
 		func(aSoupName, anAppSymbol, aChangeType, aChangeData) begin
@@ -1173,11 +1247,13 @@ export145Proto := {
 						cal:RedisplayScript()
 					end))
 		end),
+	// ValidateToDo(entry): the entry if it is a day entry ('todo with topics and date), else nil.
 	ValidateToDo: compile(
 		options: "names",
 		func(aEntry) begin
 			(if (if (if (aEntry.class = 'todo) then aEntry.topics) then aEntry.date) then aEntry)
 		end),
+	// viewAddChildScript(task): a new task - normal priority, done when the day is past.
 	viewAddChildScript: compile(
 		options: "names",
 		func(aNewOne) begin
@@ -1189,6 +1265,7 @@ export145Proto := {
 			lastTopic := (Length(topics) - 1);
 			self:CalculateScrollRects()
 		end),
+	// EnsureVisibleTopic(index): scrolls the task into view.
 	EnsureVisibleTopic: compile(
 		options: "names",
 		func(anIndex) begin
@@ -1200,11 +1277,14 @@ export145Proto := {
 						self:RedoChildren()
 					end))
 		end),
+	// MakeTopicFrame(level): a new task frame; unique is a time-based id.
 	MakeTopicFrame: compile(
 		options: "names",
 		func(aLevel) begin
 			{unique: (((TimeInSeconds() * 4) + (Ticks() mod 4)) - 60000000), mtgPriority: 3, mtgDone: nil, text: nil, styles: nil, viewBounds: nil, source: 0}
 		end),
+	// ToggleTopic(index): opens the task slip on a task (read-only for a 1.x task or a locked
+	// store), with its reminder or repeat date.
 	ToggleTopic: compile(
 		options: "names",
 		func(anIndex) begin
@@ -1253,6 +1333,7 @@ export145Proto := {
 			todoSlip:Open()
 		end),
 	topMargin: 5,
+	// HandleCheck(index, task): ticks a task (unless read-only); unticking a past one makes the next rollover start from its day.
 	HandleCheck: compile(
 		options: "names",
 		func(anIndex, aTopic) begin
@@ -1272,6 +1353,7 @@ export145Proto := {
 					(if (selectedDates[0] < lastChecked) then SetUserConfig(EnsureInternal('lastRollover), selectedDates[0]))
 				end)
 		end),
+	// CheckReadOnly(entry): true, with an alert, when the entry's store is write-protected.
 	CheckReadOnly: compile(
 		options: "names",
 		func(aEntry) begin
@@ -1283,6 +1365,7 @@ export145Proto := {
 				end;
 			nil
 		end),
+	// DeleteTopics(indexes): deletes tasks (repeating ones after a confirmation; not 1.x ones).
 	DeleteTopics: compile(
 		options: "names",
 		func(aList) begin
@@ -1329,6 +1412,7 @@ export145Proto := {
 				end;
 			true
 		end),
+	// SortToDoItems(entry): sorts an entry's tasks by priority, done ones last.
 	SortToDoItems: compile(
 		options: "names",
 		func(anEntry) begin
@@ -1341,16 +1425,19 @@ export145Proto := {
 			anEntry.needsSort := nil;
 			EntryChangeXmit(anEntry, 'todo)
 		end),
+	// debug: an NTK debug id
 	debug: 699,
 	topicDragInfo: {types: [|Array|: 'task, 'text], dragRef: nil, label: task},
 	viewFont: tsHWFont + tsSize(12),
 	topicFont: tsHWFont + tsSize(12),
+	// viewSetupChildrenScript: the tasks, and the scroll arrows.
 	viewSetupChildrenScript: compile(
 		options: "names",
 		func() begin
 			inherited:viewSetupChildrenScript();
 			self:CalculateScrollRects()
 		end),
+	// GetToDoItemsForRange(from, to): {date, topics} for each day with tasks.
 	GetToDoItemsForRange: compile(
 		options: "names",
 		func(aDate1, aDate2) begin
@@ -1365,6 +1452,7 @@ export145Proto := {
 				end);
 			theList
 		end),
+	// GetToDoItemsForThisDate(date): the day's tasks from every store, the 1.x soup and the repeating ones.
 	GetToDoItemsForThisDate: compile(
 		options: "names",
 		func(aDate) begin
@@ -1415,6 +1503,8 @@ export145Proto := {
 				end;
 			dayTopics
 		end),
+	// MoveTask(task, target, store): moves a task to an entry on another store (a repeating one
+	// after a confirmation); returns the entry, or nil on failure.
 	MoveTask: compile(
 		constants: {
 			kLiteral_791bbd: "To Do"
@@ -1527,11 +1617,14 @@ export145Proto := {
 			self:RedoTopics();
 			return Entry
 		end),
+	// UndoNewTask(date, task): deletes a task just made (undo).
 	UndoNewTask: compile(
 		options: "names",
 		func(aDate, aTask) begin
 			(if Visible(self) then self:DeleteTask(aDate, aTask, true) else self:DeleteTask(aDate, aTask, nil))
 		end),
+	// AddRepeatingTasks(list, date): adds the repeating tasks due on date (today or later), done
+	// when date is in their repeatDone. Returns whether any were added.
 	AddRepeatingTasks: compile(
 		options: "names",
 		func(aTopicList, aDate) begin
@@ -1579,6 +1672,8 @@ export145Proto := {
 				end);
 			addedTasks
 		end),
+	// AddTask(text, date, priority, done, reminder): adds a task to the day's entry (done when
+	// the day is past); returns {index, topic, Entry}.
 	AddTask: compile(
 		options: "names",
 		func(aRichString, aDate, aPriority, aComplete, aReminder) begin
@@ -1609,6 +1704,7 @@ export145Proto := {
 			EntryChangeXmit(Entry, 'todo);
 			{index: (Length(Entry.topics) - 1), topic: topicFrame, Entry: Entry}
 		end),
+	// DeleteRolledTopics(entry, indexes): removes those tasks from the entry.
 	DeleteRolledTopics: compile(
 		options: "names",
 		func(anEntry, aList) begin
@@ -1621,6 +1717,7 @@ export145Proto := {
 				end);
 			EntryChangeXmit(anEntry, 'todo)
 		end),
+	// DuplicateTask(date, task): a "copy of" task (undoable).
 	DuplicateTask: compile(
 		options: "names",
 		func(aDate, aTask) begin
@@ -1649,6 +1746,8 @@ export145Proto := {
 		end),
 	whoAmI: 'toDoListView,
 	repeatTargets: [|Array|: ],
+	// DateFind(when, type, finders, master, context): the date Find - days before, after or on
+	// that date, and repeating tasks that fall then.
 	DateFind: compile(
 		options: "names",
 		func(aWhat, aFindType, aSoupFinders, aMasterFinder, aContext) begin
@@ -1715,6 +1814,7 @@ export145Proto := {
 							end)
 					end))
 		end),
+	// Find(words, finders, master, context): the text Find over the tasks.
 	Find: compile(
 		options: "names",
 		func(aFindWords, aSoupFinders, aMasterFinder, aContext) begin
@@ -1724,7 +1824,9 @@ export145Proto := {
 			self:EndFlush();
 			(if (cursor := dataSoup:Query({type: 'words, words: aFindWords, indexPath: 'date})):Entry() then AddArraySlot(aSoupFinders, {_proto: protoToDoFinder, masterFinder: aMasterFinder, owner: GetRoot().calendar, findType: 'text, findWords: aFindWords, cursor: cursor}))
 		end),
+	// protoToDoFinder: the Find results' finder for tasks (one result per task, not per entry)
 	protoToDoFinder: {
+		// ForEachSelected(callback): calls callback(entry, topicIndex) for each selected result.
 		ForEachSelected: compile(
 			options: "names",
 			func(callback) begin
@@ -1746,12 +1848,14 @@ export145Proto := {
 							end)
 					end)
 			end),
+		// IsThisItemSelected(item): whether that result is selected.
 		IsThisItemSelected: compile(
 			options: "names",
 			func(item) begin
 				local alias;
 				(if item.realFinder:IsSelected((alias := {_uniqueID: item.entryID, _storeID: item.storeID, instanceTime: item.instanceTime, topicIndex: item.topicIndex})) then true)
 			end),
+		// SelectItem(item): selects or deselects a result.
 		SelectItem: compile(
 			options: "names",
 			func(item) begin
@@ -1761,11 +1865,13 @@ export145Proto := {
 						(if (if (if (e._uniqueID = t._uniqueID) then (e._storeID = t._storeID)) then (e.instanceTime = t.instanceTime)) then (e.topicIndex = t.topicIndex))
 					end)) then RemoveSlot(selected, index) else AddArraySlot(selected, alias)) else (selected := [Array: alias]))
 			end),
+		// Reset(): back to the first entry.
 		Reset: compile(
 			options: "names",
 			func() begin
 				cursor:Reset()
 			end),
+		// ReSync(): forgets the counts after a change.
 		ReSync: compile(
 			options: "names",
 			func() begin
@@ -1774,6 +1880,7 @@ export145Proto := {
 				self:Reset();
 				(zeroOneOrMoreResult := nil)
 			end),
+		// TaskMatches(task): the date a repeating task falls on that matches the date find, or nil.
 		TaskMatches: compile(
 			options: "names",
 			func(aTask) begin
@@ -1802,6 +1909,7 @@ export145Proto := {
 				(if match then date)
 			end),
 		currentItem: 0,
+		// GetEntryIndexForInstanceIndex(index): the entry a result index belongs to.
 		GetEntryIndexForInstanceIndex: compile(
 			options: "names",
 			func(instanceIndex) begin
@@ -1819,12 +1927,15 @@ export145Proto := {
 						i
 					end)
 			end),
+		// FileAs(labels): nothing (tasks cannot be filed).
 		FileAs: compile(
 			options: "names",
 			func(labels) begin
 				return nil
 			end),
 		cacheEntryCount: nil,
+		// AddTasksForEntry(entry, results, offset, count, max): adds an entry's matching tasks as
+		// Find items ("<date> <text>", 50 characters at most); returns how many.
 		AddTasksForEntry: compile(
 			options: "names",
 			func(anEntry, aResults, anOffset, aPrevCount, aMaxCount) begin
@@ -1858,6 +1969,7 @@ export145Proto := {
 										found[(f + 1)] := [Array: ti]
 									end)
 							end else begin
+								// debugging output left in (Write/Print to the inspector)
 								Write(Stringer([Array: "repeating task may match, anOffset=", anOffset, " ", "aPrevCount=", aPrevCount, " ", "findType="]));
 								Print(findType);
 								found := [Array: ];
@@ -1899,6 +2011,7 @@ export145Proto := {
 					end);
 				i
 			end),
+		// ShowFoundItem(item): shows a result in the To Do List.
 		ShowFoundItem: compile(
 			options: "names",
 			func(item) begin
@@ -1911,6 +2024,7 @@ export145Proto := {
 			end),
 		selected: nil,
 		items: nil,
+		// AddFoundItems(results, offset, max): the results, entry by entry.
 		AddFoundItems: compile(
 			options: "names",
 			func(results, offset, maxCount) begin
@@ -1934,6 +2048,7 @@ export145Proto := {
 				items := results;
 				i
 			end),
+		// ShowOrdinalItem(which): shows the first, next, previous or nth result.
 		ShowOrdinalItem: compile(
 			options: "names",
 			func(ordinal) begin
@@ -1960,6 +2075,7 @@ export145Proto := {
 						self:ShowItem(items[(indexFirstItem + currentItem)], cursor:Move((currentEntryIndex - oldEntryIndex)))
 					end)
 			end),
+		// ShowItem(item, entry): opens the Calendar's To Do List at the result's day.
 		ShowItem: compile(
 			options: "names",
 			func(anItem, anEntry) begin
@@ -1978,12 +2094,14 @@ export145Proto := {
 				owner:ShowToDoList(anItem.instanceTime);
 				owner.toDoListView:ShowFoundItem(anEntry, anItem.instanceTime, self)
 			end),
+		// ZeroOneOrMore(): whether there are no, one or more results.
 		ZeroOneOrMore: compile(
 			options: "names",
 			func() begin
 				(if self.cacheCount then cacheCount else (if self.zeroOneOrMoreResult then zeroOneOrMoreResult else (self.zeroOneOrMoreResult := self:Count())))
 			end),
 		cacheInstanceArrayCount: nil,
+		// Delete(): deletes the selected tasks.
 		Delete: compile(
 			options: "names",
 			func() begin
@@ -2009,7 +2127,9 @@ export145Proto := {
 				masterFinder.cacheCount := nil;
 				GetRoot().calendar:GetToDo():ShowChanges()
 			end),
+		// debug: an NTK debug id
 		debug: 1444552,
+		// Count(): the number of results (tasks), counted once and cached.
 		Count: compile(
 			options: "names",
 			func() begin
@@ -2037,6 +2157,7 @@ export145Proto := {
 					end)
 			end),
 		indexFirstItem: 0,
+		// CountTasks(entry): the entry's matching tasks.
 		CountTasks: compile(
 			options: "names",
 			func(anEntry) begin
@@ -2059,6 +2180,7 @@ export145Proto := {
 							Count
 						end else Length(anEntry.topics)))
 			end),
+		// MoveTo(store): moves the selected results' entries to another store.
 		MoveTo: compile(
 			options: "names",
 			func(toStore) begin
@@ -2071,6 +2193,7 @@ export145Proto := {
 				selected := nil;
 				XmitSoupChange("To Do List", 'todo, 'whatThe, nil)
 			end),
+		// IsSelected(alias): whether a result is selected.
 		IsSelected: compile(
 			options: "names",
 			func(itemAlias) begin
@@ -2079,6 +2202,7 @@ export145Proto := {
 					end))
 			end)
 	},
+	// GetToDoShapes(date, top, width, font): the day's tasks as shapes (checkbox, priority, text), or nil.
 	GetToDoShapes: compile(
 		options: "names",
 		func(aDate, aYOffset, aWidth, aFont) begin
@@ -2095,6 +2219,7 @@ export145Proto := {
 				end);
 			(if (Length(shapes) = 1) then nil else shapes)
 		end),
+	// GetTaskShapes(shapes, task, top, width, font): one task's shapes; returns {shapes, height}.
 	GetTaskShapes: compile(
 		options: "names",
 		func(aShapes, aTask, aYOffset, aWidth, aFont) begin

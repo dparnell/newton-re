@@ -1,3 +1,6 @@
+// Setup: the frame maps - the slot names of its frames, shared by frames with the same
+// slots (map(flags, supermap, slots...); romsrc/README.md)
+
 map_7a695d := map(0, nil, 'sequence, 'labels, '_taglist, 'iconPro, '_ExportTable, 'app, 'text, 'icon, 'theForm, 'autoClose, 'installScript);
 map_7a6b49 := map(0, map_7a6b5d, 'hilited);
 map_7a6b5d := map(2, nil, 'unhilited);

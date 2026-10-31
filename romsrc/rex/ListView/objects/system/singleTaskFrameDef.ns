@@ -1,9 +1,11 @@
-// singleTaskFrameDef, and what only it reaches
+// singleTaskFrameDef: a single task's routing format for beaming and mail (the task as its
+// item's body, routed by the Calendar). The file holds it and what only it reaches.
 
 singleTaskFrameDef := {
 	title: singleTask,
 	version: 1,
 	symbol: 'singleTaskFrameDef,
+	// SetupSlip(slip, item): the item's body is the task (from Find or the overview: its topic) with its date.
 	SetupSlip: compile(
 		options: "names",
 		func(slip, item) begin
@@ -26,6 +28,7 @@ singleTaskFrameDef := {
 			item.body.class := 'todo;
 			(item.appSymbol := 'calendar)
 		end),
+	// TextScript(item, target): the task as text - date, text, priority and whether completed.
 	TextScript: compile(
 		options: "names",
 		func(item, target) begin

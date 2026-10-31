@@ -1,6 +1,13 @@
-// part, and what only it reaches
+// part: the Newton Internet Enabler's first part, its icon in the Extras drawer
+// ("Newton Internet Enabler"): DoNotInstall refuses an install the unit cannot take, and
+// a tap on the icon shows the version and offers to suspend the NIE. The file holds the
+// part and what only it reaches.
 
 part := array(nil, {
+	// DoNotInstall(): (the package system asks before installing) returns true - do not
+	// install - when the OS lacks MissingImports, an older "Internet Enabler" package is on a
+	// store, or the package is not on the internal store (unless user configuration
+	// 'NIE_OkayToInstallOnAnyStore); the reason is shown in an alert (Notify level 3).
 	DoNotInstall: compile(
 		constants: {
 			kLiteral_1000ebd: "Newton Internet Enabler"
@@ -29,24 +36,30 @@ part := array(nil, {
 				end;
 			nil
 		end),
+	// installScript(partFrame): defines the tap-action global; returns the remove frame (below).
 	installScript: compile(
 		constants: {
+			// the AsyncConfirm answer: 2 is the Suspend button - shuts the NIE's link manager down
 			kFunction_100128d: func(a1) begin
 				(if (a1 = 2) then (if GlobalFnExists('InetShutDown) then InetShutDown(a1)))
 			end,
+			// the tap action: shows the version and asks whether to suspend all NIE activity
 			kFunction_1001011: func() begin
 				AsyncConfirm(Stringer([Array: ParamStr("Version ^0^1", [Array: "2.0    ", ""]), "\n\n", ParamStr("This icon is currently active. To make it inactive and suspend all Newton Internet Enabler activity, tap the Suspend button.", [Array: "Newton Internet Enabler"])]), [Array: {text: "Cancel", value: 1}, {text: "Suspend", value: 2}], kFunction_100128d)
 			end,
+			// the remove frame's removeScript: removes the tap-action global
 			kFunction_10013ad: func(a1) begin
 				UnDefGlobalVar('|NIE:NIE_TapActionFunc|)
 			end,
 			kLiteral_1001369: {removeScript: kFunction_10013ad}
 		},
+		// installScript(partFrame): defines the tap-action global; returns the remove frame.
 		func(partFrame) begin
 			DefGlobalVar('|NIE:NIE_TapActionFunc|, kFunction_1001011);
 			kLiteral_1001369
 		end),
 	text: newtonInternetEnabler,
+	// TapAction(): the Extras drawer's tap on the icon - calls the tap-action global (deferred).
 	TapAction: func() begin
 		AddDeferredCall(GetGlobalVar('|NIE:NIE_TapActionFunc|), nil);
 		nil

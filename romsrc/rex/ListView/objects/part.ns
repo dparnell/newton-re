@@ -1,9 +1,17 @@
-// part, and what only it reaches
+// part: the ListView package's form part - the To Do application's code (app 'toDoApp,
+// the Calendar's To Do List) and the list and checklist stationery (outline and checklist
+// notes for the Notepad) with their print and routing formats; it exports the unit listView
+// (@8313.., the protos other code builds lists from) and |ListView private| (@8321..). The
+// file holds the part and what only it reaches.
 
 part := array(nil, {
 	app: 'toDoApp,
 	text: toDo,
 	theForm: @8321,
+	// InstallScript(part): registers the data defs and view defs (list, checkList, the
+	// To Do's own), puts the To Do List view, task slip, agenda view and rollover into the
+	// Calendar, and sets the daily rollover alarm (3 minutes past midnight) and a time-change
+	// hook that makes the next rollover start from the new day.
 	InstallScript: compile(
 		options: "names",
 		func(aPart) begin
@@ -60,6 +68,7 @@ part := array(nil, {
 					return nil
 				end)
 		end),
+	// RemoveScript(part): unregisters the data and view defs.
 	RemoveScript: compile(
 		options: "names",
 		func(aPart) begin

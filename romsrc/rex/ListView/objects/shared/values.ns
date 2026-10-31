@@ -1,4 +1,4 @@
-// objects several roots reach, none alone (naturalize.py)
+// ListView's shared values: objects several roots reach, none alone (naturalize.py) - strings.
 
 task := "task";
 

@@ -1,6 +1,12 @@
-// SetUp, and what only it reaches
+// SetUp: the Setup application's base view, the step-by-step "Welcome" sequence a new
+// (or freshly reset) Newton opens with - owner name, country, home and work phone,
+// date and time pages (stepChildren, shown one at a time by ShowPage). On quitting
+// it saves the owner card, worksites, the location and the time. The file holds SetUp
+// and what only it reaches.
 
 SetUp := {
+	// viewSetupDoneScript: picks up the owner card (currentPersona) and the home/work
+	// worksite cards remembered in the app prefs, or blank frames, then shows the first page.
 	viewSetupDoneScript: func() begin
 		local currentPersona, appPrefs;
 		if (currentPersona := GetUserConfig('currentPersona)) then begin
@@ -25,8 +31,12 @@ SetUp := {
 	viewFormat: nil,
 	fFirstName: nil,
 	fReadyToQuit: nil,
+	// viewQuitScript: writes back what the pages filled in - the worksites (SaveWorksiteInfo),
+	// the owner card (adding one to the Names soup if new), the location (World Clock city
+	// from the owner's city or a worksite's area code) and the time - and returns 'postQuit.
 	viewQuitScript: func() begin
 		appPrefs := GetAppPrefs(appSymbol, '{});
+		// l6: whether a new worksite card must be made even if none exists yet (no emporia known)
 		if (IsSoupEntry(fWorkSite) or IsSoupEntry(fWorkworksite)) then begin
 				l6 := true
 			end else begin
@@ -54,6 +64,8 @@ SetUp := {
 					end
 			end;
 		EntryChange(appPrefs);
+		// the time is taken now and set again at the end, so that changing the location (and so
+		// the time zone) does not move the clock the user just set
 		now := Time();
 		if GetRoot().worldClock.SetLocation then begin
 				if fPersona.city then begin
@@ -113,12 +125,16 @@ SetUp := {
 					end
 			end;
 		SetTime(now);
+		// turns the busy box back on (switched off by viewSetupFormScript)
 		BusyBoxControl(1);
 		'postQuit
 	end,
 	CountryPicker: nil,
 	PhoneWork: nil,
 	viewFlags: vApplication + vClipping + vFloating,
+	// SaveWorksiteInfo(worksite, makeNew): files a worksite card (home or work), its city and
+	// country looked up from its area code; makes a new card only if makeNew. Returns the
+	// card (soup entry) or nil.
 	SaveWorksiteInfo: func(a1, a2) begin
 		local cityFromAreacode, areaCode, isSoupEntry2;
 		if (if (not (isSoupEntry2 := IsSoupEntry(a1))) then (not a2)) then begin
@@ -138,6 +154,8 @@ SetUp := {
 			end;
 		a1
 	end,
+	// NextPage(): the next step; when everything has been filled in and reviewed, straight to
+	// the last (review) page.
 	NextPage: func() begin
 		self.fReadyToQuit := nil;
 		(if (if (if fCompleted.fully then (fCurrentPageIndex < (Length(fPages) - 1))) then fReviewDone) then return self:ShowPage((Length(fPages) - 1)) else return self:ShowPage((fCurrentPageIndex + 1)))
@@ -146,11 +164,14 @@ SetUp := {
 	datePicker: nil,
 	fCurrentPage: nil,
 	fWorkworksite: nil,
+	// viewOverviewScript: the overview button - beeps; pressed twice in a row it closes Setup.
 	viewOverviewScript: func() begin
 		PlaySound(@funBeep);
 		(if fReadyToQuit then self:SetupClose() else (fReadyToQuit := true))
 	end,
 	fPersona: nil,
+	// ShowPage(index): replaces the current page view with page `index` of fPages (a step view)
+	// and returns it, or nil when there is no such page.
 	ShowPage: func(a1) begin
 		local fPage;
 		if (a1 >= Length(fPages)) then begin
@@ -176,11 +197,13 @@ SetUp := {
 	appSymbol: 'SetUp,
 	viewJustify: 0,
 	name: nil,
+	// viewPostQuitScript: after closing, the proto's, then ClearCut.
 	viewPostQuitScript: func() begin
 		inherited:?viewPostQuitScript();
 		self:ClearCut()
 	end,
 	fFirstPage: 0,
+	// the pages' views to declare in this base view by name (symbol, then template)
 	stepAllocateContext: [|Array|:
 		'name,
 		@8345,
@@ -194,10 +217,15 @@ SetUp := {
 		@8356
 	],
 	fPages: nil,
+	// 'normal, or 'wide when the app area is wider than high (pages lay out accordingly)
 	fformat: 'normal,
 	declareSelf: 'base,
+	// viewSetupFormScript: remembers the blessed app (to restore it when done), takes the pages
+	// out of stepChildren (they are added one at a time), and fills the screen when it is not
+	// the MessagePad's 240 pixels wide.
 	viewSetupFormScript: func() begin
 		local appAreaWidth, appAreaHeight;
+		// the busy box is off while Setup runs (turned back on in viewQuitScript)
 		BusyBoxControl(0);
 		if ((savedBlessed := UserConfiguration.blessedApp) = 'SetUp) then begin
 				savedBlessed := 'paperroll
@@ -218,6 +246,8 @@ SetUp := {
 	fCompleted: nil,
 	mapCountry: nil,
 	fFirstTime: nil,
+	// GetCityFromAreacode(areaCode, country): the first city of the location soup with that
+	// area code in that country, or nil.
 	GetCityFromAreacode: func(areaCode, mapCountry) begin
 		local cursor, next;
 		(if StrFilled(areaCode) then begin
@@ -227,16 +257,20 @@ SetUp := {
 	end,
 	fScreenSize: nil,
 	viewClass: clView,
+	// PreviousPage(): the page before (stays on the first).
 	PreviousPage: func() begin
 		self.fReadyToQuit := nil;
 		(if (fCurrentPageIndex = 0) then return self:ShowPage(fCurrentPageIndex) else return self:ShowPage((fCurrentPageIndex - 1)))
 	end,
 	fCurrentPageIndex: 0,
+	// the pages in order (the package's exported page templates)
 	stepChildren: [stepChildren: @8357, @8345, @8342, @8340, @8346, @8347, @8343, @8356, @8344, @8355, @8341],
 	fWorkSite: nil,
 	TimePicker: nil,
 	savedBlessed: nil,
 	fReviewDone: true,
+	// SetupClose(): closes Setup by blessing the previous app again (which replaces this one),
+	// or plainly when Setup is not the blessed app.
 	SetupClose: func() begin
 		(if (UserConfiguration.blessedApp <> savedBlessed) then GetRoot():BlessApp(savedBlessed) else base:Close())
 	end

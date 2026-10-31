@@ -1,3 +1,4 @@
-// objects several roots reach, none alone (naturalize.py)
+// objects several roots reach, none alone (naturalize.py): the native code of protoFSM's
+// NTK-compiled functions (ARM source).
 
 code := native('code, "resources/code/1002f89.s");

@@ -1,4 +1,5 @@
-// part, and what only it reaches
+// part: the Setup package's form part - the part frame (icon, the app SetUp, its exported
+// page templates @8339..@8357 for other packages) and what only it reaches.
 
 part := array(nil, {
 	sequence: 22,
@@ -34,6 +35,7 @@ part := array(nil, {
 			]
 		}
 	},
+	// the exports, the magic pointers @8339.. other code reaches them by (theForm is @8339, SetUp)
 	_ExportTable: [|Array|:
 		{
 			name: 'SetUp,
@@ -71,6 +73,8 @@ part := array(nil, {
 	},
 	theForm: @8339,
 	autoClose: 'noAutoclose,
+	// installScript(partFrame): runs a development-time install script if the part has one,
+	// then removes it and itself (they are needed only once).
 	installScript: func(partFrame) begin
 		partFrame:?devInstallScript(partFrame);
 		if HasSlot(partFrame, 'devInstallScript) then begin

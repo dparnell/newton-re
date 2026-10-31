@@ -1,15 +1,24 @@
-// part, and what only it reaches
+// part: the Newton Devices package's AppleTalk part - an install script that sets up
+// the AppleTalk link registry (the global AppleTalkLinkRegistry and the global functions
+// RegAppleTalklink/UnRegAppleTalklink, LocalTalk and EtherTalk registered) and, in the
+// original, the AppleTalk panel of the Prefs list ("Connect using" a link, "Card" an
+// Ethernet card from the device registry). The file holds the part and what only it reaches.
 
 part := array(nil, {
 	_ImportTable: [|Array|: {name: '|NameServerInterface:NSG|, major: 1, minor: 0}],
+	// installScript(partFrame): runs devInstallScript; returns the remove frame whose
+	// removeScript (devRemoveScript) undoes it when the package goes.
 	installScript: func(partFrame) begin
 		local ensureInternal2;
 		ensureInternal2 := EnsureInternal({removeScript: partFrame.devRemoveScript});
 		partFrame:devInstallScript(partFrame, ensureInternal2);
 		ensureInternal2
 	end,
+	// devInstallScript(partFrame, removeFrame): sets up the AppleTalk link registry (the body at its end).
 	devInstallScript: compile(
 		constants: {
+			// kBinaryFromHex(hex, class): a binary of class made from a string of hex digits (the
+			// panel icon's bits).
 			kBinaryFromHex: func(hex, cls) begin
 				local b := MakeBinary(StrLen(hex) div 2, cls);
 				for i := 0 to Length(b) - 1 do begin
@@ -19,19 +28,26 @@ part := array(nil, {
 				end;
 				b
 			end,
+			// RegAppleTalklink(link): adds a link {item: name shown, id: link id, sym: device class}
+			// to the registry, kept sorted by id.
 			kFunction_100ce6d: func(a1) begin
 				BInsert(vars.AppleTalkLinkRegistry, EnsureInternal(a1), '|str<|, 'id, true);
 				nil
 			end,
+			// UnRegAppleTalklink(link): removes the link with that id.
 			kFunction_100cf69: func(a1) begin
 				BDelete(vars.AppleTalkLinkRegistry, a1.id, '|str<|, 'id, 1);
 				nil
 			end,
+			// the "Connect using" picker's viewSetupFormScript: the current link (user configuration
+			// 'appletalkLink) and the registry as its choices.
 			kFunction_100d579: func() begin
 				curPLink := GetUserConfig('appletalkLink);
 				labelCommands := AppleTalkLinkRegistry;
 				inherited:?viewSetupFormScript()
 			end,
+			// FindService(id): the name of the link with that id (and remembers its device class in
+			// curLinkSym), or "".
 			kFunction_100d615: func(a1) begin
 				key2 := nil;
 				local key2;
@@ -45,12 +61,16 @@ part := array(nil, {
 						return labelCommands[key2].item
 					end else return "")
 			end,
+			// textSetup: the picker's text, the current link's name.
 			kFunction_100d6d1: func() begin
 				self:FindService(curPLink)
 			end,
+			// labelActionScript(index): a link chosen - refused with an alert while AppleTalk is open
+			// (AppleTalkOpenCount); else the card picker is set up for its device class and saved.
 			kFunction_100d719: func(a1) begin
 				if (AppleTalkOpenCount() > 0) then begin
 						self:updateText(self:FindService(curPLink));
+						// 3: the Notify level (the alert is shown at once)
 						return GetRoot():Notify(3, "AppleTalk", "Appletalk is currently in use. To switch AppleTalk settings, you must first close all applications using AppleTalk.")
 					end;
 				curPLink := labelCommands[a1].id;
@@ -58,6 +78,8 @@ part := array(nil, {
 				pref.DevicePicker:SetDisplay();
 				self:SetPref()
 			end,
+			// the "Card" picker's viewSetupFormScript: the card chosen before (user configuration
+			// 'AppleTalkChoice, made "" if missing).
 			kFunction_100dab9: func() begin
 				if (not (curDevice := GetUserConfig('AppleTalkChoice))) then begin
 						SetUserConfig('AppleTalkChoice, Clone(""));
@@ -66,6 +88,8 @@ part := array(nil, {
 				self:SetupDevicePicker(curDevice);
 				inherited:?viewSetupFormScript()
 			end,
+			// FindService(cisName): the display name of the card with that CIS product name; with
+			// only one card known, that one; else "None Selected".
 			kFunction_100db2d: func(a1) begin
 				key2 := nil;
 				if (if labelCommands then a1) then begin
@@ -81,9 +105,11 @@ part := array(nil, {
 							return labelCommands[0].item
 						end else return "None Selected"))
 			end,
+			// textSetup: the picker's text, the chosen card's name.
 			kFunction_100dc29: func() begin
 				self:FindService(curDevice)
 			end,
+			// labelActionScript(index): a card chosen - refused while AppleTalk is open, else saved.
 			kFunction_100dc5d: func(a1) begin
 				if (AppleTalkOpenCount() > 0) then begin
 						self:updateText(self:FindService(curDevice));
@@ -92,9 +118,12 @@ part := array(nil, {
 				curDevice := labelCommands[a1].CISName;
 				self:SetPref()
 			end,
+			// SetupDevicePicker(deviceClass): the card choices for the current link.
 			kFunction_100dcf1: func(a1) begin
 				(self.labelCommands := self:MakeLabelCommands())
 			end,
+			// MakeLabelCommands(): the cards of the device registry of the current link's class that
+			// can carry AppleTalk, sorted by name (a card may have several display names).
 			kFunction_100dd39: func() begin
 				items := [Array: ];
 				if DeviceRegistry then begin
@@ -112,23 +141,32 @@ part := array(nil, {
 					end;
 				items
 			end,
+			// SetDisplay(): the card picker is shown only for a link that needs a device (EtherTalk).
 			kFunction_100df69: func() begin
 				(if curLinkSym then self:Show() else self:Hide())
 			end,
+			// viewSetupDoneScript: shows or hides the card picker.
 			kFunction_100dfed: func() begin
 				self:SetDisplay()
 			end,
+			// viewShowScript: updates the picker's text.
 			kFunction_100e02d: func() begin
 				self:updateText(self:textSetup())
 			end,
+			// the panel's viewSetupFormScript: remembers itself as pref for its pickers.
 			kFunction_100e139: func() begin
 				pref := self;
 				inherited:?viewSetupFormScript()
 			end,
+			// @8192 and @8193: the imported unit |NameServerInterface:NSG|'s first two functions
+			// (native, 4 and 3 arguments) - here they point AppleTalk ("ATalk", "enet") at an
+			// Ethernet card, or at none (LocalTalk)
 			kROM_8193: @8193,
 			kLiteral_100e2b9: "ATalk",
 			kLiteral_100e2d1: "enet",
 			kROM_8192: @8192,
+			// SetPref(): saves the link and card chosen when they changed (or LocalTalk is chosen),
+			// reloads the hardware entry and switches AppleTalk's link to them.
 			kFunction_100e181: func() begin
 				(if ((if ((not StrEqual(curPLink, GetUserConfig('appletalkLink))) or (not StrEqual(GetUserConfig('AppleTalkChoice), curDevice))) then StrFilled(curDevice)) or StrEqual(curPLink, "llap")) then begin
 						SetUserConfig('appletalkLink, Clone(curPLink));
@@ -137,11 +175,15 @@ part := array(nil, {
 						(if StrEqual(curPLink, "llap") then call kROM_8193 with (Clone(kLiteral_100e2b9), Clone(kLiteral_100e2d1), nil) else call kROM_8192 with (Clone(kLiteral_100e2b9), Clone(kLiteral_100e2d1), Clone(curDevice), nil))
 					end)
 			end,
-			kLiteral_100d0cd: {height: 20, overview: "AppleTalk", viewBounds: '{left: 0, top: 0, right: 0, bottom: 74}, stepChildren: [stepChildren: '{_proto: @protoClosebox, preAllocatedContext: closeBox}, {text: "Connect using", viewBounds: '{left: 8, top: 24, right: -8, bottom: 38}, viewJustify: 8388656, viewSetupFormScript: kFunction_100d579, FindService: kFunction_100d615, textSetup: kFunction_100d6d1, labelActionScript: kFunction_100d719, _proto: @protoLabelPicker}, {text: "Card", viewBounds: '{left: 0, top: 5, right: 0, bottom: 19}, viewJustify: 8398384, viewSetupFormScript: kFunction_100dab9, FindService: kFunction_100db2d, textSetup: kFunction_100dc29, labelActionScript: kFunction_100dc5d, SetupDevicePicker: kFunction_100dcf1, MakeLabelCommands: kFunction_100dd39, SetDisplay: kFunction_100df69, viewSetupDoneScript: kFunction_100dfed, viewShowScript: kFunction_100e02d, _proto: @protoLabelPicker, preAllocatedContext: 'DevicePicker}], icon: {bits: call kBinaryFromHex with ("000000000004012f012f00c5013b00d21fc000003fe0000030600000376000003760000030600000306000003fe000001fc000000e0000007bf0000071f00000", 'bits), bounds: '{left: 0, top: 0, right: 13, bottom: 12}}, pref: nil, viewSetupFormScript: kFunction_100e139, curDevice: "", curPLink: nil, SetPref: kFunction_100e181, curLinkSym: nil, _proto: @protoPrefsRollItem, closeBox: nil, stepAllocateContext: [Array: 'closeBox, '{_proto: @protoClosebox, preAllocatedContext: closeBox}, 'DevicePicker, {text: "Card", viewBounds: '{left: 0, top: 5, right: 0, bottom: 19}, viewJustify: 8398384, viewSetupFormScript: kFunction_100dab9, FindService: kFunction_100db2d, textSetup: kFunction_100dc29, labelActionScript: kFunction_100dc5d, SetupDevicePicker: kFunction_100dcf1, MakeLabelCommands: kFunction_100dd39, SetDisplay: kFunction_100df69, viewSetupDoneScript: kFunction_100dfed, viewShowScript: kFunction_100e02d, _proto: @protoLabelPicker, preAllocatedContext: 'DevicePicker}], DevicePicker: nil},
+			// the AppleTalk panel (a protoPrefsRollItem) the original registered in the Prefs list
+			kLiteral_100d0cd: {height: 20, overview: "AppleTalk", viewBounds: '{left: 0, top: 0, right: 0, bottom: 74}, stepChildren: [stepChildren: '{_proto: @protoClosebox, preAllocatedContext: closeBox}, {text: "Connect using", viewBounds: '{left: 8, top: 24, right: -8, bottom: 38}, viewJustify: vjParentFullH + oneLineOnly, viewSetupFormScript: kFunction_100d579, FindService: kFunction_100d615, textSetup: kFunction_100d6d1, labelActionScript: kFunction_100d719, _proto: @protoLabelPicker}, {text: "Card", viewBounds: '{left: 0, top: 5, right: 0, bottom: 19}, viewJustify: vjParentFullH + vjSiblingFullH + vjSiblingBottomV + oneLineOnly, viewSetupFormScript: kFunction_100dab9, FindService: kFunction_100db2d, textSetup: kFunction_100dc29, labelActionScript: kFunction_100dc5d, SetupDevicePicker: kFunction_100dcf1, MakeLabelCommands: kFunction_100dd39, SetDisplay: kFunction_100df69, viewSetupDoneScript: kFunction_100dfed, viewShowScript: kFunction_100e02d, _proto: @protoLabelPicker, preAllocatedContext: 'DevicePicker}], icon: {bits: call kBinaryFromHex with ("000000000004012f012f00c5013b00d21fc000003fe0000030600000376000003760000030600000306000003fe000001fc000000e0000007bf0000071f00000", 'bits), bounds: '{left: 0, top: 0, right: 13, bottom: 12}}, pref: nil, viewSetupFormScript: kFunction_100e139, curDevice: "", curPLink: nil, SetPref: kFunction_100e181, curLinkSym: nil, _proto: @protoPrefsRollItem, closeBox: nil, stepAllocateContext: [Array: 'closeBox, '{_proto: @protoClosebox, preAllocatedContext: closeBox}, 'DevicePicker, {text: "Card", viewBounds: '{left: 0, top: 5, right: 0, bottom: 19}, viewJustify: vjParentFullH + vjSiblingFullH + vjSiblingBottomV + oneLineOnly, viewSetupFormScript: kFunction_100dab9, FindService: kFunction_100db2d, textSetup: kFunction_100dc29, labelActionScript: kFunction_100dc5d, SetupDevicePicker: kFunction_100dcf1, MakeLabelCommands: kFunction_100dd39, SetDisplay: kFunction_100df69, viewSetupDoneScript: kFunction_100dfed, viewShowScript: kFunction_100e02d, _proto: @protoLabelPicker, preAllocatedContext: 'DevicePicker}], DevicePicker: nil},
+			// the deferred call that switches AppleTalk to the saved Ethernet card at install
 			kFunction_100e321: func() begin
 				call kROM_8192 with (Clone("ATalk"), Clone("enet"), Clone(GetUserConfig('AppleTalkChoice)), nil)
 			end
 		},
+		// devInstallScript(partFrame, removeFrame): sets up the registry and its functions, the
+		// two built-in links, and, if the saved link is EtherTalk ("pnet"), selects the card.
 		func(partFrame, removeFrame) begin
 			DefGlobalVar('AppleTalkLinkRegistry, EnsureInternal([Array: ]));
 			if (not GetUserConfig('AppleTalkChoice)) then begin
@@ -155,6 +197,8 @@ part := array(nil, {
 			// the host has no AppleTalk; was RegPrefs(EnsureInternal('AppleTalk), kLiteral_100d0cd)
 			(if StrEqual("pnet", GetUserConfig('appletalkLink)) then AddDeferredCall(kFunction_100e321, [Array: ]))
 		end),
+	// devRemoveScript(partFrame): undoes the install (the registry, its functions, the saved
+	// link and the Prefs panel).
 	devRemoveScript: func(partFrame) begin
 		UnDefGlobalVar('AppleTalkLinkRegistry);
 		UnDefGlobalFn('RegAppleTalklink);

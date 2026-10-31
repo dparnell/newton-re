@@ -1,4 +1,6 @@
-// signature, and what only it reaches
+// signature: Setup's "Sign your Name" page - an edit view the owner signs in, whose ink
+// (its viewChildren) is kept as the owner card's owner.signature; an Erase button clears
+// it. The file holds the page and what only it reaches.
 
 signature := {
 	stepChildren: [stepChildren:
@@ -15,6 +17,7 @@ signature := {
 		signatureItem,
 		erase
 	],
+	// TearDown: when the page is left, stores the signature ink in the owner card.
 	TearDown: func() begin
 		if fPersona.owner then begin
 				fPersona.owner.signature := sigCapture.viewChildren
@@ -63,11 +66,13 @@ signatureItem := {
 	viewFlags: vVisible + vClipping + vClickable + vStrokesAllowed + vGesturesAllowed,
 	viewFormat: vfFrameGray + vfPen(1) + vfLinesGray,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 58},
-	viewJustify: 8394352,
+	viewJustify: vjParentFullH + vjParentCenterV + vjSiblingFullH + vjSiblingCenterV + oneLineOnly,
 	viewLineSpacing: 40,
+	// viewSetupFormScript: shows the signature already stored, if any.
 	viewSetupFormScript: func() begin
 		(if fPersona.owner.signature then (self.viewChildren := fPersona.owner.signature))
 	end,
+	// Erase: removes the ink and redraws the "X".
 	Erase: func() begin
 		self.viewChildren := nil;
 		self:RedoChildren();
@@ -82,10 +87,12 @@ erase := {
 	viewBounds: {left: 90, top: 10, right: 90, bottom: 25},
 	viewJustify: vjCenterH + vjCenterV + vjParentCenterH + vjSiblingBottomV,
 	viewFont: @fontSystem9Bold,
+	// buttonPressedScript: Erase - clears the signature.
 	buttonPressedScript: func() begin
 		sigCapture:Erase()
 	end,
 	viewFlags: vVisible + vReadOnly + vClickable,
+	// viewSetupFormScript: sizes the button to its text, from its left edge.
 	viewSetupFormScript: func() begin
 		(viewBounds := Clone(viewBounds)).right := ((viewBounds.left + StrFontWidth(text, viewFont)) + 6);
 		(viewBounds.top := (viewBounds.bottom - fontHeight(viewFont)))

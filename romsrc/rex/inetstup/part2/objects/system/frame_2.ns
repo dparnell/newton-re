@@ -1,24 +1,30 @@
-// frame_2, and what only it reaches
+// frame_2: the Ethernet module's Card picker - the Ethernet cards of the device registry,
+// stored by CIS product name. The file holds it and what only it reaches.
 
 frame_2 := {
 	labelCommands: nil,
 	text: card,
 	viewBounds: {left: 4, top: 10, right: -4, bottom: 26},
 	alwaysCallPickActionScript: true,
-	viewJustify: 8396848,
+	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
+	// BuildLabelCommands(): the Ethernet cards (GetDeviceList), or none.
 	BuildLabelCommands: func() begin
 		(if GlobalFnExists('GetDeviceList) then GetDeviceList('ethernet) else [Array: ])
 	end,
+	// viewSetupFormScript: the choices.
 	viewSetupFormScript: func() begin
 		labelCommands := self:BuildLabelCommands();
 		inherited:?viewSetupFormScript()
 	end,
+	// textSetup(): the chosen card's name, "<Unrecognized Card>" when it is not registered.
 	textSetup: func() begin
 		local index, l2;
 		(if StrFilled((l2 := target.(path))) then (if (index := self:GetIndex(l2)) then labelCommands[index].item else "<Unrecognized Card>") else "None Selected")
 	end,
+	// GetIndex(cisName): the index of that card in the choices, or nil.
 	GetIndex: compile(
 		constants: {
+			// the index of the card with that CIS product name in a list of choices, or nil
 			kFunction_101de65: func(a1, a2) begin
 				if a1 then begin
 						(for i := 0 to (Length(a2) - 1) do begin
@@ -33,6 +39,7 @@ frame_2 := {
 		func(value) begin
 			call (kFunction_101de65) with (value, labelCommands)
 		end),
+	// labelActionScript(index): stores the card's CIS product name and saves.
 	labelActionScript: func(index) begin
 		target.(path) := labelCommands[index].CISName;
 		newtAppbase.targetView:?StartFlush()

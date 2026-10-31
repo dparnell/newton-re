@@ -1,4 +1,5 @@
-// default, and what only it reaches
+// default: the Outline stationery's editor view def - the outline list (@8338) and a floating
+// bar with the new-topic buttons. The file holds it and what only it reaches.
 
 default := {
 	viewClass: clView,
@@ -15,6 +16,7 @@ default := {
 	realData: nil,
 	viewDefHeight: 36,
 	rollScrolling: true,
+	// MinimalBounds(entry): the note's height - down to the last visible topic (16 at least).
 	MinimalBounds: compile(
 		options: "names",
 		func(anEntry) begin
@@ -32,6 +34,7 @@ default := {
 				end;
 			SetBounds(0, 0, 240, top)
 		end),
+	// ShowFoundItem(entry, finder): shows what Find found.
 	ShowFoundItem: compile(
 		options: "names",
 		func(anEntry, aFinder) begin
@@ -44,6 +47,7 @@ default := {
 	menuButtons: nil
 };
 
+// the floating bar: the new left, new topic and new right buttons
 menuButtons := {
 	debug: "Yo",
 	menuButtons: [|Array|: @8315, @8316, @8314],

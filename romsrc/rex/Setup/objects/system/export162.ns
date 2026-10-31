@@ -1,9 +1,11 @@
-// export162, and what only it reaches
+// export162: the title of a Setup page (its titleTExt), centred. The file holds it and
+// what only it reaches.
 
 export162 := {
 	viewBounds: {left: 0, top: 23, right: 0, bottom: 58},
 	viewFont: @fontSystem12Bold,
 	viewJustify: vjCenterH + vjParentCenterH,
+	// viewSetupFormScript: shows the page's title, the view sized to the text.
 	viewSetupFormScript: func() begin
 		local right;
 		right := self:parent():LocalBox().right;

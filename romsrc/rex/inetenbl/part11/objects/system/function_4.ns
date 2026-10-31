@@ -1,5 +1,7 @@
-// function_4, and what only it reaches
+// function_4: the link manager's Cancel action while going down: marks the FSM aborted.
+// The file holds it and what only it reaches.
 
+// Cancel: marks the FSM aborted.
 function_4 := func() begin
 	(fAbort := true)
 end;

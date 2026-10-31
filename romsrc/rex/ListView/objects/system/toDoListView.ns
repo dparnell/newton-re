@@ -1,8 +1,11 @@
-// toDoListView, and what only it reaches
+// toDoListView: the Calendar's To Do List view (on export145Proto in shared/frames.ns) and
+// the To Do parts it brings to the Calendar (agenda view, task slip, print formats). The file
+// holds it and what only it reaches.
 
 toDoListView := {
 	_proto: export145Proto,
 	viewFlags: vClipping + vClickable + vStrokesAllowed + vGesturesAllowed + vCharsAllowed + vNumbersAllowed + vPunctuationAllowed + vPhoneField + vDateField + vTimeField,
+	// viewScroll2DScript(direction, extras): the scroll arrows - half a page up or down.
 	viewScroll2DScript: compile(
 		options: "names",
 		func(aDir, anExtras) begin
