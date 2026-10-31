@@ -56,6 +56,7 @@ buttonBar := {
 	GetQuerySpec: func(a1) begin
 		'{type: index, indexPath: sequence, tagspec: {all: [Array: _icon, _buttonBar], none: [Array: _soups, _frozen]}}
 	end,
+	// Closed: forgets the icons shown.
 	viewQuitScript: func() begin
 		(visibleItems := nil)
 	end,
@@ -150,6 +151,7 @@ buttonBar := {
 	ProtoSoftButtonBarIconV: {
 		viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
 		viewJustify: vjCenterH + vjBottomV + vjParentFullH + vjSiblingBottomV,
+		// The icon's template, iconSpacingV high when the bar says so.
 		GetAdjustedProto: func() begin
 			local frame2, iconSpacingV;
 			frame2 := inherited:GetAdjustedProto();
@@ -183,6 +185,7 @@ buttonBar := {
 				viewBounds: {left: -40, top: 0, right: 0, bottom: 0}
 			}
 		},
+		// Placed for the side the bar's controls are on.
 		viewSetupFormScript: func() begin
 			local l1;
 			l1 := justifcationAndBounds.(displayParams.buttonBarControlsPosition);
@@ -220,6 +223,7 @@ buttonBar := {
 		viewBounds: {left: 0, top: 4, right: 40, bottom: 0},
 		viewJustify: vjCenterH + vjBottomV + vjParentFullV + vjSiblingRightH,
 		iconSpacingV: 40,
+		// The icon's template, iconSpacingH wide when the bar says so.
 		GetAdjustedProto: func() begin
 			local frame2, iconSpacingH;
 			frame2 := inherited:GetAdjustedProto();

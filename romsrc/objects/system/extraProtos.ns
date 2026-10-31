@@ -14,9 +14,11 @@ extraProtos := {
 	|1.XBookEntry|: {
 		_proto: proto1_2Exformentry,
 		iconEntry: {class: '|1.XBookEntry|, text: uCardPositionAlertButton, icon: 0, packageId: nil, isbn: nil},
+		// Nothing may be done to it: "locked".
 		Preflight: func(a1, kids) begin
 			"locked"
 		end,
+		// A fresh entry.
 		New: func() begin
 			Clone(iconEntry)
 		end,
@@ -95,9 +97,11 @@ extraProtos := {
 			packageId: nil,
 			type: nil
 		},
+		// Only filing: it is "built-in".
 		Preflight: func(a1, kids) begin
 			(if (a1 = 'Filing) then 'OK else "built-in")
 		end,
+		// Files it in folder labels.
 		file: func(labels) begin
 			fentry.labels := labels;
 			true
@@ -123,6 +127,7 @@ extraProtos := {
 			func(a1, kids) begin
 				(if ((a1 = 'Filing) or (a1 = 'delete)) then (if (not EntryStore(fentry):IsReadOnly()) then 'OK else kLiteral_536a15) else (if (a1 = 'move) then (if self:copyprotected() then "copy protected" else (if EntryStore(fentry):IsReadOnly() then kLiteral_536a15 else 'OK)) else (if (a1 = 'route) then 'OK else (if (a1 = 'freeze) then "already frozen" else "frozen"))))
 			end),
+		// Thaws the package.
 		TapAction: func() begin
 			ThawPackage(self:LookupSoupPackage());
 			nil
@@ -179,6 +184,8 @@ extraProtos := {
 			packageName: nil,
 			TapAction: nil
 		},
+		// Filing, moving and deleting unless its store is read-only; routing; freezing
+		// if it belongs to a package.
 		Preflight: func(a1, kids) begin
 			(if (((a1 = 'Filing) or (a1 = 'move)) or (a1 = 'delete)) then (if (not EntryStore(fentry):IsReadOnly()) then 'OK else "locked") else (if (a1 = 'route) then 'OK else (if (if self:LookupSoupPackage() then (a1 = 'freeze)) then 'OK else "the wrong kind")))
 		end,
@@ -186,9 +193,12 @@ extraProtos := {
 		size: func() begin
 			Stringer([Array: max(1, (EntrySize(fentry) div 1024)), "K"])
 		end,
+		// Deletes the package it belongs to, else the entry itself.
 		delete: func() begin
 			(if self:LookupSoupPackage() then inherited:delete() else EntryRemoveFromSoup(fentry))
 		end,
+		// Moves the package it belongs to (to store maxLines), else the entry itself
+		// to the same soup there (copied from a read-only store).
 		move: func(maxLines) begin
 			local name, soup;
 			(if self:LookupSoupPackage() then inherited:move(maxLines) else begin
@@ -214,6 +224,7 @@ extraProtos := {
 			_tagList: [|Array|: '_icon, '_noBackup],
 			TapAction: nil
 		},
+		// Filing and routing; it is "built-in" for deleting and moving.
 		Preflight: func(a1, kids) begin
 			(if ((a1 = 'Filing) or (a1 = 'route)) then 'OK else (if ((a1 = 'delete) or (a1 = 'move)) then "built-in" else "the wrong kind"))
 		end,
@@ -243,13 +254,16 @@ ROMHelpBookEntryProto := {
 		_tagList: _tagList,
 		app: nil
 	},
+	// A fresh entry.
 	New: func() begin
 		Clone(iconEntry)
 	end,
+	// Where it is: "Built-in".
 	where: func() begin
 		"Built-in"
 	end,
 	size: size_2,
+	// Its store: the internal one.
 	store: func() begin
 		GetStores()[0]
 	end,
@@ -285,6 +299,7 @@ ROMHelpBookEntryProto := {
 		EntryChange(fentry);
 		true
 	end,
+	// Deletes the entry.
 	delete: func() begin
 		EntryRemoveFromSoup(fentry)
 	end
@@ -315,11 +330,14 @@ AutoEntryProto := {
 		packageName: nil
 	},
 	Preflight: Preflight,
+	// Activates the package (thawing it if frozen) and runs the entry's
+	// TapAction; one without says that tapping does nothing (unless it was only
+	// now activated).
 	TapAction: func() begin
 		local soupPackageAndActivate;
 		(if (soupPackageAndActivate := self:LookupSoupPackageAndActivate()) then (if fentry.TapAction then fentry:TapAction() else (if (soupPackageAndActivate <> 'justActivated) then begin
 						// 3: an alert, shown at once
-						GetRoot():Notify(3, "Packages", "Tapping this does nothing.");
+						GetRoot():Notify(kNotifyAlert, "Packages", "Tapping this does nothing.");
 						nil
 					end)))
 	end
@@ -381,7 +399,7 @@ delete_4 := func() begin
 									try begin
 											soup:RemoveFromStoreXmit(extrasDrawer.appSymbol)
 										end onexception |evt.ex| do begin
-											self:Notify(3, "Packages", ParamStr("Unable to delete the data from ^0", [Array: item:GetName()]))
+											self:Notify(kNotifyAlert, "Packages", ParamStr("Unable to delete the data from ^0", [Array: item:GetName()]))
 										end
 								end
 						end)

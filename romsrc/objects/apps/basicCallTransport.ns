@@ -317,6 +317,8 @@ basicCallTransport := {
 		self:CloseStatusDialog(nil)
 	end,
 	manualStatus: true,
+	// An incoming call answered (or not): the transport's DialingComplete with
+	// result a1.
 	AnswerIncomingDone: func(a1) begin
 		GetRoot().(appSymbol):DialingComplete(a1)
 	end,
@@ -351,6 +353,9 @@ basicCallTransport := {
 		appSymbol: '|PhoneHome:Newton|,
 		wasAutoReceive: nil,
 		transport: nil,
+		// Without the receive-calls interface (enableAutoUI) the slip is shorter and
+		// receiving is off; otherwise remembers whether calls were being received
+		// (and only while the transport is busy).
 		viewSetupFormScript: func() begin
 			transport := GetRoot().(appSymbol);
 			if (not transport:GetConfig('enableAutoUI)) then begin
@@ -363,6 +368,7 @@ basicCallTransport := {
 				end;
 			SetKeyView(self, 0)
 		end,
+		// Starts or stops waiting for calls if the setting changed.
 		viewQuitScript: func() begin
 			local phoneAutoReceive;
 			(if (if (phoneAutoReceive := transport:GetConfig('phoneAutoReceive)) then (wasAutoReceive = nil)) then transport:StartAutoReceive() else (if (if (not phoneAutoReceive) then (wasAutoReceive = true)) then transport:StopAutoReceive()))
@@ -371,6 +377,7 @@ basicCallTransport := {
 		viewChildren: [viewChildren:
 			{
 				title: nil,
+				// The title: "<transport> Preferences".
 				viewSetupFormScript: func() begin
 					title := ParamStr("^0 Preferences", [Array: transport.title]);
 					inherited:viewSetupFormScript()
@@ -381,10 +388,12 @@ basicCallTransport := {
 				viewFont: @fontSystem10,
 				text: "Always store new calls internally",
 				viewBounds: {left: 10, top: 25, right: 10, bottom: 37},
-				viewJustify: 8388660,
+				viewJustify: vjCenterV + vjParentFullH + oneLineOnly,
+				// Checked as the owning application's internalStore preference.
 				viewSetupFormScript: func() begin
 					(viewValue := GetRoot().(transport.owner):GetAppPreferences().internalStore)
 				end,
+				// The slip closed: stored in the application's preferences cache.
 				viewQuitScript: func() begin
 					(if GetRoot().(transport.owner).prefsCache then (GetRoot().(transport.owner).prefsCache.internalStore := viewValue))
 				end,
@@ -392,7 +401,7 @@ basicCallTransport := {
 			},
 			{
 				viewBounds: {left: 0, top: 10, right: 0, bottom: 42},
-				viewJustify: 8398384,
+				viewJustify: vjParentFullH + vjSiblingFullH + vjSiblingBottomV + oneLineOnly,
 				info: {
 					logText: "After completing a call",
 					logChoices: [|Array|: "Delete the call", "File the call"],
@@ -408,13 +417,16 @@ basicCallTransport := {
 			{
 				_proto: @protoTapiPicker,
 				viewBounds: {left: 0, top: 8, right: 195, bottom: 24},
-				viewJustify: 8398848,
+				viewJustify: vjSiblingLeftH + vjSiblingBottomV + oneLineOnly,
 				text: " Receive calls using",
 				onlyIncoming: true,
 				initialProvider: nil,
+				// Hidden without the receive-calls interface.
 				viewSetupDoneScript: func() begin
 					(if (not transport:GetConfig('enableAutoUI)) then self:Hide())
 				end,
+				// The service calls are received on: the user's dialing service, if it
+				// reports incoming calls and receiving is on; else none (receiving off).
 				DefaultProvider: func() begin
 					local currentDialSpeaker2, currentDialSpeaker;
 					if ((((not (currentDialSpeaker := GetTAPICommFrame((currentDialSpeaker2 := GetUserConfig('currentDialSpeaker))))) or (not currentDialSpeaker.config)) or (not currentDialSpeaker.config.supportsEventIncoming)) or (not transport:GetConfig('phoneAutoReceive))) then begin
@@ -423,6 +435,8 @@ basicCallTransport := {
 					transport:SetConfig('phoneAutoReceive, (currentDialSpeaker2 <> nil));
 					currentDialSpeaker2
 				end,
+				// A service picked: receiving is on only if it reports incoming calls; it
+				// becomes the user's dialing service.
 				SetProvider: func(slot) begin
 					local tAPICommFrame;
 					if (((not (tAPICommFrame := GetTAPICommFrame(slot))) or (not tAPICommFrame.config)) or (not tAPICommFrame.config.supportsEventIncoming)) then begin
@@ -559,7 +573,7 @@ basicCallTransport := {
 			{
 				_proto: @protoTapiPicker,
 				viewBounds: {left: 10, top: 125, right: 135, bottom: 138},
-				viewJustify: 8388608,
+				viewJustify: oneLineOnly,
 				newProvider: nil,
 				// The service: the item's own, unless waiting for calls (then the user's).
 				DefaultProvider: func() begin
@@ -576,6 +590,8 @@ basicCallTransport := {
 							self:Confirm("PhoneHome", ParamStr("Changing the service to \u201C\u^0\u201D\u will turn off your preference to receive calls using the \u201C\u^1\u201D\u service.", [Array: tAPICommFrame.name, transportProvider.name]), self, 'ConfirmChange)
 						end else self:ConfirmChange(true))
 				end,
+				// The answer to SetProvider's question: yes takes the new service (the
+				// user's own too, unless receiving calls); no shows the old one again.
 				ConfirmChange: func(a1) begin
 					local transportProvider;
 					(if a1 then begin
@@ -590,6 +606,7 @@ basicCallTransport := {
 			_defaultButton_22,
 			callassist,
 			{
+				// After the number is written in: the number to dial updated.
 				JamIt: func() begin
 					inherited:JamIt();
 					self:UpdatePhone()
@@ -612,6 +629,7 @@ basicCallTransport := {
 			self:Retarget()
 		end,
 		viewBounds: {left: 0, top: 0, right: 230, bottom: 120},
+		// The owner's info changed: the number to dial updated.
 		OwnerInfoChanged: func() begin
 			self:UpdatePhone()
 		end,
@@ -634,6 +652,7 @@ basicCallTransport := {
 		_proto: @protoRouteSlip,
 		_defaultButton: nil,
 		fromTransport: nil,
+		// The number picked becomes the item's toRef, and is shown.
 		Retarget: func() begin
 			fields.toRef := callPhoneLine.selected;
 			willDial:SetWillDial()
@@ -642,6 +661,7 @@ basicCallTransport := {
 		viewJustify: vjParentCenterH + vjParentCenterV,
 		callassist: nil,
 		declareSelf: 'base,
+		// The item is addressed to a Names card's phone; the log checkbox readied.
 		viewSetupFormScript: func() begin
 			self:ToRefCheck('|nameRef.phone|);
 			inherited:?viewSetupFormScript();
@@ -669,17 +689,20 @@ phoneHome := "PhoneHome";
 // call made from there)
 logcheck := {
 	viewBounds: {left: 0, top: 0, right: 57, bottom: 0},
-	viewJustify: 8401924,
+	viewJustify: vjCenterV + vjSiblingRightH + vjSiblingFullV + oneLineOnly,
 	viewValue: nil,
 	buttonValue: true,
 	viewFlags: vVisible + vClickable,
 	text: log,
+	// From the Call application: the box hidden, and the call logged.
 	prepareThyself: func() begin
 		(if fields.fromCallApp then begin
 				viewFlags := 0;
 				(fields.saveAsLog := true)
 			end)
 	end,
+	// Checked if the item says to log the call, else as the transport's
+	// setting (phonenocalllogging off).
 	viewSetupFormScript: func() begin
 		if HasPath(fields, 'saveAsLog) then begin
 				viewValue := fields.saveAsLog
@@ -688,6 +711,7 @@ logcheck := {
 			end;
 		inherited:?viewSetupFormScript()
 	end,
+	// The choice kept in the item (and in the setting).
 	viewQuitScript: func() begin
 		fields.saveAsLog := viewValue;
 		if (viewValue = true) then begin
@@ -705,6 +729,7 @@ fromTransport_2 := {preallocatedContext: 'fromTransport, _proto: @protoTransport
 _closeBox_3 := {
 	viewBounds: {left: -24, top: 0, right: -11, bottom: 13},
 	viewJustify: vjCenterH + vjCenterV + vjParentRightH,
+	// At the bottom of the envelope.
 	viewSetupFormScript: func() begin
 		(viewBounds := DeepClone(viewBounds)).top := (((envelopeHeight + bottomIndent) - 18) - 2);
 		(viewBounds.bottom := (viewBounds.top + 13))
@@ -717,8 +742,10 @@ _closeBox_3 := {
 // is set, then DoCall
 _defaultButton_22 := {
 	viewBounds: {left: -32, top: 0, right: -7, bottom: 13},
-	viewJustify: 8407046,
+	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingTopV + oneLineOnly,
 	text: call_2,
+	// Call: asks where the user is calling from (the area code and country)
+	// if not known, then DoCall.
 	buttonClickScript: func() begin
 		self:ValidateConfig('location, nil, '[Array: areacode, country], "Where are you calling from?", 'validateDialog, 'DoCall)
 	end,
@@ -749,6 +776,8 @@ _defaultButton_22 := {
 
 // the call options button: opens the call options slip on the number
 callassist := {
+	// Opens the call options slip on the number (and its country) of the first
+	// recipient.
 	buttonClickScript: func() begin
 		local routingInfoItem;
 		if (if fields.toRef then (Length(fields.toRef) > 0)) then begin
@@ -775,11 +804,14 @@ callPhoneLine_2 := {
 	alternatives: nil,
 	class: '|nameRef.phone|,
 	useMemory: nil,
+	// The recipients and their other numbers.
 	viewSetupFormScript: func() begin
 		selected := fields.toRef;
 		alternatives := fields.alternatives;
 		inherited:?viewSetupFormScript()
 	end,
+	// Opens the picker (closing the call options slip, and dropping any number
+	// taken as is).
 	buttonClickScript: func() begin
 		if optionsUp then begin
 				callOptionsSlip:Close()
@@ -790,6 +822,7 @@ callPhoneLine_2 := {
 			end);
 		inherited:buttonClickScript()
 	end,
+	// A number picked: retargets.
 	pickActionScript: func(index) begin
 		inherited:?pickActionScript(index);
 		self:Retarget()
@@ -804,31 +837,38 @@ willDial_2 := {
 	text: uCardPositionAlertButton,
 	asIs: nil,
 	viewBounds: {left: 10, top: 5, right: -10, bottom: 18},
-	viewJustify: 8396850,
+	viewJustify: vjCenterH + vjParentFullH + vjSiblingBottomV + oneLineOnly,
 	viewFont: tsSimple + tsSize(9),
 	viewFlags: vVisible + vClickable,
+	// A tap: the call options.
 	buttonClickScript: func() begin
 		callassist:buttonClickScript()
 	end,
 	viewClickScript: viewClickScript,
+	// Inverts a rounded box around the number.
 	viewHiliteScript: func(on) begin
 		local box, l2;
 		self:DrawShape(MakeRoundRect((l2 := ((((box := self:LocalBox()).right - StrFontWidth(text, viewFont)) div 2) - 2)), 0, (box.right - l2), box.bottom, 8), '{transferMode: 2, penPattern: 0, fillPattern: 5});
 		true
 	end,
 	InkConvert: nil,
+	// The number to dial.
 	viewSetupDoneScript: func() begin
 		(text := self:GetPhoneText())
 	end,
+	// Closes the ink conversion slip, if open.
 	viewQuitScript: func() begin
 		if InkConvert then begin
 				InkConvert:Close()
 			end;
 		(InkConvert := nil)
 	end,
+	// Shows the number to dial again.
 	SetWillDial: func() begin
 		SetValue(self, 'text, self:GetPhoneText())
 	end,
+	// The phone number of the first recipient, "" if none; a number written as
+	// ink is converted first (deferred), the result shown when done.
 	GetPhoneText: func() begin
 		local theInfo;
 		local text;
@@ -844,9 +884,12 @@ willDial_2 := {
 			end;
 		text
 	end,
+	// Opens the ink conversion slip on the number written as ink.
 	ConvertStart: func(theInfo) begin
 		self:ConvertInkText(theInfo.rawNumber, 'phone, vPhoneField, ParamStr("Phone for ^0 ", [Array: theInfo.name]), ParamStr("Please verify that ^0 is converted correctly", [Array: theInfo.rawNumber]), 'InkConvert, 'ConvertComplete, theInfo)
 	end,
+	// The conversion done: the number kept in the recipient and shown (a1 nil:
+	// cancelled).
 	ConvertComplete: func(a1, a2, a3) begin
 		InkConvert := nil;
 		(if (if a1 then a2) then begin

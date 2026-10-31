@@ -22,9 +22,11 @@ protoRoll := {
 		viewTransferMode: modeOr,
 		collapsed: true,
 		height: 16,
+		// A bullet and the item's overview text.
 		viewSetupFormScript: func() begin
 			(self.text := Stringer([Array: $\u2022, " ", items[itemIndex].overview]))
 		end,
+		// A tap: the roll shows the item.
 		viewClickScript: func(unit) begin
 			if (if (StrLen(text) > 0) then self:TrackHilite(unit)) then begin
 					self:Parent():ShowItem(itemIndex)
@@ -71,6 +73,7 @@ protoRoll := {
 		index := min(_maxIndex, index);
 		(self.viewChildren := self:LayoutColumn(_curItems, index))
 	end,
+	// Closed: forgets the items laid out.
 	viewQuitScript: func() begin
 		(self._curItems := nil)
 	end,
@@ -78,6 +81,7 @@ protoRoll := {
 	viewScrollUpScript: func() begin
 		roll:SyncScroll(_curItems, index, -1)
 	end,
+	// The down arrow: an item on, unless at the last.
 	viewScrollDownScript: func() begin
 		(if (index < _maxIndex) then roll:SyncScroll(_curItems, index, 1))
 	end,

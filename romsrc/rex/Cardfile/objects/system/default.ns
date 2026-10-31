@@ -145,6 +145,7 @@ default := {
 			label: extension,
 			viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 			entryFlags: vVisible + vClickable + vGesturesAllowed + vPhoneField,
+			// Marks the line changed.
 			textChanged: func() begin
 				(changed := true)
 			end,

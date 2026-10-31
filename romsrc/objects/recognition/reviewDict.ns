@@ -108,7 +108,7 @@ reviewDict := {
 		// added in)
 		{
 			viewBounds: {left: -53, top: -17, right: -7, bottom: -4},
-			viewJustify: 8390790,
+			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 			text: remove,
 			buttonClickScript: func() begin
 				local copy, l2;
@@ -132,7 +132,7 @@ reviewDict := {
 		// tap adds the expansion (AddWord, via AddExpandWord)
 		{
 			viewBounds: {left: -49, top: -17, right: -7, bottom: -4},
-			viewJustify: 8390790,
+			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 			text: "Expand",
 			notifyTitle: "Expand Word",
 			buttonClickScript: func() begin
@@ -363,6 +363,7 @@ reviewDict := {
 	viewJustify: vjParentCenterH + vjParentCenterV,
 	numLines: 6,
 	words: nil,
+	// The up arrow: back a page (a line less than shown).
 	viewScrollUpScript: func() begin
 		self:viewScrollScript((-(numLines - 1)))
 	end,
@@ -462,6 +463,7 @@ reviewDict := {
 	// starting at text.
 	RebuildCursorWindow: compile(
 		constants: {
+			// The window's word of an entry.
 			kFunction_5a9579: func(a1) begin
 				a1.word
 			end
@@ -504,6 +506,7 @@ words_2 := {
 	viewJustify: vjCenterH + vjCenterV + vjParentFullH,
 	viewFormat: vfFillWhite + vfFrameBlack + vfPen(2),
 	preallocatedContext: 'words,
+	// numLines lines high.
 	viewSetupFormScript: func() begin
 		(viewBounds := SetBounds(9, 20, -8, (20 + (numLines * lineHeight))))
 	end,
@@ -521,9 +524,12 @@ words_2 := {
 		self:ExpandOff();
 		words:DoDrawing('trackLinesHilite, [Array: unit])
 	end,
+	// Scrolled: redrawn.
 	doscrollscript: func(a1) begin
 		self:Dirty()
 	end,
+	// Run inside DoDrawing: selects the line under the pen (with a click),
+	// following it until the pen lifts.
 	trackLinesHilite: func(a1) begin
 		local l1, box, selectedIndex;
 		l1 := nil;
@@ -532,7 +538,7 @@ words_2 := {
 		(box := self:GlobalBox()).top := box.top;
 		selectedIndex := base.selectedIndex;
 		(loop begin
-				if ((l1 := ((GetPoint(5, a1) - box.top) div lineHeight)) >= window:GetNumberEntries()) then begin
+				if ((l1 := ((GetPoint(finalY, a1) - box.top) div lineHeight)) >= window:GetNumberEntries()) then begin
 						l1 := nil
 					end;
 				if (selectedIndex <> l1) then begin
@@ -583,6 +589,8 @@ A2Z := {
 	// The Swedish alphabet has three more letters (a-ring, a-umlaut, o-umlaut), with their own picture.
 	viewSetupFormScript: compile(
 		constants: {
+			// run when this function is built: a binary of class cls from the hex
+			// string hex, for the literals below
 			kBinaryFromHex: func(hex, cls) begin
 				local b := MakeBinary(StrLen(hex) div 2, cls);
 				for i := 0 to Length(b) - 1 do begin
@@ -647,9 +655,10 @@ A2Z := {
 // the "New word:" / "Expand to:" label
 displayText := {
 	viewBounds: {left: 7, top: 10, right: 75, bottom: 29},
-	viewJustify: 8396800,
+	viewJustify: vjSiblingBottomV + oneLineOnly,
 	viewFont: tsSystem + tsSize(10) + tsBold,
 	preallocatedContext: 'displayText,
+	// "New word:" or "Expand to:", as the floater's addText says.
 	viewSetupFormScript: func() begin
 		(text := addText)
 	end,
@@ -662,10 +671,12 @@ Display_2 := {
 	viewFlags: vVisible,
 	textFlags: 1024,
 	viewBounds: {left: 0, top: 0, right: 226, bottom: 19},
-	viewJustify: 8406016,
+	viewJustify: vjSiblingRightH + vjSiblingTopV + oneLineOnly,
 	viewFont: tsSystem + tsSize(10) + tsBold,
 	realText: nil,
 	preallocatedContext: 'Display,
+	// The text as typed (realText); in expand mode the not signs that stand for
+	// returns made returns again.
 	viewChangedScript: func(slot, view) begin
 		(if (slot = 'text) then begin
 				realText := text;
@@ -738,6 +749,8 @@ reviewKeys := {
 	viewJustify: vjCenterH + vjCenterV + vjParentCenterH + vjParentBottomV,
 	newt_feature: true,
 	preallocatedContext: 'reviewKeys,
+	// The keyboard's size: 14 by 5 units of an even number of pixels, as wide as
+	// fits the parent, above the buttons.
 	viewSetupFormScript: func() begin
 		local box, l2, l3;
 		inherited:viewSetupFormScript();
@@ -750,6 +763,7 @@ reviewKeys := {
 		viewBounds.left := 0;
 		(viewBounds.right := (14 * l3))
 	end,
+	// A key pressed: the caret taken into the word field.
 	keyPressScript: func(char2) begin
 		self:GrabCaret();
 		nil
@@ -760,7 +774,7 @@ reviewKeys := {
 // the Add button: adds the word entered
 addButton := {
 	viewBounds: {left: -33, top: -17, right: -7, bottom: -4},
-	viewJustify: 8390790,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 	text: add,
 	buttonClickScript: func() begin
 		local word;

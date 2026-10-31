@@ -298,6 +298,7 @@ end;
 // with IsSameEntry) - and that line's shape remade and redrawn.
 SelectItem := compile(
 	constants: {
+		// the test that two entries are one
 		kFunction_43b471: func(a1, a2) begin
 			IsSameEntry(a1, a2)
 		end
@@ -322,6 +323,7 @@ SelectItem := compile(
 // isSelected(entry): its position in `selected` (non-nil: checked), or nil.
 isSelected := compile(
 	constants: {
+		// the test that two entries are one
 		kFunction_43b531: func(a1, a2) begin
 			IsSameEntry(a1, a2)
 		end
@@ -868,6 +870,7 @@ end;
 // with notes after the new stop date made exceptions, so the notes stay.
 ConvertAnnotatedMeetingsAfterStopDate := compile(
 	constants: {
+		// ArrayPos's test: an instance's notes ([date, alias]) dated after a1
 		kFunction_4f3d01: func(a1, a2) begin
 			(a2[0] > a1)
 		end
@@ -881,6 +884,7 @@ ConvertAnnotatedMeetingsAfterStopDate := compile(
 // for the instances before the new start date.
 ConvertAnnotatedMeetingsBeforeStartDate := compile(
 	constants: {
+		// ArrayPos's test: an instance's notes ([date, alias]) dated at or after a1
 		kFunction_4f3dd1: func(a1, a2) begin
 			(a2[0] >= a1)
 		end
@@ -1083,6 +1087,7 @@ end;
 // _storeID}.
 SelectItem_2 := compile(
 	constants: {
+		// the test that two entries are one (unique id and store)
 		kFunction_55f3f1: func(a1, a2) begin
 			(if (a1._uniqueID = a2._uniqueID) then (a1._storeID = a2._storeID))
 		end
@@ -1096,6 +1101,7 @@ SelectItem_2 := compile(
 // isSelected(item): its position in `selected`, or nil.
 isSelected_2 := compile(
 	constants: {
+		// the test that two entries are one (unique id and store)
 		kFunction_55f479: func(a1, a2) begin
 			(if (a1._uniqueID = a2._uniqueID) then (a1._storeID = a2._storeID))
 		end

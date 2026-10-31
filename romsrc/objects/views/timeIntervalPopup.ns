@@ -98,7 +98,7 @@ timeIntervalPopup := {
 	stopTime: nil,
 	// A tap on the duration text pops up the lengths.
 	viewClickScript: func(unit) begin
-		(if (if ((GetPoint(1, unit) - self:GlobalBox().top) > 96) then ((GetPoint(0, unit) - self:GlobalBox().left) < 99)) then DoPopup(pop, 4, 96, self))
+		(if (if ((GetPoint(firstY, unit) - self:GlobalBox().top) > 96) then ((GetPoint(firstX, unit) - self:GlobalBox().left) < 99)) then DoPopup(pop, 4, 96, self))
 	end,
 	// A length was picked: the stop is that long after the start.
 	pickActionScript: func(index) begin
@@ -133,6 +133,7 @@ stop_2 := {
 	viewFormat: 0,
 	midnite: true,
 	wrapping: nil,
+	// The stop time moved: no fixed length any more.
 	Advance: func() begin
 		spread := nil;
 		inherited:Advance()

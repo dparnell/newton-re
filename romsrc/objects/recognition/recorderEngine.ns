@@ -265,6 +265,7 @@ recorderEngine := {
 								fSoundChannel.inputGain := fInputGain;
 								fSoundChannel:Open();
 								engine := self;
+								// the channel's completion callback: PlayCompletion
 								fn := func(a1, a2) begin
 									engine:PlayCompletion(a1, a2)
 								end;
@@ -284,6 +285,7 @@ recorderEngine := {
 			end;
 		l1
 	end,
+	// Nothing to do: playing starts at the start.
 	Rewind: func() begin
 		nil
 	end,
@@ -318,6 +320,7 @@ recorderEngine := {
 							end else begin
 								fSetLengthInProgress := true;
 								engine := self;
+								// called when the sound's length is set: SetLengthDone
 								fn := func() begin
 									engine:SetLengthDone()
 								end;
@@ -377,6 +380,7 @@ recorderEngine := {
 		local engine;
 		try begin
 				engine := self;
+				// the channel's completion callback: RecordCompletion
 				fn := func(a1, a2) begin
 					engine:RecordCompletion(a1, a2)
 				end;
@@ -394,6 +398,8 @@ recorderEngine := {
 			end;
 		newInputBlock
 	end,
+	// Plays; while the sound's length is being set, plays once it is set
+	// (unless asked to at once).
 	play: func() begin
 		(if (if fSetLengthInProgress then (fSetLengthInProgress <> 'doItNow)) then (fSetLengthInProgress := 'play) else self:DoPlay())
 	end,

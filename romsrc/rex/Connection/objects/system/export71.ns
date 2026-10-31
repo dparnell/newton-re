@@ -108,6 +108,8 @@ export71Item := {
 	icon: nil,
 	viewFormat: nil,
 	viewBounds: {left: 25, top: 25, right: 57, bottom: 57},
+	// The file's 32 by 32 icon from the desktop's 128 bytes (64 words copied into
+	// the bitmap); blank if there are none.
 	viewSetupFormScript: func() begin
 		newIcon := MakeBitmap(32, 32, nil);
 		if (if fileInfo.icon then (Length(fileInfo.icon) = 128)) then begin

@@ -59,7 +59,7 @@ export145Proto := {
 									end
 							end;
 						if msg then begin
-								self:Notify(3, "To Do", ParamStr(msg, [Array: where]))
+								self:Notify(kNotifyAlert, "To Do", ParamStr(msg, [Array: where]))
 							end else begin
 								Rethrow()
 							end;
@@ -160,17 +160,23 @@ export145Proto := {
 			local today, querySpec, spec, cursor, pastTest, presentTest, futureTest, Entry, task, result;
 			querySpec := '{type: index, indexPath: mtgStartDate, startKey: 0, validTest: nil};
 			today := ((today := Time()) - (today mod 1440));
+			// a past day: the tasks done (each test notes the task's date in itemDate)
 			pastTest := func(item) begin
 				itemDate := item.mtgStartDate;
 				item.mtgDone
 			end;
+			// today: the undone tasks of any day, and all of today's
 			presentTest := func(item) begin
 				itemDate := item.mtgStartDate;
 				((not item.mtgDone) or (itemDate >= aStart))
 			end;
+			// a future day: every task
 			futureTest := func(item) begin
 				true
 			end;
+			// the end of the query: the next day's tasks. Looks like a ROM bug: endTest
+			// is not declared local, so it is assigned as a variable outside the
+			// function (harmless, as it is only read here).
 			endTest := func(item) begin
 				itemDate := item.mtgStartDate;
 				(item.mtgStartDate >= tomorrow)
@@ -403,7 +409,7 @@ export145Proto := {
 								end
 						end onexception |evt.ex| do begin
 							rollEm := nil;
-							self:Notify(3, kLiteral_791bbd, "There was not enough memory to roll tasks over so they were left untouched. Marking completed tasks may help.");
+							self:Notify(kNotifyAlert, kLiteral_791bbd, "There was not enough memory to roll tasks over so they were left untouched. Marking completed tasks may help.");
 							return nil
 						end;
 					if (if aFromAlarm then Visible(self)) then begin
@@ -412,7 +418,7 @@ export145Proto := {
 				end;
 			SetUserConfig(EnsureInternal('lastRollover), today);
 			FlushUserConfig();
-			(if protectError then self:Notify(3, kLiteral_791bbd, "Couldn\u2019\ut roll some tasks over because they were write-protected"))
+			(if protectError then self:Notify(kNotifyAlert, kLiteral_791bbd, "Couldn\u2019\ut roll some tasks over because they were write-protected"))
 		end),
 	minimalChildren: true,
 	// CreateToDoItem(date, text, reminder, frequency): CreateToDoItemAll with normal priority (3).
@@ -574,7 +580,7 @@ export145Proto := {
 					local originalLen;
 					(foreach index, target in targets do begin
 							if (not EntryValid(target)) then begin
-									self:Notify(3, title, "The storage card was ejected so the last few changes have been lost.");
+									self:Notify(kNotifyAlert, title, "The storage card was ejected so the last few changes have been lost.");
 									return nil
 								end
 						end);
@@ -621,7 +627,7 @@ export145Proto := {
 		func(aTask, aTarget, anOldDate, aDate) begin
 			local Entry;
 			if ((if HasPath(aTask, 'source) then (aTask.source = nil)) or (ClassOf(aTask.source) = 'symbol)) then begin
-					self:Notify(3, title, "Can\u2019\ut move a 1.x formatted To Do item");
+					self:Notify(kNotifyAlert, title, "Can\u2019\ut move a 1.x formatted To Do item");
 					return nil
 				end;
 			self:DeleteTask(anOldDate, aTask, 'noUndoOrDraw);
@@ -867,7 +873,7 @@ export145Proto := {
 														end
 												end;
 											if msg then begin
-													self:Notify(3, "To Do", ParamStr(msg, [Array: where]))
+													self:Notify(kNotifyAlert, "To Do", ParamStr(msg, [Array: where]))
 												end else begin
 													Rethrow()
 												end;
@@ -982,7 +988,7 @@ export145Proto := {
 		options: "names",
 		func(aDate, aTask, aRedraw) begin
 			if ((if HasPath(aTask, 'source) then (aTask.source = nil)) or (ClassOf(aTask.source) = 'symbol)) then begin
-					self:Notify(3, "To Do", "Can\u2019\ut delete a 1.x formatted To Do item");
+					self:Notify(kNotifyAlert, "To Do", "Can\u2019\ut delete a 1.x formatted To Do item");
 					return nil
 				end;
 			self:GetToDoSoup();
@@ -1360,7 +1366,7 @@ export145Proto := {
 			local whatStore, name;
 			if (whatStore := EntryStore(aEntry)):IsReadOnly() then begin
 					name := whatStore:GetName();
-					self:Notify(3, "To Do", ParamStr("To Do changes could not be saved (\u201C\u^0\u201D\u is write-protected)", [Array: name]));
+					self:Notify(kNotifyAlert, "To Do", ParamStr("To Do changes could not be saved (\u201C\u^0\u201D\u is write-protected)", [Array: name]));
 					return true
 				end;
 			nil
@@ -1390,7 +1396,7 @@ export145Proto := {
 								end
 						end else begin
 							if ((if HasPath(task, 'source) then (task.source = nil)) or (ClassOf(task.source) = 'symbol)) then begin
-									self:Notify(3, "To Do", "Can\u2019\ut delete a 1.x formatted To Do item");
+									self:Notify(kNotifyAlert, "To Do", "Can\u2019\ut delete a 1.x formatted To Do item");
 									return nil
 								end;
 							local textPart1;
@@ -1513,7 +1519,7 @@ export145Proto := {
 		func(aTask, aTarget, aDestStore) begin
 			i := 0;
 			if ((if HasPath(aTask, 'source) then (aTask.source = nil)) or (ClassOf(aTask.source) = 'symbol)) then begin
-					self:Notify(3, kLiteral_791bbd, "Can\u2019\ut move a 1.x formatted To Do item");
+					self:Notify(kNotifyAlert, kLiteral_791bbd, "Can\u2019\ut move a 1.x formatted To Do item");
 					return nil
 				end;
 			if HasPath(aTask, 'repeatInfo) then begin
@@ -1587,7 +1593,7 @@ export145Proto := {
 								end
 						end;
 					if msg then begin
-							self:Notify(3, kLiteral_791bbd, ParamStr(msg, [Array: where]))
+							self:Notify(kNotifyAlert, kLiteral_791bbd, ParamStr(msg, [Array: where]))
 						end else begin
 							Rethrow()
 						end;
@@ -1755,9 +1761,11 @@ export145Proto := {
 			self:GetToDoSoup();
 			self:EndFlush();
 			if (aFindType = 'dateBefore) then begin
+					// the single tasks before the date
 					singleTest := func(item) begin
 						(if (item.date < aWhat) then (item.date > 0))
 					end;
+					// the repeating ones with a reminder before it
 					repeatTest := func(item) begin
 						local date;
 						date := NextMeeting(0, item);
@@ -1769,9 +1777,11 @@ export145Proto := {
 					startKey := 1
 				end else begin
 					if (aFindType = 'dateAfter) then begin
+							// the single tasks after the date
 							singleTest := func(item) begin
 								(item.date > aWhat)
 							end;
+							// the repeating ones with a reminder after it
 							repeatTest := func(item) begin
 								local date;
 								date := NextMeeting((aWhat + 1), item);
@@ -1782,9 +1792,11 @@ export145Proto := {
 							end;
 							startKey := aWhat
 						end else begin
+							// the single tasks on the date
 							singleTest := func(item) begin
 								(item.date = aWhat)
 							end;
+							// the repeating ones with a reminder on it
 							repeatTest := func(item) begin
 								local date;
 								date := NextMeeting(aWhat, item);

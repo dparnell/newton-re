@@ -121,6 +121,8 @@ calculator := {
 		paperDisplay:Dirty()
 	end,
 	inputKeys: uCardPositionAlertButton,
+	// viewScrollDownScript, viewScrollUpScript: the tape a line on or back (of
+	// its 30 lines).
 	viewScrollDownScript: func() begin
 		(if (index < (30 - maxLines)) then begin
 				index := (index + 1);
@@ -129,6 +131,7 @@ calculator := {
 	end,
 	viewJustify: vjParentCenterH + vjParentCenterV,
 	unary: nil,
+	// The up arrow: the tape back a line.
 	viewScrollUpScript: func() begin
 		(if (index > 1) then begin
 				index := (index - 1);
@@ -238,12 +241,15 @@ paperDisplay := {
 	viewFont: tsSimple + tsSize(12),
 	viewLineSpacing: 15,
 	pix: nil,
+	// Rotated: the tape on the left, maxLines lines high.
 	viewSetupFormScript: func() begin
 		(if rotated then (viewBounds := RelBounds(3, 3, 133, (15 * maxLines))))
 	end,
+	// Rotated: right aligned.
 	viewSetupDoneScript: func() begin
 		(if rotated then SetValue(self, 'viewJustify, vjRightH))
 	end,
+	// Shows "M" in a box when a number is in memory.
 	viewDrawScript: func() begin
 		(if memory then begin
 				if (not pix) then begin
@@ -261,9 +267,11 @@ Display := {
 	viewBounds: {left: 3, top: 93, right: 167, bottom: 111},
 	viewFont: tsSimple + tsSize(14) + tsBold,
 	viewJustify: vjRightH + oneLineOnly,
+	// Rotated: below the tape.
 	viewSetupFormScript: func() begin
 		(if rotated then (viewBounds := RelBounds(3, (3 + (15 * maxLines)), 133, 18)))
 	end,
+	// Rotated: right aligned, on one line.
 	viewSetupDoneScript: func() begin
 		(if rotated then SetValue(self, 'viewJustify, vjRightH + oneLineOnly))
 	end,
@@ -400,6 +408,7 @@ keys := {
 				end;
 			(if rotated then (viewBounds := RelBounds(138, 1, 168, 142)))
 		end),
+	// Shows the number being typed, else the value formatted.
 	viewSetupDoneScript: func() begin
 		(if (if (if Clear then (ClassOf(inputKeys) <> 'char)) then (StrLen(inputKeys) = 0)) then self:JamDisplay(self:CalcFormattedNumberStr(value)) else self:JamDisplay(inputKeys))
 	end,

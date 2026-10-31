@@ -416,6 +416,7 @@ alphaKeys := {
 			288360456
 		]
 	],
+	// The US or the ISO layout, as the locale's keyboard has.
 	viewSetupFormScript: func() begin
 		// picks the layout the locale's keyboard has
 		inherited:viewSetupFormScript();

@@ -38,6 +38,7 @@ promptLine_2 := {
 	viewJustify: vjCenterH + vjParentFullH,
 	viewFont: tsSystem + tsSize(10) + tsBold,
 	viewTransferMode: modeXor,
+	// The prompt.
 	viewSetupFormScript: func() begin
 		(text := promptText)
 	end,
@@ -61,6 +62,7 @@ PINDisplay_2 := {
 		SetKeyView(self, 0);
 		HideCaret()
 	end,
+	// Closed: the caret shown again.
 	viewQuitScript: func() begin
 		ShowCaret()
 	end,

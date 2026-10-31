@@ -11,7 +11,7 @@ recToggle := {
 	_proto: @protoPopupButton,
 	viewClass: clPictureView,
 	viewBounds: {left: 25, top: 2, right: 43, bottom: 15},
-	viewJustify: 8388614,
+	viewJustify: vjCenterH + vjCenterV + oneLineOnly,
 	icon: @recTextBitmap,
 	defaultItem: nil,
 	_cachedSettings: nil,
@@ -129,6 +129,7 @@ recToggle := {
 		local l1;
 		(if (l1 := self:GetRecognizers().(key)) then l1.default)
 	end,
+	// Pops up the choices (as the inherited button does).
 	buttonClickScript: func() begin
 		inherited:buttonClickScript()
 	end,

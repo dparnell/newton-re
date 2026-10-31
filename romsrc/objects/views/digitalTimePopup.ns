@@ -17,6 +17,7 @@ digitalTimePopup := {
 		{
 			viewBounds: {left: 2, top: 2, right: 121, bottom: 30},
 			viewFormat: 0,
+			// The pop-up's increment.
 			viewSetupFormScript: func() begin
 				(increment := self:Parent().increment)
 			end,

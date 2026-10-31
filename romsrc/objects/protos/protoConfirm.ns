@@ -17,7 +17,7 @@ protoConfirm := {
 		_proto: @protoTextButton,
 		// oneLineOnly (8388608) + vjSiblingLeftH + vjParentFullV +
 		// vjParentRightH + vjCenterV + vjCenterH: right to left from the edge
-		viewJustify: 8390886,
+		viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentFullV + vjSiblingLeftH + oneLineOnly,
 		// at setup: as wide as its text needs, 7 pixels left of its sibling
 		viewSetupFormScript: func() begin
 			local stdButtonWidth2;
@@ -33,13 +33,15 @@ protoConfirm := {
 	// the default button: as buttonTemplate, and made base's _defaultButton
 	buttonTemplateDefault: {
 		_proto: @protoTextButton,
-		viewJustify: 8390886,
+		viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentFullV + vjSiblingLeftH + oneLineOnly,
+		// Sized to its text; the slip's default button.
 		viewSetupFormScript: func() begin
 			local stdButtonWidth2;
 			stdButtonWidth2 := StdButtonWidth(text);
 			self.viewBounds := SetBounds((-(stdButtonWidth2 + 6)), 0, -7, 0);
 			(base._defaultButton := self)
 		end,
+		// Tapped: its value is the answer, and the slip closes.
 		buttonClickScript: func() begin
 			confirmedValue := buttonValue;
 			base:Close()
@@ -48,13 +50,15 @@ protoConfirm := {
 	// the closing button: as buttonTemplate, and made base's _closeBox
 	buttonTemplateClose: {
 		_proto: @protoTextButton,
-		viewJustify: 8390886,
+		viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentFullV + vjSiblingLeftH + oneLineOnly,
+		// Sized to its text; the slip's close button.
 		viewSetupFormScript: func() begin
 			local stdButtonWidth2;
 			stdButtonWidth2 := StdButtonWidth(text);
 			self.viewBounds := SetBounds((-(stdButtonWidth2 + 6)), 0, -7, 0);
 			(base._closeBox := self)
 		end,
+		// Tapped: its value is the answer, and the slip closes.
 		buttonClickScript: func() begin
 			confirmedValue := buttonValue;
 			base:Close()

@@ -58,6 +58,7 @@ protoTextExpando := {
 		{
 			_proto: @protoClosebox,
 			viewBounds: {left: -12, top: -12, right: 1, bottom: 1},
+			// Closes the expando (deferred).
 			buttonClickScript: func() begin
 				AddDeferredAction(ExpandNone, [Array: ])
 			end

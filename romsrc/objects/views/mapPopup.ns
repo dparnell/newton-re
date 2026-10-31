@@ -9,6 +9,7 @@ mapPopup := {
 	viewJustify: 0,
 	result: 'name,
 	params: nil,
+	// Opens it with params a1 over box a2, for context a3.
 	New: func(a1, a2, a3) begin
 		local init;
 		(init := self:Init()).params := a1;

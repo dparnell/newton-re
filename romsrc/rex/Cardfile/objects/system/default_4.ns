@@ -89,6 +89,8 @@ default_4 := {
 					end;
 				inherited:?viewSetupFormScript()
 			end,
+			// Closed: the printer chosen (nil for none) kept in the worksite, and the
+			// user's current printer put back.
 			viewQuitScript: func() begin
 				if target then begin
 						if noneIsChosen then begin

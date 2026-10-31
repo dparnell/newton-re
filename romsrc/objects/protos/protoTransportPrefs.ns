@@ -26,6 +26,7 @@ protoTransportPrefs := {
 	viewChildren: [viewChildren:
 		// the close box
 		{
+			// Closes the slip (ClosePrefs).
 			buttonClickScript: func() begin
 				base:ClosePrefs()
 			end,
@@ -66,6 +67,7 @@ protoTransportPrefs := {
 		// transport application's)
 		{
 			title: nil,
+			// "<title> Preferences": the slip's title, else the transport's.
 			viewSetupFormScript: func() begin
 				local title2;
 				if ((title2 := self:Parent().title) = nil) then begin
@@ -83,7 +85,7 @@ protoTransportPrefs := {
 		// value)
 		{
 			viewBounds: {left: 0, top: -35, right: 0, bottom: -3},
-			viewJustify: 8406576,
+			viewJustify: vjParentFullH + vjSiblingFullH + vjSiblingTopV + oneLineOnly,
 			infoSymbol: 'outboxPrefs,
 			_proto: @protoLogPicker
 		},
@@ -92,8 +94,9 @@ protoTransportPrefs := {
 		{
 			_proto: @protoMultiLinePicker,
 			viewBounds: {left: 0, top: -19, right: 0, bottom: -3},
-			viewJustify: 8406576,
+			viewJustify: vjParentFullH + vjSiblingFullH + vjSiblingTopV + oneLineOnly,
 			infoSymbol: 'sendPrefs,
+			// How items are sent: the info's text and choices (with its verb).
 			viewSetupFormScript: func() begin
 				self:doTheShuffle();
 				if info then begin
@@ -110,6 +113,7 @@ protoTransportPrefs := {
 			LabelActionScript: func(index) begin
 				(if info then self:GetTransport():SetConfig(info.routeConfig, info.routeActions[index]))
 			end,
+			// The choice shown.
 			TextSetup: func() begin
 				local index;
 				(if info then begin
@@ -123,7 +127,7 @@ protoTransportPrefs := {
 		{
 			text: nil,
 			viewBounds: {left: 0, top: -19, right: 205, bottom: -3},
-			viewJustify: 8407044,
+			viewJustify: vjCenterV + vjSiblingLeftH + vjSiblingTopV + oneLineOnly,
 			viewFont: @fontSystem10,
 			viewValue: true,
 			// viewSetupFormScript(): without silentPrefs, hidden; otherwise
@@ -151,7 +155,7 @@ protoTransportPrefs := {
 // oneLineOnly (0x800000, the NPG's value)
 siblingCheck := {
 	viewBounds: {left: 10, top: -60, right: 10, bottom: -28},
-	viewJustify: 8388784,
+	viewJustify: vjParentFullH + vjParentBottomV + oneLineOnly,
 	infoSymbol: 'inboxPrefs,
 	preallocatedContext: 'siblingCheck,
 	_proto: @protoLogPicker

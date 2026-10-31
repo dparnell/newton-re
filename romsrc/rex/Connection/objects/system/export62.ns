@@ -54,6 +54,8 @@ export62 := {
 		local fn;
 		deviceSpecificStuff:UpdateMemory();
 		currentChoice := self:GetConnectionType();
+		// the answer: the connection options (with the password), nil if none;
+		// called once only
 		myCallback := func(a1) begin
 			local passwordRead;
 			(if (not done) then begin
@@ -68,6 +70,7 @@ export62 := {
 		end;
 		(if (not (if (options := deviceSpecificStuff:GetConnectionOptions(currentChoice, myCallback)) then IsFrame(options))) then return nil else (if options.callBeforeConnect then begin
 					options := DeepClone(options);
+					// the options given later: kept, and the answer given (deferred)
 					fn := func(a1) begin
 						options := a1;
 						AddDeferredCall(myCallback, [Array: true])

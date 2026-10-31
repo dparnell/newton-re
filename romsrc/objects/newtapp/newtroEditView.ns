@@ -122,6 +122,7 @@ newtroEditView := {
 		_proto: @protoHorizontal2Dscroller,
 		viewFlags: vVisible + vReadOnly + vFloating,
 		viewJustify: vjParentCenterH + vjParentBottomV + vjParentClip,
+		// Set up as the edit view's scrollers.
 		viewSetupFormScript: func() begin
 			inherited:?viewSetupFormScript();
 			self:CommonScrollerSetupFormScript()
@@ -132,6 +133,7 @@ newtroEditView := {
 		_proto: @protoUpDownScroller,
 		viewFlags: vVisible + vReadOnly + vFloating,
 		viewJustify: vjParentRightH + vjParentCenterV + vjParentClip,
+		// Set up as the edit view's scrollers.
 		viewSetupFormScript: func() begin
 			inherited:?viewSetupFormScript();
 			self:CommonScrollerSetupFormScript()

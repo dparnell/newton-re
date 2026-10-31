@@ -300,6 +300,7 @@ password := {
 	viewLineSpacing: 32,
 	indent: nil,
 	passwordVisible: nil,
+	// The inherited textChanged, only while the password is hidden.
 	textChanged: func() begin
 		(if (not passwordVisible) then inherited:textChanged())
 	end,
@@ -319,6 +320,7 @@ export84Item := {_proto: @protoCancelButton, preAllocatedContext: '_defaultButto
 
 // The button configOptions names (buttonTitle): closes the slip, a cancel.
 export84Item_2 := {
+	// Cancel: the slip closes (deferred).
 	buttonClickScript: func() begin
 		base.userCancel := true;
 		AddDeferredAction(func() begin

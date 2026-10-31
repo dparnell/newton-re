@@ -107,6 +107,7 @@ abstractScroller := {
 	end,
 	DataRect: nil,
 	xPos: 0,
+	// The sound of an arrow that cannot go further.
 	PlayStopSound: func() begin
 		playsound(@tockSound)
 	end,

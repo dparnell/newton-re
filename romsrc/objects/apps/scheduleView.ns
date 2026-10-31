@@ -41,12 +41,14 @@ scheduleView := {
 	viewScrollUpScript: func(amount) begin
 		DayTable:viewScrollUpScript(amount)
 	end,
+	// viewScrollDownScript, calculateScrollRects: passed to the day table.
 	viewScrollDownScript: func(amount) begin
 		DayTable:viewScrollDownScript(amount)
 	end,
 	calculateScrollRects: func() begin
 		DayTable:calculateScrollRects()
 	end,
+	// Sets the arrows.
 	AdjustDayTableScroller: func() begin
 		upDownScroller:AdjustArrows()
 	end,
@@ -229,6 +231,7 @@ HeaderLabels := {
 	viewJustify: vjParentFullH,
 	viewFlags: vVisible + vClickable + vGesturesAllowed,
 	viewFormat: 0,
+	// Draws the selected days' labels.
 	viewDrawScript: func() begin
 		DrawDateLabels(self:GlobalBox(), selectedDates)
 	end,
@@ -238,7 +241,7 @@ HeaderLabels := {
 		local count, box, l3, l4, least, l6;
 		(if (gesture = aeTap) then (if ((count := Length(selectedDates)) > 1) then begin
 					box := self:GlobalBox();
-					l3 := (GetPoint(0, unit) - box.left);
+					l3 := (GetPoint(firstX, unit) - box.left);
 					l4 := ((box.right - box.left) div count);
 					least := (l3 div l4);
 					self:DrawShape(MakeRect((l6 := ((least := min(count, least)) * l4)), 0, (l6 + l4), (box.bottom - box.top)), '{fillPattern: 5, transferMode: 2});

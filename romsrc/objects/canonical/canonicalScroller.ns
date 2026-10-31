@@ -13,6 +13,7 @@ canonicalScroller := {
 		local childViewFrames;
 		(childViewFrames := self:ChildViewFrames())[1]:Show()
 	end,
+	// Hides the scroller (the second child).
 	HideScroller: func() begin
 		local childViewFrames;
 		(childViewFrames := self:ChildViewFrames())[1]:Hide()

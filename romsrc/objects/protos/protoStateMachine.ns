@@ -36,7 +36,7 @@ protoStateMachine := {
 						// (Notify level 4: by NTK's usual values kNotifyQAlert,
 						// an alert without the beep - unconfirmed, so not named)
 						if autoNotify then begin
-								GetRoot():Notify(4, "Data Exchange", EnsureInternal(ParamStr("An error occurred but \u201C\u^0\u201D\u has no error state.", [Array: fState])))
+								GetRoot():Notify(kNotifyQAlert, "Data Exchange", EnsureInternal(ParamStr("An error occurred but \u201C\u^0\u201D\u has no error state.", [Array: fState])))
 							end;
 						l1 := 'exit
 					end;
@@ -141,6 +141,7 @@ protoStateMachine := {
 	// the trace: frames of state, exception, text, data and times (nil: not
 	// tracing)
 	traceArray: nil,
+	// The trace (nil when not tracing).
 	GetTraces: func() begin
 		traceArray
 	end,

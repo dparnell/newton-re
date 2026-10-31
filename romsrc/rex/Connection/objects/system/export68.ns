@@ -89,6 +89,7 @@ export68Item := {
 	text: export85Item_3Text,
 	viewBounds: {left: 0, top: 10, right: 172, bottom: 22},
 	viewJustify: vjCenterH + vjParentCenterH + oneLineOnly,
+	// Hidden without a title.
 	viewSetupDoneScript: func() begin
 		(if (not config.title) then self:Hide())
 	end,
@@ -107,9 +108,11 @@ export68Item_2 := {
 
 // The close box (button 0), hidden unless config asks for it.
 export68Item_3 := {
+	// Hidden unless the desktop asks for a close box.
 	viewSetupDoneScript: func() begin
 		(if (not config.xButton) then self:Hide())
 	end,
+	// The close box: answer 0.
 	buttonClickScript: func() begin
 		self:HandleClick(0);
 		inherited:?buttonClickScript()
@@ -120,15 +123,18 @@ export68Item_3 := {
 
 // Button 1, hidden unless config names it.
 export68Item_4 := {
+	// Answer 1.
 	buttonClickScript: func() begin
 		self:HandleClick(1)
 	end,
 	text: export85Item_3Text,
 	viewBounds: {top: -18, left: -60, right: -7, bottom: -5},
 	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
+	// Sized to its text.
 	viewSetupFormScript: func() begin
 		self:SetTextBounds(self)
 	end,
+	// Hidden without a first button.
 	viewSetupDoneScript: func() begin
 		(if (not config.button1) then self:Hide())
 	end,
@@ -138,15 +144,18 @@ export68Item_4 := {
 
 // Button 2.
 export68Item_5 := {
+	// Answer 2.
 	buttonClickScript: func() begin
 		self:HandleClick(2)
 	end,
 	text: export85Item_3Text,
 	viewBounds: {top: -18, left: -60, right: -7, bottom: -5},
 	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
+	// Sized to its text.
 	viewSetupFormScript: func() begin
 		self:SetTextBounds(self)
 	end,
+	// Hidden without a second button.
 	viewSetupDoneScript: func() begin
 		(if (not config.button2) then self:Hide())
 	end,
@@ -156,15 +165,18 @@ export68Item_5 := {
 
 // Button 3.
 export68Item_6 := {
+	// Answer 3.
 	buttonClickScript: func() begin
 		self:HandleClick(3)
 	end,
 	text: export85Item_3Text,
 	viewBounds: {top: -18, left: -60, right: -7, bottom: -5},
 	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
+	// Sized to its text.
 	viewSetupFormScript: func() begin
 		self:SetTextBounds(self)
 	end,
+	// Hidden without a third button.
 	viewSetupDoneScript: func() begin
 		(if (not config.button3) then self:Hide())
 	end,

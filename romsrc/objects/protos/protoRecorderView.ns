@@ -75,6 +75,7 @@ protoRecorderView := {
 	stop: func() begin
 		stopButton:buttonClickScript()
 	end,
+	// Plays, as a tap on the Play button does.
 	play: func() begin
 		playButton:buttonClickScript()
 	end,
@@ -117,6 +118,7 @@ recordButton_2Proto := {
 	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingCenterV,
 	viewBounds: {left: 2, top: 0, right: 21, bottom: 19},
 	_sound: nil,
+	// Does nothing by default.
 	SetState: func(fSoundState, fSoundState2, hasSoundFrames) begin
 		nil
 	end,
@@ -132,6 +134,8 @@ recordButton_2 := {
 	// chosen, grey when none is
 	GetIcon: compile(
 		constants: {
+			// run when this function is built: a binary of class cls from the hex
+			// string hex, for the literals below
 			kBinaryFromHex: func(hex, cls) begin
 				local b := MakeBinary(StrLen(hex) div 2, cls);
 				for i := 0 to Length(b) - 1 do begin
@@ -147,6 +151,7 @@ recordButton_2 := {
 		func() begin
 			(if (GetUserConfig('inputDevice) <> nil) then kLiteral_42409d else kLiteral_424115)
 		end),
+	// The icon for the engine's state.
 	viewSetupFormScript: func() begin
 		icon := self:GetIcon();
 		inherited:?viewSetupFormScript()
@@ -158,6 +163,7 @@ recordButton_2 := {
 	// pause a recording, or else beep
 	buttonClickScript: compile(
 		constants: {
+			// the answer to the offer: Yes opens the Recording preferences
 			kFunction_427f75: func(a1) begin
 				(if a1 then OpenPrefsTo("Recording"))
 			end
@@ -188,6 +194,8 @@ recordButton_2 := {
 	// (kLiteral_423fad), else the record dot
 	SetState: compile(
 		constants: {
+			// run when this function is built: a binary of class cls from the hex
+			// string hex, for the literals below
 			kBinaryFromHex: func(hex, cls) begin
 				local b := MakeBinary(StrLen(hex) div 2, cls);
 				for i := 0 to Length(b) - 1 do begin
@@ -212,6 +220,7 @@ stopButton_2 := {
 		bits: bitmap('bits, "resources/bits/423fdd.png", "000000000004004e004e017c00590187", 1),
 		bounds: {left: 0, top: 0, right: 11, bottom: 11}
 	},
+	// Stops.
 	buttonClickScript: func() begin
 		RecordEngine:stop()
 	end,
@@ -223,6 +232,8 @@ stopButton_2 := {
 playButton_2 := {
 	_proto: recordButton_2Proto,
 	icon: playButton_2Icon,
+	// Plays from idle or a pause (state 1 + 8), pauses playing (4), plays a
+	// recording from its start (2: stopped and rewound first), else beeps.
 	buttonClickScript: func() begin
 		(if RecordEngine:TestState(9) then RecordEngine:play() else (if RecordEngine:TestState(4) then RecordEngine:pause() else (if RecordEngine:TestState(2) then begin
 						RecordEngine:stop();
@@ -235,6 +246,8 @@ playButton_2 := {
 	// storage almost full) is reported
 	SetState: compile(
 		constants: {
+			// run when this function is built: a binary of class cls from the hex
+			// string hex, for the literals below
 			kBinaryFromHex: func(hex, cls) begin
 				local b := MakeBinary(StrLen(hex) div 2, cls);
 				for i := 0 to Length(b) - 1 do begin

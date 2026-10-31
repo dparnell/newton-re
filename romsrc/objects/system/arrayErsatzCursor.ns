@@ -75,6 +75,8 @@ arrayErsatzCursor := {
 				(entry := self:move(1))
 			end)
 	end,
+	// Next, Prev: on or back to the next element that passes the valid test
+	// (deleted ones skipped).
 	Next: func() begin
 		local move;
 		(loop (if (not ((move := self:move(1)) = 'deleted)) then begin
@@ -93,6 +95,7 @@ arrayErsatzCursor := {
 					(if call validTest with (move) then break move)
 				end))
 	end,
+	// Back to the first element.
 	Reset: func() begin
 		self:GotoKey(0)
 	end,
@@ -118,6 +121,7 @@ arrayErsatzCursor := {
 	entry: func() begin
 		(if (if (index >= 0) then (index < Length(things))) then things[index])
 	end,
+	// A copy of the cursor.
 	clone: func() begin
 		Clone(self)
 	end,

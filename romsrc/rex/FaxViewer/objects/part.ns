@@ -325,6 +325,7 @@ pageOf := {
 		item: "1",
 		mark: $\u0020,
 		page: 1,
+		// The page's item picked: turns to it.
 		doit: func() begin
 			imageContainer:GotoPage(page)
 		end
@@ -615,6 +616,9 @@ partItem_6 := {
 	// ZoomBy (a step in or out), with the same status slip.
 	ZoomBy: compile(
 		constants: {
+			// the status slip's OpenDlog(kind, status, title): a barber pole (kind
+			// nil), a gauge (kind not a symbol) or the kind named, opened (a barber pole
+			// spins every 300 ms)
 			kFunction_7670a5: func(a1, a2, a3) begin
 				local frame2;
 				warningName := (if (not a1) then 'vBarber else (if (ClassOf(a1) <> 'symbol) then 'vGauge else a1));
@@ -629,9 +633,11 @@ partItem_6 := {
 				self:Open();
 				(if (warningName = 'vBarber) then self:SetupIdle(300) else self:SetupIdle(0))
 			end,
+			// the slip's Update(values): the gauge or barber pole moved on
 			kFunction_7672d5: func(a1) begin
 				(if ((warningName = 'vGauge) or (warningName = 'vBarber)) then self:UpdateIndicator({name: warningName, values: {gauge: (if (warningName = 'vGauge) then a1[0]), barber: (warningName = 'vBarber)}}))
 			end,
+			// the slip's viewIdleScript: the barber pole turned; again in 300 ms
 			kFunction_76738d: func() begin
 				self:Update(nil);
 				300
@@ -763,6 +769,7 @@ partItem_8Item := {
 // The arrow that scrolls the palette back a page's thumbnail.
 partItem_8ItemItem := {
 	viewBounds: {top: 0, left: -11, right: -1, bottom: 12},
+	// Pressed: the palette scrolls back one thumbnail.
 	buttonPressedScript: func() begin
 		pagePalette:ScrollBy(-1)
 	end,
@@ -777,6 +784,7 @@ partItem_8ItemItem := {
 // The arrow that scrolls the palette on a thumbnail.
 partItem_8ItemItem_2 := {
 	viewBounds: {top: -12, left: 0, right: 0, bottom: 0},
+	// Pressed: the palette scrolls on one thumbnail.
 	buttonPressedScript: func() begin
 		pagePalette:ScrollBy(1)
 	end,
@@ -839,6 +847,9 @@ partItem_9 := {
 	// The page's thumbnail and annotations are dropped.
 	DoMungeREally: compile(
 		constants: {
+			// the status slip's OpenDlog(kind, status, title): a barber pole (kind
+			// nil), a gauge (kind not a symbol) or the kind named, opened (a barber pole
+			// spins every 300 ms)
 			kFunction_7670a5: func(a1, a2, a3) begin
 				local frame2;
 				warningName := (if (not a1) then 'vBarber else (if (ClassOf(a1) <> 'symbol) then 'vGauge else a1));
@@ -853,9 +864,11 @@ partItem_9 := {
 				self:Open();
 				(if (warningName = 'vBarber) then self:SetupIdle(300) else self:SetupIdle(0))
 			end,
+			// the slip's Update(values): the gauge or barber pole moved on
 			kFunction_7672d5: func(a1) begin
 				(if ((warningName = 'vGauge) or (warningName = 'vBarber)) then self:UpdateIndicator({name: warningName, values: {gauge: (if (warningName = 'vGauge) then a1[0]), barber: (warningName = 'vBarber)}}))
 			end,
+			// the slip's viewIdleScript: the barber pole turned; again in 300 ms
 			kFunction_76738d: func() begin
 				self:Update(nil);
 				300
@@ -874,6 +887,7 @@ partItem_9 := {
 				end;
 			WarningDialog:OpenDlog('vGauge, "Rotating the fax\u2026\u", 'default);
 			frame2 := {receiver: WarningDialog, message: 'Update};
+			// MungeBitmap's progress callback: the gauge moved on.
 			fn := func(a1) begin
 				WarningDialog:Update(a1)
 			end;
@@ -946,6 +960,9 @@ partItem_9 := {
 	// and keeps the navigator's selection in step.
 	GotoPage: compile(
 		constants: {
+			// the status slip's OpenDlog(kind, status, title): a barber pole (kind
+			// nil), a gauge (kind not a symbol) or the kind named, opened (a barber pole
+			// spins every 300 ms)
 			kFunction_7670a5: func(a1, a2, a3) begin
 				local frame2;
 				warningName := (if (not a1) then 'vBarber else (if (ClassOf(a1) <> 'symbol) then 'vGauge else a1));
@@ -960,9 +977,11 @@ partItem_9 := {
 				self:Open();
 				(if (warningName = 'vBarber) then self:SetupIdle(300) else self:SetupIdle(0))
 			end,
+			// the slip's Update(values): the gauge or barber pole moved on
 			kFunction_7672d5: func(a1) begin
 				(if ((warningName = 'vGauge) or (warningName = 'vBarber)) then self:UpdateIndicator({name: warningName, values: {gauge: (if (warningName = 'vGauge) then a1[0]), barber: (warningName = 'vBarber)}}))
 			end,
+			// the slip's viewIdleScript: the barber pole turned; again in 300 ms
 			kFunction_76738d: func() begin
 				self:Update(nil);
 				300
@@ -1023,6 +1042,9 @@ partItem_9 := {
 	// thumbnail open if it was.
 	viewSetupFormScript: compile(
 		constants: {
+			// the status slip's OpenDlog(kind, status, title): a barber pole (kind
+			// nil), a gauge (kind not a symbol) or the kind named, opened (a barber pole
+			// spins every 300 ms)
 			kFunction_7670a5: func(a1, a2, a3) begin
 				local frame2;
 				warningName := (if (not a1) then 'vBarber else (if (ClassOf(a1) <> 'symbol) then 'vGauge else a1));
@@ -1037,9 +1059,11 @@ partItem_9 := {
 				self:Open();
 				(if (warningName = 'vBarber) then self:SetupIdle(300) else self:SetupIdle(0))
 			end,
+			// the slip's Update(values): the gauge or barber pole moved on
 			kFunction_7672d5: func(a1) begin
 				(if ((warningName = 'vGauge) or (warningName = 'vBarber)) then self:UpdateIndicator({name: warningName, values: {gauge: (if (warningName = 'vGauge) then a1[0]), barber: (warningName = 'vBarber)}}))
 			end,
+			// the slip's viewIdleScript: the barber pole turned; again in 300 ms
 			kFunction_76738d: func() begin
 				self:Update(nil);
 				300

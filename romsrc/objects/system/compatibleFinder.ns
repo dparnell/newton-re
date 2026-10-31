@@ -7,9 +7,11 @@
 compatibleFinder := {
 	currentItem: 0,
 	selected: nil,
+	// The number of items found.
 	count: func() begin
 		Length(items)
 	end,
+	// Starts again at the first item.
 	ReSync: func() begin
 		(currentItem := 0)
 	end,
@@ -35,6 +37,7 @@ compatibleFinder := {
 	ConvertToSoupEntry: func(a1) begin
 		a1
 	end,
+	// Shows found item a1 (ShowFakeEntry with its index).
 	ShowFoundItem: func(a1) begin
 		self:ShowFakeEntry(a1.itemIndex)
 	end,

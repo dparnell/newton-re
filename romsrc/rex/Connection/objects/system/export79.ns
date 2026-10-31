@@ -195,6 +195,7 @@ export79Item := {
 	SetConnectionType: func(currentlyShowing, currentChoice, connectionOptions) begin
 		nil
 	end,
+	// HideIfVisible, ShowIfNotVisible: nothing here.
 	HideIfVisible: func() begin
 		nil
 	end,

@@ -35,6 +35,7 @@ cardfile := {
 				// Routing several names: a frame format whose title is "Selected Names".
 				symbol: 'cardfileOverFrameFormat,
 				title: "Selected Names",
+				// The item's title is "Selected Names".
 				SetupItem: func(fields, frame2) begin
 					fields.title := title;
 					inherited:SetupItem(fields, frame2)
@@ -1123,6 +1124,7 @@ cardfile := {
 			// for "All", every card but the owner cards (whose folder is _ownerNames).
 			SetupCursor: compile(
 				constants: {
+					// the valid test: every card except the owner's
 					kFunction_73924d: func(a1) begin
 						(a1.labels <> '_ownerNames)
 					end
@@ -1192,6 +1194,8 @@ cardfile := {
 			// Adds the sample cards a new Names soup starts with.
 			AddWalletEntries: compile(
 				constants: {
+					// run when this function is built: a binary of class cls from the hex
+					// string hex, for the literals below
 					kBinaryFromHex: func(hex, cls) begin
 						local b := MakeBinary(StrLen(hex) div 2, cls);
 						for i := 0 to Length(b) - 1 do begin
@@ -1413,6 +1417,7 @@ cardfile := {
 			// bank accounts).
 			textScript: compile(
 				constants: {
+					// the generic text of the card's data a2
 					kFunction_73d459: func(a1, a2) begin
 						call GetRoot().cardfile.kGenericTextFunc with (a2)
 					end
@@ -1856,6 +1861,7 @@ cardfile := {
 	// A cursor over the cards that have a birthday (not owner cards).
 	GetBdayCursor: compile(
 		constants: {
+			// the index key: the card's birthday
 			kFunction_741eb5: func(a1) begin
 				a1.bday
 			end
@@ -2251,6 +2257,9 @@ cards := "Cards";
 cardfileRouteFormat := {
 	_proto: @targetFrameFormat,
 	symbol: 'cardfileRouteFormat,
+	// The card as it is beamed or sent: without its birthday and anniversary
+	// events, its notes unless the preference says to send them, and an owner
+	// card as a plain person without its private data and e-mail passwords.
 	SetupSlip: func(a1, fields) begin
 		fields.body := DeepClone(a1.target);
 		RemoveSlot(fields.body, 'bdayEvent);
@@ -2415,6 +2424,8 @@ cardfileItem := {
 	// owner cards; the template's arrays are put back afterwards.
 	viewSetupChildrenScript: compile(
 		constants: {
+			// the tests of the buttons to take out: the Add popup, the Show menu, the
+			// filing button
 			kFunction_73d01d: func(a1, a2) begin
 				(a2._proto = @protoPopupButton)
 			end,

@@ -94,6 +94,7 @@ soundRecorder := {
 		self:Open();
 		(RecordEngine := @recorderchassIs:New({_parent: self, fSoundArray: a1, fDirection: 'play}))
 	end,
+	// Nothing to set up.
 	viewSetupFormScript: func() begin
 		nil
 	end,
@@ -131,6 +132,8 @@ recordButton := {
 	// otherwise a greyed one.
 	GetIcon: compile(
 		constants: {
+			// run when this function is built: a binary of class cls from the hex
+			// string hex, for the literals below
 			kBinaryFromHex: func(hex, cls) begin
 				local b := MakeBinary(StrLen(hex) div 2, cls);
 				for i := 0 to Length(b) - 1 do begin
@@ -157,6 +160,7 @@ recordButton := {
 	// alarmWakeup sound (@262) as a refusal.
 	buttonClickScript: compile(
 		constants: {
+			// the answer to the offer: Yes opens the Recording preferences
 			kFunction_426ded: func(a1) begin
 				(if a1 then OpenPrefsTo("Recording"))
 			end
@@ -188,6 +192,8 @@ recordButton := {
 		end),
 	SetState: compile(
 		constants: {
+			// run when this function is built: a binary of class cls from the hex
+			// string hex, for the literals below
 			kBinaryFromHex: func(hex, cls) begin
 				local b := MakeBinary(StrLen(hex) div 2, cls);
 				for i := 0 to Length(b) - 1 do begin
@@ -250,6 +256,8 @@ playButton := {
 	end,
 	SetState: compile(
 		constants: {
+			// run when this function is built: a binary of class cls from the hex
+			// string hex, for the literals below
 			kBinaryFromHex: func(hex, cls) begin
 				local b := MakeBinary(StrLen(hex) div 2, cls);
 				for i := 0 to Length(b) - 1 do begin

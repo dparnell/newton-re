@@ -42,6 +42,7 @@ protoPopInPlace := {
 			end);
 		inherited:buttonClickScript()
 	end,
+	// Sized to fit its text.
 	viewSetupFormScript: func() begin
 		inherited:viewSetupFormScript();
 		self:SetBounds()

@@ -75,6 +75,7 @@ emailItem := {
 // emailPassword.
 setEMailPassword := {
 	viewBounds: {left: 0, top: 2, right: 107, bottom: 14},
+	// Opens the password slip for the address.
 	buttonClickScript: func() begin
 		local context;
 		(context := BuildContext(setpasswordslip)).target := target;

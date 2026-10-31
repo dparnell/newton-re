@@ -26,6 +26,7 @@ export30 := {
 	// Owner cards: the notes checkbox goes and only the password checkbox is shown.
 	viewSetupChildrenScript: compile(
 		constants: {
+			// the test of a checkbox
 			kFunction_7228c5: func(a1, a2) begin
 				(a2._proto = @protoCheckbox)
 			end

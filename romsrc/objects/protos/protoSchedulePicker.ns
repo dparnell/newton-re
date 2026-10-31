@@ -9,6 +9,7 @@ protoSchedulePicker := {
 	viewFont: tsSystem + tsSize(9) + tsBold,
 	// true lets only one item be picked
 	singleSelect: nil,
+	// Nothing to do on closing.
 	viewQuitScript: func() begin
 		nil
 	end,

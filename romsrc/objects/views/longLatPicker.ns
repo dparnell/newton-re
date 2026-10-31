@@ -9,6 +9,8 @@ longLatPicker := {
 	longitude: nil,
 	latitude: nil,
 	worldClock: nil,
+	// Opens it at longitude a1 and latitude a2 (converted from Time Zones' units
+	// when a3), over box a4, for context a5.
 	New: func(a1, a2, a3, a4, a5) begin
 		local init;
 		init := self:Init();

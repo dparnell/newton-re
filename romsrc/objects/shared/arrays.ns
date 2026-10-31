@@ -45,9 +45,12 @@ page2GutsViewChildren := [|Array|:
 		viewFlags: vVisible + vReadOnly,
 		viewFormat: 0,
 		viewJustify: vjParentCenterH + vjReflow,
+		// The parent's size.
 		viewSetupFormScript: func() begin
 			(self.viewBounds := self:Parent():LocalBox())
 		end,
+		// Reflows the data (once) into the page, 60 pixels short of the bottom, and
+		// shows the pieces from reflowStart on.
 		viewSetupChildrenScript: func() begin
 			local box;
 			if (if (not kids) then data) then begin
@@ -56,6 +59,7 @@ page2GutsViewChildren := [|Array|:
 				end;
 			(if kids then (self.stepChildren := ArrayMunger([Array: ], 0, 0, kids, reflowStart, nil)))
 		end,
+		// The next page starts after the pieces shown.
 		viewSetupDoneScript: func() begin
 			(if self.stepChildren then (reflowStart := (reflowStart + Length(self.stepChildren))))
 		end

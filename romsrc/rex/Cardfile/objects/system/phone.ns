@@ -34,6 +34,8 @@ phoneItem := {
 	label: areaCode,
 	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 	entryFlags: vVisible + vClickable + vGesturesAllowed + vCustomDictionaries,
+	// Selects the area code (when asked), with the phone keyboard and the area
+	// code dictionaries.
 	viewSetupDoneScript: func() begin
 		inherited:?viewSetupDoneScript();
 		if hiliteAreaCode then begin

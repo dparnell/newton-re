@@ -51,6 +51,7 @@ protoContentArea := {
 				end)
 		end,
 		edgeWidth: 1,
+		// viewQuitScript, viewShowScript: nothing to do.
 		viewQuitScript: func() begin
 			true
 		end,

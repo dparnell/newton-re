@@ -30,6 +30,7 @@ protoStatusTemplate := {
 		// the close box, known to the slip as cancelButton (the status
 		// button's ShiftItem)
 		{
+			// viewSetupFormScript, viewQuitScript: the slip's cancelButton while open.
 			viewSetupFormScript: func() begin
 				base.cancelButton := self;
 				inherited:?viewSetupFormScript()

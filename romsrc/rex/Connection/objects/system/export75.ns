@@ -229,6 +229,7 @@ export75Item_7 := {
 
 // Import: hands over the answers and closes.
 export75Item_8 := {
+	// Import: the answers to ImportParametersDoneScript, and closes.
 	buttonClickScript: func() begin
 		closing := true;
 		call ImportParametersDoneScript with (fResults);

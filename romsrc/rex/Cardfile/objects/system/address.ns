@@ -81,6 +81,7 @@ addressItem := {
 		AddDeferredCall(functions.KeyIn, [Array: 56, nil]);
 		inherited:?viewSetupDoneScript()
 	end,
+	// The locale's street label.
 	viewSetupFormScript: func() begin
 		local locale;
 		label := (locale := GetLocale()).streetLabel;
@@ -111,6 +112,7 @@ addressItem_3 := {
 	flavor: @newtCustomFilter,
 	label: nil,
 	newDictionaries: nil,
+	// The locale's city label and city dictionaries.
 	viewSetupFormScript: func() begin
 		local locale;
 		label := (locale := GetLocale()).cityLabel;
@@ -131,6 +133,7 @@ addressItem_4 := {
 	flavor: @newtCustomFilter,
 	label: nil,
 	memory: 'regionName,
+	// The locale's region (state, province ...) label.
 	viewSetupFormScript: func() begin
 		label := GetLocale().regionLabel;
 		inherited:?viewSetupFormScript()
@@ -174,6 +177,7 @@ country := {
 	viewLineSpacing: 25,
 	flavor: {
 		_proto: @newtCountryFilter,
+		// The countries' picker, at the card's country (else its first address's).
 		Picker: func() begin
 			if (if (if (not (country := (if StrFilled(target.country) then target.country))) then (addresses := target.addresses)) then ((count := Length(addresses)) > 0)) then begin
 					local country;

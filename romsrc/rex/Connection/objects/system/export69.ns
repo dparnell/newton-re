@@ -422,6 +422,8 @@ export69Item_2 := {
 // picked and the path to callWhenDone.
 export69Item_3 := {
 	text: nil,
+	// Does it: the file picked (with its volume) and the path passed to
+	// callWhenDone, the browser closed.
 	buttonClickScript: func() begin
 		local currentFile, frame2;
 		(if (currentSelection <> nil) then (if self:VerifyAlias((currentFile := currentFiles[currentIndex])) then begin
@@ -454,6 +456,7 @@ export69Item_3 := {
 // File Info: asks the desktop for the file's info and shows it.
 export69Item_4 := {
 	text: fileInfo,
+	// File Info: the desktop asked for the file's info.
 	buttonClickScript: func() begin
 		local currentFile, frame2;
 		(if (currentSelection <> nil) then (if self:VerifyAlias((currentFile := currentFiles[currentIndex])) then begin

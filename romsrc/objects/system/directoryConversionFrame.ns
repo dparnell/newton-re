@@ -2,6 +2,7 @@
 // systemDirectory soup (globalHeapvarwannabes.ns), found by GetConversionFrame.
 
 directoryConversionFrame := {
+	// Convert(body, fromVersion, toVersion, ...): see below.
 	Convert: func(body, a2, a3, a4) begin
 		// Convert(body, fromVersion, toVersion, ...): drops (returns nil) a directory
 		// entry belonging to one of the built-in applications or the system, which

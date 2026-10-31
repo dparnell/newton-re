@@ -149,6 +149,7 @@ PINDisplay := {
 		SetKeyView(self, 0);
 		HideCaret()
 	end,
+	// Closed: the caret shown again.
 	viewQuitScript: func() begin
 		ShowCaret()
 	end,

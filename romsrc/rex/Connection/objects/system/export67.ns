@@ -65,6 +65,8 @@ export67 := {
 	// A card in or out: the applications and stores are listed again.
 	RegisterMyStoreChange: func() begin
 		local fn;
+		// a store come or gone: the applications listed again (the connection kept
+		// alive meanwhile) and the slip redone
 		fn := func(a1, a2, a3) begin
 			protoContext:InvalidateApplicationList();
 			protoContext:BuildApplicationList(func() begin
@@ -259,6 +261,8 @@ export67 := {
 export67Item := {
 	viewBounds: {left: 0, top: 5, right: 184, bottom: 89},
 	viewFont: @fontSystem10,
+	// The applications to pick from (the first left out when it stands for the
+	// packages).
 	viewSetupFormScript: func() begin
 		count := Length((applications := protoContext.applications));
 		l3 := (if protoContext.applications[0].packages then 1 else 0);
@@ -360,6 +364,7 @@ from := {
 export67Item_2 := {
 	viewBounds: {left: 0, top: 5, right: 184, bottom: 55},
 	viewLines: 3,
+	// The stores by name (else kind), all selected.
 	viewSetupFormScript: func() begin
 		self.listItems := (foreach item in StoreMap collect begin
 			local name;

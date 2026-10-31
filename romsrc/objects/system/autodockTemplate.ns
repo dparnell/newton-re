@@ -29,6 +29,7 @@ autodockTemplate := {
 		},
 		{
 			viewJustify: vjCenterH + vjCenterV + vjSiblingTopV,
+			// The info button's Prefs: the Auto Dock preferences.
 			DoInfoPrefs: func() begin
 				OpenPrefsTo("Auto Dock")
 			end,

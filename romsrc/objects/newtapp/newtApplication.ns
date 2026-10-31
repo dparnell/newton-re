@@ -224,11 +224,13 @@ newtApplication := {
 			end;
 		(newtAppBase._kiddos := nil)
 	end,
+	// The key commands of the New, Action and Show buttons (CommonKeyScript).
 	_newKeyScript: func(a1) begin
 		newtAppBase:CommonKeyScript('_newKeyButton)
 	end,
 	scrollingUpBehavior: 'bottom,
 	target: nil,
+	// The Action button's key command.
 	_actionKeyScript: func(a1) begin
 		newtAppBase:CommonKeyScript('_actionKeyButton)
 	end,
@@ -302,6 +304,7 @@ newtApplication := {
 	end,
 	// the viewDef the layouts show entries with (Show button)
 	preferredViewDef: 'default,
+	// The view showing the target.
 	GetTargetView: func() begin
 		targetView
 	end,
@@ -572,10 +575,12 @@ newtApplication := {
 		copyright: "©1993-1994 Apple Computer.  All rights reserved.",
 		trademarks: uCardPositionAlertButton,
 		credits: nil,
+		// More to show in the About slip: nothing.
 		extraInfo: func(theApp) begin
 			nil
 		end
 	},
+	// The target (the entry shown).
 	GetTarget: func() begin
 		target
 	end,
@@ -588,6 +593,8 @@ newtApplication := {
 	end,
 	// true while the overview is open (newtOverLayout sets and clears it)
 	dontStartWithFolder: nil,
+	// The up arrow: the layout's; when the application is the backdrop its state
+	// is saved 10 seconds later.
 	viewScrollUpScript: func() begin
 		local blessedapp;
 		layout:viewScrollUpScript();
@@ -661,6 +668,7 @@ newtApplication := {
 	// the action button's own items, Duplicate and Delete
 	routeScripts: [|Array|:
 		{
+			// "Duplicate" when there is a target.
 			GetTitle: func(target) begin
 				(if target then "Duplicate")
 			end,
@@ -668,6 +676,7 @@ newtApplication := {
 			routeScript: 'newtDuplicateScript
 		},
 		{
+			// "Delete" when there is a target.
 			GetTitle: func(target) begin
 				(if target then "Delete")
 			end,
@@ -805,6 +814,7 @@ newtApplication := {
 	// the finder proto for applications whose Find returns found items
 	// (ROM_CompatibleFinder) rather than cursors
 	appCompatibleFinder: {
+		// Shows found item itemIndex: opens the application on it if it is closed.
 		ShowFakeEntry: func(itemIndex) begin
 			if (owner.viewCObject = nil) then begin
 					owner:?viewPreOpenScript(items[itemIndex]);
@@ -880,6 +890,7 @@ newtApplication := {
 	AdoptEntryFromStationery: func(adoptEntry, symbol2, a3) begin
 		self:AdoptSoupEntryFromStationery(adoptEntry, symbol2, a3, nil)
 	end,
+	// The Show button's key command.
 	_showKeyScript: func(a1) begin
 		newtAppBase:CommonKeyScript('_showKeyButton)
 	end,

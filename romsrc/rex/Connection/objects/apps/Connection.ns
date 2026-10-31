@@ -145,6 +145,7 @@ Connection := {
 	// applications list; "Packages", "Card backup" or "".
 	SoupNameToAppName: compile(
 		constants: {
+			// a callback that does nothing (no progress to show)
 			kFunction_75ad31: func() begin
 				nil
 			end,
@@ -311,6 +312,8 @@ Connection := {
 		end;
 		copy:Instantiate('Connection, "Dock");
 		where.theEndpoint := copy;
+		// the 'kybd extension: the keyboard state, and passthrough turned on
+		// (deferred)
 		fn := func(a1) begin
 			a1:FlushCommandData();
 			a1:WriteCommand("kybd", nil, nil);
@@ -617,6 +620,8 @@ Connection := {
 	// An error while a slip starts: closes the slip a2 (deferred, with the screen
 	// locked meanwhile) and ends the connection unless it was cancelled.
 	HandleErrorDuringStartup: func(endpoint, a2, aborting) begin
+		// closes slip a1 and ends the connection with error a2 unless it is 0 or
+		// the request was cancelled
 		killMyself := func(a1, a2) begin
 			local connection;
 			if Visible(a1) then begin
@@ -684,6 +689,8 @@ Connection := {
 			local appList, soupName;
 			local v9_mmll, v12_tttttttt, v13_zzzzzzyyy, v14_vvvvvvvuuuu, v17_zzzzzzzzzzzzyyy, v18_xxxwwwwwwwwwwwwww, v19_xxxxxxxxwwwwwwwwwwww, v22_yyyyyyyxxxxxxxxxxxxxxxx;
 			appList := [Array: ];
+			// the applications list's entry named a1 (added in name order), with the
+			// soup now looked at added to its soups when soupsToo
 			v12_tttttttt := func(a1) begin
 				local returnElt;
 				returnElt := BInsert(appList, {name: a1}, '|str<|, '[pathExpr: name], 'returnElt);
@@ -854,6 +861,7 @@ Connection := {
 		func(a1) begin
 			local oldPassthruMode;
 			local fn, context, error;
+			// the notify icon's action: stops the passthrough
 			fn := func() begin
 				keyboardCookie := nil;
 				AddDeferredSend(self, 'ToggleKeyboardPassthrough, [Array: nil])
@@ -1114,6 +1122,8 @@ Connection := {
 					return nil
 				end;
 			password := self:PasswordRead();
+			// the answer: the auto-dock connection options (with the password), nil if
+			// none; called once only
 			myCallback := func(a1) begin
 				(if (not done) then begin
 						if (if (not options) then a1) then begin
@@ -1215,8 +1225,11 @@ Connection := {
 		self:ShowAppError("Dock", a1, a2, a3)
 	end,
 	WorksiteToCountry: @8283,
+	// The applications of store a1, their soups if a2 (GetAppsForStoreWithCallback
+	// with a callback that does nothing).
 	GetAppsForStore: compile(
 		constants: {
+			// a callback that does nothing
 			kFunction_75f621: func() begin
 				nil
 			end
@@ -1349,6 +1362,7 @@ ConnectionItem_2 := {
 
 // The close box: the application's slips close too.
 ConnectionItem_3 := {
+	// Closes the other slips too.
 	buttonClickScript: func() begin
 		self:RemoveOpenWindow(base);
 		self:CloseOpenWindows(nil);
@@ -1405,10 +1419,12 @@ ConnectionItem_4 := {
 
 // The call options button (modem only).
 ConnectionItem_5 := {
+	// Opens the call options slip.
 	buttonClickScript: func() begin
 		desktopConnection:OpenCallOptionsSlip()
 	end,
 	hidden: true,
+	// Hidden unless set up.
 	viewSetupDoneScript: func() begin
 		if self.hidden then begin
 				self:Hide()
@@ -1422,6 +1438,7 @@ ConnectionItem_5 := {
 // A transport's own button (the options' button frame), hidden until set up.
 ConnectionItem_6 := {
 	text: nil,
+	// Runs the transport's buttonClickScript, if it has one.
 	buttonClickScript: func() begin
 		(if options.buttonClickScript then call options.buttonClickScript with (options))
 	end,
@@ -1443,6 +1460,7 @@ ConnectionItem_6 := {
 			end)
 	end,
 	hidden: true,
+	// Hidden unless set up.
 	viewSetupDoneScript: func() begin
 		(if self.hidden then self:Hide())
 	end,

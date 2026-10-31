@@ -561,6 +561,7 @@ vAnnotations := {
 	viewChangedScript: func(slot, view) begin
 		vAnnotations:SetupIdle(500)
 	end,
+	// An annotation added: noticed half a second later (the idle).
 	viewAddChildScript: func(aNewOne) begin
 		vAnnotations:SetupIdle(500);
 		nil

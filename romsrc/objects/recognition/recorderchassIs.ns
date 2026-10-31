@@ -86,10 +86,12 @@ recorderchassIs := {
 	pause: func() begin
 		(if (if inherited:pause() then SoundProgressSlider) then SoundProgressSlider:PauseSlider())
 	end,
+	// Rewinds, and the progress slider back to the start.
 	Rewind: func() begin
 		inherited:Rewind();
 		(if SoundProgressSlider then SoundProgressSlider:ResetSlider())
 	end,
+	// Fast forward, and the slider to the end.
 	FastForward: func() begin
 		inherited:FastForward();
 		(if SoundProgressSlider then SoundProgressSlider:SlideToRight())

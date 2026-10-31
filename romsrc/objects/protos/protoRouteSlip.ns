@@ -11,6 +11,7 @@ protoRouteSlip := {
 	// a close button added to an auxiliary slip found by symbol (auxSetup):
 	// the slip it is in becomes that slip's base
 	closeGadgetForm: {
+		// The slip it is in becomes its base.
 		viewSetupFormScript: func() begin
 			local parent;
 			(parent := self:Parent()).base := parent;

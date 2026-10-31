@@ -89,9 +89,12 @@ export82 := {
 						endpoint:ConnectionDone(CurrentException().error)
 					end)
 			end,
+			// Hidden unless the desktop offers 'Restore.
 			viewSetupDoneScript: func() begin
 				self:MyHide('Restore)
 			end,
+			// Placed among the buttons offered, with the desktop's icon and script if it
+			// gives them.
 			viewSetupFormScript: func() begin
 				self:SetupViewBounds('Restore);
 				self:SetupButton()
@@ -113,9 +116,12 @@ export82 := {
 						endpoint:ConnectionDone(CurrentException().error)
 					end)
 			end,
+			// Hidden unless the desktop offers 'install.
 			viewSetupDoneScript: func() begin
 				self:MyHide('install)
 			end,
+			// Placed among the buttons offered, with the desktop's icon and script if it
+			// gives them.
 			viewSetupFormScript: func() begin
 				self:SetupViewBounds('install);
 				self:SetupButton()
@@ -138,9 +144,12 @@ export82 := {
 						endpoint:ConnectionDone(CurrentException().error)
 					end)
 			end,
+			// Hidden unless the desktop offers 'Import.
 			viewSetupDoneScript: func() begin
 				self:MyHide('Import)
 			end,
+			// Placed among the buttons offered, with the desktop's icon and script if it
+			// gives them.
 			viewSetupFormScript: func() begin
 				self:SetupViewBounds('Import);
 				self:SetupButton()
@@ -163,9 +172,12 @@ export82 := {
 					kROM_8269:OpenOnEndpoint('all, endpoint, nil);
 					self:DoneForNow()
 				end),
+			// Hidden unless the desktop offers 'sync.
 			viewSetupDoneScript: func() begin
 				self:MyHide('sync)
 			end,
+			// Placed among the buttons offered, with the desktop's icon and script if it
+			// gives them.
 			viewSetupFormScript: func() begin
 				self:SetupViewBounds('sync);
 				self:SetupButton()
@@ -181,9 +193,12 @@ export82 := {
 			buttonClickScript: func() begin
 				AddDeferredSend(protoContext, 'ToggleKeyboardPassthrough, [Array: nil])
 			end,
+			// Hidden unless the desktop offers 'Keyboard.
 			viewSetupDoneScript: func() begin
 				self:MyHide('Keyboard)
 			end,
+			// Placed among the buttons offered, with the desktop's icon and script if it
+			// gives them.
 			viewSetupFormScript: func() begin
 				self:SetupViewBounds('Keyboard);
 				self:SetupButton()

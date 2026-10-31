@@ -79,6 +79,7 @@ protoListpicker := {
 		// sort text, an item whose text begins with it counting as equal.
 		GotoKey: compile(
 			constants: {
+				// the comparison: a2 beginning with a1 counts as equal
 				kFunction_4503ad: func(a1, a2) begin
 					(if BeginsWith(a2, a1) then 0 else StrCompare(a1, a2))
 				end
@@ -110,6 +111,7 @@ protoListpicker := {
 	// the soup's name and the change's data) and shows the count.
 	viewSetupDoneScript: func() begin
 		local fn;
+		// the soup change callback: message a3 sent to the picker, if it has one
 		fn := func(a1, a2, a3, a4) begin
 			ProtoPerformIfDefined(self, a3, [Array: a1, a4])
 		end;
@@ -189,6 +191,8 @@ protoListpicker := {
 	// start. kFunction_450079 gives an item's entry when it has one.
 	SetupCursor: compile(
 		constants: {
+			// the entry of an item: an alias resolved, a frame's _alias resolved (else
+			// the frame), anything else as it is (nil for nil)
 			kFunction_450079: func(a1) begin
 				local resolveEntryAlias2;
 				if (not a1) then begin
@@ -227,6 +231,8 @@ protoListpicker := {
 				(if a1._fakeID then ((a1.labels = labelsFilter) or (labelsFilter = '_all)))
 			end;
 			if fSoup then begin
+					// the multi-cursor's comparison of two items by a3: '|=| the same name
+					// reference (fake id or alias) or entry; '|<|, '|>| by sort text
 					fn := func(a1, a2, a3) begin
 						local entryFromObj2, entryFromObj3, l3, l4, strCompare2;
 						(if (a3 = '|=|) then (if IsNameRef(a1) then ((if a1._fakeID then (a1._fakeID = a2._fakeID)) or (if (if a1._alias then a2._alias) then IsSameEntry(a1._alias, a2._alias))) else begin
@@ -418,6 +424,7 @@ protoListpicker := {
 		listBase:Update()
 	end,
 	selCountText: nil,
+	// The up arrow: the list's.
 	viewScrollUpScript: func() begin
 		listBase:viewScrollUpScript()
 	end,
@@ -440,6 +447,7 @@ protoListpicker := {
 			end)
 	end,
 	validAlways: nil,
+	// The cursor on the items.
 	GetCursor: func() begin
 		cursor
 	end,
@@ -597,6 +605,7 @@ AZTabs_2 := {
 		self:hiliter(curIndex);
 		(if (not suppressBorder) then self:DrawShape(fBars, {pensize: 2}))
 	end,
+	// A tap (as the tabs').
 	viewClickScript: func(unit) begin
 		inherited:viewClickScript(unit)
 	end,
@@ -731,9 +740,11 @@ listBase := {
 	// else a name reference by its fake id; nil if not there.
 	FindNameRefPos: compile(
 		constants: {
+			// the test of an entry against a selected item's alias
 			kFunction_453bd5: func(a1, a2) begin
 				(if a2 then IsSameEntry(a1, a2))
 			end,
+			// the test of a fake id against a selected item's
 			kFunction_453bf5: func(a1, a2) begin
 				(a1 = a2)
 			end
@@ -783,6 +794,8 @@ listBase := {
 	// sort text changed, the list moves to it; the taps are unmasked.
 	Tapped: compile(
 		constants: {
+			// the entry of an item: an alias resolved, a frame's _alias resolved (else
+			// the frame), anything else as it is (nil for nil)
 			kFunction_450079: func(a1) begin
 				local resolveEntryAlias2;
 				if (not a1) then begin
@@ -1003,6 +1016,8 @@ listBase := {
 	// and any item not selected becomes a fake.
 	insert: compile(
 		constants: {
+			// the entry of an item: an alias resolved, a frame's _alias resolved (else
+			// the frame), anything else as it is (nil for nil)
 			kFunction_450079: func(a1) begin
 				local resolveEntryAlias2;
 				if (not a1) then begin
@@ -1084,6 +1099,8 @@ listBase := {
 	// Whether an item (a name reference, or an entry found in selected) is selected.
 	isSelected: compile(
 		constants: {
+			// the test of an entry against a selected item's alias (an unselected fake
+			// does not count)
 			kFunction_4541b5: func(a1, a2) begin
 				(if (if (not a2._Unselected) then a2._alias) then IsSameEntry(a1, a2._alias))
 			end
@@ -1096,6 +1113,8 @@ listBase := {
 	// the screen locked); its highlight is gone.
 	UpdatePiece: compile(
 		constants: {
+			// the entry of an item: an alias resolved, a frame's _alias resolved (else
+			// the frame), anything else as it is (nil for nil)
 			kFunction_450079: func(a1) begin
 				local resolveEntryAlias2;
 				if (not a1) then begin
@@ -1199,6 +1218,7 @@ upDownScroller := {
 			end;
 		RefreshViews()
 	end,
+	// The arrows show whether there is more above and below.
 	Update: func() begin
 		self:SetArrow('up, (if canScrollUp then 'more else 'normal));
 		self:SetArrow('down, (if canScrollDown then 'more else 'normal));

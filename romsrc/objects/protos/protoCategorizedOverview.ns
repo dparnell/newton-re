@@ -20,6 +20,7 @@ protoCategorizedOverview := {
 	// array by soup entry (the same _uniqueID on the same store)
 	IsThisItemSelected: compile(
 		constants: {
+			// the test that two entries are one (unique id and store)
 			kFunction_5610a1: func(a1, a2) begin
 				(if (a1._uniqueID = a2._uniqueID) then (a1._storeID = a2._storeID))
 			end

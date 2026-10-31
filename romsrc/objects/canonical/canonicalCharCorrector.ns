@@ -365,6 +365,7 @@ canonicalCharCorrector := {
 		(refCon2 := refCon).wordOffset := offset;
 		(refCon2.wordLength := len)
 	end,
+	// The caret at wordOffset (an empty selection).
 	SetCaret: func(wordOffset) begin
 		local refCon2;
 		(refCon2 := refCon).wordOffset := wordOffset;
@@ -994,6 +995,7 @@ cInk := {
 	TieChangedScript: func(a1, a2) begin
 		(if (a2 = 'viewBounds) then (self.viewBounds := a1.viewBounds))
 	end,
+	// Strokes are not taken.
 	viewStrokeScript: func(unit) begin
 		nil
 	end,
@@ -1108,6 +1110,7 @@ recognizeButton := {
 	viewFlags: vVisible + vReadOnly + vClickable,
 	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingCenterH + oneLineOnly,
 	text: recognize,
+	// Recognizes the ink again.
 	buttonClickScript: func() begin
 		self:Recognize()
 	end,

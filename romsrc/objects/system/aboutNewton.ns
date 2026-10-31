@@ -6,6 +6,7 @@
 
 aboutNewton := compile(
 	constants: {
+		// whether a1 is prime (for the stride through the names; see below)
 		kFunction_637e69: func(a1) begin
 			// an odd-divisor primality test: true when a1 is prime
 			(if (a1 = 1) then true else (if ((a1 mod 2) = 0) then (a1 = 2) else begin

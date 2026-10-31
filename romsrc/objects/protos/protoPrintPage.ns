@@ -39,6 +39,7 @@ printMarks := {
 	viewClass: clEditView,
 	viewFlags: 0,
 	viewFormat: 0,
+	// The page's size.
 	viewSetupFormScript: func() begin
 		(self.viewBounds := RelBounds(0, 0, cuPageSize.width, cuPageSize.height))
 	end,

@@ -8,6 +8,7 @@ inboxCard := {
 	// transparent view over it takes the taps.
 	viewSetupFormScript: compile(
 		constants: {
+			// a test every child passes
 			kFunction_72b339: func(a1) begin
 				true
 			end

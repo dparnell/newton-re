@@ -14,6 +14,8 @@ copperfield := {
 	// rotation (reopening itself), others cannot be rotated.
 	PrepBook: compile(
 		constants: {
+			// the browser's ReOrientToScreen while a rotatable book is open: rotation
+			// is allowed
 			kFunction_51bdf9: func() begin
 				true
 			end
@@ -118,6 +120,7 @@ copperfield := {
 	SetStatusBarButtons: func(a1) begin
 		cntrlPanel:SetStatusBarButtons(a1)
 	end,
+	// Whether the book may close now (the content area asks the book).
 	BookOKClose: func() begin
 		contentArea:BookOKClose()
 	end,
@@ -125,6 +128,7 @@ copperfield := {
 	ScrollReceiver: func(a1) begin
 		(scrollStealer := a1)
 	end,
+	// Shows the ink markup layer over the page (hiding the story card).
 	ShowMarkup: func() begin
 		self:HideStoryCard();
 		contentArea:ShowMarkup();
@@ -193,6 +197,7 @@ copperfield := {
 		local pageSize, l2;
 		(if (pagesShowing = 2) then self:DrawShape(MakeLine((l2 := ((pageSize := self:PageSize(nil)).width + 7)), 0, l2, pageSize.height), nil))
 	end,
+	// Sets the markup button's icon (when the status bar is open).
 	SetMarkIcon: func() begin
 		(if (panelOpen = true) then markupButton:SetMarkIcon())
 	end,
@@ -211,6 +216,7 @@ copperfield := {
 		nil
 	end,
 	viewFlags: vApplication + vClipping + vClickable,
+	// Scrolls the browser's outline to the current page, if it is open.
 	SetBrowserPosition: func() begin
 		(if Visible(browser) then browser.Outline:ScrollToCurrent(browser.Outline))
 	end,
@@ -287,6 +293,7 @@ copperfield := {
 		(if (panelOpen = true) then pageNumber:SetPageNumber(a1, a2))
 	end,
 	scrollStealer: nil,
+	// The library soup entry's list of the books that are on line.
 	GetOnlineBooks: func() begin
 		self:VerifyLibrarySoup().online
 	end,
@@ -298,7 +305,7 @@ copperfield := {
 	// view that took them (PostCommand 46 and 45 are the view system's scroll
 	// down and scroll up commands).
 	viewScrollDownScript: func() begin
-		(if (scrollStealer <> nil) then PostCommand(scrollStealer, 46) else begin
+		(if (scrollStealer <> nil) then PostCommand(scrollStealer, aeScrollDown) else begin
 				if Visible(pageDialog) then begin
 						pageDialog:Close()
 					end;
@@ -328,8 +335,11 @@ copperfield := {
 	PageContents: {class: #132, funcPtr: 7023995, numArgs: 1},
 	browserRefnum: 0,
 	UpdateBookmarks: {class: #132, funcPtr: 7025042, numArgs: 1},
+	// The up arrow: given to the view that took the arrows, else back a page
+	// (two when two are shown, except to page 1), closing the bookmark and
+	// page number slips.
 	viewScrollUpScript: func() begin
-		(if (scrollStealer <> nil) then PostCommand(scrollStealer, 45) else begin
+		(if (scrollStealer <> nil) then PostCommand(scrollStealer, aeScrollUp) else begin
 				if Visible(pageDialog) then begin
 						pageDialog:Close()
 					end;
@@ -392,6 +402,7 @@ copperfield := {
 		fields.title := self:BookTitle();
 		self:SaveMarkup()
 	end,
+	// The library soup entry's list of the books that are off line.
 	GetOfflineBooks: func() begin
 		self:VerifyLibrarySoup().offline
 	end,
@@ -462,6 +473,7 @@ copperfield := {
 			end;
 		frame2
 	end,
+	// Closes the browser, if it is open.
 	CloseBrowser: func() begin
 		(if Visible(browser) then browser:Close())
 	end,
@@ -562,6 +574,8 @@ copperfield := {
 	_keyButtonGotoScript: func(a1) begin
 		PressButton(pageNumber)
 	end,
+	// The key commands: the bookmarks slip, the markup button, the routing
+	// button.
 	_keyButtonBookMarkScript: func(a1) begin
 		pageDialog:Toggle()
 	end,
@@ -591,6 +605,8 @@ copperfield := {
 	// the full status bar: close box, routing, markup, bookmark, page number and
 	// info buttons, and any the book adds (leftButtons, rightButtons)
 	fullCtrlPanel: {
+		// Lays out the status bar: its own children, then the book's left buttons
+		// (each after the last) and right buttons (from the right).
 		viewSetupChildrenScript: func() begin
 			self.viewChildren := Clone(kids);
 			if (not stepChildren) then begin
@@ -618,12 +634,15 @@ copperfield := {
 						AddArraySlot(stepChildren, (if (key > 0) then {_proto: value, viewBounds: RelBounds(((-l4) - 6), 0, l4, 13), viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingTopV} else {_proto: value, viewBounds: RelBounds(((-l4) - 48), 2, l4, 13), viewJustify: vjCenterH + vjCenterV + vjParentRightH}))
 					end))
 		end,
+		// Shown without an effect.
 		viewShowScript: func() begin
 			true
 		end,
+		// The book's status bar is this one.
 		viewSetupDoneScript: func() begin
 			(copperfield.cntrlPanel := self)
 		end,
+		// The book's script gives new left and right buttons (SetStatusBarButtons).
 		SetStatusBarButtons: func(a1) begin
 			if HasPath(a1, 'left) then begin
 					leftButtons := a1.left
@@ -639,6 +658,8 @@ copperfield := {
 			{
 				_proto: @protoRoutingSlip,
 				debug: pgRouting,
+				// viewSetupFormScript, viewQuitScript: the book's routing button is this one
+				// while it is open.
 				viewSetupFormScript: func() begin
 					routingButton := self;
 					inherited:?viewSetupFormScript()
@@ -665,9 +686,12 @@ copperfield := {
 	// the small status bar for a short screen: collapsed to a close box and an
 	// expand button, or expanded to the buttons
 	miniCtrlPanel: {
+		// The book's status bar is this one.
 		viewSetupDoneScript: func() begin
 			(copperfield.cntrlPanel := self)
 		end,
+		// The book's script gives new left and right buttons; they show only while
+		// the bar is open.
 		SetStatusBarButtons: func(a1) begin
 			if HasPath(a1, 'left) then begin
 					leftButtons := a1.left
@@ -680,6 +704,7 @@ copperfield := {
 		extraWidth: 0,
 		viewFormat: 0,
 		page: 0,
+		// A line across the bar.
 		viewDrawScript: func() begin
 			self:DrawShape(MakeRect(2, 4, (self:LocalBox().right - 2), 6), nil)
 		end,
@@ -697,6 +722,7 @@ copperfield := {
 					bounds: {left: 0, top: 0, right: 17, bottom: 17}
 				},
 				viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH,
+				// Collapses the bar (closing the markup layer first).
 				buttonClickScript: func() begin
 					if Visible(markupLayer) then begin
 							self:HideMarkup()
@@ -710,6 +736,8 @@ copperfield := {
 				viewBounds: {left: -21, top: 2, right: -4, bottom: 15},
 				viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH,
 				debug: pgRouting,
+				// viewSetupFormScript, viewQuitScript: the book's routing button is this one
+				// while it is open.
 				viewSetupFormScript: func() begin
 					routingButton := self;
 					inherited:?viewSetupFormScript()
@@ -728,6 +756,7 @@ copperfield := {
 		viewJustify: vjParentRightH + vjParentBottomV,
 		collapsedKids: [|Array|:
 			{
+				// Close, if the book allows it.
 				buttonClickScript: func() begin
 					(if base:BookOKClose() then base:Close())
 				end,
@@ -741,6 +770,7 @@ copperfield := {
 					bits: bitmap('bits, "resources/bits/51ef35.png", "0000000000040165016501710172017e", 1),
 					bounds: {left: 0, top: 0, right: 13, bottom: 13}
 				},
+				// Expands the bar.
 				buttonClickScript: func() begin
 					cntrlPanel:ChangeState()
 				end,
@@ -809,6 +839,7 @@ copperfield := {
 				end;
 			self:Parent():Dirty()
 		end,
+		// Shown without an effect.
 		viewShowScript: func() begin
 			true
 		end
@@ -865,6 +896,8 @@ markupLayer := {
 	protoEditChild: {
 		viewClass: clEditView,
 		viewFlags: vVisible + vClipping + vClickable + vGesturesAllowed,
+		// viewAddChildScript, viewDropChildScript: the markup icon shows whether the
+		// page has marks (the first added, the last removed).
 		viewAddChildScript: func(aNewOne) begin
 			if (Length(viewChildren) = 0) then begin
 					markupButton:SetDynamicMarkIcon(1)
@@ -915,11 +948,13 @@ markupLayer := {
 						AddArraySlot(viewChildren, frame3)
 					end)))
 	end,
+	// The size of one page, or of two side by side with 15 pixels between.
 	viewSetupFormScript: func() begin
 		local pageSize;
 		pageSize := self:PageSize(nil);
 		(if (pagesShowing = 1) then (self.viewBounds := RelBounds(0, 0, pageSize.width, pageSize.height)) else (self.viewBounds := RelBounds(0, 0, ((pageSize.width * 2) + 15), pageSize.height)))
 	end,
+	// Shown without an effect.
 	viewShowScript: func() begin
 		true
 	end,
@@ -957,15 +992,18 @@ copperfieldItem := {
 		bounds: {left: 0, top: 0, right: 17, bottom: 17}
 	},
 	state: 'off,
+	// In the small status bar: at 42, with the current icon.
 	viewSetupFormScript: func() begin
 		(if miniBar then begin
 				self.viewBounds := RelBounds(42, 0, 17, 17);
 				self:SetMarkIcon()
 			end)
 	end,
+	// The book's markup button is this one.
 	viewSetupDoneScript: func() begin
 		(copperfield.markupButton := self)
 	end,
+	// Toggles the markup layer.
 	buttonClickScript: func() begin
 		if (state = 'on) then begin
 				self:Parent():HideMarkup();
@@ -1017,9 +1055,11 @@ copperfieldItem_2 := {
 		bits: bitmap('bits, "resources/bits/51e991.png", "00000000000401860186003101970044", 1),
 		bounds: {left: 0, top: 0, right: 19, bottom: 17}
 	},
+	// In the small status bar: at 22.
 	viewSetupFormScript: func() begin
 		(if miniBar then (self.viewBounds := RelBounds(22, 0, 17, 17)))
 	end,
+	// Opens or closes the bookmarks slip.
 	buttonClickScript: func() begin
 		pageDialog:Toggle()
 	end,
@@ -1032,6 +1072,7 @@ copperfieldItem_3 := {
 	viewBounds: {left: 0, top: 2, right: 30, bottom: 15},
 	viewJustify: vjCenterH + vjParentCenterH,
 	text: nil,
+	// Opens or closes the go-to-page slip.
 	buttonClickScript: func() begin
 		pageNumberDialog:Toggle()
 	end,
@@ -1050,6 +1091,7 @@ copperfieldItem_3 := {
 			end;
 		self:SyncView()
 	end,
+	// The current page; placed for the full or the small bar.
 	viewSetupFormScript: func() begin
 		page := self:CurrentPage();
 		(if (miniBar = nil) then (self.viewBounds := RelBounds(0, 2, pgButWidth, 13)) else begin
@@ -1057,6 +1099,7 @@ copperfieldItem_3 := {
 				(self.viewJustify := vjCenterH + vjCenterV + vjParentCenterH)
 			end)
 	end,
+	// "p." and the page number; the book's page number button is this one.
 	viewSetupDoneScript: func() begin
 		self.text := Stringer([Array: "p.", SPrintObject(page)]);
 		(copperfield.pageNumber := self)
@@ -1069,6 +1112,8 @@ copperfieldItem_3 := {
 copperfieldItem_4 := {
 	viewBounds: {left: 6, top: 0, right: 19, bottom: 13},
 	viewJustify: vjCenterH + vjCenterV + vjParentCenterV,
+	// The info button's items: About (the book's About card), Help (the Learn
+	// book), Prefs (the Display preferences).
 	DoInfoAbout: func() begin
 		bookAbout:Open()
 	end,
@@ -1084,6 +1129,7 @@ copperfieldItem_4 := {
 
 // the close box, which asks the content whether it may close
 kidsProto := {
+	// Close, if the book allows it.
 	buttonClickScript: func() begin
 		(if base:BookOKClose() then base:Close())
 	end,
@@ -1097,12 +1143,15 @@ pageNumberDialog := {
 	viewJustify: vjParentBottomV,
 	viewEffect: 393216,
 	declareSelf: 'base,
+	// Pages from 1 to the book's last.
 	viewSetupFormScript: func() begin
 		(self.maxValue := self:CountPages())
 	end,
+	// Shown without an effect.
 	viewShowScript: func() begin
 		true
 	end,
+	// A page number entered: turns to it (closing the bookmarks slip).
 	NumberEntered: func(floor) begin
 		if Visible(pageDialog) then begin
 				pageDialog:Close()
@@ -1115,6 +1164,7 @@ pageNumberDialog := {
 		{_proto: turnToPage, viewJustify: vjCenterV},
 		{
 			viewBounds: {left: 138, top: 25, right: 188, bottom: 45},
+			// " of" and the number of pages.
 			viewSetupDoneScript: func() begin
 				(text := Stringer([Array: " of", " ", self:CountPages()]))
 			end,
@@ -1144,6 +1194,7 @@ pageDialog := {
 	protoMarkButton: {
 		_proto: @protoTextButton,
 		viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH,
+		// "Mark p." and the page, sized to fit; the slip's default button.
 		viewSetupFormScript: func() begin
 			local strWidth2;
 			strWidth2 := StrWidth(NumberStr(thisPage));
@@ -1151,6 +1202,7 @@ pageDialog := {
 			self.text := Stringer([Array: "Mark p.", NumberStr(thisPage)]);
 			(pageDialog._defaultButton := self)
 		end,
+		// Adds a bookmark for the page and redraws the list.
 		buttonClickScript: func() begin
 			self:AddBookmark(thisPage);
 			base:SyncView();
@@ -1158,6 +1210,7 @@ pageDialog := {
 			base:Parent():Dirty();
 			RefreshViews()
 		end,
+		// No longer the slip's default button.
 		viewQuitScript: func() begin
 			RemoveSlot(pageDialog, '_defaultButton);
 			inherited:?viewQuitScript()
@@ -1272,6 +1325,7 @@ pageDialog := {
 			end;
 		(if firstMark then AddArraySlot(self.viewChildren, {_proto: protoMarkButton, thisPage: firstMark}))
 	end,
+	// Shown without an effect.
 	viewShowScript: func() begin
 		true
 	end,
@@ -1360,6 +1414,7 @@ bookAbout := {
 					end)
 			end)
 	end,
+	// Draws the About text.
 	viewDrawScript: func() begin
 		self:DrawShape(aboutText, nil)
 	end,
@@ -1372,6 +1427,7 @@ bookAbout := {
 	end,
 	// a LongDateStr format spec for the dates
 	dateShort: 80492,
+	// Drops what the card made when it opened.
 	viewQuitScript: func() begin
 		RemoveSlot(self, 'aboutText);
 		RemoveSlot(self, 'secret);
@@ -1475,6 +1531,7 @@ bookPrefs := {
 					end);
 				self:SetupList()
 			end,
+			// The rendering picked.
 			buttonClickScript: func(a1) begin
 				(index := a1)
 			end,

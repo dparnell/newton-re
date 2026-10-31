@@ -50,6 +50,7 @@ export80 := {
 // Restart: reboots the Newton.
 restart := {
 	text: "Restart",
+	// Restarts.
 	buttonClickScript: func() begin
 		ReBoot()
 	end,

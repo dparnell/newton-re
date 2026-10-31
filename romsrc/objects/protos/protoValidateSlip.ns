@@ -55,10 +55,11 @@ protoValidateSlip := {
 				// the recognition toggle at the bottom left; 8388742 =
 				// vjCenterH + vjCenterV + vjParentBottomV + oneLineOnly
 				// (0x800000, the NPG's value)
-				AddArraySlot(stepChildren, '{_proto: @recToggle, viewBounds: {left: 2, top: -18, right: 20, bottom: -5}, viewJustify: 8388742, _recogPopup: [Array: recogText, recogInkText, pickseparator, recToggleSettings]})
+				AddArraySlot(stepChildren, '{_proto: @recToggle, viewBounds: {left: 2, top: -18, right: 20, bottom: -5}, viewJustify: vjCenterH + vjCenterV + vjParentBottomV + oneLineOnly, _recogPopup: [Array: recogText, recogInkText, pickseparator, recToggleSettings]})
 			end;
 		inherited:?viewSetupChildrenScript()
 	end,
+	// The slip fitted to the screen's width (see the DEVIATION).
 	viewSetupFormScript: func() begin
 		local appAreaWidth;
 		// DEVIATION: on a screen narrower than the slip (284: the T-Deck Pro's
@@ -104,6 +105,7 @@ protoValidateSlip := {
 	viewQuitScript: func() begin
 		'postQuit
 	end,
+	// Closed: the changes saved.
 	viewPostQuitScript: func() begin
 		self:EndFlush()
 	end,
@@ -121,6 +123,7 @@ protoValidateSlip := {
 		// field with a path has data (stopping at the first that does not; a
 		// field's HasData decides, else a non-empty string or any value)
 		{
+			// OK: done if every field with a path has data.
 			buttonClickScript: func() begin
 				local l1;
 				local path;

@@ -33,9 +33,12 @@ assistFrames := {
 		isa: birthdayIsa,
 		repeatIt: 'yearly,
 		Lexicon: [|Array|: [|Array|: "birthday", "bday", "b-day"]],
+		// The event's title: "Bday: " and the person's name.
 		GetTitle: func(target) begin
 			return ParamStr("Bday: ^0", [Array: GetDataDefs('|nameRef.people|):Get(target, 'name, 'text)])
 		end,
+		// Records the birthday on the person's Names card (personal bday) and links
+		// the card to the yearly event made for it.
 		AddToCardfile: func(entryFromObj, newMtgDate, yearly) begin
 			(if GetRoot().cardfile:AddCardData(entryFromObj, 'personal, {bday: newMtgDate}) then begin
 					entryFromObj.bdayEvent := MakeEntryAlias(yearly);
@@ -62,9 +65,12 @@ assistFrames := {
 		isa: birthdayIsa,
 		repeatIt: 'yearly,
 		Lexicon: [|Array|: [|Array|: "anniversary"]],
+		// The event's title: "Anniv.: " and the person's name.
 		GetTitle: func(target) begin
 			return ParamStr("Anniv.: ^0", [Array: GetDataDefs('|nameRef.people|):Get(target, 'name, 'text)])
 		end,
+		// Records the anniversary on the person's Names card and links the card to
+		// the yearly event made for it.
 		AddToCardfile: func(entryFromObj, newMtgDate, yearly) begin
 			(if GetRoot().cardfile:AddCardData(entryFromObj, 'personal, {anniversary: newMtgDate}) then begin
 					entryFromObj.anniversaryEvent := MakeEntryAlias(yearly);
@@ -310,6 +316,9 @@ scheduling_task := {
 				(a1.locationEntries := list)
 			end else (if (not setInvitees) then (if (setInvitees := FindPossibleLocation(self.noisewords, self.OrigPhrase)) then (a1.locationEntries := [Array: GetDataDefs('|nameRef.meetingPlace|):MakeNameRef({company: setInvitees}, '|nameRef.meetingPlace|)]))))
 	end,
+	// Matched: fills the meeting slip (taskSlip) - its time (the action's usual
+	// time if it has one), title and invitees; an event (special_event_act) is
+	// an event, perhaps repeating, else the meeting's place - and opens it.
 	postParse: func() begin
 		frame2 := {givenTime: nil, usualTime: nil, usualValue: nil, currentTime: Time(), hasDate: nil, hasTime: nil};
 		root := GetRoot();
@@ -358,6 +367,8 @@ finding_task := {
 	signature: finding_taskSignature,
 	preconditions: finding_taskPreconditions,
 	taskSlip: 'findslip,
+	// Matched: opens Find with the words left once the find action's are taken
+	// out, and closes the Assistant.
 	postParse: func() begin
 		local root, l2, copy;
 		(l2 := (root := GetRoot()).findDrawer):Open();
@@ -384,6 +395,8 @@ remembering_task := {
 	signature: remembering_taskSignature,
 	preconditions: remembering_taskPreconditions,
 	taskSlip: 'remindSlip,
+	// The reminder's text: the phrase without the remind action's words and the
+	// date's.
 	SetTitle: func() begin
 		input := self.input;
 		glueStrings2 := GlueStrings(self.OrigPhrase);
@@ -403,6 +416,7 @@ remembering_task := {
 			end;
 		return glueStrings2
 	end,
+	// Matched: opens the To Do slip (taskSlip) with the time and text.
 	postParse: func() begin
 		local frame2, root, l3;
 		frame2 := {givenTime: nil, usualTime: nil, usualValue: nil, currentTime: Time(), hasDate: nil, hasTime: nil};
@@ -430,14 +444,19 @@ mailing_task := {
 	taskType: 'mail,
 	mailTag: nil,
 	transportStr: mail_2,
+	// The address tags to mail to: the transport's (iaTags), else every e-mail
+	// class.
 	SetEmailTags: func(a1) begin
 		local iaTags;
 		(if (iaTags := self:GetTransportTags('iaTags)) then (a1.mailTag := iaTags) else (a1.mailTag := EmailSystems.emailClasses))
 	end,
+	// Matched: a new mail item of the front application's target, addressed to
+	// the people (a group only of E-mail type), in its routing slip; the user
+	// is told when there is no mail transport, no group, or nothing to mail.
 	postParse: func() begin
 		l1 := GetRoot();
 		if (not (l2 := GetGroupTransport(taskType))) then begin
-				l1:Notify(3, "Assist", "No mail transport installed.");
+				l1:Notify(kNotifyAlert, "Assist", "No mail transport installed.");
 				l1.assistant:Close();
 				return nil
 			end;
@@ -448,7 +467,7 @@ mailing_task := {
 		if (l5 := GetMatchedEntries('allEntries, self.entries)) then begin
 				self:RemoveGroupsExcept(l5, '|nameRef.email|)
 			end;
-		(if (if l5 then (Length(l5) = 0)) then l1:Notify(3, "Assist", "Cannot mail to a group that is not a E-mail type group.") else begin
+		(if (if l5 then (Length(l5) = 0)) then l1:Notify(kNotifyAlert, "Assist", "Cannot mail to a group that is not a E-mail type group.") else begin
 				if ((l2 := l1.(l2):NewItem(l3)) <> nil) then begin
 						self:SetEmailTags(l2);
 						if (l5 <> nil) then begin
@@ -507,7 +526,7 @@ mailing_task := {
 						l6 := OpenRoutingSlip(l2, l4);
 						l1.assistant:Close()
 					end;
-				(if (not l6) then l1:Notify(3, "Assist", "There is nothing to mail."))
+				(if (not l6) then l1:Notify(kNotifyAlert, "Assist", "There is nothing to mail."))
 			end)
 	end,
 	score: nil
@@ -530,15 +549,18 @@ faxing_task := {
 	iaHomeTags: [|Array|: 'homefaxPhone, '|string.phone.homefaxPhone|, 'faxPhone, '|string.phone.faxPhone|, 'phone],
 	taskType: 'fax,
 	transportStr: fax,
+	// The phone tags to fax to: home or work as the item's phoneTag says, else
+	// the transport's, else the preferred kind's.
 	GetFaxTags: func(groupTransport) begin
 		local preferredSymb;
 		(if HasSlot(groupTransport, 'phoneTag) then (if (groupTransport.phoneTag = 'homefaxPhone) then self.iaHomeTags else self.iaWorkTags) else (if (not (tags := self:GetTransportTags((preferredSymb := self:GetPreferredSymb())))) then self.(preferredSymb) else tags))
 	end,
+	// Matched: as mailing_task, a fax item to the people in its routing slip.
 	postParse: func() begin
 		local root, groupTransport, viewfrontmostapp2, viewfrontmostapp, allEntries, openRoutingSlip2;
 		root := GetRoot();
 		if (not (groupTransport := GetGroupTransport(taskType))) then begin
-				root:Notify(3, "Assist", "No fax transport installed.");
+				root:Notify(kNotifyAlert, "Assist", "No fax transport installed.");
 				return nil
 			end;
 		if ((viewfrontmostapp := self:iaGetTargetInfo((viewfrontmostapp2 := GetView('viewfrontmostapp)), groupTransport, transportStr)) = nil) then begin
@@ -548,7 +570,7 @@ faxing_task := {
 		if (allEntries := GetMatchedEntries('allEntries, self.entries)) then begin
 				self:RemoveGroupsExcept(allEntries, '|nameRef.fax|)
 			end;
-		(if (if allEntries then (Length(allEntries) = 0)) then root:Notify(3, "Assist", "Cannot fax a group that is not a Faxes type group.") else begin
+		(if (if allEntries then (Length(allEntries) = 0)) then root:Notify(kNotifyAlert, "Assist", "Cannot fax a group that is not a Faxes type group.") else begin
 				if ((groupTransport := root.(groupTransport):NewItem(viewfrontmostapp2)) <> nil) then begin
 						PhoneUtility(groupTransport, self);
 						if (not HasSlot(groupTransport, 'dialdirect)) then begin
@@ -559,7 +581,7 @@ faxing_task := {
 						openRoutingSlip2 := OpenRoutingSlip(groupTransport, viewfrontmostapp);
 						root.assistant:Close()
 					end;
-				(if (not openRoutingSlip2) then root:Notify(3, "Assist", "There is nothing to fax."))
+				(if (not openRoutingSlip2) then root:Notify(kNotifyAlert, "Assist", "There is nothing to fax."))
 			end)
 	end,
 	score: nil
@@ -578,11 +600,13 @@ printing_task := {
 	preconditions: printing_taskPreconditions,
 	taskType: 'Print,
 	transportStr: print,
+	// Matched: a print item of the front application's target in its routing
+	// slip.
 	postParse: func() begin
 		local root, groupTransport, viewfrontmostapp2, viewfrontmostapp, openRoutingSlip2;
 		root := GetRoot();
 		if (not (groupTransport := GetGroupTransport(taskType))) then begin
-				root:Notify(3, "Assist", "No print transport installed.");
+				root:Notify(kNotifyAlert, "Assist", "No print transport installed.");
 				return nil
 			end;
 		if ((viewfrontmostapp := self:iaGetTargetInfo((viewfrontmostapp2 := GetView('viewfrontmostapp)), groupTransport, transportStr)) = nil) then begin
@@ -593,7 +617,7 @@ printing_task := {
 				openRoutingSlip2 := OpenRoutingSlip(groupTransport, viewfrontmostapp);
 				root.assistant:Close()
 			end;
-		(if (not openRoutingSlip2) then root:Notify(3, "Assist", "There is nothing to print."))
+		(if (not openRoutingSlip2) then root:Notify(kNotifyAlert, "Assist", "There is nothing to print."))
 	end,
 	score: nil
 };
@@ -636,6 +660,8 @@ calling_task := {
 		'|string.pager|,
 		'phone
 	],
+	// The phone tags to call: the item's phoneTag (and its string kind), else the
+	// preferred kind's.
 	GetPhoneTags: func(a1) begin
 		local preferredSymb;
 		(if HasSlot(a1, 'phoneTag) then [Array: a1.phoneTag, Intern(Stringer([Array: "string.phone.", a1.phoneTag])), 'phone] else begin
@@ -643,6 +669,7 @@ calling_task := {
 				self.(preferredSymb)
 			end)
 	end,
+	// Matched: a call item to the people (no group) in the Call routing slip.
 	postParse: func() begin
 		local root, allEntries, viewfrontmostapp, routing, l5;
 		root := GetRoot();
@@ -650,7 +677,7 @@ calling_task := {
 				self:RemoveAllGroups(allEntries)
 			end;
 		if (if allEntries then (Length(allEntries) = 0)) then begin
-				root:Notify(3, "Assist", "Cannot call a group.")
+				root:Notify(kNotifyAlert, "Assist", "Cannot call a group.")
 			end else begin
 				routing := (viewfrontmostapp := GetView('viewfrontmostapp)):GetActiveView();
 				l5 := root.(taskSlip):NewItem(viewfrontmostapp);
@@ -692,6 +719,8 @@ default_task := {
 	preconditions: default_taskPreconditions,
 	taskSlip: nil,
 	choices: nil,
+	// Matched nothing more particular: offers the templates the thing named can
+	// go with, to pick one.
 	postParse: func() begin
 		(if ((choices := GetRelevantTemplates(self.user_obj[0][0])) <> nil) then begin
 				(ass := GetRoot().assistant).assistLine.defaultChoices := choices;
@@ -715,6 +744,7 @@ about_task := {
 	preconditions: about_taskPreconditions,
 	taskSlip: nil,
 	choices: nil,
+	// Matched: the About Newton slip.
 	postParse: func() begin
 		call @aboutNewton with ()
 	end,
@@ -733,14 +763,18 @@ overview_2 := {
 	autoDeselect: true,
 	selectIndent: 0,
 	nothingCheckable: true,
+	// A cursor on the cities found.
 	viewSetupFormScript: func() begin
 		(cursor := @arrayErsatzCursor:New('{}, items))
 	end,
+	// One line per city.
 	viewSetupChildrenScript: func() begin
 		self:SetupAbstracts(cursor:clone())
 	end,
 	Abstract: compile(
 		constants: {
+			// run when this function is built: a binary of class cls from the hex
+			// string hex, for the literals below
 			kBinaryFromHex: func(hex, cls) begin
 				local b := MakeBinary(StrLen(hex) div 2, cls);
 				for i := 0 to Length(b) - 1 do begin
@@ -758,6 +792,7 @@ overview_2 := {
 			localTime2 := LocalTime(nil, resolveEntryAlias2);
 			[Array: MakeText(items2Item.title, (copy.left + 37), copy.top, copy.right, (copy.top + 11)), MakeText(Stringer([Array: HourMinute(localTime2), "  ", ShortDate(localTime2)]), (copy.left + 37), ((copy.top + 11) + 2), copy.right, ((copy.top + 22) + 2)), ScaleShape(MakeShape(kLiteral_52ac79), nil, RelBounds((copy.left + 10), (copy.top + 4), 16, 16))]
 		end),
+	// A city tapped: shows it in Time Zones and closes.
 	HitItem: func(a1, trackScrollingItem, trackScrollingItem2) begin
 		local copy, entry, worldClock;
 		copy := cursor:clone();
@@ -767,6 +802,7 @@ overview_2 := {
 		openChild := worldClock:ShowFoundItem(entry);
 		base:Close()
 	end,
+	// Moves the cursor by maxLines and redraws.
 	Scroller: func(maxLines) begin
 		cursor:move(maxLines);
 		self:RedoChildren();
@@ -797,6 +833,7 @@ time_task := {
 		city: nil,
 		declareSelf: 'base,
 		debug: 2115625,
+		// Shows the cities, titled "Time in <city>".
 		viewSetupFormScript: func() begin
 			inherited:?viewSetupFormScript();
 			self.overview.items := items;
@@ -809,6 +846,9 @@ time_task := {
 		overview: nil,
 		_proto: @protoFloatNGo
 	},
+	// Matched: finds the city named in Time Zones - one shown there, several
+	// offered in a list, none: the Assistant says it did not understand; no city
+	// named opens Time Zones.
 	postParse: func() begin
 		local root, l2, copy, worldClock, list, localFind, items, count, context;
 		l2 := (root := GetRoot()).assistant;

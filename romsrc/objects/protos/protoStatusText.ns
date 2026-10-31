@@ -19,6 +19,7 @@ protoStatusText := {
 	GetJustify: func() begin
 		(if (if StrFilled(text) then (StrWidth(text) < (viewBounds.right - viewBounds.left))) then BOr(self.viewJustify, vjCenterV) else BAnd(self.viewJustify, bnot(vjCenterV)))
 	end,
+	// The text and, for a line that fits, centred vertically.
 	viewSetupFormScript: func() begin
 		text := self:GetText();
 		(self.viewJustify := self:GetJustify())
