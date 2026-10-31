@@ -1,4 +1,11 @@
-// calculator, and what only it reaches
+// calculator: the Calculator (Extras), a four-function adding machine floater:
+// a tape (paperDisplay, the last 30 lines of which maxLines show), the entry
+// display, and a keypad (keys).  The keys' results are the codes the code
+// works with: 1-9 the digits, 117 the digit 0, 100 the decimal point, 101 %,
+// 102 MR, 108 =, 111 C (clear all), 112 CE (clear entry), 113 +, 114 -,
+// 115 x, 116 divide, 152 square root, 153 M+, 154 M-.  value is the number
+// being entered or the result, stack the running total, pendingOp the
+// operation waiting for its second operand.  The keyboard works too (lookup).
 
 calculator := {
 	isUnary: nil,
@@ -31,6 +38,7 @@ calculator := {
 	},
 	preallocatedContext: 'calculator,
 	rotated: nil,
+	// the rounded frame round the tape and display (a narrower one when rotated)
 	viewDrawScript: func() begin
 		(if rotated then self:DrawShape(MakeRoundRect(1, 1, 138, (((1 + (15 * maxLines)) + 18) + 4), 5), '{pensize: 2, fillPattern: 0}) else self:DrawShape(MakeRoundRect(1, 1, 169, (((1 + (15 * maxLines)) + 18) + 4), 5), '{pensize: 2, fillPattern: 0}))
 	end,
@@ -38,6 +46,8 @@ calculator := {
 	keyFactor: keyFactor,
 	viewFlags: vApplication + vClickable,
 	keys: nil,
+	// a number as the display and tape show it: eight significant digits
+	// (%.8G), the exponent (if any) as %.8g writes it
 	CalcFormattedNumberStr: compile(
 		constants: {
 			kLiteral_4e1865: "%.8G"
@@ -61,6 +71,8 @@ calculator := {
 	memory: nil,
 	lastKey: -1,
 	viewBounds: {left: 0, top: 0, right: 170, bottom: 257},
+	// a key typed on a keyboard: the key code of the calculator key lookup gives
+	// for the character
 	viewKeyDownScript: func(char2, flags) begin
 		if (if (char2 <> $\00) then (not IsCommandKeystroke(char2, flags))) then begin
 				(foreach item in lookup do begin
@@ -72,6 +84,7 @@ calculator := {
 			end;
 		nil
 	end,
+	// shows maxLines of the tape from line index
 	calcPaperDisplay: func() begin
 		smartStart2 := SmartStart(120);
 		l2 := (maxLines - 1);
@@ -96,6 +109,8 @@ calculator := {
 	paperDisplay: nil,
 	textFlags: 1024,
 	value: stack,
+	// adds a line at the end of the tape (the tape scrolls up one line) and shows
+	// the end
 	printToPaper: func(text) begin
 		(for i := 1 to 29 do begin
 				paper[(i - 1)] := paper[i]
@@ -121,6 +136,8 @@ calculator := {
 			end)
 	end,
 	declareSelf: 'base,
+	// a short application area (the screen rotated to landscape) gets the wide
+	// layout, with the keypad beside the tape
 	viewSetupFormScript: func() begin
 		if (not paper) then begin
 				paper := Clone(initPaper)
@@ -142,6 +159,7 @@ calculator := {
 		self:calcPaperDisplay()
 	end,
 	valueFactor: valueFactor,
+	// the empty tape: 30 lines
 	initPaper: [|Array|:
 		$\u0020,
 		$\u0020,
@@ -179,6 +197,7 @@ calculator := {
 	Clear: true,
 	digitCount: 0,
 	viewHelpTopic: learn,
+	// the keyboard's characters and the calculator key codes they press
 	lookup: [|Array|:
 		[|Array|: $., 100],
 		[|Array|: $0, 117],
@@ -241,12 +260,12 @@ Display := {
 	viewFlags: vVisible + vReadOnly + vClickable + vGesturesAllowed,
 	viewBounds: {left: 3, top: 93, right: 167, bottom: 111},
 	viewFont: tsSimple + tsSize(14) + tsBold,
-	viewJustify: 8388609,
+	viewJustify: vjRightH + oneLineOnly,
 	viewSetupFormScript: func() begin
 		(if rotated then (viewBounds := RelBounds(3, (3 + (15 * maxLines)), 133, 18)))
 	end,
 	viewSetupDoneScript: func() begin
-		(if rotated then SetValue(self, 'viewJustify, 8388609))
+		(if rotated then SetValue(self, 'viewJustify, vjRightH + oneLineOnly))
 	end,
 	preallocatedContext: 'Display,
 	_proto: @protoStaticText
@@ -258,9 +277,11 @@ keys := {
 	viewClass: clKeyboardView,
 	viewBounds: {left: -1, top: 116, right: 171, bottom: 258},
 	viewFlags: vVisible + vClickable,
-	viewFormat: 0,
+	viewFormat: vfNone,
 	viewFont: tsSystem + tsSize(12) + tsBold,
 	keyResultsAreKeycodes: nil,
+	// rows of a legend, the key code and a key descriptor (see alphaKeys.ns); the
+	// codes are the calculator's own, not key codes (keyResultsAreKeycodes nil)
 	keyDefinitions: [|Array|:
 		[|Array|:
 			8,
@@ -360,6 +381,8 @@ keys := {
 		constants: {
 			kROM_736: @keyCommaBitmap
 		},
+		// a locale whose decimal point is not a period gets its own on the key and
+		// in lookup
 		func() begin
 			if ((decimalpoint := GetLocale().numberformat.decimalpoint)[0] <> $.) then begin
 					self.keyDefinitions := Clone(self.keyDefinitions);
@@ -380,12 +403,15 @@ keys := {
 	viewSetupDoneScript: func() begin
 		(if (if (if Clear then (ClassOf(inputKeys) <> 'char)) then (StrLen(inputKeys) = 0)) then self:JamDisplay(self:CalcFormattedNumberStr(value)) else self:JamDisplay(inputKeys))
 	end,
+	// shows inputKeys (a string, or a single character) in the display
 	JamDisplay: func(inputKeys) begin
 		(if (ClassOf(inputKeys) = 'char) then begin
 				(x := Clone(" "))[0] := inputKeys;
 				SetValue(Display, 'text, x)
 			end else SetValue(Display, 'text, inputKeys))
 	end,
+	// starts a new number; with a1, shows the pending operation (and a sign typed
+	// first) in the display
 	ResetValue: func(a1) begin
 		value := 0.0;
 		valueFactor := 10.0;
@@ -400,6 +426,7 @@ keys := {
 				(digitCount := 0)
 			end)
 	end,
+	// CE: drops the number being entered
 	ClearEntry: func() begin
 		if (pendingOp <> 108) then begin
 				pendingOp := 0
@@ -413,6 +440,7 @@ keys := {
 				(digitCount := 0)
 			end)
 	end,
+	// C: clears everything, and feeds the tape a blank line
 	ClearKey: func() begin
 		valueFactor := 10.0;
 		digitCount := 0;
@@ -428,6 +456,10 @@ keys := {
 		self:UpdateDisplay();
 		paperDisplay:Dirty()
 	end,
+	// does the pending operation with the value just entered (and % or square
+	// root first), prints the line on the tape and makes char2 the pending one;
+	// = prints the result as well.  Division by zero and the root of a negative
+	// number beep and give 0.
 	DoOp: func(char2) begin
 		local l1, l2, value2, l4, l5, text;
 		l2 := nil;
@@ -524,12 +556,14 @@ keys := {
 		unary := nil;
 		(isUnary := nil)
 	end,
+	// a key of the keypad, char2 its code (see the header)
 	keyPressScript: func(char2) begin
 		local l1, formattedNumberStr;
 		playsound(click);
 		if (char2 = 117) then begin
 				char2 := 0
 			end;
+		// - or + typed before a number is its sign
 		if (if (if (char2 = 114) then Clear) then (lastKey <> 112)) then begin
 				unary := 114;
 				self:ResetValue(true)
@@ -581,6 +615,7 @@ keys := {
 														self:JamDisplay(inputKeys);
 														Clear := nil
 													end else begin
+														// the operation keys are all above 100
 														if (char2 > 100) then begin
 																if ((not Clear) or (((pendingOp = 108) or (pendingOp = 0)) or (pendingOp = 115))) then begin
 																		self:DoOp(char2)
@@ -599,6 +634,7 @@ keys := {
 																				self:JamDisplay((inputKeys := Stringer([Array: inputKeys, GetLocale().numberformat.decimalpoint])))
 																			end
 																	end else begin
+																		// at most 10 digits
 																		if (digitCount >= 10) then begin
 																				self:SysBeep()
 																			end else begin
@@ -634,6 +670,7 @@ keys := {
 		lastKey := char2;
 		true
 	end,
+	// shows value and starts a new entry
 	UpdateDisplay: func() begin
 		self:JamDisplay(self:CalcFormattedNumberStr(value));
 		(inputKeys := "")
