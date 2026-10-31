@@ -279,6 +279,7 @@ backupSlip := {
 	viewSetupDoneScript: compile(
 		constants: {
 			kLiteral_48e271: "BackupInfo",
+			// the backup cursor's index test: the 1.x "Patch2.0" entry is not part of the backup
 			kFunction_48e335: func(a1) begin
 				(not StrEqual(a1, "Patch2.0"))
 			end,
@@ -347,6 +348,7 @@ backupSlip := {
 			kLiteral_488691: "Backup",
 			kLiteral_47dd29: "There was not enough space to backup \u201C\u^0\u201D\u. Some items may not have been backed up.",
 			kLiteral_47e431: "There was an error while backing up \u201C\u^0\u201D\u. Some items may not have been backed up.",
+			// a cursor over the BackupInfo entries named a2
 			kFunction_48e3a1: func(a1, a2) begin
 				a1:Query({type: 'index, indexPath: 'name, beginKey: a2, endKey: a2})
 			end
@@ -677,6 +679,7 @@ backupSlip := {
 	// user what happened.
 	wipeInfo: compile(
 		constants: {
+			// build-time helper: a binary of class cls from hex text (the progress slip's icon)
 			kBinaryFromHex: func(hex, cls) begin
 				local b := MakeBinary(StrLen(hex) div 2, cls);
 				for i := 0 to Length(b) - 1 do begin
@@ -939,6 +942,7 @@ backupSlip := {
 	// else (1.x) its first entry with a backupDate. Warns when the info looks damaged.
 	getBackupInfo: compile(
 		constants: {
+			// true for a 1.x backup: BackupInfo's soup info has no version
 			kFunction_48e42d: func(a1) begin
 				local allInfo;
 				(not (if (allInfo := a1:GetAllInfo()) then allInfo.version))
@@ -1678,6 +1682,7 @@ backupButton := {
 	text: backup,
 	viewBounds: {left: -48, top: 0, right: -6, bottom: 0},
 	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV,
+	// opens the backup preferences slip, or closes it when open
 	buttonClickScript: compile(
 		constants: {
 			kROM_576: @backupPrefsSlip
@@ -1694,6 +1699,7 @@ restoreButton := {
 	text: restore,
 	viewBounds: {left: -53, top: 0, right: -6, bottom: 0},
 	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV,
+	// opens the restore preferences slip, or closes it when open
 	buttonClickScript: compile(
 		constants: {
 			kROM_577: @restorePrefsSlip
@@ -1701,6 +1707,7 @@ restoreButton := {
 		func() begin
 			(if (not openRestorePrefsSlip) then kROM_577:New(self:Parent()) else openRestorePrefsSlip:Close())
 		end),
+	// hidden while the card has no backup
 	viewSetupDoneScript: func() begin
 		(if (not backupInfo) then self:Hide())
 	end,
@@ -1732,6 +1739,7 @@ eraseButton := {
 				Rethrow()
 			end)
 	end,
+	// tapped: eraseSlip when there is a backup (and it is not open), else checkToErase
 	viewClickScript: compile(
 		constants: {
 			kROM_574: @eraseSlip
@@ -1760,6 +1768,7 @@ defaultStoreCheckBox := {
 	viewBounds: {left: 8, top: -20, right: -8, bottom: -8},
 	viewJustify: vjParentFullH + vjSiblingTopV,
 	text: "Save new info and packages on this card",
+	// checked when the card is the default store
 	viewSetupFormScript: func() begin
 		(viewValue := (self:getDestStore() = GetDefaultStore()))
 	end,
@@ -1771,6 +1780,7 @@ defaultStoreCheckBox := {
 		func(unit) begin
 			(if (if (not viewValue) then self:getDestStore():IsReadOnly()) then GetRoot():Notify(kNotifyAlert, kROM_556, "This card is locked, you cannot store new items on it.") else inherited:viewClickScript(unit))
 		end),
+	// checked: the card becomes the default store; unchecked: the internal store again
 	valueChanged: func() begin
 		local getDestStore;
 		getDestStore := self:getDestStore();
@@ -1788,6 +1798,7 @@ nameInput := {
 	viewFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed,
 	viewJustify: vjParentFullH + vjOneLineOnly,
 	viewLineSpacing: 35,
+	// the card's name; read-only (no clicks, gestures or characters, no lines) on a locked card
 	viewSetupFormScript: func() begin
 		local getDestStore;
 		inherited:?viewSetupFormScript();
@@ -1798,6 +1809,7 @@ nameInput := {
 				(self.viewFormat := BAnd(self.viewFormat, bnot(vfPen(1) + vfLinesGray + vfInset(2))))
 			end)
 	end,
+	// the name edited: renames the card (and its "No backup on" text)
 	viewChangedScript: func(slot, view) begin
 		local getDestStore;
 		(if (if (slot = 'text) then (view = self)) then (if (if (getDestStore := self:getDestStore()):IsValid() then (not getDestStore:IsReadOnly())) then begin
