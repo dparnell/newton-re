@@ -537,6 +537,7 @@ WeekPicker := {
 			viewBounds: {left: 0, top: 0, right: 0, bottom: 14},
 			viewJustify: vjParentFullH + vjSiblingBottomV,
 			text: first_2,
+			// Checked or not: the first week of the month added or taken out.
 			valueChanged: func() begin
 				self:AddWeek(kFirstWeek)
 			end,
@@ -547,6 +548,7 @@ WeekPicker := {
 			viewJustify: vjParentFullH + vjSiblingBottomV,
 			viewValue: nil,
 			text: second,
+			// The second week.
 			valueChanged: func() begin
 				self:AddWeek(kSecondWeek)
 			end,
@@ -557,6 +559,7 @@ WeekPicker := {
 			viewJustify: vjParentFullH + vjSiblingBottomV,
 			viewValue: nil,
 			text: third,
+			// The third week.
 			valueChanged: func() begin
 				self:AddWeek(kThirdWeek)
 			end,
@@ -567,6 +570,7 @@ WeekPicker := {
 			viewJustify: vjParentFullH + vjSiblingBottomV,
 			viewValue: nil,
 			text: fourth,
+			// The fourth week.
 			valueChanged: func() begin
 				self:AddWeek(kFourthWeek)
 			end,
@@ -577,6 +581,7 @@ WeekPicker := {
 			viewJustify: vjParentFullH + vjSiblingBottomV,
 			viewValue: nil,
 			text: last,
+			// The last week.
 			valueChanged: func() begin
 				self:AddWeek(kLastWeek)
 			end,

@@ -15,6 +15,7 @@ notes_2 := {
 	// and ignored.
 	viewSetupFormScript: compile(
 		constants: {
+			// a test every child passes
 			kFunction_72faa1: func(a1) begin
 				true
 			end

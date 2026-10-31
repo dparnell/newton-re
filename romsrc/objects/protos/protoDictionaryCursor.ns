@@ -144,6 +144,7 @@ protoDictionaryCursor := {
 		GetEntry: func(i) begin
 			(if (Length(buffer) > i) then buffer[i])
 		end,
+		// GetBuffer, GetBufferSize, GetCursor: the window's fields.
 		GetBuffer: func() begin
 			return buffer
 		end,

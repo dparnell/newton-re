@@ -9,6 +9,7 @@ protodiamondButton := {
 	PadText: func(text) begin
 		(if BeginsWith(text, "  ") then text else (if BeginsWith(text, " ") then Stringer([Array: " ", text]) else Stringer([Array: "  ", text])))
 	end,
+	// Pads the text to leave room for the diamond.
 	viewSetupFormScript: func() begin
 		local padText;
 		padText := self:PadText(text);

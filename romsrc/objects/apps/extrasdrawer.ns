@@ -56,6 +56,7 @@ extrasdrawer := {
 	GetPartCursor: compile(
 		constants: {
 			kLiteral_5a74d1: "Packages",
+			// The union of two tags (each a symbol or an array of them).
 			kFunction_554015: func(a1, a2) begin
 				if IsSymbol(a1) then begin
 						a1 := [Array: a1]
@@ -185,6 +186,7 @@ extrasdrawer := {
 					appSymbol := value.appSymbol;
 					packageName := value.packageName;
 					if (l4 := (if store then store:GetSoup(kLiteral_5a74d1) else GetUnionSoup(kLiteral_5a74d1))) then begin
+							// the test of an icon entry: its app is appSymbol
 							fn := func(a1) begin
 								(a1.app = appSymbol)
 							end;
@@ -373,10 +375,13 @@ extrasdrawer := {
 				AddArraySlot(l7, [Array: kLiteral_536791, MakeText(ParamStr("ROM Version ^0-^1", [Array: l16.ROMversionstring, l16.patchVersion]), l2, l15, l5, (l15 + 10)), MakeText(ParamStr("System RAM Installed ^0K", [Array: (l16.RAMSize div 1024)]), l2, (l15 + 16), l5, (l15 + 22)), MakeLine(l2, (l15 + 28), l5, (l15 + 28))]);
 				self:DrawShape(l7, kLiteral_5367b5)
 			end),
+		// Taps make no ink.
 		viewClickScript: func(unit) begin
 			InkOff(unit);
 			inherited:?viewClickScript(unit)
 		end,
+		// The backdrop button is hidden when the drawer is already the backdrop;
+		// remembers the backdrop application.
 		viewSetupFormScript: func() begin
 			if (userConfiguration.blessedapp = 'ExtrasDrawer) then begin
 					makeBackDrop.viewFlags := 0
@@ -405,6 +410,8 @@ extrasdrawer := {
 			end);
 		(if (l1 = 0) then self:HandleNewPartEntry(pkgRefInfo.store, '|????|, '{}, packageEntry.packageName))
 	end,
+	// The key commands: the routing button (Action), the rotate button, the
+	// folder tab.
 	_actionKeyScript: func(a1) begin
 		PressButton(routingButton)
 	end,
@@ -452,6 +459,7 @@ extrasdrawer := {
 	// a package has several parts, with a progress slip.
 	DeleteSelectedIcons: compile(
 		constants: {
+			// run when this function is built: a binary of class cls from hex
 			kBinaryFromHex: func(hex, cls) begin
 				local b := MakeBinary(StrLen(hex) div 2, cls);
 				for i := 0 to Length(b) - 1 do begin
@@ -544,6 +552,7 @@ extrasdrawer := {
 	blessedBounds: {left: 0, top: 0, right: 0, bottom: 0},
 	// the drawer's entries need no conversion, except to 1.x
 	conversion: {
+		// No conversion, except to 1.x ('oneO): nil.
 		Convert: func(body, a2, a3, a4) begin
 			(if (a3 <> 'oneO) then body)
 		end
@@ -687,6 +696,7 @@ extrasdrawer := {
 	// them to its store, with a progress slip.
 	FileSelectedIcons: compile(
 		constants: {
+			// run when this function is built: a binary of class cls from hex
 			kBinaryFromHex: func(hex, cls) begin
 				local b := MakeBinary(StrLen(hex) div 2, cls);
 				for i := 0 to Length(b) - 1 do begin
@@ -880,6 +890,9 @@ extrasdrawer := {
 	title: extras,
 	// the icon entry to make for each kind of part
 	NewPartMakers: {
+		// form, auto, Book, font, dict, ????: a new entry for a form, an auto part,
+		// a book (a help book's or a book's: its isbn, short title and icon), a
+		// font, a dictionary, or a part of an unknown kind.
 		form: func(a1, a2) begin
 			@extraProtos.FormEntry:New()
 		end,
@@ -947,6 +960,7 @@ extrasdrawer := {
 		viewJustify: vjParentCenterH + vjParentBottomV,
 		extras: nil,
 		ReOrientToScreen: @defRotateFunc,
+		// Closed: the drawer no longer has it.
 		viewQuitScript: func() begin
 			(extras.legalese := nil)
 		end,
@@ -988,6 +1002,7 @@ extrasdrawer := {
 	// Confirmed (a1): freezes the selected icons' packages, with a progress slip.
 	FreezeSelectedIcon: compile(
 		constants: {
+			// run when this function is built: a binary of class cls from hex
 			kBinaryFromHex: func(hex, cls) begin
 				local b := MakeBinary(StrLen(hex) div 2, cls);
 				for i := 0 to Length(b) - 1 do begin
@@ -1085,6 +1100,7 @@ extrasdrawer := {
 	fakeTarget: nil,
 	visibleItems: nil,
 	dontStartWithFolder: nil,
+	// The up arrow: scrolls the icons up.
 	viewScrollUpScript: func() begin
 		self:Scroller(true)
 	end,
@@ -1106,6 +1122,7 @@ extrasdrawer := {
 	vSpacing: nil,
 	declareSelf: 'base,
 	closeable: true,
+	// The rotate key command: the rotate button.
 	_rotateKeyScript: func(a1) begin
 		PressButton(rotateButton)
 	end,
@@ -1117,6 +1134,7 @@ extrasdrawer := {
 	// store changes.
 	viewSetupFormScript: compile(
 		constants: {
+			// run when this function is built: a binary of class cls from hex
 			kBinaryFromHex: func(hex, cls) begin
 				local b := MakeBinary(StrLen(hex) div 2, cls);
 				for i := 0 to Length(b) - 1 do begin
@@ -1127,6 +1145,7 @@ extrasdrawer := {
 				b
 			end,
 			kLiteral_54bbb5: [Array: '{title: "Make Backdrop", icon: @backdropBitmap, routeScript: BlessActionScript}, {title: "Freeze", icon: {bits: call kBinaryFromHex with ("0000000000040128012801a6013701b60180000005a00000d7eb0000f3cf0000799e0000fdbf0000eff7000003c00000eff70000fdbf0000799e0000f3cf0000d7eb000005a0000001800000", 'bits), bounds: '{left: 0, top: 0, right: 16, bottom: 15}}, routeScript: 'FreezeActionScript}, '{title: "Delete", icon: @routetrashBitmap, routeScript: DeleteActionScript}],
+			// The stores' change callback: a store renamed redraws the icons.
 			kFunction_54c2cd: func(a1, a2, a3) begin
 				(if (a2 = 'storeReNamed) then GetRoot().ExtrasDrawer:InvalIcons())
 			end
@@ -1231,6 +1250,8 @@ extrasdrawer := {
 			end)
 	end,
 	extrasInfoSlots: [|Array|: 'icon, 'iconPro, 'text, 'labels, 'closeControl, 'soupNames, 'ownerApp],
+	// An application's button was removed (RemoveAuxButton): the status bar
+	// is laid out again.
 	RemoveAuxButton: func(a1) begin
 		status:?RedoChildren()
 	end,
@@ -1313,6 +1334,7 @@ extrasdrawer := {
 				end))
 	end,
 	folderItems: nil,
+	// The folder key command: the folder tab.
 	_folderKeyScript: func(a1) begin
 		PressButton(Show.showBarText)
 	end,
@@ -1343,7 +1365,7 @@ iconSpace := {
 	// keys.
 	viewClickScript: func(unit) begin
 		local pt, l2, y, box;
-		l2 := (pt := GetPoint(6, unit)).x;
+		l2 := (pt := GetPoint(firstXY, unit)).x;
 		y := pt.y;
 		box := self:GlobalBox();
 		(if ((((l2 < box.left) or (l2 > box.right)) or (y < box.top)) or (y > box.bottom)) then begin
@@ -1441,6 +1463,8 @@ VolumeSlider_2 := {
 contrastSlider := {
 	viewBounds: {left: 0, top: -40, right: 60, bottom: -31},
 	viewJustify: vjParentCenterH + vjParentBottomV,
+	// The LCD contrast setting, between the limits Gestalt
+	// (kGestalt_SoftContrast) gives.
 	viewSetupFormScript: func() begin
 		local gestalt2;
 		self.viewValue := GetUserConfig('lcdContrast);
@@ -1448,23 +1472,29 @@ contrastSlider := {
 		self.minValue := gestalt2[1];
 		(self.maxValue := gestalt2[2])
 	end,
+	// Follows changes to the contrast setting (RegUserConfigChange, under a key
+	// of its own).
 	viewSetupDoneScript: func() begin
 		self.userConfigChangeSym := Intern(Stringer([Array: "ContrastSlider.", viewCObject]));
 		RegUserConfigChange(userConfigChangeSym, func(a1) begin
 			self:HandleConfigChange(a1)
 		end)
 	end,
+	// Stops following them.
 	viewQuitScript: func() begin
 		UnRegUserConfigChange(userConfigChangeSym)
 	end,
+	// The setting changed elsewhere: the slider moved to it.
 	HandleConfigChange: func(a1) begin
 		local lcdContrast;
 		lcdContrast := GetUserConfig('lcdContrast);
 		(if (if (a1 = 'lcdContrast) then (viewValue <> lcdContrast)) then SetValue(self, 'viewValue, lcdContrast))
 	end,
+	// Released: the setting stored.
 	ChangedSlider: func() begin
 		SetUserConfig('lcdContrast, viewValue)
 	end,
+	// While dragging: the screen's contrast set at once.
 	trackSlider: func() begin
 		SetLCDContrast(viewValue)
 	end,
@@ -1480,6 +1510,7 @@ contrastSliderTweakLeft := {
 	viewFormat: 0,
 	viewFlags: vVisible + vClickable,
 	increment: -1,
+	// A tap: one step, within the slider's limits, while the pen stays on it.
 	viewClickScript: func(unit) begin
 		local l1;
 		InkOff(unit);
@@ -1510,6 +1541,8 @@ memoryInfo := "Memory Info";
 status_4 := {
 	viewBounds: {left: 0, top: -18, right: 0, bottom: 0},
 	viewChildren: nil,
+	// The left buttons: the standard ones, then those applications added
+	// (GetAuxButtons).
 	viewSetupChildrenScript: func() begin
 		if (Length((auxButtons := GetAuxButtons(appSymbol))) > 0) then begin
 				menuLeftButtons := Clone(OrigMenuLeftButtons);
@@ -1526,16 +1559,21 @@ status_4 := {
 		{
 			viewBounds: {left: 0, top: 0, right: 13, bottom: 13},
 			stdItems: [|Array|: {item: memoryInfo, msg: 'DoInfoMemory}, {item: "Credits", msg: 'DoInfoLegal}],
+			// Adds the licensee's info item (LicenseeInfoItem), if there is one and it is
+			// not already there.
 			viewSetupDoneScript: func() begin
 				inherited:?viewSetupDoneScript();
 				(if (if (LicenseeInfoItem exists) then (not LSearch(stdItems, LicenseeInfoItem.item, 0, '|str=|, 'item))) then AddArraySlot((stdItems := Clone(stdItems)), {item: LicenseeInfoItem.item, msg: 'DoInfoLicensee}))
 			end,
+			// The licensee's item picked.
 			DoInfoLicensee: func() begin
 				LicenseeInfoItem:?action()
 			end,
 			_proto: @protoInfoButton
 		},
 		{
+			// viewSetupFormScript, viewQuitScript: the drawer's rotate button is this one
+			// while it is open.
 			viewSetupFormScript: func() begin
 				rotateButton := self;
 				inherited:?viewSetupFormScript()
@@ -1549,6 +1587,8 @@ status_4 := {
 	],
 	menuRightButtons: [|Array|:
 		{
+			// viewSetupFormScript, viewQuitScript: the drawer's routing button is this
+			// one while it is open.
 			viewSetupFormScript: func() begin
 				routingButton := self;
 				inherited:?viewSetupFormScript()
@@ -1557,6 +1597,7 @@ status_4 := {
 				routingButton := nil;
 				inherited:?viewQuitScript()
 			end,
+			// An action picked: the icons deselected after it.
 			pickActionScript: func(index) begin
 				inherited:pickActionScript(index);
 				iconSpace:SelectNone()
@@ -1577,6 +1618,8 @@ status_4 := {
 		},
 		{
 			viewBounds: {left: -23, top: 2, right: -6, bottom: 15},
+			// viewSetupFormScript, viewQuitScript: the drawer's filing button is this one
+			// while it is open.
 			viewSetupFormScript: func() begin
 				filingButton := self;
 				inherited:?viewSetupFormScript()
@@ -1585,9 +1628,11 @@ status_4 := {
 				filingButton := nil;
 				inherited:?viewQuitScript()
 			end,
+			// The filing button's icon.
 			PickIcon: func() begin
 				iconInt
 			end,
+			// Files the selected icons (nothing selected: nothing happens).
 			buttonClickScript: func() begin
 				local setupFakeTarget;
 				if (not (setupFakeTarget := iconSpace:SetupFakeTarget())) then begin
@@ -1606,8 +1651,9 @@ status_4 := {
 // the Memory Info slip's "Make Extras the Backdrop" button
 makeBackDrop_2 := {
 	viewBounds: {left: 0, top: -20, right: 170, bottom: -7},
-	viewJustify: 8388758,
+	viewJustify: vjCenterH + vjCenterV + vjParentCenterH + vjParentBottomV + oneLineOnly,
 	text: "Make “Extras” the Backdrop",
+	// Makes the drawer the backdrop (when the slip closes).
 	buttonClickScript: func() begin
 		newBlessed := 'ExtrasDrawer;
 		base:Close()

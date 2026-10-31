@@ -11,6 +11,7 @@ bankAccount := {
 		_proto: infoFrameProto_2,
 		checkPrefix: [|Array|: nil, [pathExpr: 'owner, 'bankAccounts]],
 		checkPaths: [|Array|: 'bankContactNum, 'bankAcctNum, 'bankName],
+		// The account as text: the bank and the account number.
 		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
 			ParamStr("^?0Bank: ^0\n||^?1Bank Acct: ^1||", [Array: v20_wwwwwwwwwwvvvvvv[2], v20_wwwwwwwwwwvvvvvv[1]])
 		end

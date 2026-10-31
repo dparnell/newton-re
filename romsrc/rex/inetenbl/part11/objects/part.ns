@@ -531,6 +531,7 @@ part := array(nil, {
 			// MNotifyIconCallback(inetMgr): the notify icon's item - asks whether to close the connection; yes releases the link, no puts the item back.
 			kFunction_1045e81: func(inetMgr) begin
 				local fn;
+				// the answer: yes releases the link, no puts the item back
 				fn := func(a1) begin
 					(if inetMgr.fNotifyIconObj then (if a1 then inetMgr:DoEvent('ReleaseTimerExpired, nil) else inetMgr:MNotifyIconOn()))
 				end;
@@ -988,6 +989,7 @@ part := array(nil, {
 				local StartRelease;
 				local inetStartUp2;
 				inetStartUp2 := InetStartUp();
+				// drops the link with the reason why
 				StartRelease := func() begin
 					InetStartUp().fWhyLinkDropped := why;
 					InetStartUp():DoEvent('Cancel, nil)
@@ -2163,6 +2165,7 @@ part := array(nil, {
 			// MNotifyIconCallback(inetMgr): the notify icon's item - asks whether to close the connection; yes releases the link, no puts the item back.
 			kFunction_1045e81: func(inetMgr) begin
 				local fn;
+				// the answer: yes releases the link, no puts the item back
 				fn := func(a1) begin
 					(if inetMgr.fNotifyIconObj then (if a1 then inetMgr:DoEvent('ReleaseTimerExpired, nil) else inetMgr:MNotifyIconOn()))
 				end;
@@ -2619,6 +2622,7 @@ part := array(nil, {
 				local StartRelease;
 				local inetStartUp2;
 				inetStartUp2 := InetStartUp();
+				// drops the link with the reason why
 				StartRelease := func() begin
 					InetStartUp().fWhyLinkDropped := why;
 					InetStartUp():DoEvent('Cancel, nil)

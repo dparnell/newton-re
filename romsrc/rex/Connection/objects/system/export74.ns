@@ -50,6 +50,7 @@ export74 := {
 			local fn, syncChanges, error, removedups;
 			currentStatusSetup.values.titleText := "Importing information...";
 			self:viewSet(currentStatusSetup);
+			// reads the desktop's answer: the soup changes
 			fn := func(a1) begin
 				soupChangeInfo := a1:ReadCommandData();
 				return true

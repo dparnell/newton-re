@@ -91,9 +91,11 @@ protoMultiCursor := {
 	Next: func() begin
 		self:mover('Next)
 	end,
+	// Back one entry.
 	prev: func() begin
 		self:mover('prev)
 	end,
+	// The current entry (of the cursor in front).
 	entry: func() begin
 		metaCursor.cursor:entry()
 	end,

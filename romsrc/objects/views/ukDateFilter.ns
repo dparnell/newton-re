@@ -36,6 +36,7 @@ ukDateFilter := {
 	SetupString: func(currentWord) begin
 		(if HasPath(curTemplate, 'SetupString) then curTemplate:SetupString(currentWord) else currentWord)
 	end,
+	// The template's CleanupString, if it has one.
 	CleanupString: func(currentWord) begin
 		(if HasPath(curTemplate, 'CleanupString) then curTemplate:CleanupString(currentWord) else currentWord)
 	end,

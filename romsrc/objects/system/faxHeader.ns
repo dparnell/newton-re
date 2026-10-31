@@ -49,6 +49,7 @@ faxHeader := {
 			TurnPage: func() begin
 				(self.text := ParamStr("Page ^0 of ^1", [Array: fields.pageNumber, fields.pageCount]))
 			end,
+			// The page turner is this view; "Page n of m".
 			viewSetupFormScript: func() begin
 				_pageTurner := self;
 				self:TurnPage()
@@ -59,6 +60,7 @@ faxHeader := {
 			viewBounds: {left: 0, top: 0, right: 0, bottom: 20},
 			viewJustify: vjParentFullH,
 			viewFont: tsFancy + tsSize(9),
+			// The date and time.
 			viewSetupFormScript: func() begin
 				(self.text := DateNTime(Time()))
 			end,

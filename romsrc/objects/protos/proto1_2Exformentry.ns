@@ -15,6 +15,7 @@ proto1_2Exformentry := {
 	// package of fentry.packageId is not found
 	size: compile(
 		constants: {
+			// the test of a package against the id
 			kFunction_537665: func(a1, a2) begin
 				(a1 = a2.id)
 			end
@@ -30,6 +31,7 @@ proto1_2Exformentry := {
 	// answers the store the package is on (nil if it is not found)
 	store: compile(
 		constants: {
+			// the test of a package against the id
 			kFunction_5376a5: func(a1, a2) begin
 				(a1 = a2.id)
 			end

@@ -34,9 +34,12 @@ analogClock := {
 		hours := (hours mod 12);
 		((300 - (timeInSeconds2 mod 300)) * 1000)
 	end,
+	// Starts the idle at the time to the next five minutes.
 	viewSetupFormScript: func() begin
 		self:SetupIdle(self:calcTime())
 	end,
+	// Draws the hour and minute hands (the time worked out again when the clock
+	// was set).
 	viewDrawScript: func() begin
 		// setTimeSeed changes when the clock is set: recompute the time and the idle
 		if (lastSeed <> setTimeSeed) then begin
@@ -46,6 +49,7 @@ analogClock := {
 		DrawXBitmap(handsBounds, smallClocks, hours, 0);
 		DrawXBitmap(handsBounds, smallClocks, (12 + minutes), 1)
 	end,
+	// A tap opens or closes the time field.
 	viewClickScript: func(unit) begin
 		InkOff(unit);
 		self:hilite(true);
@@ -53,6 +57,7 @@ analogClock := {
 		self:hilite(nil);
 		true
 	end,
+	// Every five minutes: the hands moved.
 	viewIdleScript: func() begin
 		local calcTime;
 		calcTime := self:calcTime();

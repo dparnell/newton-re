@@ -15,6 +15,7 @@ printerSerialPicker := {
 		SetKeyView(self, 0);
 		inherited:?viewSetupDoneScript()
 	end,
+	// Closed: forgets who to tell and the selection.
 	viewQuitScript: func() begin
 		notifyOnClose := nil;
 		(currentSelection := nil)
@@ -23,7 +24,7 @@ printerSerialPicker := {
 	viewChildren: [viewChildren:
 		_defaultButton_4,
 		{
-			viewJustify: 8388608,
+			viewJustify: oneLineOnly,
 			viewBounds: {left: 10, top: 5, right: 185, bottom: 18},
 			text: "Select a Printer",
 			_proto: @protoStaticText
@@ -91,6 +92,7 @@ serialPrinterList := {
 	buttonClickScript: func(a1) begin
 		(currentSelection := ListItems[a1])
 	end,
+	// Closed: no longer told of power off.
 	viewQuitScript: func() begin
 		RemovePowerOffHandler(self)
 	end,

@@ -190,6 +190,7 @@ schedule := {
 	// and registered (UpdatePeriodicAlarmTime gives its next time)
 	Add: compile(
 		constants: {
+			// the test that two alarm keys are the same string
 			kFunction_45bd5d: func(a1, a2) begin
 				StrEqual(a1, a2)
 			end

@@ -12,6 +12,8 @@ cardEventhandlers := {
 	// StoreChangeRegistry and the docking code that it has come
 	StoreMounted: compile(
 		constants: {
+			// run when this function is built: a binary of class cls from the hex
+			// string hex, for the literals below
 			kBinaryFromHex: func(hex, cls) begin
 				local b := MakeBinary(StrLen(hex) div 2, cls);
 				for i := 0 to Length(b) - 1 do begin
@@ -118,6 +120,7 @@ cardEventhandlers := {
 				nil
 			end)
 	end,
+	// the password given for store a1 was wrong
 	BadPassword: func(a1) begin
 		CardAlert('BadStorePassword, a1, nil)
 	end,
@@ -127,6 +130,8 @@ cardEventhandlers := {
 		AddDeferredCall(functions.CallFrameBasedRegistryFns, [Array: WeirdCardEventRegistry, [Array: a1, 'CardRemoved]]);
 		AbortCardAlerts(a1, 'cardYanked)
 	end,
+	// the card in slot a1 was put back while its alerts were up (the answer
+	// needed)
 	CardReInserted: func(a1) begin
 		ModalCardAlert('CardReInserted, a1, nil)
 	end,
@@ -179,25 +184,31 @@ cardEventhandlers := {
 				HandleCardEvent('|FormatReally?|, [Array: a1, modalCardAlert2])
 			end)
 	end,
+	// an unformatted card: format it? (asked, then asked again with no Cancel)
 	|Format?|: func(a1) begin
 		local modalCardAlert2;
 		modalCardAlert2 := ModalCardAlert('|Format?|, a1, nil);
 		HandleCardEvent('|FormatReallyNoCancel?|, [Array: a1, modalCardAlert2])
 	end,
+	// a locked card cannot be formatted
 	FormatLockedCard: func(a1) begin
 		ModalCardAlert('FormatLockedCard, a1, nil)
 	end,
+	// a card whose programming voltage is wrong cannot be formatted
 	FormatBadVppCard: func(a1) begin
 		ModalCardAlert('FormatBadVppCard, a1, nil)
 	end,
+	// a card that could not be mounted (error a2): format it? (asked twice)
 	|FormatAfterMountError?|: func(a1, a2) begin
 		local modalCardAlert2;
 		modalCardAlert2 := ModalCardAlert('|FormatAfterMountError?|, a1, a2);
 		HandleCardEvent('|FormatReallyNoCancel?|, [Array: a1, modalCardAlert2])
 	end,
+	// the second question, when the first was answered yes (else that answer)
 	|FormatReallyNoCancel?|: func(a1, a2) begin
 		(if (a2 = true) then ModalCardAlert('|FormatReallyNoCancel?|, a1, nil) else a2)
 	end,
+	// the second question, when the first was answered yes (else that answer)
 	|FormatReally?|: func(a1, a2) begin
 		(if (a2 = true) then ModalCardAlert('|FormatReally?|, a1, nil) else a2)
 	end,
@@ -206,15 +217,19 @@ cardEventhandlers := {
 	LockedCardMountError: func(a1, a2) begin
 		(if (a2 = kSError_WPButNeedsRepair) then CardAlert('RepairLockedCardError, a1, nil) else CardAlert('SmileAfterMountError, a1, a2))
 	end,
+	// any other card error a2
 	MiscCardError: func(a1, a2) begin
 		CardAlert('MiscCardError, a1, a2)
 	end,
+	// an SRAM card's battery is low
 	SRAMCardLowBattery: func(a1) begin
 		CardAlert('SRAMCardLowBattery, a1, nil)
 	end,
+	// an SRAM card's battery must be replaced
 	SRAMCardReplaceBattery: func(a1) begin
 		CardAlert('SRAMCardReplaceBattery, a1, nil)
 	end,
+	// a flash card's programming voltage is wrong (the answer needed)
 	FlashCardBadVpp: func(a1) begin
 		ModalCardAlert('FlashCardBadVpp, a1, nil)
 	end

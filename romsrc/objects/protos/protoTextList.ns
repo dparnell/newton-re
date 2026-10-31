@@ -85,6 +85,7 @@ protoTextList := {
 	GetViewWidth: func() begin
 		return viewWidth
 	end,
+	// The number of lines (items).
 	GetTotalLines: func() begin
 		return numItems
 	end,
@@ -119,15 +120,18 @@ protoTextList := {
 							end))))
 		end),
 	CheckOff: CheckOff,
+	// The up arrow: a line up.
 	viewScrollUpScript: func() begin
 		self:doscrollscript((-lineHeight))
 	end,
+	// The height of the list.
 	GetViewHeight: func() begin
 		return viewHeight
 	end,
 	ScrollAmounts: nil,
 	declareSelf: 'TextBase,
 	scrollableChild: nil,
+	// The number of lines shown.
 	GetVisibleLines: func() begin
 		return viewLines
 	end,
@@ -220,6 +224,7 @@ protoTextList := {
 				(if (viewOriginY > spillHeight) then self:SetOrigin(0, max(spillHeight, 0)))
 			end else (viewChildren := [Array: l1]))
 	end,
+	// The height of a line.
 	GetLineHeight: func() begin
 		return lineHeight
 	end,
@@ -253,6 +258,7 @@ textList := {
 		self.text := text;
 		(self.viewBounds := SetBounds(inset, 0, 1000, (Length(ListItems) * self:GetLineHeight())))
 	end,
+	// Draws the highlight (the parent's).
 	viewDrawScript: func() begin
 		self:Parent():drawHilite()
 	end,
@@ -292,6 +298,7 @@ pictList := {
 		self.icon := list;
 		(self.viewBounds := SetBounds(inset, 0, (-inset), (Length(ListItems) * lineHeight)))
 	end,
+	// Draws the highlight (the parent's).
 	viewDrawScript: func() begin
 		self:Parent():drawHilite()
 	end,
@@ -350,6 +357,7 @@ textListScrollers := {
 			end;
 		inherited:?viewSetupFormScript()
 	end,
+	// Shows the arrows only when there is more than fits.
 	viewSetupDoneScript: func() begin
 		self:ShowHideScrollers();
 		inherited:?viewSetupDoneScript()

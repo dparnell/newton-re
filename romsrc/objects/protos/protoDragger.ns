@@ -69,6 +69,7 @@ protoDragger := {
 				self:Notify(kNotifyAlert, "Up Arrow", noScroll)
 			end)
 	end,
+	// The down arrow: says once that the view does not scroll.
 	viewScrollDownScript: func() begin
 		(if (not beenThereDoneThat) then begin
 				beenThereDoneThat := true;

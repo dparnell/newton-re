@@ -10,6 +10,7 @@
 protoIoStateMachine := {
 	// wait for a connection
 	DoListen: {
+		// Listens for a connection; waits.
 		action: func() begin
 			fEndpoint:Listen(fOptionsOut, CallbackSpec);
 			'waitAsync
@@ -19,6 +20,7 @@ protoIoStateMachine := {
 	},
 	// send everything queued by AddSendData as one dataArray, and empty the queue
 	DoOutput: {
+		// Sends the queued frames (emptying the queue); waits.
 		action: func() begin
 			local frame2;
 			fEndpoint:output((frame2 := {dataArray: Clone(fOutgoingData)}), fOptionsOut, CallbackSpec);
@@ -63,6 +65,7 @@ protoIoStateMachine := {
 	// how many asynchronous endpoint calls are outstanding (see Cancel)
 	occupancy: 0,
 	DoConnect: {
+		// Connects; waits.
 		action: func() begin
 			fEndpoint:Connect(fOptionsOut, CallbackSpec);
 			'waitAsync
@@ -77,6 +80,7 @@ protoIoStateMachine := {
 	// (cancelBlocked: Cancel does nothing while the machine is in this state)
 	DoDispose: {
 		cancelBlocked: true,
+		// Disposes of the endpoint; then reports.
 		action: func() begin
 			fEndpoint:Dispose();
 			'DoCompletion
@@ -89,6 +93,7 @@ protoIoStateMachine := {
 	end,
 	// the first state
 	DoInstantiate: {
+		// Instantiates the endpoint with its configuration options; then binds.
 		action: func() begin
 			fEndpoint:Instantiate(fEndpoint, fEndpoint.configOptions);
 			'DoBind
@@ -105,6 +110,7 @@ protoIoStateMachine := {
 	end,
 	// after sending: in 'AutoInAndOut, receive if that was the first transfer; else done
 	DoAfterOutput: {
+		// Sent: in 'AutoInAndOut, receives next (the first stage); else disconnects.
 		action: func() begin
 			fStage := (fStage + 1);
 			(if (if (fMode = 'AutoInAndOut) then (fStage < 2)) then 'DoInputSpec else 'DoDisconnect)
@@ -114,6 +120,7 @@ protoIoStateMachine := {
 	fOutgoingData: [|Array|: ],
 	DoUnbind: {
 		cancelBlocked: true,
+		// Unbinds; waits.
 		action: func() begin
 			fEndpoint:Unbind(CallbackSpec);
 			'waitAsync
@@ -123,6 +130,8 @@ protoIoStateMachine := {
 	},
 	// after receiving: in 'AutoInAndOut, send if that was the first transfer; else done
 	DoAfterInput: {
+		// Received: in 'AutoInAndOut, sends next (the first stage); else
+		// disconnects.
 		action: func() begin
 			fStage := (fStage + 1);
 			(if (if (fMode = 'AutoInAndOut) then (fStage < 2)) then 'DoOutput else 'DoDisconnect)
@@ -132,6 +141,8 @@ protoIoStateMachine := {
 	// after the "irco" option of DoPostConnect: the 2 bit of its result says
 	// whether this side sends first (set) or receives first (clear)
 	DoExchangePostConnect: {
+		// After connecting: receives first unless the connection option read in
+		// DoPostConnect has its 2 bit set (this side sends first).
 		action: func() begin
 			(if (BAnd(fOptionsIn[0].data.arglist[0], 2) = 0) then 'DoInputSpec else 'DoOutput)
 		end,
@@ -148,9 +159,9 @@ protoIoStateMachine := {
 			func() begin
 				if autoNotify then begin
 						if fException then begin
-								GetRoot():Notify(4, kLiteral_4974a9, EnsureInternal(Stringer([Array: "Data Exchange (", fException.data, ")"])))
+								GetRoot():Notify(kNotifyQAlert, kLiteral_4974a9, EnsureInternal(Stringer([Array: "Data Exchange (", fException.data, ")"])))
 							end else begin
-								GetRoot():Notify(4, kLiteral_4974a9, "Data Exchange completed successfully")
+								GetRoot():Notify(kNotifyQAlert, kLiteral_4974a9, "Data Exchange completed successfully")
 							end
 					end;
 				if fException then begin
@@ -198,6 +209,7 @@ protoIoStateMachine := {
 		end),
 	// after binding: listen to receive, connect to send (or both)
 	DoModeSelect: {
+		// Listens ('InputFrame) or connects ('OutputFrame, 'AutoInAndOut).
 		action: func() begin
 			fStage := 0;
 			(if (fMode = 'InputFrame) then 'DoListen else (if ((fMode = 'OutputFrame) or (fMode = 'AutoInAndOut)) then 'DoConnect))
@@ -205,6 +217,7 @@ protoIoStateMachine := {
 		OnError: 'DoDisconnect
 	},
 	DoAccept: {
+		// Accepts the connection; waits.
 		action: func() begin
 			fEndpoint:Accept(fOptionsOut, CallbackSpec);
 			'waitAsync
@@ -214,6 +227,7 @@ protoIoStateMachine := {
 	},
 	// receive: the input spec (InputSpec) completes into DoPutAway
 	DoInputSpec: {
+		// Sets the input spec; waits for the frames.
 		action: func() begin
 			CallbackSpec.rcvOptions := fOptionsOut;
 			fEndpoint:SetInputSpec(InputSpec);
@@ -224,6 +238,7 @@ protoIoStateMachine := {
 	},
 	// the frames received (fIncomingData.dataArray) go to the callback as 'data, one by one
 	DoPutAway: {
+		// Passes each frame received to the callback ('data); then DoAfterInput.
 		action: func() begin
 			fEndpoint:SetInputSpec(nil);
 			fCallBack2 := fCallBack;
@@ -238,6 +253,7 @@ protoIoStateMachine := {
 	fIncomingData: nil,
 	DoDisconnect: {
 		cancelBlocked: true,
+		// Disconnects; waits.
 		action: func() begin
 			fEndpoint:Disconnect(true, CallbackSpec);
 			'waitAsync
@@ -253,6 +269,8 @@ protoIoStateMachine := {
 	// after connecting: in 'AutoInAndOut, ask the "irco" option (an IR option, by
 	// its name; its current value: opGetCurrent) which side sends first; else send
 	DoPostConnect: {
+		// In 'AutoInAndOut, reads the "irco" option (who sends first); waits.
+		// Otherwise sends.
 		action: func() begin
 			(if (fMode = 'AutoInAndOut) then begin
 					fEndpoint:option([Array: Clone('{label: "irco", type: option, opCode: opGetCurrent, form: template, data: {arglist: [Array: 0], typelist: [Array: 10, 1]}})], CallbackSpec);
@@ -263,6 +281,7 @@ protoIoStateMachine := {
 		OnError: 'DoDisconnect
 	},
 	DoBind: {
+		// Binds; waits.
 		action: func() begin
 			fEndpoint:Bind(fOptionsOut, CallbackSpec);
 			'waitAsync

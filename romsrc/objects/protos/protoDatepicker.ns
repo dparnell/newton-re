@@ -126,7 +126,7 @@ titleBar := {
 	viewFormat: nil,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 12},
 	// oneLineOnly (8388608) + vjParentFullH + vjCenterV + vjCenterH
-	viewJustify: 8388662,
+	viewJustify: vjCenterH + vjCenterV + vjParentFullH + oneLineOnly,
 	// CarefullIncrementMonth(date, months): the date months later, moved
 	// first to the 1st of the month shown if it is not in it; a yearless
 	// date wraps around within its year
@@ -195,7 +195,7 @@ monthYearLabel := {
 	viewClass: clParagraphView,
 	// oneLineOnly (8388608) + vjParentFullV + vjParentFullH + vjCenterV +
 	// vjCenterH
-	viewJustify: 8388854,
+	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjParentFullV + oneLineOnly,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
 	viewFlags: vVisible + vReadOnly + vClickable,
 	viewFormat: 0,
@@ -233,6 +233,8 @@ monthYearLabel := {
 	//   l6 the next index in list, l7 the line count
 	viewClickScript: compile(
 		constants: {
+			// the text of the month of date a2 (LongDateStr, format 12) for index a1 0 or
+			// 1 or when a3 is 0, else ""
 			kFunction_443495: func(a1, a2, a3) begin
 				(if (((a1 = 0) or (a1 = 1)) or (a3 = 0)) then LongDateStr(a2, 12) else "")
 			end

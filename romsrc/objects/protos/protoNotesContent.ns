@@ -15,6 +15,7 @@ protoNotesContent := {
 	SetupForm: func() begin
 		nil
 	end,
+	// Nothing to undo when the form closes.
 	teardownForm: func() begin
 		nil
 	end,
@@ -81,6 +82,8 @@ notesArea := {
 	viewChangedScript: func(slot, view) begin
 		(notesDirty := true)
 	end,
+	// viewAddChildScript, viewDropChildScript: a view added or removed changes
+	// the notes.
 	viewAddChildScript: func(aNewOne) begin
 		notesDirty := true;
 		nil

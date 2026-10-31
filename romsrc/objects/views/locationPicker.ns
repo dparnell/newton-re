@@ -26,6 +26,8 @@ locationPicker := {
 	SetResult: func(entry) begin
 		(result := entry)
 	end,
+	// OK: the place picked (or its returnSlot) to the context's
+	// pickActionScript; none, its pickCancelledScript.
 	Affirmative: func() begin
 		(if result then context:?pickActionScript((if returnSlot then result.(returnSlot) else result)) else context:?pickCancelledScript())
 	end,
@@ -37,14 +39,17 @@ locationPicker := {
 		// a locationPopup of countries and then shows that country's cities
 		{
 			viewBounds: {left: 3, top: 3, right: -26, bottom: 18},
-			viewJustify: 8388662,
+			viewJustify: vjCenterH + vjCenterV + vjParentFullH + oneLineOnly,
 			viewFlags: vVisible + vClickable,
 			viewFont: tsSystem + tsSize(10) + tsBold,
 			viewFormat: vfFillWhite,
 			text: nil,
+			// The country's name, as a label with a popup; hidden (moved off the slip)
+			// unless countryAndName.
 			viewSetupFormScript: func() begin
 				(if countryAndName then (text := Stringer([Array: $\uFC01, GetCountryEntry(currentCountry)[0].name])) else (viewBounds := SetBounds(3, -300, 4, -290)))
 			end,
+			// Pops up the countries.
 			buttonClickScript: func() begin
 				local offsetRect2;
 				offsetRect2 := OffsetRect(self:GlobalBox(), 15, 15);
@@ -176,6 +181,8 @@ cityList := {
 tabs := {
 	viewBounds: {left: -25, top: 0, right: 0, bottom: 137},
 	viewJustify: vjParentRightH,
+	// A letter tapped: the list goes to it (in the country, if by country and
+	// name).
 	PickLetterScript: func(part) begin
 		cityList.hilitedIndex := nil;
 		cityList.cursor:GotoKey((if countryAndName then [Array: currentCountry, part] else part));
@@ -189,10 +196,12 @@ tabs := {
 upDown := {
 	viewBounds: {left: -22, top: 3, right: -4, bottom: 35},
 	viewJustify: vjParentRightH + vjSiblingBottomV,
+	// The arrows show whether there is more above and below.
 	FiddleWithArrows: func() begin
 		self:SetArrow('up, (if cityList.canScrollUp then 'more else 'normal));
 		self:SetArrow('down, (if cityList.canScrollDown then 'more else 'normal))
 	end,
+	// The arrows set.
 	viewSetupDoneScript: func() begin
 		self:FiddleWithArrows();
 		inherited:?viewSetupDoneScript()

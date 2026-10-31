@@ -10,6 +10,7 @@ newtAreacodePhoneLine := {
 	GetTextArray: func() begin
 		GetGlobals().PhoneTypes.phoneText
 	end,
+	// The phone kinds.
 	GetSymArray: func() begin
 		GetGlobals().PhoneTypes.phoneClasses
 	end,
@@ -167,6 +168,8 @@ areacode_3 := {
 	viewFlags: vVisible + vClickable + vGesturesAllowed + vCustomDictionaries,
 	dictionaries: kNumbersOnlyDictionary,
 	changed: nil,
+	// After the parenthesis, unless the area code is suppressed; the phone
+	// keyboard.
 	viewSetupFormScript: func() begin
 		local l1;
 		if (not suppressAreaCode) then begin
@@ -176,6 +179,7 @@ areacode_3 := {
 		self._keyboard := GetRoot().phoneKeyboard;
 		inherited:?viewSetupFormScript()
 	end,
+	// A change kept and passed to the line.
 	viewChangedScript: func(slot, view) begin
 		currAreaCode := self:GetRichString();
 		changed := true;
@@ -192,6 +196,7 @@ phone_2 := {
 	viewLineSpacing: 32,
 	viewFlags: vVisible + vClickable + vGesturesAllowed + vPhoneField,
 	changed: nil,
+	// After the area code (if shown).
 	viewSetupFormScript: func() begin
 		local l1;
 		l1 := (if suppressAreaCode then 0 else (areaCodeWidth + (2 * parenWidth)));
@@ -199,6 +204,7 @@ phone_2 := {
 		text := currPhoneNum;
 		inherited:?viewSetupFormScript()
 	end,
+	// A change kept and passed to the line.
 	viewChangedScript: func(slot, view) begin
 		currPhoneNum := self:GetRichString();
 		changed := true;

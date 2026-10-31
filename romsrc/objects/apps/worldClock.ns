@@ -136,6 +136,7 @@ worldClock := {
 				(if form then form:Open() else self:UpdateLocationFields())
 			end)
 	end,
+	// The key commands of the Action and Show buttons.
 	_actionKeyScript: func(a1) begin
 		self:CommonKeyScript(_actionKeyButton)
 	end,
@@ -262,6 +263,8 @@ worldClock := {
 	// away city, its name, time and distance.
 	UpdateLocationFields: compile(
 		constants: {
+			// run when this function is built: a binary of class cls from hex, for the
+			// bitmaps below
 			kBinaryFromHex: func(hex, cls) begin
 				local b := MakeBinary(StrLen(hex) div 2, cls);
 				for i := 0 to Length(b) - 1 do begin
@@ -409,6 +412,8 @@ worldClock := {
 		self:Retarget();
 		(if (currentForm <> cityForm) then self:SetForm('cityForm) else currentForm:RedoChildren())
 	end,
+	// The up arrow: the form's own, if it has one; else the previous city (the
+	// cursor reset to the first when there is none).
 	viewScrollUpScript: func() begin
 		currentForm:?flush();
 		(if (if currentForm then currentForm.viewScrollUpScript) then currentForm:viewScrollUpScript() else begin
@@ -425,6 +430,7 @@ worldClock := {
 	viewSetupFormScript: compile(
 		constants: {
 			kROM_251: @citySoupName,
+			// The cities soup's change callback: checks the city shown is still there.
 			kFunction_4db189: func(a1, a2, a3, a4) begin
 				GetRoot().worldClock:Validate()
 			end
@@ -474,8 +480,8 @@ worldClock := {
 						BusyBoxControl(2);
 						l7 := self:GlobalBox();
 						(loop begin
-								l1 := (GetPoint(4, a1) - l7.left);
-								if (if ((l2 := (GetPoint(5, a1) - l7.top)) > 0) then (l2 < 25)) then begin
+								l1 := (GetPoint(finalX, a1) - l7.left);
+								if (if ((l2 := (GetPoint(finalY, a1) - l7.top)) > 0) then (l2 < 25)) then begin
 										l6 := l3
 									end else begin
 										if (if (l2 > 152) then (l2 < 185)) then begin
@@ -645,12 +651,14 @@ worldClock := {
 	viewHelpTopic: learn,
 	pix: nil,
 	appBase: nil,
+	// The Show button's key command.
 	_showKeyScript: func(a1) begin
 		self:CommonKeyScript(_showKeyButton)
 	end,
 	// Find's finder for the cities: it cannot file or move them; Delete deletes
 	// the selected ones
 	wcCompatibleFinder: {
+		// FileAs, MoveTo: cities can be neither filed nor moved.
 		FileAs: func(a1) begin
 			nil
 		end,
@@ -659,6 +667,7 @@ worldClock := {
 		end,
 		delete: compile(
 			constants: {
+				// Removes found city a1.
 				kFunction_4dd9c1: func(a1) begin
 					LocationEntryRemoveFromSoup(a1)
 				end
@@ -685,8 +694,9 @@ _cacheContextViewBounds := {left: 0, top: 0, right: 218, bottom: 218};
 // the New button
 _newKeyButton := {
 	viewBounds: {left: 5, top: -18, right: 33, bottom: -5},
-	viewJustify: 8388742,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + oneLineOnly,
 	text: new_2,
+	// New: adds a city.
 	buttonClickScript: func() begin
 		self:New()
 	end,
@@ -697,7 +707,7 @@ _newKeyButton := {
 // the Show button: a popup of the forms, the open one marked
 _showKeyButton := {
 	viewBounds: {left: 7, top: -18, right: 44, bottom: -5},
-	viewJustify: 8389766,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingRightH + oneLineOnly,
 	text: show_2,
 	popup: nil,
 	pop: [|Array|:
@@ -708,6 +718,7 @@ _showKeyButton := {
 		'pickseparator,
 		{item: "Two Clocks", form: 'twoClocksform}
 	],
+	// Opens the Show popup with the form shown marked.
 	buttonClickScript: func() begin
 		popup := (foreach item in pop collect begin
 			local copy;
@@ -718,6 +729,7 @@ _showKeyButton := {
 		end);
 		inherited:buttonClickScript()
 	end,
+	// Opens the form picked (nil: the map).
 	pickActionScript: func(index) begin
 		self:hilite(nil);
 		self:SetForm(pop[index].form)
@@ -744,12 +756,15 @@ notesformProto := {
 	bigSized: 218,
 	declareSelf: 'base,
 	targetView: nil,
+	// Becomes the form shown and the target view, takes no keys, and shows the
+	// current city.
 	viewSetupFormScript: func() begin
 		currentForm := self;
 		targetView := self;
 		SetKeyView(nil, nil);
 		(target := cards:entry())
 	end,
+	// Saved on closing (StartFlush, StartFlushWithChild: nothing to do now).
 	StartFlush: func() begin
 		nil
 	end,
@@ -770,6 +785,8 @@ cityFormProto := {
 	viewLineSpacing: 27,
 	labelFont: tsSystem + tsSize(10) + tsBold,
 	entryFont: tsHWFont + tsSize(12),
+	// The city's name is read-only for a built-in city; a new one gets the
+	// locale's city dictionaries.
 	viewSetupFormScript: func() begin
 		local locale;
 		if (if isIndex then (target.kind <> 'Add)) then begin
@@ -798,6 +815,7 @@ cityFormProto_3 := {
 	viewBounds: {left: -14, top: -14, right: -1, bottom: -1},
 	viewFormat: 0,
 	icon: @closeboxBitmap,
+	// Back to the map.
 	buttonClickScript: func() begin
 		self:SetForm(nil)
 	end,
@@ -824,9 +842,11 @@ twoClocksformProto := {
 	Time: nil,
 	pix: nil,
 	declareSelf: 'clocker,
+	// The picture is made again when next drawn.
 	viewSetupChildrenScript: func() begin
 		(pix := nil)
 	end,
+	// Draws the city's name, its country, its date and time.
 	viewDrawScript: func() begin
 		local box;
 		if (not pix) then begin
@@ -838,6 +858,7 @@ twoClocksformProto := {
 	viewChildren: [viewChildren:
 		{
 			viewBounds: {left: 0, top: 32, right: 101, bottom: 133},
+			// Each minute: the picture made again.
 			TimeChanged: func() begin
 				clocker.pix := nil;
 				clocker:Dirty()
@@ -852,9 +873,11 @@ notesform := {
 	_proto: notesformProto,
 	pix: nil,
 	_recogSettings: nil,
+	// The picture is made again when next drawn.
 	viewSetupChildrenScript: func() begin
 		(pix := nil)
 	end,
+	// Draws the city's name in a title.
 	viewDrawScript: func() begin
 		if (not pix) then begin
 				pix := MakeText(target.name, 0, 0, self:LocalBox().right, 12)
@@ -862,6 +885,7 @@ notesform := {
 		self:DrawShape(pix, '{font: tsFancy + tsSize(12) + tsBold, justification: center})
 	end,
 	preallocatedContext: 'notesform,
+	// Saves the notes.
 	viewQuitScript: func() begin
 		self:flush()
 	end,
@@ -879,8 +903,9 @@ notesform := {
 	end,
 	viewChildren: [viewChildren:
 		notes_2,
-		{viewBounds: {left: 7, top: -18, right: 25, bottom: -5}, viewJustify: 8388742, _proto: @recToggle},
+		{viewBounds: {left: 7, top: -18, right: 25, bottom: -5}, viewJustify: vjCenterH + vjCenterV + vjParentBottomV + oneLineOnly, _proto: @recToggle},
 		{
+			// Back to the map.
 			buttonClickScript: func() begin
 				self:SetForm(nil)
 			end,
@@ -914,6 +939,7 @@ cityForm := {
 			end)
 	end,
 	preallocatedContext: 'cityForm,
+	// Saves the city (and forgets the closest city).
 	viewQuitScript: func() begin
 		closestKey := nil;
 		self:flush()
@@ -941,6 +967,7 @@ cityForm := {
 			path: 'name,
 			isIndex: true,
 			label: city,
+			// A new city: the keys go to its name.
 			viewSetupDoneScript: func() begin
 				(if (target.kind = 'Add) then SetKeyView(self.entryLine, 0))
 			end
@@ -951,6 +978,7 @@ cityForm := {
 			path: 'areacode,
 			label: nil,
 			country: nil,
+			// The country's area code label.
 			viewSetupFormScript: func() begin
 				local locale;
 				country := GetCountryEntry(target.country)[0];
@@ -964,12 +992,14 @@ cityForm := {
 			viewLineSpacing: 14,
 			label: closestCity,
 			indent: 83,
+			// The closest city, chosen from the cities soup.
 			viewSetupFormScript: func() begin
 				local resolveEntryAlias2;
 				place := (resolveEntryAlias2 := ResolveEntryAlias(closestKey)).name;
 				params := {spots: @citySoupName, default: resolveEntryAlias2, result: nil};
 				inherited:?viewSetupFormScript()
 			end,
+			// Saves first.
 			Popit: func(x) begin
 				self:flush();
 				inherited:Popit(x)
@@ -1016,6 +1046,8 @@ cityForm := {
 			viewJustify: vjSiblingLeftH + vjSiblingBottomV,
 			viewLineSpacing: 14,
 			fullName: nil,
+			// The country's region (state, province ...) label and the city's region,
+			// named in full (found by name or abbreviation in the regions soup).
 			viewSetupFormScript: func() begin
 				local locationSoup, cursor, l3;
 				label := Stringer([Array: $\uFC01, country.regionName]);
@@ -1032,13 +1064,16 @@ cityForm := {
 					end;
 				inherited:?viewSetupFormScript()
 			end,
+			// Only a city the user added can be changed.
 			viewClickScript: func(unit) begin
 				(if (target.kind = 'Add) then inherited:viewClickScript(unit) else self:Notify(kNotifyAlert, "Time Zones", "This field can not be changed for built-in locations."))
 			end,
+			// Pops up the country's regions on its continent's map.
 			Popit: func(x) begin
 				params := {spots: country.regions, zoomer: country.continent, default: fullName};
 				inherited:Popit(x)
 			end,
+			// A region picked: kept by its abbreviation (else its name).
 			pickActionScript: func(index) begin
 				target.region := (if index.abbrev then index.abbrev else index.name);
 				self:StartFlush();
@@ -1052,17 +1087,22 @@ cityForm := {
 			label: "ﰁCountry",
 			indent: 64,
 			params: nil,
+			// The city's country.
 			viewSetupFormScript: func() begin
 				place := country.name;
 				inherited:?viewSetupFormScript()
 			end,
+			// Only a city the user added can be changed.
 			viewClickScript: func(unit) begin
 				(if (target.kind = 'Add) then inherited:viewClickScript(unit) else self:Notify(kNotifyAlert, "Time Zones", "This field can not be changed for built-in locations."))
 			end,
+			// Pops up the countries.
 			Popit: func(x) begin
 				params := {spots: @countrySoupName, default: place};
 				inherited:Popit(x)
 			end,
+			// A country picked: the city's region dropped if it had none, the form
+			// redone if the new country's regions differ.
 			pickActionScript: func(index) begin
 				local regions;
 				regions := country.regions;
@@ -1085,14 +1125,17 @@ cityForm := {
 			longitude: 3479711,
 			latitude: 72875235,
 			worldClock: true,
+			// The city's latitude and longitude.
 			viewSetupFormScript: func() begin
 				longitude := target.longitude;
 				latitude := target.latitude;
 				inherited:?viewSetupFormScript()
 			end,
+			// Only a city the user added can be changed.
 			viewClickScript: func(unit) begin
 				(if (target.kind = 'Add) then inherited:viewClickScript(unit) else self:Notify(kNotifyAlert, "Time Zones", "This field can not be changed for built-in locations."))
 			end,
+			// A place picked: the city's latitude and longitude, the map redrawn.
 			pickActionScript: func(index, a2) begin
 				target.longitude := index;
 				target.latitude := a2;
@@ -1110,11 +1153,13 @@ cityForm := {
 			increment: 1,
 			Time: nil,
 			offset: 0,
+			// The city's GMT offset.
 			viewSetupFormScript: func() begin
 				// gmt is in seconds; the picker works in minutes
 				Time := (target.gmt div 60);
 				inherited:?viewSetupFormScript()
 			end,
+			// An offset picked (in minutes, kept in seconds).
 			pickActionScript: func(index) begin
 				target.gmt := (index * 60);
 				self:UpdateLocationFields();
@@ -1129,6 +1174,7 @@ cityForm := {
 			label: nil,
 			daylight: nil,
 			pop: nil,
+			// The daylight saving label, and the daylight saving rules to pick from.
 			viewSetupFormScript: func() begin
 				local locale, locationSoup;
 				locale := GetLocale();
@@ -1163,10 +1209,12 @@ cityForm := {
 					end);
 				self:PopupMenu(pop, {left: indent, top: 2})
 			end,
+			// The name of the city's daylight saving rule (else its country's), "none".
 			TextSetup: func() begin
 				local l1;
 				(if (daylight := (if (l1 := (if HasPath(target, 'daylight) then target.daylight else (if country then country.daylight))) then GetDSTEntry(l1))) then daylight[0].name else "none")
 			end,
+			// A rule picked.
 			pickActionScript: func(index) begin
 				target.daylight := pop[index].symbol;
 				self:StartFlush();
@@ -1186,6 +1234,8 @@ countryform := {
 	cursor: nil,
 	target: nil,
 	preallocatedContext: 'countryform,
+	// Shows the country of the city shown (else of home), browsing the countries
+	// by name.
 	viewSetupFormScript: func() begin
 		local value, country;
 		value := GetVariable(self:Parent(), 'target);
@@ -1198,6 +1248,7 @@ countryform := {
 		SetKeyView(nil, nil);
 		cursor:Goto(target)
 	end,
+	// viewScrollUpScript, viewScrollDownScript: the next or previous country.
 	viewScrollUpScript: func() begin
 		target := cursor:Next();
 		self:RedoChildren()
@@ -1206,6 +1257,7 @@ countryform := {
 		target := cursor:prev();
 		self:RedoChildren()
 	end,
+	// Saves a changed country, and moves the cities cursor back to the city.
 	flush: func() begin
 		local target2;
 		(if FrameDirty(target) then begin
@@ -1214,6 +1266,7 @@ countryform := {
 				(if cards.romOnly then self:RebuildCardCursor(target2) else cards:Goto(target2))
 			end)
 	end,
+	// Saves.
 	viewQuitScript: func() begin
 		self:flush()
 	end,
@@ -1250,11 +1303,13 @@ allform := {
 	viewFormat: vfFillWhite,
 	pix: nil,
 	bigSized: 218,
+	// Becomes the form shown and takes the keys.
 	viewSetupFormScript: func() begin
 		currentForm := self;
 		SetKeyView(self, 0)
 	end,
 	preallocatedContext: 'allform,
+	// The picture is made again when next drawn.
 	viewSetupChildrenScript: func() begin
 		(pix := nil)
 	end,
@@ -1371,6 +1426,7 @@ twoClocksform := {
 	viewFlags: vClipping + vClickable,
 	viewFormat: vfFillWhite + vfFrameWhite + vfPen(1),
 	bigSized: 182,
+	// Becomes the form shown and takes the keys.
 	viewSetupFormScript: func() begin
 		currentForm := self;
 		SetKeyView(self, 0)
@@ -1380,6 +1436,7 @@ twoClocksform := {
 		{
 			_proto: twoClocksformProto,
 			viewBounds: {left: 5, top: 0, right: 106, bottom: 165},
+			// The home city's clock.
 			viewSetupFormScript: func() begin
 				Time := Time();
 				(place := userConfiguration.location)
@@ -1388,6 +1445,7 @@ twoClocksform := {
 		{
 			_proto: twoClocksformProto,
 			viewBounds: {left: 112, top: 0, right: 213, bottom: 165},
+			// The away city's clock.
 			viewSetupFormScript: func() begin
 				Time := LocalTime(nil, target);
 				(place := target)

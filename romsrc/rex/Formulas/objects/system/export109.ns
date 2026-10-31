@@ -57,6 +57,7 @@ export109Item := {
 	text: staticText,
 	viewBounds: {left: 5, top: 15, right: 110, bottom: 28},
 	viewFont: @fontSystem10Bold,
+	// A tap on the label: CalcLineLabelClickScript (the countries).
 	viewClickScript: func(unit) begin
 		(if self:TrackHilite(unit) then begin
 				self:CalcLineLabelClickScript(unit);

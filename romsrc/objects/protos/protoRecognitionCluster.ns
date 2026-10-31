@@ -9,6 +9,7 @@ protoRecognitionCluster := {
 	viewFormat: vfFillWhite,
 	viewJustify: vjParentFullH + vjSiblingBottomV,
 	viewBounds: {left: 0, top: 5, right: 0, bottom: 83},
+	// The box made taller for the host's handwriting engines (see below).
 	viewSetupFormScript: func() begin
 		// (an addition: a row taller for each of the host's handwriting
 		//  engines, recognition/WordEngines.h, whose buttons the cluster adds)

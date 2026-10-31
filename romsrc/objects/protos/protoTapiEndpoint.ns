@@ -168,6 +168,8 @@ protoTapiEndpoint := {
 	// otherwise an error result is thrown
 	SendOption: compile(
 		constants: {
+			// the option call's completion: the endpoint's ReturnOption with the option
+			// and the result
 			kFunction_52e295: func(a1, a2, a3) begin
 				a1:ReturnOption(a2, a3)
 			end

@@ -42,6 +42,7 @@ export85 := {
 							end;
 						AddDeferredCall(callback, [Array: options])
 					end else begin
+						// the answer: the options (with the password), nil if none
 						myCallback := func() begin
 							if IsFrame(options) then begin
 									options := {connectOptions: options, password: password}
@@ -144,6 +145,7 @@ export85ItemItem := {
 	viewBounds: {left: 0, top: -32, right: 0, bottom: 0},
 	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjParentBottomV + oneLineOnly,
 	viewFont: tsSimple + tsSize(9),
+	// "Will dial: " and the number.
 	viewSetupFormScript: func() begin
 		(self.text := Stringer([Array: "Will dial: ", " ", self:GetPhone()]))
 	end,
@@ -154,6 +156,7 @@ export85ItemItem := {
 // The call options button: opens the call options slip on the worksite's
 // number and country.
 export85Item_2 := {
+	// Opens or closes the call options slip on the worksite's number.
 	buttonClickScript: func() begin
 		local connection, worksite;
 		connection := GetRoot().Connection;
@@ -177,11 +180,13 @@ export85Item_2 := {
 // The transport's own button, its title from the options.
 export85Item_3 := {
 	text: export85Item_3Text,
+	// Runs the options' buttonClickScript, if any.
 	buttonClickScript: func() begin
 		(if options.buttonClickScript then call options.buttonClickScript with (options))
 	end,
 	viewBounds: {left: -133, top: -18, right: -79, bottom: -5},
 	viewJustify: vjCenterH + vjCenterV + vjParentRightH + vjParentBottomV + oneLineOnly,
+	// The options' button title, sized to fit.
 	viewSetupFormScript: func() begin
 		local copy;
 		(if options.button then begin

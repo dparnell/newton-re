@@ -1026,6 +1026,7 @@ objectsProto := {
 	// ProtoClone(frame): a deep copy of frame that follows its protos (the closure).
 	ProtoClone: func(a1) begin
 		local f;
+		// the closure that copies a frame and what it protos from
 		f := func() :|romsrc:closure:10133e1|(f);
 		call f with (a1)
 	end,
@@ -1174,7 +1175,9 @@ objectsProto := {
 				if ((not IsNumber((maxLength := GetGlobalVar('printLength)))) or (maxLength < 0)) then begin
 						maxLength := 65535
 					end;
+				// p: the native that turns what f made into a string
 				p := func() '|romsrc:native:1014535|;
+				// f: the closure that prints a1 (from depth 0) under the print settings
 				f := func() :|romsrc:closure:1014649|(backIndex, backList, runProto, runParent, floatFormat, maxDepth, maxLength, p, f);
 				(try begin
 						call p with (call f with (a1, 0))
@@ -1207,7 +1210,7 @@ objectsProto := {
 	},
 	// ExceptionHandler_Notify(text): shows text in an alert (Notify level 3).
 	ExceptionHandler_Notify: func(text) begin
-		GetRoot():Notify(3, "Newton Internet Enabler", text);
+		GetRoot():Notify(kNotifyAlert, "Newton Internet Enabler", text);
 		nil
 	end,
 	// DoPeriodicEvent(event, params, unique, ..., occurrences, delay): posts an event every

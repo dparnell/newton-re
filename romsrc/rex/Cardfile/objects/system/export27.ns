@@ -21,6 +21,7 @@ export27 := {
 	MakeDataPaths: func(checkPrefixItem, checkPaths, stringData) begin
 		newtAppBase:MakeDataPaths(checkPrefixItem, checkPaths, stringData)
 	end,
+	// GetCustomInfo, SetCustomInfo, EditCustomLabels: the application's.
 	GetCustomInfo: func() begin
 		newtAppBase:GetCustomInfo()
 	end,
@@ -239,6 +240,8 @@ editFieldsItem := {
 // else closes the slip.
 doneBtn := {
 	debug: "Done btn",
+	// Done: an ink entry without a sort letter asks for one; else closes the
+	// slip (deferred).
 	buttonClickScript: func() begin
 		(if (if targetView.inkDialog then (not StrFilled(target.sorton))) then @rubricPopup:new("What letter should this entry be sorted under?", $A, self:GlobalBox(), base) else begin
 				if (appBase.editSlipLayout = base) then begin

@@ -114,9 +114,9 @@ dateIntervalPopup := {
 	viewClickScript: func(unit) begin
 		local box, l2, l3;
 		box := self:GlobalBox();
-		l2 := (GetPoint(0, unit) - box.left);
+		l2 := (GetPoint(firstX, unit) - box.left);
 		l3 := (box.right - box.left);
-		(if (if (if (GetPoint(1, unit) > (box.top + basicWeekTop)) then (l2 > 30)) then (l2 < (l3 - 30))) then DoPopup(pop, (l3 div 2), basicWeekTop, self))
+		(if (if (if (GetPoint(firstY, unit) > (box.top + basicWeekTop)) then (l2 > 30)) then (l2 < (l3 - 30))) then DoPopup(pop, (l3 div 2), basicWeekTop, self))
 	end,
 	stopLabelLeft: 0,
 	// A duration was picked: the stop is moved that many days or months after
@@ -183,6 +183,7 @@ start_2 := {
 	labelFont: @fontSystem9Bold,
 	titleFont: @fontSystem12,
 	datesFont: @fontSystem12,
+	// The start changed: the interval worked out again.
 	DateChanged: func(selectedDates) begin
 		self:IntervalChanged()
 	end,
@@ -197,9 +198,12 @@ stop_3 := {
 	labelFont: @fontSystem9Bold,
 	titleFont: @fontSystem12,
 	datesFont: @fontSystem12,
+	// Placed at stopBounds.
 	viewSetupFormScript: func() begin
 		(viewBounds := stopBounds)
 	end,
+	// The stop changed: no fixed length any more, the interval worked out
+	// again.
 	DateChanged: func(selectedDates) begin
 		spread := nil;
 		self:IntervalChanged()

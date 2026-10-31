@@ -14,6 +14,7 @@ cuRemoteThumb := {
 		viewClass: clView,
 		viewFlags: vVisible,
 		viewChildren: [|Array|: ],
+		// The page's size.
 		viewSetupFormScript: func() begin
 			(self.viewBounds := pageBounds)
 		end
@@ -22,6 +23,7 @@ cuRemoteThumb := {
 	contentArea: nil,
 	// the page's scripts that must not run in a thumbnail, made to do nothing
 	protoStubby: {
+		// Do nothing (see above).
 		viewSetupFormScript: func() begin
 			true
 		end,

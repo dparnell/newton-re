@@ -83,6 +83,7 @@ protoBook := {
 	// ('NotCheckable)
 	FindTargeted: compile(
 		constants: {
+			// no checking of the items found
 			kFunction_5198d9: func(a1) begin
 				'NotCheckable
 			end,
@@ -123,6 +124,7 @@ protoBook := {
 	// current one (self.isbn), adding a found item per hit to results
 	find: compile(
 		constants: {
+			// no checking of the items found
 			kFunction_5198d9: func(a1) begin
 				'NotCheckable
 			end,

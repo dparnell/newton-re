@@ -182,6 +182,7 @@ protoDigitalClock := {
 			end
 		}
 	],
+	// Does nothing (the flaps advance themselves).
 	Advance: func() begin
 		nil
 	end

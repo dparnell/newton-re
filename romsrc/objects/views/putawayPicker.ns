@@ -19,6 +19,7 @@ putawayPicker := {
 	viewChildren: [viewChildren:
 		// close box: closed through the In Box when it is open (RememberedClose)
 		{
+			// Close (the In/Out Box's RememberedClose when it is open).
 			buttonClickScript: func() begin
 				(if GetRoot().iobox.viewCObject then AddDeferredSend(GetRoot().iobox, 'RememberedClose, [Array: base]) else base:Close())
 			end,
@@ -28,8 +29,10 @@ putawayPicker := {
 		// the label, as wide as its text
 		{
 			viewBounds: {left: 10, top: 22, right: 10, bottom: 38},
-			viewJustify: 8388608,
+			viewJustify: oneLineOnly,
 			text: nil,
+			// "Put away all selected items" for several, else "Put Away item to:";
+			// sized to its text.
 			viewSetupFormScript: func() begin
 				if TargetIsCursor(theItem) then begin
 						text := "Put away all selected items"
@@ -47,6 +50,8 @@ putawayPicker := {
 			viewJustify: vjCenterH + vjParentFullH + vjSiblingRightH,
 			text: nil,
 			showit: nil,
+			// The application to put the item away to, and the others that could take
+			// it (a popup only when there are several).
 			viewSetupFormScript: func() begin
 				showit := nil;
 				if TargetIsCursor(theItem) then begin
@@ -69,15 +74,19 @@ putawayPicker := {
 				viewBounds := RelBounds(viewBounds.left, viewBounds.top, viewBounds.right, fontHeight2);
 				inherited:?viewSetupFormScript()
 			end,
+			// The text as it is.
 			PadText: func(text) begin
 				text
 			end,
+			// Draws nothing of its own.
 			viewDrawScript: func() begin
 				nil
 			end,
+			// Pops up the applications only when there are several.
 			viewClickScript: func(unit) begin
 				(if showit then inherited:viewClickScript(unit))
 			end,
+			// An application picked.
 			pickActionScript: func(index) begin
 				theAppToRun := theApps[index];
 				inherited:pickActionScript(index)
@@ -89,9 +98,11 @@ putawayPicker := {
 			viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
 			viewBounds: {left: 10, top: 6, right: 10, bottom: 22},
 			text: "Delete from inbox",
+			// Checked as the In/Out Box's deleteAfterPutaway.
 			viewSetupFormScript: func() begin
 				(viewValue := GetRoot().iobox.deleteAfterPutaway)
 			end,
+			// Stored there.
 			valueChanged: func() begin
 				(GetRoot().iobox.deleteAfterPutaway := viewValue)
 			end,
@@ -109,8 +120,9 @@ putawayPicker := {
 // the slip
 _defaultButton_11 := {
 	viewBounds: {left: -63, top: 0, right: -7, bottom: 13},
-	viewJustify: 8407046,
+	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingTopV + oneLineOnly,
 	text: putAway,
+	// Puts the item away to the application chosen, and closes (deferred).
 	buttonClickScript: func() begin
 		local putAway;
 		putAway := GetRoot().iobox:DoPutAway((if IsFrame(theAppToRun) then theAppToRun.appSymbol else theAppToRun), theItem, targetView);

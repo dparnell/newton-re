@@ -45,6 +45,7 @@ cribNote := {
 			end);
 		self
 	end,
+	// Drops are not taken.
 	viewDropScript: func(dragInfo, dropPt, a3) begin
 		nil
 	end,
@@ -84,6 +85,7 @@ textView_2 := {
 	viewJustify: vjParentFullH + vjParentFullV + oneLineOnly,
 	textFlags: 24,
 	text: nil,
+	// The event's text, in the event font and spacing.
 	viewSetupFormScript: func() begin
 		text := self:GetMeetingText(realData);
 		self.viewFont := cribFont;

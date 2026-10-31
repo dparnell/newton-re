@@ -44,6 +44,7 @@ protoTwoLinePicker := {
 	// case-insensitively), or nil
 	currentChoice: compile(
 		constants: {
+			// the comparison of the choices' texts
 			kFunction_50ab09: func(a1, a2) begin
 				StrEqual(a1, a2)
 			end

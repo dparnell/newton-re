@@ -16,6 +16,8 @@ assistant := {
 		SetValue(assistMsg, 'text, "The Assistant cannot interpret this.");
 		RefreshViews()
 	end,
+	// Thinking, NoMsg, PickOne, DeferredRec: the message line's texts (while
+	// parsing, none, more options under Please, check the ink first).
 	Thinking: func() begin
 		SetValue(assistMsg, 'text, "Interpreting...");
 		RefreshViews()
@@ -131,6 +133,7 @@ assistLine := {
 		defaultChoices := nil;
 		self:SetLabelCommands(Sort(Clone((defaultFullCommands := GenFullCommands())), '|str<|, nil))
 	end,
+	// Puts the caret after the text.
 	viewSetupDoneScript: func() begin
 		// the caret after the end of the text
 		entryLine:SetHiliteNoUpdate(9999, 9999, true)
@@ -168,10 +171,12 @@ assistLine := {
 		self:FindCustomDicts();
 		""
 	end,
+	// Anything written clears the message.
 	textChanged: func() begin
 		SetValue(assistMsg, 'text, "")
 	end,
 	defaultChoices: nil,
+	// The entry flags: the Assistant's, with those CheckFlags adds.
 	viewSetupFormScript: func() begin
 		(entryFlags := BOr(assistFlags, self:CheckFlags()))
 	end,
@@ -204,6 +209,7 @@ _defaultButton_21 := {
 	viewBounds: {left: -27, top: -18, right: -7, bottom: -5},
 	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 	text: do_2,
+	// Do: parses the line (deferred).
 	buttonClickScript: func() begin
 		AddDeferredSend(assistant, DoParse, nil)
 	end,

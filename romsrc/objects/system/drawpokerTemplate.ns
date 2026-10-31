@@ -46,11 +46,11 @@ drawpokerTemplate := {
 			end);
 		eval5 := deck:Eval5((hand := deck:Draw(hand)));
 		if ((money := (money + deck.DrawPayOffs.(eval5))) < bet) then begin
-				GetRoot():Notify(3, "Draw Poker", "Your line of credit has been terminated.");
+				GetRoot():Notify(kNotifyAlert, "Draw Poker", "Your line of credit has been terminated.");
 				AddDeferredSend(base, 'Close, nil)
 			end else begin
 				if (money > bankLimit) then begin
-						GetRoot():Notify(3, "Draw Poker", "Congratulations! You broke the bank.");
+						GetRoot():Notify(kNotifyAlert, "Draw Poker", "Congratulations! You broke the bank.");
 						AddDeferredSend(base, 'Close, nil)
 					end
 			end;
@@ -80,6 +80,7 @@ drawpokerTemplate := {
 // not drawn
 cardHolderItem := {
 	_proto: @protoCard,
+	// The card in the hand at this position.
 	GetCard: func() begin
 		hand[cardIndex]
 	end,
@@ -93,6 +94,7 @@ cardHolderItem := {
 				true
 			end)
 	end,
+	// A card picked to keep (selected) is not drawn.
 	viewDrawScript: func() begin
 		(if (BAnd(GetViewFlags(self), vSelected) = 0) then inherited:viewDrawScript())
 	end
@@ -119,6 +121,7 @@ dButton := {
 	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingFullV,
 	viewBounds: {left: 5, top: 0, right: 40, bottom: 0},
 	text: uCardPositionAlertButton,
+	// Deal, or Draw after dealing.
 	buttonClickScript: func() begin
 		(if (gameState = 'dealt) then self:Draw() else self:Deal())
 	end,

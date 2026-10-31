@@ -382,6 +382,7 @@ protoTransport := {
 	// slip (ResurrectStatusDialog), once
 	StatusNotify: compile(
 		constants: {
+			// the notify icon's action: brings the transport's status slip back
 			kFunction_47f521: func(a1) begin
 				GetRoot().(a1):ResurrectStatusDialog()
 			end
@@ -452,10 +453,14 @@ protoTransport := {
 	BeginIO: func() begin
 		local appSym;
 		appSym := EnsureInternal(appSymbol);
+		// waking from an emergency power on cancels the request
 		powerOnCallback := func(a1) begin
 			(if (a1 = 'emergencyPowerOn) then GetRoot().(appSym):CancelRequest(a1))
 		end;
 		RegPowerOn(appSymbol, powerOnCallback);
+		// power off: asks the transport (PowerOffCheck) whether it may; when it
+		// happens, the request is cancelled (or power off held back while that
+		// cannot be done yet)
 		powerOffCallback := func(a1, a2) begin
 			if (a1 = 'okToPowerOff) then begin
 					return GetRoot().(appSym):PowerOffCheck(a2)

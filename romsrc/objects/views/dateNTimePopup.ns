@@ -8,6 +8,8 @@ dateNTimePopup := {
 	selectedDates: nil,
 	Time: nil,
 	increment: 5,
+	// Opens it at time a1 (now if nil) rounded to the nearest a2 minutes, over
+	// box a3, for context a4.
 	New: func(a1, a2, a3, a4) begin
 		local init, l2;
 		init := self:Init();

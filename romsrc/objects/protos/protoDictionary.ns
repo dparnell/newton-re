@@ -141,6 +141,7 @@ protoDictionary := {
 	flush: func() begin
 		nil
 	end,
+	// There is no soup behind it.
 	RealSoup: func() begin
 		nil
 	end,
@@ -166,6 +167,7 @@ protoDictionary := {
 	EncodeRecognitionWordDiacritsOK: func(copy) begin
 		return StripRecognitionWordDiacritsOK(copy)
 	end,
+	// There is no store.
 	EntryStore: func(a1) begin
 		nil
 	end,
@@ -204,6 +206,7 @@ protoDictionary := {
 	IsReadOnly: func() begin
 		return (BAnd(self:PrivateType(), 8) = 0)
 	end,
+	// Its words are read-only.
 	EntryReadOnly: func(a1) begin
 		true
 	end,

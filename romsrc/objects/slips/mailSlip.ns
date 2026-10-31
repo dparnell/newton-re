@@ -1406,9 +1406,11 @@ mailSlip := {
 						end;
 					pos
 				end,
+				// A choice picked: stored as mailMode.
 				LabelActionScript: func(index) begin
 					SetUserConfig('mailMode, labelValues[index])
 				end,
+				// The choice shown.
 				TextSetup: func() begin
 					labelCommands[self:GetIndex()]
 				end,
@@ -1426,6 +1428,7 @@ mailSlip := {
 				viewSetupFormScript: func() begin
 					(viewValue := GetUserConfig('mailautodisconnect))
 				end,
+				// Stored as mailautodisconnect.
 				valueChanged: func() begin
 					SetUserConfig('mailautodisconnect, viewValue)
 				end,
@@ -1443,6 +1446,7 @@ mailSlip := {
 				viewSetupFormScript: func() begin
 					(viewValue := GetUserConfig('mailStripHeaders))
 				end,
+				// Stored as mailStripHeaders.
 				valueChanged: func() begin
 					SetUserConfig('mailStripHeaders, viewValue)
 				end,
@@ -1513,6 +1517,7 @@ mailSlip := {
 				viewSetupFormScript: func() begin
 					(clusterValue := accountType)
 				end,
+				// The kind chosen.
 				ClusterChanged: func() begin
 					(accountType := clusterValue)
 				end,
@@ -2339,6 +2344,8 @@ attachCheck := {
 	viewSetupFormScript: func() begin
 		(self.viewValue := (not fields.attachment))
 	end,
+	// "Text only": stored as mailTextOnly (the item has no attachment); a format
+	// that allows only text keeps it checked.
 	valueChanged: func() begin
 		(if allowable then begin
 				fields.attachment := (not viewValue);
@@ -2367,10 +2374,12 @@ receiptCheck := {
 	viewSetupFormScript: func() begin
 		(self.viewValue := (fields.receipt := GetUserConfig('mailReceipt)))
 	end,
+	// Stored as mailReceipt, and asked for this item.
 	valueChanged: func() begin
 		SetUserConfig('mailReceipt, viewValue);
 		(fields.receipt := viewValue)
 	end,
+	// Shown only when the user configuration asks for return receipts.
 	viewSetupDoneScript: func() begin
 		(if (not userConfiguration.mailReceipt) then self:Hide())
 	end,
@@ -2543,6 +2552,7 @@ mailNetworksProto := {
 				end, nil, 300)
 			end)
 	end,
+	// Still at the terminal (after the "D"): a return sent, 300 ms later.
 	mailStartContinue2: func() begin
 		(if (mailEndPoint.curstate = 'waitForTerminal) then begin
 				try begin
@@ -2676,6 +2686,7 @@ willDial_3 := {
 		self:DrawShape(MakeRoundRect((l2 := ((((box := self:LocalBox()).right - StrFontWidth(text, viewFont)) div 2) - 2)), 0, (box.right - l2), box.bottom, 8), '{transferMode: 2, penPattern: 0, fillPattern: 5});
 		true
 	end,
+	// The number that will be dialed.
 	viewSetupDoneScript: func() begin
 		(text := willDialNum)
 	end,

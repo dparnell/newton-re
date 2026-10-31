@@ -46,6 +46,7 @@ export55 := {
 	viewScrollUpScript: func() begin
 		entryView:Effect(77725696, nil, @flip, 'Scroller, [Array: -1])
 	end,
+	// Shows the current card.
 	viewSetupFormScript: func() begin
 		inherited:?viewSetupFormScript();
 		self:Retarget(nil)

@@ -10,9 +10,11 @@ defaultInfoPrefs := {
 		l1 := GetRoot().(appSymbol);
 		(if (if (tinyTim := GetRoot().TinyTim) then tinyTim.viewCObject) then tinyTim:Close() else OpenHelpTo("Route"))
 	end,
+	// The transport's title.
 	GetTitle: func() begin
 		GetRoot().(appSymbol).title
 	end,
+	// Closing it closes the slip.
 	RememberedClose: func(a1) begin
 		self:viewQuitScript()
 	end

@@ -15,6 +15,7 @@ globalvarwannabes := {
 	// Packages soup
 	SoupChangeRegistry: compile(
 		constants: {
+			// the Packages soup's change callback: the Extras Drawer's HandleSoupChange
 			kFunction_54ac09: func(a1, a2, a3, a4) begin
 				GetRoot().ExtrasDrawer:HandleSoupChange(a1, a2, a3, a4)
 			end,
@@ -56,8 +57,9 @@ globalvarwannabes := {
 				bounds: {left: 0, top: 0, right: 32, bottom: 32}
 			},
 			viewBounds: {top: 0, left: 0, bottom: 32, right: 32},
+			// Tapped: says the package's information is no longer supported.
 			buttonClickScript: func() begin
-				GetRoot():Notify(3, "Newton", "This package uses information that is no longer supported. Contact the software publisher for further information.")
+				GetRoot():Notify(kNotifyAlert, "Newton", "This package uses information that is no longer supported. Contact the software publisher for further information.")
 			end,
 			autoClose: nil
 		}

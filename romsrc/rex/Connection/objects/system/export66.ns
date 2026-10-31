@@ -188,6 +188,7 @@ export66 := {
 export66Item := {
 	viewBounds: {left: 0, top: 5, right: 184, bottom: 100},
 	viewFont: @fontSystem10,
+	// The backup's applications to pick from.
 	viewSetupFormScript: func() begin
 		self:InitializeTextList(self, restoreOptions.applications);
 		inherited:?viewSetupFormScript()
@@ -220,6 +221,7 @@ packages := "Packages";
 export66Item_3 := {
 	viewBounds: {left: 0, top: 5, right: 184, bottom: 70},
 	viewFont: @fontSystem10,
+	// The backup's packages to pick from.
 	viewSetupFormScript: func() begin
 		self:InitializeTextList(self, restoreOptions.packages);
 		inherited:?viewSetupFormScript()
@@ -240,6 +242,7 @@ export66Item_3 := {
 
 // All for the packages.
 export66Item_4 := {
+	// Selects every package, or none when all are selected.
 	buttonClickScript: func() begin
 		if (Length(packageList.selectedItems) = Length(packageList.listItems)) then begin
 				packageList.selectedItems := [Array: ]

@@ -131,6 +131,7 @@ text := {
 
 // "Edit Custom Labels": closes the slip and opens the label editor.
 editCustomLabels := {
+	// Closes the slip (deferred) and opens the label editor.
 	buttonClickScript: func() begin
 		AddDeferredSend(base, Close, '[Array: ]);
 		self:EditCustomLabels()

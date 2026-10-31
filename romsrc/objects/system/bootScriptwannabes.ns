@@ -10,6 +10,7 @@ bootScriptwannabes := {
 	// system is up
 	PreSetupUserConfig: compile(
 		constants: {
+			// run once the system is up
 			kFunction_48ba25: func() begin
 				// Makes userConfiguration.personae and .emporia from the owner ('owner) and
 				// worksite cards in the Names soup.  When there are none and the configuration
@@ -133,7 +134,7 @@ bootScriptwannabes := {
 			end;
 		(if msg then AddDeferredCall(func() begin
 				// 3: an alert, shown at once
-				GetRoot():Notify(3, "Newton", msg)
+				GetRoot():Notify(kNotifyAlert, "Newton", msg)
 			end, nil))
 	end,
 	// puts the user's settings into effect: the keyboard layout, sort order,
@@ -141,6 +142,7 @@ bootScriptwannabes := {
 	// weights for recognition and the hardware entry
 	ReadPreferences: compile(
 		constants: {
+			// sets the keyboard, sort order, locale, pen size ... the preferences say
 			kFunction_5aced1: func() begin
 				local title, keyboard, sortID;
 				if (keyboard := GetUserConfig('Keyboard)) then begin

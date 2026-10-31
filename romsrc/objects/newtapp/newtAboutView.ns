@@ -44,6 +44,7 @@ newtAboutView := {
 	viewChildren: [viewChildren:
 		{
 			title: nil,
+			// The application's title.
 			viewSetupFormScript: func() begin
 				title := theApp.title;
 				inherited:viewSetupFormScript()
@@ -118,6 +119,7 @@ credits := {
 	viewLineSpacing: 14,
 	viewOriginY: 0,
 	viewEffect: fxVenetianBlindsEffect,
+	// The credits picture, scrolled.
 	viewDrawScript: func() begin
 		self:CopyBits(creditPict, 0, (-viewOriginY), 0)
 	end,

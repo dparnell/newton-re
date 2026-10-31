@@ -76,12 +76,12 @@ dayView := {
 		v7_qppppp := nil;
 		if (a2 = aeLine) then begin
 				v5_xxxxxxxxxxxxxxxxxwwwww := dayView:GlobalBox();
-				v13_zyyyyyyyyyyyyyyyyyyyy := GetPoint(1, a1);
-				v25_zzzzzzzyyyyyy := GetPoint(5, a1);
+				v13_zyyyyyyyyyyyyyyyyyyyy := GetPoint(firstY, a1);
+				v25_zzzzzzzyyyyyy := GetPoint(finalY, a1);
 				v26_wwwwwwwwwwwvvvvvvvvv := min(v13_zyyyyyyyyyyyyyyyyyyyy, v25_zzzzzzzyyyyyy);
 				v8_xxxxwwwwwwww := max(v13_zyyyyyyyyyyyyyyyyyyyy, v25_zzzzzzzyyyyyy);
-				v19_yyyyyyyyyyyyyyyyyyyyyyyxxx := GetPoint(0, a1);
-				v12_wwwwwwwwwwwwwvv := GetPoint(4, a1);
+				v19_yyyyyyyyyyyyyyyyyyyyyyyxxx := GetPoint(firstX, a1);
+				v12_wwwwwwwwwwwwwvv := GetPoint(finalX, a1);
 				v15_xxxxxxxxxxxxxxxxwwwwwww := (max(v19_yyyyyyyyyyyyyyyyyyyyyyyxxx, v12_wwwwwwwwwwwwwvv) - min(v19_yyyyyyyyyyyyyyyyyyyyyyyxxx, v12_wwwwwwwwwwwwwvv));
 				if (if ((v6_zzzzzzyyyyyyyyyyyyyyyyyyyyyy := (v8_xxxxwwwwwwww - v26_wwwwwwwwwwwvvvvvvvvv)) > (2 * v15_xxxxxxxxxxxxxxxxwwwwwww)) then (v6_zzzzzzyyyyyyyyyyyyyyyyyyyyyy > 10)) then begin
 						if (if (v20_lllk := dayView:ChildViewFrames()) then (v6_zzzzzzyyyyyyyyyyyyyyyyyyyyyy < (3 * viewLineSpacing))) then begin
@@ -132,7 +132,7 @@ dayView := {
 								dayView:Dirty()
 							end onexception |evt.ex.fr.store| do begin
 								if HasSlot((v24_xxxxxxxxxxxxxxxxxx := CurrentException()), 'error) then begin
-										self:Notify(3, self:TranslateToOverview(v24_xxxxxxxxxxxxxxxxxx.error), ParamStr("^0\n(^1)", [Array: "Sorry, a problem has occurred.", self:TranslateToMessage(v24_xxxxxxxxxxxxxxxxxx.error)]))
+										self:Notify(kNotifyAlert, self:TranslateToOverview(v24_xxxxxxxxxxxxxxxxxx.error), ParamStr("^0\n(^1)", [Array: "Sorry, a problem has occurred.", self:TranslateToMessage(v24_xxxxxxxxxxxxxxxxxx.error)]))
 									end
 							end;
 						v7_qppppp := true
@@ -142,6 +142,7 @@ dayView := {
 	end,
 	viewLineSpacing: 16,
 	kidBounds: nil,
+	// Meetings and text may be dropped on the day.
 	viewGetDropTypesScript: func(a1) begin
 		return '[Array: meeting, text]
 	end,
@@ -192,6 +193,7 @@ dayView := {
 		self:AddMeetingToDate(meeting, (displaydate + positionToTime2), true);
 		true
 	end,
+	// A meeting dragged off: taken from the day.
 	viewDropChildScript: func(a1) begin
 		self:RemoveMeetingFromDate(a1, displaydate, nil);
 		true
@@ -360,6 +362,7 @@ dayView := {
 			end);
 		(if (if (a4 >= 0) then (not a2[a4])) then (a2[a4] := self:MeetingBounds(v17_zzzzzzzzzzzzzzzy, 0, v15_zzzzzzzzzzzzzzzzzzzzyyyyyyy)))
 	end,
+	// A meeting added: put in the day at its start.
 	viewAddChildScript: func(aNewOne) begin
 		self:AddMeetingToDate(aNewOne, aNewOne.mtgStartDate, nil)
 	end,

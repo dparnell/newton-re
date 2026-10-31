@@ -6,6 +6,7 @@ yearPopup := {
 	viewBounds: {left: 0, top: 0, right: 104, bottom: 32},
 	viewJustify: 0,
 	value: nil,
+	// Opens it at year a1 (this year if nil) over box a2, for context a3.
 	New: func(a1, a2, a3) begin
 		local init;
 		(init := self:Init()).context := a3;

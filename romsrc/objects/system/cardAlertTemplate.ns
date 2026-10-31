@@ -22,6 +22,7 @@ cardAlertTemplate := {
 		inherited:?viewSetupDoneScript();
 		(if cardMessage.keepSlotPowered then self:SetupIdle(1))
 	end,
+	// Closed: no longer one of the open card alerts.
 	viewQuitScript: func() begin
 		SetRemove(OpenCardViews, self);
 		inherited:?viewQuitScript()
@@ -52,6 +53,8 @@ cardAlertTemplate := {
 		context.cardMessage := a1;
 		context
 	end,
+	// Builds the alert for message a1 of cardMessageList, for the card in
+	// cardSlot named name.
 	BuildCardAlert: func(a1, cardSlot, name) begin
 		self:BuildCardAlertFromCardMessage(cardMessageList.(a1), cardSlot, name)
 	end,
@@ -64,6 +67,7 @@ cardAlertTemplate := {
 			keepSlotPowered: true
 		},
 		LockedDefaultStore: {
+			// The message, with the card's name.
 			message: func(name) begin
 				ParamStr("Card \u201C\u^0\u201D\u is locked. New information cannot be saved on it. Remove the card, unlock it, then reinsert the card.", [Array: name])
 			end,
@@ -78,6 +82,7 @@ cardAlertTemplate := {
 			buttonList: buttonList
 		},
 		MiscCardError: {
+			// The message, with the error (name here is the error code) translated.
 			message: func(name) begin
 				ParamStr("There is a problem with this card. (^0)", [Array: GetRoot():TranslateError(name)])
 			end,
@@ -85,6 +90,7 @@ cardAlertTemplate := {
 		},
 		CommCardInserted: {message: "A communications card has been inserted.", buttonList: buttonList_3},
 		|ConvertIncompatibleSoups?|: {
+			// The message, with the card's name.
 			message: func(name) begin
 				ParamStr("Card \u201C\u^0\u201D\u is formatted for a different language. Do you want to update it?", [Array: name])
 			end,
@@ -103,12 +109,14 @@ cardAlertTemplate := {
 			buttonList: buttonList_3
 		},
 		|MakeDefaultStore?|: {
+			// The message, with the card's name.
 			message: func(name) begin
 				ParamStr("Save new information and packages on card \u201C\u^0\u201D\u?", [Array: name])
 			end,
 			buttonList: [|Array|: {value: true, text: uErasePersistentDataButton1Str}, cardAlertTemplateItem_2]
 		},
 		incompatibleSoups: {
+			// The message, with the card's name.
 			message: func(name) begin
 				ParamStr("Card \u201C\u^0\u201D\u is locked and formatted for a different language. To update it remove the card, unlock it, then reinsert the card.", [Array: name])
 			end,
@@ -120,6 +128,7 @@ cardAlertTemplate := {
 		},
 		UnrecognizedCardInserted: {message: "An unrecognized type of card has been inserted.", buttonList: buttonList_3},
 		|FormatAfterMountError?|: {
+			// The message, with the error (name here is the error code) translated.
 			message: func(name) begin
 				ParamStr("This card cannot be read due to an error (^0). To use this card you must first erase it.", [Array: GetRoot():TranslateError(name)])
 			end,
@@ -140,6 +149,7 @@ cardAlertTemplate := {
 			buttonList: buttonList_3
 		},
 		|ActivatePackages?|: {
+			// The message, with the card's name.
 			message: func(name) begin
 				ParamStr("Activate packages on card \u201C\u^0\u201D\u?", [Array: name])
 			end,
@@ -152,6 +162,7 @@ cardAlertTemplate := {
 		},
 		ProtectedStore: {message: "This card is protected. You will not be able to read it.", buttonList: buttonList_3},
 		SmileAfterMountError: {
+			// The message, with the error (name here is the error code) translated.
 			message: func(name) begin
 				ParamStr("This card cannot be read. (^0) To erase the card remove it, unlock it, then reinsert the card with \u201C\uPrefs\u201D\u open.", [Array: GetRoot():TranslateError(name)])
 			end,
@@ -168,6 +179,7 @@ cardAlertTemplate := {
 			viewFlags: vVisible,
 			viewJustify: 0,
 			viewBounds: {left: 10, top: 15, right: 46, bottom: 51},
+			// Draws the slot's card icon.
 			viewDrawScript: func() begin
 				self:DrawCardSlotIcon(CardSlot, RelBounds(0, 0, 36, 36), 0)
 			end

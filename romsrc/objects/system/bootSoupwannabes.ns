@@ -44,6 +44,8 @@ bootSoupwannabes := [|Array|:
 				sequence: 5,
 				labels: nil,
 				_tagList: [|Array|: '_icon, '_noBackup],
+				// Tapped: opens the storage card's slip (the extras drawer is closed if
+				// the user configuration says so).
 				TapAction: func() begin
 					OpenForCardIcon();
 					GetUserConfig('ExtraAlwaysClose)
@@ -112,6 +114,7 @@ bootSoupwannabes := [|Array|:
 				sequence: 21,
 				labels: nil,
 				_tagList: [|Array|: '_icon, '_noBackup],
+				// Tapped: opens Names on the owner card (deferred).
 				TapAction: func() begin
 					AddDeferredSend(GetRoot().cardfile, 'OpenAsOwner, '[Array: true]);
 					GetUserConfig('ExtraAlwaysClose)
@@ -249,6 +252,7 @@ bootSoupwannabes := [|Array|:
 				sequence: 34,
 				labels: '_buttonBar,
 				_tagList: [|Array|: '_icon, '_noBackup, '_buttonBar],
+				// Tapped: undo.
 				TapAction: func() begin
 					// 114 is the undo command's code (as the Undo button posts it)
 					PostCommand('application, 114);
@@ -264,6 +268,7 @@ bootSoupwannabes := [|Array|:
 				sequence: 35,
 				labels: '_buttonBar,
 				_tagList: [|Array|: '_icon, '_noBackup, '_buttonBar],
+				// Tapped: opens Find.
 				TapAction: func() begin
 					GetRoot().findDrawer:PrimeAndOpen();
 					GetUserConfig('ExtraAlwaysClose)
@@ -278,6 +283,7 @@ bootSoupwannabes := [|Array|:
 				sequence: 36,
 				labels: '_buttonBar,
 				_tagList: [|Array|: '_icon, '_noBackup, '_buttonBar],
+				// Tapped: opens the Assistant.
 				TapAction: func() begin
 					GetRoot().assistant:PrimeAndOpen();
 					GetUserConfig('ExtraAlwaysClose)

@@ -55,7 +55,7 @@ part := array(nil, {
 	// installed (it must be removed first).
 	doNotInstall: func() begin
 		if (if LFetch(GetPackages(), "InternetSetup", 0, '|str=|, 'title) then GetRoot().|InternetSetup:Newton|) then begin
-				GetRoot():Notify(3, "Internet Setup", "Please remove the Internet Setup package before installing a new version.");
+				GetRoot():Notify(kNotifyAlert, "Internet Setup", "Please remove the Internet Setup package before installing a new version.");
 				return true
 			end;
 		nil
@@ -966,7 +966,7 @@ part := array(nil, {
 					(if newDef then begin
 							appBase:?BeginNewEntry(newDef, nil);
 							base:Close()
-						end else GetRoot():Notify(3, "Internet Setup", "Please select a connection method from the connect using popup menu."))
+						end else GetRoot():Notify(kNotifyAlert, "Internet Setup", "Please select a connection method from the connect using popup menu."))
 				end,
 				// viewSetupFormScript: is the default button.
 				kFunction_1011dd5: func() begin
@@ -1188,6 +1188,8 @@ part := array(nil, {
 						end else begin
 							return nil
 						end;
+					// the conversion, run with a progress slip: the old soup's setups copied into
+					// the "Internet Setups" soup (the slip's Stop sets cancelled)
 					fn := func(a1) begin
 						a1.CancelRequest := func(a1) begin
 							(self.cancelled := a1)
@@ -1236,7 +1238,7 @@ part := array(nil, {
 											end
 									end
 							end);
-						(if l9 then GetRoot():Notify(3, "Internet Setup", "There are old setups on a locked card. These setups were converted and are now stored in the internal memory. Please unlock the card and delete the old setup information."))
+						(if l9 then GetRoot():Notify(kNotifyAlert, "Internet Setup", "There are old setups on a locked card. These setups were converted and are now stored in the internal memory. Please unlock the card and delete the old setup information."))
 					end;
 					(if yesNoDefaultYes then begin
 							DoProgress('vGauge, {gauge: 0, statusText: "Internet Setup", titleText: "Preparing to convert data...", closeBox: nil, icon: kLiteral_101485d}, fn);
@@ -1405,7 +1407,7 @@ part := array(nil, {
 			func() begin
 				l1 := true;
 				if (not functions.InetGetService) then begin
-						GetRoot():Notify(3, kLiteral_1002399, "You cannot use Internet Setup because the Newton Internet Enabler package is not installed.");
+						GetRoot():Notify(kNotifyAlert, kLiteral_1002399, "You cannot use Internet Setup because the Newton Internet Enabler package is not installed.");
 						return nil
 					end;
 				if (Length((defs := GetDefs('dataDef, [Array: 'INET], nil))) > 0) then begin
@@ -1416,10 +1418,10 @@ part := array(nil, {
 										return true
 									end
 							end);
-						GetRoot():Notify(3, kLiteral_1002399, kLiteral_1015e69);
+						GetRoot():Notify(kNotifyAlert, kLiteral_1002399, kLiteral_1015e69);
 						return nil
 					end else begin
-						GetRoot():Notify(3, kLiteral_1002399, kLiteral_1015e69);
+						GetRoot():Notify(kNotifyAlert, kLiteral_1002399, kLiteral_1015e69);
 						return nil
 					end;
 				l1
@@ -1801,8 +1803,8 @@ objectsProto := {
 	viewClickScript: func(unit) begin
 		l2 := (Length(hitArray) - 1);
 		InkOff(unit);
-		l3 := ((GetPoint(5, unit) + viewOriginY) - origin);
-		l4 := (GetPoint(4, unit) - self:GlobalBox().left);
+		l3 := ((GetPoint(finalY, unit) + viewOriginY) - origin);
+		l4 := (GetPoint(finalX, unit) - self:GlobalBox().left);
 		vOffset := 0;
 		local i;
 		local l2;
@@ -2385,7 +2387,7 @@ partItem_3 := {
 			if verifyFunc then begin
 					verifyFunc2 := base:verifyFunc()
 				end;
-			(if (if verifyFunc2 then StrFilled(verifyFunc2)) then GetRoot():Notify(3, "Internet Setup", verifyFunc2) else begin
+			(if (if verifyFunc2 then StrFilled(verifyFunc2)) then GetRoot():Notify(kNotifyAlert, "Internet Setup", verifyFunc2) else begin
 					newtAppBase.WhichPage := (newtAppBase.WhichPage + 1);
 					if (selectedLayout = 'walkThru) then begin
 							base.viewBounds := call (kFunction_100f7a1) with ()
@@ -3143,8 +3145,8 @@ partItem_7 := {
 			kFunction_1001a25: func(a1) begin
 				l2 := (Length(hitArray) - 1);
 				InkOff(a1);
-				l3 := ((GetPoint(5, a1) + viewOriginY) - origin);
-				l4 := (GetPoint(4, a1) - self:GlobalBox().left);
+				l3 := ((GetPoint(finalY, a1) + viewOriginY) - origin);
+				l4 := (GetPoint(finalX, a1) - self:GlobalBox().left);
 				vOffset := 0;
 				local i;
 				local l2;

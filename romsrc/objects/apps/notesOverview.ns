@@ -9,6 +9,7 @@
 notesOverview := {
 	// the preferences slip; saves the app's preferences when it closes
 	prefsView: {
+		// Closed: the preferences saved (deferred).
 		viewQuitScript: func() begin
 			inherited:?viewQuitScript();
 			(if (if theApp then theApp.prefsCache) then AddDeferredCall(functions.EntryChangeXmit, [Array: theApp.prefsCache, 'paperroll]))
@@ -193,11 +194,13 @@ notesOverview := {
 			soupIndices: @paperrollIndices,
 			soupQuery: {type: 'index, indexPath: 'timestamp},
 			defaultDataType: 'paperroll,
+			// A copy gets a new time stamp.
 			DuplicateEntry: func(a1, store) begin
 				local copy;
 				(copy := Clone(a1)).timestamp := Time();
 				inherited:DuplicateEntry(copy, store)
 			end,
+			// A new note: a protoNote with the time.
 			CreateBlankEntry: func() begin
 				local copy;
 				(copy := Clone(@protoNote)).timestamp := Time();
@@ -212,9 +215,11 @@ notesOverview := {
 	allDataDefs: {paperroll: paperroll},
 	stepallocatecontext: [|Array|: 'status, status_2],
 	declareSelf: 'base,
+	// The text of a note's data.
 	plainText: func(a1, a2) begin
 		notesText(a2.data)
 	end,
+	// An application's button was removed: the status bar laid out again.
 	RemoveAuxButton: func(a1) begin
 		status:?RedoChildren()
 	end,
@@ -260,6 +265,8 @@ notesOverview := {
 			mastersoupSlot: 'notes,
 			centerTarget: true,
 			showStoreName: true,
+			// viewSetupFormScript, viewQuitScript: the overview's status bar has Routing,
+			// Filing and Check All on the right while it is open.
 			viewSetupFormScript: func() begin
 				status.menuRightButtons := '[Array: @newtRoutingButton, @newtFilingButton, @newtCheckAllButton];
 				inherited:?viewSetupFormScript()

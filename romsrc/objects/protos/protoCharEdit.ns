@@ -276,6 +276,8 @@ protoCharEdit := {
 	//   being rebuilt; l8 the next cell edge; l9 the cell number
 	viewDrawScript: compile(
 		constants: {
+			// run when this function is built: a binary of class cls from the hex
+			// string hex, for the literals below
 			kBinaryFromHex: func(hex, cls) begin
 				local b := MakeBinary(StrLen(hex) div 2, cls);
 				for i := 0 to Length(b) - 1 do begin
