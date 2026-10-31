@@ -12,6 +12,9 @@ globalHeapvarwannabes := {
 	// Extras Drawer saves the state of its built-in icons
 	SoupBackupRegistry: {
 		_proto: {
+			// called (CallFrameBasedRegistryFns, backupSlip) before a backup with the
+			// sorted names of the soups backed up: the Extras Drawer saves its built-in
+			// icons' folders and order when the system soup is among them
 			BuiltInExtrasState: func(a1) begin
 				GetRoot().ExtrasDrawer:SaveBuiltInExtrasState(a1)
 			end
@@ -64,6 +67,7 @@ globalHeapvarwannabes := {
 						{
 							_proto: formProto,
 							viewBounds: {left: 130, top: 140, right: 470, bottom: 220},
+							// the To box's text
 							viewSetupFormScript: func() begin
 								// the recipient: name and number, the number up to the ",,," that starts any
 								// dialing suffix
@@ -107,6 +111,8 @@ globalHeapvarwannabes := {
 							_proto: formProto,
 							viewBounds: {left: 130, top: 300, right: 470, bottom: 340},
 							viewFormat: vfNone,
+							// the page count (fields.pageCount, the cover included) and the date and time
+							// it is sent
 							viewSetupFormScript: func() begin
 								(self.text := Stringer([Array: fields.pageCount, " ", "pages (including cover)", "\n", DateNTime(Time())]))
 							end
@@ -115,6 +121,8 @@ globalHeapvarwannabes := {
 							_proto: formProtoProto,
 							viewBounds: {left: 20, top: 380, right: 115, bottom: 420},
 							text: uCardPositionAlertButton,
+							// the label reads "Comments" only when the fax has some (its text is empty
+							// otherwise)
 							viewSetupFormScript: func() begin
 								(if fields.comments then (self.text := "Comments"))
 							end
@@ -126,6 +134,7 @@ globalHeapvarwannabes := {
 							viewBounds: {left: 130, top: 370, right: 330, bottom: 570},
 							viewJustify: 0,
 							viewLineSpacing: 28,
+							// the comments' box: framed in gray when there are comments
 							viewSetupFormScript: func() begin
 								if (if fields.comments then (Length(fields.comments) > 0)) then begin
 										// a gray frame round the comments when there are some
@@ -133,6 +142,8 @@ globalHeapvarwannabes := {
 									end;
 								inherited:?viewSetupFormScript()
 							end,
+							// the comments (paragraphs and ink the sender wrote on the routing slip) are
+							// the edit view's children
 							viewSetupChildrenScript: func() begin
 								(if (if fields.comments then (Length(fields.comments) > 0)) then (self.viewChildren := fields.comments))
 							end
@@ -208,6 +219,8 @@ globalHeapvarwannabes := {
 						end;
 					(text := (if extractData2 then Stringer([Array: text, extractData2]) else Stringer([Array: text, l1])))
 				end,
+				// routing's text of a recorded note (item, target: the entry): the note's
+				// paragraphs as text
 				TextScript: func(entry, target) begin
 					notesText(target.data)
 				end,
@@ -221,6 +234,7 @@ globalHeapvarwannabes := {
 					a1.height := self.height;
 					a1
 				end,
+				// a new recorded note, when there is no FillNewEntry to call (there is)
 				MakeNewEntry: func() begin
 					self:FillNewEntry({data: nil})
 				end,
@@ -241,6 +255,8 @@ globalHeapvarwannabes := {
 				querySpec: {
 					type: 'index,
 					indexPath: 'sorton,
+					// the query's test: a person, company or owner card, a group of fax names, or
+					// a plain frame (a name typed in)
 					validTest: func(a1) begin
 						local cls;
 						((((IsSubclass((cls := ClassOf(a1)), 'person) or IsSubclass(cls, 'company)) or IsSubclass(cls, 'owner)) or (if IsSubclass(cls, 'group) then IsInstance(a1.members, '|nameRef.fax|))) or (cls = 'frame))
@@ -262,6 +278,8 @@ globalHeapvarwannabes := {
 				querySpec: {
 					type: 'index,
 					indexPath: 'sorton,
+					// the query's test: a person, company or owner card, a group of e-mail names,
+					// or a plain frame
 					validTest: func(a1) begin
 						local cls;
 						((((IsSubclass((cls := ClassOf(a1)), 'person) or IsSubclass(cls, 'company)) or IsSubclass(cls, 'owner)) or (if IsSubclass(cls, 'group) then IsInstance(a1.members, '|nameRef.email|))) or (cls = 'frame))
@@ -313,6 +331,8 @@ globalHeapvarwannabes := {
 							end;
 						email
 					end),
+				// the frame routing keeps for a recipient: its name as text and its e-mail
+				// address
 				GetItemRoutingFrame: func(item) begin
 					{name: self:Get(item, 'name, 'text), email: self:Get(item, 'email, nil)}
 				end,
@@ -397,6 +417,8 @@ globalHeapvarwannabes := {
 				querySpec: {
 					type: 'index,
 					indexPath: 'sorton,
+					// the query's test: a company or worksite card (or a frame sorted as a
+					// company), but not a group
 					validTest: func(a1) begin
 						local cls;
 						(if ((IsSubclass((cls := ClassOf(a1)), 'company) or IsSubclass(cls, 'worksite)) or (if IsFrame(a1) then IsInstance(a1.sorton, 'company))) then (not IsSubclass(cls, 'group)))
@@ -410,9 +432,11 @@ globalHeapvarwannabes := {
 				name: string_3,
 				version: 1,
 				metadata: nil,
+				// a new string item: empty
 				MakeNewEntry: func() begin
 					""
 				end,
+				// the overview's line: the first 30 characters
 				StringExtract: func(entry, nLines) begin
 					Substr(entry, 0, 30)
 				end,
@@ -427,12 +451,15 @@ globalHeapvarwannabes := {
 				icon: @routeFaxBitmap,
 				version: 1,
 				metadata: nil,
+				// a new item: the In/Out Box's default one
 				MakeNewEntry: func() begin
 					GetRoot().iobox:GetDefaultItem()
 				end,
+				// nothing to set up
 				SetupForm: func(entry, a2) begin
 					nil
 				end,
+				// the overview's line: the item's title, else the application it came from
 				StringExtract: func(entry, nLines) begin
 					(if entry.title then entry.title else (if entry.appSymbol then Stringer([Array: "Item from:", " ", entry.appSymbol])))
 				end,
@@ -449,12 +476,16 @@ globalHeapvarwannabes := {
 				icon: nil,
 				version: 1,
 				metadata: nil,
+				// nothing to set up
 				SetupForm: func(entry, a2) begin
 					nil
 				end,
+				// the overview's line: the title, else the first 50 characters of the text,
+				// else "Untitled Mail"
 				StringExtract: func(entry, nLines) begin
 					(if entry.title then entry.title else (if entry.text then (if (StrLen(entry.text) > 50) then Substr(entry.text, 0, 50) else entry.text) else "Untitled Mail"))
 				end,
+				// routing's text of a mail item (item, target): target's text, else its body's
 				TextScript: func(entry, target) begin
 					(if target.text then target.text else (if IsFrame(target.body) then target.body.text else ""))
 				end
@@ -490,6 +521,8 @@ globalHeapvarwannabes := {
 					supportsHangUp: true,
 					supportsSpeaker: true,
 					supportsEventIncoming: true,
+					// the endpoint options the modem configuration opens with: the modem option
+					// (MakeModemOption)
 					configOptions: func() begin
 						[Array: MakeModemOption()]
 					end
@@ -503,6 +536,7 @@ globalHeapvarwannabes := {
 		_proto: {
 			calendar: compile(
 				constants: {
+					// asks the Date Book, procrastinated, to set its next alarm again
 					kFunction_4f402d: func() begin
 						AddProcrastinatedSend('calendarAlarm, GetRoot().calendar, 'nextCalendarAlarm, '[Array: nil], 0)
 					end
@@ -576,6 +610,9 @@ globalHeapvarwannabes := {
 	// (RegStoreChange); the Date Book sets its alarms up again
 	StoreChangeRegistry: {
 		_proto: {
+			// StoreChangeRegistry's function, called when a store changes (a2 what
+			// happened): a store come or gone ('StoreEnters, 'storeLeaves) sets the Date
+			// Book's alarms up again, unless the Date Book is open
 			calendar: func(a1, a2, a3) begin
 				(if ((a2 = 'StoreEnters) or (a2 = 'storeLeaves)) then (if (not Visible(GetRoot().calendar)) then GetRoot().calendar:initializeAlarms()))
 			end
@@ -683,7 +720,7 @@ globalHeapvarwannabes := {
 				// recording queries)
 				DoNotDisplay: func() begin
 					local gestalt2, gestalt3;
-					gestalt2 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1]);
+					gestalt2 := Gestalt('[Array: kGestalt_Ext_VolumeInfo, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1]);
 					gestalt3 := Gestalt('[Array: 33554444, [Array: struct, boolean], 1]);
 					(not ((if gestalt2 then gestalt2[0]) or (if gestalt3 then gestalt3[0])))
 				end,
@@ -702,6 +739,7 @@ globalHeapvarwannabes := {
 						valuePath: [pathExpr: 'userConfiguration, 'inputGain],
 						_sound: nil,
 						maxValue: 255,
+						// the slider shows the input gain the user configuration has
 						viewSetupFormScript: func() begin
 							local inputGain;
 							inherited:?viewSetupFormScript();
@@ -711,9 +749,11 @@ globalHeapvarwannabes := {
 								end;
 							(if (viewValue <> inputGain) then SetValue(self, 'viewValue, inputGain))
 						end,
+						// the gain is kept as the slider moves, and when it stops (ChangedSlider)
 						trackSlider: func() begin
 							SetUserConfig('inputGain, viewValue)
 						end,
+						// ChangedSlider: the gain the slider was left at
 						ChangedSlider: func() begin
 							SetUserConfig('inputGain, viewValue)
 						end,
@@ -748,9 +788,11 @@ globalHeapvarwannabes := {
 						viewJustify: vjParentFullH,
 						viewBounds: {left: 10, top: 20, right: 0, bottom: 35},
 						text: "Enable Auto Docking",
+						// the box is ticked when Auto Dock is on (the user configuration's AutoDockOn)
 						viewSetupFormScript: func() begin
 							(viewValue := GetUserConfig('AutoDockOn))
 						end,
+						// the box sets AutoDockOn
 						valueChanged: func() begin
 							SetUserConfig('AutoDockOn, viewValue)
 						end,
@@ -837,6 +879,7 @@ globalHeapvarwannabes := {
 						notifyTitle: letterShapes,
 						declareSelf: 'LetterShapesPreferencesForm,
 						nogo: true,
+						// the letter weights the user chose are saved when the panel closes
 						viewQuitScript: func() begin
 							saveLetterWeights()
 						end,
@@ -851,6 +894,8 @@ globalHeapvarwannabes := {
 								viewBounds: {left: 0, top: 5, right: 112, bottom: 18},
 								text: "Use Default Settings",
 								confirmTitle: letterShapes,
+								// the recogniser's default letter shapes, shown again (the letter's picture,
+								// the enable checkboxes)
 								revertToDefaults: func() begin
 									ResetLetterDefaults();
 									letterShapes:Dirty();
@@ -871,6 +916,7 @@ globalHeapvarwannabes := {
 								viewFormat: vfNone,
 								icon: nil,
 								newt_feature: true,
+								// the left arrow's picture
 								viewSetupFormScript: func() begin
 									(icon := @leftBitmap)
 								end,
@@ -911,6 +957,7 @@ globalHeapvarwannabes := {
 								viewFormat: vfNone,
 								icon: nil,
 								newt_feature: true,
+								// the right arrow's picture
 								viewSetupFormScript: func() begin
 									(icon := @rightBitmap)
 								end,
@@ -1077,6 +1124,8 @@ globalHeapvarwannabes := {
 							AddArraySlot(popup, "Use default settings");
 							inherited:buttonClickScript()
 						end,
+						// the last item (Use default settings) resets them and redraws the panel and
+						// any sub-panel open; any other item opens its sub-panel
 						pickActionScript: func(index) begin
 							if (index = (Length(popup) - 1)) then begin
 									self:UseDefault();
@@ -1151,6 +1200,7 @@ globalHeapvarwannabes := {
 						viewBounds: {left: 13, top: 5, right: 0, bottom: 20},
 						text: "Action sound effects",
 						sounds: [|Array|: @drawerOpen, @drawerClose, @crumple, @addingMachine],
+						// the box is ticked when action sound effects are on (actionSoundEffects)
 						viewSetupFormScript: func() begin
 							(viewValue := GetUserConfig('actionSoundEffects))
 						end,
@@ -1166,9 +1216,11 @@ globalHeapvarwannabes := {
 						viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
 						viewBounds: {left: 13, top: 0, right: 0, bottom: 15},
 						text: "Pen sound effects",
+						// the box is ticked when pen sound effects are on (penSoundEffects)
 						viewSetupFormScript: func() begin
 							(viewValue := GetUserConfig('penSoundEffects))
 						end,
+						// the box sets penSoundEffects
 						valueChanged: func() begin
 							SetUserConfig('penSoundEffects, viewValue)
 						end,
@@ -1191,11 +1243,12 @@ globalHeapvarwannabes := {
 					bits: bitmap('bits, "resources/bits/5b1ac1.png", "00000000000400e800e8003800f20040", 1),
 					bounds: {left: 0, top: 0, right: 8, bottom: 10}
 				},
+				// before the panel's children are made
 				viewSetupChildrenScript: func() begin
 					local gestalt2;
 					// the backlight's choice is hidden when there is no backlight (the Gestalt
 					// backlight query)
-					(if (not (if (gestalt2 := Gestalt('[Array: 33554439, [Array: struct, boolean], 1])) then gestalt2[0])) then (backOff.viewFlags := 0))
+					(if (not (if (gestalt2 := Gestalt('[Array: kGestalt_Ext_Backlight, [Array: struct, boolean], 1])) then gestalt2[0])) then (backOff.viewFlags := 0))
 				end,
 				stepChildren: [stepChildren:
 					{
@@ -1212,9 +1265,12 @@ globalHeapvarwannabes := {
 						viewBounds: {left: 22, top: 43, right: 22, bottom: 58},
 						viewJustify: vjParentFullH,
 						text: "Don't sleep when plugged in",
+						// the box is ticked when the machine is not to sleep plugged in (powerSleep
+						// off)
 						viewSetupFormScript: func() begin
 							(viewValue := (not GetUserConfig('powerSleep)))
 						end,
+						// the box sets powerSleep, the opposite of its value
 						valueChanged: func() begin
 							SetUserConfig('powerSleep, (not viewValue))
 						end,
@@ -1238,6 +1294,8 @@ globalHeapvarwannabes := {
 					bounds: {left: 0, top: 0, right: 13, bottom: 12}
 				},
 				localeChanged: nil,
+				// after a country was chosen, closing the panel redraws the whole screen for
+				// the new locale
 				viewQuitScript: func() begin
 					(if localeChanged then begin
 							vars.setTimeSeed := Random(0, 10000000);
@@ -1249,12 +1307,16 @@ globalHeapvarwannabes := {
 						viewBounds: {left: 10, top: 25, right: 220, bottom: 40},
 						text: country,
 						configPath: [pathExpr: 'userConfiguration, 'locale],
+						// the countries are the locale bundles there are (international.locales)
 						viewSetupFormScript: func() begin
 							self.items := international.locales;
 							self.labelCommands := (foreach item in international.locales collect item.title);
 							inherited:viewSetupFormScript()
 						end,
 						UndoAction: nil,
+						// the undo of a country choice: the label back to a1 and the letter set back
+						// to a2 (UndoAction set while it runs, so the change is not made undoable in
+						// its turn)
 						setLabelScript2: func(a1, a2) begin
 							UndoAction := true;
 							self:setLabelScript(a1);
@@ -1330,6 +1392,7 @@ globalHeapvarwannabes := {
 						viewBounds: {left: 10, top: 45, right: 180, bottom: 60},
 						text: "Keyboard",
 						configPath: [pathExpr: 'userConfiguration, 'Keyboard],
+						// the keyboards are those there are (international.keyboards)
 						viewSetupFormScript: func() begin
 							self.items := international.keyboards;
 							self.labelCommands := (foreach item in international.keyboards collect item.title);
@@ -1368,6 +1431,7 @@ globalHeapvarwannabes := {
 						viewBounds: {left: 10, top: 27, right: 90, bottom: 48},
 						viewJustify: vjCenterV + oneLineOnly,
 						text: "Modem volume",
+						// the label only as wide as its text
 						viewSetupFormScript: func() begin
 							((viewBounds := Clone(viewBounds)).right := (viewBounds.left + StrFontWidth(text, viewFont)))
 						end,
@@ -1399,10 +1463,12 @@ globalHeapvarwannabes := {
 						text: "Require dial tone",
 						buttonValue: true,
 						viewFont: @fontSystem9Bold,
+						// "Require dial tone" is ticked when blind dialing is off
 						viewSetupFormScript: func() begin
 							viewValue := (not GetUserConfig('blinddialing));
 							inherited:viewSetupFormScript()
 						end,
+						// the box sets blinddialing, the opposite of its value
 						valueChanged: func() begin
 							SetUserConfig('blinddialing, (not viewValue))
 						end,
@@ -1413,9 +1479,12 @@ globalHeapvarwannabes := {
 						viewBounds: {left: 10, top: 7, right: 210, bottom: 27},
 						viewJustify: vjSiblingBottomV,
 						clusterValue: nil,
+						// the cluster shows the dialing the user configuration has: 'pulse or
+						// 'touchtone
 						viewSetupFormScript: func() begin
 							(clusterValue := GetUserConfig('dialing))
 						end,
+						// ClusterChanged: the dialing chosen goes into the user configuration
 						ClusterChanged: func() begin
 							SetUserConfig('dialing, clusterValue)
 						end,
@@ -1472,6 +1541,7 @@ globalHeapvarwannabes := {
 							local allSoupBasedModemSetUpNames;
 							(if (Length((allSoupBasedModemSetUpNames := GetAllSoupBasedModemSetUpNames())) > 0) then (popup := allSoupBasedModemSetUpNames) else (self.viewFlags := 0))
 						end,
+						// a setup chosen: asks to confirm its removal (confirmScript)
 						pickActionScript: func(index) begin
 							inherited:pickActionScript(index);
 							removeModemIndex := index;
@@ -1509,9 +1579,11 @@ globalHeapvarwannabes := {
 				viewBounds: {left: 0, top: 0, right: 0, bottom: 120},
 				overview: alarm_2,
 				icon: @alarmIconTinyBitmap,
+				// hides "use system volume" when the sound hardware's volume info says so (its
+				// third field)
 				viewSetupFormScript: func() begin
 					local gestalt2;
-					(if (if (gestalt2 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1])) then gestalt2[2]) then (useSystemVolume.viewFlags := 0))
+					(if (if (gestalt2 := Gestalt('[Array: kGestalt_Ext_VolumeInfo, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1])) then gestalt2[2]) then (useSystemVolume.viewFlags := 0))
 				end,
 				stepChildren: [stepChildren:
 					alarmSoundPicker,
@@ -1521,9 +1593,11 @@ globalHeapvarwannabes := {
 						viewJustify: vjCenterV + vjSiblingLeftH + vjSiblingBottomV,
 						viewBounds: {left: 0, top: 5, right: 190, bottom: 20},
 						text: "Persistent Alarms",
+						// the box is ticked when persistent alarms are on (AlarmAnnoyOn)
 						viewSetupFormScript: func() begin
 							(viewValue := GetUserConfig('AlarmAnnoyOn))
 						end,
+						// the box sets AlarmAnnoyOn
 						valueChanged: func() begin
 							SetUserConfig('AlarmAnnoyOn, viewValue)
 						end,
@@ -1619,7 +1693,7 @@ globalHeapvarwannabes := {
 			// the machine restarted because its factory calibration was lost: tells the
 			// user (the error's own message)
 			FactoryCalibration: func(a1) begin
-				(if (Gestalt(16777220).rebootreason = kError_Reboot_Calibration_Missing) then GetRoot():Notify(3, kError_Reboot_Calibration_Missing, nil))
+				(if (Gestalt(kGestalt_RebootInfo).rebootreason = kError_Reboot_Calibration_Missing) then GetRoot():Notify(kNotifyAlert, kError_Reboot_Calibration_Missing, nil))
 			end
 		}
 	},
@@ -1663,6 +1737,7 @@ globalHeapvarwannabes := {
 								viewJustify: vjSiblingFullH + vjSiblingBottomV,
 								viewBounds: {left: 0, top: 8, right: 0, bottom: 50},
 								sounds: nil,
+								// true when there is at least one sound
 								HasSounds: func() begin
 									return (if (if sounds then IsArray(sounds)) then (Length(sounds) > 0))
 								end,
@@ -1703,17 +1778,20 @@ globalHeapvarwannabes := {
 								jamSlot: nil,
 								defaultValue: nil,
 								inRetarget: nil,
+								// a recording still running is stopped when the view closes
 								viewQuitScript: func() begin
 									if recorder.RecordEngine then begin
 											recorder.RecordEngine:StopNow()
 										end;
 									inherited:?viewQuitScript()
 								end,
+								// shows the target entry's sounds (targetData is read and not used)
 								viewSetupDoneScript: func() begin
 									local targetData;
 									targetData := self:TargetData();
 									self:Retarget()
 								end,
+								// the sound data at path in the target entry, else defaultValue
 								TargetData: func() begin
 									(if (if target then path) then target.(path) else defaultValue)
 								end,
@@ -1735,6 +1813,8 @@ globalHeapvarwannabes := {
 									SetValue(soundDescription, 'text, targetData.description);
 									(inRetarget := nil)
 								end,
+								// JamFromEntry (the Reference's slot view method) with another entry: the
+								// value at path becomes the other entry's jamSlot, or nil
 								jamFromEntry: func(resolveEntryAlias) begin
 									(if jamSlot then begin
 											target.(path) := nil;
@@ -1799,10 +1879,13 @@ globalHeapvarwannabes := {
 					viewFormat: vfLinesLtGray,
 					viewLineSpacing: 14,
 					viewFont: tsSimple + tsSize(10),
+					// a word written in the viewer takes the viewer's font
 					editAddWordScript: func(a1, a2) begin
 						a1.viewFont := viewFont;
 						a1
 					end,
+					// the string as one paragraph in the user's mail font (nothing without an
+					// item)
 					viewSetupChildrenScript: func() begin
 						(if fields then (self.viewChildren := [Array: {viewBounds: SetBounds(0, 0, 636, 100), _proto: @protoParagraph, viewStationery: 'para, text: target, viewFont: GetUserConfig('mailFont)}]) else (self.viewChildren := [Array: ]))
 					end,
@@ -1811,9 +1894,12 @@ globalHeapvarwannabes := {
 						target := notesText(self.viewChildren);
 						(if (if fields.edited then IsSoupEntry(fields)) then EntryChangeXmit(fields, 'mail))
 					end,
+					// the user's mail font, and lines as far apart as it is high
 					viewSetupFormScript: func() begin
 						(viewLineSpacing := FontHeight((viewFont := GetUserConfig('mailFont))))
 					end,
+					// an edit of the text marks the item edited, so it is saved when the viewer
+					// closes
 					viewChangedScript: func(slot, view) begin
 						(if (slot = 'text) then (fields.edited := true))
 					end,
@@ -1828,9 +1914,12 @@ globalHeapvarwannabes := {
 					data: nil,
 					kids: nil,
 					reflowStart: 0,
+					// a printed page is not saved back to an entry
 					StartFlushWithChild: func(a1) begin
 						nil
 					end,
+					// the page's data: the string as one paragraph in the mail font, reflowed from
+					// the start
 					viewSetupFormScript: func() begin
 						local mailFont;
 						inherited:viewSetupFormScript();
@@ -1838,6 +1927,8 @@ globalHeapvarwannabes := {
 						self.data := [Array: {_proto: @protoParagraph, viewBounds: SetBounds(0, 0, 636, 100), viewStationery: 'para, text: target, viewFont: mailFont}];
 						(self.reflowStart := 0)
 					end,
+					// PrintNextPageScript: another page while some of the reflowed paragraphs are
+					// still to print (RedoChildren's true says there is one), else nil
 					printNextPageScript: func() begin
 						(if (if kids then (reflowStart < Length(kids))) then self:RedoChildren())
 					end,
@@ -1848,9 +1939,12 @@ globalHeapvarwannabes := {
 							viewFlags: vVisible + vReadOnly,
 							viewFormat: vfNone,
 							viewJustify: vjParentCenterH + vjReflow,
+							// the page view fills its parent
 							viewSetupFormScript: func() begin
 								(self.viewBounds := self:Parent():LocalBox())
 							end,
+							// the text is reflowed to the page once (kids); each page takes the pieces
+							// from reflowStart on, as many as fit
 							viewSetupChildrenScript: func() begin
 								local mailFont;
 								if (if (not kids) then data) then begin
@@ -1859,6 +1953,7 @@ globalHeapvarwannabes := {
 									end;
 								(if kids then (self.stepChildren := ArrayMunger([Array: ], 0, 0, kids, reflowStart, nil)))
 							end,
+							// reflowStart moves past the pieces this page took
 							viewSetupDoneScript: func() begin
 								(if self.stepChildren then (reflowStart := (reflowStart + Length(self.stepChildren))))
 							end
@@ -1884,6 +1979,8 @@ globalHeapvarwannabes := {
 							viewBounds: {left: 0, top: 10, right: 0, bottom: 0},
 							viewJustify: vjCenterH + vjParentFullH + vjParentFullV,
 							text: "There is no viewer for this item.",
+							// the text: none for an item still on a remote server, the log's text for a
+							// logged item, else "There is no viewer for this item."
 							viewSetupFormScript: func() begin
 								(if (if fields then fields.Remote) then (text := "") else begin
 										if (not target) then begin
@@ -1958,6 +2055,7 @@ globalHeapvarwannabes := {
 							box := self:Parent():LocalBox();
 							(a1.viewBounds.bottom := (box.bottom - 15))
 						end,
+						// where the meetings' grid starts and ends on the page
 						viewSetupFormScript: func() begin
 							inherited:viewSetupFormScript();
 							// the meetings start below the events (when they are shown) or the date
@@ -1993,6 +2091,7 @@ globalHeapvarwannabes := {
 											viewFont: tsSimple + tsSize(12) + tsBold,
 											text: uCardPositionAlertButton,
 											DateSpec: 18,
+											// the date is shown only when more than one day is printed
 											viewSetupFormScript: func() begin
 												(if (Length(selectedDates) > 1) then (self.text := LongDateStr(displaydate, DateSpec)))
 											end
@@ -2019,6 +2118,7 @@ globalHeapvarwannabes := {
 											viewBounds: {left: 0, top: 100, right: 0, bottom: 101},
 											viewJustify: vjParentFullH,
 											viewFormat: vfFillGray,
+											// the divider under the events
 											viewSetupFormScript: func() begin
 												// no divider without the events (no viewFlags: hidden)
 												(if (not ShowCribNotes) then (viewFlags := 0))
@@ -2037,6 +2137,9 @@ globalHeapvarwannabes := {
 									HourFont: tsSystem + tsSize(9) + tsBold,
 									labelFont: tsSystem + tsSize(9) + tsBold,
 									dayStrSpec: 2793,
+									// the column's grid: 18 narrower than the day's column (the hour labels'
+									// room), the hour labels only on the first day, scrolled to OriginY, from
+									// MeetingTop to MeetingBottom
 									viewSetupFormScript: func() begin
 										self.tabWidths := (tabWidths - 18);
 										if (displaydate <> selectedDates[0]) then begin
@@ -2045,6 +2148,7 @@ globalHeapvarwannabes := {
 										viewOriginY := OriginY;
 										(viewBounds := SetBounds(0, MeetingTop, 0, MeetingBottom))
 									end,
+									// the meeting grid's hour lines
 									viewDrawScript: func() begin
 										// the hour lines, 13 pixels apart
 										DrawMeetingGrid(13)
@@ -2107,6 +2211,7 @@ globalHeapvarwannabes := {
 											end);
 										(shapes := l7)
 									end,
+									// the meetings outside the hours, in the body style
 									viewDrawScript: func() begin
 										(if shapes then self:DrawShape(shapes, bodyStyle))
 									end
@@ -2153,6 +2258,7 @@ globalHeapvarwannabes := {
 								viewFont: tsSimple + tsSize(18) + tsBold,
 								DateSpecLong: 41705,
 								DateSpecShort: 745,
+								// the title: the date, or the first and last dates of the range
 								viewSetupFormScript: func() begin
 									local count, selectedDate, selectedDate2;
 									count := Length(selectedDates);
@@ -2174,6 +2280,7 @@ globalHeapvarwannabes := {
 					},
 					margins: {left: 50, top: 50, right: 50, bottom: 10},
 					TextScript: 'oneDayText,
+					// SetupItem (routing): the item's title is the format's ("Day View")
 					SetupItem: func(fields, frame2) begin
 						inherited:SetupItem(fields, frame2);
 						(fields.title := title)
@@ -2193,6 +2300,8 @@ globalHeapvarwannabes := {
 					symbol: 'ToDoListPrintFormat,
 					mainFormat: {
 						_proto: mainFormatProto,
+						// the shapes: for each selected date, its header and its to do items; Header
+						// and todos are cleared at each date, so each date gets both
 						CreateShapes: func() begin
 							yOffset := 0;
 							drawShapes := [Array: ];
@@ -2220,6 +2329,7 @@ globalHeapvarwannabes := {
 						end
 					},
 					margins: {left: 50, top: 50, right: 50, bottom: 10},
+					// SetupItem: the item's title is the format's
 					SetupItem: func(fields, frame2) begin
 						inherited:SetupItem(fields, frame2);
 						(fields.title := title)
@@ -2235,6 +2345,7 @@ globalHeapvarwannabes := {
 					symbol: 'AgendaListPrintFormat,
 					mainFormat: mainFormatProto,
 					margins: {left: 50, top: 50, right: 50, bottom: 10},
+					// SetupItem: the item's title is the format's
 					SetupItem: func(fields, frame2) begin
 						inherited:SetupItem(fields, frame2);
 						(fields.title := title)
@@ -2251,6 +2362,7 @@ globalHeapvarwannabes := {
 					mainFormat: {_proto: mainFormatProto, numDays: 7},
 					margins: {left: 50, top: 50, right: 50, bottom: 10},
 					TextScript: 'weekText,
+					// SetupItem: the item's title is the format's
 					SetupItem: func(fields, frame2) begin
 						inherited:SetupItem(fields, frame2);
 						(fields.title := title)
@@ -2278,6 +2390,8 @@ globalHeapvarwannabes := {
 						pageWidth: nil,
 						drawShapes: nil,
 						repeatingInstance: nil,
+						// the overview's selected items (target's cursor array) sorted by their index,
+						// from the first; repeatingInstance is a fresh repeating meeting to fill in
 						viewSetupFormScript: func() begin
 							inherited:?viewSetupFormScript();
 							InsertionSort((cursor := target._cursor), '|<|, '[pathExpr: index]);
@@ -2285,12 +2399,14 @@ globalHeapvarwannabes := {
 							cursorLength := Length(cursor);
 							(repeatingInstance := Clone(protoInstanceOfRepeatingMeeting))
 						end,
+						// the page's height less the footer, and the first page's shapes
 						viewSetupDoneScript: func() begin
 							local box;
 							pageHeight := (((box := self:LocalBox()).bottom - 12) - 4);
 							pageWidth := box.right;
 							self:CreateShapes()
 						end,
+						// the cursor is let go when the format closes
 						viewQuitScript: func() begin
 							(cursor := nil)
 						end,
@@ -2302,6 +2418,7 @@ globalHeapvarwannabes := {
 								end;
 							drawShapes
 						end,
+						// the page's shapes, in the body style
 						viewDrawScript: func() begin
 							(if drawShapes then self:DrawShape(drawShapes, bodyStyle))
 						end,
@@ -2366,6 +2483,7 @@ globalHeapvarwannabes := {
 					},
 					margins: {left: 50, top: 50, right: 50, bottom: 10},
 					usesCursors: true,
+					// SetupItem: the item's title is the format's
 					SetupItem: func(fields, frame2) begin
 						inherited:SetupItem(fields, frame2);
 						(fields.title := title)
@@ -2440,6 +2558,7 @@ globalHeapvarwannabes := {
 								(self.viewChildren := [Array: {viewBounds: mailFont, _proto: @protoParagraph, viewStationery: 'para, text: (if (l2 = nil) then "No package information available." else ParamStr("Package information:\n\nName: ^0\nSize: ^1 bytes\n^2", [Array: filename, l2.size, l2.copyright])), viewFont: GetUserConfig('mailFont)}])
 							end else (self.viewChildren := [Array: ]))
 					end,
+					// the user's mail font, and lines as far apart as it is high
 					viewSetupFormScript: func() begin
 						(viewLineSpacing := FontHeight((viewFont := GetUserConfig('mailFont))))
 					end,
@@ -2451,6 +2570,8 @@ globalHeapvarwannabes := {
 					sizeLimit: 0,
 					showMessage: nil,
 					dataTypes: [|Array|: 'frame],
+					// SetupItem (routing): the item's title is the package's name; nothing at all
+					// is done (not even the inherited SetupItem) without a target
 					SetupItem: func(fields, frame2) begin
 						local l1;
 						if (frame2.target = nil) then begin
@@ -2461,6 +2582,7 @@ globalHeapvarwannabes := {
 							end;
 						inherited:SetupItem(fields, frame2)
 					end,
+					// TargetSize (routing, how big the data sent is): the package's size
 					TargetSize: func(frame2) begin
 						local l1;
 						(if (l1 := (if frame2.target.package then GetPkgRefInfo(frame2.target.package))) then l1.size)
@@ -2481,6 +2603,8 @@ globalHeapvarwannabes := {
 							end;
 						nil
 					end,
+					// ResolveBody: a body holding a package reference (pkgRef) is given back as a
+					// packageFrame with it; any other body as it is
 					ResolveBody: func(fields) begin
 						local l1;
 						(if (if (l1 := inherited:ResolveBody(fields)) then l1.pkgRef) then {class: 'packageFrame, package: l1.pkgRef} else return l1)
@@ -2514,6 +2638,8 @@ globalHeapvarwannabes := {
 					viewFormat: vfLinesLtGray,
 					viewLineSpacing: 14,
 					viewFont: tsSimple + tsSize(10),
+					// a word written in the viewer takes its font and marks the message (or its
+					// body, inBody) edited
 					editAddWordScript: func(a1, a2) begin
 						a1.viewFont := viewFont;
 						if inBody then begin
@@ -2555,6 +2681,7 @@ globalHeapvarwannabes := {
 						height := self:Parent():LocalBox().bottom;
 						((viewBounds := Clone(viewBounds)).bottom := ((height div viewLineSpacing) * viewLineSpacing))
 					end,
+					// an edit of the text marks the message (or its body) edited
 					viewChangedScript: func(slot, view) begin
 						local l1;
 						l1 := (if inBody then fields.body else fields);
@@ -2576,6 +2703,7 @@ globalHeapvarwannabes := {
 						data: nil,
 						kids: nil,
 						reflowStart: 0,
+						// a printed page is not saved back to an entry
 						StartFlushWithChild: func(a1) begin
 							nil
 						end,
@@ -2594,6 +2722,8 @@ globalHeapvarwannabes := {
 							self.data := [Array: {_proto: @protoParagraph, viewBounds: SetBounds(0, 0, (l6 - 4), l8), viewStationery: 'para, text: textHeader, viewFont: mailFont2}, {_proto: @protoParagraph, viewBounds: RelBounds(0, (l8 + mailFont), (l6 - 4), mailFont), viewStationery: 'para, text: target.text, viewFont: mailFont2}];
 							(self.reflowStart := 0)
 						end,
+						// PrintNextPageScript: another page while some of the reflowed text is still
+						// to print (RedoChildren's true), else nil
 						printNextPageScript: func() begin
 							(if (if kids then (reflowStart < Length(kids))) then self:RedoChildren())
 						end,
@@ -2604,9 +2734,12 @@ globalHeapvarwannabes := {
 								viewFlags: vVisible + vReadOnly,
 								viewFormat: vfNone,
 								viewJustify: vjParentCenterH + vjReflow,
+								// the page view fills its parent
 								viewSetupFormScript: func() begin
 									(self.viewBounds := self:Parent():LocalBox())
 								end,
+								// the header and text are reflowed once (kids) to the printer's page less 60
+								// pixels all round; each page takes the pieces from reflowStart on
 								viewSetupChildrenScript: func() begin
 									local mailFont, insetRect2;
 									if (if (not kids) then data) then begin
@@ -2617,6 +2750,7 @@ globalHeapvarwannabes := {
 										end;
 									(if kids then (self.stepChildren := ArrayMunger([Array: ], 0, 0, kids, reflowStart, nil)))
 								end,
+								// reflowStart moves past the pieces this page took
 								viewSetupDoneScript: func() begin
 									(if self.stepChildren then (reflowStart := (reflowStart + Length(self.stepChildren))))
 								end
@@ -2624,6 +2758,7 @@ globalHeapvarwannabes := {
 						],
 						_proto: @protoPrintFormat
 					},
+					// routing's text of a mail item (item, target): target's text
 					TextScript: func(entry, target) begin
 						target.text
 					end,
@@ -2644,6 +2779,8 @@ globalHeapvarwannabes := {
 					viewJustify: vjParentFullH + vjParentFullV,
 					viewFlags: vVisible + vClipping,
 					dataDef: smartMail,
+					// an option button tapped: calls the method at option.path of the application
+					// option.app (a child of the root) with the item and target.arg
 					doOption: func(option) begin
 						local l1;
 						l1 := GetRoot().(option.app);
@@ -2657,6 +2794,8 @@ globalHeapvarwannabes := {
 								call l1.(target.setup.path) with (fields, target.arg)
 							end)
 					end,
+					// the children are made again once the setup method has run (so they are made
+					// twice when the viewer opens)
 					viewSetupDoneScript: func() begin
 						self:RedoChildren()
 					end,
@@ -2667,6 +2806,7 @@ globalHeapvarwannabes := {
 							viewBounds: {left: 0, top: 0, right: 0, bottom: 27},
 							viewFlags: vVisible,
 							viewJustify: vjParentFullH,
+							// a button for each of the item's options, in a row
 							viewSetupChildrenScript: func() begin
 								self.viewChildren := [Array: ];
 								(if (if (if fields then target) then target.options) then (foreach item in target.options do begin
@@ -2685,13 +2825,17 @@ globalHeapvarwannabes := {
 							viewFormat: vfLinesLtGray,
 							viewLineSpacing: 14,
 							viewFont: tsSimple + tsSize(10),
+							// a word written takes the view's font
 							editAddWordScript: func(a1, a2) begin
 								a1.viewFont := viewFont;
 								a1
 							end,
+							// the item's text as one paragraph in the user's mail font
 							viewSetupChildrenScript: func() begin
 								(if fields then (self.viewChildren := [Array: {viewBounds: SetBounds(0, 0, 636, 100), _proto: @protoParagraph, viewStationery: 'para, text: fields.text, viewFont: GetUserConfig('mailFont)}]) else (self.viewChildren := [Array: ]))
 							end,
+							// the edited text of an item that is neither 'Read nor 'Received goes back
+							// into it (itemchanged when it is a soup entry that changed)
 							viewQuitScript: func() begin
 								local notesText2;
 								(if (not ((fields.state = 'Read) or (fields.state = 'Received))) then begin
@@ -2703,9 +2847,11 @@ globalHeapvarwannabes := {
 										(if (if (if fields.edited then IsSoupEntry(fields)) then FrameDirty(fields)) then self:itemchanged(fields, nil))
 									end)
 							end,
+							// the user's mail font, and lines as far apart as it is high
 							viewSetupFormScript: func() begin
 								(viewLineSpacing := FontHeight((viewFont := GetUserConfig('mailFont))))
 							end,
+							// an edit of the text marks the item edited
 							viewChangedScript: func(slot, view) begin
 								(if (slot = 'text) then (fields.edited := true))
 							end,
@@ -2852,6 +2998,9 @@ globalHeapvarwannabes := {
 	// SoupRestoreRegistry: what to do when a soup is restored, by soup
 	SoupRestoreRegistry: {
 		_proto: {
+			// called (CallFrameBasedRegistryFns) when soups are restored: the Extras
+			// Drawer's RestoreBuiltInExtrasState puts its built-in icons' folders and
+			// order back
 			BuiltInExtrasState: func(a1) begin
 				GetRoot().ExtrasDrawer:RestoreBuiltInExtrasState(a1)
 			end
@@ -2865,6 +3014,8 @@ recording := "Recording";
 // frame shows the recorder's state in recorderStatus
 recorder := {
 	viewBounds: {left: 0, top: 7, right: 191, bottom: 30},
+	// makes the recorder's statusText frame, whose SetState the recorder sends as
+	// its state changes
 	viewSetupFormScript: func() begin
 		// SetState(oldState, newState, hasSounds): the states as the text shows them -
 		// 1 and 32 ready, 2 recording, 4 playing, 8 and 16 paused; going to 64 the
@@ -2962,9 +3113,11 @@ inputSourcePicker := {
 	viewBounds: {left: 10, top: 8, right: 10, bottom: 23},
 	text: recordingSource,
 	labelCommands: nil,
+	// the choices: None, then the inputs the volume info's input bits (its
+	// seventh field) say the machine has
 	viewSetupFormScript: func() begin
 		local gestalt2, l2;
-		l2 := (if (gestalt2 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1])) then gestalt2[6] else 0);
+		l2 := (if (gestalt2 := Gestalt('[Array: kGestalt_Ext_VolumeInfo, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1])) then gestalt2[6] else 0);
 		AddArraySlot((labelCommands := [Array: ]), {item: "None", value: nil});
 		if (BAnd(l2, 4) <> 0) then begin
 				AddArraySlot(labelCommands, {item: "Microphone", value: 4})
@@ -2974,6 +3127,8 @@ inputSourcePicker := {
 			end;
 		inherited:?viewSetupFormScript()
 	end,
+	// TextSetup: the source the user chose; one the machine does not have falls
+	// back to the first (None), which is saved
 	TextSetup: func() begin
 		inputDevice := GetUserConfig('inputDevice);
 		local inputDevice;
@@ -2994,7 +3149,7 @@ inputSourcePicker := {
 		local value;
 		value := labelCommands[index].value;
 		SetUserConfig('inputDevice, value);
-		(if (value = 16) then self:Notify(3, "Recording source", "If you don't have an external microphone connected, you should change this setting back to \u201C\uNone\u201D\u or \u201C\uMicrophone\u201D\u."))
+		(if (value = 16) then self:Notify(kNotifyAlert, "Recording source", "If you don't have an external microphone connected, you should change this setting back to \u201C\uNone\u201D\u or \u201C\uMicrophone\u201D\u."))
 	end,
 	preallocatedContext: 'inputSourcePicker,
 	_proto: @protoLabelPicker
@@ -3007,8 +3162,10 @@ qualityPicker := {
 	viewBounds: {left: 10, top: 6, right: 10, bottom: 21},
 	text: "Recording quality",
 	labelCommands: nil,
+	// the codecs offered: three on a StrongARM (kGestalt_SystemInfo's cputype),
+	// else two
 	viewSetupFormScript: func() begin
-		if (Gestalt(16777219).cputype = 'strongarm) then begin
+		if (Gestalt(kGestalt_SystemInfo).cputype = 'strongarm) then begin
 				labelCommands := [Array: {item: "Voice (2K/sec)", symbol: 'GSM8K16Codec}, {item: "Voice (4K/sec)", symbol: 'IMA8K16Codec}, {item: "Music (5K/sec)", symbol: 'IMA10K16Codec}]
 			end else begin
 				labelCommands := [Array: {item: "Low (4K/sec)", symbol: 'IMA8K16Codec}, {item: "High (5K/sec)", symbol: 'IMA10K16Codec}]
@@ -3019,7 +3176,7 @@ qualityPicker := {
 	// not offered falls back to the first
 	TextSetup: func() begin
 		if (not (recordingQuality := GetUserConfig('recordingQuality))) then begin
-				recordingQuality := (if (Gestalt(16777219).cputype = 'strongarm) then 'GSM8K16Codec else 'IMA8K16Codec)
+				recordingQuality := (if (Gestalt(kGestalt_SystemInfo).cputype = 'strongarm) then 'GSM8K16Codec else 'IMA8K16Codec)
 			end;
 		local recordingQuality;
 		local labelCommand;
@@ -3034,6 +3191,7 @@ qualityPicker := {
 			end;
 		return labelCommand.item
 	end,
+	// the codec chosen goes into the user configuration
 	LabelActionScript: func(index) begin
 		SetUserConfig('recordingQuality, labelCommands[index].symbol)
 	end,
@@ -3065,6 +3223,7 @@ phones := {
 	querySpec: {
 		type: 'index,
 		indexPath: 'sorton,
+		// the query's test: a person, company or owner card, or a plain frame
 		validTest: func(a1) begin
 			local cls;
 			(((IsSubclass((cls := ClassOf(a1)), 'person) or IsSubclass(cls, 'company)) or IsSubclass(cls, 'owner)) or (cls = 'frame))
@@ -3231,6 +3390,9 @@ string_3 := "String";
 sprint := {
 	title: sprintNet,
 	id: 'sprint,
+	// GetAccessNumbers(a1, a2): the city is a1's cityAlias resolved, else a2 (a
+	// city entry); copies of its mailAccess numbers on this network, each mailPhone
+	// made a phone string; nil when there are none
 	GetAccessNumbers: func(a1, a2) begin
 		list := [Array: ];
 		if (if a1 then IsEntryAlias(a1.cityAlias)) then begin
@@ -3336,7 +3498,7 @@ meeting_2 := {
 								end onexception |evt.ex| do begin
 									SetLength(l6.InstanceNotesData, 1);
 									l6 := (a1.target := l1:ConvertToNonrepeating(a1.target, true));
-									GetRoot():Notify(3, "Dates", "Unable to send entire repeating meeting and all its notes.  Just this occurrence will be sent.")
+									GetRoot():Notify(kNotifyAlert, "Dates", "Unable to send entire repeating meeting and all its notes.  Just this occurrence will be sent.")
 								end
 						end;
 					a2.body := l6
@@ -3350,6 +3512,8 @@ meeting_2 := {
 							end
 					end))
 		end,
+		// routing's text of a meeting item (item, target): the meeting in the item's
+		// body as text
 		TextScript: func(entry, target) begin
 			GetRoot().calendar:GetTextOfRoutedMeeting(entry.body)
 		end,
@@ -3380,6 +3544,8 @@ meeting_2 := {
 			GetNameOfPerson: GetNameOfPerson,
 			GetNamesOfInvitees: GetNamesOfInvitees,
 			getNameOfLocation: getNameOfLocation,
+			// the meeting (the item's body), its notes and their extent (DataRect); the
+			// first page shows the notes from the top
 			viewSetupFormScript: func() begin
 				printForm := self;
 				self.meeting := fields.body;
@@ -3408,9 +3574,11 @@ meeting_2 := {
 					viewBounds: {left: 10, top: 20, right: -10, bottom: 45},
 					height: 25,
 					labelText: meeting_3,
+					// the What line: the meeting's text
 					GetContent: func() begin
 						self:GetMeetingText(meeting)
 					end,
+					// an event (a cribNote) is labelled Event rather than Meeting
 					viewSetupFormScript: func() begin
 						if (meeting.viewStationery = 'cribNote) then begin
 								labelText := "Event"
@@ -3424,6 +3592,7 @@ meeting_2 := {
 					labelText: time,
 					// TimeSpec 170636 is shortTimeStrSpec (datetimeStrSpecs.ns)
 					TimeSpec: 170636,
+					// the When line: the start and end times, then the long date
 					GetContent: func() begin
 						Stringer([Array: TimeStr(meeting.mtgStartDate, TimeSpec), " ", $-, " ", TimeStr((meeting.mtgStartDate + self:GetMeetingSlot(meeting, 'mtgDuration)), TimeSpec), "\n", LongDateStr(meeting.mtgStartDate, @datetimeStrSpecs.longDateStrSpec)])
 					end
@@ -3432,6 +3601,7 @@ meeting_2 := {
 					_proto: mainFormatProto_2,
 					height: 50,
 					labelText: "Who",
+					// the Who line: the invitees' names
 					GetContent: func() begin
 						local mtgInvitees;
 						(if (mtgInvitees := self:GetMeetingSlot(meeting, 'mtgInvitees)) then self:GetNamesOfInvitees(mtgInvitees, nil))
@@ -3441,6 +3611,7 @@ meeting_2 := {
 					_proto: mainFormatProto_2,
 					height: 25,
 					labelText: where_2,
+					// the Where line: the location's name
 					GetContent: func() begin
 						local mtgLocation;
 						(if (mtgLocation := self:GetMeetingSlot(meeting, 'mtgLocation)) then self:getNameOfLocation(mtgLocation))
@@ -3629,6 +3800,7 @@ mainFormatProtoProto_2 := {
 	viewBounds: {left: 0, top: -12, right: 0, bottom: 0},
 	viewJustify: vjParentFullH + vjParentBottomV,
 	viewFont: tsSimple + tsSize(9),
+	// the text: "printed", today's long date and the time
 	viewSetupFormScript: func() begin
 		(self.text := ParamStr("^0 ^1 ^2", [Array: "printed", LongDateStr(Time(), 0), TimeStr(Time(), TimeSpec)]))
 	end,
@@ -3660,12 +3832,15 @@ mainFormatProto := {
 					nil
 				end))
 	end,
+	// the page's height less the footer, and the first page's shapes
 	viewSetupDoneScript: func() begin
 		local box;
 		pageHeight := (((box := self:LocalBox()).bottom - 12) - 4);
 		pageWidth := box.right;
 		self:setupNextPage()
 	end,
+	// PrintNextPageScript: another page while shapes were left over (oldShapes);
+	// gives back the page's shapes, nil when there are none
 	printNextPageScript: func() begin
 		drawShapes := nil;
 		if oldShapes then begin
@@ -3740,6 +3915,10 @@ mainFormatProto := {
 					Throw('|evt.ex.nextpage|, item)
 				end))
 	end,
+	// the page's shapes: what the last page left, then for each date still to
+	// print its header, events, meetings and to do items.  The flags Header,
+	// events, meetings and todos say which parts of the first date are done, so a
+	// page that a CarefulCreate throw ended inside a day goes on from the next part
 	CreateShapes: func() begin
 		yOffset := 0;
 		drawShapes := [Array: ];
@@ -3779,6 +3958,7 @@ mainFormatProto := {
 					yOffset := (yOffset + 6)
 				end))
 	end,
+	// the page's shapes, in the body style
 	viewDrawScript: func() begin
 		self:DrawShape(drawShapes, bodyStyle)
 	end,
@@ -3796,6 +3976,8 @@ mainFormatProto_2 := {
 	height: nil,
 	ContentText: nil,
 	labelText: nil,
+	// the line's content (GetContent): with some, height high (the bounds made
+	// unless given); without, an empty view
 	viewSetupFormScript: func() begin
 		(if (if (ContentText := self:GetContent()) then (StrLen(ContentText) > 0)) then (if (not viewBounds) then (viewBounds := SetBounds(10, 0, -10, height))) else (viewBounds := SetBounds(0, 0, 0, 0)))
 	end,
@@ -3806,6 +3988,7 @@ mainFormatProto_2 := {
 			viewBounds: {left: 0, top: 0, right: 140, bottom: 25},
 			viewFont: tsSimple + tsSize(18) + tsBold,
 			text: nil,
+			// the line's label
 			viewSetupFormScript: func() begin
 				(text := DisplayLine.labelText)
 			end,
@@ -3817,6 +4000,7 @@ mainFormatProto_2 := {
 			viewBounds: {left: 150, top: 0, right: 0, bottom: 0},
 			viewFont: tsSimple + tsSize(18),
 			text: nil,
+			// the line's content
 			viewSetupFormScript: func() begin
 				(text := DisplayLine.ContentText)
 			end,
@@ -3833,6 +4017,7 @@ notes_3 := {
 	viewJustify: vjParentFullH + vjSiblingBottomV,
 	viewFormat: vfLinesLtGray,
 	viewLineSpacing: 28,
+	// the notes as children, scrolled to currentY, which moves a page (400) on
 	viewSetupChildrenScript: func() begin
 		self.viewChildren := NotesData;
 		self:SetOrigin(0, currentY);
@@ -3845,6 +4030,7 @@ Footer := {
 	viewBounds: {left: 20, top: -14, right: 0, bottom: -3},
 	viewJustify: vjParentFullH + vjParentBottomV,
 	viewFont: tsSimple + tsSize(9),
+	// "Page n"
 	viewSetupFormScript: func() begin
 		(self.text := ParamStr("^0 ^1", [Array: "Page", pageNumber]))
 	end,
@@ -3876,8 +4062,10 @@ mainFormat := {
 				self.bookRef := whereIsBook.bookSoup.Book
 			end;
 		if (bookRef = nil) then begin
-				self:Notify(3, "Book", "Book not available.")
+				self:Notify(kNotifyAlert, "Book", "Book not available.")
 			end;
+		// looks like a ROM bug: after the alert for a book that is not there it goes
+		// on, and bookRef.rendering below throws on the nil bookRef
 		self.curRendering := fields.body.curRendering;
 		pageSize := bookRef.rendering[curRendering].PageSize;
 		self.cuPageSize := {width: pageSize.right, height: pageSize.bottom};
@@ -3931,6 +4119,7 @@ mainFormat := {
 			end);
 		(self.viewChildren := list)
 	end,
+	// PrintNextPageScript: another sheet while pages of the range are left
 	printNextPageScript: func() begin
 		(if (bookPage <= printTo) then begin
 				self:RedoChildren();
@@ -3949,9 +4138,11 @@ auxForm := {
 	viewEffect: 0,
 	viewHeight: 60,
 	viewWidth: 150,
+	// ReOrientToScreen (sent when the screen is rotated): true, nothing to do
 	ReOrientToScreen: func() begin
 		true
 	end,
+	// maxValue: the book's page count
 	viewSetupFormScript: func() begin
 		(self.maxValue := fields.body.nPages)
 	end,
@@ -3963,10 +4154,12 @@ auxForm := {
 			label: "From page",
 			entryFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed,
 			viewLineSpacing: 32,
+			// the range starts at page 1
 			viewSetupFormScript: func() begin
 				fields.body.fromPage := 1;
 				(self.text := "1")
 			end,
+			// NumberEntered (turnToPage): the first page to print
 			NumberEntered: func(floor) begin
 				(fields.body.fromPage := floor)
 			end
@@ -3977,6 +4170,7 @@ auxForm := {
 			label: "To page",
 			entryFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed,
 			viewLineSpacing: 32,
+			// the range ends at the book's last page
 			viewSetupFormScript: func() begin
 				self.text := NumberStr(fields.body.nPages);
 				// looks like a ROM bug: sets fields.toPage where the other fields are kept in
@@ -3984,6 +4178,7 @@ auxForm := {
 				// in the place it is read from
 				(fields.toPage := fields.body.nPages)
 			end,
+			// NumberEntered: the last page to print
 			NumberEntered: func(floor) begin
 				(fields.body.toPage := floor)
 			end
@@ -4141,12 +4336,16 @@ smartMail := {
 	icon: @routeMailBitmap,
 	version: 1,
 	metadata: nil,
+	// a new smart mail item: no options, no argument
 	MakeNewEntry: func() begin
 		{class: 'smartMail, options: [Array: ], arg: nil}
 	end,
+	// nothing to set up
 	SetupForm: func(entry, a2) begin
 		nil
 	end,
+	// the overview's line: the title and the first 50 characters of the text (or
+	// "-empty-")
 	StringExtract: func(entry, nLines) begin
 		local l1;
 		l1 := (if (if entry.text then (StrLen(entry.text) > 0)) then StrTruncate(Clone(entry.text), 50) else "-empty-");
@@ -4171,12 +4370,16 @@ letterShapes_2 := {
 	viewBounds: {left: 10, top: 20, right: -10, bottom: 160},
 	indent: 24,
 	viewFont: tsSystem + tsSize(10),
+	// the shown letter's shape at hiliteIndex highlighted
 	viewSetupFormScript: func() begin
 		SetHiliteIndex(hiliteIndex)
 	end,
+	// the shown letter's shapes, drawn by the native DrawLetterScript
 	viewDrawScript: func() begin
 		DrawLetterScript()
 	end,
+	// a tap on a shape (a click sound): ClickLetterScript says which character it
+	// is, and the label and the cluster show it
 	viewClickScript: func(unit) begin
 		local clickLetterScript2;
 		clicker();
@@ -4195,9 +4398,11 @@ letterShapeLabel := {
 	viewBounds: {left: 10, top: -2, right: -10, bottom: 11},
 	viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV + oneLineOnly,
 	viewFont: tsSystem + tsSize(10) + tsBold,
+	// the label: I write this 'x', x the character shown
 	UpdateText: func() begin
 		SetValue(self, 'text, ParamStr("I write this '^0'", [Array: SPrintObject(displayOrigin)]))
 	end,
+	// the label from the start
 	viewSetupFormScript: func() begin
 		self:UpdateText()
 	end,
@@ -4213,6 +4418,7 @@ enableCluster := {
 	viewJustify: vjParentCenterH + vjSiblingBottomV,
 	viewBounds: {left: 0, top: 2, right: 156, bottom: 14},
 	clusterValue: nil,
+	// the cluster shows the highlighted shape's setting
 	viewSetupFormScript: func() begin
 		(clusterValue := GetLetterHilite())
 	end,
@@ -4224,10 +4430,11 @@ enableCluster := {
 			end;
 		if (clusterValue <> GetLetterHilite()) then begin
 				self:getNewSetting();
-				self:Notify(3, notifyTitle, "Each letter must have at least one shape set to \u201C\uOften.\u201D\u")
+				self:Notify(kNotifyAlert, notifyTitle, "Each letter must have at least one shape set to \u201C\uOften.\u201D\u")
 			end;
 		letterShapes:Dirty()
 	end,
+	// the cluster shows the recogniser's setting for the highlighted shape again
 	getNewSetting: func() begin
 		self:Dirty();
 		self:InitClusterValue(GetLetterHilite())
@@ -4270,6 +4477,8 @@ enableCluster := {
 // other bar (other)
 A2Z_2Proto := {
 	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjSiblingBottomV,
+	// IndexClickScript (protoPictIndexer): a character tapped is shown, its first
+	// shape highlighted, and the other bar unhighlighted
 	IndexClickScript: func(curIndex) begin
 		GetVariable(self, other):unhilite();
 		displayOrigin := (origin := letters[curIndex]);
@@ -4289,6 +4498,7 @@ A2Z_2Proto := {
 			end;
 		return -1
 	end,
+	// the bar shows the shown character when it is one of its own
 	viewSetupFormScript: func() begin
 		self.curIndex := self:OriginIndex();
 		(if (curIndex >= 0) then letterShapeLabel:UpdateText())
@@ -4307,6 +4517,8 @@ A2Z_2 := {
 	other: 'Zero2Nine,
 	viewSetupFormScript: compile(
 		constants: {
+			// build-time helper: a binary of class cls from hex text (the Swedish index
+			// picture below)
 			kBinaryFromHex: func(hex, cls) begin
 				local b := MakeBinary(StrLen(hex) div 2, cls);
 				for i := 0 to Length(b) - 1 do begin
@@ -4358,6 +4570,7 @@ remoteWriting := {
 	config: 'remoteWriting,
 	viewBounds: {left: 0, top: 2, right: 0, bottom: 17},
 	text: "Insert new words at caret",
+	// turns remote writing (inserting new words at the caret) over
 	valueChanged: func() begin
 		SetRemoteWriting((not GetRemoteWriting()))
 	end,
@@ -4373,6 +4586,8 @@ globalHeapvarwannabesItem := {
 	overview: "Text Editing Settings",
 	declareSelf: 'recogPrefs,
 	icon: globalHeapvarwannabesItemIcon,
+	// remote writing's box is hidden when Gestalt selector 33554443 (0x200000B,
+	// not one the DDK's NewtonGestalt.h names) gives true
 	viewSetupFormScript: func() begin
 		local gestalt2;
 		(if (if (gestalt2 := Gestalt('[Array: 33554443, [Array: struct, boolean], 1])) then gestalt2[0]) then (remoteWriting.viewFlags := 0))
@@ -4404,6 +4619,8 @@ globalHeapvarwannabesItem := {
 				currentItem := currentItem2;
 				labelCommands[currentItem2].item
 			end,
+			// a scaling chosen goes into the user configuration (undoable: the undo picks
+			// the old one again)
 			LabelActionScript: func(index) begin
 				AddUndoAction('pickActionScript, [Array: currentItem]);
 				userConfiguration.inkWordScaling := labelCommands[index].value;
@@ -4429,10 +4646,12 @@ SpeedOptionSlider := {
 	viewJustify: vjParentFullH + vjSiblingBottomV,
 	viewBounds: {left: 34, top: 2, right: -34, bottom: 13},
 	maxValue: 9,
+	// the speed the user configuration has; one out of range is made 5
 	viewSetupFormScript: func() begin
 		self.viewValue := userConfiguration.speedCursiveOption;
 		(if (((ClassOf(viewValue) <> 'int) or (viewValue < 0)) or (viewValue > maxValue)) then (self.viewValue := (userConfiguration.speedCursiveOption := 5)))
 	end,
+	// the speed chosen, read by the recogniser
 	ChangedSlider: func() begin
 		userConfiguration.speedCursiveOption := viewValue;
 		ReadCursiveOptions()
@@ -4454,9 +4673,11 @@ TimeoutOptionSlider := {
 	viewJustify: vjParentFullH + vjSiblingBottomV,
 	viewBounds: {left: 34, top: 2, right: -34, bottom: 13},
 	maxValue: 9,
+	// the slider from the timeout: (timeout - 15) div 5
 	viewSetupFormScript: func() begin
 		(self.viewValue := ((userConfiguration.timeoutCursiveOption - 15) div 5))
 	end,
+	// the timeout from the slider, read by the recogniser
 	ChangedSlider: func() begin
 		userConfiguration.timeoutCursiveOption := (15 + (viewValue * 5));
 		ReadCursiveOptions()
@@ -4489,6 +4710,7 @@ LetterSpaceSlider := {
 	viewJustify: vjParentCenterH + vjSiblingBottomV,
 	viewBounds: {left: 0, top: 0, right: 210, bottom: 11},
 	maxValue: 9,
+	// the slider from the letter spacing (reversed); one out of range is made 4
 	viewSetupFormScript: func() begin
 		self.viewValue := (9 - userConfiguration.letterSpaceCursiveOption);
 		(if (((ClassOf(viewValue) <> 'int) or (viewValue < 0)) or (viewValue > maxValue)) then begin
@@ -4496,11 +4718,13 @@ LetterSpaceSlider := {
 				(self.viewValue := (9 - userConfiguration.letterSpaceCursiveOption))
 			end)
 	end,
+	// the spacing chosen: the example word redrawn and the recogniser told
 	ChangedSlider: func() begin
 		userConfiguration.letterSpaceCursiveOption := (9 - viewValue);
 		wordExample:Dirty();
 		ReadCursiveOptions()
 	end,
+	// as the slider moves: the example word redrawn with the spacing
 	trackSlider: func() begin
 		userConfiguration.letterSpaceCursiveOption := (9 - viewValue);
 		wordExample:Dirty()
@@ -4516,9 +4740,12 @@ GuestAccessBox := {
 	viewFont: @fontSystem9Bold,
 	viewBounds: {left: 30, top: 5, right: 180, bottom: 18},
 	text: "Configure for guest user",
+	// ticked when guest user is on
 	viewSetupFormScript: func() begin
 		(viewValue := userConfiguration.guestAccessOption)
 	end,
+	// on: the user's settings put aside and the defaults used; off: the defaults,
+	// then the settings put aside back; the panel redrawn
 	valueChanged: func() begin
 		userConfiguration.guestAccessOption := viewValue;
 		if viewValue then begin
@@ -4543,9 +4770,11 @@ outputSourcePicker := {
 	viewBounds: {left: 10, top: 8, right: 10, bottom: 23},
 	text: "Play using",
 	labelCommands: nil,
+	// the outputs the volume info's output bits (its seventh field) say the machine
+	// has
 	viewSetupFormScript: func() begin
 		local gestalt2, l2;
-		l2 := (if (gestalt2 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1])) then gestalt2[6] else 0);
+		l2 := (if (gestalt2 := Gestalt('[Array: kGestalt_Ext_VolumeInfo, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1])) then gestalt2[6] else 0);
 		labelCommands := [Array: ];
 		if (BAnd(l2, 1) <> 0) then begin
 				AddArraySlot(labelCommands, {item: "Internal Speaker", value: 1})
@@ -4558,6 +4787,8 @@ outputSourcePicker := {
 			end;
 		inherited:?viewSetupFormScript()
 	end,
+	// TextSetup: the output the user chose (only its speaker and line-out bits);
+	// one the machine lacks falls back to the first, which is saved
 	TextSetup: func() begin
 		if (not (outputDevice := GetUserConfig('outputDevice))) then begin
 				outputDevice := 0
@@ -4596,13 +4827,16 @@ soundPicker := {
 	viewBounds: {left: 10, top: 6, right: 230, bottom: 21},
 	text: "Alert sound",
 	labelCommands: nil,
+	// the sounds there are (SoundList)
 	viewSetupFormScript: func() begin
 		labelCommands := SoundList();
 		inherited:?viewSetupFormScript()
 	end,
+	// TextSetup: the alert sound's name
 	TextSetup: func() begin
 		GetRegisteredSound(GetUserConfig('beepSound)).userName
 	end,
+	// the sound chosen becomes the alert sound and is played
 	LabelActionScript: func(index) begin
 		SetUserConfig('beepSound, labelCommands[index].soundSymbol);
 		self:SysBeep()
@@ -4638,6 +4872,7 @@ paper := {
 	viewBounds: {left: 10, top: 65, right: 165, bottom: 80},
 	text: "Paper Size",
 	configPath: [pathExpr: 'userConfiguration, 'paperSize],
+	// the paper sizes the user configuration has, by title
 	viewSetupFormScript: func() begin
 		self.items := GetUserConfig('paperSizes);
 		self.labelCommands := (foreach item in items collect item.title);
@@ -4658,6 +4893,7 @@ connectPicker := {
 	configSlot: 'modemHardwareLocation,
 	configService: mods,
 	indent: 95,
+	// the choices: where a modem can be (ModemLocations)
 	viewSetupFormScript: func() begin
 		items := ModemLocations;
 		inherited:viewSetupFormScript()
@@ -4673,16 +4909,20 @@ modemPicker := {
 	labelCommands: [|Array|: ],
 	text: "Modem setup",
 	indent: 95,
+	// TextSetup: the modem setup in use
 	TextSetup: func() begin
 		GetUserConfig('currentModem)
 	end,
+	// the setup chosen is the one in use
 	LabelActionScript: func(index) begin
 		SetUserConfig('currentModem, labelCommands[index])
 	end,
+	// the setups there are (GetModemPopUpList)
 	viewSetupFormScript: func() begin
 		labelCommands := GetModemPopUpList();
 		inherited:?viewSetupFormScript()
 	end,
+	// the list is made again before it pops up
 	pickerSetup: func() begin
 		(labelCommands := GetModemPopUpList())
 	end,
@@ -4696,13 +4936,17 @@ alarmSoundPicker := {
 	text: "Alarm Sound",
 	viewBounds: {left: 10, top: 25, right: 180, bottom: 40},
 	labelCommands: nil,
+	// the sounds there are (SoundList)
 	viewSetupFormScript: func() begin
 		labelCommands := SoundList();
 		inherited:?viewSetupFormScript()
 	end,
+	// TextSetup: the alarm sound's name
 	TextSetup: func() begin
 		GetRegisteredSound(GetUserConfig('alarmSound)).userName
 	end,
+	// the sound chosen becomes the alarm sound and is played at the alarm volume,
+	// whatever the sound settings
 	LabelActionScript: func(index) begin
 		SetUserConfig('alarmSound, labelCommands[index].soundSymbol);
 		PlaySoundIrregardlessAtVolume(GetRegisteredSound(labelCommands[index].soundSymbol), GetAlarmVolume())
@@ -4718,6 +4962,7 @@ AlarmGuageSpace := {
 	viewBounds: {left: 13, top: 46, right: 213, bottom: 71},
 	viewFlags: vVisible,
 	viewFormat: vfNone,
+	// hidden while alarms use the system volume
 	viewSetupDoneScript: func() begin
 		(if GetUserConfig('AlarmVolumeEqualsSystem) then self:Hide())
 	end,
@@ -4733,6 +4978,7 @@ AlarmGuageSpace := {
 			viewBounds: {left: 80, top: 0, right: 190, bottom: 11},
 			userConfigSlot: 'alarmVolumeDb,
 			hwSavy: nil,
+			// alarm sounds are on unless the volume is 0
 			ChangedSlider: func() begin
 				SetUserConfig('alarmSoundEffects, (viewValue <> 0));
 				inherited:ChangedSlider()
@@ -4759,10 +5005,12 @@ useSystemVolume := {
 	viewJustify: vjCenterV + vjSiblingBottomV,
 	viewBounds: {left: 13, top: 0, right: 113, bottom: 15},
 	text: "Use System Volume",
+	// ticked when alarms use the system volume
 	viewSetupFormScript: func() begin
 		inherited:?viewSetupFormScript();
 		(viewValue := GetUserConfig('AlarmVolumeEqualsSystem))
 	end,
+	// the alarm volume slider closed or opened to match
 	valueChanged: func() begin
 		SetUserConfig('AlarmVolumeEqualsSystem, viewValue);
 		(if viewValue then AlarmGuageSpace:Close() else AlarmGuageSpace:Open())
@@ -4780,6 +5028,7 @@ setPINButton := {
 	viewBounds: nil,
 	viewJustify: vjCenterH + vjCenterV + vjParentCenterH + oneLineOnly,
 	text: nil,
+	// Set PIN without a PIN, Change PIN with one, each sized to its text
 	viewSetupFormScript: func() begin
 		viewBounds := Clone(viewBounds);
 		(if (not GetUserConfig('passwordkey)) then begin
@@ -4790,6 +5039,8 @@ setPINButton := {
 				(viewBounds := RelBounds(-51, 27, 62, 15))
 			end)
 	end,
+	// after the tap (deferred), the PIN change slip; a new PIN is kept and the
+	// panel redrawn
 	buttonClickScript: func() begin
 		AddDeferredCall(func() begin
 			local passwordkey;
@@ -4814,13 +5065,15 @@ RemovePINButton := {
 	viewBounds: {left: 52, top: 27, right: 117, bottom: 42},
 	viewJustify: vjCenterH + vjCenterV + vjParentCenterH + oneLineOnly,
 	text: removePIN,
+	// after the tap (deferred), asks for the PIN: right, the PIN is removed;
+	// wrong, an alert
 	buttonClickScript: func() begin
 		AddDeferredCall(func() begin
 			(if ModalCheckPIN("Enter PIN", GetUserConfig('passwordkey)) then begin
 					SetUserConfig('usepassword, nil);
 					SetUserConfig('passwordkey, nil);
 					base:RedoChildren()
-				end else self:Notify(3, "Remove PIN", "An incorrect PIN has been entered, PIN was not removed."))
+				end else self:Notify(kNotifyAlert, "Remove PIN", "An incorrect PIN has been entered, PIN was not removed."))
 		end, nil)
 	end,
 	preallocatedContext: 'RemovePINButton,
@@ -4835,24 +5088,28 @@ PINFreqPicker := {
 	viewJustify: vjParentFullH,
 	viewFlags: vVisible + vReadOnly + vClickable,
 	labelCommands: [|Array|: "Every Power On", "Once an Hour", "Once a Day", never],
+	// TextSetup: Never when no PIN is asked for (or no frequency is set), else the
+	// frequency's choice (nil for a frequency not offered)
 	TextSetup: func() begin
 		local passwordFrequency;
 		passwordFrequency := GetUserConfig('passwordFrequency);
 		(if ((not GetUserConfig('usepassword)) or (if GetUserConfig('usepassword) then (not passwordFrequency))) then labelCommands[3] else (if (passwordFrequency = 0) then labelCommands[0] else (if (passwordFrequency = 60) then labelCommands[1] else (if (passwordFrequency = 1440) then labelCommands[2]))))
 	end,
+	// Never turns asking off; any other choice turns it on at that frequency
 	LabelActionScript: func(index) begin
 		(if (index = 3) then SetUserConfig('usepassword, nil) else begin
 				SetUserConfig('usepassword, true);
 				SetUserConfig('passwordFrequency, ([Array: 0, 60, 1440, nil])[index])
 			end)
 	end,
+	// a tap opens the picker only once the PIN is entered (when there is one)
 	viewClickScript: func(unit) begin
 		if (not self:TrackHilite(unit)) then begin
 				return nil
 			end;
 		if GetUserConfig('passwordkey) then begin
 				AddDeferredCall(func() begin
-					(if ModalCheckPIN("Enter PIN", GetUserConfig('passwordkey)) then self:Popit((indent - 2)) else self:Notify(3, "PIN Entry", "An incorrect PIN has been entered. Please try again."))
+					(if ModalCheckPIN("Enter PIN", GetUserConfig('passwordkey)) then self:Popit((indent - 2)) else self:Notify(kNotifyAlert, "PIN Entry", "An incorrect PIN has been entered. Please try again."))
 				end, nil)
 			end else begin
 				self:Popit((indent - 2))

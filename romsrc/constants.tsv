@@ -833,3 +833,6 @@ kNoOptions	0
 kHasScrollersOption	1
 # shared/ and canonical/: GetPoint selectors (Newton Programmer's Reference "GetPoint"; values as FGetPoint, src/recognition/UnitNatives.cpp, takes them), transfer modes (NPR Table 2-5), the notification level (NPR "Notify"; 3 as BHNotify treats it), aeTap, aeScrub, aeCaret (NPR gesture table, src/views/Commands.h), oneLineOnly (Newton Programmer's Guide Table 3-1, src/views/TextView.h), keyVUnit (NPR Key Descriptor Constants), kNumbersOnlyDictionary (NPR Table 8-5)
 keyVUnit	0x8
+# globalHeapvarwannabes: Gestalt selectors from the DDK's NewtonGestalt.h (src/ddk/NewtonGestalt.h: kGestalt_Base + 3, kGestalt_Extended_Base + 6)
+kGestalt_RebootInfo	0x1000004
+kGestalt_Ext_Backlight	0x2000007
