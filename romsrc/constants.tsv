@@ -734,3 +734,6 @@ kThirdWeek	0x4
 kFourthWeek	0x2
 kLastWeek	0x1
 kEveryWeek	0x1f
+# Gestalt selectors: the DDK's NewtonGestalt.h (src/ddk/NewtonGestalt.h)
+kGestalt_SoftContrast	0x2000003
+kGestalt_Ext_VolumeInfo	0x2000009
