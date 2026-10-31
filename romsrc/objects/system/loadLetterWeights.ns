@@ -1,5 +1,10 @@
-// loadLetterWeights, and what only it reaches
+// loadLetterWeights (@119): gives the cursive recogniser its saved letter
+// weights and learning data from the "LetterWeights2.0" and
+// "LearningData2.0" tagged entries of the system soup.
 
+// Called with no arguments (from the boot script). Does nothing when
+// letterSetSelection is 2 (presumably the printed recogniser, which has no
+// letter weights). Returns true if letter weights were set, else nil.
 loadLetterWeights := func() begin
 	local l1, taggedEntry;
 	if (userConfiguration.letterSetSelection <> 2) then begin

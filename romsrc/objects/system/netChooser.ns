@@ -1,4 +1,8 @@
-// netChooser, and what only it reaches
+// netChooser (@130): the AppleTalk network chooser slip - looks up the
+// entities of an NBP name (e.g. "=:LaserWriter@") in the current zone, lists
+// them for the user to pick, and offers Change Zone (zoneChooser) when the
+// network has zones. Opened with openNetChooser (as the printer picker does);
+// the choice goes back to notifyOnClose (networkChooserDone).
 
 netChooser := {
 	_proto: zoneChooserProto,
@@ -7,12 +11,18 @@ netChooser := {
 	currentZone: nil,
 	HaveZones: nil,
 	startSelection: nil,
+	// milliseconds left before the chooser times out (5 minutes)
 	timeoutCounter: 300000,
 	zoneTimer: nil,
 	nbpLookupName: nil,
+	// the idle period in milliseconds (chooserIdleFrequency)
 	idleFrequency: 250,
+	// openNetChooser(zone, nbpLookupName, startSelection, notifyOnClose,
+	// buttonText, headerText, lookForText): opens the chooser (an alert when it is
+	// already open); an empty zone means the current one. The fifth argument (the
+	// printer picker's "Use printer") is not used.
 	openNetChooser: func(a1, text, a3, a4, text2, text3, text4) begin
-		(if Visible(netChooser) then self:Notify(3, "Chooser", "The network chooser is already open") else begin
+		(if Visible(netChooser) then self:Notify(kNotifyAlert, "Chooser", "The network chooser is already open") else begin
 				if (if a1 then (StrLen(a1) = 0)) then begin
 						a1 := nil
 					end;
@@ -25,9 +35,13 @@ netChooser := {
 				netChooser:Open()
 			end)
 	end,
+	// getZoneName(): the zone to look in - this machine's (GetMyZone) unless one
+	// was given.
 	getZoneName: func() begin
 		(if ((currentZone = nil) or StrEqual(currentZone, "*")) then (currentZone := GetMyZone()))
 	end,
+	// chooserIdleFrequency(level): sets and answers the idle period for level 0-3:
+	// 250 ms, 1 s, 3 s, 10 s.
 	chooserIdleFrequency: func(a1) begin
 		if (a1 = 0) then begin
 				idleFrequency := 250
@@ -46,6 +60,8 @@ netChooser := {
 			end;
 		return idleFrequency
 	end,
+	// viewSetupDoneScript: the key view, a fresh timeout, the zone controls hidden
+	// until zones are known; the rest is done deferred (deferredSetupScript).
 	viewSetupDoneScript: func() begin
 		SetKeyView(self, 0);
 		timeoutCounter := 300000;
@@ -53,6 +69,9 @@ netChooser := {
 		self:hideZoneStuff();
 		AddDeferredSend(self, 'deferredSetupScript, [Array: ])
 	end,
+	// deferredSetupScript(): once the proto's setup succeeds, finds out whether
+	// the network has zones (showing the zone controls if so), idles quickly until
+	// it has and slowly after, and starts the NBP lookup (chooserNBPTable).
 	deferredSetupScript: func() begin
 		local l1;
 		if (l1 := inherited:deferredSetupScript()) then begin
@@ -76,6 +95,7 @@ netChooser := {
 			end;
 		return l1
 	end,
+	// ShowZoneStuff(): shows the zone's name and the Change Zone button.
 	ShowZoneStuff: func() begin
 		self:getZoneName();
 		(if formOpen then begin
@@ -89,11 +109,16 @@ netChooser := {
 				zonesButton:Show()
 			end)
 	end,
+	// hideZoneStuff(): hides the zone controls.
 	hideZoneStuff: func() begin
 		zoneLabel:Hide();
 		zoneName:Hide();
 		zonesButton:Hide()
 	end,
+	// viewIdleScript: counts the timeout down (timesUpScript when it runs out),
+	// follows zones appearing or going away, and answers the next idle period -
+	// every 10 s once there are zones, otherwise slowing from 250 ms to 1 s after
+	// 20 idles and to 3 s after 30.
 	viewIdleScript: func() begin
 		local chooserIdleFrequency, timesUpScript, l3;
 		chooserIdleFrequency := 0;
@@ -170,6 +195,7 @@ netChooser := {
 	zoneName: nil,
 	nbpScroller: nil,
 	ReOrientToScreen: @defRotateFunc,
+	// the slots the view caches
 	_cacheContext: {
 		startSelection: nil,
 		HaveZones: nil,
@@ -202,19 +228,24 @@ netChooser := {
 	}
 };
 
+// the Cancel button
 _defaultButton_2 := {
 	_proto: @protoCancelButton,
 	buttonClickScript: buttonClickScript,
 	preallocatedContext: '_defaultButton
 };
 
+// the Change Zone button: stops the lookup and opens the zone chooser with
+// this chooser's settings in its place
 zonesButton := {
 	_proto: @protoTextButton,
 	viewBounds: {left: 7, top: -18, right: 77, bottom: -5},
-	viewJustify: 8388742,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjOneLineOnly,
 	text: "Change Zone",
 	aForm: nil,
+	// buttonClickScript: hands over to the zone chooser once the lookup stops (0).
 	buttonClickScript: func() begin
+		// err is not declared local: it is set as a slot or global
 		(if ((err := chooserNBPTable:stopScript()) = 0) then begin
 				zoneChooser.startSelection := currentSelection;
 				zoneChooser.currentZone := currentZone;
@@ -241,9 +272,10 @@ theTable := {_proto: theTable_2Proto, preallocatedContext: 'theTable};
 
 startupMsg := {_proto: startupMsg_2Proto, preallocatedContext: 'startupMsg};
 
+// "Zone:" and the zone's name, above the buttons
 zoneLabel := {
 	_proto: @protoStaticText,
-	viewJustify: 8388736,
+	viewJustify: vjParentBottomV + vjOneLineOnly,
 	viewBounds: {left: 10, top: -39, right: 45, bottom: -26},
 	text: "Zone:",
 	preallocatedContext: 'zoneLabel
@@ -251,7 +283,7 @@ zoneLabel := {
 
 zoneName := {
 	_proto: @protoStaticText,
-	viewJustify: 8389760,
+	viewJustify: vjParentBottomV + vjSiblingRightH + vjOneLineOnly,
 	viewBounds: {left: 0, top: -39, right: 180, bottom: -26},
 	text: uCardPositionAlertButton,
 	preallocatedContext: 'zoneName

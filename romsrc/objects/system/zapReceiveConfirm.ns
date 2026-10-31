@@ -1,3 +1,6 @@
 // zapReceiveConfirm, and what only it reaches
+//
+// An empty array the native beaming (zap) code refers to as a ROM
+// constant; what it is used for when receiving is not traced here.
 
 zapReceiveConfirm := [|Array|: ];

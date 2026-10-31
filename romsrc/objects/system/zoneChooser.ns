@@ -1,4 +1,10 @@
 // zoneChooser, and what only it reaches
+//
+// The AppleTalk zone chooser (magic pointer 310): the floating slip that
+// lists the network's zones and lets the user pick the one to look for
+// devices in (the network chooser, netChooser, opens it). It opens
+// AppleTalk in a deferred setup, closes itself after five minutes without
+// a touch when on battery, and when the network goes away.
 
 zoneChooser := {
 	debug: 97212,
@@ -6,10 +12,13 @@ zoneChooser := {
 	viewJustify: vjParentCenterH + vjParentCenterV,
 	viewBounds: {left: 0, top: 0, right: 220, bottom: 224},
 	startSelection: nil,
-	timeoutCounter: 300000,
-	idleFrequency: 3000,
+	timeoutCounter: 300000, // milliseconds left before timing out (five minutes)
+	idleFrequency: 3000, // milliseconds between idle checks
 	currentZone: nil,
-	zoneTableWidth: 170,
+	zoneTableWidth: 170, // the zone list's column width
+	// Every idleFrequency ms while open: counts the timeout down (when it runs
+	// out, timesUpScript closes the slip unless on mains power) and closes the
+	// slip if the zones have gone; answers the next idle time.
 	viewIdleScript: func() begin
 		local timesUpScript, l2;
 		l2 := 0;
@@ -28,12 +37,16 @@ zoneChooser := {
 			end;
 		return l2
 	end,
+	// Called once set up: no key view, the scrollers hidden until needed, and
+	// the rest of the setup (opening AppleTalk) deferred.
 	viewSetupDoneScript: func() begin
 		SetKeyView(self, 0);
 		nbpScroller:Hide();
 		zoneScroller:Hide();
 		AddDeferredSend(self, 'deferredSetupScript, [Array: ])
 	end,
+	// The deferred setup: once the proto has opened AppleTalk, starts the
+	// lookup and the idle checks and fills in the zone list.
 	deferredSetupScript: func() begin
 		local l1;
 		if (l1 := inherited:deferredSetupScript()) then begin
@@ -46,6 +59,7 @@ zoneChooser := {
 			end;
 		return l1
 	end,
+	// Highlights the current zone's cell in the zone table, if it is in view.
 	selectCurrentZone: func() begin
 		local childViewFrames;
 		(if (selectedZoneIndex <> nil) then (if (if ((childViewFrames := theZoneTable:ChildViewFrames()) <> nil) then (selectedZoneIndex < Length(childViewFrames))) then theZoneTable:selectThisCell(childViewFrames[selectedZoneIndex])))
@@ -57,13 +71,14 @@ zoneChooser := {
 			_proto: zoneChooserProto_2,
 			viewBounds: {left: 10, top: 5, right: 185, bottom: 25},
 			text: "Select an AppleTalk Zone:",
+			// keeps its own text (the proto's would set "Select a ..." from headerText)
 			viewSetupFormScript: func() begin
 				true
 			end
 		},
 		{
 			_proto: zoneChooserProto_2,
-			viewJustify: 8388736,
+			viewJustify: vjParentBottomV + vjOneLineOnly,
 			viewBounds: {left: 10, top: -153, right: 185, bottom: -140}
 		},
 		theTable_2,
@@ -130,15 +145,19 @@ startupMsg_2 := {_proto: startupMsg_2Proto, preallocatedContext: 'startupMsg};
 
 nbpScroller_2 := {_proto: nbpScroller_2Proto, preallocatedContext: 'nbpScroller};
 
+// The table of zones, five rows high, scrolled by zoneScroller.
 theZoneTable := {
 	_proto: @protoTable,
 	viewBounds: {left: 10, top: 25, right: 180, bottom: 91},
 	def: @protoTableDef,
 	entryProto: {
 		_proto: @protoTableEntry,
+		// A zone tapped: it becomes the current zone, the lookup is restarted on
+		// it, and the cell is highlighted.
 		viewClickScript: func(unit) begin
 			timeoutCounter := 300000;
 			currentZone := text;
+			// stopScript and startScript answer 0 when they succeed
 			(if (chooserNBPTable:stopScript() = 0) then (if (chooserNBPTable:startScript() = 0) then begin
 						self:selectThisCell(self);
 						(selectedZoneIndex := (self.vIndex - vOrg))
@@ -148,6 +167,9 @@ theZoneTable := {
 	numZones: 0,
 	vOrg: 0,
 	scrollAmount: 4,
+	// Called as the table is set up: a copy of the table definition with this
+	// table's column width and entry proto, and the height of five rows of the
+	// view's font.
 	viewSetupFormScript: func() begin
 		(def := Clone(def)).tabWidths := zoneTableWidth;
 		def.tabProtos := entryProto;
@@ -159,6 +181,9 @@ theZoneTable := {
 		self.viewBounds.bottom := (viewBounds.top + (((5 * FontHeight(viewFont)) - 5) + 1));
 		(numZones := 0)
 	end,
+	// Fills the table with the network's zones (GetZoneList): scrolls so that
+	// the current zone is in view and selected, shows the scroller if there
+	// are more than five, or closes the slip if there are none.
 	updateZoneList: func() begin
 		def.tabValues := (if formOpen then GetZoneList());
 		(if formOpen then (if (def.tabValues = nil) then self:CloseAndNotify("No zones were found. The network connection must have been lost.") else begin
@@ -182,6 +207,7 @@ theZoneTable := {
 					self:selectCurrentZone()
 				end))
 	end,
+	// A scroller arrow: restarts the timeout, scrolls, and redraws at once.
 	viewScroll2DScript: func(arrowDirection, a2) begin
 		timeoutCounter := 300000;
 		inherited:viewScroll2DScript(arrowDirection, a2);
@@ -195,6 +221,7 @@ zoneScroller := {
 	viewBounds: {left: 185, top: 39, right: 203, bottom: 72},
 	ViewRect: {left: 0, top: 0, right: 0, bottom: 4},
 	ScrollAmounts: [|Array|: 4, 4, 4],
+	// Called once set up: scrolls the zone table.
 	viewSetupDoneScript: func() begin
 		scrollView := theZoneTable;
 		inherited:?viewSetupDoneScript()

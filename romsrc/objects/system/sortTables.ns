@@ -1,4 +1,6 @@
-// sortTables, and what only it reaches
+// sortTables: the ROM's two text collation tables ('Sort binaries), which
+// InitUnicode registers before anything can compare strings
+// (src/frames/UnicodeTables.cpp, SortTables.h).
 
 sortTables := [|Array|:
 	texttable('Sort, "resources/Sort/62cbb9.txt"),

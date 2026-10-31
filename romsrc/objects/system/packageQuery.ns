@@ -1,3 +1,5 @@
-// packageQuery, and what only it reaches
+// packageQuery: the query spec that finds a Newton 1.x store's package
+// directory entry in the system soup ({indexPath: tag, beginKey: "Packages",
+// endKey: "Packages"}) - the same object |Convert1.XPackages| holds.
 
 packageQuery := same("builtinFunctions.|Convert1.XPackages|.literals[3]");

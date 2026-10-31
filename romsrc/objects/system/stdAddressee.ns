@@ -1,4 +1,9 @@
 // stdAddressee, and what only it reaches
+//
+// The addressee block of the built-in letter and list print formats
+// (prLetterFormat, ListView's listFormat): the date and, below it, the
+// recipient's full address, as a read-only text view the width of the
+// page.
 
 stdAddressee := {
 	viewClass: clTextView,
@@ -6,6 +11,10 @@ stdAddressee := {
 	viewFlags: vVisible + vReadOnly,
 	viewFormat: 0,
 	viewJustify: vjSiblingBottomV,
+	// Called as the view is set up: makes the view the page's width and 120
+	// pixels high and its text the item's date (year, month and day) then the
+	// addressee's full address. pageWidth and fields come from the print
+	// format the view is in.
 	viewSetupFormScript: func() begin
 		self.viewBounds := RelBounds(0, 0, pageWidth, 120);
 		(self.text := Stringer([Array: LongDateStr(fields.timestamp, @datetimeStrSpecs.yearMonthDayStrSpec), $\n, $\n, fields.toFullAddress]))

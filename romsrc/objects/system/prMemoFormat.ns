@@ -1,4 +1,6 @@
-// prMemoFormat, and what only it reaches
+// prMemoFormat (@871): the "Memo" print format - a memo banner, To:/Subject:
+// and From:/date lines and the item's data below them (page2GutsViewChildren);
+// its auxiliary slip (toSubjectSlip) asks for the recipient and subject.
 
 prMemoFormat := {
 	symbol: 'prMemoFormat,
@@ -22,6 +24,7 @@ prMemoFormat := {
 			viewFormat: 0,
 			viewJustify: vjParentFullH,
 			viewFont: tsFancy + tsSize(12),
+			// viewSetupFormScript: the To: and Subject: lines, from the fields
 			viewSetupFormScript: func() begin
 				self.text := "";
 				if StrFilled(fields.toName) then begin
@@ -37,6 +40,7 @@ prMemoFormat := {
 			viewFormat: 0,
 			viewJustify: vjRightH + vjParentFullH,
 			viewFont: tsFancy + tsSize(12),
+			// viewSetupFormScript: the From: line and the item's date
 			viewSetupFormScript: func() begin
 				self.text := "";
 				if StrFilled(fields.fromName) then begin
@@ -54,11 +58,14 @@ prMemoFormat := {
 			viewChildren: page2GutsViewChildren
 		}
 	],
+	// viewSetupFormScript: the data to print, from the first piece on.
 	viewSetupFormScript: func() begin
 		inherited:viewSetupFormScript();
 		self.data := target.data;
 		(self.reflowStart := 0)
 	end,
+	// printNextPageScript: lays out another page while pieces of kids are left;
+	// nil after the last.
 	printNextPageScript: func() begin
 		(if (if kids then (reflowStart < Length(kids))) then self:RedoChildren())
 	end,

@@ -1,10 +1,16 @@
 // starterClipboard, and what only it reaches
+//
+// The starter template of the clipboard view - the floating view that
+// holds what the user dragged off to the screen edge (cloned by
+// src/views/ClipboardView.cpp, which fills in its children and bounds).
 
 starterClipboard := {
-	viewClass: 65637,
+	viewClass: 65637, // clClipboard (0x65) with 0x10000 set
 	viewBounds: {left: 0, top: 0, right: 240, bottom: 0},
 	viewFlags: vVisible + vClickable + vClipboard,
 	viewFormat: vfFillBlack,
+	// answering true: the clipboard view copes with a screen rotation itself
+	// (it is kept open as it is)
 	ReOrientToScreen: func() begin
 		true
 	end,

@@ -1,4 +1,6 @@
-// previewRemoteView, and what only it reaches
+// previewRemoteView (@679): the remote view (clRemoteView) a print preview
+// shows the page in - a print form drawn scaled down to fit its parent, keeping
+// the printer page's proportions (pagePreviewForm, ioPrintPreview).
 
 previewRemoteView := {
 	viewClass: clRemoteView,
@@ -10,6 +12,9 @@ previewRemoteView := {
 	viewKeyDownScript: viewKeyDownScript,
 	_DoDefaultButton: _DoDefaultButton,
 	textFlags: 50176,
+	// viewSetupFormScript: makes the view the largest box with the printer page's
+	// aspect ratio (fields.printerPageBounds) that fits the parent less the
+	// margin, and makes it the key view.
 	viewSetupFormScript: func() begin
 		local copy, printerPageBounds, l3, floor2, floor3;
 		(copy := Clone(self:Parent():LocalBox())).bottom := (copy.bottom - margin);

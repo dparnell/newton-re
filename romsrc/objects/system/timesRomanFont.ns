@@ -1,10 +1,14 @@
 // timesRomanFont, and what only it reaches
+//
+// The Times Roman font family as the system knows it: the name shown, the
+// Macintosh font number and PostScript names used for printing, and the
+// outline (sfnt) data of its four faces.
 
 timesRomanFont := {
 	name: "Times Roman",
 	encoding: 0,
-	macFontID: 20,
-	psSym: 'timesRomanFont,
+	macFontID: 20, // Times' font number on the Macintosh
+	psSym: 'timesRomanFont, // the font's symbol in the font list
 	normal: "Times-Roman",
 	bold: "Times-Bold",
 	italic: "Times-Italic",

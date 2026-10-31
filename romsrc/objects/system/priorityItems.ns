@@ -1,4 +1,6 @@
-// priorityItems, and what only it reaches
+// priorityItems (@12): the icons of the four priority levels (0-3) of a
+// to-do item or meeting, indexed by the priority (calendar, protoListView,
+// remindSlip).
 
 priorityItems := [|Array|:
 	{

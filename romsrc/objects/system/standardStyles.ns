@@ -1,4 +1,7 @@
 // standardStyles, and what only it reaches
+//
+// The fifteen standard font specs - the System font at 9, 10, 12, 14 and
+// 18 points, plain, bold and underlined.
 
 standardStyles := [|Array|:
 	@fontSystem9,

@@ -1,13 +1,20 @@
-// nameRefValidationFrame, and what only it reaches
+// nameRefValidationFrame (@241): the validation frame of a people name
+// reference (protoPeopleDataDef's validationFrame): for each slot of the
+// reference (name, company, place, group, phone, email) the input view a
+// validate slip edits it with (inputProto), its kind (type) and, where
+// needed, HasData(entry) saying whether the entry has a value for it.
+// The input lines' recFlags/newRecFlags are viewFlags recognition bits.
 
 nameRefValidationFrame := {
 	name: {
+		// the first and last name lines, in a view of their own
 		inputProto: {
 			viewClass: clView,
 			viewJustify: vjParentFullH + vjSiblingBottomV,
 			viewBounds: {left: 0, top: 4, right: 0, bottom: 84},
 			viewFlags: vVisible,
 			viewFormat: vfFillWhite,
+			// viewSetupFormScript: makes sure the entry has a name frame to write into.
 			viewSetupFormScript: func() begin
 				(if (not target.name) then (target.name := Clone({})))
 			end,
@@ -20,6 +27,7 @@ nameRefValidationFrame := {
 					flavor: flavor,
 					label: last_2,
 					memory: 'lastName,
+					// 31 is kUserDictionary (NPR Table 8-4)
 					newDictionaries: [|Array|: 7, 31, 0],
 					_proto: @newtLabelInputLine
 				}
@@ -27,6 +35,7 @@ nameRefValidationFrame := {
 			firstName: nil,
 			allocateContext: [|Array|: 'firstName, firstName]
 		},
+		// HasData(entry): a first or a last name.
 		HasData: func(key) begin
 			(if key.name then (key.name.first or key.name.last))
 		end,
@@ -37,8 +46,9 @@ nameRefValidationFrame := {
 			_proto: @newtLabelInputLine,
 			flavor: flavor,
 			newDictionaries: nil,
-			newRecFlags: 29403649,
+			newRecFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed + vPunctuationAllowed + vNameField + vCapsRequired + vCustomDictionaries,
 			memory: 'companyName,
+			// viewSetupFormScript: the locale's company dictionaries.
 			viewSetupFormScript: func() begin
 				local locale;
 				newDictionaries := (locale := GetLocale()).recogCompanyDictionaries;
@@ -50,13 +60,15 @@ nameRefValidationFrame := {
 	},
 	place: {inputProto: {_proto: @newtLabelInputLine, flavor: flavor}, theText: "Worksite:", type: 'text},
 	group: {
-		inputProto: {_proto: @newtLabelInputLine, flavor: flavor, newRecFlags: 8428033},
+		inputProto: {_proto: @newtLabelInputLine, flavor: flavor, newRecFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vPunctuationAllowed + vCapsRequired},
 		theText: "Group:",
 		type: 'text
 	},
 	phone: {
 		inputProto: {
 			_proto: @newtAreacodePhoneLine,
+			// viewSetupFormScript: makes sure the entry has a phone string, and gives
+			// it the context's phone class (_subclass).
 			viewSetupFormScript: func() begin
 				if (not target.(path)) then begin
 						target.(path) := Clone("")
@@ -67,6 +79,7 @@ nameRefValidationFrame := {
 				inherited:?viewSetupFormScript()
 			end
 		},
+		// HasData(entry): a non-empty phone number; an empty one is removed.
 		HasData: func(key) begin
 			local strFilled2;
 			if (not (strFilled2 := StrFilled(key.phone))) then begin
@@ -85,13 +98,18 @@ nameRefValidationFrame := {
 			path: 'email,
 			targetView: nil,
 			selectedPath: nil,
-			newRecFlags: 64001,
+			newRecFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed + vLettersAllowed + vPunctuationAllowed,
+			// GetSymArray / GetTextArray: the e-mail systems' classes and names, for
+			// the popup of the kind of address
 			GetSymArray: func() begin
 				GetGlobals().EmailSystems.emailClasses
 			end,
+			// GetTextArray(): the e-mail systems' names
 			GetTextArray: func() begin
 				GetGlobals().EmailSystems.emailText
 			end,
+			// viewSetupFormScript: makes sure the entry has an address string of the
+			// context's e-mail class (_subclass).
 			viewSetupFormScript: func() begin
 				if (not target.(path)) then begin
 						target.(path) := Clone("")
@@ -103,6 +121,7 @@ nameRefValidationFrame := {
 			end,
 			_proto: @newtPopupEdit
 		},
+		// HasData(entry): a non-empty e-mail address; an empty one is removed.
 		HasData: func(key) begin
 			local strFilled2;
 			if (not (strFilled2 := StrFilled(key.email))) then begin
@@ -114,8 +133,10 @@ nameRefValidationFrame := {
 	}
 };
 
-flavor := {_proto: @newtCustomFilter, recFlags: 25201153};
+// the input lines' recognition filter
+flavor := {_proto: @newtCustomFilter, recFlags: vVisible + vClickable + vGesturesAllowed + vPunctuationAllowed + vCapsRequired + vCustomDictionaries};
 
+// the first name line
 firstName := {
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
 	viewLineSpacing: 32,

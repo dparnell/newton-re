@@ -1,9 +1,13 @@
-// letterWeightQuery, and what only it reaches
+// letterWeightQuery (@116): the query spec that finds the recogniser's saved
+// letter weights (the cursive recogniser's learnt letter shapes) in the system
+// soup: the entry tagged "LetterWeights2.0".
 
 letterWeightQuery := {
 	type: 'index,
 	indexPath: 'tag,
 	startKey: letterWeights2,
+	// The query's validTest: true for an entry (a1) whose tag is the letter
+	// weights' tag, so the index query stops at the first other tag.
 	validTest: func(a1) begin
 		StrEqual(a1.tag, "LetterWeights2.0")
 	end

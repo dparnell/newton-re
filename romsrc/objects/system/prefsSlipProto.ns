@@ -1,16 +1,25 @@
-// prefsSlipProto, and what only it reaches
+// prefsSlipProto (@575): the proto of the backup and restore options slips
+// (backupPrefsSlip, restorePrefsSlip): a list of applications to check (all,
+// or some - each by its name and soups) kept in the caller's prefs entry
+// (prefsCache.(prefsSlot) and prefsCache.(prefsArray)).
 
 prefsSlipProto := {
 	viewJustify: vjParentCenterH + vjParentCenterV,
 	viewBounds: {left: 0, top: 0, right: 220, bottom: 142},
+	// the slot of godParent (the slip that opened this one) that holds this
+	// slip while it is open
 	whoAmI: nil,
 	prefsCache: nil,
 	godParent: nil,
 	prefsSlot: nil,
 	prefsArray: nil,
 	soupNameList: nil,
+	// figureAllItems(names, selected): fills names with the applications' names
+	// (sorted) and selected with the indices of those checked - all of them when
+	// the prefs say 'all, those found in the prefs array when they say 'Partial.
 	figureAllItems: compile(
 		constants: {
+			// whether two applications are the same: the same name and the same soups
 			kFunction_48e4dd: func(a1, a2) begin
 				l1 := true;
 				(if (if StrEqual(a1.name, a2.name) then (Length(a1.soups) = Length(a2.soups))) then begin
@@ -53,16 +62,21 @@ prefsSlipProto := {
 						end)
 				end)
 		end),
+	// New(caller): opens a slip of this kind (FilterDialog) for caller, whose
+	// prefsCache it edits.
 	New: func(a1) begin
 		local context;
 		(context := BuildContext(self)).godParent := a1;
 		context.prefsCache := a1.prefsCache;
 		context:FilterDialog()
 	end,
+	// viewSetupFormScript / viewQuitScript: the opener's whoAmI slot holds the
+	// slip while it is open.
 	viewSetupFormScript: func() begin
 		godParent.(whoAmI) := self;
 		SetKeyView(self, 0)
 	end,
+	// viewQuitScript: the opener no longer holds the slip.
 	viewQuitScript: func() begin
 		(godParent.(whoAmI) := nil)
 	end,

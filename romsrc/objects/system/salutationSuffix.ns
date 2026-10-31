@@ -1,3 +1,4 @@
-// salutationSuffix, and what only it reaches
+// salutationSuffix (@249): the punctuation that may end a letter's salutation
+// (",", ".", "-", ":", ";", " ").
 
 salutationSuffix := [|Array|: groupSepStr_2, decimalpoint, minusPrefix, timeSepStr1, salutationSuffixItem, groupSepStr];

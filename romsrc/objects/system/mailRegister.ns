@@ -1,7 +1,17 @@
-// mailRegister, and what only it reaches
+// mailRegister (@121): the "New America Online Account" floater the mail
+// routing slip opens (mailSlip, with the request it was making in
+// request) to create an AOL mail account over the modem. Pages of fields
+// (register1-4: name and phones, billing address, billing card, certificate)
+// stepped through with Continue and Go Back, filled from the owner's card
+// and kept in info; the last Continue dials the host (an eworld
+// registration endpoint, protoEworldEndpoint.protoEWorldReg), which answers
+// with RegDone, RegError (back to the page at fault) or RegName (register5,
+// choosing the account name). A root child (preallocatedContext).
 
 mailRegister := {
 	sendScreen: nil,
+	// viewSetupDoneScript: starts on the first page, the others and Go Back
+	// hidden
 	viewSetupDoneScript: func() begin
 		pages := [Array: register1, register2, register3, register4];
 		index := 0;
@@ -16,9 +26,11 @@ mailRegister := {
 	preallocatedContext: 'mailRegister,
 	viewChildren: [viewChildren:
 		{
+			// the close box: once connected, asks before giving up
 			buttonClickScript: func() begin
 				(if eworld then self:Confirm("Mail Registration", "Tap OK to stop account creation.", self, 'ConfirmCallback) else base:AllDone(nil))
 			end,
+			// Confirm's answer: OK gives up
 			ConfirmCallback: func(a1) begin
 				(if a1 then base:AllDone(nil))
 			end,
@@ -27,11 +39,13 @@ mailRegister := {
 		},
 		{
 			viewBounds: {left: -59, top: -18, right: -7, bottom: -5},
-			viewJustify: 8390790,
+			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + vjOneLineOnly,
 			text: "Continue",
+			// Continue: on the last page asks first that the modem be ready
 			buttonClickScript: func() begin
 				(if (if (not eworld) then (index = 3)) then self:Confirm("Mail Registration", "Make sure your modem is ready then tap OK to create your new account.", self, 'ConfirmCallback) else self:doContinue())
 			end,
+			// Confirm's answer: OK continues (after the alert has gone)
 			ConfirmCallback: func(a1) begin
 				(if a1 then AddDeferredCall(func() begin
 						self:doContinue()
@@ -50,12 +64,14 @@ mailRegister := {
 		register5
 	],
 	viewFlags: vApplication + vClipping + vFloating + vClickable + vStrokesAllowed,
+	// doGoBack: Go Back - the previous page
 	doGoBack: func() begin
 		pages[index]:Hide();
 		index := (index - 1);
 		pages[index]:Show();
 		(if (index = 0) then backBtn:Hide())
 	end,
+	// UpdatePhone: the number the call options slip says to dial
 	UpdatePhone: func() begin
 		(willDialNum := callOptionsSlip.outNumber.text)
 	end,
@@ -85,12 +101,17 @@ mailRegister := {
 	InkConvert: nil,
 	viewJustify: vjParentCenterH + vjParentCenterV,
 	icon: @routeMailBitmap,
+	// PowerOffScript(what): the power-off handler - allows it, and gives up
+	// the registration when the unit goes off
 	PowerOffScript: func(a1) begin
 		(if (a1 = 'okToPowerOff) then true else (if (a1 = 'PowerOff) then base:AllDone(nil)))
 	end,
 	register5: nil,
 	callassist: nil,
 	backBtn: nil,
+	// doContinue: once connected (eworld), sends the page's data - the
+	// chosen account name (sendScreen) or the information - unless still
+	// busy; else the next page, or from the last page (index 3) dials the host.
 	doContinue: func() begin
 		if (if eworld then eworld.Busy) then begin
 				return nil
@@ -114,6 +135,9 @@ mailRegister := {
 					(if (index = 1) then backBtn:Show())
 				end))
 	end,
+	// RegError(code, message): the host refused something. Shows its message
+	// (or the error, for a negative code) and, for codes 1-25, goes back to
+	// the page with the field at fault (scrIds; -1: none).
 	RegError: compile(
 		constants: {
 			kLiteral_5a450d: "Mail Registration"
@@ -122,10 +146,11 @@ mailRegister := {
 			local scrId;
 			pleaseWaitForm:Close();
 			if string2 then begin
-					self:Notify(3, kLiteral_5a450d, string2)
+					self:Notify(kNotifyAlert, kLiteral_5a450d, string2)
 				end else begin
 					if (integer2 < 0) then begin
-							self:Notify(3, integer2, kLiteral_5a450d)
+							// an integer is translated to its message by the root's Notify
+							self:Notify(kNotifyAlert, integer2, kLiteral_5a450d)
 						end
 				end;
 			(if (not sendScreen) then begin
@@ -141,6 +166,9 @@ mailRegister := {
 				end)
 		end),
 	declareSelf: 'base,
+	// viewSetupFormScript: info filled the first time from the owner's card
+	// (or a new owner card made, to be filled in by RegDone); sleep put off
+	// to 10 minutes for the call, the old value kept to restore.
 	viewSetupFormScript: func() begin
 		local l1, l2, currentPersona, workPhone;
 		currentPersona := ResolveEntryAlias(GetUserConfig('currentPersona));
@@ -180,7 +208,7 @@ mailRegister := {
 				info.creditcard := "VISA"
 			end;
 		info.SleepTime := GetUserConfig('SleepTime);
-		SetUserConfig('SleepTime, 600);
+		SetUserConfig('SleepTime, 600); // seconds
 		AddPowerOffHandler(self);
 		UseCurrentEmporium();
 		willDialNum := self:MungePhone(GetUserConfig('mailPhone), GetUserConfig('currentCountry));
@@ -188,6 +216,9 @@ mailRegister := {
 	end,
 	register2: nil,
 	request: nil,
+	// AllDone(done): ends the registration - hangs up, restores sleep, closes
+	// the floater; when done forgets info and, if mail was being sent or
+	// fetched, starts that again with the new account.
 	AllDone: func(a1) begin
 		local mailSlip, resolveEntryAlias2, resolveEntryAlias3;
 		mailSlip := GetRoot().mailSlip;
@@ -213,10 +244,13 @@ mailRegister := {
 			end;
 		base:Close()
 	end,
+	// RegName: the host has an account name (in info.mailAccount). The first
+	// time shows the account page (register5) to take or change it; after
+	// that, the name chosen is not available.
 	RegName: func() begin
 		pleaseWaitForm:Close();
 		(if sendScreen then begin
-				self:Notify(3, "Mail Registration", "That account name is not available");
+				self:Notify(kNotifyAlert, "Mail Registration", "That account name is not available");
 				info.mailAccount := nil;
 				register5:RedoChildren()
 			end else begin
@@ -227,13 +261,19 @@ mailRegister := {
 				(sendScreen := true)
 			end)
 	end,
-	viewEffect: 133120,
+	viewEffect: 133120, // 0x20800: the open/close animation's effect flags
+	// transactionAbortedScript: the host did not answer; gives up
 	transactionAbortedScript: func(a1) begin
 		pleaseWaitForm:Close();
-		self:Notify(3, "Mail Registration", "Host failed to respond. Please try again.");
+		self:Notify(kNotifyAlert, "Mail Registration", "Host failed to respond. Please try again.");
 		self:AllDone(nil)
 	end,
+	// by the host's error code: the page whose field it is about (-1: none)
 	scrIds: [|Array|: -1, 3, 3, 0, 0, 1, 1, 1, 1, 0, 2, 2, 2, 2, 2, 0, -1, -1, -1, -1, -1, 4, 4, 1, -1, 3],
+	// Register: makes the registration endpoint (eworld, also the mail
+	// slip's, replacing any connection it had), keeps the number to dial and
+	// has a handwritten number converted first (ConvertInkText, which calls
+	// ConvertedMailPhone).
 	Register: func() begin
 		local l1;
 		if (l1 := ((eworld := {_proto: @protoEworldEndpoint.protoEWorldReg, _parent: GetRoot().mailRegister}).transport := GetRoot().mailSlip)).eworld then begin
@@ -244,9 +284,12 @@ mailRegister := {
 		if (not StrEqual(willDialNum, GetUserConfig('mailPhoneFull))) then begin
 				SetUserConfig('mailPhoneFull, willDialNum)
 			end;
-		self:ConvertInkText(GetUserConfig('mailPhoneFull), 'phone, 262144, "Converting network phone number", "Please verify that the ink text was converted correctly.", 'InkConvert, 'ConvertedMailPhone, nil)
+		self:ConvertInkText(GetUserConfig('mailPhoneFull), 'phone, vPhoneField, "Converting network phone number", "Please verify that the ink text was converted correctly.", 'InkConvert, 'ConvertedMailPhone, nil)
 	end,
 	debug: 162496,
+	// RegDone: the account was made. Adds its address (an AOL e-mail) and
+	// password to the owner's card - and, for a new card, the name, address
+	// and phones typed in - then finishes.
 	RegDone: func() begin
 		local cardfile, currentPersona;
 		pleaseWaitForm:Close();
@@ -270,10 +313,13 @@ mailRegister := {
 				EntryChange(currentPersona)
 			end;
 		UseCurrentPersona();
-		self:Notify(3, "Mail Registration", "Your account has been created.  You are now ready to send and receive mail.");
+		self:Notify(kNotifyAlert, "Mail Registration", "Your account has been created.  You are now ready to send and receive mail.");
 		self:AllDone(true)
 	end,
 	eworld: nil,
+	// ConvertedMailPhone(ok, text, data): ConvertInkText's answer - keeps the
+	// converted number and starts registering (eworld:Register); a failed
+	// start drops the mail slip's endpoint.
 	ConvertedMailPhone: func(a1, a2, a3) begin
 		local mailPhoneFull, register;
 		if (not a1) then begin
@@ -289,8 +335,9 @@ mailRegister := {
 
 backBtn := {
 	viewBounds: {left: -53, top: -18, right: -7, bottom: -5},
-	viewJustify: 8390790,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + vjOneLineOnly,
 	text: "Go Back",
+	// Go Back
 	buttonClickScript: func() begin
 		self:doGoBack()
 	end,
@@ -299,9 +346,12 @@ backBtn := {
 	_proto: @protoTextButton
 };
 
+// callassist_3: the call options button, showing the mail number and
+// country.
 callassist_3 := {
 	viewBounds: {left: 5, top: 0, right: 56, bottom: 13},
 	viewJustify: vjRightH + vjCenterV + vjSiblingTopV,
+	// gives the call options slip the mail phone number, then opens it
 	buttonClickScript: func() begin
 		callOptionsSlip.inNumber := GetUserConfig('mailPhone);
 		callOptionsSlip.inCountry := GetUserConfig('currentCountry);
@@ -311,6 +361,7 @@ callassist_3 := {
 	_proto: @protoCallassistButton
 };
 
+// register1Proto: a page of the floater.
 register1Proto := {
 	viewClass: clView,
 	viewBounds: {left: 0, top: 20, right: 0, bottom: -20},
@@ -318,20 +369,26 @@ register1Proto := {
 	viewJustify: vjParentFullH + vjParentFullV
 };
 
+// cardfirstProtoProto: a labelled field showing and setting info's
+// configPath slot.
 cardfirstProtoProto := {
 	viewJustify: vjSiblingBottomV,
 	viewLineSpacing: 32,
 	deferRec: nil,
 	viewBounds: {left: 0, top: 0, right: 614, bottom: 37},
+	// TextSetup: the field's text; rich text (ink) with deferRec is put in
+	// afterwards by Recognize
 	TextSetup: func() begin
 		(if (if IsRichString(info.(configPath)) then deferRec) then begin
 				AddDeferredSend(self, 'Recognize, nil);
 				""
 			end else info.(configPath))
 	end,
+	// textChanged: keeps the text in info
 	textChanged: func() begin
 		(info.(configPath) := text)
 	end,
+	// Recognize: puts info's (rich) text in the entry line
 	Recognize: func() begin
 		SetValue(entryLine, 'text, info.(configPath))
 	end,
@@ -352,6 +409,7 @@ city_2Proto := {
 	viewBounds: {left: 0, top: 0, right: 614, bottom: 30}
 };
 
+// register1Item: the keyboard at the foot of each page
 register1Item := {
 	viewBounds: {left: 0, top: -85, right: 225, bottom: -5},
 	viewJustify: vjParentCenterH + vjParentBottomV,
@@ -360,7 +418,7 @@ register1Item := {
 
 firstName_2 := {
 	_proto: cardfirstProtoProto,
-	entryFlags: 25201153,
+	entryFlags: vVisible + vClickable + vGesturesAllowed + vPunctuationAllowed + vCapsRequired + vCustomDictionaries,
 	configPath: 'firstName,
 	label: first,
 	deferRec: true,
@@ -370,7 +428,7 @@ firstName_2 := {
 
 lastName := {
 	_proto: cardfirstProtoProto,
-	entryFlags: 25201153,
+	entryFlags: vVisible + vClickable + vGesturesAllowed + vPunctuationAllowed + vCapsRequired + vCustomDictionaries,
 	configPath: 'lastName,
 	label: last_2,
 	deferRec: true,
@@ -378,9 +436,12 @@ lastName := {
 	preallocatedContext: 'lastName
 };
 
+// register1: the name and phone numbers
 register1 := {
 	_proto: register1Proto,
 	viewFormat: vfFillWhite,
+	// the name fields' dictionaries (31: kUserDictionary; the others by
+	// number, as the ROM has them)
 	viewSetupDoneScript: func() begin
 		inherited:?viewSetupDoneScript();
 		firstName.entryLine.dictionaries := [Array: 48, 31, 0];
@@ -391,7 +452,7 @@ register1 := {
 	viewChildren: [viewChildren:
 		{
 			viewBounds: {left: 0, top: 1, right: 0, bottom: 16},
-			viewJustify: 8388662,
+			viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjOneLineOnly,
 			viewFont: @fontSystem10,
 			text: "Enter your name and phone numbers",
 			_proto: @protoStaticText
@@ -400,7 +461,7 @@ register1 := {
 		lastName,
 		{
 			_proto: cardfirstProtoProto,
-			entryFlags: 264705,
+			entryFlags: vVisible + vClickable + vGesturesAllowed + vPhoneField,
 			configPath: 'homePhone,
 			label: home,
 			deferRec: true,
@@ -408,7 +469,7 @@ register1 := {
 		},
 		{
 			_proto: cardfirstProtoProto,
-			entryFlags: 264705,
+			entryFlags: vVisible + vClickable + vGesturesAllowed + vPhoneField,
 			configPath: 'dayphone,
 			label: work,
 			deferRec: true,
@@ -423,7 +484,7 @@ register1 := {
 
 city_2 := {
 	_proto: city_2Proto,
-	entryFlags: 25201153,
+	entryFlags: vVisible + vClickable + vGesturesAllowed + vPunctuationAllowed + vCapsRequired + vCustomDictionaries,
 	configPath: 'city,
 	debug: 5245,
 	preallocatedContext: 'city
@@ -431,7 +492,7 @@ city_2 := {
 
 state_2 := {
 	_proto: city_2Proto,
-	entryFlags: 25201153,
+	entryFlags: vVisible + vClickable + vGesturesAllowed + vPunctuationAllowed + vCapsRequired + vCustomDictionaries,
 	configPath: 'state,
 	debug: 10553,
 	preallocatedContext: 'state
@@ -439,8 +500,10 @@ state_2 := {
 
 zip := {_proto: city_2Proto, configPath: 'zip, debug: 2658, preallocatedContext: 'zip};
 
+// register2: the billing address
 register2 := {
 	_proto: register1Proto,
+	// the locale's labels for city, region and postal code
 	viewSetupFormScript: func() begin
 		local locale;
 		locale := GetLocale();
@@ -449,6 +512,7 @@ register2 := {
 		zip.label := locale.postalCodeLabel;
 		inherited:?viewSetupFormScript()
 	end,
+	// and its city and state dictionaries
 	viewSetupDoneScript: func() begin
 		local locale;
 		inherited:?viewSetupDoneScript();
@@ -461,7 +525,7 @@ register2 := {
 	viewChildren: [viewChildren:
 		{
 			viewBounds: {left: 0, top: 1, right: 0, bottom: 16},
-			viewJustify: 8388662,
+			viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjOneLineOnly,
 			viewFont: @fontSystem10,
 			text: "Enter your billing address",
 			_proto: @protoStaticText
@@ -472,10 +536,11 @@ register2 := {
 		zip,
 		{
 			_proto: city_2Proto,
-			entryFlags: 12589569,
+			entryFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNameField + vCapsRequired,
 			configPath: 'country,
 			label: country,
 			labelCommands: @eworldCountries,
+			// also remembers which country it is (CountryLookup)
 			textChanged: func() begin
 				inherited:textChanged();
 				(info.currentCountry := (info.countrySlot := self:CountryLookup(entryLine.text)))
@@ -494,7 +559,7 @@ vISA := "VISA";
 
 cardfirst := {
 	_proto: cardfirstProto,
-	entryFlags: 25201153,
+	entryFlags: vVisible + vClickable + vGesturesAllowed + vPunctuationAllowed + vCapsRequired + vCustomDictionaries,
 	configPath: 'cardfirst,
 	label: "First Name",
 	debug: 167410,
@@ -503,15 +568,17 @@ cardfirst := {
 
 cardlast := {
 	_proto: cardfirstProto,
-	entryFlags: 25201153,
+	entryFlags: vVisible + vClickable + vGesturesAllowed + vPunctuationAllowed + vCapsRequired + vCustomDictionaries,
 	configPath: 'cardlast,
 	label: "Last Name",
 	debug: 83638,
 	preallocatedContext: 'cardlast
 };
 
+// register3: the billing card
 register3 := {
 	_proto: register1Proto,
+	// the name-on-card fields' dictionaries, as register1's
 	viewSetupDoneScript: func() begin
 		inherited:?viewSetupDoneScript();
 		cardfirst.entryLine.dictionaries := [Array: 48, 31, 0];
@@ -522,18 +589,19 @@ register3 := {
 	viewChildren: [viewChildren:
 		{
 			viewBounds: {left: 0, top: 1, right: 0, bottom: 16},
-			viewJustify: 8388662,
+			viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjOneLineOnly,
 			viewFont: @fontSystem10,
 			text: "Enter your billing information",
 			_proto: @protoStaticText
 		},
 		{
 			viewBounds: {left: 0, top: 6, right: 614, bottom: 22},
-			viewJustify: 8396800,
+			viewJustify: vjSiblingBottomV + vjOneLineOnly,
 			text: creditCard,
 			items: [|Array|: vISA, "Master", "AMEX", "DISCVR"],
 			labelCommands: [|Array|: vISA, masterCard, "American Express", discover],
 			configPath: 'creditcard,
+			// the card type picked: its short name kept in info
 			LabelActionScript: func(index) begin
 				(info.(configPath) := items[index])
 			end,
@@ -542,14 +610,14 @@ register3 := {
 		},
 		{
 			_proto: cardfirstProto,
-			entryFlags: 10753,
+			entryFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed,
 			configPath: 'creditnumber,
 			label: "Card No.",
 			debug: 334792
 		},
 		{
 			_proto: cardfirstProto,
-			entryFlags: 526849,
+			entryFlags: vVisible + vClickable + vGesturesAllowed + vDateField,
 			configPath: 'creditexper,
 			label: "Expiration",
 			debug: 19857600
@@ -568,6 +636,7 @@ register3 := {
 
 onCard := "ﰂon Card";
 
+// register4: the certificate (number and password, with a backup password)
 register4 := {
 	_proto: register1Proto,
 	debug: 20916,
@@ -575,21 +644,21 @@ register4 := {
 	viewChildren: [viewChildren:
 		{
 			viewBounds: {left: 0, top: 1, right: 0, bottom: 16},
-			viewJustify: 8388662,
+			viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjOneLineOnly,
 			viewFont: @fontSystem10,
 			text: "Enter your certificate information",
 			_proto: @protoStaticText
 		},
 		{
 			_proto: cardfirstProtoProto,
-			entryFlags: 10753,
+			entryFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed,
 			configPath: 'certificate,
 			label: certificate,
 			debug: 668673
 		},
 		{
 			_proto: cardfirstProtoProto,
-			entryFlags: 6657,
+			entryFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed,
 			configPath: 'certificatepassword,
 			label: certificate,
 			debug: 1337236
@@ -612,6 +681,7 @@ register4 := {
 
 certificate := "Certificate";
 
+// register5: the account name and password (after RegName)
 register5 := {
 	_proto: register1Proto,
 	debug: 20917,
@@ -619,7 +689,7 @@ register5 := {
 	viewChildren: [viewChildren:
 		{
 			viewBounds: {left: 0, top: 1, right: 0, bottom: 16},
-			viewJustify: 8388662,
+			viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjOneLineOnly,
 			viewFont: @fontSystem10,
 			text: "Enter your account information",
 			_proto: @protoStaticText

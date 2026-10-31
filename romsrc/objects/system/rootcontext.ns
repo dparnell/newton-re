@@ -1,4 +1,8 @@
-// rootcontext, and what only it reaches
+// rootcontext: the root view's context frame - the template a clone of which
+// becomes the root view's frame (TRootView's constructor, src/views/RootView.cpp).
+// Its nil slots are the root's own and those it keeps its children in (the
+// built-in applications and system slips: root.calendar, root.notification,
+// ...).
 
 rootcontext := {
 	minute: 0,

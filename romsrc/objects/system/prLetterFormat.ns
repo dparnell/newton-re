@@ -1,4 +1,7 @@
-// prLetterFormat, and what only it reaches
+// prLetterFormat (@870): the "Letter" print format - the letterhead, the
+// addressee, the item's data reflowed and a closing on the first page, the rest
+// of the data on the following pages; its auxiliary slip (addresseeSlip) asks
+// for the addressee.
 
 prLetterFormat := {
 	symbol: 'prLetterFormat,
@@ -10,15 +13,21 @@ prLetterFormat := {
 	data: nil,
 	kids: nil,
 	reflowStart: 0,
+	// the first page's body: addressee, reflowed data and (with a signature)
+	// closing
 	page1guts: {
 		viewClass: clView,
 		viewBounds: nil,
 		viewFlags: vVisible + vReadOnly,
 		viewFormat: 0,
 		viewJustify: vjParentCenterH + vjParentCenterV + vjChildrenLasso + vjReflow,
+		// viewSetupFormScript: as high as the page less the letterhead and margins.
 		viewSetupFormScript: func() begin
 			(self.viewBounds := RelBounds(0, 20, pageWidth, ((pageHeight - 120) - 60)))
 		end,
+		// viewSetupChildrenScript: makes kids once - the addressee, the data reflowed
+		// into page-sized pieces (in one font when the data uses only one family) and
+		// the closing when there is a signature - then shows them from reflowStart on.
 		viewSetupChildrenScript: func() begin
 			local reflowPreflight2, box, insetRect2;
 			if (if (not kids) then data) then begin
@@ -33,16 +42,20 @@ prLetterFormat := {
 				end;
 			(if kids then (self.stepChildren := ArrayMunger([Array: ], 0, 0, kids, reflowStart, nil)))
 		end,
+		// viewSetupDoneScript: the next page starts after the pieces shown here.
 		viewSetupDoneScript: func() begin
 			(if self.stepChildren then (reflowStart := (reflowStart + Length(self.stepChildren))))
 		end
 	},
+	// the body of the following pages
 	page2Guts: {
 		viewClass: clView,
 		viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
 		viewFlags: vVisible + vReadOnly,
 		viewJustify: vjParentFullH + vjParentFullV,
 		viewFormat: 0,
+		// viewSetupFormScript: keeps the body at least 60 pixels from the page's
+		// top and left edges.
 		viewSetupFormScript: func() begin
 			local box;
 			box := self:GlobalBox();
@@ -50,11 +63,14 @@ prLetterFormat := {
 		end,
 		viewChildren: page2GutsViewChildren
 	},
+	// viewSetupFormScript: the data to print, from the first piece on.
 	viewSetupFormScript: func() begin
 		inherited:viewSetupFormScript();
 		self.data := target.data;
 		(self.reflowStart := 0)
 	end,
+	// viewSetupChildrenScript: the letterhead and first body on the first page,
+	// the following pages' body after it.
 	viewSetupChildrenScript: func() begin
 		if (self.reflowStart = 0) then begin
 				self.stepChildren := [Array: GetUserConfig('letterheadForm), page1guts]
@@ -63,6 +79,8 @@ prLetterFormat := {
 			end;
 		inherited:viewSetupChildrenScript()
 	end,
+	// printNextPageScript: lays out another page while reflowed pieces are left;
+	// nil after the last.
 	printNextPageScript: func() begin
 		(if (if kids then (reflowStart < Length(kids))) then self:RedoChildren())
 	end,

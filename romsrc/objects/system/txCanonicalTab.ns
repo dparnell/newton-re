@@ -1,3 +1,6 @@
 // txCanonicalTab, and what only it reaches
+//
+// The template of one tab stop of a text-view ruler: its position and its
+// kind (src/text/TXRuler.cpp clones it for each tab).
 
 txCanonicalTab := {value: nil, kind: nil};

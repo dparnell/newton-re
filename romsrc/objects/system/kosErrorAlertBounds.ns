@@ -1,3 +1,4 @@
-// kosErrorAlertBounds, and what only it reaches
+// kosErrorAlertBounds: the bounds of the operating system's error alert boxes
+// (TOSErrorAlertDialog, TErasePersistentDataAlert; src/alert/AlertDialog.cpp).
 
 kosErrorAlertBounds := {left: 0, top: 0, right: 192, bottom: 80};

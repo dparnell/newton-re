@@ -1,4 +1,6 @@
-// onlineMessages, and what only it reaches
+// onlineMessages (@137): status messages shown while a modem connection is made
+// and ended (looking for the modem, connecting, receiving, disconnecting); the
+// first is empty.
 
 onlineMessages := [|Array|:
 	uCardPositionAlertButton,

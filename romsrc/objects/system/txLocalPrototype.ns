@@ -1,3 +1,6 @@
 // txLocalPrototype, and what only it reaches
+//
+// The template of a range of a text view's document as a frame - its
+// text, styles and rulers (GetRangeData, src/text/TXView.cpp).
 
 txLocalPrototype := {text: nil, styles: nil, rulers: nil};

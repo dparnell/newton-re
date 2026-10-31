@@ -1,3 +1,6 @@
-// packageDirectory, and what only it reaches
+// packageDirectory: the template of a Newton 1.x store's package directory, the
+// system soup entry tagged "Packages" (extrasSoupName) whose pssids array lists
+// the store's packages; |Convert1.XPackages| (builtinFunctions) reads and
+// removes such an entry when it converts an old store.
 
 packageDirectory := {tag: extrasSoupName, pssids: [|Array|: ]};

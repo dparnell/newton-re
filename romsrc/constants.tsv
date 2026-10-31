@@ -683,3 +683,9 @@ vfInset	<<16
 vfShadow	<<18
 vfRound	<<24
 tsSize	<<10
+# romsrc/objects/system h-z: NPG Table 3-1 (oneLineOnly), the NPR (Notify levels, Keyboard Modifier Keys), headers NewtErrors.h/NewtMemory.h
+vjOneLineOnly	0x800000
+kNotifyAlert	3
+kCommandModifier	0x2000000
+kNoMemory	-7000
+memFullErr	-108

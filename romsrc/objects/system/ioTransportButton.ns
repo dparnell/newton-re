@@ -1,14 +1,21 @@
-// ioTransportButton, and what only it reaches
+// ioTransportButton (@821): the In/Out Box's action (routing) button. Its
+// actions are the In/Out Box's own (ioboxscripts) followed by the item's
+// transport's (GetTransportScripts); it offers no transports to route to.
 
 ioTransportButton := {
 	icon: @transportScripts,
+	// registers the button as the _tagKeyButton while it is open
 	viewSetupFormScript: func() begin
 		_tagKeyButton := self;
 		inherited:?viewSetupFormScript()
 	end,
+	// GetActionTransports(target): none - In/Out Box items are not routed on.
 	GetActionTransports: func(a1) begin
 		return [Array: ]
 	end,
+	// GetActionScripts(targetInfo): the action items for the target. For a
+	// multiple selection (a cursor) the transport is the one all selected
+	// items share (their category), else none.
 	GetActionScripts: func(targetInfo) begin
 		local itemTransport, target, category, targetCursor, next, copy, transportScripts;
 		itemTransport := nil;
@@ -40,6 +47,7 @@ ioTransportButton := {
 			end;
 		copy
 	end,
+	// forgets the _tagKeyButton
 	viewQuitScript: func() begin
 		_tagKeyButton := nil;
 		inherited:?viewQuitScript()

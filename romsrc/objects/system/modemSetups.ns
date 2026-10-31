@@ -1,4 +1,12 @@
-// modemSetups, and what only it reaches
+// modemSetups (@217): the ROM's built-in modem setups (NPG chapter 25, "Modem
+// Setup Service"), sorted by modemName: |GetModemSetUpAndXvert1.X| falls back
+// to them (BFetch by name) when the system soup has no setup of that name, and
+// GetAllModemSetUpNames merges their names with the soup's. Each is a modem
+// setup frame - modemprefs (the modem preferences option) and ModemProfile:
+// the modem's speeds, the serial speed it is configured at (configSpeed),
+// command timeout and inter-command delay in milliseconds, and the
+// configuration string sent for each kind of connection (no error control,
+// error control only, error control with fallback, cellular, direct).
 
 modemSetups := [|Array|:
 	{
@@ -193,6 +201,8 @@ modemSetups := [|Array|:
 			receiveHDLCDataMod: 1
 		}
 	},
+	// the setup named "Newton Fax Modem" (@newtonModemName): no prefs or
+	// profile of its own, so the defaults
 	{modemName: @newtonModemName, version: 2, organization: appleComputerInc},
 	{
 		modemName: "TDK DF2814",
@@ -245,6 +255,8 @@ modemSetups := [|Array|:
 	}
 ];
 
+// the setups' names and their configuration strings, each ending in a
+// carriage return
 normal := "14.4 Normal";
 
 alternate := "14.4 Alternate 1";

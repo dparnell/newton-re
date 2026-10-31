@@ -1,10 +1,28 @@
 // soundOff, and what only it reaches
+//
+// The system's alert sounds by symbol (magic pointer 263): the prototype of
+// the global SoundRegistry, where GetRegisteredSound looks a sound up and
+// whose userName strings are the choices the Sound preferences offer (the
+// user's choice is userConfiguration.beepSound / alarmSound). The first
+// four are sampled sounds; the rest are synthesised on the fly by the
+// touch-tone codec (TDTMFCodec, src/sound/DTMFCodec.cpp) from a score of
+// tones, so they take almost no room in the ROM.
 
 soundOff := {
 	simpleBeep: @alarmWakeup,
 	wakeupBeep: @bootSound,
 	plinkBeep: @plinkBeep,
 	funBeep: @funBeep,
+	// A codec sound frame: the samples are produced by the codec named in
+	// codecName from the score in `samples`. dataType 16: 16-bit samples;
+	// compressionType 6: the codec-generated kind (no names in constants.tsv);
+	// samplingRate in samples a second. The score (tonescore): the header's
+	// algorithm says how the tones combine (0 each tone a sine voice, 1 in
+	// pairs, 2 and 3 in threes, 4 in fours, the others modulating the first,
+	// in 3 and 4 as a chain - frequency modulation), repeats how many times the score plays again;
+	// each tone has a frequency (Hz, with a fraction), a peak level, a delay
+	// before it starts and attack, decay, hold and release times in
+	// milliseconds, and the sustain level.
 	bizarreBeep: {
 		sndFrameType: 'codec,
 		codecName: tDTMFCodec,
@@ -51,7 +69,7 @@ soundOff := {
 				tail: 0
 			}
 		]),
-		userName: "Echo"
+		userName: "Echo" // the sound's name, presumably the one the preferences show
 	},
 	whackyBeep: {
 		sndFrameType: 'codec,
@@ -555,6 +573,7 @@ soundOff := {
 		samplingRate: 21600,
 		samples: tonescore('samples, {version: 1, algorithm: 1, reserved: 0, repeats: 0}, [tones:
 			{
+				// 63936 is 65536 - 1600: a negative frequency as a 16-bit value
 				frequency: 63936,
 				fraction: 0,
 				peak: 12000,

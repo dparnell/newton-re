@@ -1,13 +1,21 @@
-// printerChooserButton, and what only it reaches
+// printerChooserButton (@153): the Printer picker of the print slip: lists
+// the printers used recently (userConfiguration.printers) and offers to choose a
+// network LaserWriter (netChooser) or another printer (printerSerialPicker);
+// the choice becomes userConfiguration.currentPrinter.
 
 printerChooserButton := {
 	text: printer,
 	indent: 55,
 	labelCommands: nil,
+	// how many of labelCommands are printers (the choose items follow them)
 	printersInList: 0,
+	// TextSetup(): the current printer's name, as the picker shows it.
 	TextSetup: func() begin
 		(if userConfiguration.currentPrinter.printerName then GetNames(userConfiguration.currentPrinter.printerName) else GetNames(userConfiguration.currentPrinter.name))
 	end,
+	// nbpString(): the NBP type of the current printer, "LaserWriter" by default.
+	// looks like a ROM bug: it tests the misspelt slot npbType, so it answers
+	// "LaserWriter" unless a printer frame has that slot.
 	nbpString: func() begin
 		local text;
 		text := "LaserWriter";
@@ -16,6 +24,7 @@ printerChooserButton := {
 			end;
 		text
 	end,
+	// pickActionScript(index): shows the printer picked and acts on the choice.
 	pickActionScript: func(index) begin
 		if (index < printersInList) then begin
 				self:UpdateText(labelCommands[index])
@@ -23,6 +32,8 @@ printerChooserButton := {
 		self:LabelActionScript(index);
 		base:hilite(nil)
 	end,
+	// pickerSetup(): the picker's items - the recent printers, a separator and the
+	// two choose items.
 	pickerSetup: func() begin
 		if (userConfiguration.printers = nil) then begin
 				labelCommands := [Array: self:TextSetup()]
@@ -35,9 +46,13 @@ printerChooserButton := {
 		AddArraySlot(labelCommands, "Choose Other Printer");
 		true
 	end,
+	// LabelActionScript(index): opens the network or the serial chooser, or makes
+	// recent printer index the current printer.
 	LabelActionScript: func(index) begin
 		(if (index = (printersInList + 1)) then AddDeferredAction(openNetworkScript, [Array: ]) else (if (index = (printersInList + 2)) then AddDeferredAction(openSerialScript, [Array: ]) else (if (if (userConfiguration.printers <> nil) then (Length(userConfiguration.printers) > index)) then (userConfiguration.currentPrinter := Clone(userConfiguration.printers[index])))))
 	end,
+	// getPrinterProto(key, type): the AvailablePrinters entry whose nbpType (for
+	// 'networkSym) or name (for 'serialSym) is key.
 	getPrinterProto: func(a1, a2) begin
 		local slot;
 		slot := '{networkSym: nbpType, serialSym: name}.(a2);
@@ -45,6 +60,9 @@ printerChooserButton := {
 			(if a1.(slot) then a1.(slot) else "")
 		end)
 	end,
+	// saveNew(name, key, type): makes the printer named the current printer, from
+	// its AvailablePrinters entry, and puts it first in the recent printers list
+	// (which grows to at most two).
 	saveNew: func(currentSelection, a2, a3) begin
 		(if (not StrEqual(currentSelection, "")) then (if (getPrinterProto := self:getPrinterProto(a2, a3)) then begin
 					(copy := Clone(getPrinterProto)).printerType := a3;
@@ -74,23 +92,31 @@ printerChooserButton := {
 					(printers[0] := Clone(copy))
 				end))
 	end,
+	// ChooserDone(name, key, type): the choosers' callback - saves the choice and
+	// shows it.
 	ChooserDone: func(currentSelection, a2, a3) begin
 		self:saveNew(currentSelection, a2, a3);
 		self:UpdateText(self:TextSetup())
 	end,
+	// openSerialScript(): opens the serial printer chooser on the current printer.
 	openSerialScript: func() begin
 		printerSerialPicker.notifyOnClose := self;
 		printerSerialPicker.currentSelection := self:TextSetup();
 		printerSerialPicker:Open()
 	end,
+	// openNetworkScript(): opens the network chooser (netChooser) to look up
+	// the entities of the printer's NBP type ("=:type@").
 	openNetworkScript: func() begin
 		local l1;
 		netChooser:openNetChooser((l1 := nil), Stringer([Array: "=:", self:nbpString(), "@"]), self:TextSetup(), self, "Use printer", "Printer", "printers")
 	end,
+	// networkChooserDone(name, zone): the network chooser's callback - the
+	// printer's NBP name "name:type@zone" is saved (zone "*" when none).
 	networkChooserDone: func(currentSelection, currentZone) begin
 		local text, nbpString;
 		(if (if (currentSelection <> nil) then (not StrEqual(currentSelection, ""))) then begin
 				if (currentZone = nil) then begin
+						// tempZone is not declared local: it is set as a slot or global
 						tempZone := "*"
 					end else begin
 						tempZone := currentZone

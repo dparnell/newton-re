@@ -1,3 +1,7 @@
 // storageCardTypes, and what only it reaches
+//
+// The names of the kinds of storage card, by the four-letter type the
+// card's store reports (the store's cardType method): SRAM, flash, ATA
+// ('pgts') and ROM. The card alerts look a type up here.
 
 storageCardTypes := {sram: "SRAM Card", flsh: "Flash Card", pgts: "ATA Card", |rom |: "ROM Card"};

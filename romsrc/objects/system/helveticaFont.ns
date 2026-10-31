@@ -1,4 +1,7 @@
-// helveticaFont, and what only it reaches
+// helveticaFont (@109): the printing font family for Helvetica - the faces'
+// PostScript names and their sfnt data (metrics for printing), found through
+// the printing fonts table (psFonts.helvetica, globalHeapvarwannabes); plus the
+// shared "Helvetica" string.
 
 helveticaFont := {
 	name: helvetica,

@@ -1,4 +1,6 @@
-// slotCacheTable, and what only it reaches
+// slotCacheTable: the 34 slot symbols a view caches lookups of - bit n of the
+// view's slot cache says whether slot n may be in its template's proto chain
+// (TView::fSlotCache; src/views/View.h, docs/views/README.md).
 
 slotCacheTable := [|Array|:
 	'viewQuitScript,

@@ -1,4 +1,11 @@
 // stdForms, and what only it reaches
+//
+// The global stdForms (magic pointer 269): standard view forms by name
+// (protoRoll, protoFloater, para, pict, meeting ...), each the proto to
+// make the form from, most with the view class to make it as. A viewClass
+// here is the view class with
+// 0x10000 set (65610 clView, 65612 clPictureView, 65617 clParagraphView,
+// 65628 clGaugeView, 65634 clTextView).
 
 stdForms := {
 	protoRoll: {viewClass: 65610, _proto: @protoRoll},
@@ -17,10 +24,12 @@ stdForms := {
 	protoDivider: {viewClass: 65610, _proto: @protoDivider},
 	para: @protoParagraph,
 	DayItem: nil,
+	// a math expression: its children are its data
 	MathForm: {
 		viewClass: clMathExpView,
 		viewFlags: vVisible + vCalculateBounds,
 		dummy: 'MathForm,
+		// Called before the children are made: they are the form's data.
 		viewSetupChildrenScript: func() begin
 			(self.viewChildren := self.data)
 		end

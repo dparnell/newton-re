@@ -1,4 +1,9 @@
 // stopWordList, and what only it reaches
+//
+// The Intelligent Assistant's stop words (magic pointer 270): short common
+// words (at, in, if, us, ...) that the Assistant treats as noise when it
+// parses what the user wrote (IsNoise, in assistUtilities, looks up words
+// of two to four letters here).
 
 stopWordList := [|Array|:
 	at,

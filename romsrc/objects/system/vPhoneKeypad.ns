@@ -1,4 +1,11 @@
 // vPhoneKeypad, and what only it reaches
+//
+// The call transport's keypad slip (magic pointer 586), a status slip
+// layout ('vPhoneKeypad) shown during a call: an "LCD" showing the digits
+// keyed, a touch-tone keypad that sends each digit down the call, a Quick
+// Entry popup of the owner's and the current item's numbers, a speaker
+// toggle, and Hang Up. Its values (valueData.values) are by the views'
+// names.
 
 vPhoneKeypad := {
 	height: 200,
@@ -16,16 +23,22 @@ vPhoneKeypad := {
 			viewChildren: [viewChildren:
 				{
 					viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
-					viewJustify: 8388852,
+					viewJustify: vjCenterV + vjParentFullH + vjParentFullV + vjOneLineOnly,
 					viewFont: tsSystem + tsSize(14) + tsBold,
 					firstTime: true,
+					// Called as the view is set up: becomes base.keyedDigits, showing the
+					// digits the slip's values hold for it.
 					viewSetupFormScript: func() begin
 						base.keyedDigits := self;
 						(text := self:path().(name))
 					end,
+					// Called as the view closes: forgets it.
 					viewQuitScript: func() begin
 						(base.keyedDigits := nil)
 					end,
+					// Shows text2: replacing what is shown when it is the first key or a2 is
+					// true (a number picked from Quick Entry, after which the next key starts
+					// afresh), else appended, losing digits from the front until it fits.
 					AddKey: func(text2, a2) begin
 						local text, right;
 						text := "";
@@ -48,6 +61,7 @@ vPhoneKeypad := {
 		{
 			viewBounds: {left: 50, top: 13, right: -50, bottom: 110},
 			viewJustify: vjParentFullH + vjParentFullV + vjSiblingBottomV,
+			// A key pressed: shows the digit and sends it as a tone down the call.
 			keyPressScript: func(char2) begin
 				keyedDigits:AddKey(Stringer([Array: "", char2]), nil);
 				GetRoot().(appSymbol).callEndpoint:SendDigit(char2, true);
@@ -62,6 +76,10 @@ vPhoneKeypad := {
 			viewJustify: vjCenterH + vjCenterV + vjParentBottomV,
 			popup: nil,
 			text: "  Quick Entry",
+			// Called as the popup is set up: its items are the owner card's phone
+			// numbers, the owner's credit card numbers and the custom fields of the
+			// card the call is to (the current item's first toRef), a separator
+			// between the groups.
 			viewSetupFormScript: func() begin
 				popup := [Array: ];
 				if (l1 := ResolveEntryAlias(GetUserConfig('currentPersona))) then begin
@@ -72,6 +90,8 @@ vPhoneKeypad := {
 										self:addCmds(ParamStr("^0 ^1", [Array: PhoneTypes.phoneText.(ClassOf(l3)), "Phone"]), MakeDisplayPhone(l3), nil)
 									end)
 							end;
+						// note: the separator is added before the first credit card even when no
+						// phone numbers came before it
 						l5 := true;
 						if (if IsArray((l6 := GetRoot().cardfile:bcCreditCards(l1, '|string.card|))) then (Length(l6) > 0)) then begin
 								local l5;
@@ -96,6 +116,9 @@ vPhoneKeypad := {
 					end;
 				inherited:?viewSetupFormScript()
 			end,
+			// Adds item a1 with value a2 unless a2 is empty or not a string, or the
+			// popup holds 25 already; a3 true puts a separator before it. Answers nil
+			// once it has added the item (no separator before the next), else a3.
 			addCmds: func(a1, a2, a3) begin
 				if (if (if (if a2 then (not IsImmediate(a2))) then StrFilled(a2)) then (Length(popup) < 25)) then begin
 						if a3 then begin
@@ -106,9 +129,11 @@ vPhoneKeypad := {
 					end;
 				a3
 			end,
+			// Called once set up: hides the popup if it has nothing to offer.
 			viewSetupDoneScript: func() begin
 				(if (if popup then (Length(popup) > 0)) then inherited:?viewSetupDoneScript() else self:Hide())
 			end,
+			// A number picked: shows it and dials it.
 			pickActionScript: func(index) begin
 				local value;
 				inherited:pickActionScript(index);
@@ -125,6 +150,7 @@ vPhoneKeypad := {
 			viewBounds: {left: 7, top: -18, right: 23, bottom: -5},
 			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingRightH,
 			viewFlags: vVisible + vReadOnly + vClickable,
+			// The slip's values, by the views' names.
 			path: func() begin
 				valueData.values
 			end,
@@ -136,6 +162,7 @@ vPhoneKeypad := {
 				bounds: {left: 0, top: 0, right: 7, bottom: 11}
 			},
 			viewAction: nil,
+			// Turns the speaker off or on, changing the icon.
 			buttonClickScript: func() begin
 				(if SpeakerIsOn then begin
 						GetRoot().(appSymbol):SetSpeaker(nil);
@@ -147,6 +174,8 @@ vPhoneKeypad := {
 						(SpeakerIsOn := true)
 					end)
 			end,
+			// Called once set up: shown only when the slip's values have a
+			// SpeakerToggle value.
 			viewSetupDoneScript: func() begin
 				local path;
 				(if (path := self:path()).(name) then self:Show() else self:Hide())
@@ -159,6 +188,7 @@ vPhoneKeypad := {
 			viewBounds: {left: -72, top: -18, right: -25, bottom: -5},
 			constViewBounds: {left: -72, top: -18, right: -25, bottom: -5},
 			text: hangUp,
+			// Hang up: cancels the call.
 			buttonClickScript: func() begin
 				GetRoot().(appSymbol):CancelRequest(0)
 			end,

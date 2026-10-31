@@ -1,3 +1,8 @@
 // spellFrame, and what only it reaches
+//
+// The template of a spelling session's frame: MakeSpellFrame (the native
+// side of the spelling checker, src/recognition/Spelling.cpp) clones it
+// and puts the address of the session's speller block in `speller`. The
+// script holds the session by this frame.
 
 spellFrame := {speller: nil, saveUserDict: nil, dialogInhibit: nil, countskippedasmisspelled: nil};

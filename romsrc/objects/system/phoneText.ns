@@ -1,4 +1,5 @@
-// phoneText, and what only it reaches
+// phoneText (@148): the names of the kinds of phone number (the class of a
+// phone string: phone, homePhone, workPhone, ...) shown to the user.
 
 phoneText := {
 	phone: phone,

@@ -1,11 +1,15 @@
 // starterInsertSpec, and what only it reaches
+//
+// The starter of the insertion specification the edit and paragraph views
+// build (src/views/EditView.cpp, ParagraphView.cpp clone it) when text or
+// recognised words are put into a view: what to insert, where, and how.
 
 starterInsertSpec := {
 	insertItems: nil,
-	addspace: true,
-	undoable: true,
+	addspace: true, // insert a space between words where needed
+	undoable: true, // the insertion can be undone
 	insertOffset: nil,
-	replaceChars: nil,
-	moveCaret: true,
+	replaceChars: nil, // the characters it replaces
+	moveCaret: true, // the caret moves to the end of the insertion
 	defaultFontSpec: nil
 };

@@ -1,3 +1,7 @@
 // txGraphicsRunPrototype, and what only it reaches
+//
+// The template of a graphics run in a text view's styles: a shape placed
+// in the text as if it were a character (made for a dropped shape or
+// picture).
 
 txGraphicsRunPrototype := {class: 'graphics, shape: nil};

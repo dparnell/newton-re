@@ -1,6 +1,16 @@
-// ioTransportOver, and what only it reaches
+// ioTransportOver (@823): the In/Out Box's overview, a protoOverview listing
+// the In Box's or Out Box's items under collapsible headings - by day, by
+// service (transport) or by status, as the Show button's sortby says. Each
+// item line is the transport's icon and the title it draws for the item
+// (GetTitleInfoShape); a heading shows its count. Tapping a check box at the
+// left selects items for the routing button; tapping an item opens it in the
+// item layout (ioItemLayout). Part of viewRoot's In/Out Box application.
 
 ioTransportOver := {
+	// GetTargetInfo(reason): the routing target - the one selected item, a
+	// target cursor over several (for 'Filing, given a placeholder labels tag,
+	// and the targetView the application base), or
+	// nothing. Also makes it the layout's target.
 	GetTargetInfo: func(a1) begin
 		local frame2;
 		if (if selected then (Length(selected) > 0)) then begin
@@ -24,6 +34,8 @@ ioTransportOver := {
 		frame2
 	end,
 	overviewMode: nil,
+	// NewEntry(entry, goto, store): adds an entry to the box's soup (moving
+	// the cursor to it if asked) and retargets the overview afterwards.
 	NewEntry: func(a1, _context, store) begin
 		masterSoup:AddEntry(a1, store);
 		if _context then begin
@@ -31,14 +43,20 @@ ioTransportOver := {
 			end;
 		AddProcrastinatedSend(appSymbol, layout, 'Retarget, '[Array: true], 0)
 	end,
+	// ToggleOverview: the overview button - switches between all items and
+	// only the headings (overviewMode) and redraws from the start.
 	ToggleOverview: func() begin
 		overviewMode := (not overviewMode);
 		pieces := nil;
 		scrollOrigin := -1;
 		self:Dirty()
 	end,
+	// SelectItem(line): toggles the selection of the item on that visible line
+	// (kept as entry aliases in selected), redraws its line and makes the
+	// first selected item the application's target.
 	SelectItem: compile(
 		constants: {
+			// ArrayPos's test: the same soup entry
 			kFunction_4c44f5: func(a1, a2) begin
 				IsSameEntry(a1, a2)
 			end
@@ -66,6 +84,8 @@ ioTransportOver := {
 				end;
 			self:Dirty()
 		end),
+	// viewDrawScript: makes the lines' shapes if needed; an empty box draws the
+	// application's "empty" shape.
 	viewDrawScript: func() begin
 		if (not pieces) then begin
 				self:SetupAbstracts()
@@ -75,13 +95,17 @@ ioTransportOver := {
 			end;
 		inherited:viewDrawScript()
 	end,
+	// CheckState(index): 'NotCheckable for a heading, else whether the item at
+	// that index is selected (its position in selected, or nil).
 	CheckState: compile(
 		constants: {
+			// ArrayPos's test: the same soup entry
 			kFunction_4c4619: func(a1, a2) begin
 				IsSameEntry(a1, a2)
 			end
 		},
 		func(indexEntry) begin
+			// (the decompiler puts the local after its first use)
 			l1 := nil;
 			local l1;
 			(foreach item in headings do begin
@@ -96,6 +120,11 @@ ioTransportOver := {
 		end),
 	selectIndex: 0,
 	viewFlags: vVisible + vClipping + vClickable,
+	// GetIndexEntry(index): the soup entry at an index of the list (headings
+	// count as one line each, items under an expanded heading one each). At a
+	// heading it toggles that heading's collapse (opens it in overview mode)
+	// and returns nil - or in overview mode the heading's first item. Leaves
+	// currentHeadingIndex at the heading found.
 	GetIndexEntry: func(indexEntry) begin
 		local l1;
 		l1 := (Length(headings) - 1);
@@ -121,6 +150,7 @@ ioTransportOver := {
 			end;
 		headings[l1].curs:move(((indexEntry - headings[l1].index) - 1))
 	end,
+	// the status headings' titles, by item state
 	stateStrings: {
 		pending: pending,
 		ready: ready,
@@ -130,6 +160,10 @@ ioTransportOver := {
 		Read: read,
 		InLog: logged
 	},
+	// Abstract(index, bounds): protoOverview's shape for one line - for a
+	// heading its disclosure dot (filled when collapsed), title, "n Items" and
+	// rule; for an item the transport's icon and title shape (nothing if the
+	// transport throws).
 	Abstract: func(items2Item, copy2) begin
 		local text, strWidth2, list, l4, l5, move, itemTransport, copy;
 		if (items2Item >= numItems) then begin
@@ -162,6 +196,12 @@ ioTransportOver := {
 	viewBounds: {left: 0, top: 38, right: 0, bottom: -22},
 	dataSoup: nil,
 	masterSoup: nil,
+	// SetupItems: rebuilds headings (an array whose class is the sort order)
+	// for the box's entries that pass the folder, store and hide filters.
+	// By date: one heading a day with the day's key range, built by walking
+	// the timestamp index (IndexValidTest records each key and accepts none).
+	// By service: one per installed transport of this application that can
+	// send/receive. By status: one per state (the log states unless hidden).
 	SetupItems: func() begin
 		local sortby, theTagSpec, lastItem, dayEnd;
 		pieces := nil;
@@ -185,6 +225,7 @@ ioTransportOver := {
 				(spec := self:GetSpec(sortby, theTagSpec, nil)).IndexValidTest := func(a1) begin
 					local copy, l2;
 					if ((a1 >= dayEnd) or (a1 < dayStart)) then begin
+							// 1440: minutes in a day (timestamps are in minutes)
 							dayEnd := ((dayStart := ((l2 := (a1 div 1440)) * 1440)) + 1440);
 							(copy := Clone('{title: nil, collapsed: nil, count: 1, spec: nil})).sortTag := dayStart;
 							copy.title := LongDateStr(dayStart, 0);
@@ -226,6 +267,8 @@ ioTransportOver := {
 	end,
 	_proto: @protoOverview,
 	mastersoupSlot: nil,
+	// FilterChanged: the folder or box changed; a new cursor kept on the same
+	// entry, the selection pruned to entries still in view, and a retarget.
 	FilterChanged: func() begin
 		if (currentSoupSymbol = 'outbox) then begin
 				self.checkSlot := 'SendRequest
@@ -241,6 +284,7 @@ ioTransportOver := {
 		list := [Array: ];
 		copy := dataCursor:clone();
 		if selected then begin
+				// (the decompiler's placement of the function's locals)
 				local entry;
 				local list;
 				local copy;
@@ -254,9 +298,12 @@ ioTransportOver := {
 			end;
 		self:Retarget(true)
 	end,
+	// EndFlush: nothing to save in an overview
 	EndFlush: func() begin
 		nil
 	end,
+	// Scroller(lines): scrolls the list by that many lines (negative: up),
+	// within its ends.
 	Scroller: func(maxLines2) begin
 		if (maxLines2 < 0) then begin
 				scrollOrigin := max(0, (scrollOrigin + maxLines2))
@@ -266,6 +313,9 @@ ioTransportOver := {
 		pieces := nil;
 		self:Dirty()
 	end,
+	// SetupAbstracts: numbers the lines (each heading's index), and on a fresh
+	// setup (scrollOrigin -1) scrolls to the cursor's entry; keeps the data
+	// cursor on the top line's entry, then makes the visible lines' shapes.
 	SetupAbstracts: func() begin
 		self:Retarget(nil);
 		entry := dataCursor:entry();
@@ -274,9 +324,11 @@ ioTransportOver := {
 		box.bottom := lineHeight;
 		hilitedIndex := nil;
 		self.numItems := 0;
+		// l3: scroll to the current entry; l4: it is under this heading
 		l3 := (scrollOrigin = -1);
 		l4 := nil;
 		sortby := self:GetAppPreferences().sortby;
+		// (the decompiler's placement of the function's locals)
 		local entry;
 		local box;
 		local l3;
@@ -286,6 +338,7 @@ ioTransportOver := {
 				item.index := numItems;
 				if (if l3 then entry) then begin
 						if (sortby = 'Date) then begin
+								// 1440: a day in minutes
 								l4 := (if (entry.timestamp >= item.sortTag) then (entry.timestamp < (item.sortTag + 1440)))
 							end else begin
 								if (sortby = 'transport) then begin
@@ -348,7 +401,9 @@ ioTransportOver := {
 		self.numLines := Length(pieces);
 		nil
 	end,
+	// SyncItems: recounts each heading's items, dropping empty days.
 	SyncItems: func() begin
+		// (the decompiler puts the local after its first use)
 		sortby := self:GetAppPreferences().sortby;
 		local sortby;
 		(foreach item in headings do begin
@@ -361,6 +416,8 @@ ioTransportOver := {
 			end)
 	end,
 	lineHeight: 28,
+	// the scroll arrows: a screen less a line down or up; at the end a tock,
+	// once.
 	viewScrollDownScript: func() begin
 		(if (if (numItems > maxLines) then (scrollOrigin < (numItems - maxLines))) then begin
 				atEnd := nil;
@@ -370,6 +427,9 @@ ioTransportOver := {
 					playsound(@tockSound)
 				end))
 	end,
+	// Retarget(how): moves the cursor off a deleted entry; with how true
+	// rebuilds the headings ('sync only recounts them) and redraws. Then
+	// tells the views in retargetChain.
 	Retarget: func(a1) begin
 		if (((entry := dataCursor:entry()) = 'deleted) or (entry = nil)) then begin
 				dataCursor:Next();
@@ -394,6 +454,7 @@ ioTransportOver := {
 	end,
 	viewJustify: vjParentFullH + vjParentFullV,
 	selected: nil,
+	// (scroll up: see viewScrollDownScript)
 	viewScrollUpScript: func() begin
 		(if (if (numItems > maxLines) then (scrollOrigin > 0)) then begin
 				atEnd := nil;
@@ -403,10 +464,13 @@ ioTransportOver := {
 					playsound(@tockSound)
 				end))
 	end,
+	// DuplicateEntry(entry): the In/Out Box's own (ioDuplicateEntry)
 	DuplicateEntry: func(a1) begin
 		self:ioDuplicateEntry(a1)
 	end,
 	dataCursor: nil,
+	// AddStateHeading(state, tagSpec): a status heading for the entries in
+	// that state, its collapse kept in statesCollapsed.
 	AddStateHeading: func(a1, theTagSpec) begin
 		local copy;
 		(copy := Clone('{title: nil, collapsed: nil, count: 1, spec: nil})).sortTag := a1;
@@ -417,16 +481,22 @@ ioTransportOver := {
 		copy.collapsed := statesCollapsed.(a1);
 		AddArraySlot(headings, copy)
 	end,
+	// viewSetupFormScript: picks the box's soup; if the In/Out Box is the
+	// blessed application (the user's backdrop), files its used items.
 	viewSetupFormScript: func() begin
 		local blessedapp;
 		mastersoupSlot := currentSoupSymbol;
 		masterSoup := allSoups.(mastersoupSlot);
 		(if (if (blessedapp := GetUserConfig('blessedapp)) then (GetRoot().(blessedapp) = newtAppBase)) then newtAppBase:FileUsedItems())
 	end,
+	// SaveHeadingState(heading): remembers a heading's collapse - in the
+	// transport's config for a service heading, in statesCollapsed for a
+	// status one; day headings are not remembered.
 	SaveHeadingState: func(heading) begin
 		local cls, l2;
 		(if ((cls := ClassOf(headings)) = 'transport) then (if (l2 := GetRoot().(heading.sortTag)) then l2:SetConfig(collapsedSym, heading.collapsed)) else (if (cls = 'status) then (statesCollapsed.(heading.sortTag) := heading.collapsed)))
 	end,
+	// FilingChangedX: the target was filed; refile it and rebuild the list.
 	FilingChangedX: func() begin
 		(if IsSoupEntry(target) then begin
 				self:Fileit(target);
@@ -435,6 +505,11 @@ ioTransportOver := {
 				layout:Retarget(true)
 			end)
 	end,
+	// HitItem(line, x, y): a tap on a line. Left of selectIndent (and not in
+	// overview mode) toggles the item's selection; else a heading toggles, an
+	// item opens in the item layout (in overview mode the list expands to
+	// it). Not by date, the cursor is narrowed to the heading's entries first.
+	// Returns true if the line has something.
 	HitItem: func(a1, trackScrollingItem, trackScrollingItem2) begin
 		local indexEntry;
 		(if ((a1 + scrollOrigin) < numItems) then begin
@@ -464,6 +539,9 @@ ioTransportOver := {
 				true
 			end)
 	end,
+	// FileThis(target, labelsChanged, newLabels, storeChanged, newStore): the
+	// filing slip's answer for each selected entry - new folder (nil:
+	// unfiled), or moved to another store; then the list rebuilt.
 	FileThis: func(target, labelsChanged, a3, storeChanged, a5) begin
 		local targetCursor, next;
 		next := (targetCursor := GetTargetCursor(target, nil)):entry();
@@ -491,16 +569,23 @@ ioTransportOver := {
 		selected := nil;
 		layout:Retarget(true)
 	end,
+	// NewTarget: rebuilds the list for a new target
 	NewTarget: func() begin
 		self:Retarget(true)
 	end,
 	headings: nil,
+	// FlushData: nothing to save in an overview
 	FlushData: func() begin
 		nil
 	end,
+	// KillEntry(entry): the In/Out Box's own (ioKillEntry)
 	KillEntry: func(target) begin
 		self:ioKillEntry(target)
 	end,
+	// viewSetupChildrenScript: a timestamp-ordered cursor on the box's soup
+	// (kept on the current entry), the overview made the application's
+	// layout and target view, the transport method a heading needs
+	// (checkSlot) and where its collapse is kept, then the headings.
 	viewSetupChildrenScript: func() begin
 		local entry;
 		inherited:?viewSetupChildrenScript();
@@ -526,6 +611,9 @@ ioTransportOver := {
 		scrollOrigin := -1;
 		self:SetupItems()
 	end,
+	// hiliter(shape, line, on): protoOverview's highlighting while the pen is
+	// down - in the check-box column, the check box drawn in its other state
+	// (a heading's dot filled instead); elsewhere the line's shape inverted.
 	hiliter: compile(
 		constants: {
 			kLiteral_3c5eed: '{transferMode: 2, penPattern: 0, fillPattern: 5}
@@ -535,6 +623,7 @@ ioTransportOver := {
 			shapeBounds2 := ShapeBounds(hiliteShape);
 			(if hilitedIndex then (if (shapeBounds2.left < selectIndent) then begin
 						checkState := self:CheckState((hilitedIndex + scrollOrigin));
+						// (fillPattern is already 5 in the literal)
 						(copy := Clone(kLiteral_3c5eed)).fillPattern := 5;
 						(if (checkState = 'NotCheckable) then self:DrawShape(OffsetShape((list := [Array: copy, MakeOval((shapeBounds2.left + 5), (shapeBounds2.bottom - 15), (shapeBounds2.left + 9), (shapeBounds2.bottom - 11))]), shapeBounds2.left, (shapeBounds2.top + (hilitedIndex * lineHeight))), kLiteral_3c5eed) else begin
 								if (a3 = 'on) then begin
