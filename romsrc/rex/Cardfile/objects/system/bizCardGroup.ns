@@ -1,4 +1,5 @@
-// bizCardGroup, and what only it reaches
+// The group card layout (@8203): the group icon and name, a "Persons, #
+// members: n" line, and the members' names below.
 
 bizCardGroup := {
 	bizCardIcon: {bits: bizCardIconBits, bounds: {left: 0, top: 0, right: 38, bottom: 23}},
@@ -19,6 +20,7 @@ bizCardGroup := {
 			viewJustify: vjParentFullH,
 			layouts: {group: [|Array|: 'default]},
 			viewFont: tsFancy + tsSize(18),
+			// Leaves room on the left for the group icon.
 			AddAllInfoItem: func(a1, checkPrefixItem, shapeArray, hitArray, a5, a6, a7, a8, a9, frame2) begin
 				a8.left := (a8.left + 30);
 				inherited:?AddAllInfoItem(a1, checkPrefixItem, shapeArray, hitArray, a5, a6, a7, a8, a9, frame2)
@@ -38,6 +40,7 @@ bizCardGroup := {
 			viewJustify: vjParentFullH + vjSiblingBottomV,
 			layouts: {group: [|Array|: 'group]},
 			viewFont: tsFancy + tsSize(10),
+			// Sizes the members' list to the members drawn.
 			viewSetupChildrenScript: func() begin
 				local shapeBounds2, copy, l3;
 				inherited:viewSetupChildrenScript();

@@ -1,4 +1,7 @@
-// bizCardPlain, and what only it reaches
+// The plain business card layout (@8205, bizCardNum 1): the name large and
+// centred over a rule, the company, the addresses and email, and the phones at
+// the foot.  Each part is a text-lines view (@8242) showing the info views its
+// layouts list for the card's class.
 
 bizCardPlain := {
 	bizCardIcon: {bits: bizCardIconBits, bounds: {left: 0, top: 0, right: 38, bottom: 23}},

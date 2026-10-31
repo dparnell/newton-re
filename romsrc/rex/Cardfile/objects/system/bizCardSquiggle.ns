@@ -1,4 +1,6 @@
-// bizCardSquiggle, and what only it reaches
+// The "squiggle" business card layout (@8207, bizCardNum 0): the name over a
+// squiggle picture, the company, the addresses and email, and the phones at
+// the foot.
 
 bizCardSquiggle := {
 	bizCardIcon: {

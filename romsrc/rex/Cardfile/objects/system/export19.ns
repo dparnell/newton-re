@@ -1,4 +1,6 @@
-// export19, and what only it reaches
+// The card exchange slip (@8211, "Beam My Card"): pick an owner card and beam
+// it - without its financial information, passwords and signature - while the
+// other Newton beams its own; the card that comes back is put in Names.
 
 export19 := {
 	viewBounds: {left: 0, top: 0, right: 200, bottom: 116},
@@ -10,12 +12,14 @@ export19 := {
 			_proto: @protoStaticText
 		},
 		{
+			// An owner card picked from the popup becomes the one to send.
 			pickActionScript: func(index) begin
 				theEntry := ResolveEntryAlias(UserConfiguration.personae[index]);
 				SetValue(self, 'text, Stringer([Array: $\uFC01, popup[index]]));
 				self:hilite(nil)
 			end,
 			viewBounds: {left: 80, top: 10, right: 0, bottom: 23},
+			// The popup keeps its bounds.
 			SetBounds: func() begin
 				nil
 			end,
@@ -29,6 +33,7 @@ export19 := {
 			_proto: @protoStaticText
 		},
 		{
+			// Cancel: tears down the beamer.
 			buttonClickScript: func() begin
 				call GetRoot().cardfile.kDoneWithBeaming with (beamer, nil);
 				inherited:?buttonClickScript()
@@ -39,6 +44,9 @@ export19 := {
 			text: "Beam Card",
 			viewBounds: {top: 0, left: -71, right: -10, bottom: 0},
 			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV,
+			// Beam Card: makes the card's routing copy (cardfileRouteFormat, which drops
+			// the private data) as a person card, starts the beam both ways and shows the
+			// "Exchanging cards" slip.
 			buttonClickScript: func() begin
 				local frame2, frame3;
 				frame2 := {target: theEntry};
@@ -59,16 +67,20 @@ export19 := {
 				AddDeferredSend(appBase, 'RememberedClose, [Array: base])
 			end,
 			barberDialog: @8198,
+			// The beamer's callback: received data ('data) goes into the Names soup; an
+			// ending shows its message - cancelled, also for kCommErrRequestCanceled and
+			// kCommErrConnectionAborted - and tears down the beam.
 			beamerPutAway: func(a1, a2) begin
 				local l1, text;
 				(if (a1 = 'data) then GetUnionSoup(@cardfileSoupName):AddToDefaultStoreXmit(a2, 'beaming) else (if (text := '{canceled: "Card exchange canceled by user.", error: "An error occurred during card exchange.", complete: "Cards exchanged successfully."}.(a1)) then begin
-							if ((a2 = -16005) or (a2 = -16013)) then begin
+							if ((a2 = kCommErrRequestCanceled) or (a2 = kCommErrConnectionAborted)) then begin
 									text := "Card exchange canceled by user."
 								end;
 							call GetRoot().cardfile.kDoneWithBeaming with (beamer, GetRoot().cardfile.barber);
 							GetRoot():Notify(kNotifyAlert, "Names", text)
 						end))
 			end,
+			// Makes the beamer, sending and receiving (autoInAndOut).
 			viewSetupFormScript: func() begin
 				beamer := @protoBeamer:new();
 				beamer:Initialize('autoInAndOut, func(a1, a2) begin

@@ -1,4 +1,6 @@
-// export4, and what only it reaches
+// The All Info layout of the Names application (@8196): the A-Z tabs, a rule,
+// up/down scroll arrows and the card's All Info view (@8195) scrolled in its
+// entry view.  Owner cards have no tabs or rule.
 
 export4 := {
 	name: allInfo_2,
@@ -15,6 +17,8 @@ export4 := {
 	allinfoHeight: 0,
 	childBottom: 0,
 	childToScroll: nil,
+	// The scroll arrows: moves the All Info view 16 pixels a step (times the
+	// repeat count), up to its top or its bottom.
 	ViewScroll2DScript: func(arrowDirection, a2) begin
 		local viewOriginY, l2, most;
 		viewOriginY := childToScroll.viewOriginY;
@@ -33,6 +37,7 @@ export4 := {
 				RefreshViews()
 			end)
 	end,
+	// Owner cards: the tabs and the rule are taken out.
 	viewSetupFormScript: func() begin
 		if (superSymbol = 'ownerNames) then begin
 				if IsReadOnly(stepChildren) then begin
@@ -53,8 +58,10 @@ export4Item := {_proto: @8235, preAllocatedContext: 'azTabs};
 
 export4Item_2 := {viewClass: clView, _proto: @protoUpDownScroller, preAllocatedContext: 'scrollArrows};
 
+// The entry view holding the card's All Info view.
 export4Item_3 := {
 	viewBounds: {top: 20, left: 0, right: -20, bottom: 0},
+	// Shows the card's class's allinfo view (for a soup entry).
 	viewSetupChildrenScript: func() begin
 		local viewDefs;
 		if (if (if (if target then IsSoupEntry(target)) then (viewDefs := GetViewDefs(target.class))) then viewDefs.allinfo) then begin
@@ -63,6 +70,7 @@ export4Item_3 := {
 		inherited:?viewSetupChildrenScript()
 	end,
 	viewJustify: vjParentFullH + vjParentFullV,
+	// Owner cards: no tabs above, so the view starts at the top.
 	viewSetupFormScript: func() begin
 		if (superSymbol = 'ownerNames) then begin
 				if IsReadOnly(viewBounds) then begin
@@ -73,6 +81,8 @@ export4Item_3 := {
 		inherited:?viewSetupFormScript()
 	end,
 	viewFlags: vVisible + vClipping,
+	// Measures the All Info view and shows the arrows only when it is taller than
+	// the room it has.
 	viewSetupDoneScript: func() begin
 		local l1, childViewFrames;
 		inherited:?viewSetupDoneScript();

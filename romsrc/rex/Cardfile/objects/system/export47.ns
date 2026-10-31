@@ -1,8 +1,11 @@
-// export47, and what only it reaches
+// A custom field's label line in the custom fields editor (@8239): a rich text
+// input line (bullet label) whose text becomes the field's label.
 
 export47 := {
 	viewBounds: nil,
 	path: nil,
+	// After a change: the written text becomes the custom field's label (making the
+	// field's definition frame when there is none).
 	textChanged: func() begin
 		(if StrFilled(entryLine.text) then begin
 				if (not target) then begin
@@ -15,19 +18,22 @@ export47 := {
 				(lastChanged := path)
 			end)
 	end,
+	// The line's starting text: the field's label (and the caret put at its end).
 	textSetup: func() begin
 		entryLine.viewFormat := framer;
 		AddDeferredCall(functions.SetKeyView, [Array: self.entryLine, 99999]);
 		(if (if target then target.(path)) then target.(path).label else "")
 	end,
+	// The label beside the line.
 	Setup1: func(target) begin
 		label
 	end,
+	// The text of the field's label in definitions a1.
 	Setup2: func(a1) begin
 		(if (if a1 then a1.(path)) then a1.(path).label else "")
 	end,
 	label: "•",
 	viewFormat: vfFillWhite + vfInset(3),
-	framer: 143664,
+	framer: vfFrameGray + vfPen(1) + vfLinesGray + vfInset(2),
 	_proto: @protoRichLabelInputLine
 };

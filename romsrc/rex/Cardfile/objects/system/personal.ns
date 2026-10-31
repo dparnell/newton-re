@@ -1,4 +1,7 @@
-// personal, and what only it reaches
+// The Dates edit view (@8230): a person's birthday and anniversary, each kept
+// in the Date Book as a yearly event (bdayEvent, anniversaryEvent hold the
+// aliases).  The j... fields are allocated but not among the children (for a
+// localised ROM).
 
 personal := {
 	name: "Dates",
@@ -9,6 +12,7 @@ personal := {
 	infoFrame: {
 		checkPrefix: [|Array|: true, nil],
 		checkPaths: [|Array|: 'bday, 'anniversary],
+		// " Bday: date" and " Anniv.: date" lines (a date in minutes shown short).
 		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
 			local text;
 			text := "";
@@ -62,6 +66,7 @@ personal := {
 	jAnniv: nil
 };
 
+// The birthday line.
 birthday := {
 	path: nil,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
@@ -77,10 +82,12 @@ birthday := {
 	preAllocatedContext: 'birthday
 };
 
+// The date lines' filter: notes a change, so that the Date Book is updated.
 flavor_2 := {
 	_proto: @newtSimpleDateFilter,
 	longFormat: 180969,
 	shortFormat: nil,
+	// Marks the line changed and takes the date.
 	TextToPath: func(a1) begin
 		baseLine.changed := true;
 		inherited:TextToPath(a1)
@@ -89,6 +96,8 @@ flavor_2 := {
 
 bday := "Bday: ^0";
 
+// The date lines' viewQuitScript: a date changed is put into the Date Book (as
+// "Bday: name" or "Anniv.: name"); one removed takes its event out.
 viewQuitScript := func() begin
 	local l1, l2;
 	if (if self.changed then (ClassOf(target.(path)) <> 'string)) then begin
@@ -101,6 +110,7 @@ viewQuitScript := func() begin
 	inherited:?viewQuitScript()
 end;
 
+// The anniversary line.
 anniversary := {
 	path: nil,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},

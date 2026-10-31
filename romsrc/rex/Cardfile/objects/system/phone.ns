@@ -1,15 +1,19 @@
-// phone, and what only it reaches
+// The Phone edit view (@8233): area code, number (with its phone type) and
+// extension of an element of the card's phones array.
 
 phone := {
 	name: "Phone",
 	symbol: 'phone,
 	stepChildren: [|Array|: phoneItem, phoneItem_2, phoneItem_3],
+	// A card's phones: strings in the 'phones array, drawn and tapped as the phone
+	// info frame does.
 	infoFrame: {
 		_proto: infoFrameProto,
 		checkPrefix: [|Array|: nil, [pathExpr: 'phones]],
 		checkPaths: [|Array|: ],
 		stringData: true
 	},
+	// Edits the phone at the path the slip was opened on.
 	viewSetupFormScript: func() begin
 		self.path := selectedPath;
 		inherited:viewSetupFormScript()
@@ -22,12 +26,14 @@ phone := {
 	extension: nil
 };
 
+// The area code line: the phone keyboard, numbers only; hilited to start when
+// the slip asks (hiliteAreaCode).
 phoneItem := {
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
 	viewLineSpacing: 32,
 	label: areaCode,
 	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
-	entryFlags: 16779777,
+	entryFlags: vVisible + vClickable + vGesturesAllowed + vCustomDictionaries,
 	viewSetupDoneScript: func() begin
 		inherited:?viewSetupDoneScript();
 		if hiliteAreaCode then begin
@@ -36,23 +42,26 @@ phoneItem := {
 		entryLine._keyboard := GetRoot().phonekeyboard;
 		(entryLine.dictionaries := dictionaries)
 	end,
+	// Notes that the area code was changed.
 	textChanged: func() begin
 		(changed := true)
 	end,
 	changed: nil,
-	dictionaries: 117,
+	dictionaries: kNumbersOnlyDictionary,
 	_proto: @protoRichLabelInputLine,
 	preAllocatedContext: 'areacode
 };
 
 phoneItem_2 := {_proto: @newtPhonePopupEdit, preAllocatedContext: 'phoneNum};
 
+// The extension line.
 phoneItem_3 := {
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
 	viewLineSpacing: 32,
 	label: extension,
 	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
-	entryFlags: 264705,
+	entryFlags: vVisible + vClickable + vGesturesAllowed + vPhoneField,
+	// Notes that the extension was changed.
 	textChanged: func() begin
 		(changed := true)
 	end,

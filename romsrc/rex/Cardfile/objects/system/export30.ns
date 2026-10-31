@@ -1,4 +1,6 @@
-// export30, and what only it reaches
+// The Names preferences (@8222, the application's prefsView): the sort order
+// and whether notes are sent with a beamed card; for owner cards, whether the
+// owner cards are kept behind the system password (PIN) instead.
 
 export30 := {
 	stepChildren: [stepChildren:
@@ -7,9 +9,11 @@ export30 := {
 		{
 			viewBounds: {left: 16, top: 0, right: 196, bottom: 15},
 			text: "Send notes data with names",
+			// Shows whether notes are sent with names.
 			viewSetupFormScript: func() begin
 				(viewValue := theApp:GetAppPreferences().beamNotes)
 			end,
+			// Keeps it.
 			viewQuitScript: func() begin
 				(theApp:GetAppPreferences().beamNotes := viewValue)
 			end,
@@ -19,6 +23,7 @@ export30 := {
 	],
 	theSoup: nil,
 	viewBounds: {left: 0, top: 10, right: 190, bottom: 156},
+	// Owner cards: the notes checkbox goes and only the password checkbox is shown.
 	viewSetupChildrenScript: compile(
 		constants: {
 			kFunction_7228c5: func(a1, a2) begin
@@ -34,18 +39,22 @@ export30 := {
 					(stepChildren := [Array: usePasswordCheckBox])
 				end)
 		end),
+	// "Use system password for Owner Info".
 	usePasswordCheckBox: {
 		_proto: @protoCheckbox,
 		viewJustify: vjParentBottomV,
 		viewBounds: {left: 10, top: -32, right: 190, bottom: -17},
 		text: "Use system password for Owner Info",
+		// Shows the setting.
 		viewSetupFormScript: func() begin
 			(viewValue := theApp:GetAppPreferences().usePassword)
 		end,
+		// Keeps it.
 		viewQuitScript: func() begin
 			(theApp:GetAppPreferences().usePassword := viewValue)
 		end
 	},
+	// Owner cards: the slip is shorter.
 	viewSetupFormScript: func() begin
 		if (theApp.superSymbol = 'ownerNames) then begin
 				(viewBounds := Clone(viewBounds)).bottom := (viewBounds.bottom - 86)
@@ -53,9 +62,12 @@ export30 := {
 		inherited:?viewSetupFormScript()
 	end,
 	ReorientToScreen: @defRotateFunc,
+	// Saves after the slip has gone.
 	viewQuitScript: func() begin
 		'postQuit
 	end,
+	// Owner cards: saves the preferences, and warns when the password is to be used
+	// but no PIN is set.
 	viewPostQuitScript: func() begin
 		local appPreferences;
 		(if (theApp.superSymbol = 'ownerNames) then begin
@@ -69,6 +81,7 @@ export30 := {
 	sortRadio: nil
 };
 
+// The "Sort by" text.
 sortBy := {
 	viewBounds: {left: 16, top: 20, right: 190, bottom: 40},
 	text: "Sort by",
@@ -76,6 +89,8 @@ sortBy := {
 	preAllocatedContext: 'infoText
 };
 
+// The sort order buttons: default (name), first name, company, card category
+// (class) and zip code.
 export30Item := {
 	viewBounds: {left: 61, top: -2, right: 0, bottom: 80},
 	stepChildren: [stepChildren:
@@ -116,11 +131,14 @@ export30Item := {
 		}
 	],
 	viewJustify: vjParentFullH + vjSiblingTopV,
+	// Shows the order the preferences have (the last slot of a path).
 	viewSetupFormScript: func() begin
 		local sortBy;
 		clusterValue := (if IsArray((sortBy := theApp:GetAppPreferences().sortBy)) then sortBy[(Length(sortBy) - 1)] else sortBy);
 		inherited:?viewSetupFormScript()
 	end,
+	// On closing: a new order is applied (SortByChange adds the soup index), with a
+	// status slip.  First name sorts on the path name.first.
 	viewQuitScript: func() begin
 		if (clusterValue = 'first) then begin
 				clusterValue := 'name.first

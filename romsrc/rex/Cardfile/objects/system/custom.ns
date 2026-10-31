@@ -1,4 +1,6 @@
-// custom, and what only it reaches
+// The Custom edit view (@8217's 'custom view): the card's custom fields
+// (custom1-custom10), each a line labelled with the label the user gave it,
+// and a button to edit the labels.
 
 custom := {
 	name: custom_2,
@@ -29,6 +31,7 @@ custom := {
 			'custom9,
 			'custom10
 		],
+		// "Label: value" for each filled field that has a label, a line each.
 		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
 			text := "";
 			if (customInfo := GetRoot().cardfile:GetCustomInfo()) then begin
@@ -46,6 +49,7 @@ custom := {
 				end;
 			text
 		end,
+		// Draws those lines, keeping each line's field in misc for a tap.
 		shapeFunc: func(a1, a2, a3, a4) begin
 			l4 := [Array: ];
 			l5 := [Array: ];
@@ -75,6 +79,7 @@ custom := {
 				end;
 			(if (Length(l5) > 0) then {shape: l5, misc: l4})
 		end,
+		// A tap on a line hilites it and opens the edit slip on that field.
 		actionFunc: func(a1, a2, a3, box, target, path, misc) begin
 			local l1, l2, fontHeight2, l4;
 			fontHeight2 := fontHeight(a3.viewFont);
@@ -94,12 +99,15 @@ custom := {
 	gotoCustomEditor: nil
 };
 
+// A custom field's line: labelled with the field's label (when it has one),
+// remembering what was written in that field before.
 text := {
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
 	viewLineSpacing: 32,
 	path: nil,
 	label: "text",
 	addPaths: nil,
+	// Takes the field's label (truncated to half the width) and its memory slot.
 	viewSetupFormScript: func() begin
 		local customInfo, box;
 		if (if (customInfo := self:GetCustomInfo()) then customInfo.(path)) then begin
@@ -109,6 +117,7 @@ text := {
 			end;
 		inherited:?viewSetupFormScript()
 	end,
+	// Marks the value a custom field string (string.custom) and saves the card.
 	viewQuitScript: func() begin
 		if target.(path) then begin
 				SetClass(target.(path), '|string.custom|);
@@ -120,6 +129,7 @@ text := {
 	preAllocatedContext: 'customData
 };
 
+// "Edit Custom Labels": closes the slip and opens the label editor.
 editCustomLabels := {
 	buttonClickScript: func() begin
 		AddDeferredSend(base, Close, '[Array: ]);

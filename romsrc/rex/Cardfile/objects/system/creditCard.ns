@@ -1,4 +1,6 @@
-// creditCard, and what only it reaches
+// The Credit Card edit view of an owner card (@8216): card number, card name
+// (with the card types' popup), expiry date and contact phone, elements of
+// owner.creditCards.
 
 creditCard := {
 	type: 'editor,
@@ -9,6 +11,8 @@ creditCard := {
 		_proto: infoFrameProto_2,
 		checkPrefix: [|Array|: nil, [pathExpr: 'owner, 'creditCards]],
 		checkPaths: [|Array|: 'creditCardContactNum, 'creditCardName, 'creditCardNum, 'creditCardExpDate],
+		// "Card Name: ...\nCard #: ..." and the expiry date (a date in minutes shown
+		// as a short date), with the contact number drawn below.
 		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
 			local text;
 			TrimString((text := ParamStr("^?0Card Name: ^0\n||^?1Card #: ^1||", [Array: v20_wwwwwwwwwwvvvvvv[1], v20_wwwwwwwwwwvvvvvv[2]])));
@@ -37,11 +41,12 @@ creditCard := {
 	creditCardContactNum: nil
 };
 
+// The card number line.
 card_2 := {
 	path: nil,
 	flavor: @newtCustomFilter,
 	label: "Card #",
-	newRecFlags: 10753,
+	newRecFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed,
 	addPath: 'creditCardNum,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
 	viewLineSpacing: 32,
@@ -49,15 +54,20 @@ card_2 := {
 	preAllocatedContext: 'creditCardNum
 };
 
+// The card type line.
 creditCardItem := {
 	path: nil,
 	addPath: 'creditCardName,
+	// The card types the popup offers.
 	GetSymArray: func() begin
 		GetGlobals().creditCardTypes.creditCardClasses
 	end,
+	// Their names.
 	GetTextArray: func() begin
 		GetGlobals().creditCardTypes.creditCardText
 	end,
+	// A card type picked: its name, and its contact number (from the card types'
+	// creditCardPhoneNums) put into the phone line.
 	pickActionScript: func(index) begin
 		local l1, parsePhone2;
 		inherited:pickActionScript(index);
@@ -67,11 +77,12 @@ creditCardItem := {
 				creditCardContactNum:UpdatePhone(parsePhone2.phone)
 			end)
 	end,
-	newRecFlags: 8428033,
+	newRecFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vPunctuationAllowed + vCapsRequired,
 	_proto: @8245,
 	preAllocatedContext: 'creditCardName
 };
 
+// The expiry date line.
 expDate := {
 	path: nil,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
@@ -80,6 +91,7 @@ expDate := {
 	addPath: 'creditCardExpDate,
 	flavor: {
 		_proto: @newtDateFilter,
+		// A month and year with no day is taken as the first of the month.
 		TextToPath: func(a1) begin
 			local l1, stringToDateFrame2;
 			if (if (if (if (stringToDateFrame2 := StringToDateFrame(a1)) then (not stringToDateFrame2.day)) then stringToDateFrame2.month) then stringToDateFrame2.year) then begin

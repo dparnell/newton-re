@@ -1,4 +1,7 @@
-// name, and what only it reaches
+// The Name edit view (@8224): first and last name and honorific, and the
+// affiliation of a person (Spouse, Child...) or the title of a company's
+// contact - for a company card an element of its names array.  The reading
+// field is allocated but not among the children (for a localised ROM).
 
 name := {
 	stepChildren: [|Array|: nameItem, nameItem_2, nameItem_3],
@@ -6,10 +9,12 @@ name := {
 	symbol: 'name,
 	type: 'editor,
 	infoFrame: {
+		// A card's names: the name frame, or for a company an element of 'names.
 		checkPrefix: [|Array|: nil, [pathExpr: 'names]],
 		checkPaths: [|Array|: 'honorific, 'first, 'last, 'title],
 		format: format
 	},
+	// Adds the title line for a company card, the affiliation line for others.
 	viewSetupChildrenScript: func() begin
 		stepChildren := Clone(stepChildren);
 		if (target.class = 'company) then begin
@@ -41,7 +46,7 @@ name := {
 			addPath: 'title,
 			memory: 'affiliation,
 			flavor: @newtCustomFilter,
-			newRecFlags: 8428033,
+			newRecFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vPunctuationAllowed + vCapsRequired,
 			_proto: @newtLabelInputLine,
 			preAllocatedContext: 'affiliate
 		},
@@ -54,6 +59,8 @@ name := {
 			label: label,
 			newDictionaries: newDictionaries,
 			addPath: 'nameReading,
+			// Only the card's own name (not an element of names) creates its slot when
+			// written in.
 			viewSetupFormScript: func() begin
 				if (selectedPath <> true) then begin
 						RemoveSlot(self, 'viewChangedScript)
@@ -73,12 +80,15 @@ name := {
 	reading: nil
 };
 
+// The first name line.
 nameItem := {
 	path: nil,
 	flavor: @newtCustomFilter,
 	label: first,
 	newDictionaries: newDictionaries,
 	addPath: 'first,
+	// Only the card's own name (not an element of names) creates its slot when
+	// written in.
 	viewSetupFormScript: func() begin
 		if (selectedPath <> true) then begin
 				RemoveSlot(self, 'viewChangedScript)
@@ -89,6 +99,7 @@ nameItem := {
 	preAllocatedContext: 'first
 };
 
+// The last name line.
 nameItem_2 := {
 	path: nil,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
@@ -102,6 +113,7 @@ nameItem_2 := {
 	preAllocatedContext: 'last
 };
 
+// The honorific line.
 nameItem_3 := {
 	path: nil,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
@@ -110,6 +122,8 @@ nameItem_3 := {
 	label: nil_2,
 	labelCommands: nil,
 	newDictionaries: nil,
+	// The locale's honorific dictionaries, its common honorifics as the label's
+	// popup, and its label text.
 	viewSetupFormScript: func() begin
 		local locale;
 		newDictionaries := (locale := GetLocale()).recogHonorificDictionaries;

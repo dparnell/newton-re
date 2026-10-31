@@ -1,4 +1,6 @@
-// bizCardDottedLine, and what only it reaches
+// The "dotted line" business card layout (@8202, bizCardNum 5): the company,
+// the name over a dotted rule, the addresses and email, and the phones at the
+// foot.
 
 bizCardDottedLine := {
 	bizCardIcon: {

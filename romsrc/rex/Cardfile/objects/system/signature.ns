@@ -1,4 +1,5 @@
-// signature, and what only it reaches
+// The Signature view of an owner card (@8249): an ink field, beside an "X",
+// that keeps the owner's signature in owner.signature.
 
 signature := {
 	viewFlags: vVisible,
@@ -22,10 +23,12 @@ signature := {
 	infoFrame: {
 		checkPrefix: [|Array|: [pathExpr: 'owner], nil],
 		checkPaths: [|Array|: 'signature],
+		// True when the card has a signature (some ink).
 		hasDataFunc: func(a1, a2) begin
 			local l1;
 			(if (l1 := a1.(a2[0])) then (Length(l1) > 0))
 		end,
+		// "[signature]" in text, when there is one.
 		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
 			(if (if v20_wwwwwwwwwwvvvvvv[0] then (Length(v20_wwwwwwwwwwvvvvvv[0]) > 0)) then "[signature]" else "")
 		end
@@ -37,6 +40,7 @@ signature := {
 	stepAllocateContext: [|Array|: 'sigCapture, signatureItem]
 };
 
+// The signature field: ink only, no recognition.
 signatureItem := {
 	viewFlags: vVisible + vClipping + vClickable + vStrokesAllowed + vGesturesAllowed,
 	viewBounds: {top: 0, left: 2, right: -2, bottom: 60},

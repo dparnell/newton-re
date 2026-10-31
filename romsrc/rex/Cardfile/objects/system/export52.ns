@@ -1,7 +1,11 @@
-// export52, and what only it reaches
+// The edit view for one phone number (@8244): area code, number and extension
+// fields made into a phone string (MakePhone) when the slip closes, keeping
+// its phone class.
 
 export52 := {
 	type: 'editor,
+	// Builds the number from the fields (the area code only when there is a number
+	// or it was changed); nil when it comes out empty.
 	viewQuitScript: func() begin
 		local l1, phone, l3, cls;
 		if (if self.phoneNum then (phone := target.(path))) then begin
@@ -20,6 +24,8 @@ export52 := {
 			end;
 		'postQuit
 	end,
+	// Splits the card's number into the fields; for a new number, the area code of
+	// the card's other phones (or the user's own) is offered, hilited.
 	viewSetupFormScript: func() begin
 		if StrFilled(target.(path)) then begin
 				parsePhone2 := ParsePhone(target.(path));
@@ -65,6 +71,7 @@ export52 := {
 	protection: 'private,
 	hiliteAreaCode: nil,
 	usePhoneKeys: true,
+	// Puts the number into the card once the slip has closed.
 	viewPostQuitScript: func() begin
 		target.(path) := savePhoneNum;
 		targetView:StartFlush()

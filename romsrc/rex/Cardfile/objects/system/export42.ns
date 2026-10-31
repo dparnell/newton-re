@@ -1,4 +1,5 @@
-// export42, and what only it reaches
+// The phone and pager lines of a business card (@8234), right-aligned at the
+// foot of the card, the phone icons lined up under each other.
 
 export42 := {
 	viewBounds: {top: -55, left: 5, right: -5, bottom: -3},
@@ -6,6 +7,9 @@ export42 := {
 	layouts: layouts_4,
 	viewFont: tsFancy + tsSize(10),
 	phoneLeft: nil,
+	// Adds one data item to the card's drawing (text-lines view's hook): lines up
+	// each item's phone icon with the first one's (phoneLeft), leaving room for the
+	// icon when right-justified.
 	AddAllInfoItem: func(a1, checkPrefixItem, shapeArray, hitArray, a5, a6, a7, a8, a9, frame2) begin
 		local count, l2;
 		if phoneLeft then begin

@@ -687,5 +687,10 @@ tsSize	<<10
 oneLineOnly	0x800000
 # Cardfile, Connection, FaxViewer, Formulas: the Newton Programmer's Reference 2.0 (Table 8-5, lexical dictionaries)
 kNumbersOnlyDictionary	117
+kPostalCodeDictionary	116
 # Cardfile, Connection, FaxViewer, Formulas: Notify's level (named in the Newton Programmer's Reference 2.0; the NTK's value, docs/work-log.md)
 kNotifyAlert	3
+# Cardfile: src/recognition/Words.h (the Newton Programmer's Reference's name)
+kUserDictionary	31
+# Cardfile: the Newton Programmer's Reference 2.0 (a style frame's transferMode)
+modeXor	2

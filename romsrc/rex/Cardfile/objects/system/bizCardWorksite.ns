@@ -1,4 +1,5 @@
-// bizCardWorksite, and what only it reaches
+// The worksite card layout (@8209): an icon, the place's name, and its dialing,
+// dock and access number details.
 
 bizCardWorksite := {
 	bizCardIcon: {bits: bizCardIconBits, bounds: {left: 0, top: 0, right: 38, bottom: 23}},

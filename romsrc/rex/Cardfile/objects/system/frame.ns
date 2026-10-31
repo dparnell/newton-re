@@ -1,3 +1,4 @@
-// frame, and what only it reaches
+// The blank name SetCardfileStuff gives a card that has none (a literal of
+// that function, with first name ""): honorific, first, last and title.
 
 frame := {honorific: nil, first: label, last: nil, title: nil};

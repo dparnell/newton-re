@@ -1,4 +1,6 @@
-// bizCardSeparate, and what only it reaches
+// The "separate" business card layout (@8206, bizCardNum 2): the addresses and
+// email at the top right, the name above a heavy rule, then the company, and
+// the phones at the foot.
 
 bizCardSeparate := {
 	bizCardIcon: {

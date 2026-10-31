@@ -1,4 +1,5 @@
-// allinfo, and what only it reaches
+// The All Info layout (@8195): every info view's data of the card, one after
+// another (a text-lines view, @8242).
 
 allinfo := {
 	boldTitle: nil_2,
@@ -8,6 +9,8 @@ allinfo := {
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
 	symbol: 'allinfo,
 	type: 'viewer,
+	// Works out (once per class) which views a card of the target's class shows;
+	// shown at once outside the Names application.
 	viewSetupFormScript: func() begin
 		local l1, l2;
 		(if (if target then target.class) then begin

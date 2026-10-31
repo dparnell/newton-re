@@ -1,11 +1,14 @@
-// export49, and what only it reaches
+// An edit slip's title (@8241): the card's name and the layout's name, with the
+// class's icon.
 
 export49 := {
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 15},
+	// Redraws when the slip's card changes.
 	Retarget: func() begin
 		(if self.viewCObject then self:SyncView())
 	end,
 	title: title,
+	// "Name  Layout" (only the name for the default layout).
 	viewSetupFormScript: func() begin
 		local stringExtract, l2, l3;
 		stringExtract := GetDataDefs(target.class):StringExtract(target, 1);

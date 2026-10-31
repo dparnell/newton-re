@@ -1,4 +1,5 @@
-// pager, and what only it reaches
+// The Pager edit view (@8228): a pager number (with its pager type) and PIN,
+// elements of the card's pagers array.
 
 pager := {
 	name: "Pager",
@@ -9,6 +10,7 @@ pager := {
 		_proto: infoFrameProto,
 		checkPrefix: [|Array|: nil, [pathExpr: 'pagers]],
 		checkPaths: [|Array|: 'pagerNum, 'pagerPin],
+		// "number PIN type": the PIN is shown after the number, as an extension.
 		formatFunc: func(v20_wwwwwwwwwwvvvvvv) begin
 			local parsePhone2, displayPhone, l3, cls;
 			cls := ClassOf((displayPhone := v20_wwwwwwwwwwvvvvvv[0]));
@@ -24,10 +26,12 @@ pager := {
 			displayPhone := MakeDisplayPhone(displayPhone);
 			(displayPhone := ParamStr("^0 ^1", [Array: displayPhone, GetGlobals().pagerTypes.pagerText.(cls)]))
 		end,
+		// Draws the formatted pager as the phone info frame draws a number.
 		shapeFunc: func(v20_wwwwwwwwwwvvvvvv, v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, a3, a4) begin
 			local formatFunc;
 			inherited:shapeFunc([Array: (formatFunc := self:formatFunc(v20_wwwwwwwwwwvvvvvv))], v24_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy, a3, a4)
 		end,
+		// A tap dials the pager with its PIN as the extension.
 		actionFunc: func(a1, a2, a3, box, target, path, misc) begin
 			local parsePhone2, phone, l3;
 			phone := target.(path).pagerNum;
@@ -56,9 +60,11 @@ pager := {
 pagerItem := {
 	path: nil,
 	addPath: 'pagerNum,
+	// The pager types the popup offers.
 	GetSymArray: func() begin
 		GetGlobals().pagerTypes.pagerClasses
 	end,
+	// Their names.
 	GetTextArray: func() begin
 		GetGlobals().pagerTypes.pagerText
 	end,
@@ -72,7 +78,7 @@ pagerPIN := {
 	viewLineSpacing: 32,
 	flavor: @newtCustomFilter,
 	label: "Pager PIN",
-	newRecFlags: 264705,
+	newRecFlags: vVisible + vClickable + vGesturesAllowed + vPhoneField,
 	addPath: 'pagerPin,
 	_proto: @newtLabelInputLine,
 	preAllocatedContext: 'pagerPin

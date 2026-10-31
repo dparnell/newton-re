@@ -1,4 +1,4 @@
-// export44, and what only it reaches
+// A business card's frame (@8236): a 240 x 160 bordered view, centred.
 
 export44 := {
 	viewFlags: vVisible + vClipping + vClickable,

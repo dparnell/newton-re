@@ -1,4 +1,5 @@
-// cfAllFieldsFormat, and what only it reaches
+// The "Summary" print format (@8252): each card's All Info layout, as long as
+// its data needs.
 
 cfAllFieldsFormat := {
 	routingType: 'Print,
@@ -7,6 +8,8 @@ cfAllFieldsFormat := {
 	title: summary,
 	symbol: 'cfAllFieldsFormat,
 	usesCursors: true,
+	// Adds a card at a3, a4: lays out the All Info view to measure its height,
+	// then adds it 150 wide and that high; returns the size.
 	AddPrintChild: func(layout, target, a3, a4) begin
 		local frame2, addStepView2, l3;
 		frame2 := {_proto: allInfoLayout, target: target, viewBounds: RelBounds(a3, a4, 150, 2000), viewJustify: 0, showBullet: nil};

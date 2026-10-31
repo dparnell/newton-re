@@ -1,10 +1,14 @@
-// export55, and what only it reaches
+// The layout that shows one card at a time (@8247, a newtLayout over the Names
+// soup): the card layouts (such as @8210) are made on it.  Scrolling goes to
+// the next or previous card.
 
 export55 := {
 	viewBounds: {top: 21, left: 0, right: 0, bottom: -18},
 	masterSoupSlot: 'names,
 	forceNewEntry: nil,
 	viewJustify: vjParentFullH + vjParentFullV,
+	// Goes to the cursor's card (or the next or previous one when it was deleted,
+	// or the first), giving an old card a class; a1 true rebuilds the card's view.
 	Retarget: func(a1) begin
 		local entry;
 		if (((entry := dataCursor:entry()) = 'deleted) or (not entry)) then begin
@@ -34,9 +38,11 @@ export55 := {
 			end;
 		SetKeyView(self, 0)
 	end,
+	// The next card, with a scrolling effect.
 	viewScrollDownScript: func() begin
 		entryView:Effect(77725696, true, @flip, 'Scroller, [Array: 1])
 	end,
+	// The previous card, with a scrolling effect.
 	viewScrollUpScript: func() begin
 		entryView:Effect(77725696, nil, @flip, 'Scroller, [Array: -1])
 	end,
@@ -44,6 +50,8 @@ export55 := {
 		inherited:?viewSetupFormScript();
 		self:Retarget(nil)
 	end,
+	// For owner cards, tells the views that follow the card (retargetChain) once
+	// the layout is up.
 	viewSetupDoneScript: func() begin
 		(if (superSymbol = 'ownerNames) then AddDeferredCall(func() begin
 				(if retargetChain then (foreach item in retargetChain do begin
@@ -52,6 +60,7 @@ export55 := {
 			end, '[Array: ]))
 	end,
 	useTypeScrolling: true,
+	// Typing goes to the card whose letter (A-Z tab) was typed.
 	TypeScrollScript: func(keyString) begin
 		local pickLetterScript;
 		(if (pickLetterScript := azTabs:PickLetterScript(keyString)) then (if (pickLetterScript.newEntry <> pickLetterScript.currEntry) then self:Effect(133120, nil, @flip, 'Retarget, [Array: true]) else azTabs:RetargetNotify()))

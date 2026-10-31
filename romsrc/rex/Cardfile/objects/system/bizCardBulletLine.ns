@@ -1,4 +1,6 @@
-// bizCardBulletLine, and what only it reaches
+// The "bullet line" business card layout (@8200, bizCardNum 6): a bar with the
+// name over it at the top left, the addresses and email, the company at the
+// right, and the phones at the foot.
 
 bizCardBulletLine := {
 	bizCardIcon: {

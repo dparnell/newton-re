@@ -1,8 +1,17 @@
-// part, and what only it reaches
+// The Cardfile package's frames part: the Names application, which replaces the
+// ROM's own (OverrideBuiltinApp 'cardfile).  Its export table hands the
+// application and its layouts, info views and print formats (@8192-@8253) to
+// the system, which names them by those magic pointers.
 
 part := array(nil, {
+	// The part's installScript: installs the application (newtApplication's
+	// NewtInstallScript), puts it in place of the built-in Names, makes the Names
+	// soup with its sample cards when the internal store has none, and registers
+	// for changes to the soup and for a restore.  Returns the frame removeScript
+	// gets.
 	installScript: compile(
 		constants: {
+			// The soup-change callback: passes the change on to the application.
 			kFunction_720809: func(a1, a2, a3, a4) begin
 				GetRoot().cardfile:NewtSoupChangedNotify(a1, a2, a3, a4)
 			end
@@ -23,6 +32,8 @@ part := array(nil, {
 					copy:AddWalletEntries()
 				end;
 			RegSoupChange(namesSoup.soupName, theForm.appSymbol, kFunction_720809);
+			// After a restore: when the Names soup came back, drops the cached soup and
+			// looks for new birthdays.
 			RegSoupRestore(theForm.appSymbol, func(a1) begin
 				local cardfile, l2;
 				(if BFetch(a1, namesSoup.soupName, '|str<|, nil) then begin
@@ -34,6 +45,7 @@ part := array(nil, {
 			end);
 			frame2
 		end),
+	// Undoes the install script: the soup registrations and the application.
 	removeScript: func(partFrame) begin
 		UnRegSoupChange(partFrame.soupName, partFrame.appSymbol);
 		UnRegUnionSoup(partFrame.soupName, partFrame.appSymbol);
