@@ -2663,3 +2663,16 @@ The root view has a method `q_vairegerpg` (romsrc
 `BadWickedNaughtyNoot` as undocumented and then calls `InvertRect`.  Its
 name is `d_invertrect` in ROT13: a private alias for InvertRect left in
 the ROM, with its name hidden in plain sight.
+
+## Three names in the corners of Dates Preferences
+
+The Dates Preferences slip (the "i" button, then Preferences) has an
+easter egg in its `viewClickScript` (romsrc `objects/apps/calendar.ns`,
+`prefsView`).  A tap within 3 pixels of the slip's left and top edges
+shows "Fred Tou"; within 3 pixels of the right edge and the top, "Scott
+Jenson"; within 3 pixels of the left edge and 6 of the bottom (the test
+is `bottom - 3 - 3`), "Jeremy Wyld".  The name comes up in a `protoGlance`
+(`who`, kept in the slip's slot `xyzzy` - the magic word of Colossal Cave
+Adventure) to the sound of `cuckooSound`.  The bottom right corner is
+left out because the slip's close button sits there; any other tap goes
+on to the inherited click script.
