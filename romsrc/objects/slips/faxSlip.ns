@@ -129,6 +129,8 @@ faxSlip := {
 				TextSetup: func() begin
 					(if fields.coverPage then return CoverPageRegistry.(fields.coverPage).name else return labelCommands[0])
 				end,
+				// a cover page picked: kept in the fields and as the user's default,
+				// and Notes shown only for one with notes
 				LabelActionScript: func(index) begin
 					fields.coverPage := labelCommandsId[index];
 					userConfiguration.currentcoverpage := labelCommandsId[index];
@@ -152,9 +154,11 @@ faxSlip := {
 			viewJustify: vjSiblingLeftH + vjSiblingBottomV,
 			text: "Fine resolution",
 			buttonValue: true,
+			// checked for fine
 			viewSetupFormScript: func() begin
 				(viewValue := (fields.faxResolution = 'fine))
 			end,
+			// kept in the fields and as the user's default
 			valueChanged: func() begin
 				fields.faxResolution := (if viewValue then 'fine else 'normal);
 				SetUserConfig('faxResolution, fields.faxResolution)
@@ -181,6 +185,7 @@ callPhoneLine := {
 	selected: nil,
 	alternatives: nil,
 	class: '|nameRef.fax|,
+	// the picker starts at the fields' recipients and their alternatives
 	viewSetupFormScript: func() begin
 		selected := fields.toRef;
 		alternatives := fields.alternatives;
@@ -198,6 +203,7 @@ callPhoneLine := {
 			end);
 		inherited:buttonClickScript()
 	end,
+	// a recipient picked: the slip retargeted
 	pickActionScript: func(index) begin
 		inherited:?pickActionScript(index);
 		self:Retarget()
@@ -218,9 +224,11 @@ willDial := {
 	viewJustify: vjCenterH + vjParentFullH + vjSiblingBottomV + vjOneLineOnly,
 	viewFont: tsSimple + tsSize(9),
 	viewFlags: vVisible + vClickable,
+	// as the Call Options button
 	buttonClickScript: func() begin
 		faxAssist:buttonClickScript()
 	end,
+	// a tap tracked with the hilite; released on the text, a button click
 	viewClickScript: func(unit) begin
 		if self:TrackHilite(unit) then begin
 				self:buttonClickScript();
@@ -235,6 +243,7 @@ willDial := {
 		self:DrawShape(MakeRoundRect((l2 := ((((box := self:LocalBox()).right - StrFontWidth(text, viewFont)) div 2) - 2)), 0, (box.right - l2), box.bottom, 8), '{transferMode: modeXor, penPattern: vfNone, fillPattern: vfBlack});
 		true
 	end,
+	// the number shown
 	viewSetupDoneScript: func() begin
 		(text := self:GetPhoneText())
 	end,
@@ -310,9 +319,11 @@ manualDial := {
 	viewJustify: vjParentRightH + vjSiblingFullV,
 	text: "Manually connect",
 	buttonValue: true,
+	// checked from the fields
 	viewSetupFormScript: func() begin
 		(viewValue := fields.manualDialing)
 	end,
+	// kept in the fields, and the slip retargeted
 	valueChanged: func() begin
 		fields.manualDialing := viewValue;
 		self:Retarget()
@@ -325,6 +336,7 @@ manualDial := {
 // for sending
 _previewButton_2 := {
 	_proto: _previewButtonProto,
+	// the location checked first (ValidateConfig), then DoThePreview
 	buttonClickScript: func() begin
 		self:ValidateConfig('location, nil, '[Array: areacode, country], "Your configuration is not complete. Please identify your faxing location:", 'validateDialog, 'DoThePreview)
 	end,
@@ -345,6 +357,7 @@ notes := {
 	viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + vjSiblingTopV + vjOneLineOnly,
 	viewBounds: {left: 7, top: 0, right: 43, bottom: 13},
 	text: @paperrollSoupName,
+	// hidden unless the chosen cover page has notes
 	viewSetupDoneScript: func() begin
 		(if (not (if fields.coverPage then CoverPageRegistry.(fields.coverPage).hasNotes)) then self:Hide())
 	end,

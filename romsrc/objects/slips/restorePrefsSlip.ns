@@ -70,6 +70,7 @@ restorePrefsSlip := {
 			viewBounds: {left: 7, top: 7, right: 7, bottom: 20},
 			viewFont: @fontSystem10Bold,
 			text: extrasSoupName,
+			// hidden when the backup has no packages
 			viewSetupDoneScript: func() begin
 				(if (Length(pkgNames) = 0) then self:Hide())
 			end,
@@ -82,6 +83,7 @@ restorePrefsSlip := {
 			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingBottomV,
 			viewBounds: {left: 0, top: 7, right: 36, bottom: 20},
 			text: all,
+			// (see above)
 			buttonClickScript: func() begin
 				local packageList2;
 				if (not (packageList2 := packageList).checkAll) then begin
@@ -117,6 +119,7 @@ packageList := {
 	useScrollers: true,
 	checkAll: nil,
 	prefsArray: 'restorePackNames,
+	// the items and which are checked (none with no packages), and the list built
 	viewSetupFormScript: func() begin
 		inherited:?viewSetupFormScript();
 		if (Length(pkgNames) > 0) then begin
@@ -128,6 +131,7 @@ packageList := {
 		self.checkAll := (prefsCache.restorePackages = 'all);
 		self:SetupList()
 	end,
+	// hidden when the backup has no packages
 	viewSetupDoneScript: func() begin
 		(if (Length(pkgNames) = 0) then self:Hide())
 	end,
@@ -188,6 +192,7 @@ _defaultButton_9 := {
 	viewBounds: {left: -53, top: 0, right: -6, bottom: 0},
 	viewFlags: vVisible + vReadOnly + vClickable,
 	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV,
+	// (see above)
 	buttonClickScript: func() begin
 		result := ModalConfirm("Restore will replace the information on your Newton device with the information in the backup and then will restart. Are you sure you want to do this?", '[Array: {value: some, text: "Restore"}, {value: Cancel, text: "Cancel", keyValue: default}]);
 		(if (if Visible(self:Parent()) then (result <> 'Cancel)) then begin

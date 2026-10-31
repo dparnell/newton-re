@@ -202,6 +202,7 @@ filingSlip := {
 	targetView: nil
 };
 
+// the Edit Folder button's text (and the key command's name)
 editFolder := "Edit Folder";
 
 // the store section's heading: the application's own text (AppObjectFileThisOn),
@@ -211,6 +212,7 @@ fileInText := {
 	viewBounds: {left: 9, top: 0, right: -5, bottom: 12},
 	viewJustify: vjParentFullH,
 	text: nil,
+	// the text, as above
 	viewSetupFormScript: func() begin
 		(text := (if doCardRouting then (if (targetView:AppObjectFileThisOn exists) then GetVariable(targetView, 'AppObjectFileThisOn) else (if (targetView:appObject exists) then (if ((not target._cursor) or (Length(target._cursor) = 1)) then ParamStr("File this ^0 on", [Array: GetVariable(targetView, 'appObject)[0]]) else ParamStr("File the selected ^0 on", [Array: GetVariable(targetView, 'appObject)[1]])) else "File on"))))
 	end,
@@ -225,6 +227,8 @@ storeCluster := {
 	viewJustify: vjParentFullH + vjSiblingBottomV,
 	itemTitles: nil,
 	childViewBounds: {left: 3, right: 100, top: 2, bottom: 12},
+	// the cluster's size, its titles, and the target's store chosen
+	// (the locals declared late are as the decompiler wrote them)
 	viewSetupFormScript: func() begin
 		self.viewBounds := SetBounds(5, 4, -5, (storeClusterHeight + 4));
 		itemTitles := Array(Length((stores := GetStores())), nil);
@@ -252,6 +256,7 @@ storeSelector := {
 	viewJustify: vjParentFullH + vjSiblingBottomV,
 	viewFlags: vVisible + vClickable,
 	viewFormat: vfFillWhite,
+	// as tall as the store cluster needs
 	viewSetupFormScript: func() begin
 		(self.viewBounds := SetBounds(5, 5, -5, (storeClusterHeight + 23)))
 	end,
@@ -273,6 +278,7 @@ fileArea := {
 	viewBounds: {left: 9, top: 0, right: 219, bottom: 12},
 	viewJustify: 0,
 	text: nil,
+	// the text, as above
 	viewSetupFormScript: func() begin
 		local text2;
 		(text := (if ((not doCardRouting) or (Length(GetStores()) <= 1)) then (if (targetView:appObjectFileThisIn exists) then GetVariable(targetView, 'appObjectFileThisIn) else begin
@@ -296,6 +302,7 @@ folderCluster := {
 	viewJustify: vjParentFullH + vjSiblingBottomV,
 	itemTitles: nil,
 	childViewBounds: {left: 3, right: 100, top: 2, bottom: 12},
+	// the titles, the button chosen, and the cluster's size
 	viewSetupFormScript: func() begin
 		itemTitles := [Array: "None (Unfiled)"];
 		clusterValue := nil;
@@ -330,6 +337,7 @@ fileArea_2 := {
 	viewJustify: vjParentFullH + vjSiblingBottomV,
 	viewFlags: vVisible + vClickable,
 	viewFormat: vfFillWhite,
+	// as tall as the folder cluster needs
 	viewSetupFormScript: func() begin
 		(self.viewBounds := SetBounds(5, 5, -5, (folderClusterHeight + 23)))
 	end,
@@ -345,6 +353,7 @@ newFolderButton := {
 	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjOneLineOnly,
 	viewBounds: {left: 5, top: -18, right: 33, bottom: -5},
 	text: new_2,
+	// folderEdit opened for a new folder of the application's
 	buttonClickScript: func() begin
 		folderEdit:OpenForUser(nil, GetVariable(targetView, 'appSymbol), GetVariable(targetView, 'localFoldersOnly), GetVariable(targetView, 'globalFoldersOnly))
 	end,
@@ -359,6 +368,7 @@ editFoldersButton := {
 	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingRightH + vjOneLineOnly,
 	viewBounds: {left: 7, top: -18, right: 67, bottom: -5},
 	text: editFolder,
+	// (see above)
 	buttonClickScript: func() begin
 		if ((fileArea.folderCluster.clusterValue = 0) or (Length(SetDifference(GetFolderGroups(newLabels), '[Array: _System])) = 0)) then begin
 				self:Notify(kNotifyAlert, "Filing", "This folder name cannot be edited.");
@@ -379,6 +389,7 @@ _defaultButton_5 := {
 	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + vjOneLineOnly,
 	viewBounds: {left: -30, top: -18, right: -7, bottom: -5},
 	text: file,
+	// the application's own text, if any, the button widened to fit it
 	viewSetupFormScript: func() begin
 		(if (targetView:appObjectFileAction exists) then begin
 				self.text := GetVariable(targetView, 'appObjectFileAction);

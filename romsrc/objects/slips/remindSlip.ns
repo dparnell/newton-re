@@ -24,6 +24,7 @@ remindSlip := {
 		self:Close();
 		self:Open()
 	end,
+	// a rotation, if any, is over
 	viewSetupFormScript: func() begin
 		rotationInProgress := nil;
 		inherited:?viewSetupFormScript()
@@ -45,6 +46,7 @@ remindSlip := {
 	preallocatedContext: 'remindSlip,
 	viewChildren: [viewChildren:
 		{
+			// the slip closed
 			buttonClickScript: func() begin
 				remindSlip:Close()
 			end,
@@ -62,6 +64,7 @@ remindSlip := {
 			viewJustify: vjCenterV + vjSiblingBottomV,
 			longFormat: 'abbrDateStrSpec,
 			entryFont: tsHWFont + tsSize(10),
+			// the picker's date from totMin
 			viewSetupFormScript: func() begin
 				(Date := totMin)
 			end,
@@ -85,6 +88,7 @@ remindSlip := {
 			labelCommands: nil,
 			priorityItems: @priorityItems,
 			viewLineSpacing: 12,
+			// the four items, High to None, with their icons
 			viewSetupFormScript: func() begin
 				labelCommands := [Array: {item: "High", icon: priorityItems[0], indent: 18}, {item: "Medium", icon: priorityItems[1]}, {item: "Low", icon: priorityItems[2]}, {item: "None", icon: priorityItems[3]}];
 				inherited:?viewSetupFormScript()
@@ -97,6 +101,7 @@ remindSlip := {
 			LabelActionScript: func(index) begin
 				(priority := index)
 			end,
+			// the label's text at the start: None
 			TextSetup: func() begin
 				return labelCommands[3].item
 			end,
@@ -130,6 +135,7 @@ _defaultButton_15 := {
 	viewBounds: {left: -27, top: 0, right: -7, bottom: 13},
 	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingCenterV,
 	text: do_2,
+	// (see above)
 	buttonClickScript: func() begin
 		local calendar, toDo;
 		calendar := GetRoot().calendar;

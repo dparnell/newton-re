@@ -31,6 +31,7 @@ backupPrefsSlip := {
 			viewBounds: {left: 23, top: 109, right: -18, bottom: 119},
 			viewFont: @fontSystem10,
 			text: "Backup all packages",
+			// checked when packageType is 'all
 			viewSetupFormScript: func() begin
 				(self.viewValue := (prefsCache.packageType = 'all))
 			end,

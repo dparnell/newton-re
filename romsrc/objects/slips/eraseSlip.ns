@@ -9,6 +9,7 @@
 eraseSlip := {
 	// the card slot of the store being erased (its icon in CardSlotIcons)
 	slot: nil,
+	// godParent told the slip is gone
 	viewQuitScript: func() begin
 		(godParent.openEraseSlip := nil)
 	end,
