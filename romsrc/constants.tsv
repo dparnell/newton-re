@@ -698,3 +698,10 @@ kGestalt_SystemInfo	0x1000003
 kForever	0x1fffffff
 kMaxyear	2919
 kYearMissing	2920
+# gestures passed to viewGestureScript: the Newton Programmer's Reference 2.0, ViewGestureScript (also src/views/Commands.h)
+aeScrub	13
+aeCaret	15
+aeLine	16
+aeHilite	47
+aeTap	49
+aeDoubleTap	50

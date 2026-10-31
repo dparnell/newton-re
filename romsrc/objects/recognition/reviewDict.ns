@@ -580,7 +580,7 @@ A2Z := {
 	iconBBox: {left: 0, top: 0, right: 208, bottom: 8},
 	numIndices: 26,
 	letters: " bcdefghijklmnopqrstuvwxyz",
-	// The Swedish alphabet has three more letters (å, ä, ö), with their own picture.
+	// The Swedish alphabet has three more letters (a-ring, a-umlaut, o-umlaut), with their own picture.
 	viewSetupFormScript: compile(
 		constants: {
 			kBinaryFromHex: func(hex, cls) begin
