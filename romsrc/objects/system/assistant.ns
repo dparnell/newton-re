@@ -1,8 +1,14 @@
-// assistant, and what only it reaches
+// assistant: the Assistant slip (the root's `assistant`, opened by the Assist
+// button or by writing a request and tapping Assist).  A floater with the
+// "Please" input line (assistLine), a message line (assistMsg), Cancel, Do and
+// How Do I? buttons.  Its methods show the parser's progress in assistMsg and
+// hand the text to ParseUtter (src/assist/ParseUtter.cpp), which matches it
+// against the Assistant's templates (assistFrames.ns) and carries out the task.
 
 assistant := {
 	viewBounds: {left: 8, top: -98, right: -8, bottom: -8},
 	viewJustify: vjParentFullH + vjParentBottomV,
+	// the request could not be understood: shows it (cleanString) and says so
 	Duh: func(cleanString) begin
 		if cleanString then begin
 				SetValue(assistLine.entryLine, 'text, cleanString)
@@ -22,6 +28,8 @@ assistant := {
 		SetValue(assistMsg, 'text, "Tap \u2018\uPlease\u2019\u for more options.");
 		RefreshViews()
 	end,
+	// the Do button (deferred): parses the line's text; when nothing matched and
+	// the slip is still open, says it cannot interpret it
 	DoParse: func() begin
 		(if (if (not ParseUtter(assistLine.entryLine.text)) then self.viewCObject) then self:Duh(nil))
 	end,
@@ -31,6 +39,9 @@ assistant := {
 	end,
 	debug: 319180,
 	preallocatedContext: 'assistant,
+	// TryIt(text): the Assist button with a selection.  Text of two characters or
+	// fewer just toggles the slip; otherwise the slip opens with the cleaned-up
+	// text parsed at once.  Anything that is not a string toggles the slip.
 	TryIt: func(gleanIntendedText) begin
 		local cleanString2;
 		(if (ClassOf(gleanIntendedText) = 'string) then (if (Length(gleanIntendedText) <= 2) then assistant:ButtonToggle() else begin
@@ -38,6 +49,8 @@ assistant := {
 					(if (if (not ParseUtter((cleanString2 := CleanString(Clone(gleanIntendedText))))) then assistant.viewCObject) then assistant:Duh(cleanString2) else true)
 				end) else assistant:ButtonToggle())
 	end,
+	// the Assist button: tries the selected text (GleanIntendedText) if there is
+	// some, else toggles the slip
 	PrimeAndOpen: func() begin
 		local tryIt, gleanIntendedText2;
 		if (gleanIntendedText2 := GleanIntendedText()) then begin
@@ -54,8 +67,10 @@ assistant := {
 		_defaultButton_21,
 		{
 			viewBounds: {left: 5, top: -18, right: 61, bottom: -5},
-			viewJustify: 8388742,
+			viewJustify: vjCenterH + vjCenterV + vjParentBottomV + oneLineOnly,
 			text: "How Do I?",
+			// How Do I?: closes the Assistant and opens help - the frontmost application's
+			// own help book topic when it has one, else the built-in help
 			buttonClickScript: func() begin
 				local viewHelpTopic, viewfrontmost, tinyTim;
 				GetRoot().assistant:Close();
@@ -100,6 +115,9 @@ assistant := {
 
 assistLine := {
 	entryFlags: nil,
+	// a tap on one of the "Please" picker's commands (index): a remembered item is
+	// put in the line as it was, a command verb in front of what is written
+	// already; the picker then offers all commands again
 	LabelActionScript: func(index) begin
 		local labelCommand;
 		if IsFrame((labelCommand := labelCommands[index])) then begin
@@ -114,6 +132,7 @@ assistLine := {
 		self:SetLabelCommands(Sort(Clone((defaultFullCommands := GenFullCommands())), '|str<|, nil))
 	end,
 	viewSetupDoneScript: func() begin
+		// the caret after the end of the text
 		entryLine:SetHiliteNoUpdate(9999, 9999, true)
 	end,
 	indent: 58,
@@ -123,6 +142,8 @@ assistLine := {
 	viewBounds: {left: 8, top: 6, right: -8, bottom: 84},
 	defaultFullCommands: nil,
 	_proto: @protoLabelInputLine,
+	// the picker's commands, with the remembered requests (GetMemoryItems of
+	// 'assistant) above a separator line
 	SetLabelCommands: func(sort) begin
 		local memoryItems;
 		inherited:SetLabelCommands(sort);
@@ -134,7 +155,9 @@ assistLine := {
 	dictionaries: nil,
 	viewJustify: vjParentFullH,
 	label: "Please",
-	assistFlags: 18627073,
+	assistFlags: vVisible + vClickable + vGesturesAllowed + vCharsAllowed + vNumbersAllowed + vPhoneField + vDateField + vTimeField + vCustomDictionaries,
+	// the line's text and its picker of commands (GenFullCommands: the
+	// templates' verbs) when the slip opens
 	TextSetup: func() begin
 		defaultFullCommands := GenFullCommands();
 		if defaultChoices then begin
@@ -153,9 +176,13 @@ assistLine := {
 		(entryFlags := BOr(assistFlags, self:CheckFlags()))
 	end,
 	debug: 17422,
+	// letters are recognised too when the user's configuration asks for letters
+	// in fields
 	CheckFlags: func() begin
-		(if (userConfiguration.lettersInFieldsOption <> nil) then 16384 else 0)
+		(if (userConfiguration.lettersInFieldsOption <> nil) then vLettersAllowed else 0)
 	end,
+	// the custom dictionaries to recognise against: those the Assistant itself
+	// added to vars.dictionaries (custom: 'roger)
 	FindCustomDicts: func() begin
 		assistLine.dictionaries := [Array: ];
 		(foreach item in vars.dictionaries do begin
@@ -175,7 +202,7 @@ assistMsg := {
 
 _defaultButton_21 := {
 	viewBounds: {left: -27, top: -18, right: -7, bottom: -5},
-	viewJustify: 8390790,
+	viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingLeftH + oneLineOnly,
 	text: do_2,
 	buttonClickScript: func() begin
 		AddDeferredSend(assistant, DoParse, nil)

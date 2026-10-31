@@ -1,8 +1,16 @@
-// abstractScroller, and what only it reaches
+// abstractScroller: what the system scroller protos (protoUpDownScroller,
+// protoLeftRightScroller, protoHorizontal2DScroller, ...) are built on.  It keeps
+// the arrows' states (scrollerState, indexed through DirMap), works out how far
+// each step scrolls (SetupExtras) from ScrollAmounts and the units, and keeps
+// xPos/yPos within ScrollRect when the scroller tracks positions itself.  The
+// protos give it DirMap, StateMap, Arrows and ArrowCount; its children are
+// abstractArrows.
 
 abstractScroller := {
 	ArrowCount: nil,
 	DirMap: nil,
+	// sets each arrow the scroller has to 'more or 'normal by whether there is more
+	// of DataRect beyond the view's position (ViewRect) in its direction
 	AdjustArrows: func() begin
 		local l1;
 		(if ScrollRect then begin
@@ -15,6 +23,8 @@ abstractScroller := {
 						self:SetArrow('right, l1)
 					end;
 				if DirMap.up then begin
+						// a DataRect bottom of 9999 means the extent is unknown: the vertical arrows
+						// are then left normal
 						l1 := (if (DataRect.bottom = 9999) then 'normal else (if (yPos > DataRect.top) then 'more else 'normal));
 						self:SetArrow('up, l1)
 					end;
@@ -25,8 +35,9 @@ abstractScroller := {
 			end)
 	end,
 	viewFormat: vfFillWhite,
+	// swallows a scrub gesture over the scroller; nothing else
 	viewgesturescript: func(unit, gesture) begin
-		(gesture = 13)
+		(gesture = aeScrub)
 	end,
 	StateMap: nil,
 	scrollYUnits: 1,
@@ -37,6 +48,8 @@ abstractScroller := {
 	Arrows: nil,
 	PageThreshold: 5,
 	viewJustify: nil,
+	// the state name ('normal, 'more, ...) of arrowDirection's arrow: the StateMap
+	// slot whose value is its scrollerState entry
 	GetArrow: func(arrowDirection) begin
 		scrollerStateItem := scrollerState[DirMap.(arrowDirection)];
 		local scrollerStateItem;
@@ -48,8 +61,12 @@ abstractScroller := {
 	end,
 	yPos: 0,
 	scrollXUnits: 1,
+	// step sizes: [a single step, a step once the pen has been held for PageThreshold
+	// steps, a double tap], times scrollXUnits/scrollYUnits
 	ScrollAmounts: [|Array|: 1, 1, 1],
 	declareSelf: 'Scroller,
+	// makes the arrows' state array; the scroller scrolls itself unless the template
+	// gave it a scrollView
 	viewSetupFormScript: func() begin
 		scrollerState := Array(ArrowCount, 0);
 		if (not scrollView) then begin
@@ -60,6 +77,8 @@ abstractScroller := {
 	ScrollRect: nil,
 	viewClass: clView,
 	scrollView: nil,
+	// fills in an abstractArrow's extras frame a2 for a step in arrowDirection: the
+	// axis and the signed amount, clipped so xPos/yPos stay inside ScrollRect
 	SetupExtras: func(arrowDirection, a2) begin
 		local l1, l2;
 		a2.axis := (if ((arrowDirection = 'left) or (arrowDirection = 'right)) then 'horizontal else 'vertical);
@@ -91,10 +110,13 @@ abstractScroller := {
 	PlayStopSound: func() begin
 		playsound(@tockSound)
 	end,
+	// sets arrowDirection's arrow to the StateMap state a2 and redraws the scroller
 	SetArrow: func(arrowDirection, a2) begin
 		scrollerState[DirMap.(arrowDirection)] := StateMap.(a2);
 		(if (if (Scroller exists) then Visible(Scroller)) then Scroller:Dirty())
 	end,
+	// scrolls one step in direction a1 as if its arrow were tapped (for keys and
+	// other code): finds the child arrow for a1 and does what its click would
 	DoScroll: func(a1) begin
 		local childViewFrames;
 		(foreach item in (childViewFrames := self:ChildViewFrames()) do begin

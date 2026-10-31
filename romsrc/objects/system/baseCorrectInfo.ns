@@ -1,4 +1,7 @@
-// baseCorrectInfo, and what only it reaches
+// baseCorrectInfo: the proto of vars.correctInfo, the system's correction list
+// - the recently recognised words the correction picker offers alternatives
+// for (src/recognition/CorrectInfo.cpp).  Its methods are natives; info holds
+// the list and max how many words it keeps (40, set at boot).
 
 baseCorrectInfo := {
 	offset: {class: #132, funcPtr: 7018698, numArgs: 4},

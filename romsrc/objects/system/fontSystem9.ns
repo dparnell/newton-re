@@ -1,3 +1,4 @@
-// fontSystem9, and what only it reaches
+// fontSystem9: a font frame for the 9-point System (Espy) font, plain - one of
+// the system's standard fonts, ready made for templates and code to use.
 
-fontSystem9 := {family: 'espy, face: 0, size: 9};
+fontSystem9 := {family: 'espy, face: kFaceNormal, size: 9};

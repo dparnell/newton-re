@@ -1,3 +1,4 @@
-// fontSystem12Bold, and what only it reaches
+// fontSystem12Bold: a font frame for the 12-point System (Espy) font, bold - one of
+// the system's standard fonts, ready made for templates and code to use.
 
-fontSystem12Bold := {family: 'espy, face: 1, size: 12};
+fontSystem12Bold := {family: 'espy, face: kFaceBold, size: 12};

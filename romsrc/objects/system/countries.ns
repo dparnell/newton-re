@@ -1,4 +1,6 @@
-// countries, and what only it reaches
+// countries: magic pointer @59, the countries the system knows for dialing and
+// addresses: each one's name, its outgoing international dialing prefix and its
+// telephone country code.
 
 countries := {
 	USA: {name: uSA, outgoing: outgoing_2, countryCode: 1},

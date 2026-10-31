@@ -1,7 +1,16 @@
-// extraProtos, and what only it reaches
+// extraProtos: the Extras Drawer's icon kinds.  Each entry of the extras soup
+// has a class (FormEntry, BookEntry, SoupEntry, ROMScriptEntry, ...), and the
+// drawer and the button bar wrap the entry (fentry) in a frame whose _proto is
+// this frame's slot of that name.  Each kind gives New (a fresh entry, a clone
+// of iconEntry), TapAction (what tapping the icon does), Preflight (whether an
+// action - 'Filing, 'move, 'delete, 'route, 'freeze, 'Backdrop - may be done,
+// 'OK or the reason it may not), and file, move, delete, size, where and
+// store.  The ROM... kinds are the built-in icons, which cannot be moved or
+// deleted.  In iconEntry, icon indexes the drawer's built-in icons.
 
 extraProtos := {
 	|1.XFormEntry|: proto1_2Exformentry,
+	// a book from a 1.x package (it cannot be filed or moved)
 	|1.XBookEntry|: {
 		_proto: proto1_2Exformentry,
 		iconEntry: {class: '|1.XBookEntry|, text: uCardPositionAlertButton, icon: 0, packageId: nil, isbn: nil},
@@ -13,6 +22,7 @@ extraProtos := {
 		end,
 		TapAction: TapAction_3
 	},
+	// the kind of an icon from a package whose kind is not known
 	|????Entry|: AutoEntryProto,
 	FormEntry: proto1_2ExformentryProto,
 	ROMFormEntry: ROMHelpBookEntryProto,
@@ -105,6 +115,7 @@ extraProtos := {
 			_tagList: [|Array|: '_icon, '_snowflake],
 			packageName: nil
 		},
+		// a frozen package's icon: tapping it thaws the package
 		Preflight: compile(
 			constants: {
 				kLiteral_536a15: "locked"
@@ -117,6 +128,8 @@ extraProtos := {
 			nil
 		end
 	},
+	// the icon of a soup in the Storage folder: tapping it opens the soupervisor
+	// (storage manager) on the soup; deleting it deletes the soup's data
 	SoupEntry: {
 		_proto: proto1_2ExformentryProto,
 		iconEntry: {
@@ -153,6 +166,7 @@ extraProtos := {
 		delete: delete_4,
 		where: where
 	},
+	// an action icon of a package: tapping it runs the entry's TapAction
 	ScriptEntry: {
 		_proto: proto1_2ExformentryProto,
 		iconEntry: {
@@ -168,6 +182,7 @@ extraProtos := {
 		Preflight: func(a1, kids) begin
 			(if (((a1 = 'Filing) or (a1 = 'move)) or (a1 = 'delete)) then (if (not EntryStore(fentry):IsReadOnly()) then 'OK else "locked") else (if (a1 = 'route) then 'OK else (if (if self:LookupSoupPackage() then (a1 = 'freeze)) then 'OK else "the wrong kind")))
 		end,
+		// the entry's size in K
 		size: func() begin
 			Stringer([Array: max(1, (EntrySize(fentry) div 1024)), "K"])
 		end,
@@ -211,10 +226,12 @@ extraProtos := {
 	AutoPackageEntry: AutoEntry
 };
 
+// the size of a built-in item: not shown
 size_2 := func() begin
 	"--"
 end;
 
+// the built-in applications' icons (and the base of the other ROM... kinds)
 ROMHelpBookEntryProto := {
 	_proto: proto1_2Exformentry,
 	iconEntry: {
@@ -237,6 +254,8 @@ ROMHelpBookEntryProto := {
 		GetStores()[0]
 	end,
 	move: move,
+	// may be filed or routed, or made the backdrop when the application allows
+	// it and fits the screen as it is; nothing else
 	Preflight: func(a1, kids) begin
 		local l1;
 		(if ((a1 = 'Filing) or (a1 = 'route)) then 'OK else (if (if (a1 = 'Backdrop) then (Length(kids) = 1)) then begin
@@ -249,6 +268,7 @@ ROMHelpBookEntryProto := {
 					'OK
 				end else "built-in"))
 	end,
+	// files the icon in folder labels: the folder tag goes in the entry's tag list
 	file: func(labels) begin
 		if IsReadOnly(fentry._tagList) then begin
 				fentry._tagList := Clone(fentry._tagList)
@@ -270,6 +290,8 @@ ROMHelpBookEntryProto := {
 	end
 };
 
+// the Preflight of a package's icon: filing, deleting and freezing need the
+// entry's store to be writable, a copy-protected package cannot be moved
 Preflight := compile(
 	constants: {
 		kLiteral_536a15: "locked",
@@ -279,6 +301,8 @@ Preflight := compile(
 		(if (((a1 = 'Filing) or (a1 = 'delete)) or (a1 = 'freeze)) then (if (not EntryStore(fentry):IsReadOnly()) then 'OK else kLiteral_536a15) else (if (a1 = 'route) then 'OK else (if (a1 = 'move) then (if self:copyprotected() then kLiteral_536afd else (if EntryStore(fentry):IsReadOnly() then kLiteral_536a15 else 'OK)) else (if (a1 = 'send) then (if self:copyprotected() then kLiteral_536afd else 'OK) else "the wrong kind"))))
 	end);
 
+// the base of the icons of packages: tapping one activates its package (if
+// frozen) and runs the entry's TapAction; one that has none says so
 AutoEntryProto := {
 	_proto: proto1_2ExformentryProto,
 	iconEntry: {
@@ -294,6 +318,7 @@ AutoEntryProto := {
 	TapAction: func() begin
 		local soupPackageAndActivate;
 		(if (soupPackageAndActivate := self:LookupSoupPackageAndActivate()) then (if fentry.TapAction then fentry:TapAction() else (if (soupPackageAndActivate <> 'justActivated) then begin
+						// 3: an alert, shown at once
 						GetRoot():Notify(3, "Packages", "Tapping this does nothing.");
 						nil
 					end)))
@@ -313,10 +338,12 @@ AutoEntry := {
 	}
 };
 
+// tapping an action icon: runs its TapAction once its package is active
 TapAction := func() begin
 	(if (if fentry.TapAction then self:LookupSoupPackageAndActivate()) then fentry:TapAction())
 end;
 
+// the names of the stores that hold any of the entry's soups, as a list
 where := func() begin
 	local validStores;
 	local text;
@@ -331,10 +358,14 @@ where := func() begin
 	(if (not text) then "" else text)
 end;
 
+// a soup's icon may be routed or deleted unless it is one the internal store
+// must keep (emptyInternal)
 Preflight_2 := func(a1, a2) begin
 	(if (if (not fentry.emptyInternal) then ((a1 = 'route) or (a1 = 'delete))) then 'OK else "the wrong kind")
 end;
 
+// deletes the entry's soups on every writable store (or on the store the
+// drawer is showing), telling the owner application (or the drawer)
 delete_4 := func() begin
 	local storesFilter;
 	local l2;
@@ -358,6 +389,7 @@ delete_4 := func() begin
 		end)
 end;
 
+// the return value says whether the drawer closes afterwards
 TapAction_2 := func() begin
 	local soupervisor;
 	(if (soupervisor := GetRoot().soupervisor) then begin
@@ -366,6 +398,8 @@ TapAction_2 := func() begin
 		end)
 end;
 
+// a book's icon: opens it in the book reader (copperfield), closing a different
+// book first
 TapAction_3 := func() begin
 	local copperfield, l2;
 	(if self:LookupSoupPackageAndActivate() then begin
@@ -381,6 +415,8 @@ TapAction_3 := func() begin
 		end)
 end;
 
+// a help book's icon: opens it in the help reader (TinyTim), or closes the
+// reader when it already shows this book
 TapAction_4 := func() begin
 	local tinyTim;
 	(if self:LookupSoupPackageAndActivate() then begin

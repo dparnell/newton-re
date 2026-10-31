@@ -1,4 +1,7 @@
-// banner, and what only it reaches
+// banner: a heading for printed and faxed pages (magic pointer @489): its text
+// spread out letter by letter across the width of the view, in 18-point bold
+// Geneva, between two rules (above and below).  The memo print format and the
+// standard fax cover page use it.
 
 banner := {
 	viewClass: clView,
@@ -7,7 +10,9 @@ banner := {
 	drawPenSizeY: 2,
 	text: nil,
 	viewFont: tsSimple + tsSize(18) + tsBold,
-	viewFormat: 0,
+	viewFormat: vfNone,
+	// each letter is centred on its share of the width; then a line at the top
+	// and one at the bottom, drawPenSizeX by drawPenSizeY pixels thick
 	viewDrawScript: func() begin
 		len := StrLen(text);
 		box := self:LocalBox();

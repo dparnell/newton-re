@@ -1,20 +1,30 @@
-// abstractArrow, and what only it reaches
+// abstractArrow: the template of one scroll arrow of the system scrollers
+// (protoUpDownScroller, protoLeftRightScroller and the 2D ones build theirs
+// from it, as children of an abstractScroller).  It draws its state from the
+// scroller's Arrows bitmap and, while the pen is down on it, scrolls the
+// scroller's scrollView repeatedly through viewScroll2DScript.
 
 abstractArrow := {
 	viewClass: clView,
 	viewFlags: vVisible + vClickable,
-	viewFormat: 0,
+	viewFormat: vfNone,
 	lastTap: 0,
 	extras: nil,
+	// the extras frame sent with each viewScroll2DScript: single or double tap, how
+	// many steps so far, the pen unit (SetupExtras adds axis and amount)
 	baseFrame: {tap: 'single, count: 0, unit: nil},
 	arrowIndex: nil,
 	arrowDirection: nil,
 	hilite: nil,
+	// draws the arrow's bitmap: StateMap.hilite while pressed, else its current
+	// state from the scroller's scrollerState (normal or more), offset by arrowIndex
 	viewDrawScript: func() begin
 		local l1;
 		l1 := (if hilite then (StateMap.hilite + arrowIndex) else (scrollerState[arrowIndex] + arrowIndex));
 		DrawXBitmap(self:LocalBox(), Arrows, l1, 0)
 	end,
+	// true when the view cannot scroll any further in arrowDirection ('up, 'down,
+	// 'left, 'right) - then plays the scroller's stop sound
 	EndOfTheLine: func(arrowDirection) begin
 		(if (if ScrollRect then ViewRect) then (if ((((if (arrowDirection = 'up) then (yPos <= ScrollRect.top)) or (if (arrowDirection = 'down) then (yPos >= (ScrollRect.bottom - (ViewRect.bottom - ViewRect.top))))) or (if (arrowDirection = 'left) then (xPos <= ScrollRect.left))) or (if (arrowDirection = 'right) then (xPos >= (ScrollRect.right - (ViewRect.right - ViewRect.left))))) then begin
 					self:PlayStopSound();
@@ -22,6 +32,8 @@ abstractArrow := {
 					true
 				end))
 	end,
+	// the pen on the arrow: highlight it, then scroll a step at a time until the
+	// pen lifts or the end is reached, and send viewScrollDoneScript at the end
 	viewClickScript: func(unit) begin
 		local arrow;
 		InkOff(unit);
@@ -35,6 +47,8 @@ abstractArrow := {
 			end;
 		clicker();
 		(extras := Clone(baseFrame)).unit := unit;
+		// a tap less than 60 ticks (a second) after the last is a double tap, which
+		// SetupExtras turns into its largest scroll amount
 		if ((Ticks() - lastTap) < 60) then begin
 				extras.tap := 'double
 			end;

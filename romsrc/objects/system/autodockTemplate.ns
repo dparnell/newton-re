@@ -1,4 +1,7 @@
-// autodockTemplate, and what only it reaches
+// autodockTemplate: the Auto Dock slip.  AutoDock (builtinFunctions.ns) builds
+// it as the global AutoDockSlip when a docking request arrives and Auto Dock is
+// on: it offers the request (dockMessage) with a sender popup, and its Auto Dock
+// button hands it to the applications in AutoDockRegistry.
 
 autodockTemplate := {
 	viewJustify: vjParentCenterH + vjParentCenterV,
@@ -12,10 +15,13 @@ autodockTemplate := {
 			viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingFullV,
 			viewBounds: {left: -66, top: 0, right: -7, bottom: 0},
 			text: autoDock,
+			// closes the slip and passes the request on to the registered Auto Dock
+			// handlers
 			buttonClickScript: func() begin
 				base:Close();
 				CallFrameBasedRegistryFns(AutoDockRegistry, [Array: dockMessage])
 			end,
+			// the global goes with the slip
 			viewQuitScript: func() begin
 				UnDefGlobalVar('AutoDockSlip)
 			end,

@@ -1,6 +1,12 @@
-// assistUtilities, and what only it reaches
+// assistUtilities: helper methods of the Assistant's task templates
+// (assistFrames.ns) - filtering the words of an utterance, working out the
+// time a request means (a meeting or a reminder: "lunch with Bob tomorrow"),
+// choosing names and phone numbers for a call, and checking that the
+// frontmost application can be printed, faxed or mailed from.
 
 assistUtilities := {
+	// the strings of phrases whose input items are a4 (isa) taken out of copy;
+	// nil when nothing is left
 	FilterAction: func(input, phrases, copy, a4) begin
 		(foreach key, value in input do begin
 				if (isa(value, a4) <> nil) then begin
@@ -9,6 +15,8 @@ assistUtilities := {
 			end);
 		(if (Length(copy) = 0) then return nil else return copy)
 	end,
+	// whether prevStr is a noise word: two to four characters long and in the
+	// stop word list ("the", "for", ...)
 	IsNoise: func(prevStr) begin
 		local len;
 		if (((len := StrLen(prevStr)) < 2) or (len > 4)) then begin
@@ -16,6 +24,7 @@ assistUtilities := {
 			end;
 		return FindStringInArray(@stopWordList, prevStr)
 	end,
+	// copy without the strings that are in a2; nil when nothing is left
 	FilterNoise: func(copy, a2) begin
 		(foreach key, value in copy do begin
 				if (FindStringInArray(a2, value) <> nil) then begin
@@ -24,6 +33,8 @@ assistUtilities := {
 			end);
 		(if (Length(copy) = 0) then return nil else return copy)
 	end,
+	// takes phrase out of glueStrings, with a noise word before it and a space
+	// after it
 	RemoveFromString: func(glueStrings, phrase, a3) begin
 		local len, pos, prevStr, l4;
 		len := StrLen(phrase);
@@ -40,6 +51,7 @@ assistUtilities := {
 		StrMunger(glueStrings, pos, len, nil, 0, 0);
 		return glueStrings
 	end,
+	// the word before position pos of glueStrings, or nil
 	prevStr: func(glueStrings, pos) begin
 		local part, prevSubStr2;
 		pos := (pos - 2);
@@ -48,6 +60,9 @@ assistUtilities := {
 			end;
 		return part
 	end,
+	// the time the task is for, in minutes: the time written (a1, the time and
+	// date phrases matched), else the template's usual time, moved on if it has
+	// passed (GetActionTime); without either, now
 	GetTime: func(a1, frame2) begin
 		if a1 then begin
 				frame2.givenTime := self:GetUserTime(a1, frame2)
@@ -58,6 +73,9 @@ assistUtilities := {
 			end;
 		(if frame2.givenTime then return self:GetActionTime(frame2) else return frame2.currentTime)
 	end,
+	// the time and date phrases a1 as a time in minutes; a bare hour from 1 to 6
+	// (no am or pm) is taken as the afternoon (720 minutes later).  Notes in
+	// frame2 whether a time, a date and a day of the week were given.
 	GetUserTime: func(a1, frame2) begin
 		list := Array((count := Length(a1)), nil);
 		local i;
@@ -89,12 +107,15 @@ assistUtilities := {
 			end;
 		a1ItemItem := StringToDate(glueStrings2);
 		if (date2 <> nil) then begin
+				// 1 to 6 o'clock without am or pm means pm
 				if (if (date2 >= 1) then (date2 < 7)) then begin
 						a1ItemItem := (a1ItemItem + 720)
 					end
 			end;
 		return a1ItemItem
 	end,
+	// a time that has passed is moved on: by delayTime's minutes, else to the
+	// next year (a date was given) or the next day (1440 minutes)
 	GetActionTime: func(frame2) begin
 		local givenTime, usualTime, delayTime, date2;
 		givenTime := frame2.givenTime;
@@ -117,6 +138,9 @@ assistUtilities := {
 			end;
 		return givenTime
 	end,
+	// how far past the given time now is, as the step to move it on by: 0 not
+	// past, 30 or 60 minutes for a usual time just passed, a week (10080
+	// minutes) for a day of the week, else -1
 	delayTime: func(frame2) begin
 		local givenTime, currentTime;
 		givenTime := frame2.givenTime;
@@ -137,6 +161,8 @@ assistUtilities := {
 			end;
 		return -1
 	end,
+	// for a call to a custom field or an affiliate of a Names entry, sets the
+	// name of listItem from it; true when it did
 	SetDisplayName: func(listItem, a2, resolveEntryAlias) begin
 		local cls, l2, name;
 		if ((cls := ClassOf(a2)) = 'custom) then begin
@@ -157,6 +183,10 @@ assistUtilities := {
 			end;
 		return l2
 	end,
+	// fills a call slip's frame a1 from the Assistant's candidates: the first
+	// person or place is the one called (toRef), the rest, and each of their
+	// other phone numbers, are alternatives; without candidates the raw text
+	// written is the name
 	FillPhoneSlip: func(a1, a2) begin
 		(if (a1.candidates <> nil) then begin
 				l2 := HasSlot(a1, 'dialdirect);
@@ -216,6 +246,7 @@ assistUtilities := {
 					(a1.toRef := [Array: l1])
 				end))
 	end,
+	// removes the groups from allEntries, in place
 	RemoveAllGroups: func(allEntries) begin
 		l1 := 0;
 		local l1;
@@ -229,6 +260,7 @@ assistUtilities := {
 			end);
 		SetLength(allEntries, l1)
 	end,
+	// removes the groups from allEntries except those with members of class a2
 	RemoveGroupsExcept: func(allEntries, a2) begin
 		l1 := 0;
 		local l1;
@@ -244,6 +276,7 @@ assistUtilities := {
 			end);
 		SetLength(allEntries, l1)
 	end,
+	// slot a1 of the transport that handles taskType's group, if any
 	GetTransportTags: func(a1) begin
 		local groupTransport, l2;
 		if (groupTransport := GetGroupTransport(taskType)) then begin
@@ -253,12 +286,15 @@ assistUtilities := {
 			end;
 		return nil
 	end,
+	// iaWorkTags on a weekday between 9:00 and 18:00 (540 and 1080 minutes into
+	// the day), else iaHomeTags
 	GetPreferredSymb: func() begin
 		local date2, l2, l3;
 		l2 := (date2 := Date(Time())).dayOfWeek;
 		l3 := ((date2.hour * 60) + date2.minute);
 		(if (if (if (l2 > 0) then (l2 < 6)) then (if (l3 >= 540) then (l3 <= 1080))) then 'iaWorkTags else 'iaHomeTags)
 	end,
+	// entry a2's phone numbers of the kinds the task asks for (a1.phoneTag), or nil
 	GetSelectedPhones: func(a1, a2) begin
 		if HasSlot(a1, 'phoneTag) then begin
 				if (bcPhoneNumber := GetRoot().cardfile:bcPhoneNumber(a2, '[Array: string])) then begin
@@ -293,6 +329,9 @@ assistUtilities := {
 			end;
 		list
 	end,
+	// the frontmost application's routing target for printing, faxing or mailing
+	// (groupTransport) - or nil, after telling the user, when there is nothing
+	// to send or the application cannot send it that way
 	iaGetTargetInfo: func(a1, groupTransport, transportStr) begin
 		if (not (activeView := a1:GetActiveView())) then begin
 				GetRoot():Notify(3, "Assist", ParamStr("There is nothing to ^0.", [Array: Lower(Clone(transportStr))]));

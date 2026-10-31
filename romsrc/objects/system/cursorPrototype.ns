@@ -1,4 +1,8 @@
-// cursorPrototype, and what only it reaches
+// cursorPrototype: the frame every soup cursor is a clone of
+// (src/stores/Cursors.cpp): tcursor holds the C++ TCursor, and the cursor
+// messages (Move, Goto, GotoKey, Next, Prev, Reset, ResetToEnd, Entry, Clone,
+// CountEntries, WhichEnd, Soup, IndexPath, EntryKey, Status) are natives in its
+// _parent.
 
 cursorPrototype := {
 	_parent: {

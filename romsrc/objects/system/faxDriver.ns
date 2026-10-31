@@ -1,4 +1,8 @@
-// faxDriver, and what only it reaches
+// faxDriver: magic pointer @81, the printer frame of the built-in fax: faxing
+// is printing to this "printer", whose driver is the C++ TFaxDriver imaging
+// through the dot-matrix printer code (tDotPrinter).  The page sizes are the
+// fax page in points (594 by 841, A4, for both paper sizes).  The fax routing
+// code puts it in an item's printer slot (viewRoot.ns).
 
 faxDriver := {
 	name: fax,

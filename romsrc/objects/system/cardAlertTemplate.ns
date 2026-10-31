@@ -1,14 +1,23 @@
-// cardAlertTemplate, and what only it reaches
+// cardAlertTemplate: the alerts about storage cards - a protoConfirm with the
+// card slot's icon, built for one of the messages of cardMessageList (format
+// this card?, the card's battery is low, the card is locked, activate its
+// packages?, ...).  ModalCardAlert and the card event handlers
+// (cardEventhandlers.ns) build one with BuildCardAlert(messageSymbol, slot,
+// cardName); the button the user taps gives the answer's value.
 
 cardAlertTemplate := {
 	messageHIndent: 36,
 	cardMessage: nil,
+	// the open card alerts are kept in OpenCardViews (so a card's removal can
+	// close them); the message and buttons come from cardMessage
 	viewSetupFormScript: func() begin
 		AddArraySlot(OpenCardViews, self);
 		self.message := cardMessage.message;
 		self.buttonList := cardMessage.buttonList;
 		inherited:?viewSetupFormScript()
 	end,
+	// an alert whose message says so keeps the card slot powered while it is open
+	// (the user is to change the card's battery)
 	viewSetupDoneScript: func() begin
 		inherited:?viewSetupDoneScript();
 		(if cardMessage.keepSlotPowered then self:SetupIdle(1))
@@ -17,6 +26,8 @@ cardAlertTemplate := {
 		SetRemove(OpenCardViews, self);
 		inherited:?viewQuitScript()
 	end,
+	// every 5 seconds touches the card's store (IsReadOnly, the answer unused) to
+	// keep the slot powered
 	viewIdleScript: func() begin
 		local l1, cardSlotStores;
 		l1 := inherited:?viewIdleScript();
@@ -30,6 +41,8 @@ cardAlertTemplate := {
 			end;
 		l1
 	end,
+	// an alert context for the message frame a1 (its message may be a function of
+	// the card's name)
 	BuildCardAlertFromCardMessage: func(a1, cardSlot, name) begin
 		local context;
 		if IsFunction(a1.message) then begin
@@ -42,6 +55,8 @@ cardAlertTemplate := {
 	BuildCardAlert: func(a1, cardSlot, name) begin
 		self:BuildCardAlertFromCardMessage(cardMessageList.(a1), cardSlot, name)
 	end,
+	// the messages by symbol: message (a string, or a function of the card's
+	// name) and buttonList (the protoConfirm buttons: value is the answer)
 	cardMessageList: {
 		SRAMCardReplaceBattery: {
 			message: "The battery on this card must be replaced. Your information may be lost.",

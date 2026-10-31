@@ -1,4 +1,6 @@
-// connectionDupValidTest, and what only it reaches
+// connectionDupValidTest: the validTest of the query TDocker::IsDuplicateEntry
+// makes when restoring selectively: whether a soup entry equals the entry being
+// restored, slot by slot (the native ConnEntriesEqual; src/comms/Docker.cpp).
 
 connectionDupValidTest := func(a1) begin
 	ConnEntriesEqual(a1)

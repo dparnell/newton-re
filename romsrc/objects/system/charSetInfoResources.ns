@@ -1,4 +1,7 @@
-// charSetInfoResources, and what only it reaches
+// charSetInfoResources: the R-constant Rcharsetinforesources, the handwriting
+// recogniser's character set tables (ParaGraph's): the letter images and the
+// DTE and PPD tables and trigrams it reads through this frame
+// (src/recognition/ParaGraph.cpp).
 
 charSetInfoResources := {
 	letterimages: letterimages,

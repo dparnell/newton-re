@@ -1,6 +1,15 @@
-// cardEventhandlers, and what only it reaches
+// cardEventhandlers: magic pointer @541, the NewtonScript side of storage and
+// other PC card events.  The card event handler (src/newt/StorageCards.cpp,
+// HandleCardEvent) sends the event's symbol here with its arguments - usually
+// the card slot, or the store - and most handlers put up the matching
+// cardAlertTemplate message (CardAlert, or ModalCardAlert when the answer is
+// needed; 'cardYanked when the card was pulled out meanwhile).
 
 cardEventhandlers := {
+	// a store on a card was mounted: offers to convert soups made for another
+	// language, asks whether to make it the default store (where new data goes),
+	// activates its packages, opens the card's storage slip and tells the
+	// StoreChangeRegistry and the docking code that it has come
 	StoreMounted: compile(
 		constants: {
 			kBinaryFromHex: func(hex, cls) begin
@@ -12,6 +21,9 @@ cardEventhandlers := {
 				end;
 				b
 			end,
+			// two DES password keys of secret card names: a card named so opens a game of
+			// draw poker (drawpokerTemplate) or solo poker in place of the storage slip -
+			// an Easter egg
 			kLiteral_56a7e9: call kBinaryFromHex with ("6e5db133590fab4f", 'deskey),
 			kLiteral_56a7fd: call kBinaryFromHex with ("a975975bb33737cb", 'deskey)
 		},
@@ -40,6 +52,7 @@ cardEventhandlers := {
 								end
 						end
 				end;
+			// l8: the store is the one the user made the default store
 			l8 := (a1:GetSignature() = GetUserConfig('defaultStoreSig));
 			if (not isReadOnly) then begin
 					if a1:GetInfo('defaultStore) then begin
@@ -84,6 +97,8 @@ cardEventhandlers := {
 			XmitStoreSoupsEntering(a1);
 			true
 		end),
+	// a card store was unmounted: drops a key view that was on it, closes its slip,
+	// deactivates its packages and tells the registries it has gone
 	StoreUnMounted: func(a1) begin
 		local keyView;
 		if (if (keyView := GetKeyView()) then (not IsValid(keyView._proto))) then begin
@@ -95,6 +110,8 @@ cardEventhandlers := {
 		XmitStoreSoupsLeaving(a1);
 		true
 	end,
+	// a password-protected store: asks for the password if a package provides
+	// StorePasswordPrompt, else says the card cannot be read
 	CheckPassword: func(a1) begin
 		(if GlobalFnExists('StorePasswordPrompt) then StorePasswordPrompt(a1) else begin
 				CardAlert('ProtectedStore, a1, nil);
@@ -104,6 +121,8 @@ cardEventhandlers := {
 	BadPassword: func(a1) begin
 		CardAlert('BadStorePassword, a1, nil)
 	end,
+	// the card was pulled out: tells the WeirdCardEventRegistry and closes the
+	// card's alerts with the answer 'cardYanked
 	CardRemoved: func(a1) begin
 		AddDeferredCall(functions.CallFrameBasedRegistryFns, [Array: WeirdCardEventRegistry, [Array: a1, 'CardRemoved]]);
 		AbortCardAlerts(a1, 'cardYanked)
@@ -111,6 +130,9 @@ cardEventhandlers := {
 	CardReInserted: func(a1) begin
 		ModalCardAlert('CardReInserted, a1, nil)
 	end,
+	// a card that is not (only) storage: a2 is its types; a comms card offers Auto
+	// Dock (or says it was inserted), an unknown type says so; an application
+	// registered under the card type is opened
 	WeirdCardInserted: func(a1, a2) begin
 		l1 := nil;
 		l2 := nil;
@@ -124,6 +146,8 @@ cardEventhandlers := {
 						if (item = 'comm) then begin
 								l1 := true
 							end else begin
+								// looks like a ROM bug: GetRoot().(cardType) reads a variable cardType this
+								// function does not have, where item (the type) was presumably meant
 								if (l5 := GetRoot().(cardType)) then begin
 										l5:Open();
 										l2 := true
@@ -142,10 +166,12 @@ cardEventhandlers := {
 			end;
 		AddDeferredCall(functions.CallFrameBasedRegistryFns, [Array: WeirdCardEventRegistry, [Array: a1, 'cardInserted]])
 	end,
+	// an old (1.x) card: convert it (asked twice) or mount it read-only
 	|Convert1.XCard?|: func(a1) begin
 		local modalCardAlert2;
 		(if ((modalCardAlert2 := ModalCardAlert('|Convert1.XCard?|, a1, nil)) = true) then ModalCardAlert('|Convert1.XCardReally?|, a1, nil) else modalCardAlert2)
 	end,
+	// erase a card without reading it: offered only while Prefs is open
 	|FormatWithExtremePrejudice?|: func(a1) begin
 		local modalCardAlert2;
 		(if GetRoot().preferenceRoll.viewCObject then begin
@@ -175,8 +201,10 @@ cardEventhandlers := {
 	|FormatReally?|: func(a1, a2) begin
 		(if (a2 = true) then ModalCardAlert('|FormatReally?|, a1, nil) else a2)
 	end,
+	// a locked card that could not be mounted: a card that needs repair says to
+	// unlock it, any other error a2 is shown
 	LockedCardMountError: func(a1, a2) begin
-		(if (a2 = -10621) then CardAlert('RepairLockedCardError, a1, nil) else CardAlert('SmileAfterMountError, a1, a2))
+		(if (a2 = kSError_WPButNeedsRepair) then CardAlert('RepairLockedCardError, a1, nil) else CardAlert('SmileAfterMountError, a1, a2))
 	end,
 	MiscCardError: func(a1, a2) begin
 		CardAlert('MiscCardError, a1, a2)

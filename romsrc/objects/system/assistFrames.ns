@@ -1,4 +1,13 @@
-// assistFrames, and what only it reaches
+// assistFrames: the Assistant's built-in knowledge (the root's assistFrames,
+// which ParseUtter and RegTaskTemplate work with; src/assist/).  It names the
+// kinds of things an utterance can hold - actions with the words that mean
+// them (Lexicon), people, places, times, phone kinds - as frames related by
+// isa (an is-a hierarchy: dinner is a meal is a schedule action), and the task
+// templates (task_list).  A template's signature lists the kinds it needs,
+// preconditions the names the parser binds the matched words to (self.when,
+// self.who, ...), and postParse carries the task out once the utterance has
+// been matched: scheduling, finding, reminding, mailing, faxing, printing,
+// calling, the time in a city, and "about Newton".
 
 assistFrames := {
 	debug: 157285,
@@ -9,6 +18,7 @@ assistFrames := {
 	faxing_sig: faxing_taskSignature,
 	mail_act: mailing_taskPrimary_act,
 	mailing_sig: mailing_taskSignature,
+	// a meal's usualTime is the time used when none is written
 	dinner_act: {isa: dinner_actIsa, usualTime: "7:00 pm", Lexicon: [|Array|: [|Array|: "dinner"]]},
 	person: groupIsa,
 	address: {isa: homePhoneIsaIsaIsa},
@@ -17,6 +27,8 @@ assistFrames := {
 	calling_task: calling_task,
 	about_precond: about_taskPreconditions,
 	when_obj: TimeIsa,
+	// a birthday or anniversary becomes a yearly event; AddToCardfile notes the
+	// date (and the event) on the person's Names card
 	birthday: {
 		isa: birthdayIsa,
 		repeatIt: 'yearly,
@@ -37,6 +49,7 @@ assistFrames := {
 	postal_code: {isa: homePhoneIsaIsaIsa},
 	about_sig: about_taskSignature,
 	workPhone: {isa: homePhoneIsa, tagSymbol: 'workPhone, Lexicon: [|Array|: [|Array|: "work", "work phone"]]},
+	// the query the Assistant finds names and places with
 	dsQuery: {type: 'words, words: nil, entirewords: true},
 	matched: {person: nil, places: nil},
 	Time: {isa: TimeIsa, value: nil},
@@ -91,6 +104,7 @@ assistFrames := {
 				"cellular phone",
 				"cellular number",
 				"mobile",
+				// (sic: the ROM's own spelling)
 				"moibile phone",
 				"mobile number"
 			]
@@ -124,6 +138,7 @@ assistFrames := {
 	calling_sig: calling_taskSignature,
 	default_act: default_taskPrimary_act,
 	task_template: scheduling_taskIsa,
+	// the task templates, in the order they are tried
 	task_list: [|Array|:
 		scheduling_task,
 		finding_task,
@@ -215,6 +230,10 @@ carPhone := "car phone";
 
 cityIsa := {isa: homePhoneIsaIsaIsa};
 
+// scheduling ("meet Bob at 3", "lunch with Ann tomorrow"): opens the schedule
+// slip with the time, the title (the utterance less the action and time
+// words), the invitees and the place; a birthday, anniversary or holiday
+// becomes an event
 scheduling_taskSignature := [|Array|: birthdayIsaIsa, groupIsaIsa, cityIsa, TimeIsa];
 
 scheduling_taskPreconditions := [|Array|: 'action, 'who, 'where, 'when];
@@ -226,6 +245,7 @@ scheduling_task := {
 	signature: scheduling_taskSignature,
 	preconditions: scheduling_taskPreconditions,
 	taskSlip: 'scheduleSlip,
+	// the title: the words of the utterance without the action and time phrases
 	SetTitle: func() begin
 		input := self.input;
 		glueStrings2 := GlueStrings(self.OrigPhrase);
@@ -247,6 +267,8 @@ scheduling_task := {
 			end;
 		return glueStrings2
 	end,
+	// the people matched, as name references, for the slip's invitees (or a name
+	// guessed from the words); returns the guessed name
 	SetInvitees: func(a1) begin
 		if (person := GetMatchedEntries('person, self.entries)) then begin
 				list := Array((count := Length(person)), nil);
@@ -270,6 +292,7 @@ scheduling_task := {
 			end;
 		return possibleName
 	end,
+	// the places matched, as the meeting's location, unless a name was guessed
 	SetLocation: func(a1, setInvitees) begin
 		(if (places := GetMatchedEntries('places, self.entries)) then begin
 				list := Array((count := Length(places)), nil);
@@ -327,6 +350,7 @@ finding_taskSignature := [|Array|: finding_taskPrimary_act, TimeIsaIsaIsa];
 
 finding_taskPreconditions := [|Array|: 'action, 'user_obj];
 
+// finding: opens Find with the words after the action
 finding_task := {
 	_proto: @assistUtilities,
 	isa: scheduling_taskIsa,
@@ -352,6 +376,7 @@ remembering_taskSignature := [|Array|: remembering_taskPrimary_act, TimeIsa];
 
 remembering_taskPreconditions := [|Array|: 'action, 'when];
 
+// reminding ("remind me to call Bob"): a To Do item at the time given
 remembering_task := {
 	_proto: @assistUtilities,
 	isa: scheduling_taskIsa,
@@ -393,6 +418,9 @@ mailing_taskSignature := [|Array|: mailing_taskPrimary_act, groupIsaIsa];
 
 mailing_taskPreconditions := [|Array|: 'action, 'who];
 
+// mailing: opens the mail routing slip for the frontmost application's item,
+// addressed to the people (or e-mail groups) named, with their other e-mail
+// addresses as alternatives
 mailing_task := {
 	isa: scheduling_taskIsa,
 	primary_act: mailing_taskPrimary_act,
@@ -489,12 +517,15 @@ faxing_taskSignature := [|Array|: faxing_taskPrimary_act, groupIsaIsa, cityIsa, 
 
 faxing_taskPreconditions := [|Array|: 'action, 'who, 'places, 'phone, 'form];
 
+// faxing: opens the fax routing slip for the frontmost application's item to
+// the people or places named, with their fax numbers
 faxing_task := {
 	isa: scheduling_taskIsa,
 	primary_act: faxing_taskPrimary_act,
 	signature: faxing_taskSignature,
 	preconditions: faxing_taskPreconditions,
 	_proto: @assistUtilities,
+	// the phone kinds to try, in order, at work and at home (GetPreferredSymb)
 	iaWorkTags: [|Array|: 'faxPhone, '|string.phone.faxPhone|, 'homefaxPhone, '|string.phone.homefaxPhone|, 'phone],
 	iaHomeTags: [|Array|: 'homefaxPhone, '|string.phone.homefaxPhone|, 'faxPhone, '|string.phone.faxPhone|, 'phone],
 	taskType: 'fax,
@@ -538,6 +569,7 @@ printing_taskSignature := [|Array|: printing_taskPrimary_act];
 
 printing_taskPreconditions := [|Array|: 'action];
 
+// printing: opens the print routing slip for the frontmost application's item
 printing_task := {
 	_proto: @assistUtilities,
 	isa: scheduling_taskIsa,
@@ -570,6 +602,9 @@ calling_taskSignature := [|Array|: calling_taskPrimary_act, groupIsaIsa, cityIsa
 
 calling_taskPreconditions := [|Array|: 'action, 'who, 'places, 'phone];
 
+// calling: opens the call slip (PhoneHome) for the people or places named,
+// with their numbers of the kinds asked for, work or home first by the time
+// of day
 calling_task := {
 	isa: scheduling_taskIsa,
 	primary_act: calling_taskPrimary_act,
@@ -647,6 +682,8 @@ default_taskSignature := [|Array|: TimeIsaIsaIsa];
 
 default_taskPreconditions := [|Array|: 'user_obj];
 
+// the utterance matched no task: the Assistant offers the tasks related to
+// its words in the "Please" picker
 default_task := {
 	value: "Default Task",
 	isa: scheduling_taskIsa,
@@ -669,6 +706,7 @@ about_taskSignature := [|Array|: about_taskPrimary_act];
 
 about_taskPreconditions := [|Array|: 'about_act];
 
+// "about Newton": the credits Easter egg (aboutNewton.ns)
 about_task := {
 	value: "About Task",
 	isa: scheduling_taskIsa,
@@ -685,6 +723,8 @@ about_task := {
 
 title_4 := {title: nil, preallocatedContext: 'title, _proto: @protoTitle};
 
+// the overview of cities that match a "time in" request, when there are
+// several: tapping one shows it in Time Zones
 overview_2 := {
 	viewFlags: vVisible + vApplication + vClickable,
 	viewJustify: vjParentFullH + vjParentFullV,
@@ -740,6 +780,8 @@ time_taskSignature := [|Array|: time_taskPrimary_act];
 
 time_taskPreconditions := [|Array|: 'time_act];
 
+// "time in <city>": finds the city in Time Zones and shows it, or a list of
+// the cities found; without a city, opens Time Zones
 time_task := {
 	_proto: @assistUtilities,
 	isa: scheduling_taskIsa,

@@ -1,4 +1,6 @@
-// defaultItemStateMsgs, and what only it reaches
+// defaultItemStateMsgs: protoTransport's default itemStateMsgs, the words the
+// In/Out Box shows for an item's state (ready, sent, received, read, logged,
+// pending, remote, error).
 
 defaultItemStateMsgs := {
 	ready: ready,

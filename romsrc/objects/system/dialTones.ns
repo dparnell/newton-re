@@ -1,6 +1,10 @@
-// dialTones, and what only it reaches
+// dialTones: the DTMF (touch-tone) sounds, one tone score per key: the digits
+// 0 to 9, then *, #, and A to D - each the key's two frequencies (a column
+// and a row tone) played together for 200 ms, for the TDTMFCodec sound codec.
+// Dialing a number through the speaker plays these.
 
 dialTones := [|Array|:
+	// the 0 key
 	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
 		{
 			frequency: 1336,
@@ -27,6 +31,7 @@ dialTones := [|Array|:
 			tail: 100
 		}
 	]),
+	// the 1 key
 	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
 		{
 			frequency: 1209,
@@ -53,6 +58,7 @@ dialTones := [|Array|:
 			tail: 100
 		}
 	]),
+	// the 2 key
 	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
 		{
 			frequency: 1336,
@@ -79,6 +85,7 @@ dialTones := [|Array|:
 			tail: 100
 		}
 	]),
+	// the 3 key
 	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
 		{
 			frequency: 1477,
@@ -105,6 +112,7 @@ dialTones := [|Array|:
 			tail: 100
 		}
 	]),
+	// the 4 key
 	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
 		{
 			frequency: 1209,
@@ -131,6 +139,7 @@ dialTones := [|Array|:
 			tail: 100
 		}
 	]),
+	// the 5 key
 	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
 		{
 			frequency: 1336,
@@ -157,6 +166,7 @@ dialTones := [|Array|:
 			tail: 100
 		}
 	]),
+	// the 6 key
 	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
 		{
 			frequency: 1477,
@@ -183,6 +193,7 @@ dialTones := [|Array|:
 			tail: 100
 		}
 	]),
+	// the 7 key
 	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
 		{
 			frequency: 1209,
@@ -209,6 +220,7 @@ dialTones := [|Array|:
 			tail: 100
 		}
 	]),
+	// the 8 key
 	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
 		{
 			frequency: 1336,
@@ -235,6 +247,7 @@ dialTones := [|Array|:
 			tail: 100
 		}
 	]),
+	// the 9 key
 	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
 		{
 			frequency: 1477,
@@ -261,6 +274,7 @@ dialTones := [|Array|:
 			tail: 100
 		}
 	]),
+	// the * key
 	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
 		{
 			frequency: 1209,
@@ -287,6 +301,7 @@ dialTones := [|Array|:
 			tail: 100
 		}
 	]),
+	// the # key
 	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
 		{
 			frequency: 1477,
@@ -313,6 +328,7 @@ dialTones := [|Array|:
 			tail: 100
 		}
 	]),
+	// the A key
 	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
 		{
 			frequency: 1633,
@@ -339,6 +355,7 @@ dialTones := [|Array|:
 			tail: 100
 		}
 	]),
+	// the B key
 	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
 		{
 			frequency: 1633,
@@ -365,6 +382,7 @@ dialTones := [|Array|:
 			tail: 100
 		}
 	]),
+	// the C key
 	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
 		{
 			frequency: 1633,
@@ -391,6 +409,7 @@ dialTones := [|Array|:
 			tail: 100
 		}
 	]),
+	// the D key
 	tonescore('TDTMFCodec, {version: 1, algorithm: 0, reserved: 0, repeats: 0}, [tones:
 		{
 			frequency: 1633,

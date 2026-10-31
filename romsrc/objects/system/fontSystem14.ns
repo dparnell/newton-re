@@ -1,3 +1,4 @@
-// fontSystem14, and what only it reaches
+// fontSystem14: a font frame for the 14-point System (Espy) font, plain - one of
+// the system's standard fonts, ready made for templates and code to use.
 
-fontSystem14 := {family: 'espy, face: 0, size: 14};
+fontSystem14 := {family: 'espy, face: kFaceNormal, size: 14};

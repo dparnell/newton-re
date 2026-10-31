@@ -1,4 +1,8 @@
-// classinfoEnabler, and what only it reaches
+// classinfoEnabler: the methods of a class info object - NewtonScript's view
+// of a C++ protocol implementation's TClassInfo (src/protocols/): its interface
+// and implementation names, signature and version, New and Destroy for an
+// instance, its capabilities, and Dispatch to call into it.  All are natives;
+// classinfoPrototype is the frame they are sent to.
 
 classinfoEnabler := {
 	InterfaceName: {class: #132, funcPtr: 7252307, numArgs: 0},

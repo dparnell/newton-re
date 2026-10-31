@@ -1,3 +1,5 @@
-// defaultSilentPrefInfo, and what only it reaches
+// defaultSilentPrefInfo: the proto of protoTransportPrefs' silentPrefs - the
+// "Show status dialogs" check box of a transport's preferences, which sets the
+// autoStatus configuration slot.
 
 defaultSilentPrefInfo := {text: "Show status dialogs", configuration: 'autoStatus};

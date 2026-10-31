@@ -1,4 +1,7 @@
-// calendarStuff, and what only it reaches
+// calendarStuff: magic pointer @25, a frame of Date Book functions for changing
+// meetings and repeating meetings (changing one, and turning annotated
+// instances outside a new start or stop date into exceptions) that code outside
+// the Date Book reaches through the magic pointer.
 
 calendarStuff := {
 	ChangeMeeting: ChangeMeeting,

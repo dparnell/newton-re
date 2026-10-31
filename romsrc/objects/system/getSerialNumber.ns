@@ -1,3 +1,5 @@
-// getSerialNumber, and what only it reaches
+// getSerialNumber: the native that reads the unit's serial number chip (a
+// binary, or nil when it cannot be read); CheckSerialNumber
+// (bootScriptwannabes.ns) compares it with the internal store's signature.
 
 getSerialNumber := {class: #132, funcPtr: 7048294, numArgs: 0};

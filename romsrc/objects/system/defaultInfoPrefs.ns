@@ -1,6 +1,10 @@
-// defaultInfoPrefs, and what only it reaches
+// defaultInfoPrefs: the proto of protoTransportPrefs' infoPrefs - the "i" (info)
+// button of a transport's preferences slip: help, the transport's title, and
+// closing the slip.
 
 defaultInfoPrefs := {
+	// the help item: closes the help book if it is open, else opens help at
+	// "Route" (l1, the transport, is fetched but not used)
 	DoInfoHelp: func() begin
 		local l1, tinyTim;
 		l1 := GetRoot().(appSymbol);

@@ -1,8 +1,14 @@
-// defRotateFunc, and what only it reaches
+// defRotateFunc: the ReOrientToScreen method of floating slips (the Assistant,
+// the Auto Dock slip and many others): when the screen is rotated it closes
+// the view, drops its saved viewBounds if they no longer fit the application
+// area (so the template's own are used), and opens it again.
 
 defRotateFunc := func() begin
 	local box, displayParams2;
 	box := self:GlobalBox();
+	// looks like a ROM bug: the last two tests compare appAreaGlobalLeft with both
+	// box.left and box.top, where appAreaGlobalTop was presumably meant for the
+	// vertical ones (appAreaHeight is also added to the left, not the top)
 	self:_Close();
 	if ((((((displayParams2 := displayParams).appAreaGlobalLeft + displayParams2.appAreaWidth) < box.right) or ((displayParams2.appAreaGlobalLeft + displayParams2.appAreaHeight) < box.bottom)) or (displayParams2.appAreaGlobalLeft > box.left)) or (displayParams2.appAreaGlobalLeft > box.top)) then begin
 			RemoveSlot(self, 'viewBounds)

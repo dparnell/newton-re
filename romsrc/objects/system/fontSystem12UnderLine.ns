@@ -1,3 +1,4 @@
-// fontSystem12UnderLine, and what only it reaches
+// fontSystem12UnderLine: a font frame for the 12-point System (Espy) font, underlined - one of
+// the system's standard fonts, ready made for templates and code to use.
 
-fontSystem12UnderLine := {family: 'espy, face: 4, size: 12};
+fontSystem12UnderLine := {family: 'espy, face: kFaceUnderline, size: 12};

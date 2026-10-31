@@ -1,9 +1,19 @@
-// bootSoupwannabes, and what only it reaches
+// bootSoupwannabes: the soups every internal store has.  bootRunInitScripts
+// creates each one the store lacks from its soupDef, and adds the
+// initialEntries (an array, or a function returning one): the alarms, In and
+// Out Boxes, the Extras Drawer's entries, the Notepad, the calendar and to-do
+// soups, and the directory of the built-in applications' soups.
 
 bootSoupwannabes := [|Array|:
 	{initialEntries: nil, soupDef: soupDef},
 	{initialEntries: nil, soupDef: @inboxSoupDef},
 	{initialEntries: nil, soupDef: @outboxSoupDef},
+	// the Extras Drawer soup, with an entry for each built-in icon: the
+	// applications and tools (ROMFormEntry: opens app), actions (ROMScriptEntry:
+	// TapAction runs; it returns whether the drawer closes afterwards), the soups'
+	// icons in the Storage folder (ROMSoupEntry, labels '_soups) and the button
+	// bar's icons (labels '_buttonBar).  icon and iconPro index the ROM's icons
+	// (extrasRomIcons.ns), sequence orders them
 	{
 		initialEntries: [|Array|:
 			{
@@ -240,6 +250,7 @@ bootSoupwannabes := [|Array|:
 				labels: '_buttonBar,
 				_tagList: [|Array|: '_icon, '_noBackup, '_buttonBar],
 				TapAction: func() begin
+					// 114 is the undo command's code (as the Undo button posts it)
 					PostCommand('application, 114);
 					GetUserConfig('ExtraAlwaysClose)
 				end,
@@ -278,6 +289,7 @@ bootSoupwannabes := [|Array|:
 		soupDef: @extrasSoupDef
 	},
 	{
+		// the Notepad soup starts empty
 		initialEntries: func() begin
 			[Array: ]
 		end,
@@ -290,6 +302,9 @@ bootSoupwannabes := [|Array|:
 	{initialEntries: nil, soupDef: @todoSoupDef},
 	{initialEntries: nil, soupDef: @todo2SoupDef},
 	{
+		// the system directory ("meta") soup: an entry per built-in application's data
+		// saying the application provides its own description of its soups
+		// (builtInMetaData)
 		initialEntries: [|Array|:
 			{soup: uCardPositionAlertButton, app: 'calendar, builtInMetaData: true},
 			{soup: uCardPositionAlertButton, app: 'cardfile, builtInMetaData: true},
@@ -314,6 +329,7 @@ bootSoupwannabes := [|Array|:
 
 alarms := "Alarms";
 
+// the alarms soup (soupDef: the first of the array above)
 soupDef := {
 	name: systemAlarmSoup,
 	userName: alarms,

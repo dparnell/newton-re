@@ -1,13 +1,21 @@
-// blindEntryLine, and what only it reaches
+// blindEntryLine: an input line that hides what is written in it - each
+// character shows as a bullet (dummyChar) while the real text is kept in
+// realText.  The password slip's three lines (old, new and confirmed password)
+// are built from it.
 
 blindEntryLine := {
-	viewJustify: 8396848,
+	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 	viewBounds: {left: 0, top: 0, right: -10, bottom: 26},
 	viewLineSpacing: 24,
 	indent: 110,
-	entryFlags: 513,
+	// the line recognises no handwriting (no recognition flags): the password is
+	// typed
+	entryFlags: vVisible + vClickable,
 	realText: uCardPositionAlertButton,
 	dummyChar: $\u2022,
+	// the entry line's text changed: brings realText up to date (characters
+	// deleted before the caret, or new ones inserted there) and puts bullets in the
+	// line in place of the new characters
 	textChanged: func() begin
 		len := StrLen((text := entryLine.text));
 		len2 := StrLen(realText);
@@ -27,6 +35,7 @@ blindEntryLine := {
 					SetKeyView(entryLine, offset)
 				end))
 	end,
+	// sets the real text to a1 and shows as many bullets, with the caret at the end
 	UpdateText: func(a1) begin
 		copy := Clone(a1);
 		realText := a1;
@@ -37,6 +46,7 @@ blindEntryLine := {
 		SetValue(entryLine, 'text, copy);
 		entryLine:SetHilite(9999, 9999, true)
 	end,
+	// a tap (with a click) makes the line the key view, the caret at its end
 	viewClickScript: func(unit) begin
 		playsound(@click);
 		SetKeyView(entryLine, 99999);

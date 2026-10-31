@@ -1,4 +1,9 @@
-// additionalBootShiftKeyfn, and what only it reaches
+// additionalBootShiftKeyfn: the rest of the boot-time "safe start".  When the
+// pen is held near the top or left of the screen as the internal store's
+// packages are about to be activated, ActivateStorePackages (builtinFunctions.ns)
+// asks whether to activate them; if the answer is No and the pen is near the
+// top, it calls this, which makes the Notepad (paperroll) the blessed
+// application - the one opened at start-up - and saves the user configuration.
 
 additionalBootShiftKeyfn := func() begin
 	userConfiguration.blessedapp := 'paperroll;

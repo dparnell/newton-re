@@ -1,4 +1,6 @@
-// gtpens, and what only it reaches
+// gtpens: the stylus pictures (bits and mask) drawn when the system animates
+// writing - AnimateSimpleStroke draws a stroke with the third one moving along
+// it (src/views/ShapeVerbs.cpp).
 
 gtpens := [|Array|:
 	{

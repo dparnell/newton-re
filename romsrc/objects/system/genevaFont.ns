@@ -1,4 +1,6 @@
-// genevaFont, and what only it reaches
+// genevaFont: magic pointer @104, the font family frame of the Simple (Geneva)
+// font, tsSimple: its screen font data, Helvetica scaled by 1.1 (psScale, 16.16
+// fixed point) for printing, the sizes the user is offered.
 
 genevaFont := {
 	name: "Simple",
@@ -14,5 +16,5 @@ genevaFont := {
 	boldItalicData: nil,
 	userSizes: [|Array|: 9, 10, 12, 18],
 	usable: true,
-	tsID: 2
+	tsID: tsSimple
 };

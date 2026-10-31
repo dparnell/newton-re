@@ -1,4 +1,8 @@
-// confirmButtonLists, and what only it reaches
+// confirmButtonLists: magic pointer @543, the standard button sets of
+// ModalConfirm and AsyncConfirm: a buttonList given as a symbol ('okCancel,
+// 'yesNoDefaultNo, ...) is looked up here, anything else that is not an array
+// means okCancel.  value is what the button answers; keyValue 'default is the
+// button Return chooses, 'Close the one closing the slip chooses.
 
 confirmButtonLists := {
 	okCancel: [|Array|:

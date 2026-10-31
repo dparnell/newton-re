@@ -1,4 +1,6 @@
-// continents, and what only it reaches
+// continents: magic pointer @454, the regions the world picker (Time Zones'
+// map) can show, each a box of latitudes and longitudes in the same units as
+// cities.ns (degrees times 2^29/360, longitude counted eastwards).
 
 continents := {
 	continentalUSA: {

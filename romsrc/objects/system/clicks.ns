@@ -1,4 +1,8 @@
-// clicks, and what only it reaches
+// clicks: the pen click sounds.  Clicker() plays one of these for each tap when
+// the pen sound effects preference is on, stepping through the click song
+// (_clicksong.ns holds indexes into this array).  The first is the ordinary
+// @click; the others are the same kind of 8-bit sample at other sampling rates,
+// so they sound as other notes.
 
 clicks := [|Array|:
 	@click,

@@ -1,4 +1,16 @@
-// builtinFunctions, and what only it reaches
+// builtinFunctions: the ROM's global functions - the frame of every global
+// function NewtonScript code can call by name (magic pointer table 1's entry
+// 2; gROMBuiltinFunctions in src/frames/ObjectHeap.cpp).  A global function
+// call looks in the functions frame (vars.functions, where packages and the
+// system add their own) and then here.  Most entries are natives,
+// {class: #132, funcPtr, numArgs}: #132 is the native function class (0x132),
+// funcPtr times 4 the address of the C function - usually a slot of the ROM's
+// patchable jump table at 0x01A00000, else the code itself - and numArgs how
+// many arguments it takes (src/frames/NativeFunctions.cpp binds them to the
+// reconstruction's C++).  The rest are functions written in NewtonScript.
+// What each function does is documented in the Newton Programmer's Reference
+// (global functions) where it is public; the slots are in no particular
+// order.  The objects after the frame are what only it reaches.
 
 builtinFunctions := {
 	setClass: {class: #132, funcPtr: 6911915, numArgs: 2},
@@ -2525,10 +2537,10 @@ builtinFunctions := {
 	end,
 	TotalTextBounds: compile(
 		constants: {
-			kLiteral_421835: '{viewClass: clEditView, viewFlags: vNoScripts, viewFormat: 0, viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, ReOrientToScreen: @defRotateFunc}
+			kLiteral_421835: '{viewClass: clEditView, viewFlags: vNoScripts, viewFormat: vfNone, viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, ReOrientToScreen: @defRotateFunc}
 		},
 		func(frame4, a2) begin
-			frame2 := {_proto: '{viewClass: clParagraphView, viewFormat: 0, viewFlags: vCalculateBounds + vNoScripts}};
+			frame2 := {_proto: '{viewClass: clParagraphView, viewFormat: vfNone, viewFlags: vCalculateBounds + vNoScripts}};
 			local frame2;
 			(foreach item in '[Array: text, styles, viewBounds, viewFont, textFlags, recConfig, viewLineSpacing] do begin
 					if frame4.(item) then begin
