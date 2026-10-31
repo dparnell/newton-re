@@ -1,4 +1,9 @@
-// locationPicker, and what only it reaches
+// locationPicker: the list of places of a location soup (spots: cities,
+// countries, states) with A-Z tabs and scroll arrows, used by locationPopup
+// and countryLocPicker. When countryAndName is set it lists one country's
+// cities (with their regions) and has a button at the top to choose the
+// country. The picked entry goes to SetResult; Affirmative hands it (or its
+// returnSlot) to context:pickActionScript.
 
 locationPicker := {
 	viewClass: clView,
@@ -7,14 +12,17 @@ locationPicker := {
 	viewJustify: vjParentFullH + vjParentFullV,
 	viewFormat: vfFillWhite + vfRound(8),
 	currentCountry: nil,
+	// A rounded frame around the picker.
 	viewDrawScript: func() begin
 		local box;
 		box := self:LocalBox();
 		self:DrawShape(MakeRoundRect(0, 0, box.right, box.bottom, 8), '{penPattern: 5, pensize: 2, fillPattern: 0})
 	end,
+	// The scroll arrow keys scroll the list.
 	viewScroll2DScript: func(arrowDirection, a2) begin
 		(if (arrowDirection = 'up) then cityList:viewScrollUpScript() else (if (arrowDirection = 'down) then cityList:viewScrollDownScript()))
 	end,
+	// The entry picked.
 	SetResult: func(entry) begin
 		(result := entry)
 	end,
@@ -25,6 +33,8 @@ locationPicker := {
 		cityList,
 		tabs,
 		upDown,
+		// the country button (shown only when listing a country's cities): it pops up
+		// a locationPopup of countries and then shows that country's cities
 		{
 			viewBounds: {left: 3, top: 3, right: -26, bottom: 18},
 			viewJustify: 8388662,
@@ -41,6 +51,8 @@ locationPicker := {
 				@locationPopup:New({spots: @countrySoupName, result: 'symbol, default: GetCountryEntry(currentCountry)[0]}, offsetRect2, self);
 				self:hilite(nil)
 			end,
+			// A country was chosen (index2 is its symbol): query its cities, sorted by
+			// name and region, and select the first.
 			pickActionScript: func(index2) begin
 				local locationSoup, copy;
 				locationSoup := GetLocationSoup(spots);
@@ -62,10 +74,14 @@ locationPicker := {
 	upDown: nil
 };
 
+// the list of places: a protoSoupOverview on a query of the location soup
 cityList := {
 	viewFormat: vfFillWhite,
 	preallocatedContext: 'cityList,
 	viewFlags: vVisible + vApplication + vClickable,
+	// One line: the place's name (and its region when countryAndName). While
+	// hiliteHack counts the lines being made, the line of the current result is
+	// highlighted.
 	Abstract: func(items2Item, copy) begin
 		if hiliteHack then begin
 				if (items2Item = result) then begin
@@ -78,6 +94,7 @@ cityList := {
 	viewBounds: {left: 3, top: 3, right: -26, bottom: -2},
 	_proto: @protoSoupOverview,
 	cursor: nil,
+	// Updates the scroll arrows after the lines are made.
 	SetupAbstracts: func(copy) begin
 		inherited:SetupAbstracts(copy);
 		(if Visible(upDown) then upDown:FiddleWithArrows())
@@ -88,6 +105,9 @@ cityList := {
 	viewJustify: vjParentFullH + vjParentFullV,
 	checkScrollability: true,
 	hiliteHack: nil,
+	// Queries the location soup: by country and then name for a country's
+	// cities, else by name; goes to initialSpot (an entry or a key) or the
+	// user's country.
 	viewSetupFormScript: compile(
 		constants: {
 			kLiteral_435a99: '{type: index, indexPath: [Array: country, name, region]}
@@ -130,12 +150,15 @@ cityList := {
 				end)
 		end),
 	canScrollDown: nil,
+	// A tap on line a1 picks its entry.
 	HitItem: func(a1, trackScrollingItem, trackScrollingItem2) begin
 		(if (a1 >= 0) then self:SetResult(cursor:clone():move(a1)))
 	end,
 	viewEffect: 165920,
 	viewFont: tsSystem + tsSize(10) + tsBold,
 	canScrollUp: nil,
+	// Makes the lines, highlighting the result, and sets the tabs to the first
+	// entry's letter.
 	viewSetupChildrenScript: func() begin
 		local entry, l2;
 		hiliteHack := 0;
@@ -148,6 +171,8 @@ cityList := {
 	selectIndent: 0
 };
 
+// the A-Z tabs at the right: a tap moves the list to that letter (within the
+// country when countryAndName)
 tabs := {
 	viewBounds: {left: -25, top: 0, right: 0, bottom: 137},
 	viewJustify: vjParentRightH,
@@ -160,6 +185,7 @@ tabs := {
 	_proto: @azverttabs
 };
 
+// the scroll arrows, showing 'more when the list can scroll that way
 upDown := {
 	viewBounds: {left: -22, top: 3, right: -4, bottom: 35},
 	viewJustify: vjParentRightH + vjSiblingBottomV,

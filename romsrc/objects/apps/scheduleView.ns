@@ -1,4 +1,8 @@
-// scheduleView, and what only it reaches
+// scheduleView: the Dates application's schedule of several days (up to a
+// week, and the Week view): a column per selected day (DayTable, each a
+// dayView of that day's meetings) under a row of day labels
+// (HeaderLabels), scrolled half an hour (16 pixels) at a time between
+// startTime and stopTime, the minutes after midnight shown.
 
 scheduleView := {
 	debug: 165689,
@@ -14,7 +18,11 @@ scheduleView := {
 	GridBox: nil,
 	labelFont: tsSystem + tsSize(9) + tsBold,
 	HourFont: tsSystem + tsSize(9) + tsBold,
+	// a date format spec for the day labels
 	dayStrSpec: 2793,
+	// Scrolls so that meeting a1 (not a note) is in view: if it starts outside
+	// the times shown, shows from two hours before its start hour (1440 minutes
+	// in a day).
 	ScrollTo: func(a1) begin
 		local most, l2, l3;
 		(if (a1.viewStationery <> 'cribNote) then (if (if ((l2 := ((most := (a1.mtgStartDate mod 1440)) - startTime)) >= 0) then (l2 < (ViewDuration - 30))) then nil else begin
@@ -29,6 +37,7 @@ scheduleView := {
 					DayTable:Dirty()
 				end))
 	end,
+	// The scroll arrows and scroller go to the day table.
 	viewScrollUpScript: func(amount) begin
 		DayTable:viewScrollUpScript(amount)
 	end,
@@ -47,11 +56,16 @@ scheduleView := {
 	HeaderLabels: nil
 };
 
+// the table of day columns (tabProtos: one dayView per day), 768 pixels for
+// 24 hours
 DayTable := {
 	viewWidth: 0,
+	// Paints out the AM/PM label of the first hour line before a scroll.
 	zapAMPM: func() begin
 		DayTable:DrawShape(MakeRect(0, lineHeight, 15, (2 * lineHeight)), whitePat)
 	end,
+	// Puts the caret in the first day, unless the meeting notes or a to-do slip
+	// are open.
 	viewSetupDoneScript: func() begin
 		local childViewFrame;
 		(if (if (not Visible(MeetingNotes)) then (not Visible(ToDoSlip))) then begin
@@ -60,11 +74,14 @@ DayTable := {
 			end)
 	end,
 	viewFormat: 0,
+	// Draws the hour grid.
 	viewDrawScript: func() begin
 		DrawMeetingGrid(lineHeight)
 	end,
 	viewHeight: 768,
 	viewFlags: vVisible + vClipping + vClickable + vGesturesAllowed,
+	// Sets the up/down scroller's data (the hours that have meetings, 9999 for
+	// none), view and scroll rectangles, in hours.
 	calculateScrollRects: func() begin
 		l1 := 769;
 		l2 := -1;
@@ -115,6 +132,8 @@ DayTable := {
 	tabWidths: nil,
 	indentX: 15,
 	viewOriginY: 0,
+	// Scrolls amount hours later (two half-hour lines an hour), until midnight
+	// shows.
 	viewScrollDownScript: func(amount) begin
 		local l1;
 		(if (stopTime < 1440) then begin
@@ -125,6 +144,7 @@ DayTable := {
 	viewJustify: vjParentFullH + vjParentFullV,
 	tabAcross: nil,
 	tabValues: nil,
+	// Scrolls amount hours earlier, until midnight at the start shows.
 	viewScrollUpScript: func(amount) begin
 		local l1;
 		(if (startTime > 0) then begin
@@ -135,15 +155,19 @@ DayTable := {
 			end)
 	end,
 	tabDown: 1,
+	// Each column is as tall as the table.
 	tabSetup: func(a1, a2, a3) begin
 		(a1.viewBounds.bottom := viewHeight)
 	end,
+	// Starts scrolled to startTime.
 	viewSetupFormScript: func() begin
 		self.viewOriginY := ((startTime div 30) * lineHeight);
 		(self.viewBounds := SetBounds(0, 12, 0, 0))
 	end,
 	tabHeights: 0,
 	viewClass: clView,
+	// Called by SlideEffect after a scroll: moves the origin and the times
+	// shown by a2 hours (a1 pixels).
 	doscrollscript: func(a1, a2) begin
 		local l1;
 		upDownScroller:AdjustArrows();
@@ -154,6 +178,10 @@ DayTable := {
 	end,
 	tabProtos: @dayView,
 	debug: 8221,
+	// For a week or less: lays out a column per selected date and gets each
+	// day's meetings (SubKids) - day by day when the dates are not consecutive,
+	// else all at once and split up by day. Five weekdays starting on a
+	// Monday make it the Week view.
 	viewSetupChildrenScript: func() begin
 		(if ((numDays := Length(selectedDates)) <= 7) then begin
 				viewWidth := ((box := self:GlobalBox()).right - box.left);
@@ -193,6 +221,7 @@ DayTable := {
 	preallocatedContext: 'DayTable
 };
 
+// the labels of the days above the columns
 HeaderLabels := {
 	debug: 153023,
 	viewClass: clView,
@@ -203,9 +232,11 @@ HeaderLabels := {
 	viewDrawScript: func() begin
 		DrawDateLabels(self:GlobalBox(), selectedDates)
 	end,
+	// A tap on a day's label (with several shown) flashes it and shows that day
+	// alone.
 	viewgesturescript: func(unit, gesture) begin
 		local count, box, l3, l4, least, l6;
-		(if (gesture = 49) then (if ((count := Length(selectedDates)) > 1) then begin
+		(if (gesture = aeTap) then (if ((count := Length(selectedDates)) > 1) then begin
 					box := self:GlobalBox();
 					l3 := (GetPoint(0, unit) - box.left);
 					l4 := ((box.right - box.left) div count);

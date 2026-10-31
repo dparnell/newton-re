@@ -1,4 +1,7 @@
-// printerSerialPicker, and what only it reaches
+// printerSerialPicker: a floater listing the printers set up on the serial
+// port ('serialSym in AvailablePrinters) to choose from. Its notifyOnClose
+// view is told ChooserDone(selection, selection, 'serialSym) when it is
+// closed.
 
 printerSerialPicker := {
 	viewFlags: vApplication + vFloating + vClickable,
@@ -7,6 +10,7 @@ printerSerialPicker := {
 	currentSelection: uCardPositionAlertButton,
 	notifyOnClose: nil,
 	debug: 23994396,
+	// Takes the keys, so that the list can be chosen from with them.
 	viewSetupDoneScript: func() begin
 		SetKeyView(self, 0);
 		inherited:?viewSetupDoneScript()
@@ -46,6 +50,7 @@ printerSerialPicker := {
 };
 
 _defaultButton_4 := {
+	// The close box: report the selection and close.
 	buttonClickScript: func() begin
 		if (notifyOnClose exists) then begin
 				notifyOnClose:ChooserDone(currentSelection, currentSelection, 'serialSym)
@@ -56,15 +61,18 @@ _defaultButton_4 := {
 	_proto: @protoCancelButton
 };
 
+// the list of serial printers' names, showing the current selection
 serialPrinterList := {
 	viewJustify: vjCenterH,
 	viewBounds: {left: 10, top: 25, right: 170, bottom: 25},
 	useScrollers: true,
 	viewLines: 7,
 	ListItems: nil,
+	// The power-off handler: closes the picker when the machine goes off.
 	PowerOffScript: func(a1) begin
 		(if (a1 = 'okToPowerOff) then true else (if (a1 = 'PowerOff) then base:Close()))
 	end,
+	// Lists the serial printers and highlights the current one.
 	viewSetupFormScript: func() begin
 		AddPowerOffHandler(self);
 		ListItems := [Array: ];
@@ -79,6 +87,7 @@ serialPrinterList := {
 				self:HiliteLine(temp)
 			end)
 	end,
+	// A tap on line a1 selects that printer.
 	buttonClickScript: func(a1) begin
 		(currentSelection := ListItems[a1])
 	end,

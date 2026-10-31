@@ -1,3 +1,4 @@
-// canTimeFilter, and what only it reaches
+// canTimeFilter: the Canadian (English) time template for the protoCharEdit
+// corrector: the US one with its own format.
 
 canTimeFilter := {_proto: @usTimeFilter, format: format};

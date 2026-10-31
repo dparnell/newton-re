@@ -1,3 +1,4 @@
-// rcInkorText, and what only it reaches
+// rcInkorText: a recognition configuration allowing text and ink-word
+// recognition but not raw ink.
 
 rcInkorText := {allowTextRecognition: true, doInkWordRecognition: true, doRawInkRecognition: nil};

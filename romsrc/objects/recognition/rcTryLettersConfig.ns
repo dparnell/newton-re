@@ -1,3 +1,6 @@
-// rcTryLettersConfig, and what only it reaches
+// rcTryLettersConfig: ROM_rcTryLettersConfig, used by "Try Letters" in the
+// picker of a double-tapped word: recognises letter strings that are in no
+// dictionary, with no segmentation.
 
-rcTryLettersConfig := {_proto: @rcDefaultConfig, letterSpaceCursiveOption: nil, inputmask: 16384};
+// the NPR says its inputMask is vLettersAllowed+vNumbersAllowed; the ROM's is letters only
+rcTryLettersConfig := {_proto: @rcDefaultConfig, letterSpaceCursiveOption: nil, inputmask: vLettersAllowed};

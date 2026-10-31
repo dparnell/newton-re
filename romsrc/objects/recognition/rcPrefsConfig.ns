@@ -1,4 +1,5 @@
-// rcPrefsConfig, and what only it reaches
+// rcPrefsConfig: a recognition configuration that allows every kind of
+// recognition, leaving the choice to the user's preferences.
 
 rcPrefsConfig := {
 	allowTextRecognition: true,

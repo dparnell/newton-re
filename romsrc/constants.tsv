@@ -804,3 +804,16 @@ kDockStateKeyboard	9
 vjOneLineOnly	0x800000
 kNoMemory	-7000
 memFullErr	-108
+# apps, recognition, views: the Newton Programmer's Reference 2.0 (Table 8-4/8-5 dictionary IDs; Notify's levels, kNotifyAlert as the ROM passes it; Gestalt's kGestalt_SystemInfo, also src/ddk/NewtonGestalt.h)
+kLocalDateDictionary	110
+kLocalTimeDictionary	111
+kLocalPhoneDictionary	112
+kLocalNumberDictionary	113
+kMoneyOnlyDictionary	118
+kGestalt_SystemInfo	0x1000003
+# Dates and time (calendar, the date and time popups): the Newton Programmer's Guide 2.0, chapter 19 "Built-in Applications and System Data", Summary
+kMaxyear	2919
+kYearMissing	2920
+# Gestalt selectors: the DDK's NewtonGestalt.h (src/ddk/NewtonGestalt.h)
+kGestalt_SoftContrast	0x2000003
+kGestalt_Ext_VolumeInfo	0x2000009

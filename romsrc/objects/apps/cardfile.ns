@@ -1,4 +1,6 @@
-// cardfile, and what only it reaches
+// cardfile: the floater the Names application (Cardfile) is built on in the
+// ROM; the application itself is in the Cardfile ROM extension
+// (romsrc/rex/Cardfile).
 
 cardfile := {
 	viewFlags: vApplication + vClipping + vFloating + vClickable,

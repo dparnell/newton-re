@@ -1,4 +1,5 @@
-// rcNoRecog, and what only it reaches
+// rcNoRecog: a recognition configuration with every recogniser off (the
+// view collects ink only).
 
 rcNoRecog := {
 	doTextRecognition: nil,

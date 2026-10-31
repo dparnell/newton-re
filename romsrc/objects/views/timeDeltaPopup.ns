@@ -1,8 +1,12 @@
-// timeDeltaPopup, and what only it reaches
+// timeDeltaPopup: protoTimeDeltaPopup, a pop-up that sets a length of time
+// (protoTimeDeltaPicker). Opened by :New(value, params, bbox, context):
+// params gives the increment and optionally minValue and maxValue. Calls
+// context:pickActionScript(value) when closed.
 
 timeDeltaPopup := {
 	viewBounds: {left: 0, top: 0, right: 137, bottom: 32},
 	params: nil,
+	// Opens the popup with the values above.
 	New: func(a1, a2, a3, a4) begin
 		local init;
 		(init := self:Init()).value := a1;
@@ -10,6 +14,7 @@ timeDeltaPopup := {
 		init.context := a4;
 		init:popup(a3)
 	end,
+	// The close box: hands the length to the context.
 	Affirmative: func() begin
 		context:?pickActionScript(value)
 	end,
@@ -17,6 +22,7 @@ timeDeltaPopup := {
 		{
 			viewBounds: {left: 2, top: 2, right: 121, bottom: 30},
 			viewJustify: 0,
+			// Takes the step and limits from params.
 			viewSetupFormScript: func() begin
 				minuteIncrement := params.increment;
 				if params.minValue then begin

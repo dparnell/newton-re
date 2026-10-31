@@ -1,12 +1,24 @@
-// timeIntervalPopup, and what only it reaches
+// timeIntervalPopup: a pop-up for a range of times on one day: two digital
+// clocks (start and stop) with the duration between them; tapping the
+// duration offers fixed lengths (pop). Opened by :New([start, stop],
+// increment, bbox, context), the times rounded to the increment. It tells
+// the context NewTime(start, stop) as they change and pickActionScript(start,
+// stop) when closed.
 
 timeIntervalPopup := {
 	stoplabel: "Stop time",
+	// The close box: hands the range to the context.
 	Affirmative: func() begin
 		context:?pickActionScript(startTime, stopTime)
 	end,
+	// Either clock changed: the start is kept on the day (basedate); a stop that
+	// follows a fixed length moves with the start (no later than midnight),
+	// else it is kept no earlier than the start.
 	TimeChanged: func() begin
 		startTime := max(basedate, start.Time);
+		// looks like a ROM bug: this clamps a Time slot or variable, not start.Time
+		// or stop.Time, so it has no effect on the clocks (midnite, which allows
+		// 24:00, is the stop clock's own slot)
 		Time := min((basedate + (if midnite then 1440 else 1439)), Time);
 		if spread then begin
 				stopTime := (stop.Time := min((basedate + 1440), (startTime + spread)));
@@ -21,6 +33,8 @@ timeIntervalPopup := {
 		base:Dirty();
 		context:?NewTime(startTime, stopTime)
 	end,
+	// Draws the labels and the duration (two lines, from GetDuration) with a
+	// popup diamond beside it.
 	viewDrawScript: func() begin
 		local duration, l2, l3, strFontWidth2, list;
 		duration := self:GetDuration((stopTime - startTime));
@@ -30,12 +44,12 @@ timeIntervalPopup := {
 		if (not StrFilled(duration[0])) then begin
 				l3 := (l3 - 6)
 			end else begin
-				strFontWidth2 := StrFontWidth(duration[0], 10240)
+				strFontWidth2 := StrFontWidth(duration[0], tsSystem + tsSize(10))
 			end;
 		if (not StrFilled(duration[1])) then begin
 				l2 := (l2 + 6)
 			end else begin
-				strFontWidth2 := max(strFontWidth2, StrFontWidth(duration[1], 10240))
+				strFontWidth2 := max(strFontWidth2, StrFontWidth(duration[1], tsSystem + tsSize(10)))
 			end;
 		strFontWidth2 := (((119 - strFontWidth2) div 2) - 12);
 		self:DrawShape((list := [Array: MakeText(startlabel, 0, 0, 123, 16), MakeText(stoplabel, 0, 48, 123, 64), '{font: tsSystem + tsSize(10), justification: center}, MakeText(duration[0], 0, l2, 123, (l2 + 16)), MakeText(duration[1], 0, l3, 123, (l3 + 16)), '{font: tsSystem + tsSize(9) + tsBold}, MakeText("\uFC01\u", strFontWidth2, 101, (strFontWidth2 + 20), 117)]), '{font: tsSystem + tsSize(10) + tsBold, justification: center})
@@ -47,6 +61,8 @@ timeIntervalPopup := {
 	increment: 5,
 	stop: nil,
 	startlabel: "Start time",
+	// Opens the popup: a1 is [start, stop], a2 the increment, a3 the bounds,
+	// a4 the context.
 	New: func(a1, a2, a3, a4) begin
 		local init, l2;
 		init := self:Init();
@@ -59,8 +75,10 @@ timeIntervalPopup := {
 		init.context := a4;
 		init:popup(a3)
 	end,
+	// midnight at the start of the start time's day
 	basedate: nil,
 	stepallocatecontext: [|Array|: 'start, start, 'stop, stop_2],
+	// the lengths offered by tapping the duration text
 	pop: [|Array|:
 		{item: minutes, skip: 30},
 		{item: "45 minutes", skip: 45},
@@ -68,17 +86,21 @@ timeIntervalPopup := {
 		{item: "1 1/2 hours", skip: 90},
 		{item: "2 hours", skip: 120}
 	],
+	// Gives the clocks their times and increments.
 	viewSetupFormScript: func() begin
 		start.Time := startTime;
 		stop.Time := stopTime;
 		start.increment := increment;
 		stop.increment := increment;
+		// 1440 minutes in a day
 		(basedate := (startTime - (startTime mod 1440)))
 	end,
 	stopTime: nil,
+	// A tap on the duration text pops up the lengths.
 	viewClickScript: func(unit) begin
 		(if (if ((GetPoint(1, unit) - self:GlobalBox().top) > 96) then ((GetPoint(0, unit) - self:GlobalBox().left) < 99)) then DoPopup(pop, 4, 96, self))
 	end,
+	// A length was picked: the stop is that long after the start.
 	pickActionScript: func(index) begin
 		spread := pop[index].skip;
 		stopTime := (stop.Time := (startTime + spread));
@@ -87,12 +109,14 @@ timeIntervalPopup := {
 		context:?NewTime(startTime, stopTime)
 	end,
 	stepChildren: [stepChildren: start, stop_2],
+	// The duration text of a1 minutes.
 	GetDuration: func(a1) begin
 		DurationStr(a1)
 	end,
 	start: nil
 };
 
+// the start clock
 start := {
 	viewBounds: {left: 2, top: 22, right: 121, bottom: 50},
 	viewFormat: 0,
@@ -101,6 +125,8 @@ start := {
 	_proto: @protoDigitalClock
 };
 
+// the stop clock, which may show midnight (24:00); stepping it by hand forgets
+// the fixed length
 stop_2 := {
 	_proto: @protoDigitalClock,
 	viewBounds: {left: 2, top: 70, right: 121, bottom: 98},

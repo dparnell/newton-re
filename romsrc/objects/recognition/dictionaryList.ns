@@ -1,12 +1,23 @@
-// dictionaryList, and what only it reaches
+// dictionaryList: the built-in dictionaries the recognisers know, one
+// protoDictionary frame each, from which the system's dictionary list is made
+// at boot (src/recognition/Dictionaries.h). In each frame: dictID is the id
+// scripts use (GetDictionary, recConfig.dictionaries); ROMDictID the
+// dictionary's number among the ROM's own Airus dictionaries, or
+// localDictSlot the slot of the locale bundle that holds it; linkedDictID a
+// further dictionary looked up with it; dictType 0 a word list, 1 a reverse
+// (spelling) list, 4 a lexical (format) dictionary; domainType the input
+// mask (view flags) whose fields it serves, its bottom bit (4097) marking a
+// word list the spelling checker is not to offer from; status 1 for one
+// enabled by default. The user (31), Expand (35) and Auto Add (36) ones are
+// RAM dictionaries the user fills (limit: the most words they take).
 
 dictionaryList := [|Array|:
 	{
 		_proto: @protoDictionary,
 		name: "User (forward)",
-		dictID: 31,
+		dictID: kUserDictionary,
 		dictType: 0,
-		domainType: 4198400,
+		domainType: vCharsAllowed + vNameField,
 		order: 0,
 		status: 1,
 		count: 0,
@@ -19,7 +30,7 @@ dictionaryList := [|Array|:
 		dictID: 32,
 		ROMDictID: 2,
 		dictType: 0,
-		domainType: 4096,
+		domainType: vCharsAllowed,
 		order: 0,
 		status: 0
 	},
@@ -29,17 +40,17 @@ dictionaryList := [|Array|:
 		dictID: 33,
 		ROMDictID: 0,
 		dictType: 0,
-		domainType: 4096,
+		domainType: vCharsAllowed,
 		order: 0,
 		status: 0
 	},
 	{
 		_proto: @protoDictionary,
 		name: "symbols",
-		dictID: 40,
+		dictID: 40, // kSymbolsDictionary in the NPR (rcSingleCharacterConfig)
 		localDictSlot: 'recogSymbolsDictionary,
 		dictType: 0,
-		domainType: 4096,
+		domainType: vCharsAllowed,
 		order: 0,
 		status: 0
 	},
@@ -49,7 +60,7 @@ dictionaryList := [|Array|:
 		dictID: 121,
 		ROMDictID: 28,
 		dictType: 0,
-		domainType: 2097152,
+		domainType: vAddressField,
 		order: 0,
 		status: 1
 	},
@@ -76,12 +87,12 @@ dictionaryList := [|Array|:
 	{
 		_proto: @protoDictionary,
 		name: "commons (attributed) (forward)",
-		dictID: 0,
+		dictID: 0, // the common words, the first of a chain of four linked ones
 		linkedDictID: 15,
 		ROMDictID: 19,
 		reverseDictID: 15,
 		dictType: 0,
-		domainType: 6295552,
+		domainType: vCharsAllowed + vNameField + vAddressField,
 		order: 0,
 		status: 1
 	},
@@ -92,7 +103,7 @@ dictionaryList := [|Array|:
 		linkedDictID: 6,
 		ROMDictID: 20,
 		dictType: 1,
-		domainType: 6295552,
+		domainType: vCharsAllowed + vNameField + vAddressField,
 		order: 0,
 		status: 1
 	},
@@ -103,7 +114,7 @@ dictionaryList := [|Array|:
 		linkedDictID: 3,
 		ROMDictID: 17,
 		dictType: 0,
-		domainType: 6295552,
+		domainType: vCharsAllowed + vNameField + vAddressField,
 		order: 0,
 		status: 1
 	},
@@ -114,7 +125,7 @@ dictionaryList := [|Array|:
 		linkedDictID: 0,
 		localDictSlot: 'recogCommonsDictionary,
 		dictType: 0,
-		domainType: 6295552,
+		domainType: vCharsAllowed + vNameField + vAddressField,
 		order: 0,
 		status: 1
 	},
@@ -124,7 +135,7 @@ dictionaryList := [|Array|:
 		dictID: 34,
 		ROMDictID: 3,
 		dictType: 0,
-		domainType: 524288,
+		domainType: vDateField,
 		order: 0,
 		status: 0
 	},
@@ -134,7 +145,7 @@ dictionaryList := [|Array|:
 		dictID: 48,
 		ROMDictID: 22,
 		dictType: 0,
-		domainType: 4198400,
+		domainType: vCharsAllowed + vNameField,
 		order: 0,
 		status: 0
 	},
@@ -144,7 +155,7 @@ dictionaryList := [|Array|:
 		dictID: 45,
 		ROMDictID: 24,
 		dictType: 0,
-		domainType: 4198400,
+		domainType: vCharsAllowed + vNameField,
 		order: 0,
 		status: 0
 	},
@@ -154,7 +165,7 @@ dictionaryList := [|Array|:
 		dictID: 24,
 		ROMDictID: 29,
 		dictType: 0,
-		domainType: 4096,
+		domainType: vCharsAllowed,
 		order: 0,
 		status: 0
 	},
@@ -164,7 +175,7 @@ dictionaryList := [|Array|:
 		dictID: 8,
 		ROMDictID: 30,
 		dictType: 0,
-		domainType: 4096,
+		domainType: vCharsAllowed,
 		order: 0,
 		status: 0
 	},
@@ -174,47 +185,47 @@ dictionaryList := [|Array|:
 		dictID: 26,
 		ROMDictID: 31,
 		dictType: 0,
-		domainType: 4198400,
+		domainType: vCharsAllowed + vNameField,
 		order: 0,
 		status: 0
 	},
 	{
 		_proto: @protoDictionary,
 		name: "local time",
-		dictID: 111,
+		dictID: kLocalTimeDictionary,
 		localDictSlot: 'recogTimeDictionary,
 		dictType: 4,
-		domainType: 1048576,
+		domainType: vTimeField,
 		order: 0,
 		status: 1
 	},
 	{
 		_proto: @protoDictionary,
 		name: "local date",
-		dictID: 110,
+		dictID: kLocalDateDictionary,
 		localDictSlot: 'recogDateDictionary,
 		dictType: 4,
-		domainType: 524288,
+		domainType: vDateField,
 		order: 0,
 		status: 1
 	},
 	{
 		_proto: @protoDictionary,
 		name: "local phone",
-		dictID: 112,
+		dictID: kLocalPhoneDictionary,
 		localDictSlot: 'recogPhoneDictionary,
 		dictType: 4,
-		domainType: 262144,
+		domainType: vPhoneField,
 		order: 0,
 		status: 1
 	},
 	{
 		_proto: @protoDictionary,
 		name: "postal codes",
-		dictID: 116,
+		dictID: kPostalCodeDictionary,
 		ROMDictID: 107,
 		dictType: 4,
-		domainType: 8192,
+		domainType: vNumbersAllowed,
 		order: 0,
 		status: 0
 	},
@@ -231,18 +242,18 @@ dictionaryList := [|Array|:
 	{
 		_proto: @protoDictionary,
 		name: "local numbers&money",
-		dictID: 113,
-		linkedDictID: 118,
+		dictID: kLocalNumberDictionary,
+		linkedDictID: kMoneyOnlyDictionary,
 		localDictSlot: 'recogNumbersOnlyDictionary,
 		dictType: 4,
-		domainType: 8192,
+		domainType: vNumbersAllowed,
 		order: 0,
 		status: 1
 	},
 	{
 		_proto: @protoDictionary,
 		name: "local numbers only",
-		dictID: 117,
+		dictID: kNumbersOnlyDictionary,
 		localDictSlot: 'recogNumbersOnlyDictionary,
 		dictType: 4,
 		domainType: 0,
@@ -252,7 +263,7 @@ dictionaryList := [|Array|:
 	{
 		_proto: @protoDictionary,
 		name: "local money only",
-		dictID: 118,
+		dictID: kMoneyOnlyDictionary,
 		localDictSlot: 'recogMoneyOnlyDictionary,
 		dictType: 4,
 		domainType: 0,

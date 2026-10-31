@@ -1,6 +1,17 @@
-// worldClock, and what only it reaches
+// worldClock: the Time Zones application. A floater showing a world map
+// (lit by the time of day), with the home city (userConfiguration.location)
+// at the top and an "away" city (target, the current entry of the cities
+// soup, browsed with the scroll arrows) at the bottom, each with its local
+// time, and the distance between them. Tapping the map pops up the nearest
+// cities; tapping the home or away line chooses another city or worksite.
+// The Show button opens forms over the map (currentForm): all the city's
+// info, its notes, its editable details, its country's info, or two clocks.
+// Users can add their own cities (New). It also searches the cities for
+// Find (find). Its forms are defined after it.
 
 worldClock := {
+	// Adds city a1 (in the home country unless it has one); a2 also makes it a
+	// worksite (emporium), a3 makes it the home city.
 	NewCity: func(a1, a2, a3) begin
 		if (not a1.country) then begin
 				a1.country := userConfiguration.location.country
@@ -9,6 +20,9 @@ worldClock := {
 		(if a3 then self:SetLocation(a1))
 	end,
 	shift: 0,
+	// Makes cityFromAlias the home city and a2 the current worksite, undoably:
+	// sets the location, country and area code in the user configuration and
+	// updates the sender popups, the map and the system's time seed.
 	SetLocationAndEmporium: func(cityFromAlias, a2) begin
 		AddUndoAction('SetLocationAndEmporium, [Array: userConfiguration.location, userConfiguration.currentEmporium]);
 		SetUserConfig('location, cityFromAlias);
@@ -61,6 +75,8 @@ worldClock := {
 		pix: nil,
 		appBase: nil
 	},
+	// Unregisters from the cities soup and keeps an alias to the away city for
+	// next time.
 	viewQuitScript: compile(
 		constants: {
 			kROM_251: @citySoupName
@@ -76,6 +92,8 @@ worldClock := {
 			list := nil;
 			ClearUndoStacks()
 		end),
+	// After a soup change: moves off deleted entries of the cursor and redraws
+	// if the city changed.
 	Validate: func() begin
 		local l1;
 		l1 := (target := cards:entry());
@@ -90,13 +108,18 @@ worldClock := {
 			end)
 	end,
 	preallocatedContext: 'worldClock,
+	// Draws the map picture (pix), unless a form covers it.
 	viewDrawScript: func() begin
 		(if (not currentForm) then self:DrawShape(pix, nil))
 	end,
+	// _newKeyScript, _actionKeyScript, _showKeyScript: the command-key
+	// equivalents of the New, routing and Show buttons (_keyCommands).
 	_newKeyScript: func(a1) begin
 		self:CommonKeyScript(_newKeyButton)
 	end,
 	target: nil,
+	// Opens form (the name of one of the forms below; nil for the map), closing
+	// the one open, and resizes the floater to the form's bigSized.
 	SetForm: func(form) begin
 		if form then begin
 				form := GetVariable(self, form)
@@ -130,18 +153,22 @@ worldClock := {
 	notesform: nil,
 	viewFlags: vApplication + vClipping + vClickable,
 	_showKeyButton: nil,
+	// Makes a1 the home city.
 	SetLocation: func(a1) begin
 		self:SetLocationAndEmporium(a1, nil)
 	end,
+	// Redraws the times every minute.
 	viewIdleScript: func() begin
 		self:UpdateLocationFields();
 		60000
 	end,
 	list: nil,
+	// Presses button a1 when no form is open.
 	CommonKeyScript: func(a1) begin
 		(if (not currentForm) then PressButton(a1))
 	end,
 	ReOrientToScreen: @defRotateFunc,
+	// The routing slip's Delete: deletes the away city (undoably).
 	DeleteActionScript: func(a1, a2) begin
 		currentForm:?flush();
 		appBase:delete('DoDeleteScript, [Array: appBase.cards:entry()])
@@ -167,6 +194,8 @@ worldClock := {
 		'twoClocksform,
 		twoClocksform
 	],
+	// Makes a new city's position unique in the cities soup by nudging its
+	// latitude (the soup is indexed by longitude and latitude).
 	VerifyUniqueLocation: func(target) begin
 		local locationSoup, cursor, entry;
 		locationSoup := GetLocationSoup(@citySoupName);
@@ -182,6 +211,7 @@ worldClock := {
 	end,
 	_proto: @protoDragger,
 	currentForm: nil,
+	// Pops up the cities to choose the away city from.
 	SelectAwayCity: func() begin
 		local offsetRect2;
 		offsetRect2 := OffsetRect(self:GlobalBox(), -20, 152);
@@ -189,6 +219,8 @@ worldClock := {
 			self:SetNewLocation(index)
 		end})
 	end,
+	// Undoes a delete of city a1: removes the 'delete marker entry that hides a
+	// ROM city, or adds a user city back.
 	UnDeleteScript: func(a1) begin
 		local locationSoup, copy, cursor, entry;
 		AddUndoAction('DoDeleteScript, [Array: a1]);
@@ -210,6 +242,8 @@ worldClock := {
 		self:RebuildCardCursor(a1);
 		self:Retarget()
 	end,
+	// Adds city copy to the cities soup (unique position); a2 also makes it a
+	// worksite.
 	AddToCities: func(copy, a2) begin
 		self:VerifyUniqueLocation(copy);
 		if LocationEntryAdd(@citySoupName, copy) then begin
@@ -217,11 +251,15 @@ worldClock := {
 			end;
 		(if a2 then AddEmporium(copy))
 	end,
+	// Remakes the cities cursor (by country, name, region) and goes to a1.
 	RebuildCardCursor: func(a1) begin
 		cards := GetLocationSoup(@citySoupName):Query('{type: index, indexPath: [Array: country, name, region]});
 		(if (if a1 then (a1 <> 'deleted)) then cards:Goto(a1))
 	end,
 	allform: nil,
+	// Makes the map picture pix: the home city's name and time, the day and
+	// night band, the map scrolled so that home is in the middle, a dot at the
+	// away city, its name, time and distance.
 	UpdateLocationFields: compile(
 		constants: {
 			kBinaryFromHex: func(hex, cls) begin
@@ -240,6 +278,7 @@ worldClock := {
 		},
 		func() begin
 			local l1, location, countryEntryItem, countryEntryItem2, localTime2, l6, l7, text, text2, text3;
+			// the map is 214 by 107 pixels; shift scrolls it so that home is centred
 			if ((shift := (107 - LongitudeToCoordinate(userConfiguration.location.longitude, 214))) < 0) then begin
 					shift := (shift + 214)
 				end;
@@ -262,9 +301,12 @@ worldClock := {
 			pix := [Array: '{fillPattern: 5}, kLiteral_4db6e5, '{justification: center, transferMode: 2, font: @fontSystem10Bold}, MakeText(text2, 0, 0, 215, 13), kLiteral_4db6cd, '{justification: center, transferMode: 2, font: @fontSystem9Bold}, MakeText(Stringer([Array: HourMinute(nil), "  ", ShortDate(nil)]), 0, 14, 215, 25), '{justification: center, font: @fontSystem10Bold}, MakeText(text3, 0, 152, 215, 160), '{justification: center, font: @fontSystem9Bold}, MakeText(Stringer([Array: HourMinute(localTime2), "  ", ShortDate(localTime2)]), 0, 162, 215, 172), '{justification: center, font: @fontSystem9}, MakeText(text, 0, 175, 215, 185), '{transferMode: 0}, OffsetShape(MakeShape(kLiteral_4db929), (-(((Time() mod 1440) * 215) div 1440)), 30), OffsetShape(ScaleShape(MakeShape(@worldMapBitmap), scaleSrc, scaleDst), shift, 39), OffsetShape(ScaleShape(MakeShape(@worldMapBitmap), scaleSrc, scaleDst), (shift - 214), 39), '{fillPattern: 1}, MakeRect(l7, l6, (l7 + 8), (l6 + 8))];
 			appBase:Dirty()
 		end),
+	// Find's Show: goes to the city found.
 	ShowFoundItem: func(a1) begin
 		self:SetNewLocation(ResolveEntryAlias(a1.entry))
 	end,
+	// The scroll arrows: the form's own scrolling, or the next or previous
+	// city.
 	viewScrollDownScript: func() begin
 		currentForm:?flush();
 		(if (if currentForm then currentForm.viewScrollUpScript) then currentForm:viewScrollDownScript() else begin
@@ -275,6 +317,7 @@ worldClock := {
 			end)
 	end,
 	_newKeyButton: nil,
+	// Shows the cursor's city, in the form open or on the map.
 	Retarget: func() begin
 		target := cards:entry();
 		(if currentForm then currentForm:RedoChildren() else self:UpdateLocationFields())
@@ -283,6 +326,8 @@ worldClock := {
 	_actionKeyButton: nil,
 	viewJustify: vjParentCenterH + vjParentCenterV,
 	expanded: 218,
+	// Deletes city a1 (undoably) and moves to the next one. A ROM city is
+	// hidden by a marker entry, which remakes a ROM-only cursor.
 	DoDeleteScript: func(a1) begin
 		local entry;
 		AddUndoAction('UnDeleteScript, [Array: a1]);
@@ -301,6 +346,9 @@ worldClock := {
 	end,
 	title: timeZones,
 	cards: nil,
+	// Find in the cities soup: the cities whose words match a1 (a string or
+	// words), skipping ROM cities a user entry deletes or replaces; adds a
+	// finder (wcCompatibleFinder) of them to a2. a4 shows the progress.
 	find: func(a1, a2, a3, a4) begin
 		local list, l2, entry, stringInFrame, splitString2, cursor, cursor2, l8, prev, l10;
 		if a4 then begin
@@ -336,6 +384,8 @@ worldClock := {
 			end);
 		(if (Length(list) > 0) then AddArraySlot(a2, {_proto: wcCompatibleFinder, owner: self, cursor: cursor, findWhat: splitString2, items: list}))
 	end,
+	// The New button: a copy of the current city with no name, notes or
+	// airport, edited in the city form.
 	New: func() begin
 		local copy;
 		if currentForm then begin
@@ -369,6 +419,9 @@ worldClock := {
 			end)
 	end,
 	declareSelf: 'base,
+	// Places the floater inside the application area, opens the cities cursor
+	// (at the city last shown, or Tokyo), updates every minute and watches the
+	// cities soup.
 	viewSetupFormScript: compile(
 		constants: {
 			kROM_251: @citySoupName,
@@ -399,8 +452,14 @@ worldClock := {
 			RegSoupChange(kROM_251, appSymbol, kFunction_4db189);
 			SetKeyView(self, 0)
 		end),
+	// the map is drawn scaled from the 360 by 180 bitmap to 214 by 107
 	scaleDst: {left: 0, top: 0, right: 214, bottom: 107},
 	routeScripts: [|Array|: {title: delete, icon: @routetrashBitmap, routeScript: 'DeleteActionScript}],
+	// A tap: the home line (top) or away line (bottom) is highlighted while the
+	// pen is on it; on the map, pops up the 12 cities nearest (within 1000);
+	// on the home line, the worksites (and Other City), else the cities; on
+	// the away line, the cities; at the left edge of the map, the city
+	// opposite home.
 	viewClickScript: compile(
 		constants: {
 			kLiteral_3c5eed: '{transferMode: 2, penPattern: 0, fillPattern: 5},
@@ -455,6 +514,8 @@ worldClock := {
 								DoPopup(list, l1, l2, {_parent: self, pickActionScript: func(index) begin
 									local place;
 									(if (place := list[index].place) then begin
+											// an easter egg: picking the city at this latitude and longitude starts
+											// "Plan 9" (InitiatePlan9)
 											if (if (place.latitude = 55526371) then (place.longitude = 364152580)) then begin
 													InitiatePlan9()
 												end;
@@ -506,6 +567,8 @@ worldClock := {
 					end))
 		end),
 	cityForm: nil,
+	// A worksite was picked from the home line's popup (the last item is Other
+	// City). One with no city asks for the closest city first (ValidateDone).
 	pickActionScript: func(index) begin
 		local resolveEntryAlias2, cityFromAlias;
 		if (index = (Length(list) - 1)) then begin
@@ -521,17 +584,21 @@ worldClock := {
 		(list := nil)
 	end,
 	_keyCommands: [|Array|:
-		{char: $r, modifiers: 33554432, keyMessage: '_actionKeyScript, name: routing, category: routing},
-		{char: $s, modifiers: 33554432, keyMessage: '_showKeyScript, name: show, category: viewing},
-		{char: $n, modifiers: 33554432, keyMessage: '_newKeyScript, name: new_2, category: creating}
+		// command-N, -R, -S
+		{char: $r, modifiers: kCommandModifier, keyMessage: '_actionKeyScript, name: routing, category: routing},
+		{char: $s, modifiers: kCommandModifier, keyMessage: '_showKeyScript, name: show, category: viewing},
+		{char: $n, modifiers: kCommandModifier, keyMessage: '_newKeyScript, name: new_2, category: creating}
 	],
 	KClassroomAware: true,
+	// Resizes the floater to bigSized pixels high.
 	ShrinkyDink: func(bigSized) begin
 		(if (expanded <> bigSized) then begin
 				expanded := bigSized;
 				appBase:SyncView()
 			end)
 	end,
+	// Find's Show for item a1: opens the city in the form where the words were
+	// found (its notes, its name, or all its info).
 	OpenTo: func(a1, a2) begin
 		local l1;
 		if (not viewCObject) then begin
@@ -548,6 +615,7 @@ worldClock := {
 		self:SetForm(l1);
 		(if (l1 = 'notesform) then currentForm.notes:ScrollToWord(a2.findWhat, true))
 	end,
+	// The closest city chosen for an incomplete worksite: make it home.
 	ValidateDone: func(a1) begin
 		local resolveEntryAlias2, cityFromAlias;
 		if a1 then begin
@@ -559,6 +627,7 @@ worldClock := {
 	end,
 	debug: 43969,
 	scaleSrc: {left: 0, top: 0, right: 360, bottom: 180},
+	// Pops up the cities to choose the home city from.
 	SelectHomeCity: func() begin
 		local offsetRect2;
 		offsetRect2 := OffsetRect(self:GlobalBox(), -20, 0);
@@ -566,6 +635,7 @@ worldClock := {
 			self:SetLocation(index)
 		end})
 	end,
+	// Shows city a1, undoably.
 	SetNewLocation: func(a1) begin
 		AddUndoAction('SetNewLocation, [Array: target]);
 		cards:Goto(a1);
@@ -578,6 +648,8 @@ worldClock := {
 	_showKeyScript: func(a1) begin
 		self:CommonKeyScript(_showKeyButton)
 	end,
+	// Find's finder for the cities: it cannot file or move them; Delete deletes
+	// the selected ones
 	wcCompatibleFinder: {
 		FileAs: func(a1) begin
 			nil
@@ -610,6 +682,7 @@ timeZones := "Time Zones";
 
 _cacheContextViewBounds := {left: 0, top: 0, right: 218, bottom: 218};
 
+// the New button
 _newKeyButton := {
 	viewBounds: {left: 5, top: -18, right: 33, bottom: -5},
 	viewJustify: 8388742,
@@ -621,6 +694,7 @@ _newKeyButton := {
 	_proto: @protoTextButton
 };
 
+// the Show button: a popup of the forms, the open one marked
 _showKeyButton := {
 	viewBounds: {left: 7, top: -18, right: 44, bottom: -5},
 	viewJustify: 8389766,
@@ -652,6 +726,7 @@ _showKeyButton := {
 	_proto: @protoPopupButton
 };
 
+// the routing button (its only action is Delete)
 _actionKeyButton := {
 	viewJustify: vjCenterH + vjCenterV + vjSiblingLeftH + vjSiblingTopV,
 	viewBounds: {left: -24, top: 0, right: -7, bottom: 13},
@@ -659,6 +734,7 @@ _actionKeyButton := {
 	_proto: @protoRoutingSlip
 };
 
+// what a form protos from: covers the floater and shows the away city
 notesformProto := {
 	viewClass: clView,
 	viewFlags: vClickable,
@@ -682,6 +758,8 @@ notesformProto := {
 	end
 };
 
+// a labelled input line of the city form, recognised with the cities'
+// dictionaries; read-only for the name of a ROM city
 cityFormProto := {
 	viewBounds: {left: 0, top: 0, right: 214, bottom: 35},
 	viewJustify: vjSiblingLeftH + vjSiblingBottomV,
@@ -704,6 +782,7 @@ cityFormProto := {
 	_proto: @newtLabelCustomInputLine
 };
 
+// a labelled phone-number line of the city and country forms
 cityFormProto_2 := {
 	viewBounds: {left: 0, top: 0, right: 214, bottom: 35},
 	viewJustify: vjSiblingLeftH + vjSiblingBottomV,
@@ -713,6 +792,7 @@ cityFormProto_2 := {
 	_proto: @newtAreacodeLine
 };
 
+// the close box of the forms: back to the map
 cityFormProto_3 := {
 	viewJustify: vjParentRightH + vjParentBottomV,
 	viewBounds: {left: -14, top: -14, right: -1, bottom: -1},
@@ -724,6 +804,7 @@ cityFormProto_3 := {
 	_proto: @protoPictureButton
 };
 
+// the notes of a city
 notes_2 := {
 	viewBounds: {left: 5, top: 24, right: -5, bottom: -5},
 	viewJustify: vjParentFullH + vjParentFullV,
@@ -733,6 +814,8 @@ notes_2 := {
 	_proto: @newtEditView
 };
 
+// one of the two clocks: the place's name, country, an analog clock, the
+// date and time
 twoClocksformProto := {
 	viewClass: clView,
 	viewBounds: {left: 0, top: 0, right: 101, bottom: 165},
@@ -764,6 +847,7 @@ twoClocksformProto := {
 	]
 };
 
+// the Notes form: the city's notes, with a recognition toggle
 notesform := {
 	_proto: notesformProto,
 	pix: nil,
@@ -781,6 +865,8 @@ notesform := {
 	viewQuitScript: func() begin
 		self:flush()
 	end,
+	// Saves the city if changed (a ROM city becomes a user entry that replaces
+	// it, so the cursor is remade or moved to it).
 	flush: func() begin
 		local locationEntryChange2;
 		(if FrameDirty(target) then begin
@@ -806,9 +892,14 @@ notesform := {
 	ReOrientToScreen: @defRotateFunc
 };
 
+// the City Info form: name, area code, closest city (for a new city), region
+// (if the country has regions), country, latitude and longitude, GMT
+// offset and daylight saving; only a user's city can be changed
 cityForm := {
 	_proto: notesformProto,
 	country: nil,
+	// Leaves out the region line when the country has none, and the closest
+	// city line except for a new city.
 	viewSetupChildrenScript: func() begin
 		country := GetCountryEntry(target.country)[0];
 		RemoveSlot(self, 'viewChildren);
@@ -827,6 +918,7 @@ cityForm := {
 		closestKey := nil;
 		self:flush()
 	end,
+	// Saves the city if changed (an empty name becomes "Unnamed City").
 	flush: func() begin
 		local locationEntryChange2;
 		if (not StrFilled(target.name)) then begin
@@ -882,12 +974,17 @@ cityForm := {
 				self:flush();
 				inherited:Popit(x)
 			end,
+			// A closest city was picked: the new city takes its country, time zone,
+			// position, daylight saving, region, area code and mail access.
 			pickActionScript: func(index) begin
 				closestKey := MakeEntryAlias(index);
 				target.country := index.country;
 				target.gmt := index.gmt;
 				target.longitude := index.longitude;
 				target.latitude := index.latitude;
+				// looks like a ROM bug: each else removes the slot from the picked city
+				// (index), not from target, so target keeps any old dst, region, areacode
+				// or mailAccess the picked city does not have
 				if index.dst then begin
 						target.dst := index.dst
 					end else begin
@@ -936,7 +1033,7 @@ cityForm := {
 				inherited:?viewSetupFormScript()
 			end,
 			viewClickScript: func(unit) begin
-				(if (target.kind = 'Add) then inherited:viewClickScript(unit) else self:Notify(3, "Time Zones", "This field can not be changed for built-in locations."))
+				(if (target.kind = 'Add) then inherited:viewClickScript(unit) else self:Notify(kNotifyAlert, "Time Zones", "This field can not be changed for built-in locations."))
 			end,
 			Popit: func(x) begin
 				params := {spots: country.regions, zoomer: country.continent, default: fullName};
@@ -960,7 +1057,7 @@ cityForm := {
 				inherited:?viewSetupFormScript()
 			end,
 			viewClickScript: func(unit) begin
-				(if (target.kind = 'Add) then inherited:viewClickScript(unit) else self:Notify(3, "Time Zones", "This field can not be changed for built-in locations."))
+				(if (target.kind = 'Add) then inherited:viewClickScript(unit) else self:Notify(kNotifyAlert, "Time Zones", "This field can not be changed for built-in locations."))
 			end,
 			Popit: func(x) begin
 				params := {spots: @countrySoupName, default: place};
@@ -994,7 +1091,7 @@ cityForm := {
 				inherited:?viewSetupFormScript()
 			end,
 			viewClickScript: func(unit) begin
-				(if (target.kind = 'Add) then inherited:viewClickScript(unit) else self:Notify(3, "Time Zones", "This field can not be changed for built-in locations."))
+				(if (target.kind = 'Add) then inherited:viewClickScript(unit) else self:Notify(kNotifyAlert, "Time Zones", "This field can not be changed for built-in locations."))
 			end,
 			pickActionScript: func(index, a2) begin
 				target.longitude := index;
@@ -1014,6 +1111,7 @@ cityForm := {
 			Time: nil,
 			offset: 0,
 			viewSetupFormScript: func() begin
+				// gmt is in seconds; the picker works in minutes
 				Time := (target.gmt div 60);
 				inherited:?viewSetupFormScript()
 			end,
@@ -1038,6 +1136,8 @@ cityForm := {
 				locationSoup := GetLocationSoup(@dstSoupName);
 				(cursor := locationSoup:Query({type: 'index}))
 			end,
+			// Pops up the daylight-saving rules (the dst soup) and "none", marking the
+			// city's (or its country's).
 			Popit: func(x) begin
 				locationSoup := GetLocationSoup(@dstSoupName);
 				next := (cursor := locationSoup:Query({type: 'index})):entry();
@@ -1079,6 +1179,8 @@ cityForm := {
 	ReOrientToScreen: @defRotateFunc
 };
 
+// the Country Info form: the away city's country, its codes and dialing
+// prefixes; the scroll arrows go through the countries
 countryform := {
 	_proto: notesformProto,
 	cursor: nil,
@@ -1137,6 +1239,9 @@ countryform := {
 	ReOrientToScreen: @defRotateFunc
 };
 
+// the All Info form: the city's region, position, area code, airports, time
+// zone (relative to home and to GMT) and daylight saving, then its
+// country's codes, prefixes, currency and exchange rate
 allform := {
 	viewClass: clView,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
@@ -1194,13 +1299,15 @@ allform := {
 							v16_xxxxxxxxxxxxxxxxxxxxxxxxxx := (v16_xxxxxxxxxxxxxxxxxxxxxxxxxx + 1);
 							v21_ttttttttttss := (v21_ttttttttttss + 12)
 						end;
+					// gmt is in seconds east of Greenwich; the difference from home is in
+					// minutes, with daylight saving applied
 					v10_wwwwwwwwwwwwwwvvvvv := abs((v22_yxxx.gmt mod 3600));
 					v4_xxxwwwwwwwww := abs(((v6_qqqqqqqqp := ((((v22_yxxx.gmt - userConfiguration.location.gmt) - userConfiguration.daylightsavings) div 60) + DSTOffset(Time(), v22_yxxx))) mod 60));
 					v14_uutttttttttt[v16_xxxxxxxxxxxxxxxxxxxxxxxxxx] := MakeText(ParamStr("Time Zone: ^?0+||^1^?2:^3|| (GMT ^?4+||^5^?6:^7||)", [Array: (v6_qqqqqqqqp >= 0), (v6_qqqqqqqqp div 60), (v4_xxxwwwwwwwww <> 0), v4_xxxwwwwwwwww, (v22_yxxx.gmt >= 0), (v22_yxxx.gmt div 3600), (v10_wwwwwwwwwwwwwwvvvvv <> 0), (v10_wwwwwwwwwwwwwwvvvvv div 60)]), 0, (v21_ttttttttttss - 12), v11_wwwwvvvvvvvvvvvvvvvvvvv, v21_ttttttttttss);
 					v16_xxxxxxxxxxxxxxxxxxxxxxxxxx := (v16_xxxxxxxxxxxxxxxxxxxxxxxxxx + 1);
 					v21_ttttttttttss := (v21_ttttttttttss + 12);
 					if (v18_zzzzzzzzzzzyyyyyyyyyyy := (if HasPath(v22_yxxx, 'daylight) then v22_yxxx.daylight else (if v3_zzzzzzzzzyyyyyyyyyy then v3_zzzzzzzzzyyyyyyyyyy.daylight))) then begin
-							v14_uutttttttttt[v16_xxxxxxxxxxxxxxxxxxxxxxxxxx] := MakeTextLines(ParamStr("^0: ^1", [Array: v25_zzzzzzzyyyyyyyyyyyyyyy.daylightSavingsLabel, DSTExplain(v22_yxxx)]), SetBounds(0, (v21_ttttttttttss - 10), v11_wwwwvvvvvvvvvvvvvvvvvvv, (v21_ttttttttttss + 36)), 12, 10241);
+							v14_uutttttttttt[v16_xxxxxxxxxxxxxxxxxxxxxxxxxx] := MakeTextLines(ParamStr("^0: ^1", [Array: v25_zzzzzzzyyyyyyyyyyyyyyy.daylightSavingsLabel, DSTExplain(v22_yxxx)]), SetBounds(0, (v21_ttttttttttss - 10), v11_wwwwvvvvvvvvvvvvvvvvvvv, (v21_ttttttttttss + 36)), 12, tsFancy + tsSize(10));
 							v9_zzzzzzzzzzzzzzzzzzzzzzzzzz := Length(v14_uutttttttttt[v16_xxxxxxxxxxxxxxxxxxxxxxxxxx]);
 							v21_ttttttttttss := (v21_ttttttttttss + (12 * v9_zzzzzzzzzzzzzzzzzzzzzzzzzz));
 							v16_xxxxxxxxxxxxxxxxxxxxxxxxxx := (v16_xxxxxxxxxxxxxxxxxxxxxxxxxx + v9_zzzzzzzzzzzzzzzzzzzzzzzzzz)
@@ -1256,6 +1363,7 @@ allform := {
 	ReOrientToScreen: @defRotateFunc
 };
 
+// the Two Clocks form: home and away clocks side by side
 twoClocksform := {
 	viewClass: clView,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},

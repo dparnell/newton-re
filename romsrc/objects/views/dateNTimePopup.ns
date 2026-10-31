@@ -1,4 +1,7 @@
-// dateNTimePopup, and what only it reaches
+// dateNTimePopup: protoDateNTimePopup, a pop-up with a date picker and a
+// digital clock. Opened by :New(time, increment, bbox, context): the time is
+// rounded to the increment (minutes). It tells the context NewTime(time) as
+// it changes and pickActionScript(time) when closed.
 
 dateNTimePopup := {
 	viewBounds: {left: 0, top: 0, right: 139, bottom: 168},
@@ -18,17 +21,21 @@ dateNTimePopup := {
 		init.context := a4;
 		init:popup(a3)
 	end,
+	// The clock steps by the popup's increment.
 	viewSetupFormScript: func() begin
 		(clock.increment := increment)
 	end,
+	// A new date keeps the time of day (minutes past midnight, 1440 a day).
 	DateChanged: func(selectedDates2) begin
 		selectedDates[0] := (Time := (((Time mod 1440) + selectedDates2[0]) - (selectedDates2[0] mod 1440)));
 		context:?NewTime(Time)
 	end,
+	// The clock changed.
 	TimeChanged: func() begin
 		selectedDates[0] := Time;
 		context:?NewTime(Time)
 	end,
+	// The close box: hands the chosen time to the context.
 	Affirmative: func() begin
 		context:?pickActionScript(selectedDates[0])
 	end,

@@ -1,7 +1,18 @@
-// extrasdrawer, and what only it reaches
+// extrasdrawer: the Extras Drawer (GetRoot().ExtrasDrawer), the system's
+// launcher and package manager. It is a protoFinderWindow on the union
+// "Packages" soup: an icon entry per installed application, book, form,
+// soup or script (made for each new package's parts), tagged with its
+// folder (labels) and ordered by sequence. It shows the icons of a folder
+// (or the Unfiled Icons, or All Icons), opens them, and files, moves,
+// deletes, freezes or thaws them and makes one the backdrop. It also has
+// the volume and contrast sliders, a battery gauge, the Memory Info slip
+// and the legal notice. Entries tagged '_buttonBar belong to the button
+// bar (buttonBar).
 
 extrasdrawer := {
 	systemFoldersToo: true,
+	// Grows or shrinks the drawer to show v10_qqqqq rows of icons (vSpacing
+	// apart), no taller than the application area.
 	SizeForRows: func(v10_qqqqq) begin
 		local copy, l2;
 		(if (v10_qqqqq <> nRows) then begin
@@ -16,6 +27,8 @@ extrasdrawer := {
 			end)
 	end,
 	hSpacing: nil,
+	// The routing slip's filing: checks every selected icon can be moved or
+	// filed (Preflight), then FileSelectedIcons.
 	Fileit: func() begin
 		local fn;
 		self:GenericActionScript((fn := func(a1) begin
@@ -26,13 +39,20 @@ extrasdrawer := {
 			filing
 		end), 'FileSelectedIcons, true, "file ^1", "This icon can\u2019\ut be filed^?0 because it is ^0||.", "These icons can\u2019\ut be filed^?0 because they are ^0||.")
 	end,
+	// Remakes the icons.
 	RedoIcons: func() begin
 		self:RedoIconsAfterDrop(true)
 	end,
+	// The routing target: the selected icons (fakeTarget), or for routing
+	// ('Routing) their packages.
 	GetTargetInfo: func(a1) begin
 		{target: (if (a1 = 'Routing) then fakeTarget.packs else fakeTarget), targetType: 'package, targetView: base, targetStore: fakeTarget.targetStore}
 	end,
 	localFoldersOnly: true,
+	// A cursor on the Packages soup (of store a2, else the union) of the icon
+	// entries of package a1 (all if nil), filtered by frame2: a folder symbol
+	// or a frame of extra tagspec parts. The button bar's entries are left out
+	// unless frame2 asks for them.
 	GetPartCursor: compile(
 		constants: {
 			kLiteral_5a74d1: "Packages",
@@ -75,9 +95,15 @@ extrasdrawer := {
 					l1:Query(_all)
 				end)
 		end),
+	// Takes the keys (to the icons).
 	viewSetupDoneScript: func() begin
 		SetKeyView(iconSpace, 0)
 	end,
+	// Runs an action on the selected icons (fakeTarget.kids): a1 is the
+	// Preflight symbol or a function answering 'OK or why not; a2 the method
+	// to perform with the user's confirmation (asked unless a3 and none was
+	// skipped); a4 the confirmation text (^1 the icons' names), a5 and a6 the
+	// messages when one or several cannot be done (^0 the reasons).
 	GenericActionScript: func(a1, a2, a3, a4, a5, a6) begin
 		local v9_yyyyyyyxxxxx, v10_zzyyyyyyyyyyyyy, v11_wwwwwwwwwwwwwwwwvvv, v12_jiiii, v13_uuuuuuut, v16_tttttttttttt, v17_yxxxxxxxxxxxxxx, v20_xxxxxxwwwwwwwwwwwww, v21_zzzzzzzzzzzzzzyyyyyyyy, v22_vvvvvvvv, v23_tttttsssssss;
 		if (not fakeTarget.kids) then begin
@@ -128,8 +154,10 @@ extrasdrawer := {
 						v9_yyyyyyyxxxxx := ModalConfirm(ParamStr((v21_zzzzzzzzzzzzzzyyyyyyyy := (if (v12_jiiii = 0) then "Are you sure you want to ^0?" else (if (v12_jiiii = 1) then "Are you sure you want to ^0?\n\nNote -- One icon was skipped because it is ^2." else "Are you sure you want to ^0?\n\nNote -- Some icons were skipped because they are ^2."))), [Array: a4, v13_uuuuuuut, v23_tttttsssssss]), 'okCancelDefaultCancel);
 						Perform(self, a2, [Array: v9_yyyyyyyxxxxx])
 					end else Perform(self, a2, [Array: true]))
-			end else self:Notify(3, title, ParamStr((if (v12_jiiii = 1) then a5 else a6), [Array: v23_tttttsssssss])))
+			end else self:Notify(kNotifyAlert, title, ParamStr((if (v12_jiiii = 1) then a5 else a6), [Array: v23_tttttsssssss])))
 	end,
+	// The entries of package a2 on store a3 of the extra kind a1
+	// (specifiableExtraIconTypes: 'ScriptEntry or 'SoupEntry).
 	GetExtraIcons: func(a1, a2, a3) begin
 		local l1, soup, frame2;
 		l1 := specifiableExtraIconTypes.(a1);
@@ -137,6 +165,9 @@ extrasdrawer := {
 		(if (if l1 then soup) then MapCursor(soup:Query((frame2 := {beginKey: a2, endKey: a2, indexPath: 'packageName, tagspec: {all: l1, none: '_package}})), nil))
 	end,
 	contrastSliderTweakRight: nil,
+	// The icon entry of value: an entry of the Packages soup itself, an app
+	// symbol, or {appSymbol, store, packageName}; 1.x parts are looked for in
+	// |Parts1.x|.
 	GetPartEntry: compile(
 		constants: {
 			kLiteral_5a74d1: "Packages"
@@ -166,11 +197,15 @@ extrasdrawer := {
 			app
 		end),
 	needsRecalc: 'all,
+	// Confirmed: makes the chosen icon's application the backdrop (BlessApp,
+	// half a second later).
 	BlessSelectedIcon: func(a1) begin
 		(if a1 then AddDelayedSend(GetRoot(), 'BlessApp, [Array: fakeTarget.blessedapp], 500))
 	end,
 	topIndexIcon: 0,
 	viewFormat: vfFillWhite,
+	// _filingKeyScript, _actionKeyScript, _rotateKeyScript, _folderKeyScript:
+	// the command keys' scripts.
 	_filingKeyScript: func(a1) begin
 		PressButton(filingButton)
 	end,
@@ -209,6 +244,7 @@ extrasdrawer := {
 		base: nil,
 		folderItems: nil
 	},
+	// A package was removed: removes its icon entries from the soup.
 	HandleRemovedPackage: func(a1) begin
 		local packageName, frame2, cursor, next;
 		next := (cursor := a1.oldSoup:Query((frame2 := {beginKey: (packageName := a1.entry.packageName), endKey: packageName, indexPath: 'packageName, tagspec: '{none: _package}}))):entry();
@@ -218,6 +254,8 @@ extrasdrawer := {
 			end)
 	end,
 	contrastSlider: nil,
+	// The query spec of the icons: '_all (all but soups and frozen ones), nil
+	// (also none in a folder: the Unfiled Icons), or a folder symbol.
 	GetQuerySpec: compile(
 		constants: {
 			kLiteral_54ebbd: '{type: index, indexPath: sequence, startKey: nil, endKey: nil, tagspec: {all: _icon, none: [Array: _soups, _frozen]}}
@@ -232,6 +270,7 @@ extrasdrawer := {
 						copy
 					end))
 		end),
+	// Closing: forgets its caches and slips, unregisters.
 	viewQuitScript: func() begin
 		prefsEntry := nil;
 		folderItems := nil;
@@ -249,6 +288,7 @@ extrasdrawer := {
 	end,
 	preallocatedContext: 'ExtrasDrawer,
 	AppAll: "All Icons",
+	// The rule above the sliders and their labels.
 	viewDrawScript: func() begin
 		local box;
 		box := self:LocalBox();
@@ -265,6 +305,9 @@ extrasdrawer := {
 	end,
 	baseListSmall: @protoExtrasListItem,
 	target: nil,
+	// Adds an icon entry for a1 (MakeIconEntry, with frame2's slots) to the
+	// Packages soup of store a3 (the default store), with a new sequence
+	// number if it has none. Returns the entry.
 	AddIconEntryQT: func(a1, frame2, a3) begin
 		local l1, iconEntry;
 		l1 := (if a3 then a3 else GetDefaultStore()):GetSoup("Packages");
@@ -274,6 +317,8 @@ extrasdrawer := {
 		l1:AddFlushedXmit(iconEntry, 'ExtrasDrawer);
 		iconEntry
 	end,
+	// the Memory Info slip: each store's used and free space, the ROM version
+	// and the RAM installed, and a Make Backdrop checkbox
 	memexForm: {
 		viewFlags: vClickable,
 		viewBounds: nil,
@@ -281,6 +326,7 @@ extrasdrawer := {
 		extras: nil,
 		newBlessed: nil,
 		ReOrientToScreen: @defRotateFunc,
+		// Closing: if the backdrop was changed, asks to confirm it.
 		viewQuitScript: func() begin
 			extras.memex := nil;
 			(if (newBlessed <> userConfiguration.blessedapp) then begin
@@ -318,11 +364,11 @@ extrasdrawer := {
 								l12 := 0
 							end;
 						l13 := (l3 - l2);
-						l14 := StyledStrTruncate(Clone(l9:GetName()), l13, 1058816);
+						l14 := StyledStrTruncate(Clone(l9:GetName()), l13, tsSystem + tsSize(10) + tsBold);
 						l15 := (35 + (l8 * 16));
 						AddArraySlot(l7, [Array: MakeText(l14, l2, l15, l3, (l15 + 10)), '{font: tsSystem + tsSize(10) + tsBold, justification: right}, MakeText(Stringer([Array: l11, "K"]), l3, l15, l4, (l15 + 10)), MakeText(Stringer([Array: l12, "K"]), l4, l15, l5, (l15 + 10))])
 					end);
-				l16 := Gestalt(16777219);
+				l16 := Gestalt(kGestalt_SystemInfo);
 				l15 := (l15 + 22);
 				AddArraySlot(l7, [Array: kLiteral_536791, MakeText(ParamStr("ROM Version ^0-^1", [Array: l16.ROMversionstring, l16.patchVersion]), l2, l15, l5, (l15 + 10)), MakeText(ParamStr("System RAM Installed ^0K", [Array: (l16.RAMSize div 1024)]), l2, (l15 + 16), l5, (l15 + 22)), MakeLine(l2, (l15 + 28), l5, (l15 + 28))]);
 				self:DrawShape(l7, kLiteral_5367b5)
@@ -343,6 +389,8 @@ extrasdrawer := {
 		stepallocatecontext: [|Array|: 'makeBackDrop, makeBackDrop_2],
 		_proto: @protoFloatNGo
 	},
+	// A package was installed: an icon entry for each of its parts that has
+	// text (or is a book), or one '|????| entry if none has.
 	HandleNewPackage: func(packageEntry) begin
 		l1 := 0;
 		local l1;
@@ -361,6 +409,7 @@ extrasdrawer := {
 		PressButton(routingButton)
 	end,
 	legalese: nil,
+	// AddIconEntryQT, then redraws the icons.
 	AddIconEntry: func(a1, frame2, a3) begin
 		local addIconEntryQT;
 		addIconEntryQT := self:AddIconEntryQT(a1, frame2, a3);
@@ -381,6 +430,8 @@ extrasdrawer := {
 		},
 		status_4
 	],
+	// The folder soupNotifyItem was renamed to a2 (or deleted): refiles the
+	// icons in it.
 	FolderChanged: func(soupNotifyItem, a2) begin
 		local l1, cursor, next;
 		(if soupNotifyItem then begin
@@ -397,6 +448,8 @@ extrasdrawer := {
 			end)
 	end,
 	storesFilter: nil,
+	// Confirmed (a1): deletes the selected icons' packages, warning first when
+	// a package has several parts, with a progress slip.
 	DeleteSelectedIcons: compile(
 		constants: {
 			kBinaryFromHex: func(hex, cls) begin
@@ -458,7 +511,7 @@ extrasdrawer := {
 								try begin
 										item.target:delete()
 									end onexception |evt.ex.msg| do begin
-										self:Notify(3, title, CurrentException().message)
+										self:Notify(kNotifyAlert, title, CurrentException().message)
 									end
 							end)
 					end);
@@ -467,12 +520,14 @@ extrasdrawer := {
 				end)
 		end),
 	viewFlags: vApplication,
+	// Adds the ROM's help book to the 1.x parts.
 	SetupROMHelpBook: func(a1) begin
 		AddArraySlot(|Parts1.x|, self:MakeIconEntry('ROMHelpBookEntry, a1))
 	end,
 	overUp: nil,
 	doCardRouting: true,
 	ChangeTagListAndLabels: ChangeTagListAndLabels,
+	// After a rotation: reopens.
 	ReOrientToScreen: func() begin
 		pieces := nil;
 		topIndexIcon := 0;
@@ -482,24 +537,30 @@ extrasdrawer := {
 	end,
 	rotateButton: nil,
 	routingButton: nil,
+	// The routing slip's Delete.
 	DeleteActionScript: func(a1, a2) begin
 		self:GenericActionScript('delete, 'DeleteSelectedIcons, nil, "delete ^1", "This icon can\u2019\ut be deleted^?0 because it is ^0||.", "These icons can\u2019\ut be deleted^?0 because they are ^0||.")
 	end,
 	blessedBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	// the drawer's entries need no conversion, except to 1.x
 	conversion: {
 		Convert: func(body, a2, a3, a4) begin
 			(if (a3 <> 'oneO) then body)
 		end
 	},
 	viewBounds: _cacheContextViewBounds_2,
+	// Changes the extras info (the Info slip's) of part a1 from a2: its folder
+	// (labels), and its place on the button bar.
 	SetExtrasInfo: func(a1, a2) begin
 		if (l2 := self:GetPartEntry(a1)) then begin
 				if (if a2 then (Length(a2) > 0)) then begin
 						if (if HasSlot(a2, 'labels) then (a2.labels <> l2.labels)) then begin
 								l3 := a2.labels;
+								// leaving the button bar's fixed icons for a folder: a sequence there
 								if (if (l2.labels = '_buttonBar) then (l2.sequence < 0)) then begin
 										l2.sequence := self:GetNewSequence(l3)
 									end;
+								// onto the button bar: before its first mobile icon
 								if (l3 = '_buttonBar) then begin
 										if (Length((l4 := GetRoot().buttons:GetPartEntries()).mobile) > 0) then begin
 												l2.sequence := max(0, (l4.mobile[0].sequence - 1))
@@ -536,6 +597,7 @@ extrasdrawer := {
 							end;
 						self:InvalIcons()
 					end;
+				// the answer: the part's extras info slots, ROM icons (numbers) resolved
 				l1 := {};
 				(foreach l5 in extrasInfoSlots do begin
 						local l7, l8;
@@ -552,6 +614,9 @@ extrasdrawer := {
 			end;
 		l1
 	end,
+	// After a restore (a1: the soups restored): if the system soup was, puts
+	// the built-in icons back in the folders and order saved in the
+	// 'BuiltInExtrasState preferences (SaveBuiltInExtrasState).
 	RestoreBuiltInExtrasState: func(a1) begin
 		local builtInExtrasState, soup, cursor, next, app, l6;
 		(if BFind(a1, @systemSoupName, '|str<|, nil) then begin
@@ -572,6 +637,7 @@ extrasdrawer := {
 					end)
 			end)
 	end,
+	// A part of a high ROM (a ROM extension) was removed: nothing to do.
 	HandleRemovedHighROMPart: func(packageId) begin
 		nil
 	end,
@@ -593,6 +659,8 @@ extrasdrawer := {
 		'status,
 		status_4
 	],
+	// The icon, text, folder, app and package of icon entry a1 (ROM icons
+	// resolved), without leaving a non-resident entry changed.
 	GetPartEntryData: func(a1) begin
 		local l1, icon, iconPro, frame2;
 		l1 := (if IsSoupEntry(a1) then (not EntryIsResident(a1)));
@@ -608,12 +676,15 @@ extrasdrawer := {
 			end;
 		frame2
 	end,
+	// A 1.x package was removed: drops its parts from |Parts1.x|.
 	|HandleRemoved1.XPart|: func(a1) begin
 		local pos;
 		pos := 0;
 		(while (pos := LSearch(|Parts1.x|, a1, pos, '|=|, 'packageId)) do ArrayRemoveCount(|Parts1.x|, pos, 1))
 	end,
 	Show: nil,
+	// Confirmed (a1): files the selected icons in fakeTarget's folder and moves
+	// them to its store, with a progress slip.
 	FileSelectedIcons: compile(
 		constants: {
 			kBinaryFromHex: func(hex, cls) begin
@@ -646,6 +717,8 @@ extrasdrawer := {
 				end)
 		end),
 	_proto: @protoDrawer,
+	// Before routing (beaming, mailing) the selected icons: checks they can be
+	// sent (Preflight 'send); returns copy, or nil if the user cancelled.
 	VerifyRoutingInfo: func(copy, fields) begin
 		local frame2;
 		(if (fakeTarget = nil) then copy else begin
@@ -657,10 +730,15 @@ extrasdrawer := {
 			end)
 	end,
 	topIndexText: 0,
+	// The Packages soup changed (a watcher registered for it): a new, removed or
+	// moved package, a frozen or thawed one, a bulk operation; changes the
+	// drawer itself made ('ExtrasDrawer) are ignored.
 	HandleSoupChange: func(a1, a2, a3, a4) begin
 		(if (a2 <> 'ExtrasDrawer) then (if (if (a3 = 'entryAdded) then IsPackageEntry(a4)) then self:HandleNewPackage(a4) else (if (a3 = 'entryRemoved) then self:HandleRemovedPackage(a4) else (if (if (a3 = 'entryMoved) then IsPackageEntry(a4.entry)) then self:HandleMovedPackage(a4) else (if (a3 = 'SoupEnters) then nil else (if (if (a2 = '|Mr.Freeze|) then IsPackageEntry(a4)) then self:HandleFreezingOrThawing(a4) else (if (a2 = 'XmitPackageOp) then self:RedoIcons() else self:InvalIcons())))))))
 	end,
 	labelsFilter: nil,
+	// A form part of a high ROM (a ROM extension) was installed: adds its icon
+	// entry to the internal store, unless the drawer's state was saved there.
 	HandleNewHighROMPart: func(a1) begin
 		local soup, partFrame, l3;
 		soup := GetStores()[0]:GetSoup("Packages");
@@ -686,6 +764,7 @@ extrasdrawer := {
 			end)
 	end,
 	VolumeSlider: nil,
+	// A 1.x package's form part was installed: an icon in |Parts1.x|.
 	|HandleNew1.XPart|: func(a1) begin
 		local l1, partFrame;
 		(if (a1.partType = 'form) then begin
@@ -698,6 +777,7 @@ extrasdrawer := {
 				AddArraySlot(|Parts1.x|, l1)
 			end)
 	end,
+	// Opens the part of icon entry a1 (its class's TapAction).
 	LaunchPartEntry: func(a1) begin
 		local l1, frame2, l3;
 		l1 := (not EntryIsResident(a1));
@@ -712,9 +792,12 @@ extrasdrawer := {
 		iconStyle: {font: tsSystem + tsSize(9), justification: 'center, transferMode: 8}
 	},
 	baseIcon: @protoExtrasIcon,
+	// Remakes the icons soon (once, however often it is asked).
 	InvalIcons: func() begin
 		AddProcrastinatedSend('_extrasdrawer, self, 'RedoIcons, [Array: ], 0)
 	end,
+	// Scrolls the icons a page up (maxLines) or down, in the icon view
+	// (topIndexIcon) or the list view (topIndexText).
 	Scroller: func(maxLines) begin
 		local l1, l2, l3, folderItemsLen2;
 		l1 := (((displayParams.appAreaHeight - 13) - 50) div vSpacing);
@@ -743,21 +826,27 @@ extrasdrawer := {
 				iconSpace:RedoChildren()
 			end)
 	end,
+	// The next sequence number in folder labels.
 	GetNewSequence: func(labels) begin
 		local cursor;
 		(cursor := GetUnionSoup("Packages"):Query(self:GetQuerySpec(labels))):ResetToEnd();
 		(if cursor:entry() then (cursor:entry().sequence + 1) else 0)
 	end,
+	// The routing slip's Make Backdrop.
 	BlessActionScript: func(a1, a2) begin
 		fakeTarget.blessedapp := fakeTarget.kids[0].target.fentry.app;
 		self:GenericActionScript('Backdrop, 'BlessSelectedIcon, nil, "make ^1 the backdrop", "This icon can\u2019\ut be the backdrop^?0 because it is ^0||.", "Only one icon can be the backdrop. Try again with just one.")
 	end,
+	// AddAuxButton, RemoveAuxButton: another application's button for the
+	// status bar was registered or unregistered.
 	AddAuxButton: func(frame2) begin
 		status:?RedoChildren()
 	end,
+	// The scroll arrows scroll the icons.
 	viewScrollDownScript: func() begin
 		self:Scroller(nil)
 	end,
+	// The overview button: switches between icons and a list.
 	viewOverviewScript: func() begin
 		overUp := (not overUp);
 		nRows := 0;
@@ -767,6 +856,7 @@ extrasdrawer := {
 	iconSpace: nil,
 	specifiableExtraIconSlots: [|Array|: 'icon, 'iconPro, 'text, 'labels, 'TapAction, 'soupNames],
 	specifiableExtraIconTypes: {ScriptEntry: '_scriptIcon, SoupEntry: '_soups},
+	// Makes the selected icons the target (for a command key), returning self.
 	GetActiveView: func() begin
 		local setupFakeTargetHelper;
 		if (setupFakeTargetHelper := iconSpace:SetupFakeTargetHelper()) then begin
@@ -774,6 +864,7 @@ extrasdrawer := {
 			end;
 		self
 	end,
+	// A book was taken out (a1 its frame): drops its 1.x part icon.
 	DropIcon: func(a1) begin
 		(foreach item in |Parts1.x| do begin
 				if (if ('copperfield = item.app) then StrEqual(a1.isbn, item.isbn)) then begin
@@ -787,6 +878,7 @@ extrasdrawer := {
 	viewJustify: vjParentFullH + vjParentBottomV,
 	pieces: nil,
 	title: extras,
+	// the icon entry to make for each kind of part
 	NewPartMakers: {
 		form: func(a1, a2) begin
 			@extraProtos.FormEntry:New()
@@ -815,6 +907,8 @@ extrasdrawer := {
 			@extraProtos.|????Entry|:New()
 		end
 	},
+	// Adds an icon of extra kind a1 ('ScriptEntry, 'SoupEntry) for package a3
+	// on store a4, with a2's slots (specifiableExtraIconSlots).
 	AddExtraIcon: func(a1, a2, a3, a4) begin
 		(if specifiableExtraIconTypes.(a1) then begin
 				frame2 := {packageName: a3};
@@ -827,6 +921,8 @@ extrasdrawer := {
 				self:AddIconEntry(a1, frame2, a4)
 			end)
 	end,
+	// The icon entry for a part of kind value, with the part frame's slots
+	// (specifiablePartSlots); its text defaults to the package's name.
 	MakeNewPart: func(value, part, packageName) begin
 		perform2 := Perform(NewPartMakers, value, [Array: value, part]);
 		if HasSlot(part, 'labels) then begin
@@ -844,6 +940,7 @@ extrasdrawer := {
 			end;
 		perform2
 	end,
+	// the legal notice slip (DoInfoLegal)
 	fineprint: {
 		viewFlags: vClickable,
 		viewBounds: {left: 0, top: -198, right: 200, bottom: -8},
@@ -870,11 +967,14 @@ extrasdrawer := {
 		],
 		_proto: @protoFloatNGo
 	},
+	// Saves the folder shown and the view (icons or list) in the preferences.
 	SavePrefs: func() begin
 		(prefsEntry := GetAppPrefs('extras, '{})).labelsFilter := labelsFilter;
 		prefsEntry.overUp := overUp;
 		AddProcrastinatedCall('_SaveExtrasPrefs, functions.EntryFlush, [Array: prefsEntry], 0)
 	end,
+	// The info button's Memory Info: opens or closes the slip, as tall as the
+	// stores need.
 	DoInfoMemory: func() begin
 		local l1, count;
 		(if memex then memex:Close() else begin
@@ -885,6 +985,7 @@ extrasdrawer := {
 			end)
 	end,
 	visiblePartTypes: {form: true, Book: true},
+	// Confirmed (a1): freezes the selected icons' packages, with a progress slip.
 	FreezeSelectedIcon: compile(
 		constants: {
 			kBinaryFromHex: func(hex, cls) begin
@@ -907,13 +1008,17 @@ extrasdrawer := {
 								try begin
 										SafeFreezePackageQT((soupPackage := item.target:LookupSoupPackage()))
 									end onexception |evt.ex.msg| do begin
-										self:Notify(3, title, CurrentException().message)
+										self:Notify(kNotifyAlert, title, CurrentException().message)
 									end
 							end)
 					end);
 					XmitPackageOp('SafeFreezePackage)
 				end)
 		end),
+	// A package a1 was frozen or thawed: a frozen package's icons are tagged
+	// '_frozen and replaced by one FrozenEntry icon (in their folder if they
+	// shared one); a thawed one's are untagged and refiled where the frozen icon
+	// was.
 	HandleFreezingOrThawing: func(a1) begin
 		l1 := IsPackageEntryFrozen(a1);
 		l2 := a1.packageName;
@@ -983,6 +1088,8 @@ extrasdrawer := {
 	viewScrollUpScript: func() begin
 		self:Scroller(true)
 	end,
+	// After a drag and drop or a change: remakes the icons (and the button bar's
+	// if externalDrop), and the Memory Info slip.
 	RedoIconsAfterDrop: func(externalDrop) begin
 		if externalDrop then begin
 				GetRoot().buttons:RedoIcons()
@@ -1002,6 +1109,12 @@ extrasdrawer := {
 	_rotateKeyScript: func(a1) begin
 		PressButton(rotateButton)
 	end,
+	// Opening: the folder and view from the preferences; as the backdrop it
+	// fills the screen with a clock in its show bar. No contrast slider
+	// without software contrast, no volume slider when the volume is set in
+	// hardware (the third boolean of the volume info). Freeze is offered when
+	// the user configuration's ExtraPackageFreezing is set. Watches folder and
+	// store changes.
 	viewSetupFormScript: compile(
 		constants: {
 			kBinaryFromHex: func(hex, cls) begin
@@ -1034,12 +1147,12 @@ extrasdrawer := {
 							Show._proto := @protoShowBar
 						end
 				end;
-			if (not (if (gestalt2 := Gestalt('[Array: 33554435, [Array: struct, boolean, long, long], 1])) then gestalt2[0])) then begin
+			if (not (if (gestalt2 := Gestalt('[Array: kGestalt_SoftContrast, [Array: struct, boolean, long, long], 1])) then gestalt2[0])) then begin
 					contrastSlider.viewFlags := 0;
 					contrastSliderTweakLeft.viewFlags := 0;
 					contrastSliderTweakRight.viewFlags := 0
 				end;
-			if (if (gestalt3 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1])) then gestalt3[2]) then begin
+			if (if (gestalt3 := Gestalt('[Array: kGestalt_Ext_VolumeInfo, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1])) then gestalt3[2]) then begin
 					VolumeSlider.viewFlags := 0
 				end;
 			if GetUserConfig('ExtraPackageFreezing) then begin
@@ -1055,6 +1168,8 @@ extrasdrawer := {
 			RegStoreChange(appSymbol, kFunction_54c2cd)
 		end),
 	filingButton: nil,
+	// Remakes the icon entries of package packageName on store, keeping it
+	// frozen if it is.
 	RedoPackageEntries: func(packageName, store) begin
 		local PackageEntry;
 		(if (PackageEntry := GetPackageEntry(packageName, store)) then store:AtomicAction(func() begin
@@ -1069,12 +1184,15 @@ extrasdrawer := {
 			end))
 	end,
 	routeScripts: [|Array|: makeBackdrop, extrasdrawerItem],
+	// Another folder was chosen in the show bar: from the top, saved.
 	NewFilingFilter: func(a1) begin
 		topIndexIcon := 0;
 		topIndexText := 0;
 		self:SavePrefs();
 		self:RedoIcons()
 	end,
+	// A new icon entry of class a1 (an extraProtos entry), with frame2's
+	// non-nil slots, filed in frame2.labels.
 	MakeIconEntry: func(a1, frame2) begin
 		(if @extraProtos.(a1) then begin
 				l1 := @extraProtos.(a1):New();
@@ -1093,6 +1211,7 @@ extrasdrawer := {
 	end,
 	prefsEntry: nil,
 	nRows: 0,
+	// Adds a 1.x book's icon.
 	addIcon: func(icon) begin
 		RemoveSlot(icon, '_proto);
 		AddArraySlot(|Parts1.x|, self:MakeIconEntry('|1.XBookEntry|, icon));
@@ -1100,6 +1219,8 @@ extrasdrawer := {
 	end,
 	folderItemsLen: nil,
 	contrastSliderTweakLeft: nil,
+	// Adds the icon entry for part part (of kind value) of package packageName
+	// on store. Returns true if one was made.
 	HandleNewPartEntry: func(store, value, part, packageName) begin
 		local newPart;
 		(if (newPart := self:MakeNewPart(value, part, packageName)) then begin
@@ -1114,6 +1235,8 @@ extrasdrawer := {
 		status:?RedoChildren()
 	end,
 	viewEffect: 133120,
+	// The filing slip's answer for the selected icons: the new folder (a3, if
+	// labelsChanged) and store (a5, if storeChanged); files them (Fileit).
 	FileThis: func(target, labelsChanged, a3, storeChanged, a5) begin
 		if (not self.viewCObject) then begin
 				return nil
@@ -1128,6 +1251,7 @@ extrasdrawer := {
 			end;
 		self:Fileit()
 	end,
+	// A package was moved to another store: moves its icon entries with it.
 	HandleMovedPackage: func(a1) begin
 		local entry, oldSoup, soup, packageName, frame2, cursor, next;
 		entry := a1.entry;
@@ -1140,22 +1264,28 @@ extrasdrawer := {
 					end)
 			end)
 	end,
+	// command-shift-R rotate, command-R route, command-shift-F file,
+	// command-shift-T folder
 	_keyCommands: [|Array|:
-		{char: $r, modifiers: 100663296, keyMessage: '_rotateKeyScript, name: rotate, category: general},
-		{char: $r, modifiers: 33554432, keyMessage: '_actionKeyScript, name: routing, category: routing},
-		{char: $f, modifiers: 100663296, keyMessage: '_filingKeyScript, name: file, category: filing},
-		{char: $t, modifiers: 100663296, keyMessage: '_folderKeyScript, name: folder, category: filing}
+		{char: $r, modifiers: kCommandModifier + kShiftModifier, keyMessage: '_rotateKeyScript, name: rotate, category: general},
+		{char: $r, modifiers: kCommandModifier, keyMessage: '_actionKeyScript, name: routing, category: routing},
+		{char: $f, modifiers: kCommandModifier + kShiftModifier, keyMessage: '_filingKeyScript, name: file, category: filing},
+		{char: $t, modifiers: kCommandModifier + kShiftModifier, keyMessage: '_folderKeyScript, name: folder, category: filing}
 	],
 	memex: nil,
+	// A package put away from the In Box (a1.body.package): installed on the
+	// default store (or unpacked from a binary).
 	PutAwayScript: func(a1) begin
 		local l1;
 		(if IsBinary((l1 := (if a1.body then a1.body.package))) then (if IsPackage(l1) then RegisterNewPackage(l1, GetDefaultStore(), true) else GetDefaultStore():SuckPackageFromBinary(l1, nil)))
 	end,
+	// Removes an extra icon entry.
 	RemoveExtraIcon: func(a1) begin
 		EntryRemoveFromSoupXmit(a1, 'ExtrasDrawer);
 		self:InvalIcons()
 	end,
 	targetView: nil,
+	// The info button's Credits: opens or closes the legal notice.
 	DoInfoLegal: func() begin
 		local l1;
 		(if legalese then legalese:Close() else begin
@@ -1164,6 +1294,9 @@ extrasdrawer := {
 			end)
 	end,
 	viewHelpTopic: learn,
+	// Before a backup (a1: the soups being backed up): if the system soup is
+	// among them, saves the built-in icons' folders and order in the
+	// 'BuiltInExtrasState preferences.
 	SaveBuiltInExtrasState: func(a1) begin
 		local soup, cursor, builtInExtrasState, entry;
 		(if BFind(a1, @systemSoupName, '|str<|, nil) then (if (soup := GetStores()[0]:GetSoup("Packages")) then begin
@@ -1183,6 +1316,7 @@ extrasdrawer := {
 	_folderKeyScript: func(a1) begin
 		PressButton(Show.showBarText)
 	end,
+	// The routing slip's Freeze.
 	FreezeActionScript: func(a1, a2) begin
 		self:GenericActionScript('freeze, 'FreezeSelectedIcon, nil, "freeze ^1", "This icon can\u2019\ut be frozen^?0 because it is ^0||.", "These icons can\u2019\ut be frozen^?0 because they are ^0||.")
 	end
@@ -1196,13 +1330,17 @@ extrasdrawerItem := {title: delete, icon: @routetrashBitmap, routeScript: 'Delet
 
 _cacheContextViewBounds_2 := {left: 0, top: -184, right: 0, bottom: 0};
 
+// the icons (a protoFinderWindow of the drawer's entries)
 iconSpace := {
 	viewBounds: {left: 0, top: 13, right: 0, bottom: -44},
 	viewJustify: vjParentFullH + vjParentFullV,
 	preallocatedContext: 'iconSpace,
+	// A tap on an icon makes the icons the key view.
 	HandleChildClick: func() begin
 		SetKeyView(iconSpace, 0)
 	end,
+	// A tap outside the icons' bounds is ignored; inside, the icons take the
+	// keys.
 	viewClickScript: func(unit) begin
 		local pt, l2, y, box;
 		l2 := (pt := GetPoint(6, unit)).x;
@@ -1216,6 +1354,8 @@ iconSpace := {
 				inherited:?viewClickScript(unit)
 			end)
 	end,
+	// Makes fakeTarget the selected icons: their common folder and store (nil
+	// if they differ). Returns the selected icons, or nil if none.
 	SetupFakeTargetHelper: func() begin
 		if (Length((selectedIcons := iconSpace:GetSelectedIcons())) = 0) then begin
 				return (fakeTarget.kids := nil)
@@ -1244,13 +1384,17 @@ iconSpace := {
 		fakeTarget.newStore := nil;
 		(fakeTarget.kids := selectedIcons)
 	end,
+	// SetupFakeTargetHelper, telling the user if nothing is selected.
 	SetupFakeTarget: func() begin
 		local setupFakeTargetHelper;
 		if (not (setupFakeTargetHelper := self:SetupFakeTargetHelper())) then begin
-				self:Notify(3, title, "Nothing is selected.")
+				self:Notify(kNotifyAlert, title, "Nothing is selected.")
 			end;
 		setupFakeTargetHelper
 	end,
+	// Of the selected icons a1, keeps those that may be routed; their packages
+	// (unless copy-protected) become fakeTarget.packs (one, or a cursor of
+	// them). Returns true if any can be routed.
 	PostSetupFakeTarget: func(a1) begin
 		list := [Array: ];
 		list2 := [Array: ];
@@ -1284,6 +1428,7 @@ iconSpace := {
 
 Show_3 := {preallocatedContext: 'Show, _proto: @protoShowBar};
 
+// the volume slider
 VolumeSlider_2 := {
 	viewBounds: {left: 12, top: -40, right: 77, bottom: -31},
 	viewJustify: vjParentBottomV,
@@ -1291,13 +1436,15 @@ VolumeSlider_2 := {
 	_proto: @volumeSlider
 };
 
+// the contrast slider: the user's 'lcdContrast, between the limits the
+// soft-contrast Gestalt gives; it follows changes made elsewhere
 contrastSlider := {
 	viewBounds: {left: 0, top: -40, right: 60, bottom: -31},
 	viewJustify: vjParentCenterH + vjParentBottomV,
 	viewSetupFormScript: func() begin
 		local gestalt2;
 		self.viewValue := GetUserConfig('lcdContrast);
-		gestalt2 := Gestalt('[Array: 33554435, [Array: struct, boolean, long, long], 1]);
+		gestalt2 := Gestalt('[Array: kGestalt_SoftContrast, [Array: struct, boolean, long, long], 1]);
 		self.minValue := gestalt2[1];
 		(self.maxValue := gestalt2[2])
 	end,
@@ -1325,6 +1472,7 @@ contrastSlider := {
 	_proto: @protoSlider
 };
 
+// the small arrows at the ends of the contrast slider, stepping it by one
 contrastSliderTweakLeft := {
 	viewClass: clView,
 	viewBounds: {left: -5, top: 0, right: 0, bottom: 5},
@@ -1357,6 +1505,8 @@ contrastSliderTweakRight := {
 
 memoryInfo := "Memory Info";
 
+// the status bar: info (Memory Info, Credits and a licensee's item),
+// rotate, routing and filing buttons, and any other application's buttons
 status_4 := {
 	viewBounds: {left: 0, top: -18, right: 0, bottom: 0},
 	viewChildren: nil,
@@ -1411,6 +1561,7 @@ status_4 := {
 				inherited:pickActionScript(index);
 				iconSpace:SelectNone()
 			end,
+			// Routes the selected icons if they can be routed.
 			buttonClickScript: func() begin
 				local setupFakeTarget;
 				if (not (setupFakeTarget := iconSpace:SetupFakeTarget())) then begin
@@ -1418,7 +1569,7 @@ status_4 := {
 						return nil
 					end;
 				(if iconSpace:PostSetupFakeTarget(setupFakeTarget) then inherited:buttonClickScript() else begin
-						self:Notify(3, title, (if (Length(setupFakeTarget) > 1) then "Can\u2019\ut route these types of icons." else "Can\u2019\ut route this type of icon."));
+						self:Notify(kNotifyAlert, title, (if (Length(setupFakeTarget) > 1) then "Can\u2019\ut route these types of icons." else "Can\u2019\ut route this type of icon."));
 						self:hilite(nil)
 					end)
 			end,
@@ -1452,6 +1603,7 @@ status_4 := {
 	_proto: @newtStatusBar
 };
 
+// the Memory Info slip's "Make Extras the Backdrop" button
 makeBackDrop_2 := {
 	viewBounds: {left: 0, top: -20, right: 170, bottom: -7},
 	viewJustify: 8388758,

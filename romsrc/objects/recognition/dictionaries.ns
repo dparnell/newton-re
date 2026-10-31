@@ -1,3 +1,5 @@
-// dictionaries, and what only it reaches
+// dictionaries: the system's list of dictionary frames for the recognisers
+// (vars.dictionaries at run time; the ROM's copy starts empty and is filled
+// at boot from dictionaryList).
 
 dictionaries := [|Array|: ];

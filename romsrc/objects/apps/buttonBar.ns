@@ -1,10 +1,19 @@
-// buttonBar, and what only it reaches
+// buttonBar: the button bar (the "soft" one of the MessagePad 2x00 era,
+// GetRoot().buttons): a strip along one edge of the screen
+// (displayParams.buttonBarPosition, or 'none) holding icons of the Extras
+// Drawer's parts. It is a protoFinderWindow on the Packages soups' entries
+// tagged '_buttonBar, ordered by their sequence: those with a negative
+// sequence are the fixed icons, the rest (from 1000) the mobile ones.
+// Icons that do not fit show in the Extras Drawer's Unfiled Icons; the
+// overview and scroll buttons sit at one end (bbarControls).
 
 buttonBar := {
 	hSpacing: 40,
+	// Remakes the icons (if the bar is open).
 	RedoIcons: func() begin
 		(if viewCObject then iconSpace:RedoChildren())
 	end,
+	// Keeps the bar behind the root's first child.
 	viewSetupDoneScript: func() begin
 		self:MoveBehind(GetRoot():ChildViewFrames()[0])
 	end,
@@ -22,6 +31,8 @@ buttonBar := {
 		viewChildren: nil,
 		viewFlags: vClickable + vGesturesAllowed
 	},
+	// The bar's part entries, apart from the backdrop application's:
+	// {fixed: those of negative sequence, mobile: the rest}, each in order.
 	GetPartEntries: func() begin
 		local list, list2, blessedapp, _buttonBar, next;
 		list := [Array: ];
@@ -40,12 +51,15 @@ buttonBar := {
 			end);
 		{fixed: list, mobile: list2}
 	end,
+	// The query of the bar's icons: entries tagged '_icon and '_buttonBar, not
+	// soups or frozen ones, by sequence.
 	GetQuerySpec: func(a1) begin
 		'{type: index, indexPath: sequence, tagspec: {all: [Array: _icon, _buttonBar], none: [Array: _soups, _frozen]}}
 	end,
 	viewQuitScript: func() begin
 		(visibleItems := nil)
 	end,
+	// the 4-bit backdrop tile for each position of the bar
 	backgrounds: {
 		left: {
 			bounds: {left: 0, top: 0, right: 46, bottom: 40},
@@ -65,9 +79,11 @@ buttonBar := {
 		}
 	},
 	preallocatedContext: 'buttons,
+	// Opens the bar unless the screen has none.
 	InitButtonBar: func() begin
 		(if (displayParams.buttonBarPosition <> 'none) then self:Open())
 	end,
+	// Tiles the background picture over the bar.
 	viewDrawScript: func() begin
 		graphicSize2 := GraphicSize((l1 := backgrounds.(displayParams.buttonBarPosition)));
 		box := self:LocalBox();
@@ -80,6 +96,8 @@ buttonBar := {
 					end)
 			end)
 	end,
+	// How many icons fit along the bar (40 pixels are kept for the controls),
+	// taking the icon spacing from the user's configuration if set.
 	IconCapacity: func() begin
 		local buttonBarIconSpacingH, buttonBarIconSpacingV;
 		if (buttonBarIconSpacingH := GetUserConfig('buttonBarIconSpacingH)) then begin
@@ -103,6 +121,8 @@ buttonBar := {
 	viewFlags: vClickable + vGesturesAllowed,
 	overUp: nil,
 	soft: true,
+	// A new screen orientation: reopen the bar, warning again if the icons do
+	// not all fit.
 	ReOrientToScreen: func() begin
 		saturationCheck := true;
 		self:_Close();
@@ -111,6 +131,7 @@ buttonBar := {
 	viewBounds: nil,
 	_proto: @protoFinderWindow,
 	labelsFilter: '_buttonBar,
+	// Renumbers the entries: fixed ones get -n to -1, mobile ones 1000 on.
 	ResequencePartEntriesQT: func(fixed, mobile) begin
 		if fixed then begin
 				count := Length(fixed);
@@ -125,6 +146,7 @@ buttonBar := {
 					EntryChange(value)
 				end))
 	end,
+	// the icon of a bar along a side: as tall as the vertical icon spacing
 	ProtoSoftButtonBarIconV: {
 		viewBounds: {left: 0, top: 0, right: 0, bottom: 40},
 		viewJustify: vjCenterH + vjBottomV + vjParentFullH + vjSiblingBottomV,
@@ -144,6 +166,7 @@ buttonBar := {
 	iconSpace: nil,
 	appSymbol: 'buttons,
 	viewJustify: 0,
+	// the overview and scroll buttons at one end of the bar
 	bbarControls: {
 		viewClass: clView,
 		viewFormat: 0,
@@ -171,20 +194,28 @@ buttonBar := {
 	title: "Button Bar",
 	iconSpacingH: 40,
 	visibleItems: nil,
+	// After a drag and drop: remake the icons, and the Extras Drawer's too if
+	// the icon came from there.
 	RedoIconsAfterDrop: func(externalDrop) begin
 		self:RedoIcons();
 		(if externalDrop then GetRoot().ExtrasDrawer:RedoIconsAfterDrop(nil))
 	end,
 	vSpacing: 40,
 	closeable: nil,
+	// The bar's bounds are displayParams.buttonBarBounds, made local to the
+	// application area.
 	viewSetupFormScript: func() begin
 		(self.viewBounds := OffsetRect(displayParams.buttonBarBounds, (-displayParams.appAreaGlobalLeft), (-displayParams.appAreaGlobalTop)))
 	end,
+	// A tap on the bar: the ink is taken off without delay (the pen is not
+	// writing here).
 	viewClickScript: func(unit) begin
 		InkOffUnHobbled(unit);
 		inherited:?viewClickScript(unit)
 	end,
 	hasBackground: true,
+	// the icon of a bar along the top or bottom: as wide as the horizontal
+	// icon spacing
 	ProtoSoftButtonBarIconH: {
 		viewBounds: {left: 0, top: 4, right: 40, bottom: 0},
 		viewJustify: vjCenterH + vjBottomV + vjParentFullV + vjSiblingRightH,
@@ -194,6 +225,8 @@ buttonBar := {
 			frame2 := inherited:GetAdjustedProto();
 			if ((iconSpacingH := GetRoot().buttons.iconSpacingH) <> 40) then begin
 					if IsReadOnly(frame2) then begin
+							// looks like a ROM bug: the vertical one makes {_proto: frame2}; this one
+							// protos from self, losing what inherited:GetAdjustedProto adjusted
 							frame2 := {_proto: self, viewBounds: nil}
 						end;
 					frame2.viewBounds := SetBounds(0, 4, iconSpacingH, 0)
@@ -203,6 +236,10 @@ buttonBar := {
 		_proto: @protoSoftButtonBarIcon
 	},
 	debug: 5075,
+	// Applies a new arrangement a1 {fixed, mobile} (arrays of part entries'
+	// keys): the bar's old entries are untagged and given Extras Drawer
+	// sequence numbers, the new ones tagged '_buttonBar and renumbered. Then
+	// tells the Packages soup's watchers.
 	ReConfigure: func(a1) begin
 		l1 := GetRoot().ExtrasDrawer;
 		l2 := self:GetPartEntries();
@@ -247,6 +284,8 @@ buttonBar := {
 		XmitSoupChange("Packages", 'ButtonBar, 'whatThe, nil);
 		nil
 	end,
+	// Puts part a1 on the bar at index a2 (the end if nil), among the fixed
+	// icons if a3, else the mobile ones; it is moved if already there.
 	AddPartEntry: func(a1, a2, a3) begin
 		local partEntry, partEntries;
 		partEntry := GetRoot().ExtrasDrawer:GetPartEntry(a1);
@@ -276,6 +315,11 @@ buttonBar := {
 		XmitSoupChange("Packages", 'ButtonBar, 'whatThe, nil);
 		nil
 	end,
+	// Makes the icons: the entries of every store's Packages soup tagged for
+	// the bar (except the backdrop app's), each marked notActive when its
+	// package is not active, sorted by sequence, cut to what fits (warning
+	// once), the first offset to centre the row, and the controls added at
+	// their end.
 	viewSetupChildrenScript: func() begin
 		local v3_xxxxxxxxxxxxxxxxxxxwww, v6_xxxxxxwwwwww, v7_zzzzzzz, v8_vvvvvvvuuuuuuu, v9_wwwvvvvvv, v11_zzzyyyyyyyyyyyyyyyyyy, v13_xxxxxxxxxxxxxxxxxxwwwww, v14_yyyyyyyyyyyyyyyxxx, v16_kj, v17_yyyyyyyyyyyyyyyyyyyyyyyyyx, v18_jjjj, v19_wwwvvvvvvv, v23_zzzzzzzzzyyyy, v24_wwwwwwwwwwwwwvvvvvvv;
 		needsRecalc := 'all;
@@ -324,7 +368,7 @@ buttonBar := {
 				SetLength(v16_kj, v24_wwwwwwwwwwwwwvvvvvvv);
 				if saturationCheck then begin
 						saturationCheck := nil;
-						self:Notify(3, title, "The button bar couldn\u2019\ut hold all the icons.  The overflow will show in \u201C\uUnfiled Icons\u201D\u.")
+						self:Notify(kNotifyAlert, title, "The button bar couldn\u2019\ut hold all the icons.  The overflow will show in \u201C\uUnfiled Icons\u201D\u.")
 					end
 			end;
 		if (if (Length(v16_kj) > 0) then ((v7_zzzzzzz <> 0) or (v23_zzzzzzzzzyyyy <> 0))) then begin
@@ -334,6 +378,7 @@ buttonBar := {
 		viewChildren := v16_kj;
 		(if ((displayParams.buttonBarControlsPosition = 'top) or (displayParams.buttonBarControlsPosition = 'left)) then ArrayInsert(viewChildren, bbarControls, 0) else AddArraySlot(viewChildren, bbarControls))
 	end,
+	// The icon views (the children without the controls).
 	GetChildIconViews: func() begin
 		local childViewFrames;
 		childViewFrames := self:ChildViewFrames();
