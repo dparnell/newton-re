@@ -1,7 +1,17 @@
-// newtOverLayout, and what only it reaches
+// newtOverLayout, and what only it reaches: the NewtApp framework's default
+// overview layout (NPR "newtOverLayout"), based on newtLayout and on the
+// protoOverview functions it shares with the system's overviews (the slots
+// below set to functions of the same name).  It has no children: it draws one
+// line per entry (the shapes Abstract returns) with a check box column at the
+// left, keeps the checked entries as aliases in `selected`, and hands them to
+// filing, routing and delete as a target cursor.
 
 newtOverLayout := {
 	ForEachSelected: ForEachSelected,
+	// the system services' question for the target (NPR GetTargetInfo(targetType)):
+	// one checked entry is the target itself; several are a target cursor of the
+	// class overviewTargetClass (default 'newtOverview); targetStore is their store
+	// if they share one, else nil
 	GetTargetInfo: func(a1) begin
 		frame2 := {target: nil, targetView: self};
 		if (a1 = 'Filing) then begin
@@ -19,6 +29,7 @@ newtOverLayout := {
 							end;
 						frame2.target := CreateTargetCursor(value, selected);
 						if (a1 = 'Filing) then begin
+								// a placeholder folder: the filing slip shows no current folder for several
 								frame2.target.labels := '__XXTempLabel
 							end
 					end;
@@ -33,7 +44,7 @@ newtOverLayout := {
 										store2 := store
 									end else begin
 										if (store <> store2) then begin
-												break (store2 := nil)
+												break (store2 := nil) // on different stores: no common store
 											end
 									end
 							end
@@ -42,10 +53,14 @@ newtOverLayout := {
 			end;
 		frame2
 	end,
+	// Enter or Return (the key commands below): opens the highlighted entry in the
+	// previous layout
 	ChooseCurrItem: func(a1) begin
 		clicker();
 		newtAppBase:ShowLayout(nil)
 	end,
+	// newtLayout's NewEntry for the overview: adds the entry with undo and, when
+	// a2 (_context) is true, goes to it in the previous layout
 	NewEntry: func(a1, _context, store) begin
 		masterSoup:AddEntry(a1, store);
 		AddUndoSend(layout, 'KillEntry, [Array: a1]);
@@ -56,18 +71,24 @@ newtOverLayout := {
 				newtAppBase:RedoChildren()
 			end)
 	end,
+	// listens for stationery changes (HandleStationeryChange), registered under a
+	// name made of the view and the app symbol
 	viewSetupDoneScript: func() begin
 		RegStationeryChange(Intern(Stringer([Array: viewCObject, ":Overview:", GetVariable(self, 'appSymbol)])), func(a1, a2, a3, a4) begin
 			self:HandleStationeryChange(a1, a2, a3, a4)
 		end);
 		inherited:?viewSetupDoneScript()
 	end,
+	// a dataDef was registered or removed: redisplay, as icons may have changed
 	HandleStationeryChange: func(a1, a2, a3, a4) begin
 		(if (if self.viewCObject then (a2 = 'dataDef)) then self:DoRetarget())
 	end,
 	SelectItem: SelectItem,
+	// where the check boxes are drawn in each line
 	checkBoxHorzOffset: 0,
+	// the number of lines Abstract has made so far, to find the highlighted one
 	hiliteCount: nil,
+	// leaving the overview: the main layout's cursor goes to the highlighted entry
 	viewQuitScript: func() begin
 		if hiliteEntry then begin
 				if IsSoupEntry(hiliteEntry) then begin
@@ -79,11 +100,14 @@ newtOverLayout := {
 		UnRegStationeryChange(Intern(Stringer([Array: viewCObject, ":Overview:", GetVariable(self, 'appSymbol)])));
 		inherited:?viewQuitScript()
 	end,
+	// unchecks every line (the undo of checkAll)
 	UnCheckAll: func() begin
 		hilitedIndex := nil;
 		selected := nil;
 		layout:DoRetarget()
 	end,
+	// draws the "no items" text when empty, else the lines' shapes, the gray
+	// divider beside the check boxes and the highlight of the current line
 	viewDrawScript: func() begin
 		local box, hiliteShape;
 		(if (if (not forceNewEntry) then (not dataCursor:entry())) then self:DrawShape(self:AppEmpty(), '{}) else begin
@@ -94,14 +118,16 @@ newtOverLayout := {
 						self:DrawShape(pieces, viewStyle)
 					end;
 				if (if dividerLine then (not nothingCheckable)) then begin
-						self:DrawShape(MakeRect((selectIndent - dividerLine), 0, selectIndent, (maxLines * lineHeight)), '{penPattern: 0, fillPattern: 3})
+						self:DrawShape(MakeRect((selectIndent - dividerLine), 0, selectIndent, (maxLines * lineHeight)), '{penPattern: vfNone, fillPattern: 3})
 					end;
 				(if hilitedIndex then begin
 						(box := self:LocalBox()).bottom := lineHeight;
+						// box.bottom: one line high
 						self:hiliter((hiliteShape := self:GetHiliteShape(19, box)), hilitedIndex, 'off)
 					end)
 			end)
 	end,
+	// the overview's own cursor, a clone of dataCursor once one is made
 	SetupCursor: func() begin
 		inherited:SetupCursor();
 		(if cursor then (self.cursor := dataCursor:clone()))
@@ -109,8 +135,13 @@ newtOverLayout := {
 	CheckState: CheckState,
 	GetIndexEntry: GetIndexEntry,
 	CheckOn: CheckOn,
+	// NPR Abstract(targetEntry, bbox): the shapes for one line: the dataDef's icon,
+	// the entry's text (its StringExtract) and, in All Items or with several stores,
+	// the folder's or the store's name at the right; an entry with no dataDef is
+	// left to the app's OverviewAbstract, else drawn as an info icon
 	Abstract: compile(
 		constants: {
+			// the style of the right-hand folder and store names
 			kLiteral_49cdf1: '{font: tsSystem + tsSize(9), justification: right}
 		},
 		func(items2Item, copy) begin
@@ -122,12 +153,12 @@ newtOverLayout := {
 			l1 := (if (labelsFilter = '_all) then items2Item.labels);
 			(if (entryDataDef := GetEntryDataDef(items2Item)) then begin
 					icon := entryDataDef.icon;
-					l4 := ((copy.left + 16) + 2);
+					l4 := ((copy.left + 16) + 2); // after the 16-pixel icon
 					stringExtract := entryDataDef:StringExtract(items2Item, 2);
 					l6 := (copy.right - l4);
 					if l1 then begin
 							if (l7 := userConfiguration.userFolders.(items2Item.labels)) then begin
-									l6 := (l6 - StrFontWidth(l7, 9216))
+									l6 := (l6 - StrFontWidth(l7, tsSystem + tsSize(9)))
 								end
 						end;
 					list := [Array: OffsetShape(MakeShape(icon), copy.left, (copy.top + 2)), MakeText(StrTruncate(stringExtract, l6), l4, copy.top, copy.right, (copy.top + 11))];
@@ -145,10 +176,12 @@ newtOverLayout := {
 					list
 				end else (if (not (list := self:?OverviewAbstract(items2Item, copy))) then [Array: OffsetShape(MakeShape(@infoBitmap), copy.left, (copy.top + 2))] else list))
 		end),
+	// true: each line shows its store's name when more than one store is present
 	showStoreName: nil,
 	maxLines: 0,
 	_proto: @newtLayout,
 	cursor: nil,
+	// the folder or store changed: keeps only the checked entries still shown
 	FilterChanged: func() begin
 		inherited:FilterChanged();
 		list := [Array: ];
@@ -166,6 +199,7 @@ newtOverLayout := {
 			end;
 		(hilitedIndex := nil)
 	end,
+	// Command-A: checks every entry shown (selected: aliases of them all), undoably
 	checkAll: compile(
 		constants: {
 			kFunction_49dabd: func(a1) begin
@@ -178,14 +212,16 @@ newtOverLayout := {
 			try begin
 					selected := MapCursor(curse, kFunction_49dabd)
 				end onexception |evt.ex| do begin
-					self:Notify(3, title, "There was not enough memory to select all items. Some items may still be unselected.")
+					self:Notify(kNotifyAlert, title, "There was not enough memory to select all items. Some items may still be unselected.")
 				end;
 			AddUndoSend(layout, 'UnCheckAll, [Array: ]);
 			layout:DoRetarget()
 		end),
+	// the overview has no entry to flush
 	EndFlush: func() begin
 		nil
 	end,
+	// Command-Return: checks or unchecks the highlighted line
 	SelectCurrItem: func(a1) begin
 		(if (if hilitedIndex then hiliteEntry) then begin
 				clicker();
@@ -198,7 +234,9 @@ newtOverLayout := {
 	textFlags: 5120,
 	Scroller: Scroller,
 	SetupAbstracts: SetupAbstracts,
+	// the height of a line in pixels
 	lineHeight: 32,
+	// a found item is shown in the previous layout, not in the overview
 	ShowFoundItem: func(a1, a2) begin
 		hiliteEntry := nil;
 		newtAppBase:ShowLayout(nil);
@@ -207,8 +245,10 @@ newtOverLayout := {
 	trackOverview: trackOverview,
 	viewStyle: nil,
 	viewScrollDownScript: viewScrollDownScript,
+	// NPR: true hides the check boxes and the dotted line
 	nothingCheckable: nil,
 	checkScrollability: nil,
+	// the checked entries (entry aliases)
 	selected: nil,
 	pieces: nil,
 	items: nil,
@@ -217,9 +257,13 @@ newtOverLayout := {
 	CheckOff: CheckOff,
 	viewScrollUpScript: viewScrollUpScript,
 	hilitedIndex: nil,
+	// the width of the dotted line left of selectIndent (nil: none)
 	dividerLine: 1,
+	// NPR: true centres the current entry in the list
 	centerTarget: nil,
+	// the entry of the highlighted line (the one the up and down keys move)
 	hiliteEntry: nil,
+	// starts with the main layout's current entry highlighted
 	viewSetupFormScript: func() begin
 		local entry;
 		inherited:viewSetupFormScript();
@@ -230,6 +274,8 @@ newtOverLayout := {
 		SetKeyView(self, 0)
 	end,
 	GetHiliteShape: GetHiliteShape,
+	// the down arrow: highlights the next entry; past the last line, the list
+	// is redone with that entry at the top
 	downOneItem: func(a1) begin
 		local copy, next;
 		clicker();
@@ -250,10 +296,13 @@ newtOverLayout := {
 			end;
 		RefreshViews()
 	end,
+	// filing has moved the checked entries: none are checked any more
 	FilingChangedX: func() begin
 		selected := nil;
 		inherited:?FilingChangedX()
 	end,
+	// a tap on line a1 (at x, y): left of selectIndent it toggles the check box,
+	// else it opens that entry in the previous layout
 	HitItem: func(a1, trackScrollingItem, trackScrollingItem2) begin
 		(if (trackScrollingItem < selectIndent) then begin
 				self:SelectItem(a1);
@@ -268,6 +317,8 @@ newtOverLayout := {
 			end)
 	end,
 	viewClickScript: viewClickScript_3,
+	// filing the checked entries: relabels each and/or moves it to the store
+	// (copies an entry off a read-only store), then broadcasts the soup change
 	FileThis: func(target, labelsChanged, a3, storeChanged, a5) begin
 		if storeChanged then begin
 				if (not (soup := a5:GetSoup((l2 := allSoups.(mastersoupSlot).soupName)))) then begin
@@ -295,7 +346,7 @@ newtOverLayout := {
 									end
 							end;
 						if (if storeChanged then (EntryStore(resolveEntryAlias2) <> a5)) then begin
-								self:SetActionDescription(-8101);
+								self:SetActionDescription(-8101); // the action description the root's MoveTarget sets too
 								if EntryStore(resolveEntryAlias2):IsReadOnly() then begin
 										EntryCopy(resolveEntryAlias2, soup)
 									end else begin
@@ -308,12 +359,16 @@ newtOverLayout := {
 							end
 					end
 			end);
+		// looks like a ROM bug: l7 is the last entry's changed flag only, so relabelling
+		// that changed some entries but not the last does not broadcast
 		(if (storeChanged or l7) then XmitSoupChange(masterSoup.soupName, appSymbol, 'whatThe, nil))
 	end,
+	// Command-A check all; the up and down arrows; Enter and Return open the
+	// highlighted entry; Command-Return checks it
 	_keyCommands: [|Array|:
 		{
 			char: $a,
-			modifiers: 33554432,
+			modifiers: kCommandModifier,
 			keyMessage: '_checkAllKeyScript,
 			name: "Check All",
 			category: viewing
@@ -324,7 +379,7 @@ newtOverLayout := {
 		{char: $\u000d, modifiers: 0, keyMessage: 'ChooseCurrItem, name: choose, category: viewing},
 		{
 			char: $\u000d,
-			modifiers: 33554432,
+			modifiers: kCommandModifier,
 			keyMessage: 'SelectCurrItem,
 			name: "Check",
 			category: viewing
@@ -332,9 +387,12 @@ newtOverLayout := {
 	],
 	viewFont: tsSystem + tsSize(10) + tsBold,
 	checkBoxVertOffset: 3,
+	// the overview itself has the user's attention
 	GetActiveViewX: func() begin
 		self
 	end,
+	// the up arrow: highlights the previous entry; above the first line, the list
+	// is redone with that entry at the top
 	upOneItem: func(a1) begin
 		local copy, prev;
 		clicker();
@@ -355,6 +413,8 @@ newtOverLayout := {
 			end;
 		RefreshViews()
 	end,
+	// sets up the cursor (on a first display, around the current entry when
+	// centerTarget is set: maxLines is the lines that fit) and makes the lines
 	viewSetupChildrenScript: func() begin
 		local dataCursor2;
 		dataCursor2 := dataCursor;
@@ -377,7 +437,9 @@ newtOverLayout := {
 	isSelected: isSelected,
 	scrollOrigin: 0,
 	autoDeselect: nil,
+	// the width of the check box column: taps left of it check
 	selectIndent: 15,
+	// Command-A
 	_checkAllKeyScript: func(a1) begin
 		clicker();
 		self:checkAll();

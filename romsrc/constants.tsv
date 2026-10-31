@@ -683,3 +683,16 @@ vfInset	<<16
 vfShadow	<<18
 vfRound	<<24
 tsSize	<<10
+# newtapp (NewtApp framework, larger files): the Newton Programmer's Reference 2.0 names and values (kCommandModifier, kShiftModifier: "Keyboard Modifier Keys"; fxZoomOpenEffect, fxVenetianBlindsEffect: viewEffect constants; modeXor: viewTransferMode constants; vfNone: viewFormat constants, a style frame's penPattern; aeLine: gesture constants; kNumbersOnlyDictionary: "System-supplied lexical dictionaries", the NPR's kNumbersOnlyDictionary1 without its footnote mark; oneLineOnly: viewJustify text limits, src/views/TextView.h vjOneLineOnly; kNoOptions, kHasScrollersOption: newtROEditView's optionFlags); kNotifyAlert: the NPR's Notify levels, 3 the one BHNotify (romsrc builtinFunctions.ns) shows at once with the beep
+kNotifyAlert	3
+kCommandModifier	0x2000000
+kShiftModifier	0x4000000
+fxZoomOpenEffect	236577
+fxVenetianBlindsEffect	131296
+modeXor	2
+vfNone	0
+aeLine	16
+kNumbersOnlyDictionary	117
+oneLineOnly	0x800000
+kNoOptions	0
+kHasScrollersOption	1
