@@ -1,4 +1,9 @@
-// part, and what only it reaches
+// The Connection package's frames part: the Dock application, which connects
+// the Newton to Newton Connection Utilities (or Newton Backup Utility) on a
+// desktop computer for synchronizing, backing up and restoring, installing
+// packages, importing files and keyboard passthrough.  Its export tables hand
+// the application (@8254, 'Connection) and its slips (@8255-@8293,
+// 'ConnectionInternal) to the system.
 
 part := array(nil, {
 	_ImportTable: [|Array|: {name: 'ConnectionInternal, major: 1, minor: 1}, {name: 'Connection, major: 1, minor: 0}],
@@ -90,11 +95,17 @@ part := array(nil, {
 		bounds: {left: 0, top: 0, right: 40, bottom: 25}
 	},
 	theForm: @8275,
+	// Run by installScript: defines the global functions other parts of the system
+	// call (ConnOpenFileBrowser, ConnOpenUserPsswdSlip, ConnImportFile,
+	// GetApplicationNames) and, when the preferences ask for it, registers for
+	// automatic docking.
 	devInstallScript: compile(
 		constants: {
+			// GetApplicationNames: asks the application.
 			kFunction_7638d9: func(a1, a2) begin
 				GetRoot().Connection:GetApplicationNames(a1, a2)
 			end,
+			// The auto-dock callback: on 'connect, starts docking.
 			kFunction_757359: func(a1) begin
 				(if (a1 = 'connect) then GetRoot().Connection:autodock())
 			end
@@ -107,6 +118,8 @@ part := array(nil, {
 			functions.GetApplicationNames := kFunction_7638d9;
 			(if (connection := GetAppPrefs('Connection, '{type: serial})).autodock then RegAutoDock('Connection, kFunction_757359))
 		end),
+	// The part's installScript: runs devInstallScript once and takes it, and
+	// itself, out of the part frame so they are not kept.
 	installScript: func(partFrame) begin
 		partFrame:?devInstallScript(partFrame);
 		if HasSlot(partFrame, 'devInstallScript) then begin

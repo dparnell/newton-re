@@ -51,7 +51,7 @@ export70 := {
 				local driveFromName;
 				local text;
 				local copy;
-				(if (not callReadCommand) then (if (not setupDone) then self:StopOpen(-16005)) else (foreach item in callReadCommand do begin
+				(if (not callReadCommand) then (if (not setupDone) then self:StopOpen(kCommErrRequestCanceled)) else (foreach item in callReadCommand do begin
 							if (item.type = 2) then begin
 									AddArraySlot(currentFolders, item)
 								end else begin
@@ -66,7 +66,7 @@ export70 := {
 				call callWhenSetup with ()
 			end;
 		if aborting then begin
-				if (if endpoint.connected then (aborting <> -16005)) then begin
+				if (if endpoint.connected then (aborting <> kCommErrRequestCanceled)) then begin
 						protoContext:SendCancelToDesktop(endpoint)
 					end;
 				protoContext:HandleErrorDuringStartup(endpoint, self, aborting);

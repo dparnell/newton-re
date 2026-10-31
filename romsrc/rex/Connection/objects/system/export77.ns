@@ -125,7 +125,7 @@ export77 := {
 							end
 					end
 			end else begin
-				if (error = -28023) then begin
+				if (error = kDockErrRetryPassword) then begin
 						frame2 := {memory: nil, |guest?|: nil, |name?|: nil, title: nil, buttonTitle: "Cancel", Keyboard: true, |password?|: {guest: nil, users: 'hidden}};
 						ConnOpenUserPsswdSlip(endpoint, protoContext.RetryPasswordScript, frame2)
 					end else begin
@@ -306,7 +306,7 @@ export77 := {
 						syncChanges := endpoint:GetSyncChanges()
 					end onexception |evt.ex| do begin end
 			end;
-		(if (if (if (if (not stopping2) then restoring) then (error <> -28014)) then syncChanges) then self:FinishRestore(endpoint, error, syncChanges) else begin
+		(if (if (if (if (not stopping2) then restoring) then (error <> kDockErrNoStore)) then syncChanges) then self:FinishRestore(endpoint, error, syncChanges) else begin
 				if protoContext.keyPassthroughOn then begin
 						protoContext:ToggleKeyboardPassthrough(true)
 					end;
@@ -321,7 +321,7 @@ export77 := {
 					end;
 				(if inited then begin
 						self:Close();
-						(if (if restoreRoot then (((not restoring) or (error = -28014)) or (not syncChanges))) then protoContext:ReopenBlessed())
+						(if (if restoreRoot then (((not restoring) or (error = kDockErrNoStore)) or (not syncChanges))) then protoContext:ReopenBlessed())
 					end)
 			end)
 	end,

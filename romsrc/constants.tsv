@@ -694,3 +694,9 @@ kNotifyAlert	3
 kUserDictionary	31
 # Cardfile: the Newton Programmer's Reference 2.0 (a style frame's transferMode)
 modeXor	2
+# Connection: the docking session's states (eDockingState), src/comms/Docker.h
+kDockStateNone	1
+kDockStateSync	2
+kDockStateRestore	3
+kDockStateLoadPackage	4
+kDockStateKeyboard	9

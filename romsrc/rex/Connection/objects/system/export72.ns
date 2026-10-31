@@ -40,7 +40,7 @@ export72 := {
 								theFileBrowser.endpoint := endpoint;
 								theFileBrowser:FilterDialog()
 							end onexception |evt.ex| do begin
-								if ((error := CurrentException().error) <> -16005) then begin
+								if ((error := CurrentException().error) <> kCommErrRequestCanceled) then begin
 										endpoint:ConnectionDone(error)
 									end;
 								closing := true;

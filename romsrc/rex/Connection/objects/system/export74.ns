@@ -52,7 +52,7 @@ export74 := {
 				end onexception |evt.ex| do begin
 					error := CurrentException().error
 				end;
-			if (error = -28020) then begin
+			if (error = kDockErrBadExtension) then begin
 					error := 0
 				end;
 			if (error = 0) then begin
