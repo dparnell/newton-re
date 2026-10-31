@@ -1,4 +1,8 @@
-// newtStationerMenu, and what only it reaches
+// newtStationerMenu: a New button that lists all the registered dataDefs of the
+// application (superSymbol), each with its icon, and adds an entry of the one chosen
+// (the older form of newtNewStationeryButton).
+//
+// This file holds newtStationerMenu and what only it reaches.
 
 newtStationerMenu := {
 	_proto: @protoPopupButton,
@@ -8,10 +12,13 @@ newtStationerMenu := {
 	popup: nil,
 	sorter: '|str<|,
 	keyButton: '_newKeyButton,
+	// register as one of the application's key buttons: newtAppBase.(keyButton) is this view
+	// (the buttons the keyboard's and other commands can find)
 	viewSetupDoneScript: func() begin
 		inherited:?viewSetupDoneScript();
 		(if keyButton then (newtAppBase.(keyButton) := self))
 	end,
+	// add an entry made from the dataDef chosen; the result is AddEntryFromStationery's
 	pickActionScript: func(index) begin
 		local addEntryFromStationery;
 		inherited:pickActionScript(index);
@@ -19,10 +26,12 @@ newtStationerMenu := {
 		popup := nil;
 		addEntryFromStationery
 	end,
+	// no choice: forget the items
 	pickCancelledScript: func() begin
 		inherited:pickCancelledScript();
 		(popup := nil)
 	end,
+	// the picker: every dataDef in the global _dataDefs registry of this application
 	buttonClickScript: func() begin
 		box := self:GlobalBox();
 		popup := [Array: ];
@@ -39,6 +48,7 @@ newtStationerMenu := {
 			end;
 		inherited:buttonClickScript()
 	end,
+	// no longer a key button
 	viewQuitScript: func() begin
 		if keyButton then begin
 				RemoveSlot(newtAppBase, keyButton)

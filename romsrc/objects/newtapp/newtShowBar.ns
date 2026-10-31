@@ -1,7 +1,11 @@
-// newtShowBar, and what only it reaches
+// newtShowBar: a protoNewShowBar (the folder tab) that is the NewtApp
+// application's filter bar (newtAppBase.filterBar).
+//
+// This file holds newtShowBar and what only it reaches.
 
 newtShowBar := {
 	_proto: @protoNewShowBar,
+	// be the application's filter bar
 	viewSetupFormScript: func() begin
 		newtAppBase.filterBar := self;
 		inherited:?viewSetupFormScript()

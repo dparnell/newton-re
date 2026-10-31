@@ -1,4 +1,8 @@
-// newtEntryRollHeader, and what only it reaches
+// newtEntryRollHeader: the header bar between the entries of a NewtApp roll
+// (NPR 2.0), as newtEntryPageHeader but with the entry's own filing and action
+// buttons (its children) and drag resizing.
+//
+// This file holds newtEntryRollHeader and what only it reaches.
 
 newtEntryRollHeader := {
 	viewClass: clView,
@@ -6,13 +10,19 @@ newtEntryRollHeader := {
 	viewBounds: newtEntryPageHeaderViewBounds,
 	viewJustify: vjParentFullH,
 	viewFont: tsSystem + tsSize(10) + tsBold,
+	// the shapes drawn (icon, title, folder name), made once by viewDrawScript
 	pieces: nil,
 	hasFiling: true,
 	resizable: true,
+	// the icon at the left (the dataDef's when it has one); tapping it opens infoBox
 	headerIcon: @infoBitmap,
 	headerText: nil,
 	infoBox: @newtInfoBox,
+	// the open information slip (newtInfoBox), if any
 	info: nil,
+	// the functions all the NewtApp entry headers share (romsrc/objects/shared/functions.ns):
+	// the header is the application's _titleKeyButton; GetTitle is the entry's title or
+	// its date; Popit opens infoBox; InfoChanged redraws a changed title
 	viewSetupFormScript: viewSetupFormScript_2,
 	GetTitle: GetTitle,
 	viewDrawScript: viewDrawScript_3,
@@ -21,5 +31,6 @@ newtEntryRollHeader := {
 	viewQuitScript: viewQuitScript_2,
 	Popit: Popit,
 	viewClickScript: viewClickScript_4,
+	// the entry's own action (routing) and filing buttons
 	viewChildren: [viewChildren: @newtEntryViewRouting, @newtEntryViewFiling]
 };

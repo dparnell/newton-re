@@ -12,6 +12,7 @@ newtDateNTimeFilter := {
 	longFormat: 180969, // yearMonthDayStrSpec's value (@datetimeStrSpecs)
 	shortFormat: nil,
 	format: 170636, // shortTimeStrSpec's value (@datetimeStrSpecs)
+	// the date and the time, or a string in the slot as it is
 	PathToText: func() begin
 		(if IsString(target.(path)) then Clone(target.(path)) else Stringer([Array: (if longFormat then LongDateStr(target.(path), longFormat) else ShortDateStr(target.(path), shortFormat)), " ", TimeStr(target.(path), format)]))
 	end,

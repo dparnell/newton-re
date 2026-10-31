@@ -79,6 +79,7 @@ newtrocomboView := {
 			end;
 		(if shape then self:DrawShape(shape, {font: viewFont, penPattern: BAnd(viewFormat, 15), justification: l2}))
 	end,
+	// no text for routing
 	TextScript: func() begin
 		""
 	end

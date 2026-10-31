@@ -7,6 +7,8 @@
 // This file holds newtFalseEntryView and what only it reaches.
 
 newtFalseEntryView := {
+	// writing the entry back is the application's business: the flushing methods and
+	// FilingChangedX do nothing here
 	FlushEntry: func(a1) begin
 		nil
 	end,
@@ -28,6 +30,7 @@ newtFalseEntryView := {
 	dataSoup: nil,
 	dataSoupSlot: 'dataSoup,
 	_proto: @newtEntryView,
+	// nothing (see FlushEntry)
 	EndFlush: func() begin
 		nil
 	end,
@@ -47,6 +50,7 @@ newtFalseEntryView := {
 					end
 			end)
 	end,
+	// nothing (see FlushEntry)
 	StartFlush: func() begin
 		nil
 	end,
@@ -68,9 +72,11 @@ newtFalseEntryView := {
 		(if (dataDefs := GetDataDefs(DataClassOf(target))) then dataDefs:?SetupForm(target, self))
 	end,
 	parentView: nil,
+	// nothing (see FlushEntry)
 	FilingChangedX: func() begin
 		nil
 	end,
+	// nothing (see FlushEntry)
 	StartFlushWithChild: func(a1) begin
 		nil
 	end,

@@ -1,4 +1,9 @@
-// newtNetChooser, and what only it reaches
+// newtNetChooser: a labelled picker for the desktop computer to connect to over
+// AppleTalk: the computers last used (memory), None, and Choose Other, which opens
+// the network chooser looking up NBPLookupType ("Docker", the desktop connection
+// software).  The slot holds the computer's NBP name, "name:Docker@zone".
+//
+// This file holds newtNetChooser and what only it reaches.
 
 newtNetChooser := {
 	viewBounds: {left: 0, top: 4, right: 0, bottom: 20},
@@ -8,9 +13,12 @@ newtNetChooser := {
 	staticLabelCommands: [|Array|: {item: none, action: 'Clear}, {item: "Choose Other", action: 'choose}],
 	NBPLookupType: "Docker",
 	text: "Desktop Computer",
+	// the text shown: the computer's name from the NBP name
 	TextSetup: func() begin
 		(if target.(path) then GetNames(target.(path)) else "")
 	end,
+	// the picker: the remembered computers, a separator, None and Choose Other, the
+	// current one checked ($\uFC0B; added at the top when not remembered)
 	pickerSetup: func() begin
 		labelCommands := [Array: ];
 		if (memoryItems := GetMemoryItems(memory)) then begin
@@ -45,6 +53,8 @@ newtNetChooser := {
 			end;
 		true
 	end,
+	// None clears the slot; Choose Other opens the network chooser ("=:Docker@", any
+	// name of that type); a remembered computer is stored
 	pickActionScript: func(index) begin
 		local action, l2;
 		base:hilite(nil);
@@ -58,6 +68,8 @@ newtNetChooser := {
 				self:StartFlush()
 			end)
 	end,
+	// the network chooser's answer: store and remember "name:Docker@zone" ("*" the
+	// local zone)
 	networkChooserDone: func(currentSelection, currentZone) begin
 		local text, names;
 		(if viewCObject then (if (names := GetNames(currentSelection)) then begin

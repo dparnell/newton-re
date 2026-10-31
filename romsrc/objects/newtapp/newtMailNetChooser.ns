@@ -1,13 +1,20 @@
-// newtMailNetChooser, and what only it reaches
+// newtMailNetChooser: a labelled picker for the e-mail network an entry uses: the
+// networks registered in the root's mailcategory, by title; the slot holds the
+// network's id (by default the user's mailNetwork, else the first).
+//
+// This file holds newtMailNetChooser and what only it reaches.
 
 newtMailNetChooser := {
 	viewBounds: {left: 0, top: 6, right: 0, bottom: 30},
 	viewJustify: vjParentFullH + vjSiblingBottomV,
 	labelCommands: nil,
 	text: "E-Mail Network",
+	// the ids of the registered mail networks
 	GetSymArray: func() begin
 		(foreach item in GetRoot().mailcategory.mailNetworks collect item.id)
 	end,
+	// the picker's items and the text shown: the chosen network's title (the slot is
+	// filled in with the default first); the parent hears of it by DataChangeNotify
 	TextSetup: func() begin
 		mailNetworks := GetRoot().mailcategory.mailNetworks;
 		symArray := self:GetSymArray();
@@ -36,6 +43,7 @@ newtMailNetChooser := {
 				mailNetwork.title
 			end else "")
 	end,
+	// a network was chosen: store its id
 	LabelActionScript: func(index) begin
 		local mailNetwork, l2;
 		(if (mailNetwork := GetRoot().mailcategory.mailNetworks[index]) then begin

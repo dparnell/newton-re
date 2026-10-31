@@ -26,10 +26,12 @@ newtEmbeddedEntryView := {
 	viewIdleScript: func() begin
 		nil
 	end,
+	// the methods below hand the entry view's work to the outer entry view
 	jamFromEntry: func(resolveEntryAlias) begin
 		parentView:jamFromEntry(resolveEntryAlias)
 	end,
 	_proto: @newtEntryView,
+	// to the outer entry view, as are the others below
 	EndFlush: func() begin
 		parentView:EndFlush()
 	end,
@@ -53,17 +55,21 @@ newtEmbeddedEntryView := {
 					end
 			end)
 	end,
+	// to the outer entry view
 	StartFlush: func() begin
 		parentView:StartFlush()
 	end,
 	viewDef: 'default,
+	// nothing: viewSetupChildrenScript finds the entry
 	viewSetupFormScript: func() begin
 		nil
 	end,
 	parentView: nil,
+	// to the outer entry view
 	FilingChangedX: func() begin
 		parentView:FilingChangedX()
 	end,
+	// to the outer entry view
 	StartFlushWithChild: func(a1) begin
 		parentView:StartFlushWithChild(a1)
 	end,

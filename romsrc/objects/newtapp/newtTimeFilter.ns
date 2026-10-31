@@ -11,6 +11,7 @@ newtTimeFilter := {
 	recFlags: vVisible + vClickable + vGesturesAllowed + vTimeField,
 	increment: 10, // the time popup's step, in minutes
 	format: 170636, // shortTimeStrSpec's value (@datetimeStrSpecs), for TimeStr
+	// the text shown for the slot's value (a string in the slot is shown as it is)
 	PathToText: func() begin
 		(if IsString(target.(path)) then Clone(target.(path)) else TimeStr(target.(path), format))
 	end,

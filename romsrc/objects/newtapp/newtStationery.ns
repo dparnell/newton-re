@@ -20,9 +20,12 @@ newtStationery := {
 	MakeNewEntry: func() begin
 		{}
 	end,
+	// the bounds the entry's data needs, for a roll whose entries vary in height (NPR 2.0
+	// MinimalBounds); nil here
 	MinimalBounds: func(target) begin
 		nil
 	end,
+	// SetupForm(entry, entryView): change the data before it is shown (NPR 2.0); nothing here
 	SetupForm: func(entry, a2) begin
 		nil
 	end,

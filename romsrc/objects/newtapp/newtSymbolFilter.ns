@@ -11,6 +11,7 @@ newtSymbolFilter := {
 	textFrame: nil,
 	// the slot of textFrame's frames that holds the text; nil when they are the text
 	textFramePath: nil,
+	// the symbol's text from textFrame, or its name (a string in the slot as it is)
 	PathToText: func() begin
 		(if IsString(target.(path)) then Clone(target.(path)) else (if textFrame then (if textFramePath then textFrame.(target.(path)).(textFramePath) else textFrame.(target.(path))) else Stringer([Array: target.(path)])))
 	end,

@@ -14,6 +14,7 @@ newtIntegerFilter := {
 	// round what is written to an integer (newtNumberFilter clears it)
 	integerOnly: true,
 	format: g, // "%.10g"
+	// the text shown for the slot's value (a string in the slot is shown as it is)
 	PathToText: func() begin
 		(if IsString(target.(path)) then Clone(target.(path)) else FormattedNumberStr(target.(path), format))
 	end,

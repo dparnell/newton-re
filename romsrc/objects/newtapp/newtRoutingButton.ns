@@ -1,15 +1,22 @@
-// newtRoutingButton, and what only it reaches
+// newtRoutingButton: the NewtApp action (routing) button for the status bar (the
+// NPR's newtActionButton), a protoRoutingSlip that is the application's action key
+// button.
+//
+// This file holds newtRoutingButton and what only it reaches.
 
 newtRoutingButton := {
 	_proto: @protoRoutingSlip,
 	viewBounds: {left: -8, top: 0, right: 9, bottom: 14},
 	keyButton: '_actionKeyButton,
+	// register as one of the application's key buttons: newtAppBase.(keyButton) is this view
+	// (the buttons the keyboard's and other commands can find)
 	viewSetupDoneScript: func() begin
 		if keyButton then begin
 				newtAppBase.(keyButton) := self
 			end;
 		inherited:?viewSetupDoneScript()
 	end,
+	// no longer a key button
 	viewQuitScript: func() begin
 		if keyButton then begin
 				RemoveSlot(newtAppBase, keyButton)

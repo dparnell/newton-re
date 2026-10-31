@@ -19,9 +19,11 @@ newtTextFilter := {
 	InitFilter: func() begin
 		(if (if (BAnd(recFlags, vCharsAllowed + vAddressField + vNameField + vCustomDictionaries) <> 0) then GetUserConfig('lettersInFieldsOption)) then (recFlags := BOr(recFlags, vLettersAllowed)))
 	end,
+	// the slot holds the text itself
 	PathToText: func() begin
 		Clone(target.(path))
 	end,
+	// and keeps what is written, ink included
 	TextToPath: func(a1) begin
 		Clone(a1)
 	end,

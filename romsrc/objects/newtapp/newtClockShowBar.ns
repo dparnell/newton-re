@@ -1,7 +1,11 @@
-// newtClockShowBar, and what only it reaches
+// newtClockShowBar: a protoClockShowBar (the folder tab with the clock) that is the
+// NewtApp application's filter bar (newtAppBase.filterBar).
+//
+// This file holds newtClockShowBar and what only it reaches.
 
 newtClockShowBar := {
 	_proto: @protoClockShowBar,
+	// be the application's filter bar
 	viewSetupFormScript: func() begin
 		newtAppBase.filterBar := self;
 		inherited:?viewSetupFormScript()
