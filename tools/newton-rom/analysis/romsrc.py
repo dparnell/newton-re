@@ -54,12 +54,21 @@ but the tree.
 The tree (stage 2: the ROM's NewtonScript functions are source, every
 binary but strings and reals is kept as its bytes):
 
-    objects/NNN.ns   the objects, as definitions `name := value;`
+    objects/NNN.ns   the objects, as definitions `name := value;` (every .ns
+                     under objects/, its subdirectories too: romsrc/ in its
+                     natural form, naturalize.py, has a directory per kind of
+                     root object - apps/, protos/, ... - and a file per root)
     functions/<addr>.ns   each top-level function as the decompiler writes it
                      (tools/newton-rom/analysis/nsdecompile.py: its constants,
                      then the function), compiled by the builder with the
-                     host's compiler (newtonscript --compile-records)
+                     host's compiler (newtonscript --compile-records) - as the
+                     extractor writes the tree; in the natural form each
+                     function is written in its frame instead (func, compile)
     maps.ns          the frame maps, `map_<addr> := map(class, supermap, 'tag, ...);`
+    constants.tsv    the constants the notation may name (TreeNames; a package's
+                     part tree uses the ROM tree's, and its magic.tsv's names)
+    renames.tsv      (the natural form) each definition's name as the extractor
+                     wrote it, and its name now; romsrc.py rename changes one
     resources/<class>/<addr>.bin   the binaries' bytes
     lexicons/<name>.words|.lex, lexicons.tsv   the recognisers' lexicons
                      (the Airus dictionaries InitROMDictionaryData points
@@ -118,9 +127,13 @@ The notation of a value (a subset of NewtonScript's literals, plus a few
 constructors of its own):
 
     12  -3          an integer
+    vVisible + vClickable   vfPen(1)   a sum of integers and constants
+                    (constants.tsv: a name, or a name(n) that shifts n)
     nil  true       themselves
     $a  $\\u00e9     a character
     @123            a magic pointer (ROM table 0, entry 123)
+    @protoFloatNGo  the same by name (magic.tsv: the object an entry is, or
+                    one of the other names after it)
     #1a3            any other immediate Ref, in hex
     'name  '|a b|   a symbol
     "text"          a string (class 'string), UTF-8; \\uXXXX for a UTF-16
@@ -199,6 +212,15 @@ constructors of its own):
                     byte for byte stays binary('sfnt,
                     "resources/sfnt/addr.sfnt"), the font file itself
     function("functions/addr.ns")   a function, compiled from that source
+    func(a1) begin ... end   a function written where it is: NewtonScript
+                    source to the end of the expression (code_extent), its
+                    @names made numbers, compiled with the host's compiler
+    compile([constants: {name: source, ...},] [options: "names argframe=0,0",] source)
+                    a function whose record has constants of its own (bound
+                    while the source is compiled: a function it closes over,
+                    a value made when the ROM was built), the compiler's
+                    options (record_flags) or a source that is not a func
+                    (evaluated: a closure the NTK made at build time)
     same("path")    the object a compiled function holds at that path: a
                     shared object only compiled functions use (bytecode two
                     functions have in common, a function literal of two),
@@ -282,6 +304,65 @@ PER_FILE = 400					# definitions in one file of objects/
 GROUP_MIN = 8					# fewer definitions than this belonging to one root go into a misc file
 IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\Z")
 RESERVED = {"nil", "true", "real", "string", "binary", "array", "map"}
+
+# NewtonScript source inside the notation (a func written in its frame,
+# compile(...)): its tokens, as far as finding where an expression ends and
+# its magic pointers' names need them
+CODE_TOKEN = re.compile(r"""
+	(?P<space>\s+|//[^\n]*|/\*.*?\*/)
+	|(?P<string>"(?:[^"\\]|\\.)*")
+	|(?P<quoted>\|(?:[^|\\]|\\.)*\|)
+	|(?P<char>\$\\u[0-9a-fA-F]{4}|\$\\.|\$.)
+	|(?P<magic>@(?:\d+|[A-Za-z_][A-Za-z0-9_]*))
+	|(?P<word>[A-Za-z_][A-Za-z0-9_]*)
+	|(?P<other>.)
+	""", re.X | re.S)
+
+
+def code_tokens(text, pos=0):
+	"""NewtonScript source's tokens from pos: (kind, start, end)."""
+	while pos < len(text):
+		m = CODE_TOKEN.match(text, pos)
+		yield m.lastgroup, m.start(), m.end()
+		pos = m.end()
+
+
+def code_extent(text, pos, where="code"):
+	"""Where the NewtonScript expression starting at pos ends: before the
+	first `,` `;` `)` `]` or `}` outside any bracket and begin...end."""
+	depth = 0
+	for kind, start, end in code_tokens(text, pos):
+		if kind == "word":
+			word = text[start:end]
+			if word == "begin":
+				depth += 1
+			elif word == "end":
+				depth -= 1
+		elif kind == "other":
+			ch = text[start]
+			if ch in "([{":
+				depth += 1
+			elif ch in ")]}":
+				if depth == 0:
+					return start
+				depth -= 1
+			elif ch in ",;" and depth == 0:
+				return start
+	raise SyntaxError("%s: NewtonScript source with no end" % where)
+
+
+def code_with_magic_numbers(text, magic_names, where="code"):
+	"""NewtonScript source with each @name made @n, as the compiler reads it."""
+	out = []
+	last = 0
+	for kind, start, end in code_tokens(text):
+		if kind == "magic" and not text[start + 1].isdigit():
+			index = magic_names.get(text[start + 1:end].lower())
+			if index is None:
+				raise SyntaxError("%s: %s is no magic pointer's name (magic.tsv)" % (where, text[start:end]))
+			out.append(text[last:start] + "@%d" % index)
+			last = end
+	return "".join(out) + text[last:]
 
 
 def same_object(rom, v, ref, where):
@@ -400,7 +481,7 @@ def lengthen_first_string(tree):
 				address[fields[1]] = int(fields[0], 16)
 	best = None
 	folder = os.path.join(tree, "objects")
-	for name in sorted(os.listdir(folder)):
+	for name in [os.path.relpath(p, folder) for p in tree_files(tree)[1:]]:
 		with open(os.path.join(folder, name), encoding="utf-8") as f:
 			for i, line in enumerate(f.read().split("\n")):
 				m = re.match(r'([A-Za-z_][A-Za-z0-9_]*) := "([^"\\]{12,})";$', line)
@@ -1751,6 +1832,7 @@ class Obj:
 		self.path = None
 		self.native = None			# a binary of ARM code: its source (assembled where it falls)
 		self.compiled = False		# made by the host's compiler (a function's, its literals)
+		self.source = None			# a function written in the tree: (its options, its record)
 
 
 class Reader:
@@ -1760,17 +1842,31 @@ class Reader:
 		|(?P<quoted>\|(?:[^|\\]|\\.)*\|)
 		|(?P<char>\$\\u[0-9a-fA-F]{4}|\$.)
 		|(?P<hex>\#[0-9a-fA-F]+)
-		|(?P<magic>@\d+)
+		|(?P<magic>@(?:\d+|[A-Za-z_][A-Za-z0-9_]*))
 		|(?P<number>-?\d+(?:\.\d*)?(?:[eE][-+]?\d+)?)
 		|(?P<name>[A-Za-z_][A-Za-z0-9_]*)
-		|(?P<punct>:=|[{}\[\](),:;'])
+		|(?P<punct>:=|[{}\[\](),:;'+])
 		""", re.X | re.S)
+	SPACE = re.compile(r"(?:\s+|//[^\n]*)*")
+	CODE_START = re.compile(r"func\s*\(")
+	COMPILE_START = re.compile(r"compile\s*\(")
+	COMPILE_KEY = re.compile(r"(constants|options)\s*:")
 
-	def __init__(self, text, where, root):
+	def __init__(self, text, where, root, names=None):
+		"""names: the tree's names (TreeNames) - the magic pointers' and the
+		constants' - when it has them."""
 		self.toks = []
 		self.root = root
+		self.names = names
+		self.where = where
 		pos = 0
 		while pos < len(text):
+			if self.CODE_START.match(text, pos):
+				pos = self.code(text, pos)
+				continue
+			if self.COMPILE_START.match(text, pos):
+				pos = self.compile_args(text, pos)
+				continue
 			m = self.TOKEN.match(text, pos)
 			if not m:
 				raise SyntaxError("%s: cannot read at %r" % (where, text[pos:pos + 30]))
@@ -1778,7 +1874,61 @@ class Reader:
 			if m.lastgroup != "space":
 				self.toks.append((m.lastgroup, m.group()))
 		self.i = 0
-		self.where = where
+
+	def code(self, text, pos):
+		"""A NewtonScript expression (a func, or compile(...)'s) as one token."""
+		end = code_extent(text, pos, self.where)
+		self.toks.append(("code", text[pos:end].rstrip()))
+		return end
+
+	def compile_args(self, text, pos):
+		"""compile([constants: {name: code, ...},] [options: "...",] code) as
+		tokens, its code each one token."""
+		m = self.COMPILE_START.match(text, pos)
+		self.toks += [("name", "compile"), ("punct", "(")]
+		pos = self.SPACE.match(text, m.end()).end()
+		while True:
+			key = self.COMPILE_KEY.match(text, pos)
+			if not key:
+				break
+			self.toks += [("name", key.group(1)), ("punct", ":")]
+			pos = self.SPACE.match(text, key.end()).end()
+			if key.group(1) == "options":
+				s = self.TOKEN.match(text, pos)
+				if s.lastgroup != "string":
+					raise SyntaxError("%s: compile's options are a string" % self.where)
+				self.toks.append(("string", s.group()))
+				pos = s.end()
+			else:
+				if text[pos] != "{":
+					raise SyntaxError("%s: compile's constants are {name: value, ...}" % self.where)
+				self.toks.append(("punct", "{"))
+				pos = self.SPACE.match(text, pos + 1).end()
+				while text[pos] != "}":
+					name = self.TOKEN.match(text, pos)
+					if name.lastgroup not in ("name", "quoted"):
+						raise SyntaxError("%s: a constant's name expected at %r" % (self.where, text[pos:pos + 30]))
+					self.toks.append((name.lastgroup, name.group()))
+					pos = self.SPACE.match(text, name.end()).end()
+					if text[pos] != ":":
+						raise SyntaxError("%s: : expected after constant %s" % (self.where, name.group()))
+					self.toks.append(("punct", ":"))
+					pos = self.SPACE.match(text, self.code(text, self.SPACE.match(text, pos + 1).end())).end()
+					if text[pos] == ",":
+						self.toks.append(("punct", ","))
+						pos = self.SPACE.match(text, pos + 1).end()
+				self.toks.append(("punct", "}"))
+				pos += 1
+			pos = self.SPACE.match(text, pos).end()
+			if text[pos] != ",":
+				raise SyntaxError("%s: , expected after compile's %s" % (self.where, key.group(1)))
+			self.toks.append(("punct", ","))
+			pos = self.SPACE.match(text, pos + 1).end()
+		pos = self.SPACE.match(text, self.code(text, pos)).end()
+		if text[pos] != ")":
+			raise SyntaxError("%s: ) expected to end compile(...) at %r" % (self.where, text[pos:pos + 30]))
+		self.toks.append(("punct", ")"))
+		return pos + 1
 
 	def peek(self):
 		return self.toks[self.i] if self.i < len(self.toks) else (None, None)
@@ -1807,15 +1957,81 @@ class Reader:
 			yield name, value
 
 	def value(self):
+		v = self.primary()
+		if self.peek()[1] != "+":
+			return v
+		# a sum of integers and the tree's constants (vVisible + vClickable)
+		total = self.integer_of(v)
+		while self.peek()[1] == "+":
+			self.take()
+			total += self.integer_of(self.primary())
+		return self.integer(total)
+
+	def integer(self, number, text=None):
+		# the object file holds the ARM's word: a 30-bit integer (a wider
+		# one would wrap silently; docs/frames/64bit.md)
+		if not -(1 << 29) <= number < (1 << 29):
+			raise SyntaxError("%s: an integer the ROM's 30 bits cannot hold" % (text or number))
+		return Imm((number << 2) & 0xffffffff)
+
+	def integer_of(self, v):
+		if not isinstance(v, Imm) or v.ref & 3:
+			raise SyntaxError("%s: only integers are added up" % self.where)
+		return (v.ref >> 2) - ((v.ref >> 2) & 0x20000000) * 2
+
+	def code_function(self, main, constants=(), options=""):
+		"""A function written in the tree: the record the builder compiles."""
+		record = "".join("@@const %s\n%s\n" % (name, self.magic_numbers(code)) for name, code in constants)
+		if constants:
+			record += "@@main\n"
+		o = Obj("function")
+		o.source = (options, record + self.magic_numbers(main) + "\n@@end\n")
+		return o
+
+	def magic_numbers(self, code):
+		if "@" not in code:
+			return code
+		return code_with_magic_numbers(code, self.names.magic if self.names else {}, self.where)
+
+	def primary(self):
 		kind, text = self.peek()
+		if kind == "code":
+			self.take()
+			return self.code_function(text)
+		if kind == "name" and text == "compile" and self.toks[self.i + 1][1] == "(":
+			self.take()
+			self.take("(")
+			constants, options = [], ""
+			while self.peek()[0] == "name" and self.peek()[1] in ("constants", "options") and self.toks[self.i + 1][1] == ":":
+				key = self.take()[1]
+				self.take(":")
+				if key == "options":
+					options = " " + self.take()[1][1:-1].strip()
+				else:
+					self.take("{")
+					while self.peek()[1] != "}":
+						name = self.name_text()
+						self.take(":")
+						constants.append((name, self.take()[1]))
+						if self.peek()[1] == ",":
+							self.take()
+					self.take("}")
+				self.take(",")
+			main = self.take()[1]
+			self.take(")")
+			return self.code_function(main, constants, options)
 		if kind == "number":
 			self.take()
-			number = int(text)
-			# the object file holds the ARM's word: a 30-bit integer (a wider
-			# one would wrap silently; docs/frames/64bit.md)
-			if not -(1 << 29) <= number < (1 << 29):
-				raise SyntaxError("%s: an integer the ROM's 30 bits cannot hold" % text)
-			return Imm((number << 2) & 0xffffffff)
+			return self.integer(int(text), text)
+		if kind == "name" and self.names and text in self.names.constants:
+			self.take()
+			value = self.names.constants[text]
+			if callable(value):
+				self.take("(")
+				arg = self.integer_of(self.value())
+				self.take(")")
+				value = value(arg)
+			return self.integer(value, text)
 		if kind == "char":
 			self.take()
 			c = int(text[3:], 16) if text.startswith("$\\u") else ord(text[1])
@@ -1825,6 +2041,11 @@ class Reader:
 			return Imm(int(text[1:], 16))
 		if kind == "magic":
 			self.take()
+			if not text[1].isdigit():
+				index = self.names.magic.get(text[1:].lower()) if self.names else None
+				if index is None:
+					raise SyntaxError("%s: %s is no magic pointer's name (magic.tsv)" % (self.where, text))
+				return Imm((index << 2) | 3)
 			return Imm((int(text[1:]) << 2) | 3)
 		if kind == "string":
 			self.take()
@@ -1933,6 +2154,65 @@ class Reader:
 		if kind in ("name", "quoted"):
 			return Name(self.name_text())
 		raise SyntaxError("%s: a value expected, found %s" % (self.where, text))
+
+
+class TreeNames:
+	"""The names a tree's notation may use beyond its definitions: the
+	magic pointers' (@protoFloatNGo: magic.tsv, the object each entry is and
+	the names after it) and the constants' (vVisible: constants.tsv, `name
+	value`, or `name <<n` for one used as name(x), x shifted left n).  A
+	package's part tree uses the ROM's: the nearest directory above it that
+	has the files, else the repository's romsrc/."""
+	REPO_TREE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "romsrc")
+
+	def __init__(self, src):
+		self.magic = {}
+		self.constants = {}
+		self.magic_path = self.find(src, "magic.tsv")
+		if self.magic_path:
+			with open(self.magic_path, encoding="utf-8") as f:
+				for line in f:
+					fields = line.rstrip("\n").split("\t")
+					if not fields[0].isdigit():
+						continue
+					names = ([fields[1]] if IDENT.match(fields[1]) and fields[1] not in ("nil", "true") else []) + (fields[2].split(",") if len(fields) > 2 and fields[2] else [])
+					for name in names:
+						self.magic.setdefault(name.lower(), int(fields[0]))
+		path = self.find(src, "constants.tsv")
+		if path:
+			with open(path, encoding="utf-8") as f:
+				for line in f:
+					fields = line.rstrip("\n").split("\t")
+					if line.startswith("#") or len(fields) < 2:
+						continue
+					if fields[1].startswith("<<"):
+						self.constants[fields[0]] = (lambda shift: lambda x: x << shift)(int(fields[1][2:]))
+					else:
+						self.constants[fields[0]] = int(fields[1], 0)
+
+	@classmethod
+	def find(cls, src, name):
+		here = os.path.abspath(src)
+		while True:
+			if os.path.exists(os.path.join(here, name)):
+				return os.path.join(here, name)
+			up = os.path.dirname(here)
+			if up == here:
+				break
+			here = up
+		path = os.path.join(cls.REPO_TREE, name)
+		return path if os.path.exists(path) else None
+
+
+def tree_files(src):
+	"""A tree's definition files: maps.ns, then every .ns under objects/ (its
+	subdirectories too), in order of their paths."""
+	files = [os.path.join(src, "maps.ns")]
+	objdir = os.path.join(src, "objects")
+	found = []
+	for top, dirs, names in os.walk(objdir):
+		found += [os.path.relpath(os.path.join(top, f), objdir).replace(os.sep, "/") for f in names if f.endswith(".ns")]
+	return files + [os.path.join(objdir, f) for f in sorted(found)]
 
 
 def record_flags(head):
@@ -2058,14 +2338,14 @@ class Builder:
 		self.link_base = 0				# what a native binary's .origin counts from (a package file's part: PACKAGE_BASE)
 		self.native_relocations = []	# the addresses of the words native binaries' .rword made
 		self.defs = {}
-		files = [os.path.join(src, "maps.ns")]
-		objdir = os.path.join(src, "objects")
-		files += [os.path.join(objdir, f) for f in sorted(os.listdir(objdir)) if f.endswith(".ns")]
-		for path in files:
+		self.names = TreeNames(src)
+		for path in tree_files(src):
 			with open(path, encoding="utf-8") as f:
-				for name, value in Reader(f.read(), path, src).definitions():
+				for name, value in Reader(f.read(), path, src, self.names).definitions():
 					if name in self.defs:
 						raise SyntaxError("%s defined twice" % name)
+					if name in self.names.constants:
+						raise SyntaxError("%s: %s is a constant's name (constants.tsv)" % (path, name))
 					self.defs[name] = value
 		self.read_layout()
 		self.compile_functions()
@@ -2133,11 +2413,15 @@ class Builder:
 		by_id = {}
 		with open(records, "w", encoding="utf-8", newline="\n") as out:
 			for n, v in enumerate(found):
-				with open(os.path.join(self.src, v.data), encoding="utf-8") as f:
-					text = f.read()
-				# (each record numbered afresh: the file's own @@ line names
-				# the ROM's function, which an edited tree need not have)
-				head, body = text.split("\n", 1)
+				if getattr(v, "source", None):
+					# (a function written where it is used: its options, its record)
+					head, body = v.source
+				else:
+					with open(os.path.join(self.src, v.data), encoding="utf-8") as f:
+						text = f.read()
+					# (each record numbered afresh: the file's own @@ line names
+					# the ROM's function, which an edited tree need not have)
+					head, body = text.split("\n", 1)
 				out.write("@@ %x%s\n%s" % (n, record_flags(head), body))
 				by_id[n] = (v, head)
 		env = dict(os.environ, NEWTON_ROM=os.path.join(work, "no-rom-image"))
@@ -2238,7 +2522,7 @@ class Builder:
 		magic = os.path.join(self.src, "magic.tsv")
 		if os.path.exists(magic):
 			with open(magic, encoding="utf-8") as f:
-				return any(line.rstrip("\n").split("\t")[-1] == name for line in f if not line.startswith("#"))
+				return any(line.rstrip("\n").split("\t")[1:2] == [name] for line in f if not line.startswith("#"))
 		return False
 
 	def at_path(self, path, seen):
@@ -2586,7 +2870,10 @@ class Builder:
 				by_tags.setdefault(tuple(tags), name)
 		self.frame_maps = {}
 		made = 0
-		for path, v in list(self.by_path.items()):
+		# (in an order of their places a definition's new name does not change:
+		# the new maps are numbered in it)
+		path_order = self.path_order(entries)
+		for path, v in sorted(self.by_path.items(), key=lambda pv: path_order(pv[0])):
 			if v.kind != "frame":
 				continue
 			tags = [t.lower() for t in v.tags]
@@ -2658,6 +2945,20 @@ class Builder:
 			self.relocations.append((address, at))
 			at += (len(data) + 15) & ~15
 
+	@staticmethod
+	def path_order(entries):
+		"""A key that orders paths by the layout's address of the definition
+		each is in (a new one last), then by the rest of the path: an order
+		the definitions' names do not change."""
+		defined_at = {path.lower(): a for a, path, _, _ in entries if IDENT.match(path)}
+
+		def key(path):
+			m = re.match(r"(\|(?:[^|\\]|\\.)*\||[A-Za-z_][A-Za-z0-9_]*)", path)
+			if not m:
+				return (1 << 40, path)
+			return (defined_at.get(m.group(1).lower(), 1 << 40), path[m.end():].lower(), path.lower())
+		return key
+
 	def lay_out_afresh(self, entries, new_paths):
 		"""The objects one after another from the area's base, each on a word:
 		the layout's in its order, then the new ones.  Every object's old and
@@ -2683,7 +2984,11 @@ class Builder:
 			if at != a:
 				self.relocations.append((a + 1, at + 1))
 			at = start + ((at - start + size + self.align - 1) & ~(self.align - 1))
-		for path in sorted(new_paths):
+		# (the new ones: the symbols by name, then the objects in the order of
+		# the definitions they are in - an order a definition's new name does
+		# not change)
+		path_order = self.path_order(entries)
+		for path in sorted(new_paths, key=lambda p: (not p.startswith("'"), path_order(p))):
 			if path.startswith("'"):
 				out.append((at, path, 0x40, {}))				# a symbol
 				at = start + ((at - start + self.object_size(path) + self.align - 1) & ~(self.align - 1))
@@ -2742,7 +3047,8 @@ class Builder:
 			for line in f:
 				if line.startswith("#"):
 					continue
-				index, what = line.rstrip("\n").split("\t", 1)
+				# (the object, then any other names it goes by)
+				index, what = line.rstrip("\n").split("\t")[:2]
 				if index == "table":
 					self.magic_base = int(what, 16)
 					continue
@@ -3024,6 +3330,112 @@ def check(area_base, built, rom, entries_src):
 	return 1
 
 
+def rename_definition(tree, old, new):
+	"""A definition of a tree renamed everywhere the tree names it: its
+	definition and every reference in objects/ and maps.ns (not a slot's
+	tag, a symbol or a function's source, which do not name definitions),
+	the same("...") paths that start at it, layout.tsv's paths and alias
+	lines, and magic.tsv's entry for it.  ==> what was changed, as lines."""
+	if not IDENT.match(new) or new in RESERVED or new in ("true", "func", "compile"):
+		raise ValueError("%s is not a name a definition can have" % new)
+	names = TreeNames(tree)
+	if new in names.constants:
+		raise ValueError("%s is a constant's name (constants.tsv)" % new)
+	for path in tree_files(tree):
+		with open(path, encoding="utf-8") as f:
+			if re.search(r"^%s :=" % re.escape(new), f.read(), re.M | re.I):
+				raise ValueError("%s: %s is defined already (a name is the same whatever its case)" % (path, new))
+	# (the object of a magic pointer of this tree's table: @old, written in
+	# this tree and in the packages' trees under it, goes by the new name too)
+	magic = names.magic_path == os.path.join(os.path.abspath(tree), "magic.tsv") and old.lower() in names.magic
+	files = tree_files(tree)
+	if magic and os.path.isdir(os.path.join(tree, "rex")):
+		for top, dirs, found_files in sorted(os.walk(os.path.join(tree, "rex"))):
+			if "layout.tsv" in found_files and "objects" in dirs:
+				files += [(p, False) for p in tree_files(top)]
+	found, report = False, []
+	for entry in files:
+		path, own = entry if isinstance(entry, tuple) else (entry, True)
+		if not os.path.exists(path):
+			continue
+		with open(path, encoding="utf-8") as f:
+			text = f.read()
+		out, last, count = [], 0, 0
+
+		def put(start, end, what):
+			nonlocal last, count
+			out.append(text[last:start] + what)
+			last = end
+			count += 1
+
+		def at_magic(code, offset):
+			for kind, start, end in code_tokens(code):
+				if kind == "magic" and code[start + 1:end].lower() == old.lower():
+					put(offset + start, offset + end, "@" + new)
+		# the name's tokens outside functions' source (Reader's tokens, with
+		# their places), each a definition or a reference unless a tag or
+		# symbol; in a function's source, only @old
+		pos, prev = 0, None
+		while pos < len(text):
+			if Reader.CODE_START.match(text, pos) or Reader.COMPILE_START.match(text, pos):
+				r = Reader("", path, tree)
+				end = r.compile_args(text, pos) if Reader.COMPILE_START.match(text, pos) else r.code(text, pos)
+				if magic:
+					at_magic(text[pos:end], pos)
+				pos, prev = end, None
+				continue
+			m = Reader.TOKEN.match(text, pos)
+			if not m:
+				raise SyntaxError("%s: cannot read at %r" % (path, text[pos:pos + 30]))
+			pos = m.end()
+			if m.lastgroup == "space":
+				continue
+			if m.lastgroup == "magic" and magic and m.group()[1:].lower() == old.lower():
+				put(m.start(), m.end(), "@" + new)
+			elif not own:
+				pass
+			elif m.lastgroup == "string" and prev == "(":
+				# (same("path"): its path's first name)
+				before = text[max(0, m.start() - 40):m.start()]
+				if re.search(r"same\(\s*$", before) and re.match(r'"%s(?=[."\[^])' % re.escape(old), m.group()):
+					put(m.start() + 1, m.start() + 1 + len(old), new)
+			elif m.lastgroup in ("name", "quoted") and prev != "'" and unquote_name(m.group()) == old:
+				following = Reader.SPACE.match(text, pos).end()
+				if text.startswith(":=", following) or not text.startswith(":", following):
+					put(m.start(), m.end(), new)
+					found = found or text.startswith(":=", following)
+			prev = m.group()
+		if count:
+			with open(path, "w", encoding="utf-8", newline="\n") as f:
+				f.write("".join(out) + text[last:])
+			report.append("%s: %d" % (os.path.relpath(path, tree), count))
+	if not found:
+		raise ValueError("%s: no definition of %s" % (tree, old))
+	for name in ("layout.tsv", "magic.tsv"):
+		path = os.path.join(tree, name)
+		if not os.path.exists(path):
+			continue
+		with open(path, encoding="utf-8") as f:
+			lines = f.read().split("\n")
+		count = 0
+		for k, line in enumerate(lines):
+			fields = line.split("\t")
+			for i in ((1, 2) if fields[0] == "alias" else (1,)):
+				if i < len(fields) and re.match(r"%s(?=$|[.\[^])" % re.escape(old), fields[i]):
+					fields[i] = new + fields[i][len(old):]
+					count += 1
+			lines[k] = "\t".join(fields)
+		if count:
+			with open(path, "w", encoding="utf-8", newline="\n") as f:
+				f.write("\n".join(lines))
+			report.append("%s: %d" % (name, count))
+	return report
+
+
+def unquote_name(text):
+	return re.sub(r"\\(.)", r"\1", text[1:-1]) if text.startswith("|") else text
+
+
 def main(argv=None):
 	ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 	sub = ap.add_subparsers(dest="command", required=True)
@@ -3066,9 +3478,18 @@ def main(argv=None):
 					   "the ARM disassembler use (required to unpack)")
 	k.add_argument("--patches", metavar="TSV", help="unpack: apply a <package>.patches.tsv first (its lines then "
 					   "are what the source says)")
+	n = sub.add_parser("rename", help="rename a definition everywhere the tree names it (its references, "
+						"same() paths, layout.tsv, magic.tsv)")
+	n.add_argument("tree")
+	n.add_argument("old")
+	n.add_argument("new")
 	s = sub.add_parser("stamp", help="print the builder's stamp, which an object file carries")
 	s.add_argument("--header", help="write it as a C header (kObjectsStamp) instead")
 	a = ap.parse_args(argv)
+	if a.command == "rename":
+		for line in rename_definition(a.tree, a.old, a.new):
+			print(line)
+		return 0
 	if a.command == "stamp":
 		if a.header is None:
 			print(builder_stamp())
@@ -3118,7 +3539,7 @@ def main(argv=None):
 		for tree in trees:
 			if lengthen_first_string(tree) != 0:
 				return 1
-		folder = os.path.join(a.output, "objects")
+		files = tree_files(a.output)[1:]
 		# a frame's slots put in another order, and an element put at the
 		# front of an array (every later one's path moves along): the layout
 		# is not touched
@@ -3128,36 +3549,39 @@ def main(argv=None):
 				fields = line.rstrip("\n").split("\t")
 				if fields[0].isdigit():
 					magic[int(fields[0])] = fields[1]
-		for name in sorted(os.listdir(folder)):
-			path = os.path.join(folder, name)
+		for path in files:
+			name = os.path.relpath(path, a.output)
 			with open(path, encoding="utf-8") as f:
 				text = f.read()
 			changed = False
-			m = re.search(r"\n%s := \{([^:]+): (\"[^\"]*\"), ([^:]+): (\"[^\"]*\"), " % re.escape(magic.get(271, "-")), text)
+			# (a definition's slots on one line or a line each)
+			m = re.search(r"\n%s := \{(\s*)([^:\s]+): (\"[^\"]*\"),(\s*)([^:\s]+): (\"[^\"]*\")," % re.escape(magic.get(271, "-")), text)
 			if m:
-				text = text[:m.start()] + "\n%s := {%s: %s, %s: %s, " % (magic[271], m.group(3), m.group(4), m.group(1), m.group(2)) + text[m.end():]
+				text = text[:m.start()] + "\n%s := {%s%s: %s,%s%s: %s," % (magic[271], m.group(1), m.group(5), m.group(6),
+																		 m.group(4), m.group(2), m.group(3)) + text[m.end():]
 				print("edited @271 (%s) in %s: its first two slots swapped" % (magic[271], name))
 				changed = True
-			marker = "\n%s := [|Array|: " % magic.get(113, "-")
-			if marker in text:
-				text = text.replace(marker, marker + '"edit-test", ', 1)
+			m = re.search(r"\n%s := \[\|Array\|:\s*" % re.escape(magic.get(113, "-")), text)
+			if m:
+				text = text[:m.end()] + '"edit-test", ' + text[m.end():]
 				print("edited @113 (%s) in %s: an element put at its front" % (magic[113], name))
 				changed = True
 			if changed:
 				with open(path, "w", encoding="utf-8", newline="\n") as f:
 					f.write(text)
 		# and a slot added to a frame, holding a new frame: a map made for
-		# each, and symbols for the new names
-		for name in sorted(os.listdir(folder)):
-			path = os.path.join(folder, name)
+		# each, and symbols for the new names (the canonical ink shape: its
+		# R-constant's name, or the name the tree's natural form gives it)
+		for path in files:
+			name = os.path.relpath(path, a.output)
 			with open(path, encoding="utf-8") as f:
 				text = f.read()
-			marker = "\nRcanonicalinkshape := {"
-			if marker in text:
-				text = text.replace(marker, marker + 'romsrcEdited: {romsrcNote: "added by edit-test"}, ', 1)
+			m = re.search(r"\n(Rcanonicalinkshape|canonicalInkShape) := \{", text)
+			if m:
+				text = text[:m.end()] + 'romsrcEdited: {romsrcNote: "added by edit-test"}, ' + text[m.end():]
 				with open(path, "w", encoding="utf-8", newline="\n") as f:
 					f.write(text)
-				print("edited Rcanonicalinkshape in %s: a slot romsrcEdited added, holding a new frame" % name)
+				print("edited %s in %s: a slot romsrcEdited added, holding a new frame" % (m.group(1), name))
 				break
 		result = main(["build", a.output, "-o", a.objects, "--newtonscript", a.newtonscript, "--relayout"])
 		return result

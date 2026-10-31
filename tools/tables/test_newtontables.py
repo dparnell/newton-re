@@ -27,10 +27,11 @@ ROM_BUILD = None
 
 def committed():
 	seen = []
-	for name in sorted(os.listdir(os.path.join(ROMSRC, "objects"))):
-		with open(os.path.join(ROMSRC, "objects", name), encoding="utf-8") as f:
-			for m in re.finditer(r'texttable\(\'\w+, "([^"]+)"\)', f.read()):
-				seen.append(os.path.join(ROMSRC, m.group(1)))
+	for top, dirs, files in sorted(os.walk(os.path.join(ROMSRC, "objects"))):
+		for name in sorted(files):
+			with open(os.path.join(top, name), encoding="utf-8") as f:
+				for m in re.finditer(r'texttable\(\'\w+, "([^"]+)"\)', f.read()):
+					seen.append(os.path.join(ROMSRC, m.group(1)))
 	return seen
 
 

@@ -2292,9 +2292,10 @@ def tables_from_romsrc(romsrc):
 	'unicode frame's encoding 1 (Mac Roman) mapToUnicode, charClass and
 	upperNoMarkList, and the break table (magic pointer @6)."""
 	text = ""
-	for name in sorted(os.listdir(os.path.join(romsrc, "objects"))):
-		with open(os.path.join(romsrc, "objects", name), encoding="utf-8") as f:
-			text += f.read()
+	for top, dirs, files in sorted(os.walk(os.path.join(romsrc, "objects"))):
+		for name in sorted(files):
+			with open(os.path.join(top, name), encoding="utf-8") as f:
+				text += f.read()
 
 	def table_path(pattern):
 		m = re.search(pattern, text)
@@ -2302,12 +2303,13 @@ def tables_from_romsrc(romsrc):
 			raise ValueError("romsrc: %s not found" % pattern)
 		return os.path.join(romsrc, m.group(1))
 
-	to_unicode = table_path(r"encodingID: 1, mapFromUnicode: texttable\('UniC, \"[^\"]*\"\), mapToUnicode: texttable\('UniC, \"([^\"]*)\"\)")
+	# (a frame's slots a line each, or all on one)
+	to_unicode = table_path(r"encodingID: 1,\s*mapFromUnicode: texttable\('UniC, \"[^\"]*\"\),\s*mapToUnicode: texttable\('UniC, \"([^\"]*)\"\)")
 	char_class = table_path(r"charClass: texttable\('UniC, \"([^\"]*)\"\)")
 	upper_no_mark = table_path(r"upperNoMarkList: texttable\('UniC, \"([^\"]*)\"\)")
 	with open(os.path.join(romsrc, "magic.tsv"), encoding="utf-8") as f:
-		magic = dict(line.rstrip("\n").split("\t", 1) for line in f if line[:1].isdigit())
-	breaks = table_path(re.escape(magic["6"]) + r" := hexfile\('table, \"([^\"]*)\"\)")
+		magic = dict(line.rstrip("\n").split("\t")[:2] for line in f if line[:1].isdigit())
+	breaks = table_path(r"\b" + re.escape(magic["6"]) + r" := hexfile\('table, \"([^\"]*)\"\)")
 
 	def rows(p):
 		with open(p, encoding="utf-8") as f:

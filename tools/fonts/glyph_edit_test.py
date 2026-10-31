@@ -59,9 +59,11 @@ def read_pgm(path):
 def find_font_dir(tree):
 	"""The System font's plain face: its directory in the tree (unpacking a
 	.sfnt file kept whole first)."""
-	pattern = re.compile(r"screenSym: 'espyFont[^\n]*?plainData: (sfnt|binary)\('sfnt, \"([^\"]+)\"\)")
-	for name in sorted(os.listdir(os.path.join(tree, "objects"))):
-		path = os.path.join(tree, "objects", name)
+	# (the family's slots a line each, or all on one: no further than its end)
+	pattern = re.compile(r"screenSym: 'espyFont[^;]*?plainData: (sfnt|binary)\('sfnt, \"([^\"]+)\"\)")
+	paths = [os.path.join(top, name) for top, dirs, files in sorted(os.walk(os.path.join(tree, "objects")))
+			 for name in sorted(files)]
+	for path in paths:
 		with open(path, encoding="utf-8") as f:
 			text = f.read()
 		m = pattern.search(text)
