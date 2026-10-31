@@ -2,6 +2,7 @@
 // states): the client is kept to be served after the clean-up. The file holds it and what
 // only it reaches.
 
+// AddLinkClient(client): kept for after the clean-up (fLinkClients_GrabPending).
 function_2 := func(a1) begin
 	AddArraySlot(fLinkClients_GrabPending, a1)
 end;

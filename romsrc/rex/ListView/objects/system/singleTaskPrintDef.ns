@@ -1,4 +1,5 @@
-// singleTaskPrintDef, and what only it reaches
+// singleTaskPrintDef: a single task's print format - its due date, completed, priority and
+// text in a rounded frame. The file holds it and what only it reaches.
 
 singleTaskPrintDef := {
 	title: singleTask,
@@ -10,6 +11,7 @@ singleTaskPrintDef := {
 		viewFormat: vfFrameBlack + vfPen(2) + vfRound(8),
 		target: nil,
 		task: nil,
+		// viewSetupFormScript: the task to print.
 		viewSetupFormScript: compile(
 			options: "names",
 			func() begin
@@ -22,6 +24,7 @@ singleTaskPrintDef := {
 				viewJustify: vjParentFullH,
 				height: 30,
 				labelText: "Due",
+				// GetContent(): the due date.
 				GetContent: compile(
 					options: "names",
 					func() begin
@@ -33,6 +36,7 @@ singleTaskPrintDef := {
 				viewBounds: {left: 10, top: 10, right: -10, bottom: 40},
 				height: 30,
 				labelText: completed,
+				// GetContent(): "Yes" or "No".
 				GetContent: compile(
 					options: "names",
 					func() begin
@@ -44,6 +48,7 @@ singleTaskPrintDef := {
 				viewBounds: {left: 10, top: 10, right: -10, bottom: 40},
 				height: 30,
 				labelText: priority,
+				// GetContent(): the priority's name (0 High .. 3 None).
 				GetContent: compile(
 					options: "names",
 					func() begin
@@ -55,6 +60,7 @@ singleTaskPrintDef := {
 				viewBounds: {left: 10, top: 10, right: -10, bottom: 40},
 				height: 120,
 				labelText: task_2,
+				// GetContent(): the task's text.
 				GetContent: compile(
 					options: "names",
 					func() begin
@@ -65,6 +71,7 @@ singleTaskPrintDef := {
 	},
 	version: 1,
 	symbol: 'singleTaskPrintDef,
+	// SetupSlip(slip, item): the task to print, from the slip's target.
 	SetupSlip: compile(
 		options: "names",
 		func(slip, item) begin
@@ -81,6 +88,7 @@ singleTaskPrintDef := {
 	_proto: @coverPageFormat
 };
 
+// a line of the page: a label and its content (GetContent), hidden when empty
 mainFormatProto := {
 	viewClass: clView,
 	viewFlags: vVisible + vReadOnly,
@@ -90,6 +98,7 @@ mainFormatProto := {
 	height: nil,
 	contentText: nil,
 	labelText: nil,
+	// viewSetupFormScript: the content; the line's height.
 	viewSetupFormScript: compile(
 		options: "names",
 		func() begin
@@ -100,6 +109,7 @@ mainFormatProto := {
 			viewJustify: vjParentFullH,
 			viewBounds: {left: 0, top: 0, right: 110, bottom: 30},
 			viewFont: tsSimple + tsSize(18) + tsBold,
+			// viewSetupFormScript: the label.
 			viewSetupFormScript: compile(
 				options: "names",
 				func() begin
@@ -111,6 +121,7 @@ mainFormatProto := {
 			viewJustify: vjParentFullH,
 			viewBounds: {left: 110, top: 0, right: 0, bottom: 30},
 			viewFont: tsSimple + tsSize(18),
+			// viewSetupFormScript: the content.
 			viewSetupFormScript: compile(
 				options: "names",
 				func() begin

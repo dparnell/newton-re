@@ -1,3 +1,4 @@
-// checkViewRouteDef, and what only it reaches
+// checkViewRouteDef: the checklist's routing format for beaming and mail (the target frame
+// sent as it is). The file holds it and what only it reaches.
 
 checkViewRouteDef := {_proto: @targetFrameFormat, symbol: 'checkViewRouteDef};

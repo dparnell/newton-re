@@ -197,6 +197,7 @@ SetUp := {
 	appSymbol: 'SetUp,
 	viewJustify: 0,
 	name: nil,
+	// viewPostQuitScript: after closing, the proto's, then ClearCut.
 	viewPostQuitScript: func() begin
 		inherited:?viewPostQuitScript();
 		self:ClearCut()

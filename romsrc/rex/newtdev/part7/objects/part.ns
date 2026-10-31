@@ -14,6 +14,7 @@ part := array(nil, {
 		partFrame:devInstallScript(partFrame, ensureInternal2);
 		ensureInternal2
 	end,
+	// devInstallScript(partFrame, removeFrame): sets up the AppleTalk link registry (the body at its end).
 	devInstallScript: compile(
 		constants: {
 			// kBinaryFromHex(hex, class): a binary of class made from a string of hex digits (the

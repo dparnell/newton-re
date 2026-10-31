@@ -1,3 +1,4 @@
-// listMemoFormat, and what only it reaches
+// listMemoFormat: the outline's Memo print format (with the to/subject slip). The file
+// holds it and what only it reaches.
 
 listMemoFormat := {_proto: @8322, symbol: 'listMemoFormat, title: memo, auxForm: @toSubjectSlip, debug: 2557148};

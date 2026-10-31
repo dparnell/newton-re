@@ -36,6 +36,7 @@ part := array(nil, {
 				end;
 			nil
 		end),
+	// installScript(partFrame): defines the tap-action global; returns the remove frame (below).
 	installScript: compile(
 		constants: {
 			// the AsyncConfirm answer: 2 is the Suspend button - shuts the NIE's link manager down

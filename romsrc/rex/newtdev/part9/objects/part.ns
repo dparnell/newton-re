@@ -15,6 +15,7 @@ part := array(nil, {
 		partFrame:devInstallScript(partFrame, ensureInternal2);
 		ensureInternal2
 	end,
+	// devInstallScript(partFrame, removeFrame): sets up the device registry and its functions (the body at its end).
 	devInstallScript: compile(
 		constants: {
 			// the empty view's viewSetupDoneScript: closes itself at once (a placeholder root child

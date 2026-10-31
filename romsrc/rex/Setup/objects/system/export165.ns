@@ -64,12 +64,14 @@ export165Item := {
 				}
 			],
 			viewJustify: vjParentFullH + vjParentFullV,
+			// viewSetupFormScript: nothing.
 			viewSetupFormScript: func() begin
 				nil
 			end,
 			viewClass: clView
 		}
 	],
+	// viewSetupFormScript: nothing.
 	viewSetupFormScript: func() begin
 		nil
 	end,

@@ -1,3 +1,4 @@
-// listLetterFormat, and what only it reaches
+// listLetterFormat: the outline's Letter print format (with the addressee slip). The file
+// holds it and what only it reaches.
 
 listLetterFormat := {_proto: @8322, symbol: 'listLetterFormat, title: letter, auxForm: @addresseeSlip, debug: 10270172};

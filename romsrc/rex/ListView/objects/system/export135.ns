@@ -1,3 +1,4 @@
-// export135, and what only it reaches
+// export135: a print format (on @8322) that prints the checkboxes (printListViewFlags 2,
+// ListView's checkbox bit). The file holds it and what only it reaches.
 
 export135 := {_proto: @8322, printListViewFlags: 2};

@@ -1,8 +1,11 @@
-// listFormat, and what only it reaches
+// listFormat: the outline's "All Topics" print format (also the base of the Letter, Memo and
+// visible-topics formats): the topics reflowed page by page (reflowStart). The file holds it
+// and what only it reaches.
 
 listFormat := {
 	type: 'printFormat,
 	path: 'listFormat,
+	// viewSetupDoneScript: how many topics will print (only the visible ones with reflowOptions).
 	viewSetupDoneScript: compile(
 		options: "names",
 		func() begin
@@ -25,6 +28,7 @@ listFormat := {
 	editor: nil,
 	printAddExtra: nil,
 	symbol: 'listFormat,
+	// printNextPageScript: another page while topics remain (or the letter's closing to add).
 	printNextPageScript: compile(
 		options: "names",
 		func() begin
@@ -48,6 +52,7 @@ listFormat := {
 	title: "All Topics",
 	totalKids: 0,
 	name: outline,
+	// viewSetupFormScript: printing starts at the first topic.
 	viewSetupFormScript: compile(
 		options: "names",
 		func() begin
@@ -58,6 +63,8 @@ listFormat := {
 	stepChildren: [|Array|: ],
 	debug: 162780,
 	version: 1,
+	// viewSetupChildrenScript: the page - a memo's banner and To/Subject and From/date lines,
+	// or a letter's letterhead and addressee, on the first page; then the topics.
 	viewSetupChildrenScript: compile(
 		options: "names",
 		func() begin
@@ -90,11 +97,13 @@ listFormat := {
 		end),
 	printListViewFlags: 0,
 	margins: {left: 60, top: 0, right: 60, bottom: 0},
+	// the list of topics on a page
 	protoList: {
 		viewFormat: vfFillWhite,
 		topMargin: 0,
 		reflow: true,
 		viewJustify: vjParentFullH + vjParentFullV,
+		// viewSetupChildrenScript: the topics that fit; a letter ends with its closing when there is room.
 		viewSetupChildrenScript: compile(
 			options: "names",
 			func() begin
@@ -106,6 +115,7 @@ listFormat := {
 							(topics := [Array: ])
 						end else (if (((numKids := Length(viewChildren)) + reflowStart) >= nTopics) then (if ((self:LocalBox().bottom - self:TopicBottom(topics[(nTopics - 1)])) >= 80) then AddArraySlot(self.viewChildren, @stdClosing) else (printAddExtra := true)))))
 			end),
+		// viewSetupFormScript: the list flags to print with, starting at reflowStart.
 		viewSetupFormScript: compile(
 			options: "names",
 			func() begin

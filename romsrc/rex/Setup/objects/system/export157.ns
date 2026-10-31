@@ -3,6 +3,7 @@
 
 export157 := {
 	viewBounds: {left: 0, top: 0, right: 195, bottom: 30},
+	// buttonClickScript: goes back to the step this button names (the body below).
 	buttonClickScript: compile(
 		constants: {
 			// kFunction_7b3d21(name, page): the ArrayPos test - is page's debug name this name?

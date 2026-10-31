@@ -17,6 +17,7 @@ export149 := {
 		SetKeyView(self, 0)
 	end,
 	viewJustify: vjParentFullH + vjParentFullV,
+	// viewSetupFormScript: nothing.
 	viewSetupFormScript: func() begin
 		nil
 	end,
@@ -30,6 +31,7 @@ export149Item := {
 	viewFlags: vVisible,
 	viewFormat: vfFillWhite + vfPen(1),
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
+	// viewSetupFormScript: nothing.
 	viewSetupFormScript: func() begin
 		nil
 	end,
@@ -150,6 +152,7 @@ export149Item := {
 				{_proto: nameItemProto_3}
 			],
 			viewJustify: vjParentFullH + vjParentFullV,
+			// viewSetupFormScript: nothing.
 			viewSetupFormScript: func() begin
 				nil
 			end,

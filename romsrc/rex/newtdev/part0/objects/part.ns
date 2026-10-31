@@ -17,6 +17,7 @@ part := array(nil, {
 		partFrame:devInstallScript(partFrame, ensureInternal2);
 		ensureInternal2
 	end,
+	// devInstallScript(partFrame, removeFrame): defines the global the tap action calls (the body below).
 	devInstallScript: compile(
 		constants: {
 			// shows "Newton Devices Version 1.0" in an alert (Notify level 4)

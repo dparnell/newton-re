@@ -1,19 +1,24 @@
-// export145, and what only it reaches
+// export145: the To Do conversion data def ('convertTodo) - converts tasks between the 1.x
+// format ('oneO: a To Do soup item) and the 2.x one ('twoO: a topic of a day entry). The
+// file holds it and what only it reaches.
 
 export145 := {
 	_proto: export145Proto,
 	supportTypes: [|Array|: 'oneO, 'twoO],
+	// Convert(frame, from, to): converts a task between the two formats.
 	Convert: compile(
 		options: "names",
 		func(aFrame, srcFormat, dstFormat) begin
 			(if (if SetContains(supportTypes, srcFormat) then SetContains(supportTypes, dstFormat)) then (if (if (srcFormat = 'oneO) then (dstFormat = 'twoO)) then self:Convert10to20(aFrame) else (if (if (srcFormat = 'twoO) then (dstFormat = 'oneO)) then self:Convert20to10(aFrame) else aFrame)))
 		end),
+	// Convert10to20(entry): a 1.x item as a 2.x task.
 	Convert10to20: compile(
 		options: "names",
 		func(aEntry) begin
 			local task;
 			(task := self:ConvertOldEntry(aEntry))
 		end),
+	// Convert20to10(task): a 2.x task as a 1.x To Do item (a paragraph; 19-pixel lines become 16).
 	Convert20to10: compile(
 		options: "names",
 		func(aEntry) begin
@@ -32,6 +37,9 @@ export145 := {
 			oldTask.data := [Array: {viewStationery: 'para, viewBounds: convertFrame.viewBounds, text: convertFrame.text, viewFont: tsSimple + tsSize(12)}];
 			oldTask
 		end),
+	// ConvertOldEntry(entry): a task made from a 1.x To Do item - its text, priority, done
+	// state and date (a past undone one moved to today); its source the symbol RO0..RO4 of
+	// the item's store, which marks it as a 1.x task. nil for an empty item.
 	ConvertOldEntry: compile(
 		options: "names",
 		func(anEntry) begin

@@ -690,3 +690,8 @@ opSetNegotiate	256
 opSetRequired	512
 opGetDefault	768
 opGetCurrent	1024
+# rex ListView: the keyboard modifiers, Newton Programmer's Reference "Keyboard Modifier Keys" (1 << 25, 1 << 26)
+kCommandModifier	0x2000000
+kShiftModifier	0x4000000
+# rex ListView: the repeat type of a repeating meeting or task, Newton Programmer's Reference (repeatType: ... kNever (5))
+kNever	5

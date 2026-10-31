@@ -55,6 +55,7 @@ part := array(nil, {
 						self:Config(a1, true)
 					end,
 					_LostPacketCount: 0,
+					// DeviceRemoved: (as DeviceInserted) nothing.
 					DeviceRemoved: func() begin
 						nil
 					end,
@@ -110,6 +111,7 @@ part := array(nil, {
 		partFrame:devInstallScript(partFrame, ensureInternal2);
 		ensureInternal2
 	end,
+	// devInstallScript(partFrame, removeFrame): defines MapLanternError, the event registry and the client count, and the card event handler (the body at its end).
 	devInstallScript: compile(
 		constants: {
 			// the client proto's methods as the install script built them (the same as partItem's

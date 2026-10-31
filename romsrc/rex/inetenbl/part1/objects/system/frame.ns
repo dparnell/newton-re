@@ -13,6 +13,7 @@ frame := {
 		_literals: _literals_8
 	},
 	offset: 33060,
+	// the byte code of the closure
 	bcFunc: compile(
 		options: "argframe=0,0",
 		func(a1) begin

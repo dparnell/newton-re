@@ -7,6 +7,7 @@
 // (|Inet Protos:NIE|) before it installs. The file holds the part and what only it reaches.
 
 part := array(nil, {
+	// installScript(partFrame): installs through the "wait for my imports" helper below.
 	installScript: compile(
 		constants: {
 			// the NIE's "wait for my imports" helper: returns a remove frame for clientFrame and,
@@ -469,6 +470,7 @@ part := array(nil, {
 					end;
 				(if a1 then PerformIfDefined(a1, a2, nil))
 			end,
+			// DNSGetAddressFromName (as above)
 			kFunction_1039955: func(a1, a2, a3) begin
 				local mGetDomainService;
 				if (mGetDomainService := InetStartUp():MGetDomainService()) then begin
@@ -476,6 +478,7 @@ part := array(nil, {
 					end;
 				(if a2 then PerformIfDefined(a2, a3, [Array: nil, -60752]))
 			end,
+			// DNSGetMailAddressFromName (as above)
 			kFunction_10399d1: func(a1, a2, a3) begin
 				local mGetDomainService;
 				if (mGetDomainService := InetStartUp():MGetDomainService()) then begin
@@ -483,6 +486,7 @@ part := array(nil, {
 					end;
 				(if a2 then PerformIfDefined(a2, a3, [Array: nil, -60752]))
 			end,
+			// DNSGetMailServerNameFromDomainName (as above)
 			kFunction_1039a19: func(a1, a2, a3) begin
 				local mGetDomainService;
 				if (mGetDomainService := InetStartUp():MGetDomainService()) then begin
@@ -490,6 +494,7 @@ part := array(nil, {
 					end;
 				(if a2 then PerformIfDefined(a2, a3, [Array: nil, -60752]))
 			end,
+			// DNSGetNameFromAddress (as above)
 			kFunction_1039a61: func(a1, a2, a3) begin
 				local mGetDomainService;
 				if (mGetDomainService := InetStartUp():MGetDomainService()) then begin
@@ -497,6 +502,7 @@ part := array(nil, {
 					end;
 				(if a2 then PerformIfDefined(a2, a3, [Array: nil, -60752]))
 			end,
+			// DNSGetProcessPortID (as above)
 			kFunction_1039aa9: func() begin
 				local mGetDomainService;
 				(if (mGetDomainService := InetStartUp():MGetDomainService()) then mGetDomainService.fProcessPortID)

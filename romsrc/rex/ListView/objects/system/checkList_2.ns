@@ -1,4 +1,5 @@
-// checkList_2, and what only it reaches
+// checkList_2: the Checklist stationery's data def (a list with checkboxes; routed as
+// text with "+ " for done and "- " for undone items). The file holds it and what only it reaches.
 
 checkList_2 := {
 	_proto: @8317,
@@ -12,6 +13,7 @@ checkList_2 := {
 	superSymbol: 'notes,
 	mailBulletDone: "+ ",
 	mailBulletNotDone: "- ",
+	// MakeNewEntry(): a new checklist note, one empty topic to come (makeNewTopic).
 	MakeNewEntry: compile(
 		options: "names",
 		func() begin
