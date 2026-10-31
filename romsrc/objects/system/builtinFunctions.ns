@@ -2525,10 +2525,10 @@ builtinFunctions := {
 	end,
 	TotalTextBounds: compile(
 		constants: {
-			kLiteral_421835: '{viewClass: clEditView, viewFlags: vNoScripts, viewFormat: 0, viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, ReOrientToScreen: @defRotateFunc}
+			kLiteral_421835: '{viewClass: clEditView, viewFlags: vNoScripts, viewFormat: vfNone, viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, ReOrientToScreen: @defRotateFunc}
 		},
 		func(frame4, a2) begin
-			frame2 := {_proto: '{viewClass: clParagraphView, viewFormat: 0, viewFlags: vCalculateBounds + vNoScripts}};
+			frame2 := {_proto: '{viewClass: clParagraphView, viewFormat: vfNone, viewFlags: vCalculateBounds + vNoScripts}};
 			local frame2;
 			(foreach item in '[Array: text, styles, viewBounds, viewFont, textFlags, recConfig, viewLineSpacing] do begin
 					if frame4.(item) then begin

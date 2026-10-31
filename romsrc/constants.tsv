@@ -683,7 +683,7 @@ vfInset	<<16
 vfShadow	<<18
 vfRound	<<24
 tsSize	<<10
-# system a-g: the Newton Programmer's Reference 2.0 (vfNone and the text limit oneLineOnly from the viewFormat and viewJustify tables, the gesture codes aeTap...aeLine, the font frame faces kFaceNormal...kFaceSubScript)
+# system a-g: the Newton Programmer's Reference 2.0 (vfNone and the text limit oneLineOnly from the viewFormat and viewJustify tables, the gesture codes aeTap...aeLine, the font frame faces kFaceNormal...kFaceSubScript, the endpoint option opCodes opSetNegotiate...opGetCurrent)
 vfNone	0
 oneLineOnly	0x800000
 aeScrub	13
@@ -699,3 +699,7 @@ kFaceUnderline	0x4
 kFaceOutline	0x8
 kFaceSuperScript	0x80
 kFaceSubScript	0x100
+opSetNegotiate	256
+opSetRequired	512
+opGetDefault	768
+opGetCurrent	1024

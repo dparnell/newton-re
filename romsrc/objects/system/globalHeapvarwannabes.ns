@@ -1,6 +1,15 @@
-// globalHeapvarwannabes, and what only it reaches
+// globalHeapvarwannabes: the global variables the system starts with whose
+// values are changed while it runs - the registries (Reg... functions add to
+// them), the data definitions, the preferences panels, the view definitions
+// and the rest.  At boot bootInitNsGlobals sets each slot here as a global (in
+// vars) with a clone of its value, so the ROM's copy stays as it is; many are
+// a frame whose _proto holds the ROM's built-in entries, so what is registered
+// later goes in the clone and the built-in ones are found through the proto.
+// The objects after the frame are what only it reaches.
 
 globalHeapvarwannabes := {
+	// SoupBackupRegistry: what to do when a soup is backed up, by soup; the
+	// Extras Drawer saves the state of its built-in icons
 	SoupBackupRegistry: {
 		_proto: {
 			BuiltInExtrasState: func(a1) begin
@@ -8,7 +17,12 @@ globalHeapvarwannabes := {
 			end
 		}
 	},
+	// the power-off handlers registered through the 1.x interface
 	OldPowerOffHandlers: [|Array|: ],
+	// CoverPageRegistry: the fax cover pages there are, by symbol (RegCoverPage).
+	// The standard one: a "Fax Delivery" banner, To, From (the owner's name,
+	// company and fax and voice numbers), the page count and date, and the
+	// comments when there are some.
 	CoverPageRegistry: {
 		_proto: {
 			standard: {
@@ -32,6 +46,7 @@ globalHeapvarwannabes := {
 							viewJustify: vjParentCenterH + vjParentBottomV,
 							viewFlags: vVisible,
 							icon: fineprintIcon,
+							// the fine print picture, scaled to half its size
 							viewSetupFormScript: func() begin
 								local bounds, copy, l3;
 								l3 := ((copy := Clone((bounds := icon.bounds))).right div 4);
@@ -50,6 +65,8 @@ globalHeapvarwannabes := {
 							_proto: formProto,
 							viewBounds: {left: 130, top: 140, right: 470, bottom: 220},
 							viewSetupFormScript: func() begin
+								// the recipient: name and number, the number up to the ",,," that starts any
+								// dialing suffix
 								(self.text := Stringer([Array: fields.name, $\n, Substr(fields.displayNumber, 0, StrPos(fields.displayNumber, ",,,", 0))]))
 							end
 						},
@@ -61,6 +78,8 @@ globalHeapvarwannabes := {
 						{
 							_proto: formProto,
 							viewBounds: {left: 130, top: 220, right: 470, bottom: 300},
+							// the sender: name and company, then the owner card's work fax and phone
+							// numbers, or failing those the home fax and phone numbers
 							viewSetupFormScript: func() begin
 								local currentPersona, faxPhone;
 								self.text := Stringer([Array: fromFrame.name, $\n, fromFrame.company, $\n]);
@@ -87,7 +106,7 @@ globalHeapvarwannabes := {
 						{
 							_proto: formProto,
 							viewBounds: {left: 130, top: 300, right: 470, bottom: 340},
-							viewFormat: 0,
+							viewFormat: vfNone,
 							viewSetupFormScript: func() begin
 								(self.text := Stringer([Array: fields.pageCount, " ", "pages (including cover)", "\n", DateNTime(Time())]))
 							end
@@ -109,7 +128,8 @@ globalHeapvarwannabes := {
 							viewLineSpacing: 28,
 							viewSetupFormScript: func() begin
 								if (if fields.comments then (Length(fields.comments) > 0)) then begin
-										viewFormat := (viewFormat + 48)
+										// a gray frame round the comments when there are some
+										viewFormat := (viewFormat + vfFrameGray)
 									end;
 								inherited:?viewSetupFormScript()
 							end,
@@ -122,10 +142,13 @@ globalHeapvarwannabes := {
 			}
 		}
 	},
+	// SoundRegistry: the system sounds by name (the proto: the ROM's, soundOff)
 	SoundRegistry: {_proto: @soundOff},
+	// navigator: the navigator (dialing helper) used for each kind of call
 	navigator: {
 		_proto: {modemNavigator: modemNavigator, voiceNavigator: modemNavigator, faxNavigator: modemNavigator}
 	},
+	// PagerTypes: the kinds of pager phone numbers and their names
 	PagerTypes: {
 		_proto: {
 			pagerClasses: [|Array|:
@@ -142,13 +165,24 @@ globalHeapvarwannabes := {
 			}
 		}
 	},
+	// CommConfigChangeRegistry: functions told when the comms configuration changes
 	CommConfigChangeRegistry: {},
+	// AvailablePrinters: the printer drivers there are (the ROM's in the proto)
 	AvailablePrinters: @romAvailablePrinters,
+	// international: the locale bundles and keyboards (the ROM's in the proto)
 	international: {_proto: @romInternational},
+	// Routing: the routing formats registered by applications
 	Routing: {_proto: {}},
+	// DialinNetworkRegistry: the dial-in networks (packet networks such as
+	// SprintNet) whose access numbers the comms setup can look up
 	DialinNetworkRegistry: {_proto: {sprint: sprint, concert: {_proto: sprint, title: "ConcertNet", id: 'concert}}},
+	// _dataDefs: the data definitions (RegDataDef) by symbol: the stationery for
+	// recorded notes, strings and In/Out items, and the nameRef kinds the name
+	// pickers work with (people, phone, fax, e-mail, meeting place)
 	_dataDefs: {
 		_proto: {
+			// a recorded note (Notepad stationery from a sound recorder): its text is the
+			// playing time or the note's own text
 			|SoundPaper:NSG|: {
 				symbol: '|SoundPaper:NSG|,
 				name: recording,
@@ -161,6 +195,8 @@ globalHeapvarwannabes := {
 				superSymbol: 'notes,
 				version: 1,
 				height: 70,
+				// the overview's line for a recorded note: its title and either its text or
+				// its playing time
 				StringExtract: func(entry, nLines) begin
 					local l1, extractData2, text;
 					l1 := (if StrEqual((l1 := entry.|SoundPaper:NSG|.soundData.description), "00:00") then "No recording" else Stringer([Array: "Playing time:", " ", l1]));
@@ -175,6 +211,7 @@ globalHeapvarwannabes := {
 				TextScript: func(entry, target) begin
 					notesText(target.data)
 				end,
+				// a new recorded note entry: no sound yet, a playing time of 00:00
 				FillNewEntry: func(a1) begin
 					local frame2;
 					frame2 := {soundData: {sounds: nil, description: "00:00"}};
@@ -192,6 +229,8 @@ globalHeapvarwannabes := {
 			},
 			|nameRef.people|: {_proto: @protoPeopleDataDef, class: '|nameRef.people|},
 			|nameRef.phone|: phones,
+			// nameRef.fax: names with fax numbers, for the fax routing slip; groups count
+			// when they are fax groups
 			|nameRef.fax|: {
 				_proto: phones,
 				class: '|nameRef.fax|,
@@ -208,6 +247,7 @@ globalHeapvarwannabes := {
 					end
 				}
 			},
+			// nameRef.email: names with e-mail addresses, for the mail routing slip
 			|nameRef.email|: {
 				_proto: @protoPeopleDataDef,
 				class: '|nameRef.email|,
@@ -227,6 +267,9 @@ globalHeapvarwannabes := {
 						((((IsSubclass((cls := ClassOf(a1)), 'person) or IsSubclass(cls, 'company)) or IsSubclass(cls, 'owner)) or (if IsSubclass(cls, 'group) then IsInstance(a1.members, '|nameRef.email|))) or (cls = 'frame))
 					end
 				},
+				// a name reference with its e-mail address: a group's members, else the
+				// address in frame2, else the person's first e-mail address of the preferred
+				// kinds
 				MakeNameRef: func(frame2, cls) begin
 					local l1, entryFromObj2, bcEMailAddress, bcEMailAddres;
 					l1 := inherited:MakeNameRef(frame2, cls);
@@ -237,6 +280,7 @@ globalHeapvarwannabes := {
 									end))));
 					l1
 				end,
+				// the kind of e-mail system the address is for, in brackets, after the name
 				GetSuffix: func(a1) begin
 					local email, cls;
 					if (email := self:Get(a1, 'email, nil)) then begin
@@ -251,6 +295,8 @@ globalHeapvarwannabes := {
 					constants: {
 						kLiteral_450465: SetClass(Clone("--"), '|string.noData|)
 					},
+					// Get(nameRef, path, format): the e-mail path reads the entry's address when
+					// the reference has none ("--" as text when there is none at all)
 					func(a1, a2, a3) begin
 						local email, entryFromObj2;
 						email := inherited:Get(a1, a2, a3);
@@ -270,6 +316,7 @@ globalHeapvarwannabes := {
 				GetItemRoutingFrame: func(item) begin
 					{name: self:Get(item, 'name, 'text), email: self:Get(item, 'email, nil)}
 				end,
+				// the title of the slip for editing the address or name
 				DefaultOpenEditor: func(a1, trackScrollingItem, a3) begin
 					local nameRef, text;
 					if (if (text := self:Get((nameRef := a1.nameRef), primaryPath, 'text)) then (not IsInstance(text, '|string.noData|))) then begin
@@ -287,6 +334,8 @@ globalHeapvarwannabes := {
 						end;
 					inherited:DefaultOpenEditor(a1, trackScrollingItem, a3)
 				end,
+				// the picker of the person's e-mail addresses, with New Address at the end;
+				// nil for any other field
 				MakePopup: func(a1, fieldPath) begin
 					if (fieldPath <> 'email) then begin
 							return nil
@@ -308,6 +357,7 @@ globalHeapvarwannabes := {
 						end;
 					list
 				end,
+				// puts edited e-mail addresses back into the person's Names card
 				ModifyEntry: func(nameRef, equivalent) begin
 					(if (entryFromObj2 := EntryFromObj(nameRef)) then begin
 							local entryFromObj2;
@@ -321,6 +371,7 @@ globalHeapvarwannabes := {
 							EntryChangeXmit(entryFromObj2, 'entryChanged)
 						end)
 				end,
+				// adds a new Names card for the reference, with its e-mail address
 				NewEntry: func(a1, _context) begin
 					local cardfile, email, addcard;
 					cardfile := GetRoot().cardfile;
@@ -333,6 +384,7 @@ globalHeapvarwannabes := {
 					addcard
 				end
 			},
+			// nameRef.meetingPlace: companies and worksites, for a meeting's location
 			|nameRef.meetingPlace|: {
 				_proto: @protoPeopleDataDef,
 				class: '|nameRef.meetingPlace|,
@@ -351,6 +403,7 @@ globalHeapvarwannabes := {
 					end
 				}
 			},
+			// plain strings in the In/Out Box
 			|string|: {
 				symbol: '|string|,
 				superSymbol: 'iobox,
@@ -365,6 +418,7 @@ globalHeapvarwannabes := {
 				end,
 				_proto: @newtStationery
 			},
+			// an In/Out Box item
 			ioItem: {
 				symbol: 'ioItem,
 				superSymbol: 'iobox,
@@ -386,6 +440,7 @@ globalHeapvarwannabes := {
 			},
 			paperroll: paperroll,
 			calllog: calllog,
+			// a mail message's text
 			mailText: {
 				symbol: 'mailText,
 				name: mail_2,
@@ -407,9 +462,15 @@ globalHeapvarwannabes := {
 			smartMail: smartMail
 		}
 	},
+	// psFonts: the PostScript fonts that stand in for the Newton's when printing
 	psFonts: {_proto: {helvetica: @helveticaFont, timesroman: @timesRomanFont, symbol: @systemSymbolFont}},
+	// AutoDockRegistry: functions told about Auto Dock requests (autodockTemplate.ns)
 	AutoDockRegistry: {},
+	// WeirdCardEventRegistry: functions told when a card that is not storage is
+	// inserted or removed (cardEventhandlers.ns)
 	WeirdCardEventRegistry: {},
+	// CommConfigRegistry: the telephony configurations (TAPI) there are: dialing
+	// through the speaker, or through a modem
 	CommConfigRegistry: {
 		_proto: {
 			speaker: {
@@ -436,6 +497,8 @@ globalHeapvarwannabes := {
 			}
 		}
 	},
+	// SetTimeRegistry: functions told when the clock is set (SetTimeInSeconds);
+	// the Date Book reschedules its next alarm
 	SetTimeRegistry: {
 		_proto: {
 			calendar: compile(
@@ -449,6 +512,7 @@ globalHeapvarwannabes := {
 				end)
 		}
 	},
+	// AppClassesRegistry: the classes of data each application owns
 	AppClassesRegistry: {
 		_proto: {
 			paperroll: [|Array|: 'paperroll, 'list, 'checkList, 'text],
@@ -456,6 +520,8 @@ globalHeapvarwannabes := {
 			ExtrasDrawer: [|Array|: 'packageFrame]
 		}
 	},
+	// CreditCardTypes: the kinds of calling and credit card numbers the Names file
+	// knows, their names and the access numbers that dial them
 	CreditCardTypes: {
 		_proto: {
 			creditCardClasses: [|Array|:
@@ -493,6 +559,7 @@ globalHeapvarwannabes := {
 			}
 		}
 	},
+	// Notifications: the notification log, starting with the welcome message
 	Notifications: [|Array|:
 		{
 			_proto: @messageNotification,
@@ -503,7 +570,10 @@ globalHeapvarwannabes := {
 			seenByUser: true
 		}
 	],
+	// OpenCardViews: the card alerts that are open (cardAlertTemplate.ns)
 	OpenCardViews: [|Array|: ],
+	// StoreChangeRegistry: functions told when a store comes or goes
+	// (RegStoreChange); the Date Book sets its alarms up again
 	StoreChangeRegistry: {
 		_proto: {
 			calendar: func(a1, a2, a3) begin
@@ -512,6 +582,7 @@ globalHeapvarwannabes := {
 		}
 	},
 	soupNotify: [|Array|: ],
+	// transports: the built-in transports
 	transports: [|Array|:
 		'|print:newton|,
 		'|faxsend:newton|,
@@ -520,13 +591,18 @@ globalHeapvarwannabes := {
 		'|PhoneHome:Newton|,
 		'onlineslip
 	],
+	// ProcrastinatedActions: the pending procrastinated actions and sends
+	// (AddProcrastinatedCall), by symbol
 	ProcrastinatedActions: {},
 	FolderChangedRegistry: {},
 	AuxButtonRegistry: [|Array|: ],
+	// fonts: the font families by symbol (the ROM's four in the proto)
 	fonts: {
 		_proto: {espy: @espyFont, newYork: @newYorkFont, geneva: @genevaFont, handwriting: @handwritingFont}
 	},
 	PowerStatusChangeRegistry: {},
+	// EmailSystems: the kinds of e-mail addresses, their names, and how to make
+	// each into an Internet address (a domain to add, or a function)
 	EmailSystems: {
 		_proto: {
 			emailClasses: [|Array|:
@@ -563,12 +639,14 @@ globalHeapvarwannabes := {
 			},
 			emailInternet: {
 				|string.email.eworld|: "@eworld.com",
+				// an AOL screen name: without spaces, then @aol.com
 				|string.email.aol|: func(a1) begin
 					if (not StrPos((a1 := StringFilter(a1, " ", 'rejectAll)), "@aol.com", 0)) then begin
 							a1 := Stringer([Array: a1, "@aol.com"])
 						end;
 					a1
 				end,
+				// a CompuServe number: the comma made a period, then @compuserve.com
 				|string.email.compuserve|: func(a1) begin
 					StrReplace(a1, ",", ".", nil);
 					if (not StrPos(a1, "@compuserve.com", 0)) then begin
@@ -588,8 +666,11 @@ globalHeapvarwannabes := {
 			}
 		}
 	},
+	// PrefsRegistry: the panels of the Prefs application (RegPrefs); the
+	// built-in ones are in the proto
 	PrefsRegistry: {
 		_proto: {
+			// the sound recording preferences: input source, quality and volume
 			RecordingPreferencesForm: {
 				height: 110,
 				viewBounds: {left: 0, top: 0, right: 0, bottom: 110},
@@ -598,6 +679,8 @@ globalHeapvarwannabes := {
 					bits: bitmap('bits, "resources/bits/428529.png", "00000000000400b600b6009500c200a2", 1),
 					bounds: {left: 0, top: 0, right: 13, bottom: 12}
 				},
+				// hidden when the machine has no sound input (the Gestalt sound and
+				// recording queries)
 				DoNotDisplay: func() begin
 					local gestalt2, gestalt3;
 					gestalt2 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1]);
@@ -622,6 +705,7 @@ globalHeapvarwannabes := {
 						viewSetupFormScript: func() begin
 							local inputGain;
 							inherited:?viewSetupFormScript();
+							// the gain the user chose, or 128 (the middle of 0-255)
 							if (not (inputGain := GetUserConfig('inputGain))) then begin
 									inputGain := 128
 								end;
@@ -636,13 +720,13 @@ globalHeapvarwannabes := {
 						_proto: @protoSlider
 					},
 					{
-						viewJustify: 8398336,
+						viewJustify: vjSiblingFullH + vjSiblingBottomV + oneLineOnly,
 						viewBounds: {left: 0, top: -2, right: 0, bottom: 10},
 						text: "quiet",
 						_proto: @protoStaticText
 					},
 					{
-						viewJustify: 8406529,
+						viewJustify: vjRightH + vjSiblingFullH + vjSiblingTopV + oneLineOnly,
 						viewBounds: {left: 0, top: 0, right: 0, bottom: 12},
 						text: loud,
 						_proto: @protoStaticText
@@ -653,6 +737,7 @@ globalHeapvarwannabes := {
 				qualityPicker: nil,
 				_proto: @protoPrefsRollItem
 			},
+			// the Auto Dock preferences
 			AutoDockPrefsPanel: {
 				height: 50,
 				viewBounds: {left: 0, top: 0, right: 0, bottom: 50},
@@ -674,6 +759,9 @@ globalHeapvarwannabes := {
 				],
 				_proto: @protoPrefsRollItem
 			},
+			// the handwriting recognition preferences: the panel, and the panels of its
+			// two recognisers (rosForms for printing, paraForms for cursive), with the
+			// letter shapes panel
 			HWRecPreferencesForm: {
 				height: 168,
 				viewBounds: {left: 0, top: 0, right: 0, bottom: 168},
@@ -693,7 +781,7 @@ globalHeapvarwannabes := {
 						stepChildren: [stepChildren:
 							{
 								_proto: transformMyHandwriting,
-								viewJustify: 8388608,
+								viewJustify: oneLineOnly,
 								viewBounds: {left: 14, top: 20, right: 224, bottom: 32}
 							},
 							TimeoutOptionSlider_2,
@@ -736,6 +824,8 @@ globalHeapvarwannabes := {
 						],
 						_proto: @protoPrefsRollItem
 					},
+					// the letter shapes panel: which shapes of each letter the cursive
+					// recogniser accepts
 					{
 						height: 232,
 						viewBounds: {left: 0, top: 0, right: 0, bottom: 232},
@@ -757,7 +847,7 @@ globalHeapvarwannabes := {
 							A2Z_2,
 							Zero2Nine,
 							{
-								viewJustify: 8396822,
+								viewJustify: vjCenterH + vjCenterV + vjParentCenterH + vjSiblingBottomV + oneLineOnly,
 								viewBounds: {left: 0, top: 5, right: 112, bottom: 18},
 								text: "Use Default Settings",
 								confirmTitle: letterShapes,
@@ -766,6 +856,7 @@ globalHeapvarwannabes := {
 									letterShapes:Dirty();
 									enableCluster:getNewSetting()
 								end,
+								// asks first: the defaults throw away what the recogniser has learned
 								buttonClickScript: func() begin
 									AsyncConfirm("Warning: This option erases what Newton has learned about your handwriting. Are you sure you want to do this?", 'yesNoDefaultNo, func(a1) begin
 										(if a1 then self:revertToDefaults())
@@ -777,12 +868,13 @@ globalHeapvarwannabes := {
 								viewFlags: vVisible + vClickable,
 								viewBounds: {left: 32, top: 0, right: 42, bottom: 12},
 								viewJustify: vjSiblingCenterV,
-								viewFormat: 0,
+								viewFormat: vfNone,
 								icon: nil,
 								newt_feature: true,
 								viewSetupFormScript: func() begin
 									(icon := @leftBitmap)
 								end,
+								// the left arrow: the previous letter (from A back to 9, from 0 back to Z)
 								buttonPressedScript: func() begin
 									if (A2Z.curIndex > 0) then begin
 											A2Z.curIndex := (A2Z.curIndex - 1)
@@ -816,12 +908,13 @@ globalHeapvarwannabes := {
 								viewFlags: vVisible + vClickable,
 								viewBounds: {left: -44, top: 0, right: -34, bottom: 12},
 								viewJustify: vjParentRightH + vjSiblingCenterV,
-								viewFormat: 0,
+								viewFormat: vfNone,
 								icon: nil,
 								newt_feature: true,
 								viewSetupFormScript: func() begin
 									(icon := @rightBitmap)
 								end,
+								// the right arrow: the next letter (from Z on to 0, from 9 on to A)
 								buttonPressedScript: func() begin
 									if (A2Z.curIndex >= 0) then begin
 											A2Z.curIndex := (A2Z.curIndex + 1);
@@ -868,6 +961,8 @@ globalHeapvarwannabes := {
 						Zero2Nine: nil,
 						_proto: @protoPrefsRollItem
 					},
+					// the fine tuning panel of the cursive recogniser: speed and the transform
+					// delay
 					{
 						height: 120,
 						viewBounds: {left: 0, top: 0, right: 0, bottom: 120},
@@ -876,7 +971,7 @@ globalHeapvarwannabes := {
 						icon: globalHeapvarwannabesItemIcon,
 						stepChildren: [stepChildren:
 							{
-								viewJustify: 8388656,
+								viewJustify: vjParentFullH + oneLineOnly,
 								viewBounds: {left: 14, top: 20, right: 14, bottom: 32},
 								text: "Recognize my handwriting",
 								_proto: @protoStaticText
@@ -905,15 +1000,20 @@ globalHeapvarwannabes := {
 						_proto: @protoPrefsRollItem
 					}
 				],
+				// closes the sub-panel the Options popup opened
 				CloseOpenPanel: func() begin
 					if openPanel then begin
 							openPanel:Close()
 						end;
 					(openPanel := nil)
 				end,
+				// the settings are saved when the panel closes
 				viewQuitScript: func() begin
 					EntryChange(userConfiguration)
 				end,
+				// "Use default settings": removes the user's recognition settings from the
+				// user configuration, reads the defaults back, and offers to turn off guest
+				// access if it was on
 				UseDefault: func() begin
 					self:CloseOpenPanel();
 					(foreach item in '[Array: letterSetSelection, lineAtATime, letterSpaceCursiveOption, speedCursiveOption, timeoutCursiveOption, wordsCursiveOption, lettersCursiveOption, lettersInFieldsOption, numbersCursiveOption, punctuationcursiveoption, remoteWriting, inkWordScaling, doAutoAdd, learningEnabledOption] do begin
@@ -937,13 +1037,13 @@ globalHeapvarwannabes := {
 							wordExample,
 							LetterSpaceSlider,
 							{
-								viewJustify: 8398336,
+								viewJustify: vjSiblingFullH + vjSiblingBottomV + oneLineOnly,
 								viewBounds: {left: 0, top: -1, right: 0, bottom: 11},
 								text: "closely spaced",
 								_proto: @protoStaticText
 							},
 							{
-								viewJustify: 8406529,
+								viewJustify: vjRightH + vjSiblingFullH + vjSiblingTopV + oneLineOnly,
 								viewBounds: {left: 0, top: 0, right: 0, bottom: 12},
 								text: "widely spaced",
 								_proto: @protoStaticText
@@ -967,6 +1067,9 @@ globalHeapvarwannabes := {
 						viewBounds: {left: 7, top: -18, right: 58, bottom: -5},
 						viewJustify: vjCenterH + vjCenterV + vjParentBottomV,
 						useList: nil,
+						// the Options popup: the sub-panels of the current recogniser (rosForms for
+						// the printing recogniser "WREC", paraForms for cursive), then "Use default
+						// settings"
 						buttonClickScript: func() begin
 							local l1;
 							popup := (foreach item in (l1 := (useList := (if StrEqual("WREC", userConfiguration.currentwordrecognizer) then rosForms else paraForms))) collect item.overview);
@@ -993,6 +1096,7 @@ globalHeapvarwannabes := {
 						viewBounds: {left: 7, top: -18, right: 60, bottom: -5},
 						viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingRightH,
 						text: "Align Pen",
+						// Align Pen: the tablet calibration
 						buttonClickScript: func() begin
 							self:hilite(nil);
 							CalibrateTablet()
@@ -1005,6 +1109,8 @@ globalHeapvarwannabes := {
 				stepallocatecontext: [|Array|: 'GuestAccessBox, GuestAccessBox],
 				_proto: @protoPrefsRollItem
 			},
+			// the sound preferences: output, alert sound and volume, action and pen sound
+			// effects
 			SoundPreferencesForm: {
 				height: 137,
 				viewBounds: {left: 0, top: 0, right: 0, bottom: 137},
@@ -1029,13 +1135,13 @@ globalHeapvarwannabes := {
 						_proto: @volumeSlider
 					},
 					{
-						viewJustify: 8398336,
+						viewJustify: vjSiblingFullH + vjSiblingBottomV + oneLineOnly,
 						viewBounds: {left: 0, top: -2, right: 0, bottom: 10},
 						text: off,
 						_proto: @protoStaticText
 					},
 					{
-						viewJustify: 8406529,
+						viewJustify: vjRightH + vjSiblingFullH + vjSiblingTopV + oneLineOnly,
 						viewBounds: {left: 0, top: 0, right: 0, bottom: 12},
 						text: loud,
 						_proto: @protoStaticText
@@ -1048,6 +1154,7 @@ globalHeapvarwannabes := {
 						viewSetupFormScript: func() begin
 							(viewValue := GetUserConfig('actionSoundEffects))
 						end,
+						// plays one of the action sounds at random as an example
 						valueChanged: func() begin
 							SetUserConfig('actionSoundEffects, viewValue);
 							PlaySoundEffect(sounds[Random(0, 3)], nil, 'action)
@@ -1074,6 +1181,8 @@ globalHeapvarwannabes := {
 				soundPicker: nil,
 				_proto: @protoPrefsRollItem
 			},
+			// the sleep preferences: sleep after so many seconds (60, 300, 600, 1800, or
+			// never), whether to sleep while plugged in, and the backlight
 			SleepPreferencesForm: {
 				height: 50,
 				viewBounds: {left: 0, top: 0, right: 0, bottom: 90},
@@ -1084,6 +1193,8 @@ globalHeapvarwannabes := {
 				},
 				viewSetupChildrenScript: func() begin
 					local gestalt2;
+					// the backlight's choice is hidden when there is no backlight (the Gestalt
+					// backlight query)
 					(if (not (if (gestalt2 := Gestalt('[Array: 33554439, [Array: struct, boolean], 1])) then gestalt2[0])) then (backOff.viewFlags := 0))
 				end,
 				stepChildren: [stepChildren:
@@ -1116,6 +1227,8 @@ globalHeapvarwannabes := {
 				stepallocatecontext: [|Array|: 'backOff, backOff],
 				_proto: @protoPrefsRollItem
 			},
+			// the locale preferences: country, and the others below.  A change redraws
+			// everything when the panel closes (a new setTimeSeed makes the clocks redraw)
 			LocalePreferencesForm: {
 				viewBounds: {left: 0, top: 0, right: 0, bottom: 94},
 				height: 90,
@@ -1148,6 +1261,9 @@ globalHeapvarwannabes := {
 							userConfiguration.letterSetSelection := a2;
 							(UndoAction := nil)
 						end,
+						// a country chosen: sets the locale (undoable), takes its default paper size,
+						// and if its sort order differs offers to rebuild every soup's string indexes
+						// for it and restart
 						LabelActionScript: func(index) begin
 							local newSortID, currentSortID;
 							AddUndoAction('setLabelScript2, [Array: vars.(configPath), userConfiguration.letterSetSelection]);
@@ -1188,6 +1304,7 @@ globalHeapvarwannabes := {
 											end))
 								end)
 						end,
+						// rebuilds soup's string indexes whose sort order is not newSortID
 						RebuildIndexes: func(soup, currentSortID, newSortID, busybox) begin
 							local newIndexSpec, indexSpec;
 							(foreach indexSpec in (indexes := soup:GetIndexes()) do begin
@@ -1218,6 +1335,7 @@ globalHeapvarwannabes := {
 							self.labelCommands := (foreach item in international.keyboards collect item.title);
 							inherited:viewSetupFormScript()
 						end,
+						// a keyboard layout chosen: the system's keyboard (undoable)
 						LabelActionScript: func(index) begin
 							AddUndoAction('setLabelScript, [Array: vars.(configPath)]);
 							vars.(configPath) := items[index].title;
@@ -1232,6 +1350,8 @@ globalHeapvarwannabes := {
 				stepallocatecontext: [|Array|: 'paper, paper],
 				_proto: @protoPrefsRollItem
 			},
+			// the modem preferences: volume, dial tone, pulse or tone dialing, the
+			// connection and the modem setup
 			CommPreferencesForm: {
 				viewBounds: {left: 0, top: 0, right: 0, bottom: 174},
 				height: 166,
@@ -1246,7 +1366,7 @@ globalHeapvarwannabes := {
 					{_proto: @protoCancelButton},
 					{
 						viewBounds: {left: 10, top: 27, right: 90, bottom: 48},
-						viewJustify: 8388612,
+						viewJustify: vjCenterV + oneLineOnly,
 						text: "Modem volume",
 						viewSetupFormScript: func() begin
 							((viewBounds := Clone(viewBounds)).right := (viewBounds.left + StrFontWidth(text, viewFont)))
@@ -1261,20 +1381,20 @@ globalHeapvarwannabes := {
 						_proto: @protoSlider
 					},
 					{
-						viewJustify: 8398336,
+						viewJustify: vjSiblingFullH + vjSiblingBottomV + oneLineOnly,
 						viewBounds: {left: 0, top: -2, right: 0, bottom: 10},
 						text: off,
 						_proto: @protoStaticText
 					},
 					{
-						viewJustify: 8406529,
+						viewJustify: vjRightH + vjSiblingFullH + vjSiblingTopV + oneLineOnly,
 						viewBounds: {left: 0, top: 0, right: 0, bottom: 12},
 						text: loud,
 						_proto: @protoStaticText
 					},
 					{
 						viewBounds: {left: 10, top: 10, right: 108, bottom: 25},
-						viewJustify: 8396805,
+						viewJustify: vjRightH + vjCenterV + vjSiblingBottomV + oneLineOnly,
 						indent: 95,
 						text: "Require dial tone",
 						buttonValue: true,
@@ -1325,6 +1445,8 @@ globalHeapvarwannabes := {
 						text: "Use Defaults",
 						viewBounds: {left: 5, top: -18, right: 76, bottom: -5},
 						viewJustify: vjCenterH + vjCenterV + vjParentBottomV,
+						// the defaults: tone dialing, wait for a dial tone, comma delay 2 seconds,
+						// carrier delay 55 seconds, volume 2
 						buttonClickScript: func() begin
 							SetUserConfig('dialing, 'touchtone);
 							SetUserConfig('blinddialing, nil);
@@ -1345,6 +1467,7 @@ globalHeapvarwannabes := {
 						viewJustify: vjCenterH + vjCenterV + vjParentBottomV + vjSiblingRightH,
 						popup: nil,
 						removeModemIndex: nil,
+						// offers the modem setups that came in packages (soup-based), to remove
 						viewSetupFormScript: func() begin
 							local allSoupBasedModemSetUpNames;
 							(if (Length((allSoupBasedModemSetUpNames := GetAllSoupBasedModemSetUpNames())) > 0) then (popup := allSoupBasedModemSetUpNames) else (self.viewFlags := 0))
@@ -1358,6 +1481,7 @@ globalHeapvarwannabes := {
 							constants: {
 								kLiteral_3c5f05: "28.8 and faster"
 							},
+							// removing the setup in use falls back to the built-in "28.8 and faster"
 							func(a1) begin
 								local currentModem;
 								(if a1 then begin
@@ -1378,6 +1502,8 @@ globalHeapvarwannabes := {
 				modemPicker: nil,
 				_proto: @protoPrefsRollItem
 			},
+			// the alarm preferences: sound, volume and persistent alarms; hidden when
+			// there is no sound output (the Gestalt sound query)
 			AlarmSoundPreferencesForm: {
 				height: 120,
 				viewBounds: {left: 0, top: 0, right: 0, bottom: 120},
@@ -1418,6 +1544,7 @@ globalHeapvarwannabes := {
 				useSystemVolume: nil,
 				_proto: @protoPrefsRollItem
 			},
+			// the security preferences: the password and how often to ask for it
 			PasswordForm: {
 				height: 80,
 				viewBounds: {left: 0, top: 0, right: 0, bottom: 82},
@@ -1427,6 +1554,8 @@ globalHeapvarwannabes := {
 					bounds: {left: 0, top: 0, right: 10, bottom: 12}
 				},
 				declareSelf: 'base,
+				// without a password set, its frequency picker and remove button are hidden
+				// (no viewFlags: not even vVisible)
 				viewSetupChildrenScript: func() begin
 					(if (not GetUserConfig('passwordkey)) then begin
 							PINFreqPicker.viewFlags := 0;
@@ -1452,8 +1581,11 @@ globalHeapvarwannabes := {
 			}
 		}
 	},
+	// FormulasRegistry: the panels of the Formulas application (RegFormulas)
 	FormulasRegistry: {},
 	preferences: [|Array|: ],
+	// cardFilePrefs: the Names file's preferences: its phone kinds, each with the
+	// letter shown before a number of that kind
 	cardFilePrefs: {
 		_proto: {
 			mode: 1,
@@ -1472,20 +1604,30 @@ globalHeapvarwannabes := {
 			]
 		}
 	},
+	// the parts registered through the 1.x interface
 	|Parts1.x|: [|Array|: ],
+	// PowerOnRegistry: functions told when the machine wakes (RegPowerOn), with
+	// why: an alarm, the serial line, or the user
 	PowerOnRegistry: {
 		_proto: {
+			// remembers when an alarm or the serial port woke the machine (so it can go
+			// back to sleep sooner); a user's wake checks daylight saving time
 			|WakeUp&GoToSleep|: func(a1) begin
 				GetRoot().wokeFromAlarmOrGPI := (if ((a1 = 'alarm) or (a1 = 'serialgpi)) then Ticks());
 				(if (a1 = 'user) then DSTVerify(Time()))
 			end,
+			// the machine restarted because its factory calibration was lost: tells the
+			// user (the error's own message)
 			FactoryCalibration: func(a1) begin
-				(if (Gestalt(16777220).rebootreason = -10080) then GetRoot():Notify(3, -10080, nil))
+				(if (Gestalt(16777220).rebootreason = kError_Reboot_Calibration_Missing) then GetRoot():Notify(3, kError_Reboot_Calibration_Missing, nil))
 			end
 		}
 	},
+	// _viewdefs: the view definitions (RegisterViewDef) by data class; the
+	// built-in ones in the proto
 	_viewdefs: {
 		_proto: {
+			// a recorded note's editor: the sound recorder over the note's text
 			|SoundPaper:NSG|: {
 				default: {
 					viewClass: clView,
@@ -1499,6 +1641,7 @@ globalHeapvarwannabes := {
 					viewDefHeight: 50,
 					protection: 'private,
 					version: 1,
+					// the smallest bounds holding all the note's paragraphs
 					MinimalBounds: func(target) begin
 						frame2 := {left: 0, top: 0, right: 0, bottom: 0};
 						if target.data then begin
@@ -1512,6 +1655,8 @@ globalHeapvarwannabes := {
 					debug: "soundDefaultViewDef",
 					viewChildren: [viewChildren:
 						{
+							// the recorder view (newtSoundView): it keeps the note's sounds and their
+							// playing time, in the entry at path
 							_proto: {
 								viewClass: clView,
 								viewFlags: vVisible + vClickable,
@@ -1521,6 +1666,10 @@ globalHeapvarwannabes := {
 								HasSounds: func() begin
 									return (if (if sounds then IsArray(sounds)) then (Length(sounds) > 0))
 								end,
+								// elapsedTime (seconds) as "mm:ss".
+								// looks like a ROM bug: the seconds are rounded but the minutes are not, so
+								// 59.5 to 59.99 seconds shows as 00:00 rather than 01:00 (text and text2 are
+								// made and not used)
 								GetTimeString: func(elapsedTime) begin
 									local floor2, floor3, text, text2;
 									floor2 := floor((elapsedTime + 0.5));
@@ -1530,6 +1679,8 @@ globalHeapvarwannabes := {
 									text2 := Stringer([Array: (if (floor2 < 10) then "0"), floor2]);
 									return Stringer([Array: (if (floor3 < 10) then "0"), floor3, ":", (if (floor2 < 10) then "0"), floor2])
 								end,
+								// the recording is done: keeps the sounds and shows (and stores) their total
+								// playing time
 								RecordCompletion: func(sounds) begin
 									self.sounds := sounds;
 									if self:HasSounds() then begin
@@ -1566,6 +1717,8 @@ globalHeapvarwannabes := {
 								TargetData: func() begin
 									(if (if target then path) then target.(path) else defaultValue)
 								end,
+								// shows the target entry's sounds (each made a protoSoundFrame) and playing
+								// time
 								Retarget: func() begin
 									inRetarget := true;
 									if (l2 := (targetData := self:TargetData()).sounds) then begin
@@ -1588,6 +1741,7 @@ globalHeapvarwannabes := {
 											(if resolveEntryAlias then (target.(path) := resolveEntryAlias.(jamSlot)))
 										end)
 								end,
+								// the user recorded or changed the sounds: they go into the entry
 								viewChangedScript: func(slot, view) begin
 									(if (if (not inRetarget) then (slot = 'sounds)) then begin
 											target.(path) := {description: soundDescription.text, sounds: self.sounds};
@@ -1632,6 +1786,7 @@ globalHeapvarwannabes := {
 				prLetterFormat: @prLetterFormat,
 				prMemoFormat: @prMemoFormat
 			},
+			// the viewer and formats of a plain string (an In/Out Box text item)
 			|string|: {
 				default: {
 					symbol: '|string|,
@@ -1651,6 +1806,7 @@ globalHeapvarwannabes := {
 					viewSetupChildrenScript: func() begin
 						(if fields then (self.viewChildren := [Array: {viewBounds: SetBounds(0, 0, 636, 100), _proto: @protoParagraph, viewStationery: 'para, text: target, viewFont: GetUserConfig('mailFont)}]) else (self.viewChildren := [Array: ]))
 					end,
+					// the text goes back into the item when the viewer closes
 					viewQuitScript: func() begin
 						target := notesText(self.viewChildren);
 						(if (if fields.edited then IsSoupEntry(fields)) then EntryChangeXmit(fields, 'mail))
@@ -1664,6 +1820,8 @@ globalHeapvarwannabes := {
 					debug: 757625
 				},
 				stringFrameFormat: {symbol: 'stringFrameFormat, _proto: @protoRoutingFormat},
+				// prints the text in the user's mail font, as many pages as it takes
+				// (reflowStart is how far the pages printed so far got)
 				stringPrintFormat: {
 					version: 1,
 					symbol: 'stringPrintFormat,
@@ -1688,7 +1846,7 @@ globalHeapvarwannabes := {
 							viewClass: clView,
 							viewBounds: nil,
 							viewFlags: vVisible + vReadOnly,
-							viewFormat: 0,
+							viewFormat: vfNone,
 							viewJustify: vjParentCenterH + vjReflow,
 							viewSetupFormScript: func() begin
 								(self.viewBounds := self:Parent():LocalBox())
@@ -1709,6 +1867,7 @@ globalHeapvarwannabes := {
 					_proto: @protoPrintFormat
 				}
 			},
+			// an In/Out Box item no viewer is registered for
 			ioItem: {
 				default: {
 					viewClass: clView,
@@ -1738,6 +1897,7 @@ globalHeapvarwannabes := {
 					]
 				}
 			},
+			// the formats of a NewtApp overview's selected items
 			newtOverview: {
 				newtOverviewFormat: {
 					symbol: 'newtOverviewFormat,
@@ -1748,6 +1908,7 @@ globalHeapvarwannabes := {
 				},
 				newtOverFrameFormat: {symbol: 'newtOverFrameFormat, title: selectedItems, _proto: @targetFrameFormat}
 			},
+			// the Notepad's view definitions and formats
 			paperroll: {
 				viewonly: viewonly,
 				default: @notePaper,
@@ -1756,17 +1917,22 @@ globalHeapvarwannabes := {
 				prLetterFormat: @prLetterFormat,
 				prMemoFormat: @prMemoFormat
 			},
+			// the call log's
 			calllog: {
 				viewonly: viewonly_2,
 				default: default_2,
 				prFrameFormat: prFrameFormat_2,
 				cLogFormat: cLogFormat
 			},
+			// the Date Book's: every kind of meeting shares meeting_2 (below)
 			meeting: meeting_2,
 			cribNote: meeting_2,
 			exceptionMeeting: meeting_2,
 			RepeatingMeeting: meeting_2,
+			// the Date Book's print formats
 			calendar: {
+				// the day view printed: 7:00 to 20:00 (420 to 1200 minutes), the events above
+				// when there are some
 				DayViewPrintFormat: {
 					routingType: 'Print,
 					type: 'printFormat,
@@ -1786,6 +1952,7 @@ globalHeapvarwannabes := {
 						tabAcross: nil,
 						tabValues: nil,
 						tabDown: 1,
+						// each day's column ends 15 pixels above the page's bottom
 						tabSetup: func(a1, a2, a3) begin
 							local box;
 							box := self:Parent():LocalBox();
@@ -1793,6 +1960,7 @@ globalHeapvarwannabes := {
 						end,
 						viewSetupFormScript: func() begin
 							inherited:viewSetupFormScript();
+							// the meetings start below the events (when they are shown) or the date
 							(MeetingBottom := ((MeetingTop := (if ShowCribNotes then 106 else 26)) + MeetingHeight))
 						end,
 						tabHeights: 100,
@@ -1800,6 +1968,8 @@ globalHeapvarwannabes := {
 						numDays: 1,
 						OriginY: 182,
 						MeetingBottom: nil,
+						// a day's column: the date and the day's events, the meeting grid with the
+						// meetings (a dayView), and below it the meetings outside the hours shown
 						tabProtos: {
 							debug: 362187,
 							viewClass: clView,
@@ -1819,7 +1989,7 @@ globalHeapvarwannabes := {
 											viewClass: clTextView,
 											viewFlags: vVisible,
 											viewBounds: {left: 0, top: 4, right: 0, bottom: 16},
-											viewJustify: 8388658,
+											viewJustify: vjCenterH + vjParentFullH + oneLineOnly,
 											viewFont: tsSimple + tsSize(12) + tsBold,
 											text: uCardPositionAlertButton,
 											DateSpec: 18,
@@ -1837,6 +2007,7 @@ globalHeapvarwannabes := {
 											cribFont: tsSimple + tsSize(9),
 											viewLineSpacing: 16,
 											cribLineSpacing: 16,
+											// the day's events (the notes soups), as cribNotes
 											viewSetupChildrenScript: func() begin
 												(self.viewChildren := GetAllMeetings(notes, RepeatNotes, displaydate, (displaydate + 1440)))
 											end
@@ -1849,6 +2020,7 @@ globalHeapvarwannabes := {
 											viewJustify: vjParentFullH,
 											viewFormat: vfFillGray,
 											viewSetupFormScript: func() begin
+												// no divider without the events (no viewFlags: hidden)
 												(if (not ShowCribNotes) then (viewFlags := 0))
 											end
 										}
@@ -1874,6 +2046,7 @@ globalHeapvarwannabes := {
 										(viewBounds := SetBounds(0, MeetingTop, 0, MeetingBottom))
 									end,
 									viewDrawScript: func() begin
+										// the hour lines, 13 pixels apart
 										DrawMeetingGrid(13)
 									end,
 									viewChildren: [viewChildren:
@@ -1897,6 +2070,8 @@ globalHeapvarwannabes := {
 									bodyStyle: {font: tsSimple + tsSize(9), justification: 'left},
 									viewLineSpacing: 13,
 									shapes: nil,
+									// the meetings before startTime and after stopTime (from half an hour before),
+									// as lines of text below the grid
 									viewSetupFormScript: func() begin
 										viewBounds := SetBounds(18, (MeetingBottom + 10), 0, 0);
 										l2 := ((l1 := displaydate) + startTime);
@@ -1938,6 +2113,8 @@ globalHeapvarwannabes := {
 								}
 							]
 						},
+						// lays out a column per day and gives each day its meetings (SubKids),
+						// found in one pass over all the days' meetings sorted by start
 						viewSetupChildrenScript: func() begin
 							box := self:LocalBox();
 							tabAcross := numDays;
@@ -1972,7 +2149,7 @@ globalHeapvarwannabes := {
 								viewClass: clTextView,
 								viewFlags: vVisible,
 								viewBounds: {left: 0, top: 0, right: 0, bottom: 20},
-								viewJustify: 8388656,
+								viewJustify: vjParentFullH + oneLineOnly,
 								viewFont: tsSimple + tsSize(18) + tsBold,
 								DateSpecLong: 41705,
 								DateSpecShort: 745,
@@ -2001,11 +2178,13 @@ globalHeapvarwannabes := {
 						inherited:SetupItem(fields, frame2);
 						(fields.title := title)
 					end,
+					// the day view always prints on one page
 					CountPages: func(fields, target) begin
 						1
 					end,
 					_proto: @coverPageFormat
 				},
+				// the to do list printed: each selected day's header and its to do items
 				ToDoListPrintFormat: {
 					routingType: 'Print,
 					type: 'printFormat,
@@ -2047,6 +2226,7 @@ globalHeapvarwannabes := {
 					end,
 					_proto: @coverPageFormat
 				},
+				// the day's agenda
 				AgendaListPrintFormat: {
 					routingType: 'Print,
 					type: 'printFormat,
@@ -2061,6 +2241,7 @@ globalHeapvarwannabes := {
 					end,
 					_proto: @coverPageFormat
 				},
+				// the week's agenda: seven days
 				WeekViewPrintFormat: {
 					routingType: 'Print,
 					type: 'printFormat,
@@ -2077,6 +2258,8 @@ globalHeapvarwannabes := {
 					_proto: @coverPageFormat
 				}
 			},
+			// the Date Book's overview printed: the meetings the overview's cursor
+			// selected, page by page
 			CalendarOverview: {
 				OverviewPrintFormat: {
 					routingType: 'Print,
@@ -2111,6 +2294,7 @@ globalHeapvarwannabes := {
 						viewQuitScript: func() begin
 							(cursor := nil)
 						end,
+						// the next page starts with the first item that did not fit on this one
 						printNextPageScript: func() begin
 							drawShapes := nil;
 							if (cursorIndex := indexFirstShapeThatDidntFit) then begin
@@ -2121,6 +2305,8 @@ globalHeapvarwannabes := {
 						viewDrawScript: func() begin
 							(if drawShapes then self:DrawShape(drawShapes, bodyStyle))
 						end,
+						// the shapes of one page: from cursorIndex, each meeting, event or task
+						// (under a date header when its day changes) while they fit in pageHeight
 						CreateShapes: func() begin
 							drawShapes := [Array: ];
 							instanceTime2 := nil;
@@ -2188,6 +2374,8 @@ globalHeapvarwannabes := {
 				},
 				OverviewFrameFormat: {symbol: 'OverviewFrameFormat, title: overview, _proto: @targetFrameFormat}
 			},
+			// the book reader's print formats: the whole book or the current page, with
+			// or without the reader's marks
 			copperfield: {
 				bookScreenFormat: {
 					title: "Entire Book",
@@ -2220,6 +2408,7 @@ globalHeapvarwannabes := {
 					symbol: 'pageScreenMarkFormat
 				}
 			},
+			// a package as an In/Out Box item (beamed or mailed packages)
 			packageFrame: {
 				default: {
 					symbol: 'packageTextView,
@@ -2229,9 +2418,11 @@ globalHeapvarwannabes := {
 					viewBounds: {left: 0, top: 0, right: 0, bottom: 0},
 					viewFlags: vVisible + vGesturesAllowed,
 					viewJustify: vjParentFullH + vjParentFullV,
-					viewFormat: 0,
+					viewFormat: vfNone,
 					viewLineSpacing: 14,
 					viewFont: tsSimple + tsSize(10),
+					// the viewer shows the package's name (from its package reference, wherever
+					// the item keeps it)
 					viewSetupChildrenScript: func() begin
 						local mailFont, l2;
 						(if fields then begin
@@ -2274,6 +2465,9 @@ globalHeapvarwannabes := {
 						local l1;
 						(if (l1 := (if frame2.target.package then GetPkgRefInfo(frame2.target.package))) then l1.size)
 					end,
+					// the item's body: an alias to the package's entry in the packages soup.
+					// looks like a ROM bug: pkgRefInfo is read (.title, .store) before the test
+					// that it is not nil, so a package that is gone throws instead of giving nil
 					MakeBodyAlias: func(frame2) begin
 						local pkgRefInfo, packageEntry, entryAlias;
 						if ((frame2.target = nil) or (frame2.target.package = nil)) then begin
@@ -2294,6 +2488,7 @@ globalHeapvarwannabes := {
 					_proto: @targetFrameFormat
 				}
 			},
+			// the Extras Drawer's list of packages
 			packageList: {
 				exOverviewFormat: {
 					symbol: 'exOverviewFormat,
@@ -2304,6 +2499,7 @@ globalHeapvarwannabes := {
 					_proto: @protoRoutingFormat
 				}
 			},
+			// a mail message's text viewer and print format
 			mailText: {
 				default: {
 					symbol: 'mailTextView,
@@ -2327,6 +2523,7 @@ globalHeapvarwannabes := {
 							end;
 						a1
 					end,
+					// the text is either the item's own or its body's (inBody)
 					viewSetupChildrenScript: func() begin
 						local fields2, mailFont;
 						(if fields then begin
@@ -2340,6 +2537,7 @@ globalHeapvarwannabes := {
 								(self.viewChildren := [Array: {viewBounds: mailFont, _proto: @protoParagraph, viewStationery: 'para, text: fields2.text, viewFont: GetUserConfig('mailFont)}])
 							end else (self.viewChildren := [Array: ]))
 					end,
+					// an edited unread message's text goes back into the item
 					viewQuitScript: func() begin
 						local l1, notesText2;
 						(if (not (((l1 := (if inBody then fields.body else fields)).state = 'Read) or (l1.state = 'Received))) then begin
@@ -2351,6 +2549,7 @@ globalHeapvarwannabes := {
 								(if (if (if l1.edited then IsSoupEntry(fields)) then FrameDirty(fields)) then self:itemchanged(fields, nil))
 							end)
 					end,
+					// the view is a whole number of lines high
 					viewSetupFormScript: func() begin
 						viewLineSpacing := FontHeight((viewFont := GetUserConfig('mailFont)));
 						height := self:Parent():LocalBox().bottom;
@@ -2380,6 +2579,8 @@ globalHeapvarwannabes := {
 						StartFlushWithChild: func(a1) begin
 							nil
 						end,
+						// the page: the header (from, to, cc, subject: the mail slip's TextHeader)
+						// then the text, in the mail font at 10 points, reflowed over pages
 						viewSetupFormScript: func() begin
 							local mailFont2, mailFont, l3, l4, box, l6, textHeader, l8;
 							inherited:viewSetupFormScript();
@@ -2401,7 +2602,7 @@ globalHeapvarwannabes := {
 								viewClass: clView,
 								viewBounds: nil,
 								viewFlags: vVisible + vReadOnly,
-								viewFormat: 0,
+								viewFormat: vfNone,
 								viewJustify: vjParentCenterH + vjReflow,
 								viewSetupFormScript: func() begin
 									(self.viewBounds := self:Parent():LocalBox())
@@ -2429,6 +2630,9 @@ globalHeapvarwannabes := {
 					_proto: @coverPageFormat
 				}
 			},
+			// smart mail: a mail item that carries option buttons (target.options) an
+			// application provides; each button calls the application's method at its
+			// path with the item
 			smartMail: {
 				default: {
 					symbol: 'smartMail,
@@ -2445,6 +2649,7 @@ globalHeapvarwannabes := {
 						l1 := GetRoot().(option.app);
 						call l1.(option.path) with (fields, target.arg)
 					end,
+					// the item's setup method, from the application that made it
 					viewSetupFormScript: func() begin
 						local l1;
 						(if target.setup then begin
@@ -2465,7 +2670,7 @@ globalHeapvarwannabes := {
 							viewSetupChildrenScript: func() begin
 								self.viewChildren := [Array: ];
 								(if (if (if fields then target) then target.options) then (foreach item in target.options do begin
-											AddArraySlot(viewChildren, {_proto: @protoTextButton, viewFont: @fontSystem9Bold, viewJustify: 8389638, viewBounds: RelBounds(6, 6, StdButtonWidth(item.label), 13), text: item.label, option: item, buttonClickScript: func() begin
+											AddArraySlot(viewChildren, {_proto: @protoTextButton, viewFont: @fontSystem9Bold, viewJustify: vjCenterH + vjCenterV + vjSiblingRightH + oneLineOnly, viewBounds: RelBounds(6, 6, StdButtonWidth(item.label), 13), text: item.label, option: item, buttonClickScript: func() begin
 												self:doOption(option)
 											end})
 										end))
@@ -2516,13 +2721,19 @@ globalHeapvarwannabes := {
 	paperPrefs: {_proto: {scrollIndex: 0}},
 	PowerOffFenceSitters: nil,
 	ActivePackageList: [|Array|: ],
+	// StationeryChangeRegistry: functions told when stationery is registered or
+	// removed
 	StationeryChangeRegistry: {},
+	// BaudTypes: the serial speeds offered
 	BaudTypes: {
 		_proto: {
 			baudRates: [|Array|: 1200, 2400, 9600, 14400, 28800],
 			baudText: [|Array|: "1200", "2400", "9600", "14400", "28800"]
 		}
 	},
+	// DataConversionRegistry: what converts each kind of data between the 1.x and
+	// 2.0 formats, by application or soup (GetConversionFrame); a path is the
+	// application's conversion frame
 	DataConversionRegistry: {
 		_proto: {
 			alarms: @alarmSoupConversionFrame,
@@ -2535,8 +2746,12 @@ globalHeapvarwannabes := {
 			systemDirectory: @directoryConversionFrame
 		}
 	},
+	// UserConfigChangeRegistry: functions told when user configuration slots
+	// change (RegUserConfigChange), each with the changed slots
 	UserConfigChangeRegistry: {
 		_proto: {
+			// the button bar's position or its icons' spacing changed: the display
+			// parameters are made again and the icons redrawn
 			ButtonBar: func(a1, a2) begin
 				local l1, l2, l3, l4;
 				if HasSlot(a2, 'buttonBarPositions) then begin
@@ -2555,12 +2770,16 @@ globalHeapvarwannabes := {
 						(if l4 then GetRoot().ExtrasDrawer:InvalIcons() else (if l3 then GetRoot().buttons:RedoIcons()))
 					end)
 			end,
+			// the user's location changed: the clock is put right for daylight saving time
+			// there
 			LocationChange: func(a1) begin
 				local l1;
 				(if (a1 = 'location) then SetTimeInSeconds((l1 := (TimeInSeconds() + (DSTVerify(Time()) * 60)))))
 			end,
 			locale: compile(
 				constants: {
+					// the user's own time formats: those that differ from the locale's are put
+					// into a writable copy of the current locale bundle, and the clocks redrawn
 					kFunction_4a64f5: func() begin
 						(if (timeformat := GetUserConfig('timeformat)) then begin
 								timeformat := Clone(timeformat);
@@ -2597,6 +2816,8 @@ globalHeapvarwannabes := {
 		}
 	},
 	stdForms: {_proto: @stdForms},
+	// PhoneTypes: the kinds of phone numbers, the letter shown before each, and
+	// their names
 	PhoneTypes: {
 		_proto: {
 			phoneClasses: [|Array|: 'phone, 'homePhone, 'workPhone, 'faxPhone, 'carPhone, 'mobilePhone, 'homefaxPhone],
@@ -2620,10 +2841,15 @@ globalHeapvarwannabes := {
 			}
 		}
 	},
+	// PowerOffRegistry: functions told when the machine powers off (RegPowerOff)
 	PowerOffRegistry: {},
+	// findApps: the applications Find searches by default
 	findApps: [|Array|: 'paperroll, 'cardfile, 'calendar, 'callapp, 'iobox, 'worldClock],
+	// correctInfo: the recogniser's correction information (its methods are
+	// natives, in baseCorrectInfo)
 	correctInfo: {_proto: baseCorrectInfo},
 	BusyPackages: [|Array|: ],
+	// SoupRestoreRegistry: what to do when a soup is restored, by soup
 	SoupRestoreRegistry: {
 		_proto: {
 			BuiltInExtrasState: func(a1) begin
@@ -2635,9 +2861,15 @@ globalHeapvarwannabes := {
 
 recording := "Recording";
 
+// the sound recorder of a recorded note (a protoRecorderView); its statusText
+// frame shows the recorder's state in recorderStatus
 recorder := {
 	viewBounds: {left: 0, top: 7, right: 191, bottom: 30},
 	viewSetupFormScript: func() begin
+		// SetState(oldState, newState, hasSounds): the states as the text shows them -
+		// 1 and 32 ready, 2 recording, 4 playing, 8 and 16 paused; going to 64 the
+		// recorder is given the note's store to record onto.  From 32 to 1 a
+		// recording has just finished: the note takes the sounds
 		(self.statusText := {_parent: self, SetState: func(fSoundState, fSoundState2, hasSoundFrames) begin
 			local text, parent;
 			if (fSoundState2 = 64) then begin
@@ -2688,6 +2920,7 @@ recorder := {
 				end)
 		end})
 	end,
+	// while recording, the elapsed time is shown as mm:ss
 	viewChangedScript: func(slot, view) begin
 		local timeString;
 		(if (slot = 'elapsedTime) then begin
@@ -2700,8 +2933,9 @@ recorder := {
 	_proto: @protoRecorderView
 };
 
+// the note's playing time, "00:00" at first
 soundDescription := {
-	viewJustify: 8393732,
+	viewJustify: vjCenterV + vjSiblingRightH + vjSiblingCenterV + oneLineOnly,
 	viewBounds: {left: 7, top: 0, right: 297, bottom: 23},
 	viewFont: tsSimple + tsSize(14) + tsBold,
 	text: soundDescriptionText,
@@ -2711,7 +2945,7 @@ soundDescription := {
 };
 
 recorderStatus := {
-	viewJustify: 8396804,
+	viewJustify: vjCenterV + vjSiblingBottomV + oneLineOnly,
 	viewBounds: {left: 0, top: 5, right: 300, bottom: 20},
 	text: readyToRecord,
 	debug: "recordStatus",
@@ -2721,6 +2955,8 @@ recorderStatus := {
 
 recordingSource := "Recording source";
 
+// the recording source picker: none, or what the machine has (the Gestalt
+// sound query's input bits: 4 the microphone, 16 line in)
 inputSourcePicker := {
 	viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
 	viewBounds: {left: 10, top: 8, right: 10, bottom: 23},
@@ -2753,6 +2989,7 @@ inputSourcePicker := {
 			end;
 		return labelCommand.item
 	end,
+	// line in warns that without an external microphone nothing will be recorded
 	LabelActionScript: func(index) begin
 		local value;
 		value := labelCommands[index].value;
@@ -2763,6 +3000,8 @@ inputSourcePicker := {
 	_proto: @protoLabelPicker
 };
 
+// the recording quality picker: the codecs offered depend on the processor
+// (on a StrongARM, GSM at 2K a second as well as IMA)
 qualityPicker := {
 	viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
 	viewBounds: {left: 10, top: 6, right: 10, bottom: 21},
@@ -2776,6 +3015,8 @@ qualityPicker := {
 			end;
 		inherited:?viewSetupFormScript()
 	end,
+	// the quality the user chose, else the processor's default; a choice that is
+	// not offered falls back to the first
 	TextSetup: func() begin
 		if (not (recordingQuality := GetUserConfig('recordingQuality))) then begin
 				recordingQuality := (if (Gestalt(16777219).cputype = 'strongarm) then 'GSM8K16Codec else 'IMA8K16Codec)
@@ -2808,6 +3049,8 @@ eMail := "E-Mail";
 
 pager := "Pager";
 
+// nameRef.phone: names with phone numbers, for the call slip and other phone
+// pickers; nameRef.fax is built on it
 phones := {
 	_proto: @protoPeopleDataDef,
 	name: "Phones",
@@ -2827,6 +3070,8 @@ phones := {
 			(((IsSubclass((cls := ClassOf(a1)), 'person) or IsSubclass(cls, 'company)) or IsSubclass(cls, 'owner)) or (cls = 'frame))
 		end
 	},
+	// a name reference with its phone number: a group's members, else the number
+	// in frame2, else the person's first of the preferred kinds; and the country
 	MakeNameRef: func(frame2, cls) begin
 		local l1, entryFromObj2, bcPhoneNumber, country;
 		l1 := inherited:MakeNameRef(frame2, cls);
@@ -2843,6 +3088,7 @@ phones := {
 		l1.country := country;
 		l1
 	end,
+	// the kind of the number (or pager), in brackets, after the name
 	GetSuffix: func(a1) begin
 		local phone, cls;
 		if (phone := self:Get(a1, 'phone, nil)) then begin
@@ -2861,6 +3107,9 @@ phones := {
 		constants: {
 			kLiteral_450465: SetClass(Clone("--"), '|string.noData|)
 		},
+		// Get(nameRef, path, format): the phone path reads the entry's number when the
+		// reference has none ("--" as text when there is none at all), formatted for
+		// display as text
 		func(a1, a2, a3) begin
 			local l1, entryFromObj2;
 			l1 := inherited:Get(a1, a2, a3);
@@ -2874,6 +3123,7 @@ phones := {
 					(if (if (if (a3 = 'text) then l1) then (not IsInstance(l1, '|string.noData|))) then MakeDisplayPhone(l1) else l1)
 				end else l1)
 		end),
+	// what the routing slip needs to dial: the entry, name, country and number
 	GetItemRoutingFrame: func(item) begin
 		local phone;
 		if ((not (phone := self:Get(item, 'phone, nil))) or IsInstance(phone, '|string.noData|)) then begin
@@ -2881,6 +3131,7 @@ phones := {
 			end;
 		{entry: item, name: self:Get(item, primaryPath, 'text), country: item.country, rawNumber: phone, displayNumber: MakeDisplayPhone(phone), phoneNumber: (if item.asIsPhone then item.asIsPhone else GetRoot():MungePhone(phone, item.country))}
 	end,
+	// puts edited phone numbers back into the person's Names card
 	ModifyEntry: func(nameRef, equivalent) begin
 		(if (entryFromObj2 := EntryFromObj(nameRef)) then begin
 				local entryFromObj2;
@@ -2894,6 +3145,7 @@ phones := {
 				EntryChangeXmit(entryFromObj2, 'entryChanged)
 			end)
 	end,
+	// adds a new Names card for the reference, with its phone number
 	NewEntry: func(a1, _context) begin
 		local cardfile, phone, addcard;
 		cardfile := GetRoot().cardfile;
@@ -2905,6 +3157,7 @@ phones := {
 		a1.phone := phone;
 		addcard
 	end,
+	// the title of the slip for editing the number or name
 	DefaultOpenEditor: func(a1, trackScrollingItem, a3) begin
 		local nameRef, text, validityCheck2;
 		editTitle := defaultEditTitle;
@@ -2921,6 +3174,8 @@ phones := {
 			end;
 		inherited:DefaultOpenEditor(a1, trackScrollingItem, a3)
 	end,
+	// the picker of the person's phone numbers (and the reference's own), each
+	// with its kind's letter, then New Phone; nil for any other field
 	MakePopup: func(a1, fieldPath) begin
 		if (fieldPath <> 'phone) then begin
 				return nil
@@ -2971,6 +3226,8 @@ modem := "Modem";
 
 string_3 := "String";
 
+// SprintNet: a dial-in network whose local access numbers come from the
+// access numbers of the user's city
 sprint := {
 	title: sprintNet,
 	id: 'sprint,
@@ -2997,6 +3254,7 @@ unknown := "Unknown";
 
 selectedItems := "Selected Items";
 
+// the cover page's labels (To, From, ...) and their values (formProto)
 formProtoProto := {
 	viewJustify: vjRightH,
 	viewFont: tsFancy + tsSize(12) + tsBold,
@@ -3004,10 +3262,12 @@ formProtoProto := {
 	_proto: @protoStaticText
 };
 
-formProto := {_proto: formProtoProto, viewJustify: 0, viewFont: tsFancy + tsSize(12), viewFormat: 0};
+formProto := {_proto: formProtoProto, viewJustify: 0, viewFont: tsFancy + tsSize(12), viewFormat: vfNone};
 
 singleMeeting := "Single Meeting";
 
+// the view definitions and formats of a Date Book meeting, shared by every
+// kind of meeting (_viewdefs above)
 meeting_2 := {
 	default: {
 		viewClass: clView,
@@ -3018,6 +3278,7 @@ meeting_2 := {
 		type: 'viewer,
 		symbol: 'default,
 		name: date_2,
+		// a routed meeting's text, in the handwriting font, as the In Box shows it
 		viewSetupChildrenScript: func() begin
 			local textOfRoutedMeeting, box, textBounds2;
 			textOfRoutedMeeting := GetRoot().calendar:GetTextOfRoutedMeeting(target);
@@ -3026,10 +3287,14 @@ meeting_2 := {
 			(self.viewChildren := [Array: {viewBounds: textBounds2, viewStationery: 'para, text: textOfRoutedMeeting, viewFont: tsHWFont + tsSize(12), recConfig: @rcInkorText}])
 		end
 	},
+	// sending one meeting: the item carries a copy of it (an instance of a
+	// repeating meeting made into a meeting of its own)
 	singleFrameDef: {
 		title: singleMeeting,
 		version: 1,
 		symbol: 'singleFrameDef,
+		// for a repeating meeting the item carries the whole series, its instances'
+		// notes resolved into it - or, if that fails, just this occurrence
 		SetupSlip: func(a1, a2) begin
 			l1 := GetRoot().calendar;
 			if (l2 := a1.target).entryAlias then begin
@@ -3088,6 +3353,7 @@ meeting_2 := {
 		TextScript: func(entry, target) begin
 			GetRoot().calendar:GetTextOfRoutedMeeting(entry.body)
 		end,
+		// the invitees' and location's entry aliases do not go with the item
 		PrepareForRouting: func(a1) begin
 			if a1.mtgInvitees then begin
 					(foreach item in a1.mtgInvitees do begin
@@ -3098,6 +3364,8 @@ meeting_2 := {
 		end,
 		_proto: @targetFrameFormat
 	},
+	// printing one meeting: what, when, who, where and its notes, in a rounded
+	// frame, on as many pages as the notes take
 	singlePrintDef: {
 		title: singleMeeting,
 		mainFormat: {
@@ -3123,6 +3391,7 @@ meeting_2 := {
 							DataRect := UnionRect(DataRect, item.viewBounds)
 						end))
 			end,
+			// another page while the notes go on below what has been printed
 			printNextPageScript: func() begin
 				(if (currentY < DataRect.bottom) then begin
 						pageNumber := (pageNumber + 1);
@@ -3153,6 +3422,7 @@ meeting_2 := {
 					_proto: mainFormatProto_2,
 					height: 50,
 					labelText: time,
+					// TimeSpec 170636 is shortTimeStrSpec (datetimeStrSpecs.ns)
 					TimeSpec: 170636,
 					GetContent: func() begin
 						Stringer([Array: TimeStr(meeting.mtgStartDate, TimeSpec), " ", $-, " ", TimeStr((meeting.mtgStartDate + self:GetMeetingSlot(meeting, 'mtgDuration)), TimeSpec), "\n", LongDateStr(meeting.mtgStartDate, @datetimeStrSpecs.longDateStrSpec)])
@@ -3185,6 +3455,7 @@ meeting_2 := {
 		},
 		version: 1,
 		symbol: 'singlePrintDef,
+		// the item holds the meeting, with its repeat template's notes when it repeats
 		SetupSlip: func(a1, fields) begin
 			local repeatTemplate;
 			fields.title := Clone(GetRoot().calendar:GetMeetingText(a1.target));
@@ -3200,6 +3471,8 @@ meeting_2 := {
 	}
 };
 
+// the base of the Date Book's print formats: the day view's layout (dpCal),
+// the styles, and the Date Book's functions they need to draw meetings
 mainFormatProtoProto := {
 	dpCal: {
 		dayViewHeight: 624,
@@ -3218,6 +3491,7 @@ mainFormatProtoProto := {
 	TimeSpec: 170636,
 	headerHt: nil,
 	MeetingSoup: nil,
+	// an event as shapes: its icon, its text, and the first line of its notes
 	GetSingleEventShape: func(a1, yOffset, pageWidth) begin
 		local list, offsetShape2, l3, meetingText, copy, l6, notesDataItem;
 		list := [Array: ];
@@ -3254,6 +3528,8 @@ mainFormatProtoProto := {
 	getNameOfLocation: getNameOfLocation,
 	RepeatSoup: nil,
 	selectedDates: nil,
+	// a meeting as shapes: its icon, its times, its text, the first line of its
+	// notes, its place (@ ...) and invitees (with ...), each a line of LineHt
 	GetSingleMeetingShape: func(exception, a2, pageWidth) begin
 		local list, offsetShape2, l3, text, meetingText, notesDataItem, mtgLocation, mtgInvitees;
 		list := [Array: ];
@@ -3288,6 +3564,9 @@ mainFormatProtoProto := {
 		list
 	end,
 	GetNotesData: GetNotesData,
+	// opens the Date Book soups, and the days to print: the selected day, or for
+	// several days the week it is in, from the user's (or the locale's) first day
+	// of the week
 	viewSetupFormScript: func() begin
 		inherited:viewSetupFormScript();
 		self.MeetingSoup := GetUnionSoup(@calendarSoupName);
@@ -3329,6 +3608,7 @@ mainFormatProtoProto := {
 	end,
 	numDays: 1,
 	bodyFont: tsSimple + tsSize(9),
+	// a day's header: a gray rule and the long date
 	GetDateHeader: func(item, yOffset, pageWidth) begin
 		local list, longDateStr2;
 		ArrayInsert((list := [Array: ]), MakeLine(0, yOffset, pageWidth, yOffset), 0);
@@ -3344,6 +3624,7 @@ mainFormatProtoProto := {
 	HeaderTextHt: nil
 };
 
+// the "printed <date> <time>" line at the foot of a Date Book page
 mainFormatProtoProto_2 := {
 	viewBounds: {left: 0, top: -12, right: 0, bottom: 0},
 	viewJustify: vjParentFullH + vjParentBottomV,
@@ -3354,6 +3635,10 @@ mainFormatProtoProto_2 := {
 	_proto: @protoStaticText
 };
 
+// the agenda's print format: for each selected day its header, events,
+// meetings and to do items, flowing over pages.  CarefulCreate throws
+// |evt.ex.nextpage| when a day's shapes do not fit: what is left
+// (oldShapes) starts the next page.
 mainFormatProto := {
 	_proto: mainFormatProtoProto,
 	numDays: 1,
@@ -3367,6 +3652,7 @@ mainFormatProto := {
 	todos: nil,
 	oldShapes: nil,
 	drawShapes: nil,
+	// the next page's shapes; the throw for a full page just ends it
 	setupNextPage: func() begin
 		(if (not drawShapes) then (try begin
 					self:CreateShapes()
@@ -3387,6 +3673,7 @@ mainFormatProto := {
 			end;
 		drawShapes
 	end,
+	// the day's events as shapes, below each other from yOffset
 	GetEventShapes: func(item2, yOffset, pageWidth) begin
 		(if (allMeetings := GetAllMeetings(notes, RepeatNotes, item2, (item2 + 1440))) then begin
 				local allMeetings;
@@ -3399,6 +3686,7 @@ mainFormatProto := {
 				ArrayInsert(l2, bodyStyle, 0)
 			end)
 	end,
+	// the day's meetings (not other kinds of entries) as shapes
 	GetMeetingShapes: func(a1, a2, a3) begin
 		(if (l1 := GetAllMeetings(MeetingSoup, RepeatSoup, a1, (a1 + 1440))) then begin
 				l3 := 0;
@@ -3423,6 +3711,9 @@ mainFormatProto := {
 				ArrayInsert(l9, bodyStyle, 0)
 			end)
 	end,
+	// adds shapes a1 to the page if they fit; else adds those that fit, keeps the
+	// rest for the next page, drops the days already done from selectedDates and
+	// throws |evt.ex.nextpage|
 	CarefulCreate: func(a1, item) begin
 		(if a1 then (if ((bottom := ShapeBounds(a1).bottom) < pageHeight) then begin
 					oldShapes := nil;
@@ -3494,6 +3785,8 @@ mainFormatProto := {
 	viewChildren: [viewChildren: {_proto: mainFormatProtoProto_2}]
 };
 
+// a line of the single meeting printout: a bold label and its content
+// (GetContent); a line with no content is not shown
 mainFormatProto_2 := {
 	viewClass: clView,
 	viewFlags: vVisible + vReadOnly,
@@ -3532,6 +3825,7 @@ mainFormatProto_2 := {
 	]
 };
 
+// the meeting's notes, a page's worth (400 pixels) at a time
 notes_3 := {
 	viewClass: clEditView,
 	viewFlags: vVisible + vReadOnly + vClipping,
@@ -3558,8 +3852,11 @@ Footer := {
 	_proto: @protoStaticText
 };
 
+// the book reader's print formats with the reader's marks
 bookScreenMarkFormatProto := {_proto: @coverPageFormat, noClone: true, showMarks: true, mainFormat: mainFormat};
 
+// a book printed: as many of its pages as fit on each sheet, laid out in rows
+// at the book's own page size, from fromPage to toPage (or the current page)
 mainFormat := {
 	viewBounds: {left: 0, top: 15, right: 0, bottom: 0},
 	title: book,
@@ -3569,6 +3866,8 @@ mainFormat := {
 	bookRef: nil,
 	isbn: nil,
 	pagesShowing: 1,
+	// finds the book (a message when it is not there), its rendering's page size
+	// (a 1.x book's pages are 318 high), and installs the book's own scripts
 	viewSetupFormScript: func() begin
 		inherited:viewSetupFormScript();
 		printForm := self;
@@ -3604,6 +3903,7 @@ mainFormat := {
 				(bookPage := fields.body.fromPage)
 			end)
 	end,
+	// the sheet's title lines, then the pages, until the sheet or the range ends
 	viewSetupChildrenScript: func() begin
 		local box, list, l3, l4, bounds, frame2;
 		box := self:LocalBox();
@@ -3642,6 +3942,7 @@ mainFormat := {
 	_proto: @protoPrintFormat
 };
 
+// the routing slip's extra part for printing a book: from and to page
 auxForm := {
 	debug: 331701,
 	viewBounds: {left: 0, top: 120, right: 140, bottom: 200},
@@ -3660,7 +3961,7 @@ auxForm := {
 			viewBounds: {left: 0, top: 0, right: 120, bottom: 32},
 			_proto: turnToPage,
 			label: "From page",
-			entryFlags: 10753,
+			entryFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed,
 			viewLineSpacing: 32,
 			viewSetupFormScript: func() begin
 				fields.body.fromPage := 1;
@@ -3674,10 +3975,13 @@ auxForm := {
 			viewBounds: {left: 0, top: 34, right: 120, bottom: 66},
 			_proto: turnToPage,
 			label: "To page",
-			entryFlags: 10753,
+			entryFlags: vVisible + vClickable + vGesturesAllowed + vNumbersAllowed,
 			viewLineSpacing: 32,
 			viewSetupFormScript: func() begin
 				self.text := NumberStr(fields.body.nPages);
+				// looks like a ROM bug: sets fields.toPage where the other fields are kept in
+				// fields.body (fromPage, toPage), so the default end of the range is not set
+				// in the place it is read from
 				(fields.toPage := fields.body.nPages)
 			end,
 			NumberEntered: func(floor) begin
@@ -3688,7 +3992,13 @@ auxForm := {
 	_proto: @protoFloatNGo
 };
 
+// the modem navigator: before a fax, voice or data call through a modem other
+// than the built-in Newton modem, configures the modem from the user's modem
+// setup (its preferences, profile and fax capabilities as endpoint options)
+// and runs the setup's connect script
 modemNavigator := {
+	// opens an endpoint on a1, sets the setup's options and returns the first
+	// option's result, or the error
 	NavigateHelper: func(a1, currentModemSetup) begin
 		modemEndpoint := {_proto: @protoBasicEndpoint, _parent: self};
 		result := nil;
@@ -3764,6 +4074,9 @@ modemNavigator := {
 					navigateHelper
 				end)
 		end),
+	// the "mpro" option: the speeds the modem connects at as bits (300 bps is 1,
+	// 1200 is 2, ...), its capabilities, then its ID and configuration strings,
+	// each ended by a zero byte
 	MakeModemProfile: func(a1) begin
 		l1 := 0;
 		local l1;
@@ -3803,20 +4116,23 @@ modemNavigator := {
 				l12[l13] := 0;
 				l13 := (l13 + 1)
 			end);
-		{label: "mpro", type: 'option, form: 'bytes, opCode: 256, data: l12}
+		{label: "mpro", type: 'option, form: 'bytes, opCode: opSetNegotiate, data: l12}
 	end,
+	// the "mpre" option: the modem preferences as bytes
 	MakeModemPrefs: func(modemprefs) begin
 		local list;
 		list := [Array: 0, (if modemprefs.idModem then 1 else 0), 0, (if modemprefs.useHardwareCD then 1 else 0), 0, (if modemprefs.useConfigString then 1 else 0), (if modemprefs.useDialOptions then 1 else 0), (if modemprefs.hangUpAtDisconnect then 1 else 0), 0, 0, 0, 0, 0, 0, 75, 0, 0, 0, 0, 3, 0, 0, 0, 15, (if (if HasPath(modemprefs, 'RemoveDialStrWhitespace) then (not modemprefs.RemoveDialStrWhitespace)) then 0 else 1)];
-		{label: "mpre", type: 'option, form: 'bytes, opCode: 256, data: list}
+		{label: "mpre", type: 'option, form: 'bytes, opCode: opSetNegotiate, data: list}
 	end,
+	// the "mfax" option: the fax service class and speeds
 	MakeFaxCapabilities: func(faxProfile) begin
-		{label: "mfax", type: 'option, form: 'template, opCode: 512, data: {arglist: [Array: nil, 0, (if faxProfile.serviceClass then faxProfile.serviceClass else 15), (if faxProfile.transmitDataMod then faxProfile.transmitDataMod else 8190), (if faxProfile.transmitHDLCDataMod then faxProfile.transmitHDLCDataMod else 1), (if faxProfile.receiveDataMod then faxProfile.receiveDataMod else 8190), (if faxProfile.receiveHDLCDataMod then faxProfile.receiveHDLCDataMod else 1)], typelist: [Array: 'struct, 'uLong, 'uLong, 'uLong, 'uLong, 'uLong, 'uLong, 'uLong]}}
+		{label: "mfax", type: 'option, form: 'template, opCode: opSetRequired, data: {arglist: [Array: nil, 0, (if faxProfile.serviceClass then faxProfile.serviceClass else 15), (if faxProfile.transmitDataMod then faxProfile.transmitDataMod else 8190), (if faxProfile.transmitHDLCDataMod then faxProfile.transmitHDLCDataMod else 1), (if faxProfile.receiveDataMod then faxProfile.receiveDataMod else 8190), (if faxProfile.receiveHDLCDataMod then faxProfile.receiveHDLCDataMod else 1)], typelist: [Array: 'struct, 'uLong, 'uLong, 'uLong, 'uLong, 'uLong, 'uLong, 'uLong]}}
 	end
 };
 
 tAPI := "TAPI";
 
+// smart mail items (the data definition; the viewer is in _viewdefs above)
 smartMail := {
 	symbol: 'smartMail,
 	superSymbol: 'iobox,
@@ -3846,6 +4162,8 @@ globalHeapvarwannabesItemIcon := {
 	bounds: {left: 0, top: 0, right: 13, bottom: 9}
 };
 
+// the letter shapes panel's grid of letter shapes: a tap selects a letter's
+// shape (the native ClickLetterScript)
 letterShapes_2 := {
 	viewClass: clView,
 	viewFlags: vVisible + vClickable,
@@ -3872,9 +4190,10 @@ letterShapes_2 := {
 	preallocatedContext: 'letterShapes
 };
 
+// "I write this 'A'": the letter whose shapes are shown
 letterShapeLabel := {
 	viewBounds: {left: 10, top: -2, right: -10, bottom: 11},
-	viewJustify: 8396852,
+	viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV + oneLineOnly,
 	viewFont: tsSystem + tsSize(10) + tsBold,
 	UpdateText: func() begin
 		SetValue(self, 'text, ParamStr("I write this '^0'", [Array: SPrintObject(displayOrigin)]))
@@ -3888,6 +4207,8 @@ letterShapeLabel := {
 
 never := "Never";
 
+// how often the selected shape of the letter is used: often, rarely or never
+// (0, 1, 2)
 enableCluster := {
 	viewJustify: vjParentCenterH + vjSiblingBottomV,
 	viewBounds: {left: 0, top: 2, right: 156, bottom: 14},
@@ -3895,6 +4216,8 @@ enableCluster := {
 	viewSetupFormScript: func() begin
 		(clusterValue := GetLetterHilite())
 	end,
+	// the recogniser refuses a setting that leaves a letter with no shape used
+	// often; then says so and shows the setting it kept
 	ClusterChanged: func() begin
 		if (clusterValue <> GetLetterHilite()) then begin
 				SetLetterHilite(clusterValue)
@@ -3942,6 +4265,9 @@ enableCluster := {
 	_proto: @protoRadioCluster
 };
 
+// the letter and the digit-and-symbol index bars of the letter shapes panel;
+// a tap on one picks the character whose shapes are shown, and clears the
+// other bar (other)
 A2Z_2Proto := {
 	viewJustify: vjCenterH + vjCenterV + vjParentFullH + vjSiblingBottomV,
 	IndexClickScript: func(curIndex) begin
@@ -3952,6 +4278,7 @@ A2Z_2Proto := {
 		enableCluster:getNewSetting();
 		LetterShapesPreferencesForm:Dirty()
 	end,
+	// the index of origin (the shown character) in letters, or -1
 	OriginIndex: func() begin
 		if (if letters then origin) then begin
 				(for i := 0 to (StrLen(letters) - 1) do begin
@@ -3991,6 +4318,7 @@ A2Z_2 := {
 			end,
 			kLiteral_3d69c9: {bits: call kBinaryFromHex with ("00000000001c0180018000620189012d0000000000000000000000000000000000000000000000414280000010f073878f0722101112044c8c3c30f0e3e448a0a244f8a0000000001088824408082210112206cc92224889108448a0a24408408380000028890224081022101142054aa122848900844895142810408440000028f102270e133e101182044aa13c84f0e0844515081020a1444000007c8902240811221011420449a12084a01084450a141040a144400000448882440809221011220449922048911084420a221081f3e440000044f07387880722106113c4488c203088e083820a2210f9122380000000000000000000000000000000000c00000000000000000000000000", 'bits), bounds: '{left: 0, top: 0, right: 203, bottom: 9}}
 		},
+		// Swedish has three more letters: A ring, A and O diaeresis
 		func() begin
 			if (GetLocale().enabledlanguage = 'Swedish) then begin
 					icon := kLiteral_3d69c9;
@@ -4017,6 +4345,8 @@ Zero2Nine := {
 	preallocatedContext: 'Zero2Nine
 };
 
+// a check box of the handwriting settings, for the userConfiguration slot
+// named by config
 remoteWritingProto := {
 	viewJustify: vjCenterV + vjParentFullH + vjSiblingFullH + vjSiblingBottomV,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 15},
@@ -4034,6 +4364,9 @@ remoteWriting := {
 	preallocatedContext: 'remoteWriting
 };
 
+// the text editing settings: ink text scaling, inserting at the caret
+// (remote writing, offered only where the Gestalt query says the machine
+// supports it) and adding new words to the personal word list
 globalHeapvarwannabesItem := {
 	height: 77,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 77},
@@ -4046,7 +4379,7 @@ globalHeapvarwannabesItem := {
 	end,
 	stepChildren: [stepChildren:
 		{
-			viewJustify: 8388656,
+			viewJustify: vjParentFullH + oneLineOnly,
 			viewBounds: {left: 24, top: 20, right: 24, bottom: 35},
 			text: "Ink Text Scaling",
 			currentItem: nil,
@@ -4055,6 +4388,7 @@ globalHeapvarwannabesItem := {
 				{item: "75% Scaling", value: 75},
 				{item: "50% Scaling", value: 50}
 			],
+			// the scaling the user chose (75% when not one of these)
 			TextSetup: func() begin
 				if (not (currentItem2 := currentItem)) then begin
 						currentItem2 := 1;
@@ -4090,6 +4424,7 @@ globalHeapvarwannabesItem := {
 	_proto: @protoPrefsRollItem
 };
 
+// the cursive recogniser's speed against accuracy, 0 to 9
 SpeedOptionSlider := {
 	viewJustify: vjParentFullH + vjSiblingBottomV,
 	viewBounds: {left: 34, top: 2, right: -34, bottom: 13},
@@ -4107,12 +4442,14 @@ SpeedOptionSlider := {
 };
 
 transformMyHandwriting := {
-	viewJustify: 8396848,
+	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 	viewBounds: {left: 14, top: 10, right: 14, bottom: 22},
 	text: "Transform my handwriting",
 	_proto: @protoStaticText
 };
 
+// the delay before ink is recognised: 15 to 60 (in steps of 5) as the slider's
+// 0 to 9
 TimeoutOptionSlider := {
 	viewJustify: vjParentFullH + vjSiblingBottomV,
 	viewBounds: {left: 34, top: 2, right: -34, bottom: 13},
@@ -4129,14 +4466,14 @@ TimeoutOptionSlider := {
 };
 
 immediately := {
-	viewJustify: 8398336,
+	viewJustify: vjSiblingFullH + vjSiblingBottomV + oneLineOnly,
 	viewBounds: {left: 0, top: -1, right: 0, bottom: 11},
 	text: "immediately",
 	_proto: @protoStaticText
 };
 
 afterADelay := {
-	viewJustify: 8406529,
+	viewJustify: vjRightH + vjSiblingFullH + vjSiblingTopV + oneLineOnly,
 	viewBounds: {left: 0, top: 0, right: 0, bottom: 12},
 	text: "after a delay",
 	_proto: @protoStaticText
@@ -4146,6 +4483,8 @@ fineTuning := "Fine Tuning";
 
 TimeoutOptionSlider_2 := {_proto: TimeoutOptionSlider, preallocatedContext: 'TimeoutOptionSlider};
 
+// the space the user leaves between letters, 0 to 9, shown reversed on the
+// slider (tightest at the left)
 LetterSpaceSlider := {
 	viewJustify: vjParentCenterH + vjSiblingBottomV,
 	viewBounds: {left: 0, top: 0, right: 210, bottom: 11},
@@ -4170,6 +4509,8 @@ LetterSpaceSlider := {
 	_proto: @protoSlider
 };
 
+// guest user: keeps the user's writing settings aside and uses the defaults
+// until it is turned off again
 GuestAccessBox := {
 	viewJustify: vjCenterV + vjSiblingBottomV,
 	viewFont: @fontSystem9Bold,
@@ -4195,6 +4536,8 @@ GuestAccessBox := {
 	_proto: @protoCheckbox
 };
 
+// the sound output picker: what the machine has (the Gestalt sound query's
+// output bits: 1 the speaker, 8 line out, both together)
 outputSourcePicker := {
 	viewJustify: vjCenterV + vjParentFullH + vjSiblingBottomV,
 	viewBounds: {left: 10, top: 8, right: 10, bottom: 23},
@@ -4233,6 +4576,7 @@ outputSourcePicker := {
 			end;
 		return labelCommand.item
 	end,
+	// the new output plays the alert sound once it is set
 	LabelActionScript: func(index) begin
 		local value;
 		value := labelCommands[index].value;
@@ -4246,6 +4590,7 @@ outputSourcePicker := {
 	_proto: @protoLabelPicker
 };
 
+// the alert sound picker: the registered sounds
 soundPicker := {
 	viewJustify: vjCenterV + vjSiblingBottomV,
 	viewBounds: {left: 10, top: 6, right: 230, bottom: 21},
@@ -4275,6 +4620,7 @@ never_2 := "never";
 
 afterMinute := "after  1 minute";
 
+// the backlight turns off after 15, 30, 60 or 120 seconds, or never
 backOff := {
 	viewBounds: {left: 10, top: 63, right: 210, bottom: 78},
 	indent: nil,
@@ -4287,6 +4633,7 @@ backOff := {
 	_proto: @protoPreferencesPopup
 };
 
+// the paper size picker: the user's paper sizes
 paper := {
 	viewBounds: {left: 10, top: 65, right: 165, bottom: 80},
 	text: "Paper Size",
@@ -4303,9 +4650,10 @@ paper := {
 
 off := "off";
 
+// where the modem is (ModemLocations)
 connectPicker := {
 	viewBounds: {left: 10, top: 10, right: 10, bottom: 23},
-	viewJustify: 8396848,
+	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 	text: "Connect using",
 	configSlot: 'modemHardwareLocation,
 	configService: mods,
@@ -4318,9 +4666,10 @@ connectPicker := {
 	_proto: @protoConfigPicker
 };
 
+// the modem setup picker: the built-in setups and those from packages
 modemPicker := {
 	viewBounds: {left: 10, top: 10, right: 10, bottom: 23},
-	viewJustify: 8396848,
+	viewJustify: vjParentFullH + vjSiblingBottomV + oneLineOnly,
 	labelCommands: [|Array|: ],
 	text: "Modem setup",
 	indent: 95,
@@ -4342,6 +4691,7 @@ modemPicker := {
 	_proto: @protoLabelPicker
 };
 
+// the alarm sound picker; a choice plays at the alarm volume
 alarmSoundPicker := {
 	text: "Alarm Sound",
 	viewBounds: {left: 10, top: 25, right: 180, bottom: 40},
@@ -4362,11 +4712,12 @@ alarmSoundPicker := {
 	_proto: @protoLabelPicker
 };
 
+// the alarm volume slider, hidden while alarms use the system volume
 AlarmGuageSpace := {
 	viewClass: clView,
 	viewBounds: {left: 13, top: 46, right: 213, bottom: 71},
 	viewFlags: vVisible,
-	viewFormat: 0,
+	viewFormat: vfNone,
 	viewSetupDoneScript: func() begin
 		(if GetUserConfig('AlarmVolumeEqualsSystem) then self:Hide())
 	end,
@@ -4390,13 +4741,13 @@ AlarmGuageSpace := {
 			_proto: @volumeSlider
 		},
 		{
-			viewJustify: 8398336,
+			viewJustify: vjSiblingFullH + vjSiblingBottomV + oneLineOnly,
 			viewBounds: {left: 0, top: -2, right: 0, bottom: 10},
 			text: off,
 			_proto: @protoStaticText
 		},
 		{
-			viewJustify: 8406529,
+			viewJustify: vjRightH + vjSiblingFullH + vjSiblingTopV + oneLineOnly,
 			viewBounds: {left: 0, top: 0, right: 0, bottom: 12},
 			text: loud,
 			_proto: @protoStaticText
@@ -4423,9 +4774,11 @@ useSystemVolume := {
 
 security := "Security";
 
+// Set PIN, or Change PIN once there is one; a new PIN turns on asking for it
+// at every power on (passwordFrequency 0)
 setPINButton := {
 	viewBounds: nil,
-	viewJustify: 8388630,
+	viewJustify: vjCenterH + vjCenterV + vjParentCenterH + oneLineOnly,
 	text: nil,
 	viewSetupFormScript: func() begin
 		viewBounds := Clone(viewBounds);
@@ -4456,9 +4809,10 @@ setPINButton := {
 
 removePIN := "Remove PIN";
 
+// Remove PIN: only with the PIN
 RemovePINButton := {
 	viewBounds: {left: 52, top: 27, right: 117, bottom: 42},
-	viewJustify: 8388630,
+	viewJustify: vjCenterH + vjCenterV + vjParentCenterH + oneLineOnly,
 	text: removePIN,
 	buttonClickScript: func() begin
 		AddDeferredCall(func() begin
@@ -4473,6 +4827,8 @@ RemovePINButton := {
 	_proto: @protoTextButton
 };
 
+// how often to ask for the PIN: at every power on, hourly or daily (0, 60 or
+// 1440 minutes), or never; changing it needs the PIN
 PINFreqPicker := {
 	text: "Ask For PIN",
 	viewBounds: {left: 25, top: 50, right: 0, bottom: 65},
