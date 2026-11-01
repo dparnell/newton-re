@@ -183,7 +183,8 @@ GMT>` sets the clock by hand (as a sync from the network does), `!tap <x>
 <y>` puts the finger on the display there for 100 ms (a modal dialog,
 which stops the NewtonScript console, answered from it), `!pm` what keeps
 the chip out of light sleep and ESP-IDF's profile of its power locks and
-modes (`PM_PROFILING`), `!reset` restarts the board.
+modes (`PM_PROFILING`), `!tasks` each task's time on the processor since
+it was last asked, `!reset` restarts the board.
 
 ## A faster start (2026-10-11)
 

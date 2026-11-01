@@ -82,4 +82,9 @@ private:
 	long		fPixelBytes;		// how big that buffer is, so ScreenSetup can keep it
 };
 
+// told, on the drawing task, each time the grays change (a blit, the power
+// or the light, the display set up or turned) - a device's panel waits for
+// it rather than looking for changes (src/host/esp32/main/tdeck_panel.cpp)
+extern void	(*gHostScreenChanged)(void);
+
 #endif	/* __HAL_HOST_SCREEN_H */

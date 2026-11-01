@@ -85,6 +85,7 @@ const long			kBandwidthCount = (long) (sizeof(kBandwidths) / sizeof(kBandwidths[
 const unsigned long	kAdvertPeriodMs = 10 * 60 * 1000;	// this node announced unprompted this often
 const unsigned long	kFirstAdvertMs = 3000;				// ... and this long after starting
 const unsigned long	kContactsSaveMs = 10 * 1000;		// contacts kept this long after they last changed
+const long			kIdleWaitMs = 50;					// the engine's longest wait, nothing to send, on a host that wakes it (HostMeshPlatform's wait)
 const int			kSendAttempts = 3;
 const int			kMessagesKept = 32;					// received and not yet taken
 const int			kSendsKept = 32;
@@ -345,6 +346,17 @@ static HOST_LARGE_STATIC uint8_t		gContactsBlob[8 + kKeptContacts * sizeof(KeptC
 class HostMeshNode;
 static HostMeshNode*			gNode = NULL;
 static const HostMeshPlatform*	gPlatform = NULL;
+
+
+// the engine woken from its wait between looks (a request)
+static void
+WakeEngine(void)
+{
+	gWake.notify_one();
+	const HostMeshPlatform* platform = gPlatform;
+	if (platform != NULL && platform->wake != NULL)
+		platform->wake(platform->ref);
+}
 static KeptSettings				gSettings;
 static bool						gContactsChanged = false;
 static unsigned long			gContactsChangedAt = 0;
@@ -1195,9 +1207,17 @@ HostMeshRun(const HostMeshPlatform* platform)
 		}
 
 		// short enough not to miss a receive window, long enough to yield;
-		// a request wakes it at once
-		std::unique_lock<std::mutex> hold(gLock);
-		gWake.wait_for(hold, std::chrono::milliseconds(5));
+		// a request wakes it at once.  A host that wakes it on the radio's
+		// interrupt as well waits longer while there is nothing to send, so
+		// that its processor can sleep (a packet is read on its interrupt,
+		// and none is short enough to come whole in kIdleWaitMs)
+		if (platform->wait != NULL)
+			platform->wait(platform->ref, manager->getOutboundTotal() > 0 ? 5 : kIdleWaitMs);
+		else
+		{
+			std::unique_lock<std::mutex> hold(gLock);
+			gWake.wait_for(hold, std::chrono::milliseconds(5));
+		}
 	}
 }
 
@@ -1291,7 +1311,7 @@ SendText(const char* key, const char* channel, const char* text)
 		return 0;
 	s.id = gNextSendId++;
 	gSends[slot] = s;
-	gWake.notify_one();
+	WakeEngine();
 	return s.id;
 }
 
@@ -1501,7 +1521,7 @@ HostMeshJoinChannel(const char* name, const char* secret)
 		return kHostMeshJoinFull;
 	gChannels[gChannelCount++] = c;
 	gChannelsChanged = true;
-	gWake.notify_one();
+	WakeEngine();
 	return kHostMeshJoined;
 }
 
@@ -1518,7 +1538,7 @@ HostMeshLeaveChannel(const char* name)
 			memmove(&gChannels[k], &gChannels[k + 1], (gChannelCount - k - 1) * sizeof(KeptChannel));
 			gChannelCount--;
 			gChannelsChanged = true;
-			gWake.notify_one();
+			WakeEngine();
 			return true;
 		}
 	return false;
@@ -1548,13 +1568,13 @@ HostMeshSetSaved(const char* key, const char* name, bool saved)
 		if (memcmp(gContactAsks[k].key, a.key, sizeof(a.key)) == 0)
 		{
 			gContactAsks[k] = a;					// (the later wins)
-			gWake.notify_one();
+			WakeEngine();
 			return true;
 		}
 	if (gContactAskCount == kContactAsksMax)
 		return false;
 	gContactAsks[gContactAskCount++] = a;
-	gWake.notify_one();
+	WakeEngine();
 	return true;
 }
 
@@ -1566,7 +1586,7 @@ HostMeshAdvertise(void)
 		return false;
 	std::lock_guard<std::mutex> hold(gLock);
 	gAdvertAsked = true;
-	gWake.notify_one();
+	WakeEngine();
 	return true;
 }
 
@@ -1579,7 +1599,7 @@ HostMeshSetName(const char* name)
 	std::lock_guard<std::mutex> hold(gLock);
 	CopyUTF8(gNameWanted, name, sizeof(gNameWanted));
 	gNameAsked = true;
-	gWake.notify_one();
+	WakeEngine();
 	return true;
 }
 
@@ -1661,7 +1681,7 @@ HostMeshSetRadio(const HostMeshRadioSettings* settings)
 	gRadioAsked = true;
 	gStatus.radio = *settings;									// (as the natives will read it)
 	CopyUTF8(gStatus.region, RadioName(*settings), sizeof(gStatus.region));
-	gWake.notify_one();
+	WakeEngine();
 	return true;
 }
 
@@ -1723,6 +1743,6 @@ HostMeshSetPower(bool on)
 	}
 	std::lock_guard<std::mutex> hold(gLock);
 	gStatus.state = on ? kHostMeshStarting : kHostMeshOff;
-	gWake.notify_one();
+	WakeEngine();
 	return true;
 }

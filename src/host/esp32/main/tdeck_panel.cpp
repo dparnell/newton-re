@@ -143,6 +143,14 @@ static void					(*gDisplayNow)(const unsigned char** grays, long* width, long* h
 static const unsigned char* volatile	gGrays = NULL;
 static volatile long		gGraysWidth, gGraysHeight;
 
+// the task waits for the display to change (HostDevicePanelChanged, which the
+// Newton's side calls from hal/host/HostScreen.h's gHostScreenChanged) or for
+// a setting, and looks every 50 ms only while a change is still to be shown
+// or its ghosts cleared - not every 50 ms whatever, which kept the chip
+// awake 11% of the time converting and comparing the same screen
+static TaskHandle_t			gPanelTask = NULL;
+static volatile uint32_t	gChanges = 0;		// one more each time the grays change
+
 
 static bool	gInvertSending = false;
 
@@ -558,12 +566,20 @@ PanelTask(void*)
 	bool first = true;
 	int partialsSinceFull = 0;
 	int64_t changedAt = 0, pendingSince = 0, shownAt = esp_timer_get_time();
+	uint32_t converted = gChanges - 1;			// (the first look converts)
+	TickType_t wait = pdMS_TO_TICKS(50);
 	for (;;)
 	{
-		vTaskDelay(pdMS_TO_TICKS(50));
+		ulTaskNotifyTake(pdTRUE, wait);
+		wait = pdMS_TO_TICKS(50);				// (each way round that goes on below)
 		if (gGrays == NULL)
 			continue;
-		Convert(now);
+		uint32_t changes = gChanges;
+		if (changes != converted)
+		{
+			converted = changes;
+			Convert(now);
+		}
 		int64_t t = esp_timer_get_time();
 		if (gTest != 0)
 		{
@@ -659,6 +675,27 @@ PanelTask(void*)
 			touchedCount = 0;
 			shownAt = esp_timer_get_time();
 		}
+		// the next look: at once on a change or a setting; in 50 ms while a
+		// change is still to be shown; when the ghosts' clearing above is
+		// due (the screen still that long); else not until a change
+		if (memcmp(pending, shown, kFrameBytes) == 0)
+		{
+			long due = -1;						// ms after shownAt
+			bool big = touchedCount * 100 >= kFrameBytes * gCleanAreaPercent;
+			if (partialsSinceFull > 0 && big && gCleanAfterMs > 0)
+				due = gCleanAfterMs;
+			if (partialsSinceFull > 0 && big && gCleanCount > 0 && partialsSinceFull >= gCleanCount && (due < 0 || gCleanPauseMs < due))
+				due = gCleanPauseMs;
+			if (partialsSinceFull > 0 && !big && gLocalCleanCount > 0 && partialsSinceFull >= gLocalCleanCount)
+				due = gCleanPauseMs;
+			if (due < 0)
+				wait = portMAX_DELAY;
+			else
+			{
+				int64_t left = due - (esp_timer_get_time() - shownAt) / 1000;
+				wait = pdMS_TO_TICKS(left > 0 ? left : 0) + 1;
+			}
+		}
 	}
 }
 
@@ -671,8 +708,17 @@ HostDevicePanelStart(void)
 	StackType_t* stack = (StackType_t*) heap_caps_malloc(kStack, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
 	StaticTask_t* control = (StaticTask_t*) heap_caps_malloc(sizeof(StaticTask_t), MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
 	if (stack == NULL || control == NULL
-	|| xTaskCreateStaticPinnedToCore(PanelTask, "panel", kStack, NULL, 3, stack, control, 0) == NULL)
+	|| (gPanelTask = xTaskCreateStaticPinnedToCore(PanelTask, "panel", kStack, NULL, 3, stack, control, 0)) == NULL)
 		printf("newton: no room for the panel's task\n");
+}
+
+
+void
+HostDevicePanelChanged(void)
+{
+	gChanges++;
+	if (gPanelTask != NULL)
+		xTaskNotifyGive(gPanelTask);
 }
 
 
@@ -721,6 +767,8 @@ HostDevicePanelSet(const char* name, long value)
 		gRedraw = value;
 	else
 		return false;
+	if (gPanelTask != NULL)
+		xTaskNotifyGive(gPanelTask);			// (a test, a reset or a redraw done at once)
 	return true;
 }
 

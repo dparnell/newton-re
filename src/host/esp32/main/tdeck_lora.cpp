@@ -80,10 +80,18 @@ millis(void)
 // ----------------------------------------------------------------------
 // RadioLib's HAL on ESP-IDF's GPIO, timer and SPI master drivers
 
+static TaskHandle_t		gMeshTask = NULL;		// (its wait, HostMeshPlatform's: cut short by the radio's interrupt)
+
 static void IRAM_ATTR
 InterruptTrampoline(void* arg)
 {
 	((void (*)(void)) arg)();
+	if (gMeshTask != NULL)
+	{
+		BaseType_t woken = pdFALSE;
+		vTaskNotifyGiveFromISR(gMeshTask, &woken);
+		portYIELD_FROM_ISR(woken);
+	}
 }
 
 class TDeckRadioHal : public RadioLibHal
@@ -568,9 +576,30 @@ RadioIdle(void*, long* idleMs)
 }
 
 
+// The engine's wait between looks: a task notification, given by a request
+// (Wake) or by DIO1's interrupt (InterruptTrampoline) - so the chip can
+// sleep, where the engine's own wait looked every 5 ms.  (A packet that comes
+// while the chip sleeps raises DIO1 unseen - an edge does not wake it - and
+// is found by the next look, RadioCheck, within the engine's longest wait.)
+static void
+Wait(void*, long ms)
+{
+	ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(ms) > 0 ? pdMS_TO_TICKS(ms) : 1);
+}
+
+
+static void
+Wake(void*)
+{
+	if (gMeshTask != NULL)
+		xTaskNotifyGive(gMeshTask);
+}
+
+
 static void
 MeshTask(void*)
 {
+	gMeshTask = xTaskGetCurrentTaskHandle();
 	HostMeshRun(&gPlatform);
 }
 
@@ -614,6 +643,8 @@ HostDeviceLoraStart(void)
 	gPlatform.radioIdle = RadioIdle;
 	gPlatform.radioFrequencyError = RadioFrequencyError;
 	gPlatform.radioReread = RadioReread;
+	gPlatform.wait = Wait;
+	gPlatform.wake = Wake;
 	HostMeshWillRun();					// (the Newton's side boots while the radio starts)
 
 	// the engine's task: its stack in PSRAM (core 0, beside the WiFi's and the

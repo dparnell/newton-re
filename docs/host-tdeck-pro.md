@@ -981,6 +981,33 @@ about 270 takings a second to a few. With the USB away and everything on,
 other reasons. The touch panel's INT fired 16 times in about 90 s with
 nothing touching it (`!pm` counts both), each a read and nothing more.
 
+### The panel's and the mesh's tasks waited on nothing
+
+The console's new `!tasks` (FreeRTOS's run-time stats,
+`sdkconfig.defaults`; `tdeck_power.cpp`) gives each task's time on the
+processor since it was last asked. At rest, core 1 (the Newton's) was idle
+93% of the time and core 0 only 80%: the panel's task took 11% and the
+mesh's 6.4%.
+
+- **The panel** (`tdeck_panel.cpp`) looked every 50 ms, converting the
+  Newton's whole screen to the panel's bits and comparing it with what it
+  showed - the same screen, almost always. Now the host's screen driver
+  says when its grays change (`gHostScreenChanged`, `hal/host/HostScreen.h`:
+  a blit, the power or the light, the display set up), and the task waits
+  for that, looking every 50 ms only while a change is still to be shown
+  and waking for the ghosts' clearing when it is due: 0.2%.
+- **The mesh engine** (`hal/host/HostMesh.cpp`) looked at the radio every
+  5 ms. A host can now give it a wait and a wake (`HostMeshPlatform`); the
+  T-Deck's is a task notification that a request or the radio's DIO1
+  interrupt gives, and the engine waits 50 ms while it has nothing to send
+  (no packet is short enough to come whole in that; one that comes while
+  the chip sleeps, its edge unseen, is found by the next look): 1.7%.
+  Other hosts keep the engine's own 5 ms.
+
+Core 0 is now idle 97% of the time. With the USB away and everything on,
+**59 mA** (73 before); the mesh still heard its packets (11 in six
+minutes, none needing the missed-interrupt recovery).
+
 ## Order of work
 
 The owner already has a T-Deck Pro (bought for another project), so the

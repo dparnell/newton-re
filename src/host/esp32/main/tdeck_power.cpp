@@ -40,6 +40,7 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_pm.h"
@@ -192,6 +193,60 @@ HostDevicePowerDump(void)
 	HostDeviceGpsDump();
 	HostDeviceInputDump();
 	esp_pm_dump_locks(stdout);
+}
+
+
+// The console's !tasks (esp32main.cpp): each task's time on the processor
+// since last asked (FreeRTOS's run-time stats, GENERATE_RUN_TIME_STATS), as
+// a share of one core's time, largest first - the idle tasks' share is the
+// time a core had nothing to do
+void
+HostDevicePowerTasks(void)
+{
+	struct Was { TaskHandle_t task; uint32_t runTime; };
+	const int kMax = 64;
+	static Was was[kMax];
+	static int wasCount = 0;
+	static int64_t wasAt = 0;
+	UBaseType_t room = uxTaskGetNumberOfTasks() + 4;
+	if (room > kMax)
+		room = kMax;
+	TaskStatus_t* tasks = (TaskStatus_t*) malloc(room * sizeof(TaskStatus_t));
+	if (tasks == NULL)
+		return;
+	int count = (int) uxTaskGetSystemState(tasks, room, NULL);
+	int64_t now = esp_timer_get_time();
+	int64_t span = now - wasAt;
+	uint32_t delta[kMax];
+	for (int i = 0; i < count; i++)
+	{
+		uint32_t before = 0;
+		for (int j = 0; j < wasCount; j++)
+			if (was[j].task == tasks[i].xHandle)
+				before = was[j].runTime;
+		delta[i] = tasks[i].ulRunTimeCounter - before;
+	}
+	// (largest first)
+	for (int i = 1; i < count; i++)
+		for (int j = i; j > 0 && delta[j] > delta[j - 1]; j--)
+		{
+			uint32_t d = delta[j]; delta[j] = delta[j - 1]; delta[j - 1] = d;
+			TaskStatus_t t = tasks[j]; tasks[j] = tasks[j - 1]; tasks[j - 1] = t;
+		}
+	printf("newton: the tasks' time over the last %lld ms (a share of one core)\n", (long long) (span / 1000));
+	for (int i = 0; i < count; i++)
+	{
+		if (delta[i] == 0)
+			continue;
+		BaseType_t core = xTaskGetAffinity(tasks[i].xHandle);
+		printf("  %-16s core %s %8lu us %5.1f%%\n", tasks[i].pcTaskName, core == tskNO_AFFINITY ? "-" : core == 0 ? "0" : "1",
+			   (unsigned long) delta[i], span > 0 ? 100.0 * delta[i] / span : 0.0);
+	}
+	wasCount = count;
+	for (int i = 0; i < count; i++)
+		was[i] = { tasks[i].xHandle, tasks[i].ulRunTimeCounter };
+	wasAt = now;
+	free(tasks);
 }
 
 

@@ -328,7 +328,11 @@ DeviceBoot(void)
 	gestalt.RegisterGestalt(kGestalt_Extended_Base + 10, builtInKeyboard, sizeof(builtInKeyboard));
 	HostBootNewtWorld();
 	if (HostDisplay() != nil)
+	{
 		HostDevicePanelFollow(DisplayNow);
+		gHostScreenChanged = HostDevicePanelChanged;	// (the panel waits for it)
+		HostDevicePanelChanged();
+	}
 	InitFIQTimer();
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "DeviceMilliseconds")), RefVar(MakeCFunction((void*) FDeviceMilliseconds, 0, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "DeviceMemory")), RefVar(MakeCFunction((void*) FDeviceMemory, 0, nil)));

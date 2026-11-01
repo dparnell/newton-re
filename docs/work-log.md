@@ -9,6 +9,18 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-02: the T-Deck Pro's panel and mesh tasks wait for work
+
+The console's `!tasks` (FreeRTOS's run-time stats) found the panel's task
+at 11% of core 0 and the mesh's at 6.4% with nothing happening. The panel
+now waits for the host's screen driver to say its grays changed
+(`gHostScreenChanged`, `hal/host/HostScreen.h`) rather than converting and
+comparing the screen every 50 ms; the mesh engine takes a host's wait and
+wake (`HostMeshPlatform`), the T-Deck's a task notification given by
+requests and the radio's DIO1 interrupt, and waits 50 ms when it has
+nothing to send rather than 5. 59 mA on battery with everything on (73
+before). docs/host-tdeck-pro.md, "Battery life".
+
 ## 2026-11-02: the T-Deck Pro's touch panel and keyboard by interrupt
 
 `src/host/esp32/main/tdeck_input.cpp`: the touch panel's INT (GPIO 12) and

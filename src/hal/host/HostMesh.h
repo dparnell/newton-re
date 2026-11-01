@@ -184,6 +184,13 @@ struct HostMeshPlatform
 	// many bytes differ, and where the first does; -1: it could not be read
 	// again (NULL: not done)
 	int				(*radioReread)(void* ref, const uint8_t* raw, int len, int* first);
+	// the engine's wait between its looks at the radio, up to ms, cut short
+	// by wake (from any thread; a device's radio interrupt wakes it too) - a
+	// device lets its processor sleep meanwhile; the engine waits 5 ms while
+	// it has packets to send and longer otherwise (NULL, both: its own wait,
+	// 5 ms each time)
+	void			(*wait)(void* ref, long ms);
+	void			(*wake)(void* ref);
 };
 
 // The engine's thread

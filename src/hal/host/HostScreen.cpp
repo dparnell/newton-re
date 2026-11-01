@@ -13,6 +13,16 @@
 PROTOCOL_IMPL_SOURCE_MACRO(THostScreenDriver)
 PROTOCOL_CLASSINFO(THostScreenDriver, "TScreenDriver", "", 0, 0, nil)
 
+void	(*gHostScreenChanged)(void) = nil;
+
+
+static void
+Changed(void)
+{
+	if (gHostScreenChanged != nil)
+		gHostScreenChanged();
+}
+
 
 THostScreenDriver*
 THostScreenDriver::New()
@@ -84,6 +94,7 @@ THostScreenDriver::ScreenSetup(void)
 	{
 		memset(fPixels, 0, (size_t) bytes);		// white
 		memset(fPanel, 0, (size_t) bytes);
+		Changed();
 		return;
 	}
 	if (fPixels != nil)
@@ -99,6 +110,7 @@ THostScreenDriver::ScreenSetup(void)
 		fPixels = fPanel = nil;
 	}
 	fPixelBytes = fPixels != nil ? bytes : 0;
+	Changed();
 }
 
 
@@ -167,6 +179,7 @@ THostScreenDriver::SetShown(Boolean blanked, long backlight)
 		Render(0, 0, Width(), Height());
 	else if (was)
 		memcpy(fPixels, fPanel, (size_t) fPixelBytes);
+	Changed();
 }
 void	THostScreenDriver::AutoAdjustFeatures(void)	{ }
 void	THostScreenDriver::EnterIdleMode(void)		{ }
@@ -271,6 +284,7 @@ THostScreenDriver::Blit(PixelMap* map, Rect* src, Rect* dst, long mode)
 	}
 	if (Rendered())
 		Render(dst->left + (xFrom - src->left), dst->top, dst->left + (xTo - src->left), dst->top + (src->bottom - src->top));
+	Changed();
 }
 
 

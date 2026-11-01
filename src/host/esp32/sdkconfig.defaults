@@ -68,3 +68,8 @@ CONFIG_ESP_SLEEP_GPIO_RESET_WORKAROUND=n
 # (each lock's time held and the time in each mode - light sleep among them -
 #  printed by the console's !pm: tdeck_power.cpp)
 CONFIG_PM_PROFILING=y
+# each task's time on the processor (FreeRTOS's run-time stats, by esp_timer),
+# printed by the console's !tasks for the time since it was last asked
+# (tdeck_power.cpp): what keeps the chip from sleeping
+CONFIG_FREERTOS_USE_TRACE_FACILITY=y
+CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS=y

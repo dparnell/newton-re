@@ -26,6 +26,7 @@ int			HostDeviceReadLine(char* line, size_t size);		// a line the console has ty
 // black, width per row - host/HostWindow.h's form) once there is a display
 void		HostDevicePanelStart(void);
 void		HostDevicePanelShow(const unsigned char* grays, long width, long height);
+void		HostDevicePanelChanged(void);		// the grays changed (hal/host/HostScreen.h's gHostScreenChanged)
 bool		HostDevicePanelSet(const char* name, long value);
 // (and the Host preferences panel's settings of it, host/HostWindow.h's
 // HostWindowOption and HostWindowSetOption, are answered there)
@@ -118,6 +119,7 @@ bool		HostDevicePowerSetLightSleep(bool on);
 void		HostDevicePowerIdle(long* perMille, long* idles);
 bool		HostDevicePowerUsbAway(long seconds);
 void		HostDevicePowerDump(void);					// the console's !pm
+void		HostDevicePowerTasks(void);					// the console's !tasks: each task's time since last asked
 
 // the sampling profiler of core 1 (tdeck_profile.cpp): started with the
 // board, a phase's start marked, the samples printed (and the profiler
