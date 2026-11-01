@@ -4,8 +4,8 @@
 	Contains:	The T-Deck Pro's touch panel and keyboard as the Newton's pen
 				and keyboard (src/host/esp32/README.md): a task of the
 				board's own, on the core the Newton does not use, reads
-				both over I2C a hundred times a second and hands what it
-				finds to the window shims the desktop's windows call
+				both over I2C when they say they have something and hands
+				what it finds to the window shims the desktop's windows call
 				(host/HostKeyboard.cpp: HostWindowPenDown/Move/Up into the
 				tablet, HostWindowKey into the keyboard tool's queue - all
 				callable from any thread).
@@ -41,6 +41,18 @@
 				Home, End, Up, Down, Page Up) and is otherwise the Newton's
 				Command key (Alt-C, Alt-V ...: Ctrl, as on the desktop).  A key is sent as a
 				Windows virtual key code, as every host's window does.
+
+				Interrupts, not polls, so that the chip can sleep
+				(tdeck_power.cpp): the touch panel's INT (GPIO 12) and the
+				keyboard's (GPIO 15, the TCA8418's, low until its INT_STAT
+				is cleared) each wake the chip from light sleep (a GPIO
+				wake-up, low level) and the task with it (an interrupt,
+				disarmed until the task has read the chip).  While a finger
+				is down the touch panel is read every 10 ms as before, its
+				moves and its lifting seen; with nothing touched the task
+				waits for an interrupt.  Were the interrupts not to be had,
+				both are polled every 10 ms as before.  The console's !pm
+				counts them.
 				ESP-IDF's headers only (esp32host.h says why).
 */
 
@@ -54,6 +66,7 @@
 #include "driver/gpio.h"
 #include "esp_timer.h"
 #include "esp_heap_caps.h"
+#include "esp_sleep.h"
 
 #include "esp32host.h"
 
@@ -62,6 +75,7 @@
 #define PIN_SCL			14
 #define PIN_TOUCH_INT	12
 #define PIN_TOUCH_RST	45
+#define PIN_KEY_INT		15
 #define PIN_KEY_LED		42
 #define ADDR_TOUCH		0x1A
 #define ADDR_KEYBOARD	0x34
@@ -122,8 +136,8 @@ TouchStart(void)
 // a report (register 0xD000, seven bytes): valid when byte 6 is 0xAB;
 // the fingers in byte 5's low bits; the first finger's state in byte 0's
 // low nibble (6: down), its x and y's high bits in bytes 1 and 2, their
-// low nibbles in byte 3
-static void
+// low nibbles in byte 3 ==> whether a finger is still down (or held back)
+static bool
 TouchPoll(void)
 {
 	// the finger: up; held back (landed at the top edge); down (the pen's);
@@ -210,6 +224,7 @@ TouchPoll(void)
 			HostWindowPenUp();
 		state = kUp;
 	}
+	return state != kUp;
 }
 
 
@@ -437,16 +452,78 @@ KeyboardPoll(void)
 	The task
 ------------------------------------------------------------------------------*/
 
+static TaskHandle_t				gInputTask = NULL;
+static bool						gInterrupts = false;
+static volatile unsigned long	gTouchInterrupts = 0, gKeyInterrupts = 0;
+
+
+// A chip's INT low: the interrupt disarmed until the task has read it
+static void
+Interrupt(void* pin)
+{
+	gpio_intr_disable((gpio_num_t) (intptr_t) pin);
+	if ((intptr_t) pin == PIN_TOUCH_INT)
+		gTouchInterrupts++;
+	else
+		gKeyInterrupts++;
+	BaseType_t woken = pdFALSE;
+	vTaskNotifyGiveFromISR(gInputTask, &woken);
+	portYIELD_FROM_ISR(woken);
+}
+
+
+static bool
+InterruptsStart(void)
+{
+	esp_err_t err = gpio_install_isr_service(0);
+	if (err != ESP_OK && err != ESP_ERR_INVALID_STATE)
+		return false;
+	gpio_set_direction((gpio_num_t) PIN_KEY_INT, GPIO_MODE_INPUT);
+	gpio_set_pull_mode((gpio_num_t) PIN_KEY_INT, GPIO_PULLUP_ONLY);
+	static const int pins[2] = { PIN_TOUCH_INT, PIN_KEY_INT };
+	for (int pin : pins)
+	{
+		gpio_intr_disable((gpio_num_t) pin);
+		if (gpio_wakeup_enable((gpio_num_t) pin, GPIO_INTR_LOW_LEVEL) != ESP_OK
+		 || gpio_isr_handler_add((gpio_num_t) pin, Interrupt, (void*) (intptr_t) pin) != ESP_OK)
+			return false;
+	}
+	esp_sleep_enable_gpio_wakeup();
+	return true;
+}
+
+
+void
+HostDeviceInputDump(void)
+{
+	printf("newton: input %s, interrupts: touch %lu, keyboard %lu\n", gInterrupts ? "waits for interrupts" : "polled",
+		   (unsigned long) gTouchInterrupts, (unsigned long) gKeyInterrupts);
+}
+
+
 static void
 InputTask(void*)
 {
 	TouchStart();
 	KeyboardStart();
+	gInterrupts = InterruptsStart();
+	if (!gInterrupts)
+		printf("newton: no interrupts for the touch panel and keyboard - polled\n");
 	for (;;)
 	{
-		TouchPoll();
+		bool touching = TouchPoll();
 		KeyboardPoll();
-		vTaskDelay(pdMS_TO_TICKS(10));
+		if (!gInterrupts)
+		{
+			vTaskDelay(pdMS_TO_TICKS(10));
+			continue;
+		}
+		// (a finger down: read again in 10 ms, its moves and its lifting;
+		// else woken by either chip)
+		gpio_intr_enable((gpio_num_t) PIN_KEY_INT);
+		if (!touching)
+			gpio_intr_enable((gpio_num_t) PIN_TOUCH_INT);
+		ulTaskNotifyTake(pdTRUE, touching ? pdMS_TO_TICKS(10) : portMAX_DELAY);
 	}
 }
 
@@ -475,6 +552,6 @@ HostDeviceInputStart(void)
 	StackType_t* stack = (StackType_t*) heap_caps_malloc(kStack, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
 	StaticTask_t* control = (StaticTask_t*) heap_caps_malloc(sizeof(StaticTask_t), MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
 	if (stack == NULL || control == NULL
-	|| xTaskCreateStaticPinnedToCore(InputTask, "input", kStack, NULL, 4, stack, control, 0) == NULL)
+	|| (gInputTask = xTaskCreateStaticPinnedToCore(InputTask, "input", kStack, NULL, 4, stack, control, 0)) == NULL)
 		printf("newton: no room for the input task\n");
 }

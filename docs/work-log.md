@@ -9,6 +9,14 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-02: the T-Deck Pro's touch panel and keyboard by interrupt
+
+`src/host/esp32/main/tdeck_input.cpp`: the touch panel's INT (GPIO 12) and
+the keyboard's (GPIO 15) wake the chip and the input task in place of its
+10 ms poll; the touch panel read every 10 ms only while a finger is down.
+73 mA on battery with everything on (76 before). `!pm` counts the
+interrupts. docs/host-tdeck-pro.md, "Battery life".
+
 ## 2026-11-02: the T-Deck Pro's GPS lets the chip sleep
 
 `src/host/esp32/main/tdeck_gps.cpp`: the receiver's first edge of each

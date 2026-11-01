@@ -130,9 +130,10 @@ with light sleep added, 113 mA as found with the USB away (no gain yet: the
 exchanges (88 mA with it on and the GPS off, 80 with it off), and a text
 wakes the board (RI) within 3 s; the WiFi's max-modem power save is now
 the default (77 mA, 86 without); the GPS's bursts wake the chip rather than
-keeping it awake (76 mA with everything on, 72 with the GPS off). Next,
-largest first: what still wakes the Newton every 10 ms, and the touch panel's and
-keyboard's interrupts in place of the input task's 10 ms poll; a real
+keeping it awake (76 mA with everything on, 72 with the GPS off); the touch
+panel and keyboard by interrupt (73 mA). Next, largest first: what keeps
+the chip awake 86% of the time (the Newton still goes idle about 95 times a
+second); a real
 sleep for the Newton's power-off on the board; the LoRa radio's lines
 while it is unpowered (off draws 8-10 mA more than on); the keyboard light
 on a timeout; `POF` after each panel refresh.

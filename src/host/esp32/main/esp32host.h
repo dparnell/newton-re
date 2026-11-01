@@ -39,6 +39,7 @@ void		HostDevicePanelDump(void);			// what the panel shows, on the console (tool
 // the touch panel and the keyboard (tdeck_input.cpp): read from the start,
 // handed to the window shims below
 void		HostDeviceInputStart(void);
+void		HostDeviceInputDump(void);			// the console's !pm: interrupts or polls, and how many
 bool		HostDeviceSheetPulled(void);		// the quick sheet pulled down from the top edge since last asked (once for each pull) ==> whether
 void		HostDeviceSetLocked(bool locked);	// the lock screen up or down: the keyboard left out and its light off meanwhile
 void		HostDeviceSetKeyLight(bool on);		// the keyboard's light allowed (on, as at start) or kept off

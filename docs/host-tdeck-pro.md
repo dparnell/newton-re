@@ -969,6 +969,18 @@ sentence was lost to the wake-ups: across 4,539 light sleeps the
 receiver's 1,715 sentences all came whole (`!pm` counts bursts and whole
 and broken sentences).
 
+### The touch panel and keyboard by interrupt
+
+The input task polled both over I2C every 10 ms. Now
+(`src/host/esp32/main/tdeck_input.cpp`) the touch panel's INT (GPIO 12) and
+the keyboard's (GPIO 15, lilyphone1's `BOARD_KEYBOARD_INT`) each wake the
+chip (a GPIO wake-up) and the task (an interrupt); the touch panel is read
+every 10 ms only while a finger is down. The I2C driver's lock went from
+about 270 takings a second to a few. With the USB away and everything on,
+73 mA (76 before): a small gain, the chip still awake 86% of the time for
+other reasons. The touch panel's INT fired 16 times in about 90 s with
+nothing touching it (`!pm` counts both), each a read and nothing more.
+
 ## Order of work
 
 The owner already has a T-Deck Pro (bought for another project), so the

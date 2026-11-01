@@ -190,6 +190,7 @@ HostDevicePowerDump(void)
 	printf("newton: keepers %02x, USB %s, light sleep %s\n", gKeepers,
 		   usb_serial_jtag_is_connected() ? "connected" : "not connected", gLightSleep ? "allowed" : "off");
 	HostDeviceGpsDump();
+	HostDeviceInputDump();
 	esp_pm_dump_locks(stdout);
 }
 
