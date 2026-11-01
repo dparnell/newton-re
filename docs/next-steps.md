@@ -129,9 +129,9 @@ with light sleep added, 113 mA as found with the USB away (no gain yet: the
 --usb-away` measures each change). The 4G module now sleeps between
 exchanges (88 mA with it on and the GPS off, 80 with it off), and a text
 wakes the board (RI) within 3 s; the WiFi's max-modem power save is now
-the default (77 mA, 86 without). The GPS still keeps the chip awake while
-it is powered. Next, largest first: the GPS powered only while something
-wants a fix (or its UART's wake-up); what still wakes the Newton every 10 ms, and the touch panel's and
+the default (77 mA, 86 without); the GPS's bursts wake the chip rather than
+keeping it awake (76 mA with everything on, 72 with the GPS off). Next,
+largest first: what still wakes the Newton every 10 ms, and the touch panel's and
 keyboard's interrupts in place of the input task's 10 ms poll; a real
 sleep for the Newton's power-off on the board; the LoRa radio's lines
 while it is unpowered (off draws 8-10 mA more than on); the keyboard light

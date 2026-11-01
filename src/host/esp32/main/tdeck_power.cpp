@@ -16,11 +16,12 @@
 				(ESP-IDF's connection monitor, USJ_NO_AUTO_LS_ON_CONNECTION:
 				the USB serial/JTAG does not work across light sleep - and
 				since the monitor was seen to let it happen, the USB's power
-				as well, tdeck_battery.cpp), and here the GPS's UART while
-				it is powered and the 4G module's while it is awake (a
-				UART's receiver stops in light sleep, and what they send
-				meanwhile would be lost; tdeck_modem.cpp lets the module
-				sleep).  Light sleep can be
+				as well, tdeck_battery.cpp), and here the 4G module's UART
+				while it is awake and the GPS's while a burst of its
+				sentences comes (a UART's receiver stops in light sleep,
+				and what they send meanwhile would be lost: tdeck_modem.cpp
+				lets the module sleep, and tdeck_gps.cpp wakes the chip at
+				each burst).  Light sleep can be
 				switched off (DevicePowerSet('sleep, nil)).
 
 				For measuring the board on its battery with light sleep
@@ -188,6 +189,7 @@ HostDevicePowerDump(void)
 {
 	printf("newton: keepers %02x, USB %s, light sleep %s\n", gKeepers,
 		   usb_serial_jtag_is_connected() ? "connected" : "not connected", gLightSleep ? "allowed" : "off");
+	HostDeviceGpsDump();
 	esp_pm_dump_locks(stdout);
 }
 

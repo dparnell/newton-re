@@ -86,6 +86,7 @@ bool		HostDeviceLoraStart(void);
 // hal/host/HostGPS.h as the source "device" (==> whether it was started);
 // HostGPSStatus then has its fix, and serial port 2 its sentences
 bool		HostDeviceGpsStart(void);
+void		HostDeviceGpsDump(void);			// the console's !pm: its bursts and sentences
 
 // the cellular module (tdeck_modem.cpp): powered and started with the
 // board, its UART handed to hal/host/HostCellular.h's engine on a task of its
@@ -105,7 +106,7 @@ bool		HostDeviceBatteryRunOnBattery(bool on);		// the charger's input cut (on) o
 // the Newton's idle time since last asked; the USB let go for a time
 enum
 {
-	kAwakeGps = 1,							// its UART receiving
+	kAwakeGps = 1,							// its UART read by a Newton application (else its bursts wake the chip)
 	kAwakeCell = 2,							// the 4G module's
 	kAwakeUsb = 4,							// the USB taken back, being enumerated
 	kAwakeUsbPower = 8						// on USB power (tdeck_battery.cpp: the USB does not survive light sleep)

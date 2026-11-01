@@ -949,6 +949,26 @@ The cost is latency: ten pings from the computer took 428 ms on average
 (2 ms to 2.2 s), one lost. `powermeter.py`'s `wifisave` step now finds it
 on already.
 
+### The GPS wakes the chip for each burst
+
+A powered GPS kept the chip awake throughout, its UART otherwise stopped
+in light sleep. Now (`src/host/esp32/main/tdeck_gps.cpp`) the chip sleeps
+between the receiver's once-a-second bursts of NMEA: the receiver's TXD
+going low wakes it (a GPIO wake-up on our RX, GPIO 44), and an interrupt on
+the same pin takes a lock that holds it awake until 30 ms pass without a
+byte. While a Newton application has the GPS's serial port open the chip
+is kept awake instead. With the USB away and everything else on:
+
+| GPS | mA |
+|---|---|
+| on | 76 |
+| off | 72 |
+
+The GPS on costs 4 mA, where it had stopped light sleep altogether. No
+sentence was lost to the wake-ups: across 4,539 light sleeps the
+receiver's 1,715 sentences all came whole (`!pm` counts bursts and whole
+and broken sentences).
+
 ## Order of work
 
 The owner already has a T-Deck Pro (bought for another project), so the

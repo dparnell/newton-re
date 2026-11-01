@@ -9,6 +9,16 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-02: the T-Deck Pro's GPS lets the chip sleep
+
+`src/host/esp32/main/tdeck_gps.cpp`: the receiver's first edge of each
+once-a-second burst wakes the chip (a GPIO wake-up on its RX pin) and an
+interrupt holds it awake until the burst has ended; kept awake only while
+a Newton application reads the GPS's serial port. On battery with
+everything on, 76 mA (72 with the GPS off); no sentence lost across 4,539
+light sleeps. `!pm` counts the GPS's bursts and sentences.
+docs/host-tdeck-pro.md, "Battery life".
+
 ## 2026-11-01: the T-Deck Pro's WiFi in max-modem power save
 
 `src/host/esp32/main/tdeck_wifi.cpp` starts the WiFi in ESP-IDF's max
