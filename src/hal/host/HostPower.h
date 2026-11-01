@@ -17,7 +17,13 @@
 				    switch within reach of the pen, a tap on the window or
 				    any key (DEVIATION: a MessagePad's pen does not wake it);
 				  - a real-time clock alarm falling due;
+				  - a message or a call on a host's 4G module or mesh (their
+				    natives wake it as the serial port's ring line,
+				    kPowerEventSerialGPI);
 				  - a test's wake, armed with HostPowerWakeAfter.
+				A device's own wait (hal/host/Host.h's gHostSleepWait)
+				lets its processor sleep meanwhile; the host's looks every
+				10 ms.
 
 				With no window and no test wake armed nothing could ever
 				wake it, so the machine does not sleep at all and comes

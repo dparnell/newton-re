@@ -176,6 +176,11 @@ each time it does, the Newton's is set from it
 (`TURealTimeAlarm::SetTime`, in GMT; the Newton shows its home city's
 time) and the console prints `newton: the clock set: ...`.
 
+**Sleep.** The lock screen puts the Newton to sleep (docs/host-lock-screen.md,
+"Sleep"): the panel keeps showing it; the **BOOT button** (GPIO 0) is the
+power switch - it locks and sleeps, and wakes; a key, a tap, a text, a
+call or a mesh message wakes it too.
+
 **The board's own console commands**, answered whatever the Newton is
 doing: `!shot` prints what the panel shows (`tools/tdeck/panelshot.py`
 makes a PNG of it), `!prof` the profile, `!time <seconds since 1970,

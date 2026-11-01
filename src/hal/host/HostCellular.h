@@ -169,6 +169,10 @@ enum HostCellSendState
 // hasOffset is false).
 void	HostCellularRun(const HostCellularLink* link);
 bool	HostCellularStarted(void);
+// told (on the engine's thread) when a message comes or the phone rings: a
+// host wakes a sleeping machine with it, as a MessagePad's serial port's
+// ring line did (host/HostCellularNatives.cpp)
+extern void	(*gHostCellularNews)(void);
 // The host says the engine is coming before its thread gets to
 // HostCellularRun (a board first powers the module and waits for it), so
 // that the Newton's side, starting meanwhile, counts it as there

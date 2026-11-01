@@ -9,6 +9,21 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-02: the T-Deck Pro's Newton sleeps while the screen is locked
+
+The ROM's sleep, which never happened on the board (no window, so
+`PlatformPowerOffSystem` came straight back): now the lock puts the Newton
+to sleep once drawn, the machine's own sleep (the power switch - the BOOT
+button - and the idle timer) locks the screen first through a power-off
+function, the e-paper keeps the lock screen (`gHostScreenKeepsPicture`), a
+key, a tap, a text, a call or a mesh message wakes it (the engines' news as
+the serial port's ring line: the ROM sleeps again 45 s later), and woken
+while locked it sleeps again after 20 s alone. Asleep the Newton's task
+waits on the device's wait (`gHostSleepWait`), not a 10 ms look. 46 mA
+locked on battery (54 awake); `powermeter.py --locked`. Found on the way:
+a wake left the locked re-sleep counting from before the sleep, so a tap
+put it straight back to sleep. docs/host-lock-screen.md, "Sleep".
+
 ## 2026-11-02: the T-Deck Pro's GPS bursts shortened
 
 `tdeck_gps.cpp`: the receiver told to send only GGA and RMC unless a Newton

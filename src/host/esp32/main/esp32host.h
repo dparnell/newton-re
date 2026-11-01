@@ -120,6 +120,10 @@ void		HostDevicePowerIdle(long* perMille, long* idles);
 bool		HostDevicePowerUsbAway(long seconds);
 void		HostDevicePowerDump(void);					// the console's !pm
 void		HostDevicePowerTasks(void);					// the console's !tasks: each task's time since last asked
+// the Newton asleep (hal/host/Host.h's gHostSleepWait and gHostSleepWake): its
+// task waits up to so long, or until woken - the chip sleeping meanwhile
+void		HostDevicePowerSleepWait(unsigned long milliseconds);
+void		HostDevicePowerSleepWake(void);
 
 // the sampling profiler of core 1 (tdeck_profile.cpp): started with the
 // board, a phase's start marked, the samples printed (and the profiler

@@ -3,7 +3,7 @@
 in one state of the board after another (src/host/esp32, DevicePower).
 
     <PlatformIO's python> tools/tdeck/powermeter.py <port> [--window S] [--settle S]
-        [--reset] [--keep-usb] [--usb-away] [--no-sleep] [--only NAME,...]
+        [--reset] [--keep-usb] [--usb-away [--locked]] [--no-sleep] [--only NAME,...]
         [--out tmp/tdeck/power.log]
 
 Needs pyserial (PlatformIO's own Python has it).  The board must be running
@@ -33,7 +33,12 @@ its D+ pull-up away, the computer sees it unplugged): the port is closed,
 the board is left for --settle + --window seconds, and when it comes back
 the mean of the samples over all of that time is read (the settling time
 included).  --no-sleep switches light sleep off for the run
-(DevicePowerSet('sleep, nil)), for comparison.  Each state also says how
+(DevicePowerSet('sleep, nil)), for comparison.  --locked (with --usb-away)
+measures each state with the screen locked and so the Newton asleep
+(docs/host-lock-screen.md, "Sleep"): the lock is asked for just before the
+USB is let go (ScreenLockNow, three seconds on), and when the USB is back
+the console's !tap wakes the Newton - asleep, it answers no NewtonScript -
+before the mean is read; the screen is unlocked at the end.  Each state also says how
 much of the time the Newton was idle (its idle task waiting, the processor
 let down to 80 MHz) and how often it went idle.  The states, cumulative - each
 switches one more thing off:
@@ -182,6 +187,7 @@ def main(argv):
     parser.add_argument("--keep-usb", action="store_true")
     parser.add_argument("--usb-away", action="store_true")
     parser.add_argument("--no-sleep", action="store_true")
+    parser.add_argument("--locked", action="store_true")
     parser.add_argument("--only")
     parser.add_argument("--out", default="tmp/tdeck/power.log")
     args = parser.parse_args(argv)
@@ -226,6 +232,8 @@ def main(argv):
             if args.usb_away:
                 board.power()				# (the mean starts again)
                 span = int(args.settle + args.window)
+                if args.locked:
+                    board.eval("begin AddDelayedCall(func() ScreenLockNow(), nil, 3000); true end")
                 # (its answer can be lost - the USB let go as it is sent:
                 # then the board is taken to have let go all the same)
                 try:
@@ -235,6 +243,10 @@ def main(argv):
                 if answer != "TRUE":
                     raise SystemExit("powermeter: the board would not let go of the USB")
                 board.away(span + 1)
+                if args.locked:
+                    board.port.write(b"!tap 120 160\n")		# (the Newton woken: asleep, it answers nothing)
+                    for _ in board.lines(3):
+                        pass
             else:
                 for _ in board.lines(args.settle):
                     pass
@@ -261,6 +273,8 @@ def main(argv):
                 board.eval(switch[step][1])
         if args.no_sleep:
             board.eval("DevicePowerSet('sleep, true)")
+        if args.locked:
+            board.eval("begin GetGlobalVar('|QuickSheet:host|):Unlock(); true end")
         if not args.keep_usb:
             board.eval("DevicePowerSet('battery, nil)")
 

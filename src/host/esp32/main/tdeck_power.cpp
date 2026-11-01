@@ -43,6 +43,7 @@
 #include <stdlib.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 #include "esp_pm.h"
 #include "esp_timer.h"
 #include "esp_attr.h"
@@ -62,6 +63,7 @@ static portMUX_TYPE			gLock = portMUX_INITIALIZER_UNLOCKED;
 static unsigned				gKeepers = 0;		// kAwake... bits
 static bool					gLightSleep = true;
 static bool					gStarted = false;
+static SemaphoreHandle_t	gSleepWake = NULL;	// the Newton asleep: given by its wake
 
 // the Newton's idle time since last asked (microseconds), and how often it
 // went idle
@@ -124,6 +126,7 @@ HostDevicePowerStart(void)
 		return false;
 	}
 	esp_pm_lock_acquire(gNewtonRuns);		// (the Newton is starting)
+	gSleepWake = xSemaphoreCreateBinary();
 	gKeepers = kAwakeUsbPower;				// (until tdeck_battery.cpp has asked the charger)
 	esp_pm_lock_acquire(gKeptAwake);
 	if (gUsbReturn[0] == kUsbReturnMagic)
@@ -180,6 +183,28 @@ HostDevicePowerIdle(long* perMille, long* idles)
 	gCountedFrom = now;
 	portEXIT_CRITICAL(&gLock);
 	*perMille = span > 0 ? (long) (sum * 1000 / span) : 0;
+}
+
+
+// The Newton asleep (hal/host/Power.cpp's PlatformPowerOffSystem): its task
+// waits on a semaphore that its wake gives (gSleepWake, made at the start),
+// rather than looking every 10 ms
+void
+HostDevicePowerSleepWait(unsigned long milliseconds)
+{
+	TickType_t ticks = pdMS_TO_TICKS(milliseconds);
+	if (gSleepWake == NULL)
+		vTaskDelay(ticks > 0 ? ticks : 1);
+	else
+		xSemaphoreTake(gSleepWake, ticks > 0 ? ticks : 1);
+}
+
+
+void
+HostDevicePowerSleepWake(void)
+{
+	if (gSleepWake != NULL)
+		xSemaphoreGive(gSleepWake);
 }
 
 

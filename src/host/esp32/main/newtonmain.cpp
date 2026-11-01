@@ -38,6 +38,8 @@
 #include "host/HostStores.h"
 #include "host/HostKeyboard.h"
 #include "hal/host/HostScreen.h"
+#include "hal/host/HostPower.h"
+#include "power/host/HostPowerSwitch.h"
 #include "Unicode.h"
 #include "hal/host/HostFlash.h"
 #include "LongTime.h"
@@ -298,6 +300,15 @@ public:
 static TDeviceEvalHandler*	gEvalHandler = nil;
 
 
+// the machine asleep: waited for as tdeck_power.cpp waits (hal/host/Host.h's
+// gHostSleepWait)
+static void
+SleepWait(ULong milliseconds)
+{
+	HostDevicePowerSleepWait((unsigned long) milliseconds);
+}
+
+
 // the display as it is now, for the panel (its width and height swap when
 // the Newton turns it: hal/host/HostScreen.h)
 static void
@@ -363,6 +374,17 @@ DevicePreMain(void)
 	HostMeshAppStart();					// (the LoRa radio's mesh node, for the Mesh application: comms/host/HostMeshApp.h)
 	HostInstallIPPPrinters();			// (print/host/HostIPP.h: the network's IPP printers, in the Print slip and the Network Printers panel; no PNG host printer on the board)
 	HostQuickSheetSetLockHook(HostDeviceSetLocked);
+	// the Newton's sleep (docs/host-lock-screen.md, "Sleep"): the e-paper
+	// keeps the lock screen meanwhile, the machine sleeps while it is
+	// locked, a key, the touch panel, the BOOT button (tdeck_input.cpp: the
+	// power switch), a message or a call (the engines' news) wakes it, and
+	// the chip sleeps while it waits (tdeck_power.cpp)
+	gHostScreenKeepsPicture = true;
+	HostQuickSheetSetLockSleeps(true);
+	gHostSleepWait = SleepWait;
+	gHostSleepWake = HostDevicePowerSleepWake;
+	HostPowerWindowOpened();
+	HostInstallPowerGlobals();			// (power/host/HostPowerSwitch.h: HostPowerSwitch(), HostSleepCount(), ...)
 	HostInstallQuickSheet();			// (host/HostQuickSheet.h: the sheet pulled down from the top edge - tdeck_input.cpp - and the lock screen; before the Host panel, which lists its auto-lock)
 	HostInstallSettings();				// (the Host preferences panel: the panel's quick updates and clean-ups)
 	HostInstallDeveloper();				// (the Developer preferences panel: the profile to the console)

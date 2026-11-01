@@ -881,6 +881,9 @@ public:
 };
 
 
+void	(*gHostMeshNews)(void) = NULL;
+
+
 static void
 RecordMessage(const char* key, const char* name, const char* channel, const char* text, uint32_t sent)
 {
@@ -898,6 +901,8 @@ RecordMessage(const char* key, const char* name, const char* channel, const char
 	CopyUTF8(m.text, text, sizeof(m.text));
 	m.sent = sent;
 	m.received = gNode != NULL ? gNode->getRTCClock()->getCurrentTime() : 0;
+	if (gHostMeshNews != NULL)
+		gHostMeshNews();
 	gStatus.received++;
 }
 

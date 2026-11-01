@@ -76,6 +76,7 @@
 #define PIN_TOUCH_INT	12
 #define PIN_TOUCH_RST	45
 #define PIN_KEY_INT		15
+#define PIN_BOOT_BUTTON	0				// (lilyphone1's BOARD_BOOT_PIN: low while pressed)
 #define PIN_KEY_LED		42
 #define ADDR_TOUCH		0x1A
 #define ADDR_KEYBOARD	0x34
@@ -96,7 +97,9 @@ static std::atomic<bool>		gKeyLight(true);	// the keyboard's light allowed (Host
 enum
 {
 	kVKBack = 0x08, kVKReturn = 0x0d, kVKShift = 0x10, kVKCommand = 0x11, kVKEscape = 0x1b, kVKSpace = 0x20,
-	kVKPageUp = 0x21, kVKEnd = 0x23, kVKHome = 0x24, kVKUp = 0x26, kVKDown = 0x28
+	kVKPageUp = 0x21, kVKEnd = 0x23, kVKHome = 0x24, kVKUp = 0x26, kVKDown = 0x28,
+	kVKPowerSwitch = 0x7b,				// F12: every host's power switch
+	kVKNone = 0x07						// (no key: host/HostKeyboard.cpp maps it to nothing)
 };
 
 
@@ -360,6 +363,10 @@ KeyEvent(int key, bool press)
 	KeySent& sent = gSent[key];
 	if (press && gLocked)
 	{
+		// (left out - but a Newton asleep behind the lock screen woken: a
+		// key no layout has, which wakes it and types nothing)
+		HostWindowKey(kVKNone, 1);
+		HostWindowKey(kVKNone, 0);
 		sent.virtualKey = -1;
 		return;
 	}
@@ -454,18 +461,21 @@ KeyboardPoll(void)
 
 static TaskHandle_t				gInputTask = NULL;
 static bool						gInterrupts = false;
-static volatile unsigned long	gTouchInterrupts = 0, gKeyInterrupts = 0;
+static volatile unsigned long	gTouchInterrupts = 0, gKeyInterrupts = 0, gButtonPresses = 0;
 
 
-// A chip's INT low: the interrupt disarmed until the task has read it
+// A chip's INT low (or the BOOT button pressed): the interrupt disarmed until
+// the task has read it
 static void
 Interrupt(void* pin)
 {
 	gpio_intr_disable((gpio_num_t) (intptr_t) pin);
 	if ((intptr_t) pin == PIN_TOUCH_INT)
 		gTouchInterrupts++;
-	else
+	else if ((intptr_t) pin == PIN_KEY_INT)
 		gKeyInterrupts++;
+	else
+		gButtonPresses++;
 	BaseType_t woken = pdFALSE;
 	vTaskNotifyGiveFromISR(gInputTask, &woken);
 	portYIELD_FROM_ISR(woken);
@@ -480,7 +490,9 @@ InterruptsStart(void)
 		return false;
 	gpio_set_direction((gpio_num_t) PIN_KEY_INT, GPIO_MODE_INPUT);
 	gpio_set_pull_mode((gpio_num_t) PIN_KEY_INT, GPIO_PULLUP_ONLY);
-	static const int pins[2] = { PIN_TOUCH_INT, PIN_KEY_INT };
+	gpio_set_direction((gpio_num_t) PIN_BOOT_BUTTON, GPIO_MODE_INPUT);
+	gpio_set_pull_mode((gpio_num_t) PIN_BOOT_BUTTON, GPIO_PULLUP_ONLY);
+	static const int pins[3] = { PIN_TOUCH_INT, PIN_KEY_INT, PIN_BOOT_BUTTON };
 	for (int pin : pins)
 	{
 		gpio_intr_disable((gpio_num_t) pin);
@@ -496,8 +508,27 @@ InterruptsStart(void)
 void
 HostDeviceInputDump(void)
 {
-	printf("newton: input %s, interrupts: touch %lu, keyboard %lu\n", gInterrupts ? "waits for interrupts" : "polled",
-		   (unsigned long) gTouchInterrupts, (unsigned long) gKeyInterrupts);
+	printf("newton: input %s, interrupts: touch %lu, keyboard %lu, BOOT button %lu\n", gInterrupts ? "waits for interrupts" : "polled",
+		   (unsigned long) gTouchInterrupts, (unsigned long) gKeyInterrupts, (unsigned long) gButtonPresses);
+}
+
+
+// The BOOT button: the Newton's power switch (host/HostKeyboard.cpp's F12 -
+// asleep, it wakes the machine; awake, the power manager puts it to sleep,
+// the screen locked first).  A press is taken once, and the button looked
+// at again every 50 ms until it is let go ==> whether it is still down.
+static bool
+ButtonPoll(void)
+{
+	static bool down = false;
+	bool now = gpio_get_level((gpio_num_t) PIN_BOOT_BUTTON) == 0;
+	if (now && !down)
+	{
+		HostWindowKey(kVKPowerSwitch, 1);
+		HostWindowKey(kVKPowerSwitch, 0);
+	}
+	down = now;
+	return down;
 }
 
 
@@ -518,12 +549,15 @@ InputTask(void*)
 			vTaskDelay(pdMS_TO_TICKS(10));
 			continue;
 		}
+		bool button = ButtonPoll();
 		// (a finger down: read again in 10 ms, its moves and its lifting;
-		// else woken by either chip)
+		// the button held: in 50 ms; else woken by either chip or the button)
 		gpio_intr_enable((gpio_num_t) PIN_KEY_INT);
 		if (!touching)
 			gpio_intr_enable((gpio_num_t) PIN_TOUCH_INT);
-		ulTaskNotifyTake(pdTRUE, touching ? pdMS_TO_TICKS(10) : portMAX_DELAY);
+		if (!button)
+			gpio_intr_enable((gpio_num_t) PIN_BOOT_BUTTON);
+		ulTaskNotifyTake(pdTRUE, touching ? pdMS_TO_TICKS(10) : button ? pdMS_TO_TICKS(50) : portMAX_DELAY);
 	}
 }
 

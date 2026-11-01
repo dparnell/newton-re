@@ -86,5 +86,10 @@ private:
 // or the light, the display set up or turned) - a device's panel waits for
 // it rather than looking for changes (src/host/esp32/main/tdeck_panel.cpp)
 extern void	(*gHostScreenChanged)(void);
+// a panel that keeps its picture for nothing (e-paper: the T-Deck Pro's):
+// powered off, the display is left as it was rather than blanked - the
+// machine asleep shows what it showed (the lock screen).  DEVIATION
+// (hardware): a MessagePad's LCD is dark when it is off
+extern bool	gHostScreenKeepsPicture;
 
 #endif	/* __HAL_HOST_SCREEN_H */

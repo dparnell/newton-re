@@ -1023,6 +1023,19 @@ sentences in 493 came broken (a burst's first, as the chip woke), which
 costs nothing - the other carries the fix as well. With the USB away and
 everything on, **54 mA** (59 before).
 
+### The Newton asleep while locked
+
+The lock screen now puts the Newton to sleep on the board, the ROM's own
+sleep (docs/host-lock-screen.md, "Sleep"): the e-paper keeps the lock
+screen meanwhile, the BOOT button (GPIO 0) is the power switch, and a key,
+a tap, a text, a call or a mesh message wakes it. Before, the board never
+slept: `PlatformPowerOffSystem` came straight back on a host with no window
+(`HostPowerWindowOpened`, which the board now calls), and would have looked
+every 10 ms. With the USB away and everything on, **46 mA locked** against
+54 awake (`powermeter.py --locked`: the lock asked for as the USB is let
+go, the console's `!tap` waking the Newton afterwards - asleep, it answers
+no NewtonScript).
+
 **Measuring after a boot: wait 150 s.** The boot's profiler
 (`tdeck_profile.cpp`) samples core 1 every millisecond for the first 150
 s, which keeps the chip out of light sleep; two runs started sooner after

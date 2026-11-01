@@ -14,6 +14,7 @@ PROTOCOL_IMPL_SOURCE_MACRO(THostScreenDriver)
 PROTOCOL_CLASSINFO(THostScreenDriver, "TScreenDriver", "", 0, 0, nil)
 
 void	(*gHostScreenChanged)(void) = nil;
+bool	gHostScreenKeepsPicture = false;
 
 
 static void
@@ -132,7 +133,7 @@ THostScreenDriver::GetScreenInfo(ScreenInfo* info)
 
 void	THostScreenDriver::PowerInit(void)			{ }
 void	THostScreenDriver::PowerOn(void)			{ fPowered = true; SetShown(false, fBacklight); }
-void	THostScreenDriver::PowerOff(void)			{ fPowered = false; SetShown(true, fBacklight); }
+void	THostScreenDriver::PowerOff(void)			{ fPowered = false; SetShown(!gHostScreenKeepsPicture, fBacklight); }
 
 
 // The panel's grays in a rectangle of the display shown as the power and

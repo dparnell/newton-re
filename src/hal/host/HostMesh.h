@@ -197,6 +197,9 @@ struct HostMeshPlatform
 void		HostMeshRun(const HostMeshPlatform* platform);	// never returns
 void		HostMeshWillRun(void);	// the host will run it (said early, before the world boots)
 bool		HostMeshStarted(void);
+// told (on the engine's thread, its lock held) when a message comes: a host
+// wakes a sleeping machine with it (host/HostMeshNatives.cpp)
+extern void	(*gHostMeshNews)(void);
 
 // Random bytes, from the host (keys, packet nonces): the source a board
 // gives (its hardware's), or std::random_device

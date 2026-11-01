@@ -133,10 +133,11 @@ the default (77 mA, 86 without); the GPS's bursts wake the chip rather than
 keeping it awake (76 mA with everything on, 72 with the GPS off); the touch
 panel and keyboard by interrupt (73 mA); the panel's and the mesh's tasks
 waiting rather than looking every 50 and 5 ms (59 mA; `!tasks` shows each
-task's time); the GPS's bursts shortened (54 mA). Measure 150 s or more
-after a boot (the boot's profiler keeps the chip awake until then). Next,
-largest first: a real
-sleep for the Newton's power-off on the board; the Newton still goes idle
+task's time); the GPS's bursts shortened (54 mA); the Newton asleep while
+the screen is locked (46 mA locked: docs/host-lock-screen.md, "Sleep").
+Measure 150 s or more after a boot (the boot's profiler keeps the chip
+awake until then). Next, largest first: what the radios cost while locked
+(the WiFi off, the GPS off while nobody wants a fix); the Newton still goes idle
 about 95 times a second; the LoRa radio's lines
 while it is unpowered (off draws 8-10 mA more than on); the keyboard light
 on a timeout; `POF` after each panel refresh.

@@ -161,10 +161,47 @@ On the T-Deck Pro the lock screen also tells the board
 (`HostScreenLocked` → `HostDeviceSetLocked`): the keyboard's presses are
 left out and its light is off while it is locked.
 
+## Sleep
+
+A host whose screen keeps its picture for nothing - the T-Deck Pro's
+e-paper - has the machine **sleep while the screen is locked**
+(`HostQuickSheetSetLockSleeps(true)`, `HostLockSleeps()` in NewtonScript;
+other hosts answer nil and nothing below happens there):
+
+- **The lock sleeps.** `Lock` puts the machine to sleep 1.5 seconds later
+  (`SleepLocked`: the root's `GotoSleep`, as the power switch does - the
+  ROM's whole power off, the applications' power-off functions asked), the
+  lock screen drawn first; the screen keeps showing it
+  (`gHostScreenKeepsPicture`, `hal/host/HostScreen.h`: powered off, the
+  display is not blanked - DEVIATION, a MessagePad's LCD is dark).  A
+  sleep asked for before a later one is not done again (`HostSleepCount`).
+- **The machine's own sleep locks the screen.** The lock screen's
+  power-off function (`RegPowerOff('|QuickSheet:host|, ...)`,
+  `PowerOffAsked`) locks and draws the screen when asked
+  `'okToPowerOff` - so the power switch (the T-Deck Pro's BOOT button) and
+  the idle timer (Prefs' sleep time) both leave the lock screen up.
+- **What wakes it**: a tap or a key (the stroke or the key goes no
+  further: the lock screen is still up, and its slider unlocks it); the
+  power switch; a message or a call on the 4G module, or a message on the
+  mesh (`gHostCellularNews`, `gHostMeshNews` →
+  `HostPowerWake(kPowerEventSerialGPI)`: the serial port's ring line, as a
+  MessagePad's modem woke it - the ROM's root then sleeps again 45 seconds
+  later unless the user does something); an alarm.
+- **Asleep again.** Woken while locked, the machine sleeps again once
+  the user has left it alone `kAwakeLocked` (20) seconds (`LockedIdle`,
+  from the lock screen's idle: the count of the user's activity and of
+  the sleeps watched - a wake starts the count again).
+- **The wait.** Asleep, the Newton's task waits in
+  `PlatformPowerOffSystem`; a device gives it a wait the wake cuts short
+  (`gHostSleepWait`, `gHostSleepWake`, `hal/host/Host.h`; the T-Deck
+  Pro's a semaphore) so that its processor sleeps too - the host's own
+  looks every 10 ms.
+
+On the T-Deck Pro, locked and asleep with every radio on, the board draws
+46 mA from its battery against 54 awake (docs/host-tdeck-pro.md, "Battery
+life"; `tools/tdeck/powermeter.py --usb-away --locked`).
+
 ## Not yet
 
-- The machine's sleep does not lock the screen: a MessagePad woken by its
-  power switch comes back as it was.  A phone-like host may want the
-  screen locked as it goes to sleep.
 - The lock screen keeps its layout if the screen is turned while it is up.
 - No passcode: the slider is the only way through.

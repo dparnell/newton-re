@@ -10,6 +10,8 @@
 */
 
 #include "HostMesh.h"
+#include "hal/Power.h"
+#include "hal/host/HostPower.h"
 #include "HostUTF8.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
@@ -461,9 +463,20 @@ FHostMeshSetPower(RefArg /*rcvr*/, RefArg on)
 }
 
 
+// a message wakes a sleeping machine, as a MessagePad's serial port's
+// ring line did ('serialgpi: the root puts it back to sleep after 45 s
+// unless the user does something meanwhile)
+static void
+WakeForNews(void)
+{
+	HostPowerWake(kPowerEventSerialGPI);
+}
+
+
 void
 HostRegisterMeshFunctions(void)
 {
+	gHostMeshNews = WakeForNews;
 	RefVar functions(gFunctionFrame);
 	SetSlot(functions, "HostMeshAvailable", RefVar(MakeCFunction((void*) FHostMeshAvailable, 0, nil)));
 	SetSlot(functions, "HostMeshStatus", RefVar(MakeCFunction((void*) FHostMeshStatus, 0, nil)));

@@ -21,6 +21,12 @@ void			HostSleepUntil(const Int64* time);	// real clock: sleep; controllable clo
 // when it runs again (false) - a device lets its processor slow down
 // meanwhile (src/host/esp32/main/tdeck_power.cpp)
 extern void	(*gHostIdleHook)(bool idle);
+// a device's wait while the machine sleeps (PlatformPowerOffSystem): up to
+// so many milliseconds, cut short by the wake (HostPowerWake calls it) - so
+// that its processor can sleep too; the host's own looks every 10 ms (nil,
+// both: src/host/esp32/main/tdeck_power.cpp has them)
+extern void	(*gHostSleepWait)(ULong milliseconds);
+extern void	(*gHostSleepWake)(void);
 // the host's monotonic clock in nanoseconds, whichever clock the Newton's
 // timer is on (what the host's measurements - the NewtonScript profiler,
 // frames/FunctionProfiler.h - time by)

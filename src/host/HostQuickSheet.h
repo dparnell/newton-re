@@ -35,6 +35,14 @@
 				the board leaves the keyboard's keys out and its light off
 				while the screen is locked.
 
+				A host whose screen keeps its picture for nothing (the
+				T-Deck Pro's e-paper) can have the machine sleep while the
+				screen is locked (HostQuickSheetSetLockSleeps): the lock
+				puts it to sleep once drawn, the machine's own sleep (the
+				power switch, the idle timer) locks the screen first, and
+				while locked it sleeps again once the user has left it
+				alone a few seconds (docs/host-lock-screen.md, "Sleep").
+
 				DEVIATION (host addition): the ROM has no lock screen.
 */
 
@@ -47,5 +55,6 @@ bool	HostQuickSheetInstalled(void);		// whether it was installed
 void	HostQuickSheetPulled(void);			// in the newt world's task: the sheet pulled down (opened, or closed if open)
 void	HostQuickSheetSetAutoLock(long seconds);	// the screen locked after the user has left it alone so long (0: never)
 long	HostQuickSheetAutoLock(void);		// ... as set
+void	HostQuickSheetSetLockSleeps(bool sleeps);	// before boot: the machine asleep while the screen is locked (HostLockSleeps)
 
 #endif	/* __HOSTQUICKSHEET_H */

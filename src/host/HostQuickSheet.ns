@@ -43,6 +43,16 @@
 // off; a change of the setting starts it again at once, HostSetAutoLock
 // sending Rewatch - and the idle time is counted again from any change of
 // it, from a change of the setting, and from the unlock.
+//
+// Sleep (a host whose screen keeps its picture for nothing - the T-Deck
+// Pro's e-paper - says HostLockSleeps()): locked, the machine is put to
+// sleep (the root's GotoSleep, as the power switch does) a moment after the
+// lock screen is drawn, and the screen shows it meanwhile; the machine's own
+// sleep - the power switch, the idle timer - locks the screen first (a
+// power-off function, RegPowerOff); and woken while locked - a tap, a key,
+// a message (the root sleeps again 45 s after the serial line's wake
+// anyway) - it sleeps again once the user has left it alone kAwakeLocked
+// seconds.
 
 {
 	kFont: 10240,							// the system font, 10 point
@@ -51,6 +61,8 @@
 	kSmall: 9216,							// ... 9 point
 	kRowHeight: 22,
 	kMostNotes: 20,							// (notifications kept: the oldest dropped past it)
+	kAwakeLocked: 20,						// (seconds left alone, locked, before the machine sleeps again)
+	kSleepAfterLock: 1500,					// (ms after the lock before it sleeps: the finger lifted, the screen drawn)
 
 	sheetView: nil,
 	lockView: nil,
@@ -65,6 +77,13 @@
 	lastSeconds: 0,
 	watchGen: 0,							// (a watch begun before the last Rewatch stops)
 
+	// the machine awake while locked: the activity and the sleeps seen
+	// last, and when (a wake counts as activity: the time asleep does not
+	// count as left alone)
+	lockedActivity: nil,
+	lockedSleeps: nil,
+	lockedSince: 0,
+
 	Start: func()
 	begin
 		notes := [];
@@ -78,7 +97,55 @@
 		DefGlobalFn('ScreenLockNotifications, func() GetGlobalVar('|QuickSheet:host|):Notifications());
 		DefGlobalFn('RegScreenLockChange, func(callbackID, fn) GetGlobalVar('|QuickSheet:host|):RegChange(callbackID, fn));
 		DefGlobalFn('UnRegScreenLockChange, func(callbackID) GetGlobalVar('|QuickSheet:host|):UnRegChange(callbackID));
+		RegPowerOff('|QuickSheet:host|, func(what, why) GetGlobalVar('|QuickSheet:host|):PowerOffAsked(what, why));
 		:Watch(watchGen);
+	end,
+
+	// the machine about to sleep (RegPowerOff): where it sleeps locked, the
+	// screen locked and drawn first, so that the screen shows it meanwhile
+	// and it wakes to it
+	PowerOffAsked: func(what, why)
+	begin
+		if what <> 'okToPowerOff then return nil;
+		try
+			if HostLockSleeps() and not lockView then begin
+				:Lock();
+				RefreshViews();
+			end
+		onexception |evt.ex| do
+			Print("[lock] the lock before sleeping threw");
+		true;
+	end,
+
+	// locked: the machine put to sleep (the root's, as the power switch
+	// does) - unless it was unlocked meanwhile, or has slept since this was
+	// asked for (sleeps: HostSleepCount() then; nil: whatever)
+	SleepLocked: func(sleeps)
+	begin
+		if sleeps and HostSleepCount() <> sleeps then return;
+		if lockView and HostLockSleeps() then begin
+			lockedActivity := HostUserActivity();
+			lockedSince := Ticks();
+			RefreshViews();
+			GetRoot():GotoSleep();
+		end;
+	end,
+
+	// once a second while locked (the lock screen's idle): the machine
+	// awake - woken by a tap, a key or news - put to sleep again once it
+	// has been left alone kAwakeLocked seconds
+	LockedIdle: func()
+	begin
+		if not HostLockSleeps() then return;
+		local activity := HostUserActivity();
+		local sleeps := HostSleepCount();
+		local now := Ticks();
+		if activity <> lockedActivity or sleeps <> lockedSleeps or now < lockedSince then begin
+			lockedActivity := activity;
+			lockedSleeps := sleeps;
+			lockedSince := now;
+		end else if now - lockedSince >= kAwakeLocked * 60 then
+			:SleepLocked(nil);
 	end,
 
 	// the auto-lock set anew (HostSetAutoLock): watched from now
@@ -333,6 +400,7 @@
 			// which a panel that flashes to redraw wants)
 			viewIdleScript: func() begin
 				if Time() <> shownMinute then :ShowTime();
+				GetGlobalVar('|QuickSheet:host|):LockedIdle();
 				1000;
 			end,
 			viewQuitScript: func() GetGlobalVar('|QuickSheet:host|).lockView := nil});
@@ -340,6 +408,11 @@
 		autoLocked := nil;
 		HostScreenLocked(true);
 		:TellWatchers(true);
+		if HostLockSleeps() then begin
+			lockedActivity := HostUserActivity();
+			lockedSince := Ticks();
+			AddDelayedCall(func(sleeps) GetGlobalVar('|QuickSheet:host|):SleepLocked(sleeps), [HostSleepCount()], kSleepAfterLock);
+		end;
 		lockView;
 	end,
 

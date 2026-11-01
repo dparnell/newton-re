@@ -753,6 +753,9 @@ WaitForPrompt(long timeoutMs, char* said, long saidSize)
 	What the module says by itself
 ------------------------------------------------------------------------------*/
 
+static void	News(void);
+
+
 static void
 RingHeard(const char* number)
 {
@@ -760,6 +763,7 @@ RingHeard(const char* number)
 		SetCall(kHostCellCallIncoming, number);
 	std::lock_guard<std::mutex> hold(gLock);
 	PushEvent(kHostCellEventRing, number != nullptr && number[0] != 0 ? number : gStatus.number);
+	News();
 }
 
 
@@ -816,10 +820,24 @@ HandleURC(const char* line)
 	Messages
 ------------------------------------------------------------------------------*/
 
+void	(*gHostCellularNews)(void) = nullptr;
+
+
+// a message or a call the Newton is to hear of: a sleeping machine woken
+// (gHostCellularNews; gLock held - it must not call back)
+static void
+News(void)
+{
+	if (gHostCellularNews != nullptr)
+		gHostCellularNews();
+}
+
+
 static void
 Deliver(const char* number, const char* text, long long time)
 {
 	std::lock_guard<std::mutex> hold(gLock);
+	News();
 	for (long reader = 0; reader < kHostCellReaders; reader++)
 	{
 		if (gTextCount[reader] == kTextQueue)

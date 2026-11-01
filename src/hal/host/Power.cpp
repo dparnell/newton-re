@@ -26,12 +26,19 @@ static std::atomic<bool>	gHostPowerWindow(false);
 static std::atomic<ULong>	gHostWakeAfter(0);			// a test's wake, in milliseconds (0: none)
 static std::atomic<ULong>	gHostUserActivity(0);		// pen samples and keys from the user
 
+void	(*gHostSleepWait)(ULong milliseconds) = nullptr;
+void	(*gHostSleepWake)(void) = nullptr;
+
 
 void
 HostPowerWake(ULong events)
 {
 	if (gHostAsleep.load())
+	{
 		gHostPowerEvents.fetch_or(events);
+		if (gHostSleepWake != nullptr)
+			gHostSleepWake();
+	}
 }
 
 
@@ -112,7 +119,28 @@ PlatformPowerOffSystem(void)
 			gHostPowerEvents.fetch_or(kHostPowerEventSwitch);
 			break;
 		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		if (gHostSleepWait == nullptr)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			continue;
+		}
+		// (a device's wait: until HostPowerWake, the alarm or the test's
+		// wake is due - at most a minute, the clock looked at again)
+		long long ms = 60000;
+		if (gHostRTCAlarmArmed)
+		{
+			long long alarm = ((long long) gHostRTCAlarmSeconds - (long long) GetRealTimeClock()) * 1000;
+			if (alarm < ms)
+				ms = alarm < 1 ? 1 : alarm;
+		}
+		if (wakeAfter != 0)
+		{
+			long long left = (long long) wakeAfter
+						   - std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
+			if (left < ms)
+				ms = left < 1 ? 1 : left;
+		}
+		gHostSleepWait((ULong) ms);
 	}
 	if (gHostIdleHook != nullptr)
 		gHostIdleHook(false);

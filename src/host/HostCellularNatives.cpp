@@ -9,6 +9,8 @@
 */
 
 #include "HostCellular.h"
+#include "hal/Power.h"
+#include "hal/host/HostPower.h"
 #include "HostUTF8.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
@@ -165,9 +167,20 @@ FHostCellCommand(RefArg /*rcvr*/, RefArg command)
 }
 
 
+// a message or a call wakes a sleeping machine, as a MessagePad's serial port's
+// ring line did ('serialgpi: the root puts it back to sleep after 45 s
+// unless the user does something meanwhile)
+static void
+WakeForNews(void)
+{
+	HostPowerWake(kPowerEventSerialGPI);
+}
+
+
 void
 HostRegisterCellularFunctions(void)
 {
+	gHostCellularNews = WakeForNews;
 	RefVar functions(gFunctionFrame);
 	SetSlot(functions, "HostCellAvailable", RefVar(MakeCFunction((void*) FHostCellAvailable, 0, nil)));
 	SetSlot(functions, "HostCellStatus", RefVar(MakeCFunction((void*) FHostCellStatus, 0, nil)));

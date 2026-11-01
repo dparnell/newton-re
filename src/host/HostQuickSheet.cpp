@@ -19,6 +19,22 @@ extern const char gHostQuickSheetSource[];		// HostQuickSheet.ns (HostQuickSheet
 static void	(*gLockHook)(bool on) = nil;
 static bool	gInstalled = false;
 static long	gAutoLockSeconds = 0;				// (0: never)
+static bool	gLockSleeps = false;
+
+
+void
+HostQuickSheetSetLockSleeps(bool sleeps)
+{
+	gLockSleeps = sleeps;
+}
+
+
+// HostLockSleeps(): whether the machine sleeps while the screen is locked
+static Ref
+FHostLockSleeps(RefArg /*rcvr*/)
+{
+	return gLockSleeps ? TRUEREF : NILREF;
+}
 
 
 void
@@ -104,6 +120,7 @@ HostInstallQuickSheet(void)
 	SetFrameSlot(functions, RefVar(Intern((char*) "HostUserActivity")), RefVar(MakeCFunction((void*) FHostUserActivity, 0, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "HostAutoLockSeconds")), RefVar(MakeCFunction((void*) FHostAutoLockSeconds, 0, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "HostSetAutoLock")), RefVar(MakeCFunction((void*) FHostSetAutoLock, 1, nil)));
+	SetFrameSlot(functions, RefVar(Intern((char*) "HostLockSleeps")), RefVar(MakeCFunction((void*) FHostLockSleeps, 0, nil)));
 	newton_try
 	{
 		RefVar fn(ParseString(RefVar(MakeString(gHostQuickSheetSource))));
