@@ -169,6 +169,27 @@ tables searched linearly (78%), the ROM extensions' headers searched for in
 megabytes of flash at each call (half of what was left), and native
 functions registered by comparing each name with every entry.
 
+## powermeter.py - what the board draws from its battery
+
+    ~/.platformio/penv/Scripts/python tools/tdeck/powermeter.py COM4 [--reset] [--window 60] [--settle 15]
+        [--only keylight,gps,lora,cell,wifisave,wifi] [--keep-usb] [--out tmp/tdeck/power.log]
+
+The board's own fuel gauge (the BQ27220's Current, sampled once a second by
+the firmware: `DevicePower()` at the prompt gives [mA now, the mean since
+last asked, samples, mV]) measures the board in one state after another,
+each switching one more thing off: as found, the keyboard's light, the GPS,
+the LoRa radio, the 4G module, the WiFi's power save at its most, the WiFi.
+For the run the charger is told to leave the USB alone
+(`DevicePowerSet('battery, true)`, the BQ25896's EN_HIZ), so the board runs
+from its battery while the USB still carries the prompt; everything is put
+back at the end, and the board's next start puts the charger's input back
+if a run is cut short (the radios' switches are kept in NVS: one left off
+is switched on again in Prefs). Prints a table of mA, each step's saving
+and mV; `--out` keeps the whole conversation. Needs a battery fitted. With
+the board on its battery the console loses a character now and then (a
+reply's first, a digit of the mV), so the replies carry a doubled marker.
+The figures are in docs/host-tdeck-pro.md, "Battery life".
+
 ## storebench.py - how long the store takes to write
 
     ~/.platformio/penv/Scripts/python tools/tdeck/storebench.py COM4 [--count 10]

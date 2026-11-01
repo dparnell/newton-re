@@ -9,6 +9,19 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-01: what the T-Deck Pro draws, measured
+
+The owner found the board's battery did not last.
+`tools/tdeck/powermeter.py` measures it with the board's own fuel gauge
+(`DevicePower()`, sampled by the firmware once a second), the charger's
+input cut (`DevicePowerSet('battery, true)`, the BQ25896's EN_HIZ) so that
+the board runs from its battery while still on USB, switching one thing off
+after another (`DevicePowerSet` also has the keyboard light, the WiFi and
+its power save). 130 mA as found, 100 mA with every radio off: the board
+itself, the ESP32-S3 never sleeping, is most of it; the 4G module 24 mA;
+the LoRa radio draws 10 mA *more* switched off (its lines likely driving
+the unpowered chip). docs/host-tdeck-pro.md, "Battery life".
+
 ## 2026-10-25: an Android host (the Viwoods AiPaper Mini)
 
 `newton` builds for Android (arm64, NDK r27+, `src/cmake/android-ndk.cmake`)

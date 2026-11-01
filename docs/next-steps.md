@@ -120,6 +120,17 @@ Nothing at present.
 
 ## Open
 
+### The T-Deck Pro's battery life (measured 2026-11-01)
+
+130 mA as found, 100 mA with every radio off (docs/host-tdeck-pro.md,
+"Battery life"; `tools/tdeck/powermeter.py` measures each change). Next,
+largest first: ESP-IDF power management and automatic light sleep, with the
+touch panel's and keyboard's interrupts in place of the 10 ms polls; a real
+sleep for the Newton's power-off on the board; the 4G module's own sleep;
+max-modem WiFi power save; the LoRa radio's lines while it is unpowered
+(off draws 10 mA more than on); the keyboard light on a timeout; `POF`
+after each panel refresh.
+
 ### A test that passes without running
 
 `packages.PackageManager` prints "all passed" without running most of its

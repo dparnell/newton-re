@@ -22,11 +22,22 @@
 
 				With no battery fitted (the board on USB alone) the gauge
 				says so and the Newton is told the host has none.
+
+				For measuring what the board draws (DevicePower,
+				tools/tdeck/powermeter.py): a sampler task reads Current
+				once a second and keeps its mean, and the charger's input
+				can be cut (REG00 EN_HIZ, bit 7) so that the board runs from
+				its battery while the USB stays plugged in for the console -
+				the gauge then sees all of the board's current.  The
+				charger's I2C watchdog (REG07 bits 5-4, 40 s) is stopped
+				meanwhile, in case it would put REG00 back; at start EN_HIZ
+				is cleared, in case the board was reset while on battery.
 				ESP-IDF's headers only, and HostBattery.h (plain C++).
 */
 
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "driver/i2c.h"
 
 #include "esp32host.h"
@@ -53,6 +64,8 @@ enum
 };
 
 const uint8_t	kChargerStatus = 0x0B;	// REG0B
+const uint8_t	kChargerInput = 0x00;	// REG00: EN_HIZ, bit 7
+const uint8_t	kChargerTimer = 0x07;	// REG07: WATCHDOG, bits 5-4
 
 
 // (asleep, the gauge stretches the clock while it wakes - longer than the
@@ -74,6 +87,21 @@ static bool
 ReadCharger(uint8_t* status)
 {
 	return i2c_master_write_read_device(I2C_PORT, ADDR_CHARGER, &kChargerStatus, 1, status, 1, pdMS_TO_TICKS(20)) == ESP_OK;
+}
+
+
+static bool
+ReadChargerRegister(uint8_t reg, uint8_t* value)
+{
+	return i2c_master_write_read_device(I2C_PORT, ADDR_CHARGER, &reg, 1, value, 1, pdMS_TO_TICKS(20)) == ESP_OK;
+}
+
+
+static bool
+WriteChargerRegister(uint8_t reg, uint8_t value)
+{
+	uint8_t b[2] = { reg, value };
+	return i2c_master_write_to_device(I2C_PORT, ADDR_CHARGER, b, 2, pdMS_TO_TICKS(20)) == ESP_OK;
 }
 
 
@@ -113,6 +141,78 @@ ReadBattery(HostBatteryReading* reading)
 }
 
 
+/*------------------------------------------------------------------------------
+	Measuring the board's current
+------------------------------------------------------------------------------*/
+
+static volatile long	gSampleSum;			// mA, since the mean was last taken
+static volatile long	gSampleCount;
+static volatile long	gSampleLast;
+static uint8_t			gSavedTimer;		// REG07 before the input was cut
+static bool				gOnBattery;
+
+
+static void
+SamplerTask(void*)
+{
+	for (;;)
+	{
+		uint16_t value;
+		if (ReadWord(kGaugeCurrent, &value))
+		{
+			gSampleLast = (int16_t) value;
+			gSampleSum += (int16_t) value;
+			gSampleCount++;
+		}
+		vTaskDelay(pdMS_TO_TICKS(1000));
+	}
+}
+
+
+bool
+HostDeviceBatteryCurrent(long* now, long* mean, long* samples, long* millivolts)
+{
+	static bool started = false;
+	if (!started)
+	{
+		started = xTaskCreatePinnedToCore(SamplerTask, "powersample", 3072, NULL, 3, NULL, 0) == pdPASS;
+		if (!started)
+			return false;
+	}
+	long count = gSampleCount, sum = gSampleSum;
+	gSampleCount = 0;
+	gSampleSum = 0;
+	*now = gSampleLast;
+	*samples = count;
+	*mean = count != 0 ? sum / count : gSampleLast;
+	uint16_t value;
+	*millivolts = ReadWord(kGaugeVoltage, &value) ? value : -1;
+	return true;
+}
+
+
+bool
+HostDeviceBatteryRunOnBattery(bool on)
+{
+	uint8_t input, timer;
+	if (!ReadChargerRegister(kChargerInput, &input) || !ReadChargerRegister(kChargerTimer, &timer))
+		return false;
+	if (on && !gOnBattery)
+	{
+		gSavedTimer = timer;
+		if (!WriteChargerRegister(kChargerTimer, timer & ~0x30))
+			return false;
+	}
+	if (!WriteChargerRegister(kChargerInput, on ? (input | 0x80) : (input & ~0x80)))
+		return false;
+	if (!on && gOnBattery)
+		WriteChargerRegister(kChargerTimer, gSavedTimer);
+	gOnBattery = on;
+	printf("newton: the charger's input %s\n", on ? "cut - the board on its battery" : "back - the board on USB");
+	return true;
+}
+
+
 bool
 HostDeviceBatteryStart(void)
 {
@@ -122,6 +222,12 @@ HostDeviceBatteryStart(void)
 	{
 		printf("newton: no fuel gauge - no battery reading\n");
 		return false;
+	}
+	uint8_t input;
+	if (ReadChargerRegister(kChargerInput, &input) && (input & 0x80) != 0)
+	{
+		WriteChargerRegister(kChargerInput, input & ~0x80);
+		printf("newton: the charger's input was found cut (a reset while measuring?) - put back\n");
 	}
 	HostBatterySetSource(ReadBattery);
 	if (ReadBattery(&reading))

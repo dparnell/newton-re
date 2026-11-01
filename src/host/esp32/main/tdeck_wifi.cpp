@@ -55,7 +55,7 @@ struct KnownList
 	KnownNetwork	networks[kMaxKnown];
 };
 
-enum RequestKind { kScan, kRemember, kForget, kKnown };
+enum RequestKind { kScan, kRemember, kForget, kKnown, kRadio, kPowerSave };
 
 struct Request
 {
@@ -64,7 +64,7 @@ struct Request
 	char			password[65];
 	DeviceWifiSeen*	seen;			// kScan: where the networks go
 	char			(*ssids)[33];	// kKnown
-	long			max;
+	long			max;			// (kRadio: on; kPowerSave: the wifi_ps_type_t)
 	long			result;
 	SemaphoreHandle_t	done;
 };
@@ -78,6 +78,7 @@ static volatile unsigned long	gClockSyncs = 0;	// (HostDeviceClockSyncs)
 static QueueHandle_t	gRequests = NULL;
 static QueueHandle_t	gEvents = NULL;			// (an int: what ESP-IDF said)
 static KnownList		gKnown;
+static bool				gRadioOff = false;		// switched off (HostDeviceWifiSetRadio): nothing joined
 enum { kEventJoined = 1, kEventLost };
 
 
@@ -281,6 +282,32 @@ Answer(Request* request)
 			request->result = n;
 		}
 		break;
+
+	case kRadio:
+		if (request->max != 0 && gRadioOff)
+		{
+			request->result = esp_wifi_start() == ESP_OK;
+			gRadioOff = !request->result;
+			gState = kDeviceWifiSearching;
+		}
+		else if (request->max == 0 && !gRadioOff)
+		{
+			esp_wifi_disconnect();
+			request->result = esp_wifi_stop() == ESP_OK;
+			gRadioOff = request->result;
+			gState = kDeviceWifiOff;
+			gAddress = 0;
+			gSSID[0] = 0;
+		}
+		else
+			request->result = true;
+		printf("newton: WiFi %s\n", gRadioOff ? "switched off" : "switched on");
+		break;
+
+	case kPowerSave:
+		request->result = esp_wifi_set_ps((wifi_ps_type_t) request->max) == ESP_OK;
+		printf("newton: WiFi power save %s\n", request->max == WIFI_PS_NONE ? "off" : request->max == WIFI_PS_MIN_MODEM ? "min modem" : "max modem");
+		break;
 	}
 }
 
@@ -295,7 +322,7 @@ ManagerTask(void*)
 		if (xQueueReceive(gRequests, &request, pdMS_TO_TICKS(500)) == pdTRUE)
 		{
 			Answer(request);
-			bool tryNow = request->kind == kRemember && gState != kDeviceWifiConnected;
+			bool tryNow = (request->kind == kRemember || request->kind == kRadio) && gState != kDeviceWifiConnected;
 			xSemaphoreGive(request->done);
 			if (tryNow)
 				nextTry = 0;
@@ -309,7 +336,7 @@ ManagerTask(void*)
 				gAddress = 0;
 				nextTry = esp_timer_get_time() + 2000 * 1000;
 			}
-		if (gState != kDeviceWifiConnected && esp_timer_get_time() >= nextTry)
+		if (!gRadioOff && gState != kDeviceWifiConnected && esp_timer_get_time() >= nextTry)
 		{
 			if (!JoinAny())
 				nextTry = esp_timer_get_time() + kRetryMs * 1000;
@@ -466,6 +493,30 @@ HostDeviceWifiForget(const char* ssid)
 	memset(&request, 0, sizeof(request));
 	request.kind = kForget;
 	strncpy(request.ssid, ssid, sizeof(request.ssid) - 1);
+	return Ask(request) > 0;
+}
+
+
+bool
+HostDeviceWifiSetRadio(bool on)
+{
+	Request request;
+	memset(&request, 0, sizeof(request));
+	request.kind = kRadio;
+	request.max = on;
+	return Ask(request) > 0;
+}
+
+
+bool
+HostDeviceWifiSetPowerSave(int mode)
+{
+	if (mode < WIFI_PS_NONE || mode > WIFI_PS_MAX_MODEM)
+		return false;
+	Request request;
+	memset(&request, 0, sizeof(request));
+	request.kind = kPowerSave;
+	request.max = mode;
 	return Ask(request) > 0;
 }
 

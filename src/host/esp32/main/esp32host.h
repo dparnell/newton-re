@@ -41,6 +41,7 @@ void		HostDevicePanelDump(void);			// what the panel shows, on the console (tool
 void		HostDeviceInputStart(void);
 bool		HostDeviceSheetPulled(void);		// the quick sheet pulled down from the top edge since last asked (once for each pull) ==> whether
 void		HostDeviceSetLocked(bool locked);	// the lock screen up or down: the keyboard left out and its light off meanwhile
+void		HostDeviceSetKeyLight(bool on);		// the keyboard's light allowed (on, as at start) or kept off
 // the internal flash on the board's `store` partition (tdeck_store.cpp):
 // started before the OS boots (==> whether there is one), then opened by
 // the Newton's side - its image, read in place, its size, whether it was
@@ -66,6 +67,8 @@ long		HostDeviceWifiScan(DeviceWifiSeen* seen, long max);			// ==> how many, str
 long		HostDeviceWifiKnown(char (*ssids)[33], long max);
 bool		HostDeviceWifiRemember(const char* ssid, const char* password);
 bool		HostDeviceWifiForget(const char* ssid);
+bool		HostDeviceWifiSetRadio(bool on);			// the radio switched off (nothing joined) or on again (for measuring: DevicePowerSet)
+bool		HostDeviceWifiSetPowerSave(int mode);		// ESP-IDF's wifi_ps_type_t: 0 none, 1 min modem (its default), 2 max modem
 void		HostDeviceWifiStatus(int* state, char* ssid, unsigned long* address, long* rssi);
 unsigned long	HostDeviceClockSyncs(void);		// how many times the board's clock has been set (from the network, or by hand)
 void		HostDeviceClockSetTo(long long seconds);	// the board's clock set by hand, in seconds from 1970 (GMT)
@@ -93,6 +96,8 @@ bool		HostDeviceCellStart(void);
 // input's I2C bus, given to power/host/HostBattery.h as the board's own
 // source (started after the input; ==> whether there is a gauge)
 bool		HostDeviceBatteryStart(void);
+bool		HostDeviceBatteryCurrent(long* now, long* mean, long* samples, long* millivolts);	// mA (+ charging) now, and the mean of the 1 s samples since last asked (the sampler starts at the first call)
+bool		HostDeviceBatteryRunOnBattery(bool on);		// the charger's input cut (on) or back: the board on its battery while on USB
 
 // the sampling profiler of core 1 (tdeck_profile.cpp): started with the
 // board, a phase's start marked, the samples printed (and the profiler

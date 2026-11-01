@@ -76,6 +76,7 @@ const int64_t	kPullHoldMs = 300;		// ... held this long without coming down: the
 
 static std::atomic<unsigned>	gPulls(0);			// the sheet pulled down, not yet asked for
 static std::atomic<bool>		gLocked(false);		// the lock screen up
+static std::atomic<bool>		gKeyLight(true);	// the keyboard's light allowed (HostDeviceSetKeyLight)
 
 // Windows virtual key codes (host/HostKeyboard.cpp maps them to the Newton's)
 enum
@@ -226,7 +227,15 @@ void
 HostDeviceSetLocked(bool locked)
 {
 	gLocked = locked;
-	gpio_set_level((gpio_num_t) PIN_KEY_LED, locked ? 0 : 1);
+	gpio_set_level((gpio_num_t) PIN_KEY_LED, locked || !gKeyLight ? 0 : 1);
+}
+
+
+void
+HostDeviceSetKeyLight(bool on)
+{
+	gKeyLight = on;
+	gpio_set_level((gpio_num_t) PIN_KEY_LED, gLocked || !on ? 0 : 1);
 }
 
 

@@ -792,6 +792,59 @@ browse's 2.5 s; `GetGlobalVar('|NetworkPrinters:host|):AddPrinter(found,
 PostScript, and the printer answered successful-ok and printed it. (The
 board's prompt cuts a long line, so the note was built over several.)
 
+## Battery life (2026-11-01)
+
+The owner found the battery did not last. Measured by the board's own fuel
+gauge with `tools/tdeck/powermeter.py` (its README entry says how: the
+charger's input cut with EN_HIZ, so the board runs from its battery while
+the USB carries the prompt; one-second samples averaged over 60 s after
+15 s to settle), each row switching one more thing off, the board left
+alone with WiFi joined and the 4G module registered:
+
+| State | mA | saved |
+|---|---|---|
+| as found | 130 | |
+| keyboard light off | 123 | 7 |
+| GPS off | 123 | 0 |
+| LoRa radio off | 133 | -10 |
+| 4G module off | 109 | 24 |
+| WiFi power save max modem | 102 | 7 |
+| WiFi off | 100 | 2 |
+
+(A first run: 126, 124, 125, 134, then cut short; another of the first two
+rows: 123, 123. Differences of 2-3 mA are within the noise.) On a 1400 mAh
+battery (LilyGO's figure, not checked on this board's gauge) that is about
+11 hours as found, and no more than 14 with every radio off: **the floor is the
+board itself** - the ESP32-S3 at 240 MHz all the time (power management
+is not enabled: no frequency scaling, no light sleep, a 1000 Hz tick),
+woken every 10 ms by the input task's I2C polls and the services task,
+with the PSRAM and the panel's controller (powered on once and never
+off: `POF` is not sent) behind it. The Newton's own sleep is no help: no
+window ever calls `HostPowerWindowOpened` on the board, so
+`PlatformPowerOffSystem` (hal/host/Power.cpp) returns at once.
+
+Two things the table says beyond that:
+
+- **Switching the LoRa radio off draws more, 10 mA more, both runs.** The
+  mesh's loop is not spinning (it waits 200 ms at a time with the radio
+  off); the likely cause is the radio's lines still driven into a chip
+  whose power (GPIO 46) is cut - its chip select parked high by the panel
+  (GPIO 3), its reset (GPIO 4) - powering it through its pins. Not yet
+  tried: the radio's lines let go (inputs) while it is unpowered, or its
+  power left on and the radio in cold sleep (under a microamp).
+- **The GPS saves nothing** when switched off: either the receiver drew
+  little (no fix being sought indoors) or it is powered through its UART's
+  lines (GPIO 43) as the radio may be. Not looked at yet.
+
+What would help, largest first: power management with automatic light
+sleep (the touch panel's and keyboard's interrupt lines waking the board
+instead of polls - the USB console stops while asleep, so a switch for
+it); a real sleep for the Newton's power-off on the board (the panel
+keeps its picture for nothing); the 4G module's own sleep (`AT+CSCLK`
+with its DTR line, GPIO 8, which nothing drives yet) or off by default;
+max-modem WiFi power save; the keyboard light off after a while; the
+radio's pins fixed when it is off; `POF` after each refresh.
+
 ## Order of work
 
 The owner already has a T-Deck Pro (bought for another project), so the
