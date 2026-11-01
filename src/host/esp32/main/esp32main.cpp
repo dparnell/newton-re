@@ -307,6 +307,7 @@ app_main(void)
 	// the OS leaves little of
 	_Unwind_SetEnableExceptionFdeSorting(1);
 	HostDeviceProfileStart();
+	HostDevicePowerStart();				// (before the others: their drivers take its locks)
 	HostDeviceSpiBusStart();				// (the panel's and the radio's)
 	HostDevicePanelStart();
 	HostDeviceInputStart();

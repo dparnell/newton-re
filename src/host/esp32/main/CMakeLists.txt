@@ -11,9 +11,9 @@ endforeach()
 list(APPEND sources ${NEWTON_FORWARDED})
 # (the DDK's own directory as -I too: three of its headers include others
 #  with <...>, and none of its file names is a system header's)
-idf_component_register(SRCS esp32main.cpp newtonmain.cpp tdeck_panel.cpp tdeck_input.cpp tdeck_store.cpp tdeck_profile.cpp tdeck_wifi.cpp tdeck_modem.cpp tdeck_lora.cpp tdeck_gps.cpp tdeck_battery.cpp ${sources}
+idf_component_register(SRCS esp32main.cpp newtonmain.cpp tdeck_panel.cpp tdeck_input.cpp tdeck_store.cpp tdeck_profile.cpp tdeck_wifi.cpp tdeck_modem.cpp tdeck_lora.cpp tdeck_gps.cpp tdeck_battery.cpp tdeck_power.cpp ${sources}
                        INCLUDE_DIRS . ${NEWTON_SRC}/ddk
-                       REQUIRES driver esp_partition spi_flash esp_timer esp_psram vfs freertos lwip nvs_flash esp_wifi esp_netif esp_event)
+                       REQUIRES driver esp_partition spi_flash esp_timer esp_psram vfs freertos lwip nvs_flash esp_wifi esp_netif esp_event esp_pm)
 
 # the flags the tree is built with everywhere (src/CMakeLists.txt): the
 # DDK configured for the MessagePad, host_compat.h first, signed overflow

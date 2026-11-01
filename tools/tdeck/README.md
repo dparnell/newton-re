@@ -172,7 +172,8 @@ functions registered by comparing each name with every entry.
 ## powermeter.py - what the board draws from its battery
 
     ~/.platformio/penv/Scripts/python tools/tdeck/powermeter.py COM4 [--reset] [--window 60] [--settle 15]
-        [--only keylight,gps,lora,cell,wifisave,wifi] [--keep-usb] [--out tmp/tdeck/power.log]
+        [--only keylight,gps,lora,cell,wifisave,wifi] [--keep-usb] [--usb-away] [--no-sleep]
+        [--out tmp/tdeck/power.log]
 
 The board's own fuel gauge (the BQ27220's Current, sampled once a second by
 the firmware: `DevicePower()` at the prompt gives [mA now, the mean since
@@ -189,6 +190,17 @@ and mV; `--out` keeps the whole conversation. Needs a battery fitted. With
 the board on its battery the console loses a character now and then (a
 reply's first, a digit of the mV), so the replies carry a doubled marker.
 The figures are in docs/host-tdeck-pro.md, "Battery life".
+
+The chip never goes into light sleep while the USB console is connected
+(`tdeck_power.cpp`), so on the cable the table is of the board awake.
+`--usb-away` measures each state with the USB let go
+(`DevicePowerSet('usbAway, S)`: the board takes away its D+ pull-up, the
+computer sees it unplugged, and it takes it back after S seconds - or
+restarts if the computer has not found it 15 s later): the port is closed
+for `--settle` + `--window` seconds, then the mean over that whole time is
+read.  `--no-sleep` switches light sleep off for the run, for comparison.
+Each row also says how much of the time the Newton was idle (its processor
+let down to 80 MHz).
 
 ## storebench.py - how long the store takes to write
 

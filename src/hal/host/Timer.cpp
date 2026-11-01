@@ -20,6 +20,7 @@
 static Int64	gHostClock = {0, 0};
 static Boolean	gHostRealClock = false;
 static std::chrono::steady_clock::time_point gHostClockStart;
+void			(*gHostIdleHook)(bool idle) = nullptr;
 Boolean			gHostAlarmArmed = false;
 Int64			gHostAlarmTime = {0, 0};
 
@@ -114,16 +115,24 @@ HostSleepUntil(const Int64* time)
 			gHostClock = *time;
 		return;
 	}
+	bool idle = false;
 	for (;;)
 	{
 		Int64 now = HostSteadyClock();
 		if (CompCompare(&now, time) >= 0)
-			return;
+			break;
 		Int64 left = *time;
 		CompSub(&now, &left);
 		unsigned long long ticks = ((unsigned long long) (ULong) left.hi << 32) | left.lo;
+		if (!idle && gHostIdleHook != nullptr)
+		{
+			idle = true;
+			gHostIdleHook(true);
+		}
 		HostSleepNanoseconds(ticks * 1250000 / 4608);
 	}
+	if (idle)
+		gHostIdleHook(false);
 }
 
 extern "C" void

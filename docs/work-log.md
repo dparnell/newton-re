@@ -9,6 +9,21 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-01: power management on the T-Deck Pro
+
+`src/host/esp32/main/tdeck_power.cpp`: ESP-IDF's frequency scaling (80 MHz
+unless the Newton runs - `hal/host/Host.h`'s new `gHostIdleHook` - or a
+driver works) and automatic light sleep, held off while the USB console is
+connected or the GPS or 4G module is powered; ESP-IDF's GPIO isolation in
+sleep switched off (it would have cut the radios' power).
+`powermeter.py --usb-away` measures with the USB let go
+(`DevicePowerSet('usbAway, S)`; the board restarts if the computer does not
+find it again - the first try, with the tool still holding the port, never
+came back and needed the reset button). 113 mA without light sleep, 70 with
+it (GPS and 4G off); every radio off, 63. `DevicePowerSet`'s names are now
+compared without case: `'sleep` arrived as the ROM's symbol `Sleep`.
+docs/host-tdeck-pro.md, "Battery life".
+
 ## 2026-11-01: the notebook idled every 6.5 ms for nothing
 
 Profiling the T-Deck Pro at rest (`tools/tdeck/profile.py`) found core 1

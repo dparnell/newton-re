@@ -94,6 +94,8 @@ PlatformPowerOffSystem(void)
 	}
 	gHostSleeps.fetch_add(1);
 	gHostAsleep.store(true);
+	if (gHostIdleHook != nullptr)
+		gHostIdleHook(true);
 	auto start = std::chrono::steady_clock::now();
 	for (;;)
 	{
@@ -112,6 +114,8 @@ PlatformPowerOffSystem(void)
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
+	if (gHostIdleHook != nullptr)
+		gHostIdleHook(false);
 	gHostAsleep.store(false);
 }
 

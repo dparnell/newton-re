@@ -189,6 +189,7 @@ PowerTask(void*)
 			gpio_set_level((gpio_num_t) PIN_MODEM_PWRKEY, 0);
 			gpio_set_level((gpio_num_t) PIN_MODEM_POWER, 0);
 		}
+		HostDevicePowerKeepAwake(kAwakeCell, on);	// (its UART stops in light sleep)
 		KeepOff(!on);
 		printf("[cell] the module switched %s\n", on ? "on" : "off");
 	}
@@ -209,6 +210,7 @@ CellTask(void*)
 	// A7682E_init) do: the supply on, a 50 ms press of the power key; and,
 	// as lilyphone1 does when that gets no answer, a longer press (a second)
 	gpio_set_level((gpio_num_t) PIN_MODEM_POWER, 1);
+	HostDevicePowerKeepAwake(kAwakeCell, true);
 	vTaskDelay(pdMS_TO_TICKS(100));
 	printf("[cell] the module's supply (GPIO %d) reads %d\n", PIN_MODEM_POWER, gpio_get_level((gpio_num_t) PIN_MODEM_POWER));
 	PressPowerKey(50);

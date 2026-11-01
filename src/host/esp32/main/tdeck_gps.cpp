@@ -84,6 +84,7 @@ PowerTask(void*)
 		if (xQueueReceive(gPowerRequests, &on, portMAX_DELAY) != pdTRUE)
 			continue;
 		gpio_set_level((gpio_num_t) PIN_GPS_POWER, on ? 1 : 0);
+		HostDevicePowerKeepAwake(kAwakeGps, on);
 		nvs_handle_t nvs;
 		if (nvs_open("newton", NVS_READWRITE, &nvs) == ESP_OK)
 		{
@@ -146,6 +147,7 @@ HostDeviceGpsStart(void)
 	gpio_config(&pins);
 	bool on = !KeptOff();
 	gpio_set_level((gpio_num_t) PIN_GPS_POWER, on ? 1 : 0);
+	HostDevicePowerKeepAwake(kAwakeGps, on);	// (its UART stops in light sleep)
 
 	uart_config_t config = {};
 	config.baud_rate = 38400;

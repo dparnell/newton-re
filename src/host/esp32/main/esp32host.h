@@ -99,6 +99,22 @@ bool		HostDeviceBatteryStart(void);
 bool		HostDeviceBatteryCurrent(long* now, long* mean, long* samples, long* millivolts);	// mA (+ charging) now, and the mean of the 1 s samples since last asked (the sampler starts at the first call)
 bool		HostDeviceBatteryRunOnBattery(bool on);		// the charger's input cut (on) or back: the board on its battery while on USB
 
+// power management (tdeck_power.cpp): frequency scaling and automatic light
+// sleep, started first (==> whether ESP-IDF took the configuration); what
+// keeps the chip out of light sleep, by bits; light sleep allowed or not;
+// the Newton's idle time since last asked; the USB let go for a time
+enum
+{
+	kAwakeGps = 1,							// its UART receiving
+	kAwakeCell = 2,							// the 4G module's
+	kAwakeUsb = 4							// the USB taken back, being enumerated
+};
+bool		HostDevicePowerStart(void);
+void		HostDevicePowerKeepAwake(unsigned who, bool on);
+bool		HostDevicePowerSetLightSleep(bool on);
+void		HostDevicePowerIdle(long* perMille, long* idles);
+bool		HostDevicePowerUsbAway(long seconds);
+
 // the sampling profiler of core 1 (tdeck_profile.cpp): started with the
 // board, a phase's start marked, the samples printed (and the profiler
 // stopped) - tools/tdeck/profile.py reads them

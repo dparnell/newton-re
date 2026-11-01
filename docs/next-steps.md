@@ -120,16 +120,20 @@ Nothing at present.
 
 ## Open
 
-### The T-Deck Pro's battery life (measured 2026-11-01)
+### The T-Deck Pro's battery life (2026-11-01)
 
-130 mA as found, 100 mA with every radio off (docs/host-tdeck-pro.md,
-"Battery life"; `tools/tdeck/powermeter.py` measures each change). Next,
-largest first: ESP-IDF power management and automatic light sleep, with the
-touch panel's and keyboard's interrupts in place of the 10 ms polls; a real
-sleep for the Newton's power-off on the board; the 4G module's own sleep;
-max-modem WiFi power save; the LoRa radio's lines while it is unpowered
-(off draws 10 mA more than on); the keyboard light on a timeout; `POF`
-after each panel refresh.
+130 mA as found at first; the Newton's idle spin fixed and power management
+with light sleep added, 113 mA as found with the USB away (no gain yet: the
+4G module keeps the chip awake) and 63 mA with every radio off
+(docs/host-tdeck-pro.md, "Battery life"; `tools/tdeck/powermeter.py
+--usb-away` measures each change). Next, largest first: the 4G module's own
+sleep (DTR on GPIO 8 with `AT+CSCLK=1`, its RI line waking the board) so the
+chip can sleep with it on; max-modem WiFi power save by default (15 mA);
+what still wakes the Newton every 10 ms, and the touch panel's and
+keyboard's interrupts in place of the input task's 10 ms poll; a real
+sleep for the Newton's power-off on the board; the LoRa radio's lines
+while it is unpowered (off draws 8-10 mA more than on); the keyboard light
+on a timeout; `POF` after each panel refresh.
 
 ### A test that passes without running
 

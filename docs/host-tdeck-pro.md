@@ -845,6 +845,51 @@ with its DTR line, GPIO 8, which nothing drives yet) or off by default;
 max-modem WiFi power save; the keyboard light off after a while; the
 radio's pins fixed when it is off; `POF` after each refresh.
 
+### The Newton never waited, and power management
+
+Before any of that: profiling the board at rest (`tools/tdeck/profile.py`)
+found core 1 waiting 0.5% of the time. The reconstruction's
+`TNotebook::Idle` kept a next idle time that had passed, so the notebook
+idled every 6.5 ms for nothing (`docs/work-log.md`, 2026-11-01;
+`NEWTON_TRACE_IDLE` found it). Fixed as the ROM has it, the Newton is idle
+93% of the time at rest.
+
+Then power management (`src/host/esp32/main/tdeck_power.cpp`,
+`sdkconfig.defaults`): ESP-IDF's frequency scaling, 80 MHz unless the
+Newton is running (it holds 240 MHz; `gHostIdleHook` in `hal/host/Host.h`
+lets go while its idle task waits) or a driver is working, and automatic
+light sleep between FreeRTOS's ticks. ESP-IDF's GPIO isolation in sleep is
+off: it would have let go of the radios' power switches. Three things keep
+the chip out of light sleep: the USB console while connected (the USB
+serial/JTAG does not work across it - ESP-IDF's connection monitor), and
+the GPS's and the 4G module's UARTs while they are powered (what they send
+meanwhile would be lost). So on the cable the board is measured awake;
+`powermeter.py --usb-away` lets go of the USB for each measurement (the
+D+ pull-up taken away; the board restarts if the computer does not find it
+again, which happened once, with the port still held open by the tool).
+
+With the USB away, each row switching one more thing off:
+
+| State | mA | saved |
+|---|---|---|
+| as found | 113 | |
+| keyboard light off | 113 | 0 |
+| GPS off | 115 | -2 |
+| LoRa radio off | 123 | -8 |
+| 4G module off | 94 | 29 |
+| WiFi power save max modem | 79 | 15 |
+| WiFi off | 63 | 16 |
+
+With the GPS and the 4G module off and the rest on, 113 mA without light
+sleep and 70 with it (`--no-sleep` against not). As found, nothing is
+gained yet: **the 4G module keeps the chip awake.** Its own sleep (DTR,
+GPIO 8, with `AT+CSCLK=1`, and its RI line to wake the board for a call or
+a message) would let the chip sleep with it on. Max-modem WiFi power save
+is now worth 15 mA, since the chip sleeps between the beacons it skips.
+The LoRa radio still draws more switched off. The Newton still goes idle
+about 95 times a second, so something still wakes it every 10 ms; the
+input task's 10 ms poll of the touch panel and keyboard is another wake-up.
+
 ## Order of work
 
 The owner already has a T-Deck Pro (bought for another project), so the

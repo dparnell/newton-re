@@ -55,6 +55,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>			// strcasecmp
 
 #include "esp32host.h"
 
@@ -182,27 +183,34 @@ FDevicePanelSet(RefArg /*rcvr*/, RefArg name, RefArg value)
 	return HostDevicePanelSet(text, RINT(value)) ? TRUEREF : NILREF;
 }
 
-// DevicePower(): [mA now, the mean mA since last asked, its 1 s samples, mV]
-// from the fuel gauge (negative: drawn from the battery) - the first call
-// starts the sampling; nil without a gauge
+// DevicePower(): [mA now, the mean mA since last asked, its 1 s samples, mV,
+// the Newton's idle time since last asked in tenths of a per cent, how often
+// it went idle meanwhile] from the fuel gauge (negative: drawn from the
+// battery) and tdeck_power.cpp - the first call starts the sampling; nil
+// without a gauge
 static Ref
 FDevicePower(RefArg /*rcvr*/)
 {
-	long now, mean, samples, millivolts;
+	long now, mean, samples, millivolts, idle, idles;
 	if (!HostDeviceBatteryCurrent(&now, &mean, &samples, &millivolts))
 		return NILREF;
-	RefVar list(MakeArray(4));
+	HostDevicePowerIdle(&idle, &idles);
+	RefVar list(MakeArray(6));
 	SetArraySlot(list, 0, RefVar(MAKEINT(now)));
 	SetArraySlot(list, 1, RefVar(MAKEINT(mean)));
 	SetArraySlot(list, 2, RefVar(MAKEINT(samples)));
 	SetArraySlot(list, 3, RefVar(MAKEINT(millivolts)));
+	SetArraySlot(list, 4, RefVar(MAKEINT(idle)));
+	SetArraySlot(list, 5, RefVar(MAKEINT(idles)));
 	return list;
 }
 
 // DevicePowerSet(name, on): 'battery - the charger's input cut, so that the
 // board runs from its battery while on USB (for measuring it); 'keyLight -
 // the keyboard's light allowed; 'wifi - the WiFi radio on; 'wifiSave - its
-// power save, 0 none, 1 min modem (ESP-IDF's default), 2 max modem
+// power save, 0 none, 1 min modem (ESP-IDF's default), 2 max modem; 'sleep -
+// automatic light sleep allowed; 'usbAway - the USB let go for that many
+// seconds (light sleep can then happen; the console comes back after)
 // ==> true when taken
 static Ref
 FDevicePowerSet(RefArg /*rcvr*/, RefArg name, RefArg on)
@@ -210,17 +218,21 @@ FDevicePowerSet(RefArg /*rcvr*/, RefArg name, RefArg on)
 	if (!IsSymbol(name))
 		return NILREF;
 	const char* what = SymbolName(name);
-	if (strcmp(what, "battery") == 0)
+	if (strcasecmp(what, "battery") == 0)
 		return HostDeviceBatteryRunOnBattery(NOTNIL(on)) ? TRUEREF : NILREF;
-	if (strcmp(what, "keyLight") == 0)
+	if (strcasecmp(what, "keyLight") == 0)
 	{
 		HostDeviceSetKeyLight(NOTNIL(on));
 		return TRUEREF;
 	}
-	if (strcmp(what, "wifi") == 0)
+	if (strcasecmp(what, "wifi") == 0)
 		return gHostDeviceWifi && HostDeviceWifiSetRadio(NOTNIL(on)) ? TRUEREF : NILREF;
-	if (strcmp(what, "wifiSave") == 0)
+	if (strcasecmp(what, "wifiSave") == 0)
 		return gHostDeviceWifi && ISINT(on) && HostDeviceWifiSetPowerSave((int) RINT(on)) ? TRUEREF : NILREF;
+	if (strcasecmp(what, "sleep") == 0)
+		return HostDevicePowerSetLightSleep(NOTNIL(on)) ? TRUEREF : NILREF;
+	if (strcasecmp(what, "usbAway") == 0)
+		return ISINT(on) && HostDevicePowerUsbAway(RINT(on)) ? TRUEREF : NILREF;
 	return NILREF;
 }
 
