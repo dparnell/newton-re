@@ -15,7 +15,8 @@ bugs and ROM bugs found on the way.
 engine's setup (`HostCellularLink`'s new `setup`), DTR (GPIO 8) low while
 the engine talks to the module and high after half a second's quiet, RI
 (GPIO 7) a wake-up from light sleep. On battery with the GPS off, 88 mA
-with the module asleep against 80 with it off. On the way: the board's USB
+with the module asleep against 80 with it off; a text sent to the board
+asleep was on its display in under 3 s. On the way: the board's USB
 died on the cable once the 4G no longer kept the chip awake - ESP-IDF's
 connection monitor let light sleep happen (its lock let go 2,107 times in
 ten minutes) - so the chip is now kept awake while the USB gives power,

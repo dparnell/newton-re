@@ -932,8 +932,11 @@ with the number of light sleeps. A change to `sdkconfig.defaults` only
 reaches the build once `src/host/esp32/sdkconfig.tdeck-pro` is moved aside
 (a full rebuild).
 
-Not yet confirmed: a text or call arriving while the board is on its
-battery and asleep (RI's wake-up).
+RI's wake-up tried: with the board on its battery, the USB away and the
+GPS off (5,248 light sleeps in the three minutes), a text sent to it was
+on its display in under 3 s, where the 15 s status poll alone would have
+taken up to 15. (A first try with the GPS on proved nothing: a powered
+GPS keeps the chip awake, and it never slept.)
 
 ## Order of work
 
