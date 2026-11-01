@@ -22,6 +22,9 @@ Each state is set up by NewtonScript lines, left to settle (--settle, 15 s),
 then the gauge's one-second samples are averaged over --window seconds (60)
 with nothing said to the board meanwhile.
 
+Measure 150 s or more after the board started: the boot's profiler
+(tdeck_profile.cpp) keeps the chip out of light sleep until then.
+
 The chip never goes into light sleep while the USB console is connected
 (tdeck_power.cpp: the USB serial/JTAG does not work across it), so a
 measurement on the cable is of the board without it.  --usb-away measures

@@ -9,6 +9,15 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-02: the T-Deck Pro's GPS bursts shortened
+
+`tdeck_gps.cpp`: the receiver told to send only GGA and RMC unless a Newton
+application reads its serial port (UBX-CFG-VALSET); the reader waits for a
+burst's first edge between bursts instead of 20 ms slices, and ends a burst
+after 15 ms of quiet. The GPS's lock 5% of the time (27%); 54 mA on battery
+with everything on (59). Found on the way: the boot's profiler keeps the
+chip awake for 150 s after a boot, so measure after that.
+
 ## 2026-11-02: the T-Deck Pro's panel and mesh tasks wait for work
 
 The console's `!tasks` (FreeRTOS's run-time stats) found the panel's task

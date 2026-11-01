@@ -31,8 +31,12 @@
 				comes once a second): the receiver's TXD going low wakes it
 				from light sleep (a GPIO wake-up on our RX pin) and an
 				interrupt on the same pin takes a lock that keeps it awake
-				until the burst has ended (30 ms without a byte), then the
-				interrupt is armed again.  Nothing was seen lost: across
+				until the burst has ended (15 ms without a byte), then the
+				interrupt is armed again.  The burst is kept short: unless
+				a Newton application reads the receiver's sentences, it is
+				told to send only GGA and RMC (SetSentences), which the
+				fix is read from - about 150 bytes a second, where its
+				dozen sentences took 220 ms at 38400 baud.  Nothing was seen lost: across
 				4,539 light sleeps the receiver's 1,715 sentences all came
 				whole (!pm counts them); were the first characters of a
 				burst lost while the chip wakes, its first sentence would
@@ -53,6 +57,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
+#include "freertos/semphr.h"
 #include "nvs.h"
 #include "driver/uart.h"
 #include "driver/gpio.h"
@@ -74,14 +79,25 @@ static QueueHandle_t		gPowerRequests;		// the switch's: on or off (a bool)
 static esp_pm_lock_handle_t	gBurst = NULL;
 static volatile bool		gBurstHeld = false;
 static volatile int64_t		gBurstAt = 0;		// when the edge came
+static SemaphoreHandle_t	gBurstBegan = NULL;	// given by the edge: the reader waits for it between bursts
 static int64_t				gLastByte = 0;
-const int64_t				kBurstEndUs = 30000;	// no byte this long: the burst is over
-const long					kSliceMs = 20;
+const int64_t				kBurstEndUs = 15000;	// no byte this long: the burst is over
+const long					kSliceMs = 5;
 static volatile bool		gPowered = false;
+static int64_t				gPoweredAt = 0;
 
-// for the console's !pm: its bursts (each wakes the chip if asleep), and
-// the sentences heard whole (their checksums right) and broken
+// the receiver's sentences: all of them while a Newton application reads
+// them (the serial port open), else only GGA and RMC - the fix's, which is
+// all HostGPS reads (GLL too, but it has nothing GGA and RMC have not) - so
+// that a burst is a sixth as long and the chip asleep the sooner
+enum { kSentencesUnknown, kSentencesAll, kSentencesFix };
+static int					gSentencesSet = kSentencesUnknown;
+
+// for the console's !pm: its bursts (each wakes the chip if asleep) and how
+// long they kept it awake, and the sentences heard whole (their checksums
+// right) and broken
 static volatile unsigned long	gBursts = 0;
+static int64_t					gBurstUs = 0;
 static unsigned long			gWhole = 0, gBroken = 0;
 static char						gSentence[100];
 static int						gSentenceLength = -1;	// -1: not in one
@@ -100,6 +116,9 @@ BurstStarts(void*)
 		gBurstHeld = true;
 		esp_pm_lock_acquire(gBurst);
 	}
+	BaseType_t woken = pdFALSE;
+	xSemaphoreGiveFromISR(gBurstBegan, &woken);
+	portYIELD_FROM_ISR(woken);
 }
 
 
@@ -109,8 +128,49 @@ BurstEnds(void)
 	if (!gBurstHeld)
 		return;
 	gBurstHeld = false;
+	gBurstUs += esp_timer_get_time() - gBurstAt;
 	esp_pm_lock_release(gBurst);
 	gpio_intr_enable((gpio_num_t) PIN_GPS_RX);
+}
+
+
+// The receiver told which sentences to send (UBX-CFG-VALSET, to its RAM: a
+// receiver powered again starts from its defaults, all of them, and is told
+// again): CFG-MSGOUT-NMEA_ID_*_UART1, one a fix (1) or none (0)
+static void
+SetSentences(int which)
+{
+	static const uint32_t kKeys[6] = {
+		0x209100bb,		// GGA
+		0x209100ac,		// RMC
+		0x209100ca,		// GLL
+		0x209100c0,		// GSA
+		0x209100c5,		// GSV
+		0x209100b1		// VTG
+	};
+	uint8_t m[8 + 4 + 6 * 5 + 2];
+	long n = 0;
+	m[n++] = 0xB5; m[n++] = 0x62; m[n++] = 0x06; m[n++] = 0x8A;
+	m[n++] = 4 + 6 * 5; m[n++] = 0;
+	m[n++] = 0;			// version
+	m[n++] = 0x01;		// layers: RAM
+	m[n++] = 0; m[n++] = 0;
+	for (int k = 0; k < 6; k++)
+	{
+		for (int b = 0; b < 4; b++)
+			m[n++] = (uint8_t) (kKeys[k] >> (8 * b));
+		m[n++] = which == kSentencesAll || k < 2 ? 1 : 0;
+	}
+	uint8_t a = 0, c = 0;
+	for (long k = 2; k < n; k++)
+	{
+		a += m[k];
+		c += a;
+	}
+	m[n++] = a;
+	m[n++] = c;
+	uart_write_bytes(kPort, m, (size_t) n);
+	gSentencesSet = which;
 }
 
 
@@ -167,6 +227,8 @@ PowerTask(void*)
 		if (xQueueReceive(gPowerRequests, &on, portMAX_DELAY) != pdTRUE)
 			continue;
 		gpio_set_level((gpio_num_t) PIN_GPS_POWER, on ? 1 : 0);
+		gPoweredAt = esp_timer_get_time();
+		gSentencesSet = kSentencesUnknown;		// (its defaults again)
 		gPowered = on;
 		ArmWake(on);
 		nvs_handle_t nvs;
@@ -210,21 +272,47 @@ Count(const unsigned char* bytes, int size)
 void
 HostDeviceGpsDump(void)
 {
-	printf("newton: GPS %s, %lu bursts, sentences %lu whole, %lu broken\n",
+	unsigned long bursts = gBursts;
+	printf("newton: GPS %s, %s sentences, %lu bursts of %lld ms on average, sentences %lu whole, %lu broken\n",
 		   !gPowered ? "off" : gBurst == NULL ? "on, keeping the chip awake" : HostGPSPlugged() ? "on, read by the Newton (the chip kept awake)" : "on",
-		   (unsigned long) gBursts, gWhole, gBroken);
+		   gSentencesSet == kSentencesAll ? "all" : gSentencesSet == kSentencesFix ? "the fix's" : "its own",
+		   bursts, bursts != 0 ? (long long) (gBurstUs / 1000 / (int64_t) bursts) : 0LL, gWhole, gBroken);
 }
 
 
-// (in slices, so as to see a burst's end and let the chip sleep)
+// Between bursts, nothing until the next one's first edge (gBurstBegan); in a
+// burst, in 5 ms slices so as to see its end.  (Slices all the time woke the
+// chip every 5 ms - every 20 before - and kept it out of light sleep.)
 static long
 UartRead(unsigned char* bytes, long size, long timeoutMs)
 {
+	if (gBurst == NULL)
+	{
+		int got = uart_read_bytes(kPort, bytes, (uint32_t) size, pdMS_TO_TICKS(timeoutMs));
+		if (got > 0)
+			Count(bytes, got);
+		return got < 0 ? -1 : got;
+	}
+	bool plugged = HostGPSPlugged();
 	if (gBurst != NULL)
-		HostDevicePowerKeepAwake(kAwakeGps, gPowered && HostGPSPlugged());
+		HostDevicePowerKeepAwake(kAwakeGps, gPowered && plugged);
+	// (the sentences a Newton application or the fix needs, told once the
+	// receiver has said something since it was powered - it is listening)
+	int wanted = plugged ? kSentencesAll : kSentencesFix;
+	if (gPowered && gSentencesSet != wanted && gLastByte > gPoweredAt)
+		SetSentences(wanted);
 	int64_t until = esp_timer_get_time() + (int64_t) timeoutMs * 1000;
 	for (;;)
 	{
+		size_t buffered = 0;
+		uart_get_buffered_data_len(kPort, &buffered);
+		if (!gBurstHeld && buffered == 0)
+		{
+			int64_t left = until - esp_timer_get_time();
+			if (left <= 0 || xSemaphoreTake(gBurstBegan, pdMS_TO_TICKS(left / 1000) + 1) != pdTRUE)
+				return 0;
+			continue;
+		}
 		int got = uart_read_bytes(kPort, bytes, (uint32_t) size, pdMS_TO_TICKS(kSliceMs));
 		int64_t now = esp_timer_get_time();
 		if (got < 0)
@@ -316,7 +404,8 @@ HostDeviceGpsStart(void)
 	}
 	// (its UART stops in light sleep: the receiver's first edge wakes the chip)
 	esp_err_t err = gpio_install_isr_service(0);
-	if ((err == ESP_OK || err == ESP_ERR_INVALID_STATE)
+	gBurstBegan = xSemaphoreCreateBinary();
+	if ((err == ESP_OK || err == ESP_ERR_INVALID_STATE) && gBurstBegan != NULL
 	 && esp_pm_lock_create(ESP_PM_NO_LIGHT_SLEEP, 0, "gps", &gBurst) == ESP_OK)
 	{
 		gpio_intr_disable((gpio_num_t) PIN_GPS_RX);

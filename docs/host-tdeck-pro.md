@@ -1008,6 +1008,27 @@ Core 0 is now idle 97% of the time. With the USB away and everything on,
 **59 mA** (73 before); the mesh still heard its packets (11 in six
 minutes, none needing the missed-interrupt recovery).
 
+### The GPS's bursts shortened
+
+The GPS's lock was held 27% of the time: a dozen sentences a second, about
+840 bytes, take 220 ms at 38400 baud, and the reader's 20 ms slices and
+30 ms of quiet added more. Now (`tdeck_gps.cpp`) the receiver is told
+(UBX-CFG-VALSET, to its RAM; again whenever it is powered) to send only
+GGA and RMC, the fix's, unless a Newton application has its serial port
+open, when it gets them all; between bursts the reader waits for the next
+one's first edge rather than looking every 20 ms (which also kept waking
+the chip), and in a burst it reads in 5 ms slices and takes 15 ms of quiet
+as its end. Bursts now keep the chip awake 35 ms each, 5% of the time; two
+sentences in 493 came broken (a burst's first, as the chip woke), which
+costs nothing - the other carries the fix as well. With the USB away and
+everything on, **54 mA** (59 before).
+
+**Measuring after a boot: wait 150 s.** The boot's profiler
+(`tdeck_profile.cpp`) samples core 1 every millisecond for the first 150
+s, which keeps the chip out of light sleep; two runs started sooner after
+flashing read 67 and 68 mA, with no light sleep at all (`!pm`'s
+`light_sleep_counts`).
+
 ## Order of work
 
 The owner already has a T-Deck Pro (bought for another project), so the
