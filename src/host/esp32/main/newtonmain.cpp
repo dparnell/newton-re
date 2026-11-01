@@ -208,7 +208,7 @@ FDevicePower(RefArg /*rcvr*/)
 // DevicePowerSet(name, on): 'battery - the charger's input cut, so that the
 // board runs from its battery while on USB (for measuring it); 'keyLight -
 // the keyboard's light allowed; 'wifi - the WiFi radio on; 'wifiSave - its
-// power save, 0 none, 1 min modem (ESP-IDF's default), 2 max modem; 'sleep -
+// power save, 0 none, 1 min modem (ESP-IDF's default), 2 max modem (ours); 'sleep -
 // automatic light sleep allowed; 'usbAway - the USB let go for that many
 // seconds (light sleep can then happen; the console comes back after)
 // ==> true when taken

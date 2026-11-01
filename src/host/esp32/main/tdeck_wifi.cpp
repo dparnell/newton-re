@@ -17,6 +17,13 @@
 				must not), and the Newton's tasks hand it a scan, a
 				remember or a forget and wait for the answer.  ESP-IDF's
 				events (joined, lost) come to it too.
+
+				Its power save is ESP-IDF's max modem (the radio asleep
+				across several beacons, the listen interval's 3; ESP-IDF's
+				own default, min modem, wakes for every one): 15 mA less on
+				the battery, the chip then sleeping between the beacons
+				it skips (docs/host-tdeck-pro.md, "Battery life").
+				DevicePowerSet('wifiSave, 1) puts ESP-IDF's back.
 				ESP-IDF's headers only (esp32host.h says why).
 */
 
@@ -422,6 +429,7 @@ HostDeviceWifiStart(void)
 	esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, OnEvent, NULL);
 	if (esp_wifi_set_mode(WIFI_MODE_STA) != ESP_OK || esp_wifi_start() != ESP_OK)
 		return false;
+	esp_wifi_set_ps(WIFI_PS_MAX_MODEM);
 	gRequests = xQueueCreate(4, sizeof(Request*));
 	gEvents = xQueueCreate(8, sizeof(int));
 	gState = kDeviceWifiSearching;

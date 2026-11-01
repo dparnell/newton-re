@@ -42,7 +42,8 @@ switches one more thing off:
     cell       the 4G module off (HostSetSetting('cellPower, nil))
     wifisave   the WiFi's power save at its most (DevicePowerSet('wifiSave, 2):
                ESP-IDF's max modem - asleep across several beacons; its
-               default, min modem, wakes for every one)
+               default, min modem, wakes for every one) - the board's own
+               setting since 2026-11-01, so found already on and left so
     wifi       the WiFi off (DevicePowerSet('wifi, nil))
 
 A thing already off is left off and says so.  At the end everything is put
@@ -194,7 +195,7 @@ def main(argv):
         "gps": setting("gpsPower"),
         "lora": "on" if board.eval("GetGlobalFn('HostMeshPowered) and HostMeshPowered()") == "TRUE" else "off",
         "cell": setting("cellPower"),
-        "wifisave": "on",
+        "wifisave": "off",                  # (max modem from the start: tdeck_wifi.cpp)
         "wifi": "on",
     }
     # each step's NewtonScript: off, then back on
@@ -203,7 +204,7 @@ def main(argv):
         "gps": ("HostSetSetting('gpsPower, nil)", "HostSetSetting('gpsPower, true)"),
         "lora": ("HostMeshSetPower(nil)", "HostMeshSetPower(true)"),
         "cell": ("HostSetSetting('cellPower, nil)", "HostSetSetting('cellPower, true)"),
-        "wifisave": ("DevicePowerSet('wifiSave, 2)", "DevicePowerSet('wifiSave, 1)"),
+        "wifisave": ("DevicePowerSet('wifiSave, 2)", "DevicePowerSet('wifiSave, 2)"),
         "wifi": ("DevicePowerSet('wifi, nil)", "DevicePowerSet('wifi, true)"),
     }
     steps = ["keylight", "gps", "lora", "cell", "wifisave", "wifi"]

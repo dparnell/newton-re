@@ -9,6 +9,12 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-11-01: the T-Deck Pro's WiFi in max-modem power save
+
+`src/host/esp32/main/tdeck_wifi.cpp` starts the WiFi in ESP-IDF's max
+modem: 77 mA on battery against 86 with its default (GPS off, the rest
+on), pings 428 ms on average. docs/host-tdeck-pro.md, "Battery life".
+
 ## 2026-11-01: the T-Deck Pro's 4G module sleeps
 
 `src/host/esp32/main/tdeck_modem.cpp`: `AT+CSCLK=1` at the end of the

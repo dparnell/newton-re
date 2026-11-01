@@ -938,6 +938,17 @@ on its display in under 3 s, where the 15 s status poll alone would have
 taken up to 15. (A first try with the GPS on proved nothing: a powered
 GPS keeps the chip awake, and it never slept.)
 
+### The WiFi's power save at its most
+
+The WiFi now starts in ESP-IDF's max-modem power save
+(`src/host/esp32/main/tdeck_wifi.cpp`): the radio asleep across the
+listen interval's 3 beacons, where ESP-IDF's default, min modem, wakes for
+every one. With the USB away, the GPS off and everything else on, 77 mA
+against 86 with min modem (`DevicePowerSet('wifiSave, 1)` puts it back).
+The cost is latency: ten pings from the computer took 428 ms on average
+(2 ms to 2.2 s), one lost. `powermeter.py`'s `wifisave` step now finds it
+on already.
+
 ## Order of work
 
 The owner already has a T-Deck Pro (bought for another project), so the
